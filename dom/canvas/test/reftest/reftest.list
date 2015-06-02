@@ -23,7 +23,7 @@ pref(webgl.force-layers-readback,true)  == webgl-clear-test.html?readback wrappe
 # failures encountered when running on Try, and then targetting the Try config by
 # differences in the `sandbox` contents. That is, I'm labeling based on symptoms rather
 # than cause.
-# Lin-R-e10s: gtk2Widget && browserIsRemote
+# Lin-R-e10s: gtkWidget && browserIsRemote
 # WinXP-R: winWidget && layersGPUAccelerated && !d2d
 # Win7+-R: winWidget && layersGPUAccelerated && d2d
 # Win7+-Ru: winWidget && !layersGPUAccelerated
@@ -47,10 +47,10 @@ pref(webgl.force-layers-readback,true)  == webgl-clear-test.html?readback wrappe
                                                                                                          == webgl-color-test.html?frame=1&aa&________&premult&_____  wrapper.html?colors-no-alpha.png
                                                                                                          == webgl-color-test.html?frame=1&__&preserve&premult&_____  wrapper.html?colors-no-alpha.png
                                                                                                          == webgl-color-test.html?frame=1&aa&preserve&premult&_____  wrapper.html?colors-no-alpha.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)     == webgl-color-test.html?frame=1&__&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)     == webgl-color-test.html?frame=1&aa&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)     == webgl-color-test.html?frame=1&__&preserve&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)     == webgl-color-test.html?frame=1&aa&preserve&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)     == webgl-color-test.html?frame=1&__&________&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)     == webgl-color-test.html?frame=1&aa&________&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)     == webgl-color-test.html?frame=1&__&preserve&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)     == webgl-color-test.html?frame=1&aa&preserve&_______&alpha  wrapper.html?colors-non-premult.png
                                                                                                          == webgl-color-test.html?frame=1&__&________&premult&alpha  wrapper.html?colors-premult.png
                                                                                                          == webgl-color-test.html?frame=1&aa&________&premult&alpha  wrapper.html?colors-premult.png
                                                                                                          == webgl-color-test.html?frame=1&__&preserve&premult&alpha  wrapper.html?colors-premult.png
@@ -64,10 +64,10 @@ fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersG
                                                                                                          == webgl-color-test.html?frame=6&aa&________&premult&_____  wrapper.html?colors-no-alpha.png
                                                                                                          == webgl-color-test.html?frame=6&__&preserve&premult&_____  wrapper.html?colors-no-alpha.png
                                                                                                           == webgl-color-test.html?frame=6&aa&preserve&premult&_____  wrapper.html?colors-no-alpha.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)     == webgl-color-test.html?frame=6&__&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)     == webgl-color-test.html?frame=6&aa&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)     == webgl-color-test.html?frame=6&__&preserve&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&(!layersGPUAccelerated||!d2d))  == webgl-color-test.html?frame=6&aa&preserve&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)     == webgl-color-test.html?frame=6&__&________&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)     == webgl-color-test.html?frame=6&aa&________&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)     == webgl-color-test.html?frame=6&__&preserve&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&(!layersGPUAccelerated||!d2d))  == webgl-color-test.html?frame=6&aa&preserve&_______&alpha  wrapper.html?colors-non-premult.png
                                                                                                          == webgl-color-test.html?frame=6&__&________&premult&alpha  wrapper.html?colors-premult.png
                                                                                                          == webgl-color-test.html?frame=6&aa&________&premult&alpha  wrapper.html?colors-premult.png
                                                                                                          == webgl-color-test.html?frame=6&__&preserve&premult&alpha  wrapper.html?colors-premult.png
@@ -81,10 +81,10 @@ fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&(!layer
                                                                                                         pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&________&premult&_____  wrapper.html?colors-no-alpha.png
                                                                                                         pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&preserve&premult&_____  wrapper.html?colors-no-alpha.png
                                                                                                         pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&preserve&premult&_____  wrapper.html?colors-no-alpha.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&preserve&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&preserve&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&________&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&________&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&preserve&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&preserve&_______&alpha  wrapper.html?colors-non-premult.png
                                                                                                         pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&________&premult&alpha  wrapper.html?colors-premult.png
                                                                                                         pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&________&premult&alpha  wrapper.html?colors-premult.png
                                                                                                         pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&preserve&premult&alpha  wrapper.html?colors-premult.png
@@ -98,10 +98,10 @@ fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersG
                                                                                                         pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&________&premult&_____  wrapper.html?colors-no-alpha.png
                                                                                                         pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&preserve&premult&_____  wrapper.html?colors-no-alpha.png
                                                                                                         pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&preserve&premult&_____  wrapper.html?colors-no-alpha.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&preserve&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtk2Widget&&browserIsRemote) fails-if(winWidget&&(!layersGPUAccelerated||!d2d)) pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&preserve&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&________&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&________&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d2d)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&preserve&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&(!layersGPUAccelerated||!d2d)) pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&preserve&_______&alpha  wrapper.html?colors-non-premult.png
                                                                                                         pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&________&premult&alpha  wrapper.html?colors-premult.png
                                                                                                         pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&________&premult&alpha  wrapper.html?colors-premult.png
                                                                                                         pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&preserve&premult&alpha  wrapper.html?colors-premult.png

@@ -55,9 +55,9 @@ fails == 25888-2r-block.html 25888-2r-ref.html # Bug 25888
 fails == 25888-3l-block.html 25888-3l-ref.html # Bug 25888
 fails == 25888-3r-block.html 25888-3r-ref.html # Bug 25888
 skip-if(B2G||Mulet) == 28811-1a.html 28811-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(gtk2Widget,6,26200) == 28811-1b.html 28811-1-ref.html  # Bug 1128229
+fuzzy-if(gtkWidget,6,26200) == 28811-1b.html 28811-1-ref.html  # Bug 1128229
 skip-if(B2G||Mulet) == 28811-2a.html 28811-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(gtk2Widget,6,26200) == 28811-2b.html 28811-2-ref.html  # Bug 1128229
+fuzzy-if(gtkWidget,6,26200) == 28811-2b.html 28811-2-ref.html  # Bug 1128229
 == 40596-1a.html 40596-1-ref.html
 != 40596-1b.html 40596-1-ref.html
 == 40596-1c.html 40596-1-ref.html
@@ -688,7 +688,7 @@ skip-if(B2G||Mulet) == 378937-1.html 378937-1-ref.html # Initial mulet triage: p
 == 379178-html.html 379178-html-ref.html
 == 379178-svg.svg 379178-svg-ref.svg
 == 379316-1.html 379316-1-ref.html
-skip-if(B2G||Mulet) fails-if(Android) random-if(cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,170) fuzzy-if(gtk2Widget,1,191) == 379316-2.html 379316-2-ref.html # bug 379786 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fails-if(Android) random-if(cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,170) fuzzy-if(gtkWidget,1,191) == 379316-2.html 379316-2-ref.html # bug 379786 # Initial mulet triage: parity with B2G/B2G Desktop
 == 379328-1.html 379328-1-ref.html
 == 379349-1a.xhtml 379349-1-ref.xhtml
 == 379349-1b.xhtml 379349-1-ref.xhtml
@@ -831,9 +831,9 @@ fuzzy-if(Android,2,140) == 397428-1.html 397428-1-ref.html
 == 399209-2.html 399209-2-ref.html
 == 399258-1.html 399258-1-ref.html
 == 399384-1.html 399384-1-ref.html
-random-if(gtk2Widget) == 399636-standards-css.html 399636-standards-ref.html # bug 429022
-random-if(gtk2Widget) == 399636-standards-html.html 399636-standards-ref.html # bug 429022
-random-if(gtk2Widget) == 399636-quirks-css.html 399636-quirks-ref.html # bug 429022
+random-if(gtkWidget) == 399636-standards-css.html 399636-standards-ref.html # bug 429022
+random-if(gtkWidget) == 399636-standards-html.html 399636-standards-ref.html # bug 429022
+random-if(gtkWidget) == 399636-quirks-css.html 399636-quirks-ref.html # bug 429022
 # We can't rely on this test working on platforms other than Windows and
 # Mac because they need not have a font called "Symbol".
 fails-if(winWidget) fails-if(cocoaWidget) random-if(!cocoaWidget&&!winWidget) != 399636-quirks-html.html 399636-quirks-ref.html # windows failure bug 429017, mac failure bug 429019
@@ -852,7 +852,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 401946-1.xul about:blank # bug 974780 
 == 402567-1.html 402567-1-ref.html
 == 402567-2.html 402567-2-ref.html
 == 402567-3.html 402567-3-ref.html
-skip-if(B2G||Mulet) fuzzy-if(gtk2Widget,2,40) == 402567-4.html 402567-4-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(gtkWidget,2,40) == 402567-4.html 402567-4-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 402629-1.html 402629-1-ref.html
 == 402629-2.html 402629-2-ref.html
 == 402629-3.html 402629-3-ref.html
@@ -1026,7 +1026,7 @@ skip-if(B2G||Mulet) == 422249-1.html 422249-1-ref.html # Initial mulet triage: p
 fails == 423823-1.html 423823-1-ref.html # scrolling rowgroups were removed in bug 28800
 skip-if(B2G||Mulet) == 424074-1.xul 424074-1-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fails-if(Android) != 424074-1.xul 424074-1-ref2.xul # Initial mulet triage: parity with B2G/B2G Desktop
-random-if(gtk2Widget) skip-if((B2G&&browserIsRemote)||Mulet) == 424074-1-ref2.xul 424074-1-ref3.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
+random-if(gtkWidget) skip-if((B2G&&browserIsRemote)||Mulet) == 424074-1-ref2.xul 424074-1-ref3.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 == 424236-1.html 424236-1-ref.html
 == 424236-2.html 424236-2-ref.html
 == 424236-3.html 424236-3-ref.html
@@ -1320,7 +1320,7 @@ skip-if(B2G||Mulet) fails-if(Android) == 481024-1c.html 481024-1-ref.html # Init
 == 481024-1e.html 481024-1-ref.html
 != 481948-1.html 481948-1-ref.html
 != 481948-2.html 481948-2-ref.html
-skip-if(B2G||Mulet) fails-if(Android) random-if(winWidget) fails-if(gtk2Widget) == 481948-3.html 481948-3-ref.html # questionable test, see bug 488364 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fails-if(Android) random-if(winWidget) fails-if(gtkWidget) == 481948-3.html 481948-3-ref.html # questionable test, see bug 488364 # Initial mulet triage: parity with B2G/B2G Desktop
 == 482398-1.html 482398-1-ref.html
 random-if(d2d) skip-if((B2G&&browserIsRemote)||Mulet) == 482592-1a.xhtml 482592-1-ref.html # bug 586771 # Initial mulet triage: parity with B2G/B2G Desktop
 random-if(d2d) skip-if((B2G&&browserIsRemote)||Mulet) == 482592-1b.xhtml 482592-1-ref.html # bug 586771 # Initial mulet triage: parity with B2G/B2G Desktop
