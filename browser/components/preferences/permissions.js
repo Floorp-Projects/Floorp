@@ -9,10 +9,10 @@ const nsICookiePermission = Components.interfaces.nsICookiePermission;
 
 const NOTIFICATION_FLUSH_PERMISSIONS = "flush-pending-permissions";
 
-function Permission(host, rawHost, type, capability)
+function Permission(principal, type, capability)
 {
-  this.host = host;
-  this.rawHost = rawHost;
+  this.principal = principal;
+  this.origin = principal.origin;
   this.type = type;
   this.capability = capability;
 }
@@ -35,7 +35,7 @@ var gPermissionManager = {
     getCellText: function (aRow, aColumn)
     {
       if (aColumn.id == "siteCol")
-        return gPermissionManager._permissions[aRow].rawHost;
+        return gPermissionManager._permissions[aRow].origin;
       else if (aColumn.id == "statusCol")
         return gPermissionManager._permissions[aRow].capability;
       return "";
@@ -82,10 +82,17 @@ var gPermissionManager = {
   addPermission: function (aCapability)
   {
     var textbox = document.getElementById("url");
-    var host = textbox.value.replace(/^\s*([-\w]*:\/+)?/, ""); // trim any leading space and scheme
+    var input_url = textbox.value.replace(/^\s*/, ""); // trim any leading space
+    let principal;
     try {
-      var uri = Services.io.newURI("http://"+host, null, null);
-      host = uri.host;
+      // If the uri doesn't successfully parse, try adding a http:// and parsing again
+      let uri;
+      try {
+        let uri = Services.io.newURI(input_url, null, null);
+      } catch(ex) {
+        uri = Services.io.newURI("http://" + input_url, null, null);
+      }
+      principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
     } catch(ex) {
       var message = this._bundle.getString("invalidURI");
       var title = this._bundle.getString("invalidURITitle");
@@ -96,11 +103,11 @@ var gPermissionManager = {
     var capabilityString = this._getCapabilityString(aCapability);
 
     // check whether the permission already exists, if not, add it
-    let hostExists = false;
+    let permissionExists = false;
     let capabilityExists = false;
     for (var i = 0; i < this._permissions.length; ++i) {
-      if (this._permissions[i].rawHost == host) {
-        hostExists = true;
+      if (this._permissions[i].principal.equals(principal)) {
+        permissionExists = true;
         capabilityExists = this._permissions[i].capability == capabilityString;
         if (!capabilityExists) {
           this._permissions[i].capability = capabilityString;
@@ -109,14 +116,14 @@ var gPermissionManager = {
       }
     }
 
-    let permissionParams = {host: host, type: this._type, capability: aCapability};
-    if (!hostExists) {
-      this._permissionsToAdd.set(host, permissionParams);
+    let permissionParams = {principal: principal, type: this._type, capability: aCapability};
+    if (!permissionExists) {
+      this._permissionsToAdd.set(principal.origin, permissionParams);
       this._addPermission(permissionParams);
     }
     else if (!capabilityExists) {
-        this._permissionsToAdd.set(host, permissionParams);
-        this._handleCapabilityChange();
+      this._permissionsToAdd.set(principal.origin, permissionParams);
+      this._handleCapabilityChange();
     }
 
     textbox.value = "";
@@ -131,15 +138,15 @@ var gPermissionManager = {
 
   _removePermission: function(aPermission)
   {
-    this._removePermissionFromList(aPermission.host);
+    this._removePermissionFromList(aPermission.principal);
 
     // If this permission was added during this session, let's remove
     // it from the pending adds list to prevent calls to the
     // permission manager.
-    let isNewPermission = this._permissionsToAdd.delete(aPermission.host);
+    let isNewPermission = this._permissionsToAdd.delete(aPermission.principal.origin);
 
     if (!isNewPermission) {
-      this._permissionsToDelete.set(aPermission.host, aPermission);
+      this._permissionsToDelete.set(aPermission.principal.origin, aPermission);
     }
 
   },
@@ -276,7 +283,7 @@ var gPermissionManager = {
       }
       else if (aData == "changed") {
         for (var i = 0; i < this._permissions.length; ++i) {
-          if (this._permissions[i].host == permission.host) {
+          if (permission.matches(this._permissions[i].principal, true)) {
             this._permissions[i].capability = this._getCapabilityString(permission.capability);
             break;
           }
@@ -363,13 +370,11 @@ var gPermissionManager = {
     this.uninit();
 
     for (let permissionParams of this._permissionsToAdd.values()) {
-      let uri = Services.io.newURI("http://" + permissionParams.host, null, null);
-      Services.perms.add(uri, permissionParams.type, permissionParams.capability);
+      Services.perms.addFromPrincipal(permissionParams.principal, permissionParams.type, permissionParams.capability);
     }
 
     for (let p of this._permissionsToDelete.values()) {
-      let uri = Services.io.newURI("http://" + p.host, null, null);
-      Services.perms.remove(uri, p.type);
+      Services.perms.removeFromPrincipal(p.principal, p.type);
     }
 
     window.close();
@@ -392,7 +397,7 @@ var gPermissionManager = {
 
     // sort and display the table
     this._tree.view = this._view;
-    this.onPermissionSort("rawHost");
+    this.onPermissionSort("origin");
 
     // disable "remove all" button if there are none
     document.getElementById("removeAllPermissions").disabled = this._permissions.length == 0;
@@ -404,20 +409,19 @@ var gPermissionManager = {
         (!this._manageCapability ||
          (aPermission.capability == this._manageCapability))) {
 
-      var host = aPermission.host;
+      var principal = aPermission.principal;
       var capabilityString = this._getCapabilityString(aPermission.capability);
-      var p = new Permission(host,
-                             (host.charAt(0) == ".") ? host.substring(1,host.length) : host,
+      var p = new Permission(principal,
                              aPermission.type,
                              capabilityString);
       this._permissions.push(p);
     }
   },
 
-  _removePermissionFromList: function (aHost)
+  _removePermissionFromList: function (aPrincipal)
   {
     for (let i = 0; i < this._permissions.length; ++i) {
-      if (this._permissions[i].host == aHost) {
+      if (this._permissions[i].principal.equals(aPrincipal)) {
         this._permissions.splice(i, 1);
         this._view._rowCount--;
         this._tree.treeBoxObject.rowCountChanged(this._view.rowCount - 1, -1);
@@ -427,15 +431,15 @@ var gPermissionManager = {
     }
   },
 
-  setHost: function (aHost)
+  setOrigin: function (aOrigin)
   {
-    document.getElementById("url").value = aHost;
+    document.getElementById("url").value = aOrigin;
   }
 };
 
-function setHost(aHost)
+function setOrigin(aOrigin)
 {
-  gPermissionManager.setHost(aHost);
+  gPermissionManager.setOrigin(aOrigin);
 }
 
 function initWithParams(aParams)
