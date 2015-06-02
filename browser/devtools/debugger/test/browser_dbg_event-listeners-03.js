@@ -50,7 +50,7 @@ function pauseDebuggee(aThreadClient) {
     deferred.resolve(aThreadClient);
   });
 
-  sendMouseClickToTab(gTab, content.document.querySelector("button"));
+  generateMouseClickInTab(gTab, "content.document.querySelector('button')");
 
   return deferred.promise;
 }
