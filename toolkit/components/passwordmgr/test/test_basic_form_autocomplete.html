@@ -1,8 +1,9 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for Login Manager</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <meta charset="utf-8">
+  <title>Test basic autocomplete</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -586,7 +587,7 @@ function* runTest() {
   uname = $_(3, "uname");
   pword = $_(3, "pword");
   checkACForm("singleuser5", "singlepass5");
-  
+
   // Trigger autocomplete popup
   restoreForm();
   doKey("down");
