@@ -573,7 +573,7 @@ class Interface(object):
         while name not in iface.namemap and iface is not None:
             iface = self.idl.getName(self.base, self.location)
         if iface is None:
-            raise IDLError("cannot find symbol '%s'" % name, c.location)
+            raise IDLError("cannot find symbol '%s'" % name)
         c = iface.namemap.get(name, location)
         if c.kind != 'const':
             raise IDLError("symbol '%s' is not a constant", c.location)
