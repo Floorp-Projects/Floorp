@@ -1,14 +1,15 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for Login Manager</title>
+  <meta charset="utf-8">
+  <title>Test for filling before the load event</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
-  <script type="text/javascript" src="pwmgr_common.js"></script>  
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="endTest();">
-Login Manager test: 221634
+Login Manager test: Bug 221634
 <p id="display"></p>
 <div id="content" style="display: none">
 
@@ -19,7 +20,7 @@ Login Manager test: 221634
     <button type="submit">Submit</button>
     <button type="reset"> Reset</button>
   </form>
-  
+
   <img onload="performTest();" src="mlogosm.gif">
 </div>
 <pre id="test">
@@ -72,7 +73,7 @@ function performTest() {
 function endTest() {
   ok(dclHappened, "Sanity check to make sure DOMContentLoaded already happened");
   ok(testHappened, "Sanity check to make sure our test ran before pageload");
-  
+
   // Check form1
   is($_(1, "uname").value, "testuser", "Rechecking filled username");
   is($_(1, "pword").value, "testpass", "Rechecking filled password");
