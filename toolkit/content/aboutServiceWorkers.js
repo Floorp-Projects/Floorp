@@ -120,7 +120,7 @@ function display(info) {
   createItem(bundle.GetStringFromName('waitingCacheName'), info.waitingCacheName);
 
   let pushItem = createItem(bundle.GetStringFromName('pushEndpoint'), bundle.GetStringFromName('waiting'));
-  PushNotificationService.registration(info.scope).then(
+  PushNotificationService.registration(info.scope, info.principal.originAttributes).then(
     pushRecord => {
       pushItem.data = JSON.stringify(pushRecord);
     },

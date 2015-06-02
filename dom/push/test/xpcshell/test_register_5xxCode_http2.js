@@ -84,7 +84,8 @@ add_task(function* test1() {
   });
 
   let newRecord = yield PushNotificationService.register(
-    'https://example.com/retry5xxCode'
+    'https://example.com/retry5xxCode',
+    { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }
   );
 
   var subscriptionUri = serverURL + '/subscription';

@@ -24,6 +24,7 @@ add_task(function* test_registration_none() {
   });
 
   let registration = yield PushNotificationService.registration(
-    'https://example.net/1');
+    'https://example.net/1',
+    { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false });
   ok(!registration, 'Should not open a connection without registration');
 });
