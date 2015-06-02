@@ -34,7 +34,7 @@ Ping types
 * :doc:`uitour-ping` - a ping submitted via the UITour API
 * ``activation`` - *planned* - sent right after installation or profile creation
 * ``upgrade`` - *planned* - sent right after an upgrade
-* ``deletion`` - *planned* - on opt-out we may have to tell the server to delete user data
+* :doc:`deletion <deletion-ping>` - sent when FHR upload is disabled, requesting deletion of the data associated with this user
 
 Archiving
 =========
