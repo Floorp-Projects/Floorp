@@ -393,12 +393,50 @@ WebGLContext::DeleteBuffer(WebGLBuffer* buffer)
     if (!buffer || buffer->IsDeleted())
         return;
 
-    if (mBoundArrayBuffer == buffer)
-        BindBuffer(LOCAL_GL_ARRAY_BUFFER, static_cast<WebGLBuffer*>(nullptr));
+    // TODO: Extract this into a helper function?
+    if (mBoundArrayBuffer == buffer) {
+        WebGLContextUnchecked::BindBuffer(LOCAL_GL_ARRAY_BUFFER, nullptr);
+        mBoundArrayBuffer = nullptr;
+    }
 
     if (mBoundVertexArray->mElementArrayBuffer == buffer) {
-        BindBuffer(LOCAL_GL_ELEMENT_ARRAY_BUFFER,
-                   static_cast<WebGLBuffer*>(nullptr));
+        WebGLContextUnchecked::BindBuffer(LOCAL_GL_ELEMENT_ARRAY_BUFFER, nullptr);
+        mBoundVertexArray->mElementArrayBuffer = nullptr;
+    }
+
+    // WebGL binding points
+    if (IsWebGL2()) {
+        if (mBoundCopyReadBuffer == buffer)
+            mBoundCopyReadBuffer = nullptr;
+
+        if (mBoundCopyWriteBuffer == buffer)
+            mBoundCopyWriteBuffer = nullptr;
+
+        if (mBoundPixelPackBuffer == buffer)
+            mBoundPixelPackBuffer = nullptr;
+
+        if (mBoundPixelUnpackBuffer == buffer)
+            mBoundPixelUnpackBuffer = nullptr;
+
+        if (mBoundTransformFeedbackBuffer == buffer)
+            mBoundTransformFeedbackBuffer = nullptr;
+
+        if (mBoundUniformBuffer == buffer)
+            mBoundUniformBuffer = nullptr;
+
+        const size_t xfBufferCount = mBoundTransformFeedbackBuffers.Length();
+        for (size_t n = 0; n < xfBufferCount; n++) {
+            if (mBoundTransformFeedbackBuffers[n] == buffer) {
+                mBoundTransformFeedbackBuffers[n] = nullptr;
+            }
+        }
+
+        const size_t uniformBufferCount = mBoundUniformBuffers.Length();
+        for (size_t n = 0; n < uniformBufferCount; n++) {
+            if (mBoundUniformBuffers[n] == buffer) {
+                mBoundUniformBuffers[n] = nullptr;
+            }
+        }
     }
 
     for (int32_t i = 0; i < mGLMaxVertexAttribs; i++) {
