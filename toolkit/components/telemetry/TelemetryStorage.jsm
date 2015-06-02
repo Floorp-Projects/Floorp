@@ -1264,7 +1264,7 @@ let getArchivedPingSize = Task.async(function*(aPingId, aDate, aType) {
 
   for (let path of filePaths) {
     try {
-      return (yield OS.File.stat(path)).size;;
+      return (yield OS.File.stat(path)).size;
     } catch (e) {}
   }
 
