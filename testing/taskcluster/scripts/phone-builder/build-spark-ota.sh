@@ -18,15 +18,23 @@ mar_file=b2g-${TARGET%%-*}-gecko-update.mar
 # We need different platform names for each variant (user, userdebug and
 # eng). We do not append variant suffix for "user" to keep compability with
 # verions already installed in the phones.
-if [ $VARIANT == "user" ]; then
+if [ 0$DOGFOOD -ne 0 -o $VARIANT == "user" ]; then
   PLATFORM=$TARGET
 else
   PLATFORM=$TARGET-$VARIANT
 fi
 
+if ! test $MOZHARNESS_CONFIG; then
+  MOZHARNESS_CONFIG=b2g/taskcluster-spark-nightly.py
+fi
+
+if ! test $BALROG_SERVER_CONFIG; then
+  BALROG_SERVER_CONFIG=balrog/docker-worker.py
+fi
+
 ./mozharness/scripts/b2g_lightsaber.py \
-  --config b2g/taskcluster-lightsaber-nightly.py \
-  --config balrog/docker-worker.py \
+  --config $MOZHARNESS_CONFIG \
+  --config $BALROG_SERVER_CONFIG \
   "$debug_flag" \
   --disable-mock \
   --variant=$VARIANT \
