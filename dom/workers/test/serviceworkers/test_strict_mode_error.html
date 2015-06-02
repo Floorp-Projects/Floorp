@@ -1,0 +1,39 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1170550 - test registration of service worker scripts with a strict mode error</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function runTest() {
+    navigator.serviceWorker
+      .register("strict_mode_error.js", {scope: "strict_mode_error"})
+      .catch(() => {
+        ok(true, "Registration failed as expected");
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  onload = function() {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+    ]}, runTest);
+  };
+</script>
+</pre>
+</body>
+</html>
