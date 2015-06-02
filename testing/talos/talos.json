@@ -1,11 +1,11 @@
 {
     "talos.zip": {
-        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.ccab6c42b5da.zip",
+        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.a6052c33d420.zip",
         "path": ""
     },
     "global": {
         "talos_repo": "https://hg.mozilla.org/build/talos",
-        "talos_revision": "ccab6c42b5da"
+        "talos_revision": "e04283e4f2b2"
     },
     "extra_options": {
         "android": [ "--apkPath=%(apk_path)s" ]
@@ -14,14 +14,11 @@
         "chromez": {
             "tests": ["tresize", "tcanvasmark"]
         },
-        "chromez-snow": {
-            "tests": ["tresize", "tcanvasmark"]
-        },
         "chromez-e10s": {
             "tests": ["tresize", "tcanvasmark"],
             "talos_options": ["--e10s"]
         },
-        "chromez-snow-e10s": {
+        "chromez-osx-e10s": {
             "tests": ["tresize", "tcanvasmark"],
             "talos_options": ["--e10s"]
         },
@@ -35,11 +32,8 @@
         "other": {
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"]
         },
-        "other-snow": {
-            "tests": ["tpaint"]
-        },
-        "other-snow-e10s": {
-            "tests": ["tpaint"],
+        "other-osx-e10s": {
+            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"],
             "talos_options": ["--e10s"]
         },
         "other_nol64": {
@@ -77,15 +71,26 @@
                 "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
             }
         },
-        "g1-snow": {
-            "tests": ["glterrain"]
-        },
-        "g1-snow-e10s": {
-            "tests": ["glterrain"],
+        "g1-osx-e10s": {
+            "tests": ["tp5o_scroll", "glterrain"],
             "talos_options": ["--e10s"]
         },
         "g2": {
             "tests": ["damp"],
+            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
+            "pagesets_parent_dir_path": "talos/page_load_test/",
+            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest"
+        },
+        "g2-e10s": {
+            "tests": ["damp"],
+            "talos_options": ["--e10s"],
+            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
+            "pagesets_parent_dir_path": "talos/page_load_test/",
+            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest"
+        },
+        "g2-osx-e10s": {
+            "tests": ["damp"],
+            "talos_options": ["--e10s"],
             "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
             "pagesets_parent_dir_path": "talos/page_load_test/",
             "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest"
@@ -97,11 +102,8 @@
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"],
             "talos_options": ["--e10s"]
         },
-        "svgr-snow": {
-            "tests": ["tsvgx", "tscrollx"]
-        },
-        "svgr-snow-e10s": {
-            "tests": ["tsvgx", "tscrollx"],
+        "svgr-osx-e10s": {
+            "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"],
             "talos_options": ["--e10s"]
         },
         "tp5o": {
@@ -115,6 +117,17 @@
             }
         },
         "tp5o-e10s": {
+            "tests": ["tp5o"],
+            "talos_options": ["--e10s"],
+            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
+            "pagesets_parent_dir_path": "talos/page_load_test/",
+            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest",
+            "plugins": {
+                "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
+                "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
+            }
+        },
+        "tp5o-osx-e10s": {
             "tests": ["tp5o"],
             "talos_options": ["--e10s"],
             "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
@@ -158,32 +171,11 @@
         }
     },
     "mobile-suites": {
-        "remote-tspaint": {
-            "tests": ["ts_paint"]
-        },
         "remote-tsvgx": {
             "tests": ["tsvgm"],
             "talos_options": [
                 "--noChrome",
                 "--tppagecycles", "7"
-            ]
-        },
-        "remote-tcanvasmark": {
-            "tests": ["tcanvasmark"],
-            "talos_options": [
-                "--noChrome"
-            ]
-        },
-        "remote-trobopan": {
-            "tests": ["trobopan"],
-            "talos_options": [
-                "--fennecIDs", "../fennec_ids.txt"
-            ]
-        },
-        "remote-troboprovider": {
-            "tests": ["tprovider"],
-            "talos_options": [
-                "--fennecIDs", "../fennec_ids.txt"
             ]
         },
         "remote-trobocheck2": {
