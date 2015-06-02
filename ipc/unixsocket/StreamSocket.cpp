@@ -476,7 +476,7 @@ class StreamSocketIO::DelayedConnectTask final
 {
 public:
   DelayedConnectTask(StreamSocketIO* aIO)
-  : SocketIOTask<StreamSocketIO>(aIO)
+    : SocketIOTask<StreamSocketIO>(aIO)
   { }
 
   void Run() override
@@ -493,7 +493,7 @@ public:
     }
 
     io->ClearDelayedConnectTask();
-    XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new ConnectTask(io));
+    io->GetIOLoop()->PostTask(FROM_HERE, new ConnectTask(io));
   }
 };
 
@@ -502,9 +502,9 @@ public:
 //
 
 StreamSocket::StreamSocket(StreamSocketConsumer* aConsumer, int aIndex)
-  : mConsumer(aConsumer)
+  : mIO(nullptr)
+  , mConsumer(aConsumer)
   , mIndex(aIndex)
-  , mIO(nullptr)
 {
   MOZ_ASSERT(mConsumer);
 }
@@ -523,14 +523,13 @@ StreamSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
 }
 
 nsresult
-StreamSocket::Connect(UnixSocketConnector* aConnector,
-                      int aDelayMs)
+StreamSocket::Connect(UnixSocketConnector* aConnector, int aDelayMs,
+                      MessageLoop* aIOLoop)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIO);
 
-  MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-  mIO = new StreamSocketIO(ioLoop, this, aConnector);
+  mIO = new StreamSocketIO(aIOLoop, this, aConnector);
   SetConnectionStatus(SOCKET_CONNECTING);
 
   if (aDelayMs > 0) {
@@ -539,15 +538,22 @@ StreamSocket::Connect(UnixSocketConnector* aConnector,
     mIO->SetDelayedConnectTask(connectTask);
     MessageLoop::current()->PostDelayedTask(FROM_HERE, connectTask, aDelayMs);
   } else {
-    ioLoop->PostTask(FROM_HERE, new StreamSocketIO::ConnectTask(mIO));
+    aIOLoop->PostTask(FROM_HERE, new StreamSocketIO::ConnectTask(mIO));
   }
   return NS_OK;
+}
+
+nsresult
+StreamSocket::Connect(UnixSocketConnector* aConnector, int aDelayMs)
+{
+  return Connect(aConnector, aDelayMs, XRE_GetIOMessageLoop());
 }
 
 // |ConnectionOrientedSocket|
 
 nsresult
 StreamSocket::PrepareAccept(UnixSocketConnector* aConnector,
+                            MessageLoop* aIOLoop,
                             ConnectionOrientedSocketIO*& aIO)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -556,7 +562,7 @@ StreamSocket::PrepareAccept(UnixSocketConnector* aConnector,
 
   SetConnectionStatus(SOCKET_CONNECTING);
 
-  mIO = new StreamSocketIO(XRE_GetIOMessageLoop(),
+  mIO = new StreamSocketIO(aIOLoop,
                            -1, UnixSocketWatcher::SOCKET_IS_CONNECTING,
                            this, aConnector);
   aIO = mIO;
@@ -573,7 +579,7 @@ StreamSocket::SendSocketData(UnixSocketIOBuffer* aBuffer)
   MOZ_ASSERT(mIO);
 
   MOZ_ASSERT(!mIO->IsShutdownOnMainThread());
-  XRE_GetIOMessageLoop()->PostTask(
+  mIO->GetIOLoop()->PostTask(
     FROM_HERE,
     new SocketIOSendTask<StreamSocketIO, UnixSocketIOBuffer>(mIO, aBuffer));
 }
@@ -592,9 +598,7 @@ StreamSocket::Close()
   // the relationship here so any future calls to |Connect| will create
   // a new I/O object.
   mIO->ShutdownOnMainThread();
-
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
-
+  mIO->GetIOLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
   mIO = nullptr;
 
   NotifyDisconnect();

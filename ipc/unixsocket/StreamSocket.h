@@ -9,6 +9,8 @@
 
 #include "ConnectionOrientedSocket.h"
 
+class MessageLoop;
+
 namespace mozilla {
 namespace ipc {
 
@@ -19,6 +21,12 @@ class UnixSocketConnector;
 class StreamSocket final : public ConnectionOrientedSocket
 {
 public:
+  /**
+   * Constructs an instance of |StreamSocket|.
+   *
+   * @param aConsumer The consumer for the socket.
+   * @param aIndex An arbitrary index.
+   */
   StreamSocket(StreamSocketConsumer* aConsumer, int aIndex);
 
   /**
@@ -34,6 +42,18 @@ public:
    *
    * @param aConnector Connector object for socket type specific functions
    * @param aDelayMs Time delay in milliseconds.
+   * @param aIOLoop The socket's I/O thread.
+   * @return NS_OK on success, or an XPCOM error code otherwise.
+   */
+  nsresult Connect(UnixSocketConnector* aConnector, int aDelayMs,
+                   MessageLoop* aIOLoop);
+
+  /**
+   * Starts a task on the socket that will try to connect to a socket in a
+   * non-blocking manner.
+   *
+   * @param aConnector Connector object for socket type specific functions
+   * @param aDelayMs Time delay in milliseconds.
    * @return NS_OK on success, or an XPCOM error code otherwise.
    */
   nsresult Connect(UnixSocketConnector* aConnector, int aDelayMs = 0);
@@ -42,6 +62,7 @@ public:
   //
 
   nsresult PrepareAccept(UnixSocketConnector* aConnector,
+                         MessageLoop* aIOLoop,
                          ConnectionOrientedSocketIO*& aIO) override;
 
   // Methods for |DataSocket|
@@ -61,9 +82,9 @@ protected:
   virtual ~StreamSocket();
 
 private:
+  StreamSocketIO* mIO;
   StreamSocketConsumer* mConsumer;
   int mIndex;
-  StreamSocketIO* mIO;
 };
 
 } // namespace ipc
