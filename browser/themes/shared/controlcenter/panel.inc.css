@@ -1,31 +1,89 @@
-#identity-popup-content-box:not(.chromeUI) > #identity-popup-brandName,
-#identity-popup-content-box:not(.chromeUI) > #identity-popup-chromeLabel,
-#identity-popup-content-box.chromeUI > .identity-popup-label:not(#identity-popup-brandName):not(#identity-popup-chromeLabel),
-#identity-popup-content-box.chromeUI > .identity-popup-description,
-#identity-popup-content-box.unknownIdentity > #identity-popup-connectedToLabel ,
-#identity-popup-content-box.unknownIdentity > #identity-popup-runByLabel ,
-#identity-popup-content-box.unknownIdentity > #identity-popup-content-host ,
-#identity-popup-content-box.unknownIdentity > #identity-popup-content-owner ,
-#identity-popup-content-box.verifiedIdentity > #identity-popup-connectedToLabel2 ,
-#identity-popup-content-box.verifiedDomain > #identity-popup-connectedToLabel2 ,
-#identity-popup-content-box.verifiedDomain > #identity-popup-runByLabel {
+#identity-popup-content-box:not(.verifiedIdentity) > #identity-popup-content-owner,
+#identity-popup-content-box:not(.verifiedIdentity):not(.verifiedDomain) > #identity-popup-content-verifier,
+#identity-popup-content-box:not(.verifiedIdentity):not(.mixedContent) > #identity-popup-content-supplemental,
+#identity-popup-content-box:not(.verifiedIdentity):not(.verifiedDomain):not(.chromeUI) > #identity-popup-connection-secure,
+#identity-popup-content-box:not(.unknownIdentity) > #identity-popup-connection-not-secure {
   display: none;
 }
+
+/* PANEL */
+
+#identity-popup > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+
+#identity-popup-container {
+  min-width: 25em;
+  padding: 10px;
+}
+
+/* ICON */
 
 #identity-popup.chromeUI > #identity-popup-container > #identity-popup-icon {
   list-style-image: url("chrome://branding/content/icon64.png");
 }
 
-#identity-popup-brandName {
-  font-weight: bold;
-  font-size: 1.25em;
-  margin-top: .5em;
-  margin-bottom: .5em;
+@media (min-resolution: 1.1dppx) {
+  #identity-popup.chromeUI > #identity-popup-container > #identity-popup-icon {
+    list-style-image: url("chrome://branding/content/icon128.png");
+  }
+}
+
+/* CONTENT */
+
+.identity-popup-label {
+  font-size: 120%;
+  white-space: pre-wrap;
+  -moz-padding-start: 15px;
+  margin: 0;
+}
+
+.identity-popup-description {
+  white-space: pre-wrap;
+  -moz-padding-start: 15px;
+  margin: 2px 0 4px;
+  font-size: 110%;
 }
 
 #identity-popup-content-box {
-  max-width: 50ch;
+  width: 40ch;
 }
+
+#identity-popup-content-host {
+  font-size: 140%;
+}
+
+#identity-popup-content-owner {
+  margin-bottom: 0;
+  font-weight: 700;
+}
+
+#identity-popup-content-host,
+#identity-popup-content-owner {
+  max-width: 300px;
+}
+
+#identity-popup-connection-secure,
+#identity-popup-connection-not-secure,
+#identity-popup-content-supplemental {
+  margin-bottom: 1em;
+}
+
+#identity-popup-connection-secure {
+  color: #418220;
+}
+
+#identity-popup-connection-not-secure {
+  color: #d74345;
+}
+
+/* PERMISSIONS */
+
+#identity-popup-permissions {
+  margin-top: 1em;
+}
+
+/* FOOTER BUTTONS */
 
 #identity-popup-button-container {
   background-color: hsla(210,4%,10%,.07);
@@ -49,11 +107,4 @@
   color: inherit;
   background-color: hsla(210,4%,10%,.12);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
-}
-
-@media (min-resolution: 1.1dppx) {
-  #identity-popup.chromeUI > #identity-popup-container > #identity-popup-icon {
-    list-style-image: url("chrome://branding/content/icon128.png");
-    -moz-image-region: rect(0, 128px, 128px, 0);
-  }
 }
