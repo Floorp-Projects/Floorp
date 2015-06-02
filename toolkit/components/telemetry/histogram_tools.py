@@ -24,8 +24,6 @@ except ImportError:
     # ensured it's in our sys.path.
     pass
 
-import usecounters
-
 from collections import OrderedDict
 
 def table_dispatch(kind, table, body):
@@ -283,8 +281,16 @@ def from_UseCounters_conf(filename):
 
 FILENAME_PARSERS = {
     'Histograms.json': from_Histograms_json,
-    'UseCounters.conf': from_UseCounters_conf,
 }
+
+# Similarly to the dance above with buildconfig, usecounters may not be
+# available, so handle that gracefully.
+try:
+    import usecounters
+
+    FILENAME_PARSERS['UseCounters.conf'] = from_UseCounters_conf
+except ImportError:
+    pass
 
 def from_files(filenames):
     """Return an iterator that provides a sequence of Histograms for
