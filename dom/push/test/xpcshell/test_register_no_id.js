@@ -3,7 +3,7 @@
 
 'use strict';
 
-const {PushDB, PushService} = serviceExports;
+const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
 let userAgentID = '9a2f9efe-2ebb-4bcb-a5d9-9e2b73d30afe';
 let channelID = '264c2ba0-f6db-4e84-acdb-bd225b62d9e3';
@@ -26,8 +26,9 @@ add_task(function* test_register_no_id() {
   let helloDefer = Promise.defer();
   let helloDone = after(2, helloDefer.resolve);
 
-  PushService._generateID = () => channelID;
+  PushServiceWebSocket._generateID = () => channelID;
   PushService.init({
+    serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {

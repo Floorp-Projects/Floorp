@@ -13,6 +13,7 @@ function run_test() {
 
 add_task(function* test_registration_missing_scope() {
   PushService.init({
+    serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
     makeWebSocket(uri) {
       return new MockWebSocket(uri);
@@ -21,7 +22,7 @@ add_task(function* test_registration_missing_scope() {
   yield rejects(
     PushNotificationService.registration(''),
     function(error) {
-      return error == 'Database error';
+      return error.error == 'Database error';
     },
     'Record missing page and manifest URLs'
   );

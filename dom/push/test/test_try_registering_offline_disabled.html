@@ -1,0 +1,300 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1150812: Try to register when serviced if offline or connection is disabled.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+
+-->
+<head>
+  <title>Test for Bug 1150812</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1150812">Mozilla Bug 1150812</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+
+  function debug(str) {
+  //  console.log(str + "\n");
+  }
+
+  function registerServiceWorker() {
+    return navigator.serviceWorker.register("worker.js" + "?" + (Math.random()), {scope: "."});
+  }
+
+  function unregister(swr) {
+    return swr.unregister()
+      .then(result => {
+        ok(result, "Unregister should return true.");
+      }, err => {
+        dump("Unregistering the SW failed with " + err + "\n");
+        throw err;
+      });
+  }
+
+  function subscribe(swr) {
+    return swr.pushManager.subscribe()
+      .then(sub => {
+        ok(true, "successful registered for push notification");
+        return sub;
+      }, err => {
+        ok(false, "could not register for push notification");
+        throw err;
+      });
+  }
+
+  function subscribeFail(swr) {
+    return new Promise((res, rej) => {
+      swr.pushManager.subscribe()
+        .then(sub => {
+          ok(false, "successful registered for push notification");
+          throw "Should fail";
+        }, err => {
+          ok(true, "could not register for push notification");
+          res(swr);
+        });
+    });
+  }
+
+  function getEndpointExpectNull(swr) {
+    return swr.pushManager.getSubscription()
+      .then(pushSubscription => {
+        ok(pushSubscription == null, "getEndpoint should return null when app not subscribed.");
+      }, err => {
+        ok(false, "could not register for push notification");
+        throw err;
+      });
+  }
+
+  function getEndpoint(swr, subOld) {
+    return swr.pushManager.getSubscription()
+      .then(sub => {
+        ok(subOld.endpoint == sub.endpoint, "getEndpoint - Got the same endpoint back.");
+        return sub;
+      }, err => {
+          ok(false, "could not register for push notification");
+          throw err;
+      });
+  }
+
+  function offlineObserver(res) {
+    this._res = res;
+  }
+  offlineObserver.prototype = {
+    _res: null,
+
+    observe: function(subject, topic, data) {
+      debug("observe: " + subject + " " + topic + " " + data);
+      if (topic === "network:offline-status-changed") {
+        var obsService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                           .getService(SpecialPowers.Ci.nsIObserverService);
+        obsService.removeObserver(this, topic);
+        this._res(null);
+      }
+    }
+  }
+
+  function changeOfflineState(offline) {
+    return new Promise(function(res, rej) {
+      var obsService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                         .getService(SpecialPowers.Ci.nsIObserverService);
+      obsService.addObserver(SpecialPowers.wrapCallbackObject(new offlineObserver(res)),
+                             "network:offline-status-changed",
+                             false);
+      var ioService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+                        .getService(SpecialPowers.Ci.nsIIOService);
+      ioService.offline = offline;
+    });
+  }
+
+  function changePushServerConnectionEnabled(enable) {
+    debug("changePushServerConnectionEnabled");
+    SpecialPowers.pushPrefEnv({"set": [["dom.push.connection.enabled", enable]]},
+                              null);
+  }
+
+  function unsubscribe(sub) {
+    return sub.unsubscribe()
+      .then(_ => {ok(true, "Unsubscribed!");});
+  }
+
+  // go offline then go online
+  function runTest1() {
+    return registerServiceWorker()
+    .then(swr =>
+      getEndpointExpectNull(swr)
+        .then(_ => changeOfflineState(true))
+        .then(_ => subscribeFail(swr))
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => changeOfflineState(false))
+        .then(_ => subscribe(swr))
+        .then(sub => getEndpoint(swr, sub)
+          .then(sub => unsubscribe(sub))
+        )
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => unregister(swr))
+    )
+    .catch(err => {
+      ok(false, "Some test failed with error " + err);
+    })
+  }
+
+  // disable - enable push connection.
+  function runTest2() {
+    return registerServiceWorker()
+    .then(swr =>
+      getEndpointExpectNull(swr)
+        .then(_ => changePushServerConnectionEnabled(false))
+        .then(_ => subscribeFail(swr))
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => changePushServerConnectionEnabled(true))
+        .then(_ => subscribe(swr))
+        .then(sub => getEndpoint(swr, sub)
+          .then(sub => unsubscribe(sub))
+        )
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => unregister(swr))
+    )
+    .catch(err => {
+      ok(false, "Some test failed with error " + err);
+    })
+  }
+
+  // go offline - disable - enable - go online
+  function runTest3() {
+    return registerServiceWorker()
+    .then(swr =>
+      getEndpointExpectNull(swr)
+        .then(_ => changeOfflineState(true))
+        .then(_ => subscribeFail(swr))
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => changePushServerConnectionEnabled(false))
+        .then(_ => subscribeFail(swr))
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => changePushServerConnectionEnabled(true))
+        .then(_ => subscribeFail(swr))
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => changeOfflineState(false))
+        .then(_ => subscribe(swr))
+        .then(sub => getEndpoint(swr, sub)
+          .then(sub => unsubscribe(sub))
+        )
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => unregister(swr))
+    )
+    .catch(err => {
+      ok(false, "Some test failed with error " + err);
+    })
+  }
+
+  // disable - offline - online - enable.
+  function runTest4() {
+    return registerServiceWorker()
+    .then(swr =>
+      getEndpointExpectNull(swr)
+        .then(_ => changePushServerConnectionEnabled(false))
+        .then(_ => subscribeFail(swr))
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => changeOfflineState(true))
+        .then(_ => subscribeFail(swr))
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => changeOfflineState(false))
+        .then(_ => subscribeFail(swr))
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => changePushServerConnectionEnabled(true))
+        .then(_ => subscribe(swr))
+        .then(sub => getEndpoint(swr, sub)
+          .then(sub => unsubscribe(sub))
+        )
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => unregister(swr))
+    )
+    .catch(err => {
+      ok(false, "Some test failed with error " + err);
+    })
+  }
+
+  // go offline - disable - go online - enable
+  function runTest5() {
+    return registerServiceWorker()
+    .then(swr =>
+      getEndpointExpectNull(swr)
+        .then(_ => changeOfflineState(true))
+        .then(_ => subscribeFail(swr))
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => changePushServerConnectionEnabled(false))
+        .then(_ => subscribeFail(swr))
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => changeOfflineState(false))
+        .then(_ => subscribeFail(swr))
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => changePushServerConnectionEnabled(true))
+        .then(_ => subscribe(swr))
+        .then(sub => getEndpoint(swr, sub)
+          .then(sub => unsubscribe(sub))
+        )
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => unregister(swr))
+    )
+    .catch(err => {
+      ok(false, "Some test failed with error " + err);
+    })
+  }
+
+  // disable - go offline - enable - go online.
+  function runTest6() {
+    return registerServiceWorker()
+    .then(swr =>
+      getEndpointExpectNull(swr)
+        .then(_ => changePushServerConnectionEnabled(false))
+        .then(_ => subscribeFail(swr))
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => changeOfflineState(true))
+        .then(_ => subscribeFail(swr))
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => changePushServerConnectionEnabled(true))
+        .then(_ => subscribeFail(swr))
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => changeOfflineState(false))
+        .then(_ => subscribe(swr))
+        .then(sub => getEndpoint(swr, sub)
+          .then(sub => unsubscribe(sub))
+        )
+        .then(_ => getEndpointExpectNull(swr))
+        .then(_ => unregister(swr))
+    )
+    .catch(err => {
+      ok(false, "Some test failed with error " + err);
+    })
+  }
+
+  function runTest() {
+    runTest1()
+    .then(_ => runTest2())
+    .then(_ => runTest3())
+    .then(_ => runTest4())
+    .then(_ => runTest5())
+    .then(_ => runTest6())
+    .then(SimpleTest.finish);
+  }
+
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.push.enabled", true],
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+    ]}, runTest);
+  SpecialPowers.addPermission('push', true, document);
+  SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>
