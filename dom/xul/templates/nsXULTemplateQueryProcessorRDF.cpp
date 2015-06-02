@@ -483,7 +483,7 @@ nsXULTemplateQueryProcessorRDF::GenerateResults(nsISupports* aDatasource,
                 mLastRef = aRef;
             }
 
-            if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+            if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
                 nsAutoString id;
                 aRef->GetId(id);
 
@@ -863,7 +863,7 @@ nsXULTemplateQueryProcessorRDF::Propagate(nsIRDFResource* aSource,
 
     ReteNodeSet livenodes;
 
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         const char* sourceStr;
         aSource->GetValueConst(&sourceStr);
         const char* propertyStr;
@@ -950,7 +950,7 @@ nsXULTemplateQueryProcessorRDF::Retract(nsIRDFResource* aSource,
                                         nsIRDFNode* aTarget)
 {
 
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         const char* sourceStr;
         aSource->GetValueConst(&sourceStr);
         const char* propertyStr;
@@ -1023,7 +1023,7 @@ nsXULTemplateQueryProcessorRDF::Log(const char* aOperation,
                                     nsIRDFResource* aProperty,
                                     nsIRDFNode* aTarget)
 {
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         nsresult rv;
 
         const char* sourceStr;
@@ -1269,7 +1269,7 @@ nsXULTemplateQueryProcessorRDF::CompileQueryChild(nsIAtom* aTag,
     else if (aTag == nsGkAtoms::member) {
         rv = CompileMemberCondition(aQuery, aCondition, aParentNode, aResult);
     }
-    else if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_ALWAYS)) {
+    else if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_ALWAYS)) {
         nsAutoString tagstr;
         aTag->ToString(tagstr);
 

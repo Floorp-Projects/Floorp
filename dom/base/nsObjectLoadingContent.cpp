@@ -117,7 +117,7 @@ GetObjectLog()
 }
 
 #define LOG(args) MOZ_LOG(GetObjectLog(), PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(GetObjectLog(), PR_LOG_DEBUG)
+#define LOG_ENABLED() MOZ_LOG_TEST(GetObjectLog(), PR_LOG_DEBUG)
 
 static bool
 IsJavaMIME(const nsACString & aMIMEType)

@@ -694,7 +694,7 @@ Connection::initializeInternal()
 
   // SQLite tracing can slow down queries (especially long queries)
   // significantly. Don't trace unless the user is actively monitoring SQLite.
-  if (PR_LOG_TEST(gStorageLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gStorageLog, PR_LOG_DEBUG)) {
     ::sqlite3_trace(mDBConn, tracefunc, this);
 
     MOZ_LOG(gStorageLog, PR_LOG_NOTICE, ("Opening connection to '%s' (%p)",
@@ -923,7 +923,7 @@ Connection::internalClose(sqlite3 *aNativeConnection)
   }
 #endif // DEBUG
 
-  if (PR_LOG_TEST(gStorageLog, PR_LOG_NOTICE)) {
+  if (MOZ_LOG_TEST(gStorageLog, PR_LOG_NOTICE)) {
     nsAutoCString leafName(":memory");
     if (mDatabaseFile)
         (void)mDatabaseFile->GetNativeLeafName(leafName);
