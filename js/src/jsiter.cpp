@@ -448,14 +448,16 @@ GetCustomIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandle
     if (!Invoke(cx, ObjectValue(*obj), rval, 1, &arg, &rval))
         return false;
     if (rval.isPrimitive()) {
-        // Ignore the stack when throwing. We can't tell whether we were
-        // supposed to skip over a new.target or not.
+        /*
+         * We are always coming from js::ValueToIterator, and we are no longer on
+         * trace, so the object we are iterating over is on top of the stack (-1).
+         */
         JSAutoByteString bytes;
         if (!AtomToPrintableString(cx, name, &bytes))
             return false;
         RootedValue val(cx, ObjectValue(*obj));
         ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
-                          JSDVG_IGNORE_STACK, val, nullptr, bytes.ptr());
+                          -1, val, nullptr, bytes.ptr());
         return false;
     }
     objp.set(&rval.toObject());

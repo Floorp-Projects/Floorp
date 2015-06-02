@@ -609,7 +609,6 @@ class FunctionExtended : public JSFunction
 
     /* Arrow functions store their lexical |this| in the first extended slot. */
     static const unsigned ARROW_THIS_SLOT = 0;
-    static const unsigned ARROW_NEWTARGET_SLOT = 1;
 
     static const unsigned METHOD_HOMEOBJECT_SLOT = 0;
 
@@ -619,9 +618,6 @@ class FunctionExtended : public JSFunction
     }
     static inline size_t offsetOfArrowThisSlot() {
         return offsetOfExtendedSlot(ARROW_THIS_SLOT);
-    }
-    static inline size_t offsetOfArrowNewTargetSlot() {
-        return offsetOfExtendedSlot(ARROW_NEWTARGET_SLOT);
     }
 
   private:

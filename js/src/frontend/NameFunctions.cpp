@@ -374,7 +374,6 @@ class NameResolver
           case PNK_FRESHENBLOCK:
           case PNK_SUPERPROP:
           case PNK_OBJECT_PROPERTY_NAME:
-          case PNK_NEWTARGET:
             MOZ_ASSERT(cur->isArity(PN_NULLARY));
             break;
 

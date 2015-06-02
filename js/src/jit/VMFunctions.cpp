@@ -57,10 +57,9 @@ VMFunction::addToFunctions()
 }
 
 bool
-InvokeFunction(JSContext* cx, HandleObject obj, bool constructing, uint32_t argc, Value* argv,
-               Value* rval)
+InvokeFunction(JSContext* cx, HandleObject obj, uint32_t argc, Value* argv, Value* rval)
 {
-    AutoArrayRooter argvRoot(cx, argc + 1 + constructing, argv);
+    AutoArrayRooter argvRoot(cx, argc + 1, argv);
 
     // Data in the argument vector is arranged for a JIT -> JIT call.
     Value thisv = argv[0];
@@ -71,7 +70,7 @@ InvokeFunction(JSContext* cx, HandleObject obj, bool constructing, uint32_t argc
     // we use InvokeConstructor that creates it at the callee side.
     RootedValue rv(cx);
     if (thisv.isMagic(JS_IS_CONSTRUCTING)) {
-        if (!InvokeConstructor(cx, ObjectValue(*obj), argc, argvWithoutThis, true, &rv))
+        if (!InvokeConstructor(cx, ObjectValue(*obj), argc, argvWithoutThis, &rv))
             return false;
     } else {
         if (!Invoke(cx, thisv, ObjectValue(*obj), argc, argvWithoutThis, &rv))
@@ -86,15 +85,6 @@ InvokeFunction(JSContext* cx, HandleObject obj, bool constructing, uint32_t argc
 
     *rval = rv;
     return true;
-}
-
-bool
-InvokeFunctionShuffleNewTarget(JSContext* cx, HandleObject obj, uint32_t numActualArgs,
-                               uint32_t numFormalArgs, Value* argv, Value* rval)
-{
-    MOZ_ASSERT(numFormalArgs > numActualArgs);
-    argv[1 + numActualArgs] = argv[1 + numFormalArgs];
-    return InvokeFunction(cx, obj, true, numActualArgs, argv, rval);
 }
 
 bool
