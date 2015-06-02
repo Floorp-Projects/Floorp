@@ -44,7 +44,7 @@ struct AutoFinishGC
 class AutoTraceSession
 {
   public:
-    explicit AutoTraceSession(JSRuntime* rt, HeapState state = Tracing);
+    explicit AutoTraceSession(JSRuntime* rt, JS::HeapState state = JS::HeapState::Tracing);
     ~AutoTraceSession();
 
   protected:
@@ -55,7 +55,7 @@ class AutoTraceSession
     AutoTraceSession(const AutoTraceSession&) = delete;
     void operator=(const AutoTraceSession&) = delete;
 
-    HeapState prevState;
+    JS::HeapState prevState;
 };
 
 struct AutoPrepareForTracing

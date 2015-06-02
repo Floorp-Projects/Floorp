@@ -128,6 +128,7 @@ namespace js {
 void FinishGC(JSRuntime* rt);
 
 namespace gc {
+class AutoTraceSession;
 class StoreBuffer;
 void MarkPersistentRootedChains(JSTracer*);
 void FinishPersistentRootedChains(JSRuntime*);
@@ -138,6 +139,13 @@ namespace JS {
 
 typedef void (*OffThreadCompileCallback)(void* token, void* callbackData);
 
+enum class HeapState {
+    Idle,             // doing nothing with the GC heap
+    Tracing,          // tracing the GC heap without collecting, e.g. IterateCompartments()
+    MajorCollecting,  // doing a GC of the major heap
+    MinorCollecting   // doing a GC of the minor heap (nursery)
+};
+
 namespace shadow {
 
 struct Runtime
@@ -145,12 +153,17 @@ struct Runtime
     /* Restrict zone access during Minor GC. */
     bool needsIncrementalBarrier_;
 
-  private:
+  protected:
+    // Allow inlining of heapState checks.
+    friend class js::gc::AutoTraceSession;
+    JS::HeapState heapState_;
+
     js::gc::StoreBuffer* gcStoreBufferPtr_;
 
   public:
     Runtime()
       : needsIncrementalBarrier_(false)
+      , heapState_(JS::HeapState::Idle)
       , gcStoreBufferPtr_(nullptr)
     {}
 
