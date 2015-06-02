@@ -364,7 +364,8 @@ static BOOL IsToolbarStyleContainer(nsIFrame* aFrame)
 #endif
 
 #define HITHEME_ORIENTATION kHIThemeOrientationNormal
-#define MAX_FOCUS_RING_WIDTH 4
+
+static CGFloat kMaxFocusRingWidth = 0; // initialized by the nsNativeThemeCocoa constructor
 
 // These enums are for indexing into the margin array.
 enum {
@@ -513,6 +514,8 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeCocoa, nsNativeTheme, nsITheme)
 nsNativeThemeCocoa::nsNativeThemeCocoa()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  kMaxFocusRingWidth = nsCocoaFeatures::OnYosemiteOrLater() ? 7 : 4;
 
   // provide a local autorelease pool, as this is called during startup
   // before the main event-loop pool is in place
@@ -679,14 +682,14 @@ static void DrawCellWithScaling(NSCell *cell,
   else {
     float w = ceil(drawRect.size.width);
     float h = ceil(drawRect.size.height);
-    NSRect tmpRect = NSMakeRect(MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH, w, h);
+    NSRect tmpRect = NSMakeRect(kMaxFocusRingWidth, kMaxFocusRingWidth, w, h);
 
     // inflate to figure out the frame we need to tell NSCell to draw in, to get something that's 0,0,w,h
     InflateControlRect(&tmpRect, controlSize, marginSet);
 
-    // and then, expand by MAX_FOCUS_RING_WIDTH size to make sure we can capture any focus ring
-    w += MAX_FOCUS_RING_WIDTH * 2.0;
-    h += MAX_FOCUS_RING_WIDTH * 2.0;
+    // and then, expand by kMaxFocusRingWidth size to make sure we can capture any focus ring
+    w += kMaxFocusRingWidth * 2.0;
+    h += kMaxFocusRingWidth * 2.0;
 
     int backingScaleFactor = GetBackingScaleFactorForRendering(cgContext);
     CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
@@ -724,12 +727,12 @@ static void DrawCellWithScaling(NSCell *cell,
     CGImageRef img = CGBitmapContextCreateImage(ctx);
 
     // Drop the image into the original destination rectangle, scaling to fit
-    // Only scale MAX_FOCUS_RING_WIDTH by xscale/yscale when the resulting rect
+    // Only scale kMaxFocusRingWidth by xscale/yscale when the resulting rect
     // doesn't extend beyond the overflow rect
     float xscale = destRect.size.width / drawRect.size.width;
     float yscale = destRect.size.height / drawRect.size.height;
-    float scaledFocusRingX = xscale < 1.0f ? MAX_FOCUS_RING_WIDTH * xscale : MAX_FOCUS_RING_WIDTH;
-    float scaledFocusRingY = yscale < 1.0f ? MAX_FOCUS_RING_WIDTH * yscale : MAX_FOCUS_RING_WIDTH;
+    float scaledFocusRingX = xscale < 1.0f ? kMaxFocusRingWidth * xscale : kMaxFocusRingWidth;
+    float scaledFocusRingY = yscale < 1.0f ? kMaxFocusRingWidth * yscale : kMaxFocusRingWidth;
     CGContextDrawImage(cgContext, CGRectMake(destRect.origin.x - scaledFocusRingX,
                                              destRect.origin.y - scaledFocusRingY,
                                              destRect.size.width + scaledFocusRingX * 2,
@@ -1282,8 +1285,8 @@ RenderTransformedHIThemeControl(CGContextRef aCGContext, const HIRect& aRect,
     aFunc(aCGContext, drawRect, aData);
   } else {
     // Inflate the buffer to capture focus rings.
-    int w = ceil(drawRect.size.width) + 2 * MAX_FOCUS_RING_WIDTH;
-    int h = ceil(drawRect.size.height) + 2 * MAX_FOCUS_RING_WIDTH;
+    int w = ceil(drawRect.size.width) + 2 * kMaxFocusRingWidth;
+    int h = ceil(drawRect.size.height) + 2 * kMaxFocusRingWidth;
 
     int backingScaleFactor = GetBackingScaleFactorForRendering(aCGContext);
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
@@ -1297,7 +1300,7 @@ RenderTransformedHIThemeControl(CGContextRef aCGContext, const HIRect& aRect,
     CGColorSpaceRelease(colorSpace);
 
     CGContextScaleCTM(bitmapctx, backingScaleFactor, backingScaleFactor);
-    CGContextTranslateCTM(bitmapctx, MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH);
+    CGContextTranslateCTM(bitmapctx, kMaxFocusRingWidth, kMaxFocusRingWidth);
 
     // Set the context's "base transform" to in order to get correctly-sized focus rings.
     CGContextSetBaseCTM(bitmapctx, CGAffineTransformMakeScale(backingScaleFactor, backingScaleFactor));
@@ -1322,7 +1325,7 @@ RenderTransformedHIThemeControl(CGContextRef aCGContext, const HIRect& aRect,
       CGContextScaleCTM(aCGContext, -1.0f, 1.0f);
     }
 
-    HIRect inflatedDrawRect = CGRectMake(-MAX_FOCUS_RING_WIDTH, -MAX_FOCUS_RING_WIDTH, w, h);
+    HIRect inflatedDrawRect = CGRectMake(-kMaxFocusRingWidth, -kMaxFocusRingWidth, w, h);
     CGContextDrawImage(aCGContext, inflatedDrawRect, bitmap);
 
     CGContextSetCTM(aCGContext, ctm);
@@ -3163,10 +3166,10 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFram
     {
       // We assume that the above widgets can draw a focus ring that will be less than
       // or equal to 4 pixels thick.
-      nsIntMargin extraSize = nsIntMargin(MAX_FOCUS_RING_WIDTH,
-                                          MAX_FOCUS_RING_WIDTH,
-                                          MAX_FOCUS_RING_WIDTH,
-                                          MAX_FOCUS_RING_WIDTH);
+      nsIntMargin extraSize = nsIntMargin(kMaxFocusRingWidth,
+                                          kMaxFocusRingWidth,
+                                          kMaxFocusRingWidth,
+                                          kMaxFocusRingWidth);
       nsMargin m(NSIntPixelsToAppUnits(extraSize.top, p2a),
                  NSIntPixelsToAppUnits(extraSize.right, p2a),
                  NSIntPixelsToAppUnits(extraSize.bottom, p2a),
