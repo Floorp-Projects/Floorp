@@ -66,9 +66,7 @@ var gViewSourceUtils = {
 
   /**
    * Displays view source in the provided <browser>.  This allows for non-window
-   * display methods, such as a tab from Firefox.  The caller that manages
-   * the <browser> is responsible for ensuring the companion frame script,
-   * viewSource-content.js, has been loaded for the <browser>.
+   * display methods, such as a tab from Firefox.
    *
    * @param aArgs
    *        An object with the following properties:
@@ -95,9 +93,7 @@ var gViewSourceUtils = {
   /**
    * Displays view source for a selection from some document in the provided
    * <browser>.  This allows for non-window display methods, such as a tab from
-   * Firefox.  The caller that manages the <browser> is responsible for ensuring
-   * the companion frame script, viewSource-content.js, has been loaded for the
-   * <browser>.
+   * Firefox.
    *
    * @param aSelection
    *        A Selection object for the content of interest.
@@ -112,9 +108,7 @@ var gViewSourceUtils = {
   /**
    * Displays view source for a MathML fragment from some document in the
    * provided <browser>.  This allows for non-window display methods,  such as a
-   * tab from Firefox.  The caller that manages the <browser> is responsible for
-   * ensuring the companion frame script, viewSource-content.js, has been loaded
-   * for the <browser>.
+   * tab from Firefox.
    *
    * @param aNode
    *        Some element within the fragment of interest.
