@@ -3072,7 +3072,7 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
     Register calleereg = ToRegister(call->getFunction());
     Register objreg    = ToRegister(call->getTempObject());
     uint32_t unusedStack = StackOffsetOfPassedArg(call->argslot());
-    JSFunction* target = call->getSingleTarget();
+    DebugOnly<JSFunction*> target = call->getSingleTarget();
     Label end, uncompiled;
 
     // Native single targets are handled by LCallNative.
