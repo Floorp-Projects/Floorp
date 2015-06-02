@@ -436,7 +436,6 @@
 @RESPATH@/components/nsUpdateTimerManager.js
 @RESPATH@/components/addoncompat.manifest
 @RESPATH@/components/multiprocessShims.js
-@RESPATH@/components/defaultShims.js
 @RESPATH@/components/remoteTagService.js
 @RESPATH@/components/pluginGlue.manifest
 @RESPATH@/components/ProcessSingleton.manifest

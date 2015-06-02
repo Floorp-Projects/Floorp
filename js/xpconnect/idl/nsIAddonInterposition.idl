@@ -20,7 +20,7 @@
  * property, it should return a replacement property descriptor for it. If not,
  * it should return null.
  */
-[scriptable,uuid(d05cc5fd-ad88-41a6-854c-36fd94d69ddb)]
+[scriptable,uuid(215353cb-6e77-462f-a791-6891f42e593f)]
 interface nsIAddonInterposition : nsISupports
 {
     /**
@@ -54,14 +54,4 @@ interface nsIAddonInterposition : nsISupports
                         in jsval originalFunc,
                         in jsval originalThis,
                         in jsval args);
-
-    /**
-     * For the first time when the interposition is registered the engine
-     * calls getWhitelist and expects an array of strings. The strings are
-     * the name of properties the interposition wants interposeProperty
-     * to be called. It can be an empty array.
-     * Note: for CPOWs interposeProperty is always called regardless if
-     * the name of the property is on the whitelist or not.
-     */
-    jsval getWhitelist();
 };
