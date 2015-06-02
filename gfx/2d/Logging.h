@@ -53,7 +53,7 @@ inline PRLogModuleLevel PRLogLevelForLevel(int aLevel) {
   case LOG_DEBUG_PRLOG:
     return PR_LOG_DEBUG;
   case LOG_EVERYTHING:
-    return PR_LOG_ALWAYS;
+    return PR_LOG_ERROR;
   }
   return PR_LOG_DEBUG;
 }
