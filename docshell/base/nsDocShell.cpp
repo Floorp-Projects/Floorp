@@ -2997,6 +2997,7 @@ nsDocShell::PopProfileTimelineMarkers(
       marker->mName = NS_ConvertUTF8toUTF16(startPayload->GetName());
       marker->mStart = startPayload->GetTime();
       marker->mEnd = startPayload->GetTime();
+      marker->mStack = startPayload->GetStack();
       startPayload->AddDetails(aCx, *marker);
       continue;
     }
