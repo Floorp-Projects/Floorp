@@ -17,7 +17,6 @@
 #include "nsCacheService.h"
 #include "nsCacheDevice.h"
 #include "nsHashKeys.h"
-#include "mozilla/VisualEventTracer.h"
 
 using namespace mozilla;
 
@@ -45,8 +44,6 @@ nsCacheEntry::nsCacheEntry(const nsACString &   key,
     SetStoragePolicy(storagePolicy);
 
     MarkPublic();
-
-    MOZ_EVENT_TRACER_NAME_OBJECT(this, key.BeginReading());
 }
 
 
