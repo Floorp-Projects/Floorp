@@ -38,6 +38,7 @@ class HTMLLIAccessible;
 class HyperTextAccessible;
 class ImageAccessible;
 class KeyBinding;
+class OuterDocAccessible;
 class ProxyAccessible;
 class Relation;
 class RootAccessible;
@@ -618,6 +619,9 @@ public:
     MOZ_ASSERT(IsProxy());
     return mBits.proxy;
   }
+
+  bool IsOuterDoc() const { return mType == eOuterDocType; }
+  OuterDocAccessible* AsOuterDoc();
 
   bool IsProgress() const { return mType == eProgressType; }
 
