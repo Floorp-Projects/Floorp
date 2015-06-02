@@ -76,7 +76,8 @@
     _(GetDynamicName)               \
     _(FilterArgumentsOrEvalS)       \
     _(FilterArgumentsOrEvalV)       \
-    _(CallDirectEval)               \
+    _(CallDirectEvalS)              \
+    _(CallDirectEvalV)              \
     _(StackArgT)                    \
     _(StackArgV)                    \
     _(CreateThis)                   \
@@ -349,9 +350,7 @@
     _(LexicalCheck)                 \
     _(ThrowUninitializedLexical)    \
     _(NurseryObject)                \
-    _(Debugger)                     \
-    _(NewTarget)                    \
-    _(ArrowNewTarget)
+    _(Debugger)
 
 #if defined(JS_CODEGEN_X86)
 # include "jit/x86/LOpcodes-x86.h"

@@ -299,9 +299,6 @@ class FullParseHandler
     ParseNode* newSuperElement(ParseNode* expr, const TokenPos& pos) {
         return new_<SuperElement>(expr, pos);
     }
-    ParseNode* newNewTarget(const TokenPos& pos) {
-        return new_<NullaryNode>(PNK_NEWTARGET, pos);
-    }
 
     bool addPrototypeMutation(ParseNode* literal, uint32_t begin, ParseNode* expr) {
         // Object literals with mutated [[Prototype]] are non-constant so that
@@ -673,9 +670,6 @@ class FullParseHandler
     ParseNode* newList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
         MOZ_ASSERT(kind != PNK_VAR);
         return new_<ListNode>(kind, op, pos());
-    }
-    ParseNode* newList(ParseNodeKind kind, uint32_t begin, JSOp op = JSOP_NOP) {
-        return new_<ListNode>(kind, op, TokenPos(begin, begin + 1));
     }
     ParseNode* newDeclarationList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
         MOZ_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET ||

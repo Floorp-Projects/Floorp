@@ -87,18 +87,6 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
 
     // Remember number of bytes occupied by argument vector
     masm.mov(reg_argc, r13);
-
-    // if we are constructing, that also needs to include newTarget
-    {
-        Label noNewTarget;
-        masm.branchTest32(Assembler::Zero, token, Imm32(CalleeToken_FunctionConstructing),
-                          &noNewTarget);
-
-        masm.addq(Imm32(1), r13);
-
-        masm.bind(&noNewTarget);
-    }
-
     masm.shll(Imm32(3), r13);   // r13 = argc * sizeof(Value)
     static_assert(sizeof(Value) == 1 << 3, "Constant is baked in assembly code");
 
@@ -123,7 +111,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     ***************************************************************/
 
     // r13 still stores the number of bytes in the argument vector.
-    masm.addq(reg_argv, r13); // r13 points above last argument or newTarget
+    masm.addq(reg_argv, r13); // r13 points above last argument.
 
     // while r13 > rdx, push arguments.
     {
@@ -409,19 +397,9 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     masm.andq(Imm32(uint32_t(CalleeTokenMask)), rcx);
     masm.movzwl(Operand(rcx, JSFunction::offsetOfNargs()), rcx);
 
-    // Stash another copy in r11, since we are going to do destructive operations
-    // on rcx
-    masm.mov(rcx, r11);
-
-    static_assert(CalleeToken_FunctionConstructing == 1,
-      "Ensure that we can use the constructing bit to count the value");
-    masm.mov(rax, rdx);
-    masm.andq(Imm32(uint32_t(CalleeToken_FunctionConstructing)), rdx);
-
-    // Including |this|, and |new.target|, there are (|nformals| + 1 + isConstructing)
-    // arguments to push to the stack.  Then we push a JitFrameLayout.  We
-    // compute the padding expressed in the number of extra |undefined| values
-    // to push on the stack.
+    // Including |this|, there are (|nformals| + 1) arguments to push to the
+    // stack.  Then we push a JitFrameLayout.  We compute the padding expressed
+    // in the number of extra |undefined| values to push on the stack.
     static_assert(sizeof(JitFrameLayout) % JitStackAlignment == 0,
       "No need to consider the JitFrameLayout for aligning the stack");
     static_assert(JitStackAlignment % sizeof(Value) == 0,
@@ -429,7 +407,6 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
 
     MOZ_ASSERT(IsPowerOfTwo(JitStackValueAlignment));
     masm.addl(Imm32(JitStackValueAlignment - 1 /* for padding */ + 1 /* for |this| */), rcx);
-    masm.addl(rdx, rcx);
     masm.andl(Imm32(~(JitStackValueAlignment - 1)), rcx);
 
     // Load the number of |undefined|s to push into %rcx.
@@ -478,28 +455,6 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
         masm.subl(Imm32(1), r8);
         masm.j(Assembler::NonZero, &copyLoopTop);
     }
-
-    // if constructing, copy newTarget
-    {
-        Label notConstructing;
-
-        masm.branchTest32(Assembler::Zero, rax, Imm32(CalleeToken_FunctionConstructing),
-                          &notConstructing);
-
-        // thisFrame[numFormals] = prevFrame[argc]
-        ValueOperand newTarget(r10);
-
-        // +1 for |this|. We want vp[argc], so don't subtract 1
-        BaseIndex newTargetSrc(r9, rdx, TimesEight, sizeof(RectifierFrameLayout) + sizeof(Value));
-        masm.loadValue(newTargetSrc, newTarget);
-
-        // Again, 1 for |this|
-        BaseIndex newTargetDest(rsp, r11, TimesEight, sizeof(Value));
-        masm.storeValue(newTarget, newTargetDest);
-
-        masm.bind(&notConstructing);
-    }
-
 
     // Caller:
     // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- r9
