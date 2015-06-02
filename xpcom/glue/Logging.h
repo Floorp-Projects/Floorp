@@ -16,5 +16,10 @@
 
 #define MOZ_LOG PR_LOG
 
+// Tests if a module has enabled the given log level.
+// NB: _module can be null.
+#define MOZ_LOG_TEST(_module, _level) \
+  ((_module) && (_module)->level >= (_level))
+
 #endif // mozilla_logging_h
 
