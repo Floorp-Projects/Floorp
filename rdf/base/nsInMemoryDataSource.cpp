@@ -69,8 +69,6 @@
 #include "rdfIDataSource.h"
 #include "rdfITripleVisitor.h"
 
-using mozilla::LogLevel;
-
 // This struct is used as the slot value in the forward and reverse
 // arcs hash tables.
 //
@@ -795,7 +793,7 @@ InMemoryDataSource::~InMemoryDataSource()
         PL_DHashTableEnumerate(&mForwardArcs, DeleteForwardArcsEntry, nullptr);
     }
 
-    MOZ_LOG(gLog, LogLevel::Debug,
+    MOZ_LOG(gLog, PR_LOG_NOTICE,
            ("InMemoryDataSource(%p): destroyed.", this));
 
     MOZ_COUNT_DTOR(InMemoryDataSource);
@@ -851,7 +849,7 @@ InMemoryDataSource::LogOperation(const char* aOperation,
                                  nsIRDFNode* aTarget,
                                  bool aTruthValue)
 {
-    if (! MOZ_LOG_TEST(gLog, LogLevel::Debug))
+    if (! PR_LOG_TEST(gLog, PR_LOG_NOTICE))
         return;
 
     nsXPIDLCString uri;

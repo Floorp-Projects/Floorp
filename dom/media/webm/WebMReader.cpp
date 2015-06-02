@@ -104,7 +104,7 @@ static void webm_log(nestegg * context,
                      unsigned int severity,
                      char const * format, ...)
 {
-  if (!MOZ_LOG_TEST(gNesteggLog, LogLevel::Debug)) {
+  if (!PR_LOG_TEST(gNesteggLog, PR_LOG_DEBUG)) {
     return;
   }
 
@@ -137,7 +137,7 @@ static void webm_log(nestegg * context,
 
   PR_snprintf(msg, sizeof(msg), "%p [Nestegg-%s] ", context, sevStr);
   PR_vsnprintf(msg+strlen(msg), sizeof(msg)-strlen(msg), format, args);
-  MOZ_LOG(gNesteggLog, LogLevel::Debug, (msg));
+  MOZ_LOG(gNesteggLog, PR_LOG_DEBUG, (msg));
 
   va_end(args);
 }
@@ -528,7 +528,7 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
 
         if (int64_t(mCodecDelay) != FramesToUsecs(mOpusParser->mPreSkip,
                                                   mOpusParser->mRate).value()) {
-          LOG(LogLevel::Warning,
+          LOG(PR_LOG_WARNING,
               ("Invalid Opus header: CodecDelay and pre-skip do not match!"));
           Cleanup();
           return NS_ERROR_FAILURE;
@@ -613,7 +613,7 @@ bool WebMReader::DecodeAudioPacket(NesteggPacketHolder* aHolder)
 #ifdef DEBUG
     int64_t gap_frames = tstamp_frames.value() - decoded_frames.value();
     CheckedInt64 usecs = FramesToUsecs(gap_frames, mInfo.mAudio.mRate);
-    LOG(LogLevel::Debug, ("WebMReader detected gap of %lld, %lld frames, in audio",
+    LOG(PR_LOG_DEBUG, ("WebMReader detected gap of %lld, %lld frames, in audio",
                        usecs.isValid() ? usecs.value() : -1,
                        gap_frames));
 #endif
@@ -732,7 +732,7 @@ bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
   if (mPaddingDiscarded) {
     // Discard padding should be used only on the final packet, so
     // decoding after a padding discard is invalid.
-    LOG(LogLevel::Debug, ("Opus error, discard padding on interstitial packet"));
+    LOG(PR_LOG_DEBUG, ("Opus error, discard padding on interstitial packet"));
     mHitAudioDecodeError = true;
     return false;
   }
@@ -772,7 +772,7 @@ bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
   if (mSkip > 0) {
     int32_t skipFrames = std::min<int32_t>(mSkip, frames);
     int32_t keepFrames = frames - skipFrames;
-    LOG(LogLevel::Debug, ("Opus decoder skipping %d of %d frames",
+    LOG(PR_LOG_DEBUG, ("Opus decoder skipping %d of %d frames",
                        skipFrames, frames));
     PodMove(buffer.get(),
             buffer.get() + skipFrames * channels,
@@ -786,7 +786,7 @@ bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
   (void) nestegg_packet_discard_padding(aPacket, &discardPadding);
   if (discardPadding < 0) {
     // Negative discard padding is invalid.
-    LOG(LogLevel::Debug, ("Opus error, negative discard padding"));
+    LOG(PR_LOG_DEBUG, ("Opus error, negative discard padding"));
     mHitAudioDecodeError = true;
   }
   if (discardPadding > 0) {
@@ -798,11 +798,11 @@ bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
     }
     if (discardFrames.value() > frames) {
       // Discarding more than the entire packet is invalid.
-      LOG(LogLevel::Debug, ("Opus error, discard padding larger than packet"));
+      LOG(PR_LOG_DEBUG, ("Opus error, discard padding larger than packet"));
       mHitAudioDecodeError = true;
       return false;
     }
-    LOG(LogLevel::Debug, ("Opus decoder discarding %d of %d frames",
+    LOG(PR_LOG_DEBUG, ("Opus decoder discarding %d of %d frames",
                        int32_t(discardFrames.value()), frames));
     // Padding discard is only supposed to happen on the final packet.
     // Record the discard so we can return an error if another packet is
@@ -1042,7 +1042,7 @@ bool WebMReader::ShouldSkipVideoFrame(int64_t aTimeThreshold)
 bool WebMReader::DecodeVideoFrame(bool &aKeyframeSkip, int64_t aTimeThreshold)
 {
   if (!(aKeyframeSkip && ShouldSkipVideoFrame(aTimeThreshold))) {
-    LOG(LogLevel::Verbose, ("Reader [%p]: set the aKeyframeSkip to false.",this));
+    LOG(PR_LOG_DEBUG+1, ("Reader [%p]: set the aKeyframeSkip to false.",this));
     aKeyframeSkip = false;
   }
   return mVideoDecoder->DecodeVideoFrame(aKeyframeSkip, aTimeThreshold);
@@ -1072,7 +1072,7 @@ nsresult WebMReader::SeekInternal(int64_t aTarget)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  LOG(LogLevel::Debug, ("Reader [%p] for Decoder [%p]: About to seek to %fs",
+  LOG(PR_LOG_DEBUG, ("Reader [%p] for Decoder [%p]: About to seek to %fs",
                      this, mDecoder, double(aTarget) / USECS_PER_S));
   if (NS_FAILED(ResetDecode())) {
     return NS_ERROR_FAILURE;
@@ -1086,7 +1086,7 @@ nsresult WebMReader::SeekInternal(int64_t aTarget)
   }
   int r = nestegg_track_seek(mContext, trackToSeek, target);
   if (r != 0) {
-    LOG(LogLevel::Debug, ("Reader [%p]: track_seek for track %u failed, r=%d",
+    LOG(PR_LOG_DEBUG, ("Reader [%p]: track_seek for track %u failed, r=%d",
                        this, trackToSeek, r));
 
     // Try seeking directly based on cluster information in memory.
@@ -1097,7 +1097,7 @@ nsresult WebMReader::SeekInternal(int64_t aTarget)
     }
 
     r = nestegg_offset_seek(mContext, offset);
-    LOG(LogLevel::Debug, ("Reader [%p]: attempted offset_seek to %lld r=%d",
+    LOG(PR_LOG_DEBUG, ("Reader [%p]: attempted offset_seek to %lld r=%d",
                        this, offset, r));
     if (r != 0) {
       return NS_ERROR_FAILURE;

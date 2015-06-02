@@ -17,7 +17,6 @@
 #include "mozilla/Omnijar.h"
 
 using mozilla::dom::ContentParent;
-using mozilla::LogLevel;
 using mozilla::unused;
 
 static NS_DEFINE_CID(kResURLCID, NS_RESURL_CID);
@@ -32,7 +31,7 @@ static nsResProtocolHandler *gResHandler = nullptr;
 //    set NSPR_LOG_MODULES=nsResProtocol:5
 //    set NSPR_LOG_FILE=log.txt
 //
-// this enables LogLevel::Debug level information and places all output in
+// this enables PR_LOG_ALWAYS level information and places all output in
 // the file log.txt
 //
 static PRLogModuleInfo *gResLog;
@@ -448,10 +447,10 @@ nsResProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
 
     rv = baseURI->Resolve(nsDependentCString(p, path.Length()-1), result);
 
-    if (MOZ_LOG_TEST(gResLog, LogLevel::Debug)) {
+    if (PR_LOG_TEST(gResLog, PR_LOG_DEBUG)) {
         nsAutoCString spec;
         uri->GetAsciiSpec(spec);
-        MOZ_LOG(gResLog, LogLevel::Debug,
+        MOZ_LOG(gResLog, PR_LOG_DEBUG,
                ("%s\n -> %s\n", spec.get(), PromiseFlatCString(result).get()));
     }
     return rv;

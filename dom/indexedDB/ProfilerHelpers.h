@@ -282,9 +282,9 @@ LoggingHelper(bool aUseProfiler, const char* aFmt, ...)
   PRLogModuleInfo* logModule = IndexedDatabaseManager::GetLoggingModule();
   MOZ_ASSERT(logModule);
 
-  static const mozilla::LogLevel logLevel = LogLevel::Warning;
+  static const PRLogModuleLevel logLevel = PR_LOG_WARNING;
 
-  if (MOZ_LOG_TEST(logModule, logLevel) ||
+  if (PR_LOG_TEST(logModule, logLevel) ||
       (aUseProfiler && profiler_is_active())) {
     nsAutoCString message;
 

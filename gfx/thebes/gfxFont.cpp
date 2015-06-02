@@ -73,10 +73,10 @@ uint32_t gGlyphExtentsSetupFallBackToTight = 0;
 #endif
 
 #define LOG_FONTINIT(args) MOZ_LOG(gfxPlatform::GetLog(eGfxLog_fontinit), \
-                                  LogLevel::Debug, args)
-#define LOG_FONTINIT_ENABLED() MOZ_LOG_TEST( \
+                                  PR_LOG_DEBUG, args)
+#define LOG_FONTINIT_ENABLED() PR_LOG_TEST( \
                                         gfxPlatform::GetLog(eGfxLog_fontinit), \
-                                        LogLevel::Debug)
+                                        PR_LOG_DEBUG)
 
 
 /*
