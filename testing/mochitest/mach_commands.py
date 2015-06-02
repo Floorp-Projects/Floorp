@@ -553,6 +553,7 @@ class MachCommands(MachCommandBase):
             print(NOW_RUNNING.format(msg))
 
             harness_args = kwargs.copy()
+            harness_args['subsuite'] = subsuite
             harness_args.update(fobj.get('extra_args', {}))
 
             result = run_mochitest(
