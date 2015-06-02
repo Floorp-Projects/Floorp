@@ -63,6 +63,18 @@ function ConsoleMessage(aMsg, aLevel) {
   }
 }
 
+function toggleUnrestrictedDevtools(unrestricted) {
+  Services.prefs.setBoolPref("devtools.debugger.forbid-certified-apps",
+    !unrestricted);
+  Services.prefs.setBoolPref("dom.apps.developer_mode", unrestricted);
+  // TODO: Remove once bug 1125916 is fixed.
+  Services.prefs.setBoolPref("network.disable.ipc.security", unrestricted);
+  Services.prefs.setBoolPref("dom.webcomponents.enabled", unrestricted);
+  let lock = settings.createLock();
+  lock.set("developer.menu.enabled", unrestricted, null);
+  lock.set("devtools.unrestricted", unrestricted, null);
+}
+
 ConsoleMessage.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleMessage]),
   toString: function() { return this.msg; }
@@ -99,17 +111,17 @@ ProcessGlobal.prototype = {
     lines.forEach((line) => {
       log(line);
       let params = line.split(" ");
-      if (params[0] == "wipe") {
-        this.wipeDir(params[1]);
-      } else if (params[0] == "root") {
-        log("unrestrict devtools");
-        Services.prefs.setBoolPref("devtools.debugger.forbid-certified-apps", false);
-        Services.prefs.setBoolPref("dom.apps.developer_mode", true);
-        // TODO: Remove once bug 1125916 is fixed.
-        Services.prefs.setBoolPref("network.disable.ipc.security", true);
-        Services.prefs.setBoolPref("dom.webcomponents.enabled", true);
-        let lock = settings.createLock();
-        lock.set("developer.menu.enabled", true, null);
+      switch (params[0]) {
+        case "root":
+          log("unrestrict devtools");
+          toggleUnrestrictedDevtools(true);
+          break;
+        case "wipe":
+          this.wipeDir(params[1]);
+        case "normal":
+          log("restrict devtools");
+          toggleUnrestrictedDevtools(false);
+          break;
       }
     });
   },
