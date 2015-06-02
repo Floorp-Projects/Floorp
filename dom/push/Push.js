@@ -92,10 +92,10 @@ PushSubscription.prototype = {
 
     switch (aMessage.name) {
       case "PushService:Unregister:OK":
-        resolver.resolve(false);
+        resolver.resolve(true);
         break;
       case "PushService:Unregister:KO":
-        resolver.reject(true);
+        resolver.resolve(false);
         break;
       default:
         debug("NOT IMPLEMENTED! receiveMessage for " + aMessage.name);
