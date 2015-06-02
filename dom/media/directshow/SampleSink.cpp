@@ -65,7 +65,7 @@ SampleSink::Receive(IMediaSample* aSample)
     mon.Wait();
   }
 
-  if (PR_LOG_TEST(GetDirectShowLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetDirectShowLog(), PR_LOG_DEBUG)) {
     REFERENCE_TIME start = 0, end = 0;
     HRESULT hr = aSample->GetMediaTime(&start, &end);
     LOG("SampleSink::Receive() [%4.2lf-%4.2lf]",
@@ -102,7 +102,7 @@ SampleSink::Extract(RefPtr<IMediaSample>& aOutSample)
   }
   aOutSample = mSample;
 
-  if (PR_LOG_TEST(GetDirectShowLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetDirectShowLog(), PR_LOG_DEBUG)) {
     int64_t start = 0, end = 0;
     mSample->GetMediaTime(&start, &end);
     LOG("SampleSink::Extract() [%4.2lf-%4.2lf]",

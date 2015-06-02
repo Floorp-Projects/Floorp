@@ -24,7 +24,7 @@ nsRDFConMemberTestNode::nsRDFConMemberTestNode(TestNode* aParent,
       mContainerVariable(aContainerVariable),
       mMemberVariable(aMemberVariable)
 {
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         nsAutoCString props;
 
         nsResourceSet& containmentProps = aProcessor->ContainmentProperties();
@@ -111,7 +111,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
         hasMemberBinding = inst->mAssignments.GetAssignmentFor(mMemberVariable,
                                                                getter_AddRefs(memberValue));
 
-        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+        if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
             const char* container = "(unbound)";
             if (hasContainerBinding)
                 containerRes->GetValueConst(&container);
@@ -215,7 +215,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                 if (! node)
                     return NS_ERROR_UNEXPECTED;
 
-                if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+                if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
                     nsAutoString member;
                     nsXULContentUtils::GetTextForNode(node, member);
 
@@ -302,7 +302,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                         if (! source)
                             return NS_ERROR_UNEXPECTED;
 
-                        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+                        if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
                             const char* container;
                             source->GetValueConst(&container);
 
@@ -372,7 +372,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                         NS_ASSERTION(value != nullptr, "member is not an nsIRDFNode");
                         if (! value) continue;
 
-                        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+                        if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
                             nsAutoString s;
                             nsXULContentUtils::GetTextForNode(value, s);
 
@@ -389,7 +389,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
 
                         value = valueRes;
 
-                        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+                        if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
                             const char* s;
                             valueRes->GetValueConst(&s);
 
@@ -466,7 +466,7 @@ nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
         canpropagate = mProcessor->ContainmentProperties().Contains(aProperty);
     }
 
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         const char* source;
         aSource->GetValueConst(&source);
 

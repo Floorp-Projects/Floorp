@@ -188,7 +188,7 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
 #define LOG_CHECK(logType)                                                    \
   PR_BEGIN_MACRO                                                              \
     /* skip all this nonsense if the call failed or logging is disabled */    \
-    if (NS_SUCCEEDED(rv) && PR_LOG_TEST(gConPolLog, PR_LOG_DEBUG)) {          \
+    if (NS_SUCCEEDED(rv) && MOZ_LOG_TEST(gConPolLog, PR_LOG_DEBUG)) {          \
       const char *resultName;                                                 \
       if (decision) {                                                         \
         resultName = NS_CP_ResponseName(*decision);                           \

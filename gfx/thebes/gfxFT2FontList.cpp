@@ -61,7 +61,7 @@ GetFontInfoLog()
 
 #undef LOG
 #define LOG(args) MOZ_LOG(GetFontInfoLog(), PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(GetFontInfoLog(), PR_LOG_DEBUG)
+#define LOG_ENABLED() MOZ_LOG_TEST(GetFontInfoLog(), PR_LOG_DEBUG)
 
 static cairo_user_data_key_t sFTUserFontDataKey;
 
