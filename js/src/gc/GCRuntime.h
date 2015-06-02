@@ -594,12 +594,6 @@ class GCRuntime
     void setParameter(JSGCParamKey key, uint32_t value);
     uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
 
-    bool isHeapBusy() { return heapState != js::Idle; }
-    bool isHeapMajorCollecting() { return heapState == js::MajorCollecting; }
-    bool isHeapMinorCollecting() { return heapState == js::MinorCollecting; }
-    bool isHeapCollecting() { return isHeapMajorCollecting() || isHeapMinorCollecting(); }
-    bool isHeapCompacting() { return isHeapMajorCollecting() && state() == COMPACT; }
-
     bool triggerGC(JS::gcreason::Reason reason);
     void maybeAllocTriggerZoneGC(Zone* zone, const AutoLockGC& lock);
     bool triggerZoneGC(Zone* zone, JS::gcreason::Reason reason);
@@ -666,7 +660,8 @@ class GCRuntime
 
   public:
     // Internal public interface
-    js::gc::State state() { return incrementalState; }
+    js::gc::State state() const { return incrementalState; }
+    bool isHeapCompacting() const { return state() == COMPACT; }
     bool isBackgroundSweeping() { return helperState.isBackgroundSweeping(); }
     void waitBackgroundSweepEnd() { helperState.waitBackgroundSweepEnd(); }
     void waitBackgroundSweepOrAllocEnd() {
@@ -1208,8 +1203,6 @@ class GCRuntime
     unsigned objectsMarkedInDeadZones;
 
     bool poked;
-
-    js::HeapState heapState;
 
     /*
      * These options control the zealousness of the GC. The fundamental values
