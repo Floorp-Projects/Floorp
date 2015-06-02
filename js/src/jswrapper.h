@@ -162,6 +162,57 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     static const CrossCompartmentWrapper singletonWithPrototype;
 };
 
+class JS_FRIEND_API(OpaqueCrossCompartmentWrapper) : public CrossCompartmentWrapper
+{
+  public:
+    explicit MOZ_CONSTEXPR OpaqueCrossCompartmentWrapper() : CrossCompartmentWrapper(0)
+    { }
+
+    /* Standard internal methods. */
+    virtual bool getOwnPropertyDescriptor(JSContext* cx, HandleObject wrapper, HandleId id,
+                                          MutableHandle<JSPropertyDescriptor> desc) const override;
+    virtual bool defineProperty(JSContext* cx, HandleObject wrapper, HandleId id,
+                                Handle<JSPropertyDescriptor> desc,
+                                ObjectOpResult& result) const override;
+    virtual bool ownPropertyKeys(JSContext* cx, HandleObject wrapper,
+                                 AutoIdVector& props) const override;
+    virtual bool delete_(JSContext* cx, HandleObject wrapper, HandleId id,
+                         ObjectOpResult& result) const override;
+    virtual bool enumerate(JSContext* cx, HandleObject wrapper,
+                           MutableHandleObject objp) const override;
+    virtual bool getPrototype(JSContext* cx, HandleObject wrapper,
+                              MutableHandleObject protop) const override;
+    virtual bool setPrototype(JSContext* cx, HandleObject wrapper, HandleObject proto,
+                              ObjectOpResult& result) const override;
+    virtual bool setImmutablePrototype(JSContext* cx, HandleObject wrapper,
+                                       bool* succeeded) const override;
+    virtual bool preventExtensions(JSContext* cx, HandleObject wrapper,
+                                   ObjectOpResult& result) const override;
+    virtual bool isExtensible(JSContext* cx, HandleObject wrapper, bool* extensible) const override;
+    virtual bool has(JSContext* cx, HandleObject wrapper, HandleId id,
+                     bool* bp) const override;
+    virtual bool get(JSContext* cx, HandleObject wrapper, HandleObject receiver,
+                     HandleId id, MutableHandleValue vp) const override;
+    virtual bool set(JSContext* cx, HandleObject wrapper, HandleId id, HandleValue v,
+                     HandleValue receiver, ObjectOpResult& result) const override;
+    virtual bool call(JSContext* cx, HandleObject wrapper, const CallArgs& args) const override;
+    virtual bool construct(JSContext* cx, HandleObject wrapper, const CallArgs& args) const override;
+
+    /* SpiderMonkey extensions. */
+    virtual bool getPropertyDescriptor(JSContext* cx, HandleObject wrapper, HandleId id,
+                                       MutableHandle<JSPropertyDescriptor> desc) const override;
+    virtual bool hasOwn(JSContext* cx, HandleObject wrapper, HandleId id,
+                        bool* bp) const override;
+    virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject wrapper,
+                                              AutoIdVector& props) const override;
+    virtual bool objectClassIs(HandleObject obj, ESClassValue classValue, JSContext* cx) const;
+    virtual const char* className(JSContext* cx, HandleObject wrapper) const override;
+    virtual JSString* fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const;
+    virtual bool defaultValue(JSContext* cx, HandleObject obj, JSType hint, MutableHandleValue vp) const;
+
+    static const OpaqueCrossCompartmentWrapper singleton;
+};
+
 /*
  * Base class for security wrappers. A security wrapper is potentially hiding
  * all or part of some wrapped object thus SecurityWrapper defaults to denying
