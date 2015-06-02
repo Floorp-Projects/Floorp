@@ -682,7 +682,7 @@ ValueNumberer::loopHasOptimizablePhi(MBasicBlock* header) const
     // values from backedges.
     for (MPhiIterator iter(header->phisBegin()), end(header->phisEnd()); iter != end; ++iter) {
         MPhi* phi = *iter;
-        MOZ_ASSERT_IF(!phi->hasUses(), !DeadIfUnused(phi));
+        MOZ_ASSERT(phi->hasUses(), "Missed an unused phi");
 
         if (phi->operandIfRedundant() || hasLeader(phi, header))
             return true; // Phi can be simplified.

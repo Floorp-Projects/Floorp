@@ -3335,8 +3335,8 @@ RangeAnalysis::prepareForUCE(bool* shouldRemoveDeadCode)
     return tryRemovingGuards();
 }
 
-bool RangeAnalysis::tryRemovingGuards()
-{
+bool RangeAnalysis::tryRemovingGuards() {
+
     MDefinitionVector guards(alloc());
 
     for (ReversePostorderIterator block = graph_.rpoBegin(); block != graph_.rpoEnd(); block++) {
@@ -3364,22 +3364,20 @@ bool RangeAnalysis::tryRemovingGuards()
         guard->setGuardRangeBailouts();
 #endif
 
-        if (!guard->isPhi()) {
-            if (!guard->range())
-                continue;
+        if (!guard->range())
+            continue;
 
-            // Filter the range of the instruction based on its MIRType.
-            Range typeFilteredRange(guard);
+        // Filter the range of the instruction based on its MIRType.
+        Range typeFilteredRange(guard);
 
-            // If the output range is updated by adding the inner range,
-            // then the MIRType act as an effectful filter. As we do not know if
-            // this filtered Range might change or not the result of the
-            // previous comparison, we have to keep this instruction as a guard
-            // because it has to bailout in order to restrict the Range to its
-            // MIRType.
-            if (typeFilteredRange.update(guard->range()))
-                continue;
-        }
+        // If the output range is updated by adding the inner range,
+        // then the MIRType act as an effectful filter. As we do not know if
+        // this filtered Range might change or not the result of the
+        // previous comparison, we have to keep this instruction as a guard
+        // because it has to bailout in order to restrict the Range to its
+        // MIRType.
+        if (typeFilteredRange.update(guard->range()))
+            continue;
 
         guard->setNotGuardRangeBailouts();
 
