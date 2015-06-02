@@ -129,10 +129,10 @@
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="f390788a00706c06e5248edfd8d27b365387e84a"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="d2f58dbee70cba71bd3fad8cdd0fee620d10cf92"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="c4d9746e5f1a3a2e6cb53d59d5d721e9888cd2e1"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="f37bd545063039e30a92f2550ae78c0e6e4e2d08"/>
   <project name="platform_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="b2g" revision="0c6a6547cd1fd302fa2b0f6e375654df36bf0ec4"/>
-  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="42f61f665e7a9857da8cd14b455e15bae98e6b44"/>
+  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="de4bfffbbc2aabe5b5eca485e459da75e49097e2"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="d82e00fb6380b4f6cea7a96213913ee9eb441239"/>
   <project name="platform/development" path="development" revision="5968ff4e13e0d696ad8d972281fc27ae5a12829b"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="0951179277915335251c5e11d242e4e1a8c2236f"/>
