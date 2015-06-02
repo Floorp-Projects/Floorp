@@ -50,7 +50,7 @@ public:
     /** Wrap the given cairo surface and return a gfxASurface for it.
      * This adds a reference to csurf (owned by the returned gfxASurface).
      */
-    static already_AddRefed<gfxASurface> Wrap(cairo_surface_t *csurf, const gfxIntSize& aSize = gfxIntSize(-1, -1));
+    static already_AddRefed<gfxASurface> Wrap(cairo_surface_t *csurf, const mozilla::gfx::IntSize& aSize = mozilla::gfx::IntSize(-1, -1));
 
     /*** this DOES NOT addref the surface */
     cairo_surface_t *CairoSurface() {
@@ -90,7 +90,7 @@ public:
      * Returns null on error.
      */
     virtual already_AddRefed<gfxASurface> CreateSimilarSurface(gfxContentType aType,
-                                                               const nsIntSize& aSize);
+                                                               const mozilla::gfx::IntSize& aSize);
 
     /**
      * Returns an image surface for this surface, or nullptr if not supported.
@@ -118,7 +118,7 @@ public:
      * using 4 bytes per pixel; optionally, make sure that either dimension
      * doesn't exceed the given limit.
      */
-    static bool CheckSurfaceSize(const nsIntSize& sz, int32_t limit = 0);
+    static bool CheckSurfaceSize(const mozilla::gfx::IntSize& sz, int32_t limit = 0);
 
     /* Provide a stride value that will respect all alignment requirements of
      * the accelerated image-rendering code.
@@ -167,7 +167,7 @@ public:
 
     static int32_t BytePerPixelFromFormat(gfxImageFormat format);
 
-    virtual const nsIntSize GetSize() const;
+    virtual const mozilla::gfx::IntSize GetSize() const;
 
     void SetOpaqueRect(const gfxRect& aRect);
 
@@ -221,17 +221,17 @@ protected:
  */
 class gfxUnknownSurface : public gfxASurface {
 public:
-    gfxUnknownSurface(cairo_surface_t *surf, const gfxIntSize& aSize)
+    gfxUnknownSurface(cairo_surface_t *surf, const mozilla::gfx::IntSize& aSize)
         : mSize(aSize)
     {
         Init(surf, true);
     }
 
     virtual ~gfxUnknownSurface() { }
-    virtual const nsIntSize GetSize() const override { return mSize; }
+    virtual const mozilla::gfx::IntSize GetSize() const override { return mSize; }
 
 private:
-    nsIntSize mSize;
+    mozilla::gfx::IntSize mSize;
 };
 
 #endif /* GFX_ASURFACE_H */

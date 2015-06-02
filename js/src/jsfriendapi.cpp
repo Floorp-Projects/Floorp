@@ -785,7 +785,7 @@ FormatFrame(JSContext* cx, const ScriptFrameIter& iter, char* buf, int num,
                                         name ? name :"",
                                         name ? " = " : "",
                                         arg.isString() ? "\"" : "",
-                                        value ? value : "?unknown?",
+                                        value,
                                         arg.isString() ? "\"" : "");
                 if (!buf)
                     return buf;
@@ -899,23 +899,16 @@ struct DumpHeapTracer : public JS::CallbackTracer, public WeakMapTracer
 
     DumpHeapTracer(FILE* fp, JSRuntime* rt, JSTraceCallback callback)
       : JS::CallbackTracer(rt, callback, DoNotTraceWeakMaps),
-        js::WeakMapTracer(rt, DumpWeakMap), prefix(""), output(fp)
+        js::WeakMapTracer(rt), prefix(""), output(fp)
     {}
 
   private:
-    static void
-    DumpWeakMap(js::WeakMapTracer* trc, JSObject* map,
-                JS::GCCellPtr key, JS::GCCellPtr value)
-    {
-        DumpHeapTracer* tracer =
-            static_cast<DumpHeapTracer*>(trc);
-
+    void trace(JSObject* map, JS::GCCellPtr key, JS::GCCellPtr value) override {
         JSObject* kdelegate = nullptr;
-        if (key.isObject()) {
+        if (key.isObject())
             kdelegate = js::GetWeakmapKeyDelegate(key.toObject());
-        }
 
-        fprintf(tracer->output, "WeakMapEntry map=%p key=%p keyDelegate=%p value=%p\n",
+        fprintf(output, "WeakMapEntry map=%p key=%p keyDelegate=%p value=%p\n",
                 map, key.asCell(), kdelegate, value.asCell());
     }
 };

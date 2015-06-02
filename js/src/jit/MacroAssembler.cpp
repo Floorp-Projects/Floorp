@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/MacroAssembler.h"
+#include "jit/MacroAssembler-inl.h"
 
 #include "jsprf.h"
 
@@ -2478,6 +2478,59 @@ MacroAssembler::alignJitStackBasedOnNArgs(uint32_t nargs)
 }
 
 // ===============================================================
+
+MacroAssembler::MacroAssembler(JSContext* cx, IonScript* ion,
+                               JSScript* script, jsbytecode* pc)
+  : emitProfilingInstrumentation_(false),
+    framePushed_(0)
+{
+    constructRoot(cx);
+    jitContext_.emplace(cx, (js::jit::TempAllocator*)nullptr);
+    alloc_.emplace(cx);
+    moveResolver_.setAllocator(*jitContext_->temp);
+#ifdef JS_CODEGEN_ARM
+    initWithAllocator();
+    m_buffer.id = GetJitContext()->getNextAssemblerId();
+#endif
+    if (ion) {
+        setFramePushed(ion->frameSize());
+        if (pc && cx->runtime()->spsProfiler.enabled())
+            emitProfilingInstrumentation_ = true;
+    }
+}
+
+void
+MacroAssembler::resetForNewCodeGenerator(TempAllocator& alloc)
+{
+    setFramePushed(0);
+    moveResolver_.clearTempObjectPool();
+    moveResolver_.setAllocator(alloc);
+}
+
+MacroAssembler::AfterICSaveLive
+MacroAssembler::icSaveLive(LiveRegisterSet& liveRegs)
+{
+    PushRegsInMask(liveRegs);
+    AfterICSaveLive aic(framePushed());
+    alignFrameForICArguments(aic);
+    return aic;
+}
+
+bool
+MacroAssembler::icBuildOOLFakeExitFrame(void* fakeReturnAddr, AfterICSaveLive& aic)
+{
+    return buildOOLFakeExitFrame(fakeReturnAddr);
+}
+
+void
+MacroAssembler::icRestoreLive(LiveRegisterSet& liveRegs, AfterICSaveLive& aic)
+{
+    restoreFrameAlignmentForICArguments(aic);
+    MOZ_ASSERT(framePushed() == aic.initialStack);
+    PopRegsInMask(liveRegs);
+}
+
+// ===============================================================
 // Stack manipulation functions.
 
 void
@@ -2625,4 +2678,19 @@ MacroAssembler::adjustStack(int amount)
         freeStack(amount);
     else if (amount < 0)
         reserveStack(-amount);
+}
+
+void
+MacroAssembler::freeStack(uint32_t amount)
+{
+    MOZ_ASSERT(amount <= framePushed_);
+    if (amount)
+        addPtr(Imm32(amount), StackPointer);
+    framePushed_ -= amount;
+}
+
+void
+MacroAssembler::freeStack(Register amount)
+{
+    addPtr(amount, StackPointer);
 }

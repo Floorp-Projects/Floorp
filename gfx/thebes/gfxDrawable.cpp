@@ -19,7 +19,7 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 gfxSurfaceDrawable::gfxSurfaceDrawable(SourceSurface* aSurface,
-                                       const gfxIntSize aSize,
+                                       const IntSize aSize,
                                        const gfxMatrix aTransform)
  : gfxDrawable(aSize)
  , mSourceSurface(aSurface)
@@ -111,7 +111,7 @@ gfxSurfaceDrawable::DrawInternal(gfxContext* aContext,
 }
 
 gfxCallbackDrawable::gfxCallbackDrawable(gfxDrawingCallback* aCallback,
-                                         const gfxIntSize aSize)
+                                         const IntSize aSize)
  : gfxDrawable(aSize)
  , mCallback(aCallback)
 {
@@ -162,7 +162,7 @@ gfxCallbackDrawable::Draw(gfxContext* aContext,
 }
 
 gfxPatternDrawable::gfxPatternDrawable(gfxPattern* aPattern,
-                                       const gfxIntSize aSize)
+                                       const IntSize aSize)
  : gfxDrawable(aSize)
  , mPattern(aPattern)
 {

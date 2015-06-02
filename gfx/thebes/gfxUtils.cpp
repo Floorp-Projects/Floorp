@@ -79,7 +79,7 @@ void mozilla_dump_image(void* bytes, int width, int height, int bytepp,
 
     RefPtr<DataSourceSurface> surf =
         Factory::CreateWrappingDataSourceSurface((uint8_t*)bytes, strideBytes,
-                                                 gfx::IntSize(width, height),
+                                                 IntSize(width, height),
                                                  format);
     gfxUtils::DumpAsDataURI(surf);
 }
@@ -440,7 +440,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
     if (needed.IsEmpty())
         return nullptr;
 
-    gfxIntSize size(int32_t(needed.Width()), int32_t(needed.Height()));
+    IntSize size(int32_t(needed.Width()), int32_t(needed.Height()));
 
     RefPtr<DrawTarget> target =
       gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(size, aFormat);
@@ -858,7 +858,7 @@ gfxUtils::GfxRectToIntRect(const gfxRect& aIn, IntRect* aOut)
 void
 gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrData& aData,
                                          gfxImageFormat& aSuggestedFormat,
-                                         gfxIntSize& aSuggestedSize)
+                                         IntSize& aSuggestedSize)
 {
   YUVType yuvtype =
     TypeFromSize(aData.mYSize.width,
@@ -912,7 +912,7 @@ gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrData& aData,
 void
 gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
                             const gfxImageFormat& aDestFormat,
-                            const gfxIntSize& aDestSize,
+                            const IntSize& aDestSize,
                             unsigned char* aDestBuffer,
                             int32_t aStride)
 {

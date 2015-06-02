@@ -113,3 +113,7 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == 859093-1.html 859093-1-ref.html
 == 889742-1.html 889742-1-ref.html
 == 1103348-1.html 1103348-1-ref.html
+== 1169267-delete-add-1a.html 1169267-delete-add-1-ref.html
+== 1169267-delete-add-1b.html 1169267-delete-add-1-ref.html
+== 1169267-delete-add-2a.html 1169267-delete-add-2-ref.html
+== 1169267-delete-add-2b.html 1169267-delete-add-2-ref.html

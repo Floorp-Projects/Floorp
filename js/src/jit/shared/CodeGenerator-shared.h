@@ -189,64 +189,27 @@ class CodeGeneratorShared : public LElementVisitor
     FrameSizeClass frameClass_;
 
     // For arguments to the current function.
-    inline int32_t ArgToStackOffset(int32_t slot) const {
-        return masm.framePushed() +
-               (gen->compilingAsmJS() ? sizeof(AsmJSFrame) : sizeof(JitFrameLayout)) +
-               slot;
-    }
+    inline int32_t ArgToStackOffset(int32_t slot) const;
 
     // For the callee of the current function.
-    inline int32_t CalleeStackOffset() const {
-        return masm.framePushed() + JitFrameLayout::offsetOfCalleeToken();
-    }
+    inline int32_t CalleeStackOffset() const;
 
-    inline int32_t SlotToStackOffset(int32_t slot) const {
-        MOZ_ASSERT(slot > 0 && slot <= int32_t(graph.localSlotCount()));
-        int32_t offset = masm.framePushed() - frameInitialAdjustment_ - slot;
-        MOZ_ASSERT(offset >= 0);
-        return offset;
-    }
-    inline int32_t StackOffsetToSlot(int32_t offset) const {
-        // See: SlotToStackOffset. This is used to convert pushed arguments
-        // to a slot index that safepoints can use.
-        //
-        // offset = framePushed - frameInitialAdjustment - slot
-        // offset + slot = framePushed - frameInitialAdjustment
-        // slot = framePushed - frameInitialAdjustement - offset
-        return masm.framePushed() - frameInitialAdjustment_ - offset;
-    }
+    inline int32_t SlotToStackOffset(int32_t slot) const;
+    inline int32_t StackOffsetToSlot(int32_t offset) const;
 
     // For argument construction for calls. Argslots are Value-sized.
-    inline int32_t StackOffsetOfPassedArg(int32_t slot) const {
-        // A slot of 0 is permitted only to calculate %esp offset for calls.
-        MOZ_ASSERT(slot >= 0 && slot <= int32_t(graph.argumentSlotCount()));
-        int32_t offset = masm.framePushed() -
-                       graph.paddedLocalSlotsSize() -
-                       (slot * sizeof(Value));
+    inline int32_t StackOffsetOfPassedArg(int32_t slot) const;
 
-        // Passed arguments go below A function's local stack storage.
-        // When arguments are being pushed, there is nothing important on the stack.
-        // Therefore, It is safe to push the arguments down arbitrarily.  Pushing
-        // by sizeof(Value) is desirable since everything on the stack is a Value.
-        // Note that paddedLocalSlotCount() aligns to at least a Value boundary
-        // specifically to support this.
-        MOZ_ASSERT(offset >= 0);
-        MOZ_ASSERT(offset % sizeof(Value) == 0);
-        return offset;
-    }
-
-    inline int32_t ToStackOffset(LAllocation a) const {
-        if (a.isArgument())
-            return ArgToStackOffset(a.toArgument()->index());
-        return SlotToStackOffset(a.toStackSlot()->slot());
-    }
-    inline int32_t ToStackOffset(const LAllocation* a) const {
-        return ToStackOffset(*a);
-    }
+    inline int32_t ToStackOffset(LAllocation a) const;
+    inline int32_t ToStackOffset(const LAllocation* a) const;
 
     uint32_t frameSize() const {
         return frameClass_ == FrameSizeClass::None() ? frameDepth_ : frameClass_.frameSize();
     }
+
+    inline Operand ToOperand(const LAllocation& a);
+    inline Operand ToOperand(const LAllocation* a);
+    inline Operand ToOperand(const LDefinition* def);
 
   protected:
     // Ensure the cache is an IonCache while expecting the size of the derived

@@ -17,6 +17,8 @@
 #include "jit/MacroAssembler.h"
 #include "jit/MoveEmitter.h"
 
+#include "jit/MacroAssembler-inl.h"
+
 using namespace js;
 using namespace jit;
 
@@ -1803,8 +1805,8 @@ MacroAssemblerARM::ma_vstr(VFPRegister src, Register base, Register index, int32
 void
 MacroAssemblerARMCompat::buildFakeExitFrame(Register scratch, uint32_t* offset)
 {
-    DebugOnly<uint32_t> initialDepth = framePushed();
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    DebugOnly<uint32_t> initialDepth = asMasm().framePushed();
+    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
 
     asMasm().Push(Imm32(descriptor)); // descriptor_
 
@@ -1819,7 +1821,7 @@ MacroAssemblerARMCompat::buildFakeExitFrame(Register scratch, uint32_t* offset)
     uint32_t pseudoReturnOffset = currentOffset();
     leaveNoPool();
 
-    MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());
+    MOZ_ASSERT(asMasm().framePushed() == initialDepth + ExitFrameLayout::Size());
     MOZ_ASSERT(pseudoReturnOffset - offsetBeforePush == 8);
 
     *offset = pseudoReturnOffset;
@@ -1828,8 +1830,8 @@ MacroAssemblerARMCompat::buildFakeExitFrame(Register scratch, uint32_t* offset)
 bool
 MacroAssemblerARMCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 {
-    DebugOnly<uint32_t> initialDepth = framePushed();
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    DebugOnly<uint32_t> initialDepth = asMasm().framePushed();
+    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
 
     asMasm().Push(Imm32(descriptor)); // descriptor_
     asMasm().Push(ImmPtr(fakeReturnAddr));
@@ -1840,7 +1842,7 @@ MacroAssemblerARMCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 void
 MacroAssemblerARMCompat::callWithExitFrame(Label* target)
 {
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
     asMasm().Push(Imm32(descriptor)); // descriptor
 
     ma_callJitHalfPush(target);
@@ -1849,7 +1851,7 @@ MacroAssemblerARMCompat::callWithExitFrame(Label* target)
 void
 MacroAssemblerARMCompat::callWithExitFrame(JitCode* target)
 {
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
     asMasm().Push(Imm32(descriptor)); // descriptor
 
     addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
@@ -1866,7 +1868,7 @@ MacroAssemblerARMCompat::callWithExitFrame(JitCode* target)
 void
 MacroAssemblerARMCompat::callWithExitFrame(JitCode* target, Register dynStack)
 {
-    ma_add(Imm32(framePushed()), dynStack);
+    ma_add(Imm32(asMasm().framePushed()), dynStack);
     makeFrameDescriptor(dynStack, JitFrame_IonJS);
     asMasm().Push(dynStack); // descriptor
 
@@ -1884,11 +1886,11 @@ MacroAssemblerARMCompat::callWithExitFrame(JitCode* target, Register dynStack)
 void
 MacroAssemblerARMCompat::callJit(Register callee)
 {
-    MOZ_ASSERT((framePushed() & 3) == 0);
-    if ((framePushed() & 7) == 4) {
+    MOZ_ASSERT((asMasm().framePushed() & 3) == 0);
+    if ((asMasm().framePushed() & 7) == 4) {
         ma_callJitHalfPush(callee);
     } else {
-        adjustFrame(sizeof(void*));
+        asMasm().adjustFrame(sizeof(void*));
         ma_callJit(callee);
     }
 }
@@ -1903,27 +1905,6 @@ void
 MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive& aic)
 {
     // Exists for MIPS compatibility.
-}
-
-void
-MacroAssemblerARMCompat::reserveStack(uint32_t amount)
-{
-    if (amount)
-        ma_sub(Imm32(amount), sp);
-    adjustFrame(amount);
-}
-void
-MacroAssemblerARMCompat::freeStack(uint32_t amount)
-{
-    MOZ_ASSERT(amount <= framePushed_);
-    if (amount)
-        ma_add(Imm32(amount), sp);
-    adjustFrame(-amount);
-}
-void
-MacroAssemblerARMCompat::freeStack(Register amount)
-{
-    ma_add(amount, sp);
 }
 
 void
@@ -3980,7 +3961,7 @@ MacroAssemblerARMCompat::callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJ
     uint32_t alignmentAtPrologue = callFromAsmJS ? sizeof(AsmJSFrame) : 0;
 
     if (!dynamicAlignment_) {
-        *stackAdjust += ComputeByteAlignment(framePushed_ + *stackAdjust + alignmentAtPrologue,
+        *stackAdjust += ComputeByteAlignment(asMasm().framePushed() + *stackAdjust + alignmentAtPrologue,
                                              ABIStackAlignment);
     } else {
         // sizeof(intptr_t) accounts for the saved stack pointer pushed by
@@ -3988,7 +3969,7 @@ MacroAssemblerARMCompat::callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJ
         *stackAdjust += ComputeByteAlignment(*stackAdjust + sizeof(intptr_t), ABIStackAlignment);
     }
 
-    reserveStack(*stackAdjust);
+    asMasm().reserveStack(*stackAdjust);
 
     // Position all arguments.
     {
@@ -4066,7 +4047,7 @@ MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Type resu
         MOZ_CRASH("unexpected callWithABI result");
     }
 
-    freeStack(stackAdjust);
+    asMasm().freeStack(stackAdjust);
 
     if (dynamicAlignment_) {
         // While the x86 supports pop esp, on ARM that isn't well defined, so
@@ -5248,5 +5229,13 @@ void
 MacroAssembler::Pop(const ValueOperand& val)
 {
     popValue(val);
-    framePushed_ -= sizeof(Value);
+    adjustFrame(-sizeof(Value));
+}
+
+void
+MacroAssembler::reserveStack(uint32_t amount)
+{
+    if (amount)
+        ma_sub(Imm32(amount), sp);
+    adjustFrame(amount);
 }

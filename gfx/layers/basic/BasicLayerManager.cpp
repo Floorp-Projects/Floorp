@@ -24,7 +24,7 @@
 #include "gfxMatrix.h"                  // for gfxMatrix
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxPrefs.h"                   // for gfxPrefs
-#include "gfxPoint.h"                   // for gfxIntSize, gfxPoint
+#include "gfxPoint.h"                   // for IntSize, gfxPoint
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxUtils.h"                   // for gfxUtils
 #include "gfx2DGlue.h"                  // for thebes --> moz2d transition
@@ -773,8 +773,8 @@ Transform3D(RefPtr<SourceSurface> aSource,
 
   // Create a surface the size of the transformed object.
   nsRefPtr<gfxASurface> dest = aDest->CurrentSurface();
-  nsRefPtr<gfxImageSurface> destImage = new gfxImageSurface(gfxIntSize(aDestRect.width,
-                                                                       aDestRect.height),
+  nsRefPtr<gfxImageSurface> destImage = new gfxImageSurface(IntSize(aDestRect.width,
+                                                                    aDestRect.height),
                                                             gfxImageFormat::ARGB32);
   gfxPoint offset = aDestRect.TopLeft();
 

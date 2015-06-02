@@ -20,6 +20,7 @@
 #include "vm/TraceLogging.h"
 
 #include "jit/JitFrames-inl.h"
+#include "jit/MacroAssembler-inl.h"
 
 using namespace js;
 using namespace js::jit;

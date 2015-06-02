@@ -14,8 +14,8 @@ class gfxSharedImageSurface : public gfxBaseSharedMemorySurface<gfxImageSurface,
   typedef gfxBaseSharedMemorySurface<gfxImageSurface, gfxSharedImageSurface> Super;
   friend class gfxBaseSharedMemorySurface<gfxImageSurface, gfxSharedImageSurface>;
 private:
-    gfxSharedImageSurface(const gfxIntSize& aSize, long aStride, 
-                          gfxImageFormat aFormat, 
+    gfxSharedImageSurface(const mozilla::gfx::IntSize& aSize, long aStride,
+                          gfxImageFormat aFormat,
                           const mozilla::ipc::Shmem& aShmem)
       : Super(aSize, aStride, aFormat, aShmem)
     {}
