@@ -35,7 +35,6 @@ const REQUESTS_WATERFALL_BACKGROUND_TICKS_SPACING_MIN = 10; // px
 const REQUESTS_WATERFALL_BACKGROUND_TICKS_COLOR_RGB = [128, 136, 144];
 const REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_MIN = 32; // byte
 const REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_ADD = 32; // byte
-const DEFAULT_HTTP_VERSION = "HTTP/1.1";
 const REQUEST_TIME_DECIMALS = 2;
 const HEADERS_SIZE_DECIMALS = 3;
 const CONTENT_SIZE_DECIMALS = 2;
@@ -2641,7 +2640,7 @@ NetworkDetailsView.prototype = {
       $("#headers-summary-status").setAttribute("hidden", "true");
     }
 
-    if (aData.httpVersion && aData.httpVersion != DEFAULT_HTTP_VERSION) {
+    if (aData.httpVersion) {
       $("#headers-summary-version-value").setAttribute("value", aData.httpVersion);
       $("#headers-summary-version").removeAttribute("hidden");
     } else {
