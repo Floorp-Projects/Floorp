@@ -29,7 +29,6 @@
 #include "nsWeakReference.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/VisualEventTracer.h"
 #include "mozilla/Services.h"
 
 namespace mozilla {
