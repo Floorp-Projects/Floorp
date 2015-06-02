@@ -38,7 +38,7 @@ function* testEditSelector(view, name) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = yield focusEditableField(view, ruleEditor.selectorText);
+  let editor = yield focusEditableField(ruleEditor.selectorText);
 
   is(inplaceEditor(ruleEditor.selectorText), editor,
     "The selector editor got focused");
@@ -70,7 +70,7 @@ function* testAddProperty(view) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing a new property name in the rule-view");
-  let editor = yield focusEditableField(view, ruleEditor.closeBrace);
+  let editor = yield focusEditableField(ruleEditor.closeBrace);
 
   is(inplaceEditor(ruleEditor.newPropSpan), editor,
     "The new property editor got focused");
@@ -81,10 +81,10 @@ function* testAddProperty(view) {
 
   info("Pressing return to commit and focus the new value field");
   let onValueFocus = once(ruleEditor.element, "focus", true);
-  let onRuleViewChanged = view.once("ruleview-changed");
+  let onModifications = ruleEditor.rule._applyingModifications;
   EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
   yield onValueFocus;
-  yield onRuleViewChanged;
+  yield onModifications;
 
   // Getting the new value editor after focus
   editor = inplaceEditor(view.doc.activeElement);
@@ -98,10 +98,10 @@ function* testAddProperty(view) {
   info("Entering a value and bluring the field to expect a rule change");
   editor.input.value = "center";
   let onBlur = once(editor.input, "blur");
-  onRuleViewChanged = view.once("ruleview-changed");
+  onModifications = ruleEditor.rule._applyingModifications;
   editor.input.blur();
   yield onBlur;
-  yield onRuleViewChanged;
+  yield onModifications;
 
   is(textProp.value, "center", "Text prop should have been changed.");
   is(textProp.overridden, false, "Property should not be overridden");

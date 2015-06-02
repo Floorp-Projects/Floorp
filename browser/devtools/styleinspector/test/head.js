@@ -412,31 +412,16 @@ function* waitForComputedStyleProperty(selector, pseudo, name, expected) {
  * focus
  * @return a promise that resolves to the inplace-editor element when ready
  */
-let focusEditableField = Task.async(function*(ruleView, editable, xOffset=1, yOffset=1, options={}) {
-  // Focusing the name or value input is going to fire a preview and update the rule view
-  let expectRuleViewUpdate =
-    editable.classList.contains("ruleview-propertyname") ||
-    editable.classList.contains("ruleview-propertyvalue");
-  let onRuleViewChanged;
-  if (expectRuleViewUpdate) {
-    onRuleViewChanged = ruleView.once("ruleview-changed");
-  }
-
+let focusEditableField = Task.async(function*(editable, xOffset=1, yOffset=1, options={}) {
   let onFocus = once(editable.parentNode, "focus", true);
+
   info("Clicking on editable field to turn to edit mode");
   EventUtils.synthesizeMouse(editable, xOffset, yOffset, options,
     editable.ownerDocument.defaultView);
   let event = yield onFocus;
 
   info("Editable field gained focus, returning the input field now");
-  let onEdit = inplaceEditor(editable.ownerDocument.activeElement);
-
-  if (expectRuleViewUpdate) {
-    info("Waiting for rule view update");
-    yield onRuleViewChanged;
-  }
-
-  return onEdit;
+  return inplaceEditor(editable.ownerDocument.activeElement);
 });
 
 /**
@@ -723,7 +708,6 @@ function getRuleViewSelectorHighlighterIcon(view, selectorText) {
 /**
  * Simulate a color change in a given color picker tooltip, and optionally wait
  * for a given element in the page to have its style changed as a result
- * @param {RuleView} ruleView The related rule view instance
  * @param {SwatchColorPickerTooltip} colorPicker
  * @param {Array} newRgba The new color to be set [r, g, b, a]
  * @param {Object} expectedChange Optional object that needs the following props:
@@ -733,8 +717,7 @@ function getRuleViewSelectorHighlighterIcon(view, selectorText) {
  *                 - {String} value The expected style value
  * The style will be checked like so: getComputedStyle(element)[name] === value
  */
-let simulateColorPickerChange = Task.async(function*(ruleView, colorPicker, newRgba, expectedChange) {
-  let onRuleViewChanged = ruleView.once("ruleview-changed");
+let simulateColorPickerChange = Task.async(function*(colorPicker, newRgba, expectedChange) {
   info("Getting the spectrum colorpicker object");
   let spectrum = yield colorPicker.spectrum;
   info("Setting the new color");
@@ -742,8 +725,6 @@ let simulateColorPickerChange = Task.async(function*(ruleView, colorPicker, newR
   info("Applying the change");
   spectrum.updateUI();
   spectrum.onChange();
-  info("Waiting for rule-view to update");
-  yield onRuleViewChanged;
 
   if (expectedChange) {
     info("Waiting for the style to be applied on the page");
@@ -799,7 +780,7 @@ function getRuleViewRuleEditor(view, childrenIndex, nodeIndex) {
 let focusNewRuleViewProperty = Task.async(function*(ruleEditor) {
   info("Clicking on a close ruleEditor brace to start editing a new property");
   ruleEditor.closeBrace.scrollIntoView();
-  let editor = yield focusEditableField(ruleEditor.ruleView, ruleEditor.closeBrace);
+  let editor = yield focusEditableField(ruleEditor.closeBrace);
 
   is(inplaceEditor(ruleEditor.newPropSpan), editor, "Focused editor is the new property editor.");
   is(ruleEditor.rule.textProps.length,  0, "Starting with one new text property.");

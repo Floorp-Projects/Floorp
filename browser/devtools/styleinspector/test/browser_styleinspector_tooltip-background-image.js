@@ -101,7 +101,7 @@ function* testTooltipAppearsEvenInEditMode(view) {
 
 function turnToEditMode(ruleView) {
   let brace = ruleView.doc.querySelector(".ruleview-ruleclose");
-  return focusEditableField(ruleView, brace);
+  return focusEditableField(brace);
 }
 
 function* testComputedView(view) {
