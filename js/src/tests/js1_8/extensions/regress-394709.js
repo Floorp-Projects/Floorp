@@ -1,3 +1,4 @@
+// |reftest| skip-if(!xulRuntime.shell)
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,14 +10,6 @@ var summary = 'Do not leak with object.watch and closure';
 var actual = 'No Leak';
 var expect = 'No Leak';
 
-if (typeof countHeap == 'undefined')
-{
-  countHeap = function () { 
-    print('This test requires countHeap which is not supported'); 
-    return 0;
-  };
-}
-
 //-----------------------------------------------------------------------------
 test();
 //-----------------------------------------------------------------------------
@@ -27,25 +20,23 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  // Ensure that we flush all values so that gc() collects all objects that
-  // the user cannot reach from JS.
-  eval();
+  assertEq(finalizeCount(), 0, "invalid initial state");
 
   runtest();
   gc();
-  var count1 = countHeap();
+  assertEq(finalizeCount(), 1, "leaked");
+
   runtest();
   gc();
-  var count2 = countHeap();
+  assertEq(finalizeCount(), 2, "leaked");
+
   runtest();
   gc();
-  var count3 = countHeap();
-  /* Try to be tolerant of conservative GC noise: we want a steady leak. */
-  if (count1 < count2 && count2 < count3)
-    throw "A leaky watch point is detected";
+  assertEq(finalizeCount(), 3, "leaked");
+
 
   function runtest () {
-    var obj = { b: 0 };
+    var obj = { b: makeFinalizeObserver() };
     obj.watch('b', watcher);
 
     function watcher(id, old, value) {

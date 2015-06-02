@@ -10,7 +10,7 @@
 #include "nsAutoPtr.h"
 #include "SurfaceTypes.h"
 
-#include "nsSize.h" // for gfxIntSize (needed by GLContextProviderImpl.h below)
+#include "nsSize.h" // for gfx::IntSize (needed by GLContextProviderImpl.h below)
 
 class nsIWidget;
 

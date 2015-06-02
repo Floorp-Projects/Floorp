@@ -29,34 +29,8 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
     NonAssertingLabel returnLabel_;
     NonAssertingLabel deoptLabel_;
 
-    inline Address ToAddress(const LAllocation& a) {
-        MOZ_ASSERT(a.isMemory());
-        int32_t offset = ToStackOffset(&a);
-
-        return Address(StackPointer, offset);
-    }
-
-    inline Address ToAddress(const LAllocation* a) {
-        return ToAddress(*a);
-    }
-
-    inline Operand ToOperand(const LAllocation& a) {
-        if (a.isGeneralReg())
-            return Operand(a.toGeneralReg()->reg());
-        if (a.isFloatReg())
-            return Operand(a.toFloatReg()->reg());
-
-        MOZ_ASSERT(a.isMemory());
-        int32_t offset = ToStackOffset(&a);
-
-        return Operand(StackPointer, offset);
-    }
-    inline Operand ToOperand(const LAllocation* a) {
-        return ToOperand(*a);
-    }
-    inline Operand ToOperand(const LDefinition* def) {
-        return ToOperand(def->output());
-    }
+    inline Address ToAddress(const LAllocation& a);
+    inline Address ToAddress(const LAllocation* a);
 
     MoveOperand toMoveOperand(LAllocation a) const;
 

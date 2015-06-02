@@ -859,7 +859,7 @@ FilterNodeConvolveD2D1::FilterNodeConvolveD2D1(ID2D1DeviceContext *aDC)
   
   hr = aDC->CreateEffect(CLSID_D2D1ConvolveMatrix, byRef(mEffect));
 
-  if (FAILED(hr)) {
+  if (FAILED(hr) || !mEffect) {
     gfxWarning() << "Failed to create ConvolveMatrix filter!";
     return;
   }
@@ -868,14 +868,14 @@ FilterNodeConvolveD2D1::FilterNodeConvolveD2D1(ID2D1DeviceContext *aDC)
 
   hr = aDC->CreateEffect(CLSID_ExtendInputEffect, byRef(mExtendInputEffect));
 
-  if (FAILED(hr)) {
+  if (FAILED(hr) || !mExtendInputEffect) {
     gfxWarning() << "Failed to create ConvolveMatrix filter!";
     return;
   }
 
   hr = aDC->CreateEffect(CLSID_D2D1Border, byRef(mBorderEffect));
 
-  if (FAILED(hr)) {
+  if (FAILED(hr) || !mBorderEffect) {
     gfxWarning() << "Failed to create ConvolveMatrix filter!";
     return;
   }
@@ -1018,7 +1018,7 @@ FilterNodeExtendInputAdapterD2D1::FilterNodeExtendInputAdapterD2D1(ID2D1DeviceCo
 
   hr = aDC->CreateEffect(CLSID_ExtendInputEffect, byRef(mExtendInputEffect));
 
-  if (FAILED(hr)) {
+  if (FAILED(hr) || !mExtendInputEffect) {
     gfxWarning() << "Failed to create extend input effect for filter: " << hexa(hr);
     return;
   }
@@ -1062,14 +1062,14 @@ FilterNodePremultiplyAdapterD2D1::FilterNodePremultiplyAdapterD2D1(ID2D1DeviceCo
 
   hr = aDC->CreateEffect(CLSID_D2D1Premultiply, byRef(mPrePremultiplyEffect));
 
-  if (FAILED(hr)) {
+  if (FAILED(hr) || !mPrePremultiplyEffect) {
     gfxWarning() << "Failed to create ComponentTransfer filter!";
     return;
   }
 
   hr = aDC->CreateEffect(CLSID_D2D1UnPremultiply, byRef(mPostUnpremultiplyEffect));
 
-  if (FAILED(hr)) {
+  if (FAILED(hr) || !mPostUnpremultiplyEffect) {
     gfxWarning() << "Failed to create ComponentTransfer filter!";
     return;
   }

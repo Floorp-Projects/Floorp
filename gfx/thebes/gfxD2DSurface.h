@@ -19,7 +19,7 @@ public:
     gfxD2DSurface(HWND wnd,
                   gfxContentType aContent);
 
-    gfxD2DSurface(const gfxIntSize& size,
+    gfxD2DSurface(const mozilla::gfx::IntSize& size,
                   gfxImageFormat imageFormat = gfxImageFormat::RGB24);
 
     gfxD2DSurface(HANDLE handle, gfxContentType aContent);

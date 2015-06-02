@@ -549,7 +549,7 @@ GLContextEGL::CreateGLContext(const SurfaceCaps& caps,
 EGLSurface
 GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(EGLConfig config,
                                                    EGLenum bindToTextureFormat,
-                                                   gfxIntSize& pbsize)
+                                                   mozilla::gfx::IntSize& pbsize)
 {
     nsTArray<EGLint> pbattrs(16);
     EGLSurface surface = nullptr;
@@ -838,7 +838,7 @@ GLContextProviderEGL::DestroyEGLSurface(EGLSurface surface)
 #endif // defined(ANDROID)
 
 already_AddRefed<GLContextEGL>
-GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& size)
+GLContextEGL::CreateEGLPBufferOffscreenContext(const mozilla::gfx::IntSize& size)
 {
     EGLConfig config;
     EGLSurface surface;
@@ -861,7 +861,7 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& size)
     if (GLContext::ShouldSpew())
         sEGLLibrary.DumpEGLConfig(config);
 
-    gfxIntSize pbSize(size);
+    mozilla::gfx::IntSize pbSize(size);
     surface = GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(config,
                                                                  LOCAL_EGL_NONE,
                                                                  pbSize);
@@ -891,7 +891,7 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& size)
 }
 
 already_AddRefed<GLContextEGL>
-GLContextEGL::CreateEGLPixmapOffscreenContext(const gfxIntSize& size)
+GLContextEGL::CreateEGLPixmapOffscreenContext(const mozilla::gfx::IntSize& size)
 {
     gfxASurface *thebesSurface = nullptr;
     EGLNativePixmapType pixmap = 0;
@@ -937,7 +937,7 @@ GLContextProviderEGL::CreateHeadless(bool)
         return nullptr;
     }
 
-    gfxIntSize dummySize = gfxIntSize(16, 16);
+    mozilla::gfx::IntSize dummySize = mozilla::gfx::IntSize(16, 16);
     nsRefPtr<GLContext> glContext;
     glContext = GLContextEGL::CreateEGLPBufferOffscreenContext(dummySize);
     if (!glContext)
@@ -949,7 +949,7 @@ GLContextProviderEGL::CreateHeadless(bool)
 // Under EGL, on Android, pbuffers are supported fine, though
 // often without the ability to texture from them directly.
 already_AddRefed<GLContext>
-GLContextProviderEGL::CreateOffscreen(const gfxIntSize& size,
+GLContextProviderEGL::CreateOffscreen(const mozilla::gfx::IntSize& size,
                                       const SurfaceCaps& caps,
                                       bool requireCompatProfile)
 {

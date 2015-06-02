@@ -83,6 +83,11 @@ InputQueue::ReceiveTouchInput(const nsRefPtr<AsyncPanZoomController>& aTarget,
       haveBehaviors = true;
     } else if (!mInputBlockQueue.IsEmpty() && CurrentBlock()->AsTouchBlock()) {
       haveBehaviors = CurrentTouchBlock()->GetAllowedTouchBehaviors(currentBehaviors);
+      // If the behaviours aren't set, but the main-thread response timer on
+      // the block is expired we still treat it as though it has behaviors,
+      // because in that case we still want to interrupt the fast-fling and
+      // use the default behaviours.
+      haveBehaviors |= CurrentTouchBlock()->IsContentResponseTimerExpired();
     }
 
     block = StartNewTouchBlock(aTarget, aTargetConfirmed, false);
@@ -221,19 +226,26 @@ void
 InputQueue::MaybeRequestContentResponse(const nsRefPtr<AsyncPanZoomController>& aTarget,
                                         CancelableBlockState* aBlock)
 {
-  bool waitForMainThread = !aBlock->IsTargetConfirmed();
+  bool waitForMainThread = false;
+  if (aBlock->IsTargetConfirmed()) {
+    // Content won't prevent-default this, so we can just set the flag directly.
+    INPQ_LOG("not waiting for content response on block %p\n", aBlock);
+    aBlock->SetContentResponse(false);
+  } else {
+    waitForMainThread = true;
+  }
+  if (aBlock->AsTouchBlock() && gfxPrefs::TouchActionEnabled()) {
+    // TODO: once bug 1101628 is fixed, waitForMainThread should only be set
+    // to true if the APZCTM didn't know the touch-action behaviours for this
+    // block.
+    waitForMainThread = true;
+  }
   if (waitForMainThread) {
     // We either don't know for sure if aTarget is the right APZC, or we may
     // need to wait to give content the opportunity to prevent-default the
     // touch events. Either way we schedule a timeout so the main thread stuff
     // can run.
     ScheduleMainThreadTimeout(aTarget, aBlock->GetBlockId());
-  } else {
-    // Content won't prevent-default this, so we can just pretend like we scheduled
-    // a timeout and it expired. Note that we will still receive a ContentReceivedInputBlock
-    // callback for this block, and so we need to make sure we adjust the touch balance.
-    INPQ_LOG("not waiting for content response on block %p\n", aBlock);
-    aBlock->TimeoutContentResponse();
   }
 }
 
