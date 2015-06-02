@@ -273,10 +273,16 @@ if (this.addMessageListener) {
     commonInit(true);
     sendAsyncMessage("doneSetup");
   });
+
   addMessageListener("loadRecipes", Task.async(function* loadRecipes(recipes) {
     var { LoginManagerParent } = Cu.import("resource://gre/modules/LoginManagerParent.jsm", {});
     var recipeParent = yield LoginManagerParent.recipeParentPromise;
     yield recipeParent.load(recipes);
     sendAsyncMessage("loadedRecipes", recipes);
   }));
+
+  var globalMM = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
+  globalMM.addMessageListener("RemoteLogins:onFormSubmit", function onFormSubmit(message) {
+    sendAsyncMessage("formSubmissionProcessed", message.data, message.objects);
+  });
 }

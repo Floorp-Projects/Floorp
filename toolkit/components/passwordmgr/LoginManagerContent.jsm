@@ -64,9 +64,11 @@ var observer = {
     // can grab form data before it might be modified (see bug 257781).
 
     try {
-      LoginManagerContent._onFormSubmit(formElement);
+      let formLike = FormLikeFactory.createFromForm(formElement);
+      LoginManagerContent._onFormSubmit(formLike);
     } catch (e) {
       log("Caught error in onFormSubmit(", e.lineNumber, "):", e.message);
+      Cu.reportError(e);
     }
 
     return true; // Always return true, or form submit will be canceled.
@@ -638,18 +640,12 @@ var LoginManagerContent = {
   },
 
 
-  /*
-   * _isAutoCompleteDisabled
-   *
-   * Returns true if the page requests autocomplete be disabled for the
-   * specified form input.
+  /**
+   * @return true if the page requests autocomplete be disabled for the
+   *              specified element.
    */
-  _isAutocompleteDisabled :  function (element) {
-    if (element && element.hasAttribute("autocomplete") &&
-        element.getAttribute("autocomplete").toLowerCase() == "off")
-      return true;
-
-    return false;
+  _isAutocompleteDisabled(element) {
+    return element && element.autocomplete == "off";
   },
 
   /**
@@ -657,8 +653,10 @@ var LoginManagerContent = {
    * [Note that this happens before any DOM onsubmit handlers are invoked.]
    * Looks for a password change in the submitted form, so we can update
    * our stored password.
+   *
+   * @param {FormLike} form
    */
-  _onFormSubmit : function (form) {
+  _onFormSubmit(form) {
     var doc = form.ownerDocument;
     var win = doc.defaultView;
 
@@ -1096,8 +1094,8 @@ UserAutoCompleteResult.prototype = {
  */
 let FormLikeFactory = {
   _propsFromForm: [
-      "action",
-      "autocomplete",
+    "autocomplete",
+    "ownerDocument",
   ],
 
   /**
@@ -1113,8 +1111,8 @@ let FormLikeFactory = {
     }
 
     let formLike = {
+      action: LoginUtils._getActionOrigin(aForm),
       elements: [...aForm.elements],
-      ownerDocument: aForm.ownerDocument,
       rootElement: aForm,
     };
 
@@ -1152,7 +1150,7 @@ let FormLikeFactory = {
     let doc = aPasswordField.ownerDocument;
     log("Created non-form FormLike for rootElement:", doc.documentElement);
     return {
-      action: "",
+      action: LoginUtils._getPasswordOrigin(doc.baseURI),
       autocomplete: "on",
       // Exclude elements inside the rootElement that are already in a <form> as
       // they will be handled by their own FormLike.
