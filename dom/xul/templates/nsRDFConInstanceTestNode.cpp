@@ -13,9 +13,6 @@
 
 #include "mozilla/Logging.h"
 #include "nsXULContentUtils.h"
-
-using mozilla::LogLevel;
-
 extern PRLogModuleInfo* gXULTemplateLog;
 
 static const char*
@@ -39,7 +36,7 @@ nsRDFConInstanceTestNode::nsRDFConInstanceTestNode(TestNode* aParent,
       mContainer(aContainer),
       mEmpty(aEmpty)
 {
-    if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
+    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         nsAutoCString props;
 
         nsResourceSet& containmentProps = aProcessor->ContainmentProperties();
@@ -61,7 +58,7 @@ nsRDFConInstanceTestNode::nsRDFConInstanceTestNode(TestNode* aParent,
         if (mContainerVariable)
             mContainerVariable->ToString(cvar);
 
-        MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
+        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsRDFConInstanceTestNode[%p]: parent=%p member-props=(%s) container-var=%s container=%s empty=%s",
                 this,
                 aParent,
@@ -103,11 +100,11 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
             continue;
         }
 
-        if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
+        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
             const char* container = "(unbound)";
             valueres->GetValueConst(&container);
 
-            MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
+            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("nsRDFConInstanceTestNode[%p]::FilterInstantiations() container=[%s]",
                     this, container));
         }
@@ -195,11 +192,11 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
                 }
             }
 
-            MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
+            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("    empty => %s",
                     (empty == mEmpty) ? "consistent" : "inconsistent"));
 
-            MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
+            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("    container => %s",
                     (container == mContainer) ? "consistent" : "inconsistent"));
 
@@ -248,7 +245,7 @@ nsRDFConInstanceTestNode::CanPropagate(nsIRDFResource* aSource,
         canpropagate = mProcessor->ContainmentProperties().Contains(aProperty);
     }
 
-    if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
+    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         const char* source;
         aSource->GetValueConst(&source);
 
@@ -258,7 +255,7 @@ nsRDFConInstanceTestNode::CanPropagate(nsIRDFResource* aSource,
         nsAutoString target;
         nsXULContentUtils::GetTextForNode(aTarget, target);
 
-        MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
+        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsRDFConInstanceTestNode[%p]: CanPropagate([%s]==[%s]=>[%s]) => %s",
                 this, source, property, NS_ConvertUTF16toUTF8(target).get(),
                 canpropagate ? "true" : "false"));

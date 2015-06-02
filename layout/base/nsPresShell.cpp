@@ -1000,12 +1000,12 @@ LogTextPerfStats(gfxTextPerfMetrics* aTextPerf,
   PRLogModuleInfo* tpLog = gfxPlatform::GetLog(eGfxLog_textperf);
 
   // ignore XUL contexts unless at debug level
-  mozilla::LogLevel logLevel = LogLevel::Warning;
+  PRLogModuleLevel logLevel = PR_LOG_WARNING;
   if (aCounts.numContentTextRuns == 0) {
-    logLevel = LogLevel::Debug;
+    logLevel = PR_LOG_DEBUG;
   }
 
-  if (!MOZ_LOG_TEST(tpLog, logLevel)) {
+  if (!PR_LOG_TEST(tpLog, logLevel)) {
     return;
   }
 
@@ -2709,7 +2709,7 @@ PresShell::BeginLoad(nsIDocument *aDocument)
     tp = mPresContext->GetTextPerfMetrics();
   }
 
-  bool shouldLog = gLog && MOZ_LOG_TEST(gLog, LogLevel::Debug);
+  bool shouldLog = gLog && PR_LOG_TEST(gLog, PR_LOG_DEBUG);
   if (shouldLog || tp) {
     mLoadBegin = TimeStamp::Now();
   }
@@ -2720,7 +2720,7 @@ PresShell::BeginLoad(nsIDocument *aDocument)
     if (uri) {
       uri->GetSpec(spec);
     }
-    MOZ_LOG(gLog, LogLevel::Debug,
+    MOZ_LOG(gLog, PR_LOG_DEBUG,
            ("(presshell) %p load begin [%s]\n",
             this, spec.get()));
   }
@@ -2745,7 +2745,7 @@ PresShell::LoadComplete()
   }
 
   // log load
-  bool shouldLog = gLog && MOZ_LOG_TEST(gLog, LogLevel::Debug);
+  bool shouldLog = gLog && PR_LOG_TEST(gLog, PR_LOG_DEBUG);
   if (shouldLog || tp) {
     TimeDuration loadTime = TimeStamp::Now() - mLoadBegin;
     nsIURI* uri = mDocument->GetDocumentURI();
@@ -2754,7 +2754,7 @@ PresShell::LoadComplete()
       uri->GetSpec(spec);
     }
     if (shouldLog) {
-      MOZ_LOG(gLog, LogLevel::Debug,
+      MOZ_LOG(gLog, PR_LOG_DEBUG,
              ("(presshell) %p load done time-ms: %9.2f [%s]\n",
               this, loadTime.ToMilliseconds(), spec.get()));
     }

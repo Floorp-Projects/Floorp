@@ -2132,7 +2132,7 @@ FlexLine::FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
 void
 FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
 {
-  MOZ_LOG(GetFlexContainerLog(), LogLevel::Debug, ("ResolveFlexibleLengths\n"));
+  MOZ_LOG(GetFlexContainerLog(), PR_LOG_DEBUG, ("ResolveFlexibleLengths\n"));
 
   // Determine whether we're going to be growing or shrinking items.
   const bool isUsingFlexGrow =
@@ -2180,7 +2180,7 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
       availableFreeSpace -= item->GetMainSize();
     }
 
-    MOZ_LOG(GetFlexContainerLog(), LogLevel::Debug,
+    MOZ_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
            (" available free space = %d\n", availableFreeSpace));
 
 
@@ -2292,7 +2292,7 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
           }
         }
 
-        MOZ_LOG(GetFlexContainerLog(), LogLevel::Debug,
+        MOZ_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
                (" Distributing available space:"));
         // Since this loop only operates on unfrozen flex items, we can break as
         // soon as we have seen all of them.
@@ -2340,7 +2340,7 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
             availableFreeSpace -= sizeDelta;
 
             item->SetMainSize(item->GetMainSize() + sizeDelta);
-            MOZ_LOG(GetFlexContainerLog(), LogLevel::Debug,
+            MOZ_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
                    ("  child %p receives %d, for a total of %d\n",
                     item, sizeDelta, item->GetMainSize()));
           }
@@ -2350,7 +2350,7 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
 
     // Fix min/max violations:
     nscoord totalViolation = 0; // keeps track of adjustments for min/max
-    MOZ_LOG(GetFlexContainerLog(), LogLevel::Debug,
+    MOZ_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
            (" Checking for violations:"));
 
     // Since this loop only operates on unfrozen flex items, we can break as
@@ -2379,7 +2379,7 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
     FreezeOrRestoreEachFlexibleSize(totalViolation,
                                     iterationCounter + 1 == mNumItems);
 
-    MOZ_LOG(GetFlexContainerLog(), LogLevel::Debug,
+    MOZ_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
            (" Total violation: %d\n", totalViolation));
 
     if (mNumFrozenItems == mNumItems) {
@@ -3528,7 +3528,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFlexContainerFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
-  MOZ_LOG(GetFlexContainerLog(), LogLevel::Debug,
+  MOZ_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
          ("Reflow() for nsFlexContainerFrame %p\n", this));
 
   if (IsFrameTreeTooDeep(aReflowState, aDesiredSize, aStatus)) {

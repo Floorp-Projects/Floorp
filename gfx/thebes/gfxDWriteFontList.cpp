@@ -28,20 +28,20 @@
 using namespace mozilla;
 
 #define LOG_FONTLIST(args) MOZ_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
-                               LogLevel::Debug, args)
-#define LOG_FONTLIST_ENABLED() MOZ_LOG_TEST( \
+                               PR_LOG_DEBUG, args)
+#define LOG_FONTLIST_ENABLED() PR_LOG_TEST( \
                                    gfxPlatform::GetLog(eGfxLog_fontlist), \
-                                   LogLevel::Debug)
+                                   PR_LOG_DEBUG)
 
 #define LOG_FONTINIT(args) MOZ_LOG(gfxPlatform::GetLog(eGfxLog_fontinit), \
-                               LogLevel::Debug, args)
-#define LOG_FONTINIT_ENABLED() MOZ_LOG_TEST( \
+                               PR_LOG_DEBUG, args)
+#define LOG_FONTINIT_ENABLED() PR_LOG_TEST( \
                                    gfxPlatform::GetLog(eGfxLog_fontinit), \
-                                   LogLevel::Debug)
+                                   PR_LOG_DEBUG)
 
-#define LOG_CMAPDATA_ENABLED() MOZ_LOG_TEST( \
+#define LOG_CMAPDATA_ENABLED() PR_LOG_TEST( \
                                    gfxPlatform::GetLog(eGfxLog_cmapdata), \
-                                   LogLevel::Debug)
+                                   PR_LOG_DEBUG)
 
 static __inline void
 BuildKeyNameFromFontName(nsAString &aName)

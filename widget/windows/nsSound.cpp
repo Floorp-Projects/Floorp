@@ -27,8 +27,6 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsThreadUtils.h"
 
-using mozilla::LogLevel;
-
 PRLogModuleInfo* gWin32SoundLog = nullptr;
 
 class nsSoundPlayer: public nsRunnable {
@@ -169,7 +167,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
         if (uri) {
           nsAutoCString uriSpec;
           uri->GetSpec(uriSpec);
-          MOZ_LOG(gWin32SoundLog, LogLevel::Info,
+          MOZ_LOG(gWin32SoundLog, PR_LOG_ALWAYS,
                  ("Failed to load %s\n", uriSpec.get()));
         }
       }
@@ -203,7 +201,7 @@ NS_IMETHODIMP nsSound::Play(nsIURL *aURL)
 #ifdef DEBUG_SOUND
   char *url;
   aURL->GetSpec(&url);
-  MOZ_LOG(gWin32SoundLog, LogLevel::Info,
+  MOZ_LOG(gWin32SoundLog, PR_LOG_ALWAYS,
          ("%s\n", url));
 #endif
 
