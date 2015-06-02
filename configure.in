@@ -5184,11 +5184,6 @@ AC_SUBST(MOZ_WEBSPEECH_TEST_BACKEND)
 dnl ========================================================
 dnl = Disable Speech API pocketsphinx backend
 dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(webspeechpocketsphinx,
-[  --disable-webspeechpocketsphinx        Disable support for HTML Speech API Pocketsphinx Backend],
-    MOZ_WEBSPEECH_POCKETSPHINX=,
-    MOZ_WEBSPEECH_POCKETSPHINX=1)
-
 if test -n "$MOZ_WEBSPEECH_POCKETSPHINX"; then
     AC_DEFINE(MOZ_WEBSPEECH_POCKETSPHINX)
 fi
@@ -5212,11 +5207,6 @@ AC_SUBST(MOZ_WEBSPEECH)
 dnl ========================================================
 dnl = Disable Speech API models
 dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(webspeechmodels,
-[  --disable-webspeechmodels        Disable support for HTML Speech API Models],
-    MOZ_WEBSPEECH_MODELS=,
-    MOZ_WEBSPEECH_MODELS=1)
-
 if test -n "$MOZ_WEBSPEECH_MODELS"; then
     AC_DEFINE(MOZ_WEBSPEECH_MODELS)
 fi
