@@ -11,6 +11,7 @@
 #include "mozilla/ipc/DataSocket.h"
 
 class MessageLoop;
+class nsIThread;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -28,6 +29,7 @@ public:
                    BluetoothSocketType aType,
                    int aChannel,
                    bool aAuth, bool aEncrypt,
+                   nsIThread* aConsumerThread,
                    MessageLoop* aIOLoop);
 
   nsresult Connect(const nsAString& aDeviceAddress,
@@ -41,6 +43,7 @@ public:
                   BluetoothSocketType aType,
                   int aChannel,
                   bool aAuth, bool aEncrypt,
+                  nsIThread* aConsumerThread,
                   MessageLoop* aIOLoop);
 
   nsresult Listen(const nsAString& aServiceName,

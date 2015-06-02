@@ -26,6 +26,7 @@ class UnixSocketConnector;
 class ConnectionOrientedSocketIO : public DataSocketIO
 {
 public:
+  ConnectionOrientedSocketIO(nsIThread* aConsumerThread);
   virtual ~ConnectionOrientedSocketIO();
 
   virtual nsresult Accept(int aFd,
@@ -42,11 +43,13 @@ public:
    *
    * @param aConnector The new connector object, owned by the
    *                   connection-oriented socket.
+   * @param aConsumerThread The socket's consumer thread.
    * @param aIOLoop The socket's I/O thread.
    * @param[out] aIO, Returns an instance of |ConnectionOrientedSocketIO|.
    * @return NS_OK on success, or an XPCOM error code otherwise.
    */
   virtual nsresult PrepareAccept(UnixSocketConnector* aConnector,
+                                 nsIThread* aConsumerThread,
                                  MessageLoop* aIOLoop,
                                  ConnectionOrientedSocketIO*& aIO) = 0;
 
