@@ -206,13 +206,6 @@ public:
   // A value of INT64_MAX will be treated as infinity.
   void SetDuration(int64_t aDuration);
 
-  // Called from main thread to update the duration with an estimated value.
-  // The duration is only changed if its significantly different than the
-  // the current duration, as the incoming duration is an estimate and so
-  // often is unstable as more data is read and the estimate is updated.
-  // Can result in a durationchangeevent. aDuration is in microseconds.
-  void UpdateEstimatedDuration(int64_t aDuration);
-
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
   bool OnDecodeTaskQueue() const;
@@ -905,6 +898,9 @@ public:
 
   // The duration according to HTTP headers etc, mirrored from the main thread.
   Mirror<media::NullableTimeUnit> mNetworkDuration;
+
+  // The duration according to the demuxer's current estimate, mirrored from the main thread.
+  Mirror<media::NullableTimeUnit> mEstimatedDuration;
 
   // The duration explicitly set by JS, mirrored from the main thread.
   Mirror<Maybe<double>> mExplicitDuration;
