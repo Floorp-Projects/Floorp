@@ -19,7 +19,7 @@ class UnixSocketConnector;
 
 /*
  * |ConnectionOrientedSocketIO| and |ConnectionOrientedSocket| define
- * interfaces for implementing stream sockets on I/O and main thread.
+ * interfaces for implementing stream sockets on I/O and consumer thread.
  * |ListenSocket| uses these classes to handle accepted sockets.
  */
 
@@ -39,7 +39,7 @@ class ConnectionOrientedSocket : public DataSocket
 public:
   /**
    * Prepares an instance of |ConnectionOrientedSocket| in DISCONNECTED
-   * state for accepting a connection. Main-thread only.
+   * state for accepting a connection. Consumer-thread only.
    *
    * @param aConnector The new connector object, owned by the
    *                   connection-oriented socket.

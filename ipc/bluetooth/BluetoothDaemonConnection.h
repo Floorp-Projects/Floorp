@@ -94,7 +94,7 @@ private:
 /*
  * |BluetoothDaemonPDUConsumer| processes incoming PDUs from the Bluetooth
  * daemon. Please note that its method |Handle| runs on a different than the
- * main thread.
+ * consumer thread.
  */
 class BluetoothDaemonPDUConsumer
 {
