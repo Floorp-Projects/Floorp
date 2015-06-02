@@ -54,6 +54,11 @@ bool ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler&) { MOZ_CRAS
 bool ICUnaryArith_Int32::Compiler::generateStubCode(MacroAssembler&) { MOZ_CRASH(); }
 JitCode* JitRuntime::generateProfilerExitFrameTailStub(JSContext*) { MOZ_CRASH(); }
 
+void MacroAssembler::alignFrameForICArguments(AfterICSaveLive& aic) { MOZ_CRASH(); }
+void MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive& aic) { MOZ_CRASH(); }
+
+void MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output) { MOZ_CRASH(); }
+
 // ===============================================================
 // Stack manipulation functions.
 
@@ -69,3 +74,5 @@ void MacroAssembler::Push(FloatRegister reg) { MOZ_CRASH(); }
 
 void MacroAssembler::Pop(Register reg) { MOZ_CRASH(); }
 void MacroAssembler::Pop(const ValueOperand& val) { MOZ_CRASH(); }
+
+void MacroAssembler::reserveStack(uint32_t amount) { MOZ_CRASH(); }

@@ -2837,6 +2837,10 @@ js::LookupPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSObject** 
 static inline bool
 NativeGetPureInline(NativeObject* pobj, Shape* shape, Value* vp)
 {
+    /* Fail if we have a custom getter. */
+    if (!shape->hasDefaultGetter())
+        return false;
+
     if (shape->hasSlot()) {
         *vp = pobj->getSlot(shape->slot());
         MOZ_ASSERT(!vp->isMagic());
@@ -2844,8 +2848,7 @@ NativeGetPureInline(NativeObject* pobj, Shape* shape, Value* vp)
         vp->setUndefined();
     }
 
-    /* Fail if we have a custom getter. */
-    return shape->hasDefaultGetter();
+    return true;
 }
 
 bool
@@ -2855,6 +2858,12 @@ js::GetPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, Value* vp)
     Shape* shape;
     if (!LookupPropertyPure(cx, obj, id, &pobj, &shape))
         return false;
+
+    if (!shape) {
+        vp->setUndefined();
+        return true;
+    }
+
     return pobj->isNative() && NativeGetPureInline(&pobj->as<NativeObject>(), shape, vp);
 }
 

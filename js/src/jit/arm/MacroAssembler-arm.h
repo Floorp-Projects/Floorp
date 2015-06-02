@@ -532,19 +532,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
   protected:
     MoveResolver moveResolver_;
 
-    // Extra bytes currently pushed onto the frame beyond frameDepth_. This is
-    // needed to compute offsets to stack slots while temporary space has been
-    // reserved for unexpected spills or C++ function calls. It is maintained by
-    // functions which track stack alignment, which for clear distinction use
-    // StudlyCaps (for example, Push, Pop).
-    uint32_t framePushed_;
-    void adjustFrame(int value) {
-        setFramePushed(framePushed_ + value);
-    }
   public:
     MacroAssemblerARMCompat()
-      : inCall_(false),
-        framePushed_(0)
+      : inCall_(false)
     { }
 
   public:
@@ -607,14 +597,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
         ma_movPatchable(ImmPtr(c->raw()), ScratchRegister, Always, rs);
         ma_callJitHalfPush(ScratchRegister);
-    }
-    void call(const CallSiteDesc& desc, const Register reg) {
-        call(reg);
-        append(desc, currentOffset(), framePushed_);
-    }
-    void call(const CallSiteDesc& desc, Label* label) {
-        call(label);
-        append(desc, currentOffset(), framePushed_);
     }
     void callAndPushReturnAddress(Label* label) {
         AutoForbidPools afp(this, 2);
@@ -1261,36 +1243,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // Common interface.
     /////////////////////////////////////////////////////////////////
   public:
-    // The following functions are exposed for use in platform-shared code.
-
-    CodeOffsetLabel PushWithPatch(ImmWord word) {
-        framePushed_ += sizeof(word.value);
-        return pushWithPatch(word);
-    }
-    CodeOffsetLabel PushWithPatch(ImmPtr imm) {
-        return PushWithPatch(ImmWord(uintptr_t(imm.value)));
-    }
-
-    void PushWithPadding(Register reg, const Imm32 extraSpace) {
-        pushWithPadding(reg, extraSpace);
-        adjustFrame(sizeof(intptr_t) + extraSpace.value);
-    }
-    void PushWithPadding(const Imm32 imm, const Imm32 extraSpace) {
-        pushWithPadding(imm, extraSpace);
-        adjustFrame(sizeof(intptr_t) + extraSpace.value);
-    }
-
-    void implicitPop(uint32_t args) {
-        MOZ_ASSERT(args % sizeof(intptr_t) == 0);
-        adjustFrame(-args);
-    }
-    uint32_t framePushed() const {
-        return framePushed_;
-    }
-    void setFramePushed(uint32_t framePushed) {
-        framePushed_ = framePushed;
-    }
-
     // Builds an exit frame on the stack, with a return address to an internal
     // non-function. Returns offset to be passed to markSafepointAt().
     void buildFakeExitFrame(Register scratch, uint32_t* offset);
@@ -1303,10 +1255,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // independent code to make a call.
     void callJit(Register callee);
     void callJitFromAsmJS(Register callee) { as_blx(callee); }
-
-    void reserveStack(uint32_t amount);
-    void freeStack(uint32_t amount);
-    void freeStack(Register amount);
 
     void add32(Register src, Register dest);
     void add32(Imm32 imm, Register dest);

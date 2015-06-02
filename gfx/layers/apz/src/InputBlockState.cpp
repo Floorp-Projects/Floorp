@@ -127,6 +127,12 @@ CancelableBlockState::TimeoutContentResponse()
 }
 
 bool
+CancelableBlockState::IsContentResponseTimerExpired() const
+{
+  return mContentResponseTimerExpired;
+}
+
+bool
 CancelableBlockState::IsDefaultPrevented() const
 {
   MOZ_ASSERT(mContentResponded || mContentResponseTimerExpired);
@@ -136,8 +142,9 @@ CancelableBlockState::IsDefaultPrevented() const
 bool
 CancelableBlockState::IsReadyForHandling() const
 {
-  if (!IsTargetConfirmed())
+  if (!IsTargetConfirmed()) {
     return false;
+  }
   return mContentResponded || mContentResponseTimerExpired;
 }
 
@@ -447,7 +454,7 @@ TouchBlockState::CopyPropertiesFrom(const TouchBlockState& aOther)
 {
   TBS_LOG("%p copying properties from %p\n", this, &aOther);
   if (gfxPrefs::TouchActionEnabled()) {
-    MOZ_ASSERT(aOther.mAllowedTouchBehaviorSet);
+    MOZ_ASSERT(aOther.mAllowedTouchBehaviorSet || aOther.IsContentResponseTimerExpired());
     SetAllowedTouchBehaviors(aOther.mAllowedTouchBehaviors);
   }
   mTransformToApzc = aOther.mTransformToApzc;
@@ -460,11 +467,11 @@ TouchBlockState::IsReadyForHandling() const
     return false;
   }
 
-  // TODO: for long-tap blocks we probably don't need the touch behaviour?
-  if (gfxPrefs::TouchActionEnabled() && !mAllowedTouchBehaviorSet) {
-    return false;
+  if (!gfxPrefs::TouchActionEnabled()) {
+    return true;
   }
-  return true;
+
+  return mAllowedTouchBehaviorSet || IsContentResponseTimerExpired();
 }
 
 void

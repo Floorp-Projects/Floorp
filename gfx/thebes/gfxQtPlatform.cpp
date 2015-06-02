@@ -95,7 +95,7 @@ gfxQtPlatform::CreateOffscreenSurface(const IntSize& size,
     gfxImageFormat imageFormat = OptimalFormatForContent(contentType);
 
     nsRefPtr<gfxASurface> newSurface =
-        new gfxImageSurface(gfxIntSize(size.width, size.height), imageFormat);
+        new gfxImageSurface(size, imageFormat);
 
     return newSurface.forget();
 }

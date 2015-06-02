@@ -20,13 +20,13 @@ public:
 
     already_AddRefed<gfxImageSurface> GetAsImageSurface();
     virtual int32_t KnownMemoryUsed();
-    virtual const gfxIntSize GetSize() const { return gfxIntSize(mSize.width, mSize.height); }
+    virtual const mozilla::gfx::IntSize GetSize() const { return mSize; }
 
 protected:
-    gfxIntSize mSize;
+    mozilla::gfx::IntSize mSize;
 
 private:
-    gfxIntSize ComputeSize();
+    mozilla::gfx::IntSize ComputeSize();
 };
 
 #endif /* GFX_QUARTZIMAGESURFACE_H */

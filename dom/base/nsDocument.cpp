@@ -4769,6 +4769,9 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     nsLoadFlags loadFlags = 0;
     channel->GetLoadFlags(&loadFlags);
     // If we are shift-reloaded, don't associate with a ServiceWorker.
+    // TODO: This should check the nsDocShell definition of shift-reload instead
+    //       of trying to infer it from LOAD_BYPASS_CACHE.  The current code
+    //       will probably cause problems once bug 1120715 lands.
     if (loadFlags & nsIRequest::LOAD_BYPASS_CACHE) {
       NS_WARNING("Page was shift reloaded, skipping ServiceWorker control");
       return;
@@ -7876,7 +7879,11 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
   // Compute the CSS-to-LayoutDevice pixel scale as the product of the
   // widget scale and the full zoom.
   nsPresContext* context = mPresShell->GetPresContext();
-  float fullZoom = context ? context->GetFullZoom() : 1.0;
+  // When querying the full zoom, get it from the device context rather than
+  // directly from the pres context, because the device context's value can
+  // include an adjustment necessay to keep the number of app units per device
+  // pixel an integer, and we want the adjusted value.
+  float fullZoom = context ? context->DeviceContext()->GetFullZoom() : 1.0;
   fullZoom = (fullZoom == 0.0) ? 1.0 : fullZoom;
   nsIWidget *widget = nsContentUtils::WidgetForDocument(this);
   float widgetScale = widget ? widget->GetDefaultScale().scale : 1.0f;

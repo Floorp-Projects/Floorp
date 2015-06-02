@@ -39,7 +39,7 @@ public:
      *
      * @see gfxImageFormat
      */
-    gfxImageSurface(unsigned char *aData, const gfxIntSize& aSize,
+    gfxImageSurface(unsigned char *aData, const mozilla::gfx::IntSize& aSize,
                     long aStride, gfxImageFormat aFormat);
 
     /**
@@ -49,7 +49,7 @@ public:
      *
      * @see gfxImageFormat
      */
-    gfxImageSurface(const gfxIntSize& size, gfxImageFormat format, bool aClear = true);
+    gfxImageSurface(const mozilla::gfx::IntSize& size, gfxImageFormat format, bool aClear = true);
 
     /**
      * Construct an image surface, with a specified stride and allowing the
@@ -66,7 +66,7 @@ public:
      *
      * @see gfxImageFormat
      */
-    gfxImageSurface(const gfxIntSize& aSize, gfxImageFormat aFormat,
+    gfxImageSurface(const mozilla::gfx::IntSize& aSize, gfxImageFormat aFormat,
                     long aStride, int32_t aMinimalAllocation, bool aClear);
 
     explicit gfxImageSurface(cairo_surface_t *csurf);
@@ -76,7 +76,7 @@ public:
     // ImageSurface methods
     gfxImageFormat Format() const { return mFormat; }
 
-    virtual const gfxIntSize GetSize() const override { return mSize; }
+    virtual const mozilla::gfx::IntSize GetSize() const override { return mSize; }
     int32_t Width() const { return mSize.width; }
     int32_t Height() const { return mSize.height; }
 
@@ -124,7 +124,7 @@ public:
     virtual already_AddRefed<gfxImageSurface> GetAsImageSurface() override;
 
     /** See gfxASurface.h. */
-    static long ComputeStride(const gfxIntSize&, gfxImageFormat);
+    static long ComputeStride(const mozilla::gfx::IntSize&, gfxImageFormat);
 
     virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
         override;
@@ -134,7 +134,7 @@ public:
 
 protected:
     gfxImageSurface();
-    void InitWithData(unsigned char *aData, const gfxIntSize& aSize,
+    void InitWithData(unsigned char *aData, const mozilla::gfx::IntSize& aSize,
                       long aStride, gfxImageFormat aFormat);
     /**
      * See the parameters to the matching constructor.  This should only
@@ -149,7 +149,7 @@ protected:
 
     void MakeInvalid();
 
-    gfxIntSize mSize;
+    mozilla::gfx::IntSize mSize;
     bool mOwnsData;
     unsigned char *mData;
     gfxImageFormat mFormat;
@@ -161,7 +161,7 @@ protected:
     friend class gfxImageSurface;
     gfxSubimageSurface(gfxImageSurface* aParent,
                        unsigned char* aData,
-                       const gfxIntSize& aSize,
+                       const mozilla::gfx::IntSize& aSize,
                        gfxImageFormat aFormat);
 private:
     nsRefPtr<gfxImageSurface> mParent;
