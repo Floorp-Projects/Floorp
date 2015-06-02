@@ -106,3 +106,12 @@ fi
 
 # Use the low-memory GC tuning.
 export JS_GC_SMALL_CHUNK_SIZE=1
+
+# Enable checking that add-ons are signed by the trusted root
+MOZ_ADDON_SIGNING=1
+if test "$MOZ_OFFICIAL_BRANDING"; then
+  if test "$MOZ_UPDATE_CHANNEL" = "beta" -o \
+          "$MOZ_UPDATE_CHANNEL" = "release"; then
+    MOZ_REQUIRE_SIGNING=1
+  fi
+fi

@@ -1,4 +1,3 @@
-/* vim: set ts=2 sts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -452,27 +451,28 @@ var LoginManagerContent = {
     }
   },
 
-
-  /*
-   * _getPasswordFields
-   *
-   * Returns an array of password field elements for the specified form.
-   * If no pw fields are found, or if more than 3 are found, then null
-   * is returned.
-   *
-   * skipEmptyFields can be set to ignore password fields with no value.
+  /**
+   * @param {FormLike} form - the FormLike to look for password fields in.
+   * @param {bool} [skipEmptyFields=false] - Whether to ignore password fields with no value.
+   *                                         Used at capture time since saving empty values isn't
+   *                                         useful.
+   * @return {Array|null} Array of password field elements for the specified form.
+   *                      If no pw fields are found, or if more than 3 are found, then null
+   *                      is returned.
    */
-  _getPasswordFields : function (form, skipEmptyFields) {
+  _getPasswordFields(form, skipEmptyFields = false) {
     // Locate the password fields in the form.
-    var pwFields = [];
-    for (var i = 0; i < form.elements.length; i++) {
-      var element = form.elements[i];
+    let pwFields = [];
+    for (let i = 0; i < form.elements.length; i++) {
+      let element = form.elements[i];
       if (!(element instanceof Ci.nsIDOMHTMLInputElement) ||
-          element.type != "password")
+          element.type != "password") {
         continue;
+      }
 
-      if (skipEmptyFields && !element.value)
+      if (skipEmptyFields && !element.value) {
         continue;
+      }
 
       pwFields[pwFields.length] = {
                                     index   : i,
@@ -485,14 +485,12 @@ var LoginManagerContent = {
       log("(form ignored -- no password fields.)");
       return null;
     } else if (pwFields.length > 3) {
-      log("(form ignored -- too many password fields. [ got ",
-                  pwFields.length, "])");
+      log("(form ignored -- too many password fields. [ got ", pwFields.length, "])");
       return null;
     }
 
     return pwFields;
   },
-
 
   _isUsernameFieldType: function(element) {
     if (!(element instanceof Ci.nsIDOMHTMLInputElement))
@@ -1090,4 +1088,77 @@ UserAutoCompleteResult.prototype = {
       pwmgr.removeLogin(removedLogin);
     }
   }
+};
+
+/**
+ * A factory to generate FormLike objects that represent a set of login fields
+ * which aren't necessarily marked up with a <form> element.
+ */
+let FormLikeFactory = {
+  _propsFromForm: [
+      "action",
+      "autocomplete",
+  ],
+
+  /**
+   * Create a FormLike object from a <form>.
+   *
+   * @param {HTMLFormElement} aForm
+   * @return {FormLike}
+   * @throws Error if aForm isn't an HTMLFormElement
+   */
+  createFromForm(aForm) {
+    if (!(aForm instanceof Ci.nsIDOMHTMLFormElement)) {
+      throw new Error("createFromForm: aForm must be a nsIDOMHTMLFormElement");
+    }
+
+    let formLike = {
+      elements: [...aForm.elements],
+      ownerDocument: aForm.ownerDocument,
+      rootElement: aForm,
+    };
+
+    for (let prop of this._propsFromForm) {
+      formLike[prop] = aForm[prop];
+    }
+
+    return formLike;
+  },
+
+  /**
+   * Create a FormLike object from an <input type=password>.
+   *
+   * If the <input> is in a <form>, construct the FormLike from the form.
+   * Otherwise, create a FormLike with a rootElement (wrapper) according to
+   * heuristics. Currently all <input> not in a <form> are one FormLike but this
+   * shouldn't be relied upon as the heuristics may change to detect multiple
+   * "forms" (e.g. registration and login) on one page with a <form>.
+   *
+   * @param {HTMLInputElement} aPasswordField - a password field in a document
+   * @return {FormLike}
+   * @throws Error if aPasswordField isn't a password input in a document
+   */
+  createFromPasswordField(aPasswordField) {
+    if (!(aPasswordField instanceof Ci.nsIDOMHTMLInputElement) ||
+        aPasswordField.type != "password" ||
+        !aPasswordField.ownerDocument) {
+      throw new Error("createFromPasswordField requires a password field in a document");
+    }
+
+    if (aPasswordField.form) {
+      return this.createFromForm(aPasswordField.form);
+    }
+
+    let doc = aPasswordField.ownerDocument;
+    log("Created non-form FormLike for rootElement:", doc.documentElement);
+    return {
+      action: "",
+      autocomplete: "on",
+      // Exclude elements inside the rootElement that are already in a <form> as
+      // they will be handled by their own FormLike.
+      elements: [for (el of doc.querySelectorAll("input")) if (!el.form) el],
+      ownerDocument: doc,
+      rootElement: doc.documentElement,
+    };
+  },
 };

@@ -46,7 +46,7 @@
             android:textColor="@color/placeholder_grey"
             android:textSize="16sp"
 
-            tools:text="Open them without switching to Firefox each time." />
+            tools:text="Save them until the next time you open Firefox." />
 
         <TextView
             android:id="@+id/tip_text"

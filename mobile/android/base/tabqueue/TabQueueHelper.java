@@ -54,12 +54,11 @@ public class TabQueueHelper {
     public static boolean shouldShowTabQueuePrompt(Context context) {
         final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
 
-        boolean isTabQueueEnabled = prefs.getBoolean(GeckoPreferences.PREFS_TAB_QUEUE, false);
         int numberOfTimesTabQueuePromptSeen = prefs.getInt(PREF_TAB_QUEUE_TIMES_PROMPT_SHOWN, 0);
 
         // Exit early if the feature is already enabled or the user has seen the
         // prompt more than MAX_TIMES_TO_SHOW_PROMPT times.
-        if (isTabQueueEnabled || numberOfTimesTabQueuePromptSeen >= MAX_TIMES_TO_SHOW_PROMPT) {
+        if (isTabQueueEnabled(prefs) || numberOfTimesTabQueuePromptSeen >= MAX_TIMES_TO_SHOW_PROMPT) {
             return false;
         }
 
@@ -184,10 +183,9 @@ public class TabQueueHelper {
         // TODO: Use profile shared prefs when bug 1147925 gets fixed.
         final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
 
-        boolean tabQueueEnabled = prefs.getBoolean(GeckoPreferences.PREFS_TAB_QUEUE, false);
         int tabsQueued = prefs.getInt(PREF_TAB_QUEUE_COUNT, 0);
 
-        return tabQueueEnabled && tabsQueued > 0;
+        return isTabQueueEnabled(prefs) && tabsQueued > 0;
     }
 
     public static int getTabQueueLength(final Context context) {
@@ -269,5 +267,13 @@ public class TabQueueHelper {
         }
 
         editor.apply();
+    }
+
+    public static boolean isTabQueueEnabled(Context context) {
+        return isTabQueueEnabled(GeckoSharedPrefs.forApp(context));
+    }
+
+    public static boolean isTabQueueEnabled(SharedPreferences prefs) {
+        return prefs.getBoolean(GeckoPreferences.PREFS_TAB_QUEUE, false);
     }
 }
