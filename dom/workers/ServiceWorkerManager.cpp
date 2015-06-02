@@ -3692,14 +3692,16 @@ EnumControlledDocuments(nsISupports* aKey,
                         void* aData)
 {
   FilterRegistrationData* data = static_cast<FilterRegistrationData*>(aData);
-  if (data->mRegistration != aRegistration) {
+  MOZ_ASSERT(data->mRegistration);
+  MOZ_ASSERT(aRegistration);
+  if (!data->mRegistration->mScope.Equals(aRegistration->mScope)) {
     return PL_DHASH_NEXT;
   }
 
   nsCOMPtr<nsIDocument> document = do_QueryInterface(aKey);
 
   if (!document || !document->GetWindow()) {
-      return PL_DHASH_NEXT;
+    return PL_DHASH_NEXT;
   }
 
   ServiceWorkerClientInfo clientInfo(document);
