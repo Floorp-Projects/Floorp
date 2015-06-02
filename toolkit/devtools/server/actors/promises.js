@@ -24,6 +24,15 @@ types.addType("ObjectActor", {
 let PromisesActor = protocol.ActorClass({
   typeName: "promises",
 
+  events: {
+    // Event emitted for new promises allocated in debuggee and bufferred by
+    // sending the list of promise objects in a batch.
+    "new-promises": {
+      type: "new-promises",
+      data: Arg(0, "array:ObjectActor"),
+    }
+  },
+
   /**
    * @param conn DebuggerServerConnection.
    * @param parent TabActor|RootActor
@@ -37,8 +46,10 @@ let PromisesActor = protocol.ActorClass({
     this._dbg = null;
     this._gripDepth = 0;
     this._navigationLifetimePool = null;
+    this._newPromises = null;
 
     this.objectGrip = this.objectGrip.bind(this);
+    this._makePromiseEventHandler = this._makePromiseEventHandler.bind(this);
     this._onWindowReady = this._onWindowReady.bind(this);
   },
 
@@ -66,6 +77,8 @@ let PromisesActor = protocol.ActorClass({
     this._navigationLifetimePool = this._createActorPool();
     this.conn.addActorPool(this._navigationLifetimePool);
 
+    this._newPromises = [];
+
     events.on(this.parent, "window-ready", this._onWindowReady);
 
     this.state = "attached";
@@ -81,6 +94,7 @@ let PromisesActor = protocol.ActorClass({
     this.dbg.removeAllDebuggees();
     this.dbg.enabled = false;
     this._dbg = null;
+    this._newPromises = null;
 
     if (this._navigationLifetimePool) {
       this.conn.removeActorPool(this._navigationLifetimePool);
@@ -110,7 +124,11 @@ let PromisesActor = protocol.ActorClass({
    *        An ObjectActor object that wraps the given Promise object
    */
   _createObjectActorForPromise: function(promise) {
-    let object = new ObjectActor(promise, {
+    if (this._navigationLifetimePool.objectActors.has(promise)) {
+      return this._navigationLifetimePool.objectActors.get(promise);
+    }
+
+    let actor = new ObjectActor(promise, {
       getGripDepth: () => this._gripDepth,
       incrementGripDepth: () => this._gripDepth++,
       decrementGripDepth: () => this._gripDepth--,
@@ -121,8 +139,11 @@ let PromisesActor = protocol.ActorClass({
       createEnvironmentActor: () => DevToolsUtils.reportException(
         "PromisesActor", Error("createEnvironmentActor not yet implemented"))
     });
-    this._navigationLifetimePool.addActor(object);
-    return object;
+
+    this._navigationLifetimePool.addActor(actor);
+    this._navigationLifetimePool.objectActors.set(promise, actor);
+
+    return actor;
   },
 
   /**
@@ -134,15 +155,7 @@ let PromisesActor = protocol.ActorClass({
    *        The grip for the given Promise object
    */
   objectGrip: function(value) {
-    let pool = this._navigationLifetimePool;
-
-    if (pool.objectActors.has(value)) {
-      return pool.objectActors.get(value).grip();
-    }
-
-    let actor = this._createObjectActorForPromise(value);
-    pool.objectActors.set(value, actor);
-    return actor.grip();
+    return this._createObjectActorForPromise(value).grip();
   },
 
   /**
@@ -150,6 +163,8 @@ let PromisesActor = protocol.ActorClass({
    */
   listPromises: method(function() {
     let promises = this.dbg.findObjects({ class: "Promise" });
+    this.dbg.onNewPromise = this._makePromiseEventHandler(this._newPromises,
+      "new-promises");
     return promises.map(p => this._createObjectActorForPromise(p));
   }, {
     request: {
@@ -158,6 +173,31 @@ let PromisesActor = protocol.ActorClass({
       promises: RetVal("array:ObjectActor")
     }
   }),
+
+  /**
+   * Creates an event handler for onNewPromise that will add the new
+   * Promise ObjectActor to the array and schedule it to be emitted as a
+   * batch for the provided event.
+   *
+   * @param array array
+   *        The list of Promise ObjectActors to emit
+   * @param string eventName
+   *        The event name
+   */
+  _makePromiseEventHandler: function(array, eventName) {
+    return promise => {
+      let actor = this._createObjectActorForPromise(promise)
+      let needsScheduling = array.length == 0;
+
+      array.push(actor);
+
+      if (needsScheduling) {
+        DevToolsUtils.executeSoon(() => {
+          events.emit(this, eventName, array.splice(0, array.length));
+        });
+      }
+    }
+  },
 
   _onWindowReady: expectState("attached", function({ isTopLevel }) {
     if (!isTopLevel) {
