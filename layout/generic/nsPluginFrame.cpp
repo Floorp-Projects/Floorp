@@ -158,13 +158,13 @@ nsPluginFrame::nsPluginFrame(nsStyleContext* aContext)
   , mInstanceOwner(nullptr)
   , mReflowCallbackPosted(false)
 {
-  MOZ_LOG(GetObjectFrameLog(), LogLevel::Debug,
+  MOZ_LOG(GetObjectFrameLog(), PR_LOG_DEBUG,
          ("Created new nsPluginFrame %p\n", this));
 }
 
 nsPluginFrame::~nsPluginFrame()
 {
-  MOZ_LOG(GetObjectFrameLog(), LogLevel::Debug,
+  MOZ_LOG(GetObjectFrameLog(), PR_LOG_DEBUG,
          ("nsPluginFrame %p deleted\n", this));
 }
 
@@ -194,7 +194,7 @@ nsPluginFrame::Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow)
 {
-  MOZ_LOG(GetObjectFrameLog(), LogLevel::Debug,
+  MOZ_LOG(GetObjectFrameLog(), PR_LOG_DEBUG,
          ("Initializing nsPluginFrame %p for content %p\n", this, aContent));
 
   nsPluginFrameSuper::Init(aContent, aParent, aPrevInFlow);

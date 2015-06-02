@@ -145,7 +145,7 @@ SpeechSynthesis::Speak(SpeechSynthesisUtterance& aUtterance)
 void
 SpeechSynthesis::AdvanceQueue()
 {
-  LOG(LogLevel::Debug,
+  LOG(PR_LOG_DEBUG,
       ("SpeechSynthesis::AdvanceQueue length=%d", mSpeechQueue.Length()));
 
   if (mSpeechQueue.IsEmpty()) {

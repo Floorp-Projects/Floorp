@@ -107,7 +107,7 @@
 
 #define IDB_DEBUG_LOG(_args)                                                   \
   MOZ_LOG(IndexedDatabaseManager::GetLoggingModule(),                           \
-         LogLevel::Debug,                                                         \
+         PR_LOG_DEBUG,                                                         \
          _args )
 
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)

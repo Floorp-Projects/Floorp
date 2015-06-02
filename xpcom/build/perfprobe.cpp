@@ -27,7 +27,7 @@ GetProbeLog()
   }
   return sLog;
 }
-#define LOG(x)  MOZ_LOG(GetProbeLog(), mozilla::LogLevel::Debug, x)
+#define LOG(x)  MOZ_LOG(GetProbeLog(), PR_LOG_DEBUG, x)
 #else
 #define LOG(x)
 #endif
