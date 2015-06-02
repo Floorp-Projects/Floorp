@@ -109,6 +109,51 @@ const tests = [
         href='${remoteURL}?${body}&${CORS}'>`;
       return link;
     }
+  },{
+    expected: 'Trying to load from about:whatever is a TypeError.',
+    get tabURL() {
+      let query = [
+        `body=<h1>${this.expected}</h1>`,
+        'Content-Type=text/html; charset=utf-8',
+      ];
+      const URL = `${defaultURL}?${query.join('&')}`;
+      return URL;
+    },
+    run(err) {
+      Assert.strictEqual(err.name, 'TypeError', this.expected);
+    },
+    testData: `<link rel="manifest" href='about:whatever'>`
+  },
+  {
+    expected: 'Trying to load from file://whatever is a TypeError.',
+    get tabURL() {
+      let query = [
+        `body=<h1>${this.expected}</h1>`,
+        'Content-Type=text/html; charset=utf-8',
+      ];
+      const URL = `${defaultURL}?${query.join('&')}`;
+      return URL;
+    },
+    run(err) {
+      Assert.strictEqual(err.name, 'TypeError', this.expected);
+    },
+    testData: `<link rel="manifest" href='file://manifest'>`
+  },
+  //URL parsing tests
+  {
+    expected: 'Trying to load invalid URL is a TypeError.',
+    get tabURL() {
+      let query = [
+        `body=<h1>${this.expected}</h1>`,
+        'Content-Type=text/html; charset=utf-8',
+      ];
+      const URL = `${defaultURL}?${query.join('&')}`;
+      return URL;
+    },
+    run(err) {
+      Assert.strictEqual(err.name, 'TypeError', this.expected);
+    },
+    testData: `<link rel="manifest" href='http://[12.1212.21.21.12.21.12]'>`
   },
 ];
 
