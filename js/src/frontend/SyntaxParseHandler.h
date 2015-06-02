@@ -159,9 +159,7 @@ class SyntaxParseHandler
 
     Node newElision() { return NodeGeneric; }
 
-    Node newDelete(uint32_t begin, Node expr) {
-        return NodeGeneric;
-    }
+    Node newDelete(uint32_t begin, Node expr) { return NodeGeneric; }
 
     Node newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, Node kid) {
         return NodeGeneric;
