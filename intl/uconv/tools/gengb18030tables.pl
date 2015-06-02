@@ -201,11 +201,11 @@ sub genufut()
  print ( "umaptable -ut < gb18030uniq.txt > gb18030uniq2b.ut\n");
  system( "umaptable -ut < gb18030uniq.txt > gb18030uniq2b.ut");
 
- print ( "umaptable -uf < cp936uniq.txt > gbkuniq2b.uf\n") ;
- system( "umaptable -uf < cp936uniq.txt > gbkuniq2b.uf") ;
+ print ( "umaptable -uf < cp936uniq.txt > gbkuniq.uf\n") ;
+ system( "umaptable -uf < cp936uniq.txt > gbkuniq.uf") ;
 
- print ( "umaptable -ut < cp936uniq.txt > gbkuniq2b.ut\n") ;
- system( "umaptable -ut < cp936uniq.txt > gbkuniq2b.ut") ;
+ print ( "umaptable -ut < cp936uniq.txt > gbkuniq.ut\n") ;
+ system( "umaptable -ut < cp936uniq.txt > gbkuniq.ut") ;
 
  print ( "umaptable -uf < gb180304b.txt > gb180304bytes.uf\n")  ;
  system( "umaptable -uf < gb180304b.txt > gb180304bytes.uf")  ;
