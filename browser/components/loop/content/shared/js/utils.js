@@ -314,7 +314,9 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
    */
   function hasAudioOrVideoDevices(callback) {
     // mediaDevices is the official API for the spec.
-    if ("mediaDevices" in rootNavigator) {
+    // Older versions of FF had mediaDevices but not enumerateDevices.
+    if ("mediaDevices" in rootNavigator &&
+        "enumerateDevices" in rootNavigator.mediaDevices) {
       rootNavigator.mediaDevices.enumerateDevices().then(function(result) {
         function checkForInput(device) {
           return device.kind === "audioinput" || device.kind === "videoinput";
@@ -326,7 +328,8 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
       });
     // MediaStreamTrack is the older version of the API, implemented originally
     // by Google Chrome.
-    } else if ("MediaStreamTrack" in rootObject) {
+    } else if ("MediaStreamTrack" in rootObject &&
+               "getSources" in rootObject.MediaStreamTrack) {
       rootObject.MediaStreamTrack.getSources(function(result) {
         function checkForInput(device) {
           return device.kind === "audio" || device.kind === "video";
