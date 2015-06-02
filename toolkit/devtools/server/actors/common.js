@@ -6,6 +6,8 @@
 
 "use strict";
 
+const promise = require("promise");
+
 /**
  * Creates "registered" actors factory meant for creating another kind of
  * factories, ObservedActorFactory, during the call to listTabs.
@@ -484,3 +486,36 @@ exports.getOffsetColumn = function getOffsetColumn(aOffset, aScript) {
 
   return bestOffsetMapping.columnNumber;
 }
+
+/**
+ * A method decorator that ensures the actor is in the expected state before
+ * proceeding. If the actor is not in the expected state, the decorated method
+ * returns a rejected promise.
+ *
+ * The actor's state must be at this.state property.
+ *
+ * @param String expectedState
+ *        The expected state.
+ * @param String activity
+ *        Additional info about what's going on.
+ * @param Function method
+ *        The actor method to proceed with when the actor is in the expected
+ *        state.
+ *
+ * @returns Function
+ *          The decorated method.
+ */
+function expectState(expectedState, method, activity) {
+  return function(...args) {
+    if (this.state !== expectedState) {
+      const msg = `Wrong state while ${activity}:` +
+                  `Expected '${expectedState}', ` +
+                  `but current state is '${this.state}'.`;
+      return promise.reject(new Error(msg));
+    }
+
+    return method.apply(this, args);
+  };
+}
+
+exports.expectState = expectState;
