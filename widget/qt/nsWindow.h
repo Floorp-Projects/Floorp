@@ -29,10 +29,10 @@ extern PRLogModuleInfo *gWidgetFocusLog;
 extern PRLogModuleInfo *gWidgetIMLog;
 extern PRLogModuleInfo *gWidgetDrawLog;
 
-#define LOG(args) MOZ_LOG(gWidgetLog, PR_LOG_DEBUG, args)
-#define LOGFOCUS(args) MOZ_LOG(gWidgetFocusLog, PR_LOG_DEBUG, args)
-#define LOGIM(args) MOZ_LOG(gWidgetIMLog, PR_LOG_DEBUG, args)
-#define LOGDRAW(args) MOZ_LOG(gWidgetDrawLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
+#define LOGFOCUS(args) MOZ_LOG(gWidgetFocusLog, mozilla::LogLevel::Debug, args)
+#define LOGIM(args) MOZ_LOG(gWidgetIMLog, mozilla::LogLevel::Debug, args)
+#define LOGDRAW(args) MOZ_LOG(gWidgetDrawLog, mozilla::LogLevel::Debug, args)
 
 #else
 

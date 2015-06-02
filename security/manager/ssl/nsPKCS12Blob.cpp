@@ -726,8 +726,8 @@ nsPKCS12Blob::handleError(int myerr)
   }
 
   int prerr = PORT_GetError();
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("PKCS12: NSS/NSPR error(%d)", prerr));
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("PKCS12: I called(%d)", myerr));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("PKCS12: NSS/NSPR error(%d)", prerr));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("PKCS12: I called(%d)", myerr));
 
   const char * msgID = nullptr;
 

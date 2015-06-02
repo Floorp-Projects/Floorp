@@ -56,7 +56,7 @@ GetSHParserLog()
   return sSHParserLog;
 }
 
-#define SHPARSERLOG(args) MOZ_LOG(GetSHParserLog(), PR_LOG_DEBUG, args)
+#define SHPARSERLOG(args) MOZ_LOG(GetSHParserLog(), mozilla::LogLevel::Debug, args)
 
 nsSecurityHeaderParser::nsSecurityHeaderParser(const char *aHeader)
   : mCursor(aHeader)

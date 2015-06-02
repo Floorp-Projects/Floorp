@@ -114,7 +114,7 @@ nsSpeechTask::nsSpeechTask(float aVolume, const nsAString& aText)
 
 nsSpeechTask::~nsSpeechTask()
 {
-  LOG(PR_LOG_DEBUG, ("~nsSpeechTask"));
+  LOG(LogLevel::Debug, ("~nsSpeechTask"));
   if (mStream) {
     if (!mStream->IsDestroyed()) {
       mStream->Destroy();
@@ -148,7 +148,7 @@ nsSpeechTask::Setup(nsISpeechTaskCallback* aCallback,
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 
-  LOG(PR_LOG_DEBUG, ("nsSpeechTask::Setup"));
+  LOG(LogLevel::Debug, ("nsSpeechTask::Setup"));
 
   mCallback = aCallback;
 
@@ -290,7 +290,7 @@ nsSpeechTask::DispatchStartImpl()
 nsresult
 nsSpeechTask::DispatchStartImpl(const nsAString& aUri)
 {
-  LOG(PR_LOG_DEBUG, ("nsSpeechTask::DispatchStart"));
+  LOG(LogLevel::Debug, ("nsSpeechTask::DispatchStart"));
 
   MOZ_ASSERT(mUtterance);
   NS_ENSURE_TRUE(mUtterance->mState == SpeechSynthesisUtterance::STATE_PENDING,
@@ -318,7 +318,7 @@ nsSpeechTask::DispatchEnd(float aElapsedTime, uint32_t aCharIndex)
 nsresult
 nsSpeechTask::DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex)
 {
-  LOG(PR_LOG_DEBUG, ("nsSpeechTask::DispatchEnd\n"));
+  LOG(LogLevel::Debug, ("nsSpeechTask::DispatchEnd\n"));
 
   MOZ_ASSERT(mUtterance);
   NS_ENSURE_FALSE(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED,
@@ -361,7 +361,7 @@ nsSpeechTask::DispatchPause(float aElapsedTime, uint32_t aCharIndex)
 nsresult
 nsSpeechTask::DispatchPauseImpl(float aElapsedTime, uint32_t aCharIndex)
 {
-  LOG(PR_LOG_DEBUG, ("nsSpeechTask::DispatchPause"));
+  LOG(LogLevel::Debug, ("nsSpeechTask::DispatchPause"));
   MOZ_ASSERT(mUtterance);
   NS_ENSURE_FALSE(mUtterance->mPaused, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_FALSE(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED,
@@ -388,7 +388,7 @@ nsSpeechTask::DispatchResume(float aElapsedTime, uint32_t aCharIndex)
 nsresult
 nsSpeechTask::DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex)
 {
-  LOG(PR_LOG_DEBUG, ("nsSpeechTask::DispatchResume"));
+  LOG(LogLevel::Debug, ("nsSpeechTask::DispatchResume"));
   MOZ_ASSERT(mUtterance);
   NS_ENSURE_TRUE(mUtterance->mPaused, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_FALSE(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED,
@@ -515,7 +515,7 @@ nsSpeechTask::Cancel()
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 
-  LOG(PR_LOG_DEBUG, ("nsSpeechTask::Cancel"));
+  LOG(LogLevel::Debug, ("nsSpeechTask::Cancel"));
 
   if (mCallback) {
     DebugOnly<nsresult> rv = mCallback->OnCancel();

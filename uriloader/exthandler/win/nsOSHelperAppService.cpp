@@ -23,7 +23,7 @@
 // shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <shellapi.h>
 
-#define LOG(args) MOZ_LOG(mLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(mLog, mozilla::LogLevel::Debug, args)
 
 // helper methods: forward declarations...
 static nsresult GetExtensionFrom4xRegistryInfo(const nsACString& aMimeType, 

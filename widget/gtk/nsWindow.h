@@ -45,10 +45,10 @@ extern PRLogModuleInfo *gWidgetFocusLog;
 extern PRLogModuleInfo *gWidgetDragLog;
 extern PRLogModuleInfo *gWidgetDrawLog;
 
-#define LOG(args) MOZ_LOG(gWidgetLog, PR_LOG_DEBUG, args)
-#define LOGFOCUS(args) MOZ_LOG(gWidgetFocusLog, PR_LOG_DEBUG, args)
-#define LOGDRAG(args) MOZ_LOG(gWidgetDragLog, PR_LOG_DEBUG, args)
-#define LOGDRAW(args) MOZ_LOG(gWidgetDrawLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
+#define LOGFOCUS(args) MOZ_LOG(gWidgetFocusLog, mozilla::LogLevel::Debug, args)
+#define LOGDRAG(args) MOZ_LOG(gWidgetDragLog, mozilla::LogLevel::Debug, args)
+#define LOGDRAW(args) MOZ_LOG(gWidgetDrawLog, mozilla::LogLevel::Debug, args)
 
 #else
 
