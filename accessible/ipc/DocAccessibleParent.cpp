@@ -8,6 +8,7 @@
 #include "nsAutoPtr.h"
 #include "mozilla/a11y/Platform.h"
 #include "ProxyAccessible.h"
+#include "mozilla/dom/TabParent.h"
 
 namespace mozilla {
 namespace a11y {
@@ -184,6 +185,18 @@ DocAccessibleParent::ShutdownAccessibles(ProxyEntry* entry, void*)
 {
   ProxyDestroyed(entry->mProxy);
   return PL_DHASH_REMOVE;
+}
+
+bool
+DocAccessibleParent::RecvShutdown()
+{
+  Destroy();
+
+  if (!static_cast<dom::TabParent*>(Manager())->IsDestroyed()) {
+  return PDocAccessibleParent::Send__delete__(this);
+  }
+
+  return true;
 }
 
 void
