@@ -30,7 +30,6 @@ import org.json.JSONArray;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
-import org.mozilla.gecko.toolbar.SiteIdentityPopup;
 
 public class LoginDoorHanger extends DoorHanger {
     private static final String LOGTAG = "LoginDoorHanger";
