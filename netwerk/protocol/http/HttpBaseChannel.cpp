@@ -1436,6 +1436,16 @@ HttpBaseChannel::OverrideSecurityInfo(nsISupports* aSecurityInfo)
   return NS_OK;
 }
 
+void
+HttpBaseChannel::OverrideURI(nsIURI* aRedirectedURI)
+{
+  MOZ_RELEASE_ASSERT(mLoadFlags & LOAD_REPLACE,
+                     "This can only happen if the LOAD_REPLACE flag is set");
+  MOZ_RELEASE_ASSERT(ShouldIntercept(),
+                     "This can only be called on channels that can be intercepted");
+  mURI = aRedirectedURI;
+}
+
 NS_IMETHODIMP
 HttpBaseChannel::IsNoStoreResponse(bool *value)
 {
