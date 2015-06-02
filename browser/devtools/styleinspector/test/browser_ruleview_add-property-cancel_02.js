@@ -33,19 +33,22 @@ add_task(function*() {
   let elementRuleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing a new property name in the rule-view");
-  let editor = yield focusEditableField(view, elementRuleEditor.closeBrace);
+  let editor = yield focusEditableField(elementRuleEditor.closeBrace);
 
   is(inplaceEditor(elementRuleEditor.newPropSpan), editor, "The new property editor got focused.");
+  let input = editor.input;
 
   info("Entering a value in the property name editor");
-  editor.input.value = "color";
+  let onModifications = elementRuleEditor.rule._applyingModifications;
+  input.value = "color";
+  yield onModifications;
 
   info("Pressing return to commit and focus the new value field");
   let onValueFocus = once(elementRuleEditor.element, "focus", true);
-  let onRuleViewChanged = view.once("ruleview-changed");
+  onModifications = elementRuleEditor.rule._applyingModifications;
   EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
   yield onValueFocus;
-  yield onRuleViewChanged;
+  yield onModifications;
 
   // Getting the new value editor after focus
   editor = inplaceEditor(view.doc.activeElement);
@@ -59,17 +62,17 @@ add_task(function*() {
   editor.input.value = "red";
 
   info("Escaping out of the field");
-  onRuleViewChanged = view.once("ruleview-changed");
+  onModifications = elementRuleEditor.rule._applyingModifications;
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
-  yield onRuleViewChanged;
+  yield onModifications;
 
   info("Checking that the previous field is focused");
   let focusedElement = inplaceEditor(elementRuleEditor.rule.textProps[0].editor.valueSpan).input;
   is(focusedElement, focusedElement.ownerDocument.activeElement, "Correct element has focus");
 
-  onRuleViewChanged = view.once("ruleview-changed");
+  onModifications = elementRuleEditor.rule._applyingModifications;
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
-  yield onRuleViewChanged;
+  yield onModifications;
 
   is(elementRuleEditor.rule.textProps.length,  1, "Removed the new text property.");
   is(elementRuleEditor.propertyList.children.length, 1, "Removed the property editor.");
