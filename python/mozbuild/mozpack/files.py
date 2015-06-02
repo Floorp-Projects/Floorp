@@ -189,6 +189,9 @@ class BaseFile(object):
         assert self.path is not None
         return open(self.path, 'rb')
 
+    def read(self):
+        raise NotImplementedError('BaseFile.read() not implemented. Bug 1170329.')
+
     @property
     def mode(self):
         '''
@@ -226,6 +229,12 @@ class File(BaseFile):
             ret |= 0200
         # - leave away sticky bit, setuid, setgid
         return ret
+
+    def read(self):
+        '''Return the contents of the file.'''
+        with open(self.path, 'rb') as fh:
+            return fh.read()
+
 
 class ExecutableFile(File):
     '''
