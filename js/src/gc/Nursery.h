@@ -60,11 +60,7 @@ class TenuringTracer : public JSTracer
     gc::RelocationOverlay* head;
     gc::RelocationOverlay** tail;
 
-    // Save and restore all of the runtime state we use during MinorGC.
-    bool savedRuntimeNeedBarrier;
-
     TenuringTracer(JSRuntime* rt, Nursery* nursery);
-    ~TenuringTracer();
 
   public:
     const Nursery& nursery() const { return nursery_; }
