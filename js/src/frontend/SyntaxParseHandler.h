@@ -421,7 +421,7 @@ class SyntaxParseHandler
     void setPrologue(Node pn) {}
 
     bool isConstant(Node pn) { return false; }
-    PropertyName* maybeName(Node pn) {
+    PropertyName* isName(Node pn) {
         if (pn == NodeName || pn == NodeArgumentsName || pn == NodeEvalName)
             return lastAtom->asPropertyName();
         return nullptr;
