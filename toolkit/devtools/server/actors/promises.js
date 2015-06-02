@@ -30,6 +30,11 @@ let PromisesActor = protocol.ActorClass({
     "new-promises": {
       type: "new-promises",
       data: Arg(0, "array:ObjectActor"),
+    },
+    // Event emitted for promise settlements.
+    "promises-settled": {
+      type: "promises-settled",
+      data: Arg(0, "array:ObjectActor")
     }
   },
 
@@ -47,6 +52,7 @@ let PromisesActor = protocol.ActorClass({
     this._gripDepth = 0;
     this._navigationLifetimePool = null;
     this._newPromises = null;
+    this._promisesSettled = null;
 
     this.objectGrip = this.objectGrip.bind(this);
     this._makePromiseEventHandler = this._makePromiseEventHandler.bind(this);
@@ -78,6 +84,7 @@ let PromisesActor = protocol.ActorClass({
     this.conn.addActorPool(this._navigationLifetimePool);
 
     this._newPromises = [];
+    this._promisesSettled = [];
 
     events.on(this.parent, "window-ready", this._onWindowReady);
 
@@ -95,6 +102,7 @@ let PromisesActor = protocol.ActorClass({
     this.dbg.enabled = false;
     this._dbg = null;
     this._newPromises = null;
+    this._promisesSettled = null;
 
     if (this._navigationLifetimePool) {
       this.conn.removeActorPool(this._navigationLifetimePool);
@@ -163,8 +171,12 @@ let PromisesActor = protocol.ActorClass({
    */
   listPromises: method(function() {
     let promises = this.dbg.findObjects({ class: "Promise" });
+
     this.dbg.onNewPromise = this._makePromiseEventHandler(this._newPromises,
       "new-promises");
+    this.dbg.onPromiseSettled = this._makePromiseEventHandler(
+      this._promisesSettled, "promises-settled");
+
     return promises.map(p => this._createObjectActorForPromise(p));
   }, {
     request: {
