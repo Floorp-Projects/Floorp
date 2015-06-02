@@ -245,8 +245,8 @@ WatchpointMap::trace(WeakMapTracer* trc)
 {
     for (Map::Range r = map.all(); !r.empty(); r.popFront()) {
         Map::Entry& entry = r.front();
-        trc->callback(trc, nullptr,
-                      JS::GCCellPtr(entry.key().object.get()),
-                      JS::GCCellPtr(entry.value().closure.get()));
+        trc->trace(nullptr,
+                   JS::GCCellPtr(entry.key().object.get()),
+                   JS::GCCellPtr(entry.value().closure.get()));
     }
 }

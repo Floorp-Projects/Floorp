@@ -9,7 +9,7 @@
 #include "gfxXlibSurface.h"
 
 nsresult
-gfxQtNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
+gfxQtNativeRenderer::Draw(gfxContext* ctx, mozilla::gfx::IntSize size,
                           uint32_t flags, Screen* screen, Visual* visual)
 {
     Display *dpy = DisplayOfScreen(screen);
@@ -30,7 +30,7 @@ gfxQtNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
 
     nsRefPtr<gfxXlibSurface> xsurf =
         gfxXlibSurface::Create(screen, visual,
-                               gfxIntSize(size.width, size.height));
+                               mozilla::gfx::IntSize(size.width, size.height));
 
     if (!isOpaque) {
         gfxUtils::ClearThebesSurface(xsurf);

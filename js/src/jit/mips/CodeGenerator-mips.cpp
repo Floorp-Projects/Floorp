@@ -23,6 +23,7 @@
 
 #include "jsscriptinlines.h"
 
+#include "jit/MacroAssembler-inl.h"
 #include "jit/shared/CodeGenerator-shared-inl.h"
 
 using namespace js;
@@ -32,6 +33,24 @@ using mozilla::FloorLog2;
 using mozilla::NegativeInfinity;
 using JS::GenericNaN;
 using JS::ToInt32;
+
+// inline
+Address
+CodeGeneratorMIPS::ToAddress(const LAllocation& a)
+{
+    MOZ_ASSERT(a.isMemory());
+    int32_t offset = ToStackOffset(&a);
+
+    return Address(StackPointer, offset);
+}
+
+// inline
+Address
+CodeGeneratorMIPS::ToAddress(const LAllocation* a)
+{
+    return ToAddress(*a);
+}
+
 
 // shared
 CodeGeneratorMIPS::CodeGeneratorMIPS(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm)
