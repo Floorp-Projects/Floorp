@@ -30,7 +30,7 @@ public:
   StreamSocket(StreamSocketConsumer* aConsumer, int aIndex);
 
   /**
-   * Method to be called whenever data is received. Main-thread only.
+   * Method to be called whenever data is received. Consumer-thread only.
    *
    * @param aBuffer Data received from the socket.
    */

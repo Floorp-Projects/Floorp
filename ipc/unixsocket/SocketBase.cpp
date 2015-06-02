@@ -302,7 +302,7 @@ SocketIOEventRunnable::Run()
 
   MOZ_ASSERT(io->IsConsumerThread());
 
-  if (NS_WARN_IF(io->IsShutdownOnMainThread())) {
+  if (NS_WARN_IF(io->IsShutdownOnConsumerThread())) {
     // Since we've already explicitly closed and the close
     // happened before this, this isn't really an error.
     return NS_OK;
@@ -338,7 +338,7 @@ SocketIORequestClosingRunnable::Run()
 
   MOZ_ASSERT(io->IsConsumerThread());
 
-  if (NS_WARN_IF(io->IsShutdownOnMainThread())) {
+  if (NS_WARN_IF(io->IsShutdownOnConsumerThread())) {
     // Since we've already explicitly closed and the close
     // happened before this, this isn't really an error.
     return NS_OK;
@@ -388,8 +388,8 @@ SocketIOShutdownTask::Run()
   // At this point, there should be no new events on the I/O thread
   // after this one with the possible exception of an accept task,
   // which ShutdownOnIOThread will cancel for us. We are now fully
-  // shut down, so we can send a message to the main thread to delete
-  // |io| safely knowing that it's not reference any longer.
+  // shut down, so we can send a message to the consumer thread to
+  // delete |io| safely knowing that it's not reference any longer.
   io->ShutdownOnIOThread();
   io->GetConsumerThread()->Dispatch(new SocketIODeleteInstanceRunnable(io),
                                     NS_DISPATCH_NORMAL);
