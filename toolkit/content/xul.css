@@ -143,6 +143,11 @@ toolbarbutton[type="panel"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu");
 }
 
+toolbarbutton.badged-button[type="menu"],
+toolbarbutton.badged-button[type="panel"] {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-badged-menu");
+}
+
 toolbarbutton[type="menu-button"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-button");
 }
