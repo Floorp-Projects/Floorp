@@ -209,17 +209,6 @@ public:
                               BluetoothDaemonConnection* aConnection,
                               BluetoothDaemonPDUConsumer* aConsumer);
 
-  // Task callback methods
-  //
-
-  void Send(UnixSocketIOBuffer* aBuffer);
-
-  void OnSocketCanReceiveWithoutBlocking() override;
-  void OnSocketCanSendWithoutBlocking() override;
-
-  void OnConnected() override;
-  void OnError(const char* aFunction, int aErrno) override;
-
   // Methods for |ConnectionOrientedSocketIO|
   //
 
@@ -269,72 +258,6 @@ BluetoothDaemonConnectionIO::BluetoothDaemonConnectionIO(
 {
   MOZ_ASSERT(mConnection);
   MOZ_ASSERT(mConsumer);
-}
-
-void
-BluetoothDaemonConnectionIO::Send(UnixSocketIOBuffer* aBuffer)
-{
-  MOZ_ASSERT(aBuffer);
-
-  EnqueueData(aBuffer);
-  AddWatchers(WRITE_WATCHER, false);
-}
-
-void
-BluetoothDaemonConnectionIO::OnSocketCanReceiveWithoutBlocking()
-{
-  ssize_t res = ReceiveData(GetFd());
-  if (res < 0) {
-    /* I/O error */
-    RemoveWatchers(READ_WATCHER|WRITE_WATCHER);
-  } else if (!res) {
-    /* EOF or peer shutdown */
-    RemoveWatchers(READ_WATCHER);
-  }
-}
-
-void
-BluetoothDaemonConnectionIO::OnSocketCanSendWithoutBlocking()
-{
-  MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
-  MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTED);
-  MOZ_ASSERT(!IsShutdownOnIOThread());
-
-  if (NS_WARN_IF(NS_FAILED(SendPendingData(GetFd())))) {
-    RemoveWatchers(WRITE_WATCHER);
-  }
-}
-
-void
-BluetoothDaemonConnectionIO::OnConnected()
-{
-  MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
-  MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTED);
-
-  GetConsumerThread()->Dispatch(
-    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS),
-    NS_DISPATCH_NORMAL);
-
-  AddWatchers(READ_WATCHER, true);
-  if (HasPendingData()) {
-    AddWatchers(WRITE_WATCHER, false);
-  }
-}
-
-void
-BluetoothDaemonConnectionIO::OnError(const char* aFunction, int aErrno)
-{
-  MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
-
-  UnixFdWatcher::OnError(aFunction, aErrno);
-
-  // Clean up watchers, status, fd
-  Close();
-
-  // Tell the consumer thread we've errored
-  GetConsumerThread()->Dispatch(
-    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_ERROR),
-    NS_DISPATCH_NORMAL);
 }
 
 // |ConnectionOrientedSocketIO|
