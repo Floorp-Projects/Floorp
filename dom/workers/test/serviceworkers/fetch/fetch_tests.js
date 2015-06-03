@@ -140,6 +140,25 @@ fetchXHR('http://example.com/tests/dom/base/test/file_CrossSiteXHR_server.sjs?st
   finish();
 });
 
+// Test that when the page fetches a url the controlling SW forces a redirect to
+// another location. This other location fetch should also be intercepted by
+// the SW.
+fetchXHR('something.txt', function(xhr) {
+  my_ok(xhr.status == 200, "load should be successful");
+  my_ok(xhr.responseText == "something else response body", "load should have something else");
+  finish();
+});
+
+// Test fetch will internally get it's SkipServiceWorker flag set. The request is
+// made from the SW through fetch(). fetch() fetches a server-side JavaScript
+// file that force a redirect. The redirect location fetch does not go through
+// the SW.
+fetchXHR('redirect_serviceworker.sjs', function(xhr) {
+  my_ok(xhr.status == 200, "load should be successful");
+  my_ok(xhr.responseText == "// empty worker, always succeed!\n", "load should have redirection content");
+  finish();
+});
+
 expectAsyncResult();
 fetch('http://example.com/tests/dom/base/test/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*')
 .then(function(res) {
