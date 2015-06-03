@@ -17,9 +17,9 @@ GetProviderLog()
   return log;
 }
 #undef LOG_I
-#define LOG_I(...) PR_LOG(GetProviderLog(), PR_LOG_NOTICE, (__VA_ARGS__))
+#define LOG_I(...) MOZ_LOG(GetProviderLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 #undef LOG_E
-#define LOG_E(...) PR_LOG(GetProviderLog(), PR_LOG_ERROR, (__VA_ARGS__))
+#define LOG_E(...) MOZ_LOG(GetProviderLog(), mozilla::LogLevel::Error, (__VA_ARGS__))
 
 #define SERVICE_TYPE "_mozilla_papi._tcp."
 

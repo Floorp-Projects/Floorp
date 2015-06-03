@@ -74,7 +74,7 @@ using namespace mozilla::ipc;
 using namespace mozilla::layout;
 
 static PRLogModuleInfo *gLog = nullptr;
-#define LOG(...) MOZ_LOG(gLog, PR_LOG_NOTICE, (__VA_ARGS__))
+#define LOG(...) MOZ_LOG(gLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 #define DEFAULT_FRAME_RATE 60
 #define DEFAULT_THROTTLED_FRAME_RATE 1

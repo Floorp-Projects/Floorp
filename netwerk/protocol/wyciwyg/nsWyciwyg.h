@@ -20,22 +20,22 @@
 //    set NSPR_LOG_MODULES=nsWyciwyg:5
 //    set NSPR_LOG_FILE=wyciwyg.log
 //
-// this enables PR_LOG_DEBUG level information and places all output in
+// this enables LogLevel::Debug level information and places all output in
 // the file wyciwyg.log
 //
 extern PRLogModuleInfo *gWyciwygLog;
 
 // http logging
-#define LOG1(args) MOZ_LOG(gWyciwygLog, PR_LOG_ERROR, args)
-#define LOG2(args) MOZ_LOG(gWyciwygLog, PR_LOG_WARNING, args)
-#define LOG3(args) MOZ_LOG(gWyciwygLog, PR_LOG_INFO, args)
-#define LOG4(args) MOZ_LOG(gWyciwygLog, PR_LOG_DEBUG, args)
+#define LOG1(args) MOZ_LOG(gWyciwygLog, mozilla::LogLevel::Error, args)
+#define LOG2(args) MOZ_LOG(gWyciwygLog, mozilla::LogLevel::Warning, args)
+#define LOG3(args) MOZ_LOG(gWyciwygLog, mozilla::LogLevel::Info, args)
+#define LOG4(args) MOZ_LOG(gWyciwygLog, mozilla::LogLevel::Debug, args)
 #define LOG(args) LOG4(args)
 
-#define LOG1_ENABLED() MOZ_LOG_TEST(gWyciwygLog, PR_LOG_ERROR)
-#define LOG2_ENABLED() MOZ_LOG_TEST(gWyciwygLog, PR_LOG_WARNING)
-#define LOG3_ENABLED() MOZ_LOG_TEST(gWyciwygLog, PR_LOG_INFO)
-#define LOG4_ENABLED() MOZ_LOG_TEST(gWyciwygLog, PR_LOG_DEBUG)
+#define LOG1_ENABLED() MOZ_LOG_TEST(gWyciwygLog, mozilla::LogLevel::Error)
+#define LOG2_ENABLED() MOZ_LOG_TEST(gWyciwygLog, mozilla::LogLevel::Warning)
+#define LOG3_ENABLED() MOZ_LOG_TEST(gWyciwygLog, mozilla::LogLevel::Info)
+#define LOG4_ENABLED() MOZ_LOG_TEST(gWyciwygLog, mozilla::LogLevel::Debug)
 #define LOG_ENABLED() LOG4_ENABLED()
 
 #define WYCIWYG_TYPE "text/html"

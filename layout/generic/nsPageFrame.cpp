@@ -23,7 +23,7 @@
 
 #include "mozilla/Logging.h"
 extern PRLogModuleInfo *GetLayoutPrintingLog();
-#define PR_PL(_p1)  MOZ_LOG(GetLayoutPrintingLog(), PR_LOG_DEBUG, _p1)
+#define PR_PL(_p1)  MOZ_LOG(GetLayoutPrintingLog(), mozilla::LogLevel::Debug, _p1)
 
 using namespace mozilla;
 using namespace mozilla::gfx;

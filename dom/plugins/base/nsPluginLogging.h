@@ -27,10 +27,10 @@
 #define PLUGIN_LOG_NAME "Plugin"
 
 // Levels                <level>
-#define PLUGIN_LOG_ALWAYS PR_LOG_ERROR
-#define PLUGIN_LOG_BASIC  PR_LOG_INFO
-#define PLUGIN_LOG_NORMAL PR_LOG_DEBUG
-#define PLUGIN_LOG_NOISY  PR_LOG_VERBOSE
+#define PLUGIN_LOG_ALWAYS mozilla::LogLevel::Error
+#define PLUGIN_LOG_BASIC  mozilla::LogLevel::Info
+#define PLUGIN_LOG_NORMAL mozilla::LogLevel::Debug
+#define PLUGIN_LOG_NOISY  mozilla::LogLevel::Verbose
 
 // 2. You can combine logs and levels by separating them with a comma:
 //    My favorite Win32 Example: SET NSPR_LOG_MODULES=Plugin:5,PluginNPP:5,PluginNPN:5

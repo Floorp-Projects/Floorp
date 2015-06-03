@@ -42,20 +42,20 @@ const int LOG_DEFAULT = LOG_EVERYTHING;
 const int LOG_DEFAULT = LOG_CRITICAL;
 #endif
 
-inline PRLogModuleLevel PRLogLevelForLevel(int aLevel) {
+inline mozilla::LogLevel PRLogLevelForLevel(int aLevel) {
   switch (aLevel) {
   case LOG_CRITICAL:
-    return PR_LOG_ERROR;
+    return LogLevel::Error;
   case LOG_WARNING:
-    return PR_LOG_WARNING;
+    return LogLevel::Warning;
   case LOG_DEBUG:
-    return PR_LOG_DEBUG;
+    return LogLevel::Debug;
   case LOG_DEBUG_PRLOG:
-    return PR_LOG_DEBUG;
+    return LogLevel::Debug;
   case LOG_EVERYTHING:
-    return PR_LOG_ERROR;
+    return LogLevel::Error;
   }
-  return PR_LOG_DEBUG;
+  return LogLevel::Debug;
 }
 
 class PreferenceAccess

@@ -113,7 +113,7 @@ MediaShutdownManager::Shutdown()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInstance);
 
-  DECODER_LOG(PR_LOG_DEBUG, ("MediaShutdownManager::Shutdown() start..."));
+  DECODER_LOG(LogLevel::Debug, ("MediaShutdownManager::Shutdown() start..."));
 
   // Mark that we're shutting down, so that Unregister(*) calls don't remove
   // hashtable entries. If Unregsiter(*) was to remove from the hash table,
@@ -139,7 +139,7 @@ MediaShutdownManager::Shutdown()
   // up after it finishes its notifications.
   sInstance = nullptr;
 
-  DECODER_LOG(PR_LOG_DEBUG, ("MediaShutdownManager::Shutdown() end."));
+  DECODER_LOG(LogLevel::Debug, ("MediaShutdownManager::Shutdown() end."));
 }
 
 } // namespace mozilla
