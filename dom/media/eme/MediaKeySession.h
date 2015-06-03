@@ -16,6 +16,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/dom/Date.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/DetailedPromise.h"
 #include "mozilla/dom/MediaKeySessionBinding.h"
 #include "mozilla/dom/MediaKeysBinding.h"
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
@@ -100,9 +101,9 @@ private:
   ~MediaKeySession();
 
   void UpdateKeyStatusMap();
-  already_AddRefed<Promise> MakePromise(ErrorResult& aRv);
+  already_AddRefed<DetailedPromise> MakePromise(ErrorResult& aRv);
 
-  nsRefPtr<Promise> mClosed;
+  nsRefPtr<DetailedPromise> mClosed;
 
   nsRefPtr<MediaKeyError> mMediaKeyError;
   nsRefPtr<MediaKeys> mKeys;

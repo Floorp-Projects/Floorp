@@ -156,6 +156,9 @@ public:
   static already_AddRefed<DOMException>
   Create(nsresult aRv);
 
+  static already_AddRefed<DOMException>
+  Create(nsresult aRv, const nsCString& aMessage);
+
 protected:
 
   virtual ~DOMException() {}
