@@ -59,6 +59,15 @@ this.E10SUtils = {
       mustLoadRemote = chromeReg.mustLoadURLRemotely(url);
     }
 
+    if (aURL.startsWith("moz-extension:")) {
+      canLoadRemote = false;
+      mustLoadRemote = false;
+    }
+
+    if (aURL.startsWith("view-source:")) {
+      return this.canLoadURIInProcess(aURL.substr("view-source:".length), aProcess);
+    }
+
     if (mustLoadRemote)
       return processIsRemote;
 
