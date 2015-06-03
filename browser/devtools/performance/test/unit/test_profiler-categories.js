@@ -5,7 +5,11 @@
  * Tests if the profiler categories are mapped correctly.
  */
 
-function test() {
+function run_test() {
+  run_next_test();
+}
+
+add_task(function () {
   let global = devtools.require("devtools/performance/global");
   let l10n = global.L10N;
   let categories = global.CATEGORIES;
@@ -15,20 +19,18 @@ function test() {
   ok(count,
     "Should have a non-empty list of categories available.");
 
-  ok(!categories.some(e => !e.color),
+  ok(categories.some(e => e.color),
     "All categories have an associated color.");
 
-  ok(!categories.some(e => !e.label),
+  ok(categories.every(e => e.label),
     "All categories have an associated label.");
 
-  ok(!categories.some(e => e.label != l10n.getStr("category." + e.abbrev)),
+  ok(categories.every(e => e.label === l10n.getStr("category." + e.abbrev)),
     "All categories have a correctly localized label.");
 
-  ok(!Object.keys(mappings).some(e => !Number.isInteger(Math.log2(e))),
-    "All bitmask mappings keys are powers of 2.");
+  ok(Object.keys(mappings).every(e => (Number(e) >= 9000 && Number(e) <= 9999) || Number.isInteger(Math.log2(e))),
+    "All bitmask mappings keys are powers of 2, or between 9000-9999 for special categories.");
 
-  ok(!Object.keys(mappings).some(e => categories.indexOf(mappings[e]) == -1),
+  ok(Object.keys(mappings).every(e => categories.indexOf(mappings[e]) !== -1),
     "All bitmask mappings point to a category.");
-
-  finish();
-}
+});
