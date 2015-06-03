@@ -60,6 +60,9 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     RCINCLUDE = 'splash.rc'
     DEFINES['MOZ_PHOENIX'] = True
 
+for cdm in CONFIG['MOZ_EME_MODULES']:
+    DEFINES['MOZ_%s_EME' % cdm.upper()] = True
+
 # Control the default heap size.
 # This is the heap returned by GetProcessHeap().
 # As we use the CRT heap, the default size is too large and wastes VM.
