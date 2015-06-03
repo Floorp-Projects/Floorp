@@ -29,6 +29,7 @@ public:
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   virtual bool IsOnCSSUnprefixingWhitelist() override;
+  bool IsCodebasePrincipal() const override { return true; }
   nsresult GetOriginInternal(nsACString& aOrigin) override;
 
   nsPrincipal();
