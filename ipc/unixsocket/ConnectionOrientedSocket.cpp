@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ConnectionOrientedSocket.h"
+#include "UnixSocketConnector.h"
 
 namespace mozilla {
 namespace ipc {
@@ -17,20 +18,84 @@ ConnectionOrientedSocketIO::ConnectionOrientedSocketIO(
   nsIThread* aConsumerThread,
   MessageLoop* aIOLoop,
   int aFd,
-  ConnectionStatus aConnectionStatus)
+  ConnectionStatus aConnectionStatus,
+  UnixSocketConnector* aConnector)
   : DataSocketIO(aConsumerThread)
   , UnixSocketWatcher(aIOLoop, aFd, aConnectionStatus)
-{ }
+  , mConnector(aConnector)
+  , mPeerAddressLength(0)
+{
+  MOZ_ASSERT(mConnector);
+}
 
 ConnectionOrientedSocketIO::ConnectionOrientedSocketIO(
   nsIThread* aConsumerThread,
-  MessageLoop* aIOLoop)
+  MessageLoop* aIOLoop,
+  UnixSocketConnector* aConnector)
   : DataSocketIO(aConsumerThread)
   , UnixSocketWatcher(aIOLoop)
-{ }
+  , mConnector(aConnector)
+  , mPeerAddressLength(0)
+{
+  MOZ_ASSERT(mConnector);
+}
 
 ConnectionOrientedSocketIO::~ConnectionOrientedSocketIO()
 { }
+
+nsresult
+ConnectionOrientedSocketIO::Accept(int aFd,
+                                   const struct sockaddr* aPeerAddress,
+                                   socklen_t aPeerAddressLength)
+{
+  MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
+  MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTING);
+
+  SetSocket(aFd, SOCKET_IS_CONNECTED);
+
+  // Address setup
+  mPeerAddressLength = aPeerAddressLength;
+  memcpy(&mPeerAddress, aPeerAddress, mPeerAddressLength);
+
+  // Signal success and start data transfer
+  OnConnected();
+
+  return NS_OK;
+}
+
+nsresult
+ConnectionOrientedSocketIO::Connect()
+{
+  MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
+  MOZ_ASSERT(!IsOpen());
+
+  struct sockaddr* peerAddress =
+    reinterpret_cast<struct sockaddr*>(&mPeerAddress);
+  mPeerAddressLength = sizeof(mPeerAddress);
+
+  int fd;
+  nsresult rv = mConnector->CreateStreamSocket(peerAddress,
+                                               &mPeerAddressLength,
+                                               fd);
+  if (NS_FAILED(rv)) {
+    // Tell the consumer thread we've errored
+    GetConsumerThread()->Dispatch(
+      new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_ERROR),
+      NS_DISPATCH_NORMAL);
+    return NS_ERROR_FAILURE;
+  }
+
+  SetFd(fd);
+
+  // calls OnConnected() on success, or OnError() otherwise
+  rv = UnixSocketWatcher::Connect(peerAddress, mPeerAddressLength);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return NS_OK;
+}
 
 void
 ConnectionOrientedSocketIO::Send(UnixSocketIOBuffer* aBuffer)
