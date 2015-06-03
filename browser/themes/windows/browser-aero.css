@@ -114,13 +114,35 @@
   }
 
   #main-window {
-    -moz-appearance: -moz-win-borderless-glass;
+    -moz-appearance: -moz-win-glass;
     background: transparent;
   }
 
-  #appcontent {
+  /* On win10, if we don't set this on the entire browser container including
+   * the sidebar, if the sidebar is open the accent color bleeds through in
+   * the titlebar */
+  #browser {
     -moz-appearance: -moz-win-exclude-glass;
   }
+
+  @media (-moz-os-version: windows-vista),
+         (-moz-os-version: windows-win7) {
+    #main-window {
+      -moz-appearance: -moz-win-borderless-glass;
+    }
+
+    /* The borders on the glass frame are ours, and inside #browser, and on
+     * vista and win7 we want to make sure they are "glassy", so we can't use
+     * #browser as the exclude-glass container. We use #appcontent instead. */
+    #browser {
+      -moz-appearance: none;
+    }
+
+    #appcontent {
+      -moz-appearance: -moz-win-exclude-glass;
+    }
+  }
+
 
   /* Artificially draw window borders that are covered by lwtheme, see bug 591930. */
   #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
