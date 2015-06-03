@@ -22,6 +22,9 @@ add_task(function* test_default_behavior_host() {
   yield addBookmark( { uri: uri4, title: "tpbk" } );
   yield addBookmark( { uri: uri5, title: "title", tags: ["foo"] } );
 
+  yield setFaviconForHref(uri1.spec, "chrome://global/skin/icons/information-16.png");
+  yield setFaviconForHref(uri3.spec, "chrome://global/skin/icons/error-16.png");
+
   // RESTRICT TO HISTORY.
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
   Services.prefs.setBoolPref("browser.urlbar.suggest.history.onlyTyped", false);
@@ -38,7 +41,8 @@ add_task(function* test_default_behavior_host() {
   do_print("Restrict history, typed visit, should autoFill");
   yield check_autocomplete({
     search: "ty",
-    matches: [ { uri: uri1, title: "typed", style: [ "autofill" ] } ],
+    matches: [ { uri: uri1, title: "typed", style: [ "autofill" ],
+                 icon: "chrome://global/skin/icons/information-16.png" } ],
     autofilled: "typed/",
     completed: "typed/"
   });
@@ -69,7 +73,8 @@ add_task(function* test_default_behavior_host() {
   do_print("Restrict history, bookmark, autoFill.typed = false, should autoFill");
   yield check_autocomplete({
     search: "bo",
-    matches: [ { uri: uri3, title: "bookmarked", style: [ "bookmark" ], style: [ "autofill" ] } ],
+    matches: [ { uri: uri3, title: "bookmarked", style: [ "bookmark" ], style: [ "autofill" ],
+                 icon: "chrome://global/skin/icons/error-16.png" } ],
     autofilled: "bookmarked/",
     completed: "bookmarked/"
   });
@@ -98,7 +103,8 @@ add_task(function* test_default_behavior_host() {
   do_print("Restrict typed, typed visit, autofill.typed = false, should autoFill");
   yield check_autocomplete({
     search: "ty",
-    matches: [ { uri: uri1, title: "typed", style: [ "autofill" ] } ],
+    matches: [ { uri: uri1, title: "typed", style: [ "autofill" ],
+                 icon: "chrome://global/skin/icons/information-16.png"} ],
     autofilled: "typed/",
     completed: "typed/"
   });
@@ -144,7 +150,8 @@ add_task(function* test_default_behavior_host() {
   do_print("Restrict bookmarks, bookmark, should not autoFill");
   yield check_autocomplete({
     search: "bo",
-    matches: [ { uri: uri3, title: "bookmarked", style: [ "bookmark" ] } ],
+    matches: [ { uri: uri3, title: "bookmarked", style: [ "bookmark" ],
+                 icon: "chrome://global/skin/icons/error-16.png"} ],
     autofilled: "bo",
     completed: "bo"
   });
@@ -163,7 +170,8 @@ add_task(function* test_default_behavior_host() {
   do_print("Restrict bookmarks, bookmark, autofill.typed = false, should autoFill");
   yield check_autocomplete({
     search: "bo",
-    matches: [ { uri: uri3, title: "bookmarked", style: [ "autofill" ] } ],
+    matches: [ { uri: uri3, title: "bookmarked", style: [ "autofill" ],
+                 icon: "chrome://global/skin/icons/error-16.png" } ],
     autofilled: "bookmarked/",
     completed: "bookmarked/"
   });
@@ -203,6 +211,9 @@ add_task(function* test_default_behavior_url() {
   yield addBookmark( { uri: uri3, title: "bookmarked" } );
   yield addBookmark( { uri: uri4, title: "tpbk" } );
 
+  yield setFaviconForHref(uri1.spec, "chrome://global/skin/icons/information-16.png");
+  yield setFaviconForHref(uri3.spec, "chrome://global/skin/icons/error-16.png");
+
   // RESTRICT TO HISTORY.
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
   Services.prefs.setBoolPref("browser.urlbar.suggest.history.onlyTyped", false);
@@ -221,7 +232,8 @@ add_task(function* test_default_behavior_url() {
   do_print("URL: Restrict history, typed visit, should autoFill");
   yield check_autocomplete({
     search: "typed/t",
-    matches: [ { uri: uri1, title: "typed/ty/", style: [ "autofill" ] } ],
+    matches: [ { uri: uri1, title: "typed/ty/", style: [ "autofill" ],
+                 icon: "chrome://global/skin/icons/information-16.png"} ],
     autofilled: "typed/ty/",
     completed: "http://typed/ty/"
   });
@@ -268,7 +280,8 @@ add_task(function* test_default_behavior_url() {
   do_print("URL: Restrict bookmarks, bookmark, should not autoFill");
   yield check_autocomplete({
     search: "bookmarked/b",
-    matches: [ { uri: uri3, title: "bookmarked", style: [ "bookmark" ] } ],
+    matches: [ { uri: uri3, title: "bookmarked", style: [ "bookmark" ],
+                 icon: "chrome://global/skin/icons/error-16.png" } ],
     autofilled: "bookmarked/b",
     completed: "bookmarked/b"
   });
@@ -287,7 +300,8 @@ add_task(function* test_default_behavior_url() {
   do_print("URL: Restrict bookmarks, bookmark, autofill.typed = false, should autoFill");
   yield check_autocomplete({
     search: "bookmarked/b",
-    matches: [ { uri: uri3, title: "bookmarked/bo/", style: [ "autofill" ] } ],
+    matches: [ { uri: uri3, title: "bookmarked/bo/", style: [ "autofill" ],
+                 icon: "chrome://global/skin/icons/error-16.png" } ],
     autofilled: "bookmarked/bo/",
     completed: "http://bookmarked/bo/"
   });
