@@ -1491,7 +1491,7 @@ void MediaDecoderStateMachine::RecomputeDuration()
     fireDurationChanged = true;
   }
 
-  SetDuration(duration.ToMicroseconds());
+  SetDuration(duration);
 
   if (fireDurationChanged) {
     nsCOMPtr<nsIRunnable> event =
@@ -1500,29 +1500,25 @@ void MediaDecoderStateMachine::RecomputeDuration()
   }
 }
 
-void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
+void MediaDecoderStateMachine::SetDuration(TimeUnit aDuration)
 {
+  MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-
-  if (aDuration < 0) {
-    mDurationSet = false;
-    return;
-  }
-
+  MOZ_ASSERT(aDuration.ToMicroseconds() >= 0);
   mDurationSet = true;
 
   if (mStartTime == -1) {
     SetStartTime(0);
   }
 
-  if (aDuration == INT64_MAX) {
+  if (aDuration.IsInfinite()) {
     mEndTime = -1;
     return;
   }
 
-  mEndTime = mStartTime + aDuration;
+  mEndTime = mStartTime + aDuration.ToMicroseconds();
 
-  if (mDecoder && mEndTime >= 0 && mEndTime < mCurrentPosition.ReadOnWrongThread()) {
+  if (mDecoder && mEndTime >= 0 && mEndTime < mCurrentPosition) {
     // The current playback position is now past the end of the element duration
     // the user agent must also seek to the time of the end of the media
     // resource.
