@@ -38,11 +38,11 @@ public:
 
   already_AddRefed<SpeechRecognitionAlternative> Item(uint32_t aIndex);
 
-  bool IsFinal() const;
+  bool Final() const;
 
   already_AddRefed<SpeechRecognitionAlternative> IndexedGetter(uint32_t aIndex, bool& aPresent);
 
-  nsTArray<nsRefPtr<SpeechRecognitionAlternative>> mItems;
+  nsTArray<nsRefPtr<SpeechRecognitionAlternative> > mItems;
 
 private:
   ~SpeechRecognitionResult();
