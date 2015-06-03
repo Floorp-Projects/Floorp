@@ -2262,7 +2262,18 @@ UpdateThreadFunc(void *param)
 #endif
 
     if (rv == OK && sStagedUpdate && !sIsOSUpdate) {
+#ifdef TEST_UPDATER
+      // The MOZ_TEST_SKIP_UPDATE_STAGE environment variable prevents copying
+      // the files in dist/bin in the test updater when staging an update since
+      // this can cause tests to timeout.
+      if (getenv("MOZ_TEST_SKIP_UPDATE_STAGE")) {
+        rv = OK;
+      } else {
+        rv = CopyInstallDirToDestDir();
+      }
+#else
       rv = CopyInstallDirToDestDir();
+#endif
     }
 
     if (rv == OK) {
