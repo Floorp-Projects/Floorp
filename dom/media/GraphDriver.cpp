@@ -319,7 +319,7 @@ SystemClockDriver::GetIntervalForIteration(GraphTime& aFrom, GraphTime& aTo)
 
   mCurrentTimeStamp = now;
 
-  MOZ_LOG(gMediaStreamGraphLog, PR_LOG_DEBUG+1, ("Updating current time to %f (real %f, mStateComputedTime %f)",
+  MOZ_LOG(gMediaStreamGraphLog, PR_LOG_VERBOSE, ("Updating current time to %f (real %f, mStateComputedTime %f)",
          mGraphImpl->MediaTimeToSeconds(aTo),
          (now - mInitialTimeStamp).ToSeconds(),
          mGraphImpl->MediaTimeToSeconds(StateComputedTime())));
@@ -363,7 +363,7 @@ SystemClockDriver::WaitForNextIteration()
     // least once a minute, if we need to wake up at all
     timeoutMS = std::max<int64_t>(0, std::min<int64_t>(timeoutMS, 60*1000));
     timeout = PR_MillisecondsToInterval(uint32_t(timeoutMS));
-    STREAM_LOG(PR_LOG_DEBUG+1, ("Waiting for next iteration; at %f, timeout=%f", (now - mInitialTimeStamp).ToSeconds(), timeoutMS/1000.0));
+    STREAM_LOG(PR_LOG_VERBOSE, ("Waiting for next iteration; at %f, timeout=%f", (now - mInitialTimeStamp).ToSeconds(), timeoutMS/1000.0));
     if (mWaitState == WAITSTATE_WAITING_INDEFINITELY) {
       mGraphImpl->mGraphDriverAsleep = false; // atomic
     }
@@ -374,7 +374,7 @@ SystemClockDriver::WaitForNextIteration()
   }
   if (timeout > 0) {
     mGraphImpl->GetMonitor().Wait(timeout);
-    STREAM_LOG(PR_LOG_DEBUG+1, ("Resuming after timeout; at %f, elapsed=%f",
+    STREAM_LOG(PR_LOG_VERBOSE, ("Resuming after timeout; at %f, elapsed=%f",
           (TimeStamp::Now() - mInitialTimeStamp).ToSeconds(),
           (TimeStamp::Now() - now).ToSeconds()));
   }

@@ -1027,7 +1027,7 @@ bool WebMReader::ShouldSkipVideoFrame(int64_t aTimeThreshold)
 bool WebMReader::DecodeVideoFrame(bool &aKeyframeSkip, int64_t aTimeThreshold)
 {
   if (!(aKeyframeSkip && ShouldSkipVideoFrame(aTimeThreshold))) {
-    LOG(PR_LOG_DEBUG+1, ("Reader [%p]: set the aKeyframeSkip to false.",this));
+    LOG(PR_LOG_VERBOSE, ("Reader [%p]: set the aKeyframeSkip to false.",this));
     aKeyframeSkip = false;
   }
   return mVideoDecoder->DecodeVideoFrame(aKeyframeSkip, aTimeThreshold);
