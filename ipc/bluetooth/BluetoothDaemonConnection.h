@@ -12,6 +12,8 @@
 #include "mozilla/ipc/ConnectionOrientedSocket.h"
 #include "nsAutoPtr.h"
 
+class MessageLoop;
+
 namespace mozilla {
 namespace ipc {
 
@@ -92,7 +94,7 @@ private:
 /*
  * |BluetoothDaemonPDUConsumer| processes incoming PDUs from the Bluetooth
  * daemon. Please note that its method |Handle| runs on a different than the
- * main thread.
+ * consumer thread.
  */
 class BluetoothDaemonPDUConsumer
 {
@@ -123,6 +125,8 @@ public:
   //
 
   nsresult PrepareAccept(UnixSocketConnector* aConnector,
+                         nsIThread* aConsumerThread,
+                         MessageLoop* aIOLoop,
                          ConnectionOrientedSocketIO*& aIO) override;
 
   // Methods for |DataSocket|
@@ -139,10 +143,10 @@ public:
   void OnDisconnect() override;
 
 private:
+  BluetoothDaemonConnectionIO* mIO;
   BluetoothDaemonPDUConsumer* mPDUConsumer;
   BluetoothDaemonConnectionConsumer* mConsumer;
   int mIndex;
-  BluetoothDaemonConnectionIO* mIO;
 };
 
 }
