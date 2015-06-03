@@ -145,7 +145,8 @@ void TestSpecExample()
   is(timeline.GetValueAtTime(0.6), 0.75f, "Correct value");
   is(timeline.GetValueAtTime(0.65), (0.75f * powf(0.05f / 0.75f, 0.5f)), "Correct value");
   is(timeline.GetValueAtTime(0.7), -1.0f, "Correct value");
-  is(timeline.GetValueAtTime(0.9), 0.0f, "Correct value");
+  is(timeline.GetValueAtTime(0.8), 0.0f, "Correct value");
+  is(timeline.GetValueAtTime(0.9), 1.0f, "Correct value");
   is(timeline.GetValueAtTime(1.0), 1.0f, "Correct value");
 }
 
