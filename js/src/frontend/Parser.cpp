@@ -7844,13 +7844,8 @@ Parser<ParseHandler>::checkAllowedNestedSyntax(SharedContext::AllowedSyntax allo
 
         // Arrow functions don't help decide whether we should allow nested
         // syntax, as they don't store any of the necessary state for themselves.
-        if (sc->isFunctionBox() && sc->asFunctionBox()->function()->isArrow()) {
-            // For now (!), disallow new.target in arrow functions. This will
-            // change later in this bug!
-            if (allowed == SharedContext::AllowedSyntax::NewTarget)
-                return false;
+        if (sc->isFunctionBox() && sc->asFunctionBox()->function()->isArrow())
             continue;
-        }
 
         if (!sc->allowSyntax(allowed))
             return false;
