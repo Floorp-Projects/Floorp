@@ -66,7 +66,7 @@ add_task(function* test_notification_version_string() {
   yield waitForPromise(ackDefer.promise, DEFAULT_TIMEOUT,
     'Timed out waiting for string acknowledgement');
 
-  let storeRecord = yield db.getByChannelID(
+  let storeRecord = yield db.getByKeyID(
     '6ff97d56-d0c0-43bc-8f5b-61b855e1d93b');
   strictEqual(storeRecord.version, 4, 'Wrong record version');
 });

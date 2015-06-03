@@ -27,9 +27,10 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
 const {PushServiceWebSocket} = Cu.import("resource://gre/modules/PushServiceWebSocket.jsm");
+const {PushServiceHttp2} = Cu.import("resource://gre/modules/PushServiceHttp2.jsm");
 
 // Currently supported protocols: WebSocket.
-const CONNECTION_PROTOCOLS = [PushServiceWebSocket];
+const CONNECTION_PROTOCOLS = [PushServiceWebSocket, PushServiceHttp2];
 
 XPCOMUtils.defineLazyModuleGetter(this, "AlarmService",
                                   "resource://gre/modules/AlarmService.jsm");
@@ -160,11 +161,11 @@ this.PushService = {
         // Disconnect first.
         this._service.disconnect();
       }
-      this._db.getAllChannelIDs()
-        .then(channelIDs => {
-          if (channelIDs.length > 0) {
+      this._db.getAllKeyIDs()
+        .then(keyIDs => {
+          if (keyIDs.length > 0) {
             // if there are request waiting
-            this._service.connect(channelIDs);
+            this._service.connect(keyIDs);
           }
         });
       this._setState(PUSH_SERVICE_RUNNING);
@@ -245,7 +246,7 @@ this.PushService = {
         this._db.getByScope(scope)
           .then(record =>
             Promise.all([
-              this._db.delete(record.channelID),
+              this._db.delete(this._service.getKeyFromRecord(record)),
               this._sendRequest("unregister", record)
             ])
           ).catch(_ => {
@@ -500,8 +501,11 @@ this.PushService = {
         msgName => ppmm.removeMessageListener(msgName, this)
       );
     }
+
     this._service.disconnect();
     this._service.uninit();
+    this._service = null;
+    this.stopAlarm();
 
     if (!this._db) {
       return Promise.resolve();
@@ -576,7 +580,7 @@ this.PushService = {
         ignoreTimezone: true
       },
       () => {
-        if (this._service) {
+        if (this._state > PUSH_SERVICE_ACTIVATING) {
           this._service.onAlarmFired();
         }
       }, (alarmID) => {
@@ -610,7 +614,7 @@ this.PushService = {
   _notifyAllAppsRegister: function() {
     debug("notifyAllAppsRegister()");
     // records are objects describing the registration as stored in IndexedDB.
-    return this._db.getAllChannelIDs()
+    return this._db.getAllKeyIDs()
       .then(records => {
         let scopes = new Set();
         for (let record of records) {
@@ -636,8 +640,50 @@ this.PushService = {
       });
   },
 
+  dropRegistrationAndNotifyApp: function(aKeyId) {
+    return this._db.getByKeyID(aKeyId)
+      .then(record => {
+        let globalMM = Cc['@mozilla.org/globalmessagemanager;1']
+                         .getService(Ci.nsIMessageListenerManager);
+        Services.obs.notifyObservers(
+          null,
+          "push-subscription-change",
+          record.scope
+        );
+
+        let data = {
+          originAttributes: {}, // TODO bug 1166350
+          scope: record.scope
+        };
+
+        globalMM.broadcastAsyncMessage('pushsubscriptionchange', data);
+      })
+      .then(_ => this._db.delete(aKeyId));
+  },
+
+  updateRegistrationAndNotifyApp: function(aOldKey, aRecord) {
+    return this._db.delete(aOldKey)
+      .then(_ => this._db.put(aRecord)
+        .then(record => {
+          let globalMM = Cc['@mozilla.org/globalmessagemanager;1']
+                           .getService(Ci.nsIMessageListenerManager);
+          Services.obs.notifyObservers(
+            null,
+            "push-subscription-change",
+            record.scope
+          );
+
+          let data = {
+            originAttributes: {}, // TODO bug 1166350
+            scope: record.scope
+          };
+
+          globalMM.broadcastAsyncMessage('pushsubscriptionchange', data);
+        }));
+  },
+
   receivedPushMessage: function(aPushRecord, message) {
-    this._updatePushRecord(aPushRecord)
+    this._db.put(aPushRecord)
       .then(_ => this._notifyApp(aPushRecord, message));
   },
 
@@ -684,17 +730,12 @@ this.PushService = {
     globalMM.broadcastAsyncMessage('push', data);
   },
 
-  _updatePushRecord: function(aPushRecord) {
-    debug("updatePushRecord()");
-    return this._db.put(aPushRecord);
+  getByKeyID: function(aKeyID) {
+    return this._db.getByKeyID(aKeyID);
   },
 
-  getByChannelID: function(aChannelID) {
-    return this._db.getByChannelID(aChannelID);
-  },
-
-  getAllChannelIDs: function() {
-    return this._db.getAllChannelIDs();
+  getAllKeyIDs: function() {
+    return this._db.getAllKeyIDs();
   },
 
   _sendRequest(action, aRecord) {
@@ -753,7 +794,7 @@ this.PushService = {
   _onRegisterSuccess: function(aRecord) {
     debug("_onRegisterSuccess()");
 
-    return this._updatePushRecord(aRecord)
+    return this._db.put(aRecord)
       .then(_ => aRecord, error => {
         // Unable to save.
         this._sendRequest("unregister", aRecord);
@@ -793,10 +834,8 @@ this.PushService = {
 
     this._register(aPageRecord)
       .then(pushRecord => {
-        let message = {
-          requestID: aPageRecord.requestID,
-          pushEndpoint: pushRecord.pushEndpoint
-        };
+        let message = this._service.prepareRegister(pushRecord);
+        message.requestID = aPageRecord.requestID;
         aMessageManager.sendAsyncMessage("PushService:Register:OK", message);
       }, error => {
         let message = {
@@ -818,18 +857,19 @@ this.PushService = {
    * watching The important part of the transaction in this case is left to the
    * app, to tell its server of the unregistration.  Even if the request to the
    * PushServer were to fail, it would not affect correctness of the protocol,
-   * and the server GC would just clean up the channelID eventually.  Since the
-   * appserver doesn't ping it, no data is lost.
+   * and the server GC would just clean up the channelID/subscription
+   * eventually.  Since the appserver doesn't ping it, no data is lost.
    *
    * If rather we were to unregister at the server and update the database only
    * on success: If the server receives the unregister, and deletes the
-   * channelID, but the response is lost because of network failure, the
-   * application is never informed. In addition the application may retry the
-   * unregister when it fails due to timeout at which point the server will say
-   * it does not know of this unregistration.  We'll have to make the
-   * registration/unregistration phases have retries and attempts to resend
-   * messages from the server, and have the client acknowledge. On a server,
-   * data is cheap, reliable notification is not.
+   * channelID/subscription, but the response is lost because of network
+   * failure, the application is never informed. In addition the application may
+   * retry the unregister when it fails due to timeout (websocket) or any other
+   * reason at which point the server will say it does not know of this
+   * unregistration.  We'll have to make the registration/unregistration phases
+   * have retries and attempts to resend messages from the server, and have the
+   * client acknowledge. On a server, data is cheap, reliable notification is
+   * not.
    */
   _unregister: function(aPageRecord) {
     debug("unregisterWithServer()");
@@ -846,10 +886,10 @@ this.PushService = {
           throw "NotFoundError";
         }
 
-        // Let's be nice to the server and try to inform it, but we don't care
-        // about the reply.
-        this._sendRequest("unregister", record);
-        this._db.delete(record.channelID);
+        return Promise.all([
+          this._sendRequest("unregister", record),
+          this._db.delete(this._service.getKeyFromRecord(record))
+        ]);
       });
   },
 
@@ -892,12 +932,7 @@ this.PushService = {
         if (!pushRecord) {
           return null;
         }
-        return {
-          pushEndpoint: pushRecord.pushEndpoint,
-          version: pushRecord.version,
-          lastPush: pushRecord.lastPush,
-          pushCount: pushRecord.pushCount
-        };
+        return this._service.prepareRegistration(pushRecord);
       });
   },
 

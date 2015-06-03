@@ -90,7 +90,7 @@ add_task(function* test_register_timeout() {
     'Wrong error for request timeout'
   );
 
-  let record = yield db.getByChannelID(channelID);
+  let record = yield db.getByKeyID(channelID);
   ok(!record, 'Should not store records for timed-out responses');
 
   yield waitForPromise(

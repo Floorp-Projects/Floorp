@@ -56,7 +56,7 @@ add_task(function* test_unregister_error() {
   yield PushNotificationService.unregister(
     'https://example.net/page/failure');
 
-  let result = yield db.getByChannelID(channelID);
+  let result = yield db.getByKeyID(channelID);
   ok(!result, 'Deleted push record exists');
 
   // Make sure we send a request to the server.

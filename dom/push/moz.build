@@ -12,6 +12,7 @@ EXTRA_COMPONENTS += [
 EXTRA_PP_JS_MODULES += [
     'PushDB.jsm',
     'PushService.jsm',
+    'PushServiceHttp2.jsm',
     'PushServiceWebSocket.jsm',
 ]
 

@@ -45,20 +45,19 @@ this.PushDB.prototype = {
   },
 
   /*
-   * @param aChannelRecord
+   * @param aRecord
    *        The record to be added.
    */
 
-  put: function(aChannelRecord) {
-    debug("put()" + JSON.stringify(aChannelRecord));
+  put: function(aRecord) {
+    debug("put()" + JSON.stringify(aRecord));
 
     return new Promise((resolve, reject) =>
       this.newTxn(
         "readwrite",
         this._dbStoreName,
         function txnCb(aTxn, aStore) {
-          debug("Going to put " + aChannelRecord.channelID);
-          aStore.put(aChannelRecord).onsuccess = function setTxnResult(aEvent) {
+          aStore.put(aRecord).onsuccess = function setTxnResult(aEvent) {
             debug("Request successful. Updated record ID: " +
                   aEvent.target.result);
           };
@@ -70,10 +69,10 @@ this.PushDB.prototype = {
   },
 
   /*
-   * @param aChannelID
+   * @param aKeyID
    *        The ID of record to be deleted.
    */
-  delete: function(aChannelID) {
+  delete: function(aKeyID) {
     debug("delete()");
 
     return new Promise((resolve, reject) =>
@@ -81,8 +80,8 @@ this.PushDB.prototype = {
         "readwrite",
         this._dbStoreName,
         function txnCb(aTxn, aStore) {
-          debug("Going to delete " + aChannelID);
-          aStore.delete(aChannelID);
+          debug("Going to delete " + aKeyID);
+          aStore.delete(aKeyID);
         },
         resolve,
         reject
@@ -127,8 +126,8 @@ this.PushDB.prototype = {
     );
   },
 
-  getByChannelID: function(aChannelID) {
-    debug("getByChannelID()");
+  getByKeyID: function(aKeyID) {
+    debug("getByKeyID()");
 
     return new Promise((resolve, reject) =>
       this.newTxn(
@@ -137,7 +136,7 @@ this.PushDB.prototype = {
         function txnCb(aTxn, aStore) {
           aTxn.result = undefined;
 
-          aStore.get(aChannelID).onsuccess = function setTxnResult(aEvent) {
+          aStore.get(aKeyID).onsuccess = function setTxnResult(aEvent) {
             aTxn.result = aEvent.target.result;
             debug("Fetch successful " + aEvent.target.result);
           };
@@ -171,8 +170,8 @@ this.PushDB.prototype = {
     );
   },
 
-  getAllChannelIDs: function() {
-    debug("getAllChannelIDs()");
+  getAllKeyIDs: function() {
+    debug("getAllKeyIDs()");
 
     return new Promise((resolve, reject) =>
       this.newTxn(
