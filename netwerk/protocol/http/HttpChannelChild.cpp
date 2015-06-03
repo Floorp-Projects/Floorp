@@ -1271,7 +1271,7 @@ HttpChannelChild::ConnectParent(uint32_t id)
   if (iTabChild) {
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
   }
-  if (MissingRequiredTabChild(tabChild, "http")) {
+  if (MissingRequiredTabChild(tabChild, mLoadInfo, "http")) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -1279,7 +1279,12 @@ HttpChannelChild::ConnectParent(uint32_t id)
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
   AddIPDLReference();
 
-  HttpChannelConnectArgs connectArgs(id, mShouldParentIntercept);
+  HttpChannelConnectArgs connectArgs;
+  connectArgs.channelId() = id;
+  connectArgs.shouldIntercept() = mShouldParentIntercept;
+  nsresult rv = mozilla::ipc::LoadInfoToLoadInfoArgs(mLoadInfo, &connectArgs.loadInfo());
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PBrowserOrId browser = static_cast<ContentChild*>(gNeckoChild->Manager())
                          ->GetBrowserOrId(tabChild);
   if (!gNeckoChild->
@@ -1595,7 +1600,7 @@ HttpChannelChild::ContinueAsyncOpen()
   if (iTabChild) {
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
   }
-  if (MissingRequiredTabChild(tabChild, "http")) {
+  if (MissingRequiredTabChild(tabChild, mLoadInfo, "http")) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 

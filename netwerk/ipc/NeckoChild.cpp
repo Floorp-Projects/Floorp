@@ -157,7 +157,8 @@ NeckoChild::DeallocPWyciwygChannelChild(PWyciwygChannelChild* channel)
 
 PWebSocketChild*
 NeckoChild::AllocPWebSocketChild(const PBrowserOrId& browser,
-                                 const SerializedLoadContext& aSerialized)
+                                 const SerializedLoadContext& aSerialized,
+                                 const PrincipalInfo& requestingPrincipal)
 {
   NS_NOTREACHED("AllocPWebSocketChild should not be called");
   return nullptr;

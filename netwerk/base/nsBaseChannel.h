@@ -269,7 +269,6 @@ private:
   nsCOMPtr<nsIProgressEventSink>      mProgressSink;
   nsCOMPtr<nsIURI>                    mOriginalURI;
   nsCOMPtr<nsISupports>               mOwner;
-  nsCOMPtr<nsILoadInfo>               mLoadInfo;
   nsCOMPtr<nsISupports>               mSecurityInfo;
   nsCOMPtr<nsIChannel>                mRedirectChannel;
   nsCString                           mContentType;
@@ -288,6 +287,7 @@ protected:
   nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
   nsCOMPtr<nsIStreamListener>         mListener;
   nsCOMPtr<nsISupports>               mListenerContext;
+  nsCOMPtr<nsILoadInfo>               mLoadInfo;
   nsresult                            mStatus;
   uint32_t                            mContentDispositionHint;
   nsAutoPtr<nsString>                 mContentDispositionFilename;
