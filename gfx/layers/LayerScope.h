@@ -40,6 +40,7 @@ public:
     static void CleanLayer();
     static void SetHWComposed();
 
+    static void ContentChanged(TextureHost *host);
 private:
     static void Init();
 };

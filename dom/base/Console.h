@@ -18,6 +18,7 @@
 #include "nsPIDOMWindow.h"
 
 class nsIConsoleAPIStorage;
+class nsIProfiler;
 class nsIXPConnectJSObjectHolder;
 
 namespace mozilla {
@@ -203,6 +204,9 @@ private:
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIConsoleAPIStorage> mStorage;
   nsCOMPtr<nsIXPConnectJSObjectHolder> mSandbox;
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  nsCOMPtr<nsIProfiler> mProfiler;
+#endif
 
   nsDataHashtable<nsStringHashKey, DOMHighResTimeStamp> mTimerRegistry;
   nsDataHashtable<nsStringHashKey, uint32_t> mCounterRegistry;

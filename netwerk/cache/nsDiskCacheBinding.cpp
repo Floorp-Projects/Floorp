@@ -132,7 +132,8 @@ const PLDHashTableOps nsDiskCacheBindery::ops =
 
 
 nsDiskCacheBindery::nsDiskCacheBindery()
-    : initialized(false)
+    : table(&ops, sizeof(HashTableEntry), kInitialTableLength)
+    , initialized(false)
 {
 }
 
@@ -143,21 +144,18 @@ nsDiskCacheBindery::~nsDiskCacheBindery()
 }
 
 
-nsresult
+void
 nsDiskCacheBindery::Init()
 {
-    nsresult rv = NS_OK;
-    PL_DHashTableInit(&table, &ops, sizeof(HashTableEntry), 0);
+    table.ClearAndPrepareForLength(kInitialTableLength);
     initialized = true;
-
-    return rv;
 }
 
 void
 nsDiskCacheBindery::Reset()
 {
     if (initialized) {
-        PL_DHashTableFinish(&table);
+        table.ClearAndPrepareForLength(kInitialTableLength);
         initialized = false;
     }
 }

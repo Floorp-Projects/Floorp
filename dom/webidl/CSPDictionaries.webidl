@@ -24,6 +24,7 @@ dictionary CSP {
   sequence<DOMString> base-uri;
   sequence<DOMString> form-action;
   sequence<DOMString> referrer;
+  sequence<DOMString> manifest-src;
 };
 
 dictionary CSPPolicies {
