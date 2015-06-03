@@ -95,7 +95,7 @@ InvokeConstructor(JSContext* cx, CallArgs args);
 /* See the fval overload of Invoke. */
 extern bool
 InvokeConstructor(JSContext* cx, Value fval, unsigned argc, const Value* argv,
-                  MutableHandleValue rval);
+                  bool newTargetInArgv, MutableHandleValue rval);
 
 /*
  * Executes a script with the given scopeChain/this. The 'type' indicates
@@ -436,7 +436,7 @@ InitGetterSetterOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, Handl
 
 bool
 SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, HandleValue thisv,
-                    HandleValue callee, HandleValue arr, MutableHandleValue res);
+                    HandleValue callee, HandleValue arr, HandleValue newTarget, MutableHandleValue res);
 
 JSObject*
 NewObjectOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
