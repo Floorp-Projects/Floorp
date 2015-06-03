@@ -6883,12 +6883,14 @@ DebuggerObject_getAllocationSite(JSContext* cx, unsigned argc, Value* vp)
     if (!metadata)
         return null(args);
 
-    metadata = CheckedUnwrap(metadata);
-    if (!metadata || !SavedFrame::isSavedFrameAndNotProto(*metadata))
+    MOZ_ASSERT(!metadata->is<WrapperObject>());
+
+    if (!SavedFrame::isSavedFrameAndNotProto(*metadata))
         return null(args);
 
     if (!cx->compartment()->wrap(cx, &metadata))
         return false;
+
     args.rval().setObject(*metadata);
     return true;
 }

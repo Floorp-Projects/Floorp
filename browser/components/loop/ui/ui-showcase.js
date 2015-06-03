@@ -535,7 +535,7 @@
           React.createElement(Section, {name: "ConversationView-640"}, 
             React.createElement(Example, {summary: "640px breakpoint for conversation view"}, 
               React.createElement("div", {className: "breakpoint", 
-                   style: {"text-align":"center"}, 
+                   style: {"text-align": "center"}, 
                    "data-breakpoint-width": "400px", 
                    "data-breakpoint-height": "780px"}, 
                 React.createElement("div", {className: "standalone"}, 

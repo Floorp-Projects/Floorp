@@ -14,27 +14,33 @@
 /*globals content, sendAsyncMessage, addMessageListener, Components*/
 'use strict';
 const {
-  utils: Cu
+  utils: Cu,
+  classes: Cc,
+  interfaces: Ci
 } = Components;
 const {
   ManifestProcessor
 } = Cu.import('resource://gre/modules/WebManifest.jsm', {});
+const {
+  Task: {
+    spawn, async
+  }
+} = Components.utils.import('resource://gre/modules/Task.jsm', {});
 
-addMessageListener('DOM:ManifestObtainer:Obtain', (aMsg) => {
-  fetchManifest()
-    .then(
-      manifest => sendAsyncMessage('DOM:ManifestObtainer:Obtain', {
-        success: true,
-        result: manifest,
-        msgId: aMsg.data.msgId
-      }),
-      error => sendAsyncMessage('DOM:ManifestObtainer:Obtain', {
-        success: false,
-        result: cloneError(error),
-        msgId: aMsg.data.msgId
-      })
-    );
-});
+addMessageListener('DOM:ManifestObtainer:Obtain', async(function* (aMsg) {
+  const response = {
+    msgId: aMsg.data.msgId,
+    success: true,
+    result: undefined
+  };
+  try {
+    response.result = yield fetchManifest();
+  } catch (err) {
+    response.success = false;
+    response.result = cloneError(err);
+  }
+  sendAsyncMessage('DOM:ManifestObtainer:Obtain', response);
+}));
 
 function cloneError(aError) {
   const clone = {
@@ -49,19 +55,23 @@ function cloneError(aError) {
 }
 
 function fetchManifest() {
-  const manifestQuery = 'link[rel~="manifest"]';
-  return new Promise((resolve, reject) => {
+  return spawn(function* () {
     if (!content || content.top !== content) {
       let msg = 'Content window must be a top-level browsing context.';
-      return reject(new Error(msg));
+      throw new Error(msg);
     }
-    const elem = content.document.querySelector(manifestQuery);
+    const elem = content.document.querySelector('link[rel~="manifest"]');
     if (!elem || !elem.getAttribute('href')) {
       let msg = 'No manifest to fetch.';
-      return reject(new Error(msg));
+      throw new Error(msg);
     }
-    // Will throw on "about:blank" and possibly other invalid URIs.
+    // Throws on malformed URLs
     const manifestURL = new content.URL(elem.href, elem.baseURI);
+    if (!canLoadManifest(elem)) {
+      let msg = `Content Security Policy: The page's settings blocked the `;
+      msg += `loading of a resource at ${elem.href}`;
+      throw new Error(msg);
+    }
     const reqInit = {
       mode: 'cors'
     };
@@ -70,34 +80,43 @@ function fetchManifest() {
     }
     const req = new content.Request(manifestURL, reqInit);
     req.setContext('manifest');
-    content
-      .fetch(req)
-      .then(resp => processResponse(resp, content))
-      .then(resolve)
-      .catch(reject);
+    const response = yield content.fetch(req);
+    const manifest = yield processResponse(response, content);
+    return manifest;
   });
 }
 
+function canLoadManifest(aElem) {
+  const contentPolicy = Cc['@mozilla.org/layout/content-policy;1']
+    .getService(Ci.nsIContentPolicy);
+  const mimeType = aElem.type || 'application/manifest+json';
+  const elemURI = BrowserUtils.makeURI(
+    aElem.href, aElem.ownerDocument.characterSet
+  );
+  const shouldLoad = contentPolicy.shouldLoad(
+    Ci.nsIContentPolicy.TYPE_WEB_MANIFEST, elemURI,
+    aElem.ownerDocument.documentURIObject,
+    aElem, mimeType, null
+  );
+  return shouldLoad === Ci.nsIContentPolicy.ACCEPT;
+}
+
 function processResponse(aResp, aContentWindow) {
-  const manifestURL = aResp.url;
-  return new Promise((resolve, reject) => {
+  return spawn(function* () {
     const badStatus = aResp.status < 200 || aResp.status >= 300;
     if (aResp.type === 'error' || badStatus) {
       let msg =
         `Fetch error: ${aResp.status} - ${aResp.statusText} at ${aResp.url}`;
-      return reject(new Error(msg));
+      throw new Error(msg);
     }
-    aResp
-      .text()
-      .then((text) => {
-        const args = {
-          jsonText: text,
-          manifestURL: manifestURL,
-          docURL: aContentWindow.location.href
-        };
-        const processor = new ManifestProcessor();
-        const manifest = processor.process(args);
-        resolve(Cu.cloneInto(manifest, content));
-      }, reject);
+    const text = yield aResp.text();
+    const args = {
+      jsonText: text,
+      manifestURL: aResp.url,
+      docURL: aContentWindow.location.href
+    };
+    const processor = new ManifestProcessor();
+    const manifest = processor.process(args);
+    return Cu.cloneInto(manifest, content);
   });
 }

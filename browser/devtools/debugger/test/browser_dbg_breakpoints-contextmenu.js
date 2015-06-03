@@ -96,7 +96,7 @@ function test() {
     ok(isCaretPos(gPanel, 9),
       "The editor location is correct before pausing.");
 
-    sendMouseClickToTab(gTab, content.document.querySelector("button"));
+    generateMouseClickInTab(gTab, "content.document.querySelector('button')");
 
     return finished;
   }

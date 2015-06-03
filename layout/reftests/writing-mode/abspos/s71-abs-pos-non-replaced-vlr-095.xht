@@ -4,7 +4,7 @@
 
  <head>
 
-  <title>CSS Writing Modes Test: absolutely positioned non-replaced element - 'direction: rtl' and 'left', 'width' and 'right' are not 'auto'</title>
+  <title>CSS Writing Modes Test: absolutely positioned non-replaced element - 'direction: rtl' and 'left', 'width' and 'right' are not 'auto' (overconstrained)</title>
 
   <link rel="author" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/" />
   <link rel="help" href="http://www.w3.org/TR/css-writing-modes-3/#vertical-layout" title="7.1 Principles of Layout in Vertical Writing Modes" />
@@ -57,9 +57,9 @@ So:
   +
       0px : margin-left
   +
-      0px : border-top-width
+      0px : border-left-width
   +
-      0px : padding-top
+      0px : padding-left
   +
      80px : width
   +
@@ -79,9 +79,9 @@ gives us:
   +
       0px : margin-left
   +
-      0px : border-top-width
+      0px : border-left-width
   +
-      0px : padding-top
+      0px : padding-left
   +
      80px : width
   +
@@ -89,13 +89,13 @@ gives us:
   +
       0px : border-right-width
   +
-      0px : margin-right: auto
+      0px : margin-right
   +
     160px : right
     =====================
     320px : width of containing block
 
-And so computed left value must be 80px;
+And so computed left value must be 80px .
 */
 
   ]]></style>

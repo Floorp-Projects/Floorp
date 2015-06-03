@@ -80,3 +80,19 @@ nsTextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
   return NS_OK;
 }
 
+void
+nsTextEditRules::UndefineCaretBidiLevel(Selection* aSelection)
+{
+  /**
+   * After inserting text the caret Bidi level must be set to the level of the
+   * inserted text.This is difficult, because we cannot know what the level is
+   * until after the Bidi algorithm is applied to the whole paragraph.
+   *
+   * So we set the caret Bidi level to UNDEFINED here, and the caret code will
+   * set it correctly later
+   */
+  nsRefPtr<nsFrameSelection> frameSelection = aSelection->GetFrameSelection();
+  if (frameSelection) {
+    frameSelection->UndefineCaretBidiLevel();
+  }
+}

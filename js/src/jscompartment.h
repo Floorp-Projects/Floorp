@@ -324,8 +324,8 @@ struct JSCompartment
      */
     js::ReadBarrieredScriptSourceObject selfHostingScriptSource;
 
-    // Keep track of the metadata objects which can be associated with each
-    // JS object.
+    // Keep track of the metadata objects which can be associated with each JS
+    // object. Both keys and values are in this compartment.
     js::ObjectWeakMap* objectMetadataTable;
 
     // Map from array buffers to views sharing that storage.

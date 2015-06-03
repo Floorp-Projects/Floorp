@@ -32,6 +32,6 @@ describe("document.mozL10n", function() {
   });
 
   it("should get a plural form", function() {
-    expect(document.mozL10n.get("plural", {num:10})).eql("10 plural forms");
+    expect(document.mozL10n.get("plural", {num: 10})).eql("10 plural forms");
   });
 });

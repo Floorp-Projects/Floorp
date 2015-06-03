@@ -53,33 +53,11 @@ So:
 
   (solve) : left: auto
   +
-      0px : margin-left: auto
+      0px : margin-left
   +
-      0px : border-top-width
+      0px : border-left-width
   +
-      0px : padding-top
-  +
-     80px : width
-  +
-      0px : padding-right
-  +
-      0px : border-right-width
-  +
-      0px : margin-right: auto
-  +
-    160px : right: auto
-    =====================
-    320px : width of containing block
-
-gives us:
-
-  (solve) : left: auto
-  +
-      0px : margin-left: auto
-  +
-      0px : border-top-width
-  +
-      0px : padding-top
+      0px : padding-left
   +
      80px : width
   +
@@ -87,13 +65,13 @@ gives us:
   +
       0px : border-right-width
   +
-      0px : margin-right: auto
+      0px : margin-right
   +
-    160px : right: auto
+    160px : right: auto: set to static position
     =====================
     320px : width of containing block
 
-And so computed left value must be 80px;
+And so computed left value must be 80px .
 */
 
   ]]></style>

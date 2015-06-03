@@ -91,8 +91,8 @@ for (let tc of TESTCASES) {
     let testcase = tc;
     add_task(function*() {
       do_print("Starting testcase: " + testcase.description);
-      let document = RecipeHelpers.createTestDocument("http://localhost:8080/test/",
-                                                      testcase.document);
+      let document = MockDocument.createTestDocument("http://localhost:8080/test/",
+                                                     testcase.document);
 
       let mapRootElementToFormLike = new Map();
       for (let input of document.querySelectorAll("input")) {
