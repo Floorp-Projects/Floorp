@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include "mozilla/ipc/BluetoothDaemonConnectionConsumer.h"
 #include "mozilla/ipc/DataSocket.h"
-#include "mozilla/ipc/UnixSocketConnector.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
 
@@ -206,15 +205,9 @@ public:
   BluetoothDaemonConnectionIO(nsIThread* aConsumerThread,
                               MessageLoop* aIOLoop,
                               int aFd, ConnectionStatus aConnectionStatus,
+                              UnixSocketConnector* aConnector,
                               BluetoothDaemonConnection* aConnection,
                               BluetoothDaemonPDUConsumer* aConsumer);
-
-  // Methods for |ConnectionOrientedSocketIO|
-  //
-
-  nsresult Accept(int aFd,
-                  const struct sockaddr* aAddress,
-                  socklen_t aAddressLength) override;
 
   // Methods for |DataSocketIO|
   //
@@ -246,44 +239,20 @@ BluetoothDaemonConnectionIO::BluetoothDaemonConnectionIO(
   MessageLoop* aIOLoop,
   int aFd,
   ConnectionStatus aConnectionStatus,
+  UnixSocketConnector* aConnector,
   BluetoothDaemonConnection* aConnection,
   BluetoothDaemonPDUConsumer* aConsumer)
   : ConnectionOrientedSocketIO(aConsumerThread,
                                aIOLoop,
                                aFd,
-                               aConnectionStatus)
+                               aConnectionStatus,
+                               aConnector)
   , mConnection(aConnection)
   , mConsumer(aConsumer)
   , mShuttingDownOnIOThread(false)
 {
   MOZ_ASSERT(mConnection);
   MOZ_ASSERT(mConsumer);
-}
-
-// |ConnectionOrientedSocketIO|
-
-nsresult
-BluetoothDaemonConnectionIO::Accept(int aFd,
-                                    const struct sockaddr* aAddress,
-                                    socklen_t aAddressLength)
-{
-  MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
-  MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTING);
-
-  // File-descriptor setup
-
-  if (TEMP_FAILURE_RETRY(fcntl(aFd, F_SETFL, O_NONBLOCK)) < 0) {
-    OnError("fcntl", errno);
-    ScopedClose cleanupFd(aFd);
-    return NS_ERROR_FAILURE;
-  }
-
-  SetSocket(aFd, SOCKET_IS_CONNECTED);
-
-  // Signal success
-  OnConnected();
-
-  return NS_OK;
 }
 
 // |DataSocketIO|
@@ -386,16 +355,11 @@ BluetoothDaemonConnection::PrepareAccept(UnixSocketConnector* aConnector,
 {
   MOZ_ASSERT(!mIO);
 
-  // |BluetoothDaemonConnection| now owns the connector, but doesn't
-  // actually use it. So the connector is stored in an auto pointer
-  // to be deleted at the end of the method.
-  nsAutoPtr<UnixSocketConnector> connector(aConnector);
-
   SetConnectionStatus(SOCKET_CONNECTING);
 
   mIO = new BluetoothDaemonConnectionIO(
     aConsumerThread, aIOLoop, -1, UnixSocketWatcher::SOCKET_IS_CONNECTING,
-    this, mPDUConsumer);
+    aConnector, this, mPDUConsumer);
   aIO = mIO;
 
   return NS_OK;
