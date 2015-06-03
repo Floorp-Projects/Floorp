@@ -569,7 +569,7 @@ public:
 protected:
     uint64_t mLayerRef;
     uint32_t mColor;
-    nsIntSize mSize;
+    IntSize mSize;
 };
 
 class DebugGLLayersData final: public DebugGLData {

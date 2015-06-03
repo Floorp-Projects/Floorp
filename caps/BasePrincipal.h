@@ -41,7 +41,7 @@ public:
   // Serializes non-default values into the suffix format, i.e.
   // |!key1=value1&key2=value2|. If there are no non-default attributes, this
   // returns an empty string.
-  void CreateSuffix(nsACString& aStr);
+  void CreateSuffix(nsACString& aStr) const;
 
   void Serialize(nsIObjectOutputStream* aStream) const;
   nsresult Deserialize(nsIObjectInputStream* aStream);
@@ -82,6 +82,8 @@ public:
   NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) final;
 
   virtual bool IsOnCSSUnprefixingWhitelist() override { return false; }
+
+  static bool IsCodebasePrincipal(nsIPrincipal* aPrincipal);
 
   static BasePrincipal* Cast(nsIPrincipal* aPrin) { return static_cast<BasePrincipal*>(aPrin); }
   static already_AddRefed<BasePrincipal> CreateCodebasePrincipal(nsIURI* aURI, OriginAttributes& aAttrs);

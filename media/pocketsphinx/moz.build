@@ -1,0 +1,54 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+LOCAL_INCLUDES += [
+    '/media/sphinxbase',
+]
+
+EXPORTS.pocketsphinx += [
+    'pocketsphinx.h',
+]
+
+SOURCES += [
+    'src/acmod.c',
+    'src/allphone_search.c',
+    'src/bin_mdef.c',
+    'src/blkarray_list.c',
+    'src/dict.c',
+    'src/dict2pid.c',
+    'src/fsg_history.c',
+    'src/fsg_lextree.c',
+    'src/fsg_search.c',
+    'src/hmm.c',
+    'src/kws_detections.c',
+    'src/kws_search.c',
+    'src/mdef.c',
+    'src/ms_gauden.c',
+    'src/ms_mgau.c',
+    'src/ms_senone.c',
+    'src/ngram_search.c',
+    'src/ngram_search_fwdflat.c',
+    'src/ngram_search_fwdtree.c',
+    'src/phone_loop_search.c',
+    'src/pocketsphinx.c',
+    'src/ps_alignment.c',
+    'src/ps_lattice.c',
+    'src/ps_mllr.c',
+    'src/ptm_mgau.c',
+    'src/s2_semi_mgau.c',
+    'src/state_align_search.c',
+    'src/tmat.c',
+    'src/vector.c',
+]
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CC']:
+    CFLAGS += ['-Wno-sign-compare']
+
+if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
+    NO_VISIBILITY_FLAGS = True,
+
+FINAL_LIBRARY = 'gkmedias'

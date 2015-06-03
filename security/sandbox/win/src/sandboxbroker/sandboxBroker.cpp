@@ -123,6 +123,25 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel)
     ret = ret && (sandbox::SBOX_ALL_OK == result);
   }
 
+  if (aSandboxLevel >= 1) {
+    sandbox::MitigationFlags mitigations =
+      sandbox::MITIGATION_BOTTOM_UP_ASLR |
+      sandbox::MITIGATION_HEAP_TERMINATE |
+      sandbox::MITIGATION_SEHOP |
+      sandbox::MITIGATION_DEP_NO_ATL_THUNK |
+      sandbox::MITIGATION_DEP;
+
+    result = mPolicy->SetProcessMitigations(mitigations);
+    ret = ret && (sandbox::SBOX_ALL_OK == result);
+
+    mitigations =
+      sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
+      sandbox::MITIGATION_DLL_SEARCH_ORDER;
+
+    result = mPolicy->SetDelayedProcessMitigations(mitigations);
+    ret = ret && (sandbox::SBOX_ALL_OK == result);
+  }
+
   // Add the policy for the client side of a pipe. It is just a file
   // in the \pipe\ namespace. We restrict it to pipes that start with
   // "chrome." so the sandboxed process cannot connect to system services.

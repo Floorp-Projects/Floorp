@@ -167,6 +167,8 @@ class TestResolver(MozbuildObject):
                 'mochitest', 'webapprtChrome'),
             'webapprt-content': os.path.join(self.topobjdir, '_tests', 'testing',
                 'mochitest', 'webapprtContent'),
+            'web-platform-tests': os.path.join(self.topobjdir, '_tests', 'testing',
+                                               'web-platform'),
             'xpcshell': os.path.join(self.topobjdir, '_tests', 'xpcshell'),
         }
 

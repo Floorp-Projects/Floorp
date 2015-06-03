@@ -1,0 +1,37 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1131352 - Add ServiceWorkerGlobalScope skipWaiting()</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  if (!parent) {
+    info("skip_waiting_scope/index.html shouldn't be launched directly!");
+  }
+
+  navigator.serviceWorker.ready.then(function() {
+    parent.postMessage("READY", "*");
+  });
+
+  navigator.serviceWorker.oncontrollerchange = function() {
+    parent.postMessage({
+      event: "controllerchange",
+      controllerScriptURL: navigator.serviceWorker.controller &&
+                           navigator.serviceWorker.controller.scriptURL
+    }, "*");
+  }
+
+</script>
+</pre>
+</body>
+</html>

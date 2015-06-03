@@ -16,6 +16,9 @@ interface ServiceWorkerGlobalScope : WorkerGlobalScope {
   readonly attribute Clients clients;
   readonly attribute ServiceWorkerRegistration registration;
 
+  [Throws]
+  Promise<boolean> skipWaiting();
+
   attribute EventHandler oninstall;
   attribute EventHandler onactivate;
   attribute EventHandler onfetch;

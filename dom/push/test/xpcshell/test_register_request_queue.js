@@ -3,7 +3,7 @@
 
 'use strict';
 
-const {PushDB, PushService} = serviceExports;
+const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
 function run_test() {
   do_get_profile();
@@ -18,7 +18,7 @@ function run_test() {
 }
 
 add_task(function* test_register_request_queue() {
-  let db = new PushDB();
+  let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
   let helloDefer = Promise.defer();
@@ -31,6 +31,7 @@ add_task(function* test_register_request_queue() {
     helloDefer.resolve();
   });
   PushService.init({
+    serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
     db,
     makeWebSocket(uri) {
