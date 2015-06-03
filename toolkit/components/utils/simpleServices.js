@@ -104,7 +104,11 @@ AddonPolicyService.prototype = {
    * directly.
    */
   setAddonLoadURICallback(aAddonId, aCallback) {
-    this.mayLoadURICallbacks[aAddonId] = aCallback;
+    if (aCallback) {
+      this.mayLoadURICallbacks[aAddonId] = aCallback;
+    } else {
+      delete this.mayLoadURICallbacks[aAddonId];
+    }
   },
 
   /*
