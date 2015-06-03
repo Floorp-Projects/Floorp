@@ -20,9 +20,7 @@ namespace ipc {
 // StreamSocketIO
 //
 
-class StreamSocketIO final
-  : public UnixSocketWatcher
-  , public ConnectionOrientedSocketIO
+class StreamSocketIO final : public ConnectionOrientedSocketIO
 {
 public:
   class ConnectTask;
@@ -140,8 +138,7 @@ StreamSocketIO::StreamSocketIO(nsIThread* aConsumerThread,
                                MessageLoop* aIOLoop,
                                StreamSocket* aStreamSocket,
                                UnixSocketConnector* aConnector)
-  : UnixSocketWatcher(aIOLoop)
-  , ConnectionOrientedSocketIO(aConsumerThread)
+  : ConnectionOrientedSocketIO(aConsumerThread, aIOLoop)
   , mStreamSocket(aStreamSocket)
   , mConnector(aConnector)
   , mShuttingDownOnIOThread(false)
@@ -157,8 +154,10 @@ StreamSocketIO::StreamSocketIO(nsIThread* aConsumerThread,
                                int aFd, ConnectionStatus aConnectionStatus,
                                StreamSocket* aStreamSocket,
                                UnixSocketConnector* aConnector)
-  : UnixSocketWatcher(aIOLoop, aFd, aConnectionStatus)
-  , ConnectionOrientedSocketIO(aConsumerThread)
+  : ConnectionOrientedSocketIO(aConsumerThread,
+                               aIOLoop,
+                               aFd,
+                               aConnectionStatus)
   , mStreamSocket(aStreamSocket)
   , mConnector(aConnector)
   , mShuttingDownOnIOThread(false)

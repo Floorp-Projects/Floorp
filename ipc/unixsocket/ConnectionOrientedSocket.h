@@ -9,6 +9,7 @@
 
 #include <sys/socket.h>
 #include "DataSocket.h"
+#include "mozilla/ipc/UnixSocketWatcher.h"
 
 class MessageLoop;
 
@@ -23,15 +24,38 @@ class UnixSocketConnector;
  * |ListenSocket| uses these classes to handle accepted sockets.
  */
 
-class ConnectionOrientedSocketIO : public DataSocketIO
+class ConnectionOrientedSocketIO
+  : public DataSocketIO
+  , public UnixSocketWatcher
 {
 public:
-  ConnectionOrientedSocketIO(nsIThread* aConsumerThread);
   virtual ~ConnectionOrientedSocketIO();
 
   virtual nsresult Accept(int aFd,
                           const struct sockaddr* aAddress,
                           socklen_t aAddressLength) = 0;
+
+protected:
+  /**
+   * Constructs an instance of |ConnectionOrientedSocketIO|
+   *
+   * @param aConsumerThread The socket's consumer thread.
+   * @param aIOLoop The socket's I/O loop.
+   * @param aFd The socket file descriptor.
+   * @param aConnectionStatus The connection status for |aFd|.
+   */
+  ConnectionOrientedSocketIO(nsIThread* aConsumerThread,
+                             MessageLoop* aIOLoop,
+                             int aFd, ConnectionStatus aConnectionStatus);
+
+  /**
+   * Constructs an instance of |ConnectionOrientedSocketIO|
+   *
+   * @param aConsumerThread The socket's consumer thread.
+   * @param aIOLoop The socket's I/O loop.
+   */
+  ConnectionOrientedSocketIO(nsIThread* aConsumerThread,
+                             MessageLoop* aIOLoop);
 };
 
 class ConnectionOrientedSocket : public DataSocket
