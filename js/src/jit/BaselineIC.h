@@ -5538,18 +5538,27 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
 {
     friend class ICStubSpace;
   public:
-    static const unsigned UNOPTIMIZABLE_CALL_FLAG = 0x1;
+    static const unsigned CONSTRUCTING_FLAG = 0x1;
+    static const unsigned UNOPTIMIZABLE_CALL_FLAG = 0x2;
 
     static const uint32_t MAX_OPTIMIZED_STUBS = 16;
     static const uint32_t MAX_SCRIPTED_STUBS = 7;
     static const uint32_t MAX_NATIVE_STUBS = 7;
   private:
 
-    explicit ICCall_Fallback(JitCode* stubCode)
+    ICCall_Fallback(JitCode* stubCode, bool isConstructing)
       : ICMonitoredFallbackStub(ICStub::Call_Fallback, stubCode)
-    { }
+    {
+        extra_ = 0;
+        if (isConstructing)
+            extra_ |= CONSTRUCTING_FLAG;
+    }
 
   public:
+    bool isConstructing() const {
+        return extra_ & CONSTRUCTING_FLAG;
+    }
+
     void noteUnoptimizableCall() {
         extra_ |= UNOPTIMIZABLE_CALL_FLAG;
     }
@@ -5574,9 +5583,6 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
 
     // Compiler for this stub kind.
     class Compiler : public ICCallStubCompiler {
-      public:
-        static const int32_t CALL_KEY = static_cast<int32_t>(ICStub::Call_Fallback);
-        static const int32_t CONSTRUCT_KEY = static_cast<int32_t>(ICStub::Call_Fallback) | (1 << 17);
       protected:
         bool isConstructing_;
         bool isSpread_;
@@ -5585,8 +5591,7 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
         bool postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code);
 
         virtual int32_t getKey() const {
-            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isSpread_) << 16) |
-                   (static_cast<int32_t>(isConstructing_) << 17);
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isSpread_) << 16);
         }
 
       public:
@@ -5597,7 +5602,7 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
         { }
 
         ICStub* getStub(ICStubSpace* space) {
-            ICCall_Fallback* stub = newStub<ICCall_Fallback>(space, getStubCode());
+            ICCall_Fallback* stub = newStub<ICCall_Fallback>(space, getStubCode(), isConstructing_);
             if (!stub || !stub->initMonitoringChain(cx, space))
                 return nullptr;
             return stub;
