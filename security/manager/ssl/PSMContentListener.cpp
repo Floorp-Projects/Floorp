@@ -109,7 +109,7 @@ NS_IMPL_ISUPPORTS(PSMContentStreamListener, nsIStreamListener, nsIRequestObserve
 NS_IMETHODIMP
 PSMContentStreamListener::OnStartRequest(nsIRequest* request, nsISupports* context)
 {
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CertDownloader::OnStartRequest\n"));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CertDownloader::OnStartRequest\n"));
 
   int64_t contentLength = ComputeContentLength(request);
   if (contentLength < 0) {
@@ -127,7 +127,7 @@ PSMContentStreamListener::OnDataAvailable(nsIRequest* request,
                                           uint64_t aSourceOffset,
                                           uint32_t aLength)
 {
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CertDownloader::OnDataAvailable\n"));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CertDownloader::OnDataAvailable\n"));
 
   nsCString chunk;
   nsresult rv = NS_ReadInputStreamToString(aIStream, chunk, aLength);
@@ -144,7 +144,7 @@ PSMContentStreamListener::OnStopRequest(nsIRequest* request,
                                         nsISupports* context,
                                         nsresult aStatus)
 {
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CertDownloader::OnStopRequest\n"));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CertDownloader::OnStopRequest\n"));
 
   // Because importing the cert can spin the event loop (via alerts), we can't
   // do it here. Do it off the event loop instead.
@@ -398,7 +398,7 @@ PSMContentListener::DoContent(const nsACString& aContentType,
   uint32_t type;
   type = getPSMContentType(PromiseFlatCString(aContentType).get());
   if (gPIPNSSLog) {
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("PSMContentListener::DoContent\n"));
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("PSMContentListener::DoContent\n"));
   }
   if (type != UNKNOWN_TYPE) {
     nsCOMPtr<nsIStreamListener> downloader;

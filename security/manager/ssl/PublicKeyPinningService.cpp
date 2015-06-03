@@ -59,7 +59,7 @@ EvalCertWithHashType(const CERTCertificate* cert, SECOidTag hashType,
 {
   certMatchesPinset = false;
   if (!fingerprints && !dynamicFingerprints) {
-    MOZ_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
            ("pkpin: No hashes found for hash type: %d\n", hashType));
     return NS_ERROR_INVALID_ARG;
   }
@@ -67,7 +67,7 @@ EvalCertWithHashType(const CERTCertificate* cert, SECOidTag hashType,
   nsAutoCString base64Out;
   nsresult rv = GetBase64HashSPKI(cert, hashType, base64Out);
   if (NS_FAILED(rv)) {
-    MOZ_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
            ("pkpin: GetBase64HashSPKI failed!\n"));
     return rv;
   }
@@ -75,7 +75,7 @@ EvalCertWithHashType(const CERTCertificate* cert, SECOidTag hashType,
   if (fingerprints) {
     for (size_t i = 0; i < fingerprints->size; i++) {
       if (base64Out.Equals(fingerprints->data[i])) {
-        MOZ_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+        MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
                ("pkpin: found pin base_64 ='%s'\n", base64Out.get()));
         certMatchesPinset = true;
         return NS_OK;
@@ -85,7 +85,7 @@ EvalCertWithHashType(const CERTCertificate* cert, SECOidTag hashType,
   if (dynamicFingerprints) {
     for (size_t i = 0; i < dynamicFingerprints->Length(); i++) {
       if (base64Out.Equals((*dynamicFingerprints)[i])) {
-        MOZ_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+        MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
                ("pkpin: found pin base_64 ='%s'\n", base64Out.get()));
         certMatchesPinset = true;
         return NS_OK;
@@ -126,9 +126,9 @@ EvalChainWithHashType(const CERTCertList* certList, SECOidTag hashType,
   for (node = CERT_LIST_HEAD(certList); !CERT_LIST_END(node, certList);
        node = CERT_LIST_NEXT(node)) {
     currentCert = node->cert;
-    MOZ_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
            ("pkpin: certArray subject: '%s'\n", currentCert->subjectName));
-    MOZ_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
            ("pkpin: certArray issuer: '%s'\n", currentCert->issuerName));
     nsresult rv = EvalCertWithHashType(currentCert, hashType, fingerprints,
                                        dynamicFingerprints,
@@ -140,7 +140,7 @@ EvalChainWithHashType(const CERTCertList* certList, SECOidTag hashType,
       return NS_OK;
     }
   }
-  MOZ_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG, ("pkpin: no matches found\n"));
+  MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug, ("pkpin: no matches found\n"));
   return NS_OK;
 }
 
@@ -212,7 +212,7 @@ FindPinningInformation(const char* hostname, mozilla::pkix::Time time,
   char *evalPart;
   // Notice how the (xx = strchr) prevents pins for unqualified domain names.
   while (!foundEntry && (evalPart = strchr(evalHost, '.'))) {
-    MOZ_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
            ("pkpin: Querying pinsets for host: '%s'\n", evalHost));
     // Attempt dynamic pins first
     nsresult rv;
@@ -225,7 +225,7 @@ FindPinningInformation(const char* hostname, mozilla::pkix::Time time,
       return rv;
     }
     if (found && (evalHost == hostname || includeSubdomains)) {
-      MOZ_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+      MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
              ("pkpin: Found dyn match for host: '%s'\n", evalHost));
       dynamicFingerprints = pinArray;
       return NS_OK;
@@ -237,7 +237,7 @@ FindPinningInformation(const char* hostname, mozilla::pkix::Time time,
       sizeof(TransportSecurityPreload),
       TransportSecurityPreloadCompare);
     if (foundEntry) {
-      MOZ_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+      MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
              ("pkpin: Found pinset for host: '%s'\n", evalHost));
       if (evalHost != hostname) {
         if (!foundEntry->mIncludeSubdomains) {
@@ -246,7 +246,7 @@ FindPinningInformation(const char* hostname, mozilla::pkix::Time time,
         }
       }
     } else {
-      MOZ_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+      MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
              ("pkpin: Didn't find pinset for host: '%s'\n", evalHost));
     }
     // Add one for '.'
@@ -335,7 +335,7 @@ CheckPinsForHostname(const CERTCertList* certList, const char* hostname,
       }
     }
 
-    MOZ_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
            ("pkpin: Pin check %s for %s host '%s' (mode=%s)\n",
             enforceTestModeResult ? "passed" : "failed",
             staticFingerprints->mIsMoz ? "mozilla" : "non-mozilla",

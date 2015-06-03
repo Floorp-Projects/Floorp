@@ -7,7 +7,6 @@
 #include "nsHttpChannel.h"
 #include "nsCOMPtr.h"
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo*
 GetChannelWrapperLog()
 {
@@ -17,9 +16,8 @@ GetChannelWrapperLog()
   }
   return gChannelWrapperPRLog;
 }
-#endif
 
-#define CHANNELWRAPPERLOG(args) PR_LOG(GetChannelWrapperLog(), 4, args)
+#define CHANNELWRAPPERLOG(args) MOZ_LOG(GetChannelWrapperLog(), mozilla::LogLevel::Debug, args)
 
 NS_IMPL_ADDREF(nsSecCheckWrapChannelBase)
 NS_IMPL_RELEASE(nsSecCheckWrapChannelBase)
@@ -70,7 +68,6 @@ nsSecCheckWrapChannel::nsSecCheckWrapChannel(nsIChannel* aChannel,
  : nsSecCheckWrapChannelBase(aChannel)
  , mLoadInfo(aLoadInfo)
 {
-#ifdef PR_LOGGING
   {
     nsCOMPtr<nsIURI> uri;
     mChannel->GetURI(getter_AddRefs(uri));
@@ -80,7 +77,6 @@ nsSecCheckWrapChannel::nsSecCheckWrapChannel(nsIChannel* aChannel,
     }
     CHANNELWRAPPERLOG(("nsSecCheckWrapChannel::nsSecCheckWrapChannel [%p] (%s)",this, spec.get()));
   }
-#endif
 }
 
 nsSecCheckWrapChannel::~nsSecCheckWrapChannel()

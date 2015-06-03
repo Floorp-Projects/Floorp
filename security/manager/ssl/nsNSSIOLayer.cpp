@@ -244,7 +244,7 @@ nsNSSSocketInfo::NoteTimeUntilReady()
   // This will include TCP and proxy tunnel wait time
   Telemetry::AccumulateTimeDelta(Telemetry::SSL_TIME_UNTIL_READY,
                                  mSocketCreationTimestamp, TimeStamp::Now());
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
          ("[%p] nsNSSSocketInfo::NoteTimeUntilReady\n", mFd));
 }
 
@@ -288,7 +288,7 @@ nsNSSSocketInfo::SetHandshakeCompleted()
 
     mHandshakeCompleted = true;
 
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("[%p] nsNSSSocketInfo::SetHandshakeCompleted\n", (void*) mFd));
 
     mIsFullHandshake = false; // reset for next handshake on this connection
@@ -652,7 +652,7 @@ static PRStatus
 nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
                     PRIntervalTime timeout)
 {
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] connecting SSL socket\n",
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("[%p] connecting SSL socket\n",
          (void*) fd));
   nsNSSShutDownPreventionLock locker;
   if (!getSocketInfoIfRunning(fd, not_reading_or_writing, locker))
@@ -660,12 +660,12 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
 
   PRStatus status = fd->lower->methods->connect(fd->lower, addr, timeout);
   if (status != PR_SUCCESS) {
-    MOZ_LOG(gPIPNSSLog, PR_LOG_ERROR, ("[%p] Lower layer connect error: %d\n",
+    MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("[%p] Lower layer connect error: %d\n",
                                       (void*) fd, PR_GetError()));
     return status;
   }
 
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Connect\n", (void*) fd));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("[%p] Connect\n", (void*) fd));
   return status;
 }
 
@@ -916,7 +916,7 @@ nsSSLIOLayerClose(PRFileDesc* fd)
   if (!fd)
     return PR_FAILURE;
 
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Shutting down socket\n",
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("[%p] Shutting down socket\n",
          (void*) fd));
 
   nsNSSSocketInfo* socketInfo = (nsNSSSocketInfo*) fd->secret;
@@ -990,7 +990,7 @@ nsDumpBuffer(unsigned char* buf, int len)
     ch = buf[i];
 
     if (l == DUMPBUF_LINESIZE) {
-      MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("%s%s\n", hexbuf, chrbuf));
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("%s%s\n", hexbuf, chrbuf));
       (void) memset(hexbuf, 0x20, DUMPBUF_LINESIZE*3);
       (void) memset(chrbuf, 0x20, DUMPBUF_LINESIZE);
       h = hexbuf;
@@ -1011,7 +1011,7 @@ nsDumpBuffer(unsigned char* buf, int len)
     }
     i++; l++;
   }
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("%s%s\n", hexbuf, chrbuf));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("%s%s\n", hexbuf, chrbuf));
 }
 
 #define DEBUG_DUMP_BUFFER(buf,len) nsDumpBuffer(buf,len)
@@ -1235,7 +1235,7 @@ checkHandshake(int32_t bytesTransfered, bool wasReading,
   }
 
   if (wantRetry) {
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("[%p] checkHandshake: will retry with lower max TLS version\n",
             ssl_layer_fd));
     // We want to cause the network layer to retry the connection.
@@ -1286,7 +1286,7 @@ nsSSLIOLayerPoll(PRFileDesc* fd, int16_t in_flags, int16_t* out_flags)
   if (!socketInfo) {
     // If we get here, it is probably because certificate validation failed
     // and this is the first I/O operation after the failure.
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("[%p] polling SSL socket right after certificate verification failed "
                   "or NSS shutdown or SDR logout %d\n",
              fd, (int) in_flags));
@@ -1300,7 +1300,7 @@ nsSSLIOLayerPoll(PRFileDesc* fd, int16_t in_flags, int16_t* out_flags)
     return in_flags;
   }
 
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
          (socketInfo->IsWaitingForCertVerification()
             ?  "[%p] polling SSL socket during certificate verification using lower %d\n"
             :  "[%p] poll SSL socket using lower %d\n",
@@ -1311,7 +1311,7 @@ nsSSLIOLayerPoll(PRFileDesc* fd, int16_t in_flags, int16_t* out_flags)
   // it reaches any point that would be unsafe to send/receive something before
   // cert validation is complete.
   int16_t result = fd->lower->methods->poll(fd->lower, in_flags, out_flags);
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] poll SSL socket returned %d\n",
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("[%p] poll SSL socket returned %d\n",
                                     (void*) fd, (int) result));
   return result;
 }
@@ -1417,7 +1417,7 @@ PSMRecv(PRFileDesc* fd, void* buf, int32_t amount, int flags,
   int32_t bytesRead = fd->lower->methods->recv(fd->lower, buf, amount, flags,
                                                timeout);
 
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] read %d bytes\n", (void*) fd,
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("[%p] read %d bytes\n", (void*) fd,
          bytesRead));
 
 #ifdef DEBUG_SSL_VERBOSE
@@ -1448,7 +1448,7 @@ PSMSend(PRFileDesc* fd, const void* buf, int32_t amount, int flags,
   int32_t bytesWritten = fd->lower->methods->send(fd->lower, buf, amount,
                                                   flags, timeout);
 
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] wrote %d bytes\n",
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("[%p] wrote %d bytes\n",
          fd, bytesWritten));
 
   return checkHandshake(bytesWritten, false, fd, socketInfo);
@@ -2038,7 +2038,7 @@ nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     // joined on this connection, because we only show the user one hostname
     // (mHostName) in the client certificate UI.
 
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("[%p] Not returning client cert due to previous join\n", socket));
     *pRetCert = nullptr;
     *pRetKey = nullptr;
@@ -2471,7 +2471,7 @@ nsSSLIOLayerImportFD(PRFileDesc* fd,
                             infoObject);
   }
   if (flags & nsISocketProvider::MITM_OK) {
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("[%p] nsSSLIOLayerImportFD: bypass authentication flag\n", fd));
     infoObject->SetBypassAuthentication(true);
   }
@@ -2520,7 +2520,7 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   infoObject->SharedState().IOLayerHelpers()
     .adjustForTLSIntolerance(infoObject->GetHostName(), infoObject->GetPort(),
                              range, strongCiphersStatus);
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
          ("[%p] nsSSLIOLayerSetOptions: using TLS version range (0x%04x,0x%04x)%s\n",
           fd, static_cast<unsigned int>(range.min),
               static_cast<unsigned int>(range.max),
@@ -2538,7 +2538,7 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   // when adjustForTLSIntolerance tweaks the maximum version downward,
   // we tell the server using this SCSV so they can detect a downgrade attack
   if (range.max < maxEnabledVersion) {
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("[%p] nsSSLIOLayerSetOptions: enabling TLS_FALLBACK_SCSV\n", fd));
     if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_FALLBACK_SCSV, true)) {
       return NS_ERROR_FAILURE;
@@ -2646,7 +2646,7 @@ nsSSLIOLayerAddToSocket(int32_t family,
 
   nsNSSShutDownList::trackSSLSocketCreate();
 
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Socket set up\n", (void*) sslSock));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("[%p] Socket set up\n", (void*) sslSock));
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));
 
   // We are going use a clear connection first //
