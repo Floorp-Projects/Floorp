@@ -29,7 +29,7 @@ add_task(function* test_getFieldOverrides() {
     },
   ]);
 
-  let form = RecipeHelpers.createTestDocument("http://localhost:8080/first/second/", "<form>").
+  let form = MockDocument.createTestDocument("http://localhost:8080/first/second/", "<form>").
              forms[0];
   let override = LoginRecipesContent.getFieldOverrides(recipes, form);
   Assert.strictEqual(override.description, "best match",

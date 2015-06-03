@@ -268,7 +268,7 @@ const batch = function(operation, data, callback) {
   let processed = [];
   if (!LoopContactsInternal.hasOwnProperty(operation) ||
     typeof LoopContactsInternal[operation] != "function") {
-    callback(new Error ("LoopContactsInternal does not contain a '" +
+    callback(new Error("LoopContactsInternal does not contain a '" +
              operation + "' method"));
     return;
   }

@@ -50,9 +50,8 @@
     // Don't require a default case in switch statements. Avoid being forced to
     // add a bogus default when you know all possible cases are handled.
     "default-case": 0,
-    // Don't enforce consistent newlines before or after dots. This depends on
-    // what gives the most readable code.
-    "dot-location": [1, "object"],
+    // Enforce dots on the next line with property name.
+    "dot-location": [1, "property"],
     // Encourage the use of dot notation whenever possible.
     "dot-notation": 2,
     // Enforce newline at the end of file, with no multiple empty lines.

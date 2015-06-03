@@ -27,13 +27,13 @@ loop.store = loop.store || {};
    * @type {Object}
    */
   var roomSchema = {
-    roomToken:    String,
-    roomUrl:      String,
-    // roomName:     String - Optional.
-    // roomKey:      String - Optional.
-    maxSize:      Number,
+    roomToken: String,
+    roomUrl: String,
+    // roomName: String - Optional.
+    // roomKey: String - Optional.
+    maxSize: Number,
     participants: Array,
-    ctime:        Number
+    ctime: Number
   };
 
   /**
@@ -263,10 +263,10 @@ loop.store = loop.store || {};
 
       var roomCreationData = {
         decryptedContext: {
-          roomName:  this._generateNewRoomName(actionData.nameTemplate)
+          roomName: this._generateNewRoomName(actionData.nameTemplate)
         },
         roomOwner: actionData.roomOwner,
-        maxSize:   this.maxRoomCreationSize
+        maxSize: this.maxRoomCreationSize
       };
 
       if ("urls" in actionData) {

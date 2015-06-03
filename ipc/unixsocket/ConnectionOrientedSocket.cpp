@@ -9,8 +9,21 @@
 namespace mozilla {
 namespace ipc {
 
+//
+// ConnectionOrientedSocketIO
+//
+
+ConnectionOrientedSocketIO::ConnectionOrientedSocketIO(
+  nsIThread* aConsumerThread)
+  : DataSocketIO(aConsumerThread)
+{ }
+
 ConnectionOrientedSocketIO::~ConnectionOrientedSocketIO()
 { }
+
+//
+// ConnectionOrientedSocket
+//
 
 ConnectionOrientedSocket::~ConnectionOrientedSocket()
 { }
