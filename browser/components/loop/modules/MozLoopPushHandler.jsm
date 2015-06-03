@@ -47,7 +47,7 @@ PushSocket.prototype = {
 
   connect: function(pushUri, onMsg, onStart, onClose) {
     if (!pushUri || !onMsg || !onStart || !onClose) {
-      throw new Error("PushSocket: missing required parameter(s):"
+      throw new Error("PushSocket: missing required parameter(s):" +
                       (pushUri ? "" : " pushUri") +
                       (onMsg ? "" : " onMsg") +
                       (onStart ? "" : " onStart") +

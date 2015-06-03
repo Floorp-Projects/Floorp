@@ -375,9 +375,9 @@ describe("loop.shared.views", function() {
       sandbox.stub(window, "Audio").returns(fakeAudio);
 
       fakeSessionData = {
-        sessionId:    "sessionId",
+        sessionId: "sessionId",
         sessionToken: "sessionToken",
-        apiKey:       "apiKey"
+        apiKey: "apiKey"
       };
       fakeSession = _.extend({
         connection: {connectionId: 42},

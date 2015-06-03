@@ -893,25 +893,6 @@ PreserveWrapper(JSContext *cx, JSObject *obj)
     return mozilla::dom::TryPreserveWrapper(obj);
 }
 
-class DebuggeeGlobalSecurityWrapper : public js::CrossCompartmentSecurityWrapper {
-public:
-  DebuggeeGlobalSecurityWrapper()
-  : js::CrossCompartmentSecurityWrapper(CROSS_COMPARTMENT, false)
-  {
-  }
-
-  bool enter(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
-             js::Wrapper::Action act, bool* bp) const
-  {
-    *bp = false;
-    return false;
-  }
-
-  static const DebuggeeGlobalSecurityWrapper singleton;
-};
-
-const DebuggeeGlobalSecurityWrapper DebuggeeGlobalSecurityWrapper::singleton;
-
 JSObject*
 Wrap(JSContext *cx, JS::HandleObject existing, JS::HandleObject obj)
 {
@@ -926,11 +907,7 @@ Wrap(JSContext *cx, JS::HandleObject existing, JS::HandleObject obj)
   if (IsDebuggerGlobal(originGlobal) || IsDebuggerSandbox(originGlobal)) {
     wrapper = &js::CrossCompartmentWrapper::singleton;
   } else {
-    if (obj != originGlobal) {
-      MOZ_CRASH("The should be only edges from the debugger to the debuggee global.");
-    }
-
-    wrapper = &DebuggeeGlobalSecurityWrapper::singleton;
+    wrapper = &js::OpaqueCrossCompartmentWrapper::singleton;
   }
 
   if (existing) {

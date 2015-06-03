@@ -11,7 +11,7 @@ function test() {
     windows: [{
       tabs: [{
         entries: [
-          { url: "http://www.mozilla.org/projects/minefield/", title: "Minefield Start Page" },
+          { url: "about:mozilla", title: "Mozilla" },
           {}
         ]
       }]

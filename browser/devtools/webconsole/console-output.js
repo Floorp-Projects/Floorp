@@ -3160,6 +3160,12 @@ Widgets.ObjectRenderers.add({
         "message was got cleared away");
     }
 
+    // Check it again as this method is async!
+    if (this._linkedToInspector) {
+      return;
+    }
+    this._linkedToInspector = true;
+
     this.highlightDomNode = this.highlightDomNode.bind(this);
     this.element.addEventListener("mouseover", this.highlightDomNode, false);
     this.unhighlightDomNode = this.unhighlightDomNode.bind(this);
@@ -3170,8 +3176,6 @@ Widgets.ObjectRenderers.add({
       onClick: this.openNodeInInspector.bind(this)
     });
     this._openInspectorNode.title = l10n.getStr("openNodeInInspector");
-
-    this._linkedToInspector = true;
   }),
 
   /**

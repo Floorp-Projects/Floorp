@@ -265,6 +265,12 @@ let SessionHistoryInternal = {
       let persist = "persist" in entry ? entry.persist : true;
       history.addEntry(this.deserializeEntry(entry, idMap, docIdentMap), persist);
     }
+
+    // Select the right history entry.
+    let index = tabData.index - 1;
+    if (index < history.count && history.index != index) {
+      history.getEntryAtIndex(index, true);
+    }
   },
 
   /**

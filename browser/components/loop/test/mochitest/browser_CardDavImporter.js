@@ -170,7 +170,7 @@ const monkeyPatchImporter = function(importer) {
 
 add_task(function* test_CardDavImport() {
   let importer = monkeyPatchImporter(new CardDavImporter());
-  yield new Promise ((resolve, reject) => {
+  yield new Promise((resolve, reject) => {
     info("Initiating import");
     importer.startImport({
         "host": "example.com",
@@ -265,7 +265,7 @@ add_task(function* test_CardDavImport() {
   Assert.equal(c.name[0], "anyone@example.com", "Full name should be synthesized correctly");
 
   // Check that a re-import doesn't cause contact duplication.
-  yield new Promise ((resolve, reject) => {
+  yield new Promise((resolve, reject) => {
     info("Initiating import");
     importer.startImport({
         "host": "example.com",
@@ -278,7 +278,7 @@ add_task(function* test_CardDavImport() {
                "Second import shouldn't increase DB size");
 
   // Check that errors are propagated back to caller
-  let error = yield new Promise ((resolve, reject) => {
+  let error = yield new Promise((resolve, reject) => {
     info("Initiating import");
     importer.startImport({
         "host": "example.com",
@@ -289,7 +289,7 @@ add_task(function* test_CardDavImport() {
   });
   Assert.equal(error.message, "401 Auth Failure", "Auth error should propagate");
 
-  error = yield new Promise ((resolve, reject) => {
+  error = yield new Promise((resolve, reject) => {
     info("Initiating import");
     importer.startImport({
         "host": "example.invalid",
@@ -304,7 +304,7 @@ add_task(function* test_CardDavImport() {
   mockDb.getByServiceId = function(serviceId, callback) {
     callback(new Error("getByServiceId failed"));
   };
-  error = yield new Promise ((resolve, reject) => {
+  error = yield new Promise((resolve, reject) => {
     info("Initiating import");
     importer.startImport({
         "host": "example.com",
@@ -316,7 +316,7 @@ add_task(function* test_CardDavImport() {
   Assert.equal(error.message, "getByServiceId failed", "Database error should propagate");
   mockDb.getByServiceId = tmp;
 
-  error = yield new Promise ((resolve, reject) => {
+  error = yield new Promise((resolve, reject) => {
     info("Initiating import");
     importer.startImport({
         "host": "example.com"

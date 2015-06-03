@@ -6,10 +6,12 @@
 
 HAS_MISC_RULE = True
 
-XPCSHELL_TESTS_MANIFESTS += ['unit_aus_update/xpcshell.ini']
-
 MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
-XPCSHELL_TESTS_MANIFESTS += ['unit_base_updater/xpcshell.ini']
+
+XPCSHELL_TESTS_MANIFESTS += [
+    'unit_aus_update/xpcshell.ini',
+    'unit_base_updater/xpcshell.ini'
+]
 
 if CONFIG['MOZ_MAINTENANCE_SERVICE']:
     XPCSHELL_TESTS_MANIFESTS += ['unit_service_updater/xpcshell.ini']

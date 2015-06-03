@@ -9,59 +9,77 @@ loadSubScript("chrome://marionette/content/EventUtils.js", EventUtils);
 
 dump("Frame script loaded.\n");
 
-addMessageListener("test:call", function (message) {
-  dump("Calling function with name " + message.data.name + ".\n");
-
-  let data = message.data;
-  let result = XPCNativeWrapper.unwrap(content)[data.name].apply(undefined, data.args);
-  if (result && result.then) {
-    result.then(() => {
-      sendAsyncMessage("test:call");
-    });
-  } else {
-    sendAsyncMessage("test:call");
-  }
-});
-
-addMessageListener("test:click", function (message) {
-  dump("Sending mouse click.\n");
-
-  let target = message.objects.target;
-  EventUtils.synthesizeMouseAtCenter(target, {},
-                                     target.ownerDocument.defaultView);
-});
-
-addMessageListener("test:eval", function (message) {
-  dump("Evalling string " + message.data.string + ".\n");
-
-  let result = content.eval(message.data.string);
-  if (result.then) {
-    result.then(() => {
-      sendAsyncMessage("test:eval");
-    });
-  } else {
-    sendAsyncMessage("test:eval");
-  }
-});
-
 let workers = {}
 
-addMessageListener("test:createWorker", function (message) {
-  dump("Creating worker with url '" + message.data.url + "'.\n");
+this.call = function (name, args) {
+  dump("Calling function with name " + name + ".\n");
 
-  let url = message.data.url;
-  let worker = new content.Worker(message.data.url);
-  worker.addEventListener("message", function listener() {
-    worker.removeEventListener("message", listener);
-    sendAsyncMessage("test:createWorker");
+  dump("args " + JSON.stringify(args) + "\n");
+  return XPCNativeWrapper.unwrap(content)[name].apply(undefined, args);
+};
+
+this._eval = function (string) {
+  dump("Evalling string.\n");
+
+  return content.eval(string);
+};
+
+this.generateMouseClick = function (path) {
+  dump("Generating mouse click.\n");
+
+  let target = eval(path);
+  EventUtils.synthesizeMouseAtCenter(target, {},
+                                     target.ownerDocument.defaultView);
+};
+
+this.createWorker = function (url) {
+  dump("Creating worker with url '" + url + "'.\n");
+
+  return new Promise(function (resolve, reject) {
+    let worker = new content.Worker(url);
+    worker.addEventListener("message", function listener() {
+      worker.removeEventListener("message", listener);
+      workers[url] = worker;
+      resolve();
+    });
   });
-  workers[url] = worker;
-});
+};
 
-addMessageListener("test:terminateWorker", function (message) {
-  dump("Terminating worker with url '" + message.data.url + "'.\n");
+this.terminateWorker = function (url) {
+  dump("Terminating worker with url '" + url + "'.\n");
 
-  let url = message.data.url;
   workers[url].terminate();
   delete workers[url];
+};
+
+this.postMessageToWorker = function (url, message) {
+  dump("Posting message to worker with url '" + url + "'.\n");
+
+  return new Promise(function (resolve) {
+    let worker = workers[url];
+    worker.postMessage(message);
+    worker.addEventListener("message", function listener() {
+      worker.removeEventListener("message", listener);
+      resolve();
+    });
+  });
+};
+
+addMessageListener("jsonrpc", function ({ data: { method, params, id } }) {
+  method = this[method];
+  Promise.resolve().then(function () {
+    return method.apply(undefined, params);
+  }).then(function (result) {
+    sendAsyncMessage("jsonrpc", {
+      result: result,
+      error: null,
+      id: id
+    });
+  }, function (error) {
+    sendAsyncMessage("jsonrpc", {
+      result: null,
+      error: error.message.toString(),
+      id: id
+    });
+  });
 });

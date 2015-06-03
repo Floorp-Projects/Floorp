@@ -2,6 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
+
 function openViewSourceWindow(aURI, aCallback) {
   let viewSourceWindow = openDialog("chrome://global/content/viewSource.xul", null, null, aURI);
   viewSourceWindow.addEventListener("pageshow", function pageShowHandler(event) {
@@ -77,4 +80,14 @@ function openDocumentSelect(aURI, aCSSSelector, aCallback) {
 
     openViewPartialSourceWindow(selection, aCallback);
   });
+}
+
+function waitForPrefChange(pref) {
+  let deferred = PromiseUtils.defer();
+  let observer = () => {
+    Preferences.ignore(pref, observer);
+    deferred.resolve();
+  };
+  Preferences.observe(pref, observer);
+  return deferred.promise;
 }

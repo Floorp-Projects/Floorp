@@ -104,7 +104,7 @@ function testPauseOnExceptionsAfterReload() {
     return finished;
   });
 
-  sendMouseClickToTab(gTab, content.document.querySelector("button"));
+  generateMouseClickInTab(gTab, "content.document.querySelector('button')");
 
   return finished;
 }

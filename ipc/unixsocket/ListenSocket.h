@@ -10,6 +10,9 @@
 #include "nsString.h"
 #include "mozilla/ipc/SocketBase.h"
 
+class MessageLoop;
+class nsIThread;
+
 namespace mozilla {
 namespace ipc {
 
@@ -20,11 +23,30 @@ class UnixSocketConnector;
 
 class ListenSocket final : public SocketBase
 {
-protected:
-  virtual ~ListenSocket();
-
 public:
+  /**
+   * Constructs an instance of |ListenSocket|.
+   *
+   * @param aConsumer The consumer for the socket.
+   * @param aIndex An arbitrary index.
+   */
   ListenSocket(ListenSocketConsumer* aConsumer, int aIndex);
+
+  /**
+   * Starts a task on the socket that will try to accept a new connection
+   * in a non-blocking manner.
+   *
+   * @param aConnector Connector object for socket-type-specific functions
+   * @param aConsumerThread The socket's consumer thread.
+   * @param aIOLoop The socket's I/O thread.
+   * @param aCOSocket The connection-oriented socket for handling the
+   *                  accepted connection.
+   * @return NS_OK on success, or an XPCOM error code otherwise.
+   */
+  nsresult Listen(UnixSocketConnector* aConnector,
+                  nsIThread* aConsumerThread,
+                  MessageLoop* aIOLoop,
+                  ConnectionOrientedSocket* aCOSocket);
 
   /**
    * Starts a task on the socket that will try to accept a new connection
@@ -57,10 +79,13 @@ public:
   void OnConnectError() override;
   void OnDisconnect() override;
 
+protected:
+  virtual ~ListenSocket();
+
 private:
+  ListenSocketIO* mIO;
   ListenSocketConsumer* mConsumer;
   int mIndex;
-  ListenSocketIO* mIO;
 };
 
 } // namespace ipc

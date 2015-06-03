@@ -495,7 +495,11 @@ EnvironmentAddonBuilder.prototype = {
         hasBinaryComponents: addon.hasBinaryComponents,
         installDay: Utils.millisecondsToDays(installDate.getTime()),
         updateDay: Utils.millisecondsToDays(updateDate.getTime()),
+        signedState: addon.signedState,
       };
+
+      if (addon.signedState !== undefined)
+        activeAddons[addon.id].signedState = addon.signedState;
     }
 
     return activeAddons;

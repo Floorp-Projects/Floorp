@@ -12,26 +12,26 @@ loop.shared.models = (function(l10n) {
    */
   var ConversationModel = Backbone.Model.extend({
     defaults: {
-      connected:    false,         // Session connected flag
-      ongoing:      false,         // Ongoing call flag
-      callerId:     undefined,     // Loop caller id
-      loopToken:    undefined,     // Loop conversation token
-      sessionId:    undefined,     // OT session id
+      connected: false,            // Session connected flag
+      ongoing: false,              // Ongoing call flag
+      callerId: undefined,         // Loop caller id
+      loopToken: undefined,        // Loop conversation token
+      sessionId: undefined,        // OT session id
       sessionToken: undefined,     // OT session token
-      sessionType:  undefined,     // Hawk session type
-      apiKey:       undefined,     // OT api key
-      windowId:     undefined,     // The window id
-      callId:       undefined,     // The callId on the server
-      progressURL:  undefined,     // The websocket url to use for progress
+      sessionType: undefined,      // Hawk session type
+      apiKey: undefined,           // OT api key
+      windowId: undefined,         // The window id
+      callId: undefined,           // The callId on the server
+      progressURL: undefined,      // The websocket url to use for progress
       websocketToken: undefined,   // The token to use for websocket auth, this is
                                    // stored as a hex string which is what the server
                                    // requires.
-      callType:     undefined,     // The type of incoming call selected by
+      callType: undefined,         // The type of incoming call selected by
                                    // other peer ("audio" or "audio-video")
       selectedCallType: "audio-video", // The selected type for the call that was
                                        // initiated ("audio" or "audio-video")
-      callToken:    undefined,     // Incoming call token.
-      callUrl:      undefined,     // Incoming call url
+      callToken: undefined,        // Incoming call token.
+      callUrl: undefined,          // Incoming call url
                                    // Used for blocking a call url
       subscribedStream: false,     // Used to indicate that a stream has been
                                    // subscribed to
@@ -134,11 +134,11 @@ loop.shared.models = (function(l10n) {
     setOutgoingSessionData: function(sessionData) {
       // Explicit property assignment to prevent later "surprises"
       this.set({
-        sessionId:      sessionData.sessionId,
-        sessionToken:   sessionData.sessionToken,
-        apiKey:         sessionData.apiKey,
-        callId:         sessionData.callId,
-        progressURL:    sessionData.progressURL,
+        sessionId: sessionData.sessionId,
+        sessionToken: sessionData.sessionToken,
+        apiKey: sessionData.apiKey,
+        callId: sessionData.callId,
+        progressURL: sessionData.progressURL,
         websocketToken: sessionData.websocketToken.toString(16)
       });
     },
@@ -151,18 +151,18 @@ loop.shared.models = (function(l10n) {
     setIncomingSessionData: function(sessionData) {
       // Explicit property assignment to prevent later "surprises"
       this.set({
-        sessionId:       sessionData.sessionId,
-        sessionToken:    sessionData.sessionToken,
-        sessionType:     sessionData.sessionType,
-        apiKey:          sessionData.apiKey,
-        callId:          sessionData.callId,
-        callerId:        sessionData.callerId,
+        sessionId: sessionData.sessionId,
+        sessionToken: sessionData.sessionToken,
+        sessionType: sessionData.sessionType,
+        apiKey: sessionData.apiKey,
+        callId: sessionData.callId,
+        callerId: sessionData.callerId,
         urlCreationDate: sessionData.urlCreationDate,
-        progressURL:     sessionData.progressURL,
-        websocketToken:  sessionData.websocketToken.toString(16),
-        callType:        sessionData.callType || "audio-video",
-        callToken:       sessionData.callToken,
-        callUrl:         sessionData.callUrl
+        progressURL: sessionData.progressURL,
+        websocketToken: sessionData.websocketToken.toString(16),
+        callType: sessionData.callType || "audio-video",
+        callToken: sessionData.callToken,
+        callUrl: sessionData.callUrl
       });
     },
 
