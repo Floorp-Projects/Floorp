@@ -1296,6 +1296,13 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
   mRect.width = aSizedToPopup ? parentWidth : mPrefSize.width;
   mRect.height = mPrefSize.height;
 
+  // If we're anchoring to a rect, and the rect is smaller than the preferred size
+  // of the popup, change its width accordingly.
+  if (mAnchorType == MenuPopupAnchorType_Rect &&
+      parentWidth < mPrefSize.width) {
+    mRect.width = mPrefSize.width;
+  }
+
   // the screen position in app units where the popup should appear
   nsPoint screenPoint;
 
@@ -1483,7 +1490,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
   if (aSizedToPopup) {
     nsBoxLayoutState state(PresContext());
     // XXXndeakin can parentSize.width still extend outside?
-    SetBounds(state, nsRect(mRect.x, mRect.y, parentWidth, mRect.height));
+    SetBounds(state, mRect);
   }
 
   return NS_OK;

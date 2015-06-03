@@ -829,24 +829,23 @@ struct CCGraph
   uint32_t mRootCount;
 
 private:
-  PLDHashTable mPtrToNodeMap;
+  PLDHashTable2 mPtrToNodeMap;
   bool mOutOfMemory;
 
-public:
-  CCGraph() : mRootCount(0), mOutOfMemory(false) {}
+  static const uint32_t kInitialMapLength = 16384;
 
-  ~CCGraph()
-  {
-    if (mPtrToNodeMap.IsInitialized()) {
-      PL_DHashTableFinish(&mPtrToNodeMap);
-    }
-  }
+public:
+  CCGraph()
+    : mRootCount(0)
+    , mPtrToNodeMap(&PtrNodeOps, sizeof(PtrToNodeEntry), kInitialMapLength)
+    , mOutOfMemory(false)
+  {}
+
+  ~CCGraph() {}
 
   void Init()
   {
     MOZ_ASSERT(IsEmpty(), "Failed to call CCGraph::Clear");
-    PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps,
-                      sizeof(PtrToNodeEntry), 16384);
   }
 
   void Clear()
@@ -855,7 +854,7 @@ public:
     mEdges.Clear();
     mWeakMaps.Clear();
     mRootCount = 0;
-    PL_DHashTableFinish(&mPtrToNodeMap);
+    mPtrToNodeMap.ClearAndPrepareForLength(kInitialMapLength);
     mOutOfMemory = false;
   }
 
@@ -864,7 +863,7 @@ public:
   {
     return mNodes.IsEmpty() && mEdges.IsEmpty() &&
            mWeakMaps.IsEmpty() && mRootCount == 0 &&
-           !mPtrToNodeMap.IsInitialized();
+           mPtrToNodeMap.EntryCount() == 0;
   }
 #endif
 
@@ -2070,7 +2069,7 @@ private:
 public:
   // nsCycleCollectionNoteRootCallback methods.
   NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports* aRoot);
-  NS_IMETHOD_(void) NoteJSRoot(void* aRoot);
+  NS_IMETHOD_(void) NoteJSRoot(JSObject* aRoot);
   NS_IMETHOD_(void) NoteNativeRoot(void* aRoot,
                                    nsCycleCollectionParticipant* aParticipant);
   NS_IMETHOD_(void) NoteWeakMapping(JSObject* aMap, JS::GCCellPtr aKey,
@@ -2117,7 +2116,7 @@ private:
     ++childPi->mInternalRefs;
   }
 
-  JS::Zone* MergeZone(void* aGcthing)
+  JS::Zone* MergeZone(JS::GCCellPtr aGcthing)
   {
     if (!mMergeZones) {
       return nullptr;
@@ -2274,9 +2273,9 @@ CCGraphBuilder::NoteXPCOMRoot(nsISupports* aRoot)
 }
 
 NS_IMETHODIMP_(void)
-CCGraphBuilder::NoteJSRoot(void* aRoot)
+CCGraphBuilder::NoteJSRoot(JSObject* aRoot)
 {
-  if (JS::Zone* zone = MergeZone(aRoot)) {
+  if (JS::Zone* zone = MergeZone(JS::GCCellPtr(aRoot))) {
     NoteRoot(zone, mJSZoneParticipant);
   } else {
     NoteRoot(aRoot, mJSParticipant);
@@ -2385,7 +2384,7 @@ CCGraphBuilder::NoteJSChild(JS::GCCellPtr aChild)
   }
 
   if (GCThingIsGrayCCThing(aChild) || MOZ_UNLIKELY(WantAllTraces())) {
-    if (JS::Zone* zone = MergeZone(aChild.asCell())) {
+    if (JS::Zone* zone = MergeZone(aChild)) {
       NoteChild(zone, mJSZoneParticipant, edgeName);
     } else {
       NoteChild(aChild.asCell(), mJSParticipant, edgeName);
@@ -2410,7 +2409,7 @@ CCGraphBuilder::AddWeakMapNode(JS::GCCellPtr aNode)
     return nullptr;
   }
 
-  if (JS::Zone* zone = MergeZone(aNode.asCell())) {
+  if (JS::Zone* zone = MergeZone(aNode)) {
     return AddNode(zone, mJSZoneParticipant);
   }
   return AddNode(aNode.asCell(), mJSParticipant);

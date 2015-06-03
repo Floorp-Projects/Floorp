@@ -21,7 +21,7 @@ class StreamSocketConsumer
 {
 public:
   /**
-   * Method to be called whenever data is received. Main-thread only.
+   * Method to be called whenever data is received. Consumer-thread only.
    *
    * @param aIndex The index that has been given to the stream socket.
    * @param aBuffer Data received from the socket.
@@ -30,21 +30,21 @@ public:
                                  nsAutoPtr<UnixSocketBuffer>& aBuffer) = 0;
 
   /**
-   * Callback for socket success. Main-thread only.
+   * Callback for socket success. Consumer-thread only.
    *
    * @param aIndex The index that has been given to the stream socket.
    */
   virtual void OnConnectSuccess(int aIndex) = 0;
 
   /**
-   * Callback for socket errors. Main-thread only.
+   * Callback for socket errors. Consumer-thread only.
    *
    * @param aIndex The index that has been given to the stream socket.
    */
   virtual void OnConnectError(int aIndex) = 0;
 
   /**
-   * Callback for socket disconnect. Main-thread only.
+   * Callback for socket disconnect. Consumer-thread only.
    *
    * @param aIndex The index that has been given to the stream socket.
    */

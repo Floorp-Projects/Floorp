@@ -317,14 +317,17 @@ GraphSpewer::endFunction()
 void
 GraphSpewer::dump(Fprinter& c1Out, Fprinter& jsonOut)
 {
-    if (!c1Printer_.hadOutOfMemory())
+    if (!c1Printer_.hadOutOfMemory()) {
         c1Printer_.exportInto(c1Out);
+        c1Out.flush();
+    }
     c1Printer_.clear();
 
     if (!jsonPrinter_.hadOutOfMemory())
         jsonPrinter_.exportInto(jsonOut);
     else
         jsonOut.put("{}");
+    jsonOut.flush();
     jsonPrinter_.clear();
 }
 

@@ -272,16 +272,18 @@ private:
  * so that it may be called on the main thread. The error callback is also
  * passed so it can be released correctly.
  */
-class DeviceSuccessCallbackRunnable: public nsRunnable
+class DeviceSuccessCallbackRunnable : public nsRunnable
 {
 public:
   DeviceSuccessCallbackRunnable(
     uint64_t aWindowID,
     nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback>& aOnSuccess,
     nsCOMPtr<nsIDOMGetUserMediaErrorCallback>& aOnFailure,
-    nsTArray<nsRefPtr<MediaDevice>>* aDevices)
+    nsTArray<nsRefPtr<MediaDevice>>* aDevices,
+    bool aIsGum)
     : mDevices(aDevices)
     , mWindowID(aWindowID)
+    , mIsGum(aIsGum)
     , mManager(MediaManager::GetInstance())
   {
     mOnSuccess.swap(aOnSuccess);
@@ -358,38 +360,43 @@ public:
       do_CreateInstance("@mozilla.org/variant;1");
 
     size_t len = mDevices->Length();
-    if (len == 0) {
-      // XXX
-      // We should in the future return an empty array, and dynamically add
-      // devices to the dropdowns if things are hotplugged while the
-      // requester is up.
-      nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowID);
-      if (window) {
-        nsRefPtr<MediaStreamError> error = new MediaStreamError(window,
-            NS_LITERAL_STRING("NotFoundError"));
-        mOnFailure->OnError(error);
+
+    if (!len) {
+      if (mIsGum) { // gUM fails on 0 devices whereas enumerateDevices doesn't.
+        // XXX
+        // We should in the future return an empty array, and dynamically add
+        // devices to the dropdowns if things are hotplugged while the
+        // requester is up.
+        nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowID);
+        if (window) {
+          nsRefPtr<MediaStreamError> error = new MediaStreamError(window,
+              NS_LITERAL_STRING("NotFoundError"));
+          mOnFailure->OnError(error);
+        }
+        return NS_OK;
       }
-      return NS_OK;
-    }
-
-    nsTArray<nsIMediaDevice*> tmp(len);
-    for (auto& device : *mDevices) {
-      if (!mOriginKey.IsEmpty()) {
-        nsString id;
-        device->GetId(id);
-        AnonymizeId(id, mOriginKey);
-        device->SetId(id);
+      devices->SetAsEmptyArray(); // SetAsArray() fails on zero length arrays.
+    } else {
+      nsTArray<nsIMediaDevice*> tmp(len);
+      for (auto& device : *mDevices) {
+        if (!mOriginKey.IsEmpty()) {
+          nsString id;
+          device->GetId(id);
+          AnonymizeId(id, mOriginKey);
+          device->SetId(id);
+        }
+        tmp.AppendElement(device);
       }
-      tmp.AppendElement(device);
+      nsresult rv = devices->SetAsArray(nsIDataType::VTYPE_INTERFACE,
+                                        &NS_GET_IID(nsIMediaDevice),
+                                        mDevices->Length(),
+                                        const_cast<void*>(
+                                          static_cast<const void*>(tmp.Elements())
+                                        ));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
-
-    devices->SetAsArray(nsIDataType::VTYPE_INTERFACE,
-                        &NS_GET_IID(nsIMediaDevice),
-                        mDevices->Length(),
-                        const_cast<void*>(
-                          static_cast<const void*>(tmp.Elements())
-                        ));
-
     mOnSuccess->OnSuccess(devices);
     return NS_OK;
   }
@@ -400,6 +407,7 @@ private:
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
   nsAutoPtr<nsTArray<nsRefPtr<MediaDevice>>> mDevices;
   uint64_t mWindowID;
+  bool mIsGum;
   nsRefPtr<MediaManager> mManager;
 };
 
@@ -1512,7 +1520,7 @@ public:
     }
     nsRefPtr<DeviceSuccessCallbackRunnable> runnable =
         new DeviceSuccessCallbackRunnable(mWindowId, mOnSuccess, mOnFailure,
-                                          result.forget());
+                                          result.forget(), mPrivileged);
     if (mPrivileged) {
       NS_DispatchToMainThread(runnable);
     } else {
