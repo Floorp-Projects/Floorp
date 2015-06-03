@@ -576,7 +576,16 @@ static CVReturn VsyncCallback(CVDisplayLinkRef aDisplayLink,
 
   mozilla::TimeStamp previousVsync = display->mPreviousTimestamp;
   display->mPreviousTimestamp = nextVsync;
-  MOZ_ASSERT(TimeStamp::Now() > previousVsync);
+  mozilla::TimeStamp now = TimeStamp::Now();
+  MOZ_ASSERT(nextVsync > previousVsync);
+
+  // Bug 1158321 - The VsyncCallback can sometimes execute before the reported
+  // vsync time. In those cases, normalize the timestamp to Now() as sending
+  // timestamps in the future has undefined behavior. See the comment above
+  // OSXDisplay::mPreviousTimestamp
+  if (now < previousVsync) {
+    previousVsync = now;
+  }
 
   display->NotifyVsync(previousVsync);
   return kCVReturnSuccess;

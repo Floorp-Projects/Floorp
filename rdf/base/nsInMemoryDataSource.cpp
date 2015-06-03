@@ -125,7 +125,7 @@ public:
     {
         struct hash
         {
-            PLDHashTable2*  mPropertyHash;
+            PLDHashTable*  mPropertyHash;
         } hash;
         struct as
         {
@@ -163,7 +163,7 @@ Assertion::Assertion(nsIRDFResource* aSource)
     NS_ADDREF(mSource);
 
     u.hash.mPropertyHash =
-        new PLDHashTable2(PL_DHashGetStubOps(), sizeof(Entry));
+        new PLDHashTable(PL_DHashGetStubOps(), sizeof(Entry));
 }
 
 Assertion::Assertion(nsIRDFResource* aSource,
@@ -250,8 +250,8 @@ protected:
     // nsIRDFResource object per unique URI). The value of an entry is
     // an Assertion struct, which is a linked list of (subject
     // predicate object) triples.
-    PLDHashTable2 mForwardArcs;
-    PLDHashTable2 mReverseArcs;
+    PLDHashTable mForwardArcs;
+    PLDHashTable mReverseArcs;
 
     nsCOMArray<nsIRDFObserver> mObservers;  
     uint32_t                   mNumObservers;

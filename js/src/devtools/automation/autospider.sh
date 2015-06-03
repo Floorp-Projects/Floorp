@@ -91,8 +91,26 @@ elif [ "$OSTYPE" = "linux-gnu" ]; then
   MAKEFLAGS=-j4
   if [ "$VARIANT" = "arm-sim" ]; then
     USE_64BIT=false
-  elif [ "$UNAME_M" = "x86_64" ]; then
-    USE_64BIT=true
+  else
+    case "$platform" in
+    linux64)
+      USE_64BIT=true
+      ;;
+    linux64-debug)
+      USE_64BIT=true
+      ;;
+    linux)
+      USE_64BIT=false
+      ;;
+    linux-debug)
+      USE_64BIT=false
+      ;;
+    *)
+      if [ "$UNAME_M" = "x86_64" ]; then
+        USE_64BIT=true
+      fi
+      ;;
+    esac
   fi
 
   if [ "$UNAME_M" != "arm" ] && [ -n "$AUTOMATION" ]; then
@@ -130,6 +148,11 @@ else
     export CC="${CC:-/usr/bin/gcc} -m32"
     export CXX="${CXX:-/usr/bin/g++} -m32"
     export AR=ar
+  fi
+  if [ "$OSTYPE" = "linux-gnu" ]; then
+    if [ "$UNAME_M" != "arm" ] && [ -n "$AUTOMATION" ]; then
+      CONFIGURE_ARGS="$CONFIGURE_ARGS --target=i686-pc-linux --host=i686-pc-linux"
+    fi
   fi
 fi
 
