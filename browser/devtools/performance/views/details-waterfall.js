@@ -132,7 +132,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
       return cached;
     }
 
-    let rootMarkerNode = WaterfallUtils.makeParentMarkerNode({ name: "(root)" });
+    let rootMarkerNode = WaterfallUtils.makeEmptyMarkerNode("(root)");
 
     WaterfallUtils.collapseMarkersIntoNode({
       markerNode: rootMarkerNode,

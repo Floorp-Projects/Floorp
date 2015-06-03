@@ -10,18 +10,15 @@
 loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
   "devtools/performance/markers", true);
 
-// Unique ID for all markers
-let uid = 0;
-
 /**
- * Collapses markers into a tree-like structure.
+ * Collapses markers into a tree-like structure. Currently, this only goes
+ * one level deep.
  * @param object markerNode
  * @param array markersList
- * @param ?object blueprint
  */
-function collapseMarkersIntoNode({ markerNode, markersList, blueprint }) {
-  let { getCurrentParentNode, collapseMarker, addParentNode, popParentNode } = createParentNodeFactory(markerNode);
-  blueprint = blueprint || TIMELINE_BLUEPRINT;
+function collapseMarkersIntoNode({ markerNode, markersList }) {
+  let [getOrCreateParentNode, getCurrentParentNode, clearParentNode] = makeParentNodeFactory();
+  let uid = 0;
 
   for (let i = 0, len = markersList.length; i < len; i++) {
     let curr = markersList[i];
@@ -31,111 +28,114 @@ function collapseMarkersIntoNode({ markerNode, markersList, blueprint }) {
     curr.uid = ++uid;
 
     let parentNode = getCurrentParentNode();
-    let def = blueprint[curr.name];
-    let collapse = def.collapseFunc || (() => null);
+    let blueprint = TIMELINE_BLUEPRINT[curr.name];
+    let collapse = blueprint.collapseFunc || (() => null);
     let peek = distance => markersList[i + distance];
-    let foundParent = false;
-
     let collapseInfo = collapse(parentNode, curr, peek);
+
     if (collapseInfo) {
-      let { collapse, toParent, finalize } = collapseInfo;
+      let { toParent, withData, forceNew, forceEnd } = collapseInfo;
 
-      // If `toParent` is an object, use it as the next parent marker
-      if (typeof toParent === "object") {
-        addParentNode(toParent);
+      // If the `forceNew` prop is set on the collapse info, then a new parent
+      // marker needs to be created even if there is one already available.
+      if (forceNew) {
+        clearParentNode();
       }
+      // If the `toParent` prop is set on the collapse info, then this marker
+      // can be collapsed into a higher-level parent marker.
+      if (toParent) {
+        let parentNode = getOrCreateParentNode({
+          uid: ++uid,
+          owner: markerNode,
+          name: toParent,
+          start: curr.start,
+          end: curr.end
+        });
 
-      if (collapse) {
-        collapseMarker(curr);
+        // A parent marker, even when created, will always have at least one
+        // child submarker (the one which caused it to be created).
+        parentNode.submarkers.push(curr);
+
+        // Optionally, additional data may be stapled on this parent marker.
+        for (let key in withData) {
+          parentNode[key] = withData[key];
+        }
       }
-
-      // If the marker specifies this parent marker is full,
-      // pop it from the stack.
-      if (finalize) {
-        popParentNode();
+      // If the `forceEnd` prop is set on the collapse info, then the higher-level
+      // parent marker is full and should be finalized.
+      if (forceEnd) {
+        clearParentNode();
       }
     } else {
+      clearParentNode();
       markerNode.submarkers.push(curr);
     }
   }
 }
 
 /**
- * Creates a parent marker, which functions like a regular marker,
+ * Creates an empty parent marker, which functions like a regular marker,
  * but is able to hold additional child markers.
- *
- * The marker is seeded with values from `marker`.
- * @param object marker
+ * @param string name
+ * @param number uid
+ * @param number start [optional]
+ * @param number end [optional]
  * @return object
  */
-function makeParentMarkerNode (marker) {
-  let node = Object.create(null);
-  for (let prop in marker) {
-    node[prop] = marker[prop];
-  }
-  if (!node.uid) {
-    node.uid = ++uid;
-  }
-  node.submarkers = [];
-  return node;
+function makeEmptyMarkerNode(name, uid, start, end) {
+  return {
+    name: name,
+    uid: uid,
+    start: start,
+    end: end,
+    submarkers: []
+  };
 }
 
 /**
- * Takes a root marker node and creates a hash of functions used
- * to manage the creation and nesting of additional parent markers.
- *
- * @param {object} root
- * @return {object}
+ * Creates a factory for markers containing other markers.
+ * @return array[function]
  */
-function createParentNodeFactory (root) {
-  let parentMarkers = [];
-  let factory = {
-    /**
-     * Pops the most recent parent node off the stack, finalizing it.
-     * Sets the `end` time based on the most recent child if not defined.
-     */
-    popParentNode: () => {
-      if (parentMarkers.length === 0) {
-        throw new Error("Cannot pop parent markers when none exist.");
-      }
+function makeParentNodeFactory() {
+  let marker;
 
-      let lastParent = parentMarkers.pop();
-      // If this finished parent marker doesn't have an end time,
-      // so probably a synthesized marker, use the last marker's end time.
-      if (lastParent.end == void 0) {
-        lastParent.end = lastParent.submarkers[lastParent.submarkers.length - 1].end;
+  return [
+    /**
+     * Gets the current parent marker for the given marker name. If it doesn't
+     * exist, it creates it and appends it to another parent marker.
+     * @param object owner
+     * @param string name
+     * @param number start
+     * @param number end
+     * @return object
+     */
+    function getOrCreateParentNode({ owner, name, uid, start, end }) {
+      if (marker && marker.name == name) {
+        marker.end = end;
+        return marker;
+      } else {
+        marker = makeEmptyMarkerNode(name, uid, start, end);
+        owner.submarkers.push(marker);
+        return marker;
       }
-      return lastParent;
     },
 
     /**
-     * Returns the most recent parent node.
+     * Gets the current marker marker.
+     * @return object
      */
-    getCurrentParentNode: () => parentMarkers.length ? parentMarkers[parentMarkers.length - 1] : null,
-
-    /**
-     * Push a new parent node onto the stack and nest it with the
-     * next most recent parent node, or root if no other parent nodes.
-     */
-    addParentNode: (marker) => {
-      let parentMarker = makeParentMarkerNode(marker);
-      (factory.getCurrentParentNode() || root).submarkers.push(parentMarker);
-      parentMarkers.push(parentMarker);
+    function getCurrentParentNode() {
+      return marker;
     },
 
     /**
-     * Push this marker into the most recent parent node.
+     * Clears the current marker marker.
      */
-    collapseMarker: (marker) => {
-      if (parentMarkers.length === 0) {
-        throw new Error("Cannot collapse marker with no parents.");
-      }
-      factory.getCurrentParentNode().submarkers.push(marker);
+    function clearParentNode() {
+      marker = null;
     }
-  };
-
-  return factory;
+  ];
 }
 
-exports.makeParentMarkerNode = makeParentMarkerNode;
+exports.makeEmptyMarkerNode = makeEmptyMarkerNode;
 exports.collapseMarkersIntoNode = collapseMarkersIntoNode;
