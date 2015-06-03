@@ -1065,7 +1065,6 @@ public:
                           const nsAString& aCause)
     : TimelineMarker(aDocShell, "TimeStamp", aMetaData, aCause)
   {
-    CaptureStack();
     MOZ_ASSERT(aMetaData == TRACING_TIMESTAMP);
   }
 
@@ -1075,7 +1074,6 @@ public:
     if (!GetCause().IsEmpty()) {
       aMarker.mCauseName.Construct(GetCause());
     }
-    aMarker.mEndStack = GetStack();
   }
 };
 

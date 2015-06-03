@@ -22,6 +22,7 @@ import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
 import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -853,7 +854,7 @@ public class Tabs implements GeckoEventListener {
             boolean external = (flags & LOADURL_EXTERNAL) != 0;
 
             final SharedPreferences sharedPrefs =  GeckoSharedPrefs.forApp(mAppContext);
-            final boolean isPrivatePref = sharedPrefs.getBoolean("android.not_a_preference.openExternalURLsPrivately", false);
+            final boolean isPrivatePref = sharedPrefs.getBoolean(GeckoPreferences.PREFS_OPEN_URLS_IN_PRIVATE, false);
             if (isPrivatePref && external) {
                 isPrivate = true;
             }
