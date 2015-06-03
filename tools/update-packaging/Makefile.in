@@ -31,7 +31,7 @@ MAR_BIN	= $(LIBXUL_DIST)/host/bin/mar$(HOST_BIN_SUFFIX)
 MBSDIFF_BIN	= $(LIBXUL_DIST)/host/bin/mbsdiff$(HOST_BIN_SUFFIX)
 
 OVERRIDE_DEFAULT_GOAL := full-update
-full-update:: complete-patch $(if $(MOZ_AUTOMATION_UPDATE_PACKAGING),automation-partial-patch)
+full-update:: complete-patch $(if $(filter 1,$(MOZ_AUTOMATION_UPDATE_PACKAGING)),automation-partial-patch)
 
 ifeq ($(OS_TARGET), WINNT)
 MOZ_PKG_FORMAT	:= SFX7Z
