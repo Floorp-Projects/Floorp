@@ -1230,8 +1230,8 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
       case SavedValueArrayTag: {
         MOZ_ASSERT(!(addr & CellMask));
         JSObject* obj = reinterpret_cast<JSObject*>(addr);
-        HeapValue* vp;
-        HeapValue* end;
+        HeapSlot* vp;
+        HeapSlot* end;
         if (restoreValueArray(obj, (void**)&vp, (void**)&end))
             pushValueArray(&obj->as<NativeObject>(), vp, end);
         else
