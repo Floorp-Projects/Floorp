@@ -26,6 +26,7 @@ add_task(function* test_register_wrong_type() {
 
   PushService._generateID = () => '1234';
   PushService.init({
+    serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
