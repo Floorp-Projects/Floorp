@@ -589,6 +589,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node parenExprOrGeneratorComprehension(YieldHandling yieldHandling);
     Node exprInParens(InHandling inHandling, YieldHandling yieldHandling);
 
+    bool tryNewTarget(Node& newTarget);
     bool checkAndMarkSuperScope();
 
     bool methodDefinition(YieldHandling yieldHandling, PropListType listType, Node propList,
