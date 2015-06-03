@@ -82,7 +82,7 @@ DirectProxyHandler::construct(JSContext* cx, HandleObject proxy, const CallArgs&
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, CALL);
     RootedValue target(cx, proxy->as<ProxyObject>().private_());
-    return InvokeConstructor(cx, target, args.length(), args.array(), args.rval());
+    return InvokeConstructor(cx, target, args.length(), args.array(), true, args.rval());
 }
 
 bool
