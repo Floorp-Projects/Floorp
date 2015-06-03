@@ -227,11 +227,8 @@ class BaselineFrame
 
   public:
     Value newTarget() const {
-        MOZ_ASSERT(isFunctionFrame());
         if (isEvalFrame())
             return *evalNewTargetAddress();
-        if (fun()->isArrow())
-            return fun()->getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
         if (isConstructing())
             return *(Value*)(reinterpret_cast<const uint8_t*>(this) +
                              BaselineFrame::Size() +

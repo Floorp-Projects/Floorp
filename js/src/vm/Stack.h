@@ -755,9 +755,6 @@ class InterpreterFrame
         if (isEvalFrame())
             return ((Value*)this)[-3];
 
-        if (callee().isArrow())
-            return callee().getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
-
         if (isConstructing()) {
             unsigned pushedArgs = Max(numFormalArgs(), numActualArgs());
             return argv()[pushedArgs];
