@@ -19,7 +19,7 @@ PRLogModuleInfo* GetAccessibleCaretLog();
 
 #ifndef AC_LOGV_BASE
 #define AC_LOGV_BASE(...)                                                      \
-  MOZ_LOG(GetAccessibleCaretLog(), PR_LOG_DEBUG + 1, (__VA_ARGS__));
+  MOZ_LOG(GetAccessibleCaretLog(), PR_LOG_VERBOSE, (__VA_ARGS__));
 #endif
 
 } // namespace mozilla

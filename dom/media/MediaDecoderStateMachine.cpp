@@ -62,7 +62,7 @@ extern PRLogModuleInfo* gMediaSampleLog;
 #define DECODER_LOG(x, ...) \
   LOG(gMediaDecoderLog, PR_LOG_DEBUG, x, ##__VA_ARGS__)
 #define VERBOSE_LOG(x, ...) \
-  LOG(gMediaDecoderLog, PR_LOG_DEBUG+1, x, ##__VA_ARGS__)
+  LOG(gMediaDecoderLog, PR_LOG_VERBOSE, x, ##__VA_ARGS__)
 #define SAMPLE_LOG(x, ...) \
   LOG(gMediaSampleLog, PR_LOG_DEBUG, x, ##__VA_ARGS__)
 
