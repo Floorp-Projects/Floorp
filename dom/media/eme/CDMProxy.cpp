@@ -53,12 +53,14 @@ CDMProxy::Init(PromiseId aPromiseId,
     nsCOMPtr<mozIGeckoMediaPluginService> mps =
       do_GetService("@mozilla.org/gecko-media-plugin-service;1");
     if (!mps) {
-      RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+      RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+                    NS_LITERAL_CSTRING("Couldn't get MediaPluginService in CDMProxy::Init"));
       return;
     }
     mps->GetThread(getter_AddRefs(mGMPThread));
     if (!mGMPThread) {
-      RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+      RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+                    NS_LITERAL_CSTRING("Couldn't get GMP thread CDMProxy::Init"));
       return;
     }
   }
@@ -90,7 +92,8 @@ CDMProxy::gmp_Init(nsAutoPtr<InitData> aData)
   nsCOMPtr<mozIGeckoMediaPluginService> mps =
     do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   if (!mps) {
-    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Failed to get GMPService in CDMProxy::gmp_Init"));
     return;
   }
 
@@ -105,7 +108,8 @@ CDMProxy::gmp_Init(nsAutoPtr<InitData> aData)
 
   MOZ_ASSERT(!GetNodeId().IsEmpty());
   if (NS_FAILED(rv)) {
-    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Failed to get node Id in CDMProxy::gmp_Init"));
     return;
   }
 
@@ -117,7 +121,8 @@ CDMProxy::gmp_Init(nsAutoPtr<InitData> aData)
 
   rv = mps->GetGMPDecryptor(&tags, GetNodeId(), &mCDM);
   if (NS_FAILED(rv) || !mCDM) {
-    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("GetGMPDecryptor failed to return a CDM"));
   } else {
     mCallback = new CDMCallbackProxy(this);
     mCDM->Init(mCallback);
@@ -141,7 +146,8 @@ CDMProxy::OnCDMCreated(uint32_t aPromiseId)
     mKeys->OnCDMCreated(aPromiseId, GetNodeId(), mCDM->GetPluginId());
   } else {
     // No CDM? Just reject the promise.
-    mKeys->RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+    mKeys->RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+                         NS_LITERAL_CSTRING("Null CDM in OnCDMCreated()"));
   }
 }
 
@@ -181,7 +187,8 @@ CDMProxy::gmp_CreateSession(nsAutoPtr<CreateSessionData> aData)
 {
   MOZ_ASSERT(IsOnGMPThread());
   if (!mCDM) {
-    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Null CDM in gmp_CreateSession"));
     return;
   }
   mCDM->CreateSession(aData->mCreateSessionToken,
@@ -212,7 +219,8 @@ CDMProxy::gmp_LoadSession(nsAutoPtr<SessionOpData> aData)
   MOZ_ASSERT(IsOnGMPThread());
 
   if (!mCDM) {
-    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Null CDM in gmp_LoadSession"));
     return;
   }
   mCDM->LoadSession(aData->mPromiseId, aData->mSessionId);
@@ -238,7 +246,8 @@ CDMProxy::gmp_SetServerCertificate(nsAutoPtr<SetServerCertificateData> aData)
 {
   MOZ_ASSERT(IsOnGMPThread());
   if (!mCDM) {
-    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Null CDM in gmp_SetServerCertificate"));
     return;
   }
   mCDM->SetServerCertificate(aData->mPromiseId, aData->mCert);
@@ -267,7 +276,8 @@ CDMProxy::gmp_UpdateSession(nsAutoPtr<UpdateSessionData> aData)
 {
   MOZ_ASSERT(IsOnGMPThread());
   if (!mCDM) {
-    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Null CDM in gmp_UpdateSession"));
     return;
   }
   mCDM->UpdateSession(aData->mPromiseId,
@@ -295,7 +305,8 @@ CDMProxy::gmp_CloseSession(nsAutoPtr<SessionOpData> aData)
 {
   MOZ_ASSERT(IsOnGMPThread());
   if (!mCDM) {
-    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Null CDM in gmp_CloseSession"));
     return;
   }
   mCDM->CloseSession(aData->mPromiseId, aData->mSessionId);
@@ -321,7 +332,8 @@ CDMProxy::gmp_RemoveSession(nsAutoPtr<SessionOpData> aData)
 {
   MOZ_ASSERT(IsOnGMPThread());
   if (!mCDM) {
-    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Null CDM in gmp_RemoveSession"));
     return;
   }
   mCDM->RemoveSession(aData->mPromiseId, aData->mSessionId);
@@ -358,14 +370,16 @@ CDMProxy::gmp_Shutdown()
 }
 
 void
-CDMProxy::RejectPromise(PromiseId aId, nsresult aCode)
+CDMProxy::RejectPromise(PromiseId aId, nsresult aCode,
+                        const nsCString& aReason)
 {
   if (NS_IsMainThread()) {
     if (!mKeys.IsNull()) {
-      mKeys->RejectPromise(aId, aCode);
+      mKeys->RejectPromise(aId, aCode, aReason);
     }
   } else {
-    nsCOMPtr<nsIRunnable> task(new RejectPromiseTask(this, aId, aCode));
+    nsCOMPtr<nsIRunnable> task(new RejectPromiseTask(this, aId, aCode,
+                                                     aReason));
     NS_DispatchToMainThread(task);
   }
 }
@@ -512,11 +526,10 @@ CDMProxy::OnSessionError(const nsAString& aSessionId,
 void
 CDMProxy::OnRejectPromise(uint32_t aPromiseId,
                           nsresult aDOMException,
-                          const nsAString& aMsg)
+                          const nsCString& aMsg)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  RejectPromise(aPromiseId, aDOMException);
-  LogToConsole(aMsg);
+  RejectPromise(aPromiseId, aDOMException, aMsg);
 }
 
 const nsString&
