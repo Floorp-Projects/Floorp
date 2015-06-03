@@ -4516,7 +4516,7 @@ HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<DetailedPromise> promise = DetailedPromise::Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -4525,7 +4525,8 @@ HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
     return promise.forget();
   }
   if (aMediaKeys && aMediaKeys->IsBoundToMediaElement()) {
-    promise->MaybeReject(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
+    promise->MaybeReject(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR,
+                         NS_LITERAL_CSTRING("MediaKeys object is already bound to another HTMLMediaElement"));
     return promise.forget();
   }
   if (mMediaKeys) {
@@ -4537,14 +4538,16 @@ HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
       !mMediaSource &&
       Preferences::GetBool("media.eme.mse-only", true)) {
     ShutdownDecoder();
-    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                         NS_LITERAL_CSTRING("EME not supported on non-MSE streams"));
     return promise.forget();
   }
 
   mMediaKeys = aMediaKeys;
   if (mMediaKeys) {
     if (NS_FAILED(mMediaKeys->Bind(this))) {
-      promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+      promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                           NS_LITERAL_CSTRING("Failed to bind MediaKeys object to HTMLMediaElement"));
       mMediaKeys = nullptr;
       return promise.forget();
     }

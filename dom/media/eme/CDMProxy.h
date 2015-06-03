@@ -138,7 +138,7 @@ public:
   // Main thread only.
   void OnRejectPromise(uint32_t aPromiseId,
                        nsresult aDOMException,
-                       const nsAString& aMsg);
+                       const nsCString& aMsg);
 
   // Threadsafe.
   void Decrypt(MediaRawData* aSample,
@@ -147,7 +147,8 @@ public:
 
   // Reject promise with DOMException corresponding to aExceptionCode.
   // Can be called from any thread.
-  void RejectPromise(PromiseId aId, nsresult aExceptionCode);
+  void RejectPromise(PromiseId aId, nsresult aExceptionCode,
+                     const nsCString& aReason);
 
   // Resolves promise with "undefined".
   // Can be called from any thread.
@@ -269,20 +270,23 @@ private:
   public:
     RejectPromiseTask(CDMProxy* aProxy,
                       PromiseId aId,
-                      nsresult aCode)
+                      nsresult aCode,
+                      const nsCString& aReason)
       : mProxy(aProxy)
       , mId(aId)
       , mCode(aCode)
+      , mReason(aReason)
     {
     }
     NS_METHOD Run() {
-      mProxy->RejectPromise(mId, mCode);
+      mProxy->RejectPromise(mId, mCode, mReason);
       return NS_OK;
     }
   private:
     nsRefPtr<CDMProxy> mProxy;
     PromiseId mId;
     nsresult mCode;
+    nsCString mReason;
   };
 
   ~CDMProxy();
