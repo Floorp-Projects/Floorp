@@ -63,5 +63,8 @@ inline bool log_test(const PRLogModuleInfo* module, LogLevel level) {
     }                     \
   PR_END_MACRO
 
+#undef PR_LOG
+#undef PR_LOG_TEST
+
 #endif // mozilla_logging_h
 
