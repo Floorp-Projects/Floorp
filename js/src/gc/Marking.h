@@ -195,9 +195,6 @@ class GCMarker : public JSTracer
     bool shouldCheckCompartments() { return strictCompartmentChecking; }
 #endif
 
-    /* This is public exclusively for ScanRope. */
-    MarkStack stack;
-
   private:
 #ifdef DEBUG
     void checkZone(void* p);
@@ -257,7 +254,7 @@ class GCMarker : public JSTracer
             delayMarkingChildren(ptr);
     }
 
-    void pushValueArray(JSObject* obj, void* start, void* end) {
+    void pushValueArray(JSObject* obj, HeapSlot* start, HeapSlot* end) {
         checkZone(obj);
 
         MOZ_ASSERT(start <= end);
@@ -280,6 +277,9 @@ class GCMarker : public JSTracer
     bool restoreValueArray(JSObject* obj, void** vpp, void** endp);
     void saveValueRanges();
     inline void processMarkStackTop(SliceBudget& budget);
+
+    /* The mark stack. Pointers in this stack are "gray" in the GC sense. */
+    MarkStack stack;
 
     /* The color is only applied to objects and functions. */
     uint32_t color;
