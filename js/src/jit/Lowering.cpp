@@ -606,13 +606,24 @@ LIRGenerator::visitCallDirectEval(MCallDirectEval* ins)
     MOZ_ASSERT(scopeChain->type() == MIRType_Object);
 
     MDefinition* string = ins->getString();
-    MOZ_ASSERT(string->type() == MIRType_String);
+    MOZ_ASSERT(string->type() == MIRType_String || string->type() == MIRType_Value);
 
     MDefinition* thisValue = ins->getThisValue();
 
-    LInstruction* lir = new(alloc()) LCallDirectEval(useRegisterAtStart(scopeChain),
-                                                     useRegisterAtStart(string));
-    useBoxAtStart(lir, LCallDirectEval::ThisValue, thisValue);
+
+    LInstruction* lir;
+    if (string->type() == MIRType_String) {
+        lir = new(alloc()) LCallDirectEvalS(useRegisterAtStart(scopeChain),
+                                            useRegisterAtStart(string));
+    } else {
+        lir = new(alloc()) LCallDirectEvalV(useRegisterAtStart(scopeChain));
+        useBoxAtStart(lir, LCallDirectEvalV::Argument, string);
+    }
+
+    if (string->type() == MIRType_String)
+        useBoxAtStart(lir, LCallDirectEvalS::ThisValue, thisValue);
+    else
+        useBoxAtStart(lir, LCallDirectEvalV::ThisValue, thisValue);
 
     defineReturn(lir, ins);
     assignSafepoint(lir, ins);
