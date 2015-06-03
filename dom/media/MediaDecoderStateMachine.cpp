@@ -1352,7 +1352,8 @@ void MediaDecoderStateMachine::UpdatePlaybackPositionInternal(int64_t aTime)
     DECODER_LOG("Setting new end time to %lld", aTime);
     mEndTime = aTime;
     nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(mDecoder, &MediaDecoder::DurationChanged);
+      NS_NewRunnableMethodWithArg<TimeUnit>(mDecoder, &MediaDecoder::DurationChanged,
+                                            TimeUnit::FromMicroseconds(GetDuration()));
     AbstractThread::MainThread()->Dispatch(event.forget());
   }
 }
@@ -1517,7 +1518,8 @@ void MediaDecoderStateMachine::UpdateEstimatedDuration(int64_t aDuration)
       mozilla::Abs(aDuration - duration) > ESTIMATED_DURATION_FUZZ_FACTOR_USECS) {
     SetDuration(aDuration);
     nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(mDecoder, &MediaDecoder::DurationChanged);
+      NS_NewRunnableMethodWithArg<TimeUnit>(mDecoder, &MediaDecoder::DurationChanged,
+                                            TimeUnit::FromMicroseconds(GetDuration()));
     AbstractThread::MainThread()->Dispatch(event.forget());
   }
 }

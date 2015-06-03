@@ -520,7 +520,7 @@ public:
 
   // Called by the state machine to notify the decoder that the duration
   // has changed.
-  void DurationChanged();
+  void DurationChanged(media::TimeUnit aNewDuration);
 
   bool OnStateMachineTaskQueue() const override;
 

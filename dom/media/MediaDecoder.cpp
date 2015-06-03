@@ -1067,12 +1067,12 @@ void MediaDecoder::UpdateLogicalPosition(MediaDecoderEventVisibility aEventVisib
   }
 }
 
-void MediaDecoder::DurationChanged()
+void MediaDecoder::DurationChanged(TimeUnit aNewDuration)
 {
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   int64_t oldDuration = mDuration;
-  mDuration = mDecoderStateMachine ? mDecoderStateMachine->GetDuration() : -1;
+  mDuration = aNewDuration.ToMicroseconds();
   // Duration has changed so we should recompute playback rate
   UpdatePlaybackRate();
 
