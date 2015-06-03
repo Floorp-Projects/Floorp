@@ -725,7 +725,16 @@ var gMainPane = {
     if (!shellSvc)
       return;
     try {
-      shellSvc.setDefaultBrowser(true, false);
+      let claimAllTypes = true;
+      if (AppConstants.platform == "win") {
+        // In Windows 8+, the UI for selecting default protocol is much
+        // nicer than the UI for setting file type associations. So we
+        // only show the protocol association screen on Windows 8+.
+        // Windows 8 is version 6.2.
+        let version = Services.sysinfo.getProperty("version");
+        claimAllTypes = (parseFloat(version) < 6.2);
+      }
+      shellSvc.setDefaultBrowser(claimAllTypes, false);
     } catch (ex) {
       Cu.reportError(ex);
       return;

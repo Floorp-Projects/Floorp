@@ -2572,9 +2572,9 @@ let DefaultBrowserCheck = {
     let claimAllTypes = true;
 #ifdef XP_WIN
     try {
-      // In Windows 8, the UI for selecting default protocol is much
+      // In Windows 8+, the UI for selecting default protocol is much
       // nicer than the UI for setting file type associations. So we
-      // only show the protocol association screen on Windows 8.
+      // only show the protocol association screen on Windows 8+.
       // Windows 8 is version 6.2.
       let version = Services.sysinfo.getProperty("version");
       claimAllTypes = (parseFloat(version) < 6.2);
