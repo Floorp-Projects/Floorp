@@ -454,7 +454,7 @@ GetStubReturnAddress(JSContext* cx, jsbytecode* pc)
         return cx->compartment()->jitCompartment()->baselineSetPropReturnAddr();
     // This should be a call op of some kind, now.
     MOZ_ASSERT(IsCallPC(pc));
-    return cx->compartment()->jitCompartment()->baselineCallReturnAddr(JSOp(*pc) == JSOP_NEW);
+    return cx->compartment()->jitCompartment()->baselineCallReturnAddr();
 }
 
 static inline jsbytecode*
