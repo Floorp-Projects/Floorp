@@ -2772,7 +2772,6 @@ var WalkerActor = protocol.ActorClass({
       let mutation = {
         type: change.type,
         target: targetActor.actorID,
-        numChildren: targetActor.numChildren
       };
 
       if (mutation.type === "attributes") {
@@ -2819,6 +2818,7 @@ var WalkerActor = protocol.ActorClass({
           addedActors.push(addedActor.actorID);
         }
 
+        mutation.numChildren = targetActor.numChildren;
         mutation.removed = removedActors;
         mutation.added = addedActors;
 
