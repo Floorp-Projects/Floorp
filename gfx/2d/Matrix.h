@@ -499,6 +499,19 @@ public:
 
   Rect ProjectRectBounds(const Rect& aRect, const Rect &aClip) const;
 
+  /**
+   * TransformAndClipRect projects a rectangle and clips against view frustum
+   * clipping planes in homogenous space so that its projected vertices are
+   * constrained within the 2d rectangle passed in aClip.
+   * The resulting vertices are populated in aVerts.  aVerts must be
+   * pre-allocated to hold at least kTransformAndClipRectMaxVerts Points.
+   * The vertex count is returned by TransformAndClipRect.  It is possible to
+   * emit fewer that 3 vertices, indicating that aRect will not be visible
+   * within aClip.
+   */
+  size_t TransformAndClipRect(const Rect& aRect, const Rect& aClip, Point* aVerts) const;
+  static const size_t kTransformAndClipRectMaxVerts = 32;
+
   static Matrix4x4 From2D(const Matrix &aMatrix) {
     Matrix4x4 matrix;
     matrix._11 = aMatrix._11;
