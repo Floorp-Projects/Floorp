@@ -1910,16 +1910,6 @@ Breakpoints.prototype = {
     // editor itself.
     let breakpointClient = yield this.addBreakpoint(location, { noEditorUpdate: true });
 
-    // If the breakpoint client has a "requestedLocation" attached, then
-    // the original requested placement for the breakpoint wasn't accepted.
-    // In this case, we need to update the editor with the new location.
-    if (breakpointClient.requestedLocation) {
-      DebuggerView.editor.moveBreakpoint(
-        breakpointClient.requestedLocation.line - 1,
-        breakpointClient.location.line - 1
-      );
-    }
-
     // Notify that we've shown a breakpoint in the source editor.
     window.emit(EVENTS.BREAKPOINT_SHOWN_IN_EDITOR);
   }),
@@ -2030,11 +2020,40 @@ Breakpoints.prototype = {
     source.setBreakpoint(aLocation, Task.async(function*(aResponse, aBreakpointClient) {
       // If the breakpoint response has an "actualLocation" attached, then
       // the original requested placement for the breakpoint wasn't accepted.
-      if (aResponse.actualLocation) {
-        // Remember the initialization promise for the new location instead.
+      let actualLocation = aResponse.actualLocation;
+      if (actualLocation) {
+        // Update the editor to reflect the new location of the breakpoint. We
+        // always need to do this, even when we already have a breakpoint for
+        // the actual location, because the editor already as already shown the
+        // breakpoint at the original location at this point. Calling
+        // moveBreakpoint will hide the breakpoint at the original location, and
+        // show it at the actual location, if necessary.
+        //
+        // FIXME: The call to moveBreakpoint triggers another call to remove-
+        // and addBreakpoint, respectively. These calls do not have any effect,
+        // because there is no breakpoint to remove at the old location, and
+        // the breakpoint is already being added at the new location, but they
+        // are redundant and confusing.
+        DebuggerView.editor.moveBreakpoint(
+          aBreakpointClient.location.line - 1,
+          actualLocation.line - 1
+        );
+
+        aBreakpointClient.location = actualLocation;
+        aBreakpointClient.location.actor = actualLocation.source
+                                         ? actualLocation.source.actor
+                                         : null;
+
         let oldIdentifier = identifier;
-        let newIdentifier = identifier = this.getIdentifier(aResponse.actualLocation);
         this._added.delete(oldIdentifier);
+
+        if ((addedPromise = this._getAdded(actualLocation))) {
+          deferred.resolve(addedPromise);
+          return;
+        }
+
+        // Remember the initialization promise for the new location instead.
+        let newIdentifier = identifier = this.getIdentifier(actualLocation);
         this._added.set(newIdentifier, deferred.promise);
       }
 
@@ -2055,15 +2074,6 @@ Breakpoints.prototype = {
         }
       }
 
-      if (aResponse.actualLocation) {
-        // Store the originally requested location in case it's ever needed
-        // and update the breakpoint client with the actual location.
-        let actualLoc = aResponse.actualLocation;
-        aBreakpointClient.requestedLocation = aLocation;
-        aBreakpointClient.location = actualLoc;
-        aBreakpointClient.location.actor = actualLoc.source ? actualLoc.source.actor : null;
-      }
-
       // Preserve information about the breakpoint's line text, to display it
       // in the sources pane without requiring fetching the source (for example,
       // after the target navigated). Note that this will get out of sync
@@ -2071,8 +2081,7 @@ Breakpoints.prototype = {
       let line = aBreakpointClient.location.line - 1;
       aBreakpointClient.text = DebuggerView.editor.getText(line).trim();
 
-      // Show the breakpoint in the editor and breakpoints pane, and
-      // resolve.
+      // Show the breakpoint in the breakpoints pane, and resolve.
       yield this._showBreakpoint(aBreakpointClient, aOptions);
 
       // Notify that we've added a breakpoint.
