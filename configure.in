@@ -5355,17 +5355,31 @@ dnl ========================================================
 dnl = EME support
 dnl ========================================================
 
-MOZ_ARG_DISABLE_BOOL(eme,
-[  --disable-eme  Disable support for Encrypted Media Extensions],
-    MOZ_EME=,
-    MOZ_EME=1)
+MOZ_ARG_ENABLE_STRING(eme,
+[  --enable-eme[=adobe]  Enable support for Encrypted Media Extensions  ],
+    MOZ_EME_ARGS=$enableval)
 
+if test "$MOZ_EME_ARGS"; then
+    if test "$MOZ_EME_ARGS" = "no"; then
+        dnl EME explicitly disabled with --disable-eme
+        MOZ_EME=
+    elif test "$MOZ_EME_ARGS" = "yes"; then
+        dnl EME explicitly enabled with --enable-eme
+        MOZ_EME=1
+    else
+        dnl EME explicitly enabled with --enable-eme=<args>
+        MOZ_EME=1
+        MOZ_EME_MODULES=`echo $MOZ_EME_ARGS | sed -e 's/,/ /g'`
+    fi
+fi
+
+AC_SUBST_SET(MOZ_EME_MODULES)
 if test -n "$MOZ_EME"; then
     if test -z "$MOZ_FMP4"; then
         AC_MSG_ERROR([Encrypted Media Extension support requires Fragmented MP4 support])
     fi
     AC_DEFINE(MOZ_EME)
-fi;
+fi
 
 dnl ========================================================
 dnl = Enable media plugin support
