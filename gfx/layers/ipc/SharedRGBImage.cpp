@@ -28,7 +28,7 @@ namespace layers {
 
 already_AddRefed<Image>
 CreateSharedRGBImage(ImageContainer *aImageContainer,
-                     nsIntSize aSize,
+                     gfx::IntSize aSize,
                      gfxImageFormat aImageFormat)
 {
   NS_ASSERTION(aImageFormat == gfxImageFormat::ARGB32 ||

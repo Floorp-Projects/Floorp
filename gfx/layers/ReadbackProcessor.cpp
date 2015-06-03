@@ -118,7 +118,7 @@ ReadbackProcessor::BuildUpdatesForLayer(ReadbackLayer* aLayer)
                                      aLayer->AllocateSequenceNumber());
       if (ctx) {
         ColorPattern color(ToDeviceColor(aLayer->mBackgroundColor));
-        nsIntSize size = aLayer->GetSize();
+        IntSize size = aLayer->GetSize();
         ctx->GetDrawTarget()->FillRect(Rect(0, 0, size.width, size.height),
                                        color);
         aLayer->mSink->EndUpdate(ctx, aLayer->GetRect());

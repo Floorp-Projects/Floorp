@@ -435,7 +435,7 @@ TiledContentHost::RenderTile(TileHost& aTile,
                              const gfx::Rect& aClipRect,
                              const nsIntRegion& aScreenRegion,
                              const IntPoint& aTextureOffset,
-                             const nsIntSize& aTextureBounds,
+                             const IntSize& aTextureBounds,
                              const gfx::Rect& aVisibleRect)
 {
   if (aTile.IsPlaceholderTile()) {
@@ -583,7 +583,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
           gfx::IntSize tileSize = aLayerBuffer.GetTileSize();
           RenderTile(tileTexture, aBackgroundColor, aEffectChain, aOpacity, aTransform,
                      aFilter, aClipRect, tileDrawRegion, tileOffset,
-                     nsIntSize(tileSize.width, tileSize.height),
+                     IntSize(tileSize.width, tileSize.height),
                      gfx::Rect(visibleRect.x, visibleRect.y,
                                visibleRect.width, visibleRect.height));
           if (tileTexture.mTextureHostOnWhite) {
