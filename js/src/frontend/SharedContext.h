@@ -243,8 +243,8 @@ class SharedContext
 
         switch (allowed) {
           case AllowedSyntax::NewTarget:
-            // Any function supports new.target
-            return true;
+            // For now, disallow new.target inside generators
+            return !func->isGenerator();
           case AllowedSyntax::SuperProperty:
             return func->allowSuperProperty();
           default:;
@@ -373,6 +373,11 @@ class FunctionBox : public ObjectBox, public SharedContext
     }
 
     bool allowSyntax(AllowedSyntax allowed) const {
+        // For now (!) we don't allow new.target in generators, and can't
+        // check that for functions we haven't finished parsing, as they
+        // don't have initialized scripts. Check from our stashed bits instead.
+        if (allowed == AllowedSyntax::NewTarget)
+            return !isGenerator();
         return FunctionAllowsSyntax(function(), allowed);
     }
 };
