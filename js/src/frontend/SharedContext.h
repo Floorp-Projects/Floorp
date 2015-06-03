@@ -230,27 +230,7 @@ class SharedContext
         return atom == context->names().dotGenerator || atom == context->names().dotGenRVal;
     }
 
-    enum class AllowedSyntax {
-        NewTarget,
-        SuperProperty
-    };
-    virtual bool allowSyntax(AllowedSyntax allowed) const = 0;
-
-  protected:
-    static bool FunctionAllowsSyntax(JSFunction* func, AllowedSyntax allowed)
-    {
-        MOZ_ASSERT(!func->isArrow());
-
-        switch (allowed) {
-          case AllowedSyntax::NewTarget:
-            // For now, disallow new.target inside generators
-            return !func->isGenerator();
-          case AllowedSyntax::SuperProperty:
-            return func->allowSuperProperty();
-          default:;
-        }
-        MOZ_CRASH("Unknown AllowedSyntax query");
-    }
+    virtual bool allowSuperProperty() const = 0;
 };
 
 class GlobalSharedContext : public SharedContext
@@ -269,17 +249,13 @@ class GlobalSharedContext : public SharedContext
     ObjectBox* toObjectBox() { return nullptr; }
     HandleObject evalStaticScope() const { return staticEvalScope_; }
 
-    bool allowSyntax(AllowedSyntax allowed) const {
+    bool allowSuperProperty() const {
         StaticScopeIter<CanGC> it(context, staticEvalScope_);
         for (; !it.done(); it++) {
-            if (it.type() == StaticScopeIter<CanGC>::Function) {
-                if (it.fun().isArrow()) {
-                    // For the moment, disallow new.target inside arrow functions
-                    if (allowed == AllowedSyntax::NewTarget)
-                        return false;
-                    continue;
-                }
-                return FunctionAllowsSyntax(&it.fun(), allowed);
+            if (it.type() == StaticScopeIter<CanGC>::Function &&
+                !it.fun().isArrow())
+            {
+                return it.fun().allowSuperProperty();
             }
         }
         return false;
@@ -344,7 +320,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     void setArgumentsHasLocalBinding()     { funCxFlags.argumentsHasLocalBinding = true; }
     void setDefinitelyNeedsArgsObj()       { MOZ_ASSERT(funCxFlags.argumentsHasLocalBinding);
                                              funCxFlags.definitelyNeedsArgsObj   = true; }
-    void setNeedsHomeObject()              { MOZ_ASSERT(function()->allowSuperProperty());
+    void setNeedsHomeObject()              { MOZ_ASSERT(allowSuperProperty());
                                              funCxFlags.needsHomeObject          = true; }
 
     bool hasDefaults() const {
@@ -376,13 +352,8 @@ class FunctionBox : public ObjectBox, public SharedContext
                isGenerator();
     }
 
-    bool allowSyntax(AllowedSyntax allowed) const {
-        // For now (!) we don't allow new.target in generators, and can't
-        // check that for functions we haven't finished parsing, as they
-        // don't have initialized scripts. Check from our stashed bits instead.
-        if (allowed == AllowedSyntax::NewTarget)
-            return !isGenerator();
-        return FunctionAllowsSyntax(function(), allowed);
+    bool allowSuperProperty() const {
+        return function()->allowSuperProperty();
     }
 };
 
@@ -399,7 +370,6 @@ SharedContext::asGlobalSharedContext()
     MOZ_ASSERT(!isFunctionBox());
     return static_cast<GlobalSharedContext*>(this);
 }
-
 
 // In generators, we treat all locals as aliased so that they get stored on the
 // heap.  This way there is less information to copy off the stack when

@@ -39,10 +39,6 @@ FrameInfo::sync(StackValue* val)
       case StackValue::ThisSlot:
         masm.pushValue(addressOfThis());
         break;
-      case StackValue::EvalNewTargetSlot:
-        MOZ_ASSERT(script->isForEval());
-        masm.pushValue(addressOfEvalNewTarget());
-        break;
       case StackValue::Register:
         masm.pushValue(val->reg());
         break;
@@ -98,9 +94,6 @@ FrameInfo::popValue(ValueOperand dest)
         break;
       case StackValue::ThisSlot:
         masm.loadValue(addressOfThis(), dest);
-        break;
-      case StackValue::EvalNewTargetSlot:
-        masm.loadValue(addressOfEvalNewTarget(), dest);
         break;
       case StackValue::Stack:
         masm.popValue(dest);

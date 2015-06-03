@@ -4069,21 +4069,19 @@ class MFilterArgumentsOrEval
 };
 
 class MCallDirectEval
-  : public MAryInstruction<4>,
-    public Mix4Policy<ObjectPolicy<0>,
+  : public MAryInstruction<3>,
+    public Mix3Policy<ObjectPolicy<0>,
                       StringPolicy<1>,
-                      BoxPolicy<2>,
-                      BoxPolicy<3> >::Data
+                      BoxPolicy<2> >::Data
 {
   protected:
     MCallDirectEval(MDefinition* scopeChain, MDefinition* string, MDefinition* thisValue,
-                    MDefinition* newTargetValue, jsbytecode* pc)
+                    jsbytecode* pc)
         : pc_(pc)
     {
         initOperand(0, scopeChain);
         initOperand(1, string);
         initOperand(2, thisValue);
-        initOperand(3, newTargetValue);
         setResultType(MIRType_Value);
     }
 
@@ -4092,9 +4090,9 @@ class MCallDirectEval
 
     static MCallDirectEval*
     New(TempAllocator& alloc, MDefinition* scopeChain, MDefinition* string, MDefinition* thisValue,
-        MDefinition* newTargetValue, jsbytecode* pc)
+        jsbytecode* pc)
     {
-        return new(alloc) MCallDirectEval(scopeChain, string, thisValue, newTargetValue, pc);
+        return new(alloc) MCallDirectEval(scopeChain, string, thisValue, pc);
     }
 
     MDefinition* getScopeChain() const {
@@ -4105,9 +4103,6 @@ class MCallDirectEval
     }
     MDefinition* getThisValue() const {
         return getOperand(2);
-    }
-    MDefinition* getNewTargetValue() const {
-        return getOperand(3);
     }
 
     jsbytecode* pc() const {

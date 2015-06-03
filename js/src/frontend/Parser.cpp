@@ -7836,40 +7836,18 @@ Parser<ParseHandler>::argumentList(YieldHandling yieldHandling, Node listNode, b
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::checkAllowedNestedSyntax(SharedContext::AllowedSyntax allowed,
-                                               SharedContext** allowingContext)
+Parser<ParseHandler>::checkAndMarkSuperScope()
 {
     for (GenericParseContext* gpc = pc; gpc; gpc = gpc->parent) {
         SharedContext* sc = gpc->sc;
-
-        // Arrow functions don't help decide whether we should allow nested
-        // syntax, as they don't store any of the necessary state for themselves.
-        if (sc->isFunctionBox() && sc->asFunctionBox()->function()->isArrow()) {
-            // For now (!), disallow new.target in arrow functions. This will
-            // change later in this bug!
-            if (allowed == SharedContext::AllowedSyntax::NewTarget)
-                return false;
-            continue;
+        if (sc->allowSuperProperty()) {
+            if (sc->isFunctionBox())
+                sc->asFunctionBox()->setNeedsHomeObject();
+            return true;
+        } else if (sc->isFunctionBox() && !sc->asFunctionBox()->function()->isArrow()) {
+            // super is not legal in normal functions.
+            break;
         }
-
-        if (!sc->allowSyntax(allowed))
-            return false;
-        if (allowingContext)
-            *allowingContext = sc;
-        return true;
-    }
-    return false;
-}
-
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::checkAndMarkSuperScope()
-{
-    SharedContext* foundContext = nullptr;
-    if (checkAllowedNestedSyntax(SharedContext::AllowedSyntax::SuperProperty, &foundContext)) {
-        if (foundContext->isFunctionBox())
-            foundContext->asFunctionBox()->setNeedsHomeObject();
-        return true;
     }
     return false;
 }
@@ -8666,7 +8644,9 @@ Parser<ParseHandler>::tryNewTarget(Node &newTarget)
         return false;
     }
 
-    if (!checkAllowedNestedSyntax(SharedContext::AllowedSyntax::NewTarget)) {
+    if (!pc->sc->isFunctionBox() || pc->sc->asFunctionBox()->isGenerator() ||
+        pc->sc->asFunctionBox()->function()->isArrow())
+    {
         reportWithOffset(ParseError, false, begin, JSMSG_BAD_NEWTARGET);
         return false;
     }

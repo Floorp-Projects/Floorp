@@ -816,16 +816,6 @@ AbstractFramePtr::thisValue() const
     return asRematerializedFrame()->thisValue();
 }
 
-inline Value
-AbstractFramePtr::newTarget() const
-{
-    if (isInterpreterFrame())
-        return asInterpreterFrame()->newTarget();
-    if (isBaselineFrame())
-        return asBaselineFrame()->newTarget();
-    return asRematerializedFrame()->newTarget();
-}
-
 inline bool
 AbstractFramePtr::freshenBlock(JSContext* cx) const
 {
