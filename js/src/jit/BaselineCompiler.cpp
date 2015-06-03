@@ -1513,11 +1513,6 @@ BaselineCompiler::storeValue(const StackValue* source, const Address& dest,
         masm.loadValue(frame.addressOfThis(), scratch);
         masm.storeValue(scratch, dest);
         break;
-      case StackValue::EvalNewTargetSlot:
-        MOZ_ASSERT(script->isForEval());
-        masm.loadValue(frame.addressOfEvalNewTarget(), scratch);
-        masm.storeValue(scratch, dest);
-        break;
       case StackValue::Stack:
         masm.loadValue(frame.addressOfStackValue(source), scratch);
         masm.storeValue(scratch, dest);
@@ -2686,11 +2681,6 @@ BaselineCompiler::emit_JSOP_SETARG()
 bool
 BaselineCompiler::emit_JSOP_NEWTARGET()
 {
-    if (script->isForEval()) {
-        frame.pushEvalNewTarget();
-        return true;
-    }
-
     MOZ_ASSERT(function());
     frame.syncStack(0);
 

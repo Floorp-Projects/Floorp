@@ -589,8 +589,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node parenExprOrGeneratorComprehension(YieldHandling yieldHandling);
     Node exprInParens(InHandling inHandling, YieldHandling yieldHandling);
 
-    bool checkAllowedNestedSyntax(SharedContext::AllowedSyntax allowed,
-                                  SharedContext** allowingContext = nullptr);
     bool tryNewTarget(Node& newTarget);
     bool checkAndMarkSuperScope();
 
