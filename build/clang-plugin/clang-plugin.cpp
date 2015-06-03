@@ -704,8 +704,14 @@ DiagnosticsMatcher::DiagnosticsMatcher()
       ).bind("node"),
     &noAddRefReleaseOnReturnChecker);
 
+  // Match declrefs with type "pointer to object of ref-counted type" inside a
+  // lambda, where the declaration they reference is not inside the lambda.
+  // This excludes arguments and local variables, leaving only captured
+  // variables.
   astMatcher.addMatcher(lambdaExpr(
-            hasDescendant(declRefExpr(hasType(pointerType(pointee(isRefCounted())))).bind("node"))
+            hasDescendant(declRefExpr(hasType(pointerType(pointee(isRefCounted()))),
+                                      to(decl().bind("decl"))).bind("declref")),
+            unless(hasDescendant(decl(equalsBoundNode("decl"))))
         ),
     &refCountedInsideLambdaChecker);
 
@@ -917,14 +923,14 @@ void DiagnosticsMatcher::RefCountedInsideLambdaChecker::run(
     const MatchFinder::MatchResult &Result) {
   DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
   unsigned errorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "Refcounted variable %0 of type %1 cannot be used inside a lambda");
+      DiagnosticIDs::Error, "Refcounted variable %0 of type %1 cannot be captured by a lambda");
   unsigned noteID = Diag.getDiagnosticIDs()->getCustomDiagID(
       DiagnosticIDs::Note, "Please consider using a smart pointer");
-  const DeclRefExpr *node = Result.Nodes.getNodeAs<DeclRefExpr>("node");
+  const DeclRefExpr *declref = Result.Nodes.getNodeAs<DeclRefExpr>("declref");
 
-  Diag.Report(node->getLocStart(), errorID) << node->getFoundDecl() <<
-    node->getType()->getPointeeType();
-  Diag.Report(node->getLocStart(), noteID);
+  Diag.Report(declref->getLocStart(), errorID) << declref->getFoundDecl() <<
+    declref->getType()->getPointeeType();
+  Diag.Report(declref->getLocStart(), noteID);
 }
 
 void DiagnosticsMatcher::ExplicitOperatorBoolChecker::run(
