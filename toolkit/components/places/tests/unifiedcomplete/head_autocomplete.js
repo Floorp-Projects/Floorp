@@ -99,9 +99,8 @@ AutoCompleteInput.prototype = {
 
 // A helper for check_autocomplete to check a specific match against data from
 // the controller.
-function _check_autocomplete_matches(match, controllerInfo) {
+function _check_autocomplete_matches(match, result) {
   let { uri, title, tags, searchEngine, style } = match;
-  let { controllerValue, controllerComment, controllerStyle } = controllerInfo;
   if (tags)
     title += " \u2013 " + tags.sort().join(", ");
   if (searchEngine)
@@ -113,15 +112,20 @@ function _check_autocomplete_matches(match, controllerInfo) {
 
   do_print("Checking against expected '" + uri.spec + "', '" + title + "'...");
   // Got a match on both uri and title?
-  if (stripPrefix(uri.spec) != stripPrefix(controllerValue) || title != controllerComment) {
+  if (stripPrefix(uri.spec) != stripPrefix(result.value) || title != result.comment) {
     return false;
   }
-  let actualStyle = controllerStyle.split(/\s+/).sort();
+
+  let actualStyle = result.style.split(/\s+/).sort();
   if (style)
     Assert.equal(actualStyle.toString(), style.toString(), "Match should have expected style");
   if (uri.spec.startsWith("moz-action:")) {
     Assert.ok(actualStyle.indexOf("action") != -1, "moz-action results should always have 'action' in their style");
   }
+
+  if (match.icon)
+    Assert.equal(result.image, match.icon, "Match should have expected image");
+
   return true;
 }
 
@@ -184,27 +188,31 @@ function* check_autocomplete(test) {
     if (test.searchParam && test.searchParam == "enable-actions") {
       firstIndexToCheck = 1;
       do_print("Checking first match is first autocomplete entry")
-      let controllerValue = controller.getValueAt(0);
-      let controllerComment = controller.getCommentAt(0);
-      let controllerStyle = controller.getStyleAt(0);
-      do_print("First match is '" + controllerValue + "', '" + controllerComment + "");
-      let controllerInfo = { controllerValue, controllerComment, controllerStyle };
-      Assert.ok(_check_autocomplete_matches(matches[0], controllerInfo), "first item is correct");
+      let result = {
+        value: controller.getValueAt(0),
+        comment: controller.getCommentAt(0),
+        style: controller.getStyleAt(0),
+        image: controller.getImageAt(0),
+      }
+      do_print(`First match is "${result.value}", " ${result.comment}"`);
+      Assert.ok(_check_autocomplete_matches(matches[0], result), "first item is correct");
       do_print("Checking rest of the matches");
     }
 
     for (let i = firstIndexToCheck; i < controller.matchCount; i++) {
-      let controllerValue = controller.getValueAt(i);
-      let controllerComment = controller.getCommentAt(i);
-      let controllerStyle = controller.getStyleAt(i);
-      let controllerInfo = { controllerValue, controllerComment, controllerStyle };
-      do_print("Looking for '" + controllerValue + "', '" + controllerComment + "' in expected results...");
+      let result = {
+        value: controller.getValueAt(i),
+        comment: controller.getCommentAt(i),
+        style: controller.getStyleAt(i),
+        image: controller.getImageAt(i),
+      }
+      do_print(`Looking for "${result.value}", "${result.comment}" in expected results...`);
       let j;
       for (j = firstIndexToCheck; j < matches.length; j++) {
         // Skip processed expected results
         if (matches[j] == undefined)
           continue;
-        if (_check_autocomplete_matches(matches[j], controllerInfo)) {
+        if (_check_autocomplete_matches(matches[j], result)) {
           do_print("Got a match at index " + j + "!");
           // Make it undefined so we don't process it again
           matches[j] = undefined;
@@ -214,7 +222,7 @@ function* check_autocomplete(test) {
 
       // We didn't hit the break, so we must have not found it
       if (j == matches.length)
-        do_throw("Didn't find the current result ('" + controllerValue + "', '" + controllerComment + "') in matches");
+        do_throw(`Didn't find the current result ("${result.value}", "${result.comment}") in matches`);
     }
 
     Assert.equal(controller.matchCount, matches.length,
@@ -371,6 +379,18 @@ function makeSwitchToTabMatch(url, extra = {}) {
     title: extra.title || url,
     style: [ "action", "switchtab" ],
   }
+}
+
+function setFaviconForHref(href, iconHref) {
+  return new Promise(resolve => {
+    PlacesUtils.favicons.setAndFetchFaviconForPage(
+      NetUtil.newURI(href),
+      NetUtil.newURI(iconHref),
+      true,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      resolve
+    );
+  });
 }
 
 // Ensure we have a default search engine and the keyword.enabled preference
