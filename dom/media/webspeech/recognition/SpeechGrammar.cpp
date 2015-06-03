@@ -53,14 +53,14 @@ SpeechGrammar::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 SpeechGrammar::GetSrc(nsString& aRetVal, ErrorResult& aRv) const
 {
-  aRetVal = mSrc;
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return;
 }
 
 void
 SpeechGrammar::SetSrc(const nsAString& aArg, ErrorResult& aRv)
 {
-  mSrc = aArg;
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return;
 }
 

@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SpeechGrammarList, mParent, mItems)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SpeechGrammarList, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SpeechGrammarList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SpeechGrammarList)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechGrammarList)
@@ -64,14 +64,14 @@ SpeechGrammarList::GetParentObject() const
 uint32_t
 SpeechGrammarList::Length() const
 {
-  return mItems.Length();
+  return 0;
 }
 
 already_AddRefed<SpeechGrammar>
 SpeechGrammarList::Item(uint32_t aIndex, ErrorResult& aRv)
 {
-  nsRefPtr<SpeechGrammar> result = mItems.ElementAt(aIndex);
-  return result.forget();
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
 }
 
 void
@@ -88,10 +88,7 @@ SpeechGrammarList::AddFromString(const nsAString& aString,
                                  const Optional<float>& aWeight,
                                  ErrorResult& aRv)
 {
-  SpeechGrammar* speechGrammar = new SpeechGrammar(mParent);
-  speechGrammar->SetSrc(aString, aRv);
-  mItems.AppendElement(speechGrammar);
-  mRecognitionService->ValidateAndSetGrammarList(speechGrammar, nullptr);
+  mRecognitionService->ValidateAndSetGrammarList(this, nullptr);
   return;
 }
 
@@ -99,13 +96,8 @@ already_AddRefed<SpeechGrammar>
 SpeechGrammarList::IndexedGetter(uint32_t aIndex, bool& aPresent,
                                  ErrorResult& aRv)
 {
-  if (aIndex >= Length()) {
-    aPresent = false;
-    return nullptr;
-  }
-  ErrorResult rv;
-  aPresent = true;
-  return Item(aIndex, rv);
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
 }
 } // namespace dom
 } // namespace mozilla

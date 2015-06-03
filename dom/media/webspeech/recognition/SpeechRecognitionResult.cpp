@@ -67,7 +67,7 @@ SpeechRecognitionResult::Item(uint32_t aIndex)
 }
 
 bool
-SpeechRecognitionResult::IsFinal() const
+SpeechRecognitionResult::Final() const
 {
   return true; // TODO
 }

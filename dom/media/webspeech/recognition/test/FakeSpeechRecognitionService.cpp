@@ -52,7 +52,7 @@ FakeSpeechRecognitionService::SoundEnd()
 }
 
 NS_IMETHODIMP
-FakeSpeechRecognitionService::ValidateAndSetGrammarList(mozilla::dom::SpeechGrammar*, nsISpeechGrammarCompilationCallback*)
+FakeSpeechRecognitionService::ValidateAndSetGrammarList(mozilla::dom::SpeechGrammarList*, nsISpeechGrammarCompilationCallback*)
 {
   return NS_OK;
 }
