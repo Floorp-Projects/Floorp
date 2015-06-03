@@ -70,6 +70,6 @@ WebGLExtensionVertexArray::BindVertexArrayOES(WebGLVertexArray* array)
     mContext->BindVertexArray(array);
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionVertexArray)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionVertexArray, OES_vertex_array_object)
 
 } // namespace mozilla

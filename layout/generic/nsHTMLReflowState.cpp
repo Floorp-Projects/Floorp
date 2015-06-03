@@ -359,13 +359,6 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
                    "very large sizes, not attempts at intrinsic inline-size "
                    "calculation");
 
-  if (AvailableBSize() != NS_UNCONSTRAINEDSIZE && parentReflowState &&
-      parentReflowState->GetWritingMode().IsOrthogonalTo(mWritingMode)) {
-    // Orthogonal frames are always reflowed with unconstrained block-size,
-    // to avoid incomplete reflow across an orthogonal boundary.
-    AvailableBSize() = NS_UNCONSTRAINEDSIZE;
-  }
-
   mStylePosition = frame->StylePosition();
   mStyleDisplay = frame->StyleDisplay();
   mStyleVisibility = frame->StyleVisibility();
@@ -437,6 +430,13 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
     } else {
       frame->RemoveStateBits(NS_FRAME_IN_CONSTRAINED_BSIZE);
     }
+  }
+
+  if (AvailableBSize() != NS_UNCONSTRAINEDSIZE && parentReflowState &&
+      parentReflowState->GetWritingMode().IsOrthogonalTo(mWritingMode)) {
+    // Orthogonal frames are always reflowed with unconstrained block-size,
+    // to avoid incomplete reflow across an orthogonal boundary.
+    AvailableBSize() = NS_UNCONSTRAINEDSIZE;
   }
 
   NS_WARN_IF_FALSE((mFrameType == NS_CSS_FRAME_TYPE_INLINE &&

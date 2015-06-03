@@ -140,6 +140,8 @@ WebGLShader::WebGLShader(WebGLContext* webgl, GLenum type)
     : WebGLContextBoundObject(webgl)
     , mGLName(CreateShader(webgl->GL(), type))
     , mType(type)
+    , mTranslationSuccessful(false)
+    , mCompilationSuccessful(false)
 {
     mContext->mShaders.insertBack(this);
 }

@@ -32,6 +32,6 @@ WebGLExtensionColorBufferFloat::IsSupported(const WebGLContext* webgl)
            gl->IsANGLE();
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionColorBufferFloat)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionColorBufferFloat, WEBGL_color_buffer_float)
 
 } // namespace mozilla

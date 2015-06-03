@@ -3,7 +3,7 @@
 
 'use strict';
 
-const {PushDB, PushService} = serviceExports;
+const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
 function run_test() {
   do_get_profile();
@@ -17,7 +17,7 @@ function run_test() {
 }
 
 add_task(function* test_notification_error() {
-  let db = new PushDB();
+  let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
   let records = [{
     channelID: 'f04f1e46-9139-4826-b2d1-9411b0821283',
@@ -53,9 +53,10 @@ add_task(function* test_notification_error() {
   let ackDefer = Promise.defer();
   let ackDone = after(records.length, ackDefer.resolve);
   PushService.init({
+    serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
     db: makeStub(db, {
-      getByChannelID(prev, channelID) {
+      getByKeyID(prev, channelID) {
         if (channelID == '3c3930ba-44de-40dc-a7ca-8a133ec1a866') {
           return Promise.reject('splines not reticulated');
         }
