@@ -3,12 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'har'
-]
-
-EXTRA_JS_MODULES.devtools.netmonitor += [
-    'panel.js'
+EXTRA_JS_MODULES.devtools.netmonitor.har += [
+    'har-builder.js',
+    'har-exporter.js',
+    'har-utils.js',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
