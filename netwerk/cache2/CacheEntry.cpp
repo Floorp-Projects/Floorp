@@ -199,8 +199,6 @@ CacheEntry::~CacheEntry()
   MOZ_COUNT_DTOR(CacheEntry);
 }
 
-#ifdef PR_LOG
-
 char const * CacheEntry::StateString(uint32_t aState)
 {
   switch (aState) {
@@ -214,8 +212,6 @@ char const * CacheEntry::StateString(uint32_t aState)
 
   return "?";
 }
-
-#endif
 
 nsresult CacheEntry::HashingKeyWithStorage(nsACString &aResult) const
 {
