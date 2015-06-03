@@ -38,11 +38,11 @@ class RDFServiceImpl final : public nsIRDFService,
 {
 protected:
     PLHashTable* mNamedDataSources;
-    PLDHashTable2 mResources;
-    PLDHashTable2 mLiterals;
-    PLDHashTable2 mInts;
-    PLDHashTable2 mDates;
-    PLDHashTable2 mBlobs;
+    PLDHashTable mResources;
+    PLDHashTable mLiterals;
+    PLDHashTable mInts;
+    PLDHashTable mDates;
+    PLDHashTable mBlobs;
 
     nsAutoCString mLastURIPrefix;
     nsCOMPtr<nsIFactory> mLastFactory;

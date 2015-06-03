@@ -829,7 +829,7 @@ struct CCGraph
   uint32_t mRootCount;
 
 private:
-  PLDHashTable2 mPtrToNodeMap;
+  PLDHashTable mPtrToNodeMap;
   bool mOutOfMemory;
 
   static const uint32_t kInitialMapLength = 16384;

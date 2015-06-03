@@ -41,7 +41,7 @@ using namespace mozilla;
  * sure it's only manipulated from the main thread.  Probably the latter
  * is better, since the former would hurt performance.
  */
-static PLDHashTable2* gAtomTable;
+static PLDHashTable* gAtomTable;
 
 class StaticAtomEntry : public PLDHashEntryHdr
 {
@@ -543,8 +543,8 @@ static inline void
 EnsureTableExists()
 {
   if (!gAtomTable) {
-    gAtomTable = new PLDHashTable2(&AtomTableOps, sizeof(AtomTableEntry),
-                                   ATOM_HASHTABLE_INITIAL_LENGTH);
+    gAtomTable = new PLDHashTable(&AtomTableOps, sizeof(AtomTableEntry),
+                                  ATOM_HASHTABLE_INITIAL_LENGTH);
   }
 }
 
