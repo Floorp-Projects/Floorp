@@ -20,7 +20,7 @@
 //    set NSPR_LOG_MODULES=nsWyciwyg:5
 //    set NSPR_LOG_FILE=wyciwyg.log
 //
-// this enables PR_LOG_ALWAYS level information and places all output in
+// this enables PR_LOG_DEBUG level information and places all output in
 // the file wyciwyg.log
 //
 extern PRLogModuleInfo *gWyciwygLog;

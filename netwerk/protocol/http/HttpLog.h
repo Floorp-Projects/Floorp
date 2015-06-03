@@ -31,7 +31,7 @@
 //    set NSPR_LOG_MODULES=nsHttp:5
 //    set NSPR_LOG_FILE=http.log
 //
-// this enables PR_LOG_ALWAYS level information and places all output in
+// this enables PR_LOG_DEBUG level information and places all output in
 // the file http.log
 //
 extern PRLogModuleInfo *gHttpLog;
