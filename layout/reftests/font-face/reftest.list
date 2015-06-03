@@ -45,7 +45,7 @@ skip HTTP(..) == src-list-local-localized.html src-list-local-localized-ref.html
 
 # postscript name lookup
 # fontconfig only supports postscript name lookup from 2.10.92, Android/B2G not supported
-skip-if(B2G||Mulet) fails-if(Android) random-if(gtk2Widget) == src-list-local-ps.html src-list-local-full-ref.html # bug 773482
+skip-if(B2G||Mulet) fails-if(Android) random-if(gtkWidget) == src-list-local-ps.html src-list-local-full-ref.html # bug 773482
 # Mac-specific test of 100 weight faces
 random-if(!cocoaWidget) == helveticaneue-ultra.html helveticaneue-ultra-ref.html
 

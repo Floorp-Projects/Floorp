@@ -227,6 +227,9 @@ public:
   ServiceWorkerRegistrationWorkerThread*
   Registration();
 
+  already_AddRefed<Promise>
+  SkipWaiting(ErrorResult& aRv);
+
   IMPL_EVENT_HANDLER(activate)
   IMPL_EVENT_HANDLER(beforeevicted)
   IMPL_EVENT_HANDLER(evicted)

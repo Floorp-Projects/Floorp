@@ -22,7 +22,6 @@
 #include "NetworkActivityMonitor.h"
 #include "NSSErrorsService.h"
 #include "mozilla/net/NeckoChild.h"
-#include "mozilla/VisualEventTracer.h"
 #include "nsThreadUtils.h"
 #include "nsISocketProviderService.h"
 #include "nsISocketProvider.h"
@@ -784,8 +783,6 @@ nsSocketTransport::Init(const char **types, uint32_t typeCount,
                         const nsACString &hostRoute, uint16_t portRoute,
                         nsIProxyInfo *givenProxyInfo)
 {
-    MOZ_EVENT_TRACER_NAME_OBJECT(this, host.BeginReading());
-
     nsCOMPtr<nsProxyInfo> proxyInfo;
     if (givenProxyInfo) {
         proxyInfo = do_QueryInterface(givenProxyInfo);
@@ -1397,7 +1394,6 @@ nsSocketTransport::InitiateSocket()
 
     NetAddrToPRNetAddr(&mNetAddr, &prAddr);
 
-    MOZ_EVENT_TRACER_EXEC(this, "net::tcp::connect");
     status = PR_Connect(fd, &prAddr, NS_SOCKET_CONNECT_TIMEOUT);
     if (status == PR_SUCCESS) {
         // 
@@ -1641,8 +1637,6 @@ nsSocketTransport::OnSocketConnected()
             SOCKET_LOG(("  SetKeepaliveEnabledInternal failed rv[0x%x]", rv));
         }
     }
-
-    MOZ_EVENT_TRACER_DONE(this, "net::tcp::connect");
 
     SendStatus(NS_NET_STATUS_CONNECTED_TO);
 }
@@ -1925,8 +1919,8 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
         }
     }
 
-    // If we are not offline try again.
-    if (!gIOService->IsOffline() && RecoverFromError())
+    // If we are not shutting down try again.
+    if (!gIOService->IsShutdown() && RecoverFromError())
         mCondition = NS_OK;
     else {
         mState = STATE_CLOSED;
@@ -2444,7 +2438,6 @@ nsSocketTransport::OnLookupComplete(nsICancelable *request,
     // flag host lookup complete for the benefit of the ResolveHost method.
     mResolving = false;
 
-    MOZ_EVENT_TRACER_WAIT(this, "net::tcp::connect");
     nsresult rv = PostEvent(MSG_DNS_LOOKUP_COMPLETE, status, rec);
 
     // if posting a message fails, then we should assume that the socket

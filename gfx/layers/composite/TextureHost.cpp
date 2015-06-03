@@ -764,7 +764,7 @@ TextureParent::~TextureParent()
   }
 }
 
-static void RecycleCallback(TextureHost* textureHost, void* aClosure) {
+static void RecycleCallback(TextureHost*, void* aClosure) {
   TextureParent* tp = reinterpret_cast<TextureParent*>(aClosure);
   tp->CompositorRecycle();
 }

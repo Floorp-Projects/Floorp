@@ -19,8 +19,12 @@ EXPORTS.mozilla.dom += [
     'SpeechRecognitionResult.h',
     'SpeechRecognitionResultList.h',
     'SpeechStreamListener.h',
-    'test/FakeSpeechRecognitionService.h',
 ]
+
+if CONFIG['MOZ_WEBSPEECH_TEST_BACKEND']:
+    EXPORTS.mozilla.dom += [
+        'test/FakeSpeechRecognitionService.h',
+    ]
 
 UNIFIED_SOURCES += [
     'endpointer.cc',
@@ -33,8 +37,12 @@ UNIFIED_SOURCES += [
     'SpeechRecognitionResult.cpp',
     'SpeechRecognitionResultList.cpp',
     'SpeechStreamListener.cpp',
-    'test/FakeSpeechRecognitionService.cpp',
 ]
+
+if CONFIG['MOZ_WEBSPEECH_TEST_BACKEND']:
+    UNIFIED_SOURCES += [
+        'test/FakeSpeechRecognitionService.cpp',
+    ]
 
 LOCAL_INCLUDES += [
     '/dom/base',

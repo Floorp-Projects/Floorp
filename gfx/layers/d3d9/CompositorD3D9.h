@@ -7,6 +7,7 @@
 #define MOZILLA_GFX_COMPOSITORD3D9_H
 
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Point.h"
 #include "gfx2DGlue.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/TextureD3D9.h"
@@ -168,7 +169,7 @@ private:
   RefPtr<CompositingRenderTargetD3D9> mDefaultRT;
   RefPtr<CompositingRenderTargetD3D9> mCurrentRT;
 
-  nsIntSize mSize;
+  gfx::IntSize mSize;
 
   uint32_t mDeviceResetCount;
   uint32_t mFailedResetAttempts;

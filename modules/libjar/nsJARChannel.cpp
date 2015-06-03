@@ -890,7 +890,7 @@ void nsJARChannel::ResetInterception()
 {
     LOG(("nsJARChannel::ResetInterception [this=%x]\n", this));
 
-    // Continue with the origin request.
+    // Continue with the original request.
     nsresult rv = ContinueAsyncOpen();
     NS_ENSURE_SUCCESS_VOID(rv);
 }
@@ -916,6 +916,8 @@ nsJARChannel::OverrideWithSynthesizedResponse(nsIInputStream* aSynthesizedInput)
       aSynthesizedInput->Close();
       return;
     }
+
+    FinishAsyncOpen();
 
     rv = mSynthesizedResponsePump->AsyncRead(this, nullptr);
     NS_ENSURE_SUCCESS_VOID(rv);
@@ -952,6 +954,14 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
       nsRefPtr<InterceptedJARChannel> intercepted =
         new InterceptedJARChannel(this, controller, isNavigation);
       intercepted->NotifyController();
+
+      // We get the JAREntry so we can infer the content type later in case
+      // that it isn't provided along with the synthesized response.
+      nsresult rv = mJarURI->GetJAREntry(mJarEntry);
+      if (NS_FAILED(rv)) {
+          return rv;
+      }
+
       return NS_OK;
     }
 
@@ -1007,11 +1017,18 @@ nsJARChannel::ContinueAsyncOpen()
     }
 
 
+    FinishAsyncOpen();
+
+    return NS_OK;
+}
+
+void
+nsJARChannel::FinishAsyncOpen()
+{
     if (mLoadGroup)
         mLoadGroup->AddRequest(this, nullptr);
 
     mOpened = true;
-    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
