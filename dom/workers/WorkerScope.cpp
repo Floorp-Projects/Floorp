@@ -548,7 +548,8 @@ public:
     WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
 
-    swm->SetSkipWaitingFlag(mScope, workerPrivate->ServiceWorkerID());
+    swm->SetSkipWaitingFlag(workerPrivate->GetPrincipal(), mScope,
+                            workerPrivate->ServiceWorkerID());
 
     nsRefPtr<SkipWaitingResultRunnable> runnable =
       new SkipWaitingResultRunnable(workerPrivate, mPromiseProxy);
@@ -905,7 +906,7 @@ GetGlobalObjectForGlobal(JSObject* global)
 bool
 IsWorkerGlobal(JSObject* object)
 {
-  nsIGlobalObject* globalObject;
+  nsIGlobalObject* globalObject = nullptr;
   return NS_SUCCEEDED(UNWRAP_WORKER_OBJECT(WorkerGlobalScope, object,
                                            globalObject)) && !!globalObject;
 }
@@ -913,7 +914,7 @@ IsWorkerGlobal(JSObject* object)
 bool
 IsDebuggerGlobal(JSObject* object)
 {
-  nsIGlobalObject* globalObject;
+  nsIGlobalObject* globalObject = nullptr;
   return NS_SUCCEEDED(UNWRAP_OBJECT(WorkerDebuggerGlobalScope, object,
                                     globalObject)) && !!globalObject;
 }

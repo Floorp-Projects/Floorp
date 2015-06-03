@@ -356,7 +356,8 @@ public:
   ClaimClients(nsIPrincipal* aPrincipal, const nsCString& aScope, uint64_t aId);
 
   nsresult
-  SetSkipWaitingFlag(const nsCString& aScope, uint64_t aServiceWorkerID);
+  SetSkipWaitingFlag(nsIPrincipal* aPrincipal, const nsCString& aScope,
+                     uint64_t aServiceWorkerID);
 
   static already_AddRefed<ServiceWorkerManager>
   GetInstance();
