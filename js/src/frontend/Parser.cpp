@@ -4497,6 +4497,10 @@ Parser<FullParseHandler>::exportDeclaration()
           default:
             tokenStream.ungetToken();
             kid = assignExpr(InAllowed, YieldIsKeyword);
+            if (kid) {
+                if (!MatchOrInsertSemicolon(tokenStream))
+                    return null();
+            }
             break;
         }
         if (!kid)
