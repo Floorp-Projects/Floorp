@@ -109,10 +109,10 @@ loop.StandaloneClient = (function($) {
       }
 
       var req = $.ajax({
-        url:         this.settings.baseServerUrl + "/calls/" + loopToken,
-        method:      "POST",
+        url: this.settings.baseServerUrl + "/calls/" + loopToken,
+        method: "POST",
         contentType: "application/json",
-        dataType:    "json",
+        dataType: "json",
         data: JSON.stringify({callType: callType, channel: "standalone"})
       });
 

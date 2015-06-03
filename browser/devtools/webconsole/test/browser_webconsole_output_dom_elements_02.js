@@ -62,11 +62,13 @@ function test() {
       let onInspectorSelected = toolbox.once("inspector-selected");
       let onInspectorUpdated = inspector.once("inspector-updated");
       let onNewNode = toolbox.selection.once("new-node-front");
+      let onNodeHighlight = toolbox.once("node-highlight");
 
       EventUtils.synthesizeMouseAtCenter(inspectorIcon, {},
         inspectorIcon.ownerDocument.defaultView);
       yield onInspectorSelected;
       yield onInspectorUpdated;
+      yield onNodeHighlight;
       let nodeFront = yield onNewNode;
 
       ok(true, "Inspector selected and new node got selected");
@@ -78,6 +80,13 @@ function test() {
         is(attrs[i].name, data.attrs[i].name, "The correct node was highlighted");
         is(attrs[i].value, data.attrs[i].value, "The correct node was highlighted");
       }
+
+      info("Unhighlight the node by moving away from the markup view");
+      let onNodeUnhighlight = toolbox.once("node-unhighlight");
+      let btn = inspector.toolbox.doc.querySelector(".toolbox-dock-button");
+      EventUtils.synthesizeMouseAtCenter(btn, {type: "mousemove"},
+        inspector.toolbox.doc.defaultView);
+      yield onNodeUnhighlight;
 
       info("Switching back to the console");
       yield toolbox.selectTool("webconsole");

@@ -22,7 +22,7 @@ function test() {
   });
 
   function testClosure() {
-    sendMouseClickToTab(gTab, content.document.querySelector("button"));
+    generateMouseClickInTab(gTab, "content.document.querySelector('button')");
 
     return waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES).then(() => {
       let gVars = gDebugger.DebuggerView.Variables;

@@ -535,7 +535,7 @@
           <Section name="ConversationView-640">
             <Example summary="640px breakpoint for conversation view">
               <div className="breakpoint"
-                   style={{"text-align":"center"}}
+                   style={{"text-align": "center"}}
                    data-breakpoint-width="400px"
                    data-breakpoint-height="780px">
                 <div className="standalone">

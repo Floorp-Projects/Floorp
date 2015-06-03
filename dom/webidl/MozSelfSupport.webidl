@@ -41,6 +41,45 @@ interface MozSelfSupport
   Promise<object> getHealthReportPayload();
 
   /**
+   * Retrieve a list of the archived Telemetry pings.
+   * This contains objects with ping info, which are of the form:
+   * {
+   *   type: <string>, // The pings type, e.g. "main", "environment-change", ...
+   *   timestampCreated: <number>, // The time the ping was created (ms since unix epoch).
+   *   id: <string>, // The pings UUID.
+   * }
+   *
+   * @return Promise<sequence<Object>>
+   *         Resolved with the ping infos when the archived ping list has been built.
+   */
+  Promise<sequence<object>> getTelemetryPingList();
+
+  /**
+   * Retrieve an archived Telemetry ping by it's id.
+   * This will load the ping data async from the archive, possibly hitting the disk.
+   *
+   * @return Promise<Object>
+   *         Resolved with the ping data, see the Telemetry "main" ping documentation for the format.
+   */
+  Promise<object> getTelemetryPing(DOMString pingID);
+
+  /**
+   * Get the current Telemetry environment - see the Telemetry documentation for details on the format.
+   *
+   * @return Promise<Object>
+   *         Resolved with an object containing the Telemetry environment data.
+   */
+  Promise<object> getCurrentTelemetryEnvironment();
+
+  /**
+   * Get a Telemetry "main" ping containing the current session measurements.
+   *
+   * @return Promise<Object>
+   *         Resolved with the ping data, see the Telemetry "main" ping documentation for the format.
+   */
+  Promise<object> getCurrentTelemetrySubsessionPing();
+
+  /**
    * Resets a named pref:
    * - if there is a default value, then change the value back to default,
    * - if there's no default value, then delete the pref,

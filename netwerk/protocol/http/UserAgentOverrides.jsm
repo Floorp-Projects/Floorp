@@ -125,7 +125,7 @@ this.UserAgentOverrides = {
     let name = aMessage.name;
     switch (name) {
       case OVERRIDE_MESSAGE:
-        let uri = aMessage.data.uri;
+        let uri = Services.io.newURI(aMessage.data.uri, null, null);
         return this.getOverrideForURI(uri);
       default:
         throw("Wrong Message in UserAgentOverride: " + name);

@@ -10,6 +10,9 @@
 #include "BluetoothCommon.h"
 #include "mozilla/ipc/DataSocket.h"
 
+class MessageLoop;
+class nsIThread;
+
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothSocketObserver;
@@ -25,7 +28,23 @@ public:
                    const BluetoothUuid& aServiceUuid,
                    BluetoothSocketType aType,
                    int aChannel,
+                   bool aAuth, bool aEncrypt,
+                   nsIThread* aConsumerThread,
+                   MessageLoop* aIOLoop);
+
+  nsresult Connect(const nsAString& aDeviceAddress,
+                   const BluetoothUuid& aServiceUuid,
+                   BluetoothSocketType aType,
+                   int aChannel,
                    bool aAuth, bool aEncrypt);
+
+  nsresult Listen(const nsAString& aServiceName,
+                  const BluetoothUuid& aServiceUuid,
+                  BluetoothSocketType aType,
+                  int aChannel,
+                  bool aAuth, bool aEncrypt,
+                  nsIThread* aConsumerThread,
+                  MessageLoop* aIOLoop);
 
   nsresult Listen(const nsAString& aServiceName,
                   const BluetoothUuid& aServiceUuid,
@@ -35,7 +54,7 @@ public:
 
   /**
    * Method to be called whenever data is received. This is only called on the
-   * main thread.
+   * consumer thread.
    *
    * @param aBuffer Data received from the socket.
    */

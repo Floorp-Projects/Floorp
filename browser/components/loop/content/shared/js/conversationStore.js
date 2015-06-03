@@ -429,7 +429,7 @@ loop.store = loop.store || {};
       this.mozLoop.rooms.create({
         roomName: actionData.roomName,
         roomOwner: actionData.roomOwner,
-        maxSize:   loop.store.MAX_ROOM_CREATION_SIZE,
+        maxSize: loop.store.MAX_ROOM_CREATION_SIZE,
         expiresIn: loop.store.DEFAULT_EXPIRES_IN
       }, function(err, createdRoomData) {
         if (err) {

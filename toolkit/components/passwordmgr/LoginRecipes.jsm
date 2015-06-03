@@ -150,7 +150,7 @@ LoginRecipesParent.prototype = {
 let LoginRecipesContent = {
   /**
    * @param {Set} aRecipes - Possible recipes that could apply to the form
-   * @param {HTMLFormElement} aForm - We use a form instead of just a URL so we can later apply
+   * @param {FormLike} aForm - We use a form instead of just a URL so we can later apply
    * tests to the page contents.
    * @return {Set} a subset of recipes that apply to the form with the order preserved
    */
@@ -179,7 +179,7 @@ let LoginRecipesContent = {
    * overriding login fields in the form.
    *
    * @param {Set} aRecipes The set of recipes to consider for the form
-   * @param {HTMLFormElement} aForm The form where login fields exist.
+   * @param {FormLike} aForm The form where login fields exist.
    * @return {Object} The recipe that is most applicable for the form.
    */
   getFieldOverrides(aRecipes, aForm) {

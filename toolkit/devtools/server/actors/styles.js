@@ -868,19 +868,21 @@ var PageStyleActor = protocol.ActorClass({
   addNewRule: method(function(node) {
     let style = this.styleElement;
     let sheet = style.sheet;
+    let cssRules = sheet.cssRules;
     let rawNode = node.rawNode;
 
     let selector;
     if (rawNode.id) {
-      selector = "#" + rawNode.id;
+      selector = "#" + CSS.escape(rawNode.id);
     } else if (rawNode.className) {
-      selector = "." + rawNode.className.split(" ").join(".");
+      selector = "." +
+        rawNode.className.split(" ").map(c => CSS.escape(c)).join(".");
     } else {
       selector = rawNode.tagName.toLowerCase();
     }
 
-    let index = sheet.insertRule(selector + " {}", sheet.cssRules.length);
-    return this.getNewAppliedProps(node, sheet.cssRules[index]);
+    let index = sheet.insertRule(selector + " {}", cssRules.length);
+    return this.getNewAppliedProps(node, cssRules.item(index));
   }, {
     request: {
       node: Arg(0, "domnode")
