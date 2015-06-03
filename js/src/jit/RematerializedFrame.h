@@ -202,6 +202,8 @@ class RematerializedFrame
 
     Value newTarget() {
         MOZ_ASSERT(isFunctionFrame());
+        if (callee()->isArrow())
+            return callee()->getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
         if (isConstructing())
             return argv()[numActualArgs()];
         return UndefinedValue();
