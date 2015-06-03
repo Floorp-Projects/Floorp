@@ -216,7 +216,7 @@ void AsyncLatencyLogger::Log(LatencyLogIndex aIndex, uint64_t aID, int64_t aValu
 
 void AsyncLatencyLogger::Log(LatencyLogIndex aIndex, uint64_t aID, int64_t aValue, TimeStamp &aTime)
 {
-  if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
     nsCOMPtr<nsIRunnable> event = new LogEvent(aIndex, aID, aValue, aTime);
     if (mThread) {
       mThread->Dispatch(event, NS_DISPATCH_NORMAL);

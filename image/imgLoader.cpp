@@ -894,7 +894,7 @@ imgCacheEntry::UpdateCache(int32_t diff /* = 0 */)
 void
 imgCacheEntry::SetHasNoProxies(bool hasNoProxies)
 {
-  if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
     if (hasNoProxies) {
       LOG_FUNC_WITH_PARAM(GetImgLog(), "imgCacheEntry::SetHasNoProxies true",
                           "uri", mRequest->CacheKey().Spec());
@@ -1072,7 +1072,7 @@ imgCacheExpirationTracker::NotifyExpired(imgCacheEntry* entry)
   // mechanism doesn't.
   nsRefPtr<imgCacheEntry> kungFuDeathGrip(entry);
 
-  if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
     nsRefPtr<imgRequest> req = entry->GetRequest();
     if (req) {
       LOG_FUNC_WITH_PARAM(GetImgLog(),
@@ -1533,7 +1533,7 @@ imgLoader::CheckCacheLimits(imgCacheTable& cache, imgCacheQueue& queue)
 
     NS_ASSERTION(entry, "imgLoader::CheckCacheLimits -- NULL entry pointer");
 
-    if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
       nsRefPtr<imgRequest> req = entry->GetRequest();
       if (req) {
         LOG_STATIC_FUNC_WITH_PARAM(GetImgLog(),
@@ -1769,7 +1769,7 @@ imgLoader::ValidateEntry(imgCacheEntry* aEntry,
     MOZ_LOG(GetImgLog(), PR_LOG_DEBUG,
            ("imgLoader::ValidateEntry validating cache entry. "
             "validateRequest = %d", validateRequest));
-  } else if (!key && PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
+  } else if (!key && MOZ_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
     nsAutoCString spec;
     aURI->GetSpec(spec);
 
@@ -2800,7 +2800,7 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
     uri = imageURL->ToIURI();
   }
 
-  if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
     nsAutoCString spec;
     uri->GetSpec(spec);
     LOG_MSG_WITH_PARAM(GetImgLog(),
