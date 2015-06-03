@@ -445,8 +445,7 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
     }
 
     // Similarly, if this group is keyed to an allocation site, replace its
-    // entry with a new group that has the same allocation kind and no unboxed
-    // layout.
+    // entry with a new group that has no unboxed layout.
     if (layout.allocationScript()) {
         MOZ_ASSERT(!layout.isArray());
 
@@ -457,7 +456,8 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
         if (!replacementGroup)
             return false;
 
-        replacementGroup->setOriginalUnboxedGroup(group);
+        PlainObject* templateObject = &script->getObject(pc)->as<PlainObject>();
+        replacementGroup->addDefiniteProperties(cx, templateObject->lastProperty());
 
         cx->compartment()->objectGroups.replaceAllocationSiteGroup(script, pc,
                                                                    JSProto_Object,
