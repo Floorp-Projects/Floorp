@@ -59,6 +59,8 @@ def main(output, *filenames):
     if seen_use_counters:
         print("  HistogramUseCounterCount = HistogramLastUseCounter - HistogramFirstUseCounter + 1", file=output)
     else:
+        print("  HistogramFirstUseCounter = 0,", file=output)
+        print("  HistogramLastUseCounter = 0,", file=output)
         print("  HistogramUseCounterCount = 0", file=output)
     print("};", file=output)
 
