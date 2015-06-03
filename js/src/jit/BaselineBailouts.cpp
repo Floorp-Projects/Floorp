@@ -976,8 +976,6 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
             BailoutKindString(bailoutKind));
 #endif
 
-    bool pushedNewTarget = op == JSOP_NEW;
-    
     // If this was the last inline frame, or we are bailing out to a catch or
     // finally block in this frame, then unpacking is almost done.
     if (!iter.moreFrames() || catchingException) {
@@ -1034,14 +1032,11 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
                 builder.writeValue(UndefinedValue(), "CallOp FillerThis");
                 for (uint32_t i = 0; i < numCallArgs; i++)
                     builder.writeValue(UndefinedValue(), "CallOp FillerArg");
-                if (pushedNewTarget)
-                    builder.writeValue(UndefinedValue(), "CallOp FillerNewTarget");
 
-                frameSize += (numCallArgs + 2 + pushedNewTarget) * sizeof(Value);
+                frameSize += (numCallArgs + 2) * sizeof(Value);
                 blFrame->setFrameSize(frameSize);
                 JitSpew(JitSpew_BaselineBailouts, "      Adjusted framesize += %d: %d",
-                                (int) ((numCallArgs + 2 + pushedNewTarget) * sizeof(Value)),
-                                (int) frameSize);
+                                (int) ((numCallArgs + 2) * sizeof(Value)), (int) frameSize);
             }
 
             // Set the resume address to the return point from the IC, and set
@@ -1233,13 +1228,12 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
         }
 
         // Align the stack based on the number of arguments.
-        size_t afterFrameSize = (actualArgc + 1 + pushedNewTarget) * sizeof(Value) +
-                                JitFrameLayout::Size();
+        size_t afterFrameSize = (actualArgc + 1) * sizeof(Value) + JitFrameLayout::Size();
         if (!builder.maybeWritePadding(JitStackAlignment, afterFrameSize, "Padding"))
             return false;
 
-        MOZ_ASSERT(actualArgc + 2 + pushedNewTarget <= exprStackSlots);
-        for (unsigned i = 0; i < actualArgc + 1 + pushedNewTarget; i++) {
+        MOZ_ASSERT(actualArgc + 2 <= exprStackSlots);
+        for (unsigned i = 0; i < actualArgc + 1; i++) {
             size_t argSlot = (script->nfixed() + exprStackSlots) - (i + 1);
             if (!builder.writeValue(*blFrame->valueSlot(argSlot), "ArgVal"))
                 return false;
@@ -1266,7 +1260,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
         // So get the callee from the specially saved vector.
         callee = savedCallerArgs[0];
     } else {
-        uint32_t calleeStackSlot = exprStackSlots - uint32_t(actualArgc + 2 + pushedNewTarget);
+        uint32_t calleeStackSlot = exprStackSlots - uint32_t(actualArgc + 2);
         size_t calleeOffset = (builder.framePushed() - endOfBaselineJSFrameStack)
             + ((exprStackSlots - (calleeStackSlot + 1)) * sizeof(Value));
         callee = *builder.valuePointerAtStackOffset(calleeOffset);
@@ -1337,17 +1331,9 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
 #endif
 
     // Align the stack based on the number of arguments.
-    size_t afterFrameSize = (calleeFun->nargs() + 1 + pushedNewTarget) * sizeof(Value) +
-                            RectifierFrameLayout::Size();
+    size_t afterFrameSize = (calleeFun->nargs() + 1) * sizeof(Value) + RectifierFrameLayout::Size();
     if (!builder.maybeWritePadding(JitStackAlignment, afterFrameSize, "Padding"))
         return false;
-
-    // Copy new.target, if necessary.
-    if (pushedNewTarget) {
-        size_t newTargetOffset = (builder.framePushed() - endOfBaselineStubArgs) +
-                                 (actualArgc + 1) * sizeof(Value);
-        builder.writeValue(*builder.valuePointerAtStackOffset(newTargetOffset), "CopiedNewTarget");
-    }
 
     // Push undefined for missing arguments.
     for (unsigned i = 0; i < (calleeFun->nargs() - actualArgc); i++) {

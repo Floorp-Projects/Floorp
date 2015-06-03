@@ -746,14 +746,13 @@ class InlineFrameIterator
                     InlineFrameIterator it(cx, this);
                     ++it;
                     unsigned argsObjAdj = it.script()->argumentsHasVarBinding() ? 1 : 0;
-                    bool hasNewTarget = isConstructing();
                     SnapshotIterator parent_s(it.snapshotIterator());
 
                     // Skip over all slots until we get to the last slots
                     // (= arguments slots of callee) the +3 is for [this], [returnvalue],
                     // [scopechain], and maybe +1 for [argsObj]
-                    MOZ_ASSERT(parent_s.numAllocations() >= nactual + 3 + argsObjAdj + hasNewTarget);
-                    unsigned skip = parent_s.numAllocations() - nactual - 3 - argsObjAdj - hasNewTarget;
+                    MOZ_ASSERT(parent_s.numAllocations() >= nactual + 3 + argsObjAdj);
+                    unsigned skip = parent_s.numAllocations() - nactual - 3 - argsObjAdj;
                     for (unsigned j = 0; j < skip; j++)
                         parent_s.skip();
 

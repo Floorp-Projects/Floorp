@@ -938,7 +938,7 @@ class InterpreterRegs
 
     void popInlineFrame() {
         pc = fp_->prevpc();
-        sp = fp_->prevsp() - fp_->numActualArgs() - 1 - fp_->isConstructing();
+        sp = fp_->prevsp() - fp_->numActualArgs() - 1;
         fp_ = fp_->prev();
         MOZ_ASSERT(fp_);
     }
@@ -1033,14 +1033,12 @@ class InvokeArgs : public JS::CallArgs
     AutoValueVector v_;
 
   public:
-    explicit InvokeArgs(JSContext* cx, bool construct = false) : v_(cx) {}
+    explicit InvokeArgs(JSContext* cx) : v_(cx) {}
 
-    bool init(unsigned argc, bool construct = false) {
-        if (!v_.resize(2 + argc + construct))
+    bool init(unsigned argc) {
+        if (!v_.resize(2 + argc))
             return false;
         ImplicitCast<CallArgs>(*this) = CallArgsFromVp(argc, v_.begin());
-        // Set the internal flag, since we are not initializing from a made array
-        constructing_ = construct;
         return true;
     }
 };
