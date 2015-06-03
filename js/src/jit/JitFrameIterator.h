@@ -701,8 +701,8 @@ class InlineFrameIterator
 
     template <class ArgOp, class LocalOp>
     void readFrameArgsAndLocals(JSContext* cx, ArgOp& argOp, LocalOp& localOp,
-                                JSObject** scopeChain, bool* hasCallObj,
-                                Value* rval, ArgumentsObject** argsObj, Value* thisv,
+                                JSObject** scopeChain, bool* hasCallObj, Value* rval,
+                                ArgumentsObject** argsObj, Value* thisv,
                                 ReadFrameArgsBehavior behavior,
                                 MaybeReadFallback& fallback) const
     {
@@ -762,13 +762,13 @@ class InlineFrameIterator
                     parent_s.skip(); // scope chain
                     parent_s.skip(); // return value
                     parent_s.readFunctionFrameArgs(argOp, nullptr, nullptr,
-                                                   nformal, nactual + isConstructing(), it.script(),
+                                                   nformal, nactual, it.script(),
                                                    fallback);
                 } else {
                     // There is no parent frame to this inlined frame, we can read
                     // from the frame's Value vector directly.
                     Value* argv = frame_->actualArgs();
-                    for (unsigned i = nformal; i < nactual + isConstructing(); i++)
+                    for (unsigned i = nformal; i < nactual; i++)
                         argOp(argv[i]);
                 }
             }

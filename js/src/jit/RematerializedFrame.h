@@ -32,9 +32,6 @@ class RematerializedFrame
     // Has a call object been pushed?
     bool hasCallObj_;
 
-    // Is this frame constructing?
-    bool isConstructing_;
-
     // The fp of the top frame associated with this possibly inlined frame.
     uint8_t* top_;
 
@@ -165,10 +162,6 @@ class RematerializedFrame
         return thisValue_;
     }
 
-    bool isConstructing() const {
-        return isConstructing_;
-    }
-
     unsigned numFormalArgs() const {
         return maybeFun() ? fun()->nargs() : 0;
     }
@@ -180,7 +173,7 @@ class RematerializedFrame
         return slots_;
     }
     Value* locals() {
-        return slots_ + numActualArgs_ + isConstructing_;
+        return slots_ + numActualArgs_;
     }
 
     Value& unaliasedLocal(unsigned i) {
@@ -198,13 +191,6 @@ class RematerializedFrame
         MOZ_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
         MOZ_ASSERT_IF(checkAliasing && i < numFormalArgs(), !script()->formalIsAliased(i));
         return argv()[i];
-    }
-
-    Value newTarget() {
-        MOZ_ASSERT(isFunctionFrame());
-        if (isConstructing())
-            return argv()[numActualArgs()];
-        return UndefinedValue();
     }
 
     Value returnValue() const {

@@ -33,8 +33,7 @@ using mozilla::PodCopy;
 
 void
 InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractFramePtr evalInFramePrev,
-                                   const Value& thisv, const Value& newTargetValue, HandleObject scopeChain,
-                                   ExecuteType type)
+                                   const Value& thisv, HandleObject scopeChain, ExecuteType type)
 {
     /*
      * See encoding of ExecuteType. When GLOBAL isn't set, we are executing a
@@ -44,14 +43,11 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
     flags_ = type | HAS_SCOPECHAIN;
 
     JSObject* callee = nullptr;
-    RootedValue newTarget(cx, newTargetValue);
     if (!(flags_ & (GLOBAL))) {
         if (evalInFramePrev) {
             MOZ_ASSERT(evalInFramePrev.isFunctionFrame() || evalInFramePrev.isGlobalFrame());
             if (evalInFramePrev.isFunctionFrame()) {
                 callee = evalInFramePrev.callee();
-                if (newTarget.isNull())
-                    newTarget = evalInFramePrev.newTarget();
                 flags_ |= FUNCTION;
             } else {
                 flags_ |= GLOBAL;
@@ -61,8 +57,6 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
             MOZ_ASSERT(iter.isFunctionFrame() || iter.isGlobalFrame());
             MOZ_ASSERT(!iter.isAsmJS());
             if (iter.isFunctionFrame()) {
-                if (newTarget.isNull())
-                    newTarget = iter.newTarget();
                 callee = iter.callee(cx);
                 flags_ |= FUNCTION;
             } else {
@@ -70,26 +64,22 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
             }
         }
     }
-    
-    // Null is just a sentinel value. We should have figured it out by now.
-    MOZ_ASSERT_IF(isFunctionFrame(), newTarget.isObject() || newTarget.isUndefined());
 
-    Value* dstvp = (Value*)this - 3;
-    dstvp[2] = thisv;
+    Value* dstvp = (Value*)this - 2;
+    dstvp[1] = thisv;
 
     if (isFunctionFrame()) {
-        dstvp[1] = ObjectValue(*callee);
+        dstvp[0] = ObjectValue(*callee);
         exec.fun = &callee->as<JSFunction>();
         u.evalScript = script;
     } else {
         MOZ_ASSERT(isGlobalFrame());
-        dstvp[1] = NullValue();
+        dstvp[0] = NullValue();
         exec.script = script;
 #ifdef DEBUG
         u.evalScript = (JSScript*)0xbad;
 #endif
     }
-    dstvp[0] = newTarget;
 
     scopeChain_ = scopeChain.get();
     prev_ = nullptr;
@@ -409,8 +399,8 @@ InterpreterFrame::markValues(JSTracer* trc, Value* sp, jsbytecode* pc)
         unsigned argc = Max(numActualArgs(), numFormalArgs());
         TraceRootRange(trc, argc + 2 + isConstructing(), argv_ - 2, "fp argv");
     } else {
-        // Mark callee, |this|, and newTarget
-        TraceRootRange(trc, 3, ((Value*)this) - 3, "stack callee, this, newTarget");
+        // Mark callee and |this|
+        TraceRootRange(trc, 2, ((Value*)this) - 2, "stack callee and this");
     }
 }
 
@@ -468,19 +458,19 @@ InterpreterStack::pushInvokeFrame(JSContext* cx, const CallArgs& args, InitialFr
 
 InterpreterFrame*
 InterpreterStack::pushExecuteFrame(JSContext* cx, HandleScript script, const Value& thisv,
-                                   const Value& newTargetValue, HandleObject scopeChain,
-                                   ExecuteType type, AbstractFramePtr evalInFrame)
+                                   HandleObject scopeChain, ExecuteType type,
+                                   AbstractFramePtr evalInFrame)
 {
     LifoAlloc::Mark mark = allocator_.mark();
 
-    unsigned nvars = 3 /* callee, this, newTarget */ + script->nslots();
+    unsigned nvars = 2 /* callee, this */ + script->nslots();
     uint8_t* buffer = allocateFrame(cx, sizeof(InterpreterFrame) + nvars * sizeof(Value));
     if (!buffer)
         return nullptr;
 
-    InterpreterFrame* fp = reinterpret_cast<InterpreterFrame*>(buffer + 3 * sizeof(Value));
+    InterpreterFrame* fp = reinterpret_cast<InterpreterFrame*>(buffer + 2 * sizeof(Value));
     fp->mark_ = mark;
-    fp->initExecuteFrame(cx, script, evalInFrame, thisv, newTargetValue, scopeChain, type);
+    fp->initExecuteFrame(cx, script, evalInFrame, thisv, scopeChain, type);
     fp->initLocals();
 
     return fp;
@@ -1258,22 +1248,6 @@ FrameIter::thisv(JSContext* cx) const
         return data_.jitFrames_.baselineFrame()->thisValue();
       case INTERP:
         return interpFrame()->thisValue();
-    }
-    MOZ_CRASH("Unexpected state");
-}
-
-Value
-FrameIter::newTarget() const
-{
-    switch (data_.state_) {
-      case DONE:
-      case ASMJS:
-        break;
-      case INTERP:
-        return interpFrame()->newTarget();
-      case JIT:
-        MOZ_ASSERT(data_.jitFrames_.isBaselineJS());
-        return data_.jitFrames_.baselineFrame()->newTarget();
     }
     MOZ_CRASH("Unexpected state");
 }
