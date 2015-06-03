@@ -21464,7 +21464,7 @@ function test_getImageData_after_zero_canvas() {
 }
 </script>
 
-<p>Canvas test: zero_dimensions_image_data</p>
+<p>Canvas test: linedash</p>
 <canvas id="c687" width="150" height="50"></canvas>
 <script type="text/javascript">
 
@@ -21536,6 +21536,16 @@ function test_linedash() {
   isPixel(ctx, 105, 40, 0, 255, 0, 255, 0);
   isPixel(ctx, 90, 35, 0, 0, 0, 0, 0);
   isPixel(ctx, 90, 25, 0, 255, 0, 255, 0);
+
+  // Ensure that all zeros or negative pattern does not cause error state in context, see bug 1169609
+  ctx.setLineDash([0, 0]);
+  ctx.strokeRect(130.5, 10.5, 10, 10);
+  ctx.setLineDash([-1]);
+  ctx.strokeRect(130.5, 10.5, 10, 10);
+  isPixel(ctx, 135, 15, 0, 0, 0, 0, 0);
+  ctx.fillStyle = '#00FF00';
+  ctx.fillRect(130, 10, 10, 10);
+  isPixel(ctx, 135, 15, 0, 255, 0, 255, 0);
 }
 </script>
 
