@@ -61,3 +61,17 @@ dictionary HeapSnapshotBoundaries {
   object           debugger;
   boolean          runtime;
 };
+
+/**
+ * Used by principals and the script security manager to represent origin
+ * attributes.
+ *
+ * IMPORTANT: If you add any members here, you need to update the
+ * methods on mozilla::OriginAttributes, and bump the CIDs of all
+ * the principal implementations that use OriginAttributes in their
+ * nsISerializable implementations.
+ */
+dictionary OriginAttributesDictionary {
+  unsigned long appId = 0;
+  boolean inBrowser = false;
+};
