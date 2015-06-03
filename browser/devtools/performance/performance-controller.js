@@ -407,7 +407,7 @@ let PerformanceController = {
   getTimelineBlueprint: function() {
     let blueprint = TIMELINE_BLUEPRINT;
     let hiddenMarkers = this.getPref("hidden-markers");
-    return RecordingUtils.getFilteredBlueprint({ blueprint, hiddenMarkers });
+    return MarkerUtils.getFilteredBlueprint({ blueprint, hiddenMarkers });
   },
 
   /**
