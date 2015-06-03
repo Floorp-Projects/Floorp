@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.widget.FaviconView;
@@ -94,9 +95,9 @@ public class SearchEngineBar extends TwoWayView
                 view = convertView;
             }
 
-            final FaviconView faviconView = (FaviconView) view.findViewById(R.id.search_engine_icon);
+            final ImageView faviconView = (ImageView) view.findViewById(R.id.search_engine_icon);
             final SearchEngine searchEngine = searchEngines.get(position);
-            faviconView.updateAndScaleImage(searchEngine.getIcon(), searchEngine.getEngineIdentifier());
+            faviconView.setImageBitmap(searchEngine.getIcon());
 
             final View container = view.findViewById(R.id.search_engine_icon_container);
             final String desc = getResources().getString(R.string.search_bar_item_desc, searchEngine.getEngineIdentifier());
