@@ -308,7 +308,9 @@ class InterpreterFrame
 
         CONSTRUCTING       =       0x10,  /* frame is for a constructor invocation */
 
-        /* (0x20, 0x40 and 0x80 are unused) */
+        RESUMED_GENERATOR  =       0x20,  /* frame is for a resumed generator invocation */
+
+        /* (0x40 and 0x80 are unused) */
 
         /* Function prologue state */
         HAS_CALL_OBJ       =      0x100,  /* CallObject created for heavyweight fun */
@@ -841,6 +843,13 @@ class InterpreterFrame
         return !!(flags_ & CONSTRUCTING);
     }
 
+    void setResumedGenerator() {
+        flags_ |= RESUMED_GENERATOR;
+    }
+    bool isResumedGenerator() const {
+        return !!(flags_ & RESUMED_GENERATOR);
+    }
+
     /*
      * These two queries should not be used in general: the presence/absence of
      * the call/args object is determined by the static(ish) properties of the
@@ -964,7 +973,8 @@ class InterpreterRegs
 
     void popInlineFrame() {
         pc = fp_->prevpc();
-        sp = fp_->prevsp() - fp_->numActualArgs() - 1 - fp_->isConstructing();
+        unsigned spForNewTarget = fp_->isResumedGenerator() ? 0 : fp_->isConstructing();
+        sp = fp_->prevsp() - fp_->numActualArgs() - 1 - spForNewTarget;
         fp_ = fp_->prev();
         MOZ_ASSERT(fp_);
     }
@@ -1041,7 +1051,7 @@ class InterpreterStack
 
     bool resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
                                   HandleFunction callee, HandleValue thisv,
-                                  HandleObject scopeChain);
+                                  HandleValue newTarget, HandleObject scopeChain);
 
     inline void purge(JSRuntime* rt);
 
@@ -1249,7 +1259,7 @@ class InterpreterActivation : public Activation
     inline void popInlineFrame(InterpreterFrame* frame);
 
     inline bool resumeGeneratorFrame(HandleFunction callee, HandleValue thisv,
-                                     HandleObject scopeChain);
+                                     HandleValue newTarget, HandleObject scopeChain);
 
     InterpreterFrame* current() const {
         return regs_.fp();
