@@ -2912,3 +2912,7 @@ chatbox {
 @media not all and (-moz-os-version: windows-xp) {
 %include browser-aero.css
 }
+
+.browser-action-panel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
