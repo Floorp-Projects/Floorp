@@ -682,8 +682,6 @@ class NodeBuilder
     bool generatorExpression(HandleValue body, NodeVector& blocks, HandleValue filter,
                              bool isLegacy, TokenPos* pos, MutableHandleValue dst);
 
-    bool newTargetExpression(TokenPos* pos, MutableHandleValue dst);
-
     /*
      * declarations
      */
@@ -1749,16 +1747,6 @@ NodeBuilder::classDefinition(bool expr, HandleValue name, HandleValue heritage, 
                    "heritage", heritage,
                    "body", block,
                    dst);
-}
-
-bool
-NodeBuilder::newTargetExpression(TokenPos* pos, MutableHandleValue dst)
-{
-    RootedValue cb(cx, callbacks[AST_NEWTARGET_EXPR]);
-    if (!cb.isNull())
-        return callback(cb, pos, dst);
-
-    return newNode(AST_NEWTARGET_EXPR, pos, dst);
 }
 
 namespace {
@@ -3184,9 +3172,6 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
 
       case PNK_CLASS:
         return classDefinition(pn, true, dst);
-
-      case PNK_NEWTARGET:
-        return builder.newTargetExpression(&pn->pn_pos, dst);
 
       default:
         LOCAL_NOT_REACHED("unexpected expression type");

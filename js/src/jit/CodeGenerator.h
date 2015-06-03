@@ -324,7 +324,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitLexicalCheck(LLexicalCheck* ins);
     void visitThrowUninitializedLexical(LThrowUninitializedLexical* ins);
     void visitDebugger(LDebugger* ins);
-    void visitNewTarget(LNewTarget* ins);
 
     void visitCheckOverRecursed(LCheckOverRecursed* lir);
     void visitCheckOverRecursedFailure(CheckOverRecursedFailure* ool);

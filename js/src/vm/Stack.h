@@ -12,7 +12,6 @@
 
 #include "jsfun.h"
 #include "jsscript.h"
-#include "jsutil.h"
 
 #include "asmjs/AsmJSFrameIterator.h"
 #include "jit/JitFrameIterator.h"
@@ -738,23 +737,6 @@ class InterpreterFrame
 
     CallReceiver callReceiver() const {
         return CallReceiverFromArgv(argv());
-    }
-
-    /*
-     * New Target
-     *
-     * Only function frames have a meaningful newTarget. An eval frame in a
-     * function will have a copy of the newTarget of the enclosing function
-     * frame.
-     */
-    Value newTarget() const {
-        // new.target in eval() NYI.
-        MOZ_ASSERT(isNonEvalFunctionFrame());
-        if (isConstructing()) {
-            unsigned pushedArgs = Max(numFormalArgs(), numActualArgs());
-            return argv()[pushedArgs];
-        }
-        return UndefinedValue();
     }
 
     /*
