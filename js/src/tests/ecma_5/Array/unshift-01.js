@@ -13,10 +13,14 @@ print(BUGNUMBER + ": " + summary);
  * BEGIN TEST *
  **************/
 
+// ES6 ToLength clamps length values to 2^53 - 1.
+// We currently clamp to 2^32 - 1 instead. See bug 924058.
+var MAX_LENGTH = 0xffffffff;
+
 var a = {};
-a.length = 4294967296;
-assertEq([].unshift.call(a), 0);
-assertEq(a.length, 0);
+a.length = MAX_LENGTH + 1;
+assertEq([].unshift.call(a), MAX_LENGTH);
+assertEq(a.length, MAX_LENGTH);
 
 function testGetSet(len, expected) {
     var newlen;
@@ -30,8 +34,8 @@ testGetSet(0, 0);
 testGetSet(10, 10);
 testGetSet("1", 1);
 testGetSet(null, 0);
-testGetSet(4294967297, 1);
-testGetSet(-5, 4294967291);
+testGetSet(MAX_LENGTH + 2, MAX_LENGTH);
+testGetSet(-5, 0);
 
 /******************************************************************************/
 
