@@ -115,6 +115,7 @@
 
 #ifdef MOZ_EME
 #include "mozilla/EMEUtils.h"
+#include "mozilla/DetailedPromise.h"
 #endif
 
 namespace mozilla {
@@ -2640,7 +2641,7 @@ Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
                                        ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
-  nsRefPtr<Promise> promise = Promise::Create(go, aRv);
+  nsRefPtr<DetailedPromise> promise = DetailedPromise::Create(go, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
