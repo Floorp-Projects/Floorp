@@ -35,5 +35,5 @@ for test_certificate in test_certificates:
     GENERATED_FILES += [test_certificate]
     props = GENERATED_FILES[test_certificate]
     props.script = '../pycert.py'
-    props.inputs = [input_file, TOPOBJDIR + '/config']
+    props.inputs = [input_file, '!/config/buildid']
     TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.test_intermediate_basic_usage_constraints += ['!%s' % test_certificate]

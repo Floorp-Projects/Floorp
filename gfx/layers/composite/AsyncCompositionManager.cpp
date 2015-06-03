@@ -580,7 +580,14 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
   Matrix4x4 combinedAsyncTransform;
   bool hasAsyncTransform = false;
   LayerMargin fixedLayerMargins(0, 0, 0, 0);
-  Maybe<ParentLayerIntRect> clipRect = aLayer->AsLayerComposite()->GetShadowClipRect();
+
+  // Each layer has multiple clips. Its local clip, which must move with async
+  // transforms, and its scrollframe clips, which are the clips between each
+  // scrollframe and its ancestor scrollframe. Scrollframe clips include the
+  // composition bounds and any other clips induced by layout.
+  //
+  // The final clip for the layer is the intersection of these clips.
+  Maybe<ParentLayerIntRect> asyncClip = aLayer->GetClipRect();
 
   for (uint32_t i = 0; i < aLayer->GetFrameMetricsCount(); i++) {
     AsyncPanZoomController* controller = aLayer->GetAsyncPanZoomController(i);
@@ -595,6 +602,8 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     controller->SampleContentTransformForFrame(&asyncTransformWithoutOverscroll,
                                                scrollOffset);
     Matrix4x4 overscrollTransform = controller->GetOverscrollTransform();
+    Matrix4x4 asyncTransform =
+      Matrix4x4(asyncTransformWithoutOverscroll) * overscrollTransform;
 
     if (!aLayer->IsScrollInfoLayer()) {
       controller->MarkAsyncTransformAppliedToContent();
@@ -623,44 +632,34 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     // Apply the render offset
     mLayerManager->GetCompositor()->SetScreenRenderOffset(offset);
 
-    // See the comment below - the first FrameMetrics has the clip computed
-    // by layout (currently, effectively the composition bounds), which we
-    // intersect here to include the layer clip.
-    if (i == 0 && metrics.HasClipRect()) {
-      if (clipRect) {
-        clipRect = Some(clipRect.value().Intersect(metrics.ClipRect()));
+    // Transform the current local clip by this APZC's async transform. If we're
+    // using containerful scrolling, then the clip is not part of the scrolled
+    // frame and should not be transformed.
+    if (asyncClip && !metrics.UsesContainerScrolling()) {
+      asyncClip = Some(TransformTo<ParentLayerPixel>(asyncTransform, *asyncClip));
+    }
+
+    // Combine the local clip with the ancestor scrollframe clip. This is not
+    // included in the async transform above, since the ancestor clip should not
+    // move with this APZC.
+    if (metrics.HasClipRect()) {
+      ParentLayerIntRect clip = metrics.ClipRect();
+      if (asyncClip) {
+        asyncClip = Some(clip.Intersect(*asyncClip));
       } else {
-        clipRect = Some(metrics.ClipRect());
+        asyncClip = Some(clip);
       }
     }
 
     combinedAsyncTransformWithoutOverscroll *= asyncTransformWithoutOverscroll;
-    combinedAsyncTransform *= (Matrix4x4(asyncTransformWithoutOverscroll) * overscrollTransform);
-    if (i > 0 && clipRect) {
-      // The clip rect Layout calculates is the intersection of the composition
-      // bounds of all the scroll frames at the time of the paint (when there
-      // are no async transforms).
-      // An async transform on a scroll frame does not affect the composition
-      // bounds of *that* scroll frame, but it does affect the composition
-      // bounds of the scroll frames *below* it.
-      // Therefore, if we have multiple scroll frames associated with this
-      // layer, the clip rect needs to be adjusted for the async transforms of
-      // the scroll frames other than the bottom-most one.
-      // To make this adjustment, we start with the Layout-provided clip rect,
-      // and at each level other than the bottom, transform it by the async
-      // transform at that level, and then re-intersect it with the composition
-      // bounds at that level.
-      ParentLayerRect transformed = TransformTo<ParentLayerPixel>(
-        (Matrix4x4(asyncTransformWithoutOverscroll) * overscrollTransform),
-        ParentLayerRect(*clipRect));
-      clipRect = Some(RoundedOut(transformed.Intersect(metrics.GetCompositionBounds())));
-    }
+    combinedAsyncTransform *= asyncTransform;
   }
 
   if (hasAsyncTransform) {
-    if (clipRect) {
-      aLayer->AsLayerComposite()->SetShadowClipRect(clipRect);
+    if (asyncClip) {
+      aLayer->AsLayerComposite()->SetShadowClipRect(asyncClip);
     }
+
     // Apply the APZ transform on top of GetLocalTransform() here (rather than
     // GetTransform()) in case the OMTA code in SampleAnimations already set a
     // shadow transform; in that case we want to apply ours on top of that one

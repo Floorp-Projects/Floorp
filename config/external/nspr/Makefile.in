@@ -24,8 +24,20 @@ EXTRA_MAKE_FLAGS += XP_DEFINE=-DlibVersionPoint='libVersionPoint$$(LIBRARY_NAME)
 else
 # nspr's make export compiles and links everything, but linking can't happen
 # during export on platforms where nspr is linked against mozcrt/mozglue.
-export:: EXTRA_MAKE_FLAGS := SHARED_LIBRARY= IMPORT_LIBRARY= SHARED_LIB_PDB=
+export:: EXTRA_MAKE_FLAGS += SHARED_LIBRARY= IMPORT_LIBRARY= SHARED_LIB_PDB=
 endif
+
+MOZ_BUILDID := $(shell cat $(DEPTH)/config/buildid)
+
+# The NSPR build system uses build-time generated dates for public API
+# exposed data structures. Use the buildid as forced date, to avoid
+# having to deal with what changing NSPR itself might mean.
+
+# SH_DATE is a date with the format "%Y-%m-%d %T"
+EXTRA_MAKE_FLAGS += SH_DATE="$(shell $(PYTHON) -c 'd = "$(MOZ_BUILDID)"; print d[0:4]+"-"+d[4:6]+"-"+d[6:8]+" "+d[8:10]+":"+d[10:12]+":"+d[12:14]')"
+
+# SH_NOW is a date as a unix timestamp in µseconds
+EXTRA_MAKE_FLAGS += SH_NOW="$(shell $(PYTHON) -c 'import time, calendar; print calendar.timegm(time.strptime("$(MOZ_BUILDID)", "%Y%m%d%H%M%S"))')000000"
 
 clean distclean export::
 	$(MAKE) -C $(DEPTH)/nsprpub $@ $(EXTRA_MAKE_FLAGS)

@@ -130,7 +130,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitAtan2(MAtan2* ins);
     void visitHypot(MHypot* ins);
     void visitPow(MPow* ins);
-    void visitRandom(MRandom* ins);
     void visitMathFunction(MMathFunction* ins);
     void visitAdd(MAdd* ins);
     void visitSub(MSub* ins);

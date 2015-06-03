@@ -51,6 +51,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins);
     void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins);
     void visitSubstr(MSubstr* ins);
+    void visitRandom(MRandom* ins);
 };
 
 typedef LIRGeneratorX64 LIRGeneratorSpecific;

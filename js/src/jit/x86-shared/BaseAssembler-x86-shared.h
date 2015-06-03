@@ -1311,6 +1311,14 @@ public:
         }
     }
 
+#ifdef JS_CODEGEN_X64
+    void imulq_rr(RegisterID src, RegisterID dst)
+    {
+        spew("imulq      %s, %s", GPReg64Name(src), GPReg64Name(dst));
+        m_formatter.twoByteOp64(OP2_IMUL_GvEv, src, dst);
+    }
+#endif
+
     void idivl_r(RegisterID divisor)
     {
         spew("idivl      %s", GPReg32Name(divisor));
@@ -2768,6 +2776,13 @@ public:
     void vcvtsi2sd_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
     {
         twoByteOpSimd("vcvtsi2sd", VEX_SD, OP2_CVTSI2SD_VsdEd, address, src0, dst);
+    }
+#endif
+
+#ifdef JS_CODEGEN_X64
+    void vcvtsi2sdq_rr(RegisterID src, XMMRegisterID dst)
+    {
+        twoByteOpInt64Simd("vcvtsi2sdq", VEX_SD, OP2_CVTSI2SD_VsdEd, src, invalid_xmm, dst);
     }
 #endif
 

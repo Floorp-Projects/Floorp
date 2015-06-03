@@ -216,6 +216,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     void generateInvalidateEpilogue();
 
+    void visitRandom(LRandom* ins);
+
   protected:
     void visitEffectiveAddress(LEffectiveAddress* ins);
     void visitUDiv(LUDiv* ins);

@@ -23,7 +23,7 @@ DEFINES['NSS_ENABLE_ECC'] = 'True'
 for var in ('DLL_PREFIX', 'DLL_SUFFIX'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
-test_ssl_path = TOPSRCDIR + '/security/manager/ssl/tests/unit'
+test_ssl_path = '/security/manager/ssl/tests/unit'
 
 headers_arrays_certs = [
     ('marketplace-prod-public.inc', 'marketplaceProdPublicRoot', 'marketplace-prod-public.crt'),
