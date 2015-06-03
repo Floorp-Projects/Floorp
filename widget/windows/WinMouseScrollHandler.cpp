@@ -36,7 +36,7 @@ static const char* GetBoolName(bool aBool)
 
 static void LogKeyStateImpl()
 {
-  if (!PR_LOG_TEST(gMouseScrollLog, PR_LOG_DEBUG)) {
+  if (!MOZ_LOG_TEST(gMouseScrollLog, PR_LOG_DEBUG)) {
     return;
   }
   BYTE keyboardState[256];

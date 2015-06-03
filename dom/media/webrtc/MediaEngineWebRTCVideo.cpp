@@ -227,7 +227,7 @@ MediaEngineWebRTCVideoSource::Allocate(const dom::MediaTrackConstraints &aConstr
     }
     mState = kAllocated;
     LOG(("Video device %d allocated", mCaptureIndex));
-  } else if (PR_LOG_TEST(GetMediaManagerLog(), PR_LOG_DEBUG)) {
+  } else if (MOZ_LOG_TEST(GetMediaManagerLog(), PR_LOG_DEBUG)) {
     MonitorAutoLock lock(mMonitor);
     if (mSources.IsEmpty()) {
       LOG(("Video device %d reallocated", mCaptureIndex));

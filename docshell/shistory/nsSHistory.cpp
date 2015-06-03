@@ -78,7 +78,7 @@ GetSHistoryLog()
 //
 #define LOG_SPEC(format, uri)                              \
   PR_BEGIN_MACRO                                           \
-    if (PR_LOG_TEST(GetSHistoryLog(), PR_LOG_DEBUG)) {     \
+    if (MOZ_LOG_TEST(GetSHistoryLog(), PR_LOG_DEBUG)) {     \
       nsAutoCString _specStr(NS_LITERAL_CSTRING("(null)"));\
       if (uri) {                                           \
         uri->GetSpec(_specStr);                            \
@@ -96,7 +96,7 @@ GetSHistoryLog()
 //
 #define LOG_SHENTRY_SPEC(format, shentry)                  \
   PR_BEGIN_MACRO                                           \
-    if (PR_LOG_TEST(GetSHistoryLog(), PR_LOG_DEBUG)) {     \
+    if (MOZ_LOG_TEST(GetSHistoryLog(), PR_LOG_DEBUG)) {     \
       nsCOMPtr<nsIURI> uri;                                \
       shentry->GetURI(getter_AddRefs(uri));                \
       LOG_SPEC(format, uri);                               \

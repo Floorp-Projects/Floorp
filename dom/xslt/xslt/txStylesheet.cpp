@@ -157,7 +157,7 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
         }
     }
 
-    if (PR_LOG_TEST(txLog::xslt, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(txLog::xslt, PR_LOG_DEBUG)) {
       nsAutoString mode, nodeName;
       if (aMode.mLocalName) {
           aMode.mLocalName->ToString(mode);

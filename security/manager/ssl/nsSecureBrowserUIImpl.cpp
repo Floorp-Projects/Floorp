@@ -128,7 +128,7 @@ NS_IMPL_ISUPPORTS(nsSecureBrowserUIImpl,
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::Init(nsIDOMWindow *aWindow)
 {
-  if (PR_LOG_TEST(gSecureDocLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gSecureDocLog, PR_LOG_DEBUG)) {
     nsCOMPtr<nsIDOMWindow> window(do_QueryReferent(mWindow));
 
     MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
@@ -636,7 +636,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (PR_LOG_TEST(gSecureDocLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gSecureDocLog, PR_LOG_DEBUG)) {
     nsXPIDLCString reqname;
     aRequest->GetName(reqname);
     MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,

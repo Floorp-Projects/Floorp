@@ -827,7 +827,7 @@ RDFXMLDataSourceImpl::Flush(void)
     if (! mURL)
         return NS_ERROR_NOT_INITIALIZED;
 
-    if (PR_LOG_TEST(gLog, PR_LOG_NOTICE)) {
+    if (MOZ_LOG_TEST(gLog, PR_LOG_NOTICE)) {
       nsAutoCString spec;
       mURL->GetSpec(spec);
       MOZ_LOG(gLog, PR_LOG_NOTICE,
@@ -969,7 +969,7 @@ RDFXMLDataSourceImpl::Refresh(bool aBlocking)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::BeginLoad(void)
 {
-    if (PR_LOG_TEST(gLog, PR_LOG_NOTICE)) {
+    if (MOZ_LOG_TEST(gLog, PR_LOG_NOTICE)) {
       nsAutoCString spec;
       if (mURL) {
           mURL->GetSpec(spec);
@@ -995,7 +995,7 @@ RDFXMLDataSourceImpl::BeginLoad(void)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::Interrupt(void)
 {
-    if (PR_LOG_TEST(gLog, PR_LOG_NOTICE)) {
+    if (MOZ_LOG_TEST(gLog, PR_LOG_NOTICE)) {
       nsAutoCString spec;
       if (mURL) {
           mURL->GetSpec(spec);
@@ -1020,7 +1020,7 @@ RDFXMLDataSourceImpl::Interrupt(void)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::Resume(void)
 {
-    if (PR_LOG_TEST(gLog, PR_LOG_NOTICE)) {
+    if (MOZ_LOG_TEST(gLog, PR_LOG_NOTICE)) {
       nsAutoCString spec;
       if (mURL) {
           mURL->GetSpec(spec);
@@ -1045,7 +1045,7 @@ RDFXMLDataSourceImpl::Resume(void)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::EndLoad(void)
 {
-    if (PR_LOG_TEST(gLog, PR_LOG_NOTICE)) {
+    if (MOZ_LOG_TEST(gLog, PR_LOG_NOTICE)) {
       nsAutoCString spec;
       if (mURL) {
           mURL->GetSpec(spec);
