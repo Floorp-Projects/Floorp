@@ -8,13 +8,13 @@
  * and parsing out the blueprint to generate correct values for markers.
  */
 
-const { Ci } = require("chrome");
+const { Cu, Ci } = require("chrome");
 
 loader.lazyRequireGetter(this, "L10N",
   "devtools/performance/global", true);
 loader.lazyRequireGetter(this, "PREFS",
   "devtools/performance/global", true);
-loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
+loader.lazyRequireGetter(this, "getBlueprintFor",
   "devtools/performance/markers", true);
 loader.lazyRequireGetter(this, "WebConsoleUtils",
   "devtools/toolkit/webconsole/utils");
@@ -30,7 +30,7 @@ const GECKO_SYMBOL = "(Gecko)";
  * @return {string}
  */
 function getMarkerLabel (marker) {
-  let blueprint = TIMELINE_BLUEPRINT[marker.name];
+  let blueprint = getBlueprintFor(marker);
   // Either use the label function in the blueprint, or use it directly
   // as a string.
   return typeof blueprint.label === "function" ? blueprint.label(marker) : blueprint.label;
@@ -44,7 +44,7 @@ function getMarkerLabel (marker) {
  * @return {string}
  */
 function getMarkerClassName (type) {
-  let blueprint = TIMELINE_BLUEPRINT[type];
+  let blueprint = getBlueprintFor({ name: type });
   // Either use the label function in the blueprint, or use it directly
   // as a string.
   let className = typeof blueprint.label === "function" ? blueprint.label() : blueprint.label;
@@ -72,7 +72,7 @@ function getMarkerClassName (type) {
  * @return {Array<object>}
  */
 function getMarkerFields (marker) {
-  let blueprint = TIMELINE_BLUEPRINT[marker.name];
+  let blueprint = getBlueprintFor(marker);
 
   // If blueprint.fields is a function, use that
   if (typeof blueprint.fields === "function") {
@@ -111,7 +111,7 @@ const DOM = {
    * @return {Array<Element>}
    */
   buildFields: function (doc, marker) {
-    let blueprint = TIMELINE_BLUEPRINT[marker.name];
+    let blueprint = getBlueprintFor(marker);
     let fields = getMarkerFields(marker);
 
     return fields.map(({ label, value }) => DOM.buildNameValueLabel(doc, label, value));
@@ -125,7 +125,7 @@ const DOM = {
    * @return {Element}
    */
   buildTitle: function (doc, marker) {
-    let blueprint = TIMELINE_BLUEPRINT[marker.name];
+    let blueprint = getBlueprintFor(marker);
 
     let hbox = doc.createElement("hbox");
     hbox.setAttribute("align", "center");
@@ -377,6 +377,14 @@ const JS_MARKER_MAP = {
  * A series of formatters used by the blueprint.
  */
 const Formatters = {
+  /**
+   * Uses the marker name as the label for markers that do not have
+   * a blueprint entry. Uses "Other" in the marker filter menu.
+   */
+  DefaultLabel: function (marker={}) {
+    return marker.name || L10N.getStr("timeline.label.other");
+  },
+
   GCLabel: function (marker={}) {
     let label = L10N.getStr("timeline.label.garbageCollection");
     // Only if a `nonincrementalReason` exists, do we want to label
@@ -437,9 +445,59 @@ const Formatters = {
   },
 };
 
+/**
+ * Gets the current timeline blueprint without the hidden markers.
+ *
+ * @param blueprint
+ *        The default timeline blueprint.
+ * @param array hiddenMarkers
+ *        A list of hidden markers' names.
+ * @return object
+ *         The filtered timeline blueprint.
+ */
+function getFilteredBlueprint({ blueprint, hiddenMarkers }) {
+  // Clone functions here just to prevent an error, as the blueprint
+  // contains functions (even though we do not use them).
+  let filteredBlueprint = Cu.cloneInto(blueprint, {}, { cloneFunctions: true });
+  let maybeRemovedGroups = new Set();
+  let removedGroups = new Set();
+
+  // 1. Remove hidden markers from the blueprint.
+
+  for (let hiddenMarkerName of hiddenMarkers) {
+    maybeRemovedGroups.add(filteredBlueprint[hiddenMarkerName].group);
+    filteredBlueprint[hiddenMarkerName].hidden = true;
+  }
+
+  // 2. Get a list of all the groups that will be removed.
+
+  let markerNames = Object.keys(filteredBlueprint).filter(name => !filteredBlueprint[name].hidden);
+  for (let maybeRemovedGroup of maybeRemovedGroups) {
+    let isGroupRemoved = markerNames.every(e => filteredBlueprint[e].group != maybeRemovedGroup);
+    if (isGroupRemoved) {
+      removedGroups.add(maybeRemovedGroup);
+    }
+  }
+
+  // 3. Offset groups so that their indices are consecutive.
+
+  for (let removedGroup of removedGroups) {
+    for (let markerName of markerNames) {
+      let markerDetails = filteredBlueprint[markerName];
+      if (markerDetails.group > removedGroup) {
+        markerDetails.group--;
+      }
+    }
+  }
+
+  return filteredBlueprint;
+}
+
+
 exports.getMarkerLabel = getMarkerLabel;
 exports.getMarkerClassName = getMarkerClassName;
 exports.getMarkerFields = getMarkerFields;
+exports.getFilteredBlueprint = getFilteredBlueprint;
 exports.DOM = DOM;
 exports.CollapseFunctions = CollapseFunctions;
 exports.Formatters = Formatters;
