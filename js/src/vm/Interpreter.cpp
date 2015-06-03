@@ -677,9 +677,8 @@ js::Invoke(JSContext* cx, CallArgs args, MaybeConstruct construct)
     /* MaybeConstruct is a subset of InitialFrameFlags */
     InitialFrameFlags initial = (InitialFrameFlags) construct;
 
-    unsigned skipForCallee = args.length() + 1 + (construct == CONSTRUCT);
     if (args.calleev().isPrimitive())
-        return ReportIsNotFunction(cx, args.calleev(), skipForCallee, construct);
+        return ReportIsNotFunction(cx, args.calleev(), args.length() + 1, construct);
 
     const Class* clasp = args.callee().getClass();
 
@@ -692,7 +691,7 @@ js::Invoke(JSContext* cx, CallArgs args, MaybeConstruct construct)
         MOZ_ASSERT_IF(construct, !args.callee().constructHook());
         JSNative call = args.callee().callHook();
         if (!call)
-            return ReportIsNotFunction(cx, args.calleev(), skipForCallee, construct);
+            return ReportIsNotFunction(cx, args.calleev(), args.length() + 1, construct);
         return CallJSNative(cx, call, args);
     }
 
@@ -771,18 +770,15 @@ js::InvokeConstructor(JSContext* cx, CallArgs args)
 
     args.setThis(MagicValue(JS_IS_CONSTRUCTING));
 
-    // +2 here and below to pass over |this| and |new.target|
     if (!args.calleev().isObject())
-        return ReportIsNotFunction(cx, args.calleev(), args.length() + 2, CONSTRUCT);
-
-    MOZ_ASSERT(args.newTarget().isObject());
+        return ReportIsNotFunction(cx, args.calleev(), args.length() + 1, CONSTRUCT);
 
     JSObject& callee = args.callee();
     if (callee.is<JSFunction>()) {
         RootedFunction fun(cx, &callee.as<JSFunction>());
 
         if (!fun->isConstructor())
-            return ReportIsNotFunction(cx, args.calleev(), args.length() + 2, CONSTRUCT);
+            return ReportIsNotFunction(cx, args.calleev(), args.length() + 1, CONSTRUCT);
 
         if (fun->isNative())
             return CallJSNativeConstructor(cx, fun->native(), args);
@@ -796,26 +792,22 @@ js::InvokeConstructor(JSContext* cx, CallArgs args)
 
     JSNative construct = callee.constructHook();
     if (!construct)
-        return ReportIsNotFunction(cx, args.calleev(), args.length() + 2, CONSTRUCT);
+        return ReportIsNotFunction(cx, args.calleev(), args.length() + 1, CONSTRUCT);
 
     return CallJSNativeConstructor(cx, construct, args);
 }
 
 bool
 js::InvokeConstructor(JSContext* cx, Value fval, unsigned argc, const Value* argv,
-                      bool newTargetInArgv, MutableHandleValue rval)
+                      MutableHandleValue rval)
 {
     InvokeArgs args(cx);
-    if (!args.init(argc, true))
+    if (!args.init(argc))
         return false;
 
     args.setCallee(fval);
     args.setThis(MagicValue(JS_THIS_POISON));
     PodCopy(args.array(), argv, argc);
-    if (newTargetInArgv)
-        args.newTarget().set(argv[argc]);
-    else
-        args.newTarget().set(fval);
 
     if (!InvokeConstructor(cx, args))
         return false;
@@ -2899,25 +2891,16 @@ CASE(JSOP_STRICTSPREADEVAL)
 {
     static_assert(JSOP_SPREADEVAL_LENGTH == JSOP_STRICTSPREADEVAL_LENGTH,
                   "spreadeval and strictspreadeval must be the same size");
-    bool construct = JSOp(*REGS.pc) == JSOP_SPREADNEW;
+    MOZ_ASSERT(REGS.stackDepth() >= 3);
 
-    MOZ_ASSERT(REGS.stackDepth() >= 3u + construct);
-
-    HandleValue callee = REGS.stackHandleAt(-3 - construct);
-    HandleValue thisv = REGS.stackHandleAt(-2 - construct);
-    HandleValue arr = REGS.stackHandleAt(-1 - construct);
-    MutableHandleValue ret = REGS.stackHandleAt(-3 - construct);
-
-    RootedValue& newTarget = rootValue0;
-    if (construct)
-        newTarget = REGS.sp[-1];
-    else
-        newTarget = NullValue();
-
-    if (!SpreadCallOperation(cx, script, REGS.pc, thisv, callee, arr, newTarget, ret))
+    HandleValue callee = REGS.stackHandleAt(-3);
+    HandleValue thisv = REGS.stackHandleAt(-2);
+    HandleValue arr = REGS.stackHandleAt(-1);
+    MutableHandleValue ret = REGS.stackHandleAt(-3);
+    if (!SpreadCallOperation(cx, script, REGS.pc, thisv, callee, arr, ret))
         goto error;
 
-    REGS.sp -= 2 + construct;
+    REGS.sp -= 2;
 }
 END_CASE(JSOP_SPREADCALL)
 
@@ -2936,11 +2919,10 @@ CASE(JSOP_FUNCALL)
     if (REGS.fp()->hasPushedSPSFrame())
         cx->runtime()->spsProfiler.updatePC(script, REGS.pc);
 
-    bool construct = (*REGS.pc == JSOP_NEW);
-    unsigned argStackSlots = GET_ARGC(REGS.pc) + construct;
-
     MOZ_ASSERT(REGS.stackDepth() >= 2u + GET_ARGC(REGS.pc));
-    CallArgs args = CallArgsFromSp(argStackSlots, REGS.sp, construct);
+    CallArgs args = CallArgsFromSp(GET_ARGC(REGS.pc), REGS.sp);
+
+    bool construct = (*REGS.pc == JSOP_NEW);
 
     JSFunction* maybeFun;
     bool isFunction = IsFunctionObject(args.calleev(), &maybeFun);
@@ -4544,17 +4526,16 @@ js::InitGetterSetterOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, H
 
 bool
 js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, HandleValue thisv,
-                        HandleValue callee, HandleValue arr, HandleValue newTarget, MutableHandleValue res)
+                        HandleValue callee, HandleValue arr, MutableHandleValue res)
 {
     RootedArrayObject aobj(cx, &arr.toObject().as<ArrayObject>());
     uint32_t length = aobj->length();
     JSOp op = JSOp(*pc);
-    bool constructing = op == JSOP_SPREADNEW;
 
     if (length > ARGS_LENGTH_MAX) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             constructing ? JSMSG_TOO_MANY_CON_SPREADARGS
-                                          : JSMSG_TOO_MANY_FUN_SPREADARGS);
+                             op == JSOP_SPREADNEW ? JSMSG_TOO_MANY_CON_SPREADARGS
+                                                  : JSMSG_TOO_MANY_FUN_SPREADARGS);
         return false;
     }
 
@@ -4569,7 +4550,7 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
 
     InvokeArgs args(cx);
 
-    if (!args.init(length, constructing))
+    if (!args.init(length))
         return false;
 
     args.setCallee(callee);
@@ -4577,11 +4558,6 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
 
     if (!GetElements(cx, aobj, length, args.array()))
         return false;
-
-    if (constructing) {
-        MOZ_ASSERT(newTarget.isObject());
-        args.newTarget().set(newTarget);
-    }
 
     switch (op) {
       case JSOP_SPREADNEW:

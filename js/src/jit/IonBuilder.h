@@ -1244,7 +1244,6 @@ class CallInfo
 {
     MDefinition* fun_;
     MDefinition* thisArg_;
-    MDefinition* newTargetArg_;
     MDefinitionVector args_;
 
     bool constructing_;
@@ -1254,7 +1253,6 @@ class CallInfo
     CallInfo(TempAllocator& alloc, bool constructing)
       : fun_(nullptr),
         thisArg_(nullptr),
-        newTargetArg_(nullptr),
         args_(alloc),
         constructing_(constructing),
         setter_(false)
@@ -1265,9 +1263,6 @@ class CallInfo
 
         fun_ = callInfo.fun();
         thisArg_ = callInfo.thisArg();
-
-        if (constructing())
-            newTargetArg_ = callInfo.getNewTarget();
 
         if (!args_.appendAll(callInfo.argv()))
             return false;
@@ -1281,10 +1276,6 @@ class CallInfo
         // Get the arguments in the right order
         if (!args_.reserve(argc))
             return false;
-
-        if (constructing())
-            setNewTarget(current->pop());
-
         for (int32_t i = argc; i > 0; i--)
             args_.infallibleAppend(current->peek(-i));
         current->popn(argc);
@@ -1306,16 +1297,13 @@ class CallInfo
 
         for (uint32_t i = 0; i < argc(); i++)
             current->push(getArg(i));
-
-        if (constructing())
-            current->push(getNewTarget());
     }
 
     uint32_t argc() const {
         return args_.length();
     }
     uint32_t numFormals() const {
-        return argc() + 2 + constructing();
+        return argc() + 2;
     }
 
     bool setArgs(const MDefinitionVector& args) {
@@ -1361,15 +1349,6 @@ class CallInfo
         return constructing_;
     }
 
-    void setNewTarget(MDefinition* newTarget) {
-        MOZ_ASSERT(constructing());
-        newTargetArg_ = newTarget;
-    }
-    MDefinition* getNewTarget() const {
-        MOZ_ASSERT(newTargetArg_);
-        return newTargetArg_;
-    }
-
     bool isSetter() const {
         return setter_;
     }
@@ -1389,8 +1368,6 @@ class CallInfo
     void setImplicitlyUsedUnchecked() {
         fun_->setImplicitlyUsedUnchecked();
         thisArg_->setImplicitlyUsedUnchecked();
-        if (newTargetArg_)
-            newTargetArg_->setImplicitlyUsedUnchecked();
         for (uint32_t i = 0; i < argc(); i++)
             getArg(i)->setImplicitlyUsedUnchecked();
     }

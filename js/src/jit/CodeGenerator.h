@@ -130,13 +130,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier* ool);
     void visitCallNative(LCallNative* call);
     void emitCallInvokeFunction(LInstruction* call, Register callereg,
-                                bool isConstructing, uint32_t argc,
-                                uint32_t unusedStack);
+                                uint32_t argc, uint32_t unusedStack);
     void visitCallGeneric(LCallGeneric* call);
-    void emitCallInvokeFunctionShuffleNewTarget(LCallKnown *call,
-                                                Register calleeReg,
-                                                uint32_t numFormals,
-                                                uint32_t unusedStack);
     void visitCallKnown(LCallKnown* call);
     void emitCallInvokeFunction(LApplyArgsGeneric* apply, Register extraStackSize);
     void emitPushArguments(LApplyArgsGeneric* apply, Register extraStackSpace);

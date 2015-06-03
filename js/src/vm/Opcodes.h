@@ -391,9 +391,9 @@
      *   Category: Statements
      *   Type: Function
      *   Operands:
-     *   Stack: callee, this, args, newTarget => rval
+     *   Stack: callee, this, args => rval
      */ \
-    macro(JSOP_SPREADNEW, 42, "spreadnew",  NULL,         1,  4,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET) \
+    macro(JSOP_SPREADNEW, 42, "spreadnew",  NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET) \
     /*
      * spreadcall variant of JSOP_EVAL
      *
@@ -766,8 +766,8 @@
      *   Category: Statements
      *   Type: Function
      *   Operands: uint16_t argc
-     *   Stack: callee, this, args[0], ..., args[argc-1], newTarget => rval
-     *   nuses: (argc+3)
+     *   Stack: callee, this, args[0], ..., args[argc-1] => rval
+     *   nuses: (argc+2)
      */ \
     macro(JSOP_NEW,       82, js_new_str,   NULL,         3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
     /*
