@@ -4,13 +4,19 @@
 // Test that enabling Service Workers testing option enables the
 // mServiceWorkersTestingEnabled attribute added to nsPIDOMWindow.
 
+const COMMON_FRAME_SCRIPT_URL =
+  "chrome://browser/content/devtools/frame-script-utils.js";
+const ROOT_TEST_DIR =
+  getRootDirectory(gTestPath);
+const FRAME_SCRIPT_URL =
+  ROOT_TEST_DIR +
+  "browser_toolbox_options_enable_serviceworkers_testing_frame_script.js";
 const TEST_URI = URL_ROOT +
                  "browser_toolbox_options_enable_serviceworkers_testing.html";
 
 const ELEMENT_ID = "devtools-enable-serviceWorkersTesting";
 
 let toolbox;
-let doc;
 
 function test() {
   // Note: Pref dom.serviceWorkers.testing.enabled is false since we are testing
@@ -19,16 +25,19 @@ function test() {
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", false]
-  ]}, start);
+  ]}, init);
 }
 
-function start() {
-  gBrowser.selectedTab = gBrowser.addTab();
+function init() {
+  let tab = gBrowser.selectedTab = gBrowser.addTab();
   let target = TargetFactory.forTab(gBrowser.selectedTab);
+  let linkedBrowser = tab.linkedBrowser;
+
+  linkedBrowser.messageManager.loadFrameScript(COMMON_FRAME_SCRIPT_URL, false);
+  linkedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
 
   gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
     gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
-    doc = content.document;
     gDevTools.showToolbox(target).then(testSelectTool);
   }, true);
 
@@ -37,89 +46,24 @@ function start() {
 
 function testSelectTool(aToolbox) {
   toolbox = aToolbox;
-  toolbox.once("options-selected", () => {
-    testRegisterFails().then(testRegisterInstallingWorker);
-  });
+  toolbox.once("options-selected", start);
   toolbox.selectTool("options");
 }
 
-function testRegisterFails() {
-  let deferred = promise.defer();
-
-  let output = doc.getElementById("output");
-  let button = doc.getElementById("button");
-
-  function doTheCheck() {
-    info("Testing it doesn't registers correctly until enable testing");
-    is(output.textContent,
-       "SecurityError",
-       "SecurityError expected");
-    deferred.resolve();
-  }
-
-  if (output.textContent !== "No output") {
-    doTheCheck();
-  }
-
-  button.addEventListener('click', function onClick() {
-    button.removeEventListener('click', onClick);
-    doTheCheck();
-  });
-
-  return deferred.promise;
+function register() {
+  return executeInContent("devtools:sw-test:register");
 }
 
-function testRegisterInstallingWorker() {
-  toggleServiceWorkersTestingCheckbox().then(() => {
-    let output = doc.getElementById("output");
-    let button = doc.getElementById("button");
-
-    function doTheCheck() {
-      info("Testing it registers correctly and there is an installing worker");
-      is(output.textContent,
-         "Installing worker/",
-         "Installing worker expected");
-      testRegisterFailsWhenToolboxCloses();
-    }
-
-    if (output.textContent !== "No output") {
-      doTheCheck();
-    }
-
-    button.addEventListener('click', function onClick() {
-      button.removeEventListener('click', onClick);
-      doTheCheck();
-    });
-  });
+function unregister(swr) {
+  return executeInContent("devtools:sw-test:unregister");
 }
 
-// Workers should be turned back off when we closes the toolbox
-function testRegisterFailsWhenToolboxCloses() {
-  info("Testing it disable worker when closing the toolbox");
-  toolbox.destroy()
-         .then(reload)
-         .then(testRegisterFails)
-         .then(finishUp);
-}
-
-function reload() {
-  let deferred = promise.defer();
-
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
-    doc = content.document;
-    deferred.resolve();
-  }, true);
-
-  let mm = getFrameScript();
-  mm.sendAsyncMessage("devtools:test:reload");
-
-  return deferred.promise;
+function testRegisterFails(data) {
+  is(data.success, false, "Register should fail with security error");
+  return promise.resolve();
 }
 
 function toggleServiceWorkersTestingCheckbox() {
-  let deferred = promise.defer();
-
   let panel = toolbox.getCurrentPanel();
   let cbx = panel.panelDoc.getElementById(ELEMENT_ID);
 
@@ -133,11 +77,46 @@ function toggleServiceWorkersTestingCheckbox() {
 
   cbx.click();
 
-  return reload();
+  return promise.resolve();
+}
+
+function reload() {
+  let deferred = promise.defer();
+
+  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
+    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
+    deferred.resolve();
+  }, true);
+
+  executeInContent("devtools:test:reload", {}, {}, false);
+  return deferred.promise;
+}
+
+function testRegisterSuccesses(data) {
+  is(data.success, true, "Register should success");
+  return promise.resolve();
+}
+
+function start() {
+  register()
+    .then(testRegisterFails)
+    .then(toggleServiceWorkersTestingCheckbox)
+    .then(reload)
+    .then(register)
+    .then(testRegisterSuccesses)
+    .then(unregister)
+    // Workers should be turned back off when we closes the toolbox
+    .then(toolbox.destroy.bind(toolbox))
+    .then(reload)
+    .then(register)
+    .then(testRegisterFails)
+    .catch(function(e) {
+      ok(false, "Some test failed with error " + e);
+    }).then(finishUp);
 }
 
 function finishUp() {
   gBrowser.removeCurrentTab();
-  toolbox = doc = null;
+  toolbox = null;
   finish();
 }
