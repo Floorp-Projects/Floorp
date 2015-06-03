@@ -49,11 +49,16 @@ var i = 0;
 function setupChannel(path)
 {
   var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  var uri = ios.newURI(URL + path, null, null);
+  var appId = tests[i].loadContext.appId;
+  var inBrowser = tests[i].loadContext.isInBrowserElement;
   var chan = ios.newChannel2(URL + path,
                              "",
                              null,
                              null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             Services.scriptSecurityManager.getAppCodebasePrincipal(uri,
+                                                                                    appId,
+                                                                                    inBrowser),
                              null,      // aTriggeringPrincipal
                              Ci.nsILoadInfo.SEC_NORMAL,
                              Ci.nsIContentPolicy.TYPE_OTHER);

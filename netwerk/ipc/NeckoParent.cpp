@@ -27,6 +27,7 @@
 #include "mozilla/dom/network/TCPSocketParent.h"
 #include "mozilla/dom/network/TCPServerSocketParent.h"
 #include "mozilla/dom/network/UDPSocketParent.h"
+#include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/AppProcessChecker.h"
@@ -170,6 +171,7 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
 
 const char *
 NeckoParent::CreateChannelLoadContext(const PBrowserOrId& aBrowser,
+                                      nsIPrincipal* aRequestingPrincipal,
                                       PContentParent* aContent,
                                       const SerializedLoadContext& aSerialized,
                                       nsCOMPtr<nsILoadContext> &aResult)
@@ -192,6 +194,23 @@ NeckoParent::CreateChannelLoadContext(const PBrowserOrId& aBrowser,
         dom::Element* topFrameElement = nullptr;
         if (tabParent) {
           topFrameElement = tabParent->GetOwnerElement();
+        } else {
+          if (!aRequestingPrincipal) {
+            return "missing associated browser and requesting principal";
+          }
+
+          // If a null tab parent is provided, we rely on comparing the requesting principal's
+          // reported data against the provided load context's data.
+          uint32_t reportedAppId = NECKO_UNKNOWN_APP_ID;
+          aRequestingPrincipal->GetAppId(&reportedAppId);
+          if (appId != reportedAppId) {
+            return "app id mismatch for request without associated browser";
+          }
+          bool reportedInBrowser = false;
+          aRequestingPrincipal->GetIsInBrowserElement(&reportedInBrowser);
+          if (reportedInBrowser != inBrowser) {
+            return "browser element mismatch for request without associated browser";
+          }
         }
         aResult = new LoadContext(aSerialized, topFrameElement,
                                   appId, inBrowser);
@@ -222,8 +241,26 @@ NeckoParent::AllocPHttpChannelParent(const PBrowserOrId& aBrowser,
                                      const SerializedLoadContext& aSerialized,
                                      const HttpChannelCreationArgs& aOpenArgs)
 {
+  const OptionalLoadInfoArgs& infoArgs =
+    aOpenArgs.type() == HttpChannelCreationArgs::THttpChannelOpenArgs ?
+    aOpenArgs.get_HttpChannelOpenArgs().loadInfo() :
+    aOpenArgs.get_HttpChannelConnectArgs().loadInfo();
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  nsresult rv = mozilla::ipc::LoadInfoArgsToLoadInfo(infoArgs, getter_AddRefs(loadInfo));
+  if (NS_FAILED(rv)) {
+    printf_stderr("NeckoParent::AllocPHttpChannelParent: "
+                  "FATAL error: couldn't deserialize load info: KILLING CHILD PROCESS\n");
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIPrincipal> requestingPrincipal;
+  if (loadInfo) {
+    requestingPrincipal = loadInfo->LoadingPrincipal();
+  }
+
   nsCOMPtr<nsILoadContext> loadContext;
-  const char *error = CreateChannelLoadContext(aBrowser, Manager(),
+  const char *error = CreateChannelLoadContext(aBrowser, requestingPrincipal, Manager(),
                                                aSerialized, loadContext);
   if (error) {
     printf_stderr("NeckoParent::AllocPHttpChannelParent: "
@@ -261,8 +298,26 @@ NeckoParent::AllocPFTPChannelParent(const PBrowserOrId& aBrowser,
                                     const SerializedLoadContext& aSerialized,
                                     const FTPChannelCreationArgs& aOpenArgs)
 {
+  const OptionalLoadInfoArgs& infoArgs =
+    aOpenArgs.type() == FTPChannelCreationArgs::TFTPChannelOpenArgs ?
+    aOpenArgs.get_FTPChannelOpenArgs().loadInfo() :
+    aOpenArgs.get_FTPChannelConnectArgs().loadInfo();
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  nsresult rv = mozilla::ipc::LoadInfoArgsToLoadInfo(infoArgs, getter_AddRefs(loadInfo));
+  if (NS_FAILED(rv)) {
+    printf_stderr("NeckoParent::AllocPFTPChannelParent: "
+                  "FATAL error: couldn't deserialize load info: KILLING CHILD PROCESS\n");
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIPrincipal> requestingPrincipal;
+  if (loadInfo) {
+    requestingPrincipal = loadInfo->LoadingPrincipal();
+  }
+  
   nsCOMPtr<nsILoadContext> loadContext;
-  const char *error = CreateChannelLoadContext(aBrowser, Manager(),
+  const char *error = CreateChannelLoadContext(aBrowser, requestingPrincipal, Manager(),
                                                aSerialized, loadContext);
   if (error) {
     printf_stderr("NeckoParent::AllocPFTPChannelParent: "
@@ -326,10 +381,20 @@ NeckoParent::DeallocPWyciwygChannelParent(PWyciwygChannelParent* channel)
 
 PWebSocketParent*
 NeckoParent::AllocPWebSocketParent(const PBrowserOrId& browser,
-                                   const SerializedLoadContext& serialized)
+                                   const SerializedLoadContext& serialized,
+                                   const PrincipalInfo& requestingPrincipalInfo)
 {
+  nsresult rv;
+  nsCOMPtr<nsIPrincipal> requestingPrincipal =
+    mozilla::ipc::PrincipalInfoToPrincipal(requestingPrincipalInfo, &rv);
+  if (NS_FAILED(rv)) {
+    printf_stderr("NeckoParent::AllocPWebSocketParent: "
+                  "FATAL error: couldn't deserialize principal: KILLING CHILD PROCESS\n");
+    return nullptr;
+  }
+
   nsCOMPtr<nsILoadContext> loadContext;
-  const char *error = CreateChannelLoadContext(browser, Manager(),
+  const char *error = CreateChannelLoadContext(browser, requestingPrincipal, Manager(),
                                                serialized, loadContext);
   if (error) {
     printf_stderr("NeckoParent::AllocPWebSocketParent: "
