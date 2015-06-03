@@ -10059,40 +10059,5 @@ CodeGenerator::visitDebugger(LDebugger* ins)
     bailoutFrom(&bail, ins->snapshot());
 }
 
-void
-CodeGenerator::visitNewTarget(LNewTarget *ins)
-{
-    ValueOperand output = GetValueOutput(ins);
-
-    // if (!isConstructing()) output = undefined
-    Label constructing, done;
-    Address calleeToken(masm.getStackPointer(), frameSize() + JitFrameLayout::offsetOfCalleeToken());
-    masm.branchTestPtr(Assembler::NonZero, calleeToken,
-                       Imm32(CalleeToken_FunctionConstructing), &constructing);
-    masm.moveValue(UndefinedValue(), output);
-    masm.jump(&done);
-
-    masm.bind(&constructing);
-
-    // else output = argv[Max(numActualArgs, numFormalArgs)]
-    Register argvLen = output.scratchReg();
-
-    Address actualArgsPtr(masm.getStackPointer(), frameSize() + JitFrameLayout::offsetOfNumActualArgs());
-    masm.loadPtr(actualArgsPtr, argvLen);
-
-    Label actualArgsSufficient;
-
-    size_t numFormalArgs = ins->mirRaw()->block()->info().funMaybeLazy()->nargs();
-    masm.branchPtr(Assembler::AboveOrEqual, argvLen, Imm32(numFormalArgs),
-                   &actualArgsSufficient);
-    masm.move32(Imm32(numFormalArgs), argvLen);
-    masm.bind(&actualArgsSufficient);
-
-    BaseValueIndex newTarget(masm.getStackPointer(), argvLen, frameSize() + JitFrameLayout::offsetOfActualArgs());
-    masm.loadValue(newTarget, output);
-
-    masm.bind(&done);
-}
-
 } // namespace jit
 } // namespace js

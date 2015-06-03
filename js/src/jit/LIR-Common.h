@@ -1533,7 +1533,7 @@ class LJSCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
     uint32_t numActualArgs() const {
         return mir()->numActualArgs();
     }
-
+    
     bool isConstructing() const {
         return mir()->isConstructing();
     }
@@ -7034,12 +7034,6 @@ class LDebugger : public LCallInstructionHelper<0, 0, 2>
         setTemp(0, temp1);
         setTemp(1, temp2);
     }
-};
-
-class LNewTarget : public LInstructionHelper<BOX_PIECES, 0, 0>
-{
-  public:
-    LIR_HEADER(NewTarget)
 };
 
 } // namespace jit
