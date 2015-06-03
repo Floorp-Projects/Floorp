@@ -10,6 +10,7 @@
 #include "js/Debug.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/OwningNonNull.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -1692,6 +1693,10 @@ PromiseWorkerProxy::CleanUp(JSContext* aCx)
 // Specializations of MaybeRejectBrokenly we actually support.
 template<>
 void Promise::MaybeRejectBrokenly(const nsRefPtr<DOMError>& aArg) {
+  MaybeSomething(aArg, &Promise::MaybeReject);
+}
+template<>
+void Promise::MaybeRejectBrokenly(const nsRefPtr<DOMException>& aArg) {
   MaybeSomething(aArg, &Promise::MaybeReject);
 }
 template<>

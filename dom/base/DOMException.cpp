@@ -724,5 +724,17 @@ DOMException::Create(nsresult aRv)
   return inst.forget();
 }
 
+/* static */already_AddRefed<DOMException>
+DOMException::Create(nsresult aRv, const nsCString& aMessage)
+{
+  nsCString name;
+  nsCString message;
+  uint16_t code;
+  NSResultToNameAndMessage(aRv, name, message, &code);
+  nsRefPtr<DOMException> inst =
+    new DOMException(aRv, aMessage, name, code);
+  return inst.forget();
+}
+
 } // namespace dom
 } // namespace mozilla
