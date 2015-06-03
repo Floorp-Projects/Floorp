@@ -23,7 +23,7 @@ class ImageClient;
 class TextureClient;
 
 already_AddRefed<Image> CreateSharedRGBImage(ImageContainer* aImageContainer,
-                                             nsIntSize aSize,
+                                             gfx::IntSize aSize,
                                              gfxImageFormat aImageFormat);
 
 /**
