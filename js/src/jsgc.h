@@ -39,13 +39,6 @@ namespace js {
 
 unsigned GetCPUCount();
 
-enum HeapState {
-    Idle,             // doing nothing with the GC heap
-    Tracing,          // tracing the GC heap without collecting, e.g. IterateCompartments()
-    MajorCollecting,  // doing a GC of the major heap
-    MinorCollecting   // doing a GC of the minor heap (nursery)
-};
-
 enum ThreadType
 {
     MainThread,

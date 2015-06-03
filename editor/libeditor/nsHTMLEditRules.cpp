@@ -614,11 +614,13 @@ nsHTMLEditRules::WillDoAction(Selection* aSelection,
   switch (info->action) {
     case EditAction::insertText:
     case EditAction::insertIMEText:
+      UndefineCaretBidiLevel(aSelection);
       return WillInsertText(info->action, aSelection, aCancel, aHandled,
                             info->inString, info->outString, info->maxLength);
     case EditAction::loadHTML:
       return WillLoadHTML(aSelection, aCancel);
     case EditAction::insertBreak:
+      UndefineCaretBidiLevel(aSelection);
       return WillInsertBreak(aSelection, aCancel, aHandled);
     case EditAction::deleteSelection:
       return WillDeleteSelection(aSelection, info->collapsedAction,

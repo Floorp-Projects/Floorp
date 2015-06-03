@@ -1311,8 +1311,8 @@
               } else {
                 // Each time the preference is changed, restart the delay.
                 element._deferredValueUpdateTask.disarm();
-                element._deferredValueUpdateTask.arm();
               }
+              element._deferredValueUpdateTask.arm();
             }
           }
         ]]>

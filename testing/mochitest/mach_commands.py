@@ -553,6 +553,7 @@ class MachCommands(MachCommandBase):
             print(NOW_RUNNING.format(msg))
 
             harness_args = kwargs.copy()
+            harness_args['subsuite'] = subsuite
             harness_args.update(fobj.get('extra_args', {}))
 
             result = run_mochitest(
@@ -575,14 +576,11 @@ class RobocopCommands(MachCommandBase):
              conditions=[conditions.is_android],
              description='Run a Robocop test.',
              parser=setup_argument_parser)
-    @CommandArgument(
-        'test_path',
-        default=None,
-        nargs='?',
-        metavar='TEST',
-        help='Test to run. Can be specified as a Robocop test name (like "testLoad"), '
-        'or omitted. If omitted, the entire test suite is executed.')
-    def run_robocop(self, test_path, **kwargs):
+    @CommandArgument('test_paths', nargs='*', metavar='TEST', default=None,
+                     help='Test to run. Can be a single Robocop test file (like "testLoad.java") '
+                          ' or a directory of tests '
+                          '(to run recursively). If omitted, the entire Robocop suite is run.')
+    def run_robocop(self, test_paths, **kwargs):
         if not kwargs.get('robocopIni'):
             kwargs['robocopIni'] = os.path.join(self.topobjdir, '_tests', 'testing',
                                                 'mochitest', 'robocop.ini')
@@ -591,11 +589,18 @@ class RobocopCommands(MachCommandBase):
             kwargs['robocopApk'] = os.path.join(self.topobjdir, 'build', 'mobile',
                                                 'robocop', 'robocop-debug.apk')
 
-        if isinstance(test_path, basestring):
-            test_path = [test_path]
+        from mozbuild.controller.building import BuildDriver
+        self._ensure_state_subdir_exists('.')
+
+        driver = self._spawn(BuildDriver)
+        driver.install_tests(remove=False)
+
+        from mozbuild.testing import TestResolver
+        resolver = self._spawn(TestResolver)
+        tests = list(resolver.resolve_tests(paths=test_paths, cwd=self._mach_context.cwd,
+            flavor='instrumentation', subsuite='robocop'))
 
         mochitest = self._spawn(MochitestRunner)
-        tests = mochitest.resolve_tests(test_path, cwd=self._mach_context.cwd)
         return mochitest.run_android_test(self._mach_context, tests, 'robocop', **kwargs)
 
 

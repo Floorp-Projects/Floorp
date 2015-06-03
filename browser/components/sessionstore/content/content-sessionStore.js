@@ -149,15 +149,10 @@ let MessageListener = {
 
   restoreHistory({epoch, tabData, loadArguments}) {
     gContentRestore.restoreHistory(tabData, loadArguments, {
-      onReload() {
-        // Inform SessionStore.jsm about the reload. It will send
-        // restoreTabContent in response.
-        sendAsyncMessage("SessionStore:reloadPendingTab", {epoch});
-      },
-
-      // Note: The two callbacks passed here will only be used when a load
-      // starts that was not initiated by sessionstore itself. This can happen
-      // when some code calls browser.loadURI() on a pending browser/tab.
+      // Note: The callbacks passed here will only be used when a load starts
+      // that was not initiated by sessionstore itself. This can happen when
+      // some code calls browser.loadURI() or browser.reload() on a pending
+      // browser/tab.
 
       onLoadStarted() {
         // Notify the parent that the tab is no longer pending.

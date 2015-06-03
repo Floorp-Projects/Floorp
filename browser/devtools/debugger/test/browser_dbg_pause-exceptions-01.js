@@ -77,7 +77,7 @@ function testPauseOnExceptionsDisabled() {
     return finished;
   });
 
-  sendMouseClickToTab(gTab, content.document.querySelector("button"));
+  generateMouseClickInTab(gTab, "content.document.querySelector('button')");
 
   return finished;
 }
@@ -148,7 +148,7 @@ function testPauseOnExceptionsEnabled() {
     return finished;
   });
 
-  sendMouseClickToTab(gTab, content.document.querySelector("button"));
+  generateMouseClickInTab(gTab, "content.document.querySelector('button')");
 
   return finished;
 }

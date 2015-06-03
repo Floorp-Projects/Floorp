@@ -7,28 +7,70 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 
+const CHROME_BASE = "chrome://mochitests/content/browser/browser/base/content/test/general/";
+const HTTPS_BASE = "https://example.com/browser/browser/base/content/test/general/";
+
+const TELEMETRY_LOG_PREF = "toolkit.telemetry.log.level";
+const telemetryOriginalLogPref = Preferences.get(TELEMETRY_LOG_PREF, null);
+
 registerCleanupFunction(function() {
   // Ensure we don't pollute prefs for next tests.
+  if (telemetryOriginalLogPref) {
+    Preferences.set(TELEMETRY_LOG_PREF, telemetryOriginalLogPref);
+  } else {
+    Preferences.reset(TELEMETRY_LOG_PREF);
+  }
+
   try {
     Services.prefs.clearUserPref("datareporting.healthreport.about.reportUrl");
     let policy = Cc["@mozilla.org/datareporting/service;1"]
                  .getService(Ci.nsISupports)
                  .wrappedJSObject
                  .policy;
-        policy.recordHealthReportUploadEnabled(true,
+    policy.recordHealthReportUploadEnabled(true,
                                            "Resetting after tests.");
   } catch (ex) {}
 });
+
+function fakeTelemetryNow(...args) {
+  let date = new Date(...args);
+  let scope = {};
+  const modules = [
+    Cu.import("resource://gre/modules/TelemetrySession.jsm", scope),
+    Cu.import("resource://gre/modules/TelemetryEnvironment.jsm", scope),
+    Cu.import("resource://gre/modules/TelemetryController.jsm", scope),
+  ];
+
+  for (let m of modules) {
+    m.Policy.now = () => new Date(date);
+  }
+
+  return date;
+}
+
+function setupPingArchive() {
+  let scope = {};
+  Cu.import("resource://gre/modules/TelemetryController.jsm", scope);
+  Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
+    .loadSubScript(CHROME_BASE + "healthreport_pingData.js", scope);
+
+  for (let p of scope.TEST_PINGS) {
+    fakeTelemetryNow(p.date);
+    p.id = yield scope.TelemetryController.submitExternalPing(p.type, p.payload);
+  }
+}
 
 let gTests = [
 
 {
   desc: "Test the remote commands",
-  setup: function ()
+  setup: Task.async(function*()
   {
-    Services.prefs.setCharPref("datareporting.healthreport.about.reportUrl",
-                               "https://example.com/browser/browser/base/content/test/general/healthreport_testRemoteCommands.html");
-  },
+    Preferences.set(TELEMETRY_LOG_PREF, "Trace");
+    yield setupPingArchive();
+    Preferences.set("datareporting.healthreport.about.reportUrl",
+                    HTTPS_BASE + "healthreport_testRemoteCommands.html");
+  }),
   run: function (iframe)
   {
     let deferred = Promise.defer();
@@ -61,7 +103,6 @@ let gTests = [
   }
 },
 
-
 ]; // gTests
 
 function test()
@@ -74,7 +115,7 @@ function test()
   Task.spawn(function () {
     for (let test of gTests) {
       info(test.desc);
-      test.setup();
+      yield test.setup();
 
       let iframe = yield promiseNewTabLoadEvent("about:healthreport");
 
@@ -105,4 +146,3 @@ function promiseNewTabLoadEvent(aUrl, aEventType="load")
     }, true);
   return deferred.promise;
 }
-

@@ -37,4 +37,7 @@ MOCHITEST_CHROME_MANIFESTS += [
     'csp/chrome.ini',
 ]
 
-BROWSER_CHROME_MANIFESTS += ['browser.ini']
+BROWSER_CHROME_MANIFESTS += [
+    'browser.ini',
+    'csp/browser.ini',
+]

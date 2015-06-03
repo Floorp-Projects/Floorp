@@ -20,14 +20,14 @@ describe("loop.shared.models", function() {
       requests.push(xhr);
     };
     fakeSessionData = {
-      sessionId:      "sessionId",
-      sessionToken:   "sessionToken",
-      apiKey:         "apiKey",
-      callType:       "callType",
+      sessionId: "sessionId",
+      sessionToken: "sessionToken",
+      apiKey: "apiKey",
+      callType: "callType",
       websocketToken: 123,
-      callToken:      "callToken",
-      callUrl:        "http://invalid/callToken",
-      callerId:       "mrssmith"
+      callToken: "callToken",
+      callUrl: "http://invalid/callToken",
+      callerId: "mrssmith"
     };
     fakeSession = _.extend({
       connect: function () {},

@@ -66,6 +66,9 @@ partial interface Selection {
   [ChromeOnly,Throws]
   attribute boolean interlinePosition;
 
+  [Throws]
+  attribute short? caretBidiLevel;
+
   [ChromeOnly,Throws]
   DOMString  toStringWithFormat(DOMString formatType, unsigned long flags, long wrapColumn);
   [ChromeOnly,Throws]

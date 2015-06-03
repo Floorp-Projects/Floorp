@@ -54,7 +54,7 @@ function testResume() {
       });
     });
 
-    sendMouseClickToTab(gTab, content.document.querySelector("button"));
+    generateMouseClickInTab(gTab, "content.document.querySelector('button')");
   });
 }
 

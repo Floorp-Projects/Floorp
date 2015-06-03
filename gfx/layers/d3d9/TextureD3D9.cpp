@@ -914,7 +914,7 @@ DataTextureSourceD3D9::UpdateFromTexture(IDirect3DTexture9* aTexture,
 }
 
 void
-TextureHostD3D9::Updated(const nsIntRegion* aRegion)
+TextureHostD3D9::UpdatedInternal(const nsIntRegion* aRegion)
 {
   MOZ_ASSERT(mTexture);
   if (!mTexture) {

@@ -39,7 +39,7 @@ fuzzy-if(winWidget&&!layersGPUAccelerated,1,251) == backface-visibility-2.html b
 == backface-visibility-3.html backface-visibility-3-ref.html
 != perspective-origin-1a.html rotatex-perspective-1a.html
 random-if(Android&&AndroidVersion==17) == perspective-origin-1b.html perspective-origin-1a.html
-random-if(Android&&!browserIsRemote) == perspective-origin-2a.html perspective-origin-2-ref.html # bug 732568
+fuzzy(3,99) random-if(Android&&!browserIsRemote) == perspective-origin-2a.html perspective-origin-2-ref.html # subpixel AA, bug 732568
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,61) == perspective-origin-3a.html perspective-origin-3-ref.html
 == perspective-origin-4a.html perspective-origin-4-ref.html
 != sorting-1a.html sorting-1-ref.html
@@ -57,9 +57,9 @@ pref(layout.css.will-change.enabled,true) != willchange-containing-block.html?wi
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,606) == scroll-perspective-1.html scroll-perspective-1-ref.html
 # Bugs
 fails-if(!layersGPUAccelerated) == 1035611-1.html 1035611-1-ref.html # Bug 1072898 for !layersGPUAccelerated failures
-== animate-cube-radians.html animate-cube-radians-ref.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated,16,6) fuzzy-if(Mulet,16,9) == animate-cube-radians-zoom.html animate-cube-radians-zoom-ref.html
+fuzzy(3,99) == animate-cube-radians.html animate-cube-radians-ref.html # subpixel AA
+fuzzy(3,99) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated,16,6) fuzzy-if(Mulet,16,9) == animate-cube-radians-zoom.html animate-cube-radians-zoom-ref.html
 != animate-cube-radians-ref.html animate-cube-radians-zoom-ref.html
-== animate-cube-degrees.html animate-cube-degrees-ref.html
+fuzzy(3,99) == animate-cube-degrees.html animate-cube-degrees-ref.html # subpixel AA
 == animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
 != animate-cube-degrees-ref.html animate-cube-degrees-zoom-ref.html

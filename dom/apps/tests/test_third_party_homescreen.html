@@ -175,9 +175,6 @@ function runTest() {
   runApp(app, continueTest);
   yield undefined;
 
-  SpecialPowers.popPermissions(continueTest);
-  yield undefined;
-
   // Uninstall the app to cleanup after ourself.
   navigator.mozApps.mgmt.onuninstall = function(event) {
     var app = event.application;

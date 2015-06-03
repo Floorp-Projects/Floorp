@@ -927,7 +927,8 @@ RegExpCompartment::sweep(JSRuntime* rt)
                 keep = false;
             }
         }
-        if (keep || rt->isHeapCompacting()) {
+        MOZ_ASSERT(rt->isHeapMajorCollecting());
+        if (keep || rt->gc.isHeapCompacting()) {
             shared->clearMarked();
         } else {
             js_delete(shared);
