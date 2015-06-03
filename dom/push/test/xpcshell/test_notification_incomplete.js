@@ -102,7 +102,7 @@ add_task(function* test_notification_incomplete() {
   yield waitForPromise(notificationDefer.promise, DEFAULT_TIMEOUT,
     'Timed out waiting for incomplete notifications');
 
-  let storeRecords = yield db.getAllChannelIDs();
+  let storeRecords = yield db.getAllKeyIDs();
   storeRecords.sort(({pushEndpoint: a}, {pushEndpoint: b}) =>
     compareAscending(a, b));
   recordsAreEqual(records, storeRecords);

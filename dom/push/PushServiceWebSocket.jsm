@@ -143,6 +143,10 @@ this.PushServiceWebSocket = {
     objectStore.createIndex("scope", "scope", { unique: true });
   },
 
+  getKeyFromRecord: function(aRecord) {
+    return aRecord.channelID;
+  },
+
   newPushDB: function() {
     return new PushDB(kPUSHWSDB_DB_NAME,
                       kPUSHWSDB_DB_VERSION,
@@ -952,7 +956,7 @@ this.PushServiceWebSocket = {
     var data = {channelID: record.channelID,
                 messageType: action};
 
-    return new Promise((resolve, reject) => {
+    var p = new Promise((resolve, reject) => {
       this._pendingRequests[data.channelID] = {record: record,
                                                resolve: resolve,
                                                reject: reject,
@@ -960,6 +964,11 @@ this.PushServiceWebSocket = {
                                               };
       this._queueRequest(data);
     });
+    if (action == "unregister") {
+      return Promise.resolve();
+    } else {
+      return p;
+    }
   },
 
   _queueStart: Promise.resolve(),
@@ -1043,7 +1052,7 @@ this.PushServiceWebSocket = {
       debug("Could not get channelID " + aChannelIDFromServer + " from DB");
     };
 
-    this._mainPushService.getByChannelID(aChannelID)
+    this._mainPushService.getByKeyID(aChannelID)
       .then(compareRecordVersionAndNotify.bind(this),
             err => recoverNoSuchChannelID(err));
   },
@@ -1096,7 +1105,7 @@ this.PushServiceWebSocket = {
         };
       }
 
-      this._mainPushService.getAllChannelIDs()
+      this._mainPushService.getAllKeyIDs()
         .then(sendHelloMessage.bind(this),
               sendHelloMessage.bind(this));
     });
@@ -1273,6 +1282,21 @@ this.PushServiceWebSocket = {
     debug("UDP Server socket was shutdown. Status: " + aStatus);
     this._udpServer = undefined;
     this._beginWSSetup();
+  },
+
+  prepareRegistration: function(aPushRecord) {
+    return {
+      pushEndpoint: aPushRecord.pushEndpoint,
+      version: aPushRecord.version,
+      lastPush: aPushRecord.lastPush,
+      pushCount: aPushRecord.pushCount
+    };
+  },
+
+  prepareRegister: function(aPushRecord) {
+    return {
+      pushEndpoint: aPushRecord.pushEndpoint
+    };
   }
 };
 

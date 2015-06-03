@@ -55,6 +55,6 @@ add_task(function* test_register_invalid_channel() {
     'Wrong error for invalid channel ID'
   );
 
-  let record = yield db.getByChannelID(channelID);
+  let record = yield db.getByKeyID(channelID);
   ok(!record, 'Should not store records for error responses');
 });

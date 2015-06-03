@@ -56,7 +56,7 @@ add_task(function* test_notification_error() {
     serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
     db: makeStub(db, {
-      getByChannelID(prev, channelID) {
+      getByKeyID(prev, channelID) {
         if (channelID == '3c3930ba-44de-40dc-a7ca-8a133ec1a866') {
           return Promise.reject('splines not reticulated');
         }
