@@ -258,6 +258,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
             'sync',
         ]
 
+    if CONFIG['ANDROID_VERSION'] >= '16':
+        OS_LIBS += [
+            'mdnssd',
+        ]
+
 if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
     OS_LIBS += [
         'stagefright_foundation',
