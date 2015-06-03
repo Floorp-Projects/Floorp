@@ -3690,10 +3690,12 @@ ServiceWorkerManager::ClaimClients(nsIPrincipal* aPrincipal,
 }
 
 nsresult
-ServiceWorkerManager::SetSkipWaitingFlag(const nsCString& aScope,
+ServiceWorkerManager::SetSkipWaitingFlag(nsIPrincipal* aPrincipal,
+                                         const nsCString& aScope,
                                          uint64_t aServiceWorkerID)
 {
-  nsRefPtr<ServiceWorkerRegistrationInfo> registration = GetRegistration(aScope);
+  nsRefPtr<ServiceWorkerRegistrationInfo> registration =
+    GetRegistration(aPrincipal, aScope);
   if (!registration) {
     return NS_ERROR_FAILURE;
   }
