@@ -6,17 +6,16 @@
  */
 
 const TIME_CLOSE_TO = 10000;
+const TEST_URL = EXAMPLE_URL + "doc_force_gc.html"
 
 function* spawnTest () {
-  let { target, front } = yield initBackend(SIMPLE_URL);
+  let { target, front } = yield initBackend(TEST_URL);
   let markers;
 
   front.on("timeline-data", handler);
   let model = yield front.startRecording({ withTicks: true });
 
-  // Check async for markers found while GC/CCing between
   yield waitUntil(() => {
-    forceCC();
     return !!markers;
   }, 100);
 

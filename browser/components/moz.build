@@ -54,3 +54,6 @@ if CONFIG['MOZ_SAFE_BROWSING']:
 
 with Files('safebrowsing/*'):
     BUG_COMPONENT = ('Toolkit', 'Phishing Protection')
+
+with Files('controlcenter/**'):
+    BUG_COMPONENT = ('Firefox', 'General')
