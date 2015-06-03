@@ -4071,7 +4071,7 @@ class MFilterArgumentsOrEval
 class MCallDirectEval
   : public MAryInstruction<3>,
     public Mix3Policy<ObjectPolicy<0>,
-                      StringPolicy<1>,
+                      BoxExceptPolicy<1, MIRType_String>,
                       BoxPolicy<2> >::Data
 {
   protected:
