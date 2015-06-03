@@ -11,6 +11,7 @@
 #include "mozilla/devtools/HeapSnapshot.h"
 #include "mozilla/devtools/ZeroCopyNSIOutputStream.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/UniquePtr.h"
 
 #include "nsCRTGlue.h"
@@ -426,6 +427,15 @@ ChromeUtils::ReadHeapSnapshot(GlobalObject& global,
   }
 
   return HeapSnapshot::Create(cx, global, buffer.get(), size, rv);
+}
+
+/* static */ void
+ChromeUtils::OriginAttributesToCookieJar(GlobalObject& aGlobal,
+                                         const OriginAttributesDictionary& aAttrs,
+                                         nsCString& aCookieJar)
+{
+  OriginAttributes attrs(aAttrs);
+  attrs.CookieJar(aCookieJar);
 }
 
 } // namespace devtools
