@@ -219,8 +219,6 @@ AltSvcMapping::RouteEquals(AltSvcMapping *map)
   return mAlternateHost.Equals(map->mAlternateHost) &&
     (mAlternatePort == map->mAlternatePort) &&
     mNPNToken.Equals(map->mNPNToken);
-
-  return false;
 }
 
 void

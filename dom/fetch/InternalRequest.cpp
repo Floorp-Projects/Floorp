@@ -168,6 +168,9 @@ InternalRequest::SetContentPolicyType(nsContentPolicyType aContentPolicyType)
   case nsIContentPolicy::TYPE_IMAGESET:
     mContext = RequestContext::Imageset;
     break;
+  case nsIContentPolicy::TYPE_WEB_MANIFEST:
+    mContext = RequestContext::Manifest;
+    break;
   default:
     MOZ_ASSERT(false, "Unhandled nsContentPolicyType value");
     mContext = RequestContext::Internal;
