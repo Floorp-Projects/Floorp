@@ -292,7 +292,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       message.target.sendAsyncMessage(message.name + "Response", respMsg);
     },
 
-    notifyUserAcceptedP2P: function notifyUserAcceptedP2P(appId, tabId) {
+    notifyUserAcceptedP2P: function notifyUserAcceptedP2P(appId) {
       let target = this.peerTargets[appId];
       let sessionToken = SessionHelper.getCurrentP2PToken();
       let isValid = (sessionToken != null) && (target != null);
@@ -301,7 +301,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
         return;
       }
 
-      this.notifyDOMEvent(target, {tabId: tabId,
+      this.notifyDOMEvent(target, {tabId: this.focusApp,
                                    event: NFC.PEER_EVENT_READY,
                                    sessionToken: sessionToken});
     },
@@ -408,7 +408,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
           this.checkP2PRegistration(message);
           return null;
         case "NFC:NotifyUserAcceptedP2P":
-          this.notifyUserAcceptedP2P(message.data.appId, message.data.tabId);
+          this.notifyUserAcceptedP2P(message.data.appId);
           return null;
         case "NFC:NotifySendFileStatus":
           // Upon receiving the status of sendFile operation, send the response

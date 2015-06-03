@@ -420,7 +420,7 @@ MozNFCImpl.prototype = {
   notifyUserAcceptedP2P: function notifyUserAcceptedP2P(manifestUrl) {
     let appID = appsService.getAppLocalIdByManifestURL(manifestUrl);
     // Notify chrome process of user's acknowledgement
-    this._nfcContentHelper.notifyUserAcceptedP2P(appID, this._tabId);
+    this._nfcContentHelper.notifyUserAcceptedP2P(appID);
   },
 
   notifySendFileStatus: function notifySendFileStatus(status, requestId) {
