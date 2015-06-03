@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1150812: Test registering for two different scopes.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+
+-->
+<head>
+  <title>Test for Bug 1150812</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1150812">Mozilla Bug 1150812</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+
+  var scopeA = "./a/";
+  var scopeB = "./b/";
+
+  function debug(str) {
+  //  console.log(str + "\n");
+  }
+
+  function registerServiceWorker(scope) {
+    return navigator.serviceWorker.register("worker.js" + "?" + (Math.random()), {scope: scope});
+  }
+
+  function unregister(swr) {
+    return swr.unregister()
+      .then(result => {
+        ok(result, "Unregister should return true.");
+      }, err => {
+        ok(false,"Unregistering the SW failed with " + err + "\n");
+        throw err;
+      });
+  }
+
+  function subscribe(swr) {
+    return swr.pushManager.subscribe()
+      .then(sub => {
+        ok(true, "successful registered for push notification");
+        return sub;
+      }, err => {
+        ok(false, "could not register for push notification");
+        throw err;
+      });
+  }
+
+
+  function setupMultipleSubscriptions(swr1, swr2) {
+    return Promise.all([
+      subscribe(swr1),
+      subscribe(swr2)
+    ]).then(a => {
+      ok(a[0].endpoint != a[1].endpoint, "setupMultipleSubscriptions - Got different endpoints.");
+      return a;
+    });
+  }
+
+  function getEndpointExpectNull(swr) {
+    return swr.pushManager.getSubscription()
+      .then(pushSubscription => {
+        ok(pushSubscription == null, "getEndpoint should return null when app not subscribed.");
+      }, err => {
+        ok(false, "could not register for push notification");
+        throw err;
+      });
+  }
+
+  function getEndpoint(swr, results) {
+    return swr.pushManager.getSubscription()
+      .then(sub => {
+        ok((results[0].endpoint == sub.endpoint) ||
+           (results[1].endpoint == sub.endpoint), "getEndpoint - Got the same endpoint back.");
+        return results;
+      }, err => {
+          ok(false, "could not register for push notification");
+          throw err;
+      });
+  }
+
+  function unsubscribe(result) {
+    return result[0].unsubscribe()
+      .then(_ => result[1].unsubscribe());
+  }
+
+  function runTest() {
+    registerServiceWorker(scopeA)
+    .then(swrA =>
+      registerServiceWorker(scopeB)
+        .then(swrB =>
+          getEndpointExpectNull(swrA)
+            .then(_ => getEndpointExpectNull(swrB))
+            .then(_ => setupMultipleSubscriptions(swrA, swrB))
+            .then(results => getEndpoint(swrA, results))
+            .then(results => getEndpoint(swrB, results))
+            .then(results => unsubscribe(results))
+            .then(_ => unregister(swrA))
+            .then(_ => unregister(swrB))
+        )
+    )
+    .catch(err => {
+      ok(false, "Some test failed with error " + err);
+    }).then(SimpleTest.finish);
+  }
+
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.push.enabled", true],
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+    ]}, runTest);
+  SpecialPowers.addPermission('push', true, document);
+  SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>

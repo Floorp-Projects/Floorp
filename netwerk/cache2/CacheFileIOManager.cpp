@@ -27,7 +27,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "private/pprio.h"
-#include "mozilla/VisualEventTracer.h"
 #include "mozilla/Preferences.h"
 #include "nsNetUtil.h"
 
@@ -553,9 +552,6 @@ public:
   {
     MOZ_COUNT_CTOR(OpenFileEvent);
     mIOMan = CacheFileIOManager::gInstance;
-
-    MOZ_EVENT_TRACER_NAME_OBJECT(static_cast<nsIRunnable*>(this), aKey.BeginReading());
-    MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::open-background");
   }
 
 protected:
@@ -575,7 +571,6 @@ public:
       sum.finish(mHash);
     }
 
-    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::open-background");
     if (!mIOMan) {
       rv = NS_ERROR_NOT_INITIALIZED;
     } else {
@@ -588,17 +583,12 @@ public:
       }
       mIOMan = nullptr;
       if (mHandle) {
-        MOZ_EVENT_TRACER_NAME_OBJECT(mHandle.get(), mKey.get());
         if (mHandle->Key().IsEmpty()) {
           mHandle->Key() = mKey;
         }
       }
     }
-    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::open-background");
-
-    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::open-result");
     mCallback->OnFileOpened(mHandle, rv);
-    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::open-result");
 
     return NS_OK;
   }
@@ -623,9 +613,6 @@ public:
     , mCallback(aCallback)
   {
     MOZ_COUNT_CTOR(ReadEvent);
-
-    MOZ_EVENT_TRACER_NAME_OBJECT(static_cast<nsIRunnable*>(this), aHandle->Key().get());
-    MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::read-background");
   }
 
 protected:
@@ -639,19 +626,14 @@ public:
   {
     nsresult rv;
 
-    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::read-background");
     if (mHandle->IsClosed()) {
       rv = NS_ERROR_NOT_INITIALIZED;
     } else {
       rv = CacheFileIOManager::gInstance->ReadInternal(
         mHandle, mOffset, mBuf, mCount);
     }
-    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::read-background");
 
-    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::read-result");
     mCallback->OnDataRead(mHandle, mBuf, rv);
-    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::read-result");
-
     return NS_OK;
   }
 
@@ -677,9 +659,6 @@ public:
     , mCallback(aCallback)
   {
     MOZ_COUNT_CTOR(WriteEvent);
-
-    MOZ_EVENT_TRACER_NAME_OBJECT(static_cast<nsIRunnable*>(this), aHandle->Key().get());
-    MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::write-background");
   }
 
 protected:
@@ -697,7 +676,6 @@ public:
   {
     nsresult rv;
 
-    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::write-background");
     if (mHandle->IsClosed()) {
       rv = NS_ERROR_NOT_INITIALIZED;
     } else {
@@ -708,16 +686,12 @@ public:
         CacheFileIOManager::gInstance->DoomFileInternal(mHandle);
       }
     }
-    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::write-background");
-
-    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::write-result");
     if (mCallback) {
       mCallback->OnDataWritten(mHandle, mBuf, rv);
     } else {
       free(const_cast<char *>(mBuf));
       mBuf = nullptr;
     }
-    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::write-result");
 
     return NS_OK;
   }
@@ -740,9 +714,6 @@ public:
     , mHandle(aHandle)
   {
     MOZ_COUNT_CTOR(DoomFileEvent);
-
-    MOZ_EVENT_TRACER_NAME_OBJECT(static_cast<nsIRunnable*>(this), aHandle->Key().get());
-    MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::doom-background");
   }
 
 protected:
@@ -756,19 +727,15 @@ public:
   {
     nsresult rv;
 
-    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::doom-background");
     if (mHandle->IsClosed()) {
       rv = NS_ERROR_NOT_INITIALIZED;
     } else {
       rv = CacheFileIOManager::gInstance->DoomFileInternal(mHandle);
     }
-    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::doom-background");
 
-    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::doom-result");
     if (mCallback) {
       mCallback->OnFileDoomed(mHandle, rv);
     }
-    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::doom-result");
 
     return NS_OK;
   }

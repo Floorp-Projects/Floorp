@@ -11157,12 +11157,13 @@ def memberProperties(m, descriptor):
             props.isJsonifier = True
         elif (not m.isIdentifierLess() or m == descriptor.operations['Stringifier']):
             if not m.isStatic() and descriptor.interface.hasInterfacePrototypeObject():
-                if m.returnsPromise() and descriptor.needsSpecialGenericOps():
-                    props.isPromiseReturningMethod = True
+                if descriptor.needsSpecialGenericOps():
+                    if m.returnsPromise():
+                        props.isPromiseReturningMethod = True
+                    else:
+                        props.isGenericMethod = True
                 if m.getExtendedAttribute("CrossOriginCallable"):
                     props.isCrossOriginMethod = True
-                elif descriptor.needsSpecialGenericOps():
-                    props.isGenericMethod = True
     elif m.isAttr():
         if not m.isStatic() and descriptor.interface.hasInterfacePrototypeObject():
             if m.hasLenientThis():

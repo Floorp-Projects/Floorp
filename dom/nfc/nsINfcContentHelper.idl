@@ -124,7 +124,7 @@ interface nsINfcBrowserAPI : nsISupports
                    in boolean isFocus);
 };
 
-[scriptable, uuid(f0ed35c5-3f59-4806-b6bb-e77b879887af)]
+[scriptable, uuid(75f0c8c0-2e5a-491f-a75d-4f3849c4feec)]
 interface nsINfcContentHelper : nsISupports
 {
   /**
@@ -277,10 +277,8 @@ interface nsINfcContentHelper : nsISupports
    *
    * @param appId
    *        Application ID that is capable of handling NFC_EVENT_PEER_READY event
-   * @param tabId
-   *        Tab Id of the window calling this interface.
    */
-  void notifyUserAcceptedP2P(in unsigned long appId, in uint64_t tabId);
+  void notifyUserAcceptedP2P(in unsigned long appId);
 
   /**
    * Notify the status of sendFile operation to parent process

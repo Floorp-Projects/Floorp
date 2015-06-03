@@ -1019,7 +1019,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     return;
   }
 
-  nsIntSize oldSize = mSize;
+  IntSize oldSize = mSize;
   UpdateRenderTarget();
 
   // Failed to create a render target or the view.
@@ -1091,7 +1091,7 @@ CompositorD3D11::EndFrame()
     return;
   }
 
-  nsIntSize oldSize = mSize;
+  IntSize oldSize = mSize;
   EnsureSize();
   if (mSize.width <= 0 || mSize.height <= 0) {
     return;

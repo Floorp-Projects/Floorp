@@ -135,6 +135,9 @@
 @RESPATH@/run-mozilla.sh
 #endif
 #endif
+#ifdef MOZ_WEBSPEECH_MODELS
+@BINPATH@/models/
+#endif
 
 ; [Components]
 @RESPATH@/components/components.manifest
@@ -281,6 +284,7 @@
 @RESPATH@/components/necko_file.xpt
 @RESPATH@/components/necko_ftp.xpt
 @RESPATH@/components/necko_http.xpt
+@RESPATH@/components/necko_mdns.xpt
 @RESPATH@/components/necko_res.xpt
 @RESPATH@/components/necko_socket.xpt
 @RESPATH@/components/necko_strconv.xpt
