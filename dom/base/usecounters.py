@@ -41,7 +41,7 @@ def read_conf(conf_filename):
                         'interface_name': interface_name,
                         'attribute_name': attribute_name }
                 continue
-            m = re.match(r'property ([a-z0-9-]+)$', line)
+            m = re.match(r'property ([A-Za-z0-9]+)$', line)
             if m:
                 property_name = m.group(1)
                 yield { 'type': 'property',
