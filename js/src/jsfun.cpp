@@ -1552,7 +1552,7 @@ js::CallOrConstructBoundFunction(JSContext* cx, unsigned argc, Value* vp)
     const Value& boundThis = fun->getBoundFunctionThis();
 
     InvokeArgs invokeArgs(cx);
-    if (!invokeArgs.init(args.length() + argslen, args.isConstructing()))
+    if (!invokeArgs.init(args.length() + argslen))
         return false;
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 4. */
@@ -1566,14 +1566,6 @@ js::CallOrConstructBoundFunction(JSContext* cx, unsigned argc, Value* vp)
     bool constructing = args.isConstructing();
     if (!constructing)
         invokeArgs.setThis(boundThis);
-
-    /* ES6 9.4.1.2 step 5 */
-    if (constructing) {
-        if (&args.newTarget().toObject() == fun)
-            invokeArgs.newTarget().setObject(*target);
-        else
-            invokeArgs.newTarget().set(args.newTarget());
-    }
 
     if (constructing ? !InvokeConstructor(cx, invokeArgs) : !Invoke(cx, invokeArgs))
         return false;

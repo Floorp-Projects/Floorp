@@ -6447,8 +6447,6 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
             return false;
     }
 
-    bool isNewOp = pn->getOp() == JSOP_NEW || pn->getOp() == JSOP_SPREADNEW;
-
     /*
      * Emit code for each argument in order, then emit the JSOP_*CALL or
      * JSOP_NEW bytecode with a two-byte immediate telling how many args
@@ -6461,20 +6459,9 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
             if (!emitTree(pn3))
                 return false;
         }
-
-        if (isNewOp) {
-            // Repush the callee as new.target
-            if (!emitDupAt(this->stackDepth - 1 - (argc + 1)))
-                return false;
-        }
     } else {
         if (!emitArray(pn2->pn_next, argc, JSOP_SPREADCALLARRAY))
             return false;
-
-        if (isNewOp) {
-            if (!emitDupAt(this->stackDepth - 1 - 2))
-                return false;
-        }
     }
     emittingForInit = oldEmittingForInit;
 
