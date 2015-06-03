@@ -47,7 +47,7 @@
 #include "nsIDocShell.h"
 #include "nsFormData.h"
 #include "nsFormSubmissionConstants.h"
-#include "nsIPromptService.h"
+#include "nsIPrompt.h"
 #include "nsISecurityUITelemetry.h"
 #include "nsIStringBundle.h"
 
@@ -911,9 +911,16 @@ HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPromptService> promptSvc =
-    do_GetService("@mozilla.org/embedcomp/prompt-service;1");
-  if (!promptSvc) {
+  nsCOMPtr<nsPIDOMWindow> window = OwnerDoc()->GetWindow();
+  if (!window) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
+  if (!docShell) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIPrompt> prompt = do_GetInterface(docShell);
+  if (!prompt) {
     return NS_ERROR_FAILURE;
   }
   nsCOMPtr<nsIStringBundle> stringBundle;
@@ -941,13 +948,12 @@ HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
     getter_Copies(cont));
   int32_t buttonPressed;
   bool checkState = false; // this is unused (ConfirmEx requires this parameter)
-  nsCOMPtr<nsPIDOMWindow> window = OwnerDoc()->GetWindow();
-  rv = promptSvc->ConfirmEx(window, title.get(), message.get(),
-                            (nsIPromptService::BUTTON_TITLE_IS_STRING *
-                             nsIPromptService::BUTTON_POS_0) +
-                            (nsIPromptService::BUTTON_TITLE_CANCEL *
-                             nsIPromptService::BUTTON_POS_1),
-                            cont.get(), nullptr, nullptr, nullptr,
+  rv = prompt->ConfirmEx(title.get(), message.get(),
+                         (nsIPrompt::BUTTON_TITLE_IS_STRING *
+                          nsIPrompt::BUTTON_POS_0) +
+                         (nsIPrompt::BUTTON_TITLE_CANCEL *
+                          nsIPrompt::BUTTON_POS_1),
+                         cont.get(), nullptr, nullptr, nullptr,
                             &checkState, &buttonPressed);
   if (NS_FAILED(rv)) {
     return rv;
