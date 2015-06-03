@@ -690,14 +690,16 @@ TCPSocket.prototype = {
 
     if (this._binaryType === "arraybuffer") {
       byteLength = byteLength || data.byteLength;
+    } else {
+      data = data.toString();
+      byteLength = data.length;
     }
 
     if (this._inChild) {
       this._socketBridge.sendSend(data, byteOffset, byteLength, ++this._trackingNumber);
     }
 
-    let length = this._binaryType === "arraybuffer" ? byteLength : data.length;
-    let newBufferedAmount = this.bufferedAmount + length;
+    let newBufferedAmount = this.bufferedAmount + byteLength;
     let bufferFull = newBufferedAmount >= BUFFER_SIZE;
 
     if (bufferFull) {
@@ -722,7 +724,7 @@ TCPSocket.prototype = {
       new_stream.setData(data, byteOffset, byteLength);
     } else {
       new_stream = new StringInputStream();
-      new_stream.setData(data, length);
+      new_stream.setData(data, byteLength);
     }
 
     if (this._waitingForStartTLS) {
@@ -737,7 +739,7 @@ TCPSocket.prototype = {
 
 #ifdef MOZ_WIDGET_GONK
     // Collect transmitted amount for network statistics.
-    this._txBytes += length;
+    this._txBytes += byteLength;
     this._saveNetworkStats(false);
 #endif
 
