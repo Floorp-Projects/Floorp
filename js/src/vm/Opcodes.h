@@ -1514,8 +1514,15 @@
      *   Stack: obj, val => obj
      */ \
     macro(JSOP_INITHIDDENPROP, 147,"inithiddenprop", NULL, 5,  2,  1,  JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING) \
-    /* Unused. */ \
-    macro(JSOP_UNUSED148,     148,"unused148", NULL,      1,  0,  0,  JOF_BYTE) \
+    /*
+     * Push "new.target"
+     *
+     *  Category: Variables and Scopes
+     *  Type: Arguments
+     *  Operands:
+     *  Stack: => new.target
+     */ \
+    macro(JSOP_NEWTARGET,  148, "newtarget", NULL,      1,  0,  1,  JOF_BYTE) \
     \
     /*
      * Placeholder opcode used during bytecode generation. This never
