@@ -4417,6 +4417,11 @@ pref("dom.push.adaptive.upperLimit", 1740000); // 29 min
 // enable udp wakeup support
 pref("dom.push.udp.wakeupEnabled", false);
 
+// WebPush prefs:
+pref("dom.push.http2.reset_retry_count_after_ms", 60000);
+pref("dom.push.http2.maxRetries", 2);
+pref("dom.push.http2.retryInterval", 5000);
+
 // WebNetworkStats
 pref("dom.mozNetworkStats.enabled", false);
 

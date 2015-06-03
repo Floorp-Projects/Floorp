@@ -14,6 +14,7 @@
 #include "gfx2DGlue.h"
 #include "gfxUtils.h"
 #include "CompositorOGL.h"
+#include "mozilla/gfx/Point.h"
 
 using namespace mozilla::gl;
 
@@ -110,8 +111,8 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const gfx::IntRec
             srcSubInDstRect.MoveBy(aDstRect.TopLeft());
 
             // we transform these rectangles to be relative to the current src and dst tiles, respectively
-            nsIntSize srcSize = srcTextureRect.Size();
-            nsIntSize dstSize = dstTextureRect.Size();
+            gfx::IntSize srcSize = srcTextureRect.Size();
+            gfx::IntSize dstSize = dstTextureRect.Size();
             srcSubRect.MoveBy(-srcTextureRect.x, -srcTextureRect.y);
             srcSubInDstRect.MoveBy(-dstTextureRect.x, -dstTextureRect.y);
 
@@ -123,10 +124,10 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const gfx::IntRec
 
             RectTriangles rects;
 
-            nsIntSize realTexSize = srcSize;
+            gfx::IntSize realTexSize = srcSize;
             if (!CanUploadNonPowerOfTwo(gl)) {
-                realTexSize = nsIntSize(gfx::NextPowerOfTwo(srcSize.width),
-                                        gfx::NextPowerOfTwo(srcSize.height));
+                realTexSize = gfx::IntSize(gfx::NextPowerOfTwo(srcSize.width),
+                                           gfx::NextPowerOfTwo(srcSize.height));
             }
 
             if (aSrc->GetWrapMode() == LOCAL_GL_REPEAT) {

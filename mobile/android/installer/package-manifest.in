@@ -76,7 +76,8 @@
 [lib destdir="lib/@ANDROID_CPU_ARCH@"]
 @BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
 # This should be MOZ_CHILD_PROCESS_NAME, but that has a "lib/" prefix.
-@BINPATH@/@DLL_PREFIX@plugin-container@DLL_SUFFIX@
+@BINPATH@/@MOZ_CHILD_PROCESS_NAME@
+@BINPATH@/@MOZ_CHILD_PROCESS_NAME_PIE@
 
 [xpcom]
 @BINPATH@/dependentlibs.list

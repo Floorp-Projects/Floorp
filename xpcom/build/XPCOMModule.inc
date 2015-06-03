@@ -21,9 +21,6 @@
     COMPONENT(CONSOLESERVICE, nsConsoleServiceConstructor)
     COMPONENT(ATOMSERVICE, nsAtomServiceConstructor)
     COMPONENT(OBSERVERSERVICE, nsObserverService::Create)
-#ifdef MOZ_VISUAL_EVENT_TRACER
-    COMPONENT(VISUALEVENTTRACER, VisualEventTracerConstructor)
-#endif
 
     COMPONENT(TIMER, nsTimerImplConstructor)
 

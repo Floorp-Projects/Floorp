@@ -196,7 +196,10 @@ function setPrefs(prefs = {}) {
     'adaptive.gap': 60000,
     'adaptive.upperLimit': 29 * 60 * 1000,
     // Misc. defaults.
-    'adaptive.mobile': ''
+    'adaptive.mobile': '',
+    'http2.maxRetries': 2,
+    'http2.retryInterval': 500,
+    'http2.reset_retry_count_after_ms': 60000
   }, prefs);
   for (let pref in defaultPrefs) {
     servicePrefs.set(pref, defaultPrefs[pref]);

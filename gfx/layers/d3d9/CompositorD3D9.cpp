@@ -664,7 +664,7 @@ CompositorD3D9::EndFrame()
   if (mDeviceManager) {
     device()->EndScene();
 
-    nsIntSize oldSize = mSize;
+    IntSize oldSize = mSize;
     EnsureSize();
     if (oldSize == mSize) {
       if (mTarget) {
