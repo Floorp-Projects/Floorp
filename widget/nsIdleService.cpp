@@ -679,7 +679,7 @@ nsIdleService::IdleTimerCallback(void)
   uint32_t currentIdleTimeInMS;
 
   if (NS_FAILED(GetIdleTime(&currentIdleTimeInMS))) {
-    MOZ_LOG(sLog, PR_LOG_ALWAYS,
+    MOZ_LOG(sLog, PR_LOG_INFO,
            ("idleService: Idle timer callback: failed to get idle time"));
 #ifdef MOZ_WIDGET_ANDROID
     __android_log_print(LOG_LEVEL, LOG_TAG,

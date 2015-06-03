@@ -178,7 +178,7 @@ debug_printf(const char *format, ...)
   va_list ap;
   char buffer[1024];
 
-  if (MOZ_LOG_TEST(GetSCTPLog(), PR_LOG_ALWAYS)) {
+  if (MOZ_LOG_TEST(GetSCTPLog(), PR_LOG_DEBUG)) {
     va_start(ap, format);
 #ifdef _WIN32
     if (vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, format, ap) > 0) {
@@ -335,7 +335,7 @@ DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams, bool aUs
       }
 
       // Set logging to SCTP:PR_LOG_DEBUG to get SCTP debugs
-      if (MOZ_LOG_TEST(GetSCTPLog(), PR_LOG_ALWAYS)) {
+      if (MOZ_LOG_TEST(GetSCTPLog(), PR_LOG_DEBUG)) {
         usrsctp_sysctl_set_sctp_debug_on(SCTP_DEBUG_ALL);
       }
 
