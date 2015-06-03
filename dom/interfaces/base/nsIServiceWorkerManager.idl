@@ -33,7 +33,7 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, builtinclass, uuid(bfb913ad-177d-49ae-bf62-efd32ca73424)]
+[scriptable, builtinclass, uuid(d130fcbd-1afe-4dd9-b70d-08a4b2373af5)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**

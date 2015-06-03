@@ -20,13 +20,15 @@
 #define SERVICEWORKERREGISTRAR_TERMINATOR "#"
 #define SERVICEWORKERREGISTRAR_TRUE "true"
 #define SERVICEWORKERREGISTRAR_FALSE "false"
-#define SERVICEWORKERREGISTRAR_SYSTEM_PRINCIPAL "system"
-#define SERVICEWORKERREGISTRAR_CONTENT_PRINCIPAL "content"
-
 
 class nsIFile;
 
 namespace mozilla {
+
+namespace ipc {
+class PrincipalInfo;
+}
+
 namespace dom {
 
 class ServiceWorkerRegistrationData;
@@ -50,7 +52,8 @@ public:
   void GetRegistrations(nsTArray<ServiceWorkerRegistrationData>& aValues);
 
   void RegisterServiceWorker(const ServiceWorkerRegistrationData& aData);
-  void UnregisterServiceWorker(const nsACString& aScope);
+  void UnregisterServiceWorker(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                               const nsACString& aScope);
 
 protected:
   // These methods are protected because we test this class using gTest
