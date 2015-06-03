@@ -37,7 +37,7 @@ public:
   void MaybeReject(ErrorResult&, const nsCString& aReason);
 
 private:
-  DetailedPromise(nsIGlobalObject* aGlobal);
+  explicit DetailedPromise(nsIGlobalObject* aGlobal);
   virtual ~DetailedPromise();
 
   bool mResponded;
