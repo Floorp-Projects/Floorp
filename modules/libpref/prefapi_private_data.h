@@ -10,7 +10,7 @@
 
 #include "mozilla/MemoryReporting.h"
 
-extern PLDHashTable2* gHashTable;
+extern PLDHashTable* gHashTable;
 extern bool gDirty;
 
 namespace mozilla {

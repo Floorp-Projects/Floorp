@@ -790,6 +790,11 @@ public:
   void
   ContinueInstall()
   {
+    // mRegistration will be null if we have already Fail()ed.
+    if (!mRegistration) {
+      return;
+    }
+
     // Even if we are canceled, ensure integrity of mSetOfScopesBeingUpdated
     // first.
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();

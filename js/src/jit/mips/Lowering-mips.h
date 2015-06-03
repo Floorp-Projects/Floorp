@@ -105,6 +105,7 @@ class LIRGeneratorMIPS : public LIRGeneratorShared
     void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins);
     void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins);
     void visitSubstr(MSubstr* ins);
+    void visitRandom(MRandom* ins);
 };
 
 typedef LIRGeneratorMIPS LIRGeneratorSpecific;

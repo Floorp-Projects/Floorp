@@ -765,10 +765,6 @@ random_generateSeed()
     return seed.u64;
 }
 
-static const uint64_t RNG_MULTIPLIER = 0x5DEECE66DLL;
-static const uint64_t RNG_ADDEND = 0xBLL;
-static const uint64_t RNG_MASK = (1LL << 48) - 1;
-
 /*
  * Math.random() support, lifted from java.util.Random.java.
  */
@@ -785,7 +781,7 @@ uint64_t
 js::random_next(uint64_t* rngState, int bits)
 {
     MOZ_ASSERT((*rngState & 0xffff000000000000ULL) == 0, "Bad rngState");
-    MOZ_ASSERT(bits > 0 && bits <= 48, "bits is out of range");
+    MOZ_ASSERT(bits > 0 && bits <= RNG_STATE_WIDTH, "bits is out of range");
 
     if (*rngState == 0) {
         random_initState(rngState);
@@ -795,7 +791,7 @@ js::random_next(uint64_t* rngState, int bits)
     nextstate += RNG_ADDEND;
     nextstate &= RNG_MASK;
     *rngState = nextstate;
-    return nextstate >> (48 - bits);
+    return nextstate >> (RNG_STATE_WIDTH - bits);
 }
 
 double
