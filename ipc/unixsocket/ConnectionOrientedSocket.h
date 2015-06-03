@@ -31,9 +31,11 @@ class ConnectionOrientedSocketIO
 public:
   virtual ~ConnectionOrientedSocketIO();
 
-  virtual nsresult Accept(int aFd,
-                          const struct sockaddr* aAddress,
-                          socklen_t aAddressLength) = 0;
+  nsresult Accept(int aFd,
+                  const struct sockaddr* aAddress,
+                  socklen_t aAddressLength);
+
+  nsresult Connect();
 
   void Send(UnixSocketIOBuffer* aBuffer);
 
@@ -55,19 +57,39 @@ protected:
    * @param aIOLoop The socket's I/O loop.
    * @param aFd The socket file descriptor.
    * @param aConnectionStatus The connection status for |aFd|.
+   * @param aConnector Connector object for socket-type-specific methods.
    */
   ConnectionOrientedSocketIO(nsIThread* aConsumerThread,
                              MessageLoop* aIOLoop,
-                             int aFd, ConnectionStatus aConnectionStatus);
+                             int aFd, ConnectionStatus aConnectionStatus,
+                             UnixSocketConnector* aConnector);
 
   /**
    * Constructs an instance of |ConnectionOrientedSocketIO|
    *
    * @param aConsumerThread The socket's consumer thread.
    * @param aIOLoop The socket's I/O loop.
+   * @param aConnector Connector object for socket-type-specific methods.
    */
   ConnectionOrientedSocketIO(nsIThread* aConsumerThread,
-                             MessageLoop* aIOLoop);
+                             MessageLoop* aIOLoop,
+                             UnixSocketConnector* aConnector);
+
+private:
+  /**
+   * Connector object used to create the connection we are currently using.
+   */
+  nsAutoPtr<UnixSocketConnector> mConnector;
+
+  /**
+   * Number of valid bytes in |mPeerAddress|.
+   */
+  socklen_t mPeerAddressLength;
+
+  /**
+   * Address of the socket's current peer.
+   */
+  struct sockaddr_storage mPeerAddress;
 };
 
 class ConnectionOrientedSocket : public DataSocket
