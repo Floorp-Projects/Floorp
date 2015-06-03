@@ -204,7 +204,7 @@ public:
   // media metadata. The decoder monitor must be obtained before calling this.
   // aDuration is in microseconds.
   // A value of INT64_MAX will be treated as infinity.
-  void SetDuration(int64_t aDuration);
+  void SetDuration(media::TimeUnit aDuration);
 
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
