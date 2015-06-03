@@ -2007,6 +2007,9 @@ IonBuilder::inspectOpcode(JSOp op)
         // Just fall through to the unsupported bytecode case.
         break;
 
+      case JSOP_NEWTARGET:
+        return jsop_newtarget();
+
 #ifdef DEBUG
       case JSOP_PUSHBLOCKSCOPE:
       case JSOP_FRESHENBLOCKSCOPE:
@@ -9422,6 +9425,26 @@ IonBuilder::jsop_arguments()
     }
     MOZ_ASSERT(lazyArguments_);
     current->push(lazyArguments_);
+    return true;
+}
+
+bool
+IonBuilder::jsop_newtarget()
+{
+    MOZ_ASSERT(info().funMaybeLazy());
+    if (inliningDepth_ == 0) {
+        MNewTarget* newTarget = MNewTarget::New(alloc());
+        current->add(newTarget);
+        current->push(newTarget);
+        return true;
+    }
+
+    if (!info().constructing()) {
+        pushConstant(UndefinedValue());
+        return true;
+    }
+
+    current->push(inlineCallInfo_->getNewTarget());
     return true;
 }
 

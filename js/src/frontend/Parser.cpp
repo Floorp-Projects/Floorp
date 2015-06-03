@@ -7868,27 +7868,36 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
 
     /* Check for new expression first. */
     if (tt == TOK_NEW) {
-        lhs = handler.newList(PNK_NEW, JSOP_NEW);
-        if (!lhs)
+        uint32_t newBegin = pos().begin;
+        // Make sure this wasn't a |new.target| in disguise.
+        Node newTarget;
+        if (!tryNewTarget(newTarget))
             return null();
-
-        if (!tokenStream.getToken(&tt, TokenStream::Operand))
-            return null();
-        Node ctorExpr = memberExpr(yieldHandling, tt, false, PredictInvoked);
-        if (!ctorExpr)
-            return null();
-
-        handler.addList(lhs, ctorExpr);
-
-        bool matched;
-        if (!tokenStream.matchToken(&matched, TOK_LP))
-            return null();
-        if (matched) {
-            bool isSpread = false;
-            if (!argumentList(yieldHandling, lhs, &isSpread))
+        if (newTarget) {
+            lhs = newTarget;
+        } else {
+            lhs = handler.newList(PNK_NEW, newBegin, JSOP_NEW);
+            if (!lhs)
                 return null();
-            if (isSpread)
-                handler.setOp(lhs, JSOP_SPREADNEW);
+
+            // Gotten by tryNewTarget
+            tt = tokenStream.currentToken().type;
+            Node ctorExpr = memberExpr(yieldHandling, tt, false, PredictInvoked);
+            if (!ctorExpr)
+                return null();
+
+            handler.addList(lhs, ctorExpr);
+
+            bool matched;
+            if (!tokenStream.matchToken(&matched, TOK_LP))
+                return null();
+            if (matched) {
+                bool isSpread = false;
+                if (!argumentList(yieldHandling, lhs, &isSpread))
+                    return null();
+                if (isSpread)
+                    handler.setOp(lhs, JSOP_SPREADNEW);
+            }
         }
     } else if (tt == TOK_SUPER) {
         lhs = null();
@@ -8606,6 +8615,44 @@ Parser<ParseHandler>::methodDefinition(YieldHandling yieldHandling, PropListType
 
     MOZ_ASSERT(listType == ObjectLiteral);
     return handler.addObjectMethodDefinition(propList, propname, fn, op);
+}
+
+template <typename ParseHandler>
+bool
+Parser<ParseHandler>::tryNewTarget(Node &newTarget)
+{
+    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_NEW));
+
+    uint32_t begin = pos().begin;
+    newTarget = null();
+
+    // |new| expects to look for an operand, so we will honor that.
+    TokenKind next;
+    if (!tokenStream.getToken(&next, TokenStream::Operand))
+        return false;
+
+    // Don't unget the token, since lookahead cannot handle someone calling
+    // getToken() with a different modifier. Callers should inspect currentToken().
+    if (next != TOK_DOT)
+        return true;
+
+    if (!tokenStream.getToken(&next))
+        return false;
+    if (next != TOK_NAME || tokenStream.currentName() != context->names().target) {
+        report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
+               "target", TokenKindToDesc(next));
+        return false;
+    }
+
+    if (!pc->sc->isFunctionBox() || pc->sc->asFunctionBox()->isGenerator() ||
+        pc->sc->asFunctionBox()->function()->isArrow())
+    {
+        reportWithOffset(ParseError, false, begin, JSMSG_BAD_NEWTARGET);
+        return false;
+    }
+
+    newTarget = handler.newNewTarget(TokenPos(begin, pos().end));
+    return !!newTarget;
 }
 
 template <typename ParseHandler>
