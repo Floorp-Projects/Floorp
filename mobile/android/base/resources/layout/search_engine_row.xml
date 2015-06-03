@@ -3,10 +3,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
-       xmlns:gecko="http://schemas.android.com/apk/res-auto">
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Remove favicon_search_large_key when landing bug 1158275. -->
     <org.mozilla.gecko.widget.FaviconView android:id="@+id/suggestion_icon"
                                           android:layout_width="@dimen/favicon_bg"
                                           android:layout_height="@dimen/favicon_bg"
@@ -14,9 +12,7 @@
                                           android:layout_marginRight="10dip"
                                           android:layout_centerVertical="true"
                                           android:minWidth="@dimen/favicon_bg"
-                                          android:minHeight="@dimen/favicon_bg"
-                                          gecko:defaultFaviconDrawable="@drawable/favicon_search_large"
-                                          gecko:defaultFaviconKey="@string/favicon_search_large_key"/>
+                                          android:minHeight="@dimen/favicon_bg"/>
 
     <org.mozilla.gecko.widget.FlowLayout android:id="@+id/suggestion_layout"
                                          android:layout_toRightOf="@id/suggestion_icon"

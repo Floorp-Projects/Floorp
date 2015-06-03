@@ -734,6 +734,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.AllowVerticalScrollWithWheel());
     WriteParam(aMsg, aParam.mClipRect);
     WriteParam(aMsg, aParam.mIsLayersIdRoot);
+    WriteParam(aMsg, aParam.mUsesContainerScrolling);
     WriteParam(aMsg, aParam.GetContentDescription());
   }
 
@@ -778,6 +779,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mAllowVerticalScrollWithWheel) &&
             ReadParam(aMsg, aIter, &aResult->mClipRect) &&
             ReadParam(aMsg, aIter, &aResult->mIsLayersIdRoot) &&
+            ReadParam(aMsg, aIter, &aResult->mUsesContainerScrolling) &&
             ReadContentDescription(aMsg, aIter, aResult));
   }
 };

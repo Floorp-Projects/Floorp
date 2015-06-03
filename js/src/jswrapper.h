@@ -205,10 +205,10 @@ class JS_FRIEND_API(OpaqueCrossCompartmentWrapper) : public CrossCompartmentWrap
                         bool* bp) const override;
     virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject wrapper,
                                               AutoIdVector& props) const override;
-    virtual bool objectClassIs(HandleObject obj, ESClassValue classValue, JSContext* cx) const;
+    virtual bool objectClassIs(HandleObject obj, ESClassValue classValue, JSContext* cx) const override;
     virtual const char* className(JSContext* cx, HandleObject wrapper) const override;
-    virtual JSString* fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const;
-    virtual bool defaultValue(JSContext* cx, HandleObject obj, JSType hint, MutableHandleValue vp) const;
+    virtual JSString* fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const override;
+    virtual bool defaultValue(JSContext* cx, HandleObject obj, JSType hint, MutableHandleValue vp) const override;
 
     static const OpaqueCrossCompartmentWrapper singleton;
 };

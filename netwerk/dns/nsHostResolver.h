@@ -345,7 +345,7 @@ private:
     uint32_t      mNumIdleThreads;
     uint32_t      mThreadCount;
     uint32_t      mActiveAnyThreadCount;
-    PLDHashTable2 mDB;
+    PLDHashTable  mDB;
     PRCList       mHighQ;
     PRCList       mMediumQ;
     PRCList       mLowQ;

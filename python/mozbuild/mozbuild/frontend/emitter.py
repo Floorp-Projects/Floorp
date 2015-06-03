@@ -850,15 +850,15 @@ class TreeMetadataEmitter(LoggingMixin):
         for f in generated_files:
             flags = generated_files[f]
             output = f
+            inputs = []
             if flags.script:
                 method = "main"
+                script = SourcePath(context, flags.script).full_path
+
                 # Deal with cases like "C:\\path\\to\\script.py:function".
-                if not flags.script.endswith('.py') and ':' in flags.script:
-                    script, method = flags.script.rsplit(':', 1)
-                else:
-                    script = flags.script
-                script = mozpath.join(context.srcdir, script)
-                inputs = [mozpath.join(context.srcdir, i) for i in flags.inputs]
+                if '.py:' in script:
+                    script, method = script.rsplit('.py:', 1)
+                    script += '.py'
 
                 if not os.path.exists(script):
                     raise SandboxValidationError(
@@ -868,15 +868,18 @@ class TreeMetadataEmitter(LoggingMixin):
                     raise SandboxValidationError(
                         'Script for generating %s does not end in .py: %s'
                         % (f, script), context)
-                for i in inputs:
-                    if not os.path.exists(i):
+
+                for i in flags.inputs:
+                    p = Path(context, i)
+                    if (isinstance(p, SourcePath) and
+                            not os.path.exists(p.full_path)):
                         raise SandboxValidationError(
                             'Input for generating %s does not exist: %s'
-                            % (f, i), context)
+                            % (f, p.full_path), context)
+                    inputs.append(p.full_path)
             else:
                 script = None
                 method = None
-                inputs = []
             yield GeneratedFile(context, script, method, output, inputs)
 
     def _process_test_harness_files(self, context):

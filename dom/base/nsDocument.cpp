@@ -2030,7 +2030,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
     tmp->mAnimationController->Traverse(&cb);
   }
 
-  if (tmp->mSubDocuments && tmp->mSubDocuments->IsInitialized()) {
+  if (tmp->mSubDocuments) {
     PL_DHashTableEnumerate(tmp->mSubDocuments, SubDocTraverser, &cb);
   }
 
@@ -3986,7 +3986,7 @@ nsDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
         SubDocInitEntry
       };
 
-      mSubDocuments = new PLDHashTable2(&hash_table_ops, sizeof(SubDocMapEntry));
+      mSubDocuments = new PLDHashTable(&hash_table_ops, sizeof(SubDocMapEntry));
     }
 
     // Add a mapping to the hash table
@@ -7533,9 +7533,8 @@ nsDocument::GetInputEncoding(nsAString& aInputEncoding)
 }
 
 void
-nsIDocument::GetInputEncoding(nsAString& aInputEncoding)
+nsIDocument::GetInputEncoding(nsAString& aInputEncoding) const
 {
-  // Not const function, because WarnOnceAbout is not a const method
   WarnOnceAbout(eInputEncoding);
   if (mHaveInputEncoding) {
     return GetCharacterSet(aInputEncoding);
@@ -10422,7 +10421,7 @@ static const char* kDocumentWarnings[] = {
 #undef DOCUMENT_WARNING
 
 bool
-nsIDocument::HasWarnedAbout(DeprecatedOperations aOperation)
+nsIDocument::HasWarnedAbout(DeprecatedOperations aOperation) const
 {
   static_assert(eDeprecatedOperationCount <= 64,
                 "Too many deprecated operations");
@@ -10431,8 +10430,9 @@ nsIDocument::HasWarnedAbout(DeprecatedOperations aOperation)
 
 void
 nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation,
-                           bool asError /* = false */)
+                           bool asError /* = false */) const
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (HasWarnedAbout(aOperation)) {
     return;
   }
@@ -10446,7 +10446,7 @@ nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation,
 }
 
 bool
-nsIDocument::HasWarnedAbout(DocumentWarnings aWarning)
+nsIDocument::HasWarnedAbout(DocumentWarnings aWarning) const
 {
   static_assert(eDocumentWarningCount <= 64,
                 "Too many document warnings");
@@ -10457,8 +10457,9 @@ void
 nsIDocument::WarnOnceAbout(DocumentWarnings aWarning,
                            bool asError /* = false */,
                            const char16_t **aParams /* = nullptr */,
-                           uint32_t aParamsLength /* = 0 */)
+                           uint32_t aParamsLength /* = 0 */) const
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (HasWarnedAbout(aWarning)) {
     return;
   }

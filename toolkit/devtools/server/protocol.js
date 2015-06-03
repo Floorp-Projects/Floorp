@@ -15,12 +15,6 @@ let object = require("sdk/util/object");
 
 exports.emit = events.emit;
 
-// Waiting for promise.done() to be added, see bug 851321
-function promiseDone(err) {
-  console.error(err);
-  return promise.reject(err);
-}
-
 /**
  * Types: named marshallers/demarshallers.
  *
@@ -1337,7 +1331,7 @@ let frontProto = function(proto) {
         }
 
         return ret;
-      }).then(null, promiseDone);
+      });
     }
 
     // Release methods should call the destroy function on return.

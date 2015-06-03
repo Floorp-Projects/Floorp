@@ -225,7 +225,8 @@ LoginManagerPrompter.prototype = {
                     }
                     pwmgr.addLogin(aLogin);
                     promptHistogram.add(PROMPT_ADD);
-                }
+                },
+                positive: true
             }
         ];
 
@@ -282,7 +283,8 @@ LoginManagerPrompter.prototype = {
                 callback:  function() {
                     self._updateLogin(aOldLogin, aNewPassword);
                     promptHistogram.add(PROMPT_UPDATE);
-                }
+                },
+                positive: true
             }
         ];
 

@@ -55,10 +55,19 @@ void fillAbortMessage(char (&msg)[N], uintptr_t retAddress) {
 }
 #endif
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) && !defined(MOZ_ASAN)
 // Define abort() here, so that it is used instead of the system abort(). This
 // lets us control the behavior when aborting, in order to get better results
 // on *NIX platforms. See mozalloc_abort for details.
+//
+// For AddressSanitizer, we must not redefine system abort because the ASan
+// option "abort_on_error=1" calls abort() and therefore causes the following
+// call chain with our redefined abort:
+//
+// ASan -> abort() -> moz_abort() -> MOZ_CRASH() -> Segmentation fault
+//
+// That segmentation fault will be interpreted as another bug by ASan and as a
+// result, ASan will just exit(1) instead of aborting.
 void abort(void)
 {
 #ifdef MOZ_WIDGET_ANDROID
