@@ -81,9 +81,9 @@ skip-if(B2G||Mulet) skip-if(Android&&AndroidVersion>15) HTTP(..) == font-stretch
 # Bug 765906 - synthetic bold should be used if necessary together with system fallback.
 # **NOTE** we skip these on Linux because of bug 769659.
 # test 1 uses Cherokee; expected to pass on OS X and Win7
-random-if(!(cocoaWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu))) skip-if(gtk2Widget) != bold-system-fallback-1.html bold-system-fallback-1-notref.html
+random-if(!(cocoaWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu))) skip-if(gtkWidget) != bold-system-fallback-1.html bold-system-fallback-1-notref.html
 # test 2 uses Chess symbols; expected to pass on Android
-random-if(!Android) skip-if(gtk2Widget) != bold-system-fallback-2.html bold-system-fallback-2-notref.html
+random-if(!Android) skip-if(gtkWidget) != bold-system-fallback-2.html bold-system-fallback-2-notref.html
 
 # Bug 769475 - applying 'italic' to Arabic text in Arial should NOT change family or metrics.
 # Expected to pass on MacOSX and Windows; other platforms unknown, depending on font availability.

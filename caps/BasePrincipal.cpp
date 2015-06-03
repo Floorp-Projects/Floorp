@@ -21,7 +21,7 @@
 namespace mozilla {
 
 void
-OriginAttributes::CreateSuffix(nsACString& aStr)
+OriginAttributes::CreateSuffix(nsACString& aStr) const
 {
   aStr.Truncate();
   MOZ_RELEASE_ASSERT(mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
@@ -257,6 +257,31 @@ BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI, OriginAttributes& aAttrs)
   rv = codebase->Init(aURI, aAttrs);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return codebase.forget();
+}
+
+/* static */ bool
+BasePrincipal::IsCodebasePrincipal(nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(aPrincipal);
+
+  bool isNullPrincipal = true;
+  nsresult rv = aPrincipal->GetIsNullPrincipal(&isNullPrincipal);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  if (isNullPrincipal || nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    return false;
+  }
+
+  // No expanded principals.
+  nsCOMPtr<nsIExpandedPrincipal> expandedPrincipal =
+    do_QueryInterface(aPrincipal);
+  if (expandedPrincipal) {
+    return false;
+  }
+
+  return true;
 }
 
 } // namespace mozilla

@@ -16,7 +16,7 @@ namespace mozilla {
 JSObject*
 WebGLTimerQuery::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::WebGLTimerQueryBinding::Wrap(cx, this, aGivenProto);
+  return dom::WebGLTimerQueryEXTBinding::Wrap(cx, this, aGivenProto);
 }
 
 WebGLTimerQuery::WebGLTimerQuery(WebGLContext* webgl, GLuint aName)

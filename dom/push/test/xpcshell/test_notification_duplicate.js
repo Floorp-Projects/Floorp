@@ -3,7 +3,7 @@
 
 'use strict';
 
-const {PushDB, PushService} = serviceExports;
+const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
 function run_test() {
   do_get_profile();
@@ -17,7 +17,7 @@ function run_test() {
 
 // Should acknowledge duplicate notifications, but not notify apps.
 add_task(function* test_notification_duplicate() {
-  let db = new PushDB();
+  let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
   let records = [{
     channelID: '8d2d9400-3597-4c5a-8a38-c546b0043bcc',
@@ -40,6 +40,7 @@ add_task(function* test_notification_duplicate() {
   let ackDefer = Promise.defer();
   let ackDone = after(2, ackDefer.resolve);
   PushService.init({
+    serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
     db,
     makeWebSocket(uri) {
@@ -71,11 +72,11 @@ add_task(function* test_notification_duplicate() {
   yield waitForPromise(ackDefer.promise, DEFAULT_TIMEOUT,
     'Timed out waiting for stale acknowledgement');
 
-  let staleRecord = yield db.getByChannelID(
+  let staleRecord = yield db.getByKeyID(
     '8d2d9400-3597-4c5a-8a38-c546b0043bcc');
   strictEqual(staleRecord.version, 2, 'Wrong stale record version');
 
-  let updatedRecord = yield db.getByChannelID(
+  let updatedRecord = yield db.getByKeyID(
     '27d1e393-03ef-4c72-a5e6-9e890dfccad0');
   strictEqual(updatedRecord.version, 3, 'Wrong updated record version');
 });

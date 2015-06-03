@@ -91,21 +91,6 @@
   opacity: 0.3;
 }
 
-#identity-popup.chromeUI > #identity-popup-container > #identity-popup-icon {
-  list-style-image: url("chrome://branding/content/icon64.png");
-}
-
-#identity-popup-brandName {
-  font-weight: bold;
-  font-size: 1.25em;
-  margin-top: .5em;
-  margin-bottom: .5em;
-}
-
-#identity-popup-content-box {
-  max-width: 50ch;
-}
-
 @media not all and (min-resolution: 1.1dppx) {
   #page-proxy-favicon {
     -moz-image-region: rect(0, 16px, 16px, 0);
@@ -158,10 +143,5 @@
   #identity-box:hover:active > #page-proxy-favicon,
   #identity-box[open=true] > #page-proxy-favicon {
     -moz-image-region: rect(0, 96px, 32px, 64px);
-  }
-
-  #identity-popup.chromeUI > #identity-popup-container > #identity-popup-icon {
-    list-style-image: url("chrome://branding/content/icon128.png");
-    -moz-image-region: rect(0, 128px, 128px, 0);
   }
 }

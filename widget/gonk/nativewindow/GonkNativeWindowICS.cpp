@@ -499,6 +499,7 @@ GonkNativeWindow::RecycleCallback(TextureClient* client, void* closure) {
   GonkNativeWindow* nativeWindow =
     static_cast<GonkNativeWindow*>(closure);
 
+  MOZ_ASSERT(client && !client->IsDead());
   client->ClearRecycleCallback();
   nativeWindow->returnBuffer(client);
 }

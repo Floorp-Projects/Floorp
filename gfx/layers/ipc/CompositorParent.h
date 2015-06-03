@@ -476,7 +476,7 @@ protected:
   bool mPaused;
 
   bool mUseExternalSurfaceSize;
-  nsIntSize mEGLSurfaceSize;
+  gfx::IntSize mEGLSurfaceSize;
 
   mozilla::Monitor mPauseCompositionMonitor;
   mozilla::Monitor mResumeCompositionMonitor;

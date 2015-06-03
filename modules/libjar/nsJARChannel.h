@@ -82,7 +82,10 @@ private:
     // Returns true if this channel should intercept the network request and
     // prepare for a possible synthesized response instead.
     bool ShouldIntercept();
+
     nsresult ContinueAsyncOpen();
+    void FinishAsyncOpen();
+
     // Discard the prior interception and continue with the original network
     // request.
     void ResetInterception();

@@ -17,13 +17,13 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
-#include "mozilla/VisualEventTracer.h"
 #include "URIUtils.h"
 
 #include "nsIContent.h"
@@ -52,7 +52,6 @@
 #include "nsIAuthPrompt2.h"
 #include "nsIChannelEventSink.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "nsIServiceWorkerManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScrollableFrame.h"
@@ -217,6 +216,7 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using mozilla::dom::workers::ServiceWorkerManager;
 
 // True means sUseErrorPages has been added to preferences var cache.
 static bool gAddedPreferencesVarCache = false;
@@ -7499,8 +7499,6 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     return NS_ERROR_NULL_POINTER;
   }
 
-  MOZ_EVENT_TRACER_DONE(this, "docshell::pageload");
-
   nsCOMPtr<nsIURI> url;
   nsresult rv = aChannel->GetURI(getter_AddRefs(url));
   if (NS_FAILED(rv)) {
@@ -10481,13 +10479,6 @@ nsDocShell::DoURILoad(nsIURI* aURI,
                       nsIURI* aBaseURI,
                       nsContentPolicyType aContentPolicyType)
 {
-#ifdef MOZ_VISUAL_EVENT_TRACER
-  nsAutoCString urlSpec;
-  aURI->GetAsciiSpec(urlSpec);
-  MOZ_EVENT_TRACER_NAME_OBJECT(this, urlSpec.BeginReading());
-  MOZ_EVENT_TRACER_EXEC(this, "docshell::pageload");
-#endif
-
   nsresult rv;
   nsCOMPtr<nsIURILoader> uriLoader;
 
@@ -14041,13 +14032,15 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIServiceWorkerManager> swm = services::GetServiceWorkerManager();
+  nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
     return NS_OK;
   }
 
   if (aIsNavigate) {
-    return swm->IsAvailableForURI(aURI, aShouldIntercept);
+    OriginAttributes attrs(GetAppId(), GetIsInBrowserElement());
+    *aShouldIntercept = swm->IsAvailable(attrs, aURI);
+    return NS_OK;
   }
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
@@ -14055,13 +14048,19 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return swm->IsControlled(doc, aShouldIntercept);
+  ErrorResult rv;
+  *aShouldIntercept = swm->IsControlled(doc, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel)
 {
-  nsCOMPtr<nsIServiceWorkerManager> swm = services::GetServiceWorkerManager();
+  nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
     aChannel->Cancel();
     return NS_OK;
@@ -14081,7 +14080,16 @@ nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel)
   }
 
   bool isReload = mLoadType & LOAD_CMD_RELOAD;
-  return swm->DispatchFetchEvent(doc, aChannel, isReload);
+
+  OriginAttributes attrs(GetAppId(), GetIsInBrowserElement());
+
+  ErrorResult error;
+  swm->DispatchFetchEvent(attrs, doc, aChannel, isReload, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
