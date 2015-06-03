@@ -1,0 +1,16 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+% content extensions %content/extensions/
+    content/extensions/ext-alarms.js (ext-alarms.js)
+    content/extensions/ext-backgroundPage.js (ext-backgroundPage.js)
+    content/extensions/ext-notifications.js (ext-notifications.js)
+    content/extensions/ext-i18n.js (ext-i18n.js)
+    content/extensions/ext-idle.js (ext-idle.js)
+    content/extensions/ext-webRequest.js (ext-webRequest.js)
+    content/extensions/ext-webNavigation.js (ext-webNavigation.js)
+    content/extensions/ext-runtime.js (ext-runtime.js)
+    content/extensions/ext-extension.js (ext-extension.js)
+    content/extensions/ext-storage.js (ext-storage.js)
