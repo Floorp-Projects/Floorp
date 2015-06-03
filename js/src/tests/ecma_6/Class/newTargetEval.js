@@ -4,7 +4,8 @@ try {
     assertEq(false, true);
 } catch (e if e instanceof SyntaxError) { }
 
-// new.target is invalid inside eval inside top-level arrow functions
+// new.target is (for now!) invalid inside arrow functions, or eval inside arrow
+// functions.
 assertThrowsInstanceOf(() => eval('new.target'), SyntaxError);
 
 // new.target is invalid inside indirect eval.
@@ -16,7 +17,6 @@ try {
 
 function assertNewTarget(expected) {
     assertEq(eval('new.target'), expected);
-    assertEq((()=>eval('new.target'))(), expected);
 
     // Also test nestings "by induction"
     assertEq(eval('eval("new.target")'), expected);

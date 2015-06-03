@@ -11,8 +11,8 @@ function testNewTarget() {
     // invalid in top-level scripts
     assertError("new.target", SyntaxError);
 
-    // valid in arrow functions inside functions
-    assertInFunctionExpr("()=>new.target", arrowExpr([], newTarget()));
+    // invalid (for now!) in any arrow function
+    assertError("function foo() { (() => new.target) }", SyntaxError);
     assertError("(() => new.target))", SyntaxError);
 
     // invalid (for now!) in generators
