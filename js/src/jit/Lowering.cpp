@@ -386,6 +386,16 @@ LIRGenerator::visitLoadArrowThis(MLoadArrowThis* ins)
 }
 
 void
+LIRGenerator::visitArrowNewTarget(MArrowNewTarget* ins)
+{
+    MOZ_ASSERT(ins->type() == MIRType_Value);
+    MOZ_ASSERT(ins->callee()->type() == MIRType_Object);
+
+    LArrowNewTarget* lir = new(alloc()) LArrowNewTarget(useRegister(ins->callee()));
+    defineBox(lir, ins);
+}
+
+void
 LIRGenerator::lowerCallArguments(MCall* call)
 {
     uint32_t argc = call->numStackArgs();
@@ -2148,9 +2158,11 @@ LIRGenerator::visitLambdaArrow(MLambdaArrow* ins)
 {
     MOZ_ASSERT(ins->scopeChain()->type() == MIRType_Object);
     MOZ_ASSERT(ins->thisDef()->type() == MIRType_Value);
+    MOZ_ASSERT(ins->newTargetDef()->type() == MIRType_Value);
 
-    LLambdaArrow* lir = new(alloc()) LLambdaArrow(useRegister(ins->scopeChain()), temp());
+    LLambdaArrow* lir = new(alloc()) LLambdaArrow(useRegister(ins->scopeChain()));
     useBox(lir, LLambdaArrow::ThisValue, ins->thisDef());
+    useBox(lir, LLambdaArrow::NewTargetValue, ins->newTargetDef());
     define(lir, ins);
     assignSafepoint(lir, ins);
 }

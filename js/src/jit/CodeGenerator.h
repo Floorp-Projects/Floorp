@@ -42,6 +42,7 @@ class OutOfLineCallPostWriteBarrier;
 class OutOfLineIsCallable;
 class OutOfLineRegExpExec;
 class OutOfLineRegExpTest;
+class OutOfLineLambdaArrow;
 
 class CodeGenerator : public CodeGeneratorSpecific
 {
@@ -104,6 +105,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitRegExpReplace(LRegExpReplace* lir);
     void visitStringReplace(LStringReplace* lir);
     void visitLambda(LLambda* lir);
+    void visitOutOfLineLambdaArrow(OutOfLineLambdaArrow* ool);
     void visitLambdaArrow(LLambdaArrow* lir);
     void visitLambdaForSingleton(LLambdaForSingleton* lir);
     void visitPointer(LPointer* lir);
@@ -324,6 +326,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitThrowUninitializedLexical(LThrowUninitializedLexical* ins);
     void visitDebugger(LDebugger* ins);
     void visitNewTarget(LNewTarget* ins);
+    void visitArrowNewTarget(LArrowNewTarget* ins);
 
     void visitCheckOverRecursed(LCheckOverRecursed* lir);
     void visitCheckOverRecursedFailure(CheckOverRecursedFailure* ool);
