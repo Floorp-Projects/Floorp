@@ -166,7 +166,6 @@ int32_t
 nsStaticCaseInsensitiveNameTable::Lookup(const nsACString& aName)
 {
   NS_ASSERTION(mNameArray, "not inited");
-  NS_ASSERTION(mNameTable.IsInitialized(), "not inited");
 
   const nsAFlatCString& str = PromiseFlatCString(aName);
 
@@ -181,7 +180,6 @@ int32_t
 nsStaticCaseInsensitiveNameTable::Lookup(const nsAString& aName)
 {
   NS_ASSERTION(mNameArray, "not inited");
-  NS_ASSERTION(mNameTable.IsInitialized(), "not inited");
 
   const nsAFlatString& str = PromiseFlatString(aName);
 
@@ -196,7 +194,6 @@ const nsAFlatCString&
 nsStaticCaseInsensitiveNameTable::GetStringValue(int32_t aIndex)
 {
   NS_ASSERTION(mNameArray, "not inited");
-  NS_ASSERTION(mNameTable.IsInitialized(), "not inited");
 
   if ((NOT_FOUND < aIndex) && ((uint32_t)aIndex < mNameTable.EntryCount())) {
     return mNameArray[aIndex];

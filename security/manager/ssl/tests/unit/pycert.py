@@ -381,12 +381,8 @@ class Certificate:
 # particularly important when building on OS X, where we generate
 # everything twice for unified builds. During the unification step, if
 # any pair of input files differ, the build system throws an error.
-# While it would make the most sense to provide the path to the buildid
-# file itself, since it doesn't exist when processing moz.build files
-# (but it does exist when actually running this script), the build
-# system won't let us pass it in directly.
 def main(output, inputPath, buildIDPath):
-    with open('%s/buildid' % buildIDPath) as buildidFile:
+    with open(buildIDPath) as buildidFile:
         buildid = buildidFile.read().strip()
     now = datetime.datetime.strptime(buildid, '%Y%m%d%H%M%S')
     with open(inputPath) as configStream:

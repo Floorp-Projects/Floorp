@@ -3065,13 +3065,6 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
     needsParentLayerClip = false;
   }
 
-  // Note: Do not apply clips to the scroll ports of metrics above the first
-  // one on a given layer. They will be applied by the compositor instead,
-  // with async transforms for the scrollframes interspersed between them.
-  if (aOutput->Length() > 0) {
-    needsParentLayerClip = false;
-  }
-
   nsPoint toReferenceFrame = mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
   bool isRoot = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
 
@@ -5592,4 +5585,13 @@ ScrollFrameHelper::GetSnapPointForDestination(nsIScrollableFrame::ScrollUnit aUn
     aDestination = finalPos;
   }
   return snapped;
+}
+
+bool
+ScrollFrameHelper::UsesContainerScrolling() const
+{
+  if (gfxPrefs::LayoutUseContainersForRootFrames()) {
+    return mIsRoot;
+  }
+  return false;
 }

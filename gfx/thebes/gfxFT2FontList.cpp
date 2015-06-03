@@ -617,8 +617,16 @@ FT2FontFamily::AddFacesToFontList(InfallibleTArray<FontListEntry>* aFontList,
 class FontNameCache {
 public:
     FontNameCache()
-        : mWriteNeeded(false)
+        : mMap(&mOps, sizeof(FNCMapEntry), 0)
+        , mWriteNeeded(false)
     {
+        // HACK ALERT: it's weird to assign |mOps| after we passed a pointer to
+        // it to |mMap|'s constructor. A more normal approach here would be to
+        // have a static |sOps| member. Unfortunately, this mysteriously but
+        // consistently makes Fennec start-up slower, so we take this
+        // unorthodox approach instead. It's safe because PLDHashTable's
+        // constructor doesn't dereference the pointer; it just makes a copy of
+        // it.
         mOps = (PLDHashTableOps) {
             StringHash,
             HashMatchEntry,
@@ -626,8 +634,6 @@ public:
             PL_DHashClearEntryStub,
             nullptr
         };
-
-        PL_DHashTableInit(&mMap, &mOps, sizeof(FNCMapEntry), 0);
 
         MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default,
                    "StartupCacheFontNameCache should only be used in chrome "
@@ -639,23 +645,18 @@ public:
 
     ~FontNameCache()
     {
-        if (!mMap.IsInitialized()) {
-            return;
-        }
         if (!mWriteNeeded || !mCache) {
-            PL_DHashTableFinish(&mMap);
             return;
         }
 
         nsAutoCString buf;
         PL_DHashTableEnumerate(&mMap, WriteOutMap, &buf);
-        PL_DHashTableFinish(&mMap);
         mCache->PutBuffer(CACHE_KEY, buf.get(), buf.Length() + 1);
     }
 
     void Init()
     {
-        if (!mMap.IsInitialized() || !mCache) {
+        if (!mCache) {
             return;
         }
         uint32_t size;
@@ -710,9 +711,6 @@ public:
     GetInfoForFile(const nsCString& aFileName, nsCString& aFaceList,
                    uint32_t *aTimestamp, uint32_t *aFilesize)
     {
-        if (!mMap.IsInitialized()) {
-            return;
-        }
         FNCMapEntry *entry =
             static_cast<FNCMapEntry*>(PL_DHashTableSearch(&mMap,
                                                           aFileName.get()));
@@ -731,9 +729,6 @@ public:
     CacheFileInfo(const nsCString& aFileName, const nsCString& aFaceList,
                   uint32_t aTimestamp, uint32_t aFilesize)
     {
-        if (!mMap.IsInitialized()) {
-            return;
-        }
         FNCMapEntry* entry = static_cast<FNCMapEntry*>
             (PL_DHashTableAdd(&mMap, aFileName.get(), fallible));
         if (entry) {

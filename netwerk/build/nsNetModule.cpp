@@ -251,9 +251,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpDigestAuth)
 #endif // !NECKO_PROTOCOL_http
 
 #include "mozilla/net/Dashboard.h"
+#include "mozilla/net/PackagedAppService.h"
 namespace mozilla {
 namespace net {
   NS_GENERIC_FACTORY_CONSTRUCTOR(Dashboard)
+  NS_GENERIC_FACTORY_CONSTRUCTOR(PackagedAppService)
 }
 }
 #include "AppProtocolHandler.h"
@@ -709,6 +711,7 @@ NS_DEFINE_NAMED_CID(NS_BUFFEREDOUTPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_MIMEINPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_PROTOCOLPROXYSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_STREAMCONVERTERSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_PACKAGEDAPPSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_DASHBOARD_CID);
 #ifdef NECKO_PROTOCOL_ftp
 NS_DEFINE_NAMED_CID(NS_FTPDIRLISTINGCONVERTER_CID);
@@ -853,6 +856,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_MIMEINPUTSTREAM_CID, false, nullptr, nsMIMEInputStreamConstructor },
     { &kNS_PROTOCOLPROXYSERVICE_CID, true, nullptr, nsProtocolProxyServiceConstructor },
     { &kNS_STREAMCONVERTERSERVICE_CID, false, nullptr, CreateNewStreamConvServiceFactory },
+    { &kNS_PACKAGEDAPPSERVICE_CID, false, NULL, mozilla::net::PackagedAppServiceConstructor },
     { &kNS_DASHBOARD_CID, false, nullptr, mozilla::net::DashboardConstructor },
 #ifdef NECKO_PROTOCOL_ftp
     { &kNS_FTPDIRLISTINGCONVERTER_CID, false, nullptr, CreateNewFTPDirListingConv },
@@ -999,6 +1003,7 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_MIMEINPUTSTREAM_CONTRACTID, &kNS_MIMEINPUTSTREAM_CID },
     { NS_PROTOCOLPROXYSERVICE_CONTRACTID, &kNS_PROTOCOLPROXYSERVICE_CID },
     { NS_STREAMCONVERTERSERVICE_CONTRACTID, &kNS_STREAMCONVERTERSERVICE_CID },
+    { NS_PACKAGEDAPPSERVICE_CONTRACTID, &kNS_PACKAGEDAPPSERVICE_CID },
     { NS_DASHBOARD_CONTRACTID, &kNS_DASHBOARD_CID },
 #ifdef NECKO_PROTOCOL_ftp
     { NS_ISTREAMCONVERTER_KEY FTP_TO_INDEX, &kNS_FTPDIRLISTINGCONVERTER_CID },

@@ -323,6 +323,10 @@ program([
     )
 ]).assert(Reflect.parse("export default 1234"));
 
+assertThrowsInstanceOf(function () {
+   Reflect.parse("export default 1234 5678");
+}, SyntaxError);
+
 var loc = Reflect.parse("export { a as b } from 'c'", {
     loc: true
 }).body[0].loc;

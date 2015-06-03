@@ -130,12 +130,21 @@ JS::CallArgs::requireAtLeast(JSContext* cx, const char* fnname, unsigned require
 }
 
 static bool
-ErrorTakesIdArgument(unsigned msg)
+ErrorTakesArguments(unsigned msg)
 {
     MOZ_ASSERT(msg < JSErr_Limit);
     unsigned argCount = js_ErrorFormatString[msg].argCount;
-    MOZ_ASSERT(argCount <= 1);
-    return argCount == 1;
+    MOZ_ASSERT(argCount <= 2);
+    return argCount == 1 || argCount == 2;
+}
+
+static bool
+ErrorTakesObjectArgument(unsigned msg)
+{
+    MOZ_ASSERT(msg < JSErr_Limit);
+    unsigned argCount = js_ErrorFormatString[msg].argCount;
+    MOZ_ASSERT(argCount <= 2);
+    return argCount == 2;
 }
 
 JS_PUBLIC_API(bool)
@@ -153,7 +162,7 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext* cx, HandleObject obj, 
         return ReportValueErrorFlags(cx, flags, code_, JSDVG_IGNORE_STACK, val,
                                      nullptr, nullptr, nullptr);
     }
-    if (ErrorTakesIdArgument(code_)) {
+    if (ErrorTakesArguments(code_)) {
         RootedValue idv(cx, IdToValue(id));
         RootedString str(cx, ValueToSource(cx, idv));
         if (!str)
@@ -162,6 +171,11 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext* cx, HandleObject obj, 
         JSAutoByteString propName(cx, str);
         if (!propName)
             return false;
+
+        if (ErrorTakesObjectArgument(code_)) {
+            return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr, code_,
+                                                obj->getClass()->name, propName.ptr());
+        }
 
         return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr, code_,
                                             propName.ptr());
@@ -174,7 +188,7 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext* cx, HandleObject obj, 
 {
     MOZ_ASSERT(code_ != Uninitialized);
     MOZ_ASSERT(!ok());
-    MOZ_ASSERT(!ErrorTakesIdArgument(code_));
+    MOZ_ASSERT(!ErrorTakesArguments(code_));
 
     unsigned flags = strict ? JSREPORT_ERROR : (JSREPORT_WARNING | JSREPORT_STRICT);
     return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr, code_);
@@ -232,6 +246,18 @@ JS_PUBLIC_API(bool)
 JS::ObjectOpResult::failCantPreventExtensions()
 {
     return fail(JSMSG_CANT_PREVENT_EXTENSIONS);
+}
+
+JS_PUBLIC_API(bool)
+JS::ObjectOpResult::failNoNamedSetter()
+{
+    return fail(JSMSG_NO_NAMED_SETTER);
+}
+
+JS_PUBLIC_API(bool)
+JS::ObjectOpResult::failNoIndexedSetter()
+{
+    return fail(JSMSG_NO_INDEXED_SETTER);
 }
 
 JS_PUBLIC_API(int64_t)

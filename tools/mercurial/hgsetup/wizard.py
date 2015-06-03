@@ -40,7 +40,7 @@ are up to date and you won't have to do anything.
 To begin, press the enter/return key.
 '''.strip()
 
-OLDEST_NON_LEGACY_VERSION = LooseVersion('3.0')
+OLDEST_NON_LEGACY_VERSION = LooseVersion('3.2.4')
 LEGACY_MERCURIAL = '''
 You are running an out of date Mercurial client (%s).
 
@@ -106,7 +106,7 @@ Your Mercurial should now be properly configured and recommended extensions
 should be up to date!
 '''.strip()
 
-REVIEWBOARD_MINIMUM_VERSION = LooseVersion('3.0.1')
+REVIEWBOARD_MINIMUM_VERSION = LooseVersion('3.1')
 
 REVIEWBOARD_INCOMPATIBLE = '''
 Your Mercurial is too old to use the reviewboard extension, which is necessary
@@ -126,7 +126,7 @@ functionality will not be enabled or you will be prompted for your
 Bugzilla credentials when they are needed.
 '''.lstrip()
 
-BZPOST_MINIMUM_VERSION = LooseVersion('3.0')
+BZPOST_MINIMUM_VERSION = LooseVersion('3.1')
 
 BZPOST_INFO = '''
 The bzpost extension automatically records the URLs of pushed commits to
@@ -135,7 +135,7 @@ referenced Bugzilla bugs after push.
 Would you like to activate bzpost
 '''.strip()
 
-FIREFOXTREE_MINIMUM_VERSION = LooseVersion('3.0')
+FIREFOXTREE_MINIMUM_VERSION = LooseVersion('3.1')
 
 FIREFOXTREE_INFO = '''
 The firefoxtree extension makes interacting with the multiple Firefox
@@ -157,6 +157,27 @@ a) aggregate multiple Firefox repositories into a single local repo
 b) perform head/bookmark-based development (as opposed to mq)
 
 Would you like to activate firefoxtree
+'''.strip()
+
+PUSHTOTRY_MINIMUM_VERSION = LooseVersion('3.3')
+
+PUSHTOTRY_INFO = '''
+The push-to-try extension generates a temporary commit with a given
+try syntax and pushes it to the try server. The extension is intended
+to be used in concert with other tools generating try syntax so that
+they can push to try without depending on mq or other workarounds.
+
+Would you like to activate push-to-try
+'''.strip()
+
+BUNDLECLONE_MINIMUM_VERSION = LooseVersion('3.1')
+
+BUNDLECLONE_INFO = '''
+The bundleclone extension makes cloning faster and saves server resources.
+
+We highly recommend you activate this extension.
+
+Would you like to activate bundleclone
 '''.strip()
 
 
@@ -283,6 +304,12 @@ class MercurialSetupWizard(object):
 
         if hg_version >= FIREFOXTREE_MINIMUM_VERSION:
             self.prompt_external_extension(c, 'firefoxtree', FIREFOXTREE_INFO)
+
+        if hg_version >= BUNDLECLONE_MINIMUM_VERSION:
+            self.prompt_external_extension(c, 'bundleclone', BUNDLECLONE_INFO)
+
+        if hg_version >= PUSHTOTRY_MINIMUM_VERSION:
+            self.prompt_external_extension(c, 'push-to-try', PUSHTOTRY_INFO)
 
         if 'mq' in c.extensions:
             self.prompt_external_extension(c, 'mqext', MQEXT_INFO)
