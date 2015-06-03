@@ -256,6 +256,7 @@ void SubProcessCallback(const char* aProfile, void* aClosure)
 static
 void BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
 {
+  aWriter.Start(SpliceableJSONWriter::SingleLineStyle);
   aWriter.StringProperty("name", "Java Main Thread");
 
   aWriter.StartArrayProperty("samples");
@@ -300,6 +301,7 @@ void BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
     }
 
   aWriter.EndArray();
+  aWriter.End();
 }
 #endif
 

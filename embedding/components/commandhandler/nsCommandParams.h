@@ -124,7 +124,7 @@ protected:
 
   static void HashClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
-  PLDHashTable2 mValuesHash;
+  PLDHashTable mValuesHash;
 
   static const PLDHashTableOps sHashOps;
 };

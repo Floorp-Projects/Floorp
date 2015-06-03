@@ -565,6 +565,13 @@ class Assembler : public AssemblerX86Shared
         masm.xorq_ir(imm.value, dest.encoding());
     }
 
+    void imulq(Register src, Register dest) {
+        masm.imulq_rr(src.encoding(), dest.encoding());
+    }
+    void vcvtsi2sdq(Register src, FloatRegister dest) {
+        masm.vcvtsi2sdq_rr(src.encoding(), dest.encoding());
+    }
+
     void mov(ImmWord word, Register dest) {
         // Use xor for setting registers to zero, as it is specially optimized
         // for this purpose on modern hardware. Note that it does clobber FLAGS

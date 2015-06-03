@@ -584,3 +584,10 @@ LIRGeneratorMIPS::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBino
 {
     MOZ_CRASH("NYI");
 }
+
+void
+LIRGeneratorMIPS::visitRandom(MRandom* ins)
+{
+    LRandom* lir = new(alloc()) LRandom(tempFixed(CallTempReg0), tempFixed(CallTempReg1));
+    defineReturn(lir, ins);
+}

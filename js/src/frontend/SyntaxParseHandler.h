@@ -39,14 +39,33 @@ class SyntaxParseHandler
     enum Node {
         NodeFailure = 0,
         NodeGeneric,
-        NodeName,
         NodeGetProp,
         NodeStringExprStatement,
-        NodeLValue,
         NodeReturn,
         NodeHoistableDeclaration,
         NodeBreak,
         NodeThrow,
+
+        // This is needed for proper assignment-target handling.  ES6 formally
+        // requires function calls *not* pass IsValidSimpleAssignmentTarget,
+        // but at last check there were still sites with |f() = 5| and similar
+        // in code not actually executed (or at least not executed enough to be
+        // noticed).
+        NodeFunctionCall,
+
+        // Nodes representing names.  These *must* be sequential per |isName|.
+        NodeArgumentsName,
+        NodeEvalName,
+        NodeName,
+
+        NodeDottedProperty,
+        NodeElement,
+        NodeSuperProperty,
+        NodeSuperElement,
+
+        // Valuable for recognizing potential destructuring patterns.
+        NodeArray,
+        NodeObject,
 
         // In rare cases a parenthesized |node| doesn't have the same semantics
         // as |node|.  Each such node has a special Node value, and we use a
@@ -90,6 +109,20 @@ class SyntaxParseHandler
     };
     typedef Definition::Kind DefinitionNode;
 
+    bool isPropertyAccess(Node node) {
+        return node == NodeDottedProperty || node == NodeElement ||
+               node == NodeSuperProperty || node == NodeSuperElement;
+    }
+
+    bool isFunctionCall(Node node) {
+        // Note: super() is a special form, *not* a function call.
+        return node == NodeFunctionCall;
+    }
+
+    bool isDestructuringTarget(Node node) {
+        return node == NodeArray || node == NodeObject;
+    }
+
   private:
     static bool meaningMightChangeIfParenthesized(Node node) {
         return node == NodeUnparenthesizedString ||
@@ -111,8 +144,12 @@ class SyntaxParseHandler
 
     void trace(JSTracer* trc) {}
 
-    Node newName(PropertyName* name, uint32_t blockid, const TokenPos& pos) {
+    Node newName(PropertyName* name, uint32_t blockid, const TokenPos& pos, ExclusiveContext* cx) {
         lastAtom = name;
+        if (name == cx->names().arguments)
+            return NodeArgumentsName;
+        if (name == cx->names().eval)
+            return NodeEvalName;
         return NodeName;
     }
 
@@ -159,7 +196,17 @@ class SyntaxParseHandler
 
     Node newElision() { return NodeGeneric; }
 
-    Node newDelete(uint32_t begin, Node expr) { return NodeGeneric; }
+    void markAsSetCall(Node node) {
+        MOZ_ASSERT(node == NodeFunctionCall);
+    }
+
+    Node newDelete(uint32_t begin, Node expr) {
+        return NodeGeneric;
+    }
+
+    Node newTypeof(uint32_t begin, Node kid) {
+        return NodeGeneric;
+    }
 
     Node newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, Node kid) {
         return NodeGeneric;
@@ -184,15 +231,25 @@ class SyntaxParseHandler
     Node newArrayComprehension(Node body, unsigned blockid, const TokenPos& pos) {
         return NodeGeneric;
     }
-    Node newArrayLiteral(uint32_t begin, unsigned blockid) { return NodeGeneric; }
+    Node newArrayLiteral(uint32_t begin, unsigned blockid) { return NodeArray; }
     bool addElision(Node literal, const TokenPos& pos) { return true; }
     bool addSpreadElement(Node literal, uint32_t begin, Node inner) { return true; }
     void addArrayElement(Node literal, Node element) { }
 
-    Node newObjectLiteral(uint32_t begin) { return NodeGeneric; }
+    Node newCall() { return NodeFunctionCall; }
+    Node newTaggedTemplate() { return NodeGeneric; }
+
+    Node newObjectLiteral(uint32_t begin) { return NodeObject; }
     Node newClassMethodList(uint32_t begin) { return NodeGeneric; }
-    Node newSuperProperty(JSAtom* atom, const TokenPos& pos) { return NodeGeneric; }
-    Node newSuperElement(Node expr, const TokenPos& pos) { return NodeGeneric; }
+
+    Node newSuperProperty(PropertyName* prop, const TokenPos& pos) {
+        return NodeSuperProperty;
+    }
+
+    Node newSuperElement(Node expr, const TokenPos& pos) {
+        return NodeSuperElement;
+    }
+
     bool addPrototypeMutation(Node literal, uint32_t begin, Node expr) { return true; }
     bool addPropertyDefinition(Node literal, Node name, Node expr) { return true; }
     bool addShorthand(Node literal, Node name, Node expr) { return true; }
@@ -233,10 +290,10 @@ class SyntaxParseHandler
 
     Node newPropertyAccess(Node pn, PropertyName* name, uint32_t end) {
         lastAtom = name;
-        return NodeGetProp;
+        return NodeDottedProperty;
     }
 
-    Node newPropertyByValue(Node pn, Node kid, uint32_t end) { return NodeLValue; }
+    Node newPropertyByValue(Node pn, Node kid, uint32_t end) { return NodeElement; }
 
     bool addCatchBlock(Node catchList, Node letBlock,
                        Node catchName, Node catchGuard, Node catchBody) { return true; }
@@ -305,8 +362,12 @@ class SyntaxParseHandler
     }
 
     void addList(Node list, Node kid) {
-        MOZ_ASSERT(list == NodeGeneric || list == NodeUnparenthesizedCommaExpr ||
-                   list == NodeHoistableDeclaration);
+        MOZ_ASSERT(list == NodeGeneric ||
+                   list == NodeArray ||
+                   list == NodeObject ||
+                   list == NodeUnparenthesizedCommaExpr ||
+                   list == NodeHoistableDeclaration ||
+                   list == NodeFunctionCall);
     }
 
     Node newAssignment(ParseNodeKind kind, Node lhs, Node rhs,
@@ -355,12 +416,23 @@ class SyntaxParseHandler
     void setPrologue(Node pn) {}
 
     bool isConstant(Node pn) { return false; }
-    PropertyName* isName(Node pn) {
-        return (pn == NodeName) ? lastAtom->asPropertyName() : nullptr;
+    PropertyName* maybeName(Node pn) {
+        if (pn == NodeName || pn == NodeArgumentsName || pn == NodeEvalName)
+            return lastAtom->asPropertyName();
+        return nullptr;
     }
-    PropertyName* isGetProp(Node pn) {
-        return (pn == NodeGetProp) ? lastAtom->asPropertyName() : nullptr;
+
+    PropertyName* maybeDottedProperty(Node node) {
+        // Note: |super.apply(...)| is a special form that calls an "apply"
+        // method retrieved from one value, but using a *different* value as
+        // |this|.  It's not really eligible for the funapply/funcall
+        // optimizations as they're currently implemented (assuming a single
+        // value is used for both retrieval and |this|).
+        if (node != NodeDottedProperty)
+            return nullptr;
+        return lastAtom->asPropertyName();
     }
+
     JSAtom* isStringExprStatement(Node pn, TokenPos* pos) {
         if (pn == NodeStringExprStatement) {
             *pos = lastStringPos;
@@ -368,6 +440,10 @@ class SyntaxParseHandler
         }
         return nullptr;
     }
+
+    void markAsAssigned(Node node) {}
+    void adjustGetToSet(Node node) {}
+    void maybeDespecializeSet(Node node) {}
 
     Node makeAssignment(Node pn, Node rhs) { return NodeGeneric; }
 

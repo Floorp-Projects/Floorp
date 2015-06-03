@@ -10457,15 +10457,13 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
             # indexed setter.  That's how the object would normally behave if
             # you tried to set the property on it.  That means we don't need to
             # do anything special for Xrays here.
-            set += fill(
+            set += dedent(
                 """
                 if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {
-                  return js::IsInNonStrictPropertySet(cx)
-                         ? opresult.succeed()
-                         : ThrowErrorMessage(cx, MSG_NO_INDEXED_SETTER, "${name}");
+                  *defined = true;
+                  return opresult.failNoIndexedSetter();
                 }
-                """,
-                name=self.descriptor.name)
+                """)
 
         namedSetter = self.descriptor.operations['NamedSetter']
         if namedSetter:
@@ -10498,13 +10496,11 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     $*{presenceChecker}
 
                     if (found) {
-                      return js::IsInNonStrictPropertySet(cx)
-                             ? opresult.succeed()
-                             : ThrowErrorMessage(cx, MSG_NO_NAMED_SETTER, "${name}");
+                      *defined = true;
+                      return opresult.failNoNamedSetter();
                     }
                     """,
-                    presenceChecker=CGProxyNamedPresenceChecker(self.descriptor, foundVar="found").define(),
-                    name=self.descriptor.name)
+                    presenceChecker=CGProxyNamedPresenceChecker(self.descriptor, foundVar="found").define())
             set += ("return mozilla::dom::DOMProxyHandler::defineProperty(%s);\n" %
                     ", ".join(a.name for a in self.args))
         return set

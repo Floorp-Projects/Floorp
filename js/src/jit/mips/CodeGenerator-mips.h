@@ -245,6 +245,8 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
 
     void generateInvalidateEpilogue();
 
+    void visitRandom(LRandom* ins);
+
   protected:
     void visitEffectiveAddress(LEffectiveAddress* ins);
     void visitUDivOrMod(LUDivOrMod* ins);

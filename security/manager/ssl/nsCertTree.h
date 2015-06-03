@@ -124,7 +124,7 @@ private:
   treeArrayEl                *mTreeArray;
   int32_t                         mNumOrgs;
   int32_t                         mNumRows;
-  PLDHashTable2 mCompareCache;
+  PLDHashTable mCompareCache;
   nsCOMPtr<nsINSSComponent> mNSSComponent;
   nsCOMPtr<nsICertOverrideService> mOverrideService;
   mozilla::RefPtr<nsCertOverrideService> mOriginalOverrideService;
