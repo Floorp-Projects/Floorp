@@ -2678,6 +2678,43 @@ BaselineCompiler::emit_JSOP_SETARG()
     return emitFormalArgAccess(arg, /* get = */ false);
 }
 
+bool
+BaselineCompiler::emit_JSOP_NEWTARGET()
+{
+    MOZ_ASSERT(function());
+    frame.syncStack(0);
+
+    // if (!isConstructing()) push(undefined)
+    Label constructing, done;
+    masm.branchTestPtr(Assembler::NonZero, frame.addressOfCalleeToken(),
+                       Imm32(CalleeToken_FunctionConstructing), &constructing);
+    masm.moveValue(UndefinedValue(), R0);
+    masm.jump(&done);
+
+    masm.bind(&constructing);
+
+    // else push(argv[Max(numActualArgs, numFormalArgs)])
+    Register argvLen = R0.scratchReg();
+
+    Address actualArgs(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs());
+    masm.loadPtr(actualArgs, argvLen);
+
+    Label actualArgsSufficient;
+
+    masm.branchPtr(Assembler::AboveOrEqual, argvLen, Imm32(function()->nargs()),
+                   &actualArgsSufficient);
+    masm.move32(Imm32(function()->nargs()), argvLen);
+    masm.bind(&actualArgsSufficient);
+
+    BaseValueIndex newTarget(BaselineFrameReg, argvLen, BaselineFrame::offsetOfArg(0));
+    masm.loadValue(newTarget, R0);
+
+    masm.bind(&done);
+    frame.push(R0);
+
+    return true;
+}
+
 typedef bool (*ThrowUninitializedLexicalFn)(JSContext* cx);
 static const VMFunction ThrowUninitializedLexicalInfo =
     FunctionInfo<ThrowUninitializedLexicalFn>(jit::ThrowUninitializedLexical);
