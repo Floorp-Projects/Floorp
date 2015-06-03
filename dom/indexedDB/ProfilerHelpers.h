@@ -284,7 +284,7 @@ LoggingHelper(bool aUseProfiler, const char* aFmt, ...)
 
   static const PRLogModuleLevel logLevel = PR_LOG_WARNING;
 
-  if (PR_LOG_TEST(logModule, logLevel) ||
+  if (MOZ_LOG_TEST(logModule, logLevel) ||
       (aUseProfiler && profiler_is_active())) {
     nsAutoCString message;
 

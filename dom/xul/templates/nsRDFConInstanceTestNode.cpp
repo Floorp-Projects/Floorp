@@ -36,7 +36,7 @@ nsRDFConInstanceTestNode::nsRDFConInstanceTestNode(TestNode* aParent,
       mContainer(aContainer),
       mEmpty(aEmpty)
 {
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         nsAutoCString props;
 
         nsResourceSet& containmentProps = aProcessor->ContainmentProperties();
@@ -100,7 +100,7 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
             continue;
         }
 
-        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+        if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
             const char* container = "(unbound)";
             valueres->GetValueConst(&container);
 
@@ -245,7 +245,7 @@ nsRDFConInstanceTestNode::CanPropagate(nsIRDFResource* aSource,
         canpropagate = mProcessor->ContainmentProperties().Contains(aProperty);
     }
 
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         const char* source;
         aSource->GetValueConst(&source);
 

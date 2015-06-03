@@ -47,7 +47,7 @@ static PRLogModuleInfo *gPrefetchLog;
 #define LOG(args) MOZ_LOG(gPrefetchLog, 4, args)
 
 #undef LOG_ENABLED
-#define LOG_ENABLED() PR_LOG_TEST(gPrefetchLog, 4)
+#define LOG_ENABLED() MOZ_LOG_TEST(gPrefetchLog, 4)
 
 #define PREFETCH_PREF "network.prefetch-next"
 

@@ -1480,7 +1480,7 @@ gfxFontFamily::FindFontForChar(GlobalFontMatch *aMatchData)
 
             PRLogModuleInfo *log = gfxPlatform::GetLog(eGfxLog_textrun);
 
-            if (MOZ_UNLIKELY(PR_LOG_TEST(log, PR_LOG_DEBUG))) {
+            if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, PR_LOG_DEBUG))) {
                 uint32_t unicodeRange = FindCharUnicodeRange(aMatchData->mCh);
                 uint32_t script = GetScriptCode(aMatchData->mCh);
                 MOZ_LOG(log, PR_LOG_DEBUG,\

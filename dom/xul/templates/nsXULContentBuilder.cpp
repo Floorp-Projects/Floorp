@@ -446,7 +446,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
     nsresult rv;
 
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                ("nsXULContentBuilder::BuildContentFromTemplate (is unique: %d)",
                aIsUnique));
@@ -523,7 +523,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
         nsIAtom *tag = tmplKid->NodeInfo()->NameAtom();
 
-        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+        if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
             MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("xultemplate[%p]     building %s %s %s",
                     this, nsAtomCString(tag).get(),
@@ -1073,7 +1073,7 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
                                                         nsIContent** aContainer,
                                                         int32_t* aNewIndexInContainer)
 {
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         nsAutoString id;
         aResult->GetId(id);
         MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,

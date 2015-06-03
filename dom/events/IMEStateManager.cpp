@@ -506,7 +506,7 @@ IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
   bool consumed =
     sActiveIMEContentObserver->OnMouseButtonEvent(aPresContext, internalEvent);
 
-  if (PR_LOG_TEST(sISMLog, PR_LOG_ALWAYS)) {
+  if (MOZ_LOG_TEST(sISMLog, PR_LOG_ALWAYS)) {
     nsAutoString eventType;
     aMouseEvent->GetType(eventType);
     MOZ_LOG(sISMLog, PR_LOG_ALWAYS,

@@ -25,12 +25,12 @@ using namespace mozilla;
 
 #define LOG_FONTLIST(args) MOZ_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
                                PR_LOG_DEBUG, args)
-#define LOG_FONTLIST_ENABLED() PR_LOG_TEST( \
+#define LOG_FONTLIST_ENABLED() MOZ_LOG_TEST( \
                                    gfxPlatform::GetLog(eGfxLog_fontlist), \
                                    PR_LOG_DEBUG)
 #define LOG_FONTINIT(args) MOZ_LOG(gfxPlatform::GetLog(eGfxLog_fontinit), \
                                PR_LOG_DEBUG, args)
-#define LOG_FONTINIT_ENABLED() PR_LOG_TEST( \
+#define LOG_FONTINIT_ENABLED() MOZ_LOG_TEST( \
                                    gfxPlatform::GetLog(eGfxLog_fontinit), \
                                    PR_LOG_DEBUG)
 
@@ -580,7 +580,7 @@ gfxPlatformFontList::SystemFindFontForChar(uint32_t aCh, uint32_t aNextCh,
 
     PRLogModuleInfo *log = gfxPlatform::GetLog(eGfxLog_textrun);
 
-    if (MOZ_UNLIKELY(PR_LOG_TEST(log, PR_LOG_WARNING))) {
+    if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, PR_LOG_WARNING))) {
         uint32_t unicodeRange = FindCharUnicodeRange(aCh);
         int32_t script = mozilla::unicode::GetScriptCode(aCh);
         MOZ_LOG(log, PR_LOG_WARNING,\

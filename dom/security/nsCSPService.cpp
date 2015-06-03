@@ -109,7 +109,7 @@ CSPService::ShouldLoad(uint32_t aContentType,
     return NS_ERROR_FAILURE;
   }
 
-  if (PR_LOG_TEST(gCspPRLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gCspPRLog, PR_LOG_DEBUG)) {
     nsAutoCString location;
     aContentLocation->GetSpec(location);
     MOZ_LOG(gCspPRLog, PR_LOG_DEBUG,
@@ -204,7 +204,7 @@ CSPService::ShouldLoad(uint32_t aContentType,
     principal->GetCsp(getter_AddRefs(csp));
 
     if (csp) {
-      if (PR_LOG_TEST(gCspPRLog, PR_LOG_DEBUG)) {
+      if (MOZ_LOG_TEST(gCspPRLog, PR_LOG_DEBUG)) {
         uint32_t numPolicies = 0;
         nsresult rv = csp->GetPolicyCount(&numPolicies);
         if (NS_SUCCEEDED(rv)) {
@@ -228,7 +228,7 @@ CSPService::ShouldLoad(uint32_t aContentType,
                       aDecision);
     }
   }
-  else if (PR_LOG_TEST(gCspPRLog, PR_LOG_DEBUG)) {
+  else if (MOZ_LOG_TEST(gCspPRLog, PR_LOG_DEBUG)) {
     nsAutoCString uriSpec;
     aContentLocation->GetSpec(uriSpec);
     MOZ_LOG(gCspPRLog, PR_LOG_DEBUG,
@@ -316,7 +316,7 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
                   originalUri,    // aMimeTypeGuess
                   &aDecision);
 
-  if (newUri && PR_LOG_TEST(gCspPRLog, PR_LOG_DEBUG)) {
+  if (newUri && MOZ_LOG_TEST(gCspPRLog, PR_LOG_DEBUG)) {
     nsAutoCString newUriSpec("None");
     newUri->GetSpec(newUriSpec);
     MOZ_LOG(gCspPRLog, PR_LOG_DEBUG,

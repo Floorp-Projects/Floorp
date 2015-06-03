@@ -29,7 +29,7 @@ GetCspParserLog()
 }
 
 #define CSPPARSERLOG(args) MOZ_LOG(GetCspParserLog(), PR_LOG_DEBUG, args)
-#define CSPPARSERLOGENABLED() PR_LOG_TEST(GetCspParserLog(), PR_LOG_DEBUG)
+#define CSPPARSERLOGENABLED() MOZ_LOG_TEST(GetCspParserLog(), PR_LOG_DEBUG)
 
 static const char16_t COLON        = ':';
 static const char16_t SEMICOLON    = ';';
