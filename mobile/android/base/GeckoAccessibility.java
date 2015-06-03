@@ -150,6 +150,10 @@ public class GeckoAccessibility {
         }
     }
 
+    public static boolean isEnabled() {
+        return sEnabled;
+    }
+
     public static void sendAccessibilityEvent (final JSONObject message) {
         if (!sEnabled)
             return;
