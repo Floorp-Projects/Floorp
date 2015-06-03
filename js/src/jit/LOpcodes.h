@@ -76,7 +76,8 @@
     _(GetDynamicName)               \
     _(FilterArgumentsOrEvalS)       \
     _(FilterArgumentsOrEvalV)       \
-    _(CallDirectEval)               \
+    _(CallDirectEvalS)              \
+    _(CallDirectEvalV)              \
     _(StackArgT)                    \
     _(StackArgV)                    \
     _(CreateThis)                   \
