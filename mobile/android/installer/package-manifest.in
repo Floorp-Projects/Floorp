@@ -76,7 +76,8 @@
 [lib destdir="lib/@ANDROID_CPU_ARCH@"]
 @BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
 # This should be MOZ_CHILD_PROCESS_NAME, but that has a "lib/" prefix.
-@BINPATH@/@DLL_PREFIX@plugin-container@DLL_SUFFIX@
+@BINPATH@/@MOZ_CHILD_PROCESS_NAME@
+@BINPATH@/@MOZ_CHILD_PROCESS_NAME_PIE@
 
 [xpcom]
 @BINPATH@/dependentlibs.list
@@ -213,6 +214,7 @@
 @BINPATH@/components/necko_file.xpt
 @BINPATH@/components/necko_ftp.xpt
 @BINPATH@/components/necko_http.xpt
+@BINPATH@/components/necko_mdns.xpt
 @BINPATH@/components/necko_res.xpt
 @BINPATH@/components/necko_socket.xpt
 @BINPATH@/components/necko_strconv.xpt

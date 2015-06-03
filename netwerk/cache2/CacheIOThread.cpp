@@ -10,7 +10,6 @@
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 #include "mozilla/IOInterposer.h"
-#include "mozilla/VisualEventTracer.h"
 
 namespace mozilla {
 namespace net {
@@ -196,9 +195,6 @@ loopStart:
 
       // Process xpcom events first
       while (mHasXPCOMEvents) {
-        eventtracer::AutoEventTracer tracer(this, eventtracer::eExec, eventtracer::eDone,
-          "net::cache::io::level(xpcom)");
-
         mHasXPCOMEvents = false;
         mCurrentlyExecutingLevel = XPCOM_LEVEL;
 
@@ -265,9 +261,6 @@ static const char* const sLevelTraceName[] = {
 
 void CacheIOThread::LoopOneLevel(uint32_t aLevel)
 {
-  eventtracer::AutoEventTracer tracer(this, eventtracer::eExec, eventtracer::eDone,
-    sLevelTraceName[aLevel]);
-
   nsTArray<nsCOMPtr<nsIRunnable> > events;
   events.SwapElements(mEventQueue[aLevel]);
   uint32_t length = events.Length();

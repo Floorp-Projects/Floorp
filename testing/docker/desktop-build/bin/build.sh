@@ -45,20 +45,15 @@ set -x -e
 : MH_BRANCH                     ${MH_BRANCH:=mozilla-central}
 : MH_BUILD_POOL                 ${MH_BUILD_POOL:=staging}
 
-: MOZ_SIGNING_SERVERS           ${MOZ_SIGNING_SERVERS}
-: MOZ_SIGN_CMD                  ${MOZ_SIGN_CMD}
-
 : WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
 
 set -v
 
-# buildbot
-export CCACHE_COMPRESS=1
-export CCACHE_DIR=/builds/ccache
-export CCACHE_HASHDIR=
-export CCACHE_UMASK=002
+# Don't run the upload step; this is passed through mozharness to mach.  Once
+# the mozharness scripts are not run in Buildbot anymore, this can be moved to
+# Mozharness (or the upload step removed from mach entirely)
+export MOZ_AUTOMATION_UPLOAD=0
 
-export MOZ_AUTOMATION=1
 export MOZ_CRASHREPORTER_NO_REPORT=1
 export MOZ_OBJDIR=obj-firefox
 export MOZ_SYMBOLS_EXTRA_BUILDID=linux64
@@ -73,7 +68,9 @@ if [[ -z ${MOZHARNESS_SCRIPT} ]]; then exit 1; fi
 if [[ -z ${MOZHARNESS_CONFIG} ]]; then exit 1; fi
 
 cleanup() {
-    [ -n "$xvfb_pid" ] && kill $xvfb_pid
+    if [ -n "$xvfb_pid" ]; then
+        kill $xvfb_pid || true
+    fi
 }
 trap cleanup EXIT INT
 
@@ -89,6 +86,13 @@ fi
 
 # and check out mozilla-central where mozharness will use it as a cache (/builds/hg-shared)
 tc-vcs checkout $WORKSPACE/build/src $GECKO_BASE_REPOSITORY $GECKO_HEAD_REPOSITORY $GECKO_HEAD_REV $GECKO_HEAD_REF
+
+# the TC docker worker looks for artifacts to upload in $HOME/artifacts, but
+# mach wants to put them in $WORKSPACE/build/upload; symlinking lets everyone
+# win!
+rm -rf $WORKSPACE/build/upload
+mkdir -p $HOME/artifacts
+ln -s $HOME/artifacts $WORKSPACE/build/upload
 
 # run mozharness in XVfb, if necessary; this is an array to maintain the quoting in the -s argument
 if $NEED_XVFB; then
@@ -161,13 +165,10 @@ done
   --no-clone-tools \
   --no-clobber \
   --no-update \
+  --no-upload-files \
+  --no-sendchange \
   --log-level=debug \
   --work-dir=$WORKSPACE/build \
   --no-action=generate-build-stats \
   --branch=${MH_BRANCH} \
   --build-pool=${MH_BUILD_POOL}
-
-# if mozharness has created an "upload" directory, copy all of that into artifacts
-if [ -d $WORKSPACE/build/upload ]; then
-    cp -r $WORKSPACE/build/upload/* $HOME/artifacts/
-fi

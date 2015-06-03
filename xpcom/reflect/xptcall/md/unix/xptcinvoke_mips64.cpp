@@ -77,7 +77,9 @@ invoke_copy_to_stack(uint64_t* d, uint32_t paramCount,
             break;
         case nsXPTType::T_U32:
             if (i < N_ARG_REGS)
-                regs[i] = s->val.u32;
+		// 32-bit values need to be sign-extended
+		// in register, so use the signed value.
+                regs[i] = s->val.i32;
             else
                 *d++ = s->val.u32;
             break;

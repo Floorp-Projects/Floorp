@@ -7,7 +7,7 @@ HTTP(..) == 1079154-1-vertical-rl-columns.html 1079154-1-vertical-rl-columns-ref
 HTTP(..) == 1083748.html 1083748-ref.html
 HTTP(..) == 1083848-1-inline-border.html 1083848-1-inline-border-ref.html
 HTTP(..) == 1083848-2-inline-background.html 1083848-2-inline-background-ref.html
-fuzzy-if(gtk2Widget,255,2) fuzzy-if(winWidget||Android||B2G,4,8704) HTTP(..) == 1083848-3-inline-background-repeat.html 1083848-3-inline-background-repeat-ref.html
+fuzzy-if(gtkWidget,255,2) fuzzy-if(winWidget||Android||B2G,4,8704) HTTP(..) == 1083848-3-inline-background-repeat.html 1083848-3-inline-background-repeat-ref.html
 == 1083892-1.html 1083892-1-ref.html
 == 1086883-1a.html 1086883-1-ref.html
 == 1086883-1b.html 1086883-1-ref.html
@@ -20,8 +20,8 @@ fuzzy-if(gtk2Widget,255,2) fuzzy-if(winWidget||Android||B2G,4,8704) HTTP(..) == 
 == 1090168-2.html 1090168-2-ref.html
 fuzzy-if(B2G,244,173) fuzzy-if(Mulet,255,165) == 1090168-3.html 1090168-3-ref.html # bug 1142928: mark fuzzy on Mulet as on B2G
 == 1091058-1.html 1091058-1-ref.html
-random-if(gtk2Widget) == 1094434-1.html 1094434-1-ref.html # bug 1094845
-random-if(gtk2Widget) == 1094434-2.html 1094434-2-ref.html # bug 1094845
+random-if(gtkWidget) == 1094434-1.html 1094434-1-ref.html # bug 1094845
+random-if(gtkWidget) == 1094434-2.html 1094434-2-ref.html # bug 1094845
 == 1094914-1a.html 1094914-1-ref.html
 == 1094914-1b.html 1094914-1-ref.html
 == 1096224-1a.html 1096224-1-ref.html
@@ -133,6 +133,7 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 == 1157752-upright-bidi.html 1157752-upright-bidi-ref.html
 == 1157758-1-vertical-arabic.html 1157758-1-vertical-arabic-ref.html
 == 1158549-1-vertical-block-size-constraints.html 1158549-1-vertical-block-size-constraints-ref.html
+== 1163238-orthogonal-auto-margins.html 1163238-orthogonal-auto-margins-ref.html
 
 # Suite of tests from Gérard Talbot in bug 1079151
 include abspos/reftest.list

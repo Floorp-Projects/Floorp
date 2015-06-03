@@ -72,7 +72,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
             'gonk/TelephonyService.manifest',
         ]
     EXTRA_JS_MODULES += [
-        'gonk/DialNumberUtils.jsm'
+        'gonk/DialNumberUtils.jsm',
+        'gonk/TelephonyUtils.jsm',
     ]
 
 FAIL_ON_WARNINGS = True

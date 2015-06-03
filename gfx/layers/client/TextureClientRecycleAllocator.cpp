@@ -235,6 +235,7 @@ TextureClientRecycleAllocatorImp::RecycleCallbackImp(TextureClient* aClient)
 /* static */ void
 TextureClientRecycleAllocatorImp::RecycleCallback(TextureClient* aClient, void* aClosure)
 {
+  MOZ_ASSERT(aClient && !aClient->IsDead());
   TextureClientRecycleAllocatorImp* recycleAllocator = static_cast<TextureClientRecycleAllocatorImp*>(aClosure);
   recycleAllocator->RecycleCallbackImp(aClient);
 }

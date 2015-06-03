@@ -55,15 +55,15 @@ skip-if(!cocoaWidget) == select-mirrored-when-rtl.html select-mirrored-when-rtl-
 != resizer-bottomend.xul blank-window.xul
 random-if(d2d) == resizer-bottomend.xul resizer-bottomright.xul # bug 581086 
 != resizer-bottomend.xul resizer-bottomend-rtl.xul
-skip-if(gtk2Widget) != resizer-bottomend-rtl.xul blank-window.xul
-skip-if(gtk2Widget) random-if(d2d) == resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul # bug 581086
+skip-if(gtkWidget) != resizer-bottomend-rtl.xul blank-window.xul
+skip-if(gtkWidget) random-if(d2d) == resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul # bug 581086
 
 != resizer-bottomstart.xul blank-window.xul
 random-if(d2d) == resizer-bottomstart.xul resizer-bottomleft.xul
 random-if(d2d) == resizer-bottomstart.xul resizer-left.xul
 != resizer-bottomstart.xul resizer-bottomstart-rtl.xul
-skip-if(gtk2Widget) != resizer-bottomstart-rtl.xul blank-window.xul
-skip-if(gtk2Widget) random-if(d2d) == resizer-bottomstart-rtl.xul resizer-bottomend.xul
+skip-if(gtkWidget) != resizer-bottomstart-rtl.xul blank-window.xul
+skip-if(gtkWidget) random-if(d2d) == resizer-bottomstart-rtl.xul resizer-bottomend.xul
 
 # Windows-only, depends on native scrollbar metrics
 skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme-ref.html

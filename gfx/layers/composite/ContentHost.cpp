@@ -301,7 +301,7 @@ ContentHostTexture::Dump(std::stringstream& aStream,
 
 static inline void
 AddWrappedRegion(const nsIntRegion& aInput, nsIntRegion& aOutput,
-                 const nsIntSize& aSize, const nsIntPoint& aShift)
+                 const IntSize& aSize, const nsIntPoint& aShift)
 {
   nsIntRegion tempRegion;
   tempRegion.And(IntRect(aShift, aSize), aInput);
@@ -341,7 +341,7 @@ ContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
   // Shift to the rotation point
   destRegion.MoveBy(aData.rotation());
 
-  nsIntSize bufferSize = aData.rect().Size();
+  IntSize bufferSize = aData.rect().Size();
 
   // Select only the pixels that are still within the buffer.
   nsIntRegion finalRegion;
