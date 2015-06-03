@@ -187,8 +187,6 @@
     <declare-styleable name="FaviconView">
         <attr name="dominantBorderEnabled" format="boolean" />
         <attr name="overrideScaleType" format="boolean" />
-        <attr name="defaultFaviconDrawable" format="reference" />
-        <attr name="defaultFaviconKey" format="string" />
     </declare-styleable>
 
     <declare-styleable name="OverlayDialogButton">
