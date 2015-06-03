@@ -631,8 +631,10 @@ class AutoDetectInvalidation
     }
 };
 
-bool InvokeFunction(JSContext* cx, HandleObject obj0, uint32_t argc, Value* argv,
-                    MutableHandleValue rval);
+bool InvokeFunction(JSContext* cx, HandleObject obj0, bool constructing, uint32_t argc,
+                    Value* argv, MutableHandleValue rval);
+bool InvokeFunctionShuffleNewTarget(JSContext* cx, HandleObject obj, uint32_t numActualArgs,
+                                    uint32_t numFormalArgs, Value* argv, MutableHandleValue rval);
 
 bool CheckOverRecursed(JSContext* cx);
 bool CheckOverRecursedWithExtra(JSContext* cx, BaselineFrame* frame,
