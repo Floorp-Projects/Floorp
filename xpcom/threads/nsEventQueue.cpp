@@ -25,7 +25,7 @@ GetLog()
 #ifdef LOG
 #undef LOG
 #endif
-#define LOG(args) MOZ_LOG(GetLog(), PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(GetLog(), mozilla::LogLevel::Debug, args)
 
 nsEventQueue::nsEventQueue()
   : mReentrantMonitor("nsEventQueue.mReentrantMonitor")

@@ -169,7 +169,7 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
 
   mFrameRect = neededRect;
 
-  MOZ_LOG(GetPNGDecoderAccountingLog(), PR_LOG_DEBUG,
+  MOZ_LOG(GetPNGDecoderAccountingLog(), LogLevel::Debug,
          ("PNGDecoderAccounting: nsPNGDecoder::CreateFrame -- created "
           "image frame with %dx%d pixels in container %p",
           width, height,
@@ -879,7 +879,7 @@ nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
 void
 nsPNGDecoder::error_callback(png_structp png_ptr, png_const_charp error_msg)
 {
-  MOZ_LOG(GetPNGLog(), PR_LOG_ERROR, ("libpng error: %s\n", error_msg));
+  MOZ_LOG(GetPNGLog(), LogLevel::Error, ("libpng error: %s\n", error_msg));
   png_longjmp(png_ptr, 1);
 }
 
@@ -887,7 +887,7 @@ nsPNGDecoder::error_callback(png_structp png_ptr, png_const_charp error_msg)
 void
 nsPNGDecoder::warning_callback(png_structp png_ptr, png_const_charp warning_msg)
 {
-  MOZ_LOG(GetPNGLog(), PR_LOG_WARNING, ("libpng warning: %s\n", warning_msg));
+  MOZ_LOG(GetPNGLog(), LogLevel::Warning, ("libpng warning: %s\n", warning_msg));
 }
 
 Telemetry::ID

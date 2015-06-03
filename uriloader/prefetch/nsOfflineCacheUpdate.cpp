@@ -57,16 +57,16 @@ static const int32_t  kCustomProfileQuota = 512000;
 //    set NSPR_LOG_MODULES=nsOfflineCacheUpdate:5
 //    set NSPR_LOG_FILE=offlineupdate.log
 //
-// this enables PR_LOG_DEBUG level information and places all output in
+// this enables LogLevel::Debug level information and places all output in
 // the file offlineupdate.log
 //
 extern PRLogModuleInfo *gOfflineCacheUpdateLog;
 
 #undef LOG
-#define LOG(args) MOZ_LOG(gOfflineCacheUpdateLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gOfflineCacheUpdateLog, mozilla::LogLevel::Debug, args)
 
 #undef LOG_ENABLED
-#define LOG_ENABLED() MOZ_LOG_TEST(gOfflineCacheUpdateLog, PR_LOG_DEBUG)
+#define LOG_ENABLED() MOZ_LOG_TEST(gOfflineCacheUpdateLog, mozilla::LogLevel::Debug)
 
 class AutoFreeArray {
 public:

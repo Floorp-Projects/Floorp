@@ -1119,7 +1119,7 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
 #endif
 
     default:
-        MOZ_LOG(GetPluginLog(), PR_LOG_WARNING,
+        MOZ_LOG(GetPluginLog(), LogLevel::Warning,
                ("In PluginInstanceParent::NPP_GetValue: Unhandled NPPVariable %i (%s)",
                 (int) aVariable, NPPVariableToString(aVariable)));
         return NPERR_GENERIC_ERROR;
@@ -1140,7 +1140,7 @@ PluginInstanceParent::NPP_SetValue(NPNVariable variable, void* value)
 
     default:
         NS_ERROR("Unhandled NPNVariable in NPP_SetValue");
-        MOZ_LOG(GetPluginLog(), PR_LOG_WARNING,
+        MOZ_LOG(GetPluginLog(), LogLevel::Warning,
                ("In PluginInstanceParent::NPP_SetValue: Unhandled NPNVariable %i (%s)",
                 (int) variable, NPNVariableToString(variable)));
         return NPERR_GENERIC_ERROR;

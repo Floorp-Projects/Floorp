@@ -12,7 +12,7 @@
 #include "nsDebug.h"
 
 PRLogModuleInfo* GetAppleMediaLog();
-#define LOG(...) MOZ_LOG(GetAppleMediaLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define LOG(...) MOZ_LOG(GetAppleMediaLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
 

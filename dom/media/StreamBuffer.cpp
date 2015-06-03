@@ -16,13 +16,13 @@ extern PRLogModuleInfo* gMediaStreamGraphLog;
 void
 StreamBuffer::DumpTrackInfo() const
 {
-  STREAM_LOG(PR_LOG_INFO, ("DumpTracks: mTracksKnownTime %lld", mTracksKnownTime));
+  STREAM_LOG(LogLevel::Info, ("DumpTracks: mTracksKnownTime %lld", mTracksKnownTime));
   for (uint32_t i = 0; i < mTracks.Length(); ++i) {
     Track* track = mTracks[i];
     if (track->IsEnded()) {
-      STREAM_LOG(PR_LOG_INFO, ("Track[%d] %d: ended", i, track->GetID()));
+      STREAM_LOG(LogLevel::Info, ("Track[%d] %d: ended", i, track->GetID()));
     } else {
-      STREAM_LOG(PR_LOG_INFO, ("Track[%d] %d: %lld", i, track->GetID(),
+      STREAM_LOG(LogLevel::Info, ("Track[%d] %d: %lld", i, track->GetID(),
                                  track->GetEnd()));
     }
   }
