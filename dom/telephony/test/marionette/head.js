@@ -1107,12 +1107,19 @@ let emulator = (function() {
 
     let promises = [];
 
-    let promise = gWaitForEvent(connection, "radiostatechange", event => {
+    promises.push(gWaitForEvent(connection, "radiostatechange", event => {
       let state = connection.radioState;
       log("current radioState: " + state);
       return state == desiredRadioState;
-    });
-    promises.push(promise);
+    }));
+
+    // Wait for icc status to finish updating. Please see bug 1169504 for the
+    // reason why we need this.
+    promises.push(gWaitForEvent(connection, "iccchange", event => {
+      let iccId = connection.iccId;
+      log("current iccId: " + iccId);
+      return !!iccId === enabled;
+    }));
 
     promises.push(connection.setRadioEnabled(enabled));
 

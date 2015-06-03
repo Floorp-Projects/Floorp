@@ -29,6 +29,7 @@ XPCOMUtils.defineLazyGetter(this, "debuggerServer", () => {
   let debuggerServer = serverLoader.DebuggerServer;
   debuggerServer.init();
   debuggerServer.addBrowserActors();
+  debuggerServer.allowChromeProcess = !l10n.hiddenByChromePref();
   return debuggerServer;
 });
 

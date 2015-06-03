@@ -105,6 +105,8 @@ extern int32_t getAxisByLabel(const char* label);
  */
 extern const char* getAxisLabel(int32_t axisId);
 
+extern int32_t getLedByLabel(const char* label);
+
 /**
  * Updates a meta state field when a key is pressed or released.
  */
