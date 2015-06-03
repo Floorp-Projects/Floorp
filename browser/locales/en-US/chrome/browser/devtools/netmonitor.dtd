@@ -314,6 +314,22 @@
   -  for the Copy Image As Data URI menu item displayed in the context menu for a request -->
 <!ENTITY netmonitorUI.context.copyImageAsDataUri.accesskey  "I">
 
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyAllAsHar): This is the label displayed
+  -  on the context menu that copies all as HAR format -->
+<!ENTITY netmonitorUI.context.copyAllAsHar "Copy All As HAR">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyAllAsHar.accesskey): This is the access key
+  -  for the Copy All As HAR menu item displayed in the context menu for a network panel -->
+<!ENTITY netmonitorUI.context.copyAllAsHar.accesskey "O">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.saveAllAsHar): This is the label displayed
+  -  on the context menu that saves all as HAR format -->
+<!ENTITY netmonitorUI.context.saveAllAsHar "Save All As HAR">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.saveAllAsHar.accesskey): This is the access key
+  -  for the Save All As HAR menu item displayed in the context menu for a network panel -->
+<!ENTITY netmonitorUI.context.saveAllAsHar.accesskey "H">
+
 <!-- LOCALIZATION NOTE (netmonitorUI.summary.editAndResend): This is the label displayed
   -  on the button in the headers tab that opens a form to edit and resend the currently
      displayed request -->
