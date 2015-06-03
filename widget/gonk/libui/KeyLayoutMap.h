@@ -67,6 +67,8 @@ public:
     status_t mapKey(int32_t scanCode, int32_t usageCode,
             int32_t* outKeyCode, uint32_t* outFlags) const;
     status_t findScanCodesForKey(int32_t keyCode, Vector<int32_t>* outScanCodes) const;
+    status_t findScanCodeForLed(int32_t ledCode, int32_t* outScanCode) const;
+    status_t findUsageCodeForLed(int32_t ledCode, int32_t* outUsageCode) const;
 
     status_t mapAxis(int32_t scanCode, AxisInfo* outAxisInfo) const;
 
@@ -79,9 +81,16 @@ private:
         uint32_t flags;
     };
 
+    struct Led {
+        int32_t ledCode;
+    };
+
+
     KeyedVector<int32_t, Key> mKeysByScanCode;
     KeyedVector<int32_t, Key> mKeysByUsageCode;
     KeyedVector<int32_t, AxisInfo> mAxes;
+    KeyedVector<int32_t, Led> mLedsByScanCode;
+    KeyedVector<int32_t, Led> mLedsByUsageCode;
 
     KeyLayoutMap();
 
@@ -99,6 +108,7 @@ private:
     private:
         status_t parseKey();
         status_t parseAxis();
+        status_t parseLed();
     };
 };
 
