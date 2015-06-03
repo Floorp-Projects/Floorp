@@ -198,6 +198,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                     "MediaDecoderStateMachine::EstimatedDuration (Mirror)"),
   mExplicitDuration(mTaskQueue, Maybe<double>(),
                     "MediaDecoderStateMachine::mExplicitDuration (Mirror)"),
+  mObservedDuration(TimeUnit(), "MediaDecoderStateMachine::mObservedDuration"),
   mPlayState(mTaskQueue, MediaDecoder::PLAY_STATE_LOADING,
              "MediaDecoderStateMachine::mPlayState (Mirror)"),
   mNextPlayState(mTaskQueue, MediaDecoder::PLAY_STATE_PAUSED,
@@ -314,6 +315,7 @@ MediaDecoderStateMachine::InitializationTask()
   mWatchManager.Watch(mNetworkDuration, &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mEstimatedDuration, &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mExplicitDuration, &MediaDecoderStateMachine::RecomputeDuration);
+  mWatchManager.Watch(mObservedDuration, &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
   mWatchManager.Watch(mLogicallySeeking, &MediaDecoderStateMachine::LogicallySeekingChanged);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::UpdateStreamBlockingForPlayState);
@@ -1348,16 +1350,8 @@ void MediaDecoderStateMachine::UpdatePlaybackPositionInternal(int64_t aTime)
   NS_ASSERTION(mStartTime >= 0, "Should have positive mStartTime");
   mCurrentPosition = aTime - mStartTime;
   NS_ASSERTION(mCurrentPosition >= 0, "CurrentTime should be positive!");
-  if (aTime > mEndTime) {
-    NS_ASSERTION(mCurrentPosition > GetDuration(),
-                 "CurrentTime must be after duration if aTime > endTime!");
-    DECODER_LOG("Setting new end time to %lld", aTime);
-    mEndTime = aTime;
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethodWithArg<TimeUnit>(mDecoder, &MediaDecoder::DurationChanged,
-                                            TimeUnit::FromMicroseconds(GetDuration()));
-    AbstractThread::MainThread()->Dispatch(event.forget());
-  }
+  mObservedDuration = std::max(mObservedDuration.Ref(),
+                               TimeUnit::FromMicroseconds(mCurrentPosition.Ref()));
 }
 
 void MediaDecoderStateMachine::UpdatePlaybackPosition(int64_t aTime)
@@ -1463,6 +1457,8 @@ void MediaDecoderStateMachine::RecomputeDuration()
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
+  TimeUnit duration;
+  bool fireDurationChanged = false;
   if (mExplicitDuration.Ref().isSome()) {
     double d = mExplicitDuration.Ref().ref();
     if (IsNaN(d)) {
@@ -1470,27 +1466,37 @@ void MediaDecoderStateMachine::RecomputeDuration()
       // any other duration sources), but the duration isn't ready yet.
       return;
     }
-    TimeUnit duration = TimeUnit::FromSeconds(d);
-    SetDuration(duration.ToMicroseconds());
+    duration = TimeUnit::FromSeconds(d);
   } else if (mEstimatedDuration.Ref().isSome()) {
-    if (mEstimatedDuration.Ref()->ToMicroseconds() != GetDuration()) {
-      SetDuration(mEstimatedDuration.Ref()->ToMicroseconds());
-
-      // XXXbholley - Firing the event here is historical, and not necessarily
-      // sensical.
-      nsCOMPtr<nsIRunnable> event =
-        NS_NewRunnableMethodWithArg<TimeUnit>(mDecoder, &MediaDecoder::DurationChanged,
-                                              TimeUnit::FromMicroseconds(GetDuration()));
-      AbstractThread::MainThread()->Dispatch(event.forget());
+    duration = mEstimatedDuration.Ref().ref();
+    // XXXbholley - Firing the event here is historical, and not necessarily
+    // sensical.
+    if (duration.ToMicroseconds() != GetDuration()) {
+      fireDurationChanged = true;
     }
   } else if (mInfo.mMetadataDuration.isSome()) {
-    SetDuration(mInfo.mMetadataDuration.ref().ToMicroseconds());
+    duration = mInfo.mMetadataDuration.ref();
   } else if (mInfo.mMetadataEndTime.isSome() && mStartTime >= 0) {
-    SetDuration((mInfo.mMetadataEndTime.ref() - TimeUnit::FromMicroseconds(mStartTime)).ToMicroseconds());
+    duration = mInfo.mMetadataEndTime.ref() - TimeUnit::FromMicroseconds(mStartTime);
   } else if (mNetworkDuration.Ref().isSome()) {
-    // XXXbholley - This will do something more sensible in upcoming patches. This
-    // would be incorrect if we ever sent spurious state mirroring updates.
-    SetDuration(mNetworkDuration.Ref().ref().ToMicroseconds());
+    duration = mNetworkDuration.Ref().ref();
+  } else {
+    return;
+  }
+
+  if (duration < mObservedDuration.Ref()) {
+    duration = mObservedDuration;
+    // XXXbholley - Firing the event here is historical, and not necessarily
+    // sensical.
+    fireDurationChanged = true;
+  }
+
+  SetDuration(duration.ToMicroseconds());
+
+  if (fireDurationChanged) {
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethodWithArg<TimeUnit>(mDecoder, &MediaDecoder::DurationChanged, duration);
+    AbstractThread::MainThread()->Dispatch(event.forget());
   }
 }
 
