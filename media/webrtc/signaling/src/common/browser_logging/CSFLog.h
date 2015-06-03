@@ -6,30 +6,27 @@
 #define CSFLOG_H
 
 #include <stdarg.h>
-#include "mozilla/Logging.h"
+
+struct PRLogModuleInfo;
 
 typedef enum{
-    CSF_LOG_CRITICAL =1,
-    CSF_LOG_ERROR,
+    CSF_LOG_ERROR = 1,
     CSF_LOG_WARNING,
-    CSF_LOG_NOTICE,
     CSF_LOG_INFO,
     CSF_LOG_DEBUG,
-    CSF_LOG_OBNOXIOUS
+    CSF_LOG_VERBOSE,
 } CSFLogLevel;
 
 #define CSFLogError(tag , format, ...) CSFLog( CSF_LOG_ERROR, __FILE__ , __LINE__ , tag , format , ## __VA_ARGS__ )
 #define CSFLogErrorV(tag , format, va_list_arg) CSFLogV(CSF_LOG_ERROR, __FILE__ , __LINE__ , tag , format , va_list_arg )
 #define CSFLogWarn(tag , format, ...) CSFLog( CSF_LOG_WARNING, __FILE__ , __LINE__ , tag , format , ## __VA_ARGS__ )
 #define CSFLogWarnV(tag , format, va_list_arg) CSFLogV(CSF_LOG_WARNING, __FILE__ , __LINE__ , tag , format , va_list_arg )
-#define CSFLogNotice(tag , format, ...) CSFLog( CSF_LOG_NOTICE, __FILE__ , __LINE__ , tag , format , ## __VA_ARGS__ )
-#define CSFLogNoticeV(tag , format, va_list_arg) CSFLogV(CSF_LOG_NOTICE, __FILE__ , __LINE__ , tag , format , va_list_arg )
 #define CSFLogInfo(tag , format, ...) CSFLog( CSF_LOG_INFO, __FILE__ , __LINE__ , tag , format , ## __VA_ARGS__ )
 #define CSFLogInfoV(tag , format, va_list_arg) CSFLogV(CSF_LOG_INFO, __FILE__ , __LINE__ , tag , format , va_list_arg )
 #define CSFLogDebug(tag , format, ...) CSFLog(CSF_LOG_DEBUG, __FILE__ , __LINE__ , tag , format , ## __VA_ARGS__ )
 #define CSFLogDebugV(tag , format, va_list_arg) CSFLogV(CSF_LOG_DEBUG, __FILE__ , __LINE__ , tag , format , va_list_arg )
-#define CSFLogObnoxious(tag , format, ...) CSFLog(CSF_LOG_OBNOXIOUS, __FILE__ , __LINE__ , tag , format , ## __VA_ARGS__ )
-#define CSFLogObnoxiousV(tag , format, va_list_arg) CSFLogV(CSF_LOG_OBNOXIOUS, __FILE__ , __LINE__ , tag , format , va_list_arg )
+#define CSFLogVerbose(tag , format, ...) CSFLog(CSF_LOG_VERBOSE, __FILE__ , __LINE__ , tag , format , ## __VA_ARGS__ )
+#define CSFLogVerboseV(tag , format, va_list_arg) CSFLogV(CSF_LOG_VERBOSE, __FILE__ , __LINE__ , tag , format , va_list_arg )
 
 #ifdef __cplusplus
 extern "C"
@@ -43,8 +40,8 @@ void CSFLog( CSFLogLevel priority, const char* sourceFile, int sourceLine, const
 
 void CSFLogV( CSFLogLevel priority, const char* sourceFile, int sourceLine, const char* tag , const char* format, va_list args);
 
-PRLogModuleInfo *GetSignalingLogInfo();
-PRLogModuleInfo *GetWebRTCLogInfo();
+struct PRLogModuleInfo *GetSignalingLogInfo();
+struct PRLogModuleInfo *GetWebRTCLogInfo();
 
 #ifdef __cplusplus
 }
