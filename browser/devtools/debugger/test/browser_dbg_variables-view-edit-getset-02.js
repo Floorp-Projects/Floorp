@@ -35,7 +35,7 @@ function test() {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
 
-    sendMouseClickToTab(gTab, content.document.querySelector("button"));
+    generateMouseClickInTab(gTab, "content.document.querySelector('button')");
   });
 }
 

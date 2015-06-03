@@ -60,6 +60,9 @@ const kCHILD_PROCESS_MESSAGES = ["Push:Register", "Push:Unregister",
 
 const kWS_MAX_WENTDOWN = 2;
 
+// 1 minute is the least allowed ping interval
+const kWS_MIN_PING_INTERVAL = 60000;
+
 // This is a singleton
 this.PushDB = function PushDB() {
   debug("PushDB()");
@@ -803,7 +806,11 @@ this.PushService = {
         this._wsWentDownCounter = 0;
         this._recalculatePing = true;
         this._lastGoodPingInterval = Math.floor(lastTriedPingInterval / 2);
-        nextPingInterval = this._lastGoodPingInterval;
+        if (this._lastGoodPingInterval < kWS_MIN_PING_INTERVAL) {
+          nextPingInterval = kWS_MIN_PING_INTERVAL;
+        } else {
+          nextPingInterval = this._lastGoodPingInterval;
+        }
         prefs.set('pingInterval', nextPingInterval);
         this._save(ns, nextPingInterval);
         return;

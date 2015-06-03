@@ -13301,6 +13301,9 @@ class CGBindingImplClass(CGClass):
 
         wrapArgs = [Argument('JSContext*', 'aCx'),
                     Argument('JS::Handle<JSObject*>', 'aGivenProto')]
+        if not descriptor.wrapperCache:
+            wrapArgs.append(Argument('JS::MutableHandle<JSObject*>',
+                                     'aReflector'))
         self.methodDecls.insert(0,
                                 ClassMethod(wrapMethodName, "JSObject*",
                                             wrapArgs, virtual=descriptor.wrapperCache,
@@ -13418,18 +13421,26 @@ class CGExampleClass(CGBindingImplClass):
 
                 """)
 
+        if self.descriptor.wrapperCache:
+            reflectorArg = ""
+            reflectorPassArg = ""
+        else:
+            reflectorArg = ", JS::MutableHandle<JSObject*> aReflector"
+            reflectorPassArg = ", aReflector"
         classImpl = ccImpl + ctordtor + "\n" + dedent("""
             JSObject*
-            ${nativeType}::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+            ${nativeType}::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto${reflectorArg})
             {
-              return ${ifaceName}Binding::Wrap(aCx, this, aGivenProto);
+              return ${ifaceName}Binding::Wrap(aCx, this, aGivenProto${reflectorPassArg});
             }
 
             """)
         return string.Template(classImpl).substitute(
             ifaceName=self.descriptor.name,
             nativeType=self.nativeLeafName(self.descriptor),
-            parentType=self.nativeLeafName(self.parentDesc) if self.parentIface else "")
+            parentType=self.nativeLeafName(self.parentDesc) if self.parentIface else "",
+            reflectorArg=reflectorArg,
+            reflectorPassArg=reflectorPassArg)
 
     @staticmethod
     def nativeLeafName(descriptor):

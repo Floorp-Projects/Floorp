@@ -9,26 +9,14 @@
     box-sizing:border-box;
   }
 
-  #paddingBox {
-    background:gold;
-    height:100px;
-    box-sizing:padding-box;
-  }
-
 </style>
 
 <div id="borderBox"></div>
 <p id="heightWidth1"></p>
 
-<div id="paddingBox"></div>
-<p id="heightWidth2"></p>
 <script>
   var divs = document.getElementsByTagName("div");
   var textEle1 = document.getElementById("heightWidth1");
   textEle1.innerHTML += "height = " + getComputedStyle(divs[0]).height;
   textEle1.innerHTML += ", width = " + getComputedStyle(divs[0]).width;
-
-  var textEle2 = document.getElementById("heightWidth2");
-  textEle2.innerHTML += "height = " + getComputedStyle(divs[1]).height;
-  textEle2.innerHTML += ", width = " + getComputedStyle(divs[1]).width;
 </script>

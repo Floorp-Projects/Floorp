@@ -87,7 +87,7 @@ CompositorOGL::CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth,
   , mUseExternalSurfaceSize(aUseExternalSurfaceSize)
   , mFrameInProgress(false)
   , mDestroyed(false)
-  , mHeight(0)
+  , mViewportSize(0, 0)
   , mCurrentProgram(nullptr)
 {
   MOZ_COUNT_CTOR(CompositorOGL);
@@ -441,7 +441,7 @@ CompositorOGL::PrepareViewport(const gfx::IntSize& aSize)
   // Set the viewport correctly.
   mGLContext->fViewport(0, 0, aSize.width, aSize.height);
 
-  mHeight = aSize.height;
+  mViewportSize = aSize;
 
   // We flip the view matrix around so that everything is right-side up; we're
   // drawing directly into the window's back buffer, so this keeps things
@@ -575,7 +575,7 @@ void
 CompositorOGL::ClearRect(const gfx::Rect& aRect)
 {
   // Map aRect to OGL coordinates, origin:bottom-left
-  GLint y = mHeight - (aRect.y + aRect.height);
+  GLint y = mViewportSize.height - (aRect.y + aRect.height);
 
   ScopedGLState scopedScissorTestState(mGLContext, LOCAL_GL_SCISSOR_TEST, true);
   ScopedScissorRect autoScissorRect(mGLContext, aRect.x, y, aRect.width, aRect.height);
@@ -770,7 +770,8 @@ ShaderConfigOGL
 CompositorOGL::GetShaderConfigFor(Effect *aEffect,
                                   MaskType aMask,
                                   gfx::CompositionOp aOp,
-                                  bool aColorMatrix) const
+                                  bool aColorMatrix,
+                                  bool aDEAAEnabled) const
 {
   ShaderConfigOGL config;
 
@@ -821,6 +822,7 @@ CompositorOGL::GetShaderConfigFor(Effect *aEffect,
   config.SetColorMatrix(aColorMatrix);
   config.SetMask2D(aMask == MaskType::Mask2d);
   config.SetMask3D(aMask == MaskType::Mask3d);
+  config.SetDEAA(aDEAAEnabled);
   return config;
 }
 
@@ -902,12 +904,41 @@ static bool SetBlendMode(GLContext* aGL, gfx::CompositionOp aBlendMode, bool aIs
   return true;
 }
 
+gfx::Point3D
+CompositorOGL::GetLineCoefficients(const gfx::Point& aPoint1,
+                                   const gfx::Point& aPoint2)
+{
+  // Return standard coefficients for a line between aPoint1 and aPoint2
+  // for standard line equation:
+  //
+  // Ax + By + C = 0
+  //
+  // A = (p1.y – p2.y)
+  // B = (p2.x – p1.x)
+  // C = (p1.x * p2.y) – (p2.x * p1.y)
+
+  gfx::Point3D coeffecients;
+  coeffecients.x = aPoint1.y - aPoint2.y;
+  coeffecients.y = aPoint2.x - aPoint1.x;
+  coeffecients.z = aPoint1.x * aPoint2.y - aPoint2.x * aPoint1.y;
+
+  coeffecients *= 1.0f / sqrtf(coeffecients.x * coeffecients.x +
+                               coeffecients.y * coeffecients.y);
+
+  // Offset outwards by 0.5 pixel as the edge is considered to be 1 pixel
+  // wide and included within the interior of the polygon
+  coeffecients.z += 0.5f;
+
+  return coeffecients;
+}
+
 void
 CompositorOGL::DrawQuad(const Rect& aRect,
                         const Rect& aClipRect,
                         const EffectChain &aEffectChain,
                         Float aOpacity,
-                        const gfx::Matrix4x4 &aTransform)
+                        const gfx::Matrix4x4& aTransform,
+                        const gfx::Rect& aVisibleRect)
 {
   PROFILER_LABEL("CompositorOGL", "DrawQuad",
     js::ProfileEntry::Category::GRAPHICS);
@@ -1000,8 +1031,15 @@ CompositorOGL::DrawQuad(const Rect& aRect,
     blendMode = blendEffect->mBlendMode;
   }
 
+  // Only apply DEAA to quads that have been transformed such that aliasing
+  // could be visible
+  bool bEnableAA = gfxPrefs::LayersDEAAEnabled() &&
+                   !aTransform.Is2DIntegerTranslation();
+
   bool colorMatrix = aEffectChain.mSecondaryEffects[EffectTypes::COLOR_MATRIX];
-  ShaderConfigOGL config = GetShaderConfigFor(aEffectChain.mPrimaryEffect, maskType, blendMode, colorMatrix);
+  ShaderConfigOGL config = GetShaderConfigFor(aEffectChain.mPrimaryEffect,
+                                              maskType, blendMode, colorMatrix,
+                                              bEnableAA);
   config.SetOpacity(aOpacity != 1.f);
   ShaderProgramOGL *program = GetShaderProgramFor(config);
   ActivateProgram(program);
@@ -1026,6 +1064,74 @@ CompositorOGL::DrawQuad(const Rect& aRect,
     TextureSourceOGL* source = texturedEffect->mTexture->AsSourceOGL();
     // This is used by IOSurface that use 0,0...w,h coordinate rather then 0,0..1,1.
     program->SetTexCoordMultiplier(source->GetSize().width, source->GetSize().height);
+  }
+
+  // XXX kip - These calculations could be performed once per layer rather than
+  //           for every tile.  This might belong in Compositor.cpp once DEAA
+  //           is implemented for DirectX.
+  if (bEnableAA) {
+    // Calculate the transformed vertices of aVisibleRect in screen space
+    // pixels, mirroring the calculations in the vertex shader
+    Matrix4x4 flatTransform = aTransform;
+    flatTransform.PostTranslate(-offset.x, -offset.y, 0.0f);
+    flatTransform *= mProjMatrix;
+
+    Rect viewportClip = Rect(-1.0f, -1.0f, 2.0f, 2.0f);
+    size_t edgeCount = 0;
+    Point3D coefficients[4];
+
+    Point points[Matrix4x4::kTransformAndClipRectMaxVerts];
+    size_t pointCount = flatTransform.TransformAndClipRect(aVisibleRect, viewportClip, points);
+    for (size_t i = 0; i < pointCount; i++) {
+      points[i] = Point((points[i].x * 0.5f + 0.5f) * mViewportSize.width,
+                        (points[i].y * 0.5f + 0.5f) * mViewportSize.height);
+    }
+    if (pointCount > 2) {
+      // Use shoelace formula on a triangle in the clipped quad to determine if
+      // winding order is reversed.  Iterate through the triangles until one is
+      // found with a non-zero area.
+      float winding = 0.0f;
+      size_t wp = 0;
+      while (winding == 0.0f && wp < pointCount) {
+        int wp1 = (wp + 1) % pointCount;
+        int wp2 = (wp + 2) % pointCount;
+        winding = (points[wp1].x - points[wp].x) * (points[wp1].y + points[wp].y) +
+                  (points[wp2].x - points[wp1].x) * (points[wp2].y + points[wp1].y) +
+                  (points[wp].x - points[wp2].x) * (points[wp].y + points[wp2].y);
+        wp++;
+      }
+      bool frontFacing = winding >= 0.0f;
+
+      // Calculate the line coefficients used by the DEAA shader to determine the
+      // sub-pixel coverage of the edge pixels
+      for (size_t i=0; i<pointCount; i++) {
+        const Point& p1 = points[i];
+        const Point& p2 = points[(i + 1) % pointCount];
+        // Create a DEAA edge for any non-straight lines, to a maximum of 4
+        if (p1.x != p2.x && p1.y != p2.y && edgeCount < 4) {
+          if (frontFacing) {
+            coefficients[edgeCount++] = GetLineCoefficients(p2, p1);
+          } else {
+            coefficients[edgeCount++] = GetLineCoefficients(p1, p2);
+          }
+        }
+      }
+    }
+
+    // The coefficients that are not needed must not cull any fragments.
+    // We fill these unused coefficients with a clipping plane that has no
+    // effect.
+    for (size_t i = edgeCount; i < 4; i++) {
+      coefficients[i] = Point3D(0.0f, 1.0f, mViewportSize.height);
+    }
+
+    // Set uniforms required by DEAA shader
+    Matrix4x4 transformInverted = aTransform;
+    transformInverted.Invert();
+    program->SetLayerTransformInverse(transformInverted);
+    program->SetDEAAEdges(coefficients);
+    program->SetVisibleCenter(aVisibleRect.Center());
+    program->SetViewportSize(mViewportSize);
   }
 
   bool didSetBlendMode = false;
@@ -1126,9 +1232,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       program->SetTextureUnit(0);
 
       if (maskType != MaskType::MaskNone) {
-        sourceMask->BindTexture(LOCAL_GL_TEXTURE1, gfx::Filter::LINEAR);
-        program->SetMaskTextureUnit(1);
-        program->SetMaskLayerTransform(maskQuadTransform);
+        BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE1, maskQuadTransform);
       }
 
       if (config.mFeatures & ENABLE_TEXTURE_RECT) {

@@ -40,7 +40,7 @@ function testNormalReturn() {
       gDebugger);
   });
 
-  sendMouseClickToTab(gTab, content.document.getElementById("return"));
+  generateMouseClickInTab(gTab, "content.document.getElementById('return')");
 }
 
 function testReturnWithException() {
@@ -62,7 +62,7 @@ function testReturnWithException() {
       gDebugger);
   });
 
-  sendMouseClickToTab(gTab, content.document.getElementById("throw"));
+  generateMouseClickInTab(gTab, "content.document.getElementById('throw')");
 }
 
 function resumeDebuggee() {

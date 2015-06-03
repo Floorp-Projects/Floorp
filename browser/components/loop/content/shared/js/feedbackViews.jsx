@@ -54,8 +54,8 @@ loop.shared.views.FeedbackView = (function(l10n) {
   var FeedbackForm = React.createClass({
     propTypes: {
       feedbackStore: React.PropTypes.instanceOf(loop.store.FeedbackStore),
-      pending:       React.PropTypes.bool,
-      reset:         React.PropTypes.func
+      pending: React.PropTypes.bool,
+      reset: React.PropTypes.func
     },
 
     getInitialState: function() {
@@ -70,9 +70,9 @@ loop.shared.views.FeedbackView = (function(l10n) {
       return {
         audio_quality: l10n.get("feedback_category_audio_quality"),
         video_quality: l10n.get("feedback_category_video_quality"),
-        disconnected : l10n.get("feedback_category_was_disconnected"),
-        confusing:     l10n.get("feedback_category_confusing2"),
-        other:         l10n.get("feedback_category_other2")
+        disconnected: l10n.get("feedback_category_was_disconnected"),
+        confusing: l10n.get("feedback_category_confusing2"),
+        other: l10n.get("feedback_category_other2")
       };
     },
 

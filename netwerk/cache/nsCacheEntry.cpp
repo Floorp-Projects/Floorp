@@ -385,7 +385,8 @@ nsCacheEntryHashTable::ops =
 
 
 nsCacheEntryHashTable::nsCacheEntryHashTable()
-    : initialized(false)
+    : table(&ops, sizeof(nsCacheEntryHashTableEntry), kInitialTableLength)
+    , initialized(false)
 {
     MOZ_COUNT_CTOR(nsCacheEntryHashTable);
 }
@@ -399,19 +400,18 @@ nsCacheEntryHashTable::~nsCacheEntryHashTable()
 }
 
 
-nsresult
+void
 nsCacheEntryHashTable::Init()
 {
-    PL_DHashTableInit(&table, &ops, sizeof(nsCacheEntryHashTableEntry), 256);
+    table.ClearAndPrepareForLength(kInitialTableLength);
     initialized = true;
-    return NS_OK;
 }
 
 void
 nsCacheEntryHashTable::Shutdown()
 {
     if (initialized) {
-        PL_DHashTableFinish(&table);
+        table.ClearAndPrepareForLength(kInitialTableLength);
         initialized = false;
     }
 }

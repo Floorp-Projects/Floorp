@@ -65,6 +65,7 @@
 <!ENTITY largerFont.label             "Larger Font">
 <!ENTITY largerFont.accesskey         "a">
 <!ENTITY largerFont.commandkey        "+">
+<!ENTITY largerFont.commandkey2       "="> <!-- + is above this key on many keyboards -->
 
 <!ENTITY smallerFont.label            "Smaller Font">
 <!ENTITY smallerFont.accesskey        "M">

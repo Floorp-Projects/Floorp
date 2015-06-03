@@ -328,10 +328,16 @@ IsInsideNursery(const js::gc::Cell* cell)
 namespace JS {
 
 static MOZ_ALWAYS_INLINE Zone*
-GetTenuredGCThingZone(void* thing)
+GetTenuredGCThingZone(GCCellPtr thing)
 {
-    MOZ_ASSERT(!js::gc::IsInsideNursery((js::gc::Cell*)thing));
-    return js::gc::detail::GetGCThingZone(uintptr_t(thing));
+    MOZ_ASSERT(!js::gc::IsInsideNursery(thing.asCell()));
+    return js::gc::detail::GetGCThingZone(thing.unsafeAsUIntPtr());
+}
+
+static MOZ_ALWAYS_INLINE Zone*
+GetStringZone(JSString* str)
+{
+    return js::gc::detail::GetGCThingZone(uintptr_t(str));
 }
 
 extern JS_PUBLIC_API(Zone*)
@@ -384,7 +390,7 @@ IsIncrementalBarrierNeededOnTenuredGCThing(JS::shadow::Runtime* rt, const JS::GC
     MOZ_ASSERT(!js::gc::IsInsideNursery(thing.asCell()));
     if (!rt->needsIncrementalBarrier())
         return false;
-    JS::Zone* zone = JS::GetTenuredGCThingZone(thing.asCell());
+    JS::Zone* zone = JS::GetTenuredGCThingZone(thing);
     return JS::shadow::Zone::asShadowZone(zone)->needsIncrementalBarrier();
 }
 

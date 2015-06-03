@@ -1068,7 +1068,7 @@ GCRuntime::allocateArena(Chunk* chunk, Zone* zone, AllocKind thingKind, const Au
     MOZ_ASSERT(chunk->hasAvailableArenas());
 
     // Fail the allocation if we are over our heap size limits.
-    if (!isHeapMinorCollecting() &&
+    if (!rt->isHeapMinorCollecting() &&
         !isHeapCompacting() &&
         usage.gcBytes() >= tunables.gcMaxBytes())
     {
@@ -1079,7 +1079,7 @@ GCRuntime::allocateArena(Chunk* chunk, Zone* zone, AllocKind thingKind, const Au
     zone->usage.addGCArena();
 
     // Trigger an incremental slice if needed.
-    if (!isHeapMinorCollecting() && !isHeapCompacting())
+    if (!rt->isHeapMinorCollecting() && !isHeapCompacting())
         maybeAllocTriggerZoneGC(zone, lock);
 
     return aheader;
@@ -1152,7 +1152,6 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     manipulatingDeadZones(false),
     objectsMarkedInDeadZones(0),
     poked(false),
-    heapState(Idle),
 #ifdef JS_GC_ZEAL
     zealMode(0),
     zealFrequency(0),
@@ -1530,7 +1529,7 @@ GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock)
 void
 GCRuntime::setMarkStackLimit(size_t limit)
 {
-    MOZ_ASSERT(!isHeapBusy());
+    MOZ_ASSERT(!rt->isHeapBusy());
     AutoStopVerifyingBarriers pauseVerification(rt, false);
     marker.setMaxCapacity(limit);
 }
@@ -2127,7 +2126,7 @@ ArenaLists::relocateArenas(ArenaHeader*& relocatedListOut, JS::gcreason::Reason 
     // This is only called from the main thread while we are doing a GC, so
     // there is no need to lock.
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
-    MOZ_ASSERT(runtime_->isHeapCompacting());
+    MOZ_ASSERT(runtime_->gc.isHeapCompacting());
     MOZ_ASSERT(!runtime_->gc.isBackgroundSweeping());
 
     // Flush all the freeLists back into the arena headers
@@ -3450,7 +3449,7 @@ GCRuntime::queueZonesForBackgroundSweep(ZoneList& zones)
 void
 GCRuntime::freeUnusedLifoBlocksAfterSweeping(LifoAlloc* lifo)
 {
-    MOZ_ASSERT(isHeapBusy());
+    MOZ_ASSERT(rt->isHeapBusy());
     AutoLockGC lock(rt);
     freeLifoAlloc.transferUnusedFrom(lifo);
 }
@@ -3458,7 +3457,7 @@ GCRuntime::freeUnusedLifoBlocksAfterSweeping(LifoAlloc* lifo)
 void
 GCRuntime::freeAllLifoBlocksAfterSweeping(LifoAlloc* lifo)
 {
-    MOZ_ASSERT(isHeapBusy());
+    MOZ_ASSERT(rt->isHeapBusy());
     AutoLockGC lock(rt);
     freeLifoAlloc.transferFrom(lifo);
 }
@@ -4307,17 +4306,6 @@ GCRuntime::finishMarkingValidation()
 }
 
 static void
-AssertNeedsBarrierFlagsConsistent(JSRuntime* rt)
-{
-#ifdef JS_GC_MARKING_VALIDATION
-    bool anyNeedsBarrier = false;
-    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
-        anyNeedsBarrier |= zone->needsIncrementalBarrier();
-    MOZ_ASSERT(rt->needsIncrementalBarrier() == anyNeedsBarrier);
-#endif
-}
-
-static void
 DropStringWrappers(JSRuntime* rt)
 {
     /*
@@ -4480,8 +4468,6 @@ GCRuntime::getNextZoneGroup()
             zone->setGCState(Zone::NoGC);
             zone->gcGrayRoots.clearAndFree();
         }
-        rt->setNeedsIncrementalBarrier(false);
-        AssertNeedsBarrierFlagsConsistent(rt);
 
         for (GCCompartmentGroupIter comp(rt); !comp.done(); comp.next())
             ResetGrayList(comp);
@@ -5519,15 +5505,15 @@ GCRuntime::finishCollection(JS::gcreason::Reason reason)
 }
 
 /* Start a new heap session. */
-AutoTraceSession::AutoTraceSession(JSRuntime* rt, js::HeapState heapState)
+AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
   : lock(rt),
     runtime(rt),
-    prevState(rt->gc.heapState)
+    prevState(rt->heapState_)
 {
     MOZ_ASSERT(rt->gc.isAllocAllowed());
-    MOZ_ASSERT(rt->gc.heapState == Idle);
-    MOZ_ASSERT(heapState != Idle);
-    MOZ_ASSERT_IF(heapState == MajorCollecting, rt->gc.nursery.isEmpty());
+    MOZ_ASSERT(rt->heapState_ == JS::HeapState::Idle);
+    MOZ_ASSERT(heapState != JS::HeapState::Idle);
+    MOZ_ASSERT_IF(heapState == JS::HeapState::MajorCollecting, rt->gc.nursery.isEmpty());
 
     // Threads with an exclusive context can hit refillFreeList while holding
     // the exclusive access lock. To avoid deadlocking when we try to acquire
@@ -5539,9 +5525,9 @@ AutoTraceSession::AutoTraceSession(JSRuntime* rt, js::HeapState heapState)
         // Lock the helper thread state when changing the heap state in the
         // presence of exclusive threads, to avoid racing with refillFreeList.
         AutoLockHelperThreadState lock;
-        rt->gc.heapState = heapState;
+        rt->heapState_ = heapState;
     } else {
-        rt->gc.heapState = heapState;
+        rt->heapState_ = heapState;
     }
 }
 
@@ -5551,12 +5537,12 @@ AutoTraceSession::~AutoTraceSession()
 
     if (runtime->exclusiveThreadsPresent()) {
         AutoLockHelperThreadState lock;
-        runtime->gc.heapState = prevState;
+        runtime->heapState_ = prevState;
 
         // Notify any helper threads waiting for the trace session to end.
         HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER);
     } else {
-        runtime->gc.heapState = prevState;
+        runtime->heapState_ = prevState;
     }
 }
 
@@ -5613,8 +5599,6 @@ GCRuntime::resetIncrementalGC(const char* reason)
             zone->setNeedsIncrementalBarrier(false, Zone::UpdateJit);
             zone->setGCState(Zone::NoGC);
         }
-        rt->setNeedsIncrementalBarrier(false);
-        AssertNeedsBarrierFlagsConsistent(rt);
 
         freeLifoAlloc.freeAll();
 
@@ -5726,25 +5710,19 @@ AutoGCSlice::AutoGCSlice(JSRuntime* rt)
             MOZ_ASSERT(!zone->needsIncrementalBarrier());
         }
     }
-    rt->setNeedsIncrementalBarrier(false);
-    AssertNeedsBarrierFlagsConsistent(rt);
 }
 
 AutoGCSlice::~AutoGCSlice()
 {
     /* We can't use GCZonesIter if this is the end of the last slice. */
-    bool haveBarriers = false;
     for (ZonesIter zone(runtime, WithAtoms); !zone.done(); zone.next()) {
         if (zone->isGCMarking()) {
             zone->setNeedsIncrementalBarrier(true, Zone::UpdateJit);
             zone->arenas.prepareForIncrementalGC(runtime);
-            haveBarriers = true;
         } else {
             zone->setNeedsIncrementalBarrier(false, Zone::UpdateJit);
         }
     }
-    runtime->setNeedsIncrementalBarrier(haveBarriers);
-    AssertNeedsBarrierFlagsConsistent(runtime);
 }
 
 void
@@ -6005,7 +5983,7 @@ GCRuntime::gcCycle(bool incremental, SliceBudget& budget, JS::gcreason::Reason r
      */
     AutoDisableStoreBuffer adsb(this);
 
-    AutoTraceSession session(rt, MajorCollecting);
+    AutoTraceSession session(rt, JS::HeapState::MajorCollecting);
 
     majorGCTriggerReason = JS::gcreason::NO_REASON;
     interFrameGC = true;
@@ -6273,7 +6251,7 @@ GCRuntime::abortGC()
 
     evictNursery(JS::gcreason::ABORT_GC);
     AutoDisableStoreBuffer adsb(this);
-    AutoTraceSession session(rt, MajorCollecting);
+    AutoTraceSession session(rt, JS::HeapState::MajorCollecting);
 
     number++;
     resetIncrementalGC("abort");
@@ -6660,14 +6638,14 @@ GCRuntime::runDebugGC()
 void
 GCRuntime::setValidate(bool enabled)
 {
-    MOZ_ASSERT(!isHeapMajorCollecting());
+    MOZ_ASSERT(!rt->isHeapMajorCollecting());
     validate = enabled;
 }
 
 void
 GCRuntime::setFullCompartmentChecks(bool enabled)
 {
-    MOZ_ASSERT(!isHeapMajorCollecting());
+    MOZ_ASSERT(!rt->isHeapMajorCollecting());
     fullCompartmentChecks = enabled;
 }
 
@@ -6675,7 +6653,7 @@ GCRuntime::setFullCompartmentChecks(bool enabled)
 bool
 GCRuntime::selectForMarking(JSObject* object)
 {
-    MOZ_ASSERT(!isHeapMajorCollecting());
+    MOZ_ASSERT(!rt->isHeapMajorCollecting());
     return selectedForMarking.append(object);
 }
 
@@ -6688,7 +6666,7 @@ GCRuntime::clearSelectedForMarking()
 void
 GCRuntime::setDeterministic(bool enabled)
 {
-    MOZ_ASSERT(!isHeapMajorCollecting());
+    MOZ_ASSERT(!rt->isHeapMajorCollecting());
     deterministicOnly = enabled;
 }
 #endif

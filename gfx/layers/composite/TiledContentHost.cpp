@@ -213,8 +213,8 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
 
     if (tile.mTextureHost && !tile.mTextureHost->HasInternalBuffer()) {
       MOZ_ASSERT(tile.mSharedLock);
-      int tileX = i % oldRetainedWidth + oldFirstTileX;
-      int tileY = i / oldRetainedWidth + oldFirstTileY;
+      int tileX = i / oldRetainedHeight + oldFirstTileX;
+      int tileY = i % oldRetainedHeight + oldFirstTileY;
 
       if (tileX >= newFirstTileX && tileY >= newFirstTileY &&
           tileX < (newFirstTileX + newRetainedWidth) &&
@@ -237,8 +237,8 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
   // they should be with the new retained with and height rather than the
   // old one.
   for (size_t i = 0; i < tileDescriptors.Length(); i++) {
-    int tileX = i % newRetainedWidth + newFirstTileX;
-    int tileY = i / newRetainedWidth + newFirstTileY;
+    int tileX = i / newRetainedHeight + newFirstTileX;
+    int tileY = i % newRetainedHeight + newFirstTileY;
 
     // First, get the already existing tiles to the right place in the array,
     // and use placeholders where there was no tiles.
@@ -247,8 +247,8 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
         tileY >= (oldFirstTileY + oldRetainedHeight)) {
       mRetainedTiles[i] = GetPlaceholderTile();
     } else {
-      mRetainedTiles[i] = oldTiles[(tileY - oldFirstTileY) * oldRetainedWidth +
-                                   (tileX - oldFirstTileX)];
+      mRetainedTiles[i] = oldTiles[(tileX - oldFirstTileX) * oldRetainedHeight +
+                                   (tileY - oldFirstTileY)];
       // If we hit this assertion it means we probably mixed something up in the
       // logic that tries to reuse tiles on the compositor side. It is most likely
       // benign, but we are missing some fast paths so let's try to make it not happen.
@@ -334,8 +334,8 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
       }
     }
 
-    tile.x = i % newRetainedWidth + newFirstTileX;
-    tile.y = i / newRetainedWidth + newFirstTileY;
+    tile.x = i / newRetainedHeight + newFirstTileX;
+    tile.y = i % newRetainedHeight + newFirstTileY;
   }
 
   mFirstTileX = newFirstTileX;
@@ -435,7 +435,8 @@ TiledContentHost::RenderTile(TileHost& aTile,
                              const gfx::Rect& aClipRect,
                              const nsIntRegion& aScreenRegion,
                              const IntPoint& aTextureOffset,
-                             const nsIntSize& aTextureBounds)
+                             const nsIntSize& aTextureBounds,
+                             const gfx::Rect& aVisibleRect)
 {
   if (aTile.IsPlaceholderTile()) {
     // This shouldn't ever happen, but let's fail semi-gracefully. No need
@@ -490,7 +491,7 @@ TiledContentHost::RenderTile(TileHost& aTile,
                                   textureRect.y / aTextureBounds.height,
                                   textureRect.width / aTextureBounds.width,
                                   textureRect.height / aTextureBounds.height);
-    mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, aOpacity, aTransform);
+    mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, aOpacity, aTransform, aVisibleRect);
   }
   DiagnosticFlags flags = DiagnosticFlags::CONTENT | DiagnosticFlags::TILE;
   if (aTile.mTextureHostOnWhite) {
@@ -582,7 +583,9 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
           gfx::IntSize tileSize = aLayerBuffer.GetTileSize();
           RenderTile(tileTexture, aBackgroundColor, aEffectChain, aOpacity, aTransform,
                      aFilter, aClipRect, tileDrawRegion, tileOffset,
-                     nsIntSize(tileSize.width, tileSize.height));
+                     nsIntSize(tileSize.width, tileSize.height),
+                     gfx::Rect(visibleRect.x, visibleRect.y,
+                               visibleRect.width, visibleRect.height));
           if (tileTexture.mTextureHostOnWhite) {
             componentAlphaDiagnostic = DiagnosticFlags::COMPONENT_ALPHA;
           }

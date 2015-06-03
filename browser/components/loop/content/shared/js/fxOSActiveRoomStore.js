@@ -109,7 +109,7 @@ loop.store.FxOSActiveRoomStore = (function() {
           return;
         }
         if (event.target.error.name !== "NO_PROVIDER") {
-          console.error ("Unexpected " + event.target.error.name);
+          console.error("Unexpected " + event.target.error.name);
           return;
         }
         // We need to install the FxOS app.
