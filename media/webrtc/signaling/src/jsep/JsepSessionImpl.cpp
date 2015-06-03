@@ -533,19 +533,18 @@ JsepSessionImpl::SetupBundle(Sdp* sdp) const
 }
 
 nsresult
-JsepSessionImpl::FinalizeTransportAttributes(Sdp* offer)
+JsepSessionImpl::SetupTransportAttributes(const Sdp& newOffer, Sdp* local)
 {
   const Sdp* oldAnswer = GetAnswer();
 
   if (oldAnswer) {
     // Renegotiation, we might have transport attributes to copy over
     for (size_t i = 0; i < oldAnswer->GetMediaSectionCount(); ++i) {
-      if (!MsectionIsDisabled(offer->GetMediaSection(i)) &&
-          !MsectionIsDisabled(oldAnswer->GetMediaSection(i)) &&
-          !IsBundleSlave(*oldAnswer, i)) {
+      if (!MsectionIsDisabled(local->GetMediaSection(i)) &&
+          AreOldTransportParamsValid(*oldAnswer, newOffer, i)) {
         nsresult rv = CopyTransportParams(
             mCurrentLocalDescription->GetMediaSection(i),
-            &offer->GetMediaSection(i));
+            &local->GetMediaSection(i));
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
@@ -769,7 +768,7 @@ JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
 
   SetupBundle(sdp.get());
 
-  rv = FinalizeTransportAttributes(sdp.get());
+  rv = SetupTransportAttributes(*sdp, sdp.get());
   NS_ENSURE_SUCCESS(rv,rv);
 
   *offer = sdp->ToString();
@@ -1021,6 +1020,9 @@ JsepSessionImpl::CreateAnswer(const JsepAnswerOptions& options,
     rv = CreateAnswerMSection(options, i, remoteMsection, sdp.get());
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  rv = SetupTransportAttributes(offer, sdp.get());
+  NS_ENSURE_SUCCESS(rv,rv);
 
   *answer = sdp->ToString();
   mGeneratedLocalDescription = Move(sdp);
@@ -1416,6 +1418,7 @@ JsepSessionImpl::SetLocalDescriptionAnswer(JsepSdpType type,
 
   mCurrentRemoteDescription = Move(mPendingRemoteDescription);
   mCurrentLocalDescription = Move(mPendingLocalDescription);
+  mWasOffererLastTime = mIsOfferer;
 
   SetState(kJsepStateStable);
   return NS_OK;
@@ -1865,6 +1868,37 @@ JsepSessionImpl::FinalizeTransport(const SdpAttributeList& remote,
   return NS_OK;
 }
 
+bool
+JsepSessionImpl::AreOldTransportParamsValid(const Sdp& oldAnswer,
+                                            const Sdp& newOffer,
+                                            size_t level)
+{
+  if (MsectionIsDisabled(oldAnswer.GetMediaSection(level)) ||
+      MsectionIsDisabled(newOffer.GetMediaSection(level))) {
+    // Obvious
+    return false;
+  }
+
+  if (IsBundleSlave(oldAnswer, level)) {
+    // The transport attributes on this m-section were thrown away, because it
+    // was bundled.
+    return false;
+  }
+
+  if (newOffer.GetMediaSection(level).GetAttributeList().HasAttribute(
+        SdpAttribute::kBundleOnlyAttribute) &&
+      IsBundleSlave(newOffer, level)) {
+    // It never makes sense to put transport attributes in a bundle-only
+    // m-section
+    return false;
+  }
+
+  // TODO(bug 906986): Check for ICE restart (will need to pass the offerer's
+  // old SDP to compare it against |newOffer|)
+
+  return true;
+}
+
 nsresult
 JsepSessionImpl::AddTransportAttributes(SdpMediaSection* msection,
                                         SdpSetupAttribute::Role dtlsRole)
@@ -1886,33 +1920,43 @@ JsepSessionImpl::AddTransportAttributes(SdpMediaSection* msection,
 }
 
 nsresult
-JsepSessionImpl::CopyTransportParams(const SdpMediaSection& source,
-                                     SdpMediaSection* dest)
+JsepSessionImpl::CopyTransportParams(const SdpMediaSection& oldLocal,
+                                     SdpMediaSection* newLocal)
 {
   // Copy over m-section details
-  dest->SetPort(source.GetPort());
-  dest->GetConnection() = source.GetConnection();
+  newLocal->SetPort(oldLocal.GetPort());
+  newLocal->GetConnection() = oldLocal.GetConnection();
 
-  auto& sourceAttrs = source.GetAttributeList();
-  auto& destAttrs = dest->GetAttributeList();
+  const SdpAttributeList& oldLocalAttrs = oldLocal.GetAttributeList();
+  SdpAttributeList& newLocalAttrs = newLocal->GetAttributeList();
+
+  // If newLocal is an offer, this will be the number of components we used
+  // last time, and if it is an answer, this will be the number of components
+  // we know we're using now.
+  size_t components = mTransports[oldLocal.GetLevel()]->mComponents;
 
   // Now we copy over attributes that won't be added by the usual logic
-  if (sourceAttrs.HasAttribute(SdpAttribute::kCandidateAttribute)) {
-    auto* candidateAttrs =
-      new SdpMultiStringAttribute(SdpAttribute::kCandidateAttribute);
-    candidateAttrs->mValues = sourceAttrs.GetCandidate();
-    destAttrs.SetAttribute(candidateAttrs);
+  if (oldLocalAttrs.HasAttribute(SdpAttribute::kCandidateAttribute) &&
+      components) {
+    UniquePtr<SdpMultiStringAttribute> candidateAttrs(
+      new SdpMultiStringAttribute(SdpAttribute::kCandidateAttribute));
+    for (const std::string& candidate : oldLocalAttrs.GetCandidate()) {
+      size_t component;
+      nsresult rv = GetComponent(candidate, &component);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (components >= component) {
+        candidateAttrs->mValues.push_back(candidate);
+      }
+    }
+    if (candidateAttrs->mValues.size()) {
+      newLocalAttrs.SetAttribute(candidateAttrs.release());
+    }
   }
 
-  if (sourceAttrs.HasAttribute(SdpAttribute::kEndOfCandidatesAttribute)) {
-    destAttrs.SetAttribute(
-        new SdpFlagAttribute(SdpAttribute::kEndOfCandidatesAttribute));
-  }
-
-  if (!destAttrs.HasAttribute(SdpAttribute::kRtcpMuxAttribute) &&
-      sourceAttrs.HasAttribute(SdpAttribute::kRtcpAttribute)) {
-    // copy rtcp attribute
-    destAttrs.SetAttribute(new SdpRtcpAttribute(sourceAttrs.GetRtcp()));
+  if (components == 2 &&
+      oldLocalAttrs.HasAttribute(SdpAttribute::kRtcpAttribute)) {
+    // copy rtcp attribute if we had one that we are using
+    newLocalAttrs.SetAttribute(new SdpRtcpAttribute(oldLocalAttrs.GetRtcp()));
   }
 
   return NS_OK;
@@ -2075,6 +2119,7 @@ JsepSessionImpl::SetRemoteDescriptionAnswer(JsepSdpType type,
 
   mCurrentRemoteDescription = Move(mPendingRemoteDescription);
   mCurrentLocalDescription = Move(mPendingLocalDescription);
+  mWasOffererLastTime = mIsOfferer;
 
   SetState(kJsepStateStable);
   return NS_OK;
@@ -2567,6 +2612,21 @@ JsepSessionImpl::AddCandidateToSdp(Sdp* sdp,
   return NS_OK;
 }
 
+// TODO(bug 1142105): Move this into an SDP helper class. Ideally, we'd like
+// to have real parse code and a useful representation of candidate attrs.
+nsresult
+JsepSessionImpl::GetComponent(const std::string& candidate, size_t* component)
+{
+  unsigned int temp;
+  int32_t result = PR_sscanf(candidate.c_str(), "%*s %u", &temp);
+  if (result == 1) {
+    *component = temp;
+    return NS_OK;
+  }
+  JSEP_SET_ERROR("Malformed local ICE candidate: " << candidate);
+  return NS_ERROR_INVALID_ARG;
+}
+
 nsresult
 JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
                                        const std::string& mid,
@@ -2636,6 +2696,7 @@ static void SetDefaultAddresses(const std::string& defaultCandidateAddr,
 {
   msection->GetConnection().SetAddress(defaultCandidateAddr);
   msection->SetPort(defaultCandidatePort);
+
   if (!defaultRtcpCandidateAddr.empty()) {
     sdp::AddrType ipVersion = sdp::kIPv4;
     if (defaultRtcpCandidateAddr.find(':') != std::string::npos) {
@@ -2669,17 +2730,30 @@ JsepSessionImpl::EndOfLocalCandidates(const std::string& defaultCandidateAddr,
     return NS_ERROR_UNEXPECTED;
   }
 
-  std::set<std::string> bundleMids;
-  const SdpMediaSection* bundleMsection;
-  nsresult rv = GetNegotiatedBundleInfo(&bundleMids, &bundleMsection);
-  if (NS_FAILED(rv)) {
-    MOZ_ASSERT(false);
-    mLastError += " (This should have been caught sooner!)";
-    return NS_ERROR_FAILURE;
+  if (level >= sdp->GetMediaSectionCount()) {
+    return NS_OK;
   }
 
-  if (level < sdp->GetMediaSectionCount()) {
-    SdpMediaSection& msection = sdp->GetMediaSection(level);
+  std::string defaultRtcpCandidateAddrCopy(defaultRtcpCandidateAddr);
+  if (mState == kJsepStateStable && mTransports[level]->mComponents == 1) {
+    // We know we're doing rtcp-mux by now. Don't create an rtcp attr.
+    defaultRtcpCandidateAddrCopy = "";
+    defaultRtcpCandidatePort = 0;
+  }
+
+  SdpMediaSection& msection = sdp->GetMediaSection(level);
+
+  if (mState == kJsepStateStable) {
+    // offer/answer is done. Do we actually incorporate these defaults?
+    const Sdp* answer(GetAnswer());
+    std::set<std::string> bundleMids;
+    const SdpMediaSection* bundleMsection;
+    nsresult rv = GetBundleInfo(*answer, &bundleMids, &bundleMsection);
+    if (NS_FAILED(rv)) {
+      MOZ_ASSERT(false);
+      mLastError += " (This should have been caught sooner!)";
+      return NS_ERROR_FAILURE;
+    }
 
     if (msection.GetAttributeList().HasAttribute(SdpAttribute::kMidAttribute) &&
         bundleMids.count(msection.GetAttributeList().GetMid())) {
@@ -2698,26 +2772,26 @@ JsepSessionImpl::EndOfLocalCandidates(const std::string& defaultCandidateAddr,
         }
         SetDefaultAddresses(defaultCandidateAddr,
                             defaultCandidatePort,
-                            defaultRtcpCandidateAddr,
+                            defaultRtcpCandidateAddrCopy,
                             defaultRtcpCandidatePort,
                             bundledMsection);
       }
     }
+  }
 
-    SetDefaultAddresses(defaultCandidateAddr,
-                        defaultCandidatePort,
-                        defaultRtcpCandidateAddr,
-                        defaultRtcpCandidatePort,
-                        &msection);
+  SetDefaultAddresses(defaultCandidateAddr,
+                      defaultCandidatePort,
+                      defaultRtcpCandidateAddrCopy,
+                      defaultRtcpCandidatePort,
+                      &msection);
 
-    // TODO(bug 1095793): Will this have an mid someday?
+  // TODO(bug 1095793): Will this have an mid someday?
 
-    SdpAttributeList& attrs = msection.GetAttributeList();
-    attrs.SetAttribute(
-        new SdpFlagAttribute(SdpAttribute::kEndOfCandidatesAttribute));
-    if (!mIsOfferer) {
-      attrs.RemoveAttribute(SdpAttribute::kIceOptionsAttribute);
-    }
+  SdpAttributeList& attrs = msection.GetAttributeList();
+  attrs.SetAttribute(
+      new SdpFlagAttribute(SdpAttribute::kEndOfCandidatesAttribute));
+  if (!mIsOfferer) {
+    attrs.RemoveAttribute(SdpAttribute::kIceOptionsAttribute);
   }
 
   return NS_OK;
@@ -3039,10 +3113,8 @@ JsepSessionImpl::MsectionIsDisabled(const SdpMediaSection& msection) const
 const Sdp*
 JsepSessionImpl::GetAnswer() const
 {
-  MOZ_ASSERT(mState == kJsepStateStable);
-
-  return mIsOfferer ? mCurrentRemoteDescription.get()
-                    : mCurrentLocalDescription.get();
+  return mWasOffererLastTime ? mCurrentRemoteDescription.get()
+                             : mCurrentLocalDescription.get();
 }
 
 nsresult
