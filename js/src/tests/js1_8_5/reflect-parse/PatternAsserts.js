@@ -66,6 +66,11 @@ function assertStmt(src, patt) {
     assertBlockStmt(src, patt);
 }
 
+function assertInFunctionExpr(src, patt) {
+    assertLocalExpr(src, patt);
+    assertBlockExpr(src, patt);
+}
+
 function assertExpr(src, patt) {
     assertLocalExpr(src, patt);
     assertGlobalExpr(src, patt);
