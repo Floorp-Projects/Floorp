@@ -240,7 +240,7 @@ MultipartBlobImpl::SetLengthAndModifiedDate()
 
 void
 MultipartBlobImpl::GetMozFullPathInternal(nsAString& aFilename,
-                                          ErrorResult& aRv)
+                                          ErrorResult& aRv) const
 {
   if (!mIsFromNsIFile || mBlobImpls.Length() == 0) {
     BlobImplBase::GetMozFullPathInternal(aFilename, aRv);
