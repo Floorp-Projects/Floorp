@@ -177,6 +177,7 @@ browser.jar:
         skin/classic/browser/loop/toolbar-inverted.png               (loop/toolbar-inverted.png)
         skin/classic/browser/loop/toolbar-XP.png                     (loop/toolbar-XP.png)
         skin/classic/browser/loop/toolbar-lunaSilver.png             (loop/toolbar-lunaSilver.png)
+*       skin/classic/browser/controlcenter/panel.css                 (controlcenter/panel.css)
         skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
         skin/classic/browser/customizableui/customizeFavicon.ico  (../shared/customizableui/customizeFavicon.ico)
         skin/classic/browser/customizableui/customize-illustration.png  (../shared/customizableui/customize-illustration.png)
