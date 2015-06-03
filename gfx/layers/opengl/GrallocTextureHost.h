@@ -24,8 +24,6 @@ public:
 
   virtual ~GrallocTextureHostOGL();
 
-  virtual void Updated(const nsIntRegion* aRegion) override {}
-
   virtual bool Lock() override;
 
   virtual void Unlock() override;

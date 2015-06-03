@@ -541,7 +541,7 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& newValidRegion,
 #ifdef DEBUG
         int currTileX = floor_div(x - newBufferOrigin.x, scaledTileSize.width);
         int currTileY = floor_div(y - newBufferOrigin.y, scaledTileSize.height);
-        int index = currTileX * mRetainedHeight + currTileY;
+        int index = TileIndex(currTileX, currTileY);
         // If allocating a tile failed we can run into this assertion.
         // Rendering is going to be glitchy but we don't want to crash.
         NS_ASSERTION(!newValidRegion.Intersects(tileRect) ||
@@ -556,7 +556,7 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& newValidRegion,
 
       int tileX = floor_div(x - newBufferOrigin.x, scaledTileSize.width);
       int tileY = floor_div(y - newBufferOrigin.y, scaledTileSize.height);
-      int index = tileX * mRetainedHeight + tileY;
+      int index = TileIndex(tileX, tileY);
       MOZ_ASSERT(index >= 0 &&
                  static_cast<unsigned>(index) < newRetainedTiles.Length(),
                  "index out of range");
