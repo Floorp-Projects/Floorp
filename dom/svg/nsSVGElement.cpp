@@ -1183,9 +1183,18 @@ MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
     nsCSSProps::LookupProperty(nsDependentAtomString(aMappedAttrName),
                                nsCSSProps::eEnabledForAllContent);
   if (propertyID != eCSSProperty_UNKNOWN) {
-    bool changed; // outparam for ParseProperty. (ignored)
+    bool changed = false; // outparam for ParseProperty.
     mParser.ParseProperty(propertyID, aMappedAttrValue, mDocURI, mBaseURI,
                           mElement->NodePrincipal(), mDecl, &changed, false, true);
+    if (changed) {
+      // The normal reporting of use counters by the nsCSSParser won't happen
+      // since it doesn't have a sheet.
+      MOZ_ASSERT(!nsCSSProps::IsShorthand(propertyID));
+      UseCounter useCounter = nsCSSProps::UseCounterFor(propertyID);
+      if (useCounter != eUseCounter_UNKNOWN) {
+        mElement->OwnerDoc()->SetDocumentAndPageUseCounter(useCounter);
+      }
+    }
     return;
   }
   MOZ_ASSERT(aMappedAttrName == nsGkAtoms::lang,
