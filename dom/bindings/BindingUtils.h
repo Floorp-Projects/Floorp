@@ -534,7 +534,7 @@ struct VerifyTraceProtoAndIfaceCacheCalledTracer : public JS::CallbackTracer
     : JS::CallbackTracer(rt), ok(false)
   {}
 
-  void trace(void** thingp, JS::TraceKind kind) {
+  void trace(void** thingp, JS::TraceKind kind) override {
     // We don't do anything here, we only want to verify that
     // TraceProtoAndIfaceCache was called.
   }
