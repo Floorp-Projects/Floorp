@@ -13,7 +13,6 @@
 #include "mozilla/ipc/BluetoothDaemonConnectionConsumer.h"
 #include "mozilla/ipc/DataSocket.h"
 #include "mozilla/ipc/UnixSocketConnector.h"
-#include "mozilla/ipc/UnixSocketWatcher.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
 
@@ -201,9 +200,7 @@ BluetoothDaemonPDUConsumer::~BluetoothDaemonPDUConsumer()
 // BluetoothDaemonConnectionIO
 //
 
-class BluetoothDaemonConnectionIO final
-  : public UnixSocketWatcher
-  , public ConnectionOrientedSocketIO
+class BluetoothDaemonConnectionIO final : public ConnectionOrientedSocketIO
 {
 public:
   BluetoothDaemonConnectionIO(nsIThread* aConsumerThread,
@@ -262,8 +259,10 @@ BluetoothDaemonConnectionIO::BluetoothDaemonConnectionIO(
   ConnectionStatus aConnectionStatus,
   BluetoothDaemonConnection* aConnection,
   BluetoothDaemonPDUConsumer* aConsumer)
-  : UnixSocketWatcher(aIOLoop, aFd, aConnectionStatus)
-  , ConnectionOrientedSocketIO(aConsumerThread)
+  : ConnectionOrientedSocketIO(aConsumerThread,
+                               aIOLoop,
+                               aFd,
+                               aConnectionStatus)
   , mConnection(aConnection)
   , mConsumer(aConsumer)
   , mShuttingDownOnIOThread(false)
