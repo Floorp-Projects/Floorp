@@ -1600,7 +1600,8 @@ private:
         if (aWorkerPrivate->IsServiceWorker()) {
           nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
           MOZ_ASSERT(swm);
-          bool handled = swm->HandleError(aCx, aWorkerPrivate->SharedWorkerName(),
+          bool handled = swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
+                                          aWorkerPrivate->SharedWorkerName(),
                                           aWorkerPrivate->ScriptURL(),
                                           mMessage,
                                           mFilename, mLine, mLineNumber,

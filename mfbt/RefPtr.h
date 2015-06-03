@@ -60,9 +60,7 @@ template<typename T> OutParamRef<T> byRef(RefPtr<T>&);
  * section of your class, where ClassName is the name of your class.
  */
 namespace detail {
-#ifdef DEBUG
 const MozRefCountType DEAD = 0xffffdead;
-#endif
 
 // When building code that gets compiled into Gecko, try to use the
 // trace-refcount leak logging facilities.

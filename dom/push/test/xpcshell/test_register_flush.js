@@ -3,7 +3,7 @@
 
 'use strict';
 
-const {PushDB, PushService} = serviceExports;
+const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
 const userAgentID = '9ce1e6d3-7bdb-4fe9-90a5-def1d64716f1';
 const channelID = 'c26892c5-6e08-4c16-9f0c-0044697b4d85';
@@ -23,7 +23,7 @@ function run_test() {
 }
 
 add_task(function* test_register_flush() {
-  let db = new PushDB();
+  let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
   let record = {
     channelID: '9bcc7efb-86c7-4457-93ea-e24e6eb59b74',
@@ -38,6 +38,7 @@ add_task(function* test_register_flush() {
   let ackDefer = Promise.defer();
   let ackDone = after(2, ackDefer.resolve);
   PushService.init({
+    serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
     db,
     makeWebSocket(uri) {
@@ -88,14 +89,14 @@ add_task(function* test_register_flush() {
   yield waitForPromise(ackDefer.promise, DEFAULT_TIMEOUT,
      'Timed out waiting for acknowledgements');
 
-  let prevRecord = yield db.getByChannelID(
+  let prevRecord = yield db.getByKeyID(
     '9bcc7efb-86c7-4457-93ea-e24e6eb59b74');
   equal(prevRecord.pushEndpoint, 'https://example.org/update/1',
     'Wrong existing push endpoint');
   strictEqual(prevRecord.version, 3,
     'Should record version updates sent before register responses');
 
-  let registeredRecord = yield db.getByChannelID(newRecord.channelID);
+  let registeredRecord = yield db.getByKeyID(newRecord.channelID);
   equal(registeredRecord.pushEndpoint, 'https://example.org/update/2',
     'Wrong new push endpoint');
   ok(!registeredRecord.version, 'Should not record premature updates');
