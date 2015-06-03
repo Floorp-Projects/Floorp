@@ -38,7 +38,7 @@ function EventManager(sr) {
 
   var eventDependencies = {
     "speechend": "speechstart",
-    "soundend": "soundstart",
+    "soundent": "soundstart",
     "audioend": "audiostart"
   };
 

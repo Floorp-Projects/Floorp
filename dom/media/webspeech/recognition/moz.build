@@ -26,11 +26,6 @@ if CONFIG['MOZ_WEBSPEECH_TEST_BACKEND']:
         'test/FakeSpeechRecognitionService.h',
     ]
 
-if CONFIG['MOZ_WEBSPEECH_POCKETSPHINX']:
-    EXPORTS.mozilla.dom += [
-        'PocketSphinxSpeechRecognitionService.h',
-    ]
-
 UNIFIED_SOURCES += [
     'endpointer.cc',
     'energy_endpointer.cc',
@@ -49,20 +44,9 @@ if CONFIG['MOZ_WEBSPEECH_TEST_BACKEND']:
         'test/FakeSpeechRecognitionService.cpp',
     ]
 
-if CONFIG['MOZ_WEBSPEECH_POCKETSPHINX']:
-    UNIFIED_SOURCES += [
-        'PocketSphinxSpeechRecognitionService.cpp',
-    ]
-
 LOCAL_INCLUDES += [
     '/dom/base',
-    '/media/sphinxbase',
 ]
-
-if CONFIG['MOZ_WEBSPEECH_POCKETSPHINX']:
-    LOCAL_INCLUDES += [
-        '/media/pocketsphinx',
-    ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

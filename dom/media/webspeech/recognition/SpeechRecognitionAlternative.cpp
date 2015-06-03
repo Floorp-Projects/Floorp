@@ -22,7 +22,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechRecognitionAlternative)
 NS_INTERFACE_MAP_END
 
 SpeechRecognitionAlternative::SpeechRecognitionAlternative(SpeechRecognition* aParent)
-  : mConfidence(0)
+  : mTranscript(NS_LITERAL_STRING(""))
+  , mConfidence(0)
   , mParent(aParent)
 {
 }
