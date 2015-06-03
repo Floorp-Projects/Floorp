@@ -65,6 +65,10 @@ const CATEGORIES = [{
   color: "#d99b28",
   abbrev: "events",
   label: L10N.getStr("category.events")
+}, {
+  color: "#8fa1b2",
+  abbrev: "tools",
+  label: L10N.getStr("category.tools")
 }];
 
 /**
@@ -81,6 +85,9 @@ const CATEGORY_MAPPINGS = {
   "1024": CATEGORIES[5],  // js::ProfileEntry::Category::GRAPHICS
   "2048": CATEGORIES[6],  // js::ProfileEntry::Category::STORAGE
   "4096": CATEGORIES[7],  // js::ProfileEntry::Category::EVENTS
+
+  // non-bitmasks for specially-assigned categories
+  "9000": CATEGORIES[8],
 };
 
 /**
@@ -106,17 +113,17 @@ const [CATEGORY_MASK, CATEGORY_MASK_LIST] = (function () {
   return [
     function (name, index) {
       if (!(name in bitmasksForCategory)) {
-        throw new Error(`Category abbreviation '${name}' does not exist.`);
+        throw new Error(`Category abbreviation "${name}" does not exist.`);
       }
       if (arguments.length == 1) {
         if (bitmasksForCategory[name].length != 1) {
-          throw new Error(`Expected exactly one category number for '${name}'.`);
+          throw new Error(`Expected exactly one category number for "${name}".`);
         } else {
           return bitmasksForCategory[name][0];
         }
       } else {
         if (index > bitmasksForCategory[name].length) {
-          throw new Error(`Index '${index}' too high for category '${name}'.`);
+          throw new Error(`Index "${index}" too high for category "${name}".`);
         } else {
           return bitmasksForCategory[name][index - 1];
         }
@@ -125,7 +132,7 @@ const [CATEGORY_MASK, CATEGORY_MASK_LIST] = (function () {
 
     function (name) {
       if (!(name in bitmasksForCategory)) {
-        throw new Error(`Category abbreviation '${name}' does not exist.`);
+        throw new Error(`Category abbreviation "${name}" does not exist.`);
       }
       return bitmasksForCategory[name];
     }
@@ -135,11 +142,15 @@ const [CATEGORY_MASK, CATEGORY_MASK_LIST] = (function () {
 // Human-readable "other" category bitmask. Older Geckos don't have all the
 // necessary instrumentation in the sampling profiler backend for creating
 // a categories graph, in which case we default to the "other" category.
-const CATEGORY_OTHER = CATEGORY_MASK('other');
+const CATEGORY_OTHER = CATEGORY_MASK("other");
 
 // Human-readable JIT category bitmask. Certain pseudo-frames in a sample,
-// like "EnterJIT", don't have any associated `cateogry` information.
-const CATEGORY_JIT = CATEGORY_MASK('js');
+// like "EnterJIT", don't have any associated `category` information.
+const CATEGORY_JIT = CATEGORY_MASK("js");
+
+// Human-readable "devtools" category bitmask. Not emitted from frames themselves,
+// but used manually in the client.
+const CATEGORY_DEVTOOLS = CATEGORY_MASK("tools");
 
 // Exported symbols.
 exports.L10N = L10N;
@@ -150,3 +161,4 @@ exports.CATEGORY_MASK = CATEGORY_MASK;
 exports.CATEGORY_MASK_LIST = CATEGORY_MASK_LIST;
 exports.CATEGORY_OTHER = CATEGORY_OTHER;
 exports.CATEGORY_JIT = CATEGORY_JIT;
+exports.CATEGORY_DEVTOOLS = CATEGORY_DEVTOOLS;

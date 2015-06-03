@@ -13,238 +13,82 @@ add_task(function test() {
   let FrameUtils = devtools.require("devtools/performance/frame-utils");
   let { FrameNode } = devtools.require("devtools/performance/tree-model");
   let { CATEGORY_OTHER } = devtools.require("devtools/performance/global");
+  let compute = frame => {
+    FrameUtils.computeIsContentAndCategory(frame);
+    return frame;
+  };
 
-  let frame1 = new FrameNode("hello/<.world (http://foo/bar.js:123:987)", {
-    location: "hello/<.world (http://foo/bar.js:123:987)",
-    line: 456,
-    isContent: FrameUtils.isContent({
-      location: "hello/<.world (http://foo/bar.js:123:987)"
-    })
-  }, false);
-
-  equal(frame1.getInfo().nodeType, "Frame",
-    "The first frame node has the correct type.");
-  equal(frame1.getInfo().functionName, "hello/<.world",
-    "The first frame node has the correct function name.");
-  equal(frame1.getInfo().fileName, "bar.js",
-    "The first frame node has the correct file name.");
-  equal(frame1.getInfo().hostName, "foo",
-    "The first frame node has the correct host name.");
-  equal(frame1.getInfo().url, "http://foo/bar.js",
-    "The first frame node has the correct url.");
-  equal(frame1.getInfo().line, 123,
-    "The first frame node has the correct line.");
-  equal(frame1.getInfo().column, 987,
-    "The first frame node has the correct column.");
-  equal(frame1.getInfo().categoryData.toSource(), "({})",
-    "The first frame node has the correct category data.");
-  equal(frame1.getInfo().isContent, true,
-    "The first frame node has the correct content flag.");
-
-  let frame2 = new FrameNode("hello/<.world (http://foo/bar.js#baz:123:987)", {
-    location: "hello/<.world (http://foo/bar.js#baz:123:987)",
-    line: 456,
-    isContent: FrameUtils.isContent({
-      location: "hello/<.world (http://foo/bar.js#baz:123:987)"
-    })
-  }, false);
-
-  equal(frame2.getInfo().nodeType, "Frame",
-    "The second frame node has the correct type.");
-  equal(frame2.getInfo().functionName, "hello/<.world",
-    "The second frame node has the correct function name.");
-  equal(frame2.getInfo().fileName, "bar.js",
-    "The second frame node has the correct file name.");
-  equal(frame2.getInfo().hostName, "foo",
-    "The second frame node has the correct host name.");
-  equal(frame2.getInfo().url, "http://foo/bar.js#baz",
-    "The second frame node has the correct url.");
-  equal(frame2.getInfo().line, 123,
-    "The second frame node has the correct line.");
-  equal(frame2.getInfo().column, 987,
-    "The second frame node has the correct column.");
-  equal(frame2.getInfo().categoryData.toSource(), "({})",
-    "The second frame node has the correct category data.");
-  equal(frame2.getInfo().isContent, true,
-    "The second frame node has the correct content flag.");
-
-  let frame3 = new FrameNode("hello/<.world (http://foo/#bar:123:987)", {
-    location: "hello/<.world (http://foo/#bar:123:987)",
-    line: 456,
-    isContent: FrameUtils.isContent({
-      location: "hello/<.world (http://foo/#bar:123:987)"
-    })
-  }, false);
-
-  equal(frame3.getInfo().nodeType, "Frame",
-    "The third frame node has the correct type.");
-  equal(frame3.getInfo().functionName, "hello/<.world",
-    "The third frame node has the correct function name.");
-  equal(frame3.getInfo().fileName, "/",
-    "The third frame node has the correct file name.");
-  equal(frame3.getInfo().hostName, "foo",
-    "The third frame node has the correct host name.");
-  equal(frame3.getInfo().url, "http://foo/#bar",
-    "The third frame node has the correct url.");
-  equal(frame3.getInfo().line, 123,
-    "The third frame node has the correct line.");
-  equal(frame3.getInfo().column, 987,
-    "The third frame node has the correct column.");
-  equal(frame3.getInfo().categoryData.toSource(), "({})",
-    "The third frame node has the correct category data.");
-  equal(frame3.getInfo().isContent, true,
-    "The third frame node has the correct content flag.");
-
-  let frame4 = new FrameNode("hello/<.world (http://foo/:123:987)", {
-    location: "hello/<.world (http://foo/:123:987)",
-    line: 456,
-    isContent: FrameUtils.isContent({
-      location: "hello/<.world (http://foo/:123:987)"
-    })
-  }, false);
-
-  equal(frame4.getInfo().nodeType, "Frame",
-    "The fourth frame node has the correct type.");
-  equal(frame4.getInfo().functionName, "hello/<.world",
-    "The fourth frame node has the correct function name.");
-  equal(frame4.getInfo().fileName, "/",
-    "The fourth frame node has the correct file name.");
-  equal(frame4.getInfo().hostName, "foo",
-    "The fourth frame node has the correct host name.");
-  equal(frame4.getInfo().url, "http://foo/",
-    "The fourth frame node has the correct url.");
-  equal(frame4.getInfo().line, 123,
-    "The fourth frame node has the correct line.");
-  equal(frame4.getInfo().column, 987,
-    "The fourth frame node has the correct column.");
-  equal(frame4.getInfo().categoryData.toSource(), "({})",
-    "The fourth frame node has the correct category data.");
-  equal(frame4.getInfo().isContent, true,
-    "The fourth frame node has the correct content flag.");
-
-  let frame5 = new FrameNode("hello/<.world (resource://foo.js -> http://bar/baz.js:123:987)", {
-    location: "hello/<.world (resource://foo.js -> http://bar/baz.js:123:987)",
-    line: 456,
-    isContent: FrameUtils.isContent({
-      location: "hello/<.world (resource://foo.js -> http://bar/baz.js:123:987)"
-    })
-  }, false);
-
-  equal(frame5.getInfo().nodeType, "Frame",
-    "The fifth frame node has the correct type.");
-  equal(frame5.getInfo().functionName, "hello/<.world",
-    "The fifth frame node has the correct function name.");
-  equal(frame5.getInfo().fileName, "baz.js",
-    "The fifth frame node has the correct file name.");
-  equal(frame5.getInfo().hostName, "bar",
-    "The fifth frame node has the correct host name.");
-  equal(frame5.getInfo().url, "http://bar/baz.js",
-    "The fifth frame node has the correct url.");
-  equal(frame5.getInfo().line, 123,
-    "The fifth frame node has the correct line.");
-  equal(frame5.getInfo().column, 987,
-    "The fifth frame node has the correct column.");
-  equal(frame5.getInfo().categoryData.toSource(), "({})",
-    "The fifth frame node has the correct category data.");
-  equal(frame5.getInfo().isContent, false,
-    "The fifth frame node has the correct content flag.");
-
-  let frame6 = new FrameNode("Foo::Bar::Baz", {
-    location: "Foo::Bar::Baz",
-    line: 456,
-    category: CATEGORY_OTHER,
-    isContent: FrameUtils.isContent({
+  let frames = [
+    new FrameNode("hello/<.world (http://foo/bar.js:123:987)", compute({
+      location: "hello/<.world (http://foo/bar.js:123:987)",
+      line: 456,
+    }), false),
+    new FrameNode("hello/<.world (http://foo/bar.js#baz:123:987)", compute({
+      location: "hello/<.world (http://foo/bar.js#baz:123:987)",
+      line: 456,
+    }), false),
+    new FrameNode("hello/<.world (http://foo/#bar:123:987)", compute({
+      location: "hello/<.world (http://foo/#bar:123:987)",
+      line: 456,
+    }), false),
+    new FrameNode("hello/<.world (http://foo/:123:987)", compute({
+      location: "hello/<.world (http://foo/:123:987)",
+      line: 456,
+    }), false),
+    new FrameNode("hello/<.world (resource://foo.js -> http://bar/baz.js:123:987)", compute({
+      location: "hello/<.world (resource://foo.js -> http://bar/baz.js:123:987)",
+      line: 456,
+    }), false),
+    new FrameNode("Foo::Bar::Baz", compute({
       location: "Foo::Bar::Baz",
-      category: CATEGORY_OTHER
-    })
-  }, false);
+      line: 456,
+      category: CATEGORY_OTHER,
+    }), false),
+    new FrameNode("EnterJIT", compute({
+      location: "EnterJIT",
+    }), false),
+    new FrameNode("chrome://browser/content/content.js", compute({
+      location: "chrome://browser/content/content.js",
+      line: 456,
+      column: 123
+    }), false),
+    new FrameNode("hello/<.world (resource://gre/foo.js:123:434)", compute({
+      location: "hello/<.world (resource://gre/foo.js:123:434)",
+      line: 456
+    }), false),
+    new FrameNode("main (http://localhost:8888/file.js:123:987)", compute({
+      location: "main (http://localhost:8888/file.js:123:987)",
+      line: 123,
+    }), false),
+    new FrameNode("main (resource://gre/modules/devtools/timeline.js:123)", compute({
+      location: "main (resource://gre/modules/devtools/timeline.js:123)",
+    }), false),
+  ];
 
-  equal(frame6.getInfo().nodeType, "Frame",
-    "The sixth frame node has the correct type.");
-  equal(frame6.getInfo().functionName, "Foo::Bar::Baz",
-    "The sixth frame node has the correct function name.");
-  equal(frame6.getInfo().fileName, null,
-    "The sixth frame node has the correct file name.");
-  equal(frame6.getInfo().hostName, null,
-    "The sixth frame node has the correct host name.");
-  equal(frame6.getInfo().url, null,
-    "The sixth frame node has the correct url.");
-  equal(frame6.getInfo().line, 456,
-    "The sixth frame node has the correct line.");
-  equal(frame6.getInfo().categoryData.abbrev, "other",
-    "The sixth frame node has the correct category data.");
-  equal(frame6.getInfo().isContent, false,
-    "The sixth frame node has the correct content flag.");
+  let fields = ["nodeType", "functionName", "fileName", "hostName", "url", "line", "column", "categoryData.abbrev", "isContent", "port"]
+  let expected = [
+    // nodeType, functionName, fileName, hostName, url, line, column, categoryData.abbrev, isContent, port
+    ["Frame", "hello/<.world", "bar.js", "foo", "http://foo/bar.js", 123, 987, void 0, true],
+    ["Frame", "hello/<.world", "bar.js", "foo", "http://foo/bar.js#baz", 123, 987, void 0, true],
+    ["Frame", "hello/<.world", "/", "foo", "http://foo/#bar", 123, 987, void 0, true],
+    ["Frame", "hello/<.world", "/", "foo", "http://foo/", 123, 987, void 0, true],
+    ["Frame", "hello/<.world", "baz.js", "bar", "http://bar/baz.js", 123, 987, "other", false],
+    ["Frame", "Foo::Bar::Baz", null, null, null, 456, void 0, "other", false],
+    ["Frame", "EnterJIT", null, null, null, null, null, "js", false],
+    ["Frame", "chrome://browser/content/content.js", null, null, null, 456, null, "other", false],
+    ["Frame", "hello/<.world", "foo.js", null, "resource://gre/foo.js", 123, 434, "other", false],
+    ["Frame", "main", "file.js", "localhost", "http://localhost:8888/file.js", 123, 987, null, true, 8888],
+    ["Frame", "main", "timeline.js", null, "resource://gre/modules/devtools/timeline.js", 123, null, "tools", false]
+  ];
 
-  let frame7 = new FrameNode("EnterJIT", {
-    location: "EnterJIT",
-    isContent: FrameUtils.isContent({
-      location: "EnterJIT"
-    })
-  }, false);
+  for (let i = 0; i < frames.length; i++) {
+    let info = frames[i].getInfo();
+    let expect = expected[i];
 
-  equal(frame7.getInfo().nodeType, "Frame",
-    "The seventh frame node has the correct type.");
-  equal(frame7.getInfo().functionName, "EnterJIT",
-    "The seventh frame node has the correct function name.");
-  equal(frame7.getInfo().fileName, null,
-    "The seventh frame node has the correct file name.");
-  equal(frame7.getInfo().hostName, null,
-    "The seventh frame node has the correct host name.");
-  equal(frame7.getInfo().url, null,
-    "The seventh frame node has the correct url.");
-  equal(frame7.getInfo().line, null,
-    "The seventh frame node has the correct line.");
-  equal(frame7.getInfo().column, null,
-    "The seventh frame node has the correct column.");
-  equal(frame7.getInfo().categoryData.abbrev, "js",
-    "The seventh frame node has the correct category data.");
-  equal(frame7.getInfo().isContent, false,
-    "The seventh frame node has the correct content flag.");
-
-  let frame8 = new FrameNode("chrome://browser/content/content.js", {
-    location: "chrome://browser/content/content.js",
-    line: 456,
-    column: 123
-  }, false);
-
-  equal(frame8.getInfo().hostName, null,
-    "The eighth frame node has the correct host name.");
-
-  let frame9 = new FrameNode("hello/<.world (resource://gre/foo.js:123:434)", {
-    location: "hello/<.world (resource://gre/foo.js:123:434)",
-    line: 456
-  }, false);
-
-  equal(frame9.getInfo().hostName, null,
-    "The ninth frame node has the correct host name.");
-
-  let frame10 = new FrameNode("main (http://localhost:8888/file.js:123:987)", {
-    location: "main (http://localhost:8888/file.js:123:987)",
-    line: 123,
-    isContent: FrameUtils.isContent({
-      location: "main (http://localhost:8888/file.js:123:987)"
-    })
-  }, false);
-
-  equal(frame10.getInfo().nodeType, "Frame",
-    "The tenth frame node has the correct type.");
-  equal(frame10.getInfo().functionName, "main",
-    "The tenth frame node has the correct function name.");
-  equal(frame10.getInfo().fileName, "file.js",
-    "The tenth frame node has the correct file name.");
-  equal(frame10.getInfo().hostName, "localhost",
-    "The tenth frame node has the correct host name.");
-  equal(frame10.getInfo().url, "http://localhost:8888/file.js",
-    "The tenth frame node has the correct url.");
-  equal(frame10.getInfo().line, 123,
-    "The tenth frame node has the correct line.");
-  equal(frame10.getInfo().column, 987,
-    "The tenth frame node has the correct column.");
-  equal(frame10.getInfo().isContent, true,
-    "The tenth frame node has the correct content flag.");
-  equal(frame10.getInfo().host, "localhost:8888",
-    "The tenth frame node has the correct host.");
-  equal(frame10.getInfo().port, 8888,
-    "The tenth frame node has the correct port.");
+    for (let j = 0; j < fields.length; j++) {
+      let field = fields[j];
+      let value = field === "categoryData.abbrev" ? info.categoryData.abbrev : info[field];
+      equal(value, expect[j], `${field} for frame #${i} is correct: ${expect[j]}`);
+    }
+  }
 });

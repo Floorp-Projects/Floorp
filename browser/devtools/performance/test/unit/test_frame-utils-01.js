@@ -40,7 +40,12 @@ function run_test() {
 }
 
 add_task(function () {
-  const { isContent, parseLocation } = devtools.require("devtools/performance/frame-utils");
+  const { computeIsContentAndCategory, parseLocation } = devtools.require("devtools/performance/frame-utils");
+  let isContent = (frame) => {
+    computeIsContentAndCategory(frame);
+    return frame.isContent;
+  };
+
 
   for (let frame of CONTENT_LOCATIONS) {
     ok(isContent.apply(null, frameify(frame)), `${frame[0]} should be considered a content frame.`);

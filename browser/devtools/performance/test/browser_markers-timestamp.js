@@ -26,6 +26,7 @@ function* spawnTest () {
 
   let maxMarkerTime = model._timelineStartTime + model.getDuration() + TIME_CLOSE_TO;
 
+  ok(markers.every(({stack}) => typeof stack === "number"), "All markers have stack references.");
   ok(markers.every(({name}) => name === "TimeStamp"), "All markers found are TimeStamp markers");
   ok(markers.length === 2, "found 2 TimeStamp markers");
   ok(markers.every(({start}) => typeof start === "number" && start > 0 && start < maxMarkerTime),

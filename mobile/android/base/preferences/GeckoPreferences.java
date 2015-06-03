@@ -127,7 +127,7 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_SYNC = NON_PREF_PREFIX + "sync";
     private static final String PREFS_TRACKING_PROTECTION = "privacy.trackingprotection.enabled";
     private static final String PREFS_TRACKING_PROTECTION_LEARN_MORE = NON_PREF_PREFIX + "trackingprotection.learn_more";
-    private static final String PREFS_OPEN_URLS_IN_PRIVATE = NON_PREF_PREFIX + "openExternalURLsPrivately";
+    public static final String PREFS_OPEN_URLS_IN_PRIVATE = NON_PREF_PREFIX + "openExternalURLsPrivately";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
 
@@ -703,9 +703,9 @@ OnSharedPreferenceChangeListener
                     preferences.removePreference(pref);
                     i--;
                     continue;
-                } else if (AppConstants.RELEASE_BUILD &&
+                } else if (!AppConstants.NIGHTLY_BUILD &&
                         PREFS_OPEN_URLS_IN_PRIVATE.equals(key)) {
-                    // Remove UI for opening external links in private borwsing onrelease builds.
+                    // Remove UI for opening external links in private browsing on non-Nightly builds.
                     preferences.removePreference(pref);
                     i--;
                     continue;

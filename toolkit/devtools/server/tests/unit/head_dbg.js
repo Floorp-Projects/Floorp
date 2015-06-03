@@ -301,6 +301,20 @@ function initTestDebuggerServer(aServer = DebuggerServer)
   aServer.init(function () { return true; });
 }
 
+/**
+ * Initialize the testing debugger server with a tab whose title is |title|.
+ */
+function startTestDebuggerServer(title, server = DebuggerServer) {
+  initTestDebuggerServer(server);
+  addTestGlobal(title);
+  DebuggerServer.addTabActors();
+
+  let transport = DebuggerServer.connectPipe();
+  let client = new DebuggerClient(transport);
+
+  return connect(client).then(() => client);
+}
+
 function initTestTracerServer(aServer = DebuggerServer)
 {
   aServer.registerModule("xpcshell-test/testactors");
@@ -336,6 +350,11 @@ function get_chrome_actors(callback)
       callback(client, response.form);
     });
   });
+}
+
+function getChromeActors(client, server = DebuggerServer) {
+  server.allowChromeProcess = true;
+  return client.getProcess().then(response => response.form);
 }
 
 /**
