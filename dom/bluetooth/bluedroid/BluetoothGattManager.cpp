@@ -522,8 +522,7 @@ public:
       gattManager->UnregisterClient(mClient->mClientIf, result);
     }
 
-    DispatchReplyError(mClient->mStartLeScanRunnable,
-                       BluetoothValue(mClient->mAppUuid));
+    DispatchReplyError(mClient->mStartLeScanRunnable, aStatus);
     mClient->mStartLeScanRunnable = nullptr;
   }
 

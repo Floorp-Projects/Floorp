@@ -16,7 +16,6 @@
 <script type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("untriaged");
 SimpleTest.requestLongerTimeout(2);
 
 var iframes = [];
@@ -73,7 +72,7 @@ function createIframe(url,next) {
         ok(false, "iframe load for " + url + " timed out");
         endTest();
       } else {
-        setTimeout(iframeLoadCompleted, 10);
+        setTimeout(iframeLoadCompleted, 0);
       }
       return;
     }

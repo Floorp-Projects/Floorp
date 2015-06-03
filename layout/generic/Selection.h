@@ -179,6 +179,9 @@ public:
   bool GetInterlinePosition(mozilla::ErrorResult& aRv);
   void SetInterlinePosition(bool aValue, mozilla::ErrorResult& aRv);
 
+  Nullable<int16_t> GetCaretBidiLevel(mozilla::ErrorResult& aRv) const;
+  void SetCaretBidiLevel(const Nullable<int16_t>& aCaretBidiLevel, mozilla::ErrorResult& aRv);
+
   void ToStringWithFormat(const nsAString& aFormatType,
                           uint32_t aFlags,
                           int32_t aWrapColumn,

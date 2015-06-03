@@ -42,7 +42,7 @@ PopulateZonesWithGlobals(ZoneSet& zones, AutoObjectVector& globals)
 
   unsigned length = globals.length();
   for (unsigned i = 0; i < length; i++) {
-    if (!zones.put(GetTenuredGCThingZone(globals[i])))
+    if (!zones.put(GetObjectZone(globals[i])))
       return false;
   }
 

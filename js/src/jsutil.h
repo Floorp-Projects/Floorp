@@ -14,10 +14,12 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/PodOperations.h"
 
 #include <limits.h>
 
 #include "js/Utility.h"
+#include "js/Value.h"
 
 #define JS_ALWAYS_TRUE(expr)      MOZ_ALWAYS_TRUE(expr)
 #define JS_ALWAYS_FALSE(expr)     MOZ_ALWAYS_FALSE(expr)
@@ -277,20 +279,46 @@ ClearAllBitArrayElements(size_t* array, size_t length)
 
 }  /* namespace js */
 
-static inline void*
-Poison(void* ptr, int value, size_t num)
-{
-    static bool inited = false;
-    static bool poison = true;
-    if (!inited) {
-        char* env = getenv("JSGC_DISABLE_POISONING");
-        if (env)
-            poison = false;
-        inited = true;
-    }
+namespace mozilla {
 
-    if (poison)
-        return memset(ptr, value, num);
+/**
+ * Set the first |aNElem| T elements in |aDst| to |aSrc|.
+ */
+template<typename T>
+static MOZ_ALWAYS_INLINE void
+PodSet(T* aDst, T aSrc, size_t aNElem)
+{
+    for (const T* dstend = aDst + aNElem; aDst < dstend; ++aDst)
+        *aDst = aSrc;
+}
+
+} /* namespace mozilla */
+
+static inline void*
+Poison(void* ptr, uint8_t value, size_t num)
+{
+    static bool poison = !bool(getenv("JSGC_DISABLE_POISONING"));
+    if (poison) {
+        // Without a valid Value tag, a poisoned Value may look like a valid
+        // floating point number. To ensure that we crash more readily when
+        // observing a poised Value, we make the poison an invalid ObjectValue.
+        uintptr_t obj;
+        memset(&obj, value, sizeof(obj));
+#if defined(JS_PUNBOX64)
+        obj >>= JSVAL_TAG_SHIFT;
+#endif
+        const jsval_layout layout = OBJECT_TO_JSVAL_IMPL((JSObject*)obj);
+
+        size_t value_count = num / sizeof(jsval_layout);
+        size_t byte_count = num % sizeof(jsval_layout);
+        mozilla::PodSet((jsval_layout*)ptr, layout, value_count);
+        if (byte_count) {
+            uint8_t* bytes = static_cast<uint8_t*>(ptr);
+            uint8_t* end = bytes + num;
+            mozilla::PodSet(end - byte_count, value, byte_count);
+        }
+        return ptr;
+    }
 
     return nullptr;
 }
