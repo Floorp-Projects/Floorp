@@ -24,6 +24,8 @@ const TESTS = [ {
   buttonClick: "extra1"
 } ];
 
+gUseTestUpdater = true;
+
 function runTest() {
   debugDump("entering");
 
