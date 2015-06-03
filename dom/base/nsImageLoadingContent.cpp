@@ -191,6 +191,12 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
   }
 
   if (aType == imgINotificationObserver::DECODE_COMPLETE) {
+    nsCOMPtr<imgIContainer> container;
+    aRequest->GetImage(getter_AddRefs(container));
+    if (container) {
+      container->PropagateUseCounters(GetOurOwnerDoc());
+    }
+
     UpdateImageState(true);
   }
 
