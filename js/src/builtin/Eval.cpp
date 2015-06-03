@@ -361,15 +361,17 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
         esg.setNewScript(compiled);
     }
 
-    return ExecuteKernel(cx, esg.script(), *scopeobj, thisv, ExecuteType(evalType),
+    // Look up the newTarget from the frame iterator.
+    Value newTargetVal = NullValue();
+    return ExecuteKernel(cx, esg.script(), *scopeobj, thisv, newTargetVal, ExecuteType(evalType),
                          NullFramePtr() /* evalInFrame */, args.rval().address());
 }
 
 bool
 js::DirectEvalStringFromIon(JSContext* cx,
                             HandleObject scopeobj, HandleScript callerScript,
-                            HandleValue thisValue, HandleString str,
-                            jsbytecode* pc, MutableHandleValue vp)
+                            HandleValue thisValue, HandleValue newTargetValue,
+                            HandleString str, jsbytecode* pc, MutableHandleValue vp)
 {
     AssertInnerizedScopeChain(cx, *scopeobj);
 
@@ -461,8 +463,8 @@ js::DirectEvalStringFromIon(JSContext* cx,
         nthisValue = ObjectValue(*obj);
     }
 
-    return ExecuteKernel(cx, esg.script(), *scopeobj, nthisValue, ExecuteType(DIRECT_EVAL),
-                         NullFramePtr() /* evalInFrame */, vp.address());
+    return ExecuteKernel(cx, esg.script(), *scopeobj, nthisValue, newTargetValue,
+                         ExecuteType(DIRECT_EVAL), NullFramePtr() /* evalInFrame */, vp.address());
 }
 
 bool
@@ -534,7 +536,7 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
     RootedValue rval(cx);
     // XXXbz when this is fixed to pass in an actual ScopeObject, fix
     // up the assert in js::CloneFunctionObject accordingly.
-    if (!ExecuteKernel(cx, script, *scope, thisv, EXECUTE_GLOBAL,
+    if (!ExecuteKernel(cx, script, *scope, thisv, UndefinedValue(), EXECUTE_GLOBAL,
                        NullFramePtr() /* evalInFrame */, rval.address()))
     {
         return false;

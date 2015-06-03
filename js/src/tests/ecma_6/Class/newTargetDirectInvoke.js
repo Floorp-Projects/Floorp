@@ -1,3 +1,6 @@
+// new.target is valid inside Function() invocations
+var func = new Function("new.target");
+
 // Note that this will also test new.target in ion inlines. When the toplevel
 // script is compiled, assertNewTarget will be inlined.
 function assertNewTarget(expected, unused) { assertEq(new.target, expected); }
