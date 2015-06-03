@@ -15,9 +15,8 @@ function testNewTarget() {
     assertInFunctionExpr("()=>new.target", arrowExpr([], newTarget()));
     assertError("(() => new.target))", SyntaxError);
 
-    // valid in generators, too!
-    assertStmt("function *foo() { new.target; }", genFunDecl(ident("foo"), [],
-               blockStmt([exprStmt(newTarget())])));
+    // invalid (for now!) in generators
+    assertError("function *foo() { new.target; }", SyntaxError);
 
     // new.target is a member expression. You should be able to call, invoke, or
     // access properties of it.
