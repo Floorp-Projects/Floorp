@@ -57,7 +57,7 @@ public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
   nsCOMPtr<nsIAtom>  mName;           // property name
-  PLDHashTable2      mObjectValueMap; // map of object/value pairs
+  PLDHashTable       mObjectValueMap; // map of object/value pairs
   NSPropertyDtorFunc mDtorFunc;       // property specific value dtor function
   void*              mDtorData;       // pointer to pass to dtor
   bool               mTransfer;       // whether to transfer in
@@ -216,11 +216,6 @@ nsPropertyTable::SetPropertyInternal(nsPropertyOwner     aObject,
   } else {
     propertyList = new PropertyList(aPropertyName, aPropDtorFunc,
                                     aPropDtorData, aTransfer);
-    if (!propertyList || !propertyList->mObjectValueMap.IsInitialized()) {
-      delete propertyList;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
     propertyList->mNext = mPropertyList;
     mPropertyList = propertyList;
   }

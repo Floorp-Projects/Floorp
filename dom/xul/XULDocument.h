@@ -719,7 +719,7 @@ protected:
     /**
      * A map from a broadcaster element to a list of listener elements.
      */
-    PLDHashTable2* mBroadcasterMap;
+    PLDHashTable* mBroadcasterMap;
 
     nsAutoPtr<nsInterfaceHashtable<nsURIHashKey,nsIObserver> > mOverlayLoadObservers;
     nsAutoPtr<nsInterfaceHashtable<nsURIHashKey,nsIObserver> > mPendingOverlayLoadNotifications;

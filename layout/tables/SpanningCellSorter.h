@@ -62,7 +62,7 @@ private:
         return SpanToIndex(aSpan) < ARRAY_SIZE;
     }
 
-    PLDHashTable2 mHashTable;
+    PLDHashTable mHashTable;
     struct HashTableEntry : public PLDHashEntryHdr {
         int32_t mColSpan;
         Item *mItems;

@@ -1049,7 +1049,7 @@ public:
   /**
    * Return the inner window ID.
    */
-  uint64_t InnerWindowID()
+  uint64_t InnerWindowID() const
   {
     nsPIDOMWindow *window = GetInnerWindow();
     return window ? window->WindowID() : 0;
@@ -2166,8 +2166,9 @@ public:
     eDeprecatedOperationCount
   };
 #undef DEPRECATED_OPERATION
-  bool HasWarnedAbout(DeprecatedOperations aOperation);
-  void WarnOnceAbout(DeprecatedOperations aOperation, bool asError = false);
+  bool HasWarnedAbout(DeprecatedOperations aOperation) const;
+  void WarnOnceAbout(DeprecatedOperations aOperation,
+                     bool asError = false) const;
 
 #define DOCUMENT_WARNING(_op) e##_op,
   enum DocumentWarnings {
@@ -2175,11 +2176,11 @@ public:
     eDocumentWarningCount
   };
 #undef DOCUMENT_WARNING
-  bool HasWarnedAbout(DocumentWarnings aWarning);
+  bool HasWarnedAbout(DocumentWarnings aWarning) const;
   void WarnOnceAbout(DocumentWarnings aWarning,
                      bool asError = false,
                      const char16_t **aParams = nullptr,
-                     uint32_t aParamsLength = 0);
+                     uint32_t aParamsLength = 0) const;
 
   virtual void PostVisibilityUpdateEvent() = 0;
   
@@ -2379,7 +2380,7 @@ public:
     CreateAttributeNS(const nsAString& aNamespaceURI,
                       const nsAString& aQualifiedName,
                       mozilla::ErrorResult& rv);
-  void GetInputEncoding(nsAString& aInputEncoding);
+  void GetInputEncoding(nsAString& aInputEncoding) const;
   already_AddRefed<nsLocation> GetLocation() const;
   void GetReferrer(nsAString& aReferrer) const;
   void GetLastModified(nsAString& aLastModified) const;
@@ -2424,16 +2425,16 @@ public:
   {
     return mVisibilityState != mozilla::dom::VisibilityState::Visible;
   }
-  bool MozHidden() // Not const because of WarnOnceAbout
+  bool MozHidden() const
   {
     WarnOnceAbout(ePrefixedVisibilityAPI);
     return Hidden();
   }
-  mozilla::dom::VisibilityState VisibilityState()
+  mozilla::dom::VisibilityState VisibilityState() const
   {
     return mVisibilityState;
   }
-  mozilla::dom::VisibilityState MozVisibilityState()
+  mozilla::dom::VisibilityState MozVisibilityState() const
   {
     WarnOnceAbout(ePrefixedVisibilityAPI);
     return VisibilityState();
@@ -2546,8 +2547,8 @@ public:
   bool DidFireDOMContentLoaded() const { return mDidFireDOMContentLoaded; }
 
 private:
-  uint64_t mDeprecationWarnedAbout;
-  uint64_t mDocWarningWarnedAbout;
+  mutable uint64_t mDeprecationWarnedAbout;
+  mutable uint64_t mDocWarningWarnedAbout;
   SelectorCache mSelectorCache;
 
 protected:

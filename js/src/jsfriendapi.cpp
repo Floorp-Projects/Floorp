@@ -309,14 +309,6 @@ js::IsAtomsZone(JS::Zone* zone)
 }
 
 JS_FRIEND_API(bool)
-js::IsInNonStrictPropertySet(JSContext* cx)
-{
-    jsbytecode* pc;
-    JSScript* script = cx->currentScript(&pc, JSContext::ALLOW_CROSS_COMPARTMENT);
-    return script && !IsStrictSetPC(pc) && (js_CodeSpec[*pc].format & JOF_SET);
-}
-
-JS_FRIEND_API(bool)
 js::IsFunctionObject(JSObject* obj)
 {
     return obj->is<JSFunction>();

@@ -106,7 +106,7 @@ public:
     : mProxy(aProxy)
     , mPid(aPromiseId)
     , mException(aException)
-    , mMsg(NS_ConvertUTF8toUTF16(aMessage))
+    , mMsg(aMessage)
   {
   }
 
@@ -118,7 +118,7 @@ public:
   nsRefPtr<CDMProxy> mProxy;
   dom::PromiseId mPid;
   nsresult mException;
-  nsString mMsg;
+  nsCString mMsg;
 };
 
 

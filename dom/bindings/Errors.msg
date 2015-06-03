@@ -34,8 +34,6 @@ MSG_DEF(MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE, 1, JSEXN_TYPEERR, "\"this\" objec
 MSG_DEF(MSG_NOT_IN_UNION, 2, JSEXN_TYPEERR, "{0} could not be converted to any of: {1}.")
 MSG_DEF(MSG_ILLEGAL_CONSTRUCTOR, 0, JSEXN_TYPEERR, "Illegal constructor.")
 MSG_DEF(MSG_CONSTRUCTOR_WITHOUT_NEW, 1, JSEXN_TYPEERR, "Constructor {0} requires 'new'")
-MSG_DEF(MSG_NO_INDEXED_SETTER, 1, JSEXN_TYPEERR, "{0} doesn't have an indexed property setter.")
-MSG_DEF(MSG_NO_NAMED_SETTER, 1, JSEXN_TYPEERR, "{0} doesn't have a named property setter.")
 MSG_DEF(MSG_ENFORCE_RANGE_NON_FINITE, 1, JSEXN_TYPEERR, "Non-finite value is out of range for {0}.")
 MSG_DEF(MSG_ENFORCE_RANGE_OUT_OF_RANGE, 1, JSEXN_TYPEERR, "Value is out of range for {0}.")
 MSG_DEF(MSG_NOT_SEQUENCE, 1, JSEXN_TYPEERR, "{0} can't be converted to a sequence.")

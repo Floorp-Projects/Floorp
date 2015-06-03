@@ -346,6 +346,30 @@ function* test_basics() {
      'The drain event should fire after a large send that returned true.');
 
 
+  // -- Re-establish connection
+  connectedPromise = waitForConnection(listeningServer);
+  clientSocket = TCPSocket.open('127.0.0.1', serverPort,
+                                { binaryType: 'string' });
+  clientQueue = listenForEventsOnSocket(clientSocket, 'client');
+  is((yield clientQueue.waitForEvent()).type, 'open', 'got open event');
+
+  connectedResult = yield connectedPromise;
+  // destructuring assignment is not yet ES6 compliant, must manually unpack
+  serverSocket = connectedResult.socket;
+  serverQueue = connectedResult.queue;
+
+  // -- Attempt to send non-string data.
+  is(clientSocket.send(bigUint8Array), true,
+     'Client sending a large non-string should only send a small string.');
+  clientSocket.close();
+  // The server will get its data
+  serverReceived = yield serverQueue.waitForDataWithAtLeastLength(
+    bigUint8Array.toString().length);
+  // Then we'll get a close
+  is((yield clientQueue.waitForEvent()).type, 'close',
+     'The close event should fire after the drain event.');
+
+
   // -- Close the listening server (and try to connect)
   // We want to verify that the server actually closes / stops listening when
   // we tell it to.
