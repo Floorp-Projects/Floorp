@@ -347,7 +347,7 @@ def environment(xrePath, env=None, crashreporter=True, debugger=False, dmdPath=N
   env.setdefault('MOZ_DISABLE_NONLOCAL_CONNECTIONS', '1')
 
   # Set WebRTC logging in case it is not set yet
-  env.setdefault('NSPR_LOG_MODULES', 'signaling:5,mtransport:5,datachannel:5,jsep:5,MediaPipelineFactory:5')
+  env.setdefault('NSPR_LOG_MODULES', 'signaling:3,mtransport:4,datachannel:4,jsep:4,MediaPipelineFactory:4')
   env.setdefault('R_LOG_LEVEL', '6')
   env.setdefault('R_LOG_DESTINATION', 'stderr')
   env.setdefault('R_LOG_VERBOSE', '1')
