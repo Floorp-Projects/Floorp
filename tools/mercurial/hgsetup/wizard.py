@@ -159,6 +159,17 @@ b) perform head/bookmark-based development (as opposed to mq)
 Would you like to activate firefoxtree
 '''.strip()
 
+PUSHTOTRY_MINIMUM_VERSION = LooseVersion('3.3')
+
+PUSHTOTRY_INFO = '''
+The push-to-try extension generates a temporary commit with a given
+try syntax and pushes it to the try server. The extension is intended
+to be used in concert with other tools generating try syntax so that
+they can push to try without depending on mq or other workarounds.
+
+Would you like to activate push-to-try
+'''.strip()
+
 BUNDLECLONE_MINIMUM_VERSION = LooseVersion('3.1')
 
 BUNDLECLONE_INFO = '''
@@ -296,6 +307,9 @@ class MercurialSetupWizard(object):
 
         if hg_version >= BUNDLECLONE_MINIMUM_VERSION:
             self.prompt_external_extension(c, 'bundleclone', BUNDLECLONE_INFO)
+
+        if hg_version >= PUSHTOTRY_MINIMUM_VERSION:
+            self.prompt_external_extension(c, 'push-to-try', PUSHTOTRY_INFO)
 
         if 'mq' in c.extensions:
             self.prompt_external_extension(c, 'mqext', MQEXT_INFO)
