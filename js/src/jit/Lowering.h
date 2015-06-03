@@ -296,6 +296,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitThrowUninitializedLexical(MThrowUninitializedLexical* ins);
     void visitDebugger(MDebugger* ins);
     void visitNurseryObject(MNurseryObject* ins);
+    void visitNewTarget(MNewTarget* ins);
 };
 
 } // namespace jit
