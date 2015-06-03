@@ -72,11 +72,11 @@ add_task(function* test_notification_duplicate() {
   yield waitForPromise(ackDefer.promise, DEFAULT_TIMEOUT,
     'Timed out waiting for stale acknowledgement');
 
-  let staleRecord = yield db.getByChannelID(
+  let staleRecord = yield db.getByKeyID(
     '8d2d9400-3597-4c5a-8a38-c546b0043bcc');
   strictEqual(staleRecord.version, 2, 'Wrong stale record version');
 
-  let updatedRecord = yield db.getByChannelID(
+  let updatedRecord = yield db.getByKeyID(
     '27d1e393-03ef-4c72-a5e6-9e890dfccad0');
   strictEqual(updatedRecord.version, 3, 'Wrong updated record version');
 });

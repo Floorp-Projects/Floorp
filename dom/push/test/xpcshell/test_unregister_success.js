@@ -52,7 +52,7 @@ add_task(function* test_unregister_success() {
 
   yield PushNotificationService.unregister(
     'https://example.com/page/unregister-success');
-  let record = yield db.getByChannelID(channelID);
+  let record = yield db.getByKeyID(channelID);
   ok(!record, 'Unregister did not remove record');
 
   yield waitForPromise(unregisterDefer.promise, DEFAULT_TIMEOUT,

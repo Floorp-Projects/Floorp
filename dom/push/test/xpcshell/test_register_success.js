@@ -66,7 +66,7 @@ add_task(function* test_register_success() {
   equal(newRecord.scope, 'https://example.org/1',
     'Wrong scope in registration record');
 
-  let record = yield db.getByChannelID(channelID);
+  let record = yield db.getByKeyID(channelID);
   equal(record.channelID, channelID,
     'Wrong channel ID in database record');
   equal(record.pushEndpoint, 'https://example.com/update/1',

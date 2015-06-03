@@ -57,6 +57,6 @@ add_task(function* test_register_invalid_endpoint() {
     'Wrong error for invalid endpoint'
   );
 
-  let record = yield db.getByChannelID(channelID);
+  let record = yield db.getByKeyID(channelID);
   ok(!record, 'Should not store records with invalid endpoints');
 });
