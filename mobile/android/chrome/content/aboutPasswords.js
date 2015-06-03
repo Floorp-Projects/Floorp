@@ -157,6 +157,7 @@ let Passwords = {
       window: window,
     });
     let menuItems = [
+      { label: gStringBundle.GetStringFromName("passwordsMenu.showPassword") },
       { label: gStringBundle.GetStringFromName("passwordsMenu.copyPassword") },
       { label: gStringBundle.GetStringFromName("passwordsMenu.copyUsername") },
       { label: gStringBundle.GetStringFromName("passwordsMenu.details") },
@@ -168,16 +169,31 @@ let Passwords = {
       // Switch on indices of buttons, as they were added when creating login item.
       switch (data.button) {
         case 0:
-          copyStringAndToast(login.password, gStringBundle.GetStringFromName("passwordsDetails.passwordCopied"));
+          let passwordPrompt = new Prompt({
+            window: window,
+            message: login.password,
+            buttons: [
+              gStringBundle.GetStringFromName("passwordsDialog.copy"),
+              gStringBundle.GetStringFromName("passwordsDialog.cancel") ]
+          }).show((data) => {
+            switch (data.button) {
+              case 0:
+                // Corresponds to "Copy password" button.
+                copyStringAndToast(login.password, gStringBundle.GetStringFromName("passwordsDetails.passwordCopied"));
+            }
+          });
           break;
         case 1:
-          copyStringAndToast(login.username, gStringBundle.GetStringFromName("passwordsDetails.usernameCopied"));
+          copyStringAndToast(login.password, gStringBundle.GetStringFromName("passwordsDetails.passwordCopied"));
           break;
         case 2:
+          copyStringAndToast(login.username, gStringBundle.GetStringFromName("passwordsDetails.usernameCopied"));
+          break;
+        case 3:
           this._showDetails(loginItem);
           history.pushState({ id: login.guid }, document.title);
           break;
-        case 3:
+        case 4:
           let confirmPrompt = new Prompt({
             window: window,
             message: gStringBundle.GetStringFromName("passwordsDialog.confirmDelete"),
