@@ -5522,10 +5522,11 @@ class ICCallStubCompiler : public ICStubCompiler
     };
 
     void pushCallArguments(MacroAssembler& masm, AllocatableGeneralRegisterSet regs,
-                           Register argcReg, bool isJitCall);
+                           Register argcReg, bool isJitCall, bool isConstructing = false);
     void pushSpreadCallArguments(MacroAssembler& masm, AllocatableGeneralRegisterSet regs,
-                                 Register argcReg, bool isJitCall);
-    void guardSpreadCall(MacroAssembler& masm, Register argcReg, Label* failure);
+                                 Register argcReg, bool isJitCall, bool isConstructing);
+    void guardSpreadCall(MacroAssembler& masm, Register argcReg, Label* failure,
+                         bool isConstructing);
     Register guardFunApply(MacroAssembler& masm, AllocatableGeneralRegisterSet regs,
                            Register argcReg, bool checkNative, FunApplyThing applyThing,
                            Label* failure);

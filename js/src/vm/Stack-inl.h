@@ -292,7 +292,10 @@ InterpreterStack::getCallFrame(JSContext* cx, const CallArgs& args, HandleScript
     // Pad any missing arguments with |undefined|.
     MOZ_ASSERT(args.length() < nformal);
 
-    nvals += nformal + 2; // Include callee, |this|.
+    bool isConstructing = *flags & InterpreterFrame::CONSTRUCTING;
+    unsigned nfunctionState = 2 + isConstructing; // callee, |this|, |new.target|
+
+    nvals += nformal + nfunctionState;
     uint8_t* buffer = allocateFrame(cx, sizeof(InterpreterFrame) + nvals * sizeof(Value));
     if (!buffer)
         return nullptr;
@@ -303,8 +306,11 @@ InterpreterStack::getCallFrame(JSContext* cx, const CallArgs& args, HandleScript
     mozilla::PodCopy(argv, args.base(), 2 + args.length());
     SetValueRangeToUndefined(argv + 2 + args.length(), nmissing);
 
+    if (isConstructing)
+        argv[2 + nformal] = args.newTarget();
+
     *pargv = argv + 2;
-    return reinterpret_cast<InterpreterFrame*>(argv + 2 + nformal);
+    return reinterpret_cast<InterpreterFrame*>(argv + nfunctionState + nformal);
 }
 
 MOZ_ALWAYS_INLINE bool

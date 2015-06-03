@@ -2882,9 +2882,11 @@ IonBuilder::inlineBoundFunction(CallInfo& nativeCallInfo, JSFunction* target)
     // Don't optimize if we're constructing and the callee is not a
     // constructor, so that CallKnown does not have to handle this case
     // (it should always throw).
-    if (nativeCallInfo.constructing() && !scriptedTarget->isConstructor()) {
+    if (nativeCallInfo.constructing() && !scriptedTarget->isConstructor())
         return InliningStatus_NotInlined;
-    }
+
+    if (nativeCallInfo.constructing() && nativeCallInfo.getNewTarget() != nativeCallInfo.fun())
+        return InliningStatus_NotInlined;
 
     if (gc::IsInsideNursery(scriptedTarget))
         return InliningStatus_NotInlined;
@@ -2922,6 +2924,11 @@ IonBuilder::inlineBoundFunction(CallInfo& nativeCallInfo, JSFunction* target)
     }
     for (size_t i = 0; i < nativeCallInfo.argc(); i++)
         callInfo.argv().infallibleAppend(nativeCallInfo.getArg(i));
+
+    // We only inline when it was not a super-call, so just set the newTarget
+    // to be the target function, per spec.
+    if (nativeCallInfo.constructing())
+        callInfo.setNewTarget(callInfo.fun());
 
     if (!makeCall(scriptedTarget, callInfo))
         return InliningStatus_Error;
