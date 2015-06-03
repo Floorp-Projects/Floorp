@@ -29,10 +29,10 @@ extern PRLogModuleInfo *gWidgetFocusLog;
 extern PRLogModuleInfo *gWidgetIMLog;
 extern PRLogModuleInfo *gWidgetDrawLog;
 
-#define LOG(args) MOZ_LOG(gWidgetLog, 4, args)
-#define LOGFOCUS(args) MOZ_LOG(gWidgetFocusLog, 4, args)
-#define LOGIM(args) MOZ_LOG(gWidgetIMLog, 4, args)
-#define LOGDRAW(args) MOZ_LOG(gWidgetDrawLog, 4, args)
+#define LOG(args) MOZ_LOG(gWidgetLog, PR_LOG_DEBUG, args)
+#define LOGFOCUS(args) MOZ_LOG(gWidgetFocusLog, PR_LOG_DEBUG, args)
+#define LOGIM(args) MOZ_LOG(gWidgetIMLog, PR_LOG_DEBUG, args)
+#define LOGDRAW(args) MOZ_LOG(gWidgetDrawLog, PR_LOG_DEBUG, args)
 
 #else
 
