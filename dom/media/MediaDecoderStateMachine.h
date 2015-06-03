@@ -905,6 +905,10 @@ public:
   // The duration explicitly set by JS, mirrored from the main thread.
   Mirror<Maybe<double>> mExplicitDuration;
 
+  // The highest timestamp that our position has reached. Monotonically
+  // increasing.
+  Watchable<media::TimeUnit> mObservedDuration;
+
   // The current play state and next play state, mirrored from the main thread.
   Mirror<MediaDecoder::PlayState> mPlayState;
   Mirror<MediaDecoder::PlayState> mNextPlayState;
