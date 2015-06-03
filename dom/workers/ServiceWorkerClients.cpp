@@ -114,7 +114,7 @@ public:
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     nsTArray<ServiceWorkerClientInfo> result;
 
-    swm->GetAllClients(mScope, result);
+    swm->GetAllClients(mWorkerPrivate->GetPrincipal(), mScope, result);
     nsRefPtr<ResolvePromiseWorkerRunnable> r =
       new ResolvePromiseWorkerRunnable(mWorkerPrivate, mPromiseProxy, result);
 
@@ -194,11 +194,6 @@ public:
   NS_IMETHOD
   Run() override
   {
-    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    MOZ_ASSERT(swm);
-
-    nsresult rv = swm->ClaimClients(mScope, mServiceWorkerID);
-
     MutexAutoLock lock(mPromiseProxy->GetCleanUpLock());
     if (mPromiseProxy->IsClean()) {
       // Don't resolve the promise if it was already released.
@@ -207,6 +202,12 @@ public:
 
     WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
+
+    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    MOZ_ASSERT(swm);
+
+    nsresult rv = swm->ClaimClients(workerPrivate->GetPrincipal(),
+                                    mScope, mServiceWorkerID);
 
     nsRefPtr<ResolveClaimRunnable> r =
       new ResolveClaimRunnable(workerPrivate, mPromiseProxy, rv);

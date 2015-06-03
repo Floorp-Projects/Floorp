@@ -1406,7 +1406,13 @@ this.PushService = {
             "push-subscription-change",
             scope
           );
-          globalMM.broadcastAsyncMessage('pushsubscriptionchanged', scope);
+
+          let data = {
+            originAttributes: {}, // TODO bug 1166350
+            scope: scope
+          };
+
+          globalMM.broadcastAsyncMessage('pushsubscriptionchanged', data);
         }
       });
   },
@@ -1444,6 +1450,7 @@ this.PushService = {
     // TODO data.
     let data = {
       payload: "Short as life is, we make it still shorter by the careless waste of time.",
+      originAttributes: {}, // TODO bug 1166350
       scope: aPushRecord.scope
     };
 

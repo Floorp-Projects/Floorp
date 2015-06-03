@@ -132,7 +132,7 @@ function display(info) {
   let updateButton = document.createElement("button");
   updateButton.appendChild(document.createTextNode(bundle.GetStringFromName('update')));
   updateButton.onclick = function() {
-    gSWM.softUpdate(info.scope);
+    gSWM.softUpdate(info.principal.originAttributes, info.scope);
   };
   div.appendChild(updateButton);
 

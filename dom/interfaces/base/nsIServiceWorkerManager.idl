@@ -20,7 +20,7 @@ interface nsIServiceWorkerUnregisterCallback : nsISupports
   void unregisterFailed();
 };
 
-[scriptable, builtinclass, uuid(8ce0d197-5740-4ddf-aa4a-e5a63e611d03)]
+[scriptable, builtinclass, uuid(103763c8-53ba-42e4-8b26-e601d5bc4afe)]
 interface nsIServiceWorkerInfo : nsISupports
 {
   readonly attribute nsIPrincipal principal;
@@ -33,7 +33,7 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, builtinclass, uuid(384c9aec-29e5-4bdb-abc2-fba10da83e17)]
+[scriptable, builtinclass, uuid(bfb913ad-177d-49ae-bf62-efd32ca73424)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -65,16 +65,6 @@ interface nsIServiceWorkerManager : nsISupports
 
   // Remove ready pending Promise
   void removeReadyPromise(in nsIDOMWindow aWindow);
-
-  // Returns true if a ServiceWorker is available for the scope of aURI.
-  bool isAvailableForURI(in nsIURI aURI);
-
-  // Returns true if a given document is currently controlled by a ServiceWorker
-  bool isControlled(in nsIDocument aDocument);
-
-  // Cause a fetch event to be dispatched to the worker global associated with the given document.
-  void dispatchFetchEvent(in nsIDocument aDoc, in nsIInterceptedChannel aChannel,
-                          in boolean aIsReload);
 
   /**
    * Call this to request that document `aDoc` be controlled by a ServiceWorker
@@ -108,8 +98,10 @@ interface nsIServiceWorkerManager : nsISupports
 
   /*
    * This implements the soft update algorithm.
+   * XXXbaku this can be removed when bug 1155153 lands.
    */
-  void softUpdate(in DOMString aScope);
+  [implicit_jscontext] void softUpdate(in jsval aOriginAttributes,
+                                       in DOMString aScope);
 
   /*
    * Clears ServiceWorker registrations from memory and disk for the specified
@@ -128,14 +120,17 @@ interface nsIServiceWorkerManager : nsISupports
   void removeAll();
 
   // Testing
-  DOMString getScopeForUrl(in DOMString path);
+  DOMString getScopeForUrl(in nsIPrincipal aPrincipal, in DOMString aPath);
 
   // This is meant to be used only by about:serviceworkers. It returns an array
   // of nsIServiceWorkerInfo.
   nsIArray getAllRegistrations();
 
-  void sendPushEvent(in ACString scope, in DOMString data);
-  void sendPushSubscriptionChangeEvent(in ACString scope);
+  [implicit_jscontext] void sendPushEvent(in jsval aOriginAttributes,
+                                          in ACString aScope,
+                                          in DOMString aData);
+  [implicit_jscontext] void sendPushSubscriptionChangeEvent(in jsval aOriginAttributes,
+                                                            in ACString scope);
 
   void updateAllRegistrations();
 };
