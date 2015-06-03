@@ -133,6 +133,7 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 == 1157752-upright-bidi.html 1157752-upright-bidi-ref.html
 == 1157758-1-vertical-arabic.html 1157758-1-vertical-arabic-ref.html
 == 1158549-1-vertical-block-size-constraints.html 1158549-1-vertical-block-size-constraints-ref.html
+== 1163238-orthogonal-auto-margins.html 1163238-orthogonal-auto-margins-ref.html
 
 # Suite of tests from Gérard Talbot in bug 1079151
 include abspos/reftest.list
