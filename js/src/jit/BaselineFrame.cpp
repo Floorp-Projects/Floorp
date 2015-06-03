@@ -37,7 +37,7 @@ BaselineFrame::trace(JSTracer* trc, JitFrameIterator& frameIterator)
     // Mark actual and formal args.
     if (isNonEvalFunctionFrame()) {
         unsigned numArgs = js::Max(numActualArgs(), numFormalArgs());
-        TraceRootRange(trc, numArgs, argv(), "baseline-args");
+        TraceRootRange(trc, numArgs + isConstructing(), argv(), "baseline-args");
     }
 
     // Mark scope chain, if it exists.
