@@ -272,9 +272,13 @@ class GlobalSharedContext : public SharedContext
     bool allowSyntax(AllowedSyntax allowed) const {
         StaticScopeIter<CanGC> it(context, staticEvalScope_);
         for (; !it.done(); it++) {
-            if (it.type() == StaticScopeIter<CanGC>::Function &&
-                !it.fun().isArrow())
-            {
+            if (it.type() == StaticScopeIter<CanGC>::Function) {
+                if (it.fun().isArrow()) {
+                    // For the moment, disallow new.target inside arrow functions
+                    if (allowed == AllowedSyntax::NewTarget)
+                        return false;
+                    continue;
+                }
                 return FunctionAllowsSyntax(&it.fun(), allowed);
             }
         }
