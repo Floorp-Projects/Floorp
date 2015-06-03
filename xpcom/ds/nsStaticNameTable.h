@@ -42,7 +42,7 @@ public:
 
 private:
   nsDependentCString*   mNameArray;
-  PLDHashTable2         mNameTable;
+  PLDHashTable          mNameTable;
   nsDependentCString    mNullStr;
 };
 

@@ -302,11 +302,39 @@ nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
   return NS_OK;
 }
 
+static bool
+ImageIsAnimated(imgIRequest* aRequest)
+{
+  if (!aRequest) {
+    return false;
+  }
+
+  nsCOMPtr<imgIContainer> image;
+  if (NS_SUCCEEDED(aRequest->GetImage(getter_AddRefs(image)))) {
+    bool isAnimated = false;
+    nsresult rv = image->GetAnimated(&isAnimated);
+    if (NS_SUCCEEDED(rv) && isAnimated) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void
 nsImageLoadingContent::OnUnlockedDraw()
 {
   if (mVisibleCount > 0) {
     // We should already be marked as visible, there is nothing more we can do.
+    return;
+  }
+
+  // It's OK for non-animated images to wait until the next image visibility
+  // update to become locked. (And that's preferable, since in the case of
+  // scrolling it keeps memory usage minimal.) For animated images, though, we
+  // want to mark them visible right away so we can call
+  // IncrementAnimationConsumers() on them and they'll start animating.
+  if (!ImageIsAnimated(mCurrentRequest) && !ImageIsAnimated(mPendingRequest)) {
     return;
   }
 

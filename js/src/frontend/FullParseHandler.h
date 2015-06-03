@@ -72,6 +72,21 @@ class FullParseHandler
     typedef ParseNode* Node;
     typedef Definition* DefinitionNode;
 
+    bool isPropertyAccess(ParseNode* node) {
+        if (node->isKind(PNK_DOT) || node->isKind(PNK_ELEM))
+            return true;
+        return node->isKind(PNK_SUPERPROP) || node->isKind(PNK_SUPERELEM);
+    }
+
+    bool isFunctionCall(ParseNode* node) {
+        // Note: super() is a special form, *not* a function call.
+        return node->isKind(PNK_CALL);
+    }
+
+    bool isDestructuringTarget(ParseNode* node) {
+        return node->isKind(PNK_OBJECT) || node->isKind(PNK_ARRAY);
+    }
+
     FullParseHandler(ExclusiveContext* cx, LifoAlloc& alloc,
                      TokenStream& tokenStream, Parser<SyntaxParseHandler>* syntaxParser,
                      LazyScript* lazyOuterFunction)
@@ -88,7 +103,9 @@ class FullParseHandler
     void prepareNodeForMutation(ParseNode* pn) { return allocator.prepareNodeForMutation(pn); }
     const Token& currentToken() { return tokenStream.currentToken(); }
 
-    ParseNode* newName(PropertyName* name, uint32_t blockid, const TokenPos& pos) {
+    ParseNode* newName(PropertyName* name, uint32_t blockid, const TokenPos& pos,
+                       ExclusiveContext* cx)
+    {
         return new_<NameNode>(PNK_NAME, JSOP_GETNAME, name, blockid, pos);
     }
 
@@ -187,11 +204,29 @@ class FullParseHandler
     }
 
     ParseNode* newDelete(uint32_t begin, ParseNode* expr) {
-        if (expr->getKind() == PNK_NAME) {
+        if (expr->isKind(PNK_NAME)) {
             expr->pn_dflags |= PND_DEOPTIMIZED;
             expr->setOp(JSOP_DELNAME);
+            return newUnary(PNK_DELETENAME, JSOP_NOP, begin, expr);
         }
-        return newUnary(PNK_DELETE, JSOP_NOP, begin, expr);
+
+        if (expr->isKind(PNK_DOT))
+            return newUnary(PNK_DELETEPROP, JSOP_NOP, begin, expr);
+        if (expr->isKind(PNK_SUPERPROP))
+            return newUnary(PNK_DELETESUPERPROP, JSOP_NOP, begin, expr);
+
+        if (expr->isKind(PNK_ELEM))
+            return newUnary(PNK_DELETEELEM, JSOP_NOP, begin, expr);
+        if (expr->isKind(PNK_SUPERELEM))
+            return newUnary(PNK_DELETESUPERELEM, JSOP_NOP, begin, expr);
+
+        return newUnary(PNK_DELETEEXPR, JSOP_NOP, begin, expr);
+    }
+
+    ParseNode* newTypeof(uint32_t begin, ParseNode* kid) {
+        TokenPos pos(begin, kid->pn_pos.end);
+        ParseNodeKind kind = kid->isKind(PNK_NAME) ? PNK_TYPEOFNAME : PNK_TYPEOFEXPR;
+        return new_<UnaryNode>(kind, JSOP_NOP, pos, kid);
     }
 
     ParseNode* newNullary(ParseNodeKind kind, JSOp op, const TokenPos& pos) {
@@ -274,6 +309,14 @@ class FullParseHandler
         if (!element->isConstant())
             literal->pn_xflags |= PNX_NONCONST;
         literal->append(element);
+    }
+
+    ParseNode* newCall() {
+        return newList(PNK_CALL, JSOP_CALL);
+    }
+
+    ParseNode* newTaggedTemplate() {
+        return newList(PNK_TAGGED_TEMPLATE, JSOP_CALL);
     }
 
     ParseNode* newObjectLiteral(uint32_t begin) {
@@ -727,13 +770,13 @@ class FullParseHandler
     bool isConstant(ParseNode* pn) {
         return pn->isConstant();
     }
-    PropertyName* isName(ParseNode* pn) {
+    PropertyName* maybeName(ParseNode* pn) {
         return pn->isKind(PNK_NAME) ? pn->pn_atom->asPropertyName() : nullptr;
     }
     bool isCall(ParseNode* pn) {
         return pn->isKind(PNK_CALL);
     }
-    PropertyName* isGetProp(ParseNode* pn) {
+    PropertyName* maybeDottedProperty(ParseNode* pn) {
         return pn->is<PropertyAccess>() ? &pn->as<PropertyAccess>().name() : nullptr;
     }
     JSAtom* isStringExprStatement(ParseNode* pn, TokenPos* pos) {
@@ -742,6 +785,15 @@ class FullParseHandler
             return atom;
         }
         return nullptr;
+    }
+
+    void markAsAssigned(ParseNode* node) { node->markAsAssigned(); }
+    void adjustGetToSet(ParseNode* node) {
+        node->setOp(node->isOp(JSOP_GETLOCAL) ? JSOP_SETLOCAL : JSOP_SETNAME);
+    }
+    void maybeDespecializeSet(ParseNode* node) {
+        if (!(js_CodeSpec[node->getOp()].format & JOF_SET))
+            node->setOp(JSOP_SETNAME);
     }
 
     inline ParseNode* makeAssignment(ParseNode* pn, ParseNode* rhs);

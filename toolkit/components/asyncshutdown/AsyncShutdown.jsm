@@ -271,6 +271,49 @@ function looseTimer(delay) {
   return deferred;
 }
 
+/**
+ * Given an nsIStackFrame object, find the caller filename, line number,
+ * and stack if necessary, and return them as an object.
+ *
+ * @param {nsIStackFrame} topFrame Top frame of the call stack.
+ * @param {string} filename Pre-supplied filename or null if unknown.
+ * @param {number} lineNumber Pre-supplied line number or null if unknown.
+ * @param {string} stack Pre-supplied stack or null if unknown.
+ *
+ * @return object
+ */
+function getOrigin(topFrame, filename = null, lineNumber = null, stack = null) {
+  // Determine the filename and line number of the caller.
+  let frame = topFrame;
+
+  for (; frame && frame.filename == topFrame.filename; frame = frame.caller) {
+    // Climb up the stack
+  }
+
+  if (filename == null) {
+    filename = frame ? frame.filename : "?";
+  }
+  if (lineNumber == null) {
+    lineNumber = frame ? frame.lineNumber : 0;
+  }
+  if (stack == null) {
+    // Now build the rest of the stack as a string, using Task.jsm's rewriting
+    // to ensure that we do not lose information at each call to `Task.spawn`.
+    let frames = [];
+    while (frame != null) {
+      frames.push(frame.filename + ":" + frame.name + ":" + frame.lineNumber);
+      frame = frame.caller;
+    }
+    stack = Task.Debugging.generateReadableStack(frames.join("\n")).split("\n");
+  }
+
+  return {
+    filename: filename,
+    lineNumber: lineNumber,
+    stack: stack,
+  };
+}
+
 this.EXPORTED_SYMBOLS = ["AsyncShutdown"];
 
 /**
@@ -605,36 +648,9 @@ function Barrier(name) {
       // Normalize the details
 
       let fetchState = details.fetchState || null;
-      let filename = details.filename || "?";
-      let lineNumber = details.lineNumber || -1;
-      let stack = details.stack || undefined;
-
-      if (filename == "?" || lineNumber == -1 || stack === undefined) {
-        // Determine the filename and line number of the caller.
-        let leaf = Components.stack;
-        let frame;
-        for (frame = leaf; frame != null && frame.filename == leaf.filename; frame = frame.caller) {
-          // Climb up the stack
-        }
-
-        if (filename == "?") {
-          filename = frame ? frame.filename : "?";
-        }
-        if (lineNumber == -1) {
-          lineNumber = frame ? frame.lineNumber : -1;
-        }
-
-        // Now build the rest of the stack as a string, using Task.jsm's rewriting
-        // to ensure that we do not lose information at each call to `Task.spawn`.
-        let frames = [];
-        while (frame != null) {
-          frames.push(frame.filename + ":" + frame.name + ":" + frame.lineNumber);
-          frame = frame.caller;
-        }
-        if (stack === undefined) {
-          stack = Task.Debugging.generateReadableStack(frames.join("\n")).split("\n");
-        }
-      }
+      let filename = details.filename || null;
+      let lineNumber = details.lineNumber || null;
+      let stack = details.stack || null;
 
       // Split the condition between a trigger function and a promise.
 
@@ -675,14 +691,17 @@ function Barrier(name) {
         Promise.reject(error);
       });
 
+      let topFrame = null;
+      if (filename == null || lineNumber == null || stack == null) {
+        topFrame = Components.stack;
+      }
+
       let blocker = {
         trigger: trigger,
         promise: promise,
         name: name,
         fetchState: fetchState,
-        stack: stack,
-        filename: filename,
-        lineNumber: lineNumber
+        getOrigin: () => getOrigin(topFrame, filename, lineNumber, stack),
       };
 
       this._waitForMe.add(promise);
@@ -732,7 +751,9 @@ Barrier.prototype = Object.freeze({
       return "Complete";
     }
     let frozen = [];
-    for (let {name, fetchState, stack, filename, lineNumber} of this._promiseToBlocker.values()) {
+    for (let blocker of this._promiseToBlocker.values()) {
+      let {name, fetchState} = blocker;
+      let {stack, filename, lineNumber} = blocker.getOrigin();
       frozen.push({
         name: name,
         state: safeGetState(fetchState),
@@ -895,9 +916,8 @@ Barrier.prototype = Object.freeze({
           // which have been determined during the call to `addBlocker`.
           let filename = "?";
           let lineNumber = -1;
-          for (let blocker of this._promiseToBlocker) {
-            filename = blocker.filename;
-            lineNumber = blocker.lineNumber;
+          for (let blocker of this._promiseToBlocker.values()) {
+            ({filename, lineNumber} = blocker.getOrigin());
             break;
           }
           gDebug.abort(filename, lineNumber);

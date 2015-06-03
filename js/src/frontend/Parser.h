@@ -656,7 +656,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
         PlainAssignment,
         CompoundAssignment,
         KeyedDestructuringAssignment,
-        IncDecAssignment
+        IncrementAssignment,
+        DecrementAssignment
     };
 
     bool checkAndMarkAsAssignmentLhs(Node pn, AssignmentFlavor flavor);
@@ -672,8 +673,18 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool isValidForStatementLHS(Node pn1, JSVersion version, bool forDecl, bool forEach,
                                 ParseNodeKind headKind);
     bool checkForHeadConstInitializers(Node pn1);
-    bool checkAndMarkAsIncOperand(Node kid, TokenKind tt, bool preorder);
+
+    bool isValidSimpleAssignmentTarget(Node node);
+
+    // Invalid assignment targets are handled differently in different places.
+    // Select the desired semantics using |flavor|.
+    bool reportIfArgumentsEvalTarget(Node target);
+    bool reportIfNotValidSimpleAssignmentTarget(Node target, AssignmentFlavor flavor);
+
+    bool checkAndMarkAsIncOperand(Node kid, AssignmentFlavor flavor);
+
     bool checkStrictAssignment(Node lhs);
+
     bool checkStrictBinding(PropertyName* name, Node pn);
     bool defineArg(Node funcpn, HandlePropertyName name,
                    bool disallowDuplicateArgs = false, Node* duplicatedArg = nullptr);
@@ -696,7 +707,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool checkDestructuringObject(BindData<ParseHandler>* data, Node objectPattern);
     bool checkDestructuringArray(BindData<ParseHandler>* data, Node arrayPattern);
     bool bindInitialized(BindData<ParseHandler>* data, Node pn);
-    bool makeSetCall(Node pn, unsigned msg);
+    bool makeSetCall(Node node, unsigned errnum);
     Node cloneDestructuringDefault(Node opn);
     Node cloneLeftHandSide(Node opn);
     Node cloneParseTree(Node opn);
@@ -735,16 +746,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     friend class LegacyCompExprTransplanter;
     friend struct BindData<ParseHandler>;
 };
-
-/* Declare some required template specializations. */
-
-template <>
-bool
-Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode* pn, AssignmentFlavor flavor);
-
-template <>
-bool
-Parser<SyntaxParseHandler>::checkAndMarkAsAssignmentLhs(Node pn, AssignmentFlavor flavor);
 
 } /* namespace frontend */
 } /* namespace js */

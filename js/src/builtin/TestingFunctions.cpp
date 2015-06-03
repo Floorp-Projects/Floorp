@@ -843,10 +843,6 @@ HasChild(JSContext* cx, unsigned argc, jsval* vp)
     return true;
 }
 
-// Stolen from jsmath.cpp
-static const uint64_t RNG_MULTIPLIER = 0x5DEECE66DLL;
-static const uint64_t RNG_MASK = (1LL << 48) - 1;
-
 static bool
 SetSavedStacksRNGState(JSContext* cx, unsigned argc, jsval* vp)
 {

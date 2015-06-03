@@ -40,6 +40,8 @@ bool nsGBKConvUtil::UnicodeToGBKChar(
     } else {
       return false;
     }
+  } else if (aChar == UCS2_NO_MAPPING) {
+    return false;
   } else {
     // ugly linear search
     for( int32_t i = 0; i < MAX_GBK_LENGTH; i++ )

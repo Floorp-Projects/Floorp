@@ -68,7 +68,7 @@ matchPrefEntry(PLDHashTable*, const PLDHashEntryHdr* entry,
     return (strcmp(prefEntry->key, otherKey) == 0);
 }
 
-PLDHashTable2*      gHashTable;
+PLDHashTable*       gHashTable;
 static PLArenaPool  gPrefNameArena;
 bool                gDirty = false;
 
@@ -150,9 +150,9 @@ static nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, u
 nsresult PREF_Init()
 {
     if (!gHashTable) {
-        gHashTable = new PLDHashTable2(&pref_HashTableOps,
-                                       sizeof(PrefHashEntry),
-                                       PREF_HASHTABLE_INITIAL_LENGTH);
+        gHashTable = new PLDHashTable(&pref_HashTableOps,
+                                      sizeof(PrefHashEntry),
+                                      PREF_HASHTABLE_INITIAL_LENGTH);
 
         PL_INIT_ARENA_POOL(&gPrefNameArena, "PrefNameArena",
                            PREFNAME_ARENA_SIZE);

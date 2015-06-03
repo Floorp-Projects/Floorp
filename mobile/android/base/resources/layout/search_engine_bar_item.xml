@@ -11,7 +11,6 @@
      View (browser_search at the time of this writing). -->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:gecko="http://schemas.android.com/apk/res-auto"
     android:id="@+id/search_engine_icon_container"
     android:layout_height="match_parent"
     android:layout_width="72dp"
@@ -19,12 +18,11 @@
 
     <!-- Width & height are set to make the Favicons as sharp as possible
          based on asset size. -->
-    <org.mozilla.gecko.widget.FaviconView
+    <ImageView
         android:id="@+id/search_engine_icon"
-        android:layout_width="16dp"
-        android:layout_height="16dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_gravity="center"
-        gecko:defaultFaviconDrawable="@drawable/favicon_search_large"
-        gecko:defaultFaviconKey="@string/favicon_search_large_key"/>
+        android:scaleType="fitCenter"/>
 
 </FrameLayout>

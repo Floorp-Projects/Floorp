@@ -70,7 +70,7 @@ protected:
     nsCOMPtr<nsILoadGroupConnectionInfo> mConnectionInfo;
 
     nsCOMPtr<nsIRequest>            mDefaultLoadRequest;
-    PLDHashTable2                   mRequests;
+    PLDHashTable                    mRequests;
 
     nsWeakPtr                       mObserver;
     nsWeakPtr                       mParentLoadGroup;

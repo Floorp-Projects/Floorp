@@ -292,6 +292,9 @@ struct JSContext : public js::ExclusiveContext,
     static size_t offsetOfRuntime() {
         return offsetof(JSContext, runtime_);
     }
+    static size_t offsetOfCompartment() {
+        return offsetof(JSContext, compartment_);
+    }
 
     friend class js::ExclusiveContext;
     friend class JS::AutoSaveExceptionState;

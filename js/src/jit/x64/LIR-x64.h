@@ -121,6 +121,41 @@ class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 1>
     }
 };
 
+// Math.random().
+class LRandom : public LInstructionHelper<1, 0, 5>
+{
+  public:
+    LIR_HEADER(Random)
+    LRandom(const LDefinition &temp, const LDefinition &temp2, const LDefinition &temp3,
+            const LDefinition &temp4, const LDefinition &temp5)
+    {
+        setTemp(0, temp);
+        setTemp(1, temp2);
+        setTemp(2, temp3);
+        setTemp(3, temp4);
+        setTemp(4, temp5);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+    const LDefinition* temp2() {
+        return getTemp(1);
+    }
+    const LDefinition *temp3() {
+        return getTemp(2);
+    }
+    const LDefinition *temp4() {
+        return getTemp(3);
+    }
+    const LDefinition *temp5() {
+        return getTemp(4);
+    }
+
+    MRandom* mir() const {
+        return mir_->toRandom();
+    }
+};
+
 } // namespace jit
 } // namespace js
 

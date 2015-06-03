@@ -47,12 +47,12 @@ public:
         return true;
     }
 
-    nsresult Remove(nsIContent* aElement);
+    void Remove(nsIContent* aElement);
 
     void Clear() { mMap.Clear(); }
 
 protected:
-    PLDHashTable2 mMap;
+    PLDHashTable mMap;
 
     struct Entry : public PLDHashEntryHdr {
         nsIContent*      mContent;
