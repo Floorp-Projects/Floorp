@@ -31,7 +31,7 @@ static nsResProtocolHandler *gResHandler = nullptr;
 //    set NSPR_LOG_MODULES=nsResProtocol:5
 //    set NSPR_LOG_FILE=log.txt
 //
-// this enables PR_LOG_ALWAYS level information and places all output in
+// this enables PR_LOG_DEBUG level information and places all output in
 // the file log.txt
 //
 static PRLogModuleInfo *gResLog;

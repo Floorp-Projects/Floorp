@@ -418,7 +418,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
     nsXPIDLCString flavorStr;
     currentFlavor->ToString(getter_Copies(flavorStr));
 
-    MOZ_LOG(sCocoaLog, PR_LOG_ALWAYS, ("writing out clipboard data of type %s (%d)\n", flavorStr.get(), i));
+    MOZ_LOG(sCocoaLog, PR_LOG_INFO, ("writing out clipboard data of type %s (%d)\n", flavorStr.get(), i));
 
     NSString *pboardType = nil;
 
