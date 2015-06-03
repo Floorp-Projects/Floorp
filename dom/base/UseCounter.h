@@ -5,9 +5,11 @@
 #ifndef UseCounter_h_
 #define UseCounter_h_
 
+#include <stdint.h>
+
 namespace mozilla {
 
-enum UseCounter {
+enum UseCounter : int16_t {
   eUseCounter_UNKNOWN = -1,
 #define USE_COUNTER_DOM_METHOD(interface_, name_) \
     eUseCounter_##interface_##_##name_,
