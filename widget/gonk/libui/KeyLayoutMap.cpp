@@ -149,6 +149,40 @@ status_t KeyLayoutMap::mapAxis(int32_t scanCode, AxisInfo* outAxisInfo) const {
     return NO_ERROR;
 }
 
+status_t KeyLayoutMap::findScanCodeForLed(int32_t ledCode, int32_t* outScanCode) const {
+    const size_t N = mLedsByScanCode.size();
+    for (size_t i = 0; i < N; i++) {
+        if (mLedsByScanCode.valueAt(i).ledCode == ledCode) {
+            *outScanCode = mLedsByScanCode.keyAt(i);
+#if DEBUG_MAPPING
+            ALOGD("findScanCodeForLed: ledCode=%d, scanCode=%d.", ledCode, *outScanCode);
+#endif
+            return NO_ERROR;
+        }
+    }
+#if DEBUG_MAPPING
+            ALOGD("findScanCodeForLed: ledCode=%d ~ Not found.", ledCode);
+#endif
+    return NAME_NOT_FOUND;
+}
+
+status_t KeyLayoutMap::findUsageCodeForLed(int32_t ledCode, int32_t* outUsageCode) const {
+    const size_t N = mLedsByUsageCode.size();
+    for (size_t i = 0; i < N; i++) {
+        if (mLedsByUsageCode.valueAt(i).ledCode == ledCode) {
+            *outUsageCode = mLedsByUsageCode.keyAt(i);
+#if DEBUG_MAPPING
+            ALOGD("findUsageForLed: ledCode=%d, usage=%x.", ledCode, *outUsageCode);
+#endif
+            return NO_ERROR;
+        }
+    }
+#if DEBUG_MAPPING
+            ALOGD("findUsageForLed: ledCode=%d ~ Not found.", ledCode);
+#endif
+    return NAME_NOT_FOUND;
+}
+
 
 // --- KeyLayoutMap::Parser ---
 
@@ -177,6 +211,10 @@ status_t KeyLayoutMap::Parser::parse() {
             } else if (keywordToken == "axis") {
                 mTokenizer->skipDelimiters(WHITESPACE);
                 status_t status = parseAxis();
+                if (status) return status;
+            } else if (keywordToken == "led") {
+                mTokenizer->skipDelimiters(WHITESPACE);
+                status_t status = parseLed();
                 if (status) return status;
             } else {
                 ALOGE("%s: Expected keyword, got '%s'.", mTokenizer->getLocation().string(),
@@ -363,4 +401,46 @@ status_t KeyLayoutMap::Parser::parseAxis() {
     return NO_ERROR;
 }
 
+status_t KeyLayoutMap::Parser::parseLed() {
+    String8 codeToken = mTokenizer->nextToken(WHITESPACE);
+    bool mapUsage = false;
+    if (codeToken == "usage") {
+        mapUsage = true;
+        mTokenizer->skipDelimiters(WHITESPACE);
+        codeToken = mTokenizer->nextToken(WHITESPACE);
+    }
+    char* end;
+    int32_t code = int32_t(strtol(codeToken.string(), &end, 0));
+    if (*end) {
+        ALOGE("%s: Expected led %s number, got '%s'.", mTokenizer->getLocation().string(),
+                mapUsage ? "usage" : "scan code", codeToken.string());
+        return BAD_VALUE;
+    }
+
+    KeyedVector<int32_t, Led>& map = mapUsage ? mMap->mLedsByUsageCode : mMap->mLedsByScanCode;
+    if (map.indexOfKey(code) >= 0) {
+        ALOGE("%s: Duplicate entry for led %s '%s'.", mTokenizer->getLocation().string(),
+                mapUsage ? "usage" : "scan code", codeToken.string());
+        return BAD_VALUE;
+    }
+
+    mTokenizer->skipDelimiters(WHITESPACE);
+    String8 ledCodeToken = mTokenizer->nextToken(WHITESPACE);
+    int32_t ledCode = getLedByLabel(ledCodeToken.string());
+    if (ledCode < 0) {
+        ALOGE("%s: Expected LED code label, got '%s'.", mTokenizer->getLocation().string(),
+                ledCodeToken.string());
+        return BAD_VALUE;
+    }
+
+#if DEBUG_PARSER
+    ALOGD("Parsed led %s: code=%d, ledCode=%d.",
+            mapUsage ? "usage" : "scan code", code, ledCode);
+#endif
+
+    Led led;
+    led.ledCode = ledCode;
+    map.add(code, led);
+    return NO_ERROR;
+}
 };

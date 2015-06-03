@@ -22,7 +22,8 @@ NS_IMPL_ISUPPORTS(PresentationDeviceManager,
                   nsIPresentationDeviceManager,
                   nsIPresentationDeviceListener,
                   nsIPresentationDeviceEventListener,
-                  nsIObserver)
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 PresentationDeviceManager::PresentationDeviceManager()
 {

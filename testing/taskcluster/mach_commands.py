@@ -154,7 +154,7 @@ class DecisionTask(object):
             'owner': params['owner'],
             'as_slugid': SlugidJar(),
             'from_now': json_time_from_now,
-            'now': datetime.datetime.now().isoformat()
+            'now': current_json_time()
         }.items())
         task = templates.load(params['task'], parameters)
         print(json.dumps(task, indent=4))
@@ -225,7 +225,7 @@ class Graph(object):
             'head_rev': params['head_rev'],
             'owner': params['owner'],
             'from_now': json_time_from_now,
-            'now': datetime.datetime.now().isoformat(),
+            'now': current_json_time(),
             'mozharness_repository': mozharness['repo'],
             'mozharness_rev': mozharness['revision'],
             'mozharness_ref':mozharness.get('reference', mozharness['revision']),
