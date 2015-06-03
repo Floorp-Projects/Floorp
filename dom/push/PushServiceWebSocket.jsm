@@ -10,6 +10,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+const {PushDB} = Cu.import("resource://gre/modules/PushDB.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -27,7 +28,12 @@ XPCOMUtils.defineLazyServiceGetter(this, "gPowerManagerService",
                                    "nsIPowerManagerService");
 #endif
 
-var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
+var threadManager = Cc["@mozilla.org/thread-manager;1"]
+                      .getService(Ci.nsIThreadManager);
+
+const kPUSHWSDB_DB_NAME = "pushapi";
+const kPUSHWSDB_DB_VERSION = 1; // Change this if the IndexedDB format changes
+const kPUSHWSDB_STORE_NAME = "pushapi";
 
 const kUDP_WAKEUP_WS_STATUS_CODE = 4774;  // WebSocket Close status code sent
                                           // by server to signal that it can
@@ -46,9 +52,13 @@ this.EXPORTED_SYMBOLS = ["PushServiceWebSocket"];
 let gDebuggingEnabled = true;
 
 function debug(s) {
-  if (gDebuggingEnabled)
+  if (gDebuggingEnabled) {
     dump("-*- PushServiceWebSocket.jsm: " + s + "\n");
+  }
 }
+
+// Set debug first so that all debugging actually works.
+gDebuggingEnabled = prefs.get("debug");
 
 /**
  * A proxy between the PushService and the WebSocket. The listener is used so
@@ -58,20 +68,22 @@ function debug(s) {
  * closed but the PushService may not be interested in these. It's easier to
  * stop listening than to have checks at specific points.
  */
-this.PushWebSocketListener = function(pushService) {
+var PushWebSocketListener = function(pushService) {
   this._pushService = pushService;
-}
+};
 
-this.PushWebSocketListener.prototype = {
+PushWebSocketListener.prototype = {
   onStart: function(context) {
-    if (!this._pushService)
+    if (!this._pushService) {
         return;
+    }
     this._pushService._wsOnStart(context);
   },
 
   onStop: function(context, statusCode) {
-    if (!this._pushService)
+    if (!this._pushService) {
         return;
+    }
     this._pushService._wsOnStop(context, statusCode);
   },
 
@@ -84,14 +96,16 @@ this.PushWebSocketListener.prototype = {
   },
 
   onMessageAvailable: function(context, message) {
-    if (!this._pushService)
+    if (!this._pushService) {
         return;
+    }
     this._pushService._wsOnMessageAvailable(context, message);
   },
 
   onServerClose: function(context, aStatusCode, aReason) {
-    if (!this._pushService)
+    if (!this._pushService) {
         return;
+    }
     this._pushService._wsOnServerClose(context, aStatusCode, aReason);
   }
 };
@@ -109,76 +123,99 @@ const STATE_READY = 3;
 
 this.PushServiceWebSocket = {
   _mainPushService: null,
+  _serverURI: null,
 
-  observeNetworkChange: function(aSubject, aTopic, aData) {
-    // In case of network-active-changed, always disconnect existing
-    // connections. In case of offline-status changing from offline to
-    // online, it is likely that these statements will be no-ops.
-    if (this._udpServer) {
-      this._udpServer.close();
-      // Set to null since this is checked in _listenForUDPWakeup()
-      this._udpServer = null;
-    }
+  upgradeSchema: function(aTransaction,
+                          aDb,
+                          aOldVersion,
+                          aNewVersion,
+                          aDbInstance) {
+    debug("upgradeSchemaWS()");
 
-    this._shutdownWS();
+    let objectStore = aDb.createObjectStore(aDbInstance._dbStoreName,
+                                            { keyPath: "channelID" });
 
-    // Try to connect if network-active-changed or the offline-status
-    // changed to online.
-    if (aTopic === "network-active-changed" || aData === "online") {
-      this.startListeningIfChannelsPresent();
-    }
+    // index to fetch records based on endpoints. used by unregister
+    objectStore.createIndex("pushEndpoint", "pushEndpoint", { unique: true });
+
+    // index to fetch records per scope, so we can identify endpoints
+    // associated with an app.
+    objectStore.createIndex("scope", "scope", { unique: true });
   },
 
-  observePushConnectionPref: function(enabled) {
-    if (enabled) {
-      this.startListeningIfChannelsPresent();
-    } else {
-      this._shutdownWS();
-    }
+  newPushDB: function() {
+    return new PushDB(kPUSHWSDB_DB_NAME,
+                      kPUSHWSDB_DB_VERSION,
+                      kPUSHWSDB_STORE_NAME,
+                      this.upgradeSchema);
   },
 
-  observeDebug: function(enabled) {
-    gDebuggingEnabled = enabled;
-  },
-  shutdownService: function() {
+  disconnect: function() {
     this._shutdownWS();
   },
 
-  observeTimer: function(aSubject, aTopic, aData) {
-    if (aSubject == this._requestTimeoutTimer) {
-      if (Object.keys(this._pendingRequests).length == 0) {
-        this._requestTimeoutTimer.cancel();
-      }
+  observe: function(aSubject, aTopic, aData) {
 
-      // Set to true if at least one request timed out.
-      let requestTimedOut = false;
-      for (let channelID in this._pendingRequests) {
-        let duration = Date.now() - this._pendingRequests[channelID].ctime;
-        // If any of the registration requests time out, all the ones after it
-        // also made to fail, since we are going to be disconnecting the socket.
-        if (requestTimedOut || duration > this._requestTimeout) {
-          debug("Request timeout: Removing " + channelID);
-          requestTimedOut = true;
-          this._pendingRequests[channelID]
-            .deferred.reject({status: 0, error: "TimeoutError"});
+    switch (aTopic) {
+      case "nsPref:changed":
+        if (aData == "dom.push.debug") {
+          gDebuggingEnabled = prefs.get("debug");
+        }
+        break;
+    case "timer-callback":
+      if (aSubject == this._requestTimeoutTimer) {
+        if (Object.keys(this._pendingRequests).length === 0) {
+          this._requestTimeoutTimer.cancel();
+        }
 
-          delete this._pendingRequests[channelID];
-          for (let i = this._requestQueue.length - 1; i >= 0; --i) {
-            let [, data] = this._requestQueue[i];
-            if (data && data.channelID == channelID) {
-              this._requestQueue.splice(i, 1);
-            }
+        // Set to true if at least one request timed out.
+        let requestTimedOut = false;
+        for (let channelID in this._pendingRequests) {
+          let duration = Date.now() - this._pendingRequests[channelID].ctime;
+          // If any of the registration requests time out, all the ones after it
+          // also made to fail, since we are going to be disconnecting the
+          // socket.
+          if (requestTimedOut || duration > this._requestTimeout) {
+            debug("Request timeout: Removing " + channelID);
+            requestTimedOut = true;
+            this._pendingRequests[channelID]
+              .reject({status: 0, error: "TimeoutError"});
+
+            delete this._pendingRequests[channelID];
           }
         }
-      }
 
-      // The most likely reason for a registration request timing out is
-      // that the socket has disconnected. Best to reconnect.
-      if (requestTimedOut) {
-        this._shutdownWS();
-        this._reconnectAfterBackoff();
+        // The most likely reason for a registration request timing out is
+        // that the socket has disconnected. Best to reconnect.
+        if (requestTimedOut) {
+          this._shutdownWS();
+          this._reconnectAfterBackoff();
+        }
       }
+      break;
     }
+  },
+
+  checkServerURI: function(serverURL) {
+    if (!serverURL) {
+      debug("No dom.push.serverURL found!");
+      return;
+    }
+
+    let uri;
+    try {
+      uri = Services.io.newURI(serverURL, null, null);
+    } catch(e) {
+      debug("Error creating valid URI from dom.push.serverURL (" +
+            serverURL + ")");
+      return null;
+    }
+
+    if (uri.scheme !== "wss") {
+      debug("Unsupported websocket scheme " + uri.scheme);
+      return null;
+    }
+    return uri;
   },
 
   get _UAID() {
@@ -195,8 +232,6 @@ this.PushServiceWebSocket = {
     prefs.set("userAgentID", newID);
   },
 
-  // keeps requests buffered if the websocket disconnects or is not connected
-  _requestQueue: [],
   _ws: null,
   _pendingRequests: {},
   _currentState: STATE_SHUT_DOWN,
@@ -271,10 +306,11 @@ this.PushServiceWebSocket = {
     this._ws.sendMsg(msg);
   },
 
-  init: function(options, mainPushService) {
+  init: function(options, mainPushService, serverURI) {
     debug("init()");
 
     this._mainPushService = mainPushService;
+    this._serverURI = serverURI;
 
     // Override the default WebSocket factory function. The returned object
     // must be null or satisfy the nsIWebSocketChannel interface. Used by
@@ -298,6 +334,8 @@ this.PushServiceWebSocket = {
     this._requestTimeout = prefs.get("requestTimeout");
     this._adaptiveEnabled = prefs.get('adaptive.enabled');
     this._upperLimit = prefs.get('adaptive.upperLimit');
+    gDebuggingEnabled = prefs.get("debug");
+    prefs.observe("debug", this);
   },
 
   _shutdownWS: function() {
@@ -305,16 +343,27 @@ this.PushServiceWebSocket = {
     this._currentState = STATE_SHUT_DOWN;
     this._willBeWokenUpByUDP = false;
 
-    if (this._wsListener)
+    if (this._wsListener) {
       this._wsListener._pushService = null;
+    }
     try {
         this._ws.close(0, null);
     } catch (e) {}
     this._ws = null;
 
     this._waitingForPong = false;
-    this._mainPushService.stopAlarm();
+    if (this._mainPushService) {
+      this._mainPushService.stopAlarm();
+    } else {
+      dump("This should not happend");
+    }
+
     this._cancelPendingRequests();
+
+    if (this._notifyRequestQueue) {
+      this._notifyRequestQueue();
+      this._notifyRequestQueue = null;
+    }
   },
 
   uninit: function() {
@@ -366,7 +415,11 @@ this.PushServiceWebSocket = {
     this._retryFailCount++;
 
     debug("Retry in " + retryTimeout + " Try number " + this._retryFailCount);
-    this._mainPushService.setAlarm(retryTimeout);
+    if (this._mainPushService) {
+      this._mainPushService.setAlarm(retryTimeout);
+    } else {
+      dump("This should not happend");
+    }
   },
 
   /**
@@ -390,7 +443,8 @@ this.PushServiceWebSocket = {
    * valid ping, to ensure better battery life and network resources usage.
    *
    * The value is saved in dom.push.pingInterval
-   * @param wsWentDown [Boolean] if the WebSocket was closed or it is still alive
+   * @param wsWentDown [Boolean] if the WebSocket was closed or it is still
+   * alive
    *
    */
   _calculateAdaptivePing: function(wsWentDown) {
@@ -413,7 +467,8 @@ this.PushServiceWebSocket = {
     }
 
     if (!this._recalculatePing && !wsWentDown) {
-      debug('We do not need to recalculate the ping now, based on previous data');
+      debug('We do not need to recalculate the ping now, based on previous ' +
+            'data');
       return;
     }
 
@@ -498,7 +553,8 @@ this.PushServiceWebSocket = {
 
       // If the new ping interval is close to the last good one, we are near
       // optimum, so stop calculating.
-      if (nextPingInterval - this._lastGoodPingInterval < prefs.get('adaptive.gap')) {
+      if (nextPingInterval - this._lastGoodPingInterval <
+          prefs.get('adaptive.gap')) {
         debug('We have reached the gap, we have finished the calculation');
         debug('nextPingInterval=' + nextPingInterval);
         debug('lastGoodPing=' + this._lastGoodPingInterval);
@@ -517,7 +573,8 @@ this.PushServiceWebSocket = {
 
     // Check if we have reached the upper limit
     if (this._upperLimit < nextPingInterval) {
-      debug('Next ping will be bigger than the configured upper limit, capping interval');
+      debug('Next ping will be bigger than the configured upper limit, ' +
+            'capping interval');
       this._recalculatePing = false;
       this._lastGoodPingInterval = lastTriedPingInterval;
       nextPingInterval = lastTriedPingInterval;
@@ -533,10 +590,12 @@ this.PushServiceWebSocket = {
     //Save values for our current network
     if (ns.ip) {
       prefs.set('pingInterval.mobile', nextPingInterval);
-      prefs.set('adaptive.lastGoodPingInterval.mobile', this._lastGoodPingInterval);
+      prefs.set('adaptive.lastGoodPingInterval.mobile',
+                this._lastGoodPingInterval);
     } else {
       prefs.set('pingInterval.wifi', nextPingInterval);
-      prefs.set('adaptive.lastGoodPingInterval.wifi', this._lastGoodPingInterval);
+      prefs.set('adaptive.lastGoodPingInterval.wifi',
+                this._lastGoodPingInterval);
     }
   },
 
@@ -549,23 +608,9 @@ this.PushServiceWebSocket = {
       debug("Network is offline.");
       return null;
     }
-    let socket;
-    if (uri.scheme === "wss") {
-      socket = Cc["@mozilla.org/network/protocol;1?name=wss"]
-                 .createInstance(Ci.nsIWebSocketChannel);
-    }
-    else if (uri.scheme === "ws") {
-      if (uri.host != "localhost") {
-        debug("Push over an insecure connection (ws://) is not allowed!");
-        return null;
-      }
-      socket = Cc["@mozilla.org/network/protocol;1?name=ws"]
-                 .createInstance(Ci.nsIWebSocketChannel);
-    }
-    else {
-      debug("Unsupported websocket scheme " + uri.scheme);
-      return null;
-    }
+    let socket = Cc["@mozilla.org/network/protocol;1?name=wss"]
+                   .createInstance(Ci.nsIWebSocketChannel);
+
     socket.initLoadInfo(null, // aLoadingNode
                         Services.scriptSecurityManager.getSystemPrincipal(),
                         null, // aTriggeringPrincipal
@@ -584,9 +629,11 @@ this.PushServiceWebSocket = {
     }
 
     // Stop any pending reconnects scheduled for the near future.
-    this._mainPushService.stopAlarm();
+    if (this._mainPushService) {
+      this._mainPushService.stopAlarm();
+    }
 
-    let uri = this._mainPushService.getServerURI();
+    let uri = this._serverURI;
     if (!uri) {
       return;
     }
@@ -601,8 +648,8 @@ this.PushServiceWebSocket = {
     this._ws.protocol = "push-notification";
 
     try {
-      // Grab a wakelock before we open the socket to ensure we don't go to sleep
-      // before connection the is opened.
+      // Grab a wakelock before we open the socket to ensure we don't go to
+      // sleep before connection the is opened.
       this._ws.asyncOpen(uri, uri.spec, this._wsListener, null);
       this._acquireWakeLock();
       this._currentState = STATE_WAITING_FOR_WS_START;
@@ -613,18 +660,12 @@ this.PushServiceWebSocket = {
     }
   },
 
-  startListeningIfChannelsPresent: function() {
+  connect: function(channelIDs) {
+    debug("connect");
     // Check to see if we need to do anything.
-    if (this._requestQueue.length > 0) {
+    if (channelIDs.length > 0) {
       this._beginWSSetup();
-      return;
     }
-    this._mainPushService.getAllChannelIDs()
-      .then(channelIDs => {
-        if (channelIDs.length > 0) {
-          this._beginWSSetup();
-        }
-      });
   },
 
   /**
@@ -676,7 +717,7 @@ this.PushServiceWebSocket = {
       this._waitingForPong = true;
       this._mainPushService.setAlarm(prefs.get("requestTimeout"));
     }
-    else if (this._alarmID !== null) {
+    else if (this._mainPushService && this._mainPushService._alarmID !== null) {
       debug("reconnect alarm fired.");
       // Reconnect after back-off.
       // The check for a non-null _alarmID prevents a situation where the alarm
@@ -704,7 +745,8 @@ this.PushServiceWebSocket = {
     }
     if (!this._socketWakeLockTimer) {
       debug("Creating Socket WakeLock Timer");
-      this._socketWakeLockTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      this._socketWakeLockTimer = Cc["@mozilla.org/timer;1"]
+                                    .createInstance(Ci.nsITimer);
     }
 
     debug("Setting Socket WakeLock Timer");
@@ -767,7 +809,10 @@ this.PushServiceWebSocket = {
     function finishHandshake() {
       this._UAID = reply.uaid;
       this._currentState = STATE_READY;
-      this._processNextRequestInQueue();
+      if (this._notifyRequestQueue) {
+        this._notifyRequestQueue();
+        this._notifyRequestQueue = null;
+      }
     }
 
     // By this point we've got a UAID from the server that we are ready to
@@ -778,8 +823,7 @@ this.PushServiceWebSocket = {
     if (this._UAID && this._UAID != reply.uaid) {
       debug("got new UAID: all re-register");
 
-      this._mainPushService.notifyAllAppsRegister()
-          .then(_ => this._mainPushService.dropRegistrations())
+      this._mainPushService.dropRegistrations()
           .then(finishHandshake.bind(this));
 
       return;
@@ -795,19 +839,40 @@ this.PushServiceWebSocket = {
   _handleRegisterReply: function(reply) {
     debug("handleRegisterReply()");
     if (typeof reply.channelID !== "string" ||
-        typeof this._pendingRequests[reply.channelID] !== "object")
+        typeof this._pendingRequests[reply.channelID] !== "object") {
       return;
+    }
 
     let tmp = this._pendingRequests[reply.channelID];
     delete this._pendingRequests[reply.channelID];
-    if (Object.keys(this._pendingRequests).length == 0 &&
-        this._requestTimeoutTimer)
+    if (Object.keys(this._pendingRequests).length === 0 &&
+        this._requestTimeoutTimer) {
       this._requestTimeoutTimer.cancel();
+    }
 
     if (reply.status == 200) {
-      tmp.deferred.resolve(reply);
+      try {
+        Services.io.newURI(reply.pushEndpoint, null, null);
+      }
+      catch (e) {
+        debug("Invalid pushEndpoint " + reply.pushEndpoint);
+        tmp.reject({state: 0, error: "Invalid pushEndpoint " +
+                                     reply.pushEndpoint});
+        return;
+      }
+
+      let record = {
+        channelID: reply.channelID,
+        pushEndpoint: reply.pushEndpoint,
+        pageURL: tmp.record.pageURL,
+        scope: tmp.record.scope,
+        pushCount: 0,
+        lastPush: 0,
+        version: null
+      };
+      tmp.resolve(record);
     } else {
-      tmp.deferred.reject(reply);
+      tmp.reject(reply);
     }
   },
 
@@ -853,88 +918,99 @@ this.PushServiceWebSocket = {
   // FIXME(nsm): batch acks for efficiency reasons.
   _sendAck: function(channelID, version) {
     debug("sendAck()");
-    this._send('ack', {
-      updates: [{channelID: channelID, version: version}]
-    });
+    var data = {messageType: 'ack',
+                updates: [{channelID: channelID,
+                           version: version}]
+               };
+    this._queueRequest(data);
   },
 
-  /*
-   * Must be used only by request/response style calls over the websocket.
-   */
-  _sendRequest: function(action, data) {
-    debug("sendRequest() " + action);
-    if (typeof data.channelID !== "string") {
-      debug("Received non-string channelID");
-      return Promise.reject({error: "Received non-string channelID"});
-    }
+  _generateID: function() {
+    let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
+                          .getService(Ci.nsIUUIDGenerator);
+    // generateUUID() gives a UUID surrounded by {...}, slice them off.
+    return uuidGenerator.generateUUID().toString().slice(1, -1);
+  },
 
-    if (Object.keys(this._pendingRequests).length == 0) {
+  request: function(action, record) {
+    debug("request() " + action);
+
+    if (Object.keys(this._pendingRequests).length === 0) {
       // start the timer since we now have at least one request
-      if (!this._requestTimeoutTimer)
+      if (!this._requestTimeoutTimer) {
         this._requestTimeoutTimer = Cc["@mozilla.org/timer;1"]
                                       .createInstance(Ci.nsITimer);
+      }
       this._requestTimeoutTimer.init(this,
                                      this._requestTimeout,
                                      Ci.nsITimer.TYPE_REPEATING_SLACK);
     }
 
-    let deferred;
-    let request = this._pendingRequests[data.channelID];
-    if (request) {
-      // If a request is already pending for this channel ID, assume it's a
-      // retry. Use the existing deferred, but update the send time and re-send
-      // the request.
-      deferred = request.deferred;
-    } else {
-      deferred = Promise.defer();
-      request = this._pendingRequests[data.channelID] = {deferred};
+    if (action == "register") {
+      record.channelID = this._generateID();
     }
-    request.ctime = Date.now();
-    this._send(action, data);
-    return deferred.promise;
+    var data = {channelID: record.channelID,
+                messageType: action};
+
+    return new Promise((resolve, reject) => {
+      this._pendingRequests[data.channelID] = {record: record,
+                                               resolve: resolve,
+                                               reject: reject,
+                                               ctime: Date.now()
+                                              };
+      this._queueRequest(data);
+    });
   },
 
-  _send: function(action, data) {
-    debug("send()");
-    this._requestQueue.push([action, data]);
-    debug("Queued " + action);
-    this._processNextRequestInQueue();
+  _queueStart: Promise.resolve(),
+  _notifyRequestQueue: null,
+  _queue: null,
+  _enqueue: function(op, errop) {
+    debug("enqueue");
+    if (!this._queue) {
+      this._queue = this._queueStart;
+    }
+    this._queue = this._queue
+                    .then(op)
+                    .catch(_ => {});
   },
 
-  _processNextRequestInQueue: function() {
-    debug("_processNextRequestInQueue()");
-
-    if (this._requestQueue.length == 0) {
-      debug("Request queue empty");
-      return;
+  _send(data) {
+    if (this._currentState == STATE_READY) {
+      if (data.messageType == "ack") {
+        this._wsSendMessage(data);
+      } else {
+        // check if request has not been canelled
+        if (typeof this._pendingRequests[data.channelID] == "object") {
+          this._wsSendMessage(data);
+        }
+      }
     }
+  },
 
+  _queueRequest(data) {
     if (this._currentState != STATE_READY) {
-      if (!this._ws) {
-        // This will end up calling processNextRequestInQueue().
-        this._beginWSSetup();
+      if (!this._notifyRequestQueue) {
+        this._enqueue(_ => {
+          return new Promise((resolve, reject) => {
+                               this._notifyRequestQueue = resolve;
+                             });
+        });
       }
-      else {
-        // We have a socket open so we are just waiting for hello to finish.
-        // That will call processNextRequestInQueue().
-      }
-      return;
+
     }
 
-    let [action, data] = this._requestQueue.shift();
-    data.messageType = action;
+    this._enqueue(_ => this._send(data));
     if (!this._ws) {
-      // If our websocket is not ready and our state is STATE_READY we may as
-      // well give up all assumptions about the world and start from scratch
-      // again.  Discard the message itself, let the timeout notify error to
-      // the app.
-      debug("This should never happen!");
-      this._shutdownWS();
+      // This will end up calling notifyRequestQueue().
+      this._beginWSSetup();
+      // If beginWSSetup does not succeed to make ws, notifyRequestQueue will
+      // not be call.
+      if (!this._ws && this._notifyRequestQueue) {
+        this._notifyRequestQueue();
+        this._notifyRequestQueue = null;
+      }
     }
-
-    this._wsSendMessage(data);
-    // Process the next one as soon as possible.
-    setTimeout(this._processNextRequestInQueue.bind(this), 0);
   },
 
   _receivedUpdate: function(aChannelID, aLatestVersion) {
@@ -947,46 +1023,29 @@ this.PushServiceWebSocket = {
         return;
       }
 
-      if (aPushRecord.version == null ||
+      if (aPushRecord.version === null ||
           aPushRecord.version < aLatestVersion) {
         debug("Version changed, notifying app and updating DB");
         aPushRecord.version = aLatestVersion;
         aPushRecord.pushCount = aPushRecord.pushCount + 1;
         aPushRecord.lastPush = new Date().getTime();
-        this._mainPushService.notifyApp(aPushRecord);
-        this._mainPushService.updatePushRecord(aPushRecord)
-          .then(
-            null,
-            function(e) {
-              debug("Error updating push record");
-            }
-          );
+        this._mainPushService.receivedPushMessage(aPushRecord,
+                                                  "Short as life is, we make " +
+                                                  "it still shorter by the " +
+                                                  "careless waste of time.");
       }
       else {
         debug("No significant version change: " + aLatestVersion);
       }
-    }
+    };
 
     let recoverNoSuchChannelID = function(aChannelIDFromServer) {
       debug("Could not get channelID " + aChannelIDFromServer + " from DB");
-    }
+    };
 
     this._mainPushService.getByChannelID(aChannelID)
       .then(compareRecordVersionAndNotify.bind(this),
             err => recoverNoSuchChannelID(err));
-  },
-
-  register: function(channelID) {
-    return this._sendRequest("register", {channelID: channelID})
-  },
-
-  unregister: function(aRecord) {
-    // courtesy, but don't establish a connection
-    // just for it
-    if (this._ws) {
-      debug("Had a connection, so telling the server");
-      this._send("unregister", {channelID: aRecord.channelID});
-    }
   },
 
   // begin Push protocol handshake
@@ -1005,14 +1064,15 @@ this.PushServiceWebSocket = {
 
     let data = {
       messageType: "hello",
-    }
+    };
 
-    if (this._UAID)
-      data["uaid"] = this._UAID;
+    if (this._UAID) {
+      data.uaid = this._UAID;
+    }
 
     function sendHelloMessage(ids) {
       // On success, ids is an array, on error its not.
-      data["channelIDs"] = ids.map ?
+      data.channelIDs = ids.map ?
                            ids.map(function(el) { return el.channelID; }) : [];
       this._wsSendMessage(data);
       this._currentState = STATE_WAITING_FOR_HELLO;
@@ -1024,12 +1084,12 @@ this.PushServiceWebSocket = {
         this._listenForUDPWakeup();
 
         // Host-port is apparently a thing.
-        data["wakeup_hostport"] = {
+        data.wakeup_hostport = {
           ip: networkState.ip,
           port: this._udpServer && this._udpServer.port
         };
 
-        data["mobilenetwork"] = {
+        data.mobilenetwork = {
           mcc: networkState.mcc,
           mnc: networkState.mnc,
           netid: networkState.netid
@@ -1071,7 +1131,7 @@ this.PushServiceWebSocket = {
 
     this._waitingForPong = false;
 
-    let reply = undefined;
+    let reply;
     try {
       reply = JSON.parse(message);
     } catch(e) {
@@ -1157,7 +1217,7 @@ this.PushServiceWebSocket = {
     for (let channelID in this._pendingRequests) {
       let request = this._pendingRequests[channelID];
       delete this._pendingRequests[channelID];
-      request.deferred.reject({status: 0, error: "AbortError"});
+      request.reject({status: 0, error: "AbortError"});
     }
   },
 
@@ -1229,9 +1289,12 @@ let PushNetworkInfo = {
         throw new Error("UDP disabled");
       }
 
-      let nm = Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
-      if (nm.active && nm.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
-        let iccService = Cc["@mozilla.org/icc/iccservice;1"].getService(Ci.nsIIccService);
+      let nm = Cc["@mozilla.org/network/manager;1"]
+                 .getService(Ci.nsINetworkManager);
+      if (nm.active &&
+          nm.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
+        let iccService = Cc["@mozilla.org/icc/iccservice;1"]
+                           .getService(Ci.nsIIccService);
         // TODO: Bug 927721 - PushService for multi-sim
         // In Multi-sim, there is more than one client in iccService. Each
         // client represents a icc handle. To maintain backward compatibility
@@ -1251,7 +1314,7 @@ let PushNetworkInfo = {
             mcc: iccInfo.mcc,
             mnc: iccInfo.mnc,
             ip:  ips.value[0]
-          }
+          };
         }
       }
     } catch (e) {
