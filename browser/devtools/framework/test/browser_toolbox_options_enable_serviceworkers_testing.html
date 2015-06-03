@@ -3,56 +3,8 @@
   <head>
     <title>browser_toolbox_options_enable_serviceworkers_testing.html</title>
     <meta charset="UTF-8">
-    <style>
-      div {
-        width: 260px;
-        height: 24px;
-        border: 1px solid #000;
-        margin-top: 10px;
-      }
-
-      h1 {
-        font-size: 20px
-      }
-    </style>
-    <script type="application/javascript;version=1.8">
-      function log(msg) {
-        var output = document.getElementById("output");
-
-        output.innerHTML = msg;
-      }
-
-      navigator.serviceWorker.register("serviceworker.js").then(
-        swr => {
-          var msg = "";
-          var button = document.getElementById("button");
-          if (swr.installing) {
-            msg += "Installing worker/";
-          }
-          if (swr.waiting) {
-            msg += "Waiting worker/";
-          }
-          if (swr.active) {
-            msg += "Active worker/";
-          }
-          log(msg);
-          button.click();
-        },
-        error => {
-          var button = document.getElementById("button");
-          if (error.name === "SecurityError") {
-            log("SecurityError");
-          }
-          button.click();
-      });
-    </script>
   </head>
   <body>
-    <h1>Test in page</h1>
-    <input id="button"
-           type="button"
-           value="Worker clicks here"/>
-    <br>
-    <div id="output">No output</div>
+    <h1>SW-test</h1>
   </body>
 </html>

@@ -8,3 +8,13 @@ EXTRA_COMPONENTS += [
     'BuiltinProviders.manifest',
     'TCPPresentationServer.js'
 ]
+
+UNIFIED_SOURCES += [
+    'MulticastDNSDeviceProvider.cpp',
+    'PresentationDeviceProviderModule.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
+FINAL_LIBRARY = 'xul'

@@ -134,6 +134,7 @@ browser.jar:
   skin/classic/browser/loop/menuPanel.png             (loop/menuPanel.png)
   skin/classic/browser/loop/toolbar.png               (loop/toolbar.png)
   skin/classic/browser/loop/toolbar-inverted.png      (loop/toolbar-inverted.png)
+* skin/classic/browser/controlcenter/panel.css        (controlcenter/panel.css)
   skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
   skin/classic/browser/customizableui/customize-illustration.png  (../shared/customizableui/customize-illustration.png)
   skin/classic/browser/customizableui/customize-illustration-rtl.png  (../shared/customizableui/customize-illustration-rtl.png)

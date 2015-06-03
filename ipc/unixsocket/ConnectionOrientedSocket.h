@@ -9,6 +9,7 @@
 
 #include <sys/socket.h>
 #include "DataSocket.h"
+#include "mozilla/ipc/UnixSocketWatcher.h"
 
 class MessageLoop;
 
@@ -23,15 +24,72 @@ class UnixSocketConnector;
  * |ListenSocket| uses these classes to handle accepted sockets.
  */
 
-class ConnectionOrientedSocketIO : public DataSocketIO
+class ConnectionOrientedSocketIO
+  : public DataSocketIO
+  , public UnixSocketWatcher
 {
 public:
-  ConnectionOrientedSocketIO(nsIThread* aConsumerThread);
   virtual ~ConnectionOrientedSocketIO();
 
-  virtual nsresult Accept(int aFd,
-                          const struct sockaddr* aAddress,
-                          socklen_t aAddressLength) = 0;
+  nsresult Accept(int aFd,
+                  const struct sockaddr* aAddress,
+                  socklen_t aAddressLength);
+
+  nsresult Connect();
+
+  void Send(UnixSocketIOBuffer* aBuffer);
+
+  // Methods for |UnixSocketWatcher|
+  //
+
+  void OnSocketCanReceiveWithoutBlocking() final;
+  void OnSocketCanSendWithoutBlocking() final;
+
+  void OnListening() final;
+  void OnConnected() final;
+  void OnError(const char* aFunction, int aErrno) final;
+
+protected:
+  /**
+   * Constructs an instance of |ConnectionOrientedSocketIO|
+   *
+   * @param aConsumerThread The socket's consumer thread.
+   * @param aIOLoop The socket's I/O loop.
+   * @param aFd The socket file descriptor.
+   * @param aConnectionStatus The connection status for |aFd|.
+   * @param aConnector Connector object for socket-type-specific methods.
+   */
+  ConnectionOrientedSocketIO(nsIThread* aConsumerThread,
+                             MessageLoop* aIOLoop,
+                             int aFd, ConnectionStatus aConnectionStatus,
+                             UnixSocketConnector* aConnector);
+
+  /**
+   * Constructs an instance of |ConnectionOrientedSocketIO|
+   *
+   * @param aConsumerThread The socket's consumer thread.
+   * @param aIOLoop The socket's I/O loop.
+   * @param aConnector Connector object for socket-type-specific methods.
+   */
+  ConnectionOrientedSocketIO(nsIThread* aConsumerThread,
+                             MessageLoop* aIOLoop,
+                             UnixSocketConnector* aConnector);
+
+private:
+  /**
+   * Connector object used to create the connection we are currently using.
+   */
+  nsAutoPtr<UnixSocketConnector> mConnector;
+
+  /**
+   * Number of valid bytes in |mPeerAddress|.
+   */
+  socklen_t mPeerAddressLength;
+
+  /**
+   * Address of the socket's current peer.
+   */
+  struct sockaddr_storage mPeerAddress;
 };
 
 class ConnectionOrientedSocket : public DataSocket

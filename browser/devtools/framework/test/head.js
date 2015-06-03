@@ -65,3 +65,47 @@ function *openScratchpadWindow () {
   });
   return p;
 }
+
+/**
+ * Wait for a content -> chrome message on the message manager (the window
+ * messagemanager is used).
+ * @param {String} name The message name
+ * @return {Promise} A promise that resolves to the response data when the
+ * message has been received
+ */
+function waitForContentMessage(name) {
+  info("Expecting message " + name + " from content");
+
+  let mm = gBrowser.selectedBrowser.messageManager;
+
+  let def = promise.defer();
+  mm.addMessageListener(name, function onMessage(msg) {
+    mm.removeMessageListener(name, onMessage);
+    def.resolve(msg.data);
+  });
+  return def.promise;
+}
+
+/**
+ * Send an async message to the frame script (chrome -> content) and wait for a
+ * response message with the same name (content -> chrome).
+ * @param {String} name The message name. Should be one of the messages defined
+ * in doc_frame_script.js
+ * @param {Object} data Optional data to send along
+ * @param {Object} objects Optional CPOW objects to send along
+ * @param {Boolean} expectResponse If set to false, don't wait for a response
+ * with the same name from the content script. Defaults to true.
+ * @return {Promise} Resolves to the response data if a response is expected,
+ * immediately resolves otherwise
+ */
+function executeInContent(name, data={}, objects={}, expectResponse=true) {
+  info("Sending message " + name + " to content");
+  let mm = gBrowser.selectedBrowser.messageManager;
+
+  mm.sendAsyncMessage(name, data, objects);
+  if (expectResponse) {
+    return waitForContentMessage(name);
+  } else {
+    return promise.resolve();
+  }
+}
