@@ -4,7 +4,7 @@
 "use strict";
 
 const { L10N } = require("devtools/performance/global");
-const { Formatters, CollapseFunctions: collapse } = require("devtools/performance/marker-utils");
+const { Formatters, CollapseFunctions } = require("devtools/performance/marker-utils");
 
 /**
  * A simple schema for mapping markers to the timeline UI. The keys correspond
@@ -29,13 +29,15 @@ const { Formatters, CollapseFunctions: collapse } = require("devtools/performanc
  *                 nothing is returned, the marker is added as a standalone entry
  *                 in the waterfall. Otherwise, an object needs to be returned
  *                 with the following properties:
- *                 - toParent: The marker to be made a new parent. Can use the current
- *                             marker, becoming a parent itself, or make a new marker-esque
- *                             object.
- *                 - collapse: Whether or not this current marker should be nested within
- *                             the current parent.
- *                 - finalize: Whether or not the current parent should be finalized and popped
- *                             off the stack.
+ *                 - toParent: The parent marker name (needs to be an entry in
+ *                             the `TIMELINE_BLUEPRINT` itself).
+ *                 - withData: An object containing some properties to staple
+ *                             on the parent marker.
+ *                 - forceNew: True if a new parent marker needs to be created
+ *                             even though there is one currently available
+ *                             with the same name.
+ *                 - forceEnd: True if the current parent marker is full after
+ *                             this collapse operation and should be finalized.
  * - fields: An optional array of marker properties you wish to display in the
  *           marker details view. For example, a field in the array such as
  *           { property: "aCauseName", label: "Cause" } would render a string
@@ -59,20 +61,20 @@ const TIMELINE_BLUEPRINT = {
   "Styles": {
     group: 0,
     colorName: "graphs-purple",
-    collapseFunc: collapse.child,
+    collapseFunc: CollapseFunctions.identical,
     label: L10N.getStr("timeline.label.styles2"),
     fields: Formatters.StylesFields,
   },
   "Reflow": {
     group: 0,
     colorName: "graphs-purple",
-    collapseFunc: collapse.child,
+    collapseFunc: CollapseFunctions.identical,
     label: L10N.getStr("timeline.label.reflow2"),
   },
   "Paint": {
     group: 0,
     colorName: "graphs-green",
-    collapseFunc: collapse.child,
+    collapseFunc: CollapseFunctions.identical,
     label: L10N.getStr("timeline.label.paint"),
   },
 
@@ -80,33 +82,38 @@ const TIMELINE_BLUEPRINT = {
   "DOMEvent": {
     group: 1,
     colorName: "graphs-yellow",
-    collapseFunc: collapse.parent,
+    collapseFunc: CollapseFunctions.DOMtoDOMJS,
     label: L10N.getStr("timeline.label.domevent"),
     fields: Formatters.DOMEventFields,
   },
   "Javascript": {
     group: 1,
     colorName: "graphs-yellow",
-    collapseFunc: either(collapse.parent, collapse.child),
+    collapseFunc: either(CollapseFunctions.JStoDOMJS, CollapseFunctions.identical),
     label: Formatters.JSLabel,
     fields: Formatters.JSFields
+  },
+  "meta::DOMEvent+JS": {
+    colorName: "graphs-yellow",
+    label: Formatters.DOMJSLabel,
+    fields: Formatters.DOMJSFields,
   },
   "Parse HTML": {
     group: 1,
     colorName: "graphs-yellow",
-    collapseFunc: either(collapse.parent, collapse.child),
+    collapseFunc: CollapseFunctions.identical,
     label: L10N.getStr("timeline.label.parseHTML"),
   },
   "Parse XML": {
     group: 1,
     colorName: "graphs-yellow",
-    collapseFunc: either(collapse.parent, collapse.child),
+    collapseFunc: CollapseFunctions.identical,
     label: L10N.getStr("timeline.label.parseXML"),
   },
   "GarbageCollection": {
     group: 1,
     colorName: "graphs-red",
-    collapseFunc: either(collapse.parent, collapse.child),
+    collapseFunc: CollapseFunctions.adjacent,
     label: Formatters.GCLabel,
     fields: [
       { property: "causeName", label: "Reason:" },
@@ -127,7 +134,6 @@ const TIMELINE_BLUEPRINT = {
   "TimeStamp": {
     group: 2,
     colorName: "graphs-blue",
-    collapseFunc: collapse.child,
     label: sublabelForProperty(L10N.getStr("timeline.label.timestamp"), "causeName"),
     fields: [{
       property: "causeName",

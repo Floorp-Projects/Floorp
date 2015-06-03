@@ -90,7 +90,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     if (event === "selected") {
       this.details.render({ toolbox: gToolbox, marker, frames });
       this.details.hidden = false;
-      this._lastSelected = marker;
+      this._lastSelected = marker.uid;
     }
     if (event === "unselected") {
       this.details.empty();
@@ -132,7 +132,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
       return cached;
     }
 
-    let rootMarkerNode = WaterfallUtils.makeParentMarkerNode({ name: "(root)" });
+    let rootMarkerNode = WaterfallUtils.makeEmptyMarkerNode("(root)");
 
     WaterfallUtils.collapseMarkersIntoNode({
       markerNode: rootMarkerNode,
@@ -175,7 +175,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     // If an item was previously selected in this view, attempt to
     // re-select it by traversing the newly created tree.
     if (this._lastSelected) {
-      let item = root.find(i => i.marker === this._lastSelected);
+      let item = root.find(i => i.marker.uid == this._lastSelected);
       if (item) {
         item.focus();
       }
