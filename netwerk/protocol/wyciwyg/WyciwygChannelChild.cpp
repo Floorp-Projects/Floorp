@@ -667,7 +667,7 @@ WyciwygChannelChild::AsyncOpen(nsIStreamListener *aListener, nsISupports *aConte
   SerializeURI(mOriginalURI, originalURI);
 
   mozilla::dom::TabChild* tabChild = GetTabChild(this);
-  if (MissingRequiredTabChild(tabChild, "wyciwyg")) {
+  if (MissingRequiredTabChild(tabChild, nullptr, "wyciwyg")) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 

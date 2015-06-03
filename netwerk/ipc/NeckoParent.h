@@ -51,6 +51,7 @@ public:
   MOZ_WARN_UNUSED_RESULT
   static const char*
   CreateChannelLoadContext(const PBrowserOrId& aBrowser,
+                           nsIPrincipal* aRequestingPrincipal,
                            PContentParent* aContent,
                            const SerializedLoadContext& aSerialized,
                            nsCOMPtr<nsILoadContext> &aResult);
@@ -124,7 +125,8 @@ protected:
   virtual bool DeallocPFTPChannelParent(PFTPChannelParent*) override;
   virtual PWebSocketParent*
     AllocPWebSocketParent(const PBrowserOrId& browser,
-                          const SerializedLoadContext& aSerialized) override;
+                          const SerializedLoadContext& aSerialized,
+                          const PrincipalInfo& requestingPrincipal) override;
   virtual bool DeallocPWebSocketParent(PWebSocketParent*) override;
   virtual PTCPSocketParent* AllocPTCPSocketParent(const nsString& host,
                                                   const uint16_t& port) override;
