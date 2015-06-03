@@ -16,7 +16,10 @@ function debug(s) {
 
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.importGlobalProperties(["indexedDB"]);
+
+const prefs = new Preferences("dom.push.");
 
 this.EXPORTED_SYMBOLS = ["PushDB"];
 
@@ -28,6 +31,8 @@ this.PushDB = function PushDB(dbName, dbVersion, dbStoreName, schemaFunction) {
   // set the indexeddb database
   this.initDBHelper(dbName, dbVersion,
                     [dbStoreName]);
+  gDebuggingEnabled = prefs.get("debug");
+  prefs.observe("debug", this);
 };
 
 this.PushDB.prototype = {
@@ -114,7 +119,7 @@ this.PushDB.prototype = {
           index.get(aPushEndpoint).onsuccess = function setTxnResult(aEvent) {
             aTxn.result = aEvent.target.result;
             debug("Fetch successful " + aEvent.target.result);
-          }
+          };
         },
         resolve,
         reject
@@ -135,7 +140,7 @@ this.PushDB.prototype = {
           aStore.get(aChannelID).onsuccess = function setTxnResult(aEvent) {
             aTxn.result = aEvent.target.result;
             debug("Fetch successful " + aEvent.target.result);
-          }
+          };
         },
         resolve,
         reject
@@ -158,7 +163,7 @@ this.PushDB.prototype = {
           index.get(aScope).onsuccess = function setTxnResult(aEvent) {
             aTxn.result = aEvent.target.result;
             debug("Fetch successful " + aEvent.target.result);
-          }
+          };
         },
         resolve,
         reject
@@ -176,7 +181,7 @@ this.PushDB.prototype = {
         function txnCb(aTxn, aStore) {
           aStore.mozGetAll().onsuccess = function(event) {
             aTxn.result = event.target.result;
-          }
+          };
         },
         resolve,
         reject
@@ -200,7 +205,8 @@ this.PushDB.prototype = {
     );
   },
 
-  observeDebug: function(enabled) {
-    gDebuggingEnabled = enabled;
+  observe: function observe(aSubject, aTopic, aData) {
+    if ((aTopic == "nsPref:changed") && (aData == "dom.push.debug"))
+      gDebuggingEnabled = prefs.get("debug");
   }
 };
