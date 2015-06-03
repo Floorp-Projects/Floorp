@@ -180,7 +180,7 @@ def start_servers(host, ports, paths, routes, bind_hostname, external_config, ss
     for scheme, ports in ports.iteritems():
         assert len(ports) == {"http":2}.get(scheme, 1)
 
-        for port  in ports:
+        for port in ports:
             if port is None:
                 continue
             init_func = {"http":start_http_server,
@@ -235,6 +235,26 @@ class WebSocketDaemon(object):
                     "-d", doc_root,
                     "-w", handlers_root,
                     "--log-level", log_level]
+
+        if ssl_config is not None:
+            # This is usually done through pywebsocket.main, however we're
+            # working around that to get the server instance and manually
+            # setup the wss server.
+            if pywebsocket._import_ssl():
+                tls_module = pywebsocket._TLS_BY_STANDARD_MODULE
+                logger.debug("WebSocketDaemon: Using standard SSL module.")
+            elif pywebsocket._import_pyopenssl():
+                tls_module = pywebsocket._TLS_BY_PYOPENSSL
+                logger.debug("WebSocketDaemon: Using PyOpenSSL module.")
+            else:
+                logger.critical("WebSocketDaemon: No SSL module is available.")
+                sys.exit(1)
+
+            cmd_args += ["--tls",
+                         "--private-key", ssl_config["key_path"],
+                         "--certificate", ssl_config["cert_path"],
+                         "--tls-module", tls_module]
+
         if (bind_hostname):
             cmd_args = ["-H", host] + cmd_args
         opts, args = pywebsocket._parse_args_and_config(cmd_args)
@@ -282,19 +302,25 @@ def start_ws_server(host, port, paths, routes, bind_hostname, external_config, s
                            paths["ws_doc_root"],
                            "debug",
                            bind_hostname,
+                           ssl_config = None)
+
+
+def start_wss_server(host, port, paths, routes, bind_hostname, external_config, ssl_config,
+                     **kwargs):
+    return WebSocketDaemon(host,
+                           str(port),
+                           repo_root,
+                           paths["ws_doc_root"],
+                           "debug",
+                           bind_hostname,
                            ssl_config)
 
 
-def start_wss_server(host, port, path, routes, bind_hostname, external_config, ssl_config,
-                     **kwargs):
-    return
-
-
-def get_ports(config, ssl_enabled):
+def get_ports(config, ssl_environment):
     rv = defaultdict(list)
     for scheme, ports in config["ports"].iteritems():
         for i, port in enumerate(ports):
-            if scheme in ["http", "https"] and not ssl_enabled:
+            if scheme in ["wss", "https"] and not ssl_environment.ssl_enabled:
                 port = None
             if port == "auto":
                 port = get_port()
@@ -365,16 +391,17 @@ def value_set(config, key):
     return key in config and config[key] is not None
 
 
-def set_computed_defaults(config):
-    if not value_set(config, "ws_doc_root"):
-        if value_set(config, "doc_root"):
-            root = config["doc_root"]
-        else:
-            root = repo_root
-        config["ws_doc_root"] = os.path.join(repo_root, "websockets", "handlers")
+def get_value_or_default(config, key, default=None):
+    return config[key] if value_set(config, key) else default
 
+
+def set_computed_defaults(config):
     if not value_set(config, "doc_root"):
         config["doc_root"] = repo_root
+
+    if not value_set(config, "ws_doc_root"):
+        root = get_value_or_default(config, "doc_root", default=repo_root)
+        config["ws_doc_root"] = os.path.join(root, "websockets", "handlers")
 
 
 def merge_json(base_obj, override_obj):
@@ -424,6 +451,17 @@ def load_config(default_path, override_path=None, **kwargs):
         else:
             raise ValueError("Config path %s does not exist" % other_path)
 
+    overriding_path_args = [("doc_root", "Document root"),
+                            ("ws_doc_root", "WebSockets document root")]
+    for key, title in overriding_path_args:
+        value = kwargs.get(key)
+        if value is None:
+            continue
+        value = os.path.abspath(os.path.expanduser(value))
+        if not os.path.exists(value):
+            raise ValueError("%s path %s does not exist" % (title, value))
+        rv[key] = value
+
     set_computed_defaults(rv)
     return rv
 
@@ -434,6 +472,10 @@ def get_parser():
                         help="Artificial latency to add before sending http responses, in ms")
     parser.add_argument("--config", action="store", dest="config_path",
                         help="Path to external config file")
+    parser.add_argument("--doc_root", action="store", dest="doc_root",
+                        help="Path to document root. Overrides config.")
+    parser.add_argument("--ws_doc_root", action="store", dest="ws_doc_root",
+                        help="Path to WebSockets document root. Overrides config.")
     return parser
 
 
