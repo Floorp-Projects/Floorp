@@ -7,6 +7,7 @@
 #include "gc/Statistics.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/UniquePtr.h"
 
@@ -27,6 +28,7 @@ using namespace js;
 using namespace js::gc;
 using namespace js::gcstats;
 
+using mozilla::MakeRange;
 using mozilla::PodArrayZero;
 using mozilla::PodZero;
 
@@ -185,7 +187,7 @@ static ExtraPhaseInfo phaseExtra[PHASE_LIMIT] = { { 0, 0 } };
 // Mapping from all nodes with a multi-parented child to a Vector of all
 // multi-parented children and their descendants. (Single-parented children will
 // not show up in this list.)
-static mozilla::Vector<Phase> dagDescendants[Statistics::MAX_MULTIPARENT_PHASES + 1];
+static mozilla::Vector<Phase> dagDescendants[Statistics::NumTimingArrays];
 
 struct AllPhaseIterator {
     int current;
@@ -193,7 +195,7 @@ struct AllPhaseIterator {
     size_t activeSlot;
     mozilla::Vector<Phase>::Range descendants;
 
-    explicit AllPhaseIterator(Statistics::PhaseTimeTable table)
+    explicit AllPhaseIterator(const Statistics::PhaseTimeTable table)
       : current(0)
       , baseLevel(0)
       , activeSlot(PHASE_DAG_NONE)
@@ -293,7 +295,7 @@ Join(const FragmentVector& fragments, const char* separator = "") {
 }
 
 static int64_t
-SumChildTimes(size_t phaseSlot, Phase phase, Statistics::PhaseTimeTable phaseTimes)
+SumChildTimes(size_t phaseSlot, Phase phase, const Statistics::PhaseTimeTable phaseTimes)
 {
     // Sum the contributions from single-parented children.
     int64_t total = 0;
@@ -398,7 +400,7 @@ Statistics::formatCompactSummaryMessage() const
 }
 
 UniqueChars
-Statistics::formatCompactSlicePhaseTimes(PhaseTimeTable phaseTimes) const
+Statistics::formatCompactSlicePhaseTimes(const PhaseTimeTable phaseTimes) const
 {
     static const int64_t MaxUnaccountedTimeUS = 100;
 
@@ -524,7 +526,7 @@ Statistics::formatDetailedSliceDescription(unsigned i, const SliceData& slice)
 }
 
 UniqueChars
-Statistics::formatDetailedPhaseTimes(PhaseTimeTable phaseTimes)
+Statistics::formatDetailedPhaseTimes(const PhaseTimeTable phaseTimes)
 {
     static const char* LevelToIndent[] = { "", "  ", "    ", "      " };
     static const int64_t MaxUnaccountedChildTimeUS = 50;
@@ -711,7 +713,7 @@ FilterJsonKey(const char*const buffer)
 }
 
 UniqueChars
-Statistics::formatJsonPhaseTimes(PhaseTimeTable phaseTimes)
+Statistics::formatJsonPhaseTimes(const PhaseTimeTable phaseTimes)
 {
     FragmentVector fragments;
     char buffer[128];
@@ -749,7 +751,7 @@ Statistics::Statistics(JSRuntime* rt)
     PodArrayZero(phaseTotals);
     PodArrayZero(counts);
     PodArrayZero(phaseStartTimes);
-    for (size_t d = 0; d < MAX_MULTIPARENT_PHASES + 1; d++)
+    for (auto d : MakeRange(NumTimingArrays))
         PodArrayZero(phaseTimes[d]);
 
     static bool initialized = false;
@@ -778,7 +780,7 @@ Statistics::Statistics(JSRuntime* rt)
                 j++;
             } while (j != PHASE_LIMIT && phases[j].parent != PHASE_MULTI_PARENTS);
         }
-        MOZ_ASSERT(dagSlot <= MAX_MULTIPARENT_PHASES);
+        MOZ_ASSERT(dagSlot <= MaxMultiparentPhases - 1);
 
         // Fill in the depth of each node in the tree. Multi-parented nodes
         // have depth 0.
@@ -846,7 +848,7 @@ static int64_t
 SumPhase(Phase phase, Statistics::PhaseTimeTable times)
 {
     int64_t sum = 0;
-    for (size_t i = 0; i < Statistics::MAX_MULTIPARENT_PHASES + 1; i++)
+    for (auto i : MakeRange(Statistics::NumTimingArrays))
         sum += times[i][phase];
     return sum;
 }
@@ -878,7 +880,7 @@ Statistics::beginGC(JSGCInvocationKind kind)
 void
 Statistics::endGC()
 {
-    for (size_t j = 0; j < MAX_MULTIPARENT_PHASES + 1; j++)
+    for (auto j : MakeRange(NumTimingArrays))
         for (int i = 0; i < PHASE_LIMIT; i++)
             phaseTotals[j][i] += phaseTimes[j][i];
 
@@ -913,7 +915,7 @@ Statistics::endGC()
     // Clear the timers at the end of a GC because we accumulate time in
     // between GCs for some (which come before PHASE_GC_BEGIN in the list.)
     PodZero(&phaseStartTimes[PHASE_GC_BEGIN], PHASE_LIMIT - PHASE_GC_BEGIN);
-    for (size_t d = PHASE_DAG_NONE; d < MAX_MULTIPARENT_PHASES + 1; d++)
+    for (size_t d = PHASE_DAG_NONE; d < NumTimingArrays; d++)
         PodZero(&phaseTimes[d][PHASE_GC_BEGIN], PHASE_LIMIT - PHASE_GC_BEGIN);
 
     aborted = false;
