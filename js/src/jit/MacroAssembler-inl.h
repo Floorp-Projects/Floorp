@@ -28,8 +28,9 @@ MacroAssembler::setFramePushed(uint32_t framePushed)
 }
 
 void
-MacroAssembler::adjustFrame(int value)
+MacroAssembler::adjustFrame(int32_t value)
 {
+    MOZ_ASSERT_IF(value < 0, framePushed_ >= -value);
     setFramePushed(framePushed_ + value);
 }
 
@@ -37,7 +38,8 @@ void
 MacroAssembler::implicitPop(uint32_t bytes)
 {
     MOZ_ASSERT(bytes % sizeof(intptr_t) == 0);
-    adjustFrame(-bytes);
+    MOZ_ASSERT(bytes <= INT32_MAX);
+    adjustFrame(-int32_t(bytes));
 }
 
 // ===============================================================

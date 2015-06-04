@@ -280,7 +280,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline uint32_t framePushed() const;
     inline void setFramePushed(uint32_t framePushed);
-    inline void adjustFrame(int value);
+    inline void adjustFrame(int32_t value);
 
     // Adjust the frame, to account for implicit modification of the stack
     // pointer, such that callee can remove arguments on the behalf of the
