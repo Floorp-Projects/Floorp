@@ -35,15 +35,13 @@ function run_test() {
 
   do_timeout(TEST_HELPER_TIMEOUT, waitForHelperSleep);
 }
-
 function doUpdate() {
   runUpdate(0, STATE_APPLIED, null);
 
   // Switch the application to the staged application that was updated.
   gStageUpdate = false;
   gSwitchApp = true;
-  gDisableReplaceFallback = true;
-  runUpdate(1, STATE_FAILED_WRITE_ERROR, checkUpdateApplied);
+  runUpdate(1, STATE_PENDING, checkUpdateApplied);
 }
 
 function checkUpdateApplied() {
@@ -51,8 +49,9 @@ function checkUpdateApplied() {
 }
 
 function checkUpdate() {
-  checkFilesAfterUpdateFailure(getApplyDirFile, true, false);
+  checkFilesAfterUpdateFailure(getApplyDirFile, false, false);
   checkUpdateLogContains(ERR_RENAME_FILE);
+  checkUpdateLogContains(ERR_MOVE_DESTDIR_7);
   standardInit();
   checkCallbackAppLog();
 }

@@ -345,6 +345,13 @@ mstrtok(const NS_tchar *delims, NS_tchar **str)
   return ret;
 }
 
+static bool
+EnvHasValue(const char *name)
+{
+  const char *val = getenv(name);
+  return (val && *val);
+}
+
 #ifdef XP_WIN
 /**
  * Coverts a relative update path to a full path for Windows.
@@ -2266,7 +2273,7 @@ UpdateThreadFunc(void *param)
       // The MOZ_TEST_SKIP_UPDATE_STAGE environment variable prevents copying
       // the files in dist/bin in the test updater when staging an update since
       // this can cause tests to timeout.
-      if (getenv("MOZ_TEST_SKIP_UPDATE_STAGE")) {
+      if (EnvHasValue("MOZ_TEST_SKIP_UPDATE_STAGE")) {
         rv = OK;
       } else {
         rv = CopyInstallDirToDestDir();
@@ -2286,8 +2293,7 @@ UpdateThreadFunc(void *param)
     }
   }
 
-  bool reportRealResults = true;
-  if (sReplaceRequest && rv && !getenv("MOZ_NO_REPLACE_FALLBACK")) {
+  if (sReplaceRequest && rv) {
     // When attempting to replace the application, we should fall back
     // to non-staged updates in case of a failure.  We do this by
     // setting the status to pending, exiting the updater, and
@@ -2295,22 +2301,16 @@ UpdateThreadFunc(void *param)
     // startup path will see the pending status, and will start the
     // updater application again in order to apply the update without
     // staging.
-    // The MOZ_NO_REPLACE_FALLBACK environment variable is used to
-    // bypass this fallback, and is used in the updater tests.
-    // The only special thing which we should do here is to remove the
-    // staged directory as it won't be useful any more.
     ensure_remove_recursive(gWorkingDirPath);
     WriteStatusFile(sUsingService ? "pending-service" : "pending");
-    // We need to use --process-updates again in the tests
-    putenv(const_cast<char*>("MOZ_PROCESS_UPDATES="));
-    reportRealResults = false; // pretend success
-  }
-
-  if (reportRealResults) {
+#ifdef TEST_UPDATER
+    // Some tests need to use --test-process-updates again.
+    putenv(const_cast<char*>("MOZ_TEST_PROCESS_UPDATES="));
+#endif
+  } else {
     if (rv) {
       LOG(("failed: %d", rv));
-    }
-    else {
+    } else {
 #ifdef XP_MACOSX
       // If the update was successful we need to update the timestamp on the
       // top-level Mac OS X bundle directory so that Mac OS X's Launch Services
@@ -2332,7 +2332,7 @@ UpdateThreadFunc(void *param)
 int NS_main(int argc, NS_tchar **argv)
 {
 #if defined(MOZ_WIDGET_GONK)
-  if (getenv("LD_PRELOAD")) {
+  if (EnvHasValue("LD_PRELOAD")) {
     // If the updater is launched with LD_PRELOAD set, then we wind up
     // preloading libmozglue.so. Under some circumstances, this can cause
     // the remount of /system to fail when going from rw to ro, so if we
@@ -2399,7 +2399,7 @@ int NS_main(int argc, NS_tchar **argv)
 #ifdef XP_WIN
   bool useService = false;
   bool testOnlyFallbackKeyExists = false;
-  bool noServiceFallback = getenv("MOZ_NO_SERVICE_FALLBACK") != nullptr;
+  bool noServiceFallback = EnvHasValue("MOZ_NO_SERVICE_FALLBACK");
   putenv(const_cast<char*>("MOZ_NO_SERVICE_FALLBACK="));
 
   // We never want the service to be used unless we build with
@@ -2465,7 +2465,7 @@ int NS_main(int argc, NS_tchar **argv)
     *slash = NS_T('\0');
   }
 
-  if (getenv("MOZ_OS_UPDATE")) {
+  if (EnvHasValue("MOZ_OS_UPDATE")) {
     sIsOSUpdate = true;
     putenv(const_cast<char*>("MOZ_OS_UPDATE="));
   }
@@ -2572,7 +2572,7 @@ int NS_main(int argc, NS_tchar **argv)
   const int callbackIndex = 6;
 
 #if defined(XP_WIN)
-  sUsingService = getenv("MOZ_USING_SERVICE") != nullptr;
+  sUsingService = EnvHasValue("MOZ_USING_SERVICE");
   putenv(const_cast<char*>("MOZ_USING_SERVICE="));
   // lastFallbackError keeps track of the last error for the service not being
   // used, in case of an error when fallback is not enabled we write the
@@ -3217,13 +3217,10 @@ int NS_main(int argc, NS_tchar **argv)
       LaunchMacPostProcess(gInstallDirPath);
     }
 #endif /* XP_MACOSX */
-
-    if (getenv("MOZ_PROCESS_UPDATES") == nullptr) {
-      LaunchCallbackApp(argv[5],
-                        argc - callbackIndex,
-                        argv + callbackIndex,
-                        sUsingService);
-    }
+    LaunchCallbackApp(argv[5],
+                      argc - callbackIndex,
+                      argv + callbackIndex,
+                      sUsingService);
   }
 
   return gSucceeded ? 0 : 1;
