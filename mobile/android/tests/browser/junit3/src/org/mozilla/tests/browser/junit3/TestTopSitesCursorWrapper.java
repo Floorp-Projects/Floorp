@@ -6,18 +6,18 @@ package org.mozilla.tests.browser.junit3;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.MatrixCursor.RowBuilder;
+import android.test.InstrumentationTestCase;
 import android.text.TextUtils;
-
-import java.util.Arrays;
-import java.util.List;
-
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
 import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.db.TopSitesCursorWrapper;
 
-public class TestTopSitesCursorWrapper extends BrowserTestCase {
+import java.util.Arrays;
+import java.util.List;
+
+public class TestTopSitesCursorWrapper extends InstrumentationTestCase {
 
     private String[] TOP_SITES_COLUMNS = new String[] { Combined._ID,
                                                         Combined.URL,
