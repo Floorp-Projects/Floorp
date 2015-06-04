@@ -84,14 +84,7 @@ loop.roomViews = (function(mozL10n) {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       roomUrl: React.PropTypes.string,
       show: React.PropTypes.bool.isRequired,
-      socialShareButtonAvailable: React.PropTypes.bool,
       socialShareProviders: React.PropTypes.array
-    },
-
-    handleToolbarAddButtonClick: function(event) {
-      event.preventDefault();
-
-      this.props.dispatcher.dispatch(new sharedActions.AddSocialShareButton());
     },
 
     handleAddServiceClick: function(event) {
@@ -126,33 +119,8 @@ loop.roomViews = (function(mozL10n) {
         "share-service-dropdown": true,
         "dropdown-menu": true,
         "visually-hidden": true,
-        "share-button-unavailable": !this.props.socialShareButtonAvailable,
         "hide": !this.props.show
       });
-
-      // When the button is not yet available, we offer to put it in the navbar
-      // for the user.
-      if (!this.props.socialShareButtonAvailable) {
-        return (
-          React.createElement("div", {className: shareDropdown}, 
-            React.createElement("div", {className: "share-panel-header"}, 
-              mozL10n.get("share_panel_header")
-            ), 
-            React.createElement("div", {className: "share-panel-body"}, 
-              
-                mozL10n.get("share_panel_body", {
-                  brandShortname: mozL10n.get("brandShortname"),
-                  clientSuperShortname: mozL10n.get("clientSuperShortname")
-                })
-              
-            ), 
-            React.createElement("button", {className: "btn btn-info btn-toolbar-add", 
-                    onClick: this.handleToolbarAddButtonClick}, 
-              mozL10n.get("add_to_toolbar_button")
-            )
-          )
-        );
-      }
 
       return (
         React.createElement("ul", {className: shareDropdown}, 
@@ -193,7 +161,8 @@ loop.roomViews = (function(mozL10n) {
       roomData: React.PropTypes.object.isRequired,
       savingContext: React.PropTypes.bool,
       show: React.PropTypes.bool.isRequired,
-      showContext: React.PropTypes.bool.isRequired
+      showContext: React.PropTypes.bool.isRequired,
+      socialShareProviders: React.PropTypes.array
     },
 
     getInitialState: function() {
@@ -227,6 +196,14 @@ loop.roomViews = (function(mozL10n) {
 
     handleShareButtonClick: function(event) {
       event.preventDefault();
+
+      var providers = this.props.socialShareProviders;
+      // If there are no providers available currently, save a click by dispatching
+      // the 'AddSocialShareProvider' right away.
+      if (!providers || !providers.length) {
+        this.props.dispatcher.dispatch(new sharedActions.AddSocialShareProvider());
+        return;
+      }
 
       this.toggleDropdownMenu();
     },
@@ -285,7 +262,6 @@ loop.roomViews = (function(mozL10n) {
             dispatcher: this.props.dispatcher, 
             roomUrl: this.props.roomData.roomUrl, 
             show: this.state.showMenu, 
-            socialShareButtonAvailable: this.props.socialShareButtonAvailable, 
             socialShareProviders: this.props.socialShareProviders, 
             ref: "menu"}), 
           React.createElement(DesktopRoomContextView, {
@@ -712,7 +688,6 @@ loop.roomViews = (function(mozL10n) {
                 savingContext: this.state.savingContext, 
                 show: shouldRenderInvitationOverlay, 
                 showContext: shouldRenderContextView, 
-                socialShareButtonAvailable: this.state.socialShareButtonAvailable, 
                 socialShareProviders: this.state.socialShareProviders}), 
               React.createElement("div", {className: "video-layout-wrapper"}, 
                 React.createElement("div", {className: "conversation room-conversation"}, 

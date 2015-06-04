@@ -381,13 +381,6 @@ loop.shared.actions = (function() {
     }),
 
     /**
-     * Add the Social Share button to the browser toolbar.
-     * XXX: should move to some roomActions module - refs bug 1079284
-     */
-    AddSocialShareButton: Action.define("addSocialShareButton", {
-    }),
-
-    /**
      * Open the share panel to add a Social share provider.
      * XXX: should move to some roomActions module - refs bug 1079284
      */
@@ -416,7 +409,6 @@ loop.shared.actions = (function() {
       roomOwner: String,
       roomToken: String,
       roomUrl: String,
-      socialShareButtonAvailable: Boolean,
       socialShareProviders: Array
     }),
 
@@ -440,7 +432,6 @@ loop.shared.actions = (function() {
      * XXX: should move to some roomActions module - refs bug 1079284
      */
     UpdateSocialShareInfo: Action.define("updateSocialShareInfo", {
-      socialShareButtonAvailable: Boolean,
       socialShareProviders: Array
     }),
 
