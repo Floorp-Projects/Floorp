@@ -3330,7 +3330,9 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 - (NSPoint)windowButtonsPositionWithDefaultPosition:(NSPoint)aDefaultPosition
 {
-  if ([self drawsContentsIntoWindowFrame] && !([self styleMask] & NSFullScreenWindowMask)) {
+  NSInteger styleMask = [self styleMask];
+  if ([self drawsContentsIntoWindowFrame] &&
+      !(styleMask & NSFullScreenWindowMask) && (styleMask & NSTitledWindowMask)) {
     if (NSIsEmptyRect(mWindowButtonsRect)) {
       // Empty rect. Let's hide the buttons.
       // Position is in non-flipped window coordinates. Using frame's height
