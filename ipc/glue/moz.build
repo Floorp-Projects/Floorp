@@ -133,6 +133,7 @@ LOCAL_INCLUDES += [
     '/caps',
     '/dom/broadcastchannel',
     '/dom/indexedDB',
+    '/dom/workers',
     '/xpcom/build',
 ]
 

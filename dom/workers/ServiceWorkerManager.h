@@ -35,10 +35,6 @@ namespace mozilla {
 
 class OriginAttributes;
 
-namespace ipc {
-class BackgroundChild;
-}
-
 namespace dom {
 
 class ServiceWorkerRegistrationListener;
@@ -50,6 +46,7 @@ class ServiceWorkerClientInfo;
 class ServiceWorkerInfo;
 class ServiceWorkerJob;
 class ServiceWorkerJobQueue;
+class ServiceWorkerManagerChild;
 
 // Needs to inherit from nsISupports because NS_ProxyRelease() does not support
 // non-ISupports classes.
@@ -304,6 +301,13 @@ public:
   void
   SoftUpdate(nsIPrincipal* aPrincipal, const nsACString& aScope);
 
+  void
+  SoftUpdate(const OriginAttributes& aOriginAttributes, const nsACString& aScope);
+
+  void
+  PropagateSoftUpdate(const OriginAttributes& aOriginAttributes,
+                      const nsAString& aScope);
+
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetRegistration(nsIPrincipal* aPrincipal, const nsACString& aScope) const;
 
@@ -351,6 +355,9 @@ public:
 
   static already_AddRefed<ServiceWorkerManager>
   GetInstance();
+
+ void
+ LoadRegistration(const ServiceWorkerRegistrationData& aRegistration);
 
   void
   LoadRegistrations(const nsTArray<ServiceWorkerRegistrationData>& aRegistrations);
@@ -525,7 +532,7 @@ private:
   void
   RemoveRegistrationInternal(ServiceWorkerRegistrationInfo* aRegistration);
 
-  mozilla::ipc::PBackgroundChild* mActor;
+  nsRefPtr<ServiceWorkerManagerChild> mActor;
 
   struct PendingOperation;
   nsTArray<PendingOperation> mPendingOperations;
