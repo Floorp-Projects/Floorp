@@ -34,6 +34,7 @@
 
 #include "base/basictypes.h"
 #include "GonkPermission.h"
+#include "libdisplay/BootAnimation.h"
 #include "nscore.h"
 #ifdef MOZ_OMX_DECODER
 #include "MediaResourceManagerService.h"
@@ -936,6 +937,10 @@ nsAppShell::Observe(nsISupports* aSubject,
             updateHeadphoneSwitch();
         }
         mEnableDraw = true;
+
+        // System is almost booting up. Stop the bootAnim now.
+        StopBootAnimation();
+
         NotifyEvent();
         return NS_OK;
     }
