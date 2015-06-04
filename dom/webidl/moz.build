@@ -646,7 +646,13 @@ if CONFIG['MOZ_DEBUG']:
     WEBIDL_FILES += ['TestInterfaceJS.webidl', 'TestInterfaceJSDictionaries.webidl']
 
 if CONFIG['MOZ_B2G_BT']:
-    if CONFIG['MOZ_B2G_BT_API_V2']:
+    if CONFIG['MOZ_B2G_BT_API_V1']:
+        WEBIDL_FILES += [
+            'BluetoothAdapter.webidl',
+            'BluetoothDevice.webidl',
+            'BluetoothManager.webidl',
+        ]
+    else:
         WEBIDL_FILES += [
             'BluetoothAdapter2.webidl',
             'BluetoothClassOfDevice.webidl',
@@ -660,12 +666,6 @@ if CONFIG['MOZ_B2G_BT']:
             'BluetoothManager2.webidl',
             'BluetoothPairingHandle.webidl',
             'BluetoothPairingListener.webidl',
-        ]
-    else:
-        WEBIDL_FILES += [
-            'BluetoothAdapter.webidl',
-            'BluetoothDevice.webidl',
-            'BluetoothManager.webidl',
         ]
 
 if CONFIG['MOZ_SIMPLEPUSH']:
@@ -797,16 +797,16 @@ if CONFIG['MOZ_GAMEPAD']:
     ]
 
 if CONFIG['MOZ_B2G_BT']:
-    if CONFIG['MOZ_B2G_BT_API_V2']:
+    if CONFIG['MOZ_B2G_BT_API_V1']:
+        GENERATED_EVENTS_WEBIDL_FILES += [
+            'BluetoothDiscoveryStateChangedEvent.webidl',
+        ]
+    else:
         GENERATED_EVENTS_WEBIDL_FILES += [
             'BluetoothAdapterEvent.webidl',
             'BluetoothAttributeEvent.webidl',
             'BluetoothGattCharacteristicEvent.webidl',
             'BluetoothPairingEvent.webidl',
-        ]
-    else:
-        GENERATED_EVENTS_WEBIDL_FILES += [
-            'BluetoothDiscoveryStateChangedEvent.webidl',
         ]
 
     GENERATED_EVENTS_WEBIDL_FILES += [
