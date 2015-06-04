@@ -246,9 +246,15 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIContent *aRoot,
 
   mUpdateCount=0;
 
-  /* initialize IME stuff */
-  mIMETextNode = nullptr;
-  mIMETextOffset = 0;
+  // If this is an editor for <input> or <textarea>, mIMETextNode is always
+  // recreated with same content. Therefore, we need to forget mIMETextNode,
+  // but we need to keep storing mIMETextOffset and mIMETextLength becuase
+  // they are necessary to restore IME selection and replacing composing string
+  // when this receives NS_COMPOSITION_CHANGE event next time.
+  if (mIMETextNode && !mIMETextNode->IsInComposedDoc()) {
+    mIMETextNode = nullptr;
+  }
+
   /* Show the caret */
   selCon->SetCaretReadOnly(false);
   selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
@@ -4705,6 +4711,26 @@ nsEditor::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
     selection->GetRangeCount(&rangeCount);
     if (rangeCount == 0) {
       BeginningOfDocument();
+    }
+  }
+
+  // If there is composition when this is called, we may need to restore IME
+  // selection because if the editor is reframed, this already forgot IME
+  // selection and the transaction.
+  if (mComposition && !mIMETextNode && mIMETextLength) {
+    // We need to look for the new mIMETextNode from current selection.
+    // XXX If selection is changed during reframe, this doesn't work well!
+    nsRange* firstRange = selection->GetRangeAt(0);
+    NS_ENSURE_TRUE(firstRange, NS_ERROR_FAILURE);
+    nsCOMPtr<nsINode> parentNode = firstRange->GetStartParent();
+    Text* textNode = parentNode->GetAsText();
+    MOZ_ASSERT(textNode,
+               "There must be text node if mIMETextLength is larger than 0");
+    if (textNode) {
+      MOZ_ASSERT(textNode->Length() >= mIMETextOffset + mIMETextLength,
+                 "The text node must be different from the old mIMETextNode");
+      IMETextTxn::SetIMESelection(*this, textNode, mIMETextOffset,
+                                  mIMETextLength, mComposition->GetRanges());
     }
   }
 
