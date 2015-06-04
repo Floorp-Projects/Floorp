@@ -196,6 +196,22 @@ function log(msg, prefix = "", error = null) {
     }
   }
 }
+const PREF_DEBUG_LOG = "toolkit.asyncshutdown.log";
+let DEBUG_LOG = false;
+try {
+  DEBUG_LOG = Services.prefs.getBoolPref(PREF_DEBUG_LOG);
+} catch (ex) {
+  // Ignore errors
+}
+Services.prefs.addObserver(PREF_DEBUG_LOG, function() {
+  DEBUG_LOG = Services.prefs.getBoolPref(PREF_DEBUG_LOG);
+}, false);
+
+function debug(msg, error=null) {
+  if (DEBUG_LOG) {
+    return log(msg, "DEBUG: ", error);
+  }
+}
 function warn(msg, error = null) {
   return log(msg, "WARNING: ", error);
 }
@@ -511,6 +527,7 @@ Spinner.prototype = {
         Promise.reject(ex);
       }
     }
+    debug(`Finished phase ${ topic }`);
   }
 };
 
@@ -644,6 +661,7 @@ function Barrier(name) {
       if (!this._waitForMe) {
         throw new Error(`Phase "${ this._name } is finished, it is too late to register completion condition "${ name }"`);
       }
+      debug(`Adding blocker ${ name } for phase ${ this._name }`);
 
       // Normalize the details
 
@@ -711,9 +729,10 @@ function Barrier(name) {
       // As conditions may hold lots of memory, we attempt to cleanup
       // as soon as we are done (which might be in the next tick, if
       // we have been passed a resolved promise).
-      promise = promise.then(() =>
-        this._removeBlocker(condition)
-      );
+      promise = promise.then(() => {
+        debug(`Completed blocker ${ name } for phase ${ this._name }`);
+        this._removeBlocker(condition);
+      });
 
       if (this._isStarted) {
         // The wait has already started. The blocker should be
