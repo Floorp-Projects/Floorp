@@ -2,8 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // The origin we use in most of the tests.
-const TEST_ORIGIN = "example.org";
-const TEST_ORIGIN_2 = "example.com";
+const TEST_ORIGIN = NetUtil.newURI("http://example.org");
+const TEST_ORIGIN_2 = NetUtil.newURI("http://example.com");
 const TEST_PERMISSION = "test-permission";
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
@@ -35,8 +35,8 @@ add_task(function* do_test() {
 
   conv.writeString("# this is a comment\n");
   conv.writeString("\n"); // a blank line!
-  conv.writeString("host\t" + TEST_PERMISSION + "\t1\t" + TEST_ORIGIN + "\n");
-  conv.writeString("host\t" + TEST_PERMISSION + "\t1\t" + TEST_ORIGIN_2 + "\n");
+  conv.writeString("host\t" + TEST_PERMISSION + "\t1\t" + TEST_ORIGIN.spec + "\n");
+  conv.writeString("host\t" + TEST_PERMISSION + "\t1\t" + TEST_ORIGIN_2.spec + "\n");
   ostream.close();
 
   // Set the preference used by the permission manager so the file is read.
@@ -47,8 +47,7 @@ add_task(function* do_test() {
            getService(Ci.nsIPermissionManager);
 
   // test the default permission was applied.
-  let permURI = NetUtil.newURI("http://" + TEST_ORIGIN);
-  let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(permURI);
+  let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(TEST_ORIGIN);
 
   do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
               pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
@@ -105,8 +104,7 @@ add_task(function* do_test() {
   // check default permissions and removeAllSince work as expected.
   pm.removeAll(); // ensure only defaults are there.
 
-  let permURI2 = NetUtil.newURI("http://" + TEST_ORIGIN_2);
-  let principal2 = Services.scriptSecurityManager.getNoAppCodebasePrincipal(permURI2);
+  let principal2 = Services.scriptSecurityManager.getNoAppCodebasePrincipal(TEST_ORIGIN_2);
 
   // default for both principals is allow.
   do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
@@ -149,12 +147,12 @@ add_task(function* do_test() {
 // use an enumerator to find the requested permission.  Returns the permission
 // value (ie, the "capability" in nsIPermission parlance) or null if it can't
 // be found.
-function findCapabilityViaEnum(host = TEST_ORIGIN, type = TEST_PERMISSION) {
+function findCapabilityViaEnum(origin = TEST_ORIGIN, type = TEST_PERMISSION) {
   let result = undefined;
   let e = Services.perms.enumerator;
   while (e.hasMoreElements()) {
     let perm = e.getNext().QueryInterface(Ci.nsIPermission);
-    if (perm.host == host &&
+    if (perm.matchesURI(origin, true) &&
         perm.type == type) {
       if (result !== undefined) {
         // we've already found one previously - that's bad!
@@ -171,12 +169,12 @@ function findCapabilityViaEnum(host = TEST_ORIGIN, type = TEST_PERMISSION) {
 // distinct possibility exists that our checking of the DB will happen before
 // the permission manager update has completed - so we just retry a few times.
 // Returns a promise.
-function checkCapabilityViaDB(expected, host = TEST_ORIGIN, type = TEST_PERMISSION) {
+function checkCapabilityViaDB(expected, origin = TEST_ORIGIN, type = TEST_PERMISSION) {
   let deferred = Promise.defer();
   let count = 0;
   let max = 20;
   let do_check = () => {
-    let got = findCapabilityViaDB(host, type);
+    let got = findCapabilityViaDB(origin.host, type);
     if (got == expected) {
       // the do_check_eq() below will succeed - which is what we want.
       do_check_eq(got, expected, "The database has the expected value");
