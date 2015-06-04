@@ -36,3 +36,6 @@ cp $1/src/libsphinxbase/feat/*.c src/libsphinxbase/feat/
 cp $1/src/libsphinxbase/lm/*.c src/libsphinxbase/lm/
 cp $1/src/libsphinxbase/lm/*.h src/libsphinxbase/lm/
 cp $1/src/libsphinxbase/util/*.c src/libsphinxbase/util/
+
+# Apply any patches against upstream here.
+patch -l -p1 < sbthread.patch

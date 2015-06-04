@@ -1,0 +1,14 @@
+diff --git b/src/libsphinxbase/util/sbthread.c a/src/libsphinxbase/util/sbthread.c
+index 14207cb..2f82c76 100644
+--- b/src/libsphinxbase/util/sbthread.c
++++ a/src/libsphinxbase/util/sbthread.c
+@@ -51,7 +51,9 @@
+  * Platform-specific parts: threads, mutexes, and signals.
+  */
+ #if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(__SYMBIAN32__)
++#ifndef _WIN32_WINNT
+ #define _WIN32_WINNT 0x0400
++#endif /* not _WIN32_WINNT */
+ #include <windows.h>
+ 
+ struct sbthread_s {
