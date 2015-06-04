@@ -37,6 +37,23 @@ add_task(function* prepare() {
   });
 });
 
+add_task(function* testNotProlongedRLErrorWhenDisabled() {
+  // Here we arrange for the (dead?) readinglist scheduler to have a last-synced
+  // date of long ago and the RL scheduler is disabled.
+  // gSyncUI.isProlongedReadingListError() should return false.
+  // Pretend the reading-list is in the "prolonged error" state.
+  let longAgo = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000); // 100 days ago.
+  Services.prefs.setCharPref("readinglist.scheduler.lastSync", longAgo.toString());
+
+  // It's prolonged while it's enabled.
+  Services.prefs.setBoolPref("readinglist.scheduler.enabled", true);
+  Assert.equal(gSyncUI.isProlongedReadingListError(), true);
+
+  // But false when disabled.
+  Services.prefs.setBoolPref("readinglist.scheduler.enabled", false);
+  Assert.equal(gSyncUI.isProlongedReadingListError(), false);
+});
+
 add_task(function* testProlongedSyncError() {
   let promiseNotificationAdded = promiseObserver("weave:notification:added");
   Assert.equal(Notifications.notifications.length, 0, "start with no notifications");
@@ -60,6 +77,7 @@ add_task(function* testProlongedSyncError() {
 });
 
 add_task(function* testProlongedRLError() {
+  Services.prefs.setBoolPref("readinglist.scheduler.enabled", true);
   let promiseNotificationAdded = promiseObserver("weave:notification:added");
   Assert.equal(Notifications.notifications.length, 0, "start with no notifications");
 
