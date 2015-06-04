@@ -725,6 +725,14 @@ nsTextEditRules::WillInsertText(EditAction aAction,
 
   if (aAction == EditAction::insertIMEText) {
     NS_ENSURE_STATE(mEditor);
+    // Find better insertion point to insert text.
+    mEditor->FindBetterInsertionPoint(selNode, selOffset);
+    // If there is one or more IME selections, its minimum offset should be
+    // the insertion point.
+    int32_t IMESelectionOffset = mEditor->GetIMESelectionStartOffsetIn(selNode);
+    if (IMESelectionOffset >= 0) {
+      selOffset = IMESelectionOffset;
+    }
     res = mEditor->InsertTextImpl(*outString, address_of(selNode), &selOffset, doc);
     NS_ENSURE_SUCCESS(res, res);
   } else {

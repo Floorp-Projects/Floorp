@@ -807,6 +807,19 @@ public:
 
   virtual already_AddRefed<nsIDOMNode> FindUserSelectAllNode(nsIDOMNode* aNode) { return nullptr; }
 
+  /**
+   * GetIMESelectionStartOffsetIn() returns the start offset of IME selection in
+   * the aTextNode.  If there is no IME selection, returns -1.
+   */
+  int32_t GetIMESelectionStartOffsetIn(nsINode* aTextNode);
+
+  /**
+   * FindBetterInsertionPoint() tries to look for better insertion point which
+   * is typically the nearest text node and offset in it.
+   */
+  void FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
+                                int32_t& aOffset);
+
 protected:
   enum Tristate {
     eTriUnset,
