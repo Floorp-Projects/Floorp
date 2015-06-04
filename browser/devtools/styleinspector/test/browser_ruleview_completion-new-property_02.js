@@ -25,7 +25,7 @@ let testData = [
   ["VK_TAB", {shiftKey: true}, "display", -1, 0],
   ["VK_BACK_SPACE", {}, "", -1, 0],
   ["c", {}, "caption-side", 0, 10],
-  ["o", {}, "color", 0, 6],
+  ["o", {}, "color", 0, 7],
   ["VK_TAB", {}, "none", -1, 0],
   ["r", {}, "rebeccapurple", 0, 6],
   ["VK_DOWN", {}, "red", 1, 6],

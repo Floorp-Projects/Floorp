@@ -1292,6 +1292,20 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                          aResult);
       break;
 
+    case eCSSProperty_contain:
+      if (intValue & NS_STYLE_CONTAIN_STRICT) {
+        NS_ASSERTION(intValue == (NS_STYLE_CONTAIN_STRICT | NS_STYLE_CONTAIN_ALL_BITS),
+                     "contain: strict should imply contain: layout style paint");
+        // Only output strict.
+        intValue = NS_STYLE_CONTAIN_STRICT;
+      }
+      nsStyleUtil::AppendBitmaskCSSValue(aProperty,
+                                         intValue,
+                                         NS_STYLE_CONTAIN_STRICT,
+                                         NS_STYLE_CONTAIN_PAINT,
+                                         aResult);
+      break;
+
     default:
       const nsAFlatCString& name = nsCSSProps::LookupPropertyValue(aProperty, intValue);
       AppendASCIItoUTF16(name, aResult);
