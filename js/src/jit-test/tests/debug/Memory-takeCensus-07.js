@@ -16,6 +16,20 @@ assertThrowsValue(() => {
 
 assertThrowsValue(() => {
   dbg.memory.takeCensus({
+    breakdown: { by: 'count', get count() { throw "ಠ_ಠ" } }
+  });
+}, "ಠ_ಠ");
+
+assertThrowsValue(() => {
+  dbg.memory.takeCensus({
+    breakdown: { by: 'count', get bytes() { throw "ಠ_ಠ" } }
+  });
+}, "ಠ_ಠ");
+
+
+
+assertThrowsValue(() => {
+  dbg.memory.takeCensus({
     breakdown: { by: 'objectClass', get then() { throw "ಠ_ಠ" } }
   });
 }, "ಠ_ಠ");
