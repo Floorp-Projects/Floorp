@@ -10,6 +10,7 @@ import java.net.Socket;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 
+import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 
 import ch.boye.httpclientandroidlib.conn.ssl.SSLSocketFactory;
@@ -17,18 +18,9 @@ import ch.boye.httpclientandroidlib.params.HttpParams;
 
 public class TLSSocketFactory extends SSLSocketFactory {
   private static final String LOG_TAG = "TLSSocketFactory";
-  private static final String[] DEFAULT_CIPHER_SUITES = new String[] {
-    "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
-    "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
-    "SSL_RSA_WITH_RC4_128_SHA", // "RC4_SHA"
-  };
-  private static final String[] DEFAULT_PROTOCOLS = new String[] {
-    "SSLv3",
-    "TLSv1"
-  };
 
   // Guarded by `this`.
-  private static String[] cipherSuites = DEFAULT_CIPHER_SUITES;
+  private static String[] cipherSuites = GlobalConstants.DEFAULT_CIPHER_SUITES;
 
   public TLSSocketFactory(SSLContext sslContext) {
     super(sslContext);
@@ -63,7 +55,7 @@ public class TLSSocketFactory extends SSLSocketFactory {
   @Override
   public Socket createSocket(HttpParams params) throws IOException {
     SSLSocket socket = (SSLSocket) super.createSocket(params);
-    socket.setEnabledProtocols(DEFAULT_PROTOCOLS);
+    socket.setEnabledProtocols(GlobalConstants.DEFAULT_PROTOCOLS);
     setEnabledCipherSuites(socket);
     return socket;
   }
