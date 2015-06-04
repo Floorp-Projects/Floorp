@@ -56,6 +56,12 @@ OriginAttributes::Deserialize(nsIObjectInputStream* aStream)
   return NS_OK;
 }
 
+BasePrincipal::BasePrincipal()
+{}
+
+BasePrincipal::~BasePrincipal()
+{}
+
 NS_IMETHODIMP
 BasePrincipal::GetOrigin(nsACString& aOrigin)
 {
