@@ -911,6 +911,16 @@ class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
         self.do_match_test()
         self.do_finder_test(self.finder)
 
+    def test_get(self):
+        self.prepare_match_test()
+        finder = FileFinder(self.tmpdir)
+
+        self.assertIsNone(finder.get('does-not-exist'))
+        res = finder.get('bar')
+        self.assertIsInstance(res, File)
+        self.assertEqual(mozpath.normpath(res.path),
+                         mozpath.join(self.tmpdir, 'bar'))
+
     def test_ignored_dirs(self):
         """Ignored directories should not have results returned."""
         self.prepare_match_test()
@@ -969,6 +979,9 @@ class TestJarFinder(MatchTestTemplate, TestWithTmpDir):
         self.finder = JarFinder(self.tmppath('test.jar'), reader)
         self.do_match_test()
 
+        self.assertIsNone(self.finder.get('does-not-exist'))
+        self.assertIsInstance(self.finder.get('bar'), DeflatedFile)
+
 
 class TestComposedFinder(MatchTestTemplate, TestWithTmpDir):
     def add(self, path, content=None):
@@ -999,6 +1012,9 @@ class TestComposedFinder(MatchTestTemplate, TestWithTmpDir):
             'foo/qux': FileFinder(self.tmppath('b')),
         })
         self.do_match_test()
+
+        self.assertIsNone(self.finder.get('does-not-exist'))
+        self.assertIsInstance(self.finder.get('bar'), File)
 
 
 if __name__ == '__main__':
