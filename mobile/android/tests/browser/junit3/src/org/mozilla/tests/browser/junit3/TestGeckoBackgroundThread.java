@@ -4,9 +4,10 @@
 
 package org.mozilla.tests.browser.junit3;
 
+import android.test.InstrumentationTestCase;
 import org.mozilla.gecko.util.ThreadUtils;
 
-public class TestGeckoBackgroundThread extends BrowserTestCase {
+public class TestGeckoBackgroundThread extends InstrumentationTestCase {
 
     private boolean finishedTest;
     private boolean ranFirstRunnable;

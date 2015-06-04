@@ -8,7 +8,6 @@ DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
 
 jar = add_java_jar('browser-junit3')
 jar.sources += [
-    'src/org/mozilla/tests/browser/junit3/BrowserTestCase.java',
     'src/org/mozilla/tests/browser/junit3/harness/BrowserInstrumentationTestRunner.java',
     'src/org/mozilla/tests/browser/junit3/harness/BrowserTestListener.java',
     'src/org/mozilla/tests/browser/junit3/TestDistribution.java',
