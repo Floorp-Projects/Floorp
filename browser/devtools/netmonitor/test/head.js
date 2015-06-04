@@ -11,6 +11,7 @@ let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { CurlUtils } = Cu.import("resource:///modules/devtools/Curl.jsm", {});
 let NetworkHelper = devtools.require("devtools/toolkit/webconsole/network-helper");
+let DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
 let TargetFactory = devtools.TargetFactory;
 let Toolbox = devtools.Toolbox;
 
@@ -54,9 +55,9 @@ const TEST_IMAGE_DATA_URI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAA
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js"
 
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 SimpleTest.registerCleanupFunction(() => {
-  gDevTools.testing = false;
+  DevToolsUtils.testing = false;
 });
 
 // All tests are asynchronous.

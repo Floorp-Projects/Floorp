@@ -651,3 +651,38 @@ exports.settleAll = values => {
 
   return deferred.promise;
 };
+
+/**
+ * When the testing flag is set, various behaviors may be altered from
+ * production mode, typically to enable easier testing or enhanced debugging.
+ */
+let testing = false;
+let savedSendAfterPaintToContentPref;
+Object.defineProperty(exports, "testing", {
+  get: function() {
+    return testing;
+  },
+  set: function(state) {
+    let oldState = testing;
+    testing = state;
+
+    // For the highlighter, we also set dom.send_after_paint_to_content to false
+    // to prevent infinite MozAfterPaint loops and not autohiding the
+    // highlighter.
+    // TODO: This should move to a shared head.js file.
+    if (state !== oldState && Services && Services.prefs) {
+      if (state) {
+        savedSendAfterPaintToContentPref =
+          Services.prefs.getBoolPref("dom.send_after_paint_to_content");
+
+        // dom.send_after_paint_to_content is set to true (non-default) in
+        // testing/profiles/prefs_general.js so lets set it to the same as it is
+        // in a default browser profile for the duration of the test.
+        Services.prefs.setBoolPref("dom.send_after_paint_to_content", false);
+      } else {
+        Services.prefs.setBoolPref("dom.send_after_paint_to_content",
+                                   savedSendAfterPaintToContentPref);
+      }
+    }
+  }
+});
