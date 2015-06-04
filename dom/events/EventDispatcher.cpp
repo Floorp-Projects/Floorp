@@ -466,7 +466,9 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
       nsPIDOMWindow* win = doc ? doc->GetInnerWindow() : nullptr;
       // If we can't dispatch the event to chrome, do nothing.
       EventTarget* piTarget = win ? win->GetParentTarget() : nullptr;
-      NS_ENSURE_TRUE(piTarget, NS_OK);
+      if (!piTarget) {
+        return NS_OK;
+      }
 
       // Set the target to be the original dispatch target,
       aEvent->target = target;
