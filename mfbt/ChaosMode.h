@@ -7,12 +7,17 @@
 #ifndef mozilla_ChaosMode_h
 #define mozilla_ChaosMode_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/EnumSet.h"
 
 #include <stdint.h>
 #include <stdlib.h>
 
 namespace mozilla {
+
+namespace detail {
+extern MFBT_DATA Atomic<uint32_t> gChaosModeCounter;
+}
 
 /**
  * When "chaos mode" is activated, code that makes implicitly nondeterministic
@@ -44,7 +49,30 @@ private:
 public:
   static bool isActive(ChaosFeature aFeature)
   {
+    if (detail::gChaosModeCounter > 0) {
+      return true;
+    }
     return sChaosFeatures & aFeature;
+  }
+
+  /**
+   * Increase the chaos mode activation level. An equivalent number of
+   * calls to leaveChaosMode must be made in order to restore the original
+   * chaos mode state. If the activation level is nonzero all chaos mode
+   * features are activated.
+   */
+  static void enterChaosMode()
+  {
+    detail::gChaosModeCounter++;
+  }
+
+  /**
+   * Decrease the chaos mode activation level. See enterChaosMode().
+   */
+  static void leaveChaosMode()
+  {
+    MOZ_ASSERT(detail::gChaosModeCounter > 0);
+    detail::gChaosModeCounter--;
   }
 
   /**

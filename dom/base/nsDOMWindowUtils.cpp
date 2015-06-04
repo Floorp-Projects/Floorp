@@ -40,6 +40,7 @@
 #include "nsJSEnvironment.h"
 #include "nsJSUtils.h"
 
+#include "mozilla/ChaosMode.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
@@ -3773,6 +3774,22 @@ nsDOMWindowUtils::GetServiceWorkersTestingEnabled(bool *aEnabled)
 
   *aEnabled = window->GetServiceWorkersTestingEnabled();
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::EnterChaosMode()
+{
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  ChaosMode::enterChaosMode();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::LeaveChaosMode()
+{
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  ChaosMode::leaveChaosMode();
   return NS_OK;
 }
 
