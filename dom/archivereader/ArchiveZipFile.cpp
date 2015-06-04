@@ -104,7 +104,8 @@ ArchiveInputStream::Init()
   uint32_t offset = ArchiveZipItem::StrToInt32(mCentral.localhdr_offset);
 
   // The file is corrupt
-  if (offset + ZIPLOCAL_SIZE > mData.parentSize) {
+  if (mData.parentSize < ZIPLOCAL_SIZE ||
+      offset > mData.parentSize - ZIPLOCAL_SIZE) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -139,7 +140,8 @@ ArchiveInputStream::Init()
             ArchiveZipItem::StrToInt16(local.extrafield_len);
 
   // The file is corrupt if there is not enough data
-  if (offset + mData.sizeToBeRead > mData.parentSize) {
+  if (mData.parentSize < mData.sizeToBeRead ||
+      offset > mData.parentSize - mData.sizeToBeRead) {
     return NS_ERROR_UNEXPECTED;
   }
 
