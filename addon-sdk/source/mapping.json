@@ -13,7 +13,6 @@
   "l10n/prefs": "sdk/l10n/prefs",
   "list": "sdk/util/list",
   "loader": "sdk/loader/loader",
-  "memory": "sdk/deprecated/memory",
   "namespace": "sdk/core/namespace",
   "preferences-service": "sdk/preferences/service",
   "promise": "sdk/core/promise",
