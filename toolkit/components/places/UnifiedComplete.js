@@ -158,7 +158,12 @@ function hostQuery(conditions = "") {
   let query =
     `/* do not warn (bug NA): not worth to index on (typed, frecency) */
      SELECT :query_type, host || '/', IFNULL(prefix, '') || host || '/',
-            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, frecency
+            ( SELECT f.url FROM moz_favicons f
+              JOIN moz_places h ON h.favicon_id = f.id
+              WHERE rev_host = get_unreversed_host(host || '.') || '.'
+                 OR rev_host = get_unreversed_host(host || '.') || '.www.'
+            ) AS favicon_url,
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, frecency
      FROM moz_hosts
      WHERE host BETWEEN :searchString AND :searchString || X'FFFF'
      AND frecency <> 0
@@ -176,8 +181,12 @@ function bookmarkedHostQuery(conditions = "") {
   let query =
     `/* do not warn (bug NA): not worth to index on (typed, frecency) */
      SELECT :query_type, host || '/', IFNULL(prefix, '') || host || '/',
-            NULL, (
-              SELECT foreign_count > 0 FROM moz_places
+            ( SELECT f.url FROM moz_favicons f
+              JOIN moz_places h ON h.favicon_id = f.id
+              WHERE rev_host = get_unreversed_host(host || '.') || '.'
+                 OR rev_host = get_unreversed_host(host || '.') || '.www.'
+            ) AS favicon_url,
+            ( SELECT foreign_count > 0 FROM moz_places
               WHERE rev_host = get_unreversed_host(host || '.') || '.'
                  OR rev_host = get_unreversed_host(host || '.') || '.www.'
             ) AS bookmarked, NULL, NULL, NULL, NULL, NULL, NULL, frecency
@@ -198,9 +207,11 @@ const SQL_BOOKMARKED_TYPED_HOST_QUERY = bookmarkedHostQuery("AND typed = 1");
 function urlQuery(conditions = "") {
   let query =
     `/* do not warn (bug no): cannot use an index */
-     SELECT :query_type, h.url, NULL,
-            NULL, foreign_count > 0 AS bookmarked, NULL, NULL, NULL, NULL, NULL, NULL, h.frecency
+     SELECT :query_type, h.url, NULL, f.url AS favicon_url,
+            foreign_count > 0 AS bookmarked,
+            NULL, NULL, NULL, NULL, NULL, NULL, h.frecency
      FROM moz_places h
+     LEFT JOIN moz_favicons f ON h.favicon_id = f.id
      WHERE h.frecency <> 0
      ${conditions}
      AND AUTOCOMPLETE_MATCH(:searchString, h.url,
@@ -1176,6 +1187,7 @@ Search.prototype = {
     let trimmedHost = row.getResultByIndex(QUERYINDEX_URL);
     let untrimmedHost = row.getResultByIndex(QUERYINDEX_TITLE);
     let frecency = row.getResultByIndex(QUERYINDEX_FRECENCY);
+    let faviconUrl = row.getResultByIndex(QUERYINDEX_ICONURL);
 
     // If the untrimmed value doesn't preserve the user's input just
     // ignore it and complete to the found host.
@@ -1188,15 +1200,7 @@ Search.prototype = {
     // Remove the trailing slash.
     match.comment = stripHttpAndTrim(trimmedHost);
     match.finalCompleteValue = untrimmedHost;
-
-    try {
-      let iconURI = NetUtil.newURI(untrimmedHost);
-      iconURI.path = "/favicon.ico";
-      match.icon = PlacesUtils.favicons.getFaviconLinkForIcon(iconURI).spec;
-    } catch (e) {
-      // This can fail, which is ok.
-    }
-
+    match.icon = faviconUrl;
     // Although this has a frecency, this query is executed before any other
     // queries that would result in frecency matches.
     match.frecency = frecency;
@@ -1209,6 +1213,7 @@ Search.prototype = {
     let value = row.getResultByIndex(QUERYINDEX_URL);
     let url = fixupSearchText(value);
     let frecency = row.getResultByIndex(QUERYINDEX_FRECENCY);
+    let faviconUrl = row.getResultByIndex(QUERYINDEX_ICONURL);
 
     let prefix = value.slice(0, value.length - stripPrefix(value).length);
 
@@ -1234,6 +1239,7 @@ Search.prototype = {
     match.value = this._strippedPrefix + url;
     match.comment = url;
     match.finalCompleteValue = untrimmedURL;
+    match.icon = faviconUrl;
     // Although this has a frecency, this query is executed before any other
     // queries that would result in frecency matches.
     match.frecency = frecency;

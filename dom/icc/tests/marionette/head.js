@@ -131,8 +131,10 @@ function runEmulatorCmdSafe(aCommand) {
 /**
  * Send stk proactive pdu.
  *
- * Fulfill params: (none)
- * Reject params: (none)
+ * Fulfill params:
+ *   result -- an array of emulator response lines.
+ * Reject params:
+ *   result -- an array of emulator response lines.
  *
  * @param aPdu
  *
@@ -141,6 +143,84 @@ function runEmulatorCmdSafe(aCommand) {
 function sendEmulatorStkPdu(aPdu) {
   let cmd = "stk pdu " + aPdu;
   return runEmulatorCmdSafe(cmd);
+}
+
+/**
+ * Peek the last STK terminal response sent to modem.
+ *
+ * Fulfill params:
+ *   result -- last terminal response in HEX String.
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @return A deferred promise.
+ */
+function peekLastStkResponse() {
+  return runEmulatorCmdSafe("stk lastresponse")
+    .then(aResult => aResult[0]);
+}
+
+/**
+ * Peek the last STK envelope sent to modem.
+ *
+ * Fulfill params:
+ *   result -- last envelope in HEX String.
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @return A deferred promise.
+ */
+function peekLastStkEnvelope() {
+  return runEmulatorCmdSafe("stk lastenvelope")
+    .then(aResult => aResult[0]);
+}
+
+/**
+ * Verify with the peeked STK response.
+ *
+ * Fulfill params:
+ *   result -- (none)
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @param aExpectResponse
+ *        The expected Response PDU in HEX String.
+ *
+ * @return A deferred promise.
+ */
+function verifyWithPeekedStkResponse(aExpectResponse) {
+  return new Promise(function(aResolve, aReject) {
+    window.setTimeout(function() {
+      peekLastStkResponse().then(aResult => {
+        is(aResult, aExpectResponse, "Verify sent APDU");
+        aResolve();
+      });
+    }, 3000);
+  });
+}
+
+/**
+ * Verify with the peeked STK response.
+ *
+ * Fulfill params:
+ *   result -- (none)
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @param aExpectEnvelope
+ *        The expected Envelope PDU in HEX String.
+ *
+ * @return A deferred promise.
+ */
+function verifyWithPeekedStkEnvelope(aExpectEnvelope) {
+  return new Promise(function(aResolve, aReject) {
+    window.setTimeout(function() {
+      peekLastStkEnvelope().then(aResult => {
+        is(aResult, aExpectEnvelope, "Verify sent APDU");
+        aResolve();
+      });
+    }, 3000);
+  });
 }
 
 let workingFrame;

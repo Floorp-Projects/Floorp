@@ -28,6 +28,7 @@ public:
 protected:
   bool IsDefaultBrowserVista(bool aCheckAllTypes, bool* aIsDefaultBrowser);
   nsresult LaunchControlPanelDefaultPrograms();
+  nsresult LaunchModernSettingsDialogDefaultApps();
   nsresult LaunchHTTPHandlerPane();
 
 private:
