@@ -53,13 +53,15 @@ def main():
         task = get_task(taskid)
         ret = check_task(task)
         if ret != 0:
-            sys.exit(ret)
+            return ret
 
     if len(sys.argv) > 1:
         try:
-            subprocess.call(sys.argv[1:], shell=True)
+            return subprocess.call(sys.argv[1:], shell=True)
         except subprocess.CalledProcessError as e:
-            sys.exit(e.returncode)
+            return e.returncode
+
+    return 0
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
