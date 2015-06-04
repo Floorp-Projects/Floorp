@@ -2986,43 +2986,16 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
 
     aRanges[lastRangeIndex].end = aLength;
 
-#ifndef RELEASE_BUILD
-    PRLogModuleInfo *log = (mStyle.systemFont ?
-                            gfxPlatform::GetLog(eGfxLog_textrunui) :
-                            gfxPlatform::GetLog(eGfxLog_textrun));
-
-    if (MOZ_UNLIKELY(PR_LOG_TEST(log, PR_LOG_DEBUG))) {
-        nsAutoCString lang;
-        mStyle.language->ToUTF8String(lang);
-        nsAutoString families;
-        mFamilyList.ToString(families);
-
-        // collect the font matched for each range
-        nsAutoCString fontMatches;
-        for (size_t i = 0, i_end = aRanges.Length(); i < i_end; i++) {
-            char match[256];
-            const gfxTextRange& r = aRanges[i];
-            sprintf(match, " [%u:%u] %.200s (%s)",
-                    r.start, r.end,
-                    (r.font.get() ?
-                     NS_ConvertUTF16toUTF8(r.font->GetName()).get() : "<null>"),
-                    (r.matchType == gfxTextRange::kFontGroup ?
-                         "list" :
-                         (r.matchType == gfxTextRange::kPrefsFallback) ?
-                              "prefs" : "sys"));
-            fontMatches.Append(match);
-        }
-        MOZ_LOG(log, PR_LOG_DEBUG,\
-               ("(%s-fontmatching) fontgroup: [%s] default: %s lang: %s script: %d"
-                "%s\n",
-                (mStyle.systemFont ? "textrunui" : "textrun"),
-                NS_ConvertUTF16toUTF8(families).get(),
-                (mFamilyList.GetDefaultFontType() == eFamily_serif ?
-                 "serif" :
-                 (mFamilyList.GetDefaultFontType() == eFamily_sans_serif ?
-                  "sans-serif" : "none")),
-                lang.get(), aRunScript,
-                fontMatches.get()));
+#if 0
+    // dump out font matching info
+    if (mStyle.systemFont) return;
+    for (size_t i = 0, i_end = aRanges.Length(); i < i_end; i++) {
+        const gfxTextRange& r = aRanges[i];
+        printf("fontmatch %zd:%zd font: %s (%d)\n",
+               r.start, r.end,
+               (r.font.get() ?
+                    NS_ConvertUTF16toUTF8(r.font->GetName()).get() : "<null>"),
+               r.matchType);
     }
 #endif
 }
