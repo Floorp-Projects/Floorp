@@ -127,6 +127,12 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 
 == 1144501-1a-block-end-margin-orthogonal-size.html 1144501-1-block-end-margin-orthogonal-size-ref.html
 == 1144501-1b-block-end-margin-orthogonal-size.html 1144501-1-block-end-margin-orthogonal-size-ref.html
+== 1147834-relative-overconstrained-horizontal-tb-ltr.html 1147834-bottom-right-ref.html
+== 1147834-relative-overconstrained-horizontal-tb-rtl.html 1147834-bottom-left-ref.html
+== 1147834-relative-overconstrained-vertical-lr-ltr.html 1147834-bottom-right-ref.html
+fails == 1147834-relative-overconstrained-vertical-lr-rtl.html 1147834-top-right-ref.html # bug 1131451
+== 1147834-relative-overconstrained-vertical-rl-ltr.html 1147834-bottom-left-ref.html
+fails == 1147834-relative-overconstrained-vertical-rl-rtl.html 1147834-top-left-ref.html # bug 1131451
 == 1151993-1-orthogonal-block-size.html 1151993-1-orthogonal-block-size-ref.html
 == 1152941-1-orthogonal-blocksize-overflow.html 1152941-1-orthogonal-blocksize-overflow-ref.html
 == 1156021-text-indent-percent.html 1156021-text-indent-percent-ref.html
