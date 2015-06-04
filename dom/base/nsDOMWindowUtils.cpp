@@ -378,9 +378,12 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
                        new DisplayPortPropertyData(displayport, aPriority),
                        nsINode::DeleteProperty<DisplayPortPropertyData>);
 
-  if (nsLayoutUtils::UsesAsyncScrolling() && gfxPrefs::LayoutUseContainersForRootFrames()) {
+  if (gfxPrefs::LayoutUseContainersForRootFrames()) {
     nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
-    if (rootScrollFrame && content == rootScrollFrame->GetContent()) {
+    if (rootScrollFrame &&
+        content == rootScrollFrame->GetContent() &&
+        nsLayoutUtils::UsesAsyncScrolling(rootScrollFrame))
+    {
       // We are setting a root displayport for a document.
       // The pres shell needs a special flag set.
       presShell->SetIgnoreViewportScrolling(true);
@@ -861,7 +864,7 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
 
   widget->DispatchAPZAwareEvent(&wheelEvent);
 
-  if (gfxPrefs::AsyncPanZoomEnabled()) {
+  if (widget->AsyncPanZoomEnabled()) {
     // Computing overflow deltas is not compatible with APZ, so if APZ is
     // enabled, we skip testing it.
     return NS_OK;
