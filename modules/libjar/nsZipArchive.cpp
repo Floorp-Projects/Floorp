@@ -644,8 +644,13 @@ MOZ_WIN_MEM_TRY_BEGIN
   if (!centralOffset)
     return NS_ERROR_FILE_CORRUPTED;
 
-  //-- Read the central directory headers
   buf = startp + centralOffset;
+
+  // avoid overflow of startp + centralOffset.
+  if (buf < startp)
+    return NS_ERROR_FILE_CORRUPTED;
+
+  //-- Read the central directory headers
   uint32_t sig = 0;
   while (buf + int32_t(sizeof(uint32_t)) <= endp &&
          (sig = xtolong(buf)) == CENTRALSIG) {
