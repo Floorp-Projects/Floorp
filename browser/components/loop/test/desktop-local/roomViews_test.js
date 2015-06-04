@@ -28,7 +28,6 @@ describe("loop.roomViews", function () {
         previews: [],
         title: ""
       }),
-      isSocialShareButtonAvailable: sinon.stub(),
       rooms: {
         get: sinon.stub().callsArgWith(1, null, {
           roomToken: "fakeToken",
@@ -211,11 +210,27 @@ describe("loop.roomViews", function () {
     });
 
     describe("Share button", function() {
-      beforeEach(function() {
+      it("should dispatch a AddSocialShareProvider action when the share button is clicked", function() {
         view = mountTestComponent();
+
+        var shareBtn = view.getDOMNode().querySelector(".btn-share");
+
+        React.addons.TestUtils.Simulate.click(shareBtn);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWith(dispatcher.dispatch,
+          new sharedActions.AddSocialShareProvider());
       });
 
       it("should toggle the share dropdown when the share button is clicked", function() {
+        view = mountTestComponent({
+          socialShareProviders: [{
+            name: "foo",
+            origin: "https://foo",
+            iconURL: "http://example.com/foo.png"
+          }]
+        });
+
         var shareBtn = view.getDOMNode().querySelector(".btn-share");
 
         React.addons.TestUtils.Simulate.click(shareBtn);
@@ -552,18 +567,8 @@ describe("loop.roomViews", function () {
         expect(view.getDOMNode()).to.eql(null);
       });
 
-      it("should show different contents when the Share XUL button is not available", function() {
-        view = mountTestComponent({
-          socialShareProviders: []
-        });
-
-        var node = view.getDOMNode();
-        expect(node.querySelector(".share-panel-header")).to.not.eql(null);
-      });
-
       it("should show an empty list when no Social Providers are available", function() {
         view = mountTestComponent({
-          socialShareButtonAvailable: true,
           socialShareProviders: []
         });
 
@@ -574,7 +579,6 @@ describe("loop.roomViews", function () {
 
       it("should show a list of available Social Providers", function() {
         view = mountTestComponent({
-          socialShareButtonAvailable: true,
           socialShareProviders: [fakeProvider]
         });
 
@@ -590,26 +594,10 @@ describe("loop.roomViews", function () {
       });
     });
 
-    describe("#handleToolbarAddButtonClick", function() {
-      it("should dispatch an action when the 'add to toolbar' button is clicked", function() {
-        view = mountTestComponent({
-          socialShareProviders: []
-        });
-
-        var addButton = view.getDOMNode().querySelector(".btn-toolbar-add");
-        React.addons.TestUtils.Simulate.click(addButton);
-
-        sinon.assert.calledOnce(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.AddSocialShareButton());
-      });
-    });
-
     describe("#handleAddServiceClick", function() {
       it("should dispatch an action when the 'add provider' item is clicked", function() {
         view = mountTestComponent({
-          socialShareProviders: [],
-          socialShareButtonAvailable: true
+          socialShareProviders: []
         });
 
         var addItem = view.getDOMNode().querySelector(".dropdown-menu-item:first-child");
@@ -625,7 +613,6 @@ describe("loop.roomViews", function () {
       it("should dispatch an action when a provider item is clicked", function() {
         view = mountTestComponent({
           roomUrl: "http://example.com",
-          socialShareButtonAvailable: true,
           socialShareProviders: [fakeProvider]
         });
 
