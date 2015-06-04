@@ -360,9 +360,13 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
 
   domain = do_QueryInterface(supports);
 
-  OriginAttributes attrs;
-  rv = attrs.Deserialize(aStream);
+  nsAutoCString suffix;
+  rv = aStream->ReadCString(suffix);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  OriginAttributes attrs;
+  bool ok = attrs.PopulateFromSuffix(suffix);
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
   rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(supports));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -404,7 +408,11 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
     return rv;
   }
 
-  OriginAttributesRef().Serialize(aStream);
+  nsAutoCString suffix;
+  OriginAttributesRef().CreateSuffix(suffix);
+
+  rv = aStream->WriteStringZ(suffix.get());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_WriteOptionalCompoundObject(aStream, mCSP,
                                       NS_GET_IID(nsIContentSecurityPolicy),

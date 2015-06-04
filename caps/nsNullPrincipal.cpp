@@ -82,7 +82,7 @@ nsNullPrincipal::GetHashValue(uint32_t *aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNullPrincipal::GetURI(nsIURI** aURI)
 {
   return NS_EnsureSafeToReturn(mURI, aURI);
@@ -160,13 +160,25 @@ nsNullPrincipal::Read(nsIObjectInputStream* aStream)
   // that the Init() method has already been invoked by the time we deserialize.
   // This is in contrast to nsPrincipal, which uses NS_GENERIC_FACTORY_CONSTRUCTOR,
   // in which case ::Read needs to invoke Init().
-  return mOriginAttributes.Deserialize(aStream);
+  nsAutoCString suffix;
+  nsresult rv = aStream->ReadCString(suffix);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool ok = mOriginAttributes.PopulateFromSuffix(suffix);
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNullPrincipal::Write(nsIObjectOutputStream* aStream)
 {
-  OriginAttributesRef().Serialize(aStream);
+  nsAutoCString suffix;
+  OriginAttributesRef().CreateSuffix(suffix);
+
+  nsresult rv = aStream->WriteStringZ(suffix.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 

@@ -11,13 +11,13 @@ include protocol PCacheStorage;
 include protocol PCacheStreamControl;
 include protocol PFileDescriptorSet;
 include protocol PMedia;
+include protocol PServiceWorkerManager;
 include protocol PUDPSocket;
 include protocol PVsync;
 
 include DOMTypes;
 include PBackgroundSharedTypes;
 include PBackgroundIDBSharedTypes;
-include ServiceWorkerRegistrarTypes;
 
 using mozilla::dom::cache::Namespace from "mozilla/dom/cache/Types.h";
 include "mozilla/dom/cache/IPCUtils.h";
@@ -36,6 +36,7 @@ sync protocol PBackground
   manages PCacheStreamControl;
   manages PFileDescriptorSet;
   manages PMedia;
+  manages PServiceWorkerManager;
   manages PUDPSocket;
   manages PVsync;
 
@@ -52,9 +53,8 @@ parent:
   PBroadcastChannel(PrincipalInfo pInfo, nsString origin, nsString channel,
                     bool privateBrowsing);
 
-  RegisterServiceWorker(ServiceWorkerRegistrationData data);
-  UnregisterServiceWorker(PrincipalInfo principalInfo,
-                          nsString scope);
+  PServiceWorkerManager();
+
   ShutdownServiceWorkerRegistrar();
 
   PCacheStorage(Namespace aNamespace, PrincipalInfo aPrincipalInfo);
