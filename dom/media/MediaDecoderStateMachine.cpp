@@ -1457,8 +1457,12 @@ void MediaDecoderStateMachine::RecomputeDuration()
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
-  TimeUnit duration;
+  // We dispatch DurationChanged to the MediaDecoder when the duration changes
+  // sometime after initialization, unless it has already been fired by the code
+  // that set the new duration.
   bool fireDurationChanged = false;
+
+  TimeUnit duration;
   if (mExplicitDuration.Ref().isSome()) {
     double d = mExplicitDuration.Ref().ref();
     if (IsNaN(d)) {
@@ -1466,14 +1470,12 @@ void MediaDecoderStateMachine::RecomputeDuration()
       // any other duration sources), but the duration isn't ready yet.
       return;
     }
+    // We don't fire duration changed for this case because it should have
+    // already been fired on the main thread when the explicit duration was set.
     duration = TimeUnit::FromSeconds(d);
   } else if (mEstimatedDuration.Ref().isSome()) {
     duration = mEstimatedDuration.Ref().ref();
-    // XXXbholley - Firing the event here is historical, and not necessarily
-    // sensical.
-    if (duration.ToMicroseconds() != GetDuration()) {
-      fireDurationChanged = true;
-    }
+    fireDurationChanged = true;
   } else if (mInfo.mMetadataDuration.isSome()) {
     duration = mInfo.mMetadataDuration.ref();
   } else if (mInfo.mMetadataEndTime.isSome() && mStartTime >= 0) {
@@ -1486,11 +1488,10 @@ void MediaDecoderStateMachine::RecomputeDuration()
 
   if (duration < mObservedDuration.Ref()) {
     duration = mObservedDuration;
-    // XXXbholley - Firing the event here is historical, and not necessarily
-    // sensical.
     fireDurationChanged = true;
   }
 
+  fireDurationChanged = fireDurationChanged && duration.ToMicroseconds() != GetDuration();
   SetDuration(duration);
 
   if (fireDurationChanged) {
