@@ -22,7 +22,7 @@
 using namespace mozilla::ipc;
 
 #undef LOG
-#define LOG(args) MOZ_LOG(gFTPLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gFTPLog, mozilla::LogLevel::Debug, args)
 
 namespace mozilla {
 namespace net {

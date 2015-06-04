@@ -195,7 +195,7 @@ HTMLTrackElement::LoadResource()
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NewURIFromString(src, getter_AddRefs(uri));
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
-  LOG(PR_LOG_ALWAYS, ("%p Trying to load from src=%s", this,
+  LOG(LogLevel::Info, ("%p Trying to load from src=%s", this,
       NS_ConvertUTF16toUTF8(src).get()));
 
   if (mChannel) {
@@ -246,7 +246,7 @@ HTMLTrackElement::LoadResource()
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
   channel->SetNotificationCallbacks(mListener);
 
-  LOG(PR_LOG_DEBUG, ("opening webvtt channel"));
+  LOG(LogLevel::Debug, ("opening webvtt channel"));
   rv = channel->AsyncOpen(mListener, nullptr);
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
 
@@ -269,7 +269,7 @@ HTMLTrackElement::BindToTree(nsIDocument* aDocument,
     return NS_OK;
   }
 
-  LOG(PR_LOG_DEBUG, ("Track Element bound to tree."));
+  LOG(LogLevel::Debug, ("Track Element bound to tree."));
   if (!aParent || !aParent->IsNodeOfType(nsINode::eMEDIA)) {
     return NS_OK;
   }
@@ -281,7 +281,7 @@ HTMLTrackElement::BindToTree(nsIDocument* aDocument,
     HTMLMediaElement* media = static_cast<HTMLMediaElement*>(aParent);
     // TODO: separate notification for 'alternate' tracks?
     media->NotifyAddedSource();
-    LOG(PR_LOG_DEBUG, ("Track element sent notification to parent."));
+    LOG(LogLevel::Debug, ("Track element sent notification to parent."));
 
     mMediaParent->RunInStableState(
       NS_NewRunnableMethod(this, &HTMLTrackElement::LoadResource));

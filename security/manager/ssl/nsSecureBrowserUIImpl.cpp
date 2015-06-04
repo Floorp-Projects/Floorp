@@ -44,7 +44,7 @@ using namespace mozilla;
 //    set NSPR_LOG_MODULES=nsSecureBrowserUI:5
 //    set NSPR_LOG_FILE=nspr.log
 //
-// this enables PR_LOG_DEBUG level information and places all output in
+// this enables LogLevel::Debug level information and places all output in
 // the file nspr.log
 //
 PRLogModuleInfo* gSecureDocLog = nullptr;
@@ -128,10 +128,10 @@ NS_IMPL_ISUPPORTS(nsSecureBrowserUIImpl,
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::Init(nsIDOMWindow *aWindow)
 {
-  if (PR_LOG_TEST(gSecureDocLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gSecureDocLog, LogLevel::Debug)) {
     nsCOMPtr<nsIDOMWindow> window(do_QueryReferent(mWindow));
 
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: Init: mWindow: %p, aWindow: %p\n", this,
             window.get(), aWindow));
   }
@@ -310,16 +310,16 @@ static uint32_t GetSecurityStateFromSecurityInfoAndRequest(nsISupports* info,
 
   nsCOMPtr<nsITransportSecurityInfo> psmInfo(do_QueryInterface(info));
   if (!psmInfo) {
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState: - no nsITransportSecurityInfo for %p\n",
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug, ("SecureUI: GetSecurityState: - no nsITransportSecurityInfo for %p\n",
                                          (nsISupports *)info));
     return nsIWebProgressListener::STATE_IS_INSECURE;
   }
-  MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState: - info is %p\n", 
+  MOZ_LOG(gSecureDocLog, LogLevel::Debug, ("SecureUI: GetSecurityState: - info is %p\n", 
                                        (nsISupports *)info));
   
   res = psmInfo->GetSecurityState(&securityState);
   if (NS_FAILED(res)) {
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState: - GetSecurityState failed: %d\n",
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug, ("SecureUI: GetSecurityState: - GetSecurityState failed: %d\n",
                                          res));
     securityState = nsIWebProgressListener::STATE_IS_BROKEN;
   }
@@ -342,14 +342,14 @@ static uint32_t GetSecurityStateFromSecurityInfoAndRequest(nsISupports* info,
       bool isHttp, isFtp;
       if ((NS_SUCCEEDED(uri->SchemeIs("http", &isHttp)) && isHttp) ||
           (NS_SUCCEEDED(uri->SchemeIs("ftp", &isFtp)) && isFtp)) {
-        MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState: - "
+        MOZ_LOG(gSecureDocLog, LogLevel::Debug, ("SecureUI: GetSecurityState: - "
                                              "channel scheme is insecure.\n"));
         securityState = nsIWebProgressListener::STATE_IS_INSECURE;
       }
     }
   }
 
-  MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState: - Returning %d\n", 
+  MOZ_LOG(gSecureDocLog, LogLevel::Debug, ("SecureUI: GetSecurityState: - Returning %d\n", 
                                        securityState));
   return securityState;
 }
@@ -395,7 +395,7 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest,
     temp_NewToplevelSecurityState =
       GetSecurityStateFromSecurityInfoAndRequest(info, aRequest);
 
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: OnStateChange: remember mNewToplevelSecurityState => %x\n", this,
             temp_NewToplevelSecurityState));
 
@@ -423,7 +423,7 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest,
     if (updateStatus) {
       mSSLStatus = temp_SSLStatus;
     }
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: remember securityInfo %p\n", this,
             info));
     nsCOMPtr<nsIAssociatedContentSecurity> associatedContentSecurityFromRequest =
@@ -457,11 +457,11 @@ nsSecureBrowserUIImpl::UpdateSubrequestMembers(nsISupports* securityInfo,
   if (reqState & STATE_IS_SECURE) {
     // do nothing
   } else if (reqState & STATE_IS_BROKEN) {
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: OnStateChange: subreq BROKEN\n", this));
     ++mSubRequestsBrokenSecurity;
   } else {
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: OnStateChange: subreq INSECURE\n", this));
     ++mSubRequestsNoSecurity;
   }
@@ -608,22 +608,22 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   {
     if (isToplevelProgress)
     {
-      MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+      MOZ_LOG(gSecureDocLog, LogLevel::Debug,
              ("SecureUI:%p: OnStateChange: progress: for toplevel\n", this));
     }
     else
     {
-      MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+      MOZ_LOG(gSecureDocLog, LogLevel::Debug,
              ("SecureUI:%p: OnStateChange: progress: for something else\n", this));
     }
   }
   else
   {
-      MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+      MOZ_LOG(gSecureDocLog, LogLevel::Debug,
              ("SecureUI:%p: OnStateChange: progress: no window known\n", this));
   }
 
-  MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+  MOZ_LOG(gSecureDocLog, LogLevel::Debug,
          ("SecureUI:%p: OnStateChange\n", this));
 
   if (isViewSource)
@@ -631,15 +631,15 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
   if (!aRequest)
   {
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: OnStateChange with null request\n", this));
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (PR_LOG_TEST(gSecureDocLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gSecureDocLog, LogLevel::Debug)) {
     nsXPIDLCString reqname;
     aRequest->GetName(reqname);
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: %p %p OnStateChange %x %s\n", this, aWebProgress,
             aRequest, aProgressStateFlags, reqname.get()));
   }
@@ -679,7 +679,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       &&
       loadFlags & nsIChannel::LOAD_DOCUMENT_URI)
   {
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: OnStateChange: SOMETHING STARTS FOR TOPMOST DOCUMENT\n", this));
   }
 
@@ -691,7 +691,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       &&
       loadFlags & nsIChannel::LOAD_DOCUMENT_URI)
   {
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: OnStateChange: SOMETHING STOPS FOR TOPMOST DOCUMENT\n", this));
   }
 
@@ -707,7 +707,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
         if (!wyciwygRequest) {
           nsCOMPtr<nsIFTPChannel> ftpRequest(do_QueryInterface(aRequest));
           if (!ftpRequest) {
-            MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+            MOZ_LOG(gSecureDocLog, LogLevel::Debug,
                    ("SecureUI:%p: OnStateChange: not relevant for sub content\n", this));
             isSubDocumentRelevant = false;
           }
@@ -829,7 +829,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     info.AppendLiteral("f contains unknown flag!");
   }
 
-  MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+  MOZ_LOG(gSecureDocLog, LogLevel::Debug,
          ("SecureUI:%p: OnStateChange: %s %s -- %s\n", this, _status, 
           info.get(), info2.get()));
 
@@ -837,7 +837,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       &&
       channel)
   {
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: OnStateChange: seeing STOP with security state: %d\n", this,
             GetSecurityStateFromSecurityInfoAndRequest(securityInfo, aRequest)
             ));
@@ -928,13 +928,13 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
     if (allowSecurityStateChange && !inProgress)
     {
-      MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+      MOZ_LOG(gSecureDocLog, LogLevel::Debug,
              ("SecureUI:%p: OnStateChange: start for toplevel document\n", this
               ));
 
       if (prevContentSecurity)
       {
-        MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+        MOZ_LOG(gSecureDocLog, LogLevel::Debug,
                ("SecureUI:%p: OnStateChange: start, saving current sub state\n", this
                 ));
   
@@ -943,7 +943,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
         prevContentSecurity->SetCountSubRequestsBrokenSecurity(saveSubBroken);
         prevContentSecurity->SetCountSubRequestsNoSecurity(saveSubNo);
         prevContentSecurity->Flush();
-        MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Saving subs in START to %p as %d,%d\n", 
+        MOZ_LOG(gSecureDocLog, LogLevel::Debug, ("SecureUI:%p: Saving subs in START to %p as %d,%d\n", 
           this, prevContentSecurity.get(), saveSubBroken, saveSubNo));      
       }
 
@@ -970,13 +970,13 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     
         if (newContentSecurity)
         {
-          MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+          MOZ_LOG(gSecureDocLog, LogLevel::Debug,
                  ("SecureUI:%p: OnStateChange: start, loading old sub state\n", this
                   ));
     
           newContentSecurity->GetCountSubRequestsBrokenSecurity(&newSubBroken);
           newContentSecurity->GetCountSubRequestsNoSecurity(&newSubNo);
-          MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Restoring subs in START from %p to %d,%d\n", 
+          MOZ_LOG(gSecureDocLog, LogLevel::Debug, ("SecureUI:%p: Restoring subs in START from %p to %d,%d\n", 
             this, newContentSecurity.get(), newSubBroken, newSubNo));      
         }
       }
@@ -1005,7 +1005,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       // By using a counter, this code also works when the toplevel
       // document get's redirected, but the STOP request for the 
       // previous toplevel document has not yet have been received.
-      MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+      MOZ_LOG(gSecureDocLog, LogLevel::Debug,
              ("SecureUI:%p: OnStateChange: ++mDocumentRequestsInProgress\n", this
               ));
       ++mDocumentRequestsInProgress;
@@ -1041,7 +1041,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       return NS_OK;
     }
 
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: OnStateChange: --mDocumentRequestsInProgress\n", this
             ));
 
@@ -1111,7 +1111,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       {
         currentContentSecurity->GetCountSubRequestsBrokenSecurity(&subBroken);
         currentContentSecurity->GetCountSubRequestsNoSecurity(&subNo);
-        MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Restoring subs in STOP from %p to %d,%d\n", 
+        MOZ_LOG(gSecureDocLog, LogLevel::Debug, ("SecureUI:%p: Restoring subs in STOP from %p to %d,%d\n", 
           this, currentContentSecurity.get(), subBroken, subNo));      
       }
 
@@ -1195,7 +1195,7 @@ nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest,
     newSecurityState = lis_broken_security;
   }
 
-  MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+  MOZ_LOG(gSecureDocLog, LogLevel::Debug,
          ("SecureUI:%p: UpdateSecurityState:  old-new  %d - %d\n", this,
           mNotifiedSecurityState, newSecurityState));
 
@@ -1233,13 +1233,13 @@ nsSecureBrowserUIImpl::TellTheWorld(nsIRequest* aRequest)
   }
 
   if (toplevelEventSink) {
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: UpdateSecurityState: calling OnSecurityChange\n",
             this));
 
     toplevelEventSink->OnSecurityChange(aRequest, state);
   } else {
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: UpdateSecurityState: NO mToplevelEventSink!\n",
             this));
 
@@ -1257,7 +1257,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
   NS_ASSERTION(mOnStateLocationChangeReentranceDetection == 1,
                "unexpected parallel nsIWebProgress OnStateChange and/or OnLocationChange notification");
 #endif
-  MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+  MOZ_LOG(gSecureDocLog, LogLevel::Debug,
          ("SecureUI:%p: OnLocationChange\n", this));
 
   bool updateIsViewSource = false;
@@ -1272,7 +1272,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (vs) {
-      MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+      MOZ_LOG(gSecureDocLog, LogLevel::Debug,
              ("SecureUI:%p: OnLocationChange: view-source\n", this));
     }
 
@@ -1369,7 +1369,7 @@ nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
   if (aURI) {
     nsAutoCString temp;
     aURI->GetSpec(temp);
-    MOZ_LOG(gSecureDocLog, PR_LOG_DEBUG,
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: OnSecurityChange: (%x) %s\n", this,
             state, temp.get()));
   }

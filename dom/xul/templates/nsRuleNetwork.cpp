@@ -294,7 +294,7 @@ nsresult
 TestNode::Propagate(InstantiationSet& aInstantiations,
                     bool aIsUpdate, bool& aTakenInstantiations)
 {
-    MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+    MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
            ("TestNode[%p]: Propagate() begin", this));
 
     aTakenInstantiations = false;
@@ -313,7 +313,7 @@ TestNode::Propagate(InstantiationSet& aInstantiations,
     if (! aInstantiations.Empty()) {
         ReteNodeSet::Iterator last = mKids.Last();
         for (ReteNodeSet::Iterator kid = mKids.First(); kid != last; ++kid) {
-            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+            MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                    ("TestNode[%p]: Propagate() passing to child %p", this, kid.operator->()));
 
             // create a copy of the instantiations
@@ -337,7 +337,7 @@ TestNode::Propagate(InstantiationSet& aInstantiations,
         }
     }
 
-    MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+    MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
            ("TestNode[%p]: Propagate() end", this));
 
     return NS_OK;
@@ -349,7 +349,7 @@ TestNode::Constrain(InstantiationSet& aInstantiations)
 {
     nsresult rv;
 
-    MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+    MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
            ("TestNode[%p]: Constrain() begin", this));
 
     // if the cantHandleYet flag is set by FilterInstantiations,
@@ -366,7 +366,7 @@ TestNode::Constrain(InstantiationSet& aInstantiations)
         // could not be filled in yet, then ride 'em on up to the
         // parent to narrow them.
 
-        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+        MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                ("TestNode[%p]: Constrain() passing to parent %p", this, mParent));
 
         rv = mParent->Constrain(aInstantiations);
@@ -375,13 +375,13 @@ TestNode::Constrain(InstantiationSet& aInstantiations)
             rv = FilterInstantiations(aInstantiations, nullptr);
     }
     else {
-        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+        MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                ("TestNode[%p]: Constrain() failed", this));
 
         rv = NS_OK;
     }
 
-    MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+    MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
            ("TestNode[%p]: Constrain() end", this));
 
     return rv;

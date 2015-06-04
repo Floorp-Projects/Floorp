@@ -198,15 +198,6 @@ Version(JSContext *cx,
 }
 
 static bool
-BuildDate(JSContext *cx, unsigned argc, JS::Value *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-    fprintf(stdout, "built on %s at %s\n", __DATE__, __TIME__);
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
 Quit(JSContext *cx,
      unsigned argc,
      JS::Value *vp)
@@ -275,7 +266,6 @@ const JSFunctionSpec gGlobalFunctions[] =
     JS_FS("load",            Load,           1,0),
     JS_FS("quit",            Quit,           0,0),
     JS_FS("version",         Version,        1,0),
-    JS_FS("build",           BuildDate,      0,0),
     JS_FS("dumpXPC",         DumpXPC,        1,0),
     JS_FS("dump",            Dump,           1,0),
     JS_FS("gc",              GC,             0,0),

@@ -18,7 +18,7 @@
 
 PRLogModuleInfo* gRtspChildLog = nullptr;
 #undef LOG
-#define LOG(args) MOZ_LOG(gRtspChildLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gRtspChildLog, mozilla::LogLevel::Debug, args)
 
 const uint32_t kRtspTotalTracks = 2;
 const unsigned long kRtspCommandDelayMs = 200;

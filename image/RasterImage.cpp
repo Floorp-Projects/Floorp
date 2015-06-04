@@ -83,7 +83,7 @@ static int32_t sMaxDecodeCount = 0;
  */
 #define LOG_CONTAINER_ERROR                      \
   PR_BEGIN_MACRO                                 \
-  PR_LOG (GetImgLog(), PR_LOG_ERROR,             \
+  MOZ_LOG (GetImgLog(), LogLevel::Error,             \
           ("RasterImage: [this=%p] Error "      \
            "detected at line %u for image of "   \
            "type %s\n", this, __LINE__,          \

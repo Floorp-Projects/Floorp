@@ -116,8 +116,8 @@ GetObjectLog()
   return sLog;
 }
 
-#define LOG(args) MOZ_LOG(GetObjectLog(), PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(GetObjectLog(), PR_LOG_DEBUG)
+#define LOG(args) MOZ_LOG(GetObjectLog(), mozilla::LogLevel::Debug, args)
+#define LOG_ENABLED() MOZ_LOG_TEST(GetObjectLog(), mozilla::LogLevel::Debug)
 
 static bool
 IsJavaMIME(const nsACString & aMIMEType)

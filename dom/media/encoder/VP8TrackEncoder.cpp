@@ -16,7 +16,7 @@
 namespace mozilla {
 
 PRLogModuleInfo* gVP8TrackEncoderLog;
-#define VP8LOG(msg, ...) MOZ_LOG(gVP8TrackEncoderLog, PR_LOG_DEBUG, \
+#define VP8LOG(msg, ...) MOZ_LOG(gVP8TrackEncoderLog, mozilla::LogLevel::Debug, \
                                   (msg, ##__VA_ARGS__))
 // Debug logging macro with object pointer and class name.
 

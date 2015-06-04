@@ -25,7 +25,7 @@ namespace mozilla {
 
 extern PRLogModuleInfo* GetGMPLog();
 
-#define LOGD(msg) MOZ_LOG(GetGMPLog(), PR_LOG_DEBUG, msg)
+#define LOGD(msg) MOZ_LOG(GetGMPLog(), mozilla::LogLevel::Debug, msg)
 #define LOG(level, msg) MOZ_LOG(GetGMPLog(), (level), msg)
 
 #ifdef __CLASS__
@@ -352,7 +352,7 @@ GMPVideoEncoderParent::AnswerNeedShmem(const uint32_t& aEncodedBufferSize,
                                                 aEncodedBufferSize,
                                                 ipc::SharedMemory::TYPE_BASIC, &mem))
   {
-    LOG(PR_LOG_ERROR, ("%s::%s: Failed to get a shared mem buffer for Child! size %u",
+    LOG(LogLevel::Error, ("%s::%s: Failed to get a shared mem buffer for Child! size %u",
                        __CLASS__, __FUNCTION__, aEncodedBufferSize));
     return false;
   }

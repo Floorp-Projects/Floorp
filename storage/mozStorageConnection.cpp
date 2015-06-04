@@ -152,7 +152,7 @@ Module gModules[] = {
 
 void tracefunc (void *aClosure, const char *aStmt)
 {
-  MOZ_LOG(gStorageLog, PR_LOG_DEBUG, ("sqlite3_trace on %p for '%s'", aClosure,
+  MOZ_LOG(gStorageLog, LogLevel::Debug, ("sqlite3_trace on %p for '%s'", aClosure,
                                      aStmt));
 }
 
@@ -694,10 +694,10 @@ Connection::initializeInternal()
 
   // SQLite tracing can slow down queries (especially long queries)
   // significantly. Don't trace unless the user is actively monitoring SQLite.
-  if (PR_LOG_TEST(gStorageLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gStorageLog, LogLevel::Debug)) {
     ::sqlite3_trace(mDBConn, tracefunc, this);
 
-    MOZ_LOG(gStorageLog, PR_LOG_NOTICE, ("Opening connection to '%s' (%p)",
+    MOZ_LOG(gStorageLog, LogLevel::Debug, ("Opening connection to '%s' (%p)",
                                         mTelemetryFilename.get(), this));
   }
 
@@ -923,11 +923,11 @@ Connection::internalClose(sqlite3 *aNativeConnection)
   }
 #endif // DEBUG
 
-  if (PR_LOG_TEST(gStorageLog, PR_LOG_NOTICE)) {
+  if (MOZ_LOG_TEST(gStorageLog, LogLevel::Debug)) {
     nsAutoCString leafName(":memory");
     if (mDatabaseFile)
         (void)mDatabaseFile->GetNativeLeafName(leafName);
-    MOZ_LOG(gStorageLog, PR_LOG_NOTICE, ("Closing connection to '%s'",
+    MOZ_LOG(gStorageLog, LogLevel::Debug, ("Closing connection to '%s'",
                                         leafName.get()));
   }
 
@@ -953,7 +953,7 @@ Connection::internalClose(sqlite3 *aNativeConnection)
 
     sqlite3_stmt *stmt = nullptr;
     while ((stmt = ::sqlite3_next_stmt(aNativeConnection, stmt))) {
-      MOZ_LOG(gStorageLog, PR_LOG_NOTICE,
+      MOZ_LOG(gStorageLog, LogLevel::Debug,
              ("Auto-finalizing SQL statement '%s' (%x)",
               ::sqlite3_sql(stmt),
               stmt));
@@ -1103,7 +1103,7 @@ Connection::prepareStatement(sqlite3 *aNativeConnection, const nsCString &aSQL,
 #ifdef DEBUG
     NS_WARNING(warnMsg.get());
 #endif
-    MOZ_LOG(gStorageLog, PR_LOG_ERROR, ("%s", warnMsg.get()));
+    MOZ_LOG(gStorageLog, LogLevel::Error, ("%s", warnMsg.get()));
   }
 
   (void)::sqlite3_extended_result_codes(aNativeConnection, 0);

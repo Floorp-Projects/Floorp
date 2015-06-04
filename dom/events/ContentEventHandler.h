@@ -124,11 +124,13 @@ protected:
                                       LineBreakType aLineBreakType,
                                       bool aExpandToClusterBoundaries,
                                       uint32_t* aNewOffset = nullptr);
-  // Find the first textframe for the range, and get the start offset in
-  // the frame.
-  nsresult GetStartFrameAndOffset(nsRange* aRange,
-                                  nsIFrame** aFrame,
-                                  int32_t* aOffsetInFrame);
+  // If the aRange isn't in text node but next to a text node, this method
+  // modifies it in the text node.  Otherwise, not modified.
+  nsresult AdjustCollapsedRangeMaybeIntoTextNode(nsRange* aCollapsedRange);
+  // Find the first frame for the range and get the start offset in it.
+  nsresult GetStartFrameAndOffset(const nsRange* aRange,
+                                  nsIFrame*& aFrame,
+                                  int32_t& aOffsetInFrame);
   // Convert the frame relative offset to the root view relative offset.
   nsresult ConvertToRootViewRelativeOffset(nsIFrame* aFrame,
                                            nsRect& aRect);

@@ -2378,7 +2378,7 @@ nsresult
 PluginModuleParent::NP_GetValue(void *future, NPPVariable aVariable,
                                    void *aValue, NPError* error)
 {
-    MOZ_LOG(GetPluginLog(), PR_LOG_WARNING, ("%s Not implemented, requested variable %i", __FUNCTION__,
+    MOZ_LOG(GetPluginLog(), LogLevel::Warning, ("%s Not implemented, requested variable %i", __FUNCTION__,
                                         (int) aVariable));
 
     //TODO: implement this correctly

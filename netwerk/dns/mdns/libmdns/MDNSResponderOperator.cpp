@@ -31,9 +31,9 @@ GetOperatorLog()
   return log;
 }
 #undef LOG_I
-#define LOG_I(...) PR_LOG(GetOperatorLog(), PR_LOG_NOTICE, (__VA_ARGS__))
+#define LOG_I(...) MOZ_LOG(GetOperatorLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 #undef LOG_E
-#define LOG_E(...) PR_LOG(GetOperatorLog(), PR_LOG_ERROR, (__VA_ARGS__))
+#define LOG_E(...) MOZ_LOG(GetOperatorLog(), mozilla::LogLevel::Error, (__VA_ARGS__))
 
 namespace mozilla {
 namespace net {

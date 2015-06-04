@@ -55,6 +55,7 @@ UNIFIED_SOURCES += [
     'testMappedArrayBuffer.cpp',
     'testMutedErrors.cpp',
     'testNewObject.cpp',
+    'testNewTargetInvokeConstructor.cpp',
     'testNullRoot.cpp',
     'testObjectEmulatingUndefined.cpp',
     'testOOM.cpp',

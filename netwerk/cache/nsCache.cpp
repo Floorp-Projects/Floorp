@@ -27,7 +27,7 @@ CacheLogInit()
 
 
 void
-CacheLogPrintPath(PRLogModuleLevel level, const char * format, nsIFile * item)
+CacheLogPrintPath(mozilla::LogLevel level, const char * format, nsIFile * item)
 {
     nsAutoCString path;
     nsresult rv = item->GetNativePath(path);

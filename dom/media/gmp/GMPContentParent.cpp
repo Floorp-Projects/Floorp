@@ -22,7 +22,7 @@ namespace mozilla {
 
 extern PRLogModuleInfo* GetGMPLog();
 
-#define LOGD(msg) MOZ_LOG(GetGMPLog(), PR_LOG_DEBUG, msg)
+#define LOGD(msg) MOZ_LOG(GetGMPLog(), mozilla::LogLevel::Debug, msg)
 #define LOG(level, msg) MOZ_LOG(GetGMPLog(), (level), msg)
 
 #ifdef __CLASS__

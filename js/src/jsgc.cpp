@@ -2206,9 +2206,8 @@ GCRuntime::relocateArenas(Zone* zone, JS::gcreason::Reason reason, SliceBudget& 
     return true;
 }
 
-
 void
-MovingTracer::Visit(JS::CallbackTracer* jstrc, void** thingp, JS::TraceKind kind)
+MovingTracer::trace(void** thingp, JS::TraceKind kind)
 {
     TenuredCell* thing = TenuredCell::fromPointer(*thingp);
 
@@ -3678,10 +3677,10 @@ GCRuntime::shouldPreserveJITCode(JSCompartment* comp, int64_t currentTime,
 #ifdef DEBUG
 class CompartmentCheckTracer : public JS::CallbackTracer
 {
+    void trace(void** thingp, JS::TraceKind kind) override;
+
   public:
-    CompartmentCheckTracer(JSRuntime* rt, JSTraceCallback callback)
-      : JS::CallbackTracer(rt, callback)
-    {}
+    explicit CompartmentCheckTracer(JSRuntime* rt) : JS::CallbackTracer(rt) {}
 
     Cell* src;
     JS::TraceKind srcKind;
@@ -3714,31 +3713,23 @@ InCrossCompartmentMap(JSObject* src, Cell* dst, JS::TraceKind dstKind)
     return false;
 }
 
-static void
-CheckCompartment(CompartmentCheckTracer* trc, JSCompartment* thingCompartment,
-                 Cell* thing, JS::TraceKind kind)
-{
-    MOZ_ASSERT(thingCompartment == trc->compartment ||
-               trc->runtime()->isAtomsCompartment(thingCompartment) ||
-               (trc->srcKind == JS::TraceKind::Object &&
-                InCrossCompartmentMap((JSObject*)trc->src, thing, kind)));
-}
-
 struct MaybeCompartmentFunctor {
     template <typename T> JSCompartment* operator()(T* t) { return t->maybeCompartment(); }
 };
 
-static void
-CheckCompartmentCallback(JS::CallbackTracer* trcArg, void** thingp, JS::TraceKind kind)
+void
+CompartmentCheckTracer::trace(void** thingp, JS::TraceKind kind)
 {
-    CompartmentCheckTracer* trc = static_cast<CompartmentCheckTracer*>(trcArg);
     TenuredCell* thing = TenuredCell::fromPointer(*thingp);
 
     JSCompartment* comp = CallTyped(MaybeCompartmentFunctor(), thing, kind);
-    if (comp && trc->compartment)
-        CheckCompartment(trc, comp, thing, kind);
-    else
-        MOZ_ASSERT(thing->zone() == trc->zone || thing->zone()->isAtomsZone());
+    if (comp && compartment) {
+        MOZ_ASSERT(comp == compartment || runtime()->isAtomsCompartment(comp) ||
+                   (srcKind == JS::TraceKind::Object &&
+                    InCrossCompartmentMap(static_cast<JSObject*>(src), thing, kind)));
+    } else {
+        MOZ_ASSERT(thing->zone() == zone || thing->zone()->isAtomsZone());
+    }
 }
 
 void
@@ -3747,7 +3738,7 @@ GCRuntime::checkForCompartmentMismatches()
     if (disableStrictProxyCheckingCount)
         return;
 
-    CompartmentCheckTracer trc(rt, CheckCompartmentCallback);
+    CompartmentCheckTracer trc(rt);
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         trc.zone = zone;
         for (auto thingKind : AllAllocKinds()) {

@@ -77,16 +77,16 @@ using namespace mozilla::widget;
 PRLogModuleInfo* gFocusLog;
 PRLogModuleInfo* gFocusNavigationLog;
 
-#define LOGFOCUS(args) MOZ_LOG(gFocusLog, PR_LOG_DEBUG, args)
-#define LOGFOCUSNAVIGATION(args) MOZ_LOG(gFocusNavigationLog, PR_LOG_DEBUG, args)
+#define LOGFOCUS(args) MOZ_LOG(gFocusLog, mozilla::LogLevel::Debug, args)
+#define LOGFOCUSNAVIGATION(args) MOZ_LOG(gFocusNavigationLog, mozilla::LogLevel::Debug, args)
 
 #define LOGTAG(log, format, content)                            \
-  if (PR_LOG_TEST(log, PR_LOG_DEBUG)) {                         \
+  if (MOZ_LOG_TEST(log, LogLevel::Debug)) {                         \
     nsAutoCString tag(NS_LITERAL_CSTRING("(none)"));            \
     if (content) {                                              \
       content->NodeInfo()->NameAtom()->ToUTF8String(tag);       \
     }                                                           \
-    MOZ_LOG(log, PR_LOG_DEBUG, (format, tag.get()));             \
+    MOZ_LOG(log, LogLevel::Debug, (format, tag.get()));             \
   }
 
 #define LOGCONTENT(format, content) LOGTAG(gFocusLog, format, content)
@@ -482,7 +482,7 @@ nsFocusManager::MoveFocus(nsIDOMWindow* aWindow, nsIDOMElement* aStartElement,
 
   LOGFOCUS(("<<MoveFocus begin Type: %d Flags: %x>>", aType, aFlags));
 
-  if (PR_LOG_TEST(gFocusLog, PR_LOG_DEBUG) && mFocusedWindow) {
+  if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug) && mFocusedWindow) {
     nsIDocument* doc = mFocusedWindow->GetExtantDoc();
     if (doc && doc->GetDocumentURI()) {
       nsAutoCString spec;
@@ -638,7 +638,7 @@ nsFocusManager::WindowRaised(nsIDOMWindow* aWindow)
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
   NS_ENSURE_TRUE(window && window->IsOuterWindow(), NS_ERROR_INVALID_ARG);
 
-  if (PR_LOG_TEST(gFocusLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
     LOGFOCUS(("Window %p Raised [Currently: %p %p]", aWindow, mActiveWindow.get(), mFocusedWindow.get()));
     nsAutoCString spec;
     nsIDocument* doc = window->GetExtantDoc();
@@ -734,7 +734,7 @@ nsFocusManager::WindowLowered(nsIDOMWindow* aWindow)
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
   NS_ENSURE_TRUE(window && window->IsOuterWindow(), NS_ERROR_INVALID_ARG);
 
-  if (PR_LOG_TEST(gFocusLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
     LOGFOCUS(("Window %p Lowered [Currently: %p %p]", aWindow, mActiveWindow.get(), mFocusedWindow.get()));
     nsAutoCString spec;
     nsIDocument* doc = window->GetExtantDoc();
@@ -852,7 +852,7 @@ nsFocusManager::WindowShown(nsIDOMWindow* aWindow, bool aNeedsFocus)
 
   window = window->GetOuterWindow();
 
-  if (PR_LOG_TEST(gFocusLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
     LOGFOCUS(("Window %p Shown [Currently: %p %p]", window.get(), mActiveWindow.get(), mFocusedWindow.get()));
     nsAutoCString spec;
     nsIDocument* doc = window->GetExtantDoc();
@@ -907,7 +907,7 @@ nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
 
   window = window->GetOuterWindow();
 
-  if (PR_LOG_TEST(gFocusLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
     LOGFOCUS(("Window %p Hidden [Currently: %p %p]", window.get(), mActiveWindow.get(), mFocusedWindow.get()));
     nsAutoCString spec;
     nsIDocument* doc = window->GetExtantDoc();
@@ -1777,7 +1777,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
 
   LOGCONTENT("Element %s has been focused", aContent);
 
-  if (PR_LOG_TEST(gFocusLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
     nsIDocument* docm = aWindow->GetExtantDoc();
     if (docm) {
       LOGCONTENT(" from %s", docm->GetRootElement());

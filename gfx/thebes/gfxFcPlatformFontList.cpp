@@ -37,13 +37,13 @@ using namespace mozilla::unicode;
 #define PRINTING_FC_PROPERTY "gfx.printing"
 
 #define LOG_FONTLIST(args) MOZ_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
-                               PR_LOG_DEBUG, args)
-#define LOG_FONTLIST_ENABLED() PR_LOG_TEST( \
+                               LogLevel::Debug, args)
+#define LOG_FONTLIST_ENABLED() MOZ_LOG_TEST( \
                                    gfxPlatform::GetLog(eGfxLog_fontlist), \
-                                   PR_LOG_DEBUG)
-#define LOG_CMAPDATA_ENABLED() PR_LOG_TEST( \
+                                   LogLevel::Debug)
+#define LOG_CMAPDATA_ENABLED() MOZ_LOG_TEST( \
                                    gfxPlatform::GetLog(eGfxLog_cmapdata), \
-                                   PR_LOG_DEBUG)
+                                   LogLevel::Debug)
 
 static const FcChar8*
 ToFcChar8Ptr(const char* aStr)

@@ -18,7 +18,7 @@ namespace mozilla {
 
 #undef LOG
 PRLogModuleInfo* gVorbisTrackEncoderLog;
-#define VORBISLOG(msg, ...) MOZ_LOG(gVorbisTrackEncoderLog, PR_LOG_DEBUG, \
+#define VORBISLOG(msg, ...) MOZ_LOG(gVorbisTrackEncoderLog, mozilla::LogLevel::Debug, \
                              (msg, ##__VA_ARGS__))
 
 VorbisTrackEncoder::VorbisTrackEncoder()

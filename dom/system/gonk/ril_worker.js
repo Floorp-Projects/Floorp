@@ -2788,8 +2788,10 @@ RilObject.prototype = {
     if (options.address) {
       GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_ADDRESS |
                                  COMPREHENSIONTLV_FLAG_CR);
+      let addressLength = options.address[0] == '+' ? options.address.length - 1
+                                                    : options.address.length;
       ComprehensionTlvHelper.writeLength(
-        Math.ceil(options.address.length/2) + 1 // address BCD + TON
+        Math.ceil(addressLength / 2) + 1 // address BCD + TON
       );
       this.context.ICCPDUHelper.writeDiallingNumber(options.address);
     }
@@ -11379,19 +11381,29 @@ ComprehensionTlvHelperObject.prototype = {
     let GsmPDUHelper = this.context.GsmPDUHelper;
 
     let cause = -1;
-    for (let errorNo in RIL_ERROR_TO_GECKO_ERROR) {
-      if (geckoError == RIL_ERROR_TO_GECKO_ERROR[errorNo]) {
+    for (let errorNo in RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR) {
+      if (geckoError == RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[errorNo]) {
         cause = errorNo;
         break;
       }
     }
+
+    // Causes specified in 10.5.4.11 of TS 04.08 are less than 128.
+    // we can ignore causes > 127 since Cause TLV is optional in
+    // STK_EVENT_TYPE_CALL_DISCONNECTED.
+    if (cause > 127) {
+      return;
+    }
+
     cause = (cause == -1) ? ERROR_SUCCESS : cause;
 
     GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_CAUSE |
                                COMPREHENSIONTLV_FLAG_CR);
     GsmPDUHelper.writeHexOctet(2);  // For single cause value.
 
-    // TS 04.08, clause 10.5.4.11: National standard code + user location.
+    // TS 04.08, clause 10.5.4.11:
+    // Code Standard : Standard defined for GSM PLMNS
+    // Location: User
     GsmPDUHelper.writeHexOctet(0x60);
 
     // TS 04.08, clause 10.5.4.11: ext bit = 1 + 7 bits for cause.
@@ -11438,11 +11450,11 @@ ComprehensionTlvHelperObject.prototype = {
 
     // TS 102.223, clause 8.38
     // +----------------+------------------+-------------------+
-    // | hours (1 byte) | minutes (1 btye) | secounds (1 byte) |
+    // | hours (1 byte) | minutes (1 btye) | seconds (1 byte)  |
     // +----------------+------------------+-------------------+
     GsmPDUHelper.writeSwappedNibbleBCDNum(Math.floor(seconds / 60 / 60));
     GsmPDUHelper.writeSwappedNibbleBCDNum(Math.floor(seconds / 60) % 60);
-    GsmPDUHelper.writeSwappedNibbleBCDNum(seconds % 60);
+    GsmPDUHelper.writeSwappedNibbleBCDNum(Math.floor(seconds) % 60);
   },
 
   writeTextStringTlv: function(text, coding) {

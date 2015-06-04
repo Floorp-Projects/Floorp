@@ -66,8 +66,8 @@ using safe_browsing::ClientDownloadRequest_SignatureInfo;
 
 // NSPR_LOG_MODULES=ApplicationReputation:5
 PRLogModuleInfo *ApplicationReputationService::prlog = nullptr;
-#define LOG(args) MOZ_LOG(ApplicationReputationService::prlog, PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(ApplicationReputationService::prlog, PR_LOG_DEBUG)
+#define LOG(args) MOZ_LOG(ApplicationReputationService::prlog, mozilla::LogLevel::Debug, args)
+#define LOG_ENABLED() MOZ_LOG_TEST(ApplicationReputationService::prlog, mozilla::LogLevel::Debug)
 
 class PendingDBLookup;
 

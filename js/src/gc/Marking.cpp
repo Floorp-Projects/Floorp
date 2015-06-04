@@ -137,6 +137,13 @@ IsThingPoisoned(T* thing)
     }
     return false;
 }
+
+static bool
+IsMovingTracer(JSTracer *trc)
+{
+    return trc->isCallbackTracer() &&
+           trc->asCallbackTracer()->getTracerKind() == JS::CallbackTracer::TracerKind::Moving;
+}
 #endif
 
 template <typename T> bool ThingIsPermanentAtomOrWellKnownSymbol(T* thing) { return false; }
@@ -173,8 +180,7 @@ js::CheckTracedThing(JSTracer* trc, T thing)
     if (IsInsideNursery(thing))
         return;
 
-    MOZ_ASSERT_IF(!MovingTracer::IsMovingTracer(trc) && !trc->isTenuringTracer(),
-                  !IsForwarded(thing));
+    MOZ_ASSERT_IF(!IsMovingTracer(trc) && !trc->isTenuringTracer(), !IsForwarded(thing));
 
     /*
      * Permanent atoms are not associated with this runtime, but will be
@@ -186,8 +192,8 @@ js::CheckTracedThing(JSTracer* trc, T thing)
     Zone* zone = thing->zoneFromAnyThread();
     JSRuntime* rt = trc->runtime();
 
-    MOZ_ASSERT_IF(!MovingTracer::IsMovingTracer(trc), CurrentThreadCanAccessZone(zone));
-    MOZ_ASSERT_IF(!MovingTracer::IsMovingTracer(trc), CurrentThreadCanAccessRuntime(rt));
+    MOZ_ASSERT_IF(!IsMovingTracer(trc), CurrentThreadCanAccessZone(zone));
+    MOZ_ASSERT_IF(!IsMovingTracer(trc), CurrentThreadCanAccessRuntime(rt));
 
     MOZ_ASSERT(zone->runtimeFromAnyThread() == trc->runtime());
 
@@ -201,7 +207,7 @@ js::CheckTracedThing(JSTracer* trc, T thing)
      */
     bool isGcMarkingTracer = trc->isMarkingTracer();
 
-    MOZ_ASSERT_IF(zone->requireGCTracer(), isGcMarkingTracer || IsBufferingGrayRoots(trc));
+    MOZ_ASSERT_IF(zone->requireGCTracer(), isGcMarkingTracer || IsBufferGrayRootsTracer(trc));
 
     if (isGcMarkingTracer) {
         GCMarker* gcMarker = static_cast<GCMarker*>(trc);
@@ -2266,16 +2272,14 @@ TypeSet::MarkTypeUnbarriered(JSTracer* trc, TypeSet::Type* v, const char* name)
 /*** Cycle Collector Barrier Implementation *******************************************************/
 
 #ifdef DEBUG
-static void
-AssertNonGrayGCThing(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind)
-{
-    DebugOnly<Cell*> thing(static_cast<Cell*>(*thingp));
-    MOZ_ASSERT_IF(thing->isTenured(), !thing->asTenured().isMarked(js::gc::GRAY));
-}
+struct AssertNonGrayTracer : public JS::CallbackTracer {
+    explicit AssertNonGrayTracer(JSRuntime* rt) : JS::CallbackTracer(rt) {}
+    void trace(void** thingp, JS::TraceKind kind) override {
+        DebugOnly<Cell*> thing(static_cast<Cell*>(*thingp));
+        MOZ_ASSERT_IF(thing->isTenured(), !thing->asTenured().isMarked(js::gc::GRAY));
+    }
+};
 #endif
-
-static void
-UnmarkGrayChildren(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind);
 
 struct UnmarkGrayTracer : public JS::CallbackTracer
 {
@@ -2284,18 +2288,20 @@ struct UnmarkGrayTracer : public JS::CallbackTracer
      * up any color mismatches involving weakmaps when it runs.
      */
     explicit UnmarkGrayTracer(JSRuntime* rt)
-      : JS::CallbackTracer(rt, UnmarkGrayChildren, DoNotTraceWeakMaps),
+      : JS::CallbackTracer(rt, DoNotTraceWeakMaps),
         tracingShape(false),
         previousShape(nullptr),
         unmarkedAny(false)
     {}
 
     UnmarkGrayTracer(JSTracer* trc, bool tracingShape)
-      : JS::CallbackTracer(trc->runtime(), UnmarkGrayChildren, DoNotTraceWeakMaps),
+      : JS::CallbackTracer(trc->runtime(), DoNotTraceWeakMaps),
         tracingShape(tracingShape),
         previousShape(nullptr),
         unmarkedAny(false)
     {}
+
+    void trace(void** thingp, JS::TraceKind kind) override;
 
     /* True iff we are tracing the immediate children of a shape. */
     bool tracingShape;
@@ -2337,18 +2343,18 @@ struct UnmarkGrayTracer : public JS::CallbackTracer
  *   of the containers, we must add unmark-graying read barriers to these
  *   containers.
  */
-static void
-UnmarkGrayChildren(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind)
+void
+UnmarkGrayTracer::trace(void** thingp, JS::TraceKind kind)
 {
     int stackDummy;
-    if (!JS_CHECK_STACK_SIZE(trc->runtime()->mainThread.nativeStackLimit[StackForSystemCode],
+    if (!JS_CHECK_STACK_SIZE(runtime()->mainThread.nativeStackLimit[StackForSystemCode],
                              &stackDummy))
     {
         /*
          * If we run out of stack, we take a more drastic measure: require that
          * we GC again before the next CC.
          */
-        trc->runtime()->gc.setGrayBitsInvalid();
+        runtime()->gc.setGrayBitsInvalid();
         return;
     }
 
@@ -2358,7 +2364,7 @@ UnmarkGrayChildren(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind)
     // to only black edges.
     if (!cell->isTenured()) {
 #ifdef DEBUG
-        JS::CallbackTracer nongray(trc->runtime(), AssertNonGrayGCThing);
+        AssertNonGrayTracer nongray(runtime());
         TraceChildren(&nongray, cell, kind);
 #endif
         return;
@@ -2369,28 +2375,27 @@ UnmarkGrayChildren(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind)
         return;
     tenured.unmark(js::gc::GRAY);
 
-    UnmarkGrayTracer* tracer = static_cast<UnmarkGrayTracer*>(trc);
-    tracer->unmarkedAny = true;
+    unmarkedAny = true;
 
     // Trace children of |tenured|. If |tenured| and its parent are both
     // shapes, |tenured| will get saved to mPreviousShape without being traced.
     // The parent will later trace |tenured|. This is done to avoid increasing
     // the stack depth during shape tracing. It is safe to do because a shape
     // can only have one child that is a shape.
-    UnmarkGrayTracer childTracer(tracer, kind == JS::TraceKind::Shape);
+    UnmarkGrayTracer childTracer(this, kind == JS::TraceKind::Shape);
 
     if (kind != JS::TraceKind::Shape) {
         TraceChildren(&childTracer, &tenured, kind);
         MOZ_ASSERT(!childTracer.previousShape);
-        tracer->unmarkedAny |= childTracer.unmarkedAny;
+        unmarkedAny |= childTracer.unmarkedAny;
         return;
     }
 
     MOZ_ASSERT(kind == JS::TraceKind::Shape);
     Shape* shape = static_cast<Shape*>(&tenured);
-    if (tracer->tracingShape) {
-        MOZ_ASSERT(!tracer->previousShape);
-        tracer->previousShape = shape;
+    if (tracingShape) {
+        MOZ_ASSERT(!previousShape);
+        previousShape = shape;
         return;
     }
 
@@ -2400,7 +2405,7 @@ UnmarkGrayChildren(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind)
         shape = childTracer.previousShape;
         childTracer.previousShape = nullptr;
     } while (shape);
-    tracer->unmarkedAny |= childTracer.unmarkedAny;
+    unmarkedAny |= childTracer.unmarkedAny;
 }
 
 bool

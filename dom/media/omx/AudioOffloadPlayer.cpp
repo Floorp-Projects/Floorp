@@ -135,7 +135,7 @@ status_t AudioOffloadPlayer::Start(bool aSourceAlreadyStarted)
   }
 
   if (mapMimeToAudioFormat(audioFormat, mime) != OK) {
-    AUDIO_OFFLOAD_LOG(PR_LOG_ERROR, ("Couldn't map mime type \"%s\" to a valid "
+    AUDIO_OFFLOAD_LOG(LogLevel::Error, ("Couldn't map mime type \"%s\" to a valid "
         "AudioSystem::audio_format", mime));
     audioFormat = AUDIO_FORMAT_INVALID;
   }
@@ -149,7 +149,7 @@ status_t AudioOffloadPlayer::Start(bool aSourceAlreadyStarted)
   offloadInfo.has_video = false;
   offloadInfo.is_streaming = false;
 
-  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("isOffloadSupported: SR=%u, CM=0x%x, "
+  AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("isOffloadSupported: SR=%u, CM=0x%x, "
       "Format=0x%x, StreamType=%d, BitRate=%u, duration=%lld us, has_video=%d",
       offloadInfo.sample_rate, offloadInfo.channel_mask, offloadInfo.format,
       offloadInfo.stream_type, offloadInfo.bit_rate, offloadInfo.duration_us,
@@ -210,7 +210,7 @@ status_t AudioOffloadPlayer::ChangeState(MediaDecoder::PlayState aState)
 
 static void ResetCallback(nsITimer* aTimer, void* aClosure)
 {
-  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("%s", __FUNCTION__));
+  AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("%s", __FUNCTION__));
   AudioOffloadPlayer* player = static_cast<AudioOffloadPlayer*>(aClosure);
   if (player) {
     player->Reset();
@@ -291,7 +291,7 @@ void AudioOffloadPlayer::Reset()
 
   CHECK(mAudioSink.get());
 
-  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("reset: mPlaying=%d mReachedEOS=%d",
+  AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("reset: mPlaying=%d mReachedEOS=%d",
       mPlaying, mReachedEOS));
 
   mAudioSink->Stop();
@@ -313,7 +313,7 @@ void AudioOffloadPlayer::Reset()
   // source is able to stop().
 
   if (mInputBuffer) {
-    AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Releasing input buffer"));
+    AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("Releasing input buffer"));
 
     mInputBuffer->release();
     mInputBuffer = nullptr;
@@ -349,7 +349,7 @@ status_t AudioOffloadPlayer::DoSeek()
   MOZ_ASSERT(mSeekTarget.IsValid());
   CHECK(mAudioSink.get());
 
-  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("DoSeek ( %lld )", mSeekTarget.mTime));
+  AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("DoSeek ( %lld )", mSeekTarget.mTime));
 
   mReachedEOS = false;
   mPositionTimeMediaUs = -1;
@@ -375,7 +375,7 @@ status_t AudioOffloadPlayer::DoSeek()
     }
 
     if (!mSeekPromise.IsEmpty()) {
-      AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Fake seek complete during pause"));
+      AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("Fake seek complete during pause"));
       // We do not reset mSeekTarget here.
       MediaDecoder::SeekResolveValue val(mReachedEOS, mSeekTarget.mEventVisibility);
       mSeekPromise.Resolve(val, __func__);
@@ -468,23 +468,23 @@ size_t AudioOffloadPlayer::AudioSinkCallback(GonkAudioSink* aAudioSink,
   switch (aEvent) {
 
     case GonkAudioSink::CB_EVENT_FILL_BUFFER:
-      AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Notify Audio position changed"));
+      AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("Notify Audio position changed"));
       me->NotifyPositionChanged();
       return me->FillBuffer(aBuffer, aSize);
 
     case GonkAudioSink::CB_EVENT_STREAM_END:
-      AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Notify Audio EOS"));
+      AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("Notify Audio EOS"));
       me->mReachedEOS = true;
       me->NotifyAudioEOS();
       break;
 
     case GonkAudioSink::CB_EVENT_TEAR_DOWN:
-      AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Notify Tear down event"));
+      AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("Notify Tear down event"));
       me->NotifyAudioTearDown();
       break;
 
     default:
-      AUDIO_OFFLOAD_LOG(PR_LOG_ERROR, ("Unknown event %d from audio sink",
+      AUDIO_OFFLOAD_LOG(LogLevel::Error, ("Unknown event %d from audio sink",
           aEvent));
       break;
   }
@@ -532,7 +532,7 @@ size_t AudioOffloadPlayer::FillBuffer(void* aData, size_t aSize)
         if (mSeekTarget.IsValid()) {
           mSeekTarget.Reset();
         }
-        AUDIO_OFFLOAD_LOG(PR_LOG_ERROR, ("Error while reading media source %d "
+        AUDIO_OFFLOAD_LOG(LogLevel::Error, ("Error while reading media source %d "
             "Ok to receive EOS error at end", err));
         if (!mReachedEOS) {
           // After seek there is a possible race condition if
@@ -544,8 +544,8 @@ size_t AudioOffloadPlayer::FillBuffer(void* aData, size_t aSize)
           // there will be an unnecessary call to the parser
           // after parser signalled EOS.
           if (sizeDone > 0) {
-            AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("send Partial buffer down"));
-            AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("skip calling stop till next"
+            AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("send Partial buffer down"));
+            AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("skip calling stop till next"
                 " fillBuffer"));
             break;
           }
@@ -565,12 +565,12 @@ size_t AudioOffloadPlayer::FillBuffer(void* aData, size_t aSize)
         MOZ_ASSERT(mSeekTarget.IsValid());
         mSeekTarget.Reset();
         if (!mSeekPromise.IsEmpty()) {
-          AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("FillBuffer posting SEEK_COMPLETE"));
+          AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("FillBuffer posting SEEK_COMPLETE"));
           MediaDecoder::SeekResolveValue val(mReachedEOS, mSeekTarget.mEventVisibility);
           mSeekPromise.Resolve(val, __func__);
         }
       } else if (mSeekTarget.IsValid()) {
-        AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("seek is updated during unlocking mLock"));
+        AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("seek is updated during unlocking mLock"));
       }
 
       if (refreshSeekTime) {
@@ -579,7 +579,7 @@ size_t AudioOffloadPlayer::FillBuffer(void* aData, size_t aSize)
         // need to adjust the mStartPosUs for offload decoding since parser
         // might not be able to get the exact seek time requested.
         mStartPosUs = mPositionTimeMediaUs;
-        AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Adjust seek time to: %.2f",
+        AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("Adjust seek time to: %.2f",
             mStartPosUs / 1E6));
       }
     }
@@ -613,7 +613,7 @@ void AudioOffloadPlayer::SetElementVisibility(bool aIsVisible)
   MOZ_ASSERT(NS_IsMainThread());
   mIsElementVisible = aIsVisible;
   if (mIsElementVisible) {
-    AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Element is visible. Start time update"));
+    AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("Element is visible. Start time update"));
     StartTimeUpdate();
   }
 }
@@ -709,7 +709,7 @@ void AudioOffloadPlayer::SendMetaDataToHal(sp<GonkAudioSink>& aSink,
     param.addInt(String8(AUDIO_OFFLOAD_CODEC_PADDING_SAMPLES), paddingSamples);
   }
 
-  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("SendMetaDataToHal: bitRate %d,"
+  AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("SendMetaDataToHal: bitRate %d,"
       " sampleRate %d, chanMask %d, delaySample %d, paddingSample %d", bitRate,
       sampleRate, channelMask, delaySamples, paddingSamples));
 
@@ -727,7 +727,7 @@ void AudioOffloadPlayer::SetVolume(double aVolume)
 void AudioOffloadPlayer::WakeLockCreate()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("%s", __FUNCTION__));
+  AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("%s", __FUNCTION__));
   if (!mWakeLock) {
     nsRefPtr<dom::power::PowerManagerService> pmService =
       dom::power::PowerManagerService::GetInstance();
@@ -741,7 +741,7 @@ void AudioOffloadPlayer::WakeLockCreate()
 void AudioOffloadPlayer::WakeLockRelease()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("%s", __FUNCTION__));
+  AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("%s", __FUNCTION__));
   if (mWakeLock) {
     ErrorResult rv;
     mWakeLock->Unlock(rv);

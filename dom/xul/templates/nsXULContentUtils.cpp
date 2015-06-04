@@ -363,6 +363,6 @@ nsXULContentUtils::LogTemplateError(const char* aStr)
   nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
   if (cs) {
     cs->LogStringMessage(message.get());
-    MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS, ("Error parsing template: %s", aStr));
+    MOZ_LOG(gXULTemplateLog, LogLevel::Info, ("Error parsing template: %s", aStr));
   }
 }

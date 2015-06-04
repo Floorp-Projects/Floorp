@@ -69,7 +69,7 @@ PR_STATIC_ASSERT (HighThreadThreshold <= MAX_RESOLVER_THREADS);
 //----------------------------------------------------------------------------
 
 static PRLogModuleInfo *gHostResolverLog = nullptr;
-#define LOG(args) MOZ_LOG(gHostResolverLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gHostResolverLog, mozilla::LogLevel::Debug, args)
 
 #define LOG_HOST(host, interface) host,                                        \
                  (interface && interface[0] != '\0') ? " on interface " : "",  \

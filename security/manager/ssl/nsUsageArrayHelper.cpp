@@ -129,7 +129,7 @@ nsUsageArrayHelper::check(uint32_t previousCheckResult,
       result = previousCheckResult;
   }
 
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("error validating certificate for usage %s: %s (%d) -> %ud \n",
           typestr.get(), PR_ErrorToName(error), (int) error, (int) result));
 

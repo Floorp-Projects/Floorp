@@ -215,6 +215,7 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_OBJECT_PROPERTY_NAME:
       case PNK_FRESHENBLOCK:
       case PNK_SUPERPROP:
+      case PNK_NEWTARGET:
         MOZ_ASSERT(pn->isArity(PN_NULLARY));
         MOZ_ASSERT(!pn->isUsed(), "handle non-trivial cases separately");
         MOZ_ASSERT(!pn->isDefn(), "handle non-trivial cases separately");

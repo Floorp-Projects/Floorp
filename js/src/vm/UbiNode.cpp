@@ -111,11 +111,7 @@ class SimpleEdgeVectorTracer : public JS::CallbackTracer {
     // True if we should populate the edge's names.
     bool wantNames;
 
-    static void staticCallback(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind) {
-        static_cast<SimpleEdgeVectorTracer*>(trc)->callback(thingp, kind);
-    }
-
-    void callback(void** thingp, JS::TraceKind kind) {
+    void trace(void** thingp, JS::TraceKind kind) {
         if (!okay)
             return;
 
@@ -154,7 +150,7 @@ class SimpleEdgeVectorTracer : public JS::CallbackTracer {
     bool okay;
 
     SimpleEdgeVectorTracer(JSContext* cx, SimpleEdgeVector* vec, bool wantNames)
-      : JS::CallbackTracer(JS_GetRuntime(cx), staticCallback),
+      : JS::CallbackTracer(JS_GetRuntime(cx)),
         vec(vec),
         wantNames(wantNames),
         okay(true)

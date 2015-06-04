@@ -15,7 +15,7 @@ nsInstantiationNode::nsInstantiationNode(nsXULTemplateQueryProcessorRDF* aProces
         : mProcessor(aProcessor),
           mQuery(aQuery)
 {
-    MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+    MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
            ("nsInstantiationNode[%p] query=%p", this, aQuery));
 
     MOZ_COUNT_CTOR(nsInstantiationNode);

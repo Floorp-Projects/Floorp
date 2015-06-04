@@ -509,7 +509,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
 #endif
 
     default:
-        MOZ_LOG(GetPluginLog(), PR_LOG_WARNING,
+        MOZ_LOG(GetPluginLog(), LogLevel::Warning,
                ("In PluginInstanceChild::NPN_GetValue: Unhandled NPNVariable %i (%s)",
                 (int) aVar, NPNVariableToString(aVar)));
         return NPERR_GENERIC_ERROR;
@@ -538,7 +538,7 @@ PluginInstanceChild::Invalidate()
 NPError
 PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 {
-    MOZ_LOG(GetPluginLog(), PR_LOG_DEBUG, ("%s (aVar=%i, aValue=%p)",
+    MOZ_LOG(GetPluginLog(), LogLevel::Debug, ("%s (aVar=%i, aValue=%p)",
                                       FULLFUNCTION, (int) aVar, aValue));
 
     AssertPluginThread();
@@ -627,7 +627,7 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 #endif
 
     default:
-        MOZ_LOG(GetPluginLog(), PR_LOG_WARNING,
+        MOZ_LOG(GetPluginLog(), LogLevel::Warning,
                ("In PluginInstanceChild::NPN_SetValue: Unhandled NPPVariable %i (%s)",
                 (int) aVar, NPPVariableToString(aVar)));
         return NPERR_GENERIC_ERROR;
@@ -2349,7 +2349,7 @@ PluginInstanceChild::FlashThrottleMessage(HWND aWnd,
 bool
 PluginInstanceChild::AnswerSetPluginFocus()
 {
-    MOZ_LOG(GetPluginLog(), PR_LOG_DEBUG, ("%s", FULLFUNCTION));
+    MOZ_LOG(GetPluginLog(), LogLevel::Debug, ("%s", FULLFUNCTION));
 
 #if defined(OS_WIN)
     // Parent is letting us know the dom set focus to the plugin. Note,
@@ -2372,7 +2372,7 @@ PluginInstanceChild::AnswerSetPluginFocus()
 bool
 PluginInstanceChild::AnswerUpdateWindow()
 {
-    MOZ_LOG(GetPluginLog(), PR_LOG_DEBUG, ("%s", FULLFUNCTION));
+    MOZ_LOG(GetPluginLog(), LogLevel::Debug, ("%s", FULLFUNCTION));
 
 #if defined(OS_WIN)
     if (mPluginWindowHWND) {

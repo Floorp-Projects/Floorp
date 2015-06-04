@@ -249,6 +249,7 @@ class SyntaxParseHandler
     Node newSuperElement(Node expr, const TokenPos& pos) {
         return NodeSuperElement;
     }
+    Node newNewTarget(const TokenPos& pos) { return NodeGeneric; }
 
     bool addPrototypeMutation(Node literal, uint32_t begin, Node expr) { return true; }
     bool addPropertyDefinition(Node literal, Node name, Node expr) { return true; }
@@ -336,6 +337,9 @@ class SyntaxParseHandler
 
     Node newList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
         MOZ_ASSERT(kind != PNK_VAR);
+        return NodeGeneric;
+    }
+    Node newList(ParseNodeKind kind, uint32_t begin, JSOp op = JSOP_NOP) {
         return NodeGeneric;
     }
     Node newDeclarationList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
