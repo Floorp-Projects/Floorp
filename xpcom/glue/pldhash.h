@@ -288,8 +288,6 @@ public:
 
   void ClearEntryStub(PLDHashEntryHdr* aEntry);
 
-  void FreeStringKey(PLDHashEntryHdr* aEntry);
-
 #ifdef PL_DHASHMETER
   void DumpMeter(PLDHashEnumerator aDump, FILE* aFp);
 #endif
@@ -444,8 +442,6 @@ PL_DHashMoveEntryStub(PLDHashTable* aTable,
                       PLDHashEntryHdr* aTo);
 
 void PL_DHashClearEntryStub(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
-
-void PL_DHashFreeStringKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
 /*
  * If you use PLDHashEntryStub or a subclass of it as your entry struct, and
