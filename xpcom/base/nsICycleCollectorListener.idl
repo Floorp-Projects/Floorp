@@ -6,9 +6,12 @@
 
 %{C++
 #include <stdio.h>
+
+class nsCycleCollectorLogger;
 %}
 
 [ptr] native FILE(FILE);
+[ptr] native nsCycleCollectorLoggerPtr (nsCycleCollectorLogger);
 interface nsIFile;
 
 /**
@@ -38,7 +41,7 @@ interface nsIFile;
  * The methods are a subset of those in nsICycleCollectorListener; see the
  * descriptions there.
  */
-[scriptable, uuid(39a8f80e-7eee-4141-b9ef-6e2a7d6e466d)]
+[scriptable, uuid(7f093367-1492-4b89-87af-c01dbc831246)]
 interface nsICycleCollectorHandler : nsISupports
 {
     void noteRefCountedObject(in ACString aAddress,
@@ -144,7 +147,7 @@ interface nsICycleCollectorLogSink : nsISupports
  *   on objects however it pleases: the cycle collector has finished its
  *   work, and the JS code is simply consuming recorded data.
  */
-[scriptable, builtinclass, uuid(c7d55656-e0d8-4986-88bb-cb28cb55b993)]
+[scriptable, builtinclass, uuid(d88a2896-7357-4462-ad5f-939d264ff64c)]
 interface nsICycleCollectorListener : nsISupports
 {
     // Return a listener that directs the cycle collector to traverse
@@ -204,4 +207,9 @@ interface nsICycleCollectorListener : nsISupports
     // Note that we only record events to report here if our
     // |wantAfterProcessing| property is true.
     boolean processNext(in nsICycleCollectorHandler aHandler);
+
+    // Return the current object as an nsCycleCollectorLogger*, which is the
+    // only class that should be implementing this interface. We need the
+    // concrete implementation type to help the GC rooting analysis.
+    [noscript] nsCycleCollectorLoggerPtr asLogger();
 };
