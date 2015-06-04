@@ -2951,11 +2951,8 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
 
     // Do not return 304 responses from the cache, and also do not return
     // any other non-redirect 3xx responses from the cache (see bug 759043).
-    // However, if this is a synthesized cache entry we don't care what the
-    // content is and will return it regardless.
     NS_ENSURE_TRUE((mCachedResponseHead->Status() / 100 != 3) ||
-                   isCachedRedirect ||
-                   mInterceptCache == INTERCEPTED, NS_ERROR_ABORT);
+                   isCachedRedirect, NS_ERROR_ABORT);
 
     // Don't bother to validate items that are read-only,
     // unless they are read-only because of INHIBIT_CACHING or because

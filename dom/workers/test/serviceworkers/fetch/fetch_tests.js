@@ -39,12 +39,6 @@ fetchXHR('synthesized-404.txt', function(xhr) {
   finish();
 });
 
-fetchXHR('synthesized-308.txt', function(xhr) {
-  my_ok(xhr.status == 308, "load should return 308");
-  my_ok(xhr.responseText == "synthesized response body", "308 load should have synthesized response");
-  finish();
-});
-
 fetchXHR('synthesized-headers.txt', function(xhr) {
   my_ok(xhr.status == 200, "load should be successful");
   my_ok(xhr.getResponseHeader("X-Custom-Greeting") === "Hello", "custom header should be set");
