@@ -16,6 +16,7 @@
 #define SHARED_SURFACE_H_
 
 #include <queue>
+#include <set>
 #include <stdint.h>
 
 #include "GLContextTypes.h"
@@ -34,6 +35,15 @@ namespace mozilla {
 namespace gfx {
 class DrawTarget;
 }
+
+namespace layers {
+class ISurfaceAllocator;
+class SharedSurfaceTextureClient;
+enum class TextureFlags : uint32_t;
+class SurfaceDescriptor;
+class TextureClient;
+}
+
 namespace gl {
 
 class GLContext;
@@ -51,6 +61,7 @@ public:
     GLContext* const mGL;
     const gfx::IntSize mSize;
     const bool mHasAlpha;
+    const bool mCanRecycle;
 protected:
     bool mIsLocked;
     bool mIsProducerAcquired;
@@ -61,7 +72,8 @@ protected:
                   AttachmentType attachType,
                   GLContext* gl,
                   const gfx::IntSize& size,
-                  bool hasAlpha);
+                  bool hasAlpha,
+                  bool canRecycle);
 
 public:
     virtual ~SharedSurface() {
@@ -86,6 +98,8 @@ protected:
     virtual void ProducerReleaseImpl() {
         Fence();
     }
+    virtual void ProducerReadAcquireImpl() {}
+    virtual void ProducerReadReleaseImpl() {}
     virtual void ConsumerAcquireImpl() {
         WaitSync();
     }
@@ -100,6 +114,16 @@ public:
     void ProducerRelease() {
         MOZ_ASSERT(mIsProducerAcquired);
         ProducerReleaseImpl();
+        mIsProducerAcquired = false;
+    }
+    void ProducerReadAcquire() {
+        MOZ_ASSERT(!mIsProducerAcquired);
+        ProducerReadAcquireImpl();
+        mIsProducerAcquired = true;
+    }
+    void ProducerReadRelease() {
+        MOZ_ASSERT(mIsProducerAcquired);
+        ProducerReadReleaseImpl();
         mIsProducerAcquired = false;
     }
     void ConsumerAcquire() {
@@ -173,36 +197,91 @@ public:
     virtual bool NeedsIndirectReads() const {
         return false;
     }
+
+    virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) = 0;
 };
 
 template<typename T>
-class UniquePtrQueue
+class RefSet
+{
+    std::set<T*> mSet;
+
+public:
+    ~RefSet() {
+        clear();
+    }
+
+    auto begin() -> decltype(mSet.begin()) {
+        return mSet.begin();
+    }
+
+    void clear() {
+        for (auto itr = mSet.begin(); itr != mSet.end(); ++itr) {
+            (*itr)->Release();
+        }
+        mSet.clear();
+    }
+
+    bool empty() const {
+        return mSet.empty();
+    }
+
+    bool insert(T* x) {
+        if (mSet.insert(x).second) {
+            x->AddRef();
+            return true;
+        }
+
+        return false;
+    }
+
+    bool erase(T* x) {
+        if (mSet.erase(x)) {
+            x->Release();
+            return true;
+        }
+
+        return false;
+    }
+};
+
+template<typename T>
+class RefQueue
 {
     std::queue<T*> mQueue;
 
 public:
-    ~UniquePtrQueue() {
-        MOZ_ASSERT(Empty());
+    ~RefQueue() {
+        clear();
     }
 
-    bool Empty() const {
+    void clear() {
+        while (!empty()) {
+            pop();
+        }
+    }
+
+    bool empty() const {
         return mQueue.empty();
     }
 
-    void Push(UniquePtr<T> up) {
-        T* p = up.release();
-        mQueue.push(p);
+    size_t size() const {
+        return mQueue.size();
     }
 
-    UniquePtr<T> Pop() {
-        UniquePtr<T> ret;
+    void push(T* x) {
+        mQueue.push(x);
+        x->AddRef();
+    }
 
-        if (!mQueue.empty()) {
-            ret.reset(mQueue.front());
-            mQueue.pop();
-        }
+    T* front() const {
+        return mQueue.front();
+    }
 
-        return Move(ret);
+    void pop() {
+        T* x = mQueue.front();
+        x->Release();
+        mQueue.pop();
     }
 };
 
@@ -213,18 +292,21 @@ public:
     // with SupportsWeakPtr. (bug 1049278)
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(SurfaceFactory)
 
+    const SharedSurfaceType mType;
     GLContext* const mGL;
     const SurfaceCaps mCaps;
-    const SharedSurfaceType mType;
+    const RefPtr<layers::ISurfaceAllocator> mAllocator;
+    const layers::TextureFlags mFlags;
     const GLFormats mFormats;
-
 protected:
     SurfaceCaps mDrawCaps;
     SurfaceCaps mReadCaps;
+    RefQueue<layers::SharedSurfaceTextureClient> mRecycleFreePool;
+    RefSet<layers::SharedSurfaceTextureClient> mRecycleTotalPool;
 
-    SurfaceFactory(GLContext* gl,
-                   SharedSurfaceType type,
-                   const SurfaceCaps& caps);
+    SurfaceFactory(SharedSurfaceType type, GLContext* gl, const SurfaceCaps& caps,
+                   const RefPtr<layers::ISurfaceAllocator>& allocator,
+                   const layers::TextureFlags& flags);
 
 public:
     virtual ~SurfaceFactory();
@@ -240,44 +322,19 @@ public:
 protected:
     virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) = 0;
 
-    UniquePtrQueue<SharedSurface> mScraps;
+    void StartRecycling(layers::SharedSurfaceTextureClient* tc);
+    void SetRecycleCallback(layers::SharedSurfaceTextureClient* tc);
+    void StopRecycling(layers::SharedSurfaceTextureClient* tc);
 
 public:
     UniquePtr<SharedSurface> NewSharedSurface(const gfx::IntSize& size);
-    TemporaryRef<ShSurfHandle> NewShSurfHandle(const gfx::IntSize& size);
+    //TemporaryRef<ShSurfHandle> NewShSurfHandle(const gfx::IntSize& size);
+    TemporaryRef<layers::SharedSurfaceTextureClient> NewTexClient(const gfx::IntSize& size);
+
+    static void RecycleCallback(layers::TextureClient* tc, void* /*closure*/);
 
     // Auto-deletes surfs of the wrong type.
-    void Recycle(UniquePtr<SharedSurface> surf);
-};
-
-class ShSurfHandle : public RefCounted<ShSurfHandle>
-{
-public:
-    MOZ_DECLARE_REFCOUNTED_TYPENAME(ShSurfHandle)
-
-private:
-    const WeakPtr<SurfaceFactory> mFactory;
-    UniquePtr<SharedSurface> mSurf;
-
-public:
-    ShSurfHandle(SurfaceFactory* factory, UniquePtr<SharedSurface> surf)
-        : mFactory(factory)
-        , mSurf(Move(surf))
-    {
-        MOZ_ASSERT(mFactory);
-        MOZ_ASSERT(mSurf);
-    }
-
-    ~ShSurfHandle() {
-        if (mFactory) {
-            mFactory->Recycle(Move(mSurf));
-        }
-    }
-
-    SharedSurface* Surf() const {
-        MOZ_ASSERT(mSurf.get());
-        return mSurf.get();
-    }
+    bool Recycle(layers::SharedSurfaceTextureClient* texClient);
 };
 
 class ScopedReadbackFB
