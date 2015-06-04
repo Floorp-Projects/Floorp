@@ -613,6 +613,40 @@ IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
 
 // static
 void
+IMEStateManager::OnEditorInitialized(nsIEditor* aEditor)
+{
+  if (!sActiveIMEContentObserver ||
+      sActiveIMEContentObserver->GetEditor() != aEditor) {
+    return;
+  }
+
+  MOZ_LOG(sISMLog, LogLevel::Info,
+    ("ISM: IMEStateManager::OnEditorInitialized(aEditor=0x%p)",
+     aEditor));
+
+  sActiveIMEContentObserver->UnsuppressNotifyingIME();
+}
+
+// static
+void
+IMEStateManager::OnEditorDestroying(nsIEditor* aEditor)
+{
+  if (!sActiveIMEContentObserver ||
+      sActiveIMEContentObserver->GetEditor() != aEditor) {
+    return;
+  }
+
+  MOZ_LOG(sISMLog, LogLevel::Info,
+    ("ISM: IMEStateManager::OnEditorDestroying(aEditor=0x%p)",
+     aEditor));
+
+  // The IMEContentObserver shouldn't notify IME of anything until reframing
+  // is finished.
+  sActiveIMEContentObserver->SuppressNotifyingIME();
+}
+
+// static
+void
 IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
                                 nsIContent* aContent,
                                 nsIEditor* aEditor)
