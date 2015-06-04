@@ -713,6 +713,20 @@ class BaseFinder(object):
         for p, f in self._find(pattern):
             yield p, self._minify_file(p, f)
 
+    def get(self, path):
+        """Obtain a single file.
+
+        Where ``find`` is tailored towards matching multiple files, this method
+        is used for retrieving a single file. Use this method when performance
+        is critical.
+
+        Returns a ``BaseFile`` if at most one file exists or ``None`` otherwise.
+        """
+        files = list(self.find(path))
+        if len(files) != 1:
+            return None
+        return files[0][1]
+
     def __iter__(self):
         '''
         Iterates over all files under the base directory (excluding files
@@ -788,7 +802,8 @@ class FileFinder(BaseFinder):
         elif os.path.isdir(os.path.join(self.base, pattern)):
             return self._find_dir(pattern)
         else:
-            return self._find_file(pattern)
+            f = self.get(pattern)
+            return ((pattern, f),) if f else ()
 
     def _find_dir(self, path):
         '''
@@ -810,23 +825,19 @@ class FileFinder(BaseFinder):
             for p_, f in self._find(mozpath.join(path, p)):
                 yield p_, f
 
-    def _find_file(self, path):
-        '''
-        Actual implementation of FileFinder.find() when the given pattern
-        corresponds to an existing file under the base directory.
-        '''
+    def get(self, path):
         srcpath = os.path.join(self.base, path)
         if not os.path.exists(srcpath):
-            return
+            return None
 
         for p in self.ignore:
             if mozpath.match(path, p):
-                return
+                return None
 
         if self.find_executables and is_executable(srcpath):
-            yield path, ExecutableFile(srcpath)
+            return ExecutableFile(srcpath)
         else:
-            yield path, File(srcpath)
+            return File(srcpath)
 
     def _find_glob(self, base, pattern):
         '''
