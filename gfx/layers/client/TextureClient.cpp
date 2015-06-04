@@ -20,6 +20,8 @@
 #include "mozilla/gfx/Logging.h"        // for gfxDebug
 #include "mozilla/layers/TextureClientOGL.h"
 #include "mozilla/layers/PTextureChild.h"
+#include "SharedSurface.h"
+#include "GLContext.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h" // for CreateDataSourceSurfaceByCloning
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "LayersLogging.h"              // for AppendToString
@@ -111,7 +113,7 @@ public:
 
   bool RecvCompositorRecycle() override
   {
-    RECYCLE_LOG("[CLIENT] Receive recycle %p (%p)\n", mTextureClient, mWaitForRecycle.get());
+    RECYCLE_LOG("Receive recycle %p (%p)\n", mTextureClient, mWaitForRecycle.get());
     mWaitForRecycle = nullptr;
     return true;
   }
@@ -119,7 +121,7 @@ public:
   void WaitForCompositorRecycle()
   {
     mWaitForRecycle = mTextureClient;
-    RECYCLE_LOG("[CLIENT] Wait for recycle %p\n", mWaitForRecycle.get());
+    RECYCLE_LOG("Wait for recycle %p\n", mWaitForRecycle.get());
     SendClientRecycle();
   }
 
@@ -585,10 +587,6 @@ TextureClient::Finalize()
     // Null it before RemoveTexture calls to avoid invalid actor->mTextureClient
     // when calling TextureChild::ActorDestroy()
     actor->mTextureClient = nullptr;
-
-    // `actor->mWaitForRecycle` may not be null, as we may be being called from setting
-    // this RefPtr to null! Clearing it here will double-Release() it.
-
     // this will call ForceRemove in the right thread, using a sync proxy if needed
     if (actor->GetForwarder()) {
       actor->GetForwarder()->RemoveTexture(this);
@@ -915,6 +913,32 @@ BufferTextureClient::GetLockedData() const
   MOZ_ASSERT(serializer.IsValid());
 
   return serializer.GetData();
+}
+
+////////////////////////////////////////////////////////////////////////
+// SharedSurfaceTextureClient
+
+SharedSurfaceTextureClient::SharedSurfaceTextureClient(ISurfaceAllocator* aAllocator,
+                                                       TextureFlags aFlags,
+                                                       gl::SharedSurface* surf)
+  : TextureClient(aAllocator, aFlags)
+  , mIsLocked(false)
+  , mSurf(surf)
+  , mGL(mSurf->mGL)
+{
+  AddFlags(TextureFlags::DEALLOCATE_CLIENT);
+}
+
+SharedSurfaceTextureClient::~SharedSurfaceTextureClient()
+{
+  // the data is owned externally.
+}
+
+bool
+SharedSurfaceTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
+{
+  aOutDescriptor = SharedSurfaceDescriptor((uintptr_t)mSurf);
+  return true;
 }
 
 TemporaryRef<SyncObject>

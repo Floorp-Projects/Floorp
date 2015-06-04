@@ -39,7 +39,7 @@ MacIOSurfaceTextureHostBasic::MacIOSurfaceTextureHostBasic(
 )
   : TextureHost(aFlags)
 {
-  mSurface = MacIOSurface::LookupSurface(aDescriptor.surfaceId(),
+  mSurface = MacIOSurface::LookupSurface(aDescriptor.surface(),
                                          aDescriptor.scaleFactor(),
                                          !aDescriptor.isOpaque());
 }

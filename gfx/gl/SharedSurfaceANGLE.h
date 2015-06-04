@@ -38,9 +38,7 @@ protected:
     GLLibraryEGL* const mEGL;
     const EGLContext mContext;
     const EGLSurface mPBuffer;
-public:
     const HANDLE mShareHandle;
-protected:
     RefPtr<IDXGIKeyedMutex> mKeyedMutex;
     RefPtr<IDXGIKeyedMutex> mConsumerKeyedMutex;
     RefPtr<ID3D11Texture2D> mConsumerTexture;
@@ -68,8 +66,6 @@ public:
     virtual void Fence() override;
     virtual void ProducerAcquireImpl() override;
     virtual void ProducerReleaseImpl() override;
-    virtual void ProducerReadAcquireImpl() override;
-    virtual void ProducerReadReleaseImpl() override;
     virtual void ConsumerAcquireImpl() override;
     virtual void ConsumerReleaseImpl() override;
     virtual bool WaitSync() override;
@@ -79,11 +75,14 @@ public:
     virtual bool WaitSync_ContentThread_Impl() override;
     virtual bool PollSync_ContentThread_Impl() override;
 
+    // Implementation-specific functions below:
+    HANDLE GetShareHandle() {
+        return mShareHandle;
+    }
+
     const RefPtr<ID3D11Texture2D>& GetConsumerTexture() const {
         return mConsumerTexture;
     }
-
-    virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) override;
 };
 
 
@@ -99,14 +98,12 @@ protected:
 
 public:
     static UniquePtr<SurfaceFactory_ANGLEShareHandle> Create(GLContext* gl,
-                                                             const SurfaceCaps& caps,
-                                                             const RefPtr<layers::ISurfaceAllocator>& allocator,
-                                                             const layers::TextureFlags& flags);
+                                                             const SurfaceCaps& caps);
 
 protected:
-    SurfaceFactory_ANGLEShareHandle(GLContext* gl, const SurfaceCaps& caps,
-                                    const RefPtr<layers::ISurfaceAllocator>& allocator,
-                                    const layers::TextureFlags& flags, GLLibraryEGL* egl,
+    SurfaceFactory_ANGLEShareHandle(GLContext* gl,
+                                    GLLibraryEGL* egl,
+                                    const SurfaceCaps& caps,
                                     bool* const out_success);
 
     virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {
