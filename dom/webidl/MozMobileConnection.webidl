@@ -56,6 +56,9 @@ interface MozMobileConnection : EventTarget
   const long CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL_EXCEPT_HOME = 2;
   const long CALL_BARRING_PROGRAM_ALL_INCOMING                       = 3;
   const long CALL_BARRING_PROGRAM_INCOMING_ROAMING                   = 4;
+  const long CALL_BARRING_PROGRAM_ALL_SERVICE                        = 5;
+  const long CALL_BARRING_PROGRAM_OUTGOING_SERVICE                   = 6;
+  const long CALL_BARRING_PROGRAM_INCOMING_SERVICE                   = 7;
 
   /**
    * Calling line identification restriction constants.

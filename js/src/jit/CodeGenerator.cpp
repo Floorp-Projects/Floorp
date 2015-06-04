@@ -1720,33 +1720,89 @@ CodeGenerator::visitLambda(LLambda* lir)
     masm.bind(ool->rejoin());
 }
 
-typedef JSObject* (*LambdaArrowFn)(JSContext*, HandleFunction, HandleObject, HandleValue);
+class OutOfLineLambdaArrow : public OutOfLineCodeBase<CodeGenerator>
+{
+  public:
+    LLambdaArrow* lir;
+    Label entryNoPop_;
+
+    explicit OutOfLineLambdaArrow(LLambdaArrow* lir)
+      : lir(lir)
+    { }
+
+    void accept(CodeGenerator* codegen) {
+        codegen->visitOutOfLineLambdaArrow(this);
+    }
+
+    Label* entryNoPop() {
+        return &entryNoPop_;
+    }
+};
+
+typedef JSObject* (*LambdaArrowFn)(JSContext*, HandleFunction, HandleObject, HandleValue, HandleValue);
 static const VMFunction LambdaArrowInfo = FunctionInfo<LambdaArrowFn>(js::LambdaArrow);
+
+void
+CodeGenerator::visitOutOfLineLambdaArrow(OutOfLineLambdaArrow* ool)
+{
+    Register scopeChain = ToRegister(ool->lir->scopeChain());
+    ValueOperand thisv = ToValue(ool->lir, LLambdaArrow::ThisValue);
+    ValueOperand newTarget = ToValue(ool->lir, LLambdaArrow::NewTargetValue);
+    Register output = ToRegister(ool->lir->output());
+    const LambdaFunctionInfo& info = ool->lir->mir()->info();
+
+    // When we get here, we may need to restore part of the newTarget,
+    // which has been conscripted into service as a temp register.
+    masm.pop(newTarget.scratchReg());
+
+    masm.bind(ool->entryNoPop());
+
+    saveLive(ool->lir);
+
+    pushArg(newTarget);
+    pushArg(thisv);
+    pushArg(scopeChain);
+    pushArg(ImmGCPtr(info.fun));
+
+    callVM(LambdaArrowInfo, ool->lir);
+    StoreRegisterTo(output).generate(this);
+
+    restoreLiveIgnore(ool->lir, StoreRegisterTo(output).clobbered());
+
+    masm.jump(ool->rejoin());
+}
 
 void
 CodeGenerator::visitLambdaArrow(LLambdaArrow* lir)
 {
     Register scopeChain = ToRegister(lir->scopeChain());
     ValueOperand thisv = ToValue(lir, LLambdaArrow::ThisValue);
+    ValueOperand newTarget = ToValue(lir, LLambdaArrow::NewTargetValue);
     Register output = ToRegister(lir->output());
-    Register tempReg = ToRegister(lir->temp());
     const LambdaFunctionInfo& info = lir->mir()->info();
 
-    OutOfLineCode* ool = oolCallVM(LambdaArrowInfo, lir,
-                                   (ArgList(), ImmGCPtr(info.fun), scopeChain, thisv),
-                                   StoreRegisterTo(output));
+    OutOfLineLambdaArrow* ool = new (alloc()) OutOfLineLambdaArrow(lir);
+    addOutOfLineCode(ool, lir->mir());
 
     MOZ_ASSERT(!info.useSingletonForClone);
 
     if (info.singletonType) {
         // If the function has a singleton type, this instruction will only be
         // executed once so we don't bother inlining it.
-        masm.jump(ool->entry());
+        masm.jump(ool->entryNoPop());
         masm.bind(ool->rejoin());
         return;
     }
 
+    // There's not enough registers on x86 with the profiler enabled to request
+    // a temp. Instead, spill part of one of the values, being prepared to
+    // restore it if necessary on the out of line path.
+    Register tempReg = newTarget.scratchReg();
+    masm.push(newTarget.scratchReg());
+
     masm.createGCObject(output, tempReg, info.fun, gc::DefaultHeap, ool->entry());
+
+    masm.pop(newTarget.scratchReg());
 
     emitLambdaInit(output, scopeChain, info);
 
@@ -1754,8 +1810,10 @@ CodeGenerator::visitLambdaArrow(LLambdaArrow* lir)
     MOZ_ASSERT(info.flags & JSFunction::EXTENDED);
     static_assert(FunctionExtended::NUM_EXTENDED_SLOTS == 2, "All slots must be initialized");
     static_assert(FunctionExtended::ARROW_THIS_SLOT == 0, "|this| must be stored in first slot");
+    static_assert(FunctionExtended::ARROW_NEWTARGET_SLOT == 1,
+                  "|new.target| must be stored in second slot");
     masm.storeValue(thisv, Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
-    masm.storeValue(UndefinedValue(), Address(output, FunctionExtended::offsetOfExtendedSlot(1)));
+    masm.storeValue(newTarget, Address(output, FunctionExtended::offsetOfExtendedSlot(1)));
 
     masm.bind(ool->rejoin());
 }
@@ -2932,12 +2990,12 @@ CodeGenerator::visitCallGetIntrinsicValue(LCallGetIntrinsicValue* lir)
     callVM(GetIntrinsicValueInfo, lir);
 }
 
-typedef bool (*InvokeFunctionFn)(JSContext*, HandleObject, uint32_t, Value*, MutableHandleValue);
+typedef bool (*InvokeFunctionFn)(JSContext*, HandleObject, bool, uint32_t, Value*, MutableHandleValue);
 static const VMFunction InvokeFunctionInfo = FunctionInfo<InvokeFunctionFn>(InvokeFunction);
 
 void
 CodeGenerator::emitCallInvokeFunction(LInstruction* call, Register calleereg,
-                                      uint32_t argc, uint32_t unusedStack)
+                                      bool constructing, uint32_t argc, uint32_t unusedStack)
 {
     // Nestle %esp up to the argument vector.
     // Each path must account for framePushed_ separately, for callVM to be valid.
@@ -2945,6 +3003,7 @@ CodeGenerator::emitCallInvokeFunction(LInstruction* call, Register calleereg,
 
     pushArg(masm.getStackPointer()); // argv.
     pushArg(Imm32(argc));            // argc.
+    pushArg(Imm32(constructing));    // constructing.
     pushArg(calleereg);              // JSFunction*.
 
     callVM(InvokeFunctionInfo, call);
@@ -2999,7 +3058,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
     // Check whether the provided arguments satisfy target argc.
     // We cannot have lowered to LCallGeneric with a known target. Assert that we didn't
     // add any undefineds in IonBuilder. NB: MCall::numStackArgs includes |this|.
-    MOZ_ASSERT(call->numActualArgs() == call->mir()->numStackArgs() - 1);
+    DebugOnly<unsigned> numNonArgsOnStack = 1 + call->isConstructing();
+    MOZ_ASSERT(call->numActualArgs() == call->mir()->numStackArgs() - numNonArgsOnStack);
     masm.load16ZeroExtend(Address(calleereg, JSFunction::offsetOfNargs()), nargsreg);
     masm.branch32(Assembler::Above, nargsreg, Imm32(call->numActualArgs()), &thunk);
     masm.jump(&makeCall);
@@ -3026,7 +3086,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
 
     // Handle uncompiled or native functions.
     masm.bind(&invoke);
-    emitCallInvokeFunction(call, calleereg, call->numActualArgs(), unusedStack);
+    emitCallInvokeFunction(call, calleereg, call->isConstructing(), call->numActualArgs(),
+                           unusedStack);
 
     masm.bind(&end);
 
@@ -3040,19 +3101,40 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
     }
 }
 
+typedef bool (*InvokeFunctionShuffleFn)(JSContext*, HandleObject, uint32_t, uint32_t, Value*,
+                                        MutableHandleValue);
+static const VMFunction InvokeFunctionShuffleInfo =
+    FunctionInfo<InvokeFunctionShuffleFn>(InvokeFunctionShuffleNewTarget);
+void
+CodeGenerator::emitCallInvokeFunctionShuffleNewTarget(LCallKnown* call, Register calleeReg,
+                                                      uint32_t numFormals, uint32_t unusedStack)
+{
+    masm.freeStack(unusedStack);
+
+    pushArg(masm.getStackPointer());
+    pushArg(Imm32(numFormals));
+    pushArg(Imm32(call->numActualArgs()));
+    pushArg(calleeReg);
+
+    callVM(InvokeFunctionShuffleInfo, call);
+
+    masm.reserveStack(unusedStack);
+}
+
 void
 CodeGenerator::visitCallKnown(LCallKnown* call)
 {
     Register calleereg = ToRegister(call->getFunction());
     Register objreg    = ToRegister(call->getTempObject());
     uint32_t unusedStack = StackOffsetOfPassedArg(call->argslot());
-    DebugOnly<JSFunction*> target = call->getSingleTarget();
+    JSFunction* target = call->getSingleTarget();
     Label end, uncompiled;
 
     // Native single targets are handled by LCallNative.
     MOZ_ASSERT(!target->isNative());
     // Missing arguments must have been explicitly appended by the IonBuilder.
-    MOZ_ASSERT(target->nargs() <= call->mir()->numStackArgs() - 1);
+    DebugOnly<unsigned> numNonArgsOnStack = 1 + call->isConstructing();
+    MOZ_ASSERT(target->nargs() <= call->mir()->numStackArgs() - numNonArgsOnStack);
 
     MOZ_ASSERT_IF(call->mir()->isConstructing(), target->isConstructor());
 
@@ -3092,7 +3174,10 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
 
     // Handle uncompiled functions.
     masm.bind(&uncompiled);
-    emitCallInvokeFunction(call, calleereg, call->numActualArgs(), unusedStack);
+    if (call->isConstructing() && target->nargs() > call->numActualArgs())
+        emitCallInvokeFunctionShuffleNewTarget(call, calleereg, target->nargs(), unusedStack);
+    else
+        emitCallInvokeFunction(call, calleereg, call->isConstructing(), call->numActualArgs(), unusedStack);
 
     masm.bind(&end);
 
@@ -3118,6 +3203,7 @@ CodeGenerator::emitCallInvokeFunction(LApplyArgsGeneric* apply, Register extraSt
 
     pushArg(objreg);                           // argv.
     pushArg(ToRegister(apply->getArgc()));     // argc.
+    pushArg(Imm32(false));                     // isConstrucing.
     pushArg(ToRegister(apply->getFunction())); // JSFunction*.
 
     // This specialization og callVM restore the extraStackSize after the call.
@@ -3457,41 +3543,24 @@ CodeGenerator::visitFilterArgumentsOrEvalV(LFilterArgumentsOrEvalV* lir)
     masm.bind(&done);
 }
 
-typedef bool (*DirectEvalSFn)(JSContext*, HandleObject, HandleScript, HandleValue, HandleString,
-                              jsbytecode*, MutableHandleValue);
+typedef bool (*DirectEvalSFn)(JSContext*, HandleObject, HandleScript, HandleValue, HandleValue,
+                              HandleString, jsbytecode*, MutableHandleValue);
 static const VMFunction DirectEvalStringInfo = FunctionInfo<DirectEvalSFn>(DirectEvalStringFromIon);
 
 void
-CodeGenerator::visitCallDirectEvalS(LCallDirectEvalS* lir)
+CodeGenerator::visitCallDirectEval(LCallDirectEval* lir)
 {
     Register scopeChain = ToRegister(lir->getScopeChain());
     Register string = ToRegister(lir->getString());
 
     pushArg(ImmPtr(lir->mir()->pc()));
     pushArg(string);
-    pushArg(ToValue(lir, LCallDirectEvalS::ThisValue));
+    pushArg(ToValue(lir, LCallDirectEval::NewTarget));
+    pushArg(ToValue(lir, LCallDirectEval::ThisValue));
     pushArg(ImmGCPtr(gen->info().script()));
     pushArg(scopeChain);
 
     callVM(DirectEvalStringInfo, lir);
-}
-
-typedef bool (*DirectEvalVFn)(JSContext*, HandleObject, HandleScript, HandleValue, HandleValue,
-                              jsbytecode*, MutableHandleValue);
-static const VMFunction DirectEvalValueInfo = FunctionInfo<DirectEvalVFn>(DirectEvalValueFromIon);
-
-void
-CodeGenerator::visitCallDirectEvalV(LCallDirectEvalV* lir)
-{
-    Register scopeChain = ToRegister(lir->getScopeChain());
-
-    pushArg(ImmPtr(lir->mir()->pc()));
-    pushArg(ToValue(lir, LCallDirectEvalV::Argument));
-    pushArg(ToValue(lir, LCallDirectEvalV::ThisValue));
-    pushArg(ImmGCPtr(gen->info().script()));
-    pushArg(scopeChain);
-
-    callVM(DirectEvalValueInfo, lir);
 }
 
 void
@@ -4952,6 +5021,14 @@ CodeGenerator::visitLoadArrowThis(LLoadArrowThis* lir)
     Register callee = ToRegister(lir->callee());
     ValueOperand output = ToOutValue(lir);
     masm.loadValue(Address(callee, FunctionExtended::offsetOfArrowThisSlot()), output);
+}
+
+void
+CodeGenerator::visitArrowNewTarget(LArrowNewTarget* lir)
+{
+    Register callee = ToRegister(lir->callee());
+    ValueOperand output = ToOutValue(lir);
+    masm.loadValue(Address(callee, FunctionExtended::offsetOfArrowNewTargetSlot()), output);
 }
 
 void
@@ -10029,6 +10106,41 @@ CodeGenerator::visitDebugger(LDebugger* ins)
     Label bail;
     masm.branchIfTrueBool(ReturnReg, &bail);
     bailoutFrom(&bail, ins->snapshot());
+}
+
+void
+CodeGenerator::visitNewTarget(LNewTarget *ins)
+{
+    ValueOperand output = GetValueOutput(ins);
+
+    // if (!isConstructing()) output = undefined
+    Label constructing, done;
+    Address calleeToken(masm.getStackPointer(), frameSize() + JitFrameLayout::offsetOfCalleeToken());
+    masm.branchTestPtr(Assembler::NonZero, calleeToken,
+                       Imm32(CalleeToken_FunctionConstructing), &constructing);
+    masm.moveValue(UndefinedValue(), output);
+    masm.jump(&done);
+
+    masm.bind(&constructing);
+
+    // else output = argv[Max(numActualArgs, numFormalArgs)]
+    Register argvLen = output.scratchReg();
+
+    Address actualArgsPtr(masm.getStackPointer(), frameSize() + JitFrameLayout::offsetOfNumActualArgs());
+    masm.loadPtr(actualArgsPtr, argvLen);
+
+    Label actualArgsSufficient;
+
+    size_t numFormalArgs = ins->mirRaw()->block()->info().funMaybeLazy()->nargs();
+    masm.branchPtr(Assembler::AboveOrEqual, argvLen, Imm32(numFormalArgs),
+                   &actualArgsSufficient);
+    masm.move32(Imm32(numFormalArgs), argvLen);
+    masm.bind(&actualArgsSufficient);
+
+    BaseValueIndex newTarget(masm.getStackPointer(), argvLen, frameSize() + JitFrameLayout::offsetOfActualArgs());
+    masm.loadValue(newTarget, output);
+
+    masm.bind(&done);
 }
 
 } // namespace jit

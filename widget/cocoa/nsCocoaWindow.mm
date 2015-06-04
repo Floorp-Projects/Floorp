@@ -106,10 +106,12 @@ nsCocoaWindow::nsCocoaWindow()
 , mAnimationType(nsIWidget::eGenericWindowAnimation)
 , mWindowMadeHere(false)
 , mSheetNeedsShow(false)
-, mFullScreen(false)
+, mInFullScreenMode(false)
 , mInFullScreenTransition(false)
+, mInDOMFullscreenTransition(false)
 , mModal(false)
-, mUsesNativeFullScreen(false)
+, mSupportsNativeFullScreen(false)
+, mInNativeFullScreenMode(false)
 , mIsAnimationSuppressed(false)
 , mInReportMoveEvent(false)
 , mInResize(false)
@@ -195,8 +197,7 @@ static NSScreen *FindTargetScreenForRect(const nsIntRect& aRect)
 // fits the rect to the screen that contains the largest area of it,
 // or to aScreen if a screen is passed in
 // NB: this operates with aRect in global display pixels
-static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *aScreen,
-                                          bool aUsesNativeFullScreen)
+static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *aScreen)
 {
   if (!aScreen) {
     aScreen = FindTargetScreenForRect(aRect);
@@ -226,16 +227,6 @@ static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *aScreen,
   if (aRect.y < screenBounds.y || aRect.y > (screenBounds.y + screenBounds.height)) {
     aRect.y = screenBounds.y;
   }
-
-  // If aRect is filling the screen and the window supports native (Lion-style)
-  // fullscreen mode, reduce aRect's height and shift it down by 22 pixels
-  // (nominally the height of the menu bar or of a window's title bar).  For
-  // some reason this works around bug 740923.  Yes, it's a bodacious hack.
-  // But until we know more it will have to do.
-  if (aUsesNativeFullScreen && aRect.y == 0 && aRect.height == screenBounds.height) {
-    aRect.y = 22;
-    aRect.height -= 22;
-  }
 }
 
 // Some applications use native popup windows
@@ -262,7 +253,7 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
   nsAutoreleasePool localPool;
 
   nsIntRect newBounds = aRect;
-  FitRectToVisibleAreaForScreen(newBounds, nullptr, mUsesNativeFullScreen);
+  FitRectToVisibleAreaForScreen(newBounds, nullptr);
 
   // Set defaults which can be overriden from aInitData in BaseCreate
   mWindowType = eWindowType_toplevel;
@@ -523,7 +514,7 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
   }
   nsBaseWidget::OnDestroy();
 
-  if (mFullScreen) {
+  if (mInFullScreenMode) {
     // On Lion we don't have to mess with the OS chrome when in Full Screen
     // mode.  But we do have to destroy the native window here (and not wait
     // for that to happen in our destructor).  We don't switch away from the
@@ -531,7 +522,7 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
     // might not happen for several seconds (because at least one object
     // holding a reference to ourselves is usually waiting to be garbage-
     // collected).  See bug 757618.
-    if (mUsesNativeFullScreen) {
+    if (mInNativeFullScreenMode) {
       DestroyNativeWindow();
     } else if (mWindow) {
       nsCocoaUtils::HideOSChromeOnScreen(false, [mWindow screen]);
@@ -1204,7 +1195,7 @@ NS_METHOD nsCocoaWindow::SetSizeMode(int32_t aMode)
       [mWindow zoom:nil];
   }
   else if (aMode == nsSizeMode_Fullscreen) {
-    if (!mFullScreen)
+    if (!mInFullScreenMode)
       MakeFullScreen(true);
   }
 
@@ -1263,7 +1254,10 @@ NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(bool aShouldHide)
 
   // Show the new window.
   if (isVisible) {
+    bool wasAnimationSuppressed = mIsAnimationSuppressed;
+    mIsAnimationSuppressed = true;
     rv = Show(true);
+    mIsAnimationSuppressed = wasAnimationSuppressed;
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1272,11 +1266,39 @@ NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(bool aShouldHide)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void nsCocoaWindow::EnteredFullScreen(bool aFullScreen)
+void nsCocoaWindow::PrepareForDOMFullscreenTransition()
+{
+  mInDOMFullscreenTransition = true;
+}
+
+void nsCocoaWindow::EnteredFullScreen(bool aFullScreen, bool aNativeMode)
 {
   mInFullScreenTransition = false;
-  mFullScreen = aFullScreen;
+  mInFullScreenMode = aFullScreen;
+  if (aNativeMode || mInNativeFullScreenMode) {
+    mInNativeFullScreenMode = aFullScreen;
+  }
   DispatchSizeModeEvent();
+}
+
+inline bool nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen)
+{
+  if (!mSupportsNativeFullScreen) {
+    // If we cannot use native fullscreen, don't touch it.
+    return false;
+  }
+  if (mInNativeFullScreenMode) {
+    // If we are using native fullscreen, go ahead to exit it.
+    return true;
+  }
+  if (mInDOMFullscreenTransition) {
+    // We shouldn't use native fullscreen for DOM fullscreen.
+    return false;
+  }
+  // If we are using native fullscreen, we should have returned earlier,
+  // which means if we reach here for exiting fullscreen, we must be
+  // exiting from DOM fullscreen, not native fullscreen.
+  return aFullScreen;
 }
 
 NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
@@ -1290,25 +1312,27 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScre
   // We will call into MakeFullScreen redundantly when entering/exiting
   // fullscreen mode via OS X controls. When that happens we should just handle
   // it gracefully - no need to ASSERT.
-  if (mFullScreen == aFullScreen) {
+  if (mInFullScreenMode == aFullScreen) {
     return NS_OK;
   }
 
-  // If we're using native fullscreen mode and our native window is invisible,
-  // our attempt to go into fullscreen mode will fail with an assertion in
-  // system code, without [WindowDelegate windowDidFailToEnterFullScreen:]
-  // ever getting called.  To pre-empt this we bail here.  See bug 752294.
-  if (mUsesNativeFullScreen && aFullScreen && ![mWindow isVisible]) {
-    EnteredFullScreen(false);
-    return NS_OK;
-  }
 
   mInFullScreenTransition = true;
 
-  if (mUsesNativeFullScreen) {
+  if (ShouldToggleNativeFullscreen(aFullScreen)) {
+    // If we're using native fullscreen mode and our native window is invisible,
+    // our attempt to go into fullscreen mode will fail with an assertion in
+    // system code, without [WindowDelegate windowDidFailToEnterFullScreen:]
+    // ever getting called.  To pre-empt this we bail here.  See bug 752294.
+    if (aFullScreen && ![mWindow isVisible]) {
+      EnteredFullScreen(false);
+      return NS_OK;
+    }
+    MOZ_ASSERT(mInNativeFullScreenMode != aFullScreen,
+               "We shouldn't have been in native fullscreen.");
     // Calling toggleFullScreen will result in windowDid(FailTo)?(Enter|Exit)FullScreen
     // to be called from the OS. We will call EnteredFullScreen from those methods,
-    // where mFullScreen will be set and a sizemode event will be dispatched.
+    // where mInFullScreenMode will be set and a sizemode event will be dispatched.
     [mWindow toggleFullScreen:nil];
   } else {
     NSDisableScreenUpdates();
@@ -1320,7 +1344,12 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScre
     NSEnableScreenUpdates();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    EnteredFullScreen(aFullScreen);
+    EnteredFullScreen(aFullScreen, /* aNativeMode */ false);
+  }
+
+  if (mInDOMFullscreenTransition) {
+    // Clear the flag about DOM fullscreen.
+    mInDOMFullscreenTransition = false;
   }
 
   return NS_OK;
@@ -1355,10 +1384,8 @@ nsresult nsCocoaWindow::DoResize(double aX, double aY,
                       NSToIntRound(height / scale));
 
   // constrain to the screen that contains the largest area of the new rect
-  FitRectToVisibleAreaForScreen(newBounds,
-                                aConstrainToCurrentScreen ?
-                                  [mWindow screen] : nullptr,
-                                mUsesNativeFullScreen);
+  FitRectToVisibleAreaForScreen(newBounds, aConstrainToCurrentScreen ?
+                                           [mWindow screen] : nullptr);
 
   // convert requested bounds into Cocoa coordinate system
   NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(newBounds);
@@ -1694,8 +1721,8 @@ nsCocoaWindow::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
   return NS_OK;
 }
 
-// aFullScreen should be the window's mFullScreen. We don't have access to that
-// from here, so we need to pass it in. mFullScreen should be the canonical
+// aFullScreen should be the window's mInFullScreenMode. We don't have access to that
+// from here, so we need to pass it in. mInFullScreenMode should be the canonical
 // indicator that a window is currently full screen and it makes sense to keep
 // all sizemode logic here.
 static nsSizeMode
@@ -1740,7 +1767,7 @@ nsCocoaWindow::DispatchSizeModeEvent()
     return;
   }
 
-  nsSizeMode newMode = GetWindowSizeMode(mWindow, mFullScreen);
+  nsSizeMode newMode = GetWindowSizeMode(mWindow, mInFullScreenMode);
 
   // Don't dispatch a sizemode event if:
   // 1. the window is transitioning to fullscreen
@@ -1960,16 +1987,16 @@ void nsCocoaWindow::SetShowsFullScreenButton(bool aShow)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!mWindow || ![mWindow respondsToSelector:@selector(toggleFullScreen:)] ||
-      mUsesNativeFullScreen == aShow) {
+      mSupportsNativeFullScreen == aShow) {
     return;
   }
 
   // If the window is currently in fullscreen mode, then we're going to
   // transition out first, then set the collection behavior & toggle
-  // mUsesNativeFullScreen, then transtion back into fullscreen mode. This
+  // mSupportsNativeFullScreen, then transtion back into fullscreen mode. This
   // prevents us from getting into a conflicting state with MakeFullScreen
-  // where mUsesNativeFullScreen would lead us down the wrong path.
-  bool wasFullScreen = mFullScreen;
+  // where mSupportsNativeFullScreen would lead us down the wrong path.
+  bool wasFullScreen = mInFullScreenMode;
 
   if (wasFullScreen) {
     MakeFullScreen(false);
@@ -1982,7 +2009,7 @@ void nsCocoaWindow::SetShowsFullScreenButton(bool aShow)
     newBehavior &= ~NSWindowCollectionBehaviorFullScreenPrimary;
   }
   [mWindow setCollectionBehavior:newBehavior];
-  mUsesNativeFullScreen = aShow;
+  mSupportsNativeFullScreen = aShow;
 
   if (wasFullScreen) {
     MakeFullScreen(true);
@@ -2773,6 +2800,7 @@ static const NSString* kStateDrawsContentsIntoWindowFrameKey = @"drawsContentsIn
 static const NSString* kStateActiveTitlebarColorKey = @"activeTitlebarColor";
 static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor";
 static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
+static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 - (void)importState:(NSDictionary*)aState
 {
@@ -2781,6 +2809,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   [self setTitlebarColor:[aState objectForKey:kStateActiveTitlebarColorKey] forActiveWindow:YES];
   [self setTitlebarColor:[aState objectForKey:kStateInactiveTitlebarColorKey] forActiveWindow:NO];
   [self setShowsToolbarButton:[[aState objectForKey:kStateShowsToolbarButton] boolValue]];
+  [self setCollectionBehavior:[[aState objectForKey:kStateCollectionBehavior] unsignedIntValue]];
 }
 
 - (NSMutableDictionary*)exportState
@@ -2799,6 +2828,8 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   }
   [state setObject:[NSNumber numberWithBool:[self showsToolbarButton]]
             forKey:kStateShowsToolbarButton];
+  [state setObject:[NSNumber numberWithUnsignedInt: [self collectionBehavior]]
+            forKey:kStateCollectionBehavior];
   return state;
 }
 
@@ -3336,7 +3367,9 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 
 - (NSPoint)windowButtonsPositionWithDefaultPosition:(NSPoint)aDefaultPosition
 {
-  if ([self drawsContentsIntoWindowFrame] && !([self styleMask] & NSFullScreenWindowMask)) {
+  NSInteger styleMask = [self styleMask];
+  if ([self drawsContentsIntoWindowFrame] &&
+      !(styleMask & NSFullScreenWindowMask) && (styleMask & NSTitledWindowMask)) {
     if (NSIsEmptyRect(mWindowButtonsRect)) {
       // Empty rect. Let's hide the buttons.
       // Position is in non-flipped window coordinates. Using frame's height

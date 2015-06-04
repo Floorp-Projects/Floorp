@@ -22,6 +22,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/net/DNS.h"
 
+using mozilla::LogLevel;
 using namespace mozilla::net;
 
 static PRDescIdentity nsSOCKSIOLayerIdentity;
@@ -30,8 +31,8 @@ static bool firstTime = true;
 static bool ipv6Supported = true;
 
 static PRLogModuleInfo *gSOCKSLog;
-#define LOGDEBUG(args) MOZ_LOG(gSOCKSLog, PR_LOG_DEBUG, args)
-#define LOGERROR(args) MOZ_LOG(gSOCKSLog, PR_LOG_ERROR , args)
+#define LOGDEBUG(args) MOZ_LOG(gSOCKSLog, mozilla::LogLevel::Debug, args)
+#define LOGERROR(args) MOZ_LOG(gSOCKSLog, mozilla::LogLevel::Error , args)
 
 class nsSOCKSSocketInfo : public nsISOCKSSocketInfo
                         , public nsIDNSListener
@@ -424,7 +425,7 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
             return PR_FAILURE;
         }
 
-        if (PR_LOG_TEST(gSOCKSLog, PR_LOG_DEBUG)) {
+        if (MOZ_LOG_TEST(gSOCKSLog, LogLevel::Debug)) {
           char buf[kIPv6CStrBufSize];
           NetAddrToString(&mInternalProxyAddr, buf, sizeof(buf));
           LOGDEBUG(("socks: trying proxy server, %s:%hu",

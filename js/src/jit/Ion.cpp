@@ -362,13 +362,13 @@ JitRuntime::patchIonBackedges(JSRuntime* rt, BackedgeTarget target)
 
 JitCompartment::JitCompartment()
   : stubCodes_(nullptr),
-    baselineCallReturnAddr_(nullptr),
     baselineGetPropReturnAddr_(nullptr),
     baselineSetPropReturnAddr_(nullptr),
     stringConcatStub_(nullptr),
     regExpExecStub_(nullptr),
     regExpTestStub_(nullptr)
 {
+    baselineCallReturnAddrs_[0] = baselineCallReturnAddrs_[1] = nullptr;
 }
 
 JitCompartment::~JitCompartment()
@@ -652,8 +652,11 @@ JitCompartment::sweep(FreeOp* fop, JSCompartment* compartment)
     stubCodes_->sweep(fop);
 
     // If the sweep removed the ICCall_Fallback stub, nullptr the baselineCallReturnAddr_ field.
-    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::Call_Fallback)))
-        baselineCallReturnAddr_ = nullptr;
+    if (!stubCodes_->lookup(ICCall_Fallback::Compiler::CALL_KEY))
+        baselineCallReturnAddrs_[0] = nullptr;
+    if (!stubCodes_->lookup(ICCall_Fallback::Compiler::CONSTRUCT_KEY))
+        baselineCallReturnAddrs_[1] = nullptr;
+
     // Similarly for the ICGetProp_Fallback stub.
     if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::GetProp_Fallback)))
         baselineGetPropReturnAddr_ = nullptr;
@@ -2559,7 +2562,8 @@ jit::SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state, AutoVal
             data.maxArgv = args.base() + 1;
         } else {
             MOZ_ASSERT(vals.empty());
-            if (!vals.reserve(Max(args.length() + 1, numFormals + 1)))
+            unsigned numPushedArgs = Max(args.length(), numFormals);
+            if (!vals.reserve(numPushedArgs + 1 + data.constructing))
                 return false;
 
             // Append |this| and any provided arguments.
@@ -2570,7 +2574,10 @@ jit::SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state, AutoVal
             while (vals.length() < numFormals + 1)
                 vals.infallibleAppend(UndefinedValue());
 
-            MOZ_ASSERT(vals.length() >= numFormals + 1);
+            if (data.constructing)
+                vals.infallibleAppend(args.newTarget());
+
+            MOZ_ASSERT(vals.length() >= numFormals + 1 + data.constructing);
             data.maxArgv = vals.begin();
         }
     } else {
@@ -2588,6 +2595,22 @@ jit::SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state, AutoVal
             ScriptFrameIter iter(cx);
             if (iter.isFunctionFrame())
                 data.calleeToken = CalleeToToken(iter.callee(cx), /* constructing = */ false);
+                
+            // Push newTarget onto the stack, as well as Argv.
+            if (!vals.reserve(2))
+                return false;
+            
+            data.maxArgc = 2;
+            data.maxArgv = vals.begin();
+            vals.infallibleAppend(state.asExecute()->thisv());
+            if (iter.isFunctionFrame()) { 
+                if (state.asExecute()->newTarget().isNull())
+                    vals.infallibleAppend(iter.newTarget());
+                else
+                    vals.infallibleAppend(state.asExecute()->newTarget());
+            } else {
+                vals.infallibleAppend(NullValue());
+            }
         }
     }
 

@@ -119,9 +119,11 @@ js::StackUses(JSScript* script, jsbytecode* pc)
     switch (op) {
       case JSOP_POPN:
         return GET_UINT16(pc);
+      case JSOP_NEW:
+        return 2 + GET_ARGC(pc) + 1;
       default:
         /* stack: fun, this, [argc arguments] */
-        MOZ_ASSERT(op == JSOP_NEW || op == JSOP_CALL || op == JSOP_EVAL ||
+        MOZ_ASSERT(op == JSOP_CALL || op == JSOP_EVAL ||
                    op == JSOP_STRICTEVAL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY);
         return 2 + GET_ARGC(pc);
     }
@@ -1272,6 +1274,8 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
         // |this| could convert to a very long object initialiser, so cite it by
         // its keyword name.
         return write(js_this_str);
+      case JSOP_NEWTARGET:
+        return write("new.target");
       case JSOP_CALL:
       case JSOP_FUNCALL:
         return decompilePCForStackOperand(pc, -int32_t(GET_ARGC(pc) + 2)) &&

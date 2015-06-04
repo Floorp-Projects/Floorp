@@ -13,6 +13,9 @@
 #include "nsXULContentUtils.h"
 
 #include "mozilla/Logging.h"
+
+using mozilla::LogLevel;
+
 extern PRLogModuleInfo* gXULTemplateLog;
 
 nsRDFConMemberTestNode::nsRDFConMemberTestNode(TestNode* aParent,
@@ -24,7 +27,7 @@ nsRDFConMemberTestNode::nsRDFConMemberTestNode(TestNode* aParent,
       mContainerVariable(aContainerVariable),
       mMemberVariable(aMemberVariable)
 {
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
         nsAutoCString props;
 
         nsResourceSet& containmentProps = aProcessor->ContainmentProperties();
@@ -50,7 +53,7 @@ nsRDFConMemberTestNode::nsRDFConMemberTestNode(TestNode* aParent,
         if (mMemberVariable)
             mMemberVariable->ToString(mvar);
 
-        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+        MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                ("nsRDFConMemberTestNode[%p]: parent=%p member-props=(%s) container-var=%s member-var=%s",
                 this,
                 aParent,
@@ -111,7 +114,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
         hasMemberBinding = inst->mAssignments.GetAssignmentFor(mMemberVariable,
                                                                getter_AddRefs(memberValue));
 
-        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+        if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
             const char* container = "(unbound)";
             if (hasContainerBinding)
                 containerRes->GetValueConst(&container);
@@ -120,7 +123,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
             if (hasMemberBinding)
                 nsXULContentUtils::GetTextForNode(memberValue, member);
 
-            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+            MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                    ("nsRDFConMemberTestNode[%p]: FilterInstantiations() container=[%s] member=[%s]",
                     this, container, NS_ConvertUTF16toUTF8(member).get()));
         }
@@ -168,7 +171,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                 }
             }
 
-            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+            MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                    ("    consistency check => %s", isconsistent ? "passed" : "failed"));
 
             if (isconsistent) {
@@ -215,11 +218,11 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                 if (! node)
                     return NS_ERROR_UNEXPECTED;
 
-                if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+                if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
                     nsAutoString member;
                     nsXULContentUtils::GetTextForNode(node, member);
 
-                    MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                    MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                            ("    member => %s", NS_ConvertUTF16toUTF8(member).get()));
                 }
 
@@ -302,11 +305,11 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                         if (! source)
                             return NS_ERROR_UNEXPECTED;
 
-                        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+                        if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
                             const char* container;
                             source->GetValueConst(&container);
 
-                            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                            MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                                    ("    container => %s", container));
                         }
 
@@ -372,11 +375,11 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                         NS_ASSERTION(value != nullptr, "member is not an nsIRDFNode");
                         if (! value) continue;
 
-                        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+                        if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
                             nsAutoString s;
                             nsXULContentUtils::GetTextForNode(value, s);
 
-                            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                            MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                                    ("    member => %s", NS_ConvertUTF16toUTF8(s).get()));
                         }
                     }
@@ -389,11 +392,11 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
 
                         value = valueRes;
 
-                        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+                        if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
                             const char* s;
                             valueRes->GetValueConst(&s);
 
-                            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                            MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                                    ("    container => %s", s));
                         }
                     }
@@ -466,7 +469,7 @@ nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
         canpropagate = mProcessor->ContainmentProperties().Contains(aProperty);
     }
 
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
         const char* source;
         aSource->GetValueConst(&source);
 
@@ -476,7 +479,7 @@ nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
         nsAutoString target;
         nsXULContentUtils::GetTextForNode(aTarget, target);
 
-        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+        MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                ("nsRDFConMemberTestNode[%p]: CanPropagate([%s]==[%s]=>[%s]) => %s",
                 this, source, property, NS_ConvertUTF16toUTF8(target).get(),
                 canpropagate ? "true" : "false"));

@@ -412,7 +412,7 @@ NetworkManager.prototype = {
           .then(() => {
             if (networkInterface.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
               // Remove routing table in /proc/net/route
-              return this._resetRoutingTable(networkInterface);
+              return this._resetRoutingTable(networkInterface.name);
             }
             if (networkInterface.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
               return this._removeDefaultRoute(networkInterface)
@@ -904,7 +904,10 @@ NetworkManager.prototype = {
 
   _setDNS: function(aNetwork) {
     return new Promise((aResolve, aReject) => {
-      gNetworkService.setDNS(aNetwork, (aError) => {
+      let dnses = aNetwork.getDnses();
+      let gateways = aNetwork.getGateways();
+      gNetworkService.setDNS(aNetwork.name, dnses.length, dnses,
+                             gateways.length, gateways, (aError) => {
         if (aError) {
           aReject("setDNS failed");
           return;
@@ -938,9 +941,9 @@ NetworkManager.prototype = {
     });
   },
 
-  _resetRoutingTable: function(aNetwork) {
+  _resetRoutingTable: function(aInterfaceName) {
     return new Promise((aResolve, aReject) => {
-      gNetworkService.resetRoutingTable(aNetwork, (aSuccess) => {
+      gNetworkService.resetRoutingTable(aInterfaceName, (aSuccess) => {
         if (!aSuccess) {
           debug("resetRoutingTable failed");
         }
@@ -952,7 +955,9 @@ NetworkManager.prototype = {
 
   _removeDefaultRoute: function(aNetwork) {
     return new Promise((aResolve, aReject) => {
-      gNetworkService.removeDefaultRoute(aNetwork, (aSuccess) => {
+      let gateways = aNetwork.getGateways();
+      gNetworkService.removeDefaultRoute(aNetwork.name, gateways.length,
+                                         gateways, (aSuccess) => {
         if (!aSuccess) {
           debug("removeDefaultRoute failed");
         }
@@ -964,7 +969,10 @@ NetworkManager.prototype = {
 
   _setDefaultRouteAndProxy: function(aNetwork, aOldInterface) {
     return new Promise((aResolve, aReject) => {
-      gNetworkService.setDefaultRoute(aNetwork, aOldInterface, (aSuccess) => {
+      let gateways = aNetwork.getGateways();
+      let oldInterfaceName = (aOldInterface ? aOldInterface.name : "");
+      gNetworkService.setDefaultRoute(aNetwork.name, gateways.length, gateways,
+                                      oldInterfaceName, (aSuccess) => {
         if (!aSuccess) {
           gNetworkService.destroyNetwork(aNetwork, function() {
             aReject("setDefaultRoute failed");

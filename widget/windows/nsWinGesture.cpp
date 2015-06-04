@@ -455,7 +455,7 @@ nsWinGesture::ProcessPanMessage(HWND hWnd, WPARAM wParam, LPARAM lParam)
 #ifdef DBG_jimm
         int32_t deltaX = mPanIntermediate.x - coord.x;
         int32_t deltaY = mPanIntermediate.y - coord.y;
-        MOZ_LOG(gWindowsLog, PR_LOG_ALWAYS, 
+        MOZ_LOG(gWindowsLog, LogLevel::Info, 
                ("coordX=%d coordY=%d deltaX=%d deltaY=%d x:%d y:%d\n", coord.x,
                 coord.y, deltaX, deltaY, mXAxisFeedback, mYAxisFeedback));
 #endif

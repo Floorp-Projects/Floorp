@@ -459,7 +459,7 @@ nsComponentManagerImpl::Init()
   // point.  So we wait until now.
   nsCategoryManager::GetSingleton()->InitMemoryReporter();
 
-  MOZ_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+  MOZ_LOG(nsComponentManagerLog, LogLevel::Debug,
          ("nsComponentManager: Initialized."));
 
   mStatus = NORMAL;
@@ -913,7 +913,7 @@ nsresult nsComponentManagerImpl::Shutdown(void)
   mStatus = SHUTDOWN_IN_PROGRESS;
 
   // Shutdown the component manager
-  MOZ_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+  MOZ_LOG(nsComponentManagerLog, LogLevel::Debug,
          ("nsComponentManager: Beginning Shutdown."));
 
 #if !defined(MOZILLA_XPCOMRT_API)
@@ -944,7 +944,7 @@ nsresult nsComponentManagerImpl::Shutdown(void)
 
   mStatus = SHUTDOWN_COMPLETE;
 
-  MOZ_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+  MOZ_LOG(nsComponentManagerLog, LogLevel::Debug,
          ("nsComponentManager: Shutdown complete."));
 
   return NS_OK;
@@ -952,14 +952,14 @@ nsresult nsComponentManagerImpl::Shutdown(void)
 
 nsComponentManagerImpl::~nsComponentManagerImpl()
 {
-  MOZ_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+  MOZ_LOG(nsComponentManagerLog, LogLevel::Debug,
          ("nsComponentManager: Beginning destruction."));
 
   if (SHUTDOWN_COMPLETE != mStatus) {
     Shutdown();
   }
 
-  MOZ_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+  MOZ_LOG(nsComponentManagerLog, LogLevel::Debug,
          ("nsComponentManager: Destroyed."));
 }
 
@@ -1031,7 +1031,7 @@ nsComponentManagerImpl::GetClassObject(const nsCID& aClass, const nsIID& aIID,
 {
   nsresult rv;
 
-  if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(nsComponentManagerLog, LogLevel::Debug)) {
     char* buf = aClass.ToString();
     PR_LogPrint("nsComponentManager: GetClassObject(%s)", buf);
     if (buf) {
@@ -1048,7 +1048,7 @@ nsComponentManagerImpl::GetClassObject(const nsCID& aClass, const nsIID& aIID,
 
   rv = factory->QueryInterface(aIID, aResult);
 
-  MOZ_LOG(nsComponentManagerLog, PR_LOG_WARNING,
+  MOZ_LOG(nsComponentManagerLog, LogLevel::Warning,
          ("\t\tGetClassObject() %s", NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
 
   return rv;
@@ -1067,7 +1067,7 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char* aContractID,
 
   nsresult rv;
 
-  MOZ_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+  MOZ_LOG(nsComponentManagerLog, LogLevel::Debug,
          ("nsComponentManager: GetClassObject(%s)", aContractID));
 
   nsCOMPtr<nsIFactory> factory = FindFactory(aContractID, strlen(aContractID));
@@ -1077,7 +1077,7 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char* aContractID,
 
   rv = factory->QueryInterface(aIID, aResult);
 
-  MOZ_LOG(nsComponentManagerLog, PR_LOG_WARNING,
+  MOZ_LOG(nsComponentManagerLog, LogLevel::Warning,
          ("\t\tGetClassObject() %s", NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
 
   return rv;
@@ -1147,9 +1147,9 @@ nsComponentManagerImpl::CreateInstance(const nsCID& aClass,
     rv = NS_ERROR_FACTORY_NOT_REGISTERED;
   }
 
-  if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_WARNING)) {
+  if (MOZ_LOG_TEST(nsComponentManagerLog, LogLevel::Warning)) {
     char* buf = aClass.ToString();
-    MOZ_LOG(nsComponentManagerLog, PR_LOG_WARNING,
+    MOZ_LOG(nsComponentManagerLog, LogLevel::Warning,
            ("nsComponentManager: CreateInstance(%s) %s", buf,
             NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
     if (buf) {
@@ -1230,7 +1230,7 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char* aContractID,
     rv = NS_ERROR_FACTORY_NOT_REGISTERED;
   }
 
-  MOZ_LOG(nsComponentManagerLog, PR_LOG_WARNING,
+  MOZ_LOG(nsComponentManagerLog, LogLevel::Warning,
          ("nsComponentManager: CreateInstanceByContractID(%s) %s", aContractID,
           NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
 

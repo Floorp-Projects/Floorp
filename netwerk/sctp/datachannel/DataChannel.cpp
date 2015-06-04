@@ -178,7 +178,7 @@ debug_printf(const char *format, ...)
   va_list ap;
   char buffer[1024];
 
-  if (PR_LOG_TEST(GetSCTPLog(), PR_LOG_ALWAYS)) {
+  if (MOZ_LOG_TEST(GetSCTPLog(), LogLevel::Debug)) {
     va_start(ap, format);
 #ifdef _WIN32
     if (vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, format, ap) > 0) {
@@ -334,8 +334,8 @@ DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams, bool aUs
                     );
       }
 
-      // Set logging to SCTP:PR_LOG_DEBUG to get SCTP debugs
-      if (PR_LOG_TEST(GetSCTPLog(), PR_LOG_ALWAYS)) {
+      // Set logging to SCTP:LogLevel::Debug to get SCTP debugs
+      if (MOZ_LOG_TEST(GetSCTPLog(), LogLevel::Debug)) {
         usrsctp_sysctl_set_sctp_debug_on(SCTP_DEBUG_ALL);
       }
 
@@ -653,7 +653,7 @@ void
 DataChannelConnection::SctpDtlsInput(TransportFlow *flow,
                                      const unsigned char *data, size_t len)
 {
-  if (PR_LOG_TEST(GetSCTPLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetSCTPLog(), LogLevel::Debug)) {
     char *buf;
 
     if ((buf = usrsctp_dumppacket((void *)data, len, SCTP_DUMP_INBOUND)) != nullptr) {
@@ -683,7 +683,7 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
   DataChannelConnection *peer = static_cast<DataChannelConnection *>(addr);
   int res;
 
-  if (PR_LOG_TEST(GetSCTPLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetSCTPLog(), LogLevel::Debug)) {
     char *buf;
 
     if ((buf = usrsctp_dumppacket(buffer, length, SCTP_DUMP_OUTBOUND)) != nullptr) {

@@ -117,18 +117,18 @@ bool OggCodecState::AddVorbisComment(MetadataTags* aTags,
 {
   const char* div = (const char*)memchr(aComment, '=', aLength);
   if (!div) {
-    LOG(PR_LOG_DEBUG, ("Skipping comment: no separator"));
+    LOG(LogLevel::Debug, ("Skipping comment: no separator"));
     return false;
   }
   nsCString key = nsCString(aComment, div-aComment);
   if (!IsValidVorbisTagName(key)) {
-    LOG(PR_LOG_DEBUG, ("Skipping comment: invalid tag name"));
+    LOG(LogLevel::Debug, ("Skipping comment: invalid tag name"));
     return false;
   }
   uint32_t valueLength = aLength - (div-aComment);
   nsCString value = nsCString(div + 1, valueLength);
   if (!IsUTF8(value)) {
-    LOG(PR_LOG_DEBUG, ("Skipping comment: invalid UTF-8 in value"));
+    LOG(LogLevel::Debug, ("Skipping comment: invalid UTF-8 in value"));
     return false;
   }
   aTags->Put(key, value);
@@ -835,7 +835,7 @@ nsresult OpusState::Reset(bool aStart)
     return NS_ERROR_FAILURE;
   }
 
-  LOG(PR_LOG_DEBUG, ("Opus decoder reset, to skip %d", mSkip));
+  LOG(LogLevel::Debug, ("Opus decoder reset, to skip %d", mSkip));
 
   return res;
 }
@@ -858,7 +858,7 @@ bool OpusState::Init(void)
 
   mSkip = mParser->mPreSkip;
 
-  LOG(PR_LOG_DEBUG, ("Opus decoder init, to skip %d", mSkip));
+  LOG(LogLevel::Debug, ("Opus decoder init, to skip %d", mSkip));
 
   return error == OPUS_OK;
 }
@@ -1187,7 +1187,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket)
 
   int64_t timeDenom = LittleEndian::readInt64(aPacket->packet + INDEX_TIME_DENOM_OFFSET);
   if (timeDenom == 0) {
-    LOG(PR_LOG_DEBUG, ("Ogg Skeleton Index packet for stream %u has 0 "
+    LOG(LogLevel::Debug, ("Ogg Skeleton Index packet for stream %u has 0 "
                        "timestamp denominator.", serialno));
     return (mActive = false);
   }
@@ -1230,7 +1230,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket)
     // possibly contain as many packets as it claims to, so the numKeyPoints
     // field is possibly malicious. Don't try decoding this index, we may run
     // out of memory.
-    LOG(PR_LOG_DEBUG, ("Possibly malicious number of key points reported "
+    LOG(LogLevel::Debug, ("Possibly malicious number of key points reported "
                        "(%lld) in index packet for stream %u.",
                        numKeyPoints,
                        serialno));
@@ -1278,7 +1278,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket)
     mIndex.Put(serialno, keyPoints.forget());
   }
 
-  LOG(PR_LOG_DEBUG, ("Loaded %d keypoints for Skeleton on stream %u",
+  LOG(LogLevel::Debug, ("Loaded %d keypoints for Skeleton on stream %u",
                      keyPointsRead, serialno));
   return true;
 }
@@ -1342,7 +1342,7 @@ nsresult SkeletonState::IndexedSeekTarget(int64_t aTarget,
   if (r.IsNull()) {
     return NS_ERROR_FAILURE;
   }
-  LOG(PR_LOG_DEBUG, ("Indexed seek target for time %lld is offset %lld",
+  LOG(LogLevel::Debug, ("Indexed seek target for time %lld is offset %lld",
                      aTarget, r.mKeyPoint.mOffset));
   aResult = r;
   return NS_OK;
@@ -1482,7 +1482,7 @@ bool SkeletonState::DecodeHeader(ogg_packet* aPacket)
     // Extract the segment length.
     mLength = LittleEndian::readInt64(aPacket->packet + SKELETON_FILE_LENGTH_OFFSET);
 
-    LOG(PR_LOG_DEBUG, ("Skeleton segment length: %lld", mLength));
+    LOG(LogLevel::Debug, ("Skeleton segment length: %lld", mLength));
 
     // Initialize the serialno-to-index map.
     return true;

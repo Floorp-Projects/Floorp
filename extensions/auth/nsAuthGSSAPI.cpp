@@ -232,7 +232,7 @@ gssInit()
 void
 LogGssError(OM_uint32 maj_stat, OM_uint32 min_stat, const char *prefix)
 {
-    if (!PR_LOG_TEST(gNegotiateLog, PR_LOG_DEBUG)) {
+    if (!MOZ_LOG_TEST(gNegotiateLog, LogLevel::Debug)) {
         return;
     }
 

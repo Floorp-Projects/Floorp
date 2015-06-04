@@ -191,11 +191,11 @@ void AsyncLatencyLogger::WriteLog(LatencyLogIndex aIndex, uint64_t aID, int64_t 
                                   TimeStamp aTimeStamp)
 {
   if (aTimeStamp.IsNull()) {
-    MOZ_LOG(GetLatencyLog(), PR_LOG_DEBUG,
+    MOZ_LOG(GetLatencyLog(), LogLevel::Debug,
       ("Latency: %s,%llu,%lld,%lld",
        LatencyLogIndex2Strings[aIndex], aID, GetTimeStamp(), aValue));
   } else {
-    MOZ_LOG(GetLatencyLog(), PR_LOG_DEBUG,
+    MOZ_LOG(GetLatencyLog(), LogLevel::Debug,
       ("Latency: %s,%llu,%lld,%lld,%lld",
        LatencyLogIndex2Strings[aIndex], aID, GetTimeStamp(), aValue,
        static_cast<int64_t>((aTimeStamp - gAsyncLogger->mStart).ToMilliseconds())));
@@ -216,7 +216,7 @@ void AsyncLatencyLogger::Log(LatencyLogIndex aIndex, uint64_t aID, int64_t aValu
 
 void AsyncLatencyLogger::Log(LatencyLogIndex aIndex, uint64_t aID, int64_t aValue, TimeStamp &aTime)
 {
-  if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetLatencyLog(), LogLevel::Debug)) {
     nsCOMPtr<nsIRunnable> event = new LogEvent(aIndex, aID, aValue, aTime);
     if (mThread) {
       mThread->Dispatch(event, NS_DISPATCH_NORMAL);

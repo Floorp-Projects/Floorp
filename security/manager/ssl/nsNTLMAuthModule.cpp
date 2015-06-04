@@ -38,8 +38,8 @@ GetNTLMLog()
   return sNTLMLog;
 }
 
-#define LOG(x) MOZ_LOG(GetNTLMLog(), PR_LOG_DEBUG, x)
-#define LOG_ENABLED() PR_LOG_TEST(GetNTLMLog(), PR_LOG_DEBUG)
+#define LOG(x) MOZ_LOG(GetNTLMLog(), mozilla::LogLevel::Debug, x)
+#define LOG_ENABLED() MOZ_LOG_TEST(GetNTLMLog(), mozilla::LogLevel::Debug)
 
 static void des_makekey(const uint8_t *raw, uint8_t *key);
 static void des_encrypt(const uint8_t *key, const uint8_t *src, uint8_t *hash);

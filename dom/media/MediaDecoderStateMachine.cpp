@@ -60,11 +60,11 @@ extern PRLogModuleInfo* gMediaSampleLog;
 #define LOG(m, l, x, ...) \
   MOZ_LOG(m, l, ("Decoder=%p " x, mDecoder.get(), ##__VA_ARGS__))
 #define DECODER_LOG(x, ...) \
-  LOG(gMediaDecoderLog, PR_LOG_DEBUG, x, ##__VA_ARGS__)
+  LOG(gMediaDecoderLog, LogLevel::Debug, x, ##__VA_ARGS__)
 #define VERBOSE_LOG(x, ...) \
-  LOG(gMediaDecoderLog, PR_LOG_DEBUG+1, x, ##__VA_ARGS__)
+  LOG(gMediaDecoderLog, LogLevel::Verbose, x, ##__VA_ARGS__)
 #define SAMPLE_LOG(x, ...) \
-  LOG(gMediaSampleLog, PR_LOG_DEBUG, x, ##__VA_ARGS__)
+  LOG(gMediaSampleLog, LogLevel::Debug, x, ##__VA_ARGS__)
 
 // Somehow MSVC doesn't correctly delete the comma before ##__VA_ARGS__
 // when __VA_ARGS__ expands to nothing. This is a workaround for it.

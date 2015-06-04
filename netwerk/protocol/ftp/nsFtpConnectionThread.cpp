@@ -46,8 +46,8 @@
 #endif
 
 extern PRLogModuleInfo* gFTPLog;
-#define LOG(args)         MOZ_LOG(gFTPLog, PR_LOG_DEBUG, args)
-#define LOG_ALWAYS(args)  MOZ_LOG(gFTPLog, PR_LOG_ALWAYS, args)
+#define LOG(args)         MOZ_LOG(gFTPLog, mozilla::LogLevel::Debug, args)
+#define LOG_INFO(args)  MOZ_LOG(gFTPLog, mozilla::LogLevel::Info, args)
 
 using namespace mozilla::net;
 
@@ -92,7 +92,7 @@ nsFtpState::nsFtpState()
     , mControlStatus(NS_OK)
     , mDeferredCallbackPending(false)
 {
-    LOG_ALWAYS(("FTP:(%x) nsFtpState created", this));
+    LOG_INFO(("FTP:(%x) nsFtpState created", this));
 
     // make sure handler stays around
     NS_ADDREF(gFtpHandler);
@@ -100,7 +100,7 @@ nsFtpState::nsFtpState()
 
 nsFtpState::~nsFtpState() 
 {
-    LOG_ALWAYS(("FTP:(%x) nsFtpState destroyed", this));
+    LOG_INFO(("FTP:(%x) nsFtpState destroyed", this));
 
     if (mProxyRequest)
         mProxyRequest->Cancel(NS_ERROR_FAILURE);
@@ -1763,7 +1763,7 @@ nsFtpState::KillControlConnection()
         mControlConnection->IsAlive() &&
         mCacheConnection) {
 
-        LOG_ALWAYS(("FTP:(%p) caching CC(%p)", this, mControlConnection.get()));
+        LOG_INFO(("FTP:(%p) caching CC(%p)", this, mControlConnection.get()));
 
         // Store connection persistent data
         mControlConnection->mServerType = mServerType;           
@@ -1821,7 +1821,7 @@ nsFtpState::StopProcessing()
         return NS_OK;
     mKeepRunning = false;
 
-    LOG_ALWAYS(("FTP:(%x) nsFtpState stopping", this));
+    LOG_INFO(("FTP:(%x) nsFtpState stopping", this));
 
 #ifdef DEBUG_dougt
     printf("FTP Stopped: [response code %d] [response msg follows:]\n%s\n", mResponseCode, mResponseMsg.get());

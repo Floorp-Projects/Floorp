@@ -264,7 +264,7 @@ txMozillaXMLOutput::endElement()
 
     if (mBadChildLevel) {
         --mBadChildLevel;
-        MOZ_LOG(txLog::xslt, PR_LOG_DEBUG,
+        MOZ_LOG(txLog::xslt, LogLevel::Debug,
                ("endElement, mBadChildLevel = %d\n", mBadChildLevel));
         return NS_OK;
     }
@@ -493,7 +493,7 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
 
     if (mBadChildLevel) {
         ++mBadChildLevel;
-        MOZ_LOG(txLog::xslt, PR_LOG_DEBUG,
+        MOZ_LOG(txLog::xslt, LogLevel::Debug,
                ("startElement, mBadChildLevel = %d\n", mBadChildLevel));
         return NS_OK;
     }
@@ -506,7 +506,7 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
         // eCloseElement couldn't add the parent so we fail as well or we've
         // reached the limit of the depth of the tree that we allow.
         ++mBadChildLevel;
-        MOZ_LOG(txLog::xslt, PR_LOG_DEBUG,
+        MOZ_LOG(txLog::xslt, LogLevel::Debug,
                ("startElement, mBadChildLevel = %d\n", mBadChildLevel));
         return NS_OK;
     }

@@ -375,7 +375,7 @@ XULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                nsIStreamListener **aDocListener,
                                bool aReset, nsIContentSink* aSink)
 {
-    if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING)) {
+    if (MOZ_LOG_TEST(gXULLog, LogLevel::Warning)) {
 
         nsCOMPtr<nsIURI> uri;
         nsresult rv = aChannel->GetOriginalURI(getter_AddRefs(uri));
@@ -383,7 +383,7 @@ XULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
             nsAutoCString urlspec;
             rv = uri->GetSpec(urlspec);
             if (NS_SUCCEEDED(rv)) {
-                MOZ_LOG(gXULLog, PR_LOG_WARNING,
+                MOZ_LOG(gXULLog, LogLevel::Warning,
                        ("xul: load document '%s'", urlspec.get()));
             }
         }
@@ -559,11 +559,11 @@ XULDocument::EndLoad()
     }
 
     OnPrototypeLoadDone(true);
-    if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING)) {
+    if (MOZ_LOG_TEST(gXULLog, LogLevel::Warning)) {
         nsAutoCString urlspec;
         rv = uri->GetSpec(urlspec);
         if (NS_SUCCEEDED(rv)) {
-            MOZ_LOG(gXULLog, PR_LOG_WARNING,
+            MOZ_LOG(gXULLog, LogLevel::Warning,
                    ("xul: Finished loading document '%s'", urlspec.get()));
         }
     }
@@ -2271,14 +2271,14 @@ XULDocument::PrepareToWalk()
     nsXULPrototypeElement* proto = mCurrentPrototype->GetRootElement();
 
     if (! proto) {
-        if (PR_LOG_TEST(gXULLog, PR_LOG_ERROR)) {
+        if (MOZ_LOG_TEST(gXULLog, LogLevel::Error)) {
             nsCOMPtr<nsIURI> url = mCurrentPrototype->GetURI();
 
             nsAutoCString urlspec;
             rv = url->GetSpec(urlspec);
             if (NS_FAILED(rv)) return rv;
 
-            MOZ_LOG(gXULLog, PR_LOG_ERROR,
+            MOZ_LOG(gXULLog, LogLevel::Error,
                    ("xul: error parsing '%s'", urlspec.get()));
         }
 
@@ -2542,7 +2542,7 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
     *aShouldReturn = false;
     *aFailureFromContent = false;
 
-    if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULLog, LogLevel::Debug)) {
         nsAutoCString urlspec;
         aURI->GetSpec(urlspec);
         nsAutoCString parentDoc;
@@ -2553,7 +2553,7 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
         if (!(parentDoc.get()))
             parentDoc = "";
 
-        MOZ_LOG(gXULLog, PR_LOG_DEBUG,
+        MOZ_LOG(gXULLog, LogLevel::Debug,
                 ("xul: %s loading overlay %s", parentDoc.get(), urlspec.get()));
     }
 
@@ -2613,7 +2613,7 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
             return NS_OK;
         }
 
-        MOZ_LOG(gXULLog, PR_LOG_DEBUG, ("xul: overlay was cached"));
+        MOZ_LOG(gXULLog, LogLevel::Debug, ("xul: overlay was cached"));
 
         // Found the overlay's prototype in the cache, fully loaded. If
         // this is a dynamic overlay, this will call ResumeWalk.
@@ -2622,10 +2622,10 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
     }
     else {
         // Not there. Initiate a load.
-        MOZ_LOG(gXULLog, PR_LOG_DEBUG, ("xul: overlay was not cached"));
+        MOZ_LOG(gXULLog, LogLevel::Debug, ("xul: overlay was not cached"));
 
         if (mIsGoingAway) {
-            MOZ_LOG(gXULLog, PR_LOG_DEBUG, ("xul: ...and document already destroyed"));
+            MOZ_LOG(gXULLog, LogLevel::Debug, ("xul: ...and document already destroyed"));
             return NS_ERROR_NOT_AVAILABLE;
         }
 
@@ -3578,8 +3578,8 @@ XULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
     *aResult = nullptr;
     nsresult rv = NS_OK;
 
-    if (PR_LOG_TEST(gXULLog, PR_LOG_NOTICE)) {
-        MOZ_LOG(gXULLog, PR_LOG_NOTICE,
+    if (MOZ_LOG_TEST(gXULLog, LogLevel::Debug)) {
+        MOZ_LOG(gXULLog, LogLevel::Debug,
                ("xul: creating <%s> from prototype",
                 NS_ConvertUTF16toUTF8(aPrototype->mNodeInfo->QualifiedName()).get()));
     }
@@ -3848,10 +3848,10 @@ XULDocument::OverlayForwardReference::Resolve()
         if (NS_FAILED(rv)) return eResolve_Error;
     }
 
-    if (PR_LOG_TEST(gXULLog, PR_LOG_NOTICE)) {
+    if (MOZ_LOG_TEST(gXULLog, LogLevel::Debug)) {
         nsAutoCString idC;
         idC.AssignWithConversion(id);
-        MOZ_LOG(gXULLog, PR_LOG_NOTICE,
+        MOZ_LOG(gXULLog, LogLevel::Debug,
                ("xul: overlay resolved '%s'",
                 idC.get()));
     }
@@ -4017,7 +4017,7 @@ XULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
 
 XULDocument::OverlayForwardReference::~OverlayForwardReference()
 {
-    if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING) && !mResolved) {
+    if (MOZ_LOG_TEST(gXULLog, LogLevel::Warning) && !mResolved) {
         nsAutoString id;
         mOverlay->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
 
@@ -4033,7 +4033,7 @@ XULDocument::OverlayForwardReference::~OverlayForwardReference()
         nsresult rv = mDocument->mChannel->GetOriginalURI(getter_AddRefs(docURI));
         if (NS_SUCCEEDED(rv))
             docURI->GetSpec(parentDoc);
-        MOZ_LOG(gXULLog, PR_LOG_WARNING,
+        MOZ_LOG(gXULLog, LogLevel::Warning,
                ("xul: %s overlay failed to resolve '%s' in %s",
                 urlspec.get(), idC.get(), parentDoc.get()));
     }
@@ -4060,7 +4060,7 @@ XULDocument::BroadcasterHookup::Resolve()
 
 XULDocument::BroadcasterHookup::~BroadcasterHookup()
 {
-    if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING) && !mResolved) {
+    if (MOZ_LOG_TEST(gXULLog, LogLevel::Warning) && !mResolved) {
         // Tell the world we failed
 
         nsAutoString broadcasterID;
@@ -4078,7 +4078,7 @@ XULDocument::BroadcasterHookup::~BroadcasterHookup()
         nsAutoCString attributeC,broadcasteridC;
         attributeC.AssignWithConversion(attribute);
         broadcasteridC.AssignWithConversion(broadcasterID);
-        MOZ_LOG(gXULLog, PR_LOG_WARNING,
+        MOZ_LOG(gXULLog, LogLevel::Warning,
                ("xul: broadcaster hookup failed <%s attribute='%s'> to %s",
                 nsAtomCString(mObservesElement->NodeInfo()->NameAtom()).get(),
                 attributeC.get(),
@@ -4279,7 +4279,7 @@ XULDocument::CheckBroadcasterHookup(Element* aElement,
     }
 
     // Tell the world we succeeded
-    if (PR_LOG_TEST(gXULLog, PR_LOG_NOTICE)) {
+    if (MOZ_LOG_TEST(gXULLog, LogLevel::Debug)) {
         nsCOMPtr<nsIContent> content =
             do_QueryInterface(listener);
 
@@ -4290,7 +4290,7 @@ XULDocument::CheckBroadcasterHookup(Element* aElement,
         nsAutoCString attributeC,broadcasteridC;
         attributeC.AssignWithConversion(attribute);
         broadcasteridC.AssignWithConversion(broadcasterID);
-        MOZ_LOG(gXULLog, PR_LOG_NOTICE,
+        MOZ_LOG(gXULLog, LogLevel::Debug,
                ("xul: broadcaster hookup <%s attribute='%s'> to %s",
                 nsAtomCString(content->NodeInfo()->NameAtom()).get(),
                 attributeC.get(),

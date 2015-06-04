@@ -2646,11 +2646,11 @@ ObjectGroup::updateNewPropertyTypes(ExclusiveContext* cx, JSObject* objArg, jsid
     }
 }
 
-bool
+void
 ObjectGroup::addDefiniteProperties(ExclusiveContext* cx, Shape* shape)
 {
     if (unknownProperties())
-        return true;
+        return;
 
     // Mark all properties of shape as definite properties of this group.
     AutoEnterAnalysis enter(cx);
@@ -2661,16 +2661,12 @@ ObjectGroup::addDefiniteProperties(ExclusiveContext* cx, Shape* shape)
             MOZ_ASSERT_IF(shape->slot() >= shape->numFixedSlots(),
                           shape->numFixedSlots() == NativeObject::MAX_FIXED_SLOTS);
             TypeSet* types = getProperty(cx, nullptr, id);
-            if (!types)
-                return false;
-            if (types->canSetDefinite(shape->slot()))
+            if (types && types->canSetDefinite(shape->slot()))
                 types->setDefinite(shape->slot());
         }
 
         shape = shape->previous();
     }
-
-    return true;
 }
 
 bool
@@ -3459,9 +3455,9 @@ PreliminaryObjectArrayWithTemplate::maybeAnalyze(ExclusiveContext* cx, ObjectGro
 
     if (shape()) {
         // We weren't able to use an unboxed layout, but since the preliminary
-        // still reflect the template object's properties, and all objects in the
-        // future will be created with those properties, the properties can be
-        // marked as definite for objects in the group.
+        // objects still reflect the template object's properties, and all
+        // objects in the future will be created with those properties, the
+        // properties can be marked as definite for objects in the group.
         group->addDefiniteProperties(cx, shape());
     }
 }
@@ -3761,8 +3757,7 @@ TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group, bool* regenerate,
         // The definite properties analysis found exactly the properties that
         // are held in common by the preliminary objects. No further analysis
         // is needed.
-        if (!group->addDefiniteProperties(cx, templateObject()->lastProperty()))
-            return false;
+        group->addDefiniteProperties(cx, templateObject()->lastProperty());
 
         destroyNewScript.group = nullptr;
         return true;
@@ -3783,10 +3778,8 @@ TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group, bool* regenerate,
     if (!initialGroup)
         return false;
 
-    if (!initialGroup->addDefiniteProperties(cx, templateObject()->lastProperty()))
-        return false;
-    if (!group->addDefiniteProperties(cx, prefixShape))
-        return false;
+    initialGroup->addDefiniteProperties(cx, templateObject()->lastProperty());
+    group->addDefiniteProperties(cx, prefixShape);
 
     cx->compartment()->objectGroups.replaceDefaultNewGroup(nullptr, group->proto(), function(),
                                                            initialGroup);

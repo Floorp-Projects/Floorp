@@ -27,7 +27,7 @@
 #include "nsIByteArrayInputStream.h"
 
 static PRLogModuleInfo *gTestSocketIOLog;
-#define LOG(args) MOZ_LOG(gTestSocketIOLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gTestSocketIOLog, mozilla::LogLevel::Debug, args)
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);

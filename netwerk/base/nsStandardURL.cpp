@@ -44,9 +44,9 @@ static PRLogModuleInfo *gStandardURLLog;
 
 // The Chromium code defines its own LOG macro which we don't want
 #undef LOG
-#define LOG(args)     MOZ_LOG(gStandardURLLog, PR_LOG_DEBUG, args)
+#define LOG(args)     MOZ_LOG(gStandardURLLog, mozilla::LogLevel::Debug, args)
 #undef LOG_ENABLED
-#define LOG_ENABLED() PR_LOG_TEST(gStandardURLLog, PR_LOG_DEBUG)
+#define LOG_ENABLED() MOZ_LOG_TEST(gStandardURLLog, mozilla::LogLevel::Debug)
 
 //----------------------------------------------------------------------------
 

@@ -24,7 +24,7 @@ using namespace mozilla::media;
 namespace mozilla {
 
 PRLogModuleInfo* GetDirectShowLog();
-#define LOG(...) MOZ_LOG(GetDirectShowLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define LOG(...) MOZ_LOG(GetDirectShowLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 AudioSinkFilter::AudioSinkFilter(const wchar_t* aObjectName, HRESULT* aOutResult)
   : BaseFilter(aObjectName, CLSID_MozAudioSinkFilter),

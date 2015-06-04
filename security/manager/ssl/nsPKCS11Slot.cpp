@@ -13,6 +13,10 @@
 
 #include "secmod.h"
 
+#include "mozilla/Logging.h"
+
+using mozilla::LogLevel;
+
 extern PRLogModuleInfo* gPIPNSSLog;
 
 NS_IMPL_ISUPPORTS(nsPKCS11Slot, nsIPKCS11Slot)
@@ -294,7 +298,7 @@ nsPKCS11Module::FindSlotByName(const char16_t *aName,
     return NS_ERROR_NOT_AVAILABLE;
 
   char *asciiname = ToNewUTF8String(nsDependentString(aName));
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting \"%s\"\n", asciiname));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Getting \"%s\"\n", asciiname));
   PK11SlotInfo *slotinfo = nullptr;
   PK11SlotList *slotList = PK11_FindSlotsByNames(mModule->dllName, 
         asciiname /* slotName */, nullptr /* token Name */, false);
