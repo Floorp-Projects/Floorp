@@ -191,6 +191,14 @@ ChannelFromScriptURL(nsIPrincipal* principal,
 
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel)) {
+    rv = nsContentUtils::SetFetchReferrerURIWithPolicy(principal, parentDoc,
+                                                       httpChannel);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
   channel.forget(aChannel);
   return rv;
 }
