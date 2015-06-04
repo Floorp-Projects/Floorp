@@ -667,7 +667,7 @@ loop.shared.views = (function(_, l10n) {
         disabled: this.props.disabled
       };
       if (this.props.additionalClass) {
-        checkClasses[this.props.additionalClass] = true;
+        wrapperClasses[this.props.additionalClass] = true;
       }
       return (
         <div className={cx(wrapperClasses)}
