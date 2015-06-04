@@ -34,7 +34,8 @@ ImageHost::ImageHost(const TextureInfo& aTextureInfo)
 {}
 
 ImageHost::~ImageHost()
-{}
+{
+}
 
 void
 ImageHost::UseTextureHost(TextureHost* aTexture)

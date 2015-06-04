@@ -22,6 +22,9 @@
 #include "mozilla/layers/PTextureParent.h"
 #include "mozilla/unused.h"
 #include <limits>
+#include "SharedSurface.h"
+#include "SharedSurfaceEGL.h"
+#include "SharedSurfaceGL.h"
 #include "../opengl/CompositorOGL.h"
 #include "gfxUtils.h"
 
@@ -32,6 +35,7 @@
 #ifdef MOZ_WIDGET_GONK
 #include "../opengl/GrallocTextureClient.h"
 #include "../opengl/GrallocTextureHost.h"
+#include "SharedSurfaceGralloc.h"
 #endif
 
 #ifdef MOZ_X11
@@ -39,10 +43,12 @@
 #endif
 
 #ifdef XP_MACOSX
+#include "SharedSurfaceIO.h"
 #include "../opengl/MacIOSurfaceTextureHostOGL.h"
 #endif
 
 #ifdef XP_WIN
+#include "SharedSurfaceANGLE.h"
 #include "mozilla/layers/TextureDIB.h"
 #endif
 
@@ -89,8 +95,6 @@ public:
   RefPtr<TextureHost> mWaitForClientRecycle;
   RefPtr<TextureHost> mTextureHost;
 };
-
-////////////////////////////////////////////////////////////////////////////////
 
 // static
 PTextureParent*
@@ -212,6 +216,9 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
     case SurfaceDescriptor::TNewSurfaceDescriptorGralloc:
     case SurfaceDescriptor::TSurfaceTextureDescriptor:
       return CreateTextureHostOGL(aDesc, aDeallocator, aFlags);
+
+    case SurfaceDescriptor::TSharedSurfaceDescriptor:
+      return MakeAndAddRef<SharedSurfaceTextureHost>(aFlags, aDesc.get_SharedSurfaceDescriptor());
 
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface:
       if (Compositor::GetBackend() == LayersBackend::LAYERS_OPENGL) {
@@ -867,6 +874,153 @@ TextureParent::RecvRecycleTexture(const TextureFlags& aTextureFlags)
   mTextureHost->RecycleTexture(aTextureFlags);
   return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+static RefPtr<TextureSource>
+SharedSurfaceToTexSource(gl::SharedSurface* abstractSurf, Compositor* compositor)
+{
+  MOZ_ASSERT(abstractSurf);
+  MOZ_ASSERT(abstractSurf->mType != gl::SharedSurfaceType::Basic);
+  MOZ_ASSERT(abstractSurf->mType != gl::SharedSurfaceType::Gralloc);
+
+  if (!compositor) {
+    return nullptr;
+  }
+
+  gfx::SurfaceFormat format = abstractSurf->mHasAlpha ? gfx::SurfaceFormat::R8G8B8A8
+                                                      : gfx::SurfaceFormat::R8G8B8X8;
+
+  RefPtr<TextureSource> texSource;
+  switch (abstractSurf->mType) {
+#ifdef XP_WIN
+    case gl::SharedSurfaceType::EGLSurfaceANGLE: {
+      auto surf = gl::SharedSurface_ANGLEShareHandle::Cast(abstractSurf);
+
+      MOZ_ASSERT(compositor->GetBackendType() == LayersBackend::LAYERS_D3D11);
+      CompositorD3D11* compositorD3D11 = static_cast<CompositorD3D11*>(compositor);
+      RefPtr<ID3D11Texture2D> tex = surf->GetConsumerTexture();
+
+      if (!tex) {
+        NS_WARNING("Failed to open shared resource.");
+        break;
+      }
+      texSource = new DataTextureSourceD3D11(format, compositorD3D11, tex);
+      break;
+    }
+#endif
+    case gl::SharedSurfaceType::GLTextureShare: {
+      auto surf = gl::SharedSurface_GLTexture::Cast(abstractSurf);
+
+      MOZ_ASSERT(compositor->GetBackendType() == LayersBackend::LAYERS_OPENGL);
+      CompositorOGL* compositorOGL = static_cast<CompositorOGL*>(compositor);
+      gl::GLContext* gl = compositorOGL->gl();
+
+      GLenum target = surf->ConsTextureTarget();
+      GLuint tex = surf->ConsTexture(gl);
+      texSource = new GLTextureSource(compositorOGL, tex, target,
+                                      surf->mSize, format,
+                                      true/*externally owned*/);
+      break;
+    }
+    case gl::SharedSurfaceType::EGLImageShare: {
+      auto surf = gl::SharedSurface_EGLImage::Cast(abstractSurf);
+
+      MOZ_ASSERT(compositor->GetBackendType() == LayersBackend::LAYERS_OPENGL);
+      CompositorOGL* compositorOGL = static_cast<CompositorOGL*>(compositor);
+      gl::GLContext* gl = compositorOGL->gl();
+      MOZ_ASSERT(gl->IsCurrent());
+
+      GLenum target = 0;
+      GLuint tex = 0;
+      surf->AcquireConsumerTexture(gl, &tex, &target);
+
+      texSource = new GLTextureSource(compositorOGL, tex, target,
+                                      surf->mSize, format,
+                                      true/*externally owned*/);
+      break;
+    }
+#ifdef XP_MACOSX
+    case gl::SharedSurfaceType::IOSurface: {
+      auto surf = gl::SharedSurface_IOSurface::Cast(abstractSurf);
+      MacIOSurface* ioSurf = surf->GetIOSurface();
+
+      MOZ_ASSERT(compositor->GetBackendType() == LayersBackend::LAYERS_OPENGL);
+      CompositorOGL* compositorOGL = static_cast<CompositorOGL*>(compositor);
+
+      texSource = new MacIOSurfaceTextureSourceOGL(compositorOGL, ioSurf);
+      break;
+    }
+#endif
+    default:
+      break;
+  }
+
+  MOZ_ASSERT(texSource.get(), "TextureSource creation failed.");
+  return texSource;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// SharedSurfaceTextureHost
+
+SharedSurfaceTextureHost::SharedSurfaceTextureHost(TextureFlags aFlags,
+                                                   const SharedSurfaceDescriptor& aDesc)
+  : TextureHost(aFlags)
+  , mIsLocked(false)
+  , mSurf((gl::SharedSurface*)aDesc.surf())
+  , mCompositor(nullptr)
+{
+  MOZ_ASSERT(mSurf);
+}
+
+gfx::SurfaceFormat
+SharedSurfaceTextureHost::GetFormat() const
+{
+  MOZ_ASSERT(mTexSource);
+  return mTexSource->GetFormat();
+}
+
+gfx::IntSize
+SharedSurfaceTextureHost::GetSize() const
+{
+  MOZ_ASSERT(mTexSource);
+  return mTexSource->GetSize();
+}
+
+void
+SharedSurfaceTextureHost::EnsureTexSource()
+{
+  MOZ_ASSERT(mIsLocked);
+
+  if (mTexSource)
+    return;
+
+  mTexSource = SharedSurfaceToTexSource(mSurf, mCompositor);
+  MOZ_ASSERT(mTexSource);
+}
+
+bool
+SharedSurfaceTextureHost::Lock()
+{
+  MOZ_ASSERT(!mIsLocked);
+
+  mSurf->ConsumerAcquire();
+
+  mIsLocked = true;
+
+  EnsureTexSource();
+
+  return true;
+}
+
+void
+SharedSurfaceTextureHost::Unlock()
+{
+  MOZ_ASSERT(mIsLocked);
+  mSurf->ConsumerRelease();
+  mIsLocked = false;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

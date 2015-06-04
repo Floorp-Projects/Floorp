@@ -4,12 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SharedSurfaceANGLE.h"
+#include "GLContextEGL.h"
+#include "GLLibraryEGL.h"
 
 #include <d3d11.h>
 #include "gfxWindowsPlatform.h"
-#include "GLContextEGL.h"
-#include "GLLibraryEGL.h"
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 
 namespace mozilla {
 namespace gl {
@@ -106,8 +105,7 @@ SharedSurface_ANGLEShareHandle::SharedSurface_ANGLEShareHandle(GLContext* gl,
                     AttachmentType::Screen,
                     gl,
                     size,
-                    hasAlpha,
-                    true)
+                    hasAlpha)
     , mEGL(egl)
     , mContext(context)
     , mPBuffer(pbuffer)
@@ -185,21 +183,6 @@ SharedSurface_ANGLEShareHandle::ProducerReleaseImpl()
 }
 
 void
-SharedSurface_ANGLEShareHandle::ProducerReadAcquireImpl()
-{
-    ProducerAcquireImpl();
-}
-
-void
-SharedSurface_ANGLEShareHandle::ProducerReadReleaseImpl()
-{
-    if (mKeyedMutex) {
-        mKeyedMutex->ReleaseSync(0);
-        return;
-    }
-}
-
-void
 SharedSurface_ANGLEShareHandle::ConsumerAcquireImpl()
 {
     if (!mConsumerTexture) {
@@ -268,16 +251,6 @@ SharedSurface_ANGLEShareHandle::PollSync_ContentThread_Impl()
     }
 
     return PollSync();
-}
-
-bool
-SharedSurface_ANGLEShareHandle::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor)
-{
-    gfx::SurfaceFormat format = mHasAlpha ? gfx::SurfaceFormat::B8G8R8A8
-                                          : gfx::SurfaceFormat::B8G8R8X8;
-    *out_descriptor = layers::SurfaceDescriptorD3D10((WindowsHandle)mShareHandle, format,
-                                                     mSize);
-    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -415,9 +388,8 @@ ChooseConfig(GLContext* gl, GLLibraryEGL* egl, const SurfaceCaps& caps)
 }
 
 /*static*/ UniquePtr<SurfaceFactory_ANGLEShareHandle>
-SurfaceFactory_ANGLEShareHandle::Create(GLContext* gl, const SurfaceCaps& caps,
-                                        const RefPtr<layers::ISurfaceAllocator>& allocator,
-                                        const layers::TextureFlags& flags)
+SurfaceFactory_ANGLEShareHandle::Create(GLContext* gl,
+                                        const SurfaceCaps& caps)
 {
     GLLibraryEGL* egl = &sEGLLibrary;
     if (!egl)
@@ -429,7 +401,7 @@ SurfaceFactory_ANGLEShareHandle::Create(GLContext* gl, const SurfaceCaps& caps,
 
     bool success;
     typedef SurfaceFactory_ANGLEShareHandle ptrT;
-    UniquePtr<ptrT> ret( new ptrT(gl, caps, allocator, flags, egl, &success) );
+    UniquePtr<ptrT> ret( new ptrT(gl, egl, caps, &success) );
 
     if (!success)
         return nullptr;
@@ -438,12 +410,10 @@ SurfaceFactory_ANGLEShareHandle::Create(GLContext* gl, const SurfaceCaps& caps,
 }
 
 SurfaceFactory_ANGLEShareHandle::SurfaceFactory_ANGLEShareHandle(GLContext* gl,
-                                                                 const SurfaceCaps& caps,
-                                                                 const RefPtr<layers::ISurfaceAllocator>& allocator,
-                                                                 const layers::TextureFlags& flags,
                                                                  GLLibraryEGL* egl,
+                                                                 const SurfaceCaps& caps,
                                                                  bool* const out_success)
-    : SurfaceFactory(SharedSurfaceType::EGLSurfaceANGLE, gl, caps, allocator, flags)
+    : SurfaceFactory(gl, SharedSurfaceType::EGLSurfaceANGLE, caps)
     , mProdGL(gl)
     , mEGL(egl)
 {
