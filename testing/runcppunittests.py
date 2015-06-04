@@ -16,6 +16,8 @@ from contextlib import contextmanager
 from mozlog import structured
 from subprocess import PIPE
 
+SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
+
 class CPPUnitTests(object):
     # Time (seconds) to wait for test process to complete
     TEST_PROC_TIMEOUT = 900
@@ -200,6 +202,17 @@ def extract_unittests_from_args(args, environ):
 
     return tests
 
+def update_mozinfo():
+    """walk up directories to find mozinfo.json update the info"""
+    path = SCRIPT_DIR
+    dirs = set()
+    while path != os.path.expanduser('~'):
+        if path in dirs:
+            break
+        dirs.add(path)
+        path = os.path.split(path)[0]
+    mozinfo.find_and_update_from_json(*dirs)
+
 def main():
     parser = CPPUnittestOptions()
     structured.commandline.add_logging_group(parser)
@@ -215,6 +228,7 @@ def main():
                                                options,
                                                {"tbpl": sys.stdout})
 
+    update_mozinfo()
     progs = extract_unittests_from_args(args, mozinfo.info)
     options.xre_path = os.path.abspath(options.xre_path)
     if mozinfo.isMac:
