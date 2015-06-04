@@ -536,22 +536,36 @@ CountDeleter::operator()(CountBase* ptr)
 
 // The simplest type: just count everything.
 class SimpleCount : public CountType {
-    UniquePtr<char16_t[], JS::FreePolicy> label;
 
     struct Count : CountBase {
-        explicit Count(SimpleCount& count) : CountBase(count) { }
+        size_t totalBytes_;
+
+        explicit Count(SimpleCount& count)
+          : CountBase(count),
+            totalBytes_(0)
+        { }
     };
+
+    UniquePtr<char16_t[], JS::FreePolicy> label;
+    bool reportCount : 1;
+    bool reportBytes : 1;
 
   public:
     SimpleCount(Census& census,
-                UniquePtr<char16_t[], JS::FreePolicy>& label)
+                UniquePtr<char16_t[], JS::FreePolicy>& label,
+                bool reportCount=true,
+                bool reportBytes=true)
       : CountType(census),
-        label(Move(label))
+        label(Move(label)),
+        reportCount(reportCount),
+        reportBytes(reportBytes)
     { }
 
     explicit SimpleCount(Census& census)
         : CountType(census),
-          label(nullptr)
+          label(nullptr),
+          reportCount(true),
+          reportBytes(true)
     { }
 
     CountBasePtr makeCount() override {
@@ -568,16 +582,24 @@ class SimpleCount : public CountType {
     bool count(CountBase& countBase, const Node& node) override {
         Count& count = static_cast<Count&>(countBase);
         count.total_++;
+        if (reportBytes)
+            count.totalBytes_ += node.size(census.cx->runtime()->debuggerMallocSizeOf);
         return true;
     }
 
     bool report(CountBase& countBase, MutableHandleValue report) override {
         Count& count = static_cast<Count&>(countBase);
+
         RootedPlainObject obj(census.cx, NewBuiltinClassInstance<PlainObject>(census.cx));
-        RootedValue countValue(census.cx, NumberValue(count.total_));
         if (!obj)
             return false;
-        if (!DefineProperty(census.cx, obj, census.cx->names().count, countValue))
+
+        RootedValue countValue(census.cx, NumberValue(count.total_));
+        if (reportCount && !DefineProperty(census.cx, obj, census.cx->names().count, countValue))
+            return false;
+
+        RootedValue bytesValue(census.cx, NumberValue(count.totalBytes_));
+        if (reportBytes && !DefineProperty(census.cx, obj, census.cx->names().bytes, bytesValue))
             return false;
 
         if (label) {
@@ -1131,12 +1153,14 @@ class ByAllocationStack : public CountType {
                 return false;
         }
 
-        RootedValue noStackReport(cx);
-        if (!count.noStack->report(&noStackReport))
-            return false;
-        RootedValue noStack(cx, StringValue(cx->names().noStack));
-        if (!MapObject::set(cx, map, noStack, noStackReport))
-            return false;
+        if (count.noStack->total_ > 0) {
+            RootedValue noStackReport(cx);
+            if (!count.noStack->report(&noStackReport))
+                return false;
+            RootedValue noStack(cx, StringValue(cx->names().noStack));
+            if (!MapObject::set(cx, map, noStack, noStackReport))
+                return false;
+        }
 
         MOZ_ASSERT(generation == count.table.generation());
 
@@ -1237,6 +1261,15 @@ ParseBreakdown(Census& census, HandleValue breakdownValue)
         return nullptr;
 
     if (StringEqualsAscii(by, "count")) {
+        RootedValue countValue(cx), bytesValue(cx);
+        if (!GetProperty(cx, breakdown, breakdown, cx->names().count, &countValue) ||
+            !GetProperty(cx, breakdown, breakdown, cx->names().bytes, &bytesValue))
+            return nullptr;
+
+        // Both 'count' and 'bytes' default to true if omitted, but ToBoolean
+        // naturally treats 'undefined' as false; fix this up.
+        if (countValue.isUndefined()) countValue.setBoolean(true);
+        if (bytesValue.isUndefined()) bytesValue.setBoolean(true);
 
         // Undocumented feature, for testing: { by: 'count' } breakdowns can have
         // a 'label' property whose value is converted to a string and included as
@@ -1253,21 +1286,24 @@ ParseBreakdown(Census& census, HandleValue breakdownValue)
 
             JSFlatString* flat = labelString->ensureFlat(cx);
             if (!flat)
-                return false;
+                return nullptr;
 
             AutoStableStringChars chars(cx);
             if (!chars.initTwoByte(cx, flat))
-                return false;
+                return nullptr;
 
             // Since flat strings are null-terminated, and AutoStableStringChars
             // null- terminates if it needs to make a copy, we know that
             // chars.twoByteChars() is null-terminated.
             labelUnique = DuplicateString(cx, chars.twoByteChars());
             if (!labelUnique)
-                return false;
+                return nullptr;
         }
 
-        CountTypePtr simple(census.new_<SimpleCount>(census, labelUnique));
+        CountTypePtr simple(census.new_<SimpleCount>(census,
+                                                     labelUnique,
+                                                     ToBoolean(countValue),
+                                                     ToBoolean(bytesValue)));
         return simple;
     }
 
