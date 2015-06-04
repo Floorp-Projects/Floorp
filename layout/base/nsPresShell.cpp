@@ -951,7 +951,6 @@ PresShell::Init(nsIDocument* aDocument,
 #ifdef MOZ_XUL
       os->AddObserver(this, "chrome-flush-skin-caches", false);
 #endif
-      os->AddObserver(this, "memory-pressure", false);
     }
   }
 
@@ -1138,7 +1137,6 @@ PresShell::Destroy()
 #ifdef MOZ_XUL
       os->RemoveObserver(this, "chrome-flush-skin-caches");
 #endif
-      os->RemoveObserver(this, "memory-pressure");
     }
   }
 
@@ -5909,15 +5907,12 @@ PresShell::ClearVisibleImagesList(uint32_t aNonvisibleAction)
 }
 
 void
-PresShell::MarkImagesInSubtreeVisible(nsIFrame* aFrame,
-                                      const nsRect& aRect,
-                                      bool aRemoveOnly /* = false */)
+PresShell::MarkImagesInSubtreeVisible(nsIFrame* aFrame, const nsRect& aRect)
 {
   MOZ_ASSERT(aFrame->PresContext()->PresShell() == this, "wrong presshell");
 
   nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(aFrame->GetContent()));
-  if (content && aFrame->StyleVisibility()->IsVisible() &&
-      (!aRemoveOnly || content->GetVisibleCount() > 0)) {
+  if (content && aFrame->StyleVisibility()->IsVisible()) {
     uint32_t count = mVisibleImages.Count();
     mVisibleImages.PutEntry(content);
     if (mVisibleImages.Count() > count) {
@@ -5997,8 +5992,7 @@ PresShell::MarkImagesInSubtreeVisible(nsIFrame* aFrame,
 }
 
 void
-PresShell::RebuildImageVisibility(nsRect* aRect,
-                                  bool aRemoveOnly /* = false */)
+PresShell::RebuildImageVisibility(nsRect* aRect)
 {
   MOZ_ASSERT(!mImageVisibilityVisited, "already visited?");
   mImageVisibilityVisited = true;
@@ -6017,19 +6011,13 @@ PresShell::RebuildImageVisibility(nsRect* aRect,
   if (aRect) {
     vis = *aRect;
   }
-  MarkImagesInSubtreeVisible(rootFrame, vis, aRemoveOnly);
+  MarkImagesInSubtreeVisible(rootFrame, vis);
 
   oldVisibleImages.EnumerateEntries(DecrementVisibleCount, nullptr);
 }
 
 void
 PresShell::UpdateImageVisibility()
-{
-  DoUpdateImageVisibility(/* aRemoveOnly = */ false);
-}
-
-void
-PresShell::DoUpdateImageVisibility(bool aRemoveOnly)
 {
   MOZ_ASSERT(!mPresContext || mPresContext->IsRootContentDocument(),
     "updating image visibility on a non-root content document?");
@@ -6048,7 +6036,7 @@ PresShell::DoUpdateImageVisibility(bool aRemoveOnly)
     return;
   }
 
-  RebuildImageVisibility(/* aRect = */ nullptr, aRemoveOnly);
+  RebuildImageVisibility();
   ClearImageVisibilityVisited(rootFrame->GetView(), true);
 
 #ifdef DEBUG_IMAGE_VISIBILITY_DISPLAY_LIST
@@ -9667,13 +9655,6 @@ PresShell::Observe(nsISupports* aSubject,
 
   if (!nsCRT::strcmp(aTopic, "author-sheet-removed") && mStyleSet) {
     RemoveSheet(nsStyleSet::eDocSheet, aSubject);
-    return NS_OK;
-  }
-
-  if (!nsCRT::strcmp(aTopic, "memory-pressure") &&
-      !AssumeAllImagesVisible() &&
-      mPresContext->IsRootContentDocument()) {
-    DoUpdateImageVisibility(/* aRemoveOnly = */ true);
     return NS_OK;
   }
 
