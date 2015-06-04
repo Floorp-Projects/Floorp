@@ -1943,8 +1943,8 @@ XMLHttpRequest::Open(const nsACString& aMethod, const nsAString& aUrl,
 
   mProxy->mOpening = true;
   if (!runnable->Dispatch(mWorkerPrivate->GetJSContext())) {
-    ReleaseProxy();
     mProxy->mOpening = false;
+    ReleaseProxy();
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
