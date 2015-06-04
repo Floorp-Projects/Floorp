@@ -1250,6 +1250,25 @@ function testRedirects() {
   return Promise.all(fetches);
 }
 
+function testReferrer() {
+  var referrer;
+  if (self && self.location) {
+    referrer = self.location.href;
+  } else {
+    referrer = document.documentURI;
+  }
+
+  var dict = {
+    'Referer': referrer
+  };
+  return fetch(corsServerPath + "headers=" + dict.toSource()).then(function(res) {
+    is(res.status, 200, "expected correct referrer header to be sent");
+    dump(res.statusText);
+  }, function(e) {
+    ok(false, "expected correct referrer header to be sent");
+  });
+}
+
 function runTest() {
   testNoCorsCtor();
 
@@ -1260,5 +1279,6 @@ function runTest() {
     .then(testSameOriginCredentials)
     .then(testCrossOriginCredentials)
     .then(testRedirects)
+    .then(testReferrer)
     // Put more promise based tests here.
 }
