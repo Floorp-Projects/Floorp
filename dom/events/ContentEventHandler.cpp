@@ -1067,9 +1067,14 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
                                   &aEvent->mReply.mOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = AdjustCollapsedRangeMaybeIntoTextNode(range);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   int32_t xpOffsetInFrame;
   nsIFrame* frame;
-  rv = GetStartFrameAndOffset(range, &frame, &xpOffsetInFrame);
+  rv = GetStartFrameAndOffset(range, frame, xpOffsetInFrame);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsPoint posInFrame;
@@ -1359,25 +1364,80 @@ ContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
 }
 
 nsresult
-ContentEventHandler::GetStartFrameAndOffset(nsRange* aRange,
-                                            nsIFrame** aFrame,
-                                            int32_t* aOffsetInFrame)
+ContentEventHandler::AdjustCollapsedRangeMaybeIntoTextNode(nsRange* aRange)
 {
-  NS_ASSERTION(aRange && aFrame && aOffsetInFrame, "params are invalid");
+  MOZ_ASSERT(aRange);
+  MOZ_ASSERT(aRange->Collapsed());
 
-  nsIContent* content = nullptr;
-  nsINode* node = aRange->GetStartParent();
-  if (node && node->IsNodeOfType(nsINode::eCONTENT)) {
-    content = static_cast<nsIContent*>(node);
+  if (!aRange || !aRange->Collapsed()) {
+    return NS_ERROR_INVALID_ARG;
   }
-  NS_ASSERTION(content, "the start node doesn't have nsIContent!");
 
+  nsCOMPtr<nsINode> parentNode = aRange->GetStartParent();
+  int32_t offsetInParentNode = aRange->StartOffset();
+  if (NS_WARN_IF(!parentNode) || NS_WARN_IF(offsetInParentNode < 0)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // If the node is text node, we don't need to modify aRange.
+  if (parentNode->IsNodeOfType(nsINode::eTEXT)) {
+    return NS_OK;
+  }
+
+  // If the parent is not a text node but it has a text node at the offset,
+  // we should adjust the range into the text node.
+  // NOTE: This is emulating similar situation of nsEditor.
+  nsINode* childNode = nullptr;
+  int32_t offsetInChildNode = -1;
+  if (!offsetInParentNode && parentNode->HasChildren()) {
+    // If the range is the start of the parent, adjusted the range to the
+    // start of the first child.
+    childNode = parentNode->GetFirstChild();
+    offsetInChildNode = 0;
+  } else if (static_cast<uint32_t>(offsetInParentNode) <
+               parentNode->GetChildCount()) {
+    // If the range is next to a child node, adjust the range to the end of
+    // the previous child.
+    childNode = parentNode->GetChildAt(offsetInParentNode - 1);
+    offsetInChildNode = childNode->Length();
+  }
+
+  // But if the found node isn't a text node, we cannot modify the range.
+  if (!childNode || !childNode->IsNodeOfType(nsINode::eTEXT) ||
+      NS_WARN_IF(offsetInChildNode < 0)) {
+    return NS_OK;
+  }
+
+  nsresult rv = aRange->Set(childNode, offsetInChildNode,
+                            childNode, offsetInChildNode);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+ContentEventHandler::GetStartFrameAndOffset(const nsRange* aRange,
+                                            nsIFrame*& aFrame,
+                                            int32_t& aOffsetInFrame)
+{
+  MOZ_ASSERT(aRange);
+
+  aFrame = nullptr;
+  aOffsetInFrame = -1;
+
+  nsINode* node = aRange->GetStartParent();
+  if (NS_WARN_IF(!node) ||
+      NS_WARN_IF(!node->IsNodeOfType(nsINode::eCONTENT))) {
+    return NS_ERROR_FAILURE;
+  }
+  nsIContent* content = static_cast<nsIContent*>(node);
   nsRefPtr<nsFrameSelection> fs = mPresShell->FrameSelection();
-  *aFrame = fs->GetFrameForNodeOffset(content, aRange->StartOffset(),
-                                      fs->GetHint(), aOffsetInFrame);
-  NS_ENSURE_TRUE((*aFrame), NS_ERROR_FAILURE);
-  NS_ASSERTION((*aFrame)->GetType() == nsGkAtoms::textFrame,
-               "The frame is not textframe");
+  aFrame = fs->GetFrameForNodeOffset(content, aRange->StartOffset(),
+                                     fs->GetHint(), &aOffsetInFrame);
+  if (NS_WARN_IF(!aFrame)) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
