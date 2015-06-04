@@ -31,7 +31,7 @@ BEGIN_TEST(testLookup_bug522590)
     CHECK(r.isObject());
     JSObject* funobj = &r.toObject();
     CHECK(funobj->is<JSFunction>());
-    CHECK(!js::IsInternalFunctionObject(funobj));
+    CHECK(!js::IsInternalFunctionObject(*funobj));
 
     return true;
 }
