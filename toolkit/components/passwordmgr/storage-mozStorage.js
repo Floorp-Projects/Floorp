@@ -467,8 +467,8 @@ LoginManagerStorage_mozStorage.prototype = {
         // Historical compatibility requires this special case
         case "formSubmitURL":
           if (value != null) {
-              conditions.push("formSubmitURL = :formSubmitURL OR formSubmitURL = ''");
-              params["formSubmitURL"] = value;
+              // As we also need to check for different schemes at the URI
+              // this case gets handled by filtering the result of the query.
               break;
           }
         // Normal cases.
@@ -506,7 +506,7 @@ LoginManagerStorage_mozStorage.prototype = {
     }
 
     let stmt;
-    let logins = [], ids = [];
+    let logins = [], ids = [], fallbackLogins = [], fallbackIds = [];
     try {
       stmt = this._dbCreateStatement(query, params);
       // We can't execute as usual here, since we're iterating over rows
@@ -525,8 +525,24 @@ LoginManagerStorage_mozStorage.prototype = {
         login.timeLastUsed = stmt.row.timeLastUsed;
         login.timePasswordChanged = stmt.row.timePasswordChanged;
         login.timesUsed = stmt.row.timesUsed;
-        logins.push(login);
-        ids.push(stmt.row.id);
+
+        if (login.formSubmitURL == "" || typeof(matchData.formSubmitURL) == "undefined" ||
+            login.formSubmitURL == matchData.formSubmitURL) {
+            logins.push(login);
+            ids.push(stmt.row.id);
+        } else if (login.formSubmitURL != null &&
+                   login.formSubmitURL != "javascript:" &&
+                   matchData.formSubmitURL != "javascript:") {
+          let loginURI = Services.io.newURI(login.formSubmitURL, null, null);
+          let matchURI = Services.io.newURI(matchData.formSubmitURL, null, null);
+
+          if (loginURI.hostPort == matchURI.hostPort &&
+              ((loginURI.scheme == "http" && matchURI.scheme == "https") ||
+              (loginURI.scheme == "https" && matchURI.scheme == "http"))) {
+            fallbackLogins.push(login);
+            fallbackIds.push(stmt.row.id);
+          }
+        }
       }
     } catch (e) {
       this.log("_searchLogins failed: " + e.name + " : " + e.message);
@@ -536,6 +552,10 @@ LoginManagerStorage_mozStorage.prototype = {
       }
     }
 
+    if (!logins.length && fallbackLogins.length) {
+      this.log("_searchLogins: returning " + fallbackLogins.length + " fallback logins");
+      return [fallbackLogins, fallbackIds];
+    }
     this.log("_searchLogins: returning " + logins.length + " logins");
     return [logins, ids];
   },
@@ -685,31 +705,50 @@ LoginManagerStorage_mozStorage.prototype = {
    *
    */
   countLogins : function (hostname, formSubmitURL, httpRealm) {
-    // Do checks for null and empty strings, adjust conditions and params
-    let [conditions, params] =
-        this._buildConditionsAndParams(hostname, formSubmitURL, httpRealm);
 
-    let query = "SELECT COUNT(1) AS numLogins FROM moz_logins";
-    if (conditions.length) {
-      conditions = conditions.map(function(c) "(" + c + ")");
-      query += " WHERE " + conditions.join(" AND ");
-    }
+    let _countLoginsHelper = (hostname, formSubmitURL, httpRealm) => {
+      // Do checks for null and empty strings, adjust conditions and params
+      let [conditions, params] =
+          this._buildConditionsAndParams(hostname, formSubmitURL, httpRealm);
 
-    let stmt, numLogins;
-    try {
-      stmt = this._dbCreateStatement(query, params);
-      stmt.executeStep();
-      numLogins = stmt.row.numLogins;
-    } catch (e) {
-      this.log("_countLogins failed: " + e.name + " : " + e.message);
-    } finally {
-      if (stmt) {
-        stmt.reset();
+      let query = "SELECT COUNT(1) AS numLogins FROM moz_logins";
+      if (conditions.length) {
+        conditions = conditions.map(function(c) "(" + c + ")");
+        query += " WHERE " + conditions.join(" AND ");
+      }
+
+      let stmt, numLogins;
+      try {
+        stmt = this._dbCreateStatement(query, params);
+        stmt.executeStep();
+        numLogins = stmt.row.numLogins;
+      } catch (e) {
+        this.log("_countLogins failed: " + e.name + " : " + e.message);
+      } finally {
+        if (stmt) {
+          stmt.reset();
+        }
+      }
+      return numLogins;
+    };
+
+    let resultLogins = _countLoginsHelper(hostname, formSubmitURL, httpRealm);
+    if (resultLogins == 0 && formSubmitURL != null &&
+        formSubmitURL != "" && formSubmitURL != "javascript:") {
+      let formSubmitURI = Services.io.newURI(formSubmitURL, null, null);
+      let newScheme = null;
+      if (formSubmitURI.scheme == "http") {
+        newScheme = "https";
+      } else if (formSubmitURI.scheme == "https") {
+        newScheme = "http";
+      }
+      if (newScheme) {
+        let newFormSubmitURL = newScheme + "://" + formSubmitURI.hostPort;
+        resultLogins = _countLoginsHelper(hostname, newFormSubmitURL, httpRealm);
       }
     }
-
-    this.log("_countLogins: counted logins: " + numLogins);
-    return numLogins;
+    this.log("_countLogins: counted logins: " + resultLogins);
+    return resultLogins;
   },
 
 
