@@ -6,8 +6,26 @@ var Pattern = Match.Pattern;
 var g = newGlobal();
 var dbg = new Debugger(g);
 
-Pattern({ count: Pattern.NATURAL })
+Pattern({ count: Pattern.NATURAL,
+          bytes: Pattern.NATURAL })
   .assert(dbg.memory.takeCensus({ breakdown: { by: 'count' } }));
+
+let census = dbg.memory.takeCensus({ breakdown: { by: 'count', count: false, bytes: false } });
+assertEq('count' in census, false);
+assertEq('bytes' in census, false);
+
+let census = dbg.memory.takeCensus({ breakdown: { by: 'count', count: true,  bytes: false } });
+assertEq('count' in census, true);
+assertEq('bytes' in census, false);
+
+let census = dbg.memory.takeCensus({ breakdown: { by: 'count', count: false, bytes: true } });
+assertEq('count' in census, false);
+assertEq('bytes' in census, true);
+
+let census = dbg.memory.takeCensus({ breakdown: { by: 'count', count: true,  bytes: true } });
+assertEq('count' in census, true);
+assertEq('bytes' in census, true);
+
 
 // Pattern doesn't mind objects with extra properties, so we'll restrict this
 // list to the object classes we're pretty sure are going to stick around for
