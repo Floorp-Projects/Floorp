@@ -447,16 +447,6 @@ describe("loop.store.RoomStore", function () {
       });
     });
 
-    describe("#addSocialShareButton", function() {
-      it("should invoke to the correct mozLoop function", function() {
-        fakeMozLoop.addSocialShareButton = sinon.stub();
-
-        store.addSocialShareButton(new sharedActions.AddSocialShareButton());
-
-        sinon.assert.calledOnce(fakeMozLoop.addSocialShareButton);
-      });
-    });
-
     describe("#addSocialShareProvider", function() {
       it("should invoke to the correct mozLoop function", function() {
         fakeMozLoop.addSocialShareProvider = sinon.stub();

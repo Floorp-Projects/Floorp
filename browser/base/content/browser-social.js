@@ -301,9 +301,12 @@ SocialActivationListener = {
           // and has never been visible, so we check the widget directly. If
           // there is no area for the widget we move it into the toolbar.
           let widget = CustomizableUI.getWidget("social-share-button");
-          if (!widget.areaType) {
+          // If the panel is already open, we can be sure that the provider can
+          // already be accessed, possibly anchored to another toolbar button.
+          // In that case we don't move the widget.
+          if (!widget.areaType && SocialShare.panel.state != "open") {
             CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_NAVBAR);
-            // ensure correct state
+            // Ensure correct state.
             SocialUI.onCustomizeEnd(window);
           }
 
@@ -474,6 +477,9 @@ SocialShare = {
     let widget = CustomizableUI.getWidget("social-share-button");
     return widget.forWindow(window).anchor;
   },
+  // Holds the anchor node in use whilst the panel is open, because it may vary.
+  _currentAnchor: null,
+
   get panel() {
     return document.getElementById("social-share-panel");
   },
@@ -577,12 +583,13 @@ SocialShare = {
   },
 
   onShowing: function() {
-    this.anchor.setAttribute("open", "true");
+    (this._currentAnchor || this.anchor).setAttribute("open", "true");
     this.iframe.addEventListener("click", this._onclick, true);
   },
 
   onHidden: function() {
-    this.anchor.removeAttribute("open");
+    (this._currentAnchor || this.anchor).removeAttribute("open");
+    this._currentAnchor = null;
     this.iframe.removeEventListener("click", this._onclick, true);
     this.iframe.setAttribute("src", "data:text/plain;charset=utf8,");
     // make sure that the frame is unloaded after it is hidden
@@ -613,7 +620,7 @@ SocialShare = {
     sizeSocialPanelToContent(this.panel, iframe);
   },
 
-  sharePage: function(providerOrigin, graphData, target) {
+  sharePage: function(providerOrigin, graphData, target, anchor) {
     // if providerOrigin is undefined, we use the last-used provider, or the
     // current/default provider.  The provider selection in the share panel
     // will call sharePage with an origin for us to switch to.
@@ -646,7 +653,7 @@ SocialShare = {
             pageData[p] = graphData[p];
           }
         }
-        this.sharePage(providerOrigin, pageData, target);
+        this.sharePage(providerOrigin, pageData, target, anchor);
       });
       gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetPageData");
       return;
@@ -656,7 +663,7 @@ SocialShare = {
       messageManager.addMessageListener("PageMetadata:MicrodataResult", _dataFn = (msg) => {
         messageManager.removeMessageListener("PageMetadata:MicrodataResult", _dataFn);
         pageData.microdata = msg.data;
-        this.sharePage(providerOrigin, pageData, target);
+        this.sharePage(providerOrigin, pageData, target, anchor);
       });
       gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetMicrodata", null, { target });
       return;
@@ -669,7 +676,7 @@ SocialShare = {
     else
       provider = this.getSelectedProvider();
     if (!provider || !provider.shareURL) {
-      this.showDirectory();
+      this.showDirectory(anchor);
       return;
     }
     // check the menu button
@@ -731,10 +738,10 @@ SocialShare = {
     let uri = Services.io.newURI(shareEndpoint, null, null);
     iframe.setAttribute("origin", provider.origin);
     iframe.setAttribute("src", shareEndpoint);
-    this._openPanel();
+    this._openPanel(anchor);
   },
 
-  showDirectory: function() {
+  showDirectory: function(anchor) {
     this._createFrame();
     let iframe = this.iframe;
     if (iframe.getAttribute("src") == "about:providerdirectory")
@@ -758,11 +765,12 @@ SocialShare = {
       }, true);
     }, true);
     iframe.setAttribute("src", "about:providerdirectory");
-    this._openPanel();
+    this._openPanel(anchor);
   },
 
-  _openPanel: function() {
-    let anchor = document.getAnonymousElementByAttribute(this.anchor, "class", "toolbarbutton-icon");
+  _openPanel: function(anchor) {
+    this._currentAnchor = anchor || this.anchor;
+    anchor = document.getAnonymousElementByAttribute(this._currentAnchor, "class", "toolbarbutton-icon");
     this.panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
     Social.setErrorListener(this.iframe, this.setErrorMessage.bind(this));
     Services.telemetry.getHistogramById("SOCIAL_TOOLBAR_BUTTONS").add(0);

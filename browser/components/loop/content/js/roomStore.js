@@ -79,7 +79,6 @@ loop.store = loop.store || {};
      * @type {Array}
      */
     actions: [
-      "addSocialShareButton",
       "addSocialShareProvider",
       "createRoom",
       "createdRoom",
@@ -375,15 +374,6 @@ loop.store = loop.store || {};
       this._mozLoop.socialShareRoom(actionData.provider.origin, actionData.roomUrl,
         shareTitle, shareBody);
       this._mozLoop.notifyUITour("Loop:RoomURLShared");
-    },
-
-    /**
-     * Add the Social Share button to the browser toolbar.
-     *
-     * @param {sharedActions.AddSocialShareButton} actionData The action data.
-     */
-    addSocialShareButton: function(actionData) {
-      this._mozLoop.addSocialShareButton();
     },
 
     /**

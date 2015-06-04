@@ -97,8 +97,6 @@ loop.store.ActiveRoomStore = (function() {
         roomInfoFailure: null,
         // The name of the room.
         roomName: null,
-        // Social API state.
-        socialShareButtonAvailable: false,
         socialShareProviders: null
       };
     },
@@ -200,7 +198,6 @@ loop.store.ActiveRoomStore = (function() {
             roomName: roomData.decryptedContext.roomName,
             roomOwner: roomData.roomOwner,
             roomUrl: roomData.roomUrl,
-            socialShareButtonAvailable: this._mozLoop.isSocialShareButtonAvailable(),
             socialShareProviders: this._mozLoop.getSocialShareProviders()
           }));
 
@@ -319,7 +316,6 @@ loop.store.ActiveRoomStore = (function() {
         roomState: ROOM_STATES.READY,
         roomToken: actionData.roomToken,
         roomUrl: actionData.roomUrl,
-        socialShareButtonAvailable: actionData.socialShareButtonAvailable,
         socialShareProviders: actionData.socialShareProviders
       });
 
@@ -361,7 +357,6 @@ loop.store.ActiveRoomStore = (function() {
      */
     updateSocialShareInfo: function(actionData) {
       this.setStoreState({
-        socialShareButtonAvailable: actionData.socialShareButtonAvailable,
         socialShareProviders: actionData.socialShareProviders
       });
     },
@@ -400,7 +395,6 @@ loop.store.ActiveRoomStore = (function() {
      */
     _handleSocialShareUpdate: function() {
       this.dispatchAction(new sharedActions.UpdateSocialShareInfo({
-        socialShareButtonAvailable: this._mozLoop.isSocialShareButtonAvailable(),
         socialShareProviders: this._mozLoop.getSocialShareProviders()
       }));
     },
