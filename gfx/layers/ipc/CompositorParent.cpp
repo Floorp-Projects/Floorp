@@ -50,7 +50,6 @@
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsIWidget.h"                  // for nsIWidget
-#include "nsIXULRuntime.h"              // for mozilla::BrowserTabsRemoteAutostart
 #include "nsTArray.h"                   // for nsTArray
 #include "nsThreadUtils.h"              // for NS_IsMainThread
 #include "nsXULAppAPI.h"                // for XRE_GetIOMessageLoop
@@ -663,14 +662,9 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
     sIndirectLayerTrees[mRootLayerTreeID].mParent = this;
   }
 
-  if (gfxPrefs::AsyncPanZoomEnabled() &&
-#if !defined(MOZ_B2G) && !defined(MOZ_WIDGET_ANDROID)
-      // For XUL applications (everything but B2G on mobile and desktop, and
-      // Firefox on Android) we only want to use APZ when E10S is enabled. If
-      // we ever get input events off the main thread we can consider relaxing
-      // this requirement.
-      mozilla::BrowserTabsRemoteAutostart() &&
-#endif
+  // The Compositor uses the APZ pref directly since it needs to know whether
+  // to attempt to create the APZ machinery at all.
+  if (gfxPlatform::AsyncPanZoomEnabled() &&
       (aWidget->WindowType() == eWindowType_toplevel || aWidget->WindowType() == eWindowType_child)) {
     mApzcTreeManager = new APZCTreeManager();
   }
