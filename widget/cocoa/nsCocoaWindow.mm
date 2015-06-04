@@ -106,10 +106,12 @@ nsCocoaWindow::nsCocoaWindow()
 , mAnimationType(nsIWidget::eGenericWindowAnimation)
 , mWindowMadeHere(false)
 , mSheetNeedsShow(false)
-, mFullScreen(false)
+, mInFullScreenMode(false)
 , mInFullScreenTransition(false)
+, mInDOMFullscreenTransition(false)
 , mModal(false)
-, mUsesNativeFullScreen(false)
+, mSupportsNativeFullScreen(false)
+, mInNativeFullScreenMode(false)
 , mIsAnimationSuppressed(false)
 , mInReportMoveEvent(false)
 , mInResize(false)
@@ -512,7 +514,7 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
   }
   nsBaseWidget::OnDestroy();
 
-  if (mFullScreen) {
+  if (mInFullScreenMode) {
     // On Lion we don't have to mess with the OS chrome when in Full Screen
     // mode.  But we do have to destroy the native window here (and not wait
     // for that to happen in our destructor).  We don't switch away from the
@@ -520,7 +522,7 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
     // might not happen for several seconds (because at least one object
     // holding a reference to ourselves is usually waiting to be garbage-
     // collected).  See bug 757618.
-    if (mUsesNativeFullScreen) {
+    if (mInNativeFullScreenMode) {
       DestroyNativeWindow();
     } else if (mWindow) {
       nsCocoaUtils::HideOSChromeOnScreen(false, [mWindow screen]);
@@ -1193,7 +1195,7 @@ NS_METHOD nsCocoaWindow::SetSizeMode(int32_t aMode)
       [mWindow zoom:nil];
   }
   else if (aMode == nsSizeMode_Fullscreen) {
-    if (!mFullScreen)
+    if (!mInFullScreenMode)
       MakeFullScreen(true);
   }
 
@@ -1264,11 +1266,39 @@ NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(bool aShouldHide)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void nsCocoaWindow::EnteredFullScreen(bool aFullScreen)
+void nsCocoaWindow::PrepareForDOMFullscreenTransition()
+{
+  mInDOMFullscreenTransition = true;
+}
+
+void nsCocoaWindow::EnteredFullScreen(bool aFullScreen, bool aNativeMode)
 {
   mInFullScreenTransition = false;
-  mFullScreen = aFullScreen;
+  mInFullScreenMode = aFullScreen;
+  if (aNativeMode || mInNativeFullScreenMode) {
+    mInNativeFullScreenMode = aFullScreen;
+  }
   DispatchSizeModeEvent();
+}
+
+inline bool nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen)
+{
+  if (!mSupportsNativeFullScreen) {
+    // If we cannot use native fullscreen, don't touch it.
+    return false;
+  }
+  if (mInNativeFullScreenMode) {
+    // If we are using native fullscreen, go ahead to exit it.
+    return true;
+  }
+  if (mInDOMFullscreenTransition) {
+    // We shouldn't use native fullscreen for DOM fullscreen.
+    return false;
+  }
+  // If we are using native fullscreen, we should have returned earlier,
+  // which means if we reach here for exiting fullscreen, we must be
+  // exiting from DOM fullscreen, not native fullscreen.
+  return aFullScreen;
 }
 
 NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
@@ -1282,25 +1312,27 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScre
   // We will call into MakeFullScreen redundantly when entering/exiting
   // fullscreen mode via OS X controls. When that happens we should just handle
   // it gracefully - no need to ASSERT.
-  if (mFullScreen == aFullScreen) {
+  if (mInFullScreenMode == aFullScreen) {
     return NS_OK;
   }
 
-  // If we're using native fullscreen mode and our native window is invisible,
-  // our attempt to go into fullscreen mode will fail with an assertion in
-  // system code, without [WindowDelegate windowDidFailToEnterFullScreen:]
-  // ever getting called.  To pre-empt this we bail here.  See bug 752294.
-  if (mUsesNativeFullScreen && aFullScreen && ![mWindow isVisible]) {
-    EnteredFullScreen(false);
-    return NS_OK;
-  }
 
   mInFullScreenTransition = true;
 
-  if (mUsesNativeFullScreen) {
+  if (ShouldToggleNativeFullscreen(aFullScreen)) {
+    // If we're using native fullscreen mode and our native window is invisible,
+    // our attempt to go into fullscreen mode will fail with an assertion in
+    // system code, without [WindowDelegate windowDidFailToEnterFullScreen:]
+    // ever getting called.  To pre-empt this we bail here.  See bug 752294.
+    if (aFullScreen && ![mWindow isVisible]) {
+      EnteredFullScreen(false);
+      return NS_OK;
+    }
+    MOZ_ASSERT(mInNativeFullScreenMode != aFullScreen,
+               "We shouldn't have been in native fullscreen.");
     // Calling toggleFullScreen will result in windowDid(FailTo)?(Enter|Exit)FullScreen
     // to be called from the OS. We will call EnteredFullScreen from those methods,
-    // where mFullScreen will be set and a sizemode event will be dispatched.
+    // where mInFullScreenMode will be set and a sizemode event will be dispatched.
     [mWindow toggleFullScreen:nil];
   } else {
     NSDisableScreenUpdates();
@@ -1312,7 +1344,12 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScre
     NSEnableScreenUpdates();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    EnteredFullScreen(aFullScreen);
+    EnteredFullScreen(aFullScreen, /* aNativeMode */ false);
+  }
+
+  if (mInDOMFullscreenTransition) {
+    // Clear the flag about DOM fullscreen.
+    mInDOMFullscreenTransition = false;
   }
 
   return NS_OK;
@@ -1684,8 +1721,8 @@ nsCocoaWindow::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
   return NS_OK;
 }
 
-// aFullScreen should be the window's mFullScreen. We don't have access to that
-// from here, so we need to pass it in. mFullScreen should be the canonical
+// aFullScreen should be the window's mInFullScreenMode. We don't have access to that
+// from here, so we need to pass it in. mInFullScreenMode should be the canonical
 // indicator that a window is currently full screen and it makes sense to keep
 // all sizemode logic here.
 static nsSizeMode
@@ -1730,7 +1767,7 @@ nsCocoaWindow::DispatchSizeModeEvent()
     return;
   }
 
-  nsSizeMode newMode = GetWindowSizeMode(mWindow, mFullScreen);
+  nsSizeMode newMode = GetWindowSizeMode(mWindow, mInFullScreenMode);
 
   // Don't dispatch a sizemode event if:
   // 1. the window is transitioning to fullscreen
@@ -1950,16 +1987,16 @@ void nsCocoaWindow::SetShowsFullScreenButton(bool aShow)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!mWindow || ![mWindow respondsToSelector:@selector(toggleFullScreen:)] ||
-      mUsesNativeFullScreen == aShow) {
+      mSupportsNativeFullScreen == aShow) {
     return;
   }
 
   // If the window is currently in fullscreen mode, then we're going to
   // transition out first, then set the collection behavior & toggle
-  // mUsesNativeFullScreen, then transtion back into fullscreen mode. This
+  // mSupportsNativeFullScreen, then transtion back into fullscreen mode. This
   // prevents us from getting into a conflicting state with MakeFullScreen
-  // where mUsesNativeFullScreen would lead us down the wrong path.
-  bool wasFullScreen = mFullScreen;
+  // where mSupportsNativeFullScreen would lead us down the wrong path.
+  bool wasFullScreen = mInFullScreenMode;
 
   if (wasFullScreen) {
     MakeFullScreen(false);
@@ -1972,7 +2009,7 @@ void nsCocoaWindow::SetShowsFullScreenButton(bool aShow)
     newBehavior &= ~NSWindowCollectionBehaviorFullScreenPrimary;
   }
   [mWindow setCollectionBehavior:newBehavior];
-  mUsesNativeFullScreen = aShow;
+  mSupportsNativeFullScreen = aShow;
 
   if (wasFullScreen) {
     MakeFullScreen(true);
