@@ -4,9 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stdio.h>
+#include "gtest/gtest.h"
 #include "nsXPCOM.h"
 #include "nsIUnicodeNormalizer.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 #include "nsCharTraits.h"
 #include "nsServiceManagerUtils.h"
 
@@ -43,14 +44,12 @@ struct testcaseLine {
 NS_DEFINE_CID(kUnicodeNormalizerCID, NS_UNICODE_NORMALIZER_CID);
 
 nsIUnicodeNormalizer *normalizer;
-bool verboseMode = false;
 
 #include "NormalizationData.h"
 
 void showError(const char* description, const char* errorText)
 {
-  if (verboseMode)
-    printf("%s failed: %s", description, errorText);
+  printf("%s failed: %s", description, errorText);
 }
 
 bool TestInvariants(testcaseLine* testLine)
@@ -182,6 +181,7 @@ void TestPart0()
       ++numFailed;
   }
   printf(" %d cases passed, %d failed\n\n", numPassed, numFailed);
+  EXPECT_EQ(0u, numFailed);
 }
 
 void TestPart1()
@@ -209,6 +209,7 @@ void TestPart1()
     }
   }
   printf(" %d cases passed, %d failed\n\n", numPassed, numFailed);
+  EXPECT_EQ(0u, numFailed);
 }
 
 void TestPart2()
@@ -226,6 +227,7 @@ void TestPart2()
       ++numFailed;
   }
   printf(" %d cases passed, %d failed\n\n", numPassed, numFailed);
+  EXPECT_EQ(0u, numFailed);
 }
 
 void TestPart3()
@@ -243,47 +245,30 @@ void TestPart3()
       ++numFailed;
   }
   printf(" %d cases passed, %d failed\n\n", numPassed, numFailed);
+  EXPECT_EQ(0u, numFailed);
 }
 
-int main(int argc, char** argv) {
+TEST(NormalizationTest, Main) {
   if (sizeof(wchar_t) != 2) {
     printf("This test can only be run where sizeof(wchar_t) == 2\n");
-    return 1;
+    return;
   }
   if (strlen(versionText) == 0) {
     printf("No testcases: to run the tests generate the header file using\n");
     printf(" perl genNormalizationData.pl\n");
     printf("in intl/unichar/tools and rebuild\n");
-    return 1;
+    return;
   }
 
   printf("NormalizationTest: test nsIUnicodeNormalizer. UCD version: %s\n", 
          versionText); 
-  if (argc <= 1)
-    verboseMode = false;
-  else if ((argc == 2) && (!strcmp(argv[1], "-v")))
-    verboseMode = true;
-  else {
-    printf("                   Usage: NormalizationTest [OPTION]..\n");
-    printf("Options:\n");
-    printf("        -v   Verbose mode\n");
-    return 1;
-  }
 
-  nsresult rv = NS_InitXPCOM2(nullptr, nullptr, nullptr);
-  if (NS_FAILED(rv)) {
-    printf("NS_InitXPCOM2 failed\n");
-    return 1;
-  }
-  
   normalizer = nullptr;
   nsresult res;
   res = CallGetService(kUnicodeNormalizerCID, &normalizer);
   
- if(NS_FAILED(res) || !normalizer) {
-    printf("GetService failed\n");
-    return 1;
-  }
+  ASSERT_FALSE(NS_FAILED(res)) << "GetService failed";
+  ASSERT_NE(nullptr, normalizer);
 
   TestPart0();
   TestPart1();
@@ -291,7 +276,4 @@ int main(int argc, char** argv) {
   TestPart3();
   
   NS_RELEASE(normalizer);
-
-  printf("Test finished \n");
-  return 0;
 }
