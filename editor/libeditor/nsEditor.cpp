@@ -137,6 +137,7 @@ nsEditor::nsEditor()
 ,  mPlaceHolderBatch(0)
 ,  mAction(EditAction::none)
 ,  mIMETextOffset(0)
+,  mIMETextLength(0)
 ,  mDirection(eNone)
 ,  mDocDirtyState(-1)
 ,  mSpellcheckCheckboxState(eTriUnset)
@@ -2049,6 +2050,7 @@ nsEditor::EndIMEComposition()
   /* reset the data we need to construct a transaction */
   mIMETextNode = nullptr;
   mIMETextOffset = 0;
+  mIMETextLength = 0;
   mComposition->EndHandlingComposition(this);
   mComposition = nullptr;
 
@@ -2389,6 +2391,7 @@ nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
 
     txn = CreateTxnForIMEText(aStringToInsert);
     isIMETransaction = true;
+    mIMETextLength = aStringToInsert.Length();
   } else {
     txn = CreateTxnForInsertText(aStringToInsert, aTextNode, aOffset);
   }
@@ -4198,10 +4201,11 @@ nsEditor::CreateTxnForDeleteNode(nsINode* aNode, DeleteNodeTxn** aTxn)
 already_AddRefed<IMETextTxn>
 nsEditor::CreateTxnForIMEText(const nsAString& aStringToInsert)
 {
+  MOZ_ASSERT(mIMETextNode);
   // During handling IME composition, mComposition must have been initialized.
   // TODO: We can simplify IMETextTxn::Init() with TextComposition class.
   nsRefPtr<IMETextTxn> txn = new IMETextTxn(*mIMETextNode, mIMETextOffset,
-                                            mComposition->String().Length(),
+                                            mIMETextLength,
                                             mComposition->GetRanges(),
                                             aStringToInsert, *this);
   return txn.forget();
