@@ -351,7 +351,7 @@ void ImageBridgeChild::DispatchReleaseImageClient(ImageClient* aClient)
 static void ReleaseTextureClientNow(TextureClient* aClient)
 {
   MOZ_ASSERT(InImageBridgeChildThread());
-  RELEASE_MANUALLY(aClient);
+  aClient->Release();
 }
 
 // static
@@ -368,7 +368,7 @@ void ImageBridgeChild::DispatchReleaseTextureClient(TextureClient* aClient)
     // has already shut down, along with the TextureChild, which means no
     // message will be sent and it is safe to run this code from any thread.
     MOZ_ASSERT(aClient->GetIPDLActor() == nullptr);
-    RELEASE_MANUALLY(aClient);
+    aClient->Release();
     return;
   }
 
