@@ -1719,6 +1719,11 @@ public:
     mWantAllTraces = true;
   }
 
+  bool IsAllTraces()
+  {
+    return mWantAllTraces;
+  }
+
   NS_IMETHOD AllTraces(nsICycleCollectorListener** aListener) override
   {
     SetAllTraces();
@@ -2146,9 +2151,7 @@ CCGraphBuilder::CCGraphBuilder(CCGraph& aGraph,
 
   if (mLogger) {
     mFlags |= nsCycleCollectionTraversalCallback::WANT_DEBUG_INFO;
-    bool all = false;
-    mLogger->GetWantAllTraces(&all);
-    if (all) {
+    if (mLogger->IsAllTraces()) {
       mFlags |= nsCycleCollectionTraversalCallback::WANT_ALL_TRACES;
       mWantAllTraces = true; // for nsCycleCollectionNoteRootCallback
     }
@@ -3755,12 +3758,9 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     }
   }
 
-  bool forceGC = isShutdown;
-  if (!forceGC && mLogger) {
-    // On a WantAllTraces CC, force a synchronous global GC to prevent
-    // hijinks from ForgetSkippable and compartmental GCs.
-    mLogger->GetWantAllTraces(&forceGC);
-  }
+  // On a WantAllTraces CC, force a synchronous global GC to prevent
+  // hijinks from ForgetSkippable and compartmental GCs.
+  bool forceGC = isShutdown || (mLogger && mLogger->IsAllTraces());
 
   // BeginCycleCollectionCallback() might have started an IGC, and we need
   // to finish it before we run FixGrayBits.
