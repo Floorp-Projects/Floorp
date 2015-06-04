@@ -333,17 +333,31 @@ nsPerformanceStatsService::~nsPerformanceStatsService()
 {
 }
 
-/* [implicit_jscontext] attribute bool isStopwatchActive; */
-NS_IMETHODIMP nsPerformanceStatsService::GetIsStopwatchActive(JSContext* cx, bool *aIsStopwatchActive)
+//[implicit_jscontext] attribute bool isMonitoringCPOW;
+NS_IMETHODIMP nsPerformanceStatsService::GetIsMonitoringCPOW(JSContext* cx, bool *aIsStopwatchActive)
 {
   JSRuntime *runtime = JS_GetRuntime(cx);
-  *aIsStopwatchActive = js::IsStopwatchActive(runtime);
+  *aIsStopwatchActive = js::GetStopwatchIsMonitoringCPOW(runtime);
   return NS_OK;
 }
-NS_IMETHODIMP nsPerformanceStatsService::SetIsStopwatchActive(JSContext* cx, bool aIsStopwatchActive)
+NS_IMETHODIMP nsPerformanceStatsService::SetIsMonitoringCPOW(JSContext* cx, bool aIsStopwatchActive)
 {
   JSRuntime *runtime = JS_GetRuntime(cx);
-  if (!js::SetStopwatchActive(runtime, aIsStopwatchActive)) {
+  if (!js::SetStopwatchIsMonitoringCPOW(runtime, aIsStopwatchActive)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+NS_IMETHODIMP nsPerformanceStatsService::GetIsMonitoringJank(JSContext* cx, bool *aIsStopwatchActive)
+{
+  JSRuntime *runtime = JS_GetRuntime(cx);
+  *aIsStopwatchActive = js::GetStopwatchIsMonitoringJank(runtime);
+  return NS_OK;
+}
+NS_IMETHODIMP nsPerformanceStatsService::SetIsMonitoringJank(JSContext* cx, bool aIsStopwatchActive)
+{
+  JSRuntime *runtime = JS_GetRuntime(cx);
+  if (!js::SetStopwatchIsMonitoringJank(runtime, aIsStopwatchActive)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
