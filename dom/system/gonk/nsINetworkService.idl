@@ -4,8 +4,6 @@
 
 #include "nsISupports.idl"
 
-interface nsINetworkInterface;
-
 [scriptable, function, uuid(91824160-fb25-11e1-a21f-0800200c9a66)]
 interface nsIWifiTetheringCallback : nsISupports
 {
@@ -159,7 +157,7 @@ interface nsIDhcpRequestCallback : nsISupports
 /**
  * Provide network services.
  */
-[scriptable, uuid(214c0810-fd41-11e4-b939-0800200c9a66)]
+[scriptable, uuid(5d6b1877-890a-4c7f-8403-94d57ceba6cf)]
 interface nsINetworkService : nsISupports
 {
   const long MODIFY_ROUTE_ADD    = 0;
@@ -268,45 +266,78 @@ interface nsINetworkService : nsISupports
   /**
    * Reset routing table.
    *
-   * @param networkInterface
-   *        The network interface we want remove from the routing table.
+   * @param interfaceName
+   *        The name of the network interface we want to remove from the routing
+   *        table.
+   *
+   * @param callback
+   *        Callback to notify the result of resetting routing table.
    */
-  void resetRoutingTable(in nsINetworkInterface networkInterface,
+  void resetRoutingTable(in DOMString interfaceName,
                          in nsINativeCommandCallback callback);
 
   /**
    * Set DNS.
    *
-   * @param networkInterface
-   *        The network interface which contains the DNS we want to set.
+   * @param interfaceName
+   *        The network interface name of the DNS we want to set.
+   * @param dnsesCount
+   *        Number of elements in dnses.
+   * @param dnses
+   *        Dnses to set.
+   * @param gatewaysCount
+   *        Number of elements in gateways.
+   * @param gateways
+   *        Gateways for the dnses, the most suitable, usually the one with the
+   *        same address family, will be selected for each dns.
    *
    * @param callback
    *        Callback to notify the result of setting DNS server.
    */
-  void setDNS(in nsINetworkInterface networkInterface,
+  void setDNS(in DOMString interfaceName,
+              in unsigned long dnsesCount,
+              [array, size_is(dnsesCount)] in wstring dnses,
+              in unsigned long gatewaysCount,
+              [array, size_is(gatewaysCount)] in wstring gateways,
               in nsISetDnsCallback callback);
 
   /**
    * Set default route.
    *
-   * @param networkInterface
-   *        The network interface we want to set to the default route.
-   * @param oldInterface
-   *        The previous network interface.
+   * @param interfaceName
+   *        The network interface name of the default route we want to set.
+   * @param count
+   *        Number of elements in gateways.
+   * @param gateways
+   *        Default gateways for setting default route.
+   * @param oldInterfaceName
+   *        The previous network interface name.
+   *
    * @param callback
    *        Callback to notify the result of setting default route.
    */
-  void setDefaultRoute(in nsINetworkInterface networkInterface,
-                       in nsINetworkInterface oldInterface,
+  void setDefaultRoute(in DOMString interfaceName,
+                       in unsigned long count,
+                       [array, size_is(count)] in wstring gateways,
+                       in DOMString oldInterfaceName,
                        in nsINativeCommandCallback callback);
 
   /**
    * Remove default route.
    *
-   * @param networkInterface
-   *        The network interface we want remove from the default route.
+   * @param interfaceName
+   *        The network interface name of the default route we want to remove.
+   * @param count
+   *        Number of elements in gateways.
+   * @param gatways
+   *        Default gateways for removing default route.
+   *
+   * @param callback
+   *        Callback to notify the result of removing default route.
    */
-  void removeDefaultRoute(in nsINetworkInterface networkInterface,
+  void removeDefaultRoute(in DOMString interfaceName,
+                          in unsigned long count,
+                          [array, size_is(count)] in wstring gateways,
                           in nsINativeCommandCallback callback);
 
   /**
