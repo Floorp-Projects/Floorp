@@ -4,11 +4,12 @@
 
 package org.mozilla.tests.browser.junit3;
 
+import android.test.InstrumentationTestCase;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.util.ThreadUtils;
 
-public class TestGeckoMenu extends BrowserTestCase {
+public class TestGeckoMenu extends InstrumentationTestCase {
 
     private volatile Exception exception;
     private void setException(Exception e) {
@@ -16,7 +17,7 @@ public class TestGeckoMenu extends BrowserTestCase {
     }
 
     public void testMenuThreading() throws InterruptedException {
-        final GeckoMenu menu = new GeckoMenu(getActivity());
+        final GeckoMenu menu = new GeckoMenu(getInstrumentation().getTargetContext());
         final Object semaphore = new Object();
 
         ThreadUtils.postToUiThread(new Runnable() {
