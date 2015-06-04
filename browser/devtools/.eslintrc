@@ -32,8 +32,9 @@
     "brace-style": [2, "1tbs", {"allowSingleLine": false}],
     // Require camel case names
     "camelcase": 2,
-    // Disallow trailing commas. Not valid JSON notation.
-    "comma-dangle": 1,
+    // Allow trailing commas for easy list extension.  Having them does not
+    // impair readability, but also not required either.
+    "comma-dangle": 0,
     // Enforce spacing before and after comma
     "comma-spacing": [2, {"before": false, "after": true}],
     // Enforce one true comma style.
