@@ -70,9 +70,9 @@ struct JS_PUBLIC_API(SliceBudget)
         return checkOverBudget();
     }
 
-    bool isUnlimited() const {
-        return deadline == unlimitedDeadline;
-    }
+    bool isWorkBudget() const { return deadline == 0; }
+    bool isTimeBudget() const { return deadline > 0 && !isUnlimited(); }
+    bool isUnlimited() const { return deadline == unlimitedDeadline; }
 
     int describe(char* buffer, size_t maxlen) const;
 
