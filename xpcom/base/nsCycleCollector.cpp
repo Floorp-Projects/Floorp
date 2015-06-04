@@ -1255,7 +1255,7 @@ class nsCycleCollector : public nsIMemoryReporter
   ccPhase mIncrementalPhase;
   CCGraph mGraph;
   nsAutoPtr<CCGraphBuilder> mBuilder;
-  nsRefPtr<nsCycleCollectorLogger> mListener;
+  nsRefPtr<nsCycleCollectorLogger> mLogger;
 
   DebugOnly<void*> mThread;
 
@@ -2032,7 +2032,7 @@ private:
   nsCycleCollectionParticipant* mJSParticipant;
   nsCycleCollectionParticipant* mJSZoneParticipant;
   nsCString mNextEdgeName;
-  nsRefPtr<nsCycleCollectorLogger> mListener;
+  nsRefPtr<nsCycleCollectorLogger> mLogger;
   bool mMergeZones;
   nsAutoPtr<NodePool::Enumerator> mCurrNode;
 
@@ -2040,7 +2040,7 @@ public:
   CCGraphBuilder(CCGraph& aGraph,
                  CycleCollectorResults& aResults,
                  CycleCollectedJSRuntime* aJSRuntime,
-                 nsCycleCollectorLogger* aListener,
+                 nsCycleCollectorLogger* aLogger,
                  bool aMergeZones);
   virtual ~CCGraphBuilder();
 
@@ -2116,8 +2116,8 @@ private:
       return;
     }
     mEdgeBuilder.Add(childPi);
-    if (mListener) {
-      mListener->NoteEdge((uint64_t)aChild, aEdgeName.get());
+    if (mLogger) {
+      mLogger->NoteEdge((uint64_t)aChild, aEdgeName.get());
     }
     ++childPi->mInternalRefs;
   }
@@ -2138,7 +2138,7 @@ private:
 CCGraphBuilder::CCGraphBuilder(CCGraph& aGraph,
                                CycleCollectorResults& aResults,
                                CycleCollectedJSRuntime* aJSRuntime,
-                               nsCycleCollectorLogger* aListener,
+                               nsCycleCollectorLogger* aLogger,
                                bool aMergeZones)
   : mGraph(aGraph)
   , mResults(aResults)
@@ -2146,7 +2146,7 @@ CCGraphBuilder::CCGraphBuilder(CCGraph& aGraph,
   , mEdgeBuilder(aGraph.mEdges)
   , mJSParticipant(nullptr)
   , mJSZoneParticipant(nullptr)
-  , mListener(aListener)
+  , mLogger(aLogger)
   , mMergeZones(aMergeZones)
 {
   if (aJSRuntime) {
@@ -2154,10 +2154,10 @@ CCGraphBuilder::CCGraphBuilder(CCGraph& aGraph,
     mJSZoneParticipant = aJSRuntime->ZoneParticipant();
   }
 
-  if (mListener) {
+  if (mLogger) {
     mFlags |= nsCycleCollectionTraversalCallback::WANT_DEBUG_INFO;
     bool all = false;
-    mListener->GetWantAllTraces(&all);
+    mLogger->GetWantAllTraces(&all);
     if (all) {
       mFlags |= nsCycleCollectionTraversalCallback::WANT_ALL_TRACES;
       mWantAllTraces = true; // for nsCycleCollectionNoteRootCallback
@@ -2303,9 +2303,9 @@ CCGraphBuilder::DescribeRefCountedNode(nsrefcnt aRefCount, const char* aObjName)
 
   mResults.mVisitedRefCounted++;
 
-  if (mListener) {
-    mListener->NoteRefCountedObject((uint64_t)mCurrPi->mPointer, aRefCount,
-                                    aObjName);
+  if (mLogger) {
+    mLogger->NoteRefCountedObject((uint64_t)mCurrPi->mPointer, aRefCount,
+                                  aObjName);
   }
 
   mCurrPi->mRefCount = aRefCount;
@@ -2318,9 +2318,9 @@ CCGraphBuilder::DescribeGCedNode(bool aIsMarked, const char* aObjName,
   uint32_t refCount = aIsMarked ? UINT32_MAX : 0;
   mResults.mVisitedGCed++;
 
-  if (mListener) {
-    mListener->NoteGCedObject((uint64_t)mCurrPi->mPointer, aIsMarked,
-                              aObjName, aCompartmentAddress);
+  if (mLogger) {
+    mLogger->NoteGCedObject((uint64_t)mCurrPi->mPointer, aIsMarked,
+                            aObjName, aCompartmentAddress);
   }
 
   mCurrPi->mRefCount = refCount;
@@ -2439,9 +2439,9 @@ CCGraphBuilder::NoteWeakMapping(JSObject* aMap, JS::GCCellPtr aKey,
   mapping->mKeyDelegate = aKdelegate ? AddWeakMapNode(aKdelegate) : mapping->mKey;
   mapping->mVal = aVal ? AddWeakMapNode(aVal) : nullptr;
 
-  if (mListener) {
-    mListener->NoteWeakMapEntry((uint64_t)aMap, aKey.unsafeAsInteger(),
-                                (uint64_t)aKdelegate, aVal.unsafeAsInteger());
+  if (mLogger) {
+    mLogger->NoteWeakMapEntry((uint64_t)aMap, aKey.unsafeAsInteger(),
+                              (uint64_t)aKdelegate, aVal.unsafeAsInteger());
   }
 }
 
@@ -2943,9 +2943,9 @@ nsCycleCollector::ScanWeakMaps()
 class PurpleScanBlackVisitor
 {
 public:
-  PurpleScanBlackVisitor(CCGraph& aGraph, nsCycleCollectorLogger* aListener,
+  PurpleScanBlackVisitor(CCGraph& aGraph, nsCycleCollectorLogger* aLogger,
                          uint32_t& aCount, bool& aFailed)
-    : mGraph(aGraph), mListener(aListener), mCount(aCount), mFailed(aFailed)
+    : mGraph(aGraph), mLogger(aLogger), mCount(aCount), mFailed(aFailed)
   {
   }
 
@@ -2968,8 +2968,8 @@ public:
       return;
     }
     MOZ_ASSERT(pi->mParticipant, "No dead objects should be in the purple buffer.");
-    if (MOZ_UNLIKELY(mListener)) {
-      mListener->NoteIncrementalRoot((uint64_t)pi->mPointer);
+    if (MOZ_UNLIKELY(mLogger)) {
+      mLogger->NoteIncrementalRoot((uint64_t)pi->mPointer);
     }
     if (pi->mColor == black) {
       return;
@@ -2979,7 +2979,7 @@ public:
 
 private:
   CCGraph& mGraph;
-  nsRefPtr<nsCycleCollectorLogger> mListener;
+  nsRefPtr<nsCycleCollectorLogger> mLogger;
   uint32_t& mCount;
   bool& mFailed;
 };
@@ -3002,7 +3002,7 @@ nsCycleCollector::ScanIncrementalRoots()
   // buffer here, so these objects will be suspected and freed in the next CC
   // if they are garbage.
   bool failed = false;
-  PurpleScanBlackVisitor purpleScanBlackVisitor(mGraph, mListener,
+  PurpleScanBlackVisitor purpleScanBlackVisitor(mGraph, mLogger,
                                                 mWhiteNodeCount, failed);
   mPurpleBuf.VisitEntries(purpleScanBlackVisitor);
   timeLog.Checkpoint("ScanIncrementalRoots::fix purple");
@@ -3012,7 +3012,7 @@ nsCycleCollector::ScanIncrementalRoots()
     hasJSRuntime ? mJSRuntime->GCThingParticipant() : nullptr;
   nsCycleCollectionParticipant* zoneParticipant =
     hasJSRuntime ? mJSRuntime->ZoneParticipant() : nullptr;
-  bool hasListener = !!mListener;
+  bool hasLogger = !!mLogger;
 
   NodePool::Enumerator etor(mGraph.mNodes);
   while (!etor.IsDone()) {
@@ -3021,7 +3021,7 @@ nsCycleCollector::ScanIncrementalRoots()
     // As an optimization, if an object has already been determined to be live,
     // don't consider it further.  We can't do this if there is a listener,
     // because the listener wants to know the complete set of incremental roots.
-    if (pi->mColor == black && MOZ_LIKELY(!hasListener)) {
+    if (pi->mColor == black && MOZ_LIKELY(!hasLogger)) {
       continue;
     }
 
@@ -3066,9 +3066,9 @@ nsCycleCollector::ScanIncrementalRoots()
     // If there's a listener, tell it about this root. We don't bother with the
     // optimization of skipping the Walk() if pi is black: it will just return
     // without doing anything and there's no need to make this case faster.
-    if (MOZ_UNLIKELY(hasListener) && pi->mPointer) {
+    if (MOZ_UNLIKELY(hasLogger) && pi->mPointer) {
       // Dead objects aren't logged. See bug 1031370.
-      mListener->NoteIncrementalRoot((uint64_t)pi->mPointer);
+      mLogger->NoteIncrementalRoot((uint64_t)pi->mPointer);
     }
 
     FloodBlackNode(mWhiteNodeCount, failed, pi);
@@ -3167,8 +3167,8 @@ nsCycleCollector::ScanRoots(bool aFullySynchGraphBuild)
   ScanWeakMaps();
   timeLog.Checkpoint("ScanRoots::ScanWeakMaps");
 
-  if (mListener) {
-    mListener->BeginResults();
+  if (mLogger) {
+    mLogger->BeginResults();
 
     NodePool::Enumerator etor(mGraph.mNodes);
     while (!etor.IsDone()) {
@@ -3180,12 +3180,12 @@ nsCycleCollector::ScanRoots(bool aFullySynchGraphBuild)
         case black:
           if (!pi->IsGrayJS() && !pi->IsBlackJS() &&
               pi->mInternalRefs != pi->mRefCount) {
-            mListener->DescribeRoot((uint64_t)pi->mPointer,
-                                    pi->mInternalRefs);
+            mLogger->DescribeRoot((uint64_t)pi->mPointer,
+                                  pi->mInternalRefs);
           }
           break;
         case white:
-          mListener->DescribeGarbage((uint64_t)pi->mPointer);
+          mLogger->DescribeGarbage((uint64_t)pi->mPointer);
           break;
         case grey:
           MOZ_ASSERT(false, "All traversed objects should be black or white");
@@ -3193,8 +3193,8 @@ nsCycleCollector::ScanRoots(bool aFullySynchGraphBuild)
       }
     }
 
-    mListener->End();
-    mListener = nullptr;
+    mLogger->End();
+    mLogger = nullptr;
     timeLog.Checkpoint("ScanRoots::listener");
   }
 }
@@ -3751,26 +3751,26 @@ nsCycleCollector::BeginCollection(ccType aCCType,
 
   // Set up the listener for this CC.
   MOZ_ASSERT_IF(isShutdown, !aManualListener);
-  MOZ_ASSERT(!mListener, "Forgot to clear a previous listener?");
+  MOZ_ASSERT(!mLogger, "Forgot to clear a previous listener?");
 
   if (aManualListener) {
-    aManualListener->AsLogger(getter_AddRefs(mListener));
+    aManualListener->AsLogger(getter_AddRefs(mLogger));
   }
 
   aManualListener = nullptr;
-  if (!mListener && mParams.LogThisCC(isShutdown)) {
+  if (!mLogger && mParams.LogThisCC(isShutdown)) {
     nsRefPtr<nsCycleCollectorLogger> logger = new nsCycleCollectorLogger();
     if (mParams.AllTracesThisCC(isShutdown)) {
       logger->SetAllTraces();
     }
-    mListener = logger.forget();
+    mLogger = logger.forget();
   }
 
   bool forceGC = isShutdown;
-  if (!forceGC && mListener) {
+  if (!forceGC && mLogger) {
     // On a WantAllTraces CC, force a synchronous global GC to prevent
     // hijinks from ForgetSkippable and compartmental GCs.
-    mListener->GetWantAllTraces(&forceGC);
+    mLogger->GetWantAllTraces(&forceGC);
   }
 
   // BeginCycleCollectionCallback() might have started an IGC, and we need
@@ -3783,8 +3783,8 @@ nsCycleCollector::BeginCollection(ccType aCCType,
   FreeSnowWhite(true);
   timeLog.Checkpoint("BeginCollection FreeSnowWhite");
 
-  if (mListener && NS_FAILED(mListener->Begin())) {
-    mListener = nullptr;
+  if (mLogger && NS_FAILED(mLogger->Begin())) {
+    mLogger = nullptr;
   }
 
   // FreeSnowWhite could potentially have started an IGC, which we need
@@ -3800,7 +3800,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
   mResults.mMergedZones = mergeZones;
 
   MOZ_ASSERT(!mBuilder, "Forgot to clear mBuilder");
-  mBuilder = new CCGraphBuilder(mGraph, mResults, mJSRuntime, mListener,
+  mBuilder = new CCGraphBuilder(mGraph, mResults, mJSRuntime, mLogger,
                                 mergeZones);
   timeLog.Checkpoint("BeginCollection prepare graph builder");
 
