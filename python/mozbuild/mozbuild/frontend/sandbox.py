@@ -213,7 +213,7 @@ class Sandbox(dict):
             raise SandboxExecutionError(source_stack, exc[0], exc[1], exc[2])
         finally:
             self._context._sandbox = old_sandbox
-            if path:
+            if path and becomes_current_path:
                 self._context.pop_source()
 
     def push_subcontext(self, context):
