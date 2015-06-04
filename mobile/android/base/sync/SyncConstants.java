@@ -6,9 +6,6 @@ package org.mozilla.gecko.sync;
 
 import org.mozilla.gecko.AppConstants;
 
-/**
- * Preprocessed class for storing preprocessed values specific to Android Sync.
- */
 public class SyncConstants {
   public static final String GLOBAL_LOG_TAG = "FxSync";
   public static final String SYNC_MAJOR_VERSION  = "1";
