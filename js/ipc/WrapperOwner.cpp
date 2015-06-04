@@ -149,7 +149,7 @@ const CPOWProxyHandler CPOWProxyHandler::singleton;
         return false;                                                   \
     }                                                                   \
     {                                                                   \
-        CPOWTimer timer;                                                \
+        CPOWTimer timer(cx);                                            \
         return owner->call args;                                        \
     }
 
