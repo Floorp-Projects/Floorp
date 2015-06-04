@@ -2682,50 +2682,10 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     httpChannel->GetRequestMethod(method); // If GET, method name will be uppercase
 
     if (!IsSystemXHR()) {
-      // Get the referrer for the request.
-      //
-      // If it weren't for history.push/replaceState, we could just use the
-      // principal's URI here.  But since we want changes to the URI effected
-      // by push/replaceState to be reflected in the XHR referrer, we have to
-      // be more clever.
-      //
-      // If the document's original URI (before any push/replaceStates) matches
-      // our principal, then we use the document's current URI (after
-      // push/replaceStates).  Otherwise (if the document is, say, a data:
-      // URI), we just use the principal's URI.
-
-      nsCOMPtr<nsIURI> principalURI;
-      mPrincipal->GetURI(getter_AddRefs(principalURI));
-
-      nsIScriptContext* sc = GetContextForEventHandlers(&rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-      nsCOMPtr<nsIDocument> doc =
-        nsContentUtils::GetDocumentFromScriptContext(sc);
-
-      nsCOMPtr<nsIURI> docCurURI;
-      nsCOMPtr<nsIURI> docOrigURI;
-      net::ReferrerPolicy referrerPolicy = net::RP_Default;
-
-      if (doc) {
-        docCurURI = doc->GetDocumentURI();
-        docOrigURI = doc->GetOriginalURI();
-        referrerPolicy = doc->GetReferrerPolicy();
-      }
-
-      nsCOMPtr<nsIURI> referrerURI;
-
-      if (principalURI && docCurURI && docOrigURI) {
-        bool equal = false;
-        principalURI->Equals(docOrigURI, &equal);
-        if (equal) {
-          referrerURI = docCurURI;
-        }
-      }
-
-      if (!referrerURI)
-        referrerURI = principalURI;
-
-      httpChannel->SetReferrerWithPolicy(referrerURI, referrerPolicy);
+      nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
+      nsCOMPtr<nsIDocument> doc = owner ? owner->GetExtantDoc() : nullptr;
+      nsContentUtils::SetFetchReferrerURIWithPolicy(mPrincipal, doc,
+                                                    httpChannel);
     }
 
     // Some extensions override the http protocol handler and provide their own

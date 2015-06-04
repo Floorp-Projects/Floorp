@@ -416,21 +416,37 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
     // Step 2. Set the referrer.
     nsAutoString referrer;
     mRequest->GetReferrer(referrer);
-    // The referrer should have already been resolved to a URL by the caller.
-    MOZ_ASSERT(!referrer.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR));
-    if (!referrer.IsEmpty()) {
-      nsCOMPtr<nsIURI> refURI;
-      rv = NS_NewURI(getter_AddRefs(refURI), referrer, nullptr, nullptr);
+    if (referrer.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR)) {
+      rv = nsContentUtils::SetFetchReferrerURIWithPolicy(mPrincipal,
+                                                         mDocument,
+                                                         httpChan);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return FailWithNetworkError();
+      }
+    } else if (referrer.IsEmpty()) {
+      rv = httpChan->SetReferrerWithPolicy(nullptr, net::RP_No_Referrer);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return FailWithNetworkError();
+      }
+    } else {
+      // From "Determine request's Referrer" step 3
+      // "If request's referrer is a URL, let referrerSource be request's
+      // referrer."
+      //
+      // This allows ServiceWorkers to function transparently when the referrer
+      // of the intercepted request is already set.
+      nsCOMPtr<nsIURI> referrerURI;
+      rv = NS_NewURI(getter_AddRefs(referrerURI), referrer, nullptr, nullptr);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return FailWithNetworkError();
       }
 
-      net::ReferrerPolicy referrerPolicy = net::RP_Default;
-      if (mDocument) {
-        referrerPolicy = mDocument->GetReferrerPolicy();
-      }
-
-      rv = httpChan->SetReferrerWithPolicy(refURI, referrerPolicy);
+      // FIXME(nsm): Can we assert that this case can only happen in
+      // ServiceWorkers and assume null mDocument?
+      rv =
+        httpChan->SetReferrerWithPolicy(nullptr,
+                                        mDocument ? mDocument->GetReferrerPolicy() :
+                                                    net::RP_Default);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return FailWithNetworkError();
       }
