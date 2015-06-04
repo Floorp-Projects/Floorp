@@ -285,7 +285,9 @@ public:
                                         nsIWidget *aWidget, bool aActivate) override;
     NS_IMETHOD              SetSizeMode(int32_t aMode) override;
     NS_IMETHOD              HideWindowChrome(bool aShouldHide) override;
-    void                    EnteredFullScreen(bool aFullScreen);
+    virtual void            PrepareForDOMFullscreenTransition() override;
+    void EnteredFullScreen(bool aFullScreen, bool aNativeMode = true);
+    inline bool ShouldToggleNativeFullscreen(bool aFullScreen);
     NS_IMETHOD              MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) override;
     NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;
     NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
@@ -409,12 +411,21 @@ protected:
   bool                 mWindowMadeHere; // true if we created the window, false for embedding
   bool                 mSheetNeedsShow; // if this is a sheet, are we waiting to be shown?
                                         // this is used for sibling sheet contention only
-  bool                 mFullScreen;
+  bool                 mInFullScreenMode;
   bool                 mInFullScreenTransition; // true from the request to enter/exit fullscreen
                                                 // (MakeFullScreen() call) to EnteredFullScreen()
+  // We are in transition to/from DOM Fullscreen.
+  // XXX The transition is not implemented yet. This is currently only
+  // used to distinguish between DOM fullscreen and fullscreen mode.
+  bool                 mInDOMFullscreenTransition;
   bool                 mModal;
 
-  bool                 mUsesNativeFullScreen; // only true on Lion if SetShowsFullScreenButton(true);
+  // Only true on 10.7+ if SetShowsFullScreenButton(true) is called.
+  bool                 mSupportsNativeFullScreen;
+  // Whether we are currently using Lion native fullscreen. It could be
+  // false either because we are not on Lion, or we are in the DOM
+  // fullscreen where we do not use the native fullscreen.
+  bool                 mInNativeFullScreenMode;
 
   bool                 mIsAnimationSuppressed;
 
