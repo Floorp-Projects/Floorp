@@ -277,16 +277,6 @@ public:
   NS_DECL_NSISERVICEWORKERMANAGER
   NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
   NS_DECL_NSIOBSERVER
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SERVICEWORKERMANAGER_IMPL_IID)
-
-  static ServiceWorkerManager* FactoryCreate()
-  {
-    AssertIsOnMainThread();
-
-    ServiceWorkerManager* res = new ServiceWorkerManager;
-    NS_ADDREF(res);
-    return res;
-  }
 
   struct RegistrationDataPerPrincipal;
   nsClassHashtable<nsCStringHashKey, RegistrationDataPerPrincipal> mRegistrationInfos;
@@ -381,6 +371,9 @@ public:
 private:
   ServiceWorkerManager();
   ~ServiceWorkerManager();
+
+  void
+  Init();
 
   ServiceWorkerJobQueue*
   GetOrCreateJobQueue(const nsACString& aOriginSuffix,
@@ -537,9 +530,6 @@ private:
   struct PendingOperation;
   nsTArray<PendingOperation> mPendingOperations;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(ServiceWorkerManager,
-                              NS_SERVICEWORKERMANAGER_IMPL_IID);
 
 } // namespace workers
 } // namespace dom
