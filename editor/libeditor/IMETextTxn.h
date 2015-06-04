@@ -54,6 +54,12 @@ public:
 
   void MarkFixed();
 
+  static nsresult SetIMESelection(nsEditor& aEditor,
+                                  Text* aTextNode,
+                                  uint32_t aOffsetInNode,
+                                  uint32_t aLengthOfCompositionString,
+                                  const TextRangeArray* aRanges);
+
 private:
   ~IMETextTxn();
 
@@ -68,7 +74,7 @@ private:
   uint32_t mReplaceLength;
 
   /** The range list **/
-  nsRefPtr<mozilla::TextRangeArray> mRanges;
+  nsRefPtr<TextRangeArray> mRanges;
 
   /** The text to insert into mTextNode at mOffset */
   nsString mStringToInsert;
