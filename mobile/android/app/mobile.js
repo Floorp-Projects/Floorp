@@ -759,13 +759,11 @@ pref("browser.contentHandlers.types.3.type", "application/vnd.mozilla.maybe.feed
 // WebPayment
 pref("dom.mozPay.enabled", true);
 
-#ifndef RELEASE_BUILD
 pref("dom.payment.provider.0.name", "Firefox Marketplace");
 pref("dom.payment.provider.0.description", "marketplace.firefox.com");
 pref("dom.payment.provider.0.uri", "https://marketplace.firefox.com/mozpay/?req=");
 pref("dom.payment.provider.0.type", "mozilla/payments/pay/v1");
 pref("dom.payment.provider.0.requestMethod", "GET");
-#endif
 
 // Shortnumber matching needed for e.g. Brazil:
 // 01187654321 can be found with 87654321
