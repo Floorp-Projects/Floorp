@@ -463,6 +463,21 @@ TextComposition::EditorWillHandleCompositionChangeEvent(
 }
 
 void
+TextComposition::OnEditorDestroyed()
+{
+  MOZ_ASSERT(!mIsEditorHandlingEvent,
+             "The editor should have stopped listening events");
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (NS_WARN_IF(!widget)) {
+    // XXX If this could happen, how do we notify IME of destroying the editor?
+    return;
+  }
+
+  // Try to cancel the composition.
+  RequestToCommit(widget, true);
+}
+
+void
 TextComposition::EditorDidHandleCompositionChangeEvent()
 {
   mString = mLastData;

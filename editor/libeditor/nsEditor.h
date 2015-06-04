@@ -589,6 +589,10 @@ public:
    * Returns true if there is composition string and not fixed.
    */
   bool IsIMEComposing() const;
+  /**
+   * Returns true when inserting text should be a part of current composition.
+   */
+  bool ShouldHandleIMEComposition() const;
 
   /** from html rules code - migration in progress */
   static nsresult GetTagString(nsIDOMNode *aNode, nsAString& outString);
