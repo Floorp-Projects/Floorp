@@ -6123,6 +6123,9 @@ nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aFullscreenMode,
       if (aHMD) {
         screen = aHMD->GetScreen();
       }
+      if (!aFullscreenMode) {
+        widget->PrepareForDOMFullscreenTransition();
+      }
       widget->MakeFullScreen(aFullScreen, screen);
     }
   }
