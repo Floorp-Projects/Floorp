@@ -147,7 +147,7 @@ static nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, u
 
 #define PREF_HASHTABLE_INITIAL_LENGTH   1024
 
-nsresult PREF_Init()
+void PREF_Init()
 {
     if (!gHashTable) {
         gHashTable = new PLDHashTable(&pref_HashTableOps,
@@ -157,7 +157,6 @@ nsresult PREF_Init()
         PL_INIT_ARENA_POOL(&gPrefNameArena, "PrefNameArena",
                            PREFNAME_ARENA_SIZE);
     }
-    return NS_OK;
 }
 
 /* Frees the callback list. */
