@@ -240,6 +240,7 @@ SimpleTest._stopOnLoad = true;
 SimpleTest._cleanupFunctions = [];
 SimpleTest.expected = 'pass';
 SimpleTest.num_failed = 0;
+SimpleTest._inChaosMode = false;
 
 SimpleTest.setExpected = function () {
   if (parent.TestRunner) {
@@ -992,6 +993,15 @@ SimpleTest.registerCleanupFunction = function(aFunc) {
     SimpleTest._cleanupFunctions.push(aFunc);
 };
 
+SimpleTest.testInChaosMode = function() {
+    if (SimpleTest._inChaosMode) {
+      // It's already enabled for this test, don't enter twice
+      return;
+    }
+    SpecialPowers.DOMWindowUtils.enterChaosMode();
+    SimpleTest._inChaosMode = true;
+};
+
 /**
  * Finishes the tests. This is automatically called, except when
  * SimpleTest.waitForExplicitFinish() has been invoked.
@@ -1019,6 +1029,11 @@ SimpleTest.finish = function() {
     SimpleTest.testsLength = SimpleTest._tests.length;
 
     SimpleTest._alreadyFinished = true;
+
+    if (SimpleTest._inChaosMode) {
+        SpecialPowers.DOMWindowUtils.leaveChaosMode();
+        SimpleTest._inChaosMode = false;
+    }
 
     var afterCleanup = function() {
         if (SpecialPowers.DOMWindowUtils.isTestControllingRefreshes) {
