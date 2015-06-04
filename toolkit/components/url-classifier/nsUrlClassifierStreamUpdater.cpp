@@ -25,7 +25,7 @@ static const char* gQuitApplicationMessage = "quit-application";
 
 // NSPR_LOG_MODULES=UrlClassifierStreamUpdater:5
 static const PRLogModuleInfo *gUrlClassifierStreamUpdaterLog = nullptr;
-#define LOG(args) MOZ_LOG(gUrlClassifierStreamUpdaterLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gUrlClassifierStreamUpdaterLog, mozilla::LogLevel::Debug, args)
 
 // This class does absolutely nothing, except pass requests onto the DBService.
 

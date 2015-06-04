@@ -31,24 +31,24 @@
 //    set NSPR_LOG_MODULES=nsHttp:5
 //    set NSPR_LOG_FILE=http.log
 //
-// this enables PR_LOG_ALWAYS level information and places all output in
+// this enables LogLevel::Debug level information and places all output in
 // the file http.log
 //
 extern PRLogModuleInfo *gHttpLog;
 
 // http logging
-#define LOG1(args) MOZ_LOG(gHttpLog, 1, args)
-#define LOG2(args) MOZ_LOG(gHttpLog, 2, args)
-#define LOG3(args) MOZ_LOG(gHttpLog, 3, args)
-#define LOG4(args) MOZ_LOG(gHttpLog, 4, args)
-#define LOG5(args) MOZ_LOG(gHttpLog, 5, args)
+#define LOG1(args) MOZ_LOG(gHttpLog, mozilla::LogLevel::Error, args)
+#define LOG2(args) MOZ_LOG(gHttpLog, mozilla::LogLevel::Warning, args)
+#define LOG3(args) MOZ_LOG(gHttpLog, mozilla::LogLevel::Info, args)
+#define LOG4(args) MOZ_LOG(gHttpLog, mozilla::LogLevel::Debug, args)
+#define LOG5(args) MOZ_LOG(gHttpLog, mozilla::LogLevel::Verbose, args)
 #define LOG(args) LOG4(args)
 
-#define LOG1_ENABLED() PR_LOG_TEST(gHttpLog, 1)
-#define LOG2_ENABLED() PR_LOG_TEST(gHttpLog, 2)
-#define LOG3_ENABLED() PR_LOG_TEST(gHttpLog, 3)
-#define LOG4_ENABLED() PR_LOG_TEST(gHttpLog, 4)
-#define LOG5_ENABLED() PR_LOG_TEST(gHttpLog, 5)
+#define LOG1_ENABLED() MOZ_LOG_TEST(gHttpLog, mozilla::LogLevel::Error)
+#define LOG2_ENABLED() MOZ_LOG_TEST(gHttpLog, mozilla::LogLevel::Warning)
+#define LOG3_ENABLED() MOZ_LOG_TEST(gHttpLog, mozilla::LogLevel::Info)
+#define LOG4_ENABLED() MOZ_LOG_TEST(gHttpLog, mozilla::LogLevel::Debug)
+#define LOG5_ENABLED() MOZ_LOG_TEST(gHttpLog, mozilla::LogLevel::Verbose)
 #define LOG_ENABLED() LOG4_ENABLED()
 
 #endif // HttpLog_h__

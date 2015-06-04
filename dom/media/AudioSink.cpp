@@ -12,9 +12,9 @@ namespace mozilla {
 
 extern PRLogModuleInfo* gMediaDecoderLog;
 #define SINK_LOG(msg, ...) \
-  MOZ_LOG(gMediaDecoderLog, PR_LOG_DEBUG, ("AudioSink=%p " msg, this, ##__VA_ARGS__))
+  MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, ("AudioSink=%p " msg, this, ##__VA_ARGS__))
 #define SINK_LOG_V(msg, ...) \
-  MOZ_LOG(gMediaDecoderLog, PR_LOG_DEBUG+1, ("AudioSink=%p " msg, this, ##__VA_ARGS__))
+  MOZ_LOG(gMediaDecoderLog, LogLevel::Verbose, ("AudioSink=%p " msg, this, ##__VA_ARGS__))
 
 AudioSink::OnAudioEndTimeUpdateTask::OnAudioEndTimeUpdateTask(
                                      MediaDecoderStateMachine* aStateMachine)

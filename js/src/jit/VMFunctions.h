@@ -446,6 +446,7 @@ template <> struct MatchContext<ExclusiveContext*> {
 #define FOR_EACH_ARGS_4(Macro, Sep, Last) FOR_EACH_ARGS_3(Macro, Sep, Sep) Macro(4) Last(4)
 #define FOR_EACH_ARGS_5(Macro, Sep, Last) FOR_EACH_ARGS_4(Macro, Sep, Sep) Macro(5) Last(5)
 #define FOR_EACH_ARGS_6(Macro, Sep, Last) FOR_EACH_ARGS_5(Macro, Sep, Sep) Macro(6) Last(6)
+#define FOR_EACH_ARGS_7(Macro, Sep, Last) FOR_EACH_ARGS_6(Macro, Sep, Sep) Macro(7) Last(7)
 
 #define COMPUTE_INDEX(NbArg) NbArg
 #define COMPUTE_OUTPARAM_RESULT(NbArg) OutParamToDataType<A ## NbArg>::result
@@ -585,8 +586,15 @@ template <class R, class Context, class A1, class A2, class A3, class A4, class 
     FUNCTION_INFO_STRUCT_BODY(FOR_EACH_ARGS_6)
 };
 
+template <class R, class Context, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
+    struct FunctionInfo<R (*)(Context, A1, A2, A3, A4, A5, A6, A7)> : public VMFunction {
+    typedef R (*pf)(Context, A1, A2, A3, A4, A5, A6, A7);
+    FUNCTION_INFO_STRUCT_BODY(FOR_EACH_ARGS_7)
+};
+
 #undef FUNCTION_INFO_STRUCT_BODY
 
+#undef FOR_EACH_ARGS_7
 #undef FOR_EACH_ARGS_6
 #undef FOR_EACH_ARGS_5
 #undef FOR_EACH_ARGS_4
@@ -631,8 +639,10 @@ class AutoDetectInvalidation
     }
 };
 
-bool InvokeFunction(JSContext* cx, HandleObject obj0, uint32_t argc, Value* argv,
-                    MutableHandleValue rval);
+bool InvokeFunction(JSContext* cx, HandleObject obj0, bool constructing, uint32_t argc,
+                    Value* argv, MutableHandleValue rval);
+bool InvokeFunctionShuffleNewTarget(JSContext* cx, HandleObject obj, uint32_t numActualArgs,
+                                    uint32_t numFormalArgs, Value* argv, MutableHandleValue rval);
 
 bool CheckOverRecursed(JSContext* cx);
 bool CheckOverRecursedWithExtra(JSContext* cx, BaselineFrame* frame,

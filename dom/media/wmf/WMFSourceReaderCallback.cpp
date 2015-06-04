@@ -10,7 +10,7 @@
 namespace mozilla {
 
 static PRLogModuleInfo* gWMFSourceReaderCallbackLog = nullptr;
-#define WMF_CB_LOG(...) MOZ_LOG(gWMFSourceReaderCallbackLog, PR_LOG_DEBUG, (__VA_ARGS__))
+#define WMF_CB_LOG(...) MOZ_LOG(gWMFSourceReaderCallbackLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 // IUnknown Methods
 STDMETHODIMP

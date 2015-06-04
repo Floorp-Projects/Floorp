@@ -31,7 +31,7 @@ static bool Init()
 {
     g_LogMod = PR_NewLogModule("xpclog");
     g_Spaces = new char[SPACE_COUNT+1];
-    if (!g_LogMod || !g_Spaces || !PR_LOG_TEST(g_LogMod,1)) {
+    if (!g_LogMod || !g_Spaces || !MOZ_LOG_TEST(g_LogMod,LogLevel::Error)) {
         g_InitState = 1;
         XPC_Log_Finish();
         return false;
@@ -71,7 +71,7 @@ XPC_Log_print(const char* fmt, ...)
 bool
 XPC_Log_Check(int i)
 {
-    return CAN_RUN && PR_LOG_TEST(g_LogMod,1);
+    return CAN_RUN && MOZ_LOG_TEST(g_LogMod,LogLevel::Error);
 }
 
 void

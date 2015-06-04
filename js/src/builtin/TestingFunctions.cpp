@@ -808,18 +808,14 @@ class HasChildTracer : public JS::CallbackTracer
     RootedValue child_;
     bool found_;
 
-    void onEdge(void** thingp, JS::TraceKind kind) {
+    void trace(void** thingp, JS::TraceKind kind) {
         if (*thingp == child_.toGCThing())
             found_ = true;
     }
 
-    static void trampoline(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind) {
-        static_cast<HasChildTracer*>(trc)->onEdge(thingp, kind);
-    }
-
   public:
     HasChildTracer(JSRuntime* rt, HandleValue child)
-      : JS::CallbackTracer(rt, trampoline, TraceWeakMapKeysValues), child_(rt, child), found_(false)
+      : JS::CallbackTracer(rt, TraceWeakMapKeysValues), child_(rt, child), found_(false)
     {}
 
     bool found() const { return found_; }

@@ -268,7 +268,9 @@ namespace jit {
     _(UnknownValue)                                                         \
     _(LexicalCheck)                                                         \
     _(ThrowUninitializedLexical)                                            \
-    _(Debugger)
+    _(Debugger)                                                             \
+    _(NewTarget)                                                            \
+    _(ArrowNewTarget)
 
 // Forward declarations of MIR types.
 #define FORWARD_DECLARE(op) class M##op;

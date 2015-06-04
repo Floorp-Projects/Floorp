@@ -29,7 +29,7 @@
 
 // NSPR_LOG_MODULES=gio:5
 static PRLogModuleInfo *sGIOLog;
-#define LOG(args) MOZ_LOG(sGIOLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(sGIOLog, mozilla::LogLevel::Debug, args)
 
 
 //-----------------------------------------------------------------------------

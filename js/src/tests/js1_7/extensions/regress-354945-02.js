@@ -20,7 +20,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = 'TypeError: trap __iterator__ for obj returned a primitive value';
+  expect = 'TypeError: trap __iterator__ for ({__iterator__:(function (){ })}) returned a primitive value';
   var obj = {};
   obj.__iterator__ = function(){ };
   try

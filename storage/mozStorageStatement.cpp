@@ -130,15 +130,15 @@ Statement::initialize(Connection *aDBConnection,
                                             PromiseFlatCString(aSQLStatement),
                                             &mDBStatement);
   if (srv != SQLITE_OK) {
-      MOZ_LOG(gStorageLog, PR_LOG_ERROR,
+      MOZ_LOG(gStorageLog, LogLevel::Error,
              ("Sqlite statement prepare error: %d '%s'", srv,
               ::sqlite3_errmsg(aNativeConnection)));
-      MOZ_LOG(gStorageLog, PR_LOG_ERROR,
+      MOZ_LOG(gStorageLog, LogLevel::Error,
              ("Statement was: '%s'", PromiseFlatCString(aSQLStatement).get()));
       return NS_ERROR_FAILURE;
     }
 
-  MOZ_LOG(gStorageLog, PR_LOG_NOTICE, ("Initialized statement '%s' (0x%p)",
+  MOZ_LOG(gStorageLog, LogLevel::Debug, ("Initialized statement '%s' (0x%p)",
                                       PromiseFlatCString(aSQLStatement).get(),
                                       mDBStatement));
 
@@ -276,7 +276,7 @@ Statement::getAsyncStatement(sqlite3_stmt **_stmt)
       return rc;
     }
 
-    MOZ_LOG(gStorageLog, PR_LOG_NOTICE,
+    MOZ_LOG(gStorageLog, LogLevel::Debug,
            ("Cloned statement 0x%p to 0x%p", mDBStatement, mAsyncStatement));
   }
 
@@ -366,7 +366,7 @@ Statement::internalFinalize(bool aDestructing)
     // In either case, the connection is still valid, hence closing
     // here is safe.
     //
-    MOZ_LOG(gStorageLog, PR_LOG_NOTICE, ("Finalizing statement '%s' during garbage-collection",
+    MOZ_LOG(gStorageLog, LogLevel::Debug, ("Finalizing statement '%s' during garbage-collection",
                                         ::sqlite3_sql(mDBStatement)));
     srv = ::sqlite3_finalize(mDBStatement);
   }
@@ -398,7 +398,7 @@ Statement::internalFinalize(bool aDestructing)
     NS_WARNING(msg);
 #endif // 0
 
-    MOZ_LOG(gStorageLog, PR_LOG_WARNING, (msg));
+    MOZ_LOG(gStorageLog, LogLevel::Warning, (msg));
 
     ::PR_smprintf_free(msg);
   }
@@ -526,7 +526,7 @@ Statement::Reset()
     return NS_ERROR_NOT_INITIALIZED;
 
 #ifdef DEBUG
-  MOZ_LOG(gStorageLog, PR_LOG_DEBUG, ("Resetting statement: '%s'",
+  MOZ_LOG(gStorageLog, LogLevel::Debug, ("Resetting statement: '%s'",
                                      ::sqlite3_sql(mDBStatement)));
 
   checkAndLogStatementPerformance(mDBStatement);
@@ -604,10 +604,10 @@ Statement::ExecuteStep(bool *_moreResults)
   }
   int srv = mDBConnection->stepStatement(mNativeConnection, mDBStatement);
 
-  if (srv != SQLITE_ROW && srv != SQLITE_DONE && PR_LOG_TEST(gStorageLog, PR_LOG_DEBUG)) {
+  if (srv != SQLITE_ROW && srv != SQLITE_DONE && MOZ_LOG_TEST(gStorageLog, LogLevel::Debug)) {
       nsAutoCString errStr;
       (void)mDBConnection->GetLastErrorString(errStr);
-      MOZ_LOG(gStorageLog, PR_LOG_DEBUG,
+      MOZ_LOG(gStorageLog, LogLevel::Debug,
              ("Statement::ExecuteStep error: %s", errStr.get()));
   }
 
@@ -628,7 +628,7 @@ Statement::ExecuteStep(bool *_moreResults)
     mExecuting = false;
   }
   else if (mExecuting) {
-    MOZ_LOG(gStorageLog, PR_LOG_ERROR,
+    MOZ_LOG(gStorageLog, LogLevel::Error,
            ("SQLite error after mExecuting was true!"));
     mExecuting = false;
   }

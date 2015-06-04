@@ -39,7 +39,7 @@ static void Initialize()
     PRLibrary* xsslib = PR_LoadLibrary("libXss.so.1");
     if (!xsslib) // ouch.
     {
-        MOZ_LOG(sIdleLog, PR_LOG_WARNING, ("Failed to find libXss.so!\n"));
+        MOZ_LOG(sIdleLog, LogLevel::Warning, ("Failed to find libXss.so!\n"));
         return;
     }
 
@@ -51,11 +51,11 @@ static void Initialize()
         PR_FindFunctionSymbol(xsslib, "XScreenSaverQueryInfo");
 
     if (!_XSSQueryExtension)
-        MOZ_LOG(sIdleLog, PR_LOG_WARNING, ("Failed to get XSSQueryExtension!\n"));
+        MOZ_LOG(sIdleLog, LogLevel::Warning, ("Failed to get XSSQueryExtension!\n"));
     if (!_XSSAllocInfo)
-        MOZ_LOG(sIdleLog, PR_LOG_WARNING, ("Failed to get XSSAllocInfo!\n"));
+        MOZ_LOG(sIdleLog, LogLevel::Warning, ("Failed to get XSSAllocInfo!\n"));
     if (!_XSSQueryInfo)
-        MOZ_LOG(sIdleLog, PR_LOG_WARNING, ("Failed to get XSSQueryInfo!\n"));
+        MOZ_LOG(sIdleLog, LogLevel::Warning, ("Failed to get XSSQueryInfo!\n"));
 
     sInitialized = true;
 }
@@ -99,7 +99,7 @@ nsIdleServiceGTK::PollIdleTime(uint32_t *aIdleTime)
     // We might not have a display (cf. in xpcshell)
     Display *dplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
     if (!dplay) {
-        MOZ_LOG(sIdleLog, PR_LOG_WARNING, ("No display found!\n"));
+        MOZ_LOG(sIdleLog, LogLevel::Warning, ("No display found!\n"));
         return false;
     }
 
@@ -119,7 +119,7 @@ nsIdleServiceGTK::PollIdleTime(uint32_t *aIdleTime)
         return true;
     }
     // If we get here, we couldn't get to XScreenSaver:
-    MOZ_LOG(sIdleLog, PR_LOG_WARNING, ("XSSQueryExtension returned false!\n"));
+    MOZ_LOG(sIdleLog, LogLevel::Warning, ("XSSQueryExtension returned false!\n"));
     return false;
 }
 

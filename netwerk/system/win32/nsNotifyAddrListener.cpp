@@ -36,7 +36,7 @@
 using namespace mozilla;
 
 static PRLogModuleInfo *gNotifyAddrLog = nullptr;
-#define LOG(args) MOZ_LOG(gNotifyAddrLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gNotifyAddrLog, mozilla::LogLevel::Debug, args)
 
 static HMODULE sNetshell;
 static decltype(NcFreeNetconProperties)* sNcFreeNetconProperties;

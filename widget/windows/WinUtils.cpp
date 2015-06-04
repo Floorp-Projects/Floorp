@@ -484,7 +484,7 @@ WinUtils::LogW(const wchar_t *fmt, ...)
       printf("%s\n", utf8);
       NS_ASSERTION(gWindowsLog, "Called WinUtils Log() but Widget "
                                    "log module doesn't exist!");
-      MOZ_LOG(gWindowsLog, PR_LOG_ALWAYS, (utf8));
+      MOZ_LOG(gWindowsLog, LogLevel::Error, (utf8));
     }
     delete[] utf8;
   }
@@ -518,7 +518,7 @@ WinUtils::Log(const char *fmt, ...)
 
   NS_ASSERTION(gWindowsLog, "Called WinUtils Log() but Widget "
                                "log module doesn't exist!");
-  MOZ_LOG(gWindowsLog, PR_LOG_ALWAYS, (buffer));
+  MOZ_LOG(gWindowsLog, LogLevel::Error, (buffer));
   delete[] buffer;
 }
 

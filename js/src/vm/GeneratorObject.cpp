@@ -49,6 +49,7 @@ GeneratorObject::create(JSContext* cx, AbstractFramePtr frame)
     GeneratorObject* genObj = &obj->as<GeneratorObject>();
     genObj->setCallee(*frame.callee());
     genObj->setThisValue(frame.thisValue());
+    genObj->setNewTarget(frame.newTarget());
     genObj->setScopeChain(*frame.scopeChain());
     if (frame.script()->needsArgsObj())
         genObj->setArgsObj(frame.argsObj());
@@ -162,9 +163,11 @@ GeneratorObject::resume(JSContext* cx, InterpreterActivation& activation,
 
     RootedFunction callee(cx, &genObj->callee());
     RootedValue thisv(cx, genObj->thisValue());
+    RootedValue newTarget(cx, genObj->newTarget());
     RootedObject scopeChain(cx, &genObj->scopeChain());
-    if (!activation.resumeGeneratorFrame(callee, thisv, scopeChain))
+    if (!activation.resumeGeneratorFrame(callee, thisv, newTarget, scopeChain))
         return false;
+    activation.regs().fp()->setResumedGenerator();
 
     if (genObj->hasArgsObj())
         activation.regs().fp()->initArgsObj(genObj->argsObj());

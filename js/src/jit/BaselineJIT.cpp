@@ -181,6 +181,7 @@ jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc)
     data.osrFrame = fp;
     data.osrNumStackValues = fp->script()->nfixed() + cx->interpreterRegs().stackDepth();
 
+    AutoValueVector vals(cx);
     RootedValue thisv(cx);
 
     if (fp->isNonEvalFunctionFrame()) {
@@ -203,6 +204,21 @@ jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc)
             data.calleeToken = CalleeToToken(&fp->callee(), /* constructing = */ false);
         else
             data.calleeToken = CalleeToToken(fp->script());
+
+        if (fp->isEvalFrame()) {
+            if (!vals.reserve(2))
+                return JitExec_Aborted;
+
+            vals.infallibleAppend(thisv);
+            
+            if (fp->isFunctionFrame())
+                vals.infallibleAppend(fp->newTarget());
+            else
+                vals.infallibleAppend(NullValue());
+
+            data.maxArgc = 2;
+            data.maxArgv = vals.begin();
+        }
     }
 
     TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());

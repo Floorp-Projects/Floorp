@@ -23,8 +23,8 @@ GetCspUtilsLog()
   return gCspUtilsPRLog;
 }
 
-#define CSPUTILSLOG(args) MOZ_LOG(GetCspUtilsLog(), PR_LOG_DEBUG, args)
-#define CSPUTILSLOGENABLED() PR_LOG_TEST(GetCspUtilsLog(), PR_LOG_DEBUG)
+#define CSPUTILSLOG(args) MOZ_LOG(GetCspUtilsLog(), mozilla::LogLevel::Debug, args)
+#define CSPUTILSLOGENABLED() MOZ_LOG_TEST(GetCspUtilsLog(), mozilla::LogLevel::Debug)
 
 void
 CSP_GetLocalizedStr(const char16_t* aName,

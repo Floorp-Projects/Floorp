@@ -555,7 +555,7 @@ WebrtcAudioConduit::SendAudioFrame(const int16_t audio_data[],
   }
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-    if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(GetLatencyLog(), LogLevel::Debug)) {
       struct Processing insert = { TimeStamp::Now(), 0 };
       mProcessing.AppendElement(insert);
     }
@@ -667,7 +667,7 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
   }
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetLatencyLog(), LogLevel::Debug)) {
     if (mProcessing.Length() > 0) {
       unsigned int now;
       mPtrVoEVideoSync->GetPlayoutTimestamp(mChannel, now);
@@ -704,7 +704,7 @@ WebrtcAudioConduit::ReceivedRTPPacket(const void *data, int len)
   if(mEngineReceiving)
   {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-    if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(GetLatencyLog(), LogLevel::Debug)) {
       // timestamp is at 32 bits in ([1])
       struct Processing insert = { TimeStamp::Now(),
                                    ntohl(static_cast<const uint32_t *>(data)[1]) };
@@ -842,7 +842,7 @@ int WebrtcAudioConduit::SendPacket(int channel, const void* data, int len)
   CSFLogDebug(logTag,  "%s : channel %d", __FUNCTION__, channel);
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetLatencyLog(), LogLevel::Debug)) {
     if (mProcessing.Length() > 0) {
       TimeStamp started = mProcessing[0].mTimeStamp;
       mProcessing.RemoveElementAt(0);

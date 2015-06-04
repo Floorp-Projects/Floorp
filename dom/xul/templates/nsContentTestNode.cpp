@@ -13,6 +13,9 @@
 #include "nsXULTemplateQueryProcessorRDF.h"
 
 #include "mozilla/Logging.h"
+
+using mozilla::LogLevel;
+
 extern PRLogModuleInfo* gXULTemplateLog;
 
 nsContentTestNode::nsContentTestNode(nsXULTemplateQueryProcessorRDF* aProcessor,
@@ -23,7 +26,7 @@ nsContentTestNode::nsContentTestNode(nsXULTemplateQueryProcessorRDF* aProcessor,
       mRefVariable(aRefVariable),
       mTag(nullptr)
 {
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
         nsAutoString tag(NS_LITERAL_STRING("(none)"));
         if (mTag)
             mTag->ToString(tag);
@@ -32,7 +35,7 @@ nsContentTestNode::nsContentTestNode(nsXULTemplateQueryProcessorRDF* aProcessor,
         if (aRefVariable)
             aRefVariable->ToString(refvar);
 
-        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+        MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                ("nsContentTestNode[%p]: ref-var=%s tag=%s",
                 this, NS_ConvertUTF16toUTF8(refvar).get(),
                 NS_ConvertUTF16toUTF8(tag).get()));

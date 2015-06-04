@@ -21,7 +21,7 @@
 
 #undef LOG
 PRLogModuleInfo *gMediaParentLog;
-#define LOG(args) MOZ_LOG(gMediaParentLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gMediaParentLog, mozilla::LogLevel::Debug, args)
 
 // A file in the profile dir is used to persist mOriginKeys used to anonymize
 // deviceIds to be unique per origin, to avoid them being supercookies.

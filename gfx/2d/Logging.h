@@ -42,20 +42,20 @@ const int LOG_DEFAULT = LOG_EVERYTHING;
 const int LOG_DEFAULT = LOG_CRITICAL;
 #endif
 
-inline PRLogModuleLevel PRLogLevelForLevel(int aLevel) {
+inline mozilla::LogLevel PRLogLevelForLevel(int aLevel) {
   switch (aLevel) {
   case LOG_CRITICAL:
-    return PR_LOG_ERROR;
+    return LogLevel::Error;
   case LOG_WARNING:
-    return PR_LOG_WARNING;
+    return LogLevel::Warning;
   case LOG_DEBUG:
-    return PR_LOG_DEBUG;
+    return LogLevel::Debug;
   case LOG_DEBUG_PRLOG:
-    return PR_LOG_DEBUG;
+    return LogLevel::Debug;
   case LOG_EVERYTHING:
-    return PR_LOG_ALWAYS;
+    return LogLevel::Error;
   }
-  return PR_LOG_DEBUG;
+  return LogLevel::Debug;
 }
 
 class PreferenceAccess
@@ -133,7 +133,7 @@ struct BasicLogger
 #if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
       return true;
 #else
-      if (PR_LOG_TEST(GetGFX2DLog(), PRLogLevelForLevel(aLevel))) {
+      if (MOZ_LOG_TEST(GetGFX2DLog(), PRLogLevelForLevel(aLevel))) {
         return true;
       } else if ((PreferenceAccess::sGfxLogLevel >= LOG_DEBUG_PRLOG) ||
                  (aLevel < LOG_DEBUG)) {
@@ -160,7 +160,7 @@ struct BasicLogger
 #if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
       printf_stderr("%s%s", aString.c_str(), aNoNewline ? "" : "\n");
 #else
-      if (PR_LOG_TEST(GetGFX2DLog(), PRLogLevelForLevel(aLevel))) {
+      if (MOZ_LOG_TEST(GetGFX2DLog(), PRLogLevelForLevel(aLevel))) {
         PR_LogPrint("%s%s", aString.c_str(), aNoNewline ? "" : "\n");
       } else if ((PreferenceAccess::sGfxLogLevel >= LOG_DEBUG_PRLOG) ||
                  (aLevel < LOG_DEBUG)) {
