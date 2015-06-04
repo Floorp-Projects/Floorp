@@ -1,4 +1,4 @@
- # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import argparse
 import json
 import os
@@ -242,12 +242,10 @@ class WebSocketDaemon(object):
             # setup the wss server.
             if pywebsocket._import_ssl():
                 tls_module = pywebsocket._TLS_BY_STANDARD_MODULE
-                logger.debug("WebSocketDaemon: Using standard SSL module.")
             elif pywebsocket._import_pyopenssl():
                 tls_module = pywebsocket._TLS_BY_PYOPENSSL
-                logger.debug("WebSocketDaemon: Using PyOpenSSL module.")
             else:
-                logger.critical("WebSocketDaemon: No SSL module is available.")
+                print "No SSL module available"
                 sys.exit(1)
 
             cmd_args += ["--tls",
