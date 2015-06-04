@@ -37,3 +37,20 @@ function testFetchAppResource(aUrl,
     });
   });
 }
+
+function testRedirectedResponse() {
+  // Because of the CSP policies applied to privileged apps, we cannot run
+  // inline script inside realindex.html, and loading a script from the app://
+  // URI is also not an option, so we let the parent iframe which has access
+  // to the SpecialPowers API use those privileges to access the document.
+  var iframe = document.createElement("iframe");
+  document.body.appendChild(iframe);
+  iframe.src = "redirected.html";
+  iframe.id = "redirected";
+  return new Promise(resolve => {
+    iframe.addEventListener("load", event => {
+      alert("IFRAMELOADED");
+      resolve();
+    }, false);
+  });
+}
