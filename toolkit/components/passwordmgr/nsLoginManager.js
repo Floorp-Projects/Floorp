@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/LoginManagerContent.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
@@ -17,39 +17,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
+                                  "resource://gre/modules/LoginHelper.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "log", () => {
+  let logger = LoginHelper.createLogger("nsLoginManager");
+  return logger.log.bind(logger);
+});
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-var debug = false;
-function log(...pieces) {
-  function generateLogMessage(args) {
-    let strings = ['Login Manager:'];
-
-    args.forEach(function(arg) {
-      if (typeof arg === 'string') {
-        strings.push(arg);
-      } else if (typeof arg === 'undefined') {
-        strings.push('undefined');
-      } else if (arg === null) {
-        strings.push('null');
-      } else {
-        try {
-          strings.push(JSON.stringify(arg, null, 2));
-        } catch(err) {
-          strings.push("<<something>>");
-        }
-      }
-    });
-    return strings.join(' ');
-  }
-
-  if (!debug)
-    return;
-
-  let message = generateLogMessage(pieces);
-  dump(message + "\n");
-  Services.console.logStringMessage(message);
-}
 
 function LoginManager() {
   this.init();
@@ -110,10 +86,7 @@ LoginManager.prototype = {
 
     // Preferences. Add observer so we get notified of changes.
     this._prefBranch = Services.prefs.getBranch("signon.");
-    this._prefBranch.addObserver("", this._observer, false);
-
-    // Get current preference values.
-    debug = this._prefBranch.getBoolPref("debug");
+    this._prefBranch.addObserver("rememberSignons", this._observer, false);
 
     this._remember = this._prefBranch.getBoolPref("rememberSignons");
 
@@ -177,9 +150,7 @@ LoginManager.prototype = {
         var prefName = data;
         log("got change to", prefName, "preference");
 
-        if (prefName == "debug") {
-          debug = this._pwmgr._prefBranch.getBoolPref("debug");
-        } else if (prefName == "rememberSignons") {
+        if (prefName == "rememberSignons") {
           this._pwmgr._remember =
               this._pwmgr._prefBranch.getBoolPref("rememberSignons");
         } else {
