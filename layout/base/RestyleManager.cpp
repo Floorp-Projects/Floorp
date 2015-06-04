@@ -437,11 +437,10 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
            cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
         nsIFrame* cb = cont->GetContainingBlock();
         nsMargin newOffsets;
-        const nsSize size = cb->GetContentRectRelativeToSelf().Size();
+        WritingMode wm = cb->GetWritingMode();
+        const LogicalSize size(wm, cb->GetContentRectRelativeToSelf().Size());
 
-        nsHTMLReflowState::ComputeRelativeOffsets(
-            cb->StyleVisibility()->mDirection,
-            cont, size.width, size.height, newOffsets);
+        nsHTMLReflowState::ComputeRelativeOffsets(wm, cont, size, newOffsets);
         NS_ASSERTION(newOffsets.left == -newOffsets.right &&
                      newOffsets.top == -newOffsets.bottom,
                      "ComputeRelativeOffsets should return valid results");
@@ -497,9 +496,9 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
   const nsMargin& parentBorder =
     parentReflowState.mStyleBorder->GetComputedBorder();
   cbSize -= nsSize(parentBorder.LeftRight(), parentBorder.TopBottom());
+  LogicalSize lcbSize(frameWM, cbSize);
   nsHTMLReflowState reflowState(aFrame->PresContext(), parentReflowState,
-                                aFrame, availSize,
-                                cbSize.width, cbSize.height);
+                                aFrame, availSize, &lcbSize);
   nsSize computedSize(reflowState.ComputedWidth(), reflowState.ComputedHeight());
   computedSize.width += reflowState.ComputedPhysicalBorderPadding().LeftRight();
   if (computedSize.height != NS_INTRINSICSIZE) {
