@@ -1771,7 +1771,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Begin() override
+  nsresult Begin()
   {
     nsresult rv;
 
@@ -1795,8 +1795,8 @@ public:
     fprintf(mCCLog, "# WantAllTraces=%s\n", mWantAllTraces ? "true" : "false");
     return NS_OK;
   }
-  NS_IMETHOD NoteRefCountedObject(uint64_t aAddress, uint32_t aRefCount,
-                                  const char* aObjectDescription) override
+  void NoteRefCountedObject(uint64_t aAddress, uint32_t aRefCount,
+                            const char* aObjectDescription)
   {
     if (!mDisableLog) {
       fprintf(mCCLog, "%p [rc=%u] %s\n", (void*)aAddress, aRefCount,
@@ -1812,11 +1812,10 @@ public:
       d->mCnt = aRefCount;
       d->mName.Append(aObjectDescription);
     }
-    return NS_OK;
   }
-  NS_IMETHOD NoteGCedObject(uint64_t aAddress, bool aMarked,
-                            const char* aObjectDescription,
-                            uint64_t aCompartmentAddress) override
+  void NoteGCedObject(uint64_t aAddress, bool aMarked,
+                      const char* aObjectDescription,
+                      uint64_t aCompartmentAddress)
   {
     if (!mDisableLog) {
       fprintf(mCCLog, "%p [gc%s] %s\n", (void*)aAddress,
@@ -1838,9 +1837,8 @@ public:
         d->mCompartmentOrToAddress.SetIsVoid(true);
       }
     }
-    return NS_OK;
   }
-  NS_IMETHOD NoteEdge(uint64_t aToAddress, const char* aEdgeName) override
+  void NoteEdge(uint64_t aToAddress, const char* aEdgeName)
   {
     if (!mDisableLog) {
       fprintf(mCCLog, "> %p %s\n", (void*)aToAddress, aEdgeName);
@@ -1854,34 +1852,30 @@ public:
       d->mCompartmentOrToAddress.AppendInt(aToAddress, 16);
       d->mName.Append(aEdgeName);
     }
-    return NS_OK;
   }
-  NS_IMETHOD NoteWeakMapEntry(uint64_t aMap, uint64_t aKey,
-                              uint64_t aKeyDelegate, uint64_t aValue) override
+  void NoteWeakMapEntry(uint64_t aMap, uint64_t aKey,
+                        uint64_t aKeyDelegate, uint64_t aValue)
   {
     if (!mDisableLog) {
       fprintf(mCCLog, "WeakMapEntry map=%p key=%p keyDelegate=%p value=%p\n",
               (void*)aMap, (void*)aKey, (void*)aKeyDelegate, (void*)aValue);
     }
     // We don't support after-processing for weak map entries.
-    return NS_OK;
   }
-  NS_IMETHOD NoteIncrementalRoot(uint64_t aAddress) override
+  void NoteIncrementalRoot(uint64_t aAddress)
   {
     if (!mDisableLog) {
       fprintf(mCCLog, "IncrementalRoot %p\n", (void*)aAddress);
     }
     // We don't support after-processing for incremental roots.
-    return NS_OK;
   }
-  NS_IMETHOD BeginResults() override
+  void BeginResults()
   {
     if (!mDisableLog) {
       fputs("==========\n", mCCLog);
     }
-    return NS_OK;
   }
-  NS_IMETHOD DescribeRoot(uint64_t aAddress, uint32_t aKnownEdges) override
+  void DescribeRoot(uint64_t aAddress, uint32_t aKnownEdges)
   {
     if (!mDisableLog) {
       fprintf(mCCLog, "%p [known=%u]\n", (void*)aAddress, aKnownEdges);
@@ -1893,9 +1887,8 @@ public:
       d->mAddress.AppendInt(aAddress, 16);
       d->mCnt = aKnownEdges;
     }
-    return NS_OK;
   }
-  NS_IMETHOD DescribeGarbage(uint64_t aAddress) override
+  void DescribeGarbage(uint64_t aAddress)
   {
     if (!mDisableLog) {
       fprintf(mCCLog, "%p [garbage]\n", (void*)aAddress);
@@ -1906,16 +1899,13 @@ public:
       d->mType = CCGraphDescriber::eGarbage;
       d->mAddress.AppendInt(aAddress, 16);
     }
-    return NS_OK;
   }
-  NS_IMETHOD End() override
+  void End()
   {
     if (!mDisableLog) {
       mCCLog = nullptr;
-      nsresult rv = mLogSink->CloseCCLog();
-      NS_ENSURE_SUCCESS(rv, rv);
+      NS_WARN_IF(NS_FAILED(mLogSink->CloseCCLog()));
     }
-    return NS_OK;
   }
   NS_IMETHOD ProcessNext(nsICycleCollectorHandler* aHandler,
                          bool* aCanContinue) override
