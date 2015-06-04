@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_bluetooth_bluetoothservicebluedroid_h__
 #define mozilla_dom_bluetooth_bluetoothservicebluedroid_h__
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 
 #include "BluetoothCommon.h"
 #include "BluetoothInterface.h"
