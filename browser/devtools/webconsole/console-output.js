@@ -683,6 +683,7 @@ Messages.Simple = function(message, options = {})
   this.severity = options.severity;
   this.location = options.location;
   this.timestamp = options.timestamp || Date.now();
+  this.prefix = options.prefix;
   this.private = !!options.private;
 
   this._message = message;
@@ -711,6 +712,12 @@ Messages.Simple.prototype = Heritage.extend(Messages.BaseMessage.prototype,
    * @type object
    */
   location: null,
+
+  /**
+   * Message prefix
+   * @type string|null
+   */
+  prefix: null,
 
   /**
    * Tells if this message comes from a private browsing context.
@@ -809,6 +816,7 @@ Messages.Simple.prototype = Heritage.extend(Messages.BaseMessage.prototype,
 
     rid.category = this.category;
     rid.severity = this.severity;
+    rid.prefix = this.prefix;
     rid.private = this.private;
     rid.location = this.location;
     rid.link = this._link;
@@ -841,6 +849,13 @@ Messages.Simple.prototype = Heritage.extend(Messages.BaseMessage.prototype,
     icon.className = "icon";
     icon.title = l10n.getStr("severity." + this._severityNameCompat);
 
+    let prefixNode;
+    if (this.prefix) {
+      prefixNode = this.document.createElementNS(XHTML_NS, "span");
+      prefixNode.className = "prefix devtools-monospace";
+      prefixNode.textContent = this.prefix + ":";
+    }
+
     // Apply the current group by indenting appropriately.
     // TODO: remove this once bug 778766 is fixed.
     let indent = this._groupDepthCompat * COMPAT.GROUP_INDENT;
@@ -862,6 +877,9 @@ Messages.Simple.prototype = Heritage.extend(Messages.BaseMessage.prototype,
     this.element.appendChild(timestamp.element);
     this.element.appendChild(indentNode);
     this.element.appendChild(icon);
+    if (prefixNode) {
+      this.element.appendChild(prefixNode);
+    }
     this.element.appendChild(body);
     if (repeatNode) {
       this.element.appendChild(repeatNode);
@@ -1280,6 +1298,7 @@ Messages.ConsoleGeneric = function(packet)
     timestamp: packet.timeStamp,
     category: "webdev",
     severity: CONSOLE_API_LEVELS_TO_SEVERITIES[packet.level],
+    prefix: packet.prefix,
     private: packet.private,
     filterDuplicates: true,
     location: {
