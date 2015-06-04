@@ -1092,6 +1092,10 @@ void MediaDecoder::DurationChanged(TimeUnit aNewDuration)
     DECODER_LOG("Duration changed to %lld", mDuration);
     mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   }
+
+  if (CurrentPosition() > aNewDuration.ToMicroseconds()) {
+    Seek(aNewDuration.ToSeconds(), SeekTarget::Accurate);
+  }
 }
 
 void MediaDecoder::SetNetworkDuration(TimeUnit aNetworkDuration)
