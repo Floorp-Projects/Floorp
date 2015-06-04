@@ -887,6 +887,7 @@ protected:
   // for 'clip' and '-moz-image-region'
   bool ParseRect(nsCSSProperty aPropID);
   bool ParseColumns();
+  bool ParseContain(nsCSSValue& aValue);
   bool ParseContent();
   bool ParseCounterData(nsCSSProperty aPropID);
   bool ParseCursor();
@@ -10290,6 +10291,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
         return ParseTextOverflow(aValue);
       case eCSSProperty_touch_action:
         return ParseTouchAction(aValue);
+      case eCSSProperty_contain:
+        return ParseContain(aValue);
       default:
         MOZ_ASSERT(false, "should not reach here");
         return false;
@@ -12395,6 +12398,29 @@ CSSParserImpl::ParseFontVariantEastAsian(nsCSSValue& aValue)
 
   return ParseBitmaskValues(aValue, nsCSSProps::kFontVariantEastAsianKTable,
                             maskEastAsian);
+}
+
+bool
+CSSParserImpl::ParseContain(nsCSSValue& aValue)
+{
+  if (ParseVariant(aValue, VARIANT_INHERIT | VARIANT_NONE, nullptr)) {
+    return true;
+  }
+  static const int32_t maskContain[] = { MASK_END_VALUE };
+  if (!ParseBitmaskValues(aValue, nsCSSProps::kContainKTable, maskContain)) {
+    return false;
+  }
+  if (aValue.GetIntValue() & NS_STYLE_CONTAIN_STRICT) {
+    if (aValue.GetIntValue() != NS_STYLE_CONTAIN_STRICT) {
+      // Disallow any other keywords in combination with 'strict'.
+      return false;
+    }
+    // Strict implies layout, style, and paint.
+    // However, for serialization purposes, we keep the strict bit around.
+    aValue.SetIntValue(NS_STYLE_CONTAIN_STRICT |
+        NS_STYLE_CONTAIN_ALL_BITS, eCSSUnit_Enumerated);
+  }
+  return true;
 }
 
 static const int32_t maskLigatures[] = {

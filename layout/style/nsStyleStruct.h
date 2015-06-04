@@ -2069,6 +2069,7 @@ struct nsStyleDisplay {
   uint8_t mOriginalDisplay;     // [reset] saved mDisplay for position:absolute/fixed
                                 //         and float:left/right; otherwise equal
                                 //         to mDisplay
+  uint8_t mContain;             // [reset] see nsStyleConsts.h NS_STYLE_CONTAIN_*
   uint8_t mAppearance;          // [reset]
   uint8_t mPosition;            // [reset] see nsStyleConsts.h
   uint8_t mFloats;              // [reset] see nsStyleConsts.h NS_STYLE_FLOAT_*

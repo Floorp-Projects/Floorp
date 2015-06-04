@@ -6159,6 +6159,46 @@ if (SpecialPowers.getBoolPref("layout.css.display-contents.enabled")) {
   gCSSProperties["display"].other_values.push("contents");
 }
 
+if (SpecialPowers.getBoolPref("layout.css.contain.enabled")) {
+  gCSSProperties["contain"] = {
+    domProp: "contain",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [
+      "strict",
+      "layout",
+      "style",
+      "layout style",
+      "style layout",
+      "paint",
+      "layout paint",
+      "paint layout",
+      "style paint",
+      "paint style",
+      "layout style paint",
+      "layout paint style",
+      "style paint layout",
+      "paint style layout",
+    ],
+    invalid_values: [
+      "none strict",
+      "strict layout",
+      "strict layout style",
+      "layout strict",
+      "layout style strict",
+      "layout style paint strict",
+      "paint strict",
+      "style strict",
+      "paint paint",
+      "strict strict",
+      "auto",
+      "10px",
+      "0",
+    ]
+  };
+}
+
 if (SpecialPowers.getBoolPref("layout.css.image-orientation.enabled")) {
   gCSSProperties["image-orientation"] = {
     domProp: "imageOrientation",
