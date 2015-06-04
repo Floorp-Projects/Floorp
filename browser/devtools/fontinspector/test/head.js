@@ -12,15 +12,16 @@ const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {})
 
 let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let TargetFactory = devtools.TargetFactory;
+const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
 
 const BASE_URI = "http://mochi.test:8888/browser/browser/devtools/fontinspector/test/"
 
 // All test are asynchronous
 waitForExplicitFinish();
 
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 SimpleTest.registerCleanupFunction(() => {
-  gDevTools.testing = false;
+  DevToolsUtils.testing = false;
 });
 
 registerCleanupFunction(function*() {

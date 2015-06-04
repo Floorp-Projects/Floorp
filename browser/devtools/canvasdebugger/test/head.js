@@ -21,6 +21,7 @@ let { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.j
 let { CallWatcherFront } = devtools.require("devtools/server/actors/call-watcher");
 let { CanvasFront } = devtools.require("devtools/server/actors/canvas");
 let { setTimeout } = devtools.require("sdk/timers");
+let DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
 let TiltGL = devtools.require("devtools/tilt/tilt-gl");
 let TargetFactory = devtools.TargetFactory;
 let Toolbox = devtools.Toolbox;
@@ -44,10 +45,11 @@ waitForExplicitFinish();
 
 let gToolEnabled = Services.prefs.getBoolPref("devtools.canvasdebugger.enabled");
 
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 
 registerCleanupFunction(() => {
   info("finish() was called, cleaning up...");
+  DevToolsUtils.testing = false;
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setBoolPref("devtools.canvasdebugger.enabled", gToolEnabled);
 

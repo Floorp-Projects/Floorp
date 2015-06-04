@@ -23,6 +23,7 @@ const STRINGS_URI = "chrome://browser/locale/devtools/webaudioeditor.properties"
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
 const Telemetry = require("devtools/shared/telemetry");
 const telemetry = new Telemetry();
+const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 devtools.lazyRequireGetter(this, "LineGraphWidget",
   "devtools/shared/widgets/LineGraphWidget");

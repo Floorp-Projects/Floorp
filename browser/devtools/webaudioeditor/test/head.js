@@ -19,6 +19,7 @@ let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.j
 let { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
 let { WebAudioFront } = devtools.require("devtools/server/actors/webaudio");
+let DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
 let TargetFactory = devtools.TargetFactory;
 let audioNodes = devtools.require("devtools/server/actors/utils/audionodes.json");
 let mm = null;
@@ -41,10 +42,10 @@ waitForExplicitFinish();
 
 let gToolEnabled = Services.prefs.getBoolPref("devtools.webaudioeditor.enabled");
 
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 
 registerCleanupFunction(() => {
-  gDevTools.testing = false;
+  DevToolsUtils.testing = false;
   info("finish() was called, cleaning up...");
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", gToolEnabled);
