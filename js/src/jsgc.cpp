@@ -3004,7 +3004,7 @@ SliceBudget::describe(char* buffer, size_t maxlen) const
 {
     if (isUnlimited())
         return JS_snprintf(buffer, maxlen, "unlimited");
-    else if (deadline == 0)
+    else if (isWorkBudget())
         return JS_snprintf(buffer, maxlen, "work(%lld)", workBudget.budget);
     else
         return JS_snprintf(buffer, maxlen, "%lldms", timeBudget.budget);
