@@ -970,58 +970,6 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
-     * Checks if the Social Share widget is available in any of the registered
-     * widget areas (navbar, MenuPanel, etc).
-     *
-     * @return {Boolean} `true` if the widget is available and `false` when it's
-     *                   still in the Customization palette.
-     */
-    isSocialShareButtonAvailable: {
-      enumerable: true,
-      writable: true,
-      value: function() {
-        let win = Services.wm.getMostRecentWindow("navigator:browser");
-        if (!win || !win.CustomizableUI) {
-          return false;
-        }
-
-        let widget = win.CustomizableUI.getWidget(kShareWidgetId);
-        if (widget) {
-          if (!socialShareButtonListenersAdded) {
-            let eventName = "social:" + kShareWidgetId;
-            Services.obs.addObserver(onShareWidgetChanged, eventName + "-added", false);
-            Services.obs.addObserver(onShareWidgetChanged, eventName + "-removed", false);
-            socialShareButtonListenersAdded = true;
-          }
-          return !!widget.areaType;
-        }
-
-        return false;
-      }
-    },
-
-    /**
-     * Add the Social Share widget to the navbar area, but only when it's not
-     * located anywhere else than the Customization palette.
-     */
-    addSocialShareButton: {
-      enumerable: true,
-      writable: true,
-      value: function() {
-        // Don't do anything if the button is already available.
-        if (api.isSocialShareButtonAvailable.value()) {
-          return;
-        }
-
-        let win = Services.wm.getMostRecentWindow("navigator:browser");
-        if (!win || !win.CustomizableUI) {
-          return;
-        }
-        win.CustomizableUI.addWidgetToArea(kShareWidgetId, win.CustomizableUI.AREA_NAVBAR);
-      }
-    },
-
-    /**
      * Activates the Social Share panel with the Social Provider panel opened
      * when the popup open.
      */
@@ -1029,23 +977,18 @@ function injectLoopAPI(targetWindow) {
       enumerable: true,
       writable: true,
       value: function() {
-        // Don't do anything if the button is _not_ available.
-        if (!api.isSocialShareButtonAvailable.value()) {
-          return;
-        }
-
         let win = Services.wm.getMostRecentWindow("navigator:browser");
         if (!win || !win.SocialShare) {
           return;
         }
-        win.SocialShare.showDirectory();
+        win.SocialShare.showDirectory(win.LoopUI.toolbarButton.anchor);
       }
     },
 
     /**
      * Returns a sorted list of Social Providers that can share URLs. See
      * `updateSocialProvidersCache()` for more information.
-     * 
+     *
      * @return {Array} Sorted list of share-capable Social Providers.
      */
     getSocialShareProviders: {
@@ -1087,7 +1030,8 @@ function injectLoopAPI(targetWindow) {
         if (body) {
           graphData.body = body;
         }
-        win.SocialShare.sharePage(providerOrigin, graphData);
+        win.SocialShare.sharePage(providerOrigin, graphData, null,
+          win.LoopUI.toolbarButton.anchor);
       }
     }
   };
