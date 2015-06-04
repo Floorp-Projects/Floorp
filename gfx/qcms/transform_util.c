@@ -263,25 +263,32 @@ uint16_fract_t lut_inverse_interp16(uint16_t Value, uint16_t LutTable[], int len
 
         // Does the curve belong to this case?
         if (NumZeroes > 1 || NumPoles > 1)
-        {               
+        {
                 int a, b;
 
-                // Identify if value fall downto 0 or FFFF zone             
+                // Identify if value fall downto 0 or FFFF zone
                 if (Value == 0) return 0;
-               // if (Value == 0xFFFF) return 0xFFFF;
+                // if (Value == 0xFFFF) return 0xFFFF;
 
                 // else restrict to valid zone
 
-                a = ((NumZeroes-1) * 0xFFFF) / (length-1);               
-                b = ((length-1 - NumPoles) * 0xFFFF) / (length-1);
-                                                                
-                l = a - 1;
-                r = b + 1;
+                if (NumZeroes > 1) {
+                        a = ((NumZeroes-1) * 0xFFFF) / (length-1);
+                        l = a - 1;
+                }
+                if (NumPoles > 1) {
+                        b = ((length-1 - NumPoles) * 0xFFFF) / (length-1);
+                        r = b + 1;
+                }
+        }
+
+        if (r <= l) {
+                // If this happens LutTable is not invertible
+                return 0;
         }
 
 
         // Seems not a degenerated case... apply binary search
-
         while (r > l) {
 
                 x = (l + r) / 2;
@@ -290,8 +297,8 @@ uint16_fract_t lut_inverse_interp16(uint16_t Value, uint16_t LutTable[], int len
 
                 if (res == Value) {
 
-                    // Found exact match. 
-                    
+                    // Found exact match.
+
                     return (uint16_fract_t) (x - 1);
                 }
 
@@ -301,9 +308,10 @@ uint16_fract_t lut_inverse_interp16(uint16_t Value, uint16_t LutTable[], int len
 
         // Not found, should we interpolate?
 
-                
         // Get surrounding nodes
-        
+
+        assert(x >= 1);
+
         val2 = (length-1) * ((double) (x - 1) / 65535.0);
 
         cell0 = (int) floor(val2);
