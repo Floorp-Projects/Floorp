@@ -159,17 +159,17 @@ public:
   }
 
   nsCSSOffsetState(nsIFrame *aFrame, nsRenderingContext *aRenderingContext,
-                   nscoord aContainingBlockWidth);
+                   nscoord aContainingBlockISize);
 
 #ifdef DEBUG
   // Reflow trace methods.  Defined in nsFrame.cpp so they have access
   // to the display-reflow infrastructure.
-  static void* DisplayInitOffsetsEnter(nsIFrame* aFrame,
-                                       nsCSSOffsetState* aState,
-                                       nscoord aInlineDirPercentBasis,
-                                       nscoord aBlockDirPercentBasis,
-                                       const nsMargin* aBorder,
-                                       const nsMargin* aPadding);
+  static void* DisplayInitOffsetsEnter(
+                                     nsIFrame* aFrame,
+                                     nsCSSOffsetState* aState,
+                                     const mozilla::LogicalSize& aPercentBasis,
+                                     const nsMargin* aBorder,
+                                     const nsMargin* aPadding);
   static void DisplayInitOffsetsExit(nsIFrame* aFrame,
                                      nsCSSOffsetState* aState,
                                      void* aValue);
@@ -180,63 +180,63 @@ private:
    * Computes margin values from the specified margin style information, and
    * fills in the mComputedMargin member.
    *
-   * @param aInlineDirPercentBasis
-   *    Length to use for resolving percentage margin values in the inline
-   *    axis. Usually the containing block inline-size (width if writing mode
-   *    is horizontal, and height if vertical).
-   * @param aBlockDirPercentBasis
-   *    Length to use for resolving percentage margin values in the block
-   *    axis.  Usually the containing block inline-size, per CSS21 sec 8.3
-   *    (read in conjunction with CSS Writing Modes sec 7.2), but may
-   *    be the containing block block-size, e.g. in CSS3 Flexbox and Grid.
+   * @param aPercentBasis
+   *    Logical size to use for resolving percentage margin values in
+   *    the inline and block axes.
+   *    The inline size is usually the containing block inline-size
+   *    (width if writing mode is horizontal, and height if vertical).
+   *    The block size is usually the containing block inline-size, per
+   *    CSS21 sec 8.3 (read in conjunction with CSS Writing Modes sec
+   *    7.2), but may be the containing block block-size, e.g. in CSS3
+   *    Flexbox and Grid.
    * @return true if the margin is dependent on the containing block size.
    */
-  bool ComputeMargin(nscoord aInlineDirPercentBasis,
-                     nscoord aBlockDirPercentBasis);
+  bool ComputeMargin(const mozilla::LogicalSize& aPercentBasis);
   
   /**
    * Computes padding values from the specified padding style information, and
    * fills in the mComputedPadding member.
    *
-   * @param aInlineDirPercentBasis
-   *    Length to use for resolving percentage padding values in the inline
-   *    axis. Usually the containing block inline-size.
-   * @param aBlockDirPercentBasis
-   *    Length to use for resolving percentage padding values in the block
-   *    axis.  Usually the containing block inline-size, per CSS21 sec 8.4,
-   *    but may be the containing block block-size in e.g. CSS3 Flexbox and
-   *    Grid.
+   * @param aPercentBasis
+   *    Length to use for resolving percentage padding values in
+   *    the inline and block axes.
+   *    The inline size is usually the containing block inline-size
+   *    (width if writing mode is horizontal, and height if vertical).
+   *    The block size is usually the containing block inline-size, per
+   *    CSS21 sec 8.3 (read in conjunction with CSS Writing Modes sec
+   *    7.2), but may be the containing block block-size, e.g. in CSS3
+   *    Flexbox and Grid.
    * @return true if the padding is dependent on the containing block size.
    */
-   bool ComputePadding(nscoord aInlineDirPercentBasis,
-                       nscoord aBlockDirPercentBasis, nsIAtom* aFrameType);
+  bool ComputePadding(const mozilla::LogicalSize& aPercentBasis,
+                      nsIAtom* aFrameType);
 
 protected:
 
-  void InitOffsets(nscoord aInlineDirPercentBasis,
-                   nscoord aBlockDirPercentBasis,
+  void InitOffsets(const mozilla::LogicalSize& aPercentBasis,
                    nsIAtom* aFrameType,
                    const nsMargin *aBorder = nullptr,
                    const nsMargin *aPadding = nullptr);
 
   /*
    * Convert nsStyleCoord to nscoord when percentages depend on the
-   * containing block width, and enumerated values are for width,
-   * min-width, or max-width.  Does not handle auto widths.
+   * inline size of the containing block, and enumerated values are for
+   * inline size, min-inline-size, or max-inline-size.  Does not handle
+   * auto inline sizes.
    */
-  inline nscoord ComputeWidthValue(nscoord aContainingBlockWidth,
+  inline nscoord ComputeISizeValue(nscoord aContainingBlockISize,
                                    nscoord aContentEdgeToBoxSizing,
                                    nscoord aBoxSizingToMarginEdge,
                                    const nsStyleCoord& aCoord);
   // same as previous, but using mComputedBorderPadding, mComputedPadding,
   // and mComputedMargin
-  nscoord ComputeWidthValue(nscoord aContainingBlockWidth,
+  nscoord ComputeISizeValue(nscoord aContainingBlockISize,
                             uint8_t aBoxSizing,
                             const nsStyleCoord& aCoord);
 
-  nscoord ComputeHeightValue(nscoord aContainingBlockHeight,
-                             uint8_t aBoxSizing,
-                             const nsStyleCoord& aCoord);
+  nscoord ComputeBSizeValue(nscoord aContainingBlockBSize,
+                            uint8_t aBoxSizing,
+                            const nsStyleCoord& aCoord);
 };
 
 /**
@@ -615,12 +615,9 @@ public:
    * @param aFrame The frame for whose reflow state is being constructed.
    * @param aAvailableSpace See comments for availableHeight and availableWidth
    *        members.
-   * @param aContainingBlockWidth An optional width, in app units, that is used
-   *        by absolute positioning code to override default containing block
-   *        width.
-   * @param aContainingBlockHeight An optional height, in app units, that is
-   *        used by absolute positioning code to override default containing
-   *        block height.
+   * @param aContainingBlockSize An optional size, in app units, that
+   *        is used by absolute positioning code to override default containing
+   *        block sizes.
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        below).
    */
@@ -628,8 +625,7 @@ public:
                     const nsHTMLReflowState&    aParentReflowState,
                     nsIFrame*                   aFrame,
                     const mozilla::LogicalSize& aAvailableSpace,
-                    nscoord                     aContainingBlockWidth = -1,
-                    nscoord                     aContainingBlockHeight = -1,
+                    const mozilla::LogicalSize* aContainingBlockSize = nullptr,
                     uint32_t                    aFlags = 0);
 
   // Values for |aFlags| passed to constructor
@@ -645,11 +641,10 @@ public:
 
   // This method initializes various data members. It is automatically
   // called by the various constructors
-  void Init(nsPresContext* aPresContext,
-            nscoord         aContainingBlockISize = -1,
-            nscoord         aContainingBlockBSize = -1,
-            const nsMargin* aBorder = nullptr,
-            const nsMargin* aPadding = nullptr);
+  void Init(nsPresContext*              aPresContext,
+            const mozilla::LogicalSize* aContainingBlockSize = nullptr,
+            const nsMargin*             aBorder = nullptr,
+            const nsMargin*             aPadding = nullptr);
 
   /**
    * Find the content isize of our containing block for the given writing mode,
@@ -665,7 +660,7 @@ public:
   /**
    * Same as CalcLineHeight() above, but doesn't need a reflow state.
    *
-   * @param aBlockHeight The computed height of the content rect of the block
+   * @param aBlockBSize The computed block size of the content rect of the block
    *                     that the line should fill.
    *                     Only used with line-height:-moz-block-height.
    *                     NS_AUTOHEIGHT results in a normal line-height for
@@ -681,10 +676,9 @@ public:
                                 float aFontSizeInflation);
 
 
-  void ComputeContainingBlockRectangle(nsPresContext*          aPresContext,
-                                       const nsHTMLReflowState* aContainingBlockRS,
-                                       nscoord&                 aContainingBlockWidth,
-                                       nscoord&                 aContainingBlockHeight);
+  mozilla::LogicalSize ComputeContainingBlockRectangle(
+         nsPresContext*          aPresContext,
+         const nsHTMLReflowState* aContainingBlockRS);
 
   /**
    * Apply the mComputed(Min/Max)Width constraints to the content
@@ -804,10 +798,9 @@ public:
   }
 
   // Compute the offsets for a relative position element
-  static void ComputeRelativeOffsets(uint8_t aCBDirection,
+  static void ComputeRelativeOffsets(mozilla::WritingMode aWM,
                                      nsIFrame* aFrame,
-                                     nscoord aContainingBlockWidth,
-                                     nscoord aContainingBlockHeight,
+                                     const mozilla::LogicalSize& aCBSize,
                                      nsMargin& aComputedOffsets);
 
   // If a relatively positioned element, adjust the position appropriately.
@@ -852,8 +845,8 @@ public:
   // to the display-reflow infrastructure.
   static void* DisplayInitConstraintsEnter(nsIFrame* aFrame,
                                            nsHTMLReflowState* aState,
-                                           nscoord aCBWidth,
-                                           nscoord aCBHeight,
+                                           nscoord aCBISize,
+                                           nscoord aCBBSize,
                                            const nsMargin* aBorder,
                                            const nsMargin* aPadding);
   static void DisplayInitConstraintsExit(nsIFrame* aFrame,
@@ -871,46 +864,43 @@ protected:
   void InitCBReflowState();
   void InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameType);
 
-  void InitConstraints(nsPresContext* aPresContext,
-                       nscoord         aContainingBlockWidth,
-                       nscoord         aContainingBlockHeight,
-                       const nsMargin* aBorder,
-                       const nsMargin* aPadding,
-                       nsIAtom*        aFrameType);
+  void InitConstraints(nsPresContext*              aPresContext,
+                       const mozilla::LogicalSize& aContainingBlockSize,
+                       const nsMargin*             aBorder,
+                       const nsMargin*             aPadding,
+                       nsIAtom*                    aFrameType);
 
   // Returns the nearest containing block or block frame (whether or not
   // it is a containing block) for the specified frame.  Also returns
-  // the left edge and width of the containing block's content area.
+  // the inline-start edge and inline size of the containing block's
+  // content area.
   // These are returned in the coordinate space of the containing block.
   nsIFrame* GetHypotheticalBoxContainer(nsIFrame* aFrame,
-                                        nscoord& aCBLeftEdge,
-                                        nscoord& aCBWidth);
+                                        nscoord& aCBIStartEdge,
+                                        nscoord& aCBISize);
 
   void CalculateHypotheticalBox(nsPresContext*    aPresContext,
                                 nsIFrame*         aPlaceholderFrame,
                                 nsIFrame*         aContainingBlock,
-                                nscoord           aBlockLeftContentEdge,
-                                nscoord           aBlockContentWidth,
+                                nscoord           aBlockIStartContentEdge,
+                                nscoord           aBlockContentISize,
                                 const nsHTMLReflowState* cbrs,
                                 nsHypotheticalBox& aHypotheticalBox,
                                 nsIAtom*          aFrameType);
 
   void InitAbsoluteConstraints(nsPresContext* aPresContext,
                                const nsHTMLReflowState* cbrs,
-                               nscoord aContainingBlockWidth,
-                               nscoord aContainingBlockHeight,
+                               const mozilla::LogicalSize& aContainingBlockSize,
                                nsIAtom* aFrameType);
 
   // Calculates the computed values for the 'min-Width', 'max-Width',
   // 'min-Height', and 'max-Height' properties, and stores them in the assorted
   // data members
-  void ComputeMinMaxValues(nscoord                  aContainingBlockWidth,
-                           nscoord                  aContainingBlockHeight,
-                           const nsHTMLReflowState* aContainingBlockRS);
+  void ComputeMinMaxValues(const mozilla::LogicalSize& aContainingBlockSize);
 
-  void CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWidth,
-                                         nscoord* aInsideBoxSizing,
-                                         nscoord* aOutsideBoxSizing);
+  void CalculateInlineBorderPaddingMargin(nscoord aContainingBlockISize,
+                                          nscoord* aInsideBoxSizing,
+                                          nscoord* aOutsideBoxSizing);
 
   void CalculateBlockSideMargins(nsIAtom* aFrameType);
 };
