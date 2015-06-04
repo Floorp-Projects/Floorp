@@ -1570,7 +1570,8 @@ public:
   // Clears the current list of visible images on this presshell and replaces it
   // with images that are in the display list aList.
   virtual void RebuildImageVisibilityDisplayList(const nsDisplayList& aList) = 0;
-  virtual void RebuildImageVisibility(nsRect* aRect = nullptr) = 0;
+  virtual void RebuildImageVisibility(nsRect* aRect = nullptr,
+                                      bool aRemoveOnly = false) = 0;
 
   // Ensures the image is in the list of visible images.
   virtual void EnsureImageInVisibleList(nsIImageLoadingContent* aImage) = 0;
