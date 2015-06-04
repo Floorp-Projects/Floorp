@@ -1437,21 +1437,6 @@ int64_t MediaDecoderStateMachine::GetEndTime()
   return mEndTime;
 }
 
-// Runnable which dispatches an event to the main thread to seek to the new
-// aSeekTarget.
-class SeekRunnable : public nsRunnable {
-public:
-  SeekRunnable(MediaDecoder* aDecoder, double aSeekTarget)
-    : mDecoder(aDecoder), mSeekTarget(aSeekTarget) {}
-  NS_IMETHOD Run() {
-    mDecoder->Seek(mSeekTarget, SeekTarget::Accurate);
-    return NS_OK;
-  }
-private:
-  nsRefPtr<MediaDecoder> mDecoder;
-  double mSeekTarget;
-};
-
 void MediaDecoderStateMachine::RecomputeDuration()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -1518,21 +1503,6 @@ void MediaDecoderStateMachine::SetDuration(TimeUnit aDuration)
   }
 
   mEndTime = mStartTime + aDuration.ToMicroseconds();
-
-  if (mDecoder && mEndTime >= 0 && mEndTime < mCurrentPosition) {
-    // The current playback position is now past the end of the element duration
-    // the user agent must also seek to the time of the end of the media
-    // resource.
-    if (NS_IsMainThread()) {
-      // Seek synchronously.
-      mDecoder->Seek(double(mEndTime) / USECS_PER_S, SeekTarget::Accurate);
-    } else {
-      // Queue seek to new end position.
-      nsCOMPtr<nsIRunnable> task =
-        new SeekRunnable(mDecoder, double(mEndTime) / USECS_PER_S);
-      AbstractThread::MainThread()->Dispatch(task.forget());
-    }
-  }
 }
 
 void MediaDecoderStateMachine::SetFragmentEndTime(int64_t aEndTime)
