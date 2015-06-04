@@ -19,17 +19,11 @@
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 
 namespace mozilla {
-namespace gl {
-class SharedSurface;
-class ShSurfHandle;
-}
-}
-
-namespace mozilla {
 namespace layers {
 
 class ClientCanvasLayer;
 class CompositableForwarder;
+class SharedSurfaceTextureClient;
 
 /**
  * Compositable client for 2d and webgl canvas.
@@ -114,10 +108,9 @@ private:
 class CanvasClientSharedSurface : public CanvasClient
 {
 private:
-  RefPtr<gl::ShSurfHandle> mFront;
-  RefPtr<gl::ShSurfHandle> mPrevFront;
-
-  RefPtr<TextureClient> mFrontTex;
+  RefPtr<SharedSurfaceTextureClient> mShSurfClient;
+  RefPtr<TextureClient> mReadbackClient;
+  RefPtr<TextureClient> mFront;
 
   void ClearSurfaces();
 
@@ -125,10 +118,7 @@ public:
   CanvasClientSharedSurface(CompositableForwarder* aLayerForwarder,
                             TextureFlags aFlags);
 
-  ~CanvasClientSharedSurface()
-  {
-    ClearSurfaces();
-  }
+  ~CanvasClientSharedSurface();
 
   virtual TextureInfo GetTextureInfo() const override {
     return TextureInfo(CompositableType::IMAGE);
