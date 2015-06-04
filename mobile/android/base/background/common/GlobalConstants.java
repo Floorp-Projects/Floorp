@@ -101,6 +101,7 @@ public class GlobalConstants {
           {
            "TLSv1.2",
            "TLSv1.1",
+           "TLSv1",             // We would like to remove this, and will do so when we can.
           };
     } else {
       // Fall back to TLSv1 if there's nothing better.
