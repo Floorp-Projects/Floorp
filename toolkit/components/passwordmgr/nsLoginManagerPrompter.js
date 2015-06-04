@@ -1,4 +1,3 @@
-/* vim: set ts=2 sts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,11 +9,15 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/SharedPromptUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
+                                  "resource://gre/modules/LoginHelper.jsm");
+
 const LoginInfo =
       Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                              "nsILoginInfo", "init");
 
-/* Constants for password prompt telemetry.
+/**
+ * Constants for password prompt telemetry.
  * Mirrored in mobile/android/components/LoginManagerPrompter.js */
 const PROMPT_DISPLAYED = 0;
 
@@ -40,7 +43,6 @@ LoginManagerPromptFactory.prototype = {
   classID : Components.ID("{749e62f4-60ae-4569-a8a2-de78b649660e}"),
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
-  _debug : false,
   _asyncPrompts : {},
   _asyncPromptInProgress : false,
 
@@ -59,9 +61,6 @@ LoginManagerPromptFactory.prototype = {
   },
 
   getPrompt : function (aWindow, aIID) {
-    var prefBranch = Services.prefs.getBranch("signon.");
-    this._debug = prefBranch.getBoolPref("debug");
-
     var prompt = new LoginManagerPrompter().QueryInterface(aIID);
     prompt.init(aWindow, this);
     return prompt;
@@ -167,16 +166,12 @@ LoginManagerPromptFactory.prototype = {
       }
     }
   },
-
-
-  log : function (message) {
-    if (!this._debug)
-      return;
-
-    dump("Pwmgr PromptFactory: " + message + "\n");
-    Services.console.logStringMessage("Pwmgr PrompFactory: " + message);
-  }
 }; // end of LoginManagerPromptFactory implementation
+
+XPCOMUtils.defineLazyGetter(this.LoginManagerPromptFactory.prototype, "log", () => {
+  let logger = LoginHelper.createLogger("Login PromptFactory");
+  return logger.log.bind(logger);
+});
 
 
 
@@ -212,7 +207,6 @@ LoginManagerPrompter.prototype = {
   _window        : null,
   _browser       : null,
   _opener        : null,
-  _debug         : false, // mirrors signon.debug
 
   __pwmgr : null, // Password Manager service
   get _pwmgr() {
@@ -272,20 +266,6 @@ LoginManagerPrompter.prototype = {
       // information.
       return true;
     }
-  },
-
-
-  /*
-   * log
-   *
-   * Internal function for logging debug messages to the Error Console window.
-   */
-  log : function (message) {
-    if (!this._debug)
-      return;
-
-    dump("Pwmgr Prompter: " + message + "\n");
-    Services.console.logStringMessage("Pwmgr Prompter: " + message);
   },
 
 
@@ -725,8 +705,6 @@ LoginManagerPrompter.prototype = {
     this._browser = null;
     this._opener = null;
 
-    var prefBranch = Services.prefs.getBranch("signon.");
-    this._debug = prefBranch.getBoolPref("debug");
     this.log("===== initialized =====");
   },
 
@@ -1651,6 +1629,10 @@ LoginManagerPrompter.prototype = {
 
 }; // end of LoginManagerPrompter implementation
 
+XPCOMUtils.defineLazyGetter(this.LoginManagerPrompter.prototype, "log", () => {
+  let logger = LoginHelper.createLogger("LoginManagerPrompter");
+  return logger.log.bind(logger);
+});
 
 var component = [LoginManagerPromptFactory, LoginManagerPrompter];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

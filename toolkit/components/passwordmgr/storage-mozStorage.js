@@ -1,14 +1,8 @@
-/* -*- tab-width: 2; indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set sw=2 ts=2 et lcs=trail\:.,tab\:>~ : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 const DB_VERSION = 5; // The database schema version
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -154,22 +148,7 @@ LoginManagerStorage_mozStorage.prototype = {
   _dbConnection : null,  // The database connection
   _dbStmts      : null,  // Database statements for memoization
 
-  _prefBranch   : null,  // Preferences service
   _signonsFile  : null,  // nsIFile for "signons.sqlite"
-  _debug        : false, // mirrors signon.debug
-
-
-  /*
-   * log
-   *
-   * Internal function for logging debug messages to the Error Console.
-   */
-  log : function (message) {
-    if (!this._debug)
-      return;
-    dump("PwMgr mozStorage: " + message + "\n");
-    Services.console.logStringMessage("PwMgr mozStorage: " + message);
-  },
 
 
   /*
@@ -190,10 +169,6 @@ LoginManagerStorage_mozStorage.prototype = {
    */
   initialize : function () {
     this._dbStmts = {};
-
-    // Connect to the correct preferences branch.
-    this._prefBranch = Services.prefs.getBranch("signon.");
-    this._debug = this._prefBranch.getBoolPref("debug");
 
     let isFirstRun;
     try {
@@ -1387,6 +1362,11 @@ LoginManagerStorage_mozStorage.prototype = {
   }
 
 }; // end of nsLoginManagerStorage_mozStorage implementation
+
+XPCOMUtils.defineLazyGetter(this.LoginManagerStorage_mozStorage.prototype, "log", () => {
+  let logger = LoginHelper.createLogger("Login storage");
+  return logger.log.bind(logger);
+});
 
 let component = [LoginManagerStorage_mozStorage];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
