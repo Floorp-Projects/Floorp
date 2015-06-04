@@ -481,7 +481,7 @@ class ObjectGroup : public gc::TenuredCell
     /* Helpers */
 
     void updateNewPropertyTypes(ExclusiveContext* cx, JSObject* obj, jsid id, HeapTypeSet* types);
-    bool addDefiniteProperties(ExclusiveContext* cx, Shape* shape);
+    void addDefiniteProperties(ExclusiveContext* cx, Shape* shape);
     bool matchDefiniteProperties(HandleObject obj);
     void markPropertyNonData(ExclusiveContext* cx, JSObject* obj, jsid id);
     void markPropertyNonWritable(ExclusiveContext* cx, JSObject* obj, jsid id);

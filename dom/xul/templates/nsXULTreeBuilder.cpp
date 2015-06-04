@@ -1230,7 +1230,7 @@ nsXULTreeBuilder::SynchronizeResult(nsIXULTemplateResult* aResult)
         if (row >= 0)
             mBoxObject->InvalidateRow(row);
 
-        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+        MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                ("xultemplate[%p]   => row %d", this, row));
     }
 

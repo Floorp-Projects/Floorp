@@ -9,12 +9,62 @@
 
 #include "prlog.h"
 
+#include "mozilla/Assertions.h"
+
 // This file is a placeholder for a replacement to the NSPR logging framework
 // that is defined in prlog.h. Currently it is just a pass through, but as
 // work progresses more functionality will be swapped out in favor of
 // mozilla logging implementations.
 
-#define MOZ_LOG PR_LOG
+namespace mozilla {
+
+// While not a 100% mapping to PR_LOG's numeric values, mozilla::LogLevel does
+// maintain a direct mapping for the Disabled, Debug and Verbose levels.
+//
+// Mappings of LogLevel to PR_LOG's numeric values:
+//
+//   +---------+------------------+-----------------+
+//   | Numeric | NSPR Logging     | Mozilla Logging |
+//   +---------+------------------+-----------------+
+//   |       0 | PR_LOG_NONE      | Disabled        |
+//   |       1 | PR_LOG_ALWAYS    | Error           |
+//   |       2 | PR_LOG_ERROR     | Warning         |
+//   |       3 | PR_LOG_WARNING   | Info            |
+//   |       4 | PR_LOG_DEBUG     | Debug           |
+//   |       5 | PR_LOG_DEBUG + 1 | Verbose         |
+//   +---------+------------------+-----------------+
+//
+enum class LogLevel {
+  Disabled = 0,
+  Error,
+  Warning,
+  Info,
+  Debug,
+  Verbose,
+};
+
+namespace detail {
+
+inline bool log_test(const PRLogModuleInfo* module, LogLevel level) {
+  MOZ_ASSERT(level != LogLevel::Disabled);
+  return module && module->level >= static_cast<int>(level);
+}
+
+}
+
+}
+
+#define MOZ_LOG_TEST(_module,_level) mozilla::detail::log_test(_module, _level)
+
+#define MOZ_LOG(_module,_level,_args)     \
+  PR_BEGIN_MACRO             \
+    if (MOZ_LOG_TEST(_module,_level)) { \
+      PR_LogPrint _args;         \
+    }                     \
+  PR_END_MACRO
+
+#undef PR_LOG
+#undef PR_LOG_TEST
 
 #endif // mozilla_logging_h
 

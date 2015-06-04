@@ -502,7 +502,7 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
                                    nsIXULTemplateResult* aNewResult,
                                    nsIDOMNode* aQueryNode)
 {
-    MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+    MOZ_LOG(gXULTemplateLog, LogLevel::Info,
            ("nsXULTemplateBuilder::UpdateResult %p %p %p",
            aOldResult, aNewResult, aQueryNode));
 
@@ -1711,7 +1711,7 @@ nsXULTemplateBuilder::CompileQueries()
     }
 
     // always enable logging if the debug setting is used
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG))
+    if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug))
         mFlags |= eLoggingEnabled;
 
     nsCOMPtr<nsIDOMNode> rootnode = do_QueryInterface(mRoot);

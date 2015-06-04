@@ -41,7 +41,7 @@ using mozilla::Preferences;
 //
 static PRLogModuleInfo *gChannelClassifierLog;
 #undef LOG
-#define LOG(args)     MOZ_LOG(gChannelClassifierLog, PR_LOG_DEBUG, args)
+#define LOG(args)     MOZ_LOG(gChannelClassifierLog, mozilla::LogLevel::Debug, args)
 
 NS_IMPL_ISUPPORTS(nsChannelClassifier,
                   nsIURIClassifierCallback)

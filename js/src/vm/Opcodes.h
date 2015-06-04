@@ -391,9 +391,9 @@
      *   Category: Statements
      *   Type: Function
      *   Operands:
-     *   Stack: callee, this, args => rval
+     *   Stack: callee, this, args, newTarget => rval
      */ \
-    macro(JSOP_SPREADNEW, 42, "spreadnew",  NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET) \
+    macro(JSOP_SPREADNEW, 42, "spreadnew",  NULL,         1,  4,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET) \
     /*
      * spreadcall variant of JSOP_EVAL
      *
@@ -766,8 +766,8 @@
      *   Category: Statements
      *   Type: Function
      *   Operands: uint16_t argc
-     *   Stack: callee, this, args[0], ..., args[argc-1] => rval
-     *   nuses: (argc+2)
+     *   Stack: callee, this, args[0], ..., args[argc-1], newTarget => rval
+     *   nuses: (argc+3)
      */ \
     macro(JSOP_NEW,       82, js_new_str,   NULL,         3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
     /*
@@ -1340,7 +1340,7 @@
      *   Operands: uint32_t funcIndex
      *   Stack: this => obj
      */ \
-    macro(JSOP_LAMBDA_ARROW, 131, "lambda_arrow", NULL,   5,  1,  1, JOF_OBJECT) \
+    macro(JSOP_LAMBDA_ARROW, 131, "lambda_arrow", NULL,   5,  2,  1, JOF_OBJECT) \
     \
     /*
      * Pushes current callee onto the stack.
@@ -1514,8 +1514,15 @@
      *   Stack: obj, val => obj
      */ \
     macro(JSOP_INITHIDDENPROP, 147,"inithiddenprop", NULL, 5,  2,  1,  JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING) \
-    /* Unused. */ \
-    macro(JSOP_UNUSED148,     148,"unused148", NULL,      1,  0,  0,  JOF_BYTE) \
+    /*
+     * Push "new.target"
+     *
+     *  Category: Variables and Scopes
+     *  Type: Arguments
+     *  Operands:
+     *  Stack: => new.target
+     */ \
+    macro(JSOP_NEWTARGET,  148, "newtarget", NULL,      1,  0,  1,  JOF_BYTE) \
     \
     /*
      * Placeholder opcode used during bytecode generation. This never

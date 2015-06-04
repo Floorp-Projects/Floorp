@@ -16,8 +16,8 @@ using dom::ConstrainDoubleRange;
 using dom::MediaTrackConstraintSet;
 
 extern PRLogModuleInfo* GetMediaManagerLog();
-#define LOG(msg) MOZ_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
-#define LOGFRAME(msg) MOZ_LOG(GetMediaManagerLog(), 6, msg)
+#define LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)
+#define LOGFRAME(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Verbose, msg)
 
 // guts for appending data to the MSG track
 bool MediaEngineCameraVideoSource::AppendToTrack(SourceMediaStream* aSource,
@@ -218,7 +218,7 @@ MediaEngineCameraVideoSource::ChooseCapability(
     const dom::MediaTrackConstraints &aConstraints,
     const MediaEnginePrefs &aPrefs)
 {
-  if (PR_LOG_TEST(GetMediaManagerLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetMediaManagerLog(), LogLevel::Debug)) {
     LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps",
          aPrefs.GetWidth(), aPrefs.GetHeight(),
          aPrefs.mFPS, aPrefs.mMinFPS));

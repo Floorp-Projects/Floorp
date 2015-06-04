@@ -72,7 +72,7 @@ static const char kJSCachePrefix[] = "jsloader";
 // NSPR_LOG_MODULES=JSComponentLoader:5
 static PRLogModuleInfo* gJSCLLog;
 
-#define LOG(args) MOZ_LOG(gJSCLLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gJSCLLog, mozilla::LogLevel::Debug, args)
 
 // Components.utils.import error messages
 #define ERROR_SCOPE_OBJ "%s - Second argument must be an object."

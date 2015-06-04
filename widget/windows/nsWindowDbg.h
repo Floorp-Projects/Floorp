@@ -42,7 +42,7 @@ typedef struct {
   int    mId;
 } MSGFEventMsgInfo;
 
-#define DISPLAY_NMM_PRT(_arg) MOZ_LOG(gWindowsLog, PR_LOG_ALWAYS, ((_arg)));
+#define DISPLAY_NMM_PRT(_arg) MOZ_LOG(gWindowsLog, mozilla::LogLevel::Info, ((_arg)));
 #else
 #define DISPLAY_NMM_PRT(_arg)
 #endif // defined(POPUP_ROLLUP_DEBUG_OUTPUT)

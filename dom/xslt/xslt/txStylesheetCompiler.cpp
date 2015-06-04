@@ -377,7 +377,7 @@ txStylesheetCompiler::characters(const nsAString& aStr)
 nsresult
 txStylesheetCompiler::doneLoading()
 {
-    MOZ_LOG(txLog::xslt, PR_LOG_ALWAYS,
+    MOZ_LOG(txLog::xslt, LogLevel::Info,
            ("Compiler::doneLoading: %s\n",
             NS_LossyConvertUTF16toASCII(mStylesheetURI).get()));
     if (NS_FAILED(mStatus)) {
@@ -393,7 +393,7 @@ void
 txStylesheetCompiler::cancel(nsresult aError, const char16_t *aErrorText,
                              const char16_t *aParam)
 {
-    MOZ_LOG(txLog::xslt, PR_LOG_ALWAYS,
+    MOZ_LOG(txLog::xslt, LogLevel::Info,
            ("Compiler::cancel: %s, module: %d, code %d\n",
             NS_LossyConvertUTF16toASCII(mStylesheetURI).get(),
             NS_ERROR_GET_MODULE(aError),
@@ -422,7 +422,7 @@ txStylesheetCompiler::loadURI(const nsAString& aUri,
                               ReferrerPolicy aReferrerPolicy,
                               txStylesheetCompiler* aCompiler)
 {
-    MOZ_LOG(txLog::xslt, PR_LOG_ALWAYS,
+    MOZ_LOG(txLog::xslt, LogLevel::Info,
            ("Compiler::loadURI forwards %s thru %s\n",
             NS_LossyConvertUTF16toASCII(aUri).get(),
             NS_LossyConvertUTF16toASCII(mStylesheetURI).get()));
@@ -676,7 +676,7 @@ nsresult
 txStylesheetCompilerState::pushPtr(void* aPtr, enumStackType aType)
 {
 #ifdef TX_DEBUG_STACK
-    MOZ_LOG(txLog::xslt, PR_LOG_DEBUG, ("pushPtr: 0x%x type %u\n", aPtr, aType));
+    MOZ_LOG(txLog::xslt, LogLevel::Debug, ("pushPtr: 0x%x type %u\n", aPtr, aType));
 #endif
     mTypeStack.AppendElement(aType);
     return mOtherStack.push(aPtr);
@@ -695,7 +695,7 @@ txStylesheetCompilerState::popPtr(enumStackType aType)
     void* value = mOtherStack.pop();
     
 #ifdef TX_DEBUG_STACK
-    MOZ_LOG(txLog::xslt, PR_LOG_DEBUG, ("popPtr: 0x%x type %u requested %u\n", value, type, aType));
+    MOZ_LOG(txLog::xslt, LogLevel::Debug, ("popPtr: 0x%x type %u requested %u\n", value, type, aType));
 #endif
     
     if (type != aType) {
@@ -750,7 +750,7 @@ txStylesheetCompilerState::addInstruction(nsAutoPtr<txInstruction>&& aInstructio
 nsresult
 txStylesheetCompilerState::loadIncludedStylesheet(const nsAString& aURI)
 {
-    MOZ_LOG(txLog::xslt, PR_LOG_ALWAYS,
+    MOZ_LOG(txLog::xslt, LogLevel::Info,
            ("CompilerState::loadIncludedStylesheet: %s\n",
             NS_LossyConvertUTF16toASCII(aURI).get()));
     if (mStylesheetURI.Equals(aURI)) {
@@ -795,7 +795,7 @@ nsresult
 txStylesheetCompilerState::loadImportedStylesheet(const nsAString& aURI,
                                                   txStylesheet::ImportFrame* aFrame)
 {
-    MOZ_LOG(txLog::xslt, PR_LOG_ALWAYS,
+    MOZ_LOG(txLog::xslt, LogLevel::Info,
            ("CompilerState::loadImportedStylesheet: %s\n",
             NS_LossyConvertUTF16toASCII(aURI).get()));
     if (mStylesheetURI.Equals(aURI)) {

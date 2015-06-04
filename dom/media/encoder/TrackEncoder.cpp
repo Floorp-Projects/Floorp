@@ -58,7 +58,7 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
   // Check and initialize parameters for codec encoder.
   if (!mInitialized) {
     mAudioInitCounter++;
-    TRACK_LOG(PR_LOG_DEBUG, ("Init the audio encoder %d times", mAudioInitCounter));
+    TRACK_LOG(LogLevel::Debug, ("Init the audio encoder %d times", mAudioInitCounter));
     AudioSegment::ChunkIterator iter(const_cast<AudioSegment&>(audio));
     while (!iter.IsEnded()) {
       AudioChunk chunk = *iter;
@@ -184,7 +184,7 @@ VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
    // Check and initialize parameters for codec encoder.
   if (!mInitialized) {
     mVideoInitCounter++;
-    TRACK_LOG(PR_LOG_DEBUG, ("Init the video encoder %d times", mVideoInitCounter));
+    TRACK_LOG(LogLevel::Debug, ("Init the video encoder %d times", mVideoInitCounter));
     VideoSegment::ChunkIterator iter(const_cast<VideoSegment&>(video));
     while (!iter.IsEnded()) {
       VideoChunk chunk = *iter;

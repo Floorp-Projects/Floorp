@@ -245,7 +245,7 @@ class JitcodeGlobalEntry
 
         struct SizedScriptList {
             uint32_t size;
-            ScriptNamePair pairs[0];
+            ScriptNamePair pairs[1];
             SizedScriptList(uint32_t sz, JSScript** scrs, char** strs) : size(sz) {
                 for (uint32_t i = 0; i < size; i++) {
                     pairs[i].script = scrs[i];
@@ -254,7 +254,7 @@ class JitcodeGlobalEntry
             }
 
             static uint32_t AllocSizeFor(uint32_t nscripts) {
-                return sizeof(SizedScriptList) + (nscripts * sizeof(ScriptNamePair));
+                return sizeof(SizedScriptList) + ((nscripts - 1) * sizeof(ScriptNamePair));
             }
         };
 
@@ -1352,7 +1352,7 @@ class JitcodeIonTable
   private:
     /* Variable length payload section "below" here. */
     uint32_t numRegions_;
-    uint32_t regionOffsets_[0];
+    uint32_t regionOffsets_[1];
 
     const uint8_t* payloadEnd() const {
         return reinterpret_cast<const uint8_t*>(this);

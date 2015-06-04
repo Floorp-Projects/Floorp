@@ -35,6 +35,7 @@ RematerializedFrame::RematerializedFrame(JSContext* cx, uint8_t* top, unsigned n
                                          InlineFrameIterator& iter, MaybeReadFallback& fallback)
   : prevUpToDate_(false),
     isDebuggee_(iter.script()->isDebuggee()),
+    isConstructing_(iter.isConstructing()),
     top_(top),
     pc_(iter.pc()),
     frameNo_(iter.frameNo()),
@@ -57,7 +58,7 @@ RematerializedFrame::New(JSContext* cx, uint8_t* top, InlineFrameIterator& iter,
                          MaybeReadFallback& fallback)
 {
     unsigned numFormals = iter.isFunctionFrame() ? iter.calleeTemplate()->nargs() : 0;
-    unsigned argSlots = Max(numFormals, iter.numActualArgs());
+    unsigned argSlots = Max(numFormals, iter.numActualArgs()) + iter.isConstructing();
     size_t numBytes = sizeof(RematerializedFrame) +
         (argSlots + iter.script()->nfixed()) * sizeof(Value) -
         sizeof(Value); // 1 Value included in sizeof(RematerializedFrame)
@@ -158,7 +159,8 @@ RematerializedFrame::mark(JSTracer* trc)
         TraceRoot(trc, &callee_, "remat ion frame callee");
     TraceRoot(trc, &returnValue_, "remat ion frame return value");
     TraceRoot(trc, &thisValue_, "remat ion frame this");
-    TraceRootRange(trc, numActualArgs_ + script_->nfixed(), slots_, "remat ion frame stack");
+    TraceRootRange(trc, numActualArgs_ + isConstructing_ + script_->nfixed(),
+                   slots_, "remat ion frame stack");
 }
 
 void

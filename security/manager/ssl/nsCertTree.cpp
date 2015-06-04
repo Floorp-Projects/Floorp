@@ -430,7 +430,7 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
                                        nsCertCompareFunc  aCertCmpFn,
                                        void *aCertCmpFnArg)
 {
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("GetCertsByTypeFromCertList"));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("GetCertsByTypeFromCertList"));
   if (!aCertList)
     return NS_ERROR_FAILURE;
 
@@ -1351,23 +1351,23 @@ nsCertTree::dumpMap()
 {
   for (int i=0; i<mNumOrgs; i++) {
     nsAutoString org(mTreeArray[i].orgName);
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("ORG[%s]", NS_LossyConvertUTF16toASCII(org).get()));
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("OPEN[%d]", mTreeArray[i].open));
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("INDEX[%d]", mTreeArray[i].certIndex));
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NCHILD[%d]", mTreeArray[i].numChildren));
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("ORG[%s]", NS_LossyConvertUTF16toASCII(org).get()));
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("OPEN[%d]", mTreeArray[i].open));
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("INDEX[%d]", mTreeArray[i].certIndex));
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("NCHILD[%d]", mTreeArray[i].numChildren));
   }
   for (int i=0; i<mNumRows; i++) {
     treeArrayEl *el = GetThreadDescAtIndex(i);
     if (el) {
       nsAutoString td(el->orgName);
-      MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("thread desc[%d]: %s", i, NS_LossyConvertUTF16toASCII(td).get()));
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("thread desc[%d]: %s", i, NS_LossyConvertUTF16toASCII(td).get()));
     }
     nsCOMPtr<nsIX509Cert> ct = GetCertAtIndex(i);
     if (ct) {
       char16_t *goo;
       ct->GetCommonName(&goo);
       nsAutoString doo(goo);
-      MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("cert [%d]: %s", i, NS_LossyConvertUTF16toASCII(doo).get()));
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("cert [%d]: %s", i, NS_LossyConvertUTF16toASCII(doo).get()));
     }
   }
 }

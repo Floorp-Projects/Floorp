@@ -43,16 +43,16 @@ using namespace widget;
 
 /**
  * When a method is called, log its arguments and/or related static variables
- * with PR_LOG_ALWAYS.  However, if it puts too many logs like
+ * with LogLevel::Info.  However, if it puts too many logs like
  * OnDestroyPresContext(), should long only when the method actually does
  * something. In this case, the log should start with "ISM: <method name>".
  *
  * When a method quits due to unexpected situation, log the reason with
- * PR_LOG_ERROR.  In this case, the log should start with
+ * LogLevel::Error.  In this case, the log should start with
  * "ISM:   <method name>(), FAILED".  The indent makes the log look easier.
  *
  * When a method does something only in some situations and it may be important
- * for debug, log the information with PR_LOG_DEBUG.  In this case, the log
+ * for debug, log the information with LogLevel::Debug.  In this case, the log
  * should start with "ISM:   <method name>(),".
  */
 PRLogModuleInfo* sISMLog = nullptr;
@@ -200,7 +200,7 @@ IMEStateManager::Init()
 void
 IMEStateManager::Shutdown()
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::Shutdown(), "
      "sTextCompositions=0x%p, sTextCompositions->Length()=%u",
      sTextCompositions, sTextCompositions ? sTextCompositions->Length() : 0));
@@ -221,7 +221,7 @@ IMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
     TextCompositionArray::index_type i =
       sTextCompositions->IndexOf(aPresContext);
     if (i != TextCompositionArray::NoIndex) {
-      MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+      MOZ_LOG(sISMLog, LogLevel::Debug,
         ("ISM:   IMEStateManager::OnDestroyPresContext(), "
          "removing TextComposition instance from the array (index=%u)", i));
       // there should be only one composition per presContext object.
@@ -229,7 +229,7 @@ IMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
       sTextCompositions->RemoveElementAt(i);
       if (sTextCompositions->IndexOf(aPresContext) !=
             TextCompositionArray::NoIndex) {
-        MOZ_LOG(sISMLog, PR_LOG_ERROR,
+        MOZ_LOG(sISMLog, LogLevel::Error,
           ("ISM:   IMEStateManager::OnDestroyPresContext(), FAILED to remove "
            "TextComposition instance from the array"));
         MOZ_CRASH("Failed to remove TextComposition instance from the array");
@@ -241,7 +241,7 @@ IMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
     return NS_OK;
   }
 
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnDestroyPresContext(aPresContext=0x%p), "
      "sPresContext=0x%p, sContent=0x%p, sTextCompositions=0x%p",
      aPresContext, sPresContext, sContent, sTextCompositions));
@@ -273,7 +273,7 @@ IMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
       sTextCompositions->GetCompositionInContent(aPresContext, aContent);
 
     if (compositionInContent) {
-      MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+      MOZ_LOG(sISMLog, LogLevel::Debug,
         ("ISM:   IMEStateManager::OnRemoveContent(), "
          "composition is in the content"));
 
@@ -296,7 +296,7 @@ IMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnRemoveContent(aPresContext=0x%p, "
      "aContent=0x%p), sPresContext=0x%p, sContent=0x%p, sTextCompositions=0x%p",
      aPresContext, aContent, sPresContext, sContent, sTextCompositions));
@@ -324,7 +324,7 @@ IMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
                                nsIContent* aContent,
                                InputContextAction::Cause aCause)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnChangeFocus(aPresContext=0x%p, "
      "aContent=0x%p, aCause=%s)",
      aPresContext, aContent, GetActionCauseName(aCause)));
@@ -339,7 +339,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
                                        nsIContent* aContent,
                                        InputContextAction aAction)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnChangeFocusInternal(aPresContext=0x%p, "
      "aContent=0x%p, aAction={ mCause=%s, mFocusChange=%s }), "
      "sPresContext=0x%p, sContent=0x%p, sActiveIMEContentObserver=0x%p",
@@ -367,7 +367,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
   }
 
   if (!aPresContext) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::OnChangeFocusInternal(), "
        "no nsPresContext is being activated"));
     return NS_OK;
@@ -377,7 +377,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     (sPresContext == aPresContext) ? oldWidget.get() :
                                      aPresContext->GetRootWidget();
   if (NS_WARN_IF(!widget)) {
-    MOZ_LOG(sISMLog, PR_LOG_ERROR,
+    MOZ_LOG(sISMLog, LogLevel::Error,
       ("ISM:   IMEStateManager::OnChangeFocusInternal(), FAILED due to "
        "no widget to manage its IME state"));
     return NS_OK;
@@ -395,7 +395,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
   // on focus to the main process... but this cannot cause bugs like missed keypresses.
   // (It just means a lot of needless IPC.)
   if ((newState.mEnabled == IMEState::DISABLED) && TabParent::GetIMETabParent()) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::OnChangeFocusInternal(), "
        "Parent process cancels to set DISABLED state because the content process "
        "has IME focus and has already sets IME state"));  
@@ -410,7 +410,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     // we should do it.
     InputContext context = widget->GetInputContext();
     if (context.mIMEState.mEnabled == newState.mEnabled) {
-      MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+      MOZ_LOG(sISMLog, LogLevel::Debug,
         ("ISM:   IMEStateManager::OnChangeFocusInternal(), "
          "neither focus nor IME state is changing"));
       return NS_OK;
@@ -449,7 +449,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
 void
 IMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnInstalledMenuKeyboardListener(aInstalling=%s), "
      "sInstalledMenuKeyboardListener=%s",
      GetBoolName(aInstalling), GetBoolName(sInstalledMenuKeyboardListener)));
@@ -468,27 +468,27 @@ IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
                                             nsIContent* aContent,
                                             nsIDOMMouseEvent* aMouseEvent)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnMouseButtonEventInEditor(aPresContext=0x%p, "
      "aContent=0x%p, aMouseEvent=0x%p), sPresContext=0x%p, sContent=0x%p",
      aPresContext, aContent, aMouseEvent, sPresContext, sContent));
 
   if (sPresContext != aPresContext || sContent != aContent) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::OnMouseButtonEventInEditor(), "
        "the mouse event isn't fired on the editor managed by ISM"));
     return false;
   }
 
   if (!sActiveIMEContentObserver) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::OnMouseButtonEventInEditor(), "
        "there is no active IMEContentObserver"));
     return false;
   }
 
   if (!sActiveIMEContentObserver->IsManaging(aPresContext, aContent)) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::OnMouseButtonEventInEditor(), "
        "the active IMEContentObserver isn't managing the editor"));
     return false;
@@ -497,7 +497,7 @@ IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
   WidgetMouseEvent* internalEvent =
     aMouseEvent->GetInternalNSEvent()->AsMouseEvent();
   if (NS_WARN_IF(!internalEvent)) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::OnMouseButtonEventInEditor(), "
        "the internal event of aMouseEvent isn't WidgetMouseEvent"));
     return false;
@@ -506,10 +506,10 @@ IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
   bool consumed =
     sActiveIMEContentObserver->OnMouseButtonEvent(aPresContext, internalEvent);
 
-  if (PR_LOG_TEST(sISMLog, PR_LOG_ALWAYS)) {
+  if (MOZ_LOG_TEST(sISMLog, LogLevel::Info)) {
     nsAutoString eventType;
     aMouseEvent->GetType(eventType);
-    MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+    MOZ_LOG(sISMLog, LogLevel::Info,
       ("ISM:   IMEStateManager::OnMouseButtonEventInEditor(), "
        "mouse event (type=%s, button=%d) is %s",
        NS_ConvertUTF16toUTF8(eventType).get(), internalEvent->button,
@@ -525,13 +525,13 @@ IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
                                  nsIContent* aContent,
                                  nsIDOMMouseEvent* aMouseEvent)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnClickInEditor(aPresContext=0x%p, aContent=0x%p, "
      "aMouseEvent=0x%p), sPresContext=0x%p, sContent=0x%p",
      aPresContext, aContent, aMouseEvent, sPresContext, sContent));
 
   if (sPresContext != aPresContext || sContent != aContent) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::OnClickInEditor(), "
        "the mouse event isn't fired on the editor managed by ISM"));
     return;
@@ -544,7 +544,7 @@ IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
   nsresult rv = aMouseEvent->GetIsTrusted(&isTrusted);
   NS_ENSURE_SUCCESS_VOID(rv);
   if (!isTrusted) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::OnClickInEditor(), "
        "the mouse event isn't a trusted event"));
     return; // ignore untrusted event.
@@ -554,7 +554,7 @@ IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
   rv = aMouseEvent->GetButton(&button);
   NS_ENSURE_SUCCESS_VOID(rv);
   if (button != 0) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::OnClickInEditor(), "
        "the mouse event isn't a left mouse button event"));
     return; // not a left click event.
@@ -564,7 +564,7 @@ IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
   rv = aMouseEvent->GetDetail(&clickCount);
   NS_ENSURE_SUCCESS_VOID(rv);
   if (clickCount != 1) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::OnClickInEditor(), "
        "the mouse event isn't a single click event"));
     return; // should notify only first click event.
@@ -582,7 +582,7 @@ IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
                                  nsIContent* aContent,
                                  nsIEditor* aEditor)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnFocusInEditor(aPresContext=0x%p, aContent=0x%p, "
      "aEditor=0x%p), sPresContext=0x%p, sContent=0x%p, "
      "sActiveIMEContentObserver=0x%p",
@@ -590,7 +590,7 @@ IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
      sActiveIMEContentObserver));
 
   if (sPresContext != aPresContext || sContent != aContent) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::OnFocusInEditor(), "
        "an editor not managed by ISM gets focus"));
     return;
@@ -600,7 +600,7 @@ IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
   // we need to recreate the instance.
   if (sActiveIMEContentObserver) {
     if (sActiveIMEContentObserver->IsManaging(aPresContext, aContent)) {
-      MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+      MOZ_LOG(sISMLog, LogLevel::Debug,
         ("ISM:   IMEStateManager::OnFocusInEditor(), "
          "the editor is already being managed by sActiveIMEContentObserver"));
       return;
@@ -617,7 +617,7 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
                                 nsIContent* aContent,
                                 nsIEditor* aEditor)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::UpdateIMEState(aNewIMEState={ mEnabled=%s, "
      "mOpen=%s }, aContent=0x%p, aEditor=0x%p), "
      "sPresContext=0x%p, sContent=0x%p, sActiveIMEContentObserver=0x%p, "
@@ -628,21 +628,21 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
      GetBoolName(sIsGettingNewIMEState)));
 
   if (sIsGettingNewIMEState) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::UpdateIMEState(), "
        "does nothing because of called while getting new IME state"));
     return;
   }
 
   if (NS_WARN_IF(!sPresContext)) {
-    MOZ_LOG(sISMLog, PR_LOG_ERROR,
+    MOZ_LOG(sISMLog, LogLevel::Error,
       ("ISM:   IMEStateManager::UpdateIMEState(), FAILED due to "
        "no managing nsPresContext"));
     return;
   }
   nsCOMPtr<nsIWidget> widget = sPresContext->GetRootWidget();
   if (NS_WARN_IF(!widget)) {
-    MOZ_LOG(sISMLog, PR_LOG_ERROR,
+    MOZ_LOG(sISMLog, LogLevel::Error,
       ("ISM:   IMEStateManager::UpdateIMEState(), FAILED due to "
        "no widget for the managing nsPresContext"));
     return;
@@ -652,12 +652,12 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
   // editor with current editable root content due to reframed.  In such case,
   // We should try to reinitialize the IMEContentObserver.
   if (sActiveIMEContentObserver && IsIMEObserverNeeded(aNewIMEState)) {
-    PR_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::UpdateIMEState(), try to reinitialize the "
        "active IMEContentObserver"));
     if (!sActiveIMEContentObserver->MaybeReinitialize(widget, sPresContext,
                                                       aContent, aEditor)) {
-      PR_LOG(sISMLog, PR_LOG_ERROR,
+      MOZ_LOG(sISMLog, LogLevel::Error,
         ("ISM:   IMEStateManager::UpdateIMEState(), failed to reinitialize the "
          "active IMEContentObserver"));
     }
@@ -697,7 +697,7 @@ IMEState
 IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
                                 nsIContent*    aContent)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::GetNewIMEState(aPresContext=0x%p, aContent=0x%p), "
      "sInstalledMenuKeyboardListener=%s",
      aPresContext, aContent, GetBoolName(sInstalledMenuKeyboardListener)));
@@ -705,14 +705,14 @@ IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
   // On Printing or Print Preview, we don't need IME.
   if (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
       aPresContext->Type() == nsPresContext::eContext_Print) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::GetNewIMEState() returns DISABLED because "
        "the nsPresContext is for print or print preview"));
     return IMEState(IMEState::DISABLED);
   }
 
   if (sInstalledMenuKeyboardListener) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::GetNewIMEState() returns DISABLED because "
        "menu keyboard listener was installed"));
     return IMEState(IMEState::DISABLED);
@@ -723,12 +723,12 @@ IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
     // editable, such case is design mode.
     nsIDocument* doc = aPresContext->Document();
     if (doc && doc->HasFlag(NODE_IS_EDITABLE)) {
-      MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+      MOZ_LOG(sISMLog, LogLevel::Debug,
         ("ISM:   IMEStateManager::GetNewIMEState() returns ENABLED because "
          "design mode editor has focus"));
       return IMEState(IMEState::ENABLED);
     }
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::GetNewIMEState() returns DISABLED because "
        "no content has focus"));
     return IMEState(IMEState::DISABLED);
@@ -742,7 +742,7 @@ IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
   GettingNewIMEStateBlocker blocker;
 
   IMEState newIMEState = aContent->GetDesiredIMEState();
-  MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+  MOZ_LOG(sISMLog, LogLevel::Debug,
     ("ISM:   IMEStateManager::GetNewIMEState() returns { mEnabled=%s, "
      "mOpen=%s }",
      GetIMEStateEnabledName(newIMEState.mEnabled),
@@ -763,7 +763,7 @@ public:
     nsCOMPtr<nsIObserverService> observerService =
       services::GetObserverService();
     if (observerService) {
-      MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+      MOZ_LOG(sISMLog, LogLevel::Info,
         ("ISM: IMEEnabledStateChangedEvent::Run(), notifies observers of "
          "\"ime-enabled-state-changed\""));
       nsAutoString state;
@@ -785,7 +785,7 @@ IMEStateManager::SetIMEState(const IMEState& aState,
                              nsIWidget* aWidget,
                              InputContextAction aAction)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::SetIMEState(aState={ mEnabled=%s, mOpen=%s }, "
      "aContent=0x%p, aWidget=0x%p, aAction={ mCause=%s, mFocusChange=%s })",
      GetIMEStateEnabledName(aState.mEnabled),
@@ -871,7 +871,7 @@ IMEStateManager::SetIMEState(const IMEState& aState,
   }
 
 
-  MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+  MOZ_LOG(sISMLog, LogLevel::Debug,
     ("ISM:   IMEStateManager::SetIMEState(), "
      "calling nsIWidget::SetInputContext(context={ mIMEState={ mEnabled=%s, "
      "mOpen=%s }, mHTMLInputType=\"%s\", mHTMLInputInputmode=\"%s\", "
@@ -913,7 +913,7 @@ IMEStateManager::DispatchCompositionEvent(
                    EventDispatchingCallback* aCallBack,
                    bool aIsSynthesized)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::DispatchCompositionEvent(aNode=0x%p, "
      "aPresContext=0x%p, aCompositionEvent={ message=%s, "
      "mFlags={ mIsTrusted=%s, mPropagationStopped=%s } }, "
@@ -942,7 +942,7 @@ IMEStateManager::DispatchCompositionEvent(
     if (NS_WARN_IF(aIsSynthesized)) {
       return;
     }
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::DispatchCompositionEvent(), "
        "adding new TextComposition to the array"));
     MOZ_ASSERT(aCompositionEvent->message == NS_COMPOSITION_START);
@@ -978,7 +978,7 @@ IMEStateManager::DispatchCompositionEvent(
     TextCompositionArray::index_type i =
       sTextCompositions->IndexOf(aCompositionEvent->widget);
     if (i != TextCompositionArray::NoIndex) {
-      MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+      MOZ_LOG(sISMLog, LogLevel::Debug,
         ("ISM:   IMEStateManager::DispatchCompositionEvent(), "
          "removing TextComposition from the array since NS_COMPOSTION_END "
          "was dispatched"));
@@ -996,7 +996,7 @@ IMEStateManager::OnCompositionEventDiscarded(
   // Note that this method is never called for synthesized events for emulating
   // commit or cancel composition.
 
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnCompositionEventDiscarded(aCompositionEvent={ "
      "message=%s, mFlags={ mIsTrusted=%s } })",
      GetEventMessageName(aCompositionEvent->message),
@@ -1019,7 +1019,7 @@ IMEStateManager::OnCompositionEventDiscarded(
     // a TextComposition instance for the composition was already removed from
     // the array and destroyed in OnDestroyPresContext().  Therefore, we may
     // fail to retrieve a TextComposition instance here.
-    MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+    MOZ_LOG(sISMLog, LogLevel::Info,
       ("ISM:   IMEStateManager::OnCompositionEventDiscarded(), "
        "TextComposition instance for the widget has already gone"));
     return;
@@ -1040,14 +1040,14 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
   bool isSynthesizedForTests =
     composition && composition->IsSynthesizedForTests();
 
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::NotifyIME(aMessage=%s, aWidget=0x%p), "
      "composition=0x%p, composition->IsSynthesizedForTests()=%s",
      GetNotifyIMEMessageName(aMessage), aWidget, composition.get(),
      GetBoolName(isSynthesizedForTests)));
 
   if (NS_WARN_IF(!aWidget)) {
-    MOZ_LOG(sISMLog, PR_LOG_ERROR,
+    MOZ_LOG(sISMLog, LogLevel::Error,
       ("ISM:   IMEStateManager::NotifyIME(), FAILED due to no widget"));
     return NS_ERROR_INVALID_ARG;
   }
@@ -1075,7 +1075,7 @@ nsresult
 IMEStateManager::NotifyIME(IMEMessage aMessage,
                            nsPresContext* aPresContext)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::NotifyIME(aMessage=%s, aPresContext=0x%p)",
      GetNotifyIMEMessageName(aMessage), aPresContext));
 
@@ -1083,7 +1083,7 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
 
   nsIWidget* widget = aPresContext->GetRootWidget();
   if (NS_WARN_IF(!widget)) {
-    MOZ_LOG(sISMLog, PR_LOG_ERROR,
+    MOZ_LOG(sISMLog, LogLevel::Error,
       ("ISM:   IMEStateManager::NotifyIME(), FAILED due to no widget for the "
        "nsPresContext"));
     return NS_ERROR_NOT_AVAILABLE;
@@ -1150,18 +1150,18 @@ IMEStateManager::IsIMEObserverNeeded(const IMEState& aState)
 void
 IMEStateManager::DestroyIMEContentObserver()
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::DestroyIMEContentObserver(), "
      "sActiveIMEContentObserver=0x%p",
      sActiveIMEContentObserver));
 
   if (!sActiveIMEContentObserver) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::DestroyIMEContentObserver() does nothing"));
     return;
   }
 
-  MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+  MOZ_LOG(sISMLog, LogLevel::Debug,
     ("ISM:   IMEStateManager::DestroyIMEContentObserver(), destroying "
      "the active IMEContentObserver..."));
   nsRefPtr<IMEContentObserver> tsm;
@@ -1173,7 +1173,7 @@ IMEStateManager::DestroyIMEContentObserver()
 void
 IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::CreateIMEContentObserver(aEditor=0x%p), "
      "sPresContext=0x%p, sContent=0x%p, sActiveIMEContentObserver=0x%p, "
      "sActiveIMEContentObserver->IsManaging(sPresContext, sContent)=%s",
@@ -1182,7 +1182,7 @@ IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
        sActiveIMEContentObserver->IsManaging(sPresContext, sContent) : false)));
 
   if (NS_WARN_IF(sActiveIMEContentObserver)) {
-    MOZ_LOG(sISMLog, PR_LOG_ERROR,
+    MOZ_LOG(sISMLog, LogLevel::Error,
       ("ISM:   IMEStateManager::CreateIMEContentObserver(), FAILED due to "
        "there is already an active IMEContentObserver"));
     MOZ_ASSERT(sActiveIMEContentObserver->IsManaging(sPresContext, sContent));
@@ -1191,7 +1191,7 @@ IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
 
   nsCOMPtr<nsIWidget> widget = sPresContext->GetRootWidget();
   if (!widget) {
-    MOZ_LOG(sISMLog, PR_LOG_ERROR,
+    MOZ_LOG(sISMLog, LogLevel::Error,
       ("ISM:   IMEStateManager::CreateIMEContentObserver(), FAILED due to "
        "there is a root widget for the nsPresContext"));
     return; // Sometimes, there are no widgets.
@@ -1199,13 +1199,13 @@ IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
 
   // If it's not text editable, we don't need to create IMEContentObserver.
   if (!IsIMEObserverNeeded(widget->GetInputContext().mIMEState)) {
-    MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+    MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::CreateIMEContentObserver() doesn't create "
        "IMEContentObserver because of non-editable IME state"));
     return;
   }
 
-  MOZ_LOG(sISMLog, PR_LOG_DEBUG,
+  MOZ_LOG(sISMLog, LogLevel::Debug,
     ("ISM:   IMEStateManager::CreateIMEContentObserver() is creating an "
      "IMEContentObserver instance..."));
   sActiveIMEContentObserver = new IMEContentObserver();

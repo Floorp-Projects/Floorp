@@ -268,13 +268,13 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
     if (updater->mElement == aElement) {
 
 #ifdef DEBUG
-      if (PR_LOG_TEST(gCommandLog, PR_LOG_NOTICE)) {
+      if (MOZ_LOG_TEST(gCommandLog, LogLevel::Debug)) {
         nsAutoCString eventsC, targetsC, aeventsC, atargetsC; 
         eventsC.AssignWithConversion(updater->mEvents);
         targetsC.AssignWithConversion(updater->mTargets);
         CopyUTF16toUTF8(aEvents, aeventsC);
         CopyUTF16toUTF8(aTargets, atargetsC);
-        MOZ_LOG(gCommandLog, PR_LOG_NOTICE,
+        MOZ_LOG(gCommandLog, LogLevel::Debug,
                ("xulcmd[%p] replace %p(events=%s targets=%s) with (events=%s targets=%s)",
                 this, aElement,
                 eventsC.get(),
@@ -296,12 +296,12 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
     updater = updater->mNext;
   }
 #ifdef DEBUG
-  if (PR_LOG_TEST(gCommandLog, PR_LOG_NOTICE)) {
+  if (MOZ_LOG_TEST(gCommandLog, LogLevel::Debug)) {
     nsAutoCString aeventsC, atargetsC; 
     CopyUTF16toUTF8(aEvents, aeventsC);
     CopyUTF16toUTF8(aTargets, atargetsC);
 
-    MOZ_LOG(gCommandLog, PR_LOG_NOTICE,
+    MOZ_LOG(gCommandLog, LogLevel::Debug,
            ("xulcmd[%p] add     %p(events=%s targets=%s)",
             this, aElement,
             aeventsC.get(),
@@ -331,11 +331,11 @@ nsXULCommandDispatcher::RemoveCommandUpdater(nsIDOMElement* aElement)
   while (updater) {
     if (updater->mElement == aElement) {
 #ifdef DEBUG
-      if (PR_LOG_TEST(gCommandLog, PR_LOG_NOTICE)) {
+      if (MOZ_LOG_TEST(gCommandLog, LogLevel::Debug)) {
         nsAutoCString eventsC, targetsC; 
         eventsC.AssignWithConversion(updater->mEvents);
         targetsC.AssignWithConversion(updater->mTargets);
-        MOZ_LOG(gCommandLog, PR_LOG_NOTICE,
+        MOZ_LOG(gCommandLog, LogLevel::Debug,
                ("xulcmd[%p] remove  %p(events=%s targets=%s)",
                 this, aElement,
                 eventsC.get(),
@@ -391,10 +391,10 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
     nsIContent* content = updaters[u];
 
 #ifdef DEBUG
-    if (PR_LOG_TEST(gCommandLog, PR_LOG_NOTICE)) {
+    if (MOZ_LOG_TEST(gCommandLog, LogLevel::Debug)) {
       nsAutoCString aeventnameC; 
       CopyUTF16toUTF8(aEventName, aeventnameC);
-      MOZ_LOG(gCommandLog, PR_LOG_NOTICE,
+      MOZ_LOG(gCommandLog, LogLevel::Debug,
              ("xulcmd[%p] update %p event=%s",
               this, content,
               aeventnameC.get()));

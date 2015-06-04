@@ -483,7 +483,7 @@ nsXULTemplateQueryProcessorRDF::GenerateResults(nsISupports* aDatasource,
                 mLastRef = aRef;
             }
 
-            if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+            if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
                 nsAutoString id;
                 aRef->GetId(id);
 
@@ -492,7 +492,7 @@ nsXULTemplateQueryProcessorRDF::GenerateResults(nsISupports* aDatasource,
                 nsAutoString mvar;
                 query->mMemberVariable->ToString(mvar);
 
-                MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+                MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                        ("QueryProcessor::GenerateResults using ref %s and vars [ ref: %s  member: %s]",
                        NS_ConvertUTF16toUTF8(id).get(),
                        NS_ConvertUTF16toUTF8(rvar).get(),
@@ -863,7 +863,7 @@ nsXULTemplateQueryProcessorRDF::Propagate(nsIRDFResource* aSource,
 
     ReteNodeSet livenodes;
 
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
         const char* sourceStr;
         aSource->GetValueConst(&sourceStr);
         const char* propertyStr;
@@ -871,7 +871,7 @@ nsXULTemplateQueryProcessorRDF::Propagate(nsIRDFResource* aSource,
         nsAutoString targetStr;
         nsXULContentUtils::GetTextForNode(aTarget, targetStr);
 
-        MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+        MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                ("nsXULTemplateQueryProcessorRDF::Propagate: [%s] -> [%s] -> [%s]\n",
                sourceStr, propertyStr, NS_ConvertUTF16toUTF8(targetStr).get()));
     }
@@ -950,7 +950,7 @@ nsXULTemplateQueryProcessorRDF::Retract(nsIRDFResource* aSource,
                                         nsIRDFNode* aTarget)
 {
 
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
         const char* sourceStr;
         aSource->GetValueConst(&sourceStr);
         const char* propertyStr;
@@ -958,7 +958,7 @@ nsXULTemplateQueryProcessorRDF::Retract(nsIRDFResource* aSource,
         nsAutoString targetStr;
         nsXULContentUtils::GetTextForNode(aTarget, targetStr);
 
-        MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+        MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                ("nsXULTemplateQueryProcessorRDF::Retract: [%s] -> [%s] -> [%s]\n",
                sourceStr, propertyStr, NS_ConvertUTF16toUTF8(targetStr).get()));
     }
@@ -1023,7 +1023,7 @@ nsXULTemplateQueryProcessorRDF::Log(const char* aOperation,
                                     nsIRDFResource* aProperty,
                                     nsIRDFNode* aTarget)
 {
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {
         nsresult rv;
 
         const char* sourceStr;
@@ -1031,7 +1031,7 @@ nsXULTemplateQueryProcessorRDF::Log(const char* aOperation,
         if (NS_FAILED(rv))
             return rv;
 
-        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+        MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                ("xultemplate[%p] %8s [%s]--", this, aOperation, sourceStr));
 
         const char* propertyStr;
@@ -1046,7 +1046,7 @@ nsXULTemplateQueryProcessorRDF::Log(const char* aOperation,
 
         nsAutoCString targetstrC;
         targetstrC.AssignWithConversion(targetStr);
-        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+        MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                ("                        --[%s]-->[%s]",
                 propertyStr,
                 targetstrC.get()));
@@ -1269,13 +1269,13 @@ nsXULTemplateQueryProcessorRDF::CompileQueryChild(nsIAtom* aTag,
     else if (aTag == nsGkAtoms::member) {
         rv = CompileMemberCondition(aQuery, aCondition, aParentNode, aResult);
     }
-    else if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_ALWAYS)) {
+    else if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Info)) {
         nsAutoString tagstr;
         aTag->ToString(tagstr);
 
         nsAutoCString tagstrC;
         tagstrC.AssignWithConversion(tagstr);
-        MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+        MOZ_LOG(gXULTemplateLog, LogLevel::Info,
                ("xultemplate[%p] unrecognized condition test <%s>",
                 this, tagstrC.get()));
     }

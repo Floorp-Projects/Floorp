@@ -111,7 +111,7 @@ GetMediaManagerLog()
     sLog = PR_NewLogModule("MediaManager");
   return sLog;
 }
-#define LOG(msg) MOZ_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
+#define LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)
 
 using dom::File;
 using dom::MediaStreamConstraints;
