@@ -119,7 +119,7 @@ nsNodeInfoManager::nsNodeInfoManager()
     gNodeInfoManagerLeakPRLog = PR_NewLogModule("NodeInfoManagerLeak");
 
   if (gNodeInfoManagerLeakPRLog)
-    MOZ_LOG(gNodeInfoManagerLeakPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gNodeInfoManagerLeakPRLog, LogLevel::Debug,
            ("NODEINFOMANAGER %p created", this));
 
   mNodeInfoHash = PL_NewHashTable(32, GetNodeInfoInnerHashValue,
@@ -139,7 +139,7 @@ nsNodeInfoManager::~nsNodeInfoManager()
   mBindingManager = nullptr;
 
   if (gNodeInfoManagerLeakPRLog)
-    MOZ_LOG(gNodeInfoManagerLeakPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gNodeInfoManagerLeakPRLog, LogLevel::Debug,
            ("NODEINFOMANAGER %p destroyed", this));
 
   nsLayoutStatics::Release();
@@ -196,7 +196,7 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
   mDocument = aDocument;
 
   if (gNodeInfoManagerLeakPRLog)
-    MOZ_LOG(gNodeInfoManagerLeakPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gNodeInfoManagerLeakPRLog, LogLevel::Debug,
            ("NODEINFOMANAGER %p Init document=%p", this, aDocument));
 
   return NS_OK;

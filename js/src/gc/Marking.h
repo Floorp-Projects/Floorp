@@ -300,8 +300,12 @@ class GCMarker : public JSTracer
     mozilla::DebugOnly<bool> strictCompartmentChecking;
 };
 
+#ifdef DEBUG
+// Return true if this trace is happening on behalf of gray buffering during
+// the marking phase of incremental GC.
 bool
-IsBufferingGrayRoots(JSTracer* trc);
+IsBufferGrayRootsTracer(JSTracer* trc);
+#endif
 
 namespace gc {
 

@@ -463,15 +463,16 @@ public:
 
   /**
    * Moves the top-level window into fullscreen mode if aIsFullScreen is true,
-   * otherwise exits fullscreen. If aRequireTrust is true, this method only
-   * changes window state in a context trusted for write.
+   * otherwise exits fullscreen. If aFullscreenMode is true, this method is
+   * called for fullscreen mode instead of DOM fullscreen, which means it can
+   * only change window state in a context trusted for write.
    *
    * If aHMD is not null, the window is made full screen on the given VR HMD
    * device instead of its currrent display.
    *
    * Outer windows only.
    */
-  virtual nsresult SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust,
+  virtual nsresult SetFullScreenInternal(bool aIsFullscreen, bool aFullscreenMode,
                                          mozilla::gfx::VRHMDInfo *aHMD = nullptr) = 0;
 
   /**

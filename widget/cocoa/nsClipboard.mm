@@ -26,6 +26,7 @@
 
 using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::SourceSurface;
+using mozilla::LogLevel;
 using mozilla::RefPtr;
 
 // Screenshots use the (undocumented) png pasteboard type.
@@ -418,7 +419,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
     nsXPIDLCString flavorStr;
     currentFlavor->ToString(getter_Copies(flavorStr));
 
-    MOZ_LOG(sCocoaLog, PR_LOG_ALWAYS, ("writing out clipboard data of type %s (%d)\n", flavorStr.get(), i));
+    MOZ_LOG(sCocoaLog, LogLevel::Info, ("writing out clipboard data of type %s (%d)\n", flavorStr.get(), i));
 
     NSString *pboardType = nil;
 

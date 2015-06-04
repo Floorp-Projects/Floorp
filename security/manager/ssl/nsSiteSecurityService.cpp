@@ -49,7 +49,7 @@ GetSSSLog()
   return gSSSLog;
 }
 
-#define SSSLOG(args) MOZ_LOG(GetSSSLog(), 4, args)
+#define SSSLOG(args) MOZ_LOG(GetSSSLog(), mozilla::LogLevel::Debug, args)
 
 ////////////////////////////////////////////////////////////////////////////////
 

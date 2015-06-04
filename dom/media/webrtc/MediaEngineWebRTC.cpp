@@ -8,6 +8,8 @@
 #include "CSFLog.h"
 #include "prenv.h"
 
+#include "mozilla/Logging.h"
+
 static PRLogModuleInfo*
 GetUserMediaLog()
 {
@@ -35,7 +37,7 @@ GetUserMediaLog()
 #endif
 
 #undef LOG
-#define LOG(args) MOZ_LOG(GetUserMediaLog(), PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(GetUserMediaLog(), mozilla::LogLevel::Debug, args)
 
 namespace mozilla {
 

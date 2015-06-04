@@ -5452,6 +5452,19 @@ BytecodeEmitter::emitFor(ParseNode* pn, ptrdiff_t top)
     return emitNormalFor(pn, top);
 }
 
+bool
+BytecodeEmitter::arrowNeedsNewTarget()
+{
+    for (BytecodeEmitter* bce = this; bce; bce = bce->parent) {
+        SharedContext *sc = bce->sc;
+        if (sc->isFunctionBox() && sc->asFunctionBox()->function()->isArrow())
+            continue;
+
+        return sc->allowSyntax(SharedContext::AllowedSyntax::NewTarget);
+    }
+    MOZ_CRASH("impossible parent chain");
+}
+
 MOZ_NEVER_INLINE bool
 BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
 {
@@ -5543,10 +5556,21 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
 
     /* Non-hoisted functions simply emit their respective op. */
     if (!pn->functionIsHoisted()) {
-        /* JSOP_LAMBDA_ARROW is always preceded by JSOP_THIS. */
+        /* JSOP_LAMBDA_ARROW is always preceded by JSOP_THIS and a new.target */
         MOZ_ASSERT(fun->isArrow() == (pn->getOp() == JSOP_LAMBDA_ARROW));
-        if (fun->isArrow() && !emit1(JSOP_THIS))
-            return false;
+        if (fun->isArrow()) {
+            if (!emit1(JSOP_THIS))
+                return false;
+
+            if (arrowNeedsNewTarget()) {
+                if (!emit1(JSOP_NEWTARGET))
+                    return false;
+            } else {
+                if (!emit1(JSOP_NULL))
+                    return false;
+            }
+        }
+
         if (needsProto) {
             MOZ_ASSERT(pn->getOp() == JSOP_LAMBDA);
             pn->setOp(JSOP_FUNWITHPROTO);
@@ -6447,6 +6471,8 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
             return false;
     }
 
+    bool isNewOp = pn->getOp() == JSOP_NEW || pn->getOp() == JSOP_SPREADNEW;
+
     /*
      * Emit code for each argument in order, then emit the JSOP_*CALL or
      * JSOP_NEW bytecode with a two-byte immediate telling how many args
@@ -6459,9 +6485,20 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
             if (!emitTree(pn3))
                 return false;
         }
+
+        if (isNewOp) {
+            // Repush the callee as new.target
+            if (!emitDupAt(this->stackDepth - 1 - (argc + 1)))
+                return false;
+        }
     } else {
         if (!emitArray(pn2->pn_next, argc, JSOP_SPREADCALLARRAY))
             return false;
+
+        if (isNewOp) {
+            if (!emitDupAt(this->stackDepth - 1 - 2))
+                return false;
+        }
     }
     emittingForInit = oldEmittingForInit;
 
@@ -7687,6 +7724,11 @@ BytecodeEmitter::emitTree(ParseNode* pn)
 
       case PNK_CLASS:
         ok = emitClass(pn);
+        break;
+
+      case PNK_NEWTARGET:
+        if (!emit1(JSOP_NEWTARGET))
+            return false;
         break;
 
       default:

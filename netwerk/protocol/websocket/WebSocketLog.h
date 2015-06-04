@@ -14,6 +14,6 @@
 extern PRLogModuleInfo* webSocketLog;
 
 #undef LOG
-#define LOG(args) MOZ_LOG(webSocketLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(webSocketLog, mozilla::LogLevel::Debug, args)
 
 #endif

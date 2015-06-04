@@ -65,7 +65,7 @@ namespace TestProtocols {
 // set NSPR_LOG_MODULES=Test:5
 //
 static PRLogModuleInfo *gTestLog = nullptr;
-#define LOG(args) MOZ_LOG(gTestLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gTestLog, mozilla::LogLevel::Debug, args)
 
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 

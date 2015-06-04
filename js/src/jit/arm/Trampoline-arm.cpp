@@ -152,6 +152,16 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     masm.loadPtr(slot_vp, r10);
     masm.unboxInt32(Address(r10, 0), r10);
 
+    {
+        Label noNewTarget;
+        masm.branchTest32(Assembler::Zero, r9, Imm32(CalleeToken_FunctionConstructing),
+                          &noNewTarget);
+
+        masm.add32(Imm32(1), r1);
+
+        masm.bind(&noNewTarget);
+    }
+
     // Guarantee stack alignment of Jit frames.
     //
     // This code moves the stack pointer to the location where it should be when
@@ -465,12 +475,29 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
 
     masm.ma_sub(r6, r8, r2);
 
-    masm.moveValue(UndefinedValue(), r5, r4);
+    // Get the topmost argument.
+    masm.ma_alu(sp, lsl(r8, 3), r3, OpAdd); // r3 <- r3 + nargs * 8
+    masm.ma_add(r3, Imm32(sizeof(RectifierFrameLayout)), r3);
 
-    masm.ma_mov(sp, r3); // Save %sp.
-    masm.ma_mov(sp, r7); // Save %sp again.
+    {
+        Label notConstructing;
+
+        masm.branchTest32(Assembler::Zero, r1, Imm32(CalleeToken_FunctionConstructing),
+                          &notConstructing);
+
+        // Add sizeof(Value) to overcome |this|
+        masm.ma_dataTransferN(IsLoad, 64, true, r3, Imm32(8), r4, Offset);
+        masm.ma_dataTransferN(IsStore, 64, true, sp, Imm32(-8), r4, PreIndex);
+
+        // Include the newly pushed newTarget value in the frame size
+        // calculated below.
+        masm.add32(Imm32(1), r6);
+
+        masm.bind(&notConstructing);
+    }
 
     // Push undefined.
+    masm.moveValue(UndefinedValue(), r5, r4);
     {
         Label undefLoopTop;
         masm.bind(&undefLoopTop);
@@ -479,11 +506,6 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
 
         masm.ma_b(&undefLoopTop, Assembler::NonZero);
     }
-
-    // Get the topmost argument.
-
-    masm.ma_alu(r3, lsl(r8, 3), r3, OpAdd); // r3 <- r3 + nargs * 8
-    masm.ma_add(r3, Imm32(sizeof(RectifierFrameLayout)), r3);
 
     // Push arguments, |nargs| + 1 times (to include |this|).
     {

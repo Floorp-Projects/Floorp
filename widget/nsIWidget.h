@@ -115,8 +115,8 @@ typedef void* nsNativeWidget;
 #define NS_NATIVE_PLUGIN_ID            105
 
 #define NS_IWIDGET_IID \
-{ 0x316E4600, 0x15DB, 0x47AE, \
-  { 0xBF, 0xE4, 0x5B, 0xCD, 0xFF, 0x80, 0x80, 0x83 } };
+{ 0x53376F57, 0xF081, 0x4949, \
+  { 0xB5, 0x5E, 0x87, 0xEF, 0x6A, 0xE9, 0xE3, 0x5A } };
 
 /*
  * Window shadow styles
@@ -1572,6 +1572,19 @@ class nsIWidget : public nsISupports {
      *
      */
     NS_IMETHOD HideWindowChrome(bool aShouldHide) = 0;
+
+    /**
+     * Ask the widget to start the transition for entering or exiting
+     * DOM Fullscreen.
+     *
+     * XXX This method is currently not actually implemented by any
+     * widget. The only function of this method is to notify cocoa
+     * window that it should not use the native fullscreen mode. This
+     * method is reserved for bug 1160014 where a transition will be
+     * added for DOM fullscreen. Hence, this function is likely to
+     * be further changed then.
+     */
+    virtual void PrepareForDOMFullscreenTransition() = 0;
 
     /**
      * Put the toplevel window into or out of fullscreen mode.

@@ -217,6 +217,28 @@ class BaselineFrame
                          offsetOfArg(0));
     }
 
+  private:
+    Value* evalNewTargetAddress() const {
+        MOZ_ASSERT(isEvalFrame());
+        return (Value*)(reinterpret_cast<const uint8_t*>(this) +
+                        BaselineFrame::Size() +
+                        offsetOfEvalNewTarget());
+    }
+
+  public:
+    Value newTarget() const {
+        MOZ_ASSERT(isFunctionFrame());
+        if (isEvalFrame())
+            return *evalNewTargetAddress();
+        if (fun()->isArrow())
+            return fun()->getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
+        if (isConstructing())
+            return *(Value*)(reinterpret_cast<const uint8_t*>(this) +
+                             BaselineFrame::Size() +
+                             offsetOfArg(Max(numFormalArgs(), numActualArgs())));
+        return UndefinedValue();
+    }
+
     bool copyRawFrameSlots(AutoValueVector* vec) const;
 
     bool hasReturnValue() const {
@@ -398,6 +420,9 @@ class BaselineFrame
     }
     static size_t offsetOfThis() {
         return FramePointerOffset + js::jit::JitFrameLayout::offsetOfThis();
+    }
+    static size_t offsetOfEvalNewTarget() {
+        return offsetOfArg(0);
     }
     static size_t offsetOfArg(size_t index) {
         return FramePointerOffset + js::jit::JitFrameLayout::offsetOfActualArg(index);

@@ -37,8 +37,8 @@ namespace mozilla {
 #endif
 
 extern PRLogModuleInfo* GetMediaManagerLog();
-#define LOG(msg) MOZ_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
-#define LOG_FRAMES(msg) MOZ_LOG(GetMediaManagerLog(), 6, msg)
+#define LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)
+#define LOG_FRAMES(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Verbose, msg)
 
 /**
  * Webrtc audio source.
@@ -275,7 +275,7 @@ MediaEngineWebRTCAudioSource::Allocate(const dom::MediaTrackConstraints &aConstr
       LOG(("Audio device is not initalized"));
       return NS_ERROR_FAILURE;
     }
-  } else if (PR_LOG_TEST(GetMediaManagerLog(), PR_LOG_DEBUG)) {
+  } else if (MOZ_LOG_TEST(GetMediaManagerLog(), LogLevel::Debug)) {
     MonitorAutoLock lock(mMonitor);
     if (mSources.IsEmpty()) {
       LOG(("Audio device %d reallocated", mCapIndex));

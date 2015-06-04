@@ -1211,7 +1211,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 #endif
 
   if (gDOMLeakPRLog)
-    MOZ_LOG(gDOMLeakPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gDOMLeakPRLog, LogLevel::Debug,
            ("DOMWINDOW %p created outer=%p", this, aOuterWindow));
 
   NS_ASSERTION(sWindowsById, "Windows hash table must be created!");
@@ -1301,7 +1301,7 @@ nsGlobalWindow::~nsGlobalWindow()
 #endif
 
   if (gDOMLeakPRLog)
-    MOZ_LOG(gDOMLeakPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gDOMLeakPRLog, LogLevel::Debug,
            ("DOMWINDOW %p destroyed", this));
 
   if (IsOuterWindow()) {
@@ -2804,7 +2804,7 @@ nsGlobalWindow::InnerSetNewDocument(JSContext* aCx, nsIDocument* aDocument)
   NS_PRECONDITION(IsInnerWindow(), "Must only be called on inner windows");
   MOZ_ASSERT(aDocument);
 
-  if (gDOMLeakPRLog && PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
+  if (gDOMLeakPRLog && MOZ_LOG_TEST(gDOMLeakPRLog, LogLevel::Debug)) {
     nsIURI *uri = aDocument->GetDocumentURI();
     nsAutoCString spec;
     if (uri)
@@ -6046,16 +6046,17 @@ nsGlobalWindow::SetFullScreen(bool aFullScreen)
 }
 
 nsresult
-nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aRequireTrust, gfx::VRHMDInfo* aHMD)
+nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aFullscreenMode,
+                                      gfx::VRHMDInfo* aHMD)
 {
   MOZ_ASSERT(IsOuterWindow());
 
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
-  // Only chrome can change our fullScreen mode, unless we're running in
-  // untrusted mode.
+  // Only chrome can change our fullscreen mode. Otherwise, the state
+  // can only be changed for DOM fullscreen.
   if (aFullScreen == FullScreen() ||
-      (aRequireTrust && !nsContentUtils::IsCallerChrome())) {
+      (aFullscreenMode && !nsContentUtils::IsCallerChrome())) {
     return NS_OK;
   }
 
@@ -6068,7 +6069,7 @@ nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aRequireTrust, gfx:
   if (!window)
     return NS_ERROR_FAILURE;
   if (rootItem != mDocShell)
-    return window->SetFullScreenInternal(aFullScreen, aRequireTrust, aHMD);
+    return window->SetFullScreenInternal(aFullScreen, aFullscreenMode, aHMD);
 
   // make sure we don't try to set full screen on a non-chrome window,
   // which might happen in embedding world
@@ -6079,12 +6080,10 @@ nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aRequireTrust, gfx:
   if (mFullScreen == aFullScreen)
     return NS_OK;
 
-  // If a fullscreen is originated from chrome, we are switching to
-  // the fullscreen mode, otherwise, we are entering DOM fullscreen.
   // Note that although entering DOM fullscreen could also cause
   // consequential calls to this method, those calls will be skipped
   // at the condition above.
-  if (aRequireTrust) {
+  if (aFullscreenMode) {
     mFullscreenMode = aFullScreen;
   } else {
     // If we are exiting from DOM fullscreen while we
@@ -6123,6 +6122,9 @@ nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aRequireTrust, gfx:
       nsCOMPtr<nsIScreen> screen;
       if (aHMD) {
         screen = aHMD->GetScreen();
+      }
+      if (!aFullscreenMode) {
+        widget->PrepareForDOMFullscreenTransition();
       }
       widget->MakeFullScreen(aFullScreen, screen);
     }
@@ -10558,7 +10560,7 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
   }
 
   if (mSessionStorage) {
-    if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gDOMLeakPRLog, LogLevel::Debug)) {
       PR_LogPrint("nsGlobalWindow %p has %p sessionStorage", this, mSessionStorage.get());
     }
     bool canAccess = mSessionStorage->CanAccess(principal);
@@ -10609,7 +10611,7 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
     mSessionStorage = static_cast<DOMStorage*>(storage.get());
     MOZ_ASSERT(mSessionStorage);
 
-    if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gDOMLeakPRLog, LogLevel::Debug)) {
       PR_LogPrint("nsGlobalWindow %p tried to get a new sessionStorage %p", this, mSessionStorage.get());
     }
 
@@ -10619,7 +10621,7 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
     }
   }
 
-  if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gDOMLeakPRLog, LogLevel::Debug)) {
     PR_LogPrint("nsGlobalWindow %p returns %p sessionStorage", this, mSessionStorage.get());
   }
 
@@ -11537,7 +11539,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
         return NS_OK;
       }
 
-      if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
+      if (MOZ_LOG_TEST(gDOMLeakPRLog, LogLevel::Debug)) {
         PR_LogPrint("nsGlobalWindow %p with sessionStorage %p passing event from %p",
                     this, mSessionStorage.get(), changingStorage.get());
       }

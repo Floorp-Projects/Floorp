@@ -22,6 +22,6 @@ enum pType {
 //
 extern PRLogModuleInfo* gNegotiateLog;
 
-#define LOG(args) MOZ_LOG(gNegotiateLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gNegotiateLog, mozilla::LogLevel::Debug, args)
 
 #endif /* !defined( nsAuth_h__ ) */

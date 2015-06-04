@@ -588,12 +588,12 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         // want to pass to gecko should be the pre-scroll event coordinates,
         // transformed into the gecko space. (pre-scroll because the mouse
         // cursor is stationary during wheel scrolling, unlike touchmove
-        // events). Also, since we just flushed the pending repaints the
-        // transform to gecko space is a no-op so we can just skip it.
-        MOZ_ASSERT(
-          (GetScreenToApzcTransform(apzc) * GetApzcToGeckoTransform(apzc))
-          .NudgeToIntegersFixedEpsilon()
-          .IsIdentity());
+        // events). Since we just flushed the pending repaints the transform to
+        // gecko space should only consist of overscroll-cancelling transforms.
+        Matrix4x4 transformToGecko = GetScreenToApzcTransform(apzc)
+                                   * GetApzcToGeckoTransform(apzc);
+        ScreenPoint untransformedOrigin = TransformTo<ScreenPixel>(
+          transformToGecko, wheelInput.mOrigin);
 
         result = mInputQueue->ReceiveInputEvent(
           apzc,
@@ -602,6 +602,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
+        wheelInput.mOrigin = untransformedOrigin;
       }
       break;
     } case PANGESTURE_INPUT: {
@@ -771,12 +772,6 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     Matrix4x4 transformToApzc = GetScreenToApzcTransform(mApzcForInputBlock);
     Matrix4x4 transformToGecko = GetApzcToGeckoTransform(mApzcForInputBlock);
     Matrix4x4 outTransform = transformToApzc * transformToGecko;
-    if (aInput.mType == MultiTouchInput::MULTITOUCH_START) {
-      // For touch-start events we should have flushed all pending repaints
-      // above as part of the GetTouchInputBlockAPZC call, and so we expect
-      // the apzc-to-gecko transform to be empty.
-      MOZ_ASSERT(outTransform.NudgeToIntegersFixedEpsilon().IsIdentity());
-    }
     for (size_t i = 0; i < aInput.mTouches.Length(); i++) {
       SingleTouchData& touchData = aInput.mTouches[i];
       touchData.mScreenPoint = TransformTo<ScreenPixel>(

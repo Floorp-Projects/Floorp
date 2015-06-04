@@ -23,7 +23,7 @@ namespace mozilla {
 
 extern PRLogModuleInfo* GetGMPLog();
 
-#define LOGD(msg) MOZ_LOG(GetGMPLog(), PR_LOG_DEBUG, msg)
+#define LOGD(msg) MOZ_LOG(GetGMPLog(), mozilla::LogLevel::Debug, msg)
 #define LOG(level, msg) MOZ_LOG(GetGMPLog(), (level), msg)
 
 namespace gmp {
@@ -245,7 +245,7 @@ GMPVideoDecoderParent::RecvDecoded(const GMPVideoi420FrameData& aDecodedFrame)
   }
 
   if (!GMPVideoi420FrameImpl::CheckFrameData(aDecodedFrame)) {
-    LOG(PR_LOG_ERROR, ("%s: Decoded frame corrupt, ignoring", __FUNCTION__));
+    LOG(LogLevel::Error, ("%s: Decoded frame corrupt, ignoring", __FUNCTION__));
     return false;
   }
   auto f = new GMPVideoi420FrameImpl(aDecodedFrame, &mVideoHost);
@@ -361,7 +361,7 @@ GMPVideoDecoderParent::AnswerNeedShmem(const uint32_t& aFrameBufferSize,
                                                 aFrameBufferSize,
                                                 ipc::SharedMemory::TYPE_BASIC, &mem))
   {
-    LOG(PR_LOG_ERROR, ("%s: Failed to get a shared mem buffer for Child! size %u",
+    LOG(LogLevel::Error, ("%s: Failed to get a shared mem buffer for Child! size %u",
                        __FUNCTION__, aFrameBufferSize));
     return false;
   }

@@ -889,8 +889,8 @@ struct DumpHeapTracer : public JS::CallbackTracer, public WeakMapTracer
     const char* prefix;
     FILE* output;
 
-    DumpHeapTracer(FILE* fp, JSRuntime* rt, JSTraceCallback callback)
-      : JS::CallbackTracer(rt, callback, DoNotTraceWeakMaps),
+    DumpHeapTracer(FILE* fp, JSRuntime* rt)
+      : JS::CallbackTracer(rt, DoNotTraceWeakMaps),
         js::WeakMapTracer(rt), prefix(""), output(fp)
     {}
 
@@ -903,6 +903,8 @@ struct DumpHeapTracer : public JS::CallbackTracer, public WeakMapTracer
         fprintf(output, "WeakMapEntry map=%p key=%p keyDelegate=%p value=%p\n",
                 map, key.asCell(), kdelegate, value.asCell());
     }
+
+    void trace(void** thingp, JS::TraceKind kind) override;
 };
 
 static char
@@ -955,16 +957,15 @@ DumpHeapVisitCell(JSRuntime* rt, void* data, void* thing,
     JS_TraceChildren(dtrc, thing, traceKind);
 }
 
-static void
-DumpHeapVisitGCThing(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind)
+void
+DumpHeapTracer::trace(void** thingp, JS::TraceKind kind)
 {
     if (gc::IsInsideNursery((js::gc::Cell*)*thingp))
         return;
 
-    DumpHeapTracer* dtrc = static_cast<DumpHeapTracer*>(trc);
     char buffer[1024];
-    dtrc->getTracingEdgeName(buffer, sizeof(buffer));
-    fprintf(dtrc->output, "%s%p %c %s\n", dtrc->prefix, *thingp, MarkDescriptor(*thingp), buffer);
+    getTracingEdgeName(buffer, sizeof(buffer));
+    fprintf(output, "%s%p %c %s\n", prefix, *thingp, MarkDescriptor(*thingp), buffer);
 }
 
 void
@@ -973,7 +974,7 @@ js::DumpHeap(JSRuntime* rt, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehavi
     if (nurseryBehaviour == js::CollectNurseryBeforeDump)
         rt->gc.evictNursery(JS::gcreason::API);
 
-    DumpHeapTracer dtrc(fp, rt, DumpHeapVisitGCThing);
+    DumpHeapTracer dtrc(fp, rt);
     fprintf(dtrc.output, "# Roots.\n");
     TraceRuntime(&dtrc);
 

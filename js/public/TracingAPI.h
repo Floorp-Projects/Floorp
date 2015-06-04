@@ -127,21 +127,13 @@ class AutoTracingCallback;
 class JS_PUBLIC_API(CallbackTracer) : public JSTracer
 {
   public:
-    CallbackTracer(JSRuntime* rt, JSTraceCallback traceCallback,
-                   WeakMapTraceKind weakTraceKind = TraceWeakMapValues)
-      : JSTracer(rt, JSTracer::TracerKindTag::Callback, weakTraceKind), callback(traceCallback),
+    CallbackTracer(JSRuntime* rt, WeakMapTraceKind weakTraceKind = TraceWeakMapValues)
+      : JSTracer(rt, JSTracer::TracerKindTag::Callback, weakTraceKind),
         contextName_(nullptr), contextIndex_(InvalidIndex), contextFunctor_(nullptr)
     {}
 
-    // Test if the given callback is the same as our callback.
-    bool hasCallback(JSTraceCallback maybeCallback) const {
-        return maybeCallback == callback;
-    }
-
-    // Call the callback.
-    void invoke(void** thing, JS::TraceKind kind) {
-        callback(this, thing, kind);
-    }
+    // Override this method to receive notification when an edge is visited.
+    virtual void trace(void** thing, JS::TraceKind kind) = 0;
 
     // Access to the tracing context:
     // When tracing with a JS::CallbackTracer, we invoke the callback with the
@@ -188,11 +180,12 @@ class JS_PUBLIC_API(CallbackTracer) : public JSTracer
         virtual void operator()(CallbackTracer* trc, char* buf, size_t bufsize) = 0;
     };
 
-  private:
-    // Exposed publicly for several callers that need to check if the tracer
-    // calling them is of the right type.
-    JSTraceCallback callback;
+#ifdef DEBUG
+    enum class TracerKind { DoNotCare, Moving, GrayBuffering, VerifyTraceProtoAndIface };
+    virtual TracerKind getTracerKind() const { return TracerKind::DoNotCare; }
+#endif
 
+  private:
     friend class AutoTracingName;
     const char* contextName_;
 

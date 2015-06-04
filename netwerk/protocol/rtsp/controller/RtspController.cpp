@@ -45,7 +45,7 @@
 
 extern PRLogModuleInfo* gRtspLog;
 #undef LOG
-#define LOG(args) MOZ_LOG(gRtspLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gRtspLog, mozilla::LogLevel::Debug, args)
 
 namespace mozilla {
 namespace net {

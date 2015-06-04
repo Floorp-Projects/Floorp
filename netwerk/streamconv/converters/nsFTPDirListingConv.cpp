@@ -27,7 +27,7 @@
 //    set NSPR_LOG_MODULES=nsFTPDirListConv:5
 //    set NSPR_LOG_FILE=nspr.log
 //
-// this enables PR_LOG_DEBUG level information and places all output in
+// this enables LogLevel::Debug level information and places all output in
 // the file nspr.log
 //
 PRLogModuleInfo* gFTPDirListConvLog = nullptr;
@@ -61,7 +61,7 @@ nsFTPDirListingConv::AsyncConvertData(const char *aFromType, const char *aToType
     mFinalListener = aListener;
     NS_ADDREF(mFinalListener);
 
-    MOZ_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, 
+    MOZ_LOG(gFTPDirListConvLog, LogLevel::Debug, 
         ("nsFTPDirListingConv::AsyncConvertData() converting FROM raw, TO application/http-index-format\n"));
 
     return NS_OK;
@@ -95,7 +95,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     // the dir listings are ascii text, null terminate this sucker.
     buffer[streamLen] = '\0';
 
-    MOZ_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("nsFTPDirListingConv::OnData(request = %x, ctxt = %x, inStr = %x, sourceOffset = %llu, count = %u)\n", request, ctxt, inStr, sourceOffset, count));
+    MOZ_LOG(gFTPDirListConvLog, LogLevel::Debug, ("nsFTPDirListingConv::OnData(request = %x, ctxt = %x, inStr = %x, sourceOffset = %llu, count = %u)\n", request, ctxt, inStr, sourceOffset, count));
 
     if (!mBuffer.IsEmpty()) {
         // we have data left over from a previous OnDataAvailable() call.
@@ -110,7 +110,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     }
 
 #ifndef DEBUG_dougt
-    MOZ_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer.get()) );
+    MOZ_LOG(gFTPDirListConvLog, LogLevel::Debug, ("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer.get()) );
 #else
     printf("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer);
 #endif // DEBUG_dougt
@@ -132,7 +132,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     line = DigestBufferLines(line, indexFormat);
 
 #ifndef DEBUG_dougt
-    MOZ_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() sending the following %d bytes...\n\n%s\n\n", 
+    MOZ_LOG(gFTPDirListConvLog, LogLevel::Debug, ("::OnData() sending the following %d bytes...\n\n%s\n\n", 
         indexFormat.Length(), indexFormat.get()) );
 #else
     char *unescData = ToNewCString(indexFormat);
@@ -146,7 +146,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     // if there's any data left over, buffer it.
     if (line && *line) {
         mBuffer.Append(line);
-        MOZ_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() buffering the following %d bytes...\n\n%s\n\n",
+        MOZ_LOG(gFTPDirListConvLog, LogLevel::Debug, ("::OnData() buffering the following %d bytes...\n\n%s\n\n",
             strlen(line), line) );
     }
 

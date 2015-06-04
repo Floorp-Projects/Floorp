@@ -38,16 +38,16 @@ using namespace mozilla;
 //    set NSPR_LOG_MODULES=nsPrefetch:5
 //    set NSPR_LOG_FILE=prefetch.log
 //
-// this enables PR_LOG_ALWAYS level information and places all output in
+// this enables LogLevel::Debug level information and places all output in
 // the file http.log
 //
 static PRLogModuleInfo *gPrefetchLog;
 
 #undef LOG
-#define LOG(args) MOZ_LOG(gPrefetchLog, 4, args)
+#define LOG(args) MOZ_LOG(gPrefetchLog, mozilla::LogLevel::Debug, args)
 
 #undef LOG_ENABLED
-#define LOG_ENABLED() PR_LOG_TEST(gPrefetchLog, 4)
+#define LOG_ENABLED() MOZ_LOG_TEST(gPrefetchLog, mozilla::LogLevel::Debug)
 
 #define PREFETCH_PREF "network.prefetch-next"
 

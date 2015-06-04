@@ -68,7 +68,7 @@ GetSHistoryLog()
   }
   return sLog;
 }
-#define LOG(format) MOZ_LOG(GetSHistoryLog(), PR_LOG_DEBUG, format)
+#define LOG(format) MOZ_LOG(GetSHistoryLog(), mozilla::LogLevel::Debug, format)
 
 // This macro makes it easier to print a log message which includes a URI's
 // spec.  Example use:
@@ -78,7 +78,7 @@ GetSHistoryLog()
 //
 #define LOG_SPEC(format, uri)                              \
   PR_BEGIN_MACRO                                           \
-    if (PR_LOG_TEST(GetSHistoryLog(), PR_LOG_DEBUG)) {     \
+    if (MOZ_LOG_TEST(GetSHistoryLog(), LogLevel::Debug)) {     \
       nsAutoCString _specStr(NS_LITERAL_CSTRING("(null)"));\
       if (uri) {                                           \
         uri->GetSpec(_specStr);                            \
@@ -96,7 +96,7 @@ GetSHistoryLog()
 //
 #define LOG_SHENTRY_SPEC(format, shentry)                  \
   PR_BEGIN_MACRO                                           \
-    if (PR_LOG_TEST(GetSHistoryLog(), PR_LOG_DEBUG)) {     \
+    if (MOZ_LOG_TEST(GetSHistoryLog(), LogLevel::Debug)) {     \
       nsCOMPtr<nsIURI> uri;                                \
       shentry->GetURI(getter_AddRefs(uri));                \
       LOG_SPEC(format, uri);                               \

@@ -39,8 +39,8 @@
 
 using namespace mozilla;
 
-#define LOG(args) MOZ_LOG(mLog, PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(mLog, PR_LOG_DEBUG)
+#define LOG(args) MOZ_LOG(mLog, mozilla::LogLevel::Debug, args)
+#define LOG_ENABLED() MOZ_LOG_TEST(mLog, mozilla::LogLevel::Debug)
 
 static nsresult
 FindSemicolon(nsAString::const_iterator& aSemicolon_iter,

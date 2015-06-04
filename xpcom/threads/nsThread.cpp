@@ -89,7 +89,7 @@ GetThreadLog()
 #ifdef LOG
 #undef LOG
 #endif
-#define LOG(args) MOZ_LOG(GetThreadLog(), PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(GetThreadLog(), mozilla::LogLevel::Debug, args)
 
 NS_DECL_CI_INTERFACE_GETTER(nsThread)
 

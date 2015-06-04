@@ -27,7 +27,7 @@
 #include "mozilla/Logging.h"
 
 #define LOG(log, args) MOZ_LOG(gfxPlatform::GetLog(log), \
-                               PR_LOG_DEBUG, args)
+                               LogLevel::Debug, args)
 
 #define UNICODE_BMP_LIMIT 0x10000
 
