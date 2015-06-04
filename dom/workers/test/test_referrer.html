@@ -1,0 +1,35 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the referrer of workers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  var worker = new Worker("referrer.sjs");
+  worker.onmessage = function() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'referrer.sjs?result', true);
+    xhr.onload = function() {
+      is(xhr.responseText, location.href, "The referrer has been sent.");
+      SimpleTest.finish();
+    }
+    xhr.send();
+  }
+  worker.postMessage(42);
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
