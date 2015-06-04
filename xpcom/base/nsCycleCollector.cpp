@@ -3759,11 +3759,10 @@ nsCycleCollector::BeginCollection(ccType aCCType,
 
   aManualListener = nullptr;
   if (!mLogger && mParams.LogThisCC(isShutdown)) {
-    nsRefPtr<nsCycleCollectorLogger> logger = new nsCycleCollectorLogger();
+    mLogger = new nsCycleCollectorLogger();
     if (mParams.AllTracesThisCC(isShutdown)) {
-      logger->SetAllTraces();
+      mLogger->SetAllTraces();
     }
-    mLogger = logger.forget();
   }
 
   bool forceGC = isShutdown;
