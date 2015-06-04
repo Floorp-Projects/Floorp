@@ -26,7 +26,7 @@ task:
 
     env:
       MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
-      MOZHARNESS_CONFIG: 'builds/releng_base_linux_64_builds.py balrog/production.py disable_sendchange.py'
+      MOZHARNESS_CONFIG: 'builds/releng_base_linux_64_builds.py balrog/production.py'
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
       # image paths
