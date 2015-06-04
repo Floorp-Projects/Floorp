@@ -1821,6 +1821,11 @@ class nsIWidget : public nsISupports {
                                         const nsTArray<mozilla::layers::ScrollableLayerGuid>& aTargets) const = 0;
 
     /**
+     * Returns true if APZ is in use, false otherwise.
+     */
+    virtual bool AsyncPanZoomEnabled() const = 0;
+
+    /**
      * Enables the dropping of files to a widget (XXX this is temporary)
      *
      */

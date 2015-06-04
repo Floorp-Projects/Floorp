@@ -198,6 +198,8 @@ public:
 
   virtual LayerManager* GetLayerManager() override;
 
+  virtual bool AsyncPanZoomEnabled() override;
+
   virtual void SetIgnoreViewportScrolling(bool aIgnore) override;
 
   virtual nsresult SetResolution(float aResolution) override {

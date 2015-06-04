@@ -2529,10 +2529,16 @@ public:
   CalculateExpandedScrollableRect(nsIFrame* aFrame);
 
   /**
-   * Returns true if we're using asynchronous scrolling (either through
-   * APZ or the android frontend).
+   * Returns true if the widget owning the given frame uses asynchronous
+   * scrolling.
    */
-  static bool UsesAsyncScrolling();
+  static bool UsesAsyncScrolling(nsIFrame* aFrame);
+
+  /**
+   * Returns true if the widget owning the given frame has builtin APZ support
+   * enabled.
+   */
+  static bool AsyncPanZoomEnabled(nsIFrame* aFrame);
 
   /**
    * Log a key/value pair for APZ testing during a paint.
