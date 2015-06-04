@@ -853,6 +853,9 @@ protected:
   EditAction        mAction;             // the current editor action
 
   uint32_t          mIMETextOffset;    // offset in text node where IME comp string begins
+  // The Length of the composition string or commit string.  If this is length
+  // of commit string, the length is truncated by maxlength attribute.
+  uint32_t          mIMETextLength;
 
   EDirection        mDirection;          // the current direction of editor action
   int8_t            mDocDirtyState;      // -1 = not initialized
