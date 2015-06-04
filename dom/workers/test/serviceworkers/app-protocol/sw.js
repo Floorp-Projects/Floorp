@@ -17,4 +17,8 @@ self.addEventListener('fetch', (event) => {
       headers: {'Content-Type': 'text/html'}
     }));
   }
+
+  if (event.request.url.indexOf('redirected.html') >= 0) {
+    event.respondWith(fetch("http://example.com/tests/dom/workers/test/serviceworkers/app-protocol/redirect.sjs"));
+  }
 });

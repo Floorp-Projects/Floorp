@@ -17,6 +17,7 @@ function runTests() {
         return testFetchAppResource('test_custom_content_type',
                                     'customContentType', 'text/html');
     })
+    .then(testRedirectedResponse)
     .then(done);
 }
   </script>
