@@ -339,6 +339,13 @@
     "n_buckets": 50,
     "description": "Time spent running a JS GC slice (ms)"
   },
+  "GC_SLOW_PHASE": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 75,
+    "description": "The longest phase in any slice that goes over 2x the budget"
+  },
   "GC_MMU_50": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
