@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* globals ViewHelpers, window, document */
 
 "use strict";
 
@@ -10,15 +11,12 @@ const Cu = Components.utils;
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
-const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {InplaceEditor, editableItem} = devtools.require("devtools/shared/inplace-editor");
-const {parseDeclarations} = devtools.require("devtools/styleinspector/css-parsing-utils");
 const {ReflowFront} = devtools.require("devtools/server/actors/layout");
 
 const SHARED_L10N = new ViewHelpers.L10N("chrome://browser/locale/devtools/shared.properties");
@@ -205,13 +203,14 @@ LayoutView.prototype = {
                   value: undefined},
       borderRight: {selector: ".border.right > span",
                   property: "border-right-width",
-                  value: undefined},
+                  value: undefined}
     };
 
     // Make each element the dimensions editable
     for (let i in this.map) {
-      if (i == "position")
+      if (i == "position") {
         continue;
+      }
 
       let dimension = this.map[i];
       editableItem({
@@ -231,7 +230,8 @@ LayoutView.prototype = {
     if (!this.reflowFront) {
       let toolbox = this.inspector.toolbox;
       if (toolbox.target.form.reflowActor) {
-        this.reflowFront = ReflowFront(toolbox.target.client, toolbox.target.form);
+        this.reflowFront = ReflowFront(toolbox.target.client,
+                                       toolbox.target.form);
       } else {
         return;
       }
@@ -338,7 +338,10 @@ LayoutView.prototype = {
    */
   onNewSelection: function() {
     let done = this.inspector.updating("layoutview");
-    this.onNewNode().then(done, (err) => { console.error(err); done() });
+    this.onNewNode().then(done, err => {
+      console.error(err);
+      done();
+    });
   },
 
   /**
@@ -545,7 +548,6 @@ let onmouseover = function(e) {
 
 let onmouseout = function(e) {
   this.layoutview.hideBoxModel();
-
   return false;
 }.bind(window);
 
@@ -561,8 +563,8 @@ window.setPanel = function(panel) {
   }
 
   // Mark document as RTL or LTR:
-  let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
-    getService(Ci.nsIXULChromeRegistry);
+  let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                  .getService(Ci.nsIXULChromeRegistry);
   let dir = chromeReg.isLocaleRTL("global");
   document.body.setAttribute("dir", dir ? "rtl" : "ltr");
 
