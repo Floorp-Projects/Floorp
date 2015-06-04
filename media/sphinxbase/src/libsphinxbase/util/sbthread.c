@@ -51,7 +51,9 @@
  * Platform-specific parts: threads, mutexes, and signals.
  */
 #if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(__SYMBIAN32__)
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0400
+#endif /* not _WIN32_WINNT */
 #include <windows.h>
 
 struct sbthread_s {
