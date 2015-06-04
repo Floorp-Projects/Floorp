@@ -42,7 +42,7 @@ GetDeviceContextSpecGTKLog()
   return sLog;
 }
 /* Macro to make lines shorter */
-#define DO_PR_DEBUG_LOG(x) MOZ_LOG(GetDeviceContextSpecGTKLog(), PR_LOG_DEBUG, x)
+#define DO_PR_DEBUG_LOG(x) MOZ_LOG(GetDeviceContextSpecGTKLog(), mozilla::LogLevel::Debug, x)
 
 //----------------------------------------------------------------------------------
 // The printer data is shared between the PrinterEnumerator and the nsDeviceContextSpecGTK

@@ -775,7 +775,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
     rv = entries->GetNext(entryFilename);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Verifying digests for %s",
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Verifying digests for %s",
            entryFilename.get()));
 
     // The files that comprise the signature mechanism are not covered by the

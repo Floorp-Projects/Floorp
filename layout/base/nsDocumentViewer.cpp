@@ -142,7 +142,7 @@ GetPrintingLog()
     sLog = PR_NewLogModule("printing");
   return sLog;
 }
-#define PR_PL(_p1)  MOZ_LOG(GetPrintingLog(), PR_LOG_DEBUG, _p1);
+#define PR_PL(_p1)  MOZ_LOG(GetPrintingLog(), mozilla::LogLevel::Debug, _p1);
 #endif // NS_PRINTING
 
 #define PRT_YESNO(_p) ((_p)?"YES":"NO")

@@ -26,7 +26,7 @@
 namespace mozilla {
 
 PRLogModuleInfo* gWMFByteStreamLog = nullptr;
-#define WMF_BS_LOG(...) MOZ_LOG(gWMFByteStreamLog, PR_LOG_DEBUG, (__VA_ARGS__))
+#define WMF_BS_LOG(...) MOZ_LOG(gWMFByteStreamLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 WMFByteStream::WMFByteStream(MediaResource* aResource,
                              WMFSourceReaderCallback* aSourceReaderCallback)

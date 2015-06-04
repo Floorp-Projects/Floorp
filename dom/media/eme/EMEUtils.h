@@ -14,13 +14,13 @@ namespace mozilla {
 
 #ifndef EME_LOG
   PRLogModuleInfo* GetEMELog();
-  #define EME_LOG(...) MOZ_LOG(GetEMELog(), PR_LOG_DEBUG, (__VA_ARGS__))
-  #define EME_LOG_ENABLED() PR_LOG_TEST(GetEMELog(), PR_LOG_DEBUG)
+  #define EME_LOG(...) MOZ_LOG(GetEMELog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
+  #define EME_LOG_ENABLED() MOZ_LOG_TEST(GetEMELog(), mozilla::LogLevel::Debug)
 #endif
 
 #ifndef EME_VERBOSE_LOG
   PRLogModuleInfo* GetEMEVerboseLog();
-  #define EME_VERBOSE_LOG(...) MOZ_LOG(GetEMEVerboseLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+  #define EME_VERBOSE_LOG(...) MOZ_LOG(GetEMEVerboseLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 #else
   #ifndef EME_LOG
     #define EME_LOG(...)

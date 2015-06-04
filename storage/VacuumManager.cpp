@@ -244,14 +244,14 @@ Vacuumer::HandleError(mozIStorageError *aError)
   NS_WARNING(warnMsg.get());
 #endif
 
-  if (PR_LOG_TEST(gStorageLog, PR_LOG_ERROR)) {
+  if (MOZ_LOG_TEST(gStorageLog, LogLevel::Error)) {
     int32_t result;
     nsresult rv = aError->GetResult(&result);
     NS_ENSURE_SUCCESS(rv, rv);
     nsAutoCString message;
     rv = aError->GetMessage(message);
     NS_ENSURE_SUCCESS(rv, rv);
-    MOZ_LOG(gStorageLog, PR_LOG_ERROR,
+    MOZ_LOG(gStorageLog, LogLevel::Error,
            ("Vacuum failed with error: %d '%s'. Database was: '%s'",
             result, message.get(), mDBFilename.get()));
   }

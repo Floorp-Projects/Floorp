@@ -204,7 +204,7 @@ GetCookieLog()
 
 #define COOKIE_LOGEVICTED(a, details)          \
   PR_BEGIN_MACRO                               \
-  if (PR_LOG_TEST(GetCookieLog(), PR_LOG_DEBUG))  \
+  if (MOZ_LOG_TEST(GetCookieLog(), LogLevel::Debug))  \
       LogEvicted(a, details);                  \
   PR_END_MACRO
 
@@ -218,27 +218,27 @@ static void
 LogFailure(bool aSetCookie, nsIURI *aHostURI, const char *aCookieString, const char *aReason)
 {
   // if logging isn't enabled, return now to save cycles
-  if (!PR_LOG_TEST(GetCookieLog(), PR_LOG_WARNING))
+  if (!MOZ_LOG_TEST(GetCookieLog(), LogLevel::Warning))
     return;
 
   nsAutoCString spec;
   if (aHostURI)
     aHostURI->GetAsciiSpec(spec);
 
-  MOZ_LOG(GetCookieLog(), PR_LOG_WARNING,
+  MOZ_LOG(GetCookieLog(), LogLevel::Warning,
     ("===== %s =====\n", aSetCookie ? "COOKIE NOT ACCEPTED" : "COOKIE NOT SENT"));
-  MOZ_LOG(GetCookieLog(), PR_LOG_WARNING,("request URL: %s\n", spec.get()));
+  MOZ_LOG(GetCookieLog(), LogLevel::Warning,("request URL: %s\n", spec.get()));
   if (aSetCookie)
-    MOZ_LOG(GetCookieLog(), PR_LOG_WARNING,("cookie string: %s\n", aCookieString));
+    MOZ_LOG(GetCookieLog(), LogLevel::Warning,("cookie string: %s\n", aCookieString));
 
   PRExplodedTime explodedTime;
   PR_ExplodeTime(PR_Now(), PR_GMTParameters, &explodedTime);
   char timeString[40];
   PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
 
-  MOZ_LOG(GetCookieLog(), PR_LOG_WARNING,("current time: %s", timeString));
-  MOZ_LOG(GetCookieLog(), PR_LOG_WARNING,("rejected because %s\n", aReason));
-  MOZ_LOG(GetCookieLog(), PR_LOG_WARNING,("\n"));
+  MOZ_LOG(GetCookieLog(), LogLevel::Warning,("current time: %s", timeString));
+  MOZ_LOG(GetCookieLog(), LogLevel::Warning,("rejected because %s\n", aReason));
+  MOZ_LOG(GetCookieLog(), LogLevel::Warning,("\n"));
 }
 
 static void
@@ -249,27 +249,27 @@ LogCookie(nsCookie *aCookie)
   char timeString[40];
   PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
 
-  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("current time: %s", timeString));
+  MOZ_LOG(GetCookieLog(), LogLevel::Debug,("current time: %s", timeString));
 
   if (aCookie) {
-    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("----------------\n"));
-    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("name: %s\n", aCookie->Name().get()));
-    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("value: %s\n", aCookie->Value().get()));
-    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("%s: %s\n", aCookie->IsDomain() ? "domain" : "host", aCookie->Host().get()));
-    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("path: %s\n", aCookie->Path().get()));
+    MOZ_LOG(GetCookieLog(), LogLevel::Debug,("----------------\n"));
+    MOZ_LOG(GetCookieLog(), LogLevel::Debug,("name: %s\n", aCookie->Name().get()));
+    MOZ_LOG(GetCookieLog(), LogLevel::Debug,("value: %s\n", aCookie->Value().get()));
+    MOZ_LOG(GetCookieLog(), LogLevel::Debug,("%s: %s\n", aCookie->IsDomain() ? "domain" : "host", aCookie->Host().get()));
+    MOZ_LOG(GetCookieLog(), LogLevel::Debug,("path: %s\n", aCookie->Path().get()));
 
     PR_ExplodeTime(aCookie->Expiry() * int64_t(PR_USEC_PER_SEC),
                    PR_GMTParameters, &explodedTime);
     PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
-    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,
+    MOZ_LOG(GetCookieLog(), LogLevel::Debug,
       ("expires: %s%s", timeString, aCookie->IsSession() ? " (at end of session)" : ""));
 
     PR_ExplodeTime(aCookie->CreationTime(), PR_GMTParameters, &explodedTime);
     PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
-    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("created: %s", timeString));
+    MOZ_LOG(GetCookieLog(), LogLevel::Debug,("created: %s", timeString));
 
-    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("is secure: %s\n", aCookie->IsSecure() ? "true" : "false"));
-    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("is httpOnly: %s\n", aCookie->IsHttpOnly() ? "true" : "false"));
+    MOZ_LOG(GetCookieLog(), LogLevel::Debug,("is secure: %s\n", aCookie->IsSecure() ? "true" : "false"));
+    MOZ_LOG(GetCookieLog(), LogLevel::Debug,("is httpOnly: %s\n", aCookie->IsHttpOnly() ? "true" : "false"));
   }
 }
 
@@ -277,7 +277,7 @@ static void
 LogSuccess(bool aSetCookie, nsIURI *aHostURI, const char *aCookieString, nsCookie *aCookie, bool aReplacing)
 {
   // if logging isn't enabled, return now to save cycles
-  if (!PR_LOG_TEST(GetCookieLog(), PR_LOG_DEBUG)) {
+  if (!MOZ_LOG_TEST(GetCookieLog(), LogLevel::Debug)) {
     return;
   }
 
@@ -285,27 +285,27 @@ LogSuccess(bool aSetCookie, nsIURI *aHostURI, const char *aCookieString, nsCooki
   if (aHostURI)
     aHostURI->GetAsciiSpec(spec);
 
-  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,
+  MOZ_LOG(GetCookieLog(), LogLevel::Debug,
     ("===== %s =====\n", aSetCookie ? "COOKIE ACCEPTED" : "COOKIE SENT"));
-  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("request URL: %s\n", spec.get()));
-  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("cookie string: %s\n", aCookieString));
+  MOZ_LOG(GetCookieLog(), LogLevel::Debug,("request URL: %s\n", spec.get()));
+  MOZ_LOG(GetCookieLog(), LogLevel::Debug,("cookie string: %s\n", aCookieString));
   if (aSetCookie)
-    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("replaces existing cookie: %s\n", aReplacing ? "true" : "false"));
+    MOZ_LOG(GetCookieLog(), LogLevel::Debug,("replaces existing cookie: %s\n", aReplacing ? "true" : "false"));
 
   LogCookie(aCookie);
 
-  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("\n"));
+  MOZ_LOG(GetCookieLog(), LogLevel::Debug,("\n"));
 }
 
 static void
 LogEvicted(nsCookie *aCookie, const char* details)
 {
-  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("===== COOKIE EVICTED =====\n"));
-  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("%s\n", details));
+  MOZ_LOG(GetCookieLog(), LogLevel::Debug,("===== COOKIE EVICTED =====\n"));
+  MOZ_LOG(GetCookieLog(), LogLevel::Debug,("%s\n", details));
 
   LogCookie(aCookie);
 
-  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("\n"));
+  MOZ_LOG(GetCookieLog(), LogLevel::Debug,("\n"));
 }
 
 // inline wrappers to make passing in nsAFlatCStrings easier
@@ -351,13 +351,13 @@ protected:
 public:
   NS_IMETHOD HandleError(mozIStorageError* aError) override
   {
-    if (PR_LOG_TEST(GetCookieLog(), PR_LOG_WARNING)) {
+    if (MOZ_LOG_TEST(GetCookieLog(), LogLevel::Warning)) {
       int32_t result = -1;
       aError->GetResult(&result);
 
       nsAutoCString message;
       aError->GetMessage(message);
-      COOKIE_LOGSTRING(PR_LOG_WARNING,
+      COOKIE_LOGSTRING(LogLevel::Warning,
         ("DBListenerErrorHandler::HandleError(): Error %d occurred while "
          "performing operation '%s' with message '%s'; rebuilding database.",
          result, GetOpType(), message.get()));
@@ -396,7 +396,7 @@ public:
     // so.
     if (mDBState->corruptFlag == DBState::REBUILDING &&
         aReason == mozIStorageStatementCallback::REASON_FINISHED) {
-      COOKIE_LOGSTRING(PR_LOG_DEBUG,
+      COOKIE_LOGSTRING(LogLevel::Debug,
         ("InsertCookieDBListener::HandleCompletion(): rebuild complete"));
       mDBState->corruptFlag = DBState::OK;
     }
@@ -527,12 +527,12 @@ public:
     case mozIStorageStatementCallback::REASON_CANCELED:
       // Nothing more to do here. The partially read data has already been
       // thrown away.
-      COOKIE_LOGSTRING(PR_LOG_DEBUG, ("Read canceled"));
+      COOKIE_LOGSTRING(LogLevel::Debug, ("Read canceled"));
       break;
     case mozIStorageStatementCallback::REASON_ERROR:
       // Nothing more to do here. DBListenerErrorHandler::HandleError()
       // can handle it.
-      COOKIE_LOGSTRING(PR_LOG_DEBUG, ("Read error"));
+      COOKIE_LOGSTRING(LogLevel::Debug, ("Read error"));
       break;
     default:
       NS_NOTREACHED("invalid reason");
@@ -758,7 +758,7 @@ nsCookieService::Init()
   mPermissionService = do_GetService(NS_COOKIEPERMISSION_CONTRACTID);
   if (!mPermissionService) {
     NS_WARNING("nsICookiePermission implementation not available - some features won't work!");
-    COOKIE_LOGSTRING(PR_LOG_WARNING, ("Init(): nsICookiePermission implementation not available"));
+    COOKIE_LOGSTRING(LogLevel::Warning, ("Init(): nsICookiePermission implementation not available"));
   }
 
   return NS_OK;
@@ -782,7 +782,7 @@ nsCookieService::InitDBStates()
     getter_AddRefs(mDefaultDBState->cookieFile));
   if (NS_FAILED(rv)) {
     // We've already set up our DBStates appropriately; nothing more to do.
-    COOKIE_LOGSTRING(PR_LOG_WARNING,
+    COOKIE_LOGSTRING(LogLevel::Warning,
       ("InitDBStates(): couldn't get cookie file"));
     return;
   }
@@ -794,7 +794,7 @@ nsCookieService::InitDBStates()
   if (result == RESULT_RETRY) {
     // Database may be corrupt. Synchronously close the connection, clean up the
     // default DBState, and try again.
-    COOKIE_LOGSTRING(PR_LOG_WARNING, ("InitDBStates(): retrying TryInitDB()"));
+    COOKIE_LOGSTRING(LogLevel::Warning, ("InitDBStates(): retrying TryInitDB()"));
     CleanupCachedStatements();
     CleanupDefaultDBConnection();
     result = TryInitDB(true);
@@ -805,7 +805,7 @@ nsCookieService::InitDBStates()
   }
 
   if (result == RESULT_FAILURE) {
-    COOKIE_LOGSTRING(PR_LOG_WARNING,
+    COOKIE_LOGSTRING(LogLevel::Warning,
       ("InitDBStates(): TryInitDB() failed, closing connection"));
 
     // Connection failure is unrecoverable. Clean up our connection. We can run
@@ -1098,7 +1098,7 @@ nsCookieService::TryInitDB(bool aRecreateDB)
           "DROP TABLE moz_cookies_old"));
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
-        COOKIE_LOGSTRING(PR_LOG_DEBUG, 
+        COOKIE_LOGSTRING(LogLevel::Debug, 
           ("Upgraded database to schema version 5"));
       }
 
@@ -1353,7 +1353,7 @@ nsCookieService::CleanupDefaultDBConnection()
 void
 nsCookieService::HandleDBClosed(DBState* aDBState)
 {
-  COOKIE_LOGSTRING(PR_LOG_DEBUG,
+  COOKIE_LOGSTRING(LogLevel::Debug,
     ("HandleDBClosed(): DBState %x closed", aDBState));
 
   switch (aDBState->corruptFlag) {
@@ -1377,7 +1377,7 @@ nsCookieService::HandleDBClosed(DBState* aDBState)
     nsresult rv = backupFile->MoveToNative(nullptr,
       NS_LITERAL_CSTRING(COOKIES_FILE ".bak-rebuild"));
 
-    COOKIE_LOGSTRING(PR_LOG_WARNING,
+    COOKIE_LOGSTRING(LogLevel::Warning,
       ("HandleDBClosed(): DBState %x encountered error rebuilding db; move to "
        "'cookies.sqlite.bak-rebuild' gave rv 0x%x", aDBState, rv));
     mObserverService->NotifyObservers(nullptr, "cookie-db-closed", nullptr);
@@ -1392,12 +1392,12 @@ nsCookieService::HandleCorruptDB(DBState* aDBState)
   if (mDefaultDBState != aDBState) {
     // We've either closed the state or we've switched profiles. It's getting
     // a bit late to rebuild -- bail instead.
-    COOKIE_LOGSTRING(PR_LOG_WARNING,
+    COOKIE_LOGSTRING(LogLevel::Warning,
       ("HandleCorruptDB(): DBState %x is already closed, aborting", aDBState));
     return;
   }
 
-  COOKIE_LOGSTRING(PR_LOG_DEBUG,
+  COOKIE_LOGSTRING(LogLevel::Debug,
     ("HandleCorruptDB(): DBState %x has corruptFlag %u", aDBState,
       aDBState->corruptFlag));
 
@@ -1474,13 +1474,13 @@ nsCookieService::RebuildCorruptDB(DBState* aDBState)
     // a bit late to rebuild -- bail instead. In any case, we were waiting
     // on rebuild completion to notify of the db closure, which won't happen --
     // do so now.
-    COOKIE_LOGSTRING(PR_LOG_WARNING,
+    COOKIE_LOGSTRING(LogLevel::Warning,
       ("RebuildCorruptDB(): DBState %x is stale, aborting", aDBState));
     mObserverService->NotifyObservers(nullptr, "cookie-db-closed", nullptr);
     return;
   }
 
-  COOKIE_LOGSTRING(PR_LOG_DEBUG,
+  COOKIE_LOGSTRING(LogLevel::Debug,
     ("RebuildCorruptDB(): creating new database"));
 
   // The database has been closed, and we're ready to rebuild. Open a
@@ -1489,7 +1489,7 @@ nsCookieService::RebuildCorruptDB(DBState* aDBState)
   if (result != RESULT_OK) {
     // We're done. Reset our DB connection and statements, and notify of
     // closure.
-    COOKIE_LOGSTRING(PR_LOG_WARNING,
+    COOKIE_LOGSTRING(LogLevel::Warning,
       ("RebuildCorruptDB(): TryInitDB() failed with result %u", result));
     CleanupCachedStatements();
     CleanupDefaultDBConnection();
@@ -1511,7 +1511,7 @@ nsCookieService::RebuildCorruptDB(DBState* aDBState)
   uint32_t length;
   paramsArray->GetLength(&length);
   if (length == 0) {
-    COOKIE_LOGSTRING(PR_LOG_DEBUG,
+    COOKIE_LOGSTRING(LogLevel::Debug,
       ("RebuildCorruptDB(): nothing to write, rebuild complete"));
     mDefaultDBState->corruptFlag = DBState::OK;
     return;
@@ -1934,7 +1934,7 @@ nsCookieService::RemoveAll()
       NS_ASSERT_SUCCESS(rv);
     } else {
       // Recreate the database.
-      COOKIE_LOGSTRING(PR_LOG_DEBUG,
+      COOKIE_LOGSTRING(LogLevel::Debug,
         ("RemoveAll(): corruption detected with rv 0x%x", rv));
       HandleCorruptDB(mDefaultDBState);
     }
@@ -2210,7 +2210,7 @@ nsCookieService::AsyncReadComplete()
   mDefaultDBState->hostArray.Clear();
   mDefaultDBState->readSet.Clear();
 
-  COOKIE_LOGSTRING(PR_LOG_DEBUG, ("Read(): %ld cookies read",
+  COOKIE_LOGSTRING(LogLevel::Debug, ("Read(): %ld cookies read",
                                   mDefaultDBState->cookieCount));
 
   mObserverService->NotifyObservers(nullptr, "cookie-db-read", nullptr);
@@ -2281,7 +2281,7 @@ nsCookieService::EnsureReadDomain(const nsCookieKey &aKey)
 
     if (NS_FAILED(rv)) {
       // Recreate the database.
-      COOKIE_LOGSTRING(PR_LOG_DEBUG,
+      COOKIE_LOGSTRING(LogLevel::Debug,
         ("EnsureReadDomain(): corruption detected when creating statement "
          "with rv 0x%x", rv));
       HandleCorruptDB(mDefaultDBState);
@@ -2311,7 +2311,7 @@ nsCookieService::EnsureReadDomain(const nsCookieKey &aKey)
     rv = mDefaultDBState->stmtReadDomain->ExecuteStep(&hasResult);
     if (NS_FAILED(rv)) {
       // Recreate the database.
-      COOKIE_LOGSTRING(PR_LOG_DEBUG,
+      COOKIE_LOGSTRING(LogLevel::Debug,
         ("EnsureReadDomain(): corruption detected when reading result "
          "with rv 0x%x", rv));
       HandleCorruptDB(mDefaultDBState);
@@ -2333,7 +2333,7 @@ nsCookieService::EnsureReadDomain(const nsCookieKey &aKey)
   // Add it to the hashset of read entries, so we don't read it again.
   mDefaultDBState->readSet.PutEntry(aKey);
 
-  COOKIE_LOGSTRING(PR_LOG_DEBUG,
+  COOKIE_LOGSTRING(LogLevel::Debug,
     ("EnsureReadDomain(): %ld cookies read for base domain %s, "
      " appId=%u, inBrowser=%d", array.Length(), aKey.mBaseDomain.get(),
      (unsigned)aKey.mAppId, (int)aKey.mInBrowserElement));
@@ -2374,7 +2374,7 @@ nsCookieService::EnsureReadComplete()
 
   if (NS_FAILED(rv)) {
     // Recreate the database.
-    COOKIE_LOGSTRING(PR_LOG_DEBUG,
+    COOKIE_LOGSTRING(LogLevel::Debug,
       ("EnsureReadComplete(): corruption detected when creating statement "
        "with rv 0x%x", rv));
     HandleCorruptDB(mDefaultDBState);
@@ -2389,7 +2389,7 @@ nsCookieService::EnsureReadComplete()
     rv = stmt->ExecuteStep(&hasResult);
     if (NS_FAILED(rv)) {
       // Recreate the database.
-      COOKIE_LOGSTRING(PR_LOG_DEBUG,
+      COOKIE_LOGSTRING(LogLevel::Debug,
         ("EnsureReadComplete(): corruption detected when reading result "
          "with rv 0x%x", rv));
       HandleCorruptDB(mDefaultDBState);
@@ -2423,7 +2423,7 @@ nsCookieService::EnsureReadComplete()
   mDefaultDBState->syncConn = nullptr;
   mDefaultDBState->readSet.Clear();
 
-  COOKIE_LOGSTRING(PR_LOG_DEBUG,
+  COOKIE_LOGSTRING(LogLevel::Debug,
     ("EnsureReadComplete(): %ld cookies read", array.Length()));
 }
 
@@ -2595,7 +2595,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
   }
 
 
-  COOKIE_LOGSTRING(PR_LOG_DEBUG, ("ImportCookies(): %ld cookies imported",
+  COOKIE_LOGSTRING(LogLevel::Debug, ("ImportCookies(): %ld cookies imported",
     mDefaultDBState->cookieCount));
 
   return NS_OK;
@@ -3771,7 +3771,7 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
   EnsureReadComplete();
 
   uint32_t initialCookieCount = mDBState->cookieCount;
-  COOKIE_LOGSTRING(PR_LOG_DEBUG,
+  COOKIE_LOGSTRING(LogLevel::Debug,
     ("PurgeCookies(): beginning purge with %ld cookies and %lld oldest age",
      mDBState->cookieCount, aCurrentTimeInUsec - mDBState->cookieOldestTime));
 
@@ -3835,7 +3835,7 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
   // reset the oldest time indicator
   mDBState->cookieOldestTime = data.oldestTime;
 
-  COOKIE_LOGSTRING(PR_LOG_DEBUG,
+  COOKIE_LOGSTRING(LogLevel::Debug,
     ("PurgeCookies(): %ld expired; %ld purged; %ld remain; %lld oldest age",
      initialCookieCount - postExpiryCookieCount,
      postExpiryCookieCount - mDBState->cookieCount,

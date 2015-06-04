@@ -26,7 +26,7 @@ using namespace mozilla;
 using namespace mozilla::net;
 
 #undef LOG
-#define LOG(args) MOZ_LOG(GetProxyLog(), PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(GetProxyLog(), mozilla::LogLevel::Debug, args)
 
 // The PAC thread does evaluations of both PAC files and
 // nsISystemProxySettings because they can both block the calling thread and we

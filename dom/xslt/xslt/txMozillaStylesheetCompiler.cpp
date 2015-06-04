@@ -519,7 +519,7 @@ TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
 
     nsAutoCString spec;
     aUri->GetSpec(spec);
-    MOZ_LOG(txLog::xslt, PR_LOG_ALWAYS, ("TX_LoadSheet: %s\n", spec.get()));
+    MOZ_LOG(txLog::xslt, LogLevel::Info, ("TX_LoadSheet: %s\n", spec.get()));
 
     // Content Policy
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;

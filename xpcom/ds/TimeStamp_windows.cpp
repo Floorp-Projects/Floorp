@@ -27,7 +27,7 @@
 //    set NSPR_LOG_MODULES=TimeStampWindows:5
 //    set NSPR_LOG_FILE=nspr.log
 //
-// this enables PR_LOG_DEBUG level information and places all output in
+// this enables LogLevel::Debug level information and places all output in
 // the file nspr.log
 static PRLogModuleInfo*
 GetTimeStampLog()
@@ -38,7 +38,7 @@ GetTimeStampLog()
   }
   return sLog;
 }
-#define LOG(x)  MOZ_LOG(GetTimeStampLog(), PR_LOG_DEBUG, x)
+#define LOG(x)  MOZ_LOG(GetTimeStampLog(), mozilla::LogLevel::Debug, x)
 
 // Estimate of the smallest duration of time we can measure.
 static volatile ULONGLONG sResolution;

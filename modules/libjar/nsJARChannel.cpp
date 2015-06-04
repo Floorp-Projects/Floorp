@@ -51,8 +51,8 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 //
 static PRLogModuleInfo *gJarProtocolLog = nullptr;
 
-#define LOG(args)     MOZ_LOG(gJarProtocolLog, PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(gJarProtocolLog, 4)
+#define LOG(args)     MOZ_LOG(gJarProtocolLog, mozilla::LogLevel::Debug, args)
+#define LOG_ENABLED() MOZ_LOG_TEST(gJarProtocolLog, mozilla::LogLevel::Debug)
 
 //-----------------------------------------------------------------------------
 // nsJARInputThunk

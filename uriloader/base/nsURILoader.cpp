@@ -53,9 +53,9 @@
 
 PRLogModuleInfo* nsURILoader::mLog = nullptr;
 
-#define LOG(args) MOZ_LOG(nsURILoader::mLog, PR_LOG_DEBUG, args)
-#define LOG_ERROR(args) MOZ_LOG(nsURILoader::mLog, PR_LOG_ERROR, args)
-#define LOG_ENABLED() PR_LOG_TEST(nsURILoader::mLog, PR_LOG_DEBUG)
+#define LOG(args) MOZ_LOG(nsURILoader::mLog, mozilla::LogLevel::Debug, args)
+#define LOG_ERROR(args) MOZ_LOG(nsURILoader::mLog, mozilla::LogLevel::Error, args)
+#define LOG_ENABLED() MOZ_LOG_TEST(nsURILoader::mLog, mozilla::LogLevel::Debug)
 
 #define NS_PREF_DISABLE_BACKGROUND_HANDLING \
     "security.exthelperapp.disable_background_handling"

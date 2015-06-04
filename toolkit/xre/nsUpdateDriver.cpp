@@ -79,7 +79,7 @@ GetUpdateLog()
     sUpdateLog = PR_NewLogModule("updatedriver");
   return sUpdateLog;
 }
-#define LOG(args) MOZ_LOG(GetUpdateLog(), PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(GetUpdateLog(), mozilla::LogLevel::Debug, args)
 
 #ifdef XP_WIN
 #define UPDATER_BIN "updater.exe"

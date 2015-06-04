@@ -17,7 +17,7 @@ using namespace mozilla;
 // NSPR_LOG_MODULES=nsStreamCopier:5
 //
 static PRLogModuleInfo *gStreamCopierLog = nullptr;
-#define LOG(args) MOZ_LOG(gStreamCopierLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gStreamCopierLog, mozilla::LogLevel::Debug, args)
 
 /**
  * An event used to perform initialization off the main thread.

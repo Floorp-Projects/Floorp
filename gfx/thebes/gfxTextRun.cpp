@@ -2223,13 +2223,13 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
 
         if (sizeof(T) == sizeof(uint8_t) && !transformedString) {
 
-            if (MOZ_UNLIKELY(PR_LOG_TEST(log, PR_LOG_WARNING))) {
+            if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Warning))) {
                 nsAutoCString lang;
                 mStyle.language->ToUTF8String(lang);
                 nsAutoString families;
                 mFamilyList.ToString(families);
                 nsAutoCString str((const char*)aString, aLength);
-                MOZ_LOG(log, PR_LOG_WARNING,\
+                MOZ_LOG(log, LogLevel::Warning,\
                        ("(%s) fontgroup: [%s] default: %s lang: %s script: %d "
                         "len %d weight: %d width: %d style: %s size: %6.2f %d-byte "
                         "TEXTRUN [%s] ENDTEXTRUN\n",
@@ -2271,13 +2271,13 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
             int32_t runScript = MOZ_SCRIPT_LATIN;
             while (scriptRuns.Next(runStart, runLimit, runScript)) {
 
-                if (MOZ_UNLIKELY(PR_LOG_TEST(log, PR_LOG_WARNING))) {
+                if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Warning))) {
                     nsAutoCString lang;
                     mStyle.language->ToUTF8String(lang);
                     nsAutoString families;
                     mFamilyList.ToString(families);
                     uint32_t runLen = runLimit - runStart;
-                    MOZ_LOG(log, PR_LOG_WARNING,\
+                    MOZ_LOG(log, LogLevel::Warning,\
                            ("(%s) fontgroup: [%s] default: %s lang: %s script: %d "
                             "len %d weight: %d width: %d style: %s size: %6.2f "
                             "%d-byte TEXTRUN [%s] ENDTEXTRUN\n",

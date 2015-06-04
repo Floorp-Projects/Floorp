@@ -48,7 +48,7 @@ DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name)
     CheckTracedThing(trc, *thingp);
     JS::TraceKind kind = MapTypeToTraceKind<typename mozilla::RemovePointer<T>::Type>::kind;
     JS::AutoTracingName ctx(trc, name);
-    trc->invoke((void**)thingp, kind);
+    trc->trace(reinterpret_cast<void**>(thingp), kind);
     return *thingp;
 }
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type, _) \
@@ -318,27 +318,25 @@ TraceObjectGroupCycleCollectorChildrenCallback(JS::CallbackTracer* trc,
 struct ObjectGroupCycleCollectorTracer : public JS::CallbackTracer
 {
     explicit ObjectGroupCycleCollectorTracer(JS::CallbackTracer* innerTracer)
-        : JS::CallbackTracer(innerTracer->runtime(),
-                             TraceObjectGroupCycleCollectorChildrenCallback,
-                             DoNotTraceWeakMaps),
+        : JS::CallbackTracer(innerTracer->runtime(), DoNotTraceWeakMaps),
           innerTracer(innerTracer)
     {}
+
+    void trace(void** thingp, JS::TraceKind kind) override;
 
     JS::CallbackTracer* innerTracer;
     Vector<ObjectGroup*, 4, SystemAllocPolicy> seen, worklist;
 };
 
 void
-TraceObjectGroupCycleCollectorChildrenCallback(JS::CallbackTracer* trcArg,
-                                               void** thingp, JS::TraceKind kind)
+ObjectGroupCycleCollectorTracer::trace(void** thingp, JS::TraceKind kind)
 {
-    ObjectGroupCycleCollectorTracer* trc = static_cast<ObjectGroupCycleCollectorTracer*>(trcArg);
     JS::GCCellPtr thing(*thingp, kind);
 
     if (thing.isObject() || thing.isScript()) {
         // Invoke the inner cycle collector callback on this child. It will not
         // recurse back into TraceChildren.
-        trc->innerTracer->invoke(thingp, kind);
+        innerTracer->trace(thingp, kind);
         return;
     }
 
@@ -347,11 +345,11 @@ TraceObjectGroupCycleCollectorChildrenCallback(JS::CallbackTracer* trcArg,
         // via the provided worklist rather than continuing to recurse.
         ObjectGroup* group = static_cast<ObjectGroup*>(thing.asCell());
         if (group->maybeUnboxedLayout()) {
-            for (size_t i = 0; i < trc->seen.length(); i++) {
-                if (trc->seen[i] == group)
+            for (size_t i = 0; i < seen.length(); i++) {
+                if (seen[i] == group)
                     return;
             }
-            if (trc->seen.append(group) && trc->worklist.append(group)) {
+            if (seen.append(group) && worklist.append(group)) {
                 return;
             } else {
                 // If append fails, keep tracing normally. The worst that will
@@ -360,7 +358,7 @@ TraceObjectGroupCycleCollectorChildrenCallback(JS::CallbackTracer* trcArg,
         }
     }
 
-    TraceChildren(trc, thing.asCell(), thing.kind());
+    TraceChildren(this, thing.asCell(), thing.kind());
 }
 
 void

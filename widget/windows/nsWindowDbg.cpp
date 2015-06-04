@@ -37,7 +37,7 @@ void PrintEvent(UINT msg, bool aShowAllEvents, bool aShowMouseMoves)
   }
   if (aShowAllEvents || (!aShowAllEvents && gLastEventMsg != (long)msg)) {
     if (aShowMouseMoves || (!aShowMouseMoves && msg != 0x0020 && msg != 0x0200 && msg != 0x0084)) {
-      MOZ_LOG(gWindowsLog, PR_LOG_ALWAYS, 
+      MOZ_LOG(gWindowsLog, LogLevel::Info, 
              ("%6d - 0x%04X %s\n", gEventCounter++, msg, 
               gAllEvents[inx].mStr ? gAllEvents[inx].mStr : "Unknown"));
       gLastEventMsg = msg;
@@ -49,7 +49,7 @@ void PrintEvent(UINT msg, bool aShowAllEvents, bool aShowMouseMoves)
 void DDError(const char *msg, HRESULT hr)
 {
   /*XXX make nicer */
-  MOZ_LOG(gWindowsLog, PR_LOG_ERROR,
+  MOZ_LOG(gWindowsLog, LogLevel::Error,
          ("direct draw error %s: 0x%08lx\n", msg, hr));
 }
 #endif
@@ -59,7 +59,7 @@ bool is_vk_down(int vk)
 {
    SHORT st = GetKeyState(vk);
 #ifdef DEBUG
-   MOZ_LOG(gWindowsLog, PR_LOG_ALWAYS, ("is_vk_down vk=%x st=%x\n",vk, st));
+   MOZ_LOG(gWindowsLog, LogLevel::Info, ("is_vk_down vk=%x st=%x\n",vk, st));
 #endif
    return (st < 0);
 }

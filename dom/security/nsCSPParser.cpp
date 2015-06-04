@@ -28,8 +28,8 @@ GetCspParserLog()
   return gCspParserPRLog;
 }
 
-#define CSPPARSERLOG(args) MOZ_LOG(GetCspParserLog(), PR_LOG_DEBUG, args)
-#define CSPPARSERLOGENABLED() PR_LOG_TEST(GetCspParserLog(), PR_LOG_DEBUG)
+#define CSPPARSERLOG(args) MOZ_LOG(GetCspParserLog(), mozilla::LogLevel::Debug, args)
+#define CSPPARSERLOGENABLED() MOZ_LOG_TEST(GetCspParserLog(), mozilla::LogLevel::Debug)
 
 static const char16_t COLON        = ':';
 static const char16_t SEMICOLON    = ';';

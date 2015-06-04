@@ -34,6 +34,8 @@
 #include "nsEscape.h"
 #include "nsIObserverService.h"
 
+using mozilla::LogLevel;
+
 PRLogModuleInfo* gWin32ClipboardLog = nullptr;
 
 // oddly, this isn't in the MSVC headers anywhere.
@@ -336,39 +338,39 @@ static void DisplayErrCode(HRESULT hres)
 {
 #if defined(DEBUG_rods) || defined(DEBUG_pinkerton)
   if (hres == E_INVALIDARG) {
-    MOZ_LOG(gWin32ClipboardLog, PR_LOG_ALWAYS, ("E_INVALIDARG\n"));
+    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("E_INVALIDARG\n"));
   } else
   if (hres == E_UNEXPECTED) {
-    MOZ_LOG(gWin32ClipboardLog, PR_LOG_ALWAYS, ("E_UNEXPECTED\n"));
+    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("E_UNEXPECTED\n"));
   } else
   if (hres == E_OUTOFMEMORY) {
-    MOZ_LOG(gWin32ClipboardLog, PR_LOG_ALWAYS, ("E_OUTOFMEMORY\n"));
+    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("E_OUTOFMEMORY\n"));
   } else
   if (hres == DV_E_LINDEX ) {
-    MOZ_LOG(gWin32ClipboardLog, PR_LOG_ALWAYS, ("DV_E_LINDEX\n"));
+    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("DV_E_LINDEX\n"));
   } else
   if (hres == DV_E_FORMATETC) {
-    MOZ_LOG(gWin32ClipboardLog, PR_LOG_ALWAYS, ("DV_E_FORMATETC\n"));
+    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("DV_E_FORMATETC\n"));
   }  else
   if (hres == DV_E_TYMED) {
-    MOZ_LOG(gWin32ClipboardLog, PR_LOG_ALWAYS, ("DV_E_TYMED\n"));
+    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("DV_E_TYMED\n"));
   }  else
   if (hres == DV_E_DVASPECT) {
-    MOZ_LOG(gWin32ClipboardLog, PR_LOG_ALWAYS, ("DV_E_DVASPECT\n"));
+    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("DV_E_DVASPECT\n"));
   }  else
   if (hres == OLE_E_NOTRUNNING) {
-    MOZ_LOG(gWin32ClipboardLog, PR_LOG_ALWAYS, ("OLE_E_NOTRUNNING\n"));
+    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("OLE_E_NOTRUNNING\n"));
   }  else
   if (hres == STG_E_MEDIUMFULL) {
-    MOZ_LOG(gWin32ClipboardLog, PR_LOG_ALWAYS, ("STG_E_MEDIUMFULL\n"));
+    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("STG_E_MEDIUMFULL\n"));
   }  else
   if (hres == DV_E_CLIPFORMAT) {
-    MOZ_LOG(gWin32ClipboardLog, PR_LOG_ALWAYS, ("DV_E_CLIPFORMAT\n"));
+    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("DV_E_CLIPFORMAT\n"));
   }  else
   if (hres == S_OK) {
-    MOZ_LOG(gWin32ClipboardLog, PR_LOG_ALWAYS, ("S_OK\n"));
+    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("S_OK\n"));
   } else {
-    MOZ_LOG(gWin32ClipboardLog, PR_LOG_ALWAYS, 
+    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, 
            ("****** DisplayErrCode 0x%X\n", hres));
   }
 #endif
@@ -546,7 +548,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
       case TYMED_GDI: 
         {
 #ifdef DEBUG
-          MOZ_LOG(gWin32ClipboardLog, PR_LOG_ALWAYS, 
+          MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, 
                  ("*********************** TYMED_GDI\n"));
 #endif
         } break;

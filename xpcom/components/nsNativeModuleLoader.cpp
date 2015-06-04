@@ -65,7 +65,7 @@ nsresult
 nsNativeModuleLoader::Init()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Startup not on main thread?");
-  LOG(PR_LOG_DEBUG, ("nsNativeModuleLoader::Init()"));
+  LOG(LogLevel::Debug, ("nsNativeModuleLoader::Init()"));
   return NS_OK;
 }
 
@@ -125,7 +125,7 @@ nsNativeModuleLoader::LoadModule(FileLocation& aFile)
 
   if (mLibraries.Get(hashedFile, &data)) {
     NS_ASSERTION(data.mModule, "Corrupt mLibraries hash");
-    LOG(PR_LOG_DEBUG,
+    LOG(LogLevel::Debug,
         ("nsNativeModuleLoader::LoadModule(\"%s\") - found in cache",
          filePath.get()));
     return data.mModule;
@@ -203,13 +203,13 @@ PLDHashOperator
 nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
                                    NativeLoadData& aLoadData, void*)
 {
-  if (PR_LOG_TEST(GetNativeModuleLoaderLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetNativeModuleLoaderLog(), LogLevel::Debug)) {
     nsCOMPtr<nsIFile> file(do_QueryInterface(aHashedFile));
 
     nsAutoCString filePath;
     file->GetNativePath(filePath);
 
-    LOG(PR_LOG_DEBUG,
+    LOG(LogLevel::Debug,
         ("nsNativeModuleLoader::UnloaderFunc(\"%s\")", filePath.get()));
   }
 

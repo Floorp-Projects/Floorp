@@ -162,9 +162,9 @@ typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
 class PLDHashTable
 {
 private:
-  const PLDHashTableOps* mOps;        /* Virtual operations; see below. */
+  const PLDHashTableOps* const mOps;  /* Virtual operations; see below. */
   int16_t             mHashShift;     /* multiplicative hash shift */
-  uint32_t            mEntrySize;     /* number of bytes in an entry */
+  const uint32_t      mEntrySize;     /* number of bytes in an entry */
   uint32_t            mEntryCount;    /* number of entries in table */
   uint32_t            mRemovedCount;  /* removed entry sentinels in table */
   uint32_t            mGeneration;    /* entry storage generation number */
@@ -214,7 +214,12 @@ public:
                uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
   PLDHashTable(PLDHashTable&& aOther)
-    : mOps(nullptr)
+      // These two fields are |const|. Initialize them here because the
+      // move assignment operator cannot modify them.
+    : mOps(aOther.mOps)
+    , mEntrySize(aOther.mEntrySize)
+      // Initialize these two fields because they are required for a safe call
+      // to the destructor, which the move assignment operator does.
     , mEntryStore(nullptr)
 #ifdef DEBUG
     , mRecursionLevel(0)
@@ -321,9 +326,6 @@ private:
   }
 
   PLDHashNumber ComputeKeyHash(const void* aKey);
-
-  void Init(const PLDHashTableOps* aOps, uint32_t aEntrySize, uint32_t aLength);
-  void Finish();
 
   enum SearchReason { ForSearchOrRemove, ForAdd };
 
@@ -493,9 +495,7 @@ PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey);
  *
  *  PL_DHashTableRemove(table, key);
  *
- * If key's entry is found, it is cleared (via table->mOps->clearEntry) and
- * the entry is marked so that PL_DHASH_ENTRY_IS_FREE(entry).  This operation
- * returns null unconditionally; you should ignore its return value.
+ * If key's entry is found, it is cleared (via table->mOps->clearEntry).
  */
 void PL_DHASH_FASTCALL
 PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey);

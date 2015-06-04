@@ -170,6 +170,9 @@ function arrowExpr(args, body) {
                      body: body });
 }
 
+function newTarget() {
+    return Pattern({ type: "NewTargetExpression" });
+}
 function unExpr(op, arg) {
     return Pattern({ type: "UnaryExpression", operator: op, argument: arg });
 }

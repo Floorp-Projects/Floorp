@@ -50,7 +50,7 @@ GetLayoutPrintingLog()
     sLog = PR_NewLogModule("printing-layout");
   return sLog;
 }
-#define PR_PL(_p1)  MOZ_LOG(GetLayoutPrintingLog(), PR_LOG_DEBUG, _p1)
+#define PR_PL(_p1)  MOZ_LOG(GetLayoutPrintingLog(), mozilla::LogLevel::Debug, _p1)
 
 nsSimplePageSequenceFrame*
 NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)

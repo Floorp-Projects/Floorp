@@ -697,7 +697,7 @@ void
 nsPNGEncoder::WarningCallback(png_structp png_ptr,
                             png_const_charp warning_msg)
 {
-  MOZ_LOG(GetPNGEncoderLog(), PR_LOG_WARNING,
+  MOZ_LOG(GetPNGEncoderLog(), LogLevel::Warning,
          ("libpng warning: %s\n", warning_msg));
 }
 
@@ -708,7 +708,7 @@ void
 nsPNGEncoder::ErrorCallback(png_structp png_ptr,
                             png_const_charp error_msg)
 {
-  MOZ_LOG(GetPNGEncoderLog(), PR_LOG_ERROR, ("libpng error: %s\n", error_msg));
+  MOZ_LOG(GetPNGEncoderLog(), LogLevel::Error, ("libpng error: %s\n", error_msg));
   png_longjmp(png_ptr, 1);
 }
 

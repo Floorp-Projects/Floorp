@@ -624,6 +624,11 @@ class MacroAssemblerX86Shared : public Assembler
         test32(Operand(address), imm);
         j(cond, label);
     }
+    void branchTest32(Condition cond, const Operand& lhs, Imm32 imm, Label* label) {
+        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+        test32(lhs, imm);
+        j(cond, label);
+    }
 
     void jump(Label* label) {
         jmp(label);

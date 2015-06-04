@@ -22,9 +22,9 @@ namespace hal {
 
 extern PRLogModuleInfo *GetHalLog();
 #define HAL_LOG(...) \
-  MOZ_LOG(mozilla::hal::GetHalLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+  MOZ_LOG(mozilla::hal::GetHalLog(), LogLevel::Debug, (__VA_ARGS__))
 #define HAL_ERR(...) \
-  MOZ_LOG(mozilla::hal::GetHalLog(), PR_LOG_ERROR, (__VA_ARGS__))
+  MOZ_LOG(mozilla::hal::GetHalLog(), LogLevel::Error, (__VA_ARGS__))
 
 } // namespace hal
 
