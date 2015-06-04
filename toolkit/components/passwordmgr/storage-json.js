@@ -1,5 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set sw=2 ts=2 et lcs=trail\:.,tab\:>~ : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35,7 +33,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
 ////////////////////////////////////////////////////////////////////////////////
 //// LoginManagerStorage_json
 
-this.LoginManagerStorage_json = function () {}
+this.LoginManagerStorage_json = function () {};
 
 this.LoginManagerStorage_json.prototype = {
   classID : Components.ID("{c00c432d-a0c9-46d7-bef6-9c45b4d07341}"),
@@ -49,27 +47,7 @@ this.LoginManagerStorage_json.prototype = {
     return this.__crypto;
   },
 
-  /*
-   * log
-   *
-   * Internal function for logging debug messages to the Error Console.
-   */
-  log : function (message) {
-    if (!this._debug)
-      return;
-    dump("PwMgr json: " + message + "\n");
-    Services.console.logStringMessage("PwMgr json: " + message);
-  },
-  _debug : false,
-
-
-  /*
-   * initialize
-   *
-   */
   initialize : function () {
-    this._debug = Services.prefs.getBoolPref("signon.debug");
-
     try {
       // Force initialization of the crypto module.
       // See bug 717490 comment 17.
@@ -650,5 +628,10 @@ this.LoginManagerStorage_json.prototype = {
     return result;
   },
 };
+
+XPCOMUtils.defineLazyGetter(this.LoginManagerStorage_json.prototype, "log", () => {
+  let logger = LoginHelper.createLogger("Login storage");
+  return logger.log.bind(logger);
+});
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([LoginManagerStorage_json]);
