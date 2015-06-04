@@ -10,6 +10,7 @@ module.metadata = {
 const { Class } = require('../core/heritage');
 const { EventTarget } = require('../event/target');
 const { on, off, emit } = require('../event/core');
+const { events } = require('./sandbox/events');
 const { requiresAddonGlobal } = require('./utils');
 const { delay: async } = require('../lang/functional');
 const { Ci, Cu, Cc } = require('chrome');
@@ -20,8 +21,7 @@ const { merge } = require('../util/object');
 const { getTabForContentWindow } = require('../tabs/utils');
 const { getInnerId } = require('../window/utils');
 const { PlainTextConsole } = require('../console/plain-text');
-const { data } = require('../self');
-const { isChildLoader } = require('../remote/core');
+const { data } = require('../self');const { isChildLoader } = require('../remote/core');
 // WeakMap of sandboxes so we can access private values
 const sandboxes = new WeakMap();
 
@@ -166,6 +166,7 @@ const WorkerSandbox = Class({
       get top() top,
       get parent() parent
     });
+
     // Use the Greasemonkey naming convention to provide access to the
     // unwrapped window object so the content script can access document
     // JavaScript values.
@@ -261,6 +262,11 @@ const WorkerSandbox = Class({
       win.console = con;
     };
 
+    emit(events, "content-script-before-inserted", {
+      window: window,
+      worker: worker
+    });
+
     // The order of `contentScriptFile` and `contentScript` evaluation is
     // intentional, so programs can load libraries like jQuery from script URLs
     // and use them in scripts.
@@ -273,6 +279,7 @@ const WorkerSandbox = Class({
 
     if (contentScriptFile)
       importScripts.apply(null, [this].concat(contentScriptFile));
+
     if (contentScript) {
       evaluateIn(
         this,
