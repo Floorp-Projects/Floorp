@@ -201,6 +201,13 @@ class MozbuildSandbox(Sandbox):
             return self._create_template_wrapper(self.templates[key])
         return Sandbox.__getitem__(self, key)
 
+    def __contains__(self, key):
+        if any(key in d for d in (self.special_variables, self.functions,
+                                  self.subcontext_types, self.templates)):
+            return True
+
+        return Sandbox.__contains__(self, key)
+
     def __setitem__(self, key, value):
         if key in self.special_variables or key in self.functions or key in self.subcontext_types:
             raise KeyError('Cannot set "%s" because it is a reserved keyword'
@@ -412,51 +419,97 @@ class TemplateFunction(object):
         self.path = func.func_code.co_filename
         self.name = func.func_name
 
-        firstlineno = func.func_code.co_firstlineno
+        code = func.func_code
+        firstlineno = code.co_firstlineno
         lines = sandbox._current_source.splitlines(True)
         lines = inspect.getblock(lines[firstlineno - 1:])
-        first_op = None
-        generator = tokenize.generate_tokens(iter(lines).next)
-        # Find the first indent token in the source of this template function,
-        # which corresponds to the beginning of the function body.
-        for typ, s, begin, end, line in generator:
-            if typ == tokenize.OP:
-                first_op = True
-            if first_op and typ == tokenize.INDENT:
-                break
-        if typ != tokenize.INDENT:
-            # This should never happen.
-            raise Exception('Could not find the first line of the template %s' %
-                func.func_name)
-        # The code of the template in moz.build looks like this:
-        # m      def Foo(args):
-        # n          FOO = 'bar'
-        # n+1        (...)
-        #
-        # where,
-        # - m is firstlineno - 1,
-        # - n is usually m + 1, but in case the function signature takes more
-        # lines, is really m + begin[0] - 1
-        #
-        # We want that to be replaced with:
-        # m       if True:
-        # n           FOO = 'bar'
-        # n+1         (...)
-        #
-        # (this is simpler than trying to deindent the function body)
-        # So we need to prepend with n - 1 newlines so that line numbers
-        # are unchanged.
-        self._code = '\n' * (firstlineno + begin[0] - 3) + 'if True:\n'
-        self._code += ''.join(lines[begin[0] - 1:])
-        self._func = func
+
+        # The code lines we get out of inspect.getsourcelines look like
+        #   @template
+        #   def Template(*args, **kwargs):
+        #       VAR = 'value'
+        #       ...
+        func_ast = ast.parse(''.join(lines), self.path)
+        # Remove decorators
+        func_ast.body[0].decorator_list = []
+        # Adjust line numbers accordingly
+        ast.increment_lineno(func_ast, firstlineno - 1)
+
+        # When using a custom dictionary for function globals/locals, Cpython
+        # actually never calls __getitem__ and __setitem__, so we need to
+        # modify the AST so that accesses to globals are properly directed
+        # to a dict.
+        self._global_name = b'_data' # AST wants str for this, not unicode
+        # In case '_data' is a name used for a variable in the function code,
+        # prepend more underscores until we find an unused name.
+        while (self._global_name in code.co_names or
+                self._global_name in code.co_varnames):
+            self._global_name += '_'
+        func_ast = self.RewriteName(sandbox, self._global_name).visit(func_ast)
+
+        # Execute the rewritten code. That code now looks like:
+        #   def Template(*args, **kwargs):
+        #       _data['VAR'] = 'value'
+        #       ...
+        # The result of executing this code is the creation of a 'Template'
+        # function object in the global namespace.
+        glob = {'__builtins__': sandbox._builtins}
+        func = types.FunctionType(
+            compile(func_ast, self.path, 'exec'),
+            glob,
+            self.name,
+            func.func_defaults,
+            func.func_closure,
+        )
+        func()
+
+        self._func = glob[self.name]
 
     def exec_in_sandbox(self, sandbox, *args, **kwargs):
         """Executes the template function in the given sandbox."""
+        # Create a new function object associated with the execution sandbox
+        glob = {
+            self._global_name: sandbox,
+            '__builtins__': sandbox._builtins
+        }
+        func = types.FunctionType(
+            self._func.func_code,
+            glob,
+            self.name,
+            self._func.func_defaults,
+            self._func.func_closure
+        )
+        sandbox.exec_function(func, args, kwargs, self.path,
+                              becomes_current_path=False)
 
-        for k, v in inspect.getcallargs(self._func, *args, **kwargs).items():
-            sandbox[k] = v
+    class RewriteName(ast.NodeTransformer):
+        """AST Node Transformer to rewrite variable accesses to go through
+        a dict.
+        """
+        def __init__(self, sandbox, global_name):
+            self._sandbox = sandbox
+            self._global_name = global_name
 
-        sandbox.exec_source(self._code, self.path, becomes_current_path=False)
+        def visit_Str(self, node):
+            # String nodes we got from the AST parser are str, but we want
+            # unicode literals everywhere, so transform them.
+            node.s = unicode(node.s)
+            return node
+
+        def visit_Name(self, node):
+            # Modify uppercase variable references and names known to the
+            # sandbox as if they were retrieved from a dict instead.
+            if not node.id.isupper() and node.id not in self._sandbox:
+                return node
+
+            def c(new_node):
+                return ast.copy_location(new_node, node)
+
+            return c(ast.Subscript(
+                value=c(ast.Name(id=self._global_name, ctx=ast.Load())),
+                slice=c(ast.Index(value=c(ast.Str(s=node.id)))),
+                ctx=node.ctx
+            ))
 
 
 class SandboxValidationError(Exception):
@@ -594,7 +647,7 @@ class BuildReaderError(Exception):
 
             # Reset if we enter a new execution context. This prevents errors
             # in this module from being attributes to a script.
-            elif frame[0] == __file__ and frame[2] == 'exec_source':
+            elif frame[0] == __file__ and frame[2] == 'exec_function':
                 script_frame = None
 
         if script_frame is not None:
