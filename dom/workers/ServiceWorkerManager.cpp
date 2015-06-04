@@ -3303,6 +3303,7 @@ class FetchEventRunnable : public WorkerRunnable
   RequestCredentials mRequestCredentials;
   nsContentPolicyType mContentPolicyType;
   nsCOMPtr<nsIInputStream> mUploadStream;
+  nsCString mReferrer;
 public:
   FetchEventRunnable(WorkerPrivate* aWorkerPrivate,
                      nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
@@ -3319,6 +3320,7 @@ public:
     // send credentials to same-origin websites unless explicitly forbidden.
     , mRequestCredentials(RequestCredentials::Same_origin)
     , mContentPolicyType(nsIContentPolicy::TYPE_INVALID)
+    , mReferrer(kFETCH_CLIENT_REFERRER_STR)
   {
     MOZ_ASSERT(aWorkerPrivate);
   }
@@ -3357,6 +3359,15 @@ public:
     NS_ENSURE_SUCCESS(rv, rv);
 
     mContentPolicyType = loadInfo->InternalContentPolicyType();
+
+    nsCOMPtr<nsIURI> referrerURI;
+    rv = NS_GetReferrerFromChannel(channel, getter_AddRefs(referrerURI));
+    // We can't bail on failure since certain non-http channels like JAR
+    // channels are intercepted but don't have referrers.
+    if (NS_SUCCEEDED(rv) && referrerURI) {
+      rv = referrerURI->GetSpec(mReferrer);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
     if (httpChannel) {
@@ -3487,6 +3498,7 @@ private:
     internalReq->SetCreatedByFetchEvent();
 
     internalReq->SetBody(mUploadStream);
+    internalReq->SetReferrer(NS_ConvertUTF8toUTF16(mReferrer));
 
     request->SetContentPolicyType(mContentPolicyType);
 
