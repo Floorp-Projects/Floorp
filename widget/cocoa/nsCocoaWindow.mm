@@ -2763,6 +2763,7 @@ static const NSString* kStateDrawsContentsIntoWindowFrameKey = @"drawsContentsIn
 static const NSString* kStateActiveTitlebarColorKey = @"activeTitlebarColor";
 static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor";
 static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
+static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 - (void)importState:(NSDictionary*)aState
 {
@@ -2771,6 +2772,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   [self setTitlebarColor:[aState objectForKey:kStateActiveTitlebarColorKey] forActiveWindow:YES];
   [self setTitlebarColor:[aState objectForKey:kStateInactiveTitlebarColorKey] forActiveWindow:NO];
   [self setShowsToolbarButton:[[aState objectForKey:kStateShowsToolbarButton] boolValue]];
+  [self setCollectionBehavior:[[aState objectForKey:kStateCollectionBehavior] unsignedIntValue]];
 }
 
 - (NSMutableDictionary*)exportState
@@ -2789,6 +2791,8 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   }
   [state setObject:[NSNumber numberWithBool:[self showsToolbarButton]]
             forKey:kStateShowsToolbarButton];
+  [state setObject:[NSNumber numberWithUnsignedInt: [self collectionBehavior]]
+            forKey:kStateCollectionBehavior];
   return state;
 }
 
