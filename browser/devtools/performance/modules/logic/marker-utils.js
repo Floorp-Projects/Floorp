@@ -175,6 +175,7 @@ const DOM = {
    */
   buildNameValueLabel: function (doc, field, value) {
     let hbox = doc.createElement("hbox");
+    hbox.className = "marker-details-labelcontainer";
     let labelName = doc.createElement("label");
     let labelValue = doc.createElement("label");
     labelName.className = "plain marker-details-labelname";
@@ -201,6 +202,8 @@ const DOM = {
     let labelName = doc.createElement("label");
     labelName.className = "plain marker-details-labelname";
     labelName.setAttribute("value", L10N.getStr(`timeline.markerDetail.${type}`));
+    container.setAttribute("type", type);
+    container.className = "marker-details-stack";
     container.appendChild(labelName);
 
     let wasAsyncParent = false;
