@@ -322,3 +322,6 @@ user_pref("dom.serviceWorkers.periodic-updates.enabled", false);
 
 // Enable speech synth test service, and disable built in platform services.
 user_pref("media.webspeech.synth.test", true);
+
+// Disable Android addon update service
+user_pref("extensions.autoupdate.enabled", false);
