@@ -20,7 +20,7 @@ var testRunner = {
                                           "permission text should be set correctly");
           params.btnApplyChanges.doCommand();
         },
-        observances: [{ type: "cookie", host: "test.com", data: "added",
+        observances: [{ type: "cookie", origin: "http://test.com", data: "added",
                         capability: Ci.nsIPermissionManager.ALLOW_ACTION }],
       },
       {
@@ -31,7 +31,7 @@ var testRunner = {
                                           "permission should change to deny in UI");
           params.btnApplyChanges.doCommand();
         },
-        observances: [{ type: "cookie", host: "test.com", data: "changed",
+        observances: [{ type: "cookie", origin: "http://test.com", data: "changed",
                         capability: Ci.nsIPermissionManager.DENY_ACTION  }],
       },
       {
@@ -42,7 +42,7 @@ var testRunner = {
                                           "permission should revert back to allow");
           params.btnApplyChanges.doCommand();
         },
-        observances: [{ type: "cookie", host: "test.com", data: "changed",
+        observances: [{ type: "cookie", origin: "http://test.com", data: "changed",
                         capability: Ci.nsIPermissionManager.ALLOW_ACTION }],
       },
       {
@@ -52,7 +52,7 @@ var testRunner = {
           is(params.tree.view.rowCount, 0, "exception should be removed");
           params.btnApplyChanges.doCommand();
         },
-        observances: [{ type: "cookie", host: "test.com", data: "deleted" }],
+        observances: [{ type: "cookie", origin: "http://test.com", data: "deleted" }],
       },
       {
         test: function(params) {
@@ -61,7 +61,7 @@ var testRunner = {
           is(params.tree.view.rowCount, 0, "adding unrelated permission should not change display");
           params.btnApplyChanges.doCommand();
         },
-        observances: [{ type: "popup", host: "test.com", data: "added",
+        observances: [{ type: "popup", origin: "http://test.com", data: "added",
                         capability: Ci.nsIPermissionManager.DENY_ACTION }],
         cleanUp: function(params) {
           let uri = params.ioService.newURI("http://test.com", null, null);
@@ -160,10 +160,15 @@ var testRunner = {
               let expected = testRunner.tests[testRunner._currentTest].observances.shift();
 
               is(aData, expected.data, "type of message should be the same");
-              for each (let prop in ["type", "host", "capability"]) {
+              for each (let prop in ["type", "capability"]) {
                 if (expected[prop])
                   is(permission[prop], expected[prop],
                     "property: \"" + prop  + "\" should be equal");
+              }
+
+              if (expected.origin) {
+                is(permission.principal.origin, expected.origin,
+                   "property: \"origin\" should be equal");
               }
 
               os.removeObserver(permObserver, "perm-changed");
