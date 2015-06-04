@@ -501,8 +501,8 @@ public:
     MOZ_ASSERT(aFormData);
   }
 
-  bool URLSearchParamsIterator(const nsString& aName,
-                               const nsString& aValue) override
+  bool URLParamsIterator(const nsString& aName,
+                         const nsString& aValue) override
   {
     mFormData->Append(aName, aValue);
     return true;
