@@ -1806,8 +1806,8 @@ SetFullAlpha(void* data, GLenum format, GLenum type, size_t width,
 {
     if (format == LOCAL_GL_ALPHA && type == LOCAL_GL_UNSIGNED_BYTE) {
         // Just memset the rows.
+        uint8_t* row = static_cast<uint8_t*>(data);
         for (size_t j = 0; j < height; ++j) {
-            uint8_t* row = static_cast<uint8_t*>(data) + j*stride;
             memset(row, 0xff, width);
             row += stride;
         }
