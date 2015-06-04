@@ -90,6 +90,15 @@ public:
     return mUpdatePreference.WantDuringDeactive();
   }
   nsIWidget* GetWidget() const { return mWidget; }
+  nsIEditor* GetEditor() const { return mEditor; }
+  void SuppressNotifyingIME() { mSuppressNotifications++; }
+  void UnsuppressNotifyingIME()
+  {
+    if (!mSuppressNotifications || --mSuppressNotifications) {
+      return;
+    }
+    FlushMergeableNotifications();
+  }
   nsPresContext* GetPresContext() const;
   nsresult GetSelectionAndRoot(nsISelection** aSelection,
                                nsIContent** aRoot) const;
@@ -241,6 +250,7 @@ private:
 
   nsIMEUpdatePreference mUpdatePreference;
   uint32_t mPreAttrChangeLength;
+  uint32_t mSuppressNotifications;
   int64_t mPreCharacterDataChangeLength;
 
   bool mIsObserving;

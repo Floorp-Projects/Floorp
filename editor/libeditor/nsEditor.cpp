@@ -330,6 +330,10 @@ nsEditor::PostCreate()
     nsCOMPtr<nsIContent> content = GetFocusedContentForIME();
     IMEStateManager::UpdateIMEState(newState, content, this);
   }
+
+  // FYI: This call might cause destroying this editor.
+  IMEStateManager::OnEditorInitialized(this);
+
   return NS_OK;
 }
 
@@ -437,6 +441,8 @@ nsEditor::PreDestroy(bool aDestroyingFrames)
 {
   if (mDidPreDestroy)
     return NS_OK;
+
+  IMEStateManager::OnEditorDestroying(this);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
