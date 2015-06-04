@@ -800,11 +800,12 @@ getParentCB(AtkObject *aAtkObj)
     atkParent = parent ? AccessibleWrap::GetAtkObject(parent) : nullptr;
   } else if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
     ProxyAccessible* parent = proxy->Parent();
-    if (parent)
+    if (parent) {
       atkParent = GetWrapperFor(parent);
-
-    // Otherwise this should be the proxy for the tab's top level document.
-    atkParent = AccessibleWrap::GetAtkObject(proxy->OuterDocOfRemoteBrowser());
+    } else {
+      // Otherwise this should be the proxy for the tab's top level document.
+      atkParent = AccessibleWrap::GetAtkObject(proxy->OuterDocOfRemoteBrowser());
+    }
   }
 
   if (atkParent)
