@@ -803,6 +803,18 @@ CompositorParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
 }
 
 bool
+CompositorParent::RecvMakeWidgetSnapshot(const SurfaceDescriptor& aInSnapshot)
+{
+  if (!mCompositor || !mCompositor->GetWidget()) {
+    return false;
+  }
+
+  RefPtr<DrawTarget> target = GetDrawTargetForDescriptor(aInSnapshot, gfx::BackendType::CAIRO);
+  mCompositor->GetWidget()->CaptureWidgetOnScreen(target);
+  return true;
+}
+
+bool
 CompositorParent::RecvFlushRendering()
 {
   if (mCompositorScheduler->NeedsComposite())
@@ -1687,6 +1699,8 @@ public:
   virtual bool RecvAdoptChild(const uint64_t& child) override { return false; }
   virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
                                 const gfx::IntRect& aRect) override
+  { return true; }
+  virtual bool RecvMakeWidgetSnapshot(const SurfaceDescriptor& aInSnapshot) override
   { return true; }
   virtual bool RecvFlushRendering() override { return true; }
   virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) override { return true; }
