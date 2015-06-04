@@ -282,6 +282,8 @@ public:
   bool IsPopup();
   virtual bool ShouldUseOffMainThreadCompositing();
 
+  bool CaptureWidgetOnScreen(mozilla::RefPtr<mozilla::gfx::DrawTarget> aDT);
+
 protected:
   virtual ~nsWindow();
 
