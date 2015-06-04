@@ -34,7 +34,7 @@ struct nsTableCellReflowState : public nsHTMLReflowState
                          const LogicalSize&       aAvailableSpace,
                          uint32_t                 aFlags = 0)
     : nsHTMLReflowState(aPresContext, aParentReflowState, aFrame,
-                        aAvailableSpace, -1, -1, aFlags)
+                        aAvailableSpace, nullptr, aFlags)
   {
   }
 
@@ -80,7 +80,7 @@ nsTableRowFrame::InitChildReflowState(nsPresContext&         aPresContext,
       pCollapseBorder = &collapseBorder;
     }
   }
-  aReflowState.Init(&aPresContext, -1, -1, pCollapseBorder);
+  aReflowState.Init(&aPresContext, nullptr, pCollapseBorder);
   aReflowState.FixUp(aAvailSize);
 }
 

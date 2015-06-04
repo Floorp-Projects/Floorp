@@ -495,10 +495,10 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   // reflow the content frame only if needed
   if (reflowInner) {
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, inner,
-                                     innerAvailSize, -1, -1,
+                                     innerAvailSize, nullptr,
                                      nsHTMLReflowState::CALLER_WILL_INIT);
     // Override computed padding, in case it's percentage padding
-    kidReflowState.Init(aPresContext, -1, -1, nullptr,
+    kidReflowState.Init(aPresContext, nullptr, nullptr,
                         &aReflowState.ComputedPhysicalPadding());
     // Our child is "height:100%" but we actually want its height to be reduced
     // by the amount of content-height the legend is eating up, unless our

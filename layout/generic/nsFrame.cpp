@@ -8575,7 +8575,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     LogicalSize logicalSize(wm, nsSize(aWidth, aHeight));
     logicalSize.BSize(wm) = NS_INTRINSICSIZE;
     nsHTMLReflowState reflowState(aPresContext, *parentRS, this,
-                                  logicalSize, -1, -1,
+                                  logicalSize, nullptr,
                                   nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
 
     // XXX_jwir3: This is somewhat fishy. If this is actually changing the value
@@ -9087,8 +9087,7 @@ DR_init_constraints_cookie::~DR_init_constraints_cookie()
 DR_init_offsets_cookie::DR_init_offsets_cookie(
                      nsIFrame*                aFrame,
                      nsCSSOffsetState*        aState,
-                     nscoord                  aHorizontalPercentBasis,
-                     nscoord                  aVerticalPercentBasis,
+                     const LogicalSize&       aPercentBasis,
                      const nsMargin*          aMargin,
                      const nsMargin*          aPadding)
   : mFrame(aFrame)
@@ -9096,8 +9095,7 @@ DR_init_offsets_cookie::DR_init_offsets_cookie(
 {
   MOZ_COUNT_CTOR(DR_init_offsets_cookie);
   mValue = nsCSSOffsetState::DisplayInitOffsetsEnter(mFrame, mState,
-                                                     aHorizontalPercentBasis,
-                                                     aVerticalPercentBasis,
+                                                     aPercentBasis,
                                                      aMargin, aPadding);
 }
 
@@ -10042,8 +10040,7 @@ nsHTMLReflowState::DisplayInitConstraintsExit(nsIFrame* aFrame,
 /* static */ void*
 nsCSSOffsetState::DisplayInitOffsetsEnter(nsIFrame* aFrame,
                                           nsCSSOffsetState* aState,
-                                          nscoord aHorizontalPercentBasis,
-                                          nscoord aVerticalPercentBasis,
+                                          const LogicalSize& aPercentBasis,
                                           const nsMargin* aBorder,
                                           const nsMargin* aPadding)
 {
@@ -10060,8 +10057,9 @@ nsCSSOffsetState::DisplayInitOffsetsEnter(nsIFrame* aFrame,
 
     char horizPctBasisStr[16];
     char vertPctBasisStr[16];
-    DR_state->PrettyUC(aHorizontalPercentBasis, horizPctBasisStr, 16);
-    DR_state->PrettyUC(aVerticalPercentBasis,   vertPctBasisStr, 16);
+    WritingMode wm = aState->GetWritingMode();
+    DR_state->PrettyUC(aPercentBasis.ISize(wm), horizPctBasisStr, 16);
+    DR_state->PrettyUC(aPercentBasis.BSize(wm), vertPctBasisStr, 16);
     printf("InitOffsets pct_basis=%s,%s", horizPctBasisStr, vertPctBasisStr);
 
     DR_state->PrintMargin("b", aBorder);

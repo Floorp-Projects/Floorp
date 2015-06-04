@@ -209,7 +209,7 @@ GetBEndMarginClone(nsIFrame* aFrame,
 {
   if (aFrame->StyleBorder()->mBoxDecorationBreak ==
         NS_STYLE_BOX_DECORATION_BREAK_CLONE) {
-    nsCSSOffsetState os(aFrame, aRenderingContext, aContentArea.Width(aWritingMode));
+    nsCSSOffsetState os(aFrame, aRenderingContext, aContentArea.ISize(aWritingMode));
     return os.ComputedLogicalMargin().
                 ConvertTo(aWritingMode,
                           aFrame->GetWritingMode()).BEnd(aWritingMode);
@@ -721,7 +721,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
                "Float frame has wrong parent");
 
   nsCSSOffsetState offsets(aFloat, mReflowState.rendContext,
-                           mReflowState.ComputedWidth());
+                           mReflowState.ComputedISize());
 
   nscoord floatMarginISize = FloatMarginISize(mReflowState,
                                               adjustedAvailableSpace.ISize(wm),
