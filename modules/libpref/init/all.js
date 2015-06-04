@@ -2259,6 +2259,9 @@ pref("layout.css.overflow-clip-box.enabled", false);
 // Is support for CSS grid enabled?
 pref("layout.css.grid.enabled", false);
 
+// Is support for CSS contain enabled?
+pref("layout.css.contain.enabled", false);
+
 // Is support for CSS Ruby enabled?
 //
 // When this pref is removed, make sure that the pref callback registration

@@ -392,6 +392,7 @@ private:
   mozilla::dom::CSSValue* DoGetClear();
   mozilla::dom::CSSValue* DoGetFloat();
   mozilla::dom::CSSValue* DoGetDisplay();
+  mozilla::dom::CSSValue* DoGetContain();
   mozilla::dom::CSSValue* DoGetPosition();
   mozilla::dom::CSSValue* DoGetClip();
   mozilla::dom::CSSValue* DoGetImageOrientation();
