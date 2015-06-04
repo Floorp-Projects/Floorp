@@ -13,12 +13,6 @@ onfetch = function(ev) {
     ));
   }
 
-  else if (ev.request.url.includes("synthesized-308.txt")) {
-    ev.respondWith(Promise.resolve(
-      new Response("synthesized response body", { status: 308 })
-    ));
-  }
-
   else if (ev.request.url.includes("synthesized-headers.txt")) {
     ev.respondWith(Promise.resolve(
       new Response("synthesized response body", {
