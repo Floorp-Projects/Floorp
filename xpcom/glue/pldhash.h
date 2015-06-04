@@ -495,9 +495,7 @@ PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey);
  *
  *  PL_DHashTableRemove(table, key);
  *
- * If key's entry is found, it is cleared (via table->mOps->clearEntry) and
- * the entry is marked so that PL_DHASH_ENTRY_IS_FREE(entry).  This operation
- * returns null unconditionally; you should ignore its return value.
+ * If key's entry is found, it is cleared (via table->mOps->clearEntry).
  */
 void PL_DHASH_FASTCALL
 PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey);
