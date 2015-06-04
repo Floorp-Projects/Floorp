@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-package org.mozilla.gecko;
+package org.mozilla.tests.browser.junit3;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -9,6 +9,8 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.GeckoSharedPrefs.Flags;
 
 import android.content.Context;
