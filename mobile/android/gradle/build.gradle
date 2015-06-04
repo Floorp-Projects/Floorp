@@ -16,6 +16,17 @@ buildDir "${topobjdir}/mobile/android/gradle/build"
 buildscript {
     repositories {
         jcenter()
+
+        // For spoon-gradle-plugin SNAPSHOT release.  This needs to go before
+        // the snapshots repository, otherwise we find a remote 1.0.3-SNAPSHOT
+        // that doesn't include nalexander's local changes.
+        maven {
+            url "file://${topsrcdir}/mobile/android/gradle/m2repo"
+        }
+        // For spoon SNAPSHOT releases.
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots'
+        }
     }
 
     dependencies {
@@ -23,6 +34,10 @@ buildscript {
         // 1.0.0.  There are major issues with the combination of 0.14.4, Gradle
         // 2.2.1, and IntelliJ 14.0.2: see Bug 1120032.
         classpath 'com.android.tools.build:gradle:1.0.0'
+        classpath('com.stanfy.spoon:spoon-gradle-plugin:1.0.3-SNAPSHOT') {
+            // Without these, we get errors linting.
+            exclude module: 'guava'
+        }
     }
 }
 

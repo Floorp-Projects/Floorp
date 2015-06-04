@@ -73,3 +73,36 @@ android.applicationVariants.all { variant ->
     def generateAssetsTask = tasks.findByName("generate${name.capitalize()}Assets")
     generateAssetsTask.dependsOn buildOmnijarTask
 }
+
+apply plugin: 'spoon'
+
+spoon {
+    // For now, let's be verbose.
+    debug = true
+    // It's not helpful to pass when we don't have a device connected.
+    failIfNoDeviceConnected = true
+
+    def spoonPackageName
+    if (gradle.startParameter.taskNames.contains('runBrowserTests')) {
+        spoonPackageName = 'org.mozilla.tests.browser.junit3'
+    }
+    if (project.hasProperty('spoonPackageName')) {
+        // Command line overrides everything.
+        spoonPackageName = project.spoonPackageName
+    }
+    if (spoonPackageName) {
+        instrumentationArgs = ['-e', "package=${spoonPackageName}".toString()]
+    }
+}
+
+// See discussion at https://github.com/stanfy/spoon-gradle-plugin/issues/9.
+afterEvaluate {
+    tasks["spoon${android.testBuildType.capitalize()}AndroidTest"].outputs.upToDateWhen { false }
+
+    // This is an awkward way to define different sets of instrumentation tests.
+    // The task name itself is fished at runtime and the package name configured
+    // in the spoon configuration.
+    task runBrowserTests {
+        dependsOn tasks["spoonDebugAndroidTest"]
+    }
+}

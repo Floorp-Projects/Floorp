@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-package org.mozilla.gecko;
+package org.mozilla.tests.browser.junit3;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -19,6 +19,9 @@ import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.distribution.Distribution;
