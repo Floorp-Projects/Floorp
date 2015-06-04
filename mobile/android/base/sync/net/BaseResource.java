@@ -20,6 +20,7 @@ import javax.net.ssl.SSLContext;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 
@@ -215,7 +216,9 @@ public class BaseResource implements Resource {
   private static ClientConnectionManager enableTLSConnectionManager() throws KeyManagementException, NoSuchAlgorithmException  {
     SSLContext sslContext = SSLContext.getInstance("TLS");
     sslContext.init(null, null, new SecureRandom());
-    SSLSocketFactory sf = new TLSSocketFactory(sslContext);
+
+    Logger.debug(LOG_TAG, "Using protocols and cipher suites for Android API " + android.os.Build.VERSION.SDK_INT);
+    SSLSocketFactory sf = new SSLSocketFactory(sslContext, GlobalConstants.DEFAULT_PROTOCOLS, GlobalConstants.DEFAULT_CIPHER_SUITES, null);
     SchemeRegistry schemeRegistry = new SchemeRegistry();
     schemeRegistry.register(new Scheme("https", 443, sf));
     schemeRegistry.register(new Scheme("http", 80, new PlainSocketFactory()));
