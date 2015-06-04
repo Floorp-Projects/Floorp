@@ -117,6 +117,12 @@ const HarExporter = {
 
     // Build HAR object.
     return this.buildHarData(options).then(har => {
+      // Do not export an empty HAR file, unless the user
+      // explicitly says so (using the forceExport option).
+      if (!har.log.entries.length && !options.forceExport) {
+        return resolve();
+      }
+
       let jsonString = this.stringify(har);
       if (!jsonString) {
         return resolve();
@@ -143,22 +149,9 @@ const HarExporter = {
    * long strings).
    */
   buildHarData: function(options) {
-    let deferred = defer();
-
-    try {
-      // Build HAR object from provided data.
-      let builder = new HarBuilder(options);
-      builder.build().then(har => {
-        if (!har.log.entries.length && !options.forceExport) {
-          deferred.resolve();
-        }
-        deferred.resolve(har);
-      });
-    } catch (err) {
-      deferred.reject(err);
-    }
-
-    return deferred.promise;
+    // Build HAR object from collected data.
+    let builder = new HarBuilder(options);
+    return builder.build();
   },
 
   /**
