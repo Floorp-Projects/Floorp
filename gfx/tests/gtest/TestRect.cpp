@@ -2,6 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include <limits>
 
 #include "gtest/gtest.h"
 
@@ -371,11 +372,9 @@ TestUnion()
 static bool
 TestFiniteGfx()
 {
-  // Doesn't appear that __builtin_inf() and __builtin_nan() are available on
-  // all compilers, so go the old fashioned way for inf and nan.
-  float posInf = 1.0/0.0;
-  float negInf = -1.0/0.0;
-  float justNaN = 0.0/0.0;
+  float posInf = std::numeric_limits<float>::infinity();
+  float negInf = -std::numeric_limits<float>::infinity();
+  float justNaN = std::numeric_limits<float>::quiet_NaN();
 
   gfxFloat values[4] = {5.0, 10.0, 15.0, 20.0};
 
