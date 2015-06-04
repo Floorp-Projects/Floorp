@@ -1394,7 +1394,6 @@ SetFactor(const nsCSSValue& aValue, float& aField, bool& aCanStoreInRuleTree,
   NS_NOTREACHED("SetFactor: inappropriate unit");
 }
 
-// Overloaded new operator that allocates from a presShell arena.
 void*
 nsRuleNode::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
 {
@@ -1554,20 +1553,11 @@ nsRuleNode::Transition(nsIStyleRule* aRule, uint8_t aLevel,
     else {
       next = entry->mRuleNode = new (mPresContext)
         nsRuleNode(mPresContext, this, aRule, aLevel, aIsImportantRule);
-      if (!next) {
-        PL_DHashTableRawRemove(ChildrenHash(), entry);
-        NS_WARNING("out of memory");
-        return this;
-      }
     }
   } else if (!next) {
     // Create the new entry in our list.
     next = new (mPresContext)
       nsRuleNode(mPresContext, this, aRule, aLevel, aIsImportantRule);
-    if (!next) {
-      NS_WARNING("out of memory");
-      return this;
-    }
     next->mNextSibling = ChildrenList();
     SetChildrenList(next);
   }
