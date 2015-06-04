@@ -81,7 +81,29 @@ function runTest() {
                 ", Exception: " + e);
   }
 
-  resetAddons(finishTest);
+  resetAddons(cleanupRestoreUpdaterBackup);
+}
+
+/**
+ * After all tests finish this will repeatedly attempt to restore the real
+ * updater if it exists and then call finishTest after the restore is
+ * successful.
+ */
+function cleanupRestoreUpdaterBackup() {
+  debugDump("entering");
+
+  try {
+    // Windows debug builds keep the updater file in use for a short period of
+    // time after the updater process exits.
+    restoreUpdaterBackup();
+  } catch (e) {
+    logTestInfo("Attempt to restore the backed up updater failed... " +
+                "will try again, Exception: " + e);
+    SimpleTest.executeSoon(cleanupRestoreUpdaterBackup);
+    return;
+  }
+
+  SimpleTest.executeSoon(finishTest);
 }
 
 function finishTest() {

@@ -130,6 +130,7 @@ class MachCommands(MachCommandBase):
         srcdir('app/libs', 'build/mobile/robocop')
 
         srcdir('base/build.gradle', 'mobile/android/gradle/base/build.gradle')
+        srcdir('base/lint.xml', 'mobile/android/gradle/base/lint.xml')
         srcdir('base/src/main/AndroidManifest.xml', 'mobile/android/gradle/base/AndroidManifest.xml')
         srcdir('base/src/main/java/org/mozilla/gecko', 'mobile/android/base')
         srcdir('base/src/main/java/org/mozilla/mozstumbler', 'mobile/android/stumbler/java/org/mozilla/mozstumbler')

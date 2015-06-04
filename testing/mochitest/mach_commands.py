@@ -580,7 +580,13 @@ class RobocopCommands(MachCommandBase):
                      help='Test to run. Can be a single Robocop test file (like "testLoad.java") '
                           ' or a directory of tests '
                           '(to run recursively). If omitted, the entire Robocop suite is run.')
-    def run_robocop(self, test_paths, **kwargs):
+    @CommandArgument('--serve', default=False, action='store_true',
+        help='Run no tests but start the mochi.test web server and launch '
+             'Fennec with a test profile.')
+    def run_robocop(self, test_paths, serve=False, **kwargs):
+        if serve:
+            kwargs['autorun'] = False
+
         if not kwargs.get('robocopIni'):
             kwargs['robocopIni'] = os.path.join(self.topobjdir, '_tests', 'testing',
                                                 'mochitest', 'robocop.ini')
