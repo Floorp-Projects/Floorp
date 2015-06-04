@@ -49,11 +49,6 @@ function test() {
     is(aBreakpointClient.location.line, 6,
       "Breakpoint client line is new.");
 
-    is(aBreakpointClient.requestedLocation.actor, gSources.selectedValue,
-      "Requested location url is correct");
-    is(aBreakpointClient.requestedLocation.line, 4,
-      "Requested location line is correct");
-
     onBpDebuggerAdd = true;
     maybeFinish();
   }
