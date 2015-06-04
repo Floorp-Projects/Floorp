@@ -206,8 +206,8 @@ private:
   nsLineBox(nsIFrame* aFrame, int32_t aCount, bool aIsBlock);
   ~nsLineBox();
   
-  // Overloaded new operator. Uses an arena (which comes from the presShell)
-  // to perform the allocation.
+  // Infallible overloaded new operator. Uses an arena (which comes from the
+  // presShell) to perform the allocation.
   void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW;
   void operator delete(void* aPtr, size_t sz) = delete;
 
