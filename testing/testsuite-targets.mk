@@ -523,6 +523,7 @@ endif
 	cp $(topsrcdir)/testing/runcppunittests.py $(PKG_STAGE)/cppunittests
 	cp $(topsrcdir)/testing/remotecppunittests.py $(PKG_STAGE)/cppunittests
 	cp $(topsrcdir)/testing/cppunittest.ini $(PKG_STAGE)/cppunittests
+	cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/cppunittests
 ifeq ($(MOZ_DISABLE_STARTUPCACHE),)
 	cp $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.js $(PKG_STAGE)/cppunittests
 	cp $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.manifest $(PKG_STAGE)/cppunittests
