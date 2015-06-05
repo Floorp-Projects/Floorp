@@ -1888,7 +1888,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
   }
   else {
     // Calculate the overflow area contribution from our children.
-    for (nsIFrame* kid = GetFirstPrincipalChild(); kid; kid = kid->GetNextSibling()) {
+    for (nsIFrame* kid : mFrames) {
       ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kid);
     }
   }
@@ -2047,7 +2047,7 @@ nsTableFrame::GetFirstBodyRowGroupFrame()
   nsIFrame* headerFrame = nullptr;
   nsIFrame* footerFrame = nullptr;
 
-  for (nsIFrame* kidFrame = mFrames.FirstChild(); nullptr != kidFrame; ) {
+  for (nsIFrame* kidFrame : mFrames) {
     const nsStyleDisplay* childDisplay = kidFrame->StyleDisplay();
 
     // We expect the header and footer row group frames to be first, and we only
@@ -2071,9 +2071,6 @@ nsTableFrame::GetFirstBodyRowGroupFrame()
     } else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay) {
       return kidFrame;
     }
-
-    // Get the next child
-    kidFrame = kidFrame->GetNextSibling();
   }
 
   return nullptr;
@@ -2166,8 +2163,7 @@ nsTableFrame::GetCollapsedWidth(nsMargin aBorderPadding)
   NS_ASSERTION(!GetPrevInFlow(), "GetCollapsedWidth called on next in flow");
   nscoord width = GetColSpacing(GetColCount());
   width += aBorderPadding.left + aBorderPadding.right;
-  for (nsIFrame* groupFrame = mColGroups.FirstChild(); groupFrame;
-         groupFrame = groupFrame->GetNextSibling()) {
+  for (nsIFrame* groupFrame : mColGroups) {
     const nsStyleVisibility* groupVis = groupFrame->StyleVisibility();
     bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
     nsTableColGroupFrame* cgFrame = (nsTableColGroupFrame*)groupFrame;
@@ -3196,8 +3192,7 @@ nsTableFrame::ReflowColGroups(nsRenderingContext *aRenderingContext)
   if (!GetPrevInFlow() && !HaveReflowedColGroups()) {
     nsHTMLReflowMetrics kidMet(GetWritingMode());
     nsPresContext *presContext = PresContext();
-    for (nsIFrame* kidFrame = mColGroups.FirstChild(); kidFrame;
-         kidFrame = kidFrame->GetNextSibling()) {
+    for (nsIFrame* kidFrame : mColGroups) {
       if (NS_SUBTREE_DIRTY(kidFrame)) {
         // The column groups don't care about dimensions or reflow states.
         nsHTMLReflowState
@@ -3263,7 +3258,7 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState,
       // unconstrained row group.
       DistributeHeightToRows(aReflowState, tableSpecifiedHeight - desiredHeight);
       // this might have changed the overflow area incorporate the childframe overflow area.
-      for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
+      for (nsIFrame* kidFrame : mFrames) {
         ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kidFrame);
       }
       desiredHeight = tableSpecifiedHeight;
@@ -3871,8 +3866,7 @@ nsTableFrame::Dump(bool            aDumpRows,
       }
     }
     printf("\n colgroups->");
-    for (nsIFrame* childFrame = mColGroups.FirstChild(); childFrame;
-         childFrame = childFrame->GetNextSibling()) {
+    for (nsIFrame* childFrame : mColGroups) {
       if (nsGkAtoms::tableColGroupFrame == childFrame->GetType()) {
         nsTableColGroupFrame* colGroupFrame = (nsTableColGroupFrame *)childFrame;
         colGroupFrame->Dump(1);
