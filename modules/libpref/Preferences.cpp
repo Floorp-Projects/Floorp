@@ -523,8 +523,7 @@ Preferences::Init()
 {
   nsresult rv;
 
-  rv = PREF_Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  PREF_Init();
 
   rv = pref_InitInitialObjects();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -644,8 +643,7 @@ Preferences::ResetPrefs()
   NotifyServiceObservers(NS_PREFSERVICE_RESET_TOPIC_ID);
   PREF_CleanupPrefs();
 
-  nsresult rv = PREF_Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  PREF_Init();
 
   return pref_InitInitialObjects();
 }

@@ -8094,5 +8094,11 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Has the tab queue functionality been enabled."
+  },
+  "VIDEO_EME_DISABLED": {
+    "alert_emails": ["edwin@mozilla.com"],
+    "expires_in_version": "45",
+    "kind": "boolean",
+    "description": "Set if media.eme.enabled is false, in a build that supports the Adobe Primetime Content Decryption Module."
   }
 }
