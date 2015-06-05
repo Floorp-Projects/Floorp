@@ -5610,11 +5610,24 @@ function handleLinkClick(event, href, linkNode) {
     catch (e) { }
   }
 
+  // first get document wide referrer policy, then
+  // get referrer attribute from clicked link and parse it and
+  // allow per element referrer to overrule the document wide referrer if enabled
+  let referrerPolicy = doc.referrerPolicy;
+  if (Services.prefs.getBoolPref("network.http.enablePerElementReferrer") &&
+      linkNode) {
+    let referrerAttrValue = Services.netUtils.parseAttributePolicyString(linkNode.
+                            getAttribute("referrer"));
+    if (referrerAttrValue != Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT) {
+      referrerPolicy = referrerAttrValue;
+    }
+  }
+
   urlSecurityCheck(href, doc.nodePrincipal);
   let params = { charset: doc.characterSet,
                  allowMixedContent: persistAllowMixedContentInChildTab,
                  referrerURI: referrerURI,
-                 referrerPolicy: doc.referrerPolicy,
+                 referrerPolicy: referrerPolicy,
                  noReferrer: BrowserUtils.linkHasNoReferrer(linkNode) };
   openLinkIn(href, where, params);
   event.preventDefault();
