@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 module.metadata = {
@@ -12,7 +13,7 @@ module.metadata = {
 };
 
 const { Cc, Ci } = require('chrome');
-const { all } = require('../../core/promise');
+const { defer, all, resolve } = require('../../core/promise');
 const { safeMerge, omit } = require('../../util/object');
 const historyService = Cc['@mozilla.org/browser/nav-history-service;1']
                      .getService(Ci.nsINavHistoryService);
@@ -44,11 +45,13 @@ const PLACES_PROPERTIES = [
 ];
 
 function execute (queries, options) {
-  return new Promise(resolve => {
-    let root = historyService
-        .executeQueries(queries, queries.length, options).root;
-    resolve(collect([], root));
-  });
+  let deferred = defer();
+  let root = historyService
+    .executeQueries(queries, queries.length, options).root;
+
+  let items = collect([], root);
+  deferred.resolve(items);
+  return deferred.promise;
 }
 
 function collect (acc, node) {
@@ -66,35 +69,40 @@ function collect (acc, node) {
 }
 
 function query (queries, options) {
-  return new Promise((resolve, reject) => {
-    queries = queries || [];
-    options = options || {};
-    let optionsObj, queryObjs;
+  queries = queries || [];
+  options = options || {}; 
+  let deferred = defer();
+  let optionsObj, queryObjs;
 
+  try {
     optionsObj = historyService.getNewQueryOptions();
     queryObjs = [].concat(queries).map(createQuery);
     if (!queryObjs.length) {
       queryObjs = [historyService.getNewQuery()];
     }
     safeMerge(optionsObj, options);
+  } catch (e) {
+    deferred.reject(e);
+    return deferred.promise;
+  }
 
-    /*
-     * Currently `places:` queries are not supported
-     */
-    optionsObj.excludeQueries = true;
+  /*
+   * Currently `places:` queries are not supported
+   */
+  optionsObj.excludeQueries = true;
 
-    execute(queryObjs, optionsObj).then((results) => {
-      if (optionsObj.queryType === 0) {
-        return results.map(normalize);
-      }
-      else if (optionsObj.queryType === 1) {
-        // Formats query results into more standard
-        // data structures for returning
-        return all(results.map(({itemId}) =>
-          send('sdk-places-bookmarks-get', { id: itemId })));
-      }
-    }).then(resolve, reject);
-  });
+  execute(queryObjs, optionsObj).then(function (results) {
+    if (optionsObj.queryType === 0) {
+      return results.map(normalize);
+    } else if (optionsObj.queryType === 1) {
+      // Formats query results into more standard
+      // data structures for returning
+      return all(results.map(({itemId}) =>
+        send('sdk-places-bookmarks-get', { id: itemId })));
+    }
+  }).then(deferred.resolve, deferred.reject);
+  
+  return deferred.promise;
 }
 exports.query = query;
 
@@ -132,7 +140,7 @@ function queryReceiver (message) {
 
 /*
  * Converts a nsINavHistoryResultNode into a plain object
- *
+ * 
  * https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsINavHistoryResultNode
  */
 function normalize (historyObj) {
@@ -142,8 +150,7 @@ function normalize (historyObj) {
     else if (prop === 'time') {
       // Cast from microseconds to milliseconds
       obj.time = Math.floor(historyObj.time / 1000)
-    }
-    else if (prop === 'accessCount')
+    } else if (prop === 'accessCount')
       obj.visitCount = historyObj[prop];
     else
       obj[prop] = historyObj[prop];
