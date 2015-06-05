@@ -139,9 +139,26 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, MediaSource& aSource,
                      nsAString& aResult,
                      ErrorResult& aError)
 {
-  CreateObjectURLInternal(aGlobal, &aSource,
-                          NS_LITERAL_CSTRING(MEDIASOURCEURI_SCHEME), aOptions,
-                          aResult, aError);
+  nsCOMPtr<nsIPrincipal> principal = nsContentUtils::ObjectPrincipal(aGlobal.Get());
+
+  nsCString url;
+  nsresult rv = nsHostObjectProtocolHandler::
+    AddDataEntry(NS_LITERAL_CSTRING(MEDIASOURCEURI_SCHEME),
+                 &aSource, principal, url);
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+    return;
+  }
+
+  nsCOMPtr<nsIRunnable> revocation = NS_NewRunnableFunction(
+    [url] {
+      nsHostObjectProtocolHandler::RemoveDataEntry(url);
+    });
+
+  rv = nsContentUtils::RunInStableState(revocation);
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "RunInStableState() failure");
+
+  CopyASCIItoUTF16(url, aResult);
 }
 
 void
