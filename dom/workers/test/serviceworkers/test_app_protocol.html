@@ -22,7 +22,6 @@ const appManifestURL =
 let gApp;
 
 function setup() {
-  info('Setting up');
   return new Promise((resolve, reject) => {
     SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.pushPrefEnv({'set': [
@@ -75,9 +74,15 @@ function launchApp() {
     iframe.setAttribute('mozapp', gApp.manifestURL);
     iframe.addEventListener('mozbrowsershowmodalprompt', function listener(e) {
       let message = e.detail.message;
-      if (/READY/.exec(message)) {
+      if (/OK/.exec(message)) {
+        ok(true, "Message from app: " + message);
+      } else if (/KO/.exec(message)) {
+        ok(false, "Message from app: " + message);
+      } else if (/READY/.exec(message)) {
         ok(true, "Message from app: " + message);
         resolve();
+      } else {
+        ok(false, "Unexpected message received: " + message);
       }
     }, false);
     let domParent = document.getElementById('container');
@@ -88,14 +93,12 @@ function launchApp() {
 }
 
 function loadControlled() {
-  info("reloading");
   return new Promise((resolve, reject) => {
     let iframe = document.createElement('iframe');
     iframe.setAttribute('mozbrowser', 'true');
     iframe.setAttribute('mozapp', gApp.manifestURL);
     iframe.addEventListener('mozbrowsershowmodalprompt', function listener(e) {
       let message = e.detail.message;
-      info(message);
       if (/OK/.exec(message)) {
         ok(true, "Message from app: " + message);
       } else if (/KO/.exec(message)) {
@@ -106,13 +109,14 @@ function loadControlled() {
         let domParent = document.getElementById('container');
         domParent.removeChild(iframe);
         resolve();
+      } else {
+        ok(false, "Unexpected message received: " + message);
       }
       }, false);
     let domParent = document.getElementById('container');
     domParent.appendChild(iframe);
     SpecialPowers.wrap(iframe.contentWindow).location =
       gApp.origin + '/controlled.html';
-    info("reloaded");
   });
 }
 

@@ -644,12 +644,19 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         if (visibleRegion.GetNumRects() > 1) {
             mVisibleRegions.push_back(HwcUtils::RectVector());
             HwcUtils::RectVector* visibleRects = &(mVisibleRegions.back());
+            bool isVisible = false;
             if(!HwcUtils::PrepareVisibleRegion(visibleRegion,
                                      layerTransform,
                                      layerBufferTransform,
                                      clip,
                                      bufferRect,
-                                     visibleRects)) {
+                                     visibleRects,
+                                     isVisible)) {
+                LOGD("A region of layer is too small to be rendered by HWC");
+                return false;
+            }
+            if (!isVisible) {
+                // Layer is not visible, no need to render it
                 return true;
             }
             region.numRects = visibleRects->size();

@@ -22,27 +22,6 @@ histoenums_TARGET := export
 
 include $(topsrcdir)/config/rules.mk
 
-histogram_files := $(srcdir)/Histograms.json $(topsrcdir)/dom/base/UseCounters.conf
-histogram_enum_file := TelemetryHistogramEnums.h
-histogram_data_file := TelemetryHistogramData.inc
-
-enum_python_deps := \
-  $(srcdir)/gen-histogram-enum.py \
-  $(srcdir)/histogram_tools.py \
-  $(NULL)
-
-data_python_deps := \
-  $(srcdir)/gen-histogram-data.py \
-  $(srcdir)/histogram_tools.py \
-  $(NULL)
-
-$(histogram_enum_file): $(histogram_files) $(enum_python_deps)
-	$(PYTHON) $(srcdir)/gen-histogram-enum.py $(histogram_files) > $@
-$(histogram_data_file): $(histogram_files) $(data_python_deps)
-	$(PYTHON) $(srcdir)/gen-histogram-data.py $(histogram_files) > $@
-
-GARBAGE += $(histogram_enum_file)
-
 # This is so hacky. Waiting on bug 988938.
 addondir = $(srcdir)/tests/addons
 testdir = $(abspath $(DEPTH)/_tests/xpcshell/toolkit/components/telemetry/tests/unit)

@@ -508,6 +508,7 @@ public:
     {
       return mParentIsActive;
     }
+    bool AsyncPanZoomEnabled() { return mAsyncPanZoomEnabled; }
 
 protected:
     virtual ~TabChild();
@@ -644,6 +645,7 @@ private:
     double mDefaultScale;
     bool mIPCOpen;
     bool mParentIsActive;
+    bool mAsyncPanZoomEnabled;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

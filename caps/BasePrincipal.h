@@ -83,7 +83,7 @@ public:
 
   virtual bool IsOnCSSUnprefixingWhitelist() override { return false; }
 
-  static bool IsCodebasePrincipal(nsIPrincipal* aPrincipal);
+  virtual bool IsCodebasePrincipal() const { return false; };
 
   static BasePrincipal* Cast(nsIPrincipal* aPrin) { return static_cast<BasePrincipal*>(aPrin); }
   static already_AddRefed<BasePrincipal> CreateCodebasePrincipal(nsIURI* aURI, OriginAttributes& aAttrs);

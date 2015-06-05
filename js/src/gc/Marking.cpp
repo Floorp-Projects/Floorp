@@ -2414,11 +2414,7 @@ js::UnmarkGrayCellRecursively(gc::Cell* cell, JS::TraceKind kind)
     MOZ_ASSERT(cell);
 
     JSRuntime* rt = cell->runtimeFromMainThread();
-
-    // When the ReadBarriered type is used in a HashTable, it is difficult or
-    // impossible to suppress the implicit cast operator while iterating for GC.
-    if (rt->isHeapBusy())
-        return false;
+    MOZ_ASSERT(!rt->isHeapBusy());
 
     bool unmarkedArg = false;
     if (cell->isTenured()) {

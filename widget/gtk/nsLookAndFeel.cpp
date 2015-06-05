@@ -243,9 +243,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
         break;
     case eColorID_graytext: // disabled text in windows, menus, etc.
     case eColorID_inactivecaptiontext: // text in inactive window caption
-        gtk_style_context_get_color(mBackgroundStyle, 
-                                    GTK_STATE_FLAG_INSENSITIVE, &gdk_color);
-        aColor = GDK_RGBA_TO_NS_RGBA(gdk_color);
+        aColor = sMenuTextInactive;
         break;
     case eColorID_inactivecaption:
         // inactive window caption
@@ -1009,6 +1007,7 @@ nsLookAndFeel::Init()
 
     // tooltip foreground and background
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_TOOLTIP);
+    gtk_style_context_add_class(style, GTK_STYLE_CLASS_BACKGROUND);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sInfoBackground = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
@@ -1028,6 +1027,8 @@ nsLookAndFeel::Init()
     style = gtk_widget_get_style_context(accel_label);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sMenuText = GDK_RGBA_TO_NS_RGBA(color);
+    gtk_style_context_get_color(style, GTK_STATE_FLAG_INSENSITIVE, &color);
+    sMenuTextInactive = GDK_RGBA_TO_NS_RGBA(color);
 
     style = gtk_widget_get_style_context(menu);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
