@@ -70,7 +70,7 @@ class JarMaker(object):
       '''
 
     ignore = re.compile('\s*(\#.*)?$')
-    jarline = re.compile('(?:(?P<jarfile>[\w\d.\-\_\\\/]+).jar\:)|(?:\s*(\#.*)?)\s*$')
+    jarline = re.compile('(?:(?P<jarfile>[\w\d.\-\_\\\/{}]+).jar\:)|(?:\s*(\#.*)?)\s*$')
     relsrcline = re.compile('relativesrcdir\s+(?P<relativesrcdir>.+?):')
     regline = re.compile('\%\s+(.*)$')
     entryre = '(?P<optPreprocess>\*)?(?P<optOverwrite>\+?)\s+'
