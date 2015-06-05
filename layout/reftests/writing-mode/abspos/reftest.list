@@ -34,10 +34,10 @@ fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) == s71-abs-pos-non-replaced-vlr
 fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) == s71-abs-pos-non-replaced-vlr-059.xht s71-abs-pos-non-replaced-vlr-059-ref.xht
 fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) == s71-abs-pos-non-replaced-vlr-061.xht s71-abs-pos-non-replaced-vlr-061-ref.xht
 fuzzy-if(cocoaWidget,118,242) fuzzy-if(winWidget,116,240) == s71-abs-pos-non-replaced-vlr-063.xht s71-abs-pos-non-replaced-vlr-063-ref.xht
-fails == s71-abs-pos-non-replaced-vlr-065.xht s71-abs-pos-non-replaced-vlr-065-ref.xht
+fuzzy-if(cocoaWidget,118,242) fuzzy-if(winWidget,116,240) == s71-abs-pos-non-replaced-vlr-065.xht s71-abs-pos-non-replaced-vlr-065-ref.xht
 fuzzy-if(cocoaWidget,118,242) fuzzy-if(winWidget,116,240) == s71-abs-pos-non-replaced-vlr-067.xht s71-abs-pos-non-replaced-vlr-067-ref.xht
 fuzzy-if(cocoaWidget,118,242) fuzzy-if(winWidget,116,240) == s71-abs-pos-non-replaced-vlr-069.xht s71-abs-pos-non-replaced-vlr-069-ref.xht
-fails == s71-abs-pos-non-replaced-vlr-071.xht s71-abs-pos-non-replaced-vlr-071-ref.xht
+fuzzy-if(cocoaWidget,118,242) fuzzy-if(winWidget,116,240) == s71-abs-pos-non-replaced-vlr-071.xht s71-abs-pos-non-replaced-vlr-071-ref.xht
 fuzzy-if(cocoaWidget,118,242) fuzzy-if(winWidget,116,240) == s71-abs-pos-non-replaced-vlr-073.xht s71-abs-pos-non-replaced-vlr-073-ref.xht
 fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) == s71-abs-pos-non-replaced-vlr-075.xht s71-abs-pos-non-replaced-vlr-075-ref.xht
 fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) == s71-abs-pos-non-replaced-vlr-077.xht s71-abs-pos-non-replaced-vlr-077-ref.xht
@@ -82,10 +82,10 @@ fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) == s71-abs-pos-non-replaced-vrl
 fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) == s71-abs-pos-non-replaced-vrl-058.xht s71-abs-pos-non-replaced-vrl-058-ref.xht
 fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) == s71-abs-pos-non-replaced-vrl-060.xht s71-abs-pos-non-replaced-vrl-060-ref.xht
 fuzzy-if(cocoaWidget,118,242) fuzzy-if(winWidget,116,240) == s71-abs-pos-non-replaced-vrl-062.xht s71-abs-pos-non-replaced-vrl-062-ref.xht
-fails == s71-abs-pos-non-replaced-vrl-064.xht s71-abs-pos-non-replaced-vrl-064-ref.xht
+fuzzy-if(cocoaWidget,118,242) fuzzy-if(winWidget,116,240) == s71-abs-pos-non-replaced-vrl-064.xht s71-abs-pos-non-replaced-vrl-064-ref.xht
 fuzzy-if(cocoaWidget,118,242) fuzzy-if(winWidget,116,240) == s71-abs-pos-non-replaced-vrl-066.xht s71-abs-pos-non-replaced-vrl-066-ref.xht
 fuzzy-if(cocoaWidget,118,242) fuzzy-if(winWidget,116,240) == s71-abs-pos-non-replaced-vrl-068.xht s71-abs-pos-non-replaced-vrl-068-ref.xht
-fails == s71-abs-pos-non-replaced-vrl-070.xht s71-abs-pos-non-replaced-vrl-070-ref.xht
+fuzzy-if(cocoaWidget,118,242) fuzzy-if(winWidget,116,240) == s71-abs-pos-non-replaced-vrl-070.xht s71-abs-pos-non-replaced-vrl-070-ref.xht
 fuzzy-if(cocoaWidget,118,242) fuzzy-if(winWidget,116,240) == s71-abs-pos-non-replaced-vrl-072.xht s71-abs-pos-non-replaced-vrl-072-ref.xht
 fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) == s71-abs-pos-non-replaced-vrl-074.xht s71-abs-pos-non-replaced-vrl-074-ref.xht
 fuzzy-if(cocoaWidget,15,5) fuzzy-if(d2d,102,164) == s71-abs-pos-non-replaced-vrl-076.xht s71-abs-pos-non-replaced-vrl-076-ref.xht
