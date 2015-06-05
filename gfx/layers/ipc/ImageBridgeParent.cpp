@@ -206,7 +206,7 @@ bool ImageBridgeParent::RecvWillStop()
 static void
 ReleaseImageBridgeParent(ImageBridgeParent* aImageBridgeParent)
 {
-  aImageBridgeParent->Release();
+  RELEASE_MANUALLY(aImageBridgeParent);
 }
 
 bool ImageBridgeParent::RecvStop()
@@ -218,7 +218,7 @@ bool ImageBridgeParent::RecvStop()
   // the handling of this sync message can't race with the destruction of
   // the ImageBridgeParent, which would trigger the dreaded "mismatched CxxStackFrames"
   // assertion of MessageChannel.
-  AddRef();
+  ADDREF_MANUALLY(this);
   MessageLoop::current()->PostTask(
     FROM_HERE,
     NewRunnableFunction(&ReleaseImageBridgeParent, this));

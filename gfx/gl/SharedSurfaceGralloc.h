@@ -73,20 +73,17 @@ public:
     layers::GrallocTextureClientOGL* GetTextureClient() {
         return mTextureClient;
     }
+
+    virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) override;
 };
 
 class SurfaceFactory_Gralloc
     : public SurfaceFactory
 {
-protected:
-    const layers::TextureFlags mFlags;
-    RefPtr<layers::ISurfaceAllocator> mAllocator;
-
 public:
-    SurfaceFactory_Gralloc(GLContext* prodGL,
-                           const SurfaceCaps& caps,
-                           layers::TextureFlags flags,
-                           layers::ISurfaceAllocator* allocator);
+    SurfaceFactory_Gralloc(GLContext* prodGL, const SurfaceCaps& caps,
+                           const RefPtr<layers::ISurfaceAllocator>& allocator,
+                           const layers::TextureFlags& flags);
 
     virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {
         bool hasAlpha = mReadCaps.alpha;
