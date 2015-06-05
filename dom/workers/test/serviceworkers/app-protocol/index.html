@@ -19,7 +19,8 @@ function registerServiceWorker() {
 
 function runTests() {
   return Promise.resolve()
-    .then(() => { return testFetchAppResource('networkresponse'); })
+    .then(() => { return testFetchAppResource('foo.txt',
+                                              'networkresponse'); })
     .then(registerServiceWorker)
     .then(ready);
 }
