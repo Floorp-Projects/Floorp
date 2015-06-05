@@ -13,7 +13,8 @@ apt-get install -y \
     npm \
     curl \
     x11-utils \
-    python-virtualenv
+    python-virtualenv \
+    valgrind
 
 # see https://bugzilla.mozilla.org/show_bug.cgi?id=1161075
 apt-get install -y openjdk-7-jdk
