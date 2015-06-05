@@ -12,6 +12,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/WritingModes.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "Units.h"
@@ -62,11 +63,13 @@ public:
                                       bool aCancel,
                                       nsAString& aLastString);
 
-  void SetSelection(uint32_t aCaretOffset)
+  void SetSelection(uint32_t aCaretOffset, const WritingMode& aWritingMode)
   {
-    SetSelection(aCaretOffset, aCaretOffset);
+    SetSelection(aCaretOffset, aCaretOffset, aWritingMode);
   }
-  void SetSelection(uint32_t aAnchorOffset, uint32_t aFocusOffset);
+  void SetSelection(uint32_t aAnchorOffset,
+                    uint32_t aFocusOffset,
+                    const WritingMode& aWritingMode);
   bool SelectionCollapsed() const { return mSelection.Collapsed(); }
   bool SelectionReversed() const { return mSelection.Reversed(); }
   bool SelectionEndIsGraterThanTextLength() const
@@ -78,6 +81,11 @@ public:
   uint32_t SelectionStart() const { return mSelection.StartOffset(); }
   uint32_t SelectionEnd() const { return mSelection.EndOffset(); }
   uint32_t SelectionLength() const { return mSelection.Length(); }
+
+  const WritingMode& SelectionWritingMode() const
+  {
+    return mSelection.mWritingMode;
+  }
 
   bool UpdateTextRectArray(const RectArray& aTextRectArray)
   {
@@ -114,6 +122,8 @@ private:
     // Following values are offset in "flat text".
     uint32_t mAnchor;
     uint32_t mFocus;
+
+    WritingMode mWritingMode;
 
     Selection()
       : mAnchor(0)

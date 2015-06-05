@@ -15,7 +15,6 @@
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/WritingModes.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIAuthPromptProvider.h"
@@ -478,7 +477,6 @@ protected:
     // IME
     static TabParent *mIMETabParent;
     ContentCache mContentCache;
-    mozilla::WritingMode mWritingMode;
 
     LayoutDeviceIntRect mIMEEditorRect;
 
