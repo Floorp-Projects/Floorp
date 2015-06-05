@@ -64,6 +64,7 @@ GMPParent::GMPParent()
   , mAsyncShutdownRequired(false)
   , mAsyncShutdownInProgress(false)
   , mChildPid(0)
+  , mHoldingSelfRef(false)
 {
   LOGD("GMPParent ctor");
   mPluginId = GeckoChildProcessHost::GetUniqueID();
@@ -74,6 +75,8 @@ GMPParent::~GMPParent()
   // Can't Close or Destroy the process here, since destruction is MainThread only
   MOZ_ASSERT(NS_IsMainThread());
   LOGD("GMPParent dtor");
+
+  MOZ_ASSERT(!mProcess);
 }
 
 nsresult
@@ -177,6 +180,13 @@ GMPParent::LoadProcess()
   }
 
   mState = GMPStateLoaded;
+
+  // Hold a self ref while the child process is alive. This ensures that
+  // during shutdown the GMPParent stays we stay alive long enough to
+  // terminate the child process.
+  MOZ_ASSERT(!mHoldingSelfRef);
+  mHoldingSelfRef = true;
+  AddRef();
 
   return NS_OK;
 }
@@ -408,6 +418,10 @@ GMPParent::DeleteProcess()
     new NotifyGMPShutdownTask(NS_ConvertUTF8toUTF16(mNodeId)),
     NS_DISPATCH_NORMAL);
 
+  if (mHoldingSelfRef) {
+    Release();
+    mHoldingSelfRef = false;
+  }
 }
 
 GMPState
