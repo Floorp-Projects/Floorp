@@ -17,54 +17,29 @@ namespace mozilla {
 
 class DataBuffer {
  public:
-  DataBuffer() : data_(nullptr), len_(0), capacity_(0) {}
+  DataBuffer() : data_(nullptr), len_(0) {}
   DataBuffer(const uint8_t *data, size_t len) {
-    Assign(data, len, len);
-  }
-  DataBuffer(const uint8_t *data, size_t len, size_t capacity) {
-    Assign(data, len, capacity);
+    Assign(data, len);
   }
 
-  // to ensure extra space for expansion
-  void Assign(const uint8_t *data, size_t len, size_t capacity) {
-    MOZ_RELEASE_ASSERT(len <= capacity);
-    Allocate(capacity);
+  void Assign(const uint8_t *data, size_t len) {
+    Allocate(len);
     memcpy(static_cast<void *>(data_.get()),
            static_cast<const void *>(data), len);
-    len_ = len;
   }
 
-  void Allocate(size_t capacity) {
-    data_.reset(new uint8_t[capacity ? capacity : 1]);  // Don't depend on new [0].
-    capacity_ = capacity;
-  }
-
-  void EnsureCapacity(size_t capacity) {
-    if (capacity_ < capacity) {
-      uint8_t *new_data = new uint8_t[ capacity ? capacity : 1];
-      memcpy(static_cast<void *>(new_data),
-             static_cast<const void *>(data_.get()), len_);
-      data_.reset(new_data); // after copying!  Deletes old data
-      capacity_ = capacity;
-    }
-  }
-
-  // used when something writes to the buffer (having checked
-  // capacity() or used EnsureCapacity()) and increased the length.
-  void SetLength(size_t len) {
-    MOZ_RELEASE_ASSERT(len <= capacity_);
+  void Allocate(size_t len) {
+    data_.reset(new uint8_t[len ? len : 1]);  // Don't depend on new [0].
     len_ = len;
   }
 
   const uint8_t *data() const { return data_.get(); }
   uint8_t *data() { return data_.get(); }
   size_t len() const { return len_; }
-  size_t capacity() const { return capacity_; }
 
 private:
   UniquePtr<uint8_t[]> data_;
   size_t len_;
-  size_t capacity_;
 
   DISALLOW_COPY_ASSIGN(DataBuffer);
 };
