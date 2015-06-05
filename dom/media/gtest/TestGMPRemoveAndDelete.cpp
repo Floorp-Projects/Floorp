@@ -11,8 +11,9 @@
 #include "mozilla/Services.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
+#include "GMPVideoDecoderProxy.h"
 
-#define GMP_DIR_NAME NS_LITERAL_STRING("gmp-fake")
+#define GMP_DIR_NAME NS_LITERAL_STRING("gmp-fakeopenh264")
 #define GMP_OLD_VERSION NS_LITERAL_STRING("1.0")
 #define GMP_NEW_VERSION NS_LITERAL_STRING("1.1")
 
@@ -414,6 +415,10 @@ void
 GMPRemoveTest::Terminated()
 {
   mIsTerminated = true;
+  if (mDecoder) {
+    mDecoder->Close();
+    mDecoder = nullptr;
+  }
 }
 
 void
@@ -435,6 +440,17 @@ GMPRemoveTest::GeneratePlugin()
   rv = origDir->Append(GMP_OLD_VERSION);
   EXPECT_OK(rv);
 
+  rv = gmpDir->Clone(getter_AddRefs(tmpDir));
+  EXPECT_OK(rv);
+  rv = tmpDir->Append(GMP_NEW_VERSION);
+  EXPECT_OK(rv);
+  bool exists = false;
+  rv = tmpDir->Exists(&exists);
+  EXPECT_OK(rv);
+  if (exists) {
+    rv = tmpDir->Remove(true);
+    EXPECT_OK(rv);
+  }
   rv = origDir->CopyTo(gmpDir, GMP_NEW_VERSION);
   EXPECT_OK(rv);
 
