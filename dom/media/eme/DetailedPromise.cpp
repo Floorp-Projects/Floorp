@@ -35,7 +35,7 @@ LogToConsole(const nsAString& aMsg)
 }
 
 void
-DetailedPromise::MaybeReject(nsresult aArg, const nsCString& aReason)
+DetailedPromise::MaybeReject(nsresult aArg, const nsACString& aReason)
 {
   mResponded = true;
 
@@ -47,7 +47,7 @@ DetailedPromise::MaybeReject(nsresult aArg, const nsCString& aReason)
 }
 
 void
-DetailedPromise::MaybeReject(ErrorResult&, const nsCString& aReason)
+DetailedPromise::MaybeReject(ErrorResult&, const nsACString& aReason)
 {
   NS_NOTREACHED("nsresult expected in MaybeReject()");
 }
