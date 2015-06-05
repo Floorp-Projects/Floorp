@@ -1577,6 +1577,27 @@ public:
   static void WarnScriptWasIgnored(nsIDocument* aDocument);
 
   /**
+   * Whether to assert that RunInStableState() succeeds, or ignore failure,
+   * which may happen late in shutdown.
+   */
+  enum class DispatchFailureHandling { AssertSuccess, IgnoreFailure };
+
+  /**
+   * Add a "synchronous section", in the form of an nsIRunnable run once the
+   * event loop has reached a "stable state". |aRunnable| must not cause any
+   * queued events to be processed (i.e. must not spin the event loop).
+   * We've reached a stable state when the currently executing task/event has
+   * finished, see
+   * http://www.whatwg.org/specs/web-apps/current-work/multipage/webappapis.html#synchronous-section
+   * In practice this runs aRunnable once the currently executing event
+   * finishes. If called multiple times per task/event, all the runnables will
+   * be executed, in the order in which RunInStableState() was called.
+   */
+  static void RunInStableState(already_AddRefed<nsIRunnable> aRunnable,
+                               DispatchFailureHandling aHandling =
+                                 DispatchFailureHandling::AssertSuccess);
+
+  /**
    * Retrieve information about the viewport as a data structure.
    * This will return information in the viewport META data section
    * of the document. This can be used in lieu of ProcessViewportInfo(),
