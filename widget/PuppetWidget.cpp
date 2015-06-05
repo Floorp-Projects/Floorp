@@ -674,11 +674,12 @@ PuppetWidget::NotifyIMEOfFocusChange(bool aFocus)
     return NS_ERROR_FAILURE;
 
   if (aFocus) {
-    if (NS_WARN_IF(!mContentCache.CacheText(this))) {
+    // When IME gets focus, we should initalize all information of the content.
+    if (NS_WARN_IF(!mContentCache.CacheAll(this))) {
       return NS_ERROR_FAILURE;
     }
-    mTabChild->SendNotifyIMETextHint(mContentCache);
   } else {
+    // When IME loses focus, we don't need to store anything.
     mContentCache.Clear();
   }
 
@@ -686,14 +687,6 @@ PuppetWidget::NotifyIMEOfFocusChange(bool aFocus)
   if (!mTabChild->SendNotifyIMEFocus(aFocus, mContentCache,
                                      &mIMEPreferenceOfParent)) {
     return NS_ERROR_FAILURE;
-  }
-
-  // TODO: Optimize this later.
-  if (aFocus) {
-    IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
-    notification.mSelectionChangeData.mCausedByComposition = false;
-    NotifyIMEOfSelectionChange(notification); // Update selection
-    NotifyIMEOfEditorRect();
   }
   return NS_OK;
 }
@@ -712,23 +705,6 @@ PuppetWidget::NotifyIMEOfUpdateComposition()
     return NS_ERROR_FAILURE;
   }
   mTabChild->SendNotifyIMESelectedCompositionRect(mContentCache);
-  return NS_OK;
-}
-
-nsresult
-PuppetWidget::NotifyIMEOfEditorRect()
-{
-#ifndef MOZ_CROSS_PROCESS_IME
-  return NS_OK;
-#endif
-  if (NS_WARN_IF(!mTabChild)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (NS_WARN_IF(!mContentCache.CacheEditorRect(this))) {
-    return NS_ERROR_FAILURE;
-  }
-  mTabChild->SendNotifyIMEEditorRect(mContentCache);
   return NS_OK;
 }
 
@@ -760,10 +736,16 @@ PuppetWidget::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
   if (!mTabChild)
     return NS_ERROR_FAILURE;
 
-  if (NS_WARN_IF(!mContentCache.CacheText(this))) {
+  // FYI: text change notification is the first notification after
+  //      a user operation changes the content.  So, we need to modify
+  //      the cache as far as possible here.
+
+  // When text is changed, selection and text rects must be changed too.
+  if (NS_WARN_IF(!mContentCache.CacheText(this)) ||
+      NS_WARN_IF(!mContentCache.CacheTextRects(this)) ||
+      NS_WARN_IF(!mContentCache.CacheSelection(this))) {
     return NS_ERROR_FAILURE;
   }
-  mTabChild->SendNotifyIMETextHint(mContentCache);
 
   // TabParent doesn't this this to cache.  we don't send the notification
   // if parent process doesn't request NOTIFY_TEXT_CHANGE.
@@ -776,6 +758,8 @@ PuppetWidget::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
       aIMENotification.mTextChangeData.mOldEndOffset,
       aIMENotification.mTextChangeData.mNewEndOffset,
       aIMENotification.mTextChangeData.mCausedByComposition);
+  } else {
+    mTabChild->SendUpdateContentCache(mContentCache);
   }
   return NS_OK;
 }
@@ -794,6 +778,8 @@ PuppetWidget::NotifyIMEOfSelectionChange(
   if (!mTabChild)
     return NS_ERROR_FAILURE;
 
+  // Note that selection change must be notified after text change if it occurs.
+  // Therefore, we don't need to query text content again here.
   mContentCache.SetSelection(
     aIMENotification.mSelectionChangeData.mOffset,
     aIMENotification.mSelectionChangeData.mLength,

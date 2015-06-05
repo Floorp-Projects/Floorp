@@ -1179,6 +1179,9 @@ IMEContentObserver::FlushMergeableNotifications()
     nsContentUtils::AddScriptRunner(new TextChangeEvent(this, mTextChangeData));
   }
 
+  // Be aware, PuppetWidget depends on the order of this. A selection change
+  // notification should not be sent before a text change notification because
+  // PuppetWidget shouldn't query new text content every selection change.
   if (mIsSelectionChangeEventPending) {
     mIsSelectionChangeEventPending = false;
     nsContentUtils::AddScriptRunner(

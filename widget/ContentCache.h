@@ -278,6 +278,7 @@ private:
 
   bool mIsComposing;
   bool mRequestedToCommitOrCancelComposition;
+  bool mIsChrome;
 
   friend struct IPC::ParamTraits<ContentCache>;
 };
