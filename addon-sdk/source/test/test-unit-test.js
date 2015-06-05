@@ -123,6 +123,7 @@ exports.testWaitUntilTimeoutInCallback = function(test) {
     expected.push(["print", "TEST-START | wait4ever\n"]);
     expected.push(["error", "fail:", "Timed out (after: START)"]);
     expected.push(["error", "test assertion never became true:\n", "assertion failed, value is false\n"]);
+    expected.push(["print", "TEST-END | wait4ever\n"]);
   }
   else {
     expected.push(["info",  "executing 'wait4ever'"]);
@@ -131,19 +132,17 @@ exports.testWaitUntilTimeoutInCallback = function(test) {
   }
 
   function checkExpected(name, args) {
-    var index = message;
-    if (message++ >= expected.length) {
+    if (expected.length == 0 || expected[0][0] != name) {
+      test.fail("Saw an unexpected console." + name + "() call " + args);
       return;
     }
 
-    let expectedArgs = expected[index].slice(1);
-    for (let i = 0; i < expectedArgs.length; i++) {
+    message++;
+    let expectedArgs = expected.shift().slice(1);
+    for (let i = 0; i < expectedArgs.length; i++)
       test.assertEqual(args[i], expectedArgs[i], "Should have seen the right message in argument " + i + " of message " + message);
-    }
-
-    if (message >= expected.length) {
+    if (expected.length == 0)
       test.done();
-    }
   }
 
   let runner = new (require("sdk/deprecated/unit-test").TestRunner)({
