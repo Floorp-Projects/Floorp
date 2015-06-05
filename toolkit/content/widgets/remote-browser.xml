@@ -47,6 +47,8 @@
 
       <field name="_controller">null</field>
 
+      <field name="_selectParentHelper">null</field>
+
       <field name="_remoteWebNavigation">null</field>
 
       <property name="webNavigation"
@@ -307,10 +309,14 @@
               break;
 
             case "Forms:ShowDropDown": {
-              Cu.import("resource://gre/modules/SelectParentHelper.jsm");
+              if (!this._selectParentHelper) {
+                this._selectParentHelper =
+                  Cu.import("resource://gre/modules/SelectParentHelper.jsm", {}).SelectParentHelper;
+              }
+
               let menulist = document.getElementById(this.getAttribute("selectmenulist"));
-              SelectParentHelper.populate(menulist, data.options, data.selectedIndex);
-              SelectParentHelper.open(this, menulist, data.rect);
+              this._selectParentHelper.populate(menulist, data.options, data.selectedIndex);
+              this._selectParentHelper.open(this, menulist, data.rect);
               break;
             }
 
@@ -338,9 +344,10 @@
             }
 
             case "Forms:HideDropDown": {
-              Cu.import("resource://gre/modules/SelectParentHelper.jsm");
-              let menulist = document.getElementById(this.getAttribute("selectmenulist"));
-              SelectParentHelper.hide(menulist);
+              if (this._selectParentHelper) {
+                let menulist = document.getElementById(this.getAttribute("selectmenulist"));
+                this._selectParentHelper.hide(menulist);
+              }
               break;
             }
 

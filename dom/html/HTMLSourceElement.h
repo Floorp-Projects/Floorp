@@ -25,6 +25,8 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLSourceElement,
+                                           nsGenericHTMLElement)
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLSourceElement, source)
 
@@ -48,6 +50,10 @@ public:
   // prior to DOM creation.
   static bool WouldMatchMediaForDocument(const nsAString& aMediaStr,
                                          const nsIDocument *aDocument);
+
+  // Return the MediaSource object if any associated with the src attribute
+  // when it was set.
+  MediaSource* GetSrcMediaSource() { return mSrcMediaSource; };
 
   // WebIDL
   void GetSrc(nsString& aSrc)
@@ -111,6 +117,7 @@ protected:
 
 private:
   nsRefPtr<nsMediaList> mMediaList;
+  nsRefPtr<MediaSource> mSrcMediaSource;
 };
 
 } // namespace dom

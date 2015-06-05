@@ -37,7 +37,7 @@ def buffer_handler_wrapper(handler, buffer_limit):
         buffer_limit = int(buffer_limit)
     return handlers.BufferingLogFilter(handler, buffer_limit)
 
-def default_formatter_options(log_type):
+def default_formatter_options(log_type, overrides):
     formatter_option_defaults = {
         "raw": {
             "level": "debug"
@@ -46,6 +46,10 @@ def default_formatter_options(log_type):
     rv = {"verbose": False,
           "level": "info"}
     rv.update(formatter_option_defaults.get(log_type, {}))
+
+    if overrides is not None:
+        rv.update(overrides)
+
     return rv
 
 fmt_options = {
@@ -159,7 +163,7 @@ def setup_handlers(logger, formatters, formatter_options):
             logger.add_handler(handler)
 
 
-def setup_logging(suite, args, defaults=None):
+def setup_logging(suite, args, defaults=None, formatter_defaults=None):
     """
     Configure a structuredlogger based on command line arguments.
 
@@ -174,7 +178,8 @@ def setup_logging(suite, args, defaults=None):
                      this isn't supplied, reasonable defaults are chosen
                      (coloured mach formatting if stdout is a terminal, or raw
                      logs otherwise).
-
+    :param formatter_defaults: A dictionary of {option_name: default_value} to provide
+                               to the formatters in the absence of command line overrides.
     :rtype: StructuredLogger
     """
 
@@ -216,7 +221,8 @@ def setup_logging(suite, args, defaults=None):
             if len(parts) == 3:
                 _, formatter, opt = parts
                 if formatter not in formatter_options:
-                    formatter_options[formatter] = default_formatter_options(formatter)
+                    formatter_options[formatter] = default_formatter_options(formatter,
+                                                                             formatter_defaults)
                 formatter_options[formatter][opt] = values
 
     #If there is no user-specified logging, go with the default options
@@ -231,7 +237,7 @@ def setup_logging(suite, args, defaults=None):
 
     for name in formatters:
         if name not in formatter_options:
-            formatter_options[name] = default_formatter_options(name)
+            formatter_options[name] = default_formatter_options(name, formatter_defaults)
 
     setup_handlers(logger, formatters, formatter_options)
     set_default_logger(logger)

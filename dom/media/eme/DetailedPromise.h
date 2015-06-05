@@ -31,10 +31,10 @@ public:
   }
 
   void MaybeReject(nsresult aArg) = delete;
-  void MaybeReject(nsresult aArg, const nsCString& aReason);
+  void MaybeReject(nsresult aArg, const nsACString& aReason);
 
   void MaybeReject(ErrorResult& aArg) = delete;
-  void MaybeReject(ErrorResult&, const nsCString& aReason);
+  void MaybeReject(ErrorResult&, const nsACString& aReason);
 
 private:
   explicit DetailedPromise(nsIGlobalObject* aGlobal);
