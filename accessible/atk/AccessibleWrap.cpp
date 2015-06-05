@@ -1466,6 +1466,15 @@ MaiAtkObject::FireStateChangeEvent(uint64_t aState, bool aEnabled)
     }
 }
 
+void
+a11y::ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr,
+                           int32_t aStart, uint32_t aLen, bool aIsInsert,
+                           bool aFromUser)
+{
+  MaiAtkObject* atkObj = MAI_ATK_OBJECT(GetWrapperFor(aTarget));
+  atkObj->FireTextChangeEvent(aStr, aStart, aLen, aIsInsert, aFromUser);
+}
+
 #define OLD_TEXT_INSERTED "text_changed::insert"
 #define OLD_TEXT_REMOVED "text_changed::delete"
 static const char* oldTextChangeStrings[2][2] = {

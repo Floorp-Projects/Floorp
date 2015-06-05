@@ -152,6 +152,23 @@ DocAccessibleParent::RecvCaretMoveEvent(const uint64_t& aID, const int32_t& aOff
 }
 
 bool
+DocAccessibleParent::RecvTextChangeEvent(const uint64_t& aID,
+                                         const nsString& aStr,
+                                         const int32_t& aStart,
+                                         const uint32_t& aLen,
+                                         const bool& aIsInsert,
+                                         const bool& aFromUser)
+{
+  ProxyAccessible* target = GetAccessible(aID);
+  if (!target)
+  return false;
+
+  ProxyTextChangeEvent(target, aStr, aStart, aLen, aIsInsert, aFromUser);
+
+  return true;
+}
+
+bool
 DocAccessibleParent::RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uint64_t& aID)
 {
   auto childDoc = static_cast<DocAccessibleParent*>(aChildDoc);
