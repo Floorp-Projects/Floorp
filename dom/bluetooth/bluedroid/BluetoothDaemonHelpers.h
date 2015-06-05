@@ -939,12 +939,6 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothUuid& aOut)
   return aPDU.Read(aOut.mUuid, sizeof(aOut.mUuid));
 }
 
-inline nsresult
-UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattAdvData& aOut)
-{
-  return aPDU.Read(aOut.mAdvData, sizeof(aOut.mAdvData));
-}
-
 nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattId& aOut);
 
