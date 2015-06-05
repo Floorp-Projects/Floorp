@@ -564,6 +564,11 @@ DXGIYCbCrTextureClient::Create(ISurfaceAllocator* aAllocator,
                                const gfx::IntSize& aSizeY,
                                const gfx::IntSize& aSizeCbCr)
 {
+  if (!aHandleY || !aHandleCb || !aHandleCr ||
+      !aTextureY, || !aTextureCb || !aTextureCr) {
+    return nullptr;
+  }
+
   RefPtr<DXGIYCbCrTextureClient> texture =
     new DXGIYCbCrTextureClient(aAllocator, aFlags);
   texture->mHandles[0] = aHandleY;

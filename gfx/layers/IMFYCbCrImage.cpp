@@ -98,7 +98,7 @@ InitTextures(IDirect3DDevice9* aDevice,
   return result.forget();
 }
 
-static void
+static bool
 FinishTextures(IDirect3DDevice9* aDevice,
                IDirect3DTexture9* aTexture,
                IDirect3DSurface9* aSurface)
@@ -107,10 +107,22 @@ FinishTextures(IDirect3DDevice9* aDevice,
     return;
   }
 
-  aSurface->UnlockRect();
+  HRESULT hr = aSurface->UnlockRect();
+  if (FAILED(hr)) {
+    return false;
+  }
+
   nsRefPtr<IDirect3DSurface9> dstSurface;
-  aTexture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
-  aDevice->UpdateSurface(aSurface, nullptr, dstSurface, nullptr);
+  hr = aTexture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  hr = aDevice->UpdateSurface(aSurface, nullptr, dstSurface, nullptr);
+  if (FAILED(hr)) {
+    return false;
+  }
+  return true;
 }
 
 static bool UploadData(IDirect3DDevice9* aDevice,
@@ -137,8 +149,7 @@ static bool UploadData(IDirect3DDevice9* aDevice,
     }
   }
 
-  FinishTextures(aDevice, aTexture, surf);
-  return true;
+  return FinishTextures(aDevice, aTexture, surf);
 }
 
 TextureClient*
