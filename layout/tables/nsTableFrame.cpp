@@ -302,8 +302,7 @@ nsTableFrame::UnregisterPositionedTablePart(nsIFrame* aFrame,
     static_cast<FrameTArray*>(props.Get(PositionedTablePartArray()));
 
   // Remove the frame.
-  MOZ_ASSERT(positionedParts &&
-             positionedParts->IndexOf(aFrame) != FrameTArray::NoIndex,
+  MOZ_ASSERT(positionedParts && positionedParts->Contains(aFrame),
              "Asked to unregister a positioned table part that wasn't registered");
   if (positionedParts) {
     positionedParts->RemoveElement(aFrame);
