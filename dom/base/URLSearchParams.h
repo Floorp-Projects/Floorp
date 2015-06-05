@@ -27,10 +27,6 @@ public:
   virtual void URLSearchParamsUpdated(URLSearchParams* aFromThis) = 0;
 };
 
-// This class is used in BasePrincipal and it's _extremely_ important that the
-// attributes are kept in the correct order. If this changes, please, update
-// BasePrincipal code.
-
 class URLSearchParams final : public nsISupports,
                               public nsWrapperCache
 {
@@ -85,24 +81,15 @@ public:
     Serialize(aRetval);
   }
 
-  class ForEachIterator
-  {
-  public:
-    virtual bool
-    URLSearchParamsIterator(const nsString& aName, const nsString& aValue) = 0;
-  };
+  typedef void (*ParamFunc)(const nsString& aName, const nsString& aValue,
+                            void* aClosure);
 
-  bool
-  ForEach(ForEachIterator& aIterator)
+  void
+  ForEach(ParamFunc aFunc, void* aClosure)
   {
     for (uint32_t i = 0; i < mSearchParams.Length(); ++i) {
-      if (!aIterator.URLSearchParamsIterator(mSearchParams[i].mKey,
-                                             mSearchParams[i].mValue)) {
-        return false;
-      }
+      aFunc(mSearchParams[i].mKey, mSearchParams[i].mValue, aClosure);
     }
-
-    return true;
   }
 
 private:
