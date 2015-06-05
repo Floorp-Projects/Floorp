@@ -8,6 +8,7 @@ module.metadata = {
 };
 
 const file = require("../io/file");
+const memory = require('./memory');
 const { Loader } = require("../test/loader");
 
 const { isNative } = require('@loader/options');
@@ -131,6 +132,7 @@ let loader = Loader(module);
 const NOT_TESTS = ['setup', 'teardown'];
 
 var TestFinder = exports.TestFinder = function TestFinder(options) {
+  memory.track(this);
   this.filter = options.filter;
   this.testInProcess = options.testInProcess === false ? false : true;
   this.testOutOfProcess = options.testOutOfProcess === true ? true : false;
