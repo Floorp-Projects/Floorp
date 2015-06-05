@@ -192,10 +192,6 @@ protected:
 
   void ClearBrokenState() { mBroken = false; }
 
-  // Sets blocking state only if the desired state is different from the
-  // current one. See the comment for mBlockingOnload for more information.
-  void SetBlockingOnload(bool aBlocking);
-
   /**
    * Returns the CORS mode that will be used for all future image loads. The
    * default implementation returns CORS_NONE unconditionally.

@@ -13,7 +13,8 @@
 
       SimpleTest.waitForExplicitFinish();
       setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
-      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_DISABLED, "Second Test Plug-in");
+      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Java Test Plug-in");
 
       function findPlugin(pluginName) {
           for (var i = 0; i < navigator.plugins.length; i++) {
@@ -36,38 +37,37 @@
       }
 
       function run() {
-        // Add "Test Plug-in" (but not "Second Test Plug-in") to the list of
-        // unhidden plugins. This test must modify the "plugins.enumerable_names"
-        // pref BEFORE accessing the navigator.plugins or navigator.mimeTypes
-        // arrays because they only read the pref when they first initialize
-        // their internal arrays!
-        var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"].getService(SpecialPowers.Ci.nsIPrefBranch);
-        var defaultEnumerableNamesPref = prefs.getCharPref("plugins.enumerable_names");
-        SpecialPowers.pushPrefEnv(
-          {'set': [["plugins.enumerable_names", defaultEnumerableNamesPref + ",Test Plug-in"]]},
-          finishRun
-        );
-      }
-      function finishRun() {
         var pluginElement = document.getElementById("plugin");
         is(pluginElement.identifierToStringTest("foo"), "foo", "Should be able to call a function provided by the plugin");
 
-        ok(navigator.plugins["Test Plug-in"], "Should have queried a non-hidden plugin named 'Test Plug-in'");
-        ok(navigator.plugins["Second Test Plug-in"], "Should have queried a hidden plugin named 'Test Plug-in'");
+        pluginElement = document.getElementById("disabledPlugin");
+        is(typeof pluginElement.identifierToStringTest, "undefined", "Should NOT be able to call a function on a disabled plugin");
 
-        ok(findPlugin("Test Plug-in"), "Should have found a non-hidden plugin named 'Test Plug-in'");
-        ok(!findPlugin("Second Test Plug-in"), "Should NOT found a hidden plugin named 'Test Plug-in'");
+        pluginElement = document.getElementById("clickToPlayPlugin");
+        is(typeof pluginElement.identifierToStringTest, "undefined", "Should NOT be able to call a function on a click-to-play plugin");
 
-        ok(navigator.mimeTypes["application/x-test"], "Should have queried a non-hidden MIME type named 'application/x-test'");
-        ok(navigator.mimeTypes["application/x-second-test"], "Should have queried a MIME type named 'application/x-second-test'");
+        ok(navigator.plugins["Test Plug-in"], "Should have queried a plugin named 'Test Plug-in'");
+        ok(!navigator.plugins["Second Test Plug-in"], "Should NOT have queried a disabled plugin named 'Second Test Plug-in'");
+        ok(navigator.plugins["Java Test Plug-in"], "Should have queried a click-to-play plugin named 'Java Test Plug-in'");
 
-        ok(findMimeType("application/x-test"), "Should have found a non-hidden MIME type named 'application/x-test'");
-        ok(!findMimeType("application/x-second-test"), "Should NOT have found a MIME type named 'application/x-second-test'");
+        ok(findPlugin("Test Plug-in"), "Should have found a plugin named 'Test Plug-in'");
+        ok(!findPlugin("Second Test Plug-in"), "Should NOT found a disabled plugin named 'Second Test Plug-in'");
+        ok(findPlugin("Java Test Plug-in"), "Should have found a click-to-play plugin named 'Java Test Plug-in'");
+
+        ok(navigator.mimeTypes["application/x-test"], "Should have queried a MIME type named 'application/x-test'");
+        ok(!navigator.mimeTypes["application/x-second-test"], "Should NOT have queried a disabled type named 'application/x-second-test'");
+        ok(navigator.mimeTypes["application/x-java-test"], "Should have queried a click-to-play MIME type named 'application/x-java-test'");
+
+        ok(findMimeType("application/x-test"), "Should have found a MIME type named 'application/x-test'");
+        ok(!findMimeType("application/x-second-test"), "Should NOT have found a disabled MIME type named 'application/x-second-test'");
+        ok(findMimeType("application/x-java-test"), "Should have found a click-to-play MIME type named 'application/x-java-test'");
 
         SimpleTest.finish();
       }
     </script>
 
-    <object id="plugin" type="application/x-second-test" width=200 height=200></object>
+    <object id="plugin" type="application/x-test" width=200 height=200></object>
+    <object id="disabledPlugin" type="application/x-second-test" width=200 height=200></object>
+    <object id="clickToPlayPlugin" type="application/x-java-test" width=200 height=200></object>
   </body>
 </html>

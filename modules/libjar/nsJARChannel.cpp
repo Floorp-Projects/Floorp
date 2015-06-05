@@ -896,7 +896,8 @@ void nsJARChannel::ResetInterception()
 }
 
 void
-nsJARChannel::OverrideWithSynthesizedResponse(nsIInputStream* aSynthesizedInput)
+nsJARChannel::OverrideWithSynthesizedResponse(nsIInputStream* aSynthesizedInput,
+                                              const nsACString& aContentType)
 {
     // In our current implementation, the FetchEvent handler will copy the
     // response stream completely into the pipe backing the input stream so we
@@ -916,6 +917,8 @@ nsJARChannel::OverrideWithSynthesizedResponse(nsIInputStream* aSynthesizedInput)
       aSynthesizedInput->Close();
       return;
     }
+
+    SetContentType(aContentType);
 
     FinishAsyncOpen();
 

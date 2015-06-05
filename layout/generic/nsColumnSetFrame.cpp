@@ -596,8 +596,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 
       LogicalSize kidCBSize(wm, availSize.ISize(wm), computedSize.BSize(wm));
       nsHTMLReflowState kidReflowState(PresContext(), aReflowState, child,
-                                       availSize, kidCBSize.Width(wm),
-                                       kidCBSize.Height(wm));
+                                       availSize, &kidCBSize);
       kidReflowState.mFlags.mIsTopOfPage = true;
       kidReflowState.mFlags.mTableIsSplittable = false;
       kidReflowState.mFlags.mIsColumnBalancing = aConfig.mBalanceColCount < INT32_MAX;

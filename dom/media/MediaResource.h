@@ -156,8 +156,7 @@ public:
     return aByteRange.mStart >= mStart && aByteRange.mEnd <= mEnd;
   }
 
-  MediaByteRange Extents(const MediaByteRange& aByteRange) const
-  {
+  MediaByteRange Extents(const MediaByteRange& aByteRange) const {
     if (IsNull()) {
       return aByteRange;
     }
@@ -165,7 +164,9 @@ public:
                           std::max(mEnd, aByteRange.mEnd));
   }
 
-  int64_t Length() { return mEnd - mStart; }
+  int64_t Length() const {
+    return mEnd - mStart;
+  }
 
   int64_t mStart, mEnd;
 };

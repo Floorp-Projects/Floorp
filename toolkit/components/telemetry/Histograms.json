@@ -7493,12 +7493,12 @@
     "kind": "exponential",
     "high": "5000",
     "n_buckets": 20,
-    "description": "Tracking how ServiceWorkerRegistrar loads data before the first content is shown"
+    "description": "Tracking how ServiceWorkerRegistrar loads data before the first content is shown. File bugs in Core::DOM in case of a Telemetry regression."
   },
   "SERVICE_WORKER_REQUEST_PASSTHROUGH": {
     "expires_in_version": "50",
     "kind": "boolean",
-    "description": "Intercepted fetch sending back same Request object."
+    "description": "Intercepted fetch sending back same Request object. File bugs in Core::DOM in case of a Telemetry regression."
   },
   "LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS": {
     "expires_in_version": "never",
@@ -8007,17 +8007,39 @@
   "SERVICE_WORKER_SPAWN_ATTEMPTS": {
     "expires_in_version": "50",
     "kind": "count",
-    "description": "Count attempts to spawn a ServiceWorker for a domain"
+    "description": "Count attempts to spawn a ServiceWorker for a domain. File bugs in Core::DOM in case of a Telemetry regression."
   },
   "SERVICE_WORKER_WAS_SPAWNED": {
     "expires_in_version": "50",
     "kind": "count",
-    "description": "Count ServiceWorkers that really did get a thread created for them"
+    "description": "Count ServiceWorkers that really did get a thread created for them. File bugs in Core::DOM in case of a Telemetry regression."
   },
   "SERVICE_WORKER_SPAWN_GETS_QUEUED": {
     "expires_in_version": "50",
     "kind": "count",
-    "description": "Tracking whether a ServiceWorker spawn gets queued due to hitting max workers per domain limit"
+    "description": "Tracking whether a ServiceWorker spawn gets queued due to hitting max workers per domain limit. File bugs in Core::DOM in case of a Telemetry regression."
+  },
+  "SERVICE_WORKER_REGISTRATIONS": {
+    "expires_in_version": "50",
+    "kind": "count",
+    "description": "Count how many registrations occurs. File bugs in Core::DOM in case of a Telemetry regression."
+  },
+  "SERVICE_WORKER_CONTROLLED_DOCUMENTS": {
+    "expires_in_version": "50",
+    "kind": "count",
+    "description": "Count whenever a document is controlled. File bugs in Core::DOM in case of a Telemetry regression."
+  },
+  "SERVICE_WORKER_UPDATED": {
+    "expires_in_version": "50",
+    "kind": "count",
+    "description": "Count ServiceWorkers scripts that are updated. File bugs in Core::DOM in case of a Telemetry regression."
+  },
+  "SERVICE_WORKER_LIFE_TIME": {
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "high": "120000",
+    "n_buckets": 20,
+    "description": "Tracking how long a ServiceWorker stays alive after it is spawned. File bugs in Core::DOM in case of a Telemetry regression."
   },
   "GRAPHICS_SANITY_TEST": {
     "expires_in_version": "never",

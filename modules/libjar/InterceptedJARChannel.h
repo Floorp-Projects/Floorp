@@ -41,6 +41,9 @@ class InterceptedJARChannel : public nsIInterceptedChannel
   // The stream to write the body of the synthesized response.
   nsCOMPtr<nsIOutputStream> mResponseBody;
 
+  // The content type of the synthesized response.
+  nsCString mContentType;
+
   // Wether this intercepted channel was performing a navigation.
   bool mIsNavigation;
 

@@ -2,13 +2,39 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MP3_TRACK_DEMUXER_H_
-#define MP3_TRACK_DEMUXER_H_
+#ifndef MP3_DEMUXER_H_
+#define MP3_DEMUXER_H_
 
 #include "mozilla/Attributes.h"
-#include "demuxer/TrackDemuxer.h"
+#include "MediaDataDemuxer.h"
+#include "MediaResource.h"
 
-namespace mp4_demuxer {
+namespace mozilla {
+namespace mp3 {
+
+class MP3TrackDemuxer;
+
+class MP3Demuxer : public MediaDataDemuxer {
+public:
+  // MediaDataDemuxer interface.
+  explicit MP3Demuxer(MediaResource* aSource);
+  nsRefPtr<InitPromise> Init() override;
+  already_AddRefed<MediaDataDemuxer> Clone() const override;
+  bool HasTrackType(TrackInfo::TrackType aType) const override;
+  uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
+  already_AddRefed<MediaTrackDemuxer> GetTrackDemuxer(
+      TrackInfo::TrackType aType, uint32_t aTrackNumber) override;
+  bool IsSeekable() const override;
+  void NotifyDataArrived(uint32_t aLength, int64_t aOffset) override;
+  void NotifyDataRemoved() override;
+
+private:
+  // Synchronous initialization.
+  bool InitInternal();
+
+  nsRefPtr<MediaResource> mSource;
+  nsRefPtr<MP3TrackDemuxer> mTrackDemuxer;
+};
 
 // ID3 header parser state machine used by FrameParser.
 // The header contains the following format (one byte per term):
@@ -282,88 +308,93 @@ private:
 
 // The MP3 demuxer used to extract MPEG frames and side information out of
 // MPEG streams.
-class MP3Demuxer : public mozilla::TrackDemuxer {
+class MP3TrackDemuxer : public MediaTrackDemuxer {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MP3Demuxer);
+  // Constructor, expecing a valid media resource.
+  explicit MP3TrackDemuxer(MediaResource* aSource);
 
-  // Constructor, expecing a valid stream source.
-  explicit MP3Demuxer(Stream* aSource);
-
-  // Initializes the demuxer by reading the expected stream length, if
-  // available. Optional, but recommended.
-  // Currently always returns true.
+  // Initializes the track demuxer by reading the first frame for meta data.
+  // Returns initialization success state.
   bool Init();
 
   // Returns the total stream length if known, -1 otherwise.
   int64_t StreamLength() const;
 
-  // Returns the estimated stream duration in microseconds, or -1 if no
-  // estimation available.
-  int64_t Duration() const;
+  // Returns the estimated stream duration, or a 0-duration if unknown.
+  media::TimeUnit Duration() const;
 
-  // Returns the estimated duration up to the given frames number in microseconds,
-  // or -1 if no estimation available.
-  int64_t Duration(int64_t aNumFrames) const;
+  // Returns the estimated duration up to the given frame number,
+  // or a 0-duration if unknown.
+  media::TimeUnit Duration(int64_t aNumFrames) const;
 
 #ifdef ENABLE_TESTS
   const FrameParser::Frame& LastFrame() const;
+  nsRefPtr<MediaRawData> DemuxSample();
 #endif
+
   const ID3Parser::ID3Header& ID3Header() const;
   const FrameParser::VBRHeader& VBRInfo() const;
 
-  // TrackDemuxer interface.
-  virtual void Seek(Microseconds aTime) override;
-  virtual already_AddRefed<mozilla::MediaRawData> DemuxSample() override;
-  virtual Microseconds GetNextKeyframeTime() override;
-
-  void UpdateConfig(mozilla::AudioInfo& aConfig) {
-    aConfig.mRate = mSamplesPerSecond;
-    aConfig.mChannels = mChannels;
-    aConfig.mBitDepth = 16;
-    aConfig.mMimeType = "audio/mpeg";
-  }
+  // MediaTrackDemuxer interface.
+  UniquePtr<TrackInfo> GetInfo() const override;
+  nsRefPtr<SeekPromise> Seek(media::TimeUnit aTime) override;
+  nsRefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
+  void Reset() override;
+  nsRefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(
+    media::TimeUnit aTimeThreshold) override;
+  int64_t GetResourceOffset() const override;
+  media::TimeIntervals GetBuffered() override;
+  int64_t GetEvictionOffset(media::TimeUnit aTime) override;
 
 private:
   // Destructor.
-  ~MP3Demuxer() {}
+  ~MP3TrackDemuxer() {}
 
   // Fast approximate seeking to given time.
-  void FastSeek(Microseconds aTime);
+  media::TimeUnit FastSeek(media::TimeUnit aTime);
 
-  // Slow, more accurate approximate seeking to given time.
-  void SlowSeek(Microseconds aTime);
+  // Seeks by scanning the stream up to the given time for more accurate results.
+  media::TimeUnit ScanUntil(media::TimeUnit aTime);
+
+  // Finds the next valid frame and returns its byte range.
+  MediaByteRange FindNextFrame();
+
+  // Skips the next frame given the provided byte range.
+  bool SkipNextFrame(const MediaByteRange& aRange);
 
   // Returns the next MPEG frame, if available.
-  already_AddRefed<mozilla::MediaRawData> GetNext();
+  already_AddRefed<MediaRawData> GetNextFrame(const MediaByteRange& aRange);
+
+  // Updates post-read meta data.
+  void UpdateState(const MediaByteRange& aRange);
 
   // Reads aSize bytes into aBuffer from the source starting at aOffset.
   // Returns the actual size read.
-  uint32_t Read(uint8_t* aBuffer, uint32_t aOffset, uint32_t aSize);
+  int32_t Read(uint8_t* aBuffer, int64_t aOffset, int32_t aSize);
 
   // Returns the average frame length derived from the previously parsed frames.
   double AverageFrameLength() const;
 
-  // The (hopefully) MPEG source stream.
-  nsRefPtr<Stream> mSource;
+  // The (hopefully) MPEG resource.
+  nsRefPtr<MediaResource> mSource;
 
   // MPEG frame parser used to detect frames and extract side info.
   FrameParser mParser;
 
   // Current byte offset in the source stream.
-  uint64_t mOffset;
+  int64_t mOffset;
 
   // Byte offset of the begin of the first frame, or 0 if none parsed yet.
-  uint64_t mFirstFrameOffset;
-
-  // Total expected stream length, if available, or -1 otherwise.
-  int64_t mStreamLength;
+  int64_t mFirstFrameOffset;
 
   // Total parsed frames.
-  int64_t mNumParsedFrames;
+  uint64_t mNumParsedFrames;
+
+  // Current frame index.
   int64_t mFrameIndex;
 
   // Sum of parsed frames' lengths in bytes.
-  int64_t mTotalFrameLen;
+  uint64_t mTotalFrameLen;
 
   // Samples per frame metric derived from frame headers or 0 if none available.
   int32_t mSamplesPerFrame;
@@ -373,8 +404,12 @@ private:
 
   // Channel count derived from frame headers or 0 if none available.
   int32_t mChannels;
+
+  // Audio track config info.
+  UniquePtr<AudioInfo> mInfo;
 };
 
-}
+}  // namespace mp3
+}  // namespace mozilla
 
 #endif

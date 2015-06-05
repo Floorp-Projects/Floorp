@@ -545,6 +545,7 @@ public:
       // HandleFlingOverscroll() (which acquires the tree lock) would violate
       // the lock ordering. Instead we schedule HandleFlingOverscroll() to be
       // called after mMonitor is released.
+      APZC_LOG("%p fling went into overscroll, handing off with velocity %s\n", &mApzc, Stringify(velocity).c_str());
       mDeferredTasks.append(NewRunnableMethod(&mApzc,
                                               &AsyncPanZoomController::HandleFlingOverscroll,
                                               velocity,
@@ -2131,6 +2132,7 @@ void AsyncPanZoomController::AcceptFling(const ParentLayerPoint& aVelocity,
                                          bool aHandoff) {
   // We may have a pre-existing velocity for whatever reason (for example,
   // a previously handed off fling). We don't want to clobber that.
+  APZC_LOG("%p accepting fling with velocity %s\n", this, Stringify(aVelocity).c_str());
   mX.SetVelocity(mX.GetVelocity() + aVelocity.x);
   mY.SetVelocity(mY.GetVelocity() + aVelocity.y);
   SetState(FLING);
