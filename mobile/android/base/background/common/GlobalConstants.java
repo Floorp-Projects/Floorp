@@ -70,6 +70,10 @@ public class GlobalConstants {
            "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",     // 20+
            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",     // 20+
            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",        // 11+
+           
+           // For Sync 1.1.
+           "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",  // 9+
+           "TLS_RSA_WITH_AES_128_CBC_SHA",      // 9+
           };
     } else if (Versions.feature11Plus) {
       DEFAULT_CIPHER_SUITES = new String[]
@@ -77,7 +81,10 @@ public class GlobalConstants {
            "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",        // 11+
            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",      // 11+
            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",        // 11+
-           "TLS_RSA_WITH_AES_256_CBC_SHA",              // 9+
+           
+           // For Sync 1.1.
+           "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",  // 9+
+           "TLS_RSA_WITH_AES_128_CBC_SHA",      // 9+
           };
     } else {       // 9+
       // Fall back to the only half-decent cipher suites supported on Gingerbread.
@@ -91,8 +98,8 @@ public class GlobalConstants {
            "TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
 
            // This is for Sync 1.1.
-           "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",          // 9+
-           "TLS_RSA_WITH_AES_256_CBC_SHA",              // 9+
+           "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",  // 9+
+           "TLS_RSA_WITH_AES_128_CBC_SHA",      // 9+
           };
     }
 
