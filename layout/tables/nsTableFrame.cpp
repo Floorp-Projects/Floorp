@@ -159,6 +159,7 @@ nsTableFrame::Init(nsIContent*       aContent,
                    nsIFrame*         aPrevInFlow)
 {
   NS_PRECONDITION(!mCellMap, "Init called twice");
+  NS_PRECONDITION(!mTableLayoutStrategy, "Init called twice");
   NS_PRECONDITION(!aPrevInFlow ||
                   aPrevInFlow->GetType() == nsGkAtoms::tableFrame,
                   "prev-in-flow must be of same type");
@@ -171,23 +172,19 @@ nsTableFrame::Init(nsIContent*       aContent,
   bool borderCollapse = (NS_STYLE_BORDER_COLLAPSE == tableStyle->mBorderCollapse);
   SetBorderCollapse(borderCollapse);
 
-  // Create the cell map if this frame is the first-in-flow.
   if (!aPrevInFlow) {
+    // If we're the first-in-flow, we manage the cell map & layout strategy that
+    // get used by our continuation chain:
     mCellMap = new nsTableCellMap(*this, borderCollapse);
-  }
-
-  if (aPrevInFlow) {
+    if (IsAutoLayout()) {
+      mTableLayoutStrategy = new BasicTableLayoutStrategy(this);
+    } else {
+      mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
+    }
+  } else {
     // set my width, because all frames in a table flow are the same width and
     // code in nsTableOuterFrame depends on this being set
     mRect.width = aPrevInFlow->GetSize().width;
-  }
-  else {
-    NS_ASSERTION(!mTableLayoutStrategy, "strategy was created before Init was called");
-    // create the strategy
-    if (IsAutoLayout())
-      mTableLayoutStrategy = new BasicTableLayoutStrategy(this);
-    else
-      mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
   }
 }
 
