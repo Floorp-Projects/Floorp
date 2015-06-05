@@ -433,18 +433,18 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
       // "If request's referrer is a URL, let referrerSource be request's
       // referrer."
       //
-      // This allows ServiceWorkers to function transparently when the referrer
-      // of the intercepted request is already set.
+      // XXXnsm - We never actually hit this from a fetch() call since both
+      // fetch and Request() create a new internal request whose referrer is
+      // always set to about:client. Should we just crash here instead until
+      // someone tries to use FetchDriver for non-fetch() APIs?
       nsCOMPtr<nsIURI> referrerURI;
       rv = NS_NewURI(getter_AddRefs(referrerURI), referrer, nullptr, nullptr);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return FailWithNetworkError();
       }
 
-      // FIXME(nsm): Can we assert that this case can only happen in
-      // ServiceWorkers and assume null mDocument?
       rv =
-        httpChan->SetReferrerWithPolicy(nullptr,
+        httpChan->SetReferrerWithPolicy(referrerURI,
                                         mDocument ? mDocument->GetReferrerPolicy() :
                                                     net::RP_Default);
       if (NS_WARN_IF(NS_FAILED(rv))) {

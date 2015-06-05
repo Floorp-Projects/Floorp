@@ -12,8 +12,13 @@
 
 #include "mozilla/dom/ResponseBinding.h"
 #include "mozilla/dom/ChannelInfo.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
+namespace ipc {
+class PrincipalInfo;
+}
+
 namespace dom {
 
 class InternalHeaders;
@@ -41,17 +46,7 @@ public:
   }
 
   already_AddRefed<InternalResponse>
-  OpaqueResponse()
-  {
-    MOZ_ASSERT(!mWrappedResponse, "Can't OpaqueResponse a already wrapped response");
-    nsRefPtr<InternalResponse> response = new InternalResponse(0, EmptyCString());
-    response->mType = ResponseType::Opaque;
-    response->mTerminationReason = mTerminationReason;
-    response->mURL = mURL;
-    response->mChannelInfo = mChannelInfo;
-    response->mWrappedResponse = this;
-    return response.forget();
-  }
+  OpaqueResponse();
 
   already_AddRefed<InternalResponse>
   BasicResponse();
@@ -174,9 +169,18 @@ public:
     return mChannelInfo;
   }
 
+  const UniquePtr<mozilla::ipc::PrincipalInfo>&
+  GetPrincipalInfo() const
+  {
+    return mPrincipalInfo;
+  }
+
+  // Takes ownership of the principal info.
+  void
+  SetPrincipalInfo(UniquePtr<mozilla::ipc::PrincipalInfo> aPrincipalInfo);
+
 private:
-  ~InternalResponse()
-  { }
+  ~InternalResponse();
 
   explicit InternalResponse(const InternalResponse& aOther) = delete;
   InternalResponse& operator=(const InternalResponse&) = delete;
@@ -184,15 +188,7 @@ private:
   // Returns an instance of InternalResponse which is a copy of this
   // InternalResponse, except headers, body and wrapped response (if any) which
   // are left uninitialized. Used for cloning and filtering.
-  already_AddRefed<InternalResponse> CreateIncompleteCopy()
-  {
-    nsRefPtr<InternalResponse> copy = new InternalResponse(mStatus, mStatusText);
-    copy->mType = mType;
-    copy->mTerminationReason = mTerminationReason;
-    copy->mURL = mURL;
-    copy->mChannelInfo = mChannelInfo;
-    return copy.forget();
-  }
+  already_AddRefed<InternalResponse> CreateIncompleteCopy();
 
   ResponseType mType;
   nsCString mTerminationReason;
@@ -202,6 +198,7 @@ private:
   nsRefPtr<InternalHeaders> mHeaders;
   nsCOMPtr<nsIInputStream> mBody;
   ChannelInfo mChannelInfo;
+  UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
 
   // For filtered responses.
   // Cache, and SW interception should always serialize/access the underlying
