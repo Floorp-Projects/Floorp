@@ -13,7 +13,7 @@ const events = require("sdk/event/core");
 const object = require("sdk/util/object");
 const {Class} = require("sdk/core/heritage");
 const {LongStringActor} = require("devtools/server/actors/string");
-
+const {PSEUDO_ELEMENT_SET} = require("devtools/styleinspector/css-logic");
 
 // This will add the "stylesheet" actor type for protocol.js to recognize
 require("devtools/server/actors/stylesheets");
@@ -27,7 +27,18 @@ loader.lazyGetter(this, "DOMUtils", () => Cc["@mozilla.org/inspector/dom-utils;1
 const ELEMENT_STYLE = 100;
 exports.ELEMENT_STYLE = ELEMENT_STYLE;
 
-const PSEUDO_ELEMENTS = [":first-line", ":first-letter", ":before", ":after", ":-moz-selection"];
+// Not included since these are uneditable by the user.
+// See https://hg.mozilla.org/mozilla-central/file/696a4ad5d011/layout/style/nsCSSPseudoElementList.h#l74
+PSEUDO_ELEMENT_SET.delete(":-moz-meter-bar");
+PSEUDO_ELEMENT_SET.delete(":-moz-list-bullet");
+PSEUDO_ELEMENT_SET.delete(":-moz-list-number");
+PSEUDO_ELEMENT_SET.delete(":-moz-focus-inner");
+PSEUDO_ELEMENT_SET.delete(":-moz-focus-outer");
+PSEUDO_ELEMENT_SET.delete(":-moz-math-anonymous");
+PSEUDO_ELEMENT_SET.delete(":-moz-math-stretchy");
+
+const PSEUDO_ELEMENTS = Array.from(PSEUDO_ELEMENT_SET);
+
 exports.PSEUDO_ELEMENTS = PSEUDO_ELEMENTS;
 
 // When gathering rules to read for pseudo elements, we will skip
@@ -494,7 +505,7 @@ var PageStyleActor = protocol.ActorClass({
    *     'ua': Include properties from user and user-agent sheets.
    *     Default value is 'ua'
    *   `inherited`: Include styles inherited from parent nodes.
-   *   `matchedSeletors`: Include an array of specific selectors that
+   *   `matchedSelectors`: Include an array of specific selectors that
    *     caused this rule to match its node.
    */
   getApplied: method(function(node, options) {
@@ -548,19 +559,22 @@ var PageStyleActor = protocol.ActorClass({
     let showElementStyles = !inherited && !pseudo;
     let showInheritedStyles = inherited && this._hasInheritedProps(bindingElement.style);
 
+    let rule = {
+      rule: elementStyle,
+      pseudoElement: null,
+      isSystem: false,
+      inherited: false
+    };
+
     // First any inline styles
     if (showElementStyles) {
-      rules.push({
-        rule: elementStyle,
-      });
+      rules.push(rule);
     }
 
     // Now any inherited styles
     if (showInheritedStyles) {
-      rules.push({
-        rule: elementStyle,
-        inherited: inherited
-      });
+      rule.inherited = inherited;
+      rules.push(rule);
     }
 
     // Add normal rules.  Typically this is passing in the node passed into the
