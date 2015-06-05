@@ -291,14 +291,9 @@ AudioNode::SendChannelMixingParametersToStream()
   }
 }
 
-void
-AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
+bool
+AudioNode::DisconnectFromOutputIfConnected(AudioNode& aDestination, uint32_t aOutputIndex, uint32_t aInputIndex)
 {
-  if (aOutput >= NumberOfOutputs()) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-    return;
-  }
-
   WEB_AUDIO_API_LOG("%f: %s %u Disconnect()", Context()->CurrentTime(),
                     NodeType(), Id());
 
@@ -322,47 +317,220 @@ AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
     RefPtr<AudioNode> mNode;
   };
 
-  for (int32_t i = mOutputNodes.Length() - 1; i >= 0; --i) {
-    AudioNode* dest = mOutputNodes[i];
-    for (int32_t j = dest->mInputNodes.Length() - 1; j >= 0; --j) {
-      InputNode& input = dest->mInputNodes[j];
-      if (input.mInputNode == this && input.mOutputPort == aOutput) {
-        // Destroying the InputNode here sends a message to the graph thread
-        // to disconnect the streams, which should be sent before the
-        // RunAfterPendingUpdates() call below.
-        dest->mInputNodes.RemoveElementAt(j);
-        // Remove one instance of 'dest' from mOutputNodes. There could be
-        // others, and it's not correct to remove them all since some of them
-        // could be for different output ports.
-        RefPtr<AudioNode> output = mOutputNodes[i].forget();
-        mOutputNodes.RemoveElementAt(i);
-        output->NotifyInputsChanged();
-        if (mStream) {
-          RefPtr<nsIRunnable> runnable = new RunnableRelease(output.forget());
-          mStream->RunAfterPendingUpdates(runnable.forget());
-        }
-        break;
+  InputNode& input = aDestination.mInputNodes[aInputIndex];
+  if (input.mInputNode != this) {
+    return false;
+  }
+  // RunAfterPendingUpdates() call below.
+  aDestination.mInputNodes.RemoveElementAt(aInputIndex);
+  // Remove one instance of 'dest' from mOutputNodes. There could be
+  // others, and it's not correct to remove them all since some of them
+  // could be for different output ports.
+  RefPtr<AudioNode> output = mOutputNodes[aOutputIndex].forget();
+  mOutputNodes.RemoveElementAt(aOutputIndex);
+  if (mStream) {
+    nsCOMPtr<nsIRunnable> runnable = new RunnableRelease(output.forget());
+    mStream->RunAfterPendingUpdates(runnable.forget());
+  }
+  return true;
+}
+
+bool
+AudioNode::DisconnectFromParamIfConnected(AudioParam& aDestination, uint32_t aOutputIndex, uint32_t aInputIndex)
+{
+  MOZ_ASSERT(aOutputIndex < mOutputParams.Length());
+  MOZ_ASSERT(aInputIndex < aDestination.InputNodes().Length());
+
+  const InputNode& input = aDestination.InputNodes()[aInputIndex];
+  if (input.mInputNode != this) {
+    return false;
+  }
+  aDestination.RemoveInputNode(aInputIndex);
+  // Remove one instance of 'dest' from mOutputParams. There could be
+  // others, and it's not correct to remove them all since some of them
+  // could be for different output ports.
+  mOutputParams.RemoveElementAt(aOutputIndex);
+  return true;
+}
+
+void
+AudioNode::Disconnect(ErrorResult& aRv)
+{
+  for (int32_t outputIndex = mOutputNodes.Length() - 1; outputIndex >= 0; --outputIndex) {
+    AudioNode* dest = mOutputNodes[outputIndex];
+    for (int32_t inputIndex = dest->mInputNodes.Length() - 1; inputIndex >= 0; --inputIndex) {
+      DisconnectFromOutputIfConnected(*dest, outputIndex, inputIndex);
+    }
+  }
+
+  for (int32_t outputIndex = mOutputParams.Length() - 1; outputIndex >= 0; --outputIndex) {
+    AudioParam* dest = mOutputParams[outputIndex];
+    for (int32_t inputIndex = dest->InputNodes().Length() - 1; inputIndex >= 0; --inputIndex) {
+      DisconnectFromParamIfConnected(*dest, outputIndex, inputIndex);
+    }
+  }
+
+  // This disconnection may have disconnected a panner and a source.
+  Context()->UpdatePannerSource();
+}
+
+void
+AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
+{
+  if (aOutput >= NumberOfOutputs()) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  for (int32_t outputIndex = mOutputNodes.Length() - 1; outputIndex >= 0; --outputIndex) {
+    AudioNode* dest = mOutputNodes[outputIndex];
+    for (int32_t inputIndex = dest->mInputNodes.Length() - 1; inputIndex >= 0; --inputIndex) {
+      InputNode& input = dest->mInputNodes[inputIndex];
+      if (input.mOutputPort == aOutput) {
+        DisconnectFromOutputIfConnected(*dest, outputIndex, inputIndex);
       }
     }
   }
 
-  for (int32_t i = mOutputParams.Length() - 1; i >= 0; --i) {
-    AudioParam* dest = mOutputParams[i];
-    for (int32_t j = dest->InputNodes().Length() - 1; j >= 0; --j) {
-      const InputNode& input = dest->InputNodes()[j];
-      if (input.mInputNode == this && input.mOutputPort == aOutput) {
-        dest->RemoveInputNode(j);
-        // Remove one instance of 'dest' from mOutputParams. There could be
-        // others, and it's not correct to remove them all since some of them
-        // could be for different output ports.
-        mOutputParams.RemoveElementAt(i);
-        break;
+  for (int32_t outputIndex = mOutputParams.Length() - 1; outputIndex >= 0; --outputIndex) {
+    AudioParam* dest = mOutputParams[outputIndex];
+    for (int32_t inputIndex = dest->InputNodes().Length() - 1; inputIndex >= 0; --inputIndex) {
+      const InputNode& input = dest->InputNodes()[inputIndex];
+      if (input.mOutputPort == aOutput) {
+        DisconnectFromParamIfConnected(*dest, outputIndex, inputIndex);
       }
     }
   }
 
   // This disconnection may have disconnected a panner and a source.
   Context()->UpdatePannerSource();
+}
+
+void
+AudioNode::Disconnect(AudioNode& aDestination, ErrorResult& aRv)
+{
+  bool wasConnected = false;
+
+  size_t outputIndex = mOutputNodes.IndexOf(&aDestination);
+  if (outputIndex == nsTArray<InputNode>::NoIndex) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return;
+  }
+  for (int32_t inputIndex = aDestination.mInputNodes.Length() - 1; inputIndex >= 0; --inputIndex) {
+    wasConnected |= DisconnectFromOutputIfConnected(aDestination, outputIndex, inputIndex);
+  }
+
+  if (!wasConnected) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return;
+  }
+
+  // This disconnection may have disconnected a panner and a source.
+  Context()->UpdatePannerSource();
+}
+
+void
+AudioNode::Disconnect(AudioNode& aDestination, uint32_t aOutput, ErrorResult& aRv)
+{
+  if (aOutput >= NumberOfOutputs()) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  bool wasConnected = false;
+
+  for (int32_t outputIndex = mOutputNodes.Length() - 1; outputIndex >= 0; --outputIndex) {
+    for (int32_t inputIndex = aDestination.mInputNodes.Length() - 1; inputIndex >= 0; --inputIndex) {
+      InputNode& input = aDestination.mInputNodes[inputIndex];
+      if (input.mOutputPort == aOutput) {
+        wasConnected |= DisconnectFromOutputIfConnected(aDestination, outputIndex, inputIndex);
+      }
+    }
+  }
+
+  if (!wasConnected) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return;
+  }
+
+  // This disconnection may have disconnected a panner and a source.
+  Context()->UpdatePannerSource();
+}
+
+void
+AudioNode::Disconnect(AudioNode& aDestination, uint32_t aOutput, uint32_t aInput, ErrorResult& aRv)
+{
+  if (aOutput >= NumberOfOutputs()) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  if (aInput >= aDestination.NumberOfInputs()) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  bool wasConnected = false;
+
+  for (int32_t outputIndex = mOutputNodes.Length() - 1; outputIndex >= 0; --outputIndex) {
+    for (int32_t inputIndex = aDestination.mInputNodes.Length() - 1; inputIndex >= 0; --inputIndex) {
+      InputNode& input = aDestination.mInputNodes[inputIndex];
+      if (input.mOutputPort == aOutput && input.mInputPort == aInput) {
+        wasConnected |= DisconnectFromOutputIfConnected(aDestination, outputIndex, inputIndex);
+        break;
+      }
+    }
+  }
+
+  if (!wasConnected) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return;
+  }
+
+  // This disconnection may have disconnected a panner and a source.
+  Context()->UpdatePannerSource();
+}
+
+void
+AudioNode::Disconnect(AudioParam& aDestination, ErrorResult& aRv)
+{
+  bool wasConnected = false;
+
+  for (int32_t outputIndex = mOutputParams.Length() - 1; outputIndex >= 0; --outputIndex) {
+    for (int32_t inputIndex = aDestination.InputNodes().Length() - 1; inputIndex >= 0; --inputIndex) {
+        wasConnected |= DisconnectFromParamIfConnected(aDestination, outputIndex, inputIndex);
+    }
+  }
+
+  if (!wasConnected) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return;
+  }
+}
+
+void
+AudioNode::Disconnect(AudioParam& aDestination, uint32_t aOutput, ErrorResult& aRv)
+{
+  if (aOutput >= NumberOfOutputs()) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  bool wasConnected = false;
+
+  for (int32_t outputIndex = mOutputParams.Length() - 1; outputIndex >= 0; --outputIndex) {
+    for (int32_t inputIndex = aDestination.InputNodes().Length() - 1; inputIndex >= 0; --inputIndex) {
+      const InputNode& input = aDestination.InputNodes()[inputIndex];
+      if (input.mOutputPort == aOutput) {
+        wasConnected |= DisconnectFromParamIfConnected(aDestination, outputIndex, inputIndex);
+      }
+    }
+  }
+
+  if (!wasConnected) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return;
+  }
 }
 
 void
