@@ -12,6 +12,7 @@
 #include "nsServiceManagerUtils.h"
 #include "GMPService.h"
 #include "VideoUtils.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 namespace dom {
@@ -69,7 +70,8 @@ GMPVideoDecoderTrialCreator::GetCreateTrialState(const nsAString& aKeySystem)
 }
 
 void
-GMPVideoDecoderTrialCreator::TrialCreateGMPVideoDecoderFailed(const nsAString& aKeySystem)
+GMPVideoDecoderTrialCreator::TrialCreateGMPVideoDecoderFailed(const nsAString& aKeySystem,
+                                                              const nsACString& aReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -82,8 +84,8 @@ GMPVideoDecoderTrialCreator::TrialCreateGMPVideoDecoderFailed(const nsAString& a
   }
   data->mStatus = Failed;
   Preferences::SetInt(TrialCreatePrefName(aKeySystem), (int)Failed);
-  for (PromiseAccessPair& pair : data->mPending) {
-    pair.first()->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  for (nsRefPtr<AbstractPromiseLike>& promise: data->mPending) {
+    promise->Reject(NS_ERROR_DOM_NOT_SUPPORTED_ERR, aReason);
   }
   data->mPending.Clear();
   data->mTest = nullptr;
@@ -103,8 +105,8 @@ GMPVideoDecoderTrialCreator::TrialCreateGMPVideoDecoderSucceeded(const nsAString
   }
   data->mStatus = Succeeded;
   Preferences::SetInt(TrialCreatePrefName(aKeySystem), (int)Succeeded);
-  for (PromiseAccessPair& pair : data->mPending) {
-    pair.first()->MaybeResolve(pair.second());
+  for (nsRefPtr<AbstractPromiseLike>& promise : data->mPending) {
+    promise->Resolve();
   }
   data->mPending.Clear();
   data->mTest = nullptr;
@@ -198,14 +200,14 @@ TestGMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame)
     mReceivedDecoded = true;
   } else {
     EME_LOG("Received multiple decoded frames");
-    ReportFailure();
+    ReportFailure(NS_LITERAL_CSTRING("TestGMPVideoDecoder received multiple decoded frames"));
     return;
   }
 
   GMPUniquePtr<GMPVideoi420Frame> decodedFrame(aDecodedFrame);
   if (!TestDecodedFrame(aDecodedFrame)) {
     EME_LOG("decoded frame failed verification");
-    ReportFailure();
+    ReportFailure(NS_LITERAL_CSTRING("TestGMPVideoDecoder decoded frame failed verification"));
   }
 }
 
@@ -222,7 +224,7 @@ TestGMPVideoDecoder::Error(GMPErr aErr)
 {
   EME_LOG("TestGMPVideoDecoder::ReceivedDecodedFrame()");
   MOZ_ASSERT(OnGMPThread());
-  ReportFailure();
+  ReportFailure(nsPrintfCString("TestGMPVideoDecoder error %d", aErr));
 }
 
 void
@@ -230,11 +232,11 @@ TestGMPVideoDecoder::Terminated()
 {
   EME_LOG("TestGMPVideoDecoder::Terminated()");
   MOZ_ASSERT(OnGMPThread());
-  ReportFailure();
+  ReportFailure(NS_LITERAL_CSTRING("TestGMPVideoDecoder GMP terminated"));
 }
 
 void
-TestGMPVideoDecoder::ReportFailure()
+TestGMPVideoDecoder::ReportFailure(const nsACString& aReason)
 {
   MOZ_ASSERT(OnGMPThread());
 
@@ -244,9 +246,10 @@ TestGMPVideoDecoder::ReportFailure()
   }
 
   nsRefPtr<nsIRunnable> task;
-  task = NS_NewRunnableMethodWithArg<nsString>(mInstance,
+  task = NS_NewRunnableMethodWithArgs<nsString, nsCString>(mInstance,
     &GMPVideoDecoderTrialCreator::TrialCreateGMPVideoDecoderFailed,
-    mKeySystem);
+    mKeySystem,
+    aReason);
   NS_DispatchToMainThread(task, NS_DISPATCH_NORMAL);
 }
 
@@ -364,7 +367,7 @@ TestGMPVideoDecoder::Callback::Done(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aH
   MOZ_ASSERT(OnGMPThread());
 
   if (!aHost || !aGMP) {
-    mInstance->ReportFailure();
+    mInstance->ReportFailure(NS_LITERAL_CSTRING("TestGMPVideoDecoder null host or GMP on Get"));
     return;
   }
 
@@ -389,7 +392,8 @@ TestGMPVideoDecoder::ActorCreated(GMPVideoDecoderProxy* aGMP,
 
   nsCOMPtr<nsIThread> thread(GetGMPThread());
   if (!thread) {
-    mInstance->TrialCreateGMPVideoDecoderFailed(mKeySystem);
+    mInstance->TrialCreateGMPVideoDecoderFailed(mKeySystem,
+      NS_LITERAL_CSTRING("Failed to get GMP thread in TestGMPVideoDecoder::ActorCreated"));
     return;
   }
 
@@ -430,7 +434,7 @@ TestGMPVideoDecoder::InitGMPDone(GMPVideoDecoderProxy* aGMP,
                                  PR_GetNumberOfProcessors());
   if (NS_FAILED(rv)) {
     EME_LOG("InitGMPDone() - InitDecode() failed!");
-    ReportFailure();
+    ReportFailure(NS_LITERAL_CSTRING("TestGMPVideoDecoder InitDecode() returned failure"));
     return;
   }
 
@@ -439,14 +443,14 @@ TestGMPVideoDecoder::InitGMPDone(GMPVideoDecoderProxy* aGMP,
   rv = mGMP->Decode(Move(frame), false, info, 0);
   if (NS_FAILED(rv)) {
     EME_LOG("InitGMPDone() - Decode() failed to send Decode message!");
-    ReportFailure();
+    ReportFailure(NS_LITERAL_CSTRING("TestGMPVideoDecoder Decode() returned failure"));
     return;
   }
 
   rv = mGMP->Drain();
   if (NS_FAILED(rv)) {
     EME_LOG("InitGMPDone() - Drain() failed to send Drain message!");
-    ReportFailure();
+    ReportFailure(NS_LITERAL_CSTRING("TestGMPVideoDecoder Drain() returned failure"));
     return;
   }
 }
@@ -464,14 +468,13 @@ TestGMPVideoDecoder::CreateGMPVideoDecoder()
   nsCString fakeNodeId;
   if (NS_FAILED(GenerateRandomName(fakeNodeId, 32)) ||
       NS_FAILED(mGMPService->GetGMPVideoDecoder(&tags, fakeNodeId, Move(callback)))) {
-    ReportFailure();
+    ReportFailure(NS_LITERAL_CSTRING("TestGMPVideoDecoder GMPService GetGMPVideoDecoder returned failure"));
   }
 }
 
 void
 GMPVideoDecoderTrialCreator::MaybeAwaitTrialCreate(const nsAString& aKeySystem,
-                                                   MediaKeySystemAccess* aAccess,
-                                                   Promise* aPromise,
+                                                   AbstractPromiseLike* aPromisey,
                                                    nsPIDOMWindow* aParent)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -486,28 +489,29 @@ GMPVideoDecoderTrialCreator::MaybeAwaitTrialCreate(const nsAString& aKeySystem,
     case TrialCreateState::Succeeded: {
       EME_LOG("GMPVideoDecoderTrialCreator::MaybeAwaitTrialCreate(%s) already succeeded",
               NS_ConvertUTF16toUTF8(aKeySystem).get());
-      aPromise->MaybeResolve(aAccess);
+      aPromisey->Resolve();
       break;
     }
     case TrialCreateState::Failed: {
       // Something is broken about this configuration. Report as unsupported.
       EME_LOG("GMPVideoDecoderTrialCreator::MaybeAwaitTrialCreate(%s) already failed",
               NS_ConvertUTF16toUTF8(aKeySystem).get());
-      aPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      aPromisey->Reject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                        NS_LITERAL_CSTRING("navigator.requestMediaKeySystemAccess trial CDM creation failed"));
       break;
     }
     case TrialCreateState::Pending: {
       EME_LOG("GMPVideoDecoderTrialCreator::MaybeAwaitTrialCreate(%s) pending",
               NS_ConvertUTF16toUTF8(aKeySystem).get());
       // Add request to the list of pending items waiting.
-      data->mPending.AppendElement(MakePair(nsRefPtr<Promise>(aPromise),
-        nsRefPtr<MediaKeySystemAccess>(aAccess)));
+      data->mPending.AppendElement(aPromisey);
       if (!data->mTest) {
         // Not already waiting for CDM to be created. Create and Init
         // a CDM, to test whether it will work.
         data->mTest = new TestGMPVideoDecoder(this, aKeySystem, aParent);
         if (NS_FAILED(data->mTest->Start())) {
-          TrialCreateGMPVideoDecoderFailed(aKeySystem);
+          TrialCreateGMPVideoDecoderFailed(aKeySystem,
+            NS_LITERAL_CSTRING("TestGMPVideoDecoder::Start() failed"));
           return;
         }
 
