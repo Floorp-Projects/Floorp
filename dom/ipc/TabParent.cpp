@@ -262,10 +262,6 @@ TabParent::TabParent(nsIContentParent* aManager,
   : TabContext(aContext)
   , mFrameElement(nullptr)
   , mWritingMode()
-  , mIMEComposing(false)
-  , mIMECompositionEnding(false)
-  , mIMEEventCountAfterEnding(0)
-  , mIMECompositionStart(0)
   , mIMECompositionRectOffset(0)
   , mRect(0, 0, 0, 0)
   , mDimensions(0, 0)
@@ -2311,44 +2307,9 @@ TabParent::SendCompositionEvent(WidgetCompositionEvent& event)
     return false;
   }
 
-  if (event.CausesDOMTextEvent()) {
-    return SendCompositionChangeEvent(event);
-  }
-
-  mIMEComposing = !event.CausesDOMCompositionEndEvent();
-  mIMECompositionStart = mContentCache.SelectionStart();
-  if (mIMECompositionEnding) {
-    mIMEEventCountAfterEnding++;
+  if (!mContentCache.OnCompositionEvent(event)) {
     return true;
   }
-  return PBrowserParent::SendCompositionEvent(event);
-}
-
-/**
- * During REQUEST_TO_COMMIT_COMPOSITION or REQUEST_TO_CANCEL_COMPOSITION,
- * widget usually sends a NS_COMPOSITION_CHANGE event to finalize or
- * clear the composition, respectively
- *
- * Because the event will not reach content in time, we intercept it
- * here and pass the text as the EndIMEComposition return value
- */
-bool
-TabParent::SendCompositionChangeEvent(WidgetCompositionEvent& event)
-{
-  if (mIMECompositionEnding) {
-    mIMECompositionText = event.mData;
-    mIMEEventCountAfterEnding++;
-    return true;
-  }
-
-  // We must be able to simulate the selection because
-  // we might not receive selection updates in time
-  if (!mIMEComposing) {
-    mIMECompositionStart = mContentCache.SelectionStart();
-  }
-  mContentCache.SetSelection(mIMECompositionStart + event.mData.Length());
-  mIMEComposing = !event.CausesDOMCompositionEndEvent();
-
   return PBrowserParent::SendCompositionEvent(event);
 }
 
@@ -2430,19 +2391,11 @@ TabParent::RecvEndIMEComposition(const bool& aCancel,
                                  nsString* aComposition)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget)
+  if (!widget) {
     return true;
-
-  mIMECompositionEnding = true;
-  mIMEEventCountAfterEnding = 0;
-
-  widget->NotifyIME(IMENotification(aCancel ? REQUEST_TO_CANCEL_COMPOSITION :
-                                              REQUEST_TO_COMMIT_COMPOSITION));
-
-  mIMECompositionEnding = false;
-  *aNoCompositionEvent = !mIMEEventCountAfterEnding;
-  *aComposition = mIMECompositionText;
-  mIMECompositionText.Truncate(0);  
+  }
+  *aNoCompositionEvent =
+    !mContentCache.RequestToCommitComposition(widget, aCancel, *aComposition);
   return true;
 }
 
