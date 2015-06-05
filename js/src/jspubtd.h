@@ -163,9 +163,7 @@ struct Runtime
       , gcStoreBufferPtr_(nullptr)
     {}
 
-    bool needsIncrementalBarrier() const {
-        return heapState_ == JS::HeapState::Idle;
-    }
+    bool isHeapBusy() const { return heapState_ != JS::HeapState::Idle; }
 
     js::gc::StoreBuffer* gcStoreBufferPtr() { return gcStoreBufferPtr_; }
 

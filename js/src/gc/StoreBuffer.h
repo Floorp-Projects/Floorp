@@ -331,6 +331,8 @@ class StoreBuffer
     };
 
     bool isOkayToUseBuffer() const {
+        MOZ_ASSERT(!JS::shadow::Runtime::asShadowRuntime(runtime_)->isHeapBusy());
+
         /*
          * Disabled store buffers may not have a valid state; e.g. when stored
          * inline in the ChunkTrailer.
