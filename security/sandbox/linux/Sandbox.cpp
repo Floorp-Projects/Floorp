@@ -36,8 +36,8 @@
 #include "sandbox/linux/bpf_dsl/dump_bpf.h"
 #include "sandbox/linux/bpf_dsl/policy.h"
 #include "sandbox/linux/bpf_dsl/policy_compiler.h"
-#include "sandbox/linux/bpf_dsl/trap_registry.h"
 #include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
+#include "sandbox/linux/seccomp-bpf/trap.h"
 #if defined(ANDROID)
 #include "sandbox/linux/services/android_ucontext.h"
 #endif
@@ -78,40 +78,69 @@ static const char *gMediaPluginFilePath;
 #endif
 
 static UniquePtr<SandboxChroot> gChrootHelper;
+static void (*gChromiumSigSysHandler)(int, siginfo_t*, void*);
+
+// Test whether a ucontext, interpreted as the state after a syscall,
+// indicates the given error.  See also sandbox::Syscall::PutValueInUcontext.
+static bool
+ContextIsError(const ucontext_t *aContext, int aError)
+{
+  // Avoid integer promotion warnings.  (The unary addition makes
+  // the decltype not evaluate to a reference type.)
+  typedef decltype(+SECCOMP_RESULT(aContext)) reg_t;
+
+#ifdef __mips__
+  return SECCOMP_PARM4(aContext) != 0
+    && SECCOMP_RESULT(aContext) == static_cast<reg_t>(aError);
+#else
+  return SECCOMP_RESULT(aContext) == static_cast<reg_t>(-aError);
+#endif
+}
 
 /**
- * This is the SIGSYS handler function. It is used to report to the user
- * which system call has been denied by Seccomp.
- * This function also makes the process exit as denying the system call
- * will otherwise generally lead to unexpected behavior from the process,
- * since we don't know if all functions will handle such denials gracefully.
+ * This is the SIGSYS handler function.  It delegates to the Chromium
+ * TrapRegistry handler (see InstallSigSysHandler, below) and, if the
+ * trap handler installed by the policy would fail with ENOSYS,
+ * crashes the process.  This allows unintentional policy failures to
+ * be reported as crash dumps and fixed.  It also logs information
+ * about the failed system call.
  *
- * @see InstallSyscallReporter() function.
+ * Note that this could be invoked in parallel on multiple threads and
+ * that it could be in async signal context (e.g., intercepting an
+ * open() called from an async signal handler).
  */
 static void
-Reporter(int nr, siginfo_t *info, void *void_context)
+SigSysHandler(int nr, siginfo_t *info, void *void_context)
 {
   ucontext_t *ctx = static_cast<ucontext_t*>(void_context);
-  unsigned long syscall_nr, args[6];
-  pid_t pid = getpid();
-
-  if (nr != SIGSYS) {
-    return;
-  }
-  if (info->si_code != SYS_SECCOMP) {
-    return;
-  }
+  // This shouldn't ever be null, but the Chromium handler checks for
+  // that and refrains from crashing, so let's not crash release builds:
+  MOZ_DIAGNOSTIC_ASSERT(ctx);
   if (!ctx) {
     return;
   }
 
-  syscall_nr = SECCOMP_SYSCALL(ctx);
-  args[0] = SECCOMP_PARM1(ctx);
-  args[1] = SECCOMP_PARM2(ctx);
-  args[2] = SECCOMP_PARM3(ctx);
-  args[3] = SECCOMP_PARM4(ctx);
-  args[4] = SECCOMP_PARM5(ctx);
-  args[5] = SECCOMP_PARM6(ctx);
+  // Save a copy of the context before invoking the trap handler,
+  // which will overwrite one or more registers with the return value.
+  ucontext_t savedCtx = *ctx;
+
+  gChromiumSigSysHandler(nr, info, ctx);
+  if (!ContextIsError(ctx, ENOSYS)) {
+    return;
+  }
+
+  pid_t pid = getpid();
+  unsigned long syscall_nr = SECCOMP_SYSCALL(&savedCtx);
+  unsigned long args[6];
+  args[0] = SECCOMP_PARM1(&savedCtx);
+  args[1] = SECCOMP_PARM2(&savedCtx);
+  args[2] = SECCOMP_PARM3(&savedCtx);
+  args[3] = SECCOMP_PARM4(&savedCtx);
+  args[4] = SECCOMP_PARM5(&savedCtx);
+  args[5] = SECCOMP_PARM6(&savedCtx);
+
+  // Note: the next patch will migrate these syscall interceptions
+  // into the policy.
 
 #if defined(ANDROID) && ANDROID_VERSION < 16
   // Bug 1093893: Translate tkill to tgkill for pthread_kill; fixed in
@@ -147,6 +176,8 @@ Reporter(int nr, siginfo_t *info, void *void_context)
   }
 #endif
 
+  // TODO, someday when this is enabled on MIPS: include the two extra
+  // args in the error message.
   SANDBOX_LOG_ERROR("seccomp sandbox violation: pid %d, syscall %lu,"
                     " args %lu %lu %lu %lu %lu %lu.  Killing process.",
                     pid, syscall_nr,
@@ -155,44 +186,45 @@ Reporter(int nr, siginfo_t *info, void *void_context)
   // Bug 1017393: record syscall number somewhere useful.
   info->si_addr = reinterpret_cast<void*>(syscall_nr);
 
-  gSandboxCrashFunc(nr, info, void_context);
+  gSandboxCrashFunc(nr, info, &savedCtx);
   _exit(127);
 }
 
 /**
- * The reporter is called when the process receives a SIGSYS signal.
- * The signal is sent by the kernel when Seccomp encounter a system call
- * that has not been allowed.
- * We register an action for that signal (calling the Reporter function).
- *
- * This function should not be used in production and thus generally be
- * called from debug code. In production, the process is directly killed.
- * For this reason, the function is ifdef'd, as there is no reason to
- * compile it while unused.
- *
- * @return 0 on success, -1 on failure.
- * @see Reporter() function.
+ * This function installs the SIGSYS handler.  This is slightly
+ * complicated because we want to use Chromium's handler to dispatch
+ * to specific trap handlers defined in the policy, but we also need
+ * the full original signal context to give to Breakpad for crash
+ * dumps.  So we install Chromium's handler first, then retrieve its
+ * address so our replacement can delegate to it.
  */
-static int
-InstallSyscallReporter(void)
+static void
+InstallSigSysHandler(void)
 {
   struct sigaction act;
-  sigset_t mask;
-  memset(&act, 0, sizeof(act));
-  sigemptyset(&mask);
-  sigaddset(&mask, SIGSYS);
 
-  act.sa_sigaction = &Reporter;
-  act.sa_flags = SA_SIGINFO | SA_NODEFER;
+  // Ensure that the Chromium handler is installed.
+  unused << sandbox::Trap::Registry();
+
+  // If the signal handling state isn't as expected, crash now instead
+  // of crashing later (and more confusingly) when SIGSYS happens.
+
+  if (sigaction(SIGSYS, nullptr, &act) != 0) {
+    MOZ_CRASH("Couldn't read old SIGSYS disposition");
+  }
+  if ((act.sa_flags & SA_SIGINFO) != SA_SIGINFO) {
+    MOZ_CRASH("SIGSYS not already set to a siginfo handler?");
+  }
+  MOZ_RELEASE_ASSERT(act.sa_sigaction);
+  gChromiumSigSysHandler = act.sa_sigaction;
+  act.sa_sigaction = SigSysHandler;
+  // Currently, SA_NODEFER should already be set by the Chromium code,
+  // but it's harmless to ensure that it's set:
+  MOZ_ASSERT(act.sa_flags & SA_NODEFER);
+  act.sa_flags |= SA_NODEFER;
   if (sigaction(SIGSYS, &act, nullptr) < 0) {
-    return -1;
+    MOZ_CRASH("Couldn't change SIGSYS disposition");
   }
-  if (sigemptyset(&mask) ||
-    sigaddset(&mask, SIGSYS) ||
-    sigprocmask(SIG_UNBLOCK, &mask, nullptr)) {
-      return -1;
-  }
-  return 0;
 }
 
 /**
@@ -425,38 +457,22 @@ BroadcastSetThreadSandbox(UniquePtr<sock_filter[]> aProgram, size_t aProgLen)
   gSetSandboxFilter.filter = nullptr;
 }
 
-// This class is a placeholder; it will be replaced in the next patch.
-class FakeTrapRegistry : public sandbox::bpf_dsl::TrapRegistry
-{
-public:
-  virtual uint16_t Add(TrapFnc fnc, const void* aux, bool safe)
-  {
-    MOZ_RELEASE_ASSERT(safe);
-    return 0;
-  }
-  virtual bool EnableUnsafeTraps() {
-    return false;
-  }
-};
-
 // Common code for sandbox startup.
 static void
 SetCurrentProcessSandbox(UniquePtr<sandbox::bpf_dsl::Policy> aPolicy)
 {
   MOZ_ASSERT(gSandboxCrashFunc);
 
-  FakeTrapRegistry registry;
   // Note: PolicyCompiler borrows the policy and registry for its
   // lifetime, but does not take ownership of them.
-  sandbox::bpf_dsl::PolicyCompiler compiler(aPolicy.get(), &registry);
+  sandbox::bpf_dsl::PolicyCompiler compiler(aPolicy.get(),
+                                            sandbox::Trap::Registry());
   auto program = compiler.Compile();
   if (SandboxInfo::Get().Test(SandboxInfo::kVerbose)) {
     sandbox::bpf_dsl::DumpBPF::PrintProgram(*program);
   }
 
-  if (InstallSyscallReporter()) {
-    SANDBOX_LOG_ERROR("install_syscall_reporter() failed\n");
-  }
+  InstallSigSysHandler();
 
 #ifdef MOZ_ASAN
   __sanitizer_sandbox_arguments asanArgs;
