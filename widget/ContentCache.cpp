@@ -258,15 +258,27 @@ ContentCache::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
          "mLength=%u } }, aWidget=0x%p), mText.Length()=%u",
          this, GetBoolName(mIsChrome), aEvent.mInput.mOffset,
          aEvent.mInput.mLength, aWidget, mText.Length()));
-      if (NS_WARN_IF(!GetUnionTextRects(aEvent.mInput.mOffset,
-                                        aEvent.mInput.mLength,
-                                        aEvent.mReply.mRect))) {
-        // XXX We don't have cache for this request.
-        MOZ_LOG(sContentCacheLog, LogLevel::Error,
-          ("ContentCache: 0x%p (mIsChrome=%s) HandleQueryContentEvent(), "
-           "FAILED to get union rect",
-           this, GetBoolName(mIsChrome)));
-        return false;
+      if (aEvent.mInput.mLength) {
+        if (NS_WARN_IF(!GetUnionTextRects(aEvent.mInput.mOffset,
+                                          aEvent.mInput.mLength,
+                                          aEvent.mReply.mRect))) {
+          // XXX We don't have cache for this request.
+          MOZ_LOG(sContentCacheLog, LogLevel::Error,
+            ("ContentCache: 0x%p (mIsChrome=%s) HandleQueryContentEvent(), "
+             "FAILED to get union rect",
+             this, GetBoolName(mIsChrome)));
+          return false;
+        }
+      } else {
+        // If the length is 0, we should return caret rect instead.
+        if (NS_WARN_IF(!GetCaretRect(aEvent.mInput.mOffset,
+                                     aEvent.mReply.mRect))) {
+          MOZ_LOG(sContentCacheLog, LogLevel::Error,
+            ("ContentCache: 0x%p (mIsChrome=%s) HandleQueryContentEvent(), "
+             "FAILED to get caret rect",
+             this, GetBoolName(mIsChrome)));
+          return false;
+        }
       }
       if (aEvent.mInput.mOffset < mText.Length()) {
         aEvent.mReply.mString =
