@@ -172,10 +172,9 @@ public:
     virtual bool RecvNotifyIMESelectedCompositionRect(const ContentCache& aContentCache) override;
     virtual bool RecvNotifyIMESelection(const ContentCache& aContentCache,
                                         const bool& aCausedByComposition) override;
-    virtual bool RecvNotifyIMETextHint(const ContentCache& aContentCache) override;
+    virtual bool RecvUpdateContentCache(const ContentCache& aContentCache) override;
     virtual bool RecvNotifyIMEMouseButtonEvent(const widget::IMENotification& aEventMessage,
                                                bool* aConsumedByIME) override;
-    virtual bool RecvNotifyIMEEditorRect(const ContentCache& aContentCache) override;
     virtual bool RecvNotifyIMEPositionChange(const ContentCache& aContentCache) override;
     virtual bool RecvEndIMEComposition(const bool& aCancel,
                                        bool* aNoCompositionEvent,
