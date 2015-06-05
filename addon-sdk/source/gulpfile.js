@@ -28,11 +28,7 @@ gulp.task('test:modules', function(done) {
 });
 
 gulp.task('test:ini', function(done) {
-  require("./bin/jpm-test").run("ini").catch(console.error).then(done);
-});
-
-gulp.task('test:firefox-bin', function(done) {
-  require("./bin/jpm-test").run("firefox-bin").catch(console.error).then(done);
+  test("ini").catch(console.error).then(done);
 });
 
 gulp.task('patch:clean', function(done) {
@@ -41,4 +37,8 @@ gulp.task('patch:clean', function(done) {
 
 gulp.task('patch:apply', function(done) {
   patch.apply().catch(console.error).then(done);
+});
+
+gulp.task('update:ini', function(done) {
+  ini.updateAddonINI().catch(console.error).then(done);
 });
