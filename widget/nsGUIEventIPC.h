@@ -7,6 +7,7 @@
 #define nsGUIEventIPC_h__
 
 #include "ipc/IPCMessageUtils.h"
+#include "mozilla/ContentCache.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/MiscEvents.h"
@@ -790,6 +791,38 @@ struct ParamTraits<mozilla::WritingMode>
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->mWritingMode);
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::ContentCache>
+{
+  typedef mozilla::ContentCache paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mText);
+    WriteParam(aMsg, aParam.mSelection.mAnchor);
+    WriteParam(aMsg, aParam.mSelection.mFocus);
+    WriteParam(aMsg, aParam.mSelection.mWritingMode);
+    WriteParam(aMsg, aParam.mCaret.mOffset);
+    WriteParam(aMsg, aParam.mCaret.mRect);
+    WriteParam(aMsg, aParam.mTextRectArray.mStart);
+    WriteParam(aMsg, aParam.mTextRectArray.mRects);
+    WriteParam(aMsg, aParam.mEditorRect);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mText) &&
+           ReadParam(aMsg, aIter, &aResult->mSelection.mAnchor) &&
+           ReadParam(aMsg, aIter, &aResult->mSelection.mFocus) &&
+           ReadParam(aMsg, aIter, &aResult->mSelection.mWritingMode) &&
+           ReadParam(aMsg, aIter, &aResult->mCaret.mOffset) &&
+           ReadParam(aMsg, aIter, &aResult->mCaret.mRect) &&
+           ReadParam(aMsg, aIter, &aResult->mTextRectArray.mStart) &&
+           ReadParam(aMsg, aIter, &aResult->mTextRectArray.mRects) &&
+           ReadParam(aMsg, aIter, &aResult->mEditorRect);
   }
 };
 
