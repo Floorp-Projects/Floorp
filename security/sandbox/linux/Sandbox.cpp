@@ -73,8 +73,7 @@ SandboxCrashFunc gSandboxCrashFunc;
 // For media plugins, we can start the sandbox before we dlopen the
 // module, so we have to pre-open the file and simulate the sandboxed
 // open().
-static int gMediaPluginFileDesc = -1;
-static const char *gMediaPluginFilePath;
+static SandboxOpenedFile gMediaPluginFile;
 #endif
 
 static UniquePtr<SandboxChroot> gChrootHelper;
@@ -138,43 +137,6 @@ SigSysHandler(int nr, siginfo_t *info, void *void_context)
   args[3] = SECCOMP_PARM4(&savedCtx);
   args[4] = SECCOMP_PARM5(&savedCtx);
   args[5] = SECCOMP_PARM6(&savedCtx);
-
-  // Note: the next patch will migrate these syscall interceptions
-  // into the policy.
-
-#if defined(ANDROID) && ANDROID_VERSION < 16
-  // Bug 1093893: Translate tkill to tgkill for pthread_kill; fixed in
-  // bionic commit 10c8ce59a (in JB and up; API level 16 = Android 4.1).
-  if (syscall_nr == __NR_tkill) {
-    intptr_t ret = syscall(__NR_tgkill, getpid(), args[0], args[1]);
-    if (ret < 0) {
-      ret = -errno;
-    }
-    SECCOMP_RESULT(ctx) = ret;
-    return;
-  }
-#endif
-
-#ifdef MOZ_GMP_SANDBOX
-  if (syscall_nr == __NR_open && gMediaPluginFilePath) {
-    const char *path = reinterpret_cast<const char*>(args[0]);
-    int flags = int(args[1]);
-
-    if ((flags & O_ACCMODE) != O_RDONLY) {
-      SANDBOX_LOG_ERROR("non-read-only open of file %s attempted (flags=0%o)",
-                        path, flags);
-    } else if (strcmp(path, gMediaPluginFilePath) != 0) {
-      SANDBOX_LOG_ERROR("attempt to open file %s which is not the media plugin"
-                        " %s", path, gMediaPluginFilePath);
-    } else if (gMediaPluginFileDesc == -1) {
-      SANDBOX_LOG_ERROR("multiple opens of media plugin file unimplemented");
-    } else {
-      SECCOMP_RESULT(ctx) = gMediaPluginFileDesc;
-      gMediaPluginFileDesc = -1;
-      return;
-    }
-  }
-#endif
 
   // TODO, someday when this is enabled on MIPS: include the two extra
   // args in the error message.
@@ -595,9 +557,9 @@ SetContentProcessSandbox()
  * called only once, and before any potentially harmful content is
  * loaded -- including the plugin itself, if it's considered untrusted.
  *
- * The file indicated by aFilePath, if non-null, can be open()ed once
- * read-only after the sandbox starts; it should be the .so file
- * implementing the not-yet-loaded plugin.
+ * The file indicated by aFilePath, if non-null, can be open()ed
+ * read-only, once, after the sandbox starts; it should be the .so
+ * file implementing the not-yet-loaded plugin.
  *
  * Will normally make the process exit on failure.
 */
@@ -608,17 +570,20 @@ SetMediaPluginSandbox(const char *aFilePath)
     return;
   }
 
+  MOZ_ASSERT(!gMediaPluginFile.mPath);
   if (aFilePath) {
-    gMediaPluginFilePath = strdup(aFilePath);
-    gMediaPluginFileDesc = open(aFilePath, O_RDONLY | O_CLOEXEC);
-    if (gMediaPluginFileDesc == -1) {
+    gMediaPluginFile.mPath = strdup(aFilePath);
+    gMediaPluginFile.mFd = open(aFilePath, O_RDONLY | O_CLOEXEC);
+    if (gMediaPluginFile.mFd == -1) {
       SANDBOX_LOG_ERROR("failed to open plugin file %s: %s",
                         aFilePath, strerror(errno));
       MOZ_CRASH();
     }
+  } else {
+    gMediaPluginFile.mFd = -1;
   }
   // Finally, start the sandbox.
-  SetCurrentProcessSandbox(GetMediaSandboxPolicy());
+  SetCurrentProcessSandbox(GetMediaSandboxPolicy(&gMediaPluginFile));
 }
 #endif // MOZ_GMP_SANDBOX
 
