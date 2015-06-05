@@ -171,6 +171,12 @@ const gXPInstallObserver = {
         else
           error += "Incompatible";
 
+        // Add Learn More link when refusing to install an unsigned add-on
+        if (install.error == AddonManager.ERROR_SIGNEDSTATE_REQUIRED) {
+          options.learnMoreURL =
+            Services.prefs.getCharPref("xpinstall.signatures.infoURL");
+        }
+
         messageString = gNavigatorBundle.getString(error);
         messageString = messageString.replace("#1", install.name);
         if (host)
@@ -180,6 +186,9 @@ const gXPInstallObserver = {
 
         PopupNotifications.show(browser, notificationID, messageString, anchorID,
                                 action, null, options);
+
+        // Can't have multiple notifications with the same ID, so stop here.
+        break;
       }
       this._removeProgressNotification(browser);
       break; }
