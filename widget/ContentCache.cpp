@@ -31,6 +31,80 @@ ContentCache::Clear()
   mText.Truncate();
 }
 
+bool
+ContentCache::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
+                                      nsIWidget* aWidget) const
+{
+  MOZ_ASSERT(aWidget);
+
+  aEvent.mSucceeded = false;
+  aEvent.mWasAsync = false;
+  aEvent.mReply.mFocusedWidget = aWidget;
+
+  switch (aEvent.message) {
+    case NS_QUERY_SELECTED_TEXT:
+      aEvent.mReply.mOffset = mSelection.StartOffset();
+      if (mSelection.Collapsed()) {
+        aEvent.mReply.mString.Truncate(0);
+      } else {
+        if (NS_WARN_IF(SelectionEndIsGraterThanTextLength())) {
+          return false;
+        }
+        aEvent.mReply.mString =
+          Substring(mText, aEvent.mReply.mOffset, mSelection.Length());
+      }
+      aEvent.mReply.mReversed = mSelection.Reversed();
+      aEvent.mReply.mHasSelection = true;
+      aEvent.mReply.mWritingMode = mSelection.mWritingMode;
+      break;
+    case NS_QUERY_TEXT_CONTENT: {
+      uint32_t inputOffset = aEvent.mInput.mOffset;
+      uint32_t inputEndOffset =
+        std::min(aEvent.mInput.EndOffset(), mText.Length());
+      if (NS_WARN_IF(inputEndOffset < inputOffset)) {
+        return false;
+      }
+      aEvent.mReply.mOffset = inputOffset;
+      aEvent.mReply.mString =
+        Substring(mText, inputOffset, inputEndOffset - inputOffset);
+      break;
+    }
+    case NS_QUERY_TEXT_RECT:
+      if (NS_WARN_IF(!GetUnionTextRects(aEvent.mInput.mOffset,
+                                        aEvent.mInput.mLength,
+                                        aEvent.mReply.mRect))) {
+        // XXX We don't have cache for this request.
+        return false;
+      }
+      if (aEvent.mInput.mOffset < mText.Length()) {
+        aEvent.mReply.mString =
+          Substring(mText, aEvent.mInput.mOffset,
+                    mText.Length() >= aEvent.mInput.EndOffset() ?
+                      aEvent.mInput.mLength : UINT32_MAX);
+      } else {
+        aEvent.mReply.mString.Truncate(0);
+      }
+      aEvent.mReply.mOffset = aEvent.mInput.mOffset;
+      // XXX This may be wrong if storing range isn't in the selection range.
+      aEvent.mReply.mWritingMode = mSelection.mWritingMode;
+      break;
+    case NS_QUERY_CARET_RECT:
+      if (NS_WARN_IF(!GetCaretRect(aEvent.mInput.mOffset,
+                                   aEvent.mReply.mRect))) {
+        // XXX If the input offset is in the range of cached text rects,
+        //     we can guess the caret rect.
+        return false;
+      }
+      aEvent.mReply.mOffset = aEvent.mInput.mOffset;
+      break;
+    case NS_QUERY_EDITOR_RECT:
+      aEvent.mReply.mRect = mEditorRect;
+      break;
+  }
+  aEvent.mSucceeded = true;
+  return true;
+}
+
 void
 ContentCache::SetText(const nsAString& aText)
 {
