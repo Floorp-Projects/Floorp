@@ -1078,7 +1078,7 @@ private:
         mWorkerPrivate->SetBaseURI(finalURI);
       }
 
-      nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
+      DebugOnly<nsIPrincipal*> principal = mWorkerPrivate->GetPrincipal();
       MOZ_ASSERT(principal);
       nsILoadGroup* loadGroup = mWorkerPrivate->GetLoadGroup();
       MOZ_ASSERT(loadGroup);
