@@ -131,7 +131,7 @@ HistoryStore.prototype = {
       "SELECT visit_type type, visit_date date " +
       "FROM moz_historyvisits " +
       "WHERE place_id = (SELECT id FROM moz_places WHERE url = :url) " +
-      "ORDER BY date DESC LIMIT 10");
+      "ORDER BY date DESC LIMIT 20");
   },
   _visitCols: ["date", "type"],
 
