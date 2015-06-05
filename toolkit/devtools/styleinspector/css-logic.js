@@ -42,6 +42,36 @@ const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
+let pseudos = new Set([
+  ":after",
+  ":before",
+  ":first-letter",
+  ":first-line",
+  ":selection",
+  ":-moz-color-swatch",
+  ":-moz-focus-inner",
+  ":-moz-focus-outer",
+  ":-moz-list-bullet",
+  ":-moz-list-number",
+  ":-moz-math-anonymous",
+  ":-moz-math-stretchy",
+  ":-moz-meter-bar",
+  ":-moz-number-spin-box",
+  ":-moz-number-spin-down",
+  ":-moz-number-spin-up",
+  ":-moz-number-text",
+  ":-moz-number-wrapper",
+  ":-moz-placeholder",
+  ":-moz-progress-bar",
+  ":-moz-range-progress",
+  ":-moz-range-thumb",
+  ":-moz-range-track",
+  ":-moz-selection"
+]);
+
+const PSEUDO_ELEMENT_SET = pseudos;
+exports.PSEUDO_ELEMENT_SET = PSEUDO_ELEMENT_SET;
+
 // This should be ok because none of the functions that use this should be used
 // on the worker thread, where Cu is not available.
 if (Cu) {
@@ -1655,21 +1685,7 @@ CssSelector.prototype = {
   get pseudoElements()
   {
     if (!CssSelector._pseudoElements) {
-      let pseudos = CssSelector._pseudoElements = new Set();
-      pseudos.add("after");
-      pseudos.add("before");
-      pseudos.add("first-letter");
-      pseudos.add("first-line");
-      pseudos.add("selection");
-      pseudos.add("-moz-color-swatch");
-      pseudos.add("-moz-focus-inner");
-      pseudos.add("-moz-focus-outer");
-      pseudos.add("-moz-list-bullet");
-      pseudos.add("-moz-list-number");
-      pseudos.add("-moz-math-anonymous");
-      pseudos.add("-moz-math-stretchy");
-      pseudos.add("-moz-progress-bar");
-      pseudos.add("-moz-selection");
+      CssSelector._pseudoElements = PSEUDO_ELEMENT_SET;
     }
     return CssSelector._pseudoElements;
   },
