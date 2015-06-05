@@ -65,20 +65,20 @@ this.SelectParentHelper = {
 
 };
 
-function populateChildren(menulist, options, selectedIndex, startIndex = 0, isGroup = false) {
+function populateChildren(menulist, options, selectedIndex, startIndex = 0, isInGroup = false) {
   let index = startIndex;
   let element = menulist.menupopup;
 
   for (let option of options) {
-    let item = element.ownerDocument.createElement("menuitem");
+    let isOptGroup = (option.tagName == 'OPTGROUP');
+    let item = element.ownerDocument.createElement(isOptGroup ? "menucaption" : "menuitem");
+
     item.setAttribute("label", option.textContent);
     item.style.direction = option.textDirection;
 
     element.appendChild(item);
 
-    if (option.children.length > 0) {
-      item.classList.add("contentSelectDropdown-optgroup");
-      item.setAttribute("disabled", "true");
+    if (isOptGroup) {
       index = populateChildren(menulist, option.children, selectedIndex, index, true);
     } else {
       if (index == selectedIndex) {
@@ -89,9 +89,10 @@ function populateChildren(menulist, options, selectedIndex, startIndex = 0, isGr
         // _moz-menuactive attribute on the selected <xul:menuitem>.
         menulist.selectedItem = item;
       }
+
       item.setAttribute("value", index++);
 
-      if (isGroup) {
+      if (isInGroup) {
         item.classList.add("contentSelectDropdown-ingroup")
       }
     }
