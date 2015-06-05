@@ -13,7 +13,6 @@ const {SocialService} = Cu.import("resource://gre/modules/SocialService.jsm", {}
 
 add_task(loadLoopPanel);
 
-const kShareWidgetId = "social-share-button";
 const kShareProvider = {
   name: "provider 1",
   origin: "https://example.com",
@@ -32,51 +31,7 @@ registerCleanupFunction(function* () {
   SocialShare.uninit();
 });
 
-add_task(function* test_mozLoop_isSocialShareButtonAvailable() {
-  Assert.ok(gMozLoopAPI, "mozLoop should exist");
-
-  // First make sure the Social Share button is not available. This is probably
-  // already the case, but make it explicit here.
-  CustomizableUI.removeWidgetFromArea(kShareWidgetId);
-
-  Assert.ok(!gMozLoopAPI.isSocialShareButtonAvailable(),
-    "Social Share button should not be available");
-
-  // Add the widget to the navbar.
-  CustomizableUI.addWidgetToArea(kShareWidgetId, CustomizableUI.AREA_NAVBAR);
-
-  Assert.ok(gMozLoopAPI.isSocialShareButtonAvailable(),
-    "Social Share button should be available");
-
-  // Add the widget to the MenuPanel.
-  CustomizableUI.addWidgetToArea(kShareWidgetId, CustomizableUI.AREA_PANEL);
-
-  Assert.ok(gMozLoopAPI.isSocialShareButtonAvailable(),
-    "Social Share button should still be available");
-
-  // Test button removal during the same session.
-  CustomizableUI.removeWidgetFromArea(kShareWidgetId);
-
-  Assert.ok(!gMozLoopAPI.isSocialShareButtonAvailable(),
-    "Social Share button should not be available");
-});
-
-add_task(function* test_mozLoop_addSocialShareButton() {
-  gMozLoopAPI.addSocialShareButton();
-
-  Assert.ok(gMozLoopAPI.isSocialShareButtonAvailable(),
-    "Social Share button should be available");
-
-  let widget = CustomizableUI.getWidget(kShareWidgetId);
-  Assert.strictEqual(widget.areaType, CustomizableUI.TYPE_TOOLBAR,
-    "Social Share button should be placed in the navbar");
-
-  CustomizableUI.removeWidgetFromArea(kShareWidgetId);
-});
-
 add_task(function* test_mozLoop_addSocialShareProvider() {
-  gMozLoopAPI.addSocialShareButton();
-
   gMozLoopAPI.addSocialShareProvider();
 
   yield promiseWaitForCondition(() => SocialShare.panel.state == "open");
@@ -85,7 +40,6 @@ add_task(function* test_mozLoop_addSocialShareProvider() {
     "Provider directory page should be visible");
 
   SocialShare.panel.hidePopup();
-  CustomizableUI.removeWidgetFromArea(kShareWidgetId);
 });
 
 add_task(function* test_mozLoop_getSocialShareProviders() {
@@ -131,8 +85,6 @@ add_task(function* test_mozLoop_getSocialShareProviders() {
 });
 
 add_task(function* test_mozLoop_socialShareRoom() {
-  gMozLoopAPI.addSocialShareButton();
-
   gMozLoopAPI.socialShareRoom(kShareProvider.origin, "https://someroom.com", "Some Title");
 
   yield promiseWaitForCondition(() => SocialShare.panel.state == "open");
@@ -143,5 +95,4 @@ add_task(function* test_mozLoop_socialShareRoom() {
     "Provider's share page should be displayed");
 
   SocialShare.panel.hidePopup();
-  CustomizableUI.removeWidgetFromArea(kShareWidgetId);
 });

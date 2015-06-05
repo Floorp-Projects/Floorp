@@ -37,7 +37,6 @@ describe("loop.store.ActiveRoomStore", function () {
       },
       setScreenShareState: sinon.stub(),
       getActiveTabWindowId: sandbox.stub().callsArgWith(0, null, 42),
-      isSocialShareButtonAvailable: sinon.stub().returns(false),
       getSocialShareProviders: sinon.stub().returns([])
     };
 
@@ -289,7 +288,6 @@ describe("loop.store.ActiveRoomStore", function () {
             roomName: fakeRoomData.decryptedContext.roomName,
             roomOwner: fakeRoomData.roomOwner,
             roomUrl: fakeRoomData.roomUrl,
-            socialShareButtonAvailable: false,
             socialShareProviders: []
           }));
       });
@@ -550,7 +548,6 @@ describe("loop.store.ActiveRoomStore", function () {
         roomOwner: "Me",
         roomToken: "fakeToken",
         roomUrl: "http://invalid",
-        socialShareButtonAvailable: false,
         socialShareProviders: []
       };
     });
@@ -569,7 +566,6 @@ describe("loop.store.ActiveRoomStore", function () {
       expect(state.roomOwner).eql(fakeRoomInfo.roomOwner);
       expect(state.roomToken).eql(fakeRoomInfo.roomToken);
       expect(state.roomUrl).eql(fakeRoomInfo.roomUrl);
-      expect(state.socialShareButtonAvailable).eql(false);
       expect(state.socialShareProviders).eql([]);
     });
   });
@@ -606,7 +602,6 @@ describe("loop.store.ActiveRoomStore", function () {
 
     beforeEach(function() {
       fakeSocialShareInfo = {
-        socialShareButtonAvailable: true,
         socialShareProviders: [{
           name: "foo",
           origin: "https://example.com",
@@ -619,8 +614,6 @@ describe("loop.store.ActiveRoomStore", function () {
       store.updateSocialShareInfo(new sharedActions.UpdateSocialShareInfo(fakeSocialShareInfo));
 
       var state = store.getStoreState();
-      expect(state.socialShareButtonAvailable)
-        .eql(fakeSocialShareInfo.socialShareButtonAvailable);
       expect(state.socialShareProviders)
         .eql(fakeSocialShareInfo.socialShareProviders);
     });
@@ -1368,7 +1361,6 @@ describe("loop.store.ActiveRoomStore", function () {
       sinon.assert.calledOnce(dispatcher.dispatch);
       sinon.assert.calledWithExactly(dispatcher.dispatch,
         new sharedActions.UpdateSocialShareInfo({
-          socialShareButtonAvailable: false,
           socialShareProviders: []
         }));
     });
@@ -1376,7 +1368,6 @@ describe("loop.store.ActiveRoomStore", function () {
     it("should call respective mozLoop methods", function() {
       store._handleSocialShareUpdate();
 
-      sinon.assert.calledOnce(fakeMozLoop.isSocialShareButtonAvailable);
       sinon.assert.calledOnce(fakeMozLoop.getSocialShareProviders);
     });
   });
@@ -1389,7 +1380,6 @@ describe("loop.store.ActiveRoomStore", function () {
           roomOwner: "Me",
           roomToken: "fakeToken",
           roomUrl: "http://invalid",
-          socialShareButtonAvailable: false,
           socialShareProviders: []
         }));
       });
@@ -1438,7 +1428,6 @@ describe("loop.store.ActiveRoomStore", function () {
       beforeEach(function() {
         store.setupRoomInfo(new sharedActions.SetupRoomInfo(
           _.extend(fakeRoomData, {
-            socialShareButtonAvailable: false,
             socialShareProviders: []
           })
         ));
