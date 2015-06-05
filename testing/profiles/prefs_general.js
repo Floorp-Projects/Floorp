@@ -69,6 +69,7 @@ user_pref("experiments.manifest.uri", "http://%(server)s/experiments-dummy/manif
 // Only load extensions from the application and user profile
 // AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
 user_pref("extensions.enabledScopes", 5);
+user_pref("extensions.autoDisableScopes", 0);
 // Disable metadata caching for installed add-ons by default
 user_pref("extensions.getAddons.cache.enabled", false);
 // Disable intalling any distribution add-ons
