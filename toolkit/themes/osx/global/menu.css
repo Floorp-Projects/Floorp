@@ -5,7 +5,8 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 menu,
-menuitem {
+menuitem,
+menucaption {
   -moz-appearance: menuitem;
   -moz-box-align: center;
   color: MenuText;
@@ -34,6 +35,11 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 .menu-iconic-text {
   font-weight: inherit;
   color: inherit;
+}
+
+menucaption > .menu-text,
+menucaption > .menu-iconic-text {
+  font-weight: bold;
 }
 
 .menu-description {
@@ -127,7 +133,8 @@ menubar > menu[_moz-menuactive="true"][open="true"] {
 /* ::::: menu/menuitems in popups ::::: */
 
 menupopup > menu,
-menupopup > menuitem {
+menupopup > menuitem,
+menupopup > menucaption {
   max-width: 42em;
 }
 
@@ -140,6 +147,7 @@ menuitem[_moz-menuactive="true"] {
 /* ::::: menu/menuitems in menulist popups ::::: */
 
 menulist > menupopup > menuitem,
+menulist > menupopup > menucaption,
 menulist > menupopup > menu {
   max-width: none;
   font: inherit;
@@ -148,11 +156,12 @@ menulist > menupopup > menu {
 
 /* ::::: menuitems in editable menulist popups ::::: */
 
-menulist[editable="true"] > menupopup > menuitem {
+menulist[editable="true"] > menupopup > menuitem,
+menulist[editable="true"] > menupopup > menucaption {
   -moz-appearance: none;
 }
 
-menulist[editable="true"] > menupopup > menuitem > .menu-iconic-left {
+menulist[editable="true"] > menupopup > :moz-any(menuitem, menucaption) > .menu-iconic-left
   display: none;
 }
 

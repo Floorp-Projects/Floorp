@@ -137,7 +137,9 @@ PuppetWidget::InitIMEState()
 {
   MOZ_ASSERT(mTabChild);
   if (mNeedIMEStateInit) {
-    mTabChild->SendNotifyIMEFocus(false, &mIMEPreferenceOfParent);
+    mContentCache.Clear();
+    mTabChild->SendNotifyIMEFocus(false, mContentCache,
+                                  &mIMEPreferenceOfParent);
     mNeedIMEStateInit = false;
   }
 }
@@ -581,19 +583,18 @@ PuppetWidget::NotifyIMEInternal(const IMENotification& aIMENotification)
     case REQUEST_TO_CANCEL_COMPOSITION:
       return IMEEndComposition(true);
     case NOTIFY_IME_OF_FOCUS:
-      return NotifyIMEOfFocusChange(true);
     case NOTIFY_IME_OF_BLUR:
-      return NotifyIMEOfFocusChange(false);
+      return NotifyIMEOfFocusChange(aIMENotification);
     case NOTIFY_IME_OF_SELECTION_CHANGE:
       return NotifyIMEOfSelectionChange(aIMENotification);
     case NOTIFY_IME_OF_TEXT_CHANGE:
       return NotifyIMEOfTextChange(aIMENotification);
     case NOTIFY_IME_OF_COMPOSITION_UPDATE:
-      return NotifyIMEOfUpdateComposition();
+      return NotifyIMEOfUpdateComposition(aIMENotification);
     case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
       return NotifyIMEOfMouseButtonEvent(aIMENotification);
     case NOTIFY_IME_OF_POSITION_CHANGE:
-      return NotifyIMEOfPositionChange();
+      return NotifyIMEOfPositionChange(aIMENotification);
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -662,7 +663,7 @@ PuppetWidget::GetInputContext()
 }
 
 nsresult
-PuppetWidget::NotifyIMEOfFocusChange(bool aFocus)
+PuppetWidget::NotifyIMEOfFocusChange(const IMENotification& aIMENotification)
 {
 #ifndef MOZ_CROSS_PROCESS_IME
   return NS_OK;
@@ -671,35 +672,28 @@ PuppetWidget::NotifyIMEOfFocusChange(bool aFocus)
   if (!mTabChild)
     return NS_ERROR_FAILURE;
 
-  if (aFocus) {
-    nsEventStatus status;
-    WidgetQueryContentEvent queryEvent(true, NS_QUERY_TEXT_CONTENT, this);
-    InitEvent(queryEvent, nullptr);
-    // Query entire content
-    queryEvent.InitForQueryTextContent(0, UINT32_MAX);
-    DispatchEvent(&queryEvent, status);
-
-    if (queryEvent.mSucceeded) {
-      mTabChild->SendNotifyIMETextHint(queryEvent.mReply.mString);
+  bool gotFocus = aIMENotification.mMessage == NOTIFY_IME_OF_FOCUS;
+  if (gotFocus) {
+    // When IME gets focus, we should initalize all information of the content.
+    if (NS_WARN_IF(!mContentCache.CacheAll(this, &aIMENotification))) {
+      return NS_ERROR_FAILURE;
     }
+  } else {
+    // When IME loses focus, we don't need to store anything.
+    mContentCache.Clear();
   }
 
   mIMEPreferenceOfParent = nsIMEUpdatePreference();
-  if (!mTabChild->SendNotifyIMEFocus(aFocus, &mIMEPreferenceOfParent)) {
+  if (!mTabChild->SendNotifyIMEFocus(gotFocus, mContentCache,
+                                     &mIMEPreferenceOfParent)) {
     return NS_ERROR_FAILURE;
-  }
-
-  if (aFocus) {
-    IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
-    notification.mSelectionChangeData.mCausedByComposition = false;
-    NotifyIMEOfSelectionChange(notification); // Update selection
-    NotifyIMEOfEditorRect();
   }
   return NS_OK;
 }
 
 nsresult
-PuppetWidget::NotifyIMEOfUpdateComposition()
+PuppetWidget::NotifyIMEOfUpdateComposition(
+                const IMENotification& aIMENotification)
 {
 #ifndef MOZ_CROSS_PROCESS_IME
   return NS_OK;
@@ -707,108 +701,11 @@ PuppetWidget::NotifyIMEOfUpdateComposition()
 
   NS_ENSURE_TRUE(mTabChild, NS_ERROR_FAILURE);
 
-  uint32_t startOffset;
-  uint32_t targetCauseOffset;
-  nsAutoTArray<LayoutDeviceIntRect, 16> textRectArray;
-  if (!GetCompositionRects(startOffset,
-                           textRectArray,
-                           targetCauseOffset)) {
+  if (NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
     return NS_ERROR_FAILURE;
   }
-  LayoutDeviceIntRect caretRect;
-  GetCaretRect(caretRect, targetCauseOffset);
-
-  mTabChild->SendNotifyIMESelectedCompositionRect(startOffset,
-                                                  textRectArray,
-                                                  targetCauseOffset,
-                                                  caretRect);
+  mTabChild->SendNotifyIMESelectedCompositionRect(mContentCache);
   return NS_OK;
-}
-
-bool
-PuppetWidget::GetCompositionRects(uint32_t& aStartOffset,
-                                  nsTArray<LayoutDeviceIntRect>& aTextRectArray,
-                                  uint32_t& aTargetCauseOffset)
-{
-  nsRefPtr<TextComposition> textComposition =
-    IMEStateManager::GetTextCompositionFor(this);
-  NS_ENSURE_TRUE(textComposition, false);
-
-  nsEventStatus status;
-  aTextRectArray.SetCapacity(textComposition->String().Length());
-  aStartOffset = textComposition->NativeOffsetOfStartComposition();
-  aTargetCauseOffset = textComposition->OffsetOfTargetClause();
-  uint32_t endOffset = textComposition->String().Length() + aStartOffset;
-  for (uint32_t i = aStartOffset; i < endOffset; i++) {
-    WidgetQueryContentEvent textRect(true, NS_QUERY_TEXT_RECT, this);
-    InitEvent(textRect, nullptr);
-    textRect.InitForQueryTextRect(i, 1);
-    DispatchEvent(&textRect, status);
-    NS_ENSURE_TRUE(textRect.mSucceeded, false);
-
-    aTextRectArray.AppendElement(textRect.mReply.mRect);
-  }
-  return true;
-}
-
-uint32_t
-PuppetWidget::GetCaretOffset()
-{
-  nsEventStatus status;
-  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, this);
-  InitEvent(selection, nullptr);
-  DispatchEvent(&selection, status);
-  NS_ENSURE_TRUE(selection.mSucceeded, 0);
-
-  return selection.mReply.mOffset;
-}
-
-bool
-PuppetWidget::GetCaretRect(LayoutDeviceIntRect& aCaretRect, uint32_t aCaretOffset)
-{
-  nsEventStatus status;
-  WidgetQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, this);
-  InitEvent(caretRect, nullptr);
-  caretRect.InitForQueryCaretRect(aCaretOffset);
-  DispatchEvent(&caretRect, status);
-  NS_ENSURE_TRUE(caretRect.mSucceeded, false);
-
-  aCaretRect = caretRect.mReply.mRect;
-
-  return true;
-}
-
-nsresult
-PuppetWidget::NotifyIMEOfEditorRect()
-{
-#ifndef MOZ_CROSS_PROCESS_IME
-  return NS_OK;
-#endif
-  if (NS_WARN_IF(!mTabChild)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  LayoutDeviceIntRect rect;
-  if (!GetEditorRect(rect)) {
-    return NS_ERROR_FAILURE;
-  }
-  mTabChild->SendNotifyIMEEditorRect(rect);
-  return NS_OK;
-}
-
-bool
-PuppetWidget::GetEditorRect(LayoutDeviceIntRect& aRect)
-{
-  nsEventStatus status;
-  WidgetQueryContentEvent editorRectEvent(true, NS_QUERY_EDITOR_RECT, this);
-  InitEvent(editorRectEvent);
-  DispatchEvent(&editorRectEvent, status);
-  if (NS_WARN_IF(!editorRectEvent.mSucceeded)) {
-    return false;
-  }
-  aRect = editorRectEvent.mReply.mRect;
-
-  return true;
 }
 
 nsIMEUpdatePreference
@@ -839,14 +736,12 @@ PuppetWidget::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
   if (!mTabChild)
     return NS_ERROR_FAILURE;
 
-  nsEventStatus status;
-  WidgetQueryContentEvent queryEvent(true, NS_QUERY_TEXT_CONTENT, this);
-  InitEvent(queryEvent, nullptr);
-  queryEvent.InitForQueryTextContent(0, UINT32_MAX);
-  DispatchEvent(&queryEvent, status);
+  // FYI: text change notification is the first notification after
+  //      a user operation changes the content.  So, we need to modify
+  //      the cache as far as possible here.
 
-  if (queryEvent.mSucceeded) {
-    mTabChild->SendNotifyIMETextHint(queryEvent.mReply.mString);
+  if (NS_WARN_IF(!mContentCache.CacheText(this, &aIMENotification))) {
+    return NS_ERROR_FAILURE;
   }
 
   // TabParent doesn't this this to cache.  we don't send the notification
@@ -855,10 +750,13 @@ PuppetWidget::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
       (mIMEPreferenceOfParent.WantChangesCausedByComposition() ||
        !aIMENotification.mTextChangeData.mCausedByComposition)) {
     mTabChild->SendNotifyIMETextChange(
+      mContentCache,
       aIMENotification.mTextChangeData.mStartOffset,
       aIMENotification.mTextChangeData.mOldEndOffset,
       aIMENotification.mTextChangeData.mNewEndOffset,
       aIMENotification.mTextChangeData.mCausedByComposition);
+  } else {
+    mTabChild->SendUpdateContentCache(mContentCache);
   }
   return NS_OK;
 }
@@ -877,11 +775,17 @@ PuppetWidget::NotifyIMEOfSelectionChange(
   if (!mTabChild)
     return NS_ERROR_FAILURE;
 
+  // Note that selection change must be notified after text change if it occurs.
+  // Therefore, we don't need to query text content again here.
+  mContentCache.SetSelection(
+    this,
+    aIMENotification.mSelectionChangeData.mOffset,
+    aIMENotification.mSelectionChangeData.mLength,
+    aIMENotification.mSelectionChangeData.mReversed,
+    aIMENotification.mSelectionChangeData.GetWritingMode());
+
   mTabChild->SendNotifyIMESelection(
-    aIMENotification.mSelectionChangeData.StartOffset(),
-    aIMENotification.mSelectionChangeData.EndOffset(),
-    aIMENotification.mSelectionChangeData.GetWritingMode(),
-    aIMENotification.mSelectionChangeData.mCausedByComposition);
+    mContentCache, aIMENotification.mSelectionChangeData.mCausedByComposition);
   return NS_OK;
 }
 
@@ -903,7 +807,7 @@ PuppetWidget::NotifyIMEOfMouseButtonEvent(
 }
 
 nsresult
-PuppetWidget::NotifyIMEOfPositionChange()
+PuppetWidget::NotifyIMEOfPositionChange(const IMENotification& aIMENotification)
 {
 #ifndef MOZ_CROSS_PROCESS_IME
   return NS_OK;
@@ -912,25 +816,11 @@ PuppetWidget::NotifyIMEOfPositionChange()
     return NS_ERROR_FAILURE;
   }
 
-  LayoutDeviceIntRect editorRect;
-  if (!GetEditorRect(editorRect)) {
+  if (NS_WARN_IF(!mContentCache.CacheEditorRect(this, &aIMENotification)) ||
+      NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
     return NS_ERROR_FAILURE;
   }
-
-  uint32_t startOffset;
-  uint32_t targetCauseOffset;
-  nsAutoTArray<LayoutDeviceIntRect, 16> textRectArray;
-  if (!GetCompositionRects(startOffset,
-                           textRectArray,
-                           targetCauseOffset)) {
-    // no composition string, get caret offset by NS_QUERY_SELECTED_TEXT
-    targetCauseOffset = GetCaretOffset();
-  }
-
-  LayoutDeviceIntRect caretRect;
-  GetCaretRect(caretRect, targetCauseOffset);
-  if (!mTabChild->SendNotifyIMEPositionChange(editorRect, textRectArray,
-                                              caretRect)) {
+  if (!mTabChild->SendNotifyIMEPositionChange(mContentCache)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

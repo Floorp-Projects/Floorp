@@ -6,13 +6,11 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "mp4_demuxer/mp4_demuxer.h"
-#include "mp4_demuxer/MP3TrackDemuxer.h"
-#include "MP4Stream.h"
+#include "MP3Demuxer.h"
 #include "mozilla/ArrayUtils.h"
 #include "MockMediaResource.h"
 
-using namespace mp4_demuxer;
+using namespace mp3;
 
 struct MP3Resource {
   const char* mFilePath;
@@ -40,7 +38,7 @@ struct MP3Resource {
   // The first n frame offsets.
   std::vector<int32_t> mSyncOffsets;
   nsRefPtr<MockMediaResource> mResource;
-  nsRefPtr<MP3Demuxer> mDemuxer;
+  nsRefPtr<MP3TrackDemuxer> mDemuxer;
 };
 
 class MP3DemuxerTest : public ::testing::Test {
@@ -98,7 +96,7 @@ protected:
 
     for (auto& target: mTargets) {
       target.mResource = new MockMediaResource(target.mFilePath),
-      target.mDemuxer = new MP3Demuxer(new MP4Stream(target.mResource));
+      target.mDemuxer = new MP3TrackDemuxer(target.mResource);
 
       ASSERT_EQ(NS_OK, target.mResource->Open(nullptr));
       ASSERT_TRUE(target.mDemuxer->Init());
@@ -208,7 +206,7 @@ TEST_F(MP3DemuxerTest, Duration) {
     EXPECT_EQ(static_cast<int64_t>(target.mFileSize), target.mDemuxer->StreamLength());
 
     while (frameData) {
-      EXPECT_NEAR(target.mDuration, target.mDemuxer->Duration(),
+      EXPECT_NEAR(target.mDuration, target.mDemuxer->Duration().ToMicroseconds(),
                   target.mDurationError * target.mDuration);
 
       frameData = target.mDemuxer->DemuxSample();

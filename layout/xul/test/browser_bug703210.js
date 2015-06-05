@@ -15,14 +15,14 @@ add_task(function* () {
 
   // Send a mousemove at a known position to start the test.
   yield BrowserTestUtils.synthesizeMouseAtCenter("#p2", { type: "mousemove" }, browser);
-  let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown", event => {
+  let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown", false, event => {
     is(event.originalTarget.localName, "tooltip", "tooltip is showing");
     return true;
   });
   yield BrowserTestUtils.synthesizeMouseAtCenter("#p1", { type: "mousemove" }, browser);
   yield popupShownPromise;
 
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(document, "popuphidden", event => {
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(document, "popuphidden", false, event => {
     is(event.originalTarget.localName, "tooltip", "tooltip is hidden");
     return true;
   });

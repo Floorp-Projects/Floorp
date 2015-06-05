@@ -8,8 +8,7 @@
 const SMART_BOOKMARKS_PREF = "browser.places.smartBookmarksVersion";
 
 let gluesvc = Cc["@mozilla.org/browser/browserglue;1"].
-                getService(Ci.nsIBrowserGlue).
-                QueryInterface(Ci.nsIObserver);
+                getService(Ci.nsIObserver);
 // Avoid default bookmarks import.
 gluesvc.observe(null, "initial-migration-will-import-default-bookmarks", "");
 
