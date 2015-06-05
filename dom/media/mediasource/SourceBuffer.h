@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nscore.h"
+#include "SourceBufferContentManager.h"
 
 class JSObject;
 struct JSContext;
@@ -33,9 +34,11 @@ class ErrorResult;
 class MediaLargeByteBuffer;
 class TrackBuffer;
 template <typename T> class AsyncEventRunner;
-typedef MediaPromise<bool, nsresult, /* IsExclusive = */ true> TrackBufferAppendPromise;
 
 namespace dom {
+
+using media::TimeUnit;
+using media::TimeIntervals;
 
 class TimeRanges;
 
@@ -147,7 +150,7 @@ private:
 
   // Shared implementation of AppendBuffer overloads.
   void AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv);
-  void AppendData(MediaLargeByteBuffer* aData, double aTimestampOffset,
+  void AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset,
                   uint32_t aAppendID);
 
   // Implement the "Append Error Algorithm".
@@ -162,14 +165,14 @@ private:
                                                        uint32_t aLength,
                                                        ErrorResult& aRv);
 
-  void AppendDataCompletedWithSuccess(bool aValue);
+  void AppendDataCompletedWithSuccess(bool aHasActiveTracks);
   void AppendDataErrored(nsresult aError);
 
   nsRefPtr<MediaSource> mMediaSource;
 
   uint32_t mEvictionThreshold;
 
-  nsRefPtr<TrackBuffer> mTrackBuffer;
+  nsRefPtr<SourceBufferContentManager> mContentManager;
 
   double mAppendWindowStart;
   double mAppendWindowEnd;
@@ -186,7 +189,7 @@ private:
   // aborted and another AppendData queued.
   uint32_t mUpdateID;
 
-  MediaPromiseRequestHolder<TrackBufferAppendPromise> mPendingAppend;
+  MediaPromiseRequestHolder<SourceBufferContentManager::AppendPromise> mPendingAppend;
   const nsCString mType;
 };
 

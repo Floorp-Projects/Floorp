@@ -35,13 +35,10 @@ namespace gl {
 using namespace mozilla::layers;
 using namespace android;
 
-SurfaceFactory_Gralloc::SurfaceFactory_Gralloc(GLContext* prodGL,
-                                               const SurfaceCaps& caps,
-                                               layers::TextureFlags flags,
-                                               layers::ISurfaceAllocator* allocator)
-    : SurfaceFactory(prodGL, SharedSurfaceType::Gralloc, caps)
-    , mFlags(flags)
-    , mAllocator(allocator)
+SurfaceFactory_Gralloc::SurfaceFactory_Gralloc(GLContext* prodGL, const SurfaceCaps& caps,
+                                               const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                               const layers::TextureFlags& flags)
+    : SurfaceFactory(SharedSurfaceType::Gralloc, prodGL, caps, allocator, flags)
 {
     MOZ_ASSERT(mAllocator);
 }
@@ -132,7 +129,8 @@ SharedSurface_Gralloc::SharedSurface_Gralloc(GLContext* prodGL,
                     AttachmentType::GLTexture,
                     prodGL,
                     size,
-                    hasAlpha)
+                    hasAlpha,
+                    true)
     , mEGL(egl)
     , mSync(0)
     , mAllocator(allocator)
@@ -282,5 +280,12 @@ SharedSurface_Gralloc::WaitForBufferOwnership()
     mTextureClient->WaitForBufferOwnership();
 }
 
+bool
+SharedSurface_Gralloc::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor)
+{
+    mTextureClient->MarkShared();
+    return mTextureClient->ToSurfaceDescriptor(*out_descriptor);
 }
-}
+
+} // namespace gl
+} // namespace mozilla

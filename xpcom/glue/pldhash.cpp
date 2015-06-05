@@ -133,21 +133,6 @@ PL_DHashClearEntryStub(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
   aTable->ClearEntryStub(aEntry);
 }
 
-MOZ_ALWAYS_INLINE void
-PLDHashTable::FreeStringKey(PLDHashEntryHdr* aEntry)
-{
-  const PLDHashEntryStub* stub = (const PLDHashEntryStub*)aEntry;
-
-  free((void*)stub->key);
-  memset(aEntry, 0, mEntrySize);
-}
-
-void
-PL_DHashFreeStringKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
-{
-  aTable->FreeStringKey(aEntry);
-}
-
 static const PLDHashTableOps stub_ops = {
   PL_DHashVoidPtrKeyStub,
   PL_DHashMatchEntryStub,
