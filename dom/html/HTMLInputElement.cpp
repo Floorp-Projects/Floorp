@@ -1439,6 +1439,15 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
           LoadImage(src, false, aNotify, eImageLoadType_Normal);
         }
       }
+
+      if (mType == NS_FORM_INPUT_PASSWORD && IsInComposedDoc()) {
+        AsyncEventDispatcher* dispatcher =
+          new AsyncEventDispatcher(this,
+                                   NS_LITERAL_STRING("DOMInputPasswordAdded"),
+                                   true,
+                                   true);
+        dispatcher->PostDOMEvent();
+      }
     }
 
     if (aName == nsGkAtoms::required || aName == nsGkAtoms::disabled ||
@@ -4598,11 +4607,20 @@ HTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   // And now make sure our state is up to date
   UpdateState(false);
 
-#ifdef EARLY_BETA_OR_EARLIER
   if (mType == NS_FORM_INPUT_PASSWORD) {
+    if (IsInComposedDoc()) {
+      AsyncEventDispatcher* dispatcher =
+        new AsyncEventDispatcher(this,
+                                 NS_LITERAL_STRING("DOMInputPasswordAdded"),
+                                 true,
+                                 true);
+      dispatcher->PostDOMEvent();
+    }
+
+#ifdef EARLY_BETA_OR_EARLIER
     Telemetry::Accumulate(Telemetry::PWMGR_PASSWORD_INPUT_IN_FORM, !!mForm);
-  }
 #endif
+  }
 
   return rv;
 }

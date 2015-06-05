@@ -1,7 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-package org.mozilla.gecko;
+package org.mozilla.tests.browser.junit3;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
+import android.preference.PreferenceManager;
+import android.test.InstrumentationTestCase;
+import android.test.RenamingDelegatingContext;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.GeckoSharedPrefs.Flags;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -9,18 +19,10 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.mozilla.gecko.GeckoSharedPrefs.Flags;
-
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
-import android.preference.PreferenceManager;
-import android.test.RenamingDelegatingContext;
-
 /**
  * Test GeckoSharedPrefs migrations.
  */
-public class TestGeckoSharedPrefs extends BrowserTestCase {
+public class TestGeckoSharedPrefs extends InstrumentationTestCase {
 
     private static class TestContext extends RenamingDelegatingContext {
         private static final String PREFIX = "TestGeckoSharedPrefs-";
@@ -52,7 +54,7 @@ public class TestGeckoSharedPrefs extends BrowserTestCase {
     private TestContext context;
 
     protected void setUp() {
-        context = new TestContext(getApplicationContext());
+        context = new TestContext(getInstrumentation().getTargetContext());
     }
 
     protected void tearDown() {

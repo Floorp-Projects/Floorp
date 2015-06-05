@@ -1,12 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-package org.mozilla.gecko.harness;
+package org.mozilla.tests.browser.junit3.harness;
 
+import android.util.Log;
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestListener;
-import android.util.Log;
 
 /**
  * BrowserTestListener turns JUnit 3 test events into log messages in the format

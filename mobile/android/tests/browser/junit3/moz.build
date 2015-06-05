@@ -8,37 +8,20 @@ DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
 
 jar = add_java_jar('browser-junit3')
 jar.sources += [
-    'src/BrowserTestCase.java',
-    'src/harness/BrowserInstrumentationTestRunner.java',
-    'src/harness/BrowserTestListener.java',
-    'src/TestDistribution.java',
-    'src/TestGeckoBackgroundThread.java',
-    'src/TestGeckoMenu.java',
-    'src/TestGeckoProfilesProvider.java',
-    'src/TestGeckoSharedPrefs.java',
-    'src/TestImageDownloader.java',
-    'src/TestJarReader.java',
-    'src/TestRawResource.java',
-    'src/TestSuggestedSites.java',
-    'src/TestTopSitesCursorWrapper.java',
+    'src/org/mozilla/tests/browser/junit3/harness/BrowserInstrumentationTestRunner.java',
+    'src/org/mozilla/tests/browser/junit3/harness/BrowserTestListener.java',
+    'src/org/mozilla/tests/browser/junit3/TestDistribution.java',
+    'src/org/mozilla/tests/browser/junit3/TestGeckoBackgroundThread.java',
+    'src/org/mozilla/tests/browser/junit3/TestGeckoMenu.java',
+    'src/org/mozilla/tests/browser/junit3/TestGeckoProfilesProvider.java',
+    'src/org/mozilla/tests/browser/junit3/TestGeckoSharedPrefs.java',
+    'src/org/mozilla/tests/browser/junit3/TestImageDownloader.java',
+    'src/org/mozilla/tests/browser/junit3/TestJarReader.java',
+    'src/org/mozilla/tests/browser/junit3/TestRawResource.java',
+    'src/org/mozilla/tests/browser/junit3/TestSuggestedSites.java',
+    'src/org/mozilla/tests/browser/junit3/TestTopSitesCursorWrapper.java',
 ]
 jar.generated_sources = [] # None yet -- try to keep it this way.
-jar.javac_flags += ['-Xlint:all,-unchecked']
-
-# Android Eclipse project.
-main = add_android_eclipse_project('BrowserInstrumentationTests', OBJDIR + '/AndroidManifest.xml')
-# The package name doesn't really matter, but it looks nicest if the
-# generated classes (org.mozilla.gecko.browser.tests.{BuildConfig,R})
-# are in the same hierarchy as the rest of the source files.
-main.package_name = 'org.mozilla.gecko.browser.tests'
-main.res = 'res'
-main.recursive_make_targets += [
-    OBJDIR + '/AndroidManifest.xml',
-]
-main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in jar.generated_sources]
-main.referenced_projects += ['Fennec']
-
-main.add_classpathentry('src', SRCDIR + '/src',
-    dstdir='src/org/mozilla/gecko')
+jar.javac_flags += ['-Xlint:all']
 
 ANDROID_INSTRUMENTATION_MANIFESTS += ['instrumentation.ini']
