@@ -2007,7 +2007,7 @@ TabParent::RecvNotifyIMEMouseButtonEvent(
 bool
 TabParent::RecvNotifyIMEEditorRect(const LayoutDeviceIntRect& aRect)
 {
-  mIMEEditorRect = aRect;
+  mContentCache.SetEditorRect(aRect);
   return true;
 }
 
@@ -2017,7 +2017,7 @@ TabParent::RecvNotifyIMEPositionChange(
              InfallibleTArray<LayoutDeviceIntRect>&& aCompositionRects,
              const LayoutDeviceIntRect& aCaretRect)
 {
-  mIMEEditorRect = aEditorRect;
+  mContentCache.SetEditorRect(aEditorRect);
   mContentCache.UpdateTextRectArray(aCompositionRects);
   mContentCache.UpdateCaretRect(aCaretRect);
 
@@ -2283,7 +2283,8 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
     break;
   case NS_QUERY_EDITOR_RECT:
     {
-      aEvent.mReply.mRect = mIMEEditorRect - GetChildProcessOffset();
+      aEvent.mReply.mRect =
+        mContentCache.GetEditorRect() - GetChildProcessOffset();
       aEvent.mSucceeded = true;
     }
     break;
