@@ -105,6 +105,8 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 #include "nsIPermissionManager.h"
 #include "nsContentTypeParser.h"
 
+#include "mozilla/EventStateManager.h"
+
 using namespace mozilla::layers;
 using mozilla::net::nsMediaFragmentURIParser;
 
@@ -2183,6 +2185,13 @@ HTMLMediaElement::ResetConnectionState()
 void
 HTMLMediaElement::Play(ErrorResult& aRv)
 {
+  // Prevent media element from being auto-started by a script when
+  // media.autoplay.enabled=false
+  if (!IsAutoplayEnabled() && !EventStateManager::IsHandlingUserInput() && !nsContentUtils::IsCallerChrome()) {
+    LOG(LogLevel::Debug, ("%p Blocked attempt to autoplay media.", this));
+    return;
+  }
+
   StopSuspendingAfterFirstFrame();
   SetPlayedOrSeeked(true);
 
