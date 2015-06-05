@@ -1003,7 +1003,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Garbage collector state has been sucessfully initialized. */
     bool                gcInitialized;
 
-    bool isHeapBusy() const { return heapState_ != JS::HeapState::Idle; }
     bool isHeapMajorCollecting() const { return heapState_ == JS::HeapState::MajorCollecting; }
     bool isHeapMinorCollecting() const { return heapState_ == JS::HeapState::MinorCollecting; }
     bool isHeapCollecting() const { return isHeapMinorCollecting() || isHeapMajorCollecting(); }

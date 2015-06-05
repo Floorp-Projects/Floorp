@@ -3366,7 +3366,7 @@ PreliminaryObjectArrayWithTemplate::writeBarrierPre(PreliminaryObjectArrayWithTe
 {
     Shape* shape = objects->shape();
 
-    if (!shape || !shape->runtimeFromAnyThread()->needsIncrementalBarrier())
+    if (!shape || shape->runtimeFromAnyThread()->isHeapBusy())
         return;
 
     JS::Zone* zone = shape->zoneFromAnyThread();
@@ -3918,7 +3918,7 @@ TypeNewScript::trace(JSTracer* trc)
 /* static */ void
 TypeNewScript::writeBarrierPre(TypeNewScript* newScript)
 {
-    if (!newScript->function()->runtimeFromAnyThread()->needsIncrementalBarrier())
+    if (newScript->function()->runtimeFromAnyThread()->isHeapBusy())
         return;
 
     JS::Zone* zone = newScript->function()->zoneFromAnyThread();
