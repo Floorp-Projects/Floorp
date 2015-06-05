@@ -55,6 +55,7 @@ SOURCES += [
     '../chromium/sandbox/linux/seccomp-bpf/errorcode.cc',
     '../chromium/sandbox/linux/seccomp-bpf/syscall.cc',
     '../chromium/sandbox/linux/seccomp-bpf/syscall_iterator.cc',
+    '../chromium/sandbox/linux/seccomp-bpf/trap.cc',
     'LinuxCapabilities.cpp',
     'Sandbox.cpp',
     'SandboxChroot.cpp',

@@ -35,6 +35,13 @@ using namespace sandbox::bpf_dsl;
 // This file defines the seccomp-bpf system call filter policies.
 // See also SandboxFilterUtil.h, for the CASES_FOR_* macros and
 // SandboxFilterBase::Evaluate{Socket,Ipc}Call.
+//
+// One important difference from how Chromium bpf_dsl filters are
+// normally interpreted: returning -ENOSYS from a Trap() handler
+// indicates an unexpected system call; SigSysHandler() in Sandbox.cpp
+// will detect this, request a crash dump, and terminate the process.
+// This does not apply to using Error(ENOSYS) in the policy, so that
+// can be used if returning an actual ENOSYS is needed.
 
 namespace mozilla {
 
@@ -42,9 +49,16 @@ namespace mozilla {
 // core IPC code, by the crash reporter, or other core code.
 class SandboxPolicyCommon : public SandboxPolicyBase
 {
+  static intptr_t BlockedSyscallTrap(const sandbox::arch_seccomp_data& aArgs,
+                                     void *aux)
+  {
+    MOZ_ASSERT(!aux);
+    return -ENOSYS;
+  }
+
 public:
   virtual ResultExpr InvalidSyscall() const override {
-    return Trap(nullptr, nullptr);
+    return Trap(BlockedSyscallTrap, nullptr);
   }
 
   virtual ResultExpr ClonePolicy() const {
