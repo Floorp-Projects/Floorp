@@ -67,31 +67,23 @@ exports.testChromeLocale = function(assert) {
                'locales en-US folder was copied correctly');
 }
 
-exports.testChromeInPanel = function*(assert) {
+exports.testChromeInPanel = function(assert, done) {
   let panel = Panel({
     contentURL: 'chrome://test/content/panel.html',
-    contentScriptWhen: 'end',
+    contentScriptWhen: 'start',
     contentScriptFile: data.url('panel.js')
   });
-
-  yield new Promise(resolve => panel.port.once('start', resolve));
-  assert.pass('start was emitted');
-
-  yield new Promise(resolve => {
-    panel.once('show', resolve);
-    panel.show();
-  });
-  assert.pass('panel shown');
-
-  yield new Promise(resolve => {
-    panel.port.once('echo', resolve);
+  panel.once('show', _ => {
+    assert.pass('panel shown');
+    panel.port.once('echo', _ => {
+      assert.pass('got echo');
+      panel.destroy();
+      assert.pass('panel is destroyed');
+      done();
+    });
     panel.port.emit('echo');
   });
-
-  assert.pass('got echo');
-
-  panel.destroy();
-  assert.pass('panel is destroyed');
+  panel.show();
 }
 
 require('sdk/test/runner').runTestsFromModule(module);
