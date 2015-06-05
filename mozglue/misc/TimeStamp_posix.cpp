@@ -48,10 +48,7 @@
 
 #include "mozilla/Snprintf.h"
 #include "mozilla/TimeStamp.h"
-#include "nsCRT.h"
-#include "prprf.h"
-#include "prthread.h"
-#include "nsDebug.h"
+#include <pthread.h>
 
 // Estimate of the smallest duration of time we can measure.
 static uint64_t sResolution;
@@ -171,16 +168,16 @@ BaseTimeDurationPlatformUtils::ResolutionInTicks()
 
 static bool gInitialized = false;
 
-nsresult
+void
 TimeStamp::Startup()
 {
   if (gInitialized) {
-    return NS_OK;
+    return;
   }
 
   struct timespec dummy;
   if (clock_gettime(CLOCK_MONOTONIC, &dummy) != 0) {
-    NS_RUNTIMEABORT("CLOCK_MONOTONIC is absent!");
+    MOZ_CRASH("CLOCK_MONOTONIC is absent!");
   }
 
   sResolution = ClockResolutionNs();
@@ -194,7 +191,7 @@ TimeStamp::Startup()
 
   gInitialized = true;
 
-  return NS_OK;
+  return;
 }
 
 void
@@ -259,7 +256,7 @@ JiffiesSinceBoot(const char* aFile)
 // process uptime. This value will be stored at the address pointed by aTime;
 // if an error occurred 0 will be stored instead.
 
-static void
+static void*
 ComputeProcessUptimeThread(void* aTime)
 {
   uint64_t* uptime = static_cast<uint64_t*>(aTime);
@@ -268,7 +265,7 @@ ComputeProcessUptimeThread(void* aTime)
   *uptime = 0;
 
   if (!hz) {
-    return;
+    return nullptr;
   }
 
   char threadStat[40];
@@ -278,10 +275,11 @@ ComputeProcessUptimeThread(void* aTime)
   uint64_t selfJiffies = JiffiesSinceBoot("/proc/self/stat");
 
   if (!threadJiffies || !selfJiffies) {
-    return;
+    return nullptr;
   }
 
   *uptime = ((threadJiffies - selfJiffies) * kNsPerSec) / hz;
+  return nullptr;
 }
 
 // Computes and returns the process uptime in us on Linux & its derivatives.
@@ -291,15 +289,14 @@ uint64_t
 TimeStamp::ComputeProcessUptime()
 {
   uint64_t uptime = 0;
-  PRThread* thread = PR_CreateThread(PR_USER_THREAD,
-                                     ComputeProcessUptimeThread,
-                                     &uptime,
-                                     PR_PRIORITY_NORMAL,
-                                     PR_GLOBAL_THREAD,
-                                     PR_JOINABLE_THREAD,
-                                     0);
+  pthread_t uptime_pthread;
 
-  PR_JoinThread(thread);
+  if (pthread_create(&uptime_pthread, nullptr, ComputeProcessUptimeThread, &uptime)) {
+    MOZ_CRASH("Failed to create process uptime thread.");
+    return 0;
+  }
+
+  pthread_join(uptime_pthread, NULL);
 
   return uptime / kNsPerUs;
 }

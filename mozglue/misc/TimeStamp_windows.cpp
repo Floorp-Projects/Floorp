@@ -8,37 +8,30 @@
 // values of GetTickCount().
 
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
-#include "nsWindowsHelpers.h"
+
+#include <stdio.h>
+#include <intrin.h>
 #include <windows.h>
 
-#include "nsCRT.h"
-#include "mozilla/Logging.h"
-#include "prprf.h"
-#include <stdio.h>
+// To enable logging define to your favorite logging API
+#define LOG(x)
 
-#include <intrin.h>
-
-// Log module for mozilla::TimeStamp for Windows logging...
-//
-// To enable logging (see prlog.h for full details):
-//
-//    set NSPR_LOG_MODULES=TimeStampWindows:5
-//    set NSPR_LOG_FILE=nspr.log
-//
-// this enables LogLevel::Debug level information and places all output in
-// the file nspr.log
-static PRLogModuleInfo*
-GetTimeStampLog()
+class AutoCriticalSection
 {
-  static PRLogModuleInfo* sLog;
-  if (!sLog) {
-    sLog = PR_NewLogModule("TimeStampWindows");
+public:
+  AutoCriticalSection(LPCRITICAL_SECTION aSection)
+    : mSection(aSection)
+  {
+    ::EnterCriticalSection(mSection);
   }
-  return sLog;
-}
-#define LOG(x)  MOZ_LOG(GetTimeStampLog(), mozilla::LogLevel::Debug, x)
+  ~AutoCriticalSection()
+  {
+    ::LeaveCriticalSection(mSection);
+  }
+private:
+  LPCRITICAL_SECTION mSection;
+};
 
 // Estimate of the smallest duration of time we can measure.
 static volatile ULONGLONG sResolution;
@@ -293,7 +286,7 @@ InitResolution()
 // ----------------------------------------------------------------------------
 // TimeStampValue implementation
 // ----------------------------------------------------------------------------
-
+MFBT_API
 TimeStampValue::TimeStampValue(ULONGLONG aGTC, ULONGLONG aQPC, bool aHasQPC)
   : mGTC(aGTC)
   , mQPC(aQPC)
@@ -302,7 +295,7 @@ TimeStampValue::TimeStampValue(ULONGLONG aGTC, ULONGLONG aQPC, bool aHasQPC)
 {
 }
 
-TimeStampValue&
+MFBT_API TimeStampValue&
 TimeStampValue::operator+=(const int64_t aOther)
 {
   mGTC += aOther;
@@ -310,7 +303,7 @@ TimeStampValue::operator+=(const int64_t aOther)
   return *this;
 }
 
-TimeStampValue&
+MFBT_API TimeStampValue&
 TimeStampValue::operator-=(const int64_t aOther)
 {
   mGTC -= aOther;
@@ -320,7 +313,7 @@ TimeStampValue::operator-=(const int64_t aOther)
 
 // If the duration is less then two seconds, perform check of QPC stability
 // by comparing both GTC and QPC calculated durations of this and aOther.
-uint64_t
+MFBT_API uint64_t
 TimeStampValue::CheckQPC(const TimeStampValue& aOther) const
 {
   uint64_t deltaGTC = mGTC - aOther.mGTC;
@@ -394,7 +387,7 @@ TimeStampValue::CheckQPC(const TimeStampValue& aOther) const
   return deltaGTC;
 }
 
-uint64_t
+MFBT_API uint64_t
 TimeStampValue::operator-(const TimeStampValue& aOther) const
 {
   if (mIsNull && aOther.mIsNull) {
@@ -408,14 +401,14 @@ TimeStampValue::operator-(const TimeStampValue& aOther) const
 // TimeDuration and TimeStamp implementation
 // ----------------------------------------------------------------------------
 
-double
+MFBT_API double
 BaseTimeDurationPlatformUtils::ToSeconds(int64_t aTicks)
 {
   // Converting before arithmetic avoids blocked store forward
   return double(aTicks) / (double(sFrequencyPerSec) * 1000.0);
 }
 
-double
+MFBT_API double
 BaseTimeDurationPlatformUtils::ToSecondsSigDigits(int64_t aTicks)
 {
   // don't report a value < mResolution ...
@@ -427,7 +420,7 @@ BaseTimeDurationPlatformUtils::ToSecondsSigDigits(int64_t aTicks)
   return double(valueSigDigs) / kNsPerSecd;
 }
 
-int64_t
+MFBT_API int64_t
 BaseTimeDurationPlatformUtils::TicksFromMilliseconds(double aMilliseconds)
 {
   double result = ms2mt(aMilliseconds);
@@ -440,7 +433,7 @@ BaseTimeDurationPlatformUtils::TicksFromMilliseconds(double aMilliseconds)
   return result;
 }
 
-int64_t
+MFBT_API int64_t
 BaseTimeDurationPlatformUtils::ResolutionInTicks()
 {
   return static_cast<int64_t>(sResolution);
@@ -482,7 +475,7 @@ HasStableTSC()
   return regs[3] & (1 << 8);
 }
 
-nsresult
+MFBT_API void
 TimeStamp::Startup()
 {
   // Decide which implementation to use for the high-performance timer.
@@ -508,7 +501,7 @@ TimeStamp::Startup()
     InitResolution();
 
     LOG(("TimeStamp: using GetTickCount"));
-    return NS_OK;
+    return;
   }
 
   sFrequencyPerSec = freq.QuadPart;
@@ -517,16 +510,16 @@ TimeStamp::Startup()
   InitThresholds();
   InitResolution();
 
-  return NS_OK;
+  return;
 }
 
-void
+MFBT_API void
 TimeStamp::Shutdown()
 {
   DeleteCriticalSection(&sTimeStampLock);
 }
 
-TimeStamp
+MFBT_API TimeStamp
 TimeStamp::Now(bool aHighResolution)
 {
   // sUseQPC is volatile
@@ -541,7 +534,7 @@ TimeStamp::Now(bool aHighResolution)
 // Computes and returns the process uptime in microseconds.
 // Returns 0 if an error was encountered.
 
-uint64_t
+MFBT_API uint64_t
 TimeStamp::ComputeProcessUptime()
 {
   SYSTEMTIME nowSys;

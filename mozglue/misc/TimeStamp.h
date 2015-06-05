@@ -12,8 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/TypeTraits.h"
-#include "nscore.h"
-#include "nsDebug.h"
+#include "mozilla/Types.h"
 
 namespace IPC {
 template<typename T> struct ParamTraits;
@@ -39,10 +38,10 @@ class TimeStamp;
 class BaseTimeDurationPlatformUtils
 {
 public:
-  static double ToSeconds(int64_t aTicks);
-  static double ToSecondsSigDigits(int64_t aTicks);
-  static int64_t TicksFromMilliseconds(double aMilliseconds);
-  static int64_t ResolutionInTicks();
+  static MFBT_API double ToSeconds(int64_t aTicks);
+  static MFBT_API double ToSecondsSigDigits(int64_t aTicks);
+  static MFBT_API int64_t TicksFromMilliseconds(double aMilliseconds);
+  static MFBT_API int64_t ResolutionInTicks();
 };
 
 /**
@@ -206,7 +205,6 @@ public:
   BaseTimeDuration operator*(const uint64_t aMultiplier) const
   {
     if (aMultiplier > INT64_MAX) {
-      NS_WARNING("Out-of-range multiplier when multiplying BaseTimeDuration");
       return Forever();
     }
     return FromTicks(ValueCalculator::Multiply(mValue, aMultiplier));
@@ -428,8 +426,8 @@ public:
    * lower precision, usually 15.6 ms, but with very good performance benefit.
    * Use it for measurements of longer times, like >200ms timeouts.
    */
-  static TimeStamp Now() { return Now(true); }
-  static TimeStamp NowLoRes() { return Now(false); }
+  static MFBT_API TimeStamp Now() { return Now(true); }
+  static MFBT_API TimeStamp NowLoRes() { return Now(false); }
 
   /**
    * Return a timestamp representing the time when the current process was
@@ -443,14 +441,14 @@ public:
    * @returns A timestamp representing the time when the process was created,
    * this timestamp is always valid even when errors are reported
    */
-  static TimeStamp ProcessCreation(bool& aIsInconsistent);
+  static MFBT_API TimeStamp ProcessCreation(bool& aIsInconsistent);
 
   /**
    * Records a process restart. After this call ProcessCreation() will return
    * the time when the browser was restarted instead of the actual time when
    * the process was created.
    */
-  static void RecordProcessRestart();
+  static MFBT_API void RecordProcessRestart();
 
   /**
    * Compute the difference between two timestamps. Both must be non-null.
@@ -536,8 +534,8 @@ public:
   // two TimeStamps, or scaling TimeStamps, is nonsense and must never
   // be allowed.
 
-  static nsresult Startup();
-  static void Shutdown();
+  static MFBT_API void Startup();
+  static MFBT_API void Shutdown();
 
 private:
   friend struct IPC::ParamTraits<mozilla::TimeStamp>;
@@ -545,7 +543,7 @@ private:
 
   MOZ_IMPLICIT TimeStamp(TimeStampValue aValue) : mValue(aValue) {}
 
-  static TimeStamp Now(bool aHighResolution);
+  static MFBT_API TimeStamp Now(bool aHighResolution);
 
   /**
    * Computes the uptime of the current process in microseconds. The result
@@ -555,7 +553,7 @@ private:
    * @returns The number of microseconds since the calling process was started
    *          or 0 if an error was encountered while computing the uptime
    */
-  static uint64_t ComputeProcessUptime();
+  static MFBT_API uint64_t ComputeProcessUptime();
 
   /**
    * When built with PRIntervalTime, a value of 0 means this instance
