@@ -458,6 +458,8 @@ MediaCodecReader::DecodeAudioDataTask()
     }
   } else if (AudioQueue().AtEndOfStream()) {
     mAudioTrack.mAudioPromise.Reject(END_OF_STREAM, __func__);
+  } else if (AudioQueue().GetSize() == 0) {
+    DispatchAudioTask();
   }
 }
 
@@ -466,6 +468,9 @@ MediaCodecReader::DecodeVideoFrameTask(int64_t aTimeThreshold)
 {
   DecodeVideoFrameSync(aTimeThreshold);
   MonitorAutoLock al(mVideoTrack.mTrackMonitor);
+  if (mVideoTrack.mVideoPromise.IsEmpty()) {
+    return;
+  }
   if (VideoQueue().GetSize() > 0) {
     nsRefPtr<VideoData> v = VideoQueue().PopFront();
     if (v) {
@@ -477,6 +482,8 @@ MediaCodecReader::DecodeVideoFrameTask(int64_t aTimeThreshold)
     }
   } else if (VideoQueue().AtEndOfStream()) {
     mVideoTrack.mVideoPromise.Reject(END_OF_STREAM, __func__);
+  } else if (VideoQueue().GetSize() == 0) {
+    DispatchVideoTask(aTimeThreshold);
   }
 }
 
@@ -1830,7 +1837,7 @@ MediaCodecReader::GetCodecOutputData(Track& aTrack,
 
     if (status == OK) {
       // Notify mDecoder that we have parsed a video frame.
-      if (&aTrack == &mVideoTrack) {
+      if (aTrack.mType == Track::kVideo) {
         mDecoder->NotifyDecodedFrames(1, 0, 0);
       }
       if (!IsValidTimestampUs(aThreshold) || info.mTimeUs >= aThreshold) {
@@ -1905,6 +1912,7 @@ MediaCodecReader::EnsureCodecFormatParsed(Track& aTrack)
     }
     FillCodecInputData(aTrack);
   }
+  aTrack.mCodec->releaseOutputBuffer(index);
   return aTrack.mCodec->getOutputFormat(&format) == OK;
 }
 

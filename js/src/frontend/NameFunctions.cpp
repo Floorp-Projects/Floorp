@@ -710,14 +710,20 @@ class NameResolver
                 return false;
             break;
 
-          // Import/export spec lists contain only import/export specs
-          // containing only pairs of names.
+          // Import/export spec lists contain import/export specs containing
+          // only pairs of names. Alternatively, an export spec lists may
+          // contain a single export batch specifier.
           case PNK_IMPORT_SPEC_LIST: {
           case PNK_EXPORT_SPEC_LIST:
             MOZ_ASSERT(cur->isArity(PN_LIST));
 #ifdef DEBUG
             bool isImport = cur->isKind(PNK_IMPORT_SPEC_LIST);
-            for (ParseNode* item = cur->pn_head; item; item = item->pn_next) {
+            ParseNode* item = cur->pn_head;
+            if (!isImport && item && item->isKind(PNK_EXPORT_BATCH_SPEC)) {
+                MOZ_ASSERT(item->isArity(PN_NULLARY));
+                break;
+            }
+            for (; item; item = item->pn_next) {
                 MOZ_ASSERT(item->isKind(isImport ? PNK_IMPORT_SPEC : PNK_EXPORT_SPEC));
                 MOZ_ASSERT(item->isArity(PN_BINARY));
                 MOZ_ASSERT(item->pn_left->isKind(PNK_NAME));

@@ -47,7 +47,7 @@ public:
   void DumpNoLock(const char* aLabel);
 
   // To use this function, you have to create a new volume and pass it in.
-  void UpdateVolume(nsVolume* aVolume, bool aNotifyObservers = true);
+  void UpdateVolume(nsIVolume* aVolume, bool aNotifyObservers = true);
   void UpdateVolumeIOThread(const Volume* aVolume);
 
   void RecvVolumesFromParent(const nsTArray<dom::VolumeInfo>& aVolumes);
@@ -61,9 +61,8 @@ private:
   void CheckMountLock(const nsAString& aMountLockName,
                       const nsAString& aMountLockState);
   already_AddRefed<nsVolume> FindVolumeByMountLockName(const nsAString& aMountLockName);
-
-  already_AddRefed<nsVolume> FindVolumeByName(const nsAString& aName,
-                                              nsVolume::Array::index_type* aIndex = nullptr);
+  already_AddRefed<nsVolume> FindVolumeByName(const nsAString& aName);
+  already_AddRefed<nsVolume> CreateOrFindVolumeByName(const nsAString& aName, bool aIsFake = false);
 
   Monitor mArrayMonitor;
   nsVolume::Array mVolumeArray;

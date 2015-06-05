@@ -442,7 +442,6 @@ ConnectionData.prototype = Object.freeze({
     // necessarily at the mozStorage-level.
     let markAsClosed = () => {
       this._log.info("Closed");
-      this._dbConn = null;
       // Now that the connection is closed, no need to keep
       // a blocker for Barriers.connections.
       Barriers.connections.client.removeBlocker(this._deferredClose.promise);
@@ -450,10 +449,12 @@ ConnectionData.prototype = Object.freeze({
     }
     if (wrappedConnections.has(this._identifier)) {
       wrappedConnections.delete(this._identifier);
+      this._dbConn = null;
       markAsClosed();
     } else {
       this._log.debug("Calling asyncClose().");
       this._dbConn.asyncClose(markAsClosed);
+      this._dbConn = null;
     }
     return this._deferredClose.promise;
   },

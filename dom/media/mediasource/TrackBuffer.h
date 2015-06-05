@@ -101,7 +101,7 @@ public:
 #endif
 
 #if defined(DEBUG)
-  void Dump(const char* aPath);
+  void Dump(const char* aPath) override;
 #endif
 
 private:

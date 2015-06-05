@@ -47,16 +47,9 @@ protected:
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
 
-  // mMimeTypes contains MIME types handled by non-hidden plugins, those
-  // popular plugins that must be exposed in navigator.plugins enumeration to
-  // avoid breaking web content. Likewise, mMimeTypes are exposed in
-  // navigator.mimeTypes enumeration.
+  // mMimeTypes contains MIME types handled by plugins or by an OS
+  // PreferredApplicationHandler.
   nsTArray<nsRefPtr<nsMimeType> > mMimeTypes;
-
-  // mHiddenMimeTypes contains MIME types handled by plugins hidden from
-  // navigator.plugins enumeration or by an OS PreferredApplicationHandler.
-  // mHiddenMimeTypes are hidden from navigator.mimeTypes enumeration.
-  nsTArray<nsRefPtr<nsMimeType> > mHiddenMimeTypes;
 };
 
 class nsMimeType final : public nsWrapperCache

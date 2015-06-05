@@ -1469,6 +1469,15 @@ const KTableValue nsCSSProps::kMathDisplayKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const KTableValue nsCSSProps::kContainKTable[] = {
+  eCSSKeyword_none,    NS_STYLE_CONTAIN_NONE,
+  eCSSKeyword_strict,  NS_STYLE_CONTAIN_STRICT,
+  eCSSKeyword_layout,  NS_STYLE_CONTAIN_LAYOUT,
+  eCSSKeyword_style,   NS_STYLE_CONTAIN_STYLE,
+  eCSSKeyword_paint,   NS_STYLE_CONTAIN_PAINT,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const KTableValue nsCSSProps::kContextOpacityKTable[] = {
   eCSSKeyword_context_fill_opacity, NS_STYLE_CONTEXT_FILL_OPACITY,
   eCSSKeyword_context_stroke_opacity, NS_STYLE_CONTEXT_STROKE_OPACITY,
