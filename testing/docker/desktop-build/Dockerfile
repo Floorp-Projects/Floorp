@@ -15,8 +15,11 @@ ADD             configs /home/worker/configs
 ADD             hacks.sh /tmp/
 RUN             /tmp/hacks.sh
 
-# So that the compiler can find installed libs
+# So that the compilers can find necessary libraries
+# gcc
 ENV           LIBRARY_PATH  /usr/lib/x86_64-linux-gnu
+# clang
+ENV           CPLUS_INCLUDE_PATH /usr/include/c++/4.8:/usr/include/c++/4.8/backward:/usr/include/x86_64-linux-gnu/c++/4.8
 
 # Stubbed out credentials; mozharness looks for this file an issues a WARNING
 # if it's not found, which causes the build to fail.  Note that this needs to
