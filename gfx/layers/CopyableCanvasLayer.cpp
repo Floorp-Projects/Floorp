@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BasicLayersImpl.h"            // for FillWithMask, etc
 #include "CopyableCanvasLayer.h"
+
+#include "BasicLayersImpl.h"            // for FillWithMask, etc
 #include "GLContext.h"                  // for GLContext
 #include "GLScreenBuffer.h"             // for GLScreenBuffer
 #include "SharedSurface.h"              // for SharedSurface
@@ -21,6 +22,7 @@
 #include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
 #include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "gfxUtils.h"
+#include "client/TextureClientSharedSurface.h"
 
 namespace mozilla {
 namespace layers {
@@ -56,11 +58,8 @@ CopyableCanvasLayer::Initialize(const Data& aData)
 
     if (aData.mFrontbufferGLTex) {
       gfx::IntSize size(aData.mSize.width, aData.mSize.height);
-      mGLFrontbuffer = SharedSurface_GLTexture::Create(aData.mGLContext,
-                                                       nullptr,
-                                                       aData.mGLContext->GetGLFormats(),
-                                                       size, aData.mHasAlpha,
-                                                       aData.mFrontbufferGLTex);
+      mGLFrontbuffer = SharedSurface_Basic::Wrap(aData.mGLContext, size, aData.mHasAlpha,
+                                                 aData.mFrontbufferGLTex);
     }
   } else if (aData.mDrawTarget) {
     mDrawTarget = aData.mDrawTarget;
@@ -108,7 +107,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
     frontbuffer = mGLFrontbuffer.get();
   } else {
     GLScreenBuffer* screen = mGLContext->Screen();
-    ShSurfHandle* front = screen->Front();
+    const auto& front = screen->Front();
     if (front) {
       frontbuffer = front->Surf();
     }
@@ -137,7 +136,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
           Factory::CreateWrappingDataSourceSurface(destData, destStride, destSize, destFormat);
         mGLContext->Readback(frontbuffer, data);
         if (needsPremult) {
-            gfxUtils::PremultiplyDataSurface(data, data);
+          gfxUtils::PremultiplyDataSurface(data, data);
         }
         aDestTarget->ReleaseBits(destData);
         return;
