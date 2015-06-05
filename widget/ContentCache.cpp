@@ -195,6 +195,15 @@ ContentCache::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
         ("ContentCache: 0x%p (mIsChrome=%s) HandleQueryContentEvent("
          "aEvent={ message=NS_QUERY_SELECTED_TEXT }, aWidget=0x%p)",
          this, GetBoolName(mIsChrome), aWidget));
+      if (NS_WARN_IF(!IsSelectionValid())) {
+        // If content cache hasn't been initialized properly, make the query
+        // failed.
+        MOZ_LOG(sContentCacheLog, LogLevel::Error,
+          ("ContentCache: 0x%p (mIsChrome=%s) HandleQueryContentEvent(), "
+           "FAILED because mSelection is not valid",
+           this, GetBoolName(mIsChrome)));
+        return true;
+      }
       aEvent.mReply.mOffset = mSelection.StartOffset();
       if (mSelection.Collapsed()) {
         aEvent.mReply.mString.Truncate(0);
@@ -258,6 +267,15 @@ ContentCache::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
          "mLength=%u } }, aWidget=0x%p), mText.Length()=%u",
          this, GetBoolName(mIsChrome), aEvent.mInput.mOffset,
          aEvent.mInput.mLength, aWidget, mText.Length()));
+      if (NS_WARN_IF(!IsSelectionValid())) {
+        // If content cache hasn't been initialized properly, make the query
+        // failed.
+        MOZ_LOG(sContentCacheLog, LogLevel::Error,
+          ("ContentCache: 0x%p (mIsChrome=%s) HandleQueryContentEvent(), "
+           "FAILED because mSelection is not valid",
+           this, GetBoolName(mIsChrome)));
+        return true;
+      }
       if (aEvent.mInput.mLength) {
         if (NS_WARN_IF(!GetUnionTextRects(aEvent.mInput.mOffset,
                                           aEvent.mInput.mLength,
@@ -307,6 +325,15 @@ ContentCache::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
          "aWidget=0x%p), mText.Length()=%u",
          this, GetBoolName(mIsChrome), aEvent.mInput.mOffset, aWidget,
          mText.Length()));
+      if (NS_WARN_IF(!IsSelectionValid())) {
+        // If content cache hasn't been initialized properly, make the query
+        // failed.
+        MOZ_LOG(sContentCacheLog, LogLevel::Error,
+          ("ContentCache: 0x%p (mIsChrome=%s) HandleQueryContentEvent(), "
+           "FAILED because mSelection is not valid",
+           this, GetBoolName(mIsChrome)));
+        return true;
+      }
       if (NS_WARN_IF(!GetCaretRect(aEvent.mInput.mOffset,
                                    aEvent.mReply.mRect))) {
         MOZ_LOG(sContentCacheLog, LogLevel::Error,
@@ -419,6 +446,10 @@ ContentCache::CacheCaret(nsIWidget* aWidget,
   }
 
   mCaret.Clear();
+
+  if (NS_WARN_IF(!mSelection.IsValid())) {
+    return false;
+  }
 
   // XXX Should be mSelection.mFocus?
   mCaret.mOffset = mSelection.StartOffset();
@@ -564,6 +595,10 @@ ContentCache::CacheTextRects(nsIWidget* aWidget,
   mTextRectArray.Clear();
   mSelection.mAnchorCharRect.SetEmpty();
   mSelection.mFocusCharRect.SetEmpty();
+
+  if (NS_WARN_IF(!mSelection.IsValid())) {
+    return false;
+  }
 
   // Retrieve text rects in composition string if there is.
   nsRefPtr<TextComposition> textComposition =
