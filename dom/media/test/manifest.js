@@ -87,9 +87,6 @@ var gPlayedTests = [
 // anything for testing clone-specific bugs.
 var cloneKey = Math.floor(Math.random()*100000000);
 var gCloneTests = gSmallTests.concat([
-  // Actual duration is ~200ms, we have Content-Duration claim that the duration
-  // is 9000. Contrary to the original intention of the bug, we prefer the true
-  // duration here.
   { name:"bug520908.ogv", type:"video/ogg", duration:0.2 },
   // short-video is more like 1s, so if you load this twice you'll get an unexpected duration
   { name:"dynamic_resource.sjs?key=" + cloneKey + "&res1=320x240.ogv&res2=short-video.ogv",

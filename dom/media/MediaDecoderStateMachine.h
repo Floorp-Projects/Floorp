@@ -896,9 +896,6 @@ public:
   // as mStartTime and mEndTime could have been set separately.
   bool mDurationSet;
 
-  // The duration according to HTTP headers etc, mirrored from the main thread.
-  Mirror<media::NullableTimeUnit> mNetworkDuration;
-
   // The duration according to the demuxer's current estimate, mirrored from the main thread.
   Mirror<media::NullableTimeUnit> mEstimatedDuration;
 
