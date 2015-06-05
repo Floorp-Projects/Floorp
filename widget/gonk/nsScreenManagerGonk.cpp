@@ -19,7 +19,6 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Hal.h"
 #include "libdisplay/GonkDisplay.h"
-#include "libdisplay/DisplaySurface.h"
 #include "nsScreenManagerGonk.h"
 #include "nsThreadUtils.h"
 #include "HwcComposer2D.h"
@@ -32,7 +31,11 @@
 #include "nsAppShell.h"
 #include "nsTArray.h"
 #include "pixelflinger/format.h"
-#include "cutils/properties.h"
+#include "nsIDisplayInfo.h"
+
+#if ANDROID_VERSION >= 17
+#include "libdisplay/DisplaySurface.h"
+#endif
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "nsScreenGonk" , ## args)
 #define LOGW(args...) __android_log_print(ANDROID_LOG_WARN, "nsScreenGonk", ## args)
@@ -103,16 +106,25 @@ SurfaceFormatToColorDepth(int32_t aSurfaceFormat)
 
 // nsScreenGonk.cpp
 
-nsScreenGonk::nsScreenGonk(uint32_t aId, ANativeWindow* aNativeWindow)
+nsScreenGonk::nsScreenGonk(uint32_t aId,
+                           GonkDisplay::DisplayType aDisplayType,
+                           const GonkDisplay::NativeData& aNativeData)
     : mId(aId)
-    , mNativeWindow(aNativeWindow)
+    , mNativeWindow(aNativeData.mNativeWindow)
+    , mDpi(aNativeData.mXdpi)
     , mScreenRotation(nsIScreen::ROTATION_0_DEG)
     , mPhysicalScreenRotation(nsIScreen::ROTATION_0_DEG)
+#if ANDROID_VERSION >= 17
+    , mDisplaySurface(aNativeData.mDisplaySurface)
+#endif
+    , mDisplayType(aDisplayType)
+    , mDpy(EGL_NO_DISPLAY)
+    , mSur(EGL_NO_SURFACE)
+    , mGLContext(nullptr)
 {
-    int surfaceFormat;
     if (mNativeWindow->query(mNativeWindow.get(), NATIVE_WINDOW_WIDTH, &mVirtualBounds.width) ||
         mNativeWindow->query(mNativeWindow.get(), NATIVE_WINDOW_HEIGHT, &mVirtualBounds.height) ||
-        mNativeWindow->query(mNativeWindow.get(), NATIVE_WINDOW_FORMAT, &surfaceFormat)) {
+        mNativeWindow->query(mNativeWindow.get(), NATIVE_WINDOW_FORMAT, &mSurfaceFormat)) {
         NS_RUNTIMEABORT("Failed to get native window size, aborting...");
     }
 
@@ -124,8 +136,7 @@ nsScreenGonk::nsScreenGonk(uint32_t aId, ANativeWindow* aNativeWindow)
         mPhysicalScreenRotation = atoi(propValue) / 90;
     }
 
-    mDpi = GetGonkDisplay()->xdpi;
-    mColorDepth = SurfaceFormatToColorDepth(surfaceFormat);
+    mColorDepth = SurfaceFormatToColorDepth(mSurfaceFormat);
 }
 
 nsScreenGonk::~nsScreenGonk()
@@ -135,7 +146,7 @@ nsScreenGonk::~nsScreenGonk()
 bool
 nsScreenGonk::IsPrimaryScreen()
 {
-    return nsScreenManagerGonk::PRIMARY_SCREEN_ID == mId;
+    return mDisplayType == GonkDisplay::DISPLAY_PRIMARY;
 }
 
 NS_IMETHODIMP
@@ -206,6 +217,12 @@ nsScreenGonk::GetDpi()
     return mDpi;
 }
 
+int32_t
+nsScreenGonk::GetSurfaceFormat()
+{
+    return mSurfaceFormat;
+}
+
 ANativeWindow*
 nsScreenGonk::GetNativeWindow()
 {
@@ -238,8 +255,8 @@ nsScreenGonk::SetRotation(uint32_t aRotation)
 
     for (unsigned int i = 0; i < mTopWindows.Length(); i++) {
         mTopWindows[i]->Resize(mVirtualBounds.width,
-                            mVirtualBounds.height,
-                            true);
+                               mVirtualBounds.height,
+                               true);
     }
 
     return NS_OK;
@@ -314,6 +331,50 @@ nsScreenGonk::BringToTop(nsWindow* aWindow)
     mTopWindows.InsertElementAt(0, aWindow);
 }
 
+#if ANDROID_VERSION >= 17
+android::DisplaySurface*
+nsScreenGonk::GetDisplaySurface()
+{
+    return mDisplaySurface.get();
+}
+
+int
+nsScreenGonk::GetPrevDispAcquireFd()
+{
+    if (!mDisplaySurface.get()) {
+        return -1;
+    }
+    return mDisplaySurface->GetPrevDispAcquireFd();
+}
+#endif
+
+GonkDisplay::DisplayType
+nsScreenGonk::GetDisplayType()
+{
+    return mDisplayType;
+}
+
+void
+nsScreenGonk::SetEGLInfo(hwc_display_t aDisplay, hwc_surface_t aSurface,
+                         gl::GLContext* aGLContext)
+{
+    mDpy = aDisplay;
+    mSur = aSurface;
+    mGLContext = aGLContext;
+}
+
+hwc_display_t
+nsScreenGonk::GetDpy()
+{
+    return mDpy;
+}
+
+hwc_surface_t
+nsScreenGonk::GetSur()
+{
+    return mSur;
+}
+
 NS_IMPL_ISUPPORTS(nsScreenManagerGonk, nsIScreenManager)
 
 nsScreenManagerGonk::nsScreenManagerGonk()
@@ -357,7 +418,7 @@ nsScreenManagerGonk::Initialize()
     mScreenOffEvent = new ScreenOnOffEvent(false);
     GetGonkDisplay()->OnEnabled(displayEnabledCallback);
 
-    AddScreen(PRIMARY_SCREEN_TYPE);
+    AddScreen(GonkDisplay::DISPLAY_PRIMARY);
 
     nsAppShell::NotifyScreenInitialized();
     mInitialized = true;
@@ -458,7 +519,7 @@ nsScreenManagerGonk::VsyncControl(bool aEnabled)
 }
 
 uint32_t
-nsScreenManagerGonk::GetIdFromType(uint32_t aDisplayType)
+nsScreenManagerGonk::GetIdFromType(GonkDisplay::DisplayType aDisplayType)
 {
     // This is the only place where we make the assumption that
     // display type is equivalent to screen id.
@@ -467,28 +528,122 @@ nsScreenManagerGonk::GetIdFromType(uint32_t aDisplayType)
     return aDisplayType;
 }
 
-void
-nsScreenManagerGonk::AddScreen(uint32_t aDisplayType)
+bool
+nsScreenManagerGonk::IsScreenConnected(uint32_t aId)
 {
-    // We currently only support adding primary screen.
-    MOZ_ASSERT(PRIMARY_SCREEN_TYPE == aDisplayType);
+    for (size_t i = 0; i < mScreens.Length(); ++i) {
+        if (mScreens[i]->GetId() == aId) {
+            return true;
+        }
+    }
 
-    uint32_t id = GetIdFromType(aDisplayType);
-
-    ANativeWindow* win = GetGonkDisplay()->GetNativeWindow();
-    nsScreenGonk* screen = new nsScreenGonk(id, win);
-
-    mScreens.AppendElement(screen);
+    return false;
 }
 
+namespace {
+
+// A concrete class as a subject for 'display-changed' observer event.
+class DisplayInfo : public nsIDisplayInfo {
+public:
+    NS_DECL_ISUPPORTS
+
+    DisplayInfo(uint32_t aId, bool aConnected)
+        : mId(aId)
+        , mConnected(aConnected)
+    {
+    }
+
+    NS_IMETHODIMP GetId(int32_t *aId)
+    {
+        *aId = mId;
+        return NS_OK;
+    }
+
+    NS_IMETHODIMP GetConnected(bool *aConnected)
+    {
+        *aConnected = mConnected;
+        return NS_OK;
+    }
+
+private:
+    virtual ~DisplayInfo() {}
+
+    uint32_t mId;
+    bool mConnected;
+};
+
+NS_IMPL_ISUPPORTS(DisplayInfo, nsIDisplayInfo, nsISupports)
+
+class NotifyTask : public nsRunnable {
+public:
+    NotifyTask(uint32_t aId, bool aConnected)
+        : mDisplayInfo(new DisplayInfo(aId, aConnected))
+    {
+    }
+
+    NS_IMETHOD Run()
+    {
+        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+        if (os) {
+          os->NotifyObservers(mDisplayInfo, "display-changed", nullptr);
+        }
+
+        return NS_OK;
+    }
+private:
+    nsRefPtr<DisplayInfo> mDisplayInfo;
+};
+
 void
-nsScreenManagerGonk::RemoveScreen(uint32_t aDisplayType)
+NotifyDisplayChange(uint32_t aId, bool aConnected)
 {
+    NS_DispatchToMainThread(new NotifyTask(aId, aConnected));
+}
+
+} // end of unnamed namespace.
+
+nsresult
+nsScreenManagerGonk::AddScreen(GonkDisplay::DisplayType aDisplayType,
+                               android::IGraphicBufferProducer* aProducer)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+
+    NS_ENSURE_TRUE(aDisplayType < GonkDisplay::DisplayType::NUM_DISPLAY_TYPES,
+                   NS_ERROR_FAILURE);
+
+    uint32_t id = GetIdFromType(aDisplayType);
+    NS_ENSURE_TRUE(!IsScreenConnected(id), NS_ERROR_FAILURE);
+
+    GonkDisplay::NativeData nativeData =
+        GetGonkDisplay()->GetNativeData(aDisplayType, aProducer);
+    nsScreenGonk* screen = new nsScreenGonk(id, aDisplayType, nativeData);
+
+    mScreens.AppendElement(screen);
+
+    NotifyDisplayChange(id, true);
+
+    return NS_OK;
+}
+
+nsresult
+nsScreenManagerGonk::RemoveScreen(GonkDisplay::DisplayType aDisplayType)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+
+    NS_ENSURE_TRUE(aDisplayType < GonkDisplay::DisplayType::NUM_DISPLAY_TYPES,
+                   NS_ERROR_FAILURE);
+
     uint32_t screenId = GetIdFromType(aDisplayType);
+    NS_ENSURE_TRUE(IsScreenConnected(screenId), NS_ERROR_FAILURE);
+
     for (size_t i = 0; i < mScreens.Length(); i++) {
         if (mScreens[i]->GetId() == screenId) {
             mScreens.RemoveElementAt(i);
             break;
         }
     }
+
+    NotifyDisplayChange(screenId, false);
+
+    return NS_OK;
 }

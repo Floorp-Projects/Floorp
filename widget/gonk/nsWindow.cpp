@@ -18,7 +18,6 @@
 #include <fcntl.h>
 
 #include "android/log.h"
-
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -45,8 +44,6 @@
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/CompositorParent.h"
-#include "mozilla/layers/InputAPZContext.h"
-#include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "HwcComposer2D.h"
 
@@ -549,11 +546,9 @@ nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal)
     case NS_NATIVE_OPENGL_CONTEXT:
         // Called after primary display's GLContextEGL creation.
         GLContext* context = reinterpret_cast<GLContext*>(aVal);
-
-        HwcComposer2D* hwc = HwcComposer2D::GetInstance();
-        hwc->SetEGLInfo(GLContextEGL::Cast(context)->GetEGLDisplay(),
-                        GLContextEGL::Cast(context)->GetEGLSurface(),
-                        context);
+        mScreen->SetEGLInfo(GLContextEGL::Cast(context)->GetEGLDisplay(),
+                            GLContextEGL::Cast(context)->GetEGLSurface(),
+                            context);
         return;
     }
 }
@@ -810,6 +805,12 @@ nsWindow::GetNaturalBounds()
     return mScreen->GetNaturalBounds();
 }
 
+nsScreenGonk*
+nsWindow::GetScreen()
+{
+    return mScreen;
+}
+
 bool
 nsWindow::NeedsPaint()
 {
@@ -822,7 +823,7 @@ nsWindow::NeedsPaint()
 Composer2D*
 nsWindow::GetComposer2D()
 {
-    if (!mScreen->IsPrimaryScreen()) {
+    if (mScreen->GetDisplayType() == GonkDisplay::DISPLAY_VIRTUAL) {
         return nullptr;
     }
 
