@@ -132,6 +132,9 @@ public:
                            bool aNotify) override;
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
                              bool aNotify) override;
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                const nsAttrValue* aValue,
+                                bool aNotify) override;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -645,7 +648,10 @@ protected:
   class StreamSizeListener;
 
   MediaDecoderOwner::NextFrameStatus NextFrameStatus();
-  void SetDecoder(MediaDecoder* aDecoder) { mDecoder = aDecoder; }
+  void SetDecoder(MediaDecoder* aDecoder) {
+    MOZ_ASSERT(aDecoder); // Use ShutdownDecoder() to clear.
+    mDecoder = aDecoder;
+  }
 
   virtual void GetItemValueText(DOMString& text) override;
   virtual void SetItemValueText(const nsAString& text) override;
@@ -1064,7 +1070,14 @@ protected:
   // mSrcStream.
   nsRefPtr<StreamSizeListener> mMediaStreamSizeListener;
 
-  // Holds a reference to the MediaSource supplying data for playback.
+  // Holds a reference to the MediaSource, if any, referenced by the src
+  // attribute on the media element.
+  nsRefPtr<MediaSource> mSrcMediaSource;
+
+  // Holds a reference to the MediaSource supplying data for playback.  This
+  // may either match mSrcMediaSource or come from Source element children.
+  // This is set when and only when mLoadingSrc corresponds to an object url
+  // that resolved to a MediaSource.
   nsRefPtr<MediaSource> mMediaSource;
 
   // Holds a reference to the first channel we open to the media resource.

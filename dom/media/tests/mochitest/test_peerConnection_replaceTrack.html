@@ -66,8 +66,8 @@
       function PC_REMOTE_VIDEOONLY_REPLACE_VIDEOTRACK(test) {
         return replacetest(test.pcRemote);
       },
-      function PC_LOCAL_NEW_VIDEOTRACK_CHECK_MEDIA_FLOW_PRESENT(test) {
-        return test.pcLocal.checkMediaFlowPresent();
+      function PC_LOCAL_NEW_VIDEOTRACK_WAIT_FOR_MEDIA_FLOW(test) {
+        return test.pcLocal.waitForMediaFlow();
       }
     ]);
 
@@ -77,14 +77,14 @@
       function PC_LOCAL_AUDIOVIDEO_REPLACE_VIDEOTRACK_1(test) {
         return replacetest(test.pcLocal);
       },
-      function PC_REMOTE_NEW_VIDEOTRACK_CHECK_MEDIA_FLOW_PRESENT_1(test) {
-        return test.pcRemote.checkMediaFlowPresent();
+      function PC_REMOTE_NEW_VIDEOTRACK_WAIT_FOR_MEDIA_FLOW_1(test) {
+        return test.pcRemote.waitForMediaFlow();
       },
       function PC_LOCAL_AUDIOVIDEO_REPLACE_VIDEOTRACK_2(test) {
         return replacetest(test.pcLocal);
       },
-      function PC_REMOTE_NEW_VIDEOTRACK_CHECK_MEDIA_FLOW_PRESENT_2(test) {
-        return test.pcRemote.checkMediaFlowPresent();
+      function PC_REMOTE_NEW_VIDEOTRACK_WAIT_FOR_MEDIA_FLOW_2(test) {
+        return test.pcRemote.waitForMediaFlow();
       }
     ]);
 
@@ -96,8 +96,8 @@
         return sender.replaceTrack(sender.track)
           .then(() => ok(true, "replacing with itself should succeed"));
       },
-      function PC_REMOTE_NEW_SAME_VIDEOTRACK_CHECK_MEDIA_FLOW_PRESENT(test) {
-        return test.pcRemote.checkMediaFlowPresent();
+      function PC_REMOTE_NEW_SAME_VIDEOTRACK_WAIT_FOR_MEDIA_FLOW(test) {
+        return test.pcRemote.waitForMediaFlow();
       }
     ]);
 

@@ -302,7 +302,7 @@ nsTableRowGroupFrame::InitChildReflowState(nsPresContext&     aPresContext,
       pCollapseBorder = &collapseBorder;
     }
   }
-  aReflowState.Init(&aPresContext, -1, -1, pCollapseBorder, &padding);
+  aReflowState.Init(&aPresContext, nullptr, pCollapseBorder, &padding);
 }
 
 static void
@@ -375,7 +375,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
       kidAvailSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState,
                                        kidFrame, kidAvailSize,
-                                       -1, -1,
+                                       nullptr,
                                        nsHTMLReflowState::CALLER_WILL_INIT);
       InitChildReflowState(*aPresContext, borderCollapse, kidReflowState);
 
@@ -942,7 +942,7 @@ nsTableRowGroupFrame::SplitSpanningCells(nsPresContext&           aPresContext,
         nsHTMLReflowState rowReflowState(&aPresContext, aReflowState, row,
                                          LogicalSize(row->GetWritingMode(),
                                                      rowAvailSize),
-                                         -1, -1,
+                                         nullptr,
                                          nsHTMLReflowState::CALLER_WILL_INIT);
         InitChildReflowState(aPresContext, borderCollapse, rowReflowState);
         rowReflowState.mFlags.mIsTopOfPage = isTopOfPage; // set top of page
@@ -1078,7 +1078,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
         nsHTMLReflowState rowReflowState(aPresContext, aReflowState, rowFrame,
                                          LogicalSize(rowFrame->GetWritingMode(),
                                                      availSize),
-                                         -1, -1,
+                                         nullptr,
                                          nsHTMLReflowState::CALLER_WILL_INIT);
 
         InitChildReflowState(*aPresContext, borderCollapse, rowReflowState);

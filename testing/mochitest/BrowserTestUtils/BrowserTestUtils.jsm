@@ -242,6 +242,8 @@ this.BrowserTestUtils = {
    *        The element that should receive the event.
    * @param {string} eventName
    *        Name of the event to listen to.
+   * @param {bool} capture [optional]
+   *        True to use a capturing listener.
    * @param {function} checkFn [optional]
    *        Called with the Event object as argument, should return true if the
    *        event is the expected one, or false if it should be ignored and
@@ -255,24 +257,24 @@ this.BrowserTestUtils = {
    * @returns {Promise}
    * @resolves The Event object.
    */
-  waitForEvent(subject, eventName, checkFn) {
+  waitForEvent(subject, eventName, capture, checkFn) {
     return new Promise((resolve, reject) => {
       subject.addEventListener(eventName, function listener(event) {
         try {
           if (checkFn && !checkFn(event)) {
             return;
           }
-          subject.removeEventListener(eventName, listener);
+          subject.removeEventListener(eventName, listener, capture);
           resolve(event);
         } catch (ex) {
           try {
-            subject.removeEventListener(eventName, listener);
+            subject.removeEventListener(eventName, listener, capture);
           } catch (ex2) {
             // Maybe the provided object does not support removeEventListener.
           }
           reject(ex);
         }
-      });
+      }, capture);
     });
   },
 

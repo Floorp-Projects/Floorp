@@ -9,11 +9,13 @@
 
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/ResponsiveImageSelector.h"
+#include "mozilla/dom/MediaSource.h"
 
 #include "nsGkAtoms.h"
 
 #include "nsIMediaList.h"
 #include "nsCSSParser.h"
+#include "nsHostObjectProtocolHandler.h"
 
 #include "mozilla/Preferences.h"
 
@@ -31,8 +33,15 @@ HTMLSourceElement::~HTMLSourceElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLSourceElement, nsGenericHTMLElement,
-                            nsIDOMHTMLSourceElement)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLSourceElement, nsGenericHTMLElement,
+                                   mSrcMediaSource)
+
+NS_IMPL_ADDREF_INHERITED(HTMLSourceElement, nsGenericHTMLElement)
+NS_IMPL_RELEASE_INHERITED(HTMLSourceElement, nsGenericHTMLElement)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(HTMLSourceElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLSourceElement)
+NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLSourceElement)
 
@@ -112,6 +121,16 @@ HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         nsCSSParser cssParser;
         mMediaList = new nsMediaList();
         cssParser.ParseMediaList(mediaStr, nullptr, 0, mMediaList, false);
+      }
+    }
+  } else if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {
+    mSrcMediaSource = nullptr;
+    if (aValue) {
+      nsString srcStr = aValue->GetStringValue();
+      nsCOMPtr<nsIURI> uri;
+      NewURIFromString(srcStr, getter_AddRefs(uri));
+      if (uri && IsMediaSourceURI(uri)) {
+        NS_GetSourceForMediaSourceURI(uri, getter_AddRefs(mSrcMediaSource));
       }
     }
   }
