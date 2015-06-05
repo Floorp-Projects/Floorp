@@ -2720,11 +2720,7 @@ nsresult HTMLMediaElement::InitializeDecoderAsClone(MediaDecoder* aOriginal)
     return NS_ERROR_FAILURE;
   }
 
-  media::NullableTimeUnit duration = aOriginal->NetworkDuration();
-  if (duration.isSome()) {
-    decoder->SetNetworkDuration(duration.ref());
-    decoder->SetMediaSeekable(aOriginal->IsMediaSeekable());
-  }
+  decoder->SetMediaSeekable(aOriginal->IsMediaSeekable());
 
   nsRefPtr<MediaResource> resource = originalResource->CloneData(decoder);
   if (!resource) {
