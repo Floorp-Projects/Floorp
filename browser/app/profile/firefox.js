@@ -1836,9 +1836,9 @@ pref("ui.key.menuAccessKeyFocuses", true);
 // Encrypted media extensions.
 pref("media.eme.enabled", true);
 pref("media.eme.apiVisible", true);
-pref("browser.eme.ui.enabled", true);
 
 #ifdef MOZ_ADOBE_EME
+pref("browser.eme.ui.enabled", true);
 pref("media.gmp-eme-adobe.enabled", true);
 #endif
 
@@ -1851,6 +1851,8 @@ pref("browser.translation.detectLanguage", false);
 pref("browser.translation.neverForLanguages", "");
 // Show the translation UI bits, like the info bar, notification icon and preferences.
 pref("browser.translation.ui.show", false);
+// Allows to define the translation engine. Bing is default, Yandex may optionally switched on.
+pref("browser.translation.engine", "bing");
 
 // Telemetry settings.
 // Determines if Telemetry pings can be archived locally.

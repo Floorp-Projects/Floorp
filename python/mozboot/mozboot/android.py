@@ -13,8 +13,8 @@ import subprocess
 # These are the platform and build-tools versions for building
 # mobile/android, respectively. Try to keep these in synch with the
 # build system and Mozilla's automation.
-ANDROID_PLATFORM = 'android-21'
-ANDROID_BUILD_TOOLS_VERSION = '21.1.2'
+ANDROID_PLATFORM = 'android-22'
+ANDROID_BUILD_TOOLS_VERSION = '22.0.1'
 
 # These are the "Android packages" needed for building Firefox for Android.
 # Use |android list sdk --extended| to see these identifiers.

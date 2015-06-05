@@ -394,7 +394,7 @@ private:
   uint32_t mRefCnt;
 
 public:
-  // Overloaded new operator that allocates from a presShell arena.
+  // Infallible overloaded new operator that allocates from a presShell arena.
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
   void Destroy() { DestroyInternal(nullptr); }
 
@@ -651,6 +651,7 @@ private:
   ~nsRuleNode();
 
 public:
+  // This is infallible; it will never return nullptr.
   static nsRuleNode* CreateRootNode(nsPresContext* aPresContext);
 
   static void EnsureBlockDisplay(uint8_t& display,

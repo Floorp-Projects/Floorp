@@ -24,7 +24,7 @@ const {
   MENU, TOOLBAR, UNSORTED
 } = require('sdk/places/bookmarks');
 const {
-  invalidResolve, invalidReject, createTree,
+  invalidResolve, createTree,
   compareWithHost, createBookmark, createBookmarkItem,
   createBookmarkTree, addVisits, resetPlaces
 } = require('./places-helper');
@@ -369,28 +369,27 @@ exports.testPromisedSave = function (assert, done) {
   }).then(done).catch(assert.fail);
 };
 
-exports.testPromisedErrorSave = function (assert, done) {
+exports.testPromisedErrorSave = function*(assert) {
   let bookmarks = [
     { title: 'moz1', url: 'http://moz1.com', type: 'bookmark'},
     { title: 'moz2', url: 'invalidurl', type: 'bookmark'},
     { title: 'moz3', url: 'http://moz3.com', type: 'bookmark'}
   ];
 
-  saveP(bookmarks).then(invalidResolve, reason => {
+  yield saveP(bookmarks).then(() => {
+    assert.fail("should not resolve");
+  }, reason => {
     assert.ok(
       /The `url` property must be a valid URL/.test(reason),
       'Error event called with correct reason');
+  });
 
-    bookmarks[1].url = 'http://moz2.com';
-    return saveP(bookmarks);
-  }).
-  then(res => searchP({ query: 'moz' })).
-  then(res => {
-    assert.equal(res.length, 3, 'all 3 should be saved upon retry');
-    res.map(item => assert.ok(/moz\d\.com/.test(item.url), 'correct item'));
-    done();
-  }, invalidReject).
-  catch(assert.fail);
+  bookmarks[1].url = 'http://moz2.com';
+  yield saveP(bookmarks);
+
+  let res = yield searchP({ query: 'moz' });
+  assert.equal(res.length, 3, 'all 3 should be saved upon retry');
+  res.map(item => assert.ok(/moz\d\.com/.test(item.url), 'correct item'));
 };
 
 exports.testMovingChildren = function (assert, done) {
@@ -692,61 +691,63 @@ exports.testSearchTags = function (assert, done) {
  * 'http://mozilla.com/'
  * 'http://mozilla.com/*'
  */
-exports.testSearchURL = function (assert, done) {
-  createBookmarkTree().then(() => {
-    return searchP({ url: 'mozilla.org' });
-  }).then(data => {
-    assert.equal(data.length, 2, 'only URLs with host domain');
-    assert.equal(data[0].url, 'http://mozilla.org/');
-    assert.equal(data[1].url, 'http://mozilla.org/thunderbird/');
-    return searchP({ url: '*.mozilla.org' });
-  }).then(data => {
-    assert.equal(data.length, 3, 'returns domain and when host is other than domain');
-    assert.equal(data[0].url, 'http://mozilla.org/');
-    assert.equal(data[1].url, 'http://mozilla.org/thunderbird/');
-    assert.equal(data[2].url, 'http://developer.mozilla.org/en-US/');
-    return searchP({ url: 'http://mozilla.org' });
-  }).then(data => {
-    assert.equal(data.length, 1, 'only exact URL match');
-    assert.equal(data[0].url, 'http://mozilla.org/');
-    return searchP({ url: 'http://mozilla.org/*' });
-  }).then(data => {
-    assert.equal(data.length, 2, 'only URLs that begin with query');
-    assert.equal(data[0].url, 'http://mozilla.org/');
-    assert.equal(data[1].url, 'http://mozilla.org/thunderbird/');
-    return searchP([{ url: 'mozilla.org' }, { url: 'component.fm' }]);
-  }).then(data => {
-    assert.equal(data.length, 3, 'returns URLs that match EITHER query');
-    assert.equal(data[0].url, 'http://mozilla.org/');
-    assert.equal(data[1].url, 'http://mozilla.org/thunderbird/');
-    assert.equal(data[2].url, 'http://component.fm/');
-  }).then(done).catch(assert.fail);
+exports.testSearchURLForBookmarks = function*(assert) {
+  yield createBookmarkTree()
+  let data = yield searchP({ url: 'mozilla.org' });
+
+  assert.equal(data.length, 2, 'only URLs with host domain');
+  assert.equal(data[0].url, 'http://mozilla.org/');
+  assert.equal(data[1].url, 'http://mozilla.org/thunderbird/');
+
+  data = yield searchP({ url: '*.mozilla.org' });
+
+  assert.equal(data.length, 3, 'returns domain and when host is other than domain');
+  assert.equal(data[0].url, 'http://mozilla.org/');
+  assert.equal(data[1].url, 'http://mozilla.org/thunderbird/');
+  assert.equal(data[2].url, 'http://developer.mozilla.org/en-US/');
+
+  data = yield searchP({ url: 'http://mozilla.org' });
+
+  assert.equal(data.length, 1, 'only exact URL match');
+  assert.equal(data[0].url, 'http://mozilla.org/');
+
+  data = yield searchP({ url: 'http://mozilla.org/*' });
+
+  assert.equal(data.length, 2, 'only URLs that begin with query');
+  assert.equal(data[0].url, 'http://mozilla.org/');
+  assert.equal(data[1].url, 'http://mozilla.org/thunderbird/');
+
+  data = yield searchP([{ url: 'mozilla.org' }, { url: 'component.fm' }]);
+
+  assert.equal(data.length, 3, 'returns URLs that match EITHER query');
+  assert.equal(data[0].url, 'http://mozilla.org/');
+  assert.equal(data[1].url, 'http://mozilla.org/thunderbird/');
+  assert.equal(data[2].url, 'http://component.fm/');
 };
 
 /*
  * Searches url, title, tags
  */
-exports.testSearchQuery = function (assert, done) {
-  createBookmarkTree().then(() => {
-    return searchP({ query: 'thunder' });
-  }).then(data => {
-    assert.equal(data.length, 3);
-    assert.equal(data[0].title, 'mozilla.com', 'query matches tag, url, or title');
-    assert.equal(data[1].title, 'mozilla.org', 'query matches tag, url, or title');
-    assert.equal(data[2].title, 'thunderbird', 'query matches tag, url, or title');
-    return searchP([{ query: 'rust' }, { query: 'component' }]);
-  }).then(data => {
-    // rust OR component
-    assert.equal(data.length, 3);
-    assert.equal(data[0].title, 'mozilla.com', 'query matches tag, url, or title');
-    assert.equal(data[1].title, 'mozilla.org', 'query matches tag, url, or title');
-    assert.equal(data[2].title, 'web audio components', 'query matches tag, url, or title');
-    return searchP([{ query: 'moz', tags: ['javascript']}]);
-  }).then(data => {
-    assert.equal(data.length, 1);
-    assert.equal(data[0].title, 'mdn',
-      'only one item matches moz query AND has a javascript tag');
-  }).then(done).catch(assert.fail);
+exports.testSearchQueryForBookmarks = function*(assert) {
+  yield createBookmarkTree();
+
+  let data = yield searchP({ query: 'thunder' });
+  assert.equal(data.length, 3);
+  assert.equal(data[0].title, 'mozilla.com', 'query matches tag, url, or title');
+  assert.equal(data[1].title, 'mozilla.org', 'query matches tag, url, or title');
+  assert.equal(data[2].title, 'thunderbird', 'query matches tag, url, or title');
+
+  data = yield searchP([{ query: 'rust' }, { query: 'component' }]);
+  // rust OR component
+  assert.equal(data.length, 3);
+  assert.equal(data[0].title, 'mozilla.com', 'query matches tag, url, or title');
+  assert.equal(data[1].title, 'mozilla.org', 'query matches tag, url, or title');
+  assert.equal(data[2].title, 'web audio components', 'query matches tag, url, or title');
+
+  data = yield searchP([{ query: 'moz', tags: ['javascript']}]);
+  assert.equal(data.length, 1);
+  assert.equal(data[0].title, 'mdn',
+    'only one item matches moz query AND has a javascript tag');
 };
 
 /*
@@ -827,7 +828,7 @@ exports.testSearchCount = function (assert, done) {
   }
 };
 
-exports.testSearchSort = function (assert, done) {
+exports.testSearchSortForBookmarks = function (assert, done) {
   let urls = [
     'http://mozilla.com/', 'http://webaud.io/', 'http://mozilla.com/webfwd/',
     'http://developer.mozilla.com/', 'http://bandcamp.com/'

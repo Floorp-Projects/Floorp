@@ -10,6 +10,8 @@ const { id } = require("sdk/self");
 const { getAddonByID } = require("sdk/addon/manager");
 const { mapcat, map, filter, fromEnumerator } = require("sdk/util/sequence");
 const { readURISync } = require('sdk/net/url');
+const { Request } = require('sdk/request');
+const { defer } = require("sdk/core/promise");
 
 const ios = Cc['@mozilla.org/network/io-service;1'].
               getService(Ci.nsIIOService);
@@ -57,26 +59,42 @@ const getEntries = directory => mapcat(entry => {
   return [];
 }, filter(() => true, getDirectoryEntries(directory)));
 
+function readURL(url) {
+  let { promise, resolve } = defer();
+
+  Request({
+    url: url,
+    overrideMimeType: "text/plain",
+    onComplete: (response) => resolve(response.text)
+  }).get();
+
+  return promise;
+}
 
 exports["test MPL2 license header"] = function*(assert) {
   let addon = yield getAddonByID(id);
   let xpiURI = addon.getResourceURI();
   let rootURL = xpiURI.spec;
+  assert.ok(rootURL, rootURL);
   let files = [...getEntries(xpiURI.QueryInterface(Ci.nsIFileURL).file)];
 
   assert.ok(files.length > 1, files.length + " files found.");
   let failures = [];
   let success = 0;
 
-  files.forEach(file => {
-    const URI = ios.newFileURI(file);
-    let leafName = URI.spec.replace(rootURL, "");
-    let contents = readURISync(URI);
+  for (let i = 0, len = files.length; i < len; i++) {
+    let file = files[i];
+    assert.ok(file.path, "Trying " + file.path);
 
+    const URI = ios.newFileURI(file);
+
+    let leafName = URI.spec.replace(rootURL, "");
+
+    let contents = yield readURL(URI.spec);
     if (!MPL2_LICENSE_TEST.test(contents)) {
       failures.push(leafName);
     }
-  });
+  }
 
   assert.equal(1, failures.length, "we expect one failure");
   assert.ok(/test-mpl2-license-header\.js$/.test(failures[0]), "the only failure is this file");

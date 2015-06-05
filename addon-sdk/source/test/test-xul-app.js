@@ -1,10 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ "use strict";
 
 var xulApp = require("sdk/system/xul-app");
 
-exports["test xulapp"] = function(assert) {
+exports["test xulapp"] = function (assert) {
   assert.equal(typeof(xulApp.ID), "string",
                    "ID is a string");
   assert.equal(typeof(xulApp.name), "string",
@@ -14,26 +15,26 @@ exports["test xulapp"] = function(assert) {
   assert.equal(typeof(xulApp.platformVersion), "string",
                    "platformVersion is a string");
 
-  assert.throws(function() { xulApp.is("blargy"); },
-                    /Unkown Mozilla Application: blargy/,
-                    "is() throws error on bad app name");
-  assert.throws(function() { xulApp.isOneOf(["blargy"]); },
-                    /Unkown Mozilla Application: blargy/,
-                    "isOneOf() throws error on bad app name");
+  assert.throws(() => xulApp.is("blargy"),
+      /Unkown Mozilla Application: blargy/,
+      "is() throws error on bad app name");
+
+  assert.throws(() => xulApp.isOneOf(["blargy"]),
+      /Unkown Mozilla Application: blargy/,
+      "isOneOf() throws error on bad app name");
 
   function testSupport(name) {
     var item = xulApp.is(name);
     assert.ok(item === true || item === false,
-                "is('" + name + "') is true or false.");
+                  "is('" + name + "') is true or false.");
   }
 
   var apps = ["Firefox", "Mozilla", "SeaMonkey", "Fennec", "Thunderbird"];
 
   apps.forEach(testSupport);
 
-  assert.ok(xulApp.isOneOf(apps) == true ||
-              xulApp.isOneOf(apps) == false,
-              "isOneOf() returns true or false.");
+  assert.ok(xulApp.isOneOf(apps) == true || xulApp.isOneOf(apps) == false,
+                "isOneOf() returns true or false.");
 
   assert.equal(xulApp.versionInRange(xulApp.platformVersion, "1.9", "*"),
                    true, "platformVersion in range [1.9, *)");
