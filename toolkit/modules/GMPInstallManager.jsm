@@ -890,6 +890,10 @@ GMPDownloader.prototype = {
         // if you need to set other prefs etc. do it before this.
         GMPPrefs.set(GMPPrefs.KEY_PLUGIN_VERSION, gmpAddon.version,
                      gmpAddon.id);
+        // Reset the trial create pref, so that Gecko knows to do a test
+        // run before reporting that the GMP works to content.
+        GMPPrefs.reset(GMPPrefs.KEY_PLUGIN_TRIAL_CREATE, gmpAddon.version,
+                       gmpAddon.id);
         this._deferred.resolve(extractedPaths);
       }, err => {
         this._deferred.reject(err);
