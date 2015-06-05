@@ -6,8 +6,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ContentCache.h"
+#include "mozilla/IMEStateManager.h"
+#include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "nsIWidget.h"
+#include "nsRefPtr.h"
 
 namespace mozilla {
 
@@ -105,10 +108,138 @@ ContentCache::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
   return true;
 }
 
+bool
+ContentCache::CacheAll(nsIWidget* aWidget)
+{
+  if (NS_WARN_IF(!CacheText(aWidget)) ||
+      NS_WARN_IF(!CacheSelection(aWidget)) ||
+      NS_WARN_IF(!CacheTextRects(aWidget)) ||
+      NS_WARN_IF(!CacheEditorRect(aWidget))) {
+    return false;
+  }
+  return true;
+}
+
+bool
+ContentCache::CacheSelection(nsIWidget* aWidget)
+{
+  mCaret.Clear();
+  mSelection.Clear();
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWidget);
+  aWidget->DispatchEvent(&selection, status);
+  if (NS_WARN_IF(!selection.mSucceeded)) {
+    return false;
+  }
+  if (selection.mReply.mReversed) {
+    mSelection.mAnchor =
+      selection.mReply.mOffset + selection.mReply.mString.Length();
+    mSelection.mFocus = selection.mReply.mOffset;
+  } else {
+    mSelection.mAnchor = selection.mReply.mOffset;
+    mSelection.mFocus =
+      selection.mReply.mOffset + selection.mReply.mString.Length();
+  }
+  mSelection.mWritingMode = selection.GetWritingMode();
+
+  nsRefPtr<TextComposition> textComposition =
+    IMEStateManager::GetTextCompositionFor(aWidget);
+  if (textComposition) {
+    mCaret.mOffset = textComposition->OffsetOfTargetClause();
+  } else {
+    mCaret.mOffset = selection.mReply.mOffset;
+  }
+
+  status = nsEventStatus_eIgnore;
+  WidgetQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, aWidget);
+  caretRect.InitForQueryCaretRect(mCaret.mOffset);
+  aWidget->DispatchEvent(&caretRect, status);
+  if (NS_WARN_IF(!caretRect.mSucceeded)) {
+    mCaret.Clear();
+    return false;
+  }
+  mCaret.mRect = caretRect.mReply.mRect;
+  return true;
+}
+
+bool
+ContentCache::CacheEditorRect(nsIWidget* aWidget)
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  WidgetQueryContentEvent editorRectEvent(true, NS_QUERY_EDITOR_RECT, aWidget);
+  aWidget->DispatchEvent(&editorRectEvent, status);
+  if (NS_WARN_IF(!editorRectEvent.mSucceeded)) {
+    return false;
+  }
+  mEditorRect = editorRectEvent.mReply.mRect;
+  return true;
+}
+
+bool
+ContentCache::CacheText(nsIWidget* aWidget)
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  WidgetQueryContentEvent queryText(true, NS_QUERY_TEXT_CONTENT, aWidget);
+  queryText.InitForQueryTextContent(0, UINT32_MAX);
+  aWidget->DispatchEvent(&queryText, status);
+  if (NS_WARN_IF(!queryText.mSucceeded)) {
+    SetText(EmptyString());
+    return false;
+  }
+  SetText(queryText.mReply.mString);
+  return true;
+}
+
+bool
+ContentCache::CacheTextRects(nsIWidget* aWidget)
+{
+  mTextRectArray.Clear();
+
+  nsRefPtr<TextComposition> textComposition =
+    IMEStateManager::GetTextCompositionFor(aWidget);
+  if (NS_WARN_IF(!textComposition)) {
+    return true;
+  }
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  mTextRectArray.mRects.SetCapacity(textComposition->String().Length());
+  mTextRectArray.mStart = textComposition->NativeOffsetOfStartComposition();
+  uint32_t endOffset =
+    mTextRectArray.mStart + textComposition->String().Length();
+  for (uint32_t i = mTextRectArray.mStart; i < endOffset; i++) {
+    WidgetQueryContentEvent textRect(true, NS_QUERY_TEXT_RECT, aWidget);
+    textRect.InitForQueryTextRect(i, 1);
+    aWidget->DispatchEvent(&textRect, status);
+    if (NS_WARN_IF(!textRect.mSucceeded)) {
+      mTextRectArray.Clear();
+      return false;
+    }
+    mTextRectArray.mRects.AppendElement(textRect.mReply.mRect);
+  }
+  return true;
+}
+
 void
 ContentCache::SetText(const nsAString& aText)
 {
   mText = aText;
+}
+
+void
+ContentCache::SetSelection(uint32_t aStartOffset,
+                           uint32_t aLength,
+                           bool aReversed,
+                           const WritingMode& aWritingMode)
+{
+  if (!aReversed) {
+    mSelection.mAnchor = aStartOffset;
+    mSelection.mFocus = aStartOffset + aLength;
+  } else {
+    mSelection.mAnchor = aStartOffset + aLength;
+    mSelection.mFocus = aStartOffset;
+  }
+  mSelection.mWritingMode = aWritingMode;
 }
 
 void

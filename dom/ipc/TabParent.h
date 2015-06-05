@@ -161,29 +161,22 @@ public:
                                   InfallibleTArray<CpowEntry>&& aCpows,
                                   const IPC::Principal& aPrincipal) override;
     virtual bool RecvNotifyIMEFocus(const bool& aFocus,
+                                    const ContentCache& aContentCache,
                                     nsIMEUpdatePreference* aPreference)
                                       override;
-    virtual bool RecvNotifyIMETextChange(const uint32_t& aStart,
+    virtual bool RecvNotifyIMETextChange(const ContentCache& aContentCache,
+                                         const uint32_t& aStart,
                                          const uint32_t& aEnd,
                                          const uint32_t& aNewEnd,
                                          const bool& aCausedByComposition) override;
-    virtual bool RecvNotifyIMESelectedCompositionRect(
-                   const uint32_t& aOffset,
-                   InfallibleTArray<LayoutDeviceIntRect>&& aRects,
-                   const uint32_t& aCaretOffset,
-                   const LayoutDeviceIntRect& aCaretRect) override;
-    virtual bool RecvNotifyIMESelection(const uint32_t& aAnchor,
-                                        const uint32_t& aFocus,
-                                        const mozilla::WritingMode& aWritingMode,
+    virtual bool RecvNotifyIMESelectedCompositionRect(const ContentCache& aContentCache) override;
+    virtual bool RecvNotifyIMESelection(const ContentCache& aContentCache,
                                         const bool& aCausedByComposition) override;
-    virtual bool RecvNotifyIMETextHint(const nsString& aText) override;
+    virtual bool RecvNotifyIMETextHint(const ContentCache& aContentCache) override;
     virtual bool RecvNotifyIMEMouseButtonEvent(const widget::IMENotification& aEventMessage,
                                                bool* aConsumedByIME) override;
-    virtual bool RecvNotifyIMEEditorRect(const LayoutDeviceIntRect& aRect) override;
-    virtual bool RecvNotifyIMEPositionChange(
-                   const LayoutDeviceIntRect& aEditorRect,
-                   InfallibleTArray<LayoutDeviceIntRect>&& aCompositionRects,
-                   const LayoutDeviceIntRect& aCaretRect) override;
+    virtual bool RecvNotifyIMEEditorRect(const ContentCache& aContentCache) override;
+    virtual bool RecvNotifyIMEPositionChange(const ContentCache& aContentCache) override;
     virtual bool RecvEndIMEComposition(const bool& aCancel,
                                        bool* aNoCompositionEvent,
                                        nsString* aComposition) override;

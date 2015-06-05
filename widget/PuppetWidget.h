@@ -22,6 +22,7 @@
 #include "nsIScreenManager.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ContentCache.h"
 #include "mozilla/EventForwards.h"
 
 namespace mozilla {
@@ -264,10 +265,10 @@ private:
   nsresult NotifyIMEOfEditorRect();
   nsresult NotifyIMEOfPositionChange();
 
-  bool GetEditorRect(mozilla::LayoutDeviceIntRect& aEditorRect);
-  bool GetCompositionRects(uint32_t& aStartOffset,
-                           nsTArray<mozilla::LayoutDeviceIntRect>& aRectArray,
-                           uint32_t& aTargetCauseOffset);
+  bool CacheEditorRect();
+  bool CacheCompositionRects(uint32_t& aStartOffset,
+                             nsTArray<mozilla::LayoutDeviceIntRect>& aRectArray,
+                             uint32_t& aTargetCauseOffset);
   bool GetCaretRect(mozilla::LayoutDeviceIntRect& aCaretRect, uint32_t aCaretOffset);
   uint32_t GetCaretOffset();
 
@@ -310,6 +311,7 @@ private:
   mozilla::RefPtr<DrawTarget> mDrawTarget;
   // IME
   nsIMEUpdatePreference mIMEPreferenceOfParent;
+  ContentCache mContentCache;
   bool mNeedIMEStateInit;
 
   // The DPI of the screen corresponding to this widget
