@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/WritingModes.h"
 #include "nsString.h"
@@ -170,28 +171,59 @@ private:
     LayoutDeviceIntRect mFocusCharRect;
 
     Selection()
-      : mAnchor(0)
-      , mFocus(0)
+      : mAnchor(UINT32_MAX)
+      , mFocus(UINT32_MAX)
     {
     }
 
     void Clear()
     {
-      mAnchor = mFocus = 0;
+      mAnchor = mFocus = UINT32_MAX;
       mWritingMode = WritingMode();
       mAnchorCharRect.SetEmpty();
       mFocusCharRect.SetEmpty();
     }
 
-    bool Collapsed() const { return mFocus == mAnchor; }
-    bool Reversed() const { return mFocus < mAnchor; }
-    uint32_t StartOffset() const { return Reversed() ? mFocus : mAnchor; }
-    uint32_t EndOffset() const { return Reversed() ? mAnchor : mFocus; }
+    bool IsValid() const
+    {
+      return mAnchor != UINT32_MAX && mFocus != UINT32_MAX;
+    }
+    bool Collapsed() const
+    {
+      NS_ASSERTION(IsValid(),
+                   "The caller should check if the selection is valid");
+      return mFocus == mAnchor;
+    }
+    bool Reversed() const
+    {
+      NS_ASSERTION(IsValid(),
+                   "The caller should check if the selection is valid");
+      return mFocus < mAnchor;
+    }
+    uint32_t StartOffset() const
+    {
+      NS_ASSERTION(IsValid(),
+                   "The caller should check if the selection is valid");
+      return Reversed() ? mFocus : mAnchor;
+    }
+    uint32_t EndOffset() const
+    {
+      NS_ASSERTION(IsValid(),
+                   "The caller should check if the selection is valid");
+      return Reversed() ? mAnchor : mFocus;
+    }
     uint32_t Length() const
     {
+      NS_ASSERTION(IsValid(),
+                   "The caller should check if the selection is valid");
       return Reversed() ? mAnchor - mFocus : mFocus - mAnchor;
     }
   } mSelection;
+
+  bool IsSelectionValid() const
+  {
+    return mSelection.IsValid() && mSelection.EndOffset() <= mText.Length();
+  }
 
   struct Caret final
   {
@@ -213,7 +245,8 @@ private:
 
     uint32_t Offset() const
     {
-      NS_WARN_IF(mOffset == UINT32_MAX);
+      NS_ASSERTION(IsValid(),
+                   "The caller should check if the caret is valid");
       return mOffset;
     }
   } mCaret;
@@ -234,28 +267,40 @@ private:
       mRects.Clear();
     }
 
+    bool IsValid() const
+    {
+      if (mStart == UINT32_MAX) {
+        return false;
+      }
+      CheckedInt<uint32_t> endOffset =
+        CheckedInt<uint32_t>(mStart) + mRects.Length();
+      return endOffset.isValid();
+    }
     uint32_t StartOffset() const
     {
-      NS_WARN_IF(mStart == UINT32_MAX);
+      NS_ASSERTION(IsValid(),
+                   "The caller should check if the caret is valid");
       return mStart;
     }
     uint32_t EndOffset() const
     {
-      if (NS_WARN_IF(mStart == UINT32_MAX) ||
-          NS_WARN_IF(static_cast<uint64_t>(mStart) + mRects.Length() >
-                       UINT32_MAX)) {
+      NS_ASSERTION(IsValid(),
+                   "The caller should check if the caret is valid");
+      if (!IsValid()) {
         return UINT32_MAX;
       }
       return mStart + mRects.Length();
     }
     bool InRange(uint32_t aOffset) const
     {
-      return mStart != UINT32_MAX &&
+      return IsValid() &&
              StartOffset() <= aOffset && aOffset < EndOffset();
     }
     bool InRange(uint32_t aOffset, uint32_t aLength) const
     {
-      if (NS_WARN_IF(static_cast<uint64_t>(aOffset) + aLength > UINT32_MAX)) {
+      CheckedInt<uint32_t> endOffset =
+        CheckedInt<uint32_t>(aOffset) + aLength;
+      if (NS_WARN_IF(!endOffset.isValid())) {
         return false;
       }
       return InRange(aOffset) && aOffset + aLength <= EndOffset();

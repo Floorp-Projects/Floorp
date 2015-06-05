@@ -10,6 +10,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h" // for KeyNameIndex, temporarily
 #include "mozilla/TextRange.h"
 #include "mozilla/FontRange.h"
@@ -543,10 +544,9 @@ public:
   {
     uint32_t EndOffset() const
     {
-      if (NS_WARN_IF(static_cast<uint64_t>(mOffset) + mLength > UINT32_MAX)) {
-        return UINT32_MAX;
-      }
-      return mOffset + mLength;
+      CheckedInt<uint32_t> endOffset =
+        CheckedInt<uint32_t>(mOffset) + mLength;
+      return NS_WARN_IF(!endOffset.isValid()) ? UINT32_MAX : endOffset.value();
     }
 
     uint32_t mOffset;
