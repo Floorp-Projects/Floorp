@@ -7844,7 +7844,7 @@ nsGlobalWindow::OpenDialog(JSContext* aCx, const nsAString& aUrl,
 
   nsCOMPtr<nsIJSArgArray> argvArray;
   aError = NS_CreateJSArgv(aCx, aExtraArgument.Length(),
-                           const_cast<JS::Value*>(aExtraArgument.Elements()),
+                           aExtraArgument.Elements(),
                            getter_AddRefs(argvArray));
   if (aError.Failed()) {
     return nullptr;
