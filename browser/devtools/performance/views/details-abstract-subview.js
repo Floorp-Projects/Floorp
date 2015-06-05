@@ -45,6 +45,15 @@ let DetailsSubview = {
   rangeChangeDebounceTime: 0,
 
   /**
+   * When the overview range changes, all details views will require a
+   * rerendering at a later point, determined by `shouldUpdateWhenShown` and
+   * `canUpdateWhileHidden` and whether or not its the current view.
+   * Set `requiresUpdateOnRangeChange` to false to not invalidate the view
+   * when the range changes.
+   */
+  requiresUpdateOnRangeChange: true,
+
+  /**
    * Flag specifying if this view should be updated when selected. This will
    * be set to true, for example, when the range changes in the overview and
    * this view is not currently visible.
@@ -93,6 +102,9 @@ let DetailsSubview = {
    * Fired when a range is selected or cleared in the OverviewView.
    */
   _onOverviewRangeChange: function (_, interval) {
+    if (!this.requiresUpdateOnRangeChange) {
+      return;
+    }
     if (DetailsView.isViewSelected(this)) {
       let debounced = () => {
         if (!this.shouldUpdateWhileMouseIsActive && OverviewView.isMouseActive) {
