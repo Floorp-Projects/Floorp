@@ -1002,7 +1002,7 @@ nsHTMLReflowState::GetHypotheticalBoxContainer(nsIFrame* aFrame,
     state = nullptr;
   }
 
-  WritingMode wm = GetWritingMode();
+  WritingMode wm = aFrame->GetWritingMode();
   if (state) {
     WritingMode stateWM = state->GetWritingMode();
     aCBIStartEdge =
@@ -1016,31 +1016,31 @@ nsHTMLReflowState::GetHypotheticalBoxContainer(nsIFrame* aFrame,
                  "aFrame shouldn't be in reflow; we'll lie if it is");
     LogicalMargin borderPadding = aFrame->GetLogicalUsedBorderAndPadding(wm);
     aCBIStartEdge = borderPadding.IStart(wm);
-    aCBISize = aFrame->GetLogicalSize(wm).ISize(wm) -
-               borderPadding.IStartEnd(wm);
+    aCBISize = aFrame->ISize(wm) - borderPadding.IStartEnd(wm);
   }
 
   return aFrame;
 }
 
 // When determining the hypothetical box that would have been if the element
-// had been in the flow we may not be able to exactly determine both the left
-// and right edges. For example, if the element is a non-replaced inline-level
-// element we would have to reflow it in order to determine it desired width.
-// In that case depending on the progression direction either the left or
-// right edge would be marked as not being exact
+// had been in the flow we may not be able to exactly determine both the IStart
+// and IEnd edges. For example, if the element is a non-replaced inline-level
+// element we would have to reflow it in order to determine its desired ISize.
+// In that case depending on the progression direction either the IStart or
+// IEnd edge would be marked as not being exact.
 struct nsHypotheticalBox {
-  // offsets from left edge of containing block (which is a padding edge)
-  nscoord       mLeft, mRight;
-  // offset from top edge of containing block (which is a padding edge)
-  nscoord       mTop;
+  // offsets from inline-start edge of containing block (which is a padding edge)
+  nscoord       mIStart, mIEnd;
+  // offset from block-start edge of containing block (which is a padding edge)
+  nscoord       mBStart;
+  WritingMode   mWritingMode;
 #ifdef DEBUG
-  bool          mLeftIsExact, mRightIsExact;
+  bool          mIStartIsExact, mIEndIsExact;
 #endif
 
   nsHypotheticalBox() {
 #ifdef DEBUG
-    mLeftIsExact = mRightIsExact = false;
+    mIStartIsExact = mIEndIsExact = false;
 #endif
   }
 };
@@ -1164,15 +1164,11 @@ static bool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
 
 // Calculate the hypothetical box that the element would have if it were in
 // the flow. The values returned are relative to the padding edge of the
-// absolute containing block
-// aContainingBlock is the placeholder's containing block (XXX rename it?)
+// absolute containing block, in the actual containing block's writing mode.
 // cbrs->frame is the actual containing block
 void
 nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
                                             nsIFrame*         aPlaceholderFrame,
-                                            nsIFrame*         aContainingBlock,
-                                            nscoord           aBlockIStartContentEdge,
-                                            nscoord           aBlockContentISize,
                                             const nsHTMLReflowState* cbrs,
                                             nsHypotheticalBox& aHypotheticalBox,
                                             nsIAtom*          aFrameType)
@@ -1180,11 +1176,20 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   NS_ASSERTION(mStyleDisplay->mOriginalDisplay != NS_STYLE_DISPLAY_NONE,
                "mOriginalDisplay has not been properly initialized");
 
+  // Find the nearest containing block frame to the placeholder frame,
+  // and its inline-start edge and width.
+  nscoord blockIStartContentEdge, blockContentISize;
+  nsIFrame* containingBlock =
+    GetHypotheticalBoxContainer(aPlaceholderFrame, blockIStartContentEdge,
+                                blockContentISize);
+
   // If it's a replaced element and it has a 'auto' value for
   //'inline size', see if we can get the intrinsic size. This will allow
   // us to exactly determine both the inline edges
-  WritingMode cbWM = cbrs->GetWritingMode();
-  nsStyleCoord styleISize = mStylePosition->ISize(cbWM);
+  WritingMode wm = containingBlock->GetWritingMode();
+  aHypotheticalBox.mWritingMode = wm;
+
+  nsStyleCoord styleISize = mStylePosition->ISize(wm);
   bool isAutoISize = styleISize.GetUnit() == eStyleUnit_Auto;
   nsSize      intrinsicSize;
   bool        knowIntrinsicSize = false;
@@ -1211,28 +1216,28 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
     // been in the flow. Note that we ignore any 'auto' and 'inherit'
     // values
     nscoord insideBoxSizing, outsideBoxSizing;
-    CalculateInlineBorderPaddingMargin(aBlockContentISize,
+    CalculateInlineBorderPaddingMargin(blockContentISize,
                                        &insideBoxSizing, &outsideBoxSizing);
 
     if (NS_FRAME_IS_REPLACED(mFrameType) && isAutoISize) {
       // It's a replaced element with an 'auto' inline size so the box
       // inline size is its intrinsic size plus any border/padding/margin
       if (knowIntrinsicSize) {
-        boxISize = LogicalSize(cbWM, intrinsicSize).ISize(cbWM) +
+        boxISize = LogicalSize(wm, intrinsicSize).ISize(wm) +
                    outsideBoxSizing + insideBoxSizing;
         knowBoxISize = true;
       }
 
     } else if (isAutoISize) {
       // The box inline size is the containing block inline size
-      boxISize = aBlockContentISize;
+      boxISize = blockContentISize;
       knowBoxISize = true;
 
     } else {
       // We need to compute it. It's important we do this, because if it's
       // percentage based this computed value may be different from the computed
       // value calculated using the absolute containing block width
-      boxISize = ComputeISizeValue(aBlockContentISize,
+      boxISize = ComputeISizeValue(blockContentISize,
                                    insideBoxSizing, outsideBoxSizing,
                                    styleISize) +
                  insideBoxSizing + outsideBoxSizing;
@@ -1240,29 +1245,39 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
     }
   }
 
-  // Get the 'direction' of the block
-  const nsStyleVisibility* blockVis = aContainingBlock->StyleVisibility();
-
   // Get the placeholder x-offset and y-offset in the coordinate
   // space of its containing block
   // XXXbz the placeholder is not fully reflowed yet if our containing block is
   // relatively positioned...
-  nsPoint placeholderOffset = aPlaceholderFrame->GetOffsetTo(aContainingBlock);
+  WritingMode cbwm = cbrs->GetWritingMode();
+  nscoord containerWidth = containingBlock->GetStateBits() & NS_FRAME_IN_REFLOW
+    ? cbrs->ComputedWidth() +
+      cbrs->ComputedLogicalBorderPadding().LeftRight(cbwm)
+    : containingBlock->GetSize().width;
+  LogicalPoint placeholderOffset(wm, aPlaceholderFrame->GetOffsetTo(containingBlock),
+                                 containerWidth);
 
-  // First, determine the hypothetical box's mTop.  We want to check the
-  // content insertion frame of aContainingBlock for block-ness, but make
+  // XXX hack to correct for lack of LogicalPoint bidi support in vertical mode
+  if (wm.IsVertical() && !wm.IsBidiLTR()) {
+    placeholderOffset.I(wm) = cbrs->ComputedHeight() +
+      cbrs->ComputedLogicalBorderPadding().TopBottom(cbwm) -
+      placeholderOffset.I(wm);
+  }
+
+  // First, determine the hypothetical box's mBStart.  We want to check the
+  // content insertion frame of containingBlock for block-ness, but make
   // sure to compute all coordinates in the coordinate system of
-  // aContainingBlock.
+  // containingBlock.
   nsBlockFrame* blockFrame =
-    nsLayoutUtils::GetAsBlock(aContainingBlock->GetContentInsertionFrame());
+    nsLayoutUtils::GetAsBlock(containingBlock->GetContentInsertionFrame());
   if (blockFrame) {
-    nscoord blockYOffset = blockFrame->GetOffsetTo(aContainingBlock).y;
+    LogicalPoint blockOffset(wm, blockFrame->GetOffsetTo(containingBlock), 0);
     bool isValid;
     nsBlockInFlowLineIterator iter(blockFrame, aPlaceholderFrame, &isValid);
     if (!isValid) {
       // Give up.  We're probably dealing with somebody using
       // position:absolute inside native-anonymous content anyway.
-      aHypotheticalBox.mTop = placeholderOffset.y;
+      aHypotheticalBox.mBStart = placeholderOffset.B(wm);
     } else {
       NS_ASSERTION(iter.GetContainer() == blockFrame,
                    "Found placeholder in wrong block!");
@@ -1270,10 +1285,13 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
 
       // How we determine the hypothetical box depends on whether the element
       // would have been inline-level or block-level
+      LogicalRect lineBounds =
+        lineBox->GetBounds().ConvertTo(wm, lineBox->mWritingMode,
+                                       lineBox->mContainerWidth);
       if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
-        // Use the top of the inline box which the placeholder lives in
-        // as the hypothetical box's top.
-        aHypotheticalBox.mTop = lineBox->GetPhysicalBounds().y + blockYOffset;
+        // Use the block-start of the inline box which the placeholder lives in
+        // as the hypothetical box's block-start.
+        aHypotheticalBox.mBStart = lineBounds.BStart(wm) + blockOffset.B(wm);
       } else {
         // The element would have been block-level which means it would
         // be below the line containing the placeholder frame, unless
@@ -1298,81 +1316,51 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
             // The top of the hypothetical box is the top of the line
             // containing the placeholder, since there is nothing in the
             // line before our placeholder except empty frames.
-            aHypotheticalBox.mTop = lineBox->GetPhysicalBounds().y + blockYOffset;
+            aHypotheticalBox.mBStart = lineBounds.BStart(wm) + blockOffset.B(wm);
           } else {
             // The top of the hypothetical box is just below the line
             // containing the placeholder.
-            aHypotheticalBox.mTop = lineBox->GetPhysicalBounds().YMost() + blockYOffset;
+            aHypotheticalBox.mBStart = lineBounds.BEnd(wm) + blockOffset.B(wm);
           }
         } else {
-          // Just use the placeholder's y-offset wrt the containing block
-          aHypotheticalBox.mTop = placeholderOffset.y;
+          // Just use the placeholder's block-offset wrt the containing block
+          aHypotheticalBox.mBStart = placeholderOffset.B(wm);
         }
       }
     }
   } else {
     // The containing block is not a block, so it's probably something
     // like a XUL box, etc.
-    // Just use the placeholder's y-offset
-    aHypotheticalBox.mTop = placeholderOffset.y;
+    // Just use the placeholder's block-offset
+    aHypotheticalBox.mBStart = placeholderOffset.B(wm);
   }
 
-  // Second, determine the hypothetical box's mLeft & mRight
-  // To determine the left and right offsets we need to look at the block's 'direction'
-  if (NS_STYLE_DIRECTION_LTR == blockVis->mDirection) {
-    // How we determine the hypothetical box depends on whether the element
-    // would have been inline-level or block-level
-    if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
-      // The placeholder represents the left edge of the hypothetical box
-      aHypotheticalBox.mLeft = placeholderOffset.x;
-    } else {
-      aHypotheticalBox.mLeft = aBlockIStartContentEdge;
-    }
-#ifdef DEBUG
-    aHypotheticalBox.mLeftIsExact = true;
-#endif
-
-    if (knowBoxISize) {
-      aHypotheticalBox.mRight = aHypotheticalBox.mLeft + boxISize;
-#ifdef DEBUG
-      aHypotheticalBox.mRightIsExact = true;
-#endif
-    } else {
-      // We can't compute the right edge because we don't know the desired
-      // width. So instead use the right content edge of the block parent,
-      // but remember it's not exact
-      aHypotheticalBox.mRight = aBlockIStartContentEdge + aBlockContentISize;
-#ifdef DEBUG
-      aHypotheticalBox.mRightIsExact = false;
-#endif
-    }
-
+  // Second, determine the hypothetical box's mIStart & mIEnd.
+  // How we determine the hypothetical box depends on whether the element
+  // would have been inline-level or block-level
+  if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
+    // The placeholder represents the left edge of the hypothetical box
+    aHypotheticalBox.mIStart = placeholderOffset.I(wm);
   } else {
-    // The placeholder represents the right edge of the hypothetical box
-    if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
-      aHypotheticalBox.mRight = placeholderOffset.x;
-    } else {
-      aHypotheticalBox.mRight = aBlockIStartContentEdge + aBlockContentISize;
-    }
+    aHypotheticalBox.mIStart = blockIStartContentEdge;
+  }
 #ifdef DEBUG
-    aHypotheticalBox.mRightIsExact = true;
+  aHypotheticalBox.mIStartIsExact = true;
 #endif
 
-    if (knowBoxISize) {
-      aHypotheticalBox.mLeft = aHypotheticalBox.mRight - boxISize;
+  if (knowBoxISize) {
+    aHypotheticalBox.mIEnd = aHypotheticalBox.mIStart + boxISize;
 #ifdef DEBUG
-      aHypotheticalBox.mLeftIsExact = true;
+    aHypotheticalBox.mIEndIsExact = true;
 #endif
-    } else {
-      // We can't compute the left edge because we don't know the desired
-      // width. So instead use the left content edge of the block parent,
-      // but remember it's not exact
-      aHypotheticalBox.mLeft = aBlockIStartContentEdge;
+  } else {
+    // We can't compute the inline-end edge because we don't know the desired
+    // inline-size. So instead use the end content edge of the block parent,
+    // but remember it's not exact
+    aHypotheticalBox.mIEnd = blockIStartContentEdge + blockContentISize;
 #ifdef DEBUG
-      aHypotheticalBox.mLeftIsExact = false;
+    aHypotheticalBox.mIEndIsExact = false;
 #endif
-    }
-
   }
 
   // The current coordinate space is that of the nearest block to the placeholder.
@@ -1385,44 +1373,49 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
       // Exclude cases inside -moz-transform where fixed is like absolute.
       nsLayoutUtils::IsReallyFixedPos(frame)) {
     // In this case, cbrs->frame will likely be an ancestor of
-    // aContainingBlock, so can just walk our way up the frame tree.
+    // containingBlock, so can just walk our way up the frame tree.
     // Make sure to not add positions of frames whose parent is a
     // scrollFrame, since we're doing fixed positioning, which assumes
     // everything is scrolled to (0,0).
     cbOffset.MoveTo(0, 0);
     do {
-      cbOffset += aContainingBlock->GetPositionIgnoringScrolling();
-      nsContainerFrame* parent = aContainingBlock->GetParent();
+      cbOffset += containingBlock->GetPositionIgnoringScrolling();
+      nsContainerFrame* parent = containingBlock->GetParent();
       if (!parent) {
         // Oops, our absolute containing block isn't an ancestor of the
         // placeholder's containing block. This can happen if the placeholder
         // is pushed to a different page in a printing context.  'cbOffset' is
-        // currently relative to the root frame (aContainingBlock) - so just
+        // currently relative to the root frame (containingBlock) - so just
         // subtract the offset to the absolute containing block to make it
         // relative to that.
-        cbOffset -= aContainingBlock->GetOffsetTo(cbrs->frame);
+        cbOffset -= containingBlock->GetOffsetTo(cbrs->frame);
         break;
       }
-      aContainingBlock = parent;
-    } while (aContainingBlock != cbrs->frame);
+      containingBlock = parent;
+    } while (containingBlock != cbrs->frame);
   } else {
     // XXXldb We need to either ignore scrolling for the absolute
     // positioning case too (and take the incompatibility) or figure out
     // how to make these positioned elements actually *move* when we
     // scroll, and thus avoid the resulting incremental reflow bugs.
-    cbOffset = aContainingBlock->GetOffsetTo(cbrs->frame);
+    cbOffset = containingBlock->GetOffsetTo(cbrs->frame);
   }
-  aHypotheticalBox.mLeft += cbOffset.x;
-  aHypotheticalBox.mTop += cbOffset.y;
-  aHypotheticalBox.mRight += cbOffset.x;
-  
+  nscoord cbrsWidth = cbrs->ComputedWidth() +
+                        cbrs->ComputedLogicalBorderPadding().LeftRight(cbwm);
+  LogicalPoint logCBOffs(wm, cbOffset, cbrsWidth - containerWidth);
+  aHypotheticalBox.mIStart += logCBOffs.I(wm);
+  aHypotheticalBox.mIEnd += logCBOffs.I(wm);
+  aHypotheticalBox.mBStart += logCBOffs.B(wm);
+
   // The specified offsets are relative to the absolute containing block's
   // padding edge and our current values are relative to the border edge, so
   // translate.
-  nsMargin border = cbrs->ComputedPhysicalBorderPadding() - cbrs->ComputedPhysicalPadding();
-  aHypotheticalBox.mLeft -= border.left;
-  aHypotheticalBox.mRight -= border.left;
-  aHypotheticalBox.mTop -= border.top;
+  LogicalMargin border =
+    cbrs->ComputedLogicalBorderPadding() - cbrs->ComputedLogicalPadding();
+  border = border.ConvertTo(wm, cbrs->GetWritingMode());
+  aHypotheticalBox.mIStart -= border.IStart(wm);
+  aHypotheticalBox.mIEnd -= border.IStart(wm);
+  aHypotheticalBox.mBStart -= border.BStart(wm);
 }
 
 void
@@ -1432,8 +1425,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
                                            nsIAtom* aFrameType)
 {
   WritingMode wm = GetWritingMode();
-  NS_PRECONDITION(aCBSize.BSize(wm) != NS_AUTOHEIGHT,
-                  "containing block height must be constrained");
+  WritingMode cbwm = cbrs->GetWritingMode();
+  NS_PRECONDITION(aCBSize.BSize(cbwm) != NS_AUTOHEIGHT,
+                  "containing block bsize must be constrained");
 
   NS_ASSERTION(aFrameType != nsGkAtoms::tableFrame,
                "InitAbsoluteConstraints should not be called on table frames");
@@ -1454,143 +1448,151 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
        (eStyleUnit_Auto == mStylePosition->mOffset.GetRightUnit())) ||
       ((eStyleUnit_Auto == mStylePosition->mOffset.GetTopUnit()) &&
        (eStyleUnit_Auto == mStylePosition->mOffset.GetBottomUnit()))) {
-    // Find the nearest containing block frame to the placeholder frame,
-    // and return its left edge and width.
-    nscoord cbIStartEdge, cbISize;
-    nsIFrame* cbFrame = GetHypotheticalBoxContainer(placeholderFrame,
-                                                    cbIStartEdge,
-                                                    cbISize);
-
-    CalculateHypotheticalBox(aPresContext, placeholderFrame, cbFrame,
-                             cbIStartEdge, cbISize, cbrs, hypotheticalBox,
-                             aFrameType);
+    CalculateHypotheticalBox(aPresContext, placeholderFrame, cbrs,
+                             hypotheticalBox, aFrameType);
   }
 
   // Initialize the 'left' and 'right' computed offsets
   // XXX Handle new 'static-position' value...
-  bool          leftIsAuto = false, rightIsAuto = false;
-  if (eStyleUnit_Auto == mStylePosition->mOffset.GetLeftUnit()) {
-    ComputedPhysicalOffsets().left = 0;
-    leftIsAuto = true;
+
+  bool iStartIsAuto = false, iEndIsAuto = false;
+  bool bStartIsAuto = false, bEndIsAuto = false;
+
+  // Size of the containing block in its writing mode
+  LogicalSize cbSize = aCBSize;
+
+  LogicalMargin offsets = ComputedLogicalOffsets().ConvertTo(cbwm, wm);
+
+  if (eStyleUnit_Auto == mStylePosition->mOffset.GetIStartUnit(cbwm)) {
+    offsets.IStart(cbwm) = 0;
+    iStartIsAuto = true;
   } else {
-    ComputedPhysicalOffsets().left = nsLayoutUtils::
-      ComputeCBDependentValue(aCBSize.ISize(wm),
-                              mStylePosition->mOffset.GetLeft());
+    offsets.IStart(cbwm) = nsLayoutUtils::
+      ComputeCBDependentValue(cbSize.ISize(cbwm),
+                              mStylePosition->mOffset.GetIStart(cbwm));
   }
-  if (eStyleUnit_Auto == mStylePosition->mOffset.GetRightUnit()) {
-    ComputedPhysicalOffsets().right = 0;
-    rightIsAuto = true;
+  if (eStyleUnit_Auto == mStylePosition->mOffset.GetIEndUnit(cbwm)) {
+    offsets.IEnd(cbwm) = 0;
+    iEndIsAuto = true;
   } else {
-    ComputedPhysicalOffsets().right = nsLayoutUtils::
-      ComputeCBDependentValue(aCBSize.ISize(wm),
-                              mStylePosition->mOffset.GetRight());
+    offsets.IEnd(cbwm) = nsLayoutUtils::
+      ComputeCBDependentValue(cbSize.ISize(cbwm),
+                              mStylePosition->mOffset.GetIEnd(cbwm));
   }
 
-  // Use the horizontal component of the hypothetical box in the cases
-  // where it's needed.
-  if (leftIsAuto && rightIsAuto) {
-    // Use the direction of the original ("static-position") containing block
-    // to dictate whether 'left' or 'right' is treated like 'static-position'.
-    if (NS_STYLE_DIRECTION_LTR == placeholderFrame->GetContainingBlock()
-                                    ->StyleVisibility()->mDirection) {
-      NS_ASSERTION(hypotheticalBox.mLeftIsExact, "should always have "
-                   "exact value on containing block's start side");
-      ComputedPhysicalOffsets().left = hypotheticalBox.mLeft;
-      leftIsAuto = false;
+  if (iStartIsAuto && iEndIsAuto) {
+    NS_ASSERTION(hypotheticalBox.mIStartIsExact, "should always have "
+                 "exact value on containing block's start side");
+    if (cbwm.IsBidiLTR() != hypotheticalBox.mWritingMode.IsBidiLTR()) {
+      offsets.IEnd(cbwm) = hypotheticalBox.mIStart;
+      iEndIsAuto = false;
     } else {
-      NS_ASSERTION(hypotheticalBox.mRightIsExact, "should always have "
-                   "exact value on containing block's start side");
-      ComputedPhysicalOffsets().right = aCBSize.ISize(wm) -
-                                        hypotheticalBox.mRight;
-      rightIsAuto = false;
+      offsets.IStart(cbwm) = hypotheticalBox.mIStart;
+      iStartIsAuto = false;
     }
   }
 
-  // Initialize the 'top' and 'bottom' computed offsets
-  bool        topIsAuto = false, bottomIsAuto = false;
-  if (eStyleUnit_Auto == mStylePosition->mOffset.GetTopUnit()) {
-    ComputedPhysicalOffsets().top = 0;
-    topIsAuto = true;
+  if (eStyleUnit_Auto == mStylePosition->mOffset.GetBStartUnit(cbwm)) {
+    offsets.BStart(cbwm) = 0;
+    bStartIsAuto = true;
   } else {
-    ComputedPhysicalOffsets().top = nsLayoutUtils::
-      ComputeBSizeDependentValue(aCBSize.BSize(wm),
-                                 mStylePosition->mOffset.GetTop());
+    offsets.BStart(cbwm) = nsLayoutUtils::
+      ComputeBSizeDependentValue(cbSize.BSize(cbwm),
+                                 mStylePosition->mOffset.GetBStart(cbwm));
   }
-  if (eStyleUnit_Auto == mStylePosition->mOffset.GetBottomUnit()) {
-    ComputedPhysicalOffsets().bottom = 0;        
-    bottomIsAuto = true;
+  if (eStyleUnit_Auto == mStylePosition->mOffset.GetBEndUnit(cbwm)) {
+    offsets.BEnd(cbwm) = 0;
+    bEndIsAuto = true;
   } else {
-    ComputedPhysicalOffsets().bottom = nsLayoutUtils::
-      ComputeBSizeDependentValue(aCBSize.BSize(wm),
-                                 mStylePosition->mOffset.GetBottom());
+    offsets.BEnd(cbwm) = nsLayoutUtils::
+      ComputeBSizeDependentValue(cbSize.BSize(cbwm),
+                                 mStylePosition->mOffset.GetBEnd(cbwm));
   }
 
-  if (topIsAuto && bottomIsAuto) {
+  if (bStartIsAuto && bEndIsAuto) {
     // Treat 'top' like 'static-position'
-    ComputedPhysicalOffsets().top = hypotheticalBox.mTop;
-    topIsAuto = false;
+    NS_ASSERTION(hypotheticalBox.mWritingMode.GetBlockDir() == cbwm.GetBlockDir(),
+                 "block direction mismatch");
+    offsets.BStart(cbwm) = hypotheticalBox.mBStart;
+    bStartIsAuto = false;
   }
 
-  bool widthIsAuto = eStyleUnit_Auto == mStylePosition->mWidth.GetUnit();
-  bool heightIsAuto = eStyleUnit_Auto == mStylePosition->mHeight.GetUnit();
+  SetComputedLogicalOffsets(offsets.ConvertTo(wm, cbwm));
+
+  bool iSizeIsAuto = eStyleUnit_Auto == mStylePosition->ISize(cbwm).GetUnit();
+  bool bSizeIsAuto = eStyleUnit_Auto == mStylePosition->BSize(cbwm).GetUnit();
 
   typedef nsIFrame::ComputeSizeFlags ComputeSizeFlags;
   ComputeSizeFlags computeSizeFlags = ComputeSizeFlags::eDefault;
-  if (leftIsAuto || rightIsAuto) {
-    computeSizeFlags =
-      ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
+  if (wm.IsOrthogonalTo(cbwm)) {
+    if (bStartIsAuto || bEndIsAuto) {
+      computeSizeFlags =
+        ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
+    }
+  } else {
+    if (iStartIsAuto || iEndIsAuto) {
+      computeSizeFlags =
+        ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
+    }
   }
 
+  LogicalSize computedSize(wm);
   {
     AutoMaybeDisableFontInflation an(frame);
 
-    LogicalSize size =
-      frame->ComputeSize(rendContext, wm, aCBSize,
-                         aCBSize.ISize(wm), // XXX or AvailableISize()?
+    computedSize =
+      frame->ComputeSize(rendContext, wm, cbSize.ConvertTo(wm, cbwm),
+                         cbSize.ConvertTo(wm, cbwm).ISize(wm), // XXX or AvailableISize()?
                          ComputedLogicalMargin().Size(wm) +
                            ComputedLogicalOffsets().Size(wm),
                          ComputedLogicalBorderPadding().Size(wm) -
                            ComputedLogicalPadding().Size(wm),
                          ComputedLogicalPadding().Size(wm),
                          computeSizeFlags);
-    ComputedISize() = size.ISize(wm);
-    ComputedBSize() = size.BSize(wm);
+    ComputedISize() = computedSize.ISize(wm);
+    ComputedBSize() = computedSize.BSize(wm);
+    NS_ASSERTION(ComputedISize() >= 0, "Bogus inline-size");
+    NS_ASSERTION(ComputedBSize() == NS_UNCONSTRAINEDSIZE ||
+                 ComputedBSize() >= 0, "Bogus block-size");
   }
-  NS_ASSERTION(ComputedISize() >= 0, "Bogus inline-size");
-  NS_ASSERTION(ComputedBSize() == NS_UNCONSTRAINEDSIZE ||
-               ComputedBSize() >= 0, "Bogus block-size");
+  computedSize = computedSize.ConvertTo(cbwm, wm);
 
   // XXX Now that we have ComputeSize, can we condense many of the
   // branches off of widthIsAuto?
 
-  if (leftIsAuto) {
+  LogicalMargin margin = ComputedLogicalMargin().ConvertTo(cbwm, wm);
+  const LogicalMargin borderPadding =
+    ComputedLogicalBorderPadding().ConvertTo(cbwm, wm);
+
+  if (iStartIsAuto) {
     // We know 'right' is not 'auto' anymore thanks to the hypothetical
     // box code above.
     // Solve for 'left'.
-    if (widthIsAuto) {
+    if (iSizeIsAuto) {
       // XXXldb This, and the corresponding code in
       // nsAbsoluteContainingBlock.cpp, could probably go away now that
       // we always compute widths.
-      ComputedPhysicalOffsets().left = NS_AUTOOFFSET;
+      offsets.IStart(cbwm) = NS_AUTOOFFSET;
     } else {
-      ComputedPhysicalOffsets().left = aCBSize.Width(wm) - ComputedPhysicalMargin().left -
-        ComputedPhysicalBorderPadding().left - ComputedWidth() - ComputedPhysicalBorderPadding().right -
-        ComputedPhysicalMargin().right - ComputedPhysicalOffsets().right;
-
+      offsets.IStart(cbwm) =
+        cbSize.ISize(cbwm) - offsets.IEnd(cbwm) -
+        computedSize.ISize(cbwm) - margin.IStartEnd(cbwm) -
+        borderPadding.IStartEnd(cbwm);
     }
-  } else if (rightIsAuto) {
+  } else if (iEndIsAuto) {
     // We know 'left' is not 'auto' anymore thanks to the hypothetical
     // box code above.
     // Solve for 'right'.
-    if (widthIsAuto) {
+    if (iSizeIsAuto) {
       // XXXldb This, and the corresponding code in
       // nsAbsoluteContainingBlock.cpp, could probably go away now that
       // we always compute widths.
-      ComputedPhysicalOffsets().right = NS_AUTOOFFSET;
+      offsets.IEnd(cbwm) = NS_AUTOOFFSET;
     } else {
-      ComputedPhysicalOffsets().right = aCBSize.Width(wm) - ComputedPhysicalOffsets().left -
-        ComputedPhysicalMargin().left - ComputedPhysicalBorderPadding().left - ComputedWidth() -
-        ComputedPhysicalBorderPadding().right - ComputedPhysicalMargin().right;
+      offsets.IEnd(cbwm) =
+        cbSize.ISize(cbwm) - offsets.IStart(cbwm) -
+        computedSize.ISize(cbwm) - margin.IStartEnd(cbwm) -
+        borderPadding.IStartEnd(cbwm);
     }
   } else {
     // Neither 'left' nor 'right' is 'auto'.  However, the width might
@@ -1600,43 +1602,35 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
     //  * we're dealing with a replaced element
     //  * width was constrained by min-width or max-width.
 
-    nscoord availMarginSpace = aCBSize.Width(wm) -
-                               ComputedPhysicalOffsets().LeftRight() -
-                               ComputedPhysicalMargin().LeftRight() -
-                               ComputedPhysicalBorderPadding().LeftRight() -
-                               ComputedWidth();
-    bool marginLeftIsAuto =
-      eStyleUnit_Auto == mStyleMargin->mMargin.GetLeftUnit();
-    bool marginRightIsAuto =
-      eStyleUnit_Auto == mStyleMargin->mMargin.GetRightUnit();
+    nscoord availMarginSpace =
+      aCBSize.ISize(cbwm) - offsets.IStartEnd(cbwm) - margin.IStartEnd(cbwm) -
+      borderPadding.IStartEnd(cbwm) - computedSize.ISize(cbwm);
+    bool marginIStartIsAuto =
+      eStyleUnit_Auto == mStyleMargin->mMargin.GetIStartUnit(cbwm);
+    bool marginIEndIsAuto =
+      eStyleUnit_Auto == mStyleMargin->mMargin.GetIEndUnit(cbwm);
 
-    if (marginLeftIsAuto) {
-      if (marginRightIsAuto) {
+    if (marginIStartIsAuto) {
+      if (marginIEndIsAuto) {
         if (availMarginSpace < 0) {
           // Note that this case is different from the neither-'auto'
           // case below, where the spec says to ignore 'left'/'right'.
-          if (cbrs &&
-              NS_STYLE_DIRECTION_RTL == cbrs->mStyleVisibility->mDirection) {
-            // Ignore the specified value for 'margin-left'.
-            ComputedPhysicalMargin().left = availMarginSpace;
-          } else {
-            // Ignore the specified value for 'margin-right'.
-            ComputedPhysicalMargin().right = availMarginSpace;
-          }
+          // Ignore the specified value for 'margin-right'.
+          margin.IEnd(cbwm) = availMarginSpace;
         } else {
           // Both 'margin-left' and 'margin-right' are 'auto', so they get
           // equal values
-          ComputedPhysicalMargin().left = availMarginSpace / 2;
-          ComputedPhysicalMargin().right = availMarginSpace - ComputedPhysicalMargin().left;
+          margin.IStart(cbwm) = availMarginSpace / 2;
+          margin.IEnd(cbwm) = availMarginSpace - margin.IStart(cbwm);
         }
       } else {
         // Just 'margin-left' is 'auto'
-        ComputedPhysicalMargin().left = availMarginSpace;
+        margin.IStart(cbwm) = availMarginSpace;
       }
     } else {
-      if (marginRightIsAuto) {
+      if (marginIEndIsAuto) {
         // Just 'margin-right' is 'auto'
-        ComputedPhysicalMargin().right = availMarginSpace;
+        margin.IEnd(cbwm) = availMarginSpace;
       } else {
         // We're over-constrained so use the direction of the containing
         // block to dictate which value to ignore.  (And note that the
@@ -1645,95 +1639,100 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
         // Note that this case is different from the both-'auto' case
         // above, where the spec says to ignore
         // 'margin-left'/'margin-right'.
-        if (cbrs &&
-            NS_STYLE_DIRECTION_RTL == cbrs->mStyleVisibility->mDirection) {
-          // Ignore the specified value for 'left'.
-          ComputedPhysicalOffsets().left += availMarginSpace;
-        } else {
-          // Ignore the specified value for 'right'.
-          ComputedPhysicalOffsets().right += availMarginSpace;
-        }
+        // Ignore the specified value for 'right'.
+        offsets.IEnd(cbwm) += availMarginSpace;
       }
     }
   }
 
-  if (topIsAuto) {
-    // solve for 'top'
-    if (heightIsAuto) {
-      ComputedPhysicalOffsets().top = NS_AUTOOFFSET;
+  if (bStartIsAuto) {
+    // solve for block-start
+    if (bSizeIsAuto) {
+      offsets.BStart(cbwm) = NS_AUTOOFFSET;
     } else {
-      ComputedPhysicalOffsets().top = aCBSize.Height(wm) - ComputedPhysicalMargin().top -
-        ComputedPhysicalBorderPadding().top - ComputedHeight() - ComputedPhysicalBorderPadding().bottom - 
-        ComputedPhysicalMargin().bottom - ComputedPhysicalOffsets().bottom;
+      offsets.BStart(cbwm) = cbSize.BSize(cbwm) - margin.BStartEnd(cbwm) -
+        borderPadding.BStartEnd(cbwm) - computedSize.BSize(cbwm) -
+        offsets.BEnd(cbwm);
     }
-  } else if (bottomIsAuto) {
-    // solve for 'bottom'
-    if (heightIsAuto) {
-      ComputedPhysicalOffsets().bottom = NS_AUTOOFFSET;
+  } else if (bEndIsAuto) {
+    // solve for block-end
+    if (bSizeIsAuto) {
+      offsets.BEnd(cbwm) = NS_AUTOOFFSET;
     } else {
-      ComputedPhysicalOffsets().bottom = aCBSize.Height(wm) - ComputedPhysicalOffsets().top -
-        ComputedPhysicalMargin().top - ComputedPhysicalBorderPadding().top - ComputedHeight() -
-        ComputedPhysicalBorderPadding().bottom - ComputedPhysicalMargin().bottom;
+      offsets.BEnd(cbwm) = cbSize.BSize(cbwm) - margin.BStartEnd(cbwm) -
+        borderPadding.BStartEnd(cbwm) - computedSize.BSize(cbwm) -
+        offsets.BStart(cbwm);
     }
   } else {
-    // Neither 'top' nor 'bottom' is 'auto'.
-    nscoord autoHeight = aCBSize.Height(wm) -
-                         ComputedPhysicalOffsets().TopBottom() -
-                         ComputedPhysicalMargin().TopBottom() -
-                         ComputedPhysicalBorderPadding().TopBottom();
-    if (autoHeight < 0) {
-      autoHeight = 0;
+    // Neither block-start nor -end is 'auto'.
+    nscoord autoBSize = cbSize.BSize(cbwm) - margin.BStartEnd(cbwm) -
+      borderPadding.BStartEnd(cbwm) - offsets.BStartEnd(cbwm);
+    if (autoBSize < 0) {
+      autoBSize = 0;
     }
 
-    if (ComputedHeight() == NS_UNCONSTRAINEDSIZE) {
-      // For non-replaced elements with 'height' auto, the 'height'
+    if (computedSize.BSize(cbwm) == NS_UNCONSTRAINEDSIZE) {
+      // For non-replaced elements with block-size auto, the block-size
       // fills the remaining space.
-      ComputedHeight() = autoHeight;
+      computedSize.BSize(cbwm) = autoBSize;
 
       // XXX Do these need box-sizing adjustments?
-      if (ComputedHeight() > ComputedMaxHeight())
-        ComputedHeight() = ComputedMaxHeight();
-      if (ComputedHeight() < ComputedMinHeight())
-        ComputedHeight() = ComputedMinHeight();
+      LogicalSize maxSize =
+        LogicalSize(wm, ComputedMaxISize(),
+                    ComputedMaxBSize()).ConvertTo(cbwm, wm);
+      LogicalSize minSize =
+        LogicalSize(wm, ComputedMinISize(),
+                    ComputedMinBSize()).ConvertTo(cbwm, wm);
+      if (computedSize.BSize(cbwm) > maxSize.BSize(cbwm)) {
+        computedSize.BSize(cbwm) = maxSize.BSize(cbwm);
+      }
+      if (computedSize.BSize(cbwm) < minSize.BSize(cbwm)) {
+        computedSize.BSize(cbwm) = minSize.BSize(cbwm);
+      }
     }
 
-    // The height might still not fill all the available space in case:
-    //  * height was specified
+    // The block-size might still not fill all the available space in case:
+    //  * bsize was specified
     //  * we're dealing with a replaced element
-    //  * height was constrained by min-height or max-height.
-    nscoord availMarginSpace = autoHeight - ComputedHeight();
-    bool marginTopIsAuto =
-      eStyleUnit_Auto == mStyleMargin->mMargin.GetTopUnit();
-    bool marginBottomIsAuto =
-      eStyleUnit_Auto == mStyleMargin->mMargin.GetBottomUnit();
+    //  * bsize was constrained by min- or max-bsize.
+    nscoord availMarginSpace = autoBSize - computedSize.BSize(cbwm);
+    bool marginBStartIsAuto =
+      eStyleUnit_Auto == mStyleMargin->mMargin.GetBStartUnit(cbwm);
+    bool marginBEndIsAuto =
+      eStyleUnit_Auto == mStyleMargin->mMargin.GetBEndUnit(cbwm);
 
-    if (marginTopIsAuto) {
-      if (marginBottomIsAuto) {
+    if (marginBStartIsAuto) {
+      if (marginBEndIsAuto) {
         if (availMarginSpace < 0) {
           // FIXME: Note that the spec doesn't actually say we should do this!
-          ComputedPhysicalMargin().bottom = availMarginSpace;
+          margin.BEnd(cbwm) = availMarginSpace;
         } else {
-          // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
+          // Both margin-block-start and -end are 'auto', so they get
           // equal values
-          ComputedPhysicalMargin().top = availMarginSpace / 2;
-          ComputedPhysicalMargin().bottom = availMarginSpace - ComputedPhysicalMargin().top;
+          margin.BStart(cbwm) = availMarginSpace / 2;
+          margin.BEnd(cbwm) = availMarginSpace - margin.BStart(cbwm);
         }
       } else {
-        // Just 'margin-top' is 'auto'
-        ComputedPhysicalMargin().top = availMarginSpace;
+        // Just margin-block-start is 'auto'
+        margin.BStart(cbwm) = availMarginSpace;
       }
     } else {
-      if (marginBottomIsAuto) {
-        // Just 'margin-bottom' is 'auto'
-        ComputedPhysicalMargin().bottom = availMarginSpace;
+      if (marginBEndIsAuto) {
+        // Just margin-block-end is 'auto'
+        margin.BEnd(cbwm) = availMarginSpace;
       } else {
         // We're over-constrained so ignore the specified value for
-        // 'bottom'.  (And note that the spec says to ignore 'bottom'
+        // block-end.  (And note that the spec says to ignore 'bottom'
         // rather than 'margin-bottom'.)
-        ComputedPhysicalOffsets().bottom += availMarginSpace;
+        offsets.BEnd(cbwm) += availMarginSpace;
       }
     }
   }
+  ComputedBSize() = computedSize.ConvertTo(wm, cbwm).BSize(wm);
+  ComputedISize() = computedSize.ConvertTo(wm, cbwm).ISize(wm);
+
+  SetComputedLogicalOffsets(offsets.ConvertTo(wm, cbwm));
+  SetComputedLogicalMargin(margin.ConvertTo(wm, cbwm));
 }
 
 // This will not be converted to abstract coordinates because it's only
@@ -1764,7 +1763,8 @@ GetBlockMarginBorderPadding(const nsHTMLReflowState* aReflowState)
  * until it finds the canvas frame, or it encounters a frame that is not a block,
  * area, or scroll frame. This handles compatibility with IE (see bug 85016 and bug 219693)
  *
- *  When we encounter scrolledContent block frames, we skip over them, since they are guaranteed to not be useful for computing the containing block.
+ * When we encounter scrolledContent block frames, we skip over them,
+ * since they are guaranteed to not be useful for computing the containing block.
  *
  * See also IsQuirkContainingBlockHeight.
  */
@@ -1838,13 +1838,15 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
       if (firstAncestorRS) {
         nsIContent* frameContent = firstAncestorRS->frame->GetContent();
         if (frameContent) {
-          NS_ASSERTION(frameContent->IsHTMLElement(nsGkAtoms::html), "First ancestor is not HTML");
+          NS_ASSERTION(frameContent->IsHTMLElement(nsGkAtoms::html),
+                       "First ancestor is not HTML");
         }
       }
       if (secondAncestorRS) {
         nsIContent* frameContent = secondAncestorRS->frame->GetContent();
         if (frameContent) {
-          NS_ASSERTION(frameContent->IsHTMLElement(nsGkAtoms::body), "Second ancestor is not BODY");
+          NS_ASSERTION(frameContent->IsHTMLElement(nsGkAtoms::body),
+                       "Second ancestor is not BODY");
         }
       }
 #endif
@@ -2011,15 +2013,19 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
     ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
     ComputedPhysicalOffsets().SizeTo(0, 0, 0, 0);
 
-    ComputedWidth() = AvailableWidth() - ComputedPhysicalBorderPadding().LeftRight();
-    if (ComputedWidth() < 0)
-      ComputedWidth() = 0;
-    if (AvailableHeight() != NS_UNCONSTRAINEDSIZE) {
-      ComputedHeight() = AvailableHeight() - ComputedPhysicalBorderPadding().TopBottom();
-      if (ComputedHeight() < 0)
-        ComputedHeight() = 0;
+    ComputedISize() =
+      AvailableISize() - ComputedLogicalBorderPadding().IStartEnd(wm);
+    if (ComputedISize() < 0) {
+      ComputedISize() = 0;
+    }
+    if (AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
+      ComputedBSize() =
+        AvailableBSize() - ComputedLogicalBorderPadding().BStartEnd(wm);
+      if (ComputedBSize() < 0) {
+        ComputedBSize() = 0;
+      }
     } else {
-      ComputedHeight() = NS_UNCONSTRAINEDSIZE;
+      ComputedBSize() = NS_UNCONSTRAINEDSIZE;
     }
 
     ComputedMinWidth() = ComputedMinHeight() = 0;
@@ -2185,7 +2191,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
 
     } else if (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE) {
       // XXX not sure if this belongs here or somewhere else - cwk
-      InitAbsoluteConstraints(aPresContext, cbrs, cbSize, aFrameType);
+      InitAbsoluteConstraints(aPresContext, cbrs, cbSize.ConvertTo(cbrs->GetWritingMode(), wm), aFrameType);
     } else {
       AutoMaybeDisableFontInflation an(frame);
 
