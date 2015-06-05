@@ -25,6 +25,7 @@ ContentCache::ContentCache()
   , mCompositionEventsDuringRequest(0)
   , mIsComposing(false)
   , mRequestedToCommitOrCancelComposition(false)
+  , mIsChrome(XRE_GetProcessType() == GeckoProcessType_Default)
 {
 }
 
@@ -32,6 +33,10 @@ void
 ContentCache::Clear()
 {
   mText.Truncate();
+  mSelection.Clear();
+  mCaret.Clear();
+  mTextRectArray.Clear();
+  mEditorRect.SetEmpty();
 }
 
 bool
@@ -111,6 +116,11 @@ ContentCache::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
 bool
 ContentCache::CacheAll(nsIWidget* aWidget)
 {
+  // CacheAll() must be called in content process.
+  if (NS_WARN_IF(mIsChrome)) {
+    return false;
+  }
+
   if (NS_WARN_IF(!CacheText(aWidget)) ||
       NS_WARN_IF(!CacheSelection(aWidget)) ||
       NS_WARN_IF(!CacheTextRects(aWidget)) ||
@@ -123,6 +133,11 @@ ContentCache::CacheAll(nsIWidget* aWidget)
 bool
 ContentCache::CacheSelection(nsIWidget* aWidget)
 {
+  // CacheSelection() must be called in content process.
+  if (NS_WARN_IF(mIsChrome)) {
+    return false;
+  }
+
   mCaret.Clear();
   mSelection.Clear();
 
@@ -166,6 +181,11 @@ ContentCache::CacheSelection(nsIWidget* aWidget)
 bool
 ContentCache::CacheEditorRect(nsIWidget* aWidget)
 {
+  // CacheEditorRect() must be called in content process.
+  if (NS_WARN_IF(mIsChrome)) {
+    return false;
+  }
+
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetQueryContentEvent editorRectEvent(true, NS_QUERY_EDITOR_RECT, aWidget);
   aWidget->DispatchEvent(&editorRectEvent, status);
@@ -179,6 +199,11 @@ ContentCache::CacheEditorRect(nsIWidget* aWidget)
 bool
 ContentCache::CacheText(nsIWidget* aWidget)
 {
+  // CacheText() must be called in content process.
+  if (NS_WARN_IF(mIsChrome)) {
+    return false;
+  }
+
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetQueryContentEvent queryText(true, NS_QUERY_TEXT_CONTENT, aWidget);
   queryText.InitForQueryTextContent(0, UINT32_MAX);
@@ -194,6 +219,11 @@ ContentCache::CacheText(nsIWidget* aWidget)
 bool
 ContentCache::CacheTextRects(nsIWidget* aWidget)
 {
+  // CacheTextRects() must be called in content process.
+  if (NS_WARN_IF(mIsChrome)) {
+    return false;
+  }
+
   mTextRectArray.Clear();
 
   nsRefPtr<TextComposition> textComposition =

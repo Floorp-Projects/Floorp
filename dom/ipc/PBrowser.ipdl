@@ -215,11 +215,12 @@ parent:
                                           bool causedByComposition);
 
     /**
-     * Notifies chrome to refresh its text cache 
+     * Notifies chrome of updating its content cache.
+     * This is useful if content is modified but we don't need to notify IME.
      *
      *  contentCache Cache of content
      */
-    prio(urgent) async NotifyIMETextHint(ContentCache contentCache);
+    prio(urgent) async UpdateContentCache(ContentCache contentCache);
 
     /**
      * Notifies IME of mouse button event on a character in focused editor.
@@ -228,13 +229,6 @@ parent:
      */
     prio(urgent) sync NotifyIMEMouseButtonEvent(IMENotification notification)
       returns (bool consumedByIME);
-
-    /**
-     * Notifies chrome to currect editor rect
-     *
-     *  contentCache Cache of content
-     */
-    prio(urgent) async NotifyIMEEditorRect(ContentCache contentCache);
 
     /**
      * Notifies chrome to position change

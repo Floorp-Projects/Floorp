@@ -1977,8 +1977,13 @@ TabParent::RecvNotifyIMESelection(const ContentCache& aContentCache,
 }
 
 bool
-TabParent::RecvNotifyIMETextHint(const ContentCache& aContentCache)
+TabParent::RecvUpdateContentCache(const ContentCache& aContentCache)
 {
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
+
   mContentCache.AssignContent(aContentCache);
   return true;
 }
@@ -1996,13 +2001,6 @@ TabParent::RecvNotifyIMEMouseButtonEvent(
   }
   nsresult rv = widget->NotifyIME(aIMENotification);
   *aConsumedByIME = rv == NS_SUCCESS_EVENT_CONSUMED;
-  return true;
-}
-
-bool
-TabParent::RecvNotifyIMEEditorRect(const ContentCache& aContentCache)
-{
-  mContentCache.AssignContent(aContentCache);
   return true;
 }
 
