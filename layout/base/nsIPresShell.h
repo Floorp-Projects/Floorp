@@ -139,10 +139,10 @@ typedef struct CapturingContentInfo {
   mozilla::StaticRefPtr<nsIContent> mContent;
 } CapturingContentInfo;
 
-// a7ef8bb3-d628-4965-80f3-a326e089fb7f
+// 1033a12a-51a2-461c-9c83-d53d0b2ac0b7
 #define NS_IPRESSHELL_IID \
-{ 0xa7ef8bb3, 0xd628, 0x4965, \
-  { 0x80, 0xf3, 0xa3, 0x26, 0xe0, 0x89, 0xfb, 0x7f } }
+{ 0x1033a12a, 0x51a2, 0x461c, \
+  { 0x9c, 0x83, 0xd5, 0x3d, 0x0b, 0x2a, 0xc0, 0xb7 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1551,7 +1551,8 @@ public:
   // Clears the current list of visible images on this presshell and replaces it
   // with images that are in the display list aList.
   virtual void RebuildImageVisibilityDisplayList(const nsDisplayList& aList) = 0;
-  virtual void RebuildImageVisibility(nsRect* aRect = nullptr) = 0;
+  virtual void RebuildImageVisibility(nsRect* aRect = nullptr,
+                                      bool aRemoveOnly = false) = 0;
 
   // Ensures the image is in the list of visible images.
   virtual void EnsureImageInVisibleList(nsIImageLoadingContent* aImage) = 0;
