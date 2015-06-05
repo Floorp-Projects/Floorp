@@ -2207,10 +2207,10 @@ TabParent::SendSelectionEvent(WidgetSelectionEvent& event)
   if (mIsDestroyed) {
     return false;
   }
-  // XXX The writing mode is wrong, but this should cause a call of
-  //     RecvNotifyIMESelection().  If so, why do we need to modify the range
-  //     here??
-  mContentCache.SetSelection(event.mOffset, event.mLength, event.mReversed);
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
   return PBrowserParent::SendSelectionEvent(event);
 }
 

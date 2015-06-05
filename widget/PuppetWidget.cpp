@@ -701,8 +701,7 @@ PuppetWidget::NotifyIMEOfUpdateComposition(
 
   NS_ENSURE_TRUE(mTabChild, NS_ERROR_FAILURE);
 
-  if (NS_WARN_IF(!mContentCache.CacheTextRects(this, &aIMENotification)) ||
-      NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
+  if (NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
     return NS_ERROR_FAILURE;
   }
   mTabChild->SendNotifyIMESelectedCompositionRect(mContentCache);
@@ -741,10 +740,7 @@ PuppetWidget::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
   //      a user operation changes the content.  So, we need to modify
   //      the cache as far as possible here.
 
-  // When text is changed, selection and text rects must be changed too.
-  if (NS_WARN_IF(!mContentCache.CacheText(this, &aIMENotification)) ||
-      NS_WARN_IF(!mContentCache.CacheTextRects(this, &aIMENotification)) ||
-      NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
+  if (NS_WARN_IF(!mContentCache.CacheText(this, &aIMENotification))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -782,6 +778,7 @@ PuppetWidget::NotifyIMEOfSelectionChange(
   // Note that selection change must be notified after text change if it occurs.
   // Therefore, we don't need to query text content again here.
   mContentCache.SetSelection(
+    this,
     aIMENotification.mSelectionChangeData.mOffset,
     aIMENotification.mSelectionChangeData.mLength,
     aIMENotification.mSelectionChangeData.mReversed,
@@ -820,7 +817,6 @@ PuppetWidget::NotifyIMEOfPositionChange(const IMENotification& aIMENotification)
   }
 
   if (NS_WARN_IF(!mContentCache.CacheEditorRect(this, &aIMENotification)) ||
-      NS_WARN_IF(!mContentCache.CacheTextRects(this, &aIMENotification)) ||
       NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
     return NS_ERROR_FAILURE;
   }
