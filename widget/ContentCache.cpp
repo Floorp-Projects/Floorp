@@ -132,6 +132,10 @@ void
 ContentCache::AssignContent(const ContentCache& aOther,
                             const IMENotification* aNotification)
 {
+  if (NS_WARN_IF(!mIsChrome)) {
+    return;
+  }
+
   mText = aOther.mText;
   mSelection = aOther.mSelection;
   mCaret = aOther.mCaret;
@@ -160,6 +164,10 @@ ContentCache::Clear()
     ("ContentCache: 0x%p (mIsChrome=%s) Clear()",
      this, GetBoolName(mIsChrome)));
 
+  if (NS_WARN_IF(mIsChrome)) {
+    return;
+  }
+
   mText.Truncate();
   mSelection.Clear();
   mCaret.Clear();
@@ -172,6 +180,10 @@ ContentCache::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
                                       nsIWidget* aWidget) const
 {
   MOZ_ASSERT(aWidget);
+
+  if (NS_WARN_IF(!mIsChrome)) {
+    return false;
+  }
 
   aEvent.mSucceeded = false;
   aEvent.mWasAsync = false;
@@ -498,6 +510,10 @@ ContentCache::QueryCharRect(nsIWidget* aWidget,
 {
   aCharRect.SetEmpty();
 
+  if (NS_WARN_IF(mIsChrome)) {
+    return false;
+  }
+
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetQueryContentEvent textRect(true, NS_QUERY_TEXT_RECT, aWidget);
   textRect.InitForQueryTextRect(aOffset, 1);
@@ -750,6 +766,10 @@ ContentCache::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
      aEvent.mRanges ? aEvent.mRanges->Length() : 0, GetBoolName(mIsComposing),
      GetBoolName(mRequestedToCommitOrCancelComposition)));
 
+  if (NS_WARN_IF(!mIsChrome)) {
+    return false;
+  }
+
   if (!aEvent.CausesDOMTextEvent()) {
     MOZ_ASSERT(aEvent.message == NS_COMPOSITION_START);
     mIsComposing = !aEvent.CausesDOMCompositionEndEvent();
@@ -800,6 +820,10 @@ ContentCache::RequestToCommitComposition(nsIWidget* aWidget,
      GetBoolName(mIsComposing),
      GetBoolName(mRequestedToCommitOrCancelComposition),
      mCompositionEventsDuringRequest));
+
+  if (NS_WARN_IF(!mIsChrome)) {
+    return 0;
+  }
 
   mRequestedToCommitOrCancelComposition = true;
   mCompositionEventsDuringRequest = 0;

@@ -26,9 +26,13 @@ struct IMENotification;
 }
 
 /**
- * ContentCache stores various information of the child content.  This hides
- * raw information but you can access more useful information with a lot of
- * methods.
+ * ContentCache stores various information of the child content both on
+ * PuppetWidget (child process) and TabParent (chrome process).
+ * When PuppetWidget receives some notifications of content state change,
+ * Cache*() are called.  Then, stored data is modified for the latest content
+ * in PuppetWidget.  After that, PuppetWidget sends the ContentCache to
+ * TabParent.  In this time, TabParent stores the latest content data with
+ * AssignContent().
  */
 
 class ContentCache final
@@ -39,18 +43,25 @@ public:
 
   ContentCache();
 
+  /**
+   * When IME loses focus, this should be called and making this forget the
+   * content for reducing footprint.
+   * This must be called in content process.
+   */
   void Clear();
 
   /**
    * AssignContent() is called when TabParent receives ContentCache from
    * the content process.  This doesn't copy composition information because
    * it's managed by TabParent itself.
+   * This must be called in chrome process.
    */
   void AssignContent(const ContentCache& aOther,
                      const IMENotification* aNotification = nullptr);
 
   /**
    * HandleQueryContentEvent() sets content data to aEvent.mReply.
+   * This must be called in chrome process.
    *
    * For NS_QUERY_SELECTED_TEXT, fail if the cache doesn't contain the whole
    *  selected range. (This shouldn't happen because PuppetWidget should have
@@ -75,6 +86,9 @@ public:
 
   /**
    * Cache*() retrieves the latest content information and store them.
+   * Be aware, CacheSelection() calls CacheTextRects(), and also CacheText()
+   * calls CacheSelection().  So, related data is also retrieved automatically.
+   * These methods must be called in content process.
    */
   bool CacheEditorRect(nsIWidget* aWidget,
                        const IMENotification* aNotification = nullptr);
@@ -89,12 +103,14 @@ public:
   /**
    * OnCompositionEvent() should be called before sending composition string.
    * This returns true if the event should be sent.  Otherwise, false.
+   * This must be called in chrome process.
    */
   bool OnCompositionEvent(const WidgetCompositionEvent& aCompositionEvent);
   /**
    * RequestToCommitComposition() requests to commit or cancel composition to
    * the widget.  If it's handled synchronously, this returns the number of
    * composition events after that.
+   * This must be called in chrome process.
    *
    * @param aWidget     The widget to be requested to commit or cancel
    *                    the composition.
@@ -116,6 +132,11 @@ public:
    */
   void InitNotification(IMENotification& aNotification) const;
 
+  /**
+   * SetSelection() modifies selection with specified raw data. And also this
+   * tries to retrieve text rects too.
+   * This must be called in content process.
+   */
   void SetSelection(nsIWidget* aWidget,
                     uint32_t aStartOffset,
                     uint32_t aLength,
@@ -126,11 +147,14 @@ private:
   // Whole text in the target
   nsString mText;
   // This is commit string which is caused by our request.
+  // This value is valid only in chrome process.
   nsString mCommitStringByRequest;
   // Start offset of the composition string.
+  // This value is valid only in chrome process.
   uint32_t mCompositionStart;
   // Count of composition events during requesting commit or cancel the
   // composition.
+  // This value is valid only in chrome process.
   uint32_t mCompositionEventsDuringRequest;
 
   struct Selection final
@@ -242,7 +266,9 @@ private:
 
   LayoutDeviceIntRect mEditorRect;
 
+  // mIsComposing is valid only in chrome process.
   bool mIsComposing;
+  // mRequestedToCommitOrCancelComposition is valid only in chrome process.
   bool mRequestedToCommitOrCancelComposition;
   bool mIsChrome;
 
