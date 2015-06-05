@@ -46,7 +46,7 @@ public:
   // Implement VideoEncoder interface.
   virtual const uint64_t PluginID() override
   {
-    return mGMP ? mGMP->ParentID() : mCachedPluginId;
+    return mGMP ? mGMP->GetPluginId() : mCachedPluginId;
   }
 
   virtual void Terminated() override;
@@ -228,7 +228,7 @@ public:
   // Implement VideoDecoder interface.
   virtual const uint64_t PluginID() override
   {
-    return mGMP ? mGMP->ParentID() : mCachedPluginId;
+    return mGMP ? mGMP->GetPluginId() : mCachedPluginId;
   }
 
   virtual void Terminated() override;
