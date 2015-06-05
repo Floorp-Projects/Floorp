@@ -1798,9 +1798,6 @@ let Impl = {
         // bug 1127907 lands.
         Services.obs.notifyObservers(null, "gather-telemetry", null);
       }).bind(this), Ci.nsIThread.DISPATCH_NORMAL);
-      // TODO: This is just a fallback for now. Remove this when we have ping send
-      // scheduling properly factored out and driven independently of this module.
-      TelemetryController.sendPersistedPings();
       break;
 
 #ifdef MOZ_WIDGET_ANDROID

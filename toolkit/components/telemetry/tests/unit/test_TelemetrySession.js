@@ -18,6 +18,7 @@ Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
+Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -97,10 +98,10 @@ function truncateDateToDays(date) {
 function sendPing() {
   TelemetrySession.gatherStartup();
   if (gServerStarted) {
-    TelemetryController.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
+    TelemetrySend.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
     return TelemetrySession.testPing();
   } else {
-    TelemetryController.setServer("http://doesnotexist");
+    TelemetrySend.setServer("http://doesnotexist");
     return TelemetrySession.testPing();
   }
 }
@@ -855,7 +856,7 @@ add_task(function* test_dailyCollection() {
 
   // Init and check timer.
   yield TelemetrySession.setup();
-  TelemetryController.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
+  TelemetrySend.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
 
   // Set histograms to expected state.
   const COUNT_ID = "TELEMETRY_TEST_COUNT";
@@ -1066,7 +1067,7 @@ add_task(function* test_environmentChange() {
 
   // Setup.
   yield TelemetrySession.setup();
-  TelemetryController.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
+  TelemetrySend.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
   TelemetryEnvironment._watchPreferences(PREFS_TO_WATCH);
 
   // Set histograms to expected state.
