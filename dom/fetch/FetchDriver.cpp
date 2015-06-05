@@ -684,6 +684,13 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
     uint32_t responseStatus = 200;
     nsAutoCString statusText;
     response = new InternalResponse(responseStatus, NS_LITERAL_CSTRING("OK"));
+    ErrorResult result;
+    nsAutoCString contentType;
+    jarChannel->GetContentType(contentType);
+    response->Headers()->Append(NS_LITERAL_CSTRING("content-type"),
+                                contentType,
+                                result);
+    MOZ_ASSERT(!result.Failed());
   }
 
   // We open a pipe so that we can immediately set the pipe's read end as the

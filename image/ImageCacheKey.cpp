@@ -86,8 +86,10 @@ bool
 ImageCacheKey::operator==(const ImageCacheKey& aOther) const
 {
   if (mBlobSerial || aOther.mBlobSerial) {
-    // If at least one of us has a blob serial, just compare those.
-    return mBlobSerial == aOther.mBlobSerial;
+    // If at least one of us has a blob serial, just compare the blob serial and
+    // the ref portion of the URIs.
+    return mBlobSerial == aOther.mBlobSerial &&
+           mURI->HasSameRef(*aOther.mURI);
   }
 
   // For non-blob URIs, compare the URIs.
@@ -109,8 +111,13 @@ ImageCacheKey::ComputeHash(ImageURL* aURI,
 
   if (aBlobSerial) {
     // For blob URIs, we hash the serial number of the underlying blob, so that
-    // different blob URIs which point to the same blob share a cache entry.
-    return HashGeneric(*aBlobSerial);
+    // different blob URIs which point to the same blob share a cache entry. We
+    // also include the ref portion of the URI to support -moz-samplesize and
+    // -moz-resolution, which require us to create different Image objects even
+    // if the source data is the same.
+    nsAutoCString ref;
+    aURI->GetRef(ref);
+    return HashGeneric(*aBlobSerial, HashString(ref));
   }
 
   // For non-blob URIs, we hash the URI spec.

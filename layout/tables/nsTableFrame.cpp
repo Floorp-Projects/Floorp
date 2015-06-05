@@ -2688,7 +2688,7 @@ nsTableFrame::InitChildReflowState(nsHTMLReflowState& aReflowState)
     collapseBorder = border.GetPhysicalMargin(wm);
     pCollapseBorder = &collapseBorder;
   }
-  aReflowState.Init(presContext, -1, -1, pCollapseBorder, &padding);
+  aReflowState.Init(presContext, nullptr, pCollapseBorder, &padding);
 
   NS_ASSERTION(!mBits.mResizedColumns ||
                !aReflowState.parentReflowState->mFlags.mSpecialHeightReflow,
@@ -2856,8 +2856,8 @@ nsTableFrame::SetupHeaderFooterChild(const nsTableReflowState& aReflowState,
   LogicalSize availSize = aReflowState.reflowState.AvailableSize(wm);
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   nsHTMLReflowState kidReflowState(presContext, aReflowState.reflowState,
-                                   aFrame, availSize,
-                                   -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
+                                   aFrame, availSize, nullptr,
+                                   nsHTMLReflowState::CALLER_WILL_INIT);
   InitChildReflowState(kidReflowState);
   kidReflowState.mFlags.mIsTopOfPage = true;
   nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
@@ -2884,7 +2884,7 @@ nsTableFrame::PlaceRepeatedFooter(nsTableReflowState& aReflowState,
   nsHTMLReflowState footerReflowState(presContext,
                                       aReflowState.reflowState,
                                       aTfoot, kidAvailSize,
-                                      -1, -1,
+                                      nullptr,
                                       nsHTMLReflowState::CALLER_WILL_INIT);
   InitChildReflowState(footerReflowState);
   aReflowState.y += GetRowSpacing(GetRowCount());
@@ -3011,7 +3011,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
                                        kidFrame,
                                        LogicalSize(kidFrame->GetWritingMode(),
                                                    kidAvailSize),
-                                       -1, -1,
+                                       nullptr,
                                        nsHTMLReflowState::CALLER_WILL_INIT);
       InitChildReflowState(kidReflowState);
 

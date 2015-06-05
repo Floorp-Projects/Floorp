@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<html class="reftest-wait">
+
+<body>
+  <img id="test">
+</body>
+
+<script>
+  var image = new Image;
+
+  image.onload = function() {
+    // Create a canvas.
+    var canvas = document.createElement('canvas');
+    canvas.width = 100;
+    canvas.height = 100;
+
+    // Draw the image into the canvas.
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(image, 0, 0);
+
+    // Convert the image into a blob URI and use it as #test's src.
+    canvas.toBlob(function(blob) {
+      var uri = window.URL.createObjectURL(blob);
+      document.getElementById('test').src = uri;
+
+      // Take the snapshot.
+      document.documentElement.removeAttribute('class');
+    }, 'image/jpeg', 0.99);
+  }
+
+  // Start loading the image.
+  image.src = 'image.png';
+</script>
+
+</html>

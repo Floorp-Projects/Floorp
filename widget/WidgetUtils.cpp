@@ -93,6 +93,8 @@ nsIntRect RotateRect(nsIntRect aRect,
   }
 }
 
+namespace widget {
+
 uint32_t
 WidgetUtils::IsTouchDeviceSupportPresent()
 {
@@ -103,4 +105,5 @@ WidgetUtils::IsTouchDeviceSupportPresent()
 #endif
 }
 
+} // namespace widget
 } // namespace mozilla
