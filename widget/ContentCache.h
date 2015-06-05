@@ -21,6 +21,10 @@ class nsIWidget;
 
 namespace mozilla {
 
+namespace widget {
+struct IMENotification;
+}
+
 /**
  * ContentCache stores various information of the child content.  This hides
  * raw information but you can access more useful information with a lot of
@@ -31,6 +35,7 @@ class ContentCache final
 {
 public:
   typedef InfallibleTArray<LayoutDeviceIntRect> RectArray;
+  typedef widget::IMENotification IMENotification;
 
   ContentCache();
 
@@ -41,14 +46,8 @@ public:
    * the content process.  This doesn't copy composition information because
    * it's managed by TabParent itself.
    */
-  void AssignContent(const ContentCache& aOther)
-  {
-    mText = aOther.mText;
-    mSelection = aOther.mSelection;
-    mCaret = aOther.mCaret;
-    mTextRectArray = aOther.mTextRectArray;
-    mEditorRect = aOther.mEditorRect;
-  }
+  void AssignContent(const ContentCache& aOther,
+                     const IMENotification* aNotification = nullptr);
 
   /**
    * HandleQueryContentEvent() sets content data to aEvent.mReply.
@@ -77,12 +76,17 @@ public:
   /**
    * Cache*() retrieves the latest content information and store them.
    */
-  bool CacheEditorRect(nsIWidget* aWidget);
-  bool CacheSelection(nsIWidget* aWidget);
-  bool CacheText(nsIWidget* aWidget);
-  bool CacheTextRects(nsIWidget* aWidget);
+  bool CacheEditorRect(nsIWidget* aWidget,
+                       const IMENotification* aNotification = nullptr);
+  bool CacheSelection(nsIWidget* aWidget,
+                      const IMENotification* aNotification = nullptr);
+  bool CacheText(nsIWidget* aWidget,
+                 const IMENotification* aNotification = nullptr);
+  bool CacheTextRects(nsIWidget* aWidget,
+                      const IMENotification* aNotification = nullptr);
 
-  bool CacheAll(nsIWidget* aWidget);
+  bool CacheAll(nsIWidget* aWidget,
+                const IMENotification* aNotification = nullptr);
 
   /**
    * OnCompositionEvent() should be called before sending composition string.
@@ -108,15 +112,11 @@ public:
                                       nsAString& aLastString);
 
   /**
-   * NotifyIMEOfSelectionChange() notifies IME of selection change with
-   * storing selection range.
+   * InitNotification() initializes aNotification with stored data.
    *
-   * @param aWidget                 A widget to notify IME of the notification.
-   * @param aCausedByComposition    true if the change is caused by composition.
-   *                                Otherwise, false.
+   * @param aNotification       Must be NOTIFY_IME_OF_SELECTION_CHANGE.
    */
-  void NotifyIMEOfSelectionChange(nsIWidget* aWidget,
-                                  bool aCausedByComposition) const;
+  void InitNotification(IMENotification& aNotification) const;
 
   void SetSelection(uint32_t aCaretOffset, const WritingMode& aWritingMode)
   {
