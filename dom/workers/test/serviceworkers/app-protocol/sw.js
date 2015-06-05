@@ -21,4 +21,8 @@ self.addEventListener('fetch', (event) => {
   if (event.request.url.indexOf('redirected.html') >= 0) {
     event.respondWith(fetch("http://example.com/tests/dom/workers/test/serviceworkers/app-protocol/redirect.sjs"));
   }
+
+  if (event.request.url.indexOf('redirected-https.html') >= 0) {
+    event.respondWith(fetch("https://example.com/tests/dom/workers/test/serviceworkers/app-protocol/redirect-https.sjs"));
+  }
 });

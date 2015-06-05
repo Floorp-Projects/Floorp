@@ -96,6 +96,7 @@ http://example.net:80                privileged
 http://prefixexample.com:80
 
 https://example.com:443                privileged
+https://example.org:443                privileged
 https://test1.example.com:443          privileged
 https://test2.example.com:443          privileged
 https://sub1.test1.example.com:443     privileged
