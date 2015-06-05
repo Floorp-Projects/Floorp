@@ -103,6 +103,12 @@ function loadControlled() {
         ok(true, "Message from app: " + message);
       } else if (/KO/.exec(message)) {
         ok(false, "Message from app: " + message);
+      } else if (/HTTPSIFRAMELOADED/.exec(message)) {
+        let doc = SpecialPowers.wrap(iframe).contentDocument;
+        let innerDoc = SpecialPowers.wrap(doc.getElementById("redirected-https").contentDocument);
+        let innerLocation = innerDoc.defaultView.location;
+        is(innerDoc.domain, "example.org", "Correct domain expected (https)");
+        is(innerLocation.origin, "https://example.org", "Correct origin expected (https)");
       } else if (/IFRAMELOADED/.exec(message)) {
         let doc = SpecialPowers.wrap(iframe).contentDocument;
         let innerDoc = SpecialPowers.wrap(doc.getElementById("redirected").contentDocument);
