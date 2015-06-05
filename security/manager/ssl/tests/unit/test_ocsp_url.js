@@ -25,14 +25,14 @@ function start_ocsp_responder(expectedCertNames, expectedPaths) {
 }
 
 function check_cert_err(cert_name, expected_error) {
-  let cert = constructCertFromFile("test_ocsp_url/" + cert_name + ".der");
+  let cert = constructCertFromFile("test_ocsp_url/" + cert_name + ".pem");
   return checkCertErrorGeneric(certdb, cert, expected_error,
                                certificateUsageSSLServer);
 }
 
 function run_test() {
-  addCertFromFile(certdb, "test_ocsp_url/ca.der", 'CTu,CTu,CTu');
-  addCertFromFile(certdb, "test_ocsp_url/int.der", ',,');
+  addCertFromFile(certdb, "test_ocsp_url/ca.pem", 'CTu,CTu,CTu');
+  addCertFromFile(certdb, "test_ocsp_url/int.pem", ',,');
 
   // Enabled so that we can force ocsp failure responses.
   Services.prefs.setBoolPref("security.OCSP.require", true);
@@ -44,7 +44,7 @@ function run_test() {
   add_test(function() {
     clearOCSPCache();
     let ocspResponder = failingOCSPResponder();
-    check_cert_err("bad-scheme",SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
+    check_cert_err("bad-scheme", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
     ocspResponder.stop(run_next_test);
   });
 
