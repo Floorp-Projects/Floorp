@@ -7,6 +7,7 @@
 #ifndef mozilla_SandboxFilter_h
 #define mozilla_SandboxFilter_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/UniquePtr.h"
 
 namespace sandbox {
@@ -22,7 +23,12 @@ UniquePtr<sandbox::bpf_dsl::Policy> GetContentSandboxPolicy();
 #endif
 
 #ifdef MOZ_GMP_SANDBOX
-UniquePtr<sandbox::bpf_dsl::Policy> GetMediaSandboxPolicy();
+struct SandboxOpenedFile {
+  const char *mPath;
+  Atomic<int> mFd;
+};
+
+UniquePtr<sandbox::bpf_dsl::Policy> GetMediaSandboxPolicy(SandboxOpenedFile* aPlugin);
 #endif
 
 } // namespace mozilla
