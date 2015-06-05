@@ -43,20 +43,7 @@ xpcom_ds_src = [
     'nsStringEnumerator.cpp',
     'nsSupportsPrimitives.cpp',
 ]
-if CONFIG['OS_ARCH'] == 'WINNT':
-    xpcom_ds_src += [
-        'TimeStamp_windows.cpp',
-    ]
-elif CONFIG['HAVE_CLOCK_MONOTONIC']:
-    xpcom_ds_src += [
-        'TimeStamp_posix.cpp',
-    ]
-elif CONFIG['OS_ARCH'] == 'Darwin':
-    xpcom_ds_src += [
-        'TimeStamp_darwin.cpp',
-    ]
-elif CONFIG['COMPILE_ENVIRONMENT']:
-    error('No TimeStamp implementation on this platform.  Build will not succeed')
+
 src_list += [
     '/xpcom/ds/%s' % s for s in xpcom_ds_src
 ]
