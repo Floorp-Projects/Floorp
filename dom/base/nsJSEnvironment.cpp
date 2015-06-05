@@ -2868,7 +2868,7 @@ mozilla::dom::ShutdownJSEnvironment()
 // on-the-fly.
 class nsJSArgArray final : public nsIJSArgArray {
 public:
-  nsJSArgArray(JSContext *aContext, uint32_t argc, JS::Value *argv,
+  nsJSArgArray(JSContext *aContext, uint32_t argc, const JS::Value* argv,
                nsresult *prv);
 
   // nsISupports
@@ -2891,11 +2891,11 @@ protected:
   uint32_t mArgc;
 };
 
-nsJSArgArray::nsJSArgArray(JSContext *aContext, uint32_t argc, JS::Value *argv,
-                           nsresult *prv) :
-    mContext(aContext),
-    mArgv(nullptr),
-    mArgc(argc)
+nsJSArgArray::nsJSArgArray(JSContext *aContext, uint32_t argc,
+                           const JS::Value* argv, nsresult *prv)
+  : mContext(aContext)
+  , mArgv(nullptr)
+  , mArgc(argc)
 {
   // copy the array - we don't know its lifetime, and ours is tied to xpcom
   // refcounting.
@@ -3010,12 +3010,11 @@ NS_IMETHODIMP nsJSArgArray::Enumerate(nsISimpleEnumerator **_retval)
 }
 
 // The factory function
-nsresult NS_CreateJSArgv(JSContext *aContext, uint32_t argc, void *argv,
-                         nsIJSArgArray **aArray)
+nsresult NS_CreateJSArgv(JSContext *aContext, uint32_t argc,
+                         const JS::Value* argv, nsIJSArgArray **aArray)
 {
   nsresult rv;
-  nsCOMPtr<nsIJSArgArray> ret = new nsJSArgArray(aContext, argc,
-                                                static_cast<JS::Value *>(argv), &rv);
+  nsCOMPtr<nsIJSArgArray> ret = new nsJSArgArray(aContext, argc, argv, &rv);
   if (NS_FAILED(rv)) {
     return rv;
   }

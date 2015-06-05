@@ -469,10 +469,10 @@ class MachCommands(MachCommandBase):
         driver = self._spawn(BuildDriver)
         driver.install_tests(remove=False)
 
-        structured.commandline.formatter_option_defaults['verbose'] = True
         params['log'] = structured.commandline.setup_logging("XPCShellTests",
                                                              params,
-                                                             {"mach": sys.stdout})
+                                                             {"mach": sys.stdout},
+                                                             {"verbose": True})
 
         if conditions.is_android(self):
             xpcshell = self._spawn(AndroidXPCShellRunner)

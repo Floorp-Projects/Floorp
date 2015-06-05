@@ -101,6 +101,11 @@ public:
     return mSpec == aOther.mSpec;
   }
 
+  bool HasSameRef(const ImageURL& aOther) const
+  {
+    return mRef == aOther.mRef;
+  }
+
 private:
   // Since this is a basic storage class, no duplication of spec parsing is
   // included in the functionality. Instead, the class depends upon the

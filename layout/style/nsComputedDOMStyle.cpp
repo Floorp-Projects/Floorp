@@ -4006,6 +4006,31 @@ nsComputedDOMStyle::DoGetDisplay()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetContain()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+
+  int32_t mask = StyleDisplay()->mContain;
+
+  if (mask == 0) {
+    val->SetIdent(eCSSKeyword_none);
+  } else if (mask & NS_STYLE_CONTAIN_STRICT) {
+    NS_ASSERTION(mask == (NS_STYLE_CONTAIN_STRICT | NS_STYLE_CONTAIN_ALL_BITS),
+                 "contain: strict should imply contain: layout style paint");
+    val->SetIdent(eCSSKeyword_strict);
+  } else {
+    nsAutoString valueStr;
+
+    nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_contain,
+                                       mask, NS_STYLE_CONTAIN_LAYOUT,
+                                       NS_STYLE_CONTAIN_PAINT, valueStr);
+    val->SetString(valueStr);
+  }
+
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetPosition()
 {
   nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
