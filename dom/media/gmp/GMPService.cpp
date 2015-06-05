@@ -35,6 +35,9 @@
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 
+#include "mozilla/dom/PluginCrashedEvent.h"
+#include "mozilla/EventDispatcher.h"
+
 namespace mozilla {
 
 #ifdef LOG
@@ -163,33 +166,115 @@ GeckoMediaPluginService::RemoveObsoletePluginCrashCallbacks()
 {
   MOZ_ASSERT(NS_IsMainThread());
   for (size_t i = mPluginCrashCallbacks.Length(); i != 0; --i) {
-    nsRefPtr<PluginCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
+    nsRefPtr<GMPCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
     if (!callback->IsStillValid()) {
       LOGD(("%s::%s - Removing obsolete callback for pluginId %i",
-            __CLASS__, __FUNCTION__, callback->PluginId()));
+            __CLASS__, __FUNCTION__, callback->GetPluginId()));
       mPluginCrashCallbacks.RemoveElementAt(i - 1);
     }
   }
 }
 
-void
-GeckoMediaPluginService::AddPluginCrashCallback(
-  nsRefPtr<PluginCrashCallback> aPluginCrashCallback)
+GeckoMediaPluginService::GMPCrashCallback::GMPCrashCallback(const uint32_t aPluginId,
+                                                            nsPIDOMWindow* aParentWindow,
+                                                            nsIDocument* aDocument)
+  : mPluginId(aPluginId)
+  , mParentWindowWeakPtr(do_GetWeakReference(aParentWindow))
+  , mDocumentWeakPtr(do_GetWeakReference(aDocument))
 {
-  RemoveObsoletePluginCrashCallbacks();
-  mPluginCrashCallbacks.AppendElement(aPluginCrashCallback);
+  MOZ_ASSERT(NS_IsMainThread());
 }
 
 void
-GeckoMediaPluginService::RemovePluginCrashCallbacks(const uint32_t aPluginId)
+GeckoMediaPluginService::GMPCrashCallback::Run(const nsACString& aPluginName)
 {
+  dom::PluginCrashedEventInit init;
+  init.mPluginID = mPluginId;
+  init.mBubbles = true;
+  init.mCancelable = true;
+  init.mGmpPlugin = true;
+  CopyUTF8toUTF16(aPluginName, init.mPluginName);
+  init.mSubmittedCrashReport = false;
+
+  // The following PluginCrashedEvent fields stay empty:
+  // init.mBrowserDumpID
+  // init.mPluginFilename
+  // TODO: Can/should we fill them?
+
+  nsCOMPtr<nsPIDOMWindow> parentWindow;
+  nsCOMPtr<nsIDocument> document;
+  if (!GetParentWindowAndDocumentIfValid(parentWindow, document)) {
+    return;
+  }
+
+  nsRefPtr<dom::PluginCrashedEvent> event =
+    dom::PluginCrashedEvent::Constructor(document, NS_LITERAL_STRING("PluginCrashed"), init);
+  event->SetTrusted(true);
+  event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+
+  EventDispatcher::DispatchDOMEvent(parentWindow, nullptr, event, nullptr, nullptr);
+}
+
+bool
+GeckoMediaPluginService::GMPCrashCallback::IsStillValid()
+{
+  nsCOMPtr<nsPIDOMWindow> parentWindow;
+  nsCOMPtr<nsIDocument> document;
+  return GetParentWindowAndDocumentIfValid(parentWindow, document);
+}
+
+bool
+GeckoMediaPluginService::GMPCrashCallback::GetParentWindowAndDocumentIfValid(
+  nsCOMPtr<nsPIDOMWindow>& parentWindow,
+  nsCOMPtr<nsIDocument>& document)
+{
+  parentWindow = do_QueryReferent(mParentWindowWeakPtr);
+  if (!parentWindow) {
+    return false;
+  }
+  document = do_QueryReferent(mDocumentWeakPtr);
+  if (!document) {
+    return false;
+  }
+  nsCOMPtr<nsIDocument> parentWindowDocument = parentWindow->GetExtantDoc();
+  if (!parentWindowDocument || document.get() != parentWindowDocument.get()) {
+    return false;
+  }
+  return true;
+}
+
+void
+GeckoMediaPluginService::AddPluginCrashedEventTarget(const uint32_t aPluginId,
+                                                     nsPIDOMWindow* aParentWindow)
+{
+  LOGD(("%s::%s(%i)", __CLASS__, __FUNCTION__, aPluginId));
+
+  if (NS_WARN_IF(!aParentWindow)) {
+    return;
+  }
+  nsCOMPtr<nsIDocument> doc = aParentWindow->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    return;
+  }
+  nsRefPtr<GMPCrashCallback> callback(new GMPCrashCallback(aPluginId, aParentWindow, doc));
   RemoveObsoletePluginCrashCallbacks();
-  for (size_t i = mPluginCrashCallbacks.Length(); i != 0; --i) {
-    nsRefPtr<PluginCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
-    if (callback->PluginId() == aPluginId) {
-      mPluginCrashCallbacks.RemoveElementAt(i - 1);
+
+  // If the plugin with that ID has already crashed without being handled,
+  // just run the handler now.
+  for (size_t i = mPluginCrashes.Length(); i != 0; --i) {
+    size_t index = i - 1;
+    const PluginCrash& crash = mPluginCrashes[index];
+    if (crash.mPluginId == aPluginId) {
+      LOGD(("%s::%s(%i) - added crash handler for crashed plugin, running handler #%u",
+        __CLASS__, __FUNCTION__, aPluginId, index));
+      callback->Run(crash.mPluginName);
+      mPluginCrashes.RemoveElementAt(index);
     }
   }
+
+  // Remember crash, so if a handler is added for it later, we report the
+  // crash to that window too.
+  mPluginCrashCallbacks.AppendElement(callback);
 }
 
 void
@@ -198,19 +283,20 @@ GeckoMediaPluginService::RunPluginCrashCallbacks(const uint32_t aPluginId,
 {
   MOZ_ASSERT(NS_IsMainThread());
   LOGD(("%s::%s(%i)", __CLASS__, __FUNCTION__, aPluginId));
+  RemoveObsoletePluginCrashCallbacks();
+
   for (size_t i = mPluginCrashCallbacks.Length(); i != 0; --i) {
-    nsRefPtr<PluginCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
-    const uint32_t callbackPluginId = callback->PluginId();
-    if (!callback->IsStillValid()) {
-      LOGD(("%s::%s(%i) - Removing obsolete callback for pluginId %i",
-            __CLASS__, __FUNCTION__, aPluginId, callback->PluginId()));
-      mPluginCrashCallbacks.RemoveElementAt(i - 1);
-    } else if (callbackPluginId == aPluginId) {
+    nsRefPtr<GMPCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
+    if (callback->GetPluginId() == aPluginId) {
       LOGD(("%s::%s(%i) - Running #%u",
           __CLASS__, __FUNCTION__, aPluginId, i - 1));
       callback->Run(aPluginName);
       mPluginCrashCallbacks.RemoveElementAt(i - 1);
     }
+  }
+  mPluginCrashes.AppendElement(PluginCrash(aPluginId, aPluginName));
+  if (mPluginCrashes.Length() > MAX_PLUGIN_CRASHES) {
+    mPluginCrashes.RemoveElementAt(0);
   }
 }
 

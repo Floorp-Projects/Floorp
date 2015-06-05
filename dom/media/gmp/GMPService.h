@@ -15,6 +15,9 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIThread.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDocument.h"
+#include "nsIWeakReference.h"
 
 template <class> struct already_AddRefed;
 
@@ -61,36 +64,20 @@ public:
 
   int32_t AsyncShutdownTimeoutMs();
 
-  class PluginCrashCallback
-  {
-  public:
-    NS_INLINE_DECL_REFCOUNTING(PluginCrashCallback)
-
-    PluginCrashCallback(const uint32_t aPluginId)
-      : mPluginId(aPluginId)
-    {
-      MOZ_ASSERT(NS_IsMainThread());
-    }
-    const uint32_t PluginId() const { return mPluginId; }
-    virtual void Run(const nsACString& aPluginName) = 0;
-    virtual bool IsStillValid() = 0; // False if callback has become useless.
-  protected:
-    virtual ~PluginCrashCallback()
-    {
-      MOZ_ASSERT(NS_IsMainThread());
-    }
-  private:
-    const uint32_t mPluginId;
-  };
-  void RemoveObsoletePluginCrashCallbacks(); // Called from add/remove/run.
-  void AddPluginCrashCallback(nsRefPtr<PluginCrashCallback> aPluginCrashCallback);
-  void RemovePluginCrashCallbacks(const uint32_t aPluginId);
   void RunPluginCrashCallbacks(const uint32_t aPluginId,
                                const nsACString& aPluginName);
+
+  // Sets the window to which 'PluginCrashed' chromeonly event is dispatched.
+  // Note: if the plugin has crashed before the target window has been set,
+  // the 'PluginCrashed' event is dispatched as soon as a target window is set.
+  void AddPluginCrashedEventTarget(const uint32_t aPluginId,
+                                   nsPIDOMWindow* aParentWindow);
 
 protected:
   GeckoMediaPluginService();
   virtual ~GeckoMediaPluginService();
+
+  void RemoveObsoletePluginCrashCallbacks(); // Called from add/run.
 
   virtual void InitializePlugins() = 0;
   virtual bool GetContentParentFrom(const nsACString& aNodeId,
@@ -101,14 +88,54 @@ protected:
   nsresult GMPDispatch(nsIRunnable* event, uint32_t flags = NS_DISPATCH_NORMAL);
   void ShutdownGMPThread();
 
-protected:
   Mutex mMutex; // Protects mGMPThread and mGMPThreadShutdown and some members
                 // in derived classes.
   nsCOMPtr<nsIThread> mGMPThread;
   bool mGMPThreadShutdown;
   bool mShuttingDownOnGMPThread;
 
-  nsTArray<nsRefPtr<PluginCrashCallback>> mPluginCrashCallbacks;
+  class GMPCrashCallback
+  {
+  public:
+    NS_INLINE_DECL_REFCOUNTING(GMPCrashCallback)
+
+    GMPCrashCallback(const uint32_t aPluginId,
+                     nsPIDOMWindow* aParentWindow,
+                     nsIDocument* aDocument);
+    void Run(const nsACString& aPluginName);
+    bool IsStillValid();
+    const uint32_t GetPluginId() const { return mPluginId; }
+  private:
+    virtual ~GMPCrashCallback() { MOZ_ASSERT(NS_IsMainThread()); }
+
+    bool GetParentWindowAndDocumentIfValid(nsCOMPtr<nsPIDOMWindow>& parentWindow,
+                                           nsCOMPtr<nsIDocument>& document);
+    const uint32_t mPluginId;
+    nsWeakPtr mParentWindowWeakPtr;
+    nsWeakPtr mDocumentWeakPtr;
+  };
+
+  struct PluginCrash
+  {
+    PluginCrash(uint32_t aPluginId,
+                const nsACString& aPluginName)
+      : mPluginId(aPluginId)
+      , mPluginName(aPluginName)
+    {
+    }
+    uint32_t mPluginId;
+    nsCString mPluginName;
+
+    bool operator==(const PluginCrash& aOther) const {
+      return mPluginId == aOther.mPluginId &&
+             mPluginName == aOther.mPluginName;
+    }
+  };
+
+  static const size_t MAX_PLUGIN_CRASHES = 100;
+  nsTArray<PluginCrash> mPluginCrashes;
+
+  nsTArray<nsRefPtr<GMPCrashCallback>> mPluginCrashCallbacks;
 };
 
 } // namespace gmp
