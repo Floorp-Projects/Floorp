@@ -18,6 +18,10 @@ UNIFIED_SOURCES += [
     'gfxVROculus.cpp',
 ]
 
+SOURCES += [
+    'gfxVROculus050.cpp',
+]
+
 # For building with the real SDK instead of our local hack
 #SOURCES += [
 #    'OVR_CAPI_Util.cpp',
