@@ -350,8 +350,6 @@ MediaDecoder::MediaDecoder() :
   mMediaSeekable(true),
   mSameOriginMedia(false),
   mReentrantMonitor("media.decoder"),
-  mNetworkDuration(AbstractThread::MainThread(), NullableTimeUnit(),
-                   "MediaDecoder::mNetworkDuration (Canonical)"),
   mEstimatedDuration(AbstractThread::MainThread(), NullableTimeUnit(),
                      "MediaDecoder::mEstimatedDuration (Canonical)"),
   mExplicitDuration(AbstractThread::MainThread(), Maybe<double>(),
@@ -1096,28 +1094,6 @@ void MediaDecoder::DurationChanged(TimeUnit aNewDuration)
   if (CurrentPosition() > aNewDuration.ToMicroseconds()) {
     Seek(aNewDuration.ToSeconds(), SeekTarget::Accurate);
   }
-}
-
-void MediaDecoder::SetNetworkDuration(TimeUnit aNetworkDuration)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mNetworkDuration = Some(aNetworkDuration);
-
-  // XXXbholley - it doesn't really make sense to change mDuration here, but
-  // we leave it for this patch. This will change in subsequent patches.
-  double aDuration = aNetworkDuration.ToSeconds();
-  if (mozilla::IsInfinite(aDuration)) {
-    SetInfinite(true);
-  } else if (IsNaN(aDuration)) {
-    mDuration = -1;
-    SetInfinite(true);
-  } else {
-    mDuration = static_cast<int64_t>(NS_round(aDuration * static_cast<double>(USECS_PER_S)));
-  }
-
-  // Duration has changed so we should recompute playback rate
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  UpdatePlaybackRate();
 }
 
 void MediaDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)

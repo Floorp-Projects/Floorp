@@ -726,7 +726,6 @@ RtspMediaResource::OnConnected(uint8_t aTrackIdx,
     // Not live stream.
     mIsLiveStream = false;
     mDecoder->SetInfinite(false);
-    mDecoder->SetNetworkDuration(TimeUnit::FromMicroseconds(durationUs));
   } else {
     // Live stream.
     // Check the preference "media.realtime_decoder.enabled".
