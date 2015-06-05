@@ -3811,9 +3811,9 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   if (NS_FAILED(rv))
     updRoot = mDirProvider.GetAppDir();
 
-  // If the MOZ_PROCESS_UPDATES environment variable already exists, then
+  // If the MOZ_TEST_PROCESS_UPDATES environment variable already exists, then
   // we are being called from the callback application.
-  if (EnvHasValue("MOZ_PROCESS_UPDATES")) {
+  if (EnvHasValue("MOZ_TEST_PROCESS_UPDATES")) {
     // If the caller has asked us to log our arguments, do so.  This is used
     // to make sure that the maintenance service successfully launches the
     // callback application.
@@ -3831,13 +3831,13 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
     return 0;
   }
 
-  // Support for processing an update and exiting. The MOZ_PROCESS_UPDATES
+  // Support for processing an update and exiting. The MOZ_TEST_PROCESS_UPDATES
   // environment variable will be part of the updater's environment and the
   // application that is relaunched by the updater. When the application is
   // relaunched by the updater it will be removed below and the application
   // will exit.
-  if (CheckArg("process-updates")) {
-    SaveToEnv("MOZ_PROCESS_UPDATES=1");
+  if (CheckArg("test-process-updates")) {
+    SaveToEnv("MOZ_TEST_PROCESS_UPDATES=1");
   }
   nsCOMPtr<nsIFile> exeFile, exeDir;
   rv = mDirProvider.GetFile(XRE_EXECUTABLE_FILE, &persistent,
@@ -3851,8 +3851,8 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
                  gRestartArgc,
                  gRestartArgv,
                  mAppData->version);
-  if (EnvHasValue("MOZ_PROCESS_UPDATES")) {
-    SaveToEnv("MOZ_PROCESS_UPDATES=");
+  if (EnvHasValue("MOZ_TEST_PROCESS_UPDATES")) {
+    SaveToEnv("MOZ_TEST_PROCESS_UPDATES=");
     *aExitFlag = true;
     return 0;
   }

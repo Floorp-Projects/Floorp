@@ -8,8 +8,6 @@ package org.mozilla.gecko.gfx;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.util.FloatMath;
-
 public class IntSize {
     public final int width, height;
 
@@ -75,7 +73,7 @@ public class IntSize {
     }
 
     public static int largestPowerOfTwoLessThan(float value) {
-        int val = (int)FloatMath.floor(value);
+        int val = (int) Math.floor(value);
         if (val <= 0) {
             throw new IllegalArgumentException("Error: value must be > 0");
         }

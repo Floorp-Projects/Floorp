@@ -5,6 +5,8 @@
  * Tests that the SVG marker styling is updated when devtools theme changes.
  */
 
+const { setTheme } = devtools.require("devtools/shared/theme");
+
 add_task(function*() {
   let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
@@ -56,20 +58,4 @@ add_task(function*() {
  */
 function getFill (el) {
   return el.getAttribute("style").match(/(#.*)$/)[1];
-}
-
-/**
- * Mimics selecting the theme selector in the toolbox;
- * sets the preference and emits an event on gDevTools to trigger
- * the themeing.
- */
-function setTheme (newTheme) {
-  let oldTheme = Services.prefs.getCharPref("devtools.theme");
-  info("Setting `devtools.theme` to \"" + newTheme + "\"");
-  Services.prefs.setCharPref("devtools.theme", newTheme);
-  gDevTools.emit("pref-changed", {
-    pref: "devtools.theme",
-    newValue: newTheme,
-    oldValue: oldTheme
-  });
 }

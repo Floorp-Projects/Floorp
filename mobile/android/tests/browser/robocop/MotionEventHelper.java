@@ -9,7 +9,6 @@ import org.mozilla.gecko.gfx.LayerView;
 
 import android.app.Instrumentation;
 import android.os.SystemClock;
-import android.util.FloatMath;
 import android.util.Log;
 import android.view.MotionEvent;
 
@@ -133,7 +132,7 @@ class MotionEventHelper {
         // will trigger the fling.
         final float dx = (endX - startX) / 2;
         final float dy = (endY - startY) / 2;
-        float distance = FloatMath.sqrt((dx * dx) + (dy * dy));
+        float distance = (float) Math.sqrt((dx * dx) + (dy * dy));
         final long time = (long)(distance / velocity);
         if (time <= 0) {
             throw new IllegalArgumentException( "Fling parameters require too small a time period" );
