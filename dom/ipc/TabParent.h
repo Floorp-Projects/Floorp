@@ -478,8 +478,6 @@ protected:
     static TabParent *mIMETabParent;
     ContentCache mContentCache;
 
-    LayoutDeviceIntRect mIMEEditorRect;
-
     nsIntRect mRect;
     ScreenIntSize mDimensions;
     ScreenOrientation mOrientation;
