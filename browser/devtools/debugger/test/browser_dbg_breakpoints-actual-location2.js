@@ -49,6 +49,7 @@ function test() {
         actor: gSources.selectedValue,
         line: 17
       });
+
       testMovedLocation(movedBpClient);
 
       yield resumeAndTestBreakpoint(19);
@@ -93,10 +94,5 @@ function test() {
       "Breakpoint client url is the same.");
     is(breakpointClient.location.line, 19,
       "Breakpoint client line is new.");
-
-    is(breakpointClient.requestedLocation.actor, gSources.selectedValue,
-      "Requested location url is correct");
-    is(breakpointClient.requestedLocation.line, 17,
-      "Requested location line is correct");
   }
 }

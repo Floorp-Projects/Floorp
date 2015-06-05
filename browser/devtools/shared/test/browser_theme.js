@@ -27,6 +27,14 @@ function testGetTheme () {
 
 function testSetTheme () {
   let originalTheme = getTheme();
+  gDevTools.once("pref-changed", (_, { pref, oldValue, newValue }) => {
+    is(pref, "devtools.theme",
+      "The 'pref-changed' event triggered by setTheme has correct pref.");
+    is(oldValue, originalTheme,
+      "The 'pref-changed' event triggered by setTheme has correct oldValue.");
+    is(newValue, "dark",
+      "The 'pref-changed' event triggered by setTheme has correct newValue.");
+  });
   setTheme("dark");
   is(Services.prefs.getCharPref("devtools.theme"), "dark", "setTheme() correctly sets dark theme.");
   setTheme("light");
