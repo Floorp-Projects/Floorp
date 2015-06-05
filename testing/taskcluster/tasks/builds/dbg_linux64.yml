@@ -1,0 +1,15 @@
+$inherits:
+  from: 'tasks/opt_linux64.yml'
+  variables:
+    build_name: 'linux64'
+    build_type: 'dbg'
+task:
+  metadata:
+      name: '[TC] Linux64 Dbg'
+      description: 'Linux64 Dbg'
+
+  workerType: b2g-desktop-opt
+
+  payload:
+    env:
+      MH_CUSTOM_BUILD_VARIANT_CFG: 'debug'
