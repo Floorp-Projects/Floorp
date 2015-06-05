@@ -12,9 +12,14 @@ const PAGECONTENT =
   "    <option value=Two>Two" +
   "  </optgroup>" +
   "  <option value=Three>Three" +
-  "  <optgroup label='Second Group'>" +
+  "  <optgroup label='Second Group' disabled='true'>" +
   "    <option value=Four>Four" +
   "    <option value=Five>Five" +
+  "  </optgroup>" +
+  "  <option value=Six disabled='true'>Six" +
+  "  <optgroup label='Third Group'>" +
+  "    <option value=Seven>Seven" +
+  "    <option value=Eight>Eight" +
   "  </optgroup>" +
   "</body></html>";
 
@@ -65,11 +70,23 @@ add_task(function*() {
   is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(3), "Select item 3");
 
   EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
-  is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(5), "Skip optgroup header and select item 4");
+
+  // On Windows, one can navigate on disabled menuitems
+  let expectedIndex = (navigator.platform.indexOf("Win") >= 0) ? 5 : 9;
+     
+  is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(expectedIndex),
+     "Skip optgroup header and disabled items select item 7");
+
+  for (let i = 0; i < 10; i++) {
+    is(menulist.getItemAtIndex(i).disabled, i >= 4 && i <= 7, "item " + i + " disabled")
+  }
+
+  EventUtils.synthesizeKey("KEY_ArrowUp", { code: "ArrowUp" });
+  is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(3), "Select item 3 again");
 
   yield hideSelectPopup(selectPopup);
 
-  is(menulist.selectedIndex, 5, "Item 4 still selected selectedIndex");
+  is(menulist.selectedIndex, 3, "Item 3 still selected");
 
   gBrowser.removeCurrentTab();
 });
