@@ -34,21 +34,20 @@ public:
   // NotifyDataArrived on the decoder to keep buffered range computation up
   // to date.  Returns false if the append failed.
   nsRefPtr<AppendPromise> AppendData(MediaLargeByteBuffer* aData,
-                                     int64_t aTimestampOffset /* microseconds */) override;
+                                     TimeUnit aTimestampOffset /* microseconds */) override;
 
   // Evicts data held in the current decoders SourceBufferResource from the
   // start of the buffer through to aPlaybackTime. aThreshold is used to
   // bound the data being evicted. It will not evict more than aThreshold
   // bytes. aBufferStartTime contains the new start time of the current
   // decoders buffered data after the eviction.
-  EvictDataResult EvictData(double aPlaybackTime, uint32_t aThreshold, double* aBufferStartTime) override;
+  EvictDataResult EvictData(TimeUnit aPlaybackTime, uint32_t aThreshold, TimeUnit* aBufferStartTime) override;
 
   // Evicts data held in all the decoders SourceBufferResource from the start
   // of the buffer through to aTime.
-  void EvictBefore(double aTime) override;
+  void EvictBefore(TimeUnit aTime) override;
 
-  bool RangeRemoval(mozilla::media::TimeUnit aStart,
-                    mozilla::media::TimeUnit aEnd) override;
+  bool RangeRemoval(TimeUnit aStart, TimeUnit aEnd) override;
 
   void AbortAppendData() override;
 
@@ -115,7 +114,7 @@ private:
   // for initialization.
   // The decoder is not considered initialized until it is added to
   // mInitializedDecoders.
-  already_AddRefed<SourceBufferDecoder> NewDecoder(int64_t aTimestampOffset /* microseconds */);
+  already_AddRefed<SourceBufferDecoder> NewDecoder(TimeUnit aTimestampOffset);
 
   // Helper for AppendData, ensures NotifyDataArrived is called whenever
   // data is appended to the current decoder's SourceBufferResource.
@@ -193,11 +192,11 @@ private:
   // AppendData.  Accessed on the main thread only.
   int64_t mLastStartTimestamp;
   Maybe<int64_t> mLastEndTimestamp;
-  void AdjustDecodersTimestampOffset(int32_t aOffset);
+  void AdjustDecodersTimestampOffset(TimeUnit aOffset);
 
-  // The timestamp offset used by our current decoder, in microseconds.
-  int64_t mLastTimestampOffset;
-  int64_t mAdjustedTimestamp;
+  // The timestamp offset used by our current decoder.
+  TimeUnit mLastTimestampOffset;
+  TimeUnit mAdjustedTimestamp;
 
   // True if at least one of our decoders has encrypted content.
   bool mIsWaitingOnCDM;
