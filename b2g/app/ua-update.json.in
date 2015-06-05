@@ -8,36 +8,22 @@
   "itau.com.br": "\\(Mobile#(Android; Mobile",
   // bug 826510, r7.com
   "r7.com": "\\(Mobile#(Android; Mobile",
-  // bug 826514, estadao.com.br
-  "estadao.com.br": "\\(Mobile#(Android; Mobile",
-  // bug 826711, bb.com.br
-  "bb.com.br": "\\(Mobile#(Android; Mobile",
   // bug 827622, bing.com
   "bing.com": "\\(Mobile#(Android; Mobile",
   // bug 827626, magazineluiza.com.br
   "magazineluiza.com.br": "\\(Mobile#(Android; Mobile",
   // bug 827633, hao123.com
   "hao123.com": "\\(Mobile#(Android; Mobile",
-  // bug 827573, webmotors.com.br
-  "webmotors.com.br": "\\(Mobile#(Android; Mobile",
   // bug 827670, elpais.com.co
   "elpais.com.co": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 827674, avianca.com
   "avianca.com": "\\(Mobile#(Android; Mobile",
-  // bug 827678, marca.com
-  "marca.com": "\\(Mobile#(Android; Mobile",
-  // bug 828371, ingbank.pl
-  "ingbank.pl": "\\(Mobile#(Android; Mobile",
   // bug 828416, loteriasyapuestas.es
   "loteriasyapuestas.es": "\\(Mobile#(Android; Mobile",
   // bug 828418, bbva.es
   "bbva.es": "\\(Mobile#(Android; Mobile",
-  // bug 828422, publico.es
-  "publico.es": "\\(Mobile#(Android; Mobile",
   // bug 828439, movistar.com.ve
   "movistar.com.ve": "\\(Mobile#(Android; Mobile",
-  // bug 843129, 11870.com
-  "iphonejuegosgratis.com": "\\(Mobile#(Android; Mobile",
   // bug 843132, comunio.es
   "comunio.es": "\\(Mobile#(Android; Mobile",
   // bug 843151, citibank.com
@@ -48,8 +34,6 @@
   "ehow.com": "\\(Mobile#(Android; Mobile",
   // bug 878228, blikk.hu
   "blikk.hu": "\\(Mobile#(Android; Mobile",
-  // bug 878232, hazipatika.com
-  "hazipatika.com": "\\(Mobile#(Android; Mobile",
   // bug 878238, koponyeg.hu
   "koponyeg.hu": "\\(Mobile#(Android; Mobile",
   // bug 878240, kuruc.info
@@ -60,24 +44,12 @@
   "port.hu": "\\(Mobile#(Android; Mobile",
   // bug 878249, portfolio.hu
   "portfolio.hu": "\\(Mobile#(Android; Mobile",
-  // bug 878253, vatera.hu
-  "vatera.hu": "\\(Mobile#(Android; Mobile",
   // bug 878260, cdm.me
   "cdm.me": "\\(Mobile#(Android; Mobile",
   // bug 878262, download.com
   "download.com": "\\(Mobile#(Android; Mobile",
-  // bug 878264, haber.ba
-  "haber.ba": "\\(Mobile#(Android; Mobile",
-  // bug 878271, kurir-info.rs
-  "kurir-info.rs": "\\(Mobile#(Android; Mobile",
   // bug 878273, livescore.com
   "livescore.com": "\\(Mobile#(Android; Mobile",
-  // bug 878277, naslovi.net
-  "naslovi.net": "\\(Mobile#(Android; Mobile",
-  // bug 878649, univision.com
-  "univision.com": "\\(Mobile#(Android; Mobile",
   // bug 878653, redstarbelgrade.info
-  "redstarbelgrade.info": "\\(Mobile#(Android; Mobile",
-  // bug 878655, vesti-online.com
-  "vesti-online.com": "\\(Mobile#(Android; Mobile"
+  "redstarbelgrade.info": "\\(Mobile#(Android; Mobile"
 }
