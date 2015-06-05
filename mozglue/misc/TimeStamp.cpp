@@ -9,7 +9,8 @@
  */
 
 #include "mozilla/TimeStamp.h"
-#include "prenv.h"
+#include <stdio.h>
+#include <string.h>
 
 namespace mozilla {
 
@@ -45,13 +46,13 @@ struct TimeStampInitialization
 
 static TimeStampInitialization sInitOnce;
 
-TimeStamp
+MFBT_API TimeStamp
 TimeStamp::ProcessCreation(bool& aIsInconsistent)
 {
   aIsInconsistent = false;
 
   if (sInitOnce.mProcessCreation.IsNull()) {
-    char* mozAppRestart = PR_GetEnv("MOZ_APP_RESTART");
+    char* mozAppRestart = getenv("MOZ_APP_RESTART");
     TimeStamp ts;
 
     /* When calling PR_SetEnv() with an empty value the existing variable may

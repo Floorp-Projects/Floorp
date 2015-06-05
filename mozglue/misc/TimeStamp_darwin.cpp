@@ -23,7 +23,6 @@
 #include <unistd.h>
 
 #include "mozilla/TimeStamp.h"
-#include "nsDebug.h"
 
 // Estimate of the smallest duration of time we can measure.
 static uint64_t sResolution;
@@ -120,11 +119,11 @@ BaseTimeDurationPlatformUtils::ResolutionInTicks()
   return static_cast<int64_t>(sResolution);
 }
 
-nsresult
+void
 TimeStamp::Startup()
 {
   if (gInitialized) {
-    return NS_OK;
+    return;
   }
 
   mach_timebase_info_data_t timebaseInfo;
@@ -133,7 +132,7 @@ TimeStamp::Startup()
   // to cache the result.
   kern_return_t kr = mach_timebase_info(&timebaseInfo);
   if (kr != KERN_SUCCESS) {
-    NS_RUNTIMEABORT("mach_timebase_info failed");
+    MOZ_RELEASE_ASSERT(false, "mach_timebase_info failed");
   }
 
   sNsPerTick = double(timebaseInfo.numer) / timebaseInfo.denom;
@@ -149,7 +148,7 @@ TimeStamp::Startup()
 
   gInitialized = true;
 
-  return NS_OK;
+  return;
 }
 
 void
