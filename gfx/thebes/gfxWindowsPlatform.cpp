@@ -1714,12 +1714,14 @@ bool DoesD3D11DeviceWork(ID3D11Device *device)
 #if defined(MOZ_CRASHREPORTER)
       CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("DisplayLink: could not parse version\n"));
 #endif
+      gANGLESupportsD3D11 = false;
       return false;
     }
     if (displayLinkModuleVersion <= V(8,6,1,36484)) {
 #if defined(MOZ_CRASHREPORTER)
       CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("DisplayLink: too old version\n"));
 #endif
+      gANGLESupportsD3D11 = false;
       return false;
     }
   }
