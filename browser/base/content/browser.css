@@ -1022,14 +1022,9 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
   direction: ltr;
 }
 
-.contentSelectDropdown-optgroup {
-  font-weight: bold;
-  /* color: menutext used to overwrite the disabled color */
-  color: menutext;
-}
-
-.contentSelectDropdown-ingroup {
-  -moz-margin-start: 2em;
+/* Indent options in optgroups */
+.contentSelectDropdown-ingroup .menu-iconic-text {
+  -moz-padding-start: 2em;
 }
 
 /* Give this menupopup an arrow panel styling */
