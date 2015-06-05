@@ -24,10 +24,8 @@ class ContainerParser;
 class MediaSourceDecoder;
 class MediaLargeByteBuffer;
 
-class TrackBuffer final {
+class TrackBuffer final : public SourceBufferContentManager {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TrackBuffer);
-
   TrackBuffer(MediaSourceDecoder* aParentDecoder, const nsACString& aType);
 
   nsRefPtr<ShutdownPromise> Shutdown();
@@ -35,32 +33,45 @@ public:
   // Append data to the current decoder.  Also responsible for calling
   // NotifyDataArrived on the decoder to keep buffered range computation up
   // to date.  Returns false if the append failed.
-  nsRefPtr<TrackBufferAppendPromise> AppendData(MediaLargeByteBuffer* aData,
-                                                int64_t aTimestampOffset /* microseconds */);
+  nsRefPtr<AppendPromise> AppendData(MediaLargeByteBuffer* aData,
+                                     int64_t aTimestampOffset /* microseconds */) override;
 
   // Evicts data held in the current decoders SourceBufferResource from the
   // start of the buffer through to aPlaybackTime. aThreshold is used to
   // bound the data being evicted. It will not evict more than aThreshold
   // bytes. aBufferStartTime contains the new start time of the current
-  // decoders buffered data after the eviction. Returns true if data was
-  // evicted.
-  bool EvictData(double aPlaybackTime, uint32_t aThreshold, double* aBufferStartTime);
+  // decoders buffered data after the eviction.
+  EvictDataResult EvictData(double aPlaybackTime, uint32_t aThreshold, double* aBufferStartTime) override;
 
   // Evicts data held in all the decoders SourceBufferResource from the start
   // of the buffer through to aTime.
-  void EvictBefore(double aTime);
+  void EvictBefore(double aTime) override;
+
+  bool RangeRemoval(mozilla::media::TimeUnit aStart,
+                    mozilla::media::TimeUnit aEnd) override;
+
+  void AbortAppendData() override;
+
+  int64_t GetSize() override;
+
+  void ResetParserState() override;
 
   // Returns the union of the decoders buffered ranges in aRanges.
   // This may be called on any thread.
-  media::TimeIntervals Buffered();
+  media::TimeIntervals Buffered() override;
+
+  void Ended() override
+  {
+    EndCurrentDecoder();
+  }
+
+  void Detach() override;
 
   // Mark the current decoder's resource as ended, clear mCurrentDecoder and
   // reset mLast{Start,End}Timestamp.  Main thread only.
   void DiscardCurrentDecoder();
   // Mark the current decoder's resource as ended.
   void EndCurrentDecoder();
-
-  void Detach();
 
   // Returns true if an init segment has been appended.
   bool HasInitSegment();
@@ -77,29 +88,10 @@ public:
 
   void BreakCycles();
 
-  // Run MSE Reset Parser State Algorithm.
-  // 3.5.2 Reset Parser State
-  // http://w3c.github.io/media-source/#sourcebuffer-reset-parser-state
-  void ResetParserState();
-
   // Returns a reference to mInitializedDecoders, used by MediaSourceReader
   // to select decoders.
   // TODO: Refactor to a cleaner interface between TrackBuffer and MediaSourceReader.
   const nsTArray<nsRefPtr<SourceBufferDecoder>>& Decoders();
-
-  // Runs MSE range removal algorithm.
-  // http://w3c.github.io/media-source/#sourcebuffer-coded-frame-removal
-  // Implementation is only partial, we can only trim a buffer.
-  // Returns true if data was evicted.
-  // Times are in microseconds.
-  bool RangeRemoval(mozilla::media::TimeUnit aStart,
-                    mozilla::media::TimeUnit aEnd);
-
-  // Abort any pending appendBuffer by rejecting any pending promises.
-  void AbortAppendData();
-
-  // Return the size used by all decoders managed by this TrackBuffer.
-  int64_t GetSize();
 
   // Return true if we have a partial media segment being appended that is
   // currently not playable.
@@ -116,7 +108,7 @@ public:
 private:
   friend class DecodersToInitialize;
   friend class MetadataRecipient;
-  ~TrackBuffer();
+  virtual ~TrackBuffer();
 
   // Create a new decoder, set mCurrentDecoder to the new decoder and
   // returns it. The new decoder must be queued using QueueInitializeDecoder
@@ -219,7 +211,7 @@ private:
   bool mDecoderPerSegment;
   bool mShutdown;
 
-  MediaPromiseHolder<TrackBufferAppendPromise> mInitializationPromise;
+  MediaPromiseHolder<AppendPromise> mInitializationPromise;
   // Track our request for metadata from the reader.
   MediaPromiseRequestHolder<MediaDecoderReader::MetadataPromise> mMetadataRequest;
 };
