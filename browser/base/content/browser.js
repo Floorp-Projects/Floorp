@@ -1181,7 +1181,7 @@ var gBrowserInit = {
         break;
       case "restoreAll":
         for (let browserWin of browserWindows()) {
-          for (let tab of window.gBrowser.tabs) {
+          for (let tab of browserWin.gBrowser.tabs) {
             SessionStore.reviveCrashedTab(tab);
           }
         }
