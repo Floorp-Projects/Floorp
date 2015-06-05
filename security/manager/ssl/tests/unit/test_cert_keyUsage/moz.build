@@ -1,0 +1,31 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+test_certificates = (
+    'ca-all-usages.pem',
+    'ca-missing-keyCertSign.pem',
+    'ca-no-keyUsage-extension.pem',
+    'ee-keyCertSign-and-keyEncipherment-ca-all-usages.pem',
+    'ee-keyCertSign-and-keyEncipherment-ca-missing-keyCertSign.pem',
+    'ee-keyCertSign-and-keyEncipherment-ca-no-keyUsage-extension.pem',
+    'ee-keyCertSign-only-ca-all-usages.pem',
+    'ee-keyCertSign-only-ca-missing-keyCertSign.pem',
+    'ee-keyCertSign-only-ca-no-keyUsage-extension.pem',
+    'ee-keyEncipherment-only-ca-all-usages.pem',
+    'ee-keyEncipherment-only-ca-missing-keyCertSign.pem',
+    'ee-keyEncipherment-only-ca-no-keyUsage-extension.pem',
+    'ee-no-keyUsage-extension-ca-all-usages.pem',
+    'ee-no-keyUsage-extension-ca-missing-keyCertSign.pem',
+    'ee-no-keyUsage-extension-ca-no-keyUsage-extension.pem',
+)
+
+for test_certificate in test_certificates:
+    input_file = test_certificate + '.certspec'
+    GENERATED_FILES += [test_certificate]
+    props = GENERATED_FILES[test_certificate]
+    props.script = '../pycert.py'
+    props.inputs = [input_file, '!/config/buildid']
+    TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.test_cert_keyUsage += ['!%s' % test_certificate]

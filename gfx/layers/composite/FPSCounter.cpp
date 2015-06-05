@@ -25,7 +25,6 @@ namespace mozilla {
 namespace layers {
 
 using namespace mozilla::gfx;
-using namespace mozilla::gl;
 
 FPSCounter::FPSCounter(const char* aName)
   : mWriteIndex(0)
@@ -396,7 +395,7 @@ static void DrawDigits(unsigned int aValue,
     Rect drawRect = Rect(aOffsetX + n * FontWidth, aOffsetY, FontWidth, FontHeight);
     Rect clipRect = Rect(0, 0, 300, 100);
     aCompositor->DrawQuad(drawRect, clipRect,
-	aEffectChain, opacity, transform);
+  aEffectChain, opacity, transform);
   }
 }
 

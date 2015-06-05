@@ -13,6 +13,5 @@ sys.path.insert(0, os.path.join(here, "harness"))
 from wptrunner import wptrunner
 
 if __name__ == "__main__":
-    success = wptrunner.main()
-    if not success:
-        sys.exit(1)
+    rv = wptrunner.main()
+    sys.exit(rv)

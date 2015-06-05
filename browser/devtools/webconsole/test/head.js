@@ -1292,6 +1292,11 @@ function waitForMessages(aOptions)
       aRule.clickableElements = clickables;
     }
 
+    if ("prefix" in aRule) {
+      let prefixNode = aElement.querySelector(".prefix");
+      is(prefixNode && prefixNode.textContent, aRule.prefix, "Check prefix");
+    }
+
     let count = aRule.count || 1;
     if (!aRule.matched) {
       aRule.matched = new Set();
