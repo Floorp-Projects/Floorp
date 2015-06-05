@@ -382,8 +382,7 @@ public:
   virtual void ScheduleImageVisibilityUpdate() override;
 
   virtual void RebuildImageVisibilityDisplayList(const nsDisplayList& aList) override;
-  virtual void RebuildImageVisibility(nsRect* aRect = nullptr,
-                                      bool aRemoveOnly = false) override;
+  virtual void RebuildImageVisibility(nsRect* aRect = nullptr) override;
 
   virtual void EnsureImageInVisibleList(nsIImageLoadingContent* aImage) override;
 
@@ -737,7 +736,6 @@ protected:
   virtual void ResumePainting() override;
 
   void UpdateImageVisibility();
-  void DoUpdateImageVisibility(bool aRemoveOnly);
   void UpdateActivePointerState(mozilla::WidgetGUIEvent* aEvent);
 
   nsRevocableEventPtr<nsRunnableMethod<PresShell> > mUpdateImageVisibilityEvent;
@@ -745,8 +743,7 @@ protected:
   void ClearVisibleImagesList(uint32_t aNonvisibleAction);
   static void ClearImageVisibilityVisited(nsView* aView, bool aClear);
   static void MarkImagesInListVisible(const nsDisplayList& aList);
-  void MarkImagesInSubtreeVisible(nsIFrame* aFrame, const nsRect& aRect,
-                                  bool aRemoveOnly = false);
+  void MarkImagesInSubtreeVisible(nsIFrame* aFrame, const nsRect& aRect);
 
   // Methods for dispatching KeyboardEvent and BeforeAfterKeyboardEvent.
   void HandleKeyboardEvent(nsINode* aTarget,
