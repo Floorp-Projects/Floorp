@@ -22,9 +22,9 @@ namespace mozilla {
 #define SRTP_MASTER_SALT_LENGTH 14
 #define SRTP_TOTAL_KEY_LENGTH (SRTP_MASTER_KEY_LENGTH + SRTP_MASTER_SALT_LENGTH)
 
-// SRTCP requires an auth tag *plus* a 4-byte index-plus-'E'-bit value (see
-// RFC 3711)
-#define SRTP_MAX_EXPANSION (SRTP_MAX_TRAILER_LEN+4)
+// For some reason libsrtp increases packet size by > 12 for RTCP even though
+// the doc claims otherwise.
+#define SRTP_MAX_EXPANSION 20
 
 
 class SrtpFlow {
