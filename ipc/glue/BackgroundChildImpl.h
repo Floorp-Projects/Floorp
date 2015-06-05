@@ -98,12 +98,6 @@ protected:
   virtual bool
   DeallocPBroadcastChannelChild(PBroadcastChannelChild* aActor) override;
 
-  virtual PServiceWorkerManagerChild*
-  AllocPServiceWorkerManagerChild() override;
-
-  virtual bool
-  DeallocPServiceWorkerManagerChild(PServiceWorkerManagerChild* aActor) override;
-
   virtual dom::cache::PCacheStorageChild*
   AllocPCacheStorageChild(const dom::cache::Namespace& aNamespace,
                           const PrincipalInfo& aPrincipalInfo) override;

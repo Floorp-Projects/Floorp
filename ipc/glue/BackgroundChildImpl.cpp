@@ -6,7 +6,6 @@
 
 #include "ActorsChild.h" // IndexedDB
 #include "BroadcastChannelChild.h"
-#include "ServiceWorkerManagerChild.h"
 #include "FileDescriptorSetChild.h"
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/Assertions.h"
@@ -257,28 +256,6 @@ BackgroundChildImpl::DeallocPBroadcastChannelChild(
 {
   nsRefPtr<dom::BroadcastChannelChild> child =
     dont_AddRef(static_cast<dom::BroadcastChannelChild*>(aActor));
-  MOZ_ASSERT(child);
-  return true;
-}
-
-// -----------------------------------------------------------------------------
-// ServiceWorkerManager
-// -----------------------------------------------------------------------------
-
-dom::PServiceWorkerManagerChild*
-BackgroundChildImpl::AllocPServiceWorkerManagerChild()
-{
-  nsRefPtr<dom::workers::ServiceWorkerManagerChild> agent =
-    new dom::workers::ServiceWorkerManagerChild();
-  return agent.forget().take();
-}
-
-bool
-BackgroundChildImpl::DeallocPServiceWorkerManagerChild(
-                                             PServiceWorkerManagerChild* aActor)
-{
-  nsRefPtr<dom::workers::ServiceWorkerManagerChild> child =
-    dont_AddRef(static_cast<dom::workers::ServiceWorkerManagerChild*>(aActor));
   MOZ_ASSERT(child);
   return true;
 }
