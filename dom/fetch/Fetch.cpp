@@ -548,26 +548,13 @@ ExtractFromURLSearchParams(const URLSearchParams& aParams,
   return NS_NewStringInputStream(aStream, serialized);
 }
 
-class MOZ_STACK_CLASS FillFormIterator final
-  : public URLSearchParams::ForEachIterator
+void
+FillFormData(const nsString& aName, const nsString& aValue, void* aFormData)
 {
-public:
-  explicit FillFormIterator(nsFormData* aFormData)
-    : mFormData(aFormData)
-  {
-    MOZ_ASSERT(aFormData);
-  }
-
-  bool URLSearchParamsIterator(const nsString& aName,
-                               const nsString& aValue) override
-  {
-    mFormData->Append(aName, aValue);
-    return true;
-  }
-
-private:
-  nsFormData* mFormData;
-};
+  MOZ_ASSERT(aFormData);
+  nsFormData* fd = static_cast<nsFormData*>(aFormData);
+  fd->Append(aName, aValue);
+}
 
 /**
  * A simple multipart/form-data parser as defined in RFC 2388 and RFC 2046.
@@ -1604,10 +1591,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
           params->ParseInput(data, /* aObserver */ nullptr);
 
           nsRefPtr<nsFormData> fd = new nsFormData(DerivedClass()->GetParentObject());
-          FillFormIterator iterator(fd);
-          DebugOnly<bool> status = params->ForEach(iterator);
-          MOZ_ASSERT(status);
-
+          params->ForEach(FillFormData, static_cast<void*>(fd));
           localPromise->MaybeResolve(fd);
         } else {
           ErrorResult result;
