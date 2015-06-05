@@ -23,10 +23,11 @@ a {
   box-sizing: border-box;
 }
 
+.message > .prefix,
 .message > .timestamp {
   flex: none;
   color: GrayText;
-  margin: 4px 6px 0 0;
+  margin: 3px 6px 0 0;
 }
 
 .message > .indent {

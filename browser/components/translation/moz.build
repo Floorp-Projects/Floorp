@@ -9,7 +9,8 @@ EXTRA_JS_MODULES.translation = [
     'LanguageDetector.jsm',
     'Translation.jsm',
     'TranslationContentHandler.jsm',
-    'TranslationDocument.jsm'
+    'TranslationDocument.jsm',
+    'YandexTranslator.jsm'
 ]
 
 JAR_MANIFESTS += ['jar.mn']

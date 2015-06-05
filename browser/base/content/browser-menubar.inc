@@ -29,7 +29,7 @@
                           key="key_privatebrowsing"/>
 #ifdef E10S_TESTING_ONLY
                 <menuitem id="menu_newNonRemoteWindow"
-                          label="New Non-e10s Window"
+                          label="&newNonRemoteWindow.label;"
                           hidden="true"
                           command="Tools:NonRemoteWindow"/>
 #endif

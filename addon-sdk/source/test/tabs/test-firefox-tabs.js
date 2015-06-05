@@ -18,6 +18,7 @@ const { set: setPref } = require("sdk/preferences/service");
 const DEPRECATE_PREF = "devtools.errorconsole.deprecation_warnings";
 const fixtures = require("../fixtures");
 const { base64jpeg } = fixtures;
+const { cleanUI, after } = require("sdk/test/utils");
 
 // Bug 682681 - tab.title should never be empty
 exports.testBug682681_aboutURI = function(assert, done) {
@@ -372,31 +373,28 @@ exports.testTabMove = function(assert, done) {
   }).then(null, assert.fail);
 };
 
-exports.testIgnoreClosing = function(assert, done) {
-  let originalWindow = viewFor(browserWindows.activeWindow);
-  openBrowserWindow(function(window, browser) {
-    onFocus(window).then(() => {
-      let url = "data:text/html;charset=utf-8,foobar";
+exports.testIgnoreClosing = function*(assert) {
+  let url = "data:text/html;charset=utf-8,foobar";
+  let originalWindow = getMostRecentBrowserWindow();
 
-      assert.equal(tabs.length, 2, "should be two windows open each with one tab");
+  let window = yield open().then(focus);
 
-      tabs.on('ready', function onReady(tab) {
-        tabs.removeListener('ready', onReady);
+  assert.equal(tabs.length, 2, "should be two windows open each with one tab");
 
-        let win = tab.window;
-        assert.equal(win.tabs.length, 2, "should be two tabs in the new window");
-        assert.equal(tabs.length, 3, "should be three tabs in total");
+  yield new Promise(resolve => {
+    tabs.once("ready", (tab) => {
+      let win = tab.window;
+      assert.equal(win.tabs.length, 2, "should be two tabs in the new window");
+      assert.equal(tabs.length, 3, "should be three tabs in total");
 
-        tab.close(function() {
-          assert.equal(win.tabs.length, 1, "should be one tab in the new window");
-          assert.equal(tabs.length, 2, "should be two tabs in total");
-
-          close(window).then(onFocus(originalWindow)).then(done).then(null, assert.fail);
-        });
+      tab.close(() => {
+        assert.equal(win.tabs.length, 1, "should be one tab in the new window");
+        assert.equal(tabs.length, 2, "should be two tabs in total");
+        resolve();
       });
-
-      tabs.open(url);
     });
+
+    tabs.open(url);
   });
 };
 
@@ -537,23 +535,23 @@ exports.testTabsEvent_onOpen = function(assert, done) {
 };
 
 // TEST: onClose event handler
-exports.testTabsEvent_onClose = function(assert, done) {
-  open().then(focus).then(window => {
-    let url = "data:text/html;charset=utf-8,onclose";
-    let eventCount = 0;
+exports.testTabsEvent_onClose = function*(assert) {
+  let window = yield open().then(focus);
+  let url = "data:text/html;charset=utf-8,onclose";
+  let eventCount = 0;
 
-    // add listener via property assignment
-    function listener1(tab) {
-      eventCount++;
-    }
-    tabs.on('close', listener1);
+  // add listener via property assignment
+  function listener1(tab) {
+    eventCount++;
+  }
+  tabs.on("close", listener1);
 
+  yield new Promise(resolve => {
     // add listener via collection add
-    tabs.on('close', function listener2(tab) {
+    tabs.on("close", function listener2(tab) {
       assert.equal(++eventCount, 2, "both listeners notified");
-      tabs.removeListener('close', listener1);
-      tabs.removeListener('close', listener2);
-      close(window).then(done).then(null, assert.fail);
+      tabs.removeListener("close", listener2);
+      resolve();
     });
 
     tabs.on('ready', function onReady(tab) {
@@ -562,7 +560,13 @@ exports.testTabsEvent_onClose = function(assert, done) {
     });
 
     tabs.open(url);
-  }).then(null, assert.fail);
+  });
+
+  tabs.removeListener("close", listener1);
+  assert.pass("done test!");
+
+  yield close(window);
+  assert.pass("window was closed!");
 };
 
 // TEST: onClose event handler when a window is closed
@@ -671,32 +675,38 @@ exports.testTabsEvent_onActivate = function(assert, done) {
 };
 
 // onDeactivate event handler
-exports.testTabsEvent_onDeactivate = function(assert, done) {
-  open().then(focus).then(window => {
-    let url = "data:text/html;charset=utf-8,ondeactivate";
-    let eventCount = 0;
+exports.testTabsEvent_onDeactivate = function*(assert) {
+  let window = yield open().then(focus);
 
-    // add listener via property assignment
-    function listener1(tab) {
-      eventCount++;
-    };
-    tabs.on('deactivate', listener1);
+  let url = "data:text/html;charset=utf-8,ondeactivate";
+  let eventCount = 0;
 
+  // add listener via property assignment
+  function listener1(tab) {
+    eventCount++;
+    assert.pass("listener1 was called " + eventCount);
+  };
+  tabs.on('deactivate', listener1);
+
+  yield new Promise(resolve => {
     // add listener via collection add
     tabs.on('deactivate', function listener2(tab) {
       assert.equal(++eventCount, 2, "both listeners notified");
-      tabs.removeListener('deactivate', listener1);
       tabs.removeListener('deactivate', listener2);
-      close(window).then(done).then(null, assert.fail);
+      resolve();
     });
 
     tabs.on('open', function onOpen(tab) {
+      assert.pass("tab opened");
       tabs.removeListener('open', onOpen);
       tabs.open("data:text/html;charset=utf-8,foo");
     });
 
     tabs.open(url);
-  }).then(null, assert.fail);
+  });
+
+  tabs.removeListener('deactivate', listener1);
+  assert.pass("listeners were removed");
 };
 
 // pinning
@@ -726,13 +736,16 @@ exports.testTabsEvent_pinning = function(assert, done) {
 };
 
 // TEST: per-tab event handlers
-exports.testPerTabEvents = function(assert, done) {
-  open().then(focus).then(window => {
-    let eventCount = 0;
+exports.testPerTabEvents = function*(assert) {
+  let window = yield open().then(focus);
+  let eventCount = 0;
 
+  let tab = yield new Promise(resolve => {
     tabs.open({
       url: "data:text/html;charset=utf-8,foo",
-      onOpen: function(tab) {
+      onOpen: (tab) => {
+        assert.pass("the tab was opened");
+
         // add listener via property assignment
         function listener1() {
           eventCount++;
@@ -741,14 +754,18 @@ exports.testPerTabEvents = function(assert, done) {
 
         // add listener via collection add
         tab.on('ready', function listener2() {
-          assert.equal(eventCount, 1, "both listeners notified");
+          assert.equal(eventCount, 1, "listener1 called before listener2");
           tab.removeListener('ready', listener1);
           tab.removeListener('ready', listener2);
-          close(window).then(done).then(null, assert.fail);
+          assert.pass("removed listeners");
+          eventCount++;
+          resolve();
         });
       }
     });
-  }).then(null, assert.fail);
+  });
+
+  assert.equal(eventCount, 2, "both listeners were notified.");
 };
 
 exports.testAttachOnOpen = function (assert, done) {
@@ -1202,6 +1219,10 @@ exports.testTabDestroy = function(assert, done) {
     })
   })
 };
+
+after(exports, function*(name, assert) {
+  yield cleanUI();
+});
 
 /******************* helpers *********************/
 

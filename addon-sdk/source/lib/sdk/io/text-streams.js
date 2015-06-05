@@ -1,17 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 module.metadata = {
   "stability": "experimental"
 };
 
-const {Cc,Ci,Cu,components} = require("chrome");
-var NetUtil = {};
-Cu.import("resource://gre/modules/NetUtil.jsm", NetUtil);
-NetUtil = NetUtil.NetUtil;
+const { Cc, Ci, Cu, components } = require("chrome");
+const { ensure } = require("../system/unload");
+const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 
 // NetUtil.asyncCopy() uses this buffer length, and since we call it, for best
 // performance we use it, too.
@@ -19,8 +17,6 @@ const BUFFER_BYTE_LEN = 0x8000;
 const PR_UINT32_MAX = 0xffffffff;
 const DEFAULT_CHARSET = "UTF-8";
 
-exports.TextReader = TextReader;
-exports.TextWriter = TextWriter;
 
 /**
  * An input stream that reads text from a backing stream using a given text
@@ -35,7 +31,6 @@ exports.TextWriter = TextWriter;
  *        documentation on how to determine other valid values for this.
  */
 function TextReader(inputStream, charset) {
-  const self = this;
   charset = checkCharset(charset);
 
   let stream = Cc["@mozilla.org/intl/converter-input-stream;1"].
@@ -89,6 +84,7 @@ function TextReader(inputStream, charset) {
     return str;
   };
 }
+exports.TextReader = TextReader;
 
 /**
  * A buffered output stream that writes text to a backing stream using a given
@@ -103,7 +99,6 @@ function TextReader(inputStream, charset) {
  *        for documentation on how to determine other valid values for this.
  */
 function TextWriter(outputStream, charset) {
-  const self = this;
   charset = checkCharset(charset);
 
   let stream = outputStream;
@@ -169,7 +164,7 @@ function TextWriter(outputStream, charset) {
   this.writeAsync = function TextWriter_writeAsync(str, callback) {
     manager.ensureOpened();
     let istream = uconv.convertToInputStream(str);
-    NetUtil.asyncCopy(istream, stream, function (result) {
+    NetUtil.asyncCopy(istream, stream, (result) => {
         let err = components.isSuccessCode(result) ? undefined :
         new Error("An error occured while writing to the stream: " + result);
       if (err)
@@ -180,7 +175,7 @@ function TextWriter(outputStream, charset) {
 
       if (typeof(callback) === "function") {
         try {
-          callback.call(self, err);
+          callback.call(this, err);
         }
         catch (exc) {
           console.exception(exc);
@@ -189,34 +184,32 @@ function TextWriter(outputStream, charset) {
     });
   };
 }
+exports.TextWriter = TextWriter;
 
 // This manages the lifetime of stream, a TextReader or TextWriter.  It defines
 // closed and close() on stream and registers an unload listener that closes
 // rawStream if it's still opened.  It also provides ensureOpened(), which
 // throws an exception if the stream is closed.
 function StreamManager(stream, rawStream) {
-  const self = this;
   this.rawStream = rawStream;
   this.opened = true;
 
   /**
    * True iff the stream is closed.
    */
-  stream.__defineGetter__("closed", function stream_closed() {
-    return !self.opened;
-  });
+  stream.__defineGetter__("closed", () => !this.opened);
 
   /**
    * Closes both the stream and its backing stream.  If the stream is already
    * closed, an exception is thrown.  For TextWriters, this first flushes the
    * backing stream's buffer.
    */
-  stream.close = function stream_close() {
-    self.ensureOpened();
-    self.unload();
+  stream.close = () => {
+    this.ensureOpened();
+    this.unload();
   };
 
-  require("../system/unload").ensure(this);
+  ensure(this);
 }
 
 StreamManager.prototype = {

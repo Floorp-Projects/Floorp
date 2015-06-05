@@ -88,6 +88,12 @@ MarkerDetails.prototype = {
         frameIndex: marker.stack, frames, type
       }));
     }
+    if (marker.endStack) {
+      let type = "endStack";
+      elements.push(MarkerUtils.DOM.buildStackTrace(this._document, {
+        frameIndex: marker.endStack, frames, type
+      }));
+    }
 
     elements.forEach(el => this._parent.appendChild(el));
   },

@@ -22,6 +22,7 @@ let mm = null;
 const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js"
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/performance/test/";
 const SIMPLE_URL = EXAMPLE_URL + "doc_simple-test.html";
+const MARKERS_URL = EXAMPLE_URL + "doc_markers.html";
 
 const MEMORY_SAMPLE_PROB_PREF = "devtools.performance.memory.sample-probability";
 const MEMORY_MAX_LOG_LEN_PREF = "devtools.performance.memory.max-log-length";

@@ -11,6 +11,7 @@ const { browserWindows: windows } = require('sdk/windows');
 const { defer } = require('sdk/core/promise');
 const tabs = require('sdk/tabs');
 const { getMostRecentBrowserWindow } = require('sdk/window/utils');
+const { cleanUI } = require("sdk/test/utils");
 
 // test openDialog() from window/utils with private option
 // test isActive state in pwpb case
@@ -42,15 +43,18 @@ exports.testPerWindowPrivateBrowsingGetter = function*(assert) {
   yield close(win)
 }
 
-exports.testIsPrivateOnWindowOpen = function(assert, done) {
-  windows.open({
-    isPrivate: true,
-    onOpen: function(window) {
-      assert.equal(isPrivate(window), false, 'isPrivate for a window is true when it should be');
-      assert.equal(isPrivate(window.tabs[0]), false, 'isPrivate for a tab is false when it should be');
-      window.close(done);
-    }
+exports.testIsPrivateOnWindowOpen = function*(assert) {
+  let window = yield new Promise(resolve => {
+    windows.open({
+      isPrivate: true,
+      onOpen: resolve
+    });
   });
+
+  assert.equal(isPrivate(window), false, 'isPrivate for a window is true when it should be');
+  assert.equal(isPrivate(window.tabs[0]), false, 'isPrivate for a tab is false when it should be');
+
+  yield cleanUI();
 }
 
 exports.testIsPrivateOnWindowOpenFromPrivate = function(assert, done) {

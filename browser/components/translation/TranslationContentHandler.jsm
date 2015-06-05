@@ -8,6 +8,7 @@ this.EXPORTED_SYMBOLS = [ "TranslationContentHandler" ];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector",
   "resource:///modules/translation/LanguageDetector.jsm");
@@ -120,7 +121,6 @@ TranslationContentHandler.prototype = {
       case "Translation:TranslateDocument":
       {
         Cu.import("resource:///modules/translation/TranslationDocument.jsm");
-        Cu.import("resource:///modules/translation/BingTranslator.jsm");
 
         // If a TranslationDocument already exists for this document, it should
         // be used instead of creating a new one so that we can use the original
@@ -128,16 +128,27 @@ TranslationContentHandler.prototype = {
         // translated text.
         let translationDocument = this.global.content.translationDocument ||
                                   new TranslationDocument(this.global.content.document);
-        let bingTranslator = new BingTranslator(translationDocument,
-                                                msg.data.from,
-                                                msg.data.to);
+
+        let preferredEngine = Services.prefs.getCharPref("browser.translation.engine");
+        let translator = null;
+        if (preferredEngine == "yandex") {
+          Cu.import("resource:///modules/translation/YandexTranslator.jsm");
+          translator = new YandexTranslator(translationDocument,
+                                            msg.data.from,
+                                            msg.data.to);
+        } else {
+          Cu.import("resource:///modules/translation/BingTranslator.jsm");
+          translator = new BingTranslator(translationDocument,
+                                          msg.data.from,
+                                          msg.data.to);
+        }
 
         this.global.content.translationDocument = translationDocument;
         translationDocument.translatedFrom = msg.data.from;
         translationDocument.translatedTo = msg.data.to;
         translationDocument.translationError = false;
 
-        bingTranslator.translate().then(
+        translator.translate().then(
           result => {
             this.global.sendAsyncMessage("Translation:Finished", {
               characterCount: result.characterCount,

@@ -1,0 +1,35 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Performance tool marker generation</title>
+  </head>
+
+  <body>
+    <script type="text/javascript">
+      var x = 1;
+      function test() {
+        var i = 10;
+        // generate sync styles and reflows
+        while (--i) {
+            var h = document.body.clientHeight;
+            document.body.style.height = (200 + i) + "px";
+            document.body.style.borderTop = i + "px solid red"; // paint
+        }
+        console.time("!!!");
+        test2();
+      }
+      function test2() {
+        console.timeStamp("go");
+        console.timeEnd("!!!");
+      }
+
+      // Prevent this script from being garbage collected.
+      window.setInterval(test, 1);
+    </script>
+  </body>
+
+</html>

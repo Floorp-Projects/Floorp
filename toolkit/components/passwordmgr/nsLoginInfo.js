@@ -2,11 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function nsLoginInfo() {}
 
@@ -39,7 +38,7 @@ nsLoginInfo.prototype = {
     this.passwordField = aPasswordField;
   },
 
-  matches : function (aLogin, ignorePassword) {
+  matches(aLogin, ignorePassword) {
     if (this.hostname      != aLogin.hostname      ||
         this.httpRealm     != aLogin.httpRealm     ||
         this.username      != aLogin.username)
@@ -50,8 +49,18 @@ nsLoginInfo.prototype = {
 
     // If either formSubmitURL is blank (but not null), then match.
     if (this.formSubmitURL != "" && aLogin.formSubmitURL != "" &&
-        this.formSubmitURL != aLogin.formSubmitURL)
-      return false;
+        this.formSubmitURL != aLogin.formSubmitURL) {
+      // If we have the same formSubmitURL hostPort we should match (ignore scheme)
+      try {
+        let loginURI = Services.io.newURI(aLogin.formSubmitURL, null, null);
+        let matchURI = Services.io.newURI(this.formSubmitURL, null, null);
+        if (loginURI.hostPort != matchURI.hostPort) {
+          return false;
+        }
+      } catch (e) {
+        return false;
+      }
+    }
 
     // The .usernameField and .passwordField values are ignored.
 

@@ -46,8 +46,7 @@ const NS_DATA_CALL_ERROR_TOPIC_ID        = "data-call-error";
 
 const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
 
-const INT32_MAX = 2147483647;
-const UNKNOWN_RSSI = 99;
+const UNKNOWN_VALUE = Ci.nsICellInfo.UNKNOWN_VALUE;
 
 XPCOMUtils.defineLazyServiceGetter(this, "gMobileConnectionMessenger",
                                    "@mozilla.org/ril/system-messenger-helper;1",
@@ -155,7 +154,26 @@ MobileCallForwardingOptions.prototype = {
   serviceClass: Ci.nsIMobileConnection.ICC_SERVICE_CLASS_NONE
 }
 
-function NeighboringCellInfo() {}
+function NeighboringCellInfo(aOptions) {
+  this.networkType = aOptions.networkType;
+  this.gsmLocationAreaCode = (aOptions.gsmLocationAreaCode !== undefined &&
+                              aOptions.gsmLocationAreaCode >= 0 &&
+                              aOptions.gsmLocationAreaCode <= 65535) ?
+                             aOptions.gsmLocationAreaCode : UNKNOWN_VALUE;
+  this.gsmCellId = (aOptions.gsmCellId !== undefined &&
+                    aOptions.gsmCellId >= 0 &&
+                    aOptions.gsmCellId <= 65535) ?
+                   aOptions.gsmCellId : UNKNOWN_VALUE;
+  this.wcdmaPsc = (aOptions.wcdmaPsc !== undefined && aOptions.wcdmaPsc >= 0 &&
+                   aOptions.wcdmaPsc <= 511) ?
+                  aOptions.wcdmaPsc : UNKNOWN_VALUE;
+  this.signalStrength = (aOptions.signalStrength !== undefined &&
+                         ((aOptions.signalStrength >= 0 &&
+                           aOptions.signalStrength <= 31) ||
+                          (aOptions.signalStrength >= -120 &&
+                           aOptions.signalStrength <= -25))) ?
+                        aOptions.signalStrength : UNKNOWN_VALUE;
+}
 NeighboringCellInfo.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINeighboringCellInfo]),
   classID:        NEIGHBORINGCELLINFO_CID,
@@ -165,16 +183,28 @@ NeighboringCellInfo.prototype = {
     interfaces:       [Ci.nsINeighboringCellInfo]
   }),
 
+  isValid: function() {
+    return !(this.gsmLocationAreaCode == UNKNOWN_VALUE &&
+             this.gsmCellId == UNKNOWN_VALUE &&
+             this.wcdmaPsc == UNKNOWN_VALUE &&
+             this.signalStrength == UNKNOWN_VALUE);
+  },
+
   // nsINeighboringCellInfo
 
   networkType: null,
-  gsmLocationAreaCode: -1,
-  gsmCellId: -1,
-  wcdmaPsc: -1,
-  signalStrength: UNKNOWN_RSSI
+  gsmLocationAreaCode: UNKNOWN_VALUE,
+  gsmCellId: UNKNOWN_VALUE,
+  wcdmaPsc: UNKNOWN_VALUE,
+  signalStrength: UNKNOWN_VALUE
 };
 
-function CellInfo() {}
+function CellInfo(aOptions) {
+  this.type = aOptions.type;
+  this.registered = aOptions.registered;
+  this.timestampType = aOptions.timestampType;
+  this.timestamp = aOptions.timestamp;
+}
 CellInfo.prototype = {
 
   // nsICellInfo
@@ -185,7 +215,28 @@ CellInfo.prototype = {
   timestamp: 0
 };
 
-function GsmCellInfo() {}
+function GsmCellInfo(aOptions) {
+  CellInfo.call(this, aOptions);
+
+  // Cell Identity
+  this.mcc = (aOptions.mcc !== undefined && aOptions.mcc >= 0 &&
+              aOptions.mcc <= 999) ? aOptions.mcc : UNKNOWN_VALUE;
+  this.mnc = (aOptions.mnc !== undefined && aOptions.mnc >= 0 &&
+              aOptions.mnc <= 999) ? aOptions.mnc : UNKNOWN_VALUE;
+  this.lac = (aOptions.lac !== undefined && aOptions.lac >= 0 &&
+              aOptions.lac <= 65535) ? aOptions.lac : UNKNOWN_VALUE;
+  this.cid = (aOptions.cid !== undefined && aOptions.cid >= 0 &&
+              aOptions.cid <= 65535) ? aOptions.cid : UNKNOWN_VALUE;
+
+  // Signal Strength
+  this.signalStrength = (aOptions.signalStrength !== undefined &&
+                         aOptions.signalStrength >= 0 &&
+                         aOptions.signalStrength <= 31) ?
+                        aOptions.signalStrength : UNKNOWN_VALUE;
+  this.bitErrorRate = (aOptions.bitErrorRate !== undefined &&
+                       aOptions.bitErrorRate >= 0 && aOptions.bitErrorRate <= 7)
+                      ? aOptions.bitErrorRate : UNKNOWN_VALUE;
+}
 GsmCellInfo.prototype = {
   __proto__: CellInfo.prototype,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICellInfo,
@@ -197,17 +248,47 @@ GsmCellInfo.prototype = {
     interfaces:       [Ci.nsIGsmCellInfo]
   }),
 
+  isValid: function() {
+    return !(this.mcc == UNKNOWN_VALUE && this.mnc == UNKNOWN_VALUE &&
+             this.lac == UNKNOWN_VALUE && this.cid == UNKNOWN_VALUE &&
+             this.signalStrength == UNKNOWN_VALUE &&
+             this.bitErrorRate == UNKNOWN_VALUE);
+  },
+
   // nsIGsmCellInfo
 
-  mcc: INT32_MAX,
-  mnc: INT32_MAX,
-  lac: INT32_MAX,
-  cid: INT32_MAX,
-  signalStrength: UNKNOWN_RSSI,
-  bitErrorRate: UNKNOWN_RSSI
+  mcc: UNKNOWN_VALUE,
+  mnc: UNKNOWN_VALUE,
+  lac: UNKNOWN_VALUE,
+  cid: UNKNOWN_VALUE,
+  signalStrength: UNKNOWN_VALUE,
+  bitErrorRate: UNKNOWN_VALUE
 };
 
-function WcdmaCellInfo() {}
+function WcdmaCellInfo(aOptions) {
+  CellInfo.call(this, aOptions);
+
+  // Cell Identity
+  this.mcc = (aOptions.mcc !== undefined && aOptions.mcc >= 0 &&
+              aOptions.mcc <= 999) ? aOptions.mcc : UNKNOWN_VALUE;
+  this.mnc = (aOptions.mnc !== undefined && aOptions.mnc >= 0 &&
+              aOptions.mnc <= 999) ? aOptions.mnc : UNKNOWN_VALUE;
+  this.lac = (aOptions.lac !== undefined && aOptions.lac >= 0 &&
+              aOptions.lac <= 65535) ? aOptions.lac : UNKNOWN_VALUE;
+  this.cid = (aOptions.cid !== undefined && aOptions.cid >= 0 &&
+              aOptions.cid <= 268435455) ? aOptions.cid : UNKNOWN_VALUE;
+  this.psc = (aOptions.psc !== undefined && aOptions.psc >= 0 &&
+              aOptions.psc <= 511) ? aOptions.psc : UNKNOWN_VALUE;
+
+  // Signal Strength
+  this.signalStrength = (aOptions.signalStrength !== undefined &&
+                         aOptions.signalStrength >= 0 &&
+                         aOptions.signalStrength <= 31) ?
+                        aOptions.signalStrength : UNKNOWN_VALUE;
+  this.bitErrorRate = (aOptions.bitErrorRate !== undefined &&
+                       aOptions.bitErrorRate >= 0 && aOptions.bitErrorRate <= 7)
+                      ? aOptions.bitErrorRate : UNKNOWN_VALUE;
+}
 WcdmaCellInfo.prototype = {
   __proto__: CellInfo.prototype,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICellInfo,
@@ -219,18 +300,57 @@ WcdmaCellInfo.prototype = {
     interfaces:       [Ci.nsIWcdmaCellInfo]
   }),
 
+  isValid: function() {
+    return !(this.mcc == UNKNOWN_VALUE && this.mnc == UNKNOWN_VALUE &&
+             this.lac == UNKNOWN_VALUE && this.cid == UNKNOWN_VALUE &&
+             this.psc == UNKNOWN_VALUE && this.signalStrength == UNKNOWN_VALUE &&
+             this.bitErrorRate == UNKNOWN_VALUE);
+  },
+
   // nsIWcdmaCellInfo
 
-  mcc: INT32_MAX,
-  mnc: INT32_MAX,
-  lac: INT32_MAX,
-  cid: INT32_MAX,
-  psc: INT32_MAX,
-  signalStrength: UNKNOWN_RSSI,
-  bitErrorRate: UNKNOWN_RSSI
+  mcc: UNKNOWN_VALUE,
+  mnc: UNKNOWN_VALUE,
+  lac: UNKNOWN_VALUE,
+  cid: UNKNOWN_VALUE,
+  psc: UNKNOWN_VALUE,
+  signalStrength: UNKNOWN_VALUE,
+  bitErrorRate: UNKNOWN_VALUE
 };
 
-function LteCellInfo() {}
+function LteCellInfo(aOptions) {
+  CellInfo.call(this, aOptions);
+
+  // Cell Identity
+  this.mcc = (aOptions.mcc !== undefined && aOptions.mcc >= 0 &&
+              aOptions.mcc <= 999) ? aOptions.mcc : UNKNOWN_VALUE;
+  this.mnc = (aOptions.mnc !== undefined && aOptions.mnc >= 0 &&
+              aOptions.mnc <= 999) ? aOptions.mnc : UNKNOWN_VALUE;
+  this.cid = (aOptions.cid !== undefined && aOptions.cid >= 0 &&
+              aOptions.cid <= 268435455) ? aOptions.cid : UNKNOWN_VALUE;
+  this.pcid = (aOptions.pcid !== undefined && aOptions.pcid >= 0 &&
+               aOptions.pcid <= 503) ? aOptions.pcid : UNKNOWN_VALUE;
+  this.tac = (aOptions.tac !== undefined && aOptions.tac >= 0 &&
+              aOptions.tac <= 65535) ? aOptions.tac : UNKNOWN_VALUE;
+
+  // Signal Strength
+  this.signalStrength = (aOptions.signalStrength !== undefined &&
+                         aOptions.signalStrength >= 0 &&
+                         aOptions.signalStrength <= 31) ?
+                        aOptions.signalStrength : UNKNOWN_VALUE;
+  this.rsrp = (aOptions.rsrp !== undefined && aOptions.rsrp >= 44 &&
+               aOptions.rsrp <= 140) ? aOptions.rsrp : UNKNOWN_VALUE;
+  this.rsrq = (aOptions.rsrq !== undefined && aOptions.rsrq >= 3 &&
+               aOptions.rsrq <= 20) ? aOptions.rsrq : UNKNOWN_VALUE;
+  this.rssnr = (aOptions.rssnr !== undefined && aOptions.rssnr >= -200 &&
+                aOptions.rssnr <= 300) ? aOptions.rssnr : UNKNOWN_VALUE;
+  this.cqi = (aOptions.cqi !== undefined && aOptions.cqi >= 0 &&
+                aOptions.cqi <= 15) ? aOptions.cqi : UNKNOWN_VALUE;
+  this.timingAdvance = (aOptions.timingAdvance !== undefined &&
+                        aOptions.timingAdvance >= 0 &&
+                        aOptions.timingAdvance <= 2147483646) ?
+                       aOptions.timingAdvance : UNKNOWN_VALUE;
+}
 LteCellInfo.prototype = {
   __proto__: CellInfo.prototype,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICellInfo,
@@ -242,22 +362,64 @@ LteCellInfo.prototype = {
     interfaces:       [Ci.nsILteCellInfo]
   }),
 
+  isValid: function() {
+    return !(this.mcc == UNKNOWN_VALUE && this.mnc == UNKNOWN_VALUE &&
+             this.cid == UNKNOWN_VALUE && this.pcid == UNKNOWN_VALUE &&
+             this.tac == UNKNOWN_VALUE && this.signalStrength == UNKNOWN_VALUE &&
+             this.rsrp == UNKNOWN_VALUE && this.rsrq == UNKNOWN_VALUE &&
+             this.rssnr == UNKNOWN_VALUE && this.cqi == UNKNOWN_VALUE &&
+             this.timingAdvance == UNKNOWN_VALUE);
+  },
+
   // nsILteCellInfo
 
-  mcc: INT32_MAX,
-  mnc: INT32_MAX,
-  cid: INT32_MAX,
-  pcid: INT32_MAX,
-  tac: INT32_MAX,
-  signalStrength: UNKNOWN_RSSI,
-  rsrp: INT32_MAX,
-  rsrq: INT32_MAX,
-  rssnr: INT32_MAX,
-  cqi: INT32_MAX,
-  timingAdvance: INT32_MAX
+  mcc: UNKNOWN_VALUE,
+  mnc: UNKNOWN_VALUE,
+  cid: UNKNOWN_VALUE,
+  pcid: UNKNOWN_VALUE,
+  tac: UNKNOWN_VALUE,
+  signalStrength: UNKNOWN_VALUE,
+  rsrp: UNKNOWN_VALUE,
+  rsrq: UNKNOWN_VALUE,
+  rssnr: UNKNOWN_VALUE,
+  cqi: UNKNOWN_VALUE,
+  timingAdvance: UNKNOWN_VALUE
 };
 
-function CdmaCellInfo() {}
+function CdmaCellInfo(aOptions) {
+  CellInfo.call(this, aOptions);
+
+  // Cell Identity
+  this.networkId = (aOptions.networkId !== undefined &&
+                    aOptions.networkId >= 0 && aOptions.networkId <= 65535) ?
+                   aOptions.networkId : UNKNOWN_VALUE;
+  this.systemId = (aOptions.systemId !== undefined && aOptions.systemId >= 0 &&
+                   aOptions.systemId <= 32767) ?
+                  aOptions.systemId : UNKNOWN_VALUE;
+  this.baseStationId = (aOptions.baseStationId !== undefined &&
+                        aOptions.baseStationId >= 0 &&
+                        aOptions.baseStationId <= 65535) ?
+                       aOptions.baseStationId : UNKNOWN_VALUE;
+  this.longitude = (aOptions.longitude !== undefined &&
+                    aOptions.longitude >= -2592000 &&
+                    aOptions.longitude <= 2592000) ?
+                   aOptions.longitude : UNKNOWN_VALUE;
+  this.latitude = (aOptions.latitude !== undefined &&
+                   aOptions.latitude >= -1296000 &&
+                   aOptions.latitude <= 1296000) ?
+                  aOptions.latitude : UNKNOWN_VALUE;
+
+  // Signal Strength
+  this.cdmaEcio = (aOptions.cdmaEcio !== undefined &&
+                   aOptions.cdmaEcio >= 0) ? aOptions.cdmaEcio : UNKNOWN_VALUE;
+  this.evdoDbm = (aOptions.evdoDbm !== undefined &&
+                  aOptions.evdoDbm >= 0) ? aOptions.evdoDbm : UNKNOWN_VALUE;
+  this.evdoEcio = (aOptions.evdoEcio !== undefined &&
+                   aOptions.evdoEcio >= 0) ? aOptions.evdoEcio : UNKNOWN_VALUE;
+  this.evdoSnr = (aOptions.evdoSnr !== undefined &&
+                  aOptions.evdoSnr >= 0 && aOptions.evdoSnr <= 8) ?
+                 aOptions.evdoSnr : UNKNOWN_VALUE;
+}
 CdmaCellInfo.prototype = {
   __proto__: CellInfo.prototype,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICellInfo,
@@ -269,18 +431,27 @@ CdmaCellInfo.prototype = {
     interfaces:       [Ci.nsICdmaCellInfo]
   }),
 
+  isValid: function() {
+    return !(this.networkId == UNKNOWN_VALUE && this.systemId == UNKNOWN_VALUE &&
+             this.baseStationId == UNKNOWN_VALUE &&
+             this.longitude == UNKNOWN_VALUE &&
+             this.latitude == UNKNOWN_VALUE && this.cdmaDbm == UNKNOWN_VALUE &&
+             this.cdmaEcio == UNKNOWN_VALUE && this.evdoDbm == UNKNOWN_VALUE &&
+             this.evdoEcio == UNKNOWN_VALUE && this.evdoSnr == UNKNOWN_VALUE);
+  },
+
   // nsICdmaCellInfo
 
-  networkId: INT32_MAX,
-  systemId: INT32_MAX,
-  baseStationId: INT32_MAX,
-  longitude: INT32_MAX,
-  latitude: INT32_MAX,
-  cdmaDbm: INT32_MAX,
-  cdmaEcio: INT32_MAX,
-  evdoDbm: INT32_MAX,
-  evdoEcio: INT32_MAX,
-  evdoSnr: INT32_MAX
+  networkId: UNKNOWN_VALUE,
+  systemId: UNKNOWN_VALUE,
+  baseStationId: UNKNOWN_VALUE,
+  longitude: UNKNOWN_VALUE,
+  latitude: UNKNOWN_VALUE,
+  cdmaDbm: UNKNOWN_VALUE,
+  cdmaEcio: UNKNOWN_VALUE,
+  evdoDbm: UNKNOWN_VALUE,
+  evdoEcio: UNKNOWN_VALUE,
+  evdoSnr: UNKNOWN_VALUE
 };
 
 function MobileConnectionProvider(aClientId, aRadioInterface) {
@@ -1069,26 +1240,26 @@ MobileConnectionProvider.prototype = {
         let cellInfo;
         switch (srcCellInfo.type) {
           case RIL.CELL_INFO_TYPE_GSM:
-            cellInfo = new GsmCellInfo();
+            cellInfo = new GsmCellInfo(srcCellInfo);
             break;
           case RIL.CELL_INFO_TYPE_WCDMA:
-            cellInfo = new WcdmaCellInfo();
+            cellInfo = new WcdmaCellInfo(srcCellInfo);
             break;
           case RIL.CELL_INFO_TYPE_LTE:
-            cellInfo = new LteCellInfo();
+            cellInfo = new LteCellInfo(srcCellInfo);
             break;
           case RIL.CELL_INFO_TYPE_CDMA:
-            cellInfo = new CdmaCellInfo();
+            cellInfo = new CdmaCellInfo(srcCellInfo);
             break;
         }
 
-        if (!cellInfo) {
+        if (!cellInfo || !cellInfo.isValid()) {
           continue;
         }
-        this._updateInfo(cellInfo, srcCellInfo);
+
         cellInfoList.push(cellInfo);
       }
-      aCallback.notifyGetCellInfoList(count, cellInfoList);
+      aCallback.notifyGetCellInfoList(cellInfoList.length, cellInfoList);
     }.bind(this));
   },
 
@@ -1105,11 +1276,13 @@ MobileConnectionProvider.prototype = {
       let count = aResponse.result.length;
       for (let i = 0; i < count; i++) {
         let srcCellInfo = aResponse.result[i];
-        let cellInfo = new NeighboringCellInfo();
-        this._updateInfo(cellInfo, srcCellInfo);
-        neighboringCellIds.push(cellInfo);
+        let cellInfo = new NeighboringCellInfo(srcCellInfo);
+        if (cellInfo && cellInfo.isValid()) {
+          neighboringCellIds.push(cellInfo);
+        }
       }
-      aCallback.notifyGetNeighboringCellIds(count, neighboringCellIds);
+      aCallback.notifyGetNeighboringCellIds(neighboringCellIds.length,
+                                            neighboringCellIds);
 
     }.bind(this));
   },
