@@ -6,14 +6,12 @@
 
 #include "mozilla/dom/MediaKeys.h"
 #include "GMPService.h"
-#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/MediaKeysBinding.h"
 #include "mozilla/dom/MediaKeyMessageEvent.h"
 #include "mozilla/dom/MediaKeyError.h"
 #include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/dom/DOMException.h"
-#include "mozilla/dom/PluginCrashedEvent.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/EMEUtils.h"
@@ -383,83 +381,6 @@ MediaKeys::Init(ErrorResult& aRv)
   return promise.forget();
 }
 
-class CrashHandler : public gmp::GeckoMediaPluginService::PluginCrashCallback
-{
-public:
-  CrashHandler(const uint32_t aPluginId,
-               nsPIDOMWindow* aParentWindow,
-               nsIDocument* aDocument)
-    : gmp::GeckoMediaPluginService::PluginCrashCallback(aPluginId)
-    , mPluginId(aPluginId)
-    , mParentWindowWeakPtr(do_GetWeakReference(aParentWindow))
-    , mDocumentWeakPtr(do_GetWeakReference(aDocument))
-  {
-  }
-
-  virtual void Run(const nsACString& aPluginName) override
-  {
-    PluginCrashedEventInit init;
-    init.mPluginID = mPluginId;
-    init.mBubbles = true;
-    init.mCancelable = true;
-    init.mGmpPlugin = true;
-    CopyUTF8toUTF16(aPluginName, init.mPluginName);
-    init.mSubmittedCrashReport = false;
-
-    // The following PluginCrashedEvent fields stay empty:
-    // init.mBrowserDumpID
-    // init.mPluginFilename
-    // TODO: Can/should we fill them?
-
-    nsCOMPtr<nsPIDOMWindow> parentWindow;
-    nsCOMPtr<nsIDocument> document;
-    if (!GetParentWindowAndDocumentIfValid(parentWindow, document)) {
-      return;
-    }
-
-    nsRefPtr<PluginCrashedEvent> event =
-      PluginCrashedEvent::Constructor(document, NS_LITERAL_STRING("PluginCrashed"), init);
-    event->SetTrusted(true);
-    event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
-
-    EventDispatcher::DispatchDOMEvent(parentWindow, nullptr, event, nullptr, nullptr);
-  }
-
-  virtual bool IsStillValid() override
-  {
-    nsCOMPtr<nsPIDOMWindow> parentWindow;
-    nsCOMPtr<nsIDocument> document;
-    return GetParentWindowAndDocumentIfValid(parentWindow, document);
-  }
-
-private:
-  virtual ~CrashHandler()
-  { }
-
-  bool
-  GetParentWindowAndDocumentIfValid(nsCOMPtr<nsPIDOMWindow>& parentWindow,
-                                    nsCOMPtr<nsIDocument>& document)
-  {
-    parentWindow = do_QueryReferent(mParentWindowWeakPtr);
-    if (!parentWindow) {
-      return false;
-    }
-    document = do_QueryReferent(mDocumentWeakPtr);
-    if (!document) {
-      return false;
-    }
-    nsCOMPtr<nsIDocument> parentWindowDocument = parentWindow->GetExtantDoc();
-    if (!parentWindowDocument || document.get() != parentWindowDocument.get()) {
-      return false;
-    }
-    return true;
-  }
-
-  uint32_t mPluginId;
-  nsWeakPtr mParentWindowWeakPtr;
-  nsWeakPtr mDocumentWeakPtr;
-};
-
 void
 MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const uint32_t aPluginId)
 {
@@ -489,11 +410,7 @@ MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const uint32_t
     if (NS_WARN_IF(!mParent)) {
       return;
     }
-    nsCOMPtr<nsIDocument> doc = mParent->GetExtantDoc();
-    if (NS_WARN_IF(!doc)) {
-      return;
-    }
-    service->AddPluginCrashCallback(new CrashHandler(aPluginId, mParent, doc));
+    service->AddPluginCrashedEventTarget(aPluginId, mParent);
     EME_LOG("MediaKeys[%p]::OnCDMCreated() registered crash handler for pluginId '%i'",
             this, aPluginId);
   }
