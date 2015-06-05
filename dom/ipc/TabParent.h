@@ -470,8 +470,6 @@ protected:
                                    const int32_t& aX, const int32_t& aY,
                                    const int32_t& aCx, const int32_t& aCy) override;
 
-    bool SendCompositionChangeEvent(mozilla::WidgetCompositionEvent& event);
-
     bool InitBrowserConfiguration(const nsCString& aURI,
                                   BrowserConfiguration& aConfiguration);
 
@@ -481,13 +479,6 @@ protected:
     static TabParent *mIMETabParent;
     ContentCache mContentCache;
     mozilla::WritingMode mWritingMode;
-    bool mIMEComposing;
-    bool mIMECompositionEnding;
-    uint32_t mIMEEventCountAfterEnding;
-    // Buffer to store composition text during ResetInputState
-    // Compositions in almost all cases are small enough for nsAutoString
-    nsAutoString mIMECompositionText;
-    uint32_t mIMECompositionStart;
 
     uint32_t mIMECompositionRectOffset;
     InfallibleTArray<LayoutDeviceIntRect> mIMECompositionRects;
