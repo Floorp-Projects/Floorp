@@ -7,6 +7,8 @@
 #include "InternalResponse.h"
 
 #include "mozilla/dom/InternalHeaders.h"
+#include "mozilla/dom/cache/CacheTypes.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsStreamUtils.h"
 
 namespace mozilla {
@@ -17,6 +19,10 @@ InternalResponse::InternalResponse(uint16_t aStatus, const nsACString& aStatusTe
   , mStatus(aStatus)
   , mStatusText(aStatusText)
   , mHeaders(new InternalHeaders(HeadersGuardEnum::Response))
+{
+}
+
+InternalResponse::~InternalResponse()
 {
 }
 
@@ -71,6 +77,42 @@ InternalResponse::CORSResponse()
   cors->mHeaders = InternalHeaders::CORSHeaders(Headers());
   cors->mWrappedResponse = this;
   return cors.forget();
+}
+
+void
+InternalResponse::SetPrincipalInfo(UniquePtr<mozilla::ipc::PrincipalInfo> aPrincipalInfo)
+{
+  mPrincipalInfo = Move(aPrincipalInfo);
+}
+
+already_AddRefed<InternalResponse>
+InternalResponse::OpaqueResponse()
+{
+  MOZ_ASSERT(!mWrappedResponse, "Can't OpaqueResponse a already wrapped response");
+  nsRefPtr<InternalResponse> response = new InternalResponse(0, EmptyCString());
+  response->mType = ResponseType::Opaque;
+  response->mTerminationReason = mTerminationReason;
+  response->mURL = mURL;
+  response->mChannelInfo = mChannelInfo;
+  if (mPrincipalInfo) {
+    response->mPrincipalInfo = MakeUnique<mozilla::ipc::PrincipalInfo>(*mPrincipalInfo);
+  }
+  response->mWrappedResponse = this;
+  return response.forget();
+}
+
+already_AddRefed<InternalResponse>
+InternalResponse::CreateIncompleteCopy()
+{
+  nsRefPtr<InternalResponse> copy = new InternalResponse(mStatus, mStatusText);
+  copy->mType = mType;
+  copy->mTerminationReason = mTerminationReason;
+  copy->mURL = mURL;
+  copy->mChannelInfo = mChannelInfo;
+  if (mPrincipalInfo) {
+    copy->mPrincipalInfo = MakeUnique<mozilla::ipc::PrincipalInfo>(*mPrincipalInfo);
+  }
+  return copy.forget();
 }
 
 } // namespace dom

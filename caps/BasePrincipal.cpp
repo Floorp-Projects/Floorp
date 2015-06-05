@@ -115,6 +115,23 @@ OriginAttributes::PopulateFromSuffix(const nsACString& aStr)
   return params->ForEach(iterator);
 }
 
+bool
+OriginAttributes::PopulateFromOrigin(const nsACString& aOrigin,
+                                     nsACString& aOriginNoSuffix)
+{
+  // RFindChar is only available on nsCString.
+  nsCString origin(aOrigin);
+  int32_t pos = origin.RFindChar('!');
+
+  if (pos == kNotFound) {
+    aOriginNoSuffix = origin;
+    return true;
+  }
+
+  aOriginNoSuffix = Substring(origin, 0, pos);
+  return PopulateFromSuffix(Substring(origin, pos));
+}
+
 void
 OriginAttributes::CookieJar(nsACString& aStr)
 {
