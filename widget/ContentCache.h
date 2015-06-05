@@ -82,8 +82,6 @@ public:
                       const IMENotification* aNotification = nullptr);
   bool CacheText(nsIWidget* aWidget,
                  const IMENotification* aNotification = nullptr);
-  bool CacheTextRects(nsIWidget* aWidget,
-                      const IMENotification* aNotification = nullptr);
 
   bool CacheAll(nsIWidget* aWidget,
                 const IMENotification* aNotification = nullptr);
@@ -118,22 +116,10 @@ public:
    */
   void InitNotification(IMENotification& aNotification) const;
 
-  void SetSelection(uint32_t aCaretOffset, const WritingMode& aWritingMode)
-  {
-    SetSelection(aCaretOffset, aCaretOffset, aWritingMode);
-  }
-  void SetSelection(uint32_t aStartOffset,
-                    uint32_t aLength,
-                    bool aReversed)
-  {
-    SetSelection(aStartOffset, aLength, aReversed, mSelection.mWritingMode);
-  }
-  void SetSelection(uint32_t aStartOffset,
+  void SetSelection(nsIWidget* aWidget,
+                    uint32_t aStartOffset,
                     uint32_t aLength,
                     bool aReversed,
-                    const WritingMode& aWritingMode);
-  void SetSelection(uint32_t aAnchorOffset,
-                    uint32_t aFocusOffset,
                     const WritingMode& aWritingMode);
 
 private:
@@ -155,6 +141,10 @@ private:
 
     WritingMode mWritingMode;
 
+    // Character rects at next character of mAnchor and mFocus.
+    LayoutDeviceIntRect mAnchorCharRect;
+    LayoutDeviceIntRect mFocusCharRect;
+
     Selection()
       : mAnchor(0)
       , mFocus(0)
@@ -165,6 +155,8 @@ private:
     {
       mAnchor = mFocus = 0;
       mWritingMode = WritingMode();
+      mAnchorCharRect.SetEmpty();
+      mFocusCharRect.SetEmpty();
     }
 
     bool Collapsed() const { return mFocus == mAnchor; }
@@ -253,6 +245,14 @@ private:
   bool mIsComposing;
   bool mRequestedToCommitOrCancelComposition;
   bool mIsChrome;
+
+  bool QueryCharRect(nsIWidget* aWidget,
+                     uint32_t aOffset,
+                     LayoutDeviceIntRect& aCharRect) const;
+  bool CacheCaret(nsIWidget* aWidget,
+                  const IMENotification* aNotification = nullptr);
+  bool CacheTextRects(nsIWidget* aWidget,
+                      const IMENotification* aNotification = nullptr);
 
   bool GetCaretRect(uint32_t aOffset, LayoutDeviceIntRect& aCaretRect) const;
   bool GetTextRect(uint32_t aOffset,
