@@ -17,12 +17,13 @@ exports.run = function(type) {
   return new Promise(function(resolve) {
     type = type || "";
     [
-      (!isDebug && /^(modules)?$/.test(type)) && require.resolve("../bin/node-scripts/test.modules"),
-      (!isDebug && /^(addons)?$/.test(type)) && require.resolve("../bin/node-scripts/test.addons"),
-      (/^(examples)?$/.test(type)) && require.resolve("../bin/node-scripts/test.examples"),
+      (!isDebug && /^(firefox-bin)?$/.test(type)) && require.resolve("../bin/node-scripts/test.firefox-bin"),
       (!isDebug && /^(docs)?$/.test(type)) && require.resolve("../bin/node-scripts/test.docs"),
       (!isDebug && /^(ini)?$/.test(type)) && require.resolve("../bin/node-scripts/test.ini"),
-    ].sort().forEach(function(filepath) {
+      (/^(examples)?$/.test(type)) && require.resolve("../bin/node-scripts/test.examples"),
+      (!isDebug && /^(addons)?$/.test(type)) && require.resolve("../bin/node-scripts/test.addons"),
+      (!isDebug && /^(modules)?$/.test(type)) && require.resolve("../bin/node-scripts/test.modules"),
+    ].forEach(function(filepath) {
       filepath && mocha.addFile(filepath);
     })
 

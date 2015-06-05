@@ -65,6 +65,9 @@ function run (cmd, options, p) {
     if (p) {
       proc.stdout.pipe(p.stdout);
     }
+    else if (!isDebug) {
+      proc.stdout.pipe(DEFAULT_PROCESS.stdout);
+    }
     else {
       proc.stdout.on("data", function (data) {
         data = (data || "") + "";

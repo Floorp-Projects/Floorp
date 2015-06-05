@@ -102,10 +102,21 @@ compartment.
     *promise*, has been allocated in the scope of the debuggees.
 
     This handler method should return a [resumption value][rv] specifying how
-    the debuggee's execution should proceed. However, note that a <code>{ return:
-    <i>value</i> }</code> resumption value is treated like `undefined` ("continue
-    normally"); <i>value</i> is ignored. (Allowing the handler to substitute
-    its own value for the new global object doesn't seem useful.)
+    the debuggee's execution should proceed. However, note that a <code>{
+    return: <i>value</i> }</code> resumption value is treated like `undefined`
+    ("continue normally"); <i>value</i> is ignored.
+
+<code>onPromiseSettled(<i>promise</i>)</code>
+:   A Promise object, referenced by the [`Debugger.Object`][object] instance
+    *promise* that was allocated within a debuggee scope, has settled (either
+    fulfilled or rejected). The Promise's state and fulfillment or rejection
+    value can be obtained via the
+    [PromiseDebugging webidl interface][promise-debugging].
+
+    This handler method should return a [resumption value][rv] specifying how
+    the debuggee's execution should proceed. However, note that a <code>{
+    return: <i>value</i> }</code> resumption value is treated like `undefined`
+    ("continue normally"); <i>value</i> is ignored.
 
 <code>onDebuggerStatement(<i>frame</i>)</code>
 :   Debuggee code has executed a <i>debugger</i> statement in <i>frame</i>.

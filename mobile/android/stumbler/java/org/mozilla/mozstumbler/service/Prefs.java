@@ -4,7 +4,6 @@
 
 package org.mozilla.mozstumbler.service;
 
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -200,7 +199,6 @@ public  final class Prefs {
         }
     }
 
-    @SuppressLint("InlinedApi")
     private SharedPreferences getPrefs() {
         return mSharedPrefs;
     }

@@ -443,7 +443,7 @@ function stopTimer(aName, aTimestamp) {
 function dumpMessage(aConsole, aLevel, aMessage) {
   aConsole.dump(
     "console." + aLevel + ": " +
-    aConsole.prefix +
+    (aConsole.prefix ? aConsole.prefix + ": " : "")  +
     aMessage + "\n"
   );
 }
@@ -533,6 +533,7 @@ function sendConsoleAPIMessage(aConsole, aLevel, aFrame, aArgs, aOptions = {})
     functionName: aFrame.functionName,
     timeStamp: Date.now(),
     arguments: aArgs,
+    prefix: aConsole.prefix,
   };
 
   consoleEvent.wrappedJSObject = consoleEvent;

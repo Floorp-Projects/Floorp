@@ -33,13 +33,6 @@ function invalidResolve (assert) {
 }
 exports.invalidResolve = invalidResolve;
 
-function invalidReject (assert) {
-  return function (e) {
-    assert.fail('Reject state should not be called: ' + e);
-  };
-}
-exports.invalidReject = invalidReject;
-
 // Removes all children of group
 function clearBookmarks (group) {
   group

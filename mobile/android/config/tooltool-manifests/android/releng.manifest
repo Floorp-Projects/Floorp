@@ -7,9 +7,9 @@
 "filename": "android-ndk.tar.bz2"
 },
 {
-"size": 227988048,
+"size": 329217868,
 "visibility": "internal",
-"digest": "c84db0abd1f4fda1bb38292ef561e211e1e6b99586764fd8cf0829fa4d0c6a605eb21e1eb5462465fcca64749d48e22ac1b13029e2623bbdfe103801f5ef1411",
+"digest": "1cf54f12c271a2eea8f03caafa458207768ba12400cf53d742e3c4654a32b18fb75d8e0dece95e27691695751a6f6514ccb724b1a74958948c5f111c5c00da4f",
 "algorithm": "sha512",
 "filename": "android-sdk.tar.xz"
 },
