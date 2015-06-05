@@ -14,6 +14,10 @@ add_task(function*() {
 
   let {textEditorContextMenuPopup} = projecteditor;
 
+  // Update menu items for a clean slate, so previous tests cannot
+  // affect paste, and possibly other side effects
+  projecteditor._updateMenuItems();
+
   let cmdDelete = textEditorContextMenuPopup.querySelector("[command=cmd_delete]");
   let cmdSelectAll = textEditorContextMenuPopup.querySelector("[command=cmd_selectAll]");
   let cmdCut = textEditorContextMenuPopup.querySelector("[command=cmd_cut]");

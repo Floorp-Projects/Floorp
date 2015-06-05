@@ -7,32 +7,37 @@
 
 const TEST_URL = EXAMPLE_URL + "doc_innerHTML.html"
 
-function* getMarkers(front) {
-  const { promise, resolve } = Promise.defer();
-  const handler = (_, name, markers) => {
-    if (name === "markers") {
-      resolve(markers);
-    }
-  };
-  front.on("timeline-data", handler);
-
-  yield front.startRecording({ withMarkers: true, withTicks: true });
-
-  const markers = yield promise;
-  front.off("timeline-data", handler);
-  yield front.stopRecording();
-
-  return markers;
-}
-
 function* spawnTest () {
   let { target, front } = yield initBackend(TEST_URL);
+  let markers = [];
 
-  const markers = yield getMarkers(front);
-  info("markers = " + JSON.stringify(markers, null, 2));
-  ok(markers.some(m => m.name === "Parse HTML" && m.stack != undefined),
-     "Should get some Parse HTML markers");
+  front.on("timeline-data", handler);
+  let model = yield front.startRecording({ withTicks: true });
+
+  yield waitUntil(() => {
+    return markers.length;
+  }, 100);
+
+  front.off("timeline-data", handler);
+  yield front.stopRecording(model);
+
+  info(`Got ${markers.length} markers.`);
+
+  ok(markers.every(({name}) => name === "Parse HTML"), "All markers found are Parse HTML markers");
 
   yield removeTab(target.tab);
   finish();
+
+  function handler (_, name, _markers) {
+    if (name !== "markers") {
+      return;
+    }
+
+    _markers.forEach(marker => {
+      info(marker.name);
+      if (marker.name === "Parse HTML") {
+        markers.push(marker);
+      }
+    });
+  }
 }

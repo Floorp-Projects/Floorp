@@ -19,45 +19,44 @@ const {
   search
 } = require('sdk/places/history');
 const {
-  invalidResolve, invalidReject, createTree,
+  invalidResolve, createTree,
   compareWithHost, addVisits, resetPlaces
 } = require('./places-helper');
 const { promisedEmitter } = require('sdk/places/utils');
 
-exports.testEmptyQuery = function (assert, done) {
+exports.testEmptyQuery = function*(assert) {
   let within = toBeWithin();
-  addVisits([
+  yield addVisits([
     'http://simplequery-1.com', 'http://simplequery-2.com'
-  ]).then(searchP).then(results => {
-    assert.equal(results.length, 2, 'Correct number of entries returned');
-    assert.equal(results[0].url, 'http://simplequery-1.com/',
-      'matches url');
-    assert.equal(results[1].url, 'http://simplequery-2.com/',
-      'matches url');
-    assert.equal(results[0].title, 'Test visit for ' + results[0].url,
-      'title matches');
-    assert.equal(results[1].title, 'Test visit for ' + results[1].url,
-      'title matches');
-    assert.equal(results[0].visitCount, 1, 'matches access');
-    assert.equal(results[1].visitCount, 1, 'matches access');
-    assert.ok(within(results[0].time), 'accurate access time');
-    assert.ok(within(results[1].time), 'accurate access time');
-    assert.equal(Object.keys(results[0]).length, 4,
-      'no addition exposed properties on history result');
-    done();
-  }, invalidReject);
+  ]);
+
+  let results = yield searchP();
+  assert.equal(results.length, 2, 'Correct number of entries returned');
+  assert.equal(results[0].url, 'http://simplequery-1.com/',
+    'matches url');
+  assert.equal(results[1].url, 'http://simplequery-2.com/',
+    'matches url');
+  assert.equal(results[0].title, 'Test visit for ' + results[0].url,
+    'title matches');
+  assert.equal(results[1].title, 'Test visit for ' + results[1].url,
+    'title matches');
+  assert.equal(results[0].visitCount, 1, 'matches access');
+  assert.equal(results[1].visitCount, 1, 'matches access');
+  assert.ok(within(results[0].time), 'accurate access time');
+  assert.ok(within(results[1].time), 'accurate access time');
+  assert.equal(Object.keys(results[0]).length, 4,
+    'no addition exposed properties on history result');
 };
 
-exports.testVisitCount = function (assert, done) {
-  addVisits([
+exports.testVisitCount = function*(assert) {
+  yield addVisits([
     'http://simplequery-1.com', 'http://simplequery-1.com',
     'http://simplequery-1.com', 'http://simplequery-1.com'
-  ]).then(searchP).then(results => {
-    assert.equal(results.length, 1, 'Correct number of entries returned');
-    assert.equal(results[0].url, 'http://simplequery-1.com/', 'correct url');
-    assert.equal(results[0].visitCount, 4, 'matches access count');
-    done();
-  }, invalidReject);
+  ]);
+  let results = yield searchP();
+  assert.equal(results.length, 1, 'Correct number of entries returned');
+  assert.equal(results[0].url, 'http://simplequery-1.com/', 'correct url');
+  assert.equal(results[0].visitCount, 4, 'matches access count');
 };
 
 /*
@@ -67,24 +66,23 @@ exports.testVisitCount = function (assert, done) {
  * 'http://mozilla.org/'
  * 'http://mozilla.org/*'
  */
-exports.testSearchURL = function (assert, done) {
-  addVisits([
+exports.testSearchURLForHistory = function*(assert) {
+  yield addVisits([
     'http://developer.mozilla.org', 'http://mozilla.org',
     'http://mozilla.org/index', 'https://mozilla.org'
-  ]).then(() => searchP({ url: '*.mozilla.org' }))
-  .then(results => {
-    assert.equal(results.length, 4, 'returns all entries');
-    return searchP({ url: 'mozilla.org' });
-  }).then(results => {
-    assert.equal(results.length, 3, 'returns entries where mozilla.org is host');
-    return searchP({ url: 'http://mozilla.org/' });
-  }).then(results => {
-    assert.equal(results.length, 1, 'should just be an exact match');
-    return searchP({ url: 'http://mozilla.org/*' });
-  }).then(results => {
-    assert.equal(results.length, 2, 'should match anything starting with substring');
-    done();
-  });
+  ]);
+
+  let results = yield searchP({ url: 'http://mozilla.org/' });
+  assert.equal(results.length, 1, 'should just be an exact match');
+
+  results = yield searchP({ url: '*.mozilla.org' });
+  assert.equal(results.length, 4, 'returns all entries');
+
+  results = yield searchP({ url: 'mozilla.org' });
+  assert.equal(results.length, 3, 'returns entries where mozilla.org is host');
+
+  results = yield searchP({ url: 'http://mozilla.org/*' });
+  assert.equal(results.length, 2, 'should match anything starting with substring');
 };
 
 // Disabling due to intermittent Bug 892619
@@ -124,23 +122,21 @@ exports.testSearchTimeRange = function (assert, done) {
   });
 };
 */
-exports.testSearchQuery = function (assert, done) {
-  addVisits([
+exports.testSearchQueryForHistory = function*(assert) {
+  yield addVisits([
     'http://mozilla.com', 'http://webaud.io', 'http://mozilla.com/webfwd'
-  ]).then(() => {
-    return searchP({ query: 'moz' });
-  }).then(results => {
-    assert.equal(results.length, 2, 'should return urls that match substring');
-    results.map(({url}) => {
-      assert.ok(/moz/.test(url), 'correct item');
-    });
-    return searchP([{ query: 'webfwd' }, { query: 'aud.io' }]);
-  }).then(results => {
-    assert.equal(results.length, 2, 'should OR separate queries');
-    results.map(({url}) => {
-      assert.ok(/webfwd|aud\.io/.test(url), 'correct item');
-    });
-    done();
+  ]);
+
+  let results = yield searchP({ query: 'moz' });
+  assert.equal(results.length, 2, 'should return urls that match substring');
+  results.map(({url}) => {
+    assert.ok(/moz/.test(url), 'correct item');
+  });
+
+  results = yield searchP([{ query: 'webfwd' }, { query: 'aud.io' }]);
+  assert.equal(results.length, 2, 'should OR separate queries');
+  results.map(({url}) => {
+    assert.ok(/webfwd|aud\.io/.test(url), 'correct item');
   });
 };
 
@@ -168,51 +164,50 @@ exports.testSearchCount = function (assert, done) {
   }
 };
 
-exports.testSearchSort = function (assert, done) {
-  let places = [
-    'http://mozilla.com/', 'http://webaud.io/', 'http://mozilla.com/webfwd/',
-    'http://developer.mozilla.com/', 'http://bandcamp.com/'
-  ];
-  addVisits(places).then(() => {
-    return searchP({}, { sort: 'title' });
-  }).then(results => {
-    checkOrder(results, [4,3,0,2,1]);
-    return searchP({}, { sort: 'title', descending: true });
-  }).then(results => {
-    checkOrder(results, [1,2,0,3,4]);
-    return searchP({}, { sort: 'url' });
-  }).then(results => {
-    checkOrder(results, [4,3,0,2,1]);
-    return searchP({}, { sort: 'url', descending: true });
-  }).then(results => {
-    checkOrder(results, [1,2,0,3,4]);
-    return addVisits('http://mozilla.com') // for visit conut
-      .then(() => addVisits('http://github.com')); // for checking date
-  }).then(() => {
-    return searchP({}, { sort: 'visitCount' });
-  }).then(results => {
-    assert.equal(results[5].url, 'http://mozilla.com/',
-      'last entry is the highest visit count');
-    return searchP({}, { sort: 'visitCount', descending: true });
-  }).then(results => {
-    assert.equal(results[0].url, 'http://mozilla.com/',
-      'first entry is the highest visit count');
-    return searchP({}, { sort: 'date' });
-  }).then(results => {
-    assert.equal(results[5].url, 'http://github.com/',
-      'latest visited should be first');
-    return searchP({}, { sort: 'date', descending: true });
-  }).then(results => {
-    assert.equal(results[0].url, 'http://github.com/',
-      'latest visited should be at the end');
-  }).then(done);
-
+exports.testSearchSortForHistory = function*(assert) {
   function checkOrder (results, nums) {
     assert.equal(results.length, nums.length, 'expected return count');
     for (let i = 0; i < nums.length; i++) {
       assert.equal(results[i].url, places[nums[i]], 'successful order');
     }
   }
+
+  let places = [
+    'http://mozilla.com/', 'http://webaud.io/', 'http://mozilla.com/webfwd/',
+    'http://developer.mozilla.com/', 'http://bandcamp.com/'
+  ];
+  yield addVisits(places);
+
+  let results = yield searchP({}, { sort: 'title' });
+  checkOrder(results, [4,3,0,2,1]);
+
+  results = yield searchP({}, { sort: 'title', descending: true });
+  checkOrder(results, [1,2,0,3,4]);
+
+  results = yield searchP({}, { sort: 'url' });
+  checkOrder(results, [4,3,0,2,1]);
+
+  results = yield searchP({}, { sort: 'url', descending: true });
+  checkOrder(results, [1,2,0,3,4]);
+
+  yield addVisits('http://mozilla.com'); // for visit conut
+  yield addVisits('http://github.com'); // for checking date
+
+  results = yield searchP({}, { sort: 'visitCount' });
+  assert.equal(results[5].url, 'http://mozilla.com/',
+    'last entry is the highest visit count');
+
+  results = yield  searchP({}, { sort: 'visitCount', descending: true });
+  assert.equal(results[0].url, 'http://mozilla.com/',
+    'first entry is the highest visit count');
+
+  results = yield  searchP({}, { sort: 'date' });
+  assert.equal(results[5].url, 'http://github.com/',
+    'latest visited should be first');
+
+  results = yield  searchP({}, { sort: 'date', descending: true });
+  assert.equal(results[0].url, 'http://github.com/',
+    'latest visited should be at the end');
 };
 
 exports.testEmitters = function (assert, done) {

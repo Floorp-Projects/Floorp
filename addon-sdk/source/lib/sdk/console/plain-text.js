@@ -47,7 +47,7 @@ branch.addObserver(SDK_LOG_LEVEL_PREF, logLevelObserver, true);
 function PlainTextConsole(print, innerID) {
 
   let consoleOptions = {
-    prefix: self.name + ": ",
+    prefix: self.name,
     maxLogLevel: logLevel,
     dump: print,
     innerID: innerID,

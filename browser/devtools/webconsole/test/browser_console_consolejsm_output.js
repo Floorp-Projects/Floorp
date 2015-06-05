@@ -7,11 +7,11 @@
 
 "use strict";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let storage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(Ci.nsIConsoleAPIStorage);
   storage.clearEvents();
 
-  let console = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).console;
+  let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
   console.log("bug861338-log-cached");
 
   let hud = yield HUDService.toggleBrowserConsole();
@@ -134,4 +134,35 @@ let test = asyncTest(function*() {
     name: "bug851231prop",
     value: "bug851231value",
   }], { webconsole: hud });
+
+  yield HUDService.toggleBrowserConsole();
+});
+
+add_task(function* test_prefix() {
+  let storage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(Ci.nsIConsoleAPIStorage);
+  storage.clearEvents();
+
+  let {ConsoleAPI} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+  let consoleOptions = {
+    maxLogLevel: "error",
+    prefix: "Log Prefix",
+  };
+  let console2 = new ConsoleAPI(consoleOptions);
+  console2.error("Testing a prefix");
+  console2.log("Below the maxLogLevel");
+
+  let hud = yield HUDService.toggleBrowserConsole();
+
+  yield waitForMessages({
+    webconsole: hud,
+    messages: [{
+      name: "cached console.error message",
+      prefix: "Log Prefix:",
+      severity: SEVERITY_ERROR,
+      text: "Testing a prefix",
+    }],
+  });
+
+  hud.jsterm.clearOutput(true);
+  yield HUDService.toggleBrowserConsole();
 });

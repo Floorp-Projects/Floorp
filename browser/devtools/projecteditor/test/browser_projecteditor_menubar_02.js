@@ -12,6 +12,10 @@ add_task(function*() {
   let projecteditor = yield addProjectEditorTabForTempDirectory();
   let menubar = projecteditor.menubar;
 
+  // Update menu items for a clean slate, so previous tests cannot
+  // affect paste, and possibly other side effects
+  projecteditor._updateMenuItems();
+
   // let projecteditor = yield addProjectEditorTabForTempDirectory();
   ok(projecteditor, "ProjectEditor has loaded");
 
