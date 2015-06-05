@@ -30,7 +30,7 @@ class LucidDreamRunner(MozbuildObject):
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command('luciddream', category='testing',
-        description='Runs the luciddream test suite.')
+        description='Run the luciddream test suite (remote debugging).')
     @CommandArgument("--consoles", action="store_true",
                      help="Open jsconsole in both runtimes.")
     @CommandArgument('--b2g-desktop', dest="b2g_desktop_path", type=str, default=None,

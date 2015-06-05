@@ -12,6 +12,7 @@
 
 menu,
 menuitem,
+menucaption,
 .splitmenu-menuitem {
   -moz-appearance: menuitem;
   -moz-box-align: center;
@@ -70,6 +71,12 @@ menuitem.spell-suggestion {
   font-weight: inherit;
   -moz-margin-start: 2px !important;
   -moz-padding-end: 2px;
+}
+
+menucaption > .menu-text,
+menucaption > .menu-iconic-text {
+  font-weight: bold;
+  -moz-padding-start: 0 !important;
 }
 
 .menu-description {
@@ -173,7 +180,8 @@ menubar > menu:-moz-window-inactive {
 /* ::::: menu/menuitems in popups ::::: */
 
 menupopup > menu,
-menupopup > menuitem {
+menupopup > menuitem,
+menupopup > menucaption {
   max-width: 42em;
 }
 
@@ -187,6 +195,7 @@ menuitem[_moz-menuactive="true"],
 /* ::::: menu/menuitems in menulist popups ::::: */
 
 menulist > menupopup > menuitem,
+menulist > menupopup > menucaption,
 menulist > menupopup > menu {
   -moz-appearance: none !important;
   border: 1px solid transparent;
@@ -204,12 +213,14 @@ menulist > menupopup > menu[_moz-menuactive="true"] {
 }
 
 menulist > menupopup > menuitem > .menu-iconic-left,
+menulist > menupopup > menucaption > .menu-iconic-left,
 menulist > menupopup > menu > .menu-iconic-left {
   display: none;
   padding-top: 0px;
 }
 
 menulist > menupopup > menuitem > label,
+menulist > menupopup > menucaption > label,
 menulist > menupopup > menu > label {
   padding-top: 0px;
   padding-bottom: 0px;
@@ -228,7 +239,7 @@ menulist > menupopup > menuitem[disabled="true"]:not([_moz-menuactive="true"]):-
   text-shadow: none;
 }
 
-menulist > menupopup > menuitem:not(.menuitem-iconic) > .menu-iconic-text {
+menulist > menupopup > :moz-any(menuitem, menucaption):not(.menuitem-iconic) > .menu-iconic-text,
   margin: 0 !important;
 }
 
