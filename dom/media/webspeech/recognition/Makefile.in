@@ -11,6 +11,6 @@ MODELSPS_FILES := models/dict/cmu07a.dic \
 		models/en-us-semi/transition_matrices \
 		models/en-us-semi/variances
 
-MODELSPS_DEST := $(DIST)/bin/models
+MODELSPS_DEST := $(DIST)/bin
 INSTALL_TARGETS += MODELSPS
 endif
