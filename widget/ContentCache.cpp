@@ -282,8 +282,6 @@ ContentCache::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
          mText.Length()));
       if (NS_WARN_IF(!GetCaretRect(aEvent.mInput.mOffset,
                                    aEvent.mReply.mRect))) {
-        // XXX If the input offset is in the range of cached text rects,
-        //     we can guess the caret rect.
         MOZ_LOG(sContentCacheLog, LogLevel::Error,
           ("ContentCache: 0x%p (mIsChrome=%s) HandleQueryContentEvent(), "
            "FAILED to get caret rect",
@@ -376,13 +374,8 @@ ContentCache::CacheSelection(nsIWidget* aWidget,
   }
   mSelection.mWritingMode = selection.GetWritingMode();
 
-  nsRefPtr<TextComposition> textComposition =
-    IMEStateManager::GetTextCompositionFor(aWidget);
-  if (textComposition) {
-    mCaret.mOffset = textComposition->OffsetOfTargetClause();
-  } else {
-    mCaret.mOffset = selection.mReply.mOffset;
-  }
+  // XXX Should be mSelection.mFocus?
+  mCaret.mOffset = selection.mReply.mOffset;
 
   status = nsEventStatus_eIgnore;
   WidgetQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, aWidget);
@@ -611,15 +604,32 @@ ContentCache::GetCaretRect(uint32_t aOffset,
 {
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("ContentCache: 0x%p (mIsChrome=%s) GetCaretRect(aOffset=%u), "
-     "mCaret={ mOffset=%u, mRect=%s }",
+     "mCaret={ mOffset=%u, mRect=%s, IsValid()=%s }, mTextRectArray={ "
+     "mStart=%u, mRects.Length()=%u }, mSelection={ mWritingMode=%s }",
      this, GetBoolName(mIsChrome), aOffset, mCaret.mOffset,
-     GetRectText(mCaret.mRect).get()));
+     GetRectText(mCaret.mRect).get(), GetBoolName(mCaret.IsValid()),
+     mTextRectArray.mStart, mTextRectArray.mRects.Length(),
+     GetWritingModeName(mSelection.mWritingMode).get()));
 
-  if (mCaret.mOffset != aOffset) {
+  if (mCaret.IsValid() && mCaret.mOffset == aOffset) {
+    aCaretRect = mCaret.mRect;
+    return true;
+  }
+
+  // Guess caret rect from the text rect if it's stored.
+  if (!GetTextRect(aOffset, aCaretRect)) {
     aCaretRect.SetEmpty();
     return false;
   }
-  aCaretRect = mCaret.mRect;
+
+  // XXX This is not bidi aware because we don't cache each character's
+  //     direction.  However, this is usually used by IME, so, assuming the
+  //     character is in LRT context must not cause any problem.
+  if (mSelection.mWritingMode.IsVertical()) {
+    aCaretRect.height = mCaret.IsValid() ? mCaret.mRect.height : 1;
+  } else {
+    aCaretRect.width = mCaret.IsValid() ? mCaret.mRect.width : 1;
+  }
   return true;
 }
 
