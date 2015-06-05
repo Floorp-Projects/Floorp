@@ -10,12 +10,17 @@
   color: black;
   direction: ltr;
   -moz-control-character-visibility: visible;
+  height: 100%;
 }
 #viewsource {
   font-family: -moz-fixed;
   font-weight: normal;
   white-space: pre;
   counter-reset: line;
+  height: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 8px;
 }
 #viewsource.wrap {
   white-space: pre-wrap;
@@ -24,7 +29,7 @@
 pre {
   font: inherit;
   color: inherit;
-  white-space: inherit; 
+  white-space: inherit;
   margin: 0 0 0 5ch;
 }
 pre[id]:before,
