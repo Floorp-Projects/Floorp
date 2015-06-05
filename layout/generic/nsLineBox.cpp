@@ -145,8 +145,6 @@ nsLineBox::NoteFramesMovedFrom(nsLineBox* aFromLine)
   }
 }
 
-// Overloaded new operator. Uses an arena (which comes from the presShell)
-// to perform the allocation.
 void*
 nsLineBox::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
 {

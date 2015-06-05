@@ -367,7 +367,8 @@ Statistics::formatCompactSummaryMessage() const
                     "Max Pause: %.3fms; MMU 20ms: %.1f%%; MMU 50ms: %.1f%%; Total: %.3fms; ",
                     t(longest), mmu20 * 100., mmu50 * 100., t(total));
     } else {
-        JS_snprintf(buffer, sizeof(buffer), "Non-Incremental: %.3fms; ", t(total));
+        JS_snprintf(buffer, sizeof(buffer), "Non-Incremental: %.3fms (%s); ",
+                    t(total), nonincrementalReason_);
     }
     if (!fragments.append(make_string_copy(buffer)))
         return UniqueChars(nullptr);

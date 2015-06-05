@@ -701,11 +701,35 @@ js::CreateRegExpPrototype(JSContext* cx, JSProtoKey key)
     return proto;
 }
 
+static bool
+ReportLastIndexNonwritable(JSContext* cx)
+{
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_READ_ONLY, "\"lastIndex\"");
+    return false;
+}
+
+static bool
+SetLastIndex(JSContext* cx, Handle<RegExpObject*> reobj, double lastIndex)
+{
+    if (!reobj->lookup(cx, cx->names().lastIndex)->writable())
+        return ReportLastIndexNonwritable(cx);
+
+    reobj->setLastIndex(lastIndex);
+    return true;
+}
+
+/* ES6 final draft 21.2.5.2.2. */
 RegExpRunStatus
 js::ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
                   MatchPairs* matches, RegExpStaticsUpdate staticsUpdate)
 {
-    /* Step 1 (b) was performed by CallNonGenericMethod. */
+    /*
+     * WARNING: Despite the presence of spec step comment numbers, this
+     *          algorithm isn't consistent with any ES6 version, draft or
+     *          otherwise.  YOU HAVE BEEN WARNED.
+     */
+
+    /* Steps 1-2 performed by the caller. */
     Rooted<RegExpObject*> reobj(cx, &regexp->as<RegExpObject>());
 
     RegExpGuard re(cx);
@@ -721,16 +745,15 @@ js::ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
         res = nullptr;
     }
 
-    /* Step 3. */
     RootedLinearString input(cx, string->ensureLinear(cx));
     if (!input)
         return RegExpRunStatus_Error;
 
-    /* Step 4. */
-    RootedValue lastIndex(cx, reobj->getLastIndex());
+    /* Step 3. */
     size_t length = input->length();
 
-    /* Step 5. */
+    /* Steps 4-5. */
+    RootedValue lastIndex(cx, reobj->getLastIndex());
     int searchIndex;
     if (lastIndex.isInt32()) {
         /* Aggressively avoid doubles. */
@@ -740,9 +763,13 @@ js::ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
         if (!ToInteger(cx, lastIndex, &d))
             return RegExpRunStatus_Error;
 
-        /* Inlined steps 6, 7, 9a with doubles to detect failure case. */
+        /* Inlined steps 6-10, 15.a with doubles to detect failure case. */
         if (reobj->needUpdateLastIndex() && (d < 0 || d > length)) {
-            reobj->zeroLastIndex();
+            /* Steps 15.a.i-ii. */
+            if (!SetLastIndex(cx, reobj, 0))
+                return RegExpRunStatus_Error;
+
+            /* Step 15.a.iii. */
             return RegExpRunStatus_Success_NotFound;
         }
 
@@ -750,7 +777,7 @@ js::ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
     }
 
     /*
-     * Steps 6-7 (with sticky extension).
+     * Steps 6-10.
      *
      * Also make sure that we have a MatchPairs for regexps which update their
      * last index, as we won't compute the last index otherwise.
@@ -763,22 +790,30 @@ js::ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
         matches = &alternateMatches.ref();
     }
 
-    /* Step 9a. */
+    /* Step 15.a. */
     if (searchIndex < 0 || size_t(searchIndex) > length) {
-        reobj->zeroLastIndex();
+        /* Steps 15.a.i-ii. */
+        if (!SetLastIndex(cx, reobj, 0))
+            return RegExpRunStatus_Error;
+
+        /* Step 15.a.iii. */
         return RegExpRunStatus_Success_NotFound;
     }
 
-    /* Steps 8-21. */
+    /* Step 14-29. */
     RegExpRunStatus status = ExecuteRegExpImpl(cx, res, *re, input, searchIndex, matches);
     if (status == RegExpRunStatus_Error)
         return RegExpRunStatus_Error;
 
-    /* Steps 9a and 11 (with sticky extension). */
-    if (status == RegExpRunStatus_Success_NotFound)
-        reobj->zeroLastIndex();
-    else if (reobj->needUpdateLastIndex())
-        reobj->setLastIndex((*matches)[0].limit);
+    if (status == RegExpRunStatus_Success_NotFound) {
+        /* Steps 15.a.i-ii. */
+        if (!SetLastIndex(cx, reobj, 0))
+            return RegExpRunStatus_Error;
+    } else if (reobj->needUpdateLastIndex()) {
+        /* Steps 18.a-b. */
+        if (!SetLastIndex(cx, reobj, (*matches)[0].limit))
+            return RegExpRunStatus_Error;
+    }
 
     return status;
 }

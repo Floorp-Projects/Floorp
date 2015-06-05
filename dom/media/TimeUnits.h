@@ -140,6 +140,10 @@ public:
     MOZ_ASSERT(IsValid() && aOther.IsValid());
     return mValue.value() == aOther.mValue.value();
   }
+  bool operator != (const TimeUnit& aOther) const {
+    MOZ_ASSERT(IsValid() && aOther.IsValid());
+    return mValue.value() != aOther.mValue.value();
+  }
   bool operator >= (const TimeUnit& aOther) const {
     MOZ_ASSERT(IsValid() && aOther.IsValid());
     return mValue.value() >= aOther.mValue.value();
