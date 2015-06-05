@@ -41,7 +41,7 @@ class AppendDataRunnable : public nsRunnable {
 public:
   AppendDataRunnable(SourceBuffer* aSourceBuffer,
                      MediaLargeByteBuffer* aData,
-                     double aTimestampOffset,
+                     TimeUnit aTimestampOffset,
                      uint32_t aUpdateID)
   : mSourceBuffer(aSourceBuffer)
   , mData(aData)
@@ -60,7 +60,7 @@ public:
 private:
   nsRefPtr<SourceBuffer> mSourceBuffer;
   nsRefPtr<MediaLargeByteBuffer> mData;
-  double mTimestampOffset;
+  TimeUnit mTimestampOffset;
   uint32_t mUpdateID;
 };
 
@@ -140,7 +140,7 @@ SourceBuffer::GetBuffered(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  media::TimeIntervals ranges = mContentManager->Buffered();
+  TimeIntervals ranges = mContentManager->Buffered();
   MSE_DEBUGV("ranges=%s", DumpTimeRanges(ranges).get());
   nsRefPtr<dom::TimeRanges> tr = new dom::TimeRanges();
   ranges.ToTimeRanges(tr);
@@ -172,8 +172,7 @@ SourceBuffer::SetAppendWindowEnd(double aAppendWindowEnd, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  if (IsNaN(aAppendWindowEnd) ||
-      aAppendWindowEnd <= mAppendWindowStart) {
+  if (IsNaN(aAppendWindowEnd) || aAppendWindowEnd <= mAppendWindowStart) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
   }
@@ -272,8 +271,8 @@ SourceBuffer::DoRangeRemoval(double aStart, double aEnd)
 {
   MSE_DEBUG("DoRangeRemoval(%f, %f)", aStart, aEnd);
   if (mContentManager && !IsInfinite(aStart)) {
-    mContentManager->RangeRemoval(media::TimeUnit::FromSeconds(aStart),
-                               media::TimeUnit::FromSeconds(aEnd));
+    mContentManager->RangeRemoval(TimeUnit::FromSeconds(aStart),
+                                  TimeUnit::FromSeconds(aEnd));
   }
 }
 
@@ -419,12 +418,12 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   MOZ_ASSERT(mAppendMode == SourceBufferAppendMode::Segments,
              "We don't handle timestampOffset for sequence mode yet");
   nsCOMPtr<nsIRunnable> task =
-    new AppendDataRunnable(this, data, mTimestampOffset, mUpdateID);
+    new AppendDataRunnable(this, data, TimeUnit::FromSeconds(mTimestampOffset), mUpdateID);
   NS_DispatchToMainThread(task);
 }
 
 void
-SourceBuffer::AppendData(MediaLargeByteBuffer* aData, double aTimestampOffset,
+SourceBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset,
                          uint32_t aUpdateID)
 {
   if (!mUpdating || aUpdateID != mUpdateID) {
@@ -445,7 +444,7 @@ SourceBuffer::AppendData(MediaLargeByteBuffer* aData, double aTimestampOffset,
     return;
   }
 
-  mPendingAppend.Begin(mContentManager->AppendData(aData, aTimestampOffset * USECS_PER_S)
+  mPendingAppend.Begin(mContentManager->AppendData(aData, aTimestampOffset)
                        ->Then(AbstractThread::MainThread(), __func__, this,
                               &SourceBuffer::AppendDataCompletedWithSuccess,
                               &SourceBuffer::AppendDataErrored));
@@ -532,13 +531,13 @@ SourceBuffer::PrepareAppend(const uint8_t* aData, uint32_t aLength, ErrorResult&
   // TODO: Make the eviction threshold smaller for audio-only streams.
   // TODO: Drive evictions off memory pressure notifications.
   // TODO: Consider a global eviction threshold  rather than per TrackBuffer.
-  double newBufferStartTime = 0.0;
+  TimeUnit newBufferStartTime;
   // Attempt to evict the amount of data we are about to add by lowering the
   // threshold.
   uint32_t toEvict =
     (mEvictionThreshold > aLength) ? mEvictionThreshold - aLength : aLength;
   Result evicted =
-    mContentManager->EvictData(mMediaSource->GetDecoder()->GetCurrentTime(),
+    mContentManager->EvictData(TimeUnit::FromSeconds(mMediaSource->GetDecoder()->GetCurrentTime()),
                                toEvict, &newBufferStartTime);
   if (evicted == Result::DATA_EVICTED) {
     MSE_DEBUG("AppendData Evict; current buffered start=%f",
@@ -546,7 +545,7 @@ SourceBuffer::PrepareAppend(const uint8_t* aData, uint32_t aLength, ErrorResult&
 
     // We notify that we've evicted from the time range 0 through to
     // the current start point.
-    mMediaSource->NotifyEvicted(0.0, newBufferStartTime);
+    mMediaSource->NotifyEvicted(0.0, newBufferStartTime.ToSeconds());
   }
 
   // See if we have enough free space to append our new data.
@@ -597,7 +596,7 @@ SourceBuffer::Evict(double aStart, double aEnd)
   if (currentTime + safety_threshold >= evictTime) {
     evictTime -= safety_threshold;
   }
-  mContentManager->EvictBefore(evictTime);
+  mContentManager->EvictBefore(TimeUnit::FromSeconds(evictTime));
 }
 
 #if defined(DEBUG)
