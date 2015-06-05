@@ -37,6 +37,9 @@ template <typename T> class AsyncEventRunner;
 
 namespace dom {
 
+using media::TimeUnit;
+using media::TimeIntervals;
+
 class TimeRanges;
 
 class SourceBuffer final : public DOMEventTargetHelper
@@ -147,7 +150,7 @@ private:
 
   // Shared implementation of AppendBuffer overloads.
   void AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv);
-  void AppendData(MediaLargeByteBuffer* aData, double aTimestampOffset,
+  void AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset,
                   uint32_t aAppendID);
 
   // Implement the "Append Error Algorithm".
