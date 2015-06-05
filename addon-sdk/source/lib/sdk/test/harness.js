@@ -15,6 +15,7 @@ const { PlainTextConsole } = require("../console/plain-text");
 const { when: unload } = require("../system/unload");
 const { format, fromException }  = require("../console/traceback");
 const system = require("../system");
+const memory = require('../deprecated/memory');
 const { gc: gcPromise } = require('./memory');
 const { defer } = require('../core/promise');
 const { extend } = require('../core/heritage');
@@ -149,7 +150,7 @@ function reportMemoryUsage() {
     return emptyPromise();
   }
 
-  return gcPromise().then((() => {
+  return gcPromise().then((function () {
     var mgr = Cc["@mozilla.org/memory-reporter-manager;1"]
               .getService(Ci.nsIMemoryReporterManager);
     let count = 0;
@@ -157,6 +158,11 @@ function reportMemoryUsage() {
       print(((++count == 1) ? "\n" : "") + description + ": " + amount + "\n");
     }
     mgr.getReportsForThisProcess(logReporter, null, /* anonymize = */ false);
+
+    var weakrefs = [info.weakref.get()
+                    for (info of memory.getObjects())];
+    weakrefs = [weakref for (weakref of weakrefs) if (weakref)];
+    print("Tracked memory objects in testing sandbox: " + weakrefs.length + "\n");
   }));
 }
 
@@ -210,6 +216,16 @@ function showResults() {
 function cleanup() {
   let coverObject = {};
   try {
+    for (let name in loader.modules)
+      memory.track(loader.modules[name],
+                           "module global scope: " + name);
+      memory.track(loader, "Cuddlefish Loader");
+
+    if (profileMemory) {
+      gWeakrefInfo = [{ weakref: info.weakref, bin: info.bin }
+                      for (info of memory.getObjects())];
+    }
+
     loader.unload();
 
     if (loader.globals.console.errorsLogged && !results.failed) {
@@ -235,7 +251,7 @@ function cleanup() {
 
     consoleListener.unregister();
 
-    Cu.forceGC();
+    memory.gc();
   }
   catch (e) {
     results.failed++;
@@ -262,7 +278,7 @@ function cleanup() {
 }
 
 function getPotentialLeaks() {
-  Cu.forceGC();
+  memory.gc();
 
   // Things we can assume are part of the platform and so aren't leaks
   let GOOD_BASE_URLS = [
