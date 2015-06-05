@@ -158,7 +158,7 @@ public:
   Create(nsresult aRv);
 
   static already_AddRefed<DOMException>
-  Create(nsresult aRv, const nsCString& aMessage);
+  Create(nsresult aRv, const nsACString& aMessage);
 
 protected:
 
