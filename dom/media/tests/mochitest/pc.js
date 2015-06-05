@@ -28,79 +28,6 @@ const signalingStateTransitions = {
   "closed": []
 }
 
-var wait = (time) => new Promise(r => setTimeout(r, time));
-
-/**
- * This class provides a state checker for media elements which store
- * a media stream to check for media attribute state and events fired.
- * When constructed by a caller, an object instance is created with
- * a media element, event state checkers for canplaythrough, timeupdate, and
- * time changing on the media element and stream.
- *
- * @param {HTMLMediaElement} element the media element being analyzed
- */
-function MediaElementChecker(element) {
-  this.element = element;
-  this.canPlayThroughFired = false;
-  this.timeUpdateFired = false;
-  this.timePassed = false;
-
-  var elementId = this.element.getAttribute('id');
-
-  // When canplaythrough fires, we track that it's fired and remove the
-  // event listener.
-  var canPlayThroughCallback = () => {
-    info('canplaythrough fired for media element ' + elementId);
-    this.canPlayThroughFired = true;
-    this.element.removeEventListener('canplaythrough', canPlayThroughCallback,
-                                     false);
-  };
-
-  // When timeupdate fires, we track that it's fired and check if time
-  // has passed on the media stream and media element.
-  var timeUpdateCallback = () => {
-    this.timeUpdateFired = true;
-    info('timeupdate fired for media element ' + elementId);
-
-    // If time has passed, then track that and remove the timeupdate event
-    // listener.
-    if (element.mozSrcObject && element.mozSrcObject.currentTime > 0 &&
-        element.currentTime > 0) {
-      info('time passed for media element ' + elementId);
-      this.timePassed = true;
-      this.element.removeEventListener('timeupdate', timeUpdateCallback,
-                                       false);
-    }
-  };
-
-  element.addEventListener('canplaythrough', canPlayThroughCallback, false);
-  element.addEventListener('timeupdate', timeUpdateCallback, false);
-}
-
-MediaElementChecker.prototype = {
-
-  /**
-   * Waits until the canplaythrough & timeupdate events to fire along with
-   * ensuring time has passed on the stream and media element.
-   */
-  waitForMediaFlow: function() {
-    var elementId = this.element.getAttribute('id');
-    info('Analyzing element: ' + elementId);
-
-    return waitUntil(() => this.canPlayThroughFired && this.timeUpdateFired && this.timePassed)
-      .then(() => ok(true, 'Media flowing for ' + elementId));
-  },
-
-  /**
-   * Checks if there is no media flow present by checking that the ready
-   * state of the media element is HAVE_METADATA.
-   */
-  checkForNoMediaFlow: function() {
-    ok(this.element.readyState === HTMLMediaElement.HAVE_METADATA,
-       'Media element has a ready state of HAVE_METADATA');
-  }
-};
-
 // Also remove mode 0 if it's offered
 // Note, we don't bother removing the fmtp lines, which makes a good test
 // for some SDP parsing issues.
@@ -768,7 +695,7 @@ function PeerConnectionWrapper(label, configuration, h264) {
   this.constraints = [ ];
   this.offerOptions = {};
   this.streams = [ ];
-  this.mediaCheckers = [ ];
+  this.mediaElements = [ ];
 
   this.dataChannels = [ ];
 
@@ -918,7 +845,7 @@ PeerConnectionWrapper.prototype = {
     }
 
     var element = createMediaElement(type, this.label + '_' + side + this.streams.length);
-    this.mediaCheckers.push(new MediaElementChecker(element));
+    this.mediaElements.push(element);
     element.mozSrcObject = stream;
     element.play();
 
@@ -1528,11 +1455,93 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
-   * Check that media flow is present on all media elements involved in this
-   * test by waiting for confirmation that media flow is present.
+   * Check that media flow is present on the given media element by waiting for
+   * it to reach ready state HAVE_ENOUGH_DATA and progress time further than
+   * the start of the check.
+   *
+   * This ensures, that the stream being played is producing
+   * data and that at least one video frame has been displayed.
+   *
+   * @param {object} element
+   *        A media element to wait for data flow on.
+   * @returns {Promise}
+   *        A promise that resolves when media is flowing.
    */
-  checkMediaFlowPresent : function() {
-    return Promise.all(this.mediaCheckers.map(checker => checker.waitForMediaFlow()));
+  waitForMediaElementFlow : function(element) {
+    return new Promise(resolve => {
+      info("Checking data flow to element: " + element.id);
+      var haveEnoughData = false;
+      var oncanplay = () => {
+        info("Element " + element.id + " saw 'canplay', " +
+             "meaning HAVE_ENOUGH_DATA was just reached.");
+        haveEnoughData = true;
+        element.removeEventListener("canplay", oncanplay);
+      };
+      var ontimeupdate = () => {
+        info("Element " + element.id + " saw 'timeupdate'" +
+             ", currentTime=" + element.currentTime +
+             "s, readyState=" + element.readyState);
+        if (haveEnoughData || element.readyState == element.HAVE_ENOUGH_DATA) {
+          element.removeEventListener("timeupdate", ontimeupdate);
+          ok(true, "Media flowing for element: " + element.id);
+          resolve();
+        }
+      };
+      element.addEventListener("canplay", oncanplay);
+      element.addEventListener("timeupdate", ontimeupdate);
+    });
+  },
+
+  /**
+   * Wait for RTP packet flow for the given MediaStreamTrack.
+   *
+   * @param {object} track
+   *        A MediaStreamTrack to wait for data flow on.
+   * @returns {Promise}
+   *        A promise that resolves when media is flowing.
+   */
+  waitForRtpFlow(track) {
+    var hasFlow = stats => {
+      var rtpStatsKey = Object.keys(stats)
+        .find(key => !stats[key].isRemote && stats[key].type.endsWith("boundrtp"));
+      ok(rtpStatsKey, "Should have RTP stats for track " + track.id);
+      var rtp = stats[rtpStatsKey];
+      var nrPackets = rtp[rtp.type == "outboundrtp" ? "packetsSent"
+                                                    : "packetsReceived"];
+      info("Track " + track.id + " has " + nrPackets + " " +
+           rtp.type + " RTP packets.");
+      return nrPackets > 0;
+    };
+
+    return new Promise(resolve => {
+      info("Checking RTP packet flow for track " + track.id);
+
+      var waitForFlow = () => {
+        this._pc.getStats(track).then(stats => {
+          if (hasFlow(stats)) {
+            ok(true, "RTP flowing for track " + track.id);
+            resolve();
+          } else {
+            wait(200).then(waitForFlow);
+          }
+        });
+      };
+      waitForFlow();
+    });
+  },
+
+  /**
+   * Wait for presence of video flow on all media elements and rtp flow on
+   * all sending and receiving track involved in this test.
+   *
+   * @returns {Promise}
+   *        A promise that resolves when media flows for all elements and tracks
+   */
+  waitForMediaFlow : function() {
+    return Promise.all([].concat(
+      this.mediaElements.map(element => this.waitForMediaElementFlow(element)),
+      this._pc.getSenders().map(sender => this.waitForRtpFlow(sender.track)),
+      this._pc.getReceivers().map(receiver => this.waitForRtpFlow(receiver.track))));
   },
 
   /**

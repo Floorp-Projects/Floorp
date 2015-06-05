@@ -125,7 +125,7 @@ class MachCommands(MachCommandBase):
         srcdir('app/src/robocop_harness/org/mozilla/gecko', 'build/mobile/robocop')
         srcdir('app/src/robocop/org/mozilla/gecko/tests', 'mobile/android/tests/browser/robocop')
         srcdir('app/src/background/org/mozilla/gecko', 'mobile/android/tests/background/junit3/src')
-        srcdir('app/src/browser/org/mozilla/gecko', 'mobile/android/tests/browser/junit3/src')
+        srcdir('app/src/browser', 'mobile/android/tests/browser/junit3/src')
         # Test libraries.
         srcdir('app/libs', 'build/mobile/robocop')
 

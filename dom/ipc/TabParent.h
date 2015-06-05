@@ -8,13 +8,13 @@
 #define mozilla_tabs_TabParent_h
 
 #include "js/TypeDecls.h"
+#include "mozilla/ContentCache.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PFilePickerParent.h"
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/WritingModes.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIAuthPromptProvider.h"
@@ -161,29 +161,21 @@ public:
                                   InfallibleTArray<CpowEntry>&& aCpows,
                                   const IPC::Principal& aPrincipal) override;
     virtual bool RecvNotifyIMEFocus(const bool& aFocus,
+                                    const ContentCache& aContentCache,
                                     nsIMEUpdatePreference* aPreference)
                                       override;
-    virtual bool RecvNotifyIMETextChange(const uint32_t& aStart,
+    virtual bool RecvNotifyIMETextChange(const ContentCache& aContentCache,
+                                         const uint32_t& aStart,
                                          const uint32_t& aEnd,
                                          const uint32_t& aNewEnd,
                                          const bool& aCausedByComposition) override;
-    virtual bool RecvNotifyIMESelectedCompositionRect(
-                   const uint32_t& aOffset,
-                   InfallibleTArray<LayoutDeviceIntRect>&& aRects,
-                   const uint32_t& aCaretOffset,
-                   const LayoutDeviceIntRect& aCaretRect) override;
-    virtual bool RecvNotifyIMESelection(const uint32_t& aAnchor,
-                                        const uint32_t& aFocus,
-                                        const mozilla::WritingMode& aWritingMode,
+    virtual bool RecvNotifyIMESelectedCompositionRect(const ContentCache& aContentCache) override;
+    virtual bool RecvNotifyIMESelection(const ContentCache& aContentCache,
                                         const bool& aCausedByComposition) override;
-    virtual bool RecvNotifyIMETextHint(const nsString& aText) override;
+    virtual bool RecvUpdateContentCache(const ContentCache& aContentCache) override;
     virtual bool RecvNotifyIMEMouseButtonEvent(const widget::IMENotification& aEventMessage,
                                                bool* aConsumedByIME) override;
-    virtual bool RecvNotifyIMEEditorRect(const LayoutDeviceIntRect& aRect) override;
-    virtual bool RecvNotifyIMEPositionChange(
-                   const LayoutDeviceIntRect& aEditorRect,
-                   InfallibleTArray<LayoutDeviceIntRect>&& aCompositionRects,
-                   const LayoutDeviceIntRect& aCaretRect) override;
+    virtual bool RecvNotifyIMEPositionChange(const ContentCache& aContentCache) override;
     virtual bool RecvEndIMEComposition(const bool& aCancel,
                                        bool* aNoCompositionEvent,
                                        nsString* aComposition) override;
@@ -469,8 +461,6 @@ protected:
                                    const int32_t& aX, const int32_t& aY,
                                    const int32_t& aCx, const int32_t& aCy) override;
 
-    bool SendCompositionChangeEvent(mozilla::WidgetCompositionEvent& event);
-
     bool InitBrowserConfiguration(const nsCString& aURI,
                                   BrowserConfiguration& aConfiguration);
 
@@ -478,23 +468,7 @@ protected:
 
     // IME
     static TabParent *mIMETabParent;
-    nsString mIMECacheText;
-    uint32_t mIMESelectionAnchor;
-    uint32_t mIMESelectionFocus;
-    mozilla::WritingMode mWritingMode;
-    bool mIMEComposing;
-    bool mIMECompositionEnding;
-    uint32_t mIMEEventCountAfterEnding;
-    // Buffer to store composition text during ResetInputState
-    // Compositions in almost all cases are small enough for nsAutoString
-    nsAutoString mIMECompositionText;
-    uint32_t mIMECompositionStart;
-
-    uint32_t mIMECompositionRectOffset;
-    InfallibleTArray<LayoutDeviceIntRect> mIMECompositionRects;
-    uint32_t mIMECaretOffset;
-    LayoutDeviceIntRect mIMECaretRect;
-    LayoutDeviceIntRect mIMEEditorRect;
+    ContentCache mContentCache;
 
     nsIntRect mRect;
     ScreenIntSize mDimensions;
