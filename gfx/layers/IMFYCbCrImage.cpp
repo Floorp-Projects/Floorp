@@ -104,7 +104,7 @@ FinishTextures(IDirect3DDevice9* aDevice,
                IDirect3DSurface9* aSurface)
 {
   if (!aDevice) {
-    return;
+    return false;
   }
 
   HRESULT hr = aSurface->UnlockRect();
