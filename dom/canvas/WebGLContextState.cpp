@@ -138,18 +138,15 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         } else if (pname >= LOCAL_GL_DRAW_BUFFER0 &&
                    pname < GLenum(LOCAL_GL_DRAW_BUFFER0 + mGLMaxDrawBuffers))
         {
-            if (mBoundDrawFramebuffer) {
-                GLint iv = 0;
-                gl->fGetIntegerv(pname, &iv);
-                return JS::Int32Value(iv);
-            }
-
             GLint iv = 0;
             gl->fGetIntegerv(pname, &iv);
 
-            if (iv == GLint(LOCAL_GL_COLOR_ATTACHMENT0 + pname - LOCAL_GL_DRAW_BUFFER0)) {
+            if (mBoundDrawFramebuffer)
+                return JS::Int32Value(iv);
+
+            const GLint index = (pname - LOCAL_GL_DRAW_BUFFER0);
+            if (iv == LOCAL_GL_COLOR_ATTACHMENT0 + index)
                 return JS::Int32Value(LOCAL_GL_BACK);
-            }
 
             return JS::Int32Value(LOCAL_GL_NONE);
         }
@@ -157,11 +154,9 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 
     if (IsExtensionEnabled(WebGLExtensionID::OES_vertex_array_object)) {
         if (pname == LOCAL_GL_VERTEX_ARRAY_BINDING) {
-            if (mBoundVertexArray == mDefaultVertexArray){
-                return WebGLObjectAsJSValue(cx, (WebGLVertexArray *) nullptr, rv);
-            }
-
-            return WebGLObjectAsJSValue(cx, mBoundVertexArray.get(), rv);
+            WebGLVertexArray* vao =
+                (mBoundVertexArray != mDefaultVertexArray) ? mBoundVertexArray.get() : nullptr;
+            return WebGLObjectAsJSValue(cx, vao, rv);
         }
     }
 
@@ -169,10 +164,12 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         if (pname == LOCAL_GL_TIMESTAMP_EXT) {
             GLuint64 iv = 0;
             gl->fGetInteger64v(pname, (GLint64*) &iv);
-            return JS::NumberValue(uint64_t(iv));
+            // TODO: JS doesn't support 64-bit integers. Be lossy and
+            // cast to double (53 bits)
+            return JS::NumberValue(static_cast<double>(iv));
         } else if (pname == LOCAL_GL_GPU_DISJOINT_EXT) {
             // When disjoint isn't supported, leave as false.
-            realGLboolean disjoint = 0;
+            realGLboolean disjoint = LOCAL_GL_FALSE;
             if (gl->IsExtensionSupported(gl::GLContext::EXT_disjoint_timer_query)) {
                 gl->fGetBooleanv(pname, &disjoint);
             }
@@ -365,18 +362,17 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 
         // unsigned int. here we may have to return very large values like 2^32-1 that can't be represented as
         // javascript integer values. We just return them as doubles and javascript doesn't care.
-        case LOCAL_GL_STENCIL_BACK_VALUE_MASK: {
+        case LOCAL_GL_STENCIL_BACK_VALUE_MASK:
             return JS::DoubleValue(mStencilValueMaskBack); // pass as FP value to allow large values such as 2^32-1.
-        }
-        case LOCAL_GL_STENCIL_BACK_WRITEMASK: {
+
+        case LOCAL_GL_STENCIL_BACK_WRITEMASK:
             return JS::DoubleValue(mStencilWriteMaskBack);
-        }
-        case LOCAL_GL_STENCIL_VALUE_MASK: {
+
+        case LOCAL_GL_STENCIL_VALUE_MASK:
             return JS::DoubleValue(mStencilValueMaskFront);
-        }
-        case LOCAL_GL_STENCIL_WRITEMASK: {
+
+        case LOCAL_GL_STENCIL_WRITEMASK:
             return JS::DoubleValue(mStencilWriteMaskFront);
-        }
 
         // float
         case LOCAL_GL_DEPTH_CLEAR_VALUE:
