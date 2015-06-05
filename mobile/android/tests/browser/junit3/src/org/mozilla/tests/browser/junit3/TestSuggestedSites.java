@@ -1,7 +1,28 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-package org.mozilla.gecko;
+package org.mozilla.tests.browser.junit3;
+
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.database.ContentObserver;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.SystemClock;
+import android.test.InstrumentationTestCase;
+import android.test.RenamingDelegatingContext;
+import android.test.mock.MockResources;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.Locales;
+import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.SuggestedSites;
+import org.mozilla.gecko.distribution.Distribution;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -16,26 +37,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.db.SuggestedSites;
-import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.preferences.GeckoPreferences;
-
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.res.Resources;
-import android.database.ContentObserver;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.SystemClock;
-import android.test.RenamingDelegatingContext;
-import android.test.mock.MockResources;
-
-public class TestSuggestedSites extends BrowserTestCase {
+public class TestSuggestedSites extends InstrumentationTestCase {
     private static class TestContext extends RenamingDelegatingContext {
         private static final String PREFIX = "TestSuggestedSites-";
 
@@ -119,18 +124,16 @@ public class TestSuggestedSites extends BrowserTestCase {
     }
 
     class TestObserver extends ContentObserver {
-        private final Object changeLock;
+        private final CountDownLatch changeLatch;
 
-        public TestObserver(Object changeLock) {
+        public TestObserver(CountDownLatch changeLatch) {
             super(null);
-            this.changeLock = changeLock;
+            this.changeLatch = changeLatch;
         }
 
         @Override
         public void onChange(boolean selfChange) {
-            synchronized(changeLock) {
-                changeLock.notifyAll();
-            }
+            changeLatch.countDown();
         }
     }
 
@@ -211,7 +214,7 @@ public class TestSuggestedSites extends BrowserTestCase {
     }
 
     protected void setUp() {
-        context = new TestContext(getApplicationContext());
+        context = new TestContext(getInstrumentation().getTargetContext());
         resources = (TestResources) context.getResources();
         tempFiles = new ArrayList<File>();
     }
@@ -449,6 +452,14 @@ public class TestSuggestedSites extends BrowserTestCase {
         tempFiles.add(distFile);
         assertTrue(distFile.exists());
 
+        final CountDownLatch changeLatch = new CountDownLatch(1);
+
+        // Watch for change notifications on suggested sites.
+        ContentResolver cr = context.getContentResolver();
+        ContentObserver observer = new TestObserver(changeLatch);
+        cr.registerContentObserver(BrowserContract.SuggestedSites.CONTENT_URI,
+                false, observer);
+
         // Init distribution with the mock file.
         TestDistribution distribution = new TestDistribution(context);
         distribution.setFileForLocale(Locale.getDefault(), distFile);
@@ -458,14 +469,6 @@ public class TestSuggestedSites extends BrowserTestCase {
         resources.setSuggestedSitesResource(generateSites(DEFAULT_COUNT));
         SuggestedSites suggestedSites =
                 new SuggestedSites(context, distribution, sitesFile);
-
-        Object changeLock = new Object();
-
-        // Watch for change notifications on suggested sites.
-        ContentResolver cr = context.getContentResolver();
-        ContentObserver observer = new TestObserver(changeLock);
-        cr.registerContentObserver(BrowserContract.SuggestedSites.CONTENT_URI,
-                                   false, observer);
 
         // The initial query will not contain the distribution sites
         // yet. This will happen asynchronously once the distribution
@@ -480,12 +483,10 @@ public class TestSuggestedSites extends BrowserTestCase {
             }
         }
 
-        synchronized(changeLock) {
-            try {
-                changeLock.wait(5000);
-            } catch (InterruptedException ie) {
-                fail("No change notification after fetching distribution file");
-            }
+        try {
+            assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
+        } catch (InterruptedException ie) {
+            fail("No change notification after fetching distribution file");
         }
 
         // Target file should exist after distribution is deployed.
