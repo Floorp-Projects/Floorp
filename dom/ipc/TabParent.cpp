@@ -1906,7 +1906,7 @@ TabParent::RecvNotifyIMEFocus(const bool& aFocus,
   if (aFocus) {
     *aPreference = widget->GetIMEUpdatePreference();
   } else {
-    mIMECacheText.Truncate(0);
+    mContentCache.Clear();
   }
   return true;
 }
@@ -1998,8 +1998,7 @@ TabParent::RecvNotifyIMESelection(const uint32_t& aAnchor,
 bool
 TabParent::RecvNotifyIMETextHint(const nsString& aText)
 {
-  // Replace our cache with new text
-  mIMECacheText = aText;
+  mContentCache.SetText(aText);
   return true;
 }
 
@@ -2230,14 +2229,14 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
       if (mIMESelectionAnchor == mIMESelectionFocus) {
         aEvent.mReply.mString.Truncate(0);
       } else {
-        if (mIMESelectionAnchor > mIMECacheText.Length() ||
-            mIMESelectionFocus > mIMECacheText.Length()) {
+        if (mIMESelectionAnchor > mContentCache.TextLength() ||
+            mIMESelectionFocus > mContentCache.TextLength()) {
           break;
         }
         uint32_t selLen = mIMESelectionAnchor > mIMESelectionFocus ?
                           mIMESelectionAnchor - mIMESelectionFocus :
                           mIMESelectionFocus - mIMESelectionAnchor;
-        aEvent.mReply.mString = Substring(mIMECacheText,
+        aEvent.mReply.mString = Substring(mContentCache.Text(),
                                           aEvent.mReply.mOffset,
                                           selLen);
       }
@@ -2252,14 +2251,14 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
       uint32_t inputOffset = aEvent.mInput.mOffset,
                inputEnd = inputOffset + aEvent.mInput.mLength;
 
-      if (inputEnd > mIMECacheText.Length()) {
-        inputEnd = mIMECacheText.Length();
+      if (inputEnd > mContentCache.TextLength()) {
+        inputEnd = mContentCache.TextLength();
       }
       if (inputEnd < inputOffset) {
         break;
       }
       aEvent.mReply.mOffset = inputOffset;
-      aEvent.mReply.mString = Substring(mIMECacheText,
+      aEvent.mReply.mString = Substring(mContentCache.Text(),
                                         inputOffset,
                                         inputEnd - inputOffset);
       aEvent.mSucceeded = true;
@@ -2282,10 +2281,10 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
         aEvent.mReply.mRect =
           aEvent.mReply.mRect.Union(mIMECompositionRects[i]);
       }
-      if (aEvent.mInput.mOffset < mIMECacheText.Length()) {
+      if (aEvent.mInput.mOffset < mContentCache.TextLength()) {
         aEvent.mReply.mString =
-          Substring(mIMECacheText, aEvent.mInput.mOffset,
-                    mIMECacheText.Length() >= aEvent.mInput.EndOffset() ?
+          Substring(mContentCache.Text(), aEvent.mInput.mOffset,
+                    mContentCache.TextLength() >= aEvent.mInput.EndOffset() ?
                       aEvent.mInput.mLength : UINT32_MAX);
       } else {
         aEvent.mReply.mString.Truncate();
