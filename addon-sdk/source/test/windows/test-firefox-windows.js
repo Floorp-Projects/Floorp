@@ -327,7 +327,6 @@ exports.testTrackWindows = function(assert, done) {
   // listen to global deactivate events
   browserWindows.on("deactivate", windowsDeactivation);
 
-
   function openWindow() {
     windows.push(browserWindows.open({
       url: "data:text/html;charset=utf-8,<i>testTrackWindows</i>",
@@ -350,8 +349,10 @@ exports.testTrackWindows = function(assert, done) {
         else {
           (function closeWindows(windows) {
             if (!windows.length) {
+              assert.pass('the last window was closed');
               browserWindows.removeListener("activate", windowsActivation);
               browserWindows.removeListener("deactivate", windowsDeactivation);
+              assert.pass('removed listeners');
               return done();
             }
 
