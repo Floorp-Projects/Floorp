@@ -862,10 +862,10 @@ Accessible::HandleAccEvent(AccEvent* aEvent)
                                                        break;
                                                      }
         case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
-                                                           AccCaretMoveEvent* event = downcast_accEvent(aEvent);
-                                                           ipcDoc->SendEvent(id, event->GetCaretOffset());
-                                                           break;
-                                                         }
+          AccCaretMoveEvent* event = downcast_accEvent(aEvent);
+          ipcDoc->SendCaretMoveEvent(id, event->GetCaretOffset());
+          break;
+        }
         case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
         case nsIAccessibleEvent::EVENT_TEXT_REMOVED: {
           AccTextChangeEvent* event = downcast_accEvent(aEvent);
