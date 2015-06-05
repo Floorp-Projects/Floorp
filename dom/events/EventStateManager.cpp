@@ -3281,12 +3281,13 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       }
       if (dispatchedToContentProcess) {
         dragSession->SetCanDrop(true);
-      }
-
-      // now set the drop effect in the initial dataTransfer. This ensures
-      // that we can get the desired drop effect in the drop event.
-      if (initialDataTransfer)
+      } else if (initialDataTransfer) {
+        // Now set the drop effect in the initial dataTransfer. This ensures
+        // that we can get the desired drop effect in the drop event. For events
+        // dispatched to content, the content process will take care of setting
+        // this.
         initialDataTransfer->SetDropEffectInt(dropEffect);
+      }
     }
     break;
 

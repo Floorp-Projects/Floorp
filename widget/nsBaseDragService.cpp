@@ -55,7 +55,8 @@ nsBaseDragService::nsBaseDragService()
   : mCanDrop(false), mOnlyChromeDrop(false), mDoingDrag(false),
     mHasImage(false), mUserCancelled(false),
     mDragEventDispatchedToChildProcess(false),
-    mDragAction(DRAGDROP_ACTION_NONE), mTargetSize(0,0),
+    mDragAction(DRAGDROP_ACTION_NONE),
+    mDragActionFromChildProcess(DRAGDROP_ACTION_UNINITIALIZED), mTargetSize(0,0),
     mImageX(0), mImageY(0), mScreenX(-1), mScreenY(-1), mSuppressLevel(0),
     mInputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE)
 {
@@ -330,6 +331,21 @@ nsBaseDragService::OpenDragPopup()
       pm->ShowPopupAtScreen(mDragPopup, mScreenX - mImageX, mScreenY - mImageY, false, nullptr);
     }
   }
+}
+
+int32_t
+nsBaseDragService::TakeChildProcessDragAction()
+{
+  // If the last event was dispatched to the child process, use the drag action
+  // assigned from it instead and return it. DRAGDROP_ACTION_UNINITIALIZED is
+  // returned otherwise.
+  int32_t retval = DRAGDROP_ACTION_UNINITIALIZED;
+  if (TakeDragEventDispatchedToChildProcess() &&
+      mDragActionFromChildProcess != DRAGDROP_ACTION_UNINITIALIZED) {
+    retval = mDragActionFromChildProcess;
+  }
+
+  return retval;
 }
 
 //-------------------------------------------------------------------------
@@ -720,6 +736,7 @@ nsBaseDragService::UserCancelled()
 NS_IMETHODIMP
 nsBaseDragService::UpdateDragEffect()
 {
+  mDragActionFromChildProcess = mDragAction;
   return NS_OK;
 }
 
