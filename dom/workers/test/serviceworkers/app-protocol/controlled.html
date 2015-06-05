@@ -19,6 +19,8 @@ function runTests() {
     })
     .then(testRedirectedResponse)
     .then(testRedirectedHttpsResponse)
+    .then(testCachedRedirectedResponse)
+    .then(testCachedRedirectedHttpsResponse)
     .then(done);
 }
   </script>
