@@ -38,10 +38,13 @@ ContentCache::SetText(const nsAString& aText)
 }
 
 void
-ContentCache::SetSelection(uint32_t aAnchorOffset, uint32_t aFocusOffset)
+ContentCache::SetSelection(uint32_t aAnchorOffset,
+                           uint32_t aFocusOffset,
+                           const WritingMode& aWritingMode)
 {
   mSelection.mAnchor = aAnchorOffset;
   mSelection.mFocus = aFocusOffset;
+  mSelection.mWritingMode = aWritingMode;
 }
 
 bool
@@ -145,7 +148,8 @@ ContentCache::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
   // XXX This causes different behavior from non-e10s mode.
   //     Selection range should represent caret position in the composition
   //     string but this means selection range is all of the composition string.
-  SetSelection(mCompositionStart + aEvent.mData.Length());
+  SetSelection(mCompositionStart + aEvent.mData.Length(),
+               mSelection.mWritingMode);
   mIsComposing = !aEvent.CausesDOMCompositionEndEvent();
   return true;
 }
