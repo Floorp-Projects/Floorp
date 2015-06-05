@@ -262,7 +262,6 @@ TabParent::TabParent(nsIContentParent* aManager,
   : TabContext(aContext)
   , mFrameElement(nullptr)
   , mWritingMode()
-  , mIMECompositionRectOffset(0)
   , mRect(0, 0, 0, 0)
   , mDimensions(0, 0)
   , mOrientation(0)
@@ -1939,11 +1938,12 @@ TabParent::RecvNotifyIMESelectedCompositionRect(
   const uint32_t& aCaretOffset,
   const LayoutDeviceIntRect& aCaretRect)
 {
-  // add rect to cache for another query
-  mIMECompositionRectOffset = aOffset;
-  mIMECompositionRects = aRects;
-  mIMECaretOffset = aCaretOffset;
-  mIMECaretRect = aCaretRect;
+  if (!mContentCache.InitTextRectArray(aOffset, aRects)) {
+    NS_WARNING("Failed to set text rect array");
+  }
+  if (!mContentCache.InitCaretRect(aCaretOffset, aCaretRect)) {
+    NS_WARNING("Failed to set caret rect");
+  }
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -2020,8 +2020,8 @@ TabParent::RecvNotifyIMEPositionChange(
              const LayoutDeviceIntRect& aCaretRect)
 {
   mIMEEditorRect = aEditorRect;
-  mIMECompositionRects = aCompositionRects;
-  mIMECaretRect = aCaretRect;
+  mContentCache.UpdateTextRectArray(aCompositionRects);
+  mContentCache.UpdateCaretRect(aCaretRect);
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -2250,20 +2250,11 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
     break;
   case NS_QUERY_TEXT_RECT:
     {
-      if (aEvent.mInput.mOffset < mIMECompositionRectOffset ||
-          (aEvent.mInput.mOffset + aEvent.mInput.mLength >
-            mIMECompositionRectOffset + mIMECompositionRects.Length())) {
-        // XXX
-        // we doesn't have cache for this request.
+      if (!mContentCache.GetUnionTextRects(aEvent.mInput.mOffset,
+                                           aEvent.mInput.mLength,
+                                           aEvent.mReply.mRect)) {
+        // XXX We don't have cache for this request.
         break;
-      }
-
-      uint32_t baseOffset = aEvent.mInput.mOffset - mIMECompositionRectOffset;
-      uint32_t endOffset = baseOffset + aEvent.mInput.mLength;
-      aEvent.mReply.mRect.SetEmpty();
-      for (uint32_t i = baseOffset; i < endOffset; i++) {
-        aEvent.mReply.mRect =
-          aEvent.mReply.mRect.Union(mIMECompositionRects[i]);
       }
       if (aEvent.mInput.mOffset < mContentCache.TextLength()) {
         aEvent.mReply.mString =
@@ -2274,19 +2265,20 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
         aEvent.mReply.mString.Truncate();
       }
       aEvent.mReply.mOffset = aEvent.mInput.mOffset;
-      aEvent.mReply.mRect = aEvent.mReply.mRect - GetChildProcessOffset();
+      aEvent.mReply.mRect -= GetChildProcessOffset();
       aEvent.mReply.mWritingMode = mWritingMode;
       aEvent.mSucceeded = true;
     }
     break;
   case NS_QUERY_CARET_RECT:
     {
-      if (aEvent.mInput.mOffset != mIMECaretOffset) {
+      if (!mContentCache.GetCaretRect(aEvent.mInput.mOffset,
+                                      aEvent.mReply.mRect)) {
         break;
       }
 
-      aEvent.mReply.mOffset = mIMECaretOffset;
-      aEvent.mReply.mRect = mIMECaretRect - GetChildProcessOffset();
+      aEvent.mReply.mOffset = aEvent.mInput.mOffset;
+      aEvent.mReply.mRect -= GetChildProcessOffset();
       aEvent.mSucceeded = true;
     }
     break;

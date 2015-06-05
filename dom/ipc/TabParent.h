@@ -480,10 +480,6 @@ protected:
     ContentCache mContentCache;
     mozilla::WritingMode mWritingMode;
 
-    uint32_t mIMECompositionRectOffset;
-    InfallibleTArray<LayoutDeviceIntRect> mIMECompositionRects;
-    uint32_t mIMECaretOffset;
-    LayoutDeviceIntRect mIMECaretRect;
     LayoutDeviceIntRect mIMEEditorRect;
 
     nsIntRect mRect;

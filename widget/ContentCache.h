@@ -13,6 +13,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/EventForwards.h"
 #include "nsString.h"
+#include "nsTArray.h"
+#include "Units.h"
 
 class nsIWidget;
 
@@ -27,6 +29,8 @@ namespace mozilla {
 class ContentCache final
 {
 public:
+  typedef InfallibleTArray<LayoutDeviceIntRect> RectArray;
+
   ContentCache();
 
   void Clear();
@@ -75,6 +79,25 @@ public:
   uint32_t SelectionEnd() const { return mSelection.EndOffset(); }
   uint32_t SelectionLength() const { return mSelection.Length(); }
 
+  bool UpdateTextRectArray(const RectArray& aTextRectArray)
+  {
+    return InitTextRectArray(mTextRectArray.mStart, aTextRectArray);
+  }
+  bool InitTextRectArray(uint32_t aOffset, const RectArray& aTextRectArray);
+  bool GetTextRect(uint32_t aOffset,
+                   LayoutDeviceIntRect& aTextRect) const;
+  bool GetUnionTextRects(uint32_t aOffset,
+                         uint32_t aLength,
+                         LayoutDeviceIntRect& aUnionTextRect) const;
+
+  bool UpdateCaretRect(const LayoutDeviceIntRect& aCaretRect)
+  {
+    return InitCaretRect(mCaret.mOffset, aCaretRect);
+  }
+  bool InitCaretRect(uint32_t aOffset, const LayoutDeviceIntRect& aCaretRect);
+  uint32_t CaretOffset() const { return mCaret.mOffset; }
+  bool GetCaretRect(uint32_t aOffset, LayoutDeviceIntRect& aCaretRect) const;
+
 private:
   // Whole text in the target
   nsString mText;
@@ -107,6 +130,63 @@ private:
       return Reversed() ? mAnchor - mFocus : mFocus - mAnchor;
     }
   } mSelection;
+
+  struct Caret final
+  {
+    uint32_t mOffset;
+    LayoutDeviceIntRect mRect;
+
+    Caret()
+      : mOffset(UINT32_MAX)
+    {
+    }
+
+    uint32_t Offset() const
+    {
+      NS_WARN_IF(mOffset == UINT32_MAX);
+      return mOffset;
+    }
+  } mCaret;
+
+  struct TextRectArray final
+  {
+    uint32_t mStart;
+    RectArray mRects;
+
+    TextRectArray()
+      : mStart(UINT32_MAX)
+    {
+    }
+
+    uint32_t StartOffset() const
+    {
+      NS_WARN_IF(mStart == UINT32_MAX);
+      return mStart;
+    }
+    uint32_t EndOffset() const
+    {
+      if (NS_WARN_IF(mStart == UINT32_MAX) ||
+          NS_WARN_IF(static_cast<uint64_t>(mStart) + mRects.Length() >
+                       UINT32_MAX)) {
+        return UINT32_MAX;
+      }
+      return mStart + mRects.Length();
+    }
+    bool InRange(uint32_t aOffset) const
+    {
+      return mStart != UINT32_MAX &&
+             StartOffset() <= aOffset && aOffset < EndOffset();
+    }
+    bool InRange(uint32_t aOffset, uint32_t aLength) const
+    {
+      if (NS_WARN_IF(static_cast<uint64_t>(aOffset) + aLength > UINT32_MAX)) {
+        return false;
+      }
+      return InRange(aOffset) && aOffset + aLength <= EndOffset();
+    }
+    LayoutDeviceIntRect GetRect(uint32_t aOffset) const;
+    LayoutDeviceIntRect GetUnionRect(uint32_t aOffset, uint32_t aLength) const;
+  } mTextRectArray;
 
   bool mIsComposing;
   bool mRequestedToCommitOrCancelComposition;
