@@ -20,7 +20,7 @@ add_task(function* () {
   do_register_cleanup(() => Services.prefs.clearUserPref("browser.bookmarks.autoExportHTML"));
 
   // Initialize nsBrowserGlue before Places.
-  Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIBrowserGlue);
+  Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsISupports);
 
   // Initialize Places through the History Service.
   Cc["@mozilla.org/browser/nav-history-service;1"]

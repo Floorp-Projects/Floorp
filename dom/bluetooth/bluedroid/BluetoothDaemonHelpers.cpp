@@ -1772,13 +1772,13 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattReadParam& aOut)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  /* unpack value type */
-  rv = UnpackPDU(aPDU, aOut.mValueType);
+  /* unpack status */
+  rv = UnpackPDU(aPDU, aOut.mStatus);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  /* unpack status */
-  rv = UnpackPDU(aPDU, aOut.mStatus);
+  /* unpack value type */
+  rv = UnpackPDU(aPDU, aOut.mValueType);
   if (NS_FAILED(rv)) {
     return rv;
   }

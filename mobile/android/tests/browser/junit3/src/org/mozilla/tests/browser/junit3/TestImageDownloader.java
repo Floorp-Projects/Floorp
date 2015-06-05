@@ -1,15 +1,18 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-package org.mozilla.gecko;
+package org.mozilla.tests.browser.junit3;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.net.Uri;
-import android.test.mock.MockResources;
+import android.test.InstrumentationTestCase;
 import android.test.RenamingDelegatingContext;
+import android.test.mock.MockResources;
 import android.util.DisplayMetrics;
+import org.mozilla.gecko.distribution.Distribution;
+import org.mozilla.gecko.home.ImageLoader.ImageDownloader;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,10 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.home.ImageLoader.ImageDownloader;
-
-public class TestImageDownloader extends BrowserTestCase {
+public class TestImageDownloader extends InstrumentationTestCase {
     private static class TestContext extends RenamingDelegatingContext {
         private static final String PREFIX = "TestImageDownloader-";
 
@@ -104,7 +104,7 @@ public class TestImageDownloader extends BrowserTestCase {
     private ImageDownloader downloader;
 
     protected void setUp() {
-        context = new TestContext(getApplicationContext());
+        context = new TestContext(getInstrumentation().getTargetContext());
         resources = (TestResources) context.getResources();
         distribution = new TestDistribution(context);
         downloader = new ImageDownloader(context, distribution);

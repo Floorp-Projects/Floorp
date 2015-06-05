@@ -1,10 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-package org.mozilla.gecko;
+package org.mozilla.tests.browser.junit3;
 
 import java.io.InputStream;
 
+import android.test.InstrumentationTestCase;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.util.GeckoJarReader;
 
@@ -12,9 +13,9 @@ import org.mozilla.gecko.util.GeckoJarReader;
  * A basic jar reader test. Tests reading a png from fennec's apk, as well as
  * loading some invalid jar urls.
  */
-public class TestJarReader extends BrowserTestCase {
+public class TestJarReader extends InstrumentationTestCase {
     public void testJarReader() {
-        String appPath = getActivity().getApplication().getPackageResourcePath();
+        String appPath = getInstrumentation().getTargetContext().getPackageResourcePath();
         assertNotNull(appPath);
 
         // Test reading a file from a jar url that looks correct.

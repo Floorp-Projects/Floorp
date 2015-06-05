@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+   -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="1163447:  selectItems in Places no longer selects items within Toolbar or Sidebar folders"
+        onload="runTest();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript" src="head.js" />
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+  <tree id="tree"
+        type="places"
+        flex="1">
+    <treecols>
+      <treecol label="Title" id="title" anonid="title" primary="true" ordinal="1" flex="1"/>
+    </treecols>
+    <treechildren flex="1"/>
+  </tree>
+
+  <script type="application/javascript"><![CDATA[
+
+    /**
+     * Bug 1163447: places-tree should be able to select an item within the toolbar, and
+     * unfiled bookmarks. Yet not follow recursive folder-shortcuts infinitely.
+     */
+
+    function runTest() {
+      SimpleTest.waitForExplicitFinish();
+
+      Task.spawn(function* () {
+        let bmu = PlacesUtils.bookmarks;
+
+        yield bmu.insert({
+          parentGuid: bmu.toolbarGuid,
+          index: bmu.DEFAULT_INDEX,
+          type: bmu.TYPE_BOOKMARK,
+          url: "place:folder=TOOLBAR",
+          title: "shortcut to self - causing infinite recursion if not handled properly"
+        });
+
+        yield bmu.insert({
+          parentGuid: bmu.toolbarGuid,
+          index: bmu.DEFAULT_INDEX,
+          type: bmu.TYPE_BOOKMARK,
+          url: "place:folder=UNFILED_BOOKMARKS",
+          title: "shortcut to unfiled, within toolbar"
+        });
+
+        let folder = yield bmu.insert({
+          parentGuid: bmu.unfiledGuid,
+          index: bmu.DEFAULT_INDEX,
+          type: bmu.TYPE_FOLDER,
+          title: "folder within unfiled"
+        });
+
+        // Setup the places tree contents.
+        let tree = document.getElementById("tree");
+        tree.place = "place:folder=TOOLBAR";
+
+        // Select the folder via the selectItems(itemId) API being tested
+        let itemId = yield PlacesUtils.promiseItemId(folder.guid);
+        tree.selectItems([itemId]);
+
+        is(tree.selectedNode && tree.selectedNode.itemId, itemId, "The node was selected through the shortcut");
+
+        // Cleanup
+        yield bmu.eraseEverything();
+
+      }).catch(err => {
+        ok(false, `Uncaught error: ${err}`);
+      }).then(SimpleTest.finish);
+    }
+  ]]></script>
+</window>

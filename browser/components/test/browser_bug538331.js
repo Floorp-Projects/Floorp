@@ -110,8 +110,7 @@ var gOriginalOverrideURL;
 this.__defineGetter__("gBG", function() {
   delete this.gBG;
   return this.gBG = Cc["@mozilla.org/browser/browserglue;1"].
-                    getService(Ci.nsIBrowserGlue).
-                    QueryInterface(Ci.nsIObserver);
+                    getService(Ci.nsIObserver);
 });
 
 function test()
