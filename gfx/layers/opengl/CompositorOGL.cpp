@@ -607,8 +607,6 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
     *aRenderBoundsOut = rect;
   }
 
-  mRenderBoundsOut = rect;
-
   GLint width = rect.width;
   GLint height = rect.height;
 
@@ -952,17 +950,6 @@ CompositorOGL::DrawQuad(const Rect& aRect,
     DrawVRDistortion(aRect, aClipRect, aEffectChain, aOpacity, aTransform);
     return;
   }
-
-  // XXX: This doesn't handle 3D transforms. It also doesn't handled rotated
-  //      quads. Fix me.
-  const Rect destRect = aTransform.TransformBounds(aRect);
-
-  if (!mRenderBoundsOut.Intersects(destRect)) {
-    return;
-  }
-
-  mPixelsFilled += destRect.width * destRect.height;
-
   LayerScope::DrawBegin();
 
   Rect clipRect = aClipRect;
@@ -1010,6 +997,13 @@ CompositorOGL::DrawQuad(const Rect& aRect,
                  : MaskType::Mask2d;
   } else {
     maskType = MaskType::MaskNone;
+  }
+
+  {
+    // XXX: This doesn't handle 3D transforms. It also doesn't handled rotated
+    //      quads. Fix me.
+    const Rect destRect = aTransform.TransformBounds(aRect);
+    mPixelsFilled += destRect.width * destRect.height;
   }
 
   // Determine the color if this is a color shader and fold the opacity into
