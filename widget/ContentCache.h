@@ -193,6 +193,8 @@ private:
       mRect.SetEmpty();
     }
 
+    bool IsValid() const { return mOffset != UINT32_MAX; }
+
     uint32_t Offset() const
     {
       NS_WARN_IF(mOffset == UINT32_MAX);
