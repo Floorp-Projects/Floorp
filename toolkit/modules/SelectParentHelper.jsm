@@ -65,7 +65,8 @@ this.SelectParentHelper = {
 
 };
 
-function populateChildren(menulist, options, selectedIndex, startIndex = 0, isInGroup = false) {
+function populateChildren(menulist, options, selectedIndex, startIndex = 0,
+                          isInGroup = false, isGroupDisabled = false) {
   let index = startIndex;
   let element = menulist.menupopup;
 
@@ -78,8 +79,14 @@ function populateChildren(menulist, options, selectedIndex, startIndex = 0, isIn
 
     element.appendChild(item);
 
+    // A disabled optgroup disables all of its child options.
+    let isDisabled = isGroupDisabled || option.disabled;
+    if (isDisabled) {
+      item.setAttribute("disabled", "true");
+    }
+
     if (isOptGroup) {
-      index = populateChildren(menulist, option.children, selectedIndex, index, true);
+      index = populateChildren(menulist, option.children, selectedIndex, index, true, isDisabled);
     } else {
       if (index == selectedIndex) {
         // We expect the parent element of the popup to be a <xul:menulist> that
