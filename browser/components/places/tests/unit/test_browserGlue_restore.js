@@ -32,7 +32,7 @@ do_register_cleanup(function () {
 
 add_task(function* test_main() {
   // Initialize nsBrowserGlue before Places.
-  Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIBrowserGlue);
+  Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsISupports);
 
   // Initialize Places through the History Service.
   let hs = Cc["@mozilla.org/browser/nav-history-service;1"].

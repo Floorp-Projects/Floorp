@@ -1,24 +1,24 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-package org.mozilla.gecko;
+package org.mozilla.tests.browser.junit3;
+
+import android.content.Context;
+import android.content.res.Resources;
+import android.test.InstrumentationTestCase;
+import android.test.mock.MockContext;
+import android.test.mock.MockResources;
+import org.mozilla.gecko.util.RawResource;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.mozilla.gecko.util.RawResource;
-
-import android.content.Context;
-import android.content.res.Resources;
-import android.test.mock.MockContext;
-import android.test.mock.MockResources;
-
 /**
  * Tests whether RawResource.getAsString() produces the right String
  * result after reading the returned raw resource's InputStream.
  */
-public class TestRawResource extends BrowserTestCase {
+public class TestRawResource extends InstrumentationTestCase {
     private static final int RAW_RESOURCE_ID = 1;
     private static final String RAW_CONTENTS = "RAW";
 

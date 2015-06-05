@@ -3610,12 +3610,14 @@ nsNavHistoryFolderResultNode::OnItemRemoved(int64_t aItemId,
                                             const nsACString& aGUID,
                                             const nsACString& aParentGUID)
 {
-  // If this folder is a folder shortcut, we should never be notified for the
-  // removal of the shortcut (the parent node would be).
-  MOZ_ASSERT(mItemId == mTargetFolderItemId || aItemId != mItemId);
+  // Folder shortcuts should not be notified removal of the target folder.
+  MOZ_ASSERT_IF(mItemId != mTargetFolderItemId, aItemId != mTargetFolderItemId);
+  // Concrete folders should not be notified their own removal.
+  // Note aItemId may equal mItemId for recursive folder shortcuts.
+  MOZ_ASSERT_IF(mItemId == mTargetFolderItemId, aItemId != mItemId);
 
   // In any case though, here we only care about the children removal.
-  if (mTargetFolderItemId == aItemId)
+  if (mTargetFolderItemId == aItemId || mItemId == aItemId)
     return NS_OK;
 
   MOZ_ASSERT(aParentFolder == mTargetFolderItemId, "Got wrong bookmark update");
