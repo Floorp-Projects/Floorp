@@ -74,6 +74,16 @@ public:
   bool HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
                                nsIWidget* aWidget) const;
 
+  /**
+   * Cache*() retrieves the latest content information and store them.
+   */
+  bool CacheEditorRect(nsIWidget* aWidget);
+  bool CacheSelection(nsIWidget* aWidget);
+  bool CacheText(nsIWidget* aWidget);
+  bool CacheTextRects(nsIWidget* aWidget);
+
+  bool CacheAll(nsIWidget* aWidget);
+
   void SetText(const nsAString& aText);
   const nsString& Text() const { return mText; }
   uint32_t TextLength() const { return mText.Length(); }
@@ -105,6 +115,10 @@ public:
   {
     SetSelection(aCaretOffset, aCaretOffset, aWritingMode);
   }
+  void SetSelection(uint32_t aStartOffset,
+                    uint32_t aLength,
+                    bool aReversed,
+                    const WritingMode& aWritingMode);
   void SetSelection(uint32_t aAnchorOffset,
                     uint32_t aFocusOffset,
                     const WritingMode& aWritingMode);
@@ -175,6 +189,12 @@ private:
     {
     }
 
+    void Clear()
+    {
+      mAnchor = mFocus = 0;
+      mWritingMode = WritingMode();
+    }
+
     bool Collapsed() const { return mFocus == mAnchor; }
     bool Reversed() const { return mFocus < mAnchor; }
     uint32_t StartOffset() const { return Reversed() ? mFocus : mAnchor; }
@@ -195,6 +215,12 @@ private:
     {
     }
 
+    void Clear()
+    {
+      mOffset = UINT32_MAX;
+      mRect.SetEmpty();
+    }
+
     uint32_t Offset() const
     {
       NS_WARN_IF(mOffset == UINT32_MAX);
@@ -210,6 +236,12 @@ private:
     TextRectArray()
       : mStart(UINT32_MAX)
     {
+    }
+
+    void Clear()
+    {
+      mStart = UINT32_MAX;
+      mRects.Clear();
     }
 
     uint32_t StartOffset() const
