@@ -24,7 +24,7 @@ add_task(function* () {
   yield createCorruptDB();
 
   // Initialize nsBrowserGlue before Places.
-  Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIBrowserGlue);
+  Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsISupports);
 
   // Check the database was corrupt.
   // nsBrowserGlue uses databaseStatus to manage initialization.

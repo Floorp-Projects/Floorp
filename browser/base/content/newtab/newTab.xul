@@ -34,7 +34,7 @@
   <xul:panel id="newtab-customize-panel" orient="vertical" type="arrow"
              noautohide="true" hidden="true">
     <xul:hbox id="newtab-customize-title" class="newtab-customize-panel-item">
-      <xul:label>&newtab.customize.cog.title;</xul:label>
+      <xul:label>&newtab.customize.cog.title2;</xul:label>
     </xul:hbox>
     <xul:vbox class="newtab-customize-complex-option">
       <xul:hbox id="newtab-customize-classic" class="newtab-customize-panel-superitem newtab-customize-panel-item selectable">

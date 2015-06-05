@@ -482,7 +482,6 @@ input[type=button] {
   line-height: 52px;
   padding-left: 15px;
   font-weight: 600;
-  text-transform: uppercase;
   cursor: default;
   border-radius: 5px 5px 0px 0px;
 }

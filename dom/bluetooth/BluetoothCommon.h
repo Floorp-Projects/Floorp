@@ -729,7 +729,7 @@ struct BluetoothGattReadParam {
   BluetoothGattServiceId mServiceId;
   BluetoothGattId mCharId;
   BluetoothGattId mDescriptorId;
-  uint32_t mValueType;
+  uint16_t mValueType;
   uint16_t mValueLength;
   uint8_t mValue[BLUETOOTH_GATT_MAX_ATTR_LEN];
   uint8_t mStatus;

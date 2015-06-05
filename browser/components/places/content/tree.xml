@@ -576,11 +576,11 @@
           // Array of nodes found by findNodes which should be opened
           var nodesToOpen = [];
 
-          // A set of URIs of container-nodes that were previously searched,
+          // A set of GUIDs of container-nodes that were previously searched,
           // and thus shouldn't be searched again. This is empty at the initial
           // start of the recursion and gets filled in as the recursion
           // progresses.
-          var nodesURIChecked = [];
+          var checkedGuidsSet = new Set();
 
           /**
            * Recursively search through a node's children for items
@@ -606,20 +606,18 @@
               ids.splice(index, 1);
             }
 
+            var concreteGuid = PlacesUtils.getConcreteItemGuid(node);
             if (ids.length == 0 || !PlacesUtils.nodeIsContainer(node) ||
-                nodesURIChecked.indexOf(node.uri) != -1)
+                checkedGuidsSet.has(concreteGuid))
               return foundOne;
 
-            // Don't try to open a query or a shurtcut, since it may return
-            // any duplicate data and be infinitely nested.  Though, if it has
-            // been explicitly opened by the caller, search into it.
-            let shouldOpen = aOpenContainers &&
-                             node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER;
+            // Only follow a query if it has been been explicitly opened by the caller.
+            let shouldOpen = aOpenContainers && PlacesUtils.nodeIsFolder(node);
             PlacesUtils.asContainer(node);
             if (!node.containerOpen && !shouldOpen)
               return foundOne;
 
-            nodesURIChecked.push(node.uri);
+            checkedGuidsSet.add(concreteGuid);
 
             // Remember the beginning state so that we can re-close
             // this node if we don't find any additional results here.
