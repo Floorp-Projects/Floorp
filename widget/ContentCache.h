@@ -84,10 +84,6 @@ public:
 
   bool CacheAll(nsIWidget* aWidget);
 
-  void SetText(const nsAString& aText);
-  const nsString& Text() const { return mText; }
-  uint32_t TextLength() const { return mText.Length(); }
-
   /**
    * OnCompositionEvent() should be called before sending composition string.
    * This returns true if the event should be sent.  Otherwise, false.
@@ -111,9 +107,26 @@ public:
                                       bool aCancel,
                                       nsAString& aLastString);
 
+  /**
+   * NotifyIMEOfSelectionChange() notifies IME of selection change with
+   * storing selection range.
+   *
+   * @param aWidget                 A widget to notify IME of the notification.
+   * @param aCausedByComposition    true if the change is caused by composition.
+   *                                Otherwise, false.
+   */
+  void NotifyIMEOfSelectionChange(nsIWidget* aWidget,
+                                  bool aCausedByComposition) const;
+
   void SetSelection(uint32_t aCaretOffset, const WritingMode& aWritingMode)
   {
     SetSelection(aCaretOffset, aCaretOffset, aWritingMode);
+  }
+  void SetSelection(uint32_t aStartOffset,
+                    uint32_t aLength,
+                    bool aReversed)
+  {
+    SetSelection(aStartOffset, aLength, aReversed, mSelection.mWritingMode);
   }
   void SetSelection(uint32_t aStartOffset,
                     uint32_t aLength,
@@ -122,47 +135,6 @@ public:
   void SetSelection(uint32_t aAnchorOffset,
                     uint32_t aFocusOffset,
                     const WritingMode& aWritingMode);
-  bool SelectionCollapsed() const { return mSelection.Collapsed(); }
-  bool SelectionReversed() const { return mSelection.Reversed(); }
-  bool SelectionEndIsGraterThanTextLength() const
-  {
-    return SelectionEnd() > TextLength();
-  }
-  uint32_t SelectionAnchor() const { return mSelection.mAnchor; }
-  uint32_t SelectionFocus() const { return mSelection.mFocus; }
-  uint32_t SelectionStart() const { return mSelection.StartOffset(); }
-  uint32_t SelectionEnd() const { return mSelection.EndOffset(); }
-  uint32_t SelectionLength() const { return mSelection.Length(); }
-
-  const WritingMode& SelectionWritingMode() const
-  {
-    return mSelection.mWritingMode;
-  }
-
-  bool UpdateTextRectArray(const RectArray& aTextRectArray)
-  {
-    return InitTextRectArray(mTextRectArray.mStart, aTextRectArray);
-  }
-  bool InitTextRectArray(uint32_t aOffset, const RectArray& aTextRectArray);
-  bool GetTextRect(uint32_t aOffset,
-                   LayoutDeviceIntRect& aTextRect) const;
-  bool GetUnionTextRects(uint32_t aOffset,
-                         uint32_t aLength,
-                         LayoutDeviceIntRect& aUnionTextRect) const;
-
-  bool UpdateCaretRect(const LayoutDeviceIntRect& aCaretRect)
-  {
-    return InitCaretRect(mCaret.mOffset, aCaretRect);
-  }
-  bool InitCaretRect(uint32_t aOffset, const LayoutDeviceIntRect& aCaretRect);
-  uint32_t CaretOffset() const { return mCaret.mOffset; }
-  bool GetCaretRect(uint32_t aOffset, LayoutDeviceIntRect& aCaretRect) const;
-
-  void SetEditorRect(const LayoutDeviceIntRect& aEditorRect)
-  {
-    mEditorRect = aEditorRect;
-  }
-  const LayoutDeviceIntRect& GetEditorRect() const { return mEditorRect; }
 
 private:
   // Whole text in the target
@@ -279,6 +251,13 @@ private:
   bool mIsComposing;
   bool mRequestedToCommitOrCancelComposition;
   bool mIsChrome;
+
+  bool GetCaretRect(uint32_t aOffset, LayoutDeviceIntRect& aCaretRect) const;
+  bool GetTextRect(uint32_t aOffset,
+                   LayoutDeviceIntRect& aTextRect) const;
+  bool GetUnionTextRects(uint32_t aOffset,
+                         uint32_t aLength,
+                         LayoutDeviceIntRect& aUnionTextRect) const;
 
   friend struct IPC::ParamTraits<ContentCache>;
 };
