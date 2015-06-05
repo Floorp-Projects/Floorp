@@ -1333,15 +1333,21 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
   if (aAction == EditAction::insertIMEText) {
     // Right now the nsWSRunObject code bails on empty strings, but IME needs
     // the InsertTextImpl() call to still happen since empty strings are meaningful there.
+    NS_ENSURE_STATE(mHTMLEditor);
+    // If there is one or more IME selections, its minimum offset should be
+    // the insertion point.
+    int32_t IMESelectionOffset =
+      mHTMLEditor->GetIMESelectionStartOffsetIn(selNode);
+    if (IMESelectionOffset >= 0) {
+      selOffset = IMESelectionOffset;
+    }
     if (inString->IsEmpty())
     {
-      NS_ENSURE_STATE(mHTMLEditor);
       res = mHTMLEditor->InsertTextImpl(*inString, address_of(selNode),
                                         &selOffset, doc);
     }
     else
     {
-      NS_ENSURE_STATE(mHTMLEditor);
       nsWSRunObject wsObj(mHTMLEditor, selNode, selOffset);
       res = wsObj.InsertText(*inString, address_of(selNode), &selOffset, doc);
     }

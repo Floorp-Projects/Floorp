@@ -1,11 +1,3 @@
-application.zip contains:
+application.list contains a list of files that are in application.zip.
 
-- controlled.html
-- foo.txt
-- index.html
-- manifest.webapp
-- sw.js
-- test.js
-- test_doc_load_interception.js
-
-Any change to one of these three files should be added to application.zip as well.
+To update application.zip when changing one of those files, run makezip.sh.

@@ -66,20 +66,23 @@ InterfaceType()        - construct a new object representing a type that
 """
 
 from __future__ import with_statement
-import os, sys
+import os
+import sys
 import struct
 import operator
-import itertools
 
 # header magic
 XPT_MAGIC = "XPCOM\nTypeLib\r\n\x1a"
 TYPELIB_VERSION = (1, 2)
 
+
 class FileFormatError(Exception):
     pass
 
+
 class DataError(Exception):
     pass
+
 
 # Magic for creating enums
 def M_add_class_attribs(attribs):
@@ -89,19 +92,22 @@ def M_add_class_attribs(attribs):
         return type(name, bases, dict_)
     return foo
 
+
 def enum(*names):
     class Foo(object):
         __metaclass__ = M_add_class_attribs(enumerate(names))
+
         def __setattr__(self, name, value):  # this makes it read-only
             raise NotImplementedError
     return Foo()
+
 
 # Descriptor types as described in the spec
 class Type(object):
     """
     Data type of a method parameter or return value. Do not instantiate
     this class directly. Rather, use one of its subclasses.
-    
+
     """
     _prefixdescriptor = struct.Struct(">B")
     Tags = enum(
@@ -135,7 +141,7 @@ class Type(object):
         'StringWithSize',
         # WideStringWithSizeTypeDescriptor
         'WideStringWithSize',
-        #XXX: These are also SimpleTypes (but not in the spec)
+        # XXX: These are also SimpleTypes (but not in the spec)
         # http://hg.mozilla.org/mozilla-central/annotate/0e0e2516f04e/xpcom/typelib/xpt/tools/xpt_dump.c#l69
         'UTF8String',
         'CString',
@@ -157,7 +163,7 @@ class Type(object):
         http://www.mozilla.org/scriptable/typelib_file.html#TypeDescriptor
         and return a dict of flagname: (True|False) suitable
         for passing to Type.__init__ as **kwargs.
-        
+
         """
         return {'pointer': bool(byte & 0x80),
                 'reference': bool(byte & 0x20),
@@ -182,7 +188,7 @@ class Type(object):
         data pool offset |data_pool|. Returns (Type, next offset),
         where |next offset| is an offset suitable for reading the data
         following this TypeDescriptor.
-        
+
         """
         start = data_pool + offset - 1
         (data,) = Type._prefixdescriptor.unpack_from(map, start)
@@ -217,6 +223,7 @@ class Type(object):
         """
         file.write(Type._prefixdescriptor.pack(self.encodeflags() | self.tag))
 
+
 class SimpleType(Type):
     """
     A simple data type. (SimpleTypeDescriptor from the typelib specification.)
@@ -234,7 +241,7 @@ class SimpleType(Type):
         Get a SimpleType object representing |data| (a TypeDescriptorPrefix).
         May return an already-created object. If no cached object is found,
         construct one with |tag| and |flags|.
-        
+
         """
         if data not in SimpleType._cache:
             SimpleType._cache[data] = SimpleType(tag, **flags)
@@ -258,6 +265,7 @@ class SimpleType(Type):
                 s += " *"
         return s
 
+
 class InterfaceType(Type):
     """
     A type representing a pointer to an IDL-defined interface.
@@ -268,7 +276,7 @@ class InterfaceType(Type):
 
     def __init__(self, iface, pointer=True, **kwargs):
         if not pointer:
-            raise DataError, "InterfaceType is not valid with pointer=False"
+            raise DataError("InterfaceType is not valid with pointer=False")
         Type.__init__(self, pointer=pointer, **kwargs)
         self.iface = iface
         self.tag = Type.Tags.Interface
@@ -281,7 +289,7 @@ class InterfaceType(Type):
         Returns (InterfaceType, next offset),
         where |next offset| is an offset suitable for reading the data
         following this InterfaceTypeDescriptor.
-        
+
         """
         if not flags['pointer']:
             return None, offset
@@ -309,19 +317,20 @@ class InterfaceType(Type):
             return self.iface.name
         return "unknown interface"
 
+
 class InterfaceIsType(Type):
     """
     A type representing an interface described by one of the other
     arguments to the method. (InterfaceIsTypeDescriptor from the
     typelib specification.)
-    
+
     """
     _descriptor = struct.Struct(">B")
     _cache = {}
 
     def __init__(self, param_index, pointer=True, **kwargs):
         if not pointer:
-            raise DataError, "InterfaceIsType is not valid with pointer=False"
+            raise DataError("InterfaceIsType is not valid with pointer=False")
         Type.__init__(self, pointer=pointer, **kwargs)
         self.param_index = param_index
         self.tag = Type.Tags.InterfaceIs
@@ -335,7 +344,7 @@ class InterfaceIsType(Type):
         where |next offset| is an offset suitable for reading the data
         following this InterfaceIsTypeDescriptor.
         May return a cached value.
-        
+
         """
         if not flags['pointer']:
             return None, offset
@@ -358,19 +367,20 @@ class InterfaceIsType(Type):
     def __str__(self):
         return "InterfaceIs *"
 
+
 class ArrayType(Type):
     """
     A type representing an Array of elements of another type, whose
     size and length are passed as separate parameters to a method.
     (ArrayTypeDescriptor from the typelib specification.)
-    
+
     """
     _descriptor = struct.Struct(">BB")
 
     def __init__(self, element_type, size_is_arg_num, length_is_arg_num,
                  pointer=True, **kwargs):
         if not pointer:
-            raise DataError, "ArrayType is not valid with pointer=False"
+            raise DataError("ArrayType is not valid with pointer=False")
         Type.__init__(self, pointer=pointer, **kwargs)
         self.element_type = element_type
         self.size_is_arg_num = size_is_arg_num
@@ -408,6 +418,7 @@ class ArrayType(Type):
     def __str__(self):
         return "%s []" % str(self.element_type)
 
+
 class StringWithSizeType(Type):
     """
     A type representing a UTF-8 encoded string whose size and length
@@ -420,7 +431,7 @@ class StringWithSizeType(Type):
     def __init__(self, size_is_arg_num, length_is_arg_num,
                  pointer=True, **kwargs):
         if not pointer:
-            raise DataError, "StringWithSizeType is not valid with pointer=False"
+            raise DataError("StringWithSizeType is not valid with pointer=False")
         Type.__init__(self, pointer=pointer, **kwargs)
         self.size_is_arg_num = size_is_arg_num
         self.length_is_arg_num = length_is_arg_num
@@ -455,6 +466,7 @@ class StringWithSizeType(Type):
     def __str__(self):
         return "string_s"
 
+
 class WideStringWithSizeType(Type):
     """
     A type representing a UTF-16 encoded string whose size and length
@@ -467,7 +479,7 @@ class WideStringWithSizeType(Type):
     def __init__(self, size_is_arg_num, length_is_arg_num,
                  pointer=True, **kwargs):
         if not pointer:
-            raise DataError, "WideStringWithSizeType is not valid with pointer=False"
+            raise DataError("WideStringWithSizeType is not valid with pointer=False")
         Type.__init__(self, pointer=pointer, **kwargs)
         self.size_is_arg_num = size_is_arg_num
         self.length_is_arg_num = length_is_arg_num
@@ -501,6 +513,7 @@ class WideStringWithSizeType(Type):
 
     def __str__(self):
         return "wstring_s"
+
 
 class Param(object):
     """
@@ -540,7 +553,7 @@ class Param(object):
                 'retval': bool(byte & 0x20),
                 'shared': bool(byte & 0x10),
                 'dipper': bool(byte & 0x08),
-                #XXX: Not in the spec, see:
+                # XXX: Not in the spec, see:
                 # http://hg.mozilla.org/mozilla-central/annotate/0e0e2516f04e/xpcom/typelib/xpt/public/xpt_struct.h#l456
                 'optional': bool(byte & 0x04),
                 }
@@ -620,12 +633,13 @@ class Param(object):
     def __str__(self):
         return self.prefix() + str(self.type)
 
+
 class Method(object):
     """
     A method of an interface, defining its associated parameters
     and return value.
     (MethodDescriptor from the typelib specification.)
-    
+
     """
     _descriptorstart = struct.Struct(">BIB")
 
@@ -653,7 +667,7 @@ class Method(object):
         from the mmaped file |map| with data pool at the offset |data_pool|,
         starting at |offset| into self.params. Returns the offset
         suitable for reading the data following the ParamDescriptor array.
-        
+
         """
         for i in range(num_args):
             p, offset = Param.read(typelib, map, data_pool, offset)
@@ -666,7 +680,7 @@ class Method(object):
         from the mmaped file |map| with data pool at the offset |data_pool|,
         starting at |offset| into self.result. Returns the offset
         suitable for reading the data following the ParamDescriptor.
-        
+
         """
         self.result, offset = Param.read(typelib, map, data_pool, offset)
         return offset
@@ -679,7 +693,7 @@ class Method(object):
         http://www.mozilla.org/scriptable/typelib_file.html#MethodDescriptor
         and return a dict of flagname: (True|False) suitable
         for passing to Method.__init__ as **kwargs
-        
+
         """
         return {'getter': bool(byte & 0x80),
                 'setter': bool(byte & 0x40),
@@ -722,7 +736,7 @@ class Method(object):
         data pool offset |data_pool|. Returns (Method, next offset),
         where |next offset| is an offset suitable for reading the data
         following this MethodDescriptor.
-        
+
         """
         start = data_pool + offset - 1
         flags, name_offset, num_args = Method._descriptorstart.unpack_from(map, start)
@@ -762,6 +776,7 @@ class Method(object):
         else:
             self._name_offset = 0
 
+
 class Constant(object):
     """
     A constant value of a specific type defined on an interface.
@@ -770,7 +785,7 @@ class Constant(object):
     """
     _descriptorstart = struct.Struct(">I")
     # Actual value is restricted to this set of types
-    #XXX: the spec lies, the source allows a bunch more
+    # XXX: the spec lies, the source allows a bunch more
     # http://hg.mozilla.org/mozilla-central/annotate/9c85f9aaec8c/xpcom/typelib/xpt/src/xpt_struct.c#l689
     typemap = {Type.Tags.int16: '>h',
                Type.Tags.uint16: '>H',
@@ -790,7 +805,7 @@ class Constant(object):
         data pool offset |data_pool|. Returns (Constant, next offset),
         where |next offset| is an offset suitable for reading the data
         following this ConstDescriptor.
-        
+
         """
         start = data_pool + offset - 1
         (name_offset,) = Constant._descriptorstart.unpack_from(map, start)
@@ -834,12 +849,13 @@ class Constant(object):
     def __repr__(self):
         return "Constant(%s, %s, %d)" % (self.name, str(self.type), self.value)
 
+
 class Interface(object):
     """
     An Interface represents an object, with its associated methods
     and constant values.
     (InterfaceDescriptor from the typelib specification.)
-    
+
     """
     _direntry = struct.Struct(">16sIII")
     _descriptorstart = struct.Struct(">HH")
@@ -851,7 +867,7 @@ class Interface(object):
                  scriptable=False, function=False, builtinclass=False,
                  main_process_scriptable_only=False):
         self.resolved = resolved
-        #TODO: should validate IIDs!
+        # TODO: should validate IIDs!
         self.iid = iid
         self.name = name
         self.namespace = namespace
@@ -868,7 +884,7 @@ class Interface(object):
         if self.methods or self.constants:
             # make sure it has a valid IID
             if self.iid == Interface.UNRESOLVED_IID:
-                raise DataError, "Cannot instantiate Interface %s containing methods or constants with an unresolved IID" % self.name
+                raise DataError("Cannot instantiate Interface %s containing methods or constants with an unresolved IID" % self.name)
             self.resolved = True
         # These are only used for writing out the interface
         self._descriptor_offset = 0
@@ -904,7 +920,7 @@ class Interface(object):
         else:
             # both unresolved, but names and IIDs are the same, so equal
             return 0
-        #TODO: actually compare methods etc
+        # TODO: actually compare methods etc
         return 0
 
     def read_descriptor(self, typelib, map, data_pool):
@@ -1008,6 +1024,7 @@ class Interface(object):
         for c in self.constants:
             c.write_name(file, data_pool_offset)
 
+
 class Typelib(object):
     """
     A typelib represents one entire typelib file and all the interfaces
@@ -1049,7 +1066,7 @@ class Typelib(object):
         Convert a UUID string into a 16-byte IID.
 
         """
-        s = iid_str.replace('-','')
+        s = iid_str.replace('-', '')
         return ''.join([chr(int(s[i:i+2], 16)) for i in range(0, len(s), 2)])
 
     @staticmethod
@@ -1089,12 +1106,12 @@ class Typelib(object):
          interface_directory_offset,
          data_pool_offset) = Typelib._header.unpack_from(data)
         if magic != XPT_MAGIC:
-            raise FileFormatError, "Bad magic: %s" % magic
+            raise FileFormatError("Bad magic: %s" % magic)
         xpt = Typelib((major_ver, minor_ver))
         xpt.filename = filename
         if expected_size and file_length != expected_size:
-            raise FileFormatError, "File is of wrong length, got %d bytes, expected %d" % (expected_size, file_length)
-        #XXX: by spec this is a zero-based file offset. however,
+            raise FileFormatError("File is of wrong length, got %d bytes, expected %d" % (expected_size, file_length))
+        # XXX: by spec this is a zero-based file offset. however,
         # the xpt_xdr code always subtracts 1 from data offsets
         # (because that's what you do in the data pool) so it
         # winds up accidentally treating this as 1-based.
@@ -1104,9 +1121,8 @@ class Typelib(object):
         # since XPIDL doesn't produce any anyway.
         start = Typelib._header.size
         (anno, ) = struct.unpack_from(">B", data, start)
-        islast = anno & 0x80
         tag = anno & 0x7F
-        if tag == 0: # EmptyAnnotation
+        if tag == 0:  # EmptyAnnotation
             xpt.annotations.append(None)
         # We don't bother handling PrivateAnnotations or anything
 
@@ -1138,14 +1154,14 @@ class Typelib(object):
         self.interfaces.sort()
         for i in self.interfaces:
             if i.parent and i.parent not in self.interfaces:
-                raise DataError, "Interface %s has parent %s not present in typelib!" % (i.name, i.parent.name)
+                raise DataError("Interface %s has parent %s not present in typelib!" % (i.name, i.parent.name))
             for m in i.methods:
                 for n, p in enumerate(m.params):
                     if isinstance(p, InterfaceType) and \
-                        p.iface not in self.interfaces:
-                        raise DataError, "Interface method %s::%s, parameter %d references interface %s not present in typelib!" % (i.name, m.name, n, p.iface.name)
+                       p.iface not in self.interfaces:
+                        raise DataError("Interface method %s::%s, parameter %d references interface %s not present in typelib!" % (i.name, m.name, n, p.iface.name))
                 if isinstance(m.result, InterfaceType) and m.result.iface not in self.interfaces:
-                    raise DataError, "Interface method %s::%s, result references interface %s not present in typelib!" % (i.name, m.name, m.result.iface.name)
+                    raise DataError("Interface method %s::%s, result references interface %s not present in typelib!" % (i.name, m.name, m.result.iface.name))
 
     def writefd(self, fd):
         # write out space for a header + one empty annotation,
@@ -1177,7 +1193,7 @@ class Typelib(object):
         # write an empty annotation
         fd.write(struct.pack(">B", 0x80))
         # now write the interface directory
-        #XXX: bug-compatible with existing xpt lib, put it one byte
+        # XXX: bug-compatible with existing xpt lib, put it one byte
         # ahead of where it's supposed to be.
         fd.seek(interface_directory_offset - 1)
         for i in self.interfaces:
@@ -1200,7 +1216,7 @@ class Typelib(object):
         """
         Print a human-readable listing of the contents of this typelib
         to |out|, in the format of xpt_dump.
-        
+
         """
         out.write("""Header:
    Major version:         %d
@@ -1218,7 +1234,7 @@ class Typelib(object):
             else:
                 if i.parent:
                     out.write("      Parent: %s::%s\n" % (i.parent.namespace,
-                                                    i.parent.name))
+                                                          i.parent.name))
                 out.write("""      Flags:
          Scriptable: %s
          BuiltinClass: %s
@@ -1249,6 +1265,7 @@ class Typelib(object):
                     for c in i.constants:
                         out.write("         %s %s = %d;\n" % (c.type, c.name, c.value))
 
+
 def xpt_dump(file):
     """
     Dump the contents of |file| to stdout in the format of xpt_dump.
@@ -1256,6 +1273,7 @@ def xpt_dump(file):
     """
     t = Typelib.read(file)
     t.dump(sys.stdout)
+
 
 def xpt_link(inputs):
     """
@@ -1287,9 +1305,9 @@ def xpt_link(inputs):
 
     Result = enum('Equal',     # Interfaces the same, doesn't matter
                   'NotEqual',  # Interfaces differ, keep both
-                  'KeepFirst', # Replace second interface with first
-                  'KeepSecond')# Replace first interface with second
-        
+                  'KeepFirst',  # Replace second interface with first
+                  'KeepSecond')  # Replace first interface with second
+
     def compare(i, j):
         """
         Compare two interfaces, determine if they're equal or
@@ -1303,10 +1321,10 @@ def xpt_link(inputs):
         if i.name != j.name:
             if i.iid == j.iid and i.iid != Interface.UNRESOLVED_IID:
                 # Same IID but different names: raise an exception.
-                raise DataError, \
-                    "Typelibs contain definitions of interface %s" \
-                    " with different names (%s (%s) vs %s (%s))!" % \
-                    (i.iid, i.name, i.xpt_filename, j.name, j.xpt_filename)
+                raise DataError(
+                    "Typelibs contain definitions of interface %s"
+                    " with different names (%s (%s) vs %s (%s))!" %
+                    (i.iid, i.name, i.xpt_filename, j.name, j.xpt_filename))
             # Otherwise just different interfaces.
             return Result.NotEqual
         # Interfaces have the same name, so either they need to be merged
@@ -1333,14 +1351,14 @@ def xpt_link(inputs):
                 return Result.KeepSecond
             else:
                 # Same name but different IIDs: raise an exception.
-                raise DataError, \
-                    "Typelibs contain definitions of interface %s" \
-                                " with different IIDs (%s (%s) vs %s (%s))!" % \
-                                (i.name, i.iid, i.xpt_filename, \
-                                 j.iid, j.xpt_filename)
-        raise DataError, "No idea what happened here: %s:%s (%s), %s:%s (%s)" % \
-            (i.name, i.iid, i.xpt_filename, j.name, j.iid, j.xpt_filename)
-    
+                raise DataError(
+                    "Typelibs contain definitions of interface %s"
+                    " with different IIDs (%s (%s) vs %s (%s))!" %
+                               (i.name, i.iid, i.xpt_filename,
+                                j.iid, j.xpt_filename))
+        raise DataError("No idea what happened here: %s:%s (%s), %s:%s (%s)" %
+                        (i.name, i.iid, i.xpt_filename, j.name, j.iid, j.xpt_filename))
+
     # Compare interfaces pairwise to find duplicates that should be merged.
     i = 1
     while i < len(interfaces):
@@ -1356,15 +1374,15 @@ def xpt_link(inputs):
         elif res == Result.KeepSecond:
             merged_interfaces[interfaces[i-1]] = interfaces[i]
             del interfaces[i-1]
-    
+
     # Now fixup any merged interfaces
     def checkType(t):
         if isinstance(t, InterfaceType) and t.iface in merged_interfaces:
             t.iface = merged_interfaces[t.iface]
         elif isinstance(t, ArrayType) and \
-             isinstance(t.element_type, InterfaceType) and \
-             t.element_type.iface in merged_interfaces:
-            t.element_type.iface = merged_interfaces[t.element_type.iface]
+            isinstance(t.element_type, InterfaceType) and \
+                t.element_type.iface in merged_interfaces:
+                t.element_type.iface = merged_interfaces[t.element_type.iface]
 
     for i in interfaces:
         # Replace parent references
@@ -1383,6 +1401,7 @@ def xpt_link(inputs):
     # scriptable interfaces.
     worklist = set(i for i in interfaces if i.scriptable)
     required_interfaces = set()
+
     def maybe_add_to_worklist(iface):
         if iface in required_interfaces or iface in worklist:
             return
@@ -1416,4 +1435,3 @@ if __name__ == '__main__':
         xpt_dump(sys.argv[2])
     elif sys.argv[1] == 'link':
         xpt_link(sys.argv[3:]).write(sys.argv[2])
-        

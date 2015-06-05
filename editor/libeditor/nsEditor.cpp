@@ -26,6 +26,7 @@
 #include "mozFlushType.h"               // for mozFlushType::Flush_Frames
 #include "mozISpellCheckingEngine.h"
 #include "mozInlineSpellChecker.h"      // for mozInlineSpellChecker
+#include "mozilla/CheckedInt.h"         // for CheckedInt
 #include "mozilla/IMEStateManager.h"    // for IMEStateManager
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/dom/Selection.h"      // for Selection, etc
@@ -137,6 +138,7 @@ nsEditor::nsEditor()
 ,  mPlaceHolderBatch(0)
 ,  mAction(EditAction::none)
 ,  mIMETextOffset(0)
+,  mIMETextLength(0)
 ,  mDirection(eNone)
 ,  mDocDirtyState(-1)
 ,  mSpellcheckCheckboxState(eTriUnset)
@@ -152,6 +154,10 @@ nsEditor::~nsEditor()
 {
   NS_ASSERTION(!mDocWeak || mDidPreDestroy, "Why PreDestroy hasn't been called?");
 
+  if (mComposition) {
+    mComposition->OnEditorDestroyed();
+    mComposition = nullptr;
+  }
   mTxnMgr = nullptr;
 
   delete mPhonetic;
@@ -241,9 +247,15 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIContent *aRoot,
 
   mUpdateCount=0;
 
-  /* initialize IME stuff */
-  mIMETextNode = nullptr;
-  mIMETextOffset = 0;
+  // If this is an editor for <input> or <textarea>, mIMETextNode is always
+  // recreated with same content. Therefore, we need to forget mIMETextNode,
+  // but we need to keep storing mIMETextOffset and mIMETextLength becuase
+  // they are necessary to restore IME selection and replacing composing string
+  // when this receives NS_COMPOSITION_CHANGE event next time.
+  if (mIMETextNode && !mIMETextNode->IsInComposedDoc()) {
+    mIMETextNode = nullptr;
+  }
+
   /* Show the caret */
   selCon->SetCaretReadOnly(false);
   selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
@@ -318,6 +330,10 @@ nsEditor::PostCreate()
     nsCOMPtr<nsIContent> content = GetFocusedContentForIME();
     IMEStateManager::UpdateIMEState(newState, content, this);
   }
+
+  // FYI: This call might cause destroying this editor.
+  IMEStateManager::OnEditorInitialized(this);
+
   return NS_OK;
 }
 
@@ -345,7 +361,12 @@ nsEditor::InstallEventListeners()
 
   nsEditorEventListener* listener =
     reinterpret_cast<nsEditorEventListener*>(mEventListener.get());
-  return listener->Connect(this);
+  nsresult rv = listener->Connect(this);
+  if (mComposition) {
+    // Restart to handle composition with new editor contents.
+    mComposition->StartHandlingComposition(this);
+  }
+  return rv;
 }
 
 void
@@ -356,8 +377,9 @@ nsEditor::RemoveEventListeners()
   }
   reinterpret_cast<nsEditorEventListener*>(mEventListener.get())->Disconnect();
   if (mComposition) {
+    // Even if this is called, don't release mComposition because this is
+    // may be reused after reframing.
     mComposition->EndHandlingComposition(this);
-    mComposition = nullptr;
   }
   mEventTarget = nullptr;
 }
@@ -419,6 +441,8 @@ nsEditor::PreDestroy(bool aDestroyingFrames)
 {
   if (mDidPreDestroy)
     return NS_OK;
+
+  IMEStateManager::OnEditorDestroying(this);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -2039,6 +2063,7 @@ nsEditor::EndIMEComposition()
   /* reset the data we need to construct a transaction */
   mIMETextNode = nullptr;
   mIMETextOffset = 0;
+  mIMETextLength = 0;
   mComposition->EndHandlingComposition(this);
   mComposition = nullptr;
 
@@ -2256,6 +2281,70 @@ NS_IMETHODIMP nsEditor::ScrollSelectionIntoView(bool aScrollToAnchor)
   return NS_OK;
 }
 
+void
+nsEditor::FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
+                                   int32_t& aOffset)
+{
+  if (aNode->IsNodeOfType(nsINode::eTEXT)) {
+    // There is no "better" insertion point.
+    return;
+  }
+
+  if (!IsPlaintextEditor()) {
+    // We cannot find "better" insertion point in HTML editor.
+    // WARNING: When you add some code to find better node in HTML editor,
+    //          you need to call this before calling InsertTextImpl() in
+    //          nsHTMLEditRules.
+    return;
+  }
+
+  nsCOMPtr<nsINode> node = aNode;
+  int32_t offset = aOffset;
+
+  nsCOMPtr<nsINode> root = GetRoot();
+  if (aNode == root) {
+    // In some cases, aNode is the anonymous DIV, and offset is 0.  To avoid
+    // injecting unneeded text nodes, we first look to see if we have one
+    // available.  In that case, we'll just adjust node and offset accordingly.
+    if (offset == 0 && node->HasChildren() &&
+        node->GetFirstChild()->IsNodeOfType(nsINode::eTEXT)) {
+      aNode = node->GetFirstChild();
+      aOffset = 0;
+      return;
+    }
+
+    // In some other cases, aNode is the anonymous DIV, and offset points to the
+    // terminating mozBR.  In that case, we'll adjust aInOutNode and
+    // aInOutOffset to the preceding text node, if any.
+    if (offset > 0 && node->GetChildAt(offset - 1) &&
+        node->GetChildAt(offset - 1)->IsNodeOfType(nsINode::eTEXT)) {
+      NS_ENSURE_TRUE_VOID(node->Length() <= INT32_MAX);
+      aNode = node->GetChildAt(offset - 1);
+      aOffset = static_cast<int32_t>(aNode->Length());
+      return;
+    }
+  }
+
+  // Sometimes, aNode is the mozBR element itself.  In that case, we'll adjust
+  // the insertion point to the previous text node, if one exists, or to the
+  // parent anonymous DIV.
+  if (nsTextEditUtils::IsMozBR(node) && !offset) {
+    if (node->GetPreviousSibling() &&
+        node->GetPreviousSibling()->IsNodeOfType(nsINode::eTEXT)) {
+      NS_ENSURE_TRUE_VOID(node->Length() <= INT32_MAX);
+      aNode = node->GetPreviousSibling();
+      aOffset = static_cast<int32_t>(aNode->Length());
+      return;
+    }
+
+    if (node->GetParentNode() && node->GetParentNode() == root) {
+      aNode = node->GetParentNode();
+      aOffset = 0;
+      return;
+    }
+  }
+}
+
 nsresult
 nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
                          nsCOMPtr<nsINode>* aInOutNode,
@@ -2268,46 +2357,27 @@ nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
 
   NS_ENSURE_TRUE(aInOutNode && *aInOutNode && aInOutOffset && aDoc,
                  NS_ERROR_NULL_POINTER);
-  if (!mComposition && aStringToInsert.IsEmpty()) {
+
+  if (!ShouldHandleIMEComposition() && aStringToInsert.IsEmpty()) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsINode> node = *aInOutNode;
-  uint32_t offset = static_cast<uint32_t>(*aInOutOffset);
+  // This method doesn't support over INT32_MAX length text since aInOutOffset
+  // is int32_t*.
+  CheckedInt<int32_t> lengthToInsert(aStringToInsert.Length());
+  NS_ENSURE_TRUE(lengthToInsert.isValid(), NS_ERROR_INVALID_ARG);
 
-  if (!node->IsNodeOfType(nsINode::eTEXT) && IsPlaintextEditor()) {
-    nsCOMPtr<nsINode> root = GetRoot();
-    // In some cases, node is the anonymous DIV, and offset is 0.  To avoid
-    // injecting unneeded text nodes, we first look to see if we have one
-    // available.  In that case, we'll just adjust node and offset accordingly.
-    if (node == root && offset == 0 && node->HasChildren() &&
-        node->GetFirstChild()->IsNodeOfType(nsINode::eTEXT)) {
-      node = node->GetFirstChild();
-    }
-    // In some other cases, node is the anonymous DIV, and offset points to the
-    // terminating mozBR.  In that case, we'll adjust aInOutNode and
-    // aInOutOffset to the preceding text node, if any.
-    if (node == root && offset > 0 && node->GetChildAt(offset - 1) &&
-        node->GetChildAt(offset - 1)->IsNodeOfType(nsINode::eTEXT)) {
-      node = node->GetChildAt(offset - 1);
-      offset = node->Length();
-    }
-    // Sometimes, node is the mozBR element itself.  In that case, we'll adjust
-    // the insertion point to the previous text node, if one exists, or to the
-    // parent anonymous DIV.
-    if (nsTextEditUtils::IsMozBR(node) && offset == 0) {
-      if (node->GetPreviousSibling() &&
-          node->GetPreviousSibling()->IsNodeOfType(nsINode::eTEXT)) {
-        node = node->GetPreviousSibling();
-        offset = node->Length();
-      } else if (node->GetParentNode() && node->GetParentNode() == root) {
-        node = node->GetParentNode();
-      }
-    }
-  }
+  nsCOMPtr<nsINode> node = *aInOutNode;
+  int32_t offset = *aInOutOffset;
+
+  // In some cases, the node may be the anonymous div elemnt or a mozBR
+  // element.  Let's try to look for better insertion point in the nearest
+  // text node if there is.
+  FindBetterInsertionPoint(node, offset);
 
   nsresult res;
-  if (mComposition) {
+  if (ShouldHandleIMEComposition()) {
+    CheckedInt<int32_t> newOffset;
     if (!node->IsNodeOfType(nsINode::eTEXT)) {
       // create a text node
       nsRefPtr<nsTextNode> newNode = aDoc->CreateTextNode(EmptyString());
@@ -2316,18 +2386,24 @@ nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
       NS_ENSURE_SUCCESS(res, res);
       node = newNode;
       offset = 0;
+      newOffset = lengthToInsert;
+    } else {
+      newOffset = lengthToInsert + offset;
+      NS_ENSURE_TRUE(newOffset.isValid(), NS_ERROR_FAILURE);
     }
     res = InsertTextIntoTextNodeImpl(aStringToInsert, *node->GetAsText(),
                                      offset);
     NS_ENSURE_SUCCESS(res, res);
-    offset += aStringToInsert.Length();
+    offset = newOffset.value();
   } else {
     if (node->IsNodeOfType(nsINode::eTEXT)) {
+      CheckedInt<int32_t> newOffset = lengthToInsert + offset;
+      NS_ENSURE_TRUE(newOffset.isValid(), NS_ERROR_FAILURE);
       // we are inserting text into an existing text node.
       res = InsertTextIntoTextNodeImpl(aStringToInsert, *node->GetAsText(),
                                        offset);
       NS_ENSURE_SUCCESS(res, res);
-      offset += aStringToInsert.Length();
+      offset = newOffset.value();
     } else {
       // we are inserting text into a non-text node.  first we have to create a
       // textnode (this also populates it with the text)
@@ -2336,12 +2412,12 @@ nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
       res = InsertNode(*newNode, *node, offset);
       NS_ENSURE_SUCCESS(res, res);
       node = newNode;
-      offset = aStringToInsert.Length();
+      offset = lengthToInsert.value();
     }
   }
 
   *aInOutNode = node;
-  *aInOutOffset = static_cast<int32_t>(offset);
+  *aInOutOffset = offset;
   return NS_OK;
 }
 
@@ -2353,10 +2429,12 @@ nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
 {
   nsRefPtr<EditTxn> txn;
   bool isIMETransaction = false;
+  int32_t replacedOffset = 0;
+  int32_t replacedLength = 0;
   // aSuppressIME is used when editor must insert text, yet this text is not
   // part of the current IME operation. Example: adjusting whitespace around an
   // IME insertion.
-  if (mComposition && !aSuppressIME) {
+  if (ShouldHandleIMEComposition() && !aSuppressIME) {
     if (!mIMETextNode) {
       mIMETextNode = &aTextNode;
       mIMETextOffset = aOffset;
@@ -2379,6 +2457,12 @@ nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
 
     txn = CreateTxnForIMEText(aStringToInsert);
     isIMETransaction = true;
+    // All characters of the composition string will be replaced with
+    // aStringToInsert.  So, we need to emulate to remove the composition
+    // string.
+    replacedOffset = mIMETextOffset;
+    replacedLength = mIMETextLength;
+    mIMETextLength = aStringToInsert.Length();
   } else {
     txn = CreateTxnForInsertText(aStringToInsert, aTextNode, aOffset);
   }
@@ -2396,6 +2480,11 @@ nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   nsresult res = DoTransaction(txn);
   EndUpdateViewBatch();
 
+  if (replacedLength) {
+    mRangeUpdater.SelAdjDeleteText(
+      static_cast<nsIDOMCharacterData*>(aTextNode.AsDOMNode()),
+      replacedOffset, replacedLength);
+  }
   mRangeUpdater.SelAdjInsertText(aTextNode, aOffset, aStringToInsert);
 
   // let listeners know what happened
@@ -4023,6 +4112,15 @@ nsEditor::IsIMEComposing() const
   return mComposition && mComposition->IsComposing();
 }
 
+bool
+nsEditor::ShouldHandleIMEComposition() const
+{
+  // When the editor is being reframed, the old value may be restored with
+  // InsertText().  In this time, the text should be inserted as not a part
+  // of the composition.
+  return mComposition && mDidPostCreate;
+}
+
 nsresult
 nsEditor::DeleteSelectionAndPrepareToCreateNode()
 {
@@ -4179,10 +4277,11 @@ nsEditor::CreateTxnForDeleteNode(nsINode* aNode, DeleteNodeTxn** aTxn)
 already_AddRefed<IMETextTxn>
 nsEditor::CreateTxnForIMEText(const nsAString& aStringToInsert)
 {
+  MOZ_ASSERT(mIMETextNode);
   // During handling IME composition, mComposition must have been initialized.
   // TODO: We can simplify IMETextTxn::Init() with TextComposition class.
   nsRefPtr<IMETextTxn> txn = new IMETextTxn(*mIMETextNode, mIMETextOffset,
-                                            mComposition->String().Length(),
+                                            mIMETextLength,
                                             mComposition->GetRanges(),
                                             aStringToInsert, *this);
   return txn.forget();
@@ -4685,6 +4784,28 @@ nsEditor::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
     }
   }
 
+  // If there is composition when this is called, we may need to restore IME
+  // selection because if the editor is reframed, this already forgot IME
+  // selection and the transaction.
+  if (mComposition && !mIMETextNode && mIMETextLength) {
+    // We need to look for the new mIMETextNode from current selection.
+    // XXX If selection is changed during reframe, this doesn't work well!
+    nsRange* firstRange = selection->GetRangeAt(0);
+    NS_ENSURE_TRUE(firstRange, NS_ERROR_FAILURE);
+    nsCOMPtr<nsINode> startNode = firstRange->GetStartParent();
+    int32_t startOffset = firstRange->StartOffset();
+    FindBetterInsertionPoint(startNode, startOffset);
+    Text* textNode = startNode->GetAsText();
+    MOZ_ASSERT(textNode,
+               "There must be text node if mIMETextLength is larger than 0");
+    if (textNode) {
+      MOZ_ASSERT(textNode->Length() >= mIMETextOffset + mIMETextLength,
+                 "The text node must be different from the old mIMETextNode");
+      IMETextTxn::SetIMESelection(*this, textNode, mIMETextOffset,
+                                  mIMETextLength, mComposition->GetRanges());
+    }
+  }
+
   return NS_OK;
 }
 
@@ -5061,4 +5182,50 @@ nsEditor::GetIsInEditAction(bool* aIsInEditAction)
   MOZ_ASSERT(aIsInEditAction, "aIsInEditAction must not be null");
   *aIsInEditAction = mIsInEditAction;
   return NS_OK;
+}
+
+int32_t
+nsEditor::GetIMESelectionStartOffsetIn(nsINode* aTextNode)
+{
+  MOZ_ASSERT(aTextNode, "aTextNode must not be nullptr");
+
+  nsCOMPtr<nsISelectionController> selectionController;
+  nsresult rv = GetSelectionController(getter_AddRefs(selectionController));
+  NS_ENSURE_SUCCESS(rv, -1);
+  NS_ENSURE_TRUE(selectionController, -1);
+
+  int32_t minOffset = INT32_MAX;
+  static const SelectionType kIMESelectionTypes[] = {
+    nsISelectionController::SELECTION_IME_RAWINPUT,
+    nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT,
+    nsISelectionController::SELECTION_IME_CONVERTEDTEXT,
+    nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT
+  };
+  for (auto selectionType : kIMESelectionTypes) {
+    nsRefPtr<Selection> selection = GetSelection(selectionType);
+    if (!selection) {
+      continue;
+    }
+    for (uint32_t i = 0; i < selection->RangeCount(); i++) {
+      nsRefPtr<nsRange> range = selection->GetRangeAt(i);
+      if (NS_WARN_IF(!range)) {
+        continue;
+      }
+      if (NS_WARN_IF(range->GetStartParent() != aTextNode)) {
+        // ignore the start offset...
+      } else {
+        MOZ_ASSERT(range->StartOffset() >= 0,
+                   "start offset shouldn't be negative");
+        minOffset = std::min(minOffset, range->StartOffset());
+      }
+      if (NS_WARN_IF(range->GetEndParent() != aTextNode)) {
+        // ignore the end offset...
+      } else {
+        MOZ_ASSERT(range->EndOffset() >= 0,
+                   "start offset shouldn't be negative");
+        minOffset = std::min(minOffset, range->EndOffset());
+      }
+    }
+  }
+  return minOffset < INT32_MAX ? minOffset : -1;
 }

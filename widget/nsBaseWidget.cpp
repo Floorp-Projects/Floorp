@@ -1010,6 +1010,12 @@ nsBaseWidget::SetConfirmedTargetAPZC(uint64_t aInputBlockId,
     mAPZC.get(), setTargetApzcFunc, aInputBlockId, mozilla::Move(aTargets)));
 }
 
+bool
+nsBaseWidget::AsyncPanZoomEnabled() const
+{
+  return !!mAPZC;
+}
+
 nsEventStatus
 nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
                                            const ScrollableLayerGuid& aGuid,

@@ -94,6 +94,13 @@ public:
                               nsIContent* aContent,
                               nsIEditor* aEditor);
 
+  // This method is called when the editor is initialized.
+  static void OnEditorInitialized(nsIEditor* aEditor);
+
+  // This method is called when the editor is (might be temporarily) being
+  // destroyed.
+  static void OnEditorDestroying(nsIEditor* aEditor);
+
   /**
    * All composition events must be dispatched via DispatchCompositionEvent()
    * for storing the composition target and ensuring a set of composition

@@ -106,6 +106,7 @@ function startTest() {
   SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]}, continueTest);
 }
 
+SimpleTest.testInChaosMode();
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(startTest, window);
 

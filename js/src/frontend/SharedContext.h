@@ -565,21 +565,17 @@ FinishPopStatement(ContextT* ct)
 
 /*
  * Find a lexically scoped variable (one declared by let, catch, or an array
- * comprehension) named by atom, looking in sc's compile-time scopes.
+ * comprehension) named by atom, looking in ct's compile-time scopes.
  *
  * If a WITH statement is reached along the scope stack, return its statement
- * info record, so callers can tell that atom is ambiguous. If slotp is not
- * null, then if atom is found, set *slotp to its stack slot, otherwise to -1.
- * This means that if slotp is not null, all the block objects on the lexical
- * scope chain must have had their depth slots computed by the code generator,
- * so the caller must be under EmitTree.
+ * info record, so callers can tell that atom is ambiguous.
  *
  * In any event, directly return the statement info record in which atom was
  * found. Otherwise return null.
  */
 template <class ContextT>
 typename ContextT::StmtInfo*
-LexicalLookup(ContextT* ct, HandleAtom atom, int* slotp, typename ContextT::StmtInfo* stmt);
+LexicalLookup(ContextT* ct, HandleAtom atom, typename ContextT::StmtInfo* stmt = nullptr);
 
 } // namespace frontend
 

@@ -3933,7 +3933,6 @@ MOZ_TIME_MANAGER=
 MOZ_SIMPLEPUSH=
 MOZ_PAY=
 MOZ_AUDIO_CHANNEL_MANAGER=
-NSS_NO_LIBPKIX=
 MOZ_CONTENT_SANDBOX=
 MOZ_GMP_SANDBOX=
 MOZ_SANDBOX=1
@@ -6562,14 +6561,6 @@ if test -n "$MOZ_NO_EV_CERTS"; then
     AC_DEFINE(MOZ_NO_EV_CERTS)
 fi
 AC_SUBST(MOZ_NO_EV_CERTS)
-
-dnl ========================================================
-dnl = Disable libpkix
-dnl ========================================================
-if test -n "$NSS_NO_LIBPKIX"; then
-    AC_DEFINE(NSS_NO_LIBPKIX)
-fi
-AC_SUBST(NSS_NO_LIBPKIX)
 
 dnl ========================================================
 dnl = Sandboxing support

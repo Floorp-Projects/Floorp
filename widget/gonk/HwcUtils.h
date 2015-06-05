@@ -86,14 +86,17 @@ static bool CalculateClipRect(const gfx::Matrix& aTransform,
  *        The origin is the top-left corner of the layer
  * @param aVisibleRegionScreen Output. Visible region in screen space.
  *        The origin is the top-left corner of the screen
- * @return true if the layer should be rendered.
- *         false if the layer can be skipped
+ * @param aIsVisible Output. true if region is visible
+ *        false if region is not visible
+ * @return true if region can be rendered by HWC.
+ *         false if region should not be rendered by HWC
  */
 static bool PrepareVisibleRegion(const nsIntRegion& aVisible,
                                  const gfx::Matrix& aLayerTransform,
                                  const gfx::Matrix& aLayerBufferTransform,
                                  nsIntRect aClip, nsIntRect aBufferRect,
-                                 RectVector* aVisibleRegionScreen);
+                                 RectVector* aVisibleRegionScreen,
+                                 bool& aIsVisible);
 
 
 /**

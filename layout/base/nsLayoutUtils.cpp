@@ -815,6 +815,34 @@ ApplyRectMultiplier(nsRect aRect, float aMultiplier)
   return nsRect(ceil(newX), ceil(newY), floor(newWidth), floor(newHeight));
 }
 
+bool
+nsLayoutUtils::UsesAsyncScrolling(nsIFrame* aFrame)
+{
+#ifdef MOZ_WIDGET_ANDROID
+  // We always have async scrolling for android
+  return true;
+#endif
+
+  return AsyncPanZoomEnabled(aFrame);
+}
+
+bool
+nsLayoutUtils::AsyncPanZoomEnabled(nsIFrame* aFrame)
+{
+  // We use this as a shortcut, since if the compositor will never use APZ,
+  // no widget will either.
+  if (!gfxPrefs::AsyncPanZoomEnabledDoNotUseDirectly()) {
+    return false;
+  }
+
+  nsIFrame *frame = nsLayoutUtils::GetDisplayRootFrame(aFrame);
+  nsIWidget* widget = frame->GetNearestWidget();
+  if (!widget) {
+    return false;
+  }
+  return widget->AsyncPanZoomEnabled();
+}
+
 // Return the maximum displayport size, based on the LayerManager's maximum
 // supported texture size. The result is in app units.
 static nscoord
@@ -1093,9 +1121,12 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
                             aMargins, aPriority),
                         nsINode::DeleteProperty<DisplayPortMarginsPropertyData>);
 
-  if (nsLayoutUtils::UsesAsyncScrolling() && gfxPrefs::LayoutUseContainersForRootFrames()) {
+  if (gfxPrefs::LayoutUseContainersForRootFrames()) {
     nsIFrame* rootScrollFrame = aPresShell->GetRootScrollFrame();
-    if (rootScrollFrame && aContent == rootScrollFrame->GetContent()) {
+    if (rootScrollFrame &&
+        aContent == rootScrollFrame->GetContent() &&
+        nsLayoutUtils::UsesAsyncScrolling(rootScrollFrame))
+    {
       // We are setting a root displayport for a document.
       // If we have APZ, then set a special flag on the pres shell so
       // that we don't get scrollbars drawn.
@@ -2987,7 +3018,7 @@ nsLayoutUtils::GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
   // Note: we only do this in processes where we do subframe scrolling to
   //       begin with (i.e., not in the parent process on B2G).
   if (aBuilder.IsPaintingToWindow() &&
-      gfxPrefs::AsyncPanZoomEnabled() &&
+      nsLayoutUtils::AsyncPanZoomEnabled(aScrollFrame) &&
       !aBuilder.HaveScrollableDisplayPort() &&
       scrollableFrame->WantAsyncScroll()) {
 
@@ -7836,17 +7867,6 @@ nsLayoutUtils::CalculateExpandedScrollableRect(nsIFrame* aFrame)
     scrollableRect.height = compSize.height;
   }
   return scrollableRect;
-}
-
-/* static */ bool
-nsLayoutUtils::UsesAsyncScrolling()
-{
-#ifdef MOZ_WIDGET_ANDROID
-  // We always have async scrolling for android
-  return true;
-#endif
-
-  return gfxPrefs::AsyncPanZoomEnabled();
 }
 
 /* static */ void
