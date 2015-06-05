@@ -37,6 +37,20 @@ public:
   void Clear();
 
   /**
+   * AssignContent() is called when TabParent receives ContentCache from
+   * the content process.  This doesn't copy composition information because
+   * it's managed by TabParent itself.
+   */
+  void AssignContent(const ContentCache& aOther)
+  {
+    mText = aOther.mText;
+    mSelection = aOther.mSelection;
+    mCaret = aOther.mCaret;
+    mTextRectArray = aOther.mTextRectArray;
+    mEditorRect = aOther.mEditorRect;
+  }
+
+  /**
    * HandleQueryContentEvent() sets content data to aEvent.mReply.
    *
    * For NS_QUERY_SELECTED_TEXT, fail if the cache doesn't contain the whole
@@ -232,6 +246,8 @@ private:
 
   bool mIsComposing;
   bool mRequestedToCommitOrCancelComposition;
+
+  friend struct IPC::ParamTraits<ContentCache>;
 };
 
 } // namespace mozilla
