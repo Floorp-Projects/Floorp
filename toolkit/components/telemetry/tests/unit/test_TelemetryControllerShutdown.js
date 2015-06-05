@@ -8,6 +8,7 @@
 
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
+Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
@@ -59,7 +60,7 @@ add_task(function* test_sendTimeout() {
   httpServer.start(-1);
 
   yield TelemetryController.setup();
-  TelemetryController.setServer("http://localhost:" + httpServer.identity.primaryPort);
+  TelemetrySend.setServer("http://localhost:" + httpServer.identity.primaryPort);
   TelemetryController.submitExternalPing("test-ping-type", {});
 
   // Trigger the AsyncShutdown phase TelemetryController hangs off.
