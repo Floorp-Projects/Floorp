@@ -461,7 +461,7 @@ let Impl = {
       creationDate: (Policy.now()).toISOString(),
       version: PING_FORMAT_VERSION,
       application: this._getApplicationSection(),
-      payload: aPayload,
+      payload: payload,
     };
 
     if (aOptions.addClientId) {

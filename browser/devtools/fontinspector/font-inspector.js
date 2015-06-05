@@ -28,6 +28,7 @@ FontInspector.prototype = {
   init: function() {
     this.update = this.update.bind(this);
     this.onNewNode = this.onNewNode.bind(this);
+    this.onThemeChanged = this.onThemeChanged.bind(this);
     this.inspector.selection.on("new-node", this.onNewNode);
     this.inspector.sidebar.on("fontinspector-selected", this.onNewNode);
     this.showAll = this.showAll.bind(this);
@@ -36,6 +37,10 @@ FontInspector.prototype = {
     this.previewTextChanged = this.previewTextChanged.bind(this);
     this.previewInput = this.chromeDoc.getElementById("preview-text-input");
     this.previewInput.addEventListener("input", this.previewTextChanged);
+
+    // Listen for theme changes as the color of the previews depend on the theme
+    gDevTools.on("theme-switched", this.onThemeChanged);
+
     this.update();
   },
 
@@ -56,6 +61,8 @@ FontInspector.prototype = {
     this.inspector.selection.off("new-node", this.onNewNode);
     this.showAllButton.removeEventListener("click", this.showAll);
     this.previewInput.removeEventListener("input", this.previewTextChanged);
+
+    gDevTools.off("theme-switched", this.onThemeChanged);
 
     if (this._previewUpdateTimeout) {
       clearTimeout(this._previewUpdateTimeout);
@@ -101,6 +108,15 @@ FontInspector.prototype = {
     this._previewUpdateTimeout = setTimeout(() => {
       this.update(this._lastUpdateShowedAllFonts);
     }, PREVIEW_UPDATE_DELAY);
+  },
+
+  /**
+   * Callback for the theme-switched event.
+   */
+  onThemeChanged: function(event, frame) {
+    if (frame === this.chromeDoc.defaultView) {
+      this.update(this._lastUpdateShowedAllFonts);
+    }
   },
 
   /**

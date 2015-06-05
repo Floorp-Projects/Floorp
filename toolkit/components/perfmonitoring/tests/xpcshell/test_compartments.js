@@ -10,14 +10,12 @@ function run_test() {
   run_next_test();
 }
 
+let monitor = PerformanceStats.getMonitor(["ticks", "jank", "cpow"]);
+
 let promiseStatistics = Task.async(function*(name) {
   yield Promise.resolve(); // Make sure that we wait until
   // statistics have been updated.
-  let snapshot = PerformanceStats.getSnapshot();
-  do_print("Statistics: " + name);
-  do_print(JSON.stringify(snapshot.processData, null, "\t"));
-  do_print(JSON.stringify(snapshot.componentsData, null, "\t"));
-  return snapshot;
+  return monitor.promiseSnapshot();
 });
 
 let promiseSetMonitoring = Task.async(function*(to) {
@@ -105,13 +103,13 @@ add_task(function* test_measure() {
   if (skipPrecisionTests) {
     do_print("Skipping totalUserTime check under Windows XP, as timer is not always updated by the OS.")
   } else {
-    Assert.ok(process2.totalUserTime - process1.totalUserTime >= 10000, `At least 10ms counted for process time (${process2.totalUserTime - process1.totalUserTime})`);
+    Assert.ok(process2.jank.totalUserTime - process1.jank.totalUserTime >= 10000, `At least 10ms counted for process time (${process2.jank.totalUserTime - process1.jank.totalUserTime})`);
   }
-  Assert.equal(process2.totalCPOWTime, process1.totalCPOWTime, "We haven't used any CPOW time during the first burn");
-  Assert.equal(process4.totalUserTime, process3.totalUserTime, "After deactivating the stopwatch, we didn't count any time");
-  Assert.equal(process4.totalCPOWTime, process3.totalCPOWTime, "After deactivating the stopwatch, we didn't count any CPOW time");
+  Assert.equal(process2.jank.totalCPOWTime, process1.jank.totalCPOWTime, "We haven't used any CPOW time during the first burn");
+  Assert.equal(process4.jank.totalUserTime, process3.jank.totalUserTime, "After deactivating the stopwatch, we didn't count any time");
+  Assert.equal(process4.jank.totalCPOWTime, process3.jank.totalCPOWTime, "After deactivating the stopwatch, we didn't count any CPOW time");
 
-  let builtin1 = getBuiltinStatistics(stats1) || { totalUserTime: 0, totalCPOWTime: 0 };
+  let builtin1 = getBuiltinStatistics(stats1) || { jank: { totalUserTime: 0 }, cpow: { totalCPOWTime: 0 } };
   let builtin2 = getBuiltinStatistics(stats2);
   let builtin3 = getBuiltinStatistics(stats3);
   let builtin4 = getBuiltinStatistics(stats4);
@@ -122,10 +120,10 @@ add_task(function* test_measure() {
   if (skipPrecisionTests) {
     do_print("Skipping totalUserTime check under Windows XP, as timer is not always updated by the OS.")
   } else {
-    Assert.ok(builtin2.totalUserTime - builtin1.totalUserTime >= 10000, `At least 10ms counted for built-in statistics (${builtin2.totalUserTime - builtin1.totalUserTime})`);
+    Assert.ok(builtin2.jank.totalUserTime - builtin1.jank.totalUserTime >= 10000, `At least 10ms counted for built-in statistics (${builtin2.jank.totalUserTime - builtin1.jank.totalUserTime})`);
   }
-  Assert.equal(builtin2.totalCPOWTime, builtin1.totalCPOWTime, "We haven't used any CPOW time during the first burn for the built-in");
-  Assert.equal(builtin2.totalCPOWTime, builtin1.totalCPOWTime, "No CPOW for built-in statistics");
-  Assert.equal(builtin4.totalUserTime, builtin3.totalUserTime, "After deactivating the stopwatch, we didn't count any time for the built-in");
-  Assert.equal(builtin4.totalCPOWTime, builtin3.totalCPOWTime, "After deactivating the stopwatch, we didn't count any CPOW time for the built-in");
+  Assert.equal(builtin2.jank.totalCPOWTime, builtin1.jank.totalCPOWTime, "We haven't used any CPOW time during the first burn for the built-in");
+  Assert.equal(builtin2.jank.totalCPOWTime, builtin1.jank.totalCPOWTime, "No CPOW for built-in statistics");
+  Assert.equal(builtin4.jank.totalUserTime, builtin3.jank.totalUserTime, "After deactivating the stopwatch, we didn't count any time for the built-in");
+  Assert.equal(builtin4.jank.totalCPOWTime, builtin3.jank.totalCPOWTime, "After deactivating the stopwatch, we didn't count any CPOW time for the built-in");
 });
