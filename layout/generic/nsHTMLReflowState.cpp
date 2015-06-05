@@ -1595,12 +1595,41 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
         borderPadding.IStartEnd(cbwm);
     }
   } else {
-    // Neither 'left' nor 'right' is 'auto'.  However, the width might
+    // Neither 'inline-start' nor 'inline-end' is 'auto'.
+
+    if (wm.IsOrthogonalTo(cbwm)) {
+      // For orthogonal blocks, we need to handle the case where the block had
+      // unconstrained block-size, which mapped to unconstrained inline-size
+      // in the containing block's writing mode.
+      nscoord autoISize = cbSize.ISize(cbwm) - margin.IStartEnd(cbwm) -
+        borderPadding.IStartEnd(cbwm) - offsets.IStartEnd(cbwm);
+      if (autoISize < 0) {
+        autoISize = 0;
+      }
+
+      if (computedSize.ISize(cbwm) == NS_UNCONSTRAINEDSIZE) {
+        // For non-replaced elements with block-size auto, the block-size
+        // fills the remaining space.
+        computedSize.ISize(cbwm) = autoISize;
+
+        // XXX Do these need box-sizing adjustments?
+        LogicalSize maxSize = ComputedMaxSize(cbwm);
+        LogicalSize minSize = ComputedMinSize(cbwm);
+        if (computedSize.ISize(cbwm) > maxSize.ISize(cbwm)) {
+          computedSize.ISize(cbwm) = maxSize.ISize(cbwm);
+        }
+        if (computedSize.ISize(cbwm) < minSize.ISize(cbwm)) {
+          computedSize.ISize(cbwm) = minSize.ISize(cbwm);
+        }
+      }
+    }
+
+    // However, the inline-size might
     // still not fill all the available space (even though we didn't
     // shrink-wrap) in case:
-    //  * width was specified
+    //  * inline-size was specified
     //  * we're dealing with a replaced element
-    //  * width was constrained by min-width or max-width.
+    //  * width was constrained by min- or max-inline-size.
 
     nscoord availMarginSpace =
       aCBSize.ISize(cbwm) - offsets.IStartEnd(cbwm) - margin.IStartEnd(cbwm) -
@@ -1677,12 +1706,8 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
       computedSize.BSize(cbwm) = autoBSize;
 
       // XXX Do these need box-sizing adjustments?
-      LogicalSize maxSize =
-        LogicalSize(wm, ComputedMaxISize(),
-                    ComputedMaxBSize()).ConvertTo(cbwm, wm);
-      LogicalSize minSize =
-        LogicalSize(wm, ComputedMinISize(),
-                    ComputedMinBSize()).ConvertTo(cbwm, wm);
+      LogicalSize maxSize = ComputedMaxSize(cbwm);
+      LogicalSize minSize = ComputedMinSize(cbwm);
       if (computedSize.BSize(cbwm) > maxSize.BSize(cbwm)) {
         computedSize.BSize(cbwm) = maxSize.BSize(cbwm);
       }
