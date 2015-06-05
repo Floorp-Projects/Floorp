@@ -197,7 +197,7 @@ function testInit() {
       function finish() {
         if (passed + failed == 0) {
           dump("TEST-UNEXPECTED-FAIL | jetpack-addon-harness.js | " +
-               "No tests to run. Did you pass an invalid --test-path?\n");
+               "No tests to run. Did you pass invalid test_paths?\n");
         }
         else {
           dump("Jetpack Addon Test Summary\n");
