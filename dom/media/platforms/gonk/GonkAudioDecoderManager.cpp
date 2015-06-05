@@ -257,6 +257,25 @@ GonkAudioDecoderManager::Output(int64_t aStreamOffset,
     {
       // If the format changed, update our cached info.
       GADM_LOG("Decoder format changed");
+      sp<AMessage> audioCodecFormat;
+
+      if (mDecoder->getOutputFormat(&audioCodecFormat) != OK ||
+        audioCodecFormat == nullptr) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      int32_t codec_channel_count = 0;
+      int32_t codec_sample_rate = 0;
+
+      if (!audioCodecFormat->findInt32("channel-count", &codec_channel_count) ||
+        !audioCodecFormat->findInt32("sample-rate", &codec_sample_rate)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      // Update AudioInfo
+      mAudioChannels = codec_channel_count;
+      mAudioRate = codec_sample_rate;
+
       return Output(aStreamOffset, aOutData);
     }
     case android::INFO_OUTPUT_BUFFERS_CHANGED:
