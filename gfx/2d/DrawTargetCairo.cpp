@@ -722,6 +722,27 @@ DrawTargetCairo::GetDummySurface()
   return mDummySurface;
 }
 
+static void
+PaintWithAlpha(cairo_t* aContext, const DrawOptions& aOptions)
+{
+  if (aOptions.mCompositionOp == CompositionOp::OP_SOURCE) {
+    // Cairo treats the source operator like a lerp when alpha is < 1.
+    // Approximate the desired operator by: out = 0; out += src*alpha;
+    if (aOptions.mAlpha == 1) {
+      cairo_set_operator(aContext, CAIRO_OPERATOR_SOURCE);
+      cairo_paint(aContext);
+    } else {
+      cairo_set_operator(aContext, CAIRO_OPERATOR_CLEAR);
+      cairo_paint(aContext);
+      cairo_set_operator(aContext, CAIRO_OPERATOR_ADD);
+      cairo_paint_with_alpha(aContext, aOptions.mAlpha);
+    }
+  } else {
+    cairo_set_operator(aContext, GfxOpToCairoOp(aOptions.mCompositionOp));
+    cairo_paint_with_alpha(aContext, aOptions.mAlpha);
+  }
+}
+
 void
 DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
                              const Rect &aDest,
@@ -770,9 +791,7 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
     cairo_set_source(mContext, pat);
   }
 
-  cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
-
-  cairo_paint_with_alpha(mContext, aOptions.mAlpha);
+  PaintWithAlpha(mContext, aOptions);
 
   cairo_pattern_destroy(pat);
 }
@@ -904,8 +923,7 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
     cairo_pop_group_to_source(mContext);
 
     // Now draw the content using the desired operator
-    cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
-    cairo_paint_with_alpha(mContext, aOptions.mAlpha);
+    PaintWithAlpha(mContext, aOptions);
   } else {
     cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
 
