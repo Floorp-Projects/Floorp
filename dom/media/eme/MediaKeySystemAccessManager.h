@@ -6,6 +6,9 @@
 #define mozilla_dom_MediaKeySystemAccessManager_h
 
 #include "mozilla/dom/MediaKeySystemAccess.h"
+#ifdef XP_WIN
+#include "mozilla/dom/GMPVideoDecoderTrialCreator.h"
+#endif
 #include "nsIObserver.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
@@ -15,6 +18,7 @@ namespace mozilla {
 namespace dom {
 
 class DetailedPromise;
+class TestGMPVideoDecoder;
 
 class MediaKeySystemAccessManager final : public nsIObserver
 {
@@ -34,9 +38,9 @@ public:
 
   struct PendingRequest {
     PendingRequest(DetailedPromise* aPromise,
-      const nsAString& aKeySystem,
-      const Sequence<MediaKeySystemOptions>& aOptions,
-      nsITimer* aTimer);
+                   const nsAString& aKeySystem,
+                   const Sequence<MediaKeySystemOptions>& aOptions,
+                   nsITimer* aTimer);
     PendingRequest(const PendingRequest& aOther);
     ~PendingRequest();
     void CancelTimer();
@@ -74,6 +78,10 @@ private:
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
   bool mAddedObservers;
+
+#ifdef XP_WIN
+  nsRefPtr<GMPVideoDecoderTrialCreator> mTrialCreator;
+#endif
 };
 
 } // namespace dom

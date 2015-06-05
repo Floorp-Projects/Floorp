@@ -89,6 +89,10 @@ GMPVideoDecoderParent::InitDecode(const GMPVideoCodec& aCodecSettings,
                                   GMPVideoDecoderCallbackProxy* aCallback,
                                   int32_t aCoreCount)
 {
+  if (mActorDestroyed) {
+    NS_WARNING("Trying to use a destroyed GMP video decoder!");
+    return NS_ERROR_FAILURE;
+  }
   if (mIsOpen) {
     NS_WARNING("Trying to re-init an in-use GMP video decoder!");
     return NS_ERROR_FAILURE;
