@@ -1788,7 +1788,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   if (!GetPrevInFlow() && !mTableLayoutStrategy) {
-    NS_ASSERTION(false, "strategy should have been created in Init");
+    NS_ERROR("strategy should have been created in Init");
     return;
   }
 
@@ -3219,7 +3219,7 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState,
 {
   nsTableCellMap* cellMap = GetCellMap();
   if (!cellMap) {
-    NS_ASSERTION(false, "never ever call me until the cell map is built!");
+    NS_ERROR("never ever call me until the cell map is built!");
     aDesiredSize.Height() = 0;
     return;
   }
@@ -4403,7 +4403,7 @@ BCMapCellInfo::SetInfo(nsTableRowFrame*   aNewRow,
       NS_ASSERTION(mEndRow, "spanned row not found");
     }
     else {
-      NS_ASSERTION(false, "error in cell map");
+      NS_ERROR("error in cell map");
       mRowSpan = 1;
       mEndRow = mStartRow;
     }
@@ -6992,7 +6992,7 @@ BCVerticalSeg::Paint(BCPaintBorderIterator& aIter,
       owner = mFirstRowGroup;
       break;
     case eAjaRowOwner:
-      NS_ASSERTION(false, "program error"); // and fall through
+      NS_ERROR("program error"); // and fall through
     case eRowOwner:
       NS_ASSERTION(aIter.IsTableLeftMost() || aIter.IsTableRightMost(),
                    "row can own border only at table edge");
