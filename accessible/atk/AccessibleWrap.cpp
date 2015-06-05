@@ -1451,6 +1451,21 @@ MaiAtkObject::FireStateChangeEvent(uint64_t aState, bool aEnabled)
     }
 }
 
+#define OLD_TEXT_INSERTED "text_changed::insert"
+#define OLD_TEXT_REMOVED "text_changed::delete"
+static const char* oldTextChangeStrings[2][2] = {
+  { OLD_TEXT_REMOVED NON_USER_EVENT, OLD_TEXT_INSERTED NON_USER_EVENT },
+  { OLD_TEXT_REMOVED, OLD_TEXT_INSERTED }
+};
+
+#define TEXT_INSERTED "text-insert"
+#define TEXT_REMOVED "text-remove"
+#define NON_USER_DETAIL "::system"
+static const char* textChangedStrings[2][2] = {
+  { TEXT_REMOVED NON_USER_DETAIL, TEXT_INSERTED NON_USER_DETAIL },
+  { TEXT_REMOVED, TEXT_INSERTED}
+};
+
 nsresult
 AccessibleWrap::FireAtkTextChangedEvent(AccEvent* aEvent,
                                         AtkObject* aObject)
@@ -1462,7 +1477,6 @@ AccessibleWrap::FireAtkTextChangedEvent(AccEvent* aEvent,
     uint32_t length = event->GetLength();
     bool isInserted = event->IsTextInserted();
     bool isFromUserInput = aEvent->IsFromUserInput();
-    char* signal_name = nullptr;
 
   if (gAvailableAtkSignals == eUnknown)
     gAvailableAtkSignals =
@@ -1473,20 +1487,18 @@ AccessibleWrap::FireAtkTextChangedEvent(AccEvent* aEvent,
     // XXX remove this code and the gHaveNewTextSignals check when we can
     // stop supporting old atk since it doesn't really work anyway
     // see bug 619002
-    signal_name = g_strconcat(isInserted ? "text_changed::insert" :
-                              "text_changed::delete",
-                              isFromUserInput ? "" : NON_USER_EVENT, nullptr);
+    const char* signal_name =
+      oldTextChangeStrings[isFromUserInput][isInserted];
     g_signal_emit_by_name(aObject, signal_name, start, length);
   } else {
     nsAutoString text;
     event->GetModifiedText(text);
-    signal_name = g_strconcat(isInserted ? "text-insert" : "text-remove",
-                              isFromUserInput ? "" : "::system", nullptr);
+    const char* signal_name =
+      textChangedStrings[isFromUserInput][isInserted];
     g_signal_emit_by_name(aObject, signal_name, start, length,
                           NS_ConvertUTF16toUTF8(text).get());
   }
 
-  g_free(signal_name);
   return NS_OK;
 }
 
