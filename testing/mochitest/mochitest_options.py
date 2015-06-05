@@ -58,6 +58,13 @@ class MochitestArguments(ArgumentContainer):
     LEVEL_STRING = ", ".join(LOG_LEVELS)
 
     args = [
+        [["test_paths"],
+         {"nargs": "*",
+          "metavar": "TEST",
+          "default": [],
+          "help": "Test to run. Can be a single test file or a directory of tests "
+                  "(to run recursively). If omitted, the entire suite is run.",
+          }],
         [["--keep-open"],
          {"action": "store_false",
           "dest": "closeWhenDone",
@@ -157,13 +164,6 @@ class MochitestArguments(ArgumentContainer):
           "help": "Run ipcplugins mochitests.",
           "default": False,
           "suppress": True,
-          }],
-        [["--test-path"],
-         {"dest": "testPath",
-          "default": "",
-          "help": "Run the given test or recursively run the given directory of tests.",
-          # if running from mach, a test_paths arg is exposed instead
-          "suppress": build_obj is not None,
           }],
         [["--bisect-chunk"],
          {"dest": "bisectChunk",
@@ -552,6 +552,9 @@ class MochitestArguments(ArgumentContainer):
             options.gmp_path = os.pathsep.join(
                 os.path.join(build_obj.bindir, *p) for p in gmp_modules)
 
+        if options.ipcplugins:
+            options.test_paths.append('dom/plugins/test/mochitest')
+
         if options.totalChunks is not None and options.thisChunk is None:
             parser.error(
                 "thisChunk must be specified when totalChunks is specified")
@@ -727,6 +730,15 @@ class MochitestArguments(ArgumentContainer):
         # get leak logs yet.
         if mozinfo.isWin:
             options.ignoreMissingLeaks.append("tab")
+
+        # XXX We can't normalize test_paths in the non build_obj case here,
+        # because testRoot depends on the flavor, which is determined by the
+        # mach command and therefore not finalized yet. Conversely, test paths
+        # need to be normalized here for the mach case.
+        if options.test_paths and build_obj:
+            # Normalize test paths so they are relative to test root
+            options.test_paths = [build_obj._wrap_path_argument(p).relpath()
+                for p in options.test_paths]
 
         return options
 

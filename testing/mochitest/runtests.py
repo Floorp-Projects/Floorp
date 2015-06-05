@@ -13,7 +13,6 @@ SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 sys.path.insert(0, SCRIPT_DIR)
 
 from argparse import Namespace
-from urlparse import urlparse
 import ctypes
 import glob
 import json
@@ -51,10 +50,11 @@ from manifestparser.filters import (
     chunk_by_dir,
     chunk_by_runtime,
     chunk_by_slice,
+    pathprefix,
     subsuite,
     tags,
 )
-from mochitest_options import MochitestArgumentParser
+from mochitest_options import MochitestArgumentParser, build_obj
 from mozprofile import Profile, Preferences
 from mozprofile.permissions import ServerLocations
 from urllib import quote_plus as encodeURIComponent
@@ -62,12 +62,6 @@ from mozlog.structured.formatters import TbplFormatter
 from mozlog.structured import commandline
 
 here = os.path.abspath(os.path.dirname(__file__))
-
-try:
-    from mozbuild.base import MozbuildObject
-    build_obj = MozbuildObject.from_environment(cwd=here)
-except ImportError:
-    build_obj = None
 
 
 ###########################
@@ -638,14 +632,14 @@ class MochitestUtilsMixin(object):
                 self.urlOpts.append("runUntilFailure=1")
             if options.repeat:
                 self.urlOpts.append("repeat=%d" % options.repeat)
-            if os.path.isfile(
+            if len(options.test_paths) == 1 and options.repeat > 0 and os.path.isfile(
                 os.path.join(
                     self.oldcwd,
                     os.path.dirname(__file__),
                     self.TEST_PATH,
-                    options.testPath)) and options.repeat > 0:
-                self.urlOpts.append("testname=%s" %
-                                    ("/").join([self.TEST_PATH, options.testPath]))
+                    options.test_paths[0])):
+                self.urlOpts.append("testname=%s" % "/".join(
+                    [self.TEST_PATH, options.test_paths[0]]))
             if options.manifestFile:
                 self.urlOpts.append("manifestFile=%s" % options.manifestFile)
             if options.failureFile:
@@ -716,50 +710,43 @@ class MochitestUtilsMixin(object):
         return (testPattern.match(pathPieces[-1]) and
                 not re.search(r'\^headers\^$', filename))
 
-    def getTestPath(self, options):
-        if options.ipcplugins:
-            return "dom/plugins/test/mochitest"
-        else:
-            return options.testPath
-
     def setTestRoot(self, options):
-        if hasattr(self, "testRoot"):
-            return self.testRoot, self.testRootAbs
-        else:
-            if options.browserChrome:
-                if options.immersiveMode:
-                    self.testRoot = 'metro'
-                else:
-                    self.testRoot = 'browser'
-            elif options.jetpackPackage:
-                self.testRoot = 'jetpack-package'
-            elif options.jetpackAddon:
-                self.testRoot = 'jetpack-addon'
-            elif options.a11y:
-                self.testRoot = 'a11y'
-            elif options.webapprtChrome:
-                self.testRoot = 'webapprtChrome'
-            elif options.webapprtContent:
-                self.testRoot = 'webapprtContent'
-            elif options.chrome:
-                self.testRoot = 'chrome'
+        if options.browserChrome:
+            if options.immersiveMode:
+                self.testRoot = 'metro'
             else:
-                self.testRoot = self.TEST_PATH
-            self.testRootAbs = os.path.join(SCRIPT_DIR, self.testRoot)
+                self.testRoot = 'browser'
+        elif options.jetpackPackage:
+            self.testRoot = 'jetpack-package'
+        elif options.jetpackAddon:
+            self.testRoot = 'jetpack-addon'
+        elif options.a11y:
+            self.testRoot = 'a11y'
+        elif options.webapprtChrome:
+            self.testRoot = 'webapprtChrome'
+        elif options.webapprtContent:
+            self.testRoot = 'webapprtContent'
+        elif options.chrome:
+            self.testRoot = 'chrome'
+        else:
+            self.testRoot = self.TEST_PATH
+        self.testRootAbs = os.path.join(SCRIPT_DIR, self.testRoot)
 
     def buildTestURL(self, options):
         testHost = "http://mochi.test:8888"
-        testPath = self.getTestPath(options)
-        testURL = "/".join([testHost, self.TEST_PATH, testPath])
-        if os.path.isfile(
-            os.path.join(
-                self.oldcwd,
-                os.path.dirname(__file__),
-                self.TEST_PATH,
-                testPath)) and options.repeat > 0:
-            testURL = "/".join([testHost,
-                                self.TEST_PATH,
-                                os.path.dirname(testPath)])
+        testURL = "/".join([testHost, self.TEST_PATH])
+
+        if len(options.test_paths) == 1 :
+            if options.repeat > 0 and os.path.isfile(
+                os.path.join(
+                    self.oldcwd,
+                    os.path.dirname(__file__),
+                    self.TEST_PATH,
+                    options.test_paths[0])):
+                testURL = "/".join([testURL, os.path.dirname(options.test_paths[0])])
+            else:
+                testURL = "/".join([testURL, options.test_paths[0]])
+
         if options.chrome or options.a11y:
             testURL = "/".join([testHost, self.CHROME_PATH])
         elif options.browserChrome or options.jetpackPackage or options.jetpackAddon:
@@ -1698,7 +1685,6 @@ class Mochitest(MochitestUtilsMixin):
                onLaunch=None,
                detectShutdownLeaks=False,
                screenshotOnFail=False,
-               testPath=None,
                bisectChunk=None,
                quiet=False):
         """
@@ -1775,8 +1761,7 @@ class Mochitest(MochitestUtilsMixin):
                     proc,
                     utilityPath,
                     debuggerInfo,
-                    browserProcessId,
-                    testPath)
+                    browserProcessId)
             kp_kwargs = {'kill_on_timeout': False,
                          'cwd': SCRIPT_DIR,
                          'onTimeout': [timeoutHandler]}
@@ -1896,6 +1881,16 @@ class Mochitest(MochitestUtilsMixin):
         return os.path.join(data_dir, '{}-{}.runtimes.json'.format(
             base, flavor))
 
+    def normalize_paths(self, paths):
+        # Normalize test paths so they are relative to test root
+        norm_paths = []
+        for p in paths:
+            abspath = os.path.abspath(os.path.join(self.oldcwd, p))
+            if abspath.startswith(self.testRootAbs):
+                norm_paths.append(os.path.relpath(abspath, self.testRootAbs))
+            else:
+                norm_paths.append(p)
+        return norm_paths
 
     def getActiveTests(self, options, disabled=True):
         """
@@ -1904,87 +1899,73 @@ class Mochitest(MochitestUtilsMixin):
         if self._active_tests:
             return self._active_tests
 
-        self.setTestRoot(options)
         manifest = self.getTestManifest(options)
         if manifest:
             info = mozinfo.info
 
-            # Bug 883858 - return all tests including disabled tests
-            testPath = self.getTestPath(options)
-            testPath = testPath.replace('\\', '/')
-            if testPath.endswith('.html') or \
-               testPath.endswith('.xhtml') or \
-               testPath.endswith('.xul') or \
-               testPath.endswith('.js'):
-                # In the case where we have a single file, we don't want to
-                # filter based on options such as subsuite.
-                tests = manifest.active_tests(
-                    exists=False, disabled=disabled, **info)
-                for test in tests:
-                    if 'disabled' in test:
-                        del test['disabled']
+            # Bug 1089034 - imptest failure expectations are encoded as
+            # test manifests, even though they aren't tests. This gross
+            # hack causes several problems in automation including
+            # throwing off the chunking numbers. Remove them manually
+            # until bug 1089034 is fixed.
+            def remove_imptest_failure_expectations(tests, values):
+                return (t for t in tests
+                        if 'imptests/failures' not in t['path'])
 
-            else:
-                # Bug 1089034 - imptest failure expectations are encoded as
-                # test manifests, even though they aren't tests. This gross
-                # hack causes several problems in automation including
-                # throwing off the chunking numbers. Remove them manually
-                # until bug 1089034 is fixed.
-                def remove_imptest_failure_expectations(tests, values):
-                    return (t for t in tests
-                            if 'imptests/failures' not in t['path'])
+            filters = [
+                remove_imptest_failure_expectations,
+                subsuite(options.subsuite),
+            ]
 
-                filters = [
-                    remove_imptest_failure_expectations,
-                    subsuite(options.subsuite),
-                ]
+            if options.test_tags:
+                filters.append(tags(options.test_tags))
 
-                # Add chunking filters if specified
-                if options.totalChunks:
-                    if options.chunkByRuntime:
-                        runtime_file = self.resolve_runtime_file(options, info)
-                        if not os.path.exists(runtime_file):
-                            self.log.warning("runtime file %s not found; defaulting to chunk-by-dir" %
-                                             runtime_file)
-                            options.chunkByRuntime = None
-                            flavor = self.getTestFlavor(options)
-                            if flavor in ('browser-chrome', 'devtools-chrome'):
-                                # these values match current mozharness configs
-                                options.chunkbyDir = 5
-                            else:
-                                options.chunkByDir = 4
+            if options.test_paths:
+                options.test_paths = self.normalize_paths(options.test_paths)
+                filters.append(pathprefix(options.test_paths))
 
-                    if options.chunkByDir:
-                        filters.append(chunk_by_dir(options.thisChunk,
-                                                    options.totalChunks,
-                                                    options.chunkByDir))
-                    elif options.chunkByRuntime:
-                        with open(runtime_file, 'r') as f:
-                            runtime_data = json.loads(f.read())
-                        runtimes = runtime_data['runtimes']
-                        default = runtime_data['excluded_test_average']
-                        filters.append(
-                            chunk_by_runtime(options.thisChunk,
-                                             options.totalChunks,
-                                             runtimes,
-                                             default_runtime=default))
-                    else:
-                        filters.append(chunk_by_slice(options.thisChunk,
-                                                      options.totalChunks))
+            # Add chunking filters if specified
+            if options.totalChunks:
+                if options.chunkByRuntime:
+                    runtime_file = self.resolve_runtime_file(options, info)
+                    if not os.path.exists(runtime_file):
+                        self.log.warning("runtime file %s not found; defaulting to chunk-by-dir" %
+                                         runtime_file)
+                        options.chunkByRuntime = None
+                        flavor = self.getTestFlavor(options)
+                        if flavor in ('browser-chrome', 'devtools-chrome'):
+                            # these values match current mozharness configs
+                            options.chunkbyDir = 5
+                        else:
+                            options.chunkByDir = 4
 
-                if options.test_tags:
-                    filters.append(tags(options.test_tags))
+                if options.chunkByDir:
+                    filters.append(chunk_by_dir(options.thisChunk,
+                                                options.totalChunks,
+                                                options.chunkByDir))
+                elif options.chunkByRuntime:
+                    with open(runtime_file, 'r') as f:
+                        runtime_data = json.loads(f.read())
+                    runtimes = runtime_data['runtimes']
+                    default = runtime_data['excluded_test_average']
+                    filters.append(
+                        chunk_by_runtime(options.thisChunk,
+                                         options.totalChunks,
+                                         runtimes,
+                                         default_runtime=default))
+                else:
+                    filters.append(chunk_by_slice(options.thisChunk,
+                                                  options.totalChunks))
 
-                tests = manifest.active_tests(
-                    exists=False, disabled=disabled, filters=filters, **info)
+            tests = manifest.active_tests(
+                exists=False, disabled=disabled, filters=filters, **info)
 
-                if len(tests) == 0:
-                    self.log.error("no tests to run using specified "
-                                   "combination of filters: {}".format(
-                                        manifest.fmt_filters()))
+            if len(tests) == 0:
+                self.log.error("no tests to run using specified "
+                               "combination of filters: {}".format(
+                                    manifest.fmt_filters()))
 
         paths = []
-
         for test in tests:
             if len(tests) == 1 and 'disabled' in test:
                 del test['disabled']
@@ -1992,10 +1973,6 @@ class Mochitest(MochitestUtilsMixin):
             pathAbs = os.path.abspath(test['path'])
             assert pathAbs.startswith(self.testRootAbs)
             tp = pathAbs[len(self.testRootAbs):].replace('\\', '/').strip('/')
-
-            # Filter out tests if we are using --test-path
-            if testPath and not tp.startswith(testPath):
-                continue
 
             if not self.isTest(options, tp):
                 self.log.warning(
@@ -2132,11 +2109,7 @@ class Mochitest(MochitestUtilsMixin):
         dirs = self.getDirectories(options)
 
         result = 1  # default value, if no tests are run.
-        inputTestPath = self.getTestPath(options)
         for d in dirs:
-            if inputTestPath and not inputTestPath.startswith(d):
-                continue
-
             print "dir: %s" % d
             tests_in_dir = [t for t in testsToRun if os.path.dirname(t) == d]
 
@@ -2296,7 +2269,6 @@ class Mochitest(MochitestUtilsMixin):
                                      onLaunch=onLaunch,
                                      detectShutdownLeaks=detectShutdownLeaks,
                                      screenshotOnFail=options.screenshotOnFail,
-                                     testPath=options.testPath,
                                      bisectChunk=options.bisectChunk,
                                      quiet=options.quiet
                                      )
@@ -2337,17 +2309,12 @@ class Mochitest(MochitestUtilsMixin):
             proc,
             utilityPath,
             debuggerInfo,
-            browserProcessId,
-            testPath=None):
+            browserProcessId):
         """handle process output timeout"""
         # TODO: bug 913975 : _processOutput should call self.processOutputLine
         # one more time one timeout (I think)
-        if testPath:
-            error_message = "TEST-UNEXPECTED-TIMEOUT | %s | application timed out after %d seconds with no output on %s" % (
-                self.lastTestSeen, int(timeout), testPath)
-        else:
-            error_message = "TEST-UNEXPECTED-TIMEOUT | %s | application timed out after %d seconds with no output" % (
-                self.lastTestSeen, int(timeout))
+        error_message = "TEST-UNEXPECTED-TIMEOUT | %s | application timed out after %d seconds with no output" % (
+            self.lastTestSeen, int(timeout))
 
         self.message_logger.dump_buffered()
         self.message_logger.buffering = False
@@ -2563,7 +2530,6 @@ class Mochitest(MochitestUtilsMixin):
     def makeTestConfig(self, options):
         "Creates a test configuration file for customizing test execution."
         options.logFile = options.logFile.replace("\\", "\\\\")
-        options.testPath = options.testPath.replace("\\", "\\\\")
 
         if "MOZ_HIDE_RESULTS_TABLE" in os.environ and os.environ[
                 "MOZ_HIDE_RESULTS_TABLE"] == "1":
