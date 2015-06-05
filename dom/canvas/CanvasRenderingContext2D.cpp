@@ -4670,6 +4670,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
   if (!sw || !sh) {
     return;
   }
+
   nsRefPtr<gfxContext> thebes;
   RefPtr<DrawTarget> drawDT;
   // Rendering directly is faster and can be done if mTarget supports Azure
@@ -4816,6 +4817,51 @@ CanvasRenderingContext2D::AsyncDrawXULElement(nsXULElement& elem,
     docrender->SetCanvasContext(this, mThebes);
   }
 #endif
+}
+
+void
+CanvasRenderingContext2D::DrawWidgetAsOnScreen(nsGlobalWindow& aWindow,
+                                               mozilla::ErrorResult& error)
+{
+  EnsureTarget();
+
+  // This is an internal API.
+  if (!nsContentUtils::IsCallerChrome()) {
+    error.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  nsRefPtr<nsPresContext> presContext;
+  nsIDocShell* docshell = aWindow.GetDocShell();
+  if (docshell) {
+    docshell->GetPresContext(getter_AddRefs(presContext));
+  }
+  if (!presContext) {
+    error.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsIWidget* widget = presContext->GetRootWidget();
+  if (!widget) {
+    error.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  RefPtr<SourceSurface> snapshot = widget->SnapshotWidgetOnScreen();
+  if (!snapshot) {
+    error.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  mgfx::Rect sourceRect(mgfx::Point(0, 0), mgfx::Size(snapshot->GetSize()));
+  mTarget->DrawSurface(snapshot, sourceRect, sourceRect,
+                       DrawSurfaceOptions(mgfx::Filter::POINT),
+                       DrawOptions(GlobalAlpha(), CompositionOp::OP_OVER,
+                                   AntialiasMode::NONE));
+  mTarget->Flush();
+
+  RedrawUser(gfxRect(0, 0,
+                     std::min(mWidth, snapshot->GetSize().width),
+                     std::min(mHeight, snapshot->GetSize().height)));
 }
 
 //

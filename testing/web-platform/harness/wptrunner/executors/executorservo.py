@@ -198,7 +198,8 @@ class ServoRefTestExecutor(ProcessTestExecutor):
 
             try:
                 self.proc.run()
-                rv = self.proc.wait(timeout=test.timeout)
+                timeout = test.timeout * self.timeout_multiplier + 5
+                rv = self.proc.wait(timeout=timeout)
             except KeyboardInterrupt:
                 self.proc.kill()
                 raise

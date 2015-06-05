@@ -1157,10 +1157,12 @@ e10sDisabled |= Services.prefs.getBoolPref("layers.acceleration.disabled");
 if (Services.appinfo.browserTabsRemoteAutostart) {
   CustomizableWidgets.push({
     id: "e10s-button",
-    label: "New Non-e10s Window",
-    tooltiptext: "New Non-e10s Window",
     disabled: e10sDisabled,
     defaultArea: CustomizableUI.AREA_PANEL,
+    onBuild: function(aDocument) {
+        node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
+        node.setAttribute("tooltiptext", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
+    },
     onCommand: function(aEvent) {
       let win = aEvent.view;
       if (win && typeof win.OpenBrowserWindow == "function") {

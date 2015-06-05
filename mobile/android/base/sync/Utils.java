@@ -31,7 +31,6 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.nativecode.NativeCrypto;
 import org.mozilla.gecko.sync.setup.Constants;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -144,11 +143,10 @@ public class Utils {
     return Base64.decodeBase64(base64.getBytes("UTF-8"));
   }
 
-  @SuppressLint("DefaultLocale")
   public static byte[] decodeFriendlyBase32(String base32) {
     Base32 converter = new Base32();
     final String translated = base32.replace('8', 'l').replace('9', 'o');
-    return converter.decode(translated.toUpperCase());
+    return converter.decode(translated.toUpperCase(Locale.US));
   }
 
   public static byte[] hex2Byte(String str, int byteLength) {
