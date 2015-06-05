@@ -19,76 +19,40 @@ void take(...);
 void foo() {
   R* ptr;
   SmartPtr<R> sp;
-  take([&](R* argptr) {
-    R* localptr;
-    ptr->method(); // expected-error{{Refcounted variable 'ptr' of type 'R' cannot be captured by a lambda}} expected-note{{Please consider using a smart pointer}}
-    argptr->method();
-    localptr->method();
+  take([&]() {
+    ptr->method(); // expected-error{{Refcounted variable 'ptr' of type 'R' cannot be used inside a lambda}} expected-note{{Please consider using a smart pointer}}
   });
-  take([&](SmartPtr<R> argsp) {
-    SmartPtr<R> localsp;
+  take([&]() {
     sp->method();
-    argsp->method();
-    localsp->method();
   });
-  take([&](R* argptr) {
-    R* localptr;
-    take(ptr); // expected-error{{Refcounted variable 'ptr' of type 'R' cannot be captured by a lambda}} expected-note{{Please consider using a smart pointer}}
-    take(argptr);
-    take(localptr);
+  take([&]() {
+    take(ptr); // expected-error{{Refcounted variable 'ptr' of type 'R' cannot be used inside a lambda}} expected-note{{Please consider using a smart pointer}}
   });
-  take([&](SmartPtr<R> argsp) {
-    SmartPtr<R> localsp;
+  take([&]() {
     take(sp);
-    take(argsp);
-    take(localsp);
   });
-  take([=](R* argptr) {
-    R* localptr;
-    ptr->method(); // expected-error{{Refcounted variable 'ptr' of type 'R' cannot be captured by a lambda}} expected-note{{Please consider using a smart pointer}}
-    argptr->method();
-    localptr->method();
+  take([=]() {
+    ptr->method(); // expected-error{{Refcounted variable 'ptr' of type 'R' cannot be used inside a lambda}} expected-note{{Please consider using a smart pointer}}
   });
-  take([=](SmartPtr<R> argsp) {
-    SmartPtr<R> localsp;
+  take([=]() {
     sp->method();
-    argsp->method();
-    localsp->method();
   });
-  take([=](R* argptr) {
-    R* localptr;
-    take(ptr); // expected-error{{Refcounted variable 'ptr' of type 'R' cannot be captured by a lambda}} expected-note{{Please consider using a smart pointer}}
-    take(argptr);
-    take(localptr);
+  take([=]() {
+    take(ptr); // expected-error{{Refcounted variable 'ptr' of type 'R' cannot be used inside a lambda}} expected-note{{Please consider using a smart pointer}}
   });
-  take([=](SmartPtr<R> argsp) {
-    SmartPtr<R> localsp;
+  take([=]() {
     take(sp);
-    take(argsp);
-    take(localsp);
   });
-  take([ptr](R* argptr) {
-    R* localptr;
-    ptr->method(); // expected-error{{Refcounted variable 'ptr' of type 'R' cannot be captured by a lambda}} expected-note{{Please consider using a smart pointer}}
-    argptr->method();
-    localptr->method();
+  take([ptr]() {
+    ptr->method(); // expected-error{{Refcounted variable 'ptr' of type 'R' cannot be used inside a lambda}} expected-note{{Please consider using a smart pointer}}
   });
-  take([sp](SmartPtr<R> argsp) {
-    SmartPtr<R> localsp;
+  take([sp]() {
     sp->method();
-    argsp->method();
-    localsp->method();
   });
-  take([ptr](R* argptr) {
-    R* localptr;
-    take(ptr); // expected-error{{Refcounted variable 'ptr' of type 'R' cannot be captured by a lambda}} expected-note{{Please consider using a smart pointer}}
-    take(argptr);
-    take(localptr);
+  take([ptr]() {
+    take(ptr); // expected-error{{Refcounted variable 'ptr' of type 'R' cannot be used inside a lambda}} expected-note{{Please consider using a smart pointer}}
   });
-  take([sp](SmartPtr<R> argsp) {
-    SmartPtr<R> localsp;
+  take([sp]() {
     take(sp);
-    take(argsp);
-    take(localsp);
   });
 }
