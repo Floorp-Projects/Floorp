@@ -543,6 +543,9 @@ public:
   {
     uint32_t EndOffset() const
     {
+      if (NS_WARN_IF(static_cast<uint64_t>(mOffset) + mLength > UINT32_MAX)) {
+        return UINT32_MAX;
+      }
       return mOffset + mLength;
     }
 
