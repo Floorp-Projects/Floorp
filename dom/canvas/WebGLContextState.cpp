@@ -180,6 +180,38 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
     }
 
+    // Privileged string params exposed by WEBGL_debug_renderer_info:
+    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_debug_renderer_info)) {
+        switch (pname) {
+        case UNMASKED_VENDOR_WEBGL:
+        case UNMASKED_RENDERER_WEBGL:
+            GLenum glstringname = LOCAL_GL_NONE;
+            if (pname == UNMASKED_VENDOR_WEBGL) {
+                glstringname = LOCAL_GL_VENDOR;
+            } else if (pname == UNMASKED_RENDERER_WEBGL) {
+                glstringname = LOCAL_GL_RENDERER;
+            }
+            const GLchar* string = (const GLchar*) gl->fGetString(glstringname);
+            return StringValue(cx, string, rv);
+        }
+    }
+
+    if (IsExtensionEnabled(WebGLExtensionID::OES_standard_derivatives)) {
+        if (pname == LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT) {
+            GLint i = 0;
+            gl->fGetIntegerv(pname, &i);
+            return JS::Int32Value(i);
+        }
+    }
+
+    if (IsExtensionEnabled(WebGLExtensionID::EXT_texture_filter_anisotropic)) {
+        if (pname == LOCAL_GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT) {
+            GLfloat f = 0.f;
+            gl->fGetFloatv(pname, &f);
+            return JS::NumberValue(f);
+        }
+    }
+
     switch (pname) {
         //
         // String params
@@ -191,24 +223,6 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             return StringValue(cx, "WebGL 1.0", rv);
         case LOCAL_GL_SHADING_LANGUAGE_VERSION:
             return StringValue(cx, "WebGL GLSL ES 1.0", rv);
-
-            // Privileged string params exposed by WEBGL_debug_renderer_info:
-        case UNMASKED_VENDOR_WEBGL:
-        case UNMASKED_RENDERER_WEBGL: {
-            // The privilege check is done in WebGLContext::IsExtensionSupported.
-            // So here we just have to check that the extension is enabled.
-            if (!IsExtensionEnabled(WebGLExtensionID::WEBGL_debug_renderer_info)) {
-                break;
-            }
-            GLenum glstringname = LOCAL_GL_NONE;
-            if (pname == UNMASKED_VENDOR_WEBGL) {
-                glstringname = LOCAL_GL_VENDOR;
-            } else if (pname == UNMASKED_RENDERER_WEBGL) {
-                glstringname = LOCAL_GL_RENDERER;
-            }
-            const char* string = reinterpret_cast<const char*>(gl->fGetString(glstringname));
-            return StringValue(cx, string, rv);
-        }
 
         ////////////////////////////////
         // Single-value params
@@ -320,15 +334,6 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             }
             return JS::Int32Value(i);
         }
-        case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT: {
-            if (IsExtensionEnabled(WebGLExtensionID::OES_standard_derivatives)) {
-                GLint i = 0;
-                gl->fGetIntegerv(pname, &i);
-                return JS::Int32Value(i);
-            } else {
-                break;
-            }
-        }
         case LOCAL_GL_MAX_TEXTURE_SIZE:
             return JS::Int32Value(mGLMaxTextureSize);
 
@@ -374,15 +379,6 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
 
         // float
-        case LOCAL_GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: {
-            if (IsExtensionEnabled(WebGLExtensionID::EXT_texture_filter_anisotropic)) {
-                GLfloat f = 0.f;
-                gl->fGetFloatv(pname, &f);
-                return JS::DoubleValue(f);
-            } else {
-                break;
-            }
-        }
         case LOCAL_GL_DEPTH_CLEAR_VALUE:
         case LOCAL_GL_LINE_WIDTH:
         case LOCAL_GL_POLYGON_OFFSET_FACTOR:
