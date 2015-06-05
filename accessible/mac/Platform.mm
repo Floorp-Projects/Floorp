@@ -83,6 +83,11 @@ ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset)
     [wrapper selectedTextDidChange];
 }
 
+void
+ProxyTextChangeEvent(ProxyAccessible*, const nsString&, int32_t, uint32_t,
+                     bool, bool)
+{
+}
 } // namespace a11y
 } // namespace mozilla
 

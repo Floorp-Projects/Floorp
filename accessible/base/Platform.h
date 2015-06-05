@@ -6,6 +6,8 @@
 
 #include <stdint.h>
 
+class nsString;
+
 namespace mozilla {
 namespace a11y {
 
@@ -70,6 +72,9 @@ void ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType);
 void ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t aState,
                            bool aEnabled);
 void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset);
+void ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr,
+                          int32_t aStart, uint32_t aLen, bool aIsInsert,
+                          bool aFromUser);
 } // namespace a11y
 } // namespace mozilla
 
