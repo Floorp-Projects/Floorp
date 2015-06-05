@@ -39,6 +39,14 @@ UNIFIED_SOURCES += [
     'MediaKeySystemAccessManager.cpp',
 ]
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    UNIFIED_SOURCES += [
+        'GMPVideoDecoderTrialCreator.cpp',
+    ]
+    EXPORTS.mozilla.dom += [
+        'GMPVideoDecoderTrialCreator.h',
+    ]
+
 FINAL_LIBRARY = 'xul'
 
 FAIL_ON_WARNINGS = True
