@@ -360,6 +360,7 @@ let TOPIC_WHITELIST = [
   "dom-window-destroyed",
   "inner-window-destroyed",
   "outer-window-destroyed",
+  "csp-on-violate-policy",
 ];
 
 // This interposition listens for
