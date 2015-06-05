@@ -27,7 +27,7 @@ const isOSX10_6 = (() => {
 
 const { search } = require('sdk/places/history');
 const {
-  invalidResolve, createTree, createBookmark,
+  invalidResolve, invalidReject, createTree, createBookmark,
   compareWithHost, addVisits, resetPlaces, createBookmarkItem,
   removeVisits, historyBatch
 } = require('./places-helper');
