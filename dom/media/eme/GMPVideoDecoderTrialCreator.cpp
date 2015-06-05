@@ -53,15 +53,18 @@ TrialCreatePrefName(const nsAString& aKeySystem)
   if (aKeySystem.EqualsLiteral("org.w3.clearkey")) {
     return "media.gmp-eme-clearkey.trial-create";
   }
-  NS_NOTREACHED("Unsupported keystem");
-  return "";
+  return nullptr;
 }
 
 /* static */
 GMPVideoDecoderTrialCreator::TrialCreateState
 GMPVideoDecoderTrialCreator::GetCreateTrialState(const nsAString& aKeySystem)
 {
-  switch (Preferences::GetInt(TrialCreatePrefName(aKeySystem), (int)Pending)) {
+  const char* pref = TrialCreatePrefName(aKeySystem);
+  if (!pref) {
+    return Pending;
+  }
+  switch (Preferences::GetInt(pref, (int)Pending)) {
     case 0: return Pending;
     case 1: return Succeeded;
     case 2: return Failed;
@@ -83,7 +86,10 @@ GMPVideoDecoderTrialCreator::TrialCreateGMPVideoDecoderFailed(const nsAString& a
     return;
   }
   data->mStatus = Failed;
-  Preferences::SetInt(TrialCreatePrefName(aKeySystem), (int)Failed);
+  const char* pref = TrialCreatePrefName(aKeySystem);
+  if (pref) {
+    Preferences::SetInt(pref, (int)Failed);
+  }
   for (nsRefPtr<AbstractPromiseLike>& promise: data->mPending) {
     promise->Reject(NS_ERROR_DOM_NOT_SUPPORTED_ERR, aReason);
   }
@@ -104,7 +110,10 @@ GMPVideoDecoderTrialCreator::TrialCreateGMPVideoDecoderSucceeded(const nsAString
     return;
   }
   data->mStatus = Succeeded;
-  Preferences::SetInt(TrialCreatePrefName(aKeySystem), (int)Succeeded);
+  const char* pref = TrialCreatePrefName(aKeySystem);
+  if (pref) {
+    Preferences::SetInt(pref, (int)Succeeded);
+  }
   for (nsRefPtr<AbstractPromiseLike>& promise : data->mPending) {
     promise->Resolve();
   }

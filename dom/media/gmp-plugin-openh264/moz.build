@@ -8,7 +8,7 @@
 
 FINAL_TARGET = 'dist/bin/gmp-fakeopenh264/1.0'
 SOURCES += [
-    '../gmp-plugin/gmp-fake.cpp',
+    'gmp-fake-openh264.cpp',
 ]
 
 SharedLibrary("fakeopenh264")
