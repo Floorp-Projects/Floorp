@@ -106,6 +106,12 @@ public:
   uint32_t CaretOffset() const { return mCaret.mOffset; }
   bool GetCaretRect(uint32_t aOffset, LayoutDeviceIntRect& aCaretRect) const;
 
+  void SetEditorRect(const LayoutDeviceIntRect& aEditorRect)
+  {
+    mEditorRect = aEditorRect;
+  }
+  const LayoutDeviceIntRect& GetEditorRect() const { return mEditorRect; }
+
 private:
   // Whole text in the target
   nsString mText;
@@ -197,6 +203,8 @@ private:
     LayoutDeviceIntRect GetRect(uint32_t aOffset) const;
     LayoutDeviceIntRect GetUnionRect(uint32_t aOffset, uint32_t aLength) const;
   } mTextRectArray;
+
+  LayoutDeviceIntRect mEditorRect;
 
   bool mIsComposing;
   bool mRequestedToCommitOrCancelComposition;
