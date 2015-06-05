@@ -685,7 +685,7 @@ ContentCache::GetTextRect(uint32_t aOffset,
     return !aTextRect.IsEmpty();
   }
 
-  if (NS_WARN_IF(!mTextRectArray.InRange(aOffset))) {
+  if (!mTextRectArray.InRange(aOffset)) {
     aTextRect.SetEmpty();
     return false;
   }
@@ -719,7 +719,7 @@ ContentCache::GetUnionTextRects(uint32_t aOffset,
     }
   }
 
-  if (NS_WARN_IF(!mTextRectArray.InRange(aOffset, aLength))) {
+  if (!mTextRectArray.InRange(aOffset, aLength)) {
     aUnionTextRect.SetEmpty();
     return false;
   }
@@ -751,8 +751,19 @@ ContentCache::GetCaretRect(uint32_t aOffset,
 
   // Guess caret rect from the text rect if it's stored.
   if (!GetTextRect(aOffset, aCaretRect)) {
-    aCaretRect.SetEmpty();
-    return false;
+    // There might be previous character rect in the cache.  If so, we can
+    // guess the caret rect with it.
+    if (!aOffset || !GetTextRect(aOffset - 1, aCaretRect)) {
+      aCaretRect.SetEmpty();
+      return false;
+    }
+
+    if (mSelection.mWritingMode.IsVertical()) {
+      aCaretRect.y = aCaretRect.YMost();
+    } else {
+      // XXX bidi-unaware.
+      aCaretRect.x = aCaretRect.XMost();
+    }
   }
 
   // XXX This is not bidi aware because we don't cache each character's
