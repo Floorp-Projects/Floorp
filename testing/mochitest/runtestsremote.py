@@ -814,6 +814,7 @@ def main(args):
         options.extraPrefs.append('browser.chrome.dynamictoolbar=false')
         options.extraPrefs.append('browser.snippets.enabled=false')
         options.extraPrefs.append('browser.casting.enabled=true')
+        options.extraPrefs.append('extensions.autoupdate.enabled=false')
 
         if (options.dm_trans == 'adb' and options.robocopApk):
             dm._checkCmd(["install", "-r", options.robocopApk])
