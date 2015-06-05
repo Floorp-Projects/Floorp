@@ -116,12 +116,6 @@ function configureLogging() {
   }
 }
 
-function generateUUID() {
-  let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
-  // strip {}
-  return str.substring(1, str.length - 1);
-}
-
 /**
  * This is a policy object used to override behavior for testing.
  */
@@ -150,6 +144,8 @@ this.TelemetryController = Object.freeze({
   reset: function() {
     Impl._clientID = null;
     TelemetryStorage.reset();
+    TelemetrySend.reset();
+
     return this.setup();
   },
   /**
@@ -401,8 +397,7 @@ let Impl = {
    * @returns Promise<Object> A promise that resolves when the ping is completely assembled.
    */
   assemblePing: function assemblePing(aType, aPayload, aOptions = {}) {
-    this._log.trace("assemblePing - Type " + aType + ", Server " + this._server +
-                    ", aOptions " + JSON.stringify(aOptions));
+    this._log.trace("assemblePing - Type " + aType + ", aOptions " + JSON.stringify(aOptions));
 
     // Clone the payload data so we don't race against unexpected changes in subobjects that are
     // still referenced by other code.
@@ -412,7 +407,7 @@ let Impl = {
     // Fill the common ping fields.
     let pingData = {
       type: aType,
-      id: generateUUID(),
+      id: Utils.generateUUID(),
       creationDate: (Policy.now()).toISOString(),
       version: PING_FORMAT_VERSION,
       application: this._getApplicationSection(),
@@ -502,7 +497,7 @@ let Impl = {
 
     let pingData = this.assemblePing(aType, aPayload, aOptions);
 
-    let savePromise = TelemetryStorage.savePing(pingData, aOptions.overwrite);
+    let savePromise = TelemetryStorage.savePendingPing(pingData);
     let archivePromise = TelemetryArchive.promiseArchivePing(pingData).catch(e => {
       this._log.error("addPendingPing - Failed to archive ping " + pingData.id, e);
     });
