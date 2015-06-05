@@ -16,23 +16,17 @@ GMPDecryptorParent::GMPDecryptorParent(GMPContentParent* aPlugin)
   , mShuttingDown(false)
   , mActorDestroyed(false)
   , mPlugin(aPlugin)
+  , mPluginId(aPlugin->GetPluginId())
   , mCallback(nullptr)
 #ifdef DEBUG
   , mGMPThread(aPlugin->GMPThread())
 #endif
 {
   MOZ_ASSERT(mPlugin && mGMPThread);
-  mPluginId = aPlugin->GetPluginId();
 }
 
 GMPDecryptorParent::~GMPDecryptorParent()
 {
-}
-
-const uint32_t
-GMPDecryptorParent::GetPluginId() const
-{
-  return mPluginId;
 }
 
 nsresult
