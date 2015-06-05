@@ -1830,9 +1830,9 @@ pref("ui.key.menuAccessKeyFocuses", true);
 // Encrypted media extensions.
 pref("media.eme.enabled", true);
 pref("media.eme.apiVisible", true);
-pref("browser.eme.ui.enabled", true);
 
 #ifdef MOZ_ADOBE_EME
+pref("browser.eme.ui.enabled", true);
 pref("media.gmp-eme-adobe.enabled", true);
 #endif
 
