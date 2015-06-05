@@ -5,8 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
-Provides methods for signing data and representing a key as a
-subject public key info for use with pyasn1.
+Reads a key specification from stdin or a file and outputs a
+PKCS #8 file representing the (private) key. Also provides
+methods for signing data and representing the key as a subject
+public key info for use with pyasn1.
 
 The key specification format is currently very simple. If it is
 empty, one RSA key is used. If it consists of the string
@@ -18,8 +20,10 @@ strength, signature algorithm, etc.).
 from pyasn1.codec.der import encoder
 from pyasn1.type import univ, namedtype
 from pyasn1_modules import rfc2459
+import base64
 import binascii
 import rsa
+import sys
 
 def byteStringToHexifiedBitString(string):
     """Takes a string of bytes and returns a hex string representing
@@ -51,6 +55,30 @@ class RSAPublicKey(univ.Sequence):
     componentType = namedtype.NamedTypes(
         namedtype.NamedType('N', univ.Integer()),
         namedtype.NamedType('E', univ.Integer()))
+
+
+class RSAPrivateKey(univ.Sequence):
+    """Helper type for encoding an RSA private key"""
+    componentType = namedtype.NamedTypes(
+        namedtype.NamedType('version', univ.Integer()),
+        namedtype.NamedType('modulus', univ.Integer()),
+        namedtype.NamedType('publicExponent', univ.Integer()),
+        namedtype.NamedType('privateExponent', univ.Integer()),
+        namedtype.NamedType('prime1', univ.Integer()),
+        namedtype.NamedType('prime2', univ.Integer()),
+        namedtype.NamedType('exponent1', univ.Integer()),
+        namedtype.NamedType('exponent2', univ.Integer()),
+        namedtype.NamedType('coefficient', univ.Integer()),
+    )
+
+
+class PrivateKeyInfo(univ.Sequence):
+    """Helper type for encoding a PKCS #8 private key info"""
+    componentType = namedtype.NamedTypes(
+        namedtype.NamedType('version', univ.Integer()),
+        namedtype.NamedType('privateKeyAlgorithm', rfc2459.AlgorithmIdentifier()),
+        namedtype.NamedType('privateKey', univ.OctetString())
+    )
 
 
 class RSAKey:
@@ -186,6 +214,37 @@ class RSAKey:
         else:
             raise UnknownKeySpecificationError(specification)
 
+    def toDER(self):
+        privateKeyInfo = PrivateKeyInfo()
+        privateKeyInfo.setComponentByName('version', 0)
+        algorithmIdentifier = rfc2459.AlgorithmIdentifier()
+        algorithmIdentifier.setComponentByName('algorithm', rfc2459.rsaEncryption)
+        algorithmIdentifier.setComponentByName('parameters', univ.Null())
+        privateKeyInfo.setComponentByName('privateKeyAlgorithm', algorithmIdentifier)
+        rsaPrivateKey = RSAPrivateKey()
+        rsaPrivateKey.setComponentByName('version', 0)
+        rsaPrivateKey.setComponentByName('modulus', self.RSA_N)
+        rsaPrivateKey.setComponentByName('publicExponent', self.RSA_E)
+        rsaPrivateKey.setComponentByName('privateExponent', self.RSA_D)
+        rsaPrivateKey.setComponentByName('prime1', self.RSA_P)
+        rsaPrivateKey.setComponentByName('prime2', self.RSA_Q)
+        rsaPrivateKey.setComponentByName('exponent1', self.RSA_exp1)
+        rsaPrivateKey.setComponentByName('exponent2', self.RSA_exp2)
+        rsaPrivateKey.setComponentByName('coefficient', self.RSA_coef)
+        rsaPrivateKeyEncoded = encoder.encode(rsaPrivateKey)
+        privateKeyInfo.setComponentByName('privateKey', univ.OctetString(rsaPrivateKeyEncoded))
+        return encoder.encode(privateKeyInfo)
+
+    def toPEM(self):
+        output = '-----BEGIN PRIVATE KEY-----'
+        der = self.toDER()
+        b64 = base64.b64encode(der)
+        while b64:
+            output += '\n' + b64[:64]
+            b64 = b64[64:]
+        output += '\n-----END PRIVATE KEY-----'
+        return output
+
     def asSubjectPublicKeyInfo(self):
         """Returns a subject public key info representing
         this key for use by pyasn1."""
@@ -208,3 +267,16 @@ class RSAKey:
         rsaPrivateKey = rsa.PrivateKey(self.RSA_N, self.RSA_E, self.RSA_D, self.RSA_P, self.RSA_Q)
         signature = rsa.sign(data, rsaPrivateKey, 'SHA-256')
         return byteStringToHexifiedBitString(signature)
+
+
+# The build harness will call this function with an output file-like
+# object and a path to a file containing a specification. This will
+# read the specification and output the key as ASCII-encoded PKCS #8.
+def main(output, inputPath):
+    with open(inputPath) as configStream:
+        output.write(RSAKey(configStream.read()).toPEM())
+
+# When run as a standalone program, this will read a specification from
+# stdin and output the certificate as PEM to stdout.
+if __name__ == '__main__':
+    print RSAKey(sys.stdin.read()).toPEM()
