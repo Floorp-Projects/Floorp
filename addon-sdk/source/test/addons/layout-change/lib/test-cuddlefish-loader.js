@@ -147,6 +147,9 @@ exports["test compatibility"] = function(assert) {
   assert.equal(require("tabs/tab.js"),
                require("sdk/tabs/tab"), "sdk/tabs/tab -> tabs/tab.js");
 
+  assert.equal(require("memory"),
+               require("sdk/deprecated/memory"), "sdk/deprecated/memory -> memory");
+
   assert.equal(require("environment"),
                require("sdk/system/environment"), "sdk/system/environment -> environment");
 
