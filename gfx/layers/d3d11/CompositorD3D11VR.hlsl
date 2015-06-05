@@ -38,9 +38,9 @@ SamplerState Linear
 };
 
 /*
- * Oculus basic distortion, with chroma aberration correction
+ * Oculus050 basic distortion, with chroma aberration correction
  */
-VS_VR_OUTPUT OculusVRDistortionVS(const VS_VR_INPUT aVertex)
+VS_VR_OUTPUT Oculus050VRDistortionVS(const VS_VR_INPUT aVertex)
 {
   VS_VR_OUTPUT res;
 
@@ -61,7 +61,7 @@ VS_VR_OUTPUT OculusVRDistortionVS(const VS_VR_INPUT aVertex)
   return res;
 }
 
-float4 OculusVRDistortionPS(const VS_VR_OUTPUT aVertex) : SV_Target
+float4 Oculus050VRDistortionPS(const VS_VR_OUTPUT aVertex) : SV_Target
 {
   float resR = Texture.Sample(Linear, aVertex.vTexCoord0.xy).r;
   float resG = Texture.Sample(Linear, aVertex.vTexCoord1.xy).g;

@@ -331,13 +331,13 @@ CompositorD3D11::Initialize()
 
     hr = mDevice->CreateInputLayout(vrlayout,
                                     sizeof(vrlayout) / sizeof(D3D11_INPUT_ELEMENT_DESC),
-                                    OculusVRDistortionVS,
-                                    sizeof(OculusVRDistortionVS),
-                                    byRef(mAttachments->mVRDistortionInputLayout[VRHMDType::Oculus]));
+                                    Oculus050VRDistortionVS,
+                                    sizeof(Oculus050VRDistortionVS),
+                                    byRef(mAttachments->mVRDistortionInputLayout[VRHMDType::Oculus050]));
 
     // XXX shared for now, rename
     mAttachments->mVRDistortionInputLayout[VRHMDType::Cardboard] =
-      mAttachments->mVRDistortionInputLayout[VRHMDType::Oculus];
+      mAttachments->mVRDistortionInputLayout[VRHMDType::Oculus050];
 
     cBufferDesc.ByteWidth = sizeof(gfx::VRDistortionConstants);
     hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, byRef(mAttachments->mVRDistortionConstants));
@@ -632,6 +632,14 @@ CompositorD3D11::DrawVRDistortion(const gfx::Rect& aRect,
 
   VRHMDInfo* hmdInfo = vrEffect->mHMD;
   VRHMDType hmdType = hmdInfo->GetType();
+
+  if (!mAttachments->mVRDistortionVS[hmdType] ||
+      !mAttachments->mVRDistortionPS[hmdType])
+  {
+    NS_WARNING("No VS/PS for hmd type for VR distortion!");
+    return;
+  }
+
   VRDistortionConstants shaderConstants;
 
   // do we need to recreate the VR buffers, since the config has changed?
@@ -1263,26 +1271,26 @@ CompositorD3D11::CreateShaders()
 
   /* VR stuff */
 
-  hr = mDevice->CreateVertexShader(OculusVRDistortionVS,
-                                   sizeof(OculusVRDistortionVS),
+  hr = mDevice->CreateVertexShader(Oculus050VRDistortionVS,
+                                   sizeof(Oculus050VRDistortionVS),
                                    nullptr,
-                                   byRef(mAttachments->mVRDistortionVS[VRHMDType::Oculus]));
+                                   byRef(mAttachments->mVRDistortionVS[VRHMDType::Oculus050]));
   if (FAILED(hr)) {
     return false;
   }
 
-  hr = mDevice->CreatePixelShader(OculusVRDistortionPS,
-                                  sizeof(OculusVRDistortionPS),
+  hr = mDevice->CreatePixelShader(Oculus050VRDistortionPS,
+                                  sizeof(Oculus050VRDistortionPS),
                                   nullptr,
-                                  byRef(mAttachments->mVRDistortionPS[VRHMDType::Oculus]));
+                                  byRef(mAttachments->mVRDistortionPS[VRHMDType::Oculus050]));
   if (FAILED(hr)) {
     return false;
   }
 
   // These are shared
-  // XXX rename Oculus shaders to something more generic
-  mAttachments->mVRDistortionVS[VRHMDType::Cardboard] = mAttachments->mVRDistortionVS[VRHMDType::Oculus];
-  mAttachments->mVRDistortionPS[VRHMDType::Cardboard] = mAttachments->mVRDistortionPS[VRHMDType::Oculus];
+  // XXX rename Oculus050 shaders to something more generic
+  mAttachments->mVRDistortionVS[VRHMDType::Cardboard] = mAttachments->mVRDistortionVS[VRHMDType::Oculus050];
+  mAttachments->mVRDistortionPS[VRHMDType::Cardboard] = mAttachments->mVRDistortionPS[VRHMDType::Oculus050];
 
   return true;
 }
