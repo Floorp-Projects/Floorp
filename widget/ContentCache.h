@@ -10,7 +10,11 @@
 
 #include <stdint.h>
 
+#include "mozilla/Assertions.h"
+#include "mozilla/EventForwards.h"
 #include "nsString.h"
+
+class nsIWidget;
 
 namespace mozilla {
 
@@ -23,11 +27,36 @@ namespace mozilla {
 class ContentCache final
 {
 public:
+  ContentCache();
+
   void Clear();
 
   void SetText(const nsAString& aText);
   const nsString& Text() const { return mText; }
   uint32_t TextLength() const { return mText.Length(); }
+
+  /**
+   * OnCompositionEvent() should be called before sending composition string.
+   * This returns true if the event should be sent.  Otherwise, false.
+   */
+  bool OnCompositionEvent(const WidgetCompositionEvent& aCompositionEvent);
+  /**
+   * RequestToCommitComposition() requests to commit or cancel composition to
+   * the widget.  If it's handled synchronously, this returns the number of
+   * composition events after that.
+   *
+   * @param aWidget     The widget to be requested to commit or cancel
+   *                    the composition.
+   * @param aCancel     When the caller tries to cancel the composition, true.
+   *                    Otherwise, i.e., tries to commit the composition, false.
+   * @param aLastString The last composition string before requesting to
+   *                    commit or cancel composition.
+   * @return            The count of composition events ignored after a call of
+   *                    WillRequestToCommitOrCancelComposition().
+   */
+  uint32_t RequestToCommitComposition(nsIWidget* aWidget,
+                                      bool aCancel,
+                                      nsAString& aLastString);
 
   void SetSelection(uint32_t aCaretOffset)
   {
@@ -49,6 +78,13 @@ public:
 private:
   // Whole text in the target
   nsString mText;
+  // This is commit string which is caused by our request.
+  nsString mCommitStringByRequest;
+  // Start offset of the composition string.
+  uint32_t mCompositionStart;
+  // Count of composition events during requesting commit or cancel the
+  // composition.
+  uint32_t mCompositionEventsDuringRequest;
 
   struct Selection final
   {
@@ -71,6 +107,9 @@ private:
       return Reversed() ? mAnchor - mFocus : mFocus - mAnchor;
     }
   } mSelection;
+
+  bool mIsComposing;
+  bool mRequestedToCommitOrCancelComposition;
 };
 
 } // namespace mozilla
