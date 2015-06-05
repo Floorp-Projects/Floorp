@@ -21,29 +21,33 @@ function frameScript() {
   });
   
   addMessageListener("aboutperformance-test:hasItems", ({data: title}) => {
-    Services.obs.notifyObservers(null, "about:performance-update-immediately", "");
-    let hasPlatform = false;
-    let hasTitle = false;
+    let observer = function() {
+      Services.obs.removeObserver(observer, "about:performance-update-complete");
+      let hasPlatform = false;
+      let hasTitle = false;
 
-    try {
-      let eltData = content.document.getElementById("liveData");
-      if (!eltData) {
-        return;
+      try {
+        let eltData = content.document.getElementById("liveData");
+        if (!eltData) {
+          return;
+        }
+
+        // Find if we have a row for "platform"
+        hasPlatform = eltData.querySelector("tr.platform") != null;
+
+        // Find if we have a row for our content page
+        let titles = [for (eltContent of eltData.querySelectorAll("td.contents.name")) eltContent.textContent];
+
+        hasTitle = titles.includes(title);
+      } catch (ex) {
+        Cu.reportError("Error in content: " + ex);
+        Cu.reportError(ex.stack);
+      } finally {
+        sendAsyncMessage("aboutperformance-test:hasItems", {hasPlatform, hasTitle});
       }
-
-      // Find if we have a row for "platform"
-      hasPlatform = eltData.querySelector("tr.platform") != null;
-
-      // Find if we have a row for our content page
-      let titles = [for (eltContent of eltData.querySelectorAll("td.contents.name")) eltContent.textContent];
-
-      hasTitle = titles.includes(title);
-    } catch (ex) {
-      Cu.reportError("Error in content: " + ex);
-      Cu.reportError(ex.stack);
-    } finally {
-      sendAsyncMessage("aboutperformance-test:hasItems", {hasPlatform, hasTitle});
     }
+    Services.obs.addObserver(observer, "about:performance-update-complete", false);
+    Services.obs.notifyObservers(null, "about:performance-update-immediately", "");
   });
 }
 

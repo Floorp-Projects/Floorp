@@ -19,6 +19,7 @@ const protocol = require("devtools/server/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
 const {fetch} = require("devtools/toolkit/DevToolsUtils");
+const {listenOnce} = require("devtools/async-utils");
 
 loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-logic").CssLogic);
 
@@ -75,55 +76,28 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
    * Protocol method for getting a list of StyleSheetActors representing
    * all the style sheets in this document.
    */
-  getStyleSheets: method(function() {
-    let deferred = promise.defer();
+  getStyleSheets: method(Task.async(function* () {
+    let documents = [this.document];
+    let actors = [];
 
-    let window = this.window;
-    var domReady = () => {
-      window.removeEventListener("DOMContentLoaded", domReady, true);
-      this._addAllStyleSheets().then(deferred.resolve, Cu.reportError);
-    };
+    for (let doc of documents) {
+      let sheets = yield this._addStyleSheets(doc);
+      actors = actors.concat(sheets);
 
-    if (window.document.readyState === "loading") {
-      window.addEventListener("DOMContentLoaded", domReady, true);
-    } else {
-      domReady();
+      // Recursively handle style sheets of the documents in iframes.
+      for (let iframe of doc.querySelectorAll("iframe, browser, frame")) {
+        if (iframe.contentDocument) {
+          // Sometimes, iframes don't have any document, like the
+          // one that are over deeply nested (bug 285395)
+          documents.push(iframe.contentDocument);
+        }
+      }
     }
-
-    return deferred.promise;
-  }, {
+    return actors;
+  }), {
     request: {},
     response: { styleSheets: RetVal("array:stylesheet") }
   }),
-
-  /**
-   * Add all the stylesheets in this document and its subframes.
-   * Assumes the document is loaded.
-   *
-   * @return {Promise}
-   *         Promise that resolves with an array of StyleSheetActors
-   */
-  _addAllStyleSheets: function() {
-    return Task.spawn(function*() {
-      let documents = [this.document];
-      let actors = [];
-
-      for (let doc of documents) {
-        let sheets = yield this._addStyleSheets(doc);
-        actors = actors.concat(sheets);
-
-        // Recursively handle style sheets of the documents in iframes.
-        for (let iframe of doc.querySelectorAll("iframe, browser, frame")) {
-          if (iframe.contentDocument) {
-            // Sometimes, iframes don't have any document, like the
-            // one that are over deeply nested (bug 285395)
-            documents.push(iframe.contentDocument);
-          }
-        }
-      }
-      return actors;
-    }.bind(this));
-  },
 
   /**
    * Check if we should be showing this stylesheet.
@@ -160,6 +134,11 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
   _addStyleSheets: function(doc)
   {
     return Task.spawn(function*() {
+      if (doc.readyState === "loading") {
+        // Wait for the document to load first.
+        yield listenOnce(doc.defaultView, "DOMContentLoaded", true);
+      }
+
       let isChrome = Services.scriptSecurityManager.isSystemPrincipal(doc.nodePrincipal);
       let styleSheets = isChrome ? DOMUtils.getAllStyleSheets(doc) : doc.styleSheets;
       let actors = [];
