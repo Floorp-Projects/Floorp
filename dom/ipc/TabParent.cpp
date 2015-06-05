@@ -1962,16 +1962,7 @@ TabParent::RecvNotifyIMESelection(const ContentCache& aContentCache,
   if (updatePreference.WantSelectionChange() &&
       (updatePreference.WantChangesCausedByComposition() ||
        !aCausedByComposition)) {
-    IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
-    notification.mSelectionChangeData.mOffset = mContentCache.SelectionStart();
-    notification.mSelectionChangeData.mLength = mContentCache.SelectionLength();
-    notification.mSelectionChangeData.mReversed =
-      mContentCache.SelectionReversed();
-    notification.mSelectionChangeData.SetWritingMode(
-      mContentCache.SelectionWritingMode());
-    notification.mSelectionChangeData.mCausedByComposition =
-      aCausedByComposition;
-    widget->NotifyIME(notification);
+    mContentCache.NotifyIMEOfSelectionChange(widget, aCausedByComposition);
   }
   return true;
 }
@@ -2212,10 +2203,7 @@ TabParent::SendSelectionEvent(WidgetSelectionEvent& event)
   // XXX The writing mode is wrong, but this should cause a call of
   //     RecvNotifyIMESelection().  If so, why do we need to modify the range
   //     here??
-  mContentCache.SetSelection(
-    event.mOffset + (event.mReversed ? event.mLength : 0),
-    event.mOffset + (!event.mReversed ? event.mLength : 0),
-    mContentCache.SelectionWritingMode());
+  mContentCache.SetSelection(event.mOffset, event.mLength, event.mReversed);
   return PBrowserParent::SendSelectionEvent(event);
 }
 

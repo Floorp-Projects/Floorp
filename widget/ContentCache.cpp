@@ -55,7 +55,7 @@ ContentCache::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
       if (mSelection.Collapsed()) {
         aEvent.mReply.mString.Truncate(0);
       } else {
-        if (NS_WARN_IF(SelectionEndIsGraterThanTextLength())) {
+        if (NS_WARN_IF(mSelection.EndOffset() > mText.Length())) {
           return false;
         }
         aEvent.mReply.mString =
@@ -209,10 +209,10 @@ ContentCache::CacheText(nsIWidget* aWidget)
   queryText.InitForQueryTextContent(0, UINT32_MAX);
   aWidget->DispatchEvent(&queryText, status);
   if (NS_WARN_IF(!queryText.mSucceeded)) {
-    SetText(EmptyString());
+    mText.Truncate();
     return false;
   }
-  SetText(queryText.mReply.mString);
+  mText = queryText.mReply.mString;
   return true;
 }
 
@@ -251,12 +251,6 @@ ContentCache::CacheTextRects(nsIWidget* aWidget)
 }
 
 void
-ContentCache::SetText(const nsAString& aText)
-{
-  mText = aText;
-}
-
-void
 ContentCache::SetSelection(uint32_t aStartOffset,
                            uint32_t aLength,
                            bool aReversed,
@@ -280,19 +274,6 @@ ContentCache::SetSelection(uint32_t aAnchorOffset,
   mSelection.mAnchor = aAnchorOffset;
   mSelection.mFocus = aFocusOffset;
   mSelection.mWritingMode = aWritingMode;
-}
-
-bool
-ContentCache::InitTextRectArray(uint32_t aOffset,
-                                const RectArray& aTextRectArray)
-{
-  if (NS_WARN_IF(aOffset >= TextLength()) ||
-      NS_WARN_IF(aOffset + aTextRectArray.Length() > TextLength())) {
-    return false;
-  }
-  mTextRectArray.mStart = aOffset;
-  mTextRectArray.mRects = aTextRectArray;
-  return true;
 }
 
 bool
@@ -321,18 +302,6 @@ ContentCache::GetUnionTextRects(uint32_t aOffset,
 }
 
 bool
-ContentCache::InitCaretRect(uint32_t aOffset,
-                            const LayoutDeviceIntRect& aCaretRect)
-{
-  if (NS_WARN_IF(aOffset > TextLength())) {
-    return false;
-  }
-  mCaret.mOffset = aOffset;
-  mCaret.mRect = aCaretRect;
-  return true;
-}
-
-bool
 ContentCache::GetCaretRect(uint32_t aOffset,
                            LayoutDeviceIntRect& aCaretRect) const
 {
@@ -350,7 +319,7 @@ ContentCache::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
   if (!aEvent.CausesDOMTextEvent()) {
     MOZ_ASSERT(aEvent.message == NS_COMPOSITION_START);
     mIsComposing = !aEvent.CausesDOMCompositionEndEvent();
-    mCompositionStart = SelectionStart();
+    mCompositionStart = mSelection.StartOffset();
     // XXX What's this case??
     if (mRequestedToCommitOrCancelComposition) {
       mCommitStringByRequest = aEvent.mData;
@@ -378,7 +347,7 @@ ContentCache::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
   // We must be able to simulate the selection because
   // we might not receive selection updates in time
   if (!mIsComposing) {
-    mCompositionStart = SelectionStart();
+    mCompositionStart = mSelection.StartOffset();
   }
   // XXX This causes different behavior from non-e10s mode.
   //     Selection range should represent caret position in the composition
@@ -404,6 +373,20 @@ ContentCache::RequestToCommitComposition(nsIWidget* aWidget,
   aLastString = mCommitStringByRequest;
   mCommitStringByRequest.Truncate(0);
   return mCompositionEventsDuringRequest;
+}
+
+void
+ContentCache::NotifyIMEOfSelectionChange(nsIWidget* aWidget,
+                                         bool aCausedByComposition) const
+{
+  IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
+  notification.mSelectionChangeData.mOffset = mSelection.StartOffset();
+  notification.mSelectionChangeData.mLength = mSelection.Length();
+  notification.mSelectionChangeData.mReversed = mSelection.Reversed();
+  notification.mSelectionChangeData.SetWritingMode(mSelection.mWritingMode);
+  notification.mSelectionChangeData.mCausedByComposition =
+    aCausedByComposition;
+  aWidget->NotifyIME(notification);
 }
 
 /*****************************************************************************
