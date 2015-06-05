@@ -565,7 +565,7 @@ DXGIYCbCrTextureClient::Create(ISurfaceAllocator* aAllocator,
                                const gfx::IntSize& aSizeCbCr)
 {
   if (!aHandleY || !aHandleCb || !aHandleCr ||
-      !aTextureY, || !aTextureCb || !aTextureCr) {
+      !aTextureY || !aTextureCb || !aTextureCr) {
     return nullptr;
   }
 
