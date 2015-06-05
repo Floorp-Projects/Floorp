@@ -1833,13 +1833,17 @@ bool DoesD3D11AlphaTextureSharingWork(ID3D11Device *device)
 {
   nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
   if (gfxInfo) {
-    // Disable texture sharing if we're blocking d2d since that's the only other time we use it
-    // and it might be broken.
-    int32_t status;
-    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT2D, &status))) {
-      if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
-        return false;
-      }
+    // A8 texture sharing crashes on this intel driver version (and no others)
+    // so just avoid using it in that case.
+    nsString adapterVendor;
+    nsString driverVersion;
+    gfxInfo->GetAdapterVendorID(adapterVendor);
+    gfxInfo->GetAdapterDriverVersion(driverVersion);
+
+    nsAString &intelVendorID = (nsAString &)GfxDriverInfo::GetDeviceVendor(VendorIntel);
+    if (adapterVendor.Equals(intelVendorID, nsCaseInsensitiveStringComparator()) &&
+        driverVersion.Equals(NS_LITERAL_STRING("8.15.10.2086"))) {
+      return false;
     }
   }
 
