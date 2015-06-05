@@ -712,7 +712,7 @@ opensl_stream_get_position(cubeb_stream * stm, uint64_t * position)
 
   struct timespec t;
   clock_gettime(CLOCK_MONOTONIC, &t);
-  if(stm->lastPosition == msec || msec < stm->lastCompensativePosition) {
+  if(stm->lastPosition == msec) {
     compensation_msec =
       (t.tv_sec*1000000000LL + t.tv_nsec - stm->lastPositionTimeStamp) / 1000000;
   } else {
@@ -733,14 +733,21 @@ opensl_stream_get_position(cubeb_stream * stm, uint64_t * position)
   assert(maximum_position >= 0);
 
   if (msec > mixer_latency) {
-    int64_t unadjusted_position =
-      samplerate * (msec - mixer_latency + compensation_msec) / 1000;
+    int64_t unadjusted_position;
+    if (stm->lastCompensativePosition > msec + compensation_msec) {
+      // Over compensation, use lastCompensativePosition.
+      unadjusted_position =
+        samplerate * (stm->lastCompensativePosition - mixer_latency) / 1000;
+    } else {
+      unadjusted_position =
+        samplerate * (msec - mixer_latency + compensation_msec) / 1000;
+      stm->lastCompensativePosition = msec + compensation_msec;
+    }
     *position = unadjusted_position < maximum_position ?
       unadjusted_position : maximum_position;
   } else {
     *position = 0;
   }
-  stm->lastCompensativePosition = *position;
   return CUBEB_OK;
 }
 
