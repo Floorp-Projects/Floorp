@@ -57,7 +57,8 @@ GMPVideoEncoderParent::GMPVideoEncoderParent(GMPContentParent *aPlugin)
   mActorDestroyed(false),
   mPlugin(aPlugin),
   mCallback(nullptr),
-  mVideoHost(this)
+  mVideoHost(this),
+  mPluginId(aPlugin->GetPluginId())
 {
   MOZ_ASSERT(mPlugin);
 
@@ -214,12 +215,6 @@ GMPVideoEncoderParent::SetPeriodicKeyFrames(bool aEnable)
 
   // Async IPC, we don't have access to a return value.
   return GMPNoErr;
-}
-
-const uint32_t
-GMPVideoEncoderParent::ParentID()
-{
-  return mPlugin ? mPlugin->GetPluginId() : 0;
 }
 
 // Note: Consider keeping ActorDestroy sync'd up when making changes here.
