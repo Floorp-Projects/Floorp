@@ -821,6 +821,28 @@ FoldUnaryArithmetic(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandl
     return true;
 }
 
+static bool
+FoldIncrementDecrement(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+                       bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_PREINCREMENT) ||
+               node->isKind(PNK_POSTINCREMENT) ||
+               node->isKind(PNK_PREDECREMENT) ||
+               node->isKind(PNK_POSTDECREMENT));
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+
+    ParseNode*& target = node->pn_kid;
+    MOZ_ASSERT(parser.isValidSimpleAssignmentTarget(target, Parser<FullParseHandler>::PermitAssignmentToFunctionCalls));
+
+    if (!Fold(cx, &target, parser, inGenexpLambda, SyntacticContext::Other))
+        return false;
+
+    MOZ_ASSERT(parser.isValidSimpleAssignmentTarget(target, Parser<FullParseHandler>::PermitAssignmentToFunctionCalls));
+
+    return true;
+}
+
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda,
      SyntacticContext sc)
@@ -906,11 +928,13 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_NEG:
         return FoldUnaryArithmetic(cx, pn, parser, inGenexpLambda);
 
-      case PNK_THROW:
       case PNK_PREINCREMENT:
       case PNK_POSTINCREMENT:
       case PNK_PREDECREMENT:
       case PNK_POSTDECREMENT:
+        return FoldIncrementDecrement(cx, pn, parser, inGenexpLambda);
+
+      case PNK_THROW:
       case PNK_COMPUTED_NAME:
       case PNK_ARRAYPUSH:
       case PNK_SPREAD:
