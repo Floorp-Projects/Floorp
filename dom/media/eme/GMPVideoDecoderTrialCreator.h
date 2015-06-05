@@ -8,7 +8,6 @@
 #define mozilla_dom_GMPVideoDecoderTrialCreator_h
 
 #include "mozilla/dom/MediaKeySystemAccess.h"
-#include "mozilla/Pair.h"
 #include "nsIObserver.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
@@ -26,15 +25,58 @@ class GMPVideoDecoderTrialCreator {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPVideoDecoderTrialCreator);
 
-  void MaybeAwaitTrialCreate(const nsAString& aKeySystem,
-                             MediaKeySystemAccess* aAccess,
-                             Promise* aPromise,
-                             nsPIDOMWindow* aParent);
-
-  void TrialCreateGMPVideoDecoderFailed(const nsAString& aKeySystem);
+  void TrialCreateGMPVideoDecoderFailed(const nsAString& aKeySystem,
+                                        const nsACString& aReason);
   void TrialCreateGMPVideoDecoderSucceeded(const nsAString& aKeySystem);
 
+  template<class T>
+  void MaybeAwaitTrialCreate(const nsAString& aKeySystem,
+                             MediaKeySystemAccess* aAccess,
+                             T* aPromiseLike,
+                             nsPIDOMWindow* aParent)
+  {
+    nsRefPtr<PromiseLike<T>> p(new PromiseLike<T>(aPromiseLike, aAccess));
+    MaybeAwaitTrialCreate(aKeySystem, p, aParent);
+  }
+
 private:
+
+  class AbstractPromiseLike {
+  public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AbstractPromiseLike);
+
+    virtual void Resolve() = 0;
+    virtual void Reject(nsresult aResult, const nsACString& aMessage) = 0;
+  protected:
+    virtual ~AbstractPromiseLike() {}
+  };
+
+  template<class T>
+  class PromiseLike : public AbstractPromiseLike
+  {
+  public:
+    explicit PromiseLike(T* aPromiseLike, MediaKeySystemAccess* aAccess)
+      : mPromiseLike(aPromiseLike)
+      , mAccess(aAccess)
+    {
+    }
+    void Resolve() override {
+      MOZ_ASSERT(NS_IsMainThread());
+      mPromiseLike->MaybeResolve(mAccess);
+    }
+    void Reject(nsresult aResult, const nsACString& aMessage) override {
+      MOZ_ASSERT(NS_IsMainThread());
+      mPromiseLike->MaybeReject(aResult, aMessage);
+    }
+  protected:
+    ~PromiseLike() {}
+    nsRefPtr<T> mPromiseLike;
+    nsRefPtr<MediaKeySystemAccess> mAccess;
+  };
+
+  void MaybeAwaitTrialCreate(const nsAString& aKeySystem,
+                             AbstractPromiseLike* aPromisey,
+                             nsPIDOMWindow* aParent);
 
   ~GMPVideoDecoderTrialCreator() {}
 
@@ -47,8 +89,6 @@ private:
 
   static TrialCreateState GetCreateTrialState(const nsAString& aKeySystem);
 
-  typedef Pair<nsRefPtr<Promise>, nsRefPtr<MediaKeySystemAccess>> PromiseAccessPair;
-
   struct TrialCreateData {
     TrialCreateData(const nsAString& aKeySystem)
       : mKeySystem(aKeySystem)
@@ -57,7 +97,7 @@ private:
     ~TrialCreateData() {}
     const nsString mKeySystem;
     nsRefPtr<TestGMPVideoDecoder> mTest;
-    nsTArray<PromiseAccessPair> mPending;
+    nsTArray<nsRefPtr<AbstractPromiseLike>> mPending;
     TrialCreateState mStatus;
   private:
     TrialCreateData(const TrialCreateData& aOther) = delete;
@@ -116,7 +156,7 @@ private:
   void CreateGMPVideoDecoder();
   ~TestGMPVideoDecoder() {}
 
-  void ReportFailure();
+  void ReportFailure(const nsACString& aReason);
   void ReportSuccess();
 
   const nsString mKeySystem;
