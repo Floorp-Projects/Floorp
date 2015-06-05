@@ -11,7 +11,7 @@ interface nsIPrefBranch;
 /**
  * nsINetUtil provides various network-related utility methods.
  */
-[scriptable, uuid(ca68c485-9db3-4c12-82a6-4fab7948e2d5)]
+[scriptable, uuid(885d6940-1001-46e7-92ec-d494a78d7784)]
 interface nsINetUtil : nsISupports
 {
   /**
@@ -192,4 +192,16 @@ interface nsINetUtil : nsISupports
                                         out AUTF8String aCharset,
                                         out long aCharsetStart,
                                         out long aCharsetEnd);
+
+/**
+   * Parse an attribute referrer policy string (no-referrer, origin, unsafe-url)
+   * and return the according integer code (defined in nsIHttpChannel.idl)
+   *
+   * @param aPolicyString
+   *        the policy string given as attribute
+   * @return aPolicyEnum
+   *         referrer policy code from nsIHttpChannel.idl, (see parser in
+   *         ReferrerPolicy.h for details)
+   */
+  unsigned long parseAttributePolicyString(in AString aPolicyString);
 };

@@ -13515,6 +13515,22 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
   nsCOMPtr<nsIURI> referer = refererDoc->GetDocumentURI();
   uint32_t refererPolicy = refererDoc->GetReferrerPolicy();
 
+  // get referrer attribute from clicked link and parse it
+  // if per element referrer is enabled, the element referrer overrules
+  // the document wide referrer
+  if (IsElementAnchor(aContent)) {
+    MOZ_ASSERT(aContent->IsHTMLElement());
+    if (Preferences::GetBool("network.http.enablePerElementReferrer", false)) {
+      nsAutoString referrerPolicy;
+      if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::referrer, referrerPolicy)) {
+        uint32_t refPolEnum = mozilla::net::ReferrerPolicyFromString(referrerPolicy);
+        if (refPolEnum != mozilla::net::RP_Unset) {
+          refererPolicy = refPolEnum;
+        }
+      }
+    }
+  }
+
   // referer could be null here in some odd cases, but that's ok,
   // we'll just load the link w/o sending a referer in those cases.
 
