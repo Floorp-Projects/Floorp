@@ -2179,115 +2179,25 @@ TabParent::RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent)
   return true;
 }
 
-/**
- * Try to answer query event using cached text.
- *
- * For NS_QUERY_SELECTED_TEXT, fail if the cache doesn't contain the whole
- *  selected range. (This shouldn't happen because PuppetWidget should have
- *  already sent the whole selection.)
- *
- * For NS_QUERY_TEXT_CONTENT, fail only if the cache doesn't overlap with
- *  the queried range. Note the difference from above. We use
- *  this behavior because a normal NS_QUERY_TEXT_CONTENT event is allowed to
- *  have out-of-bounds offsets, so that widget can request content without
- *  knowing the exact length of text. It's up to widget to handle cases when
- *  the returned offset/length are different from the queried offset/length.
- *
- * For NS_QUERY_TEXT_RECT, fail if cached offset/length aren't equals to input.
- *   Cocoa widget always queries selected offset, so it works on it.
- *
- * For NS_QUERY_CARET_RECT, fail if cached offset isn't equals to input
- *
- * For NS_QUERY_EDITOR_RECT, always success
- */
 bool
 TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
 {
-  aEvent.mSucceeded = false;
-  aEvent.mWasAsync = false;
-  aEvent.mReply.mFocusedWidget = nsCOMPtr<nsIWidget>(GetWidget()).get();
-
-  switch (aEvent.message)
-  {
-  case NS_QUERY_SELECTED_TEXT:
-    {
-      aEvent.mReply.mOffset = mContentCache.SelectionStart();
-      if (mContentCache.SelectionCollapsed()) {
-        aEvent.mReply.mString.Truncate(0);
-      } else {
-        if (NS_WARN_IF(mContentCache.SelectionEndIsGraterThanTextLength())) {
-          break;
-        }
-        aEvent.mReply.mString = Substring(mContentCache.Text(),
-                                          aEvent.mReply.mOffset,
-                                          mContentCache.SelectionLength());
-      }
-      aEvent.mReply.mReversed = mContentCache.SelectionReversed();
-      aEvent.mReply.mHasSelection = true;
-      aEvent.mReply.mWritingMode = mContentCache.SelectionWritingMode();
-      aEvent.mSucceeded = true;
-    }
-    break;
-  case NS_QUERY_TEXT_CONTENT:
-    {
-      uint32_t inputOffset = aEvent.mInput.mOffset,
-               inputEnd = inputOffset + aEvent.mInput.mLength;
-
-      if (inputEnd > mContentCache.TextLength()) {
-        inputEnd = mContentCache.TextLength();
-      }
-      if (inputEnd < inputOffset) {
-        break;
-      }
-      aEvent.mReply.mOffset = inputOffset;
-      aEvent.mReply.mString = Substring(mContentCache.Text(),
-                                        inputOffset,
-                                        inputEnd - inputOffset);
-      aEvent.mSucceeded = true;
-    }
-    break;
-  case NS_QUERY_TEXT_RECT:
-    {
-      if (!mContentCache.GetUnionTextRects(aEvent.mInput.mOffset,
-                                           aEvent.mInput.mLength,
-                                           aEvent.mReply.mRect)) {
-        // XXX We don't have cache for this request.
-        break;
-      }
-      if (aEvent.mInput.mOffset < mContentCache.TextLength()) {
-        aEvent.mReply.mString =
-          Substring(mContentCache.Text(), aEvent.mInput.mOffset,
-                    mContentCache.TextLength() >= aEvent.mInput.EndOffset() ?
-                      aEvent.mInput.mLength : UINT32_MAX);
-      } else {
-        aEvent.mReply.mString.Truncate();
-      }
-      aEvent.mReply.mOffset = aEvent.mInput.mOffset;
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
+  if (NS_WARN_IF(!mContentCache.HandleQueryContentEvent(aEvent, widget)) ||
+      NS_WARN_IF(!aEvent.mSucceeded)) {
+    return true;
+  }
+  switch (aEvent.message) {
+    case NS_QUERY_TEXT_RECT:
+    case NS_QUERY_CARET_RECT:
+    case NS_QUERY_EDITOR_RECT:
       aEvent.mReply.mRect -= GetChildProcessOffset();
-      // XXX This may be wrong if storing range isn't in the selection range.
-      aEvent.mReply.mWritingMode = mContentCache.SelectionWritingMode();
-      aEvent.mSucceeded = true;
-    }
-    break;
-  case NS_QUERY_CARET_RECT:
-    {
-      if (!mContentCache.GetCaretRect(aEvent.mInput.mOffset,
-                                      aEvent.mReply.mRect)) {
-        break;
-      }
-
-      aEvent.mReply.mOffset = aEvent.mInput.mOffset;
-      aEvent.mReply.mRect -= GetChildProcessOffset();
-      aEvent.mSucceeded = true;
-    }
-    break;
-  case NS_QUERY_EDITOR_RECT:
-    {
-      aEvent.mReply.mRect =
-        mContentCache.GetEditorRect() - GetChildProcessOffset();
-      aEvent.mSucceeded = true;
-    }
-    break;
+      break;
+    default:
+      break;
   }
   return true;
 }
