@@ -312,7 +312,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(DOMRequestService,
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(QuotaManager,
                                          QuotaManager::FactoryCreate)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ServiceWorkerManager,
-                                         ServiceWorkerManager::FactoryCreate)
+                                         ServiceWorkerManager::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ServiceWorkerPeriodicUpdater,
                                          ServiceWorkerPeriodicUpdater::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(WorkerDebuggerManager)

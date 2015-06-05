@@ -59,6 +59,7 @@ protected:
     nscolor sMenuBarText;
     nscolor sMenuBarHoverText;
     nscolor sMenuText;
+    nscolor sMenuTextInactive;
     nscolor sMenuHover;
     nscolor sMenuHoverText;
     nscolor sButtonText;

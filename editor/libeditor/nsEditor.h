@@ -589,6 +589,10 @@ public:
    * Returns true if there is composition string and not fixed.
    */
   bool IsIMEComposing() const;
+  /**
+   * Returns true when inserting text should be a part of current composition.
+   */
+  bool ShouldHandleIMEComposition() const;
 
   /** from html rules code - migration in progress */
   static nsresult GetTagString(nsIDOMNode *aNode, nsAString& outString);
@@ -803,6 +807,19 @@ public:
 
   virtual already_AddRefed<nsIDOMNode> FindUserSelectAllNode(nsIDOMNode* aNode) { return nullptr; }
 
+  /**
+   * GetIMESelectionStartOffsetIn() returns the start offset of IME selection in
+   * the aTextNode.  If there is no IME selection, returns -1.
+   */
+  int32_t GetIMESelectionStartOffsetIn(nsINode* aTextNode);
+
+  /**
+   * FindBetterInsertionPoint() tries to look for better insertion point which
+   * is typically the nearest text node and offset in it.
+   */
+  void FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
+                                int32_t& aOffset);
+
 protected:
   enum Tristate {
     eTriUnset,
@@ -849,6 +866,9 @@ protected:
   EditAction        mAction;             // the current editor action
 
   uint32_t          mIMETextOffset;    // offset in text node where IME comp string begins
+  // The Length of the composition string or commit string.  If this is length
+  // of commit string, the length is truncated by maxlength attribute.
+  uint32_t          mIMETextLength;
 
   EDirection        mDirection;          // the current direction of editor action
   int8_t            mDocDirtyState;      // -1 = not initialized

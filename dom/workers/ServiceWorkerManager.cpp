@@ -25,6 +25,7 @@
 #include "jsapi.h"
 
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -83,6 +84,8 @@ static_assert(nsIHttpChannelInternal::CORS_MODE_CORS == static_cast<uint32_t>(Re
               "RequestMode enumeration value should match Necko CORS mode value.");
 static_assert(nsIHttpChannelInternal::CORS_MODE_CORS_WITH_FORCED_PREFLIGHT == static_cast<uint32_t>(RequestMode::Cors_with_forced_preflight),
               "RequestMode enumeration value should match Necko CORS mode value.");
+
+static StaticRefPtr<ServiceWorkerManager> gInstance;
 
 struct ServiceWorkerManager::RegistrationDataPerPrincipal
 {
@@ -229,7 +232,7 @@ PopulateRegistrationData(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aRegistration);
 
-  if (NS_WARN_IF(!BasePrincipal::IsCodebasePrincipal(aPrincipal))) {
+  if (NS_WARN_IF(!BasePrincipal::Cast(aPrincipal)->IsCodebasePrincipal())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -343,9 +346,6 @@ NS_INTERFACE_MAP_BEGIN(ServiceWorkerManager)
   NS_INTERFACE_MAP_ENTRY(nsIServiceWorkerManager)
   NS_INTERFACE_MAP_ENTRY(nsIIPCBackgroundChildCreateCallback)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  if (aIID.Equals(NS_GET_IID(ServiceWorkerManager)))
-    foundInterface = static_cast<nsIServiceWorkerManager*>(this);
-  else
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIServiceWorkerManager)
 NS_INTERFACE_MAP_END
 
@@ -354,7 +354,17 @@ ServiceWorkerManager::ServiceWorkerManager()
 {
   // Register this component to PBackground.
   MOZ_ALWAYS_TRUE(BackgroundChild::GetOrCreateForCurrentThread(this));
+}
 
+ServiceWorkerManager::~ServiceWorkerManager()
+{
+  // The map will assert if it is not empty when destroyed.
+  mRegistrationInfos.Clear();
+}
+
+void
+ServiceWorkerManager::Init()
+{
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
     nsRefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
     MOZ_ASSERT(swr);
@@ -374,12 +384,6 @@ ServiceWorkerManager::ServiceWorkerManager()
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
-}
-
-ServiceWorkerManager::~ServiceWorkerManager()
-{
-  // The map will assert if it is not empty when destroyed.
-  mRegistrationInfos.Clear();
 }
 
 class ContinueLifecycleTask : public nsISupports
@@ -1591,7 +1595,7 @@ public:
 
     nsTArray<nsRefPtr<ServiceWorkerRegistrationMainThread>> array;
 
-    if (NS_WARN_IF(!BasePrincipal::IsCodebasePrincipal(principal))) {
+    if (NS_WARN_IF(!BasePrincipal::Cast(principal)->IsCodebasePrincipal())) {
       return NS_OK;
     }
 
@@ -2287,9 +2291,19 @@ ServiceWorkerManager::GetOrCreateJobQueue(const nsACString& aKey,
 already_AddRefed<ServiceWorkerManager>
 ServiceWorkerManager::GetInstance()
 {
-  nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
-  nsRefPtr<ServiceWorkerManager> concrete = do_QueryObject(swm);
-  return concrete.forget();
+  // Note: We don't simply check gInstance for null-ness here, since otherwise
+  // this can resurrect the ServiceWorkerManager pretty late during shutdown.
+  static bool firstTime = true;
+  if (firstTime) {
+    AssertIsOnMainThread();
+
+    gInstance = new ServiceWorkerManager();
+    gInstance->Init();
+    ClearOnShutdown(&gInstance);
+    firstTime = false;
+  }
+  nsRefPtr<ServiceWorkerManager> copy = gInstance.get();
+  return copy.forget();
 }
 
 void
@@ -2588,7 +2602,7 @@ ServiceWorkerManager::PrincipalToScopeKey(nsIPrincipal* aPrincipal,
 {
   MOZ_ASSERT(aPrincipal);
 
-  if (NS_WARN_IF(!BasePrincipal::IsCodebasePrincipal(aPrincipal))) {
+  if (NS_WARN_IF(!BasePrincipal::Cast(aPrincipal)->IsCodebasePrincipal())) {
     return NS_ERROR_FAILURE;
   }
 

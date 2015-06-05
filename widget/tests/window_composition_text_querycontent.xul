@@ -33,6 +33,8 @@
         src="data:text/html,&lt;body onload='document.designMode=%22on%22'&gt;body content&lt;/body&gt;"></iframe><br/>
 <iframe id="iframe3" width="300" height="150"
         src="data:text/html,&lt;body onload='document.designMode=%22on%22'&gt;body content&lt;/body&gt;"></iframe><br/>
+<iframe id="iframe4" width="300" height="150"
+        src="data:text/html,&lt;div contenteditable id='contenteditable'&gt;&lt;/div&gt;"></iframe><br/>
 <input id="input" type="text"/><br/>
 </p>
 <div id="content" style="display: none">
@@ -79,6 +81,8 @@ var textbox = document.getElementById("textbox");
 var iframe = document.getElementById("iframe");
 var iframe2 = document.getElementById("iframe2");
 var iframe3 = document.getElementById("iframe3");
+var contenteditable;
+var windowOfContenteditable;
 var input = document.getElementById("input");
 var textareaInFrame;
 
@@ -3836,8 +3840,320 @@ function runMaxLengthTest()
   }
 }
 
+function runEditorReframeTests(aCallback)
+{
+  function runEditorReframeTest(aEditor, aWindow, aEventType, aNextTest)
+  {
+    function getValue()
+    {
+      return aEditor == contenteditable ?
+        aEditor.innerHTML.replace("<br>", "") : aEditor.value;
+    }
+
+    var description = "runEditorReframeTest(" + aEditor.id + ", \"" + aEventType + "\"): ";
+
+    var tests = [
+      { test: function () {
+          synthesizeCompositionChange(
+            { "composition":
+              { "string": "a",
+                "clauses":
+                [
+                  { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+                ]
+              },
+              "caret": { "start": 1, "length": 0 }
+            });
+        },
+        check: function () {
+          is(getValue(aEditor), "a", description + "Typing 'a'");
+        },
+      },
+      { test: function () {
+          synthesizeCompositionChange(
+            { "composition":
+              { "string": "ab",
+                "clauses":
+                [
+                  { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+                ]
+              },
+              "caret": { "start": 2, "length": 0 }
+            });
+        },
+        check: function () {
+          is(getValue(aEditor), "ab", description + "Typing 'b' next to 'a'");
+        },
+      },
+      { test: function () {
+          synthesizeCompositionChange(
+            { "composition":
+              { "string": "abc",
+                "clauses":
+                [
+                  { "length": 3, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+                ]
+              },
+              "caret": { "start": 3, "length": 0 }
+            });
+        },
+        check: function () {
+          is(getValue(aEditor), "abc", description + "Typing 'c' next to 'ab'");
+        },
+      },
+      { test: function () {
+        synthesizeCompositionChange(
+          { "composition":
+            { "string": "abc",
+              "clauses":
+              [
+                { "length": 2, "attr": COMPOSITION_ATTR_SELECTED_CLAUSE },
+                { "length": 1, "attr": COMPOSITION_ATTR_CONVERTED_CLAUSE }
+              ]
+            },
+            "caret": { "start": 2, "length": 0 }
+          });
+        },
+        check: function () {
+          is(getValue(aEditor), "abc", description + "Starting to convert 'ab][c'");
+        },
+      },
+      { test: function () {
+          synthesizeCompositionChange(
+            { "composition":
+              { "string": "ABc",
+                "clauses":
+                [
+                  { "length": 2, "attr": COMPOSITION_ATTR_SELECTED_CLAUSE },
+                  { "length": 1, "attr": COMPOSITION_ATTR_CONVERTED_CLAUSE }
+                ]
+              },
+              "caret": { "start": 2, "length": 0 }
+            });
+        },
+        check: function () {
+          is(getValue(aEditor), "ABc", description + "Starting to convert 'AB][c'");
+        },
+      },
+      { test: function () {
+          synthesizeCompositionChange(
+            { "composition":
+              { "string": "ABC",
+                "clauses":
+                [
+                  { "length": 2, "attr": COMPOSITION_ATTR_CONVERTED_CLAUSE },
+                  { "length": 1, "attr": COMPOSITION_ATTR_SELECTED_CLAUSE }
+                ]
+              },
+              "caret": { "start": 3, "length": 0 }
+            });
+          },
+        check: function () {
+          is(getValue(aEditor), "ABC", description + "Starting to convert 'AB][C'");
+        },
+      },
+      { test: function () {
+          // Commit composition
+          synthesizeComposition({ type: "compositioncommitasis" });
+        },
+        check: function () {
+          is(getValue(aEditor), "ABC", description + "Committed as 'ABC'");
+        },
+      },
+      { test: function () {
+          synthesizeCompositionChange(
+            { "composition":
+              { "string": "d",
+                "clauses":
+                [
+                  { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+                ]
+              },
+              "caret": { "start": 1, "length": 0 }
+            });
+        },
+        check: function () {
+          is(getValue(aEditor), "ABCd", description + "Typing 'd' next to ABC");
+        },
+      },
+      { test: function () {
+          synthesizeCompositionChange(
+            { "composition":
+              { "string": "de",
+                "clauses":
+                [
+                  { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+                ]
+              },
+              "caret": { "start": 2, "length": 0 }
+            });
+        },
+        check: function () {
+          is(getValue(aEditor), "ABCde", description + "Typing 'e' next to ABCd");
+        },
+      },
+      { test: function () {
+          synthesizeCompositionChange(
+            { "composition":
+              { "string": "def",
+                "clauses":
+                [
+                  { "length": 3, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+                ]
+              },
+              "caret": { "start": 3, "length": 0 }
+            });
+        },
+        check: function () {
+          is(getValue(aEditor), "ABCdef", description + "Typing 'f' next to ABCde");
+        },
+      },
+      { test: function () {
+          // Commit composition
+          synthesizeComposition({ type: "compositioncommitasis" });
+        },
+        check: function () {
+          is(getValue(aEditor), "ABCdef", description + "Commit 'def' without convert");
+        },
+      },
+      { test: function () {
+          // Select "Cd"
+          synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft" });
+          synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft" });
+          synthesizeKey("KEY_Shift", { type: "keydown", code: "ShiftLeft", shiftKey: true });
+          synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true });
+          synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true });
+          synthesizeKey("KEY_Shift", { type: "keyup", code: "ShiftLeft" });
+        },
+        check: function () {
+        },
+      },
+      { test: function () {
+          synthesizeCompositionChange(
+            { "composition":
+              { "string": "g",
+                "clauses":
+                [
+                  { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+                ]
+              },
+              "caret": { "start": 1, "length": 0 }
+            });
+        },
+        check: function () {
+          is(getValue(aEditor), "ABgef", description + "Typing 'g' next to AB");
+        },
+      },
+      { test: function () {
+          synthesizeCompositionChange(
+            { "composition":
+              { "string": "gh",
+                "clauses":
+                [
+                  { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+                ]
+              },
+              "caret": { "start": 2, "length": 0 }
+            });
+        },
+        check: function () {
+          is(getValue(aEditor), "ABghef", description + "Typing 'h' next to ABg");
+        },
+      },
+      { test: function () {
+          synthesizeCompositionChange(
+            { "composition":
+              { "string": "ghi",
+                "clauses":
+                [
+                  { "length": 3, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+                ]
+              },
+              "caret": { "start": 3, "length": 0 }
+            });
+        },
+        check: function () {
+          is(getValue(aEditor), "ABghief", description + "Typing 'i' next to ABgh");
+        },
+      },
+      { test: function () {
+          synthesizeCompositionChange(
+            { "composition":
+              { "string": "GHI",
+                "clauses":
+                [
+                  { "length": 3, "attr": COMPOSITION_ATTR_SELECTED_CLAUSE }
+                ]
+              },
+              "caret": { "start": 3, "length": 0 }
+            });
+        },
+        check: function () {
+          is(getValue(aEditor), "ABGHIef", description + "Convert 'ghi' to 'GHI'");
+        },
+      },
+      { test: function () {
+          // Commit composition
+          synthesizeComposition({ type: "compositioncommitasis" });
+        },
+        check: function () {
+          is(getValue(aEditor), "ABGHIef", description + "Commit 'GHI'");
+        },
+      },
+    ];
+
+    var index = 0;
+    function doReframe(aEvent)
+    {
+      aEvent.target.style.overflow =
+        aEvent.target.style.overflow != "hidden" ? "hidden" : "auto";
+    }
+    aEditor.focus();
+    aEditor.addEventListener(aEventType, doReframe);
+
+    function doNext()
+    {
+      if (tests.length <= index) {
+        aEditor.style.overflow = "auto";
+        aEditor.removeEventListener(aEventType, doReframe);
+        requestAnimationFrame(function() { setTimeout(aNextTest); });
+        return;
+      }
+      tests[index].test();
+      hitEventLoop(function () {
+        tests[index].check();
+        index++;
+        setTimeout(doNext, 0);
+      }, 20);
+    }
+    doNext();
+  }
+
+  input.value = "";
+  runEditorReframeTest(input, window, "input", function () {
+    input.value = "";
+    runEditorReframeTest(input, window, "compositionupdate", function () {
+      textarea.value = "";
+      runEditorReframeTest(textarea, window, "input", function () {
+        textarea.value = "";
+        runEditorReframeTest(textarea, window, "compositionupdate", function () {
+          contenteditable.innerHTML = "";
+          runEditorReframeTest(contenteditable, windowOfContenteditable, "input", function () {
+            contenteditable.innerHTML = "";
+            runEditorReframeTest(contenteditable, windowOfContenteditable, "compositionupdate", function () {
+              aCallback();
+            });
+          });
+        });
+      });
+    });
+  });
+}
+
 function runTest()
 {
+  contenteditable = document.getElementById("iframe4").contentDocument.getElementById("contenteditable");
+  windowOfContenteditable = document.getElementById("iframe4").contentWindow;
   textareaInFrame = iframe.contentDocument.getElementById("textarea");
 
   runUndoRedoTest();
@@ -3854,11 +4170,13 @@ function runTest()
   runRedundantChangeTest();
   runNotRedundantChangeTest();
   runControlCharTest();
-  runAsyncForceCommitTest(function () {
-    runRemoveContentTest(function () {
-      runFrameTest();
-      runPanelTest();
-      runMaxLengthTest();
+  runEditorReframeTests(function () {
+    runAsyncForceCommitTest(function () {
+      runRemoveContentTest(function () {
+        runFrameTest();
+        runPanelTest();
+        runMaxLengthTest();
+      });
     });
   });
 }

@@ -213,7 +213,7 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   // platforms.
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
   if (mWidget && mWidget->GetOwningTabChild()) {
-    mCompositorMightResample = gfxPrefs::AsyncPanZoomEnabled();
+    mCompositorMightResample = AsyncPanZoomEnabled();
   }
 #endif
 
@@ -780,6 +780,12 @@ ClientLayerManager::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
 #else
   return false;
 #endif
+}
+
+bool
+ClientLayerManager::AsyncPanZoomEnabled() const
+{
+  return mWidget && mWidget->AsyncPanZoomEnabled();
 }
 
 ClientLayer::~ClientLayer()
