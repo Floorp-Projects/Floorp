@@ -409,17 +409,24 @@ loadListener.prototype = {
 
 // Method to determine if we should be using geo-specific defaults
 function geoSpecificDefaultsEnabled() {
+  // check to see if this is a partner build.  Partner builds should not use geo-specific defaults.
+  let distroID;
+  try {
+    distroID = Services.prefs.getCharPref("distribution.id");
+
+    // Mozilla-provided builds (i.e. funnelcake) are not partner builds
+    if (distroID && !distroID.startsWith("mozilla")) {
+      return false;
+    }
+  } catch (e) {}
+
+  // if we make it here, the pref should dictate behaviour
   let geoSpecificDefaults = false;
   try {
     geoSpecificDefaults = Services.prefs.getBoolPref("browser.search.geoSpecificDefaults");
   } catch(e) {}
 
-  let distroID;
-  try {
-    distroID = Services.prefs.getCharPref("distribution.id");
-  } catch (e) {}
-
-  return (geoSpecificDefaults && !distroID);
+  return geoSpecificDefaults;
 }
 
 // Some notes on countryCode and region prefs:
