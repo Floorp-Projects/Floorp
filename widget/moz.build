@@ -109,6 +109,7 @@ EXPORTS += [
 EXPORTS.mozilla += [
     'BasicEvents.h',
     'CommandList.h',
+    'ContentCache.h',
     'ContentEvents.h',
     'EventClassList.h',
     'EventForwards.h',
@@ -131,6 +132,7 @@ EXPORTS.mozilla.widget += [
 ]
 
 UNIFIED_SOURCES += [
+    'ContentCache.cpp',
     'ContentHelper.cpp',
     'GfxDriverInfo.cpp',
     'GfxInfoBase.cpp',
