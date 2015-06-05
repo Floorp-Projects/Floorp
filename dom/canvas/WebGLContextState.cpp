@@ -58,18 +58,6 @@ WebGLContext::Enable(GLenum cap)
     gl->fEnable(cap);
 }
 
-static JS::Value
-StringValue(JSContext* cx, const char* chars, ErrorResult& rv)
-{
-    JSString* str = JS_NewStringCopyZ(cx, chars);
-    if (!str) {
-        rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-        return JS::NullValue();
-    }
-
-    return JS::StringValue(str);
-}
-
 bool
 WebGLContext::GetStencilBits(GLint* out_stencilBits)
 {
@@ -192,63 +180,15 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
     }
 
-    if (IsWebGL2()) {
-        switch (pname) {
-        case LOCAL_GL_MAX_SAMPLES:
-        case LOCAL_GL_MAX_UNIFORM_BLOCK_SIZE:
-        case LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS: {
-            GLint val;
-            gl->fGetIntegerv(pname, &val);
-            return JS::NumberValue(uint32_t(val));
-        }
-
-        case LOCAL_GL_TEXTURE_BINDING_3D:
-            return WebGLObjectAsJSValue(cx, mBound3DTextures[mActiveTexture].get(), rv);
-
-        // DRAW_FRAMEBUFFER_BINDING is the same as FRAMEBUFFER_BINDING.
-        case LOCAL_GL_READ_FRAMEBUFFER_BINDING:
-            return WebGLObjectAsJSValue(cx, mBoundReadFramebuffer.get(), rv);
-
-        case LOCAL_GL_PIXEL_PACK_BUFFER_BINDING:
-            return WebGLObjectAsJSValue(cx, mBoundPixelPackBuffer.get(), rv);
-
-        case LOCAL_GL_PIXEL_UNPACK_BUFFER_BINDING:
-            return WebGLObjectAsJSValue(cx, mBoundPixelUnpackBuffer.get(), rv);
-
-        case LOCAL_GL_UNIFORM_BUFFER_BINDING:
-            return WebGLObjectAsJSValue(cx, mBoundUniformBuffer.get(), rv);
-
-        case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
-            return WebGLObjectAsJSValue(cx, mBoundTransformFeedbackBuffer.get(), rv);
-
-        case LOCAL_GL_COPY_READ_BUFFER_BINDING:
-            return WebGLObjectAsJSValue(cx, mBoundCopyReadBuffer.get(), rv);
-
-        case LOCAL_GL_COPY_WRITE_BUFFER_BINDING:
-            return WebGLObjectAsJSValue(cx, mBoundCopyWriteBuffer.get(), rv);
-        }
-    }
-
     switch (pname) {
         //
         // String params
         //
         case LOCAL_GL_VENDOR:
-            return StringValue(cx, "Mozilla", rv);
         case LOCAL_GL_RENDERER:
             return StringValue(cx, "Mozilla", rv);
-        case LOCAL_GL_VERSION: {
-            const char* version = 0;
-
-            if (IsWebGL2()) {
-                version = "WebGL 2.0";
-            } else {
-                version = "WebGL 1.0";
-            }
-
-            MOZ_ASSERT(version != 0);
-            return StringValue(cx, version, rv);
-        }
+        case LOCAL_GL_VERSION:
+            return StringValue(cx, "WebGL 1.0", rv);
         case LOCAL_GL_SHADING_LANGUAGE_VERSION:
             return StringValue(cx, "WebGL GLSL ES 1.0", rv);
 
@@ -416,12 +356,6 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
             return JS::ObjectOrNullValue(obj);
-        }
-        case LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS: {
-            if (!IsWebGL2()) {
-                break;
-            }
-            return JS::Int32Value(mGLMaxTransformFeedbackSeparateAttribs);
         }
 
         // unsigned int. here we may have to return very large values like 2^32-1 that can't be represented as
