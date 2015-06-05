@@ -26,6 +26,7 @@ extKeyUsage:[serverAuth,clientAuth,codeSigning,emailProtection
              nsSGC, # Netscape Server Gated Crypto
              OCSPSigning,timeStamping]
 subjectAlternativeName:[<dNSName>,...]
+authorityInformationAccess:<OCSP URI>
 
 Where:
   [] indicates an optional field or component of a field
@@ -119,6 +120,18 @@ def getASN1Tag(asn1Type):
     """Helper function for returning the base tag value of a given
     type from the pyasn1 package"""
     return asn1Type.baseTagSet.getBaseTag().asTuple()[2]
+
+def stringToAccessDescription(string):
+    """Helper function that takes a string representing a URI
+    presumably identifying an OCSP authority information access
+    location. Returns an AccessDescription usable by pyasn1."""
+    accessMethod = rfc2459.id_ad_ocsp
+    accessLocation = rfc2459.GeneralName()
+    accessLocation.setComponentByName('uniformResourceIdentifier', string)
+    sequence = univ.Sequence()
+    sequence.setComponentByPosition(0, accessMethod)
+    sequence.setComponentByPosition(1, accessLocation)
+    return sequence
 
 def stringToAlgorithmIdentifier(string):
     """Helper function that converts a description of an algorithm
@@ -247,6 +260,8 @@ class Certificate:
             self.addExtKeyUsage(value)
         elif extensionType == 'subjectAlternativeName':
             self.addSubjectAlternativeName(value)
+        elif extensionType == 'authorityInformationAccess':
+            self.addAuthorityInformationAccess(value)
         else:
             raise UnknownExtensionTypeError(extensionType)
 
@@ -320,6 +335,12 @@ class Certificate:
             subjectAlternativeName.setComponentByPosition(count, generalName)
             count += 1
         self.addExtension(rfc2459.id_ce_subjectAltName, subjectAlternativeName)
+
+    def addAuthorityInformationAccess(self, ocspURI):
+        sequence = univ.Sequence()
+        accessDescription = stringToAccessDescription(ocspURI)
+        sequence.setComponentByPosition(0, accessDescription)
+        self.addExtension(rfc2459.id_pe_authorityInfoAccess, sequence)
 
     def getVersion(self):
         return rfc2459.Version(self.versionValue).subtype(
