@@ -18,6 +18,7 @@ Cu.import("resource://testing-common/httpd.js", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
+Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 let {OS: {File, Path, Constants}} = Cu.import("resource://gre/modules/osfile.jsm", {});
@@ -31,8 +32,8 @@ XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
 // OVERDUE_PING_FILE_AGE by 1 minute so that our test pings exceed
 // those points in time, even taking into account file system imprecision.
 const ONE_MINUTE_MS = 60 * 1000;
-const EXPIRED_PING_FILE_AGE = TelemetryStorage.MAX_PING_FILE_AGE + ONE_MINUTE_MS;
-const OVERDUE_PING_FILE_AGE = TelemetryStorage.OVERDUE_PING_FILE_AGE + ONE_MINUTE_MS;
+const EXPIRED_PING_FILE_AGE = TelemetrySend.MAX_PING_FILE_AGE + ONE_MINUTE_MS;
+const OVERDUE_PING_FILE_AGE = TelemetrySend.OVERDUE_PING_FILE_AGE + ONE_MINUTE_MS;
 
 const PING_SAVE_FOLDER = "saved-telemetry-pings";
 const PING_TIMEOUT_LENGTH = 5000;
@@ -40,7 +41,7 @@ const EXPIRED_PINGS = 5;
 const OVERDUE_PINGS = 6;
 const OLD_FORMAT_PINGS = 4;
 const RECENT_PINGS = 4;
-const LRU_PINGS = TelemetryStorage.MAX_LRU_PINGS;
+const LRU_PINGS = TelemetrySend.MAX_LRU_PINGS;
 
 const TOTAL_EXPECTED_PINGS = OVERDUE_PINGS + RECENT_PINGS + OLD_FORMAT_PINGS;
 
@@ -91,8 +92,7 @@ let createSavedPings = Task.async(function* (aPingInfos) {
  */
 let clearPings = Task.async(function* (aPingIds) {
   for (let pingId of aPingIds) {
-    let filePath = getSavePathForPingId(pingId);
-    yield File.remove(filePath);
+    yield TelemetryStorage.removePendingPing(pingId);
   }
 });
 
@@ -161,14 +161,14 @@ function stopHttpServer() {
 }
 
 /**
- * Reset Telemetry state.
+ * Clear out all pending pings.
  */
-function resetTelemetry() {
-  // Quick and dirty way to clear TelemetryStorage's pendingPings
-  // collection, and put it back in its initial state.
-  let gen = TelemetryStorage.popPendingPings();
-  for (let item of gen) {};
-}
+let clearPendingPings = Task.async(function*() {
+  const pending = yield TelemetryStorage.loadPendingPingList();
+  for (let p of pending) {
+    yield TelemetryStorage.removePendingPing(p.id);
+  }
+});
 
 /**
  * Creates and returns a TelemetryController instance in "testing"
@@ -205,7 +205,7 @@ add_task(function* setupEnvironment() {
   let directory = TelemetryStorage.pingDirectoryPath;
   yield File.makeDir(directory, { ignoreExisting: true, unixMode: OS.Constants.S_IRWXU });
 
-  yield resetTelemetry();
+  yield clearPendingPings();
 });
 
 /**
@@ -215,10 +215,12 @@ add_task(function* setupEnvironment() {
 add_task(function* test_expired_pings_are_deleted() {
   let pingTypes = [{ num: EXPIRED_PINGS, age: EXPIRED_PING_FILE_AGE }];
   let expiredPings = yield createSavedPings(pingTypes);
-  yield startTelemetry();
+
+  yield TelemetryController.reset();
   assertReceivedPings(0);
   yield assertNotSaved(expiredPings);
-  yield resetTelemetry();
+
+  yield clearPendingPings();
 });
 
 /**
@@ -227,10 +229,11 @@ add_task(function* test_expired_pings_are_deleted() {
 add_task(function* test_recent_pings_not_sent() {
   let pingTypes = [{ num: RECENT_PINGS }];
   let recentPings = yield createSavedPings(pingTypes);
-  yield startTelemetry();
+
+  yield TelemetryController.reset();
   assertReceivedPings(0);
-  yield resetTelemetry();
-  yield clearPings(recentPings);
+
+  yield clearPendingPings();
 });
 
 /**
@@ -245,18 +248,16 @@ add_task(function* test_most_recent_pings_kept() {
   let head = pings.slice(0, LRU_PINGS);
   let tail = pings.slice(-3);
 
-  yield startTelemetry();
-  let gen = TelemetryStorage.popPendingPings();
+  yield TelemetryController.reset();
+  const pending = yield TelemetryStorage.loadPendingPingList();
 
-  for (let item of gen) {
-    for (let id of tail) {
-      do_check_neq(id, item.id);
-    }
+  for (let id of tail) {
+    const found = pending.some(p => p.id == id);
+    Assert.ok(!found, "Should have discarded the oldest pings");
   }
 
   assertNotSaved(tail);
-  yield resetTelemetry();
-  yield clearPings(pings);
+  yield clearPendingPings();
 });
 
 /**
@@ -301,10 +302,10 @@ add_task(function* test_overdue_old_format() {
   };
 
   const PING_FILES_PATHS = [
-    Path.join(Constants.Path.profileDir, PING_SAVE_FOLDER, PING_OLD_FORMAT.slug),
-    Path.join(Constants.Path.profileDir, PING_SAVE_FOLDER, PING_NO_INFO.slug),
-    Path.join(Constants.Path.profileDir, PING_SAVE_FOLDER, PING_NO_PAYLOAD.slug),
-    Path.join(Constants.Path.profileDir, PING_SAVE_FOLDER, "no-slug-file"),
+    getSavePathForPingId(PING_OLD_FORMAT.slug),
+    getSavePathForPingId(PING_NO_INFO.slug),
+    getSavePathForPingId(PING_NO_PAYLOAD.slug),
+    getSavePathForPingId("no-slug-file"),
   ];
 
   // Write the ping to file and make it overdue.
@@ -317,14 +318,14 @@ add_task(function* test_overdue_old_format() {
     yield File.setDates(PING_FILES_PATHS[f], null, Date.now() - OVERDUE_PING_FILE_AGE);
   }
 
-  yield startTelemetry();
+  yield TelemetryController.reset();
   assertReceivedPings(OLD_FORMAT_PINGS);
 
   // |TelemetryStorage.cleanup| doesn't know how to remove a ping with no slug or id,
   // so remove it manually so that the next test doesn't fail.
   yield OS.File.remove(PING_FILES_PATHS[3]);
 
-  yield resetTelemetry();
+  yield clearPendingPings();
 });
 
 /**
@@ -343,13 +344,14 @@ add_task(function* test_overdue_pings_trigger_send() {
   let expiredPings = pings.slice(RECENT_PINGS, RECENT_PINGS + EXPIRED_PINGS);
   let overduePings = pings.slice(-OVERDUE_PINGS);
 
-  yield startTelemetry();
+  yield TelemetryController.reset();
   assertReceivedPings(TOTAL_EXPECTED_PINGS);
 
   yield assertNotSaved(recentPings);
   yield assertNotSaved(expiredPings);
   yield assertNotSaved(overduePings);
-  yield resetTelemetry();
+
+  yield clearPendingPings();
 });
 
 /**
@@ -395,10 +397,10 @@ add_task(function* test_overdue_old_format() {
     receivedPings++;
   });
 
-  yield startTelemetry();
+  yield TelemetryController.reset();
   Assert.equal(receivedPings, 1, "We must receive a ping in the old format.");
 
-  yield resetTelemetry();
+  yield clearPendingPings();
 });
 
 add_task(function* teardown() {
