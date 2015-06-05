@@ -10,6 +10,7 @@ const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
 const {DevToolsWorker} = Cu.import("resource:///modules/devtools/shared/worker.js", {});
+const {LayoutHelpers} = Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm", {});
 
 this.EXPORTED_SYMBOLS = [
   "GraphCursor",
@@ -969,6 +970,12 @@ AbstractCanvasGraph.prototype = {
     let maxY = quad.p3.y - quad.p1.y;
     let mouseX = Math.max(0, Math.min(x, maxX)) * this._pixelRatio;
     let mouseY = Math.max(0, Math.min(x, maxY)) * this._pixelRatio;
+
+    // The coordinates need to be modified with the current zoom level
+    // to prevent them from being wrong.
+    let zoom = LayoutHelpers.getCurrentZoom(this._canvas);
+    mouseX /= zoom;
+    mouseY /= zoom;
 
     return {mouseX,mouseY};
   },
