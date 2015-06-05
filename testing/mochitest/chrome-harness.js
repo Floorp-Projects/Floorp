@@ -57,62 +57,6 @@ function getChromeDir(resolvedURI) {
   return chromeDir.parent.QueryInterface(Components.interfaces.nsILocalFile);
 }
 
-/**
- * basePath: the URL base path to search from such as chrome://mochikit/content/a11y
- * testPath: the optional testPath passed into the test such as dom/tests/mochitest
- * dir: the test dir to append to the uri after getting a directory interface
- * srvScope: loaded javascript to server.js so we have aComponents.classesess to the list() function
- *
- * return value:
- *  single test: [json object, path to test]
- *  list of tests: [json object, null] <- directory [heirarchy]
- */
-function getFileListing(basePath, testPath, dir, srvScope)
-{
-  var uri = getResolvedURI(basePath);
-  var chromeDir = getChromeDir(uri);
-  chromeDir.appendRelativePath(dir);
-  basePath += '/' + dir.replace(/\\/g, '/');
-
-  if (testPath == "false" || testPath == false) {
-    testPath = "";
-  }
-  testPath = testPath.replace(/\\\\/g, '\\').replace(/\\/g, '/');
-
-  var ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
-              getService(Components.interfaces.nsIIOService);
-  var testsDirURI = ioSvc.newFileURI(chromeDir);
-  var testsDir = ioSvc.newURI(testPath, null, testsDirURI)
-                  .QueryInterface(Components.interfaces.nsIFileURL).file;
-
-  if (testPath != undefined) {
-    var extraPath = testPath;
-
-    var fileNameRegexp = /(browser|test)_.+\.(xul|html|js)$/;
-
-    // Invalid testPath...
-    if (!testsDir.exists())
-      return null;
-
-    if (testsDir.isFile()) {
-      if (fileNameRegexp.test(testsDir.leafName)) {
-        var singlePath = basePath + '/' + testPath;
-        var links = {};
-        links[singlePath] = true;
-        return links;
-      }
-      // We were passed a file that's not a test...
-      return null;
-    }
-
-    // otherwise, we were passed a directory of tests
-    basePath += "/" + testPath;
-  }
-  var [links, count] = srvScope.list(basePath, testsDir, true);
-  return links;
-}
-
-
 //used by tests to determine their directory based off window.location.path
 function getRootDirectory(path, chromeURI) {
   if (chromeURI === undefined)
@@ -313,19 +257,6 @@ function getTestList(params, callback) {
     }
   }
   params = config;
-  if (params.manifestFile) {
-    getTestManifest("http://mochi.test:8888/" + params.manifestFile, params, callback);
-    return;
-  }
-
-  var links = {};
-  // load server.js in so we can share template functions
-  var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                       getService(Ci.mozIJSSubScriptLoader);
-  var srvScope = {};
-  scriptLoader.loadSubScript('chrome://mochikit/content/server.js',
-                             srvScope);
-
-  links = getFileListing(baseurl, params.testPath, params.testRoot, srvScope);
-  callback(links);
+  getTestManifest("http://mochi.test:8888/" + params.manifestFile, params, callback);
+  return;
 }

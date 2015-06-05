@@ -236,10 +236,6 @@ class MochitestRunner(MozbuildObject):
         if test_objects:
             return test_objects
 
-        # Ensure test paths are relative to topobjdir or topsrcdir.
-        test_paths = test_paths or []
-        test_paths = [self._wrap_path_argument(tp).relpath() for tp in test_paths]
-
         from mozbuild.testing import TestResolver
         resolver = self._spawn(TestResolver)
         tests = list(resolver.resolve_tests(paths=test_paths, cwd=cwd))
@@ -440,12 +436,7 @@ class MachCommands(MachCommandBase):
                      metavar='{{{}}}'.format(', '.join(CANONICAL_FLAVORS)),
                      choices=SUPPORTED_FLAVORS,
                      help='Only run tests of this flavor.')
-    @CommandArgument('test_paths', nargs='*', metavar='TEST', default=None,
-                     help='Test to run. Can be a single test file or a directory of tests '
-                          '(to run recursively). If omitted, the entire suite is run.')
-    def run_mochitest_general(self, test_paths, flavor=None, test_objects=None,
-                              **kwargs):
-
+    def run_mochitest_general(self, flavor=None, test_objects=None, **kwargs):
         buildapp = None
         for app in SUPPORTED_APPS:
             if is_buildapp_in(app)(self):
@@ -469,19 +460,22 @@ class MachCommands(MachCommandBase):
         driver = self._spawn(BuildDriver)
         driver.install_tests(remove=False)
 
+        test_paths = kwargs['test_paths']
+        kwargs['test_paths'] = []
+
         if test_paths and buildapp == 'b2g':
             # In B2G there is often a 'gecko' directory, though topsrcdir is actually
             # elsewhere. This little hack makes test paths like 'gecko/dom' work, even if
             # GECKO_PATH is set in the .userconfig
             gecko_path = mozpath.abspath(mozpath.join(kwargs['b2gPath'], 'gecko'))
             if gecko_path != self.topsrcdir:
-                old_paths = test_paths[:]
-                test_paths = []
-                for tp in old_paths:
+                new_paths = []
+                for tp in test_paths:
                     if mozpath.abspath(tp).startswith(gecko_path):
-                        test_paths.append(mozpath.relpath(tp, gecko_path))
+                        new_paths.append(mozpath.relpath(tp, gecko_path))
                     else:
-                        test_paths.append(tp)
+                        new_paths.append(tp)
+                test_paths = new_paths
 
         mochitest = self._spawn(MochitestRunner)
         tests = mochitest.resolve_tests(test_paths, test_objects, cwd=self._mach_context.cwd)
@@ -576,14 +570,10 @@ class RobocopCommands(MachCommandBase):
              conditions=[conditions.is_android],
              description='Run a Robocop test.',
              parser=setup_argument_parser)
-    @CommandArgument('test_paths', nargs='*', metavar='TEST', default=None,
-                     help='Test to run. Can be a single Robocop test file (like "testLoad.java") '
-                          ' or a directory of tests '
-                          '(to run recursively). If omitted, the entire Robocop suite is run.')
     @CommandArgument('--serve', default=False, action='store_true',
         help='Run no tests but start the mochi.test web server and launch '
              'Fennec with a test profile.')
-    def run_robocop(self, test_paths, serve=False, **kwargs):
+    def run_robocop(self, serve=False, **kwargs):
         if serve:
             kwargs['autorun'] = False
 
@@ -600,6 +590,9 @@ class RobocopCommands(MachCommandBase):
 
         driver = self._spawn(BuildDriver)
         driver.install_tests(remove=False)
+
+        test_paths = kwargs['test_paths']
+        kwargs['test_paths'] = []
 
         from mozbuild.testing import TestResolver
         resolver = self._spawn(TestResolver)

@@ -339,6 +339,34 @@ class tags(InstanceFilter):
                 yield test
 
 
+class pathprefix(InstanceFilter):
+    """
+    Removes tests that don't start with any of the given test paths.
+
+    :param paths: A list of test paths to filter on
+    """
+
+    def __init__(self, paths):
+        InstanceFilter.__init__(self, paths)
+        if isinstance(paths, basestring):
+            paths = [paths]
+        self.paths = paths
+
+    def __call__(self, tests, values):
+        for test in tests:
+            for tp in self.paths:
+                tp = os.path.normpath(tp)
+                if not os.path.normpath(test['relpath']).startswith(tp):
+                    continue
+
+                # any test path that points to a single file will be run no
+                # matter what, even if it's disabled
+                if 'disabled' in test and os.path.normpath(test['relpath']) == tp:
+                    del test['disabled']
+                yield test
+                break
+
+
 # filter container
 
 DEFAULT_FILTERS = (
