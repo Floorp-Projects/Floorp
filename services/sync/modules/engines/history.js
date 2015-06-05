@@ -276,14 +276,14 @@ HistoryStore.prototype = {
       if (!visit.date || typeof visit.date != "number") {
         this._log.warn("Encountered record with invalid visit date: "
                        + visit.date);
-        throw "Visit has no date!";
+        continue;
       }
 
       if (!visit.type || !(visit.type >= PlacesUtils.history.TRANSITION_LINK &&
                            visit.type <= PlacesUtils.history.TRANSITION_FRAMED_LINK)) {
-        this._log.warn("Encountered record with invalid visit type: "
-                       + visit.type);
-        throw "Invalid visit type!";
+        this._log.warn("Encountered record with invalid visit type: " +
+                       visit.type + "; ignoring.");
+        continue;
       }
 
       // Dates need to be integers.
@@ -294,6 +294,7 @@ HistoryStore.prototype = {
         // overwritten.
         continue;
       }
+
       visit.visitDate = visit.date;
       visit.transitionType = visit.type;
       k += 1;

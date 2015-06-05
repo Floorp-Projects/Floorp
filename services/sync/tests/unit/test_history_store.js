@@ -226,7 +226,7 @@ add_test(function test_invalid_records() {
                type: Ci.nsINavHistoryService.TRANSITION_EMBED}]}
   ]);
 
-  _("Make sure we report records with invalid visits, gracefully handle non-integer dates.");
+  _("Make sure we handle records with invalid visit codes or visit dates, gracefully ignoring those visits.");
   let no_date_visit_guid = Utils.makeGUID();
   let no_type_visit_guid = Utils.makeGUID();
   let invalid_type_visit_guid = Utils.makeGUID();
@@ -235,11 +235,11 @@ add_test(function test_invalid_records() {
     {id: no_date_visit_guid,
      histUri: "http://no.date.visit/",
      title: "Visit has no date",
-     visits: [{date: TIMESTAMP3}]},
+     visits: [{type: Ci.nsINavHistoryService.TRANSITION_EMBED}]},
     {id: no_type_visit_guid,
      histUri: "http://no.type.visit/",
      title: "Visit has no type",
-     visits: [{type: Ci.nsINavHistoryService.TRANSITION_EMBED}]},
+     visits: [{date: TIMESTAMP3}]},
     {id: invalid_type_visit_guid,
      histUri: "http://invalid.type.visit/",
      title: "Visit has invalid type",
@@ -251,14 +251,7 @@ add_test(function test_invalid_records() {
      visits: [{date: 1234.567,
                type: Ci.nsINavHistoryService.TRANSITION_EMBED}]}
   ]);
-  do_check_eq(failed.length, 3);
-  failed.sort();
-  let expected = [no_date_visit_guid,
-                  no_type_visit_guid,
-                  invalid_type_visit_guid].sort();
-  for (let i = 0; i < expected.length; i++) {
-    do_check_eq(failed[i], expected[i]);
-  }
+  do_check_eq(failed.length, 0);
 
   _("Make sure we handle records with javascript: URLs gracefully.");
   applyEnsureNoFailures([
