@@ -65,3 +65,4 @@ absolute-label 'protocol' https://wiki.mozilla.org/Remote_Debugging_Protocol "Re
 absolute-label 'saved-frame' https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/SavedFrame "SavedFrame"
 absolute-label 'bernoulli-trial' https://en.wikipedia.org/wiki/Bernoulli_trial "Bernoulli Trial"
 absolute-label 'ssa-form' https://en.wikipedia.org/wiki/Static_single_assignment_form "SSA form"
+absolute-label 'promise-debugging' https://mxr.mozilla.org/mozilla-central/source/dom/webidl/PromiseDebugging.webidl?rev=331d71cabe1e "PromiseDebugging.webidl"
