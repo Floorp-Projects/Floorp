@@ -175,6 +175,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   // Old version of WebcamMax crashes WebRTC, bug 1130061
   { "vwcsource.ax", MAKE_VERSION(1, 5, 0, 0) },
 
+  // NetOp School, discontinued product, bug 763395
+  { "nlsp.dll", MAKE_VERSION(6, 23, 2012, 19) },
+
   { nullptr, 0 }
 };
 
