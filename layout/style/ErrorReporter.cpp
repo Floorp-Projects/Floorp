@@ -243,7 +243,11 @@ ErrorReporter::AddToError(const nsString &aErrorText)
     // for all errors on that line.  That causes the text of the line to
     // be shared among all the nsIScriptError objects.
     if (mErrorLine.IsEmpty() || mErrorLineNumber != mPrevErrorLineNumber) {
-      mErrorLine = mScanner->GetCurrentLine();
+      // Be careful here: the error line might be really long and OOM
+      // when we try to make a copy here.  If so, just leave it empty.
+      if (!mErrorLine.Assign(mScanner->GetCurrentLine(), fallible)) {
+        mErrorLine.Truncate();
+      }
       mPrevErrorLineNumber = mErrorLineNumber;
     }
   } else {
