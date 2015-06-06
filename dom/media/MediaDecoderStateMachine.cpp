@@ -763,6 +763,7 @@ MediaDecoderStateMachine::OnAudioDecoded(AudioData* aAudioSample)
   nsRefPtr<AudioData> audio(aAudioSample);
   MOZ_ASSERT(audio);
   mAudioDataRequest.Complete();
+  aAudioSample->AdjustForStartTime(StartTime());
   mDecodedAudioEndTime = audio->GetEndTime();
 
   SAMPLE_LOG("OnAudioDecoded [%lld,%lld] disc=%d",
@@ -1043,7 +1044,9 @@ MediaDecoderStateMachine::OnVideoDecoded(VideoData* aVideoSample)
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   nsRefPtr<VideoData> video(aVideoSample);
+  MOZ_ASSERT(video);
   mVideoDataRequest.Complete();
+  aVideoSample->AdjustForStartTime(StartTime());
   mDecodedVideoEndTime = video ? video->GetEndTime() : mDecodedVideoEndTime;
 
   SAMPLE_LOG("OnVideoDecoded [%lld,%lld] disc=%d",
