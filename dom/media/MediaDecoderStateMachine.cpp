@@ -56,8 +56,6 @@ using namespace mozilla::media;
 #undef DECODER_LOG
 #undef VERBOSE_LOG
 
-extern PRLogModuleInfo* gMediaDecoderLog;
-extern PRLogModuleInfo* gMediaSampleLog;
 #define LOG(m, l, x, ...) \
   MOZ_LOG(m, l, ("Decoder=%p " x, mDecoder.get(), ##__VA_ARGS__))
 #define DECODER_LOG(x, ...) \
@@ -1568,6 +1566,11 @@ void MediaDecoderStateMachine::Shutdown()
 
   Reset();
 
+  // Shut down our start time rendezvous.
+  if (mStartTimeRendezvous) {
+    mStartTimeRendezvous->Destroy();
+  }
+
   // Put a task in the decode queue to shutdown the reader.
   // the queue to spin down.
   ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__, &MediaDecoderReader::Shutdown)
@@ -2170,6 +2173,9 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
   mInfo = aMetadata->mInfo;
   mMetadataTags = aMetadata->mTags.forget();
 
+  mStartTimeRendezvous = new StartTimeRendezvous(TaskQueue(), HasAudio(), HasVideo(),
+                                                 mReader->ForceZeroStartTime() || IsRealTime());
+
   if (mInfo.mMetadataDuration.isSome() || mInfo.mMetadataEndTime.isSome()) {
     RecomputeDuration();
   }
@@ -2283,17 +2289,27 @@ MediaDecoderStateMachine::DecodeFirstFrame()
     NS_ENSURE_SUCCESS(res, res);
   } else {
     if (HasAudio()) {
-      mAudioDataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(),
-                                             __func__, &MediaDecoderReader::RequestAudioData)
+      mAudioDataRequest.Begin(
+        ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
+                       &MediaDecoderReader::RequestAudioData)
+        ->Then(TaskQueue(), __func__, mStartTimeRendezvous.get(),
+               &StartTimeRendezvous::ProcessFirstSample<AudioDataPromise>,
+               &StartTimeRendezvous::FirstSampleRejected<AudioData>)
+        ->CompletionPromise()
         ->Then(TaskQueue(), __func__, this,
                &MediaDecoderStateMachine::OnAudioDecoded,
-               &MediaDecoderStateMachine::OnAudioNotDecoded));
+               &MediaDecoderStateMachine::OnAudioNotDecoded)
+      );
     }
     if (HasVideo()) {
       mVideoDecodeStartTime = TimeStamp::Now();
-      mVideoDataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(),
-                                             __func__, &MediaDecoderReader::RequestVideoData, false,
-                                             int64_t(0))
+      mVideoDataRequest.Begin(
+        ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
+                       &MediaDecoderReader::RequestVideoData, false, int64_t(0))
+        ->Then(TaskQueue(), __func__, mStartTimeRendezvous.get(),
+               &StartTimeRendezvous::ProcessFirstSample<VideoDataPromise>,
+               &StartTimeRendezvous::FirstSampleRejected<VideoData>)
+        ->CompletionPromise()
         ->Then(TaskQueue(), __func__, this,
                &MediaDecoderStateMachine::OnVideoDecoded,
                &MediaDecoderStateMachine::OnVideoNotDecoded));
