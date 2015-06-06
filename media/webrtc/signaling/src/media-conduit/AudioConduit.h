@@ -169,7 +169,7 @@ public:
                       mEngineTransmitting(false),
                       mEngineReceiving(false),
                       mChannel(-1),
-                      mCodecMutex("AudioConduit codec db"),
+                      mCurSendCodecConfig(nullptr),
                       mCaptureDelay(150),
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
                       mLastTimestamp(0),
@@ -245,7 +245,7 @@ private:
   bool CheckCodecsForMatch(const AudioCodecConfig* curCodecConfig,
                            const AudioCodecConfig* codecInfo) const;
   //Checks the codec to be applied
-  MediaConduitErrorCode ValidateCodecConfig(const AudioCodecConfig* codecInfo, bool send);
+  MediaConduitErrorCode ValidateCodecConfig(const AudioCodecConfig* codecInfo, bool send) const;
 
   //Utility function to dump recv codec database
   void DumpCodecDB() const;
@@ -277,9 +277,7 @@ private:
 
   int mChannel;
   RecvCodecList    mRecvCodecList;
-
-  Mutex mCodecMutex; // protects mCurSendCodecConfig
-  nsAutoPtr<AudioCodecConfig> mCurSendCodecConfig;
+  AudioCodecConfig* mCurSendCodecConfig;
 
   // Current "capture" delay (really output plus input delay)
   int32_t mCaptureDelay;
