@@ -524,7 +524,7 @@ class VirtualRegister
     LiveRange* lastRange() const {
         return LiveRange::get(ranges_.back());
     }
-    LiveRange* rangeFor(CodePosition pos) const;
+    LiveRange* rangeFor(CodePosition pos, bool preferRegister = false) const;
     void removeRange(LiveRange* range);
     void addRange(LiveRange* range);
 
