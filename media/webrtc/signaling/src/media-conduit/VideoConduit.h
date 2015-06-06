@@ -145,15 +145,15 @@ public:
    * @param force: force setting the codec config if framerate may require a bandwidth change
    */
   bool SelectSendResolution(unsigned short width,
-                            unsigned short height);
+                            unsigned short height,
+                            bool force);
 
   /**
    * Function to select and change the encoding frame rate based on incoming frame rate
    * and max-mbps setting.
-   * @param current framerate
-   * @result new framerate
+   * @param framerate
    */
-  unsigned int SelectSendFrameRate(unsigned int framerate) const;
+  bool SelectSendFrameRate(unsigned int framerate);
 
   /**
    * Function to deliver a capture video frame for encoding and transport
@@ -306,7 +306,7 @@ private:
                            const VideoCodecConfig* codecInfo) const;
 
   //Checks the codec to be applied
-  MediaConduitErrorCode ValidateCodecConfig(const VideoCodecConfig* codecInfo, bool send);
+  MediaConduitErrorCode ValidateCodecConfig(const VideoCodecConfig* codecInfo, bool send) const;
 
   //Utility function to dump recv codec database
   void DumpCodecDB() const;
@@ -337,10 +337,7 @@ private:
   int mChannel; // Video Channel for this conduit
   int mCapId;   // Capturer for this conduit
   RecvCodecList    mRecvCodecList;
-
-  Mutex mCodecMutex; // protects mCurrSendCodecConfig
-  nsAutoPtr<VideoCodecConfig> mCurSendCodecConfig;
-
+  VideoCodecConfig* mCurSendCodecConfig;
   unsigned short mSendingWidth;
   unsigned short mSendingHeight;
   unsigned short mReceivingWidth;
