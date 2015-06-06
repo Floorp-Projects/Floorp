@@ -2208,8 +2208,14 @@ CodeGenerator::visitMoveGroup(LMoveGroup* group)
     masm.propagateOOM(resolver.resolve());
 
     MoveEmitter emitter(masm);
+
+#ifdef JS_CODEGEN_X86
     if (group->maybeScratchRegister().isGeneralReg())
         emitter.setScratchRegister(group->maybeScratchRegister().toGeneralReg()->reg());
+    else
+        resolver.sortMemoryToMemoryMoves();
+#endif
+
     emitter.emit(resolver);
     emitter.finish();
 }
