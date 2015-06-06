@@ -707,7 +707,7 @@ class BacktrackingAllocator : protected RegisterAllocator
     struct PrintLiveRange;
 
     bool minimalDef(LiveRange* range, LNode* ins);
-    bool minimalUse(LiveRange* range, LNode* ins);
+    bool minimalUse(LiveRange* range, UsePosition* use);
     bool minimalBundle(LiveBundle* bundle, bool* pfixed = nullptr);
 
     // Heuristic methods.
