@@ -621,7 +621,9 @@ private:
                          uint32_t aContentOffset,
                          nsSelectionAmount aAmount,
                          CaretAssociateHint aHint);
-  void BidiLevelFromClick(nsIContent *aNewFocus, uint32_t aContentOffset);
+  void BidiLevelFromClick(nsIContent *aNewFocus,
+                          uint32_t aContentOffset,
+                          CaretAssociateHint aHint);
   nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent *aNode,
                                              uint32_t aContentOffset,
                                              CaretAssociateHint aHint,
