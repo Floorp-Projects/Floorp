@@ -147,7 +147,7 @@ public:
 };
 
 template<class ListenerT>
-class /*NS_INTERFACE_CLASS*/ IProtocolManager
+class IProtocolManager
 {
 public:
     enum ActorDestroyReason {
