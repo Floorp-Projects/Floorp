@@ -2326,11 +2326,12 @@ BacktrackingAllocator::minimalDef(LiveRange* range, LNode* ins)
 }
 
 bool
-BacktrackingAllocator::minimalUse(LiveRange* range, LNode* ins)
+BacktrackingAllocator::minimalUse(LiveRange* range, UsePosition* use)
 {
-    // Whether this is a minimal range capturing a use at ins.
+    // Whether this is a minimal range capturing |use|.
+    LNode* ins = insData[use->pos];
     return (range->from() == inputOf(ins)) &&
-           (range->to() == outputOf(ins) || range->to() == outputOf(ins).next());
+           (range->to() == (use->use->usedAtStart() ? outputOf(ins) : outputOf(ins).next()));
 }
 
 bool
@@ -2368,12 +2369,12 @@ BacktrackingAllocator::minimalBundle(LiveBundle* bundle, bool* pfixed)
             if (fixed)
                 return false;
             fixed = true;
-            if (minimalUse(range, insData[iter->pos]))
+            if (minimalUse(range, *iter))
                 minimal = true;
             break;
 
           case LUse::REGISTER:
-            if (minimalUse(range, insData[iter->pos]))
+            if (minimalUse(range, *iter))
                 minimal = true;
             break;
 
