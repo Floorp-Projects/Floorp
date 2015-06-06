@@ -201,14 +201,90 @@ MoveResolver::addOrderedMove(const MoveOp& move)
             }
         }
 
-        if (existing.to().aliases(move.from()) ||
-            existing.to().aliases(move.to()) ||
-            existing.from().aliases(move.to()) ||
-            existing.from().aliases(move.from()))
-        {
+        if (existing.aliases(move))
             break;
-        }
     }
 
     return orderedMoves_.append(move);
+}
+
+void
+MoveResolver::reorderMove(size_t from, size_t to)
+{
+    MOZ_ASSERT(from != to);
+
+    MoveOp op = orderedMoves_[from];
+    if (from < to) {
+        for (size_t i = from; i < to; i++)
+            orderedMoves_[i] = orderedMoves_[i + 1];
+    } else {
+        for (size_t i = from; i > to; i--)
+            orderedMoves_[i] = orderedMoves_[i - 1];
+    }
+    orderedMoves_[to] = op;
+}
+
+void
+MoveResolver::sortMemoryToMemoryMoves()
+{
+    // Try to reorder memory->memory moves so that they are executed right
+    // before a move that clobbers some register. This will allow the move
+    // emitter to use that clobbered register as a scratch register for the
+    // memory->memory move, if necessary.
+    for (size_t i = 0; i < orderedMoves_.length(); i++) {
+        const MoveOp& base = orderedMoves_[i];
+        if (!base.from().isMemory() || !base.to().isMemory())
+            continue;
+        if (base.type() != MoveOp::GENERAL && base.type() != MoveOp::INT32)
+            continue;
+
+        // Look for an earlier move clobbering a register.
+        bool found = false;
+        for (int j = i - 1; j >= 0; j--) {
+            const MoveOp& previous = orderedMoves_[j];
+            if (previous.aliases(base) || previous.isCycleBegin() || previous.isCycleEnd())
+                break;
+
+            if (previous.to().isGeneralReg()) {
+                reorderMove(i, j);
+                found = true;
+                break;
+            }
+        }
+        if (found)
+            continue;
+
+        // Look for a later move clobbering a register.
+        if (i + 1 < orderedMoves_.length()) {
+            bool found = false, skippedRegisterUse = false;
+            for (size_t j = i + 1; j < orderedMoves_.length(); j++) {
+                const MoveOp& later = orderedMoves_[j];
+                if (later.aliases(base) || later.isCycleBegin() || later.isCycleEnd())
+                    break;
+
+                if (later.to().isGeneralReg()) {
+                    if (skippedRegisterUse) {
+                        reorderMove(i, j);
+                        found = true;
+                    } else {
+                        // There is no move that uses a register between the
+                        // original memory->memory move and this move that
+                        // clobbers a register. The move should already be able
+                        // to use a scratch register, so don't shift anything
+                        // around.
+                    }
+                    break;
+                }
+
+                if (later.from().isGeneralReg())
+                    skippedRegisterUse = true;
+            }
+
+            if (found) {
+                // Redo the search for memory->memory moves at the current
+                // index, so we don't skip the move just shifted back.
+                i--;
+            }
+        }
+    }
 }
