@@ -2174,10 +2174,18 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
   mStartTimeRendezvous = new StartTimeRendezvous(TaskQueue(), HasAudio(), HasVideo(),
                                                  mReader->ForceZeroStartTime() || IsRealTime());
 
+  nsRefPtr<MediaDecoderStateMachine> self = this;
+  mStartTimeRendezvous->AwaitStartTime()->Then(TaskQueue(), __func__,
+    [self] () -> void {
+      ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
+      self->mReader->SetStartTime(self->StartTime());
+    },
+    [] () -> void { NS_WARNING("Setting start time on reader failed"); }
+  );
+
   if (mInfo.mMetadataDuration.isSome()) {
     RecomputeDuration();
   } else if (mInfo.mUnadjustedMetadataEndTime.isSome()) {
-    nsRefPtr<MediaDecoderStateMachine> self = this;
     mStartTimeRendezvous->AwaitStartTime()->Then(TaskQueue(), __func__,
       [self] () -> void {
         TimeUnit unadjusted = self->mInfo.mUnadjustedMetadataEndTime.ref();
@@ -3174,10 +3182,6 @@ void MediaDecoderStateMachine::SetStartTime(int64_t aStartTimeUsecs)
       mEndTime = mStartTime + mEndTime;
     }
   }
-
-  // Pass along this immutable value to the reader so that it can make
-  // calculations independently of the state machine.
-  mReader->SetStartTime(mStartTime);
 
   // Set the audio start time to be start of media. If this lies before the
   // first actual audio frame we have, we'll inject silence during playback
