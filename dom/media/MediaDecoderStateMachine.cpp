@@ -1423,8 +1423,6 @@ void MediaDecoderStateMachine::RecomputeDuration()
     fireDurationChanged = true;
   } else if (mInfo.mMetadataDuration.isSome()) {
     duration = mInfo.mMetadataDuration.ref();
-  } else if (mInfo.mMetadataEndTime.isSome() && mStartTime >= 0) {
-    duration = mInfo.mMetadataEndTime.ref() - TimeUnit::FromMicroseconds(mStartTime);
   } else {
     return;
   }
@@ -2176,8 +2174,18 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
   mStartTimeRendezvous = new StartTimeRendezvous(TaskQueue(), HasAudio(), HasVideo(),
                                                  mReader->ForceZeroStartTime() || IsRealTime());
 
-  if (mInfo.mMetadataDuration.isSome() || mInfo.mMetadataEndTime.isSome()) {
+  if (mInfo.mMetadataDuration.isSome()) {
     RecomputeDuration();
+  } else if (mInfo.mUnadjustedMetadataEndTime.isSome()) {
+    nsRefPtr<MediaDecoderStateMachine> self = this;
+    mStartTimeRendezvous->AwaitStartTime()->Then(TaskQueue(), __func__,
+      [self] () -> void {
+        TimeUnit unadjusted = self->mInfo.mUnadjustedMetadataEndTime.ref();
+        TimeUnit adjustment = TimeUnit::FromMicroseconds(self->StartTime());
+        self->mInfo.mMetadataDuration.emplace(unadjusted - adjustment);
+        self->RecomputeDuration();
+      }, [] () -> void { NS_WARNING("Adjusting metadata end time failed"); }
+    );
   }
 
   if (HasVideo()) {
@@ -3177,8 +3185,6 @@ void MediaDecoderStateMachine::SetStartTime(int64_t aStartTimeUsecs)
   mAudioStartTime = mStartTime;
   mStreamStartTime = mStartTime;
   DECODER_LOG("Set media start time to %lld", mStartTime);
-
-  RecomputeDuration();
 }
 
 void MediaDecoderStateMachine::UpdateNextFrameStatus()
