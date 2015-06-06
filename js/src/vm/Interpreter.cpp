@@ -4587,10 +4587,8 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
     if (!GetElements(cx, aobj, length, args.array()))
         return false;
 
-    if (constructing) {
-        MOZ_ASSERT(newTarget.isObject());
+    if (constructing)
         args.newTarget().set(newTarget);
-    }
 
     switch (op) {
       case JSOP_SPREADNEW:
