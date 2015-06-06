@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1432051555000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1433264296000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -283,6 +283,15 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i914" id="{0153E448-190B-4987-BDE1-F256CADA672F}">
+                        <versionRange  minVersion="0" maxVersion="15.0.6" severity="1">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="39.0a1" maxVersion="*" />
+                          </targetApplication>
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i678" id="{C4A4F5A0-4B89-4392-AFAC-D58010E349AF}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -463,8 +472,13 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i106" os="WINNT" id="{97E22097-9A2F-45b1-8DAF-36AD648C7EF4}">
+      <emItem  blockID="i916" os="WINNT" id="{97E22097-9A2F-45b1-8DAF-36AD648C7EF4}">
                         <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
+                    </versionRange>
+                                <versionRange  minVersion="0" maxVersion="15.0.4" severity="1">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="39.0a1" maxVersion="*" />
+                          </targetApplication>
                     </versionRange>
                     <prefs>
               </prefs>
@@ -786,8 +800,13 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i111" os="WINNT" id="{C3949AC2-4B17-43ee-B4F1-D26B9D42404D}">
+      <emItem  blockID="i918" os="WINNT" id="{C3949AC2-4B17-43ee-B4F1-D26B9D42404D}">
                         <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
+                    </versionRange>
+                                <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="39.0a1" maxVersion="*" />
+                          </targetApplication>
                     </versionRange>
                     <prefs>
               </prefs>
