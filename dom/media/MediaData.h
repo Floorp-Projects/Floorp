@@ -74,6 +74,11 @@ public:
 
   int64_t GetEndTime() const { return mTime + mDuration; }
 
+  bool AdjustForStartTime(int64_t aStartTime)
+  {
+    mTime = mTime - aStartTime;
+    return mTime >= 0;
+  }
 protected:
   explicit MediaData(Type aType)
     : mType(aType)
