@@ -125,17 +125,11 @@ class CxxCodeGen(CodePrinter, Visitor):
     def visitClass(self, c):
         if c.specializes is not None:
             self.printdentln('template<>')
-        
+
         if c.struct:
             self.printdent('struct')
         else:
             self.printdent('class')
-        if c.interface:
-            # FIXME/cjones: turn this "on" when we get the analysis
-            self.write(' /*NS_INTERFACE_CLASS*/')
-        if c.abstract:
-            # FIXME/cjones: turn this "on" when we get the analysis
-            self.write(' /*NS_ABSTRACT_CLASS*/')
         self.write(' '+ c.name)
         if c.final:
             self.write(' final')
