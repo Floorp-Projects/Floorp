@@ -2169,7 +2169,10 @@ js::array_shift(JSContext* cx, unsigned argc, Value* vp)
         if (!SetLengthProperty(cx, obj, newlen))
             return false;
 
-        return SuppressDeletedProperty(cx, obj, INT_TO_JSID(newlen));
+        RootedId id(cx);
+        if (!IndexToId(cx, newlen, &id))
+            return false;
+        return SuppressDeletedProperty(cx, obj, id);
     }
 
     /* Steps 5, 10. */
