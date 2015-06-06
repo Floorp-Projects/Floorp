@@ -213,6 +213,9 @@ public:
   // called.
   virtual media::TimeIntervals GetBuffered();
 
+  // MediaSourceReader opts out of the start-time-guessing mechanism.
+  virtual bool ForceZeroStartTime() const { return false; }
+
   virtual int64_t ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio);
 
   // The MediaDecoderStateMachine uses various heuristics that assume that
