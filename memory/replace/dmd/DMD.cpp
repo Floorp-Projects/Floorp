@@ -1824,7 +1824,6 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
           }
           writer.StringProperty("alloc", isc.ToIdString(b.AllocStackTrace()));
           if (gOptions->IsDarkMatterMode() && b.NumReports() > 0) {
-            MOZ_ASSERT(gOptions->IsDarkMatterMode());
             writer.StartArrayProperty("reps");
             {
               if (b.ReportStackTrace1()) {
