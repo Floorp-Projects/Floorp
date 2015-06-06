@@ -100,11 +100,14 @@ public:
             AudioDataValue* aData,
             uint32_t aChannels,
             uint32_t aRate)
-    : MediaData(AUDIO_DATA, aOffset, aTime, aDuration)
+    : MediaData(sType, aOffset, aTime, aDuration)
     , mFrames(aFrames)
     , mChannels(aChannels)
     , mRate(aRate)
     , mAudioData(aData) {}
+
+  static const Type sType = AUDIO_DATA;
+  static const char* sTypeName;
 
   // Creates a new VideoData identical to aOther, but with a different
   // specified timestamp and duration. All data from aOther is copied
@@ -148,6 +151,9 @@ public:
   typedef layers::ImageContainer ImageContainer;
   typedef layers::Image Image;
   typedef layers::PlanarYCbCrImage PlanarYCbCrImage;
+
+  static const Type sType = VIDEO_DATA;
+  static const char* sTypeName;
 
   // YCbCr data obtained from decoding the video. The index's are:
   //   0 = Y
