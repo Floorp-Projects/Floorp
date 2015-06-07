@@ -790,6 +790,7 @@ js::ToPropertyDescriptor(JSContext* cx, HandleValue descval, bool checkAccessors
             if (checkAccessors && !CheckCallable(cx, &v.toObject(), js_getter_str))
                 return false;
             desc.setGetterObject(&v.toObject());
+            desc.attributesRef() |= JSPROP_GETTER;
         } else if (!v.isUndefined()) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
                                  js_getter_str);
@@ -808,6 +809,7 @@ js::ToPropertyDescriptor(JSContext* cx, HandleValue descval, bool checkAccessors
             if (checkAccessors && !CheckCallable(cx, &v.toObject(), js_setter_str))
                 return false;
             desc.setSetterObject(&v.toObject());
+            desc.attributesRef() |= JSPROP_SETTER;
         } else if (!v.isUndefined()) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
                                  js_setter_str);
