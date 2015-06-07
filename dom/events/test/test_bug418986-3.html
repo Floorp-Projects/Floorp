@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=418986
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test 3/3 for Bug 418986 - Resist fingerprinting by preventing exposure of screen and system info</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body id="body">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=418986">Bug 418986</a>
+<p id="display"></p>
+<pre id="test"></pre>
+<script type="application/javascript;version=1.7" src="bug418986-3.js"></script>
+<script type="application/javascript;version=1.7">
+  // This test produces fake mouse events and checks that the screenX and screenY
+  // properties of the received event objects provide client window coordinates.
+  // Run the test once the window has loaded.
+  window.onload = () => test(true);
+</script>
+</body>
+</html>
