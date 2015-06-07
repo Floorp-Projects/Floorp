@@ -803,8 +803,11 @@ this.PushService = {
 
     return this._db.put(aRecord)
       .then(_ => aRecord, error => {
-        // Unable to save.
-        this._sendRequest("unregister", aRecord);
+        // Unable to save. Destroy the subscription in the background.
+        this._sendRequest("unregister", aRecord).catch(err => {
+          debug("_onRegisterSuccess: Error unregistering stale subscription" +
+            err);
+        });
         throw error;
       });
   },
@@ -879,7 +882,7 @@ this.PushService = {
    * not.
    */
   _unregister: function(aPageRecord) {
-    debug("unregisterWithServer()");
+    debug("_unregister()");
 
     if (!aPageRecord.scope) {
       return Promise.reject({state: 0, error: "NotFoundError"});
