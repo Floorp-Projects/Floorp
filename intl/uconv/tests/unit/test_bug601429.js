@@ -4,6 +4,7 @@ load('CharsetConversionTests.js');
 
 function run_test() {
   var failures = false;
+  var decodingConverter = CreateScriptableConverter();
 
   var decoders = [
     "Big5",
@@ -13,6 +14,8 @@ function run_test() {
     "gb18030",
     "IBM866",
     "ISO-2022-JP",
+    "ISO-8859-1",
+    "ISO-8859-2",
     "ISO-8859-3",
     "ISO-8859-4",
     "ISO-8859-5",
@@ -25,7 +28,6 @@ function run_test() {
     "ISO-8859-14",
     "ISO-8859-15",
     "ISO-8859-16",
-    "ISO-8859-2",
     "KOI8-R",
     "KOI8-U",
     "Shift_JIS",
@@ -39,22 +41,18 @@ function run_test() {
     "windows-1257",
     "windows-1258",
     "windows-874",
+    "macintosh",
     "x-mac-cyrillic",
+    "x-user-defined",
     "UTF-8"
   ];
 
   var counter = 0;
   while (counter < decoders.length) {
-    ++counter;
-    var charset = decoders[counter];
+    var charset = decoders[counter++];
     dump("testing " + counter + " " + charset + "\n");
-      
-    try {
-      decodingConverter.charset = charset;
-    } catch(e) {
-      dump("Warning: couldn't set decoder charset to " + charset + "\n");
-      continue;
-    }
+
+    decodingConverter.charset = charset;
     for (var i = 0x80; i < 0x100; ++i) {
       var inString = String.fromCharCode(i);
       var outString;
