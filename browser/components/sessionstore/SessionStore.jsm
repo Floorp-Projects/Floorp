@@ -1263,13 +1263,11 @@ let SessionStoreInternal = {
     LastSession.clear();
     let openWindows = {};
     this._forEachBrowserWindow(function(aWindow) {
-      let tabs = aWindow.gBrowser.tabs;
-      // Remove pending or restoring tabs instead of just emptying them.
-      for (let i = tabs.length - 1; i >= 0 && tabs.length > 1; i--) {
-        if (tabs[i].linkedBrowser.__SS_restoreState) {
-          aWindow.gBrowser.removeTab(tabs[i], {animate: false});
-        }
-      }
+      Array.forEach(aWindow.gBrowser.tabs, function(aTab) {
+        delete aTab.linkedBrowser.__SS_data;
+        if (aTab.linkedBrowser.__SS_restoreState)
+          this._resetTabRestoringState(aTab);
+      }, this);
       openWindows[aWindow.__SSi] = true;
     });
     // also clear all data about closed tabs and windows
@@ -1280,9 +1278,6 @@ let SessionStoreInternal = {
         delete this._windows[ix];
       }
     }
-    // Remove all pointers so that pending/restoring tabs that were closed
-    // above do not end up in _closedTabs[] again.
-    this._closedTabs.clear();
     // also clear all data about closed windows
     this._closedWindows = [];
     // give the tabbrowsers a chance to clear their histories first
