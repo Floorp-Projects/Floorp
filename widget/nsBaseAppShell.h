@@ -25,6 +25,8 @@ class nsBaseAppShell : public nsIAppShell, public nsIThreadObserver,
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIAPPSHELL
+  void RunInStableState(already_AddRefed<nsIRunnable> runnable) override;
+
   NS_DECL_NSITHREADOBSERVER
   NS_DECL_NSIOBSERVER
 
@@ -94,7 +96,7 @@ private:
     }
   }
 
-  void ScheduleSyncSection(nsIRunnable* runnable, bool stable);
+  void ScheduleSyncSection(already_AddRefed<nsIRunnable> runnable, bool stable);
 
   struct SyncSection {
     SyncSection()
