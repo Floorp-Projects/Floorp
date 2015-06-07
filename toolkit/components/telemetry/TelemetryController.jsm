@@ -156,6 +156,13 @@ this.TelemetryController = Object.freeze({
   },
 
   /**
+   * Used only for testing purposes.
+   */
+  setupContent: function() {
+    return Impl.setupContentTelemetry(true);
+  },
+
+  /**
    * Send a notification.
    */
   observe: function (aSubject, aTopic, aData) {
@@ -689,6 +696,21 @@ let Impl = {
     return this._delayedInitTaskDeferred.promise;
   },
 
+  /**
+   * This triggers basic telemetry initialization for content processes.
+   * @param {Boolean} [testing=false] True if we are in test mode, false otherwise.
+   */
+  setupContentTelemetry: function (testing = false) {
+    this._testMode = testing;
+
+    // We call |enableTelemetryRecording| here to make sure that Telemetry.canRecord* flags
+    // are in sync between chrome and content processes.
+    if (!this.enableTelemetryRecording()) {
+      this._log.trace("setupContentTelemetry - Content process recording disabled.");
+      return;
+    }
+  },
+
   // Do proper shutdown waiting and cleanup.
   _cleanupOnShutdown: Task.async(function*() {
     if (!this._initialized) {
@@ -760,13 +782,8 @@ let Impl = {
       // profile-after-change is only registered for chrome processes.
       return this.setupTelemetry();
     case "app-startup":
-      // app-startup is only registered for content processes. We call
-      // |enableTelemetryRecording| here to make sure that Telemetry.canRecord* flags
-      // are in sync between chrome and content processes.
-      if (!this.enableTelemetryRecording()) {
-        this._log.trace("observe - Content process recording disabled.");
-        return;
-      }
+      // app-startup is only registered for content processes.
+      return this.setupContentTelemetry();
       break;
     }
   },
