@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1012662
+-->
+<head>
+  <title>Test for Bug 1170911</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1170911">Mozilla Bug 1170911</a>
+<p id="display"></p>
+
+<div id="content">
+  <textarea>textarea text</textarea>
+</div>
+
+<pre id="test">
+<script>
+const TEXTAREA = document.querySelector('textarea');
+const TEXTAREA_VALUE = TEXTAREA.value;
+
+function doTest() {
+  is(document.queryCommandSupported("copy"), false,
+     "Copy support should have been disabled");
+  is(document.queryCommandSupported("cut"), false,
+     "Cut support should have been disabled");
+
+  document.addEventListener("keydown", tryCopy);
+  synthesizeKey("Q", {});
+}
+
+function tryCopy(evt) {
+  evt.preventDefault();
+  document.removeEventListener("keydown", tryCopy);
+  TEXTAREA.setSelectionRange(0, TEXTAREA_VALUE.length);
+  TEXTAREA.focus();
+
+  SimpleTest.waitForClipboard(null, function () {
+      is(document.queryCommandEnabled("copy"), false,
+        "Copy should not be allowed when dom.allow_cut_copy is off");
+      is(document.execCommand("copy"), false,
+        "Copy should not be executed when dom.allow_cut_copy is off");
+      is(TEXTAREA.value, TEXTAREA_VALUE,
+        "Content in the textarea shouldn't be changed");
+      TEXTAREA.value = TEXTAREA_VALUE;
+    },
+    /* success fn */ SimpleTest.finish,
+    /* failure fn */ function () {
+      document.addEventListener("keydown", tryCut);
+      synthesizeKey("Q", {});
+    },
+    /* flavor */ undefined,
+    /* timeout */ undefined,
+    /* expect failure */ true);
+}
+
+function tryCut(evt) {
+  evt.preventDefault();
+  document.removeEventListener("keydown", tryCut);
+  TEXTAREA.setSelectionRange(0, TEXTAREA_VALUE.length);
+  TEXTAREA.focus();
+
+  SimpleTest.waitForClipboard(null, function () {
+      is(document.queryCommandEnabled("cut"), false,
+        "Cut should not be allowed when dom.allow_cut_copy is off");
+      is(document.execCommand("cut"), false,
+        "Cut should not be executed when dom.allow_cut_copy is off");
+      is(TEXTAREA.value, TEXTAREA_VALUE,
+        "Content in the textarea shouldn't be changed");
+    },
+    /* success fn */ SimpleTest.finish,
+    /* failure fn */ SimpleTest.finish,
+    /* flavor */ undefined,
+    /* timeout */ undefined,
+    /* expect failure */ true);
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPrefEnv({"set": [["dom.allow_cut_copy", false]]}, doTest);
+});
+
+</script>
+</pre>
+</body>
+</html>
