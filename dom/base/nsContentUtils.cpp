@@ -5162,9 +5162,7 @@ nsContentUtils::RunInStableState(already_AddRefed<nsIRunnable> aRunnable,
     MOZ_ASSERT(aHandling == DispatchFailureHandling::IgnoreFailure);
     return;
   }
-  DebugOnly<nsresult> rv = appShell->RunInStableState(runnable);
-  MOZ_ASSERT(NS_SUCCEEDED(rv) ||
-             aHandling == DispatchFailureHandling::IgnoreFailure);
+  appShell->RunInStableState(runnable.forget());
 }
 
 void
