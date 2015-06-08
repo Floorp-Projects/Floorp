@@ -682,6 +682,7 @@ ICStubCompiler::getStubCode()
         return nullptr;
 
     MOZ_ASSERT(entersStubFrame_ == ICStub::CanMakeCalls(kind));
+    MOZ_ASSERT(!inStubFrame_);
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(newStubCode, "BaselineIC");
@@ -706,6 +707,8 @@ ICStubCompiler::tailCallVM(const VMFunction& fun, MacroAssembler& masm)
 bool
 ICStubCompiler::callVM(const VMFunction& fun, MacroAssembler& masm)
 {
+    MOZ_ASSERT(inStubFrame_);
+
     JitCode* code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
     if (!code)
         return false;
@@ -730,6 +733,10 @@ void
 ICStubCompiler::enterStubFrame(MacroAssembler& masm, Register scratch)
 {
     EmitEnterStubFrame(masm, scratch);
+
+    MOZ_ASSERT(!inStubFrame_);
+    inStubFrame_ = true;
+
 #ifdef DEBUG
     entersStubFrame_ = true;
 #endif
@@ -738,8 +745,20 @@ ICStubCompiler::enterStubFrame(MacroAssembler& masm, Register scratch)
 void
 ICStubCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon)
 {
-    MOZ_ASSERT(entersStubFrame_);
+    MOZ_ASSERT(entersStubFrame_ && inStubFrame_);
+    inStubFrame_ = false;
     EmitLeaveStubFrame(masm, calledIntoIon);
+}
+
+void
+ICStubCompiler::pushFramePtr(MacroAssembler& masm, Register scratch)
+{
+    if (inStubFrame_) {
+        masm.loadPtr(Address(BaselineFrameReg, 0), scratch);
+        masm.pushBaselineFramePtr(scratch, scratch);
+    } else {
+        masm.pushBaselineFramePtr(BaselineFrameReg, scratch);
+    }
 }
 
 bool
