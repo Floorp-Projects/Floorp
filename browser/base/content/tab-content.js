@@ -337,6 +337,7 @@ let AboutReaderListener = {
         break;
 
       case "pagehide":
+        this.cancelPotentialPendingReadabilityCheck();
         sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: false });
         break;
 
@@ -353,12 +354,42 @@ let AboutReaderListener = {
 
     }
   },
+
+  /**
+   * NB: this function will update the state of the reader button asynchronously
+   * after the next mozAfterPaint call (assuming reader mode is enabled and 
+   * this is a suitable document). Calling it on things which won't be
+   * painted is not going to work.
+   */
   updateReaderButton: function(forceNonArticle) {
     if (!ReaderMode.isEnabledForParseOnLoad || this.isAboutReader ||
         !(content.document instanceof content.HTMLDocument) ||
         content.document.mozSyntheticDocument) {
       return;
     }
+
+    this.scheduleReadabilityCheckPostPaint(forceNonArticle);
+  },
+
+  cancelPotentialPendingReadabilityCheck: function() {
+    if (this._pendingReadabilityCheck) {
+      removeEventListener("MozAfterPaint", this._pendingReadabilityCheck);
+      delete this._pendingReadabilityCheck;
+    }
+  },
+
+  scheduleReadabilityCheckPostPaint: function(forceNonArticle) {
+    if (this._pendingReadabilityCheck) {
+      // We need to stop this check before we re-add one because we don't know
+      // if forceNonArticle was true or false last time.
+      this.cancelPotentialPendingReadabilityCheck();
+    }
+    this._pendingReadabilityCheck = this.onPaintWhenWaitedFor.bind(this, forceNonArticle);
+    addEventListener("MozAfterPaint", this._pendingReadabilityCheck);
+  },
+
+  onPaintWhenWaitedFor: function(forceNonArticle) {
+    this.cancelPotentialPendingReadabilityCheck();
     // Only send updates when there are articles; there's no point updating with
     // |false| all the time.
     if (ReaderMode.isProbablyReaderable(content.document)) {
