@@ -37,7 +37,10 @@ enum class PixelCastJustification : uint8_t {
   // technically in screen pixels, as it has not yet accounted for any
   // asynchronous transforms. This justification is for viewing the initial
   // reference point as a screen point.
-  LayoutDeviceToScreenForUntransformedEvent
+  LayoutDeviceToScreenForUntransformedEvent,
+  // Similar to LayoutDeviceToScreenForUntransformedEvent, PBrowser handles
+  // some widget/tab dimension information as the OS does -- in screen units.
+  LayoutDeviceIsScreenForTabDims
 };
 
 template <class TargetUnits, class SourceUnits>

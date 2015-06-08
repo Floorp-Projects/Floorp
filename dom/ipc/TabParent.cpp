@@ -90,6 +90,7 @@
 #include "nsPIWindowRoot.h"
 #include "gfxDrawable.h"
 #include "ImageOps.h"
+#include "UnitTransforms.h"
 #include <algorithm>
 
 using namespace mozilla::dom;
@@ -966,7 +967,21 @@ TabParent::UpdateDimensions(const nsIntRect& rect, const ScreenIntSize& size)
     mOrientation = orientation;
     mChromeOffset = chromeOffset;
 
-    unused << SendUpdateDimensions(mRect, mDimensions, mOrientation, mChromeOffset);
+    CSSToLayoutDeviceScale widgetScale;
+    if (widget) {
+      widgetScale = widget->GetDefaultScale();
+    }
+
+    LayoutDeviceIntRect devicePixelRect =
+      ViewAs<LayoutDevicePixel>(mRect,
+                                PixelCastJustification::LayoutDeviceIsScreenForTabDims);
+    LayoutDeviceIntSize devicePixelSize =
+      ViewAs<LayoutDevicePixel>(mDimensions.ToUnknownSize(),
+                                PixelCastJustification::LayoutDeviceIsScreenForTabDims);
+
+    CSSRect unscaledRect = devicePixelRect / widgetScale;
+    CSSSize unscaledSize = devicePixelSize / widgetScale;
+    unused << SendUpdateDimensions(unscaledRect, unscaledSize, orientation, chromeOffset);
   }
 }
 
