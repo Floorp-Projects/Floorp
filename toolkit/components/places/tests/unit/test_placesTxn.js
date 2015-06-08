@@ -542,17 +542,19 @@ add_test(function test_edit_keyword() {
   let testURI = NetUtil.newURI("http://test_edit_keyword.com");
   let testBkmId = bmsvc.insertBookmark(root, testURI, bmsvc.DEFAULT_INDEX, "Test edit keyword");
 
-  let txn = new PlacesEditBookmarkKeywordTransaction(testBkmId, KEYWORD);
+  let txn = new PlacesEditBookmarkKeywordTransaction(testBkmId, KEYWORD, "postData");
 
   txn.doTransaction();
   do_check_eq(observer._itemChangedId, testBkmId);
   do_check_eq(observer._itemChangedProperty, "keyword");
   do_check_eq(observer._itemChangedValue, KEYWORD);
+  do_check_eq(PlacesUtils.getPostDataForBookmark(testBkmId), "postData");
 
   txn.undoTransaction();
   do_check_eq(observer._itemChangedId, testBkmId);
   do_check_eq(observer._itemChangedProperty, "keyword");
   do_check_eq(observer._itemChangedValue, "");
+  do_check_eq(PlacesUtils.getPostDataForBookmark(testBkmId), null);
 
   run_next_test();
 });
@@ -714,47 +716,6 @@ add_test(function test_sort_folder_by_name() {
   do_check_eq(2, bmsvc.getItemIndex(b3));
 
   run_next_test();
-});
-
-add_test(function test_edit_postData() {
-  function* promiseKeyword(keyword, href, postData) {
-    while (true) {
-      let entry = yield PlacesUtils.keywords.fetch(keyword);
-      if (entry && entry.url.href == href && entry.postData == postData) {
-        break;
-      }
-
-      yield new Promise(resolve => do_timeout(100, resolve));
-    }
-  }
-
-  Task.spawn(function* () {
-    let postData = "post-test_edit_postData";
-    let testURI = NetUtil.newURI("http://test_edit_postData.com");
-
-    let testBkm = yield PlacesUtils.bookmarks.insert({
-      parentGuid: PlacesUtils.bookmarks.menuGuid,
-      url: "http://test_edit_postData.com",
-      title: "Test edit Post Data"
-    });
-
-    yield PlacesUtils.keywords.insert({
-      keyword: "kw",
-      url: "http://test_edit_postData.com"
-    });
-
-    let testBkmId = yield PlacesUtils.promiseItemId(testBkm.guid);
-    let txn = new PlacesEditBookmarkPostDataTransaction(testBkmId, postData);
-
-    txn.doTransaction();
-    yield promiseKeyword("kw", testURI.spec, postData);
-
-    txn.undoTransaction();
-    entry = yield PlacesUtils.keywords.fetch("kw");
-    Assert.equal(entry.url.href, testURI.spec);
-    // We don't allow anymore to set a null post data.
-    //Assert.equal(null, post_data);
-  }).then(run_next_test);
 });
 
 add_test(function test_tagURI_untagURI() {

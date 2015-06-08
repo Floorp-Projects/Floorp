@@ -50,6 +50,7 @@ var gEditItemOverlay = {
     this._readOnly = aInfo && aInfo.forceReadOnly;
     this._titleOverride = aInfo && aInfo.titleOverride ? aInfo.titleOverride
                                                        : "";
+    this._postData = aInfo && aInfo.postData;
   },
 
   _showHideRows: function EIO__showHideRows() {
@@ -590,7 +591,7 @@ var gEditItemOverlay = {
   onKeywordFieldBlur: function EIO_onKeywordFieldBlur() {
     var keyword = this._element("keywordField").value;
     if (keyword != PlacesUtils.bookmarks.getKeywordForBookmark(this._itemId)) {
-      var txn = new PlacesEditBookmarkKeywordTransaction(this._itemId, keyword);
+      var txn = new PlacesEditBookmarkKeywordTransaction(this._itemId, keyword, this._postData);
       PlacesUtils.transactionManager.doTransaction(txn);
     }
   },

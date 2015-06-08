@@ -1310,9 +1310,6 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ptm", function() {
     editBookmarkKeyword: function(aItemId, aNewKeyword)
       new PlacesEditBookmarkKeywordTransaction(aItemId, aNewKeyword),
 
-    editBookmarkPostData: function(aItemId, aPostData)
-      new PlacesEditBookmarkPostDataTransaction(aItemId, aPostData),
-
     editLivemarkSiteURI: function(aLivemarkId, aSiteURI)
       new PlacesEditLivemarkSiteURITransaction(aLivemarkId, aSiteURI),
 
