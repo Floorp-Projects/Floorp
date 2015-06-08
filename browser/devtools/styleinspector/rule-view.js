@@ -1628,12 +1628,13 @@ CssRuleView.prototype = {
     let element = elementStyle.element;
     let rules = elementStyle.rules;
     let client = this.inspector.toolbox._target.client;
+    let pseudoClasses = element.pseudoClassLocks;
 
     if (!client.traits.addNewRule) {
       return;
     }
 
-    this.pageStyle.addNewRule(element).then(options => {
+    this.pageStyle.addNewRule(element, pseudoClasses).then(options => {
       let newRule = new Rule(elementStyle, options);
       rules.push(newRule);
       let editor = new RuleEditor(this, newRule);
