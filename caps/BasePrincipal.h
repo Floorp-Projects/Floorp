@@ -27,8 +27,6 @@ public:
     mAppId = aAppId;
     mInBrowser = aInBrowser;
   }
-  OriginAttributes(const OriginAttributesDictionary& aOther)
-    : OriginAttributesDictionary(aOther) {}
 
   bool operator==(const OriginAttributes& aOther) const
   {
@@ -44,8 +42,6 @@ public:
   // |!key1=value1&key2=value2|. If there are no non-default attributes, this
   // returns an empty string.
   void CreateSuffix(nsACString& aStr) const;
-
-  void CookieJar(nsACString& aStr);
 
   void Serialize(nsIObjectOutputStream* aStream) const;
   nsresult Deserialize(nsIObjectInputStream* aStream);
