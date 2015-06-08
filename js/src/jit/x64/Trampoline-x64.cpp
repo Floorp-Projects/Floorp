@@ -869,7 +869,7 @@ JitRuntime::generateDebugTrapHandler(JSContext* cx)
     // Enter a stub frame and call the HandleDebugTrap VM function. Ensure
     // the stub frame has a nullptr ICStub pointer, since this pointer is marked
     // during GC.
-    masm.movePtr(ImmPtr(nullptr), BaselineStubReg);
+    masm.movePtr(ImmPtr(nullptr), ICStubReg);
     EmitEnterStubFrame(masm, scratch3);
 
     JitCode* code = cx->runtime()->jitRuntime()->getVMWrapper(HandleDebugTrapInfo);

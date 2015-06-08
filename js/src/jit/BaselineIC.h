@@ -1137,14 +1137,14 @@ class ICStubCompiler
         AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
         MOZ_ASSERT(!regs.has(BaselineStackReg));
 #if defined(JS_CODEGEN_ARM)
-        MOZ_ASSERT(!regs.has(BaselineTailCallReg));
+        MOZ_ASSERT(!regs.has(ICTailCallReg));
         regs.take(BaselineSecondScratchReg);
 #elif defined(JS_CODEGEN_MIPS)
-        MOZ_ASSERT(!regs.has(BaselineTailCallReg));
+        MOZ_ASSERT(!regs.has(ICTailCallReg));
         MOZ_ASSERT(!regs.has(BaselineSecondScratchReg));
 #endif
         regs.take(BaselineFrameReg);
-        regs.take(BaselineStubReg);
+        regs.take(ICStubReg);
 #ifdef JS_CODEGEN_X64
         regs.take(ExtractTemp0);
         regs.take(ExtractTemp1);
