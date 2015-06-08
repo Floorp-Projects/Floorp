@@ -38,12 +38,6 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
 }
 
 void
-OriginAttributes::CookieJar(nsACString& aStr)
-{
-  mozilla::GetJarPrefix(mAppId, mInBrowser, aStr);
-}
-
-void
 OriginAttributes::Serialize(nsIObjectOutputStream* aStream) const
 {
   aStream->Write32(mAppId);
@@ -170,7 +164,7 @@ BasePrincipal::GetJarPrefix(nsACString& aJarPrefix)
 {
   MOZ_ASSERT(AppId() != nsIScriptSecurityManager::UNKNOWN_APP_ID);
 
-  mOriginAttributes.CookieJar(aJarPrefix);
+  mozilla::GetJarPrefix(AppId(), IsInBrowserElement(), aJarPrefix);
   return NS_OK;
 }
 
@@ -193,8 +187,10 @@ BasePrincipal::GetOriginSuffix(nsACString& aOriginAttributes)
 NS_IMETHODIMP
 BasePrincipal::GetCookieJar(nsACString& aCookieJar)
 {
-  mOriginAttributes.CookieJar(aCookieJar);
-  return NS_OK;
+  // We just forward to .jarPrefix for now, which is a nice compact
+  // stringification of the (appId, inBrowser) tuple. This will eventaully be
+  // swapped out for an origin attribute - see the comment in nsIPrincipal.idl.
+  return GetJarPrefix(aCookieJar);
 }
 
 NS_IMETHODIMP
