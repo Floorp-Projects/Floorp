@@ -19,13 +19,13 @@
 #include "BluetoothServiceBluedroid.h"
 
 #include "BluetoothA2dpManager.h"
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 #include "BluetoothGattManager.h"
 #else
 // TODO: Support GATT
 #endif
 #include "BluetoothHfpManager.h"
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 #include "BluetoothHidManager.h"
 #else
 // TODO: Support HID
@@ -41,7 +41,7 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/unused.h"
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 #include "nsDataHashtable.h"
 #endif
 
@@ -63,7 +63,7 @@
     }                                                                  \
   } while(0)
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 
 #define ENSURE_GATT_MGR_IS_READY_VOID(gatt, runnable)                  \
   do {                                                                 \
@@ -947,7 +947,7 @@ BluetoothServiceBluedroid::StopInternal()
 }
 #endif
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 nsresult
 BluetoothServiceBluedroid::GetAdaptersInternal(
   BluetoothReplyRunnable* aRunnable)
@@ -1039,7 +1039,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
     BT_WARNING("GetRemoteDeviceProperties(%s) failed: %d",
                NS_ConvertUTF16toUTF8(mDeviceAddress).get(), aStatus);
 
@@ -1083,7 +1083,7 @@ BluetoothServiceBluedroid::GetConnectedDevicePropertiesInternal(
 
   ENSURE_BLUETOOTH_IS_READY(aRunnable, NS_OK);
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   BluetoothProfileManagerBase* profile =
     BluetoothUuidHelper::GetBluetoothProfileManager(aServiceUuid);
   if (!profile) {
@@ -1148,7 +1148,7 @@ BluetoothServiceBluedroid::GetPairedDevicePropertiesInternal(
 
   ENSURE_BLUETOOTH_IS_READY(aRunnable, NS_OK);
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   int requestedDeviceCount = aDeviceAddress.Length();
   if (requestedDeviceCount == 0) {
     DispatchReplySuccess(aRunnable);
@@ -1182,7 +1182,7 @@ public:
   : mRunnable(aRunnable)
   { }
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -1214,7 +1214,7 @@ BluetoothServiceBluedroid::StartDiscoveryInternal(
   MOZ_ASSERT(NS_IsMainThread());
   ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   sChangeDiscoveryRunnableArray.AppendElement(aRunnable);
 #else
   // Missing in bluetooth1
@@ -1231,7 +1231,7 @@ public:
   : mRunnable(aRunnable)
   { }
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -1256,7 +1256,7 @@ private:
   BluetoothReplyRunnable* mRunnable;
 };
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 class BluetoothServiceBluedroid::GetRemoteServicesResultHandler final
   : public BluetoothResultHandler
 {
@@ -1310,7 +1310,7 @@ BluetoothServiceBluedroid::StopDiscoveryInternal(
   MOZ_ASSERT(NS_IsMainThread());
   ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   sChangeDiscoveryRunnableArray.AppendElement(aRunnable);
 #else
   // Missing in bluetooth1
@@ -1331,7 +1331,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
     sSetPropertyRunnableArray.RemoveElement(mRunnable);
     DispatchReplyError(mRunnable, aStatus);
 #else
@@ -1388,7 +1388,7 @@ public:
 
   void OnError(BluetoothStatus aStatus) override
   {
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
     sBondingRunnableArray.RemoveElement(mRunnable);
     DispatchReplyError(mRunnable, aStatus);
 #else
@@ -1429,7 +1429,7 @@ public:
 
   void OnError(BluetoothStatus aStatus) override
   {
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
     sUnbondingRunnableArray.RemoveElement(mRunnable);
     DispatchReplyError(mRunnable, aStatus);
 #else
@@ -1458,7 +1458,7 @@ BluetoothServiceBluedroid::RemoveDeviceInternal(
   return NS_OK;
 }
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 class BluetoothServiceBluedroid::PinReplyResultHandler final
   : public BluetoothResultHandler
 {
@@ -1540,7 +1540,7 @@ BluetoothServiceBluedroid::SetPinCodeInternal(
 }
 #endif
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 void
 BluetoothServiceBluedroid::SetPasskeyInternal(
   const nsAString& aDeviceAddress, uint32_t aPasskey,
@@ -1558,7 +1558,7 @@ BluetoothServiceBluedroid::SetPasskeyInternal(
 }
 #endif
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 class BluetoothServiceBluedroid::SspReplyResultHandler final
   : public BluetoothResultHandler
 {
@@ -1641,7 +1641,7 @@ BluetoothServiceBluedroid::SetPairingConfirmationInternal(
 }
 #endif
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 // Missing in bluetooth2
 #else
 bool
@@ -1659,7 +1659,7 @@ BluetoothServiceBluedroid::PrepareAdapterInternal()
 }
 #endif
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 void
 BluetoothServiceBluedroid::NextBluetoothProfileController()
 #else
@@ -1679,7 +1679,7 @@ NextBluetoothProfileController()
   }
 }
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 void
 BluetoothServiceBluedroid::ConnectDisconnect(
   bool aConnect, const nsAString& aDeviceAddress,
@@ -1728,7 +1728,7 @@ BluetoothServiceBluedroid::Disconnect(
   ConnectDisconnect(false, aDeviceAddress, aRunnable, aServiceUuid);
 }
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 bool
 BluetoothServiceBluedroid::IsConnected(uint16_t aProfileId)
 {
@@ -1953,7 +1953,7 @@ BluetoothServiceBluedroid::ToggleCalls(BluetoothReplyRunnable* aRunnable)
 {
 }
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 // Missing in bluetooth2
 #else
 uint16_t
@@ -2062,7 +2062,7 @@ public:
 void
 BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
 {
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   MOZ_ASSERT(NS_IsMainThread());
 
   BT_LOGR("BT_STATE: %d", aState);
@@ -2235,7 +2235,7 @@ BluetoothServiceBluedroid::AdapterPropertiesNotification(
   BluetoothStatus aStatus, int aNumProperties,
   const BluetoothProperty* aProperties)
 {
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   MOZ_ASSERT(NS_IsMainThread());
 
   InfallibleTArray<BluetoothNamedValue> propertiesArray;
@@ -2390,7 +2390,7 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
   BluetoothStatus aStatus, const nsAString& aBdAddr,
   int aNumProperties, const BluetoothProperty* aProperties)
 {
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   MOZ_ASSERT(NS_IsMainThread());
 
   InfallibleTArray<BluetoothNamedValue> propertiesArray;
@@ -2596,7 +2596,7 @@ void
 BluetoothServiceBluedroid::DeviceFoundNotification(
   int aNumProperties, const BluetoothProperty* aProperties)
 {
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   MOZ_ASSERT(NS_IsMainThread());
 
   BluetoothValue propertyValue;
@@ -2684,7 +2684,7 @@ BluetoothServiceBluedroid::DeviceFoundNotification(
 void
 BluetoothServiceBluedroid::DiscoveryStateChangedNotification(bool aState)
 {
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   MOZ_ASSERT(NS_IsMainThread());
 
   sAdapterDiscovering = aState;
@@ -2727,7 +2727,7 @@ BluetoothServiceBluedroid::PinRequestNotification(const nsAString& aRemoteBdAddr
                                                   const nsAString& aBdName,
                                                   uint32_t aCod)
 {
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   MOZ_ASSERT(NS_IsMainThread());
 
   InfallibleTArray<BluetoothNamedValue> propertiesArray;
@@ -2766,7 +2766,7 @@ BluetoothServiceBluedroid::SspRequestNotification(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   InfallibleTArray<BluetoothNamedValue> propertiesArray;
   nsAutoString passkey;
   nsAutoString pairingType;
@@ -2826,7 +2826,7 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
   BluetoothStatus aStatus, const nsAString& aRemoteBdAddr,
   BluetoothBondState aState)
 {
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aState == BOND_STATE_BONDING) {
@@ -3023,7 +3023,7 @@ BluetoothServiceBluedroid::LeTestModeNotification(BluetoothStatus aStatus,
   // FIXME: This will be implemented in the later patchset
 }
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
 // TODO: Support EnergyInfoNotification
 #else
 void
@@ -3059,7 +3059,7 @@ BluetoothServiceBluedroid::BackendErrorNotification(bool aCrashed)
 
   sIsRestart = true;
   BT_LOGR("Recovery step2: stop bluetooth");
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   StopBluetooth(false, nullptr);
 #else
   StopBluetooth(false);
