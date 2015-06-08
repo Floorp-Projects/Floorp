@@ -2310,7 +2310,13 @@ CASE(JSOP_SETCONST)
 END_CASE(JSOP_SETCONST)
 
 CASE(JSOP_BINDINTRINSIC)
-    PUSH_OBJECT(*cx->global()->intrinsicsHolder());
+{
+    NativeObject* holder = GlobalObject::getIntrinsicsHolder(cx, cx->global());
+    if (!holder)
+        goto error;
+
+    PUSH_OBJECT(*holder);
+}
 END_CASE(JSOP_BINDINTRINSIC)
 
 CASE(JSOP_BINDGNAME)
