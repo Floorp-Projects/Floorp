@@ -87,12 +87,8 @@ public:
     mStringTableWriter.StartBareList();
   }
 
-  ~UniqueJSONStrings() {
-    mStringTableWriter.EndBareList();
-  }
-
-  void SpliceStringTableElements(SpliceableJSONWriter& aWriter) const {
-    aWriter.Splice(mStringTableWriter.WriteFunc());
+  void SpliceStringTableElements(SpliceableJSONWriter& aWriter) {
+    aWriter.TakeAndSplice(mStringTableWriter.WriteFunc());
   }
 
   void WriteProperty(mozilla::JSONWriter& aWriter, const char* aName, const char* aStr) {
@@ -193,13 +189,12 @@ public:
   };
 
   explicit UniqueStacks(JSRuntime* aRuntime);
-  ~UniqueStacks();
 
   Stack BeginStack(const OnStackFrameKey& aRoot);
   uint32_t LookupJITFrameDepth(void* aAddr);
   void AddJITFrameDepth(void* aAddr, unsigned depth);
-  void SpliceFrameTableElements(SpliceableJSONWriter& aWriter) const;
-  void SpliceStackTableElements(SpliceableJSONWriter& aWriter) const;
+  void SpliceFrameTableElements(SpliceableJSONWriter& aWriter);
+  void SpliceStackTableElements(SpliceableJSONWriter& aWriter);
 
 private:
   uint32_t GetOrAddFrameIndex(const OnStackFrameKey& aFrame);

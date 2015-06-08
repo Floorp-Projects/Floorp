@@ -1,3 +1,20 @@
+const kHTTPRedirect = "http://example.com/tests/dom/workers/test/serviceworkers/app-protocol/redirect.sjs";
+const kHTTPSRedirect = "https://example.com/tests/dom/workers/test/serviceworkers/app-protocol/redirect-https.sjs";
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    self.caches.open("origin-app-cache")
+      .then(c => {
+        return Promise.all(
+          [
+            c.add(kHTTPRedirect),
+            c.add(kHTTPSRedirect),
+          ]
+        );
+      })
+  );
+});
+
 self.addEventListener('fetch', (event) => {
   if (event.request.url.indexOf('foo.txt') >= 0) {
     event.respondWith(new Response('swresponse', {
@@ -16,5 +33,31 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(new Response('customContentType', {
       headers: {'Content-Type': 'text/html'}
     }));
+  }
+
+  if (event.request.url.indexOf('redirected.html') >= 0) {
+    event.respondWith(fetch(kHTTPRedirect));
+  }
+
+  if (event.request.url.indexOf('redirected-https.html') >= 0) {
+    event.respondWith(fetch(kHTTPSRedirect));
+  }
+
+  if (event.request.url.indexOf('redirected-cached.html') >= 0) {
+    event.respondWith(
+      self.caches.open("origin-app-cache")
+        .then(c => {
+          return c.match(kHTTPRedirect);
+        })
+    );
+  }
+
+  if (event.request.url.indexOf('redirected-https-cached.html') >= 0) {
+    event.respondWith(
+      self.caches.open("origin-app-cache")
+        .then(c => {
+          return c.match(kHTTPSRedirect);
+        })
+    );
   }
 });
