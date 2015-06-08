@@ -122,7 +122,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gWM",
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let ConsoleAPI = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).ConsoleAPI;
   let consoleOptions = {
-    maxLogLevel: Services.prefs.getCharPref(PREF_LOG_LEVEL).toLowerCase(),
+    maxLogLevelPref: PREF_LOG_LEVEL,
     prefix: "Loop"
   };
   return new ConsoleAPI(consoleOptions);
