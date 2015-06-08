@@ -18,6 +18,7 @@ Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
+Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -97,13 +98,20 @@ function truncateDateToDays(date) {
 function sendPing() {
   TelemetrySession.gatherStartup();
   if (gServerStarted) {
-    TelemetryController.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
+    TelemetrySend.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
     return TelemetrySession.testPing();
   } else {
-    TelemetryController.setServer("http://doesnotexist");
+    TelemetrySend.setServer("http://doesnotexist");
     return TelemetrySession.testPing();
   }
 }
+
+let clearPendingPings = Task.async(function*() {
+  const pending = yield TelemetryStorage.loadPendingPingList();
+  for (let p of pending) {
+    yield TelemetryStorage.removePendingPing(p.id);
+  }
+});
 
 function wrapWithExceptionHandler(f) {
   function wrapper(...args) {
@@ -267,7 +275,7 @@ function checkPayloadInfo(data) {
   Assert.ok(data.timezoneOffset <= 12*60, "The timezone must be in a valid range.");
 }
 
-function checkPayload(payload, reason, successfulPings) {
+function checkPayload(payload, reason, successfulPings, savedPings) {
   Assert.ok("info" in payload, "Payload must contain an info section.");
   checkPayloadInfo(payload.info);
 
@@ -275,7 +283,7 @@ function checkPayload(payload, reason, successfulPings) {
   Assert.ok(payload.simpleMeasurements.uptime >= 0);
   Assert.equal(payload.simpleMeasurements.startupInterrupted, 1);
   Assert.equal(payload.simpleMeasurements.shutdownDuration, SHUTDOWN_TIME);
-  Assert.equal(payload.simpleMeasurements.savedPings, 1);
+  Assert.equal(payload.simpleMeasurements.savedPings, savedPings);
   Assert.ok("maximalNumberOfConcurrentThreads" in payload.simpleMeasurements);
   Assert.ok(payload.simpleMeasurements.maximalNumberOfConcurrentThreads >= gNumberOfThreadsLaunched);
 
@@ -304,7 +312,9 @@ function checkPayload(payload, reason, successfulPings) {
   const TELEMETRY_TEST_KEYED_COUNT = "TELEMETRY_TEST_KEYED_COUNT";
   const READ_SAVED_PING_SUCCESS = "READ_SAVED_PING_SUCCESS";
 
-  Assert.ok(TELEMETRY_PING in payload.histograms);
+  if (successfulPings > 0) {
+    Assert.ok(TELEMETRY_PING in payload.histograms);
+  }
   Assert.ok(READ_SAVED_PING_SUCCESS in payload.histograms);
   Assert.ok(TELEMETRY_TEST_FLAG in payload.histograms);
   Assert.ok(TELEMETRY_TEST_COUNT in payload.histograms);
@@ -346,17 +356,19 @@ function checkPayload(payload, reason, successfulPings) {
   Assert.equal(uneval(count), uneval(expected_count));
 
   // There should be one successful report from the previous telemetry ping.
-  const expected_tc = {
-    range: [1, 2],
-    bucket_count: 3,
-    histogram_type: 2,
-    values: {0:2, 1:successfulPings, 2:0},
-    sum: successfulPings,
-    sum_squares_lo: successfulPings,
-    sum_squares_hi: 0
-  };
-  let tc = payload.histograms[TELEMETRY_SUCCESS];
-  Assert.equal(uneval(tc), uneval(expected_tc));
+  if (successfulPings > 0) {
+    const expected_tc = {
+      range: [1, 2],
+      bucket_count: 3,
+      histogram_type: 2,
+      values: {0:2, 1:successfulPings, 2:0},
+      sum: successfulPings,
+      sum_squares_lo: successfulPings,
+      sum_squares_hi: 0
+    };
+    let tc = payload.histograms[TELEMETRY_SUCCESS];
+    Assert.equal(uneval(tc), uneval(expected_tc));
+  }
 
   let h = payload.histograms[READ_SAVED_PING_SUCCESS];
   Assert.equal(h.values[0], 1);
@@ -562,42 +574,42 @@ add_task(function* test_simplePing() {
 
 // Saves the current session histograms, reloads them, performs a ping
 // and checks that the dummy http server received both the previously
-// saved histograms and the new ones.
+// saved ping and the new one.
 add_task(function* test_saveLoadPing() {
-  let histogramsFile = getSavedPingFile("saved-histograms.dat");
+  // Let's start out with a defined state.
+  yield clearPendingPings();
+  yield TelemetryController.reset();
+  gRequestIterator = Iterator(new Request());
 
+  // Setup test data and trigger pings.
   setupTestData();
-  yield TelemetrySession.testSaveHistograms(histogramsFile);
-  yield TelemetryStorage.testLoadHistograms(histogramsFile);
+  yield TelemetrySession.testSavePendingPing();
   yield sendPing();
 
   // Get requests received by dummy server.
-  let request1 = yield gRequestIterator.next();
-  let request2 = yield gRequestIterator.next();
+  let requests = [
+    yield gRequestIterator.next(),
+    yield gRequestIterator.next(),
+  ];
 
-  Assert.equal(request1.getHeader("content-type"), "application/json; charset=UTF-8",
-               "The request must have the correct content-type.");
-  Assert.equal(request2.getHeader("content-type"), "application/json; charset=UTF-8",
-               "The request must have the correct content-type.");
+  for (let req of requests) {
+    Assert.equal(req.getHeader("content-type"), "application/json; charset=UTF-8",
+                 "The request must have the correct content-type.");
+  }
 
   // We decode both requests to check for the |reason|.
-  let ping1 = decodeRequestPayload(request1);
-  let ping2 = decodeRequestPayload(request2);
+  let pings = [for (req of requests) decodeRequestPayload(req)];
 
   // Check we have the correct two requests. Ordering is not guaranteed. The ping type
   // is encoded in the URL.
-  let requestTypeComponent = request1.path.split("/")[4];
-  if (requestTypeComponent === PING_TYPE_MAIN) {
-    checkPingFormat(ping1, PING_TYPE_MAIN, true, true);
-    checkPayload(ping1.payload, REASON_TEST_PING, 1);
-    checkPingFormat(ping2, PING_TYPE_SAVED_SESSION, true, true);
-    checkPayload(ping2.payload, REASON_SAVED_SESSION, 1);
-  } else {
-    checkPingFormat(ping1, PING_TYPE_SAVED_SESSION, true, true);
-    checkPayload(ping1.payload, REASON_SAVED_SESSION, 1);
-    checkPingFormat(ping2, PING_TYPE_MAIN, true, true);
-    checkPayload(ping2.payload, REASON_TEST_PING, 1);
+  if (pings[0].type != PING_TYPE_MAIN) {
+    pings.reverse();
   }
+
+  checkPingFormat(pings[0], PING_TYPE_MAIN, true, true);
+  checkPayload(pings[0].payload, REASON_TEST_PING, 0, 1);
+  checkPingFormat(pings[1], PING_TYPE_SAVED_SESSION, true, true);
+  checkPayload(pings[1].payload, REASON_SAVED_SESSION, 0, 0);
 });
 
 add_task(function* test_checkSubsessionHistograms() {
@@ -855,7 +867,7 @@ add_task(function* test_dailyCollection() {
 
   // Init and check timer.
   yield TelemetrySession.setup();
-  TelemetryController.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
+  TelemetrySend.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
 
   // Set histograms to expected state.
   const COUNT_ID = "TELEMETRY_TEST_COUNT";
@@ -1066,7 +1078,7 @@ add_task(function* test_environmentChange() {
 
   // Setup.
   yield TelemetrySession.setup();
-  TelemetryController.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
+  TelemetrySend.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
   TelemetryEnvironment._watchPreferences(PREFS_TO_WATCH);
 
   // Set histograms to expected state.
@@ -1121,16 +1133,18 @@ add_task(function* test_environmentChange() {
 });
 
 // Checks that an expired histogram file is deleted when loaded.
-add_task(function* test_runOldPingFile() {
-  let histogramsFile = getSavedPingFile("old-histograms.dat");
+add_task(function* test_pruneOldPingFile() {
+  const id = generateUUID();
+  const path = OS.Path.join(TelemetryStorage.pingDirectoryPath, id);
+  yield OS.File.writeAtomic(path, "{}", {noOverwrite: false});
 
-  yield TelemetrySession.testSaveHistograms(histogramsFile);
-  do_check_true(histogramsFile.exists());
-  let mtime = histogramsFile.lastModifiedTime;
-  histogramsFile.lastModifiedTime = mtime - (14 * 24 * 60 * 60 * 1000 + 60000); // 14 days, 1m
+  // fake a time 14 days & 1m earlier
+  const now = new Date().getTime();
+  const fakeMtime = now - (14 * 24 * 60 * 60 * 1000 + 60000);
+  OS.File.setDates(path, null, fakeMtime);
 
-  yield TelemetryStorage.testLoadHistograms(histogramsFile);
-  do_check_false(histogramsFile.exists());
+  yield TelemetryController.reset();
+  Assert.ok(!(yield OS.File.exists(path)), "File should have been removed.");
 });
 
 add_task(function* test_savedPingsOnShutdown() {
@@ -1144,11 +1158,13 @@ add_task(function* test_savedPingsOnShutdown() {
   yield OS.File.makeDir(dir);
   yield TelemetrySession.shutdown();
 
-  yield TelemetryStorage.loadSavedPings();
-  Assert.equal(TelemetryStorage.pingsLoaded, expectedPings);
+  yield TelemetryController.reset();
+  const pending = yield TelemetryStorage.loadPendingPingList();
+  Assert.equal(pending.length, expectedPings,
+               "Should have the correct number of pending pings.");
 
-  let pingsIterator = TelemetryStorage.popPendingPings();
-  for (let ping of pingsIterator) {
+  const pings = [for (p of pending) yield TelemetryStorage.loadPendingPing(p.id)];
+  for (let ping of pings) {
     Assert.ok("type" in ping);
 
     let expectedReason =
@@ -1349,8 +1365,10 @@ add_task(function* test_abortedSession() {
   // saved pings directory when it starts.
   yield TelemetryStorage.savePingToFile(abortedSessionPing, ABORTED_FILE, false);
 
+  yield clearPendingPings();
   gRequestIterator = Iterator(new Request());
   yield TelemetrySession.reset();
+  yield TelemetryController.reset();
 
   Assert.ok(!(yield OS.File.exists(ABORTED_FILE)),
             "The aborted session ping must be removed from the aborted session ping directory.");
@@ -1362,16 +1380,20 @@ add_task(function* test_abortedSession() {
   Assert.ok((yield OS.File.exists(PENDING_PING_FILE)),
             "The aborted session ping must exist in the saved pings directory.");
 
-  // Trick: make the aborted ping file overdue so that it gets sent immediately when
-  // resetting TelemetryController.
-  const OVERDUE_PING_FILE_AGE = TelemetryStorage.OVERDUE_PING_FILE_AGE + 60 * 1000;
-  yield OS.File.setDates(PENDING_PING_FILE, null, Date.now() - OVERDUE_PING_FILE_AGE);
-  yield TelemetryController.reset();
+  // Trigger sending the pending pings.
+  yield sendPing();
 
-  // Wait for the aborted-session ping.
-  let request = yield gRequestIterator.next();
-  let receivedPing = decodeRequestPayload(request);
-  Assert.equal(receivedPing.payload.info.reason, REASON_ABORTED_SESSION);
+  // We should receive two pings, one of them an aborted-session ping.
+  let requests = [
+    yield gRequestIterator.next(),
+    yield gRequestIterator.next(),
+  ];
+  let pings = [for (req of requests) decodeRequestPayload(req)].filter((p) => {
+    return p.type == PING_TYPE_MAIN && p.payload.info.reason == REASON_ABORTED_SESSION;
+  });
+
+  Assert.equal(pings.length, 1, "Should have received one aborted-session ping.");
+  let receivedPing = pings[0];
   Assert.equal(receivedPing.id, abortedSessionPing.id);
 
   yield TelemetrySession.shutdown();
@@ -1512,6 +1534,7 @@ add_task(function* test_schedulerEnvironmentReschedules() {
     [PREF_TEST, TelemetryEnvironment.RECORD_PREF_VALUE],
   ]);
 
+  yield clearPendingPings();
   gRequestIterator = Iterator(new Request());
 
   // Set a fake current date and start Telemetry.
@@ -1554,6 +1577,7 @@ add_task(function* test_schedulerNothingDue() {
 
   // Remove any aborted-session ping from the previous tests.
   yield OS.File.removeDir(DATAREPORTING_PATH, { ignoreAbsent: true });
+  yield clearPendingPings();
 
   // We don't expect to receive any ping in this test, so assert if we do.
   registerPingHandler((req, res) => {
@@ -1590,6 +1614,7 @@ add_task(function* test_pingExtendedStats() {
   // Disable sending extended statistics.
   Telemetry.canRecordExtended = false;
 
+  yield clearPendingPings();
   gRequestIterator = Iterator(new Request());
   yield TelemetrySession.reset();
   yield sendPing();
@@ -1653,6 +1678,7 @@ add_task(function* test_schedulerUserIdle() {
     schedulerTimeout = timeout;
   }, () => {});
   yield TelemetrySession.reset();
+  yield clearPendingPings();
   gRequestIterator = Iterator(new Request());
 
   // When not idle, the scheduler should have a 5 minutes tick interval.
@@ -1693,7 +1719,9 @@ add_task(function* test_sendDailyOnIdle() {
   fakeSchedulerTimer((callback, timeout) => {
     schedulerTickCallback = callback;
   }, () => {});
+
   yield TelemetrySession.reset();
+  yield clearPendingPings();
 
   // Make sure we are not sending a daily before midnight when active.
   now = new Date(2040, 1, 1, 23, 55, 0);
