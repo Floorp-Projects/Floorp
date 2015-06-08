@@ -258,6 +258,7 @@ browser.jar:
   skin/classic/browser/devtools/add.svg               (../shared/devtools/images/add.svg)
   skin/classic/browser/devtools/filters.svg           (../shared/devtools/filters.svg)
   skin/classic/browser/devtools/filter-swatch.svg     (../shared/devtools/images/filter-swatch.svg)
+  skin/classic/browser/devtools/pseudo-class.svg      (../shared/devtools/images/pseudo-class.svg)
   skin/classic/browser/devtools/controls.png          (../shared/devtools/images/controls.png)
   skin/classic/browser/devtools/controls@2x.png       (../shared/devtools/images/controls@2x.png)
   skin/classic/browser/devtools/performance-icons.svg  (../shared/devtools/images/performance-icons.svg)
@@ -469,6 +470,7 @@ browser.jar:
   skin/classic/browser/warning16.png                        (../shared/warning16.png)
   skin/classic/browser/warning16@2x.png                     (../shared/warning16@2x.png)
 
+../extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/chrome.jar:
 % override chrome://browser/skin/feeds/audioFeedIcon.png              chrome://browser/skin/feeds/feedIcon.png
 % override chrome://browser/skin/feeds/audioFeedIcon16.png            chrome://browser/skin/feeds/feedIcon16.png
 % override chrome://browser/skin/feeds/videoFeedIcon.png              chrome://browser/skin/feeds/feedIcon.png

@@ -273,3 +273,11 @@
   background-image: url("chrome://browser/skin/devtools/add.svg");
   background-size: cover;
 }
+
+#pseudo-class-panel-toggle::before {
+  background-image: url("chrome://browser/skin/devtools/pseudo-class.svg#pseudo-class");
+  background-size: cover;
+}
+#pseudo-class-panel-toggle[checked]::before {
+  background-image: url("chrome://browser/skin/devtools/pseudo-class.svg#pseudo-class-checked");
+}

@@ -243,6 +243,9 @@ toolkit.jar:
         skin/classic/global/tree/twisty-clsd-XP.png                    (tree/twisty-clsd-XP.png)
         skin/classic/global/tree/twisty-open-XP.png                    (tree/twisty-open-XP.png)
 
+#if MOZ_BUILD_APP == browser
+../browser/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/chrome.jar:
+#endif
 % override chrome://global/skin/console/console-toolbar.png       chrome://global/skin/console/console-toolbar-XP.png      osversion<6
 % override chrome://global/skin/dirListing/folder.png             chrome://global/skin/dirListing/folder-XP.png            osversion<6
 % override chrome://global/skin/dirListing/local.png              chrome://global/skin/dirListing/local-XP.png             osversion<6
@@ -283,5 +286,8 @@ toolkit.jar:
 % override chrome://global/skin/tree/twisty-open.png              chrome://global/skin/tree/twisty-open-XP.png             osversion<6
 #endif
 
+#if MOZ_BUILD_APP == browser
+../browser/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/chrome.jar:
+#endif
 % override chrome://global/skin/arrow/arrow-lft-hov.gif           chrome://global/skin/arrow/arrow-lft.gif
 % override chrome://global/skin/arrow/arrow-rit-hov.gif           chrome://global/skin/arrow/arrow-rit.gif

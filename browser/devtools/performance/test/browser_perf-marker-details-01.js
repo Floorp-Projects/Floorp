@@ -9,7 +9,6 @@
 function* spawnTest() {
   let { target, panel } = yield initPerformance(MARKERS_URL);
   let { $, $$, EVENTS, PerformanceController, OverviewView, WaterfallView } = panel.panelWin;
-  let { L10N } = devtools.require("devtools/performance/global");
 
   // Hijack the markers massaging part of creating the waterfall view,
   // to prevent collapsing markers and allowing this test to verify
@@ -45,9 +44,9 @@ function* spawnTest() {
 
   const tests = {
     ConsoleTime: function (marker) {
-      shouldHaveLabel($, L10N.getStr("timeline.markerDetail.consoleTimerName"), "!!!", marker);
       shouldHaveStack($, "startStack", marker);
       shouldHaveStack($, "endStack", marker);
+      shouldHaveLabel($, "Timer Name:", "!!!", marker);
       return true;
     },
     TimeStamp: function (marker) {
@@ -83,10 +82,12 @@ function* spawnTest() {
     let m = markers[i];
     EventUtils.sendMouseEvent({ type: "mousedown" }, bar);
 
-    if (testsDone.indexOf(m.name) === -1 && tests[m.name]) {
-      let fullTestComplete = tests[m.name](m);
-      if (fullTestComplete) {
-        testsDone.push(m.name);
+    if (tests[m.name]) {
+      if (testsDone.indexOf(m.name) === -1) {
+        let fullTestComplete = tests[m.name](m);
+        if (fullTestComplete) {
+          testsDone.push(m.name);
+        }
       }
     } else {
       info(`TODO: Need to add marker details tests for ${m.name}`);
