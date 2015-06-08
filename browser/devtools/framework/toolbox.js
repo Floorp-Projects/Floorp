@@ -128,6 +128,10 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._onFocus = this._onFocus.bind(this);
   this._showDevEditionPromo = this._showDevEditionPromo.bind(this);
   this._updateTextboxMenuItems = this._updateTextboxMenuItems.bind(this);
+  this._onBottomHostMinimized = this._onBottomHostMinimized.bind(this);
+  this._onBottomHostMaximized = this._onBottomHostMaximized.bind(this);
+  this._onToolSelectWhileMinimized = this._onToolSelectWhileMinimized.bind(this);
+  this._onBottomHostWillChange = this._onBottomHostWillChange.bind(this);
 
   this._target.on("close", this.destroy);
 
@@ -680,6 +684,32 @@ Toolbox.prototype = {
       return;
     }
 
+    // Bottom-type host can be minimized, add a button for this.
+    if (this.hostType == Toolbox.HostType.BOTTOM) {
+      let minimizeBtn = this.doc.createElement("toolbarbutton");
+      minimizeBtn.id = "toolbox-dock-bottom-minimize";
+      minimizeBtn.className = "maximized";
+      minimizeBtn.setAttribute("tooltiptext",
+        toolboxStrings("toolboxDockButtons.bottom.minimize"));
+      // Calculate the height to which the host should be minimized so the
+      // tabbar is still visible.
+      let toolbarHeight = this.doc.querySelector(".devtools-tabbar")
+                                  .getBoxQuads({box: "content"})[0]
+                                  .bounds.height;
+      minimizeBtn.addEventListener("command", () => {
+        this._host.toggleMinimizeMode(toolbarHeight);
+      });
+      dockBox.appendChild(minimizeBtn);
+
+      // Update the label and icon when the state changes.
+      this._host.on("minimized", this._onBottomHostMinimized);
+      this._host.on("maximized", this._onBottomHostMaximized);
+      // Maximize again when a tool gets selected.
+      this.on("before-select", this._onToolSelectWhileMinimized);
+      // Maximize and stop listening before the host type changes.
+      this.once("host-will-change", this._onBottomHostWillChange);
+    }
+
     if (this.hostType == Toolbox.HostType.WINDOW) {
       this.closeButton.setAttribute("hidden", "true");
     } else {
@@ -707,6 +737,32 @@ Toolbox.prototype = {
 
       dockBox.appendChild(button);
     }
+  },
+
+  _onBottomHostMinimized: function() {
+    let btn = this.doc.querySelector("#toolbox-dock-bottom-minimize");
+    btn.className = "minimized";
+    btn.setAttribute("tooltiptext",
+      toolboxStrings("toolboxDockButtons.bottom.maximize"));
+  },
+
+  _onBottomHostMaximized: function() {
+    let btn = this.doc.querySelector("#toolbox-dock-bottom-minimize");
+    btn.className = "maximized";
+    btn.setAttribute("tooltiptext",
+      toolboxStrings("toolboxDockButtons.bottom.minimize"));
+  },
+
+  _onToolSelectWhileMinimized: function() {
+    this._host.maximize();
+  },
+
+  _onBottomHostWillChange: function() {
+    this._host.maximize();
+
+    this._host.off("minimized", this._onBottomHostMinimized);
+    this._host.off("maximized", this._onBottomHostMaximized);
+    this.off("before-select", this._onToolSelectWhileMinimized);
   },
 
   /**
@@ -1126,6 +1182,8 @@ Toolbox.prototype = {
    *        The id of the tool to switch to
    */
   selectTool: function(id) {
+    this.emit("before-select", id);
+
     let selected = this.doc.querySelector(".devtools-tab[selected]");
     if (selected) {
       selected.removeAttribute("selected");
@@ -1489,6 +1547,8 @@ Toolbox.prototype = {
     if (hostType == this._host.type || !this._target.isLocalTab) {
       return null;
     }
+
+    this.emit("host-will-change", hostType);
 
     let newHost = this._createHost(hostType);
     return newHost.create().then(iframe => {
