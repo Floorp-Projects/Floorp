@@ -227,7 +227,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mAudioCompleted(false, "MediaDecoderStateMachine::mAudioCompleted"),
   mGotDurationFromMetaData(false),
   mDispatchedEventToDecode(false),
-  mStopAudioThread(true),
   mQuickBuffering(false),
   mMinimizePreroll(false),
   mDecodeThreadWaiting(false),
@@ -1799,17 +1798,6 @@ void MediaDecoderStateMachine::StopAudioThread()
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
 
-  if (mStopAudioThread) {
-    // Audio sink is being stopped in another thread. Wait until finished.
-    while (mAudioSink) {
-      mDecoder->GetReentrantMonitor().Wait();
-    }
-    return;
-  }
-
-  mStopAudioThread = true;
-  // Wake up audio sink so that it can reach the finish line.
-  mDecoder->GetReentrantMonitor().NotifyAll();
   if (mAudioSink) {
     DECODER_LOG("Shutdown audio thread");
     mAudioSink->PrepareToShutdown();
@@ -1819,8 +1807,6 @@ void MediaDecoderStateMachine::StopAudioThread()
     }
     mAudioSink = nullptr;
   }
-  // Wake up those waiting for audio sink to finish.
-  mDecoder->GetReentrantMonitor().NotifyAll();
 }
 
 nsresult
@@ -2092,11 +2078,10 @@ MediaDecoderStateMachine::StartAudioThread()
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
   if (mAudioCaptured) {
-    NS_ASSERTION(mStopAudioThread, "mStopAudioThread must always be true if audio is captured");
+    MOZ_ASSERT(!mAudioSink);
     return NS_OK;
   }
 
-  mStopAudioThread = false;
   if (HasAudio() && !mAudioSink) {
     // The audio end time should always be at least the audio start time.
     mAudioEndTime = mAudioStartTime;
