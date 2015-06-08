@@ -325,14 +325,19 @@ VirtualRegister::setInitialDefinition(CodePosition from)
 }
 
 LiveRange*
-VirtualRegister::rangeFor(CodePosition pos) const
+VirtualRegister::rangeFor(CodePosition pos, bool preferRegister /* = false */) const
 {
+    LiveRange* found = nullptr;
     for (LiveRange::RegisterLinkIterator iter = rangesBegin(); iter; iter++) {
         LiveRange* range = LiveRange::get(*iter);
-        if (range->covers(pos))
-            return range;
+        if (range->covers(pos)) {
+            if (!preferRegister || range->bundle()->allocation().isRegister())
+                return range;
+            if (!found)
+                found = range;
+        }
     }
-    return nullptr;
+    return found;
 }
 
 void
@@ -1706,7 +1711,7 @@ BacktrackingAllocator::resolveControlFlow()
             if (skip)
                 continue;
 
-            LiveRange* predecessorRange = reg.rangeFor(start.previous());
+            LiveRange* predecessorRange = reg.rangeFor(start.previous(), /* preferRegister = */ true);
             if (start.subpos() == CodePosition::INPUT) {
                 if (!moveInput(ins->toInstruction(), predecessorRange, range, reg.type()))
                     return false;
@@ -1742,7 +1747,7 @@ BacktrackingAllocator::resolveControlFlow()
                 MOZ_ASSERT(predecessor->mir()->numSuccessors() == 1);
 
                 LAllocation* input = phi->getOperand(k);
-                LiveRange* from = vreg(input).rangeFor(exitOf(predecessor));
+                LiveRange* from = vreg(input).rangeFor(exitOf(predecessor), /* preferRegister = */ true);
                 MOZ_ASSERT(from);
 
                 if (!moveAtExit(predecessor, from, to, def->type()))
@@ -1767,7 +1772,7 @@ BacktrackingAllocator::resolveControlFlow()
                     if (to->covers(exitOf(predecessor)))
                         continue;
 
-                    LiveRange* from = reg.rangeFor(exitOf(predecessor));
+                    LiveRange* from = reg.rangeFor(exitOf(predecessor), /* preferRegister = */ true);
 
                     if (mSuccessor->numPredecessors() > 1) {
                         MOZ_ASSERT(predecessor->mir()->numSuccessors() == 1);
@@ -2326,11 +2331,12 @@ BacktrackingAllocator::minimalDef(LiveRange* range, LNode* ins)
 }
 
 bool
-BacktrackingAllocator::minimalUse(LiveRange* range, LNode* ins)
+BacktrackingAllocator::minimalUse(LiveRange* range, UsePosition* use)
 {
-    // Whether this is a minimal range capturing a use at ins.
+    // Whether this is a minimal range capturing |use|.
+    LNode* ins = insData[use->pos];
     return (range->from() == inputOf(ins)) &&
-           (range->to() == outputOf(ins) || range->to() == outputOf(ins).next());
+           (range->to() == (use->use->usedAtStart() ? outputOf(ins) : outputOf(ins).next()));
 }
 
 bool
@@ -2368,12 +2374,12 @@ BacktrackingAllocator::minimalBundle(LiveBundle* bundle, bool* pfixed)
             if (fixed)
                 return false;
             fixed = true;
-            if (minimalUse(range, insData[iter->pos]))
+            if (minimalUse(range, *iter))
                 minimal = true;
             break;
 
           case LUse::REGISTER:
-            if (minimalUse(range, insData[iter->pos]))
+            if (minimalUse(range, *iter))
                 minimal = true;
             break;
 

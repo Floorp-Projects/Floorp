@@ -750,107 +750,83 @@ nsresult MediaPipeline::PipelineTransport::SendRtpPacket(
     const void *data, int len) {
 
     nsAutoPtr<DataBuffer> buf(new DataBuffer(static_cast<const uint8_t *>(data),
-                                             len));
+                                             len, len + SRTP_MAX_EXPANSION));
 
     RUN_ON_THREAD(sts_thread_,
                   WrapRunnable(
                       RefPtr<MediaPipeline::PipelineTransport>(this),
-                      &MediaPipeline::PipelineTransport::SendRtpPacket_s,
-                      buf),
+                      &MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s,
+                      buf, true),
                   NS_DISPATCH_NORMAL);
 
     return NS_OK;
 }
 
-nsresult MediaPipeline::PipelineTransport::SendRtpPacket_s(
-    nsAutoPtr<DataBuffer> data) {
-  ASSERT_ON_THREAD(sts_thread_);
-  if (!pipeline_)
-    return NS_OK;  // Detached
+nsresult MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
+    nsAutoPtr<DataBuffer> data,
+    bool is_rtp) {
 
-  if (!pipeline_->rtp_.send_srtp_) {
-    MOZ_MTLOG(ML_DEBUG, "Couldn't write RTP packet; SRTP not set up yet");
+  ASSERT_ON_THREAD(sts_thread_);
+  if (!pipeline_) {
+    return NS_OK;  // Detached
+  }
+  TransportInfo& transport = is_rtp ? pipeline_->rtp_ : pipeline_->rtcp_;
+
+  if (!transport.send_srtp_) {
+    MOZ_MTLOG(ML_DEBUG, "Couldn't write RTP/RTCP packet; SRTP not set up yet");
     return NS_OK;
   }
 
-  MOZ_ASSERT(pipeline_->rtp_.transport_);
-  NS_ENSURE_TRUE(pipeline_->rtp_.transport_, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(transport.transport_);
+  NS_ENSURE_TRUE(transport.transport_, NS_ERROR_NULL_POINTER);
 
-  // libsrtp enciphers in place, so we need a new, big enough
-  // buffer.
-  // XXX. allocates and deletes one buffer per packet sent.
-  // Bug 822129
-  int max_len = data->len() + SRTP_MAX_EXPANSION;
-  ScopedDeletePtr<unsigned char> inner_data(
-      new unsigned char[max_len]);
-  memcpy(inner_data, data->data(), data->len());
+  // libsrtp enciphers in place, so we need a big enough buffer.
+  MOZ_ASSERT(data->capacity() >= data->len() + SRTP_MAX_EXPANSION);
 
   int out_len;
-  nsresult res = pipeline_->rtp_.send_srtp_->ProtectRtp(inner_data,
-                                                        data->len(),
-                                                        max_len,
-                                                        &out_len);
-  if (!NS_SUCCEEDED(res))
+  nsresult res;
+  if (is_rtp) {
+    res = transport.send_srtp_->ProtectRtp(data->data(),
+                                           data->len(),
+                                           data->capacity(),
+                                           &out_len);
+  } else {
+    res = transport.send_srtp_->ProtectRtcp(data->data(),
+                                            data->len(),
+                                            data->capacity(),
+                                            &out_len);
+  }
+  if (!NS_SUCCEEDED(res)) {
     return res;
+  }
 
-  MOZ_MTLOG(ML_DEBUG, pipeline_->description_ << " sending RTP packet.");
-  pipeline_->increment_rtp_packets_sent(out_len);
-  return pipeline_->SendPacket(pipeline_->rtp_.transport_, inner_data,
-                               out_len);
+  // paranoia; don't have uninitialized bytes included in data->len()
+  data->SetLength(out_len);
+
+  MOZ_MTLOG(ML_DEBUG, pipeline_->description_ << " sending " <<
+            (is_rtp ? "RTP" : "RTCP") << " packet");
+  if (is_rtp) {
+    pipeline_->increment_rtp_packets_sent(out_len);
+  } else {
+    pipeline_->increment_rtcp_packets_sent();
+  }
+  return pipeline_->SendPacket(transport.transport_, data->data(), out_len);
 }
 
 nsresult MediaPipeline::PipelineTransport::SendRtcpPacket(
     const void *data, int len) {
 
     nsAutoPtr<DataBuffer> buf(new DataBuffer(static_cast<const uint8_t *>(data),
-                                             len));
+                                             len, len + SRTP_MAX_EXPANSION));
 
     RUN_ON_THREAD(sts_thread_,
                   WrapRunnable(
                       RefPtr<MediaPipeline::PipelineTransport>(this),
-                      &MediaPipeline::PipelineTransport::SendRtcpPacket_s,
-                      buf),
+                      &MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s,
+                      buf, false),
                   NS_DISPATCH_NORMAL);
 
     return NS_OK;
-}
-
-nsresult MediaPipeline::PipelineTransport::SendRtcpPacket_s(
-    nsAutoPtr<DataBuffer> data) {
-  ASSERT_ON_THREAD(sts_thread_);
-  if (!pipeline_)
-    return NS_OK;  // Detached
-
-  if (!pipeline_->rtcp_.send_srtp_) {
-    MOZ_MTLOG(ML_DEBUG, "Couldn't write RTCP packet; SRTCP not set up yet");
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(pipeline_->rtcp_.transport_);
-  NS_ENSURE_TRUE(pipeline_->rtcp_.transport_, NS_ERROR_NULL_POINTER);
-
-  // libsrtp enciphers in place, so we need a new, big enough
-  // buffer.
-  // XXX. allocates and deletes one buffer per packet sent.
-  // Bug 822129.
-  int max_len = data->len() + SRTP_MAX_EXPANSION;
-  ScopedDeletePtr<unsigned char> inner_data(
-      new unsigned char[max_len]);
-  memcpy(inner_data, data->data(), data->len());
-
-  int out_len;
-  nsresult res = pipeline_->rtcp_.send_srtp_->ProtectRtcp(inner_data,
-                                                          data->len(),
-                                                          max_len,
-                                                          &out_len);
-
-  if (!NS_SUCCEEDED(res))
-    return res;
-
-  MOZ_MTLOG(ML_DEBUG, pipeline_->description_ << " sending RTCP packet.");
-  pipeline_->increment_rtcp_packets_sent();
-  return pipeline_->SendPacket(pipeline_->rtcp_.transport_, inner_data,
-                               out_len);
 }
 
 void MediaPipelineTransmit::PipelineListener::

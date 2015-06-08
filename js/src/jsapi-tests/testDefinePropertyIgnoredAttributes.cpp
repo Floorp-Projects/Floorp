@@ -49,7 +49,7 @@ BEGIN_TEST(testDefinePropertyIgnoredAttributes)
                             JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_PERMANENT | JSPROP_SHARED,
                             Getter));
 
-    CHECK(JS_GetPropertyDescriptor(cx, obj, "foo", &desc));
+    CHECK(JS_GetOwnPropertyDescriptor(cx, obj, "foo", &desc));
 
     // Note that JSPROP_READONLY is meaningless for accessor properties.
     CHECK(CheckDescriptor(desc, AccessorDescriptor, false, true, false));
@@ -58,7 +58,7 @@ BEGIN_TEST(testDefinePropertyIgnoredAttributes)
     CHECK(JS_DefineProperty(cx, obj, "bar", defineValue,
                             JSPROP_IGNORE_ENUMERATE | JSPROP_SHARED,
                             Getter));
-    CHECK(JS_GetPropertyDescriptor(cx, obj, "bar", &desc));
+    CHECK(JS_GetOwnPropertyDescriptor(cx, obj, "bar", &desc));
     CHECK(CheckDescriptor(desc, AccessorDescriptor, false, true, true));
 
     // Rewrite the descriptor to now be enumerable, leaving the configurability
@@ -66,7 +66,7 @@ BEGIN_TEST(testDefinePropertyIgnoredAttributes)
     CHECK(JS_DefineProperty(cx, obj, "bar", defineValue,
                             JSPROP_IGNORE_PERMANENT | JSPROP_ENUMERATE | JSPROP_SHARED,
                             Getter));
-    CHECK(JS_GetPropertyDescriptor(cx, obj, "bar", &desc));
+    CHECK(JS_GetOwnPropertyDescriptor(cx, obj, "bar", &desc));
     CHECK(CheckDescriptor(desc, AccessorDescriptor, true, true, true));
 
     // Now try the same game with a value property
@@ -75,13 +75,13 @@ BEGIN_TEST(testDefinePropertyIgnoredAttributes)
                             JSPROP_IGNORE_ENUMERATE |
                             JSPROP_IGNORE_READONLY |
                             JSPROP_IGNORE_PERMANENT));
-    CHECK(JS_GetPropertyDescriptor(cx, obj, "baz", &desc));
+    CHECK(JS_GetOwnPropertyDescriptor(cx, obj, "baz", &desc));
     CHECK(CheckDescriptor(desc, DataDescriptor, false, false, false));
 
     // Now again with a configurable property
     CHECK(JS_DefineProperty(cx, obj, "quux", defineValue,
                             JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY));
-    CHECK(JS_GetPropertyDescriptor(cx, obj, "quux", &desc));
+    CHECK(JS_GetOwnPropertyDescriptor(cx, obj, "quux", &desc));
     CHECK(CheckDescriptor(desc, DataDescriptor, false, false, true));
 
     // Just make it writable. Leave the old value and everything else alone.
@@ -91,7 +91,7 @@ BEGIN_TEST(testDefinePropertyIgnoredAttributes)
                             JSPROP_IGNORE_PERMANENT |
                             JSPROP_IGNORE_VALUE));
 
-    CHECK(JS_GetPropertyDescriptor(cx, obj, "quux", &desc));
+    CHECK(JS_GetOwnPropertyDescriptor(cx, obj, "quux", &desc));
     CHECK(CheckDescriptor(desc, DataDescriptor, false, true, true));
     CHECK_SAME(JS::ObjectValue(*obj), desc.value());
 

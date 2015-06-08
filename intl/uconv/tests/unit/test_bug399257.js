@@ -6,15 +6,19 @@ const expectedString = "Hello\nWorld";
 
 function run_test() {
     var failures = false;
+    var encodingConverter = CreateScriptableConverter();
 
-    var decoders = [
+    var encoders = [
         "Big5",
         "Big5-HKSCS",
         "EUC-JP",
         "EUC-KR",
         "gb18030",
+        "gbk",
         "IBM866",
         "ISO-2022-JP",
+        "ISO-8859-1",
+        "ISO-8859-2",
         "ISO-8859-3",
         "ISO-8859-4",
         "ISO-8859-5",
@@ -27,7 +31,6 @@ function run_test() {
         "ISO-8859-14",
         "ISO-8859-15",
         "ISO-8859-16",
-        "ISO-8859-2",
         "KOI8-R",
         "KOI8-U",
         "Shift_JIS",
@@ -41,23 +44,18 @@ function run_test() {
         "windows-1257",
         "windows-1258",
         "windows-874",
+        "macintosh",
         "x-mac-cyrillic",
+        "x-user-defined",
         "UTF-8"
     ];
 
     var counter = 0;
-    while (counter < decoders.length) {
-	++counter;
-	var charset = decoders[counter];
-
+    while (counter < encoders.length) {
+	var charset = encoders[counter++];
         dump("testing " + counter + " " + charset + "\n");
 
-        try {
-            encodingConverter.charset = charset;
-        } catch(e) {
-            dump("Warning: couldn't set encoder charset to " + charset + "\n");
-            continue;
-        }
+        encodingConverter.charset = charset;
         var codepageString = encodingConverter.ConvertFromUnicode(inString) +
             encodingConverter.Finish();
 	if (codepageString != expectedString) {

@@ -1,0 +1,6 @@
+<!DOCTYPE html>
+<script>
+  window.opener.postMessage({status: "domain", data: document.domain}, "*");
+  window.opener.postMessage({status: "origin", data: location.origin}, "*");
+  window.opener.postMessage({status: "done"}, "*");
+</script>
