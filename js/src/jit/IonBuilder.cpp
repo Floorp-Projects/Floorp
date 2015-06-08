@@ -7663,9 +7663,10 @@ IonBuilder::jsop_intrinsic(PropertyName* name)
         return pushTypeBarrier(ins, types, BarrierKind::TypeSet);
     }
 
-    // Bake in the intrinsic. Make sure that TI agrees with us on the type.
-    Value vp;
-    JS_ALWAYS_TRUE(script()->global().maybeGetIntrinsicValue(name, &vp));
+    // Bake in the intrinsic, guaranteed to exist because a non-empty typeset
+    // means the intrinsic was successfully gotten in the VM call above.
+    // Assert that TI agrees with us on the type.
+    Value vp = script()->global().existingIntrinsicValue(name);
     MOZ_ASSERT(types->hasType(TypeSet::GetValueType(vp)));
 
     pushConstant(vp);
