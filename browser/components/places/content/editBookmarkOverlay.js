@@ -42,6 +42,7 @@ let gEditItemOverlay = {
     let uris = bulkTagging ? aInitInfo.uris : null;
     let visibleRows = new Set();
     let isParentReadOnly = false;
+    let postData = aInitInfo.postData;
     if (node && "parent" in node) {
       let parent = node.parent;
       if (parent) {
@@ -54,7 +55,7 @@ let gEditItemOverlay = {
                               isURI, uri, title,
                               isBookmark, isFolderShortcut, isParentReadOnly,
                               bulkTagging, uris,
-                              visibleRows };
+                              visibleRows, postData };
   },
 
   get initialized() {
@@ -594,7 +595,7 @@ let gEditItemOverlay = {
     let itemId = this._paneInfo.itemId;
     let newKeyword = this._keywordField.value;
     if (!PlacesUIUtils.useAsyncTransactions) {
-      let txn = new PlacesEditBookmarkKeywordTransaction(itemId, newKeyword);
+      let txn = new PlacesEditBookmarkKeywordTransaction(itemId, newKeyword, this._paneInfo.postData);
       PlacesUtils.transactionManager.doTransaction(txn);
       return;
     }

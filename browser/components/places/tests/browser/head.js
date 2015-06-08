@@ -162,18 +162,21 @@ function promiseIsURIVisited(aURI) {
 }
 
 function promiseBookmarksNotification(notification, conditionFn) {
-  info(`Waiting for ${notification}`);
+  info(`promiseBookmarksNotification: waiting for ${notification}`);
   return new Promise((resolve, reject) => {
     let proxifiedObserver = new Proxy({}, {
       get: (target, name) => {
         if (name == "QueryInterface")
           return XPCOMUtils.generateQI([ Ci.nsINavBookmarkObserver ]);
+        info(`promiseBookmarksNotification: got ${name} notification`);
         if (name == notification)
           return () => {
             if (conditionFn.apply(this, arguments)) {
               clearTimeout(timeout);
               PlacesUtils.bookmarks.removeObserver(proxifiedObserver, false);
               executeSoon(resolve);
+            } else {
+              info(`promiseBookmarksNotification: skip cause condition doesn't apply to ${JSON.stringify(arguments)}`);
             }
           }
         return () => {};
@@ -277,4 +280,134 @@ function isToolbarVisible(aToolbar) {
   let hidingValue = aToolbar.getAttribute(hidingAttribute).toLowerCase();
   // Check for both collapsed="true" and collapsed="collapsed"
   return hidingValue !== "true" && hidingValue !== hidingAttribute;
+}
+
+/**
+ * Executes a task after opening the bookmarks dialog, then cancels the dialog.
+ *
+ * @param openFn
+ *        generator function causing the dialog to open
+ * @param task
+ *        the task to execute once the dialog is open
+ */
+let withBookmarksDialog = Task.async(function* (openFn, taskFn) {
+  let dialogPromise = new Promise(resolve => {
+    Services.ww.registerNotification(function winObserver(subject, topic, data) {
+      if (topic != "domwindowopened")
+        return;
+      let win = subject.QueryInterface(Ci.nsIDOMWindow);
+      win.addEventListener("load", function load() {
+        win.removeEventListener("load", load);
+        ok(win.location.href.startsWith("chrome://browser/content/places/bookmarkProperties"),
+           "The bookmark properties dialog is ready");
+        Services.ww.unregisterNotification(winObserver);
+        // This is needed for the overlay.
+        waitForFocus(() => {
+          resolve(win);
+        }, win);
+      });
+    });
+  });
+
+  info("withBookmarksDialog: opening the dialog");
+  // The dialog might be modal and could block our events loop, so executeSoon.
+  executeSoon(openFn);
+
+  info("withBookmarksDialog: waiting for the dialog");
+  let dialogWin = yield dialogPromise;
+
+  // Ensure overlay is loaded
+  ok(dialogWin.gEditItemOverlay.initialized, "EditItemOverlay is initialized");
+
+  info("withBookmarksDialog: executing the task");
+  try {
+    yield taskFn(dialogWin);
+  } finally {
+    info("withBookmarksDialog: canceling the dialog");
+    dialogWin.document.documentElement.cancelDialog();
+  }
+});
+
+/**
+ * Opens the contextual menu on the element pointed by the given selector.
+ *
+ * @param selector
+ *        Valid selector syntax
+ * @return the target DOM node.
+ */
+let openContextMenuForContentSelector = Task.async(function* (browser, selector) {
+  info("wait for the context menu");
+  let contextPromise = BrowserTestUtils.waitForEvent(document.getElementById("contentAreaContextMenu"),
+                                                     "popupshown");
+  yield ContentTask.spawn(browser, { selector }, function* (args) {
+    let doc = content.document;
+    let elt = doc.querySelector(args.selector)
+    dump(`openContextMenuForContentSelector: found ${elt}\n`);
+
+    /* Open context menu so chrome can access the element */
+    const domWindowUtils =
+      content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+             .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    let rect = elt.getBoundingClientRect();
+    let left = rect.left + rect.width / 2;
+    let top = rect.top + rect.height / 2;
+    domWindowUtils.sendMouseEvent("contextmenu", left, top, 2,
+                                  1, 0, false, 0, 0, true);
+  });
+  yield contextPromise;
+
+  return gContextMenuContentData.popupNode;
+});
+
+/**
+ * Waits for a specified condition to happen.
+ *
+ * @param conditionFn
+ *        a Function or a generator function, returning a boolean for whether
+ *        the condition is fulfilled.
+ * @param errorMsg
+ *        Error message to use if the condition has not been satisfied after a
+ *        meaningful amount of tries.
+ */
+let waitForCondition = Task.async(function* (conditionFn, errorMsg) {
+  for (let tries = 0; tries < 100; ++tries) {
+    if ((yield conditionFn()))
+      return;
+    yield new Promise(resolve => {
+      if (!waitForCondition._timers) {
+        waitForCondition._timers = new Set();
+        registerCleanupFunction(() => {
+          is(waitForCondition._timers.size, 0, "All the wait timers have been removed");
+          delete waitForCondition._timers;
+        });
+      }
+      let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      waitForCondition._timers.add(timer);
+      timer.init(() => {
+        waitForCondition._timers.delete(timer);
+        resolve();
+      }, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+    });
+  }
+  ok(false, errorMsg);
+});
+
+/**
+ * Fills a bookmarks dialog text field ensuring to cause expected edit events.
+ *
+ * @param id
+ *        id of the text field
+ * @param text
+ *        text to fill in
+ * @param win
+ *        dialog window
+ */
+function fillBookmarkTextField(id, text, win) {
+  let elt = win.document.getElementById(id);
+  elt.focus();
+  elt.select();
+  for (let c of text.split("")) {
+    EventUtils.synthesizeKey(c, {}, win);
+  }
+  elt.blur();
 }
