@@ -11,6 +11,7 @@
 #include "InterfaceInitFuncs.h"
 #include "nsAccUtils.h"
 #include "mozilla/a11y/PDocAccessible.h"
+#include "OuterDocAccessible.h"
 #include "ProxyAccessible.h"
 #include "RootAccessible.h"
 #include "nsMai.h"
@@ -828,26 +829,45 @@ getChildCountCB(AtkObject *aAtkObj)
 AtkObject *
 refChildCB(AtkObject *aAtkObj, gint aChildIndex)
 {
-    // aChildIndex should not be less than zero
-    if (aChildIndex < 0) {
+  // aChildIndex should not be less than zero
+  if (aChildIndex < 0) {
+    return nullptr;
+  }
+
+  AtkObject* childAtkObj = nullptr;
+  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
+  if (accWrap) {
+    if (nsAccUtils::MustPrune(accWrap)) {
       return nullptr;
     }
 
-    AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-    if (!accWrap || nsAccUtils::MustPrune(accWrap)) {
-        return nullptr;
-    }
-
     Accessible* accChild = accWrap->GetEmbeddedChildAt(aChildIndex);
-    if (!accChild)
-        return nullptr;
+    if (accChild) {
+      childAtkObj = AccessibleWrap::GetAtkObject(accChild);
+    } else {
+      OuterDocAccessible* docOwner = accWrap->AsOuterDoc();
+      if (docOwner) {
+        ProxyAccessible* proxyDoc = docOwner->RemoteChildDoc();
+        if (proxyDoc)
+          childAtkObj = GetWrapperFor(proxyDoc);
+      }
+    }
+  } else if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
+    if (proxy->MustPruneChildren())
+      return nullptr;
 
-    AtkObject* childAtkObj = AccessibleWrap::GetAtkObject(accChild);
+    ProxyAccessible* child = proxy->EmbeddedChildAt(aChildIndex);
+    if (child)
+      childAtkObj = GetWrapperFor(child);
+  } else {
+    return nullptr;
+  }
 
-    NS_ASSERTION(childAtkObj, "Fail to get AtkObj");
-    if (!childAtkObj)
-        return nullptr;
-    g_object_ref(childAtkObj);
+  NS_ASSERTION(childAtkObj, "Fail to get AtkObj");
+  if (!childAtkObj)
+    return nullptr;
+
+  g_object_ref(childAtkObj);
 
   if (aAtkObj != childAtkObj->accessible_parent)
     atk_object_set_parent(childAtkObj, aAtkObj);
