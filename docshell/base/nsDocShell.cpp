@@ -944,7 +944,7 @@ nsDocShell::nsDocShell()
 
 nsDocShell::~nsDocShell()
 {
-  MOZ_ASSERT(!mProfileTimelineRecording);
+  MOZ_ASSERT(!IsObserved());
 
   Destroy();
 
@@ -2927,6 +2927,8 @@ nsDocShell::HistoryTransactionRemoved(int32_t aIndex)
 
 unsigned long nsDocShell::gProfileTimelineRecordingsCount = 0;
 
+mozilla::LinkedList<nsDocShell::ObservedDocShell>* nsDocShell::gObservedDocShells = nullptr;
+
 NS_IMETHODIMP
 nsDocShell::SetRecordProfileTimelineMarkers(bool aValue)
 {
@@ -2935,11 +2937,16 @@ nsDocShell::SetRecordProfileTimelineMarkers(bool aValue)
     if (aValue) {
       ++gProfileTimelineRecordingsCount;
       UseEntryScriptProfiling();
-      mProfileTimelineRecording = true;
+
+      MOZ_ASSERT(!mObserved);
+      mObserved.reset(new ObservedDocShell(this));
+      GetOrCreateObservedDocShells().insertFront(mObserved.get());
     } else {
       --gProfileTimelineRecordingsCount;
       UnuseEntryScriptProfiling();
-      mProfileTimelineRecording = false;
+
+      mObserved.reset(nullptr);
+
       ClearProfileTimelineMarkers();
     }
   }
@@ -2950,7 +2957,7 @@ nsDocShell::SetRecordProfileTimelineMarkers(bool aValue)
 NS_IMETHODIMP
 nsDocShell::GetRecordProfileTimelineMarkers(bool* aValue)
 {
-  *aValue = mProfileTimelineRecording;
+  *aValue = IsObserved();
   return NS_OK;
 }
 
@@ -3090,7 +3097,7 @@ void
 nsDocShell::AddProfileTimelineMarker(const char* aName,
                                      TracingMetadata aMetaData)
 {
-  if (mProfileTimelineRecording) {
+  if (IsObserved()) {
     TimelineMarker* marker = new TimelineMarker(this, aName, aMetaData);
     mProfileTimelineMarkers.AppendElement(marker);
   }
@@ -3099,7 +3106,7 @@ nsDocShell::AddProfileTimelineMarker(const char* aName,
 void
 nsDocShell::AddProfileTimelineMarker(UniquePtr<TimelineMarker>&& aMarker)
 {
-  if (mProfileTimelineRecording) {
+  if (IsObserved()) {
     mProfileTimelineMarkers.AppendElement(Move(aMarker));
   }
 }
