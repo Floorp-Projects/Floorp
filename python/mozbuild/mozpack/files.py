@@ -978,17 +978,28 @@ class MercurialFile(BaseFile):
 class MercurialRevisionFinder(BaseFinder):
     """A finder that operates on a specific Mercurial revision."""
 
-    def __init__(self, repo, rev='.', **kwargs):
+    def __init__(self, repo, rev='.', recognize_repo_paths=False, **kwargs):
         """Create a finder attached to a specific revision in a repository.
 
         If no revision is given, open the parent of the working directory.
+
+        ``recognize_repo_paths`` will enable a mode where ``.get()`` will
+        recognize full paths that include the repo's path. Typically Finder
+        instances are "bound" to a base directory and paths are relative to
+        that directory. This mode changes that. When this mode is activated,
+        ``.find()`` will not work! This mode exists to support the moz.build
+        reader, which uses absolute paths instead of relative paths. The reader
+        should eventually be rewritten to use relative paths and this hack
+        should be removed (TODO bug 1171069).
         """
         if not hglib:
             raise Exception('hglib package not found')
 
         super(MercurialRevisionFinder, self).__init__(base=repo, **kwargs)
 
-        self._root = repo
+        self._root = mozpath.normpath(repo).rstrip('/')
+        self._recognize_repo_paths = recognize_repo_paths
+
         # We change directories here otherwise we have to deal with relative
         # paths.
         oldcwd = os.getcwd()
@@ -1007,9 +1018,18 @@ class MercurialRevisionFinder(BaseFinder):
             self._files[relpath] = None
 
     def _find(self, pattern):
+        if self._recognize_repo_paths:
+            raise NotImplementedError('cannot use find with recognize_repo_path')
+
         return self._find_helper(pattern, self._files, self._get)
 
     def get(self, path):
+        if self._recognize_repo_paths:
+            if not path.startswith(self._root):
+                raise ValueError('lookups in recognize_repo_paths mode must be '
+                                 'prefixed with repo path: %s' % path)
+            path = path[len(self._root) + 1:]
+
         try:
             return self._get(path)
         except KeyError:
