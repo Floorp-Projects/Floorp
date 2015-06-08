@@ -265,6 +265,9 @@ SizeOfFramePrefix(FrameType type)
       case JitFrame_BaselineStub:
       case JitFrame_Unwound_BaselineStub:
         return BaselineStubFrameLayout::Size();
+      case JitFrame_IonStub:
+      case JitFrame_Unwound_IonStub:
+        return JitStubFrameLayout::Size();
       case JitFrame_Rectifier:
         return RectifierFrameLayout::Size();
       case JitFrame_Unwound_Rectifier:
@@ -317,6 +320,8 @@ JitFrameIterator::operator++()
     type_ = current()->prevType();
     if (type_ == JitFrame_Unwound_IonJS)
         type_ = JitFrame_IonJS;
+    else if (type_ == JitFrame_Unwound_IonStub)
+        type_ = JitFrame_IonStub;
     else if (type_ == JitFrame_Unwound_BaselineJS)
         type_ = JitFrame_BaselineJS;
     else if (type_ == JitFrame_Unwound_BaselineStub)
@@ -939,6 +944,7 @@ EnsureExitFrame(CommonFrameLayout* frame)
 {
     switch (frame->prevType()) {
       case JitFrame_Unwound_IonJS:
+      case JitFrame_Unwound_IonStub:
       case JitFrame_Unwound_BaselineJS:
       case JitFrame_Unwound_BaselineStub:
       case JitFrame_Unwound_Rectifier:
@@ -969,6 +975,10 @@ EnsureExitFrame(CommonFrameLayout* frame)
 
       case JitFrame_IonJS:
         frame->changePrevType(JitFrame_Unwound_IonJS);
+        return;
+
+      case JitFrame_IonStub:
+        frame->changePrevType(JitFrame_Unwound_IonStub);
         return;
 
       case JitFrame_IonAccessorIC:
@@ -1222,13 +1232,13 @@ UpdateIonJSFrameForMinorGC(JSTracer* trc, const JitFrameIterator& frame)
 }
 
 static void
-MarkBaselineStubFrame(JSTracer* trc, const JitFrameIterator& frame)
+MarkJitStubFrame(JSTracer* trc, const JitFrameIterator& frame)
 {
     // Mark the ICStub pointer stored in the stub frame. This is necessary
     // so that we don't destroy the stub code after unlinking the stub.
 
-    MOZ_ASSERT(frame.type() == JitFrame_BaselineStub);
-    BaselineStubFrameLayout* layout = (BaselineStubFrameLayout*)frame.fp();
+    MOZ_ASSERT(frame.type() == JitFrame_IonStub || frame.type() == JitFrame_BaselineStub);
+    JitStubFrameLayout* layout = (JitStubFrameLayout*)frame.fp();
 
     if (ICStub* stub = layout->maybeStubPtr()) {
         MOZ_ASSERT(ICStub::CanMakeCalls(stub->kind()));
@@ -1523,11 +1533,12 @@ MarkJitActivation(JSTracer* trc, const JitActivationIterator& activations)
           case JitFrame_BaselineJS:
             frames.baselineFrame()->trace(trc, frames);
             break;
-          case JitFrame_BaselineStub:
-            MarkBaselineStubFrame(trc, frames);
-            break;
           case JitFrame_IonJS:
             MarkIonJSFrame(trc, frames);
+            break;
+          case JitFrame_BaselineStub:
+          case JitFrame_IonStub:
+            MarkJitStubFrame(trc, frames);
             break;
           case JitFrame_Bailout:
             MarkBailoutFrame(trc, frames);
@@ -2780,6 +2791,11 @@ JitFrameIterator::dump() const
         }
         break;
       }
+      case JitFrame_IonStub:
+      case JitFrame_Unwound_IonStub:
+        fprintf(stderr, " Ion stub frame\n");
+        fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
+        break;
       case JitFrame_Rectifier:
       case JitFrame_Unwound_Rectifier:
         fprintf(stderr, " Rectifier frame\n");
@@ -2795,7 +2811,10 @@ JitFrameIterator::dump() const
         fprintf(stderr, "Warning! Unwound JS frames are not observable.\n");
         break;
       case JitFrame_Exit:
+        fprintf(stderr, " Exit frame\n");
+        break;
       case JitFrame_LazyLink:
+        fprintf(stderr, " Lazy link frame\n");
         break;
     };
     fputc('\n', stderr);
