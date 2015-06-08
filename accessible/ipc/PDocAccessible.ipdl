@@ -48,7 +48,7 @@ prio(normal upto high) sync protocol PDocAccessible
   manager PBrowser;
 
 parent:
-  __delete__();
+  Shutdown();
 
   /*
    * Notify the parent process the document in the child process is firing an
@@ -67,6 +67,8 @@ parent:
   BindChildDoc(PDocAccessible aChildDoc, uint64_t aID);
 
 child:
+  __delete__();
+
   // Accessible
   prio(high) sync State(uint64_t aID) returns(uint64_t states);
   prio(high) sync Name(uint64_t aID) returns(nsString name);

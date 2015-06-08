@@ -1864,6 +1864,15 @@ public:
   static bool IsRequestFullScreenAllowed();
 
   /**
+   * Returns true if calling execCommand with 'cut' or 'copy' arguments
+   * is restricted to chrome code.
+   */
+  static bool IsCutCopyRestricted()
+  {
+    return !sIsCutCopyAllowed;
+  }
+
+  /**
    * Returns true if calling execCommand with 'cut' or 'copy' arguments is
    * allowed in the current context. These are only allowed if the user initiated
    * them (like with a mouse-click or key press).
@@ -2434,6 +2443,7 @@ private:
   static bool sAllowXULXBL_for_file;
   static bool sIsFullScreenApiEnabled;
   static bool sTrustedFullScreenOnly;
+  static bool sIsCutCopyAllowed;
   static uint32_t sHandlingInputTimeout;
   static bool sIsPerformanceTimingEnabled;
   static bool sIsResourceTimingEnabled;

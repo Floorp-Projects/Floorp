@@ -947,6 +947,29 @@ nsChromeRegistryChrome::ManifestOverride(ManifestProcessingContext& cx, int line
     return;
   }
 
+  if (cx.mType == NS_SKIN_LOCATION) {
+    bool chromeSkinOnly = false;
+    nsresult rv = chromeuri->SchemeIs("chrome", &chromeSkinOnly);
+    chromeSkinOnly = chromeSkinOnly && NS_SUCCEEDED(rv);
+    if (chromeSkinOnly) {
+      rv = resolveduri->SchemeIs("chrome", &chromeSkinOnly);
+      chromeSkinOnly = chromeSkinOnly && NS_SUCCEEDED(rv);
+    }
+    if (chromeSkinOnly) {
+      nsAutoCString chromePath, resolvedPath;
+      chromeuri->GetPath(chromePath);
+      resolveduri->GetPath(resolvedPath);
+      chromeSkinOnly = StringBeginsWith(chromePath, NS_LITERAL_CSTRING("/skin/")) &&
+                       StringBeginsWith(resolvedPath, NS_LITERAL_CSTRING("/skin/"));
+    }
+    if (!chromeSkinOnly) {
+      LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
+                            "Cannot register non-chrome://.../skin/ URIs '%s' and '%s' as overrides and/or to be overridden from a skin manifest.",
+                            chrome, resolved);
+      return;
+    }
+  }
+
   if (!CanLoadResource(resolveduri)) {
     LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
                           "Cannot register non-local URI '%s' for an override.", resolved);
