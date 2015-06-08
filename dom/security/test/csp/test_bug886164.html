@@ -1,0 +1,172 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 886164 - Enforce CSP in sandboxed iframe</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<iframe style="width:200px;height:200px;" id='cspframe'  sandbox="allow-same-origin"></iframe>
+<iframe style="width:200px;height:200px;" id='cspframe2' sandbox></iframe>
+<iframe style="width:200px;height:200px;" id='cspframe3' sandbox="allow-same-origin"></iframe>
+<iframe style="width:200px;height:200px;" id='cspframe4' sandbox></iframe>
+<iframe style="width:200px;height:200px;" id='cspframe5' sandbox="allow-scripts"></iframe>
+<iframe style="width:200px;height:200px;" id='cspframe6' sandbox="allow-same-origin allow-scripts"></iframe>
+<script class="testbody" type="text/javascript">
+
+
+var path = "/tests/dom/security/test/csp/";
+
+// These are test results: -1 means it hasn't run,
+// true/false is the pass/fail result.
+window.tests = {
+  // sandbox allow-same-origin; 'self'
+  img_good: -1, // same origin
+  img_bad: -1, //example.com
+
+  // sandbox; 'self'
+  img2_bad: -1, //example.com
+  img2a_good: -1, // same origin & is image
+
+  // sandbox allow-same-origin; 'none'
+  img3_bad: -1,
+  img3a_bad: -1,
+
+  // sandbox; 'none'
+  img4_bad: -1,
+  img4a_bad: -1,
+
+  // sandbox allow-scripts; 'none' 'unsafe-inline'
+  img5_bad: -1,
+  img5a_bad: -1,
+  script5_bad: -1,
+  script5a_bad: -1,
+
+  // sandbox allow-same-origin allow-scripts; 'self' 'unsafe-inline'
+  img6_bad: -1,
+  script6_bad: -1,
+};
+
+// a postMessage handler that is used by sandboxed iframes without
+// 'allow-same-origin' to communicate pass/fail back to this main page.
+// it expects to be called with an object like {ok: true/false, desc:
+// <description of the test> which it then forwards to ok()
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event)
+{
+  ok_wrapper(event.data.ok, event.data.desc);
+}
+
+var cspTestsDone = false;
+var iframeSandboxTestsDone = false;
+
+// iframe related
+var completedTests = 0;
+var passedTests = 0;
+
+function ok_wrapper(result, desc) {
+  ok(result, desc);
+
+  completedTests++;
+
+  if (result) {
+    passedTests++;
+  }
+
+  if (completedTests === 5) {
+    iframeSandboxTestsDone = true;
+    if (cspTestsDone) {
+      SimpleTest.finish();
+    }
+  }
+}
+
+
+//csp related
+
+// This is used to watch the blocked data bounce off CSP and allowed data
+// get sent out to the wire.
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    var testpat = new RegExp("testid=([a-z0-9_]+)");
+
+    //_good things better be allowed!
+    //_bad things better be stopped!
+
+    if (topic === "specialpowers-http-notify-request") {
+      //these things were allowed by CSP
+      var uri = data;
+      if (!testpat.test(uri)) return;
+      var testid = testpat.exec(uri)[1];
+
+      window.testResult(testid,
+                        /_good/.test(testid),
+                        uri + " allowed by csp");
+    }
+
+    if(topic === "csp-on-violate-policy") {
+      //these were blocked... record that they were blocked
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+      if (!testpat.test(asciiSpec)) return;
+      var testid = testpat.exec(asciiSpec)[1];
+      window.testResult(testid,
+                        /_bad/.test(testid),
+                        asciiSpec + " blocked by \"" + data + "\"");
+    }
+  },
+
+  // must eventually call this to remove the listener,
+  // or mochitests might get borked.
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
+  }
+}
+
+window.examiner = new examiner();
+
+window.testResult = function(testname, result, msg) {
+  //test already complete.... forget it... remember the first result.
+  if (window.tests[testname] != -1)
+    return;
+
+  window.tests[testname] = result;
+  ok(result, testname + ' test: ' + msg);
+
+  // if any test is incomplete, keep waiting
+  for (var v in window.tests)
+    if(tests[v] == -1)
+      return;
+
+  // ... otherwise, finish
+  window.examiner.remove();
+  cspTestsDone = true;
+  if (iframeSandboxTestsDone) {
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_bug886164.html';
+document.getElementById('cspframe2').src = 'file_bug886164_2.html';
+document.getElementById('cspframe3').src = 'file_bug886164_3.html';
+document.getElementById('cspframe4').src = 'file_bug886164_4.html';
+document.getElementById('cspframe5').src = 'file_bug886164_5.html';
+document.getElementById('cspframe6').src = 'file_bug886164_6.html';
+
+</script>
+</pre>
+</body>
+</html>

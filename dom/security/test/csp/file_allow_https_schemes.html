@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 826805 - CSP: Allow http and https for scheme-less sources</title>
+  </head>
+  <body>
+  <div id="testdiv">blocked</div>
+  <!--
+    We resue file_path_matching.js which just updates the contents of 'testdiv' to contain allowed.
+    Note, that we are loading the file_path_matchting.js using a scheme of 'https'.
+   -->
+  <script src="https://example.com/tests/dom/security/test/csp/file_path_matching.js#foo"></script>
+</body>
+</html>
