@@ -163,22 +163,24 @@ getTextAfterOffsetCB(AtkText *aText, gint aOffset,
                      AtkTextBoundary aBoundaryType,
                      gint *aStartOffset, gint *aEndOffset)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return nullptr;
-
-  HyperTextAccessible* text = accWrap->AsHyperText();
-  if (!text || !text->IsTextRole())
-    return nullptr;
-
-  nsAutoString autoStr;
+    nsAutoString autoStr;
   int32_t startOffset = 0, endOffset = 0;
-  text->TextAfterOffset(aOffset, aBoundaryType, &startOffset, &endOffset, autoStr);
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole())
+      return nullptr;
+
+    text->TextAfterOffset(aOffset, aBoundaryType, &startOffset, &endOffset, autoStr);
+    ConvertTexttoAsterisks(accWrap, autoStr);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    proxy->GetTextAfterOffset(aOffset, aBoundaryType, autoStr, &startOffset,
+                              &endOffset);
+  }
 
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  ConvertTexttoAsterisks(accWrap, autoStr);
   NS_ConvertUTF16toUTF8 cautoStr(autoStr);
   return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nullptr;
 }
@@ -188,23 +190,26 @@ getTextAtOffsetCB(AtkText *aText, gint aOffset,
                   AtkTextBoundary aBoundaryType,
                   gint *aStartOffset, gint *aEndOffset)
 {
+  nsAutoString autoStr;
+  int32_t startOffset = 0, endOffset = 0;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return nullptr;
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole())
+      return nullptr;
 
-  HyperTextAccessible* text = accWrap->AsHyperText();
-  if (!text || !text->IsTextRole())
-    return nullptr;
-
-    nsAutoString autoStr;
-    int32_t startOffset = 0, endOffset = 0;
     text->TextAtOffset(aOffset, aBoundaryType, &startOffset, &endOffset, autoStr);
-    *aStartOffset = startOffset;
-    *aEndOffset = endOffset;
-
     ConvertTexttoAsterisks(accWrap, autoStr);
-    NS_ConvertUTF16toUTF8 cautoStr(autoStr);
-    return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nullptr;
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    proxy->GetTextAtOffset(aOffset, aBoundaryType, autoStr, &startOffset,
+                           &endOffset);
+  }
+
+  *aStartOffset = startOffset;
+  *aEndOffset = endOffset;
+
+  NS_ConvertUTF16toUTF8 cautoStr(autoStr);
+  return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nullptr;
 }
 
 static gunichar
@@ -233,22 +238,25 @@ getTextBeforeOffsetCB(AtkText *aText, gint aOffset,
                       AtkTextBoundary aBoundaryType,
                       gint *aStartOffset, gint *aEndOffset)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return nullptr;
-
-  HyperTextAccessible* text = accWrap->AsHyperText();
-  if (!text || !text->IsTextRole())
-    return nullptr;
-
   nsAutoString autoStr;
   int32_t startOffset = 0, endOffset = 0;
-  text->TextBeforeOffset(aOffset, aBoundaryType,
-                         &startOffset, &endOffset, autoStr);
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole())
+      return nullptr;
+
+    text->TextBeforeOffset(aOffset, aBoundaryType,
+                           &startOffset, &endOffset, autoStr);
+    ConvertTexttoAsterisks(accWrap, autoStr);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    proxy->GetTextBeforeOffset(aOffset, aBoundaryType, autoStr, &startOffset,
+                               &endOffset);
+  }
+
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  ConvertTexttoAsterisks(accWrap, autoStr);
   NS_ConvertUTF16toUTF8 cautoStr(autoStr);
   return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nullptr;
 }
