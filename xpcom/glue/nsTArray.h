@@ -1393,17 +1393,20 @@ public:
   // was previously sorted, it will remain sorted after this
   // insertion.
   template<class Item, class Comparator>
-  elem_type* InsertElementSorted(const Item& aItem, const Comparator& aComp)
+  elem_type* InsertElementSorted(Item&& aItem, const Comparator& aComp)
   {
-    index_type index = IndexOfFirstElementGt(aItem, aComp);
-    return InsertElementAt(index, aItem);
+    index_type index = IndexOfFirstElementGt<Item, Comparator>(aItem, aComp);
+    return InsertElementAt<Item, Alloc>(
+      index, mozilla::Forward<Item>(aItem));
   }
 
   // A variation on the InsertElementSorted method defined above.
   template<class Item>
-  elem_type* InsertElementSorted(const Item& aItem)
+  elem_type* InsertElementSorted(Item&& aItem)
   {
-    return InsertElementSorted(aItem, nsDefaultComparator<elem_type, Item>());
+    nsDefaultComparator<elem_type, Item> comp;
+    return InsertElementSorted<Item, decltype(comp)>(
+      mozilla::Forward<Item>(aItem), comp);
   }
 
   // This method appends elements to the end of this array.
