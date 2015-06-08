@@ -314,8 +314,6 @@ MediaDecoderStateMachine::InitializationTask()
   mWatchManager.Watch(mObservedDuration, &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
   mWatchManager.Watch(mLogicallySeeking, &MediaDecoderStateMachine::LogicallySeekingChanged);
-  mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::UpdateStreamBlockingForPlayState);
-  mWatchManager.Watch(mLogicallySeeking, &MediaDecoderStateMachine::UpdateStreamBlockingForPlayState);
 }
 
 bool MediaDecoderStateMachine::HasFutureAudio()
@@ -430,19 +428,6 @@ static bool ZeroDurationAtLastChunk(VideoSegment& aInput)
   return lastVideoStratTime == aInput.GetDuration();
 }
 
-static void
-UpdateStreamBlocking(MediaStream* aStream, bool aBlocking)
-{
-  int32_t delta = aBlocking ? 1 : -1;
-  if (NS_IsMainThread()) {
-    aStream->ChangeExplicitBlockerCount(delta);
-  } else {
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<int32_t>(
-      aStream, &MediaStream::ChangeExplicitBlockerCount, delta);
-    AbstractThread::MainThread()->Dispatch(r.forget());
-  }
-}
-
 void MediaDecoderStateMachine::SendStreamData()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -481,12 +466,6 @@ void MediaDecoderStateMachine::SendStreamData()
       }
       mediaStream->FinishAddTracks();
       stream->mStreamInitialized = true;
-
-      // Make sure stream blocking is updated before sending stream data so we
-      // don't 'leak' data when the stream is supposed to be blocked.
-      UpdateStreamBlockingForPlayState();
-      UpdateStreamBlockingForStateMachinePlaying();
-      UpdateStreamBlocking(mediaStream, false);
     }
 
     if (mInfo.HasAudio()) {
@@ -1295,7 +1274,6 @@ void MediaDecoderStateMachine::StopPlayback()
   // so it can pause audio playback.
   mDecoder->GetReentrantMonitor().NotifyAll();
   NS_ASSERTION(!IsPlaying(), "Should report not playing at end of StopPlayback()");
-  UpdateStreamBlockingForStateMachinePlaying();
 
   DispatchDecodeTasksIfNeeded();
 }
@@ -1333,7 +1311,6 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   NS_ENSURE_SUCCESS_VOID(rv);
 
   mDecoder->GetReentrantMonitor().NotifyAll();
-  UpdateStreamBlockingForStateMachinePlaying();
   DispatchDecodeTasksIfNeeded();
 }
 
@@ -3296,13 +3273,11 @@ void MediaDecoderStateMachine::SetPlayStartTime(const TimeStamp& aTimeStamp)
 {
   AssertCurrentThreadInMonitor();
   mPlayStartTime = aTimeStamp;
-  if (!mAudioSink) {
-    return;
-  }
-  if (!mPlayStartTime.IsNull()) {
-    mAudioSink->StartPlayback();
-  } else {
-    mAudioSink->StopPlayback();
+
+  if (mAudioSink) {
+    mAudioSink->SetPlaying(!mPlayStartTime.IsNull());
+  } else if (mAudioCaptured) {
+    mDecodedStream.SetPlaying(!mPlayStartTime.IsNull());
   }
 }
 
@@ -3526,44 +3501,12 @@ void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,
   DispatchAudioCaptured();
 }
 
-void MediaDecoderStateMachine::UpdateStreamBlockingForPlayState()
-{
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-
-   auto stream = GetDecodedStream();
-   if (!stream) {
-     return;
-   }
-
-  bool blocking = mPlayState != MediaDecoder::PLAY_STATE_PLAYING ||
-                  mLogicallySeeking;
-  if (blocking != stream->mHaveBlockedForPlayState) {
-    stream->mHaveBlockedForPlayState = blocking;
-    UpdateStreamBlocking(stream->mStream, blocking);
-  }
-}
-
-void MediaDecoderStateMachine::UpdateStreamBlockingForStateMachinePlaying()
-{
-  AssertCurrentThreadInMonitor();
-
-  auto stream = GetDecodedStream();
-  if (!stream) {
-    return;
-  }
-
-  bool blocking = !IsPlaying();
-  if (blocking != stream->mHaveBlockedForStateMachineNotPlaying) {
-    stream->mHaveBlockedForStateMachineNotPlaying = blocking;
-    UpdateStreamBlocking(stream->mStream, blocking);
-  }
-}
-
 void MediaDecoderStateMachine::RecreateDecodedStream(MediaStreamGraph* aGraph)
 {
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   mDecodedStream.RecreateData(aGraph);
+  mDecodedStream.SetPlaying(IsPlaying());
 }
 
 } // namespace mozilla
