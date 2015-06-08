@@ -9,7 +9,7 @@
 // our protocol that we implement (so cocoa widgets can talk to us)
 #import "mozAccessibleProtocol.h"
 
-/* 
+/*
   The root accessible. There is one per window.
   Created by the RootAccessibleWrap.
 */
