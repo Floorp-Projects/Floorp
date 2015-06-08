@@ -1,0 +1,44 @@
+<html>
+  <head>
+    <title>CSP frame ancestors tests</title>
+
+    <!-- this page shouldn't have a CSP, just the sub-pages. -->
+    <script src='file_frameancestors_main.js'></script>
+
+  </head>
+  <body>
+
+<!-- These iframes will get populated by the attached javascript. -->
+<tt>  aa_allow:   /* innermost frame allows a */</tt><br/>
+<iframe id='aa_allow'></iframe><br/>
+
+<tt>  aa_block:     /* innermost frame denies a */</tt><br/>
+<iframe id='aa_block'></iframe><br/>
+
+<tt>  ab_allow:     /* innermost frame allows a */</tt><br/>
+<iframe id='ab_allow'></iframe><br/>
+
+<tt>  ab_block:     /* innermost frame denies a */</tt><br/>
+<iframe id='ab_block'></iframe><br/>
+
+<tt>  aba_allow:    /* innermost frame allows b,a */</tt><br/>
+<iframe id='aba_allow'></iframe><br/>
+
+<tt>  aba_block:    /* innermost frame denies b */</tt><br/>
+<iframe id='aba_block'></iframe><br/>
+
+<tt>  aba2_block:   /* innermost frame denies a */</tt><br/>
+<iframe id='aba2_block'></iframe><br/>
+
+<tt>  abb_allow:    /* innermost frame allows b,a */</tt><br/>
+<iframe id='abb_allow'></iframe><br/>
+
+<tt>  abb_block:    /* innermost frame denies b */</tt><br/>
+<iframe id='abb_block'></iframe><br/>
+
+<tt>  abb2_block:   /* innermost frame denies a */</tt><br/>
+<iframe id='abb2_block'></iframe><br/>
+
+
+  </body>
+</html>
