@@ -8,6 +8,7 @@
 
 #include "nsIDocument.h"
 #include "nsIServiceWorkerManager.h"
+#include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/Services.h"
 
