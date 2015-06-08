@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
 </head>
 <body>
 
-<iframe src="https://example.com/tests/dom/base/test/mixedcontentblocker/file_mixed_content_frameNavigation_innermost.html?securePage_navigate_grandchild" id="child"></iframe>
+<iframe src="https://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_innermost.html?securePage_navigate_grandchild" id="child"></iframe>
 <script>
   // For tests that require setTimeout, set the maximum polling time to 50 x 100ms = 5 seconds.
   var MAX_COUNT = 50;
@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
       counter++;
       return;
     }
-    if (loc == "http://example.com/tests/dom/base/test/mixedcontentblocker/file_mixed_content_frameNavigation_innermost.html?securePage_navigate_grandchild_response") {
+    if (loc == "http://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_innermost.html?securePage_navigate_grandchild_response") {
       return;
     }
     else {
