@@ -34,9 +34,10 @@ enum FrameType
     // JS frame used by the baseline JIT.
     JitFrame_BaselineJS,
 
-    // Frame pushed for baseline JIT stubs that make non-tail calls, so that the
+    // Frame pushed for JIT stubs that make non-tail calls, so that the
     // return address -> ICEntry mapping works.
     JitFrame_BaselineStub,
+    JitFrame_IonStub,
 
     // The entry frame is the initial prologue block transitioning from the VM
     // into the Ion world.
@@ -55,6 +56,7 @@ enum FrameType
     JitFrame_Unwound_BaselineJS,
     JitFrame_Unwound_IonJS,
     JitFrame_Unwound_BaselineStub,
+    JitFrame_Unwound_IonStub,
     JitFrame_Unwound_Rectifier,
     JitFrame_Unwound_IonAccessorIC,
 
@@ -165,6 +167,9 @@ class JitFrameIterator
     }
     bool isIonJS() const {
         return type_ == JitFrame_IonJS;
+    }
+    bool isIonStub() const {
+        return type_ == JitFrame_IonStub;
     }
     bool isBailoutJS() const {
         return type_ == JitFrame_Bailout;
