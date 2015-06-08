@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1121857 - document.baseURI should not get blocked if baseURI is null</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="visibility: hidden">
+    <iframe style="width:100%;" id="testframe"></iframe>
+  </div>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * Creating a 'base' element and appending that element
+ * to document.head. After setting baseTag.href and finally
+ * removing the created element from the head, the baseURI
+ * should be the inital baseURI of the page.
+ */
+
+const TOTAL_TESTS = 3;
+var test_counter = 0;
+
+// a postMessage handler to communicate the results back to the parent.
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event)
+{
+  // make sure the base-uri before and after the test is the initial base uri of the page
+  if (event.data.test === "initial_base_uri") {
+    ok(event.data.baseURI.startsWith("http://mochi.test"), "baseURI should be 'http://mochi.test'!");
+  }
+  // check that appending the child and setting the base tag actually affects the base-uri
+  else if (event.data.test === "changed_base_uri") {
+    ok(event.data.baseURI === "http://www.base-tag.com/", "baseURI should be 'http://www.base-tag.com'!");
+  }
+  // we shouldn't get here, but just in case, throw an error.
+  else {
+    ok(false, "unrecognized test!");
+  }
+
+  if (++test_counter === TOTAL_TESTS) {
+    SimpleTest.finish();
+  }
+}
+
+function startTest() {
+  var src = "file_testserver.sjs";
+  // append the file that should be served
+  src += "?file=" + escape("tests/dom/security/test/csp/file_null_baseuri.html");
+  // using 'unsafe-inline' since we load the testcase using an inline script
+  // within file_null_baseuri.html
+  src += "&csp=" + escape("default-src * 'unsafe-inline';");
+
+  document.getElementById("testframe").src = src;
+}
+
+
+SimpleTest.waitForExplicitFinish();
+startTest();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=768029
+-->
+<head>
+  <meta charset="utf-8">
+    <title>This is an app for testing</title>
+
+    <link rel="stylesheet" type="text/css"
+          href="file_bug768029.sjs?type=style&origin=same_origin" />
+    <link rel="stylesheet" type="text/css"
+          href="http://example.com/tests/dom/security/test/csp/file_bug768029.sjs?type=style&origin=cross_origin" />
+  </head>
+  <body>
+
+    <script src="file_bug768029.sjs?type=script&origin=same_origin"></script>
+    <script src="http://example.com/tests/dom/security/test/csp/file_bug768029.sjs?type=script&origin=cross_origin"></script>
+    <img src="file_bug768029.sjs?type=img&origin=same_origin" />
+    <img src="http://example.com/tests/dom/security/test/csp/file_bug768029.sjs?type=img&origin=cross_origin" />
+
+    Test for CSP applied to (simulated) app.
+
+  </body>
+</html>

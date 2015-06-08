@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Content Security Policy Frame Ancestors directive</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<iframe style="width:100%;height:300px;" id='cspframe'></iframe>
+<script class="testbody" type="text/javascript">
+
+// These are test results: -1 means it hasn't run,
+// true/false is the pass/fail result.
+var framesThatShouldLoad = {
+  aa_allow: -1,    /* innermost frame allows a *
+  //aa_block: -1,    /* innermost frame denies a */
+  ab_allow: -1,    /* innermost frame allows a */
+  //ab_block: -1,    /* innermost frame denies a */
+  aba_allow: -1,   /* innermost frame allows b,a */
+  //aba_block: -1,   /* innermost frame denies b */
+  //aba2_block: -1,  /* innermost frame denies a */
+  abb_allow: -1,   /* innermost frame allows b,a */
+  //abb_block: -1,   /* innermost frame denies b */
+  //abb2_block: -1,  /* innermost frame denies a */
+};
+
+// we normally expect _6_ violations (6 test cases that cause blocks), but many
+// of the cases cause violations due to the // origin of the test harness (same
+// as 'a'). When the violation is cross-origin, the URI passed to the observers
+// is null (see bug 846978).  This means we can't tell if it's part of the test
+// case or if it is the test harness frame (also origin 'a').
+// As a result, we'll get an extra violation for the following cases:
+//  ab_block    "frame-ancestors 'none'" (outer frame and test harness)
+//  aba2_block  "frame-ancestors b" (outer frame and test harness)
+//  abb2_block   "frame-ancestors b" (outer frame and test harness)
+//
+// and while we can detect the test harness check for this one case since
+// the violations are not cross-origin and we get the URI:
+//  aba2_block  "frame-ancestors b" (outer frame and test harness)
+//
+// we can't for these other ones:
+//  ab_block    "frame-ancestors 'none'" (outer frame and test harness)
+//  abb2_block   "frame-ancestors b" (outer frame and test harness)
+//
+// so that results in 2 extra violation notifications due to the test harness.
+// expected = 6, total = 8
+//
+// Number of tests that pass for this file should be 12 (8 violations 4 loads)
+var expectedViolationsLeft = 8;
+
+// This is used to watch the blocked data bounce off CSP and allowed data
+// get sent out to the wire.
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    // subject should be an nsURI... though could be null since CSP
+    // prohibits cross-origin URI reporting during frame ancestors checks.
+    if (subject && !SpecialPowers.can_QI(subject))
+      return;
+
+    var asciiSpec = subject;
+
+    try {
+      asciiSpec = SpecialPowers.getPrivilegedProps(
+                    SpecialPowers.do_QueryInterface(subject, "nsIURI"),
+                    "asciiSpec");
+
+      // skip checks on the test harness -- can't do this skipping for
+      // cross-origin blocking since the observer doesn't get the URI.  This
+      // can cause this test to over-succeed (but only in specific cases).
+      if (asciiSpec.includes("test_frameancestors.html")) {
+        return;
+      }
+    } catch (ex) {
+      // was not an nsIURI, so it was probably a cross-origin report.
+    }
+
+
+    if (topic === "csp-on-violate-policy") {
+      //these were blocked... record that they were blocked
+      window.frameBlocked(asciiSpec, data);
+    }
+  },
+
+  // must eventually call this to remove the listener,
+  // or mochitests might get borked.
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+  }
+}
+
+// called when a frame is loaded
+// -- if it's not enumerated above, it should not load!
+var frameLoaded = function(testname, uri) {
+  //test already complete.... forget it... remember the first result.
+  if (window.framesThatShouldLoad[testname] != -1)
+    return;
+
+  if (typeof window.framesThatShouldLoad[testname] === 'undefined') {
+    // uh-oh, we're not expecting this frame to load!
+    ok(false, testname + ' framed site should not have loaded: ' + uri);
+  } else {
+    framesThatShouldLoad[testname] = true;
+    ok(true, testname + ' framed site when allowed by csp (' + uri + ')');
+  }
+  checkTestResults();
+}
+
+// called when a frame is blocked
+// -- we can't determine *which* frame was blocked, but at least we can count them
+var frameBlocked = function(uri, policy) {
+  ok(true, 'a CSP policy blocked frame from being loaded: ' + policy);
+  expectedViolationsLeft--;
+  checkTestResults();
+}
+
+
+// Check to see if all the tests have run
+var checkTestResults = function() {
+  // if any test is incomplete, keep waiting
+  for (var v in framesThatShouldLoad)
+    if(window.framesThatShouldLoad[v] == -1)
+      return;
+
+  if (window.expectedViolationsLeft > 0)
+    return;
+
+  // ... otherwise, finish
+  window.examiner.remove();
+  SimpleTest.finish();
+}
+
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event) {
+  if (event.data.call && event.data.call == 'frameLoaded')
+    frameLoaded(event.data.testname, event.data.uri);
+}
+
+//////////////////////////////////////////////////////////////////////
+// set up and go
+window.examiner = new examiner();
+SimpleTest.waitForExplicitFinish();
+
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_frameancestors_main.html';
+
+</script>
+</pre>
+</body>
+</html>
