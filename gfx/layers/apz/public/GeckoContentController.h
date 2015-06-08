@@ -79,7 +79,7 @@ public:
    * |aContentRect| is in CSS pixels, relative to the current cssPage.
    * |aScrollableSize| is the current content width/height in CSS pixels.
    */
-  virtual void SendAsyncScrollDOMEvent(bool aIsRoot,
+  virtual void SendAsyncScrollDOMEvent(bool aIsRootContent,
                                        const CSSRect &aContentRect,
                                        const CSSSize &aScrollableSize) = 0;
 

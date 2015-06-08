@@ -3066,13 +3066,13 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
   }
 
   nsPoint toReferenceFrame = mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
-  bool isRoot = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
+  bool isRootContent = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
 
   Maybe<nsRect> parentLayerClip;
   if (needsParentLayerClip) {
     nsRect clip = nsRect(mScrollPort.TopLeft() + toReferenceFrame,
                          nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
-    if (isRoot) {
+    if (isRootContent) {
       double res = mOuter->PresContext()->PresShell()->GetResolution();
       clip.width = NSToCoordRound(clip.width / res);
       clip.height = NSToCoordRound(clip.height / res);
@@ -3089,7 +3089,7 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
 #if defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_ANDROID_APZ)
   // Android without apzc (aka the java pan zoom code) only uses async scrolling
   // for the root scroll frame of the root content document.
-  if (!isRoot) {
+  if (!isRootContent) {
     thisScrollFrameUsesAsyncScrolling = false;
   }
 #endif
@@ -3124,7 +3124,7 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
       nsLayoutUtils::ComputeFrameMetrics(
         mScrolledFrame, mOuter, mOuter->GetContent(),
         aContainerReferenceFrame, aLayer, mScrollParentID,
-        scrollport, parentLayerClip, isRoot, aParameters);
+        scrollport, parentLayerClip, isRootContent, aParameters);
 }
 
 bool

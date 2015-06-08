@@ -721,7 +721,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mZoom);
     WriteParam(aMsg, aParam.mDevPixelsPerCSSPixel);
     WriteParam(aMsg, aParam.mPresShellId);
-    WriteParam(aMsg, aParam.mIsRoot);
+    WriteParam(aMsg, aParam.mIsRootContent);
     WriteParam(aMsg, aParam.mHasScrollgrab);
     WriteParam(aMsg, aParam.mUpdateScrollOffset);
     WriteParam(aMsg, aParam.mScrollGeneration);
@@ -766,7 +766,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mZoom) &&
             ReadParam(aMsg, aIter, &aResult->mDevPixelsPerCSSPixel) &&
             ReadParam(aMsg, aIter, &aResult->mPresShellId) &&
-            ReadParam(aMsg, aIter, &aResult->mIsRoot) &&
+            ReadParam(aMsg, aIter, &aResult->mIsRootContent) &&
             ReadParam(aMsg, aIter, &aResult->mHasScrollgrab) &&
             ReadParam(aMsg, aIter, &aResult->mUpdateScrollOffset) &&
             ReadParam(aMsg, aIter, &aResult->mScrollGeneration) &&
