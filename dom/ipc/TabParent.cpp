@@ -334,8 +334,26 @@ TabParent::SetOwnerElement(Element* aElement)
   // If we held previous content then unregister for its events.
   RemoveWindowListeners();
 
+  // If we change top-level documents then we need to change our
+  // registration with them.
+  nsRefPtr<nsPIWindowRoot> curTopLevelWin, newTopLevelWin;
+  if (mFrameElement) {
+    curTopLevelWin = nsContentUtils::GetWindowRoot(mFrameElement->OwnerDoc());
+  }
+  if (aElement) {
+    newTopLevelWin = nsContentUtils::GetWindowRoot(aElement->OwnerDoc());
+  }
+  bool isSameTopLevelWin = curTopLevelWin == newTopLevelWin;
+  if (curTopLevelWin && !isSameTopLevelWin) {
+    curTopLevelWin->RemoveBrowser(this);
+  }
+
   // Update to the new content, and register to listen for events from it.
   mFrameElement = aElement;
+
+  if (newTopLevelWin && !isSameTopLevelWin) {
+    newTopLevelWin->AddBrowser(this);
+  }
 
   AddWindowListeners();
   TryCacheDPIAndScale();
@@ -1000,6 +1018,7 @@ TabParent::UIResolutionChanged()
     // TryCacheDPIAndScale()'s cache is keyed off of
     // mDPI being greater than 0, so this invalidates it.
     mDPI = -1;
+    TryCacheDPIAndScale();
     unused << SendUIResolutionChanged();
   }
 }
