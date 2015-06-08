@@ -6,4 +6,5 @@
 
 MOCHITEST_MANIFESTS += [
     'cors/mochitest.ini',
+    'mixedcontentblocker/mochitest.ini',
 ]
