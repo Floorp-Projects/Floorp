@@ -581,6 +581,11 @@ function sendConsoleAPIMessage(aConsole, aLevel, aFrame, aArgs, aOptions = {})
  *                            If falsy value, all messages will be logged.
  *                            If wrong value that doesn't match any key of
  *                            LOG_LEVELS, no message will be logged
+ *        - maxLogLevelPref {string} : String pref name which contains the
+ *                            level to use for maxLogLevel. If the pref doesn't
+ *                            exist or gets removed, the maxLogLevel will default
+ *                            to the value passed to this constructor (or "all"
+ *                            if it wasn't specified).
  *        - dump {function} : An optional function to intercept all strings
  *                            written to stdout
  *        - innerID {string}: An ID representing the source of the message.
@@ -595,9 +600,23 @@ function ConsoleAPI(aConsoleOptions = {}) {
   // in order to avoid runtime checks on each console method call.
   this.dump = aConsoleOptions.dump || dump;
   this.prefix = aConsoleOptions.prefix || "";
-  this.maxLogLevel = aConsoleOptions.maxLogLevel || "all";
+  this.maxLogLevel = aConsoleOptions.maxLogLevel;
   this.innerID = aConsoleOptions.innerID || null;
   this.consoleID = aConsoleOptions.consoleID || "";
+
+  // Setup maxLogLevelPref watching
+  let updateMaxLogLevel = () => {
+    if (Services.prefs.getPrefType(aConsoleOptions.maxLogLevelPref) == Services.prefs.PREF_STRING) {
+      this._maxLogLevel = Services.prefs.getCharPref(aConsoleOptions.maxLogLevelPref).toLowerCase();
+    } else {
+      this._maxLogLevel = this._maxExplicitLogLevel;
+    }
+  };
+
+  if (aConsoleOptions.maxLogLevelPref) {
+    updateMaxLogLevel();
+    Services.prefs.addObserver(aConsoleOptions.maxLogLevelPref, updateMaxLogLevel, false);
+  }
 
   // Bind all the functions to this object.
   for (let prop in this) {
@@ -608,6 +627,15 @@ function ConsoleAPI(aConsoleOptions = {}) {
 }
 
 ConsoleAPI.prototype = {
+  /**
+   * The last log level that was specified via the constructor or setter. This
+   * is used as a fallback if the pref doesn't exist or is removed.
+   */
+  _maxExplicitLogLevel: null,
+  /**
+   * The current log level via all methods of setting (pref or via the API).
+   */
+  _maxLogLevel: null,
   debug: createMultiLineDumper("debug"),
   log: createDumper("log"),
   info: createDumper("info"),
@@ -654,6 +682,14 @@ ConsoleAPI.prototype = {
     sendConsoleAPIMessage(this, "timeEnd", frame, args, { timer: timer });
     dumpMessage(this, "timeEnd",
                 "'" + timer.name + "' " + timer.duration + "ms");
+  },
+
+  get maxLogLevel() {
+    return this._maxLogLevel || "all";
+  },
+
+  set maxLogLevel(aValue) {
+    this._maxLogLevel = this._maxExplicitLogLevel = aValue;
   },
 };
 

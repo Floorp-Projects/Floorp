@@ -907,6 +907,7 @@ function openDebugger(aOptions = {})
  *            - source: object of the shape { url, line }. This is used to
  *            match the source URL and line number of the error message or
  *            console API call.
+ *            - prefix: prefix text to check for in the prefix element.
  *            - stacktrace: array of objects of the form { file, fn, line } that
  *            can match frames in the stacktrace associated with the message.
  *            - groupDepth: number used to check the depth of the message in
