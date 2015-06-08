@@ -24,6 +24,6 @@
       </g>
     </g>
   </defs>
-  <use xlink:href="#pseudo-class-shape" id="pseudo-class" color="#edf0f1"/>
+  <use xlink:href="#pseudo-class-shape" id="pseudo-class" color="#babec3"/>
   <use xlink:href="#pseudo-class-shape" id="pseudo-class-checked" color="#3089C9"/>
 </svg>
