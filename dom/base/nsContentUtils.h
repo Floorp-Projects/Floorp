@@ -99,6 +99,7 @@ class nsViewportInfo;
 class nsWrapperCache;
 class nsAttrValue;
 class nsITransferable;
+class nsPIWindowRoot;
 
 struct JSPropertyDescriptor;
 struct JSRuntime;
@@ -2383,6 +2384,8 @@ public:
 
   static void FirePageHideEvent(nsIDocShellTreeItem* aItem,
                                 mozilla::dom::EventTarget* aChromeEventHandler);
+
+  static already_AddRefed<nsPIWindowRoot> GetWindowRoot(nsIDocument* aDoc);
 
 private:
   static bool InitializeEventTable();
