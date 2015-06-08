@@ -11,7 +11,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsJSPrincipals.h"
 
-#include "mozilla/dom/ChromeUtilsBinding.h"
+#include "mozilla/dom/SystemDictionariesBinding.h"
 
 class nsIObjectOutputStream;
 class nsIObjectInputStream;
