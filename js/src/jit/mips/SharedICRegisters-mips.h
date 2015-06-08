@@ -19,10 +19,10 @@ static MOZ_CONSTEXPR_VAR ValueOperand R0(a3, a2);
 static MOZ_CONSTEXPR_VAR ValueOperand R1(s7, s6);
 static MOZ_CONSTEXPR_VAR ValueOperand R2(t7, t6);
 
-// BaselineTailCallReg and BaselineStubReg
+// ICTailCallReg and ICStubReg
 // These use registers that are not preserved across calls.
-static MOZ_CONSTEXPR_VAR Register BaselineTailCallReg = ra;
-static MOZ_CONSTEXPR_VAR Register BaselineStubReg = t5;
+static MOZ_CONSTEXPR_VAR Register ICTailCallReg = ra;
+static MOZ_CONSTEXPR_VAR Register ICStubReg = t5;
 
 static MOZ_CONSTEXPR_VAR Register ExtractTemp0 = InvalidReg;
 static MOZ_CONSTEXPR_VAR Register ExtractTemp1 = InvalidReg;
@@ -30,8 +30,8 @@ static MOZ_CONSTEXPR_VAR Register ExtractTemp1 = InvalidReg;
 // Register used internally by MacroAssemblerMIPS.
 static MOZ_CONSTEXPR_VAR Register BaselineSecondScratchReg = SecondScratchReg;
 
-// Note that BaselineTailCallReg is actually just the link register.
-// In MIPS code emission, we do not clobber BaselineTailCallReg since we keep
+// Note that ICTailCallReg is actually just the link register.
+// In MIPS code emission, we do not clobber ICTailCallReg since we keep
 // the return address for calls there.
 
 // FloatReg0 must be equal to ReturnFloatReg.

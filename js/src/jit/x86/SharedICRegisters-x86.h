@@ -20,10 +20,10 @@ static MOZ_CONSTEXPR_VAR ValueOperand R0(ecx, edx);
 static MOZ_CONSTEXPR_VAR ValueOperand R1(eax, ebx);
 static MOZ_CONSTEXPR_VAR ValueOperand R2(esi, edi);
 
-// BaselineTailCallReg and BaselineStubReg reuse
+// ICTailCallReg and ICStubReg reuse
 // registers from R2.
-static MOZ_CONSTEXPR_VAR Register BaselineTailCallReg = esi;
-static MOZ_CONSTEXPR_VAR Register BaselineStubReg     = edi;
+static MOZ_CONSTEXPR_VAR Register ICTailCallReg       = esi;
+static MOZ_CONSTEXPR_VAR Register ICStubReg           = edi;
 
 static MOZ_CONSTEXPR_VAR Register ExtractTemp0        = InvalidReg;
 static MOZ_CONSTEXPR_VAR Register ExtractTemp1        = InvalidReg;

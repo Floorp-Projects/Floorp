@@ -54,7 +54,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Add R0 and R1.  Don't need to explicitly unbox, just use the TailCallReg which
     // should be available.
-    Register scratchReg = BaselineTailCallReg;
+    Register scratchReg = ICTailCallReg;
 
     Label revertRegister, maybeNegZero;
     switch(op_) {

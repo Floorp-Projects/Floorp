@@ -19,8 +19,8 @@ static MOZ_CONSTEXPR_VAR ValueOperand R0(rcx);
 static MOZ_CONSTEXPR_VAR ValueOperand R1(rbx);
 static MOZ_CONSTEXPR_VAR ValueOperand R2(rax);
 
-static MOZ_CONSTEXPR_VAR Register BaselineTailCallReg = rsi;
-static MOZ_CONSTEXPR_VAR Register BaselineStubReg     = rdi;
+static MOZ_CONSTEXPR_VAR Register ICTailCallReg       = rsi;
+static MOZ_CONSTEXPR_VAR Register ICStubReg           = rdi;
 
 static MOZ_CONSTEXPR_VAR Register ExtractTemp0        = r14;
 static MOZ_CONSTEXPR_VAR Register ExtractTemp1        = r15;
