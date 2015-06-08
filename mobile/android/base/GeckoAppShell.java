@@ -1207,11 +1207,6 @@ public class GeckoAppShell
             intent.setComponent(null);
             nullIntentSelector(intent);
 
-            // We only handle explicit Intents at the moment (see bug 851693 comment 20).
-            if (intent.getPackage() == null) {
-                return null;
-            }
-
             return intent;
         }
 
