@@ -100,3 +100,8 @@ function primitiveThisTests()
 if (primitiveThisSupported())
   primitiveThisTests();
 
+// Ensure the internal implementation of destructuring object pattern
+// assignment -- using a self-hosted intrinsic function -- works even when lazy
+// standard class initialization hasn't occurred.  Unfortunately we can't use
+// |newGlobal()| because that method eagerly initializes standard classes.
+evalcx("({} = 1);", evalcx("lazy"));
