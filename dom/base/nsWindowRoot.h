@@ -69,9 +69,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsWindowRoot,
                                                          nsIDOMEventTarget)
 
-  virtual void AddBrowser(mozilla::dom::TabParent* aBrowser);
-  virtual void RemoveBrowser(mozilla::dom::TabParent* aBrowser);
-  virtual void EnumerateBrowsers(BrowserEnumerator aEnumFunc, void *aArg);
+  virtual void AddBrowser(mozilla::dom::TabParent* aBrowser) override;
+  virtual void RemoveBrowser(mozilla::dom::TabParent* aBrowser) override;
+  virtual void EnumerateBrowsers(BrowserEnumerator aEnumFunc, void *aArg) override;
 
 protected:
   virtual ~nsWindowRoot();
