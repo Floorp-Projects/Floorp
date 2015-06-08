@@ -123,22 +123,24 @@ const gXPInstallObserver = {
       }
     };
 
-    options.learnMoreURL = Services.urlFormatter.formatURLPref("app.support.baseURL") +
-                           "find-and-install-add-ons";
+    options.learnMoreURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
 
     let messageString;
     if (unsigned.length == installInfo.installs.length) {
       // None of the add-ons are verified
       messageString = gNavigatorBundle.getString("addonConfirmInstallUnsigned.message");
+      options.learnMoreURL += "unsigned-addons";
     }
     else if (unsigned.length == 0) {
       // All add-ons are verified or don't need to be verified
       messageString = gNavigatorBundle.getString("addonConfirmInstall.message");
+      options.learnMoreURL += "find-and-install-add-ons";
     }
     else {
       // Some of the add-ons are unverified, the list of names will indicate
       // which
       messageString = gNavigatorBundle.getString("addonConfirmInstallSomeUnsigned.message");
+      options.learnMoreURL += "unsigned-addons";
     }
 
     let brandBundle = document.getElementById("bundle_brand");
@@ -306,8 +308,7 @@ const gXPInstallObserver = {
 
         // Add Learn More link when refusing to install an unsigned add-on
         if (install.error == AddonManager.ERROR_SIGNEDSTATE_REQUIRED) {
-          options.learnMoreURL =
-            Services.prefs.getCharPref("xpinstall.signatures.infoURL");
+          options.learnMoreURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
         }
 
         messageString = gNavigatorBundle.getString(error);

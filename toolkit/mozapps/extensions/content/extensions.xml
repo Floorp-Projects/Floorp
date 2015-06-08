@@ -1257,7 +1257,7 @@
               );
               let infoLink = this.mAddon.appDisabled ? this._errorLink : this._warningLink;
               infoLink.value = gStrings.ext.GetStringFromName("notification.unsigned.link");
-              infoLink.href = Services.prefs.getCharPref("xpinstall.signatures.infoURL");
+              infoLink.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
               infoLink.hidden = false;
             } else if ((!isUpgrade && !this.mAddon.isCompatible) && (AddonManager.checkCompatibility
             || (this.mAddon.blocklistState != Ci.nsIBlocklistService.STATE_SOFTBLOCKED))) {
