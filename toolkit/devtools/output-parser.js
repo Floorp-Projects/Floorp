@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* globals DOMUtils */
+
 "use strict";
 
 const {Cc, Ci, Cu} = require("chrome");
@@ -12,7 +14,8 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 const MAX_ITERATIONS = 100;
 
-const BEZIER_KEYWORDS = ["linear", "ease-in-out", "ease-in", "ease-out", "ease"];
+const BEZIER_KEYWORDS = ["linear", "ease-in-out", "ease-in", "ease-out",
+                         "ease"];
 
 // Functions that accept a color argument.
 const COLOR_TAKING_FUNCTIONS = ["linear-gradient",
@@ -24,7 +27,7 @@ const COLOR_TAKING_FUNCTIONS = ["linear-gradient",
                                 "repeating-radial-gradient",
                                 "-moz-repeating-radial-gradient"];
 
-loader.lazyGetter(this, "DOMUtils", function () {
+loader.lazyGetter(this, "DOMUtils", function() {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
 
@@ -36,7 +39,8 @@ loader.lazyGetter(this, "DOMUtils", function () {
  * border radius, cubic-bezier etc.).
  *
  * Usage:
- *   const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+ *   const {devtools} =
+ *      Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
  *   const {OutputParser} = devtools.require("devtools/output-parser");
  *
  *   let parser = new OutputParser();
@@ -146,15 +150,16 @@ OutputParser.prototype = {
       let i = 0;
       while (true) {
         let token = tokenStream.nextToken();
-        if (!token)
+        if (!token) {
           break;
+        }
         if (token.tokenType === "comment") {
           continue;
         }
 
         // Prevent this loop from slowing down the browser with too
-        // many nodes being appended into output. In practice it is very unlikely
-        // that this will ever happen.
+        // many nodes being appended to the output. In practice it is
+        // very unlikely that this will ever happen.
         i++;
         if (i > MAX_ITERATIONS) {
           this._appendTextNode(text.substring(token.startOffset,
@@ -380,7 +385,7 @@ OutputParser.prototype = {
         href = options.baseURI.resolve(url);
       }
 
-      this._appendNode("a",  {
+      this._appendNode("a", {
         target: "_blank",
         class: options.urlClass,
         href: href
