@@ -159,6 +159,7 @@ nsTableFrame::Init(nsIContent*       aContent,
                    nsIFrame*         aPrevInFlow)
 {
   NS_PRECONDITION(!mCellMap, "Init called twice");
+  NS_PRECONDITION(!mTableLayoutStrategy, "Init called twice");
   NS_PRECONDITION(!aPrevInFlow ||
                   aPrevInFlow->GetType() == nsGkAtoms::tableFrame,
                   "prev-in-flow must be of same type");
@@ -171,23 +172,19 @@ nsTableFrame::Init(nsIContent*       aContent,
   bool borderCollapse = (NS_STYLE_BORDER_COLLAPSE == tableStyle->mBorderCollapse);
   SetBorderCollapse(borderCollapse);
 
-  // Create the cell map if this frame is the first-in-flow.
   if (!aPrevInFlow) {
+    // If we're the first-in-flow, we manage the cell map & layout strategy that
+    // get used by our continuation chain:
     mCellMap = new nsTableCellMap(*this, borderCollapse);
-  }
-
-  if (aPrevInFlow) {
+    if (IsAutoLayout()) {
+      mTableLayoutStrategy = new BasicTableLayoutStrategy(this);
+    } else {
+      mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
+    }
+  } else {
     // set my width, because all frames in a table flow are the same width and
     // code in nsTableOuterFrame depends on this being set
     mRect.width = aPrevInFlow->GetSize().width;
-  }
-  else {
-    NS_ASSERTION(!mTableLayoutStrategy, "strategy was created before Init was called");
-    // create the strategy
-    if (IsAutoLayout())
-      mTableLayoutStrategy = new BasicTableLayoutStrategy(this);
-    else
-      mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
   }
 }
 
@@ -305,8 +302,7 @@ nsTableFrame::UnregisterPositionedTablePart(nsIFrame* aFrame,
     static_cast<FrameTArray*>(props.Get(PositionedTablePartArray()));
 
   // Remove the frame.
-  MOZ_ASSERT(positionedParts &&
-             positionedParts->IndexOf(aFrame) != FrameTArray::NoIndex,
+  MOZ_ASSERT(positionedParts && positionedParts->Contains(aFrame),
              "Asked to unregister a positioned table part that wasn't registered");
   if (positionedParts) {
     positionedParts->RemoveElement(aFrame);
@@ -1792,7 +1788,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   if (!GetPrevInFlow() && !mTableLayoutStrategy) {
-    NS_ASSERTION(false, "strategy should have been created in Init");
+    NS_ERROR("strategy should have been created in Init");
     return;
   }
 
@@ -1892,7 +1888,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
   }
   else {
     // Calculate the overflow area contribution from our children.
-    for (nsIFrame* kid = GetFirstPrincipalChild(); kid; kid = kid->GetNextSibling()) {
+    for (nsIFrame* kid : mFrames) {
       ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kid);
     }
   }
@@ -2051,7 +2047,7 @@ nsTableFrame::GetFirstBodyRowGroupFrame()
   nsIFrame* headerFrame = nullptr;
   nsIFrame* footerFrame = nullptr;
 
-  for (nsIFrame* kidFrame = mFrames.FirstChild(); nullptr != kidFrame; ) {
+  for (nsIFrame* kidFrame : mFrames) {
     const nsStyleDisplay* childDisplay = kidFrame->StyleDisplay();
 
     // We expect the header and footer row group frames to be first, and we only
@@ -2075,9 +2071,6 @@ nsTableFrame::GetFirstBodyRowGroupFrame()
     } else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay) {
       return kidFrame;
     }
-
-    // Get the next child
-    kidFrame = kidFrame->GetNextSibling();
   }
 
   return nullptr;
@@ -2170,8 +2163,7 @@ nsTableFrame::GetCollapsedWidth(nsMargin aBorderPadding)
   NS_ASSERTION(!GetPrevInFlow(), "GetCollapsedWidth called on next in flow");
   nscoord width = GetColSpacing(GetColCount());
   width += aBorderPadding.left + aBorderPadding.right;
-  for (nsIFrame* groupFrame = mColGroups.FirstChild(); groupFrame;
-         groupFrame = groupFrame->GetNextSibling()) {
+  for (nsIFrame* groupFrame : mColGroups) {
     const nsStyleVisibility* groupVis = groupFrame->StyleVisibility();
     bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
     nsTableColGroupFrame* cgFrame = (nsTableColGroupFrame*)groupFrame;
@@ -3200,8 +3192,7 @@ nsTableFrame::ReflowColGroups(nsRenderingContext *aRenderingContext)
   if (!GetPrevInFlow() && !HaveReflowedColGroups()) {
     nsHTMLReflowMetrics kidMet(GetWritingMode());
     nsPresContext *presContext = PresContext();
-    for (nsIFrame* kidFrame = mColGroups.FirstChild(); kidFrame;
-         kidFrame = kidFrame->GetNextSibling()) {
+    for (nsIFrame* kidFrame : mColGroups) {
       if (NS_SUBTREE_DIRTY(kidFrame)) {
         // The column groups don't care about dimensions or reflow states.
         nsHTMLReflowState
@@ -3223,7 +3214,7 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState,
 {
   nsTableCellMap* cellMap = GetCellMap();
   if (!cellMap) {
-    NS_ASSERTION(false, "never ever call me until the cell map is built!");
+    NS_ERROR("never ever call me until the cell map is built!");
     aDesiredSize.Height() = 0;
     return;
   }
@@ -3267,7 +3258,7 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState,
       // unconstrained row group.
       DistributeHeightToRows(aReflowState, tableSpecifiedHeight - desiredHeight);
       // this might have changed the overflow area incorporate the childframe overflow area.
-      for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
+      for (nsIFrame* kidFrame : mFrames) {
         ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kidFrame);
       }
       desiredHeight = tableSpecifiedHeight;
@@ -3875,8 +3866,7 @@ nsTableFrame::Dump(bool            aDumpRows,
       }
     }
     printf("\n colgroups->");
-    for (nsIFrame* childFrame = mColGroups.FirstChild(); childFrame;
-         childFrame = childFrame->GetNextSibling()) {
+    for (nsIFrame* childFrame : mColGroups) {
       if (nsGkAtoms::tableColGroupFrame == childFrame->GetType()) {
         nsTableColGroupFrame* colGroupFrame = (nsTableColGroupFrame *)childFrame;
         colGroupFrame->Dump(1);
@@ -4407,7 +4397,7 @@ BCMapCellInfo::SetInfo(nsTableRowFrame*   aNewRow,
       NS_ASSERTION(mEndRow, "spanned row not found");
     }
     else {
-      NS_ASSERTION(false, "error in cell map");
+      NS_ERROR("error in cell map");
       mRowSpan = 1;
       mEndRow = mStartRow;
     }
@@ -6996,7 +6986,7 @@ BCVerticalSeg::Paint(BCPaintBorderIterator& aIter,
       owner = mFirstRowGroup;
       break;
     case eAjaRowOwner:
-      NS_ASSERTION(false, "program error"); // and fall through
+      NS_ERROR("program error"); // and fall through
     case eRowOwner:
       NS_ASSERTION(aIter.IsTableLeftMost() || aIter.IsTableRightMost(),
                    "row can own border only at table edge");
