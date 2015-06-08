@@ -138,7 +138,7 @@ function handleRequest(request, response)
 
   if (query.hop && query.hop < hops.length) {
     newURL = hops[query.hop].server +
-             "/tests/dom/base/test/file_CrossSiteXHR_server.sjs?" +
+             "/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?" +
              "hop=" + (query.hop + 1) + "&hops=" + query.hops;
     response.setStatusLine(null, 307, "redirect");
     response.setHeader("Location", newURL);
