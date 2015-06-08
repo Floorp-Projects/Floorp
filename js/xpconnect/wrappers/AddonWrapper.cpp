@@ -32,7 +32,8 @@ InterposeProperty(JSContext* cx, HandleObject target, const nsIID* iid, HandleId
     if (!mozilla::dom::IsDOMClass(clasp) &&
         !IS_WN_CLASS(clasp) &&
         !IS_PROTO_CLASS(clasp) &&
-        clasp != &OuterWindowProxyClass) {
+        clasp != &OuterWindowProxyClass &&
+        !jsipc::IsWrappedCPOW(unwrapped)) {
         return true;
     }
 
