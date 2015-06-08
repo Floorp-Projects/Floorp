@@ -100,6 +100,12 @@ function contentHandler(metadata, response)
   response.bodyOutputStream.write(body, body.length);
 }
 
+function regularContentHandler(metadata, response)
+{
+  var body = "response";
+  response.bodyOutputStream.write(body, body.length);
+}
+
 var httpserver = null;
 var originalPref = false;
 
@@ -108,6 +114,7 @@ function run_test()
   // setup test
   httpserver = new HttpServer();
   httpserver.registerPathHandler("/package", contentHandler);
+  httpserver.registerPathHandler("/regular", regularContentHandler);
   httpserver.start(-1);
 
   // Enable the feature and save the original pref value
@@ -116,6 +123,7 @@ function run_test()
   do_register_cleanup(reset_pref);
 
   add_test(test_channel);
+  add_test(test_channel_uris);
 
   // run tests
   run_next_test();
@@ -130,6 +138,19 @@ function test_channel() {
     do_check_true(l.gotStopRequest);
     run_next_test();
   }), null);
+}
+
+function test_channel_uris() {
+  // A `!//` in the query or ref should not be handled as a packaged app resource
+  var channel = make_channel(uri+"/regular?bla!//bla#bla!//bla");
+  channel.asyncOpen(new ChannelListener(check_regular_response, null), null);
+}
+
+function check_regular_response(request, buffer) {
+  request.QueryInterface(Components.interfaces.nsIHttpChannel);
+  do_check_eq(request.responseStatus, 200);
+  do_check_eq(buffer, "response");
+  run_next_test();
 }
 
 function reset_pref() {
