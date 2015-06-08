@@ -16,7 +16,7 @@
 # include "jit/PerfSpewer.h"
 #endif
 #include "jit/VMFunctions.h"
-#include "jit/x86/BaselineHelpers-x86.h"
+#include "jit/x86/SharedICHelpers-x86.h"
 
 #include "jsscriptinlines.h"
 

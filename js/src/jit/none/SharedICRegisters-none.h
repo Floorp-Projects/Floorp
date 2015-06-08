@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_none_BaselineRegisters_none_h
-#define jit_none_BaselineRegisters_none_h
+#ifndef jit_none_SharedICRegisters_none_h
+#define jit_none_SharedICRegisters_none_h
 
 #include "jit/MacroAssembler.h"
 
@@ -31,5 +31,5 @@ static MOZ_CONSTEXPR_VAR FloatRegister FloatReg1 = { FloatRegisters::invalid_reg
 } // namespace jit
 } // namespace js
 
-#endif /* jit_none_BaselineRegisters_none_h */
+#endif /* jit_none_SharedICRegisters_none_h */
 

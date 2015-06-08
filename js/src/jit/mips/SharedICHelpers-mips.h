@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_mips_BaselineHelpers_mips_h
-#define jit_mips_BaselineHelpers_mips_h
+#ifndef jit_mips_SharedICHelpers_mips_h
+#define jit_mips_SharedICHelpers_mips_h
 
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
-#include "jit/BaselineRegisters.h"
 #include "jit/MacroAssembler.h"
+#include "jit/SharedICRegisters.h"
 
 namespace js {
 namespace jit {
@@ -326,4 +326,4 @@ EmitStubGuardFailure(MacroAssembler& masm)
 } // namespace jit
 } // namespace js
 
-#endif /* jit_mips_BaselineHelpers_mips_h */
+#endif /* jit_mips_SharedICHelpers_mips_h */
