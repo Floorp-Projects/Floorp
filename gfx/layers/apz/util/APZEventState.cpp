@@ -6,6 +6,7 @@
 #include "APZEventState.h"
 
 #include "ActiveElementManager.h"
+#include "APZCCallbackHelper.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include "nsCOMPtr.h"
