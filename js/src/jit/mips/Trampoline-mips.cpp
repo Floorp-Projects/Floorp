@@ -14,7 +14,7 @@
 #include "jit/JitSpewer.h"
 #include "jit/Linker.h"
 #include "jit/mips/Bailouts-mips.h"
-#include "jit/mips/BaselineHelpers-mips.h"
+#include "jit/mips/SharedICHelpers-mips.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif

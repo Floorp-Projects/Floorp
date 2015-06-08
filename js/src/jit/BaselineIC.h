@@ -16,7 +16,7 @@
 
 #include "builtin/TypedObject.h"
 #include "jit/BaselineJIT.h"
-#include "jit/BaselineRegisters.h"
+#include "jit/SharedICRegisters.h"
 #include "vm/ArrayObject.h"
 #include "vm/ReceiverGuard.h"
 #include "vm/TypedArrayCommon.h"
