@@ -22,6 +22,7 @@ import mozdebug
 import mozinfo
 import mozprocess
 import mozrunner
+import numbers
 import re
 import shutil
 import signal
@@ -2551,8 +2552,9 @@ class Mochitest(MochitestUtilsMixin):
                 "MOZ_HIDE_RESULTS_TABLE"] == "1":
             options.hideResultsTable = True
 
-        d = dict((k, v) for k, v in options.__dict__.items() if (not k.startswith(
-            'log_') or not any([k.endswith(fmt) for fmt in commandline.log_formatters.keys()])))
+        # strip certain unnecessary items to avoid serialization errors in json.dumps()
+        d = dict((k, v) for k, v in options.__dict__.items() if (v is None) or
+            isinstance(v,(basestring,numbers.Number)))
         d['testRoot'] = self.testRoot
         content = json.dumps(d)
 
