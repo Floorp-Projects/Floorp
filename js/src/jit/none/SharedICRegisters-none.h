@@ -19,8 +19,8 @@ static MOZ_CONSTEXPR_VAR ValueOperand R0 = JSReturnOperand;
 static MOZ_CONSTEXPR_VAR ValueOperand R1 = JSReturnOperand;
 static MOZ_CONSTEXPR_VAR ValueOperand R2 = JSReturnOperand;
 
-static MOZ_CONSTEXPR_VAR Register BaselineTailCallReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register BaselineStubReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register ICTailCallReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register ICStubReg = { Registers::invalid_reg };
 
 static MOZ_CONSTEXPR_VAR Register ExtractTemp0 = { Registers::invalid_reg };
 static MOZ_CONSTEXPR_VAR Register ExtractTemp1 = { Registers::invalid_reg };
