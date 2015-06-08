@@ -1,0 +1,29 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Performance tool + cycle collection test page</title>
+  </head>
+
+  <body>
+    <script type="text/javascript">
+    window.test = function () {
+      document.body.expando1 = { cycle: document.body };
+      SpecialPowers.Cu.forceCC();
+
+      document.body.expando2 = { cycle: document.body };
+      SpecialPowers.Cu.forceCC();
+
+      document.body.expando3 = { cycle: document.body };
+      SpecialPowers.Cu.forceCC();
+
+      setTimeout(window.test, 100);
+    };
+    test();
+    </script>
+  </body>
+
+</html>
