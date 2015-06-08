@@ -373,8 +373,8 @@ static CGFloat kMaxFocusRingWidth = 0; // initialized by the nsNativeThemeCocoa 
 
 // These enums are for indexing into the margin array.
 enum {
-  leopardOS = 0,
-  yosemiteOS = 1
+  leopardOSorlater = 0, // 10.6 - 10.9
+  yosemiteOSorlater = 1 // 10.10+
 };
 
 enum {
@@ -423,7 +423,8 @@ static void InflateControlRect(NSRect* rect, NSControlSize cocoaControlSize, con
   if (!marginSet)
     return;
 
-  static int osIndex = nsCocoaFeatures::OnYosemiteOrLater() ? yosemiteOS : leopardOS;
+  static int osIndex = nsCocoaFeatures::OnYosemiteOrLater() ?
+                         yosemiteOSorlater : leopardOSorlater;
   size_t controlSize = EnumSizeForCocoaSize(cocoaControlSize);
   const float* buttonMargins = marginSet[osIndex][controlSize];
   rect->origin.x -= buttonMargins[leftMargin];
