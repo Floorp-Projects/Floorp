@@ -224,7 +224,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mAudioCaptured(false),
   mPositionChangeQueued(false),
   mAudioCompleted(false, "MediaDecoderStateMachine::mAudioCompleted"),
-  mGotDurationFromMetaData(false),
+  mNotifyMetadataBeforeFirstFrame(false),
   mDispatchedEventToDecode(false),
   mQuickBuffering(false),
   mMinimizePreroll(false),
@@ -1447,11 +1447,10 @@ void MediaDecoderStateMachine::SetDuration(TimeUnit aDuration)
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   MOZ_ASSERT(aDuration.ToMicroseconds() >= 0);
-  mDurationSet = true;
-
   if (mStartTime == -1) {
     SetStartTime(0);
   }
+  mDurationSet = true;
 
   if (aDuration.IsInfinite()) {
     mEndTime = -1;
@@ -2204,10 +2203,15 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
   }
 
   mDecoder->StartProgressUpdates();
-  mGotDurationFromMetaData = (GetDuration() != -1) || mDurationSet;
-  if (mGotDurationFromMetaData) {
-    // We have all the information required: duration and size
-    // Inform the element that we've loaded the metadata.
+
+  // In general, we wait until we know the duration before notifying the decoder.
+  // However, we notify  unconditionally in this case without waiting for the start
+  // time, since the caller might be waiting on metadataloaded to be fired before
+  // feeding in the CDM, which we need to decode the first frame (and
+  // thus get the metadata). We could fix this if we could compute the start
+  // time by demuxing without necessaring decoding.
+  mNotifyMetadataBeforeFirstFrame = mDurationSet || mReader->IsWaitingOnCDMResource();
+  if (mNotifyMetadataBeforeFirstFrame) {
     EnqueueLoadedMetadataEvent();
   }
 
@@ -2382,15 +2386,11 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
 
   nsAutoPtr<MediaInfo> info(new MediaInfo());
   *info = mInfo;
-  if (!mGotDurationFromMetaData) {
-    // We now have a duration, we can fire the LoadedMetadata and
-    // FirstFrame event.
+  if (!mNotifyMetadataBeforeFirstFrame) {
+    // If we didn't have duration and/or start time before, we should now.
     EnqueueLoadedMetadataEvent();
-    EnqueueFirstFrameLoadedEvent();
-  } else {
-    // Inform the element that we've loaded the first frame.
-    EnqueueFirstFrameLoadedEvent();
   }
+  EnqueueFirstFrameLoadedEvent();
 
   if (mState == DECODER_STATE_DECODING_FIRSTFRAME) {
     StartDecoding();
@@ -3173,7 +3173,8 @@ void MediaDecoderStateMachine::SetStartTime(int64_t aStartTimeUsecs)
   mStartTime = 0;
   if (aStartTimeUsecs != 0) {
     mStartTime = aStartTimeUsecs;
-    if (mGotDurationFromMetaData && GetEndTime() != INT64_MAX) {
+    // XXXbholley - this whole method goes away in the upcoming patches.
+    if (mDurationSet && GetEndTime() != INT64_MAX) {
       NS_ASSERTION(mEndTime != -1,
                    "We should have mEndTime as supplied duration here");
       // We were specified a duration from a Content-Duration HTTP header.
