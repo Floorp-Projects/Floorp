@@ -119,14 +119,10 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
     void setScratchRegister(Register reg) {
         scratchRegister_ = LGeneralReg(reg);
     }
-#endif
     LAllocation maybeScratchRegister() {
-#ifdef JS_CODEGEN_X86
         return scratchRegister_;
-#else
-        return LAllocation();
-#endif
     }
+#endif
 
     bool uses(Register reg) {
         for (size_t i = 0; i < numMoves(); i++) {
