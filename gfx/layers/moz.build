@@ -125,6 +125,7 @@ EXPORTS.mozilla.layers += [
     'composite/ColorLayerComposite.h',
     'composite/ContainerLayerComposite.h',
     'composite/ContentHost.h',
+    'composite/FrameUniformityData.h',
     'composite/ImageHost.h',
     'composite/ImageLayerComposite.h',
     'composite/LayerManagerComposite.h',
@@ -277,6 +278,7 @@ UNIFIED_SOURCES += [
     'composite/ContainerLayerComposite.cpp',
     'composite/ContentHost.cpp',
     'composite/FPSCounter.cpp',
+    'composite/FrameUniformityData.cpp',
     'composite/ImageHost.cpp',
     'composite/ImageLayerComposite.cpp',
     'composite/LayerManagerComposite.cpp',
@@ -391,6 +393,7 @@ CXXFLAGS += [
 ]
 
 MOCHITEST_MANIFESTS += ['apz/test/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['apz/test/chrome.ini']
 
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 CXXFLAGS += CONFIG['TK_CFLAGS']
