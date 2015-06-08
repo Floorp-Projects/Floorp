@@ -542,7 +542,6 @@ MoveEmitterX86::findScratchRegister(const MoveResolver& moves, size_t initial)
     if (scratchRegister_.isSome())
         return scratchRegister_;
 
-    /*
     // All registers are either in use by this move group or are live
     // afterwards. Look through the remaining moves for a register which is
     // clobbered before it is used, and is thus dead at this point.
@@ -561,7 +560,6 @@ MoveEmitterX86::findScratchRegister(const MoveResolver& moves, size_t initial)
             regs.takeUnchecked(move.to().base());
         }
     }
-    */
 
     return mozilla::Nothing();
 #else
