@@ -540,6 +540,11 @@ STUB(gtk_widget_get_style_context)
 STUB(gtk_widget_path_append_type)
 STUB(gtk_widget_path_new)
 STUB(gtk_widget_set_visual)
+STUB(gtk_app_chooser_dialog_new_for_content_type)
+STUB(gtk_app_chooser_get_type)
+STUB(gtk_app_chooser_get_app_info)
+STUB(gtk_app_chooser_dialog_get_type)
+STUB(gtk_app_chooser_dialog_set_heading)
 #endif
 
 #ifdef GTK2_SYMBOLS
