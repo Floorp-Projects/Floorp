@@ -1667,7 +1667,14 @@ SwatchFilterTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototy
       return;
     }
 
-    this.currentFilterValue.textContent = filters;
+    // Remove the old children and reparse the property value to
+    // recompute them.
+    while (this.currentFilterValue.firstChild) {
+      this.currentFilterValue.firstChild.remove();
+    }
+    let node = this._parser.parseCssProperty("filter", filters, this._options);
+    this.currentFilterValue.appendChild(node);
+
     this.preview();
   },
 
@@ -1678,6 +1685,27 @@ SwatchFilterTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototy
       widget.off("updated", this._onUpdate);
       widget.destroy();
     });
+  },
+
+  /**
+   * Like SwatchBasedEditorTooltip.addSwatch, but accepts a parser object
+   * to use when previewing the updated property value.
+   *
+   * @param {node} swatchEl
+   *        @see SwatchBasedEditorTooltip.addSwatch
+   * @param {object} callbacks
+   *        @see SwatchBasedEditorTooltip.addSwatch
+   * @param {object} parser
+   *        A parser object; @see OutputParser object
+   * @param {object} options
+   *        options to pass to the output parser, with
+   *          the option |filterSwatch| set.
+   */
+  addSwatch: function(swatchEl, callbacks, parser, options) {
+    SwatchBasedEditorTooltip.prototype.addSwatch.call(this, swatchEl,
+                                                      callbacks);
+    this._parser = parser;
+    this._options = options;
   }
 });
 

@@ -25,7 +25,8 @@ const COLOR_TAKING_FUNCTIONS = ["linear-gradient",
                                 "radial-gradient",
                                 "-moz-radial-gradient",
                                 "repeating-radial-gradient",
-                                "-moz-repeating-radial-gradient"];
+                                "-moz-repeating-radial-gradient",
+                                "drop-shadow"];
 
 loader.lazyGetter(this, "DOMUtils", function() {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
@@ -143,94 +144,114 @@ OutputParser.prototype = {
     text = text.trim();
     this.parsed.length = 0;
 
-    if (options.expectFilter) {
-      this._appendFilter(text, options);
-    } else {
-      let tokenStream = DOMUtils.getCSSLexer(text);
-      let i = 0;
-      while (true) {
-        let token = tokenStream.nextToken();
-        if (!token) {
-          break;
-        }
-        if (token.tokenType === "comment") {
-          continue;
-        }
+    let tokenStream = DOMUtils.getCSSLexer(text);
+    let i = 0;
+    let parenDepth = 0;
+    let outerMostFunctionTakesColor = false;
 
-        // Prevent this loop from slowing down the browser with too
-        // many nodes being appended to the output. In practice it is
-        // very unlikely that this will ever happen.
-        i++;
-        if (i > MAX_ITERATIONS) {
-          this._appendTextNode(text.substring(token.startOffset,
-                                              token.endOffset));
-          continue;
-        }
+    let colorOK = function() {
+      return options.supportsColor ||
+        (options.expectFilter && parenDepth === 1 &&
+         outerMostFunctionTakesColor);
+    };
 
-        switch (token.tokenType) {
-          case "function": {
-            if (COLOR_TAKING_FUNCTIONS.indexOf(token.text) >= 0) {
-              // The function can accept a color argument, and we know
-              // it isn't special in some other way.  So, we let it
-              // through to the ordinary parsing loop so that colors
-              // can be handled in a single place.
-              this._appendTextNode(text.substring(token.startOffset,
-                                                  token.endOffset));
-            } else {
-              let functionText = this._collectFunctionText(token, text,
-                                                           tokenStream);
+    while (true) {
+      let token = tokenStream.nextToken();
+      if (!token) {
+        break;
+      }
+      if (token.tokenType === "comment") {
+        continue;
+      }
 
-              if (options.expectCubicBezier && token.text === "cubic-bezier") {
-                this._appendCubicBezier(functionText, options);
-              } else if (options.supportsColor &&
-                         DOMUtils.isValidCSSColor(functionText)) {
-                this._appendColor(functionText, options);
-              } else {
-                this._appendTextNode(functionText);
-              }
-            }
-            break;
-          }
+      // Prevent this loop from slowing down the browser with too
+      // many nodes being appended into output. In practice it is very unlikely
+      // that this will ever happen.
+      i++;
+      if (i > MAX_ITERATIONS) {
+        this._appendTextNode(text.substring(token.startOffset,
+                                            token.endOffset));
+        continue;
+      }
 
-          case "ident":
-            if (options.expectCubicBezier &&
-                BEZIER_KEYWORDS.indexOf(token.text) >= 0) {
-              this._appendCubicBezier(token.text, options);
-            } else if (options.supportsColor &&
-                       DOMUtils.isValidCSSColor(token.text)) {
-              this._appendColor(token.text, options);
-            } else {
-              this._appendTextNode(text.substring(token.startOffset,
-                                                  token.endOffset));
-            }
-            break;
-
-          case "id":
-          case "hash": {
-            let original = text.substring(token.startOffset, token.endOffset);
-            if (options.supportsColor && DOMUtils.isValidCSSColor(original)) {
-              this._appendColor(original, options);
-            } else {
-              this._appendTextNode(original);
-            }
-            break;
-          }
-
-          case "url":
-          case "bad_url":
-            this._appendURL(text.substring(token.startOffset, token.endOffset),
-                            token.text, options);
-            break;
-
-          default:
+      switch (token.tokenType) {
+        case "function": {
+          if (COLOR_TAKING_FUNCTIONS.indexOf(token.text) >= 0) {
+            // The function can accept a color argument, and we know
+            // it isn't special in some other way.  So, we let it
+            // through to the ordinary parsing loop so that colors
+            // can be handled in a single place.
             this._appendTextNode(text.substring(token.startOffset,
                                                 token.endOffset));
-            break;
+            if (parenDepth === 0) {
+              outerMostFunctionTakesColor = true;
+            }
+            ++parenDepth;
+          } else {
+            let functionText = this._collectFunctionText(token, text,
+                                                         tokenStream);
+
+            if (options.expectCubicBezier && token.text === "cubic-bezier") {
+              this._appendCubicBezier(functionText, options);
+            } else if (colorOK() && DOMUtils.isValidCSSColor(functionText)) {
+              this._appendColor(functionText, options);
+            } else {
+              this._appendTextNode(functionText);
+            }
+          }
+          break;
         }
+
+        case "ident":
+          if (options.expectCubicBezier &&
+              BEZIER_KEYWORDS.indexOf(token.text) >= 0) {
+            this._appendCubicBezier(token.text, options);
+          } else if (colorOK() && DOMUtils.isValidCSSColor(token.text)) {
+            this._appendColor(token.text, options);
+          } else {
+            this._appendTextNode(text.substring(token.startOffset,
+                                                token.endOffset));
+          }
+          break;
+
+        case "id":
+        case "hash": {
+          let original = text.substring(token.startOffset, token.endOffset);
+          if (colorOK() && DOMUtils.isValidCSSColor(original)) {
+            this._appendColor(original, options);
+          } else {
+            this._appendTextNode(original);
+          }
+          break;
+        }
+
+        case "url":
+        case "bad_url":
+          this._appendURL(text.substring(token.startOffset, token.endOffset),
+                          token.text, options);
+          break;
+
+        case "symbol":
+          if (token.text === "(") {
+            ++parenDepth;
+          } else if (token.token === ")") {
+            --parenDepth;
+          }
+          // falls through
+        default:
+          this._appendTextNode(text.substring(token.startOffset,
+                                              token.endOffset));
+          break;
       }
     }
 
-    return this._toDOM();
+    let result = this._toDOM();
+
+    if (options.expectFilter && !options.filterSwatch) {
+      result = this._wrapFilter(text, options, result);
+    }
+
+    return result;
   },
 
   /**
@@ -330,7 +351,20 @@ OutputParser.prototype = {
     return false;
   },
 
-  _appendFilter: function(filters, options={}) {
+  /**
+   * Wrap some existing nodes in a filter editor.
+   *
+   * @param {String} filters
+   *        The full text of the "filter" property.
+   * @param {object} options
+   *        The options object passed to parseCssProperty().
+   * @param {object} nodes
+   *        Nodes created by _toDOM().
+   *
+   * @returns {object}
+   *        A new node that supplies a filter swatch and that wraps |nodes|.
+   */
+  _wrapFilter: function(filters, options, nodes) {
     let container = this._createNode("span", {
       "data-filters": filters
     });
@@ -344,10 +378,11 @@ OutputParser.prototype = {
 
     let value = this._createNode("span", {
       class: options.filterClass
-    }, filters);
-
+    });
+    value.appendChild(nodes);
     container.appendChild(value);
-    this.parsed.push(container);
+
+    return container;
   },
 
   _onSwatchMouseDown: function(event) {
@@ -503,6 +538,11 @@ OutputParser.prototype = {
    *           - urlClass: ""           // The class to be used for url() links.
    *           - baseURI: ""            // A string or nsIURI used to resolve
    *                                    // relative links.
+   *           - filterSwatch: false    // A special case for parsing a
+   *                                    // "filter" property, causing the
+   *                                    // parser to skip the call to
+   *                                    // _wrapFilter.  Used only for
+   *                                    // previewing with the filter swatch.
    * @return {Object}
    *         Overridden options object
    */
@@ -515,7 +555,8 @@ OutputParser.prototype = {
       bezierClass: "",
       supportsColor: false,
       urlClass: "",
-      baseURI: ""
+      baseURI: "",
+      filterSwatch: false
     };
 
     if (typeof overrides.baseURI === "string") {
