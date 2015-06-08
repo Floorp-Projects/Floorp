@@ -1,3 +1,9 @@
+// This test checks that we are able to optimize float32 inputs.  As
+// GetElementIC (float32 array accesses) output is not specialized with Float32
+// output types, we should not force inline caches.
+if (getJitCompilerOptions()["ion.forceinlineCaches"])
+    setJitCompilerOption("ion.forceinlineCaches", 0);
+
 // Fuzz tests
 (function(){
     //
