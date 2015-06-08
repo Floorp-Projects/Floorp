@@ -95,6 +95,55 @@ BottomHost.prototype = {
   },
 
   /**
+   * Minimize this host so that only the toolbox tabbar remains visible.
+   * @param {Number} height The height to minimize to. Defaults to 0, which
+   * means that the toolbox won't be visible at all once minimized.
+   */
+  minimize: function BH_minimize(height=0) {
+    if (this.isMinimized) {
+      return;
+    }
+    this.isMinimized = true;
+
+    this.frame.style.marginBottom = -this.frame.height + height + "px";
+    this._splitter.classList.add("disabled");
+
+    let onTransitionEnd = () => {
+      this.frame.removeEventListener("transitionend", onTransitionEnd);
+      this.emit("minimized");
+    };
+    this.frame.addEventListener("transitionend", onTransitionEnd);
+  },
+
+  /**
+   * If the host was minimized before, maximize it again (the host will be
+   * maximized to the height it previously had).
+   */
+  maximize: function BH_maximize() {
+    if (!this.isMinimized) {
+      return;
+    }
+    this.isMinimized = false;
+
+    this.frame.style.marginBottom = "0";
+    this._splitter.classList.remove("disabled");
+
+    let onTransitionEnd = () => {
+      this.frame.removeEventListener("transitionend", onTransitionEnd);
+      this.emit("maximized");
+    };
+    this.frame.addEventListener("transitionend", onTransitionEnd);
+  },
+
+  /**
+   * Toggle the minimize mode.
+   * @param {Number} minHeight The height to minimize to.
+   */
+  toggleMinimizeMode: function BH_toggleMinimizedMode(minHeight) {
+    this.isMinimized ? this.maximize() : this.minimize(minHeight);
+  },
+
+  /**
    * Set the toolbox title.
    */
   setTitle: function BH_setTitle(title) {
