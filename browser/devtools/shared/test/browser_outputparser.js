@@ -92,14 +92,13 @@ function testParseCssProperty(doc, parser) {
     // Invalid property names should not cause exceptions.
     makeColorTest("hellothere", "'red'", ["'red'"]),
 
-    // This requires better parsing than we currently have available.
-    // See bug 1158288.
-    // makeColorTest("filter",
-    //               "blur(1px) drop-shadow(0 0 0 blue) url(red.svg#blue)",
-    //               ["blur(1px) drop-shadow(0 0 0 ",
-    //                {name: "blue", value: "#00F"},
-    //                ") url(red.svg#blue)"])
-
+    makeColorTest("filter",
+                  "blur(1px) drop-shadow(0 0 0 blue) url(red.svg#blue)",
+                  ["<span data-filters=\"blur(1px) drop-shadow(0 0 0 blue) ",
+                   "url(red.svg#blue)\"><span>",
+                   "blur(1px) drop-shadow(0 0 0 ",
+                   {name: "blue", value: "#00F"},
+                   ") url(\"red.svg#blue\")</span></span>"])
   ];
 
   let target = doc.querySelector("div");
