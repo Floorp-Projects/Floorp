@@ -1643,7 +1643,10 @@ WebConsoleCommands._registerOriginal("$", function JSTH_$(aOwner, aSelector)
  */
 WebConsoleCommands._registerOriginal("$$", function JSTH_$$(aOwner, aSelector)
 {
-  return aOwner.window.document.querySelectorAll(aSelector);
+  let results = aOwner.window.document.querySelectorAll(aSelector);
+  let nodes = aOwner.window.wrappedJSObject.Array.from(results);
+
+  return nodes;
 });
 
 /**
