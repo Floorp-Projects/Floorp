@@ -69,12 +69,10 @@ treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover, open) {
     color: -moz-FieldText;
     -moz-margin-start: 1px;
     -moz-margin-end: 1px;
-    border-width: 2px;
+    border-width: 1px;
     border-color: transparent;
-    border-radius: 3px;
     background-repeat: no-repeat;
     background-size: 100% 100%;
-    -moz-outline-radius: 3px;
   }
 
   treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected) {
@@ -82,7 +80,7 @@ treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover, open) {
     -moz-border-right-colors: @selectedBorderColor@ @whiteOpacityBorderColor@;
     -moz-border-left-colors: @selectedBorderColor@ @whiteOpacityBorderColor@;
     -moz-border-bottom-colors: @selectedBorderColor@ @whiteOpacityBottomBorderColor@;
-    background-image: linear-gradient(@selectedGradientColor1@, @selectedGradientColor2@);
+    background-image: linear-gradient(@selectedGradientColor2@, @selectedGradientColor2@);
     background-color: transparent;
     outline: 1px solid @whiteOpacityBorderColor@;
   }
@@ -102,7 +100,7 @@ treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover, open) {
     -moz-border-right-colors: @selectedFocusBorderColor@ @whiteOpacityBorderColor@;
     -moz-border-left-colors: @selectedFocusBorderColor@ @whiteOpacityBorderColor@;
     -moz-border-bottom-colors: @selectedFocusBorderColor@ @whiteOpacityBottomBorderColor@;
-    background-image: linear-gradient(@selectedFocusGradientColor1@, @selectedFocusGradientColor2@);
+    background-image: linear-gradient(@selectedFocusGradientColor2@, @selectedFocusGradientColor2@);
     background-color: transparent;
   }
 
@@ -112,7 +110,7 @@ treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover, open) {
     -moz-border-right-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
     -moz-border-left-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
     -moz-border-bottom-colors: @hoverAndFocusBorderColor@ @whiteOpacityBottomBorderColor@;
-    background-image: linear-gradient(@hoverAndCurrentFocusGradientColor1@, @hoverAndCurrentFocusGradientColor2@);
+    background-image: linear-gradient(@hoverAndCurrentFocusGradientColor2@, @hoverAndCurrentFocusGradientColor2@);
   }
 
   treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover) {
@@ -120,7 +118,7 @@ treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover, open) {
     -moz-border-right-colors: @hoverBorderColor@ @whiteOpacityBorderColor@;
     -moz-border-left-colors: @hoverBorderColor@ @whiteOpacityBorderColor@;
     -moz-border-bottom-colors: @hoverBorderColor@ @whiteOpacityBottomBorderColor@;
-    background-image: linear-gradient(@hoverGradientColor1@, @hoverGradientColor2@);
+    background-image: linear-gradient(@hoverGradientColor2@, @hoverGradientColor2@);
     outline: 1px solid @whiteOpacityBorderColor@;
   }
 
@@ -129,7 +127,7 @@ treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover, open) {
     -moz-border-right-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
     -moz-border-left-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
     -moz-border-bottom-colors: @hoverAndFocusBorderColor@ @whiteOpacityBottomBorderColor@;
-    background-image: linear-gradient(@hoverGradientColor1@, @hoverGradientColor2@);
+    background-image: linear-gradient(@hoverGradientColor2@, @hoverGradientColor2@);
   }
 
   treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover, selected) {
@@ -137,7 +135,7 @@ treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover, open) {
     -moz-border-right-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
     -moz-border-left-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
     -moz-border-bottom-colors: @hoverAndFocusBorderColor@ @whiteOpacityBottomBorderColor@;
-    background-image: linear-gradient(@hoverAndCurrentFocusGradientColor1@, @hoverAndCurrentFocusGradientColor2@);
+    background-image: linear-gradient(@hoverAndCurrentFocusGradientColor2@, @hoverAndCurrentFocusGradientColor2@);
   }
 
   tree[disabled="true"] > treechildren::-moz-tree-row {
@@ -164,36 +162,37 @@ treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover, open) {
     color: -moz-DialogText;
   }
 
-  @media (-moz-os-version: windows-win8) {
+  @media (-moz-os-version: windows-vista),
+         (-moz-os-version: windows-win7) {
     treechildren:not(.autocomplete-treebody)::-moz-tree-row {
-      border-width: 1px;
-      border-radius: 0;
-      -moz-outline-radius: 0;
+      border-width: 2px;
+      border-radius: 3px;
+      -moz-outline-radius: 3px;
     }
 
     treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected) {
-      background-image: linear-gradient(@selectedGradientColor2@, @selectedGradientColor2@);
+      background-image: linear-gradient(@selectedGradientColor1@, @selectedGradientColor2@);
     }
 
     treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected, focus),
     treechildren::-moz-tree-row(dropOn) {
-      background-image: linear-gradient(@selectedFocusGradientColor2@, @selectedFocusGradientColor2@);
+      background-image: linear-gradient(@selectedFocusGradientColor1@, @selectedFocusGradientColor2@);
     }
 
     treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected, current, focus) {
-      background-image: linear-gradient(@hoverAndCurrentFocusGradientColor2@, @hoverAndCurrentFocusGradientColor2@);
+      background-image: linear-gradient(@hoverAndCurrentFocusGradientColor1@, @hoverAndCurrentFocusGradientColor2@);
     }
 
     treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover) {
-      background-image: linear-gradient(@hoverGradientColor2@, @hoverGradientColor2@);
+      background-image: linear-gradient(@hoverGradientColor1@, @hoverGradientColor2@);
     }
 
     treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover, current) {
-      background-image: linear-gradient(@hoverGradientColor2@, @hoverGradientColor2@);
+      background-image: linear-gradient(@hoverGradientColor1@, @hoverGradientColor2@);
     }
 
     treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover, selected) {
-      background-image: linear-gradient(@hoverAndCurrentFocusGradientColor2@, @hoverAndCurrentFocusGradientColor2@);
+      background-image: linear-gradient(@hoverAndCurrentFocusGradientColor1@, @hoverAndCurrentFocusGradientColor2@);
     }
   }
 }
