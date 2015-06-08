@@ -524,7 +524,7 @@ class VirtualRegister
     LiveRange* lastRange() const {
         return LiveRange::get(ranges_.back());
     }
-    LiveRange* rangeFor(CodePosition pos) const;
+    LiveRange* rangeFor(CodePosition pos, bool preferRegister = false) const;
     void removeRange(LiveRange* range);
     void addRange(LiveRange* range);
 
@@ -707,7 +707,7 @@ class BacktrackingAllocator : protected RegisterAllocator
     struct PrintLiveRange;
 
     bool minimalDef(LiveRange* range, LNode* ins);
-    bool minimalUse(LiveRange* range, LNode* ins);
+    bool minimalUse(LiveRange* range, UsePosition* use);
     bool minimalBundle(LiveBundle* bundle, bool* pfixed = nullptr);
 
     // Heuristic methods.

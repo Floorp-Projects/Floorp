@@ -58,6 +58,21 @@ ChunkedJSONWriteFunc::CopyData() const
 }
 
 void
+ChunkedJSONWriteFunc::Take(ChunkedJSONWriteFunc&& aOther)
+{
+  for (size_t i = 0; i < aOther.mChunkList.length(); i++) {
+    MOZ_ALWAYS_TRUE(mChunkLengths.append(aOther.mChunkLengths[i]));
+    MOZ_ALWAYS_TRUE(mChunkList.append(mozilla::Move(aOther.mChunkList[i])));
+  }
+  mChunkPtr = mChunkList.back().get() + mChunkLengths.back();
+  mChunkEnd = mChunkPtr;
+  aOther.mChunkPtr = nullptr;
+  aOther.mChunkEnd = nullptr;
+  aOther.mChunkList.clear();
+  aOther.mChunkLengths.clear();
+}
+
+void
 ChunkedJSONWriteFunc::AllocChunk(size_t aChunkSize)
 {
   MOZ_ASSERT(mChunkLengths.length() == mChunkList.length());
@@ -70,12 +85,16 @@ ChunkedJSONWriteFunc::AllocChunk(size_t aChunkSize)
 }
 
 void
-SpliceableJSONWriter::Splice(const ChunkedJSONWriteFunc* aFunc)
+SpliceableJSONWriter::TakeAndSplice(ChunkedJSONWriteFunc* aFunc)
 {
   Separator();
   for (size_t i = 0; i < aFunc->mChunkList.length(); i++) {
     WriteFunc()->Write(aFunc->mChunkList[i].get());
   }
+  aFunc->mChunkPtr = nullptr;
+  aFunc->mChunkEnd = nullptr;
+  aFunc->mChunkList.clear();
+  aFunc->mChunkLengths.clear();
   mNeedComma[mDepth] = true;
 }
 
@@ -84,5 +103,13 @@ SpliceableJSONWriter::Splice(const char* aStr)
 {
   Separator();
   WriteFunc()->Write(aStr);
+  mNeedComma[mDepth] = true;
+}
+
+void
+SpliceableChunkedJSONWriter::TakeAndSplice(ChunkedJSONWriteFunc* aFunc)
+{
+  Separator();
+  WriteFunc()->Take(mozilla::Move(*aFunc));
   mNeedComma[mDepth] = true;
 }
