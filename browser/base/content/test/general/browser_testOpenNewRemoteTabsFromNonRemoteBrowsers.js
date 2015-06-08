@@ -26,7 +26,7 @@ function frame_script() {
  */
 function prepareNonRemoteBrowser(aWindow, browser) {
   browser.loadURI(NON_REMOTE_PAGE);
-  return BrowserTestUtils.browserLoaded(browser);
+  return waitForDocLoadComplete(browser);
 }
 
 registerCleanupFunction(() => {
