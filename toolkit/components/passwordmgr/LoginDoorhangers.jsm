@@ -15,6 +15,16 @@ Cu.import("resource://gre/modules/LoginManagerParent.jsm");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+// Helper function needed because the "disabled" property may not be available
+// if the XBL binding of the UI control has not been constructed yet.
+function setDisabled(element, disabled) {
+  if (disabled) {
+    element.setAttribute("disabled", "true");
+  } else {
+    element.removeAttribute("disabled");
+  }
+}
+
 this.LoginDoorhangers = {};
 
 /**
@@ -24,10 +34,20 @@ this.LoginDoorhangers = {};
  *        Properties from this object will be applied to the new instance.
  */
 this.LoginDoorhangers.FillDoorhanger = function (properties) {
-  this.onFilterInput = this.onFilterInput.bind(this);
-  this.onListDblClick = this.onListDblClick.bind(this);
-  this.onListKeyPress = this.onListKeyPress.bind(this);
-
+  // Set up infrastructure to access our elements and listen to events.
+  this.el = new Proxy({}, {
+    get: (target, name) => {
+      return this.chromeDocument.getElementById("login-fill-" + name);
+    },
+  });
+  this.eventHandlers = [];
+  for (let elementName of Object.keys(this.events)) {
+    let handlers = this.events[elementName];
+    for (let eventName of Object.keys(handlers)) {
+      let handler = handlers[eventName];
+      this.eventHandlers.push([elementName, eventName, handler.bind(this)]);
+    }
+  };
   for (let name of Object.getOwnPropertyNames(properties)) {
     this[name] = properties[name];
   }
@@ -52,7 +72,7 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
     this._browser = browser;
 
     let doorhanger = this;
-    let PopupNotifications = this.chomeDocument.defaultView.PopupNotifications;
+    let PopupNotifications = this.chromeDocument.defaultView.PopupNotifications;
     let notification = PopupNotifications.show(
       browser,
       "login-fill",
@@ -71,8 +91,7 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
             case "shown":
               // Since we specified the "dismissed" option, this event will only
               // be called after the "show" method returns, so the reference to
-              // "this.notification" will be available at this point.
-              doorhanger.bound = true;
+              // "this.notification" will be available in "bind" at this point.
               doorhanger.promiseHidden =
                          new Promise(resolve => doorhanger.onUnbind = resolve);
               doorhanger.bind();
@@ -109,7 +128,7 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
    * This may change during the lifetime of the doorhanger, in case the web page
    * is moved to a different chrome window by the swapDocShells method.
    */
-  get chomeDocument() {
+  get chromeDocument() {
     return this.browser.ownerDocument;
   },
 
@@ -117,7 +136,7 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
    * Hides this notification, if the notification panel is currently open.
    */
   hide() {
-    let PopupNotifications = this.chomeDocument.defaultView.PopupNotifications;
+    let PopupNotifications = this.chromeDocument.defaultView.PopupNotifications;
     if (PopupNotifications.isPanelOpen) {
       PopupNotifications.panel.hidePopup();
     }
@@ -139,36 +158,47 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
    * Binds this doorhanger to its UI controls.
    */
   bind() {
-    this.element = this.chomeDocument.getElementById("login-fill-doorhanger");
-    this.list = this.chomeDocument.getElementById("login-fill-list");
-    this.filter = this.chomeDocument.getElementById("login-fill-filter");
+    // Since this may ask for the master password, we must do it at bind time.
+    if (this.autoDetailLogin) {
+      let formLogins = Services.logins.findLogins({}, this.loginFormOrigin, "",
+                                                  null);
+      if (formLogins.length == 1) {
+        this.detailLogin = formLogins[0];
+      }
+      this.autoDetailLogin = false;
+    }
 
-    this.filter.setAttribute("value", this.filterString);
-
+    this.el.filter.setAttribute("value", this.filterString);
     this.refreshList();
+    this.refreshDetailView();
 
-    this.filter.addEventListener("input", this.onFilterInput);
-    this.list.addEventListener("dblclick", this.onListDblClick);
-    this.list.addEventListener("keypress", this.onListKeyPress);
+    this.eventHandlers.forEach(([elementName, eventName, handler]) => {
+      this.el[elementName].addEventListener(eventName, handler, true);
+    });
 
     // Move the main element to the notification panel for displaying.
-    this.notification.owner.panel.firstElementChild.appendChild(this.element);
-    this.element.hidden = false;
+    this.notification.owner.panel.firstElementChild.appendChild(this.el.doorhanger);
+    this.el.doorhanger.hidden = false;
+
+    this.bound = true;
   },
 
   /**
    * Unbinds this doorhanger from its UI controls.
    */
   unbind() {
-    this.filter.removeEventListener("input", this.onFilterInput);
-    this.list.removeEventListener("dblclick", this.onListDblClick);
-    this.list.removeEventListener("keypress", this.onListKeyPress);
+    this.bound = false;
+
+    this.eventHandlers.forEach(([elementName, eventName, handler]) => {
+      this.el[elementName].removeEventListener(eventName, handler, true);
+    });
 
     this.clearList();
 
     // Place the element back in the document for the next time we need it.
-    this.element.hidden = true;
-    this.chomeDocument.getElementById("mainPopupSet").appendChild(this.element);
+    this.el.doorhanger.hidden = true;
+    this.chromeDocument.getElementById("mainPopupSet")
+                       .appendChild(this.el.doorhanger);
   },
 
   /**
@@ -189,11 +219,78 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
   filterString: "",
 
   /**
-   * Handles text changes in the filter textbox.
+   * Show login details automatically when the panel is first opened.
    */
-  onFilterInput() {
-    this.filterString = this.filter.value;
-    this.refreshList();
+  autoDetailLogin: false,
+
+  /**
+   * Indicates which particular login to show in the detail view.
+   */
+  set detailLogin(detailLogin) {
+    this._detailLogin = detailLogin;
+    if (this.bound) {
+      this.refreshDetailView();
+    }
+  },
+  get detailLogin() {
+    return this._detailLogin;
+  },
+  _detailLogin: null,
+
+  /**
+   * Prototype functions for event handling.
+   */
+  events: {
+    mainview: {
+      focus(event) {
+        // If keyboard focus returns to any control in the the main view (for
+        // example using SHIFT+TAB) close the details view.
+        this.detailLogin = null;
+      },
+    },
+    filter: {
+      input(event) {
+        this.filterString = this.el.filter.value;
+        this.refreshList();
+      },
+    },
+    list: {
+      click(event) {
+        if (event.button == 0 && this.el.list.selectedItem) {
+          this.displaySelectedLoginDetails();
+        }
+      },
+      keypress(event) {
+        if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_RETURN &&
+            this.el.list.selectedItem) {
+          this.displaySelectedLoginDetails();
+        }
+      },
+    },
+    clickcapturer: {
+      click(event) {
+        this.detailLogin = null;
+      },
+    },
+    details: {
+      transitionend(event) {
+        // We must set focus to the detail controls only when the transition has
+        // ended, otherwise focus will interfere with the animation. We do this
+        // only when we're showing the detail view, not when leaving.
+        if (event.target == this.el.details && this.detailLogin) {
+          if (this.loginFormPresent) {
+            this.el.use.focus();
+          } else {
+            this.el.username.focus();
+          }
+        }
+      },
+    },
+    use: {
+      command(event) {
+        this.fillLogin();
+      },
+    },
   },
 
   /**
@@ -212,17 +309,14 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
     }
 
     for (let { hostname, username } of formLogins) {
-      let item = this.chomeDocument.createElementNS(XUL_NS, "richlistitem");
+      let item = this.chromeDocument.createElementNS(XUL_NS, "richlistitem");
       item.classList.add("login-fill-item");
       item.setAttribute("hostname", hostname);
       item.setAttribute("username", username);
       if (hostname != this.loginFormOrigin) {
         item.classList.add("different-hostname");
       }
-      if (!this.loginFormPresent) {
-        item.setAttribute("disabled", "true");
-      }
-      this.list.appendChild(item);
+      this.el.list.appendChild(item);
     }
   },
 
@@ -230,45 +324,51 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
    * Clears the list of logins.
    */
   clearList() {
-    while (this.list.firstChild) {
-      this.list.removeChild(this.list.firstChild);
+    let list = this.el.list;
+    while (list.firstChild) {
+      list.firstChild.remove();
     }
   },
 
   /**
-   * Handles the action associated to a login item.
+   * Updates all the controls of the detail view based on the chosen login.
    */
-  onListDblClick(event) {
-    if (event.button != 0 || !this.list.selectedItem) {
-      return;
-    }
-    this.fillLogin();
-  },
-  onListKeyPress(event) {
-    if (event.keyCode != Ci.nsIDOMKeyEvent.DOM_VK_RETURN ||
-        !this.list.selectedItem) {
-      return;
-    }
-    this.fillLogin();
-  },
-  fillLogin() {
-    if (this.list.selectedItem.hasAttribute("disabled")) {
-      return;
-    }
-    let formLogins = Services.logins.findLogins({}, "", "", null);
-    let login = formLogins.find(login => {
-      return login.hostname == this.list.selectedItem.getAttribute("hostname") &&
-             login.username == this.list.selectedItem.getAttribute("username");
-    });
-    if (login) {
-      LoginManagerParent.fillForm({
-        browser: this.browser,
-        loginFormOrigin: this.loginFormOrigin,
-        login,
-      }).catch(Cu.reportError);
+  refreshDetailView() {
+    if (this.detailLogin) {
+      this.el.username.setAttribute("value", this.detailLogin.username);
+      this.el.password.setAttribute("value", this.detailLogin.password);
+      this.el.doorhanger.setAttribute("inDetailView", "true");
+      setDisabled(this.el.username, false);
+      setDisabled(this.el.use, !this.loginFormPresent);
     } else {
-      Cu.reportError("The selected login has been removed in the meantime.");
+      this.el.doorhanger.removeAttribute("inDetailView");
+      // We must disable all the detail controls to ensure they cannot be
+      // selected with the keyboard while they are outside the visible area.
+      setDisabled(this.el.username, true);
+      setDisabled(this.el.use, true);
     }
+  },
+
+  displaySelectedLoginDetails() {
+    let selectedItem = this.el.list.selectedItem;
+    let hostLogins = Services.logins.findLogins({},
+                               selectedItem.getAttribute("hostname"), "", null);
+    let login = hostLogins.find(login => {
+      return login.username == selectedItem.getAttribute("username");
+    });
+    if (!login) {
+      Cu.reportError("The selected login has been removed in the meantime.");
+      return;
+    }
+    this.detailLogin = login;
+  },
+
+  fillLogin() {
+    LoginManagerParent.fillForm({
+      browser: this.browser,
+      loginFormOrigin: this.loginFormOrigin,
+      login: this.detailLogin,
+    }).catch(Cu.reportError);
     this.hide();
   },
 };
