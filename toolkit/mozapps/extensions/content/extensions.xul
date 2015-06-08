@@ -71,6 +71,8 @@
                 label="&cmd.about.label;"
                 accesskey="&cmd.about.accesskey;"/>
     </menupopup>
+
+    <tooltip id="addonitem-tooltip"/>
   </popupset>
 
   <!-- global commands - these act on all addons, or affect the addons manager
