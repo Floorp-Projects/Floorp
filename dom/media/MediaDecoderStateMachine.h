@@ -1186,8 +1186,8 @@ protected:
   }
 
   // True if we shouldn't play our audio (but still write it to any capturing
-  // streams). When this is true, mStopAudioThread is always true and
-  // the audio thread will never start again after it has stopped.
+  // streams). When this is true, the audio thread will never start again after
+  // it has stopped.
   bool mAudioCaptured;
 
   // True if an event to notify about a change in the playback
@@ -1214,10 +1214,6 @@ protected:
   // DecodeThreadRun(). We use this flag to prevent us from dispatching
   // unneccessary runnables, since the decode thread runs in a loop.
   bool mDispatchedEventToDecode;
-
-  // False while audio thread should be running. Accessed state machine
-  // and audio threads. Syncrhonised by decoder monitor.
-  bool mStopAudioThread;
 
   // If this is true while we're in buffering mode, we can exit early,
   // as it's likely we may be able to playback. This happens when we enter
