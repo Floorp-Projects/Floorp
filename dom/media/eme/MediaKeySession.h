@@ -16,6 +16,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/dom/Date.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/DetailedPromise.h"
 #include "mozilla/dom/MediaKeySessionBinding.h"
 #include "mozilla/dom/MediaKeysBinding.h"
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
