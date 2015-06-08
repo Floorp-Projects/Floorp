@@ -511,7 +511,7 @@ public:
     }
     bool AsyncPanZoomEnabled() { return mAsyncPanZoomEnabled; }
 
-    virtual ScreenIntSize GetInnerSize();
+    virtual ScreenIntSize GetInnerSize() override;
 
 protected:
     virtual ~TabChild();
