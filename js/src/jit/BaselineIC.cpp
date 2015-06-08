@@ -17,7 +17,6 @@
 #include "builtin/Eval.h"
 #include "builtin/SIMD.h"
 #include "jit/BaselineDebugModeOSR.h"
-#include "jit/BaselineHelpers.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitSpewer.h"
 #include "jit/Linker.h"
@@ -25,6 +24,7 @@
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
+#include "jit/SharedICHelpers.h"
 #include "jit/VMFunctions.h"
 #include "js/Conversions.h"
 #include "vm/Opcodes.h"

@@ -12,7 +12,7 @@
 # include "jit/PerfSpewer.h"
 #endif
 #include "jit/VMFunctions.h"
-#include "jit/x64/BaselineHelpers-x64.h"
+#include "jit/x64/SharedICHelpers-x64.h"
 
 using namespace js;
 using namespace js::jit;

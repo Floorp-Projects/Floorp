@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_x64_BaselineRegisters_x64_h
-#define jit_x64_BaselineRegisters_x64_h
+#ifndef jit_x64_SharedICRegisters_x64_h
+#define jit_x64_SharedICRegisters_x64_h
 
 #include "jit/MacroAssembler.h"
 
@@ -32,4 +32,4 @@ static MOZ_CONSTEXPR_VAR FloatRegister FloatReg1      = xmm1;
 } // namespace jit
 } // namespace js
 
-#endif /* jit_x64_BaselineRegisters_x64_h */
+#endif /* jit_x64_SharedICRegisters_x64_h */
