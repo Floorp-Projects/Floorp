@@ -28,15 +28,6 @@ interface ChromeUtils {
    */
   [Throws, NewObject]
   static HeapSnapshot readHeapSnapshot(DOMString filePath);
-
-  /**
-   * A helper that converts OriginAttributesDictionary to cookie jar opaque
-   * identfier.
-   *
-   * @param originAttrs       The originAttributes from the caller.
-   */
-  static ByteString
-  originAttributesToCookieJar(optional OriginAttributesDictionary originAttrs);
 };
 
 /**
