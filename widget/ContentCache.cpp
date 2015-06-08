@@ -145,14 +145,15 @@ ContentCache::AssignContent(const ContentCache& aOther,
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("ContentCache: 0x%p (mIsChrome=%s) AssignContent(aNotification=%s), "
      "Succeeded, mText.Length()=%u, mSelection={ mAnchor=%u, mFocus=%u, "
-     "mWritingMode=%s, mAnchorCharRect=%s, mFocusCharRect=%s }, "
+     "mWritingMode=%s, mAnchorCharRect=%s, mFocusCharRect=%s, mRect=%s }, "
      "mCaret={ mOffset=%u, mRect=%s }, mTextRectArray={ mStart=%u, "
      "mRects.Length()=%u }, mEditorRect=%s",
      this, GetBoolName(mIsChrome), GetNotificationName(aNotification),
      mText.Length(), mSelection.mAnchor, mSelection.mFocus,
      GetWritingModeName(mSelection.mWritingMode).get(),
      GetRectText(mSelection.mAnchorCharRect).get(),
-     GetRectText(mSelection.mFocusCharRect).get(), mCaret.mOffset,
+     GetRectText(mSelection.mFocusCharRect).get(),
+     GetRectText(mSelection.mRect).get(), mCaret.mOffset,
      GetRectText(mCaret.mRect).get(), mTextRectArray.mStart,
      mTextRectArray.mRects.Length(), GetRectText(mEditorRect).get()));
 }
@@ -595,6 +596,7 @@ ContentCache::CacheTextRects(nsIWidget* aWidget,
   mTextRectArray.Clear();
   mSelection.mAnchorCharRect.SetEmpty();
   mSelection.mFocusCharRect.SetEmpty();
+  mSelection.mRect.SetEmpty();
 
   if (NS_WARN_IF(!mSelection.IsValid())) {
     return false;
@@ -653,15 +655,32 @@ ContentCache::CacheTextRects(nsIWidget* aWidget,
     mSelection.mFocusCharRect = charRect;
   }
 
+  if (!mSelection.Collapsed()) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    WidgetQueryContentEvent textRect(true, NS_QUERY_TEXT_RECT, aWidget);
+    textRect.InitForQueryTextRect(mSelection.StartOffset(),
+                                  mSelection.Length());
+    aWidget->DispatchEvent(&textRect, status);
+    if (NS_WARN_IF(!textRect.mSucceeded)) {
+      MOZ_LOG(sContentCacheLog, LogLevel::Error,
+        ("ContentCache: 0x%p (mIsChrome=%s) CacheTextRects(), FAILED, "
+         "couldn't retrieve text rect of whole selected text",
+         this, GetBoolName(mIsChrome)));
+    } else {
+      mSelection.mRect = textRect.mReply.mRect;
+    }
+  }
+
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("ContentCache: 0x%p (mIsChrome=%s) CacheTextRects(), Succeeded, "
      "mText.Length()=%u, mTextRectArray={ mStart=%u, mRects.Length()=%u }, "
      "mSelection={ mAnchor=%u, mAnchorCharRect=%s, mFocus=%u, "
-     "mFocusCharRect=%s }",
+     "mFocusCharRect=%s, mRect=%s }",
      this, GetBoolName(mIsChrome), mText.Length(), mTextRectArray.mStart,
      mTextRectArray.mRects.Length(), mSelection.mAnchor,
      GetRectText(mSelection.mAnchorCharRect).get(), mSelection.mFocus,
-     GetRectText(mSelection.mFocusCharRect).get()));
+     GetRectText(mSelection.mFocusCharRect).get(),
+     GetRectText(mSelection.mRect).get()));
   return true;
 }
 
@@ -740,6 +759,13 @@ ContentCache::GetUnionTextRects(uint32_t aOffset,
      this, GetBoolName(mIsChrome), aOffset, aLength,
      mTextRectArray.mStart, mTextRectArray.mRects.Length(),
      mSelection.mAnchor, mSelection.mFocus));
+
+  if (!mSelection.Collapsed() &&
+      aOffset == mSelection.StartOffset() && aLength == mSelection.Length()) {
+    NS_WARN_IF(mSelection.mRect.IsEmpty());
+    aUnionTextRect = mSelection.mRect;
+    return !aUnionTextRect.IsEmpty();
+  }
 
   if (aLength == 1) {
     if (aOffset == mSelection.mAnchor) {
