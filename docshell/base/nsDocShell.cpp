@@ -13867,7 +13867,9 @@ nsDocShell::GetAsyncPanZoomEnabled(bool* aOut)
     return NS_OK;
   }
 
-  *aOut = false;
+  // If we don't have a presShell, fall back to the default platform value of
+  // whether or not APZ is enabled.
+  *aOut = gfxPlatform::AsyncPanZoomEnabled();
   return NS_OK;
 }
 
