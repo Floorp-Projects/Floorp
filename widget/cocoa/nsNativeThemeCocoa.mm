@@ -347,6 +347,10 @@ static BOOL IsToolbarStyleContainer(nsIFrame* aFrame)
   [super drawWithFrame:rect inView:controlView];
 
   if (FocusIsDrawnByDrawWithFrame(self)) {
+    // For some reason, -[NSSearchFieldCell drawWithFrame:inView] doesn't draw a
+    // focus ring in 64 bit mode, no matter what SDK is used or what OS X version
+    // we're running on. But if FocusIsDrawnByDrawWithFrame(self), then our
+    // caller expects us to draw a focus ring. So we just do that here.
     DrawFocusRingForCellIfNeeded(self, rect, controlView);
   }
 }
