@@ -637,6 +637,8 @@ var WifiManager = (function() {
     wifiCommand.connectToSupplicant(connectCallback);
   }
 
+  let dhcpRequestGen = 0;
+
   function onconnected() {
     // For now we do our own DHCP. In the future, this should be handed
     // off to the Network Manager.
@@ -652,9 +654,14 @@ var WifiManager = (function() {
           runStaticIp(manager.ifname, key);
           return;
       }
-      netUtil.runDhcp(manager.ifname, function(data) {
+      netUtil.runDhcp(manager.ifname, dhcpRequestGen++, function(data, gen) {
         dhcpInfo = data.info;
+        debug('dhcpRequestGen: ' + dhcpRequestGen + ', gen: ' + gen);
         if (!dhcpInfo) {
+          if (gen + 1 < dhcpRequestGen) {
+            debug('Do not bother younger DHCP request.');
+            return;
+          }
           if (++manager.dhcpFailuresCount >= MAX_RETRIES_ON_DHCP_FAILURE) {
             manager.dhcpFailuresCount = 0;
             notify("disconnected", {connectionInfo: manager.connectionInfo});
