@@ -297,7 +297,7 @@ DispatchReplyError(BluetoothReplyRunnable* aRunnable,
   MOZ_ASSERT(!aErrorStr.IsEmpty());
 
   // Reply will be deleted by the runnable after running on main thread
-#ifndef MOZ_B2G_BT_API_V1
+#if MOZ_B2G_BT_API_V2
   BluetoothReply* reply =
     new BluetoothReply(BluetoothReplyError(STATUS_FAIL, nsString(aErrorStr)));
 #else
@@ -317,7 +317,7 @@ DispatchReplyError(BluetoothReplyRunnable* aRunnable,
   MOZ_ASSERT(aStatus != STATUS_SUCCESS);
 
   // Reply will be deleted by the runnable after running on main thread
-#ifndef MOZ_B2G_BT_API_V1
+#if MOZ_B2G_BT_API_V2
   BluetoothReply* reply =
     new BluetoothReply(BluetoothReplyError(aStatus, EmptyString()));
 #else
@@ -344,7 +344,7 @@ DispatchStatusChangedEvent(const nsAString& aType,
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
 
-#ifndef MOZ_B2G_BT_API_V1
+#ifdef MOZ_B2G_BT_API_V2
   bs->DistributeSignal(aType, NS_LITERAL_STRING(KEY_ADAPTER), data);
 #else
   BluetoothSignal signal(nsString(aType), NS_LITERAL_STRING(KEY_ADAPTER), data);
