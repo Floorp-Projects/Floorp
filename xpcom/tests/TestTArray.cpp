@@ -1011,7 +1011,7 @@ static bool test_fallible()
   const unsigned numArrays = 36;
   FallibleTArray<char> arrays[numArrays];
   for (size_t i = 0; i < numArrays; i++) {
-    bool success = arrays[i].SetCapacity(128 * 1024 * 1024);
+    bool success = arrays[i].SetCapacity(128 * 1024 * 1024, fallible);
     if (!success) {
       // We got our OOM.  Check that it didn't come too early.
       if (i < 8) {
@@ -1112,7 +1112,7 @@ static bool test_SetLengthAndRetainStorage_no_ctor() {
   } while (0)
   
   // Setup test arrays.
-  FOR_EACH(;, .SetLength(N));
+  FOR_EACH(;, .SetLength(N, fallible));
   for (int n = 0; n < N; ++n) {
     FOR_EACH(;, [n] = n);
   }
