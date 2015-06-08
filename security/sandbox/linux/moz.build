@@ -47,6 +47,7 @@ SOURCES += [
     '../chromium/base/time/time_posix.cc',
     '../chromium/sandbox/linux/bpf_dsl/bpf_dsl.cc',
     '../chromium/sandbox/linux/bpf_dsl/dump_bpf.cc',
+    '../chromium/sandbox/linux/bpf_dsl/policy.cc',
     '../chromium/sandbox/linux/bpf_dsl/policy_compiler.cc',
     '../chromium/sandbox/linux/seccomp-bpf/basicblock.cc',
     '../chromium/sandbox/linux/seccomp-bpf/codegen.cc',
@@ -54,11 +55,12 @@ SOURCES += [
     '../chromium/sandbox/linux/seccomp-bpf/errorcode.cc',
     '../chromium/sandbox/linux/seccomp-bpf/syscall.cc',
     '../chromium/sandbox/linux/seccomp-bpf/syscall_iterator.cc',
+    '../chromium/sandbox/linux/seccomp-bpf/trap.cc',
     'LinuxCapabilities.cpp',
     'Sandbox.cpp',
-    'SandboxAssembler.cpp',
     'SandboxChroot.cpp',
     'SandboxFilter.cpp',
+    'SandboxFilterUtil.cpp',
     'SandboxUtil.cpp',
 ]
 

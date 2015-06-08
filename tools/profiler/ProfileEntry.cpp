@@ -400,12 +400,6 @@ UniqueStacks::UniqueStacks(JSRuntime* aRuntime)
   mStackTableWriter.StartBareList();
 }
 
-UniqueStacks::~UniqueStacks()
-{
-  mFrameTableWriter.EndBareList();
-  mStackTableWriter.EndBareList();
-}
-
 uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack)
 {
   uint32_t index;
@@ -462,14 +456,16 @@ void UniqueStacks::AddJITFrameDepth(void* aAddr, unsigned depth)
   mJITFrameDepthMap.Put(aAddr, depth);
 }
 
-void UniqueStacks::SpliceFrameTableElements(SpliceableJSONWriter& aWriter) const
+void UniqueStacks::SpliceFrameTableElements(SpliceableJSONWriter& aWriter)
 {
-  aWriter.Splice(mFrameTableWriter.WriteFunc());
+  mFrameTableWriter.EndBareList();
+  aWriter.TakeAndSplice(mFrameTableWriter.WriteFunc());
 }
 
-void UniqueStacks::SpliceStackTableElements(SpliceableJSONWriter& aWriter) const
+void UniqueStacks::SpliceStackTableElements(SpliceableJSONWriter& aWriter)
 {
-  aWriter.Splice(mStackTableWriter.WriteFunc());
+  mStackTableWriter.EndBareList();
+  aWriter.TakeAndSplice(mStackTableWriter.WriteFunc());
 }
 
 void UniqueStacks::StreamStack(const StackKey& aStack)

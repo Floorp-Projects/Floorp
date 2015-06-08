@@ -29,8 +29,16 @@ public:
     AllocChunk(kChunkSize);
   }
 
+  bool IsEmpty() const {
+    MOZ_ASSERT_IF(!mChunkPtr, !mChunkEnd &&
+                              mChunkList.length() == 0 &&
+                              mChunkLengths.length() == 0);
+    return !mChunkPtr;
+  }
+
   void Write(const char* aStr) override;
   mozilla::UniquePtr<char[]> CopyData() const;
+  void Take(ChunkedJSONWriteFunc&& aOther);
 
 private:
   void AllocChunk(size_t aChunkSize);
@@ -93,6 +101,11 @@ public:
 
   void Splice(const ChunkedJSONWriteFunc* aFunc);
   void Splice(const char* aStr);
+
+  // Takes the chunks from aFunc and write them. If move is not possible
+  // (e.g., using OStreamJSONWriteFunc), aFunc's chunks are copied and its
+  // storage cleared.
+  virtual void TakeAndSplice(ChunkedJSONWriteFunc* aFunc);
 };
 
 class SpliceableChunkedJSONWriter : public SpliceableJSONWriter
@@ -105,6 +118,9 @@ public:
   ChunkedJSONWriteFunc* WriteFunc() const {
     return static_cast<ChunkedJSONWriteFunc*>(JSONWriter::WriteFunc());
   }
+
+  // Adopts the chunks from aFunc without copying.
+  virtual void TakeAndSplice(ChunkedJSONWriteFunc* aFunc) override;
 };
 
 #endif // PROFILEJSONWRITER_H
