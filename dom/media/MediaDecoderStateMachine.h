@@ -1285,9 +1285,13 @@ protected:
   // been written to the MediaStream.
   Watchable<bool> mAudioCompleted;
 
-  // True if mDuration has a value obtained from an HTTP header, or from
-  // the media index/metadata. Accessed on the state machine thread.
-  bool mGotDurationFromMetaData;
+  // Flag whether we notify metadata before decoding the first frame or after.
+  //
+  // Note that the odd semantics here are designed to replicate the current
+  // behavior where we notify the decoder each time we come out of dormant, but
+  // send suppressed event visibility for those cases. This code can probably be
+  // simplified.
+  bool mNotifyMetadataBeforeFirstFrame;
 
   // True if we've dispatched an event to the decode task queue to call
   // DecodeThreadRun(). We use this flag to prevent us from dispatching
