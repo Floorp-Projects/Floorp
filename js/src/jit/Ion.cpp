@@ -652,15 +652,15 @@ JitCompartment::sweep(FreeOp* fop, JSCompartment* compartment)
     stubCodes_->sweep(fop);
 
     // If the sweep removed the ICCall_Fallback stub, nullptr the baselineCallReturnAddr_ field.
-    if (!stubCodes_->lookup(ICCall_Fallback::Compiler::CALL_KEY))
+    if (!stubCodes_->lookup(ICCall_Fallback::Compiler::BASELINE_CALL_KEY))
         baselineCallReturnAddrs_[0] = nullptr;
-    if (!stubCodes_->lookup(ICCall_Fallback::Compiler::CONSTRUCT_KEY))
+    if (!stubCodes_->lookup(ICCall_Fallback::Compiler::BASELINE_CONSTRUCT_KEY))
         baselineCallReturnAddrs_[1] = nullptr;
 
     // Similarly for the ICGetProp_Fallback stub.
-    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::GetProp_Fallback)))
+    if (!stubCodes_->lookup(ICGetProp_Fallback::Compiler::BASELINE_KEY))
         baselineGetPropReturnAddr_ = nullptr;
-    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::SetProp_Fallback)))
+    if (!stubCodes_->lookup(ICSetProp_Fallback::Compiler::BASELINE_KEY))
         baselineSetPropReturnAddr_ = nullptr;
 
     if (stringConcatStub_ && !IsMarkedUnbarriered(&stringConcatStub_))
