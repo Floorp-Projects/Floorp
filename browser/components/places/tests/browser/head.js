@@ -310,7 +310,9 @@ let withBookmarksDialog = Task.async(function* (openFn, taskFn) {
   });
 
   info("withBookmarksDialog: opening the dialog");
-  yield openFn();
+  // The dialog might be modal and could block our events loop, so executeSoon.
+  executeSoon(openFn);
+
   info("withBookmarksDialog: waiting for the dialog");
   let dialogWin = yield dialogPromise;
 
