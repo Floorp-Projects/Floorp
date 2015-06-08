@@ -171,9 +171,8 @@ private:
 
   // Recreates mDecodedStream. Call this to create mDecodedStream at first,
   // and when seeking, to ensure a new stream is set up with fresh buffers.
-  // aInitialTime is relative to mStartTime.
   // Decoder monitor must be held.
-  void RecreateDecodedStream(int64_t aInitialTime, MediaStreamGraph* aGraph);
+  void RecreateDecodedStream(MediaStreamGraph* aGraph);
 
   void Shutdown();
 public:
@@ -548,6 +547,8 @@ protected:
   // Returns the audio clock, if we have audio, or -1 if we don't.
   // Called on the state machine thread.
   int64_t GetAudioClock() const;
+
+  int64_t GetStreamClock() const;
 
   // Get the video stream position, taking the |playbackRate| change into
   // account. This is a position in the media, not the duration of the playback
@@ -999,6 +1000,9 @@ protected:
 public:
   AbstractCanonical<int64_t>* CanonicalCurrentPosition() { return &mCurrentPosition; }
 protected:
+  // The presentation time of the first audio/video frame that is sent to the
+  // media stream.
+  int64_t mStreamStartTime;
 
   // The presentation time of the first audio frame that was played in
   // microseconds. We can add this to the audio stream position to determine
