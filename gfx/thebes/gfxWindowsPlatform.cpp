@@ -1829,6 +1829,23 @@ bool DoesD3D11TextureSharingWork(ID3D11Device *device)
   return result;
 }
 
+bool DoesD3D11AlphaTextureSharingWork(ID3D11Device *device)
+{
+  nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+  if (gfxInfo) {
+    // Disable texture sharing if we're blocking d2d since that's the only other time we use it
+    // and it might be broken.
+    int32_t status;
+    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT2D, &status))) {
+      if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+        return false;
+      }
+    }
+  }
+
+  return DoesD3D11TextureSharingWorkInternal(device, DXGI_FORMAT_A8_UNORM, D3D11_BIND_SHADER_RESOURCE);
+}
+
 void
 gfxWindowsPlatform::InitD3D11Devices()
 {
@@ -2024,7 +2041,7 @@ gfxWindowsPlatform::InitD3D11Devices()
 
     mD3D11ImageBridgeDevice->SetExceptionMode(0);
 
-    if (!DoesD3D11TextureSharingWorkInternal(mD3D11ImageBridgeDevice, DXGI_FORMAT_A8_UNORM, D3D11_BIND_SHADER_RESOURCE)) {
+    if (!DoesD3D11AlphaTextureSharingWork(mD3D11ImageBridgeDevice)) {
       mD3D11ImageBridgeDevice = nullptr;
     }
   }
