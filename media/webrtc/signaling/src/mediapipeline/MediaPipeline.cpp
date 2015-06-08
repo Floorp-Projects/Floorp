@@ -894,19 +894,19 @@ NewData(MediaStreamGraph* graph, TrackID tid,
     return;
   }
 
-  if (track_id_ != TRACK_INVALID) {
-    if (tid != track_id_) {
-      return;
-    }
-  } else if (conduit_->type() !=
-             (media.GetType() == MediaSegment::AUDIO ? MediaSessionConduit::AUDIO :
-                                                       MediaSessionConduit::VIDEO)) {
-    // Ignore data in case we have a muxed stream
+  if (conduit_->type() !=
+      (media.GetType() == MediaSegment::AUDIO ? MediaSessionConduit::AUDIO :
+                                                MediaSessionConduit::VIDEO)) {
+    // Ignore data of wrong kind in case we have a muxed stream
     return;
-  } else {
+  }
+
+  if (track_id_ == TRACK_INVALID) {
     // Don't lock during normal media flow except on first sample
     MutexAutoLock lock(mMutex);
     track_id_ = track_id_external_ = tid;
+  } else if (tid != track_id_) {
+    return;
   }
 
   // TODO(ekr@rtfm.com): For now assume that we have only one
