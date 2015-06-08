@@ -162,13 +162,6 @@ private:
 
   void DispatchAudioCaptured();
 
-  // Update blocking state of mDecodedStream when mPlayState or
-  // mLogicallySeeking change. Decoder monitor must be held.
-  void UpdateStreamBlockingForPlayState();
-
-  // Call this IsPlaying() changes. Decoder monitor must be held.
-  void UpdateStreamBlockingForStateMachinePlaying();
-
   // Recreates mDecodedStream. Call this to create mDecodedStream at first,
   // and when seeking, to ensure a new stream is set up with fresh buffers.
   // Decoder monitor must be held.
