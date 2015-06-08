@@ -1128,39 +1128,25 @@ CreateObjectPrototype(JSContext* cx, JSProtoKey key)
 static bool
 FinishObjectClassInit(JSContext* cx, JS::HandleObject ctor, JS::HandleObject proto)
 {
-    Rooted<GlobalObject*> self(cx, cx->global());
+    Rooted<GlobalObject*> global(cx, cx->global());
 
     /* ES5 15.1.2.1. */
     RootedId evalId(cx, NameToId(cx->names().eval));
-    JSObject* evalobj = DefineFunction(cx, self, evalId, IndirectEval, 1,
+    JSObject* evalobj = DefineFunction(cx, global, evalId, IndirectEval, 1,
                                        JSFUN_STUB_GSOPS | JSPROP_RESOLVING);
     if (!evalobj)
         return false;
-    self->setOriginalEval(evalobj);
+    global->setOriginalEval(evalobj);
 
-    RootedObject intrinsicsHolder(cx);
-    bool isSelfHostingGlobal = cx->runtime()->isSelfHostingGlobal(self);
-    if (isSelfHostingGlobal) {
-        intrinsicsHolder = self;
-    } else {
-        intrinsicsHolder = NewObjectWithGivenProto<PlainObject>(cx, proto, TenuredObject);
-        if (!intrinsicsHolder)
-            return false;
-    }
-    self->setIntrinsicsHolder(intrinsicsHolder);
-    /* Define a property 'global' with the current global as its value. */
-    RootedValue global(cx, ObjectValue(*self));
-    if (!DefineProperty(cx, intrinsicsHolder, cx->names().global, global,
-                        nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
-    {
+    Rooted<NativeObject*> holder(cx, GlobalObject::getIntrinsicsHolder(cx, global));
+    if (!holder)
         return false;
-    }
 
     /*
      * Define self-hosted functions after setting the intrinsics holder
      * (which is needed to define self-hosted functions)
      */
-    if (!isSelfHostingGlobal) {
+    if (!cx->runtime()->isSelfHostingGlobal(global)) {
         if (!JS_DefineFunctions(cx, ctor, object_static_methods, OnlyDefineLateProperties))
             return false;
         if (!JS_DefineFunctions(cx, proto, object_methods, OnlyDefineLateProperties))
@@ -1176,8 +1162,10 @@ FinishObjectClassInit(JSContext* cx, JS::HandleObject ctor, JS::HandleObject pro
      * only set the [[Prototype]] if it hasn't already been set.
      */
     Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-    if (self->shouldSplicePrototype(cx) && !self->splicePrototype(cx, self->getClass(), tagged))
-        return false;
+    if (global->shouldSplicePrototype(cx)) {
+        if (!global->splicePrototype(cx, global->getClass(), tagged))
+            return false;
+    }
     return true;
 }
 
