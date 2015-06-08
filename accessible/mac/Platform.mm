@@ -47,8 +47,7 @@ ProxyCreated(ProxyAccessible* aProxy, uint32_t)
 void
 ProxyDestroyed(ProxyAccessible* aProxy)
 {
-  mozAccessible* wrapper =
-    reinterpret_cast<mozAccessible*>(aProxy->GetWrapper());
+  mozAccessible* wrapper = GetNativeFromProxy(aProxy);
   [wrapper expire];
   [wrapper release];
   aProxy->SetWrapper(0);
@@ -65,8 +64,7 @@ ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType)
       aEventType != nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED)
     return;
 
-  mozAccessible* wrapper =
-    reinterpret_cast<mozAccessible*>(aProxy->GetWrapper());
+  mozAccessible* wrapper = GetNativeFromProxy(aProxy);
   if (wrapper)
     FireNativeEvent(wrapper, aEventType);
 }
@@ -80,8 +78,7 @@ ProxyStateChangeEvent(ProxyAccessible* aProxy, uint64_t, bool)
 void
 ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset)
 {
-  mozAccessible* wrapper =
-    reinterpret_cast<mozAccessible*>(aTarget->GetWrapper());
+  mozAccessible* wrapper = GetNativeFromProxy(aTarget);
   if (wrapper)
     [wrapper selectedTextDidChange];
 }
