@@ -949,16 +949,25 @@ class ICStubCompiler
     // Prevent GC in the middle of stub compilation.
     js::gc::AutoSuppressGC suppressGC;
 
+  public:
+    enum class Engine {
+        Baseline = 0,
+        IonMonkey
+    };
+
   protected:
     JSContext* cx;
     ICStub::Kind kind;
+    Engine engine_;
+
 #ifdef DEBUG
     bool entersStubFrame_;
 #endif
 
     // By default the stubcode key is just the kind.
     virtual int32_t getKey() const {
-        return static_cast<int32_t>(kind);
+        return static_cast<int32_t>(engine_) |
+              (static_cast<int32_t>(kind) << 1);
     }
 
     virtual bool generateStubCode(MacroAssembler& masm) = 0;
@@ -967,8 +976,8 @@ class ICStubCompiler
     }
     JitCode* getStubCode();
 
-    ICStubCompiler(JSContext* cx, ICStub::Kind kind)
-      : suppressGC(cx), cx(cx), kind(kind)
+    ICStubCompiler(JSContext* cx, ICStub::Kind kind, Engine engine)
+      : suppressGC(cx), cx(cx), kind(kind), engine_(engine)
 #ifdef DEBUG
       , entersStubFrame_(false)
 #endif
@@ -1061,11 +1070,13 @@ class ICMultiStubCompiler : public ICStubCompiler
     // Stub keys for multi-stub kinds are composed of both the kind
     // and the op they are compiled for.
     virtual int32_t getKey() const {
-        return static_cast<int32_t>(kind) | (static_cast<int32_t>(op) << 16);
+        return static_cast<int32_t>(engine_) |
+              (static_cast<int32_t>(kind) << 1) |
+              (static_cast<int32_t>(op) << 17);
     }
 
-    ICMultiStubCompiler(JSContext* cx, ICStub::Kind kind, JSOp op)
-      : ICStubCompiler(cx, kind), op(op) {}
+    ICMultiStubCompiler(JSContext* cx, ICStub::Kind kind, JSOp op, Engine engine)
+      : ICStubCompiler(cx, kind, engine), op(op) {}
 };
 
 } // namespace jit
