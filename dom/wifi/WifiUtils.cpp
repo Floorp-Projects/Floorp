@@ -368,10 +368,10 @@ public:
     char command[COMMAND_SIZE];
     if (!strcmp(iface, "p2p0")) {
       // Commands for p2p0 interface don't need prefix
-      snprintf(command, COMMAND_SIZE, "%s", cmd);
+      PR_snprintf(command, COMMAND_SIZE, "%s", cmd);
     }
     else {
-      snprintf(command, COMMAND_SIZE, "IFNAME=%s %s", iface, cmd);
+      PR_snprintf(command, COMMAND_SIZE, "IFNAME=%s %s", iface, cmd);
     }
     USE_DLFUNC(wifi_command)
     return wifi_command(command, buf, len);
