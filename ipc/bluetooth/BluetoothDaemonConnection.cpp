@@ -42,10 +42,14 @@ static const char sBluetoothdSocketName[] = "bluez_hal_socket";
 
 BluetoothDaemonPDU::BluetoothDaemonPDU(uint8_t aService, uint8_t aOpcode,
                                        uint16_t aPayloadSize)
-  : UnixSocketIOBuffer(HEADER_SIZE + aPayloadSize)
-  , mConsumer(nullptr)
+  : mConsumer(nullptr)
   , mUserData(nullptr)
 {
+  // Allocate memory
+  size_t availableSpace = HEADER_SIZE + aPayloadSize;
+  ResetBuffer(new uint8_t[availableSpace], 0, 0, availableSpace);
+
+  // Reserve PDU header
   uint8_t* data = Append(HEADER_SIZE);
   MOZ_ASSERT(data);
 
@@ -56,10 +60,18 @@ BluetoothDaemonPDU::BluetoothDaemonPDU(uint8_t aService, uint8_t aOpcode,
 }
 
 BluetoothDaemonPDU::BluetoothDaemonPDU(size_t aPayloadSize)
-  : UnixSocketIOBuffer(HEADER_SIZE + aPayloadSize)
-  , mConsumer(nullptr)
+  : mConsumer(nullptr)
   , mUserData(nullptr)
-{ }
+{
+  size_t availableSpace = HEADER_SIZE + aPayloadSize;
+  ResetBuffer(new uint8_t[availableSpace], 0, 0, availableSpace);
+}
+
+BluetoothDaemonPDU::~BluetoothDaemonPDU()
+{
+  nsAutoArrayPtr<uint8_t> data(GetBuffer());
+  ResetBuffer(nullptr, 0, 0, 0);
+}
 
 void
 BluetoothDaemonPDU::GetHeader(uint8_t& aService, uint8_t& aOpcode,
