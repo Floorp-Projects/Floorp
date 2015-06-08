@@ -894,16 +894,57 @@ ExitFrameLayout::as<LazyLinkExitFrameLayout>()
 
 class ICStub;
 
-class BaselineStubFrameLayout : public CommonFrameLayout
+class JitStubFrameLayout : public CommonFrameLayout
 {
+    // Info on the stack
+    //
+    // --------------------
+    // |JitStubFrameLayout|
+    // +------------------+
+    // | - Descriptor     | => Marks end of JitFrame_IonJS
+    // | - returnaddres   |
+    // +------------------+
+    // | - StubPtr        | => First thing pushed in a stub only when the stub will do
+    // --------------------    a vmcall. Else we cannot have JitStubFrame. But technically
+    //                         not a member of the layout.
+
   public:
-    static inline size_t Size() {
-        return sizeof(BaselineStubFrameLayout);
+    static size_t Size() {
+        return sizeof(JitStubFrameLayout);
     }
 
     static inline int reverseOffsetOfStubPtr() {
         return -int(sizeof(void*));
     }
+
+    inline ICStub* maybeStubPtr() {
+        uint8_t* fp = reinterpret_cast<uint8_t*>(this);
+        return *reinterpret_cast<ICStub**>(fp + reverseOffsetOfStubPtr());
+    }
+};
+
+class BaselineStubFrameLayout : public JitStubFrameLayout
+{
+    // Info on the stack
+    //
+    // -------------------------
+    // |BaselineStubFrameLayout|
+    // +-----------------------+
+    // | - Descriptor          | => Marks end of JitFrame_BaselineJS
+    // | - returnaddres        |
+    // +-----------------------+
+    // | - StubPtr             | => First thing pushed in a stub only when the stub will do
+    // +-----------------------+    a vmcall. Else we cannot have BaselineStubFrame.
+    // | - FramePtr            | => Baseline stubs also need to push the frame ptr when doing
+    // -------------------------    a vmcall.
+    //                              Technically these last two variables are not part of the
+    //                              layout.
+
+  public:
+    static inline size_t Size() {
+        return sizeof(BaselineStubFrameLayout);
+    }
+
     static inline int reverseOffsetOfSavedFramePtr() {
         return -int(2 * sizeof(void*));
     }
@@ -913,10 +954,6 @@ class BaselineStubFrameLayout : public CommonFrameLayout
         return *(void**)addr;
     }
 
-    inline ICStub* maybeStubPtr() {
-        uint8_t* fp = reinterpret_cast<uint8_t*>(this);
-        return *reinterpret_cast<ICStub**>(fp + reverseOffsetOfStubPtr());
-    }
     inline void setStubPtr(ICStub* stub) {
         uint8_t* fp = reinterpret_cast<uint8_t*>(this);
         *reinterpret_cast<ICStub**>(fp + reverseOffsetOfStubPtr()) = stub;
