@@ -104,6 +104,9 @@ public:
 
   NS_DECL_NSIDOCUMENTACTIVITY
 
+  uint32_t GetAudioBitrate() { return mAudioBitsPerSecond; }
+  uint32_t GetVideoBitrate() { return mVideoBitsPerSecond; }
+  uint32_t GetBitrate() { return mBitsPerSecond; }
 protected:
   virtual ~MediaRecorder();
 
