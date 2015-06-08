@@ -47,13 +47,13 @@ static const uintptr_t IS_PROXY = 1;
    * Weak reference; it owns us.
    */
   uintptr_t mGeckoAccessible;
-  
+
   /**
    * Strong ref to array of children
    */
   NSMutableArray* mChildren;
-  
-  /** 
+
+  /**
    * Weak reference to the parent
    */
   mozAccessible* mParent;
@@ -129,7 +129,7 @@ static const uintptr_t IS_PROXY = 1;
 // invalidates and removes all our children from our cached array.
 - (void)invalidateChildren;
 
-/** 
+/**
  * Append a child if they are already cached.
  */
 - (void)appendChild:(mozilla::a11y::Accessible*)aAccessible;
