@@ -13,6 +13,7 @@
 #include "nsContentUtils.h"
 #include "nsCopySupport.h"
 #include "nsFocusManager.h"
+#include "nsFontMetrics.h"
 #include "nsFrameSelection.h"
 #include "nsIContentIterator.h"
 #include "nsIPresShell.h"
@@ -1081,18 +1082,44 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
   rv = frame->GetPointFromOffset(range->StartOffset(), &posInFrame);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  aEvent->mReply.mWritingMode = frame->GetWritingMode();
+  bool isVertical = aEvent->mReply.mWritingMode.IsVertical();
+
   nsRect rect;
   rect.x = posInFrame.x;
   rect.y = posInFrame.y;
-  rect.width = caretRect.width;
-  rect.height = frame->GetSize().height;
+
+  nscoord fontHeight = 0;
+  float inflation = nsLayoutUtils::FontSizeInflationFor(frame);
+  nsRefPtr<nsFontMetrics> fontMetrics;
+  rv = nsLayoutUtils::GetFontMetricsForFrame(frame, getter_AddRefs(fontMetrics),
+                                             inflation);
+  if (NS_WARN_IF(!fontMetrics)) {
+    // If we cannot get font height, use frame size instead.
+    fontHeight = isVertical ? frame->GetSize().width : frame->GetSize().height;
+  } else {
+    fontHeight = fontMetrics->MaxAscent() + fontMetrics->MaxDescent();
+  }
+  if (isVertical) {
+    rect.width = fontHeight;
+    rect.height = caretRect.height;
+  } else {
+    rect.width = caretRect.width;
+    rect.height = fontHeight;
+  }
 
   rv = ConvertToRootViewRelativeOffset(frame, rect);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aEvent->mReply.mRect = LayoutDevicePixel::FromUntyped(
       rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
-  aEvent->mReply.mWritingMode = frame->GetWritingMode();
+  // If the caret rect is empty, let's make it non-empty rect.
+  if (!aEvent->mReply.mRect.width) {
+    aEvent->mReply.mRect.width = 1;
+  }
+  if (!aEvent->mReply.mRect.height) {
+    aEvent->mReply.mRect.height = 1;
+  }
   aEvent->mSucceeded = true;
   return NS_OK;
 }
