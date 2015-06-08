@@ -959,6 +959,7 @@ class ICStubCompiler
     JSContext* cx;
     ICStub::Kind kind;
     Engine engine_;
+    bool inStubFrame_;
 
 #ifdef DEBUG
     bool entersStubFrame_;
@@ -977,11 +978,14 @@ class ICStubCompiler
     JitCode* getStubCode();
 
     ICStubCompiler(JSContext* cx, ICStub::Kind kind, Engine engine)
-      : suppressGC(cx), cx(cx), kind(kind), engine_(engine)
+      : suppressGC(cx), cx(cx), kind(kind), engine_(engine), inStubFrame_(false)
 #ifdef DEBUG
       , entersStubFrame_(false)
 #endif
     {}
+
+    // Pushes the frame ptr.
+    void pushFramePtr(MacroAssembler& masm, Register scratch);
 
     // Emits a tail call to a VMFunction wrapper.
     bool tailCallVM(const VMFunction& fun, MacroAssembler& masm);
