@@ -1081,6 +1081,28 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
         f = finder.get('bar')
         self.assertEqual(f.read(), 'bar second')
 
+    def test_recognize_repo_paths(self):
+        c = hglib.open(self.tmpdir)
+        with open(self.tmppath('foo'), 'wb') as fh:
+            fh.write('initial')
+        c.add(self.tmppath('foo'))
+        c.commit('initial')
+        c.rawcommand(['update', 'null'])
+
+        finder = MercurialRevisionFinder(self.tmpdir, rev='0',
+                                         recognize_repo_paths=True)
+        with self.assertRaises(NotImplementedError):
+            list(finder.find(''))
+
+        with self.assertRaises(ValueError):
+            finder.get('foo')
+        with self.assertRaises(ValueError):
+            finder.get('')
+
+        f = finder.get(self.tmppath('foo'))
+        self.assertIsInstance(f, MercurialFile)
+        self.assertEqual(f.read(), 'initial')
+
 
 if __name__ == '__main__':
     mozunit.main()
