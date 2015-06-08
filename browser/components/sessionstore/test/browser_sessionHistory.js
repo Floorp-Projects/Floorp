@@ -12,10 +12,8 @@ add_task(function test_load_start() {
   let browser = tab.linkedBrowser;
   yield promiseBrowserLoaded(browser);
 
-  // Load a new URI.
-  yield BrowserTestUtils.loadURI(browser, "about:mozilla");
-
-  // Remove the tab before it has finished loading.
+  // Load a new URI but remove the tab before it has finished loading.
+  browser.loadURI("about:mozilla");
   yield promiseContentMessage(browser, "ss-test:OnHistoryReplaceEntry");
   yield promiseRemoveTab(tab);
 
