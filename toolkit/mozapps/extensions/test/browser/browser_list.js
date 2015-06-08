@@ -8,7 +8,6 @@ let tempScope = {};
 Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", tempScope);
 let LightweightThemeManager = tempScope.LightweightThemeManager;
 
-
 var gProvider;
 var gManagerWindow;
 var gCategoryUtilities;
@@ -18,6 +17,7 @@ var gVersion = Services.appinfo.version;
 var gBlocklistURL = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
 var gPluginURL = Services.urlFormatter.formatURLPref("plugins.update.url");
 var gDate = new Date(2010, 7, 16);
+let infoURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
 
 var gLWTheme = {
                 id: "4",
@@ -412,7 +412,7 @@ add_test(function() {
     is(get_node(addon, "warning").textContent, "Test add-on 10 could not be verified for use in " + gApp + ". Proceed with caution.", "Warning message should be correct");
     is_element_visible(get_node(addon, "warning-link"), "Warning link should be visible");
     is(get_node(addon, "warning-link").value, "More Information", "Warning link text should be correct");
-    is(get_node(addon, "warning-link").href, Services.prefs.getCharPref("xpinstall.signatures.infoURL"), "Warning link should be correct");
+    is(get_node(addon, "warning-link").href, infoURL, "Warning link should be correct");
     is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
     is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
     is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
@@ -433,7 +433,7 @@ add_test(function() {
     is(get_node(addon, "error").textContent, "Test add-on 11 could not be verified for use in " + gApp + " and has been disabled.", "Error message should be correct");
     is_element_visible(get_node(addon, "error-link"), "Error link should be visible");
     is(get_node(addon, "error-link").value, "More Information", "Error link text should be correct");
-    is(get_node(addon, "error-link").href, Services.prefs.getCharPref("xpinstall.signatures.infoURL"), "Error link should be correct");
+    is(get_node(addon, "error-link").href, infoURL, "Error link should be correct");
     is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
     info("Filter for disabled unsigned extensions");

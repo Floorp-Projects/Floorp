@@ -18,6 +18,7 @@ var gVersion = Services.appinfo.version;
 var gBlocklistURL = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
 var gPluginURL = Services.urlFormatter.formatURLPref("plugins.update.url");
 var gDate = new Date(2010, 7, 1);
+let infoURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
 
 function open_details(aId, aType, aCallback) {
   requestLongerTimeout(2);
@@ -712,7 +713,7 @@ add_test(function() {
     is(get("detail-warning").textContent, "Test add-on 9 could not be verified for use in " + gApp + ". Proceed with caution.", "Warning message should be correct");
     is_element_visible(get("detail-warning-link"), "Warning link should be visible");
     is(get("detail-warning-link").value, "More Information", "Warning link text should be correct");
-    is(get("detail-warning-link").href, Services.prefs.getCharPref("xpinstall.signatures.infoURL"), "Warning link should be correct");
+    is(get("detail-warning-link").href, infoURL, "Warning link should be correct");
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
 
     run_next_test();
@@ -735,7 +736,7 @@ add_test(function() {
     is(get("detail-error").textContent, "Test add-on 10 could not be verified for use in " + gApp + " and has been disabled.", "Error message should be correct");
     is_element_visible(get("detail-error-link"), "Error link should be visible");
     is(get("detail-error-link").value, "More Information", "Error link text should be correct");
-    is(get("detail-error-link").href, Services.prefs.getCharPref("xpinstall.signatures.infoURL"), "Error link should be correct");
+    is(get("detail-error-link").href, infoURL, "Error link should be correct");
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
 
     run_next_test();
