@@ -8169,7 +8169,7 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
                                    ViewID aScrollParentId,
                                    const nsRect& aViewport,
                                    const Maybe<nsRect>& aClipRect,
-                                   bool aIsRoot,
+                                   bool aIsRootContent,
                                    const ContainerLayerParameters& aContainerParameters)
 {
   nsPresContext* presContext = aForFrame->PresContext();
@@ -8248,7 +8248,7 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
   // overscroll handoff chain.
   MOZ_ASSERT(aScrollParentId == FrameMetrics::NULL_SCROLL_ID || scrollId != aScrollParentId);
   metrics.SetScrollId(scrollId);
-  metrics.SetIsRoot(aIsRoot);
+  metrics.SetIsRootContent(aIsRootContent);
   metrics.SetScrollParentId(aScrollParentId);
 
   if (scrollId != FrameMetrics::NULL_SCROLL_ID && !presContext->GetParentPresContext()) {
