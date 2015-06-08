@@ -577,7 +577,7 @@ void MediaDecoderStateMachine::SendStreamData()
       }
       endPosition = std::max(endPosition,
           mediaStream->MicrosecondsToStreamTimeRoundDown(
-              stream->mNextVideoTime - stream->mInitialTime));
+              stream->mNextVideoTime - stream->mInitialTime - mStartTime));
     }
 
     if (!stream->mHaveSentFinish) {
