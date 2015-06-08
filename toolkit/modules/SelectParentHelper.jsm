@@ -11,10 +11,10 @@ this.EXPORTED_SYMBOLS = [
 let currentBrowser = null;
 
 this.SelectParentHelper = {
-  populate: function(menulist, items, selectedIndex) {
+  populate: function(menulist, items, selectedIndex, zoom) {
     // Clear the current contents of the popup
     menulist.menupopup.textContent = "";
-    populateChildren(menulist, items, selectedIndex);
+    populateChildren(menulist, items, selectedIndex, zoom);
   },
 
   open: function(browser, menulist, rect) {
@@ -65,10 +65,22 @@ this.SelectParentHelper = {
 
 };
 
-function populateChildren(menulist, options, selectedIndex, startIndex = 0,
-                          isInGroup = false, isGroupDisabled = false) {
+function populateChildren(menulist, options, selectedIndex, zoom, startIndex = 0,
+                          isInGroup = false, isGroupDisabled = false, adjustedTextSize = -1) {
   let index = startIndex;
   let element = menulist.menupopup;
+
+  // -1 just means we haven't calculated it yet. When we recurse through this function
+  // we will pass in adjustedTextSize to save on recalculations.
+  if (adjustedTextSize == -1) {
+    let win = element.ownerDocument.defaultView;
+
+    // Grab the computed text size and multiply it by the remote browser's fullZoom to ensure
+    // the popup's text size is matched with the content's. We can't just apply a CSS transform
+    // here as the popup's preferred size is calculated pre-transform.
+    let textSize = win.getComputedStyle(element).getPropertyValue("font-size");
+    adjustedTextSize = (zoom * parseFloat(textSize, 10)) + "px";
+  }
 
   for (let option of options) {
     let isOptGroup = (option.tagName == 'OPTGROUP');
@@ -76,6 +88,7 @@ function populateChildren(menulist, options, selectedIndex, startIndex = 0,
 
     item.setAttribute("label", option.textContent);
     item.style.direction = option.textDirection;
+    item.style.fontSize = adjustedTextSize;
 
     element.appendChild(item);
 
@@ -86,7 +99,8 @@ function populateChildren(menulist, options, selectedIndex, startIndex = 0,
     }
 
     if (isOptGroup) {
-      index = populateChildren(menulist, option.children, selectedIndex, index, true, isDisabled);
+      index = populateChildren(menulist, option.children, selectedIndex, zoom,
+                               index, true, isDisabled, adjustedTextSize);
     } else {
       if (index == selectedIndex) {
         // We expect the parent element of the popup to be a <xul:menulist> that
