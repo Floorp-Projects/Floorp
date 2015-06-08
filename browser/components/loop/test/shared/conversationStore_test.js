@@ -13,7 +13,7 @@ describe("loop.store.ConversationStore", function () {
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
   var sandbox, dispatcher, client, store, fakeSessionData, sdkDriver;
-  var contact, fakeMozLoop;
+  var contact, fakeMozLoop, fakeVideoElement;
   var connectPromise, resolveConnectPromise, rejectConnectPromise;
   var wsCancelSpy, wsCloseSpy, wsDeclineSpy, wsMediaUpSpy, fakeWebsocket;
 
@@ -88,6 +88,8 @@ describe("loop.store.ConversationStore", function () {
       windowId: "28",
       progressURL: "fakeURL"
     };
+
+    fakeVideoElement = { id: "fakeVideoElement" };
 
     var dummySocket = {
       close: sinon.spy(),
@@ -927,6 +929,62 @@ describe("loop.store.ConversationStore", function () {
 
       sinon.assert.calledOnce(wsMediaUpSpy);
     });
+
+    it("should set store.mediaConnected to true", function () {
+      store._websocket = fakeWebsocket;
+
+      store.mediaConnected(new sharedActions.MediaConnected());
+
+      expect(store.getStoreState("mediaConnected")).eql(true);
+    });
+  });
+
+  describe("#localVideoEnabled", function() {
+    it("should set store.localSrcVideoObject from the action data", function () {
+      store.localVideoEnabled(
+        new sharedActions.LocalVideoEnabled({srcVideoObject: fakeVideoElement}));
+
+      expect(store.getStoreState("localSrcVideoObject")).eql(fakeVideoElement);
+    });
+  });
+
+  describe("#remoteVideoEnabled", function() {
+    it("should set store.remoteSrcVideoObject from the actionData", function () {
+      store.setStoreState({remoteSrcVideoObject: undefined});
+
+      store.remoteVideoEnabled(
+        new sharedActions.RemoteVideoEnabled({srcVideoObject: fakeVideoElement}));
+
+      expect(store.getStoreState("remoteSrcVideoObject")).eql(fakeVideoElement);
+    });
+
+    it("should set store.remoteVideoEnabled to true", function () {
+      store.setStoreState({remoteVideoEnabled: false});
+
+      store.remoteVideoEnabled(
+        new sharedActions.RemoteVideoEnabled({srcVideoObject: fakeVideoElement}));
+
+      expect(store.getStoreState("remoteVideoEnabled")).to.be.true;
+    });
+  });
+
+  describe("#remoteVideoDisabled", function() {
+    it("should set store.remoteVideoEnabled to false", function () {
+      store.setStoreState({remoteVideoEnabled: true});
+
+      store.remoteVideoDisabled(new sharedActions.RemoteVideoDisabled({}));
+
+      expect(store.getStoreState("remoteVideoEnabled")).to.be.false;
+    });
+
+    it("should set store.remoteSrcVideoObject to undefined", function () {
+      store.setStoreState({remoteSrcVideoObject: fakeVideoElement});
+
+      store.remoteVideoDisabled(new sharedActions.RemoteVideoDisabled({}));
+
+      expect(store.getStoreState("remoteSrcVideoObject")).to.be.undefined;
+    });
+
   });
 
   describe("#setMute", function() {

@@ -8,6 +8,7 @@ describe("loop.roomViews", function () {
   var TestUtils = React.addons.TestUtils;
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
+  var sharedViews = loop.shared.views;
   var ROOM_STATES = loop.store.ROOM_STATES;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
 
@@ -66,6 +67,13 @@ describe("loop.roomViews", function () {
     roomStore = new loop.store.RoomStore(dispatcher, {
       mozLoop: fakeMozLoop,
       activeRoomStore: activeRoomStore
+    });
+    var textChatStore = new loop.store.TextChatStore(dispatcher, {
+      sdkDriver: {}
+    });
+
+    loop.store.StoreMixin.register({
+      textChatStore: textChatStore
     });
 
     fakeContextURL = {
@@ -422,16 +430,6 @@ describe("loop.roomViews", function () {
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           sinon.match.instanceOf(sharedActions.SetupStreamElements));
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-          sinon.match(function(value) {
-            return value.getLocalElementFunc() ===
-                   view.getDOMNode().querySelector(".local");
-          }));
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-          sinon.match(function(value) {
-            return value.getRemoteElementFunc() ===
-                   view.getDOMNode().querySelector(".remote");
-          }));
       }
 
       it("should dispatch a `SetupStreamElements` action when the MEDIA_WAIT state " +
@@ -516,6 +514,54 @@ describe("loop.roomViews", function () {
           TestUtils.findRenderedComponentWithType(view,
             loop.shared.views.FeedbackView);
         });
+
+      it("should display an avatar for remote video when the room has participants but video is not enabled",
+        function() {
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.HAS_PARTICIPANTS,
+            mediaConnected: true,
+            remoteVideoEnabled: false
+          });
+
+          view = mountTestComponent();
+
+          TestUtils.findRenderedComponentWithType(view, sharedViews.AvatarView);
+        });
+
+      it("should display the remote video when there are participants and video is enabled", function() {
+        activeRoomStore.setStoreState({
+          roomState: ROOM_STATES.HAS_PARTICIPANTS,
+          mediaConnected: true,
+          remoteVideoEnabled: true,
+          remoteSrcVideoObject: { fake: 1 }
+        });
+
+        view = mountTestComponent();
+
+        expect(view.getDOMNode().querySelector(".remote video")).not.eql(null);
+      });
+
+      it("should display an avatar for local video when the stream is muted", function() {
+        activeRoomStore.setStoreState({
+          videoMuted: true
+        });
+
+        view = mountTestComponent();
+
+        TestUtils.findRenderedComponentWithType(view, sharedViews.AvatarView);
+      });
+
+      it("should display the local video when the stream is enabled", function() {
+        activeRoomStore.setStoreState({
+          localSrcVideoObject: { fake: 1 },
+          videoMuted: false
+        });
+
+        view = mountTestComponent();
+
+        expect(view.getDOMNode().querySelector(".local video")).not.eql(null);
+      });
+
     });
 
     describe("Mute", function() {

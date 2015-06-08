@@ -193,14 +193,7 @@ loop.shared.actions = (function() {
      */
     SetupStreamElements: Action.define("setupStreamElements", {
       // The configuration for the publisher/subscribe options
-      publisherConfig: Object,
-      // The local stream element
-      getLocalElementFunc: Function,
-      // The screen share element; optional until all conversation
-      // types support it.
-      // getScreenShareElementFunc: Function,
-      // The remote stream element
-      getRemoteElementFunc: Function
+      publisherConfig: Object
     }),
 
     /**
@@ -223,6 +216,42 @@ loop.shared.actions = (function() {
       isLocal: Boolean,
       videoType: String,
       dimensions: Object
+    }),
+
+    /**
+     * Video has been enabled from the remote sender.
+     *
+     * XXX somewhat tangled up with remote video muting semantics; see bug
+     * 1171969
+     *
+     * @note if/when we want to untangle this, we'll may want to include the
+     *       reason provided by the SDK and documented hereI:
+     *       https://tokbox.com/opentok/libraries/client/js/reference/VideoEnabledChangedEvent.html
+     */
+    RemoteVideoEnabled: Action.define("remoteVideoEnabled", {
+      /* The SDK video object that the views will be copying the remote
+         stream from. */
+      srcVideoObject: Object
+    }),
+
+    /**
+     * Video has been disabled by the remote sender.
+     *
+     *  @see RemoteVideoEnabled
+     */
+    RemoteVideoDisabled: Action.define("remoteVideoDisabled", {
+    }),
+
+    /**
+     * Video from the local camera has been enabled.
+     *
+     * XXX we should implement a LocalVideoDisabled action to cleanly prevent
+     * leakage; see bug 1171978 for details
+     */
+    LocalVideoEnabled: Action.define("localVideoEnabled", {
+      /* The SDK video object that the views will be copying the remote
+         stream from. */
+      srcVideoObject: Object
     }),
 
     /**
@@ -250,7 +279,7 @@ loop.shared.actions = (function() {
     }),
 
     /**
-     * Used to notifiy that screen sharing is active or not.
+     * Used to notify that screen sharing is active or not.
      */
     ScreenSharingState: Action.define("screenSharingState", {
       // One of loop.shared.utils.SCREEN_SHARE_STATES.
@@ -259,9 +288,13 @@ loop.shared.actions = (function() {
 
     /**
      * Used to notify that a shared screen is being received (or not).
+     *
+     * XXX this is going to need to be split into two actions so when
+     * can display a spinner when the screen share is pending (bug 1171933)
      */
     ReceivingScreenShare: Action.define("receivingScreenShare", {
       receiving: Boolean
+      // srcVideoObject: Object (only present if receiving is true)
     }),
 
     /**

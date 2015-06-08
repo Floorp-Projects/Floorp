@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 body {
-  /* Override the hidden in common.css */
+  /* Override the hidden in common.css. Very important otherwise you can't
+   * scroll the showcase.
+   */
   overflow: visible;
 }
 
@@ -107,70 +109,10 @@ body {
   font-weight: bold;
 }
 
-/*
- * Switched to using height: 100% in standalone version
- * this mocks it for the ui so that the component has height
- * */
-.standalone .video-layout-wrapper,
-.standalone .remote_wrapper {
-  min-height: 550px;
-}
-
-@media screen and (max-width:640px) {
-
-  .standalone .local-stream {
-    background-size: cover;
-  }
-
-  .standalone .local-stream,
-  .conversation .media.nested .remote {
-    background-size: cover;
-    background-position: center;
-  }
-
-  .standalone .remote_wrapper {
-    width: 100%;
-    background-size: cover;
-    background-position: center;
-  }
-}
-
-.remote_wrapper {
-  background-image: url("sample-img/video-screen-remote.png");
-  background-repeat: no-repeat;
-  background-size: cover;
-}
-
-.local-stream {
-  background-image: url("sample-img/video-screen-local.png");
-  background-repeat: no-repeat;
-}
-
-  .local-stream.local:not(.local-stream-audio) {
-    background-size: cover;
-  }
-
 .call-action-group .btn-group-chevron,
 .call-action-group .btn-group {
   /* Prevent box overflow due to long string */
   max-width: 120px;
-}
-
-.conversation .media.nested .remote {
-  /* Height of obsolute box covers media control buttons. UI showcase only.
-   * When tokbox inserts the markup into the page the problem goes away */
-  bottom: auto;
-}
-
-.standalone .ended-conversation .remote_wrapper,
-.standalone .video-layout-wrapper {
-  /* Removes the fake video image for ended conversations */
-  background: none;
-}
-
-/* Rooms edge cases */
-.standalone .room-conversation .remote_wrapper {
-  background: none;
 }
 
 /* SVG icons showcase */
