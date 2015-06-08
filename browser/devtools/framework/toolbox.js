@@ -1,6 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* globals gDevTools, DOMHelpers, toolboxStrings, InspectorFront, Selection,
+   getPerformanceActorsConnection, CommandUtils, DevToolsUtils, screenManager,
+   oscpu, Hosts, is64Bit */
 
 "use strict";
 
@@ -318,7 +321,7 @@ Toolbox.prototype = {
   /**
    * Open the toolbox
    */
-  open: function () {
+  open: function() {
     return Task.spawn(function*() {
       let iframe = yield this._host.create();
       let domReady = promise.defer();
@@ -395,13 +398,15 @@ Toolbox.prototype = {
       ]);
 
       // Lazily connect to the profiler here and don't wait for it to complete,
-      // used to intercept console.profile calls before the performance tools are open.
+      // used to intercept console.profile calls before the performance tools
+      // are open.
       let profilerReady = this._connectProfiler();
 
-      // However, while testing, we must wait for the performance connection to finish,
-      // as most tests shut down without waiting for a toolbox destruction event,
-      // resulting in the shared profiler connection being opened and closed
-      // outside of the test that originally opened the toolbox.
+      // However, while testing, we must wait for the performance connection to
+      // finish, as most tests shut down without waiting for a toolbox
+      // destruction event, resulting in the shared profiler connection being
+      // opened and closed outside of the test that originally opened the
+      // toolbox.
       if (gDevTools.testing) {
         yield profilerReady;
       }
@@ -433,13 +438,13 @@ Toolbox.prototype = {
    *         }
    */
   _prefChanged: function(event, data) {
-    switch(data.pref) {
-    case "devtools.cache.disabled":
-      this._applyCacheSettings();
-      break;
-    case "devtools.serviceWorkers.testing.enabled":
-      this._applyServiceWorkersTestingSettings();
-      break;
+    switch (data.pref) {
+      case "devtools.cache.disabled":
+        this._applyCacheSettings();
+        break;
+      case "devtools.serviceWorkers.testing.enabled":
+        this._applyServiceWorkersTestingSettings();
+        break;
     }
   },
 
@@ -632,7 +637,8 @@ Toolbox.prototype = {
       }
 
       key.setAttribute("modifiers", toolDefinition.modifiers);
-      key.setAttribute("oncommand", "void(0);"); // needed. See bug 371900
+      // needed. See bug 371900
+      key.setAttribute("oncommand", "void(0);");
       key.addEventListener("command", () => {
         this.selectTool(toolId).then(() => this.fireCustomKey(toolId));
       }, true);
@@ -646,7 +652,8 @@ Toolbox.prototype = {
 
       key.setAttribute("key", toolboxStrings("browserConsoleCmd.commandkey"));
       key.setAttribute("modifiers", "accel,shift");
-      key.setAttribute("oncommand", "void(0)"); // needed. See bug 371900
+      // needed. See bug 371900
+      key.setAttribute("oncommand", "void(0)");
       key.addEventListener("command", () => {
         HUDService.toggleBrowserConsole();
       }, true);
@@ -655,9 +662,10 @@ Toolbox.prototype = {
   },
 
   /**
-   * Handle any custom key events.  Returns true if there was a custom key binding run
-   * @param {string} toolId
-   *        Which tool to run the command on (skip if not current)
+   * Handle any custom key events.  Returns true if there was a custom key
+   * binding run.
+   * @param {string} toolId Which tool to run the command on (skip if not
+   * current)
    */
   fireCustomKey: function(toolId) {
     let toolDefinition = gDevTools.getToolDefinition(toolId);
@@ -891,8 +899,9 @@ Toolbox.prototype = {
         button: button,
         label: button.getAttribute("tooltiptext"),
         visibilityswitch: "devtools." + options.id + ".enabled",
-        isTargetSupported: options.isTargetSupported ? options.isTargetSupported
-                                                     : target => target.isLocalTab
+        isTargetSupported: options.isTargetSupported
+                           ? options.isTargetSupported
+                           : target => target.isLocalTab
       };
     }).filter(button=>button);
   },
@@ -903,7 +912,7 @@ Toolbox.prototype = {
    */
   setToolboxButtonsVisibility: function() {
     this.toolboxButtons.forEach(buttonSpec => {
-      let { visibilityswitch, id, button, isTargetSupported } = buttonSpec;
+      let { visibilityswitch, button, isTargetSupported } = buttonSpec;
       let on = true;
       try {
         on = Services.prefs.getBoolPref(visibilityswitch);
@@ -995,7 +1004,7 @@ Toolbox.prototype = {
 
     if (toolDefinition.label && !toolDefinition.iconOnly) {
       let label = this.doc.createElement("label");
-      label.setAttribute("value", toolDefinition.label)
+      label.setAttribute("value", toolDefinition.label);
       label.setAttribute("crop", "end");
       label.setAttribute("flex", "1");
       radio.appendChild(label);
@@ -1074,7 +1083,7 @@ Toolbox.prototype = {
 
     let definition = gDevTools.getToolDefinition(id);
     if (!definition) {
-      deferred.reject(new Error("no such tool id "+id));
+      deferred.reject(new Error("no such tool id " + id));
       return deferred.promise;
     }
 
@@ -1168,7 +1177,7 @@ Toolbox.prototype = {
       let callback = () => {
         iframe.removeEventListener("DOMContentLoaded", callback);
         onLoad();
-      }
+      };
       iframe.addEventListener("DOMContentLoaded", callback);
     }
 
@@ -1422,7 +1431,7 @@ Toolbox.prototype = {
     this._host.setTitle(title);
   },
 
-  _listFrames: function (event) {
+  _listFrames: function(event) {
     if (!this._target.activeTab || !this._target.activeTab.traits.frames) {
       // We are not targetting a regular TabActor
       // it can be either an addon or browser toolbox actor
@@ -1437,7 +1446,7 @@ Toolbox.prototype = {
     });
   },
 
-  selectFrame: function (event) {
+  selectFrame: function(event) {
     let windowId = event.target.getAttribute("data-window-id");
     let packet = {
       to: this._target.form.actor,
@@ -1448,7 +1457,7 @@ Toolbox.prototype = {
     // Wait for frameUpdate event to update the UI
   },
 
-  _updateFrames: function (event, data) {
+  _updateFrames: function(event, data) {
     if (!Services.prefs.getBoolPref("devtools.command-button-frames.enabled")) {
       return;
     }
@@ -1478,7 +1487,7 @@ Toolbox.prototype = {
         menu.removeAttribute("checked");
       }
       // Uncheck the previously selected frame
-      let selected = menu.querySelector("menuitem[checked=true]")
+      let selected = menu.querySelector("menuitem[checked=true]");
       if (selected) {
         selected.removeAttribute("checked");
       }
@@ -1516,8 +1525,8 @@ Toolbox.prototype = {
    * Create a host object based on the given host type.
    *
    * Warning: some hosts require that the toolbox target provides a reference to
-   * the attached tab. Not all Targets have a tab property - make sure you correctly
-   * mix and match hosts and targets.
+   * the attached tab. Not all Targets have a tab property - make sure you
+   * correctly mix and match hosts and targets.
    *
    * @param {string} hostType
    *        The host type of the new host object
@@ -1730,32 +1739,72 @@ Toolbox.prototype = {
     screenManager.primaryScreen.GetRect({}, {}, width, height);
     let dims = width.value + "x" + height.value;
 
-    if (width.value < 800 || height.value < 600) return 0;
-    if (dims === "800x600")   return 1;
-    if (dims === "1024x768")  return 2;
-    if (dims === "1280x800")  return 3;
-    if (dims === "1280x1024") return 4;
-    if (dims === "1366x768")  return 5;
-    if (dims === "1440x900")  return 6;
-    if (dims === "1920x1080") return 7;
-    if (dims === "2560×1440") return 8;
-    if (dims === "2560×1600") return 9;
-    if (dims === "2880x1800") return 10;
-    if (width.value > 2880 || height.value > 1800) return 12;
+    if (width.value < 800 || height.value < 600) {
+      return 0;
+    }
+    if (dims === "800x600") {
+      return 1;
+    }
+    if (dims === "1024x768") {
+      return 2;
+    }
+    if (dims === "1280x800") {
+      return 3;
+    }
+    if (dims === "1280x1024") {
+      return 4;
+    }
+    if (dims === "1366x768") {
+      return 5;
+    }
+    if (dims === "1440x900") {
+      return 6;
+    }
+    if (dims === "1920x1080") {
+      return 7;
+    }
+    if (dims === "2560×1440") {
+      return 8;
+    }
+    if (dims === "2560×1600") {
+      return 9;
+    }
+    if (dims === "2880x1800") {
+      return 10;
+    }
+    if (width.value > 2880 || height.value > 1800) {
+      return 12;
+    }
 
-    return 11; // Other dimension such as a VM.
+    // Other dimension such as a VM.
+    return 11;
   },
 
   _getOsCpu: function() {
-    if (oscpu.includes("NT 5.1") || oscpu.includes("NT 5.2")) return 0;
-    if (oscpu.includes("NT 6.0")) return 1;
-    if (oscpu.includes("NT 6.1")) return 2;
-    if (oscpu.includes("NT 6.2")) return 3;
-    if (oscpu.includes("NT 6.3")) return 4;
-    if (oscpu.includes("OS X"))   return 5;
-    if (oscpu.includes("Linux"))  return 6;
+    if (oscpu.includes("NT 5.1") || oscpu.includes("NT 5.2")) {
+      return 0;
+    }
+    if (oscpu.includes("NT 6.0")) {
+      return 1;
+    }
+    if (oscpu.includes("NT 6.1")) {
+      return 2;
+    }
+    if (oscpu.includes("NT 6.2")) {
+      return 3;
+    }
+    if (oscpu.includes("NT 6.3")) {
+      return 4;
+    }
+    if (oscpu.includes("OS X")) {
+      return 5;
+    }
+    if (oscpu.includes("Linux")) {
+      return 6;
+    }
 
-    return 12; // Other OS.
+    // Other OS.
+    return 12;
   },
 
   /**
@@ -1929,8 +1978,8 @@ Toolbox.prototype = {
    */
   _updateTextboxMenuItems: function() {
     let window = this.doc.defaultView;
-    ['cmd_undo', 'cmd_delete', 'cmd_cut',
-     'cmd_copy', 'cmd_paste','cmd_selectAll'].forEach(window.goUpdateCommand);
+    ["cmd_undo", "cmd_delete", "cmd_cut",
+     "cmd_copy", "cmd_paste", "cmd_selectAll"].forEach(window.goUpdateCommand);
   },
 
   getPerformanceActorsConnection: function() {
@@ -1980,7 +2029,7 @@ Toolbox.prototype = {
    * Opens source in style editor. Falls back to plain "view-source:".
    * @see browser/devtools/shared/source-utils.js
    */
-  viewSourceInStyleEditor: function (sourceURL, sourceLine) {
+  viewSourceInStyleEditor: function(sourceURL, sourceLine) {
     return sourceUtils.viewSourceInStyleEditor(this, sourceURL, sourceLine);
   },
 
@@ -1988,7 +2037,7 @@ Toolbox.prototype = {
    * Opens source in debugger. Falls back to plain "view-source:".
    * @see browser/devtools/shared/source-utils.js
    */
-  viewSourceInDebugger: function (sourceURL, sourceLine) {
+  viewSourceInDebugger: function(sourceURL, sourceLine) {
     return sourceUtils.viewSourceInDebugger(this, sourceURL, sourceLine);
   },
 
@@ -2001,7 +2050,7 @@ Toolbox.prototype = {
    *
    * @see browser/devtools/shared/source-utils.js
    */
-  viewSourceInScratchpad: function (sourceURL, sourceLine) {
+  viewSourceInScratchpad: function(sourceURL, sourceLine) {
     return sourceUtils.viewSourceInScratchpad(sourceURL, sourceLine);
   },
 
@@ -2009,7 +2058,7 @@ Toolbox.prototype = {
    * Opens source in plain "view-source:".
    * @see browser/devtools/shared/source-utils.js
    */
-  viewSource: function (sourceURL, sourceLine) {
+  viewSource: function(sourceURL, sourceLine) {
     return sourceUtils.viewSource(this, sourceURL, sourceLine);
   },
 };
