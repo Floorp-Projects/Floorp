@@ -368,8 +368,8 @@
 
 /* Searchbox is a div container element for a search input element */
 .devtools-searchbox {
-  display: -moz-box;
-  -moz-box-flex: 1;
+  display: flex;
+  flex: 1;
   position: relative;
 }
 

@@ -84,7 +84,13 @@ let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
    */
   _onRangeChangeInGraph: function () {
     let interval = this.graph.getViewRange();
-    OverviewView.setTimeInterval(interval, { stopPropagation: true });
+
+    // Squelch rerendering this view when we update the range here
+    // to avoid recursion, as our FlameGraph handles rerendering itself
+    // when originating from within the graph.
+    this.requiresUpdateOnRangeChange = false;
+    OverviewView.setTimeInterval(interval);
+    this.requiresUpdateOnRangeChange = true;
   },
 
   /**
