@@ -14,15 +14,14 @@ let gSSService = null;
 let profileDir = do_get_profile();
 let certdb;
 
-function certFromFile(filename) {
-  let der = readFile(do_get_file("test_pinning_dynamic/" + filename, false));
-  return certdb.constructX509(der, der.length);
+function certFromFile(cert_name) {
+  return constructCertFromFile("test_pinning_dynamic/" + cert_name + ".pem");
 }
 
 function loadCert(cert_name, trust_string) {
-  let cert_filename = cert_name + ".der";
-  addCertFromFile(certdb, "test_pinning_dynamic/" + cert_filename, trust_string);
-  return certFromFile(cert_filename);
+  let cert_filename = "test_pinning_dynamic/" + cert_name + ".pem";
+  addCertFromFile(certdb,  cert_filename, trust_string);
+  return constructCertFromFile(cert_filename);
 }
 
 function checkOK(cert, hostname) {
@@ -36,7 +35,7 @@ function checkFail(cert, hostname) {
 }
 
 const NON_ISSUED_KEY_HASH = "KHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN=";
-const PINNING_ROOT_KEY_HASH ="kXoHD1ZGyMuowchJwy+xgHlzh0kJFoI9KX0o0IrzTps=";
+const PINNING_ROOT_KEY_HASH = "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=";
 
 function run_test() {
   Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 2);
@@ -49,8 +48,8 @@ function run_test() {
      "State file should not exist when working with a clean slate");
   let outputStream = FileUtils.openFileOutputStream(stateFile);
   let now = (new Date()).getTime();
-  writeLine("a.pinning2.example.com:HPKP\t0\t0\t" + (now + 100000) + ",1,0,kXoHD1ZGyMuowchJwy+xgHlzh0kJFoI9KX0o0IrzTps=\n", outputStream);
-  writeLine("b.pinning2.example.com:HPKP\t0\t0\t" + (now + 100000) + ",1,1,kXoHD1ZGyMuowchJwy+xgHlzh0kJFoI9KX0o0IrzTps=\n", outputStream);
+  writeLine(`a.pinning2.example.com:HPKP\t0\t0\t${now + 100000},1,0,${PINNING_ROOT_KEY_HASH}\n`, outputStream);
+  writeLine(`b.pinning2.example.com:HPKP\t0\t0\t${now + 100000},1,1,${PINNING_ROOT_KEY_HASH}\n`, outputStream);
 
   outputStream.close();
   Services.obs.addObserver(checkStateRead, "data-storage-ready", false);
@@ -94,17 +93,17 @@ function checkStateRead(aSubject, aTopic, aData) {
 
   // the written entry is for a.pinning2.example.com without subdomains
   // and b.pinning2.example.com with subdomains
-  checkFail(certFromFile('cn-a.pinning2.example.com-badca.der'), "a.pinning2.example.com");
-  checkOK(certFromFile('cn-a.pinning2.example.com-pinningroot.der'), "a.pinning2.example.com");
-  checkOK(certFromFile('cn-x.a.pinning2.example.com-badca.der'), "x.a.pinning2.example.com");
-  checkOK(certFromFile('cn-x.a.pinning2.example.com-pinningroot.der'), "x.a.pinning2.example.com");
-  checkFail(certFromFile('cn-www.example.com-alt-a.pinning2.example-badca.der'), "a.pinning2.example.com");
-  checkOK(certFromFile('cn-www.example.com-alt-a.pinning2.example-pinningroot.der'), "a.pinning2.example.com");
+  checkFail(certFromFile('cn-a.pinning2.example.com-badca'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-a.pinning2.example.com-pinningroot'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-x.a.pinning2.example.com-badca'), "x.a.pinning2.example.com");
+  checkOK(certFromFile('cn-x.a.pinning2.example.com-pinningroot'), "x.a.pinning2.example.com");
+  checkFail(certFromFile('cn-www.example.com-alt-a.pinning2.example-badca'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-www.example.com-alt-a.pinning2.example-pinningroot'), "a.pinning2.example.com");
 
-  checkFail(certFromFile('cn-b.pinning2.example.com-badca.der'), "b.pinning2.example.com");
-  checkOK(certFromFile('cn-b.pinning2.example.com-pinningroot.der'), "b.pinning2.example.com");
-  checkFail(certFromFile('cn-x.b.pinning2.example.com-badca.der'), "x.b.pinning2.example.com");
-  checkOK(certFromFile('cn-x.b.pinning2.example.com-pinningroot.der'), "x.b.pinning2.example.com");
+  checkFail(certFromFile('cn-b.pinning2.example.com-badca'), "b.pinning2.example.com");
+  checkOK(certFromFile('cn-b.pinning2.example.com-pinningroot'), "b.pinning2.example.com");
+  checkFail(certFromFile('cn-x.b.pinning2.example.com-badca'), "x.b.pinning2.example.com");
+  checkOK(certFromFile('cn-x.b.pinning2.example.com-pinningroot'), "x.b.pinning2.example.com");
 
   checkDefaultSiteHPKPStatus();
 
@@ -112,16 +111,16 @@ function checkStateRead(aSubject, aTopic, aData) {
   // add includeSubdomains to a.pinning2.example.com
   gSSService.setKeyPins("a.pinning2.example.com", true, 1000, 2,
                         [NON_ISSUED_KEY_HASH, PINNING_ROOT_KEY_HASH]);
-  checkFail(certFromFile('cn-a.pinning2.example.com-badca.der'), "a.pinning2.example.com");
-  checkOK(certFromFile('cn-a.pinning2.example.com-pinningroot.der'), "a.pinning2.example.com");
-  checkFail(certFromFile('cn-x.a.pinning2.example.com-badca.der'), "x.a.pinning2.example.com");
-  checkOK(certFromFile('cn-x.a.pinning2.example.com-pinningroot.der'), "x.a.pinning2.example.com");
-  checkFail(certFromFile('cn-www.example.com-alt-a.pinning2.example-badca.der'), "a.pinning2.example.com");
-  checkOK(certFromFile('cn-www.example.com-alt-a.pinning2.example-pinningroot.der'), "a.pinning2.example.com");
-  checkFail(certFromFile('cn-b.pinning2.example.com-badca.der'), "b.pinning2.example.com");
-  checkOK(certFromFile('cn-b.pinning2.example.com-pinningroot.der'), "b.pinning2.example.com");
-  checkFail(certFromFile('cn-x.b.pinning2.example.com-badca.der'), "x.b.pinning2.example.com");
-  checkOK(certFromFile('cn-x.b.pinning2.example.com-pinningroot.der'), "x.b.pinning2.example.com");
+  checkFail(certFromFile('cn-a.pinning2.example.com-badca'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-a.pinning2.example.com-pinningroot'), "a.pinning2.example.com");
+  checkFail(certFromFile('cn-x.a.pinning2.example.com-badca'), "x.a.pinning2.example.com");
+  checkOK(certFromFile('cn-x.a.pinning2.example.com-pinningroot'), "x.a.pinning2.example.com");
+  checkFail(certFromFile('cn-www.example.com-alt-a.pinning2.example-badca'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-www.example.com-alt-a.pinning2.example-pinningroot'), "a.pinning2.example.com");
+  checkFail(certFromFile('cn-b.pinning2.example.com-badca'), "b.pinning2.example.com");
+  checkOK(certFromFile('cn-b.pinning2.example.com-pinningroot'), "b.pinning2.example.com");
+  checkFail(certFromFile('cn-x.b.pinning2.example.com-badca'), "x.b.pinning2.example.com");
+  checkOK(certFromFile('cn-x.b.pinning2.example.com-pinningroot'), "x.b.pinning2.example.com");
 
   ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HPKP,
                              "a.pinning2.example.com", 0),
@@ -135,17 +134,17 @@ function checkStateRead(aSubject, aTopic, aData) {
   // Now setpins without subdomains
   gSSService.setKeyPins("a.pinning2.example.com", false, 1000, 2,
                         [NON_ISSUED_KEY_HASH, PINNING_ROOT_KEY_HASH]);
-  checkFail(certFromFile('cn-a.pinning2.example.com-badca.der'), "a.pinning2.example.com");
-  checkOK(certFromFile('cn-a.pinning2.example.com-pinningroot.der'), "a.pinning2.example.com");
-  checkOK(certFromFile('cn-x.a.pinning2.example.com-badca.der'), "x.a.pinning2.example.com");
-  checkOK(certFromFile('cn-x.a.pinning2.example.com-pinningroot.der'), "x.a.pinning2.example.com");
-  checkFail(certFromFile('cn-www.example.com-alt-a.pinning2.example-badca.der'), "a.pinning2.example.com");
-  checkOK(certFromFile('cn-www.example.com-alt-a.pinning2.example-pinningroot.der'), "a.pinning2.example.com");
+  checkFail(certFromFile('cn-a.pinning2.example.com-badca'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-a.pinning2.example.com-pinningroot'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-x.a.pinning2.example.com-badca'), "x.a.pinning2.example.com");
+  checkOK(certFromFile('cn-x.a.pinning2.example.com-pinningroot'), "x.a.pinning2.example.com");
+  checkFail(certFromFile('cn-www.example.com-alt-a.pinning2.example-badca'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-www.example.com-alt-a.pinning2.example-pinningroot'), "a.pinning2.example.com");
 
-  checkFail(certFromFile('cn-b.pinning2.example.com-badca.der'), "b.pinning2.example.com");
-  checkOK(certFromFile('cn-b.pinning2.example.com-pinningroot.der'), "b.pinning2.example.com");
-  checkFail(certFromFile('cn-x.b.pinning2.example.com-badca.der'), "x.b.pinning2.example.com");
-  checkOK(certFromFile('cn-x.b.pinning2.example.com-pinningroot.der'), "x.b.pinning2.example.com");
+  checkFail(certFromFile('cn-b.pinning2.example.com-badca'), "b.pinning2.example.com");
+  checkOK(certFromFile('cn-b.pinning2.example.com-pinningroot'), "b.pinning2.example.com");
+  checkFail(certFromFile('cn-x.b.pinning2.example.com-badca'), "x.b.pinning2.example.com");
+  checkOK(certFromFile('cn-x.b.pinning2.example.com-pinningroot'), "x.b.pinning2.example.com");
 
   checkDefaultSiteHPKPStatus();
 
@@ -156,17 +155,17 @@ function checkStateRead(aSubject, aTopic, aData) {
     ok(false, "Attempting to set an invalid pin should have failed");
   } catch(e) {
   }
-  checkFail(certFromFile('cn-a.pinning2.example.com-badca.der'), "a.pinning2.example.com");
-  checkOK(certFromFile('cn-a.pinning2.example.com-pinningroot.der'), "a.pinning2.example.com");
-  checkOK(certFromFile('cn-x.a.pinning2.example.com-badca.der'), "x.a.pinning2.example.com");
-  checkOK(certFromFile('cn-x.a.pinning2.example.com-pinningroot.der'), "x.a.pinning2.example.com");
-  checkFail(certFromFile('cn-www.example.com-alt-a.pinning2.example-badca.der'), "a.pinning2.example.com");
-  checkOK(certFromFile('cn-www.example.com-alt-a.pinning2.example-pinningroot.der'), "a.pinning2.example.com");
+  checkFail(certFromFile('cn-a.pinning2.example.com-badca'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-a.pinning2.example.com-pinningroot'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-x.a.pinning2.example.com-badca'), "x.a.pinning2.example.com");
+  checkOK(certFromFile('cn-x.a.pinning2.example.com-pinningroot'), "x.a.pinning2.example.com");
+  checkFail(certFromFile('cn-www.example.com-alt-a.pinning2.example-badca'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-www.example.com-alt-a.pinning2.example-pinningroot'), "a.pinning2.example.com");
 
-  checkFail(certFromFile('cn-b.pinning2.example.com-badca.der'), "b.pinning2.example.com");
-  checkOK(certFromFile('cn-b.pinning2.example.com-pinningroot.der'), "b.pinning2.example.com");
-  checkFail(certFromFile('cn-x.b.pinning2.example.com-badca.der'), "x.b.pinning2.example.com");
-  checkOK(certFromFile('cn-x.b.pinning2.example.com-pinningroot.der'), "x.b.pinning2.example.com");
+  checkFail(certFromFile('cn-b.pinning2.example.com-badca'), "b.pinning2.example.com");
+  checkOK(certFromFile('cn-b.pinning2.example.com-pinningroot'), "b.pinning2.example.com");
+  checkFail(certFromFile('cn-x.b.pinning2.example.com-badca'), "x.b.pinning2.example.com");
+  checkOK(certFromFile('cn-x.b.pinning2.example.com-pinningroot'), "x.b.pinning2.example.com");
 
   checkDefaultSiteHPKPStatus();
 
@@ -193,17 +192,17 @@ function checkStateRead(aSubject, aTopic, aData) {
 }
 
 function checkExpiredState() {
-  checkOK(certFromFile('cn-a.pinning2.example.com-badca.der'), "a.pinning2.example.com");
-  checkOK(certFromFile('cn-a.pinning2.example.com-pinningroot.der'), "a.pinning2.example.com");
-  checkOK(certFromFile('cn-x.a.pinning2.example.com-badca.der'), "x.a.pinning2.example.com");
-  checkOK(certFromFile('cn-x.a.pinning2.example.com-pinningroot.der'), "x.a.pinning2.example.com");
-  checkOK(certFromFile('cn-www.example.com-alt-a.pinning2.example-badca.der'), "a.pinning2.example.com");
-  checkOK(certFromFile('cn-www.example.com-alt-a.pinning2.example-pinningroot.der'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-a.pinning2.example.com-badca'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-a.pinning2.example.com-pinningroot'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-x.a.pinning2.example.com-badca'), "x.a.pinning2.example.com");
+  checkOK(certFromFile('cn-x.a.pinning2.example.com-pinningroot'), "x.a.pinning2.example.com");
+  checkOK(certFromFile('cn-www.example.com-alt-a.pinning2.example-badca'), "a.pinning2.example.com");
+  checkOK(certFromFile('cn-www.example.com-alt-a.pinning2.example-pinningroot'), "a.pinning2.example.com");
 
-  checkFail(certFromFile('cn-b.pinning2.example.com-badca.der'), "b.pinning2.example.com");
-  checkOK(certFromFile('cn-b.pinning2.example.com-pinningroot.der'), "b.pinning2.example.com");
-  checkFail(certFromFile('cn-x.b.pinning2.example.com-badca.der'), "x.b.pinning2.example.com");
-  checkOK(certFromFile('cn-x.b.pinning2.example.com-pinningroot.der'), "x.b.pinning2.example.com");
+  checkFail(certFromFile('cn-b.pinning2.example.com-badca'), "b.pinning2.example.com");
+  checkOK(certFromFile('cn-b.pinning2.example.com-pinningroot'), "b.pinning2.example.com");
+  checkFail(certFromFile('cn-x.b.pinning2.example.com-badca'), "x.b.pinning2.example.com");
+  checkOK(certFromFile('cn-x.b.pinning2.example.com-pinningroot'), "x.b.pinning2.example.com");
 
   do_test_finished();
 }
