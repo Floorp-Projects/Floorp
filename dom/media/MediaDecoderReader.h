@@ -81,6 +81,12 @@ public:
   // destroyed.
   explicit MediaDecoderReader(AbstractMediaDecoder* aDecoder, MediaTaskQueue* aBorrowedTaskQueue = nullptr);
 
+  // Does any spinup that needs to happen on this task queue. This runs on a
+  // different thread than Init, and there should not be ordering dependencies
+  // between the two (even though in practice, Init will always run first right
+  // now thanks to the tail dispatcher).
+  void InitializationTask();
+
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.
   virtual nsresult Init(MediaDecoderReader* aCloneDonor) = 0;
@@ -317,6 +323,9 @@ protected:
 
   // Stores presentation info required for playback.
   MediaInfo mInfo;
+
+  // Duration, mirrored from the state machine task queue.
+  Mirror<media::NullableTimeUnit> mDuration;
 
   // Whether we should accept media that we know we can't play
   // directly, because they have a number of channel higher than
