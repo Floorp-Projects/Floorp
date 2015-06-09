@@ -18,8 +18,10 @@ add_task(function*() {
 
   info("Pressing ESC and wait for the split-console to open");
   let onSplitConsole = toolbox.once("split-console");
+  let onConsoleReady = toolbox.once("webconsole-ready");
   EventUtils.synthesizeKey("VK_ESCAPE", {}, inspector.panelWin);
   yield onSplitConsole;
+  yield onConsoleReady;
   ok(toolbox.splitConsole, "The split console is shown.");
 
   info("Pressing ESC again and wait for the split-console to close");
