@@ -28,14 +28,14 @@ add_task(function* () {
 });
 
 add_task(function* () {
-  NewTabURL.override("about:blank");
+  Services.prefs.setCharPref("browser.newtab.url", "about:blank");
   registerCleanupFunction(() => {
-    NewTabURL.reset();
+    Services.prefs.clearUserPref("browser.newtab.url");
   });
 
   let win = yield openNewPrivateWindow();
   checkUrlbarFocus(win);
   win.close();
 
-  NewTabURL.reset();
+  Services.prefs.clearUserPref("browser.newtab.url");
 });

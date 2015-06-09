@@ -462,24 +462,6 @@ NS_IMETHODIMP nsContentTreeOwner::ShouldLoadURI(nsIDocShell *aDocShell,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsContentTreeOwner::ShouldAddToSessionHistory(nsIDocShell *aDocShell,
-                                              nsIURI *aURI,
-                                              bool *_retval)
-{
-  NS_ENSURE_STATE(mXULWindow);
-
-  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
-  mXULWindow->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
-
-  if (xulBrowserWindow) {
-    return xulBrowserWindow->ShouldAddToSessionHistory(aDocShell, aURI, _retval);
-  }
-
-  *_retval = true;
-  return NS_OK;
-}
-
 //*****************************************************************************
 // nsContentTreeOwner::nsIWebBrowserChrome2
 //*****************************************************************************   
