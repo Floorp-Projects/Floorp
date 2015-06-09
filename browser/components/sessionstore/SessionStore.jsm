@@ -630,12 +630,6 @@ let SessionStoreInternal = {
         TabState.setSyncHandler(browser, aMessage.objects.handler);
         break;
       case "SessionStore:update":
-        // Ignore messages from <browser> elements that have crashed
-        // and not yet been revived.
-        if (this._crashedBrowsers.has(browser.permanentKey)) {
-          return;
-        }
-
         // |browser.frameLoader| might be empty if the browser was already
         // destroyed and its tab removed. In that case we still have the last
         // frameLoader we know about to compare.
@@ -646,12 +640,6 @@ let SessionStoreInternal = {
         if (frameLoader != aMessage.targetFrameLoader) {
           return;
         }
-
-        // Record telemetry measurements done in the child and update the tab's
-        // cached state. Mark the window as dirty and trigger a delayed write.
-        this.recordTelemetry(aMessage.data.telemetry);
-        TabState.update(browser, aMessage.data);
-        this.saveStateDelayed(win);
 
         if (aMessage.data.isFinal) {
           // If this the final message we need to resolve all pending flush
@@ -665,6 +653,18 @@ let SessionStoreInternal = {
           // consumer that's waiting for the flush to be done.
           TabStateFlusher.resolve(browser, aMessage.data.flushID);
         }
+
+        // Ignore messages from <browser> elements that have crashed
+        // and not yet been revived.
+        if (this._crashedBrowsers.has(browser.permanentKey)) {
+          return;
+        }
+
+        // Record telemetry measurements done in the child and update the tab's
+        // cached state. Mark the window as dirty and trigger a delayed write.
+        this.recordTelemetry(aMessage.data.telemetry);
+        TabState.update(browser, aMessage.data);
+        this.saveStateDelayed(win);
 
         // Handle any updates sent by the child after the tab was closed. This
         // might be the final update as sent by the "unload" handler but also
