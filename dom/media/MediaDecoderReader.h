@@ -79,7 +79,7 @@ public:
 
   // The caller must ensure that Shutdown() is called before aDecoder is
   // destroyed.
-  explicit MediaDecoderReader(AbstractMediaDecoder* aDecoder);
+  explicit MediaDecoderReader(AbstractMediaDecoder* aDecoder, MediaTaskQueue* aBorrowedTaskQueue = nullptr);
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.
@@ -107,18 +107,9 @@ public:
   // thread.
   virtual nsRefPtr<ShutdownPromise> Shutdown();
 
-  MediaTaskQueue* EnsureTaskQueue();
-
   virtual bool OnTaskQueue()
   {
-    return !GetTaskQueue() || GetTaskQueue()->IsCurrentThreadIn();
-  }
-
-  void SetBorrowedTaskQueue(MediaTaskQueue* aTaskQueue)
-  {
-    MOZ_ASSERT(!mTaskQueue && aTaskQueue);
-    mTaskQueue = aTaskQueue;
-    mTaskQueueIsBorrowed = true;
+    return GetTaskQueue()->IsCurrentThreadIn();
   }
 
   // Resets all state related to decoding, emptying all buffers etc.
@@ -320,6 +311,9 @@ protected:
   // Reference to the owning decoder object.
   AbstractMediaDecoder* mDecoder;
 
+  // Decode task queue.
+  nsRefPtr<MediaTaskQueue> mTaskQueue;
+
   // Stores presentation info required for playback.
   MediaInfo mInfo;
 
@@ -347,7 +341,6 @@ private:
   MediaPromiseHolder<AudioDataPromise> mBaseAudioPromise;
   MediaPromiseHolder<VideoDataPromise> mBaseVideoPromise;
 
-  nsRefPtr<MediaTaskQueue> mTaskQueue;
   bool mTaskQueueIsBorrowed;
 
   // Flags whether a the next audio/video sample comes after a "gap" or
