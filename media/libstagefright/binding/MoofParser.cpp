@@ -430,6 +430,12 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mdhd& aMdhd, Edts& aEdts, uint64_t* aDec
   uint32_t firstSampleFlags = hasFirstSampleFlags ? reader->ReadU32() : 0;
   uint64_t decodeTime = *aDecodeTime;
   nsTArray<Interval<Microseconds>> timeRanges;
+
+  if (!mIndex.SetCapacity(sampleCount)) {
+    LOG(Moof, "Out of Memory");
+    return false;
+  }
+
   for (size_t i = 0; i < sampleCount; i++) {
     uint32_t sampleDuration =
       flags & 0x100 ? reader->ReadU32() : aTfhd.mDefaultSampleDuration;
@@ -458,7 +464,7 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mdhd& aMdhd, Edts& aEdts, uint64_t* aDec
     // because every audio sample is a keyframe.
     sample.mSync = !(sampleFlags & 0x1010000) || aIsAudio;
 
-    mIndex.AppendElement(sample);
+    MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample));
 
     mMdatRange = mMdatRange.Extents(sample.mByteRange);
   }
