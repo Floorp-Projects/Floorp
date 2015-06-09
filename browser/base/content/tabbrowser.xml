@@ -2497,8 +2497,28 @@
             // Make sure to unregister any open URIs.
             this._swapRegisteredOpenURIs(ourBrowser, aOtherBrowser);
 
+            // Unmap old outerWindowIDs.
+            this._outerWindowIDBrowserMap.delete(ourBrowser.outerWindowID);
+            let remoteBrowser = aOtherBrowser.ownerDocument.defaultView.gBrowser;
+            if (remoteBrowser) {
+              remoteBrowser._outerWindowIDBrowserMap.delete(aOtherBrowser.outerWindowID);
+            }
+
             // Swap the docshells
             ourBrowser.swapDocShells(aOtherBrowser);
+
+            if (ourBrowser.isRemoteBrowser) {
+              // Switch outerWindowIDs for remote browsers.
+              let ourOuterWindowID = ourBrowser._outerWindowID;
+              ourBrowser._outerWindowID = aOtherBrowser._outerWindowID;
+              aOtherBrowser._outerWindowID = ourOuterWindowID;
+            }
+
+            // Register new outerWindowIDs.
+            this._outerWindowIDBrowserMap.set(ourBrowser.outerWindowID, ourBrowser);
+            if (remoteBrowser) {
+              remoteBrowser._outerWindowIDBrowserMap.set(aOtherBrowser.outerWindowID, aOtherBrowser);
+            }
 
             // Swap permanentKey properties.
             let ourPermanentKey = ourBrowser.permanentKey;
