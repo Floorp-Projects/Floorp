@@ -1013,7 +1013,7 @@ class MercurialRevisionFinder(BaseFinder):
 
         # Immediately populate the list of files in the repo since nearly every
         # operation requires this list.
-        out = self._client.rawcommand([b'files', b'--rev', self._rev])
+        out = self._client.rawcommand([b'files', b'--rev', str(self._rev)])
         for relpath in out.splitlines():
             self._files[relpath] = None
 

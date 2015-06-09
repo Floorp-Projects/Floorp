@@ -33,6 +33,11 @@ try:
 except ImportError:
     hglib = None
 
+try:
+    from mozpack.hg import MercurialNativeRevisionFinder
+except ImportError:
+    MercurialNativeRevisionFinder = None
+
 from mozpack.mozjar import (
     JarReader,
     JarWriter,
@@ -1042,11 +1047,14 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
     def do_check(self, pattern, result):
         do_check(self, self.finder, pattern, result)
 
+    def _get_finder(self, *args, **kwargs):
+        return MercurialRevisionFinder(*args, **kwargs)
+
     def test_default_revision(self):
         self.prepare_match_test()
         c = hglib.open(self.tmpdir)
         c.commit('initial commit')
-        self.finder = MercurialRevisionFinder(self.tmpdir)
+        self.finder = self._get_finder(self.tmpdir)
         self.do_match_test()
 
         self.assertIsNone(self.finder.get('does-not-exist'))
@@ -1069,13 +1077,13 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
         # finding anything from the filesystem.
         c.rawcommand(['update', 'null'])
 
-        finder = MercurialRevisionFinder(self.tmpdir, rev='0')
+        finder = self._get_finder(self.tmpdir, 0)
         f = finder.get('foo')
         self.assertEqual(f.read(), 'foo initial')
         self.assertEqual(f.read(), 'foo initial', 'read again for good measure')
         self.assertIsNone(finder.get('bar'))
 
-        finder = MercurialRevisionFinder(self.tmpdir, rev='1')
+        finder = MercurialRevisionFinder(self.tmpdir, rev=1)
         f = finder.get('foo')
         self.assertEqual(f.read(), 'foo second')
         f = finder.get('bar')
@@ -1089,8 +1097,8 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
         c.commit('initial')
         c.rawcommand(['update', 'null'])
 
-        finder = MercurialRevisionFinder(self.tmpdir, rev='0',
-                                         recognize_repo_paths=True)
+        finder = self._get_finder(self.tmpdir, 0,
+                                  recognize_repo_paths=True)
         with self.assertRaises(NotImplementedError):
             list(finder.find(''))
 
@@ -1102,6 +1110,12 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
         f = finder.get(self.tmppath('foo'))
         self.assertIsInstance(f, MercurialFile)
         self.assertEqual(f.read(), 'initial')
+
+
+@unittest.skipUnless(MercurialNativeRevisionFinder, 'hgnative not available')
+class TestMercurialNativeRevisionFinder(TestMercurialRevisionFinder):
+    def _get_finder(self, *args, **kwargs):
+        return MercurialNativeRevisionFinder(*args, **kwargs)
 
 
 if __name__ == '__main__':
