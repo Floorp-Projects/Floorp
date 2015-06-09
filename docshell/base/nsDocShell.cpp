@@ -11738,7 +11738,7 @@ nsDocShell::ShouldAddToSessionHistory(nsIURI* aURI)
   // should just do a spec compare, rather than two gets of the scheme and
   // then the path.  -Gagan
   nsresult rv;
-  nsAutoCString buf;
+  nsAutoCString buf, pref;
 
   rv = aURI->GetScheme(buf);
   if (NS_FAILED(rv)) {
@@ -11756,17 +11756,16 @@ nsDocShell::ShouldAddToSessionHistory(nsIURI* aURI)
     }
   }
 
-  // Check if the webbrowser chrome wants us to proceed - by default it ensures
-  // aURI is not the newtab URI.
-  nsCOMPtr<nsIWebBrowserChrome3> browserChrome3 = do_GetInterface(mTreeOwner);
-  if (browserChrome3) {
-    bool shouldAdd;
-    rv = browserChrome3->ShouldAddToSessionHistory(this, aURI, &shouldAdd);
-    NS_ENSURE_SUCCESS(rv, true);
-    return shouldAdd;
+  rv = Preferences::GetDefaultCString("browser.newtab.url", &pref);
+
+  if (NS_FAILED(rv)) {
+    return true;
   }
 
-  return true;
+  rv = aURI->GetSpec(buf);
+  NS_ENSURE_SUCCESS(rv, true);
+
+  return !buf.Equals(pref);
 }
 
 nsresult
