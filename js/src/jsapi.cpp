@@ -4442,6 +4442,12 @@ JS::AutoSetAsyncStackForNewCalls::AutoSetAsyncStackForNewCalls(
 {
     CHECK_REQUEST(cx);
 
+    // The option determines whether we actually use the new values at this
+    // point. It will not affect restoring the previous values when the object
+    // is destroyed, so if the option changes it won't cause consistency issues.
+    if (!cx->runtime()->options().asyncStack())
+        return;
+
     SavedFrame* asyncStack = &stack->as<SavedFrame>();
     MOZ_ASSERT(!asyncCause->empty());
 

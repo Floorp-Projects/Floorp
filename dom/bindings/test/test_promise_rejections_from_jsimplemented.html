@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
 
   function doTest() {
     var t = new TestInterfaceJS();
-
+    var asyncStack = SpecialPowers.getBoolPref("javascript.options.asyncstack");
     var ourFile = "http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html";
 
     Promise.all([
@@ -64,7 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
           checkExn.bind(null, 61, "ReferenceError",
                         "thereIsNoSuchContentFunction2 is not defined",
                         undefined, ourFile, 4,
-                        "doTest/<@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:61:11\nAsync*doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:60:7\n")),
+                        "doTest/<@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:61:11\n" + (asyncStack ? "Async*doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:60:7\n" : ""))),
       t.testPromiseWithThrowingChromeThenable().then(
           ensurePromiseFail.bind(null, 5),
           checkExn.bind(null, 0, "NS_ERROR_UNEXPECTED", "", undefined, "", 5, "")),
@@ -84,10 +84,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
                         "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:79:7\n")),
       t.testPromiseWithDOMExceptionThrowingThenFunction().then(
           ensurePromiseFail.bind(null, 8),
-          checkExn.bind(null, 85, "NetworkError",
-                        "We are a third DOMException",
-                        DOMException.NETWORK_ERR, ourFile, 8,
-                        "Async*doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:85:7\n")),
+          checkExn.bind(null, asyncStack ? 85 : 0, "NetworkError",
+                         "We are a third DOMException",
+                        DOMException.NETWORK_ERR, asyncStack ? ourFile : "", 8,
+                        asyncStack ? "Async*doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:85:7\n" : "")),
       t.testPromiseWithDOMExceptionThrowingThenable().then(
           ensurePromiseFail.bind(null, 9),
           checkExn.bind(null, 0, "TypeMismatchError",
