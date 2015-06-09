@@ -37,6 +37,7 @@
 # include "AndroidBridge.h"
 #endif
 #include "GeckoProfiler.h"
+#include "FrameUniformityData.h"
 
 struct nsCSSValueSharedList;
 
@@ -92,6 +93,18 @@ WalkTheTree(Layer* aLayer,
        child; child = child->GetNextSibling()) {
     WalkTheTree<OP>(child, aReady, aTargetConfig);
   }
+}
+
+AsyncCompositionManager::AsyncCompositionManager(LayerManagerComposite* aManager)
+  : mLayerManager(aManager)
+  , mIsFirstPaint(true)
+  , mLayersUpdated(false)
+  , mReadyForCompose(true)
+{
+}
+
+AsyncCompositionManager::~AsyncCompositionManager()
+{
 }
 
 void
@@ -543,6 +556,36 @@ SampleAPZAnimations(const LayerMetricsWrapper& aLayer, TimeStamp aSampleTime)
   }
 
   return activeAnimations;
+}
+
+void
+AsyncCompositionManager::RecordShadowTransforms(Layer* aLayer)
+{
+  MOZ_ASSERT(gfxPrefs::CollectScrollTransforms());
+  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+
+  for (Layer* child = aLayer->GetFirstChild();
+      child; child = child->GetNextSibling()) {
+      RecordShadowTransforms(child);
+  }
+
+  for (uint32_t i = 0; i < aLayer->GetFrameMetricsCount(); i++) {
+    AsyncPanZoomController* apzc = aLayer->GetAsyncPanZoomController(i);
+    if (!apzc) {
+      continue;
+    }
+    gfx::Matrix4x4 shadowTransform = aLayer->AsLayerComposite()->GetShadowTransform();
+    if (!shadowTransform.Is2D()) {
+      continue;
+    }
+
+    Matrix transform = shadowTransform.As2D();
+    if (transform.IsTranslation() && !shadowTransform.IsIdentity()) {
+      Point translation = transform.GetTranslation();
+      mLayerTransformRecorder.RecordTransform(aLayer, translation);
+      return;
+    }
+  }
 }
 
 Matrix4x4
@@ -1051,6 +1094,13 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
                             aLayer->GetLocalTransform(), fixedLayerMargins);
 }
 
+void
+AsyncCompositionManager::GetFrameUniformity(FrameUniformityData* aOutData)
+{
+  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+  mLayerTransformRecorder.EndTest(aOutData);
+}
+
 bool
 AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
                                              TransformsToSkip aSkip)
@@ -1103,6 +1153,9 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
   trans *= gfx::Matrix4x4::From2D(mWorldTransform);
   rootComposite->SetShadowTransform(trans);
 
+  if (gfxPrefs::CollectScrollTransforms()) {
+    RecordShadowTransforms(root);
+  }
 
   return wantNextFrame;
 }

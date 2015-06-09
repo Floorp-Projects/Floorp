@@ -74,9 +74,6 @@ public:
   // Return the duration of the media in microseconds.
   virtual int64_t GetMediaDuration() = 0;
 
-  // Set the duration of the media in microseconds.
-  virtual void SetMediaDuration(int64_t aDuration) = 0;
-
   // Sets the duration of the media in microseconds. The MediaDecoder
   // fires a durationchange event to its owner (e.g., an HTML audio
   // tag).
@@ -99,9 +96,6 @@ public:
   virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo, MediaDecoderEventVisibility aEventVisibility) = 0;
 
   virtual void RemoveMediaTracks() = 0;
-
-  // Set the media end time in microseconds
-  virtual void SetMediaEndTime(int64_t aTime) = 0;
 
   // May be called by the reader to notify this decoder that the metadata from
   // the media file has been read. Call on the decode thread only.
