@@ -462,6 +462,20 @@ Animation::UpdateRelevance()
 }
 
 bool
+Animation::HasLowerCompositeOrderThan(const Animation& aOther) const
+{
+  // We only ever sort non-idle animations so we don't ever expect
+  // mSequenceNum to be set to kUnsequenced
+  MOZ_ASSERT(mSequenceNum != kUnsequenced &&
+             aOther.mSequenceNum != kUnsequenced,
+             "Animations to compare should not be idle");
+  MOZ_ASSERT(mSequenceNum != aOther.mSequenceNum || &aOther == this,
+             "Sequence numbers should be unique");
+
+  return mSequenceNum < aOther.mSequenceNum;
+}
+
+bool
 Animation::CanThrottle() const
 {
   if (!mEffect ||
