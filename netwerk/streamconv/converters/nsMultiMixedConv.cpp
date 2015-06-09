@@ -1144,6 +1144,8 @@ nsMultiMixedConv::FindToken(char *aCursor, uint32_t aLen) {
                 if ((*(aCursor-1) == '-') && (*(aCursor-2) == '-')) {
                     aCursor -= 2;
                     aLen += 2;
+                    aLen;
+                    // The additional aLen statement above,  helps to suppress the compiler warning: "Value stored to 'aLen' is never read".
 
                     // we're playing w/ double dash tokens, adjust.
                     mToken.Assign(aCursor, mTokenLen + 2);
