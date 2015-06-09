@@ -61,11 +61,6 @@ class nsFrameLoader final : public nsIFrameLoader,
   typedef mozilla::dom::TabParent TabParent;
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
 
-protected:
-  nsFrameLoader(mozilla::dom::Element* aOwner, bool aNetworkCreated);
-
-  ~nsFrameLoader();
-
 public:
   static nsFrameLoader* Create(mozilla::dom::Element* aOwner,
                                bool aNetworkCreated);
@@ -215,7 +210,13 @@ public:
   // Properly retrieves documentSize of any subdocument type.
   nsresult GetWindowDimensions(nsIntRect& aRect);
 
+  // public because a callback needs these.
+  nsRefPtr<nsFrameMessageManager> mMessageManager;
+  nsCOMPtr<nsIInProcessContentFrameMessageManager> mChildMessageManager;
+
 private:
+  nsFrameLoader(mozilla::dom::Element* aOwner, bool aNetworkCreated);
+  ~nsFrameLoader();
 
   void SetOwnerContent(mozilla::dom::Element* aContent);
 
@@ -312,11 +313,6 @@ private:
   // Note: this variable must be modified only by ResetPermissionManagerStatus()
   uint32_t mAppIdSentToPermissionManager;
 
-public:
-  // public because a callback needs these.
-  nsRefPtr<nsFrameMessageManager> mMessageManager;
-  nsCOMPtr<nsIInProcessContentFrameMessageManager> mChildMessageManager;
-private:
   // Stores the root view of the subdocument while the subdocument is being
   // reframed. Used to restore the presentation after reframing.
   nsView* mDetachedSubdocViews;
@@ -326,6 +322,13 @@ private:
   // enables us to detect whether the frame has moved documents during
   // a reframe, so that we know not to restore the presentation.
   nsCOMPtr<nsIDocument> mContainerDocWhileDetached;
+
+  TabParent* mRemoteBrowser;
+  uint64_t mChildID;
+
+  // See nsIFrameLoader.idl. EVENT_MODE_NORMAL_DISPATCH automatically
+  // forwards some input events to out-of-process content.
+  uint32_t mEventMode;
 
   bool mIsPrerendered : 1;
   bool mDepthTooGreat : 1;
@@ -350,13 +353,6 @@ private:
   // whether this frameloader's <iframe mozbrowser> is setVisible(true)'ed, and
   // doesn't necessarily correlate with docshell/document visibility.
   bool mVisible : 1;
-
-  TabParent* mRemoteBrowser;
-  uint64_t mChildID;
-
-  // See nsIFrameLoader.idl. EVENT_MODE_NORMAL_DISPATCH automatically
-  // forwards some input events to out-of-process content.
-  uint32_t mEventMode;
 };
 
 #endif
