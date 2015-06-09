@@ -2,8 +2,18 @@
 
 . pre-build.sh
 
+if [ $TARGET == "aries" -o $TARGET == "shinano" ]; then
+  # caching objects might be dangerous for some devices (aka aries)
+  rm -rf $WORKSPACE/B2G/objdir*
+  rm -rf $WORKSPACE/B2G/out
+fi
+
+if ! test $MOZHARNESS_CONFIG; then
+  MOZHARNESS_CONFIG=b2g/taskcluster-phone.py
+fi
+
 ./mozharness/scripts/b2g_build.py \
-  --config b2g/taskcluster-phone.py \
+  --config $MOZHARNESS_CONFIG \
   "$debug_flag" \
   --disable-mock \
   --variant=$VARIANT \
