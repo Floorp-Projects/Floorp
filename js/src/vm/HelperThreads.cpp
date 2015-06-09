@@ -1017,7 +1017,7 @@ MFBT_API void NuwaMarkCurrentThread(void (*recreate)(void*), void* arg);
 void
 HelperThread::ThreadMain(void* arg)
 {
-    PR_SetCurrentThreadName("Analysis Helper");
+    PR_SetCurrentThreadName("JS Helper");
 
 #ifdef MOZ_NUWA_PROCESS
     if (IsNuwaProcess()) {
