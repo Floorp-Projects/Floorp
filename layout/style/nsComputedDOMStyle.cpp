@@ -1450,6 +1450,10 @@ nsComputedDOMStyle::DoGetFontSizeAdjust()
 CSSValue*
 nsComputedDOMStyle::DoGetOsxFontSmoothing()
 {
+  if (nsContentUtils::ShouldResistFingerprinting(
+        mPresShell->GetPresContext()->GetDocShell()))
+    return nullptr;
+
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
   val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleFont()->mFont.smoothing,
                                                nsCSSProps::kFontSmoothingKTable));

@@ -9,6 +9,7 @@
 #include "AccessibleCaret.h"
 #include "AccessibleCaretEventHub.h"
 #include "AccessibleCaretLogger.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/TreeWalker.h"
@@ -889,7 +890,6 @@ AccessibleCaretManager::CancelCaretTimeoutTimer()
 void
 AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReason) const
 {
-  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
   // Holding PresShell to prevent AccessibleCaretManager to be destroyed.
   nsCOMPtr<nsIPresShell> presShell = mPresShell;
   // XXX: Do we need to flush layout?
@@ -936,7 +936,6 @@ AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReaso
     nsLayoutUtils::TransformRect(commonAncestorFrame, rootFrame, clampedRect);
     domRect->SetLayoutRect(clampedRect);
     init.mSelectionVisible = !clampedRect.IsEmpty();
-    init.mBoundingClientRect = domRect;
   } else {
     domRect->SetLayoutRect(rect);
     init.mSelectionVisible = true;
@@ -953,8 +952,7 @@ AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReaso
 
   event->SetTrusted(true);
   event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
-  bool ret;
-  doc->DispatchEvent(event, &ret);
+  (new AsyncEventDispatcher(doc, event))->RunDOMEventWhenSafe();
 }
 
 } // namespace mozilla

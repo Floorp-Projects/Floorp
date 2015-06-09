@@ -93,12 +93,6 @@ BufferDecoder::GetMediaDuration()
 }
 
 void
-BufferDecoder::SetMediaDuration(int64_t aDuration)
-{
-  // ignore
-}
-
-void
 BufferDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
 {
   // ignore
@@ -156,12 +150,6 @@ BufferDecoder::QueueMetadata(int64_t aTime, nsAutoPtr<MediaInfo> aInfo, nsAutoPt
 
 void
 BufferDecoder::RemoveMediaTracks()
-{
-  // ignore
-}
-
-void
-BufferDecoder::SetMediaEndTime(int64_t aTime)
 {
   // ignore
 }

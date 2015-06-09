@@ -19,6 +19,7 @@ using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using class mozilla::layers::FrameUniformityData from "mozilla/layers/FrameUniformityData.h";
 
 namespace mozilla {
 namespace layers {
@@ -79,6 +80,9 @@ child:
 parent:
   // Child sends the parent a request for fill ratio numbers.
   async RequestOverfill();
+
+  // Child requests frame uniformity measurements
+  sync GetFrameUniformity() returns (FrameUniformityData data);
 
   // The child is about to be destroyed, so perform any necessary cleanup.
   sync WillStop();

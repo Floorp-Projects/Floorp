@@ -17,6 +17,8 @@
 #include "mozilla/Endian.h"
 #include <algorithm>
 
+using namespace mozilla::media;
+
 namespace mozilla {
 
 // Un-comment to enable logging of seek bisections.
@@ -138,15 +140,12 @@ nsresult WaveReader::ReadMetadata(MediaInfo* aInfo,
 
   mInfo.mAudio.mRate = mSampleRate;
   mInfo.mAudio.mChannels = mChannels;
+  mInfo.mMetadataDuration.emplace(TimeUnit::FromSeconds(BytesToTime(GetDataLength())));
 
   *aInfo = mInfo;
 
   *aTags = tags.forget();
 
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-
-  mDecoder->SetMediaDuration(
-    static_cast<int64_t>(BytesToTime(GetDataLength()) * USECS_PER_S));
 
   return NS_OK;
 }

@@ -36,7 +36,7 @@ public:
   virtual bool IsTransportSeekable() final override;
   virtual bool OnDecodeTaskQueue() const final override;
   virtual bool OnStateMachineTaskQueue() const final override;
-  virtual int64_t GetMediaDuration() final override;
+  virtual int64_t GetMediaDuration() final override { MOZ_ASSERT_UNREACHABLE(""); return -1; };
   virtual layers::ImageContainer* GetImageContainer() final override;
   virtual MediaDecoderOwner* GetOwner() final override;
   virtual SourceBufferResource* GetResource() const final override;
@@ -54,8 +54,6 @@ public:
   virtual void OnReadMetadataCompleted() final override;
   virtual void QueueMetadata(int64_t aTime, nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags) final override;
   virtual void RemoveMediaTracks() final override;
-  virtual void SetMediaDuration(int64_t aDuration) final override;
-  virtual void SetMediaEndTime(int64_t aTime) final override;
   virtual void SetMediaSeekable(bool aMediaSeekable) final override;
   virtual void UpdateEstimatedMediaDuration(int64_t aDuration) final override;
   virtual bool HasInitializationData() final override;
@@ -150,8 +148,6 @@ private:
   nsRefPtr<MediaDecoderReader> mReader;
   // in microseconds
   int64_t mTimestampOffset;
-  // mMediaDuration contains the apparent buffer duration, excluding trimmed data.
-  int64_t mMediaDuration;
   // mRealMediaDuration contains the real buffer duration, including trimmed data.
   int64_t mRealMediaDuration;
   // in seconds

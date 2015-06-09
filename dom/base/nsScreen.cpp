@@ -68,6 +68,11 @@ NS_IMPL_RELEASE_INHERITED(nsScreen, DOMEventTargetHelper)
 int32_t
 nsScreen::GetPixelDepth(ErrorResult& aRv)
 {
+  // Return 24 to prevent fingerprinting.
+  if (ShouldResistFingerprinting()) {
+    return 24;
+  }
+
   nsDeviceContext* context = GetDeviceContext();
 
   if (!context) {
@@ -111,6 +116,11 @@ nsScreen::GetDeviceContext()
 nsresult
 nsScreen::GetRect(nsRect& aRect)
 {
+  // Return window inner rect to prevent fingerprinting.
+  if (ShouldResistFingerprinting()) {
+    return GetWindowInnerRect(aRect);
+  }
+
   nsDeviceContext *context = GetDeviceContext();
 
   if (!context) {
@@ -130,6 +140,11 @@ nsScreen::GetRect(nsRect& aRect)
 nsresult
 nsScreen::GetAvailRect(nsRect& aRect)
 {
+  // Return window inner rect to prevent fingerprinting.
+  if (ShouldResistFingerprinting()) {
+    return GetWindowInnerRect(aRect);
+  }
+
   nsDeviceContext *context = GetDeviceContext();
 
   if (!context) {
@@ -166,22 +181,26 @@ nsScreen::Notify(const hal::ScreenConfiguration& aConfiguration)
 void
 nsScreen::GetMozOrientation(nsString& aOrientation)
 {
-  switch (mOrientation) {
-  case eScreenOrientation_PortraitPrimary:
-    aOrientation.AssignLiteral("portrait-primary");
-    break;
-  case eScreenOrientation_PortraitSecondary:
-    aOrientation.AssignLiteral("portrait-secondary");
-    break;
-  case eScreenOrientation_LandscapePrimary:
+  if (ShouldResistFingerprinting()) {
     aOrientation.AssignLiteral("landscape-primary");
-    break;
-  case eScreenOrientation_LandscapeSecondary:
-    aOrientation.AssignLiteral("landscape-secondary");
-    break;
-  case eScreenOrientation_None:
-  default:
-    MOZ_CRASH("Unacceptable mOrientation value");
+  } else {
+    switch (mOrientation) {
+    case eScreenOrientation_PortraitPrimary:
+      aOrientation.AssignLiteral("portrait-primary");
+      break;
+    case eScreenOrientation_PortraitSecondary:
+      aOrientation.AssignLiteral("portrait-secondary");
+      break;
+    case eScreenOrientation_LandscapePrimary:
+      aOrientation.AssignLiteral("landscape-primary");
+      break;
+    case eScreenOrientation_LandscapeSecondary:
+      aOrientation.AssignLiteral("landscape-secondary");
+      break;
+    case eScreenOrientation_None:
+    default:
+      MOZ_CRASH("Unacceptable mOrientation value");
+    }
   }
 }
 
@@ -372,4 +391,28 @@ nsScreen::FullScreenEventListener::HandleEvent(nsIDOMEvent* aEvent)
   hal::UnlockScreenOrientation();
 
   return NS_OK;
+}
+
+nsresult
+nsScreen::GetWindowInnerRect(nsRect& aRect)
+{
+  aRect.x = 0;
+  aRect.y = 0;
+  nsCOMPtr<nsIDOMWindow> win = GetOwner();
+  if (!win) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = win->GetInnerWidth(&aRect.width);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return win->GetInnerHeight(&aRect.height);
+}
+
+bool nsScreen::ShouldResistFingerprinting() const
+{
+  bool resist = false;
+  nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
+  if (owner) {
+    resist = nsContentUtils::ShouldResistFingerprinting(owner->GetDocShell());
+  }
+  return resist;
 }
