@@ -74,6 +74,10 @@
          key="&toolboxToggleMinimize.key;"
          oncommand="void(0);"
          modifiers="shift, accel"/>
+    <key id="toolbox-toggle-host-key"
+         key="&toolboxToggle.key;"
+         oncommand="void(0);"
+         modifiers="accel shift"/>
   </keyset>
 
   <popupset>
