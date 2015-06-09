@@ -32,6 +32,16 @@ XPCOMUtils.defineLazyGetter(this, "SE", function() {
   return obj;
 });
 
+// Extend / Inherit from Error object
+function SEError(name, message) {
+  this.name = name || SE.ERROR_GENERIC;
+  this.message = message || "";
+}
+
+SEError.prototype = {
+  __proto__: Error.prototype,
+};
+
 function PromiseHelpersSubclass(win) {
   this._window = win;
 }
@@ -74,11 +84,11 @@ PromiseHelpersSubclass.prototype = {
     return {resolver: resolver, context: context};
   },
 
-  rejectWithSEError: function rejectWithSEError(reason) {
-    return this.createSEPromise((resolverId) => {
-      debug("rejectWithSEError : " + reason);
-      this.takePromiseResolver(resolverId).reject(new Error(reason));
-    });
+  rejectWithSEError: function rejectWithSEError(name, message) {
+    let error = new SEError(name, message);
+    debug("rejectWithSEError - " + error.toString());
+
+    return this._window.Promise.reject(Cu.cloneInto(error, this._window));
   }
 };
 
@@ -155,8 +165,9 @@ SEReaderImpl.prototype = {
         this._sessions = [];
         resolver.resolve();
       }, (reason) => {
-        resolver.reject(new Error(SE.ERROR_BADSTATE +
-          " Unable to close all channels associated with this reader"));
+        let error = new SEError(SE.ERROR_BADSTATE,
+          "Unable to close all channels associated with this reader");
+        resolver.reject(Cu.cloneInto(error, this._window));
       });
     });
   },
@@ -203,13 +214,6 @@ SESessionImpl.prototype = {
   contractID: "@mozilla.org/secureelement/session;1",
   QueryInterface: XPCOMUtils.generateQI([]),
 
-  // Private function
-  _checkClosed: function _checkClosed() {
-    if (this._isClosed) {
-      throw new Error(SE.ERROR_BADSTATE + " Session Already Closed!");
-    }
-  },
-
   // Chrome-only function
   onChannelOpen: function onChannelOpen(channelCtx) {
     this._channels.push(channelCtx);
@@ -229,12 +233,15 @@ SESessionImpl.prototype = {
   },
 
   openLogicalChannel: function openLogicalChannel(aid) {
-    this._checkClosed();
+    if (this._isClosed) {
+      return PromiseHelpers.rejectWithSEError(SE.ERROR_BADSTATE,
+             "Session Already Closed!");
+    }
 
     let aidLen = aid ? aid.length : 0;
     if (aidLen < SE.MIN_AID_LEN || aidLen > SE.MAX_AID_LEN) {
-      return PromiseHelpers.rejectWithSEError(SE.ERROR_GENERIC +
-             " Invalid AID length - " + aidLen);
+      return PromiseHelpers.rejectWithSEError(SE.ERROR_ILLEGALPARAMETER,
+             "Invalid AID length - " + aidLen);
     }
 
     return PromiseHelpers.createSEPromise((resolverId) => {
@@ -256,7 +263,10 @@ SESessionImpl.prototype = {
   },
 
   closeAll: function closeAll() {
-    this._checkClosed();
+    if (this._isClosed) {
+      return PromiseHelpers.rejectWithSEError(SE.ERROR_BADSTATE,
+             "Session Already Closed!");
+    }
 
     return PromiseHelpers.createSEPromise((resolverId) => {
       let promises = [];
@@ -276,7 +286,7 @@ SESessionImpl.prototype = {
         resolver.resolve();
       }, (reason) => {
         resolver.reject(new Error(SE.ERROR_BADSTATE +
-          " Unable to close all channels associated with this session"));
+          "Unable to close all channels associated with this session"));
       });
     });
   },
@@ -320,12 +330,6 @@ SEChannelImpl.prototype = {
   contractID: "@mozilla.org/secureelement/channel;1",
   QueryInterface: XPCOMUtils.generateQI([]),
 
-  _checkClosed: function _checkClosed() {
-    if (this._isClosed) {
-      throw new Error(SE.ERROR_BADSTATE + " Channel Already Closed!");
-    }
-  },
-
   // Chrome-only function
   onClose: function onClose() {
     this._isClosed = true;
@@ -349,28 +353,31 @@ SEChannelImpl.prototype = {
     // TODO remove this once it will be possible to have a non-optional dict
     // in the WebIDL
     if (!command) {
-      return PromiseHelpers.rejectWithSEError(SE.ERROR_GENERIC +
-        " SECommand dict must be defined");
+      return PromiseHelpers.rejectWithSEError(SE.ERROR_ILLEGALPARAMETER,
+             "SECommand dict must be defined");
     }
 
-    this._checkClosed();
+    if (this._isClosed) {
+      return PromiseHelpers.rejectWithSEError(SE.ERROR_BADSTATE,
+             "Channel Already Closed!");
+    }
 
     let dataLen = command.data ? command.data.length : 0;
     if (dataLen > SE.MAX_APDU_LEN) {
-      return PromiseHelpers.rejectWithSEError(SE.ERROR_GENERIC +
+      return PromiseHelpers.rejectWithSEError(SE.ERROR_ILLEGALPARAMETER,
              " Command data length exceeds max limit - 255. " +
              " Extended APDU is not supported!");
     }
 
     if ((command.cla & 0x80 === 0) && ((command.cla & 0x60) !== 0x20)) {
       if (command.ins === SE.INS_MANAGE_CHANNEL) {
-        return PromiseHelpers.rejectWithSEError(SE.ERROR_SECURITY +
-               ", MANAGE CHANNEL command not permitted");
+        return PromiseHelpers.rejectWithSEError(SE.ERROR_SECURITY,
+               "MANAGE CHANNEL command not permitted");
       }
       if ((command.ins === SE.INS_SELECT) && (command.p1 == 0x04)) {
         // SELECT by DF Name (p1=04) is not allowed
-        return PromiseHelpers.rejectWithSEError(SE.ERROR_SECURITY +
-               ", SELECT command not permitted");
+        return PromiseHelpers.rejectWithSEError(SE.ERROR_SECURITY,
+               "SELECT command not permitted");
       }
       debug("Attempting to transmit an ISO command");
     } else {
@@ -397,7 +404,10 @@ SEChannelImpl.prototype = {
   },
 
   close: function close() {
-    this._checkClosed();
+    if (this._isClosed) {
+      return PromiseHelpers.rejectWithSEError(SE.ERROR_BADSTATE,
+             "Channel Already Closed!");
+    }
 
     return PromiseHelpers.createSEPromise((resolverId) => {
       /**
@@ -583,8 +593,8 @@ SEManagerImpl.prototype = {
       case "SE:OpenChannelRejected":
       case "SE:CloseChannelRejected":
       case "SE:TransmitAPDURejected":
-        let error = result.error || SE.ERROR_GENERIC;
-        resolver.reject(error);
+        let error = new SEError(result.error, result.reason);
+        resolver.reject(Cu.cloneInto(error, this._window));
         break;
       case "SE:ReaderPresenceChanged":
         debug("Reader " + result.type + " present: " + result.isPresent);
@@ -595,7 +605,7 @@ SEManagerImpl.prototype = {
         break;
       default:
         debug("Could not find a handler for " + message.name);
-        resolver.reject();
+        resolver.reject(Cu.cloneInto(new SEError(), this._window));
         break;
     }
   }
