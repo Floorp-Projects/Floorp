@@ -465,5 +465,5 @@ function getRecordingModelPrefs () {
   };
 }
 
-exports.getPerformanceActorsConnection = t => SharedPerformanceActors.forTarget(t);
+exports.getPerformanceFront = t => PerformanceFronts.forTarget(t);
 exports.PerformanceFront = PerformanceFront;
