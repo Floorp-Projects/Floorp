@@ -324,7 +324,7 @@ class MozbuildSandbox(Sandbox):
         if name.islower() or name.isupper() or name[0].islower():
             raise NameError('Template function names must be CamelCase.')
 
-        self.templates[name] = TemplateFunction(func)
+        self.templates[name] = TemplateFunction(func, self)
 
     @memoize
     def _create_subcontext(self, cls):
@@ -408,11 +408,13 @@ class MozbuildSandbox(Sandbox):
 
 
 class TemplateFunction(object):
-    def __init__(self, func):
-        self.path = inspect.getfile(func)
+    def __init__(self, func, sandbox):
+        self.path = func.func_code.co_filename
         self.name = func.func_name
 
-        lines, firstlineno = inspect.getsourcelines(func)
+        firstlineno = func.func_code.co_firstlineno
+        lines = sandbox._current_source.splitlines(True)
+        lines = inspect.getblock(lines[firstlineno - 1:])
         first_op = None
         generator = tokenize.generate_tokens(iter(lines).next)
         # Find the first indent token in the source of this template function,

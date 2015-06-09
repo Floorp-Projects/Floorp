@@ -129,6 +129,9 @@ class Sandbox(dict):
         # evaluation.
         self._last_name_error = None
 
+        # Current literal source being executed.
+        self._current_source = None
+
     @property
     def _context(self):
         return self._active_contexts[-1]
@@ -171,6 +174,8 @@ class Sandbox(dict):
         # too low-level for that. However, we could add bytecode generation via
         # the marshall module if parsing performance were ever an issue.
 
+        old_source = self._current_source
+        self._current_source = source
         try:
             # compile() inherits the __future__ from the module by default. We
             # do want Unicode literals.
@@ -212,6 +217,7 @@ class Sandbox(dict):
                 source_stack.append(path)
             raise SandboxExecutionError(source_stack, exc[0], exc[1], exc[2])
         finally:
+            self._current_source = old_source
             self._context._sandbox = old_sandbox
             if path and becomes_current_path:
                 self._context.pop_source()
