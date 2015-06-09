@@ -766,10 +766,12 @@ Animation::UpdateTiming(SeekFlag aSeekFlag)
 {
   // Update the sequence number each time we transition in or out of the
   // idle state
-  if (PlayState() == AnimationPlayState::Idle) {
-    mSequenceNum = kUnsequenced;
-  } else if (mSequenceNum == kUnsequenced) {
-    mSequenceNum = sNextSequenceNum++;
+  if (!IsUsingCustomCompositeOrder()) {
+    if (PlayState() == AnimationPlayState::Idle) {
+      mSequenceNum = kUnsequenced;
+    } else if (mSequenceNum == kUnsequenced) {
+      mSequenceNum = sNextSequenceNum++;
+    }
   }
 
   // We call UpdateFinishedState before UpdateEffect because the former
