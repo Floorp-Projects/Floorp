@@ -58,7 +58,6 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
     case LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS:
     case LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS:
     case LOCAL_GL_MAX_UNIFORM_BUFFER_BINDINGS:
-    case LOCAL_GL_MAX_VARYING_COMPONENTS:
     case LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS:
     case LOCAL_GL_MAX_VERTEX_UNIFORM_BLOCKS:
     case LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS:
@@ -72,6 +71,14 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
       GLint val;
       gl->fGetIntegerv(pname, &val);
       return JS::Int32Value(val);
+    }
+
+    case LOCAL_GL_MAX_VARYING_COMPONENTS: {
+      // On OS X Core Profile this is buggy.  The spec says that the
+      // value is 4 * GL_MAX_VARYING_VECTORS
+      GLint val;
+      gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_VECTORS, &val);
+      return JS::Int32Value(4*val);
     }
 
     /* GLint64 */
@@ -88,7 +95,7 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
     }
 
 
-      // GLuint64
+    /* GLuint64 */
     case LOCAL_GL_MAX_SERVER_WAIT_TIMEOUT: {
       GLuint64 val;
       gl->fGetInteger64v(pname, (GLint64*) &val);
