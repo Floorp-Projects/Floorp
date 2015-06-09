@@ -66,10 +66,13 @@ private:
   nsRefPtr<Stream> mSource;
 };
 
-static inline void
-ConvertIndex(nsTArray<Index::Indice>& aDest,
+static inline bool
+ConvertIndex(FallibleTArray<Index::Indice>& aDest,
              const stagefright::Vector<stagefright::MediaSource::Indice>& aIndex)
 {
+  if (!aDest.SetCapacity(aIndex.size())) {
+    return false;
+  }
   for (size_t i = 0; i < aIndex.size(); i++) {
     Index::Indice indice;
     const stagefright::MediaSource::Indice& s_indice = aIndex[i];
@@ -78,8 +81,9 @@ ConvertIndex(nsTArray<Index::Indice>& aDest,
     indice.start_composition = s_indice.start_composition;
     indice.end_composition = s_indice.end_composition;
     indice.sync = s_indice.sync;
-    aDest.AppendElement(indice);
+    MOZ_ALWAYS_TRUE(aDest.AppendElement(indice));
   }
+  return true;
 }
 
 MP4Metadata::MP4Metadata(Stream* aSource)
@@ -233,7 +237,7 @@ MP4Metadata::UpdateCrypto(const MetaData* aMetaData)
 }
 
 bool
-MP4Metadata::ReadTrackIndex(nsTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID)
+MP4Metadata::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID)
 {
   size_t numTracks = mPrivate->mMetadataExtractor->countTracks();
   int32_t trackNumber = GetTrackNumber(aTrackID);
@@ -244,11 +248,11 @@ MP4Metadata::ReadTrackIndex(nsTArray<Index::Indice>& aDest, mozilla::TrackID aTr
   if (!track.get() || track->start() != OK) {
     return false;
   }
-  ConvertIndex(aDest, track->exportIndex());
+  bool rv = ConvertIndex(aDest, track->exportIndex());
 
   track->stop();
 
-  return true;
+  return rv;
 }
 
 int32_t

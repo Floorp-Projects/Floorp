@@ -45,7 +45,7 @@ MP4Demuxer::Init()
   auto audioInfo = mMetadata->GetTrackInfo(mozilla::TrackInfo::kAudioTrack, 0);
   if (audioInfo) {
     mAudioConfig = mozilla::Move(audioInfo);
-    nsTArray<Index::Indice> indices;
+    FallibleTArray<Index::Indice> indices;
     if (!mMetadata->ReadTrackIndex(indices, mAudioConfig->mTrackId)) {
       return false;
     }
@@ -62,7 +62,7 @@ MP4Demuxer::Init()
   auto videoInfo = mMetadata->GetTrackInfo(mozilla::TrackInfo::kVideoTrack, 0);
   if (videoInfo) {
     mVideoConfig = mozilla::Move(videoInfo);
-    nsTArray<Index::Indice> indices;
+    FallibleTArray<Index::Indice> indices;
     if (!mMetadata->ReadTrackIndex(indices, mVideoConfig->mTrackId)) {
       return false;
     }
