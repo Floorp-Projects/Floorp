@@ -35,3 +35,13 @@ dictionary APZTestData {
   sequence<APZBucket> paints;
   sequence<APZBucket> repaintRequests;
 };
+
+// A frame uniformity measurement for every scrollable layer
+dictionary FrameUniformity {
+  unsigned long layerAddress;
+  float frameUniformity;
+};
+
+dictionary FrameUniformityResults {
+  sequence<FrameUniformity> layerUniformities;
+};
