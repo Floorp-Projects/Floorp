@@ -107,25 +107,13 @@ a setTimeout.
 
 ## GarbageCollection
 
-Emitted after a full GC cycle has completed (which is after any number of
-incremental slices).
+Emitted after a full GC has occurred (which will emit past incremental events).
 
 * DOMString causeName - The reason for a GC event to occur. A full list of
   GC reasons can be found [on MDN](https://developer.mozilla.org/en-US/docs/Tools/Debugger-API/Debugger.Memory#Debugger.Memory_Handler_Functions).
 * DOMString nonincremenetalReason - If the GC could not do an incremental
   GC (smaller, quick GC events), and we have to walk the entire heap and
   GC everything marked, then the reason listed here is why.
-
-## nsCycleCollector::Collect
-
-An `nsCycleCollector::Collect` marker is emitted for each incremental cycle
-collection slice and each non-incremental cycle collection.
-
-# nsCycleCollector::ForgetSkippable
-
-`nsCycleCollector::ForgetSkippable` is presented as "Cycle Collection", but in
-reality it is preparation/pre-optimization for cycle collection, and not the
-actual tracing of edges and collecting of cycles.
 
 ## ConsoleTime
 

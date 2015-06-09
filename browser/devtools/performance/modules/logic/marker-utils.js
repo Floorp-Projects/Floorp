@@ -435,13 +435,6 @@ const Formatters = {
       return { "Restyle Hint": marker.restyleHint.replace(/eRestyle_/g, "") };
     }
   },
-
-  CycleCollectionFields: function (marker) {
-    let Type = PREFS["show-platform-data"]
-        ? marker.name
-        : marker.name.replace(/nsCycleCollector::/g, "");
-    return { Type };
-  },
 };
 
 exports.getMarkerLabel = getMarkerLabel;
