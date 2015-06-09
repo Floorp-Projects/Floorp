@@ -2279,6 +2279,7 @@
 #define LOCAL_GL_MAX_ATTRIB_STACK_DEPTH                      0x0D35
 #define LOCAL_GL_MAX_BINDABLE_UNIFORM_SIZE_EXT               0x8DED
 #define LOCAL_GL_MAX_CLIENT_ATTRIB_STACK_DEPTH               0x0D3B
+#define LOCAL_GL_MAX_CLIENT_WAIT_TIMEOUT_WEBGL               0x9247
 #define LOCAL_GL_MAX_CLIPMAP_DEPTH_SGIX                      0x8177
 #define LOCAL_GL_MAX_CLIPMAP_VIRTUAL_DEPTH_SGIX              0x8178
 #define LOCAL_GL_MAX_CLIP_DISTANCES                          0x0D32
