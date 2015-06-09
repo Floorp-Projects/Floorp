@@ -3147,7 +3147,7 @@ var gDetailView = {
         );
         var infoLink = document.getElementById("detail-" + msgType + "-link");
         infoLink.value = gStrings.ext.GetStringFromName("details.notification.unsigned.link");
-        infoLink.href = Services.prefs.getCharPref("xpinstall.signatures.infoURL");
+        infoLink.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
         infoLink.hidden = false;
       } else if (!this._addon.isCompatible && (AddonManager.checkCompatibility ||
         (this._addon.blocklistState != Ci.nsIBlocklistService.STATE_SOFTBLOCKED))) {

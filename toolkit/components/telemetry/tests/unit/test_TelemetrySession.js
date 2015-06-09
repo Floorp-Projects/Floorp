@@ -1706,61 +1706,6 @@ add_task(function* test_schedulerUserIdle() {
   yield TelemetrySession.shutdown();
 });
 
-add_task(function* test_sendDailyOnIdle() {
-  if (gIsAndroid || gIsGonk) {
-    // We don't have the aborted session or the daily ping here.
-    return;
-  }
-
-  let now = new Date(2040, 1, 1, 11, 0, 0);
-  fakeNow(now);
-
-  let schedulerTickCallback = 0;
-  fakeSchedulerTimer((callback, timeout) => {
-    schedulerTickCallback = callback;
-  }, () => {});
-
-  yield TelemetrySession.reset();
-  yield clearPendingPings();
-
-  // Make sure we are not sending a daily before midnight when active.
-  now = new Date(2040, 1, 1, 23, 55, 0);
-  fakeNow(now);
-  registerPingHandler((req, res) => {
-    Assert.ok(false, "No daily ping should be received yet when the user is active.");
-  });
-  yield fakeIdleNotification("active");
-
-  // The Request constructor restores the previous ping handler.
-  gRequestIterator = Iterator(new Request());
-
-  // We should receive a daily ping after midnight.
-  now = new Date(2040, 1, 2, 0, 05, 0);
-  fakeNow(now);
-  yield schedulerTickCallback();
-
-  let request = yield gRequestIterator.next();
-  Assert.ok(!!request);
-  let ping = decodeRequestPayload(request);
-
-  Assert.equal(ping.type, PING_TYPE_MAIN);
-  Assert.equal(ping.payload.info.reason, REASON_DAILY);
-
-  // We should also trigger a ping when going idle shortly before next midnight.
-  now = new Date(2040, 1, 2, 23, 54, 0);
-  fakeNow(now);
-  yield fakeIdleNotification("idle");
-
-  request = yield gRequestIterator.next();
-  Assert.ok(!!request);
-  ping = decodeRequestPayload(request);
-
-  Assert.equal(ping.type, PING_TYPE_MAIN);
-  Assert.equal(ping.payload.info.reason, REASON_DAILY);
-
-  yield TelemetrySession.shutdown();
-});
-
 add_task(function* stopServer(){
   gHttpServer.stop(do_test_finished);
 });
