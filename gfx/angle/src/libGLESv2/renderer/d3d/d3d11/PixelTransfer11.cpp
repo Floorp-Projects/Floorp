@@ -201,6 +201,21 @@ gl::Error PixelTransfer11::copyBufferToTexture(const gl::PixelUnpackState &unpac
     GLenum unsizedFormat = gl::GetInternalFormatInfo(destinationFormat).format;
     GLenum sourceFormat = gl::GetFormatTypeInfo(unsizedFormat, sourcePixelsType).internalFormat;
 
+    CopyShaderParams shaderParams;
+    setBufferToTextureCopyParams(destArea, destSize, sourceFormat, unpack, offset, &shaderParams);
+
+    ID3D11DeviceContext *deviceContext = mRenderer->getDeviceContext();
+
+    if (!StructEquals(mParamsData, shaderParams))
+    {
+        HRESULT result = d3d11::SetBufferData(deviceContext, mParamsConstantBuffer, shaderParams);
+        if (FAILED(result))
+        {
+             return gl::Error(GL_OUT_OF_MEMORY, "Failed to set shader parameters, result: 0x%X.", result);
+        }
+        mParamsData = shaderParams;
+    }
+
     const d3d11::TextureFormat &sourceFormatInfo = d3d11::GetTextureFormatInfo(sourceFormat);
     DXGI_FORMAT srvFormat = sourceFormatInfo.srvFormat;
     ASSERT(srvFormat != DXGI_FORMAT_UNKNOWN);
@@ -210,11 +225,6 @@ gl::Error PixelTransfer11::copyBufferToTexture(const gl::PixelUnpackState &unpac
 
     ID3D11RenderTargetView *textureRTV = RenderTarget11::makeRenderTarget11(destRenderTarget)->getRenderTargetView();
     ASSERT(textureRTV != NULL);
-
-    CopyShaderParams shaderParams;
-    setBufferToTextureCopyParams(destArea, destSize, sourceFormat, unpack, offset, &shaderParams);
-
-    ID3D11DeviceContext *deviceContext = mRenderer->getDeviceContext();
 
     ID3D11Buffer *nullBuffer = NULL;
     UINT zero = 0;
@@ -235,12 +245,6 @@ gl::Error PixelTransfer11::copyBufferToTexture(const gl::PixelUnpackState &unpac
     deviceContext->RSSetState(mCopyRasterizerState);
 
     mRenderer->setOneTimeRenderTarget(textureRTV);
-
-    if (!StructEquals(mParamsData, shaderParams))
-    {
-        d3d11::SetBufferData(deviceContext, mParamsConstantBuffer, shaderParams);
-        mParamsData = shaderParams;
-    }
 
     deviceContext->VSSetConstantBuffers(0, 1, &mParamsConstantBuffer);
 
