@@ -221,7 +221,7 @@ public:
 
   NS_METHOD Run()
   {
-    MOZ_ASSERT(mReader->GetTaskQueue()->IsCurrentThreadIn());
+    MOZ_ASSERT(mReader->OnTaskQueue());
 
     // Make sure ResetDecode hasn't been called in the mean time.
     if (!mReader->mBaseVideoPromise.IsEmpty()) {
@@ -246,7 +246,7 @@ public:
 
   NS_METHOD Run()
   {
-    MOZ_ASSERT(mReader->GetTaskQueue()->IsCurrentThreadIn());
+    MOZ_ASSERT(mReader->OnTaskQueue());
 
     // Make sure ResetDecode hasn't been called in the mean time.
     if (!mReader->mBaseAudioPromise.IsEmpty()) {
@@ -353,7 +353,7 @@ MediaDecoderReader::Shutdown()
 
   // Spin down the task queue if necessary. We wait until BreakCycles to null
   // out mTaskQueue, since otherwise any remaining tasks could crash when they
-  // invoke GetTaskQueue()->IsCurrentThreadIn().
+  // invoke OnTaskQueue().
   if (mTaskQueue && !mTaskQueueIsBorrowed) {
     // If we own our task queue, shutdown ends when the task queue is done.
     p = mTaskQueue->BeginShutdown();
