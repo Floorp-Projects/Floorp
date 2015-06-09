@@ -59,6 +59,21 @@ MachMessage::~MachMessage() {
   }
 }
 
+
+u_int32_t MachMessage::GetDataLength() {
+  return EndianU32_LtoN(GetDataPacket()->data_length);
+}
+
+  // The message ID may be used as a code identifying the type of message
+void MachMessage::SetMessageID(int32_t message_id) {
+  GetDataPacket()->id = EndianU32_NtoL(message_id);
+}
+
+int32_t MachMessage::GetMessageID() {
+  return EndianU32_LtoN(GetDataPacket()->id);
+}
+
+
 //==============================================================================
 // returns true if successful
 bool MachMessage::SetData(const void* data,
