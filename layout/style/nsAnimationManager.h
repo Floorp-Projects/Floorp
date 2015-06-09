@@ -106,6 +106,7 @@ public:
 
   bool IsStylePaused() const { return mIsStylePaused; }
 
+  bool HasLowerCompositeOrderThan(const Animation& aOther) const override;
   bool IsUsingCustomCompositeOrder() const override { return !!mOwningElement; }
 
   void SetAnimationIndex(uint64_t aIndex)
