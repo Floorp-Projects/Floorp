@@ -1385,11 +1385,6 @@ void MediaDecoderStateMachine::RecomputeDuration()
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
-  // We dispatch DurationChanged to the MediaDecoder when the duration changes
-  // sometime after initialization, unless it has already been fired by the code
-  // that set the new duration.
-  bool fireDurationChanged = false;
-
   TimeUnit duration;
   if (mExplicitDuration.Ref().isSome()) {
     double d = mExplicitDuration.Ref().ref();
@@ -1403,7 +1398,6 @@ void MediaDecoderStateMachine::RecomputeDuration()
     duration = TimeUnit::FromSeconds(d);
   } else if (mEstimatedDuration.Ref().isSome()) {
     duration = mEstimatedDuration.Ref().ref();
-    fireDurationChanged = true;
   } else if (mInfo.mMetadataDuration.isSome()) {
     duration = mInfo.mMetadataDuration.ref();
   } else {
@@ -1412,17 +1406,10 @@ void MediaDecoderStateMachine::RecomputeDuration()
 
   if (duration < mObservedDuration.Ref()) {
     duration = mObservedDuration;
-    fireDurationChanged = true;
   }
-  fireDurationChanged = fireDurationChanged && duration != Duration();
 
   MOZ_ASSERT(duration.ToMicroseconds() >= 0);
   mDuration = Some(duration);
-
-  if (fireDurationChanged) {
-    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(mDecoder, &MediaDecoder::DurationChanged);
-    AbstractThread::MainThread()->Dispatch(event.forget());
-  }
 }
 
 void MediaDecoderStateMachine::SetFragmentEndTime(int64_t aEndTime)
