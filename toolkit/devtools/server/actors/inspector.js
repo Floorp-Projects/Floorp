@@ -1295,7 +1295,9 @@ var WalkerActor = protocol.ActorClass({
 
   getDocumentWalker: function(node, whatToShow) {
     // Allow native anon content (like <video> controls) if preffed on
-    let nodeFilter = this.showAllAnonymousContent ? allAnonymousContentTreeWalkerFilter : standardTreeWalkerFilter;
+    let nodeFilter = this.showAllAnonymousContent
+                        ? allAnonymousContentTreeWalkerFilter
+                        : standardTreeWalkerFilter;
     return new DocumentWalker(node, this.rootWin, whatToShow, nodeFilter);
   },
 
@@ -1418,9 +1420,16 @@ var WalkerActor = protocol.ActorClass({
     let nodeActors = [];
     let newParents = new Set();
     for (let node of nodes) {
-      // Be sure we deal with NodeActor only.
-      if (!(node instanceof NodeActor))
+      if (!(node instanceof NodeActor)) {
+        // If an anonymous node was passed in and we aren't supposed to know
+        // about it, then consult with the document walker as the source of
+        // truth about which elements exist.
+        if (!this.showAllAnonymousContent && LayoutHelpers.isAnonymous(node)) {
+          node = this.getDocumentWalker(node).currentNode;
+        }
+
         node = this._ref(node);
+      }
 
       this.ensurePathToRoot(node, newParents);
       // If nodes may be an array of raw nodes, we're sure to only have
@@ -3782,8 +3791,16 @@ function DocumentWalker(node, rootWin, whatToShow=Ci.nsIDOMNodeFilter.SHOW_ALL, 
   this.walker.showSubDocuments = true;
   this.walker.showDocumentsAsNodes = true;
   this.walker.init(rootWin.document, whatToShow);
-  this.walker.currentNode = node;
   this.filter = filter;
+
+  // Make sure that the walker knows about the initial node (which could
+  // be skipped due to a filter).  Note that simply calling parentNode()
+  // causes currentNode to be updated.
+  this.walker.currentNode = node;
+  while (node &&
+         this.filter(node) === Ci.nsIDOMNodeFilter.FILTER_SKIP) {
+    node = this.walker.parentNode();
+  }
 }
 
 DocumentWalker.prototype = {
