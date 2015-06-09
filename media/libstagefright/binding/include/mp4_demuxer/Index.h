@@ -74,7 +74,7 @@ private:
   ~Index();
 
   Stream* mSource;
-  nsTArray<Sample> mIndex;
+  FallibleTArray<Sample> mIndex;
   nsAutoPtr<MoofParser> mMoofParser;
   mozilla::Monitor* mMonitor;
 };

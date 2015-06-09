@@ -39,7 +39,7 @@ public:
     return mCrypto;
   }
 
-  bool ReadTrackIndex(nsTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID);
+  bool ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID);
 
 private:
   int32_t GetTrackNumber(mozilla::TrackID aTrackID);
