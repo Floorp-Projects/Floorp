@@ -61,6 +61,8 @@ public:
   // Returns true if we should not start decoder until we receive
   // OnConnected signal. (currently RTSP only)
   static bool DecoderWaitsForOnConnected(const nsACString& aType);
+
+  static bool IsWebMType(const nsACString& aType);
 };
 
 }
