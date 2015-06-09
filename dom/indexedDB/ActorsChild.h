@@ -624,7 +624,7 @@ class BackgroundCursorChild final
   friend class BackgroundTransactionChild;
   friend class BackgroundVersionChangeTransactionChild;
 
-  class DelayedDeleteRunnable;
+  class DelayedActionRunnable;
 
   IDBRequest* mRequest;
   IDBTransaction* mTransaction;
