@@ -132,6 +132,64 @@ CSSTransition::TransitionProperty() const
   return effect->AsTransition()->TransitionProperty();
 }
 
+bool
+CSSTransition::HasLowerCompositeOrderThan(const Animation& aOther) const
+{
+  // 0. Object-equality case
+  if (&aOther == this) {
+    return false;
+  }
+
+  // 1. Transitions sort lowest
+  const CSSTransition* otherTransition = aOther.AsCSSTransition();
+  if (!otherTransition) {
+    return true;
+  }
+
+  // 2. CSS transitions that correspond to a transition-property property sort
+  // lower than CSS transitions owned by script.
+  if (!IsUsingCustomCompositeOrder()) {
+    return !aOther.IsUsingCustomCompositeOrder() ?
+           Animation::HasLowerCompositeOrderThan(aOther) :
+           false;
+  }
+  if (!aOther.IsUsingCustomCompositeOrder()) {
+    return true;
+  }
+
+  // 3. Sort by document order
+  Element* ourElement;
+  nsCSSPseudoElements::Type ourPseudoType;
+  GetOwningElement(ourElement, ourPseudoType);
+
+  Element* otherElement;
+  nsCSSPseudoElements::Type otherPseudoType;
+  otherTransition->GetOwningElement(otherElement, otherPseudoType);
+  MOZ_ASSERT(ourElement && otherElement,
+             "Transitions using custom composite order should have an "
+             "owning element");
+
+  if (ourElement != otherElement) {
+    return nsContentUtils::PositionIsBefore(ourElement, otherElement);
+  }
+
+  // 3b. Sort by pseudo: (none) < before < after
+  if (ourPseudoType != otherPseudoType) {
+    return ourPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
+           (ourPseudoType == nsCSSPseudoElements::ePseudo_before &&
+            otherPseudoType == nsCSSPseudoElements::ePseudo_after);
+  }
+
+  // 4. (Same element and pseudo): Sort by transition generation
+  if (mSequenceNum != otherTransition->mSequenceNum) {
+    return mSequenceNum < otherTransition->mSequenceNum;
+  }
+
+  // 5. (Same transition generation): Sort by transition property
+  return nsCSSProps::GetStringValue(TransitionProperty()) <
+         nsCSSProps::GetStringValue(otherTransition->TransitionProperty());
+}
+
 /*****************************************************************************
  * nsTransitionManager                                                       *
  *****************************************************************************/

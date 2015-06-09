@@ -120,6 +120,7 @@ public:
 
   nsCSSProperty TransitionProperty() const;
 
+  bool HasLowerCompositeOrderThan(const Animation& aOther) const override;
   bool IsUsingCustomCompositeOrder() const override { return !!mOwningElement; }
 
   void SetCreationSequence(uint64_t aIndex)
