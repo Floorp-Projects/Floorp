@@ -8,10 +8,17 @@ loadRelativeToScript('CFG.js');
 
 var sourceRoot = (os.getenv('SOURCE') || '') + '/'
 
+var functionName;
 var functionBodies;
 
 if (typeof scriptArgs[0] != 'string' || typeof scriptArgs[1] != 'string')
-    throw "Usage: analyzeRoots.js <gcFunctions.lst> <gcEdges.txt> <suppressedFunctions.lst> <gcTypes.txt> [start end [tmpfile]]";
+    throw "Usage: analyzeRoots.js [-f function_name] <gcFunctions.lst> <gcEdges.txt> <suppressedFunctions.lst> <gcTypes.txt> [start end [tmpfile]]";
+
+var theFunctionNameToFind;
+if (scriptArgs[0] == '--function') {
+    theFunctionNameToFind = scriptArgs[1];
+    scriptArgs = scriptArgs.slice(2);
+}
 
 var gcFunctionsFile = scriptArgs[0];
 var gcEdgesFile = scriptArgs[1];
@@ -635,23 +642,9 @@ var end = Math.min(minStream + each * batch - 1, maxStream);
 var theFunctionNameToFind;
 // var start = end = 12345;
 
-for (var nameIndex = start; nameIndex <= end; nameIndex++) {
-    var name = xdb.read_key(nameIndex);
-    var functionName = name.readString();
-    var data = xdb.read_entry(name);
-    xdb.free_string(name);
-    var json = data.readString();
-    xdb.free_string(data);
+function process(name, json) {
+    functionName = name;
     functionBodies = JSON.parse(json);
-
-    if (theFunctionNameToFind) {
-        if (functionName == theFunctionNameToFind) {
-            printErr("nameIndex = " + nameIndex);
-            quit(1);
-        } else {
-            continue;
-        }
-    }
 
     for (var body of functionBodies)
         body.suppressed = [];
@@ -660,4 +653,22 @@ for (var nameIndex = start; nameIndex <= end; nameIndex++) {
             pbody.suppressed[id] = true;
     }
     processBodies(functionName);
+}
+
+if (theFunctionNameToFind) {
+    var data = xdb.read_entry(theFunctionNameToFind);
+    var json = data.readString();
+    process(theFunctionNameToFind, json);
+    xdb.free_string(data);
+    quit(0);
+}
+
+for (var nameIndex = start; nameIndex <= end; nameIndex++) {
+    var name = xdb.read_key(nameIndex);
+    var functionName = name.readString();
+    var data = xdb.read_entry(name);
+    xdb.free_string(name);
+    var json = data.readString();
+    process(functionName, json);
+    xdb.free_string(data);
 }
