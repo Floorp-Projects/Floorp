@@ -1420,8 +1420,7 @@ void MediaDecoderStateMachine::RecomputeDuration()
   mDuration = Some(duration);
 
   if (fireDurationChanged) {
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethodWithArg<TimeUnit>(mDecoder, &MediaDecoder::DurationChanged, duration);
+    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(mDecoder, &MediaDecoder::DurationChanged);
     AbstractThread::MainThread()->Dispatch(event.forget());
   }
 }
