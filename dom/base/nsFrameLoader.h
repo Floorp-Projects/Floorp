@@ -162,7 +162,7 @@ public:
    * returned.  (In-process <browser> behaves similarly, and this
    * behavior seems desirable.)
    */
-  RenderFrameParent* GetCurrentRemoteFrame() const;
+  RenderFrameParent* GetCurrentRenderFrame() const;
 
   nsFrameMessageManager* GetFrameMessageManager() { return mMessageManager; }
 
