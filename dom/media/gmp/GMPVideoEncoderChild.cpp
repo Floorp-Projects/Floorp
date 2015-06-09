@@ -9,21 +9,25 @@
 #include "mozilla/unused.h"
 #include "GMPVideoEncodedFrameImpl.h"
 #include "GMPVideoi420FrameImpl.h"
+#include "runnable_utils.h"
 
 namespace mozilla {
 namespace gmp {
 
 GMPVideoEncoderChild::GMPVideoEncoderChild(GMPContentChild* aPlugin)
-: GMPSharedMemManager(aPlugin),
-  mPlugin(aPlugin),
-  mVideoEncoder(nullptr),
-  mVideoHost(this)
+  : GMPSharedMemManager(aPlugin)
+  , mPlugin(aPlugin)
+  , mVideoEncoder(nullptr)
+  , mVideoHost(this)
+  , mNeedShmemIntrCount(0)
+  , mPendingEncodeComplete(false)
 {
   MOZ_ASSERT(mPlugin);
 }
 
 GMPVideoEncoderChild::~GMPVideoEncoderChild()
 {
+  MOZ_ASSERT(!mNeedShmemIntrCount);
 }
 
 void
@@ -162,6 +166,17 @@ GMPVideoEncoderChild::RecvSetPeriodicKeyFrames(const bool& aEnable)
 bool
 GMPVideoEncoderChild::RecvEncodingComplete()
 {
+  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
+
+  if (mNeedShmemIntrCount) {
+    // There's a GMP blocked in Alloc() waiting for the CallNeedShem() to
+    // return a frame they can use. Don't call the GMP's EncodingComplete()
+    // now and don't delete the GMPVideoEncoderChild, defer processing the
+    // EncodingComplete() until once the Alloc() finishes.
+    mPendingEncodeComplete = true;
+    return true;
+  }
+
   if (!mVideoEncoder) {
     unused << Send__delete__(this);
     return false;
@@ -177,6 +192,42 @@ GMPVideoEncoderChild::RecvEncodingComplete()
   unused << Send__delete__(this);
 
   return true;
+}
+
+bool
+GMPVideoEncoderChild::Alloc(size_t aSize,
+                            Shmem::SharedMemory::SharedMemoryType aType,
+                            Shmem* aMem)
+{
+  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
+
+  bool rv;
+#ifndef SHMEM_ALLOC_IN_CHILD
+  ++mNeedShmemIntrCount;
+  rv = CallNeedShmem(aSize, aMem);
+  --mNeedShmemIntrCount;
+  if (mPendingEncodeComplete) {
+    auto t = NewRunnableMethod(this, &GMPVideoEncoderChild::RecvEncodingComplete);
+    mPlugin->GMPMessageLoop()->PostTask(FROM_HERE, t);
+  }
+#else
+#ifdef GMP_SAFE_SHMEM
+  rv = AllocShmem(aSize, aType, aMem);
+#else
+  rv = AllocUnsafeShmem(aSize, aType, aMem);
+#endif
+#endif
+  return rv;
+}
+
+void
+GMPVideoEncoderChild::Dealloc(Shmem& aMem)
+{
+#ifndef SHMEM_ALLOC_IN_CHILD
+  SendParentShmemForPool(aMem);
+#else
+  DeallocShmem(aMem);
+#endif
 }
 
 } // namespace gmp

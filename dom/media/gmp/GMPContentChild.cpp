@@ -98,13 +98,15 @@ GMPContentChild::DeallocPGMPVideoDecoderChild(PGMPVideoDecoderChild* aActor)
 PGMPVideoEncoderChild*
 GMPContentChild::AllocPGMPVideoEncoderChild()
 {
-  return new GMPVideoEncoderChild(this);
+  GMPVideoEncoderChild* actor = new GMPVideoEncoderChild(this);
+  actor->AddRef();
+  return actor;
 }
 
 bool
 GMPContentChild::DeallocPGMPVideoEncoderChild(PGMPVideoEncoderChild* aActor)
 {
-  delete aActor;
+  static_cast<GMPVideoEncoderChild*>(aActor)->Release();
   return true;
 }
 
