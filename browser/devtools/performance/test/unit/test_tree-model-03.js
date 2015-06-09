@@ -20,12 +20,13 @@ add_task(function test() {
   // exactly at 18.
   let startTime = 5;
   let endTime = 18;
-  let root = getFrameNodePath(new ThreadNode(gThread, { startTime, endTime }), "(root)");
+  let thread = new ThreadNode(gThread, { startTime, endTime });
+  let root = getFrameNodePath(thread, "(root)");
 
   // Test the root node.
 
-  equal(root.duration, endTime - startTime,
-    "The correct duration was calculated for the root node.");
+  equal(thread.duration, endTime - startTime,
+    "The correct duration was calculated for the ThreadNode.");
 
   equal(root.calls.length, 1,
     "The correct number of child calls were calculated for the root node.");

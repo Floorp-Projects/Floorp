@@ -12,7 +12,7 @@ function test() {
   let { ThreadNode } = devtools.require("devtools/performance/tree-model");
   let { CallView } = devtools.require("devtools/performance/tree-view");
 
-  let threadNode = new ThreadNode(gThread);
+  let threadNode = new ThreadNode(gThread, { startTime: 0, endTime: 20 });
   // Don't display the synthesized (root) and the real (root) node twice.
   threadNode.calls = threadNode.calls[0].calls;
   let treeRoot = new CallView({ frame: threadNode });
@@ -33,11 +33,11 @@ function test() {
   is(container.childNodes[0].className, "call-tree-item",
     "The root node in the tree has the correct class name.");
 
-  is($$dur(0).getAttribute("value"), "15 ms",
+  is($$dur(0).getAttribute("value"), "20 ms",
     "The root's duration cell displays the correct value.");
   is($$perc(0).getAttribute("value"), "100%",
     "The root's percentage cell displays the correct value.");
-  is($$sampl(0).getAttribute("value"), "4",
+  is($$sampl(0).getAttribute("value"), "0",
     "The root's samples cell displays the correct value.");
   is($$fun(".call-tree-name")[0].getAttribute("value"), "(root)",
     "The root's function cell displays the correct name.");
@@ -59,11 +59,11 @@ function test() {
   is(container.childNodes[1].className, "call-tree-item",
     "The .A node in the tree has the correct class name.");
 
-  is($$dur(1).getAttribute("value"), "15 ms",
+  is($$dur(1).getAttribute("value"), "20 ms",
     "The .A node's duration cell displays the correct value.");
   is($$perc(1).getAttribute("value"), "100%",
     "The .A node's percentage cell displays the correct value.");
-  is($$sampl(1).getAttribute("value"), "4",
+  is($$sampl(1).getAttribute("value"), "0",
     "The .A node's samples cell displays the correct value.");
   is($fun(".call-tree-name", $$(".call-tree-item")[1]).getAttribute("value"), "A",
     "The .A node's function cell displays the correct name.");
@@ -88,11 +88,11 @@ function test() {
   is(container.childNodes[3].className, "call-tree-item",
     "The .E node in the tree has the correct class name.");
 
-  is($$dur(2).getAttribute("value"), "8 ms",
+  is($$dur(2).getAttribute("value"), "15 ms",
     "The .A.B node's duration cell displays the correct value.");
   is($$perc(2).getAttribute("value"), "75%",
     "The .A.B node's percentage cell displays the correct value.");
-  is($$sampl(2).getAttribute("value"), "3",
+  is($$sampl(2).getAttribute("value"), "0",
     "The .A.B node's samples cell displays the correct value.");
   is($fun(".call-tree-name", $$(".call-tree-item")[2]).getAttribute("value"), "B",
     "The .A.B node's function cell displays the correct name.");
@@ -107,11 +107,11 @@ function test() {
   is($fun(".call-tree-category", $$(".call-tree-item")[2]).getAttribute("value"), "Styles",
     "The .A.B node's function cell displays the correct category.");
 
-  is($$dur(3).getAttribute("value"), "7 ms",
+  is($$dur(3).getAttribute("value"), "5 ms",
     "The .A.E node's duration cell displays the correct value.");
   is($$perc(3).getAttribute("value"), "25%",
     "The .A.E node's percentage cell displays the correct value.");
-  is($$sampl(3).getAttribute("value"), "1",
+  is($$sampl(3).getAttribute("value"), "0",
     "The .A.E node's samples cell displays the correct value.");
   is($fun(".call-tree-name", $$(".call-tree-item")[3]).getAttribute("value"), "E",
     "The .A.E node's function cell displays the correct name.");

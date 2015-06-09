@@ -58,7 +58,7 @@ function* spawnTest() {
 
     // Force a rerender
     let rendered = once(JsCallTreeView, EVENTS.JS_CALL_TREE_RENDERED);
-    JsCallTreeView.render();
+    JsCallTreeView.render(OverviewView.getTimeInterval());
     yield rendered;
 
     is($("#jit-optimizations-view").hidden, true, "JIT Optimizations panel still hidden when rerendered");

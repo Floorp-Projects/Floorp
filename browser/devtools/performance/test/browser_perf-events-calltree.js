@@ -14,7 +14,7 @@ function* spawnTest() {
   Services.prefs.setBoolPref(MEMORY_PREF, true);
 
   let { panel } = yield initPerformance(SIMPLE_URL);
-  let { EVENTS, $, DetailsView, JsCallTreeView, MemoryCallTreeView } = panel.panelWin;
+  let { EVENTS, $, DetailsView, OverviewView, JsCallTreeView, MemoryCallTreeView } = panel.panelWin;
 
   yield DetailsView.selectView("js-calltree");
   ok(DetailsView.isViewSelected(JsCallTreeView), "The call tree is now selected.");
@@ -26,7 +26,7 @@ function* spawnTest() {
   yield rendered;
 
   // Mock the profile used so we can get a deterministic tree created
-  let threadNode = new ThreadNode(gProfile.threads[0]);
+  let threadNode = new ThreadNode(gProfile.threads[0], OverviewView.getTimeInterval());
   JsCallTreeView._populateCallTree(threadNode);
   JsCallTreeView.emit(EVENTS.JS_CALL_TREE_RENDERED);
 

@@ -14,7 +14,7 @@ add_task(function test() {
 
   // Create a root node from a given samples array.
 
-  let threadNode = new ThreadNode(gThread);
+  let threadNode = new ThreadNode(gThread, { startTime: 0, endTime: 20 });
   let root = getFrameNodePath(threadNode, "(root)");
 
   // Test the root node.
@@ -22,8 +22,8 @@ add_task(function test() {
   equal(threadNode.getInfo().nodeType, "Thread",
     "The correct node type was retrieved for the root node.");
 
-  equal(root.duration, 20,
-    "The correct duration was calculated for the root node.");
+  equal(threadNode.duration, 20,
+    "The correct duration was calculated for the ThreadNode.");
   equal(root.getInfo().functionName, "(root)",
     "The correct function name was retrieved for the root node.");
   equal(root.getInfo().categoryData.abbrev, "other",
@@ -82,32 +82,38 @@ add_task(function test() {
   equal(getFrameNodePath(root, "A > E > F").calls.length, 0,
     "The correct number of child calls were calculated for the 'A > E > F' node.");
 
-  // Check the location, sample times, duration and samples of the root.
+  // Check the location, sample times, and samples of the root.
 
   equal(getFrameNodePath(root, "A").location, "A",
     "The 'A' node has the correct location.");
-  equal(getFrameNodePath(root, "A").duration, 20,
-    "The 'A' node has the correct duration in milliseconds.");
+  equal(getFrameNodePath(root, "A").youngestFrameSamples, 0,
+    "The 'A' has correct `youngestFrameSamples`");
   equal(getFrameNodePath(root, "A").samples, 4,
-    "The 'A' node has the correct number of samples.");
+    "The 'A' has correct `samples`");
+
+  // A frame that is both a leaf and caught in another stack
+  equal(getFrameNodePath(root, "A > B > C").youngestFrameSamples, 1,
+    "The 'A > B > C' has correct `youngestFrameSamples`");
+  equal(getFrameNodePath(root, "A > B > C").samples, 2,
+    "The 'A > B > C' has correct `samples`");
 
   // ...and the rightmost leaf.
 
   equal(getFrameNodePath(root, "A > E > F").location, "F",
     "The 'A > E > F' node has the correct location.");
-  equal(getFrameNodePath(root, "A > E > F").duration, 7,
-    "The 'A > E > F' node has the correct duration in milliseconds.");
   equal(getFrameNodePath(root, "A > E > F").samples, 1,
     "The 'A > E > F' node has the correct number of samples.");
+  equal(getFrameNodePath(root, "A > E > F").youngestFrameSamples, 1,
+    "The 'A > E > F' node has the correct number of youngestFrameSamples.");
 
   // ...and the leftmost leaf.
 
   equal(getFrameNodePath(root, "A > B > C > D > E > F > G").location, "G",
     "The 'A > B > C > D > E > F > G' node has the correct location.");
-  equal(getFrameNodePath(root, "A > B > C > D > E > F > G").duration, 2,
-    "The 'A > B > C > D > E > F > G' node has the correct duration in milliseconds.");
   equal(getFrameNodePath(root, "A > B > C > D > E > F > G").samples, 1,
     "The 'A > B > C > D > E > F > G' node has the correct number of samples.");
+  equal(getFrameNodePath(root, "A > B > C > D > E > F > G").youngestFrameSamples, 1,
+    "The 'A > B > C > D > E > F > G' node has the correct number of youngestFrameSamples.");
 });
 
 let gThread = synthesizeProfileForTest([{
