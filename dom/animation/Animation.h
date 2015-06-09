@@ -57,6 +57,7 @@ public:
     : mTimeline(aTimeline)
     , mPlaybackRate(1.0)
     , mPendingState(PendingState::NotPending)
+    , mSequenceNum(kUnsequenced)
     , mIsRunningOnCompositor(false)
     , mIsPreviousStateFinished(false)
     , mFinishedAtLastComposeStyle(false)
@@ -354,6 +355,14 @@ protected:
   // (see TriggerOnNextTick for details).
   enum class PendingState { NotPending, PlayPending, PausePending };
   PendingState mPendingState;
+
+  static uint64_t sNextSequenceNum;
+  static const uint64_t kUnsequenced = UINT64_MAX;
+
+  // The sequence number assigned to this animation. This is kUnsequenced
+  // while the animation is in the idle state and is updated each time
+  // the animation transitions out of the idle state.
+  uint64_t mSequenceNum;
 
   bool mIsRunningOnCompositor;
   // Indicates whether we were in the finished state during our
