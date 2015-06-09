@@ -274,9 +274,6 @@ class ReceivePort {
   kern_return_t WaitForMessage(MachReceiveMessage *out_message,
                                mach_msg_timeout_t timeout);
 
-  kern_return_t SendMessageToSelf(MachSendMessage& msg,
-                                  mach_msg_timeout_t timeout);
-
   // The underlying mach port that we wrap
   mach_port_t  GetPort() const { return port_; }
 
