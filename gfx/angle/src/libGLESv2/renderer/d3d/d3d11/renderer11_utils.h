@@ -168,14 +168,17 @@ inline ID3D11PixelShader *CompilePS(ID3D11Device *device, const BYTE (&byteCode)
 // Copy data to small D3D11 buffers, such as for small constant buffers, which use one struct to
 // represent an entire buffer.
 template <class T>
-inline void SetBufferData(ID3D11DeviceContext *context, ID3D11Buffer *constantBuffer, const T &value)
+inline HRESULT SetBufferData(ID3D11DeviceContext *context, ID3D11Buffer *constantBuffer, const T &value)
 {
     D3D11_MAPPED_SUBRESOURCE mappedResource;
-    context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    HRESULT result = context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    if(SUCCEEDED(result))
+    {
+        memcpy(mappedResource.pData, &value, sizeof(T));
 
-    memcpy(mappedResource.pData, &value, sizeof(T));
-
-    context->Unmap(constantBuffer, 0);
+        context->Unmap(constantBuffer, 0);
+    }
+    return result;
 }
 
 gl::Error GetAttachmentRenderTarget(gl::FramebufferAttachment *attachment, RenderTarget11 **outRT);
