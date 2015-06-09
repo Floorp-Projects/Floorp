@@ -48,6 +48,7 @@ public:
     response->mType = ResponseType::Opaque;
     response->mTerminationReason = mTerminationReason;
     response->mURL = mURL;
+    response->mFinalURL = mFinalURL;
     response->mChannelInfo = mChannelInfo;
     response->mWrappedResponse = this;
     return response.forget();
@@ -87,6 +88,18 @@ public:
   SetUrl(const nsACString& aURL)
   {
     mURL.Assign(aURL);
+  }
+
+  bool
+  FinalURL() const
+  {
+    return mFinalURL;
+  }
+
+  void
+  SetFinalURL(bool aFinalURL)
+  {
+    mFinalURL = aFinalURL;
   }
 
   uint16_t
@@ -184,6 +197,7 @@ private:
     copy->mType = mType;
     copy->mTerminationReason = mTerminationReason;
     copy->mURL = mURL;
+    copy->mFinalURL = mFinalURL;
     copy->mChannelInfo = mChannelInfo;
     return copy.forget();
   }
@@ -191,6 +205,7 @@ private:
   ResponseType mType;
   nsCString mTerminationReason;
   nsCString mURL;
+  bool mFinalURL;
   const uint16_t mStatus;
   const nsCString mStatusText;
   nsRefPtr<InternalHeaders> mHeaders;
