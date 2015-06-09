@@ -120,6 +120,18 @@ CSSTransition::GetAnimationManager() const
   return context->TransitionManager();
 }
 
+nsCSSProperty
+CSSTransition::TransitionProperty() const
+{
+  // FIXME: Once we support replacing/removing the effect (bug 1049975)
+  // we'll need to store the original transition property so we keep
+  // returning the same value in that case.
+  dom::KeyframeEffectReadOnly* effect = GetEffect();
+  MOZ_ASSERT(effect && effect->AsTransition(),
+             "Transition should have a transition effect");
+  return effect->AsTransition()->TransitionProperty();
+}
+
 /*****************************************************************************
  * nsTransitionManager                                                       *
  *****************************************************************************/
