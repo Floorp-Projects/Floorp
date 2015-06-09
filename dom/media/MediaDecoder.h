@@ -402,8 +402,7 @@ public:
   // Return the duration of the video in seconds.
   virtual double GetDuration();
 
-  // Return the duration of the video in seconds.
-  int64_t GetMediaDuration() final override;
+  AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() override;
 
   // A media stream is assumed to be infinite if the metadata doesn't
   // contain the duration, and range requests are not supported, and

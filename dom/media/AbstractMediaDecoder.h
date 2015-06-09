@@ -8,6 +8,7 @@
 #define AbstractMediaDecoder_h_
 
 #include "mozilla/Attributes.h"
+#include "StateMirroring.h"
 #include "MediaInfo.h"
 #include "nsISupports.h"
 #include "nsDataHashtable.h"
@@ -71,8 +72,7 @@ public:
   virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
                                    uint32_t aDropped) = 0;
 
-  // Return the duration of the media in microseconds.
-  virtual int64_t GetMediaDuration() = 0;
+  virtual AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() { return nullptr; };
 
   // Sets the duration of the media in microseconds. The MediaDecoder
   // fires a durationchange event to its owner (e.g., an HTML audio

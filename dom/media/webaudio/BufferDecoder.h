@@ -45,8 +45,6 @@ public:
   virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
                                    uint32_t aDropped) final override;
 
-  virtual int64_t GetMediaDuration() final override;
-
   virtual void UpdateEstimatedMediaDuration(int64_t aDuration) final override;
 
   virtual void SetMediaSeekable(bool aMediaSeekable) final override;

@@ -309,6 +309,9 @@ private:
       return mValue;
     }
 
+    // Temporary workaround for naughty code.
+    const T& ReadOnWrongThread() { return mValue; }
+
     virtual void UpdateValue(const T& aNewValue) override
     {
       MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
@@ -374,6 +377,7 @@ public:
 
   // Access to the T.
   const T& Ref() const { return *mImpl; }
+  const T& ReadOnWrongThread() const { return mImpl->ReadOnWrongThread(); }
   operator const T&() const { return Ref(); }
 
 private:
