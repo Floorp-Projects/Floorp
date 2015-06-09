@@ -7,20 +7,10 @@
 const protocol = require("devtools/server/protocol");
 const { method, RetVal, Arg, types } = protocol;
 const { MemoryBridge } = require("./utils/memory-bridge");
+const { actorBridge } = require("./utils/actor-utils");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "StackFrameCache",
                          "devtools/server/actors/utils/stack", true);
-
-/**
- * Proxies a call to the MemoryActor to the underlying MemoryBridge,
- * allowing access to MemoryBridge features by defining the RDP
- * request/response signature.
- */
-function linkBridge (methodName, definition) {
-  return method(function () {
-    return this.bridge[methodName].apply(this.bridge, arguments);
-  }, definition);
-}
 
 types.addDictType("AllocationsRecordingOptions", {
   // The probability we sample any given allocation when recording
@@ -79,7 +69,7 @@ let MemoryActor = protocol.ActorClass({
    * recording allocations or take a census of the heap. In addition, the
    * MemoryActor will start emitting GC events.
    */
-  attach: linkBridge("attach", {
+  attach: actorBridge("attach", {
     request: {},
     response: {
       type: "attached"
@@ -89,7 +79,7 @@ let MemoryActor = protocol.ActorClass({
   /**
    * Detach from this MemoryActor.
    */
-  detach: linkBridge("detach", {
+  detach: actorBridge("detach", {
     request: {},
     response: {
       type: "detached"
@@ -99,7 +89,7 @@ let MemoryActor = protocol.ActorClass({
   /**
    * Gets the current MemoryActor attach/detach state.
    */
-  getState: linkBridge("getState", {
+  getState: actorBridge("getState", {
     response: {
       state: RetVal(0, "string")
     }
@@ -109,7 +99,7 @@ let MemoryActor = protocol.ActorClass({
    * Take a census of the heap. See js/src/doc/Debugger/Debugger.Memory.md for
    * more information.
    */
-  takeCensus: linkBridge("takeCensus", {
+  takeCensus: actorBridge("takeCensus", {
     request: {},
     response: RetVal("json")
   }),
@@ -120,7 +110,7 @@ let MemoryActor = protocol.ActorClass({
    * @param AllocationsRecordingOptions options
    *        See the protocol.js definition of AllocationsRecordingOptions above.
    */
-  startRecordingAllocations: linkBridge("startRecordingAllocations", {
+  startRecordingAllocations: actorBridge("startRecordingAllocations", {
     request: {
       options: Arg(0, "nullable:AllocationsRecordingOptions")
     },
@@ -133,7 +123,7 @@ let MemoryActor = protocol.ActorClass({
   /**
    * Stop recording allocation sites.
    */
-  stopRecordingAllocations: linkBridge("stopRecordingAllocations", {
+  stopRecordingAllocations: actorBridge("stopRecordingAllocations", {
     request: {},
     response: {
       // Accept `nullable` in the case of server Gecko <= 37, handled on the front
@@ -145,14 +135,14 @@ let MemoryActor = protocol.ActorClass({
    * Return settings used in `startRecordingAllocations` for `probability`
    * and `maxLogLength`. Currently only uses in tests.
    */
-  getAllocationsSettings: linkBridge("getAllocationsSettings", {
+  getAllocationsSettings: actorBridge("getAllocationsSettings", {
     request: {},
     response: {
       options: RetVal(0, "json")
     }
   }),
 
-  getAllocations: linkBridge("getAllocations", {
+  getAllocations: actorBridge("getAllocations", {
     request: {},
     response: RetVal("json")
   }),
@@ -160,7 +150,7 @@ let MemoryActor = protocol.ActorClass({
   /*
    * Force a browser-wide GC.
    */
-  forceGarbageCollection: linkBridge("forceGarbageCollection", {
+  forceGarbageCollection: actorBridge("forceGarbageCollection", {
     request: {},
     response: {}
   }),
@@ -170,7 +160,7 @@ let MemoryActor = protocol.ActorClass({
    * collection, see
    * https://developer.mozilla.org/en-US/docs/Interfacing_with_the_XPCOM_cycle_collector#What_the_cycle_collector_does
    */
-  forceCycleCollection: linkBridge("forceCycleCollection", {
+  forceCycleCollection: actorBridge("forceCycleCollection", {
     request: {},
     response: {}
   }),
@@ -181,12 +171,12 @@ let MemoryActor = protocol.ActorClass({
    *
    * @returns object
    */
-  measure: linkBridge("measure", {
+  measure: actorBridge("measure", {
     request: {},
     response: RetVal("json"),
   }),
 
-  residentUnique: linkBridge("residentUnique", {
+  residentUnique: actorBridge("residentUnique", {
     request: {},
     response: { value: RetVal("number") }
   }),

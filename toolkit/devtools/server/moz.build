@@ -98,6 +98,7 @@ EXTRA_JS_MODULES.devtools.server.actors += [
 
 EXTRA_JS_MODULES.devtools.server.actors.utils += [
     'actors/utils/actor-registry-utils.js',
+    'actors/utils/actor-utils.js',
     'actors/utils/audionodes.json',
     'actors/utils/automation-timeline.js',
     'actors/utils/make-debugger.js',
