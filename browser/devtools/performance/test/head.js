@@ -31,6 +31,7 @@ const PROFILER_SAMPLE_RATE_PREF = "devtools.performance.profiler.sample-frequenc
 
 const FRAMERATE_PREF = "devtools.performance.ui.enable-framerate";
 const MEMORY_PREF = "devtools.performance.ui.enable-memory";
+const ALLOCATIONS_PREF = "devtools.performance.ui.enable-allocations";
 
 const PLATFORM_DATA_PREF = "devtools.performance.ui.show-platform-data";
 const IDLE_PREF = "devtools.performance.ui.show-idle-blocks";
@@ -52,6 +53,7 @@ let DEFAULT_PREFS = [
   "devtools.performance.ui.show-platform-data",
   "devtools.performance.ui.show-idle-blocks",
   "devtools.performance.ui.enable-memory",
+  "devtools.performance.ui.enable-allocations",
   "devtools.performance.ui.enable-framerate",
   "devtools.performance.ui.show-jit-optimizations",
   "devtools.performance.memory.sample-probability",

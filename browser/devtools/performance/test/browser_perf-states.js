@@ -30,6 +30,7 @@ function* spawnTest() {
     "The memory-flamegraph detail view should not have been created yet.");
 
   Services.prefs.setBoolPref(MEMORY_PREF, true);
+  Services.prefs.setBoolPref(ALLOCATIONS_PREF, true);
 
   ok(!(OverviewView.graphs.get("timeline")),
     "The markers graph should still not have been created yet.");
