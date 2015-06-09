@@ -935,6 +935,17 @@ let NodeFront = protocol.FrontClass(NodeActor, {
     return "isDisplayed" in this._form ? this._form.isDisplayed : true;
   },
 
+  get isTreeDisplayed() {
+    let parent = this;
+    while (parent) {
+      if (!parent.isDisplayed) {
+        return false;
+      }
+      parent = parent.parentNode();
+    }
+    return true;
+  },
+
   getNodeValue: protocol.custom(function() {
     if (!this.incompleteValue) {
       return delayedResolve(new ShortLongString(this.shortValue));
