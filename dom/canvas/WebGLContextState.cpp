@@ -426,15 +426,17 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 
         // unsigned int. here we may have to return very large values like 2^32-1 that can't be represented as
         // javascript integer values. We just return them as doubles and javascript doesn't care.
-        case LOCAL_GL_STENCIL_BACK_VALUE_MASK:
-        case LOCAL_GL_STENCIL_BACK_WRITEMASK:
-        case LOCAL_GL_STENCIL_VALUE_MASK:
+        case LOCAL_GL_STENCIL_BACK_VALUE_MASK: {
+            return JS::DoubleValue(mStencilValueMaskBack); // pass as FP value to allow large values such as 2^32-1.
+        }
+        case LOCAL_GL_STENCIL_BACK_WRITEMASK: {
+            return JS::DoubleValue(mStencilWriteMaskBack);
+        }
+        case LOCAL_GL_STENCIL_VALUE_MASK: {
+            return JS::DoubleValue(mStencilValueMaskFront);
+        }
         case LOCAL_GL_STENCIL_WRITEMASK: {
-            GLint i = 0; // the GL api (glGetIntegerv) only does signed ints
-            gl->fGetIntegerv(pname, &i);
-            GLuint i_unsigned(i); // this is where -1 becomes 2^32-1
-            double i_double(i_unsigned); // pass as FP value to allow large values such as 2^32-1.
-            return JS::DoubleValue(i_double);
+            return JS::DoubleValue(mStencilWriteMaskFront);
         }
 
         // float
