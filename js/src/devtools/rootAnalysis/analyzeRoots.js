@@ -216,7 +216,7 @@ function edgeTakesVariableAddress(edge, variable)
 
 function edgeKillsVariable(edge, variable)
 {
-    // Direct assignments kill their lhs.
+    // Direct assignments kill their lhs: var = value
     if (edge.Kind == "Assign") {
         var lhs = edge.Exp[0];
         if (lhs.Kind == "Var" && sameVariable(lhs.Variable, variable))
@@ -303,26 +303,48 @@ function edgeCanGC(edge)
     return indirectCallCannotGC(functionName, varName) ? null : "*" + varName;
 }
 
-function variableUsePrecedesGC(suppressed, variable, worklist)
+// Search recursively through predecessors from a variable use, returning
+// whether a GC call is reachable (in the reverse direction; this means that
+// the variable use is reachable from the GC call, and therefore the variable
+// is live after the GC call), along with some additional information. What
+// info we want depends on whether the variable turns out to be live across any
+// GC call. We are looking for both hazards (unrooted variables live across GC
+// calls) and unnecessary roots (rooted variables that have no GC calls in
+// their live ranges.)
+//
+// If not:
+//
+//  - 'minimumUse': the earliest point in each body that uses the variable, for
+//    reporting on unnecessary roots.
+//
+// If so:
+//
+//  - 'why': a path from the GC call to a use of the variable after the GC
+//    call, chained through a 'why' field in the returned edge descriptor
+//
+//  - 'gcInfo': a direct pointer to the GC call edge
+//
+function findGCBeforeVariableUse(suppressed, variable, worklist)
 {
     // Scan through all edges preceding an unrooted variable use, using an
-    // explicit worklist. A worklist contains an incoming edge together with a
-    // description of where it or one of its successors GC'd (if any).
+    // explicit worklist, looking for a GC call. A worklist contains an
+    // incoming edge together with a description of where it or one of its
+    // successors GC'd (if any).
 
     while (worklist.length) {
         var entry = worklist.pop();
-        var body = entry.body, ppoint = entry.ppoint;
+        var { body, ppoint, gcInfo } = entry;
 
         if (body.seen) {
             if (ppoint in body.seen) {
                 var seenEntry = body.seen[ppoint];
-                if (!entry.gcInfo || seenEntry.gcInfo)
+                if (!gcInfo || seenEntry.gcInfo)
                     continue;
             }
         } else {
             body.seen = [];
         }
-        body.seen[ppoint] = {body:body, gcInfo:entry.gcInfo};
+        body.seen[ppoint] = {body: body, gcInfo: gcInfo};
 
         if (ppoint == body.Index[0]) {
             if (body.BlockId.Kind == "Loop") {
@@ -334,17 +356,17 @@ function variableUsePrecedesGC(suppressed, variable, worklist)
                             if (sameBlockId(xbody.BlockId, parent.BlockId)) {
                                 assert(!found);
                                 found = true;
-                                worklist.push({body:xbody, ppoint:parent.Index,
-                                               gcInfo:entry.gcInfo, why:entry});
+                                worklist.push({body: xbody, ppoint: parent.Index,
+                                               gcInfo: gcInfo, why: entry});
                             }
                         }
                         assert(found);
                     }
                 }
-            } else if (variable.Kind == "Arg" && entry.gcInfo) {
+            } else if (variable.Kind == "Arg" && gcInfo) {
                 // The scope of arguments starts at the beginning of the
                 // function
-                return {gcInfo:entry.gcInfo, why:entry};
+                return {gcInfo: gcInfo, why: entry};
             }
         }
 
@@ -355,31 +377,45 @@ function variableUsePrecedesGC(suppressed, variable, worklist)
         for (var edge of predecessors[ppoint]) {
             var source = edge.Index[0];
 
-            if (edgeKillsVariable(edge, variable)) {
-                if (entry.gcInfo)
-                    return {gcInfo: entry.gcInfo, why: {body:body, ppoint:source, gcInfo:entry.gcInfo, why:entry } }
+            var edge_kills = edgeKillsVariable(edge, variable);
+            var edge_uses = edgeUsesVariable(edge, variable, body);
+
+            if (edge_kills || edge_uses) {
                 if (!body.minimumUse || source < body.minimumUse)
                     body.minimumUse = source;
+            }
+
+            if (edge_kills) {
+                // This is a beginning of the variable's live range. If we can
+                // reach a GC call from here, then we're done -- we have a path
+                // from the beginning of the live range, through the GC call,
+                // to a use after the GC call that proves its live range
+                // extends at least that far.
+                if (gcInfo)
+                    return {gcInfo: gcInfo, why: {body: body, ppoint: source, gcInfo: gcInfo, why: entry } }
+
+                // Otherwise, we want to continue searching for the true
+                // minimumUse, for use in reporting unnecessary rooting, but we
+                // truncate this particular branch of the search at this edge.
                 continue;
             }
 
-            var gcInfo = entry.gcInfo;
             if (!gcInfo && !(source in body.suppressed) && !suppressed) {
                 var gcName = edgeCanGC(edge, body);
                 if (gcName)
                     gcInfo = {name:gcName, body:body, ppoint:source};
             }
 
-            if (edgeUsesVariable(edge, variable, body)) {
+            if (edge_uses) {
+                // The live range starts at least this far back, so we're done
+                // for the same reason as with edge_kills.
                 if (gcInfo)
                     return {gcInfo:gcInfo, why:entry};
-                if (!body.minimumUse || source < body.minimumUse)
-                    body.minimumUse = source;
             }
 
             if (edge.Kind == "Loop") {
-                // propagate to exit points of the loop body, in addition to the
-                // predecessor of the loop edge itself.
+                // Additionally propagate the search into a loop body, starting
+                // with the exit point.
                 var found = false;
                 for (var xbody of functionBodies) {
                     if (sameBlockId(xbody.BlockId, edge.BlockId)) {
@@ -392,6 +428,8 @@ function variableUsePrecedesGC(suppressed, variable, worklist)
                 assert(found);
                 break;
             }
+
+            // Propagate the search to the predecessors of this edge.
             worklist.push({body:body, ppoint:source, gcInfo:gcInfo, why:entry});
         }
     }
@@ -414,14 +452,21 @@ function variableLiveAcrossGC(suppressed, variable)
             continue;
         for (var edge of body.PEdge) {
             var usePoint = edgeUsesVariable(edge, variable, body);
+            // Example for !edgeKillsVariable:
+            //
+            //   JSObject* obj = NewObject();
+            //   cangc();
+            //   obj = NewObject();    <-- uses 'obj', but kills previous value
+            //
             if (usePoint && !edgeKillsVariable(edge, variable)) {
                 // Found a use, possibly after a GC.
                 var worklist = [{body:body, ppoint:usePoint, gcInfo:null, why:null}];
-                var call = variableUsePrecedesGC(suppressed, variable, worklist);
-                if (call) {
-                    call.afterGCUse = usePoint;
-                    return call;
-                }
+                var call = findGCBeforeVariableUse(suppressed, variable, worklist);
+                if (!call)
+                    continue;
+
+                call.afterGCUse = usePoint;
+                return call;
             }
         }
     }
