@@ -15,7 +15,6 @@ function handleRequest(request, response)
   fis.init(file, -1, -1, false);
   bis.setInputStream(fis);
   var bytes = bis.readBytes(bis.available());
-  response.setHeader("Content-Duration", "0.233", false);
   response.setHeader("Content-Type", "video/ogg", false);
   response.setHeader("Content-Length", ""+ bytes.length, false);
   response.setHeader("Access-Control-Allow-Origin", "*", false);

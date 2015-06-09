@@ -32,8 +32,9 @@
 #include "WMFDecoder.h"
 #endif
 
-using namespace mozilla::layers;
 using namespace mozilla::dom;
+using namespace mozilla::layers;
+using namespace mozilla::media;
 
 // Default timeout msecs until try to enter dormant state by heuristic.
 static const int DEFAULT_HEURISTIC_DORMANT_TIMEOUT_MSECS = 60000;
@@ -47,6 +48,12 @@ namespace mozilla {
 // MediaDecoder::CanPlayThrough() calculation more stable in the case of
 // fluctuating bitrates.
 static const int64_t CAN_PLAY_THROUGH_MARGIN = 1;
+
+// The amount of instability we tollerate in calls to
+// MediaDecoder::UpdateEstimatedMediaDuration(); changes of duration
+// less than this are ignored, as they're assumed to be the result of
+// instability in the duration estimation.
+static const uint64_t ESTIMATED_DURATION_FUZZ_FACTOR_USECS = USECS_PER_S / 2;
 
 // avoid redefined macro in unified build
 #undef DECODER_LOG
@@ -343,6 +350,10 @@ MediaDecoder::MediaDecoder() :
   mMediaSeekable(true),
   mSameOriginMedia(false),
   mReentrantMonitor("media.decoder"),
+  mEstimatedDuration(AbstractThread::MainThread(), NullableTimeUnit(),
+                     "MediaDecoder::mEstimatedDuration (Canonical)"),
+  mExplicitDuration(AbstractThread::MainThread(), Maybe<double>(),
+                   "MediaDecoder::mExplicitDuration (Canonical)"),
   mPlayState(AbstractThread::MainThread(), PLAY_STATE_LOADING,
              "MediaDecoder::mPlayState (Canonical)"),
   mNextState(AbstractThread::MainThread(), PLAY_STATE_PAUSED,
@@ -488,7 +499,6 @@ nsresult MediaDecoder::InitializeStateMachine(MediaDecoder* aCloneDonor)
 void MediaDecoder::SetStateMachineParameters()
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mDecoderStateMachine->SetDuration(mDuration);
   if (mMinimizePreroll) {
     mDecoderStateMachine->DispatchMinimizePrerollUntilPlaybackStarts();
   }
@@ -1065,12 +1075,12 @@ void MediaDecoder::UpdateLogicalPosition(MediaDecoderEventVisibility aEventVisib
   }
 }
 
-void MediaDecoder::DurationChanged()
+void MediaDecoder::DurationChanged(TimeUnit aNewDuration)
 {
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   int64_t oldDuration = mDuration;
-  mDuration = mDecoderStateMachine ? mDecoderStateMachine->GetDuration() : -1;
+  mDuration = aNewDuration.ToMicroseconds();
   // Duration has changed so we should recompute playback rate
   UpdatePlaybackRate();
 
@@ -1080,33 +1090,10 @@ void MediaDecoder::DurationChanged()
     DECODER_LOG("Duration changed to %lld", mDuration);
     mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   }
-}
 
-void MediaDecoder::SetDuration(double aDuration)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mozilla::IsInfinite(aDuration)) {
-    SetInfinite(true);
-  } else if (IsNaN(aDuration)) {
-    mDuration = -1;
-    SetInfinite(true);
-  } else {
-    mDuration = static_cast<int64_t>(NS_round(aDuration * static_cast<double>(USECS_PER_S)));
+  if (CurrentPosition() > aNewDuration.ToMicroseconds()) {
+    Seek(aNewDuration.ToSeconds(), SeekTarget::Accurate);
   }
-
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  if (mDecoderStateMachine) {
-    mDecoderStateMachine->SetDuration(mDuration);
-  }
-
-  // Duration has changed so we should recompute playback rate
-  UpdatePlaybackRate();
-}
-
-void MediaDecoder::SetMediaDuration(int64_t aDuration)
-{
-  NS_ENSURE_TRUE_VOID(GetStateMachine());
-  GetStateMachine()->SetDuration(aDuration);
 }
 
 void MediaDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
@@ -1114,8 +1101,17 @@ void MediaDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
   if (mPlayState <= PLAY_STATE_LOADING) {
     return;
   }
-  NS_ENSURE_TRUE_VOID(GetStateMachine());
-  GetStateMachine()->UpdateEstimatedDuration(aDuration);
+
+  // The duration is only changed if its significantly different than the
+  // the current estimate, as the incoming duration is an estimate and so
+  // often is unstable as more data is read and the estimate is updated.
+  // Can result in a durationchangeevent. aDuration is in microseconds.
+  if (mEstimatedDuration.Ref().isSome() &&
+      mozilla::Abs(mEstimatedDuration.Ref().ref().ToMicroseconds() - aDuration) < ESTIMATED_DURATION_FUZZ_FACTOR_USECS) {
+    return;
+  }
+
+  mEstimatedDuration = Some(TimeUnit::FromMicroseconds(aDuration));
 }
 
 void MediaDecoder::SetMediaSeekable(bool aMediaSeekable) {
@@ -1162,12 +1158,6 @@ void MediaDecoder::SetFragmentEndTime(double aTime)
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
     mDecoderStateMachine->SetFragmentEndTime(static_cast<int64_t>(aTime * USECS_PER_S));
   }
-}
-
-void MediaDecoder::SetMediaEndTime(int64_t aTime)
-{
-  NS_ENSURE_TRUE_VOID(GetStateMachine());
-  GetStateMachine()->SetMediaEndTime(aTime);
 }
 
 void MediaDecoder::Suspend()

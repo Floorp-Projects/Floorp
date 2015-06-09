@@ -46,6 +46,7 @@ namespace mozilla {
 
 using namespace gfx;
 using namespace layers;
+using namespace media;
 
 extern PRLogModuleInfo* gMediaDecoderLog;
 PRLogModuleInfo* gNesteggLog;
@@ -343,8 +344,7 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
   uint64_t duration = 0;
   r = nestegg_duration(mContext, &duration);
   if (r == 0) {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mDecoder->SetMediaDuration(duration / NS_PER_USEC);
+    mInfo.mMetadataDuration.emplace(TimeUnit::FromNanoseconds(duration));
   }
 
   unsigned int ntracks = 0;

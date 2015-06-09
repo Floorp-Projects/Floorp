@@ -56,6 +56,7 @@ public:
   BluetoothDaemonPDU(uint8_t aService, uint8_t aOpcode,
                      uint16_t aPayloadSize);
   BluetoothDaemonPDU(size_t aPayloadSize);
+  ~BluetoothDaemonPDU();
 
   void SetConsumer(BluetoothDaemonPDUConsumer* aConsumer)
   {

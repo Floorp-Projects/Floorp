@@ -225,11 +225,11 @@ nsComboboxControlFrame::nsComboboxControlFrame(nsStyleContext* aContext)
   , mButtonFrame(nullptr)
   , mDropdownFrame(nullptr)
   , mListControlFrame(nullptr)
-  , mDisplayWidth(0)
+  , mDisplayISize(0)
   , mRecentSelectedIndex(NS_SKIP_NOTIFY_INDEX)
   , mDisplayedIndex(-1)
-  , mLastDropDownAboveScreenY(nscoord_MIN)
-  , mLastDropDownBelowScreenY(nscoord_MIN)
+  , mLastDropDownBeforeScreenBCoord(nscoord_MIN)
+  , mLastDropDownAfterScreenBCoord(nscoord_MIN)
   , mDroppedDown(false)
   , mInRedisplayText(false)
   , mDelayedShowDropDown(false)
@@ -418,7 +418,7 @@ void
 nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
                                        const nsHTMLReflowState& aReflowState)
 {
-  // All we want out of it later on, really, is the height of a row, so we
+  // All we want out of it later on, really, is the block size of a row, so we
   // don't even need to cache mDropdownFrame's ascent or anything.  If we don't
   // need to reflow it, just bail out here.
   if (!aReflowState.ShouldReflowAllKids() &&
@@ -426,23 +426,24 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
     return;
   }
 
-  // XXXbz this will, for small-height dropdowns, have extra space on the right
-  // edge for the scrollbar we don't show... but that's the best we can do here
-  // for now.
+  // XXXbz this will, for small-block-size dropdowns, have extra space
+  // on the appropriate edge for the scrollbar we don't show... but
+  // that's the best we can do here for now.
   WritingMode wm = mDropdownFrame->GetWritingMode();
   LogicalSize availSize = aReflowState.AvailableSize(wm);
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, mDropdownFrame,
                                    availSize);
 
-  // If the dropdown's intrinsic width is narrower than our specified width,
-  // then expand it out.  We want our border-box width to end up the same as
-  // the dropdown's so account for both sets of mComputedBorderPadding.
-  nscoord forcedWidth = aReflowState.ComputedWidth() +
-    aReflowState.ComputedPhysicalBorderPadding().LeftRight() -
-    kidReflowState.ComputedPhysicalBorderPadding().LeftRight();
-  kidReflowState.SetComputedWidth(std::max(kidReflowState.ComputedWidth(),
-                                         forcedWidth));
+  // If the dropdown's intrinsic inline size is narrower than our
+  // specified inline size, then expand it out.  We want our border-box
+  // inline size to end up the same as the dropdown's so account for
+  // both sets of mComputedBorderPadding.
+  nscoord forcedISize = aReflowState.ComputedISize() +
+    aReflowState.ComputedLogicalBorderPadding().IStartEnd(wm) -
+    kidReflowState.ComputedLogicalBorderPadding().IStartEnd(wm);
+  kidReflowState.SetComputedISize(std::max(kidReflowState.ComputedISize(),
+                                         forcedISize));
 
   // ensure we start off hidden
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
@@ -455,19 +456,26 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
 
   // Allow the child to move/size/change-visibility its view if it's currently
   // dropped down
-  int32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_VISIBILITY | NS_FRAME_NO_SIZE_VIEW;
-  if (mDroppedDown) {
-    flags = 0;
-  }
-  nsRect rect = mDropdownFrame->GetRect();
+  int32_t flags = mDroppedDown ? 0
+                               : NS_FRAME_NO_MOVE_FRAME |
+                                 NS_FRAME_NO_VISIBILITY |
+                                 NS_FRAME_NO_SIZE_VIEW;
+
+  //XXX Can this be different from the dropdown's writing mode?
+  // That would be odd!
+  // Note that we don't need to pass the true frame position or container width
+  // to ReflowChild or FinishReflowChild here; it will be positioned as needed
+  // by AbsolutelyPositionDropDown().
+  WritingMode outerWM = GetWritingMode();
   nsHTMLReflowMetrics desiredSize(aReflowState);
   nsReflowStatus ignoredStatus;
   ReflowChild(mDropdownFrame, aPresContext, desiredSize,
-              kidReflowState, rect.x, rect.y, flags, ignoredStatus);
+              kidReflowState, outerWM, LogicalPoint(outerWM), 0,
+              flags, ignoredStatus);
 
    // Set the child's width and height to its desired size
-  FinishReflowChild(mDropdownFrame, aPresContext, desiredSize,
-                    &kidReflowState, rect.x, rect.y, flags);
+  FinishReflowChild(mDropdownFrame, aPresContext, desiredSize, &kidReflowState,
+                    outerWM, LogicalPoint(outerWM), 0, flags);
 }
 
 nsPoint
@@ -549,71 +557,81 @@ public:
 };
 
 void
-nsComboboxControlFrame::GetAvailableDropdownSpace(nscoord* aAbove,
-                                                  nscoord* aBelow,
-                                                  nsPoint* aTranslation)
+nsComboboxControlFrame::GetAvailableDropdownSpace(WritingMode aWM,
+                                                  nscoord* aBefore,
+                                                  nscoord* aAfter,
+                                                  LogicalPoint* aTranslation)
 {
-  // Note: At first glance, it appears that you could simply get the absolute
-  // bounding box for the dropdown list by first getting its view, then getting
-  // the view's nsIWidget, then asking the nsIWidget for its AbsoluteBounds.
-  // The problem with this approach, is that the dropdown lists y location can
-  // change based on whether the dropdown is placed below or above the display
-  // frame.  The approach, taken here is to get the absolute position of the
-  // display frame and use its location to determine if the dropdown will go
-  // offscreen.
+  // Note: At first glance, it appears that you could simply get the
+  // absolute bounding box for the dropdown list by first getting its
+  // view, then getting the view's nsIWidget, then asking the nsIWidget
+  // for its AbsoluteBounds.
+  // The problem with this approach, is that the dropdown list's bcoord
+  // location can change based on whether the dropdown is placed after
+  // or before the display frame.  The approach taken here is to get the
+  // absolute position of the display frame and use its location to
+  // determine if the dropdown will go offscreen.
 
   // Normal frame geometry (eg GetOffsetTo, mRect) doesn't include transforms.
   // In the special case that our transform is only a 2D translation we
   // introduce this hack so that the dropdown will show up in the right place.
-  *aTranslation = GetCSSTransformTranslation();
-  *aAbove = 0;
-  *aBelow = 0;
+  *aTranslation = LogicalPoint(aWM, GetCSSTransformTranslation(), 0);
+  *aBefore = 0;
+  *aAfter = 0;
 
   nsRect screen = nsFormControlFrame::GetUsableScreenRect(PresContext());
-  if (mLastDropDownBelowScreenY == nscoord_MIN) {
-    nsRect thisScreenRect = GetScreenRectInAppUnits();
-    mLastDropDownBelowScreenY = thisScreenRect.YMost() + aTranslation->y;
-    mLastDropDownAboveScreenY = thisScreenRect.y + aTranslation->y;
+  nscoord containerWidth = screen.width;
+  LogicalRect logicalScreen(aWM, screen, containerWidth);
+  if (mLastDropDownAfterScreenBCoord == nscoord_MIN) {
+    LogicalRect thisScreenRect(aWM, GetScreenRectInAppUnits(),
+                               containerWidth);
+    mLastDropDownAfterScreenBCoord = thisScreenRect.BEnd(aWM) +
+                                     aTranslation->B(aWM);
+    mLastDropDownBeforeScreenBCoord = thisScreenRect.BEnd(aWM) +
+                                     aTranslation->B(aWM);
   }
 
-  nscoord minY;
+  nscoord minBCoord;
   nsPresContext* pc = PresContext()->GetToplevelContentDocumentPresContext();
   nsIFrame* root = pc ? pc->PresShell()->GetRootFrame() : nullptr;
   if (root) {
-    minY = root->GetScreenRectInAppUnits().y;
-    if (mLastDropDownBelowScreenY < minY) {
-      // Don't allow the drop-down to be placed above the content area.
+    minBCoord = LogicalRect(aWM,
+                            root->GetScreenRectInAppUnits(),
+                            containerWidth).BStart(aWM);
+    if (mLastDropDownAfterScreenBCoord < minBCoord) {
+      // Don't allow the drop-down to be placed before the content area.
       return;
     }
   } else {
-    minY = screen.y;
+    minBCoord = logicalScreen.BStart(aWM);
   }
 
-  nscoord below = screen.YMost() - mLastDropDownBelowScreenY;
-  nscoord above = mLastDropDownAboveScreenY - minY;
+  nscoord after = logicalScreen.BEnd(aWM) - mLastDropDownAfterScreenBCoord;
+  nscoord before = mLastDropDownBeforeScreenBCoord - minBCoord;
 
-  // If the difference between the space above and below is less
-  // than a row-height, then we favor the space below.
-  if (above >= below) {
+  // If the difference between the space before and after is less
+  // than a row-block-size, then we favor the space after.
+  if (before >= after) {
     nsListControlFrame* lcf = static_cast<nsListControlFrame*>(mDropdownFrame);
-    nscoord rowHeight = lcf->GetHeightOfARow();
-    if (above < below + rowHeight) {
-      above -= rowHeight;
+    nscoord rowBSize = lcf->GetBSizeOfARow();
+    if (before < after + rowBSize) {
+      before -= rowBSize;
     }
   }
 
-  *aBelow = below;
-  *aAbove = above;
+  *aAfter = after;
+  *aBefore = before;
 }
 
 nsComboboxControlFrame::DropDownPositionState
 nsComboboxControlFrame::AbsolutelyPositionDropDown()
 {
-  nsPoint translation;
-  nscoord above, below;
-  mLastDropDownBelowScreenY = nscoord_MIN;
-  GetAvailableDropdownSpace(&above, &below, &translation);
-  if (above <= 0 && below <= 0) {
+  WritingMode wm = GetWritingMode();
+  LogicalPoint translation(wm);
+  nscoord before, after;
+  mLastDropDownAfterScreenBCoord = nscoord_MIN;
+  GetAvailableDropdownSpace(wm, &before, &after, &translation);
+  if (before <= 0 && after <= 0) {
     if (IsDroppedDown()) {
       // Hide the view immediately to minimize flicker.
       nsView* view = mDropdownFrame->GetView();
@@ -623,17 +641,17 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
     return eDropDownPositionSuppressed;
   }
 
-  nsSize dropdownSize = mDropdownFrame->GetSize();
-  nscoord height = std::max(above, below);
+  LogicalSize dropdownSize = mDropdownFrame->GetLogicalSize(wm);
+  nscoord bSize = std::max(before, after);
   nsListControlFrame* lcf = static_cast<nsListControlFrame*>(mDropdownFrame);
-  if (height < dropdownSize.height) {
+  if (bSize < dropdownSize.BSize(wm)) {
     if (lcf->GetNumDisplayRows() > 1) {
       // The drop-down doesn't fit and currently shows more than 1 row -
       // schedule a resize to show fewer rows.
       NS_DispatchToCurrentThread(new nsAsyncResize(this));
       return eDropDownPositionPendingResize;
     }
-  } else if (height > (dropdownSize.height + lcf->GetHeightOfARow() * 1.5) &&
+  } else if (bSize > (dropdownSize.BSize(wm) + lcf->GetBSizeOfARow() * 1.5) &&
              lcf->GetDropdownCanGrow()) {
     // The drop-down fits but there is room for at least 1.5 more rows -
     // schedule a resize to show more rows if it has more rows to show.
@@ -643,22 +661,20 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
     return eDropDownPositionPendingResize;
   }
 
-  // Position the drop-down below if there is room, otherwise place it above
+  // Position the drop-down after if there is room, otherwise place it before
   // if there is room.  If there is no room for it on either side then place
-  // it below (to avoid overlapping UI like the URL bar).
-  bool b = dropdownSize.height <= below || dropdownSize.height > above;
-  nsPoint dropdownPosition(0, b ? GetRect().height : -dropdownSize.height);
-  if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
-    // Align the right edge of the drop-down with the right edge of the control.
-    dropdownPosition.x = GetRect().width - dropdownSize.width;
-  }
+  // it after (to avoid overlapping UI like the URL bar).
+  bool b = dropdownSize.BSize(wm)<= after || dropdownSize.BSize(wm) > before;
+  LogicalPoint dropdownPosition(wm, 0, b ? BSize(wm) : -dropdownSize.BSize(wm));
 
   // Don't position the view unless the position changed since it might cause
   // a call to NotifyGeometryChange() and an infinite loop here.
-  const nsPoint currentPos = mDropdownFrame->GetPosition();
-  const nsPoint newPos = dropdownPosition + translation;
+  nscoord containerWidth = GetRect().width;
+  const LogicalPoint currentPos =
+    mDropdownFrame->GetLogicalPosition(containerWidth);
+  const LogicalPoint newPos = dropdownPosition + translation;
   if (currentPos != newPos) {
-    mDropdownFrame->SetPosition(newPos);
+    mDropdownFrame->SetPosition(wm, newPos, containerWidth);
     nsContainerFrame::PositionFrameView(mDropdownFrame);
   }
   return eDropDownPositionFinal;
@@ -716,63 +732,63 @@ nsComboboxControlFrame::GetIntrinsicISize(nsRenderingContext* aRenderingContext,
       presContext, aRenderingContext);
   }
 
-  nscoord displayWidth = 0;
+  nscoord displayISize = 0;
   if (MOZ_LIKELY(mDisplayFrame)) {
-    displayWidth = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+    displayISize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                         mDisplayFrame,
                                                         aType);
   }
 
   if (mDropdownFrame) {
-    nscoord dropdownContentWidth;
+    nscoord dropdownContentISize;
     bool isUsingOverlayScrollbars =
       LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0;
     if (aType == nsLayoutUtils::MIN_ISIZE) {
-      dropdownContentWidth = mDropdownFrame->GetMinISize(aRenderingContext);
+      dropdownContentISize = mDropdownFrame->GetMinISize(aRenderingContext);
       if (isUsingOverlayScrollbars) {
-        dropdownContentWidth += scrollbarWidth;
+        dropdownContentISize += scrollbarWidth;
       }
     } else {
       NS_ASSERTION(aType == nsLayoutUtils::PREF_ISIZE, "Unexpected type");
-      dropdownContentWidth = mDropdownFrame->GetPrefISize(aRenderingContext);
+      dropdownContentISize = mDropdownFrame->GetPrefISize(aRenderingContext);
       if (isUsingOverlayScrollbars) {
-        dropdownContentWidth += scrollbarWidth;
+        dropdownContentISize += scrollbarWidth;
       }
     }
-    dropdownContentWidth = NSCoordSaturatingSubtract(dropdownContentWidth,
+    dropdownContentISize = NSCoordSaturatingSubtract(dropdownContentISize,
                                                      scrollbarWidth,
                                                      nscoord_MAX);
 
-    displayWidth = std::max(dropdownContentWidth, displayWidth);
+    displayISize = std::max(dropdownContentISize, displayISize);
   }
 
   // add room for the dropmarker button if there is one
   if ((!IsThemed() ||
        presContext->GetTheme()->ThemeNeedsComboboxDropmarker()) &&
       StyleDisplay()->mAppearance != NS_THEME_NONE) {
-    displayWidth += scrollbarWidth;
+    displayISize += scrollbarWidth;
   }
 
-  return displayWidth;
+  return displayISize;
 
 }
 
 nscoord
 nsComboboxControlFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
-  nscoord minWidth;
-  DISPLAY_MIN_WIDTH(this, minWidth);
-  minWidth = GetIntrinsicISize(aRenderingContext, nsLayoutUtils::MIN_ISIZE);
-  return minWidth;
+  nscoord minISize;
+  DISPLAY_MIN_WIDTH(this, minISize);
+  minISize = GetIntrinsicISize(aRenderingContext, nsLayoutUtils::MIN_ISIZE);
+  return minISize;
 }
 
 nscoord
 nsComboboxControlFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
-  nscoord prefWidth;
-  DISPLAY_PREF_WIDTH(this, prefWidth);
-  prefWidth = GetIntrinsicISize(aRenderingContext, nsLayoutUtils::PREF_ISIZE);
-  return prefWidth;
+  nscoord prefISize;
+  DISPLAY_PREF_WIDTH(this, prefISize);
+  prefISize = GetIntrinsicISize(aRenderingContext, nsLayoutUtils::PREF_ISIZE);
+  return prefISize;
 }
 
 void
@@ -784,13 +800,13 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   MarkInReflow();
   // Constraints we try to satisfy:
 
-  // 1) Default width of button is the vertical scrollbar size
-  // 2) If the width of button is bigger than our width, set width of
-  //    button to 0.
-  // 3) Default height of button is height of display area
-  // 4) Width of display area is whatever is left over from our width after
-  //    allocating width for the button.
-  // 5) Height of display area is GetHeightOfARow() on the
+  // 1) Default inline size of button is the vertical scrollbar size
+  // 2) If the inline size of button is bigger than our inline size, set
+  //    inline size of button to 0.
+  // 3) Default block size of button is block size of display area
+  // 4) Inline size of display area is whatever is left over from our
+  //    inline size after allocating inline size for the button.
+  // 5) Block Size of display area is GetBSizeOfARow() on the
   //    mListControlFrame.
 
   if (!mDisplayFrame || !mButtonFrame || !mDropdownFrame) {
@@ -826,48 +842,45 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
     unused << resize.forget();
   }
 
-  // Get the width of the vertical scrollbar.  That will be the width of the
-  // dropdown button.
-  nscoord buttonWidth;
+  // Get the width of the vertical scrollbar.  That will be the inline
+  // size of the dropdown button.
+  nscoord buttonISize;
   const nsStyleDisplay *disp = StyleDisplay();
   if ((IsThemed(disp) && !aPresContext->GetTheme()->ThemeNeedsComboboxDropmarker()) ||
       StyleDisplay()->mAppearance == NS_THEME_NONE) {
-    buttonWidth = 0;
+    buttonISize = 0;
   }
   else {
     nsIScrollableFrame* scrollable = do_QueryFrame(mListControlFrame);
     NS_ASSERTION(scrollable, "List must be a scrollable frame");
-    buttonWidth = scrollable->GetNondisappearingScrollbarWidth(
+    buttonISize = scrollable->GetNondisappearingScrollbarWidth(
       PresContext(), aReflowState.rendContext);
-    if (buttonWidth > aReflowState.ComputedWidth()) {
-      buttonWidth = 0;
+    if (buttonISize > aReflowState.ComputedISize()) {
+      buttonISize = 0;
     }
   }
 
-  mDisplayWidth = aReflowState.ComputedWidth() - buttonWidth;
+  mDisplayISize = aReflowState.ComputedISize() - buttonISize;
 
   nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   // The button should occupy the same space as a scrollbar
-  nsRect buttonRect = mButtonFrame->GetRect();
+  WritingMode wm = aReflowState.GetWritingMode();
+  nscoord containerWidth = aReflowState.ComputedWidth();
+  LogicalRect buttonRect = mButtonFrame->GetLogicalRect(containerWidth);
 
-  if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
-    buttonRect.x = aReflowState.ComputedPhysicalBorderPadding().left -
-                   aReflowState.ComputedPhysicalPadding().left;
-  }
-  else {
-    buttonRect.x = aReflowState.ComputedPhysicalBorderPadding().LeftRight() +
-                   mDisplayWidth -
-                   (aReflowState.ComputedPhysicalBorderPadding().right -
-                    aReflowState.ComputedPhysicalPadding().right);
-  }
-  buttonRect.width = buttonWidth;
+  buttonRect.IStart(wm) =
+    aReflowState.ComputedLogicalBorderPadding().IStartEnd(wm) +
+    mDisplayISize -
+    (aReflowState.ComputedLogicalBorderPadding().IEnd(wm) -
+     aReflowState.ComputedLogicalPadding().IEnd(wm));
+  buttonRect.ISize(wm) = buttonISize;
 
-  buttonRect.y = this->GetUsedBorder().top;
-  buttonRect.height = mDisplayFrame->GetRect().height +
-                      this->GetUsedPadding().TopBottom();
+  buttonRect.BStart(wm) = this->GetLogicalUsedBorder(wm).BStart(wm);
+  buttonRect.BSize(wm) = mDisplayFrame->BSize(wm) +
+                         this->GetLogicalUsedPadding(wm).BStartEnd(wm);
 
-  mButtonFrame->SetRect(buttonRect);
+  mButtonFrame->SetRect(buttonRect, containerWidth);
 
   if (!NS_INLINE_IS_BREAK_BEFORE(aStatus) &&
       !NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
@@ -1019,7 +1032,7 @@ void
 nsComboboxControlFrame::ActuallyDisplayText(bool aNotify)
 {
   if (mDisplayedOptionText.IsEmpty()) {
-    // Have to use a non-breaking space for line-height calculations
+    // Have to use a non-breaking space for line-block-size calculations
     // to be right
     static const char16_t space = 0xA0;
     mDisplayContent->SetText(&space, 1, aNotify);
@@ -1235,8 +1248,8 @@ public:
       mComboBox(aComboBox)
   {}
 
-  // Need this so that line layout knows that this block's width
-  // depends on the available width.
+  // Need this so that line layout knows that this block's inline size
+  // depends on the available inline size.
   virtual nsIAtom* GetType() const override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
@@ -1273,18 +1286,19 @@ nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
                                nsReflowStatus&          aStatus)
 {
   nsHTMLReflowState state(aReflowState);
-  if (state.ComputedHeight() == NS_INTRINSICSIZE) {
-    // Note that the only way we can have a computed height here is if the
-    // combobox had a specified height.  If it didn't, size based on what our
-    // rows look like, for lack of anything better.
-    state.SetComputedHeight(mComboBox->mListControlFrame->GetHeightOfARow());
+  if (state.ComputedBSize() == NS_INTRINSICSIZE) {
+    // Note that the only way we can have a computed block size here is
+    // if the combobox had a specified block size.  If it didn't, size
+    // based on what our rows look like, for lack of anything better.
+    state.SetComputedBSize(mComboBox->mListControlFrame->GetBSizeOfARow());
   }
-  nscoord computedWidth = mComboBox->mDisplayWidth -
-    state.ComputedPhysicalBorderPadding().LeftRight();
-  if (computedWidth < 0) {
-    computedWidth = 0;
+  WritingMode wm = aReflowState.GetWritingMode();
+  nscoord computedISize = mComboBox->mDisplayISize -
+    state.ComputedLogicalBorderPadding().IStartEnd(wm);
+  if (computedISize < 0) {
+    computedISize = 0;
   }
-  state.SetComputedWidth(computedWidth);
+  state.SetComputedISize(computedISize);
   nsBlockFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
   aStatus = NS_FRAME_COMPLETE; // this type of frame can't be split
 }

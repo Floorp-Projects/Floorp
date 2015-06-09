@@ -10,6 +10,7 @@
 #include "Intervals.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/TimeRanges.h"
 
 namespace mozilla {
@@ -25,13 +26,14 @@ struct nsTArray_CopyChooser<mozilla::media::TimeIntervals>
 };
 
 namespace mozilla {
-namespace media {
 
 // Number of microseconds per second. 1e6.
 static const int64_t USECS_PER_S = 1000000;
 
 // Number of microseconds per millisecond.
 static const int64_t USECS_PER_MS = 1000;
+
+namespace media {
 
 // Number of nanoseconds per second. 1e9.
 static const int64_t NSECS_PER_S = 1000000000;
@@ -202,6 +204,8 @@ private:
   // Our internal representation is in microseconds.
   CheckedInt64 mValue;
 };
+
+typedef Maybe<TimeUnit> NullableTimeUnit;
 
 typedef Interval<TimeUnit> TimeInterval;
 

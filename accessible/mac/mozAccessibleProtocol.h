@@ -9,10 +9,10 @@
 
 /* This protocol's primary use is so widget/cocoa can talk back to us
    properly.
-   
-   ChildView owns the topmost mozRootAccessible, and needs to take care of setting up 
+
+   ChildView owns the topmost mozRootAccessible, and needs to take care of setting up
    that parent/child relationship.
-   
+
    This protocol is thus used to make sure it knows it's talking to us, and not
    just some random |id|.
 */
@@ -23,7 +23,7 @@
 // root accessible per window.
 - (BOOL)isRoot;
 
-// some mozAccessibles implement accessibility support in place of another object. for example, 
+// some mozAccessibles implement accessibility support in place of another object. for example,
 // ChildView gets its support from us.
 //
 // instead of returning a mozAccessible to the OS when it wants an object, we need to pass the view we represent, so the

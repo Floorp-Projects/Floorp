@@ -15,9 +15,9 @@
   <project name="platform_build" path="build" remote="b2g" revision="e862ab9177af664f00b4522e2350f4cb13866d73">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="ea27c4ed5b6083c9e21d233d4804372ac4d5d353"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="31ef8deec7a04a988eb92309178b87cc0bde8220"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="5deaf27fd266316f27e68206cc3be0e6f47ded54"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="3477513bcd385571aa01c0d074849e35bd5e2376"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="46da1a05ac04157669685246d70ac59d48699c9e"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
@@ -129,7 +129,7 @@
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="f390788a00706c06e5248edfd8d27b365387e84a"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="c4d9746e5f1a3a2e6cb53d59d5d721e9888cd2e1"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="4bebbe8d92368befc31e8b4a99da2d29cc26bfbc"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="f37bd545063039e30a92f2550ae78c0e6e4e2d08"/>
   <project name="platform_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="b2g" revision="0c6a6547cd1fd302fa2b0f6e375654df36bf0ec4"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="de4bfffbbc2aabe5b5eca485e459da75e49097e2"/>

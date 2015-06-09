@@ -37,7 +37,6 @@ SourceBufferDecoder::SourceBufferDecoder(MediaResource* aResource,
   , mParentDecoder(aParentDecoder)
   , mReader(nullptr)
   , mTimestampOffset(aTimestampOffset)
-  , mMediaDuration(-1)
   , mRealMediaDuration(0)
   , mTrimmedOffset(-1)
 {
@@ -62,12 +61,6 @@ void
 SourceBufferDecoder::NotifyBytesConsumed(int64_t aBytes, int64_t aOffset)
 {
   MSE_DEBUG("UNIMPLEMENTED");
-}
-
-int64_t
-SourceBufferDecoder::GetMediaDuration()
-{
-  return mMediaDuration;
 }
 
 VideoFrameContainer*
@@ -116,12 +109,6 @@ SourceBufferDecoder::QueueMetadata(int64_t aTime,
 
 void
 SourceBufferDecoder::RemoveMediaTracks()
-{
-  MSE_DEBUG("UNIMPLEMENTED");
-}
-
-void
-SourceBufferDecoder::SetMediaEndTime(int64_t aTime)
 {
   MSE_DEBUG("UNIMPLEMENTED");
 }
@@ -177,12 +164,6 @@ SourceBufferDecoder::NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
                                          uint32_t aDropped)
 {
   return mParentDecoder->NotifyDecodedFrames(aParsed, aDecoded, aDropped);
-}
-
-void
-SourceBufferDecoder::SetMediaDuration(int64_t aDuration)
-{
-  mMediaDuration = aDuration;
 }
 
 void

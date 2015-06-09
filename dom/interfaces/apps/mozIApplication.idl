@@ -7,11 +7,13 @@
 
 #include "domstubs.idl"
 
+interface nsIPrincipal;
+
 /**
  * We expose Gecko-internal helpers related to "web apps" through this
  * sub-interface.
  */
-[scriptable, uuid(1d856b11-ac29-47d3-bd52-a86e3d45fcf5)]
+[scriptable, uuid(e76aa5e0-80b2-404f-bccc-1067828bb6ed)]
 interface mozIApplication: nsISupports
 {
   /* Return true if this app has |permission|. */
@@ -58,4 +60,7 @@ interface mozIApplication: nsISupports
 
   /* Returns the kind of the app. */
   readonly attribute DOMString kind;
+
+  /* Returns the app's principal */
+  readonly attribute nsIPrincipal principal;
 };

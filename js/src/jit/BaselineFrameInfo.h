@@ -10,9 +10,9 @@
 #include "mozilla/Alignment.h"
 
 #include "jit/BaselineFrame.h"
-#include "jit/BaselineRegisters.h"
 #include "jit/FixedList.h"
 #include "jit/MacroAssembler.h"
+#include "jit/SharedICRegisters.h"
 
 namespace js {
 namespace jit {

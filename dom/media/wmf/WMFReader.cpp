@@ -27,6 +27,7 @@
 #include "gfx2DGlue.h"
 
 using namespace mozilla::gfx;
+using namespace mozilla::media;
 using mozilla::layers::Image;
 using mozilla::layers::LayerManager;
 using mozilla::layers::LayersBackend;
@@ -535,8 +536,7 @@ WMFReader::ReadMetadata(MediaInfo* aInfo,
   int64_t duration = 0;
   hr = GetSourceReaderDuration(mSourceReader, duration);
   if (SUCCEEDED(hr)) {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mDecoder->SetMediaEndTime(duration);
+    mInfo.mMetadataDuration.emplace(TimeUnit::FromMicroseconds(duration));
   }
 
   *aInfo = mInfo;

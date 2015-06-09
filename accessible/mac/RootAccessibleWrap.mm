@@ -46,7 +46,7 @@ RootAccessibleWrap::GetNativeWidget(void** aOutView)
       nsIWidget *widget = view->GetWidget();
       if (widget) {
         *aOutView = (void**)widget->GetNativeData (NS_NATIVE_WIDGET);
-        NS_ASSERTION (*aOutView, 
+        NS_ASSERTION (*aOutView,
                       "Couldn't get the native NSView parent we need to connect the accessibility hierarchy!");
       }
     }
