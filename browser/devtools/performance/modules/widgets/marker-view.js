@@ -11,7 +11,7 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Heritage } = require("resource:///modules/devtools/ViewHelpers.jsm");
 const { AbstractTreeItem } = require("resource:///modules/devtools/AbstractTreeItem.jsm");
-const { getBlueprintFor } = require("devtools/performance/markers");
+const { TIMELINE_BLUEPRINT: ORIGINAL_BP } = require("devtools/performance/markers");
 
 loader.lazyRequireGetter(this, "MarkerUtils",
   "devtools/performance/marker-utils");
@@ -139,6 +139,7 @@ MarkerView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     if (!submarkers || !submarkers.length) {
       return;
     }
+    let blueprint = this.root._blueprint;
     let startTime = this.root._interval.startTime;
     let endTime = this.root._interval.endTime;
     let newLevel = this.level + 1;
@@ -146,6 +147,14 @@ MarkerView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     for (let i = 0, len = submarkers.length; i < len; i++) {
       let marker = submarkers[i];
 
+      // If this marker isn't in the global timeline blueprint, don't display
+      // it, but dump a warning message to the console.
+      if (!(marker.name in blueprint)) {
+        if (!(marker.name in ORIGINAL_BP)) {
+          console.warn(`Marker not found in timeline blueprint: ${marker.name}.`);
+        }
+        continue;
+      }
       if (!isMarkerInRange(marker, startTime|0, endTime|0)) {
         continue;
       }
@@ -166,20 +175,15 @@ MarkerView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
    */
   _buildMarkerCells: function(doc, targetNode, arrowNode) {
     let marker = this.marker;
-    let blueprint = getBlueprintFor(marker, this.root._blueprint);
+    let style = this.root._blueprint[marker.name];
     let startTime = this.root._interval.startTime;
     let endTime = this.root._interval.endTime;
 
-    // If this marker type has been marked hidden via marker filtering,
-    // then don't display it. This is so we can also handle "Unknown" markers
-    // that do not have a blueprint, but we want to show those anyway unless "Unknown"
-    // markers are filtered.
-    if (blueprint.hidden) {
-      return;
-    }
+    let sidebarCell = this._buildMarkerSidebar(
+      doc, style, marker);
 
-    let sidebarCell = this._buildMarkerSidebar(doc, blueprint, marker);
-    let timebarCell = this._buildMarkerTimebar(doc, blueprint, marker, startTime, endTime, arrowNode);
+    let timebarCell = this._buildMarkerTimebar(
+      doc, style, marker, startTime, endTime, arrowNode);
 
     targetNode.appendChild(sidebarCell);
     targetNode.appendChild(timebarCell);
