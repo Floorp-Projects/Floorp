@@ -467,6 +467,8 @@ browser.jar:
         skin/classic/browser/devtools/toggle-tools.png              (../shared/devtools/images/toggle-tools.png)
         skin/classic/browser/devtools/toggle-tools@2x.png              (../shared/devtools/images/toggle-tools@2x.png)
         skin/classic/browser/devtools/dock-bottom@2x.png            (../shared/devtools/images/dock-bottom@2x.png)
+        skin/classic/browser/devtools/dock-bottom-minimize@2x.png   (../shared/devtools/images/dock-bottom-minimize@2x.png)
+        skin/classic/browser/devtools/dock-bottom-maximize@2x.png   (../shared/devtools/images/dock-bottom-maximize@2x.png)
         skin/classic/browser/devtools/dock-side@2x.png              (../shared/devtools/images/dock-side@2x.png)
         skin/classic/browser/devtools/floating-scrollbars.css       (devtools/floating-scrollbars.css)
         skin/classic/browser/devtools/floating-scrollbars-light.css (devtools/floating-scrollbars-light.css)

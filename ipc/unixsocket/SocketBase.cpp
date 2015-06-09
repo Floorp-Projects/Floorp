@@ -18,27 +18,18 @@ namespace ipc {
 // UnixSocketIOBuffer
 //
 
-UnixSocketBuffer::UnixSocketBuffer(const void* aData, size_t aSize)
-  : mSize(aSize)
-  , mOffset(0)
-  , mAvailableSpace(aSize)
-{
-  MOZ_ASSERT(aData || !mSize);
-
-  mData = new uint8_t[mAvailableSpace];
-  memcpy(mData, aData, mSize);
-}
-
-UnixSocketBuffer::UnixSocketBuffer(size_t aAvailableSpace)
+UnixSocketBuffer::UnixSocketBuffer()
   : mSize(0)
   , mOffset(0)
-  , mAvailableSpace(aAvailableSpace)
-{
-  mData = new uint8_t[mAvailableSpace];
-}
+  , mAvailableSpace(0)
+  , mData(nullptr)
+{ }
 
 UnixSocketBuffer::~UnixSocketBuffer()
-{ }
+{
+  // Make sure that the caller released the buffer's memory.
+  MOZ_ASSERT(!GetBuffer());
+}
 
 const uint8_t*
 UnixSocketBuffer::Consume(size_t aLen)
@@ -105,14 +96,6 @@ UnixSocketBuffer::CleanupLeadingSpace()
 // UnixSocketIOBuffer
 //
 
-UnixSocketIOBuffer::UnixSocketIOBuffer(const void* aData, size_t aSize)
-  : UnixSocketBuffer(aData, aSize)
-{ }
-
-UnixSocketIOBuffer::UnixSocketIOBuffer(size_t aAvailableSpace)
-  : UnixSocketBuffer(aAvailableSpace)
-{ }
-
 UnixSocketIOBuffer::~UnixSocketIOBuffer()
 { }
 
@@ -121,12 +104,23 @@ UnixSocketIOBuffer::~UnixSocketIOBuffer()
 //
 
 UnixSocketRawData::UnixSocketRawData(const void* aData, size_t aSize)
-: UnixSocketIOBuffer(aData, aSize)
-{ }
+{
+  MOZ_ASSERT(aData || !aSize);
+
+  ResetBuffer(static_cast<uint8_t*>(memcpy(new uint8_t[aSize], aData, aSize)),
+              0, aSize, aSize);
+}
 
 UnixSocketRawData::UnixSocketRawData(size_t aSize)
-: UnixSocketIOBuffer(aSize)
-{ }
+{
+  ResetBuffer(new uint8_t[aSize], 0, 0, aSize);
+}
+
+UnixSocketRawData::~UnixSocketRawData()
+{
+  nsAutoArrayPtr<uint8_t> data(GetBuffer());
+  ResetBuffer(nullptr, 0, 0, 0);
+}
 
 ssize_t
 UnixSocketRawData::Receive(int aFd)
