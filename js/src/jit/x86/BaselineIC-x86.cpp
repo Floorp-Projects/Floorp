@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/BaselineCompiler.h"
-#include "jit/BaselineHelpers.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Linker.h"
+#include "jit/SharedICHelpers.h"
 
 using namespace js;
 using namespace js::jit;
@@ -54,7 +54,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Add R0 and R1.  Don't need to explicitly unbox, just use the TailCallReg which
     // should be available.
-    Register scratchReg = BaselineTailCallReg;
+    Register scratchReg = ICTailCallReg;
 
     Label revertRegister, maybeNegZero;
     switch(op_) {

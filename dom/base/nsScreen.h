@@ -131,6 +131,7 @@ protected:
   nsDeviceContext* GetDeviceContext();
   nsresult GetRect(nsRect& aRect);
   nsresult GetAvailRect(nsRect& aRect);
+  nsresult GetWindowInnerRect(nsRect& aRect);
 
   mozilla::dom::ScreenOrientation mOrientation;
 
@@ -157,6 +158,8 @@ private:
   LockPermission GetLockOrientationPermission() const;
 
   bool IsDeviceSizePageSize();
+
+  bool ShouldResistFingerprinting() const;
 
   nsRefPtr<FullScreenEventListener> mEventListener;
 };

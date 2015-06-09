@@ -456,14 +456,6 @@ public:
   // Call on the main thread only.
   virtual bool IsEndedOrShutdown() const;
 
-  // Set the duration of the media resource in units of seconds.
-  // This is called via a channel listener if it can pick up the duration
-  // from a content header. Must be called from the main thread only.
-  virtual void SetDuration(double aDuration);
-
-  // Sets the initial duration of the media. Called while the media metadata
-  // is being read and the decode is being setup.
-  void SetMediaDuration(int64_t aDuration) override;
   // Updates the media duration. This is called while the media is being
   // played, calls before the media has reached loaded metadata are ignored.
   // The duration is assumed to be an estimate, and so a degree of
@@ -490,9 +482,6 @@ public:
   // Set the end time of the media resource. When playback reaches
   // this point the media pauses. aTime is in seconds.
   virtual void SetFragmentEndTime(double aTime);
-
-  // Set the end time of the media. aTime is in microseconds.
-  void SetMediaEndTime(int64_t aTime) final override;
 
   // Invalidate the frame.
   void Invalidate();
@@ -525,7 +514,7 @@ public:
 
   // Called by the state machine to notify the decoder that the duration
   // has changed.
-  void DurationChanged();
+  void DurationChanged(media::TimeUnit aNewDuration);
 
   bool OnStateMachineTaskQueue() const override;
 
@@ -993,7 +982,26 @@ private:
   nsRefPtr<CDMProxy> mProxy;
 #endif
 
+  // Media duration according to the demuxer's current estimate.
+  //
+  // Note that it's quite bizarre for this to live on the main thread - it would
+  // make much more sense for this to be owned by the demuxer's task queue. But
+  // currently this is only every changed in NotifyDataArrived, which runs on
+  // the main thread. That will need to be cleaned up at some point.
+  Canonical<media::NullableTimeUnit> mEstimatedDuration;
+public:
+  AbstractCanonical<media::NullableTimeUnit>* CanonicalEstimatedDuration() { return &mEstimatedDuration; }
 protected:
+
+  // Media duration set explicitly by JS. At present, this is only ever present
+  // for MSE.
+  Canonical<Maybe<double>> mExplicitDuration;
+  double ExplicitDuration() { return mExplicitDuration.Ref().ref(); }
+  void SetExplicitDuration(double aValue) { mExplicitDuration.Set(Some(aValue)); }
+public:
+  AbstractCanonical<Maybe<double>>* CanonicalExplicitDuration() { return &mExplicitDuration; }
+protected:
+
   // Set to one of the valid play states.
   // This can only be changed on the main thread while holding the decoder
   // monitor. Thus, it can be safely read while holding the decoder monitor

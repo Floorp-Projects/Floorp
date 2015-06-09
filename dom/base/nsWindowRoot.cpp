@@ -24,6 +24,7 @@
 #include "nsIController.h"
 #include "xpcpublic.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/dom/TabParent.h"
 
 #ifdef MOZ_XUL
 #include "nsIDOMXULElement.h"
@@ -383,6 +384,46 @@ JSObject*
 nsWindowRoot::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return mozilla::dom::WindowRootBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void
+nsWindowRoot::AddBrowser(mozilla::dom::TabParent* aBrowser)
+{
+  nsWeakPtr weakBrowser = do_GetWeakReference(static_cast<nsITabParent*>(aBrowser));
+  mWeakBrowsers.PutEntry(weakBrowser);
+}
+
+void
+nsWindowRoot::RemoveBrowser(mozilla::dom::TabParent* aBrowser)
+{
+  nsWeakPtr weakBrowser = do_GetWeakReference(static_cast<nsITabParent*>(aBrowser));
+  mWeakBrowsers.RemoveEntry(weakBrowser);
+}
+
+static PLDHashOperator
+WeakBrowserEnumFunc(nsRefPtrHashKey<nsIWeakReference>* aKey, void* aArg)
+{
+  nsTArray<nsRefPtr<TabParent>>* tabParents =
+    static_cast<nsTArray<nsRefPtr<TabParent>>*>(aArg);
+  nsCOMPtr<nsITabParent> tabParent(do_QueryReferent((*aKey).GetKey()));
+  TabParent* tab = TabParent::GetFrom(tabParent);
+  if (tab) {
+    tabParents->AppendElement(tab);
+  }
+  return PL_DHASH_NEXT;
+}
+
+void
+nsWindowRoot::EnumerateBrowsers(BrowserEnumerator aEnumFunc, void* aArg)
+{
+  // Collect strong references to all browsers in a separate array in
+  // case aEnumFunc alters mWeakBrowsers.
+  nsTArray<nsRefPtr<TabParent>> tabParents;
+  mWeakBrowsers.EnumerateEntries(WeakBrowserEnumFunc, &tabParents);
+
+  for (uint32_t i = 0; i < tabParents.Length(); ++i) {
+    aEnumFunc(tabParents[i], aArg);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

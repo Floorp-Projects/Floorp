@@ -146,14 +146,15 @@ public:
   virtual void RollupFromList() override;
 
   /**
-   * Return the available space above and below this frame for
+   * Return the available space before and after this frame for
    * placing the drop-down list, and the current 2D translation.
    * Note that either or both can be less than or equal to zero,
    * if both are then the drop-down should be closed.
    */
-  void GetAvailableDropdownSpace(nscoord* aAbove,
-                                 nscoord* aBelow,
-                                 nsPoint* aTranslation);
+  void GetAvailableDropdownSpace(mozilla::WritingMode aWM,
+                                 nscoord* aBefore,
+                                 nscoord* aAfter,
+                                 mozilla::LogicalPoint* aTranslation);
   virtual int32_t GetIndexOfDisplayArea() override;
   /**
    * @note This method might destroy |this|.
@@ -271,9 +272,9 @@ protected:
   nsIFrame*                mDropdownFrame;           // dropdown list frame
   nsIListControlFrame *    mListControlFrame;        // ListControl Interface for the dropdown frame
 
-  // The width of our display area.  Used by that frame's reflow to
-  // size to the full width except the drop-marker.
-  nscoord mDisplayWidth;
+  // The inline size of our display area.  Used by that frame's reflow
+  // to size to the full inline size except the drop-marker.
+  nscoord mDisplayISize;
   
   nsRevocableEventPtr<RedisplayTextEvent> mRedisplayTextEvent;
 
@@ -285,13 +286,13 @@ protected:
   // then open or close the combo box.
   nsCOMPtr<nsIDOMEventListener> mButtonListener;
 
-  // The last y-positions used for estimating available space above and
-  // below for the dropdown list in GetAvailableDropdownSpace.  These are
+  // The last y-positions used for estimating available space before and
+  // after for the dropdown list in GetAvailableDropdownSpace.  These are
   // reset to nscoord_MIN in AbsolutelyPositionDropDown when placing the
   // dropdown at its actual position.  The GetAvailableDropdownSpace call
   // from nsListControlFrame::ReflowAsDropdown use the last position.
-  nscoord               mLastDropDownAboveScreenY;
-  nscoord               mLastDropDownBelowScreenY;
+  nscoord               mLastDropDownBeforeScreenBCoord;
+  nscoord               mLastDropDownAfterScreenBCoord;
   // Current state of the dropdown list, true is dropped down.
   bool                  mDroppedDown;
   // See comment in HandleRedisplayTextEvent().

@@ -37,19 +37,16 @@ class Image;
  */
 class DecodedStreamData {
 public:
-  DecodedStreamData(int64_t aInitialTime, SourceMediaStream* aStream);
+  explicit DecodedStreamData(SourceMediaStream* aStream);
   ~DecodedStreamData();
   bool IsFinished() const;
-  int64_t GetClock() const;
+  int64_t GetPosition() const;
 
   /* The following group of fields are protected by the decoder's monitor
    * and can be read or written on any thread.
    */
   // Count of audio frames written to the stream
   int64_t mAudioFramesWritten;
-  // Saved value of aInitialTime. Timestamp of the first audio and/or
-  // video packet written.
-  const int64_t mInitialTime; // microseconds
   // mNextVideoTime is the end timestamp for the last packet sent to the stream.
   // Therefore video packets starting at or after this time need to be copied
   // to the output stream.
@@ -95,7 +92,7 @@ public:
   explicit DecodedStream(ReentrantMonitor& aMonitor);
   DecodedStreamData* GetData() const;
   void DestroyData();
-  void RecreateData(int64_t aInitialTime, MediaStreamGraph* aGraph);
+  void RecreateData(MediaStreamGraph* aGraph);
   nsTArray<OutputStreamData>& OutputStreams();
   ReentrantMonitor& GetReentrantMonitor() const;
   void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);

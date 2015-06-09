@@ -1137,7 +1137,7 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     mInfo.mCrypto.AddInitData(info.mCrypto);
     MSE_DEBUG("audio reader=%p duration=%lld",
               mAudioSourceDecoder.get(),
-              mAudioSourceDecoder->GetReader()->GetDecoder()->GetMediaDuration());
+              mInfo.mMetadataDuration.isSome() ? mInfo.mMetadataDuration.ref().ToMicroseconds() : -1);
   }
 
   if (mVideoTrack) {
@@ -1150,7 +1150,7 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     mInfo.mCrypto.AddInitData(info.mCrypto);
     MSE_DEBUG("video reader=%p duration=%lld",
               GetVideoReader(),
-              GetVideoReader()->GetDecoder()->GetMediaDuration());
+              mInfo.mMetadataDuration.isSome() ? mInfo.mMetadataDuration.ref().ToMicroseconds() : -1);
   }
 
   *aInfo = mInfo;

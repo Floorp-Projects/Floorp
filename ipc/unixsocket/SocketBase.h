@@ -109,15 +109,38 @@ public:
   }
 
 protected:
+  UnixSocketBuffer();
 
-  /* This constructor copies aData of aSize bytes length into the
-   * new instance of |UnixSocketBuffer|.
+  /**
+   * Sets the raw memory. The caller is responsible for freeing
+   * this memory.
+   *
+   * @param aData A pointer to the buffer's raw memory.
+   * @param aOffset The start of valid bytes in |aData|.
+   * @param aSize The number of valid bytes in |aData|.
+   * @param aAvailableSpace The number of bytes in |aData|.
    */
-  UnixSocketBuffer(const void* aData, size_t aSize);
+  void ResetBuffer(uint8_t* aData,
+                   size_t aOffset, size_t aSize, size_t aAvailableSpace)
+  {
+    MOZ_ASSERT(aData || !aAvailableSpace);
+    MOZ_ASSERT((aOffset + aSize) <= aAvailableSpace);
 
-  /* This constructor reserves aAvailableSpace bytes of space.
+    mOffset = aOffset;
+    mSize = aSize;
+    mAvailableSpace = aAvailableSpace;
+    mData = aData;
+  }
+
+  /**
+   * Retrieves the memory buffer.
+   *
+   * @return A pointer to the buffer's raw memory.
    */
-  UnixSocketBuffer(size_t aAvailableSpace);
+  uint8_t* GetBuffer()
+  {
+    return mData;
+  }
 
   size_t GetLeadingSpace() const
   {
@@ -160,7 +183,7 @@ private:
   size_t mSize;
   size_t mOffset;
   size_t mAvailableSpace;
-  nsAutoArrayPtr<uint8_t> mData;
+  uint8_t* mData;
 };
 
 //
@@ -190,17 +213,6 @@ public:
    * is the number of bytes written, or a negative value on error.
    */
   virtual ssize_t Send(int aFd) = 0;
-
-protected:
-
-  /* This constructor copies aData of aSize bytes length into the
-   * new instance of |UnixSocketIOBuffer|.
-   */
-  UnixSocketIOBuffer(const void* aData, size_t aSize);
-
-  /* This constructor reserves aAvailableSpace bytes of space.
-   */
-  UnixSocketIOBuffer(size_t aAvailableSpace);
 };
 
 //
@@ -210,15 +222,27 @@ protected:
 class UnixSocketRawData final : public UnixSocketIOBuffer
 {
 public:
-  /* This constructor copies aData of aSize bytes length into the
+  /**
+   * This constructor copies aData of aSize bytes length into the
    * new instance of |UnixSocketRawData|.
+   *
+   * @param aData The buffer to copy.
+   * @param aSize The number of bytes in |aData|.
    */
   UnixSocketRawData(const void* aData, size_t aSize);
 
-  /* This constructor reserves aSize bytes of space. Currently
+  /**
+   * This constructor reserves aSize bytes of space. Currently
    * it's only possible to fill this buffer by calling |Receive|.
+   *
+   * @param aSize The number of bytes to allocate.
    */
   UnixSocketRawData(size_t aSize);
+
+  /**
+   * The destructor releases the buffer's raw memory.
+   */
+  ~UnixSocketRawData();
 
   /**
    * Receives data from aFd at the end of the buffer. The returned value

@@ -108,17 +108,17 @@ BaselineCompilerShared::callVM(const VMFunction& fun, CallVMPhase phase)
                           Imm32(BaselineFrame::OVER_RECURSED),
                           &writePostInitialize);
 
-        masm.move32(Imm32(frameBaseSize), BaselineTailCallReg);
+        masm.move32(Imm32(frameBaseSize), ICTailCallReg);
         masm.jump(&afterWrite);
 
         masm.bind(&writePostInitialize);
-        masm.move32(Imm32(frameFullSize), BaselineTailCallReg);
+        masm.move32(Imm32(frameFullSize), ICTailCallReg);
 
         masm.bind(&afterWrite);
-        masm.store32(BaselineTailCallReg, frameSizeAddress);
-        masm.add32(Imm32(argSize), BaselineTailCallReg);
-        masm.makeFrameDescriptor(BaselineTailCallReg, JitFrame_BaselineJS);
-        masm.push(BaselineTailCallReg);
+        masm.store32(ICTailCallReg, frameSizeAddress);
+        masm.add32(Imm32(argSize), ICTailCallReg);
+        masm.makeFrameDescriptor(ICTailCallReg, JitFrame_BaselineJS);
+        masm.push(ICTailCallReg);
     }
     MOZ_ASSERT(fun.expectTailCall == NonTailCall);
     // Perform the call.
