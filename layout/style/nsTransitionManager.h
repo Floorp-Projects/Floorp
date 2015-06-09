@@ -118,6 +118,8 @@ public:
     MOZ_ASSERT(mSequenceNum == kUnsequenced);
   }
 
+  nsCSSProperty TransitionProperty() const;
+
   bool IsUsingCustomCompositeOrder() const override { return !!mOwningElement; }
 
   void SetCreationSequence(uint64_t aIndex)
