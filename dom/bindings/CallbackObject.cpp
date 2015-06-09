@@ -187,7 +187,8 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   // Make sure the JS engine doesn't report exceptions we want to re-throw
   if ((mCompartment && mExceptionHandling == eRethrowContentExceptions) ||
       mExceptionHandling == eRethrowExceptions) {
-    mAutoEntryScript->TakeOwnershipOfErrorReporting();
+    mSavedJSContextOptions = JS::ContextOptionsRef(cx);
+    JS::ContextOptionsRef(cx).setDontReportUncaught(true);
   }
 }
 
@@ -257,8 +258,9 @@ CallbackObject::CallSetup::~CallSetup()
     bool needToDealWithException = JS_IsExceptionPending(mCx);
     if ((mCompartment && mExceptionHandling == eRethrowContentExceptions) ||
         mExceptionHandling == eRethrowExceptions) {
+      // Restore the old context options
+      JS::ContextOptionsRef(mCx) = mSavedJSContextOptions;
       mErrorResult.MightThrowJSException();
-      MOZ_ASSERT(mAutoEntryScript->OwnsErrorReporting());
       if (needToDealWithException) {
         JS::Rooted<JS::Value> exn(mCx);
         if (JS_GetPendingException(mCx, &exn) &&
