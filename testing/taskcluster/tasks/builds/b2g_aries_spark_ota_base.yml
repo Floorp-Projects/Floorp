@@ -11,11 +11,12 @@ task:
     env:
       TARGET: 'aries'
       DEBUG: 0
+      MOZHARNESS_CONFIG: b2g/taskcluster-spark-ota.py
     command:
       - >
         checkout-gecko workspace &&
         cd ./workspace/gecko/testing/taskcluster/scripts/phone-builder &&
-        buildbot_step 'Build' ./build-spark-ota.sh $HOME/workspace
+        buildbot_step 'Build' ./build-phone-ota.sh $HOME/workspace
 
   extra:
     treeherder:
