@@ -9,7 +9,8 @@ let test = Task.async(function*() {
   var { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
   var { EVENTS, PerformanceController, DetailsView, DetailsSubview } = panel.panelWin;
 
-  // Enable memory to test the memory-calltree and memory-flamegraph.
+  // Enable allocations to test the memory-calltree and memory-flamegraph.
+  Services.prefs.setBoolPref(ALLOCATIONS_PREF, true);
   Services.prefs.setBoolPref(MEMORY_PREF, true);
   Services.prefs.setBoolPref(FRAMERATE_PREF, true);
 

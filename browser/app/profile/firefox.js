@@ -1461,6 +1461,7 @@ pref("devtools.performance.ui.flatten-tree-recursion", true);
 pref("devtools.performance.ui.show-platform-data", false);
 pref("devtools.performance.ui.show-idle-blocks", true);
 pref("devtools.performance.ui.enable-memory", false);
+pref("devtools.performance.ui.enable-allocations", false);
 pref("devtools.performance.ui.enable-framerate", true);
 pref("devtools.performance.ui.show-jit-optimizations", false);
 
