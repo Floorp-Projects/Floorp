@@ -272,9 +272,6 @@ struct AnimationCollection : public PRCList
 
   void Destroy()
   {
-    for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-      mAnimations[animIdx]->CancelFromStyle();
-    }
     // This will call our destructor.
     mElement->DeleteProperty(mElementProperty);
   }
