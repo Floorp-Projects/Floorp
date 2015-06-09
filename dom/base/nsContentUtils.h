@@ -99,6 +99,7 @@ class nsViewportInfo;
 class nsWrapperCache;
 class nsAttrValue;
 class nsITransferable;
+class nsPIWindowRoot;
 
 struct JSPropertyDescriptor;
 struct JSRuntime;
@@ -197,6 +198,9 @@ public:
   static bool LookupBindingMember(JSContext* aCx, nsIContent *aContent,
                                   JS::Handle<jsid> aId,
                                   JS::MutableHandle<JSPropertyDescriptor> aDesc);
+
+  // Check whether we should avoid leaking distinguishing information to JS/CSS.
+  static bool ShouldResistFingerprinting(nsIDocShell* aDocShell);
 
   /**
    * Returns the parent node of aChild crossing document boundaries.
@@ -1912,6 +1916,16 @@ public:
     return sEncodeDecodeURLHash;
   }
 
+  /*
+   * Returns true if the browser should attempt to prevent content scripts
+   * from collecting distinctive information about the browser that could
+   * be used to "fingerprint" and track the user across websites.
+   */
+  static bool ResistFingerprinting()
+  {
+    return sPrivacyResistFingerprinting;
+  }
+
   /**
    * Returns true if the doc tree branch which contains aDoc contains any
    * plugins which we don't control event dispatch for, i.e. do any plugins
@@ -2350,6 +2364,8 @@ public:
   static void FirePageHideEvent(nsIDocShellTreeItem* aItem,
                                 mozilla::dom::EventTarget* aChromeEventHandler);
 
+  static already_AddRefed<nsPIWindowRoot> GetWindowRoot(nsIDocument* aDoc);
+
 private:
   static bool InitializeEventTable();
 
@@ -2450,6 +2466,7 @@ private:
   static bool sIsUserTimingLoggingEnabled;
   static bool sIsExperimentalAutocompleteEnabled;
   static bool sEncodeDecodeURLHash;
+  static bool sPrivacyResistFingerprinting;
 
   static nsHtml5StringParser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;

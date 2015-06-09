@@ -210,6 +210,10 @@ if toolkit in ('qt', 'gtk2', 'gtk3', 'windows', 'cocoa'):
     UNIFIED_SOURCES += [
         'nsNativeTheme.cpp',
     ]
+if toolkit == 'gtk3':
+    XPIDL_SOURCES += [
+        'nsIApplicationChooser.idl',
+    ]
 
 if not CONFIG['MOZ_B2G']:
     DEFINES['MOZ_CROSS_PROCESS_IME'] = True

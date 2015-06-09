@@ -1631,12 +1631,12 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             // Restore values where they need to be and resume execution.
             AllocatableGeneralRegisterSet enterMonRegs(GeneralRegisterSet::All());
             enterMonRegs.take(R0);
-            enterMonRegs.take(BaselineStubReg);
+            enterMonRegs.take(ICStubReg);
             enterMonRegs.take(BaselineFrameReg);
-            enterMonRegs.takeUnchecked(BaselineTailCallReg);
+            enterMonRegs.takeUnchecked(ICTailCallReg);
 
-            pop(BaselineStubReg);
-            pop(BaselineTailCallReg);
+            pop(ICStubReg);
+            pop(ICTailCallReg);
             pop(BaselineFrameReg);
             popValue(R0);
 
@@ -1644,9 +1644,9 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             addToStackPtr(Imm32(ExitFrameLayout::SizeWithFooter()));
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-            push(BaselineTailCallReg);
+            push(ICTailCallReg);
 #endif
-            jump(Address(BaselineStubReg, ICStub::offsetOfStubCode()));
+            jump(Address(ICStubReg, ICStub::offsetOfStubCode()));
         }
 
         //

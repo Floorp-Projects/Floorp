@@ -92,6 +92,7 @@ class ShadowLayerForwarder;
 class LayerManagerComposite;
 class SpecificLayerAttributes;
 class Compositor;
+class FrameUniformityData;
 
 namespace layerscope {
 class LayersPacket;
@@ -643,6 +644,7 @@ public:
   virtual bool IsCompositingCheap() { return true; }
 
   bool IsInTransaction() const { return mInTransaction; }
+  virtual void GetFrameUniformity(FrameUniformityData* aOutData) { }
   virtual bool RequestOverfill(mozilla::dom::OverfillCallback* aCallback) { return true; }
   virtual void RunOverfillCallback(const uint32_t aOverfill) { }
 

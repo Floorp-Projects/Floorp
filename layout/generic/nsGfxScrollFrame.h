@@ -939,11 +939,11 @@ protected:
   bool InInitialReflow() const;
   
   /**
-   * Override this to return false if computed height/min-height/max-height
+   * Override this to return false if computed bsize/min-bsize/max-bsize
    * should NOT be propagated to child content.
    * nsListControlFrame uses this.
    */
-  virtual bool ShouldPropagateComputedHeightToScrolledContent() const { return true; }
+  virtual bool ShouldPropagateComputedBSizeToScrolledContent() const { return true; }
 
 private:
   friend class mozilla::ScrollFrameHelper;

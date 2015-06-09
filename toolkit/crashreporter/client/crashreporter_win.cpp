@@ -1296,6 +1296,24 @@ void UIShowDefaultUI()
              MB_OK | MB_ICONSTOP);
 }
 
+static bool CanUseMainCrashReportServer()
+{
+  // Any NT from 6.0 and above is fine.
+  if (IsWindowsVersionOrGreater(6, 0, 0)) {
+    return true;
+  }
+
+  // On NT 5 servers, we need Server 2003 SP2.
+  if (IsWindowsServer()) {
+    return IsWindowsVersionOrGreater(5, 2, 2);
+  }
+
+  // Otherwise we have an NT 5 client.
+  // We need exactly XP SP3 (version 5.1 SP3 but not version 5.2).
+  return (IsWindowsVersionOrGreater(5, 1, 3) &&
+         !IsWindowsVersionOrGreater(5, 2, 0));
+}
+
 bool UIShowCrashUI(const StringTable& files,
                    const StringTable& queryParameters,
                    const string& sendURL,
@@ -1304,9 +1322,9 @@ bool UIShowCrashUI(const StringTable& files,
   gSendData.hDlg = nullptr;
   gSendData.sendURL = UTF8ToWide(sendURL);
 
-  // Windows XP SP2 doesn't support the crash report server's crypto.
+  // Older Windows don't support the crash report server's crypto.
   // This is a hack to use an alternate server.
-  if (!IsWindowsXPSP3OrGreater() &&
+  if (!CanUseMainCrashReportServer() &&
       gSendData.sendURL.find(SENDURL_ORIGINAL) == 0) {
     gSendData.sendURL.replace(0, ARRAYSIZE(SENDURL_ORIGINAL) - 1,
                               SENDURL_XPSP2);

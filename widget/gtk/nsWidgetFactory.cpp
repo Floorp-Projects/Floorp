@@ -21,6 +21,9 @@
 #include "nsClipboard.h"
 #include "nsDragService.h"
 #endif
+#if (MOZ_WIDGET_GTK == 3)
+#include "nsApplicationChooser.h"
+#endif
 #include "nsColorPicker.h"
 #include "nsFilePicker.h"
 #include "nsSound.h"
@@ -152,6 +155,25 @@ nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
   return picker->QueryInterface(aIID, aResult);
 }
 
+#if (MOZ_WIDGET_GTK == 3)
+static nsresult
+nsApplicationChooserConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult)
+{
+  *aResult = nullptr;
+  if (aOuter != nullptr) {
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  nsCOMPtr<nsIApplicationChooser> chooser = new nsApplicationChooser;
+
+  if (!chooser) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return chooser->QueryInterface(aIID, aResult);
+}
+#endif
+
 static nsresult
 nsColorPickerConstructor(nsISupports *aOuter, REFNSIID aIID,
                          void **aResult)
@@ -175,6 +197,9 @@ NS_DEFINE_NAMED_CID(NS_CHILD_CID);
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
 NS_DEFINE_NAMED_CID(NS_COLORPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_FILEPICKER_CID);
+#if (MOZ_WIDGET_GTK == 3)
+NS_DEFINE_NAMED_CID(NS_APPLICATIONCHOOSER_CID);
+#endif
 NS_DEFINE_NAMED_CID(NS_SOUND_CID);
 NS_DEFINE_NAMED_CID(NS_TRANSFERABLE_CID);
 #ifdef MOZ_X11
@@ -206,6 +231,9 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor },
     { &kNS_COLORPICKER_CID, false, nullptr, nsColorPickerConstructor, Module::MAIN_PROCESS_ONLY },
     { &kNS_FILEPICKER_CID, false, nullptr, nsFilePickerConstructor, Module::MAIN_PROCESS_ONLY },
+#if (MOZ_WIDGET_GTK == 3)
+    { &kNS_APPLICATIONCHOOSER_CID, false, nullptr, nsApplicationChooserConstructor, Module::MAIN_PROCESS_ONLY },
+#endif
     { &kNS_SOUND_CID, false, nullptr, nsSoundConstructor, Module::MAIN_PROCESS_ONLY },
     { &kNS_TRANSFERABLE_CID, false, nullptr, nsTransferableConstructor },
 #ifdef MOZ_X11
@@ -239,6 +267,9 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     { "@mozilla.org/widget/appshell/gtk;1", &kNS_APPSHELL_CID },
     { "@mozilla.org/colorpicker;1", &kNS_COLORPICKER_CID, Module::MAIN_PROCESS_ONLY },
     { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID, Module::MAIN_PROCESS_ONLY },
+#if (MOZ_WIDGET_GTK == 3)
+    { "@mozilla.org/applicationchooser;1", &kNS_APPLICATIONCHOOSER_CID, Module::MAIN_PROCESS_ONLY },
+#endif
     { "@mozilla.org/sound;1", &kNS_SOUND_CID, Module::MAIN_PROCESS_ONLY },
     { "@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID },
 #ifdef MOZ_X11

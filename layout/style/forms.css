@@ -192,7 +192,6 @@ textarea:-moz-read-write {
 }
 
 select {
-  writing-mode: horizontal-tb !important; /* XXX remove when bug 1112954 is fixed */
   margin: 0;
   border-color: ThreeDFace;
   background-color: -moz-Combobox;
