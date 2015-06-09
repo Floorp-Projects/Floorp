@@ -1,4 +1,11 @@
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 function run_test() {
+  if (!Services.prefs.getBoolPref("javascript.options.asyncstack")) {
+    do_print("Async stacks are disabled.");
+    return;
+  }
+
   function getAsyncStack() {
     return Components.stack;
   }
