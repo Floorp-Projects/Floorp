@@ -569,6 +569,9 @@ protected:
   // window below. This is currently only used for popups.
   bool                  mMouseTransparent;
 
+  // Whether we're in the process of sending a WM_SETTEXT ourselves
+  bool                  mSendingSetText;
+
   // The point in time at which the last paint completed. We use this to avoid
   //  painting too rapidly in response to frequent input events.
   TimeStamp mLastPaintEndTime;
