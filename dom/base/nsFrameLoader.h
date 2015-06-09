@@ -130,9 +130,6 @@ public:
                                      nsRefPtr<nsFrameLoader>& aFirstToSwap,
                                      nsRefPtr<nsFrameLoader>& aSecondToSwap);
 
-  // When IPC is enabled, destroy any associated child process.
-  void DestroyChild();
-
   /**
    * Return the primary frame for our owning content, or null if it
    * can't be found.
