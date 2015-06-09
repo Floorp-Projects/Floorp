@@ -175,7 +175,7 @@ public:
   mozilla::MediaByteRange mRange;
   mozilla::MediaByteRange mMdatRange;
   Interval<Microseconds> mTimeRange;
-  nsTArray<Sample> mIndex;
+  FallibleTArray<Sample> mIndex;
 
   nsTArray<Saiz> mSaizs;
   nsTArray<Saio> mSaios;
