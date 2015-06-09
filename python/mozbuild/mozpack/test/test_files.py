@@ -19,11 +19,20 @@ from mozpack.files import (
     GeneratedFile,
     JarFinder,
     ManifestFile,
+    MercurialFile,
+    MercurialRevisionFinder,
     MinifiedJavaScript,
     MinifiedProperties,
     PreprocessedFile,
     XPTFile,
 )
+
+# We don't have hglib installed everywhere.
+try:
+    import hglib
+except ImportError:
+    hglib = None
+
 from mozpack.mozjar import (
     JarReader,
     JarWriter,
@@ -1015,6 +1024,62 @@ class TestComposedFinder(MatchTestTemplate, TestWithTmpDir):
 
         self.assertIsNone(self.finder.get('does-not-exist'))
         self.assertIsInstance(self.finder.get('bar'), File)
+
+
+@unittest.skipUnless(hglib, 'hglib not available')
+class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
+    def setUp(self):
+        super(TestMercurialRevisionFinder, self).setUp()
+        hglib.init(self.tmpdir)
+
+    def add(self, path):
+        c = hglib.open(self.tmpdir)
+        ensureParentDir(self.tmppath(path))
+        with open(self.tmppath(path), 'wb') as fh:
+            fh.write(path)
+        c.add(self.tmppath(path))
+
+    def do_check(self, pattern, result):
+        do_check(self, self.finder, pattern, result)
+
+    def test_default_revision(self):
+        self.prepare_match_test()
+        c = hglib.open(self.tmpdir)
+        c.commit('initial commit')
+        self.finder = MercurialRevisionFinder(self.tmpdir)
+        self.do_match_test()
+
+        self.assertIsNone(self.finder.get('does-not-exist'))
+        self.assertIsInstance(self.finder.get('bar'), MercurialFile)
+
+    def test_old_revision(self):
+        c = hglib.open(self.tmpdir)
+        with open(self.tmppath('foo'), 'wb') as fh:
+            fh.write('foo initial')
+        c.add(self.tmppath('foo'))
+        c.commit('initial')
+
+        with open(self.tmppath('foo'), 'wb') as fh:
+            fh.write('foo second')
+        with open(self.tmppath('bar'), 'wb') as fh:
+            fh.write('bar second')
+        c.add(self.tmppath('bar'))
+        c.commit('second')
+        # This wipes out the working directory, ensuring the finder isn't
+        # finding anything from the filesystem.
+        c.rawcommand(['update', 'null'])
+
+        finder = MercurialRevisionFinder(self.tmpdir, rev='0')
+        f = finder.get('foo')
+        self.assertEqual(f.read(), 'foo initial')
+        self.assertEqual(f.read(), 'foo initial', 'read again for good measure')
+        self.assertIsNone(finder.get('bar'))
+
+        finder = MercurialRevisionFinder(self.tmpdir, rev='1')
+        f = finder.get('foo')
+        self.assertEqual(f.read(), 'foo second')
+        f = finder.get('bar')
+        self.assertEqual(f.read(), 'bar second')
 
 
 if __name__ == '__main__':

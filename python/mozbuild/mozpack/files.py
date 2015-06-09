@@ -34,6 +34,12 @@ from tempfile import (
     NamedTemporaryFile,
 )
 
+try:
+    import hglib
+except ImportError:
+    hglib = None
+
+
 # For clean builds, copying files on win32 using CopyFile through ctypes is
 # ~2x as fast as using shutil.copyfile.
 if platform.system() != 'Windows':
@@ -776,6 +782,30 @@ class BaseFinder(object):
 
         return file
 
+    def _find_helper(self, pattern, files, file_getter):
+        """Generic implementation of _find.
+
+        A few *Finder implementations share logic for returning results.
+        This function implements the custom logic.
+
+        The ``file_getter`` argument is a callable that receives a path
+        that is known to exist. The callable should return a ``BaseFile``
+        instance.
+        """
+        if '*' in pattern:
+            for p in files:
+                if mozpath.match(p, pattern):
+                    yield p, file_getter(p)
+        elif pattern == '':
+            for p in files:
+                yield p, file_getter(p)
+        elif pattern in files:
+            yield pattern, file_getter(pattern)
+        else:
+            for p in files:
+                if mozpath.basedir(p, [pattern]) == pattern:
+                    yield p, file_getter(p)
+
 
 class FileFinder(BaseFinder):
     '''
@@ -905,19 +935,8 @@ class JarFinder(BaseFinder):
         Actual implementation of JarFinder.find(), dispatching to specialized
         member functions depending on what kind of pattern was given.
         '''
-        if '*' in pattern:
-            for p in self._files:
-                if mozpath.match(p, pattern):
-                    yield p, DeflatedFile(self._files[p])
-        elif pattern == '':
-            for p in self._files:
-                yield p, DeflatedFile(self._files[p])
-        elif pattern in self._files:
-            yield pattern, DeflatedFile(self._files[pattern])
-        else:
-            for p in self._files:
-                if mozpath.basedir(p, [pattern]) == pattern:
-                    yield p, DeflatedFile(self._files[p])
+        return self._find_helper(pattern, self._files,
+                                 lambda x: DeflatedFile(self._files[x]))
 
 
 class ComposedFinder(BaseFinder):
@@ -945,3 +964,64 @@ class ComposedFinder(BaseFinder):
     def find(self, pattern):
         for p in self.files.match(pattern):
             yield p, self.files[p]
+
+
+class MercurialFile(BaseFile):
+    """File class for holding data from Mercurial."""
+    def __init__(self, client, rev, path):
+        self._content = client.cat([path], rev=rev)
+
+    def read(self):
+        return self._content
+
+
+class MercurialRevisionFinder(BaseFinder):
+    """A finder that operates on a specific Mercurial revision."""
+
+    def __init__(self, repo, rev='.', **kwargs):
+        """Create a finder attached to a specific revision in a repository.
+
+        If no revision is given, open the parent of the working directory.
+        """
+        if not hglib:
+            raise Exception('hglib package not found')
+
+        super(MercurialRevisionFinder, self).__init__(base=repo, **kwargs)
+
+        self._root = repo
+        # We change directories here otherwise we have to deal with relative
+        # paths.
+        oldcwd = os.getcwd()
+        os.chdir(self._root)
+        try:
+            self._client = hglib.open(path=repo, encoding=b'utf-8')
+        finally:
+            os.chdir(oldcwd)
+        self._rev = rev if rev is not None else b'.'
+        self._files = OrderedDict()
+
+        # Immediately populate the list of files in the repo since nearly every
+        # operation requires this list.
+        out = self._client.rawcommand([b'files', b'--rev', self._rev])
+        for relpath in out.splitlines():
+            self._files[relpath] = None
+
+    def _find(self, pattern):
+        return self._find_helper(pattern, self._files, self._get)
+
+    def get(self, path):
+        try:
+            return self._get(path)
+        except KeyError:
+            return None
+
+    def _get(self, path):
+        # We lazy populate self._files because potentially creating tens of
+        # thousands of MercurialFile instances for every file in the repo is
+        # inefficient.
+        f = self._files[path]
+        if not f:
+            f = MercurialFile(self._client, self._rev, path)
+            self._files[path] = f
+
+        return f
