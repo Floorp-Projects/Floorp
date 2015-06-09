@@ -363,9 +363,6 @@ private:
   // doesn't necessarily correlate with docshell/document visibility.
   bool mVisible : 1;
 
-  // The ContentParent associated with mRemoteBrowser.  This was added as a
-  // strong ref in bug 545237, and we're not sure if we can get rid of it.
-  nsRefPtr<mozilla::dom::nsIContentParent> mContentParent;
   RenderFrameParent* mCurrentRemoteFrame;
   TabParent* mRemoteBrowser;
   uint64_t mChildID;
