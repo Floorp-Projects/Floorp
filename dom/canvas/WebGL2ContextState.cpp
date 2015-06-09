@@ -81,10 +81,17 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
     case LOCAL_GL_MAX_ELEMENT_INDEX:
     case LOCAL_GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS:
     case LOCAL_GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS:
-    case LOCAL_GL_MAX_SERVER_WAIT_TIMEOUT:
     case LOCAL_GL_MAX_UNIFORM_BLOCK_SIZE: {
       GLint64 val;
       gl->fGetInteger64v(pname, &val);
+      return JS::DoubleValue(static_cast<double>(val));
+    }
+
+
+      // GLuint64
+    case LOCAL_GL_MAX_SERVER_WAIT_TIMEOUT: {
+      GLuint64 val;
+      gl->fGetInteger64v(pname, (GLint64*) &val);
       return JS::DoubleValue(static_cast<double>(val));
     }
 
