@@ -637,6 +637,40 @@ gfxContext::HasComplexClip() const
 }
 
 bool
+gfxContext::ExportClip(ClipExporter& aExporter)
+{
+  unsigned int lastReset = 0;
+  for (int i = mStateStack.Length() - 1; i > 0; i--) {
+    if (mStateStack[i].clipWasReset) {
+      lastReset = i;
+      break;
+    }
+  }
+
+  for (unsigned int i = lastReset; i < mStateStack.Length(); i++) {
+    for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
+      AzureState::PushedClip &clip = mStateStack[i].pushedClips[c];
+      gfx::Matrix transform = clip.transform;
+      transform.PostTranslate(-GetDeviceOffset());
+
+      aExporter.BeginClip(transform);
+      if (clip.path) {
+        clip.path->StreamToSink(&aExporter);
+      } else {
+        aExporter.MoveTo(clip.rect.TopLeft());
+        aExporter.LineTo(clip.rect.TopRight());
+        aExporter.LineTo(clip.rect.BottomRight());
+        aExporter.LineTo(clip.rect.BottomLeft());
+        aExporter.Close();
+      }
+      aExporter.EndClip();
+    }
+  }
+
+  return true;
+}
+
+bool
 gfxContext::ClipContainsRect(const gfxRect& aRect)
 {
   unsigned int lastReset = 0;
