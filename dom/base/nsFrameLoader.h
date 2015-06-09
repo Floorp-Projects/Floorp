@@ -146,7 +146,7 @@ public:
   nsIDocument* GetOwnerDoc() const
   { return mOwnerContent ? mOwnerContent->OwnerDoc() : nullptr; }
 
-  PBrowserParent* GetRemoteBrowser();
+  PBrowserParent* GetRemoteBrowser() const;
 
   /**
    * The "current" render frame is the one on which the most recent
@@ -162,20 +162,8 @@ public:
    * returned.  (In-process <browser> behaves similarly, and this
    * behavior seems desirable.)
    */
-  RenderFrameParent* GetCurrentRemoteFrame() const
-  {
-    return mCurrentRemoteFrame;
-  }
+  RenderFrameParent* GetCurrentRemoteFrame() const;
 
-  /**
-   * |aFrame| can be null.  If non-null, it must be the remote frame
-   * on which the most recent layer transaction completed for this's
-   * <browser>.
-   */
-  void SetCurrentRemoteFrame(RenderFrameParent* aFrame)
-  {
-    mCurrentRemoteFrame = aFrame;
-  }
   nsFrameMessageManager* GetFrameMessageManager() { return mMessageManager; }
 
   mozilla::dom::Element* GetOwnerContent() { return mOwnerContent; }
@@ -186,10 +174,10 @@ public:
   /**
    * Tell this FrameLoader to use a particular remote browser.
    *
-   * This will assert if mRemoteBrowser or mCurrentRemoteFrame is non-null.  In
-   * practice, this means you can't have successfully run TryRemoteBrowser() on
-   * this object, which means you can't have called ShowRemoteFrame() or
-   * ReallyStartLoading().
+   * This will assert if mRemoteBrowser is non-null.  In practice,
+   * this means you can't have successfully run TryRemoteBrowser() on
+   * this object, which means you can't have called ShowRemoteFrame()
+   * or ReallyStartLoading().
    */
   void SetRemoteBrowser(nsITabParent* aTabParent);
 
@@ -363,7 +351,6 @@ private:
   // doesn't necessarily correlate with docshell/document visibility.
   bool mVisible : 1;
 
-  RenderFrameParent* mCurrentRemoteFrame;
   TabParent* mRemoteBrowser;
   uint64_t mChildID;
 
