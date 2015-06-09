@@ -1901,6 +1901,10 @@ function BrowserReloadOrDuplicate(aEvent) {
 }
 
 function BrowserReload() {
+  if (gBrowser.currentURI.schemeIs("view-source")) {
+    // Bug 1167797: For view source, we always skip the cache
+    return BrowserReloadSkipCache();
+  }
   const reloadFlags = nsIWebNavigation.LOAD_FLAGS_NONE;
   BrowserReloadWithFlags(reloadFlags);
 }
