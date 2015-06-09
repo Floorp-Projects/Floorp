@@ -16,6 +16,11 @@
 #include "nsIWeakReferenceUtils.h"
 #include "nsIWidget.h"
 #include "TouchManager.h"
+#include "nsIDOMMouseEvent.h"
+#include "nsLayoutUtils.h"
+#include "nsIScrollableFrame.h"
+#include "nsIScrollbarMediator.h"
+#include "mozilla/TouchEvents.h"
 
 #define APZES_LOG(...)
 // #define APZES_LOG(...) printf_stderr("APZES: " __VA_ARGS__)
