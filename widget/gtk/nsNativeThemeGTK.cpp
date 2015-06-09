@@ -1578,6 +1578,15 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     return false;
 
   switch (aWidgetType) {
+  // Combobox dropdowns don't support native theming in vertical mode.
+  case NS_THEME_DROPDOWN:
+  case NS_THEME_DROPDOWN_TEXT:
+  case NS_THEME_DROPDOWN_TEXTFIELD:
+    if (aFrame && aFrame->GetWritingMode().IsVertical()) {
+      return false;
+    }
+    // fall through
+
   case NS_THEME_BUTTON:
   case NS_THEME_BUTTON_FOCUS:
   case NS_THEME_RADIO:
@@ -1634,7 +1643,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_NUMBER_INPUT:
   case NS_THEME_TEXTFIELD:
   case NS_THEME_TEXTFIELD_MULTILINE:
-  case NS_THEME_DROPDOWN_TEXTFIELD:
   case NS_THEME_RANGE:
   case NS_THEME_RANGE_THUMB:
   case NS_THEME_SCALE_HORIZONTAL:
@@ -1658,11 +1666,12 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_SPLITTER:
   case NS_THEME_WINDOW:
   case NS_THEME_DIALOG:
-  case NS_THEME_DROPDOWN:
-  case NS_THEME_DROPDOWN_TEXT:
     return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
 
   case NS_THEME_DROPDOWN_BUTTON:
+    if (aFrame && aFrame->GetWritingMode().IsVertical()) {
+      return false;
+    }
     // "Native" dropdown buttons cause padding and margin problems, but only
     // in HTML so allow them in XUL.
     return (!aFrame || IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) &&

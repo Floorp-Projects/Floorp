@@ -14,6 +14,7 @@
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositorChild.h" // for CompositorChild
 #include "mozilla/layers/ContentClient.h"
+#include "mozilla/layers/FrameUniformityData.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/LayersMessages.h"  // for EditReply, etc
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
@@ -424,6 +425,20 @@ ClientLayerManager::StartNewRepaintRequest(SequenceNumber aSequenceNumber)
   if (gfxPrefs::APZTestLoggingEnabled()) {
     mApzTestData.StartNewRepaintRequest(aSequenceNumber);
   }
+}
+
+void
+ClientLayerManager::GetFrameUniformity(FrameUniformityData* aOutData)
+{
+  MOZ_ASSERT(XRE_IsParentProcess(), "Frame Uniformity only supported in parent process");
+
+  if (HasShadowManager()) {
+    CompositorChild* child = GetRemoteRenderer();
+    child->SendGetFrameUniformity(aOutData);
+    return;
+  }
+
+  return LayerManager::GetFrameUniformity(aOutData);
 }
 
 bool

@@ -49,14 +49,16 @@ this.mozIApplication = function(aApp) {
 
 mozIApplication.prototype = {
   hasPermission: function(aPermission) {
-    let uri = Services.io.newURI(this.origin, null, null);
-    let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                   .getService(Ci.nsIScriptSecurityManager);
     // This helper checks an URI inside |aApp|'s origin and part of |aApp| has a
     // specific permission. It is not checking if browsers inside |aApp| have such
     // permission.
-    let principal = secMan.getAppCodebasePrincipal(uri, this.localId,
-                                                   /*mozbrowser*/false);
+    let principal = this.principal;
+    if (this.installerIsBrowser) {
+      let uri = Services.io.newURI(this.origin, null, null);
+      principal =
+        Services.scriptSecurityManager.getAppCodebasePrincipal(uri, this.localId,
+                                                               /*mozbrowser*/false);
+    }
     let perm = Services.perms.testExactPermissionFromPrincipal(principal,
                                                                aPermission);
     return (perm === Ci.nsIPermissionManager.ALLOW_ACTION);
@@ -69,6 +71,26 @@ mozIApplication.prototype = {
     let equalCriterion = aUrl => Services.io.newURI(aUrl, null, null)
                                             .equals(eliminatedUri);
     return this.widgetPages.find(equalCriterion) !== undefined;
+  },
+
+  get principal() {
+    if (this._principal) {
+      return this._principal;
+    }
+
+    this._principal = null;
+
+    try {
+      this._principal = Services.scriptSecurityManager.getAppCodebasePrincipal(
+        Services.io.newURI(this.origin, null, null),
+        this.localId,
+        this.installerIsBrowser
+      );
+    } catch(e) {
+      dump("Could not create app principal " + e + "\n");
+    }
+
+    return this._principal;
   },
 
   QueryInterface: function(aIID) {

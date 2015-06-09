@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AccessibleWrap.h"
+#include "ProxyAccessible.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -31,6 +32,12 @@ GetNativeFromGeckoAccessible(mozilla::a11y::Accessible* aAccessible)
   return native;
 }
 
+inline mozAccessible*
+GetNativeFromProxy(mozilla::a11y::ProxyAccessible* aProxy)
+{
+  return reinterpret_cast<mozAccessible*>(aProxy->GetWrapper());
+}
+
 // This is OR'd with the Accessible owner to indicate the wrap-ee is a proxy.
 static const uintptr_t IS_PROXY = 1;
 
@@ -40,13 +47,13 @@ static const uintptr_t IS_PROXY = 1;
    * Weak reference; it owns us.
    */
   uintptr_t mGeckoAccessible;
-  
+
   /**
    * Strong ref to array of children
    */
   NSMutableArray* mChildren;
-  
-  /** 
+
+  /**
    * Weak reference to the parent
    */
   mozAccessible* mParent;
@@ -122,7 +129,7 @@ static const uintptr_t IS_PROXY = 1;
 // invalidates and removes all our children from our cached array.
 - (void)invalidateChildren;
 
-/** 
+/**
  * Append a child if they are already cached.
  */
 - (void)appendChild:(mozilla::a11y::Accessible*)aAccessible;

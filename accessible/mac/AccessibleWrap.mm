@@ -20,7 +20,7 @@ using namespace mozilla::a11y;
 
 AccessibleWrap::
   AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-  Accessible(aContent, aDoc), mNativeObject(nil),  
+  Accessible(aContent, aDoc), mNativeObject(nil),
   mNativeInited(false)
 {
 }
@@ -29,20 +29,20 @@ AccessibleWrap::~AccessibleWrap()
 {
 }
 
-mozAccessible* 
+mozAccessible*
 AccessibleWrap::GetNativeObject()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-  
+
   if (!mNativeInited && !mNativeObject && !IsDefunct() && !AncestorIsFlat()) {
     uintptr_t accWrap = reinterpret_cast<uintptr_t>(this);
     mNativeObject = [[GetNativeType() alloc] initWithAccessible:accWrap];
   }
-  
+
   mNativeInited = true;
-  
+
   return mNativeObject;
-  
+
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
@@ -55,7 +55,7 @@ AccessibleWrap::GetNativeInterface(void** aOutInterface)
 // overridden in subclasses to create the right kind of object. by default we create a generic
 // 'mozAccessible' node.
 Class
-AccessibleWrap::GetNativeType () 
+AccessibleWrap::GetNativeType ()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
@@ -112,18 +112,7 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
   if (!nativeAcc)
     return NS_ERROR_FAILURE;
 
-  switch (eventType) {
-    case nsIAccessibleEvent::EVENT_FOCUS:
-      [nativeAcc didReceiveFocus];
-      break;
-    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
-      [nativeAcc valueDidChange];
-      break;
-    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
-    case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
-      [nativeAcc selectedTextDidChange];
-      break;
-  }
+  FireNativeEvent(nativeAcc, eventType);
 
   return NS_OK;
 
@@ -165,14 +154,14 @@ AccessibleWrap::RemoveChild(Accessible* aAccessible)
 
 // if we for some reason have no native accessible, we should be skipped over (and traversed)
 // when fetching all unignored children, etc.  when counting unignored children, we will not be counted.
-bool 
-AccessibleWrap::IsIgnored() 
+bool
+AccessibleWrap::IsIgnored()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-  
+
   mozAccessible* nativeObject = GetNativeObject();
   return (!nativeObject) || [nativeObject accessibilityIsIgnored];
-  
+
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
@@ -203,9 +192,9 @@ AccessibleWrap::GetUnignoredParent() const
 {
   // Go up the chain to find a parent that is not ignored.
   AccessibleWrap* parentWrap = static_cast<AccessibleWrap*>(Parent());
-  while (parentWrap && parentWrap->IsIgnored()) 
+  while (parentWrap && parentWrap->IsIgnored())
     parentWrap = static_cast<AccessibleWrap*>(parentWrap->Parent());
-    
+
   return parentWrap;
 }
 
@@ -217,7 +206,7 @@ AccessibleWrap::AncestorIsFlat()
 {
   // We don't create a native object if we're child of a "flat" accessible;
   // for example, on OS X buttons shouldn't have any children, because that
-  // makes the OS confused. 
+  // makes the OS confused.
   //
   // To maintain a scripting environment where the XPCOM accessible hierarchy
   // look the same on all platforms, we still let the C++ objects be created
@@ -234,8 +223,29 @@ AccessibleWrap::AncestorIsFlat()
   return false;
 }
 
+void
+a11y::FireNativeEvent(mozAccessible* aNativeAcc, uint32_t aEventType)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  switch (aEventType) {
+    case nsIAccessibleEvent::EVENT_FOCUS:
+      [aNativeAcc didReceiveFocus];
+      break;
+    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
+      [aNativeAcc valueDidChange];
+      break;
+    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
+    case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
+      [aNativeAcc selectedTextDidChange];
+      break;
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 Class
-a11y::GetTypeFromRole(roles::Role aRole) 
+a11y::GetTypeFromRole(roles::Role aRole)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
@@ -247,13 +257,13 @@ a11y::GetTypeFromRole(roles::Role aRole)
     {
         return [mozButtonAccessible class];
     }
-    
+
     case roles::PAGETAB:
       return [mozButtonAccessible class];
 
     case roles::CHECKBUTTON:
       return [mozCheckboxAccessible class];
-      
+
     case roles::HEADING:
       return [mozHeadingAccessible class];
 
@@ -273,11 +283,11 @@ a11y::GetTypeFromRole(roles::Role aRole)
 
     case roles::LINK:
       return [mozLinkAccessible class];
-      
+
     default:
       return [mozAccessible class];
   }
-  
+
   return nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
