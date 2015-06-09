@@ -260,7 +260,7 @@ public:
   /**
    * Returns true if this Animation has a lower composite order than aOther.
    */
-  bool HasLowerCompositeOrderThan(const Animation& aOther) const;
+  virtual bool HasLowerCompositeOrderThan(const Animation& aOther) const;
   /**
    * Returns true if this Animation is involved in some sort of
    * custom composite ordering (such as the ordering defined for CSS

@@ -15,6 +15,7 @@
 #include "nsPresContext.h"
 #include "nsStyleSet.h"
 #include "nsStyleChangeList.h"
+#include "nsContentUtils.h"
 #include "nsCSSRules.h"
 #include "RestyleManager.h"
 #include "nsLayoutUtils.h"
@@ -110,6 +111,65 @@ CSSAnimation::PauseFromStyle()
   if (rv.Failed()) {
     NS_WARNING("Unexpected exception pausing animation - silently failing");
   }
+}
+
+bool
+CSSAnimation::HasLowerCompositeOrderThan(const Animation& aOther) const
+{
+  // 0. Object-equality case
+  if (&aOther == this) {
+    return false;
+  }
+
+  // 1. Transitions sort lower
+  //
+  // FIXME: We need to differentiate between transitions and generic Animations.
+  // Generic animations don't exist yet (that's bug 1096773) so for now we're
+  // ok.
+  const CSSAnimation* otherAnimation = aOther.AsCSSAnimation();
+  if (!otherAnimation) {
+    MOZ_ASSERT(aOther.AsCSSTransition(),
+               "Animation being compared is a CSS transition");
+    return false;
+  }
+
+  // 2. CSS animations using custom composite ordering (i.e. those that
+  //    correspond to an animation-name property) sort lower than other CSS
+  //    animations (e.g. those created or kept-alive by script).
+  if (!IsUsingCustomCompositeOrder()) {
+    return !aOther.IsUsingCustomCompositeOrder() ?
+           Animation::HasLowerCompositeOrderThan(aOther) :
+           false;
+  }
+  if (!aOther.IsUsingCustomCompositeOrder()) {
+    return true;
+  }
+
+  // 3. Sort by document order
+  Element* ourElement;
+  nsCSSPseudoElements::Type ourPseudoType;
+  GetOwningElement(ourElement, ourPseudoType);
+
+  Element* otherElement;
+  nsCSSPseudoElements::Type otherPseudoType;
+  otherAnimation->GetOwningElement(otherElement, otherPseudoType);
+  MOZ_ASSERT(ourElement && otherElement,
+             "Animations using custom composite order should have an "
+             "owning element");
+
+  if (ourElement != otherElement) {
+    return nsContentUtils::PositionIsBefore(ourElement, otherElement);
+  }
+
+  // 3b. Sort by pseudo: (none) < before < after
+  if (ourPseudoType != otherPseudoType) {
+    return ourPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
+           (ourPseudoType == nsCSSPseudoElements::ePseudo_before &&
+            otherPseudoType == nsCSSPseudoElements::ePseudo_after);
+  }
+
+  // 4. (Same element and pseudo): Sort by position in animation-name
+  return mSequenceNum < otherAnimation->mSequenceNum;
 }
 
 void
