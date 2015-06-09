@@ -55,16 +55,6 @@ const { Formatters, CollapseFunctions: collapse } = require("devtools/performanc
  * updated as well.
  */
 const TIMELINE_BLUEPRINT = {
-  /* Default definition used for markers that occur but
-   * are not defined here. Should ultimately be defined, but this gives
-   * us room to work on the front end separately from the platform. */
-  "UNKNOWN": {
-    group: 2,
-    colorName: "graphs-grey",
-    collapseFunc: collapse.child,
-    label: Formatters.DefaultLabel
-  },
-
   /* Group 0 - Reflow and Rendering pipeline */
   "Styles": {
     group: 0,
@@ -127,7 +117,7 @@ const TIMELINE_BLUEPRINT = {
   /* Group 2 - User Controlled */
   "ConsoleTime": {
     group: 2,
-    colorName: "graphs-blue",
+    colorName: "graphs-grey",
     label: sublabelForProperty(L10N.getStr("timeline.label.consoleTime"), "causeName"),
     fields: [{
       property: "causeName",
@@ -136,7 +126,7 @@ const TIMELINE_BLUEPRINT = {
   },
   "TimeStamp": {
     group: 2,
-    colorName: "graphs-yellow",
+    colorName: "graphs-blue",
     collapseFunc: collapse.child,
     label: sublabelForProperty(L10N.getStr("timeline.label.timestamp"), "causeName"),
     fields: [{
@@ -145,19 +135,6 @@ const TIMELINE_BLUEPRINT = {
     }],
   },
 };
-
-/**
- * Takes a marker and returns the definition for that marker type,
- * falling back to the UNKNOWN definition if undefined. Takes an optional
- * second argument if using another blueprint, rather than TIMELINE_BLUEPRINT.
- *
- * @param {Marker} marker
- * @param {?object} blueprint
- * @return {object}
- */
-function getBlueprintFor (marker, blueprint=TIMELINE_BLUEPRINT) {
-  return blueprint[marker.name] || blueprint.UNKNOWN;
-}
 
 /**
  * Helper for creating a function that returns the first defined result from
@@ -186,4 +163,3 @@ function sublabelForProperty (mainLabel, prop) {
 
 // Exported symbols.
 exports.TIMELINE_BLUEPRINT = TIMELINE_BLUEPRINT;
-exports.getBlueprintFor = getBlueprintFor;

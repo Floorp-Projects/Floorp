@@ -32,7 +32,6 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     this._onMarkerSelected = this._onMarkerSelected.bind(this);
     this._onResize = this._onResize.bind(this);
     this._onViewSource = this._onViewSource.bind(this);
-    this._blueprint = PerformanceController.getTimelineBlueprint();
 
     this.headerContainer = $("#waterfall-header");
     this.breakdownContainer = $("#waterfall-breakdown");
@@ -112,8 +111,8 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    * Called whenever an observed pref is changed.
    */
   _onObservedPrefChange: function(_, prefName) {
-    this._blueprint = PerformanceController.getTimelineBlueprint();
-    this._markersRoot.blueprint = this._blueprint;
+    let blueprint = PerformanceController.getTimelineBlueprint();
+    this._markersRoot.blueprint = blueprint;
   },
 
   /**
@@ -137,8 +136,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
 
     WaterfallUtils.collapseMarkersIntoNode({
       markerNode: rootMarkerNode,
-      markersList: markers,
-      blueprint: this._blueprint
+      markersList: markers
     });
 
     this._cache.set(markers, rootMarkerNode);
@@ -162,7 +160,8 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     this._markersRoot = root;
     this._waterfallHeader = header;
 
-    root.blueprint = this._blueprint;
+    let blueprint = PerformanceController.getTimelineBlueprint();
+    root.blueprint = blueprint;
     root.interval = interval;
     root.on("selected", this._onMarkerSelected);
     root.on("unselected", this._onMarkerSelected);
