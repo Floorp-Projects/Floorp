@@ -75,7 +75,8 @@ public:
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual CSSAnimation* AsCSSAnimation() override { return this; }
+  CSSAnimation* AsCSSAnimation() override { return this; }
+  const CSSAnimation* AsCSSAnimation() const override { return this; }
 
   // CSSAnimation interface
   void GetAnimationName(nsString& aRetVal) const { aRetVal = mAnimationName; }

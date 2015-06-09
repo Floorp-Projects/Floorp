@@ -211,7 +211,8 @@ public:
                                JS::Handle<JSObject*> aGivenProto) override;
 
   virtual ElementPropertyTransition* AsTransition() { return nullptr; }
-  virtual const ElementPropertyTransition* AsTransition() const {
+  virtual const ElementPropertyTransition* AsTransition() const
+  {
     return nullptr;
   }
 
