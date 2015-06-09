@@ -116,8 +116,8 @@ public:
   // Determine whether any APZC along this handoff chain is overscrolled.
   bool HasOverscrolledApzc() const;
 
-  // Determine whether any APZC along this handoff chain is moving fast.
-  bool HasFastMovingApzc() const;
+  // Determine whether any APZC along this handoff chain has been flung fast.
+  bool HasFastFlungApzc() const;
 
   nsRefPtr<AsyncPanZoomController> FindFirstScrollable(const ScrollWheelInput& aInput) const;
 

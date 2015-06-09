@@ -421,7 +421,7 @@ TouchBlockState::TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTarget
                                  bool aTargetConfirmed)
   : CancelableBlockState(aTargetApzc, aTargetConfirmed)
   , mAllowedTouchBehaviorSet(false)
-  , mDuringFastMotion(false)
+  , mDuringFastFling(false)
   , mSingleTapOccurred(false)
 {
   TBS_LOG("Creating %p\n", this);
@@ -475,24 +475,24 @@ TouchBlockState::IsReadyForHandling() const
 }
 
 void
-TouchBlockState::SetDuringFastMotion()
+TouchBlockState::SetDuringFastFling()
 {
   TBS_LOG("%p setting fast-motion flag\n", this);
-  mDuringFastMotion = true;
+  mDuringFastFling = true;
 }
 
 bool
-TouchBlockState::IsDuringFastMotion() const
+TouchBlockState::IsDuringFastFling() const
 {
-  return mDuringFastMotion;
+  return mDuringFastFling;
 }
 
 bool
 TouchBlockState::SetSingleTapOccurred()
 {
   TBS_LOG("%p attempting to set single-tap occurred; disallowed=%d\n",
-    this, mDuringFastMotion);
-  if (!mDuringFastMotion) {
+    this, mDuringFastFling);
+  if (!mDuringFastFling) {
     mSingleTapOccurred = true;
     return true;
   }
