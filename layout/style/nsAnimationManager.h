@@ -56,10 +56,12 @@ namespace dom {
 class CSSAnimation final : public Animation
 {
 public:
- explicit CSSAnimation(DocumentTimeline* aTimeline,
+ explicit CSSAnimation(dom::DocumentTimeline* aTimeline,
                        const nsSubstring& aAnimationName)
-    : Animation(aTimeline)
+    : dom::Animation(aTimeline)
     , mAnimationName(aAnimationName)
+    , mOwningElement(nullptr)
+    , mOwningPseudoType(nsCSSPseudoElements::ePseudo_NotPseudoElement)
     , mIsStylePaused(false)
     , mPauseShouldStick(false)
     , mPreviousPhaseOrIteration(PREVIOUS_PHASE_BEFORE)
@@ -92,10 +94,56 @@ public:
 
   void PlayFromStyle();
   void PauseFromStyle();
+  void CancelFromStyle() override
+  {
+    mOwningElement = nullptr;
+    mOwningPseudoType = nsCSSPseudoElements::ePseudo_NotPseudoElement;
+
+    Animation::CancelFromStyle();
+  }
 
   bool IsStylePaused() const { return mIsStylePaused; }
 
   void QueueEvents(EventArray& aEventsToDispatch);
+
+  // Returns the element or pseudo-element whose animation-name property
+  // this CSSAnimation corresponds to (if any). This is used for determining
+  // the relative composite order of animations generated from CSS markup.
+  //
+  // Typically this will be the same as the target element of the keyframe
+  // effect associated with this animation. However, it can differ in the
+  // following circumstances:
+  //
+  // a) If script removes or replaces the effect of this animation,
+  // b) If this animation is cancelled (e.g. by updating the
+  //    animation-name property or removing the owning element from the
+  //    document),
+  // c) If this object is generated from script using the CSSAnimation
+  //    constructor.
+  //
+  // For (b) and (c) the returned owning element will by nullptr and the
+  // pseudo-type will be nsCSSPseudoElements::ePseudo_NotPseudoElement.
+  void GetOwningElement(dom::Element*& aElement,
+                        nsCSSPseudoElements::Type& aPseudoType) const {
+    MOZ_ASSERT(mOwningElement != nullptr ||
+               mOwningPseudoType ==
+                 nsCSSPseudoElements::ePseudo_NotPseudoElement,
+               "When there is no owning element there should be no "
+               "pseudo-type");
+    aElement = mOwningElement;
+    aPseudoType = mOwningPseudoType;
+  }
+
+  // Sets the owning element and pseudo-type which is used for determining
+  // the composite order of CSSAnimation objects generated from CSS markup.
+  //
+  // @see GetOwningElement.
+  void SetOwningElement(dom::Element& aElement,
+                        nsCSSPseudoElements::Type aPseudoType)
+  {
+    mOwningElement = &aElement;
+    mOwningPseudoType = aPseudoType;
+  }
 
   // Is this animation currently in effect for the purposes of computing
   // mWinsInCascade.  (In general, this can be computed from the timing
@@ -105,12 +153,24 @@ public:
   bool mInEffectForCascadeResults;
 
 protected:
-  virtual ~CSSAnimation() { }
+  virtual ~CSSAnimation()
+  {
+    MOZ_ASSERT(!mOwningElement, "Owning element should be cleared before a "
+                                "CSS animation is destroyed");
+  }
   virtual css::CommonAnimationManager* GetAnimationManager() const override;
 
   static nsString PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType);
 
   nsString mAnimationName;
+
+  // The (pseudo-)element whose computed animation-name refers to this
+  // animation (if any).
+  //
+  // Raw pointer because this is only ever set when this object is part
+  // of mOwningElement's AnimationCollection.
+  dom::Element* MOZ_NON_OWNING_REF mOwningElement;
+  nsCSSPseudoElements::Type        mOwningPseudoType;
 
   // When combining animation-play-state with play() / pause() the following
   // behavior applies:
