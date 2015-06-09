@@ -11,11 +11,11 @@
 
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
-#include "jit/BaselineRegisters.h"
 #include "jit/JitFrames.h"
 #include "jit/MacroAssembler.h"
 #include "jit/mips/Simulator-mips.h"
 #include "jit/MoveEmitter.h"
+#include "jit/SharedICRegisters.h"
 
 #include "jit/MacroAssembler-inl.h"
 

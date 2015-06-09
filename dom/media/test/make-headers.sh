@@ -12,10 +12,6 @@ FILES=(`ls *.ogg *.ogv *.webm *.mp3 *.opus *.mp4 *.m4s *.wav`)
 
 rm -f *.ogg^headers^ *.ogv^headers^ *.webm^headers^ *.mp3^headers^ *.opus^headers^ *.mp4^headers^ *.m4s^headers^ *.wav^headers^
 
-# Restore special headers.
-echo "X-Content-Duration: 1.96" > bug500311.ogv^headers^
-echo "X-Content-Duration: 9000" > bug520908.ogv^headers^
-
 for i in "${FILES[@]}"
 do
   echo "Cache-Control: no-store" >> $i^headers^

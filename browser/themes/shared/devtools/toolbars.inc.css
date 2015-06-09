@@ -657,6 +657,14 @@
   background-image: url("chrome://browser/skin/devtools/undock@2x.png");
 }
 
+#toolbox-dock-bottom-minimize > image {
+  background-image: url("chrome://browser/skin/devtools/dock-bottom-minimize@2x.png");
+}
+
+#toolbox-dock-bottom-minimize.minimized > image {
+  background-image: url("chrome://browser/skin/devtools/dock-bottom-maximize@2x.png");
+}
+
 #toolbox-dock-window,
 #toolbox-dock-bottom,
 #toolbox-dock-side {

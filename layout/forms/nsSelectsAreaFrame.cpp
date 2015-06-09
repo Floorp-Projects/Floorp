@@ -6,6 +6,9 @@
 #include "nsIContent.h"
 #include "nsListControlFrame.h"
 #include "nsDisplayList.h"
+#include "WritingModes.h"
+
+using namespace mozilla;
 
 nsContainerFrame*
 NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsStyleContext* aContext, nsFrameState aFlags)
@@ -164,35 +167,38 @@ nsSelectsAreaFrame::Reflow(nsPresContext*           aPresContext,
   NS_ASSERTION(list,
                "Must have an nsListControlFrame!  Frame constructor is "
                "broken");
-  
+
   bool isInDropdownMode = list->IsInDropDownMode();
-  
+
   // See similar logic in nsListControlFrame::Reflow and
   // nsListControlFrame::ReflowAsDropdown.  We need to match it here.
-  nscoord oldHeight;
+  WritingMode wm = aReflowState.GetWritingMode();
+  nscoord oldBSize;
   if (isInDropdownMode) {
-    // Store the height now in case it changes during
+    // Store the block size now in case it changes during
     // nsBlockFrame::Reflow for some odd reason.
     if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-      oldHeight = GetSize().height;
+      oldBSize = BSize(wm);
     } else {
-      oldHeight = NS_UNCONSTRAINEDSIZE;
+      oldBSize = NS_UNCONSTRAINEDSIZE;
     }
   }
-  
+
   nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
-  // Check whether we need to suppress scrollbar updates.  We want to do that if
-  // we're in a possible first pass and our height of a row has changed.
+  // Check whether we need to suppress scrollbar updates.  We want to do
+  // that if we're in a possible first pass and our block size of a row
+  // has changed.
   if (list->MightNeedSecondPass()) {
-    nscoord newHeightOfARow = list->CalcHeightOfARow();
-    // We'll need a second pass if our height of a row changed.  For
-    // comboboxes, we'll also need it if our height changed.  If we're going
-    // to do a second pass, suppress scrollbar updates for this pass.
-    if (newHeightOfARow != mHeightOfARow ||
-        (isInDropdownMode && (oldHeight != aDesiredSize.Height() ||
-                              oldHeight != GetSize().height))) {
-      mHeightOfARow = newHeightOfARow;
+    nscoord newBSizeOfARow = list->CalcBSizeOfARow();
+    // We'll need a second pass if our block size of a row changed.  For
+    // comboboxes, we'll also need it if our block size changed.  If
+    // we're going to do a second pass, suppress scrollbar updates for
+    // this pass.
+    if (newBSizeOfARow != mBSizeOfARow ||
+        (isInDropdownMode && (oldBSize != aDesiredSize.BSize(wm) ||
+                              oldBSize != BSize(wm)))) {
+      mBSizeOfARow = newBSizeOfARow;
       list->SetSuppressScrollbarUpdate(true);
     }
   }

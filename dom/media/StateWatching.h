@@ -143,7 +143,8 @@ public:
   Watchable(const T& aInitialValue, const char* aName)
     : WatchTarget(aName), mValue(aInitialValue) {}
 
-  operator const T&() const { return mValue; }
+  const T& Ref() const { return mValue; }
+  operator const T&() const { return Ref(); }
   Watchable& operator=(const T& aNewValue)
   {
     if (aNewValue != mValue) {

@@ -37,6 +37,7 @@
 #include "mozilla/layers/CompositorLRU.h"  // for CompositorLRU
 #include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
 #include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/FrameUniformityData.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/PLayerTransactionParent.h"
@@ -1325,6 +1326,13 @@ CompositorParent::ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
 }
 
 bool
+CompositorParent::RecvGetFrameUniformity(FrameUniformityData* aOutData)
+{
+  mCompositionManager->GetFrameUniformity(aOutData);
+  return true;
+}
+
+bool
 CompositorParent::RecvRequestOverfill()
 {
   uint32_t overfillRatio = mCompositor->GetFillRatio();
@@ -1713,6 +1721,13 @@ public:
     return true;
   }
 
+  virtual bool RecvGetFrameUniformity(FrameUniformityData* aOutData) override
+  {
+    // Don't support calculating frame uniformity on the child process and
+    // this is just a stub for now.
+    MOZ_ASSERT(false);
+    return true;
+  }
 
   /**
    * Tells this CompositorParent to send a message when the compositor has received the transaction.

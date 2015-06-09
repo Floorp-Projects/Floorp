@@ -4545,7 +4545,7 @@ Tab.prototype = {
     // or pageshow event, but we'll still want to update the reader view button to account for this change.
     // This mirrors the desktop logic in TabsProgressListener.
     if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
-      this.browser.messageManager.sendAsyncMessage("Reader:PushState", {isArticle: gBrowser.selectedBrowser.isArticle});
+      this.browser.messageManager.sendAsyncMessage("Reader:PushState", {isArticle: this.browser.isArticle});
     }
 
     // Reset state of click-to-play plugin notifications.

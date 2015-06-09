@@ -14,7 +14,7 @@
 
 using namespace mozilla::a11y;
 
-static id <mozAccessible, mozView> 
+static id <mozAccessible, mozView>
 getNativeViewFromRootAccessible(Accessible* aAccessible)
 {
   RootAccessibleWrap* root =
@@ -31,14 +31,14 @@ getNativeViewFromRootAccessible(Accessible* aAccessible)
 - (NSArray*)accessibilityAttributeNames
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-  
+
   // if we're expired, we don't support any attributes.
   if (![self getGeckoAccessible])
     return [NSArray array];
-  
+
   // standard attributes that are shared and supported by root accessible (AXMain) elements.
   static NSMutableArray* attributes = nil;
-  
+
   if (!attributes) {
     attributes = [[super accessibilityAttributeNames] mutableCopy];
     [attributes addObject:NSAccessibilityMainAttribute];
@@ -53,14 +53,14 @@ getNativeViewFromRootAccessible(Accessible* aAccessible)
 - (id)accessibilityAttributeValue:(NSString *)attribute
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-  
+
   if ([attribute isEqualToString:NSAccessibilityMainAttribute])
     return [NSNumber numberWithBool:[[self window] isMainWindow]];
   if ([attribute isEqualToString:NSAccessibilityMinimizedAttribute])
     return [NSNumber numberWithBool:[[self window] isMiniaturized]];
 
   return [super accessibilityAttributeValue:attribute];
-  
+
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
@@ -72,10 +72,10 @@ getNativeViewFromRootAccessible(Accessible* aAccessible)
 
   if (!mParallelView)
     mParallelView = (id<mozView, mozAccessible>)[self representedView];
-  
+
   if (mParallelView)
     return [mParallelView accessibilityAttributeValue:NSAccessibilityParentAttribute];
-  
+
   NSAssert(mParallelView, @"we're a root accessible w/o native view?");
   return [super parent];
 
@@ -94,9 +94,9 @@ getNativeViewFromRootAccessible(Accessible* aAccessible)
 
   if (mParallelView)
     return (id)mParallelView;
-  
+
   mParallelView = getNativeViewFromRootAccessible ([self getGeckoAccessible]);
-  
+
   NSAssert(mParallelView, @"can't return root accessible's native parallel view.");
   return mParallelView;
 

@@ -109,13 +109,19 @@ GetDeviceContextFor(nsPresContext* aPresContext)
   return aPresContext->DeviceContext();
 }
 
+static bool
+ShouldResistFingerprinting(nsPresContext* aPresContext)
+{
+    return nsContentUtils::ShouldResistFingerprinting(aPresContext->GetDocShell());
+}
+
 // A helper for three features below.
 static nsSize
 GetDeviceSize(nsPresContext* aPresContext)
 {
     nsSize size;
 
-    if (aPresContext->IsDeviceSizePageSize()) {
+    if (ShouldResistFingerprinting(aPresContext) || aPresContext->IsDeviceSizePageSize()) {
         size = GetSize(aPresContext);
     } else if (aPresContext->IsRootPaginatedDocument()) {
         // We want the page size, including unprintable areas and margins.
@@ -223,13 +229,17 @@ static nsresult
 GetColor(nsPresContext* aPresContext, const nsMediaFeature*,
          nsCSSValue& aResult)
 {
-    // FIXME:  This implementation is bogus.  nsDeviceContext
-    // doesn't provide reliable information (should be fixed in bug
-    // 424386).
-    // FIXME: On a monochrome device, return 0!
-    nsDeviceContext *dx = GetDeviceContextFor(aPresContext);
-    uint32_t depth;
-    dx->GetDepth(depth);
+    uint32_t depth = 24; // Use depth of 24 when resisting fingerprinting.
+
+    if (!ShouldResistFingerprinting(aPresContext)) {
+        // FIXME:  This implementation is bogus.  nsDeviceContext
+        // doesn't provide reliable information (should be fixed in bug
+        // 424386).
+        // FIXME: On a monochrome device, return 0!
+        nsDeviceContext *dx = GetDeviceContextFor(aPresContext);
+        dx->GetDepth(depth);
+    }
+
     // The spec says to use bits *per color component*, so divide by 3,
     // and round down, since the spec says to use the smallest when the
     // color components differ.
@@ -267,10 +277,15 @@ static nsresult
 GetResolution(nsPresContext* aPresContext, const nsMediaFeature*,
               nsCSSValue& aResult)
 {
-    // Resolution measures device pixels per CSS (inch/cm/pixel).  We
-    // return it in device pixels per CSS inches.
-    float dpi = float(nsPresContext::AppUnitsPerCSSInch()) /
-                float(aPresContext->AppUnitsPerDevPixel());
+    float dpi = 96; // Use 96 when resisting fingerprinting.
+
+    if (!ShouldResistFingerprinting(aPresContext)) {
+      // Resolution measures device pixels per CSS (inch/cm/pixel).  We
+      // return it in device pixels per CSS inches.
+      dpi = float(nsPresContext::AppUnitsPerCSSInch()) /
+            float(aPresContext->AppUnitsPerDevPixel());
+    }
+
     aResult.SetFloatValue(dpi, eCSSUnit_Inch);
     return NS_OK;
 }
@@ -299,15 +314,26 @@ static nsresult
 GetDevicePixelRatio(nsPresContext* aPresContext, const nsMediaFeature*,
                     nsCSSValue& aResult)
 {
-  float ratio = aPresContext->CSSPixelsToDevPixels(1.0f);
-  aResult.SetFloatValue(ratio, eCSSUnit_Number);
-  return NS_OK;
+    if (!ShouldResistFingerprinting(aPresContext)) {
+        float ratio = aPresContext->CSSPixelsToDevPixels(1.0f);
+        aResult.SetFloatValue(ratio, eCSSUnit_Number);
+    } else {
+        aResult.SetFloatValue(1.0, eCSSUnit_Number);
+    }
+    return NS_OK;
 }
 
 static nsresult
 GetSystemMetric(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
                 nsCSSValue& aResult)
 {
+    aResult.Reset();
+    if (ShouldResistFingerprinting(aPresContext)) {
+        // If "privacy.resistFingerprinting" is enabled, then we simply don't
+        // return any system-backed media feature values. (No spoofed values returned.)
+        return NS_OK;
+    }
+
     MOZ_ASSERT(aFeature->mValueType == nsMediaFeature::eBoolInteger,
                "unexpected type");
     nsIAtom *metricAtom = *aFeature->mData.mMetric;
@@ -321,6 +347,10 @@ GetWindowsTheme(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
                 nsCSSValue& aResult)
 {
     aResult.Reset();
+    if (ShouldResistFingerprinting(aPresContext)) {
+        return NS_OK;
+    }
+
 #ifdef XP_WIN
     uint8_t windowsThemeId =
         nsCSSRuleProcessor::GetWindowsThemeIdentifier();
@@ -346,6 +376,10 @@ GetOperatinSystemVersion(nsPresContext* aPresContext, const nsMediaFeature* aFea
                          nsCSSValue& aResult)
 {
     aResult.Reset();
+    if (ShouldResistFingerprinting(aPresContext)) {
+        return NS_OK;
+    }
+
 #ifdef XP_WIN
     int32_t metricResult;
     if (NS_SUCCEEDED(

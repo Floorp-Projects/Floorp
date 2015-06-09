@@ -1517,10 +1517,10 @@
     /*
      * Push "new.target"
      *
-     *  Category: Variables and Scopes
-     *  Type: Arguments
-     *  Operands:
-     *  Stack: => new.target
+     *   Category: Variables and Scopes
+     *   Type: Arguments
+     *   Operands:
+     *   Stack: => new.target
      */ \
     macro(JSOP_NEWTARGET,  148, "newtarget", NULL,      1,  0,  1,  JOF_BYTE) \
     \
