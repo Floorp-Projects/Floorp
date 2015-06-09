@@ -14,6 +14,7 @@ namespace dom {
 
 InternalResponse::InternalResponse(uint16_t aStatus, const nsACString& aStatusText)
   : mType(ResponseType::Default)
+  , mFinalURL(false)
   , mStatus(aStatus)
   , mStatusText(aStatusText)
   , mHeaders(new InternalHeaders(HeadersGuardEnum::Response))
