@@ -1176,9 +1176,10 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     int half_height = (size.height + 1) >> 1;
     int c_size = half_width * half_height;
     int buffer_size = YSIZE(size.width, size.height) + 2 * c_size;
-    uint8* yuv = (uint8*) malloc(buffer_size); // fallible
-    if (!yuv)
+    UniquePtr<uint8[]> yuv_scoped(new (fallible) uint8[buffer_size]);
+    if (!yuv_scoped)
       return;
+    uint8* yuv = yuv_scoped.get();
 
     {
       DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
@@ -1219,7 +1220,6 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
       }
     }
     conduit->SendVideoFrame(yuv, buffer_size, size.width, size.height, mozilla::kVideoI420, 0);
-    free(yuv);
   }
 }
 #endif
