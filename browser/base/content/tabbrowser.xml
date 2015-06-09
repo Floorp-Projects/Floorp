@@ -1776,13 +1776,6 @@
               b = this._createBrowser({remote, uriIsAboutBlank});
             }
 
-            // A remote browser doesn't initially have the outerWindowID
-            // set. Once a remote browser initializes, it sends the Browser:Init
-            // message, and we map the browser at that point.
-            if (!remote) {
-              this._outerWindowIDBrowserMap.set(b.outerWindowID, b);
-            }
-
             let notificationbox = this.getNotificationBox(b);
             var position = this.tabs.length - 1;
             var uniqueId = this._generateUniquePanelID();
@@ -1871,6 +1864,19 @@
             // We start our browsers out as inactive, and then maintain
             // activeness in the tab switcher.
             b.docShellIsActive = false;
+
+            // When addTab() is called with an URL that is not "about:blank" we
+            // set the "nodefaultsrc" attribute that prevents a frameLoader
+            // from being created as soon as the linked <browser> is inserted
+            // into the DOM. We thus have to register the new outerWindowID
+            // for non-remote browsers after we have called browser.loadURI().
+            //
+            // Note: Only do this of we still have a docShell. The TabOpen
+            // event was dispatched above and a gBrowser.removeTab() call from
+            // one of its listeners could cause us to fail here.
+            if (!remote && b.docShell) {
+              this._outerWindowIDBrowserMap.set(b.outerWindowID, b);
+            }
 
             // Check if we're opening a tab related to the current tab and
             // move it to after the current tab.
