@@ -1380,16 +1380,6 @@ bool MediaDecoderStateMachine::IsRealTime() const
   return mRealTime;
 }
 
-int64_t MediaDecoderStateMachine::GetDuration()
-{
-  AssertCurrentThreadInMonitor();
-  if (mDuration.Ref().isNothing() || Duration().IsInfinite()) {
-    return -1;
-  }
-
-  return Duration().ToMicroseconds();
-}
-
 void MediaDecoderStateMachine::RecomputeDuration()
 {
   MOZ_ASSERT(OnTaskQueue());
