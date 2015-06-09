@@ -5,18 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BluetoothSocket.h"
-
 #include <fcntl.h>
 #include <sys/socket.h>
-
-#include "base/message_loop.h"
 #include "BluetoothSocketObserver.h"
 #include "BluetoothInterface.h"
 #include "BluetoothUtils.h"
 #include "mozilla/ipc/UnixSocketWatcher.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/RefPtr.h"
-#include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
 using namespace mozilla::ipc;
@@ -74,11 +70,11 @@ public:
     SOCKET_IS_CONNECTED
   };
 
-  DroidSocketImpl(nsIThread* aConsumerThread,
+  DroidSocketImpl(MessageLoop* aConsumerLoop,
                   MessageLoop* aIOLoop,
                   BluetoothSocket* aConsumer)
     : ipc::UnixFdWatcher(aIOLoop)
-    , DataSocketIO(aConsumerThread)
+    , DataSocketIO(aConsumerLoop)
     , mConsumer(aConsumer)
     , mShuttingDownOnIOThread(false)
     , mConnectionStatus(SOCKET_IS_DISCONNECTED)
@@ -173,7 +169,7 @@ public:
   }
 
 private:
-  class ReceiveRunnable;
+  class ReceiveTask;
 
   /**
    * libevent triggered functions that reads data from socket when available and
@@ -319,9 +315,8 @@ DroidSocketImpl::Accept(int aFd)
   SetFd(aFd);
   mConnectionStatus = SOCKET_IS_CONNECTED;
 
-  GetConsumerThread()->Dispatch(
-    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS),
-    NS_DISPATCH_NORMAL);
+  GetConsumerThread()->PostTask(
+    FROM_HERE, new SocketEventTask(this, SocketEventTask::CONNECT_SUCCESS));
 
   AddWatchers(READ_WATCHER, true);
   if (HasPendingData()) {
@@ -426,15 +421,15 @@ private:
   DroidSocketImpl* mImpl;
 };
 
-class AcceptRunnable final : public SocketIORunnable<DroidSocketImpl>
+class InvokeAcceptTask final : public SocketTask<DroidSocketImpl>
 {
 public:
-  AcceptRunnable(DroidSocketImpl* aImpl, int aFd)
-  : SocketIORunnable<DroidSocketImpl>(aImpl)
-  , mFd(aFd)
+  InvokeAcceptTask(DroidSocketImpl* aImpl, int aFd)
+    : SocketTask<DroidSocketImpl>(aImpl)
+    , mFd(aFd)
   { }
 
-  NS_IMETHOD Run() override
+  void Run() override
   {
     MOZ_ASSERT(GetIO()->IsConsumerThread());
     MOZ_ASSERT(sBluetoothSocketInterface);
@@ -443,8 +438,6 @@ public:
     GetIO()->mConsumer->SetCurrentResultHandler(res);
 
     sBluetoothSocketInterface->Accept(mFd, res);
-
-    return NS_OK;
   }
 
 private:
@@ -462,8 +455,7 @@ DroidSocketImpl::OnSocketCanAcceptWithoutBlocking(int aFd)
    */
 
   RemoveWatchers(READ_WATCHER);
-  GetConsumerThread()->Dispatch(new AcceptRunnable(this, aFd),
-                                NS_DISPATCH_NORMAL);
+  GetConsumerThread()->PostTask(FROM_HERE, new InvokeAcceptTask(this, aFd));
 }
 
 void
@@ -507,9 +499,8 @@ DroidSocketImpl::OnSocketCanConnectWithoutBlocking(int aFd)
 
   mConnectionStatus = SOCKET_IS_CONNECTED;
 
-  GetConsumerThread()->Dispatch(
-    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS),
-    NS_DISPATCH_NORMAL);
+  GetConsumerThread()->PostTask(
+    FROM_HERE, new SocketEventTask(this, SocketEventTask::CONNECT_SUCCESS));
 
   AddWatchers(READ_WATCHER, true);
   if (HasPendingData()) {
@@ -537,33 +528,30 @@ DroidSocketImpl::QueryReceiveBuffer(
  * |ReceiveRunnable| transfers data received on the I/O thread
  * to an instance of |BluetoothSocket| on the consumer thread.
  */
-class DroidSocketImpl::ReceiveRunnable final
-  : public SocketIORunnable<DroidSocketImpl>
+class DroidSocketImpl::ReceiveTask final : public SocketTask<DroidSocketImpl>
 {
 public:
-  ReceiveRunnable(DroidSocketImpl* aIO, UnixSocketBuffer* aBuffer)
-    : SocketIORunnable<DroidSocketImpl>(aIO)
+  ReceiveTask(DroidSocketImpl* aIO, UnixSocketBuffer* aBuffer)
+    : SocketTask<DroidSocketImpl>(aIO)
     , mBuffer(aBuffer)
   { }
 
-  NS_IMETHOD Run() override
+  void Run() override
   {
-    DroidSocketImpl* io = SocketIORunnable<DroidSocketImpl>::GetIO();
+    DroidSocketImpl* io = SocketTask<DroidSocketImpl>::GetIO();
 
     MOZ_ASSERT(io->IsConsumerThread());
 
     if (NS_WARN_IF(io->IsShutdownOnConsumerThread())) {
       // Since we've already explicitly closed and the close
       // happened before this, this isn't really an error.
-      return NS_OK;
+      return;
     }
 
     BluetoothSocket* bluetoothSocket = io->GetBluetoothSocket();
     MOZ_ASSERT(bluetoothSocket);
 
     bluetoothSocket->ReceiveSocketData(mBuffer);
-
-    return NS_OK;
   }
 
 private:
@@ -573,8 +561,8 @@ private:
 void
 DroidSocketImpl::ConsumeBuffer()
 {
-  GetConsumerThread()->Dispatch(new ReceiveRunnable(this, mBuffer.forget()),
-                                NS_DISPATCH_NORMAL);
+  GetConsumerThread()->PostTask(FROM_HERE,
+                                new ReceiveTask(this, mBuffer.forget()));
 }
 
 void
@@ -651,14 +639,14 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress,
                          BluetoothSocketType aType,
                          int aChannel,
                          bool aAuth, bool aEncrypt,
-                         nsIThread* aConsumerThread,
+                         MessageLoop* aConsumerLoop,
                          MessageLoop* aIOLoop)
 {
   MOZ_ASSERT(!mImpl);
 
   SetConnectionStatus(SOCKET_CONNECTING);
 
-  mImpl = new DroidSocketImpl(aConsumerThread, aIOLoop, this);
+  mImpl = new DroidSocketImpl(aConsumerLoop, aIOLoop, this);
 
   BluetoothSocketResultHandler* res = new ConnectSocketResultHandler(mImpl);
   SetCurrentResultHandler(res);
@@ -678,14 +666,8 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress,
                          int aChannel,
                          bool aAuth, bool aEncrypt)
 {
-  nsIThread* consumerThread = nullptr;
-  nsresult rv = NS_GetCurrentThread(&consumerThread);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   return Connect(aDeviceAddress, aServiceUuid, aType, aChannel, aAuth,
-                 aEncrypt, consumerThread, XRE_GetIOMessageLoop());
+                 aEncrypt, MessageLoop::current(), XRE_GetIOMessageLoop());
 }
 
 class ListenResultHandler final : public BluetoothSocketResultHandler
@@ -721,14 +703,14 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
                         BluetoothSocketType aType,
                         int aChannel,
                         bool aAuth, bool aEncrypt,
-                        nsIThread* aConsumerThread,
+                        MessageLoop* aConsumerLoop,
                         MessageLoop* aIOLoop)
 {
   MOZ_ASSERT(!mImpl);
 
   SetConnectionStatus(SOCKET_LISTENING);
 
-  mImpl = new DroidSocketImpl(aConsumerThread, aIOLoop, this);
+  mImpl = new DroidSocketImpl(aConsumerLoop, aIOLoop, this);
 
   BluetoothSocketResultHandler* res = new ListenResultHandler(mImpl);
   SetCurrentResultHandler(res);
@@ -748,14 +730,8 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
                         int aChannel,
                         bool aAuth, bool aEncrypt)
 {
-  nsIThread* consumerThread = nullptr;
-  nsresult rv = NS_GetCurrentThread(&consumerThread);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   return Listen(aServiceName, aServiceUuid, aType, aChannel, aAuth, aEncrypt,
-                consumerThread, XRE_GetIOMessageLoop());
+                MessageLoop::current(), XRE_GetIOMessageLoop());
 }
 
 void
