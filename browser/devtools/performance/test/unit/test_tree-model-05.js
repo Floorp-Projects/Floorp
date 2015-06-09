@@ -49,7 +49,7 @@ function run_test() {
 add_task(function test() {
   let { ThreadNode } = devtools.require("devtools/performance/tree-model");
 
-  let root = new ThreadNode(gThread, { invertTree: true });
+  let root = new ThreadNode(gThread, { invertTree: true, startTime: 0, endTime: 4 });
 
   equal(root.calls.length, 2,
      "Should get the 2 youngest frames, not the 1 oldest frame");
