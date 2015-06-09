@@ -510,10 +510,6 @@ public:
   // Returns a weak reference to the media decoder owner.
   MediaDecoderOwner* GetMediaOwner() const;
 
-  // Called by the state machine to notify the decoder that the duration
-  // has changed.
-  void DurationChanged();
-
   bool OnStateMachineTaskQueue() const override;
 
   bool OnDecodeTaskQueue() const override;
@@ -886,6 +882,10 @@ protected:
 
   // Return true if the decoder has reached the end of playback
   bool IsEnded() const;
+
+  // Called by the state machine to notify the decoder that the duration
+  // has changed.
+  void DurationChanged();
 
   // State-watching manager.
   WatchManager<MediaDecoder> mWatchManager;
