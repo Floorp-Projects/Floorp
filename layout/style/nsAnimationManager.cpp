@@ -15,7 +15,6 @@
 #include "nsPresContext.h"
 #include "nsStyleSet.h"
 #include "nsStyleChangeList.h"
-#include "nsContentUtils.h"
 #include "nsCSSRules.h"
 #include "RestyleManager.h"
 #include "nsLayoutUtils.h"
@@ -146,26 +145,11 @@ CSSAnimation::HasLowerCompositeOrderThan(const Animation& aOther) const
   }
 
   // 3. Sort by document order
-  Element* ourElement;
-  nsCSSPseudoElements::Type ourPseudoType;
-  GetOwningElement(ourElement, ourPseudoType);
-
-  Element* otherElement;
-  nsCSSPseudoElements::Type otherPseudoType;
-  otherAnimation->GetOwningElement(otherElement, otherPseudoType);
-  MOZ_ASSERT(ourElement && otherElement,
+  MOZ_ASSERT(mOwningElement.IsSet() && otherAnimation->OwningElement().IsSet(),
              "Animations using custom composite order should have an "
              "owning element");
-
-  if (ourElement != otherElement) {
-    return nsContentUtils::PositionIsBefore(ourElement, otherElement);
-  }
-
-  // 3b. Sort by pseudo: (none) < before < after
-  if (ourPseudoType != otherPseudoType) {
-    return ourPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
-           (ourPseudoType == nsCSSPseudoElements::ePseudo_before &&
-            otherPseudoType == nsCSSPseudoElements::ePseudo_after);
+  if (!mOwningElement.Equals(otherAnimation->OwningElement())) {
+    return mOwningElement.LessThan(otherAnimation->OwningElement());
   }
 
   // 4. (Same element and pseudo): Sort by position in animation-name
@@ -614,7 +598,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     }
 
     nsRefPtr<CSSAnimation> dest = new CSSAnimation(aTimeline, src.GetName());
-    dest->SetOwningElement(*aTarget, aStyleContext->GetPseudoType());
+    dest->SetOwningElement(
+      OwningElementRef(*aTarget, aStyleContext->GetPseudoType()));
     dest->SetAnimationIndex(static_cast<uint64_t>(animIdx));
     aAnimations.AppendElement(dest);
 

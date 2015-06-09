@@ -81,8 +81,6 @@ class CSSTransition final : public Animation
 public:
  explicit CSSTransition(dom::DocumentTimeline* aTimeline)
     : dom::Animation(aTimeline)
-    , mOwningElement(nullptr)
-    , mOwningPseudoType(nsCSSPseudoElements::ePseudo_NotPseudoElement)
   {
   }
 
@@ -111,9 +109,7 @@ public:
 
   void CancelFromStyle() override
   {
-    mOwningElement = nullptr;
-    mOwningPseudoType = nsCSSPseudoElements::ePseudo_NotPseudoElement;
-
+    mOwningElement = OwningElementRef();
     Animation::CancelFromStyle();
     MOZ_ASSERT(mSequenceNum == kUnsequenced);
   }
@@ -121,7 +117,10 @@ public:
   nsCSSProperty TransitionProperty() const;
 
   bool HasLowerCompositeOrderThan(const Animation& aOther) const override;
-  bool IsUsingCustomCompositeOrder() const override { return !!mOwningElement; }
+  bool IsUsingCustomCompositeOrder() const override
+  {
+    return mOwningElement.IsSet();
+  }
 
   void SetCreationSequence(uint64_t aIndex)
   {
@@ -131,8 +130,7 @@ public:
 
   // Returns the element or pseudo-element whose transition-property property
   // this CSSTransition corresponds to (if any). This is used for determining
-  // the relative priority of transitions generated from CSS transitions
-  // markup.
+  // the relative composite order of transitions generated from CSS markup.
   //
   // Typically this will be the same as the target element of the keyframe
   // effect associated with this transition. However, it can differ in the
@@ -144,46 +142,30 @@ public:
   // c) If this object is generated from script using the CSSTransition
   //    constructor.
   //
-  // For (b) and (c) the returned owning element will by nullptr and the
-  // pseudo-type will be nsCSSPseudoElements::ePseudo_NotPseudoElement.
-  void GetOwningElement(dom::Element*& aElement,
-                        nsCSSPseudoElements::Type& aPseudoType) const {
-    MOZ_ASSERT(mOwningElement != nullptr ||
-               mOwningPseudoType ==
-                 nsCSSPseudoElements::ePseudo_NotPseudoElement,
-               "When there is no owning element there should be no "
-               "pseudo-type");
-    aElement = mOwningElement;
-    aPseudoType = mOwningPseudoType;
-  }
+  // For (b) and (c) the returned owning element will return !IsSet().
+  const OwningElementRef& OwningElement() const { return mOwningElement; }
 
-  // Sets the owning element and pseudo-type which is used for prioritizing
-  // CSSTransition objects generated from CSS markup.
+  // Sets the owning element which is used for determining the composite
+  // oder of CSSTransition objects generated from CSS markup.
   //
-  // @see GetOwningElement.
-  void SetOwningElement(dom::Element& aElement,
-                        nsCSSPseudoElements::Type aPseudoType)
+  // @see OwningElement()
+  void SetOwningElement(const OwningElementRef& aElement)
   {
-    mOwningElement = &aElement;
-    mOwningPseudoType = aPseudoType;
+    mOwningElement = aElement;
   }
 
 protected:
   virtual ~CSSTransition()
   {
-    MOZ_ASSERT(!mOwningElement, "Owning element should be cleared before a "
-                                "CSS transition is destroyed");
+    MOZ_ASSERT(!mOwningElement.IsSet(), "Owning element should be cleared "
+                                        "before a CSS transition is destroyed");
   }
 
   virtual css::CommonAnimationManager* GetAnimationManager() const override;
 
   // The (pseudo-)element whose computed transition-property refers to this
   // transition (if any).
-  //
-  // Raw pointer because this is only ever set when this object is part
-  // of mOwningElement's AnimationCollection.
-  dom::Element* MOZ_NON_OWNING_REF mOwningElement;
-  nsCSSPseudoElements::Type        mOwningPseudoType;
+  OwningElementRef mOwningElement;
 };
 
 } // namespace dom
