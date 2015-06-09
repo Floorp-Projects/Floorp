@@ -688,6 +688,7 @@ public:
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnAudioSinkComplete);
     TaskQueue()->Dispatch(runnable.forget());
   }
+private:
 
   // Called by the AudioSink to signal errors.
   void OnAudioSinkError();
@@ -943,8 +944,11 @@ public:
 
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.
-  media::NullableTimeUnit mDuration;
-  media::TimeUnit Duration() const { MOZ_ASSERT(OnTaskQueue()); return mDuration.ref(); }
+  Canonical<media::NullableTimeUnit> mDuration;
+  media::TimeUnit Duration() const { MOZ_ASSERT(OnTaskQueue()); return mDuration.Ref().ref(); }
+public:
+  AbstractCanonical<media::NullableTimeUnit>* CanonicalDuration() { return &mDuration; }
+protected:
 
   // Recomputes the canonical duration from various sources.
   void RecomputeDuration();

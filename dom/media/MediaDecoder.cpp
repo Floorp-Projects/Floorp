@@ -342,6 +342,7 @@ MediaDecoder::MediaDecoder() :
   mPlaybackRate(AbstractThread::MainThread(), 1.0, "MediaDecoder::mPlaybackRate (Canonical)"),
   mPreservesPitch(AbstractThread::MainThread(), true, "MediaDecoder::mPreservesPitch (Canonical)"),
   mDuration(std::numeric_limits<double>::quiet_NaN()),
+  mStateMachineDuration(AbstractThread::MainThread(), NullableTimeUnit(), "MediaDecoder::mStateMachineDuration (Mirror)"),
   mMediaSeekable(true),
   mSameOriginMedia(false),
   mReentrantMonitor("media.decoder"),
@@ -649,11 +650,10 @@ void MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
 
   {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    int64_t stateMachineDuration = mDecoderStateMachine ? mDecoderStateMachine->GetDuration() : -1;
-    if (stateMachineDuration == -1) {
+    if (mStateMachineDuration.Ref().isNothing() && mStateMachineDuration.Ref().ref().IsInfinite()) {
       SetInfinite(true);
     } else {
-      mDuration = TimeUnit::FromMicroseconds(stateMachineDuration).ToSeconds();
+      mDuration = mStateMachineDuration.Ref().ref().ToSeconds();
     }
 
     // Duration has changed so we should recompute playback rate
@@ -1254,9 +1254,11 @@ MediaDecoder::SetStateMachine(MediaDecoderStateMachine* aStateMachine)
   mDecoderStateMachine = aStateMachine;
 
   if (mDecoderStateMachine) {
+    mStateMachineDuration.Connect(mDecoderStateMachine->CanonicalDuration());
     mNextFrameStatus.Connect(mDecoderStateMachine->CanonicalNextFrameStatus());
     mCurrentPosition.Connect(mDecoderStateMachine->CanonicalCurrentPosition());
   } else {
+    mStateMachineDuration.DisconnectIfConnected();
     mNextFrameStatus.DisconnectIfConnected();
     mCurrentPosition.DisconnectIfConnected();
   }
