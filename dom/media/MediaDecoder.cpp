@@ -307,10 +307,8 @@ double MediaDecoder::GetDuration()
   if (mInfiniteStream) {
     return std::numeric_limits<double>::infinity();
   }
-  if (mDuration >= 0) {
-     return static_cast<double>(mDuration) / static_cast<double>(USECS_PER_S);
-  }
-  return std::numeric_limits<double>::quiet_NaN();
+
+  return mDuration;
 }
 
 int64_t MediaDecoder::GetMediaDuration()
@@ -343,7 +341,7 @@ MediaDecoder::MediaDecoder() :
   mVolume(AbstractThread::MainThread(), 0.0, "MediaDecoder::mVolume (Canonical)"),
   mPlaybackRate(AbstractThread::MainThread(), 1.0, "MediaDecoder::mPlaybackRate (Canonical)"),
   mPreservesPitch(AbstractThread::MainThread(), true, "MediaDecoder::mPreservesPitch (Canonical)"),
-  mDuration(-1),
+  mDuration(std::numeric_limits<double>::quiet_NaN()),
   mMediaSeekable(true),
   mSameOriginMedia(false),
   mReentrantMonitor("media.decoder"),
@@ -651,13 +649,15 @@ void MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
 
   {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    mDuration = mDecoderStateMachine ? mDecoderStateMachine->GetDuration() : -1;
+    int64_t stateMachineDuration = mDecoderStateMachine ? mDecoderStateMachine->GetDuration() : -1;
+    if (stateMachineDuration == -1) {
+      SetInfinite(true);
+    } else {
+      mDuration = TimeUnit::FromMicroseconds(stateMachineDuration).ToSeconds();
+    }
+
     // Duration has changed so we should recompute playback rate
     UpdatePlaybackRate();
-  }
-
-  if (mDuration == -1) {
-    SetInfinite(true);
   }
 
   mInfo = aInfo.forget();
@@ -868,9 +868,9 @@ double MediaDecoder::ComputePlaybackRate(bool* aReliable)
   MOZ_ASSERT(NS_IsMainThread() || OnStateMachineTaskQueue() || OnDecodeTaskQueue());
 
   int64_t length = mResource ? mResource->GetLength() : -1;
-  if (mDuration >= 0 && length >= 0) {
+  if (!IsNaN(mDuration) && !mozilla::IsInfinite<double>(mDuration) && length >= 0) {
     *aReliable = true;
-    return length * static_cast<double>(USECS_PER_S) / mDuration;
+    return length * mDuration;
   }
   return mPlaybackStatistics->GetRateAtLastStop(aReliable);
 }
@@ -1081,15 +1081,13 @@ void MediaDecoder::DurationChanged(TimeUnit aNewDuration)
 {
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  int64_t oldDuration = mDuration;
-  mDuration = aNewDuration.ToMicroseconds();
+  double oldDuration = mDuration;
+  mDuration = aNewDuration.ToSeconds();
   // Duration has changed so we should recompute playback rate
   UpdatePlaybackRate();
 
-  SetInfinite(mDuration == -1);
-
   if (mOwner && oldDuration != mDuration && !IsInfinite()) {
-    DECODER_LOG("Duration changed to %lld", mDuration);
+    DECODER_LOG("Duration changed to %f", mDuration);
     mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   }
 
