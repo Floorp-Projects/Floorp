@@ -53,13 +53,13 @@ protected:
   /**
    * Constructs an instance of |ConnectionOrientedSocketIO|
    *
-   * @param aConsumerThread The socket's consumer thread.
+   * @param aConsumerLoop The socket's consumer thread.
    * @param aIOLoop The socket's I/O loop.
    * @param aFd The socket file descriptor.
    * @param aConnectionStatus The connection status for |aFd|.
    * @param aConnector Connector object for socket-type-specific methods.
    */
-  ConnectionOrientedSocketIO(nsIThread* aConsumerThread,
+  ConnectionOrientedSocketIO(MessageLoop* aConsumerLoop,
                              MessageLoop* aIOLoop,
                              int aFd, ConnectionStatus aConnectionStatus,
                              UnixSocketConnector* aConnector);
@@ -67,11 +67,11 @@ protected:
   /**
    * Constructs an instance of |ConnectionOrientedSocketIO|
    *
-   * @param aConsumerThread The socket's consumer thread.
+   * @param aConsumerLoop The socket's consumer thread.
    * @param aIOLoop The socket's I/O loop.
    * @param aConnector Connector object for socket-type-specific methods.
    */
-  ConnectionOrientedSocketIO(nsIThread* aConsumerThread,
+  ConnectionOrientedSocketIO(MessageLoop* aConsumerLoop,
                              MessageLoop* aIOLoop,
                              UnixSocketConnector* aConnector);
 
@@ -101,13 +101,13 @@ public:
    *
    * @param aConnector The new connector object, owned by the
    *                   connection-oriented socket.
-   * @param aConsumerThread The socket's consumer thread.
+   * @param aConsumerLoop The socket's consumer thread.
    * @param aIOLoop The socket's I/O thread.
    * @param[out] aIO, Returns an instance of |ConnectionOrientedSocketIO|.
    * @return NS_OK on success, or an XPCOM error code otherwise.
    */
   virtual nsresult PrepareAccept(UnixSocketConnector* aConnector,
-                                 nsIThread* aConsumerThread,
+                                 MessageLoop* aConsumerLoop,
                                  MessageLoop* aIOLoop,
                                  ConnectionOrientedSocketIO*& aIO) = 0;
 
