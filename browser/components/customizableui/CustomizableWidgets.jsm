@@ -1080,7 +1080,9 @@ if (Services.prefs.getBoolPref("browser.pocket.enabled")) {
   }
 
   if (isEnabledForLocale) {
-    if (browserLocale == "ja-JP-mac")
+    if (browserLocale == "en-GB" || browserLocale == "en-ZA")
+      browserLocale = "en-US";
+    else if (browserLocale == "ja-JP-mac")
       browserLocale = "ja";
     let url = "chrome://browser/content/browser-pocket-" + browserLocale + ".properties";
     let strings = Services.strings.createBundle(url);
