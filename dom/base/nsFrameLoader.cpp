@@ -151,7 +151,6 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   , mClampScrollPosition(true)
   , mObservingOwnerContent(false)
   , mVisible(true)
-  , mCurrentRemoteFrame(nullptr)
   , mRemoteBrowser(nullptr)
   , mChildID(0)
   , mEventMode(EVENT_MODE_NORMAL_DISPATCH)
@@ -2223,9 +2222,18 @@ nsFrameLoader::TryRemoteBrowser()
 }
 
 mozilla::dom::PBrowserParent*
-nsFrameLoader::GetRemoteBrowser()
+nsFrameLoader::GetRemoteBrowser() const
 {
   return mRemoteBrowser;
+}
+
+RenderFrameParent*
+nsFrameLoader::GetCurrentRemoteFrame() const
+{
+  if (mRemoteBrowser) {
+    return mRemoteBrowser->GetRenderFrame();
+  }
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -2530,7 +2538,6 @@ void
 nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
 {
   MOZ_ASSERT(!mRemoteBrowser);
-  MOZ_ASSERT(!mCurrentRemoteFrame);
   mRemoteFrame = true;
   mRemoteBrowser = TabParent::GetFrom(aTabParent);
   mChildID = mRemoteBrowser ? mRemoteBrowser->Manager()->ChildID() : 0;
