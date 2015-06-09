@@ -47,8 +47,6 @@ public:
 
   virtual int64_t GetMediaDuration() final override;
 
-  virtual void SetMediaDuration(int64_t aDuration) final override;
-
   virtual void UpdateEstimatedMediaDuration(int64_t aDuration) final override;
 
   virtual void SetMediaSeekable(bool aMediaSeekable) final override;
@@ -68,8 +66,6 @@ public:
                                 MediaDecoderEventVisibility aEventVisibility) final override;
 
   virtual void RemoveMediaTracks() final override;
-
-  virtual void SetMediaEndTime(int64_t aTime) final override;
 
   virtual void OnReadMetadataCompleted() final override;
 

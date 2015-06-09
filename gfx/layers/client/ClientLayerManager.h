@@ -34,6 +34,7 @@ class ClientPaintedLayer;
 class CompositorChild;
 class ImageLayer;
 class PLayerChild;
+class FrameUniformityData;
 class TextureClientPool;
 
 class ClientLayerManager final : public LayerManager
@@ -200,6 +201,7 @@ public:
   bool NeedsComposite() const { return mNeedsComposite; }
 
   virtual void Composite() override;
+  virtual void GetFrameUniformity(FrameUniformityData* aFrameUniformityData) override;
   virtual bool RequestOverfill(mozilla::dom::OverfillCallback* aCallback) override;
   virtual void RunOverfillCallback(const uint32_t aOverfill) override;
 

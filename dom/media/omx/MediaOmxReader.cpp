@@ -23,6 +23,7 @@
 #define MAX_VIDEO_DECODE_SECONDS 0.1
 
 using namespace mozilla::gfx;
+using namespace mozilla::media;
 using namespace android;
 
 namespace mozilla {
@@ -281,16 +282,14 @@ void MediaOmxReader::HandleResourceAllocated()
 
   if (mLastParserDuration >= 0) {
     // Prefer the parser duration if we have it.
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mDecoder->SetMediaDuration(mLastParserDuration);
+    mInfo.mMetadataDuration = Some(TimeUnit::FromMicroseconds(mLastParserDuration));
   } else {
     // MP3 parser failed to find a duration.
     // Set the total duration (the max of the audio and video track).
     int64_t durationUs;
     mOmxDecoder->GetDuration(&durationUs);
     if (durationUs) {
-      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      mDecoder->SetMediaDuration(durationUs);
+      mInfo.mMetadataDuration = Some(TimeUnit::FromMicroseconds(durationUs));
     }
   }
 

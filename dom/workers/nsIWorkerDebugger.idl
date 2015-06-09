@@ -17,7 +17,7 @@ interface nsIWorkerDebuggerListener : nsISupports
   void onThaw();
 };
 
-[scriptable, builtinclass, uuid(d7c73e54-3c41-4393-9d13-fa2ed4Ba6764)]
+[scriptable, builtinclass, uuid(bdcaf96f-916a-4b24-bb53-165c1785668b)]
 interface nsIWorkerDebugger : nsISupports
 {
   const unsigned long TYPE_DEDICATED = 0;
@@ -29,6 +29,8 @@ interface nsIWorkerDebugger : nsISupports
   readonly attribute bool isChrome;
 
   readonly attribute bool isFrozen;
+
+  readonly attribute bool isInitialized;
 
   readonly attribute nsIWorkerDebugger parent;
 

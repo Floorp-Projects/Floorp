@@ -137,12 +137,6 @@ CheckedInt64 FramesToUsecs(int64_t aFrames, uint32_t aRate);
 // overflow while calulating the conversion.
 CheckedInt64 UsecsToFrames(int64_t aUsecs, uint32_t aRate);
 
-// Number of microseconds per second. 1e6.
-static const int64_t USECS_PER_S = 1000000;
-
-// Number of microseconds per millisecond.
-static const int64_t USECS_PER_MS = 1000;
-
 // Converts milliseconds to seconds.
 #define MS_TO_SECONDS(ms) ((double)(ms) / (PR_MSEC_PER_SEC))
 

@@ -791,8 +791,14 @@ public:
    * Notify the pres context that the resolution of the user interface has
    * changed. This happens if a window is moved between HiDPI and non-HiDPI
    * displays, so that the ratio of points to device pixels changes.
+   * The notification happens asynchronously.
    */
   void UIResolutionChanged();
+
+ /*
+  * Like UIResolutionChanged() but invalidates values immediately.
+  */
+  void UIResolutionChangedSync();
 
   /*
    * Notify the pres context that a system color has changed

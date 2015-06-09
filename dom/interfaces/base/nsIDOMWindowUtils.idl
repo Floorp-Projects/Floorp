@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(098d9f0d-7809-4d3c-8fc6-e5b3fb71835b)]
+[scriptable, uuid(ec176f3b-2886-4090-938e-dded103c5f1c)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1814,6 +1814,14 @@ interface nsIDOMWindowUtils : nsISupports {
   attribute boolean serviceWorkersTestingEnabled;
 
   /**
+   * Returns a JSObject which contains a list of frame uniformities
+   * when the pref gfx.vsync.collect-scroll-data is enabled.
+   * Every result contains a layer address and a frame uniformity for that layer.
+   * A negative frame uniformity value indicates an invalid frame uniformity and an error has occured.
+   */
+  [implicit_jscontext] jsval getFrameUniformityTestData();
+
+  /*
    * Increase the chaos mode activation level. An equivalent number of
    * calls to leaveChaosMode must be made in order to restore the original
    * chaos mode state. If the activation level is nonzero all chaos mode

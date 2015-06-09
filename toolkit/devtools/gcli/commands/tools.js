@@ -57,8 +57,7 @@ exports.items = [
                                          Ci.nsISupportsString, str);
           devtools.reload();
 
-          let msg = l10n.lookupFormat("toolsSrcdirReloaded", [ args.srcdir ]);
-          throw new Error(msg);
+          return l10n.lookupFormat("toolsSrcdirReloaded", [ args.srcdir ]);
         }
 
         return l10n.lookupFormat("toolsSrcdirNotFound", [ args.srcdir ]);

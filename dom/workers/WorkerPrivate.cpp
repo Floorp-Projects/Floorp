@@ -4290,6 +4290,21 @@ WorkerDebugger::GetIsFrozen(bool* aResult)
 }
 
 NS_IMETHODIMP
+WorkerDebugger::GetIsInitialized(bool* aResult)
+{
+  AssertIsOnMainThread();
+
+  MutexAutoLock lock(mMutex);
+
+  if (!mWorkerPrivate) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  *aResult = mIsInitialized;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 WorkerDebugger::GetParent(nsIWorkerDebugger** aResult)
 {
   AssertIsOnMainThread();

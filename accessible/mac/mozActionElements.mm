@@ -162,10 +162,10 @@ enum CheckboxValue {
   if ([action isEqualToString:NSAccessibilityPressAction]) {
     if ([self isChecked] != kUnchecked)
       return @"uncheck checkbox"; // XXX: localize this later?
-    
+
     return @"check checkbox"; // XXX: localize this later?
   }
-  
+
   return nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -179,7 +179,7 @@ enum CheckboxValue {
   if (state & states::CHECKED) {
     return (state & states::MIXED) ? kMixed : kChecked;
   }
-  
+
   return kUnchecked;
 }
 
@@ -207,24 +207,24 @@ enum CheckboxValue {
 {
   // standard attributes that are shared and supported by root accessible (AXMain) elements.
   static NSMutableArray* attributes = nil;
-  
+
   if (!attributes) {
     attributes = [[super accessibilityAttributeNames] mutableCopy];
     [attributes addObject:NSAccessibilityContentsAttribute];
     [attributes addObject:NSAccessibilityTabsAttribute];
   }
-  
-  return attributes;  
+
+  return attributes;
 }
 
 - (id)accessibilityAttributeValue:(NSString *)attribute
-{  
+{
   if ([attribute isEqualToString:NSAccessibilityContentsAttribute])
     return [super children];
   if ([attribute isEqualToString:NSAccessibilityTabsAttribute])
     return [self tabs];
-  
-  return [super accessibilityAttributeValue:attribute];  
+
+  return [super accessibilityAttributeValue:attribute];
 }
 
 /**
@@ -256,7 +256,7 @@ enum CheckboxValue {
   NSArray* children = [self children];
   NSEnumerator* enumerator = [children objectEnumerator];
   mTabs = [[NSMutableArray alloc] init];
-  
+
   id obj;
   while ((obj = [enumerator nextObject]))
     if ([obj isTab])

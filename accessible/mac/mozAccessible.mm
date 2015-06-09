@@ -2,7 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #import "mozAccessible.h"
 
 #import "MacUtils.h"
@@ -37,7 +37,7 @@ GetClosestInterestingAccessible(id anObject)
   // this object is not ignored, so let's return it.
   if (![anObject accessibilityIsIgnored])
     return GetObjectOrRepresentedView(anObject);
-  
+
   // find the closest ancestor that is not ignored.
   id unignoredObject = anObject;
   while ((unignoredObject = [unignoredObject accessibilityAttributeValue:NSAccessibilityParentAttribute])) {
@@ -45,12 +45,12 @@ GetClosestInterestingAccessible(id anObject)
       // object is not ignored, so let's stop the search.
       break;
   }
-  
+
   // if it's a mozAccessible, we need to take care to maybe return the view we
   // represent, to the AT.
   if ([unignoredObject respondsToSelector:@selector(hasRepresentedView)])
     return GetObjectOrRepresentedView(unignoredObject);
-  
+
   return unignoredObject;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -59,7 +59,7 @@ GetClosestInterestingAccessible(id anObject)
 #pragma mark -
 
 @implementation mozAccessible
- 
+
 - (id)initWithAccessible:(uintptr_t)aGeckoAccessible
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
@@ -104,7 +104,7 @@ GetClosestInterestingAccessible(id anObject)
 
   return reinterpret_cast<ProxyAccessible*>(mGeckoAccessible & ~IS_PROXY);
 }
- 
+
 #pragma mark -
 
 - (BOOL)accessibilityIsIgnored
@@ -128,12 +128,12 @@ GetClosestInterestingAccessible(id anObject)
   // if we're expired, we don't support any attributes.
   if (![self getGeckoAccessible])
     return [NSArray array];
-  
+
   static NSArray *generalAttributes = nil;
-  
+
   if (!generalAttributes) {
     // standard attributes that are shared and supported by all generic elements.
-    generalAttributes = [[NSArray alloc] initWithObjects:  NSAccessibilityChildrenAttribute, 
+    generalAttributes = [[NSArray alloc] initWithObjects:  NSAccessibilityChildrenAttribute,
                                                            NSAccessibilityParentAttribute,
                                                            NSAccessibilityRoleAttribute,
                                                            NSAccessibilityTitleAttribute,
@@ -161,7 +161,7 @@ GetClosestInterestingAccessible(id anObject)
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute
-{  
+{
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if (![self getGeckoAccessible])
@@ -171,19 +171,19 @@ GetClosestInterestingAccessible(id anObject)
   if ([attribute isEqualToString:@"AXMozDescription"])
     return [NSString stringWithFormat:@"role = %u native = %@", mRole, [self class]];
 #endif
-  
+
   if ([attribute isEqualToString:NSAccessibilityChildrenAttribute])
     return [self children];
-  if ([attribute isEqualToString:NSAccessibilityParentAttribute]) 
+  if ([attribute isEqualToString:NSAccessibilityParentAttribute])
     return [self parent];
-  
+
 #ifdef DEBUG_hakan
   NSLog (@"(%@ responding to attr %@)", self, attribute);
 #endif
 
   if ([attribute isEqualToString:NSAccessibilityRoleAttribute])
     return [self role];
-  if ([attribute isEqualToString:NSAccessibilityPositionAttribute]) 
+  if ([attribute isEqualToString:NSAccessibilityPositionAttribute])
     return [self position];
   if ([attribute isEqualToString:NSAccessibilitySubroleAttribute])
     return [self subrole];
@@ -191,8 +191,8 @@ GetClosestInterestingAccessible(id anObject)
     return [NSNumber numberWithBool:[self isEnabled]];
   if ([attribute isEqualToString:NSAccessibilityValueAttribute])
     return [self value];
-  if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute]) 
-    return [self roleDescription];  
+  if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute])
+    return [self roleDescription];
   if ([attribute isEqualToString:NSAccessibilityDescriptionAttribute])
     return [self customDescription];
   if ([attribute isEqualToString:NSAccessibilityFocusedAttribute])
@@ -213,7 +213,7 @@ GetClosestInterestingAccessible(id anObject)
   }
   if ([attribute isEqualToString:NSAccessibilityHelpAttribute])
     return [self help];
-    
+
 #ifdef DEBUG
  NSLog (@"!!! %@ can't respond to attribute %@", self, attribute);
 #endif
@@ -228,7 +228,7 @@ GetClosestInterestingAccessible(id anObject)
 
   if ([attribute isEqualToString:NSAccessibilityFocusedAttribute])
     return [self canBeFocused];
-  
+
   return NO;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
@@ -241,7 +241,7 @@ GetClosestInterestingAccessible(id anObject)
 #ifdef DEBUG_hakan
   NSLog (@"[%@] %@='%@'", self, attribute, value);
 #endif
-  
+
   // we only support focusing elements so far.
   if ([attribute isEqualToString:NSAccessibilityFocusedAttribute] && [value boolValue])
     [self focus];
@@ -275,22 +275,22 @@ GetClosestInterestingAccessible(id anObject)
   }
 
   // if we didn't find anything, return ourself (or the first unignored ancestor).
-  return GetClosestInterestingAccessible(self); 
+  return GetClosestInterestingAccessible(self);
 }
 
-- (NSArray*)accessibilityActionNames 
+- (NSArray*)accessibilityActionNames
 {
   return nil;
 }
 
-- (NSString*)accessibilityActionDescription:(NSString*)action 
+- (NSString*)accessibilityActionDescription:(NSString*)action
 {
   // by default we return whatever the MacOS API know about.
   // if you have custom actions, override.
   return NSAccessibilityActionDescription(action);
 }
 
-- (void)accessibilityPerformAction:(NSString*)action 
+- (void)accessibilityPerformAction:(NSString*)action
 {
 }
 
@@ -299,14 +299,14 @@ GetClosestInterestingAccessible(id anObject)
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   if (!accWrap)
     return nil;
-  
+
   Accessible* focusedGeckoChild = accWrap->FocusedChild();
   if (focusedGeckoChild) {
     mozAccessible *focusedChild = GetNativeFromGeckoAccessible(focusedGeckoChild);
     if (focusedChild)
       return GetClosestInterestingAccessible(focusedChild);
   }
-  
+
   // return ourself if we can't get a native focused child.
   return GetClosestInterestingAccessible(self);
 }
@@ -324,9 +324,9 @@ GetClosestInterestingAccessible(id anObject)
     if (nativeParent)
       return GetClosestInterestingAccessible(nativeParent);
   }
-  
+
   // GetUnignoredParent() returns null when there is no unignored accessible all the way up to
-  // the root accessible. so we'll have to return whatever native accessible is above our root accessible 
+  // the root accessible. so we'll have to return whatever native accessible is above our root accessible
   // (which might be the owning NSWindow in the application, for example).
   //
   // get the native root accessible, and tell it to return its first parent unignored accessible.
@@ -380,7 +380,7 @@ GetClosestInterestingAccessible(id anObject)
         [mChildren addObject:GetObjectOrRepresentedView(curNative)];
     }
   }
-  
+
 #ifdef DEBUG_hakan
   // make sure we're not returning any ignored accessibles.
   NSEnumerator *e = [mChildren objectEnumerator];
@@ -389,7 +389,7 @@ GetClosestInterestingAccessible(id anObject)
     NSAssert1(![m accessibilityIsIgnored], @"we should never return an ignored accessible! (%@)", m);
   }
 #endif
-  
+
   return mChildren;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -710,7 +710,7 @@ struct RoleDescrComparator
   // if mChildren is nil, then we don't even need to bother
   if (!mChildren)
     return;
-    
+
   mozAccessible *curNative = GetNativeFromGeckoAccessible(aAccessible);
   if (curNative)
     [mChildren addObject:GetObjectOrRepresentedView(curNative)];
@@ -723,7 +723,7 @@ struct RoleDescrComparator
   [self invalidateChildren];
 
   mGeckoAccessible = 0;
-  
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -747,13 +747,13 @@ struct RoleDescrComparator
   NSAssert(![self accessibilityIsIgnored], @"can't sanity check children of an ignored accessible!");
   NSEnumerator *iter = [children objectEnumerator];
   mozAccessible *curObj = nil;
-  
+
   NSLog(@"sanity checking %@", self);
-  
+
   while ((curObj = [iter nextObject])) {
     id realSelf = GetObjectOrRepresentedView(self);
     NSLog(@"checking %@", realSelf);
-    NSAssert2([curObj parent] == realSelf, 
+    NSAssert2([curObj parent] == realSelf,
               @"!!! %@ not returning %@ as AXParent, even though it is a AXChild of it!", curObj, realSelf);
   }
 
@@ -783,26 +783,26 @@ struct RoleDescrComparator
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NSAssert(![self isExpired], @"!!! trying to print hierarchy of expired object!");
-  
+
   // print this node
   NSMutableString *indent = [NSMutableString stringWithCapacity:level];
   unsigned i=0;
   for (;i<level;i++)
     [indent appendString:@" "];
-  
+
   NSLog (@"%@(#%i) %@", indent, level, self);
-  
+
   // use |children| method to make sure our children are lazily fetched first.
   NSArray *children = [self children];
   if (!children)
     return;
-    
+
   if (![self accessibilityIsIgnored])
     [self sanityCheckChildren];
-    
+
   NSEnumerator *iter = [children objectEnumerator];
   mozAccessible *object = nil;
-  
+
   while (iter && (object = [iter nextObject]))
     // print every child node's subtree, increasing the indenting
     // by two for every level.

@@ -69,10 +69,8 @@ private:
   bool mStreamFinishedOnMainThread;
 };
 
-DecodedStreamData::DecodedStreamData(int64_t aInitialTime,
-                                     SourceMediaStream* aStream)
+DecodedStreamData::DecodedStreamData(SourceMediaStream* aStream)
   : mAudioFramesWritten(0)
-  , mInitialTime(aInitialTime)
   , mNextVideoTime(-1)
   , mNextAudioTime(-1)
   , mStreamInitialized(false)
@@ -103,9 +101,9 @@ DecodedStreamData::IsFinished() const
 }
 
 int64_t
-DecodedStreamData::GetClock() const
+DecodedStreamData::GetPosition() const
 {
-  return mInitialTime + mListener->GetLastOutputTime();
+  return mListener->GetLastOutputTime();
 }
 
 class OutputStreamListener : public MediaStreamListener {
@@ -223,7 +221,7 @@ DecodedStream::DestroyData()
 }
 
 void
-DecodedStream::RecreateData(int64_t aInitialTime, MediaStreamGraph* aGraph)
+DecodedStream::RecreateData(MediaStreamGraph* aGraph)
 {
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
@@ -235,7 +233,7 @@ DecodedStream::RecreateData(int64_t aInitialTime, MediaStreamGraph* aGraph)
   }
   auto source = aGraph->CreateSourceStream(nullptr);
   DestroyData();
-  mData.reset(new DecodedStreamData(aInitialTime, source));
+  mData.reset(new DecodedStreamData(source));
 
   // Note that the delay between removing ports in DestroyDecodedStream
   // and adding new ones won't cause a glitch since all graph operations

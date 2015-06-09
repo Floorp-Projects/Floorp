@@ -1,0 +1,83 @@
+<html>
+<head>
+  <title>Test Frame Uniformity While Scrolling</title>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+
+  <style>
+  #content {
+    height: 5000px;
+    background: repeating-linear-gradient(#EEE, #EEE 100px, #DDD 100px, #DDD 200px);
+  }
+  </style>
+  <script type="text/javascript">
+    var scrollEvents = 100;
+    var i = 0;
+    var testPref = "gfx.vsync.collect-scroll-transforms";
+    // Scroll points
+    var x = 100;
+    var y = 150;
+
+    SimpleTest.waitForExplicitFinish();
+    var utils = _getDOMWindowUtils(window);
+
+    function sendScrollEvent(aRafTimestamp) {
+      var scrollDiv = document.getElementById("content");
+
+      if (i < scrollEvents) {
+        i++;
+        // Scroll diff
+        var dx = 0;
+        var dy = -10; // Negative to scroll down
+        synthesizeNativeWheelAndWaitForEvent(scrollDiv, x, y, dx, dy);
+        window.requestAnimationFrame(sendScrollEvent);
+      } else {
+        // Locally, with silk and apz + e10s, retina 15" mbp usually get ~1.0 - 1.5
+        // w/o silk + e10s + apz, I get up to 7. Lower is better.
+        // Windows, I get ~3. Values are not valid w/o hardware vsync
+        var uniformities = _getDOMWindowUtils().getFrameUniformityTestData();
+        for (var j = 0; j < uniformities.layerUniformities.length; j++) {
+          var layerResult = uniformities.layerUniformities[j];
+          var layerAddr = layerResult.layerAddress;
+          var uniformity = layerResult.frameUniformity;
+          var msg = "Layer: " + layerAddr.toString(16) + " Uniformity: " + uniformity;
+          SimpleTest.ok((uniformity >= 0) && (uniformity < 4.0), msg);
+        }
+        SimpleTest.finish();
+      }
+    }
+
+    function startTest() {
+      window.requestAnimationFrame(sendScrollEvent);
+    }
+
+    window.onload = function() {
+      var apzEnabled = SpecialPowers.getBoolPref("layers.async-pan-zoom.enabled");
+      if (!apzEnabled) {
+        SimpleTest.ok(true, "APZ not enabled, skipping test");
+        SimpleTest.finish();
+      }
+
+      var hwVsyncEnabled = SpecialPowers.getBoolPref("gfx.vsync.hw-vsync.enabled");
+      if (!hwVsyncEnabled) {
+        SimpleTest.ok(true, "Hardware vsync not enabled, skipping test");
+        SimpleTest.finish();
+      }
+
+      SpecialPowers.pushPrefEnv({
+        "set" : [
+          [testPref, true]
+        ]
+      }, startTest);
+    }
+    </script>
+</head>
+
+<body>
+  <div id="content">
+  </div>
+</body>
+</html>
