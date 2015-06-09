@@ -343,25 +343,13 @@ LoadRuntimeOptions(const char* aPrefName, void* /* aClosure */)
 
   // Runtime options.
   JS::RuntimeOptions runtimeOptions;
-  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("asmjs"))) {
-    runtimeOptions.setAsmJS(true);
-  }
-  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("baselinejit"))) {
-    runtimeOptions.setBaseline(true);
-  }
-  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("ion"))) {
-    runtimeOptions.setIon(true);
-  }
-  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("native_regexp"))) {
-    runtimeOptions.setNativeRegExp(true);
-  }
-  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("werror"))) {
-    runtimeOptions.setWerror(true);
-  }
-
-  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("strict"))) {
-    runtimeOptions.setExtraWarnings(true);
-  }
+  runtimeOptions.setAsmJS(GetWorkerPref<bool>(NS_LITERAL_CSTRING("asmjs")))
+                .setBaseline(GetWorkerPref<bool>(NS_LITERAL_CSTRING("baselinejit")))
+                .setIon(GetWorkerPref<bool>(NS_LITERAL_CSTRING("ion")))
+                .setNativeRegExp(GetWorkerPref<bool>(NS_LITERAL_CSTRING("native_regexp")))
+                .setAsyncStack(GetWorkerPref<bool>(NS_LITERAL_CSTRING("asyncstack")))
+                .setWerror(GetWorkerPref<bool>(NS_LITERAL_CSTRING("werror")))
+                .setExtraWarnings(GetWorkerPref<bool>(NS_LITERAL_CSTRING("strict")));
 
   RuntimeService::SetDefaultRuntimeOptions(runtimeOptions);
 
