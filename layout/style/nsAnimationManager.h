@@ -101,9 +101,24 @@ public:
     mOwningPseudoType = nsCSSPseudoElements::ePseudo_NotPseudoElement;
 
     Animation::CancelFromStyle();
+    MOZ_ASSERT(mSequenceNum == kUnsequenced);
   }
 
   bool IsStylePaused() const { return mIsStylePaused; }
+
+  bool IsUsingCustomCompositeOrder() const override { return !!mOwningElement; }
+
+  void SetAnimationIndex(uint64_t aIndex)
+  {
+    MOZ_ASSERT(IsUsingCustomCompositeOrder());
+    mSequenceNum = aIndex;
+  }
+  void CopyAnimationIndex(const CSSAnimation& aOther)
+  {
+    MOZ_ASSERT(IsUsingCustomCompositeOrder() &&
+               aOther.IsUsingCustomCompositeOrder());
+    mSequenceNum = aOther.mSequenceNum;
+  }
 
   void QueueEvents(EventArray& aEventsToDispatch);
 
