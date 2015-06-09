@@ -775,6 +775,7 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
             "Menu:Open",
             "Menu:Update",
+            "LightweightTheme:Update",
             "Search:Keyword",
             "Prompt:ShowTop",
             "Accounts:Exist");
@@ -1349,6 +1350,7 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
             "Menu:Open",
             "Menu:Update",
+            "LightweightTheme:Update",
             "Search:Keyword",
             "Prompt:ShowTop",
             "Accounts:Exist");
@@ -1919,6 +1921,13 @@ public class BrowserApp extends GeckoApp
 
             } else if (event.equals("Search:Keyword")) {
                 storeSearchQuery(message.getString("query"));
+            } else if (event.equals("LightweightTheme:Update")) {
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
+                    }
+                });
             } else if (event.equals("Prompt:ShowTop")) {
                 // Bring this activity to front so the prompt is visible..
                 Intent bringToFrontIntent = new Intent();
