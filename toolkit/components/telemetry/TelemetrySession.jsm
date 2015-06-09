@@ -439,11 +439,8 @@ let TelemetryScheduler = {
   _sentDailyPingToday: function(nowDate) {
     // This is today's date and also the previous midnight (0:00).
     const todayDate = Utils.truncateToDays(nowDate);
-    const nearestMidnight = Utils.getNearestMidnight(nowDate, SCHEDULER_MIDNIGHT_TOLERANCE_MS);
-    // If we are close to midnight, we check against that, otherwise against the last midnight.
-    const checkDate = nearestMidnight || todayDate;
-    // We consider a ping sent for today if it occured after midnight, or prior within the tolerance.
-    return (this._lastDailyPingTime >= (checkDate.getTime() - SCHEDULER_MIDNIGHT_TOLERANCE_MS));
+    // We consider a ping sent for today if it occured after or at 00:00 today.
+    return (this._lastDailyPingTime >= todayDate.getTime());
   },
 
   /**
@@ -452,32 +449,16 @@ let TelemetryScheduler = {
    * @return {Boolean} True if we can send the daily ping, false otherwise.
    */
   _isDailyPingDue: function(nowDate) {
-    const sentPingToday = this._sentDailyPingToday(nowDate);
-
     // The daily ping is not due if we already sent one today.
-    if (sentPingToday) {
+    if (this._sentDailyPingToday(nowDate)) {
       this._log.trace("_isDailyPingDue - already sent one today");
       return false;
-    }
-
-    const nearestMidnight = Utils.getNearestMidnight(nowDate, SCHEDULER_MIDNIGHT_TOLERANCE_MS);
-    if (!sentPingToday && !nearestMidnight) {
-      // Computer must have gone to sleep, the daily ping is overdue.
-      this._log.trace("_isDailyPingDue - daily ping is overdue... computer went to sleep?");
-      return true;
     }
 
     // Avoid overly short sessions.
     const timeSinceLastDaily = nowDate.getTime() - this._lastDailyPingTime;
     if (timeSinceLastDaily < MIN_SUBSESSION_LENGTH_MS) {
       this._log.trace("_isDailyPingDue - delaying daily to keep minimum session length");
-      return false;
-    }
-
-    // To fight jank, we allow daily pings to be collected on user idle before midnight
-    // within the tolerance interval.
-    if (!this._isUserIdle && (nowDate.getTime() < nearestMidnight.getTime())) {
-      this._log.trace("_isDailyPingDue - waiting for user idle period");
       return false;
     }
 
