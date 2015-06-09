@@ -127,11 +127,10 @@ public:
    * CSSAnimation::PauseFromJS so we leave it for now.
    */
   void PauseFromJS(ErrorResult& aRv) { Pause(aRv); }
+
   // Wrapper functions for Animation DOM methods when called from style.
-  //
-  // Typically these DOM methods also notify style of changes but when
-  // we are calling from style we don't need to do this.
-  void CancelFromStyle() { DoCancel(); }
+
+  virtual void CancelFromStyle() { DoCancel(); }
 
   void Tick();
 
