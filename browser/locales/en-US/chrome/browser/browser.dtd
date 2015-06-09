@@ -860,3 +860,10 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!-- Pre-landed strings for bug 1123519 -->
 <!ENTITY readingList.sidebar.add.label            "Add to Reading List">
 <!ENTITY readingList.sidebar.add.tooltip          "Add this page to your Reading List">
+
+<!-- LOCALIZATION NOTE (saveToPocketCmd.label, saveLinkToPocketCmd.label, pocketMenuitem.label): Pocket is a brand name -->
+<!ENTITY saveToPocketCmd.label     "Save Page to Pocket">
+<!ENTITY saveToPocketCmd.accesskey "k">
+<!ENTITY saveLinkToPocketCmd.label     "Save Link to Pocket">
+<!ENTITY saveLinkToPocketCmd.accesskey "o">
+<!ENTITY pocketMenuitem.label      "View Pocket List">
