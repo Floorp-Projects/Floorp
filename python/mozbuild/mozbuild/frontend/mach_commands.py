@@ -5,6 +5,7 @@
 from __future__ import print_function, unicode_literals
 
 from collections import defaultdict
+import os
 
 from mach.decorators import (
     CommandArgument,
@@ -88,12 +89,14 @@ class MozbuildFileCommands(MachCommandBase):
 
     @SubCommand('file-info', 'bugzilla-component',
                 'Show Bugzilla component info for files listed.')
+    @CommandArgument('-r', '--rev',
+                     help='Version control revision to look up info from')
     @CommandArgument('paths', nargs='+',
                      help='Paths whose data to query')
-    def file_info_bugzilla(self, paths):
+    def file_info_bugzilla(self, paths, rev=None):
         components = defaultdict(set)
         try:
-            for p, m in self._get_files_info(paths).items():
+            for p, m in self._get_files_info(paths, rev=rev).items():
                 components[m.get('BUG_COMPONENT')].add(p)
         except InvalidPathException as e:
             print(e.message)
@@ -106,24 +109,31 @@ class MozbuildFileCommands(MachCommandBase):
 
     @SubCommand('file-info', 'missing-bugzilla',
                 'Show files missing Bugzilla component info')
+    @CommandArgument('-r', '--rev',
+                     help='Version control revision to look up info from')
     @CommandArgument('paths', nargs='+',
                      help='Paths whose data to query')
-    def file_info_missing_bugzilla(self, paths):
+    def file_info_missing_bugzilla(self, paths, rev=None):
         try:
-            for p, m in sorted(self._get_files_info(paths).items()):
+            for p, m in sorted(self._get_files_info(paths, rev=rev).items()):
                 if 'BUG_COMPONENT' not in m:
                     print(p)
         except InvalidPathException as e:
             print(e.message)
             return 1
 
-    def _get_reader(self):
-        from mozbuild.frontend.reader import BuildReader, EmptyConfig
-        config = EmptyConfig(self.topsrcdir)
-        return BuildReader(config)
+    def _get_reader(self, finder):
+        from mozbuild.frontend.reader import (
+            BuildReader,
+            EmptyConfig,
+        )
 
-    def _get_files_info(self, paths):
-        from mozpack.files import FileFinder
+        config = EmptyConfig(self.topsrcdir)
+        return BuildReader(config, finder=finder)
+
+    def _get_files_info(self, paths, rev=None):
+        from mozbuild.frontend.reader import default_finder
+        from mozpack.files import FileFinder, MercurialRevisionFinder
 
         # Normalize to relative from topsrcdir.
         relpaths = []
@@ -134,7 +144,23 @@ class MozbuildFileCommands(MachCommandBase):
 
             relpaths.append(mozpath.relpath(a, self.topsrcdir))
 
+        repo = None
+        if rev:
+            hg_path = os.path.join(self.topsrcdir, '.hg')
+            if not os.path.exists(hg_path):
+                raise InvalidPathException('a Mercurial repo is required '
+                        'when specifying a revision')
+
+            repo = self.topsrcdir
+
+        # We need two finders because the reader's finder operates on
+        # absolute paths.
         finder = FileFinder(self.topsrcdir, find_executables=False)
+        if repo:
+            reader_finder = MercurialRevisionFinder(repo, rev=rev,
+                                                    recognize_repo_paths=True)
+        else:
+            reader_finder = default_finder
 
         # Expand wildcards.
         allpaths = []
@@ -144,9 +170,12 @@ class MozbuildFileCommands(MachCommandBase):
                     allpaths.append(p)
                 continue
 
+            if repo:
+                raise InvalidPathException('cannot use wildcard in version control mode')
+
             for path, f in finder.find(p):
                 if path not in allpaths:
                     allpaths.append(path)
 
-        reader = self._get_reader()
+        reader = self._get_reader(finder=reader_finder)
         return reader.files_info(allpaths)
