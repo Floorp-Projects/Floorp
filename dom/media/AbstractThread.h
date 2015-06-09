@@ -79,6 +79,10 @@ public:
   // Must be called exactly once during startup.
   static void InitStatics();
 
+  void DispatchStateChange(already_AddRefed<nsIRunnable> aRunnable);
+
+  static void DispatchDirectTask(already_AddRefed<nsIRunnable> aRunnable);
+
 protected:
   virtual ~AbstractThread() {}
   static ThreadLocal<AbstractThread*> sCurrentThreadTLS;
