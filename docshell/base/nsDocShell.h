@@ -23,7 +23,6 @@
 #include "mozilla/TimeStamp.h"
 #include "GeckoProfiler.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
-#include "mozilla/LinkedList.h"
 #include "jsapi.h"
 
 // Helper Classes
@@ -266,43 +265,6 @@ public:
   // Global counter for how many docShells are currently recording profile
   // timeline markers
   static unsigned long gProfileTimelineRecordingsCount;
-
-  class ObservedDocShell : public mozilla::LinkedListElement<ObservedDocShell>
-  {
-  public:
-    explicit ObservedDocShell(nsDocShell* aDocShell)
-      : mDocShell(aDocShell)
-    { }
-
-    nsDocShell* operator*() const { return mDocShell.get(); }
-
-  private:
-    nsRefPtr<nsDocShell> mDocShell;
-  };
-
-private:
-  static mozilla::LinkedList<ObservedDocShell>* gObservedDocShells;
-
-  static mozilla::LinkedList<ObservedDocShell>& GetOrCreateObservedDocShells()
-  {
-    if (!gObservedDocShells) {
-      gObservedDocShells = new mozilla::LinkedList<ObservedDocShell>();
-    }
-    return *gObservedDocShells;
-  }
-
-  // Never null if timeline markers are being observed.
-  mozilla::UniquePtr<ObservedDocShell> mObserved;
-
-  // Return true if timeline markers are being observed for this docshell. False
-  // otherwise.
-  bool IsObserved() const { return !!mObserved; }
-
-public:
-  static const mozilla::LinkedList<ObservedDocShell>& GetObservedDocShells()
-  {
-    return GetOrCreateObservedDocShells();
-  }
 
   // Tell the favicon service that aNewURI has the same favicon as aOldURI.
   static void CopyFavicon(nsIURI* aOldURI,
@@ -1010,6 +972,9 @@ private:
   // A depth count of how many times NotifyRunToCompletionStart
   // has been called without a matching NotifyRunToCompletionStop.
   uint32_t mJSRunToCompletionDepth;
+
+  // True if recording profiles.
+  bool mProfileTimelineRecording;
 
   nsTArray<mozilla::UniquePtr<TimelineMarker>> mProfileTimelineMarkers;
 

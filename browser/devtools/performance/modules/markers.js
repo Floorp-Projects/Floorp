@@ -113,20 +113,6 @@ const TIMELINE_BLUEPRINT = {
       { property: "nonincrementalReason", label: "Non-incremental Reason:" }
     ],
   },
-  "nsCycleCollector::Collect": {
-    group: 1,
-    colorName: "graphs-red",
-    collapseFunc: either(collapse.parent, collapse.child),
-    label: "Cycle Collection",
-    fields: Formatters.CycleCollectionFields,
-  },
-  "nsCycleCollector::ForgetSkippable": {
-    group: 1,
-    colorName: "graphs-red",
-    collapseFunc: either(collapse.parent, collapse.child),
-    label: "Cycle Collection",
-    fields: Formatters.CycleCollectionFields,
-  },
 
   /* Group 2 - User Controlled */
   "ConsoleTime": {

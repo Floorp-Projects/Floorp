@@ -8,12 +8,9 @@
 #define AutoTimelineMarker_h__
 
 #include "mozilla/GuardObjects.h"
-#include "mozilla/Vector.h"
-
+#include "mozilla/Move.h"
+#include "nsDocShell.h"
 #include "nsRefPtr.h"
-
-class nsIDocShell;
-class nsDocShell;
 
 namespace mozilla {
 
@@ -30,6 +27,7 @@ namespace mozilla {
 //       nsresult rv = ParseTheCSSFile(mFile);
 //       ...
 //     }
+
 class MOZ_STACK_CLASS AutoTimelineMarker
 {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
@@ -37,55 +35,40 @@ class MOZ_STACK_CLASS AutoTimelineMarker
   nsRefPtr<nsDocShell> mDocShell;
   const char* mName;
 
-  bool DocShellIsRecording(nsDocShell& aDocShell);
+  bool
+  DocShellIsRecording(nsDocShell& aDocShell)
+  {
+    bool isRecording = false;
+    if (nsDocShell::gProfileTimelineRecordingsCount > 0) {
+      aDocShell.GetRecordProfileTimelineMarkers(&isRecording);
+    }
+    return isRecording;
+  }
 
 public:
   explicit AutoTimelineMarker(nsIDocShell* aDocShell, const char* aName
-                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-  ~AutoTimelineMarker();
+                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mDocShell(nullptr)
+    , mName(aName)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+    nsDocShell* docShell = static_cast<nsDocShell*>(aDocShell);
+    if (docShell && DocShellIsRecording(*docShell)) {
+      mDocShell = docShell;
+      mDocShell->AddProfileTimelineMarker(mName, TRACING_INTERVAL_START);
+    }
+  }
+
+  ~AutoTimelineMarker()
+  {
+    if (mDocShell) {
+      mDocShell->AddProfileTimelineMarker(mName, TRACING_INTERVAL_END);
+    }
+  }
 
   AutoTimelineMarker(const AutoTimelineMarker& aOther) = delete;
   void operator=(const AutoTimelineMarker& aOther) = delete;
-};
-
-// # AutoGlobalTimelineMarker
-//
-// Similar to `AutoTimelineMarker`, but adds its traced marker to all docshells,
-// not a single particular one. This is useful for operations that aren't
-// associated with any one particular doc shell, or when it isn't clear which
-// doc shell triggered the operation.
-//
-// Example usage:
-//
-//     {
-//       AutoGlobalTimelineMarker marker("Cycle Collection");
-//       nsCycleCollector* cc = GetCycleCollector();
-//       cc->Collect();
-//       ...
-//     }
-class MOZ_STACK_CLASS AutoGlobalTimelineMarker
-{
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
-
-  // True as long as no operation has failed, eg due to OOM.
-  bool mOk;
-
-  // The set of docshells that are being observed and will get markers.
-  mozilla::Vector<nsRefPtr<nsDocShell>> mDocShells;
-
-  // The name of the marker we are adding.
-  const char* mName;
-
-  void PopulateDocShells();
-
-public:
-  explicit AutoGlobalTimelineMarker(const char* aName
-                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-
-  ~AutoGlobalTimelineMarker();
-
-  AutoGlobalTimelineMarker(const AutoGlobalTimelineMarker& aOther) = delete;
-  void operator=(const AutoGlobalTimelineMarker& aOther) = delete;
 };
 
 } // namespace mozilla
