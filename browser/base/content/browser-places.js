@@ -1436,6 +1436,9 @@ let BookmarkingUI = {
       let locale = Cc["@mozilla.org/chrome/chrome-registry;1"].
                    getService(Ci.nsIXULChromeRegistry).
                    getSelectedLocale("browser");
+      if (locale == "en-GB" || locale == "en-ZA")
+        locale = "en-US";
+
       if (locale != "en-US") {
         if (locale == "ja-JP-mac")
           locale = "ja";
