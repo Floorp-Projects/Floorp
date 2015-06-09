@@ -115,6 +115,15 @@ public:
     mOwningPseudoType = nsCSSPseudoElements::ePseudo_NotPseudoElement;
 
     Animation::CancelFromStyle();
+    MOZ_ASSERT(mSequenceNum == kUnsequenced);
+  }
+
+  bool IsUsingCustomCompositeOrder() const override { return !!mOwningElement; }
+
+  void SetCreationSequence(uint64_t aIndex)
+  {
+    MOZ_ASSERT(IsUsingCustomCompositeOrder());
+    mSequenceNum = aIndex;
   }
 
   // Returns the element or pseudo-element whose transition-property property
