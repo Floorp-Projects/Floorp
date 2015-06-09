@@ -38,8 +38,17 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
     }
 
     /* GLenum */
+    case LOCAL_GL_READ_BUFFER: {
+      if (mBoundReadFramebuffer) {
+        GLint val = LOCAL_GL_NONE;
+        gl->fGetIntegerv(pname, &val);
+        return JS::Int32Value(val);
+      }
+
+      return JS::Int32Value(LOCAL_GL_BACK);
+    }
+
     case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
-    case LOCAL_GL_READ_BUFFER:
       /* fall through */
 
     /* GLint */
