@@ -72,7 +72,9 @@ public:
                                JS::Handle<JSObject*> aGivenProto) override;
 
   virtual CSSAnimation* AsCSSAnimation() { return nullptr; }
+  virtual const CSSAnimation* AsCSSAnimation() const { return nullptr; }
   virtual CSSTransition* AsCSSTransition() { return nullptr; }
+  virtual const CSSTransition* AsCSSTransition() const { return nullptr; }
 
   /**
    * Flag to pass to Play to indicate whether or not it should automatically

@@ -38,8 +38,11 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
     : dom::KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType, aTiming)
   { }
 
-  virtual ElementPropertyTransition* AsTransition() override { return this; }
-  virtual const ElementPropertyTransition* AsTransition() const override { return this; }
+  ElementPropertyTransition* AsTransition() override { return this; }
+  const ElementPropertyTransition* AsTransition() const override
+  {
+    return this;
+  }
 
   nsCSSProperty TransitionProperty() const {
     MOZ_ASSERT(Properties().Length() == 1,
@@ -86,7 +89,8 @@ public:
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual CSSTransition* AsCSSTransition() override { return this; }
+  CSSTransition* AsCSSTransition() override { return this; }
+  const CSSTransition* AsCSSTransition() const override { return this; }
 
   // CSSTransition interface
   void GetTransitionProperty(nsString& aRetVal) const;
