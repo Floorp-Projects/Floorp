@@ -23,6 +23,10 @@
 #include "MP4Reader.h"
 #endif
 
+#ifdef MOZ_WEBM
+#include "WebMReader.h"
+#endif
+
 extern PRLogModuleInfo* GetMediaSourceLog();
 
 #define MSE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Debug, ("MediaSourceReader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
@@ -692,7 +696,14 @@ CreateReaderForType(const nsACString& aType, AbstractMediaDecoder* aDecoder)
     return reader;
   }
 #endif
-  return DecoderTraits::CreateReader(aType, aDecoder);
+
+#ifdef MOZ_WEBM
+  if (DecoderTraits::IsWebMType(aType)) {
+    return new WebMReader(aDecoder);
+  }
+#endif
+
+  return nullptr;
 }
 
 already_AddRefed<SourceBufferDecoder>
