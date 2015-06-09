@@ -946,6 +946,9 @@ protected:
   // Official duration of the media resource as observed by script.
   double mDuration;
 
+  // Duration of the media resource according to the state machine.
+  Mirror<media::NullableTimeUnit> mStateMachineDuration;
+
   // True if the media is seekable (i.e. supports random access).
   bool mMediaSeekable;
 
