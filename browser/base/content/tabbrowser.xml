@@ -1494,6 +1494,9 @@
 
             let wasActive = document.activeElement == aBrowser;
 
+            // Unmap the old outerWindowID.
+            this._outerWindowIDBrowserMap.delete(aBrowser.outerWindowID);
+
             // Unhook our progress listener.
             let tab = this.getTabForBrowser(aBrowser);
             let index = tab._tPos;
@@ -1518,6 +1521,9 @@
               tab.removeAttribute("crashed");
             } else {
               aBrowser.messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: tab.pinned })
+
+              // Register the new outerWindowID.
+              this._outerWindowIDBrowserMap.set(aBrowser.outerWindowID, aBrowser);
             }
 
             if (wasActive)
