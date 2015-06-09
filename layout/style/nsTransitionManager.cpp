@@ -577,6 +577,7 @@ nsTransitionManager::ConsiderStartingTransition(
   segment.mTimingFunction.Init(tf);
 
   nsRefPtr<CSSTransition> animation = new CSSTransition(timeline);
+  animation->SetOwningElement(*aElement, aNewStyleContext->GetPseudoType());
   // The order of the following two calls is important since PlayFromStyle
   // will add the animation to the PendingAnimationTracker of its effect's
   // document. When we come to make effect writeable (bug 1049975) we should
