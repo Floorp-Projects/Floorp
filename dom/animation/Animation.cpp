@@ -444,7 +444,7 @@ Animation::DoCancel()
   mHoldTime.SetNull();
   mStartTime.SetNull();
 
-  UpdateEffect();
+  UpdateTiming(SeekFlag::NoSeek);
 }
 
 void
