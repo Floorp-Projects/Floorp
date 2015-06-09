@@ -1809,6 +1809,13 @@ let SessionStoreInternal = {
         return;
       }
 
+      let window = newTab.ownerDocument && newTab.ownerDocument.defaultView;
+
+      // The tab or its window might be gone.
+      if (!window || !window.__SSi) {
+        return;
+      }
+
       // Update state with flushed data. We can't use TabState.clone() here as
       // the tab to duplicate may have already been closed. In that case we
       // only have access to the <xul:browser>.
@@ -2176,7 +2183,14 @@ let SessionStoreInternal = {
     // Flush to get the latest tab state.
     TabStateFlusher.flush(browser).then(() => {
       // The tab might have been closed/gone in the meantime.
-      if (tab.closing || !tab.linkedBrowser || !tab.ownerDocument.defaultView) {
+      if (tab.closing || !tab.linkedBrowser) {
+        return;
+      }
+
+      let window = tab.ownerDocument && tab.ownerDocument.defaultView;
+
+      // The tab or its window might be gone.
+      if (!window || !window.__SSi) {
         return;
       }
 
