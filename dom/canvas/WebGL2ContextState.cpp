@@ -109,9 +109,7 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
       return WebGLObjectAsJSValue(cx, mBoundReadFramebuffer.get(), rv);
 
     case LOCAL_GL_SAMPLER_BINDING:
-      // TODO: Implement bound sampler tracking
-      //return WebGLObjectAsJSValue(cx, mBoundSamplers[mActiveTexture].get(), rv);
-      return JS::NullValue();
+      return WebGLObjectAsJSValue(cx, mBoundSamplers[mActiveTexture].get(), rv);
 
     case LOCAL_GL_TEXTURE_BINDING_2D_ARRAY:
       // TODO: Implement gl.TEXTURE_2D_ARRAY
