@@ -15,12 +15,11 @@ namespace ipc {
 //
 
 ConnectionOrientedSocketIO::ConnectionOrientedSocketIO(
-  nsIThread* aConsumerThread,
+  MessageLoop* aConsumerLoop,
   MessageLoop* aIOLoop,
-  int aFd,
-  ConnectionStatus aConnectionStatus,
+  int aFd, ConnectionStatus aConnectionStatus,
   UnixSocketConnector* aConnector)
-  : DataSocketIO(aConsumerThread)
+  : DataSocketIO(aConsumerLoop)
   , UnixSocketWatcher(aIOLoop, aFd, aConnectionStatus)
   , mConnector(aConnector)
   , mPeerAddressLength(0)
@@ -29,10 +28,10 @@ ConnectionOrientedSocketIO::ConnectionOrientedSocketIO(
 }
 
 ConnectionOrientedSocketIO::ConnectionOrientedSocketIO(
-  nsIThread* aConsumerThread,
+  MessageLoop* aConsumerLoop,
   MessageLoop* aIOLoop,
   UnixSocketConnector* aConnector)
-  : DataSocketIO(aConsumerThread)
+  : DataSocketIO(aConsumerLoop)
   , UnixSocketWatcher(aIOLoop)
   , mConnector(aConnector)
   , mPeerAddressLength(0)
@@ -79,9 +78,8 @@ ConnectionOrientedSocketIO::Connect()
                                                fd);
   if (NS_FAILED(rv)) {
     // Tell the consumer thread we've errored
-    GetConsumerThread()->Dispatch(
-      new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_ERROR),
-      NS_DISPATCH_NORMAL);
+    GetConsumerThread()->PostTask(
+      FROM_HERE, new SocketEventTask(this, SocketEventTask::CONNECT_ERROR));
     return NS_ERROR_FAILURE;
   }
 
@@ -147,9 +145,8 @@ ConnectionOrientedSocketIO::OnConnected()
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
   MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTED);
 
-  GetConsumerThread()->Dispatch(
-    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS),
-    NS_DISPATCH_NORMAL);
+  GetConsumerThread()->PostTask(
+    FROM_HERE, new SocketEventTask(this, SocketEventTask::CONNECT_SUCCESS));
 
   AddWatchers(READ_WATCHER, true);
   if (HasPendingData()) {
@@ -176,9 +173,8 @@ ConnectionOrientedSocketIO::OnError(const char* aFunction, int aErrno)
   Close();
 
   // Tell the consumer thread we've errored
-  GetConsumerThread()->Dispatch(
-    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_ERROR),
-    NS_DISPATCH_NORMAL);
+  GetConsumerThread()->PostTask(
+    FROM_HERE, new SocketEventTask(this, SocketEventTask::CONNECT_ERROR));
 }
 
 //

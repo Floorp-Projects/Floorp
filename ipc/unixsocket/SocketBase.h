@@ -11,8 +11,6 @@
 
 #include "base/message_loop.h"
 #include "nsAutoPtr.h"
-#include "nsTArray.h"
-#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace ipc {
@@ -382,33 +380,33 @@ public:
    *
    * @return A pointer to the consumer thread.
    */
-  nsIThread* GetConsumerThread() const;
+  MessageLoop* GetConsumerThread() const;
 
   /**
-   * @return True if the current thread is thre consumer thread, or false
+   * @return True if the current thread is the consumer thread, or false
    *         otherwise.
    */
   bool IsConsumerThread() const;
 
 protected:
-  SocketIOBase(nsIThread* nsConsumerThread);
+  SocketIOBase(MessageLoop* aConsumerLoop);
 
 private:
-  nsCOMPtr<nsIThread> mConsumerThread;
+  MessageLoop* mConsumerLoop;
 };
 
 //
-// Socket I/O runnables
+// Socket tasks
 //
 
-/* |SocketIORunnable| is a runnable for sending a message from
+/* |SocketTask| is a task for sending a message from
  * the I/O thread to the consumer thread.
  */
 template <typename T>
-class SocketIORunnable : public nsRunnable
+class SocketTask : public Task
 {
 public:
-  virtual ~SocketIORunnable()
+  virtual ~SocketTask()
   { }
 
   T* GetIO() const
@@ -417,8 +415,8 @@ public:
   }
 
 protected:
-  SocketIORunnable(T* aIO)
-  : mIO(aIO)
+  SocketTask(T* aIO)
+    : mIO(aIO)
   {
     MOZ_ASSERT(aIO);
   }
@@ -428,10 +426,10 @@ private:
 };
 
 /**
- * |SocketIOEventRunnable| reports the connection state on the
+ * |SocketEventTask| reports the connection state on the
  * I/O thread back to the consumer thread.
  */
-class SocketIOEventRunnable final : public SocketIORunnable<SocketIOBase>
+class SocketEventTask final : public SocketTask<SocketIOBase>
 {
 public:
   enum SocketEvent {
@@ -440,36 +438,35 @@ public:
     DISCONNECT
   };
 
-  SocketIOEventRunnable(SocketIOBase* aIO, SocketEvent aEvent);
+  SocketEventTask(SocketIOBase* aIO, SocketEvent aEvent);
 
-  NS_IMETHOD Run() override;
+  void Run() override;
 
 private:
   SocketEvent mEvent;
 };
 
 /**
- * |SocketIORequestClosingRunnable| closes an instance of |SocketBase|
- * to the consumer thread.
+ * |SocketRequestClosingTask| closes an instance of |SocketBase|
+ * on the consumer thread.
  */
-class SocketIORequestClosingRunnable final
-  : public SocketIORunnable<SocketIOBase>
+class SocketRequestClosingTask final : public SocketTask<SocketIOBase>
 {
 public:
-  SocketIORequestClosingRunnable(SocketIOBase* aIO);
+  SocketRequestClosingTask(SocketIOBase* aIO);
 
-  NS_IMETHOD Run() override;
+  void Run() override;
 };
 
 /**
- * |SocketIODeleteInstanceRunnable| deletes an object on the consumer thread.
+ * |SocketDeleteInstanceTask| deletes an object on the consumer thread.
  */
-class SocketIODeleteInstanceRunnable final : public nsRunnable
+class SocketDeleteInstanceTask final : public Task
 {
 public:
-  SocketIODeleteInstanceRunnable(SocketIOBase* aIO);
+  SocketDeleteInstanceTask(SocketIOBase* aIO);
 
-  NS_IMETHOD Run() override;
+  void Run() override;
 
 private:
   nsAutoPtr<SocketIOBase> mIO;
