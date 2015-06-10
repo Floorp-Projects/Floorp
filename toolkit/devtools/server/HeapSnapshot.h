@@ -52,7 +52,9 @@ struct UniqueStringHashPolicy {
 
   static bool match(const UniqueString& existing, const Lookup& lookup) {
     MOZ_ASSERT(lookup.str);
-    return NS_strncmp(existing.get(), lookup.str, lookup.length) == 0;
+    if (NS_strlen(existing.get()) != lookup.length)
+      return false;
+    return memcmp(existing.get(), lookup.str, lookup.length * sizeof(char16_t)) == 0;
   }
 };
 
