@@ -500,6 +500,12 @@ void MediaDecoderStateMachine::SendStreamData()
       endPosition = std::max(endPosition,
           mediaStream->TicksToTimeRoundDown(mInfo.mAudio.mRate,
                                             stream->mAudioFramesWritten));
+
+      CheckedInt64 playedUsecs = mStreamStartTime +
+          FramesToUsecs(stream->mAudioFramesWritten, mInfo.mAudio.mRate);
+      if (playedUsecs.isValid()) {
+        OnAudioEndTimeUpdate(playedUsecs.value());
+      }
     }
 
     if (mInfo.HasVideo()) {
@@ -588,7 +594,6 @@ void MediaDecoderStateMachine::SendStreamData()
     // Therefore we only discard those behind the stream clock to throttle
     // the decoding speed.
     if (a && a->mTime <= clockTime) {
-      OnAudioEndTimeUpdate(std::max(mAudioEndTime, a->GetEndTime()));
       nsRefPtr<AudioData> releaseMe = AudioQueue().PopFront();
       continue;
     }
@@ -3477,6 +3482,9 @@ void MediaDecoderStateMachine::DispatchAudioCaptured()
       // the 1st frame. But this is OK since we will update mStreamStartTime
       // again in SetStartTime().
       self->mStreamStartTime = self->GetMediaTime();
+      // Reset mAudioEndTime which will be updated as we send audio data to
+      // stream. Otherwise it will remain -1 if we don't have audio.
+      self->mAudioEndTime = -1;
       self->mAudioCaptured = true;
       self->ScheduleStateMachine();
     }
