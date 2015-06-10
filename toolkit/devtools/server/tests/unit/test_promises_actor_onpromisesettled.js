@@ -69,12 +69,18 @@ function oncePromiseSettled(front, resolution, resolveValue, rejectValue) {
         equal(p.class, "Promise", "Expect class to be Promise");
         equal(typeof p.promiseState.creationTimestamp, "number",
           "Expect creation timestamp to be a number");
+        equal(typeof p.promiseState.timeToSettle, "number",
+          "Expect time to settle to be a number");
 
         if (p.promiseState.state === "fulfilled" &&
             p.promiseState.value === resolution) {
+          equal(Math.floor(p.promiseState.timeToSettle), 0,
+            "Expect time to settle for resolved promise to be 0.");
           resolve(resolveValue);
         } else if (p.promiseState.state === "rejected" &&
                    p.promiseState.reason === resolution) {
+          equal(Math.floor(p.promiseState.timeToSettle), 0,
+            "Expect time to settle for rejected promise to be 0.");
           resolve(rejectValue);
         } else {
           dump("Found non-target promise\n");

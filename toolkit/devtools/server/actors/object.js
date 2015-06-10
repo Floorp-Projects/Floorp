@@ -145,6 +145,12 @@ ObjectActor.prototype = {
     promiseState.creationTimestamp = Date.now() -
       PromiseDebugging.getPromiseLifetime(rawPromise);
 
+    // If the promise is not settled, avoid adding the timeToSettle property
+    // and catch the error thrown by PromiseDebugging.getTimeToSettle.
+    try {
+      promiseState.timeToSettle = PromiseDebugging.getTimeToSettle(rawPromise);
+    } catch(e) {}
+
     return promiseState;
   },
 
