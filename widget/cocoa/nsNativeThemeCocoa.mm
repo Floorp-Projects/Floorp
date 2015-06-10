@@ -90,6 +90,20 @@ extern "C" {
 
 @end
 
+// These two classes don't actually add any behavior over NSButtonCell. Their
+// purpose is to make it easy to distinguish NSCell objects that are used for
+// drawing radio buttons / checkboxes from other cell types.
+// The class names are made up, there are no classes with these names in AppKit.
+// The reason we need them is that calling [cell setButtonType:NSRadioButton]
+// doesn't leave an easy-to-check "marker" on the cell object - there is no
+// -[NSButtonCell buttonType] method.
+@interface RadioButtonCell : NSButtonCell
+@end;
+@implementation RadioButtonCell @end;
+@interface CheckboxCell : NSButtonCell
+@end;
+@implementation CheckboxCell @end;
+
 static void
 DrawFocusRingForCellIfNeeded(NSCell* aCell, NSRect aWithFrame, NSView* aInView)
 {
@@ -120,7 +134,7 @@ DrawFocusRingForCellIfNeeded(NSCell* aCell, NSRect aWithFrame, NSView* aInView)
 }
 
 static bool
-FocusIsDrawnByDrawWithFrame()
+FocusIsDrawnByDrawWithFrame(NSCell* aCell)
 {
 #if defined(MAC_OS_X_VERSION_10_8) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_8
   // When building with the 10.8 SDK or higher, focus rings don't draw as part
@@ -130,9 +144,19 @@ FocusIsDrawnByDrawWithFrame()
   // https://developer.apple.com/library/mac/releasenotes/AppKit/RN-AppKitOlderNotes/#X10_8Notes
   return false;
 #else
-  // On 10.10 and up, this is the case even when building against the 10.7 SDK
-  // or lower.
-  return !nsCocoaFeatures::OnYosemiteOrLater();
+  if (!nsCocoaFeatures::OnYosemiteOrLater()) {
+    // When building with the 10.7 SDK or lower, focus rings always draw as
+    // part of -[NSCell drawWithFrame:inView:] if the build is run on 10.9 or
+    // lower.
+    return true;
+  }
+
+  // On 10.10, whether the focus ring is drawn as part of
+  // -[NSCell drawWithFrame:inView:] depends on the cell type.
+  // Radio buttons and checkboxes draw their own focus rings, other cell
+  // types need -[NSCell drawFocusRingMaskWithFrame:inView:].
+  return [aCell isKindOfClass:[RadioButtonCell class]] ||
+         [aCell isKindOfClass:[CheckboxCell class]];
 #endif
 }
 
@@ -141,7 +165,7 @@ DrawCellIncludingFocusRing(NSCell* aCell, NSRect aWithFrame, NSView* aInView)
 {
   [aCell drawWithFrame:aWithFrame inView:aInView];
 
-  if (!FocusIsDrawnByDrawWithFrame()) {
+  if (!FocusIsDrawnByDrawWithFrame(aCell)) {
     DrawFocusRingForCellIfNeeded(aCell, aWithFrame, aInView);
   }
 }
@@ -322,7 +346,7 @@ static BOOL IsToolbarStyleContainer(nsIFrame* aFrame)
 {
   [super drawWithFrame:rect inView:controlView];
 
-  if (FocusIsDrawnByDrawWithFrame()) {
+  if (FocusIsDrawnByDrawWithFrame(self)) {
     DrawFocusRingForCellIfNeeded(self, rect, controlView);
   }
 }
@@ -508,10 +532,10 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   [mPushButtonCell setButtonType:NSMomentaryPushInButton];
   [mPushButtonCell setHighlightsBy:NSPushInCellMask];
 
-  mRadioButtonCell = [[NSButtonCell alloc] initTextCell:nil];
+  mRadioButtonCell = [[RadioButtonCell alloc] initTextCell:nil];
   [mRadioButtonCell setButtonType:NSRadioButton];
 
-  mCheckboxCell = [[NSButtonCell alloc] initTextCell:nil];
+  mCheckboxCell = [[CheckboxCell alloc] initTextCell:nil];
   [mCheckboxCell setButtonType:NSSwitchButton];
   [mCheckboxCell setAllowsMixedState:YES];
 
