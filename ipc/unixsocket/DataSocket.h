@@ -10,6 +10,7 @@
 #define mozilla_ipc_datasocket_h
 
 #include "mozilla/ipc/SocketBase.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace ipc {
@@ -90,7 +91,7 @@ public:
   nsresult SendPendingData(int aFd);
 
 protected:
-  DataSocketIO(nsIThread* aConsumerThread);
+  DataSocketIO(MessageLoop* aConsumerLoop);
 
 private:
   /**

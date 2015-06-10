@@ -27,7 +27,7 @@ class ListenSocketIO final
 public:
   class ListenTask;
 
-  ListenSocketIO(nsIThread* aConsumerThread,
+  ListenSocketIO(MessageLoop* aConsumerLoop,
                  MessageLoop* aIOLoop,
                  ListenSocket* aListenSocket,
                  UnixSocketConnector* aConnector);
@@ -95,12 +95,12 @@ private:
   ConnectionOrientedSocketIO* mCOSocketIO;
 };
 
-ListenSocketIO::ListenSocketIO(nsIThread* aConsumerThread,
+ListenSocketIO::ListenSocketIO(MessageLoop* aConsumerLoop,
                                MessageLoop* aIOLoop,
                                ListenSocket* aListenSocket,
                                UnixSocketConnector* aConnector)
   : UnixSocketWatcher(aIOLoop)
-  , SocketIOBase(aConsumerThread)
+  , SocketIOBase(aConsumerLoop)
   , mListenSocket(aListenSocket)
   , mConnector(aConnector)
   , mShuttingDownOnIOThread(false)
@@ -168,9 +168,8 @@ ListenSocketIO::OnListening()
   AddWatchers(READ_WATCHER, true);
 
   /* We signal a successful 'connection' to a local address for listening. */
-  GetConsumerThread()->Dispatch(
-    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS),
-    NS_DISPATCH_NORMAL);
+  GetConsumerThread()->PostTask(
+    FROM_HERE, new SocketEventTask(this, SocketEventTask::CONNECT_SUCCESS));
 }
 
 void
@@ -191,9 +190,8 @@ ListenSocketIO::FireSocketError()
   Close();
 
   // Tell the consumer thread we've errored
-  GetConsumerThread()->Dispatch(
-    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_ERROR),
-    NS_DISPATCH_NORMAL);
+  GetConsumerThread()->PostTask(
+    FROM_HERE, new SocketEventTask(this, SocketEventTask::CONNECT_ERROR));
 }
 
 void
@@ -311,13 +309,13 @@ ListenSocket::~ListenSocket()
 
 nsresult
 ListenSocket::Listen(UnixSocketConnector* aConnector,
-                     nsIThread* aConsumerThread,
+                     MessageLoop* aConsumerLoop,
                      MessageLoop* aIOLoop,
                      ConnectionOrientedSocket* aCOSocket)
 {
   MOZ_ASSERT(!mIO);
 
-  mIO = new ListenSocketIO(aConsumerThread, aIOLoop, this, aConnector);
+  mIO = new ListenSocketIO(aConsumerLoop, aIOLoop, this, aConnector);
 
   // Prepared I/O object, now start listening.
   nsresult rv = Listen(aCOSocket);
@@ -334,13 +332,8 @@ nsresult
 ListenSocket::Listen(UnixSocketConnector* aConnector,
                      ConnectionOrientedSocket* aCOSocket)
 {
-  nsIThread* consumerThread = nullptr;
-  nsresult rv = NS_GetCurrentThread(&consumerThread);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  return Listen(aConnector, consumerThread, XRE_GetIOMessageLoop(), aCOSocket);
+  return Listen(aConnector, MessageLoop::current(), XRE_GetIOMessageLoop(),
+                aCOSocket);
 }
 
 nsresult
