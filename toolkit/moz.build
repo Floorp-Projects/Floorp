@@ -56,6 +56,7 @@ elif CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     # Profiler requires some crashreporter code,
     # so build it even if crashreporter is disabled.
     DIRS += [
+    'crashreporter/breakpad-logging',
     'crashreporter/google-breakpad/src/common',
     'crashreporter/google-breakpad/src/processor',
     ]

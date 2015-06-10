@@ -26,6 +26,8 @@
  * layer manager fall back on full GPU composition.
  */
 
+class nsIWidget;
+
 namespace mozilla {
 namespace layers {
 
@@ -47,13 +49,14 @@ public:
    * Currently, when TryRender() returns true, the entire framebuffer
    * must have been rendered.
    */
-  virtual bool TryRenderWithHwc(Layer* aRoot, bool aGeometryChanged) = 0;
+  virtual bool TryRenderWithHwc(Layer* aRoot, nsIWidget* aWidget,
+                                bool aGeometryChanged) = 0;
 
   /**
    * Return true if Composer2D does composition. Return false if Composer2D
    * failed the composition.
    */
-  virtual bool Render() = 0;
+  virtual bool Render(nsIWidget* aWidget) = 0;
 
   /**
    * Return true if Composer2D has a fast composition hardware.

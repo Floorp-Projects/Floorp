@@ -113,6 +113,9 @@ JitOptions::JitOptions()
     // Whether functions are compiled immediately.
     SET_DEFAULT(eagerCompilation, false);
 
+    // Whether IonBuilder should prefer IC generation above specialized MIR.
+    SET_DEFAULT(forceInlineCaches, false);
+
     // Force how many invocation or loop iterations are needed before compiling
     // a function with the highest ionmonkey optimization level.
     // (i.e. OptimizationLevel_Normal)

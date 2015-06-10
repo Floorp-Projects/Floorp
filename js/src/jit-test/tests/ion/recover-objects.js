@@ -4,6 +4,12 @@
 if (getJitCompilerOptions()["ion.warmup.trigger"] <= 90)
     setJitCompilerOption("ion.warmup.trigger", 90);
 
+// This test checks that we are able to remove the getprop & setprop with scalar
+// replacement, so we should not force inline caches, as this would skip the
+// generation of getprop & setprop instructions.
+if (getJitCompilerOptions()["ion.forceinlineCaches"])
+    setJitCompilerOption("ion.forceinlineCaches", 0);
+
 var uceFault = function (i) {
     if (i > 98)
         uceFault = function (i) { return true; };

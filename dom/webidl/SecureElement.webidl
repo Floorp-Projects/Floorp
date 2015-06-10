@@ -16,6 +16,7 @@ enum SEError {
   "SEInvalidChannelError",      // Opening a channel failed because no channel is available.
   "SEInvalidApplicationError",  // The requested application was not found on the secure element.
   "SENotPresentError",          // Secure Element is not present
+  "SEIllegalParameterError",    // Request operation does not have valid parameters.
   "SEGenericError"              // Generic failures.
 };
 

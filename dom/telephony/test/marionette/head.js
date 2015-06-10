@@ -279,6 +279,18 @@ let emulator = (function() {
   /**
    * @return Promise
    */
+  function changeModemTech(aTech, aPreferredMask) {
+    return Promise.resolve()
+      .then(() => emulator.runCmd("modem tech " + aTech + " " + aPreferredMask))
+      .then(() => emulator.runCmd("modem tech"))
+      .then(result => is(result[0],
+                         aTech + " " + aPreferredMask,
+                         "Check modem 'tech/preferred mask'"));
+  }
+
+  /**
+   * @return Promise
+   */
   function clearCalls() {
     log("Clear existing calls.");
 
@@ -1152,6 +1164,7 @@ let emulator = (function() {
   this.gWaitForNamedStateEvent = waitForNamedStateEvent;
   this.gWaitForStateChangeEvent = waitForStateChangeEvent;
   this.gCheckInitialState = checkInitialState;
+  this.gChangeModemTech = changeModemTech;
   this.gClearCalls = clearCalls;
   this.gOutCallStrPool = outCallStrPool;
   this.gInCallStrPool = inCallStrPool;
