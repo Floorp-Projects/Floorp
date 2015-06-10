@@ -53,6 +53,7 @@
 #include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
 #include "mozilla/media/MediaChild.h"
+#include "mozilla/BasePrincipal.h"
 
 #if defined(MOZ_CONTENT_SANDBOX)
 #if defined(XP_WIN)
@@ -2112,18 +2113,15 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
     MOZ_ASSERT(permissionManager,
                "We have no permissionManager in the Content process !");
 
+    nsAutoCString originNoSuffix;
+    OriginAttributes attrs;
+    attrs.PopulateFromOrigin(permission.origin, originNoSuffix);
+
     nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + nsCString(permission.host));
-    NS_ENSURE_TRUE(uri, true);
-
-    nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-    MOZ_ASSERT(secMan);
-
-    nsCOMPtr<nsIPrincipal> principal;
-    nsresult rv = secMan->GetAppCodebasePrincipal(uri, permission.appId,
-                                                permission.isInBrowserElement,
-                                                getter_AddRefs(principal));
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
     NS_ENSURE_SUCCESS(rv, true);
+
+    nsCOMPtr<nsIPrincipal> principal = mozilla::BasePrincipal::CreateCodebasePrincipal(uri, attrs);
 
     // child processes don't care about modification time.
     int64_t modificationTime = 0;
