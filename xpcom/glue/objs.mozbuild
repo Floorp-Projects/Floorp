@@ -25,7 +25,6 @@ xpcom_glue_src_lcppsrcs = [
     'nsMemory.cpp',
     'nsQuickSort.cpp',
     'nsTArray.cpp',
-    'nsTHashtable.cpp',
     'nsThreadUtils.cpp',
     'nsTObserverArray.cpp',
     'nsVersionComparator.cpp',
