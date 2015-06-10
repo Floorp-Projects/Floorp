@@ -244,7 +244,7 @@ Index::Index(const nsTArray<Indice>& aIndex,
   if (aIndex.IsEmpty()) {
     mMoofParser = new MoofParser(aSource, aTrackId, aIsAudio, aMonitor);
   } else {
-    if (!mIndex.SetCapacity(aIndex.Length())) {
+    if (!mIndex.SetCapacity(aIndex.Length(), fallible)) {
       // OOM.
       return;
     }
@@ -256,7 +256,8 @@ Index::Index(const nsTArray<Indice>& aIndex,
       sample.mCompositionRange = Interval<Microseconds>(indice.start_composition,
                                                         indice.end_composition);
       sample.mSync = indice.sync;
-      MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample));
+      // FIXME: Make this infallible after bug 968520 is done.
+      MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample, fallible));
     }
   }
 }

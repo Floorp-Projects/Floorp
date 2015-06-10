@@ -463,7 +463,7 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
   uint64_t decodeTime = *aDecodeTime;
   nsTArray<Interval<Microseconds>> timeRanges;
 
-  if (!mIndex.SetCapacity(sampleCount)) {
+  if (!mIndex.SetCapacity(sampleCount, fallible)) {
     LOG(Moof, "Out of Memory");
     return false;
   }
@@ -497,7 +497,8 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
     // because every audio sample is a keyframe.
     sample.mSync = !(sampleFlags & 0x1010000) || aIsAudio;
 
-    MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample));
+    // FIXME: Make this infallible after bug 968520 is done.
+    MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample, fallible));
 
     mMdatRange = mMdatRange.Extents(sample.mByteRange);
   }

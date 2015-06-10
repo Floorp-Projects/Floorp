@@ -161,14 +161,15 @@ public:
       int length = mEvent.mTechList.Length();
       event.mTechList.Construct();
 
-      if (!event.mTechList.Value().SetCapacity(length)) {
+      if (!event.mTechList.Value().SetCapacity(length, fallible)) {
         return NS_ERROR_FAILURE;
       }
 
       for (int i = 0; i < length; i++) {
         NFCTechType tech = static_cast<NFCTechType>(mEvent.mTechList[i]);
         MOZ_ASSERT(tech < NFCTechType::EndGuard_);
-        *event.mTechList.Value().AppendElement() = tech;
+        // FIXME: Make this infallible after bug 968520 is done.
+        *event.mTechList.Value().AppendElement(fallible) = tech;
       }
     }
 
@@ -180,13 +181,15 @@ public:
     if (mEvent.mRecords.Length() > 0) {
       int length = mEvent.mRecords.Length();
       event.mRecords.Construct();
-      if (!event.mRecords.Value().SetCapacity(length)) {
+      if (!event.mRecords.Value().SetCapacity(length, fallible)) {
         return NS_ERROR_FAILURE;
       }
 
       for (int i = 0; i < length; i++) {
         NDEFRecordStruct& recordStruct = mEvent.mRecords[i];
-        MozNDEFRecordOptions& record = *event.mRecords.Value().AppendElement();
+        // FIXME: Make this infallible after bug 968520 is done.
+        MozNDEFRecordOptions& record =
+          *event.mRecords.Value().AppendElement(fallible);
 
         record.mTnf = recordStruct.mTnf;
         MOZ_ASSERT(record.mTnf < TNF::EndGuard_);

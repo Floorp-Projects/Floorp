@@ -805,7 +805,7 @@ gfxFontconfigFontEntry::CopyFontTable(uint32_t aTableTag,
     if (FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, nullptr, &length) != 0) {
         return NS_ERROR_NOT_AVAILABLE;
     }
-    if (!aBuffer.SetLength(length)) {
+    if (!aBuffer.SetLength(length, fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
     if (FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, aBuffer.Elements(), &length) != 0) {
