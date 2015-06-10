@@ -6,7 +6,10 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(cfb08e46-193c-4be7-a467-d7775fb2a31e)]
+interface nsIPrincipal;
+interface nsIURI;
+
+[scriptable, uuid(bb409a51-2371-4fea-9dc9-b7286a458b8c)]
 /**
  * This interface defines a "permission" object,
  * used to specify allowed/blocked objects from
@@ -16,19 +19,9 @@
 interface nsIPermission : nsISupports
 {
     /**
-     * The name of the host for which the permission is set
+     * The principal for which this permission applies.
      */
-    readonly attribute AUTF8String host;
-
-    /**
-     * The id of the app for which the permission is set.
-     */
-    readonly attribute unsigned long appId;
-
-    /**
-     * Whether the permission has been set to a page inside a browser element.
-     */
-    readonly attribute boolean isInBrowserElement;
+    readonly attribute nsIPrincipal principal;
 
     /**
      * a case-sensitive ASCII string, indicating the type of permission
@@ -56,4 +49,29 @@ interface nsIPermission : nsISupports
      * 0:00:00).
      */
     readonly attribute int64_t expireTime;
+
+    /**
+     * Test whether a principal would be affected by this permission.
+     *
+     * @param principal  the principal to test
+     * @param exactHost  If true, only the specific host will be matched,
+     *                   @see nsIPermissionManager::testExactPermission.
+     *                   If false, subdomains will also be searched,
+     *                   @see nsIPermissionManager::testPermission.
+     */
+    boolean matches(in nsIPrincipal principal,
+                    in boolean exactHost);
+
+    /**
+     * Test whether a URI would be affected by this permission.
+     * This performs a matches with a NO_APP_ID identifier.
+     *
+     * @param uri        the uri to test
+     * @param exactHost  If true, only the specific host will be matched,
+     *                   @see nsIPermissionManager::testExactPermission.
+     *                   If false, subdomains will also be searched,
+     *                   @see nsIPermissionManager::testPermission.
+     */
+    boolean matchesURI(in nsIURI uri,
+                       in boolean exactHost);
 };
