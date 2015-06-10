@@ -62,8 +62,8 @@ enum UIStateChangeType
 };
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x2485d4d7, 0xf7cb, 0x481e, \
-  { 0x9c, 0x89, 0xb2, 0xa8, 0x12, 0x67, 0x7f, 0x97 } }
+{ 0x0df7578f, 0x31d4, 0x4391, \
+  { 0x98, 0xd4, 0xf3, 0x7d, 0x51, 0x8e, 0xa4, 0x37 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -474,6 +474,18 @@ public:
    */
   virtual nsresult SetFullScreenInternal(bool aIsFullscreen, bool aFullscreenMode,
                                          mozilla::gfx::VRHMDInfo *aHMD = nullptr) = 0;
+
+  /**
+   * This function should be called when the fullscreen state is flipped.
+   * If no widget is involved the fullscreen change, this method is called
+   * by SetFullScreenInternal, otherwise, it is called when the widget
+   * finishes its change to or from fullscreen.
+   *
+   * @param aIsFullscreen indicates whether the widget is in fullscreen.
+   *
+   * Outer windows only.
+   */
+  virtual void FinishFullscreenChange(bool aIsFullscreen) = 0;
 
   /**
    * Call this to check whether some node (this window, its document,
