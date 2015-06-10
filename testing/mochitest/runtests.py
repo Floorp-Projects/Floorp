@@ -1935,12 +1935,24 @@ class Mochitest(MochitestUtilsMixin):
 
                 # Add chunking filters if specified
                 if options.totalChunks:
+                    if options.chunkByRuntime:
+                        runtime_file = self.resolve_runtime_file(options, info)
+                        if not os.path.exists(runtime_file):
+                            self.log.warning("runtime file %s not found; defaulting to chunk-by-dir" %
+                                             runtime_file)
+                            options.chunkByRuntime = None
+                            flavor = self.getTestFlavor(options)
+                            if flavor in ('browser-chrome', 'devtools-chrome'):
+                                # these values match current mozharness configs
+                                options.chunkbyDir = 5
+                            else:
+                                options.chunkByDir = 4
+
                     if options.chunkByDir:
                         filters.append(chunk_by_dir(options.thisChunk,
                                                     options.totalChunks,
                                                     options.chunkByDir))
                     elif options.chunkByRuntime:
-                        runtime_file = self.resolve_runtime_file(options, info)
                         with open(runtime_file, 'r') as f:
                             runtime_data = json.loads(f.read())
                         runtimes = runtime_data['runtimes']
