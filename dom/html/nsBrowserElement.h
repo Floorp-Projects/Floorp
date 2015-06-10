@@ -20,6 +20,8 @@ namespace dom {
 struct BrowserElementDownloadOptions;
 class BrowserElementNextPaintEventCallback;
 class DOMRequest;
+enum class BrowserFindCaseSensitivity: uint32_t;
+enum class BrowserFindDirection: uint32_t;
 } // namespace dom
 
 class ErrorResult;
@@ -79,6 +81,11 @@ public:
   already_AddRefed<dom::DOMRequest> GetCanGoBack(ErrorResult& aRv);
   already_AddRefed<dom::DOMRequest> GetCanGoForward(ErrorResult& aRv);
   already_AddRefed<dom::DOMRequest> GetContentDimensions(ErrorResult& aRv);
+
+  void FindAll(const nsAString& aSearchString, dom::BrowserFindCaseSensitivity aCaseSensitivity,
+               ErrorResult& aRv);
+  void FindNext(dom::BrowserFindDirection aDirection, ErrorResult& aRv);
+  void ClearMatch(ErrorResult& aRv);
 
   void AddNextPaintListener(dom::BrowserElementNextPaintEventCallback& listener,
                             ErrorResult& aRv);

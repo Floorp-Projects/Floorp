@@ -377,6 +377,62 @@ nsBrowserElement::GetContentDimensions(ErrorResult& aRv)
 }
 
 void
+nsBrowserElement::FindAll(const nsAString& aSearchString,
+                          BrowserFindCaseSensitivity aCaseSensitivity,
+                          ErrorResult& aRv)
+{
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+  NS_ENSURE_TRUE_VOID(IsNotWidgetOrThrow(aRv));
+
+  uint32_t caseSensitivity;
+  if (aCaseSensitivity == BrowserFindCaseSensitivity::Case_insensitive) {
+    caseSensitivity = nsIBrowserElementAPI::FIND_CASE_INSENSITIVE;
+  } else {
+    caseSensitivity = nsIBrowserElementAPI::FIND_CASE_SENSITIVE;
+  }
+
+  nsresult rv = mBrowserElementAPI->FindAll(aSearchString, caseSensitivity);
+
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+}
+
+void
+nsBrowserElement::FindNext(BrowserFindDirection aDirection,
+                          ErrorResult& aRv)
+{
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+  NS_ENSURE_TRUE_VOID(IsNotWidgetOrThrow(aRv));
+
+  uint32_t direction;
+  if (aDirection == BrowserFindDirection::Backward) {
+    direction = nsIBrowserElementAPI::FIND_BACKWARD;
+  } else {
+    direction = nsIBrowserElementAPI::FIND_FORWARD;
+  }
+
+  nsresult rv = mBrowserElementAPI->FindNext(direction);
+
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+}
+
+void
+nsBrowserElement::ClearMatch(ErrorResult& aRv)
+{
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+  NS_ENSURE_TRUE_VOID(IsNotWidgetOrThrow(aRv));
+
+  nsresult rv = mBrowserElementAPI->ClearMatch();
+
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+}
+
+void
 nsBrowserElement::AddNextPaintListener(BrowserElementNextPaintEventCallback& aListener,
                                        ErrorResult& aRv)
 {
