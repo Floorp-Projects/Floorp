@@ -1279,6 +1279,9 @@ void nsCocoaWindow::EnteredFullScreen(bool aFullScreen, bool aNativeMode)
     mInNativeFullScreenMode = aFullScreen;
   }
   DispatchSizeModeEvent();
+  if (mWidgetListener) {
+    mWidgetListener->FullscreenChanged(aFullScreen);
+  }
 }
 
 inline bool nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen)
