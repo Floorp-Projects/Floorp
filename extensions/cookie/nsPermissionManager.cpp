@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/unused.h"
 #include "nsPermissionManager.h"
 #include "nsPermission.h"
@@ -741,6 +742,15 @@ nsPermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
+  // Null principals can't meaningfully have persisted permissions attached to
+  // them, so we don't allow adding permissions for them.
+  bool isNullPrincipal;
+  nsresult rv = aPrincipal->GetIsNullPrincipal(&isNullPrincipal);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (isNullPrincipal) {
+    return NS_OK;
+  }
+
   // Permissions may not be added to expanded principals.
   if (IsExpandedPrincipal(aPrincipal)) {
     return NS_ERROR_INVALID_ARG;
@@ -770,16 +780,12 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!IsChildProcess()) {
-    uint32_t appId;
-    rv = aPrincipal->GetAppId(&appId);
+    nsAutoCString origin;
+    rv = aPrincipal->GetOrigin(origin);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool isInBrowserElement;
-    rv = aPrincipal->GetIsInBrowserElement(&isInBrowserElement);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    IPC::Permission permission(host, appId, isInBrowserElement, aType,
-                               aPermission, aExpireType, aExpireTime);
+    IPC::Permission permission(origin, aType, aPermission,
+                               aExpireType, aExpireTime);
 
     nsTArray<ContentParent*> cplist;
     ContentParent::GetAll(cplist);
@@ -1098,12 +1104,8 @@ nsPermissionManager::RemoveFromPrincipal(nsIPrincipal* aPrincipal,
 NS_IMETHODIMP
 nsPermissionManager::RemovePermission(nsIPermission* aPerm)
 {
-  nsAutoCString host;
-  nsresult rv = aPerm->GetHost(host);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIPrincipal> principal;
-  rv = GetPrincipal(host, getter_AddRefs(principal));
+  nsresult rv = aPerm->GetPrincipal(getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString type;
@@ -1301,9 +1303,14 @@ nsPermissionManager::GetPermissionObject(nsIPrincipal* aPrincipal,
   }
 
   PermissionEntry& perm = entry->GetPermissions()[idx];
-  nsCOMPtr<nsIPermission> r = new nsPermission(entry->GetKey()->mHost,
-                                               entry->GetKey()->mAppId,
-                                               entry->GetKey()->mIsInBrowserElement,
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = GetPrincipal(entry->GetKey()->mHost,
+                    entry->GetKey()->mAppId,
+                    entry->GetKey()->mIsInBrowserElement,
+                    getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPermission> r = new nsPermission(principal,
                                                mTypeArray.ElementAt(perm.mType),
                                                perm.mPermission,
                                                perm.mExpireType,
@@ -1444,6 +1451,7 @@ nsPermissionManager::GetPermissionHashKey(const nsACString& aHost,
     return GetPermissionHashKey(NS_LITERAL_CSTRING("<file>"), aAppId, aIsInBrowserElement, aType, true);
   }
 
+  // If aExactHostMatch wasn't true, we can check if the base domain has a permission entry.
   if (!aExactHostMatch) {
     nsCString domain = GetNextSubDomainForHost(aHost);
     if (!domain.IsEmpty()) {
@@ -1485,9 +1493,13 @@ AddPermissionsToList(nsPermissionManager::PermissionHashKey* entry, void *arg)
       continue;
     }
 
-    nsPermission *perm = new nsPermission(entry->GetKey()->mHost,
-                                          entry->GetKey()->mAppId,
-                                          entry->GetKey()->mIsInBrowserElement,
+    nsCOMPtr<nsIPrincipal> principal;
+    GetPrincipal(entry->GetKey()->mHost,
+                 entry->GetKey()->mAppId,
+                 entry->GetKey()->mIsInBrowserElement,
+                 getter_AddRefs(principal));
+
+    nsPermission *perm = new nsPermission(principal,
                                           data->types->ElementAt(permEntry.mType),
                                           permEntry.mPermission,
                                           permEntry.mExpireType,
@@ -1542,9 +1554,13 @@ AddPermissionsModifiedSinceToList(
       continue;
     }
 
-    nsPermission* perm = new nsPermission(entry->GetKey()->mHost,
-                                          entry->GetKey()->mAppId,
-                                          entry->GetKey()->mIsInBrowserElement,
+    nsCOMPtr<nsIPrincipal> principal;
+    GetPrincipal(entry->GetKey()->mHost,
+                 entry->GetKey()->mAppId,
+                 entry->GetKey()->mIsInBrowserElement,
+                 getter_AddRefs(principal));
+
+    nsPermission* perm = new nsPermission(principal,
                                           data->types->ElementAt(permEntry.mType),
                                           permEntry.mPermission,
                                           permEntry.mExpireType,
@@ -1567,22 +1583,21 @@ nsPermissionManager::RemoveAllModifiedSince(int64_t aModificationTime)
   mPermissionTable.EnumerateEntries(AddPermissionsModifiedSinceToList, &data);
 
   for (int32_t i = 0; i<array.Count(); ++i) {
-    nsAutoCString host;
-    bool isInBrowserElement = false;
-    nsAutoCString type;
-    uint32_t appId = 0;
-
-    array[i]->GetHost(host);
-    array[i]->GetIsInBrowserElement(&isInBrowserElement);
-    array[i]->GetType(type);
-    array[i]->GetAppId(&appId);
-
     nsCOMPtr<nsIPrincipal> principal;
-    if (NS_FAILED(GetPrincipal(host, appId, isInBrowserElement,
-                               getter_AddRefs(principal)))) {
+    nsAutoCString type;
+
+    nsresult rv = array[i]->GetPrincipal(getter_AddRefs(principal));
+    if (NS_FAILED(rv)) {
       NS_ERROR("GetPrincipal() failed!");
       continue;
     }
+
+    rv = array[i]->GetType(type);
+    if (NS_FAILED(rv)) {
+      NS_ERROR("GetType() failed!");
+      continue;
+    }
+
     // AddInternal handles removal, so let it do the work...
     AddInternal(
       principal,
@@ -1612,9 +1627,13 @@ nsPermissionManager::GetPermissionsForApp(nsPermissionManager::PermissionHashKey
       continue;
     }
 
-    data->permissions.AppendObject(new nsPermission(entry->GetKey()->mHost,
-                                                    entry->GetKey()->mAppId,
-                                                    entry->GetKey()->mIsInBrowserElement,
+    nsCOMPtr<nsIPrincipal> principal;
+    GetPrincipal(entry->GetKey()->mHost,
+                 entry->GetKey()->mAppId,
+                 entry->GetKey()->mIsInBrowserElement,
+                 getter_AddRefs(principal));
+
+    data->permissions.AppendObject(new nsPermission(principal,
                                                     gPermissionManager->mTypeArray.ElementAt(permEntry.mType),
                                                     permEntry.mPermission,
                                                     permEntry.mExpireType,
@@ -1658,20 +1677,11 @@ nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId, bool aBrowserOnly)
   mPermissionTable.EnumerateEntries(GetPermissionsForApp, &data);
 
   for (int32_t i=0; i<data.permissions.Count(); ++i) {
-    nsAutoCString host;
-    bool isInBrowserElement;
+    nsCOMPtr<nsIPrincipal> principal;
     nsAutoCString type;
 
-    data.permissions[i]->GetHost(host);
-    data.permissions[i]->GetIsInBrowserElement(&isInBrowserElement);
+    data.permissions[i]->GetPrincipal(getter_AddRefs(principal));
     data.permissions[i]->GetType(type);
-
-    nsCOMPtr<nsIPrincipal> principal;
-    if (NS_FAILED(GetPrincipal(host, aAppId, isInBrowserElement,
-                               getter_AddRefs(principal)))) {
-      NS_ERROR("GetPrincipal() failed!");
-      continue;
-    }
 
     AddInternal(principal,
                 type,
@@ -1799,8 +1809,11 @@ nsPermissionManager::NotifyObserversWithPermission(const nsACString &aHost,
                                                    int64_t           aExpireTime,
                                                    const char16_t  *aData)
 {
+  nsCOMPtr<nsIPrincipal> principal;
+  GetPrincipal(aHost, aAppId, aIsInBrowserElement, getter_AddRefs(principal));
+
   nsCOMPtr<nsIPermission> permission =
-    new nsPermission(aHost, aAppId, aIsInBrowserElement, aType, aPermission,
+    new nsPermission(principal, aType, aPermission,
                      aExpireType, aExpireTime);
   if (permission)
     NotifyObservers(permission, aData);
@@ -2293,10 +2306,15 @@ nsPermissionManager::FetchPermissions() {
   for (uint32_t i = 0; i < perms.Length(); i++) {
     const IPC::Permission &perm = perms[i];
 
-    nsCOMPtr<nsIPrincipal> principal;
-    nsresult rv = GetPrincipal(perm.host, perm.appId,
-                               perm.isInBrowserElement, getter_AddRefs(principal));
+    nsAutoCString originNoSuffix;
+    mozilla::OriginAttributes attrs;
+    attrs.PopulateFromOrigin(perm.origin, originNoSuffix);
+
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIPrincipal> principal = mozilla::BasePrincipal::CreateCodebasePrincipal(uri, attrs);
 
     // The child process doesn't care about modification times - it neither
     // reads nor writes, nor removes them based on the date - so 0 (which
