@@ -560,8 +560,8 @@ add_test(function test_read_number_with_length() {
       expectedNumber: "123456789"
     },
     {
-      number: null,
-      expectedNumber: null
+      number: "",
+      expectedNumber: ""
     },
     // Invalid length of BCD number/SSC contents
     {
@@ -579,7 +579,7 @@ add_test(function test_read_number_with_length() {
       return aNumber.substring(0, numLen);
     };
 
-    if (aNumber != null) {
+    if (aNumber) {
       helper.writeHexOctet(aNumber.length + 1);
     } else {
       helper.writeHexOctet(0xff);

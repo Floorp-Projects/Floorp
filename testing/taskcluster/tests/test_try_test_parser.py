@@ -6,6 +6,11 @@ class TryTestParserTest(unittest.TestCase):
 
     def test_parse_opts_valid(self):
         self.assertEquals(
+            parse_test_opts('all[Mulet Linux]'),
+            [{ 'test': 'all', 'platforms': ['Mulet Linux'] }]
+        )
+
+        self.assertEquals(
             parse_test_opts('all[Amazing, Foobar woot,yeah]'),
             [{ 'test': 'all', 'platforms': ['Amazing', 'Foobar woot', 'yeah'] }]
         )
@@ -48,4 +53,3 @@ class TryTestParserTest(unittest.TestCase):
 
 if __name__ == '__main__':
     mozunit.main()
-
