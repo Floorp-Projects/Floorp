@@ -123,6 +123,8 @@ public:
 
     void ConfigureAPZControllerThread() override;
 
+    nsScreenGonk* GetScreen();
+
 protected:
     nsWindow* mParent;
     bool mVisible;

@@ -23,6 +23,34 @@ BUILD_TYPE_ALIASES = {
 class InvalidCommitException(Exception):
     pass
 
+def escape_whitspace_in_brackets(input_str):
+    '''
+    In tests you may restrict them by platform [] inside of the brackets
+    whitespace may occur this is typically invalid shell syntax so we escape it
+    with backslash sequences    .
+    '''
+    result = ""
+    in_brackets = False
+    for char in input_str:
+        if char == '[':
+            in_brackets = True
+            result += char
+            continue
+
+        if char == ']':
+            in_brackets = False
+            result += char
+            continue
+
+        if char == ' ' and in_brackets:
+            result += '\ '
+            continue
+
+        result += char
+
+    return result
+
+
 def normalize_platform_list(alias, all_builds, build_list):
     if build_list == 'all':
         return all_builds
@@ -178,7 +206,7 @@ def parse_commit(message, jobs):
     '''
 
     # shlex used to ensure we split correctly when giving values to argparse.
-    parts = shlex.split(message)
+    parts = shlex.split(escape_whitspace_in_brackets(message))
     try_idx = None
     for idx, part in enumerate(parts):
         if part == TRY_DELIMITER:
