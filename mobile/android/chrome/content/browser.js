@@ -7028,6 +7028,7 @@ var IdentityHandler = {
       locationObj.host = location.host;
       locationObj.hostname = location.hostname;
       locationObj.port = location.port;
+      locationObj.origin = location.origin;
     } catch (ex) {
       // Can sometimes throw if the URL being visited has no host/hostname,
       // e.g. about:blank. The _state for these pages means we won't need these
@@ -7039,6 +7040,7 @@ var IdentityHandler = {
     let mixedMode = this.getMixedMode(aState);
     let trackingMode = this.getTrackingMode(aState);
     let result = {
+      origin: locationObj.origin,
       mode: {
         identity: identityMode,
         mixed: mixedMode,
@@ -7052,8 +7054,7 @@ var IdentityHandler = {
       return result;
     }
 
-    // Ideally we'd just make this a Java string
-    result.encrypted = Strings.browser.GetStringFromName("identity.encrypted2");
+    result.encrypted = true;
     result.host = this.getEffectiveHost();
 
     let iData = this.getIdentityData();
