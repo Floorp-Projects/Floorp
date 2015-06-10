@@ -362,42 +362,9 @@ nsDiskCacheBindery::ActiveBindings()
     return activeBinding;
 }
 
-struct AccumulatorArg {
-    size_t mUsage;
-    mozilla::MallocSizeOf mMallocSizeOf;
-};
-
-PLDHashOperator
-AccumulateHeapUsage(PLDHashTable *table, PLDHashEntryHdr *hdr, uint32_t number,
-                    void *arg)
-{
-    nsDiskCacheBinding *binding = ((HashTableEntry *)hdr)->mBinding;
-    NS_ASSERTION(binding, "### disk cache binding = nsnull!");
-
-    AccumulatorArg *acc = (AccumulatorArg *)arg;
-
-    nsDiskCacheBinding *head = binding;
-    do {
-        acc->mUsage += acc->mMallocSizeOf(binding);
-
-        if (binding->mStreamIO) {
-            acc->mUsage += binding->mStreamIO->SizeOfIncludingThis(acc->mMallocSizeOf);
-        }
-
-        /* No good way to get at mDeactivateEvent internals for proper size, so
-           we use this as an estimate. */
-        if (binding->mDeactivateEvent) {
-            acc->mUsage += acc->mMallocSizeOf(binding->mDeactivateEvent);
-        }
-
-        binding = (nsDiskCacheBinding *)PR_NEXT_LINK(binding);
-    } while (binding != head);
-
-    return PL_DHASH_NEXT;
-}
-
 /**
- * SizeOfExcludingThis: return the amount of heap memory (bytes) being used by the bindery
+ * SizeOfExcludingThis: return the amount of heap memory (bytes) being used by
+ * the bindery.
  */
 size_t
 nsDiskCacheBindery::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
@@ -405,11 +372,28 @@ nsDiskCacheBindery::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     NS_ASSERTION(initialized, "nsDiskCacheBindery not initialized");
     if (!initialized) return 0;
 
-    AccumulatorArg arg;
-    arg.mUsage = 0;
-    arg.mMallocSizeOf = aMallocSizeOf;
+    size_t size = 0;
 
-    PL_DHashTableEnumerate(&table, AccumulateHeapUsage, &arg);
+    PLDHashTable::Iterator iter(&table);
+    while (iter.HasMoreEntries()) {
+        auto entry = static_cast<HashTableEntry*>(iter.NextEntry());
+        nsDiskCacheBinding* binding = entry->mBinding;
 
-    return arg.mUsage;
+        nsDiskCacheBinding* head = binding;
+        do {
+            size += aMallocSizeOf(binding);
+            if (binding->mStreamIO) {
+                size += binding->mStreamIO->SizeOfIncludingThis(aMallocSizeOf);
+            }
+
+            // No good way to get at mDeactivateEvent internals for proper
+            // size, so we use this as an estimate.
+            if (binding->mDeactivateEvent) {
+                size += aMallocSizeOf(binding->mDeactivateEvent);
+            }
+            binding = (nsDiskCacheBinding *)PR_NEXT_LINK(binding);
+        } while (binding != head);
+    }
+
+    return size;
 }
