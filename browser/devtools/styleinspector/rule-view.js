@@ -958,6 +958,21 @@ Rule.prototype = {
     } else {
       aTextProperty.rule.editor.closeBrace.focus();
     }
+  },
+
+  /**
+   * Return a string representation of the rule.
+   */
+  stringifyRule: function() {
+    let selectorText = this.selectorText;
+    let cssText = "";
+    let terminator = osString == "WINNT" ? "\r\n" : "\n";
+
+    for (let textProp of this.textProps) {
+      cssText += "\t" + textProp.stringifyProperty() + terminator;
+    }
+
+    return selectorText + " {" + terminator + cssText + "}";
   }
 };
 
@@ -1083,6 +1098,21 @@ TextProperty.prototype = {
 
   remove: function() {
     this.rule.removeProperty(this);
+  },
+
+  /**
+   * Return a string representation of the rule property.
+   */
+  stringifyProperty: function() {
+    // Get the displayed property value
+    let declaration = this.name + ": " + this.editor.committed.value + ";";
+
+    // Comment out property declarations that are not enabled
+    if (!this.enabled) {
+      declaration = "/* " + declaration + " */";
+    }
+
+    return declaration;
   }
 };
 
@@ -1136,6 +1166,12 @@ function CssRuleView(aInspector, aDoc, aStore, aPageStyle) {
   this._onCopy = this._onCopy.bind(this);
   this._onCopyColor = this._onCopyColor.bind(this);
   this._onCopyImageDataUrl = this._onCopyImageDataUrl.bind(this);
+  this._onCopyLocation = this._onCopyLocation.bind(this);
+  this._onCopyPropertyDeclaration = this._onCopyPropertyDeclaration.bind(this);
+  this._onCopyPropertyName = this._onCopyPropertyName.bind(this);
+  this._onCopyPropertyValue = this._onCopyPropertyValue.bind(this);
+  this._onCopyRule = this._onCopyRule.bind(this);
+  this._onCopySelector = this._onCopySelector.bind(this);
   this._onToggleOrigSources = this._onToggleOrigSources.bind(this);
   this._onShowMdnDocs = this._onShowMdnDocs.bind(this);
   this._onFilterStyles = this._onFilterStyles.bind(this);
@@ -1223,31 +1259,70 @@ CssRuleView.prototype = {
     this._contextmenu.addEventListener("popupshowing", this._contextMenuUpdate);
     this._contextmenu.id = "rule-view-context-menu";
 
-    this.menuitemAddRule = createMenuItem(this._contextmenu, {
-      label: "ruleView.contextmenu.addNewRule",
-      accesskey: "ruleView.contextmenu.addNewRule.accessKey",
-      command: this._onAddRule
-    });
-    this.menuitemSelectAll = createMenuItem(this._contextmenu, {
-      label: "ruleView.contextmenu.selectAll",
-      accesskey: "ruleView.contextmenu.selectAll.accessKey",
-      command: this._onSelectAll
-    });
     this.menuitemCopy = createMenuItem(this._contextmenu, {
       label: "ruleView.contextmenu.copy",
       accesskey: "ruleView.contextmenu.copy.accessKey",
       command: this._onCopy
     });
+
+    this.menuitemCopyLocation = createMenuItem(this._contextmenu, {
+      label: "ruleView.contextmenu.copyLocation",
+      command: this._onCopyLocation
+    });
+
+    this.menuitemCopyRule = createMenuItem(this._contextmenu, {
+      label: "ruleView.contextmenu.copyRule",
+      command: this._onCopyRule
+    });
+
     this.menuitemCopyColor = createMenuItem(this._contextmenu, {
       label: "ruleView.contextmenu.copyColor",
       accesskey: "ruleView.contextmenu.copyColor.accessKey",
       command: this._onCopyColor
     });
+
     this.menuitemCopyImageDataUrl = createMenuItem(this._contextmenu, {
       label: "styleinspector.contextmenu.copyImageDataUrl",
       accesskey: "styleinspector.contextmenu.copyImageDataUrl.accessKey",
       command: this._onCopyImageDataUrl
     });
+
+    this.menuitemCopyPropertyDeclaration = createMenuItem(this._contextmenu, {
+      label: "ruleView.contextmenu.copyPropertyDeclaration",
+      command: this._onCopyPropertyDeclaration
+    });
+
+    this.menuitemCopyPropertyName = createMenuItem(this._contextmenu, {
+      label: "ruleView.contextmenu.copyPropertyName",
+      command: this._onCopyPropertyName
+    });
+
+    this.menuitemCopyPropertyValue = createMenuItem(this._contextmenu, {
+      label: "ruleView.contextmenu.copyPropertyValue",
+      command: this._onCopyPropertyValue
+    });
+
+    this.menuitemCopySelector = createMenuItem(this._contextmenu, {
+      label: "ruleView.contextmenu.copySelector",
+      command: this._onCopySelector
+    });
+
+    createMenuSeparator(this._contextmenu);
+
+    this.menuitemSelectAll = createMenuItem(this._contextmenu, {
+      label: "ruleView.contextmenu.selectAll",
+      accesskey: "ruleView.contextmenu.selectAll.accessKey",
+      command: this._onSelectAll
+    });
+
+    createMenuSeparator(this._contextmenu);
+
+    this.menuitemAddRule = createMenuItem(this._contextmenu, {
+      label: "ruleView.contextmenu.addNewRule",
+      accesskey: "ruleView.contextmenu.addNewRule.accessKey",
+      command: this._onAddRule
+    });
+
     this.menuitemSources = createMenuItem(this._contextmenu, {
       label: "ruleView.contextmenu.showOrigSources",
       accesskey: "ruleView.contextmenu.showOrigSources.accessKey",
@@ -1360,6 +1435,23 @@ CssRuleView.prototype = {
    * appropriate.
    */
   _contextMenuUpdate: function() {
+    this._enableCopyMenuItems(this.doc.popupNode.parentNode);
+
+    this.menuitemAddRule.disabled = this.inspector.selection.isAnonymousNode();
+
+    this.menuitemShowMdnDocs.hidden = !this.enableMdnDocsTooltip ||
+                                      !this.doc.popupNode.parentNode
+                                      .classList.contains(PROPERTY_NAME_CLASS);
+
+    let showOrig = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
+    this.menuitemSources.setAttribute("checked", showOrig);
+  },
+
+  /**
+   * Display the necessary copy context menu items depending on the clicked
+   * node and selection in the rule view.
+   */
+  _enableCopyMenuItems: function(target) {
     let win = this.doc.defaultView;
 
     // Copy selection.
@@ -1382,18 +1474,31 @@ CssRuleView.prototype = {
       copy = false;
     }
 
+    this.menuitemCopy.hidden = !copy;
     this.menuitemCopyColor.hidden = !this._isColorPopup();
     this.menuitemCopyImageDataUrl.hidden = !this._isImageUrlPopup();
-    this.menuitemCopy.disabled = !copy;
 
-    let showOrig = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
-    this.menuitemSources.setAttribute("checked", showOrig);
+    this.menuitemCopyLocation.hidden = true;
+    this.menuitemCopyPropertyDeclaration.hidden = true;
+    this.menuitemCopyPropertyName.hidden = true;
+    this.menuitemCopyPropertyValue.hidden = true;
+    this.menuitemCopySelector.hidden = true;
 
-    this.menuitemShowMdnDocs.hidden = !this.enableMdnDocsTooltip ||
-                                      !this.doc.popupNode.parentNode
-                                      .classList.contains(PROPERTY_NAME_CLASS);
+    this._clickedNodeInfo = this.getNodeInfo(target);
 
-    this.menuitemAddRule.disabled = this.inspector.selection.isAnonymousNode();
+    if (!this._clickedNodeInfo) {
+      return;
+    } else if (this._clickedNodeInfo.type == overlays.VIEW_NODE_PROPERTY_TYPE) {
+      this.menuitemCopyPropertyDeclaration.hidden = false;
+      this.menuitemCopyPropertyName.hidden = false;
+    } else if (this._clickedNodeInfo.type == overlays.VIEW_NODE_VALUE_TYPE) {
+      this.menuitemCopyPropertyDeclaration.hidden = false;
+      this.menuitemCopyPropertyValue.hidden = false;
+    } else if (this._clickedNodeInfo.type == overlays.VIEW_NODE_SELECTOR_TYPE) {
+      this.menuitemCopySelector.hidden = false;
+    } else if (this._clickedNodeInfo.type == overlays.VIEW_NODE_LOCATION_TYPE) {
+      this.menuitemCopyLocation.hidden = false;
+    }
   },
 
   /**
@@ -1422,7 +1527,8 @@ CssRuleView.prototype = {
         enabled: prop.enabled,
         overridden: prop.overridden,
         pseudoElement: prop.rule.pseudoElement,
-        sheetHref: prop.rule.domRule.href
+        sheetHref: prop.rule.domRule.href,
+        textProperty: prop
       };
     } else if (classes.contains("ruleview-propertyvalue") && prop) {
       type = overlays.VIEW_NODE_VALUE_TYPE;
@@ -1432,7 +1538,8 @@ CssRuleView.prototype = {
         enabled: prop.enabled,
         overridden: prop.overridden,
         pseudoElement: prop.rule.pseudoElement,
-        sheetHref: prop.rule.domRule.href
+        sheetHref: prop.rule.domRule.href,
+        textProperty: prop
       };
     } else if (classes.contains("theme-link") &&
                !classes.contains("ruleview-rule-source") && prop) {
@@ -1444,12 +1551,19 @@ CssRuleView.prototype = {
         enabled: prop.enabled,
         overridden: prop.overridden,
         pseudoElement: prop.rule.pseudoElement,
-        sheetHref: prop.rule.domRule.href
+        sheetHref: prop.rule.domRule.href,
+        textProperty: prop
       };
     } else if (classes.contains("ruleview-selector-unmatched") ||
-               classes.contains("ruleview-selector-matched")) {
+               classes.contains("ruleview-selector-matched") ||
+               classes.contains("ruleview-selector")) {
       type = overlays.VIEW_NODE_SELECTOR_TYPE;
-      value = node.textContent;
+      value = node.offsetParent._ruleEditor.selectorText.textContent;
+    } else if (classes.contains("ruleview-rule-source")) {
+      type = overlays.VIEW_NODE_LOCATION_TYPE;
+      let ruleEditor = node.offsetParent._ruleEditor;
+      let rule = ruleEditor.rule;
+      value = (rule.sheet && rule.sheet.href) ? rule.sheet.href : rule.title;
     } else {
       return null;
     }
@@ -1623,6 +1737,71 @@ CssRuleView.prototype = {
 
     clipboardHelper.copyString(message);
   }),
+
+  /**
+   * Copy the rule source location of the current clicked node.
+   */
+  _onCopyLocation: function() {
+    if (!this._clickedNodeInfo) {
+      return;
+    }
+
+    clipboardHelper.copyString(this._clickedNodeInfo.value, this.doc);
+  },
+
+  /**
+   * Copy the rule property declaration of the current clicked node.
+   */
+  _onCopyPropertyDeclaration: function() {
+    if (!this._clickedNodeInfo) {
+      return;
+    }
+
+    let textProp = this._clickedNodeInfo.value.textProperty;
+    clipboardHelper.copyString(textProp.stringifyProperty(), this.doc);
+  },
+
+  /**
+   * Copy the rule property name of the current clicked node.
+   */
+  _onCopyPropertyName: function() {
+    if (!this._clickedNodeInfo) {
+      return;
+    }
+
+    clipboardHelper.copyString(this._clickedNodeInfo.value.property, this.doc);
+  },
+
+  /**
+   * Copy the rule property value of the current clicked node.
+   */
+  _onCopyPropertyValue: function() {
+    if (!this._clickedNodeInfo) {
+      return;
+    }
+
+    clipboardHelper.copyString(this._clickedNodeInfo.value.value, this.doc);
+  },
+
+  /**
+   * Copy the rule of the current clicked node.
+   */
+  _onCopyRule: function() {
+    let ruleEditor = this.doc.popupNode.parentNode.offsetParent._ruleEditor;
+    let rule = ruleEditor.rule;
+    clipboardHelper.copyString(rule.stringifyRule(), this.doc);
+  },
+
+  /**
+   * Copy the rule selector of the current clicked node.
+   */
+  _onCopySelector: function() {
+    if (!this._clickedNodeInfo) {
+      return;
+    }
+
+    clipboardHelper.copyString(this._clickedNodeInfo.value, this.doc);
+  },
 
   /**
    *  Toggle the original sources pref.
@@ -1831,16 +2010,43 @@ CssRuleView.prototype = {
       this.menuitemCopyColor = null;
 
       // Destroy Copy Data URI menuitem.
-      this.menuitemCopyImageDataUrl.removeEventListener("command", this._onCopyImageDataUrl);
+      this.menuitemCopyImageDataUrl.removeEventListener("command",
+        this._onCopyImageDataUrl);
       this.menuitemCopyImageDataUrl = null;
 
+      this.menuitemCopyLocation.removeEventListener("command",
+        this._onCopyLocation);
+      this.menuitemCopyLocation = null;
+
+      this.menuitemCopyPropertyDeclaration.removeEventListener("command",
+        this._onCopyPropertyDeclaration);
+      this.menuitemCopyPropertyDeclaration = null;
+
+      this.menuitemCopyPropertyName.removeEventListener("command",
+        this._onCopyPropertyName);
+      this.menuitemCopyPropertyName = null;
+
+      this.menuitemCopyPropertyValue.removeEventListener("command",
+        this._onCopyPropertyValue);
+      this.menuitemCopyPropertyValue = null;
+
+      this.menuitemCopyRule.removeEventListener("command",
+        this._onCopyRule);
+      this.menuitemCopyRule = null;
+
+      this.menuitemCopySelector.removeEventListener("command",
+        this._onCopySelector);
+      this.menuitemCopySelector = null;
+
       this.menuitemSources.removeEventListener("command",
-                                               this._onToggleOrigSources);
+        this._onToggleOrigSources);
       this.menuitemSources = null;
+
+      this._clickedNodeInfo = null;
 
       // Destroy the context menu.
       this._contextmenu.removeEventListener("popupshowing",
-                                            this._contextMenuUpdate);
+        this._contextMenuUpdate);
       this._contextmenu.parentNode.removeChild(this._contextmenu);
       this._contextmenu = null;
     }
@@ -3628,8 +3834,12 @@ function createMenuItem(aMenu, aAttributes) {
   let item = aMenu.ownerDocument.createElementNS(XUL_NS, "menuitem");
 
   item.setAttribute("label", _strings.GetStringFromName(aAttributes.label));
-  item.setAttribute("accesskey",
-                    _strings.GetStringFromName(aAttributes.accesskey));
+
+  if (aAttributes.accesskey) {
+    item.setAttribute("accesskey",
+                      _strings.GetStringFromName(aAttributes.accesskey));
+  }
+
   item.addEventListener("command", aAttributes.command);
 
   if (aAttributes.type) {
@@ -3639,6 +3849,11 @@ function createMenuItem(aMenu, aAttributes) {
   aMenu.appendChild(item);
 
   return item;
+}
+
+function createMenuSeparator(aMenu) {
+  let separator = aMenu.ownerDocument.createElementNS(XUL_NS, "menuseparator");
+  aMenu.appendChild(separator);
 }
 
 function setTimeout() {
@@ -3793,6 +4008,10 @@ exports._advanceValidate = advanceValidate;
 XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
   return Cc["@mozilla.org/widget/clipboardhelper;1"]
     .getService(Ci.nsIClipboardHelper);
+});
+
+XPCOMUtils.defineLazyGetter(this, "osString", function() {
+  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });
 
 XPCOMUtils.defineLazyGetter(this, "_strings", function() {
