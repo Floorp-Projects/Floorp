@@ -437,18 +437,6 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const char16_
 
   aPrintSettings->SetIsInitializedFromPrinter(true);
 
-  /* PostScript module does not support changing the plex mode... */
-  DO_PR_DEBUG_LOG(("setting default plex to '%s'\n", "default"));
-  aPrintSettings->SetPlexName(MOZ_UTF16("default"));
-
-  /* PostScript module does not support changing the resolution mode... */
-  DO_PR_DEBUG_LOG(("setting default resolution to '%s'\n", "default"));
-  aPrintSettings->SetResolutionName(MOZ_UTF16("default"));
-
-  /* PostScript module does not support changing the colorspace... */
-  DO_PR_DEBUG_LOG(("setting default colorspace to '%s'\n", "default"));
-  aPrintSettings->SetColorspace(MOZ_UTF16("default"));
-
   return NS_OK;    
 }
 
