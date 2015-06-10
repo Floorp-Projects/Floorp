@@ -122,13 +122,20 @@ DeserializedNode::DeserializedNode(NodeId id, const char16_t* typeName, uint64_t
   , owner(nullptr)
 { }
 
-DeserializedNode&
+JS::ubi::Node
 DeserializedNode::getEdgeReferent(const DeserializedEdge& edge)
 {
   assertInitialized();
   auto ptr = owner->nodes.lookup(edge.referent);
   MOZ_ASSERT(ptr);
-  return ptr->value();
+
+  // `HashSets` only provide const access to their values, because mutating a
+  // value might change its hash, rendering it unfindable in the set.
+  // Unfortunately, the `ubi::Node` constructor requires a non-const pointer to
+  // its referent.  However, the only aspect of a `DeserializedNode` we hash on
+  // is its id, which can't be changed via `ubi::Node`, so this cast can't cause
+  // the trouble `HashSet` is concerned a non-const reference would cause.
+  return JS::ubi::Node(const_cast<DeserializedNode*>(&*ptr));
 }
 
 } // namespace devtools
@@ -187,8 +194,8 @@ public:
           return false;
       }
 
-      DeserializedNode& referent = node.getEdgeReferent(*edgep);
-      edges.infallibleAppend(mozilla::Move(SimpleEdge(name, Node(&referent))));
+      auto referent = node.getEdgeReferent(*edgep);
+      edges.infallibleAppend(mozilla::Move(SimpleEdge(name, referent)));
     }
 
     settle();

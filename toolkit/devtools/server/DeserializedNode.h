@@ -84,7 +84,9 @@ struct DeserializedNode {
 
   // Get a borrowed reference to the given edge's referent. This method is
   // virtual to provide a hook for gmock and gtest.
-  virtual DeserializedNode& getEdgeReferent(const DeserializedEdge& edge);
+  virtual JS::ubi::Node getEdgeReferent(const DeserializedEdge& edge);
+
+  struct HashPolicy;
 
 protected:
   // This is only for use with `MockDeserializedNode` in testing.
@@ -98,6 +100,25 @@ private:
 
   DeserializedNode(const DeserializedNode&) = delete;
   DeserializedNode& operator=(const DeserializedNode&) = delete;
+};
+
+struct DeserializedNode::HashPolicy
+{
+  using Lookup = NodeId;
+
+  static js::HashNumber hash(const Lookup& lookup) {
+    // NodeIds are always 64 bits, but they are derived from the original
+    // referents' addresses, which could have been either 32 or 64 bits long.
+    // As such, a NodeId has little entropy in its bottom three bits, and may or
+    // may not have entropy in its upper 32 bits. This hash should manage both
+    // cases well.
+    uint64_t id = lookup >> 3;
+    return js::HashNumber((id >> 32) ^ id);
+  }
+
+  static bool match(const DeserializedNode& existing, const Lookup& lookup) {
+    return existing.id == lookup;
+  }
 };
 
 } // namespace devtools
