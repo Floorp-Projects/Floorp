@@ -480,7 +480,7 @@ loop.roomViews = (function(mozL10n) {
       }
 
       var url = this._getURL();
-      var thumbnail = url && url.thumbnail || "loop/shared/img/icons-16x16.svg#globe";
+      var thumbnail = url && url.thumbnail || "";
       var urlDescription = url && url.description || "";
       var location = url && url.location || "";
       var locationData = null;
