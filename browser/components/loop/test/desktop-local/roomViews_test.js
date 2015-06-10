@@ -700,7 +700,6 @@ describe("loop.roomViews", function () {
       props = _.extend({
         dispatcher: dispatcher,
         mozLoop: fakeMozLoop,
-        savingContext: false,
         show: true,
         roomData: {
           roomToken: "fakeToken"
@@ -786,7 +785,7 @@ describe("loop.roomViews", function () {
         expect(checkbox.classList.contains("disabled")).to.eql(true);
       });
 
-      it("should render the editMode view when the edit button is clicked", function(done) {
+      it("should render the editMode view when the edit button is clicked", function(next) {
         var roomName = "Hello, is it me you're looking for?";
         view = mountTestComponent({
           roomData: {
@@ -809,11 +808,11 @@ describe("loop.roomViews", function () {
           expect(node.querySelector(".room-context-url").value).to.eql(fakeContextURL.location);
           expect(node.querySelector(".room-context-comments").value).to.eql(fakeContextURL.description);
 
-          done();
+          next();
         });
       });
 
-      it("should hide the checkbox when no context data is stored or available", function(done) {
+      it("should hide the checkbox when no context data is stored or available", function(next) {
         view = mountTestComponent({
           roomData: {
             roomToken: "fakeToken",
@@ -831,7 +830,7 @@ describe("loop.roomViews", function () {
           var node = view.getDOMNode();
           expect(node.querySelector(".checkbox-wrapper").classList.contains("hide")).to.eql(true);
 
-          done();
+          next();
         });
       });
     });
@@ -891,21 +890,6 @@ describe("loop.roomViews", function () {
               newRoomThumbnail: fakeContextURL.thumbnail
             }));
         });
-
-      it("should close the edit form when context was saved successfully", function(done) {
-        view.setProps({ savingContext: true }, function() {
-          var node = view.getDOMNode();
-          // The button should show up as disabled.
-          expect(node.querySelector(".btn-info").hasAttribute("disabled")).to.eql(true);
-
-          // Now simulate a successful save.
-          view.setProps({ savingContext: false }, function() {
-            // The editMode flag should be updated.
-            expect(view.state.editMode).to.eql(false);
-            done();
-          });
-        });
-      });
     });
 
     describe("#handleCheckboxChange", function() {

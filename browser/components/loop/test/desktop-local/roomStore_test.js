@@ -603,10 +603,9 @@ describe("loop.store.RoomStore", function () {
   });
 
   describe("#updateRoomContext", function() {
-    var store, fakeMozLoop, clock;
+    var store, fakeMozLoop;
 
     beforeEach(function() {
-      clock = sinon.useFakeTimers();
       fakeMozLoop = {
         rooms: {
           get: sinon.stub().callsArgWith(1, null, {
@@ -619,10 +618,6 @@ describe("loop.store.RoomStore", function () {
         }
       };
       store = new loop.store.RoomStore(dispatcher, {mozLoop: fakeMozLoop});
-    });
-
-    afterEach(function() {
-      clock.restore();
     });
 
     it("should rename the room via mozLoop", function() {
@@ -679,7 +674,6 @@ describe("loop.store.RoomStore", function () {
         roomToken: "42abc",
         newRoomName: " \t  \t "
       }));
-      clock.tick(1);
 
       sinon.assert.notCalled(fakeMozLoop.rooms.update);
       expect(store.getStoreState().savingContext).to.eql(false);
@@ -737,7 +731,6 @@ describe("loop.store.RoomStore", function () {
           newRoomThumbnail: "",
           newRoomURL: ""
         }));
-        clock.tick(1);
 
         sinon.assert.notCalled(fakeMozLoop.rooms.update);
         expect(store.getStoreState().savingContext).to.eql(false);

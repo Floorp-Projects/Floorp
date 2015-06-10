@@ -513,11 +513,7 @@ loop.store = loop.store || {};
         // When no properties have been set on the roomData object, there's nothing
         // to save.
         if (!Object.getOwnPropertyNames(roomData).length) {
-          // Ensure async actions so that we get separate setStoreState events
-          // that React components won't miss.
-          setTimeout(function() {
-            this.dispatchAction(new sharedActions.UpdateRoomContextDone());
-          }.bind(this), 0);
+          this.dispatchAction(new sharedActions.UpdateRoomContextDone());
           return;
         }
 
