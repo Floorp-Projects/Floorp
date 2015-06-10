@@ -71,7 +71,7 @@ ConvertIndex(FallibleTArray<Index::Indice>& aDest,
              const stagefright::Vector<stagefright::MediaSource::Indice>& aIndex,
              int64_t aMediaTime)
 {
-  if (!aDest.SetCapacity(aIndex.size())) {
+  if (!aDest.SetCapacity(aIndex.size(), mozilla::fallible)) {
     return false;
   }
   for (size_t i = 0; i < aIndex.size(); i++) {
@@ -82,7 +82,8 @@ ConvertIndex(FallibleTArray<Index::Indice>& aDest,
     indice.start_composition = s_indice.start_composition - aMediaTime;
     indice.end_composition = s_indice.end_composition - aMediaTime;
     indice.sync = s_indice.sync;
-    MOZ_ALWAYS_TRUE(aDest.AppendElement(indice));
+    // FIXME: Make this infallible after bug 968520 is done.
+    MOZ_ALWAYS_TRUE(aDest.AppendElement(indice, mozilla::fallible));
   }
   return true;
 }
