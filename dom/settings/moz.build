@@ -9,7 +9,7 @@ EXTRA_COMPONENTS += [
     'SettingsManager.manifest',
 ]
 
-if CONFIG['MOZ_B2G']:
+if CONFIG['MOZ_B2G'] or CONFIG['ENABLE_TESTS']:
     EXTRA_COMPONENTS += [
         'SettingsService.js',
         'SettingsService.manifest',
