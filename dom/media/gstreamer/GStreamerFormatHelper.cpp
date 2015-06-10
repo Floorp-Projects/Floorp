@@ -241,6 +241,7 @@ GStreamerFormatHelper::IsPluginFeatureBlacklisted(GstPluginFeature *aFeature)
 
   for (unsigned int i = 0; i < G_N_ELEMENTS(sPluginBlacklist); i++) {
     if (!strcmp(factoryName, sPluginBlacklist[i])) {
+      LOG("rejecting disabled plugin %s", factoryName);
       return true;
     }
   }
