@@ -183,7 +183,8 @@ DataSourceSurfaceD2D1::Map(MapType aMapType, MappedSurface *aMappedSurface)
 {
   // DataSourceSurfaces used with the new Map API should not be used with GetData!!
   MOZ_ASSERT(!mMapped);
-  MOZ_ASSERT(!mIsMapped);
+  // XXX - Add support for multiple read maps here!
+  MOZ_ASSERT(mMapCount == 0);
 
   D2D1_MAP_OPTIONS options;
   if (aMapType == MapType::READ) {
@@ -200,16 +201,22 @@ DataSourceSurfaceD2D1::Map(MapType aMapType, MappedSurface *aMappedSurface)
   aMappedSurface->mData = map.bits;
   aMappedSurface->mStride = map.pitch;
 
-  mIsMapped = !!aMappedSurface->mData;
-  return mIsMapped;
+  if (!aMappedSurface->mData) {
+    return false;
+  }
+
+  mMapCount++;
+  mIsReadMap = aMapType == MapType::READ;
+
+  return true;
 }
 
 void
 DataSourceSurfaceD2D1::Unmap()
 {
-  MOZ_ASSERT(mIsMapped);
+  MOZ_ASSERT(mMapCount > 0);
 
-  mIsMapped = false;
+  mMapCount--;
   mBitmap->Unmap();
 }
 
@@ -225,7 +232,7 @@ void
 DataSourceSurfaceD2D1::EnsureMapped()
 {
   // Do not use GetData() after having used Map!
-  MOZ_ASSERT(!mIsMapped);
+  MOZ_ASSERT(mMapCount == 0);
   if (mMapped) {
     return;
   }
