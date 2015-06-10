@@ -759,7 +759,7 @@ PLDHashTable::Enumerate(PLDHashEnumerator aEtor, void* aArg)
   char* entryAddr = mEntryStore;
   uint32_t capacity = Capacity();
   uint32_t tableSize = capacity * mEntrySize;
-  char* entryLimit = entryAddr + tableSize;
+  char* entryLimit = mEntryStore + tableSize;
   uint32_t i = 0;
   bool didRemove = false;
 
@@ -954,7 +954,7 @@ PLDHashTable::Iterator::NextEntry()
   // mEntryAddr, respectively.
   uint32_t capacity = mTable->Capacity();
   uint32_t tableSize = capacity * mTable->mEntrySize;
-  char* entryLimit = mEntryAddr + tableSize;
+  char* entryLimit = mTable->mEntryStore + tableSize;
 
   // Strictly speaking, we don't need to iterate over the full capacity each
   // time. However, it is simpler to do so rather than unnecessarily track the
