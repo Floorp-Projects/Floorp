@@ -7460,6 +7460,8 @@ bool
 IonBuilder::getStaticName(JSObject* staticObject, PropertyName* name, bool* psucceeded,
                           MDefinition* lexicalCheck)
 {
+    MOZ_ASSERT(*psucceeded == false);
+
     jsid id = NameToId(name);
 
     MOZ_ASSERT(staticObject->is<GlobalObject>() || staticObject->is<CallObject>());
@@ -7541,8 +7543,13 @@ IonBuilder::getStaticName(JSObject* staticObject, PropertyName* name, bool* psuc
     if (barrier != BarrierKind::NoBarrier)
         rvalType = MIRType_Value;
 
-    return loadSlot(obj, property.maybeTypes()->definiteSlot(), NumFixedSlots(staticObject),
-                    rvalType, barrier, types);
+    if (!loadSlot(obj, property.maybeTypes()->definiteSlot(), NumFixedSlots(staticObject),
+                  rvalType, barrier, types)) {
+        *psucceeded = false;
+        return false;
+    }
+
+    return true;
 }
 
 // Whether a write of the given value may need a post-write barrier for GC purposes.
@@ -7606,19 +7613,21 @@ bool
 IonBuilder::jsop_getgname(PropertyName* name)
 {
     JSObject* obj = &script()->global();
-    bool succeeded;
-    if (!getStaticName(obj, name, &succeeded))
-        return false;
-    if (succeeded)
-        return true;
+    bool emitted = false;
+    if (!getStaticName(obj, name, &emitted) || emitted)
+        return emitted;
 
-    TemporaryTypeSet* types = bytecodeTypes(pc);
-    MDefinition* globalObj = constant(ObjectValue(*obj));
-    if (!getPropTryCommonGetter(&succeeded, globalObj, name, types))
-        return false;
-    if (succeeded)
-        return true;
+    if (MOZ_UNLIKELY(js_JitOptions.forceInlineCaches))
+        goto do_InlineCache;
 
+    {
+        TemporaryTypeSet* types = bytecodeTypes(pc);
+        MDefinition* globalObj = constant(ObjectValue(*obj));
+        if (!getPropTryCommonGetter(&emitted, globalObj, name, types) || emitted)
+            return emitted;
+    }
+
+  do_InlineCache:
     return jsop_getname(name);
 }
 
@@ -7742,6 +7751,8 @@ IonBuilder::jsop_getelem()
     obj = maybeUnboxForPropertyAccess(obj);
 
     bool emitted = false;
+    if (MOZ_UNLIKELY(js_JitOptions.forceInlineCaches))
+        goto do_InlineCache;
 
     trackOptimizationAttempt(TrackedStrategy::GetElem_TypedObject);
     if (!getElemTryTypedObject(&emitted, obj, index) || emitted)
@@ -7771,6 +7782,7 @@ IonBuilder::jsop_getelem()
     if (!getElemTryArgumentsInlined(&emitted, obj, index) || emitted)
         return emitted;
 
+  do_InlineCache:
     if (script()->argumentsHasVarBinding() && obj->mightBeType(MIRType_MagicOptimizedArguments))
         return abort("Type is not definitely lazy arguments.");
 
@@ -8798,6 +8810,9 @@ IonBuilder::jsop_setelem()
         return resumeAfter(ins);
     }
 
+    if (MOZ_UNLIKELY(js_JitOptions.forceInlineCaches))
+        goto do_InlineCache;
+
     trackOptimizationAttempt(TrackedStrategy::SetElem_TypedObject);
     if (!setElemTryTypedObject(&emitted, object, index, value) || emitted)
         return emitted;
@@ -8818,6 +8833,7 @@ IonBuilder::jsop_setelem()
     if (!setElemTryArguments(&emitted, object, index, value) || emitted)
         return emitted;
 
+  do_InlineCache:
     if (script()->argumentsHasVarBinding() &&
         object->mightBeType(MIRType_MagicOptimizedArguments) &&
         info().analysisMode() != Analysis_ArgumentsUsage)
@@ -10144,6 +10160,9 @@ IonBuilder::jsop_getprop(PropertyName* name)
     if (!getPropTryInnerize(&emitted, obj, name, types) || emitted)
         return emitted;
 
+    if (MOZ_UNLIKELY(js_JitOptions.forceInlineCaches))
+        goto do_InlineCache;
+
     // Try to hardcode known constants.
     trackOptimizationAttempt(TrackedStrategy::GetProp_Constant);
     if (!getPropTryConstant(&emitted, obj, name, types) || emitted)
@@ -10179,6 +10198,7 @@ IonBuilder::jsop_getprop(PropertyName* name)
     if (!getPropTryInlineAccess(&emitted, obj, name, barrier, types) || emitted)
         return emitted;
 
+  do_InlineCache:
     // Try to emit a polymorphic cache.
     trackOptimizationAttempt(TrackedStrategy::GetProp_InlineCache);
     if (!getPropTryCache(&emitted, obj, name, barrier, types) || emitted)
@@ -11168,6 +11188,9 @@ IonBuilder::getPropTryInnerize(bool* emitted, MDefinition* obj, PropertyName* na
     if (inner == obj)
         return true;
 
+    if (MOZ_UNLIKELY(js_JitOptions.forceInlineCaches))
+        goto do_InlineCache;
+
     // Note: the Baseline ICs don't know about this optimization, so it's
     // possible the global property's HeapTypeSet has not been initialized
     // yet. In this case we'll fall back to getPropTryCache for now.
@@ -11189,6 +11212,7 @@ IonBuilder::getPropTryInnerize(bool* emitted, MDefinition* obj, PropertyName* na
     if (!getPropTryCommonGetter(emitted, inner, name, types) || *emitted)
         return *emitted;
 
+  do_InlineCache:
     // Passing the inner object to GetProperty IC is safe, see the
     // needsOuterizedThisObject check in IsCacheableGetPropCallNative.
     BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
@@ -11222,6 +11246,9 @@ IonBuilder::jsop_setprop(PropertyName* name)
         return resumeAfter(ins);
     }
 
+    if (MOZ_UNLIKELY(js_JitOptions.forceInlineCaches))
+        goto do_InlineCache_step1;
+
     // Try to inline a common property setter, or make a call.
     trackOptimizationAttempt(TrackedStrategy::SetProp_CommonSetter);
     if (!setPropTryCommonSetter(&emitted, obj, name, value) || emitted)
@@ -11232,19 +11259,27 @@ IonBuilder::jsop_setprop(PropertyName* name)
     if (!setPropTryTypedObject(&emitted, obj, name, value) || emitted)
         return emitted;
 
+  do_InlineCache_step1:
     TemporaryTypeSet* objTypes = obj->resultTypeSet();
     bool barrier = PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current, &obj, name, &value,
                                                  /* canModify = */ true);
+
+    if (MOZ_UNLIKELY(js_JitOptions.forceInlineCaches))
+        goto do_InlineCache_step2;
 
     // Try to emit stores to unboxed objects.
     trackOptimizationAttempt(TrackedStrategy::SetProp_Unboxed);
     if (!setPropTryUnboxed(&emitted, obj, name, value, barrier, objTypes) || emitted)
         return emitted;
 
+  do_InlineCache_step2:
     // Add post barrier if needed. The instructions above manage any post
     // barriers they need directly.
     if (NeedsPostBarrier(info(), value))
         current->add(MPostWriteBarrier::New(alloc(), obj, value));
+
+    if (MOZ_UNLIKELY(js_JitOptions.forceInlineCaches))
+        goto do_InlineCache_step3;
 
     // Try to emit store from definite slots.
     trackOptimizationAttempt(TrackedStrategy::SetProp_DefiniteSlot);
@@ -11256,6 +11291,7 @@ IonBuilder::jsop_setprop(PropertyName* name)
     if (!setPropTryInlineAccess(&emitted, obj, name, value, barrier, objTypes) || emitted)
         return emitted;
 
+  do_InlineCache_step3:
     // Emit a polymorphic cache.
     trackOptimizationAttempt(TrackedStrategy::SetProp_InlineCache);
     return setPropTryCache(&emitted, obj, name, value, barrier, objTypes);
@@ -12288,11 +12324,9 @@ IonBuilder::jsop_getaliasedvar(ScopeCoordinate sc)
     JSObject* call = nullptr;
     if (hasStaticScopeObject(sc, &call) && call) {
         PropertyName* name = ScopeCoordinateName(scopeCoordinateNameCache, script(), pc);
-        bool succeeded;
-        if (!getStaticName(call, name, &succeeded, takeLexicalCheck()))
-            return false;
-        if (succeeded)
-            return true;
+        bool emitted = false;
+        if (!getStaticName(call, name, &emitted, takeLexicalCheck()) || emitted)
+            return emitted;
     }
 
     // See jsop_checkaliasedlet.

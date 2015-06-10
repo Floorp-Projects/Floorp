@@ -946,10 +946,6 @@ struct NullaryNode : public ParseNode
         pn_atom = atom;
     }
 
-    static bool test(const ParseNode& node) {
-        return node.isArity(PN_NULLARY);
-    }
-
 #ifdef DEBUG
     void dump();
 #endif
@@ -961,10 +957,6 @@ struct UnaryNode : public ParseNode
       : ParseNode(kind, op, PN_UNARY, pos)
     {
         pn_kid = kid;
-    }
-
-    static bool test(const ParseNode& node) {
-        return node.isArity(PN_UNARY);
     }
 
 #ifdef DEBUG
@@ -988,10 +980,6 @@ struct BinaryNode : public ParseNode
         pn_right = right;
     }
 
-    static bool test(const ParseNode& node) {
-        return node.isArity(PN_BINARY);
-    }
-
 #ifdef DEBUG
     void dump(int indent);
 #endif
@@ -1006,10 +994,6 @@ struct BinaryObjNode : public ParseNode
         pn_left = left;
         pn_right = right;
         pn_binary_obj = objbox;
-    }
-
-    static bool test(const ParseNode& node) {
-        return node.isArity(PN_BINARY_OBJ);
     }
 
 #ifdef DEBUG
@@ -1036,10 +1020,6 @@ struct TernaryNode : public ParseNode
         pn_kid1 = kid1;
         pn_kid2 = kid2;
         pn_kid3 = kid3;
-    }
-
-    static bool test(const ParseNode& node) {
-        return node.isArity(PN_TERNARY);
     }
 
 #ifdef DEBUG
@@ -1087,10 +1067,6 @@ struct CodeNode : public ParseNode
         pn_cookie.makeFree();
     }
 
-    static bool test(const ParseNode& node) {
-        return node.isArity(PN_CODE);
-    }
-
 #ifdef DEBUG
     void dump(int indent);
 #endif
@@ -1108,10 +1084,6 @@ struct NameNode : public ParseNode
         pn_dflags = 0;
         pn_blockid = blockid;
         MOZ_ASSERT(pn_blockid == blockid);  // check for bitfield overflow
-    }
-
-    static bool test(const ParseNode& node) {
-        return node.isArity(PN_NAME);
     }
 
 #ifdef DEBUG
