@@ -943,11 +943,9 @@ EnvironmentCache.prototype = {
     // Enumerate the available CPU extensions.
     let availableExts = [];
     for (let ext of CPU_EXTENSIONS) {
-      try {
-        Services.sysinfo.getProperty(ext);
-        // If it doesn't throw, add it to the list.
+      if (getSysinfoProperty(ext, false)) {
         availableExts.push(ext);
-      } catch (e) {}
+      }
     }
 
     cpuData.extensions = availableExts;
