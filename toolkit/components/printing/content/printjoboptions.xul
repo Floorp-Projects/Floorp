@@ -47,42 +47,6 @@
         </menulist>
       </row>
 
-      <row id="plexGroup">
-        <hbox align="center" pack="end">
-          <label id="plexLabel"
-                 value="&plexInput.label;"
-                 accesskey="&plexInput.accesskey;"
-                 control="plexList"/>
-        </hbox>
-        <menulist id="plexList" flex="1">
-          <menupopup/>
-        </menulist>
-      </row>
-
-      <row id="resolutionGroup">
-        <hbox align="center" pack="end">
-          <label id="resolutionLabel"
-                 value="&resolutionInput.label;"
-                 accesskey="&resolutionInput.accesskey;"
-                 control="resolutionList"/>
-        </hbox>
-        <menulist id="resolutionList" flex="1">
-          <menupopup/>
-        </menulist>
-      </row>
-
-      <row id="colorspaceGroup">
-        <hbox align="center" pack="end">
-          <label id="colorspaceLabel"
-                 value="&colorspaceInput.label;"
-                 accesskey="&colorspaceInput.accesskey;"
-                 control="colorspaceList"/>
-        </hbox>
-        <menulist id="colorspaceList" flex="1">
-          <menupopup/>
-        </menulist>
-      </row>
-
       <row id="colorGroup">
         <hbox align="center" pack="end">
           <label control="colorRadioGroup" value="&colorGroup.label;"/>
@@ -95,15 +59,6 @@
                  label="&colorRadio.label;"
                  accesskey="&colorRadio.accesskey;"/>
         </radiogroup>
-      </row>
-
-      <row id="fontsGroup">
-        <hbox align="center" pack="end">
-          <label value="&fontsGroup.label;"/>
-        </hbox>
-        <checkbox id="downloadFonts"
-                  label="&downloadFonts.label;"
-                  accesskey="&downloadFonts.accesskey;"/>
       </row>
     </rows>
   </grid>

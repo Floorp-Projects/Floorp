@@ -59,15 +59,11 @@ static const char kPrintFooterStrRight[]  = "print_footerright";
 static const char kPrintReversed[]      = "print_reversed";
 static const char kPrintInColor[]       = "print_in_color";
 static const char kPrintPaperName[]     = "print_paper_name";
-static const char kPrintPlexName[]      = "print_plex_name";
 static const char kPrintPaperSizeType[] = "print_paper_size_type";
 static const char kPrintPaperData[]     = "print_paper_data";
 static const char kPrintPaperSizeUnit[] = "print_paper_size_unit";
 static const char kPrintPaperWidth[]    = "print_paper_width";
 static const char kPrintPaperHeight[]   = "print_paper_height";
-static const char kPrintColorspace[]    = "print_colorspace";
-static const char kPrintResolutionName[]= "print_resolution_name";
-static const char kPrintDownloadFonts[] = "print_downloadfonts";
 static const char kPrintOrientation[]   = "print_orientation";
 static const char kPrinterName[]        = "print_printer";
 static const char kPrintToFile[]        = "print_to_file";
@@ -181,19 +177,6 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetPaperHeight(&data->paperHeight());
   aSettings->GetPaperSizeUnit(&data->paperSizeUnit());
 
-  nsXPIDLString plexName;
-  aSettings->GetPlexName(getter_Copies(plexName));
-  data->plexName() = plexName;
-
-  nsXPIDLString colorspace;
-  aSettings->GetColorspace(getter_Copies(colorspace));
-  data->colorspace() = colorspace;
-
-  nsXPIDLString resolutionName;
-  aSettings->GetResolutionName(getter_Copies(resolutionName));
-  data->resolutionName() = resolutionName;
-
-  aSettings->GetDownloadFonts(&data->downloadFonts());
   aSettings->GetPrintReversed(&data->printReversed());
   aSettings->GetPrintInColor(&data->printInColor());
   aSettings->GetOrientation(&data->orientation());
@@ -303,13 +286,6 @@ nsPrintOptions::DeserializeToPrintSettings(const PrintData& data,
   settings->SetPaperHeight(data.paperHeight());
   settings->SetPaperSizeUnit(data.paperSizeUnit());
 
-  settings->SetPlexName(data.plexName().get());
-
-  settings->SetColorspace(data.colorspace().get());
-
-  settings->SetResolutionName(data.resolutionName().get());
-
-  settings->SetDownloadFonts(data.downloadFonts());
   settings->SetPrintReversed(data.printReversed());
   settings->SetPrintInColor(data.printInColor());
   settings->SetOrientation(data.orientation());
@@ -650,38 +626,10 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
     }
   }
 
-  if (aFlags & nsIPrintSettings::kInitSavePlexName) {
-    if (GETSTRPREF(kPrintPlexName, &str)) {
-      aPS->SetPlexName(str.get());
-      DUMP_STR(kReadStr, kPrintPlexName, str.get());
-    }
-  }
-
   if (aFlags & nsIPrintSettings::kInitSavePaperData) {
     if (GETINTPREF(kPrintPaperData, &iVal)) {
       aPS->SetPaperData(iVal);
       DUMP_INT(kReadStr, kPrintPaperData, iVal);
-    }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSaveColorspace) {
-    if (GETSTRPREF(kPrintColorspace, &str)) {
-      aPS->SetColorspace(str.get());
-      DUMP_STR(kReadStr, kPrintColorspace, str.get());
-    }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSaveResolutionName) {
-    if (GETSTRPREF(kPrintResolutionName, &str)) {
-      aPS->SetResolutionName(str.get());
-      DUMP_STR(kReadStr, kPrintResolutionName, str.get());
-    }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSaveDownloadFonts) {
-    if (GETBOOLPREF(kPrintDownloadFonts, &b)) {
-      aPS->SetDownloadFonts(b);
-      DUMP_BOOL(kReadStr, kPrintDownloadFonts, b);
     }
   }
 
@@ -942,40 +890,11 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
     }
   }
 
-  if (aFlags & nsIPrintSettings::kInitSavePlexName) {
-    if (NS_SUCCEEDED(aPS->GetPlexName(&uStr))) {
-      DUMP_STR(kWriteStr, kPrintPlexName, uStr);
-      Preferences::SetString(GetPrefName(kPrintPlexName, aPrinterName), uStr);
-    }
-  }
-
   if (aFlags & nsIPrintSettings::kInitSavePaperData) {
     if (NS_SUCCEEDED(aPS->GetPaperData(&iVal16))) {
       DUMP_INT(kWriteStr, kPrintPaperData, iVal16);
       Preferences::SetInt(GetPrefName(kPrintPaperData, aPrinterName),
                           int32_t(iVal16));
-    }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSaveColorspace) {
-    if (NS_SUCCEEDED(aPS->GetColorspace(&uStr))) {
-      DUMP_STR(kWriteStr, kPrintColorspace, uStr);
-      Preferences::SetString(GetPrefName(kPrintColorspace, aPrinterName), uStr);
-    }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSaveResolutionName) {
-    if (NS_SUCCEEDED(aPS->GetResolutionName(&uStr))) {
-      DUMP_STR(kWriteStr, kPrintResolutionName, uStr);
-      Preferences::SetString(GetPrefName(kPrintResolutionName, aPrinterName),
-                             uStr);
-    }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSaveDownloadFonts) {
-    if (NS_SUCCEEDED(aPS->GetDownloadFonts(&b))) {
-      DUMP_BOOL(kWriteStr, kPrintDownloadFonts, b);
-      Preferences::SetBool(GetPrefName(kPrintDownloadFonts, aPrinterName), b);
     }
   }
 
@@ -1481,7 +1400,6 @@ Tester::Tester()
     ps->SetFooterStrCenter(NS_ConvertUTF8toUTF16("Center").get());
     ps->SetFooterStrRight(NS_ConvertUTF8toUTF16("Right").get());
     ps->SetPaperName(NS_ConvertUTF8toUTF16("Paper Name").get());
-    ps->SetPlexName(NS_ConvertUTF8toUTF16("Plex Name").get());
     ps->SetPaperSizeType(10);
     ps->SetPaperData(1);
     ps->SetPaperWidth(100.0);
@@ -1513,13 +1431,9 @@ Tester::Tester()
       {kPrintBGImages, nsIPrintSettings::kInitSaveBGImages},
       {kPrintShrinkToFit, nsIPrintSettings::kInitSaveShrinkToFit},
       {kPrintPaperSize, nsIPrintSettings::kInitSavePaperSize},
-      {kPrintPlexName, nsIPrintSettings::kInitSavePlexName},
       {kPrintPaperData, nsIPrintSettings::kInitSavePaperData},
       {kPrintReversed, nsIPrintSettings::kInitSaveReversed},
       {kPrintInColor, nsIPrintSettings::kInitSaveInColor},
-      {kPrintColorspace, nsIPrintSettings::kInitSaveColorspace},
-      {kPrintResolutionName, nsIPrintSettings::kInitSaveResolutionName},
-      {kPrintDownloadFonts, nsIPrintSettings::kInitSaveDownloadFonts},
       {kPrintOrientation, nsIPrintSettings::kInitSaveOrientation},
       {kPrinterName, nsIPrintSettings::kInitSavePrinterName},
       {kPrintToFile, nsIPrintSettings::kInitSavePrintToFile},
