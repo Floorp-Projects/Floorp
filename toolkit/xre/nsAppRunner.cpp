@@ -4377,7 +4377,7 @@ enum {
   kE10sEnabledByUser = 0,
   kE10sEnabledByDefault = 1,
   kE10sDisabledByUser = 2,
-  kE10sDisabledInSafeMode = 3,
+  // kE10sDisabledInSafeMode = 3, was removed in bug 1172491.
   kE10sDisabledForAccessibility = 4,
   kE10sDisabledForMacGfx = 5,
 };
@@ -4416,10 +4416,7 @@ mozilla::BrowserTabsRemoteAutostart()
   bool disabledForVR = Preferences::GetBool("dom.vr.enabled", false);
 
   if (prefEnabled) {
-    if (gSafeMode) {
-      status = kE10sDisabledInSafeMode;
-      LogE10sBlockedReason("Safe mode");
-    } else if (disabledForA11y) {
+    if (disabledForA11y) {
       status = kE10sDisabledForAccessibility;
       LogE10sBlockedReason("An accessibility tool is or was active. See bug 1115956.");
     } else if (disabledForVR) {
