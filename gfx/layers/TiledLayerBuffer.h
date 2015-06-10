@@ -178,6 +178,16 @@ public:
   //  GetScaledTileSize().width, GetScaledTileSize().height)
   Tile& GetTile(int x, int y);
 
+  Tile& GetTile(size_t i) { return mRetainedTiles[i]; }
+
+  gfx::IntPoint GetTileOffset(TileIntPoint aPosition) const {
+    gfx::IntSize scaledTileSize = GetScaledTileSize();
+    return gfx::IntPoint(aPosition.x * scaledTileSize.width,
+                         aPosition.y * scaledTileSize.height);
+  }
+
+  const TilesPlacement& GetPlacement() const { return mTiles; }
+
   int TileIndex(const gfx::IntPoint& aTileOrigin) const;
   int TileIndex(int x, int y) const { return x * mTiles.mSize.height + y; }
 
