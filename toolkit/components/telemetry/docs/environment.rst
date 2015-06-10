@@ -35,6 +35,11 @@ Structure::
         blocklistEnabled: <bool>, // true on failure
         isDefaultBrowser: <bool>, // null on failure, not available on Android
         defaultSearchEngine: <string>, // e.g. "yahoo"
+        defaultSearchEngineData: {, // data about the current default engine
+          name: <string>, // engine name, e.g. "Yahoo"; or "NONE" if no default
+          loadPath: <string>, // where the engine line is located; missing if no default
+          submissionURL: <string> // missing if no default or for user-installed engines
+        },
         e10sEnabled: <bool>, // false on failure
         telemetryEnabled: <bool>, // false on failure
         locale: <string>, // e.g. "it", null on failure
@@ -196,6 +201,8 @@ Settings
 
 defaultSearchEngine
 ~~~~~~~~~~~~~~~~~~~
+Note: Deprecated, use defaultSearchEngineData instead.
+
 Contains the string identifier or name of the default search engine provider. This will not be present in environment data collected before the Search Service initialization.
 
 The special value ``NONE`` could occur if there is no default search engine.
@@ -203,3 +210,24 @@ The special value ``NONE`` could occur if there is no default search engine.
 The special value ``UNDEFINED`` could occur if a default search engine exists but its identifier could not be determined.
 
 This field's contents are ``Services.search.defaultEngine.identifier`` (if defined) or ``"other-"`` + ``Services.search.defaultEngine.name`` if not. In other words, search engines without an ``.identifier`` are prefixed with ``other-``.
+
+defaultSearchEngineData
+~~~~~~~~~~~~~~~~~~~~~~~
+Contains data identifying the engine currently set as the default.
+
+The object contains:
+
+- a ``name`` property with the name of the engine, or ``NONE`` if no
+  engine is currently set as the default.
+
+- a ``loadPath`` property: an anonymized path of the engine xml file, e.g.
+ jar:[app]/omni.ja!browser/engine.xml
+  (where 'browser' is the name of the chrome package, not a folder)
+ [profile]/searchplugins/engine.xml
+ [distribution]/searchplugins/common/engine.xml
+ [other]/engine.xml
+
+- a ``submissionURL`` property with the HTTP url we would use to search.
+  For privacy, we don't record this for user-installed engines.
+
+``loadPath`` and ``submissionURL`` are not present if ``name`` is ``NONE``.
