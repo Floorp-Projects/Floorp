@@ -1307,6 +1307,61 @@ ContinueInstallTask::ContinueAfterWorkerEvent(bool aSuccess, bool aActivateImmed
   mJob->ContinueAfterInstallEvent(aSuccess, aActivateImmediately);
 }
 
+static bool
+IsFromAuthenticatedOrigin(nsIDocument* aDoc)
+{
+  nsCOMPtr<nsIURI> documentURI = aDoc->GetDocumentURI();
+
+  bool authenticatedOrigin = false;
+  nsresult rv;
+  if (!authenticatedOrigin) {
+    nsAutoCString scheme;
+    rv = documentURI->GetScheme(scheme);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+
+    if (scheme.EqualsLiteral("https") ||
+        scheme.EqualsLiteral("file") ||
+        scheme.EqualsLiteral("app")) {
+      authenticatedOrigin = true;
+    }
+  }
+
+  if (!authenticatedOrigin) {
+    nsAutoCString host;
+    rv = documentURI->GetHost(host);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+
+    if (host.Equals("127.0.0.1") ||
+        host.Equals("localhost") ||
+        host.Equals("::1")) {
+      authenticatedOrigin = true;
+    }
+  }
+
+  if (!authenticatedOrigin) {
+    bool isFile;
+    rv = documentURI->SchemeIs("file", &isFile);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+
+    if (!isFile) {
+      bool isHttps;
+      rv = documentURI->SchemeIs("https", &isHttps);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+      authenticatedOrigin = isHttps;
+    }
+  }
+
+  return authenticatedOrigin;
+}
+
 // If we return an error code here, the ServiceWorkerContainer will
 // automatically reject the Promise.
 NS_IMETHODIMP
@@ -1333,65 +1388,24 @@ ServiceWorkerManager::Register(nsIDOMWindow* aWindow,
   bool serviceWorkersTestingEnabled =
     outerWindow->GetServiceWorkersTestingEnabled();
 
-  nsCOMPtr<nsIURI> documentURI = doc->GetDocumentURI();
-
-  bool authenticatedOrigin = false;
+  bool authenticatedOrigin;
   if (Preferences::GetBool("dom.serviceWorkers.testing.enabled") ||
       serviceWorkersTestingEnabled) {
     authenticatedOrigin = true;
-  }
-
-  nsresult rv;
-  if (!authenticatedOrigin) {
-    nsAutoCString scheme;
-    rv = documentURI->GetScheme(scheme);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (scheme.EqualsLiteral("https") ||
-        scheme.EqualsLiteral("file") ||
-        scheme.EqualsLiteral("app")) {
-      authenticatedOrigin = true;
-    }
+  } else {
+    authenticatedOrigin = IsFromAuthenticatedOrigin(doc);
   }
 
   if (!authenticatedOrigin) {
-    nsAutoCString host;
-    rv = documentURI->GetHost(host);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (host.Equals("127.0.0.1") ||
-        host.Equals("localhost") ||
-        host.Equals("::1")) {
-      authenticatedOrigin = true;
-    }
-  }
-
-  if (!authenticatedOrigin) {
-    bool isFile;
-    rv = documentURI->SchemeIs("file", &isFile);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (!isFile) {
-      bool isHttps;
-      rv = documentURI->SchemeIs("https", &isHttps);
-      if (NS_WARN_IF(NS_FAILED(rv)) || !isHttps) {
-        NS_WARNING("ServiceWorker registration from insecure websites is not allowed.");
-        return NS_ERROR_DOM_SECURITY_ERR;
-      }
-    }
+    NS_WARNING("ServiceWorker registration from insecure websites is not allowed.");
+    return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   // Data URLs are not allowed.
   nsCOMPtr<nsIPrincipal> documentPrincipal = doc->NodePrincipal();
 
-  rv = documentPrincipal->CheckMayLoad(aScriptURI, true /* report */,
-                                       false /* allowIfInheritsPrincipal */);
+  nsresult rv = documentPrincipal->CheckMayLoad(aScriptURI, true /* report */,
+                                                false /* allowIfInheritsPrincipal */);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
