@@ -619,7 +619,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
         final String languageTag = Locales.getLanguageTag(locale);
         String url = getSearchPluginsJarURL(context, languageTag, fileName);
 
-        InputStream in = GeckoJarReader.getStream(url);
+        InputStream in = GeckoJarReader.getStream(context, url);
         if (in != null) {
             return in;
         }
@@ -628,7 +628,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
         final String language = Locales.getLanguage(locale);
         if (!languageTag.equals(language)) {
             url = getSearchPluginsJarURL(context, language, fileName);
-            in = GeckoJarReader.getStream(url);
+            in = GeckoJarReader.getStream(context, url);
             if (in != null) {
                 return in;
             }
@@ -636,7 +636,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
 
         // Finally, fall back to default locale defined in chrome registry.
         url = getSearchPluginsJarURL(context, getFallbackLocale(), fileName);
-        return GeckoJarReader.getStream(url);
+        return GeckoJarReader.getStream(context, url);
     }
 
     /**
@@ -650,7 +650,8 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
             return fallbackLocale;
         }
 
-        final InputStream in = GeckoJarReader.getStream(GeckoJarReader.getJarURL(context, "chrome/chrome.manifest"));
+        final InputStream in = GeckoJarReader.getStream(
+                context, GeckoJarReader.getJarURL(context, "chrome/chrome.manifest"));
         final BufferedReader br = getBufferedReader(in);
 
         try {

@@ -494,7 +494,8 @@ public class Favicons {
     }
 
     private static Bitmap loadBrandingBitmap(Context context, String name) {
-        Bitmap b = GeckoJarReader.getBitmap(context.getResources(),
+        Bitmap b = GeckoJarReader.getBitmap(context,
+                                            context.getResources(),
                                             getBrandingBitmapPath(context, name));
         if (b == null) {
             throw new IllegalStateException("Bitmap " + name + " missing from JAR!");
