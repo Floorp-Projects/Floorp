@@ -1816,7 +1816,7 @@ PluginModuleParent::StreamCast(NPP instance, NPStream* s,
 
     BrowserStreamParent* sp =
         static_cast<BrowserStreamParent*>(static_cast<AStream*>(s->pdata));
-    if (sp->mNPP != ip || s != sp->mStream) {
+    if (sp && (sp->mNPP != ip || s != sp->mStream)) {
         NS_RUNTIMEABORT("Corrupted plugin stream data.");
     }
     return sp;
