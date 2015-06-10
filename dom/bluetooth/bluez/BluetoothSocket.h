@@ -8,13 +8,10 @@
 #define mozilla_dom_bluetooth_BluetoothSocket_h
 
 #include "BluetoothCommon.h"
-#include <stdlib.h>
 #include "mozilla/ipc/DataSocket.h"
 #include "mozilla/ipc/UnixSocketWatcher.h"
-#include "mozilla/RefPtr.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
-#include "nsThreadUtils.h"
 
 class MessageLoop;
 
@@ -66,12 +63,12 @@ public:
    *
    * @param aConnector Connector object for socket type specific functions
    * @param aDelayMs Time delay in milli-seconds.
-   * @param aConsumerThread The socket's consumer thread.
+   * @param aConsumerLoop The socket's consumer thread.
    * @param aIOLoop The socket's I/O thread.
    * @return NS_OK on success, or an XPCOM error code otherwise.
    */
   nsresult Connect(BluetoothUnixSocketConnector* aConnector, int aDelayMs,
-                   nsIThread* aConsumerThread, MessageLoop* aIOLoop);
+                   MessageLoop* aConsumerLoop, MessageLoop* aIOLoop);
 
   /**
    * Starts a task on the socket that will try to connect to a socket in a
@@ -89,12 +86,12 @@ public:
    * non-blocking manner.
    *
    * @param aConnector Connector object for socket type specific functions
-   * @param aConsumerThread The socket's consumer thread.
+   * @param aConsumerLoop The socket's consumer thread.
    * @param aIOLoop The socket's I/O thread.
    * @return NS_OK on success, or an XPCOM error code otherwise.
    */
   nsresult Listen(BluetoothUnixSocketConnector* aConnector,
-                  nsIThread* aConsumerThread, MessageLoop* aIOLoop);
+                  MessageLoop* aConsumerLoop, MessageLoop* aIOLoop);
 
   /**
    * Starts a task on the socket that will try to accept a new connection in a
