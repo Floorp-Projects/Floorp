@@ -374,6 +374,9 @@ nsresult GStreamerReader::ReadMetadata(MediaInfo* aInfo,
    * might be concurrent stream operations happening on both decoding and gstreamer
    * threads which will screw the GStreamer state machine.
    */
+  LOG(LogLevel::Debug, "content-type: %s %s",
+      mDecoder->GetResource()->GetContentType().get(),
+      mDecoder->GetResource()->GetContentURL().get());
   bool isMP3 = mDecoder->GetResource()->GetContentType().EqualsASCII(AUDIO_MP3);
   if (isMP3) {
     ParseMP3Headers();
