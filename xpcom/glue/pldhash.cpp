@@ -768,9 +768,6 @@ PLDHashTable::Enumerate(PLDHashEnumerator aEtor, void* aArg)
     // even more chaotic to iterate in fully random order, but that's a lot
     // more work.
     entryAddr += ChaosMode::randomUint32LessThan(capacity) * mEntrySize;
-    if (entryAddr >= entryLimit) {
-      entryAddr -= tableSize;
-    }
   }
 
   for (uint32_t e = 0; e < capacity; ++e) {
@@ -912,17 +909,12 @@ PLDHashTable::Iterator::Iterator(const PLDHashTable* aTable)
   // vary over the course of the for loop) are converted into mEntryOffset and
   // mEntryAddr, respectively.
   uint32_t capacity = mTable->Capacity();
-  uint32_t tableSize = capacity * mTable->EntrySize();
-  char* entryLimit = mEntryAddr + tableSize;
 
   if (ChaosMode::isActive(ChaosMode::HashTableIteration)) {
     // Start iterating at a random point in the hashtable. It would be
     // even more chaotic to iterate in fully random order, but that's a lot
     // more work.
     mEntryAddr += ChaosMode::randomUint32LessThan(capacity) * mTable->mEntrySize;
-    if (mEntryAddr >= entryLimit) {
-      mEntryAddr -= tableSize;
-    }
   }
 }
 
