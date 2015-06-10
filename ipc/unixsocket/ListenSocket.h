@@ -11,7 +11,6 @@
 #include "mozilla/ipc/SocketBase.h"
 
 class MessageLoop;
-class nsIThread;
 
 namespace mozilla {
 namespace ipc {
@@ -37,14 +36,14 @@ public:
    * in a non-blocking manner.
    *
    * @param aConnector Connector object for socket-type-specific functions
-   * @param aConsumerThread The socket's consumer thread.
+   * @param aConsumerLoop The socket's consumer thread.
    * @param aIOLoop The socket's I/O thread.
    * @param aCOSocket The connection-oriented socket for handling the
    *                  accepted connection.
    * @return NS_OK on success, or an XPCOM error code otherwise.
    */
   nsresult Listen(UnixSocketConnector* aConnector,
-                  nsIThread* aConsumerThread,
+                  MessageLoop* aConsumerLoop,
                   MessageLoop* aIOLoop,
                   ConnectionOrientedSocket* aCOSocket);
 
