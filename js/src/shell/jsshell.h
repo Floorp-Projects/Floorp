@@ -50,6 +50,24 @@ class AutoCloseFile
     }
 };
 
+// Reference counted file.
+struct RCFile {
+    FILE* fp;
+    uint32_t numRefs;
+
+    RCFile() : fp(nullptr), numRefs(0) {}
+    explicit RCFile(FILE* fp) : fp(fp), numRefs(0) {}
+
+    void acquire() { numRefs++; }
+
+    // Starts out with a ref count of zero.
+    static RCFile* create(JSContext* cx, const char* filename, const char* mode);
+
+    void close();
+    bool isOpen() const { return fp; }
+    bool release();
+};
+
 } /* namespace shell */
 } /* namespace js */
 
