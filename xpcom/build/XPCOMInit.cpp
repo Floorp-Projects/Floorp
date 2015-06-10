@@ -486,6 +486,8 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
   mozPoisonValueInit();
 
+  NS_LogInit();
+
   char aLocal;
   profiler_init(&aLocal);
   nsresult rv = NS_OK;
@@ -507,8 +509,6 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   nsSystemInfo::gUserUmask = ::umask(0777);
   ::umask(nsSystemInfo::gUserUmask);
 #endif
-
-  NS_LogInit();
 
   // Set up chromium libs
   NS_ASSERTION(!sExitManager && !sMessageLoop, "Bad logic!");
