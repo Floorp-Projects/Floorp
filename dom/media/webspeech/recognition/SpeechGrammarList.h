@@ -56,6 +56,8 @@ private:
   ~SpeechGrammarList();
 
   nsCOMPtr<nsISupports> mParent;
+
+  nsTArray<nsRefPtr<SpeechGrammar>> mItems;
 };
 
 } // namespace dom
