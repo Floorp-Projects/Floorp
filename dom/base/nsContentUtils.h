@@ -1124,7 +1124,7 @@ public:
   static mozilla::EventListenerManager*
     GetExistingListenerManagerForNode(const nsINode* aNode);
 
-  static void UnmarkGrayJSListenersInCCGenerationDocuments(uint32_t aGeneration);
+  static void UnmarkGrayJSListenersInCCGenerationDocuments();
 
   /**
    * Remove the eventlistener manager for aNode.
