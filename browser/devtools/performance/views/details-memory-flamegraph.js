@@ -113,3 +113,5 @@ let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
 
   toString: () => "[object MemoryFlameGraphView]"
 });
+
+EventEmitter.decorate(MemoryFlameGraphView);
