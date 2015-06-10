@@ -1044,21 +1044,12 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    WorkerGlobalScope* globalScope =
-      aWorkerPrivate->GetOrCreateGlobalScope(aCx);
-    if (!globalScope) {
-      NS_WARNING("Failed to make global!");
+    if (!scriptloader::LoadMainScript(aCx, mScriptURL, WorkerScript)) {
       return false;
     }
 
-    JS::Rooted<JSObject*> global(aCx, globalScope->GetWrapper());
-
-    JSAutoCompartment ac(aCx, global);
-    bool result = scriptloader::LoadMainScript(aCx, mScriptURL, WorkerScript);
-    if (result) {
-      aWorkerPrivate->SetWorkerScriptExecutedSuccessfully();
-    }
-    return result;
+    aWorkerPrivate->SetWorkerScriptExecutedSuccessfully();
+    return true;
   }
 };
 
@@ -6043,7 +6034,9 @@ WorkerPrivate::RunCurrentSyncLoop()
       MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(mThread, false));
 
       // Now *might* be a good time to GC. Let the JS engine make the decision.
-      JS_MaybeGC(cx);
+      if (JS::CurrentGlobalOrNull(cx)) {
+        JS_MaybeGC(cx);
+      }
     }
   }
 
@@ -6280,7 +6273,9 @@ WorkerPrivate::EnterDebuggerEventLoop()
       runnable->Release();
 
       // Now *might* be a good time to GC. Let the JS engine make the decision.
-      JS_MaybeGC(cx);
+      if (JS::CurrentGlobalOrNull(cx)) {
+        JS_MaybeGC(cx);
+      }
     }
   }
 }
@@ -6525,7 +6520,8 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aMessage,
   // if there was an error in the close handler or if we ran out of memory.
   bool fireAtScope = mErrorHandlerRecursionCount == 1 &&
                      !mCloseHandlerStarted &&
-                     errorNumber != JSMSG_OUT_OF_MEMORY;
+                     errorNumber != JSMSG_OUT_OF_MEMORY &&
+                     JS::CurrentGlobalOrNull(aCx);
 
   if (!ReportErrorRunnable::ReportError(aCx, this, fireAtScope, nullptr, message,
                                         filename, line, lineNumber,
@@ -6918,7 +6914,7 @@ WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
 {
   AssertIsOnWorkerThread();
 
-  if (!JS::CurrentGlobalOrNull(aCx)) {
+  if (!GlobalScope()) {
     // We haven't compiled anything yet. Just bail out.
     return;
   }
@@ -7167,13 +7163,16 @@ WorkerPrivate::GetOrCreateGlobalScope(JSContext* aCx)
 
     JSAutoCompartment ac(aCx, global);
 
+    // RegisterBindings() can spin a nested event loop so we have to set mScope
+    // before calling it, and we have to make sure to unset mScope if it fails.
+    mScope = Move(globalScope);
+
     if (!RegisterBindings(aCx, global)) {
+      mScope = nullptr;
       return nullptr;
     }
 
     JS_FireOnNewGlobalObject(aCx, global);
-
-    mScope = globalScope.forget();
   }
 
   return mScope;
