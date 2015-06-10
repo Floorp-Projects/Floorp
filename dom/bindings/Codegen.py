@@ -10989,7 +10989,7 @@ class CGDOMJSProxyHandler_getElements(ClassMethod):
             'jsvalRef': 'temp',
             'jsvalHandle': '&temp',
             'obj': 'proxy',
-            'successCode': ("adder->append(cx, temp);\n"
+            'successCode': ("if (!adder->append(cx, temp)) return false;\n"
                             "continue;\n")
         }
         get = CGProxyIndexedGetter(self.descriptor, templateValues, False, False).define()

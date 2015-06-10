@@ -253,8 +253,7 @@ function ArrayMap(callbackfn/*, thisArg*/) {
         if (k in O) {
             /* Step c.i-iii. */
             var mappedValue = callFunction(callbackfn, T, O[k], k, O);
-            // UnsafePutElements doesn't invoke setters, so we can use it here.
-            UnsafePutElements(A, k, mappedValue);
+            _DefineDataProperty(A, k, mappedValue);
         }
     }
 
@@ -718,9 +717,6 @@ function ArrayFrom(items, mapfn=undefined, thisArg=undefined) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, mapfn));
     var T = thisArg;
 
-    // All elements defined by this algorithm have the same attrs:
-    var attrs = ATTR_CONFIGURABLE | ATTR_ENUMERABLE | ATTR_WRITABLE;
-
     // Steps 4-5.
     var usingIterator = GetMethod(items, std_iterator);
 
@@ -757,7 +753,7 @@ function ArrayFrom(items, mapfn=undefined, thisArg=undefined) {
             var mappedValue = mapping ? callFunction(mapfn, thisArg, nextValue, k) : nextValue;
 
             // Steps 6.g.ix-xi.
-            _DefineDataProperty(A, k++, mappedValue, attrs);
+            _DefineDataProperty(A, k++, mappedValue);
         }
     }
 
@@ -782,7 +778,7 @@ function ArrayFrom(items, mapfn=undefined, thisArg=undefined) {
         var mappedValue = mapping ? callFunction(mapfn, thisArg, kValue, k) : kValue;
 
         // Steps 16.f-g.
-        _DefineDataProperty(A, k, mappedValue, attrs);
+        _DefineDataProperty(A, k, mappedValue);
     }
 
     // Steps 17-18.
