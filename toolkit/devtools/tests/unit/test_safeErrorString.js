@@ -54,4 +54,5 @@ function test_with_psychotic() {
   });
   // Still get a string out, and no exceptions thrown
   do_check_eq(typeof s, "string");
+  do_check_eq(s, "[object Object]");
 }
