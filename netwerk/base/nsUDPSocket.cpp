@@ -1311,7 +1311,7 @@ nsUDPSocket::Send(const nsACString &aHost, uint16_t aPort,
   *_retval = 0;
 
   FallibleTArray<uint8_t> fallibleArray;
-  if (!fallibleArray.InsertElementsAt(0, aData, aDataLength)) {
+  if (!fallibleArray.InsertElementsAt(0, aData, aDataLength, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1369,7 +1369,7 @@ nsUDPSocket::SendWithAddress(const NetAddr *aAddr, const uint8_t *aData,
     *_retval = count;
   } else {
     FallibleTArray<uint8_t> fallibleArray;
-    if (!fallibleArray.InsertElementsAt(0, aData, aDataLength)) {
+    if (!fallibleArray.InsertElementsAt(0, aData, aDataLength, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
