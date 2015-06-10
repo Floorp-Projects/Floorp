@@ -135,3 +135,43 @@ int nr_socket_read(nr_socket *sock,void * restrict buf, size_t maxlen,
     CHECK_DEFINED(sread);
     return sock->vtbl->sread(sock->obj, buf, maxlen, len);
   }
+
+
+int nr_socket_factory_create_int(void *obj,
+  nr_socket_factory_vtbl *vtbl, nr_socket_factory **factorypp)
+  {
+    int _status;
+    nr_socket_factory *factoryp=0;
+
+    if(!(factoryp=RCALLOC(sizeof(nr_socket_factory))))
+      ABORT(R_NO_MEMORY);
+
+    factoryp->obj = obj;
+    factoryp->vtbl = vtbl;
+
+    *factorypp = factoryp;
+
+    _status=0;
+  abort:
+    return(_status);
+  }
+
+int nr_socket_factory_destroy(nr_socket_factory **factorypp)
+  {
+    nr_socket_factory *factoryp;
+
+    if (!factorypp || !*factorypp)
+      return (0);
+
+    factoryp = *factorypp;
+    *factorypp = NULL;
+    factoryp->vtbl->destroy(&factoryp->obj);
+    RFREE(factoryp);
+    return (0);
+  }
+
+int nr_socket_factory_create_socket(nr_socket_factory *factory, nr_transport_addr *addr, nr_socket **sockp)
+  {
+    return factory->vtbl->create_socket(factory->obj, addr, sockp);
+  }
+

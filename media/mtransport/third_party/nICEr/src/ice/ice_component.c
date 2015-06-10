@@ -196,7 +196,7 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           continue;
       }
       r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): host address %s",ctx->label,addrs[i].addr.as_string);
-      if(r=nr_socket_local_create(&addrs[i].addr,&sock)){
+      if((r=nr_socket_factory_create_socket(ctx->socket_factory,&addrs[i].addr,&sock))){
         r_log(LOG_ICE,LOG_WARNING,"ICE(%s): couldn't create socket for address %s",ctx->label,addrs[i].addr.as_string);
         continue;
       }
@@ -323,7 +323,7 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         addr.protocol = IPPROTO_TCP;
         if ((r=nr_transport_addr_fmt_addr_string(&addr)))
           ABORT(r);
-        if((r=nr_socket_local_create(&addr, &sock))){
+        if((r=nr_socket_factory_create_socket(ctx->socket_factory,&addr,&sock))){
           r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create socket for address %s",ctx->label,addr.as_string);
           continue;
         }
