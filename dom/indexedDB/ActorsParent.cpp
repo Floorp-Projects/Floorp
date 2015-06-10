@@ -858,7 +858,8 @@ ReadCompressedIndexDataValuesFromBlob(
     blobDataIter += keyBufferLength;
 
     if (NS_WARN_IF(!aIndexValues.InsertElementSorted(
-                      IndexDataValue(indexId, unique, Key(keyBuffer))))) {
+                      IndexDataValue(indexId, unique, Key(keyBuffer)),
+                      fallible))) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2734,7 +2735,8 @@ InsertIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
   }
 
   MOZ_ALWAYS_TRUE(
-    indexValues.InsertElementSorted(IndexDataValue(indexId, !!unique, value)));
+    indexValues.InsertElementSorted(IndexDataValue(indexId, !!unique, value),
+                                    fallible));
 
   // Compress the array.
   UniqueFreePtr<uint8_t> indexValuesBlob;
@@ -17856,7 +17858,8 @@ DatabaseOperationBase::IndexDataValuesFromUpdateInfos(
     MOZ_ALWAYS_TRUE(aUniqueIndexTable.Get(indexId, &unique));
 
     MOZ_ALWAYS_TRUE(
-      aIndexValues.InsertElementSorted(IndexDataValue(indexId, unique, key)));
+      aIndexValues.InsertElementSorted(IndexDataValue(indexId, unique, key),
+                                       fallible));
   }
 
   return NS_OK;
@@ -22291,7 +22294,8 @@ UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
     MOZ_ALWAYS_TRUE(
       indexValues.InsertElementSorted(IndexDataValue(metadata.id(),
                                                      metadata.unique(),
-                                                     info.value())));
+                                                     info.value()),
+                                      fallible));
   }
 
   UniqueFreePtr<uint8_t> indexValuesBlob;
@@ -22327,7 +22331,8 @@ UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
       MOZ_ALWAYS_TRUE(
         indexValues.InsertElementSorted(IndexDataValue(metadata.id(),
                                                        metadata.unique(),
-                                                       info.value())));
+                                                       info.value()),
+                                        fallible));
     }
   }
 

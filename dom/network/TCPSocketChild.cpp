@@ -237,7 +237,8 @@ TCPSocketChild::SendSend(JS::Handle<JS::Value> aData,
         if (!data) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        if (!fallibleArr.InsertElementsAt(0, data + aByteOffset, nbytes)) {
+        if (!fallibleArr.InsertElementsAt(0, data + aByteOffset, nbytes,
+                                          fallible)) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
     }

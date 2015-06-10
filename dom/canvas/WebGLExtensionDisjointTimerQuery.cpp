@@ -93,8 +93,8 @@ WebGLExtensionDisjointTimerQuery::BeginQueryEXT(GLenum target,
 
   mContext->MakeContextCurrent();
   gl::GLContext* gl = mContext->GL();
-  gl->fBeginQuery(target, query->GLName());
-  query->BindTo(LOCAL_GL_TIME_ELAPSED_EXT);
+  gl->fBeginQuery(target, query->mGLName);
+  query->mTarget = LOCAL_GL_TIME_ELAPSED_EXT;
   mActiveQuery = query;
 }
 
@@ -137,8 +137,8 @@ WebGLExtensionDisjointTimerQuery::QueryCounterEXT(WebGLTimerQuery* query,
   }
 
   mContext->MakeContextCurrent();
-  mContext->GL()->fQueryCounter(query->GLName(), target);
-  query->BindTo(LOCAL_GL_TIMESTAMP_EXT);
+  mContext->GL()->fQueryCounter(query->mGLName, target);
+  query->mTarget = LOCAL_GL_TIMESTAMP_EXT;
 }
 
 void
@@ -210,7 +210,7 @@ WebGLExtensionDisjointTimerQuery::GetQueryObjectEXT(JSContext* cx,
   switch (pname) {
   case LOCAL_GL_QUERY_RESULT_EXT: {
     GLuint64 result = 0;
-    mContext->GL()->fGetQueryObjectui64v(query->GLName(),
+    mContext->GL()->fGetQueryObjectui64v(query->mGLName,
                                          LOCAL_GL_QUERY_RESULT_EXT,
                                          &result);
     retval.set(JS::NumberValue(result));
@@ -218,7 +218,7 @@ WebGLExtensionDisjointTimerQuery::GetQueryObjectEXT(JSContext* cx,
   }
   case LOCAL_GL_QUERY_RESULT_AVAILABLE_EXT: {
     GLuint avail = 0;
-    mContext->GL()->fGetQueryObjectuiv(query->GLName(),
+    mContext->GL()->fGetQueryObjectuiv(query->mGLName,
                                        LOCAL_GL_QUERY_RESULT_AVAILABLE_EXT,
                                        &avail);
     retval.set(JS::BooleanValue(bool(avail)));

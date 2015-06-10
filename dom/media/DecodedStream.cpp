@@ -69,6 +69,19 @@ private:
   bool mStreamFinishedOnMainThread;
 };
 
+static void
+UpdateStreamBlocking(MediaStream* aStream, bool aBlocking)
+{
+  int32_t delta = aBlocking ? 1 : -1;
+  if (NS_IsMainThread()) {
+    aStream->ChangeExplicitBlockerCount(delta);
+  } else {
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<int32_t>(
+      aStream, &MediaStream::ChangeExplicitBlockerCount, delta);
+    AbstractThread::MainThread()->Dispatch(r.forget());
+  }
+}
+
 DecodedStreamData::DecodedStreamData(SourceMediaStream* aStream)
   : mAudioFramesWritten(0)
   , mNextVideoTime(-1)
@@ -78,14 +91,13 @@ DecodedStreamData::DecodedStreamData(SourceMediaStream* aStream)
   , mHaveSentFinishAudio(false)
   , mHaveSentFinishVideo(false)
   , mStream(aStream)
-  , mHaveBlockedForPlayState(false)
-  , mHaveBlockedForStateMachineNotPlaying(false)
+  , mPlaying(false)
   , mEOSVideoCompensation(false)
 {
   mListener = new DecodedStreamGraphListener(mStream);
   mStream->AddListener(mListener);
-  // Block the stream until the initialization is done.
-  mStream->ChangeExplicitBlockerCount(1);
+  // Block the stream as mPlaying is initially false.
+  UpdateStreamBlocking(mStream, true);
 }
 
 DecodedStreamData::~DecodedStreamData()
@@ -104,6 +116,15 @@ int64_t
 DecodedStreamData::GetPosition() const
 {
   return mListener->GetLastOutputTime();
+}
+
+void
+DecodedStreamData::SetPlaying(bool aPlaying)
+{
+  if (mPlaying != aPlaying) {
+    mPlaying = aPlaying;
+    UpdateStreamBlocking(mStream, !mPlaying);
+  }
 }
 
 class OutputStreamListener : public MediaStreamListener {
@@ -288,6 +309,14 @@ DecodedStream::Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
     // Ensure that aStream finishes the moment mDecodedStream does.
     aStream->SetAutofinish(true);
   }
+}
+
+void
+DecodedStream::SetPlaying(bool aPlaying)
+{
+  GetReentrantMonitor().AssertCurrentThreadIn();
+  MOZ_ASSERT(mData);
+  mData->SetPlaying(aPlaying);
 }
 
 } // namespace mozilla
