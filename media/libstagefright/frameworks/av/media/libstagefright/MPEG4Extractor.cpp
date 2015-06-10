@@ -868,6 +868,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                 track->includes_expensive_metadata = false;
                 track->skipTrack = false;
                 track->timescale = 0;
+                track->empty_duration = 0;
                 track->segment_duration = 0;
                 track->media_time = 0;
                 track->meta->setCString(kKeyMIMEType, "application/octet-stream");
@@ -935,35 +936,54 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                 return ERROR_IO;
             }
 
-            if (entry_count != 1) {
-                // we only support a single entry at the moment, for gapless playback
-                ALOGW("ignoring edit list with %d entries", entry_count);
-            } else if (mHeaderTimescale == 0) {
-                ALOGW("ignoring edit list because timescale is 0");
-            } else {
-                off64_t entriesoffset = data_offset + 8;
-
+            off64_t entriesoffset = data_offset + 8;
+            for (uint32_t i = 0; i < entry_count; i++) {
+                if (mHeaderTimescale == 0) {
+                    ALOGW("ignoring edit list because timescale is 0");
+                    break;
+                }
+                if (entriesoffset - data_offset > chunk_size) {
+                    ALOGW("invalid edit list size");
+                    break;
+                }
+                uint64_t segment_duration;
+                int64_t media_time;
                 if (version == 1) {
-                    if (!mDataSource->getUInt64(entriesoffset, &mLastTrack->segment_duration) ||
-                            !mDataSource->getUInt64(entriesoffset + 8, (uint64_t*)&mLastTrack->media_time)) {
+                    if (!mDataSource->getUInt64(entriesoffset, &segment_duration) ||
+                        !mDataSource->getUInt64(entriesoffset + 8, (uint64_t*)&media_time)) {
                         return ERROR_IO;
                     }
+                    entriesoffset += 16;
                 } else if (version == 0) {
                     uint32_t sd;
                     int32_t mt;
                     if (!mDataSource->getUInt32(entriesoffset, &sd) ||
-                            !mDataSource->getUInt32(entriesoffset + 4, (uint32_t*)&mt)) {
+                        !mDataSource->getUInt32(entriesoffset + 4, (uint32_t*)&mt)) {
                         return ERROR_IO;
                     }
-                    mLastTrack->segment_duration = sd;
-                    mLastTrack->media_time = mt;
+                    entriesoffset += 8;
+                    segment_duration = sd;
+                    media_time = mt;
                 } else {
                     return ERROR_IO;
                 }
-
-                storeEditList();
-
+                entriesoffset += 4; // ignore media_rate_integer and media_rate_fraction.
+                if (media_time == -1 && i) {
+                    ALOGW("ignoring invalid empty edit", i);
+                    break;
+                } else if (media_time == -1) {
+                    // Starting offsets for tracks (streams) are represented by an initial empty edit.
+                    mLastTrack->empty_duration = segment_duration;
+                    continue;
+                } else if (i > 1) {
+                    // we only support a single non-empty entry at the moment, for gapless playback
+                    ALOGW("multiple edit list entries, A/V sync will be wrong");
+                    break;
+                }
+                mLastTrack->segment_duration = segment_duration;
+                mLastTrack->media_time = media_time;
             }
+            storeEditList();
             *offset += chunk_size;
             break;
         }
@@ -1947,13 +1967,13 @@ void MPEG4Extractor::storeEditList()
     return;
   }
 
-  uint64_t segment_duration = (mLastTrack->segment_duration * 1000000)/ mHeaderTimescale;
+  uint64_t segment_duration = (mLastTrack->segment_duration * 1000000) / mHeaderTimescale;
   // media_time is measured in media time scale units.
   int64_t media_time = (mLastTrack->media_time * 1000000) / mLastTrack->timescale;
-
-  if (segment_duration == 0) {
-    mLastTrack->meta->setInt64(kKeyMediaTime, media_time);
-  }
+  // empty_duration is in the Movie Header Box's timescale.
+  int64_t empty_duration = (mLastTrack->empty_duration * 1000000) / mHeaderTimescale;
+  media_time -= empty_duration;
+  mLastTrack->meta->setInt64(kKeyMediaTime, media_time);
 
   int64_t duration;
   int32_t samplerate;
