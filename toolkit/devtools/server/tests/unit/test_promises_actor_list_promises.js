@@ -43,6 +43,8 @@ function* testListPromises(client, form, makePromise) {
   for (let p of promises) {
     equal(p.type, "object", "Expect type to be Object");
     equal(p.class, "Promise", "Expect class to be Promise");
+    equal(typeof p.promiseState.creationTimestamp, "number",
+      "Expect creation timestamp to be a number");
 
     if (p.promiseState.state === "fulfilled" &&
         p.promiseState.value === resolution) {
