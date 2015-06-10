@@ -16,7 +16,7 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
-#include "nsStackWalk.h"
+#include "mozilla/StackWalk.h"
 #include "nsTraceRefcnt.h"
 #include "plstr.h"
 #include "prio.h"

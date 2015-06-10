@@ -6,20 +6,16 @@
 
 /* API for getting a stack trace of the C/C++ stack on the current thread */
 
-#ifndef nsStackWalk_h_
-#define nsStackWalk_h_
+#ifndef mozilla_StackWalk_h
+#define mozilla_StackWalk_h
 
 /* WARNING: This file is intended to be included from C or C++ files. */
 
-#include "nscore.h"
+#include "mozilla/Types.h"
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
- * The callback for NS_StackWalk.
+ * The callback for MozStackWalk.
  *
  * @param aFrameNumber  The frame number (starts at 1, not 0).
  * @param aPC           The program counter value.
@@ -27,20 +23,20 @@ extern "C" {
  *                      pointer will be pointing to when the execution returns
  *                      to executing that at aPC. If no approximation can
  *                      be made it will be nullptr.
- * @param aClosure      Extra data passed in via NS_StackWalk().
+ * @param aClosure      Extra data passed in via MozStackWalk().
  */
 typedef void
-(*NS_WalkStackCallback)(uint32_t aFrameNumber, void* aPC, void* aSP,
+(*MozWalkStackCallback)(uint32_t aFrameNumber, void* aPC, void* aSP,
                         void* aClosure);
 
 /**
  * Call aCallback for the C/C++ stack frames on the current thread, from
- * the caller of NS_StackWalk to main (or above).
+ * the caller of MozStackWalk to main (or above).
  *
  * @param aCallback    Callback function, called once per frame.
  * @param aSkipFrames  Number of initial frames to skip.  0 means that
  *                     the first callback will be for the caller of
- *                     NS_StackWalk.
+ *                     MozStackWalk.
  * @param aMaxFrames   Maximum number of frames to trace.  0 means no limit.
  * @param aClosure     Caller-supplied data passed through to aCallback.
  * @param aThread      The thread for which the stack is to be retrieved.
@@ -53,27 +49,14 @@ typedef void
  *                      CONTEXT on Windows and should not be passed on other
  *                      platforms.
  *
- * Return values:
- * - NS_ERROR_NOT_IMPLEMENTED.  Occurs on platforms where it is unimplemented.
- *
- * - NS_ERROR_UNEXPECTED.  Occurs when the stack indicates that the thread
- *   is in a very dangerous situation (e.g., holding sem_pool_lock in Mac OS X
- *   pthreads code).  Callers should then bail out immediately.
- *
- * - NS_ERROR_FAILURE.  Occurs when stack walking completely failed, i.e.
- *   aCallback was never called.
- *
- * - NS_OK.  Occurs when stack walking succeeded, i.e. aCallback was called at
- *   least once (and there was no need to exit with NS_ERROR_UNEXPECTED).
- *
  * May skip some stack frames due to compiler optimizations or code
  * generation.
  *
  * Note: this (and other helper methods) will only be available when
  * MOZ_STACKWALKING is defined, so any new consumers must #if based on that.
  */
-XPCOM_API(nsresult)
-NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
+MFBT_API bool
+MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
              uint32_t aMaxFrames, void* aClosure, uintptr_t aThread,
              void* aPlatformData);
 
@@ -99,7 +82,7 @@ typedef struct
    */
   char function[256];
   ptrdiff_t foffset;
-} nsCodeAddressDetails;
+} MozCodeAddressDetails;
 
 /**
  * For a given pointer to code, fill in the pieces of information used
@@ -108,8 +91,8 @@ typedef struct
  * @param aPC         The code address.
  * @param aDetails    A structure to be filled in with the result.
  */
-XPCOM_API(nsresult)
-NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails);
+MFBT_API bool
+MozDescribeCodeAddress(void* aPC, MozCodeAddressDetails* aDetails);
 
 /**
  * Format the information about a code address in a format suitable for
@@ -137,15 +120,15 @@ NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails);
  * @param aFileName    The filename. Possibly null or the empty string.
  * @param aLineNo      The line number. Possibly zero.
  */
-XPCOM_API(void)
-NS_FormatCodeAddress(char* aBuffer, uint32_t aBufferSize, uint32_t aFrameNumber,
+MFBT_API void
+MozFormatCodeAddress(char* aBuffer, uint32_t aBufferSize, uint32_t aFrameNumber,
                      const void* aPC, const char* aFunction,
                      const char* aLibrary, ptrdiff_t aLOffset,
                      const char* aFileName, uint32_t aLineNo);
 
 /**
  * Format the information about a code address in the same fashion as
- * NS_FormatCodeAddress.
+ * MozFormatCodeAddress.
  *
  * @param aBuffer      A string to be filled in with the description.
  *                     The string will always be null-terminated.
@@ -156,15 +139,27 @@ NS_FormatCodeAddress(char* aBuffer, uint32_t aBufferSize, uint32_t aFrameNumber,
  *                     is the terminating null.
  * @param aFrameNumber The frame number.
  * @param aPC          The code address.
- * @param aDetails     The value filled in by NS_DescribeCodeAddress(aPC).
+ * @param aDetails     The value filled in by MozDescribeCodeAddress(aPC).
  */
-XPCOM_API(void)
-NS_FormatCodeAddressDetails(char* aBuffer, uint32_t aBufferSize,
+MFBT_API void
+MozFormatCodeAddressDetails(char* aBuffer, uint32_t aBufferSize,
                             uint32_t aFrameNumber, void* aPC,
-                            const nsCodeAddressDetails* aDetails);
+                            const MozCodeAddressDetails* aDetails);
 
-#ifdef __cplusplus
+namespace mozilla {
+
+MFBT_API bool
+FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
+                      uint32_t aMaxFrames, void* aClosure, void** aBp,
+                      void* aStackEnd);
+
 }
-#endif
 
-#endif /* !defined(nsStackWalk_h_) */
+/**
+ * Initialize the critical sections for this platform so that we can
+ * abort stack walks when needed.
+ */
+MFBT_API void
+StackWalkInitCriticalAddress(void);
+
+#endif
