@@ -420,12 +420,8 @@ protected:
   void PushFront(AudioData* aSample);
   void PushFront(VideoData* aSample);
 
-  // Pops MediaData* samples from their respective MediaQueues.
-  // Note that the audio queue is also drained on the audio thread,
-  // which we can't easily react to - This should be fixed when we
-  // remove the audio thread in bug 750596.
-  already_AddRefed<AudioData> PopAudio();
-  already_AddRefed<VideoData> PopVideo();
+  void OnAudioPopped();
+  void OnVideoPopped();
 
   void VolumeChanged();
   void LogicalPlaybackRateChanged();
