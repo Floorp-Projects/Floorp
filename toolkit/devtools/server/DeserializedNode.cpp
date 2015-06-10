@@ -49,55 +49,70 @@ DeserializedEdge::init(const protobuf::Edge& edge, HeapSnapshot& owner)
   return true;
 }
 
-/* static */ UniquePtr<DeserializedNode>
-DeserializedNode::Create(const protobuf::Node& node, HeapSnapshot& owner)
+DeserializedNode::DeserializedNode(DeserializedNode&& rhs)
 {
+  rhs.assertInitialized();
+
+  id = rhs.id;
+  rhs.id = 0;
+
+  typeName = rhs.typeName;
+  rhs.typeName = nullptr;
+
+  size = rhs.size;
+  rhs.size = 0;
+
+  edges = Move(rhs.edges);
+
+  owner = rhs.owner;
+  rhs.owner = nullptr;
+}
+
+DeserializedNode& DeserializedNode::operator=(DeserializedNode&& rhs)
+{
+  MOZ_ASSERT(&rhs != this);
+  this->~DeserializedNode();
+  new(this) DeserializedNode(Move(rhs));
+  return *this;
+}
+
+bool
+DeserializedNode::init(const protobuf::Node& node, HeapSnapshot& owner)
+{
+  MOZ_ASSERT(this->owner == nullptr);
+  MOZ_ASSERT(typeName == nullptr);
+
+  this->owner = &owner;
+
   if (!node.has_id())
-    return nullptr;
-  NodeId id = node.id();
+    return false;
+  id = node.id();
 
   if (!node.has_typename_())
-    return nullptr;
+    return false;
 
   const char16_t* duplicatedTypeName = reinterpret_cast<const char16_t*>(node.typename_().c_str());
-  const char16_t* uniqueTypeName = owner.borrowUniqueString(duplicatedTypeName,
-                                                            node.typename_().length() / sizeof(char16_t));
-  if (!uniqueTypeName)
-    return nullptr;
+  typeName = owner.borrowUniqueString(duplicatedTypeName,
+                                      node.typename_().length() / sizeof(char16_t));
+  if (!typeName)
+    return false;
+
+  if (!node.has_size())
+    return false;
+  size = node.size();
 
   auto edgesLength = node.edges_size();
-  EdgeVector edges;
   if (!edges.reserve(edgesLength))
-    return nullptr;
+    return false;
   for (decltype(edgesLength) i = 0; i < edgesLength; i++) {
     DeserializedEdge edge;
     if (!edge.init(node.edges(i), owner))
-      return nullptr;
+      return false;
     edges.infallibleAppend(Move(edge));
   }
 
-  if (!node.has_size())
-    return nullptr;
-  uint64_t size = node.size();
-
-  return MakeUnique<DeserializedNode>(id,
-                                      uniqueTypeName,
-                                      size,
-                                      Move(edges),
-                                      owner);
+  return true;
 }
-
-DeserializedNode::DeserializedNode(NodeId id,
-                                   const char16_t* typeName,
-                                   uint64_t size,
-                                   EdgeVector&& edges,
-                                   HeapSnapshot& owner)
-  : id(id)
-  , typeName(typeName)
-  , size(size)
-  , edges(Move(edges))
-  , owner(&owner)
-{ }
 
 DeserializedNode::DeserializedNode(NodeId id, const char16_t* typeName, uint64_t size)
   : id(id)
@@ -110,9 +125,10 @@ DeserializedNode::DeserializedNode(NodeId id, const char16_t* typeName, uint64_t
 DeserializedNode&
 DeserializedNode::getEdgeReferent(const DeserializedEdge& edge)
 {
+  assertInitialized();
   auto ptr = owner->nodes.lookup(edge.referent);
   MOZ_ASSERT(ptr);
-  return *ptr->value();
+  return ptr->value();
 }
 
 } // namespace devtools

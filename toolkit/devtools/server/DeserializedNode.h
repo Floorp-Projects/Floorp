@@ -57,25 +57,30 @@ struct DeserializedNode {
   using EdgeVector = Vector<DeserializedEdge>;
   using UniqueStringPtr = UniquePtr<char16_t[]>;
 
-  NodeId         id;
+  NodeId          id;
   // A borrowed reference to a string owned by this node's owning HeapSnapshot.
   const char16_t* typeName;
-  uint64_t       size;
-  EdgeVector     edges;
+  uint64_t        size;
+  EdgeVector      edges;
   // A weak pointer to this node's owning `HeapSnapshot`. Safe without
   // AddRef'ing because this node's lifetime is equal to that of its owner.
-  HeapSnapshot*  owner;
+  HeapSnapshot*   owner;
 
-  // Create a new `DeserializedNode` from the given `protobuf::Node` message.
-  static UniquePtr<DeserializedNode> Create(const protobuf::Node& node,
-                                            HeapSnapshot& owner);
-
-  DeserializedNode(NodeId id,
-                   const char16_t* typeName,
-                   uint64_t size,
-                   EdgeVector&& edges,
-                   HeapSnapshot& owner);
+  explicit DeserializedNode()
+    : id(0)
+    , typeName(nullptr)
+    , size(0)
+    , edges()
+    , owner(nullptr)
+  { }
   virtual ~DeserializedNode() { }
+
+  DeserializedNode(DeserializedNode&& rhs);
+  DeserializedNode& operator=(DeserializedNode&& rhs);
+
+  // Initialize a new `DeserializedNode` from the given `protobuf::Node`
+  // message.
+  bool init(const protobuf::Node& node, HeapSnapshot& owner);
 
   // Get a borrowed reference to the given edge's referent. This method is
   // virtual to provide a hook for gmock and gtest.
@@ -86,6 +91,11 @@ protected:
   DeserializedNode(NodeId id, const char16_t* typeName, uint64_t size);
 
 private:
+  void assertInitialized() const {
+    MOZ_ASSERT(owner);
+    MOZ_ASSERT(typeName);
+  }
+
   DeserializedNode(const DeserializedNode&) = delete;
   DeserializedNode& operator=(const DeserializedNode&) = delete;
 };
