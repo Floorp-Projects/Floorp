@@ -62,6 +62,14 @@ window.Frame = React.createClass({
       );
 
       React.render(contents, doc.body, this.fireOnContentsRendered.bind(this));
+
+      // Set the RTL mode. We assume for now that rtl is the only query parameter.
+      //
+      // See also "ShowCase" in ui-showcase.jsx
+      if (document.location.search === "?rtl=1") {
+        doc.documentElement.setAttribute("lang", "ar");
+        doc.documentElement.setAttribute("dir", "rtl");
+      }
     } else {
       // Queue it, only if it isn't already. We do need to set the timeout
       // regardless, as this function can get re-entered several times.

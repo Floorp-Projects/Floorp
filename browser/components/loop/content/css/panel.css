@@ -265,7 +265,7 @@ body {
   flex: 0 1 auto;
 }
 
-body[dir=rtl] .new-room-view > .context > .context-content > .context-preview {
+html[dir="rtl"] .new-room-view > .context > .context-content > .context-preview {
   float: left;
 }
 
@@ -563,7 +563,7 @@ body[dir=rtl] .new-room-view > .context > .context-content > .context-preview {
   right: 4px;
 }
 
-body[dir=rtl] .generate-url-spinner {
+html[dir="rtl"] .generate-url-spinner {
   left: 4px;
   right: auto;
 }
@@ -749,7 +749,7 @@ body[dir=rtl] .generate-url-spinner {
   right: 14px;
 }
 
-body[dir="rtl"] .settings-menu .dropdown-menu {
+html[dir="rtl"] .settings-menu .dropdown-menu {
   /* This is specified separately rather than using -moz-margin-start etc, as
      we need to override .dropdown-menu's values which can't use the gecko
      specific extensions. */
