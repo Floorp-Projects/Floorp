@@ -338,6 +338,12 @@ else
     esac
 fi
 
+case "$target" in
+*-apple-darwin*)
+    MOZ_IOS_SDK
+    ;;
+esac
+
 AC_SUBST(ANDROID_SOURCE)
 AC_SUBST(ANDROID_PACKAGE_NAME)
 AC_SUBST(OBJCOPY)
@@ -1818,7 +1824,12 @@ Linux)
         MOZ_ENABLE_PROFILER_SPS=
     esac
     ;;
-WINNT|Darwin) ;;
+WINNT) ;;
+Darwin)
+    if test -n "$MOZ_IOS"; then
+        MOZ_ENABLE_PROFILER_SPS=
+    fi
+    ;;
 *)
     MOZ_ENABLE_PROFILER_SPS=
     ;;
@@ -2036,7 +2047,7 @@ case "$target" in
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP_FLAGS="$STRIP_FLAGS -x -S"
-    # Check whether we're targeting OS X or iOS
+    # Ensure that if we're targeting iOS an SDK was provided.
     AC_CACHE_CHECK(for iOS target,
                    ac_cv_ios_target,
                    [AC_TRY_COMPILE([#include <TargetConditionals.h>
@@ -2046,7 +2057,10 @@ case "$target" in
                                    [],
                                    ac_cv_ios_target="yes",
                                    ac_cv_ios_target="no")])
-    if test "$ac_cv_ios_target" = "yes"; then
+    if test "$ac_cv_ios_target" = "yes" -a -z $MOZ_IOS; then
+       AC_MSG_ERROR([targeting iOS but not using an iOS SDK?])
+    fi
+    if test -n "$MOZ_IOS"; then
         AC_DEFINE(XP_IOS)
         AC_DEFINE(XP_DARWIN)
         _PLATFORM_DEFAULT_TOOLKIT='cairo-uikit'
@@ -3811,6 +3825,9 @@ MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
 MOZ_WEBAPP_RUNTIME=
 MOZ_AUTH_EXTENSION=1
+if test "$MOZ_IOS"; then
+   MOZ_AUTH_EXTENSION=
+fi
 MOZ_RAW=
 MOZ_VORBIS=
 MOZ_TREMOR=
@@ -3868,6 +3885,9 @@ MOZ_URL_CLASSIFIER=
 MOZ_XUL=1
 MOZ_ZIPWRITER=1
 NS_PRINTING=1
+if test "$MOZ_IOS"; then
+   NS_PRINTING=
+fi
 MOZ_PDF_PRINTING=
 MOZ_NO_SMART_CARDS=
 NSS_DISABLE_DBM=
@@ -4316,7 +4336,10 @@ cairo-cocoa)
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     MOZ_USER_DIR="Mozilla"
     MOZ_FS_LAYOUT=bundle
-    MOZ_INSTRUMENT_EVENT_LOOP=1
+    # skip event loop instrumentation on UIKit for now
+    if test "$MOZ_WIDGET_TOOLKIT" == "cocoa"; then
+      MOZ_INSTRUMENT_EVENT_LOOP=1
+    fi
     ;;
 
 cairo-uikit)
@@ -4324,7 +4347,7 @@ cairo-uikit)
     AC_DEFINE(MOZ_WIDGET_UIKIT)
     LDFLAGS="$LDFLAGS -framework UIKit -lobjc"
     TK_CFLAGS="-DNO_X11"
-    TK_LIBS='-Wl,-framework,Foundation -Wl,-framework,CoreFoundation -Wl,-framework,CoreGraphics -Wl,-framework,CoreText'
+    TK_LIBS='-Wl,-framework,Foundation -Wl,-framework,CoreFoundation -Wl,-framework,CoreGraphics -Wl,-framework,CoreText -Wl,-framework,AVFoundation -Wl,-framework,AudioToolbox -Wl,-framework,CoreMedia -Wl,-framework,CoreVideo -Wl,-framework,OpenGLES -Wl,-framework,QuartzCore'
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     MOZ_USER_DIR="Mozilla"
@@ -4447,6 +4470,10 @@ MOZ_ARG_DISABLE_BOOL(printing,
 [  --disable-printing      Disable printing support],
     NS_PRINTING=,
     NS_PRINTING=1)
+
+if test -n "$MOZ_IOS" -a -n "$NS_PRINTING"; then
+   AC_MSG_ERROR([Printing is not supported on iOS.])
+fi
 
 if test "$NS_PRINTING"; then
     AC_DEFINE(NS_PRINTING)
@@ -5748,10 +5775,15 @@ AC_SUBST(MOZ_CHILD_PERMISSIONS)
 dnl ========================================================
 dnl NegotiateAuth
 dnl ========================================================
+
 MOZ_ARG_DISABLE_BOOL(negotiateauth,
 [  --disable-negotiateauth Disable GSS-API negotiation ],
     MOZ_AUTH_EXTENSION=,
     MOZ_AUTH_EXTENSION=1 )
+
+if test -n "$MOZ_IOS" -a -n "$MOZ_AUTH_EXTENSION"; then
+   AC_MSG_ERROR([negotiateauth is not supported on iOS.])
+fi
 
 dnl ========================================================
 dnl Pref extensions (autoconfig)
@@ -6028,8 +6060,13 @@ MOZ_GAMEPAD_BACKEND=stub
 
 # Gamepad DOM is built on supported platforms by default.
 case "$OS_TARGET" in
-     Darwin|WINNT|Linux)
+     WINNT|Linux)
        MOZ_GAMEPAD=1
+       ;;
+     Darwin)
+       if test -z "$MOZ_IOS"; then
+         MOZ_GAMEPAD=1
+       fi
        ;;
      Android)
        if test "$MOZ_WIDGET_TOOLKIT" != "gonk"; then
@@ -6048,7 +6085,9 @@ MOZ_ARG_DISABLE_BOOL(gamepad,
 if test "$MOZ_GAMEPAD"; then
     case "$OS_TARGET" in
     Darwin)
-        MOZ_GAMEPAD_BACKEND=cocoa
+        if test -z "$MOZ_IOS"; then
+            MOZ_GAMEPAD_BACKEND=cocoa
+        fi
         ;;
     WINNT)
         MOZ_GAMEPAD_BACKEND=windows
@@ -6081,7 +6120,9 @@ i?86-*-mingw*|x86_64-*-mingw*)
   MOZ_CRASHREPORTER=1
   ;;
 i?86-apple-darwin*|x86_64-apple-darwin*)
-  MOZ_CRASHREPORTER=1
+  if test -z "$MOZ_IOS"; then
+    MOZ_CRASHREPORTER=1
+  fi
   ;;
 i?86-*-linux*|x86_64-*-linux*|arm-*-linux*)
   if test "$MOZ_ENABLE_GTK"; then
@@ -6164,6 +6205,8 @@ if test -n "$MOZ_LIBJPEG_TURBO"; then
   ;;
   Darwin:x86_64)
     LIBJPEG_TURBO_ASFLAGS="-f macho64 -rnasm -pnasm -D__x86_64__ -DPIC -DMACHO"
+  ;;
+  Darwin:arm*)
   ;;
   WINNT:x86)
     LIBJPEG_TURBO_ASFLAGS="-f win32 -rnasm -pnasm -DPIC -DWIN32"
@@ -6454,6 +6497,10 @@ fi
 dnl ========================================================
 dnl Updater
 dnl ========================================================
+
+if test "$MOZ_IOS"; then
+  MOZ_UPDATER=
+fi
 
 MOZ_ARG_DISABLE_BOOL(updater,
 [  --disable-updater       Disable building of updater],
@@ -8322,7 +8369,12 @@ case "$OS_TARGET" in
       NECKO_WIFI=1
     fi
     ;;
-  Darwin|DragonFly|FreeBSD|SunOS|WINNT)
+  Darwin)
+    if test -z "$MOZ_IOS"; then
+      NECKO_WIFI=1
+    fi
+    ;;
+  DragonFly|FreeBSD|SunOS|WINNT)
     NECKO_WIFI=1
     ;;
   Linux)

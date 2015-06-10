@@ -37,7 +37,6 @@ if test -z "$MOZ_ARCH"; then
         ;;
     arm-Darwin)
         MOZ_ARCH=toolchain-default
-        MOZ_THUMB=yes
         ;;
     esac
 fi

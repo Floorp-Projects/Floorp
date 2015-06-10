@@ -6,7 +6,7 @@
 
 @template
 def Libxul(name):
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
         # This is going to be a framework named "XUL", not an ordinary library named
         # "libxul.dylib"
         GeckoFramework(name, linkage=None)
@@ -270,7 +270,7 @@ if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
 
 OS_LIBS += CONFIG['ICONV_LIBS']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
     OS_LIBS += CONFIG['TK_LIBS']
 
 if CONFIG['OS_ARCH'] == 'OpenBSD':
