@@ -377,7 +377,6 @@ function onAccept()
                 gPrintSetInterface.kInitSaveInColor        |
                 gPrintSetInterface.kInitSaveResolutionName |
                 gPrintSetInterface.kInitSaveDownloadFonts  |
-                gPrintSetInterface.kInitSavePrintCommand   |
                 gPrintSetInterface.kInitSaveShrinkToFit    |
                 gPrintSetInterface.kInitSaveScaling;
     printService.savePrintSettingsToPrefs(gPrintSettings, true, flags);

@@ -69,7 +69,6 @@ static const char kPrintColorspace[]    = "print_colorspace";
 static const char kPrintResolutionName[]= "print_resolution_name";
 static const char kPrintDownloadFonts[] = "print_downloadfonts";
 static const char kPrintOrientation[]   = "print_orientation";
-static const char kPrintCommand[]       = "print_command";
 static const char kPrinterName[]        = "print_printer";
 static const char kPrintToFile[]        = "print_to_file";
 static const char kPrintToFileName[]    = "print_to_filename";
@@ -199,10 +198,6 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetPrintInColor(&data->printInColor());
   aSettings->GetOrientation(&data->orientation());
 
-  nsXPIDLString printCommand;
-  aSettings->GetPrintCommand(getter_Copies(printCommand));
-  data->printCommand() = printCommand;
-
   aSettings->GetNumCopies(&data->numCopies());
 
   nsXPIDLString printerName;
@@ -318,8 +313,6 @@ nsPrintOptions::DeserializeToPrintSettings(const PrintData& data,
   settings->SetPrintReversed(data.printReversed());
   settings->SetPrintInColor(data.printInColor());
   settings->SetOrientation(data.orientation());
-
-  settings->SetPrintCommand(data.printCommand().get());
 
   settings->SetNumCopies(data.numCopies());
 
@@ -699,13 +692,6 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
     }
   }
 
-  if (aFlags & nsIPrintSettings::kInitSavePrintCommand) {
-    if (GETSTRPREF(kPrintCommand, &str)) {
-      aPS->SetPrintCommand(str.get());
-      DUMP_STR(kReadStr, kPrintCommand, str.get());
-    }
-  }
-
   if (aFlags & nsIPrintSettings::kInitSavePrintToFile) {
     if (GETBOOLPREF(kPrintToFile, &b)) {
       aPS->SetPrintToFile(b);
@@ -997,13 +983,6 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
     if (NS_SUCCEEDED(aPS->GetOrientation(&iVal))) {
       DUMP_INT(kWriteStr, kPrintOrientation, iVal);
       Preferences::SetInt(GetPrefName(kPrintOrientation, aPrinterName), iVal);
-    }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSavePrintCommand) {
-    if (NS_SUCCEEDED(aPS->GetPrintCommand(&uStr))) {
-      DUMP_STR(kWriteStr, kPrintCommand, uStr);
-      Preferences::SetString(GetPrefName(kPrintCommand, aPrinterName), uStr);
     }
   }
 
@@ -1511,7 +1490,6 @@ Tester::Tester()
     ps->SetPrintReversed(true);
     ps->SetPrintInColor(true);
     ps->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
-    ps->SetPrintCommand(NS_ConvertUTF8toUTF16("Command").get());
     ps->SetNumCopies(2);
     ps->SetPrinterName(NS_ConvertUTF8toUTF16("Printer Name").get());
     ps->SetPrintToFile(true);
@@ -1543,7 +1521,6 @@ Tester::Tester()
       {kPrintResolutionName, nsIPrintSettings::kInitSaveResolutionName},
       {kPrintDownloadFonts, nsIPrintSettings::kInitSaveDownloadFonts},
       {kPrintOrientation, nsIPrintSettings::kInitSaveOrientation},
-      {kPrintCommand, nsIPrintSettings::kInitSavePrintCommand},
       {kPrinterName, nsIPrintSettings::kInitSavePrinterName},
       {kPrintToFile, nsIPrintSettings::kInitSavePrintToFile},
       {kPrintToFileName, nsIPrintSettings::kInitSaveToFileName},
