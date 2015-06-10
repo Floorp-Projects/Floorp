@@ -441,7 +441,7 @@ public:
    * Remove aStream from the graph. Ensures that pending messages about the
    * stream back to the main thread are flushed.
    */
-  void RemoveStream(MediaStream* aStream);
+  void RemoveStream(MediaStream* aStream, bool aLocked = true);
   /**
    * Remove aPort from the graph and release it.
    */
