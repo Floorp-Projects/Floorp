@@ -68,7 +68,8 @@ private:
 
 static inline bool
 ConvertIndex(FallibleTArray<Index::Indice>& aDest,
-             const stagefright::Vector<stagefright::MediaSource::Indice>& aIndex)
+             const stagefright::Vector<stagefright::MediaSource::Indice>& aIndex,
+             int64_t aMediaTime)
 {
   if (!aDest.SetCapacity(aIndex.size())) {
     return false;
@@ -78,8 +79,8 @@ ConvertIndex(FallibleTArray<Index::Indice>& aDest,
     const stagefright::MediaSource::Indice& s_indice = aIndex[i];
     indice.start_offset = s_indice.start_offset;
     indice.end_offset = s_indice.end_offset;
-    indice.start_composition = s_indice.start_composition;
-    indice.end_composition = s_indice.end_composition;
+    indice.start_composition = s_indice.start_composition - aMediaTime;
+    indice.end_composition = s_indice.end_composition - aMediaTime;
     indice.sync = s_indice.sync;
     MOZ_ALWAYS_TRUE(aDest.AppendElement(indice));
   }
@@ -248,7 +249,13 @@ MP4Metadata::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::Track
   if (!track.get() || track->start() != OK) {
     return false;
   }
-  bool rv = ConvertIndex(aDest, track->exportIndex());
+  sp<MetaData> metadata =
+    mPrivate->mMetadataExtractor->getTrackMetaData(trackNumber);
+  int64_t mediaTime;
+  if (!metadata->findInt64(kKeyMediaTime, &mediaTime)) {
+    mediaTime = 0;
+  }
+  bool rv = ConvertIndex(aDest, track->exportIndex(), mediaTime);
 
   track->stop();
 
