@@ -266,6 +266,7 @@
 .devtools-button {
   border: 0 solid var(--theme-splitter-color);
   background: var(--theme-toolbar-background);
+  color: var(--theme-body-color);
   margin: 0;
   padding: 0;
   min-width: 32px;
@@ -314,6 +315,11 @@
   top: 50%;
   margin: -8px 0 0 -8px;
   background-repeat: no-repeat;
+}
+
+.devtools-button[disabled]::before,
+.devtools-button:disabled::before {
+  opacity: 0.5;
 }
 
 @media (min-resolution: 1.25dppx) {
