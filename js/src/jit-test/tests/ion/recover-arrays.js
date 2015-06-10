@@ -4,6 +4,12 @@
 if (getJitCompilerOptions()["ion.warmup.trigger"] <= 100)
     setJitCompilerOption("ion.warmup.trigger", 100);
 
+// This test checks that we are able to remove the getelem & setelem with scalar
+// replacement, so we should not force inline caches, as this would skip the
+// generation of getelem & setelem instructions.
+if (getJitCompilerOptions()["ion.forceinlineCaches"])
+    setJitCompilerOption("ion.forceinlineCaches", 0);
+
 // This function is used to force a bailout when it is inlined, and to recover
 // the frame which is inlining this function.
 var resumeHere = function (i) { if (i >= 99) bailout(); };

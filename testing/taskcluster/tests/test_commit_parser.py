@@ -260,8 +260,9 @@ class TestCommitParser(unittest.TestCase):
     def test_specific_test_platforms(self):
         '''
         This test cases covers the platform specific test exclusion options.
+        Intentionally includes platforms with spaces.
         '''
-        commit = 'try: -b od -p all -u all[windows,b2g] -t none'
+        commit = 'try: -b od -p all -u all[Windows XP,b2g] -t none'
         jobs = {
             'flags': {
                 'builds': ['linux', 'win32'],
@@ -279,7 +280,7 @@ class TestCommitParser(unittest.TestCase):
                     }
                 },
                 'win32': {
-                    'platforms': ['windows'],
+                    'platforms': ['Windows XP'],
                     'types': {
                         'opt': {
                             'task': 'task/win32',

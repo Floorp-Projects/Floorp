@@ -28,6 +28,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=116083
 <div data-result="foo &#10; bar&#10;&#10;!&#10;&#10;&#10;baz" style="white-space: pre-line" contenteditable><div>foo </div><div> bar</div><div><br></div><div>!</div><div><br><br></div><div>baz</div></div>
 <div data-result="foo  &#10;  bar&#10;&#10;!&#10;&#10;&#10;baz" style="white-space: -moz-pre-space"><div>foo  </div><div>  bar</div><div><br></div><div>!</div><div><br><br></div><div>baz</div></div>
 <div data-result="foo &#10; bar&#10;&#10;!&#10;&#10;&#10;baz" style="white-space: -moz-pre-space" contenteditable><div>foo </div><div> bar</div><div><br></div><div>!</div><div><br><br></div><div>baz</div></div>
+<div data-result="foo&#10;bar&#10;baz&#10;qux"><div>foo<br></div><span>bar<br>baz<br>qux</span></div>
+<div data-result="foo&#10;bar&#10;baz&#10;qux" contenteditable><div>foo<br></div><span>bar<br>baz<br>qux</span></div>
+<div data-result="foo&#10;&#10;"><div>foo</div><span><br></span></div>
+<div data-result="foo&#10;&#10;" contenteditable><div>foo</div><span><br></span></div>
+<div data-result="foo&#10;&#10;bar"><div>foo</div><span><br></span><div>bar</div></div>
+<div data-result="foo&#10;&#10;bar" contenteditable><div>foo</div><span><br></span><div>bar</div></div>
+<div data-result="foo&#10;bar&#10;"><div>foo</div><span>bar<br></span></div>
+<div data-result="foo&#10;bar" contenteditable><div>foo</div><span>bar<br></span></div>
+<div data-result="foo&#10;bar&#10;baz"><div>foo</div><span>bar<br></span><div>baz</div></div>
+<div data-result="foo&#10;bar&#10;baz" contenteditable><div>foo</div><span>bar<br></span><div>baz</div></div>
+<div data-result="&#10;&#10;foo"><div><br><br><div>foo</div></div></div>
+<div data-result="&#10;&#10;foo" contenteditable><div><br><br><div>foo</div></div></div>
+<div data-result="foo&#10;bar"><div>foo<br>bar</div></div>
+<div data-result="foo&#10;bar" contenteditable><div>foo<br>bar</div></div>
+<div data-result="foo&#10;bar&#10;"><div>foo<br>bar<br></div></div>
+<div data-result="foo&#10;bar" contenteditable><div>foo<br>bar<br></div></div>
 <div data-result="&#10;foo bar&#10;">foo  bar</div>
 </div>
 <script type="application/javascript">

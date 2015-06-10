@@ -57,6 +57,8 @@
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
 #include "libdisplay/GonkDisplay.h"     // for GonkDisplay
 #include <ui/Fence.h>
+#include "nsWindow.h"
+#include "nsScreenManagerGonk.h"
 #endif
 
 namespace mozilla {
@@ -607,6 +609,8 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
     *aRenderBoundsOut = rect;
   }
 
+  mRenderBoundsOut = rect;
+
   GLint width = rect.width;
   GLint height = rect.height;
 
@@ -950,6 +954,19 @@ CompositorOGL::DrawQuad(const Rect& aRect,
     DrawVRDistortion(aRect, aClipRect, aEffectChain, aOpacity, aTransform);
     return;
   }
+
+  // XXX: This doesn't handle 3D transforms. It also doesn't handled rotated
+  //      quads. Fix me.
+  Rect destRect = aTransform.TransformBounds(aRect);
+  mPixelsFilled += destRect.width * destRect.height;
+
+  // Do a simple culling if this rect is out of target buffer.
+  // Inflate a small size to avoid some numerical imprecision issue.
+  destRect.Inflate(1, 1);
+  if (!mRenderBoundsOut.Intersects(destRect)) {
+    return;
+  }
+
   LayerScope::DrawBegin();
 
   Rect clipRect = aClipRect;
@@ -997,13 +1014,6 @@ CompositorOGL::DrawQuad(const Rect& aRect,
                  : MaskType::Mask2d;
   } else {
     maskType = MaskType::MaskNone;
-  }
-
-  {
-    // XXX: This doesn't handle 3D transforms. It also doesn't handled rotated
-    //      quads. Fix me.
-    const Rect destRect = aTransform.TransformBounds(aRect);
-    mPixelsFilled += destRect.width * destRect.height;
   }
 
   // Determine the color if this is a color shader and fold the opacity into
@@ -1401,8 +1411,9 @@ CompositorOGL::SetDispAcquireFence(Layer* aLayer)
   if (!aLayer) {
     return;
   }
-
-  RefPtr<FenceHandle::FdObj> fence = new FenceHandle::FdObj(GetGonkDisplay()->GetPrevDispAcquireFd());
+  nsWindow* window = static_cast<nsWindow*>(mWidget);
+  RefPtr<FenceHandle::FdObj> fence = new FenceHandle::FdObj(
+      window->GetScreen()->GetPrevDispAcquireFd());
   mReleaseFenceHandle.Merge(FenceHandle(fence));
 }
 

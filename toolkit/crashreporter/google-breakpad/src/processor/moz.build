@@ -23,9 +23,12 @@ UNIFIED_SOURCES += [
 
 FINAL_LIBRARY = 'xul'
 
+DEFINES['BP_LOGGING_INCLUDE'] = '"BreakpadLogging.h"'
+
 LOCAL_INCLUDES += [
     '..',
     '../..',
+    '../../../breakpad-logging',
 ]
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')

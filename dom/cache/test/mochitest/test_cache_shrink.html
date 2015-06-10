@@ -10,6 +10,18 @@
 </head>
 <body>
 <script class="testbody" type="text/javascript">
+function setupTestIframe() {
+  return new Promise(function(resolve) {
+    var iframe = document.createElement("iframe");
+    iframe.src = "empty.html";
+    iframe.onload = function() {
+      window.caches = iframe.contentWindow.caches;
+      resolve();
+    };
+    document.body.appendChild(iframe);
+  });
+}
+
 function clearStorage() {
   return new Promise(function(resolve, reject) {
     var principal = SpecialPowers.wrap(document).nodePrincipal;
@@ -73,7 +85,9 @@ SpecialPowers.pushPrefEnv({
   var endUsage = 0;
   // start from a fresh origin directory so other tests do not influence our
   // results
-  clearStorage().then(function() {
+  setupTestIframe().then(function() {
+    return clearStorage();
+  }).then(function() {
     return storageUsage();
   }).then(function(usage) {
     is(0, usage, 'disk usage should be zero to start');
