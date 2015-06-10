@@ -162,13 +162,6 @@ private:
 
   void DispatchAudioCaptured();
 
-  // Update blocking state of mDecodedStream when mPlayState or
-  // mLogicallySeeking change. Decoder monitor must be held.
-  void UpdateStreamBlockingForPlayState();
-
-  // Call this IsPlaying() changes. Decoder monitor must be held.
-  void UpdateStreamBlockingForStateMachinePlaying();
-
   // Recreates mDecodedStream. Call this to create mDecodedStream at first,
   // and when seeking, to ensure a new stream is set up with fresh buffers.
   // Decoder monitor must be held.
@@ -427,12 +420,8 @@ protected:
   void PushFront(AudioData* aSample);
   void PushFront(VideoData* aSample);
 
-  // Pops MediaData* samples from their respective MediaQueues.
-  // Note that the audio queue is also drained on the audio thread,
-  // which we can't easily react to - This should be fixed when we
-  // remove the audio thread in bug 750596.
-  already_AddRefed<AudioData> PopAudio();
-  already_AddRefed<VideoData> PopVideo();
+  void OnAudioPopped();
+  void OnVideoPopped();
 
   void VolumeChanged();
   void LogicalPlaybackRateChanged();

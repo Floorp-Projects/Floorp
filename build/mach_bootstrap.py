@@ -47,6 +47,7 @@ SEARCH_PATHS = [
     'other-licenses/ply',
     'xpcom/idl-parser',
     'testing',
+    'testing/tools/autotry',
     'testing/taskcluster',
     'testing/xpcshell',
     'testing/web-platform',

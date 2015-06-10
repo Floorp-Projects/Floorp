@@ -51,12 +51,18 @@ WebGLContext::CreateVertexArray()
     if (IsContextLost())
         return nullptr;
 
-    nsRefPtr<WebGLVertexArray> globj = WebGLVertexArray::Create(this);
+    nsRefPtr<WebGLVertexArray> globj = CreateVertexArrayImpl();
 
     MakeContextCurrent();
     globj->GenVertexArray();
 
     return globj.forget();
+}
+
+WebGLVertexArray*
+WebGLContext::CreateVertexArrayImpl()
+{
+    return WebGLVertexArray::Create(this);
 }
 
 void
@@ -86,9 +92,14 @@ WebGLContext::IsVertexArray(WebGLVertexArray* array)
     if (!array)
         return false;
 
-    return ValidateObjectAllowDeleted("isVertexArray", array) &&
-           !array->IsDeleted() &&
-           array->HasEverBeenBound();
+    if (!ValidateObjectAllowDeleted("isVertexArray", array))
+        return false;
+
+    if (array->IsDeleted())
+        return false;
+
+    MakeContextCurrent();
+    return array->IsVertexArray();
 }
 
 } // namespace mozilla

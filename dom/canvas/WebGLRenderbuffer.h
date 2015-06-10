@@ -8,7 +8,6 @@
 
 #include "mozilla/LinkedList.h"
 #include "nsWrapperCache.h"
-#include "WebGLBindableName.h"
 #include "WebGLFramebufferAttachable.h"
 #include "WebGLObjectModel.h"
 
@@ -16,7 +15,6 @@ namespace mozilla {
 
 class WebGLRenderbuffer final
     : public nsWrapperCache
-    , public WebGLBindable<RBTarget>
     , public WebGLRefCountedObject<WebGLRenderbuffer>
     , public LinkedListElement<WebGLRenderbuffer>
     , public WebGLRectangleObject
@@ -40,6 +38,8 @@ public:
 
     GLsizei Samples() const { return mSamples; }
     void SetSamples(GLsizei samples) { mSamples = samples; }
+
+    GLuint PrimaryGLName() const { return mPrimaryRB; }
 
     GLenum InternalFormat() const { return mInternalFormat; }
     void SetInternalFormat(GLenum internalFormat) {
@@ -80,7 +80,16 @@ protected:
     GLenum mInternalFormatForGL;
     WebGLImageDataStatus mImageDataStatus;
     GLsizei mSamples;
+#ifdef ANDROID
+    // Bug 1140459: Some drivers (including our test slaves!) don't
+    // give reasonable answers for IsRenderbuffer, maybe others.
+    // This shows up on Android 2.3 emulator.
+    //
+    // So we track the `is a Renderbuffer` state ourselves.
+    bool mIsRB;
+#endif
 
+    friend class WebGLContext;
     friend class WebGLFramebuffer;
 };
 

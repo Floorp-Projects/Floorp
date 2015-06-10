@@ -10,6 +10,11 @@
 
 namespace mozilla {
 
+WebGLVertexArrayFake::WebGLVertexArrayFake(WebGLContext* webgl)
+    : WebGLVertexArray(webgl)
+    , mIsVAO(false)
+{ }
+
 void
 WebGLVertexArrayFake::BindVertexArrayImpl()
 {
@@ -52,6 +57,19 @@ WebGLVertexArrayFake::BindVertexArrayImpl()
     }
 
     mContext->BindBuffer(LOCAL_GL_ARRAY_BUFFER, prevBuffer);
+    mIsVAO = true;
+}
+
+void
+WebGLVertexArrayFake::DeleteImpl()
+{
+    mIsVAO = false;
+}
+
+bool
+WebGLVertexArrayFake::IsVertexArrayImpl()
+{
+    return mIsVAO;
 }
 
 } // namespace mozilla

@@ -700,6 +700,20 @@ class MachCommandBase(MozbuildObject):
 
             sys.exit(1)
 
+        # Always keep a log of the last command, but don't do that for mach
+        # invokations from scripts (especially not the ones done by the build
+        # system itself).
+        if (self.log_manager and self.log_manager.terminal and
+                not getattr(self, 'NO_AUTO_LOG', False)):
+            self._ensure_state_subdir_exists('.')
+            logfile = self._get_state_filename('last_log.json')
+            try:
+                fd = open(logfile, "wb")
+                self.log_manager.add_json_handler(fd)
+            except Exception as e:
+                self.log(logging.WARNING, 'mach', {'error': e},
+                         'Log will not be kept for this command: {error}.')
+
 
 class MachCommandConditions(object):
     """A series of commonly used condition functions which can be applied to

@@ -26,11 +26,9 @@ interface WebGLSync {
 interface WebGLTransformFeedback {
 };
 
-/*
 [Pref="webgl.enable-prototype-webgl2"]
 interface WebGLVertexArrayObject {
 };
-*/
 
 [Pref="webgl.enable-prototype-webgl2"]
 interface WebGL2RenderingContext : WebGLRenderingContext
@@ -238,7 +236,6 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     const GLenum RGB8_SNORM                                    = 0x8F96;
     const GLenum RGBA8_SNORM                                   = 0x8F97;
     const GLenum SIGNED_NORMALIZED                             = 0x8F9C;
-    const GLenum PRIMITIVE_RESTART_FIXED_INDEX                 = 0x8D69;
     const GLenum COPY_READ_BUFFER                              = 0x8F36;
     const GLenum COPY_WRITE_BUFFER                             = 0x8F37;
     const GLenum COPY_READ_BUFFER_BINDING                      = 0x8F36; /* Same as COPY_READ_BUFFER */
@@ -291,10 +288,6 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     const GLenum ANY_SAMPLES_PASSED_CONSERVATIVE               = 0x8D6A;
     const GLenum SAMPLER_BINDING                               = 0x8919;
     const GLenum RGB10_A2UI                                    = 0x906F;
-    const GLenum TEXTURE_SWIZZLE_R                             = 0x8E42;
-    const GLenum TEXTURE_SWIZZLE_G                             = 0x8E43;
-    const GLenum TEXTURE_SWIZZLE_B                             = 0x8E44;
-    const GLenum TEXTURE_SWIZZLE_A                             = 0x8E45;
     const GLenum GREEN                                         = 0x1904;
     const GLenum BLUE                                          = 0x1905;
     const GLenum INT_2_10_10_10_REV                            = 0x8D9F;
@@ -475,10 +468,8 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     void uniformBlockBinding(WebGLProgram? program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
 
     /* Vertex Array Objects */
-    /*
     WebGLVertexArrayObject? createVertexArray();
     void deleteVertexArray(WebGLVertexArrayObject? vertexArray);
     [WebGLHandlesContextLoss] GLboolean isVertexArray(WebGLVertexArrayObject? vertexArray);
     void bindVertexArray(WebGLVertexArrayObject? array);
-    */
 };

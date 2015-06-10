@@ -93,6 +93,7 @@ extern nsresult nsStringInputStreamConstructor(nsISupports*, REFNSIID, void**);
 #include "SpecialSystemDirectory.h"
 
 #if defined(XP_WIN)
+#include "mozilla/WindowsVersion.h"
 #include "nsWindowsRegKey.h"
 #endif
 
@@ -486,6 +487,8 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
   mozPoisonValueInit();
 
+  NS_LogInit();
+
   char aLocal;
   profiler_init(&aLocal);
   nsresult rv = NS_OK;
@@ -507,8 +510,6 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   nsSystemInfo::gUserUmask = ::umask(0777);
   ::umask(nsSystemInfo::gUserUmask);
 #endif
-
-  NS_LogInit();
 
   // Set up chromium libs
   NS_ASSERTION(!sExitManager && !sMessageLoop, "Bad logic!");
@@ -954,7 +955,7 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   // On Windows XP debug, there are intermittent failures in
   // dom/media/tests/mochitest/test_peerConnection_basicH264Video.html
   // if we don't exit early in a child process. See bug 1073310.
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_GetProcessType() == GeckoProcessType_Content && !IsVistaOrLater()) {
       NS_WARNING("Exiting child process early!");
       exit(0);
   }

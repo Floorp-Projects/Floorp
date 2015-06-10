@@ -197,7 +197,7 @@ private:
       // updates at all if the value ends up where it started.
       if (!alreadyNotifying) {
         nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(this, &Impl::DoNotify);
-        AbstractThread::GetCurrent()->TailDispatcher().AddDirectTask(r.forget());
+        AbstractThread::DispatchDirectTask(r.forget());
       }
     }
 
@@ -222,7 +222,7 @@ private:
       }
 
       for (size_t i = 0; i < mMirrors.Length(); ++i) {
-        OwnerThread()->TailDispatcher().AddStateChangeTask(mMirrors[i]->OwnerThread(), MakeNotifier(mMirrors[i]));
+        mMirrors[i]->OwnerThread()->DispatchStateChange(MakeNotifier(mMirrors[i]));
       }
     }
 

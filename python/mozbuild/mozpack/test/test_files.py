@@ -19,11 +19,25 @@ from mozpack.files import (
     GeneratedFile,
     JarFinder,
     ManifestFile,
+    MercurialFile,
+    MercurialRevisionFinder,
     MinifiedJavaScript,
     MinifiedProperties,
     PreprocessedFile,
     XPTFile,
 )
+
+# We don't have hglib installed everywhere.
+try:
+    import hglib
+except ImportError:
+    hglib = None
+
+try:
+    from mozpack.hg import MercurialNativeRevisionFinder
+except ImportError:
+    MercurialNativeRevisionFinder = None
+
 from mozpack.mozjar import (
     JarReader,
     JarWriter,
@@ -911,6 +925,16 @@ class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
         self.do_match_test()
         self.do_finder_test(self.finder)
 
+    def test_get(self):
+        self.prepare_match_test()
+        finder = FileFinder(self.tmpdir)
+
+        self.assertIsNone(finder.get('does-not-exist'))
+        res = finder.get('bar')
+        self.assertIsInstance(res, File)
+        self.assertEqual(mozpath.normpath(res.path),
+                         mozpath.join(self.tmpdir, 'bar'))
+
     def test_ignored_dirs(self):
         """Ignored directories should not have results returned."""
         self.prepare_match_test()
@@ -969,6 +993,9 @@ class TestJarFinder(MatchTestTemplate, TestWithTmpDir):
         self.finder = JarFinder(self.tmppath('test.jar'), reader)
         self.do_match_test()
 
+        self.assertIsNone(self.finder.get('does-not-exist'))
+        self.assertIsInstance(self.finder.get('bar'), DeflatedFile)
+
 
 class TestComposedFinder(MatchTestTemplate, TestWithTmpDir):
     def add(self, path, content=None):
@@ -999,6 +1026,96 @@ class TestComposedFinder(MatchTestTemplate, TestWithTmpDir):
             'foo/qux': FileFinder(self.tmppath('b')),
         })
         self.do_match_test()
+
+        self.assertIsNone(self.finder.get('does-not-exist'))
+        self.assertIsInstance(self.finder.get('bar'), File)
+
+
+@unittest.skipUnless(hglib, 'hglib not available')
+class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
+    def setUp(self):
+        super(TestMercurialRevisionFinder, self).setUp()
+        hglib.init(self.tmpdir)
+
+    def add(self, path):
+        c = hglib.open(self.tmpdir)
+        ensureParentDir(self.tmppath(path))
+        with open(self.tmppath(path), 'wb') as fh:
+            fh.write(path)
+        c.add(self.tmppath(path))
+
+    def do_check(self, pattern, result):
+        do_check(self, self.finder, pattern, result)
+
+    def _get_finder(self, *args, **kwargs):
+        return MercurialRevisionFinder(*args, **kwargs)
+
+    def test_default_revision(self):
+        self.prepare_match_test()
+        c = hglib.open(self.tmpdir)
+        c.commit('initial commit')
+        self.finder = self._get_finder(self.tmpdir)
+        self.do_match_test()
+
+        self.assertIsNone(self.finder.get('does-not-exist'))
+        self.assertIsInstance(self.finder.get('bar'), MercurialFile)
+
+    def test_old_revision(self):
+        c = hglib.open(self.tmpdir)
+        with open(self.tmppath('foo'), 'wb') as fh:
+            fh.write('foo initial')
+        c.add(self.tmppath('foo'))
+        c.commit('initial')
+
+        with open(self.tmppath('foo'), 'wb') as fh:
+            fh.write('foo second')
+        with open(self.tmppath('bar'), 'wb') as fh:
+            fh.write('bar second')
+        c.add(self.tmppath('bar'))
+        c.commit('second')
+        # This wipes out the working directory, ensuring the finder isn't
+        # finding anything from the filesystem.
+        c.rawcommand(['update', 'null'])
+
+        finder = self._get_finder(self.tmpdir, 0)
+        f = finder.get('foo')
+        self.assertEqual(f.read(), 'foo initial')
+        self.assertEqual(f.read(), 'foo initial', 'read again for good measure')
+        self.assertIsNone(finder.get('bar'))
+
+        finder = MercurialRevisionFinder(self.tmpdir, rev=1)
+        f = finder.get('foo')
+        self.assertEqual(f.read(), 'foo second')
+        f = finder.get('bar')
+        self.assertEqual(f.read(), 'bar second')
+
+    def test_recognize_repo_paths(self):
+        c = hglib.open(self.tmpdir)
+        with open(self.tmppath('foo'), 'wb') as fh:
+            fh.write('initial')
+        c.add(self.tmppath('foo'))
+        c.commit('initial')
+        c.rawcommand(['update', 'null'])
+
+        finder = self._get_finder(self.tmpdir, 0,
+                                  recognize_repo_paths=True)
+        with self.assertRaises(NotImplementedError):
+            list(finder.find(''))
+
+        with self.assertRaises(ValueError):
+            finder.get('foo')
+        with self.assertRaises(ValueError):
+            finder.get('')
+
+        f = finder.get(self.tmppath('foo'))
+        self.assertIsInstance(f, MercurialFile)
+        self.assertEqual(f.read(), 'initial')
+
+
+@unittest.skipUnless(MercurialNativeRevisionFinder, 'hgnative not available')
+class TestMercurialNativeRevisionFinder(TestMercurialRevisionFinder):
+    def _get_finder(self, *args, **kwargs):
+        return MercurialNativeRevisionFinder(*args, **kwargs)
 
 
 if __name__ == '__main__':

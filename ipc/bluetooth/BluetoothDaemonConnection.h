@@ -126,7 +126,7 @@ public:
   //
 
   nsresult PrepareAccept(UnixSocketConnector* aConnector,
-                         nsIThread* aConsumerThread,
+                         MessageLoop* aConsumerLoop,
                          MessageLoop* aIOLoop,
                          ConnectionOrientedSocketIO*& aIO) override;
 

@@ -41,6 +41,7 @@ public:
   ~DecodedStreamData();
   bool IsFinished() const;
   int64_t GetPosition() const;
+  void SetPlaying(bool aPlaying);
 
   /* The following group of fields are protected by the decoder's monitor
    * and can be read or written on any thread.
@@ -66,12 +67,7 @@ public:
   // The decoder is responsible for calling Destroy() on this stream.
   const nsRefPtr<SourceMediaStream> mStream;
   nsRefPtr<DecodedStreamGraphListener> mListener;
-  // True when we've explicitly blocked this stream because we're
-  // not in PLAY_STATE_PLAYING. Used on the main thread only.
-  bool mHaveBlockedForPlayState;
-  // We also have an explicit blocker on the stream when
-  // mDecoderStateMachine is non-null and MediaDecoderStateMachine is false.
-  bool mHaveBlockedForStateMachineNotPlaying;
+  bool mPlaying;
   // True if we need to send a compensation video frame to ensure the
   // StreamTime going forward.
   bool mEOSVideoCompensation;
@@ -96,6 +92,7 @@ public:
   nsTArray<OutputStreamData>& OutputStreams();
   ReentrantMonitor& GetReentrantMonitor() const;
   void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
+  void SetPlaying(bool aPlaying);
 
 private:
   void Connect(OutputStreamData* aStream);

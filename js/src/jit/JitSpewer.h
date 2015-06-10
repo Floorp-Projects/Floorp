@@ -171,7 +171,7 @@ void EnableIonDebugAsyncLogging();
 class GraphSpewer
 {
   public:
-    GraphSpewer(TempAllocator *alloc) { }
+    explicit GraphSpewer(TempAllocator *alloc) { }
 
     bool isSpewing() { return false; }
     void init(MIRGraph* graph, JSScript* function) { }

@@ -103,7 +103,7 @@ public class UpdateServiceHelper {
             ApplicationInfo info = pm.getApplicationInfo(AppConstants.ANDROID_PACKAGE_NAME, 0);
             String updateLocaleUrl = "jar:jar:file://" + info.sourceDir + "!/" + AppConstants.OMNIJAR_NAME + "!/update.locale";
 
-            final String jarLocale = GeckoJarReader.getText(updateLocaleUrl);
+            final String jarLocale = GeckoJarReader.getText(context, updateLocaleUrl);
             if (jarLocale != null) {
                 locale = jarLocale.trim();
             }
