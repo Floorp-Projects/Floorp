@@ -252,7 +252,8 @@ DataSourceSurfaceD2D::Map(MapType aMapType, MappedSurface *aMappedSurface)
 {
   // DataSourceSurfaces used with the new Map API should not be used with GetData!!
   MOZ_ASSERT(!mMapped);
-  MOZ_ASSERT(!mIsMapped);
+  // Add support for multiple read locks here!
+  MOZ_ASSERT(mMapCount == 0);
 
   if (!mTexture) {
     return false;
@@ -277,19 +278,24 @@ DataSourceSurfaceD2D::Map(MapType aMapType, MappedSurface *aMappedSurface)
     return false;
   }
 
+  if (!map.pData) {
+    return false;
+  }
+
   aMappedSurface->mData = (uint8_t*)map.pData;
   aMappedSurface->mStride = map.RowPitch;
-  mIsMapped = !!aMappedSurface->mData;
 
-  return mIsMapped;
+  mMapCount++;
+  mIsReadMap = aMapType == MapType::READ;
+  return true;
 }
 
 void
 DataSourceSurfaceD2D::Unmap()
 {
-  MOZ_ASSERT(mIsMapped);
+  MOZ_ASSERT(mMapCount > 0);
 
-  mIsMapped = false;
+  mMapCount--;
   mTexture->Unmap(0);
 }
 
@@ -297,10 +303,9 @@ void
 DataSourceSurfaceD2D::EnsureMappedTexture()
 {
   // Do not use GetData() after having used Map!
-  MOZ_ASSERT(!mIsMapped);
+  MOZ_ASSERT(mMapCount == 0);
 
-  if (mMapped ||
-      !mTexture) {
+  if (mMapped || !mTexture) {
     return;
   }
 
