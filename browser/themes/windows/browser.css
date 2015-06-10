@@ -592,6 +592,12 @@ menuitem.bookmark-item {
   }
 }
 
+@media (-moz-windows-theme: luna-silver) and (min-resolution: 1.1dppx) {
+  #loop-button > .toolbarbutton-badge-container {
+    list-style-image: url(chrome://browser/skin/loop/toolbar-lunaSilver@2x.png)
+  }
+}
+
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-icon,
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menu-dropmarker,
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menubutton-dropmarker,
