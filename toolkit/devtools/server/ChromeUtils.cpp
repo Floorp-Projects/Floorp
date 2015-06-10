@@ -395,13 +395,13 @@ ChromeUtils::ReadHeapSnapshot(GlobalObject& global,
     return nullptr;
   }
 
-  PRFileInfo fileInfo;
-  if (PR_GetFileInfo(path.get(), &fileInfo) != PR_SUCCESS) {
+  PRFileInfo64 fileInfo;
+  if (PR_GetFileInfo64(path.get(), &fileInfo) != PR_SUCCESS) {
     rv.Throw(NS_ERROR_FILE_NOT_FOUND);
     return nullptr;
   }
 
-  uint32_t size = fileInfo.size;
+  uint64_t size = fileInfo.size;
   ScopedFreePtr<uint8_t> buffer(static_cast<uint8_t*>(malloc(size)));
   if (!buffer) {
     rv.Throw(NS_ERROR_OUT_OF_MEMORY);
