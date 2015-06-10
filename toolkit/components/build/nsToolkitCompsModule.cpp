@@ -120,7 +120,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUpdateProcessor)
 #endif
-NS_GENERIC_FACTORY_CONSTRUCTOR(FinalizationWitnessService)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(FinalizationWitnessService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(NativeOSFileInternalsService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NativeFileWatcherService, Init)
 
