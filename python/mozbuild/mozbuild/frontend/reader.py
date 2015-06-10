@@ -39,7 +39,6 @@ from mozbuild.util import (
     EmptyValue,
     memoize,
     ReadOnlyDefaultDict,
-    ReadOnlyDict,
 )
 
 from mozbuild.backend.configenvironment import ConfigEnvironment
@@ -53,6 +52,7 @@ from .data import (
 )
 
 from .sandbox import (
+    default_finder,
     SandboxError,
     SandboxExecutionError,
     SandboxLoadError,
@@ -172,10 +172,10 @@ class MozbuildSandbox(Sandbox):
     metadata is a dict of metadata that can be used during the sandbox
     evaluation.
     """
-    def __init__(self, context, metadata={}):
+    def __init__(self, context, metadata={}, finder=default_finder):
         assert isinstance(context, Context)
 
-        Sandbox.__init__(self, context)
+        Sandbox.__init__(self, context, finder=finder)
 
         self._log = logging.getLogger(__name__)
 
@@ -198,8 +198,15 @@ class MozbuildSandbox(Sandbox):
         if key in self.subcontext_types:
             return self._create_subcontext(self.subcontext_types[key])
         if key in self.templates:
-            return self._create_template_function(self.templates[key])
+            return self._create_template_wrapper(self.templates[key])
         return Sandbox.__getitem__(self, key)
+
+    def __contains__(self, key):
+        if any(key in d for d in (self.special_variables, self.functions,
+                                  self.subcontext_types, self.templates)):
+            return True
+
+        return Sandbox.__contains__(self, key)
 
     def __setitem__(self, key, value):
         if key in self.special_variables or key in self.functions or key in self.subcontext_types:
@@ -308,14 +315,7 @@ class MozbuildSandbox(Sandbox):
         raise SandboxCalledError(self._context.source_stack, message)
 
     def _template_decorator(self, func):
-        """Registers template as expected by _create_template_function.
-
-        The template data consists of:
-        - the function object as it comes from the sandbox evaluation of the
-          template declaration.
-        - its code, modified as described in the comments of this method.
-        - the path of the file containing the template definition.
-        """
+        """Registers a template function."""
 
         if not inspect.isfunction(func):
             raise Exception('`template` is a function decorator. You must '
@@ -326,47 +326,12 @@ class MozbuildSandbox(Sandbox):
         if name in self.templates:
             raise KeyError(
                 'A template named "%s" was already declared in %s.' % (name,
-                self.templates[name][2]))
+                self.templates[name].path))
 
         if name.islower() or name.isupper() or name[0].islower():
             raise NameError('Template function names must be CamelCase.')
 
-        lines, firstlineno = inspect.getsourcelines(func)
-        first_op = None
-        generator = tokenize.generate_tokens(iter(lines).next)
-        # Find the first indent token in the source of this template function,
-        # which corresponds to the beginning of the function body.
-        for typ, s, begin, end, line in generator:
-            if typ == tokenize.OP:
-                first_op = True
-            if first_op and typ == tokenize.INDENT:
-                break
-        if typ != tokenize.INDENT:
-            # This should never happen.
-            raise Exception('Could not find the first line of the template %s' %
-                func.func_name)
-        # The code of the template in moz.build looks like this:
-        # m      def Foo(args):
-        # n          FOO = 'bar'
-        # n+1        (...)
-        #
-        # where,
-        # - m is firstlineno - 1,
-        # - n is usually m + 1, but in case the function signature takes more
-        # lines, is really m + begin[0] - 1
-        #
-        # We want that to be replaced with:
-        # m       if True:
-        # n           FOO = 'bar'
-        # n+1         (...)
-        #
-        # (this is simpler than trying to deindent the function body)
-        # So we need to prepend with n - 1 newlines so that line numbers
-        # are unchanged.
-        code = '\n' * (firstlineno + begin[0] - 3) + 'if True:\n'
-        code += ''.join(lines[begin[0] - 1:])
-
-        self.templates[name] = func, code, self._context.current_path
+        self.templates[name] = TemplateFunction(func, self)
 
     @memoize
     def _create_subcontext(self, cls):
@@ -398,9 +363,9 @@ class MozbuildSandbox(Sandbox):
         return function
 
     @memoize
-    def _create_template_function(self, template):
+    def _create_template_wrapper(self, template):
         """Returns a function object for use within the sandbox for the given
-        template.
+        TemplateFunction instance..
 
         When a moz.build file contains a reference to a template call, the
         sandbox needs a function to execute. This is what this method returns.
@@ -408,11 +373,9 @@ class MozbuildSandbox(Sandbox):
         After the template is executed, the data from its execution is merged
         with the context of the calling sandbox.
         """
-        func, code, path = template
-
-        def template_function(*args, **kwargs):
+        def template_wrapper(*args, **kwargs):
             context = TemplateContext(
-                template=func.func_name,
+                template=template.name,
                 allowed_variables=self._context._allowed_variables,
                 config=self._context.config)
             context.add_source(self._context.current_path)
@@ -428,11 +391,9 @@ class MozbuildSandbox(Sandbox):
                 'special_variables': self.metadata.get('special_variables', {}),
                 'subcontexts': self.metadata.get('subcontexts', {}),
                 'templates': self.metadata.get('templates', {})
-            })
-            for k, v in inspect.getcallargs(func, *args, **kwargs).items():
-                sandbox[k] = v
+            }, finder=self._finder)
 
-            sandbox.exec_source(code, path, becomes_current_path=False)
+            template.exec_in_sandbox(sandbox, *args, **kwargs)
 
             # This is gross, but allows the merge to happen. Eventually, the
             # merging will go away and template contexts emitted independently.
@@ -451,7 +412,105 @@ class MozbuildSandbox(Sandbox):
             for p in context.all_paths:
                 self._context.add_source(p)
 
-        return template_function
+        return template_wrapper
+
+
+class TemplateFunction(object):
+    def __init__(self, func, sandbox):
+        self.path = func.func_code.co_filename
+        self.name = func.func_name
+
+        code = func.func_code
+        firstlineno = code.co_firstlineno
+        lines = sandbox._current_source.splitlines(True)
+        lines = inspect.getblock(lines[firstlineno - 1:])
+
+        # The code lines we get out of inspect.getsourcelines look like
+        #   @template
+        #   def Template(*args, **kwargs):
+        #       VAR = 'value'
+        #       ...
+        func_ast = ast.parse(''.join(lines), self.path)
+        # Remove decorators
+        func_ast.body[0].decorator_list = []
+        # Adjust line numbers accordingly
+        ast.increment_lineno(func_ast, firstlineno - 1)
+
+        # When using a custom dictionary for function globals/locals, Cpython
+        # actually never calls __getitem__ and __setitem__, so we need to
+        # modify the AST so that accesses to globals are properly directed
+        # to a dict.
+        self._global_name = b'_data' # AST wants str for this, not unicode
+        # In case '_data' is a name used for a variable in the function code,
+        # prepend more underscores until we find an unused name.
+        while (self._global_name in code.co_names or
+                self._global_name in code.co_varnames):
+            self._global_name += '_'
+        func_ast = self.RewriteName(sandbox, self._global_name).visit(func_ast)
+
+        # Execute the rewritten code. That code now looks like:
+        #   def Template(*args, **kwargs):
+        #       _data['VAR'] = 'value'
+        #       ...
+        # The result of executing this code is the creation of a 'Template'
+        # function object in the global namespace.
+        glob = {'__builtins__': sandbox._builtins}
+        func = types.FunctionType(
+            compile(func_ast, self.path, 'exec'),
+            glob,
+            self.name,
+            func.func_defaults,
+            func.func_closure,
+        )
+        func()
+
+        self._func = glob[self.name]
+
+    def exec_in_sandbox(self, sandbox, *args, **kwargs):
+        """Executes the template function in the given sandbox."""
+        # Create a new function object associated with the execution sandbox
+        glob = {
+            self._global_name: sandbox,
+            '__builtins__': sandbox._builtins
+        }
+        func = types.FunctionType(
+            self._func.func_code,
+            glob,
+            self.name,
+            self._func.func_defaults,
+            self._func.func_closure
+        )
+        sandbox.exec_function(func, args, kwargs, self.path,
+                              becomes_current_path=False)
+
+    class RewriteName(ast.NodeTransformer):
+        """AST Node Transformer to rewrite variable accesses to go through
+        a dict.
+        """
+        def __init__(self, sandbox, global_name):
+            self._sandbox = sandbox
+            self._global_name = global_name
+
+        def visit_Str(self, node):
+            # String nodes we got from the AST parser are str, but we want
+            # unicode literals everywhere, so transform them.
+            node.s = unicode(node.s)
+            return node
+
+        def visit_Name(self, node):
+            # Modify uppercase variable references and names known to the
+            # sandbox as if they were retrieved from a dict instead.
+            if not node.id.isupper() and node.id not in self._sandbox:
+                return node
+
+            def c(new_node):
+                return ast.copy_location(new_node, node)
+
+            return c(ast.Subscript(
+                value=c(ast.Name(id=self._global_name, ctx=ast.Load())),
+                slice=c(ast.Index(value=c(ast.Str(s=node.id)))),
+                ctx=node.ctx
+            ))
 
 
 class SandboxValidationError(Exception):
@@ -589,7 +648,7 @@ class BuildReaderError(Exception):
 
             # Reset if we enter a new execution context. This prevents errors
             # in this module from being attributes to a script.
-            elif frame[0] == __file__ and frame[2] == 'exec_source':
+            elif frame[0] == __file__ and frame[2] == 'exec_function':
                 script_frame = None
 
         if script_frame is not None:
@@ -795,12 +854,13 @@ class BuildReader(object):
     each sandbox evaluation. Its return value is ignored.
     """
 
-    def __init__(self, config):
+    def __init__(self, config, finder=default_finder):
         self.config = config
 
         self._log = logging.getLogger(__name__)
         self._read_files = set()
         self._execution_stack = []
+        self._finder = finder
 
     def read_topsrcdir(self):
         """Read the tree of linked moz.build files.
@@ -1033,7 +1093,8 @@ class BuildReader(object):
             config.external_source_dir = None
 
         context = Context(VARIABLES, config)
-        sandbox = MozbuildSandbox(context, metadata=metadata)
+        sandbox = MozbuildSandbox(context, metadata=metadata,
+                                  finder=self._finder)
         sandbox.exec_file(path)
         context.execution_time = time.time() - time_start
 
@@ -1069,7 +1130,7 @@ class BuildReader(object):
             non_unified_sources = set()
             for s in gyp_dir.non_unified_sources:
                 source = SourcePath(context, s)
-                if not os.path.exists(source.full_path):
+                if not self._finder.get(source.full_path):
                     raise SandboxValidationError('Cannot find %s.' % source,
                         context)
                 non_unified_sources.add(source)
@@ -1157,7 +1218,7 @@ class BuildReader(object):
 
         @memoize
         def exists(path):
-            return os.path.exists(path)
+            return self._finder.get(path) is not None
 
         def itermozbuild(path):
             subpath = ''

@@ -19,7 +19,7 @@ Known extensions are:
 basicConstraints:[cA],[pathLenConstraint]
 keyUsage:[digitalSignature,nonRepudiation,keyEncipherment,
           dataEncipherment,keyAgreement,keyCertSign,cRLSign]
-extKeyUsage:[serverAuth,clientAuth]
+extKeyUsage:[serverAuth,clientAuth,codeSigning,emailProtection]
 
 In the future it will be possible to specify other properties of the
 generated certificate (for example, its validity period, signature
@@ -279,6 +279,10 @@ class Certificate:
             return univ.ObjectIdentifier('1.3.6.1.5.5.7.3.1')
         if keyPurpose == 'clientAuth':
             return rfc2459.id_kp_clientAuth
+        if keyPurpose == 'codeSigning':
+            return rfc2459.id_kp_codeSigning
+        if keyPurpose == 'emailProtection':
+            return rfc2459.id_kp_emailProtection
         raise UnknownKeyPurposeTypeError(keyPurpose)
 
     def addExtKeyUsage(self, extKeyUsage):

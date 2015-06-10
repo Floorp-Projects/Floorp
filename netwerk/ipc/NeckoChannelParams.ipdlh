@@ -65,7 +65,9 @@ struct HttpChannelOpenArgs
   PrincipalInfo               triggeringPrincipalInfo;
   uint32_t                    securityFlags;
   uint32_t                    contentPolicyType;
-  uint32_t                    innerWindowID;
+  uint64_t                    innerWindowID;
+  uint64_t                    outerWindowID;
+  uint64_t                    parentOuterWindowID;
   OptionalHttpResponseHead    synthesizedResponseHead;
   uint32_t                    cacheKey;
 };
@@ -96,7 +98,9 @@ struct FTPChannelOpenArgs
   PrincipalInfo             triggeringPrincipalInfo;
   uint32_t                  securityFlags;
   uint32_t                  contentPolicyType;
-  uint32_t                  innerWindowID;
+  uint64_t                  innerWindowID;
+  uint64_t                  outerWindowID;
+  uint64_t                  parentOuterWindowID;
 };
 
 struct FTPChannelConnectArgs
@@ -142,7 +146,9 @@ struct WebSocketLoadInfoArgs
   PrincipalInfo triggeringPrincipalInfo;
   uint32_t      securityFlags;
   uint32_t      contentPolicyType;
-  uint32_t      innerWindowID;
+  uint64_t      innerWindowID;
+  uint64_t      outerWindowID;
+  uint64_t      parentOuterWindowID;
 };
 
 } // namespace ipc

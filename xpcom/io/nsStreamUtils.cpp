@@ -274,7 +274,6 @@ public:
       return;
     }
 
-    nsresult sourceCondition, sinkCondition;
     nsresult cancelStatus;
     bool canceled;
     {
@@ -282,6 +281,13 @@ public:
       canceled = mCanceled;
       cancelStatus = mCancelStatus;
     }
+
+    // If the copy was canceled before Process() was even called, then
+    // sourceCondition and sinkCondition should be set to error results to
+    // ensure we don't call Finish() on a canceled nsISafeOutputStream.
+    MOZ_ASSERT(NS_FAILED(cancelStatus) == canceled, "cancel needs an error");
+    nsresult sourceCondition = cancelStatus;
+    nsresult sinkCondition = cancelStatus;
 
     // Copy data from the source to the sink until we hit failure or have
     // copied all the data.

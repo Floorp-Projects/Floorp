@@ -13,8 +13,9 @@
 namespace mozilla {
 
 WebGLBuffer::WebGLBuffer(WebGLContext* webgl, GLuint buf)
-    : WebGLBindableName<BufferBinding>(buf)
-    , WebGLContextBoundObject(webgl)
+    : WebGLContextBoundObject(webgl)
+    , mGLName(buf)
+    , mContent(Kind::Undefined)
     , mByteLength(0)
 {
     mContext->mBuffers.insertBack(this);
@@ -23,6 +24,34 @@ WebGLBuffer::WebGLBuffer(WebGLContext* webgl, GLuint buf)
 WebGLBuffer::~WebGLBuffer()
 {
     DeleteOnce();
+}
+
+void
+WebGLBuffer::BindTo(GLenum target)
+{
+    switch (target) {
+    case LOCAL_GL_ELEMENT_ARRAY_BUFFER:
+        mContent = Kind::ElementArray;
+        if (!mCache)
+            mCache = new WebGLElementArrayCache;
+        break;
+
+    case LOCAL_GL_ARRAY_BUFFER:
+    case LOCAL_GL_PIXEL_PACK_BUFFER:
+    case LOCAL_GL_PIXEL_UNPACK_BUFFER:
+    case LOCAL_GL_UNIFORM_BUFFER:
+    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
+        mContent = Kind::OtherData;
+        break;
+
+    case LOCAL_GL_COPY_READ_BUFFER:
+    case LOCAL_GL_COPY_WRITE_BUFFER:
+        /* Do nothing. Doesn't set the type of the buffer contents. */
+        break;
+
+    default:
+        MOZ_CRASH();
+    }
 }
 
 void
@@ -35,18 +64,11 @@ WebGLBuffer::Delete()
     LinkedListElement<WebGLBuffer>::remove(); // remove from mContext->mBuffers
 }
 
-void
-WebGLBuffer::OnTargetChanged()
-{
-    if (!mCache && mTarget == LOCAL_GL_ELEMENT_ARRAY_BUFFER)
-        mCache = new WebGLElementArrayCache;
-}
-
 bool
 WebGLBuffer::ElementArrayCacheBufferData(const void* ptr,
                                          size_t bufferSizeInBytes)
 {
-    if (mTarget == LOCAL_GL_ELEMENT_ARRAY_BUFFER)
+    if (mContent == Kind::ElementArray)
         return mCache->BufferData(ptr, bufferSizeInBytes);
 
     return true;
@@ -56,7 +78,7 @@ void
 WebGLBuffer::ElementArrayCacheBufferSubData(size_t pos, const void* ptr,
                                             size_t updateSizeInBytes)
 {
-    if (mTarget == LOCAL_GL_ELEMENT_ARRAY_BUFFER)
+    if (mContent == Kind::ElementArray)
         mCache->BufferSubData(pos, ptr, updateSizeInBytes);
 }
 

@@ -159,9 +159,11 @@ WebGLContext::BindFramebuffer(GLenum target, WebGLFramebuffer* wfb)
     if (!wfb) {
         gl->fBindFramebuffer(target, 0);
     } else {
-        wfb->BindTo(target);
-        GLuint framebuffername = wfb->GLName();
+        GLuint framebuffername = wfb->mGLName;
         gl->fBindFramebuffer(target, framebuffername);
+#ifdef ANDROID
+        wfb->mIsFB = true;
+#endif
     }
 
     switch (target) {
@@ -196,15 +198,15 @@ WebGLContext::BindRenderbuffer(GLenum target, WebGLRenderbuffer* wrb)
     if (wrb && wrb->IsDeleted())
         return;
 
-    if (wrb)
-        wrb->BindTo(target);
-
     MakeContextCurrent();
 
     // Sometimes we emulate renderbuffers (depth-stencil emu), so there's not
     // always a 1-1 mapping from `wrb` to GL name. Just have `wrb` handle it.
     if (wrb) {
         wrb->BindRenderbuffer();
+#ifdef ANDROID
+        wrb->mIsRB = true;
+#endif
     } else {
         gl->fBindRenderbuffer(target, 0);
     }
@@ -737,7 +739,7 @@ WebGLContext::DeleteTexture(WebGLTexture* tex)
             (mBound3DTextures[i] == tex && tex->Target() == LOCAL_GL_TEXTURE_3D))
         {
             ActiveTexture(LOCAL_GL_TEXTURE0 + i);
-            BindTexture(tex->Target().get(), nullptr);
+            BindTexture(tex->Target(), nullptr);
         }
     }
     ActiveTexture(LOCAL_GL_TEXTURE0 + activeTexture);
@@ -1691,9 +1693,22 @@ WebGLContext::IsFramebuffer(WebGLFramebuffer* fb)
     if (IsContextLost())
         return false;
 
-    return ValidateObjectAllowDeleted("isFramebuffer", fb) &&
-        !fb->IsDeleted() &&
-        fb->HasEverBeenBound();
+    if (!ValidateObjectAllowDeleted("isFramebuffer", fb))
+        return false;
+
+    if (fb->IsDeleted())
+        return false;
+
+#ifdef ANDROID
+    if (gl->WorkAroundDriverBugs() &&
+        gl->Renderer() == GLRenderer::AndroidEmulator)
+    {
+        return fb->mIsFB;
+    }
+#endif
+
+    MakeContextCurrent();
+    return gl->fIsFramebuffer(fb->mGLName);
 }
 
 bool
@@ -1711,9 +1726,22 @@ WebGLContext::IsRenderbuffer(WebGLRenderbuffer* rb)
     if (IsContextLost())
         return false;
 
-    return ValidateObjectAllowDeleted("isRenderBuffer", rb) &&
-        !rb->IsDeleted() &&
-        rb->HasEverBeenBound();
+    if (!ValidateObjectAllowDeleted("isRenderBuffer", rb))
+        return false;
+
+    if (rb->IsDeleted())
+        return false;
+
+#ifdef ANDROID
+    if (gl->WorkAroundDriverBugs() &&
+        gl->Renderer() == GLRenderer::AndroidEmulator)
+    {
+         return rb->mIsRB;
+    }
+#endif
+
+    MakeContextCurrent();
+    return gl->fIsRenderbuffer(rb->PrimaryGLName());
 }
 
 bool

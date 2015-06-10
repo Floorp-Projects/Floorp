@@ -256,6 +256,9 @@ protected:
     // caching generic/lang ==> font family
     nsRefPtrHashtable<nsCStringHashKey, gfxFontFamily> mGenericMappings;
 
+    // caching family lookups as found by FindFamily after resolving substitutions
+    nsRefPtrHashtable<nsCStringHashKey, gfxFontFamily> mFcSubstituteCache;
+
     nsCOMPtr<nsITimer> mCheckFontUpdatesTimer;
     nsCountedRef<FcConfig> mLastConfig;
 

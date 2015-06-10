@@ -196,7 +196,7 @@ public class LoadFaviconTask {
         if (uri.startsWith("jar:jar:")) {
             Log.d(LOGTAG, "Fetching favicon from JAR.");
             try {
-                return GeckoJarReader.getBitmap(context.getResources(), uri);
+                return GeckoJarReader.getBitmap(context, context.getResources(), uri);
             } catch (Exception e) {
                 // Just about anything could happen here.
                 Log.w(LOGTAG, "Error fetching favicon from JAR.", e);
