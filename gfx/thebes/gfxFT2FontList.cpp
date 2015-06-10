@@ -650,7 +650,21 @@ public:
         }
 
         nsAutoCString buf;
-        PL_DHashTableEnumerate(&mMap, WriteOutMap, &buf);
+        for (auto iter = mMap.Iter(); !iter.Done(); iter.Next()) {
+            auto entry = static_cast<FNCMapEntry*>(iter.Get());
+            if (!entry->mFileExists) {
+                // skip writing entries for files that are no longer present
+                continue;
+            }
+            buf.Append(entry->mFilename);
+            buf.Append(';');
+            buf.Append(entry->mFaces);
+            buf.Append(';');
+            buf.AppendInt(entry->mTimestamp);
+            buf.Append(';');
+            buf.AppendInt(entry->mFilesize);
+            buf.Append(';');
+        }
         mCache->PutBuffer(CACHE_KEY, buf.get(), buf.Length() + 1);
     }
 
@@ -747,28 +761,6 @@ private:
     bool mWriteNeeded;
 
     PLDHashTableOps mOps;
-
-    static PLDHashOperator WriteOutMap(PLDHashTable *aTable,
-                                       PLDHashEntryHdr *aHdr,
-                                       uint32_t aNumber, void *aData)
-    {
-        FNCMapEntry* entry = static_cast<FNCMapEntry*>(aHdr);
-        if (!entry->mFileExists) {
-            // skip writing entries for files that are no longer present
-            return PL_DHASH_NEXT;
-        }
-
-        nsAutoCString* buf = reinterpret_cast<nsAutoCString*>(aData);
-        buf->Append(entry->mFilename);
-        buf->Append(';');
-        buf->Append(entry->mFaces);
-        buf->Append(';');
-        buf->AppendInt(entry->mTimestamp);
-        buf->Append(';');
-        buf->AppendInt(entry->mFilesize);
-        buf->Append(';');
-        return PL_DHASH_NEXT;
-    }
 
     typedef struct : public PLDHashEntryHdr {
     public:
