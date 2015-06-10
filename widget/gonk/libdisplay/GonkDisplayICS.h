@@ -59,6 +59,8 @@ public:
         GonkDisplay::DisplayType aDisplayType,
         android::IGraphicBufferProducer* aProducer = nullptr);
 
+    virtual void NotifyBootAnimationStopped() {}
+
 private:
     hw_module_t const*        mModule;
     hwc_composer_device_t*    mHwc;
