@@ -395,6 +395,52 @@ public:
     READ_WRITE
   };
 
+  /**
+   * This is a scoped version of Map(). Map() is called in the constructor and
+   * Unmap() in the destructor. Use this for automatic unmapping of your data
+   * surfaces.
+   *
+   * Use IsMapped() to verify whether Map() succeeded or not.
+   */
+  class ScopedMap {
+  public:
+    explicit ScopedMap(DataSourceSurface* aSurface, MapType aType)
+      : mSurface(aSurface)
+      , mIsMapped(aSurface->Map(aType, &mMap)) {}
+
+    virtual ~ScopedMap()
+    {
+      if (mIsMapped) {
+        mSurface->Unmap();
+      }
+    }
+
+    uint8_t* GetData()
+    {
+      MOZ_ASSERT(mIsMapped);
+      return mMap.mData;
+    }
+
+    int32_t GetStride()
+    {
+      MOZ_ASSERT(mIsMapped);
+      return mMap.mStride;
+    }
+
+    MappedSurface* GetMappedSurface()
+    {
+      MOZ_ASSERT(mIsMapped);
+      return &mMap;
+    }
+
+    bool IsMapped() { return mIsMapped; }
+
+  private:
+    RefPtr<DataSourceSurface> mSurface;
+    MappedSurface mMap;
+    bool mIsMapped;
+  };
+
   virtual SurfaceType GetType() const override { return SurfaceType::DATA; }
   /** @deprecated
    * Get the raw bitmap data of the surface.

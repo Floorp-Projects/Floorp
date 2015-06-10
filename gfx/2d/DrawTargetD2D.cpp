@@ -305,15 +305,22 @@ DrawTargetD2D::GetBitmapForSurface(SourceSurface *aSurface,
         return nullptr;
       }
 
-      int stride = srcSurf->Stride();
+      HRESULT hr;
+      {
+        DataSourceSurface::ScopedMap srcMap(srcSurf, DataSourceSurface::READ);
+        if (MOZ2D_WARN_IF(!srcMap.IsMapped())) {
+          return nullptr;
+        }
 
-      unsigned char *data = srcSurf->GetData() +
-                            (uint32_t)sourceRect.y * stride +
-                            (uint32_t)sourceRect.x * BytesPerPixel(srcSurf->GetFormat());
+        int stride = srcMap.GetStride();
+        unsigned char *data = srcMap.GetData() +
+                              (uint32_t)sourceRect.y * stride +
+                              (uint32_t)sourceRect.x * BytesPerPixel(srcSurf->GetFormat());
 
-      D2D1_BITMAP_PROPERTIES props =
-        D2D1::BitmapProperties(D2DPixelFormat(srcSurf->GetFormat()));
-      HRESULT hr = mRT->CreateBitmap(D2D1::SizeU(UINT32(sourceRect.width), UINT32(sourceRect.height)), data, stride, props, byRef(bitmap));
+        D2D1_BITMAP_PROPERTIES props =
+          D2D1::BitmapProperties(D2DPixelFormat(srcSurf->GetFormat()));
+        hr = mRT->CreateBitmap(D2D1::SizeU(UINT32(sourceRect.width), UINT32(sourceRect.height)), data, stride, props, byRef(bitmap));
+      }
       if (FAILED(hr)) {
         IntSize size(sourceRect.width, sourceRect.height);
         gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(size))) << "[D2D] 1CreateBitmap failure " << size << " Code: " << hexa(hr);
