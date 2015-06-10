@@ -21,13 +21,6 @@ if (AppConstants.MOZ_CRASHREPORTER) {
                                      "nsICrashReporter");
 }
 
-function makeInputStream(aString) {
-  let stream = Cc["@mozilla.org/io/string-input-stream;1"].
-               createInstance(Ci.nsISupportsCString);
-  stream.data = aString;
-  return stream; // XPConnect will QI this to nsIInputStream for us.
-}
-
 let WebProgressListener = {
   init: function() {
     this._filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
@@ -250,7 +243,6 @@ let WebNavigation =  {
       case "WebNavigation:LoadURI":
         this.loadURI(message.data.uri, message.data.flags,
                      message.data.referrer, message.data.referrerPolicy,
-                     message.data.postData, message.data.headers,
                      message.data.baseURI);
         break;
       case "WebNavigation:Reload":
@@ -277,7 +269,7 @@ let WebNavigation =  {
     this.webNavigation.gotoIndex(index);
   },
 
-  loadURI: function(uri, flags, referrer, referrerPolicy, postData, headers, baseURI) {
+  loadURI: function(uri, flags, referrer, referrerPolicy, baseURI) {
     if (AppConstants.MOZ_CRASHREPORTER && CrashReporter.enabled) {
       let annotation = uri;
       try {
@@ -291,14 +283,10 @@ let WebNavigation =  {
     }
     if (referrer)
       referrer = Services.io.newURI(referrer, null, null);
-    if (postData)
-      postData = makeInputStream(postData);
-    if (headers)
-      headers = makeInputStream(headers);
     if (baseURI)
       baseURI = Services.io.newURI(baseURI, null, null);
     this.webNavigation.loadURIWithOptions(uri, flags, referrer, referrerPolicy,
-                                          postData, headers, baseURI);
+                                          null, null, baseURI);
   },
 
   reload: function(flags) {
