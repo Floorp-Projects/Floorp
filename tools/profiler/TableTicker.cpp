@@ -108,6 +108,111 @@ using namespace mozilla;
 
 std::string GetSharedLibraryInfoString();
 
+static bool
+hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature) {
+  for(size_t i = 0; i < aFeatureCount; i++) {
+    if (strcmp(aFeatures[i], aFeature) == 0)
+      return true;
+  }
+  return false;
+}
+
+TableTicker::TableTicker(double aInterval, int aEntrySize,
+                         const char** aFeatures, uint32_t aFeatureCount,
+                         const char** aThreadNameFilters, uint32_t aFilterCount)
+  : Sampler(aInterval, true, aEntrySize)
+  , mPrimaryThreadProfile(nullptr)
+  , mBuffer(new ProfileBuffer(aEntrySize))
+  , mSaveRequested(false)
+#if defined(XP_WIN)
+  , mIntelPowerGadget(nullptr)
+#endif
+{
+  mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
+
+  mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
+  mProfileJava = hasFeature(aFeatures, aFeatureCount, "java");
+  mProfileGPU = hasFeature(aFeatures, aFeatureCount, "gpu");
+  mProfilePower = hasFeature(aFeatures, aFeatureCount, "power");
+  // Users sometimes ask to filter by a list of threads but forget to request
+  // profiling non main threads. Let's make it implificit if we have a filter
+  mProfileThreads = hasFeature(aFeatures, aFeatureCount, "threads") || aFilterCount > 0;
+  mAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
+  mPrivacyMode = hasFeature(aFeatures, aFeatureCount, "privacy");
+  mAddMainThreadIO = hasFeature(aFeatures, aFeatureCount, "mainthreadio");
+  mProfileMemory = hasFeature(aFeatures, aFeatureCount, "memory");
+  mTaskTracer = hasFeature(aFeatures, aFeatureCount, "tasktracer");
+  mLayersDump = hasFeature(aFeatures, aFeatureCount, "layersdump");
+  mDisplayListDump = hasFeature(aFeatures, aFeatureCount, "displaylistdump");
+  mProfileRestyle = hasFeature(aFeatures, aFeatureCount, "restyle");
+
+#if defined(XP_WIN)
+  if (mProfilePower) {
+    mIntelPowerGadget = new IntelPowerGadget();
+    mProfilePower = mIntelPowerGadget->Init();
+  }
+#endif
+
+  // Deep copy aThreadNameFilters
+  MOZ_ALWAYS_TRUE(mThreadNameFilters.resize(aFilterCount));
+  for (uint32_t i = 0; i < aFilterCount; ++i) {
+    mThreadNameFilters[i] = aThreadNameFilters[i];
+  }
+
+  sStartTime = mozilla::TimeStamp::Now();
+
+  {
+    mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
+
+    // Create ThreadProfile for each registered thread
+    for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+      ThreadInfo* info = sRegisteredThreads->at(i);
+
+      RegisterThread(info);
+    }
+
+    SetActiveSampler(this);
+  }
+
+#ifdef MOZ_TASK_TRACER
+  if (mTaskTracer) {
+    mozilla::tasktracer::StartLogging();
+  }
+#endif
+}
+
+TableTicker::~TableTicker()
+{
+  if (IsActive())
+    Stop();
+
+  SetActiveSampler(nullptr);
+
+  // Destroy ThreadProfile for all threads
+  {
+    mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
+
+    for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+      ThreadInfo* info = sRegisteredThreads->at(i);
+      ThreadProfile* profile = info->Profile();
+      if (profile) {
+        delete profile;
+        info->SetProfile(nullptr);
+      }
+      // We've stopped profiling. We no longer need to retain
+      // information for an old thread.
+      if (info->IsPendingDelete()) {
+        delete info;
+        sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
+        i--;
+      }
+    }
+  }
+#if defined(XP_WIN)
+  delete mIntelPowerGadget;
+#endif
+}
+
 void TableTicker::HandleSaveRequest()
 {
   if (!mSaveRequested)
@@ -256,6 +361,22 @@ UniquePtr<char[]> TableTicker::ToJSON(float aSinceTime)
   SpliceableChunkedJSONWriter b;
   StreamJSON(b, aSinceTime);
   return b.WriteFunc()->CopyData();
+}
+
+void TableTicker::ToJSObjectAsync(float aSinceTime,
+                                  Promise* aPromise)
+{
+  if (NS_WARN_IF(mGatherer)) {
+    return;
+  }
+
+  mGatherer = new ProfileGatherer(this, aSinceTime, aPromise);
+  mGatherer->Start();
+}
+
+void TableTicker::ProfileGathered()
+{
+  mGatherer = nullptr;
 }
 
 struct SubprocessClosure {

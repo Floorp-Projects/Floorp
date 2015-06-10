@@ -624,8 +624,8 @@ child:
     async StartProfiler(uint32_t aEntries, double aInterval, nsCString[] aFeatures,
                         nsCString[] aThreadNameFilters);
     async StopProfiler();
-    prio(high) sync GetProfile()
-      returns (nsCString aProfile);
+
+    async GatherProfile();
 
     InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action);
 
@@ -1053,6 +1053,8 @@ parent:
      * Tells the parent to stop the gamepad listening service if it hasn't already.
      */
     GamepadListenerRemoved();
+
+    async Profile(nsCString aProfile);
 
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,

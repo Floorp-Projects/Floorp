@@ -12,7 +12,7 @@ class nsCString;
 
 [ref] native StringArrayRef(const nsTArray<nsCString>);
 
-[scriptable, uuid(9f3e7c97-abcf-425c-83fd-34d354eb95e8)]
+[scriptable, uuid(0f474ec5-b95c-45d9-a7c8-156da0e3fa25)]
 interface nsIProfiler : nsISupports
 {
   void StartProfiler(in uint32_t aEntries, in double aInterval,
@@ -37,6 +37,9 @@ interface nsIProfiler : nsISupports
    */
   [implicit_jscontext]
   jsval getProfileData([optional] in float aSinceTime);
+
+  [implicit_jscontext]
+  nsISupports getProfileDataAsync([optional] in float aSinceTime);
 
   boolean IsActive();
   void GetFeatures(out uint32_t aCount, [retval, array, size_is(aCount)] out string aFeatures);

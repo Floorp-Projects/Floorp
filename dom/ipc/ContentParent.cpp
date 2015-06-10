@@ -79,6 +79,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
+#include "mozilla/ProfileGatherer.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
@@ -238,6 +239,7 @@ static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
 using base::ChildPrivileges;
 using base::KillProcess;
+using mozilla::ProfileGatherer;
 
 #ifdef MOZ_CRASHREPORTER
 using namespace CrashReporter;
@@ -661,6 +663,7 @@ static const char* sObserverTopics[] = {
 #ifdef MOZ_ENABLE_PROFILER_SPS
     "profiler-started",
     "profiler-stopped",
+    "profiler-subprocess-gather",
     "profiler-subprocess",
 #endif
 };
@@ -3132,13 +3135,17 @@ ContentParent::Observe(nsISupports* aSubject,
     else if (!strcmp(aTopic, "profiler-stopped")) {
         unused << SendStopProfiler();
     }
+    else if (!strcmp(aTopic, "profiler-subprocess-gather")) {
+        mGatherer = static_cast<ProfileGatherer*>(aSubject);
+        mGatherer->WillGatherOOPProfile();
+        unused << SendGatherProfile();
+    }
     else if (!strcmp(aTopic, "profiler-subprocess")) {
         nsCOMPtr<nsIProfileSaveEvent> pse = do_QueryInterface(aSubject);
         if (pse) {
-            nsCString result;
-            unused << SendGetProfile(&result);
-            if (!result.IsEmpty()) {
-                pse->AddSubProfile(result.get());
+            if (!mProfile.IsEmpty()) {
+                pse->AddSubProfile(mProfile.get());
+                mProfile.Truncate();
             }
         }
     }
@@ -5093,6 +5100,18 @@ ContentParent::RecvGamepadListenerRemoved()
     mHasGamepadListener = false;
     MaybeStopGamepadMonitoring();
 #endif
+    return true;
+}
+
+bool
+ContentParent::RecvProfile(const nsCString& aProfile)
+{
+    if (NS_WARN_IF(!mGatherer)) {
+        return true;
+    }
+    mProfile = aProfile;
+    mGatherer->GatheredOOPProfile();
+    mGatherer = nullptr;
     return true;
 }
 
