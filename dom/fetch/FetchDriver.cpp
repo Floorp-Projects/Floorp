@@ -548,14 +548,16 @@ FetchDriver::ContinueHttpFetchAfterNetworkFetch()
 }
 
 already_AddRefed<InternalResponse>
-FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse)
+FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aFinalURI)
 {
   MOZ_ASSERT(aResponse);
-  if (!aResponse->FinalURL()) {
-    nsAutoCString reqURL;
+  nsAutoCString reqURL;
+  if (aFinalURI) {
+    aFinalURI->GetSpec(reqURL);
+  } else {
     mRequest->GetURL(reqURL);
-    aResponse->SetUrl(reqURL);
   }
+  aResponse->SetUrl(reqURL);
 
   // FIXME(nsm): Handle mixed content check, step 7 of fetch.
 
@@ -584,7 +586,7 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse)
 void
 FetchDriver::BeginResponse(InternalResponse* aResponse)
 {
-  nsRefPtr<InternalResponse> r = BeginAndGetFilteredResponse(aResponse);
+  nsRefPtr<InternalResponse> r = BeginAndGetFilteredResponse(aResponse, nullptr);
   // Release the ref.
 }
 
@@ -716,9 +718,17 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   response->InitChannelInfo(channel);
 
+  nsCOMPtr<nsIURI> channelURI;
+  rv = channel->GetURI(getter_AddRefs(channelURI));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    FailWithNetworkError();
+    // Cancel request.
+    return rv;
+  }
+
   // Resolves fetch() promise which may trigger code running in a worker.  Make
   // sure the Response is fully initialized before calling this.
-  mResponse = BeginAndGetFilteredResponse(response);
+  mResponse = BeginAndGetFilteredResponse(response, channelURI);
 
   nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {

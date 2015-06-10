@@ -3335,8 +3335,8 @@ RangeAnalysis::prepareForUCE(bool* shouldRemoveDeadCode)
     return tryRemovingGuards();
 }
 
-bool RangeAnalysis::tryRemovingGuards() {
-
+bool RangeAnalysis::tryRemovingGuards()
+{
     MDefinitionVector guards(alloc());
 
     for (ReversePostorderIterator block = graph_.rpoBegin(); block != graph_.rpoEnd(); block++) {
@@ -3344,6 +3344,7 @@ bool RangeAnalysis::tryRemovingGuards() {
             if (!iter->isGuardRangeBailouts())
                 continue;
 
+            iter->setInWorklist();
             if (!guards.append(*iter))
                 return false;
         }
@@ -3364,20 +3365,22 @@ bool RangeAnalysis::tryRemovingGuards() {
         guard->setGuardRangeBailouts();
 #endif
 
-        if (!guard->range())
-            continue;
+        if (!guard->isPhi()) {
+            if (!guard->range())
+                continue;
 
-        // Filter the range of the instruction based on its MIRType.
-        Range typeFilteredRange(guard);
+            // Filter the range of the instruction based on its MIRType.
+            Range typeFilteredRange(guard);
 
-        // If the output range is updated by adding the inner range,
-        // then the MIRType act as an effectful filter. As we do not know if
-        // this filtered Range might change or not the result of the
-        // previous comparison, we have to keep this instruction as a guard
-        // because it has to bailout in order to restrict the Range to its
-        // MIRType.
-        if (typeFilteredRange.update(guard->range()))
-            continue;
+            // If the output range is updated by adding the inner range,
+            // then the MIRType act as an effectful filter. As we do not know if
+            // this filtered Range might change or not the result of the
+            // previous comparison, we have to keep this instruction as a guard
+            // because it has to bailout in order to restrict the Range to its
+            // MIRType.
+            if (typeFilteredRange.update(guard->range()))
+                continue;
+        }
 
         guard->setNotGuardRangeBailouts();
 
@@ -3386,18 +3389,26 @@ bool RangeAnalysis::tryRemovingGuards() {
             MDefinition* operand = guard->getOperand(op);
 
             // Already marked.
-            if (operand->isGuardRangeBailouts())
+            if (operand->isInWorklist())
                 continue;
+
+            MOZ_ASSERT(!operand->isGuardRangeBailouts());
 
             // No need to mark as a guard, since it is has already an even more
             // restrictive flag set.
             if (!DeadIfUnused(operand))
                 continue;
 
+            operand->setInWorklist();
             operand->setGuardRangeBailouts();
             if (!guards.append(operand))
                 return false;
         }
+    }
+
+    for (size_t i = 0; i < guards.length(); i++) {
+        MDefinition* guard = guards[i];
+        guard->setNotInWorklist();
     }
 
     return true;

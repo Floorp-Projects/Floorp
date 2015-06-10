@@ -267,6 +267,10 @@ static const JSFunctionSpecWithHelp osfile_functions[] = {
 "  Read filename into returned string. Filename is relative to the directory\n"
 "  containing the current script."),
 
+    JS_FS_HELP_END
+};
+
+static const JSFunctionSpecWithHelp osfile_unsafe_functions[] = {
     JS_FN_HELP("redirect", osfile_redirect, 2, 0,
 "redirect(stdoutFilename[, stderrFilename])",
 "  Redirect stdout and/or stderr to the named file. Pass undefined to avoid\n"
@@ -566,6 +570,11 @@ DefineOS(JSContext* cx, HandleObject global, bool fuzzingSafe)
         return false;
     }
 
+    if (!fuzzingSafe) {
+        if (!JS_DefineFunctionsWithHelp(cx, osfile, osfile_unsafe_functions))
+            return false;
+    }
+
     // For backwards compatibility, expose various os.file.* functions as
     // direct methods on the global.
     RootedValue val(cx);
@@ -583,9 +592,11 @@ DefineOS(JSContext* cx, HandleObject global, bool fuzzingSafe)
     for (auto pair : osfile_exports) {
         if (!JS_GetProperty(cx, osfile, pair.src, &val))
             return false;
-        RootedObject function(cx, &val.toObject());
-        if (!JS_DefineProperty(cx, global, pair.dst, function, 0))
-            return false;
+        if (val.isObject()) {
+            RootedObject function(cx, &val.toObject());
+            if (!JS_DefineProperty(cx, global, pair.dst, function, 0))
+                return false;
+        }
     }
 
     return true;

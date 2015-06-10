@@ -46,36 +46,6 @@ WebGL2Context::ValidateBufferIndexedTarget(GLenum target, const char* info)
 }
 
 bool
-WebGL2Context::ValidateBufferForTarget(GLenum target, WebGLBuffer* buffer,
-                                       const char* info)
-{
-    if (!buffer)
-        return true;
-
-    switch (target) {
-    case LOCAL_GL_COPY_READ_BUFFER:
-    case LOCAL_GL_COPY_WRITE_BUFFER:
-        return true;
-
-    case LOCAL_GL_ELEMENT_ARRAY_BUFFER:
-        return !buffer->HasEverBeenBound() ||
-            buffer->Target() == LOCAL_GL_ELEMENT_ARRAY_BUFFER;
-
-    case LOCAL_GL_ARRAY_BUFFER:
-    case LOCAL_GL_PIXEL_PACK_BUFFER:
-    case LOCAL_GL_PIXEL_UNPACK_BUFFER:
-    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
-    case LOCAL_GL_UNIFORM_BUFFER:
-        return !buffer->HasEverBeenBound() ||
-            buffer->Target() != LOCAL_GL_ELEMENT_ARRAY_BUFFER;
-    }
-
-    ErrorInvalidOperation("%s: buffer already bound to a incompatible target %s",
-                          info, EnumName(buffer->Target().get()));
-    return false;
-}
-
-bool
 WebGL2Context::ValidateBufferUsageEnum(GLenum usage, const char* info)
 {
     switch (usage) {
@@ -123,7 +93,7 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
     if (!readBuffer)
         return ErrorInvalidOperation("copyBufferSubData: No buffer bound to readTarget");
 
-    const WebGLBuffer* writeBuffer = writeBufferSlot.get();
+    WebGLBuffer* writeBuffer = writeBufferSlot.get();
     if (!writeBuffer)
         return ErrorInvalidOperation("copyBufferSubData: No buffer bound to writeTarget");
 
@@ -145,8 +115,27 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
         return;
     }
 
+    WebGLBuffer::Kind readType = readBuffer->Content();
+    WebGLBuffer::Kind writeType = writeBuffer->Content();
+
+    if (readType != WebGLBuffer::Kind::Undefined &&
+        writeType != WebGLBuffer::Kind::Undefined &&
+        writeType != readType)
+    {
+        ErrorInvalidOperation("copyBufferSubData: Can't copy %s data to %s data",
+                              (readType == WebGLBuffer::Kind::OtherData) ? "other" : "element",
+                              (writeType == WebGLBuffer::Kind::OtherData) ? "other" : "element");
+        return;
+    }
+
     WebGLContextUnchecked::CopyBufferSubData(readTarget, writeTarget, readOffset,
                                              writeOffset, size);
+
+    if (writeType == WebGLBuffer::Kind::Undefined) {
+        writeBuffer->BindTo(
+            (readType == WebGLBuffer::Kind::OtherData) ? LOCAL_GL_ARRAY_BUFFER
+                                                       : LOCAL_GL_ELEMENT_ARRAY_BUFFER);
+    }
 }
 
 void
@@ -155,7 +144,7 @@ WebGL2Context::GetBufferSubData(GLenum target, GLintptr offset,
 {
     if (IsContextLost())
         return;
-    
+
     // For the WebGLBuffer bound to the passed target, read
     // returnedData.byteLength bytes from the buffer starting at byte
     // offset offset and write them to returnedData.
@@ -168,7 +157,7 @@ WebGL2Context::GetBufferSubData(GLenum target, GLintptr offset,
     // If offset is less than zero, an INVALID_VALUE error is
     // generated.
     if (offset < 0)
-        return ErrorInvalidValue("getBufferSubData: negative offset"); 
+        return ErrorInvalidValue("getBufferSubData: negative offset");
 
     // If returnedData is null then an INVALID_VALUE error is
     // generated.
@@ -179,7 +168,7 @@ WebGL2Context::GetBufferSubData(GLenum target, GLintptr offset,
     WebGLBuffer* boundBuffer = bufferSlot.get();
     if (!boundBuffer)
         return ErrorInvalidOperation("getBufferSubData: no buffer bound");
-    
+
     // If offset + returnedData.byteLength would extend beyond the end
     // of the buffer an INVALID_VALUE error is generated.
     const dom::ArrayBuffer& data = maybeData.Value();

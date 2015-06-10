@@ -5,16 +5,17 @@
 
 #include "WebGL2Context.h"
 #include "GLContext.h"
+#include "WebGLVertexArrayObject.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
 // -------------------------------------------------------------------------
 // Vertex Array Object
-// TODO(djg): Implemented in WebGLContext
-/*
-    already_AddRefed<WebGLVertexArrayObject> CreateVertexArray();
-    void DeleteVertexArray(WebGLVertexArrayObject* vertexArray);
-    bool IsVertexArray(WebGLVertexArrayObject* vertexArray);
-    void BindVertexArray(WebGLVertexArrayObject* vertexArray);
-*/
+
+WebGLVertexArray*
+WebGL2Context::CreateVertexArrayImpl()
+{
+    return dom::WebGLVertexArrayObject::Create(this);
+}
+
+} // namespace mozilla

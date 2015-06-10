@@ -41,7 +41,7 @@ ChunkSet::Set(uint32_t aChunk)
 {
   size_t idx = mChunks.BinaryIndexOf(aChunk);
   if (idx == nsTArray<uint32_t>::NoIndex) {
-    if (!mChunks.InsertElementSorted(aChunk)) {
+    if (!mChunks.InsertElementSorted(aChunk, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }

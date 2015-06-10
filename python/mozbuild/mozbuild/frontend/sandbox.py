@@ -19,15 +19,16 @@ user-friendly error messages in the case of errors.
 
 from __future__ import unicode_literals
 
-import copy
 import os
 import sys
 import weakref
 
-from contextlib import contextmanager
-
 from mozbuild.util import ReadOnlyDict
-from context import Context
+from .context import Context
+from mozpack.files import FileFinder
+
+
+default_finder = FileFinder('/', find_executables=False)
 
 
 def alphabetical_sorted(iterable, cmp=None, key=lambda x: x.lower(),
@@ -108,7 +109,7 @@ class Sandbox(dict):
         'int': int,
     })
 
-    def __init__(self, context, builtins=None):
+    def __init__(self, context, builtins=None, finder=default_finder):
         """Initialize a Sandbox ready for execution.
         """
         self._builtins = builtins or self.BUILTINS
@@ -129,6 +130,11 @@ class Sandbox(dict):
         # evaluation.
         self._last_name_error = None
 
+        # Current literal source being executed.
+        self._current_source = None
+
+        self._finder = finder
+
     @property
     def _context(self):
         return self._active_contexts[-1]
@@ -140,18 +146,15 @@ class Sandbox(dict):
         """
         assert os.path.isabs(path)
 
-        source = None
-
         try:
-            with open(path, 'rt') as fd:
-                source = fd.read()
+            source = self._finder.get(path).read()
         except Exception as e:
             raise SandboxLoadError(self._context.source_stack,
                 sys.exc_info()[2], read_error=path)
 
         self.exec_source(source, path)
 
-    def exec_source(self, source, path='', becomes_current_path=True):
+    def exec_source(self, source, path=''):
         """Execute Python code within a string.
 
         The passed string should contain Python code to be executed. The string
@@ -160,6 +163,30 @@ class Sandbox(dict):
         You should almost always go through exec_file() because exec_source()
         does not perform extra path normalization. This can cause relative
         paths to behave weirdly.
+        """
+        def execute():
+            # compile() inherits the __future__ from the module by default. We
+            # do want Unicode literals.
+            code = compile(source, path, 'exec')
+            # We use ourself as the global namespace for the execution. There
+            # is no need for a separate local namespace as moz.build execution
+            # is flat, namespace-wise.
+            old_source = self._current_source
+            self._current_source = source
+            try:
+                # Ideally, we'd use exec(code, self), but that yield the
+                # following error:
+                # SyntaxError: unqualified exec is not allowed in function
+                # 'execute' it is a nested function.
+                exec code in self
+            finally:
+                self._current_source = old_source
+
+        self.exec_function(execute, path=path)
+
+    def exec_function(self, func, args=(), kwargs={}, path='',
+                      becomes_current_path=True):
+        """Execute function with the given arguments in the sandbox.
         """
         if path and becomes_current_path:
             self._context.push_source(path)
@@ -171,14 +198,10 @@ class Sandbox(dict):
         # too low-level for that. However, we could add bytecode generation via
         # the marshall module if parsing performance were ever an issue.
 
+        old_source = self._current_source
+        self._current_source = None
         try:
-            # compile() inherits the __future__ from the module by default. We
-            # do want Unicode literals.
-            code = compile(source, path, 'exec')
-            # We use ourself as the global namespace for the execution. There
-            # is no need for a separate local namespace as moz.build execution
-            # is flat, namespace-wise.
-            exec(code, self)
+            func(*args, **kwargs)
         except SandboxError as e:
             raise e
         except NameError as e:
@@ -212,8 +235,9 @@ class Sandbox(dict):
                 source_stack.append(path)
             raise SandboxExecutionError(source_stack, exc[0], exc[1], exc[2])
         finally:
+            self._current_source = old_source
             self._context._sandbox = old_sandbox
-            if path:
+            if path and becomes_current_path:
                 self._context.pop_source()
 
     def push_subcontext(self, context):
@@ -276,4 +300,6 @@ class Sandbox(dict):
         raise NotImplementedError('Not supported')
 
     def __contains__(self, key):
-        raise NotImplementedError('Not supported')
+        if key.isupper():
+            return key in self._context
+        return dict.__contains__(self, key)

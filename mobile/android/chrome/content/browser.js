@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/DelayedInit.jsm");
 Cu.import('resource://gre/modules/Payment.jsm');
 Cu.import("resource://gre/modules/NotificationDB.jsm");
 Cu.import("resource://gre/modules/SpatialNavigation.jsm");
@@ -375,41 +376,6 @@ var BrowserApp = {
     dump("zerdatime " + Date.now() + " - browser chrome startup finished.");
 
     this.deck = document.getElementById("browsers");
-    this.deck.addEventListener("DOMContentLoaded", function BrowserApp_delayedStartup() {
-      try {
-        BrowserApp.deck.removeEventListener("DOMContentLoaded", BrowserApp_delayedStartup, false);
-        Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
-        Messaging.sendRequest({ type: "Gecko:DelayedStartup" });
-
-        // Queue up some other performance-impacting initializations
-        Services.tm.mainThread.dispatch(function() {
-          // Spin up some services which impact performance.
-          Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-          Services.search.init();
-
-          // Spin up some features which impact performance.
-          CastingApps.init();
-          DownloadNotifications.init();
-
-          if (AppConstants.MOZ_SAFE_BROWSING) {
-            // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
-            SafeBrowsing.init();
-          };
-
-          // Delay this a minute because there's no rush
-          setTimeout(() => {
-            BrowserApp.gmpInstallManager = new GMPInstallManager();
-            BrowserApp.gmpInstallManager.simpleCheckAndInstall().then(null, () => {});
-          }, 1000 * 60);
-        }, Ci.nsIThread.DISPATCH_NORMAL);
-
-        if (AppConstants.NIGHTLY_BUILD) {
-          WebcompatReporter.init();
-          Telemetry.addData("TRACKING_PROTECTION_ENABLED",
-            Services.prefs.getBoolPref("privacy.trackingprotection.enabled"));
-        }
-      } catch(ex) { console.log(ex); }
-    }, false);
 
     BrowserEventHandler.init();
     ViewportHandler.init();
@@ -553,6 +519,40 @@ var BrowserApp = {
 
     // Notify Java that Gecko has loaded.
     Messaging.sendRequest({ type: "Gecko:Ready" });
+
+    this.deck.addEventListener("DOMContentLoaded", function BrowserApp_delayedStartup() {
+      BrowserApp.deck.removeEventListener("DOMContentLoaded", BrowserApp_delayedStartup, false);
+
+      function InitLater(fn, object, name) {
+        return DelayedInit.schedule(fn, object, name, 15000 /* 15s max wait */);
+      }
+
+      InitLater(() => Services.obs.notifyObservers(window, "browser-delayed-startup-finished", ""));
+      InitLater(() => Messaging.sendRequest({ type: "Gecko:DelayedStartup" }));
+
+      if (AppConstants.NIGHTLY_BUILD) {
+        InitLater(() => Telemetry.addData("TRACKING_PROTECTION_ENABLED",
+            Services.prefs.getBoolPref("privacy.trackingprotection.enabled")));
+        InitLater(() => WebcompatReporter.init());
+      }
+
+      InitLater(() => CastingApps.init(), window, "CastingApps");
+      InitLater(() => Services.search.init(), Services, "search");
+      InitLater(() => DownloadNotifications.init(), window, "DownloadNotifications");
+
+      if (AppConstants.MOZ_SAFE_BROWSING) {
+        // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
+        InitLater(() => SafeBrowsing.init(), window, "SafeBrowsing");
+      }
+
+      InitLater(() => Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager));
+
+      InitLater(() => {
+          BrowserApp.gmpInstallManager = new GMPInstallManager();
+          BrowserApp.gmpInstallManager.simpleCheckAndInstall().then(null, () => {});
+      }, BrowserApp, "gmpInstallManager");
+
+    }, false);
   },
 
   get _startupStatus() {
