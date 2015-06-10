@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor, Pref="media.webspeech.recognition.enable"]
+[Constructor, Pref="media.webspeech.recognition.enable",
+ Func="SpeechRecognition::IsAuthorized"]
 interface SpeechGrammarList {
     readonly attribute unsigned long length;
     [Throws]
