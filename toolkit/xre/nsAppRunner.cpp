@@ -4276,6 +4276,8 @@ XREMain::XRE_mainRun()
 int
 XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 {
+  ScopedLogging log;
+
   char aLocal;
   GeckoProfilerInitRAII profilerGuard(&aLocal);
 
@@ -4301,8 +4303,6 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   }
   // used throughout this file
   gAppData = mAppData;
-
-  ScopedLogging log;
 
   mozilla::IOInterposerInit ioInterposerGuard;
 
