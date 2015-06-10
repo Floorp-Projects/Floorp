@@ -689,12 +689,13 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
   rv = NS_NewURI(getter_AddRefs(baseURI), aBaseURI);
   NS_ENSURE_SUCCESS(rv, false);
 
-  nsCOMPtr<nsIURI> finalURI;
-  rv = NS_NewURI(getter_AddRefs(finalURI), NS_ConvertUTF16toUTF8(aURI).get(), baseURI);
-  NS_ENSURE_SUCCESS(rv, false);
-
   nsAutoCString finalURIString;
-  finalURI->GetSpec(finalURIString);
+  if (!aURI.IsEmpty()) {
+    nsCOMPtr<nsIURI> finalURI;
+    rv = NS_NewURI(getter_AddRefs(finalURI), NS_ConvertUTF16toUTF8(aURI).get(), baseURI);
+    NS_ENSURE_SUCCESS(rv, false);
+    finalURI->GetSpec(finalURIString);
+  }
 
   nsCOMPtr<nsIDOMWindow> window;
 
