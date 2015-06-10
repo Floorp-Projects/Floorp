@@ -127,13 +127,19 @@ MediaStreamGraphImpl::AddStream(MediaStream* aStream)
 }
 
 void
-MediaStreamGraphImpl::RemoveStream(MediaStream* aStream)
+MediaStreamGraphImpl::RemoveStream(MediaStream* aStream, bool aLocked)
 {
   // Remove references in mStreamUpdates before we allow aStream to die.
   // Pending updates are not needed (since the main thread has already given
   // up the stream) so we will just drop them.
-  {
+  if (aLocked) {
     MonitorAutoLock lock(mMonitor);
+    for (uint32_t i = 0; i < mStreamUpdates.Length(); ++i) {
+      if (mStreamUpdates[i].mStream == aStream) {
+        mStreamUpdates[i].mStream = nullptr;
+      }
+    }
+  } else {
     for (uint32_t i = 0; i < mStreamUpdates.Length(); ++i) {
       if (mStreamUpdates[i].mStream == aStream) {
         mStreamUpdates[i].mStream = nullptr;
@@ -1272,7 +1278,8 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
     mStreamUpdates.SetCapacity(mStreamUpdates.Length() + mStreams.Length());
     for (uint32_t i = 0; i < mStreams.Length(); ++i) {
       MediaStream* stream = mStreams[i];
-      if (!stream->MainThreadNeedsUpdates()) {
+      if (!stream->MainThreadNeedsUpdates() ||
+          !stream->mGraph) { // destroyed on mainthread
         continue;
       }
       StreamUpdate* update = mStreamUpdates.AppendElement();
@@ -1542,8 +1549,9 @@ MediaStreamGraphImpl::ApplyStreamUpdate(StreamUpdate* aUpdate)
   mMonitor.AssertCurrentThreadOwns();
 
   MediaStream* stream = aUpdate->mStream;
-  if (!stream)
+  if (!stream || stream->IsDestroyed()) {
     return;
+  }
   stream->mMainThreadCurrentTime = aUpdate->mNextMainThreadCurrentTime;
   stream->mMainThreadFinished = aUpdate->mNextMainThreadFinished;
 
@@ -2087,7 +2095,14 @@ MediaStream::Destroy()
       graph->RemoveStream(mStream);
     }
     virtual void RunDuringShutdown()
-    { Run(); }
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+      mStream->RemoveAllListenersImpl();
+      auto graph = mStream->GraphImpl();
+      mStream->DestroyImpl();
+      // Don't acquire the lock, this is during shutdown
+      graph->RemoveStream(mStream, false);
+    }
   };
   mWrapper = nullptr;
   GraphImpl()->AppendMessage(new Message(this));
