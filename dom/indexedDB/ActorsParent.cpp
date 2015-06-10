@@ -3640,9 +3640,11 @@ SetDefaultPragmas(mozIStorageConnection* aConnection)
 
 #ifndef IDB_MOBILE
   if (kSQLiteGrowthIncrement) {
+    // This is just an optimization so ignore the failure if the disk is
+    // currently too full.
     rv = aConnection->SetGrowthIncrement(kSQLiteGrowthIncrement,
                                          EmptyCString());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (rv != NS_ERROR_FILE_TOO_BIG && NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
