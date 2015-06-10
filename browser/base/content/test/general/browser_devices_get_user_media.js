@@ -242,6 +242,7 @@ let gTests = [
     is(PopupNotifications.panel.firstChild.getAttribute("popupid"),
        "webRTC-shareDevices", "panel using devices icon");
 
+    let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
@@ -250,6 +251,7 @@ let gTests = [
     is(getMediaCaptureState(), "CameraAndMicrophone",
        "expected camera and microphone to be shared");
 
+    yield indicator;
     yield checkSharingUI({audio: true, video: true});
     yield closeStream();
   }
@@ -270,6 +272,7 @@ let gTests = [
     is(PopupNotifications.panel.firstChild.getAttribute("popupid"),
        "webRTC-shareMicrophone", "panel using microphone icon");
 
+    let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
@@ -277,6 +280,7 @@ let gTests = [
     expectObserverCalled("recording-device-events");
     is(getMediaCaptureState(), "Microphone", "expected microphone to be shared");
 
+    yield indicator;
     yield checkSharingUI({audio: true});
     yield closeStream();
   }
@@ -297,6 +301,7 @@ let gTests = [
     is(PopupNotifications.panel.firstChild.getAttribute("popupid"),
        "webRTC-shareDevices", "panel using devices icon");
 
+    let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
@@ -304,6 +309,7 @@ let gTests = [
     expectObserverCalled("recording-device-events");
     is(getMediaCaptureState(), "Camera", "expected camera to be shared");
 
+    yield indicator;
     yield checkSharingUI({video: true});
     yield closeStream();
   }
@@ -322,6 +328,7 @@ let gTests = [
     // disable the camera
     enableDevice("Camera", false);
 
+    let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
@@ -334,6 +341,7 @@ let gTests = [
     is(getMediaCaptureState(), "Microphone",
        "expected microphone to be shared");
 
+    yield indicator;
     yield checkSharingUI({audio: true});
     yield closeStream();
   }
@@ -352,6 +360,7 @@ let gTests = [
     // disable the microphone
     enableDevice("Microphone", false);
 
+    let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
@@ -364,6 +373,7 @@ let gTests = [
     is(getMediaCaptureState(), "Camera",
        "expected microphone to be shared");
 
+    yield indicator;
     yield checkSharingUI({video: true});
     yield closeStream();
   }
@@ -427,6 +437,7 @@ let gTests = [
     expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
+    let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
@@ -435,6 +446,7 @@ let gTests = [
     is(getMediaCaptureState(), "CameraAndMicrophone",
        "expected camera and microphone to be shared");
 
+    yield indicator;
     yield checkSharingUI({video: true, audio: true});
 
     yield promiseNotificationShown(PopupNotifications.getNotification("webRTC-sharingDevices"));
@@ -469,6 +481,7 @@ let gTests = [
     expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
+    let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
@@ -477,6 +490,7 @@ let gTests = [
     is(getMediaCaptureState(), "CameraAndMicrophone",
        "expected camera and microphone to be shared");
 
+    yield indicator;
     yield checkSharingUI({video: true, audio: true});
 
     yield promiseNotificationShown(PopupNotifications.getNotification("webRTC-sharingDevices"));
@@ -730,6 +744,7 @@ let gTests = [
       Perms.add(uri, "microphone", Perms.ALLOW_ACTION);
       Perms.add(uri, "camera", Perms.ALLOW_ACTION);
 
+      let indicator = promiseIndicatorWindow();
       // Start sharing what's been requested.
       yield promiseMessage("ok", () => {
         content.wrappedJSObject.requestDevice(aRequestAudio, aRequestVideo);
@@ -737,6 +752,7 @@ let gTests = [
       expectObserverCalled("getUserMedia:request");
       expectObserverCalled("getUserMedia:response:allow");
       expectObserverCalled("recording-device-events");
+      yield indicator;
       yield checkSharingUI({video: aRequestVideo, audio: aRequestAudio});
 
       yield promiseNotificationShown(PopupNotifications.getNotification("webRTC-sharingDevices"));
@@ -801,6 +817,7 @@ let gTests = [
     expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(false, true);
 
+    let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
@@ -808,6 +825,7 @@ let gTests = [
     expectObserverCalled("recording-device-events");
     is(getMediaCaptureState(), "Camera", "expected camera to be shared");
 
+    yield indicator;
     yield checkSharingUI({video: true});
 
     yield promisePopupNotificationShown("webRTC-sharingDevices", () => {
