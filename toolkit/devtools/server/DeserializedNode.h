@@ -66,21 +66,21 @@ struct DeserializedNode {
   // AddRef'ing because this node's lifetime is equal to that of its owner.
   HeapSnapshot*   owner;
 
-  explicit DeserializedNode()
-    : id(0)
-    , typeName(nullptr)
-    , size(0)
-    , edges()
-    , owner(nullptr)
+  DeserializedNode(NodeId id,
+                   const char16_t* typeName,
+                   uint64_t size,
+                   EdgeVector&& edges,
+                   HeapSnapshot& owner)
+    : id(id)
+    , typeName(typeName)
+    , size(size)
+    , edges(Move(edges))
+    , owner(&owner)
   { }
   virtual ~DeserializedNode() { }
 
   DeserializedNode(DeserializedNode&& rhs);
   DeserializedNode& operator=(DeserializedNode&& rhs);
-
-  // Initialize a new `DeserializedNode` from the given `protobuf::Node`
-  // message.
-  bool init(const protobuf::Node& node, HeapSnapshot& owner);
 
   // Get a borrowed reference to the given edge's referent. This method is
   // virtual to provide a hook for gmock and gtest.
@@ -93,11 +93,6 @@ protected:
   DeserializedNode(NodeId id, const char16_t* typeName, uint64_t size);
 
 private:
-  void assertInitialized() const {
-    MOZ_ASSERT(owner);
-    MOZ_ASSERT(typeName);
-  }
-
   DeserializedNode(const DeserializedNode&) = delete;
   DeserializedNode& operator=(const DeserializedNode&) = delete;
 };
