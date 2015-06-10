@@ -10,6 +10,7 @@ import sys
 import tarfile
 import time
 import zipfile
+import tempfile
 
 import mozfile
 import mozinfo
@@ -93,8 +94,7 @@ def install(src, dest):
     the installation folder.
 
     :param src: Path to the install file
-    :param dest: Path to install to (to ensure we do not overwrite any existent
-                 files the folder should not exist yet)
+    :param dest: Path to install to
     """
     src = os.path.realpath(src)
     dest = os.path.realpath(dest)
@@ -102,14 +102,15 @@ def install(src, dest):
     if not is_installer(src):
         raise InvalidSource(src + ' is not valid installer file.')
 
-    did_we_create = False
     if not os.path.exists(dest):
-        did_we_create = True
         os.makedirs(dest)
+    else:
+        # create a subfolder to prevent data loss
+        dest = tempfile.mkdtemp(prefix="mozinstall", dir=dest)
 
     trbk = None
+    install_dir = None
     try:
-        install_dir = None
         if zipfile.is_zipfile(src) or tarfile.is_tarfile(src):
             install_dir = mozfile.extract(src, dest)[0]
         elif src.lower().endswith('.dmg'):
@@ -121,17 +122,17 @@ def install(src, dest):
 
     except:
         cls, exc, trbk = sys.exc_info()
-        if did_we_create:
-            try:
-                # try to uninstall this properly
-                uninstall(dest)
-            except:
-                # uninstall may fail, let's just try to clean the folder
-                # in this case
-                try:
-                    mozfile.remove(dest)
-                except:
-                    pass
+        # try to uninstall this properly
+        try:
+            if install_dir:
+                uninstall(install_dir)
+        except:
+            pass
+        # remove the dest folder anyway
+        try:
+            mozfile.remove(dest)
+        except:
+            pass
         if issubclass(cls, Exception):
             error = InstallError('Failed to install "%s (%s)"' % (src, str(exc)))
             raise InstallError, error, trbk
