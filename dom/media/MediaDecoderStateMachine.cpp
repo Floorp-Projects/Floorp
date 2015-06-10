@@ -272,6 +272,14 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   // timeEndPeriod() call.
   timeBeginPeriod(1);
 #endif
+
+  AudioQueue().AddPopListener(
+    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnAudioPopped),
+    mTaskQueue);
+
+  VideoQueue().AddPopListener(
+    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnVideoPopped),
+    mTaskQueue);
 }
 
 MediaDecoderStateMachine::~MediaDecoderStateMachine()
@@ -581,7 +589,7 @@ void MediaDecoderStateMachine::SendStreamData()
     // the decoding speed.
     if (a && a->mTime <= clockTime) {
       OnAudioEndTimeUpdate(std::max(mAudioEndTime, a->GetEndTime()));
-      nsRefPtr<AudioData> releaseMe = PopAudio();
+      nsRefPtr<AudioData> releaseMe = AudioQueue().PopFront();
       continue;
     }
     break;
@@ -905,22 +913,25 @@ MediaDecoderStateMachine::PushFront(VideoData* aSample)
   UpdateNextFrameStatus();
 }
 
-already_AddRefed<AudioData>
-MediaDecoderStateMachine::PopAudio()
+void
+MediaDecoderStateMachine::OnAudioPopped()
 {
   MOZ_ASSERT(OnTaskQueue());
-  nsRefPtr<AudioData> sample = AudioQueue().PopFront();
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   UpdateNextFrameStatus();
-  return sample.forget();
+  DispatchAudioDecodeTaskIfNeeded();
 }
 
-already_AddRefed<VideoData>
-MediaDecoderStateMachine::PopVideo()
+void
+MediaDecoderStateMachine::OnVideoPopped()
 {
   MOZ_ASSERT(OnTaskQueue());
-  nsRefPtr<VideoData> sample = VideoQueue().PopFront();
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   UpdateNextFrameStatus();
-  return sample.forget();
+  DispatchVideoDecodeTaskIfNeeded();
+  // Notify the decode thread that the video queue's buffers may have
+  // free'd up space for more frames.
+  mDecoder->GetReentrantMonitor().NotifyAll();
 }
 
 void
@@ -2283,17 +2294,6 @@ MediaDecoderStateMachine::DecodeFirstFrame()
   MOZ_ASSERT(mState == DECODER_STATE_DECODING_FIRSTFRAME);
   DECODER_LOG("DecodeFirstFrame started");
 
-  if (HasAudio()) {
-    RefPtr<nsIRunnable> decodeTask(
-      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::DispatchAudioDecodeTaskIfNeeded));
-    AudioQueue().AddPopListener(decodeTask, TaskQueue());
-  }
-  if (HasVideo()) {
-    RefPtr<nsIRunnable> decodeTask(
-      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::DispatchVideoDecodeTaskIfNeeded));
-    VideoQueue().AddPopListener(decodeTask, TaskQueue());
-  }
-
   if (IsRealTime()) {
     SetStartTime(0);
     nsresult res = FinishDecodeFirstFrame();
@@ -2925,10 +2925,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
                     currentFrame->mTime, clock_time, ++droppedFrames);
       }
       currentFrame = frame;
-      nsRefPtr<VideoData> releaseMe = PopVideo();
-      // Notify the decode thread that the video queue's buffers may have
-      // free'd up space for more frames.
-      mDecoder->GetReentrantMonitor().NotifyAll();
+      nsRefPtr<VideoData> releaseMe = VideoQueue().PopFront();
       OnPlaybackOffsetUpdate(frame->mOffset);
       if (VideoQueue().GetSize() == 0)
         break;
