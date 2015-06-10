@@ -112,31 +112,43 @@ UseTileTexture(CompositableTextureHostRef& aTexture,
                TextureHost* aNewTexture,
                Compositor* aCompositor)
 {
-  if (aTexture && aTexture->GetFormat() != aNewTexture->GetFormat()) {
-    // Only reuse textures if their format match the new texture's.
-    aTextureSource = nullptr;
-    aTexture = nullptr;
+  MOZ_ASSERT(aNewTexture);
+  if (!aNewTexture) {
+    return;
   }
-  aTexture = aNewTexture;
-  if (aTexture) {
-    if (aCompositor) {
-      aTexture->SetCompositor(aCompositor);
-    }
 
-    if (!aUpdateRect.IsEmpty()) {
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-      aTexture->Updated(nullptr);
-#else
-      // We possibly upload the entire texture contents here. This is a purposeful
-      // decision, as sub-image upload can often be slow and/or unreliable, but
-      // we may want to reevaluate this in the future.
-      // For !HasInternalBuffer() textures, this is likely a no-op.
-      nsIntRegion region = aUpdateRect;
-      aTexture->Updated(&region);
-#endif
+  if (aTexture) {
+    aTexture->SetCompositor(aCompositor);
+    aNewTexture->SetCompositor(aCompositor);
+
+    if (aTexture->GetFormat() != aNewTexture->GetFormat()) {
+      // Only reuse textures if their format match the new texture's.
+      aTextureSource = nullptr;
+      aTexture = nullptr;
     }
-    aTexture->PrepareTextureSource(aTextureSource);
   }
+
+  aTexture = aNewTexture;
+
+
+  if (aCompositor) {
+    aTexture->SetCompositor(aCompositor);
+  }
+
+  if (!aUpdateRect.IsEmpty()) {
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+    aTexture->Updated(nullptr);
+#else
+    // We possibly upload the entire texture contents here. This is a purposeful
+    // decision, as sub-image upload can often be slow and/or unreliable, but
+    // we may want to reevaluate this in the future.
+    // For !HasInternalBuffer() textures, this is likely a no-op.
+    nsIntRegion region = aUpdateRect;
+    aTexture->Updated(&region);
+#endif
+  }
+
+  aTexture->PrepareTextureSource(aTextureSource);
 }
 
 bool
