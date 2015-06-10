@@ -480,7 +480,7 @@ loop.roomViews = (function(mozL10n) {
       }
 
       var url = this._getURL();
-      var thumbnail = url && url.thumbnail || "loop/shared/img/icons-16x16.svg#globe";
+      var thumbnail = url && url.thumbnail || "";
       var urlDescription = url && url.description || "";
       var location = url && url.location || "";
       var locationData = null;
@@ -553,7 +553,7 @@ loop.roomViews = (function(mozL10n) {
           <div className="room-context-label">{mozL10n.get("context_inroom_label")}</div>
           <div className="room-context-content"
                onClick={this.handleContextClick}>
-            <img className="room-context-thumbnail" src={thumbnail} />
+            <img className="room-context-thumbnail" src={thumbnail}/>
             <div className="room-context-description"
                  title={urlDescription}>
               {this._truncate(urlDescription)}
