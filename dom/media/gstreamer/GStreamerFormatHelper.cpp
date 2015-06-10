@@ -8,12 +8,17 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsString.h"
 #include "GStreamerLoader.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 
 #define ENTRY_FORMAT(entry) entry[0]
 #define ENTRY_CAPS(entry) entry[1]
 
 namespace mozilla {
+
+extern PRLogModuleInfo* gMediaDecoderLog;
+#define LOG(msg, ...) \
+    MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, ("GStreamerFormatHelper " msg, ##__VA_ARGS__))
 
 GStreamerFormatHelper* GStreamerFormatHelper::gInstance = nullptr;
 bool GStreamerFormatHelper::sLoadOK = false;
