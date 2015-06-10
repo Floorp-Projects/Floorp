@@ -267,17 +267,6 @@ expectDescriptor(pd, expected);
 
 o = /foo/im;
 
-pd = Object.getOwnPropertyDescriptor(o, "source");
-expected =
-  {
-    value: "foo",
-    writable: false,
-    enumerable: false,
-    configurable: false
-  };
-
-expectDescriptor(pd, expected);
-
 pd = Object.getOwnPropertyDescriptor(o, "lastIndex");
 expected =
   {
