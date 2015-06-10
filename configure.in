@@ -3399,8 +3399,6 @@ if test -n "$MOZ_LINKER" -a "$OS_TARGET" = "Android"; then
   fi
 fi
 
-MOZ_CHECK_ALLOCATOR
-
 dnl See if compiler supports some gcc-style attributes
 
 AC_CACHE_CHECK(for __attribute__((always_inline)),
@@ -3434,6 +3432,8 @@ fi
 
 AC_HAVE_FUNCS(localeconv)
 fi # ! SKIP_COMPILER_CHECKS
+
+MOZ_CHECK_ALLOCATOR
 
 TARGET_XPCOM_ABI=
 if test -n "${CPU_ARCH}" -a -n "${TARGET_COMPILER_ABI}"; then
