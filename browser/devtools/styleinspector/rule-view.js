@@ -1859,6 +1859,16 @@ CssRuleView.prototype = {
     });
   },
 
+  /**
+   * Disables add rule button when needed
+   */
+  refreshAddRuleButtonState: function() {
+    let shouldBeDisabled = !this._viewedElement ||
+                           !this.inspector.selection.isElementNode() ||
+                           this.inspector.selection.isAnonymousNode();
+    this.addRuleButton.disabled = shouldBeDisabled;
+  },
+
   setPageStyle: function(aPageStyle) {
     this.pageStyle = aPageStyle;
   },
@@ -2106,6 +2116,8 @@ CssRuleView.prototype = {
     this.clearPseudoClassPanel();
 
     this._viewedElement = aElement;
+    this.refreshAddRuleButtonState();
+
     if (!this._viewedElement) {
       this._showEmpty();
       this.refreshPseudoClassPanel();
