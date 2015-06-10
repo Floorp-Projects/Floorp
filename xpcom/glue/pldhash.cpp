@@ -761,6 +761,27 @@ PL_DHashTableRawRemove(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
   aTable->RawRemove(aEntry);
 }
 
+// Shrink or compress if a quarter or more of all entries are removed, or if the
+// table is underloaded according to the minimum alpha, and is not minimal-size
+// already.
+void
+PLDHashTable::ShrinkIfAppropriate()
+{
+  uint32_t capacity = Capacity();
+  if (mRemovedCount >= capacity >> 2 ||
+      (capacity > PL_DHASH_MIN_CAPACITY && mEntryCount <= MinLoad(capacity))) {
+    METER(mStats.mEnumShrinks++);
+
+    uint32_t log2;
+    BestCapacity(mEntryCount, &capacity, &log2);
+
+    int32_t deltaLog2 = log2 - (PL_DHASH_BITS - mHashShift);
+    MOZ_ASSERT(deltaLog2 <= 0);
+
+    (void) ChangeTable(deltaLog2);
+  }
+}
+
 MOZ_ALWAYS_INLINE uint32_t
 PLDHashTable::Enumerate(PLDHashEnumerator aEtor, void* aArg)
 {
@@ -805,26 +826,11 @@ PLDHashTable::Enumerate(PLDHashEnumerator aEtor, void* aArg)
 
   MOZ_ASSERT(!didRemove || mRecursionLevel == 1);
 
-  /*
-   * Shrink or compress if a quarter or more of all entries are removed, or
-   * if the table is underloaded according to the minimum alpha, and is not
-   * minimal-size already.  Do this only if we removed above, so non-removing
-   * enumerations can count on stable |mEntryStore| until the next
-   * Add, Remove, or removing-Enumerate.
-   */
-  if (didRemove &&
-      (mRemovedCount >= capacity >> 2 ||
-       (capacity > PL_DHASH_MIN_CAPACITY &&
-        mEntryCount <= MinLoad(capacity)))) {
-    METER(mStats.mEnumShrinks++);
-
-    uint32_t log2;
-    BestCapacity(mEntryCount, &capacity, &log2);
-
-    int32_t deltaLog2 = log2 - (PL_DHASH_BITS - mHashShift);
-    MOZ_ASSERT(deltaLog2 <= 0);
-
-    (void) ChangeTable(deltaLog2);
+  // Shrink the table if appropriate. Do this only if we removed above, so
+  // non-removing enumerations can count on stable |mEntryStore| until the next
+  // Add, Remove, or removing-Enumerate.
+  if (didRemove) {
+    ShrinkIfAppropriate();
   }
 
   DECREMENT_RECURSION_LEVEL(this);

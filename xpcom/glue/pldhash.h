@@ -360,6 +360,8 @@ private:
 
   bool ChangeTable(int aDeltaLog2);
 
+  void ShrinkIfAppropriate();
+
   PLDHashTable(const PLDHashTable& aOther) = delete;
   PLDHashTable& operator=(const PLDHashTable& aOther) = delete;
 };
