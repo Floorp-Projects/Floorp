@@ -98,8 +98,38 @@ parseMessage(ZeroCopyInputStream& stream, MessageType& message)
 bool
 HeapSnapshot::saveNode(const protobuf::Node& node)
 {
-  DeserializedNode dn;
-  return dn.init(node, *this) && nodes.putNew(dn.id, Move(dn));
+  if (!node.has_id())
+    return false;
+  NodeId id = node.id();
+
+  if (!node.has_typename_())
+    return false;
+
+  const auto* duplicatedTypeName = reinterpret_cast<const char16_t*>(
+    node.typename_().c_str());
+  const char16_t* typeName = borrowUniqueString(
+    duplicatedTypeName,
+    node.typename_().length() / sizeof(char16_t));
+  if (!typeName)
+    return false;
+
+  if (!node.has_size())
+    return false;
+  uint64_t size = node.size();
+
+  auto edgesLength = node.edges_size();
+  DeserializedNode::EdgeVector edges;
+  if (!edges.reserve(edgesLength))
+    return false;
+  for (decltype(edgesLength) i = 0; i < edgesLength; i++) {
+    DeserializedEdge edge;
+    if (!edge.init(node.edges(i), *this))
+      return false;
+    edges.infallibleAppend(Move(edge));
+  }
+
+  DeserializedNode dn(id, typeName, size, Move(edges), *this);
+  return nodes.putNew(id, Move(dn));
 }
 
 static inline bool
