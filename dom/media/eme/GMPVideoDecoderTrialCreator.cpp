@@ -60,6 +60,10 @@ TrialCreatePrefName(const nsAString& aKeySystem)
 GMPVideoDecoderTrialCreator::TrialCreateState
 GMPVideoDecoderTrialCreator::GetCreateTrialState(const nsAString& aKeySystem)
 {
+  if (Preferences::GetBool("media.gmp.always-trial-create", false)) {
+    return Pending;
+  }
+
   const char* pref = TrialCreatePrefName(aKeySystem);
   if (!pref) {
     return Pending;
