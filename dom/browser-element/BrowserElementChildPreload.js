@@ -1424,6 +1424,12 @@ BrowserElementChild.prototype = {
       else if (state & Ci.nsIWebProgressListener.STATE_IS_INSECURE) {
         stateDesc = 'insecure';
       }
+      else if (state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) {
+        stateDesc = 'loaded_tracking_content';
+      }
+      else if (state & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) {
+        stateDesc = 'blocked_tracking_content';
+      }
       else {
         debug("Unexpected securitychange state!");
         stateDesc = '???';
