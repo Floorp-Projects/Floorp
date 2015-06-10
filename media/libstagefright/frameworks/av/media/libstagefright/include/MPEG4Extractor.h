@@ -88,6 +88,7 @@ private:
         uint32_t timescale;
         // Temporary storage for elst until we've
         // parsed mdhd and can interpret them.
+        uint64_t empty_duration;
         uint64_t segment_duration;
         int64_t media_time;
 
