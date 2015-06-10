@@ -10885,9 +10885,9 @@ namespace mozilla {
 // presses the escape key.
 class FullscreenRoots {
 public:
-  // Adds a root to the manager. Adding a root multiple times does not result
-  // in duplicate entries for that item, only one.
-  static void Add(nsIDocument* aRoot);
+  // Adds the root of given document to the manager. Calling this method
+  // with a document whose root is already contained has no effect.
+  static void Add(nsIDocument* aDoc);
 
   // Iterates over every root in the root list, and calls aFunction, passing
   // each root once to aFunction. It is safe to call Add() and Remove() while
@@ -10896,8 +10896,8 @@ public:
   // are added to the manager during traversal are also not traversed.
   static void ForEach(void(*aFunction)(nsIDocument* aDoc));
 
-  // Removes a specific root from the manager.
-  static void Remove(nsIDocument* aRoot);
+  // Removes the root of a specific document from the manager.
+  static void Remove(nsIDocument* aDoc);
 
   // Returns true if all roots added to the list have been removed.
   static bool IsEmpty();
@@ -10960,13 +10960,14 @@ FullscreenRoots::Contains(nsIDocument* aRoot)
 
 /* static */
 void
-FullscreenRoots::Add(nsIDocument* aRoot)
+FullscreenRoots::Add(nsIDocument* aDoc)
 {
-  if (!FullscreenRoots::Contains(aRoot)) {
+  nsCOMPtr<nsIDocument> root = nsContentUtils::GetRootDocument(aDoc);
+  if (!FullscreenRoots::Contains(root)) {
     if (!sInstance) {
       sInstance = new FullscreenRoots();
     }
-    sInstance->mRoots.AppendElement(do_GetWeakReference(aRoot));
+    sInstance->mRoots.AppendElement(do_GetWeakReference(root));
   }
 }
 
@@ -10989,9 +10990,10 @@ FullscreenRoots::Find(nsIDocument* aRoot)
 
 /* static */
 void
-FullscreenRoots::Remove(nsIDocument* aRoot)
+FullscreenRoots::Remove(nsIDocument* aDoc)
 {
-  uint32_t index = Find(aRoot);
+  nsCOMPtr<nsIDocument> root = nsContentUtils::GetRootDocument(aDoc);
+  uint32_t index = Find(root);
   NS_ASSERTION(index != NotFound,
     "Should only try to remove roots which are still added!");
   if (index == NotFound || !sInstance) {
@@ -11067,13 +11069,6 @@ private:
 static void
 SetWindowFullScreen(nsIDocument* aDoc, bool aValue, gfx::VRHMDInfo *aVRHMD = nullptr)
 {
-  // Maintain list of fullscreen root documents.
-  nsCOMPtr<nsIDocument> root = nsContentUtils::GetRootDocument(aDoc);
-  if (aValue) {
-    FullscreenRoots::Add(root);
-  } else {
-    FullscreenRoots::Remove(root);
-  }
   nsContentUtils::AddScriptRunner(new nsSetWindowFullScreen(aDoc, aValue, aVRHMD));
 }
 
@@ -11189,6 +11184,7 @@ ExitFullscreenInDocTree(nsIDocument* aMaybeNotARootDoc)
                              true, true);
   asyncDispatcher->PostDOMEvent();
   // Move the top-level window out of fullscreen mode.
+  FullscreenRoots::Remove(root);
   SetWindowFullScreen(root, false);
 }
 
@@ -11308,6 +11304,7 @@ nsDocument::RestorePreviousFullScreenState()
     nsRefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
       this, NS_LITERAL_STRING("MozDOMFullscreen:Exited"), true, true);
     asyncDispatcher->PostDOMEvent();
+    FullscreenRoots::Remove(this);
     SetWindowFullScreen(this, false);
   }
 }
@@ -11666,6 +11663,7 @@ nsDocument::RequestFullScreen(Element* aElement,
   // modes. Also note that nsGlobalWindow::SetFullScreen() (which
   // SetWindowFullScreen() calls) proxies to the root window in its hierarchy,
   // and does not operate on the a per-nsIDOMWindow basis.
+  FullscreenRoots::Add(this);
   SetWindowFullScreen(this, true, aOptions.mVRHMDDevice);
 }
 
