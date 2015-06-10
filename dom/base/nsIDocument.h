@@ -48,6 +48,7 @@ class nsIChannel;
 class nsIContent;
 class nsIContentSink;
 class nsIDocShell;
+class nsIDocShellTreeItem;
 class nsIDocumentEncoder;
 class nsIDocumentObserver;
 class nsIDOMDocument;
@@ -83,6 +84,7 @@ class nsDOMCaretPosition;
 class nsViewportInfo;
 class nsIGlobalObject;
 struct nsCSSSelectorList;
+struct FullscreenRequest; // For nsIDocument::HandlePendingFullscreenRequest
 
 namespace mozilla {
 class CSSStyleSheet;
@@ -1179,6 +1181,22 @@ public:
    * aDocument has fullscreen ancestors.
    */
   static void ExitFullscreen(nsIDocument* aDocument, bool aRunAsync);
+
+  /**
+   * Handles one single fullscreen request, updates `aHandled` if the request
+   * is handled, and returns whether this request should be removed from the
+   * request queue.
+   */
+  static bool HandlePendingFullscreenRequest(const FullscreenRequest& aRequest,
+                                             nsIDocShellTreeItem* aRootShell,
+                                             bool* aHandled);
+
+  /**
+   * Handles any pending fullscreen in aDocument or its subdocuments.
+   *
+   * Returns whether there is any fullscreen request handled.
+   */
+  static bool HandlePendingFullscreenRequests(nsIDocument* aDocument);
 
   virtual void RequestPointerLock(Element* aElement) = 0;
 
