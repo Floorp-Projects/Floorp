@@ -6,17 +6,22 @@
 #define mozilla_finalizationwitnessservice_h__
 
 #include "nsIFinalizationWitnessService.h"
+#include "nsIObserver.h"
 
 namespace mozilla {
 
 /**
  * XPConnect initializer, for use in the main thread.
  */
-class FinalizationWitnessService final : public nsIFinalizationWitnessService
+class FinalizationWitnessService final : public nsIFinalizationWitnessService,
+                                         public nsIObserver
 {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFINALIZATIONWITNESSSERVICE
+  NS_DECL_NSIOBSERVER
+
+  nsresult Init();
  private:
   ~FinalizationWitnessService() {}
   void operator=(const FinalizationWitnessService* other) = delete;
