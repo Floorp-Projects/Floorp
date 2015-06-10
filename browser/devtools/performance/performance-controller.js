@@ -458,6 +458,7 @@ let PerformanceController = {
     if (state !== "recording-starting" && this.getRecordings().indexOf(model) === -1) {
       return;
     }
+
     switch (state) {
       // Fired when a RecordingModel was just created from the front
       case "recording-starting":
