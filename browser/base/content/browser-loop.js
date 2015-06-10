@@ -9,6 +9,13 @@ let LoopUI;
   const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
   const kBrowserSharingNotificationId = "loop-sharing-notification";
   const kPrefBrowserSharingInfoBar = "browserSharing.showInfoBar";
+  // This is the default icon as provided by the favicon service when a website
+  // doesn't provide its own. When the icon ever changes, this data-uri will need
+  // to be updated as well. A unit test covers this event.
+  const kDefaultFavicon = "data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAArklEQVR42t2TMQ4CIRBF" +
+    "9xBGEw5AkBJKY7uhcHsCjfEkHkJDLOWiyDeTyWoFwcriMcD8/wMkTKWUId6DMUYrpa5Symddb1CB9/4IaM09aOHhgLpxyzlf6jxChErsibjuQQsPB1C" +
+    "6hKARCQ8HcHof8eMEvQHwDAX89grOuVNvADx/9AbjJ7DWPkIIh1YztPBwQErprLW+t34maOFZv8G2MlcWIcSESuyI5as3k2d6AZGetvsfEgPvAAAAAE" +
+    "lFTkSuQmCC";
 
   LoopUI = {
     /**
@@ -548,7 +555,10 @@ let LoopUI;
         }
 
         let reader = new FileReader();
-        reader.onload = () => callback(null, reader.result);
+        reader.onload = () => {
+          let result = reader.result;
+          callback(null, result && result != kDefaultFavicon ? result : null);
+        };
         reader.onerror = callback;
         reader.readAsDataURL(xhr.response);
       };

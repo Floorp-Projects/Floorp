@@ -35,3 +35,16 @@ add_task(function* test_mozLoop_getSelectedTabMetadata() {
 
   gBrowser.removeTab(tab);
 });
+
+add_task(function* test_mozLoop_getSelectedTabMetadata_defaultIcon() {
+  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  yield promiseTabLoadEvent(tab, "http://example.com/");
+  let metadata = yield promiseGetMetadata();
+
+  Assert.strictEqual(metadata.url, "http://example.com/", "URL should match");
+  Assert.strictEqual(metadata.favicon, null, "Favicon should be empty");
+  Assert.ok(metadata.title, "Title should be set");
+  Assert.deepEqual(metadata.previews, [], "No previews available");
+
+  gBrowser.removeTab(tab);
+});
