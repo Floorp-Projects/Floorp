@@ -4885,12 +4885,15 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    // Chrome callers (whether ChromeWorker of Worker) always get the system
-    // principal here as they're allowed to load anything. The script loader may
-    // change the principal later depending on the script uri.
+    // Chrome callers (whether creating a ChromeWorker or Worker) always get the
+    // system principal here as they're allowed to load anything. The script
+    // loader will refuse to run any script that does not also have the system
+    // principal.
     if (isChrome) {
       rv = ssm->GetSystemPrincipal(getter_AddRefs(loadInfo.mPrincipal));
       NS_ENSURE_SUCCESS(rv, rv);
+
+      loadInfo.mPrincipalIsSystem = true;
     }
 
     // See if we're being called from a window.

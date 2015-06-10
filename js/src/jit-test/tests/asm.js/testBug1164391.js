@@ -1,3 +1,6 @@
+if (!this.SharedArrayBuffer)
+    quit(0);
+
 function m(stdlib, ffi, heap) {
     "use asm";
     var HEAP32 = new stdlib.SharedInt32Array(heap);

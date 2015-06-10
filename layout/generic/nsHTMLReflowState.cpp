@@ -2393,7 +2393,8 @@ nsCSSOffsetState::InitOffsets(const LogicalSize& aPercentBasis,
       // try to do anything like handling 'auto' widths,
       // 'box-sizing', or 'auto' margins.
       ComputedPhysicalPadding().SizeTo(0,0,0,0);
-      ComputedPhysicalBorderPadding() = tableFrame->GetIncludedOuterBCBorder();
+      SetComputedLogicalBorderPadding(
+        tableFrame->GetIncludedOuterBCBorder(mWritingMode));
     }
 
     // The margin is inherited to the outer table frame via

@@ -1292,19 +1292,37 @@ public:
   }
 
   // A variation on the ReplaceElementsAt method defined above.
-  template<class Item>
+  template<class Item, typename ActualAlloc = Alloc>
   elem_type* InsertElementsAt(index_type aIndex, const Item* aArray,
                               size_type aArrayLen)
   {
-    return ReplaceElementsAt(aIndex, 0, aArray, aArrayLen);
+    return ReplaceElementsAt<Item, ActualAlloc>(aIndex, 0, aArray, aArrayLen);
+  }
+
+  template<class Item>
+  /* MOZ_WARN_UNUSED_RESULT */
+  elem_type* InsertElementsAt(index_type aIndex, const Item* aArray,
+                              size_type aArrayLen, const mozilla::fallible_t&)
+  {
+    return InsertElementsAt<Item, FallibleAlloc>(aIndex, aArray, aArrayLen);
   }
 
   // A variation on the ReplaceElementsAt method defined above.
-  template<class Item, class Allocator>
+  template<class Item, class Allocator, typename ActualAlloc = Alloc>
   elem_type* InsertElementsAt(index_type aIndex,
                               const nsTArray_Impl<Item, Allocator>& aArray)
   {
-    return ReplaceElementsAt(aIndex, 0, aArray.Elements(), aArray.Length());
+    return ReplaceElementsAt<Item, ActualAlloc>(
+      aIndex, 0, aArray.Elements(), aArray.Length());
+  }
+
+  template<class Item, class Allocator>
+  /* MOZ_WARN_UNUSED_RESULT */
+  elem_type* InsertElementsAt(index_type aIndex,
+                              const nsTArray_Impl<Item, Allocator>& aArray,
+                              const mozilla::fallible_t&)
+  {
+    return InsertElementsAt<Item, Allocator, FallibleAlloc>(aIndex, aArray);
   }
 
   // Insert a new element without copy-constructing. This is useful to avoid
@@ -1392,18 +1410,38 @@ public:
   // Inserts |aItem| at such an index to guarantee that if the array
   // was previously sorted, it will remain sorted after this
   // insertion.
-  template<class Item, class Comparator>
-  elem_type* InsertElementSorted(const Item& aItem, const Comparator& aComp)
+  template<class Item, class Comparator, typename ActualAlloc = Alloc>
+  elem_type* InsertElementSorted(Item&& aItem, const Comparator& aComp)
   {
-    index_type index = IndexOfFirstElementGt(aItem, aComp);
-    return InsertElementAt(index, aItem);
+    index_type index = IndexOfFirstElementGt<Item, Comparator>(aItem, aComp);
+    return InsertElementAt<Item, ActualAlloc>(
+      index, mozilla::Forward<Item>(aItem));
+  }
+
+  template<class Item, class Comparator>
+  /* MOZ_WARN_UNUSED_RESULT */
+  elem_type* InsertElementSorted(Item&& aItem, const Comparator& aComp,
+                                 const mozilla::fallible_t&)
+  {
+    return InsertElementSorted<Item, Comparator, FallibleAlloc>(
+      mozilla::Forward<Item>(aItem), aComp);
   }
 
   // A variation on the InsertElementSorted method defined above.
-  template<class Item>
-  elem_type* InsertElementSorted(const Item& aItem)
+  template<class Item, typename ActualAlloc = Alloc>
+  elem_type* InsertElementSorted(Item&& aItem)
   {
-    return InsertElementSorted(aItem, nsDefaultComparator<elem_type, Item>());
+    nsDefaultComparator<elem_type, Item> comp;
+    return InsertElementSorted<Item, decltype(comp), ActualAlloc>(
+      mozilla::Forward<Item>(aItem), comp);
+  }
+
+  template<class Item>
+  /* MOZ_WARN_UNUSED_RESULT */
+  elem_type* InsertElementSorted(Item&& aItem, const mozilla::fallible_t&)
+  {
+    return InsertElementSorted<Item, FallibleAlloc>(
+      mozilla::Forward<Item>(aItem));
   }
 
   // This method appends elements to the end of this array.

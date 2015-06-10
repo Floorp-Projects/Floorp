@@ -12,8 +12,6 @@ ifneq ($(make_min_ver),$(firstword $(sort $(make_min_ver) $(MAKE_VERSION))))
 $(error GNU Make $(make_min_ver) or higher is required)
 endif
 
-TOPLEVEL_BUILD := 1
-
 run_for_side_effects := $(shell echo 'MAKE: $(MAKE)')
 
 ifdef JS_HAS_CTYPES

@@ -79,25 +79,26 @@ struct nsTableReflowState {
                "nsTableReflowState should only be created for nsTableFrame");
     nsTableFrame* table =
       static_cast<nsTableFrame*>(reflowState.frame->FirstInFlow());
-    nsMargin borderPadding = table->GetChildAreaOffset(&reflowState);
+    WritingMode wm = aReflowState.GetWritingMode();
+    LogicalMargin borderPadding = table->GetChildAreaOffset(wm, &reflowState);
 
-    x = borderPadding.left + table->GetColSpacing(-1);
-    y = borderPadding.top; //cellspacing added during reflow
+    x = borderPadding.IStart(wm) + table->GetColSpacing(-1);
+    y = borderPadding.BStart(wm); //cellspacing added during reflow
 
     availSize.width  = aAvailWidth;
     if (NS_UNCONSTRAINEDSIZE != availSize.width) {
       int32_t colCount = table->GetColCount();
-      availSize.width -= borderPadding.left + borderPadding.right
-                         + table->GetColSpacing(-1)
-                         + table->GetColSpacing(colCount);
+      availSize.width -= borderPadding.IStartEnd(wm) +
+                         table->GetColSpacing(-1) +
+                         table->GetColSpacing(colCount);
       availSize.width = std::max(0, availSize.width);
     }
 
     availSize.height = aAvailHeight;
     if (NS_UNCONSTRAINEDSIZE != availSize.height) {
-      availSize.height -= borderPadding.top + borderPadding.bottom
-                          + table->GetRowSpacing(-1)
-                          + table->GetRowSpacing(table->GetRowCount());
+      availSize.height -= borderPadding.BStartEnd(wm) +
+                          table->GetRowSpacing(-1) +
+                          table->GetRowSpacing(table->GetRowCount());
       availSize.height = std::max(0, availSize.height);
     }
   }
@@ -1350,7 +1351,8 @@ nsTableFrame::GetDeflationForBackground(nsPresContext* aPresContext) const
       !IsBorderCollapse())
     return nsMargin(0,0,0,0);
 
-  return GetOuterBCBorder();
+  WritingMode wm = GetWritingMode();
+  return GetOuterBCBorder(wm).GetPhysicalMargin(wm);
 }
 
 // XXX We don't put the borders and backgrounds in tree order like we should.
@@ -1418,10 +1420,10 @@ nsTableFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 }
 
 void
-nsTableFrame::SetColumnDimensions(nscoord         aHeight,
-                                  const nsMargin& aBorderPadding)
+nsTableFrame::SetColumnDimensions(nscoord aHeight, WritingMode aWM,
+                                  const LogicalMargin& aBorderPadding)
 {
-  nscoord colHeight = aHeight -= aBorderPadding.top + aBorderPadding.bottom +
+  nscoord colHeight = aHeight -= aBorderPadding.BStartEnd(aWM) +
                                  GetRowSpacing(-1) +
                                  GetRowSpacing(GetRowCount());
 
@@ -1431,8 +1433,8 @@ nsTableFrame::SetColumnDimensions(nscoord         aHeight,
   int32_t colX =tableIsLTR ? 0 : std::max(0, GetColCount() - 1);
   nscoord cellSpacingX = GetColSpacing(colX);
   int32_t tableColIncr = tableIsLTR ? 1 : -1;
-  nsPoint colGroupOrigin(aBorderPadding.left + GetColSpacing(-1),
-                         aBorderPadding.top + GetRowSpacing(-1));
+  nsPoint colGroupOrigin(aBorderPadding.IStart(aWM) + GetColSpacing(-1),
+                         aBorderPadding.BStart(aWM) + GetRowSpacing(-1));
   while (colGroupFrame) {
     MOZ_ASSERT(colGroupFrame->GetType() == nsGkAtoms::tableColGroupFrame);
     nscoord colGroupWidth = 0;
@@ -1552,8 +1554,9 @@ nsTableFrame::IntrinsicISizeOffsets(nsRenderingContext* aRenderingContext)
     result.hPadding = 0;
     result.hPctPadding = 0;
 
-    nsMargin outerBC = GetIncludedOuterBCBorder();
-    result.hBorder = outerBC.LeftRight();
+    WritingMode wm = GetWritingMode();
+    LogicalMargin outerBC = GetIncludedOuterBCBorder(wm);
+    result.hBorder = outerBC.IStartEnd(wm);
   }
 
   return result;
@@ -1785,6 +1788,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsTableFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   bool isPaginated = aPresContext->IsPaginated();
+  WritingMode wm = aReflowState.GetWritingMode();
 
   aStatus = NS_FRAME_COMPLETE;
   if (!GetPrevInFlow() && !mTableLayoutStrategy) {
@@ -1877,8 +1881,8 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
 
       if (lastChildReflowed && NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
         // if there is an incomplete child, then set the desired height to include it but not the next one
-        nsMargin borderPadding = GetChildAreaOffset(&aReflowState);
-        aDesiredSize.Height() = borderPadding.bottom + GetRowSpacing(GetRowCount()) +
+        LogicalMargin borderPadding = GetChildAreaOffset(wm, &aReflowState);
+        aDesiredSize.Height() = borderPadding.BEnd(wm) + GetRowSpacing(GetRowCount()) +
                               lastChildReflowed->GetNormalRect().YMost();
       }
       haveDesiredHeight = true;
@@ -1902,11 +1906,11 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
     ProcessRowInserted(aDesiredSize.Height());
   }
 
-  nsMargin borderPadding = GetChildAreaOffset(&aReflowState);
-  SetColumnDimensions(aDesiredSize.Height(), borderPadding);
+  LogicalMargin borderPadding = GetChildAreaOffset(wm, &aReflowState);
+  SetColumnDimensions(aDesiredSize.Height(), wm, borderPadding);
   if (NeedToCollapse() &&
       (NS_UNCONSTRAINEDSIZE != aReflowState.AvailableWidth())) {
-    AdjustForCollapsingRowsCols(aDesiredSize, borderPadding);
+    AdjustForCollapsingRowsCols(aDesiredSize, wm, borderPadding);
   }
 
   // If there are any relatively-positioned table parts, we need to reflow their
@@ -1918,8 +1922,8 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
 
   if (!ShouldApplyOverflowClipping(this, aReflowState.mStyleDisplay)) {
     // collapsed border may leak out
-    nsMargin bcMargin = GetExcludedOuterBCBorder();
-    tableRect.Inflate(bcMargin);
+    LogicalMargin bcMargin = GetExcludedOuterBCBorder(wm);
+    tableRect.Inflate(bcMargin.GetPhysicalMargin(wm));
   }
   aDesiredSize.mOverflowAreas.UnionAllWith(tableRect);
 
@@ -2007,8 +2011,9 @@ nsTableFrame::UpdateOverflow()
   // As above in Reflow, make sure the table overflow area includes the table
   // rect, and check for collapsed borders leaking out.
   if (!ShouldApplyOverflowClipping(this, StyleDisplay())) {
-    nsMargin bcMargin = GetExcludedOuterBCBorder();
-    bounds.Inflate(bcMargin);
+    WritingMode wm = GetWritingMode();
+    LogicalMargin bcMargin = GetExcludedOuterBCBorder(wm);
+    bounds.Inflate(bcMargin.GetPhysicalMargin(wm));
   }
 
   nsOverflowAreas overflowAreas(bounds, bounds);
@@ -2123,7 +2128,8 @@ nsTableFrame::PushChildren(const RowGroupArray& aRowGroups,
 // reflow so that it has no effect on the calculations of reflow.
 void
 nsTableFrame::AdjustForCollapsingRowsCols(nsHTMLReflowMetrics& aDesiredSize,
-                                          nsMargin             aBorderPadding)
+                                          const WritingMode aWM,
+                                          const LogicalMargin& aBorderPadding)
 {
   nscoord yTotalOffset = 0; // total offset among all rows in all row groups
 
@@ -2137,7 +2143,7 @@ nsTableFrame::AdjustForCollapsingRowsCols(nsHTMLReflowMetrics& aDesiredSize,
   OrderRowGroups(rowGroups);
 
   nsTableFrame* firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
-  nscoord width = firstInFlow->GetCollapsedWidth(aBorderPadding);
+  nscoord width = firstInFlow->GetCollapsedWidth(aWM, aBorderPadding);
   nscoord rgWidth = width - GetColSpacing(-1) -
                     GetColSpacing(GetColCount());
   nsOverflowAreas overflow;
@@ -2158,11 +2164,12 @@ nsTableFrame::AdjustForCollapsingRowsCols(nsHTMLReflowMetrics& aDesiredSize,
 
 
 nscoord
-nsTableFrame::GetCollapsedWidth(nsMargin aBorderPadding)
+nsTableFrame::GetCollapsedWidth(const WritingMode aWM,
+                                const LogicalMargin& aBorderPadding)
 {
   NS_ASSERTION(!GetPrevInFlow(), "GetCollapsedWidth called on next in flow");
   nscoord width = GetColSpacing(GetColCount());
-  width += aBorderPadding.left + aBorderPadding.right;
+  width += aBorderPadding.IStartEnd(aWM);
   for (nsIFrame* groupFrame : mColGroups) {
     const nsStyleVisibility* groupVis = groupFrame->StyleVisibility();
     bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
@@ -2550,7 +2557,8 @@ nsTableFrame::GetUsedBorder() const
   if (!IsBorderCollapse())
     return nsContainerFrame::GetUsedBorder();
 
-  return GetIncludedOuterBCBorder();
+  WritingMode wm = GetWritingMode();
+  return GetIncludedOuterBCBorder(wm).GetPhysicalMargin(wm);
 }
 
 /* virtual */ nsMargin
@@ -2595,74 +2603,72 @@ DivideBCBorderSize(BCPixelSize  aPixelSize,
   aLargeHalf = aPixelSize - aSmallHalf;
 }
 
-nsMargin
-nsTableFrame::GetOuterBCBorder() const
+LogicalMargin
+nsTableFrame::GetOuterBCBorder(const WritingMode aWM) const
 {
   if (NeedToCalcBCBorders())
     const_cast<nsTableFrame*>(this)->CalcBCBorders();
 
-  nsMargin border(0, 0, 0, 0);
   int32_t p2t = nsPresContext::AppUnitsPerCSSPixel();
   BCPropertyData* propData = GetBCProperty();
   if (propData) {
-    border.top = BC_BORDER_START_HALF_COORD(p2t, propData->mTopBorderWidth);
-    border.right = BC_BORDER_END_HALF_COORD(p2t, propData->mRightBorderWidth);
-    border.bottom = BC_BORDER_END_HALF_COORD(p2t, propData->mBottomBorderWidth);
-    border.left = BC_BORDER_START_HALF_COORD(p2t, propData->mLeftBorderWidth);
+    return LogicalMargin(
+      aWM,
+      BC_BORDER_START_HALF_COORD(p2t, propData->mTopBorderWidth),
+      BC_BORDER_END_HALF_COORD(p2t, propData->mRightBorderWidth),
+      BC_BORDER_END_HALF_COORD(p2t, propData->mBottomBorderWidth),
+      BC_BORDER_START_HALF_COORD(p2t, propData->mLeftBorderWidth));
   }
-  return border;
+  return LogicalMargin(GetWritingMode());
 }
 
-nsMargin
-nsTableFrame::GetIncludedOuterBCBorder() const
+LogicalMargin
+nsTableFrame::GetIncludedOuterBCBorder(const WritingMode aWM) const
 {
   if (NeedToCalcBCBorders())
     const_cast<nsTableFrame*>(this)->CalcBCBorders();
 
-  nsMargin border(0, 0, 0, 0);
   int32_t p2t = nsPresContext::AppUnitsPerCSSPixel();
   BCPropertyData* propData = GetBCProperty();
   if (propData) {
-    border.top += BC_BORDER_START_HALF_COORD(p2t, propData->mTopBorderWidth);
-    border.right += BC_BORDER_END_HALF_COORD(p2t, propData->mRightCellBorderWidth);
-    border.bottom += BC_BORDER_END_HALF_COORD(p2t, propData->mBottomBorderWidth);
-    border.left += BC_BORDER_START_HALF_COORD(p2t, propData->mLeftCellBorderWidth);
+    return LogicalMargin(
+      aWM,
+      BC_BORDER_START_HALF_COORD(p2t, propData->mTopBorderWidth),
+      BC_BORDER_END_HALF_COORD(p2t, propData->mRightCellBorderWidth),
+      BC_BORDER_END_HALF_COORD(p2t, propData->mBottomBorderWidth),
+      BC_BORDER_START_HALF_COORD(p2t, propData->mLeftCellBorderWidth));
   }
-  return border;
+  return LogicalMargin(GetWritingMode());
 }
 
-nsMargin
-nsTableFrame::GetExcludedOuterBCBorder() const
+LogicalMargin
+nsTableFrame::GetExcludedOuterBCBorder(const WritingMode aWM) const
 {
-  return GetOuterBCBorder() - GetIncludedOuterBCBorder();
+  return GetOuterBCBorder(aWM) - GetIncludedOuterBCBorder(aWM);
 }
 
-static
-void GetSeparateModelBorderPadding(const nsHTMLReflowState* aReflowState,
-                                   nsStyleContext&          aStyleContext,
-                                   nsMargin&                aBorderPadding)
+static LogicalMargin
+GetSeparateModelBorderPadding(const WritingMode aWM,
+                              const nsHTMLReflowState* aReflowState,
+                              nsStyleContext* aStyleContext)
 {
   // XXXbz Either we _do_ have a reflow state and then we can use its
   // mComputedBorderPadding or we don't and then we get the padding
   // wrong!
-  const nsStyleBorder* border = aStyleContext.StyleBorder();
-  aBorderPadding = border->GetComputedBorder();
+  const nsStyleBorder* border = aStyleContext->StyleBorder();
+  LogicalMargin borderPadding(aWM, border->GetComputedBorder());
   if (aReflowState) {
-    aBorderPadding += aReflowState->ComputedPhysicalPadding();
+    borderPadding += aReflowState->ComputedLogicalPadding();
   }
+  return borderPadding;
 }
 
-nsMargin
-nsTableFrame::GetChildAreaOffset(const nsHTMLReflowState* aReflowState) const
+LogicalMargin
+nsTableFrame::GetChildAreaOffset(const WritingMode aWM,
+                                 const nsHTMLReflowState* aReflowState) const
 {
-  nsMargin offset(0,0,0,0);
-  if (IsBorderCollapse()) {
-    offset = GetIncludedOuterBCBorder();
-  }
-  else {
-    GetSeparateModelBorderPadding(aReflowState, *mStyleContext, offset);
-  }
-  return offset;
+  return IsBorderCollapse() ? GetIncludedOuterBCBorder(aWM) :
+    GetSeparateModelBorderPadding(aWM, aReflowState, mStyleContext);
 }
 
 void
@@ -3218,7 +3224,8 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState,
     aDesiredSize.Height() = 0;
     return;
   }
-  nsMargin borderPadding = GetChildAreaOffset(&aReflowState);
+  WritingMode wm = aReflowState.GetWritingMode();
+  LogicalMargin borderPadding = GetChildAreaOffset(wm, &aReflowState);
 
   // get the natural height based on the last child's (row group) rect
   RowGroupArray rowGroups;
@@ -3238,7 +3245,7 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState,
   }
   int32_t rowCount = cellMap->GetRowCount();
   int32_t colCount = cellMap->GetColCount();
-  nscoord desiredHeight = borderPadding.top + borderPadding.bottom;
+  nscoord desiredHeight = borderPadding.BStartEnd(wm);
   if (rowCount > 0 && colCount > 0) {
     desiredHeight += GetRowSpacing(-1);
     for (uint32_t rgX = 0; rgX < rowGroups.Length(); rgX++) {
@@ -3301,7 +3308,8 @@ void
 nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
                                      nscoord                  aAmount)
 {
-  nsMargin borderPadding = GetChildAreaOffset(&aReflowState);
+  WritingMode wm = aReflowState.GetWritingMode();
+  LogicalMargin borderPadding = GetChildAreaOffset(wm, &aReflowState);
 
   RowGroupArray rowGroups;
   OrderRowGroups(rowGroups);
@@ -3311,7 +3319,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
   // height, and base the pct on the table height. If the row group had a computed
   // height, then this was already done in nsTableRowGroupFrame::CalculateRowHeights
   nscoord pctBasis = aReflowState.ComputedHeight() - GetRowSpacing(-1, GetRowCount());
-  nscoord yOriginRG = borderPadding.top + GetRowSpacing(0);
+  nscoord yOriginRG = borderPadding.BStart(wm) + GetRowSpacing(0);
   nscoord yEndRG = yOriginRG;
   uint32_t rgX;
   for (rgX = 0; rgX < rowGroups.Length(); rgX++) {
@@ -3449,7 +3457,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
   }
   // allocate the extra height to the unstyled row groups and rows
   nscoord heightToDistribute = aAmount - amountUsed;
-  yOriginRG = borderPadding.top + GetRowSpacing(-1);
+  yOriginRG = borderPadding.BStart(wm) + GetRowSpacing(-1);
   yEndRG = yOriginRG;
   for (rgX = 0; rgX < rowGroups.Length(); rgX++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
@@ -3726,8 +3734,9 @@ nsTableFrame::CalcBorderBoxHeight(const nsHTMLReflowState& aState)
 {
   nscoord height = aState.ComputedHeight();
   if (NS_AUTOHEIGHT != height) {
-    nsMargin borderPadding = GetChildAreaOffset(&aState);
-    height += borderPadding.top + borderPadding.bottom;
+    WritingMode wm = aState.GetWritingMode();
+    LogicalMargin borderPadding = GetChildAreaOffset(wm, &aState);
+    height += borderPadding.BStartEnd(wm);
   }
   height = std::max(0, height);
 
@@ -6386,9 +6395,10 @@ BCPaintBorderIterator::BCPaintBorderIterator(nsTableFrame* aTable)
   , mTableWM(aTable->StyleContext())
 {
   mVerInfo    = nullptr;
-  nsMargin childAreaOffset = mTable->GetChildAreaOffset(nullptr);
+  LogicalMargin childAreaOffset = mTable->GetChildAreaOffset(mTableWM, nullptr);
   // y position of first row in damage area
-  mInitialOffsetY = mTable->GetPrevInFlow() ? 0 : childAreaOffset.top;
+  mInitialOffsetY =
+    mTable->GetPrevInFlow() ? 0 : childAreaOffset.BStart(mTableWM);
   mNumTableRows  = mTable->GetRowCount();
   mNumTableCols  = mTable->GetColCount();
 
@@ -6465,15 +6475,16 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
     return false;
   int32_t leftCol, rightCol; // columns are in the range [leftCol, rightCol)
 
-  nsMargin childAreaOffset = mTable->GetChildAreaOffset(nullptr);
+  LogicalMargin childAreaOffset = mTable->GetChildAreaOffset(mTableWM, nullptr);
   if (mTableWM.IsBidiLTR()) {
-    mInitialOffsetX = childAreaOffset.left; // x position of first col in
-                                            // damage area
+    // x position of first col in damage area
+    mInitialOffsetX = childAreaOffset.IStart(mTableWM);
     leftCol = 0;
     rightCol = mNumTableCols;
   } else {
     // x position of first col in damage area
-    mInitialOffsetX = mTable->GetRect().width - childAreaOffset.right;
+    mInitialOffsetX =
+      mTable->GetRect().width - childAreaOffset.IStart(mTableWM);
     leftCol = mNumTableCols-1;
     rightCol = -1;
   }
@@ -6509,7 +6520,8 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
   }
   if (!mTableWM.IsBidiLTR()) {
     uint32_t temp;
-    mInitialOffsetX = mTable->GetRect().width - childAreaOffset.right;
+    mInitialOffsetX =
+      mTable->GetRect().width - childAreaOffset.IStart(mTableWM);
     temp = startColIndex; startColIndex = endColIndex; endColIndex = temp;
     for (uint32_t column = 0; column < startColIndex; column++) {
       nsTableColFrame* colFrame = mTableFirstInFlow->GetColFrame(column);
