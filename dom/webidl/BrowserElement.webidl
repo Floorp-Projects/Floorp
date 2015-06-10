@@ -6,6 +6,9 @@
 
 callback BrowserElementNextPaintEventCallback = void ();
 
+enum BrowserFindCaseSensitivity { "case-sensitive", "case-insensitive" };
+enum BrowserFindDirection { "forward", "backward" };
+
 dictionary BrowserElementDownloadOptions {
   DOMString? filename;
   DOMString? referrer;
@@ -146,4 +149,20 @@ interface BrowserElementPrivileged {
    Pref="dom.mozBrowserFramesEnabled",
    CheckPermissions="browser"]
   void setNFCFocus(boolean isFocus);
+
+  [Throws,
+   Pref="dom.mozBrowserFramesEnabled",
+   CheckPermissions="browser"]
+  void findAll(DOMString searchString, BrowserFindCaseSensitivity caseSensitivity);
+
+  [Throws,
+   Pref="dom.mozBrowserFramesEnabled",
+   CheckPermissions="browser"]
+  void findNext(BrowserFindDirection direction);
+
+  [Throws,
+   Pref="dom.mozBrowserFramesEnabled",
+   CheckPermissions="browser"]
+  void clearMatch();
+
 };
