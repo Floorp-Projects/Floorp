@@ -18,6 +18,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'jsinspector'
 
 EXPORTS.mozilla.devtools += [
+    'AutoMemMap.h',
     'ChromeUtils.h',
     'CoreDump.pb.h',
     'DeserializedNode.h',
@@ -26,6 +27,7 @@ EXPORTS.mozilla.devtools += [
 ]
 
 SOURCES += [
+    'AutoMemMap.cpp',
     'ChromeUtils.cpp',
     'CoreDump.pb.cc',
     'DeserializedNode.cpp',
