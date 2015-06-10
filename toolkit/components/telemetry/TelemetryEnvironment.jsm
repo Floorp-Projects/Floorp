@@ -876,6 +876,8 @@ EnvironmentCache.prototype = {
     this._currentEnvironment.settings = this._currentEnvironment.settings || {};
     // Update the search engine entry in the current environment.
     this._currentEnvironment.settings.defaultSearchEngine = this._getDefaultSearchEngine();
+    this._currentEnvironment.settings.defaultSearchEngineData =
+      Services.search.wrappedJSObject.getDefaultEngineInfo();
   },
 
   /**
