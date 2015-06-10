@@ -7,14 +7,17 @@ var FullScreen = {
   _XULNS: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
 
   _MESSAGES: [
-    "DOMFullscreen:Entered",
+    "DOMFullscreen:Request",
     "DOMFullscreen:NewOrigin",
-    "DOMFullscreen:Exited"
+    "DOMFullscreen:Exited",
   ],
 
   init: function() {
     // called when we go into full screen, even if initiated by a web page script
     window.addEventListener("fullscreen", this, true);
+    window.addEventListener("MozDOMFullscreen:Entered", this,
+                            /* useCapture */ true,
+                            /* wantsUntrusted */ false);
     window.addEventListener("MozDOMFullscreen:Exited", this,
                             /* useCapture */ true,
                             /* wantsUntrusted */ false);
@@ -108,6 +111,35 @@ var FullScreen = {
         if (event.propertyName == "opacity")
           this.cancelWarning();
         break;
+      case "MozDOMFullscreen:Entered": {
+        // The original target is the element which requested the DOM
+        // fullscreen. If we were entering DOM fullscreen for a remote
+        // browser, this element would be that browser element, which
+        // was the parameter of `remoteFrameFullscreenChanged` call.
+        // If the fullscreen request was initiated from an in-process
+        // browser, we need to get its corresponding browser element.
+        let originalTarget = event.originalTarget;
+        let browser;
+        if (this._isBrowser(originalTarget)) {
+          browser = originalTarget;
+        } else {
+          let topWin = originalTarget.ownerDocument.defaultView.top;
+          browser = gBrowser.getBrowserForContentWindow(topWin);
+          if (!browser) {
+            document.mozCancelFullScreen();
+            break;
+          }
+        }
+        this.enterDomFullscreen(browser);
+        // If it is a remote browser, send a message to ask the content
+        // to enter fullscreen state. We don't need to do so if it is an
+        // in-process browser, since all related document should have
+        // entered fullscreen state at this point.
+        if (this._isRemoteBrowser(browser)) {
+          browser.messageManager.sendAsyncMessage("DOMFullscreen:Entered");
+        }
+        break;
+      }
       case "MozDOMFullscreen:Exited":
         this.cleanupDomFullscreen();
         break;
@@ -117,16 +149,8 @@ var FullScreen = {
   receiveMessage: function(aMessage) {
     let browser = aMessage.target;
     switch (aMessage.name) {
-      case "DOMFullscreen:Entered": {
-        // If we're a multiprocess browser, then the request to enter
-        // fullscreen did not bubble up to the root browser document -
-        // it stopped at the root of the content document. That means
-        // we have to kick off the switch to fullscreen here at the
-        // operating system level in the parent process ourselves.
-        if (this._isRemoteBrowser(browser)) {
-          this._windowUtils.remoteFrameFullscreenChanged(browser);
-        }
-        this.enterDomFullscreen(browser);
+      case "DOMFullscreen:Request": {
+        this._windowUtils.remoteFrameFullscreenChanged(browser);
         break;
       }
       case "DOMFullscreen:NewOrigin": {
@@ -216,6 +240,13 @@ var FullScreen = {
           .broadcastAsyncMessage("DOMFullscreen:CleanUp");
   },
 
+  _isBrowser: function (aNode) {
+    if (aNode.tagName != "xul:browser") {
+      return false;
+    }
+    let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+    return aNode.nodePrincipal == systemPrincipal;
+  },
   _isRemoteBrowser: function (aBrowser) {
     return gMultiProcessBrowser && aBrowser.getAttribute("remote") == "true";
   },

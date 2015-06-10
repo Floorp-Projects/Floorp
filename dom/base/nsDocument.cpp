@@ -16,6 +16,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Likely.h"
+#include "mozilla/LinkedList.h"
+#include "mozilla/UniquePtr.h"
 #include <algorithm>
 
 #include "mozilla/Logging.h"
@@ -11633,44 +11635,132 @@ nsDocument::FullscreenElementReadyCheck(Element* aElement,
   return true;
 }
 
+struct FullscreenRequest : public LinkedListElement<FullscreenRequest>
+{
+  FullscreenRequest(Element* aElement, const FullScreenOptions& aOptions)
+    : mElement(aElement), mOptions(aOptions)
+    { MOZ_COUNT_CTOR(FullscreenRequest); }
+  ~FullscreenRequest() { MOZ_COUNT_DTOR(FullscreenRequest); }
+
+  nsRefPtr<Element> mElement;
+  FullScreenOptions mOptions;
+};
+
+// Any fullscreen request waiting for the widget to finish being full-
+// screen is queued here. This is declared static instead of a member
+// of nsDocument because in the majority of time, there would be at most
+// one document requesting fullscreen. We shouldn't waste the space to
+// hold for it in every document.
+static LinkedList<FullscreenRequest> sPendingFullscreenRequests;
+
+static nsCOMPtr<nsPIDOMWindow>
+GetRootWindow(nsIDocument* aDoc)
+{
+  nsIDocShell* docShell = aDoc->GetDocShell();
+  if (!docShell) {
+    return nullptr;
+  }
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  docShell->GetRootTreeItem(getter_AddRefs(rootItem));
+  return rootItem ? rootItem->GetWindow() : nullptr;
+}
+
 void
 nsDocument::RequestFullScreen(Element* aElement,
                               const FullScreenOptions& aOptions)
 {
+  nsCOMPtr<nsPIDOMWindow> rootWin = GetRootWindow(this);
+  if (!rootWin) {
+    return;
+  }
+
+  // If we have been in fullscreen, apply the new state directly.
+  // Note that we should check both condition, because if we are in
+  // child process, our window may not report to be in fullscreen.
+  if (static_cast<nsGlobalWindow*>(rootWin.get())->FullScreen() ||
+      nsContentUtils::GetRootDocument(this)->IsFullScreenDoc()) {
+    ApplyFullscreen(aElement, aOptions);
+    return;
+  }
+
+  // We don't need to check element ready before this point, because
+  // if we called ApplyFullscreen, it would check that for us.
   if (!FullscreenElementReadyCheck(aElement, aOptions.mIsCallerChrome)) {
     return;
   }
 
-  ApplyFullscreen(aElement, aOptions);
+  sPendingFullscreenRequests.insertBack(
+    new FullscreenRequest(aElement, aOptions));
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    // If we are not the top level process, dispatch an event to make
+    // our parent process go fullscreen first.
+    (new AsyncEventDispatcher(
+       this, NS_LITERAL_STRING("MozDOMFullscreen:Request"),
+       /* Bubbles */ true, /* ChromeOnly */ true))->PostDOMEvent();
+  } else {
+    // Make the window fullscreen.
+    SetWindowFullScreen(this, true, aOptions.mVRHMDDevice);
+  }
+}
 
-#ifdef DEBUG
-  // Note assertions must run before SetWindowFullScreen() as that does
-  // synchronous event dispatch which can run script which exits full-screen!
-  NS_ASSERTION(GetFullScreenElement() == aElement,
-               "Full-screen element should be the requested element!");
-  NS_ASSERTION(IsFullScreenDoc(), "Should be full-screen doc");
-  nsCOMPtr<nsIDOMElement> fse;
-  GetMozFullScreenElement(getter_AddRefs(fse));
-  nsCOMPtr<nsIContent> c(do_QueryInterface(fse));
-  NS_ASSERTION(c->AsElement() == aElement,
-    "GetMozFullScreenElement should match GetFullScreenElement()");
-#endif
+/* static */ bool
+nsIDocument::HandlePendingFullscreenRequest(const FullscreenRequest& aRequest,
+                                            nsIDocShellTreeItem* aRootShell,
+                                            bool* aHandled)
+{
+  nsRefPtr<nsDocument> doc =
+    static_cast<nsDocument*>(aRequest.mElement->OwnerDoc());
+  nsIDocShellTreeItem* shell = doc->GetDocShell();
+  if (!shell) {
+    return true;
+  }
+  nsCOMPtr<nsIDocShellTreeItem> rootShell;
+  shell->GetRootTreeItem(getter_AddRefs(rootShell));
+  if (rootShell != aRootShell) {
+    return false;
+  }
 
-  // Make the window full-screen. Note we must make the state changes above
-  // before making the window full-screen, as then the document reports as
-  // being in full-screen mode when the chrome "fullscreen" event fires,
-  // enabling chrome to distinguish between browser and dom full-screen
-  // modes. Also note that nsGlobalWindow::SetFullScreen() (which
-  // SetWindowFullScreen() calls) proxies to the root window in its hierarchy,
-  // and does not operate on the a per-nsIDOMWindow basis.
-  FullscreenRoots::Add(this);
-  SetWindowFullScreen(this, true, aOptions.mVRHMDDevice);
+  doc->ApplyFullscreen(aRequest.mElement, aRequest.mOptions);
+  *aHandled = true;
+  return true;
+}
+
+/* static */ bool
+nsIDocument::HandlePendingFullscreenRequests(nsIDocument* aDoc)
+{
+  if (sPendingFullscreenRequests.isEmpty()) {
+    return false;
+  }
+
+  bool handled = false;
+  nsIDocShellTreeItem* shell = aDoc->GetDocShell();
+  nsCOMPtr<nsIDocShellTreeItem> rootShell;
+  if (shell) {
+    shell->GetRootTreeItem(getter_AddRefs(rootShell));
+  }
+  FullscreenRequest* request = sPendingFullscreenRequests.getFirst();
+  while (request) {
+    if (HandlePendingFullscreenRequest(*request, rootShell, &handled)) {
+      // Drop requests, which either have been detached from document/
+      // document shell, or are handled by HandleFullscreenRequest.
+      FullscreenRequest* thisRequest = request;
+      request = request->getNext();
+      delete thisRequest;
+    } else {
+      request = request->getNext();
+    }
+  }
+  return handled;
 }
 
 void
 nsDocument::ApplyFullscreen(Element* aElement,
                             const FullScreenOptions& aOptions)
 {
+  if (!FullscreenElementReadyCheck(aElement, aOptions.mIsCallerChrome)) {
+    return;
+  }
+
   // Stash a reference to any existing fullscreen doc, we'll use this later
   // to detect if the origin which is fullscreen has changed.
   nsCOMPtr<nsIDocument> previousFullscreenDoc = GetFullscreenLeaf(this);
@@ -11761,7 +11851,7 @@ nsDocument::ApplyFullscreen(Element* aElement,
   if (!previousFullscreenDoc) {
     nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
       new AsyncEventDispatcher(
-        this, NS_LITERAL_STRING("MozDOMFullscreen:Entered"),
+        aElement, NS_LITERAL_STRING("MozDOMFullscreen:Entered"),
         /* Bubbles */ true, /* ChromeOnly */ true);
     asyncDispatcher->PostDOMEvent();
   }
@@ -11781,6 +11871,8 @@ nsDocument::ApplyFullscreen(Element* aElement,
         /* Bubbles */ true, /* ChromeOnly */ true);
     asyncDispatcher->PostDOMEvent();
   }
+
+  FullscreenRoots::Add(this);
 }
 
 NS_IMETHODIMP

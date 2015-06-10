@@ -6179,6 +6179,14 @@ nsGlobalWindow::FinishFullscreenChange(bool aIsFullscreen)
     return;
   }
 
+  // Ask the document to handle any pending DOM fullscreen change. Note
+  // we must make the state changes before dispatching the "fullscreen"
+  // event below, so that the chrome can distinguish between browser
+  // fullscreen mode and DOM fullscreen.
+  if (mFullScreen) {
+    nsIDocument::HandlePendingFullscreenRequests(mDoc);
+  }
+
   // dispatch a "fullscreen" DOM event so that XUL apps can
   // respond visually if we are kicked into full screen mode
   DispatchCustomEvent(NS_LITERAL_STRING("fullscreen"));
