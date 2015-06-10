@@ -11325,13 +11325,13 @@ FullScreenOptions::FullScreenOptions()
 class nsCallRequestFullScreen : public nsRunnable
 {
 public:
-  explicit nsCallRequestFullScreen(Element* aElement, FullScreenOptions& aOptions)
+  explicit nsCallRequestFullScreen(Element* aElement,
+                                   const FullScreenOptions& aOptions)
     : mElement(aElement),
       mDoc(aElement->OwnerDoc()),
-      mWasCallerChrome(nsContentUtils::IsCallerChrome()),
+      mOptions(aOptions),
       mHadRequestPending(static_cast<nsDocument*>(mDoc.get())->
-                         mAsyncFullscreenPending),
-      mOptions(aOptions)
+                         mAsyncFullscreenPending)
   {
     static_cast<nsDocument*>(mDoc.get())->
       mAsyncFullscreenPending = true;
@@ -11342,18 +11342,14 @@ public:
     static_cast<nsDocument*>(mDoc.get())->
       mAsyncFullscreenPending = mHadRequestPending;
     nsDocument* doc = static_cast<nsDocument*>(mDoc.get());
-    doc->RequestFullScreen(mElement,
-                           mOptions,
-                           mWasCallerChrome,
-                           /* aNotifyOnOriginChange */ true);
+    doc->RequestFullScreen(mElement, mOptions);
     return NS_OK;
   }
 
   nsRefPtr<Element> mElement;
   nsCOMPtr<nsIDocument> mDoc;
-  bool mWasCallerChrome;
-  bool mHadRequestPending;
   FullScreenOptions mOptions;
+  bool mHadRequestPending;
 };
 
 void
@@ -11565,9 +11561,9 @@ nsresult nsDocument::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement)
   // this has no effect.
   nsCOMPtr<nsIContent> content(do_QueryInterface(aFrameElement));
   FullScreenOptions opts;
-  RequestFullScreen(content->AsElement(), opts,
-                    /* aWasCallerChrome */ false,
-                    /* aNotifyOnOriginChange */ false);
+  opts.mIsCallerChrome = false;
+  opts.mShouldNotifyNewOrigin = false;
+  RequestFullScreen(content->AsElement(), opts);
 
   return NS_OK;
 }
@@ -11642,11 +11638,9 @@ nsDocument::FullscreenElementReadyCheck(Element* aElement,
 
 void
 nsDocument::RequestFullScreen(Element* aElement,
-                              FullScreenOptions& aOptions,
-                              bool aWasCallerChrome,
-                              bool aNotifyOnOriginChange)
+                              const FullScreenOptions& aOptions)
 {
-  if (!FullscreenElementReadyCheck(aElement, aWasCallerChrome)) {
+  if (!FullscreenElementReadyCheck(aElement, aOptions.mIsCallerChrome)) {
     return;
   }
 
@@ -11752,7 +11746,7 @@ nsDocument::RequestFullScreen(Element* aElement,
   // process browser, the code in content process is responsible for
   // sending message with the origin to its parent, and the parent
   // shouldn't rely on this event itself.
-  if (aNotifyOnOriginChange &&
+  if (aOptions.mShouldNotifyNewOrigin &&
       !nsContentUtils::HaveEqualPrincipals(previousFullscreenDoc, this)) {
     nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
       new AsyncEventDispatcher(
