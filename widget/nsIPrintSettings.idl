@@ -22,7 +22,7 @@ interface nsIPrintSession;
 /**
  * Simplified graphics interface for JS rendering.
  */
-[scriptable, uuid(ec3d43bb-3fe0-4f9a-9502-eebcc511555b)]
+[scriptable, uuid(04dd3a01-a74e-44aa-8d49-2c30478fd7b8)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -56,12 +56,10 @@ interface nsIPrintSettings : nsISupports
   const unsigned long kInitSavePageDelay      = 0x00800000;
   const unsigned long kInitSaveMargins        = 0x01000000;
   const unsigned long kInitSaveNativeData     = 0x02000000;
-  const unsigned long kInitSavePlexName       = 0x04000000;
+
   const unsigned long kInitSaveShrinkToFit    = 0x08000000;
   const unsigned long kInitSaveScaling        = 0x10000000;
-  const unsigned long kInitSaveColorspace     = 0x20000000;
-  const unsigned long kInitSaveResolutionName = 0x40000000;
-  const unsigned long kInitSaveDownloadFonts  = 0x80000000;
+
   const unsigned long kInitSaveAll            = 0xFFFFFFFF;
 
   /* Print Option Flags for Bit Field*/
@@ -230,15 +228,6 @@ interface nsIPrintSettings : nsISupports
   attribute double  paperWidth;    /* width of the paper in inches or mm */
   attribute double  paperHeight;   /* height of the paper in inches or mm */
   attribute short   paperSizeUnit; /* paper is in inches or mm */
-
-  attribute wstring plexName;      /* name of plex mode (like "simplex", "duplex",
-                                    * "tumble" and various custom values) */
-
-  attribute wstring colorspace;    /* device-specific name of colorspace, overrides |printInColor| */
-  attribute wstring resolutionName;/* device-specific identifer of resolution or quality
-                                    * (like "600", "600x300", "600x300x12", "high-res",
-                                    * "med-res". "low-res", etc.) */
-  attribute boolean downloadFonts; /* enable font download to printer? */
 
   attribute boolean printReversed;
   attribute boolean printInColor;  /* a false means grayscale */
