@@ -1174,7 +1174,10 @@ ObjectGroup::allocationSiteGroup(JSContext* cx, JSScript* script, jsbytecode* pc
         }
     }
 
-    if (JSOp(*pc) == JSOP_NEWARRAY && cx->runtime()->options().unboxedArrays()) {
+    if (kind == JSProto_Array &&
+        (JSOp(*pc) == JSOP_NEWARRAY || IsCallPC(pc)) &&
+        cx->runtime()->options().unboxedArrays())
+    {
         PreliminaryObjectArrayWithTemplate* preliminaryObjects =
             cx->new_<PreliminaryObjectArrayWithTemplate>(nullptr);
         if (preliminaryObjects)

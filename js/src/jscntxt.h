@@ -794,7 +794,6 @@ bool intrinsic_NewDenseArray(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_IsConstructing(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_SubstringKernel(JSContext* cx, unsigned argc, Value* vp);
 
-bool intrinsic_UnsafePutElements(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_DefineDataProperty(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_UnsafeSetReservedSlot(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_UnsafeGetReservedSlot(JSContext* cx, unsigned argc, Value* vp);
