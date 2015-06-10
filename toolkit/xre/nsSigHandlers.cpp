@@ -56,7 +56,7 @@ static unsigned int _gdb_sleep_duration = 300;
 
 #include <unistd.h>
 #include "nsISupportsUtils.h"
-#include "nsStackWalk.h"
+#include "mozilla/StackWalk.h"
 
 // NB: keep me up to date with the same variable in
 // ipc/chromium/chrome/common/ipc_channel_posix.cc
@@ -68,10 +68,10 @@ static void PrintStackFrame(uint32_t aFrameNumber, void *aPC, void *aSP,
                             void *aClosure)
 {
   char buf[1024];
-  nsCodeAddressDetails details;
+  MozCodeAddressDetails details;
 
-  NS_DescribeCodeAddress(aPC, &details);
-  NS_FormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
+  MozDescribeCodeAddress(aPC, &details);
+  MozFormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
   fprintf(stdout, "%s\n", buf);
   fflush(stdout);
 }
@@ -87,7 +87,7 @@ ah_crap_handler(int signum)
          signum);
 
   printf("Stack:\n");
-  NS_StackWalk(PrintStackFrame, /* skipFrames */ 2, /* maxFrames */ 0,
+  MozStackWalk(PrintStackFrame, /* skipFrames */ 2, /* maxFrames */ 0,
                nullptr, 0, nullptr);
 
   printf("Sleeping for %d seconds.\n",_gdb_sleep_duration);

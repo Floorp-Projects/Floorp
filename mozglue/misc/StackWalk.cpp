@@ -9,9 +9,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/StackWalk.h"
-#include "nsStackWalkPrivate.h"
-
-#include "nsStackWalk.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
@@ -38,16 +35,16 @@ static CriticalAddress gCriticalAddress;
 #include <dlfcn.h>
 #endif
 
-#define NSSTACKWALK_SUPPORTS_MACOSX \
+#define MOZ_STACKWALK_SUPPORTS_MACOSX \
   (defined(XP_DARWIN) && \
    (defined(__i386) || defined(__ppc__) || defined(HAVE__UNWIND_BACKTRACE)))
 
-#define NSSTACKWALK_SUPPORTS_LINUX \
+#define MOZ_STACKWALK_SUPPORTS_LINUX \
   (defined(linux) && \
    ((defined(__GNUC__) && (defined(__i386) || defined(PPC))) || \
     defined(HAVE__UNWIND_BACKTRACE)))
 
-#if NSSTACKWALK_SUPPORTS_MACOSX
+#if MOZ_STACKWALK_SUPPORTS_MACOSX
 #include <pthread.h>
 #include <sys/errno.h>
 #ifdef MOZ_WIDGET_COCOA
@@ -110,7 +107,7 @@ my_malloc_logger(uint32_t aType,
   // On Leopard dladdr returns the wrong value for "new_sem_from_pool". The
   // stack shows up as having two pthread_cond_wait$UNIX2003 frames.
   const char* name = "new_sem_from_pool";
-  NS_StackWalk(stack_callback, /* skipFrames */ 0, /* maxFrames */ 0,
+  MozStackWalk(stack_callback, /* skipFrames */ 0, /* maxFrames */ 0,
                const_cast<char*>(name), 0, nullptr);
 }
 
@@ -121,7 +118,7 @@ my_malloc_logger(uint32_t aType,
 // function during NS_LogInit() ensures that we meet the first criterion, and
 // running this function during the stack walking functions ensures we meet the
 // second criterion.
-void
+MFBT_API void
 StackWalkInitCriticalAddress()
 {
   if (gCriticalAddress.mInit) {
@@ -181,7 +178,7 @@ IsCriticalAddress(void* aPC)
 // We still initialize gCriticalAddress.mInit so that this code behaves
 // the same on all platforms. Otherwise a failure to init would be visible
 // only on OS X.
-void
+MFBT_API void
 StackWalkInitCriticalAddress()
 {
   gCriticalAddress.mInit = true;
@@ -190,15 +187,12 @@ StackWalkInitCriticalAddress()
 
 #if defined(_WIN32) && (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_IA64)) // WIN32 x86 stack walking code
 
-#include "nscore.h"
 #include <windows.h>
 #include <process.h>
 #include <stdio.h>
 #include <malloc.h>
-#include "plstr.h"
 #include "mozilla/ArrayUtils.h"
 
-#include "nspr.h"
 #include <imagehlp.h>
 // We need a way to know if we are building for WXP (or later), as if we are, we
 // need to use the newer 64-bit APIs. API_VERSION_NUMBER seems to fit the bill.
@@ -512,8 +506,8 @@ WalkStackThread(void* aData)
  * whose in memory address doesn't match its in-file address.
  */
 
-XPCOM_API(nsresult)
-NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
+MFBT_API bool
+MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
              uint32_t aMaxFrames, void* aClosure, uintptr_t aThread,
              void* aPlatformData)
 {
@@ -524,7 +518,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
   struct WalkStackData data;
 
   if (!EnsureWalkThreadReady()) {
-    return NS_ERROR_FAILURE;
+    return false;
   }
 
   HANDLE currentThread = ::GetCurrentThread();
@@ -542,7 +536,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
       if (data.walkCallingThread) {
         PrintError("DuplicateHandle (process)");
       }
-      return NS_ERROR_FAILURE;
+      return false;
     }
   }
   if (!::DuplicateHandle(::GetCurrentProcess(),
@@ -553,7 +547,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
     if (data.walkCallingThread) {
       PrintError("DuplicateHandle (thread)");
     }
-    return NS_ERROR_FAILURE;
+    return false;
   }
 
   data.skipFrames = aSkipFrames;
@@ -622,7 +616,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
     (*aCallback)(i + 1, data.pcs[i], data.sps[i], aClosure);
   }
 
-  return data.pc_count == 0 ? NS_ERROR_FAILURE : NS_OK;
+  return data.pc_count != 0;
 }
 
 
@@ -772,8 +766,8 @@ EnsureSymInitialized()
 }
 
 
-XPCOM_API(nsresult)
-NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
+MFBT_API bool
+MozDescribeCodeAddress(void* aPC, MozCodeAddressDetails* aDetails)
 {
   aDetails->library[0] = '\0';
   aDetails->loffset = 0;
@@ -783,7 +777,7 @@ NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
   aDetails->foffset = 0;
 
   if (!EnsureSymInitialized()) {
-    return NS_ERROR_FAILURE;
+    return false;
   }
 
   HANDLE myProcess = ::GetCurrentProcess();
@@ -804,12 +798,12 @@ NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
   modInfoRes = SymGetModuleInfoEspecial64(myProcess, addr, &modInfo, &lineInfo);
 
   if (modInfoRes) {
-    PL_strncpyz(aDetails->library, modInfo.ModuleName,
+    strncpy(aDetails->library, modInfo.ModuleName,
                 sizeof(aDetails->library));
     aDetails->loffset = (char*)aPC - (char*)modInfo.BaseOfImage;
 
     if (lineInfo.FileName) {
-      PL_strncpyz(aDetails->filename, lineInfo.FileName,
+      strncpy(aDetails->filename, lineInfo.FileName,
                   sizeof(aDetails->filename));
       aDetails->lineno = lineInfo.LineNumber;
     }
@@ -825,23 +819,21 @@ NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
   ok = SymFromAddr(myProcess, addr, &displacement, pSymbol);
 
   if (ok) {
-    PL_strncpyz(aDetails->function, pSymbol->Name,
+    strncpy(aDetails->function, pSymbol->Name,
                 sizeof(aDetails->function));
     aDetails->foffset = static_cast<ptrdiff_t>(displacement);
   }
 
   LeaveCriticalSection(&gDbgHelpCS); // release our lock
-  return NS_OK;
+  return true;
 }
 
 // i386 or PPC Linux stackwalking code
-#elif HAVE_DLADDR && (HAVE__UNWIND_BACKTRACE || NSSTACKWALK_SUPPORTS_LINUX || NSSTACKWALK_SUPPORTS_MACOSX)
+#elif HAVE_DLADDR && (HAVE__UNWIND_BACKTRACE || MOZ_STACKWALK_SUPPORTS_LINUX || MOZ_STACKWALK_SUPPORTS_MACOSX)
 
 #include <stdlib.h>
 #include <string.h>
-#include "nscore.h"
 #include <stdio.h>
-#include "plstr.h"
 
 // On glibc 2.1, the Dl_info api defined in <dlfcn.h> is only exposed
 // if __USE_GNU is defined.  I suppose its some kind of standards
@@ -868,7 +860,7 @@ void DemangleSymbol(const char* aSymbol,
   char* demangled = abi::__cxa_demangle(aSymbol, 0, 0, 0);
 
   if (demangled) {
-    PL_strncpyz(aBuffer, demangled, aBufLen);
+    strncpy(aBuffer, demangled, aBufLen);
     free(demangled);
   }
 #endif // MOZ_DEMANGLE_SYMBOLS
@@ -884,8 +876,8 @@ void DemangleSymbol(const char* aSymbol,
 extern MOZ_EXPORT void* __libc_stack_end; // from ld-linux.so
 #endif
 namespace mozilla {
-nsresult
-FramePointerStackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
+bool
+FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
                       uint32_t aMaxFrames, void* aClosure, void** bp,
                       void* aStackEnd)
 {
@@ -915,7 +907,7 @@ FramePointerStackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
     bp += 2;
 #endif
     if (IsCriticalAddress(pc)) {
-      return NS_ERROR_UNEXPECTED;
+      return false;
     }
     if (--skip < 0) {
       // Assume that the SP points to the BP of the function
@@ -930,16 +922,16 @@ FramePointerStackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
     }
     bp = next;
   }
-  return numFrames == 0 ? NS_ERROR_FAILURE : NS_OK;
+  return numFrames != 0;
 }
 
 }
 
 #define X86_OR_PPC (defined(__i386) || defined(PPC) || defined(__ppc__))
-#if X86_OR_PPC && (NSSTACKWALK_SUPPORTS_MACOSX || NSSTACKWALK_SUPPORTS_LINUX) // i386 or PPC Linux or Mac stackwalking code
+#if X86_OR_PPC && (MOZ_STACKWALK_SUPPORTS_MACOSX || MOZ_STACKWALK_SUPPORTS_LINUX) // i386 or PPC Linux or Mac stackwalking code
 
-XPCOM_API(nsresult)
-NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
+MFBT_API bool
+MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
              uint32_t aMaxFrames, void* aClosure, uintptr_t aThread,
              void* aPlatformData)
 {
@@ -975,7 +967,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
 
 struct unwind_info
 {
-  NS_WalkStackCallback callback;
+  MozWalkStackCallback callback;
   int skip;
   int maxFrames;
   int numFrames;
@@ -1007,8 +999,8 @@ unwind_callback(struct _Unwind_Context* context, void* closure)
   return _URC_NO_REASON;
 }
 
-XPCOM_API(nsresult)
-NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
+MFBT_API bool
+MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
              uint32_t aMaxFrames, void* aClosure, uintptr_t aThread,
              void* aPlatformData)
 {
@@ -1034,15 +1026,15 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
   //   is to make unwind_callback return something other than _URC_NO_REASON,
   //   which causes _Unwind_Backtrace to return a non-success code.
   if (info.isCriticalAbort) {
-    return NS_ERROR_UNEXPECTED;
+    return false;
   }
-  return info.numFrames == 0 ? NS_ERROR_FAILURE : NS_OK;
+  return info.numFrames != 0;
 }
 
 #endif
 
-XPCOM_API(nsresult)
-NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
+bool MFBT_API
+MozDescribeCodeAddress(void* aPC, MozCodeAddressDetails* aDetails)
 {
   aDetails->library[0] = '\0';
   aDetails->loffset = 0;
@@ -1054,51 +1046,51 @@ NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
   Dl_info info;
   int ok = dladdr(aPC, &info);
   if (!ok) {
-    return NS_OK;
+    return true;
   }
 
-  PL_strncpyz(aDetails->library, info.dli_fname, sizeof(aDetails->library));
+  strncpy(aDetails->library, info.dli_fname, sizeof(aDetails->library));
   aDetails->loffset = (char*)aPC - (char*)info.dli_fbase;
 
   const char* symbol = info.dli_sname;
   if (!symbol || symbol[0] == '\0') {
-    return NS_OK;
+    return true;
   }
 
   DemangleSymbol(symbol, aDetails->function, sizeof(aDetails->function));
 
   if (aDetails->function[0] == '\0') {
     // Just use the mangled symbol if demangling failed.
-    PL_strncpyz(aDetails->function, symbol, sizeof(aDetails->function));
+    strncpy(aDetails->function, symbol, sizeof(aDetails->function));
   }
 
   aDetails->foffset = (char*)aPC - (char*)info.dli_saddr;
-  return NS_OK;
+  return true;
 }
 
 #else // unsupported platform.
 
-XPCOM_API(nsresult)
-NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
+MFBT_API bool
+MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
              uint32_t aMaxFrames, void* aClosure, uintptr_t aThread,
              void* aPlatformData)
 {
   MOZ_ASSERT(!aThread);
   MOZ_ASSERT(!aPlatformData);
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return false;
 }
 
 namespace mozilla {
-nsresult
-FramePointerStackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
+MFBT_API bool
+FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
                       void* aClosure, void** aBp)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return false;
 }
 }
 
-XPCOM_API(nsresult)
-NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
+MFBT_API bool
+MozDescribeCodeAddress(void* aPC, MozCodeAddressDetails* aDetails)
 {
   aDetails->library[0] = '\0';
   aDetails->loffset = 0;
@@ -1106,24 +1098,24 @@ NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
   aDetails->lineno = 0;
   aDetails->function[0] = '\0';
   aDetails->foffset = 0;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return false;
 }
 
 #endif
 
-XPCOM_API(void)
-NS_FormatCodeAddressDetails(char* aBuffer, uint32_t aBufferSize,
+MFBT_API void
+MozFormatCodeAddressDetails(char* aBuffer, uint32_t aBufferSize,
                             uint32_t aFrameNumber, void* aPC,
-                            const nsCodeAddressDetails* aDetails)
+                            const MozCodeAddressDetails* aDetails)
 {
-  NS_FormatCodeAddress(aBuffer, aBufferSize,
+  MozFormatCodeAddress(aBuffer, aBufferSize,
                        aFrameNumber, aPC, aDetails->function,
                        aDetails->library, aDetails->loffset,
                        aDetails->filename, aDetails->lineno);
 }
 
-XPCOM_API(void)
-NS_FormatCodeAddress(char* aBuffer, uint32_t aBufferSize, uint32_t aFrameNumber,
+MFBT_API void
+MozFormatCodeAddress(char* aBuffer, uint32_t aBufferSize, uint32_t aFrameNumber,
                      const void* aPC, const char* aFunction,
                      const char* aLibrary, ptrdiff_t aLOffset,
                      const char* aFileName, uint32_t aLineNo)
