@@ -18,6 +18,8 @@
 
 // Implementation of nsIFinalizationWitnessService
 
+static bool gShuttingDown = false;
+
 namespace mozilla {
 
 namespace {
@@ -99,8 +101,8 @@ ExtractFinalizationEvent(JSObject *objSelf)
 void Finalize(JSFreeOp *fop, JSObject *objSelf)
 {
   nsRefPtr<FinalizationEvent> event = ExtractFinalizationEvent(objSelf);
-  if (event == nullptr) {
-    // Forget() has been called
+  if (event == nullptr || gShuttingDown) {
+    // NB: event will be null if Forget() has been called
     return;
   }
 
@@ -171,7 +173,7 @@ static const JSFunctionSpec sWitnessClassFunctions[] = {
 
 }
 
-NS_IMPL_ISUPPORTS(FinalizationWitnessService, nsIFinalizationWitnessService)
+NS_IMPL_ISUPPORTS(FinalizationWitnessService, nsIFinalizationWitnessService, nsIObserver)
 
 /**
  * Create a new Finalization Witness.
@@ -207,6 +209,32 @@ FinalizationWitnessService::Make(const char* aTopic,
 
   aRetval.setObject(*objResult);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+FinalizationWitnessService::Observe(nsISupports* aSubject,
+                                    const char* aTopic,
+                                    const char16_t* aValue)
+{
+  MOZ_ASSERT(strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
+  gShuttingDown = true;
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+FinalizationWitnessService::Init()
+{
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (!obs) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 }
 
 } // namespace mozilla
