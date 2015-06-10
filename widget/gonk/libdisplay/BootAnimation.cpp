@@ -692,18 +692,26 @@ AnimationThread(void *)
     return nullptr;
 }
 
+namespace mozilla {
+
+__attribute__ ((visibility ("default")))
 void
 StartBootAnimation()
 {
+    GetGonkDisplay(); // Ensure GonkDisplay exist
     sRunAnimation = true;
     pthread_create(&sAnimationThread, nullptr, AnimationThread, nullptr);
 }
 
+__attribute__ ((visibility ("default")))
 void
 StopBootAnimation()
 {
     if (sRunAnimation) {
         sRunAnimation = false;
         pthread_join(sAnimationThread, nullptr);
+        GetGonkDisplay()->NotifyBootAnimationStopped();
     }
 }
+
+} // namespace mozilla

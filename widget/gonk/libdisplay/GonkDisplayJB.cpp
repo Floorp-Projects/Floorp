@@ -26,7 +26,6 @@
 #include <hardware/power.h>
 #include <suspend/autosuspend.h>
 
-#include "BootAnimation.h"
 #include "FramebufferSurface.h"
 #if ANDROID_VERSION == 17
 #include "GraphicBufferAlloc.h"
@@ -126,9 +125,6 @@ GonkDisplayJB::GonkDisplayJB()
         // only create this buffer for devices w/ hwc version > 1.0.
         CreateSurface(mBootAnimSTClient, mBootAnimDispSurface, mWidth, mHeight);
     }
-
-    ALOGI("Starting bootanimation with (%d) format framebuffer", surfaceformat);
-    StartBootAnimation();
 }
 
 GonkDisplayJB::~GonkDisplayJB()
@@ -225,8 +221,6 @@ GonkDisplayJB::GetHWCDevice()
 bool
 GonkDisplayJB::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
 {
-    StopBootAnim();
-
     // Should be called when composition rendering is complete for a frame.
     // Only HWC v1.0 needs this call.
     // HWC > v1.0 case, do not call compositionComplete().
@@ -340,15 +334,12 @@ GonkDisplayJB::QueueBuffer(ANativeWindowBuffer* buf)
 void
 GonkDisplayJB::UpdateDispSurface(EGLDisplay dpy, EGLSurface sur)
 {
-    StopBootAnim();
-
     eglSwapBuffers(dpy, sur);
 }
 
 void
-GonkDisplayJB::StopBootAnim()
+GonkDisplayJB::NotifyBootAnimationStopped()
 {
-    StopBootAnimation();
     if (mBootAnimSTClient.get()) {
         mBootAnimSTClient = nullptr;
         mBootAnimDispSurface = nullptr;
@@ -377,7 +368,6 @@ GonkDisplayJB::GetNativeData(GonkDisplay::DisplayType aDisplayType,
     NativeData data;
 
     if (aDisplayType == DISPLAY_PRIMARY) {
-        StopBootAnim();
         data.mNativeWindow = mSTClient;
         data.mDisplaySurface = mDispSurface;
         data.mXdpi = xdpi;
