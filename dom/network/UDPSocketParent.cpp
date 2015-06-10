@@ -451,7 +451,7 @@ UDPSocketParent::OnPacketReceived(nsIUDPSocket* aSocket, nsIUDPMessage* aMessage
   }
 
   FallibleTArray<uint8_t> fallibleArray;
-  if (!fallibleArray.InsertElementsAt(0, buffer, len)) {
+  if (!fallibleArray.InsertElementsAt(0, buffer, len, fallible)) {
     FireInternalError(__LINE__);
     return NS_ERROR_OUT_OF_MEMORY;
   }
