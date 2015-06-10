@@ -17,6 +17,7 @@ UNIFIED_SOURCES = [
     'SerializesEdgeNames.cpp',
     'SerializesEverythingInHeapGraphOnce.cpp',
     'SerializesTypeNames.cpp',
+    'UniqueStringHashPolicy.cpp',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
