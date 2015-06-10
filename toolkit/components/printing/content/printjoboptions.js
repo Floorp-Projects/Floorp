@@ -14,7 +14,6 @@ var gResolutionArray;
 var gColorSpaceArray;
 var gPrefs;
 
-var default_command    = "lpr";
 var gPrintSetInterface = Components.interfaces.nsIPrintSettings;
 var doDebug            = true;
 
@@ -77,10 +76,6 @@ function initDialog()
   dialog.jobTitleGroup   = document.getElementById("jobTitleGroup");
   dialog.jobTitleInput   = document.getElementById("jobTitleInput");
     
-  dialog.cmdLabel        = document.getElementById("cmdLabel");
-  dialog.cmdGroup        = document.getElementById("cmdGroup");
-  dialog.cmdInput        = document.getElementById("cmdInput");
-
   dialog.colorspaceList  = document.getElementById("colorspaceList");
   dialog.colorspaceGroup = document.getElementById("colorspaceGroup");
 
@@ -589,7 +584,6 @@ function loadDialog()
   var print_colorspace       = "";
   var print_color            = true;
   var print_downloadfonts    = true;
-  var print_command          = default_command;
   var print_jobtitle         = "";
 
   gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
@@ -605,7 +599,6 @@ function loadDialog()
     print_colorspace       = gPrintSettings.colorspace;
     print_color            = gPrintSettings.printInColor;
     print_downloadfonts    = gPrintSettings.downloadFonts;
-    print_command          = gPrintSettings.printCommand;
     print_jobtitle         = gPrintSettings.title;
   }
 
@@ -620,7 +613,6 @@ function loadDialog()
     dump("colorspace      "+print_colorspace+"\n");
     dump("print_color     "+print_color+"\n");
     dump("print_downloadfonts "+print_downloadfonts+"\n");
-    dump("print_command    "+print_command+"\n");
     dump("print_jobtitle   "+print_jobtitle+"\n");
   }
 
@@ -709,16 +701,6 @@ function loadDialog()
     else
       dialog.jobTitleGroup.setAttribute("hidden","true");
 
-    // spooler command
-    if (gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".can_change_spoolercommand"))
-      dialog.cmdInput.removeAttribute("disabled");
-    else
-      dialog.cmdInput.setAttribute("disabled","true");
-    if (gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".supports_spoolercommand_change"))
-      dialog.cmdGroup.removeAttribute("hidden");
-    else
-      dialog.cmdGroup.setAttribute("hidden","true");
-
     // paper size
     if (gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".can_change_paper_size"))
       dialog.paperList.removeAttribute("disabled");
@@ -780,10 +762,6 @@ function loadDialog()
       dialog.fontsGroup.setAttribute("hidden","true");
   }
 
-  if (print_command == "") {
-    print_command = default_command;
-  }
-
   if (print_color) {
     dialog.colorRadioGroup.selectedItem = dialog.colorRadio;
   } else {
@@ -792,7 +770,6 @@ function loadDialog()
 
   dialog.downloadFonts.checked = print_downloadfonts;
 
-  dialog.cmdInput.value      = print_command;
   dialog.jobTitleInput.value = print_jobtitle;
 
   dialog.topInput.value    = gPrintSettings.edgeTop.toFixed(2);
@@ -862,7 +839,6 @@ function onAccept()
     // save these out so they can be picked up by the device spec
     gPrintSettings.printInColor     = dialog.colorRadio.selected;
     gPrintSettings.downloadFonts    = dialog.downloadFonts.checked;
-    gPrintSettings.printCommand     = dialog.cmdInput.value;
     gPrintSettings.title            = dialog.jobTitleInput.value;
 
     gPrintSettings.edgeTop          = dialog.topInput.value;
@@ -883,7 +859,6 @@ function onAccept()
 
       dump("printInColor     "+gPrintSettings.printInColor+"\n");
       dump("downloadFonts    "+gPrintSettings.downloadFonts+"\n");
-      dump("printCommand    '"+gPrintSettings.printCommand+"'\n");
     }
   } else {
     dump("************ onAccept gPrintSettings: "+gPrintSettings+"\n");

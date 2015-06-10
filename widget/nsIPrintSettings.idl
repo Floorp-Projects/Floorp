@@ -22,7 +22,7 @@ interface nsIPrintSession;
 /**
  * Simplified graphics interface for JS rendering.
  */
-[scriptable, uuid(11b86b46-12c9-4e63-8023-129dd239ace7)]
+[scriptable, uuid(ec3d43bb-3fe0-4f9a-9502-eebcc511555b)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -49,7 +49,7 @@ interface nsIPrintSettings : nsISupports
   const unsigned long kInitSaveReversed       = 0x00010000;
   const unsigned long kInitSaveInColor        = 0x00020000;
   const unsigned long kInitSaveOrientation    = 0x00040000;
-  const unsigned long kInitSavePrintCommand   = 0x00080000;
+
   const unsigned long kInitSavePrinterName    = 0x00100000;
   const unsigned long kInitSavePrintToFile    = 0x00200000;
   const unsigned long kInitSaveToFileName     = 0x00400000;
@@ -243,7 +243,6 @@ interface nsIPrintSettings : nsISupports
   attribute boolean printReversed;
   attribute boolean printInColor;  /* a false means grayscale */
   attribute long    orientation;   /*  see orientation consts */
-  attribute wstring printCommand;
   attribute long    numCopies;
 
   attribute wstring printerName;   /* name of destination printer */

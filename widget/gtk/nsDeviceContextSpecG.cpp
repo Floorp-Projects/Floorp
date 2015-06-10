@@ -578,19 +578,6 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const char16_
         DO_PR_DEBUG_LOG(("Unknown paper size '%s' given.\n", papername.get()));
       }
     }
-
-    bool hasSpoolerCmd = (nsPSPrinterList::kTypePS ==
-        nsPSPrinterList::GetPrinterType(fullPrinterName));
-
-    if (hasSpoolerCmd) {
-      nsAutoCString command;
-      if (NS_SUCCEEDED(CopyPrinterCharPref("postscript",
-            printerName, "print_command", command))) {
-        DO_PR_DEBUG_LOG(("setting default print command to '%s'\n",
-            command.get()));
-        aPrintSettings->SetPrintCommand(NS_ConvertUTF8toUTF16(command).get());
-      }
-    }
     
     return NS_OK;    
   }
