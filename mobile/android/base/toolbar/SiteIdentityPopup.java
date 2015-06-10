@@ -6,6 +6,8 @@ package org.mozilla.gecko.toolbar;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONArray;
@@ -21,6 +23,8 @@ import org.mozilla.gecko.SiteIdentity.MixedMode;
 import org.mozilla.gecko.SiteIdentity.TrackingMode;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.favicons.Favicons;
+import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.AnchoredPopup;
@@ -64,6 +68,8 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     private LinearLayout mIdentityKnownContainer;
     private LinearLayout mIdentityUnknownContainer;
 
+    private TextView mTitle;
+    private TextView mEncrypted;
     private TextView mHost;
     private TextView mOwnerLabel;
     private TextView mOwner;
@@ -101,6 +107,9 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         mIdentityUnknownContainer =
                 (LinearLayout) mIdentity.findViewById(R.id.site_identity_unknown_container);
 
+
+        mTitle = (TextView) mIdentityKnownContainer.findViewById(R.id.site_identity_title);
+        mEncrypted = (TextView) mIdentityKnownContainer.findViewById(R.id.site_identity_encrypted);
         mHost = (TextView) mIdentityKnownContainer.findViewById(R.id.host);
         mOwnerLabel = (TextView) mIdentityKnownContainer.findViewById(R.id.owner_label);
         mOwner = (TextView) mIdentityKnownContainer.findViewById(R.id.owner);
@@ -268,6 +277,25 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     }
 
     private void updateIdentityInformation(final SiteIdentity siteIdentity) {
+        final String host = siteIdentity.getHost();
+        mTitle.setText(host);
+
+        final String hostUrl = siteIdentity.getOrigin();
+        Favicons.getSizedFaviconForPageFromLocal(mContext, hostUrl, 32, new OnFaviconLoadedListener() {
+            @Override
+            public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
+                if (favicon == null) {
+                    // If there is no favicon, clear the compound drawable.
+                    mTitle.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
+                } else {
+                    mTitle.setCompoundDrawablesWithIntrinsicBounds(new BitmapDrawable(mContext.getResources(), favicon), null, null, null);
+                    mTitle.setCompoundDrawablePadding((int) mContext.getResources().getDimension(R.dimen.doorhanger_drawable_padding));
+                }
+            }
+        });
+
+        mEncrypted.setVisibility(siteIdentity.getEncrypted() ? View.VISIBLE : View.GONE);
+
         mHost.setText(siteIdentity.getHost());
 
         String owner = siteIdentity.getOwner();
@@ -287,8 +315,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         }
 
         final String verifier = siteIdentity.getVerifier();
-        final String encrypted = siteIdentity.getEncrypted();
-        mVerifier.setText(verifier + "\n" + encrypted);
+        mVerifier.setText(verifier);
     }
 
     private void addMixedContentNotification(boolean blocked) {
