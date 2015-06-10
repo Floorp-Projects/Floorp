@@ -51,9 +51,15 @@ function debug(msg) {
 
 /**
  * An empirically determined amount of acceleration corresponding to a
- * shake
+ * shake.
  */
 const EXCITEMENT_THRESHOLD = 500;
+/**
+ * The maximum fraction to update the excitement value per frame. This
+ * corresponds to requiring shaking for approximately 10 motion events (1.6
+ * seconds)
+ */
+const EXCITEMENT_FILTER_ALPHA = 0.2;
 const DEVICE_MOTION_EVENT = "devicemotion";
 const SCREEN_CHANGE_EVENT = "screenchange";
 const CAPTURE_LOGS_CONTENT_EVENT = "requestSystemLogs";
@@ -89,6 +95,11 @@ let LogShake = {
   captureRequested: false,
 
   /**
+   * The current excitement (movement) level
+   */
+  excitement: 0,
+
+  /**
    * Map of files which have log-type information to their parsers
    */
   LOGS_WITH_PARSERS: {
@@ -121,6 +132,9 @@ let LogShake = {
     this.handleScreenChangeEvent({ detail: {
       screenEnabled: true
     }});
+
+    // Reset excitement to clear residual motion
+    this.excitement = 0;
 
     SystemAppProxy.addEventListener(CAPTURE_LOGS_CONTENT_EVENT, this, false);
     SystemAppProxy.addEventListener(SCREEN_CHANGE_EVENT, this, false);
@@ -196,9 +210,12 @@ let LogShake = {
 
     var acc = event.accelerationIncludingGravity;
 
-    var excitement = acc.x * acc.x + acc.y * acc.y + acc.z * acc.z;
+    // Updates excitement by a factor of at most alpha, ignoring sudden device
+    // motion. See bug #1101994 for more information.
+    var newExcitement = acc.x * acc.x + acc.y * acc.y + acc.z * acc.z;
+    this.excitement += (newExcitement - this.excitement) * EXCITEMENT_FILTER_ALPHA;
 
-    if (excitement > EXCITEMENT_THRESHOLD) {
+    if (this.excitement > EXCITEMENT_THRESHOLD) {
       this.startCapture();
     }
   },
