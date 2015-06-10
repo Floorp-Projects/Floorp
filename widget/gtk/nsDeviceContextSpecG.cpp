@@ -374,66 +374,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
   return NS_OK;
 }
 
-/* Get prefs for printer
- * Search order:
- * - Get prefs per printer name and module name
- * - Get prefs per printer name
- * - Get prefs per module name
- * - Get prefs
- */
-static
-nsresult CopyPrinterCharPref(const char *modulename, const char *printername,
-                             const char *prefname, nsCString &return_buf)
-{
-  DO_PR_DEBUG_LOG(("CopyPrinterCharPref('%s', '%s', '%s')\n", modulename, printername, prefname));
-
-  nsresult rv = NS_ERROR_FAILURE;
- 
-  if (printername && modulename) {
-    /* Get prefs per printer name and module name */
-    nsPrintfCString name("print.%s.printer_%s.%s", modulename, printername, prefname);
-    DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-    rv = Preferences::GetCString(name.get(), &return_buf);
-  }
-  
-  if (NS_FAILED(rv)) { 
-    if (printername) {
-      /* Get prefs per printer name */
-      nsPrintfCString name("print.printer_%s.%s", printername, prefname);
-      DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-      rv = Preferences::GetCString(name.get(), &return_buf);
-    }
-
-    if (NS_FAILED(rv)) {
-      if (modulename) {
-        /* Get prefs per module name */
-        nsPrintfCString name("print.%s.%s", modulename, prefname);
-        DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-        rv = Preferences::GetCString(name.get(), &return_buf);
-      }
-      
-      if (NS_FAILED(rv)) {
-        /* Get prefs */
-        nsPrintfCString name("print.%s", prefname);
-        DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-        rv = Preferences::GetCString(name.get(), &return_buf);
-      }
-    }
-  }
-
-#ifdef PR_LOG  
-  if (NS_SUCCEEDED(rv)) {
-    DO_PR_DEBUG_LOG(("CopyPrinterCharPref returning '%s'.\n", return_buf.get()));
-  }
-  else
-  {
-    DO_PR_DEBUG_LOG(("CopyPrinterCharPref failure.\n"));
-  }
-#endif /* PR_LOG */
-
-  return rv;
-}
-
 //  Printer Enumerator
 nsPrinterEnumeratorGTK::nsPrinterEnumeratorGTK()
 {
@@ -503,28 +443,18 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const char16_
   if (NS_FAILED(rv))
     return rv;
 
-  /* "Demangle" postscript printer name */
-  if (type == pmPostScript) {
-    /* Strip the printing method name from the printer,
-     * e.g. turn "PostScript/foobar" to "foobar" */
-    int32_t slash = printerName.FindChar('/');
-    if (kNotFound != slash)
-      printerName.Cut(0, slash + 1);
-  }
-  
   /* Set filename */
   nsAutoCString filename;
-  if (NS_FAILED(CopyPrinterCharPref(nullptr, printerName, "filename", filename))) {
-    const char *path;
+  const char *path;
   
-    if (!(path = PR_GetEnv("PWD")))
-      path = PR_GetEnv("HOME");
+  if (!(path = PR_GetEnv("PWD")))
+    path = PR_GetEnv("HOME");
   
-    if (path)
-      filename = nsPrintfCString("%s/mozilla.pdf", path);
-    else
-      filename.AssignLiteral("mozilla.pdf");
-  }  
+  if (path)
+    filename = nsPrintfCString("%s/mozilla.pdf", path);
+  else
+    filename.AssignLiteral("mozilla.pdf");
+
   DO_PR_DEBUG_LOG(("Setting default filename to '%s'\n", filename.get()));
   aPrintSettings->SetToFileName(NS_ConvertUTF8toUTF16(filename).get());
 
