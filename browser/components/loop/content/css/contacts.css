@@ -134,7 +134,7 @@
   background-color: #fff;
 }
 
-body[dir="rtl"] .contact > .details > .username > i.icon-google {
+html[dir="rtl"] .contact > .details > .username > i.icon-google {
   left: 1rem;
   right: auto;
 }
@@ -193,7 +193,7 @@ body[dir="rtl"] .contact > .details > .username > i.icon-google {
   left: auto;
 }
 
-body[dir="rtl"] .contact > .dropdown-menu {
+html[dir="rtl"] .contact > .dropdown-menu {
   right: auto;
   left: 3em;
 }
@@ -211,7 +211,7 @@ body[dir="rtl"] .contact > .dropdown-menu {
   margin-top: 3px;
 }
 
-body[dir="rtl"] .contact > .dropdown-menu > .dropdown-menu-item > .icon {
+html[dir="rtl"] .contact > .dropdown-menu > .dropdown-menu-item > .icon {
   background-position: center right;
 }
 
@@ -259,7 +259,7 @@ body[dir="rtl"] .contact > .dropdown-menu > .dropdown-menu-item > .icon {
   word-wrap: break-word;
 }
 
-body[dir=rtl] .contacts-gravatar-promo > p {
+html[dir="rtl"] .contacts-gravatar-promo > p {
   margin-right: 0;
   margin-left: 4px;
 }
@@ -279,7 +279,7 @@ body[dir=rtl] .contacts-gravatar-promo > p {
   right: 8px;
 }
 
-body[dir=rtl] .contacts-gravatar-promo > .button-close {
+html[dir="rtl"] .contacts-gravatar-promo > .button-close {
   right: auto;
   left: 8px;
 }

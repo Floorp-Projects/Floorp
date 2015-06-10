@@ -879,7 +879,7 @@ html, .fx-embedded, #main,
   text-decoration: underline;
 }
 
-body[dir="rtl"] .room-invitation-addcontext {
+html[dir="rtl"] .room-invitation-addcontext {
   padding-left: 0;
   padding-right: 1.5em;
   background-position: right top;
@@ -1104,13 +1104,13 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   background-image: url("../img/icons-10x10.svg#close-active");
 }
 
-body[dir=rtl] .room-context-btn-close,
-body[dir=rtl] .room-context-btn-edit {
+html[dir="rtl"] .room-context-btn-close,
+html[dir="rtl"] .room-context-btn-edit {
   right: auto;
   left: 8px;
 }
 
-body[dir=rtl] .room-context-btn-edit {
+html[dir="rtl"] .room-context-btn-edit {
   left: 20px;
 }
 
