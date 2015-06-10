@@ -234,6 +234,24 @@ nsPerformanceSnapshot::GetWindowData(JSContext* cx,
 
   doc->GetTitle(title);
   *windowId = ptop->WindowID();
+
+  *memoryUsed = -1;
+  int64_t jsObjectsSize;
+  int64_t jsStringsSize;
+  int64_t jsOtherSize;
+  int64_t domSize;
+  int64_t styleSize;
+  int64_t otherSize;
+  double jsMilliseconds;
+  double nonJSMilliseconds;
+  nsCOMPtr<nsIMemoryReporterManager> manager = nsMemoryReporterManager::GetOrCreate();
+  if (!manager) {
+    return;
+  }
+  nsresult rv = manager->GetSizeOfTab(top, &jsObjectsSize, &jsStringsSize, &jsOtherSize, &domSize, &styleSize, memoryUsed);
+  if (NS_FAILED(rv)) {
+    *memoryUsed = -1;
+  }
 }
 
 /* static */ void
