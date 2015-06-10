@@ -5001,12 +5001,17 @@ nsHttpChannel::BeginConnect()
         mLoadFlags |= LOAD_FROM_CACHE;
         mLoadFlags &= ~VALIDATE_ALWAYS;
         nsCOMPtr<nsIPackagedAppService> pas =
-          do_GetService("@mozilla.org/network/packaged-app-service;1", &rv);
+            do_GetService("@mozilla.org/network/packaged-app-service;1", &rv);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+            AsyncAbort(rv);
+            return rv;
         }
 
-        return pas->RequestURI(mURI, GetLoadContextInfo(this), this);
+        rv = pas->RequestURI(mURI, GetLoadContextInfo(this), this);
+        if (NS_FAILED(rv)) {
+            AsyncAbort(rv);
+        }
+        return rv;
     }
 
     // when proxying only use the pipeline bit if ProxyPipelining() allows it.
