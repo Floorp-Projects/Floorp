@@ -221,7 +221,7 @@ int TestStunServer::TryOpenListenSocket(nr_local_addr* addr, uint16_t port) {
       return R_INTERNAL;
     }
 
-    if (nr_socket_local_create(&addr->addr, &listen_sock_)) {
+    if (nr_socket_local_create(nullptr, &addr->addr, &listen_sock_)) {
       MOZ_MTLOG(ML_ERROR, "Couldn't create listen socket");
       return R_ALREADY;
     }
