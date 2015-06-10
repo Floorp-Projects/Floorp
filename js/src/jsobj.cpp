@@ -663,17 +663,14 @@ js::StandardDefineProperty(JSContext* cx, HandleObject obj, HandleId id,
     if (IsAnyTypedArray(obj))
         return DefinePropertyOnTypedArray(cx, obj, id, desc, result);
 
-    if (!MaybeConvertUnboxedObjectToNative(cx, obj))
-        return false;
-
-    if (obj->getOps()->lookupProperty) {
-        if (obj->is<ProxyObject>()) {
-            Rooted<PropertyDescriptor> pd(cx, desc);
-            pd.object().set(obj);
-            return Proxy::defineProperty(cx, obj, id, pd, result);
-        }
-        return result.fail(JSMSG_OBJECT_NOT_EXTENSIBLE);
+    if (obj->is<ProxyObject>()) {
+        Rooted<PropertyDescriptor> pd(cx, desc);
+        pd.object().set(obj);
+        return Proxy::defineProperty(cx, obj, id, pd, result);
     }
+
+    if (obj->getOps()->defineProperty)
+        return obj->getOps()->defineProperty(cx, obj, id, desc, result);
 
     return DefinePropertyOnObject(cx, obj.as<NativeObject>(), id, desc, result);
 }

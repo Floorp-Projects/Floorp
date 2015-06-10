@@ -930,15 +930,6 @@ function GetNumberOption(options, property, minimum, maximum, fallback) {
 
 
 /**
- * Set a normal public property p of o to value v, but use Object.defineProperty
- * to avoid interference from setters on Object.prototype.
- */
-function defineProperty(o, p, v) {
-    _DefineDataProperty(o, p, v, ATTR_ENUMERABLE | ATTR_CONFIGURABLE | ATTR_WRITABLE);
-}
-
-
-/**
  * Weak map used to track the initialize-as-Intl status (and, if an object has
  * been so initialized, the Intl-specific internal properties) of all objects.
  * Presence of an object as a key within this map indicates that the object has
@@ -1458,7 +1449,7 @@ function Intl_Collator_resolvedOptions() {
     for (var i = 0; i < relevantExtensionKeys.length; i++) {
         var key = relevantExtensionKeys[i];
         var property = (key === "co") ? "collation" : collatorKeyMappings[key].property;
-        defineProperty(result, property, internals[property]);
+        _DefineDataProperty(result, property, internals[property]);
     }
     return result;
 }
@@ -1901,7 +1892,7 @@ function Intl_NumberFormat_resolvedOptions() {
     for (var i = 0; i < optionalProperties.length; i++) {
         var p = optionalProperties[i];
         if (callFunction(std_Object_hasOwnProperty, internals, p))
-            defineProperty(result, p, internals[p]);
+            _DefineDataProperty(result, p, internals[p]);
     }
     return result;
 }
@@ -2366,17 +2357,17 @@ function ToDateTimeOptions(options, required, defaults) {
         // the Throw parameter, while Object.defineProperty uses true. For the
         // calls here, the difference doesn't matter because we're adding
         // properties to a new object.
-        defineProperty(options, "year", "numeric");
-        defineProperty(options, "month", "numeric");
-        defineProperty(options, "day", "numeric");
+        _DefineDataProperty(options, "year", "numeric");
+        _DefineDataProperty(options, "month", "numeric");
+        _DefineDataProperty(options, "day", "numeric");
     }
 
     // Step 8.
     if (needDefaults && (defaults === "time" || defaults === "all")) {
         // See comment for step 7.
-        defineProperty(options, "hour", "numeric");
-        defineProperty(options, "minute", "numeric");
-        defineProperty(options, "second", "numeric");
+        _DefineDataProperty(options, "hour", "numeric");
+        _DefineDataProperty(options, "minute", "numeric");
+        _DefineDataProperty(options, "second", "numeric");
     }
 
     // Step 9.
@@ -2680,11 +2671,11 @@ function resolveICUPattern(pattern, result) {
                 // skip other pattern characters and literal text
             }
             if (callFunction(std_Object_hasOwnProperty, icuPatternCharToComponent, c))
-                defineProperty(result, icuPatternCharToComponent[c], value);
+                _DefineDataProperty(result, icuPatternCharToComponent[c], value);
             if (c === "h" || c === "K")
-                defineProperty(result, "hour12", true);
+                _DefineDataProperty(result, "hour12", true);
             else if (c === "H" || c === "k")
-                defineProperty(result, "hour12", false);
+                _DefineDataProperty(result, "hour12", false);
         }
     }
 }

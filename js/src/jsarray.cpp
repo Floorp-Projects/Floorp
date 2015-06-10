@@ -243,14 +243,25 @@ GetElement(JSContext* cx, HandleObject obj, IndexType index, bool* hole, Mutable
     return GetElement(cx, obj, obj, index, hole, vp);
 }
 
-void
+bool
 ElementAdder::append(JSContext* cx, HandleValue v)
 {
     MOZ_ASSERT(index_ < length_);
-    if (resObj_)
-        resObj_->as<NativeObject>().setDenseElementWithType(cx, index_++, v);
-    else
-        vp_[index_++] = v;
+    if (resObj_) {
+        DenseElementResult result = SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, resObj_, index_,
+                                                                              v.address(), 1,
+                                                                              UpdateTypes);
+        if (result == DenseElementResult::Failure)
+            return false;
+        if (result == DenseElementResult::Incomplete) {
+            if (!DefineElement(cx, resObj_, index_, v))
+                return false;
+        }
+    } else {
+        vp_[index_] = v;
+    }
+    index_++;
+    return true;
 }
 
 void
@@ -258,12 +269,9 @@ ElementAdder::appendHole()
 {
     MOZ_ASSERT(getBehavior_ == ElementAdder::CheckHasElemPreserveHoles);
     MOZ_ASSERT(index_ < length_);
-    if (resObj_) {
-        MOZ_ASSERT(resObj_->as<NativeObject>().getDenseElement(index_).isMagic(JS_ELEMENTS_HOLE));
-        index_++;
-    } else {
-        vp_[index_++].setMagic(JS_ELEMENTS_HOLE);
-    }
+    if (!resObj_)
+        vp_[index_].setMagic(JS_ELEMENTS_HOLE);
+    index_++;
 }
 
 bool
@@ -287,7 +295,8 @@ js::GetElementsWithAdder(JSContext* cx, HandleObject obj, HandleObject receiver,
             if (!GetElement(cx, obj, receiver, i, &val))
                 return false;
         }
-        adder->append(cx, val);
+        if (!adder->append(cx, val))
+            return false;
     }
 
     return true;
@@ -2281,84 +2290,6 @@ js::array_unshift(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-// Return a new array with the default prototype and specified allocated
-// capacity and length. If possible, try to reuse the group of the input
-// object. The resulting array will have the same boxed/unboxed elements
-// representation as the input object, and will either reuse the input
-// object's group or will have unknown property types.
-JSObject*
-js::NewFullyAllocatedArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length,
-                                        NewObjectKind newKind, bool forceAnalyze)
-{
-    if (!obj->is<ArrayObject>() && !obj->is<UnboxedArrayObject>())
-        return NewDenseFullyAllocatedArray(cx, length, nullptr, newKind);
-
-    if (obj->getProto() != cx->global()->maybeGetArrayPrototype())
-        return NewDenseFullyAllocatedArray(cx, length, nullptr, newKind);
-
-    RootedObjectGroup group(cx, obj->getGroup(cx));
-    if (!group)
-        return nullptr;
-
-    if (group->maybePreliminaryObjects())
-        group->maybePreliminaryObjects()->maybeAnalyze(cx, group, forceAnalyze);
-
-    if (group->shouldPreTenure() || group->maybePreliminaryObjects())
-        newKind = TenuredObject;
-
-    if (group->maybeUnboxedLayout()) {
-        if (length > UnboxedArrayObject::MaximumCapacity)
-            return NewDenseFullyAllocatedArray(cx, length, nullptr, newKind);
-
-        return UnboxedArrayObject::create(cx, group, length, newKind);
-    }
-
-    ArrayObject* res = NewDenseFullyAllocatedArray(cx, length, nullptr, newKind);
-    if (!res)
-        return nullptr;
-
-    res->setGroup(group);
-
-    if (PreliminaryObjectArray* preliminaryObjects = group->maybePreliminaryObjects())
-        preliminaryObjects->registerNewObject(res);
-
-    return res;
-}
-
-// As above, except this might not allocate space up to |length| and will
-// definitely return a normal boxed array, instead of an unboxed array. This
-// should be used when the result might need sparse elements.
-static inline ArrayObject*
-NewPartlyAllocatedArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length)
-{
-    if (!obj->is<ArrayObject>() && !obj->is<UnboxedArrayObject>())
-        return NewDensePartlyAllocatedArray(cx, length);
-
-    if (obj->getProto() != cx->global()->maybeGetArrayPrototype())
-        return NewDensePartlyAllocatedArray(cx, length);
-
-    RootedObjectGroup group(cx, obj->getGroup(cx));
-    if (!group)
-        return nullptr;
-
-    if (group->maybePreliminaryObjects())
-        group->maybePreliminaryObjects()->maybeAnalyze(cx, group);
-
-    NewObjectKind newKind = GenericObject;
-    if (group->shouldPreTenure() || group->maybePreliminaryObjects())
-        newKind = TenuredObject;
-
-    if (group->maybeUnboxedLayout())
-        return NewDensePartlyAllocatedArray(cx, length, nullptr, newKind);
-
-    ArrayObject* res = NewDensePartlyAllocatedArray(cx, length, nullptr, newKind);
-    if (!res)
-        return nullptr;
-
-    res->setGroup(group);
-    return res;
-}
-
 /*
  * Returns true if this is a dense or unboxed array whose |count| properties
  * starting from |startingIndex| may be accessed (get, set, delete) directly
@@ -2960,28 +2891,17 @@ js::array_slice(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    RootedArrayObject narr(cx, NewPartlyAllocatedArrayTryReuseGroup(cx, obj, end - begin));
+    RootedObject narr(cx, NewPartlyAllocatedArrayTryReuseGroup(cx, obj, end - begin));
     if (!narr)
         return false;
 
     if (js::GetElementsOp op = obj->getOps()->getElements) {
-        // Ensure that we have dense elements, so that ElementAdder::append can
-        // use setDenseElementWithType.
-        DenseElementResult result = narr->ensureDenseElements(cx, 0, end - begin);
-        if (result == DenseElementResult::Failure)
+        ElementAdder adder(cx, narr, end - begin, ElementAdder::CheckHasElemPreserveHoles);
+        if (!op(cx, obj, begin, end, &adder))
             return false;
 
-        if (result == DenseElementResult::Success) {
-            ElementAdder adder(cx, narr, end - begin, ElementAdder::CheckHasElemPreserveHoles);
-            if (!op(cx, obj, begin, end, &adder))
-                return false;
-
-            args.rval().setObject(*narr);
-            return true;
-        }
-
-        // Fallthrough
-        MOZ_ASSERT(result == DenseElementResult::Incomplete);
+        args.rval().setObject(*narr);
+        return true;
     }
 
     if (obj->isNative() && obj->isIndexed() && end - begin > 1000) {
@@ -3076,13 +2996,9 @@ array_filter(JSContext* cx, unsigned argc, Value* vp)
     RootedValue thisv(cx, args.length() >= 2 ? args[1] : UndefinedValue());
 
     /* Step 6. */
-    RootedObject arr(cx, NewDenseFullyAllocatedArray(cx, 0));
+    RootedObject arr(cx, NewFullyAllocatedArrayForCallingAllocationSite(cx, 0));
     if (!arr)
         return false;
-    ObjectGroup* newGroup = ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array);
-    if (!newGroup)
-        return false;
-    arr->setGroup(newGroup);
 
     /* Step 7. */
     uint32_t k = 0;
@@ -3157,19 +3073,11 @@ IsArrayConstructor(const Value& v)
 }
 
 static bool
-ArrayFromCallArgs(JSContext* cx, HandleObjectGroup group, CallArgs& args)
+ArrayFromCallArgs(JSContext* cx, CallArgs& args)
 {
-    JSObject* obj = NewDenseFullyAllocatedArray(cx, args.length());
+    JSObject* obj = NewCopiedArrayForCallingAllocationSite(cx, args.array(), args.length());
     if (!obj)
         return false;
-    obj->setGroup(group);
-
-    DenseElementResult result =
-        SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, obj, 0, args.array(), args.length(),
-                                                  UpdateTypes);
-    if (result == DenseElementResult::Failure)
-        return false;
-    MOZ_ASSERT(result == DenseElementResult::Success);
 
     args.rval().setObject(*obj);
     return true;
@@ -3183,10 +3091,7 @@ array_of(JSContext* cx, unsigned argc, Value* vp)
     if (IsArrayConstructor(args.thisv()) || !IsConstructor(args.thisv())) {
         // IsArrayConstructor(this) will usually be true in practice. This is
         // the most common path.
-        RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
-        if (!group)
-            return false;
-        return ArrayFromCallArgs(cx, group, args);
+        return ArrayFromCallArgs(cx, args);
     }
 
     // Step 4.
@@ -3289,16 +3194,12 @@ bool
 js::ArrayConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    
+
     if (args.isConstructing())
         MOZ_ASSERT(args.newTarget().toObject().as<JSFunction>().native() == js::ArrayConstructor);
-    
-    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
-    if (!group)
-        return false;
 
     if (args.length() != 1 || !args[0].isNumber())
-        return ArrayFromCallArgs(cx, group, args);
+        return ArrayFromCallArgs(cx, args);
 
     uint32_t length;
     if (args[0].isInt32()) {
@@ -3317,14 +3218,7 @@ js::ArrayConstructor(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    /*
-     * Allocate up to |EagerAllocationMaxLength| dense elements eagerly, to
-     * avoid reallocating elements when filling the array.
-     */
-    AllocatingBehaviour allocating = (length <= ArrayObject::EagerAllocationMaxLength)
-                                   ? NewArray_FullyAllocating
-                                   : NewArray_PartlyAllocating;
-    RootedObject obj(cx, NewDenseArray(cx, length, group, allocating));
+    JSObject* obj = NewPartlyAllocatedArrayForCallingAllocationSite(cx, length);
     if (!obj)
         return false;
 
@@ -3332,7 +3226,7 @@ js::ArrayConstructor(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-ArrayObject*
+JSObject*
 js::ArrayConstructorOneArg(JSContext* cx, HandleObjectGroup group, int32_t lengthInt)
 {
     if (lengthInt < 0) {
@@ -3341,10 +3235,7 @@ js::ArrayConstructorOneArg(JSContext* cx, HandleObjectGroup group, int32_t lengt
     }
 
     uint32_t length = uint32_t(lengthInt);
-    AllocatingBehaviour allocating = (length <= ArrayObject::EagerAllocationMaxLength)
-                                   ? NewArray_FullyAllocating
-                                   : NewArray_PartlyAllocating;
-    return NewDenseArray(cx, length, group, allocating);
+    return NewPartlyAllocatedArrayTryUseGroup(cx, group, length);
 }
 
 static JSObject*
@@ -3532,7 +3423,7 @@ js::NewDenseFullyAllocatedArray(ExclusiveContext* cx, uint32_t length,
                                 HandleObject proto /* = nullptr */,
                                 NewObjectKind newKind /* = GenericObject */)
 {
-    return NewArray<NativeObject::NELEMENTS_LIMIT>(cx, length, proto, newKind);
+    return NewArray<UINT32_MAX>(cx, length, proto, newKind);
 }
 
 ArrayObject * JS_FASTCALL
@@ -3552,46 +3443,12 @@ js::NewDenseUnallocatedArray(ExclusiveContext* cx, uint32_t length,
 }
 
 ArrayObject*
-js::NewDenseArray(ExclusiveContext* cx, uint32_t length, HandleObjectGroup group,
-                  AllocatingBehaviour allocating, bool convertDoubleElements)
-{
-    NewObjectKind newKind = !group ? SingletonObject : GenericObject;
-    if (group && group->shouldPreTenure())
-        newKind = TenuredObject;
-
-    ArrayObject* arr;
-    if (allocating == NewArray_Unallocating) {
-        arr = NewDenseUnallocatedArray(cx, length, nullptr, newKind);
-    } else if (allocating == NewArray_PartlyAllocating) {
-        arr = NewDensePartlyAllocatedArray(cx, length, nullptr, newKind);
-    } else {
-        MOZ_ASSERT(allocating == NewArray_FullyAllocating);
-        arr = NewDenseFullyAllocatedArray(cx, length, nullptr, newKind);
-    }
-    if (!arr)
-        return nullptr;
-
-    if (group)
-        arr->setGroup(group);
-
-    if (convertDoubleElements)
-        arr->setShouldConvertDoubleElements();
-
-    // If the length calculation overflowed, make sure that is marked for the
-    // new group.
-    if (arr->length() > INT32_MAX)
-        arr->setLength(cx, arr->length());
-
-    return arr;
-}
-
-ArrayObject*
 js::NewDenseCopiedArray(JSContext* cx, uint32_t length, HandleArrayObject src,
                         uint32_t elementOffset, HandleObject proto /* = nullptr */)
 {
     MOZ_ASSERT(!src->isIndexed());
 
-    ArrayObject* arr = NewArray<NativeObject::NELEMENTS_LIMIT>(cx, length, proto);
+    ArrayObject* arr = NewArray<UINT32_MAX>(cx, length, proto);
     if (!arr)
         return nullptr;
 
@@ -3610,7 +3467,7 @@ js::NewDenseCopiedArray(JSContext* cx, uint32_t length, const Value* values,
                         HandleObject proto /* = nullptr */,
                         NewObjectKind newKind /* = GenericObject */)
 {
-    ArrayObject* arr = NewArray<NativeObject::NELEMENTS_LIMIT>(cx, length, proto);
+    ArrayObject* arr = NewArray<UINT32_MAX>(cx, length, proto);
     if (!arr)
         return nullptr;
 
@@ -3636,7 +3493,7 @@ js::NewDenseFullyAllocatedArrayWithTemplate(JSContext* cx, uint32_t length, JSOb
 
     gc::InitialHeap heap = GetInitialHeap(GenericObject, &ArrayObject::class_);
     Rooted<ArrayObject*> arr(cx, ArrayObject::createArray(cx, allocKind,
-                                                           heap, shape, group, length));
+                                                          heap, shape, group, length));
     if (!arr)
         return nullptr;
 
@@ -3659,6 +3516,150 @@ js::NewDenseCopyOnWriteArray(JSContext* cx, HandleArrayObject templateObject, gc
 
     probes::CreateObject(cx, arr);
     return arr;
+}
+
+// Return a new boxed or unboxed array with the specified length and allocated
+// capacity (up to maxLength), using the specified group if possible.
+template <uint32_t maxLength>
+static inline JSObject*
+NewArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length,
+                    NewObjectKind newKind = GenericObject, bool forceAnalyze = false)
+{
+    MOZ_ASSERT(newKind != SingletonObject);
+
+    if (group->maybePreliminaryObjects())
+        group->maybePreliminaryObjects()->maybeAnalyze(cx, group, forceAnalyze);
+
+    if (group->shouldPreTenure() || group->maybePreliminaryObjects())
+        newKind = TenuredObject;
+
+    if (group->maybeUnboxedLayout()) {
+        if (length > UnboxedArrayObject::MaximumCapacity)
+            return NewArray<maxLength>(cx, length, nullptr, newKind);
+
+        return UnboxedArrayObject::create(cx, group, length, newKind, maxLength);
+    }
+
+    ArrayObject* res = NewArray<maxLength>(cx, length, nullptr, newKind);
+    if (!res)
+        return nullptr;
+
+    res->setGroup(group);
+
+    // If the length calculation overflowed, make sure that is marked for the
+    // new group.
+    if (res->length() > INT32_MAX)
+        res->setLength(cx, res->length());
+
+    if (PreliminaryObjectArray* preliminaryObjects = group->maybePreliminaryObjects())
+        preliminaryObjects->registerNewObject(res);
+
+    return res;
+}
+
+JSObject*
+js::NewFullyAllocatedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length)
+{
+    return NewArrayTryUseGroup<UINT32_MAX>(cx, group, length);
+}
+
+JSObject*
+js::NewPartlyAllocatedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length)
+{
+    return NewArrayTryUseGroup<ArrayObject::EagerAllocationMaxLength>(cx, group, length);
+}
+
+// Return a new array with the default prototype and specified allocated
+// capacity and length. If possible, try to reuse the group of the input
+// object. The resulting array will either reuse the input object's group or
+// will have unknown property types. Additionally, the result will have the
+// same boxed/unboxed elements representation as the input object, unless
+// |length| is larger than the input object's initialized length (in which case
+// UnboxedArrayObject::MaximumCapacity might be exceeded).
+template <uint32_t maxLength>
+static inline JSObject*
+NewArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length,
+                      NewObjectKind newKind = GenericObject, bool forceAnalyze = false)
+{
+    if (!obj->is<ArrayObject>() && !obj->is<UnboxedArrayObject>())
+        return NewArray<maxLength>(cx, length, nullptr, newKind);
+
+    if (obj->getProto() != cx->global()->maybeGetArrayPrototype())
+        return NewArray<maxLength>(cx, length, nullptr, newKind);
+
+    RootedObjectGroup group(cx, obj->getGroup(cx));
+    if (!group)
+        return nullptr;
+
+    return NewArrayTryUseGroup<maxLength>(cx, group, length, newKind, forceAnalyze);
+}
+
+JSObject*
+js::NewFullyAllocatedArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length,
+                                        NewObjectKind newKind, bool forceAnalyze)
+{
+    return NewArrayTryReuseGroup<UINT32_MAX>(cx, obj, length, newKind, forceAnalyze);
+}
+
+JSObject*
+js::NewPartlyAllocatedArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length)
+{
+    return NewArrayTryReuseGroup<ArrayObject::EagerAllocationMaxLength>(cx, obj, length);
+}
+
+JSObject*
+js::NewFullyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length,
+                                                   NewObjectKind newKind, bool forceAnalyze)
+{
+    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
+    if (!group)
+        return nullptr;
+    return NewArrayTryUseGroup<UINT32_MAX>(cx, group, length, newKind, forceAnalyze);
+}
+
+JSObject*
+js::NewPartlyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length)
+{
+    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
+    if (!group)
+        return nullptr;
+    return NewArrayTryUseGroup<ArrayObject::EagerAllocationMaxLength>(cx, group, length);
+}
+
+JSObject*
+js::NewCopiedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, const Value* vp, size_t length)
+{
+    JSObject* obj = NewFullyAllocatedArrayTryUseGroup(cx, group, length);
+    if (!obj)
+        return nullptr;
+
+    DenseElementResult result =
+        SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, obj, 0, vp, length, UpdateTypes);
+    if (result == DenseElementResult::Failure)
+        return nullptr;
+    if (result == DenseElementResult::Success)
+        return obj;
+
+    MOZ_ASSERT(obj->is<UnboxedArrayObject>());
+    if (!UnboxedArrayObject::convertToNative(cx, obj))
+        return nullptr;
+
+    result = SetOrExtendBoxedOrUnboxedDenseElements<JSVAL_TYPE_MAGIC>(cx, obj, 0, vp, length,
+                                                                      UpdateTypes);
+    MOZ_ASSERT(result != DenseElementResult::Incomplete);
+    if (result == DenseElementResult::Failure)
+        return nullptr;
+
+    return obj;
+}
+
+JSObject*
+js::NewCopiedArrayForCallingAllocationSite(JSContext* cx, const Value* vp, size_t length)
+{
+    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
+    if (!group)
+        return nullptr;
+    return NewCopiedArrayTryUseGroup(cx, group, vp, length);
 }
 
 #ifdef DEBUG

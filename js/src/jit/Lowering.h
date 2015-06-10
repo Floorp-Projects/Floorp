@@ -190,6 +190,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitUnboxedArrayLength(MUnboxedArrayLength* ins);
     void visitUnboxedArrayInitializedLength(MUnboxedArrayInitializedLength* ins);
     void visitIncrementUnboxedArrayInitializedLength(MIncrementUnboxedArrayInitializedLength* ins);
+    void visitSetUnboxedArrayInitializedLength(MSetUnboxedArrayInitializedLength* ins);
     void visitNot(MNot* ins);
     void visitBoundsCheck(MBoundsCheck* ins);
     void visitBoundsCheckLower(MBoundsCheckLower* ins);
