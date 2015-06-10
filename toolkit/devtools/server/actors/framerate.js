@@ -4,7 +4,7 @@
 "use strict";
 
 const protocol = require("devtools/server/protocol");
-const { actorBridge } = require("devtools/server/actors/utils/actor-utils");
+const { actorBridge } = require("devtools/server/actors/common");
 const { method, custom, Arg, Option, RetVal } = protocol;
 const { on, once, off, emit } = require("sdk/event/core");
 const { Framerate } = require("devtools/toolkit/shared/framerate");

@@ -6,8 +6,8 @@
 
 const protocol = require("devtools/server/protocol");
 const { method, RetVal, Arg, types } = protocol;
-const { MemoryBridge } = require("./utils/memory-bridge");
-const { actorBridge } = require("./utils/actor-utils");
+const { Memory } = require("devtools/toolkit/shared/memory");
+const { actorBridge } = require("devtools/server/actors/common");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "StackFrameCache",
                          "devtools/server/actors/utils/stack", true);
@@ -29,8 +29,13 @@ types.addDictType("AllocationsRecordingOptions", {
  * A tab-scoped instance of this actor will measure the memory footprint of its
  * parent tab. A global-scoped instance however, will measure the memory
  * footprint of the chrome window referenced by the root actor.
+ * 
+ * This actor wraps the Memory module at toolkit/devtools/shared/memory.js
+ * and provides RDP definitions.
+ *
+ * @see toolkit/devtools/shared/memory.js for documentation.
  */
-let MemoryActor = protocol.ActorClass({
+let MemoryActor = exports.MemoryActor = protocol.ActorClass({
   typeName: "memory",
 
   /**
@@ -52,7 +57,7 @@ let MemoryActor = protocol.ActorClass({
     protocol.Actor.prototype.initialize.call(this, conn);
 
     this._onGarbageCollection = this._onGarbageCollection.bind(this);
-    this.bridge = new MemoryBridge(parent, frameCache);
+    this.bridge = new Memory(parent, frameCache);
     this.bridge.on("garbage-collection", this._onGarbageCollection);
   },
 
@@ -62,13 +67,6 @@ let MemoryActor = protocol.ActorClass({
     protocol.Actor.prototype.destroy.call(this);
   },
 
-  /**
-   * Attach to this MemoryActor.
-   *
-   * This attaches the MemoryActor's Debugger instance so that you can start
-   * recording allocations or take a census of the heap. In addition, the
-   * MemoryActor will start emitting GC events.
-   */
   attach: actorBridge("attach", {
     request: {},
     response: {
@@ -76,9 +74,6 @@ let MemoryActor = protocol.ActorClass({
     }
   }),
 
-  /**
-   * Detach from this MemoryActor.
-   */
   detach: actorBridge("detach", {
     request: {},
     response: {
@@ -86,30 +81,17 @@ let MemoryActor = protocol.ActorClass({
     }
   }),
 
-  /**
-   * Gets the current MemoryActor attach/detach state.
-   */
   getState: actorBridge("getState", {
     response: {
       state: RetVal(0, "string")
     }
   }),
 
-  /**
-   * Take a census of the heap. See js/src/doc/Debugger/Debugger.Memory.md for
-   * more information.
-   */
   takeCensus: actorBridge("takeCensus", {
     request: {},
     response: RetVal("json")
   }),
 
-  /**
-   * Start recording allocation sites.
-   *
-   * @param AllocationsRecordingOptions options
-   *        See the protocol.js definition of AllocationsRecordingOptions above.
-   */
   startRecordingAllocations: actorBridge("startRecordingAllocations", {
     request: {
       options: Arg(0, "nullable:AllocationsRecordingOptions")
@@ -120,9 +102,6 @@ let MemoryActor = protocol.ActorClass({
     }
   }),
 
-  /**
-   * Stop recording allocation sites.
-   */
   stopRecordingAllocations: actorBridge("stopRecordingAllocations", {
     request: {},
     response: {
@@ -131,10 +110,6 @@ let MemoryActor = protocol.ActorClass({
     }
   }),
 
-  /**
-   * Return settings used in `startRecordingAllocations` for `probability`
-   * and `maxLogLength`. Currently only uses in tests.
-   */
   getAllocationsSettings: actorBridge("getAllocationsSettings", {
     request: {},
     response: {
@@ -147,30 +122,16 @@ let MemoryActor = protocol.ActorClass({
     response: RetVal("json")
   }),
 
-  /*
-   * Force a browser-wide GC.
-   */
   forceGarbageCollection: actorBridge("forceGarbageCollection", {
     request: {},
     response: {}
   }),
 
-  /**
-   * Force an XPCOM cycle collection. For more information on XPCOM cycle
-   * collection, see
-   * https://developer.mozilla.org/en-US/docs/Interfacing_with_the_XPCOM_cycle_collector#What_the_cycle_collector_does
-   */
   forceCycleCollection: actorBridge("forceCycleCollection", {
     request: {},
     response: {}
   }),
 
-  /**
-   * A method that returns a detailed breakdown of the memory consumption of the
-   * associated window.
-   *
-   * @returns object
-   */
   measure: actorBridge("measure", {
     request: {},
     response: RetVal("json"),
@@ -181,16 +142,10 @@ let MemoryActor = protocol.ActorClass({
     response: { value: RetVal("number") }
   }),
 
-  /**
-   * Called when the underlying MemoryBridge fires a "garbage-collection" events.
-   * Propagates over RDP.
-   */
   _onGarbageCollection: function (data) {
     events.emit(this, "garbage-collection", data);
   },
 });
-
-exports.MemoryActor = MemoryActor;
 
 exports.MemoryFront = protocol.FrontClass(MemoryActor, {
   initialize: function(client, form) {
