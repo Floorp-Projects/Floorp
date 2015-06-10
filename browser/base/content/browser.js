@@ -7263,11 +7263,6 @@ let gRemoteTabsUI = {
       return;
     }
 
-    if (Services.appinfo.inSafeMode) {
-      // e10s isn't supported in safe mode, so don't show the menu items for it
-      return;
-    }
-
 #ifdef XP_MACOSX
     if (Services.prefs.getBoolPref("layers.acceleration.disabled")) {
       // On OS X, "Disable Hardware Acceleration" also disables OMTC and forces
