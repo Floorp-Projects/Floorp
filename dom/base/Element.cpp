@@ -3151,8 +3151,9 @@ Element::MozRequestFullScreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
   }
 
   FullScreenOptions opts;
-  RequestFullscreenOptions fsOptions;
+  opts.mIsCallerChrome = nsContentUtils::IsCallerChrome();
 
+  RequestFullscreenOptions fsOptions;
   // We need to check if options is convertible to a dict first before
   // trying to init fsOptions; otherwise Init() would throw, and we want to
   // silently ignore non-dictionary values
