@@ -130,7 +130,16 @@ this.AboutServiceWorkers = {
           self.sendError(message.id, "MissingScope");
           return;
         }
-        gServiceWorkerManager.softUpdate(message.scope);
+
+        if (!message.principal ||
+            !message.principal.originAttributes) {
+          // XXX This will always error until bug 1171915 is fixed.
+          self.sendError(message.id, "MissingOriginAttributes");
+          return;
+        }
+
+        gServiceWorkerManager.propagateSoftUpdate({},
+                                                  message.scope);
         self.sendResult(message.id, true);
         break;
 
@@ -166,9 +175,9 @@ this.AboutServiceWorkers = {
             Ci.nsIServiceWorkerUnregisterCallback
           ])
         };
-        gServiceWorkerManager.unregister(principal,
-                                         serviceWorkerUnregisterCallback,
-                                         message.scope);
+        gServiceWorkerManager.propagateUnregister(principal,
+                                                  serviceWorkerUnregisterCallback,
+                                                  message.scope);
         break;
     }
   }
