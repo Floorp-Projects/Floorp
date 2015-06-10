@@ -11196,12 +11196,8 @@ ExitFullscreenInDocTree(nsIDocument* aMaybeNotARootDoc)
 void
 nsDocument::ExitFullscreen(nsIDocument* aDoc)
 {
-  // Unlock the pointer, if it's locked.
-  nsCOMPtr<Element> pointerLockedElement =
-    do_QueryReferent(EventStateManager::sPointerLockedElement);
-  if (pointerLockedElement) {
-    UnlockPointer();
-  }
+  // Unlock the pointer
+  UnlockPointer();
 
   if (aDoc)  {
     ExitFullscreenInDocTree(aDoc);
@@ -11258,11 +11254,7 @@ nsDocument::RestorePreviousFullScreenState()
   }
 
   // If fullscreen mode is updated the pointer should be unlocked
-  nsCOMPtr<Element> pointerLockedElement =
-    do_QueryReferent(EventStateManager::sPointerLockedElement);
-  if (pointerLockedElement) {
-    UnlockPointer();
-  }
+  UnlockPointer();
 
   nsCOMPtr<nsIDocument> fullScreenDoc = GetFullscreenLeaf(this);
 
@@ -11271,7 +11263,6 @@ nsDocument::RestorePreviousFullScreenState()
   while (doc != this) {
     NS_ASSERTION(doc->IsFullScreenDoc(), "Should be full-screen doc");
     static_cast<nsDocument*>(doc)->CleanupFullscreenState();
-    UnlockPointer();
     DispatchFullScreenChange(doc);
     doc = doc->GetParentDocument();
   }
@@ -11280,7 +11271,6 @@ nsDocument::RestorePreviousFullScreenState()
   NS_ASSERTION(doc == this, "Must have reached this doc.");
   while (doc != nullptr) {
     static_cast<nsDocument*>(doc)->FullScreenStackPop();
-    UnlockPointer();
     DispatchFullScreenChange(doc);
     if (static_cast<nsDocument*>(doc)->mFullScreenStack.IsEmpty()) {
       // Full-screen stack in document is empty. Go back up to the parent
@@ -11666,19 +11656,10 @@ nsDocument::RequestFullScreen(Element* aElement,
   // Remember the root document, so that if a full-screen document is hidden
   // we can reset full-screen state in the remaining visible full-screen documents.
   nsIDocument* fullScreenRootDoc = nsContentUtils::GetRootDocument(this);
-  if (fullScreenRootDoc->IsFullScreenDoc()) {
-    // A document is already in fullscreen, unlock the mouse pointer
-    // before setting a new document to fullscreen
-    UnlockPointer();
-  }
 
   // If a document is already in fullscreen, then unlock the mouse pointer
   // before setting a new document to fullscreen
-  nsCOMPtr<Element> pointerLockedElement =
-    do_QueryReferent(EventStateManager::sPointerLockedElement);
-  if (pointerLockedElement) {
-    UnlockPointer();
-  }
+  UnlockPointer();
 
   // Process options -- in this case, just HMD
   if (aOptions.mVRHMDDevice) {
