@@ -25,6 +25,10 @@ class nsTableRowFrame;
 class nsTableColGroupFrame;
 class nsITableLayoutStrategy;
 class nsStyleContext;
+namespace mozilla {
+class WritingMode;
+class LogicalMargin;
+}
 
 struct nsTableReflowState;
 struct BCPropertyData;
@@ -123,6 +127,8 @@ enum nsTableColType {
 class nsTableFrame : public nsContainerFrame
 {
   typedef mozilla::image::DrawResult DrawResult;
+  typedef mozilla::WritingMode WritingMode;
+  typedef mozilla::LogicalMargin LogicalMargin;
 
 public:
   NS_DECL_QUERYFRAME_TARGET(nsTableFrame)
@@ -206,7 +212,8 @@ public:
   virtual nsMargin GetUsedMargin() const override;
 
   // Get the offset from the border box to the area where the row groups fit
-  nsMargin GetChildAreaOffset(const nsHTMLReflowState* aReflowState) const;
+  LogicalMargin GetChildAreaOffset(const WritingMode aWM,
+                                   const nsHTMLReflowState* aReflowState) const;
 
   /** helper method to find the table parent of any table frame object */
   static nsTableFrame* GetTableFrame(nsIFrame* aSourceFrame);
@@ -273,18 +280,18 @@ public:
    *  the table) of the largest segment (?) of border-collapsed border on
    *  the table on each side, or 0 for non border-collapsed tables.
    */
-  nsMargin GetOuterBCBorder() const;
+  LogicalMargin GetOuterBCBorder(const WritingMode aWM) const;
 
   /** Same as above, but only if it's included from the border-box width
    *  of the table.
    */
-  nsMargin GetIncludedOuterBCBorder() const;
+  LogicalMargin GetIncludedOuterBCBorder(const WritingMode aWM) const;
 
   /** Same as above, but only if it's excluded from the border-box width
    *  of the table.  This is the area that leaks out into the margin
    *  (or potentially past it, if there is no margin).
    */
-  nsMargin GetExcludedOuterBCBorder() const;
+  LogicalMargin GetExcludedOuterBCBorder(const WritingMode aWM) const;
 
   /**
    * In quirks mode, the size of the table background is reduced
@@ -632,7 +639,8 @@ protected:
     * on columns and colgroups
     * @param aBorderPadding  the border and padding of the table
     */
-  nscoord GetCollapsedWidth(nsMargin aBorderPadding);
+  nscoord GetCollapsedWidth(const WritingMode aWM,
+                            const LogicalMargin& aBorderPadding);
 
 
   /** Adjust the table for visibility.collapse set on rowgroups, rows,
@@ -641,7 +649,8 @@ protected:
     * @param aBorderPadding  the border and padding of the table
     */
   void AdjustForCollapsingRowsCols(nsHTMLReflowMetrics& aDesiredSize,
-                                   nsMargin             aBorderPadding);
+                                   const WritingMode aWM,
+                                   const LogicalMargin& aBorderPadding);
 
   /** FixupPositionedTableParts is called at the end of table reflow to reflow
    *  the absolutely positioned descendants of positioned table parts. This is
@@ -801,8 +810,8 @@ protected:
 
   void ExpandBCDamageArea(mozilla::TableArea& aRect) const;
 
-  void SetColumnDimensions(nscoord         aHeight,
-                           const nsMargin& aReflowState);
+  void SetColumnDimensions(nscoord aHeight, WritingMode aWM,
+                           const LogicalMargin& aBorderPadding);
 
   int32_t CollectRows(nsIFrame*                   aFrame,
                       nsTArray<nsTableRowFrame*>& aCollection);
