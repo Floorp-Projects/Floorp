@@ -9,6 +9,18 @@
 </head>
 <body>
 <script class="testbody" type="text/javascript">
+function setupTestIframe() {
+  return new Promise(function(resolve) {
+    var iframe = document.createElement("iframe");
+    iframe.src = "empty.html";
+    iframe.onload = function() {
+      window.caches = iframe.contentWindow.caches;
+      resolve();
+    };
+    document.body.appendChild(iframe);
+  });
+}
+
 function resetStorage() {
   return new Promise(function(resolve, reject) {
     var principal = SpecialPowers.wrap(document).nodePrincipal;
@@ -32,7 +44,9 @@ SpecialPowers.pushPrefEnv({
   var name = 'foo';
   var url = './test_cache_add.js';
   var cache;
-  caches.open(name).then(function(c) {
+  setupTestIframe().then(function() {
+    return caches.open(name);
+  }).then(function(c) {
     cache = c;
     return cache.add(url);
   }).then(function() {

@@ -56,6 +56,7 @@ struct JitOptions
     bool disableEaa;
     bool disableAma;
     bool eagerCompilation;
+    bool forceInlineCaches;
     mozilla::Maybe<uint32_t> forcedDefaultIonWarmUpThreshold;
     mozilla::Maybe<IonRegisterAllocator> forcedRegisterAllocator;
     bool limitScriptSize;

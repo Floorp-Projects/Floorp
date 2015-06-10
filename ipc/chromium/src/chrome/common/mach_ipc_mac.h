@@ -10,8 +10,6 @@
 #include <servers/bootstrap.h>
 #include <sys/types.h>
 
-#include <CoreServices/CoreServices.h>
-
 #include "base/basictypes.h"
 
 //==============================================================================
@@ -145,16 +143,12 @@ class MachMessage {
     return GetDataLength() > 0 ? GetDataPacket()->data : NULL;
   }
 
-  u_int32_t GetDataLength() {
-    return EndianU32_LtoN(GetDataPacket()->data_length);
-  }
+  u_int32_t GetDataLength();
 
   // The message ID may be used as a code identifying the type of message
-  void SetMessageID(int32_t message_id) {
-    GetDataPacket()->id = EndianU32_NtoL(message_id);
-  }
+  void SetMessageID(int32_t message_id);
 
-  int32_t GetMessageID() { return EndianU32_LtoN(GetDataPacket()->id); }
+  int32_t GetMessageID();
 
   // Adds a descriptor (typically a mach port) to be translated
   // returns true if successful, otherwise not enough space
@@ -279,6 +273,9 @@ class ReceivePort {
   // Waits on the mach port until message received or timeout
   kern_return_t WaitForMessage(MachReceiveMessage *out_message,
                                mach_msg_timeout_t timeout);
+
+  kern_return_t SendMessageToSelf(MachSendMessage& msg,
+                                  mach_msg_timeout_t timeout);
 
   // The underlying mach port that we wrap
   mach_port_t  GetPort() const { return port_; }
