@@ -178,13 +178,15 @@ MinLoad(uint32_t aCapacity)
   return aCapacity >> 2;                // == aCapacity * 0.25
 }
 
-static MOZ_ALWAYS_INLINE uint32_t
-HashShift(uint32_t aEntrySize, uint32_t aLength)
+// Compute the minimum capacity (and the Log2 of that capacity) for a table
+// containing |aLength| elements while respecting the following contraints:
+// - table must be at most 75% full;
+// - capacity must be a power of two;
+// - capacity cannot be too small.
+static inline void
+BestCapacity(uint32_t aLength, uint32_t* aCapacityOut,
+             uint32_t* aLog2CapacityOut)
 {
-  if (aLength > PL_DHASH_MAX_INITIAL_LENGTH) {
-    MOZ_CRASH("Initial length is too large");
-  }
-
   // Compute the smallest capacity allowing |aLength| elements to be inserted
   // without rehashing.
   uint32_t capacity = (aLength * 4 + (3 - 1)) / 3; // == ceil(aLength * 4 / 3)
@@ -193,9 +195,23 @@ HashShift(uint32_t aEntrySize, uint32_t aLength)
   }
 
   // Round up capacity to next power-of-two.
-  int log2 = CeilingLog2(capacity);
+  uint32_t log2 = CeilingLog2(capacity);
   capacity = 1u << log2;
   MOZ_ASSERT(capacity <= PL_DHASH_MAX_CAPACITY);
+
+  *aCapacityOut = capacity;
+  *aLog2CapacityOut = log2;
+}
+
+static MOZ_ALWAYS_INLINE uint32_t
+HashShift(uint32_t aEntrySize, uint32_t aLength)
+{
+  if (aLength > PL_DHASH_MAX_INITIAL_LENGTH) {
+    MOZ_CRASH("Initial length is too large");
+  }
+
+  uint32_t capacity, log2;
+  BestCapacity(aLength, &capacity, &log2);
 
   uint32_t nbytes;
   if (!SizeOfEntryStore(capacity, aEntrySize, &nbytes)) {
@@ -474,13 +490,13 @@ PLDHashTable::FindFreeEntry(PLDHashNumber aKeyHash)
 }
 
 bool
-PLDHashTable::ChangeTable(int aDeltaLog2)
+PLDHashTable::ChangeTable(int32_t aDeltaLog2)
 {
   MOZ_ASSERT(mEntryStore);
 
   /* Look, but don't touch, until we succeed in getting new entry store. */
-  int oldLog2 = PL_DHASH_BITS - mHashShift;
-  int newLog2 = oldLog2 + aDeltaLog2;
+  int32_t oldLog2 = PL_DHASH_BITS - mHashShift;
+  int32_t newLog2 = oldLog2 + aDeltaLog2;
   uint32_t newCapacity = 1u << newLog2;
   if (newCapacity > PL_DHASH_MAX_CAPACITY) {
     return false;
@@ -801,16 +817,14 @@ PLDHashTable::Enumerate(PLDHashEnumerator aEtor, void* aArg)
        (capacity > PL_DHASH_MIN_CAPACITY &&
         mEntryCount <= MinLoad(capacity)))) {
     METER(mStats.mEnumShrinks++);
-    capacity = mEntryCount;
-    capacity += capacity >> 1;
-    if (capacity < PL_DHASH_MIN_CAPACITY) {
-      capacity = PL_DHASH_MIN_CAPACITY;
-    }
 
-    uint32_t ceiling = CeilingLog2(capacity);
-    ceiling -= PL_DHASH_BITS - mHashShift;
+    uint32_t log2;
+    BestCapacity(mEntryCount, &capacity, &log2);
 
-    (void) ChangeTable(ceiling);
+    int32_t deltaLog2 = log2 - (PL_DHASH_BITS - mHashShift);
+    MOZ_ASSERT(deltaLog2 <= 0);
+
+    (void) ChangeTable(deltaLog2);
   }
 
   DECREMENT_RECURSION_LEVEL(this);
