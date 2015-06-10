@@ -220,7 +220,7 @@ private:
   nsRefPtr<AudioContext> mContext;
 
 protected:
-  // Must be set in the constructor. Must not be null.
+  // Must be set in the constructor. Must not be null unless finished.
   // If MaxNumberOfInputs() is > 0, then mStream must be a ProcessedMediaStream.
   nsRefPtr<MediaStream> mStream;
 

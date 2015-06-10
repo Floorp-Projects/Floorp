@@ -643,7 +643,9 @@ void
 AudioBufferSourceNode::SendBufferParameterToStream(JSContext* aCx)
 {
   AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
-  MOZ_ASSERT(ns, "Why don't we have a stream here?");
+  if (!mStream) {
+    return;
+  }
 
   if (mBuffer) {
     float rate = mBuffer->SampleRate();
@@ -734,6 +736,9 @@ AudioBufferSourceNode::NotifyMainThreadStreamFinished()
   };
 
   NS_DispatchToMainThread(new EndedEventDispatcher(this));
+  // Release stream resources.
+  // DestroyMediaStream() will remove this stream listener.
+  DestroyMediaStream();
 
   // Drop the playing reference
   // Warning: The below line might delete this.
@@ -744,6 +749,9 @@ void
 AudioBufferSourceNode::SendPlaybackRateToStream(AudioNode* aNode)
 {
   AudioBufferSourceNode* This = static_cast<AudioBufferSourceNode*>(aNode);
+  if (!This->mStream) {
+    return;
+  }
   SendTimelineParameterToStream(This, PLAYBACKRATE, *This->mPlaybackRate);
 }
 
@@ -757,12 +765,16 @@ AudioBufferSourceNode::SendDetuneToStream(AudioNode* aNode)
 void
 AudioBufferSourceNode::SendDopplerShiftToStream(double aDopplerShift)
 {
+  MOZ_ASSERT(mStream, "Should have disconnected panner if no stream");
   SendDoubleParameterToStream(DOPPLERSHIFT, aDopplerShift);
 }
 
 void
 AudioBufferSourceNode::SendLoopParametersToStream()
 {
+  if (!mStream) {
+    return;
+  }
   // Don't compute and set the loop parameters unnecessarily
   if (mLoop && mBuffer) {
     float rate = mBuffer->SampleRate();
