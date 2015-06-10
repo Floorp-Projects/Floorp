@@ -4002,11 +4002,11 @@ ListenerEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
 }
 
 void
-nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments(uint32_t aGeneration)
+nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments()
 {
   if (sEventListenerManagersHash) {
     PL_DHashTableEnumerate(sEventListenerManagersHash, ListenerEnumerator,
-                           &aGeneration);
+                           nullptr);
   }
 }
 

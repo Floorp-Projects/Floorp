@@ -432,7 +432,7 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
 
   switch(sFSState) {
     case eUnmarkJSEventListeners: {
-      nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments(sGeneration);
+      nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments();
       break;
     }
     case eUnmarkMessageManagers: {
