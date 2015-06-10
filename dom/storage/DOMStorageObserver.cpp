@@ -196,8 +196,20 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
       return NS_OK;
     }
 
+    nsCOMPtr<nsIPrincipal> principal;
+    perm->GetPrincipal(getter_AddRefs(principal));
+    if (!principal) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIURI> origin;
+    principal->GetURI(getter_AddRefs(origin));
+    if (!origin) {
+      return NS_OK;
+    }
+
     nsAutoCString host;
-    perm->GetHost(host);
+    origin->GetHost(host);
     if (host.IsEmpty()) {
       return NS_OK;
     }
