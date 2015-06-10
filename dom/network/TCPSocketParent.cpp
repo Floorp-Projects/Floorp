@@ -311,7 +311,7 @@ TCPSocketParent::SendEvent(const nsAString& aType, JS::Handle<JS::Value> aDataVa
               errLine = __LINE__;
               break;
           }
-          if (!fallibleArr.InsertElementsAt(0, buffer, nbytes)) {
+          if (!fallibleArr.InsertElementsAt(0, buffer, nbytes, fallible)) {
               errLine = __LINE__;
               break;
           }

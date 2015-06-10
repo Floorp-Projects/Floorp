@@ -385,7 +385,8 @@ DOMSVGPathSegList::InsertItemBefore(DOMSVGPathSeg& aNewItem,
 
   MOZ_ALWAYS_TRUE(InternalList().mData.InsertElementsAt(internalIndex,
                                                         segAsRaw,
-                                                        1 + argCount));
+                                                        1 + argCount,
+                                                        fallible));
   MOZ_ALWAYS_TRUE(mItems.InsertElementAt(aIndex,
                                          ItemProxy(domItem.get(),
                                                    internalIndex),

@@ -347,6 +347,9 @@ XRE_InitChildProcess(int aArgc,
   }
 #endif
 
+  // NB: This must be called before profiler_init
+  NS_LogInit();
+
   char aLocal;
   profiler_init(&aLocal);
 
@@ -487,8 +490,6 @@ XRE_InitChildProcess(int aArgc,
 
   base::AtExitManager exitManager;
   NotificationService notificationService;
-
-  NS_LogInit();
 
   nsresult rv = XRE_InitCommandLine(aArgc, aArgv);
   if (NS_FAILED(rv)) {

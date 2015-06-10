@@ -400,7 +400,7 @@ public class BrowserLocaleManager implements LocaleManager {
         final String resPath = "res/multilocale.json";
         final String jarURL = GeckoJarReader.getJarURL(context, resPath);
 
-        final String contents = GeckoJarReader.getText(jarURL);
+        final String contents = GeckoJarReader.getText(context, jarURL);
         if (contents == null) {
             // GeckoJarReader logs and swallows exceptions.
             return null;
