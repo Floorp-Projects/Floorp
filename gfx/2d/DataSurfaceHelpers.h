@@ -90,7 +90,9 @@ CreateDataSourceSurfaceByCloning(DataSourceSurface* aSource);
  * Return the byte at aPoint.
  */
 uint8_t*
-DataAtOffset(DataSourceSurface* aSurface, IntPoint aPoint);
+DataAtOffset(DataSourceSurface* aSurface,
+             DataSourceSurface::MappedSurface* aMap,
+             IntPoint aPoint);
 
 /**
  * Check if aPoint is contained by the surface.
