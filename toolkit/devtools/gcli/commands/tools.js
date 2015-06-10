@@ -57,10 +57,10 @@ exports.items = [
                                          Ci.nsISupportsString, str);
           devtools.reload();
 
-          return l10n.lookupFormat("toolsSrcdirReloaded", [ args.srcdir ]);
+          return l10n.lookupFormat("toolsSrcdirReloaded2", [ args.srcdir ]);
         }
 
-        return l10n.lookupFormat("toolsSrcdirNotFound", [ args.srcdir ]);
+        return l10n.lookupFormat("toolsSrcdirNotFound2", [ args.srcdir ]);
       });
     }
   },
