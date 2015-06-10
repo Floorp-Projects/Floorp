@@ -26,7 +26,8 @@ class DocAccessibleParent : public ProxyAccessible,
 {
 public:
   DocAccessibleParent() :
-    ProxyAccessible(this), mParentDoc(nullptr), mShutdown(false)
+    ProxyAccessible(this), mParentDoc(nullptr),
+    mTopLevel(false), mShutdown(false)
   { MOZ_COUNT_CTOR_INHERITED(DocAccessibleParent, ProxyAccessible); }
   ~DocAccessibleParent()
   {
@@ -34,6 +35,9 @@ public:
     MOZ_ASSERT(mChildDocs.Length() == 0);
     MOZ_ASSERT(!ParentDoc());
   }
+
+  void SetTopLevel() { mTopLevel = true; }
+  bool IsTopLevel() const { return mTopLevel; }
 
   /*
    * Called when a message from a document in a child process notifies the main
@@ -151,6 +155,7 @@ private:
    * proxy object so we can't use a real map.
    */
   nsTHashtable<ProxyEntry> mAccessibles;
+  bool mTopLevel;
   bool mShutdown;
 };
 
