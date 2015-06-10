@@ -89,8 +89,8 @@ class HeapSnapshot final : public nsISupports
   NodeId rootId;
 
   // The set of nodes in this deserialized heap graph, keyed by id.
-  using NodeMap = js::HashMap<NodeId, DeserializedNode>;
-  NodeMap nodes;
+  using NodeSet = js::HashSet<DeserializedNode, DeserializedNode::HashPolicy>;
+  NodeSet nodes;
 
   // Core dump files have many duplicate strings: type names are repeated for
   // each node, and although in theory edge names are highly customizable for

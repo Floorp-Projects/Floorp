@@ -99,7 +99,7 @@ bool
 HeapSnapshot::saveNode(const protobuf::Node& node)
 {
   DeserializedNode dn;
-  return dn.init(node, *this) && nodes.put(dn.id, Move(dn));
+  return dn.init(node, *this) && nodes.putNew(dn.id, Move(dn));
 }
 
 static inline bool

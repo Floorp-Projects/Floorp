@@ -26,7 +26,7 @@ struct MockDeserializedNode : public DeserializedNode
     return edges.append(Move(edge));
   }
 
-  MOCK_METHOD1(getEdgeReferent, DeserializedNode&(const DeserializedEdge&));
+  MOCK_METHOD1(getEdgeReferent, JS::ubi::Node(const DeserializedEdge&));
 };
 
 size_t fakeMallocSizeOf(const void*) {
@@ -65,7 +65,7 @@ DEF_TEST(DeserializedNodeUbiNodes, {
                 getEdgeReferent(Field(&DeserializedEdge::referent,
                                       referent1->id)))
       .Times(1)
-      .WillOnce(ReturnRef(*referent1.get()));
+      .WillOnce(Return(JS::ubi::Node(referent1.get())));
 
     UniquePtr<DeserializedNode> referent2(new MockDeserializedNode(2,
                                                                    nullptr,
@@ -77,7 +77,7 @@ DEF_TEST(DeserializedNodeUbiNodes, {
                 getEdgeReferent(Field(&DeserializedEdge::referent,
                                       referent2->id)))
       .Times(1)
-      .WillOnce(ReturnRef(*referent2.get()));
+      .WillOnce(Return(JS::ubi::Node(referent2.get())));
 
     UniquePtr<DeserializedNode> referent3(new MockDeserializedNode(3,
                                                                    nullptr,
@@ -89,7 +89,7 @@ DEF_TEST(DeserializedNodeUbiNodes, {
                 getEdgeReferent(Field(&DeserializedEdge::referent,
                                       referent3->id)))
       .Times(1)
-      .WillOnce(ReturnRef(*referent3.get()));
+      .WillOnce(Return(JS::ubi::Node(referent3.get())));
 
     ubi.edges(cx);
   });
