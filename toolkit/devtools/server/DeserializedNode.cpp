@@ -51,8 +51,6 @@ DeserializedEdge::init(const protobuf::Edge& edge, HeapSnapshot& owner)
 
 DeserializedNode::DeserializedNode(DeserializedNode&& rhs)
 {
-  rhs.assertInitialized();
-
   id = rhs.id;
   rhs.id = 0;
 
@@ -76,44 +74,6 @@ DeserializedNode& DeserializedNode::operator=(DeserializedNode&& rhs)
   return *this;
 }
 
-bool
-DeserializedNode::init(const protobuf::Node& node, HeapSnapshot& owner)
-{
-  MOZ_ASSERT(this->owner == nullptr);
-  MOZ_ASSERT(typeName == nullptr);
-
-  this->owner = &owner;
-
-  if (!node.has_id())
-    return false;
-  id = node.id();
-
-  if (!node.has_typename_())
-    return false;
-
-  const char16_t* duplicatedTypeName = reinterpret_cast<const char16_t*>(node.typename_().c_str());
-  typeName = owner.borrowUniqueString(duplicatedTypeName,
-                                      node.typename_().length() / sizeof(char16_t));
-  if (!typeName)
-    return false;
-
-  if (!node.has_size())
-    return false;
-  size = node.size();
-
-  auto edgesLength = node.edges_size();
-  if (!edges.reserve(edgesLength))
-    return false;
-  for (decltype(edgesLength) i = 0; i < edgesLength; i++) {
-    DeserializedEdge edge;
-    if (!edge.init(node.edges(i), owner))
-      return false;
-    edges.infallibleAppend(Move(edge));
-  }
-
-  return true;
-}
-
 DeserializedNode::DeserializedNode(NodeId id, const char16_t* typeName, uint64_t size)
   : id(id)
   , typeName(typeName)
@@ -125,7 +85,6 @@ DeserializedNode::DeserializedNode(NodeId id, const char16_t* typeName, uint64_t
 JS::ubi::Node
 DeserializedNode::getEdgeReferent(const DeserializedEdge& edge)
 {
-  assertInitialized();
   auto ptr = owner->nodes.lookup(edge.referent);
   MOZ_ASSERT(ptr);
 
