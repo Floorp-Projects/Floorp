@@ -14,9 +14,6 @@
 #include "jsfriendapi.h"
 #include "js/TrackedOptimizationInfo.h"
 
-// JSON
-#include "ProfileJSONWriter.h"
-
 // Self
 #include "ProfileEntry.h"
 

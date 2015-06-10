@@ -581,6 +581,17 @@ JSObject *mozilla_sampler_get_profile_data(JSContext *aCx, float aSinceTime)
   return t->ToJSObject(aCx, aSinceTime);
 }
 
+void mozilla_sampler_get_profile_data_async(float aSinceTime,
+                                            mozilla::dom::Promise* aPromise)
+{
+  TableTicker *t = tlsTicker.get();
+  if (NS_WARN_IF(!t)) {
+    return;
+  }
+
+  t->ToJSObjectAsync(aSinceTime, aPromise);
+}
+
 void mozilla_sampler_save_profile_to_file(const char* aFilename)
 {
   TableTicker *t = tlsTicker.get();

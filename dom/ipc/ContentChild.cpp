@@ -2634,14 +2634,17 @@ ContentChild::RecvStopProfiler()
 }
 
 bool
-ContentChild::RecvGetProfile(nsCString* aProfile)
+ContentChild::RecvGatherProfile()
 {
+    nsCString profileCString;
     UniquePtr<char[]> profile = profiler_get_profile();
     if (profile) {
-        *aProfile = nsCString(profile.get(), strlen(profile.get()));
+        profileCString = nsCString(profile.get(), strlen(profile.get()));
     } else {
-        *aProfile = EmptyCString();
+        profileCString = EmptyCString();
     }
+
+    unused << SendProfile(profileCString);
     return true;
 }
 

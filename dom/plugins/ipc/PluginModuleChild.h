@@ -151,7 +151,7 @@ protected:
                                    nsTArray<nsCString>&& aFeatures,
                                    nsTArray<nsCString>&& aThreadNameFilters) override;
     virtual bool RecvStopProfiler() override;
-    virtual bool AnswerGetProfile(nsCString* aProfile) override;
+    virtual bool RecvGatherProfile() override;
 
 public:
     explicit PluginModuleChild(bool aIsChrome);
