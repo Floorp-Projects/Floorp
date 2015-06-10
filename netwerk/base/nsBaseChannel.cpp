@@ -69,7 +69,14 @@ nsBaseChannel::nsBaseChannel()
 
 nsBaseChannel::~nsBaseChannel()
 {
-  NS_ReleaseOnMainThread(mLoadInfo);
+  if (mLoadInfo) {
+    nsCOMPtr<nsIThread> mainThread;
+    NS_GetMainThread(getter_AddRefs(mainThread));
+    
+    nsILoadInfo *forgetableLoadInfo;
+    mLoadInfo.forget(&forgetableLoadInfo);
+    NS_ProxyRelease(mainThread, forgetableLoadInfo, false);
+  }
 }
 
 nsresult

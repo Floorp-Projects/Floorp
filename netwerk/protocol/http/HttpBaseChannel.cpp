@@ -103,7 +103,14 @@ HttpBaseChannel::~HttpBaseChannel()
 {
   LOG(("Destroying HttpBaseChannel @%x\n", this));
 
-  NS_ReleaseOnMainThread(mLoadInfo);
+  if (mLoadInfo) {
+    nsCOMPtr<nsIThread> mainThread;
+    NS_GetMainThread(getter_AddRefs(mainThread));
+    
+    nsILoadInfo *forgetableLoadInfo;
+    mLoadInfo.forget(&forgetableLoadInfo);
+    NS_ProxyRelease(mainThread, forgetableLoadInfo, false);
+  }
 
   // Make sure we don't leak
   CleanRedirectCacheChainIfNecessary();
