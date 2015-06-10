@@ -346,12 +346,13 @@ function* startRecording(panel, options = {
   click(win, button);
   yield clicked;
 
+  yield willStart;
+
   ok(button.hasAttribute("checked"),
     "The record button should now be checked.");
   ok(button.hasAttribute("locked"),
     "The record button should be locked.");
 
-  yield willStart;
   let stateChanged = options.waitForStateChanged
     ? once(win.PerformanceView, win.EVENTS.UI_STATE_CHANGED)
     : Promise.resolve();
@@ -393,12 +394,12 @@ function* stopRecording(panel, options = {
   click(win, button);
   yield clicked;
 
+  yield willStop;
   ok(!button.hasAttribute("checked"),
     "The record button should not be checked.");
   ok(button.hasAttribute("locked"),
     "The record button should be locked.");
 
-  yield willStop;
   let stateChanged = options.waitForStateChanged
     ? once(win.PerformanceView, win.EVENTS.UI_STATE_CHANGED)
     : Promise.resolve();
