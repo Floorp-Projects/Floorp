@@ -1531,6 +1531,25 @@ APZCTreeManager::FindRootApzcForLayersId(uint64_t aLayersId) const
   return resultNode ? resultNode->GetApzc() : nullptr;
 }
 
+AsyncPanZoomController*
+APZCTreeManager::FindRootContentApzcForLayersId(uint64_t aLayersId) const
+{
+  mTreeLock.AssertCurrentThreadOwns();
+
+  struct RootContentForLayersIdMatcher {
+    uint64_t mLayersId;
+    bool operator()(const HitTestingTreeNode* aNode) const {
+      AsyncPanZoomController* apzc = aNode->GetApzc();
+      return apzc
+          && apzc->GetLayersId() == mLayersId
+          && apzc->IsRootContent();
+    }
+  };
+  const HitTestingTreeNode* resultNode = BreadthFirstSearch(mRootNode.get(),
+      RootContentForLayersIdMatcher{aLayersId});
+  return resultNode ? resultNode->GetApzc() : nullptr;
+}
+
 /* The methods GetScreenToApzcTransform() and GetApzcToGeckoTransform() return
    some useful transformations that input events may need applied. This is best
    illustrated with an example. Consider a chain of layers, L, M, N, O, P, Q, R. Layer L
