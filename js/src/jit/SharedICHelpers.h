@@ -13,6 +13,8 @@
 # include "jit/x64/SharedICHelpers-x64.h"
 #elif defined(JS_CODEGEN_ARM)
 # include "jit/arm/SharedICHelpers-arm.h"
+#elif defined(JS_CODEGEN_ARM64)
+# include "jit/arm64/SharedICHelpers-arm64.h"
 #elif defined(JS_CODEGEN_MIPS)
 # include "jit/mips/SharedICHelpers-mips.h"
 #elif defined(JS_CODEGEN_NONE)
