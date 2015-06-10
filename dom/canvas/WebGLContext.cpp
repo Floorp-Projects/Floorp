@@ -1880,7 +1880,7 @@ WebGLContext::TexImageFromVideoElement(const TexImageTarget texImageTarget,
                                                       : gl::OriginPos::TopLeft;
     bool ok = gl->BlitHelper()->BlitImageToTexture(srcImage.get(),
                                                    srcImage->GetSize(),
-                                                   tex->GLName(),
+                                                   tex->mGLName,
                                                    texImageTarget.get(),
                                                    destOrigin);
     if (ok) {

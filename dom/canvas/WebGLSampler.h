@@ -8,14 +8,12 @@
 
 #include "mozilla/LinkedList.h"
 #include "nsWrapperCache.h"
-#include "WebGLBindableName.h"
 #include "WebGLObjectModel.h"
 
 namespace mozilla {
 
 class WebGLSampler final
     : public nsWrapperCache
-    , public WebGLBindableName<GLenum>
     , public WebGLRefCountedObject<WebGLSampler>
     , public LinkedListElement<WebGLSampler>
     , public WebGLContextBoundObject
@@ -24,6 +22,8 @@ class WebGLSampler final
 
 public:
     explicit WebGLSampler(WebGLContext* webgl, GLuint sampler);
+
+    const GLuint mGLName;
 
     void Delete();
     WebGLContext* GetParentObject() const;

@@ -31,6 +31,7 @@ EXPORTS.mozilla.dom += [
     'CanvasUtils.h',
     'ImageData.h',
     'TextMetrics.h',
+    'WebGLVertexArrayObject.h',
 ]
 
 # http://support.microsoft.com/kb/143208
@@ -128,6 +129,7 @@ UNIFIED_SOURCES += [
     'WebGLVertexArray.cpp',
     'WebGLVertexArrayFake.cpp',
     'WebGLVertexArrayGL.cpp',
+    'WebGLVertexArrayObject.cpp',
 ]
 LOCAL_INCLUDES += [
     '/js/xpconnect/wrappers',

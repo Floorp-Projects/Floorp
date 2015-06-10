@@ -12,8 +12,8 @@
 namespace mozilla {
 
 WebGLSampler::WebGLSampler(WebGLContext* webgl, GLuint sampler)
-    : WebGLBindableName<GLenum>(sampler),
-      WebGLContextBoundObject(webgl)
+    : WebGLContextBoundObject(webgl)
+    , mGLName(sampler)
 {
     mContext->mSamplers.insertBack(this);
 }

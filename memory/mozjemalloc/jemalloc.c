@@ -6514,13 +6514,8 @@ malloc_good_size_impl(size_t size)
 }
 
 
-#if defined(MOZ_MEMORY_ANDROID) && (ANDROID_VERSION < 19)
 MOZ_MEMORY_API size_t
-malloc_usable_size_impl(void *ptr)
-#else
-MOZ_MEMORY_API size_t
-malloc_usable_size_impl(const void *ptr)
-#endif
+malloc_usable_size_impl(MALLOC_USABLE_SIZE_CONST_PTR void *ptr)
 {
 	DARWIN_ONLY(return (szone->size)(szone, ptr));
 

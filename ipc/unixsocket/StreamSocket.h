@@ -42,12 +42,12 @@ public:
    *
    * @param aConnector Connector object for socket type specific functions
    * @param aDelayMs Time delay in milliseconds.
-   * @param aConsumerThread The socket's consumer thread.
+   * @param aConsumerLoop The socket's consumer thread.
    * @param aIOLoop The socket's I/O thread.
    * @return NS_OK on success, or an XPCOM error code otherwise.
    */
   nsresult Connect(UnixSocketConnector* aConnector, int aDelayMs,
-                   nsIThread* aConsumerThread, MessageLoop* aIOLoop);
+                   MessageLoop* aConsumerLoop, MessageLoop* aIOLoop);
 
   /**
    * Starts a task on the socket that will try to connect to a socket in a
@@ -63,7 +63,7 @@ public:
   //
 
   nsresult PrepareAccept(UnixSocketConnector* aConnector,
-                         nsIThread* aConsumerThread,
+                         MessageLoop* aConsumerLoop,
                          MessageLoop* aIOLoop,
                          ConnectionOrientedSocketIO*& aIO) override;
 

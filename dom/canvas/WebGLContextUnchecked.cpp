@@ -24,21 +24,32 @@ void
 WebGLContextUnchecked::BindBuffer(GLenum target, WebGLBuffer* buffer)
 {
     gl->MakeCurrent();
-    gl->fBindBuffer(target, buffer ? buffer->GLName() : 0);
+    gl->fBindBuffer(target, buffer ? buffer->mGLName : 0);
 }
 
 void
 WebGLContextUnchecked::BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer)
 {
     gl->MakeCurrent();
-    gl->fBindBufferBase(target, index, buffer ? buffer->GLName() : 0);
+    gl->fBindBufferBase(target, index, buffer ? buffer->mGLName : 0);
 }
 
 void
 WebGLContextUnchecked::BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer, WebGLintptr offset, WebGLsizeiptr size)
 {
     gl->MakeCurrent();
-    gl->fBindBufferRange(target, index, buffer ? buffer->GLName() : 0, offset, size);
+
+#ifdef XP_MACOSX
+    if (buffer && buffer->Content() == WebGLBuffer::Kind::Undefined &&
+        gl->WorkAroundDriverBugs())
+    {
+        // BindBufferRange will fail if the buffer's contents is undefined.
+        // Bind so driver initializes the buffer.
+        gl->fBindBuffer(target, buffer->mGLName);
+    }
+#endif
+
+    gl->fBindBufferRange(target, index, buffer ? buffer->mGLName : 0, offset, size);
 }
 
 void
@@ -56,9 +67,7 @@ void
 WebGLContextUnchecked::BindSampler(GLuint unit, WebGLSampler* sampler)
 {
     gl->MakeCurrent();
-    gl->fBindSampler(unit, sampler ? sampler->GLName() : 0);
-    if (sampler)
-        sampler->BindTo(LOCAL_GL_SAMPLER_BINDING);
+    gl->fBindSampler(unit, sampler ? sampler->mGLName : 0);
 }
 
 GLint
@@ -69,7 +78,7 @@ WebGLContextUnchecked::GetSamplerParameteriv(WebGLSampler* sampler,
 
     GLint param = 0;
     gl->MakeCurrent();
-    gl->fGetSamplerParameteriv(sampler->GLName(), pname, &param);
+    gl->fGetSamplerParameteriv(sampler->mGLName, pname, &param);
 
     return param;
 }
@@ -82,7 +91,7 @@ WebGLContextUnchecked::GetSamplerParameterfv(WebGLSampler* sampler,
 
     GLfloat param = 0.0f;
     gl->MakeCurrent();
-    gl->fGetSamplerParameterfv(sampler->GLName(), pname, &param);
+    gl->fGetSamplerParameterfv(sampler->mGLName, pname, &param);
     return param;
 }
 
@@ -93,7 +102,7 @@ WebGLContextUnchecked::SamplerParameteri(WebGLSampler* sampler,
 {
     MOZ_ASSERT(sampler, "Did you validate?");
     gl->MakeCurrent();
-    gl->fSamplerParameteri(sampler->GLName(), pname, param);
+    gl->fSamplerParameteri(sampler->mGLName, pname, param);
 }
 
 void
@@ -103,7 +112,7 @@ WebGLContextUnchecked::SamplerParameteriv(WebGLSampler* sampler,
 {
     MOZ_ASSERT(sampler, "Did you validate?");
     gl->MakeCurrent();
-    gl->fSamplerParameteriv(sampler->GLName(), pname, param);
+    gl->fSamplerParameteriv(sampler->mGLName, pname, param);
 }
 
 void
@@ -113,7 +122,7 @@ WebGLContextUnchecked::SamplerParameterf(WebGLSampler* sampler,
 {
     MOZ_ASSERT(sampler, "Did you validate?");
     gl->MakeCurrent();
-    gl->fSamplerParameterf(sampler->GLName(), pname, param);
+    gl->fSamplerParameterf(sampler->mGLName, pname, param);
 }
 
 void
@@ -123,7 +132,7 @@ WebGLContextUnchecked::SamplerParameterfv(WebGLSampler* sampler,
 {
     MOZ_ASSERT(sampler, "Did you validate?");
     gl->MakeCurrent();
-    gl->fSamplerParameterfv(sampler->GLName(), pname, param);
+    gl->fSamplerParameterfv(sampler->mGLName, pname, param);
 }
 
 } // namespace mozilla

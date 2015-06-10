@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "gmp-entrypoints.h"
 #include "prlink.h"
+#include "prenv.h"
 
 #include <string>
 
@@ -168,22 +169,25 @@ GMPLoaderImpl::Load(const char* aLibPath,
     if (!rlz_lib::BytesToString(digest, SHA256_LENGTH, &nodeId)) {
       return false;
     }
-    // We've successfully bound the origin salt to node id.
-    // rlz_lib::GetRawMachineId and/or the system functions it
-    // called could have left user identifiable data on the stack,
-    // so carefully zero the stack down to the guard page.
-    uint8_t* top;
-    uint8_t* bottom;
-    if (!GetStackAfterCurrentFrame(&top, &bottom)) {
-      return false;
-    }
-    assert(top >= bottom);
-    // Inline instructions equivalent to RtlSecureZeroMemory().
-    // We can't just use RtlSecureZeroMemory here directly, as in debug
-    // builds, RtlSecureZeroMemory() can't be inlined, and the stack
-    // memory it uses would get wiped by itself running, causing crashes.
-    for (volatile uint8_t* p = (volatile uint8_t*)bottom; p < top; p++) {
-      *p = 0;
+
+    if (!PR_GetEnv("MOZ_GMP_DISABLE_NODE_ID_CLEANUP")) {
+      // We've successfully bound the origin salt to node id.
+      // rlz_lib::GetRawMachineId and/or the system functions it
+      // called could have left user identifiable data on the stack,
+      // so carefully zero the stack down to the guard page.
+      uint8_t* top;
+      uint8_t* bottom;
+      if (!GetStackAfterCurrentFrame(&top, &bottom)) {
+        return false;
+      }
+      assert(top >= bottom);
+      // Inline instructions equivalent to RtlSecureZeroMemory().
+      // We can't just use RtlSecureZeroMemory here directly, as in debug
+      // builds, RtlSecureZeroMemory() can't be inlined, and the stack
+      // memory it uses would get wiped by itself running, causing crashes.
+      for (volatile uint8_t* p = (volatile uint8_t*)bottom; p < top; p++) {
+        *p = 0;
+      }
     }
   } else
 #endif
