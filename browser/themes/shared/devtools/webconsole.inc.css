@@ -44,19 +44,17 @@ a {
 
 .message > .icon::before {
   content: "";
-  background-image: url(chrome://browser/skin/devtools/webconsole.png);
-  background-position: 8px 8px;
+  background-image: url(chrome://browser/skin/devtools/webconsole.svg);
+  background-position: 12px 12px;
   background-repeat: no-repeat;
-  background-size: 48px 40px;
-  width: 8px;
-  height: 8px;
+  background-size: 72px 60px;
+  width: 12px;
+  height: 12px;
   display: inline-block;
 }
 
-@media (min-resolution: 1.25dppx) {
-  .message > .icon::before {
-    background-image: url(chrome://browser/skin/devtools/webconsole@2x.png);
-  }
+.theme-light .message > .icon::before {
+  background-image: url(chrome://browser/skin/devtools/webconsole.svg#light-icons);
 }
 
 .message > .message-body-wrapper {
@@ -228,7 +226,7 @@ a {
 }
 
 .message[category=network][severity=error] > .icon::before {
-  background-position: -8px 0;
+  background-position: -12px 0;
 }
 
 .message[category=network] > .message-body {
@@ -285,11 +283,11 @@ a {
 }
 
 .message[category=cssparser][severity=error] > .icon::before {
-  background-position: -8px -8px;
+  background-position: -12px -12px;
 }
 
 .message[category=cssparser][severity=warn] > .icon::before {
-  background-position: -16px -8px;
+  background-position: -24px -12px;
 }
 
 /* JS styles */
@@ -303,11 +301,11 @@ a {
 }
 
 .message[category=exception][severity=error] > .icon::before {
-  background-position: -8px -16px;
+  background-position: -12px -24px;
 }
 
 .message[category=exception][severity=warn] > .icon::before {
-  background-position: -16px -16px;
+  background-position: -24px -24px;
 }
 
 /* Web Developer styles */
@@ -322,15 +320,15 @@ a {
 
 .message[category=console][severity=error] > .icon::before,
 .message[category=output][severity=error] > .icon::before {
-  background-position: -8px -24px;
+  background-position: -12px -36px;
 }
 
 .message[category=console][severity=warn] > .icon::before {
-  background-position: -16px -24px;
+  background-position: -24px -36px;
 }
 
 .message[category=console][severity=info] > .icon::before {
-  background-position: -24px -24px;
+  background-position: -36px -36px;
 }
 
 /* Input and output styles */
@@ -340,11 +338,11 @@ a {
 }
 
 .message[category=input] > .icon::before {
-  background-position: -32px -24px;
+  background-position: -48px -36px;
 }
 
 .message[category=output] > .icon::before {
-  background-position: -40px -24px;
+  background-position: -60px -36px;
 }
 
 /* JSTerm Styles */
@@ -411,11 +409,11 @@ a {
 }
 
 .message[category=security][severity=error] > .icon::before {
-  background-position: -8px -32px;
+  background-position: -12px -48px;
 }
 
 .message[category=security][severity=warn] > .icon::before {
-  background-position: -16px -32px;
+  background-position: -24px -48px;
 }
 
 .navigation-marker {
