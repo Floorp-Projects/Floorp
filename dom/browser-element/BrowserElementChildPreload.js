@@ -154,8 +154,8 @@ BrowserElementChild.prototype = {
                      /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
-    addEventListener("MozDOMFullscreen:Exit",
-                     this._mozExitDomFullscreen.bind(this),
+    addEventListener("MozDOMFullscreen:Exited",
+                     this._mozExitedDomFullscreen.bind(this),
                      /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
@@ -447,7 +447,7 @@ BrowserElementChild.prototype = {
       // If we don't actually have any pending fullscreen request
       // to handle, neither we have been in fullscreen, tell the
       // parent to just exit.
-      sendAsyncMsg("exit-dom-fullscreen");
+      sendAsyncMsg("exited-dom-fullscreen");
     }
   },
 
@@ -994,8 +994,8 @@ BrowserElementChild.prototype = {
     });
   },
 
-  _mozExitDomFullscreen: function(e) {
-    sendAsyncMsg("exit-dom-fullscreen");
+  _mozExitedDomFullscreen: function(e) {
+    sendAsyncMsg("exited-dom-fullscreen");
   },
 
   _getContentDimensions: function() {
