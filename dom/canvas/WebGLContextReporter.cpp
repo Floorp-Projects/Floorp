@@ -126,8 +126,7 @@ WebGLMemoryTracker::GetBufferCacheMemoryUsed()
              buffer;
              buffer = buffer->getNext())
         {
-            if (buffer->HasEverBeenBound() &&
-                buffer->Target() == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
+            if (buffer->Content() == WebGLBuffer::Kind::ElementArray) {
                 result += buffer->SizeOfIncludingThis(WebGLBufferMallocSizeOf);
             }
         }

@@ -20,9 +20,15 @@ WebGLTimerQuery::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 }
 
 WebGLTimerQuery::WebGLTimerQuery(WebGLContext* webgl, GLuint aName)
-  : WebGLBindableName<QueryBinding>(aName)
-  , WebGLContextBoundObject(webgl)
+  : WebGLContextBoundObject(webgl)
+  , mGLName(aName)
+  , mTarget(LOCAL_GL_NONE)
 {
+}
+
+WebGLTimerQuery::~WebGLTimerQuery()
+{
+  DeleteOnce();
 }
 
 WebGLTimerQuery*
@@ -40,6 +46,13 @@ WebGLTimerQuery::Delete()
   mContext->MakeContextCurrent();
   mContext->gl->fDeleteQueries(1, &mGLName);
 }
+
+WebGLContext*
+WebGLTimerQuery::GetParentObject() const
+{
+  return Context();
+}
+
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLTimerQuery)
 

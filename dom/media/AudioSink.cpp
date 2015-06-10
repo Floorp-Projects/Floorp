@@ -165,18 +165,10 @@ AudioSink::SetPreservesPitch(bool aPreservesPitch)
 }
 
 void
-AudioSink::StartPlayback()
+AudioSink::SetPlaying(bool aPlaying)
 {
   AssertCurrentThreadInMonitor();
-  mPlaying = true;
-  GetReentrantMonitor().NotifyAll();
-}
-
-void
-AudioSink::StopPlayback()
-{
-  AssertCurrentThreadInMonitor();
-  mPlaying = false;
+  mPlaying = aPlaying;
   GetReentrantMonitor().NotifyAll();
 }
 

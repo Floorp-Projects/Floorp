@@ -6,6 +6,7 @@ package org.mozilla.gecko.util;
 
 import android.content.Context;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.mozglue.NativeZip;
 
 import android.content.res.Resources;
@@ -31,12 +32,13 @@ public final class GeckoJarReader {
 
     private GeckoJarReader() {}
 
-    public static Bitmap getBitmap(Resources resources, String url) {
-        BitmapDrawable drawable = getBitmapDrawable(resources, url);
+    public static Bitmap getBitmap(Context context, Resources resources, String url) {
+        BitmapDrawable drawable = getBitmapDrawable(context, resources, url);
         return (drawable != null) ? drawable.getBitmap() : null;
     }
 
-    public static BitmapDrawable getBitmapDrawable(Resources resources, String url) {
+    public static BitmapDrawable getBitmapDrawable(Context context, Resources resources,
+                                                   String url) {
         Stack<String> jarUrls = parseUrl(url);
         InputStream inputStream = null;
         BitmapDrawable bitmap = null;
@@ -44,7 +46,7 @@ public final class GeckoJarReader {
         NativeZip zip = null;
         try {
             // Load the initial jar file as a zip
-            zip = getZipFile(jarUrls.pop());
+            zip = getZipFile(context, jarUrls.pop());
             inputStream = getStream(zip, jarUrls, url);
             if (inputStream != null) {
                 bitmap = new BitmapDrawable(resources, inputStream);
@@ -67,14 +69,14 @@ public final class GeckoJarReader {
         return bitmap;
     }
 
-    public static String getText(String url) {
+    public static String getText(Context context, String url) {
         Stack<String> jarUrls = parseUrl(url);
 
         NativeZip zip = null;
         BufferedReader reader = null;
         String text = null;
         try {
-            zip = getZipFile(jarUrls.pop());
+            zip = getZipFile(context, jarUrls.pop());
             InputStream input = getStream(zip, jarUrls, url);
             if (input != null) {
                 reader = new BufferedReader(new InputStreamReader(input));
@@ -98,16 +100,18 @@ public final class GeckoJarReader {
         return text;
     }
 
-    private static NativeZip getZipFile(String url) throws IOException, URISyntaxException {
+    private static NativeZip getZipFile(Context context, String url)
+            throws IOException, URISyntaxException {
         URI fileUrl = new URI(url);
+        GeckoLoader.loadMozGlue(context);
         return new NativeZip(fileUrl.getPath());
     }
 
     @RobocopTarget
-    public static InputStream getStream(String url) {
+    public static InputStream getStream(Context context, String url) {
         Stack<String> jarUrls = parseUrl(url);
         try {
-            NativeZip zip = getZipFile(jarUrls.pop());
+            NativeZip zip = getZipFile(context, jarUrls.pop());
             return getStream(zip, jarUrls, url);
         } catch (Exception ex) {
             // Some JNI code throws IllegalArgumentException on a bad file name;
