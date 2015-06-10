@@ -1308,7 +1308,7 @@ ContinueInstallTask::ContinueAfterWorkerEvent(bool aSuccess, bool aActivateImmed
 }
 
 static bool
-IsFromAuthenticatedOrigin(nsIDocument* aDoc)
+IsFromAuthenticatedOriginInternal(nsIDocument* aDoc)
 {
   nsCOMPtr<nsIURI> documentURI = aDoc->GetDocumentURI();
 
@@ -1360,6 +1360,23 @@ IsFromAuthenticatedOrigin(nsIDocument* aDoc)
   }
 
   return authenticatedOrigin;
+}
+
+// This function implements parts of the step 3 of the following algorithm:
+// https://w3c.github.io/webappsec/specs/powerfulfeatures/#settings-secure
+static bool
+IsFromAuthenticatedOrigin(nsIDocument* aDoc)
+{
+  MOZ_ASSERT(aDoc);
+  nsCOMPtr<nsIDocument> doc(aDoc);
+  while (doc && !nsContentUtils::IsChromeDoc(doc)) {
+    if (!IsFromAuthenticatedOriginInternal(doc)) {
+      return false;
+    }
+
+    doc = doc->GetParentDocument();
+  }
+  return true;
 }
 
 // If we return an error code here, the ServiceWorkerContainer will
