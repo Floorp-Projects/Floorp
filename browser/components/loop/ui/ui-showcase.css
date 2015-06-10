@@ -86,6 +86,14 @@ body {
   color: #555;
 }
 
+.showcase .checkbox-wrapper label {
+  font-weight: bold;
+}
+
+.showcase .checkbox.checked {
+  background-image: url("../content/shared/img/check.svg#check-blue");
+}
+
 .showcase p.note {
   margin: 0;
   padding: 0;
