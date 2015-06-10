@@ -195,27 +195,22 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
     return false;
   }
 
-  int newFirstTileX = aTiles.firstTileX();
-  int newFirstTileY = aTiles.firstTileY();
-  int oldFirstTileX = mFirstTileX;
-  int oldFirstTileY = mFirstTileY;
-  int newRetainedWidth = aTiles.retainedWidth();
-  int newRetainedHeight = aTiles.retainedHeight();
-  int oldRetainedWidth = mRetainedWidth;
-  int oldRetainedHeight = mRetainedHeight;
+  TilesPlacement oldTiles = mTiles;
+  TilesPlacement newTiles(aTiles.firstTileX(), aTiles.firstTileY(),
+                          aTiles.retainedWidth(), aTiles.retainedHeight());
 
   const InfallibleTArray<TileDescriptor>& tileDescriptors = aTiles.tiles();
 
-  nsTArray<TileHost> oldTiles;
-  mRetainedTiles.SwapElements(oldTiles);
+  nsTArray<TileHost> oldRetainedTiles;
+  mRetainedTiles.SwapElements(oldRetainedTiles);
   mRetainedTiles.SetLength(tileDescriptors.Length());
 
   // Step 1, we need to unlock tiles that don't have an internal buffer after the
   // next frame where they are replaced.
   // Since we are about to replace the tiles' textures, we need to keep their locks
   // somewhere (in mPreviousSharedLock) until we composite the layer.
-  for (size_t i = 0; i < oldTiles.Length(); ++i) {
-    TileHost& tile = oldTiles[i];
+  for (size_t i = 0; i < oldRetainedTiles.Length(); ++i) {
+    TileHost& tile = oldRetainedTiles[i];
     // It can happen that we still have a previous lock at this point,
     // if we changed a tile's front buffer (causing mSharedLock to
     // go into mPreviousSharedLock, and then did not composite that tile until
@@ -225,12 +220,8 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
 
     if (tile.mTextureHost && !tile.mTextureHost->HasInternalBuffer()) {
       MOZ_ASSERT(tile.mSharedLock);
-      int tileX = i / oldRetainedHeight + oldFirstTileX;
-      int tileY = i % oldRetainedHeight + oldFirstTileY;
-
-      if (tileX >= newFirstTileX && tileY >= newFirstTileY &&
-          tileX < (newFirstTileX + newRetainedWidth) &&
-          tileY < (newFirstTileY + newRetainedHeight)) {
+      const TileIntPoint tilePosition = oldTiles.TilePosition(i);
+      if (newTiles.HasTile(tilePosition)) {
         // This tile still exist in the new buffer
         tile.mPreviousSharedLock = tile.mSharedLock;
         tile.mSharedLock = nullptr;
@@ -249,29 +240,25 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
   // they should be with the new retained with and height rather than the
   // old one.
   for (size_t i = 0; i < tileDescriptors.Length(); i++) {
-    int tileX = i / newRetainedHeight + newFirstTileX;
-    int tileY = i % newRetainedHeight + newFirstTileY;
-
+    const TileIntPoint tilePosition = newTiles.TilePosition(i);
     // First, get the already existing tiles to the right place in the array,
     // and use placeholders where there was no tiles.
-    if (tileX < oldFirstTileX || tileY < oldFirstTileY ||
-        tileX >= (oldFirstTileX + oldRetainedWidth) ||
-        tileY >= (oldFirstTileY + oldRetainedHeight)) {
+    if (!oldTiles.HasTile(tilePosition)) {
       mRetainedTiles[i] = GetPlaceholderTile();
     } else {
-      mRetainedTiles[i] = oldTiles[(tileX - oldFirstTileX) * oldRetainedHeight +
-                                   (tileY - oldFirstTileY)];
+      mRetainedTiles[i] = oldRetainedTiles[oldTiles.TileIndex(tilePosition)];
       // If we hit this assertion it means we probably mixed something up in the
       // logic that tries to reuse tiles on the compositor side. It is most likely
       // benign, but we are missing some fast paths so let's try to make it not happen.
-      MOZ_ASSERT(tileX == mRetainedTiles[i].x && tileY == mRetainedTiles[i].y);
+      MOZ_ASSERT(tilePosition.x == mRetainedTiles[i].x &&
+                 tilePosition.y == mRetainedTiles[i].y);
     }
   }
 
   // It is important to remove the duplicated reference to tiles before calling
   // TextureHost::PrepareTextureSource, etc. because depending on the textures
   // ref counts we may or may not get some of the fast paths.
-  oldTiles.Clear();
+  oldRetainedTiles.Clear();
 
   // Step 3, handle the texture updates and release the copy-on-write locks.
   for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
@@ -345,17 +332,13 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
         break;
       }
     }
-
-    tile.x = i / newRetainedHeight + newFirstTileX;
-    tile.y = i % newRetainedHeight + newFirstTileY;
+    TileIntPoint tilePosition = newTiles.TilePosition(i);
+    tile.x = tilePosition.x;
+    tile.y = tilePosition.y;
   }
 
-  mFirstTileX = newFirstTileX;
-  mFirstTileY = newFirstTileY;
-  mRetainedWidth = newRetainedWidth;
-  mRetainedHeight = newRetainedHeight;
+  mTiles = newTiles;
   mValidRegion = aTiles.validRegion();
-
   mResolution = aTiles.resolution();
   mFrameResolution = CSSToParentLayerScale2D(aTiles.frameXResolution(),
                                              aTiles.frameYResolution());
@@ -371,10 +354,8 @@ TiledLayerBufferComposite::Clear()
     tile.ReadUnlockPrevious();
   }
   mRetainedTiles.Clear();
-  mFirstTileX = 0;
-  mFirstTileY = 0;
-  mRetainedWidth = 0;
-  mRetainedHeight = 0;
+  mTiles.mFirst = TileIntPoint();
+  mTiles.mSize = TileIntSize();
   mValidRegion = nsIntRegion();
   mPaintedRegion = nsIntRegion();
   mResolution = 1.0;

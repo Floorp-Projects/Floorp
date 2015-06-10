@@ -874,8 +874,8 @@ ClientTiledLayerBuffer::GetSurfaceDescriptorTiles()
   }
   return SurfaceDescriptorTiles(mValidRegion, mPaintedRegion,
                                 tiles,
-                                mFirstTileX, mFirstTileY,
-                                mRetainedWidth, mRetainedHeight,
+                                mTiles.mFirst.x, mTiles.mFirst.y,
+                                mTiles.mSize.width, mTiles.mSize.height,
                                 mResolution, mFrameResolution.xScale,
                                 mFrameResolution.yScale);
 }
