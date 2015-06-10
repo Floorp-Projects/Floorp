@@ -19,15 +19,16 @@ user-friendly error messages in the case of errors.
 
 from __future__ import unicode_literals
 
-import copy
 import os
 import sys
 import weakref
 
-from contextlib import contextmanager
-
 from mozbuild.util import ReadOnlyDict
-from context import Context
+from .context import Context
+from mozpack.files import FileFinder
+
+
+default_finder = FileFinder('/', find_executables=False)
 
 
 def alphabetical_sorted(iterable, cmp=None, key=lambda x: x.lower(),
@@ -108,7 +109,7 @@ class Sandbox(dict):
         'int': int,
     })
 
-    def __init__(self, context, builtins=None):
+    def __init__(self, context, builtins=None, finder=default_finder):
         """Initialize a Sandbox ready for execution.
         """
         self._builtins = builtins or self.BUILTINS
@@ -132,6 +133,8 @@ class Sandbox(dict):
         # Current literal source being executed.
         self._current_source = None
 
+        self._finder = finder
+
     @property
     def _context(self):
         return self._active_contexts[-1]
@@ -143,11 +146,8 @@ class Sandbox(dict):
         """
         assert os.path.isabs(path)
 
-        source = None
-
         try:
-            with open(path, 'rt') as fd:
-                source = fd.read()
+            source = self._finder.get(path).read()
         except Exception as e:
             raise SandboxLoadError(self._context.source_stack,
                 sys.exc_info()[2], read_error=path)
