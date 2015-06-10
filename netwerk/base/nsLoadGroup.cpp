@@ -166,17 +166,6 @@ RescheduleRequest(nsIRequest *aRequest, int32_t delta)
         p->AdjustPriority(delta);
 }
 
-static PLDHashOperator
-RescheduleRequests(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                   uint32_t number, void *arg)
-{
-    RequestMapEntry *e = static_cast<RequestMapEntry *>(hdr);
-    int32_t *delta = static_cast<int32_t *>(arg);
-
-    RescheduleRequest(e->mKey, *delta);
-    return PL_DHASH_NEXT;
-}
-
 nsLoadGroup::nsLoadGroup(nsISupports* outer)
     : mForegroundCount(0)
     , mLoadFlags(LOAD_NORMAL)
@@ -878,7 +867,11 @@ nsLoadGroup::AdjustPriority(int32_t aDelta)
     // Update the priority for each request that supports nsISupportsPriority
     if (aDelta != 0) {
         mPriority += aDelta;
-        PL_DHashTableEnumerate(&mRequests, RescheduleRequests, &aDelta);
+        PLDHashTable::Iterator iter(&mRequests);
+        while (iter.HasMoreEntries()) {
+          auto e = static_cast<RequestMapEntry*>(iter.NextEntry());
+          RescheduleRequest(e->mKey, aDelta);
+        }
     }
     return NS_OK;
 }
