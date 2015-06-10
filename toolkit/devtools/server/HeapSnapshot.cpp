@@ -98,10 +98,8 @@ parseMessage(ZeroCopyInputStream& stream, MessageType& message)
 bool
 HeapSnapshot::saveNode(const protobuf::Node& node)
 {
-  UniquePtr<DeserializedNode> dn(DeserializedNode::Create(node, *this));
-  if (!dn)
-    return false;
-  return nodes.put(dn->id, Move(dn));
+  DeserializedNode dn;
+  return dn.init(node, *this) && nodes.put(dn.id, Move(dn));
 }
 
 static inline bool
