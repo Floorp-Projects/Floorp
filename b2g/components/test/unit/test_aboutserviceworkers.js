@@ -128,12 +128,15 @@ add_test(function test_swm() {
                 "SWM.getAllRegistrations exists");
   do_check_true(typeof gServiceWorkerManager.getAllRegistrations == "function",
                 "SWM.getAllRegistrations is a function");
-  do_check_true(gServiceWorkerManager.softUpdate, "SWM.softUpdate exists");
-  do_check_true(typeof gServiceWorkerManager.softUpdate == "function",
-                "SWM.softUpdate is a function");
-  do_check_true(gServiceWorkerManager.unregister, "SWM.unregister exists");
-  do_check_true(typeof gServiceWorkerManager.unregister == "function",
-                "SWM.unregister exists");
+  do_check_true(gServiceWorkerManager.propagateSoftUpdate,
+                "SWM.propagateSoftUpdate exists");
+  do_check_true(typeof gServiceWorkerManager.propagateSoftUpdate == "function",
+
+                "SWM.propagateSoftUpdate is a function");
+  do_check_true(gServiceWorkerManager.propagateUnregister,
+                "SWM.propagateUnregister exists");
+  do_check_true(typeof gServiceWorkerManager.propagateUnregister == "function",
+                "SWM.propagateUnregister exists");
 
   run_next_test();
 });
