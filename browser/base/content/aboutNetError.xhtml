@@ -112,6 +112,12 @@
                 .addEventListener('click', function togglePanelVisibility() {
           var panel = document.getElementById('certificateErrorReportingPanel');
           toggleDisplay(panel);
+
+          if (panel.style.display == "block") {
+            // send event to trigger telemetry ping
+            var event = new CustomEvent("AboutNetErrorUIExpanded", {bubbles:true});
+            document.dispatchEvent(event);
+          }
         });
       }
 
