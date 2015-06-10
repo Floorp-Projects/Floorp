@@ -213,8 +213,11 @@ DocAccessibleParent::Destroy()
 
   mAccessibles.EnumerateEntries(ShutdownAccessibles, nullptr);
   ProxyDestroyed(this);
-  mParentDoc ? mParentDoc->RemoveChildDoc(this)
-    : GetAccService()->RemoteDocShutdown(this);
+  if (mParentDoc)
+    mParentDoc->RemoveChildDoc(this);
+  else if (IsTopLevel())
+    GetAccService()->RemoteDocShutdown(this);
 }
-}
-}
+
+} // a11y
+} // mozilla
