@@ -1512,6 +1512,10 @@ protected:
 
   void NotifyStyleSheetApplicableStateChanged();
 
+  // Apply the fullscreen state to the document, and trigger related events.
+  void ApplyFullscreen(Element* aElement,
+                       const mozilla::dom::FullScreenOptions& aOptions);
+
   nsTArray<nsIObserver*> mCharSetObservers;
 
   PLDHashTable *mSubDocuments;
