@@ -2518,7 +2518,6 @@ BackgroundCursorChild::HandleResponse(
   auto& response = const_cast<ObjectStoreCursorResponse&>(aResponse);
 
   StructuredCloneReadInfo cloneReadInfo(Move(response.cloneInfo()));
-  cloneReadInfo.mDatabase = mTransaction->Database();
 
   ConvertActorsToBlobs(mTransaction->Database(),
                        response.cloneInfo(),
@@ -2580,7 +2579,6 @@ BackgroundCursorChild::HandleResponse(const IndexCursorResponse& aResponse)
   auto& response = const_cast<IndexCursorResponse&>(aResponse);
 
   StructuredCloneReadInfo cloneReadInfo(Move(response.cloneInfo()));
-  cloneReadInfo.mDatabase = mTransaction->Database();
 
   ConvertActorsToBlobs(mTransaction->Database(),
                        aResponse.cloneInfo(),
