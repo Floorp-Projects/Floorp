@@ -246,27 +246,29 @@ nsLoadGroup::GetStatus(nsresult *status)
     return NS_OK; 
 }
 
-// PLDHashTable enumeration callback that appends strong references to
-// all nsIRequest to an nsTArray<nsIRequest*>.
-static PLDHashOperator
-AppendRequestsToArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                      uint32_t number, void *arg)
+static bool
+AppendRequestsToArray(PLDHashTable* aTable, nsTArray<nsIRequest*> *aArray)
 {
-    RequestMapEntry *e = static_cast<RequestMapEntry *>(hdr);
-    nsTArray<nsIRequest*> *array = static_cast<nsTArray<nsIRequest*> *>(arg);
+    PLDHashTable::Iterator iter(aTable);
+    while (iter.HasMoreEntries()) {
+        auto e = static_cast<RequestMapEntry*>(iter.NextEntry());
+        nsIRequest *request = e->mKey;
+        NS_ASSERTION(request, "What? Null key in pldhash entry?");
 
-    nsIRequest *request = e->mKey;
-    NS_ASSERTION(request, "What? Null key in pldhash entry?");
-
-    bool ok = array->AppendElement(request) != nullptr;
-
-    if (!ok) {
-        return PL_DHASH_STOP;
+        bool ok = !!aArray->AppendElement(request);
+        if (!ok) {
+           break;
+        }
+        NS_ADDREF(request);
     }
 
-    NS_ADDREF(request);
-
-    return PL_DHASH_NEXT;
+    if (aArray->Length() != aTable->EntryCount()) {
+        for (uint32_t i = 0, len = aArray->Length(); i < len; ++i) {
+            NS_RELEASE((*aArray)[i]);
+        }
+        return false;
+    }
+    return true;
 }
 
 NS_IMETHODIMP
@@ -280,14 +282,7 @@ nsLoadGroup::Cancel(nsresult status)
 
     nsAutoTArray<nsIRequest*, 8> requests;
 
-    PL_DHashTableEnumerate(&mRequests, AppendRequestsToArray,
-                           static_cast<nsTArray<nsIRequest*> *>(&requests));
-
-    if (requests.Length() != count) {
-        for (uint32_t i = 0, len = requests.Length(); i < len; ++i) {
-            NS_RELEASE(requests[i]);
-        }
-
+    if (!AppendRequestsToArray(&mRequests, &requests)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -359,14 +354,7 @@ nsLoadGroup::Suspend()
 
     nsAutoTArray<nsIRequest*, 8> requests;
 
-    PL_DHashTableEnumerate(&mRequests, AppendRequestsToArray,
-                           static_cast<nsTArray<nsIRequest*> *>(&requests));
-
-    if (requests.Length() != count) {
-        for (uint32_t i = 0, len = requests.Length(); i < len; ++i) {
-            NS_RELEASE(requests[i]);
-        }
-
+    if (!AppendRequestsToArray(&mRequests, &requests)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -411,14 +399,7 @@ nsLoadGroup::Resume()
 
     nsAutoTArray<nsIRequest*, 8> requests;
 
-    PL_DHashTableEnumerate(&mRequests, AppendRequestsToArray,
-                           static_cast<nsTArray<nsIRequest*> *>(&requests));
-
-    if (requests.Length() != count) {
-        for (uint32_t i = 0, len = requests.Length(); i < len; ++i) {
-            NS_RELEASE(requests[i]);
-        }
-
+    if (!AppendRequestsToArray(&mRequests, &requests)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
