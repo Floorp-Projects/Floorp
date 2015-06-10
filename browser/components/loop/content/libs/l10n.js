@@ -38,8 +38,9 @@
 
   // translate a string
   function translateString(key, args, fallback) {
-    if (args && args.num) {
-      var num = args && args.num;
+    var num;
+    if (args && ("num" in args)) {
+      num = args.num;
     }
     var data = getL10nData(key, num);
     if (!data && fallback)
