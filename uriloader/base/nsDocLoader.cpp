@@ -1343,43 +1343,23 @@ nsDocLoader::nsRequestInfo* nsDocLoader::GetRequestInfo(nsIRequest* aRequest)
                     (PL_DHashTableSearch(&mRequestInfoHash, aRequest));
 }
 
-// PLDHashTable enumeration callback that just removes every entry
-// from the hash.
-static PLDHashOperator
-RemoveInfoCallback(PLDHashTable *table, PLDHashEntryHdr *hdr, uint32_t number,
-                   void *arg)
-{
-  return PL_DHASH_REMOVE;
-}
-
 void nsDocLoader::ClearRequestInfoHash(void)
 {
-  PL_DHashTableEnumerate(&mRequestInfoHash, RemoveInfoCallback, nullptr);
-}
-
-// PLDHashTable enumeration callback that calculates the max progress.
-PLDHashOperator
-nsDocLoader::CalcMaxProgressCallback(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                                     uint32_t number, void* arg)
-{
-  const nsRequestInfo* info = static_cast<const nsRequestInfo*>(hdr);
-  int64_t* max = static_cast<int64_t* >(arg);
-
-  if (info->mMaxProgress < info->mCurrentProgress) {
-    *max = int64_t(-1);
-
-    return PL_DHASH_STOP;
-  }
-
-  *max += info->mMaxProgress;
-
-  return PL_DHASH_NEXT;
+  mRequestInfoHash.Clear();
 }
 
 int64_t nsDocLoader::CalculateMaxProgress()
 {
   int64_t max = mCompletedTotalProgress;
-  PL_DHashTableEnumerate(&mRequestInfoHash, CalcMaxProgressCallback, &max);
+  PLDHashTable::Iterator iter(&mRequestInfoHash);
+  while (iter.HasMoreEntries()) {
+    auto info = static_cast<const nsRequestInfo*>(iter.NextEntry());
+
+    if (info->mMaxProgress < info->mCurrentProgress) {
+      return int64_t(-1);
+    }
+    max += info->mMaxProgress;
+  }
   return max;
 }
 

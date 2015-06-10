@@ -324,9 +324,6 @@ private:
     nsRequestInfo *GetRequestInfo(nsIRequest* aRequest);
     void ClearRequestInfoHash();
     int64_t CalculateMaxProgress();
-    static PLDHashOperator CalcMaxProgressCallback(PLDHashTable* table,
-                                                   PLDHashEntryHdr* hdr,
-                                                   uint32_t number, void* arg);
 ///    void DumpChannelInfo(void);
 
     // used to clear our internal progress state between loads...
