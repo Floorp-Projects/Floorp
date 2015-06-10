@@ -666,7 +666,8 @@ LayerManagerComposite::Render()
   // We can't use composert2D if we have layer effects
   if (!mTarget && !haveLayerEffects &&
       gfxPrefs::Composer2DCompositionEnabled() &&
-      composer2D && composer2D->HasHwc() && composer2D->TryRenderWithHwc(mRoot, mGeometryChanged))
+      composer2D && composer2D->HasHwc() && composer2D->TryRenderWithHwc(mRoot,
+          mCompositor->GetWidget(), mGeometryChanged))
   {
     LayerScope::SetHWComposed();
     if (mFPS) {
@@ -772,7 +773,7 @@ LayerManagerComposite::Render()
   }
 
   if (composer2D) {
-    composer2D->Render();
+    composer2D->Render(mCompositor->GetWidget());
   }
 
   mCompositor->GetWidget()->PostRender(this);

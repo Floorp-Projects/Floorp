@@ -31,6 +31,8 @@
 #include <utils/Timers.h>
 #endif
 
+class nsScreenGonk;
+
 namespace mozilla {
 
 namespace gl {
@@ -83,9 +85,10 @@ public:
     // Returns FALSE if the container cannot be fully rendered
     // by this composer so nothing was rendered at all
     virtual bool TryRenderWithHwc(layers::Layer* aRoot,
+                                  nsIWidget* aWidget,
                                   bool aGeometryChanged) override;
 
-    virtual bool Render() override;
+    virtual bool Render(nsIWidget* aWidget) override;
 
     virtual bool HasHwc() override { return mHwc; }
 
@@ -94,18 +97,15 @@ public:
     bool RegisterHwcEventCallback();
     void Vsync(int aDisplay, int64_t aTimestamp);
     void Invalidate();
+    void Hotplug(int aDisplay, int aConnected);
 #endif
     void SetCompositorParent(layers::CompositorParent* aCompositorParent);
 
-    // Set EGL info of primary display. Used for BLIT Composition.
-    // XXX Add multiple displays compostion support.
-    void SetEGLInfo(hwc_display_t aDisplay, hwc_surface_t aSurface, gl::GLContext* aGLContext);
-
 private:
     void Reset();
-    void Prepare(buffer_handle_t dispHandle, int fence);
-    bool Commit();
-    bool TryHwComposition();
+    void Prepare(buffer_handle_t dispHandle, int fence, nsScreenGonk* screen);
+    bool Commit(nsScreenGonk* aScreen);
+    bool TryHwComposition(nsScreenGonk* aScreen);
     bool ReallocLayerList();
     bool PrepareLayerList(layers::Layer* aContainer, const nsIntRect& aClip,
           const gfx::Matrix& aParentTransform);
@@ -115,9 +115,6 @@ private:
 
     HwcDevice*              mHwc;
     HwcList*                mList;
-    hwc_display_t           mDpy; // Store for BLIT Composition and GonkDisplayICS
-    hwc_surface_t           mSur; // Store for BLIT Composition and GonkDisplayICS
-    gl::GLContext*          mGLContext; // Store for BLIT Composition
     nsIntRect               mScreenRect;
     int                     mMaxLayerCount;
     bool                    mColorFill;

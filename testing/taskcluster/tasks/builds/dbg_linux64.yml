@@ -1,5 +1,5 @@
 $inherits:
-  from: 'tasks/opt_linux64.yml'
+  from: 'tasks/builds/opt_linux64.yml'
   variables:
     build_name: 'linux64'
     build_type: 'dbg'

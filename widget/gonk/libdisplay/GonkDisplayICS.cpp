@@ -23,6 +23,7 @@
 #include <cutils/log.h>
 #include <fcntl.h>
 
+#include "mozilla/Assertions.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/FileUtils.h"
 
@@ -139,13 +140,6 @@ GonkDisplayICS::~GonkDisplayICS()
         hwc_close(mHwc);
 }
 
-ANativeWindow*
-GonkDisplayICS::GetNativeWindow()
-{
-    StopBootAnimation();
-    return static_cast<ANativeWindow *>(mFBSurface.get());
-}
-
 void
 GonkDisplayICS::SetEnabled(bool enabled)
 {
@@ -207,12 +201,25 @@ GonkDisplayICS::QueueBuffer(ANativeWindowBuffer *buf)
 void
 GonkDisplayICS::UpdateDispSurface(EGLDisplay dpy, EGLSurface sur)
 {
-    eglSwapBuffers(dpy, sur);
 }
 
 void
 GonkDisplayICS::SetDispReleaseFd(int fd)
 {
+}
+
+GonkDisplay::NativeData
+GonkDisplayICS::GetNativeData(GonkDisplay::DisplayType aDisplayType,
+                              android::IGraphicBufferProducer* aProducer)
+{
+    MOZ_ASSERT(aDisplayType == DISPLAY_PRIMARY, "ICS gonk supports primary display only.");
+
+    NativeData data;
+    StopBootAnimation();
+    data.mNativeWindow = static_cast<ANativeWindow *>(mFBSurface.get());
+    data.mXdpi = xdpi;
+
+    return data;
 }
 
 __attribute__ ((visibility ("default")))

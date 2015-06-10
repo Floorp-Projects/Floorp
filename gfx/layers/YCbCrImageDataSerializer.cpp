@@ -10,6 +10,7 @@
 #include "mozilla/gfx/Logging.h"        // for gfxDebug
 #include "mozilla/gfx/Types.h"
 #include "mozilla/mozalloc.h"           // for operator delete
+#include "nsDebug.h"                    // for NS_WARN_IF
 #include "yuv_convert.h"                // for ConvertYCbCrToRGB32, etc
 
 #define MOZ_ALIGN_WORD(x) (((x) + 3) & ~3)
