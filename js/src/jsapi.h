@@ -4927,6 +4927,7 @@ JS_SetOffthreadIonCompilationEnabled(JSRuntime* rt, bool enabled);
     Register(BASELINE_WARMUP_TRIGGER, "baseline.warmup.trigger")           \
     Register(ION_WARMUP_TRIGGER, "ion.warmup.trigger")                     \
     Register(ION_GVN_ENABLE, "ion.gvn.enable")                             \
+    Register(ION_FORCE_IC, "ion.forceinlineCaches")                        \
     Register(ION_ENABLE, "ion.enable")                                     \
     Register(BASELINE_ENABLE, "baseline.enable")                           \
     Register(OFFTHREAD_COMPILATION_ENABLE, "offthread-compilation.enable") \

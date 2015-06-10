@@ -1902,182 +1902,430 @@ BytecodeEmitter::bindNameToSlot(ParseNode* pn)
 bool
 BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
 {
-    if (!pn || *answer)
+    JS_CHECK_RECURSION(cx, return false);
+
+    switch (pn->getKind()) {
+      // Trivial cases with no side effects.
+      case PNK_NEWTARGET:
+      case PNK_NOP:
+      case PNK_STRING:
+      case PNK_TEMPLATE_STRING:
+      case PNK_REGEXP:
+      case PNK_TRUE:
+      case PNK_FALSE:
+      case PNK_NULL:
+      case PNK_THIS:
+      case PNK_ELISION:
+      case PNK_GENERATOR:
+      case PNK_NUMBER:
+      case PNK_OBJECT_PROPERTY_NAME:
+        MOZ_ASSERT(pn->isArity(PN_NULLARY));
+        *answer = false;
         return true;
 
-    switch (pn->getArity()) {
-      case PN_CODE:
+      case PNK_BREAK:
+      case PNK_CONTINUE:
+      case PNK_DEBUGGER:
+        MOZ_ASSERT(pn->isArity(PN_NULLARY));
+        *answer = true;
+        return true;
+
+      // Watch out for getters!
+      case PNK_SUPERPROP:
+        MOZ_ASSERT(pn->isArity(PN_NULLARY));
+        *answer = true;
+        return true;
+
+      // Again, getters.
+      case PNK_DOT:
+        MOZ_ASSERT(pn->isArity(PN_NAME));
+        *answer = true;
+        return true;
+
+      // Unary cases with side effects only if the child has them.
+      case PNK_TYPEOFEXPR:
+      case PNK_VOID:
+      case PNK_NOT:
+      case PNK_COMPUTED_NAME:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        return checkSideEffects(pn->pn_kid, answer);
+
+      // Looking up or evaluating the associated name could throw.
+      case PNK_TYPEOFNAME:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        *answer = true;
+        return true;
+
+      // These unary cases have side effects on the enclosing object/array,
+      // sure.  But that's not the question this function answers: it's
+      // whether the operation may have a side effect on something *other* than
+      // the result of the overall operation in which it's embedded.  The
+      // answer to that is no, for an object literal having a mutated prototype
+      // and an array comprehension containing no other effectful operations
+      // only produce a value, without affecting anything else.
+      case PNK_MUTATEPROTO:
+      case PNK_ARRAYPUSH:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        return checkSideEffects(pn->pn_kid, answer);
+
+      // Unary cases with obvious side effects.
+      case PNK_PREINCREMENT:
+      case PNK_POSTINCREMENT:
+      case PNK_PREDECREMENT:
+      case PNK_POSTDECREMENT:
+      case PNK_THROW:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        *answer = true;
+        return true;
+
+      // These might invoke valueOf/toString, even with a subexpression without
+      // side effects!  Consider |+{ valueOf: null, toString: null }|.
+      case PNK_BITNOT:
+      case PNK_POS:
+      case PNK_NEG:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        *answer = true;
+        return true;
+
+      // This invokes the (user-controllable) iterator protocol.
+      case PNK_SPREAD:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        *answer = true;
+        return true;
+
+      case PNK_YIELD_STAR:
+      case PNK_YIELD:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
+      // Deletion generally has side effects, even if isolated cases have none.
+      case PNK_DELETENAME:
+      case PNK_DELETEPROP:
+      case PNK_DELETESUPERPROP:
+      case PNK_DELETEELEM:
+      case PNK_DELETESUPERELEM:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        *answer = true;
+        return true;
+
+      // Deletion of a non-Reference expression has side effects only through
+      // evaluating the expression.
+      case PNK_DELETEEXPR: {
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        ParseNode* expr = pn->pn_kid;
+        return checkSideEffects(expr, answer);
+      }
+
+      case PNK_SEMI:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        if (ParseNode* expr = pn->pn_kid)
+            return checkSideEffects(expr, answer);
+        *answer = false;
+        return true;
+
+      // Binary cases with obvious side effects.
+      case PNK_ASSIGN:
+      case PNK_ADDASSIGN:
+      case PNK_SUBASSIGN:
+      case PNK_BITORASSIGN:
+      case PNK_BITXORASSIGN:
+      case PNK_BITANDASSIGN:
+      case PNK_LSHASSIGN:
+      case PNK_RSHASSIGN:
+      case PNK_URSHASSIGN:
+      case PNK_MULASSIGN:
+      case PNK_DIVASSIGN:
+      case PNK_MODASSIGN:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
+      case PNK_STATEMENTLIST:
+      case PNK_CATCHLIST:
+      // Strict equality operations and logical operators are well-behaved and
+      // perform no conversions.
+      case PNK_OR:
+      case PNK_AND:
+      case PNK_STRICTEQ:
+      case PNK_STRICTNE:
+      // Any subexpression of a comma expression could be effectful.
+      case PNK_COMMA:
+        MOZ_ASSERT(pn->pn_count > 0);
+      // Subcomponents of a literal may be effectful.
+      case PNK_ARRAY:
+      case PNK_OBJECT:
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        for (ParseNode* item = pn->pn_head; item; item = item->pn_next) {
+            if (!checkSideEffects(item, answer))
+                return false;
+            if (*answer)
+                return true;
+        }
+        return true;
+
+      // Most other binary operations (parsed as lists in SpiderMonkey) may
+      // perform conversions triggering side effects.  Math operations perform
+      // ToNumber and may fail invoking invalid user-defined toString/valueOf:
+      // |5 < { toString: null }|.  |instanceof| throws if provided a
+      // non-object constructor: |null instanceof null|.  |in| throws if given
+      // a non-object RHS: |5 in null|.
+      case PNK_BITOR:
+      case PNK_BITXOR:
+      case PNK_BITAND:
+      case PNK_EQ:
+      case PNK_NE:
+      case PNK_LT:
+      case PNK_LE:
+      case PNK_GT:
+      case PNK_GE:
+      case PNK_INSTANCEOF:
+      case PNK_IN:
+      case PNK_LSH:
+      case PNK_RSH:
+      case PNK_URSH:
+      case PNK_ADD:
+      case PNK_SUB:
+      case PNK_STAR:
+      case PNK_DIV:
+      case PNK_MOD:
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        MOZ_ASSERT(pn->pn_count >= 2);
+        *answer = true;
+        return true;
+
+      case PNK_DEFAULT:
+      case PNK_COLON:
+      case PNK_CASE:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        if (!checkSideEffects(pn->pn_left, answer))
+            return false;
+        if (*answer)
+            return true;
+        return checkSideEffects(pn->pn_right, answer);
+
+      // More getters.
+      case PNK_ELEM:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
+      // Again, getters.
+      case PNK_SUPERELEM:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        *answer = true;
+        return true;
+
+      // These affect visible names in this code, or in other code.
+      case PNK_IMPORT:
+      case PNK_EXPORT_FROM:
+      case PNK_EXPORT_DEFAULT:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
+      // Likewise.
+      case PNK_EXPORT:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        *answer = true;
+        return true;
+
+      // Every part of a loop might be effect-free, but looping infinitely *is*
+      // an effect.  (Language lawyer trivia: C++ says threads can be assumed
+      // to exit or have side effects, C++14 [intro.multithread]p27, so a C++
+      // implementation's equivalent of the below could set |*answer = false;|
+      // if all loop sub-nodes set |*answer = false|!)
+      case PNK_DOWHILE:
+      case PNK_WHILE:
+      case PNK_FOR:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
+      // Declarations affect the name set of the relevant scope.
+      case PNK_VAR:
+      case PNK_CONST:
+      case PNK_LET:
+      case PNK_GLOBALCONST:
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        *answer = true;
+        return true;
+
+      case PNK_CONDITIONAL:
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        if (!checkSideEffects(pn->pn_kid1, answer))
+            return false;
+        if (*answer)
+            return true;
+        if (!checkSideEffects(pn->pn_kid2, answer))
+            return false;
+        if (*answer)
+            return true;
+        return checkSideEffects(pn->pn_kid3, answer);
+
+      case PNK_IF:
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        if (!checkSideEffects(pn->pn_kid1, answer))
+            return false;
+        if (*answer)
+            return true;
+        if (!checkSideEffects(pn->pn_kid2, answer))
+            return false;
+        if (*answer)
+            return true;
+        if (ParseNode* elseNode = pn->pn_kid3) {
+            if (!checkSideEffects(elseNode, answer))
+                return false;
+        }
+        return true;
+
+      // Function calls can invoke non-local code.
+      case PNK_NEW:
+      case PNK_CALL:
+      case PNK_TAGGED_TEMPLATE:
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        *answer = true;
+        return true;
+
+      // Classes typically introduce names.  Even if no name is introduced,
+      // the heritage and/or class body (through computed property names)
+      // usually have effects.
+      case PNK_CLASS:
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        *answer = true;
+        return true;
+
+      // |with| calls |ToObject| on its expression and so throws if that value
+      // is null/undefined.
+      case PNK_WITH:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
+      case PNK_RETURN:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
+      case PNK_NAME:
+        MOZ_ASSERT(pn->isArity(PN_NAME));
+        *answer = true;
+        return true;
+
+      // Shorthands could trigger getters: the |x| in the object literal in
+      // |with ({ get x() { throw 42; } }) ({ x });|, for example, triggers
+      // one.  (Of course, it isn't necessary to use |with| for a shorthand to
+      // trigger a getter.)
+      case PNK_SHORTHAND:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
+      case PNK_FUNCTION:
+        MOZ_ASSERT(pn->isArity(PN_CODE));
         /*
-         * A named function, contrary to ES3, is no longer useful, because we
-         * bind its name lexically (using JSOP_CALLEE) instead of creating an
-         * Object instance and binding a readonly, permanent property in it
+         * A named function, contrary to ES3, is no longer effectful, because
+         * we bind its name lexically (using JSOP_CALLEE) instead of creating
+         * an Object instance and binding a readonly, permanent property in it
          * (the object and binding can be detected and hijacked or captured).
          * This is a bug fix to ES3; it is fixed in ES3.1 drafts.
          */
-        MOZ_ASSERT(*answer == false);
+        *answer = false;
         return true;
 
-      case PN_LIST:
-        if (pn->isOp(JSOP_NOP) || pn->isOp(JSOP_OR) || pn->isOp(JSOP_AND) ||
-            pn->isOp(JSOP_STRICTEQ) || pn->isOp(JSOP_STRICTNE)) {
-            /*
-             * Non-operators along with ||, &&, ===, and !== never invoke
-             * toString or valueOf.
-             */
-            bool ok = true;
-            for (ParseNode* pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next)
-                ok &= checkSideEffects(pn2, answer);
-            return ok;
-        }
+      // Generator expressions have no side effects on their own.
+      case PNK_GENEXP:
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        *answer = false;
+        return true;
 
-        if (pn->isKind(PNK_GENEXP)) {
-            /* Generator-expressions are harmless if the result is ignored. */
-            MOZ_ASSERT(*answer == false);
+      case PNK_TRY:
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        if (!checkSideEffects(pn->pn_kid1, answer))
+            return false;
+        if (*answer)
             return true;
+        if (ParseNode* catchList = pn->pn_kid2) {
+            MOZ_ASSERT(catchList->isKind(PNK_CATCHLIST));
+            if (!checkSideEffects(catchList, answer))
+                return false;
+            if (*answer)
+                return true;
         }
+        if (ParseNode* finallyBlock = pn->pn_kid3) {
+            if (!checkSideEffects(finallyBlock, answer))
+                return false;
+        }
+        return true;
 
-        /*
-         * All invocation operations (construct: PNK_NEW, call: PNK_CALL)
-         * are presumed to be useful, because they may have side effects
-         * even if their main effect (their return value) is discarded.
-         *
-         * PNK_ELEM binary trees of 3+ nodes are flattened into lists to
-         * avoid too much recursion. All such lists must be presumed to be
-         * useful because each index operation could invoke a getter.
-         *
-         * Likewise, array and object initialisers may call prototype
-         * setters (the __defineSetter__ built-in, and writable __proto__
-         * on Array.prototype create this hazard). Initialiser list nodes
-         * have JSOP_NEWINIT in their pn_op.
-         */
+      case PNK_CATCH:
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        if (!checkSideEffects(pn->pn_kid1, answer))
+            return false;
+        if (*answer)
+            return true;
+        if (ParseNode* cond = pn->pn_kid2) {
+            if (!checkSideEffects(cond, answer))
+                return false;
+            if (*answer)
+                return true;
+        }
+        return checkSideEffects(pn->pn_kid3, answer);
+
+      case PNK_SWITCH:
+      case PNK_LETBLOCK:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        if (!checkSideEffects(pn->pn_left, answer))
+            return false;
+        return *answer || checkSideEffects(pn->pn_right, answer);
+
+      case PNK_LABEL:
+      case PNK_LEXICALSCOPE:
+        MOZ_ASSERT(pn->isArity(PN_NAME));
+        return checkSideEffects(pn->expr(), answer);
+
+      // We could methodically check every interpolated expression, but it's
+      // probably not worth the trouble.  Treat template strings as effect-free
+      // only if they don't contain any substitutions.
+      case PNK_TEMPLATE_STRING_LIST:
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        MOZ_ASSERT(pn->pn_count > 0);
+        MOZ_ASSERT((pn->pn_count % 2) == 1,
+                   "template strings must alternate template and substitution "
+                   "parts");
+        *answer = pn->pn_count > 1;
+        return true;
+
+      case PNK_ARRAYCOMP:
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        MOZ_ASSERT(pn->pn_count == 1);
+        return checkSideEffects(pn->pn_head, answer);
+
+      case PNK_ARGSBODY:
         *answer = true;
         return true;
 
-      case PN_TERNARY:
-        return checkSideEffects(pn->pn_kid1, answer) &&
-               checkSideEffects(pn->pn_kid2, answer) &&
-               checkSideEffects(pn->pn_kid3, answer);
+      case PNK_FORIN:           // by PNK_FOR
+      case PNK_FOROF:           // by PNK_FOR
+      case PNK_FORHEAD:         // by PNK_FOR
+      case PNK_FRESHENBLOCK:    // by PNK_FOR
+      case PNK_CLASSMETHOD:     // by PNK_CLASS
+      case PNK_CLASSNAMES:      // by PNK_CLASS
+      case PNK_CLASSMETHODLIST: // by PNK_CLASS
+      case PNK_IMPORT_SPEC_LIST: // by PNK_IMPORT
+      case PNK_IMPORT_SPEC:      // by PNK_IMPORT
+      case PNK_EXPORT_BATCH_SPEC:// by PNK_EXPORT
+      case PNK_EXPORT_SPEC_LIST: // by PNK_EXPORT
+      case PNK_EXPORT_SPEC:      // by PNK_EXPORT
+      case PNK_CALLSITEOBJ:      // by PNK_TAGGED_TEMPLATE
+        MOZ_CRASH("handled by parent nodes");
 
-      case PN_BINARY:
-      case PN_BINARY_OBJ:
-        if (pn->isAssignment()) {
-            /*
-             * Assignment is presumed to be useful, even if the next operation
-             * is another assignment overwriting this one's ostensible effect,
-             * because the left operand may be a property with a setter that
-             * has side effects.
-             *
-             * The only exception is assignment of a useless value to a const
-             * declared in the function currently being compiled.
-             */
-            ParseNode* pn2 = pn->pn_left;
-            if (!pn2->isKind(PNK_NAME)) {
-                *answer = true;
-            } else {
-                if (!bindNameToSlot(pn2))
-                    return false;
-                if (!checkSideEffects(pn->pn_right, answer))
-                    return false;
-                if (!*answer && (!pn->isOp(JSOP_NOP) || !pn2->isConst()))
-                    *answer = true;
-            }
-            return true;
-        }
-
-        MOZ_ASSERT(!pn->isOp(JSOP_OR), "|| produces a list now");
-        MOZ_ASSERT(!pn->isOp(JSOP_AND), "&& produces a list now");
-        MOZ_ASSERT(!pn->isOp(JSOP_STRICTEQ), "=== produces a list now");
-        MOZ_ASSERT(!pn->isOp(JSOP_STRICTNE), "!== produces a list now");
-
-        /*
-         * We can't easily prove that neither operand ever denotes an
-         * object with a toString or valueOf method.
-         */
-        *answer = true;
-        return true;
-
-      case PN_UNARY:
-        switch (pn->getKind()) {
-          case PNK_DELETENAME: {
-            ParseNode* nameExpr = pn->pn_kid;
-            MOZ_ASSERT(nameExpr->isKind(PNK_NAME));
-            if (!bindNameToSlot(nameExpr))
-                return false;
-            *answer = !nameExpr->isConst();
-            return true;
-          }
-
-          case PNK_DELETEPROP:
-          case PNK_DELETESUPERPROP:
-          case PNK_DELETEELEM:
-          case PNK_DELETESUPERELEM:
-            // All these delete addressing modes have effects, too.
-            *answer = true;
-            return true;
-
-          case PNK_DELETEEXPR:
-            return checkSideEffects(pn->pn_kid, answer);
-
-          case PNK_TYPEOFNAME:
-          case PNK_TYPEOFEXPR:
-          case PNK_VOID:
-          case PNK_NOT:
-          case PNK_BITNOT:
-            if (pn->isOp(JSOP_NOT)) {
-                /* ! does not convert its operand via toString or valueOf. */
-                return checkSideEffects(pn->pn_kid, answer);
-            }
-            /* FALL THROUGH */
-
-          default:
-            /*
-             * All of PNK_INC, PNK_DEC and PNK_THROW have direct effects. Of
-             * the remaining unary-arity node types, we can't easily prove that
-             * the operand never denotes an object with a toString or valueOf
-             * method.
-             */
-            *answer = true;
-            return true;
-        }
-        MOZ_CRASH("We have a returning default case");
-
-      case PN_NAME:
-        /*
-         * Take care to avoid trying to bind a label name (labels, both for
-         * statements and property values in object initialisers, have pn_op
-         * defaulted to JSOP_NOP).
-         */
-        if (pn->isKind(PNK_NAME) && !pn->isOp(JSOP_NOP)) {
-            if (!bindNameToSlot(pn))
-                return false;
-            if (!pn->isOp(JSOP_CALLEE) && pn->pn_cookie.isFree()) {
-                /*
-                 * Not a use of an unshadowed named function expression's given
-                 * name, so this expression could invoke a getter that has side
-                 * effects.
-                 */
-                *answer = true;
-            }
-        }
-
-        if (pn->isHoistedLexicalUse()) {
-            // Hoisted uses of lexical bindings throw on access.
-            *answer = true;
-        }
-
-        if (pn->isKind(PNK_DOT)) {
-            /* Dotted property references in general can call getters. */
-            *answer = true;
-        }
-        return checkSideEffects(pn->maybeExpr(), answer);
-
-      case PN_NULLARY:
-        if (pn->isKind(PNK_DEBUGGER) ||
-            pn->isKind(PNK_SUPERPROP))
-            *answer = true;
-        return true;
+      case PNK_LIMIT: // invalid sentinel value
+        MOZ_CRASH("invalid node kind");
     }
-    return true;
+
+    MOZ_CRASH("invalid, unenumerated ParseNodeKind value encountered in "
+              "BytecodeEmitter::checkSideEffects");
 }
 
 bool

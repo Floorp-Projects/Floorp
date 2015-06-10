@@ -756,6 +756,14 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow* aParent,
             nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
         }
 
+        // B2G multi-screen support. mozDisplayId is returned from the
+        // "display-changed" event, it is also platform-dependent.
+#ifdef MOZ_WIDGET_GONK
+        int retval = WinHasOption(features.get(), "mozDisplayId", 0, nullptr);
+        windowCreator2->SetScreenId(retval);
+#endif
+
+
         bool cancel = false;
         rv = windowCreator2->CreateChromeWindow2(parentChrome, chromeFlags,
                                                  contextFlags, uriToLoad,

@@ -9830,7 +9830,7 @@ ICCPDUHelperObject.prototype = {
 
   readNumberWithLength: function() {
     let Buf = this.context.Buf;
-    let number;
+    let number = "";
     let numLen = this.context.GsmPDUHelper.readHexOctet();
     if (numLen != 0xff) {
       if (numLen > ADN_MAX_BCD_NUMBER_BYTES) {
@@ -9839,7 +9839,7 @@ ICCPDUHelperObject.prototype = {
             "Error: invalid length of BCD number/SSC contents - " + numLen);
         }
         Buf.seekIncoming(ADN_MAX_BCD_NUMBER_BYTES * Buf.PDU_HEX_OCTET_SIZE);
-        return "";
+        return number;
       }
 
       number = this.readDiallingNumber(numLen);

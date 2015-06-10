@@ -27,6 +27,7 @@ function add_ocsp_test(aHost, aExpectedResult, aOCSPResponseToServe) {
 
 do_get_profile();
 Services.prefs.setBoolPref("security.ssl.enable_ocsp_stapling", true);
+Services.prefs.setIntPref("security.OCSP.enabled", 1);
 let args = [["good", "localhostAndExampleCom", "unused"],
              ["expiredresponse", "localhostAndExampleCom", "unused"],
              ["oldvalidperiod", "localhostAndExampleCom", "unused"],

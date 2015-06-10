@@ -7350,7 +7350,7 @@ NewMemoryInfoObject(JSContext* cx)
     RootedObject obj(cx, JS_NewObject(cx, nullptr));
 
     using namespace MemInfo;
-    struct {
+    struct NamedGetter {
         const char* name;
         JSNative getter;
     } getters[] = {
@@ -7364,13 +7364,13 @@ NewMemoryInfoObject(JSContext* cx)
         { "minorGCCount", MinorGCCountGetter }
     };
 
-    for (size_t i = 0; i < mozilla::ArrayLength(getters); i++) {
- #ifdef JS_MORE_DETERMINISTIC
+    for (auto pair : getters) {
+#ifdef JS_MORE_DETERMINISTIC
         JSNative getter = DummyGetter;
 #else
-        JSNative getter = getters[i].getter;
+        JSNative getter = pair.getter;
 #endif
-        if (!JS_DefineProperty(cx, obj, getters[i].name, UndefinedHandleValue,
+        if (!JS_DefineProperty(cx, obj, pair.name, UndefinedHandleValue,
                                JSPROP_ENUMERATE | JSPROP_SHARED,
                                getter, nullptr))
         {
@@ -7385,7 +7385,7 @@ NewMemoryInfoObject(JSContext* cx)
     if (!JS_DefineProperty(cx, obj, "zone", zoneObj, JSPROP_ENUMERATE))
         return nullptr;
 
-    struct {
+    struct NamedZoneGetter {
         const char* name;
         JSNative getter;
     } zoneGetters[] = {
@@ -7399,13 +7399,13 @@ NewMemoryInfoObject(JSContext* cx)
         { "gcNumber", ZoneGCNumberGetter }
     };
 
-    for (size_t i = 0; i < mozilla::ArrayLength(zoneGetters); i++) {
+    for (auto pair : zoneGetters) {
  #ifdef JS_MORE_DETERMINISTIC
         JSNative getter = DummyGetter;
 #else
-        JSNative getter = zoneGetters[i].getter;
+        JSNative getter = pair.getter;
 #endif
-        if (!JS_DefineProperty(cx, zoneObj, zoneGetters[i].name, UndefinedHandleValue,
+        if (!JS_DefineProperty(cx, zoneObj, pair.name, UndefinedHandleValue,
                                JSPROP_ENUMERATE | JSPROP_SHARED,
                                getter, nullptr))
         {

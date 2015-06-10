@@ -5699,6 +5699,15 @@ JS_SetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt, uint32_t v
             JitSpew(js::jit::JitSpew_IonScripts, "Enable ion's GVN");
         }
         break;
+      case JSJITCOMPILER_ION_FORCE_IC:
+        if (value == 0) {
+            jit::js_JitOptions.forceInlineCaches = false;
+            JitSpew(js::jit::JitSpew_IonScripts, "IonBuilder: Enable non-IC optimizations.");
+        } else {
+            jit::js_JitOptions.forceInlineCaches = true;
+            JitSpew(js::jit::JitSpew_IonScripts, "IonBuilder: Disable non-IC optimizations.");
+        }
+        break;
       case JSJITCOMPILER_ION_ENABLE:
         if (value == 1) {
             JS::RuntimeOptionsRef(rt).setIon(true);
@@ -5753,6 +5762,8 @@ JS_GetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt)
         return jit::js_JitOptions.forcedDefaultIonWarmUpThreshold.isSome()
              ? jit::js_JitOptions.forcedDefaultIonWarmUpThreshold.ref()
              : jit::OptimizationInfo::CompilerWarmupThreshold;
+      case JSJITCOMPILER_ION_FORCE_IC:
+        return jit::js_JitOptions.forceInlineCaches;
       case JSJITCOMPILER_ION_ENABLE:
         return JS::RuntimeOptionsRef(rt).ion();
       case JSJITCOMPILER_BASELINE_ENABLE:
