@@ -734,24 +734,17 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
     return rv;
 }
 
-// PLDHashTable enumeration callback that appends all items in the
-// hash to an nsCOMArray
-static PLDHashOperator
-AppendRequestsToCOMArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                         uint32_t number, void *arg)
-{
-    RequestMapEntry *e = static_cast<RequestMapEntry *>(hdr);
-    static_cast<nsCOMArray<nsIRequest>*>(arg)->AppendObject(e->mKey);
-    return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 nsLoadGroup::GetRequests(nsISimpleEnumerator * *aRequests)
 {
     nsCOMArray<nsIRequest> requests;
     requests.SetCapacity(mRequests.EntryCount());
 
-    PL_DHashTableEnumerate(&mRequests, AppendRequestsToCOMArray, &requests);
+    PLDHashTable::Iterator iter(&mRequests);
+    while (iter.HasMoreEntries()) {
+      auto e = static_cast<RequestMapEntry*>(iter.NextEntry());
+      requests.AppendObject(e->mKey);
+    }
 
     return NS_NewArrayEnumerator(aRequests, requests);
 }
