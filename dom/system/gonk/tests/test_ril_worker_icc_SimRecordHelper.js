@@ -355,10 +355,8 @@ add_test(function test_update_mwis() {
       // pin2.
       equal(this.readString(), null);
 
-      if (!ril.v5Legacy) {
-        // AID. Ignore because it's from modem.
-        this.readInt32();
-      }
+      // AID. Ignore because it's from modem.
+      this.readInt32();
     };
 
     ok(!isUpdated);
