@@ -299,24 +299,6 @@ static const PLDHashTableOps AtomTableOps = {
 };
 
 
-#ifdef DEBUG
-static PLDHashOperator
-DumpAtomLeaks(PLDHashTable* aTable, PLDHashEntryHdr* aEntryHdr,
-              uint32_t aIndex, void* aArg)
-{
-  AtomTableEntry* entry = static_cast<AtomTableEntry*>(aEntryHdr);
-  AtomImpl* atom = entry->mAtom;
-  if (!atom->IsPermanent()) {
-    ++*static_cast<uint32_t*>(aArg);
-    nsAutoCString str;
-    atom->ToUTF8String(str);
-    fputs(str.get(), stdout);
-    fputs("\n", stdout);
-  }
-  return PL_DHASH_NEXT;
-}
-#endif
-
 static inline
 void
 PromoteToPermanent(AtomImpl* aAtom)
@@ -345,7 +327,18 @@ NS_PurgeAtomTable()
       uint32_t leaked = 0;
       printf("*** %d atoms still exist (including permanent):\n",
              gAtomTable->EntryCount());
-      PL_DHashTableEnumerate(gAtomTable, DumpAtomLeaks, &leaked);
+      PLDHashTable::Iterator iter(gAtomTable);
+      while (iter.HasMoreEntries()) {
+        auto entry = static_cast<AtomTableEntry*>(iter.NextEntry());
+        AtomImpl* atom = entry->mAtom;
+        if (!atom->IsPermanent()) {
+          leaked++;
+          nsAutoCString str;
+          atom->ToUTF8String(str);
+          fputs(str.get(), stdout);
+          fputs("\n", stdout);
+        }
+      }
       printf("*** %u non-permanent atoms leaked\n", leaked);
     }
 #endif
