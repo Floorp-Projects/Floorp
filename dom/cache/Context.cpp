@@ -112,14 +112,18 @@ public:
 private:
   ~Data()
   {
-    if (mConnection) {
-      NS_ProxyRelease(mTarget, mConnection);
-    }
+    // We could proxy release our data here, but instead just assert.  The
+    // Context code should guarantee that we are destroyed on the target
+    // thread.  If we're not, then QuotaManager might race and try to clear the
+    // origin out from under us.
+    MOZ_ASSERT(mTarget == NS_GetCurrentThread());
   }
 
   nsCOMPtr<nsIThread> mTarget;
   nsCOMPtr<mozIStorageConnection> mConnection;
 
+  // Threadsafe counting because we're created on the PBackground thread
+  // and destroyed on the target IO thread.
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Context::Data)
 };
 
@@ -420,6 +424,8 @@ Context::QuotaInitRunnable::Run()
       // before returning.
       mInitAction->RunOnTarget(resolver, mQuotaInfo, mData);
       MOZ_ASSERT(resolver->Resolved());
+
+      mData = nullptr;
 
       break;
     }
@@ -915,6 +921,7 @@ Context::~Context()
 {
   NS_ASSERT_OWNINGTHREAD(Context);
   MOZ_ASSERT(mManager);
+  MOZ_ASSERT(!mData);
 
   if (mThreadsafeHandle) {
     mThreadsafeHandle->ContextDestroyed(this);
