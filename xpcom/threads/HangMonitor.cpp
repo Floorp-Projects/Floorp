@@ -15,7 +15,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsReadableUtils.h"
-#include "nsStackWalk.h"
+#include "mozilla/StackWalk.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
@@ -146,7 +146,7 @@ GetChromeHangReport(Telemetry::ProcessedStack& aStack,
   if (ret == -1) {
     return;
   }
-  NS_StackWalk(ChromeStackWalker, /* skipFrames */ 0, /* maxFrames */ 0,
+  MozStackWalk(ChromeStackWalker, /* skipFrames */ 0, /* maxFrames */ 0,
                reinterpret_cast<void*>(&rawStack),
                reinterpret_cast<uintptr_t>(winMainThreadHandle), nullptr);
   ret = ::ResumeThread(winMainThreadHandle);

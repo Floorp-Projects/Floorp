@@ -13,7 +13,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Types.h"
 
-#include "nsStackWalk.h"
+#include "mozilla/StackWalk.h"
 
 namespace mozilla {
 
@@ -27,7 +27,7 @@ namespace mozilla {
 // while |free| is used to free strings created by |copy|.
 //
 // |DescribeCodeAddressLock| is needed when the callers may be holding a lock
-// used by NS_DescribeCodeAddress.  |DescribeCodeAddressLock| must implement
+// used by MozDescribeCodeAddress.  |DescribeCodeAddressLock| must implement
 // static methods IsLocked(), Unlock() and Lock().
 template <class StringTable,
           class StringAlloc,
@@ -35,9 +35,9 @@ template <class StringTable,
 class CodeAddressService
 {
   // GetLocation() is the key function in this class.  It's basically a wrapper
-  // around NS_DescribeCodeAddress.
+  // around MozDescribeCodeAddress.
   //
-  // However, NS_DescribeCodeAddress is very slow on some platforms, and we
+  // However, MozDescribeCodeAddress is very slow on some platforms, and we
   // have lots of repeated (i.e. same PC) calls to it.  So we do some caching
   // of results.  Each cached result includes two strings (|mFunction| and
   // |mLibrary|), so we also optimize them for space in the following ways.
@@ -137,15 +137,15 @@ public:
     if (!entry.mInUse || entry.mPc != aPc) {
       mNumCacheMisses++;
 
-      // NS_DescribeCodeAddress can (on Linux) acquire a lock inside
+      // MozDescribeCodeAddress can (on Linux) acquire a lock inside
       // the shared library loader.  Another thread might call malloc
       // while holding that lock (when loading a shared library).  So
       // we have to exit the lock around this call.  For details, see
       // https://bugzilla.mozilla.org/show_bug.cgi?id=363334#c3
-      nsCodeAddressDetails details;
+      MozCodeAddressDetails details;
       {
         DescribeCodeAddressLock::Unlock();
-        (void)NS_DescribeCodeAddress(const_cast<void*>(aPc), &details);
+        (void)MozDescribeCodeAddress(const_cast<void*>(aPc), &details);
         DescribeCodeAddressLock::Lock();
       }
 
@@ -159,7 +159,7 @@ public:
 
     MOZ_ASSERT(entry.mPc == aPc);
 
-    NS_FormatCodeAddress(aBuf, aBufLen, aFrameNumber, entry.mPc,
+    MozFormatCodeAddress(aBuf, aBufLen, aFrameNumber, entry.mPc,
                          entry.mFunction, entry.mLibrary, entry.mLOffset,
                          entry.mFileName, entry.mLineNo);
   }
