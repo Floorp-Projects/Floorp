@@ -533,22 +533,6 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const char16_
   if (type == pmPostScript) {
     DO_PR_DEBUG_LOG(("InitPrintSettingsFromPrinter() for PostScript printer\n"));
      
-    nsAutoCString orientation;
-    if (NS_SUCCEEDED(CopyPrinterCharPref("postscript", printerName,
-                                         "orientation", orientation))) {
-      if (orientation.LowerCaseEqualsLiteral("portrait")) {
-        DO_PR_DEBUG_LOG(("setting default orientation to 'portrait'\n"));
-        aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
-      }
-      else if (orientation.LowerCaseEqualsLiteral("landscape")) {
-        DO_PR_DEBUG_LOG(("setting default orientation to 'landscape'\n"));
-        aPrintSettings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);  
-      }
-      else {
-        DO_PR_DEBUG_LOG(("Unknown default orientation '%s'\n", orientation.get()));
-      }
-    }
-
     /* PostScript module does not support changing the plex mode... */
     DO_PR_DEBUG_LOG(("setting default plex to '%s'\n", "default"));
     aPrintSettings->SetPlexName(MOZ_UTF16("default"));
@@ -561,24 +545,6 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const char16_
     DO_PR_DEBUG_LOG(("setting default colorspace to '%s'\n", "default"));
     aPrintSettings->SetColorspace(MOZ_UTF16("default"));
 
-    nsAutoCString papername;
-    if (NS_SUCCEEDED(CopyPrinterCharPref("postscript", printerName,
-                                         "paper_size", papername))) {
-      nsPaperSizePS paper;
-
-      if (paper.Find(papername.get())) {
-        DO_PR_DEBUG_LOG(("setting default paper size to '%s' (%g mm/%g mm)\n",
-              paper.Name(), paper.Width_mm(), paper.Height_mm()));
-	aPrintSettings->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeMillimeters);
-        aPrintSettings->SetPaperWidth(paper.Width_mm());
-        aPrintSettings->SetPaperHeight(paper.Height_mm());
-        aPrintSettings->SetPaperName(NS_ConvertASCIItoUTF16(paper.Name()).get());
-      }
-      else {
-        DO_PR_DEBUG_LOG(("Unknown paper size '%s' given.\n", papername.get()));
-      }
-    }
-    
     return NS_OK;    
   }
 
