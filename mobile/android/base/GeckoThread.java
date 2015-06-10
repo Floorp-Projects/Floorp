@@ -90,6 +90,8 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         final Locale locale = Locale.getDefault();
 
         final Context context = GeckoAppShell.getContext();
+        GeckoLoader.loadMozGlue(context);
+
         final Resources res = context.getResources();
         if (locale.toString().equalsIgnoreCase("zh_hk")) {
             final Locale mappedLocale = Locale.TRADITIONAL_CHINESE;
