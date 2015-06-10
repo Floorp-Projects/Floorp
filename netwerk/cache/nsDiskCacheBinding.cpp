@@ -319,36 +319,8 @@ nsDiskCacheBindery::RemoveBinding(nsDiskCacheBinding * binding)
     PR_REMOVE_AND_INIT_LINK(binding);
 }
 
-
 /**
- *  ActiveBinding : PLDHashTable enumerate function to verify active bindings
- */
-
-PLDHashOperator
-ActiveBinding(PLDHashTable *    table,
-              PLDHashEntryHdr * hdr,
-              uint32_t          number,
-              void *            arg)
-{
-    nsDiskCacheBinding * binding = ((HashTableEntry *)hdr)->mBinding;
-    NS_ASSERTION(binding, "### disk cache binding = nullptr!");
-    
-    nsDiskCacheBinding * head = binding;
-    do {   
-        if (binding->IsActive()) {
-           *((bool *)arg) = true;
-            return PL_DHASH_STOP;
-        }
-
-        binding = (nsDiskCacheBinding *)PR_NEXT_LINK(binding);
-    } while (binding != head);
-
-    return PL_DHASH_NEXT;
-}
-
-
-/**
- *  ActiveBindings : return true if any bindings have open descriptors
+ * ActiveBindings: return true if any bindings have open descriptors.
  */
 bool
 nsDiskCacheBindery::ActiveBindings()
@@ -356,10 +328,20 @@ nsDiskCacheBindery::ActiveBindings()
     NS_ASSERTION(initialized, "nsDiskCacheBindery not initialized");
     if (!initialized) return false;
 
-    bool    activeBinding = false;
-    PL_DHashTableEnumerate(&table, ActiveBinding, &activeBinding);
+    PLDHashTable::Iterator iter(&table);
+    while (iter.HasMoreEntries()) {
+        auto entry = static_cast<HashTableEntry*>(iter.NextEntry());
+        nsDiskCacheBinding* binding = entry->mBinding;
+        nsDiskCacheBinding* head = binding;
+        do {
+            if (binding->IsActive()) {
+                return true;
+            }
+            binding = (nsDiskCacheBinding *)PR_NEXT_LINK(binding);
+        } while (binding != head);
+    }
 
-    return activeBinding;
+    return false;
 }
 
 /**
