@@ -2065,7 +2065,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         MessageLoop::current()->PostTask(
             FROM_HERE,
             NewRunnableMethod(cp, &ContentParent::ShutDownProcess,
-                              CLOSE_CHANNEL));
+                              SEND_SHUTDOWN_MESSAGE));
     }
     cpm->RemoveContentProcess(this->ChildID());
 }
