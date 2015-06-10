@@ -115,3 +115,5 @@ let JsFlameGraphView = Heritage.extend(DetailsSubview, {
 
   toString: () => "[object JsFlameGraphView]"
 });
+
+EventEmitter.decorate(JsFlameGraphView);
