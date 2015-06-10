@@ -54,7 +54,8 @@ WebGL2Context::IsSampler(WebGLSampler* sampler)
     if (sampler->IsDeleted())
         return false;
 
-    return !sampler->HasEverBeenBound();
+    MakeContextCurrent();
+    return gl->fIsSampler(sampler->mGLName);
 }
 
 void

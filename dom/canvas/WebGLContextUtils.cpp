@@ -1098,15 +1098,15 @@ WebGLContext::AssertCachedBindings()
 
     // Bound object state
     if (IsWebGL2()) {
-        GLuint bound = mBoundDrawFramebuffer ? mBoundDrawFramebuffer->GLName()
+        GLuint bound = mBoundDrawFramebuffer ? mBoundDrawFramebuffer->mGLName
                                              : 0;
         AssertUintParamCorrect(gl, LOCAL_GL_DRAW_FRAMEBUFFER_BINDING, bound);
 
-        bound = mBoundReadFramebuffer ? mBoundReadFramebuffer->GLName() : 0;
+        bound = mBoundReadFramebuffer ? mBoundReadFramebuffer->mGLName : 0;
         AssertUintParamCorrect(gl, LOCAL_GL_READ_FRAMEBUFFER_BINDING, bound);
     } else {
         MOZ_ASSERT(mBoundDrawFramebuffer == mBoundReadFramebuffer);
-        GLuint bound = mBoundDrawFramebuffer ? mBoundDrawFramebuffer->GLName()
+        GLuint bound = mBoundDrawFramebuffer ? mBoundDrawFramebuffer->mGLName
                                              : 0;
         AssertUintParamCorrect(gl, LOCAL_GL_FRAMEBUFFER_BINDING, bound);
     }
@@ -1119,20 +1119,20 @@ WebGLContext::AssertCachedBindings()
     AssertUintParamCorrect(gl, LOCAL_GL_ACTIVE_TEXTURE, activeTexture);
 
     WebGLTexture* curTex = ActiveBoundTextureForTarget(LOCAL_GL_TEXTURE_2D);
-    bound = curTex ? curTex->GLName() : 0;
+    bound = curTex ? curTex->mGLName : 0;
     AssertUintParamCorrect(gl, LOCAL_GL_TEXTURE_BINDING_2D, bound);
 
     curTex = ActiveBoundTextureForTarget(LOCAL_GL_TEXTURE_CUBE_MAP);
-    bound = curTex ? curTex->GLName() : 0;
+    bound = curTex ? curTex->mGLName : 0;
     AssertUintParamCorrect(gl, LOCAL_GL_TEXTURE_BINDING_CUBE_MAP, bound);
 
     // Buffers
-    bound = mBoundArrayBuffer ? mBoundArrayBuffer->GLName() : 0;
+    bound = mBoundArrayBuffer ? mBoundArrayBuffer->mGLName : 0;
     AssertUintParamCorrect(gl, LOCAL_GL_ARRAY_BUFFER_BINDING, bound);
 
     MOZ_ASSERT(mBoundVertexArray);
     WebGLBuffer* curBuff = mBoundVertexArray->mElementArrayBuffer;
-    bound = curBuff ? curBuff->GLName() : 0;
+    bound = curBuff ? curBuff->mGLName : 0;
     AssertUintParamCorrect(gl, LOCAL_GL_ELEMENT_ARRAY_BUFFER_BINDING, bound);
 
     MOZ_ASSERT(!GetAndFlushUnderlyingGLErrors());

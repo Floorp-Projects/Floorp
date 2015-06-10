@@ -483,7 +483,7 @@ public class LocalBrowserDB implements BrowserDB {
         }
 
         final String bitmapPath = GeckoJarReader.getJarURL(context, context.getString(faviconId));
-        final InputStream iStream = GeckoJarReader.getStream(bitmapPath);
+        final InputStream iStream = GeckoJarReader.getStream(context, bitmapPath);
 
         return IOUtils.readFully(iStream, DEFAULT_FAVICON_BUFFER_SIZE);
     }

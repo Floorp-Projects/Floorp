@@ -983,9 +983,11 @@ private:
 
       // If the load principal is the system principal then the channel
       // principal must also be the system principal (we do not allow chrome
-      // code to create workers with non-chrome scripts). Otherwise this channel
-      // principal must be same origin with the load principal (we check again
-      // here in case redirects changed the location of the script).
+      // code to create workers with non-chrome scripts, and if we ever decide
+      // to change this we need to make sure we don't always set
+      // mPrincipalIsSystem to true in WorkerPrivate::GetLoadInfo()). Otherwise
+      // this channel principal must be same origin with the load principal (we
+      // check again here in case redirects changed the location of the script).
       if (nsContentUtils::IsSystemPrincipal(loadPrincipal)) {
         if (!nsContentUtils::IsSystemPrincipal(channelPrincipal)) {
           // See if this is a resource URI. Since JSMs usually come from
