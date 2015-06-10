@@ -31,9 +31,11 @@
 #include "nsExceptionHandler.h"
 #endif
 
+class nsIProfileSaveEvent;
 class nsPluginTag;
 
 namespace mozilla {
+class ProfileGatherer;
 namespace dom {
 class PCrashReporterParent;
 class CrashReporterParent;
@@ -190,6 +192,8 @@ protected:
     virtual void UpdatePluginTimeout() {}
 
     virtual bool RecvNotifyContentModuleDestroyed() override { return true; }
+
+    virtual bool RecvProfile(const nsCString& aProfile) override { return true; }
 
     void SetPluginFuncs(NPPluginFuncs* aFuncs);
 
@@ -413,6 +417,12 @@ class PluginModuleChromeParent
     void OnEnteredSyncSend() override;
     void OnExitedSyncSend() override;
 
+    void GatherAsyncProfile(mozilla::ProfileGatherer* aGatherer);
+    void GatheredAsyncProfile(nsIProfileSaveEvent* aSaveEvent);
+
+    virtual bool
+    RecvProfile(const nsCString& aProfile) override;
+
 private:
     virtual void
     EnteredCxxStack() override;
@@ -570,6 +580,8 @@ private:
     NPError             mAsyncInitError;
     dom::ContentParent* mContentParent;
     nsCOMPtr<nsIObserver> mOfflineObserver;
+    nsRefPtr<mozilla::ProfileGatherer> mGatherer;
+    nsCString mProfile;
     bool mIsBlocklisted;
     static bool sInstantiated;
 };

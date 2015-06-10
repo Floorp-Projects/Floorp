@@ -20,6 +20,9 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'PseudoStack.h',
         'shared-libraries.h',
     ]
+    EXPORTS.mozilla += [
+        'ProfileGatherer.h',
+    ]
     EXTRA_JS_MODULES += [
         'Profiler.jsm',
     ]
@@ -29,6 +32,7 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'nsProfilerStartParams.cpp',
         'platform.cpp',
         'ProfileEntry.cpp',
+        'ProfileGatherer.cpp',
         'ProfileJSONWriter.cpp',
         'ProfilerBacktrace.cpp',
         'ProfilerIOInterposeObserver.cpp',
