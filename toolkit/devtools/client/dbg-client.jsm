@@ -2416,6 +2416,21 @@ ObjectClient.prototype = {
       return aPacket;
     },
     telemetry: "SCOPE"
+  }),
+
+  /**
+   * Request the promises directly depending on the current promise.
+   */
+  getDependentPromises: DebuggerClient.requester({
+    type: "dependentPromises"
+  }, {
+    before: function(aPacket) {
+      if (this._grip.class !== "Promise") {
+        throw new Error("getDependentPromises is only valid for promise " +
+          "grips.");
+      }
+      return aPacket;
+    }
   })
 };
 
