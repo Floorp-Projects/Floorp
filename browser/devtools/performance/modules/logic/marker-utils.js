@@ -8,7 +8,7 @@
  * and parsing out the blueprint to generate correct values for markers.
  */
 
-const { Ci } = require("chrome");
+const { Cu, Ci } = require("chrome");
 
 loader.lazyRequireGetter(this, "L10N",
   "devtools/performance/global", true);
@@ -23,6 +23,18 @@ loader.lazyRequireGetter(this, "WebConsoleUtils",
 const GECKO_SYMBOL = "(Gecko)";
 
 /**
+ * Takes a marker, blueprint, and filter list and
+ * determines if this marker should be filtered or not.
+ */
+function isMarkerValid (marker, filter) {
+  let isUnknown = !(marker.name in TIMELINE_BLUEPRINT);
+  if (isUnknown) {
+    return filter.indexOf("UNKNOWN") === -1;
+  }
+  return filter.indexOf(marker.name) === -1;
+}
+
+/**
  * Returns the correct label to display for passed in marker, based
  * off of the blueprints.
  *
@@ -30,7 +42,7 @@ const GECKO_SYMBOL = "(Gecko)";
  * @return {string}
  */
 function getMarkerLabel (marker) {
-  let blueprint = TIMELINE_BLUEPRINT[marker.name];
+  let blueprint = getBlueprintFor(marker);
   // Either use the label function in the blueprint, or use it directly
   // as a string.
   return typeof blueprint.label === "function" ? blueprint.label(marker) : blueprint.label;
@@ -44,7 +56,7 @@ function getMarkerLabel (marker) {
  * @return {string}
  */
 function getMarkerClassName (type) {
-  let blueprint = TIMELINE_BLUEPRINT[type];
+  let blueprint = getBlueprintFor({ name: type });
   // Either use the label function in the blueprint, or use it directly
   // as a string.
   let className = typeof blueprint.label === "function" ? blueprint.label() : blueprint.label;
@@ -72,7 +84,7 @@ function getMarkerClassName (type) {
  * @return {Array<object>}
  */
 function getMarkerFields (marker) {
-  let blueprint = TIMELINE_BLUEPRINT[marker.name];
+  let blueprint = getBlueprintFor(marker);
 
   // If blueprint.fields is a function, use that
   if (typeof blueprint.fields === "function") {
@@ -111,7 +123,7 @@ const DOM = {
    * @return {Array<Element>}
    */
   buildFields: function (doc, marker) {
-    let blueprint = TIMELINE_BLUEPRINT[marker.name];
+    let blueprint = getBlueprintFor(marker);
     let fields = getMarkerFields(marker);
 
     return fields.map(({ label, value }) => DOM.buildNameValueLabel(doc, label, value));
@@ -125,7 +137,7 @@ const DOM = {
    * @return {Element}
    */
   buildTitle: function (doc, marker) {
-    let blueprint = TIMELINE_BLUEPRINT[marker.name];
+    let blueprint = getBlueprintFor(marker);
 
     let hbox = doc.createElement("hbox");
     hbox.setAttribute("align", "center");
@@ -377,6 +389,14 @@ const JS_MARKER_MAP = {
  * A series of formatters used by the blueprint.
  */
 const Formatters = {
+  /**
+   * Uses the marker name as the label for markers that do not have
+   * a blueprint entry. Uses "Other" in the marker filter menu.
+   */
+  UnknownLabel: function (marker={}) {
+    return marker.name || L10N.getStr("timeline.label.unknown");
+  },
+
   GCLabel: function (marker={}) {
     let label = L10N.getStr("timeline.label.garbageCollection");
     // Only if a `nonincrementalReason` exists, do we want to label
@@ -444,9 +464,22 @@ const Formatters = {
   },
 };
 
+/**
+ * Takes a marker and returns the definition for that marker type,
+ * falling back to the UNKNOWN definition if undefined.
+ *
+ * @param {Marker} marker
+ * @return {object}
+ */
+function getBlueprintFor (marker) {
+  return TIMELINE_BLUEPRINT[marker.name] || TIMELINE_BLUEPRINT.UNKNOWN;
+}
+
+exports.isMarkerValid = isMarkerValid;
 exports.getMarkerLabel = getMarkerLabel;
 exports.getMarkerClassName = getMarkerClassName;
 exports.getMarkerFields = getMarkerFields;
 exports.DOM = DOM;
 exports.CollapseFunctions = CollapseFunctions;
 exports.Formatters = Formatters;
+exports.getBlueprintFor = getBlueprintFor;

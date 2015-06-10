@@ -55,6 +55,16 @@ const { Formatters, CollapseFunctions: collapse } = require("devtools/performanc
  * updated as well.
  */
 const TIMELINE_BLUEPRINT = {
+  /* Default definition used for markers that occur but
+   * are not defined here. Should ultimately be defined, but this gives
+   * us room to work on the front end separately from the platform. */
+  "UNKNOWN": {
+    group: 2,
+    colorName: "graphs-grey",
+    collapseFunc: collapse.child,
+    label: Formatters.UnknownLabel
+  },
+
   /* Group 0 - Reflow and Rendering pipeline */
   "Styles": {
     group: 0,
@@ -131,7 +141,7 @@ const TIMELINE_BLUEPRINT = {
   /* Group 2 - User Controlled */
   "ConsoleTime": {
     group: 2,
-    colorName: "graphs-grey",
+    colorName: "graphs-blue",
     label: sublabelForProperty(L10N.getStr("timeline.label.consoleTime"), "causeName"),
     fields: [{
       property: "causeName",

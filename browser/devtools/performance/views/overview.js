@@ -42,7 +42,7 @@ let OverviewView = {
   initialize: function () {
     this.graphs = new GraphsController({
       root: $("#overview-pane"),
-      getBlueprint: () => PerformanceController.getTimelineBlueprint(),
+      getFilter: () => PerformanceController.getPref("hidden-markers"),
       getTheme: () => PerformanceController.getTheme(),
     });
 
@@ -331,8 +331,8 @@ let OverviewView = {
       case "hidden-markers": {
         let graph;
         if (graph = yield this.graphs.isAvailable("timeline")) {
-          let blueprint = PerformanceController.getTimelineBlueprint();
-          graph.setBlueprint(blueprint);
+          let filter = PerformanceController.getPref("hidden-markers");
+          graph.setFilter(filter);
           graph.refresh({ force: true });
         }
         break;
