@@ -14,6 +14,7 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         'runnable_utils_unittest',
         'simpletokenbucket_unittest',
         'sockettransportservice_unittest',
+        'test_nr_socket_unittest',
         'TestSyncRunnable',
         'transport_unittests',
         'turn_unittest',
@@ -30,6 +31,8 @@ for var in ('MOZILLA_INTERNAL_API', 'MOZILLA_XPCOMRT_API', 'MOZILLA_EXTERNAL_LIN
     DEFINES[var] = True
 
 if CONFIG['OS_TARGET'] == 'Android':
+    DEFINES['LINUX'] = True
+    DEFINES['ANDROID'] = True
     LOCAL_INCLUDES += [
         '/media/mtransport/third_party/nrappkit/src/port/android/include',
     ]
@@ -37,6 +40,8 @@ else:
     DEFINES['INET6'] = True
 
 if CONFIG['OS_TARGET'] == 'Linux':
+    DEFINES['LINUX'] = True
+    DEFINES['USE_INTERFACE_PRIORITIZER'] = True
     LOCAL_INCLUDES += [
         '/media/mtransport/third_party/nrappkit/src/port/linux/include',
     ]
@@ -53,12 +58,20 @@ if CONFIG['OS_TARGET'] == 'Darwin':
     ]
 
 if CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
+    if CONFIG['OS_TARGET'] == 'Darwin':
+        DEFINES['DARWIN'] = True
+    else:
+        DEFINES['BSD'] = True
     LOCAL_INCLUDES += [
         '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
     ]
 
 # SCTP DEFINES
 if CONFIG['OS_TARGET'] == 'WINNT':
+    DEFINES['WIN'] = True
+    # for stun.h
+    DEFINES['WIN32'] = True
+    DEFINES['NOMINMAX'] = True
     DEFINES['__Userspace_os_Windows'] = 1
 else:
     # Works for Darwin, Linux, Android. Probably doesn't work for others.

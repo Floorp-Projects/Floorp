@@ -16,6 +16,7 @@ mtransport_lcppsrcs = [
     'rlogringbuffer.cpp',
     'simpletokenbucket.cpp',
     'stun_udp_socket_filter.cpp',
+    'test_nr_socket.cpp',
     'transportflow.cpp',
     'transportlayer.cpp',
     'transportlayerdtls.cpp',

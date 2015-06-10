@@ -72,6 +72,15 @@ typedef struct nr_socket_ {
   nr_socket_vtbl *vtbl;
 } nr_socket;
 
+typedef struct nr_socket_factory_vtbl_ {
+  int (*create_socket)(void *obj, nr_transport_addr *addr, nr_socket **sockp);
+  int (*destroy)(void **obj);
+} nr_socket_factory_vtbl;
+
+typedef struct nr_socket_factory_ {
+  void *obj;
+  nr_socket_factory_vtbl *vtbl;
+} nr_socket_factory;
 
 /* To be called by constructors */
 int nr_socket_create_int(void *obj, nr_socket_vtbl *vtbl, nr_socket **sockp);
@@ -86,6 +95,10 @@ int nr_socket_close(nr_socket *sock);
 int nr_socket_connect(nr_socket *sock, nr_transport_addr *addr);
 int nr_socket_write(nr_socket *sock,const void *msg, size_t len, size_t *written, int flags);
 int nr_socket_read(nr_socket *sock, void * restrict buf, size_t maxlen, size_t *len, int flags);
+
+int nr_socket_factory_create_int(void *obj, nr_socket_factory_vtbl *vtbl, nr_socket_factory **factorypp);
+int nr_socket_factory_destroy(nr_socket_factory **factoryp);
+int nr_socket_factory_create_socket(nr_socket_factory *factory, nr_transport_addr *addr, nr_socket **sockp);
 
 #endif
 
