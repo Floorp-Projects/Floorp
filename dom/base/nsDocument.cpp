@@ -11644,6 +11644,35 @@ nsDocument::RequestFullScreen(Element* aElement,
     return;
   }
 
+  ApplyFullscreen(aElement, aOptions);
+
+#ifdef DEBUG
+  // Note assertions must run before SetWindowFullScreen() as that does
+  // synchronous event dispatch which can run script which exits full-screen!
+  NS_ASSERTION(GetFullScreenElement() == aElement,
+               "Full-screen element should be the requested element!");
+  NS_ASSERTION(IsFullScreenDoc(), "Should be full-screen doc");
+  nsCOMPtr<nsIDOMElement> fse;
+  GetMozFullScreenElement(getter_AddRefs(fse));
+  nsCOMPtr<nsIContent> c(do_QueryInterface(fse));
+  NS_ASSERTION(c->AsElement() == aElement,
+    "GetMozFullScreenElement should match GetFullScreenElement()");
+#endif
+
+  // Make the window full-screen. Note we must make the state changes above
+  // before making the window full-screen, as then the document reports as
+  // being in full-screen mode when the chrome "fullscreen" event fires,
+  // enabling chrome to distinguish between browser and dom full-screen
+  // modes. Also note that nsGlobalWindow::SetFullScreen() (which
+  // SetWindowFullScreen() calls) proxies to the root window in its hierarchy,
+  // and does not operate on the a per-nsIDOMWindow basis.
+  SetWindowFullScreen(this, true, aOptions.mVRHMDDevice);
+}
+
+void
+nsDocument::ApplyFullscreen(Element* aElement,
+                            const FullScreenOptions& aOptions)
+{
   // Stash a reference to any existing fullscreen doc, we'll use this later
   // to detect if the origin which is fullscreen has changed.
   nsCOMPtr<nsIDocument> previousFullscreenDoc = GetFullscreenLeaf(this);
@@ -11754,28 +11783,6 @@ nsDocument::RequestFullScreen(Element* aElement,
         /* Bubbles */ true, /* ChromeOnly */ true);
     asyncDispatcher->PostDOMEvent();
   }
-
-#ifdef DEBUG
-  // Note assertions must run before SetWindowFullScreen() as that does
-  // synchronous event dispatch which can run script which exits full-screen!
-  NS_ASSERTION(GetFullScreenElement() == aElement,
-               "Full-screen element should be the requested element!");
-  NS_ASSERTION(IsFullScreenDoc(), "Should be full-screen doc");
-  nsCOMPtr<nsIDOMElement> fse;
-  GetMozFullScreenElement(getter_AddRefs(fse));
-  nsCOMPtr<nsIContent> c(do_QueryInterface(fse));
-  NS_ASSERTION(c->AsElement() == aElement,
-    "GetMozFullScreenElement should match GetFullScreenElement()");
-#endif
-
-  // Make the window full-screen. Note we must make the state changes above
-  // before making the window full-screen, as then the document reports as
-  // being in full-screen mode when the chrome "fullscreen" event fires,
-  // enabling chrome to distinguish between browser and dom full-screen
-  // modes. Also note that nsGlobalWindow::SetFullScreen() (which
-  // SetWindowFullScreen() calls) proxies to the root window in its hierarchy,
-  // and does not operate on the a per-nsIDOMWindow basis.
-  SetWindowFullScreen(this, true, aOptions.mVRHMDDevice);
 }
 
 NS_IMETHODIMP
