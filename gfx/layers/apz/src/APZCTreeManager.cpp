@@ -464,21 +464,22 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
     }
 
     if (newApzc) {
-      if (apzc->HasNoParentWithSameLayersId()) {
-        // If we just created a new apzc that is the root for its layers ID, then
-        // we need to update its zoom constraints which might have arrived before this
-        // was created
+      if (apzc->IsRootContent()) {
+        // If we just created a new root-content apzc, then we need to update
+        // its zoom constraints which might have arrived before it was created.
         ZoomConstraints constraints;
         if (state->mController->GetRootZoomConstraints(&constraints)) {
           apzc->UpdateZoomConstraints(constraints);
         }
-      } else {
-        // For an apzc that is not the root for its layers ID, we give it the
-        // same zoom constraints as its parent. This ensures that if e.g.
-        // user-scalable=no was specified, none of the APZCs allow double-tap
-        // to zoom.
+      } else if (!apzc->HasNoParentWithSameLayersId()) {
+        // Otherwise, an APZC that has a parent in the same layer tree gets
+        // the same zoom constraints as its parent. This ensures that if e.g.
+        // user-scalable=no was specified on the root, none of the APZCs allow
+        // double-tap to zoom.
         apzc->UpdateZoomConstraints(apzc->GetParent()->GetZoomConstraints());
       }
+      // Otherwise, if the APZC has no parent in the same layer tree, leave
+      // it with the existing zoom constraints.
     }
 
     // Add a guid -> APZC mapping for the newly created APZC.
@@ -1033,9 +1034,9 @@ APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
   nsRefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, nullptr);
   MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
 
-  // For a given layers id, non-root APZCs inherit the zoom constraints
+  // For a given layers id, non-{root content} APZCs inherit the zoom constraints
   // of their root.
-  if (node && node->GetApzc()->HasNoParentWithSameLayersId()) {
+  if (node && node->GetApzc()->IsRootContent()) {
     UpdateZoomConstraintsRecursively(node.get(), aConstraints);
   }
 }
