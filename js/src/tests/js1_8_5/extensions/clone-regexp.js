@@ -27,7 +27,7 @@ testRegExp(RegExp.prototype);
 var re = /\bx\b/gi;
 re.expando = true;
 testRegExp(re);
-// the flag accessors are defined on RegExp.prototype, so they're
+// `source` and the flag accessors are defined on RegExp.prototype, so they're
 // not available after re.__proto__ has been changed. We solve that by passing
 // in an additional copy of the same RegExp to compare the
 // serialized-then-deserialized clone with."

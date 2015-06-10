@@ -8,6 +8,7 @@ var getters = [
   "global",
   "ignoreCase",
   "multiline",
+  "source",
   "sticky",
   //"unicode",
 ];
