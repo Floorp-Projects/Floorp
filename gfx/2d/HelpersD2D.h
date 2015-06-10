@@ -601,18 +601,22 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
     uploadRect.height = rect.height;
   }
 
-
-  int stride = aSurface->Stride();
-
   if (uploadRect.width <= aRT->GetMaximumBitmapSize() &&
       uploadRect.height <= aRT->GetMaximumBitmapSize()) {
+    {
+      // Scope to auto-Unmap() |mapping|.
+      DataSourceSurface::ScopedMap mapping(aSurface, DataSourceSurface::READ);
+      if (MOZ2D_WARN_IF(!mapping.IsMapped())) {
+        return nullptr;
+      }
 
-    // A partial upload will suffice.
-    aRT->CreateBitmap(D2D1::SizeU(uint32_t(uploadRect.width), uint32_t(uploadRect.height)),
-                      aSurface->GetData() + int(uploadRect.x) * 4 + int(uploadRect.y) * stride,
-                      stride,
-                      D2D1::BitmapProperties(D2DPixelFormat(aSurface->GetFormat())),
-                      byRef(bitmap));
+      // A partial upload will suffice.
+      aRT->CreateBitmap(D2D1::SizeU(uint32_t(uploadRect.width), uint32_t(uploadRect.height)),
+                        mapping.GetData() + int(uploadRect.x) * 4 + int(uploadRect.y) * mapping.GetStride(),
+                        mapping.GetStride(),
+                        D2D1::BitmapProperties(D2DPixelFormat(aSurface->GetFormat())),
+                        byRef(bitmap));
+    }
 
     aSourceTransform.PreTranslate(uploadRect.x, uploadRect.y);
 
@@ -626,46 +630,53 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
       return nullptr;
     }
 
-    ImageHalfScaler scaler(aSurface->GetData(), stride, size);
+    {
+      // Scope to auto-Unmap() |mapping|.
+      DataSourceSurface::ScopedMap mapping(aSurface, DataSourceSurface::READ);
+      if (MOZ2D_WARN_IF(!mapping.IsMapped())) {
+        return nullptr;
+      }
+      ImageHalfScaler scaler(mapping.GetData(), mapping.GetStride(), size);
 
-    // Calculate the maximum width/height of the image post transform.
-    Point topRight = transform * Point(Float(size.width), 0);
-    Point topLeft = transform * Point(0, 0);
-    Point bottomRight = transform * Point(Float(size.width), Float(size.height));
-    Point bottomLeft = transform * Point(0, Float(size.height));
-    
-    IntSize scaleSize;
+      // Calculate the maximum width/height of the image post transform.
+      Point topRight = transform * Point(Float(size.width), 0);
+      Point topLeft = transform * Point(0, 0);
+      Point bottomRight = transform * Point(Float(size.width), Float(size.height));
+      Point bottomLeft = transform * Point(0, Float(size.height));
 
-    scaleSize.width = int32_t(std::max(Distance(topRight, topLeft),
-                                       Distance(bottomRight, bottomLeft)));
-    scaleSize.height = int32_t(std::max(Distance(topRight, bottomRight),
-                                        Distance(topLeft, bottomLeft)));
+      IntSize scaleSize;
 
-    if (unsigned(scaleSize.width) > aRT->GetMaximumBitmapSize()) {
-      // Ok, in this case we'd really want a downscale of a part of the bitmap,
-      // perhaps we can do this later but for simplicity let's do something
-      // different here and assume it's good enough, this should be rare!
-      scaleSize.width = 4095;
+      scaleSize.width = int32_t(std::max(Distance(topRight, topLeft),
+                                         Distance(bottomRight, bottomLeft)));
+      scaleSize.height = int32_t(std::max(Distance(topRight, bottomRight),
+                                          Distance(topLeft, bottomLeft)));
+
+      if (unsigned(scaleSize.width) > aRT->GetMaximumBitmapSize()) {
+        // Ok, in this case we'd really want a downscale of a part of the bitmap,
+        // perhaps we can do this later but for simplicity let's do something
+        // different here and assume it's good enough, this should be rare!
+        scaleSize.width = 4095;
+      }
+      if (unsigned(scaleSize.height) > aRT->GetMaximumBitmapSize()) {
+        scaleSize.height = 4095;
+      }
+
+      scaler.ScaleForSize(scaleSize);
+
+      IntSize newSize = scaler.GetSize();
+
+      if (newSize.IsEmpty()) {
+        return nullptr;
+      }
+
+      aRT->CreateBitmap(D2D1::SizeU(newSize.width, newSize.height),
+                        scaler.GetScaledData(), scaler.GetStride(),
+                        D2D1::BitmapProperties(D2DPixelFormat(aSurface->GetFormat())),
+                        byRef(bitmap));
+
+      aSourceTransform.PreScale(Float(size.width) / newSize.width,
+                                Float(size.height) / newSize.height);
     }
-    if (unsigned(scaleSize.height) > aRT->GetMaximumBitmapSize()) {
-      scaleSize.height = 4095;
-    }
-
-    scaler.ScaleForSize(scaleSize);
-
-    IntSize newSize = scaler.GetSize();
-
-    if (newSize.IsEmpty()) {
-      return nullptr;
-    }
-    
-    aRT->CreateBitmap(D2D1::SizeU(newSize.width, newSize.height),
-                      scaler.GetScaledData(), scaler.GetStride(),
-                      D2D1::BitmapProperties(D2DPixelFormat(aSurface->GetFormat())),
-                      byRef(bitmap));
-
-    aSourceTransform.PreScale(Float(size.width) / newSize.width,
-                              Float(size.height) / newSize.height);
     return bitmap.forget();
   }
 }
