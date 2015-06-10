@@ -3532,8 +3532,6 @@ pref("layout.css.scroll-snap.enabled", false);
 
 /* PostScript print module prefs */
 // pref("print.postscript.enabled",      true);
-pref("print.postscript.paper_size",    "letter");
-pref("print.postscript.orientation",   "portrait");
 
 // Setting default_level_parent to true makes the default level for popup
 // windows "top" instead of "parent".  On GTK2 platform, this is implemented
@@ -3717,8 +3715,6 @@ pref("font.name.monospace.zh-TW", "monospace");
 
 /* PostScript print module prefs */
 // pref("print.postscript.enabled",      true);
-pref("print.postscript.paper_size",    "letter");
-pref("print.postscript.orientation",   "portrait");
 
 // On GTK2 platform, we should use topmost window level for the default window
 // level of <panel> element of XUL. GTK2 has only two window types. One is
