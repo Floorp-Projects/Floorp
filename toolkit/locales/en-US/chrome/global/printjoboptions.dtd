@@ -15,9 +15,6 @@
 <!ENTITY resolutionInput.label "Resolution/Quality:">
 <!ENTITY resolutionInput.accesskey "e">
 
-<!ENTITY cmdInput.label "Print Command:">
-<!ENTITY cmdInput.accesskey "o">
-
 <!ENTITY jobTitleInput.label "Job Title:">
 <!ENTITY jobTitleInput.accesskey "J">
 

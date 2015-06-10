@@ -96,7 +96,6 @@ protected:
   int32_t       mResolution;
   int32_t       mDuplex;
   bool          mDownloadFonts;
-  nsString      mPrintCommand;
   int32_t       mNumCopies;
   nsXPIDLString mPrinter;
   bool          mPrintToFile;

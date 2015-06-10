@@ -60,7 +60,6 @@ struct PrintData {
   bool printReversed;
   bool printInColor;
   int32_t orientation;
-  nsString printCommand;
   int32_t numCopies;
   nsString printerName;
   bool printToFile;
