@@ -14,8 +14,8 @@
                   android:padding="@dimen/doorhanger_padding">
 
         <ImageView android:id="@+id/larry"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
+                   android:layout_width="@dimen/doorhanger_icon_size"
+                   android:layout_height="@dimen/doorhanger_icon_size"
                    android:src="@drawable/larry"
                    android:paddingRight="@dimen/doorhanger_padding"/>
 
@@ -31,6 +31,20 @@
                           android:layout_height="wrap_content"
                           android:visibility="gone"
                           android:orientation="vertical">
+
+                <TextView android:id="@+id/site_identity_title"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:layout_marginBottom="@dimen/doorhanger_section_padding_small"
+                          android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Light"/>
+
+                <TextView android:id="@+id/site_identity_encrypted"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:layout_marginBottom="@dimen/doorhanger_section_padding_small"
+                          android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Bold"
+                          android:textColor="@color/affirmative_green"
+                          android:text="@string/identity_encrypted"/>
 
                 <TextView android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
