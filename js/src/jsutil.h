@@ -305,7 +305,7 @@ Poison(void* ptr, uint8_t value, size_t num)
         uintptr_t obj;
         memset(&obj, value, sizeof(obj));
 #if defined(JS_PUNBOX64)
-        obj >>= JSVAL_TAG_SHIFT;
+        obj = obj & ((uintptr_t(1) << JSVAL_TAG_SHIFT) - 1);
 #endif
         const jsval_layout layout = OBJECT_TO_JSVAL_IMPL((JSObject*)obj);
 
