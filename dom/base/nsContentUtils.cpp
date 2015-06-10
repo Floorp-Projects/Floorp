@@ -3985,28 +3985,21 @@ nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
   }
 }
 
-PLDHashOperator
-ListenerEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
-                   uint32_t aNumber, void* aArg)
+void
+nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments()
 {
-  EventListenerManagerMapEntry* entry =
-    static_cast<EventListenerManagerMapEntry*>(aEntry);
-  if (entry) {
+  if (!sEventListenerManagersHash) {
+    return;
+  }
+
+  PLDHashTable::Iterator iter(sEventListenerManagersHash);
+  while (iter.HasMoreEntries()) {
+    auto entry = static_cast<EventListenerManagerMapEntry*>(iter.NextEntry());
     nsINode* n = static_cast<nsINode*>(entry->mListenerManager->GetTarget());
     if (n && n->IsInDoc() &&
         nsCCUncollectableMarker::InGeneration(n->OwnerDoc()->GetMarkedCCGeneration())) {
       entry->mListenerManager->MarkForCC();
     }
-  }
-  return PL_DHASH_NEXT;
-}
-
-void
-nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments()
-{
-  if (sEventListenerManagersHash) {
-    PL_DHashTableEnumerate(sEventListenerManagersHash, ListenerEnumerator,
-                           nullptr);
   }
 }
 
