@@ -253,15 +253,15 @@ void nsCocoaUtils::HideOSChromeOnScreen(bool aShouldHide, NSScreen* aScreen)
     NS_ASSERTION(sDockHiddenCount >= 0, "Unbalanced HideMenuAndDockForWindow calls");
   }
 
-  // TODO This should be upgraded to use [NSApplication setPresentationOptions:]
-  // when support for 10.5 is dropped.
+  NSApplicationPresentationOptions options;
   if (sMenuBarHiddenCount > 0) {
-    ::SetSystemUIMode(kUIModeAllHidden, 0);
+    options = NSApplicationPresentationHideDock | NSApplicationPresentationHideMenuBar;
   } else if (sDockHiddenCount > 0) {
-    ::SetSystemUIMode(kUIModeContentHidden, 0);
+    options = NSApplicationPresentationHideDock;
   } else {
-    ::SetSystemUIMode(kUIModeNormal, 0);
+    options = NSApplicationPresentationDefault;
   }
+  [NSApp setPresentationOptions:options];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
