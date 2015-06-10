@@ -338,6 +338,13 @@ loop.roomViews = (function(mozL10n) {
         }
       }
 
+      // Make sure we do not show the edit-mode when we just successfully saved
+      // context.
+      if (this.props.savingContext && nextProps.savingContext !== this.props.savingContext &&
+        !nextProps.error && this.state.editMode) {
+        newState.editMode = false;
+      }
+
       if (Object.getOwnPropertyNames(newState).length) {
         this.setState(newState);
       }
@@ -345,7 +352,7 @@ loop.roomViews = (function(mozL10n) {
 
     getDefaultProps: function() {
       return { editMode: false };
-     },
+    },
 
     getInitialState: function() {
       var url = this._getURL();
@@ -528,7 +535,7 @@ loop.roomViews = (function(mozL10n) {
             React.createElement("button", {className: "btn btn-info", 
                     disabled: this.props.savingContext, 
                     onClick: this.handleFormSubmit}, 
-              mozL10n.get("context_save_label")
+              mozL10n.get("context_save_label2")
             ), 
             React.createElement("button", {className: "room-context-btn-close", 
                     onClick: this.handleCloseClick, 
