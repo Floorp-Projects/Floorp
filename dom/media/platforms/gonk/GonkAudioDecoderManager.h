@@ -45,8 +45,8 @@ private:
 
   void ReleaseAudioBuffer();
 
-  const uint32_t mAudioChannels;
-  const uint32_t mAudioRate;
+  uint32_t mAudioChannels;
+  uint32_t mAudioRate;
   const uint32_t mAudioProfile;
   bool mUseAdts;
 
