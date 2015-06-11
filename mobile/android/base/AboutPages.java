@@ -19,7 +19,7 @@ public class AboutPages {
     public static final String FIREFOX         = "about:firefox";
     public static final String HEALTHREPORT    = "about:healthreport";
     public static final String HOME            = "about:home";
-    public static final String PASSWORDS       = "about:passwords";
+    public static final String LOGINS          = "about:logins";
     public static final String PRIVATEBROWSING = "about:privatebrowsing";
     public static final String READER          = "about:reader";
     public static final String UPDATER         = "about:";

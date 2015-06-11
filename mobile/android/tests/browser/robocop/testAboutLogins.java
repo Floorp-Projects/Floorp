@@ -6,11 +6,11 @@ package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.AppConstants;
 
-public class testAboutPasswords extends JavascriptTest {
-    private static final String LOGTAG = testAboutPasswords.class.getSimpleName();
+public class testAboutLogins extends JavascriptTest {
+    private static final String LOGTAG = testAboutLogins.class.getSimpleName();
 
-    public testAboutPasswords() {
-        super("testAboutPasswords.js");
+    public testAboutLogins() {
+        super("testAboutLogins.js");
     }
 
     @Override
