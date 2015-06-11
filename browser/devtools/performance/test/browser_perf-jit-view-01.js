@@ -31,12 +31,14 @@ function* spawnTest() {
 
   yield injectAndRenderProfilerData();
 
-  // gRawSite1 and gRawSite2 are both optimizations on A, so they'll have
-  // indices in descending order of # of samples.
-  yield checkFrame(1, [{ i: 0, opt: gRawSite1 }, { i: 1, opt: gRawSite2 }]);
+  // A is never a leaf, so it's optimizations should not be shown.
+  yield checkFrame(1);
 
-  // gRawSite3 is the only optimization on B, so it'll have index 0.
-  yield checkFrame(2, [{ i: 0, opt: gRawSite3 }]);
+  // gRawSite2 and gRawSite3 are both optimizations on B, so they'll have
+  // indices in descending order of # of samples.
+  yield checkFrame(2, [{ i: 0, opt: gRawSite2 }, { i: 1, opt: gRawSite3 }]);
+
+  // Leaf node (C) with no optimizations should not display any opts.
   yield checkFrame(3);
 
   let select = once(PerformanceController, EVENTS.RECORDING_SELECTED);
@@ -114,7 +116,7 @@ function* spawnTest() {
 
       // The second and third optimization should display optimization failures.
       let warningIcon = $(`.tree-widget-container li[data-id='["${i}"]'] .opt-icon[severity=warning]`);
-      if (opt === gRawSite2 || opt === gRawSite3) {
+      if (opt === gRawSite3 || opt === gRawSite1) {
         ok(warningIcon, "did find a warning icon for all strategies failing.");
       } else {
         ok(!warningIcon, "did not find a warning icon for no successful strategies");
@@ -130,7 +132,7 @@ function uniqStr(s) {
 }
 
 // Since deflateThread doesn't handle deflating optimization info, use
-// placeholder names A_O1, B_O3, and A_O2, which will be used to manually
+// placeholder names A_O1, B_O2, and B_O3, which will be used to manually
 // splice deduped opts into the profile.
 let gThread = RecordingUtils.deflateThread({
   samples: [{
@@ -143,7 +145,7 @@ let gThread = RecordingUtils.deflateThread({
     frames: [
       { location: "(root)" },
       { location: "A_O1" },
-      { location: "B_O3" },
+      { location: "B_O2" },
       { location: "C (http://foo/bar/baz:56)" }
     ]
   }, {
@@ -151,14 +153,14 @@ let gThread = RecordingUtils.deflateThread({
     frames: [
       { location: "(root)" },
       { location: "A (http://foo/bar/baz:12)" },
-      { location: "B (http://foo/bar/boo:34)" },
+      { location: "B_O2" },
     ]
   }, {
     time: 5 + 1 + 2,
     frames: [
       { location: "(root)" },
-      { location: "A_O2" },
-      { location: "B (http://foo/bar/boo:34)" },
+      { location: "A_O1" },
+      { location: "B_O3" },
     ]
   }, {
     time: 5 + 1 + 2 + 7,
@@ -197,14 +199,14 @@ let gRawSite1 = {
     data: [
       [uniqStr("Failure1"), uniqStr("SomeGetter1")],
       [uniqStr("Failure2"), uniqStr("SomeGetter2")],
-      [uniqStr("Inlined"), uniqStr("SomeGetter3")]
+      [uniqStr("Failure3"), uniqStr("SomeGetter3")]
     ]
   }
 };
 
 let gRawSite2 = {
-  _testFrameInfo: { name: "A", line: "12", file: "@baz" },
-  line: 12,
+  _testFrameInfo: { name: "B", line: "10", file: "@boo" },
+  line: 40,
   types: [{
     mirType: uniqStr("Int32"),
     site: uniqStr("Receiver")
@@ -217,13 +219,13 @@ let gRawSite2 = {
     data: [
       [uniqStr("Failure1"), uniqStr("SomeGetter1")],
       [uniqStr("Failure2"), uniqStr("SomeGetter2")],
-      [uniqStr("Failure3"), uniqStr("SomeGetter3")]
+      [uniqStr("Inlined"), uniqStr("SomeGetter3")]
     ]
   }
 };
 
 let gRawSite3 = {
-  _testFrameInfo: { name: "B", line: "34", file: "@boo" },
+  _testFrameInfo: { name: "B", line: "10", file: "@boo" },
   line: 34,
   types: [{
     mirType: uniqStr("Int32"),
@@ -252,12 +254,12 @@ gThread.frameTable.data.forEach((frame) => {
     frame[LOCATION_SLOT] = uniqStr("A (http://foo/bar/baz:12)");
     frame[OPTIMIZATIONS_SLOT] = gRawSite1;
     break;
-  case "A_O2":
-    frame[LOCATION_SLOT] = uniqStr("A (http://foo/bar/baz:12)");
+  case "B_O2":
+    frame[LOCATION_SLOT] = uniqStr("B (http://foo/bar/boo:10)");
     frame[OPTIMIZATIONS_SLOT] = gRawSite2;
     break;
   case "B_O3":
-    frame[LOCATION_SLOT] = uniqStr("B (http://foo/bar/boo:34)");
+    frame[LOCATION_SLOT] = uniqStr("B (http://foo/bar/boo:10)");
     frame[OPTIMIZATIONS_SLOT] = gRawSite3;
     break;
   }

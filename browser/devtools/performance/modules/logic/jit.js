@@ -211,6 +211,19 @@ const JITOptimizations = function (rawSites, stringTable) {
 };
 
 /**
+ * Make JITOptimizations iterable.
+ */
+JITOptimizations.prototype = {
+  [Symbol.iterator]: function *() {
+    yield* this.optimizationSites;
+  },
+
+  get length() {
+    return this.optimizationSites.length;
+  }
+};
+
+/**
  * Takes an "outcome" string from an OptimizationAttempt and returns
  * a boolean indicating whether or not its a successful outcome.
  *
