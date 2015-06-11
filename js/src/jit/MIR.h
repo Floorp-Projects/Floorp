@@ -2915,8 +2915,6 @@ class MNewArray
 
     // Heap where the array should be allocated.
     gc::InitialHeap initialHeap_;
-    // Allocate space at initialization or not
-    AllocatingBehaviour allocating_;
 
     // Whether values written to this array should be converted to double first.
     bool convertDoubleElements_;
@@ -2924,18 +2922,16 @@ class MNewArray
     jsbytecode* pc_;
 
     MNewArray(CompilerConstraintList* constraints, uint32_t count, MConstant* templateConst,
-              gc::InitialHeap initialHeap, AllocatingBehaviour allocating, jsbytecode* pc);
+              gc::InitialHeap initialHeap, jsbytecode* pc);
 
   public:
     INSTRUCTION_HEADER(NewArray)
 
     static MNewArray* New(TempAllocator& alloc, CompilerConstraintList* constraints,
                           uint32_t count, MConstant* templateConst,
-                          gc::InitialHeap initialHeap, AllocatingBehaviour allocating,
-                          jsbytecode* pc)
+                          gc::InitialHeap initialHeap, jsbytecode* pc)
     {
-        return new(alloc) MNewArray(constraints, count, templateConst,
-                                    initialHeap, allocating, pc);
+        return new(alloc) MNewArray(constraints, count, templateConst, initialHeap, pc);
     }
 
     uint32_t count() const {
@@ -2948,10 +2944,6 @@ class MNewArray
 
     gc::InitialHeap initialHeap() const {
         return initialHeap_;
-    }
-
-    AllocatingBehaviour allocatingBehaviour() const {
-        return allocating_;
     }
 
     jsbytecode* pc() const {
@@ -3027,10 +3019,10 @@ class MNewArrayDynamicLength
   : public MUnaryInstruction,
     public IntPolicy<0>::Data
 {
-    AlwaysTenured<ArrayObject*> templateObject_;
+    AlwaysTenuredObject templateObject_;
     gc::InitialHeap initialHeap_;
 
-    MNewArrayDynamicLength(CompilerConstraintList* constraints, ArrayObject* templateObject,
+    MNewArrayDynamicLength(CompilerConstraintList* constraints, JSObject* templateObject,
                            gc::InitialHeap initialHeap, MDefinition* length)
       : MUnaryInstruction(length),
         templateObject_(templateObject),
@@ -3046,7 +3038,7 @@ class MNewArrayDynamicLength
     INSTRUCTION_HEADER(NewArrayDynamicLength)
 
     static MNewArrayDynamicLength* New(TempAllocator& alloc, CompilerConstraintList* constraints,
-                                       ArrayObject* templateObject, gc::InitialHeap initialHeap,
+                                       JSObject* templateObject, gc::InitialHeap initialHeap,
                                        MDefinition* length)
     {
         return new(alloc) MNewArrayDynamicLength(constraints, templateObject, initialHeap, length);
@@ -3055,7 +3047,7 @@ class MNewArrayDynamicLength
     MDefinition* length() const {
         return getOperand(0);
     }
-    ArrayObject* templateObject() const {
+    JSObject* templateObject() const {
         return templateObject_;
     }
     gc::InitialHeap initialHeap() const {
@@ -7995,6 +7987,36 @@ class MIncrementUnboxedArrayInitializedLength
     ALLOW_CLONE(MIncrementUnboxedArrayInitializedLength)
 };
 
+// Set the initialized length of an unboxed array object.
+class MSetUnboxedArrayInitializedLength
+  : public MBinaryInstruction,
+    public SingleObjectPolicy::Data
+{
+    explicit MSetUnboxedArrayInitializedLength(MDefinition* obj, MDefinition* length)
+      : MBinaryInstruction(obj, length)
+    {}
+
+  public:
+    INSTRUCTION_HEADER(SetUnboxedArrayInitializedLength)
+
+    static MSetUnboxedArrayInitializedLength* New(TempAllocator& alloc, MDefinition* obj,
+                                                  MDefinition* length) {
+        return new(alloc) MSetUnboxedArrayInitializedLength(obj, length);
+    }
+
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* length() const {
+        return getOperand(1);
+    }
+    AliasSet getAliasSet() const override {
+        return AliasSet::Store(AliasSet::ObjectFields);
+    }
+
+    ALLOW_CLONE(MSetUnboxedArrayInitializedLength)
+};
+
 // Load the array length from an elements header.
 class MArrayLength
   : public MUnaryInstruction,
@@ -11891,13 +11913,15 @@ class MInArray
 {
     bool needsHoleCheck_;
     bool needsNegativeIntCheck_;
+    JSValueType unboxedType_;
 
     MInArray(MDefinition* elements, MDefinition* index,
              MDefinition* initLength, MDefinition* object,
-             bool needsHoleCheck)
+             bool needsHoleCheck, JSValueType unboxedType)
       : MQuaternaryInstruction(elements, index, initLength, object),
         needsHoleCheck_(needsHoleCheck),
-        needsNegativeIntCheck_(true)
+        needsNegativeIntCheck_(true),
+        unboxedType_(unboxedType)
     {
         setResultType(MIRType_Boolean);
         setMovable();
@@ -11911,9 +11935,10 @@ class MInArray
 
     static MInArray* New(TempAllocator& alloc, MDefinition* elements, MDefinition* index,
                          MDefinition* initLength, MDefinition* object,
-                         bool needsHoleCheck)
+                         bool needsHoleCheck, JSValueType unboxedType)
     {
-        return new(alloc) MInArray(elements, index, initLength, object, needsHoleCheck);
+        return new(alloc) MInArray(elements, index, initLength, object, needsHoleCheck,
+                                   unboxedType);
     }
 
     MDefinition* elements() const {
@@ -11934,6 +11959,9 @@ class MInArray
     bool needsNegativeIntCheck() const {
         return needsNegativeIntCheck_;
     }
+    JSValueType unboxedType() const {
+        return unboxedType_;
+    }
     void collectRangeInfoPreTrunc() override;
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::Element);
@@ -11945,6 +11973,8 @@ class MInArray
         if (needsHoleCheck() != other->needsHoleCheck())
             return false;
         if (needsNegativeIntCheck() != other->needsNegativeIntCheck())
+            return false;
+        if (unboxedType() != other->unboxedType())
             return false;
         return congruentIfOperandsEqual(other);
     }
