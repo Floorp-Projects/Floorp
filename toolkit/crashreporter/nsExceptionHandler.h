@@ -143,7 +143,7 @@ typedef int ThreadId;
 // hoops for us.
 ThreadId CurrentThreadId();
 
-// Create a hang report with two minidumps that are snapshots of the state
+// Create a crash report with two minidumps that are snapshots of the state
 // of this parent process and |childPid|. The "main" minidump will be the
 // child process, and this parent process will have the -browser extension.
 //
