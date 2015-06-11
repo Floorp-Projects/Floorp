@@ -3,16 +3,56 @@
 
 /**
  * Tests that when constructing FrameNodes, if optimization data is available,
- * the FrameNodes have the correct optimization data after iterating over samples.
+ * the FrameNodes have the correct optimization data after iterating over samples,
+ * and only youngest frames capture optimization data.
  */
+
+function run_test() {
+  run_next_test();
+}
+
+add_task(function test() {
+  let { ThreadNode } = devtools.require("devtools/performance/tree-model");
+  let root = getFrameNodePath(new ThreadNode(gThread, { startTime: 0, endTime: 30 }), "(root)");
+
+  let A = getFrameNodePath(root, "A");
+  let B = getFrameNodePath(A, "B");
+  let C = getFrameNodePath(B, "C");
+  let Aopts = A.getOptimizations();
+  let Bopts = B.getOptimizations();
+  let Copts = C.getOptimizations();
+
+  ok(!Aopts, "A() was never youngest frame, so should not have optimization data");
+
+  equal(Bopts.length, 2, "B() only has optimization data when it was a youngest frame");
+
+  // Check a few properties on the OptimizationSites.
+  let optSitesObserved = new Set();
+  for (let opt of Bopts) {
+    if (opt.data.line === 12) {
+      equal(opt.samples, 2, "Correct amount of samples for B()'s first opt site");
+      equal(opt.data.attempts.length, 3, "First opt site has 3 attempts");
+      equal(opt.data.attempts[0].strategy, "SomeGetter1", "inflated strategy name");
+      equal(opt.data.attempts[0].outcome, "Failure1", "inflated outcome name");
+      equal(opt.data.types[0].typeset[0].keyedBy, "constructor", "inflates type info");
+      optSitesObserved.add("first");
+    } else {
+      equal(opt.samples, 1, "Correct amount of samples for B()'s second opt site");
+      optSitesObserved.add("second");
+    }
+  }
+
+  ok(optSitesObserved.has("first"), "first opt site for B() was checked");
+  ok(optSitesObserved.has("second"), "second opt site for B() was checked");
+
+  equal(Copts.length, 1, "C() always youngest frame, so has optimization data");
+});
 
 let gUniqueStacks = new RecordingUtils.UniqueStacks();
 
 function uniqStr(s) {
   return gUniqueStacks.getOrAddStringIndex(s);
 }
-
-let time = 1;
 
 let gThread = RecordingUtils.deflateThread({
   samples: [{
@@ -21,52 +61,48 @@ let gThread = RecordingUtils.deflateThread({
       { location: "(root)" }
     ]
   }, {
-    time: time++,
-    frames: [
-      { location: "(root)" },
-      { location: "A_O1" },
-      { location: "B" },
-      { location: "C" }
-    ]
-  }, {
-    time: time++,
-    frames: [
-      { location: "(root)" },
-      { location: "A_O1" },
-      { location: "D" },
-      { location: "C" }
-    ]
-  }, {
-    time: time++,
-    frames: [
-      { location: "(root)" },
-      { location: "A_O2" },
-      { location: "E_O3" },
-      { location: "C" }
-    ],
-  }, {
-    time: time++,
+    time: 10,
     frames: [
       { location: "(root)" },
       { location: "A" },
-      { location: "B" },
-      { location: "F" }
+      { location: "B_LEAF_1" }
+    ]
+  }, {
+    time: 15,
+    frames: [
+      { location: "(root)" },
+      { location: "A" },
+      { location: "B_NOTLEAF" },
+      { location: "C" },
+    ]
+  }, {
+    time: 20,
+    frames: [
+      { location: "(root)" },
+      { location: "A" },
+      { location: "B_LEAF_2" }
+    ]
+  }, {
+    time: 25,
+    frames: [
+      { location: "(root)" },
+      { location: "A" },
+      { location: "B_LEAF_2" }
     ]
   }],
   markers: []
 }, gUniqueStacks);
 
-// 3 OptimizationSites
 let gRawSite1 = {
   line: 12,
   column: 2,
   types: [{
     mirType: uniqStr("Object"),
-    site: uniqStr("A (http://foo/bar/bar:12)"),
+    site: uniqStr("B (http://foo/bar:10)"),
     typeset: [{
         keyedBy: uniqStr("constructor"),
         name: uniqStr("Foo"),
-        location: uniqStr("A (http://foo/bar/baz:12)")
+        location: uniqStr("B (http://foo/bar:10)")
     }, {
         keyedBy: uniqStr("primitive"),
         location: uniqStr("self-hosted")
@@ -86,7 +122,7 @@ let gRawSite1 = {
 };
 
 let gRawSite2 = {
-  line: 34,
+  line: 22,
   types: [{
     mirType: uniqStr("Int32"),
     site: uniqStr("Receiver")
@@ -104,32 +140,9 @@ let gRawSite2 = {
   }
 };
 
-let gRawSite3 = {
-  line: 78,
-  types: [{
-    mirType: uniqStr("Object"),
-    site: uniqStr("A (http://foo/bar/bar:12)"),
-    typeset: [{
-      keyedBy: uniqStr("constructor"),
-      name: uniqStr("Foo"),
-      location: uniqStr("A (http://foo/bar/baz:12)")
-    }, {
-      keyedBy: uniqStr("primitive"),
-      location: uniqStr("self-hosted")
-    }]
-  }],
-  attempts: {
-    schema: {
-      outcome: 0,
-      strategy: 1
-    },
-    data: [
-      [uniqStr("Failure1"), uniqStr("SomeGetter1")],
-      [uniqStr("Failure2"), uniqStr("SomeGetter2")],
-      [uniqStr("GenericSuccess"), uniqStr("SomeGetter3")]
-    ]
-  }
-};
+function serialize (x) {
+  return JSON.parse(JSON.stringify(x));
+}
 
 gThread.frameTable.data.forEach((frame) => {
   const LOCATION_SLOT = gThread.frameTable.schema.location;
@@ -137,45 +150,25 @@ gThread.frameTable.data.forEach((frame) => {
 
   let l = gThread.stringTable[frame[LOCATION_SLOT]];
   switch (l) {
-  case "A_O1":
-    frame[LOCATION_SLOT] = uniqStr("A");
-    frame[OPTIMIZATIONS_SLOT] = gRawSite1;
+  case "A":
+    frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
     break;
-  case "A_O2":
-    frame[LOCATION_SLOT] = uniqStr("A");
-    frame[OPTIMIZATIONS_SLOT] = gRawSite2;
+  // Rename some of the location sites so we can register different
+  // frames with different opt sites
+  case "B_LEAF_1":
+    frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite2);
+    frame[LOCATION_SLOT] = uniqStr("B");
     break;
-  case "E_O3":
-    frame[LOCATION_SLOT] = uniqStr("E");
-    frame[OPTIMIZATIONS_SLOT] = gRawSite3;
+  case "B_LEAF_2":
+    frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
+    frame[LOCATION_SLOT] = uniqStr("B");
+    break;
+  case "B_NOTLEAF":
+    frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
+    frame[LOCATION_SLOT] = uniqStr("B");
+    break;
+  case "C":
+    frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
     break;
   }
-});
-
-function run_test() {
-  run_next_test();
-}
-
-add_task(function test() {
-  let { ThreadNode } = devtools.require("devtools/performance/tree-model");
-
-  let root = new ThreadNode(gThread, { startTime: 0, endTime: 4 });
-
-  let A = getFrameNodePath(root, "(root) > A");
-
-  let opts = A.getOptimizations();
-  let sites = opts.optimizationSites;
-  equal(sites.length, 2, "Frame A has two optimization sites.");
-  equal(sites[0].samples, 2, "first opt site has 2 samples.");
-  equal(sites[1].samples, 1, "second opt site has 1 sample.");
-
-  let E = getFrameNodePath(A, "E");
-  opts = E.getOptimizations();
-  sites = opts.optimizationSites;
-  equal(sites.length, 1, "Frame E has one optimization site.");
-  equal(sites[0].samples, 1, "first opt site has 1 samples.");
-
-  let D = getFrameNodePath(A, "D");
-  ok(!D.getOptimizations(),
-    "frames that do not have any opts data do not have JITOptimizations instances.");
 });
