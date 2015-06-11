@@ -60,6 +60,14 @@ public:
              TextEventDispatcherListener* aListener);
 
   /**
+   * EndInputTransaction() should be called when the listener stops using
+   * the TextEventDispatcher.
+   *
+   * @param aListener       The listener using the TextEventDispatcher instance.
+   */
+  void EndInputTransaction(TextEventDispatcherListener* aListener);
+
+  /**
    * OnDestroyWidget() is called when mWidget is being destroyed.
    */
   void OnDestroyWidget();
