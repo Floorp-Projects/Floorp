@@ -1773,7 +1773,7 @@ public class GeckoAppShell
                 String[] split = output.split("\\s+");
                 if (split.length <= pidColumn || split.length <= nameColumn)
                     continue;
-                Integer pid = new Integer(split[pidColumn]);
+                final Integer pid = Integer.valueOf(split[pidColumn]);
                 String name = pidNameMap.get(pid);
                 if (name == null) {
                     name = getAppNameByPID(pid.intValue());
