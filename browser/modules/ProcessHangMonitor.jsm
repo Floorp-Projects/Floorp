@@ -313,6 +313,7 @@ let ProcessHangMonitor = {
     for (let [otherReport, otherTimer] of this._activeReports) {
       if (otherTimer === timer) {
         this.removeReport(otherReport);
+        otherReport.userCanceled();
         break;
       }
     }
