@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ProfileUnlockerWin_h
-#define mozilla_ProfileUnlockerWin_h
+#ifndef ProfileUnlockerWin_h
+#define ProfileUnlockerWin_h
 
 #include <windows.h>
 #include <restartmanager.h>
@@ -56,5 +56,5 @@ private:
 
 } // namespace mozilla
 
-#endif // mozilla_ProfileUnlockerWin_h
+#endif // ProfileUnlockerWin_h
 
