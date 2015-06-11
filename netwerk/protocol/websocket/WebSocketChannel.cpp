@@ -1185,33 +1185,13 @@ WebSocketChannel::~WebSocketChannel()
   while ((mCurrentOut = (OutboundMessage *) mOutgoingMessages.PopFront()))
     delete mCurrentOut;
 
-  nsCOMPtr<nsIThread> mainThread;
-  nsIURI *forgettable;
-  NS_GetMainThread(getter_AddRefs(mainThread));
-
-  if (mURI) {
-    mURI.forget(&forgettable);
-    NS_ProxyRelease(mainThread, forgettable, false);
-  }
-
-  if (mOriginalURI) {
-    mOriginalURI.forget(&forgettable);
-    NS_ProxyRelease(mainThread, forgettable, false);
-  }
+  NS_ReleaseOnMainThread(mURI);
+  NS_ReleaseOnMainThread(mOriginalURI);
 
   mListenerMT = nullptr;
 
-  if (mLoadGroup) {
-    nsILoadGroup *forgettableGroup;
-    mLoadGroup.forget(&forgettableGroup);
-    NS_ProxyRelease(mainThread, forgettableGroup, false);
-  }
-
-  if (mLoadInfo) {
-    nsILoadInfo *forgetableLoadInfo;
-    mLoadInfo.forget(&forgetableLoadInfo);
-    NS_ProxyRelease(mainThread, forgetableLoadInfo, false);
-  }
+  NS_ReleaseOnMainThread(mLoadGroup);
+  NS_ReleaseOnMainThread(mLoadInfo);
 }
 
 NS_IMETHODIMP

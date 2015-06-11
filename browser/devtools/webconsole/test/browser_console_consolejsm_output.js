@@ -7,6 +7,15 @@
 
 "use strict";
 
+function onNewMessage(aEvent, aNewMessages) {
+  for (let msg of aNewMessages) {
+    // Messages that shouldn't be output contain the substring FAIL_TEST
+    if (msg.node.textContent.includes("FAIL_TEST")) {
+      ok(false, "Message shouldn't have been output: " + msg.node.textContent);
+    }
+  }
+};
+
 add_task(function*() {
   let storage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(Ci.nsIConsoleAPIStorage);
   storage.clearEvents();
@@ -149,10 +158,10 @@ add_task(function* test_prefix() {
   };
   let console2 = new ConsoleAPI(consoleOptions);
   console2.error("Testing a prefix");
-  console2.log("Below the maxLogLevel");
+  console2.log("FAIL_TEST: Below the maxLogLevel");
 
   let hud = yield HUDService.toggleBrowserConsole();
-
+  hud.ui.on("new-messages", onNewMessage);
   yield waitForMessages({
     webconsole: hud,
     messages: [{
@@ -164,5 +173,109 @@ add_task(function* test_prefix() {
   });
 
   hud.jsterm.clearOutput(true);
+  hud.ui.off("new-messages", onNewMessage);
+  yield HUDService.toggleBrowserConsole();
+});
+
+add_task(function* test_maxLogLevelPref_missing() {
+  let storage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(Ci.nsIConsoleAPIStorage);
+  storage.clearEvents();
+
+  let {ConsoleAPI} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+  let consoleOptions = {
+    maxLogLevel: "error",
+    maxLogLevelPref: "testing.maxLogLevel",
+  };
+  let console = new ConsoleAPI(consoleOptions);
+
+  is(Services.prefs.getPrefType(consoleOptions.maxLogLevelPref),
+     Services.prefs.PREF_INVALID,
+     "Check log level pref is missing");
+
+  // Since the maxLogLevelPref doesn't exist, we should fallback to the passed
+  // maxLogLevel of "error".
+  console.warn("FAIL_TEST: Below the maxLogLevel");
+  console.error("Error should be shown");
+
+  let hud = yield HUDService.toggleBrowserConsole();
+
+  hud.ui.on("new-messages", onNewMessage);
+
+  yield waitForMessages({
+    webconsole: hud,
+    messages: [{
+      name: "defaulting to error level",
+      severity: SEVERITY_ERROR,
+      text: "Error should be shown",
+    }],
+  });
+
+  hud.jsterm.clearOutput(true);
+  hud.ui.off("new-messages", onNewMessage);
+  yield HUDService.toggleBrowserConsole();
+});
+
+add_task(function* test_maxLogLevelPref() {
+  let storage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(Ci.nsIConsoleAPIStorage);
+  storage.clearEvents();
+
+  let {ConsoleAPI} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+  let consoleOptions = {
+    maxLogLevel: "error",
+    maxLogLevelPref: "testing.maxLogLevel",
+  };
+
+  info("Setting the pref to warn");
+  Services.prefs.setCharPref(consoleOptions.maxLogLevelPref, "Warn");
+
+  let console = new ConsoleAPI(consoleOptions);
+
+  is(console.maxLogLevel, "warn", "Check pref was read at initialization");
+
+  console.info("FAIL_TEST: info is below the maxLogLevel");
+  console.error("Error should be shown");
+  console.warn("Warn should be shown due to the initial pref value");
+
+  info("Setting the pref to info");
+  Services.prefs.setCharPref(consoleOptions.maxLogLevelPref, "INFO");
+  is(console.maxLogLevel, "info", "Check pref was lowercased");
+
+  console.info("info should be shown due to the pref change being observed");
+
+  info("Clearing the pref");
+  Services.prefs.clearUserPref(consoleOptions.maxLogLevelPref);
+
+  console.warn("FAIL_TEST: Shouldn't be shown due to defaulting to error");
+  console.error("Should be shown due to defaulting to error");
+
+  let hud = yield HUDService.toggleBrowserConsole();
+  hud.ui.on("new-messages", onNewMessage);
+
+  yield waitForMessages({
+    webconsole: hud,
+    messages: [{
+      name: "error > warn",
+      severity: SEVERITY_ERROR,
+      text: "Error should be shown",
+    },
+    {
+      name: "warn is the inital pref value",
+      severity: SEVERITY_WARNING,
+      text: "Warn should be shown due to the initial pref value",
+    },
+    {
+      name: "pref changed to info",
+      severity: SEVERITY_INFO,
+      text: "info should be shown due to the pref change being observed",
+    },
+    {
+      name: "default to intial maxLogLevel if pref is removed",
+      severity: SEVERITY_ERROR,
+      text: "Should be shown due to defaulting to error",
+    }],
+  });
+
+  hud.jsterm.clearOutput(true);
+  hud.ui.off("new-messages", onNewMessage);
   yield HUDService.toggleBrowserConsole();
 });

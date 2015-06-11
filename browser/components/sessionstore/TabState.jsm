@@ -35,10 +35,6 @@ this.TabState = Object.freeze({
     TabStateInternal.update(browser, data);
   },
 
-  flush: function (browser) {
-    TabStateInternal.flush(browser);
-  },
-
   flushAsync: function (browser) {
     TabStateInternal.flushAsync(browser);
   },
@@ -92,16 +88,6 @@ let TabStateInternal = {
   },
 
   /**
-   * Flushes all data currently queued in the given browser's content script.
-   */
-  flush: function (browser) {
-    if (this._syncHandlers.has(browser.permanentKey)) {
-      let lastID = this._latestMessageID.get(browser.permanentKey);
-      this._syncHandlers.get(browser.permanentKey).flush(lastID);
-    }
-  },
-
-  /**
    * DO NOT USE - DEBUGGING / TESTING ONLY
    *
    * This function is used to simulate certain situations where race conditions
@@ -118,7 +104,10 @@ let TabStateInternal = {
    */
   flushWindow: function (window) {
     for (let browser of window.gBrowser.browsers) {
-      this.flush(browser);
+      if (this._syncHandlers.has(browser.permanentKey)) {
+        let lastID = this._latestMessageID.get(browser.permanentKey);
+        this._syncHandlers.get(browser.permanentKey).flush(lastID);
+      }
     }
   },
 

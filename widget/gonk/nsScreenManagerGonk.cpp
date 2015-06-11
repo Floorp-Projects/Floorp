@@ -18,6 +18,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Hal.h"
+#include "libdisplay/BootAnimation.h"
 #include "libdisplay/GonkDisplay.h"
 #include "nsScreenManagerGonk.h"
 #include "nsThreadUtils.h"
@@ -226,6 +227,9 @@ nsScreenGonk::GetSurfaceFormat()
 ANativeWindow*
 nsScreenGonk::GetNativeWindow()
 {
+    if (IsPrimaryScreen()) {
+        StopBootAnimation();
+    }
     return mNativeWindow.get();
 }
 

@@ -102,7 +102,7 @@ class Test1BrowserCall(MarionetteTestCase):
         media_container = self.wait_for_element_displayed(By.CLASS_NAME, "media")
         self.assertEqual(media_container.tag_name, "div", "expect a video container")
 
-        self.check_video(".local .OT_publisher .OT_widget-container");
+        self.check_video(".local-video")
 
     def local_get_and_verify_room_url(self):
         self.switch_to_chatbox()
@@ -127,23 +127,20 @@ class Test1BrowserCall(MarionetteTestCase):
                                                       "btn-join")
         join_button.click()
 
-    # Assumes the standlone or the conversation window is selected first.
+    # Assumes the standalone or the conversation window is selected first.
     def check_video(self, selector):
-        video_wrapper = self.wait_for_element_displayed(By.CSS_SELECTOR,
+        video = self.wait_for_element_displayed(By.CSS_SELECTOR,
                                                         selector, 20)
-        video = self.wait_for_subelement_displayed(video_wrapper,
-                                                   By.TAG_NAME, "video")
-
         self.wait_for_element_attribute_to_be_false(video, "paused")
         self.assertEqual(video.get_attribute("ended"), "false")
 
     def standalone_check_remote_video(self):
         self.switch_to_standalone()
-        self.check_video(".remote .OT_subscriber .OT_widget-container")
+        self.check_video(".remote-video")
 
     def local_check_remote_video(self):
         self.switch_to_chatbox()
-        self.check_video(".remote .OT_subscriber .OT_widget-container")
+        self.check_video(".remote-video")
 
     def local_enable_screenshare(self):
         self.switch_to_chatbox()
@@ -153,7 +150,7 @@ class Test1BrowserCall(MarionetteTestCase):
 
     def standalone_check_remote_screenshare(self):
         self.switch_to_standalone()
-        self.check_video(".media .screen .OT_subscriber .OT_widget-container")
+        self.check_video(".screen-share-video")
 
     def remote_leave_room_and_verify_feedback(self):
         self.switch_to_standalone()

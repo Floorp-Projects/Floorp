@@ -189,8 +189,6 @@ public:
                                          const bool& aIsRoot,
                                          const mozilla::layers::ZoomConstraints& aConstraints) = 0;
 
-    virtual ScreenIntSize GetInnerSize() = 0;
-
 protected:
     virtual ~TabChildBase();
     CSSSize GetPageSize(nsCOMPtr<nsIDocument> aDocument, const CSSSize& aViewport);
@@ -224,6 +222,7 @@ protected:
     CSSSize mOldViewportSize;
     bool mContentDocumentIsDisplayed;
     nsRefPtr<TabChildGlobal> mTabChildGlobal;
+    ScreenIntSize mInnerSize;
     mozilla::layers::FrameMetrics mLastRootMetrics;
     nsCOMPtr<nsIWebBrowserChrome3> mWebBrowserChrome;
 };
@@ -320,8 +319,8 @@ public:
                           const uint64_t& aLayersId,
                           PRenderFrameChild* aRenderFrame,
                           const bool& aParentIsActive) override;
-    virtual bool RecvUpdateDimensions(const CSSRect& rect,
-                                      const CSSSize& size,
+    virtual bool RecvUpdateDimensions(const nsIntRect& rect,
+                                      const ScreenIntSize& size,
                                       const ScreenOrientation& orientation,
                                       const LayoutDeviceIntPoint& chromeDisp) override;
     virtual bool RecvUpdateFrame(const layers::FrameMetrics& aFrameMetrics) override;
@@ -511,8 +510,6 @@ public:
     }
     bool AsyncPanZoomEnabled() { return mAsyncPanZoomEnabled; }
 
-    virtual ScreenIntSize GetInnerSize() override;
-
 protected:
     virtual ~TabChild();
 
@@ -602,12 +599,6 @@ private:
 
     void SetTabId(const TabId& aTabId);
 
-    ScreenIntRect GetOuterRect();
-
-    void SetUnscaledInnerSize(const CSSSize& aSize) {
-      mUnscaledInnerSize = aSize;
-    }
-
     class CachedFileDescriptorInfo;
     class CachedFileDescriptorCallbackRunnable;
     class DelayedDeleteRunnable;
@@ -620,7 +611,7 @@ private:
     nsRefPtr<nsIContentChild> mManager;
     uint32_t mChromeFlags;
     uint64_t mLayersId;
-    CSSRect mUnscaledOuterRect;
+    nsIntRect mOuterRect;
     // When we're tracking a possible tap gesture, this is the "down"
     // point of the touchstart.
     LayoutDevicePoint mGestureDownPoint;
@@ -655,7 +646,6 @@ private:
     bool mIPCOpen;
     bool mParentIsActive;
     bool mAsyncPanZoomEnabled;
-    CSSSize mUnscaledInnerSize;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

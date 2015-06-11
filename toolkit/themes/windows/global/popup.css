@@ -6,6 +6,7 @@
 
 /* ::::: Variables ::::: */
 .panel-arrowcontent {
+  --panel-arrowcontent-padding: 10px;
   --panel-arrowcontent-background: -moz-field;
   --panel-arrowcontent-color: -moz-FieldText;
   --panel-arrowcontent-border: 1px solid ThreeDShadow;
@@ -55,7 +56,7 @@ panel[type="arrow"][side="right"] {
 }
 
 .panel-arrowcontent {
-  padding: 10px;
+  padding: var(--panel-arrowcontent-padding);
   color: var(--panel-arrowcontent-color);
   background: var(--panel-arrowcontent-background);
   background-clip: padding-box;

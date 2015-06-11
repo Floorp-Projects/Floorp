@@ -88,7 +88,10 @@ Tools.inspector = {
   url: "chrome://browser/content/devtools/inspector/inspector.xul",
   label: l10n("inspector.label", inspectorStrings),
   panelLabel: l10n("inspector.panelLabel", inspectorStrings),
-  tooltip: l10n("inspector.tooltip", inspectorStrings),
+  get tooltip() {
+    return l10n("inspector.tooltip2", inspectorStrings,
+    ( osString == "Darwin" ? "Cmd+Alt" : "Ctrl+Shift+" ) + this.key);
+  },
   inMenu: true,
   commands: [
     "devtools/resize-commands",
@@ -122,7 +125,10 @@ Tools.webConsole = {
   label: l10n("ToolboxTabWebconsole.label", webConsoleStrings),
   menuLabel: l10n("MenuWebconsole.label", webConsoleStrings),
   panelLabel: l10n("ToolboxWebConsole.panelLabel", webConsoleStrings),
-  tooltip: l10n("ToolboxWebconsole.tooltip", webConsoleStrings),
+  get tooltip() {
+    return l10n("ToolboxWebconsole.tooltip2", webConsoleStrings,
+    ( osString == "Darwin" ? "Cmd+Alt" : "Ctrl+Shift+" ) + this.key);
+  },
   inMenu: true,
   commands: "devtools/webconsole/console-commands",
 
@@ -155,7 +161,10 @@ Tools.jsdebugger = {
   url: "chrome://browser/content/devtools/debugger.xul",
   label: l10n("ToolboxDebugger.label", debuggerStrings),
   panelLabel: l10n("ToolboxDebugger.panelLabel", debuggerStrings),
-  tooltip: l10n("ToolboxDebugger.tooltip", debuggerStrings),
+  get tooltip() {
+    return l10n("ToolboxDebugger.tooltip2", debuggerStrings,
+    ( osString == "Darwin" ? "Cmd+Alt" : "Ctrl+Shift+" ) + this.key);
+  },
   inMenu: true,
   commands: "devtools/debugger/debugger-commands",
 
@@ -179,7 +188,10 @@ Tools.styleEditor = {
   url: "chrome://browser/content/devtools/styleeditor.xul",
   label: l10n("ToolboxStyleEditor.label", styleEditorStrings),
   panelLabel: l10n("ToolboxStyleEditor.panelLabel", styleEditorStrings),
-  tooltip: l10n("ToolboxStyleEditor.tooltip2", styleEditorStrings),
+  get tooltip() {
+    return l10n("ToolboxStyleEditor.tooltip3", styleEditorStrings,
+    "Shift+" + functionkey(this.key));
+  },
   inMenu: true,
   commands: "devtools/styleeditor/styleeditor-commands",
 
@@ -244,7 +256,10 @@ Tools.performance = {
   visibilityswitch: "devtools.performance.enabled",
   label: l10n("profiler.label2", profilerStrings),
   panelLabel: l10n("profiler.panelLabel2", profilerStrings),
-  tooltip: l10n("profiler.tooltip2", profilerStrings),
+  get tooltip() {
+    return l10n("profiler.tooltip3", profilerStrings,
+    "Shift+" + functionkey(this.key));
+  },
   accesskey: l10n("profiler.accesskey", profilerStrings),
   key: l10n("profiler.commandkey2", profilerStrings),
   modifiers: "shift",
@@ -271,7 +286,10 @@ Tools.netMonitor = {
   url: "chrome://browser/content/devtools/netmonitor.xul",
   label: l10n("netmonitor.label", netMonitorStrings),
   panelLabel: l10n("netmonitor.panelLabel", netMonitorStrings),
-  tooltip: l10n("netmonitor.tooltip", netMonitorStrings),
+  get tooltip() {
+    return l10n("netmonitor.tooltip2", netMonitorStrings,
+    ( osString == "Darwin" ? "Cmd+Alt" : "Ctrl+Shift+" ) + this.key);
+  },
   inMenu: true,
 
   isTargetSupported: function(target) {
@@ -296,7 +314,10 @@ Tools.storage = {
   label: l10n("storage.label", storageStrings),
   menuLabel: l10n("storage.menuLabel", storageStrings),
   panelLabel: l10n("storage.panelLabel", storageStrings),
-  tooltip: l10n("storage.tooltip2", storageStrings),
+  get tooltip() {
+    return l10n("storage.tooltip3", storageStrings,
+    "Shift+" + functionkey(this.key));
+  },
   inMenu: true,
 
   isTargetSupported: function(target) {
@@ -399,12 +420,18 @@ exports.defaultThemes = [
  *        The key to lookup.
  * @returns A localized version of the given key.
  */
-function l10n(name, bundle)
+function l10n(name, bundle, arg)
 {
   try {
-    return bundle.GetStringFromName(name);
+    return arg ? bundle.formatStringFromName(name, [arg], 1)
+    : bundle.GetStringFromName(name);
   } catch (ex) {
     Services.console.logStringMessage("Error reading '" + name + "'");
     throw new Error("l10n error with " + name);
   }
+}
+
+function functionkey(shortkey)
+{
+  return shortkey.split("_")[1];
 }

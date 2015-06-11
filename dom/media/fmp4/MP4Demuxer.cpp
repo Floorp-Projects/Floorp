@@ -158,7 +158,7 @@ MP4TrackDemuxer::MP4TrackDemuxer(MP4Demuxer* aParent,
 
   MOZ_ASSERT(mInfo);
 
-  nsTArray<mp4_demuxer::Index::Indice> indices;
+  FallibleTArray<mp4_demuxer::Index::Indice> indices;
   if (!mParent->mMetadata->ReadTrackIndex(indices, mInfo->mTrackId)) {
     MOZ_ASSERT(false);
   }

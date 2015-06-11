@@ -13,9 +13,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777674
   <script type="application/javascript;version=1.8">
 window.onload = function() {
   Components.utils.import("resource://gre/modules/devtools/Loader.jsm");
+  const Ci = Components.interfaces;
   const {Promise: promise} =
     Components.utils.import("resource://gre/modules/Promise.jsm", {});
   const {InspectorFront} =
+    devtools.require("devtools/server/actors/inspector");
+  const {_documentWalker} =
     devtools.require("devtools/server/actors/inspector");
   const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -65,6 +68,32 @@ window.onload = function() {
 
     is (select.numChildren, 2, "No native anon content for form control");
     is (children.nodes.length, 2, "No native anon content for form control");
+
+    runNextTest();
+  });
+
+  addAsyncTest(function* testNativeAnonymousStartingNode() {
+    info ("Tests attaching an element that a walker can't see.");
+
+    let serverConnection = gWalker.conn._transport._serverConnection;
+    let serverWalker = serverConnection.getActor(gWalker.actorID);
+    let docwalker = new _documentWalker(
+      gInspectee.querySelector("select"),
+      gInspectee.defaultView,
+      Ci.nsIDOMNodeFilter.SHOW_ALL,
+      () => {
+        return Ci.nsIDOMNodeFilter.FILTER_ACCEPT
+      }
+    );
+    let scrollbar = docwalker.lastChild();
+    is (scrollbar.tagName, "scrollbar", "An anonymous child has been fetched");
+
+    let node = yield serverWalker.attachElement(scrollbar);
+
+    ok (node, "A response has arrived");
+    ok (node.node, "A node is in the response");
+    is (node.node.rawNode.tagName, "SELECT",
+      "The node has changed to a parent that the walker recognizes");
 
     runNextTest();
   });

@@ -54,6 +54,11 @@ nsIWidgetListener::SizeModeChanged(nsSizeMode aSizeMode)
 {
 }
 
+void
+nsIWidgetListener::FullscreenChanged(bool aInFullscreen)
+{
+}
+
 bool
 nsIWidgetListener::ZLevelChanged(bool aImmediate,
                                  nsWindowZ* aPlacement,

@@ -13,15 +13,11 @@ describe("loop.OTSdkDriver", function () {
 
   var sandbox;
   var dispatcher, driver, mozLoop, publisher, sdk, session, sessionData, subscriber;
-  var fakeLocalElement, fakeRemoteElement, fakeScreenElement;
   var publisherConfig, fakeEvent;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
 
-    fakeLocalElement = { fake: 1 };
-    fakeRemoteElement = { fake: 2 };
-    fakeScreenElement = { fake: 3 };
     fakeEvent = {
       preventDefault: sinon.stub()
     };
@@ -120,8 +116,6 @@ describe("loop.OTSdkDriver", function () {
   describe("#setupStreamElements", function() {
     it("should call initPublisher", function() {
       driver.setupStreamElements(new sharedActions.SetupStreamElements({
-        getLocalElementFunc: function() { return fakeLocalElement; },
-        getRemoteElementFunc: function() { return fakeRemoteElement; },
         publisherConfig: publisherConfig
       }));
 
@@ -132,7 +126,9 @@ describe("loop.OTSdkDriver", function () {
       }, publisherConfig);
 
       sinon.assert.calledOnce(sdk.initPublisher);
-      sinon.assert.calledWith(sdk.initPublisher, fakeLocalElement, expectedConfig);
+      sinon.assert.calledWith(sdk.initPublisher,
+        sinon.match.instanceOf(HTMLDivElement),
+        expectedConfig);
     });
   });
 
@@ -141,8 +137,6 @@ describe("loop.OTSdkDriver", function () {
       sdk.initPublisher.returns(publisher);
 
       driver.setupStreamElements(new sharedActions.SetupStreamElements({
-        getLocalElementFunc: function() { return fakeLocalElement; },
-        getRemoteElementFunc: function() { return fakeRemoteElement; },
         publisherConfig: publisherConfig
       }));
     });
@@ -169,7 +163,9 @@ describe("loop.OTSdkDriver", function () {
       }, publisherConfig);
 
       sinon.assert.calledTwice(sdk.initPublisher);
-      sinon.assert.calledWith(sdk.initPublisher, fakeLocalElement, expectedConfig);
+      sinon.assert.calledWith(sdk.initPublisher,
+        sinon.match.instanceOf(HTMLDivElement),
+        expectedConfig);
     });
   });
 
@@ -178,8 +174,6 @@ describe("loop.OTSdkDriver", function () {
       sdk.initPublisher.returns(publisher);
 
       driver.setupStreamElements(new sharedActions.SetupStreamElements({
-        getLocalElementFunc: function() { return fakeLocalElement; },
-        getRemoteElementFunc: function() { return fakeRemoteElement; },
         publisherConfig: publisherConfig
       }));
     });
@@ -206,18 +200,8 @@ describe("loop.OTSdkDriver", function () {
   });
 
   describe("#startScreenShare", function() {
-    var fakeElement;
-
     beforeEach(function() {
       sandbox.stub(driver, "_noteSharingState");
-
-      fakeElement = {
-        className: "fakeVideo"
-      };
-
-      driver.getScreenShareElementFunc = function() {
-        return fakeElement;
-      };
     });
 
     it("should initialize a publisher", function() {
@@ -233,7 +217,8 @@ describe("loop.OTSdkDriver", function () {
       driver.startScreenShare(options);
 
       sinon.assert.calledOnce(sdk.initPublisher);
-      sinon.assert.calledWithMatch(sdk.initPublisher, fakeElement, options);
+      sinon.assert.calledWithMatch(sdk.initPublisher,
+        sinon.match.instanceOf(HTMLDivElement), options);
     });
 
     it("should log a telemetry action", function() {
@@ -259,10 +244,6 @@ describe("loop.OTSdkDriver", function () {
           scrollWithPage: true
         }
       };
-      driver.getScreenShareElementFunc = function() {
-        return fakeScreenElement;
-      };
-
       driver.startScreenShare(options);
     });
 
@@ -282,8 +263,6 @@ describe("loop.OTSdkDriver", function () {
 
   describe("#endScreenShare", function() {
     beforeEach(function() {
-      driver.getScreenShareElementFunc = function() {};
-
       sandbox.stub(driver, "_noteSharingState");
     });
 
@@ -638,14 +617,34 @@ describe("loop.OTSdkDriver", function () {
     });
   });
 
-  describe("Events (general media)", function() {
+  describe("Events: general media", function() {
+    var fakeConnection, fakeStream, fakeSubscriberObject,
+      fakeSdkContainerWithVideo, videoElement;
+
     beforeEach(function() {
+      fakeConnection = "fakeConnection";
+      fakeStream = {
+        hasVideo: true,
+        videoType: "camera",
+        videoDimensions: {width: 1, height: 2}
+      };
+
+      fakeSubscriberObject = _.extend({
+        session: { connection: fakeConnection },
+        stream: fakeStream
+      }, Backbone.Events);
+
+      fakeSdkContainerWithVideo = {
+        querySelector: sinon.stub().returns(videoElement)
+      };
+
+      // use a real video element so that these tests correctly reflect
+      // test behavior when run in firefox or chrome
+      videoElement = document.createElement("video");
+
       driver.connectSession(sessionData);
 
       driver.setupStreamElements(new sharedActions.SetupStreamElements({
-        getLocalElementFunc: function() {return fakeLocalElement; },
-        getScreenShareElementFunc: function() {return fakeScreenElement; },
-        getRemoteElementFunc: function() {return fakeRemoteElement; },
         publisherConfig: publisherConfig
       }));
     });
@@ -760,9 +759,13 @@ describe("loop.OTSdkDriver", function () {
     });
 
     describe("streamCreated (publisher/local)", function() {
-      var fakeStream;
+      var fakeStream, fakeMockVideo;
 
       beforeEach(function() {
+        driver._mockPublisherEl = document.createElement("div");
+        fakeMockVideo = document.createElement("video");
+
+        driver._mockPublisherEl.appendChild(fakeMockVideo);
         fakeStream = {
           hasVideo: true,
           videoType: "camera",
@@ -779,6 +782,16 @@ describe("loop.OTSdkDriver", function () {
             isLocal: true,
             videoType: "camera",
             dimensions: {width: 1, height: 2}
+          }));
+      });
+
+      it("should dispatch a LocalVideoEnabled action", function() {
+        publisher.trigger("streamCreated", { stream: fakeStream });
+
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.LocalVideoEnabled({
+            srcVideoObject: fakeMockVideo
           }));
       });
 
@@ -800,16 +813,7 @@ describe("loop.OTSdkDriver", function () {
       });
     });
 
-    describe("streamCreated (session/remote)", function() {
-      var fakeStream;
-
-      beforeEach(function() {
-        fakeStream = {
-          hasVideo: true,
-          videoType: "camera",
-          videoDimensions: {width: 1, height: 2}
-        };
-      });
+    describe("streamCreated: session/remote", function() {
 
       it("should dispatch a VideoDimensionsChanged action", function() {
         session.trigger("streamCreated", { stream: fakeStream });
@@ -843,28 +847,63 @@ describe("loop.OTSdkDriver", function () {
         session.trigger("streamCreated", { stream: fakeStream });
 
         sinon.assert.calledOnce(session.subscribe);
-        sinon.assert.calledWith(session.subscribe,
-          fakeStream, fakeRemoteElement, publisherConfig);
+        sinon.assert.calledWithExactly(session.subscribe,
+          fakeStream, sinon.match.instanceOf(HTMLDivElement), publisherConfig,
+          sinon.match.func);
+      });
+
+      it("should dispatch RemoteVideoEnabled if the stream has video" +
+        " after subscribe is complete", function() {
+        session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
+          videoElement).returns(this.fakeSubscriberObject);
+        driver.session = session;
+        fakeStream.connection = fakeConnection;
+        fakeStream.hasVideo = true;
+
+        session.trigger("streamCreated", { stream: fakeStream });
+
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.RemoteVideoEnabled({
+            srcVideoObject: videoElement
+          }));
+      });
+
+      it("should not dispatch RemoteVideoEnabled if the stream is audio-only", function() {
+        session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
+          videoElement);
+        fakeStream.connection = fakeConnection;
+        fakeStream.hasVideo = false;
+
+        session.trigger("streamCreated", { stream: fakeStream });
+
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.neverCalledWith(dispatcher.dispatch,
+          new sharedActions.RemoteVideoEnabled({
+            srcVideoObject: videoElement
+          }));
       });
 
       it("should trigger a readyForDataChannel signal after subscribe is complete", function() {
-        session.subscribe.callsArgWith(3, null);
+        session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
+          document.createElement("video"));
         driver._useDataChannels = true;
-        fakeStream.connection = "fakeID";
+        fakeStream.connection = fakeConnection;
 
         session.trigger("streamCreated", { stream: fakeStream });
 
         sinon.assert.calledOnce(session.signal);
         sinon.assert.calledWith(session.signal, {
           type: "readyForDataChannel",
-          to: "fakeID"
+          to: fakeConnection
         });
       });
 
       it("should not trigger readyForDataChannel signal if data channels are not wanted", function() {
-        session.subscribe.callsArgWith(3, null);
+        session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
+          document.createElement("video"));
         driver._useDataChannels = false;
-        fakeStream.connection = "fakeID";
+        fakeStream.connection = fakeConnection;
 
         session.trigger("streamCreated", { stream: fakeStream });
 
@@ -878,10 +917,13 @@ describe("loop.OTSdkDriver", function () {
 
         sinon.assert.calledOnce(session.subscribe);
         sinon.assert.calledWithExactly(session.subscribe,
-          fakeStream, fakeScreenElement, publisherConfig);
+          fakeStream, sinon.match.instanceOf(HTMLDivElement), publisherConfig,
+          sinon.match.func);
       });
 
       it("should dispatch a mediaConnected action if both streams are up", function() {
+        session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
+          videoElement);
         driver._publishedLocalStream = true;
 
         session.trigger("streamCreated", { stream: fakeStream });
@@ -894,6 +936,8 @@ describe("loop.OTSdkDriver", function () {
 
       it("should store the start time when both streams are up and" +
       " driver._sendTwoWayMediaTelemetry is true", function() {
+        session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
+          videoElement);
         driver._sendTwoWayMediaTelemetry = true;
         driver._publishedLocalStream = true;
         var startTime = 1;
@@ -906,6 +950,8 @@ describe("loop.OTSdkDriver", function () {
 
       it("should not store the start time when both streams are up and" +
          " driver._isDesktop is false", function() {
+        session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
+          videoElement);
         driver._isDesktop = false;
         driver._publishedLocalStream = true;
         var startTime = 73;
@@ -936,8 +982,10 @@ describe("loop.OTSdkDriver", function () {
             new sharedActions.ReceivingScreenShare({receiving: true}));
         });
 
-      it("should dispatch a ReceivingScreenShare action for screen sharing streams",
-        function() {
+      // XXX See bug 1171933 and the comment in
+      // OtSdkDriver#_handleRemoteScreenShareCreated
+      it.skip("should dispatch a ReceivingScreenShare action for screen" +
+        " sharing streams", function() {
           fakeStream.videoType = "screen";
 
           session.trigger("streamCreated", { stream: fakeStream });
@@ -949,7 +997,7 @@ describe("loop.OTSdkDriver", function () {
         });
     });
 
-    describe("streamDestroyed (publisher/local)", function() {
+    describe("streamDestroyed: publisher/local", function() {
       it("should dispatch a ConnectionStatus action", function() {
         driver._metrics.sendStreams = 1;
         driver._metrics.recvStreams = 1;
@@ -969,7 +1017,7 @@ describe("loop.OTSdkDriver", function () {
       });
     });
 
-    describe("streamDestroyed (session/remote)", function() {
+    describe("streamDestroyed: session/remote", function() {
       var fakeStream;
 
       beforeEach(function() {
@@ -1182,6 +1230,36 @@ describe("loop.OTSdkDriver", function () {
       });
     });
 
+    describe("videoEnabled", function() {
+      it("should dispatch RemoteVideoEnabled", function() {
+        session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
+          videoElement).returns(this.fakeSubscriberObject);
+        session.trigger("streamCreated", {stream: fakeSubscriberObject.stream});
+        driver._mockSubscribeEl.appendChild(videoElement);
+
+        fakeSubscriberObject.trigger("videoEnabled");
+
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.calledWith(dispatcher.dispatch,
+          new sharedActions.RemoteVideoEnabled({srcVideoObject: videoElement}));
+      });
+    });
+
+    describe("videoDisabled", function() {
+      it("should dispatch RemoteVideoDisabled", function() {
+        session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
+          videoElement).returns(this.fakeSubscriberObject);
+        session.trigger("streamCreated", {stream: fakeSubscriberObject.stream});
+
+
+        fakeSubscriberObject.trigger("videoDisabled");
+
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.RemoteVideoDisabled({}));
+      });
+    });
+
     describe("signal:readyForDataChannel", function() {
       beforeEach(function() {
         driver.subscriber = subscriber;
@@ -1270,15 +1348,19 @@ describe("loop.OTSdkDriver", function () {
     });
   });
 
-  describe("Events (screenshare)", function() {
+  describe("Events: screenshare:", function() {
+    var videoElement;
+
     beforeEach(function() {
       driver.connectSession(sessionData);
-
-      driver.getScreenShareElementFunc = function() {};
 
       driver.startScreenShare({
         videoSource: "window"
       });
+
+      // use a real video element so that these tests correctly reflect
+      // code behavior when run in whatever browser
+      videoElement = document.createElement("video");
     });
 
     describe("accessAllowed", function() {

@@ -50,6 +50,8 @@ public:
         GonkDisplay::DisplayType aDisplayType,
         android::IGraphicBufferProducer* aProducer = nullptr);
 
+    virtual void NotifyBootAnimationStopped();
+
 private:
     void StopBootAnim();
     void CreateSurface(android::sp<ANativeWindow>& aNativeWindow,

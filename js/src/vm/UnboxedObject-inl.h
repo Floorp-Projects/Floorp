@@ -320,9 +320,27 @@ SetAnyBoxedOrUnboxedArrayLength(JSContext* cx, JSObject* obj, size_t length)
     }
 }
 
+static inline bool
+SetAnyBoxedOrUnboxedDenseElement(JSContext* cx, JSObject* obj, size_t index, const Value& value)
+{
+    if (obj->isNative()) {
+        obj->as<NativeObject>().setDenseElementWithType(cx, index, value);
+        return true;
+    }
+    return obj->as<UnboxedArrayObject>().setElement(cx, index, value);
+}
+
 /////////////////////////////////////////////////////////////////////
 // Template methods for NativeObject and UnboxedArrayObject accesses.
 /////////////////////////////////////////////////////////////////////
+
+static inline JSValueType
+GetBoxedOrUnboxedType(JSObject* obj)
+{
+    if (obj->isNative())
+        return JSVAL_TYPE_MAGIC;
+    return obj->as<UnboxedArrayObject>().elementType();
+}
 
 template <JSValueType Type>
 static inline bool
@@ -385,6 +403,17 @@ SetBoxedOrUnboxedDenseElementNoTypeChange(JSObject* obj, size_t index, const Val
         obj->as<NativeObject>().setDenseElement(index, value);
     else
         obj->as<UnboxedArrayObject>().setElementNoTypeChangeSpecific<Type>(index, value);
+}
+
+template <JSValueType Type>
+static inline bool
+SetBoxedOrUnboxedDenseElement(JSContext* cx, JSObject* obj, size_t index, const Value& value)
+{
+    if (Type == JSVAL_TYPE_MAGIC) {
+        obj->as<NativeObject>().setDenseElementWithType(cx, index, value);
+        return true;
+    }
+    return obj->as<UnboxedArrayObject>().setElementSpecific<Type>(cx, index, value);
 }
 
 template <JSValueType Type>
@@ -665,6 +694,9 @@ CopyAnyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* dst, JSObject* src,
 
 void
 SetAnyBoxedOrUnboxedInitializedLength(JSContext* cx, JSObject* obj, size_t initlen);
+
+bool
+EnsureAnyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj, size_t count);
 
 } // namespace js
 

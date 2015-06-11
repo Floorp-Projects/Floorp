@@ -393,7 +393,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
     class FadeRunnable implements Runnable {
         private boolean mStarted;
-        private long mRunAt;
+        long mRunAt; // Would be private but we need both file access and high performance.
 
         void scheduleStartFade(long delay) {
             mRunAt = SystemClock.elapsedRealtime() + delay;
@@ -504,7 +504,9 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
                 mHorizScrollLayer.unfade();
                 mFadeRunnable.scheduleStartFade(ScrollbarLayer.FADE_DELAY);
             } else if (mFadeRunnable.timeToFade()) {
-                boolean stillFading = mVertScrollLayer.fade() | mHorizScrollLayer.fade();
+                final long currentMillis = SystemClock.elapsedRealtime();
+                final boolean stillFading = mVertScrollLayer.fade(mFadeRunnable.mRunAt, currentMillis) |
+                        mHorizScrollLayer.fade(mFadeRunnable.mRunAt, currentMillis);
                 if (stillFading) {
                     mFadeRunnable.scheduleNextFadeFrame();
                 }

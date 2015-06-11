@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Content Security Policy inline stylesheets stuff</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<iframe style="width:100%;" id='cspframe'></iframe>
+<iframe style="width:100%;" id='cspframe2'></iframe>
+<script class="testbody" type="text/javascript">
+
+//////////////////////////////////////////////////////////////////////
+// set up and go
+SimpleTest.waitForExplicitFinish();
+
+// utilities for check functions
+// black means the style wasn't applied, applied styles are green
+var green = 'rgb(0, 128, 0)';
+var black = 'rgb(0, 0, 0)';
+
+// We test both script and style execution by observing changes in computed styles
+function checkAllowed () {
+  var cspframe = document.getElementById('cspframe');
+  var color;
+
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('unsafe-inline-script-allowed')).color;
+  ok(color === green, "Inline script should be allowed");
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('unsafe-eval-script-allowed')).color;
+  ok(color === green, "Eval should be allowed");
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('unsafe-inline-style-allowed')).color;
+  ok(color === green, "Inline style should be allowed");
+
+  document.getElementById('cspframe2').src = 'file_bug885433_blocks.html';
+  document.getElementById('cspframe2').addEventListener('load', checkBlocked, false);
+}
+
+function checkBlocked () {
+  var cspframe = document.getElementById('cspframe2');
+  var color;
+
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('unsafe-inline-script-blocked')).color;
+  ok(color === black, "Inline script should be blocked");
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('unsafe-eval-script-blocked')).color;
+  ok(color === black, "Eval should be blocked");
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('unsafe-inline-style-blocked')).color;
+  ok(color === black, "Inline style should be blocked");
+
+  SimpleTest.finish();
+}
+
+document.getElementById('cspframe').src = 'file_bug885433_allows.html';
+document.getElementById('cspframe').addEventListener('load', checkAllowed, false);
+</script>
+</pre>
+</body>
+</html>
