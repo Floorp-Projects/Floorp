@@ -42,9 +42,9 @@ function notSoEmpty1() {
     assertRecoveredOnBailout(c, true);
     assertRecoveredOnBailout(d, true);
     assertRecoveredOnBailout(unused, true);
-    // Scalar Replacement is coming after the branch removal made by GVN, and
-    // the ucefault branch is not taken yet.
-    assertRecoveredOnBailout(res, false);
+    // The ucefault branch is not taken yet, and GVN removes it. Scalar
+    // Replacement thus removes the creation of the object.
+    assertRecoveredOnBailout(res, true);
 }
 
 // Check that we can recover objects with their content.
@@ -67,9 +67,9 @@ function notSoEmpty2(i) {
     assertRecoveredOnBailout(c, true);
     assertRecoveredOnBailout(d, true);
     assertRecoveredOnBailout(unused, true);
-    // Scalar Replacement is coming after the branch removal made by GVN, and
-    // the ucefault branch is not taken yet.
-    assertRecoveredOnBailout(res, false);
+    // The ucefault branch is not taken yet, and GVN removes it. Scalar
+    // Replacement thus removes the creation of the object.
+    assertRecoveredOnBailout(res, true);
 }
 
 // Check that we can recover objects with their content.
