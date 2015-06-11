@@ -20,7 +20,6 @@ var PKT_SIGNUP_OVERLAY = function (options)
     this.inoverflowmenu = false;
     this.pockethost = "getpocket.com";
     this.fxasignedin = false;
-    this.panelId = 0;
     this.dictJSON = {};
     this.initCloseTabEvents = function() {
         $('.btn,.pkt_ext_learnmore,.alreadyhave > a').click(function(e)
@@ -58,89 +57,7 @@ var PKT_SIGNUP_OVERLAY = function (options)
     };
     this.getTranslations = function()
     {
-        var language = this.locale || '';
-        this.dictJSON = {};
-
-        var dictsuffix = 'en-US';
-
-        if (language.indexOf('en') == 0)
-        {
-            dictsuffix = 'en';
-        }
-        else if (language.indexOf('it') == 0)
-        {
-            dictsuffix = 'it';
-        }
-        else if (language.indexOf('fr-ca') == 0)
-        {
-            dictsuffix = 'fr';
-        }
-        else if (language.indexOf('fr') == 0)
-        {
-            dictsuffix = 'fr';
-        }
-        else if (language.indexOf('de') == 0)
-        {
-            dictsuffix = 'de';
-        }
-        else if (language.indexOf('es-es') == 0)
-        {
-            dictsuffix = 'es';
-        }
-        else if (language.indexOf('es-419') == 0)
-        {
-            dictsuffix = 'es_419';
-        }
-        else if (language.indexOf('es') == 0)
-        {
-            dictsuffix = 'es';
-        }
-        else if (language.indexOf('ja') == 0)
-        {
-            dictsuffix = 'ja';
-        }
-        else if (language.indexOf('nl') == 0)
-        {
-            dictsuffix = 'nl';
-        }
-        else if (language.indexOf('pt-pt') == 0)
-        {
-            dictsuffix = 'pt_PT';
-        }
-        else if (language.indexOf('pt') == 0)
-        {
-            dictsuffix = 'pt_BR';
-        }
-        else if (language.indexOf('ru') == 0)
-        {
-            dictsuffix = 'ru';
-        }
-        else if (language.indexOf('zh-tw') == 0)
-        {
-            dictsuffix = 'zh_TW';
-        }
-        else if (language.indexOf('zh') == 0)
-        {
-            dictsuffix = 'zh_CN';
-        }
-        else if (language.indexOf('ko') == 0)
-        {
-            dictsuffix = 'ko';
-        }
-        else if (language.indexOf('pl') == 0)
-        {
-            dictsuffix = 'pl';
-        }
-
-        this.dictJSON = Translations[dictsuffix];
-        if (typeof this.dictJSON !== 'object')
-        {
-            this.dictJSON = Translations['en'];
-        }
-        if (typeof this.dictJSON !== 'object')
-        {
-            this.dictJSON = {};
-        }
+        this.dictJSON = window.pocketStrings;
     };
 };
 
@@ -174,8 +91,6 @@ PKT_SIGNUP_OVERLAY.prototype = {
         {
            this.locale = locale[1].toLowerCase();
         }
-
-        this.panelId = pktPanelMessaging.panelIdFromURL(window.location.href);
 
         if (this.active)
         {
@@ -231,17 +146,18 @@ PKT_SIGNUP.prototype = {
         if (this.inited) {
             return;
         }
+        this.panelId = pktPanelMessaging.panelIdFromURL(window.location.href);
         this.overlay = new PKT_SIGNUP_OVERLAY();
 
         this.inited = true;
     },
 
     addMessageListener: function(messageId, callback) {
-        pktPanelMessaging.addMessageListener(this.overlay.panelId, messageId, callback);
+        pktPanelMessaging.addMessageListener(this.panelId, messageId, callback);
     },
 
     sendMessage: function(messageId, payload, callback) {
-        pktPanelMessaging.sendMessage(this.overlay.panelId, messageId, payload, callback);
+        pktPanelMessaging.sendMessage(this.panelId, messageId, payload, callback);
     },
 
     create: function() {
@@ -260,6 +176,10 @@ $(function()
         thePKT_SIGNUP.init();
     }
 
-    window.thePKT_SIGNUP.create();
+    // send an async message to get string data
+    thePKT_SIGNUP.sendMessage("initL10N", {}, function(resp) {
+        window.pocketStrings = resp.strings;
+        window.thePKT_SIGNUP.create();
+    });
 });
 

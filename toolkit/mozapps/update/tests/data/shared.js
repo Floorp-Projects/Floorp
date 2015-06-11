@@ -61,6 +61,7 @@ const DIR_UPDATED      = IS_MACOSX ? "Updated.app" : "updated";
 const FILE_APPLICATION_INI           = "application.ini";
 const FILE_BACKUP_LOG                = "backup-update.log";
 const FILE_LAST_LOG                  = "last-update.log";
+const FILE_PERMS_TEST                = "update.test";
 const FILE_UPDATER_INI               = "updater.ini";
 const FILE_UPDATES_DB                = "updates.xml";
 const FILE_UPDATE_ACTIVE             = "active-update.xml";

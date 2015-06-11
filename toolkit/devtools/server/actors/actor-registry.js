@@ -11,8 +11,7 @@ const { Cu, CC, components } = require("chrome");
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 const Services = require("Services");
 const { DebuggerServer } = require("devtools/server/main");
-const ActorRegistryUtils = require("devtools/server/actors/utils/actor-registry-utils");
-const { registerActor, unregisterActor } = ActorRegistryUtils;
+const { registerActor, unregisterActor } = require("devtools/server/actors/utils/actor-registry-utils");
 
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 

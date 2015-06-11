@@ -550,7 +550,9 @@ CryptoKey::PrivateKeyToPkcs8(SECKEYPrivateKey* aPrivKey,
   if (!pkcs8Item.get()) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
-  aRetVal.Assign(pkcs8Item.get());
+  if (!aRetVal.Assign(pkcs8Item.get())) {
+    return NS_ERROR_DOM_OPERATION_ERR;
+  }
   return NS_OK;
 }
 
@@ -647,7 +649,9 @@ CryptoKey::PublicKeyToSpki(SECKEYPublicKey* aPubKey,
   const SEC_ASN1Template* tpl = SEC_ASN1_GET(CERT_SubjectPublicKeyInfoTemplate);
   ScopedSECItem spkiItem(SEC_ASN1EncodeItem(nullptr, nullptr, spki, tpl));
 
-  aRetVal.Assign(spkiItem.get());
+  if (!aRetVal.Assign(spkiItem.get())) {
+    return NS_ERROR_DOM_OPERATION_ERR;
+  }
   return NS_OK;
 }
 
@@ -1125,7 +1129,9 @@ CryptoKey::PublicDhKeyToRaw(SECKEYPublicKey* aPubKey,
                             CryptoBuffer& aRetVal,
                             const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
-  aRetVal.Assign(&aPubKey->u.dh.publicValue);
+  if (!aRetVal.Assign(&aPubKey->u.dh.publicValue)) {
+    return NS_ERROR_DOM_OPERATION_ERR;
+  }
   return NS_OK;
 }
 

@@ -282,14 +282,7 @@ let promiseForEachSessionRestoreFile = Task.async(function*(cb) {
 });
 
 function promiseBrowserLoaded(aBrowser, ignoreSubFrames = true) {
-  return new Promise(resolve => {
-    aBrowser.messageManager.addMessageListener("ss-test:loadEvent", function onLoad(msg) {
-      if (!ignoreSubFrames || !msg.data.subframe) {
-        aBrowser.messageManager.removeMessageListener("ss-test:loadEvent", onLoad);
-        resolve();
-      }
-    });
-  });
+  return BrowserTestUtils.browserLoaded(aBrowser, !ignoreSubFrames);
 }
 
 function whenWindowLoaded(aWindow, aCallback = next) {
@@ -435,8 +428,21 @@ function whenNewWindowLoaded(aOptions, aCallback) {
   }
 
   let win = openDialog(getBrowserURL(), "", "chrome,all,dialog=no" + features, url);
-  whenDelayedStartupFinished(win, () => aCallback(win));
-  return win;
+  let delayedStartup = promiseDelayedStartupFinished(win);
+
+  let browserLoaded = new Promise(resolve => {
+    if (url == "about:blank") {
+      resolve();
+      return;
+    }
+
+    win.addEventListener("load", function onLoad() {
+      win.removeEventListener("load", onLoad);
+      resolve(promiseBrowserLoaded(win.gBrowser.selectedBrowser));
+    });
+  });
+
+  Promise.all([delayedStartup, browserLoaded]).then(() => aCallback(win));
 }
 function promiseNewWindowLoaded(aOptions) {
   return new Promise(resolve => whenNewWindowLoaded(aOptions, resolve));

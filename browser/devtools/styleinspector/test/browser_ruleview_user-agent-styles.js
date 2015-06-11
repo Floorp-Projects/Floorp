@@ -9,12 +9,73 @@
 
 let PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 const { PrefObserver } = devtools.require("devtools/styleeditor/utils");
-const TEST_URI = "data:text/html;charset=utf-8," +
-  "<blockquote type=cite>" +
-  " <pre _moz_quote=true>" +
-  "   inspect <a href='foo' style='color:orange'>user agent</a> styles" +
-  " </pre>" +
-  "</blockquote>";
+
+const TEST_DOC = '<html>                                              \
+                    <head>                                            \
+                      <style>                                         \
+                        pre a {                                       \
+                          color: orange;                              \
+                        }                                             \
+                      </style>                                        \
+                    </head>                                           \
+                    <body>                                            \
+                      <input type=text placeholder=test></input>      \
+                      <input type=color></input>                      \
+                      <input type=range></input>                      \
+                      <input type=number></input>                     \
+                      <progress></progress>                           \
+                      <blockquote type=cite>                          \
+                        <pre _moz_quote=true>                         \
+                          inspect <a href="foo">user agent</a> styles \
+                        </pre>                                        \
+                      </blockquote>                                   \
+                    </body>                                           \
+                  </html>';
+
+const TEST_URI = "data:text/html;charset=utf-8," + encodeURIComponent(TEST_DOC);
+
+const TEST_DATA = [
+  {
+    selector: "blockquote",
+    numUserRules: 1,
+    numUARules: 0
+  },
+  {
+    selector: "pre",
+    numUserRules: 1,
+    numUARules: 0
+  },
+  {
+    selector: "input[type=range]",
+    numUserRules: 1,
+    numUARules: 0
+  },
+  {
+    selector: "input[type=number]",
+    numUserRules: 1,
+    numUARules: 0
+  },
+  {
+    selector: "input[type=color]",
+    numUserRules: 1,
+    numUARules: 0
+  },
+  {
+    selector: "input[type=text]",
+    numUserRules: 1,
+    numUARules: 0
+  },
+  {
+    selector: "progress",
+    numUserRules: 1,
+    numUARules: 0
+  },
+  {
+    selector: "a",
+    numUserRules: 2,
+    numUARules: 0
+  }
+];
 
 add_task(function*() {
   info ("Starting the test with the pref set to true before toolbox is opened");
@@ -55,66 +116,45 @@ function* setUserAgentStylesPref(val) {
 function* userAgentStylesVisible(inspector, view) {
   info ("Making sure that user agent styles are currently visible");
 
-  yield selectNode("blockquote", inspector);
-  yield compareAppliedStylesWithUI(inspector, view, "ua");
+  let userRules;
+  let uaRules;
 
-  let userRules = view._elementStyle.rules.filter(rule=>rule.editor.isEditable);
-  let uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
-  is (userRules.length, 1, "Correct number of user rules");
-  ok (uaRules.length > 0, "Has UA rules");
+  for (let data of TEST_DATA) {
+    yield selectNode(data.selector, inspector);
+    yield compareAppliedStylesWithUI(inspector, view, "ua");
 
-  yield selectNode("pre", inspector);
-  yield compareAppliedStylesWithUI(inspector, view, "ua");
+    userRules = view._elementStyle.rules.filter(rule=>rule.editor.isEditable);
+    uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
+    is (userRules.length, data.numUserRules, "Correct number of user rules");
+    ok (uaRules.length > data.numUARules, "Has UA rules");
+  }
 
-  userRules = view._elementStyle.rules.filter(rule=>rule.editor.isEditable);
-  uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
-  is (userRules.length, 1, "Correct number of user rules");
-  ok (uaRules.length > 0, "Has UA rules");
-
-  yield selectNode("a", inspector);
-  yield compareAppliedStylesWithUI(inspector, view, "ua");
-
-  userRules = view._elementStyle.rules.filter(rule=>rule.editor.isEditable);
-  uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
-  is (userRules.length, 1, "Correct number of user rules");
-
-  ok (userRules.some(rule=> rule.matchedSelectors.length === 0),
+  ok (userRules.some(rule=> rule.matchedSelectors.length === 1),
     "There is an inline style for element in user styles");
 
   ok (uaRules.some(rule=> rule.matchedSelectors.indexOf(":-moz-any-link")),
     "There is a rule for :-moz-any-link");
   ok (uaRules.some(rule=> rule.matchedSelectors.indexOf("*|*:link")),
     "There is a rule for *|*:link");
-  ok (!uaRules.some(rule=> rule.matchedSelectors.length === 0),
-    "No inline styles for ua styles");
+  ok (uaRules.some(rule=> rule.matchedSelectors.length === 1),
+    "Inline styles for ua styles");
 }
 
 function* userAgentStylesNotVisible(inspector, view) {
   info ("Making sure that user agent styles are not currently visible");
 
-  yield selectNode("blockquote", inspector);
-  yield compareAppliedStylesWithUI(inspector, view);
+  let userRules;
+  let uaRules;
 
-  let userRules = view._elementStyle.rules.filter(rule=>rule.editor.isEditable);
-  let uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
-  is (userRules.length, 1, "Correct number of user rules");
-  is (uaRules.length, 0, "No UA rules");
+  for (let data of TEST_DATA) {
+    yield selectNode(data.selector, inspector);
+    yield compareAppliedStylesWithUI(inspector, view);
 
-  yield selectNode("pre", inspector);
-  yield compareAppliedStylesWithUI(inspector, view);
-
-  userRules = view._elementStyle.rules.filter(rule=>rule.editor.isEditable);
-  uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
-  is (userRules.length, 1, "Correct number of user rules");
-  is (uaRules.length, 0, "No UA rules");
-
-  yield selectNode("a", inspector);
-  yield compareAppliedStylesWithUI(inspector, view);
-
-  userRules = view._elementStyle.rules.filter(rule=>rule.editor.isEditable);
-  uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
-  is (userRules.length, 1, "Correct number of user rules");
-  is (uaRules.length, 0, "No UA rules");
+    userRules = view._elementStyle.rules.filter(rule=>rule.editor.isEditable);
+    uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
+    is (userRules.length, data.numUserRules, "Correct number of user rules");
+    is (uaRules.length, data.numUARules, "No UA rules");
+  }
 }
 
 function* compareAppliedStylesWithUI(inspector, view, filter) {
@@ -128,6 +168,10 @@ function* compareAppliedStylesWithUI(inspector, view, filter) {
 
   let elementStyle = view._elementStyle;
   is(elementStyle.rules.length, entries.length, "Should have correct number of rules (" +  entries.length + ")");
+
+  entries = entries.sort((a, b) => {
+    return (a.pseudoElement || "z") > (b.pseudoElement || "z");
+  });
 
   entries.forEach((entry, i) => {
     let elementStyleRule = elementStyle.rules[i];

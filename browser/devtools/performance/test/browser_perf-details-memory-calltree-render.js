@@ -9,7 +9,7 @@ function* spawnTest() {
   let { EVENTS, DetailsView, MemoryCallTreeView } = panel.panelWin;
 
   // Enable memory to test.
-  Services.prefs.setBoolPref(MEMORY_PREF, true);
+  Services.prefs.setBoolPref(ALLOCATIONS_PREF, true);
 
   yield startRecording(panel);
   yield busyWait(100);
