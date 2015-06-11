@@ -576,10 +576,12 @@ public:
                            const MutableFileData& aData,
                            JS::MutableHandle<JSObject*> aResult)
   {
-    MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
-    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aDatabase);
     MOZ_ASSERT(aFile.mFileInfo);
+
+    if (!IndexedDatabaseManager::IsMainProcess() || !NS_IsMainThread()) {
+      return false;
+    }
 
     nsRefPtr<IDBMutableFile> mutableFile =
       IDBMutableFile::Create(aDatabase,
