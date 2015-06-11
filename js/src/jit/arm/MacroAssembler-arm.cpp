@@ -3715,7 +3715,7 @@ MacroAssemblerARMCompat::breakpoint()
 void
 MacroAssemblerARMCompat::simulatorStop(const char* msg)
 {
-#if defined(JS_ARM_SIMULATOR)
+#ifdef JS_SIMULATOR_ARM
     MOZ_ASSERT(sizeof(char*) == 4);
     writeInst(0xefffffff);
     writeInst((int)msg);
@@ -3753,7 +3753,7 @@ MacroAssemblerARMCompat::setupABICall(uint32_t args)
     passedArgs_ = 0;
     passedArgTypes_ = 0;
     usedIntSlots_ = 0;
-#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_ARM_SIMULATOR)
+#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_SIMULATOR_ARM)
     usedFloatSlots_ = 0;
     usedFloat32_ = false;
     padding_ = 0;
@@ -3789,7 +3789,7 @@ MacroAssemblerARMCompat::setupUnalignedABICall(uint32_t args, Register scratch)
     ma_push(scratch);
 }
 
-#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_ARM_SIMULATOR)
+#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_SIMULATOR_ARM)
 void
 MacroAssemblerARMCompat::passHardFpABIArg(const MoveOperand& from, MoveOp::Type type)
 {
@@ -3864,7 +3864,7 @@ MacroAssemblerARMCompat::passHardFpABIArg(const MoveOperand& from, MoveOp::Type 
 }
 #endif
 
-#if !defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_ARM_SIMULATOR)
+#if !defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_SIMULATOR_ARM)
 void
 MacroAssemblerARMCompat::passSoftFpABIArg(const MoveOperand& from, MoveOp::Type type)
 {
@@ -3917,7 +3917,7 @@ MacroAssemblerARMCompat::passSoftFpABIArg(const MoveOperand& from, MoveOp::Type 
 void
 MacroAssemblerARMCompat::passABIArg(const MoveOperand& from, MoveOp::Type type)
 {
-#if defined(JS_ARM_SIMULATOR)
+#if defined(JS_SIMULATOR_ARM)
     if (UseHardFpABI())
         MacroAssemblerARMCompat::passHardFpABIArg(from, type);
     else
@@ -3955,7 +3955,7 @@ MacroAssemblerARMCompat::callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJ
     MOZ_ASSERT(inCall_);
 
     *stackAdjust = ((usedIntSlots_ > NumIntArgRegs) ? usedIntSlots_ - NumIntArgRegs : 0) * sizeof(intptr_t);
-#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_ARM_SIMULATOR)
+#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_SIMULATOR_ARM)
     if (UseHardFpABI())
         *stackAdjust += 2*((usedFloatSlots_ > NumFloatArgRegs) ? usedFloatSlots_ - NumFloatArgRegs : 0) * sizeof(intptr_t);
 #endif
@@ -4060,7 +4060,7 @@ MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Type resu
     inCall_ = false;
 }
 
-#if defined(DEBUG) && defined(JS_ARM_SIMULATOR)
+#if defined(DEBUG) && defined(JS_SIMULATOR_ARM)
 static void
 AssertValidABIFunctionType(uint32_t passedArgTypes)
 {
@@ -4095,7 +4095,7 @@ AssertValidABIFunctionType(uint32_t passedArgTypes)
 void
 MacroAssemblerARMCompat::callWithABI(void* fun, MoveOp::Type result)
 {
-#ifdef JS_ARM_SIMULATOR
+#ifdef JS_SIMULATOR_ARM
     MOZ_ASSERT(passedArgs_ <= 15);
     passedArgTypes_ <<= ArgType_Shift;
     switch (result) {

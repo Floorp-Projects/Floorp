@@ -1222,7 +1222,7 @@ void MacroAssembler::PrintfNoPreserve(const char * format, const CPURegister& ar
   // Actually call printf. This part needs special handling for the simulator,
   // since the system printf function will use a different instruction set and
   // the procedure-call standard will not be compatible.
-#ifdef JS_ARM64_SIMULATOR
+#ifdef JS_SIMULATOR_ARM64
   {
     InstructionAccurateScope scope(this, kPrintfLength / kInstructionSize);
     hlt(kPrintfOpcode);
@@ -1319,7 +1319,7 @@ void MacroAssembler::Printf(const char * format, CPURegister arg0, CPURegister a
 
 
 void MacroAssembler::Trace(TraceParameters parameters, TraceCommand command) {
-#ifdef JS_ARM64_SIMULATOR
+#ifdef JS_SIMULATOR_ARM64
   // The arguments to the trace pseudo instruction need to be contiguous in
   // memory, so make sure we don't try to emit a literal pool.
   InstructionAccurateScope scope(this, kTraceLength / kInstructionSize);
@@ -1343,7 +1343,7 @@ void MacroAssembler::Trace(TraceParameters parameters, TraceCommand command) {
 
 
 void MacroAssembler::Log(TraceParameters parameters) {
-#ifdef JS_ARM64_SIMULATOR
+#ifdef JS_SIMULATOR_ARM64
   // The arguments to the log pseudo instruction need to be contiguous in
   // memory, so make sure we don't try to emit a literal pool.
   InstructionAccurateScope scope(this, kLogLength / kInstructionSize);
