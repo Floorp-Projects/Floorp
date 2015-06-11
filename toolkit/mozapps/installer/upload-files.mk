@@ -607,7 +607,6 @@ NO_PKG_FILES += \
 	ClientAuthServer* \
 	OCSPStaplingServer* \
 	GenerateOCSPResponse* \
-	winEmbed.exe \
 	chrome/chrome.rdf \
 	chrome/app-chrome.manifest \
 	chrome/overlayinfo \
