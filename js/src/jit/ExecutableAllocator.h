@@ -55,7 +55,7 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
 #endif
 #endif
 
-#if defined(JS_CODEGEN_MIPS) && defined(__linux__) && !defined(JS_MIPS_SIMULATOR)
+#if defined(JS_CODEGEN_MIPS) && defined(__linux__) && !defined(JS_SIMULATOR_MIPS)
 #include <sys/cachectl.h>
 #endif
 
@@ -379,7 +379,7 @@ class ExecutableAllocator
     static void cacheFlush(void*, size_t)
     {
     }
-#elif defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
+#elif defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS)
     static void cacheFlush(void* code, size_t size)
     {
         js::jit::Simulator::FlushICache(code, size);

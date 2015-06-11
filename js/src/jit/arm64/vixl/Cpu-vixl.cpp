@@ -63,7 +63,7 @@ CPU::SetUp()
 uint32_t
 CPU::GetCacheType()
 {
-#ifdef JS_ARM64_SIMULATOR
+#ifdef JS_SIMULATOR_ARM64
     // This will lead to a cache with 1 byte long lines, which is fine since the
     // simulator will not need this information.
     return 0;
@@ -80,7 +80,7 @@ CPU::GetCacheType()
 void
 CPU::EnsureIAndDCacheCoherency(void* address, size_t length)
 {
-#ifdef JS_ARM64_SIMULATOR
+#ifdef JS_SIMULATOR_ARM64
     USE(address);
     USE(length);
 #else
@@ -162,7 +162,7 @@ CPU::EnsureIAndDCacheCoherency(void* address, size_t length)
         // isb : Instruction Synchronisation Barrier
         "   isb\n"
         : : : "memory");
-#endif // JS_ARM64_SIMULATOR
+#endif // JS_SIMULATOR_ARM64
 }
 
 } // namespace vixl

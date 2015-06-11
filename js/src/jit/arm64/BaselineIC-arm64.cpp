@@ -7,7 +7,7 @@
 #include "jit/SharedIC.h"
 #include "jit/SharedICHelpers.h"
 
-#ifdef JS_ARM64_SIMULATOR
+#ifdef JS_SIMULATOR_ARM64
 #include "jit/arm64/Assembler-arm64.h"
 #include "jit/arm64/BaselineCompiler-arm64.h"
 #include "jit/arm64/vixl/Debugger-vixl.h"
