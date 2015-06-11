@@ -107,6 +107,11 @@ public:
 
   void BreakCycles() override;
 
+  bool GetSamplesMayBlock() const override
+  {
+    return false;
+  }
+
   // Called by TrackBuffersManager to indicate that new frames were added or
   // removed.
   void NotifyTimeRangesChanged();

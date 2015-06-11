@@ -72,6 +72,7 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mInitDone(false)
   , mSeekable(false)
   , mIsEncrypted(false)
+  , mTrackDemuxersMayBlock(false)
   , mCachedTimeRangesStale(true)
 #if defined(READER_DORMANT_HEURISTIC)
   , mDormantEnabled(Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
@@ -304,6 +305,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
     mInfo.mVideo = *mVideo.mTrackDemuxer->GetInfo()->GetAsVideoInfo();
     mVideo.mCallback = new DecoderCallback(this, TrackInfo::kVideoTrack);
     mVideo.mTimeRanges = mVideo.mTrackDemuxer->GetBuffered();
+    mTrackDemuxersMayBlock |= mVideo.mTrackDemuxer->GetSamplesMayBlock();
   }
 
   bool audioActive = !!mDemuxer->GetNumberTracks(TrackInfo::kAudioTrack);
@@ -313,6 +315,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
     mInfo.mAudio = *mAudio.mTrackDemuxer->GetInfo()->GetAsAudioInfo();
     mAudio.mCallback = new DecoderCallback(this, TrackInfo::kAudioTrack);
     mAudio.mTimeRanges = mAudio.mTrackDemuxer->GetBuffered();
+    mTrackDemuxersMayBlock |= mAudio.mTrackDemuxer->GetSamplesMayBlock();
   }
 
   UniquePtr<EncryptionInfo> crypto = mDemuxer->GetCrypto();
