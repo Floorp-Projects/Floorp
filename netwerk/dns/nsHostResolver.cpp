@@ -632,24 +632,24 @@ nsHostResolver::ClearPendingQueue(PRCList *aPendingQ)
 void
 nsHostResolver::FlushCache()
 {
-  MutexAutoLock lock(mLock);
-  mEvictionQSize = 0;
+    MutexAutoLock lock(mLock);
+    mEvictionQSize = 0;
 
-  // Clear the evictionQ and remove all its corresponding entries from
-  // the cache first
-  if (!PR_CLIST_IS_EMPTY(&mEvictionQ)) {
-      PRCList *node = mEvictionQ.next;
-      while (node != &mEvictionQ) {
-          nsHostRecord *rec = static_cast<nsHostRecord *>(node);
-          node = node->next;
-          PR_REMOVE_AND_INIT_LINK(rec);
-          PL_DHashTableRemove(&mDB, (nsHostKey *) rec);
-          NS_RELEASE(rec);
-      }
-  }
+    // Clear the evictionQ and remove all its corresponding entries from
+    // the cache first
+    if (!PR_CLIST_IS_EMPTY(&mEvictionQ)) {
+        PRCList *node = mEvictionQ.next;
+        while (node != &mEvictionQ) {
+            nsHostRecord *rec = static_cast<nsHostRecord *>(node);
+            node = node->next;
+            PR_REMOVE_AND_INIT_LINK(rec);
+            PL_DHashTableRemove(&mDB, (nsHostKey *) rec);
+            NS_RELEASE(rec);
+        }
+    }
 
-  // Refresh the cache entries that are resolving RIGHT now, remove the rest.
-  PL_DHashTableEnumerate(&mDB, HostDB_PruneEntry, nullptr);
+    // Refresh the cache entries that are resolving RIGHT now, remove the rest.
+    PL_DHashTableEnumerate(&mDB, HostDB_PruneEntry, nullptr);
 }
 
 void
