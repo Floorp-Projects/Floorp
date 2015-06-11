@@ -324,7 +324,6 @@ public:
     void BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer);
     void BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer, GLintptr offset, GLsizeiptr size);
 */
-    virtual JS::Value GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv) override;
     void GetIndexedParameter(GLenum target, GLuint index,
                              dom::Nullable<dom::OwningWebGLBufferOrLongLong>& retval);
     void GetUniformIndices(WebGLProgram* program,
