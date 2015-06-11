@@ -226,6 +226,7 @@ public:
   bool BlockingReadNextMoof();
   bool HasMetadata();
   MediaByteRange FirstCompleteMediaSegment();
+  MediaByteRange FirstCompleteMediaHeader();
 
   mozilla::MediaByteRange mInitRange;
   nsRefPtr<Stream> mSource;
