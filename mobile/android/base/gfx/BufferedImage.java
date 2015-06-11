@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 /** A buffered image that simply saves a buffer of pixel data. */
 public class BufferedImage {
     private ByteBuffer mBuffer;
+    private Bitmap mBitmap;
     private IntSize mSize;
     private int mFormat;
 
@@ -29,14 +30,13 @@ public class BufferedImage {
     public BufferedImage(Bitmap bitmap) {
         mFormat = bitmapConfigToFormat(bitmap.getConfig());
         mSize = new IntSize(bitmap.getWidth(), bitmap.getHeight());
-
-        int bpp = bitsPerPixelForFormat(mFormat);
-        mBuffer = DirectBufferAllocator.allocate(mSize.getArea() * bpp);
-        bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
+        mBitmap = bitmap;
     }
 
     private synchronized void freeBuffer() {
-        mBuffer = DirectBufferAllocator.free(mBuffer);
+        if (mBuffer != null) {
+            mBuffer = DirectBufferAllocator.free(mBuffer);
+        }
     }
 
     public void destroy() {
@@ -47,7 +47,16 @@ public class BufferedImage {
         }
     }
 
-    public ByteBuffer getBuffer() { return mBuffer; }
+    public ByteBuffer getBuffer() {
+        if (mBuffer == null) {
+            int bpp = bitsPerPixelForFormat(mFormat);
+            mBuffer = DirectBufferAllocator.allocate(mSize.getArea() * bpp);
+            mBitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
+            mBitmap = null;
+        }
+        return mBuffer;
+    }
+
     public IntSize getSize() { return mSize; }
     public int getFormat() { return mFormat; }
 
