@@ -336,12 +336,6 @@ public:
    */
   void RecreateAccessible(nsIContent* aContent);
 
-  /**
-   * If this document is in a content process return the object responsible for
-   * communicating with the main process for it.
-   */
-  DocAccessibleChild* IPCDoc() const { return mIPCDoc; }
-
 protected:
   virtual ~DocAccessible();
 
@@ -524,6 +518,12 @@ protected:
    * coalescence).
    */
   bool IsLoadEventTarget() const;
+
+  /**
+   * If this document is in a content process return the object responsible for
+   * communicating with the main process for it.
+   */
+  DocAccessibleChild* IPCDoc() const { return mIPCDoc; }
 
   /*
    * Set the object responsible for communicating with the main process on
