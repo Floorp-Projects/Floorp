@@ -178,6 +178,8 @@ function make_EE {
   SUBJECT_ALT_NAME="${4}"
   EXTRA_ARGS="${5} ${6}"
 
+  [ -z "$SUBJECT_ALT_NAME" ] && SUBJECT_ALT_NAME_PART="" || SUBJECT_ALT_NAME_PART="-8 $SUBJECT_ALT_NAME"
+
   cert_already_exists $NICKNAME
   if [ $ALREADY_EXISTS -eq 1 ]; then
     echo "cert \"$NICKNAME\" already exists - not regenerating it (use --clobber to force regeneration)"
@@ -187,7 +189,7 @@ function make_EE {
   echo -e "$CERT_RESPONSES" | $RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -S \
                                                      -n $NICKNAME \
                                                      -s "$SUBJECT" \
-                                                     -8 $SUBJECT_ALT_NAME \
+                                                     $SUBJECT_ALT_NAME_PART \
                                                      -c $CA \
                                                      -t ",," \
                                                      -m $SERIALNO \
@@ -276,7 +278,10 @@ make_EE ocspEEWithIntermediate 'CN=Test End-entity with Intermediate' testINT "l
 make_EE expired 'CN=Expired Test End-entity' testCA "expired.example.com" "-w -400"
 export_cert expired expired-ee.der
 make_EE notYetValid 'CN=Not Yet Valid Test End-entity' testCA "notyetvalid.example.com" "-w 400"
-make_EE mismatch 'CN=Mismatch Test End-entity' testCA "doesntmatch.example.com"
+make_EE mismatch 'CN=Mismatch Test End-entity' testCA "doesntmatch.example.com,*.alsodoesntmatch.example.com"
+make_EE mismatchCN 'CN=doesntmatch.example.com' testCA
+make_EE ipAddressAsDNSNameInSAN 'CN=127.0.0.1' testCA "127.0.0.1"
+make_EE noValidNames 'CN=End-entity with no valid names' testCA
 make_EE selfsigned 'CN=Self-signed Test End-entity' testCA "selfsigned.example.com" "-x"
 # If the certificate 'CN=Test Intermediate' isn't loaded into memory,
 # this certificate will have an unknown issuer.
