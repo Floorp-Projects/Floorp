@@ -129,7 +129,20 @@ TrackBuffersManager::EvictData(TimeUnit aPlaybackTime,
                                uint32_t aThreshold,
                                TimeUnit* aBufferStartTime)
 {
-  // TODO.
+  MOZ_ASSERT(NS_IsMainThread());
+
+  int64_t toEvict = GetSize() - aThreshold;
+  if (toEvict <= 0) {
+    return EvictDataResult::NO_DATA_EVICTED;
+  }
+  MSE_DEBUG("Reaching our size limit, schedule eviction of %lld bytes", toEvict);
+
+  nsCOMPtr<nsIRunnable> task =
+    NS_NewRunnableMethodWithArgs<TimeUnit, uint32_t>(
+      this, &TrackBuffersManager::DoEvictData,
+      aPlaybackTime, toEvict);
+  GetTaskQueue()->Dispatch(task.forget());
+
   return EvictDataResult::NO_DATA_EVICTED;
 }
 
@@ -182,8 +195,7 @@ TrackBuffersManager::Buffered()
 int64_t
 TrackBuffersManager::GetSize()
 {
-  // TODO
-  return 0;
+  return mSizeSourceBuffer;
 }
 
 void
@@ -281,6 +293,70 @@ TrackBuffersManager::CompleteResetParserState()
 }
 
 void
+TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
+                                 uint32_t aSizeToEvict)
+{
+  MOZ_ASSERT(OnTaskQueue());
+
+  // Remove any data we've already played, up to 5s behind.
+  TimeUnit lowerLimit = aPlaybackTime - TimeUnit::FromSeconds(5);
+  TimeUnit to;
+  // Video is what takes the most space, only evict there if we have video.
+  const auto& track = HasVideo() ? mVideoTracks : mAudioTracks;
+  const auto& buffer = track.mBuffers.LastElement();
+  uint32_t lastKeyFrameIndex = 0;
+  int64_t toEvict = aSizeToEvict;
+  uint32_t partialEvict = 0;
+  for (uint32_t i = 0; i < buffer.Length(); i++) {
+    const auto& frame = buffer[i];
+    if (frame->mKeyframe) {
+      lastKeyFrameIndex = i;
+      toEvict -= partialEvict;
+      if (toEvict < 0) {
+        break;
+      }
+      partialEvict = 0;
+    }
+    if (frame->mTime >= lowerLimit.ToMicroseconds()) {
+      break;
+    }
+    partialEvict += sizeof(*frame) + frame->mSize;
+  }
+  if (lastKeyFrameIndex > 0) {
+    CodedFrameRemoval(
+      TimeInterval(TimeUnit::FromMicroseconds(0),
+                   TimeUnit::FromMicroseconds(buffer[lastKeyFrameIndex-1]->mTime)));
+  }
+  if (toEvict <= 0) {
+    return;
+  }
+
+  // Still some to remove. Remove data starting from the end, up to 5s ahead
+  // of our playtime.
+  TimeUnit upperLimit = aPlaybackTime + TimeUnit::FromSeconds(5);
+  for (int32_t i = buffer.Length() - 1; i >= 0; i--) {
+    const auto& frame = buffer[i];
+    if (frame->mKeyframe) {
+      lastKeyFrameIndex = i;
+      toEvict -= partialEvict;
+      if (toEvict < 0) {
+        break;
+      }
+      partialEvict = 0;
+    }
+    if (frame->mTime <= upperLimit.ToMicroseconds()) {
+      break;
+    }
+    partialEvict += sizeof(*frame) + frame->mSize;
+  }
+  if (lastKeyFrameIndex < buffer.Length()) {
+    CodedFrameRemoval(
+      TimeInterval(TimeUnit::FromMicroseconds(buffer[lastKeyFrameIndex+1]->mTime),
+                   TimeUnit::FromInfinity()));
+  }
+}
+
+void
 TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
 {
   MSE_DEBUG("From %.2fs to %.2f",
@@ -332,6 +408,7 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
             TimeInterval(TimeUnit::FromMicroseconds(frame->mTime),
                          TimeUnit::FromMicroseconds(frame->mTime + frame->mDuration)));
         }
+        track->mSizeBuffer -= sizeof(*frame) + frame->mSize;
         data.RemoveElementAt(i);
       }
     }
@@ -346,6 +423,7 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
         removedInterval = removedInterval.Span(
           TimeInterval(TimeUnit::FromMicroseconds(frame->mTime),
                        TimeUnit::FromMicroseconds(frame->mTime + frame->mDuration)));
+        track->mSizeBuffer -= sizeof(*frame) + frame->mSize;
         data.RemoveElementAt(i);
       }
     }
@@ -368,6 +446,9 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
   }
   MSE_DEBUG("after video ranges=%s", DumpTimeRanges(mVideoTracks.mBufferedRanges).get());
   MSE_DEBUG("after audio ranges=%s", DumpTimeRanges(mAudioTracks.mBufferedRanges).get());
+
+  // Update our reported total size.
+  mSizeSourceBuffer = mVideoTracks.mSizeBuffer + mAudioTracks.mSizeBuffer;
 
   mRangeRemovalPromise.ResolveIfExists(true, __func__);
 }
@@ -891,6 +972,9 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
     mAudioBufferedRanges = mAudioTracks.mBufferedRanges;
   }
 
+  // Update our reported total size.
+  mSizeSourceBuffer = mVideoTracks.mSizeBuffer + mAudioTracks.mSizeBuffer;
+
   // Return to step 6.4 of Segment Parser Loop algorithm
   // 4. If this SourceBuffer is full and cannot accept more media data, then set the buffer full flag to true.
   // TODO
@@ -1046,6 +1130,7 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
               TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
                            TimeUnit::FromMicroseconds(sample->mTime + sample->mDuration)));
           }
+          trackBuffer.mSizeBuffer -= sizeof(*sample) + sample->mSize;
           data.RemoveElementAt(i);
         }
       }
@@ -1064,6 +1149,7 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
               TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
                            TimeUnit::FromMicroseconds(sample->mTime + sample->mDuration)));
           }
+          trackBuffer.mSizeBuffer -= sizeof(*sample) + sample->mSize;
           data.RemoveElementAt(i);
         }
       }
@@ -1080,6 +1166,7 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
       removedInterval = removedInterval.Span(
         TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
                      TimeUnit::FromMicroseconds(sample->mTime + sample->mDuration)));
+      trackBuffer.mSizeBuffer -= sizeof(*aSample) + sample->mSize;
       data.RemoveElementAt(i);
     }
     // Update our buffered range to exclude the range just removed.
@@ -1094,6 +1181,8 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
   } else {
     data.AppendElement(aSample);
   }
+  trackBuffer.mSizeBuffer += sizeof(*aSample) + aSample->mSize;
+
   // 17. Set last decode timestamp for track buffer to decode timestamp.
   trackBuffer.mLastDecodeTimestamp = Some(decodeTimestamp);
   // 18. Set last frame duration for track buffer to frame duration.
