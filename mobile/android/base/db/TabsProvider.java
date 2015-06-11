@@ -35,9 +35,11 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
     static final int TABS_ID = 601;
     static final int CLIENTS = 602;
     static final int CLIENTS_ID = 603;
+    static final int CLIENTS_RECENCY = 604;
 
     static final String DEFAULT_TABS_SORT_ORDER = Clients.LAST_MODIFIED + " DESC, " + Tabs.LAST_USED + " DESC";
     static final String DEFAULT_CLIENTS_SORT_ORDER = Clients.LAST_MODIFIED + " DESC";
+    static final String DEFAULT_CLIENTS_RECENCY_SORT_ORDER = "COALESCE(MAX(" + Tabs.LAST_USED + "), " + Clients.LAST_MODIFIED + ") DESC";
 
     static final String INDEX_TABS_GUID = "tabs_guid_index";
     static final String INDEX_TABS_POSITION = "tabs_position_index";
@@ -47,12 +49,14 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
 
     static final Map<String, String> TABS_PROJECTION_MAP;
     static final Map<String, String> CLIENTS_PROJECTION_MAP;
+    static final Map<String, String> CLIENTS_RECENCY_PROJECTION_MAP;
 
     static {
         URI_MATCHER.addURI(BrowserContract.TABS_AUTHORITY, "tabs", TABS);
         URI_MATCHER.addURI(BrowserContract.TABS_AUTHORITY, "tabs/#", TABS_ID);
         URI_MATCHER.addURI(BrowserContract.TABS_AUTHORITY, "clients", CLIENTS);
         URI_MATCHER.addURI(BrowserContract.TABS_AUTHORITY, "clients/#", CLIENTS_ID);
+        URI_MATCHER.addURI(BrowserContract.TABS_AUTHORITY, "clients_recency", CLIENTS_RECENCY);
 
         HashMap<String, String> map;
 
@@ -76,10 +80,24 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
         map.put(Clients.LAST_MODIFIED, Clients.LAST_MODIFIED);
         map.put(Clients.DEVICE_TYPE, Clients.DEVICE_TYPE);
         CLIENTS_PROJECTION_MAP = Collections.unmodifiableMap(map);
+
+        map = new HashMap<>();
+        map.put(Clients.GUID, projectColumn(TABLE_CLIENTS, Clients.GUID) + " AS guid");
+        map.put(Clients.NAME, projectColumn(TABLE_CLIENTS, Clients.NAME) + " AS name");
+        map.put(Clients.LAST_MODIFIED, projectColumn(TABLE_CLIENTS, Clients.LAST_MODIFIED) + " AS last_modified");
+        map.put(Clients.DEVICE_TYPE, projectColumn(TABLE_CLIENTS, Clients.DEVICE_TYPE) + " AS device_type");
+        // last_used is the max of the tab last_used times, or if there are no tabs,
+        // the client's last_modified time.
+        map.put(Tabs.LAST_USED, "COALESCE(MAX(" + projectColumn(TABLE_TABS, Tabs.LAST_USED) + "), " + projectColumn(TABLE_CLIENTS, Clients.LAST_MODIFIED) + ") AS last_used");
+        CLIENTS_RECENCY_PROJECTION_MAP = Collections.unmodifiableMap(map);
+    }
+
+    private static final String projectColumn(String table, String column) {
+        return table + "." + column;
     }
 
     private static final String selectColumn(String table, String column) {
-        return table + "." + column + " = ?";
+        return projectColumn(table, column) + " = ?";
     }
 
     final class TabsDatabaseHelper extends SQLiteOpenHelper {
@@ -334,6 +352,7 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
         SQLiteDatabase db = getReadableDatabase(uri);
         final int match = URI_MATCHER.match(uri);
 
+        String groupBy = null;
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         String limit = uri.getQueryParameter(BrowserContract.PARAM_LIMIT);
 
@@ -374,12 +393,27 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
                 qb.setTables(TABLE_CLIENTS);
                 break;
 
+            case CLIENTS_RECENCY:
+                trace("Query is on CLIENTS_RECENCY: " + uri);
+                if (TextUtils.isEmpty(sortOrder)) {
+                    sortOrder = DEFAULT_CLIENTS_RECENCY_SORT_ORDER;
+                } else {
+                    debug("Using sort order " + sortOrder + ".");
+                }
+
+                qb.setProjectionMap(CLIENTS_RECENCY_PROJECTION_MAP);
+                qb.setTables(TABLE_CLIENTS + " LEFT OUTER JOIN " + TABLE_TABS +
+                        " ON (" + projectColumn(TABLE_CLIENTS, Clients.GUID) +
+                        " = " + projectColumn(TABLE_TABS,Tabs.CLIENT_GUID) + ")");
+                groupBy = projectColumn(TABLE_CLIENTS, Clients.GUID);
+                break;
+
             default:
                 throw new UnsupportedOperationException("Unknown query URI " + uri);
         }
 
         trace("Running built query.");
-        final Cursor cursor = qb.query(db, projection, selection, selectionArgs, null, null, sortOrder, limit);
+        final Cursor cursor = qb.query(db, projection, selection, selectionArgs, groupBy, null, sortOrder, limit);
         cursor.setNotificationUri(getContext().getContentResolver(), BrowserContract.TABS_AUTHORITY_URI);
 
         return cursor;

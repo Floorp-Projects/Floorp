@@ -114,8 +114,18 @@ class StubTabsAccessor implements TabsAccessor {
     }
 
     @Override
+    public List<RemoteClient> getClientsWithoutTabsByRecencyFromCursor(Cursor cursor) {
+        return new ArrayList<>();
+    }
+
+    @Override
     public List<RemoteClient> getClientsFromCursor(final Cursor cursor) {
         return new ArrayList<RemoteClient>();
+    }
+
+    @Override
+    public Cursor getRemoteClientsByRecencyCursor(Context context) {
+        return null;
     }
 
     public Cursor getRemoteTabsCursor(Context context) {

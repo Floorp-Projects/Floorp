@@ -40,7 +40,7 @@ function* spawnTest() {
   ok(true, "Flamegraph rerenders after its corresponding pane is shown.");
 
   rendered = once(JsFlameGraphView, EVENTS.JS_FLAMEGRAPH_RENDERED);
-  OverviewView.emit(EVENTS.OVERVIEW_RANGE_CLEARED);
+  OverviewView.emit(EVENTS.OVERVIEW_RANGE_SELECTED);
   yield rendered;
   ok(true, "Flamegraph rerenders when a range in the overview graph is removed.");
 

@@ -5,7 +5,7 @@
 %globalDTD;
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % aboutDTD SYSTEM "chrome://browser/locale/aboutPasswords.dtd" >
+<!ENTITY % aboutDTD SYSTEM "chrome://browser/locale/aboutLogins.dtd" >
 %aboutDTD;
 ]>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -13,16 +13,16 @@
 - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>&aboutPasswords.title;</title>
+    <title>&aboutLogins.title;</title>
     <meta name="viewport" content="width=device-width; user-scalable=0" />
     <link rel="icon" type="image/png" sizes="64x64" href="chrome://branding/content/favicon64.png" />
     <link rel="stylesheet" href="chrome://browser/skin/aboutBase.css" type="text/css"/>
-    <link rel="stylesheet" href="chrome://browser/skin/aboutPasswords.css" type="text/css"/>
-    <script type="application/javascript;version=1.8" src="chrome://browser/content/aboutPasswords.js"></script>
+    <link rel="stylesheet" href="chrome://browser/skin/aboutLogins.css" type="text/css"/>
+    <script type="application/javascript;version=1.8" src="chrome://browser/content/aboutLogins.js"></script>
   </head>
   <body dir="&locale.dir;">
-    <div id="passwords-header" class="header">
-      <div>&aboutPasswords.title;</div>
+    <div id="logins-header" class="header">
+      <div>&aboutLogins.title;</div>
       <ul class="toolbar-buttons">
         <li id="filter-button"></li>
       </ul>
@@ -41,8 +41,8 @@
           <div id="detail-age"></div>
         </div>
         <div class="buttons">
-          <button id="copyusername-btn">&aboutPasswords.copyUsername;</button>
-          <button id="copypassword-btn">&aboutPasswords.copyPassword;</button>
+          <button id="copyusername-btn">&aboutLogins.copyUsername;</button>
+          <button id="copypassword-btn">&aboutLogins.copyPassword;</button>
         </div>
       </div>
     </div>
