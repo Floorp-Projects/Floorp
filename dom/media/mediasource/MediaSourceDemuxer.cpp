@@ -37,24 +37,30 @@ MediaSourceDemuxer::AttemptInit()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  ScanSourceBuffersForContent();
-
-  if (mInfo.HasAudio() || mInfo.HasVideo()) {
+  if (ScanSourceBuffersForContent()) {
     return InitPromise::CreateAndResolve(NS_OK, __func__);
   }
   return InitPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
                                       __func__);
 }
 
-void
+bool
 MediaSourceDemuxer::ScanSourceBuffersForContent()
 {
   MOZ_ASSERT(OnTaskQueue());
 
+  if (mSourceBuffers.IsEmpty()) {
+    return false;
+  }
+
   MonitorAutoLock mon(mMonitor);
 
+  bool haveEmptySourceBuffer = false;
   for (const auto& sourceBuffer : mSourceBuffers) {
     MediaInfo info = sourceBuffer->GetMetadata();
+    if (!info.HasAudio() && !info.HasVideo()) {
+      haveEmptySourceBuffer = true;
+    }
     if (info.HasAudio() && !mAudioTrack) {
       mInfo.mAudio = info.mAudio;
       mAudioTrack = sourceBuffer;
@@ -67,6 +73,11 @@ MediaSourceDemuxer::ScanSourceBuffersForContent()
       mInfo.mCrypto = info.mCrypto;
     }
   }
+  if (mInfo.HasAudio() && mInfo.HasVideo()) {
+    // We have both audio and video. We can ignore non-ready source buffer.
+    return true;
+  }
+  return !haveEmptySourceBuffer;
 }
 
 bool
@@ -332,7 +343,7 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
   }
   nsRefPtr<SamplesHolder> samples = new SamplesHolder;
   samples->mSamples.AppendElement(sample);
-  {
+  if (mNextRandomAccessPoint.ToMicroseconds() <= sample->mTime) {
     MonitorAutoLock mon(mMonitor);
     mNextRandomAccessPoint = GetNextRandomAccessPoint();
   }
