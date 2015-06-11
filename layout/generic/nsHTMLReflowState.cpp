@@ -144,6 +144,7 @@ FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame)
 // containing-block block-size, rather than its inline-size.
 nsCSSOffsetState::nsCSSOffsetState(nsIFrame *aFrame,
                                    nsRenderingContext *aRenderingContext,
+                                   WritingMode aContainingBlockWritingMode,
                                    nscoord aContainingBlockISize)
   : frame(aFrame)
   , rendContext(aRenderingContext)
@@ -153,9 +154,9 @@ nsCSSOffsetState::nsCSSOffsetState(nsIFrame *aFrame,
              "We're about to resolve percent margin & padding "
              "values against CB inline size, which is incorrect for "
              "flex/grid items");
-  LogicalSize cbSize(mWritingMode, aContainingBlockISize,
+  LogicalSize cbSize(aContainingBlockWritingMode, aContainingBlockISize,
                      aContainingBlockISize);
-  InitOffsets(cbSize, frame->GetType());
+  InitOffsets(aContainingBlockWritingMode, cbSize, frame->GetType());
 }
 
 // Initialize a reflow state for a child frame's reflow. Some state
@@ -2031,7 +2032,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
   // height equal to the available space
   if (nullptr == parentReflowState || mFlags.mDummyParentReflowState) {
     // XXXldb This doesn't mean what it used to!
-    InitOffsets(OffsetPercentBasis(frame, wm, aContainingBlockSize),
+    InitOffsets(wm, OffsetPercentBasis(frame, wm, aContainingBlockSize),
                 aFrameType, aBorder, aPadding);
     // Override mComputedMargin since reflow roots start from the
     // frame's boundary, which is inside the margin.
@@ -2084,9 +2085,15 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
 
     // XXX Might need to also pass the CB height (not width) for page boxes,
     // too, if we implement them.
-    InitOffsets(OffsetPercentBasis(frame, wm, cbSize),
+
+    // For calculating positioning offsets, margins, borders and
+    // padding, we use the writing mode of the containing block
+    WritingMode cbwm = cbrs->GetWritingMode();
+    InitOffsets(cbwm, OffsetPercentBasis(frame, cbwm,
+                                         cbSize.ConvertTo(cbwm, wm)),
                 aFrameType, aBorder, aPadding);
 
+    // For calculating the size of this box, we use its own writing mode
     const nsStyleCoord &blockSize = mStylePosition->BSize(wm);
     nsStyleUnit blockSizeUnit = blockSize.GetUnit();
 
@@ -2138,14 +2145,16 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
       }
     }
 
-    // Compute our offsets if the element is relatively positioned.  We need
-    // the correct containing block width and blockSize here, which is why we need
-    // to do it after all the quirks-n-such above. (If the element is sticky
-    // positioned, we need to wait until the scroll container knows its size,
-    // so we compute offsets from StickyScrollContainer::UpdatePositions.)
+    // Compute our offsets if the element is relatively positioned.  We
+    // need the correct containing block inline-size and block-size
+    // here, which is why we need to do it after all the quirks-n-such
+    // above. (If the element is sticky positioned, we need to wait
+    // until the scroll container knows its size, so we compute offsets
+    // from StickyScrollContainer::UpdatePositions.)
     if (mStyleDisplay->IsRelativelyPositioned(frame) &&
         NS_STYLE_POSITION_RELATIVE == mStyleDisplay->mPosition) {
-      ComputeRelativeOffsets(wm, frame, cbSize, ComputedPhysicalOffsets());
+      ComputeRelativeOffsets(cbwm, frame, cbSize.ConvertTo(cbwm, wm),
+                             ComputedPhysicalOffsets());
     } else {
       // Initialize offsets to 0
       ComputedPhysicalOffsets().SizeTo(0, 0, 0, 0);
@@ -2306,7 +2315,8 @@ UpdateProp(FrameProperties& aProps,
 }
 
 void
-nsCSSOffsetState::InitOffsets(const LogicalSize& aPercentBasis,
+nsCSSOffsetState::InitOffsets(WritingMode aWM,
+                              const LogicalSize& aPercentBasis,
                               nsIAtom* aFrameType,
                               const nsMargin *aBorder,
                               const nsMargin *aPadding)
@@ -2323,7 +2333,7 @@ nsCSSOffsetState::InitOffsets(const LogicalSize& aPercentBasis,
   // become the default computed values, and may be adjusted below
   // XXX fix to provide 0,0 for the top&bottom margins for
   // inline-non-replaced elements
-  bool needMarginProp = ComputeMargin(aPercentBasis);
+  bool needMarginProp = ComputeMargin(aWM, aPercentBasis);
   // XXX We need to include 'auto' horizontal margins in this too!
   // ... but if we did that, we'd need to fix nsFrame::GetUsedMargin
   // to use it even when the margins are all zero (since sometimes
@@ -2356,7 +2366,7 @@ nsCSSOffsetState::InitOffsets(const LogicalSize& aPercentBasis,
 	  (frame->GetStateBits() & NS_FRAME_REFLOW_ROOT);
   }
   else {
-    needPaddingProp = ComputePadding(aPercentBasis, aFrameType);
+    needPaddingProp = ComputePadding(aWM, aPercentBasis, aFrameType);
   }
 
   if (isThemed) {
@@ -2650,7 +2660,8 @@ nsHTMLReflowState::CalcLineHeight(nsIContent* aContent,
 }
 
 bool
-nsCSSOffsetState::ComputeMargin(const LogicalSize& aPercentBasis)
+nsCSSOffsetState::ComputeMargin(WritingMode aWM,
+                                const LogicalSize& aPercentBasis)
 {
   // SVG text frames have no margin.
   if (frame->IsSVGText()) {
@@ -2662,26 +2673,29 @@ nsCSSOffsetState::ComputeMargin(const LogicalSize& aPercentBasis)
 
   bool isCBDependent = !styleMargin->GetMargin(ComputedPhysicalMargin());
   if (isCBDependent) {
-    // We have to compute the value
-    WritingMode wm = GetWritingMode();
-    LogicalMargin m(wm);
-    m.IStart(wm) = nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.ISize(wm),
-                              styleMargin->mMargin.GetIStart(wm));
-    m.IEnd(wm) = nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.ISize(wm),
-                              styleMargin->mMargin.GetIEnd(wm));
+    // We have to compute the value. Note that this calculation is
+    // performed according to the writing mode of the containing block
+    // (http://dev.w3.org/csswg/css-writing-modes-3/#orthogonal-flows)
+    LogicalMargin m(aWM);
+    m.IStart(aWM) = nsLayoutUtils::
+      ComputeCBDependentValue(aPercentBasis.ISize(aWM),
+                              styleMargin->mMargin.GetIStart(aWM));
+    m.IEnd(aWM) = nsLayoutUtils::
+      ComputeCBDependentValue(aPercentBasis.ISize(aWM),
+                              styleMargin->mMargin.GetIEnd(aWM));
 
-    m.BStart(wm) = nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.BSize(wm),
-                              styleMargin->mMargin.GetBStart(wm));
-    m.BEnd(wm) = nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.BSize(wm),
-                              styleMargin->mMargin.GetBEnd(wm));
+    m.BStart(aWM) = nsLayoutUtils::
+      ComputeCBDependentValue(aPercentBasis.BSize(aWM),
+                              styleMargin->mMargin.GetBStart(aWM));
+    m.BEnd(aWM) = nsLayoutUtils::
+      ComputeCBDependentValue(aPercentBasis.BSize(aWM),
+                              styleMargin->mMargin.GetBEnd(aWM));
 
-    SetComputedLogicalMargin(m);
+    SetComputedLogicalMargin(aWM, m);
   }
 
+  // ... but font-size-inflation-based margin adjustment uses the
+  // frame's writing mode
   nscoord marginAdjustment = FontSizeInflationListMarginAdjustment(frame);
 
   if (marginAdjustment > 0) {
@@ -2694,7 +2708,8 @@ nsCSSOffsetState::ComputeMargin(const LogicalSize& aPercentBasis)
 }
 
 bool
-nsCSSOffsetState::ComputePadding(const LogicalSize& aPercentBasis,
+nsCSSOffsetState::ComputePadding(WritingMode aWM,
+                                 const LogicalSize& aPercentBasis,
                                  nsIAtom* aFrameType)
 {
   // If style can provide us the padding directly, then use it.
@@ -2709,25 +2724,26 @@ nsCSSOffsetState::ComputePadding(const LogicalSize& aPercentBasis,
     ComputedPhysicalPadding().SizeTo(0,0,0,0);
   }
   else if (isCBDependent) {
-    // We have to compute the value
+    // We have to compute the value. This calculation is performed
+    // according to the writing mode of the containing block
+    // (http://dev.w3.org/csswg/css-writing-modes-3/#orthogonal-flows)
     // clamp negative calc() results to 0
-    WritingMode wm = GetWritingMode();
-    LogicalMargin p(wm);
-    p.IStart(wm) = std::max(0, nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.ISize(wm),
-                              stylePadding->mPadding.GetIStart(wm)));
-    p.IEnd(wm) = std::max(0, nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.ISize(wm),
-                              stylePadding->mPadding.GetIEnd(wm)));
+    LogicalMargin p(aWM);
+    p.IStart(aWM) = std::max(0, nsLayoutUtils::
+      ComputeCBDependentValue(aPercentBasis.ISize(aWM),
+                              stylePadding->mPadding.GetIStart(aWM)));
+    p.IEnd(aWM) = std::max(0, nsLayoutUtils::
+      ComputeCBDependentValue(aPercentBasis.ISize(aWM),
+                              stylePadding->mPadding.GetIEnd(aWM)));
 
-    p.BStart(wm) = std::max(0, nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.BSize(wm),
-                              stylePadding->mPadding.GetBStart(wm)));
-    p.BEnd(wm) = std::max(0, nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.BSize(wm),
-                              stylePadding->mPadding.GetBEnd(wm)));
+    p.BStart(aWM) = std::max(0, nsLayoutUtils::
+      ComputeCBDependentValue(aPercentBasis.BSize(aWM),
+                              stylePadding->mPadding.GetBStart(aWM)));
+    p.BEnd(aWM) = std::max(0, nsLayoutUtils::
+      ComputeCBDependentValue(aPercentBasis.BSize(aWM),
+                              stylePadding->mPadding.GetBEnd(aWM)));
 
-    SetComputedLogicalPadding(p);
+    SetComputedLogicalPadding(aWM, p);
   }
   return isCBDependent;
 }
