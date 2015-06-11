@@ -125,8 +125,27 @@ protected:
     // event.
     GdkEventKey* mProcessingKeyEvent;
 
-    // current target offset of IME composition
-    uint32_t mCompositionTargetOffset;
+    struct Range
+    {
+        uint32_t mOffset;
+        uint32_t mLength;
+
+        Range()
+            : mOffset(UINT32_MAX)
+            , mLength(UINT32_MAX)
+        {
+        }
+
+        bool IsValid() const { return mOffset != UINT32_MAX; }
+        void Clear()
+        {
+            mOffset = UINT32_MAX;
+            mLength = UINT32_MAX;
+        }
+    };
+
+    // current target offset and length of IME composition
+    Range mCompositionTargetRange;
 
     // mCompositionState indicates current status of composition.
     enum eCompositionState {
@@ -327,14 +346,11 @@ protected:
                              const nsAString& aLastDispatchedData);
 
     /**
-     * Sets the offset's cursor position to IME.
+     * Move the candidate window with "fake" cursor position.
      *
      * @param aContext              A GtkIMContext which is being handled.
-     * @param aTargetOffset         Offset of a character which is anchor of
-     *                              a candidate window.  This is offset in
-     *                              UTF-16 string.
      */
-    void SetCursorPosition(GtkIMContext* aContext, uint32_t aTargetOffset);
+    void SetCursorPosition(GtkIMContext* aContext);
 
     // Queries the current selection offset of the window.
     uint32_t GetSelectionOffset(nsWindow* aWindow);
