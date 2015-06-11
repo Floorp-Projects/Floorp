@@ -263,14 +263,7 @@ public:
   }
 
   media::TimeIntervals GetBuffered() {
-    // It's possible for JS to query .buffered before we've determined the start
-    // time from metadata, in which case the reader isn't ready to be asked this
-    // question.
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    if (!HaveStartTime()) {
-      return media::TimeIntervals();
-    }
-
     return mReader->GetBuffered();
   }
 
