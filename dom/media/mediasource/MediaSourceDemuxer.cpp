@@ -310,6 +310,11 @@ MediaSourceTrackDemuxer::BreakCycles()
 nsRefPtr<MediaSourceTrackDemuxer::SeekPromise>
 MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
 {
+  if (aTime.ToMicroseconds() && !mManager->Buffered(mType).Contains(aTime)) {
+    // We don't have the data to seek to.
+    return SeekPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
+                                        __func__);
+  }
   const TrackBuffersManager::TrackBuffer& track =
     mManager->GetTrackBuffer(mType);
   TimeUnit lastKeyFrameTime;
