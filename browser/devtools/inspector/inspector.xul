@@ -91,6 +91,9 @@
         label="&inspectorScrollNodeIntoView.label;"
         accesskey="&inspectorScrollNodeIntoView.accesskey;"
         oncommand="inspector.scrollNodeIntoView()"/>
+      <menuitem id="node-menu-screenshotnode"
+        label="&inspectorScreenshotNode.label;"
+        oncommand="inspector.screenshotNode()" />
       <menuitem id="node-menu-delete"
         label="&inspectorHTMLDelete.label;"
         accesskey="&inspectorHTMLDelete.accesskey;"

@@ -1,0 +1,33 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Network Monitor Test Page</title>
+  </head>
+
+  <body>
+    <p>HAR POST data test</p>
+
+    <script type="text/javascript">
+      function post(aAddress, aData) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", aAddress, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(aData);
+      }
+
+      function executeTest() {
+        var url = "sjs_simple-test-server.sjs";
+        var data = "{'first': 'John', 'last': 'Doe'}";
+        post(url, data);
+      }
+    </script>
+  </body>
+
+</html>

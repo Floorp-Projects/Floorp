@@ -338,6 +338,13 @@ loop.roomViews = (function(mozL10n) {
         }
       }
 
+      // Make sure we do not show the edit-mode when we just successfully saved
+      // context.
+      if (this.props.savingContext && nextProps.savingContext !== this.props.savingContext &&
+        !nextProps.error && this.state.editMode) {
+        newState.editMode = false;
+      }
+
       if (Object.getOwnPropertyNames(newState).length) {
         this.setState(newState);
       }
@@ -345,7 +352,7 @@ loop.roomViews = (function(mozL10n) {
 
     getDefaultProps: function() {
       return { editMode: false };
-     },
+    },
 
     getInitialState: function() {
       var url = this._getURL();
@@ -528,7 +535,7 @@ loop.roomViews = (function(mozL10n) {
             React.createElement("button", {className: "btn btn-info", 
                     disabled: this.props.savingContext, 
                     onClick: this.handleFormSubmit}, 
-              mozL10n.get("context_save_label")
+              mozL10n.get("context_save_label2")
             ), 
             React.createElement("button", {className: "room-context-btn-close", 
                     onClick: this.handleCloseClick, 
@@ -579,7 +586,10 @@ loop.roomViews = (function(mozL10n) {
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      mozLoop: React.PropTypes.object.isRequired
+      mozLoop: React.PropTypes.object.isRequired,
+      // The poster URLs are for UI-showcase testing and development.
+      localPosterUrl: React.PropTypes.string,
+      remotePosterUrl: React.PropTypes.string
     },
 
     componentWillUpdate: function(nextProps, nextState) {
@@ -591,10 +601,7 @@ loop.roomViews = (function(mozL10n) {
         this.props.dispatcher.dispatch(new sharedActions.SetupStreamElements({
           publisherConfig: this.getDefaultPublisherConfig({
             publishVideo: !this.state.videoMuted
-          }),
-          getLocalElementFunc: this._getElement.bind(this, ".local"),
-          getScreenShareElementFunc: this._getElement.bind(this, ".screen"),
-          getRemoteElementFunc: this._getElement.bind(this, ".remote")
+          })
         }));
       }
     },
@@ -633,6 +640,40 @@ loop.roomViews = (function(mozL10n) {
         this.props.mozLoop.getLoopPref("contextInConversations.enabled") &&
         (this.state.roomContextUrls || this.state.roomDescription)
       );
+    },
+
+    /**
+     * Works out if remote video should be rended or not, depending on the
+     * room state and other flags.
+     *
+     * @return {Boolean} True if remote video should be rended.
+     */
+    shouldRenderRemoteVideo: function() {
+      switch(this.state.roomState) {
+        case ROOM_STATES.HAS_PARTICIPANTS:
+          if (this.state.remoteVideoEnabled) {
+            return true;
+          }
+
+          if (this.state.mediaConnected) {
+            // since the remoteVideo hasn't yet been enabled, if the
+            // media is connected, then we should be displaying an avatar.
+            return false;
+          }
+
+          return true;
+
+        case ROOM_STATES.SESSION_CONNECTED:
+        case ROOM_STATES.JOINED:
+          // this case is so that we don't show an avatar while waiting for
+          // the other party to connect
+          return true;
+
+        default:
+          console.warn("StandaloneRoomView.shouldRenderRemoteVideo:" +
+            " unexpected roomState: ", this.state.roomState);
+          return true;
+      }
     },
 
     render: function() {
@@ -674,6 +715,7 @@ loop.roomViews = (function(mozL10n) {
           );
         }
         default: {
+
           return (
             React.createElement("div", {className: "room-conversation-wrapper"}, 
               React.createElement(sharedViews.TextChatView, {dispatcher: this.props.dispatcher}), 
@@ -690,10 +732,19 @@ loop.roomViews = (function(mozL10n) {
                 React.createElement("div", {className: "conversation room-conversation"}, 
                   React.createElement("div", {className: "media nested"}, 
                     React.createElement("div", {className: "video_wrapper remote_wrapper"}, 
-                      React.createElement("div", {className: "video_inner remote focus-stream"})
+                      React.createElement("div", {className: "video_inner remote focus-stream"}, 
+                        React.createElement(sharedViews.MediaView, {displayAvatar: !this.shouldRenderRemoteVideo(), 
+                          posterUrl: this.props.remotePosterUrl, 
+                          mediaType: "remote", 
+                          srcVideoObject: this.state.remoteSrcVideoObject})
+                      )
                     ), 
-                    React.createElement("div", {className: localStreamClasses}), 
-                    React.createElement("div", {className: "screen hide"})
+                    React.createElement("div", {className: localStreamClasses}, 
+                      React.createElement(sharedViews.MediaView, {displayAvatar: this.state.videoMuted, 
+                        posterUrl: this.props.localPosterUrl, 
+                        mediaType: "local", 
+                        srcVideoObject: this.state.localSrcVideoObject})
+                    )
                   ), 
                   React.createElement(sharedViews.ConversationToolbar, {
                     dispatcher: this.props.dispatcher, 

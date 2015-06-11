@@ -565,13 +565,23 @@ loop.conversationViews = (function(mozL10n) {
 
   var OngoingConversationView = React.createClass({
     mixins: [
+      loop.store.StoreMixin("conversationStore"),
       sharedMixins.MediaSetupMixin
     ],
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      // local
       video: React.PropTypes.object,
-      audio: React.PropTypes.object
+      // local
+      audio: React.PropTypes.object,
+      remoteVideoEnabled: React.PropTypes.bool,
+      // This is used from the props rather than the state to make it easier for
+      // the ui-showcase.
+      mediaConnected: React.PropTypes.bool,
+      // The poster URLs are for UI-showcase testing and development.
+      localPosterUrl: React.PropTypes.string,
+      remotePosterUrl: React.PropTypes.string
     },
 
     getDefaultProps: function() {
@@ -581,6 +591,10 @@ loop.conversationViews = (function(mozL10n) {
       };
     },
 
+    getInitialState: function() {
+      return this.getStoreState();
+    },
+
     componentDidMount: function() {
       // The SDK needs to know about the configuration and the elements to use
       // for display. So the best way seems to pass the information here - ideally
@@ -588,9 +602,7 @@ loop.conversationViews = (function(mozL10n) {
       this.props.dispatcher.dispatch(new sharedActions.SetupStreamElements({
         publisherConfig: this.getDefaultPublisherConfig({
           publishVideo: this.props.video.enabled
-        }),
-        getLocalElementFunc: this._getElement.bind(this, ".local"),
-        getRemoteElementFunc: this._getElement.bind(this, ".remote")
+        })
       }));
     },
 
@@ -616,6 +628,18 @@ loop.conversationViews = (function(mozL10n) {
         }));
     },
 
+    shouldRenderRemoteVideo: function() {
+      if (this.props.mediaConnected) {
+        // If remote video is not enabled, we're muted, so we'll show an avatar
+        // instead.
+        return this.props.remoteVideoEnabled;
+      }
+
+      // We're not yet connected, but we don't want to show the avatar, and in
+      // the common case, we'll just transition to the video.
+      return true;
+    },
+
     render: function() {
       var localStreamClasses = React.addons.classSet({
         local: true,
@@ -628,11 +652,22 @@ loop.conversationViews = (function(mozL10n) {
           <div className="conversation">
             <div className="media nested">
               <div className="video_wrapper remote_wrapper">
-                <div className="video_inner remote focus-stream"></div>
+                <div className="video_inner remote focus-stream">
+                  <sharedViews.MediaView displayAvatar={!this.shouldRenderRemoteVideo()}
+                    posterUrl={this.props.remotePosterUrl}
+                    mediaType="remote"
+                    srcVideoObject={this.state.remoteSrcVideoObject} />
+                </div>
               </div>
-              <div className={localStreamClasses}></div>
+              <div className={localStreamClasses}>
+                <sharedViews.MediaView displayAvatar={!this.props.video.enabled}
+                  posterUrl={this.props.localPosterUrl}
+                  mediaType="local"
+                  srcVideoObject={this.state.localSrcVideoObject} />
+              </div>
             </div>
             <loop.shared.views.ConversationToolbar
+              dispatcher={this.props.dispatcher}
               video={this.props.video}
               audio={this.props.audio}
               publishStream={this.publishStream}
@@ -743,6 +778,9 @@ loop.conversationViews = (function(mozL10n) {
             dispatcher={this.props.dispatcher}
             video={{enabled: !this.state.videoMuted}}
             audio={{enabled: !this.state.audioMuted}}
+            remoteVideoEnabled={this.state.remoteVideoEnabled}
+            mediaConnected={this.state.mediaConnected}
+            remoteSrcVideoObject={this.state.remoteSrcVideoObject}
             />
           );
         }

@@ -3,7 +3,7 @@
 
 /**
  * Tests that clearing recordings empties out the recordings list and stops
- * a current recording if recording.
+ * a current recording if recording and can continue recording after.
  */
 
 let test = Task.async(function*() {
@@ -28,6 +28,10 @@ let test = Task.async(function*() {
     "PerformanceView should be in an empty state.");
   is(PerformanceController.getCurrentRecording(), null,
     "There should be no current recording.");
+
+  // bug 1169146: Try another recording after clearing mid-recording
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   yield teardown(panel);
   finish();

@@ -16,6 +16,12 @@ function makeURI(url)
          newURI(url, null, null);
 }
 
+function readInputStreamToString(aStream)
+{
+  Cu.import("resource://gre/modules/NetUtil.jsm");
+  return NetUtil.readInputStreamToString(aStream, aStream.available());
+}
+
 function RemoteWebNavigation(browser)
 {
   this.swapBrowser(browser);
@@ -73,14 +79,13 @@ RemoteWebNavigation.prototype = {
   },
   loadURIWithOptions: function(aURI, aLoadFlags, aReferrer, aReferrerPolicy,
                                aPostData, aHeaders, aBaseURI) {
-    if (aPostData || aHeaders)
-      throw Components.Exception("RemoteWebNavigation doesn't accept postdata or headers.", Cr.NS_ERROR_INVALID_ARGS);
-
     this._sendMessage("WebNavigation:LoadURI", {
       uri: aURI,
       flags: aLoadFlags,
       referrer: aReferrer ? aReferrer.spec : null,
       referrerPolicy: aReferrerPolicy,
+      postData: aPostData ? readInputStreamToString(aPostData) : null,
+      headers: aHeaders ? readInputStreamToString(aHeaders) : null,
       baseURI: aBaseURI ? aBaseURI.spec : null,
     });
   },

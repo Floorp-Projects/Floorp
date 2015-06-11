@@ -18,7 +18,7 @@
     <EditText android:id="@+id/password_edit"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:password="true"
+              android:inputType="textPassword"
               android:hint="@string/doorhanger_login_edit_password_hint"/>
 
     <CheckBox android:id="@+id/checkbox_toggle_password"

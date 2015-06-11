@@ -8,8 +8,8 @@ describe("loop.conversationViews", function () {
   var TestUtils = React.addons.TestUtils;
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
-  var sharedView = loop.shared.views;
-  var sandbox, view, dispatcher, contact, fakeAudioXHR;
+  var sharedViews = loop.shared.views;
+  var sandbox, view, dispatcher, contact, fakeAudioXHR, conversationStore;
   var fakeMozLoop, fakeWindow;
 
   var CALL_STATES = loop.store.CALL_STATES;
@@ -104,6 +104,19 @@ describe("loop.conversationViews", function () {
     };
     loop.shared.mixins.setRootObject(fakeWindow);
 
+    var feedbackStore = new loop.store.FeedbackStore(dispatcher, {
+      feedbackClient: {}
+    });
+    conversationStore = new loop.store.ConversationStore(dispatcher, {
+      client: {},
+      mozLoop: fakeMozLoop,
+      sdkDriver: {}
+    });
+
+    loop.store.StoreMixin.register({
+      conversationStore: conversationStore,
+      feedbackStore: feedbackStore
+    });
   });
 
   afterEach(function() {
@@ -255,7 +268,7 @@ describe("loop.conversationViews", function () {
   });
 
   describe("CallFailedView", function() {
-    var store, fakeAudio;
+    var fakeAudio;
 
     var contact = {email: [{value: "test@test.tld"}]};
 
@@ -269,15 +282,6 @@ describe("loop.conversationViews", function () {
     }
 
     beforeEach(function() {
-      store = new loop.store.ConversationStore(dispatcher, {
-        client: {},
-        mozLoop: navigator.mozLoop,
-        sdkDriver: {}
-      });
-      loop.store.StoreMixin.register({
-        conversationStore: store
-      });
-
       fakeAudio = {
         play: sinon.spy(),
         pause: sinon.spy(),
@@ -357,7 +361,7 @@ describe("loop.conversationViews", function () {
     it("should compose an email once the email link is received", function() {
       var composeCallUrlEmail = sandbox.stub(sharedUtils, "composeCallUrlEmail");
       view = mountTestComponent({contact: contact});
-      store.setStoreState({emailLink: "http://fake.invalid/"});
+      conversationStore.setStoreState({emailLink: "http://fake.invalid/"});
 
       sinon.assert.calledOnce(composeCallUrlEmail);
       sinon.assert.calledWithExactly(composeCallUrlEmail,
@@ -368,7 +372,7 @@ describe("loop.conversationViews", function () {
       function() {
         view = mountTestComponent({contact: contact});
 
-        store.setStoreState({emailLink: "http://fake.invalid/"});
+        conversationStore.setStoreState({emailLink: "http://fake.invalid/"});
 
         sinon.assert.calledOnce(fakeWindow.close);
       });
@@ -377,7 +381,7 @@ describe("loop.conversationViews", function () {
       function() {
         view = mountTestComponent({contact: contact});
 
-        store.trigger("error:emailLink");
+        conversationStore.trigger("error:emailLink");
 
         expect(view.getDOMNode().querySelector(".error")).not.eql(null);
       });
@@ -386,7 +390,7 @@ describe("loop.conversationViews", function () {
       function() {
         view = mountTestComponent({contact: contact});
 
-        store.trigger("error:emailLink");
+        conversationStore.trigger("error:emailLink");
 
         expect(view.getDOMNode().querySelector(".btn-email").disabled).eql(false);
       });
@@ -403,7 +407,7 @@ describe("loop.conversationViews", function () {
 
     it("should show 'something went wrong' when the reason is WEBSOCKET_REASONS.MEDIA_FAIL",
       function () {
-        store.setStoreState({callStateReason: WEBSOCKET_REASONS.MEDIA_FAIL});
+        conversationStore.setStoreState({callStateReason: WEBSOCKET_REASONS.MEDIA_FAIL});
 
         view = mountTestComponent({contact: contact});
 
@@ -412,7 +416,7 @@ describe("loop.conversationViews", function () {
 
     it("should show 'contact unavailable' when the reason is WEBSOCKET_REASONS.REJECT",
       function () {
-        store.setStoreState({callStateReason: WEBSOCKET_REASONS.REJECT});
+        conversationStore.setStoreState({callStateReason: WEBSOCKET_REASONS.REJECT});
 
         view = mountTestComponent({contact: contact});
 
@@ -423,7 +427,7 @@ describe("loop.conversationViews", function () {
 
     it("should show 'contact unavailable' when the reason is WEBSOCKET_REASONS.BUSY",
       function () {
-        store.setStoreState({callStateReason: WEBSOCKET_REASONS.BUSY});
+        conversationStore.setStoreState({callStateReason: WEBSOCKET_REASONS.BUSY});
 
         view = mountTestComponent({contact: contact});
 
@@ -434,7 +438,7 @@ describe("loop.conversationViews", function () {
 
     it("should show 'something went wrong' when the reason is 'setup'",
       function () {
-        store.setStoreState({callStateReason: "setup"});
+        conversationStore.setStoreState({callStateReason: "setup"});
 
         view = mountTestComponent({contact: contact});
 
@@ -444,7 +448,7 @@ describe("loop.conversationViews", function () {
 
     it("should show 'contact unavailable' when the reason is REST_ERRNOS.USER_UNAVAILABLE",
       function () {
-        store.setStoreState({callStateReason: REST_ERRNOS.USER_UNAVAILABLE});
+        conversationStore.setStoreState({callStateReason: REST_ERRNOS.USER_UNAVAILABLE});
 
         view = mountTestComponent({contact: contact});
 
@@ -455,7 +459,7 @@ describe("loop.conversationViews", function () {
 
     it("should show 'no media' when the reason is FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA",
       function () {
-        store.setStoreState({callStateReason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA});
+        conversationStore.setStoreState({callStateReason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA});
 
         view = mountTestComponent({contact: contact});
 
@@ -464,7 +468,7 @@ describe("loop.conversationViews", function () {
 
     it("should display a generic contact unavailable msg when the reason is" +
        " WEBSOCKET_REASONS.BUSY and no display name is available", function() {
-        store.setStoreState({callStateReason: WEBSOCKET_REASONS.BUSY});
+        conversationStore.setStoreState({callStateReason: WEBSOCKET_REASONS.BUSY});
         var phoneOnlyContact = {
           tel: [{"pref": true, type: "work", value: ""}]
         };
@@ -477,27 +481,72 @@ describe("loop.conversationViews", function () {
   });
 
   describe("OngoingConversationView", function() {
-    function mountTestComponent(props) {
+    function mountTestComponent(extraProps) {
+      var props = _.extend({
+        dispatcher: dispatcher
+      }, extraProps);
       return TestUtils.renderIntoDocument(
         React.createElement(loop.conversationViews.OngoingConversationView, props));
     }
 
     it("should dispatch a setupStreamElements action when the view is created",
       function() {
-        view = mountTestComponent({
-          dispatcher: dispatcher
-        });
+        view = mountTestComponent();
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "setupStreamElements"));
       });
 
+    it("should display an avatar for remote video when the stream is not enabled", function() {
+      view = mountTestComponent({
+        mediaConnected: true,
+        remoteVideoEnabled: false
+      });
+
+      TestUtils.findRenderedComponentWithType(view, sharedViews.AvatarView);
+    });
+
+    it("should display the remote video when the stream is enabled", function() {
+      conversationStore.setStoreState({
+        remoteSrcVideoObject: { fake: 1 }
+      });
+
+      view = mountTestComponent({
+        mediaConnected: true,
+        remoteVideoEnabled: true
+      });
+
+      expect(view.getDOMNode().querySelector(".remote video")).not.eql(null);
+    });
+
+    it("should display an avatar for local video when the stream is not enabled", function() {
+      view = mountTestComponent({
+        video: {
+          enabled: false
+        }
+      });
+
+      TestUtils.findRenderedComponentWithType(view, sharedViews.AvatarView);
+    });
+
+    it("should display the local video when the stream is enabled", function() {
+      conversationStore.setStoreState({
+        localSrcVideoObject: { fake: 1 }
+      });
+
+      view = mountTestComponent({
+        video: {
+          enabled: true
+        }
+      });
+
+      expect(view.getDOMNode().querySelector(".local video")).not.eql(null);
+    });
+
     it("should dispatch a hangupCall action when the hangup button is pressed",
       function() {
-        view = mountTestComponent({
-          dispatcher: dispatcher
-        });
+        view = mountTestComponent();
 
         var hangupBtn = view.getDOMNode().querySelector(".btn-hangup");
 
@@ -510,7 +559,6 @@ describe("loop.conversationViews", function () {
     it("should dispatch a setMute action when the audio mute button is pressed",
       function() {
         view = mountTestComponent({
-          dispatcher: dispatcher,
           audio: {enabled: false}
         });
 
@@ -529,7 +577,6 @@ describe("loop.conversationViews", function () {
     it("should dispatch a setMute action when the video mute button is pressed",
       function() {
         view = mountTestComponent({
-          dispatcher: dispatcher,
           video: {enabled: true}
         });
 
@@ -547,7 +594,6 @@ describe("loop.conversationViews", function () {
 
     it("should set the mute button as mute off", function() {
       view = mountTestComponent({
-        dispatcher: dispatcher,
         video: {enabled: true}
       });
 
@@ -558,7 +604,6 @@ describe("loop.conversationViews", function () {
 
     it("should set the mute button as mute on", function() {
       view = mountTestComponent({
-        dispatcher: dispatcher,
         audio: {enabled: false}
       });
 
@@ -569,7 +614,7 @@ describe("loop.conversationViews", function () {
   });
 
   describe("CallControllerView", function() {
-    var store, feedbackStore;
+    var feedbackStore;
 
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
@@ -580,22 +625,13 @@ describe("loop.conversationViews", function () {
     }
 
     beforeEach(function() {
-      store = new loop.store.ConversationStore(dispatcher, {
-        client: {},
-        mozLoop: fakeMozLoop,
-        sdkDriver: {}
-      });
-      loop.store.StoreMixin.register({
-        conversationStore: store
-      });
-
       feedbackStore = new loop.store.FeedbackStore(dispatcher, {
         feedbackClient: {}
       });
     });
 
     it("should set the document title to the callerId", function() {
-      store.setStoreState({
+      conversationStore.setStoreState({
         contact: contact
       });
 
@@ -606,7 +642,7 @@ describe("loop.conversationViews", function () {
 
     it("should fallback to the contact email if the contact name is not defined", function() {
       delete contact.name;
-      store.setStoreState({
+      conversationStore.setStoreState({
         contact: contact
       });
 
@@ -616,7 +652,7 @@ describe("loop.conversationViews", function () {
     });
 
     it("should fallback to the caller id if no contact is defined", function() {
-      store.setStoreState({
+      conversationStore.setStoreState({
         callerId: "fakeId"
       });
 
@@ -627,7 +663,7 @@ describe("loop.conversationViews", function () {
 
     it("should render the CallFailedView when the call state is 'terminated'",
       function() {
-        store.setStoreState({
+        conversationStore.setStoreState({
           callState: CALL_STATES.TERMINATED,
           contact: contact
         });
@@ -640,7 +676,7 @@ describe("loop.conversationViews", function () {
 
     it("should render the PendingConversationView for outgoing calls when the call state is 'gather'",
       function() {
-        store.setStoreState({
+        conversationStore.setStoreState({
           callState: CALL_STATES.GATHER,
           contact: contact,
           outgoing: true
@@ -653,7 +689,7 @@ describe("loop.conversationViews", function () {
     });
 
     it("should render the AcceptCallView for incoming calls when the call state is 'alerting'", function() {
-      store.setStoreState({
+      conversationStore.setStoreState({
         callState: CALL_STATES.ALERTING,
         outgoing: false
       });
@@ -666,7 +702,7 @@ describe("loop.conversationViews", function () {
 
     it("should render the OngoingConversationView when the call state is 'ongoing'",
       function() {
-        store.setStoreState({callState: CALL_STATES.ONGOING});
+        conversationStore.setStoreState({callState: CALL_STATES.ONGOING});
 
         view = mountTestComponent();
 
@@ -676,7 +712,7 @@ describe("loop.conversationViews", function () {
 
     it("should render the FeedbackView when the call state is 'finished'",
       function() {
-        store.setStoreState({callState: CALL_STATES.FINISHED});
+        conversationStore.setStoreState({callState: CALL_STATES.FINISHED});
 
         view = mountTestComponent();
 
@@ -685,7 +721,7 @@ describe("loop.conversationViews", function () {
     });
 
     it("should set the document title to conversation_has_ended when displaying the feedback view", function() {
-      store.setStoreState({callState: CALL_STATES.FINISHED});
+      conversationStore.setStoreState({callState: CALL_STATES.FINISHED});
 
       mountTestComponent();
 
@@ -701,7 +737,7 @@ describe("loop.conversationViews", function () {
         };
         sandbox.stub(window, "Audio").returns(fakeAudio);
 
-        store.setStoreState({callState: CALL_STATES.FINISHED});
+        conversationStore.setStoreState({callState: CALL_STATES.FINISHED});
 
         view = mountTestComponent();
 
@@ -710,7 +746,7 @@ describe("loop.conversationViews", function () {
 
     it("should update the rendered views when the state is changed.",
       function() {
-        store.setStoreState({
+        conversationStore.setStoreState({
           callState: CALL_STATES.GATHER,
           contact: contact,
           outgoing: true
@@ -721,7 +757,7 @@ describe("loop.conversationViews", function () {
         TestUtils.findRenderedComponentWithType(view,
           loop.conversationViews.PendingConversationView);
 
-        store.setStoreState({callState: CALL_STATES.TERMINATED});
+        conversationStore.setStoreState({callState: CALL_STATES.TERMINATED});
 
         TestUtils.findRenderedComponentWithType(view,
           loop.conversationViews.CallFailedView);

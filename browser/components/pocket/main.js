@@ -611,6 +611,19 @@ var pktUI = (function() {
 				}
 			})
 		});
+
+        var _initL10NMessageId = "initL10N";
+        pktUIMessaging.addMessageListener(_initL10NMessageId, function(panelId, data) {
+            var strings = {};
+            var bundle = Services.strings.createBundle("chrome://browser/locale/browser-pocket.properties");
+            var e = bundle.getSimpleEnumeration();
+            while(e.hasMoreElements()) {
+                var str = e.getNext().QueryInterface(Components.interfaces.nsIPropertyElement);
+                strings[str.key] = str.value;
+            }
+            pktUIMessaging.sendResponseMessageToPanel(panelId, _initL10NMessageId, { strings: strings });
+        });
+
 	}
 
 	// -- Browser Navigation -- //
