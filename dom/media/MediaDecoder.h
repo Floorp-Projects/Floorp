@@ -264,8 +264,7 @@ struct SeekTarget {
   MediaDecoderEventVisibility mEventVisibility;
 };
 
-class MediaDecoder : public nsIObserver,
-                     public AbstractMediaDecoder
+class MediaDecoder : public AbstractMediaDecoder
 {
 public:
   struct SeekResolveValue {
