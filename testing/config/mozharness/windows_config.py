@@ -82,7 +82,8 @@ config = {
             "options": [
                 "--symbols-path=%(symbols_path)s",
                 "--test-plugin-path=%(test_plugin_path)s",
-                "--log-raw=%(raw_log_file)s"
+                "--log-raw=%(raw_log_file)s",
+                "--utility-path=tests/bin",
             ],
             "run_filename": "runxpcshelltests.py",
             "testsdir": "xpcshell"

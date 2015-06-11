@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import copy
+import importlib
 import json
 import math
 import mozdebug
@@ -90,6 +91,39 @@ def cleanup_encoding(s):
     # Replace all C0 and C1 control characters with \xNN escapes.
     return _cleanup_encoding_re.sub(_cleanup_encoding_repl, s)
 
+def find_stack_fixer(mozinfo, utility_dir, symbols_path):
+    # This is mostly taken from the equivalent in runreftest.py, itself similar
+    # to the mochitest version. It's not a huge amount of code, but deduping it
+    # might be nice. This version is indepenent of an enclosing harness class,
+    # so should easily be movable to a shared location.
+    if not mozinfo.info.get('debug'):
+        return None
+
+    def import_stack_fixer_module(module_name):
+        sys.path.insert(0, utility_dir)
+        module = importlib.import_module(module_name)
+        sys.path.pop(0)
+        return module
+
+    stack_fixer_function = None
+
+    if symbols_path and os.path.exists(symbols_path):
+        # Run each line through a function in fix_stack_using_bpsyms.py (uses breakpad symbol files).
+        # This method is preferred for Tinderbox builds, since native symbols may have been stripped.
+        stack_fixer_module = import_stack_fixer_module('fix_stack_using_bpsyms')
+        stack_fixer_function = lambda line: stack_fixer_module.fixSymbols(line, symbols_path)
+    elif mozinfo.isMac:
+        # Run each line through fix_macosx_stack.py (uses atos).
+        # This method is preferred for developer machines, so we don't have to run "make buildsymbols".
+        stack_fixer_module = import_stack_fixer_module('fix_macosx_stack')
+        stack_fixer_function = stack_fixer_module.fixSymbols
+    elif mozinfo.isLinux:
+        stack_fixer_module = import_stack_fixer_module('fix_linux_stack')
+        stack_fixer_function = stack_fixer_module.fixSymbols
+
+    return stack_fixer_function
+
+
 """ Control-C handling """
 gotSIGINT = False
 def markGotSIGINT(signum, stackFrame):
@@ -126,6 +160,7 @@ class XPCShellTestThread(Thread):
         self.xpcshell = kwargs.get('xpcshell')
         self.xpcsRunArgs = kwargs.get('xpcsRunArgs')
         self.failureManifest = kwargs.get('failureManifest')
+        self.stack_fixer_function = kwargs.get('stack_fixer_function')
 
         self.tests_root_dir = tests_root_dir
         self.app_dir_key = app_dir_key
@@ -490,17 +525,23 @@ class XPCShellTestThread(Thread):
         if self.saw_proc_start and not self.saw_proc_end:
             self.has_failure_output = True
 
+    def fix_text_output(self, line):
+        line = cleanup_encoding(line)
+        if self.stack_fixer_function is not None:
+            return self.stack_fixer_function(line)
+        return line
+
     def log_line(self, line):
         """Log a line of output (either a parser json object or text output from
         the test process"""
         if isinstance(line, basestring):
-            line = cleanup_encoding(line).rstrip("\r\n")
+            line = self.fix_text_output(line).rstrip('\r\n')
             self.log.process_output(self.proc_ident,
                                     line,
                                     command=self.complete_command)
         else:
             if 'message' in line:
-                line['message'] = cleanup_encoding(line['message'])
+                line['message'] = self.fix_text_output(line['message'])
             if 'xpcshell_process' in line:
                 line['thread'] =  ' '.join([current_thread().name, line['xpcshell_process']])
             else:
@@ -1022,7 +1063,7 @@ class XPCShellTests(object):
                  testsRootDir=None, testingModulesDir=None, pluginsPath=None,
                  testClass=XPCShellTestThread, failureManifest=None,
                  log=None, stream=None, jsDebugger=False, jsDebuggerPort=0,
-                 test_tags=None, **otherOptions):
+                 test_tags=None, utility_path=None, **otherOptions):
         """Run xpcshell tests.
 
         |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -1153,6 +1194,12 @@ class XPCShellTests(object):
 
         mozinfo.update(self.mozInfo)
 
+        self.stack_fixer_function = None
+        if utility_path and os.path.exists(utility_path):
+            self.stack_fixer_function = find_stack_fixer(mozinfo,
+                                                         utility_path,
+                                                         self.symbolsPath)
+
         # buildEnvironment() needs mozInfo, so we call it after mozInfo is initialized.
         self.buildEnvironment()
 
@@ -1200,6 +1247,7 @@ class XPCShellTests(object):
             'xpcsRunArgs': self.xpcsRunArgs,
             'failureManifest': failureManifest,
             'harness_timeout': self.harness_timeout,
+            'stack_fixer_function': self.stack_fixer_function,
         }
 
         if self.sequential:
@@ -1486,6 +1534,11 @@ class XPCShellOptions(OptionParser):
                         help="filter out tests that don't have the given tag. Can be "
                              "used multiple times in which case the test must contain "
                              "at least one of the given tags.")
+        self.add_option("--utility-path",
+                        action="store", dest="utility_path",
+                        default=None,
+                        help="Path to a directory containing utility programs, such "
+                             "as stack fixer scripts.")
 
 def main():
     parser = XPCShellOptions()
