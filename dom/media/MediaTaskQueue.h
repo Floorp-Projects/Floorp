@@ -94,6 +94,14 @@ protected:
                           DispatchFailureHandling aFailureHandling,
                           DispatchReason aReason = NormalDispatch);
 
+  void MaybeResolveShutdown()
+  {
+    mQueueMonitor.AssertCurrentThreadOwns();
+    if (mIsShutdown && !mIsRunning) {
+      mShutdownPromise.ResolveIfExists(true, __func__);
+    }
+  }
+
   RefPtr<SharedThreadPool> mPool;
 
   // Monitor that protects the queue and mIsRunning;
