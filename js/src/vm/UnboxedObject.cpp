@@ -522,7 +522,7 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
                 return false;
 
             HeapTypeSet* nativeProperty = nativeGroup->maybeGetProperty(id);
-            if (nativeProperty->canSetDefinite(i))
+            if (nativeProperty && nativeProperty->canSetDefinite(i))
                 nativeProperty->setDefinite(i);
         }
     }
