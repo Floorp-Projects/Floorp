@@ -7,8 +7,7 @@ new WeakMap(undefined);
 new WeakMap(null);
 
 // FIXME: bug 1083752
-options("werror");
-assertEq(evaluate("WeakMap()", {catchTermination: true}), "terminated");
+assertWarning(() => WeakMap(), "None");
 // assertThrowsInstanceOf(() => WeakMap(), TypeError);
 // assertThrowsInstanceOf(() => WeakMap(undefined), TypeError);
 // assertThrowsInstanceOf(() => WeakMap(null), TypeError);
