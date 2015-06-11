@@ -444,8 +444,17 @@ var gUpdates = {
               return;
           }
         }
-        if (this.update.licenseURL)
+
+        let aus = CoC["@mozilla.org/updates/update-service;1"].
+                  getService(CoI.nsIApplicationUpdateService);
+        if (!aus.canApplyUpdates) {
+          aCallback("manualUpdate");
+          return;
+        }
+
+        if (this.update.licenseURL) {
           this.wiz.getPageById(this.updatesFoundPageId).setAttribute("next", "license");
+        }
 
         var self = this;
         this.getShouldCheckAddonCompatibility(function(shouldCheck) {
@@ -453,8 +462,7 @@ var gUpdates = {
             var incompatCheckPage = document.getElementById("incompatibleCheck");
             incompatCheckPage.setAttribute("next", self.updatesFoundPageId);
             aCallback(incompatCheckPage.id);
-          }
-          else {
+          } else {
             aCallback(self.updatesFoundPageId);
           }
         });
