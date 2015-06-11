@@ -1075,7 +1075,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   list-style-image: url(chrome://browser/skin/undoCloseTab.png);
 }
 
-@media (min-resolution: 1.25dppx) {
+@media (min-resolution: 1.1dppx) {
   #alltabs_undoCloseTab {
     list-style-image: url(chrome://browser/skin/undoCloseTab@2x.png);
   }
@@ -1963,7 +1963,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 %include ../shared/tabs.inc.css
 
-@media (min-resolution: 1.25dppx) {
+@media (min-resolution: 1.1dppx) {
   /* image preloading hack from shared/tabs.inc.css */
   #tabbrowser-tabs::before {
     background-image:
@@ -2016,8 +2016,17 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   }
 }
 
-#TabsToolbar[brighttext] .tab-close-button:not(:hover):not([visuallyselected="true"]) {
-  -moz-image-region: rect(0, 64px, 16px, 48px) !important;
+/* Invert the unhovered close tab icons on bright-text tabs */
+@media not all and (min-resolution: 1.1dppx) {
+  #TabsToolbar[brighttext] .tab-close-button:not(:hover):not([visuallyselected="true"]) {
+    -moz-image-region: rect(0, 64px, 16px, 48px) !important;
+  }
+}
+
+@media (min-resolution: 1.1dppx) {
+  #TabsToolbar[brighttext] .tab-close-button:not(:hover):not([visuallyselected="true"]) {
+    -moz-image-region: rect(0, 128px, 32px, 96px) !important;
+  }
 }
 
 /* tabbrowser-tab focus ring */
