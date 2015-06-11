@@ -9,7 +9,7 @@
 #include <gtk/gtk.h>
 #include "nsIApplicationChooser.h"
 
-class nsApplicationChooser : public nsIApplicationChooser
+class nsApplicationChooser final : public nsIApplicationChooser
 {
 public:
   nsApplicationChooser();
