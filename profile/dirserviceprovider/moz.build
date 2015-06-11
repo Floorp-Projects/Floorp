@@ -13,7 +13,6 @@ if CONFIG['MOZ_PROFILELOCKING']:
     UNIFIED_SOURCES += ['nsProfileLock.cpp']
     if CONFIG['OS_ARCH'] == 'WINNT':
         UNIFIED_SOURCES += ['ProfileUnlockerWin.cpp']
-        EXPORTS.mozilla += ['ProfileUnlockerWin.h']
 
 Library('profdirserviceprovidersa_s')
 
