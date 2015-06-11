@@ -8158,5 +8158,13 @@
     "expires_in_version": "45",
     "kind": "boolean",
     "description": "Set if media.eme.enabled is false, in a build that supports the Adobe Primetime Content Decryption Module."
+  },
+  "GRAPHICS_DRIVER_STARTUP_TEST": {
+    "alert_emails": ["danderson@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "releaseChannelCollection": "opt-out",
+    "description": "Reports the status of graphics driver initialization. 0=Okay, 1=Driver/GPU/Firefox changed, 2=Drivers crashed during last startup, 3=Drivers crashed in a previous startup. State 0 is normal, 1 indicates a system change, 2 indicates a catastrophic crash, 3 indicates a user that experienced state 2 and is now unaccelerated."
   }
 }
