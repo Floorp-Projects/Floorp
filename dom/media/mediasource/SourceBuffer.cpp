@@ -272,9 +272,17 @@ SourceBuffer::Detach()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("Detach");
+  if (!mMediaSource) {
+    MSE_DEBUG("Already detached");
+    return;
+  }
   AbortBufferAppend();
   if (mContentManager) {
     mContentManager->Detach();
+    if (mIsUsingFormatReader) {
+      mMediaSource->GetDecoder()->GetDemuxer()->DetachSourceBuffer(
+        static_cast<mozilla::TrackBuffersManager*>(mContentManager.get()));
+    }
   }
   mContentManager = nullptr;
   mMediaSource = nullptr;
@@ -299,6 +307,7 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   , mUpdating(false)
   , mActive(false)
   , mUpdateID(0)
+  , mReportedOffset(0)
   , mType(aType)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -324,6 +333,10 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
     SetMode(SourceBufferAppendMode::Sequence, dummy);
   } else {
     SetMode(SourceBufferAppendMode::Segments, dummy);
+  }
+  if (mIsUsingFormatReader) {
+    mMediaSource->GetDecoder()->GetDemuxer()->AttachSourceBuffer(
+      static_cast<mozilla::TrackBuffersManager*>(mContentManager.get()));
   }
 }
 
@@ -467,7 +480,14 @@ SourceBuffer::AppendDataCompletedWithSuccess(bool aHasActiveTracks)
       mActive = true;
       mMediaSource->SourceBufferIsActive(this);
       mMediaSource->QueueInitializationEvent();
+      if (mIsUsingFormatReader) {
+        mMediaSource->GetDecoder()->NotifyWaitingForResourcesStatusChanged();
+      }
     }
+    // Tell our parent decoder that we have received new data.
+    // The information provided do not matter much so long as it is monotonically
+    // increasing.
+    mMediaSource->GetDecoder()->NotifyDataArrived(nullptr, 1, mReportedOffset++);
   }
 
   CheckEndTime();
