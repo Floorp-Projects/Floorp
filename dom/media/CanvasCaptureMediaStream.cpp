@@ -11,10 +11,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/dom/CanvasCaptureMediaStreamBinding.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "nsIAppShell.h"
-#include "nsWidgetsCID.h"
-
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+#include "nsContentUtils.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
@@ -113,8 +110,7 @@ OutputStreamDriver::Start()
   // Run StartInternal() in stable state to allow it to directly capture a frame
   nsCOMPtr<nsIRunnable> runnable =
     NS_NewRunnableMethod(this, &OutputStreamDriver::StartInternal);
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  appShell->RunInStableState(runnable);
+  nsContentUtils::RunInStableState(runnable.forget());
 
   mStarted = true;
   return NS_OK;
