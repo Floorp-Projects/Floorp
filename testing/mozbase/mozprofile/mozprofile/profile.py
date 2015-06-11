@@ -26,6 +26,23 @@ class Profile(object):
 
     Creating new profiles, installing add-ons, setting preferences and
     handling cleanup.
+
+    The files associated with the profile will be removed automatically after
+    the object is garbage collected: ::
+
+      profile = Profile()
+      print profile.profile  # this is the path to the created profile
+      del profile
+      # the profile path has been removed from disk
+
+    :meth:`cleanup` is called under the hood to remove the profile files. You
+    can ensure this method is called (even in the case of exception) by using
+    the profile as a context manager: ::
+
+      with Profile() as profile:
+          # do things with the profile
+          pass
+      # profile.cleanup() has been called here
     """
 
     def __init__(self, profile=None, addons=None, addon_manifests=None, apps=None,
@@ -103,6 +120,12 @@ class Profile(object):
         # handle webapps
         self.webapps = WebappCollection(profile=self.profile, apps=self._apps)
         self.webapps.update_manifests()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.cleanup()
 
     def __del__(self):
         self.cleanup()
