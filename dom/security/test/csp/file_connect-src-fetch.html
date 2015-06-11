@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 1139667 - Test mapping of fetch() to connect-src</title>
+  </head>
+  <body>
+  <script type="text/javascript">
+
+    // Please note that file_testserver.sjs?foo does not return a response.
+    // For testing purposes this is not necessary because we only want to check
+    // whether CSP allows or blocks the load.
+    fetch( "file_testserver.sjs?foo");
+
+  </script>
+</body>
+</html>

@@ -98,14 +98,14 @@ InputQueue::ReceiveTouchInput(const nsRefPtr<AsyncPanZoomController>& aTarget,
     // else. For now assume this is rare enough that it's not an issue.
     if (block == CurrentBlock() &&
         aEvent.mTouches.Length() == 1 &&
-        block->GetOverscrollHandoffChain()->HasFastMovingApzc() &&
+        block->GetOverscrollHandoffChain()->HasFastFlungApzc() &&
         haveBehaviors) {
       // If we're already in a fast fling, and a single finger goes down, then
       // we want special handling for the touch event, because it shouldn't get
       // delivered to content. Note that we don't set this flag when going
       // from a fast fling to a pinch state (i.e. second finger goes down while
       // the first finger is moving).
-      block->SetDuringFastMotion();
+      block->SetDuringFastFling();
       block->SetConfirmedTargetApzc(aTarget);
       if (gfxPrefs::TouchActionEnabled()) {
         block->SetAllowedTouchBehaviors(currentBehaviors);
@@ -144,7 +144,7 @@ InputQueue::ReceiveTouchInput(const nsRefPtr<AsyncPanZoomController>& aTarget,
   // XXX calling ArePointerEventsConsumable on |target| may be wrong here if
   // the target isn't confirmed and the real target turns out to be something
   // else. For now assume this is rare enough that it's not an issue.
-  if (block->IsDuringFastMotion()) {
+  if (block->IsDuringFastFling()) {
     INPQ_LOG("dropping event due to block %p being in fast motion\n", block);
     result = nsEventStatus_eConsumeNoDefault;
   } else if (target && target->ArePointerEventsConsumable(block, aEvent.AsMultiTouchInput().mTouches.Length())) {

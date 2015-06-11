@@ -4024,11 +4024,10 @@ MArrayState::Copy(TempAllocator& alloc, MArrayState* state)
 }
 
 MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t count, MConstant* templateConst,
-                     gc::InitialHeap initialHeap, AllocatingBehaviour allocating, jsbytecode* pc)
+                     gc::InitialHeap initialHeap, jsbytecode* pc)
   : MUnaryInstruction(templateConst),
     count_(count),
     initialHeap_(initialHeap),
-    allocating_(allocating),
     convertDoubleElements_(false),
     pc_(pc)
 {
@@ -4046,11 +4045,6 @@ MNewArray::shouldUseVM() const
 {
     if (!templateObject())
         return true;
-
-    // Allocate space using the VMCall when mir hints it needs to get allocated
-    // immediately, but only when data doesn't fit the available array slots.
-    if (allocatingBehaviour() == NewArray_Unallocating)
-        return false;
 
     if (templateObject()->is<UnboxedArrayObject>()) {
         MOZ_ASSERT(templateObject()->as<UnboxedArrayObject>().capacity() >= count());

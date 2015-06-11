@@ -2519,6 +2519,14 @@ LIRGenerator::visitIncrementUnboxedArrayInitializedLength(MIncrementUnboxedArray
 }
 
 void
+LIRGenerator::visitSetUnboxedArrayInitializedLength(MSetUnboxedArrayInitializedLength* ins)
+{
+    add(new(alloc()) LSetUnboxedArrayInitializedLength(useRegister(ins->object()),
+                                                       useRegisterOrConstant(ins->length()),
+                                                       temp()), ins);
+}
+
+void
 LIRGenerator::visitNot(MNot* ins)
 {
     MDefinition* op = ins->input();

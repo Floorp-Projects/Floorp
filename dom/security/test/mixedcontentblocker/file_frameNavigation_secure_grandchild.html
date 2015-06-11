@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests for Mixed Content Blocker - Navigating Grandchild Frames when a secure parent exists
+https://bugzilla.mozilla.org/show_bug.cgi?id=840388
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Mixed Content Frame Navigation</title>
+</head>
+<body>
+
+<iframe src="https://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_innermost.html?securePage_navigate_grandchild" id="child"></iframe>
+<script>
+  // For tests that require setTimeout, set the maximum polling time to 50 x 100ms = 5 seconds.
+  var MAX_COUNT = 50;
+  var TIMEOUT_INTERVAL = 100;
+  var counter = 0;
+
+  var child = document.getElementById("child");
+  function navigationStatus(child)
+  {
+    var loc;
+    // When the page is navigating, it goes through about:blank and we will get a permission denied for loc.
+    // Catch that specific exception and return
+    try {
+      loc = document.getElementById("child").contentDocument.location;
+    } catch(e) {
+      if (e.message && e.message.indexOf("Permission denied to access property") == -1) {
+        // We received an exception we didn't expect.
+        throw e;
+      }
+      counter++;
+      return;
+    }
+    if (loc == "http://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_innermost.html?securePage_navigate_grandchild_response") {
+      return;
+    }
+    else {
+      if(counter < MAX_COUNT) {
+        counter++;
+        setTimeout(navigationStatus, TIMEOUT_INTERVAL, child);
+      }
+      else {
+        // After we have called setTimeout the maximum number of times, assume navigating the iframe is blocked
+        dump("\nThe current location of the grandchild iframe is: "+loc+".\n");
+        dump("\nWe have past the maximum timeout.  Navigating a grandchild iframe from an https location to an http location on a secure page failed.  We are about to post message to the top level page\n");
+        parent.parent.postMessage({"test": "securePage_navigate_grandchild", "msg": "navigating to insecure grandchild iframe blocked on secure page"}, "http://mochi.test:8888");
+        dump("\nAttempted postMessage\n");
+      }
+    }
+  }
+
+  setTimeout(navigationStatus, TIMEOUT_INTERVAL, child);
+
+</script>
+</body>
+</html>

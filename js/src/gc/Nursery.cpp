@@ -650,8 +650,10 @@ js::Nursery::sweep()
     {
 #ifdef JS_CRASH_DIAGNOSTICS
         JS_POISON((void*)start(), JS_SWEPT_NURSERY_PATTERN, allocationEnd() - start());
-        for (int i = 0; i < numActiveChunks_; ++i)
+        for (int i = 0; i < numActiveChunks_; ++i) {
+            chunk(i).trailer.location = gc::ChunkLocationBitNursery;
             chunk(i).trailer.runtime = runtime();
+        }
 #endif
         setCurrentChunk(0);
     }
