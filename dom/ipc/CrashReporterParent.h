@@ -29,49 +29,108 @@ public:
   virtual ~CrashReporterParent();
 
 #ifdef MOZ_CRASHREPORTER
-  /* Attempt to generate a parent/child pair of minidumps from the given
-     toplevel actor in the event of a hang. Returns true if successful,
-     false otherwise.
-  */
-  template<class Toplevel>
-  bool
-  GeneratePairedMinidump(Toplevel* t);
 
-  /* Attempt to create a bare-bones crash report, along with extra process-
-     specific annotations present in the given AnnotationTable. Returns true if
-     successful, false otherwise.
-  */
+  /*
+   * Attempt to create a bare-bones crash report, along with extra process-
+   * specific annotations present in the given AnnotationTable.
+   *
+   * @returns true if successful, false otherwise.
+   */
   template<class Toplevel>
   bool
   GenerateCrashReport(Toplevel* t, const AnnotationTable* processNotes);
 
+  /*
+   * Attempt to generate a parent/child pair of minidumps from the given
+   * toplevel actor. This calls CrashReporter::CreatePairedMinidumps to
+   * generate the minidumps. Crash reporter annotations set prior to this
+   * call will be saved via PairedDumpCallbackExtra into an .extra file
+   * under the proper crash id. AnnotateCrashReport annotations are not
+   * set in this call, use GenerateChildData.
+   *
+   * @returns true if successful, false otherwise.
+   */
+  template<class Toplevel>
+  bool
+  GeneratePairedMinidump(Toplevel* t);
+
   /**
-   * Add the .extra data for an existing crash report.
+   * Apply child process annotations to an existing paired mindump generated
+   * with GeneratePairedMinidump.
+   *
+   * Be careful about calling generate apis immediately after this call,
+   * see FinalizeChildData.
+   *
+   * @param processNotes (optional) - Additional notes to append. Annotations
+   *   stored in mNotes will also be applied. processNotes can be null.
+   * @returns true if successful, false otherwise.
    */
   bool
   GenerateChildData(const AnnotationTable* processNotes);
 
+  /**
+   * Handles main thread finalization tasks after a report has been
+   * generated. Does the following:
+   *  - register the finished report with the crash service manager
+   *  - records telemetry related data about crashes
+   *
+   * Be careful about calling generate apis immediately after this call,
+   * if this api is called on a non-main thread it will fire off a runnable
+   * to complete its work async.
+   */
+  void
+  FinalizeChildData();
+
+  /*
+   * Attempt to generate a full paired dump complete with any child
+   * annoations, and finalizes the report. Note this call is only valid
+   * on the main thread. Calling on a background thread will fail.
+   *
+   * @returns true if successful, false otherwise.
+   */
+  template<class Toplevel>
+  bool
+  GenerateCompleteMinidump(Toplevel* t);
+
+  /**
+   * Submits a raw minidump handed in, calls GenerateChildData. Used
+   * by plugins.
+   *
+   * @returns true if successful, false otherwise.
+   */
   bool
   GenerateCrashReportForMinidump(nsIFile* minidump,
                                  const AnnotationTable* processNotes);
 
-  /* Instantiate a new crash reporter actor from a given parent that manages
-     the protocol.
-  */
+  /*
+   * Instantiate a new crash reporter actor from a given parent that manages
+   * the protocol.
+   *
+   * @returns true if successful, false otherwise.
+   */
   template<class Toplevel>
   static bool CreateCrashReporter(Toplevel* actor);
-#endif
-  /* Initialize this reporter with data from the child process */
-  void
-    SetChildData(const NativeThreadId& id, const uint32_t& processType);
+#endif // MOZ_CRASHREPORTER
 
-  /* Returns the ID of the child minidump.
-     GeneratePairedMinidump or GenerateCrashReport must be called first.
-  */
+  /*
+   * Initialize this reporter with data from the child process.
+   */
+  void
+  SetChildData(const NativeThreadId& id, const uint32_t& processType);
+
+  /*
+   * Returns the ID of the child minidump.
+   * GeneratePairedMinidump or GenerateCrashReport must be called first.
+   */
   const nsString& ChildDumpID() {
     return mChildDumpID;
   }
 
+  /*
+   * Add an annotation to our internally tracked list of annotations.
+   * Callers must apply these notes using GenerateChildData otherwise
+   * the notes will get dropped.
+   */
   void
   AnnotateCrashReport(const nsCString& key, const nsCString& data);
 
@@ -138,6 +197,36 @@ CrashReporterParent::GenerateCrashReport(Toplevel* t,
   if (t->TakeMinidump(getter_AddRefs(crashDump), nullptr) &&
       CrashReporter::GetIDFromMinidump(crashDump, mChildDumpID)) {
     return GenerateChildData(processNotes);
+  }
+  return false;
+}
+
+template<class Toplevel>
+inline bool
+CrashReporterParent::GenerateCompleteMinidump(Toplevel* t)
+{
+  mozilla::ipc::ScopedProcessHandle child;
+  if (!NS_IsMainThread()) {
+    NS_WARNING("GenerateCompleteMinidump can't be called on non-main thread.");
+    return false;
+  }
+
+#ifdef XP_MACOSX
+  child = t->Process()->GetChildTask();
+#else
+  if (!base::OpenPrivilegedProcessHandle(t->OtherPid(), &child.rwget())) {
+    NS_WARNING("Failed to open child process handle.");
+    return false;
+  }
+#endif
+  nsCOMPtr<nsIFile> childDump;
+  if (CrashReporter::CreatePairedMinidumps(child,
+                                           mMainThread,
+                                           getter_AddRefs(childDump)) &&
+      CrashReporter::GetIDFromMinidump(childDump, mChildDumpID)) {
+    GenerateChildData(nullptr);
+    FinalizeChildData();
+    return true;
   }
   return false;
 }
