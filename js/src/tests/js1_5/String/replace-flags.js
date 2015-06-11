@@ -6,10 +6,19 @@ var summary = 'Add console warnings for non-standard flag argument of String.pro
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-options("werror");
-assertEq(evaluate("'aaaA'.match('a', 'i')", {catchTermination: true}), "terminated");
-assertEq(evaluate("'aaaA'.search('a', 'i')", {catchTermination: true}), "terminated");
-assertEq(evaluate("'aaaA'.replace('a', 'b', 'g')", {catchTermination: true}), "terminated");
+function assertWarningForComponent(code, name) {
+  enableLastWarning();
+  var g = newGlobal();
+  g.eval(code);
+  var warning = getLastWarning();
+  assertEq(warning !== null, true);
+  assertEq(warning.name, name);
+  disableLastWarning();
+}
+
+assertWarningForComponent(`'aaaA'.match('a', 'i');`, "None");
+assertWarningForComponent(`'aaaA'.search('a', 'i');`, "None");
+assertWarningForComponent(`'aaaA'.replace('a', 'b', 'g');`, "None");
 
 if (typeof reportCompare === "function")
   reportCompare(true, true);
