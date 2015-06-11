@@ -179,6 +179,21 @@ IsObjectEscaped(MInstruction* ins, JSObject* objDefault)
             JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
             return true;
 
+          case MDefinition::Op_LoadUnboxedScalar:
+          case MDefinition::Op_StoreUnboxedScalar:
+            // Not escaped if it is the first argument.
+            if (def->indexOf(*i) != 0) {
+                JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
+                return true;
+            }
+
+            if (!def->getOperand(1)->isConstant()) {
+                JitSpewDef(JitSpew_Escape, "is addressed with unknown index\n", def);
+                return true;
+            }
+
+            break;
+
           case MDefinition::Op_PostWriteBarrier:
             break;
 
@@ -278,6 +293,8 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop
     void visitGuardShape(MGuardShape* ins);
     void visitFunctionEnvironment(MFunctionEnvironment* ins);
     void visitLambda(MLambda* ins);
+    void visitStoreUnboxedScalar(MStoreUnboxedScalar* ins);
+    void visitLoadUnboxedScalar(MLoadUnboxedScalar* ins);
 };
 
 const char* ObjectMemoryView::phaseName = "Scalar Replacement of Object";
@@ -588,6 +605,50 @@ ObjectMemoryView::visitLambda(MLambda* ins)
     // In order to recover the lambda we need to recover the scope chain, as the
     // lambda is holding it.
     ins->setIncompleteObject();
+}
+
+size_t
+GetOffsetOf(MDefinition* index, Scalar::Type type, int32_t baseOffset)
+{
+    int32_t idx = index->toConstant()->value().toInt32();
+    size_t width = Scalar::byteSize(type);
+    MOZ_ASSERT(idx >= 0);
+    MOZ_ASSERT(baseOffset >= 0 && size_t(baseOffset) >= UnboxedPlainObject::offsetOfData());
+    return idx * width + baseOffset - UnboxedPlainObject::offsetOfData();
+}
+
+void
+ObjectMemoryView::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins)
+{
+    // Skip stores made on other objects.
+    if (ins->elements() != obj_)
+        return;
+
+    // Clone the state and update the slot value.
+    size_t offset = GetOffsetOf(ins->index(), ins->storageType(), ins->offsetAdjustment());
+    MOZ_ASSERT(state_->hasOffset(offset));
+    state_ = BlockState::Copy(alloc_, state_);
+    state_->setOffset(offset, ins->value());
+    ins->block()->insertBefore(ins->toInstruction(), state_);
+
+    // Remove original instruction.
+    ins->block()->discard(ins);
+}
+
+void
+ObjectMemoryView::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins)
+{
+    // Skip loads made on other objects.
+    if (ins->elements() != obj_)
+        return;
+
+    // Replace load by the slot value.
+    size_t offset = GetOffsetOf(ins->index(), ins->storageType(), ins->offsetAdjustment());
+    MOZ_ASSERT(state_->hasOffset(offset));
+    ins->replaceAllUsesWith(state_->getOffset(offset));
+
+    // Remove original instruction.
+    ins->block()->discard(ins);
 }
 
 static bool
