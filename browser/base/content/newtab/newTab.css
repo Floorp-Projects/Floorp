@@ -523,13 +523,16 @@ input[type=button] {
   color: #7A7A7A;
   font-size: 14px;
   background-color: #FFFFFF;
-  height: 52px;
-  line-height: 52px;
-  padding-left: 15px;
+  line-height: 25px;
+  padding: 15px;
   font-weight: 600;
   text-transform: uppercase;
   cursor: default;
   border-radius: 5px 5px 0px 0px;
+  max-width: 300px;
+  overflow: hidden;
+  display: table-cell;
+
 }
 
 #newtab-customize-title > label {
@@ -551,12 +554,13 @@ input[type=button] {
 }
 
 .newtab-customize-panel-item {
-  padding-left: 40px;
+  line-height: 25px;
+  padding: 15px 15px 15px 40px;
 }
 
-.newtab-customize-panel-item:not(:last-child),
+.newtab-customize-panel-item:not(:first-child),
 .newtab-search-panel-engine {
-  border-bottom: 1px solid threedshadow;
+  border-top: 1px solid threedshadow;
 }
 
 .newtab-search-panel-engine > image {
@@ -579,6 +583,15 @@ input[type=button] {
 .newtab-customize-panel-item,
 .newtab-customize-complex-option {
   width: 100%;
+  display: block;
+  text-align: left;
+  max-width: 300px;
+  background-color: #F9F9F9;
+}
+
+.newtab-intro-image-customize .newtab-customize-panel-item,
+.newtab-intro-image-customize .newtab-customize-complex-option {
+  max-width: 100%;
 }
 
 .newtab-customize-panel-item:not([selected]),
@@ -628,19 +641,22 @@ input[type=button] {
 
 .newtab-customize-panel-subitem {
   font-size: 12px;
-  padding-left: 40px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid threedshadow;
+  padding: 0px 15px 15px 40px;
+  display: block;
 }
 
 .newtab-customize-panel-subitem > label {
   padding-left: 10px;
+  line-height: 20px;
+  vertical-align: middle;
+  max-width: 225px;
 }
 
 .newtab-customize-panel-superitem {
-  line-height: 14px;
+  line-height: 20px;
   border-bottom: medium none !important;
-  padding: 15px 0px 10px 40px;
+  padding: 15px 15px 10px 40px;
+  border-top: 1px solid threedshadow;
 }
 
 .searchSuggestionTable {
@@ -664,11 +680,11 @@ input[type=button] {
   transition: opacity .5s linear;
   overflow: auto;
   display: none;
+  text-align: center;
 }
 
 #newtab-intro-modal {
   font-family: "Helvetica";
-  width: 700px;
   height: 500px;
   position: fixed;
   left: 0;
@@ -679,6 +695,11 @@ input[type=button] {
   background: linear-gradient(#FFFFFF, #F9F9F9);
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.7);
   border-radius: 8px 8px 0px 0px;
+  min-width: 715px;
+  position: relative;
+  display: inline-block;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 #newtab-intro-header {
@@ -689,10 +710,10 @@ input[type=button] {
   position: relative;
   border-bottom: 2px solid #E0DFE0;
   padding-bottom: 10px;
-  width: 600px;
   display: block;
   margin: 0px auto;
   font-weight: 100;
+  padding: 0px 15px;
 }
 
 #newtab-intro-header .bold {
@@ -740,7 +761,7 @@ input[type=button] {
 }
 
 #newtab-intro-body {
-  height: 300px;
+  height: 310px;
   position: relative;
   display: block;
   top: 50px;
@@ -757,10 +778,12 @@ input[type=button] {
 }
 
 #newtab-intro-buttons {
-  height: 90px;
   text-align: center;
   vertical-align: middle;
-  line-height: 90px;
+  position: absolute;
+  display: block;
+  bottom: 0px;
+  width: 100%;
 }
 
 #newtab-intro-tile {
@@ -768,29 +791,43 @@ input[type=button] {
   height: 100%;
 }
 
+#newtab-intro-text {
+  text-align: left;
+  right: 0px;
+  width: 270px;
+}
+
 #newtab-intro-text,
 #newtab-intro-image {
   height: 100%;
-  width: 270px;
   right: 0px;
-  position: absolute;
   font-size: 14px;
   line-height: 20px;
   margin-top: -12px;
+  min-width: 270px;
 }
 
 #newtab-intro-image {
   left: 0px;
   right: auto;
-}
-
-.newtab-intro-image-tile {
+  float: left;
+  margin-right: 40px;
 }
 
 .newtab-intro-image-customize {
-  display: block;
   box-shadow: 3px 3px 5px #888;
   margin: 0 !important;
+  background-color: #FFF;
+  float: left;
+  z-index: 101;
+  margin-top: -5px;
+  min-width: 270px;
+  padding: 0;
+}
+
+.newtab-intro-image-customize #newtab-customize-title {
+  display: block;
+  max-height: 72px;
 }
 
 .newtab-intro-image-customize .newtab-customize-panel-item:not([selected]):hover {
@@ -813,7 +850,7 @@ input[type=button] {
 }
 
 #newtab-intro-buttons > input {
-  width: 150px;
+  min-width: 150px;
   height: 50px;
   margin: 0px 5px;
   vertical-align: bottom;
@@ -822,6 +859,7 @@ input[type=button] {
   background-color: #FFFFFF;
   color: #4A90E2;
   -moz-user-focus: normal;
+  padding: 0px 10px;
 }
 
 #newtab-intro-buttons > input[default] {

@@ -147,10 +147,14 @@ let gIntro = {
       let imageClass = "";
       switch (this._imageTypes[type]) {
         case this._imageTypes.COG:
-          image = document.getElementById("newtab-customize-panel").cloneNode(true);
-          image.removeAttribute("hidden");
-          image.removeAttribute("type");
+          // Copy the customize panel's subnodes over so that it can be styled
+          // appropriately for the intro.
+          image = document.createElementNS(HTML_NAMESPACE, "div");
           image.classList.add("newtab-intro-image-customize");
+          let imageToCopy = document.getElementById("newtab-customize-panel").cloneNode(true);
+          while (imageToCopy.firstChild) {
+            image.appendChild(imageToCopy.firstChild);
+          }
           break;
         case this._imageTypes.PIN_REMOVE:
           imageClass = "-hover";
