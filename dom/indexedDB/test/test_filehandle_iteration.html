@@ -1,0 +1,77 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    const dbName = window.location.pathname;
+    const dbVersion = 1;
+    const objectStoreName = "foo";
+    const entryCount = 10;
+
+    let request = indexedDB.open(dbName, dbVersion);
+    request.onerror = errorHandler;
+    request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = unexpectedSuccessHandler;
+    let event = yield undefined;
+
+    is(event.type, "upgradeneeded", "Got correct event type");
+
+    let db = event.target.result;
+    db.onerror = errorHandler;
+
+    db.createObjectStore(objectStoreName, { autoIncrement: true });
+
+    request.onupgradeneeded = unexpectedSuccessHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    is(event.type, "success", "Got correct event type");
+
+    request = db.createMutableFile("bar");
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    let mutableFile = event.target.result;
+
+    let trans = db.transaction(objectStoreName, "readwrite");
+    let objectStore = trans.objectStore(objectStoreName);
+
+    for (let i = 0; i < entryCount; i++) {
+      request = objectStore.add(mutableFile);
+    }
+
+    let seenEntryCount = 0;
+
+    request = objectStore.openCursor().onsuccess = event => {
+      let cursor = event.target.result;
+      if (cursor) {
+        seenEntryCount++;
+        cursor.continue();
+      } else {
+        continueToNextStep();
+      }
+    }
+    yield undefined;
+
+    is(seenEntryCount, entryCount, "Correct entry count");
+
+    finishTest();
+    yield undefined;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>
