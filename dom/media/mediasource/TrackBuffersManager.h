@@ -15,6 +15,7 @@
 #include "mozilla/Pair.h"
 #include "nsProxyRelease.h"
 #include "nsTArray.h"
+#include "StateMirroring.h"
 
 namespace mozilla {
 
@@ -263,7 +264,10 @@ private:
   nsMainThreadPtrHandle<dom::SourceBuffer> mParent;
   nsMainThreadPtrHandle<MediaSourceDecoder> mParentDecoder;
 
-  // Set to true if abort is called.
+  // MediaSource duration mirrored from MediaDecoder on the main thread..
+  Mirror<Maybe<double>> mMediaSourceDuration;
+
+  // Set to true if abort was called.
   Atomic<bool> mAbort;
   // Set to true if mediasource state changed to ended.
   Atomic<bool> mEnded;

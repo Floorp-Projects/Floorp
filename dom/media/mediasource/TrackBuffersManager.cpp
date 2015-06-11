@@ -46,13 +46,21 @@ TrackBuffersManager::TrackBuffersManager(dom::SourceBuffer* aParent, MediaSource
   , mParser(ContainerParser::CreateForMIMEType(aType))
   , mProcessedInput(0)
   , mAppendRunning(false)
-  , mTaskQueue(new MediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK)))
+  , mTaskQueue(new MediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
+                                  /* aSupportsTailDispatch = */ true))
   , mParent(new nsMainThreadPtrHolder<dom::SourceBuffer>(aParent, false /* strict */))
   , mParentDecoder(new nsMainThreadPtrHolder<MediaSourceDecoder>(aParentDecoder, false /* strict */))
+  , mMediaSourceDuration(mTaskQueue, Maybe<double>(), "TrackBuffersManager::mMediaSourceDuration (Mirror)")
   , mAbort(false)
   , mMonitor("TrackBuffersManager")
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be instanciated on the main thread");
+  nsRefPtr<TrackBuffersManager> self = this;
+  nsCOMPtr<nsIRunnable> task =
+    NS_NewRunnableFunction([self] () {
+      self->mMediaSourceDuration.Connect(self->mParentDecoder->CanonicalExplicitDuration());
+    });
+  GetTaskQueue()->Dispatch(task.forget());
 }
 
 bool
@@ -235,11 +243,14 @@ TrackBuffersManager::Detach()
   MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("");
 
-  // Clear our sourcebuffer
+  nsRefPtr<TrackBuffersManager> self = this;
   nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableMethodWithArg<TimeInterval>(
-      this, &TrackBuffersManager::CodedFrameRemoval,
-      TimeInterval(TimeUnit::FromSeconds(0), TimeUnit::FromInfinity()));
+    NS_NewRunnableFunction([self] () {
+      // Clear our sourcebuffer
+      self->CodedFrameRemoval(TimeInterval(TimeUnit::FromSeconds(0),
+                                           TimeUnit::FromInfinity()));
+      self->mMediaSourceDuration.DisconnectIfConnected();
+    });
   GetTaskQueue()->Dispatch(task.forget());
 }
 
@@ -399,12 +410,12 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
   MSE_DEBUG("From %.2fs to %.2f",
             aInterval.mStart.ToSeconds(), aInterval.mEnd.ToSeconds());
 
-  double mediaSourceDuration = mParentDecoder->GetMediaSourceDuration();
-  if (IsNaN(mediaSourceDuration)) {
+  if (mMediaSourceDuration.Ref().isNothing() ||
+      IsNaN(mMediaSourceDuration.Ref().ref())) {
     MSE_DEBUG("Nothing to remove, aborting");
     return false;
   }
-  TimeUnit duration{TimeUnit::FromSeconds(mediaSourceDuration)};
+  TimeUnit duration{TimeUnit::FromSeconds(mMediaSourceDuration.Ref().ref())};
 
   MSE_DEBUG("duration:%.2f", duration.ToSeconds());
   if (HasAudio()) {
