@@ -263,6 +263,7 @@ TrackBuffersManager::CompleteResetParserState()
     // if we have been aborted, we may have pending frames that we are going
     // to discard now.
     track->mQueuedSamples.Clear();
+    track->mLongestFrameDuration.reset();
   }
   // 6. Remove all bytes from the input buffer.
   mIncomingBuffers.Clear();
@@ -699,6 +700,9 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
     // 3. Set the need random access point flag on all track buffers to true.
     mVideoTracks.mNeedRandomAccessPoint = true;
     mAudioTracks.mNeedRandomAccessPoint = true;
+
+    mVideoTracks.mLongestFrameDuration = mVideoTracks.mLastFrameDuration;
+    mAudioTracks.mLongestFrameDuration = mAudioTracks.mLastFrameDuration;
   }
 
   // 4. Let active track flag equal false.
@@ -1054,10 +1058,15 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
 
   // TODO: Maybe we should be using TimeStamp and TimeDuration instead?
 
+  // Some MP4 content may exhibit an extremely short frame duration.
+  // As such, we can't use the last frame duration as a way to detect
+  // discontinuities as required per step 6 above.
+  // Instead we use the biggest duration seen so far in this run (init + media
+  // segment).
   if ((trackBuffer.mLastDecodeTimestamp.isSome() &&
        decodeTimestamp < trackBuffer.mLastDecodeTimestamp.ref()) ||
       (trackBuffer.mLastDecodeTimestamp.isSome() &&
-       decodeTimestamp - trackBuffer.mLastDecodeTimestamp.ref() > 2*trackBuffer.mLastFrameDuration.ref())) {
+       decodeTimestamp - trackBuffer.mLastDecodeTimestamp.ref() > 2*trackBuffer.mLongestFrameDuration.ref())) {
 
     // 1a. If mode equals "segments":
     if (mParent->mAppendMode == SourceBufferAppendMode::Segments) {
@@ -1078,6 +1087,8 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
       track->mHighestEndTimestamp.reset();
       // 5. Set the need random access point flag on all track buffers to true.
       track->mNeedRandomAccessPoint = true;
+
+      trackBuffer.mLongestFrameDuration.reset();
     }
     MSE_DEBUG("Detected discontinuity. Restarting process");
     // 6. Jump to the Loop Top step above to restart processing of the current coded frame.
@@ -1208,7 +1219,17 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
   // 17. Set last decode timestamp for track buffer to decode timestamp.
   trackBuffer.mLastDecodeTimestamp = Some(decodeTimestamp);
   // 18. Set last frame duration for track buffer to frame duration.
-  trackBuffer.mLastFrameDuration = Some(TimeUnit::FromMicroseconds(aSample->mDuration));
+  trackBuffer.mLastFrameDuration =
+    Some(TimeUnit::FromMicroseconds(aSample->mDuration));
+
+  if (trackBuffer.mLongestFrameDuration.isNothing()) {
+    trackBuffer.mLongestFrameDuration = trackBuffer.mLastFrameDuration;
+  } else {
+    trackBuffer.mLongestFrameDuration =
+      Some(std::max(trackBuffer.mLongestFrameDuration.ref(),
+               trackBuffer.mLastFrameDuration.ref()));
+  }
+
   // 19. If highest end timestamp for track buffer is unset or frame end timestamp is greater than highest end timestamp, then set highest end timestamp for track buffer to frame end timestamp.
   if (trackBuffer.mHighestEndTimestamp.isNothing() ||
       frameEndTimestamp > trackBuffer.mHighestEndTimestamp.ref()) {
