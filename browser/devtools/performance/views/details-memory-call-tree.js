@@ -118,3 +118,5 @@ let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
 
   toString: () => "[object MemoryCallTreeView]"
 });
+
+EventEmitter.decorate(MemoryCallTreeView);

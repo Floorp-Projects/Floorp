@@ -638,7 +638,9 @@ public class Tabs implements GeckoEventListener {
         VIEWPORT_CHANGE,
         RECORDING_CHANGE,
         BOOKMARK_ADDED,
-        BOOKMARK_REMOVED
+        BOOKMARK_REMOVED,
+        READING_LIST_ADDED,
+        READING_LIST_REMOVED,
     }
 
     public void notifyListeners(Tab tab, TabEvents msg) {

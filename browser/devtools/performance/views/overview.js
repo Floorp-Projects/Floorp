@@ -165,8 +165,10 @@ let OverviewView = {
     let mapEnd = () => recording.getDuration();
     let selection = this.graphs.getMappedSelection({ mapStart, mapEnd });
     // If no selection returned, this means the overview graphs have not been rendered
-    // yet, so act as if we have no selection (the full recording).
-    if (!selection) {
+    // yet, so act as if we have no selection (the full recording). Also
+    // if the selection range distance is tiny, assume the range was cleared or just
+    // clicked, and we do not have a range.
+    if (!selection || (selection.max - selection.min) < 1) {
       return { startTime: 0, endTime: recording.getDuration() };
     }
     return { startTime: selection.min, endTime: selection.max };
@@ -300,14 +302,8 @@ let OverviewView = {
     if (this._stopSelectionChangeEventPropagation) {
       return;
     }
-    // If the range is smaller than a pixel (which can happen when performing
-    // a click on the graphs), treat this as a cleared selection.
-    let interval = this.getTimeInterval();
-    if (interval.endTime - interval.startTime < 1) {
-      this.emit(EVENTS.OVERVIEW_RANGE_CLEARED);
-    } else {
-      this.emit(EVENTS.OVERVIEW_RANGE_SELECTED, interval);
-    }
+
+    this.emit(EVENTS.OVERVIEW_RANGE_SELECTED, this.getTimeInterval());
   },
 
   _onGraphRendered: function (_, graphName) {
