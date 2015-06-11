@@ -592,13 +592,8 @@ Rule.prototype = {
    * Reapply all the properties in this rule, and update their
    * computed styles. Store disabled properties in the element
    * style's store. Will re-mark overridden properties.
-   *
-   * @param {string} [aName]
-   *        A text property name (such as "background" or "border-top") used
-   *        when calling from setPropertyValue & setPropertyName to signify
-   *        that the property should be saved in store.userProperties.
    */
-  applyProperties: function(aModifications, aName) {
+  applyProperties: function(aModifications) {
     this.elementStyle.markOverriddenAll();
 
     if (!aModifications) {
@@ -718,8 +713,6 @@ Rule.prototype = {
    *        The property's priority (either "important" or an empty string).
    */
   previewPropertyValue: function(aProperty, aValue, aPriority) {
-    aProperty.value = aValue;
-
     let modifications = this.style.startModifyingProperties();
     modifications.setProperty(aProperty.name, aValue, aPriority);
     modifications.apply();
@@ -3359,14 +3352,12 @@ TextPropertyEditor.prototype = {
       this.valueSpan.querySelectorAll("." + colorSwatchClass);
     if (this.ruleEditor.isEditable) {
       for (let span of this._colorSwatchSpans) {
-        // Capture the original declaration value to be able to revert later
-        let originalValue = this.valueSpan.textContent;
         // Adding this swatch to the list of swatches our colorpicker
         // knows about
         this.ruleEditor.ruleView.tooltips.colorPicker.addSwatch(span, {
           onPreview: () => this._previewValue(this.valueSpan.textContent),
-          onCommit: () => this._applyNewValue(this.valueSpan.textContent),
-          onRevert: () => this._applyNewValue(originalValue, false)
+          onCommit: () => this._onValueDone(this.valueSpan.textContent, true),
+          onRevert: () => this._onValueDone(undefined, false)
         });
       }
     }
@@ -3376,14 +3367,12 @@ TextPropertyEditor.prototype = {
       this.valueSpan.querySelectorAll("." + bezierSwatchClass);
     if (this.ruleEditor.isEditable) {
       for (let span of this._bezierSwatchSpans) {
-        // Capture the original declaration value to be able to revert later
-        let originalValue = this.valueSpan.textContent;
         // Adding this swatch to the list of swatches our colorpicker
         // knows about
         this.ruleEditor.ruleView.tooltips.cubicBezier.addSwatch(span, {
           onPreview: () => this._previewValue(this.valueSpan.textContent),
-          onCommit: () => this._applyNewValue(this.valueSpan.textContent),
-          onRevert: () => this._applyNewValue(originalValue, false)
+          onCommit: () => this._onValueDone(this.valueSpan.textContent, true),
+          onRevert: () => this._onValueDone(undefined, false)
         });
       }
     }
@@ -3393,12 +3382,11 @@ TextPropertyEditor.prototype = {
     if (this.ruleEditor.isEditable) {
       if (span) {
         parserOptions.filterSwatch = true;
-        let originalValue = this.valueSpan.textContent;
 
         this.ruleEditor.ruleView.tooltips.filterEditor.addSwatch(span, {
           onPreview: () => this._previewValue(this.valueSpan.textContent),
-          onCommit: () => this._applyNewValue(this.valueSpan.textContent),
-          onRevert: () => this._applyNewValue(originalValue, false)
+          onCommit: () => this._onValueDone(this.valueSpan.textContent, true),
+          onRevert: () => this._onValueDone(undefined, false)
         }, outputParser, parserOptions);
       }
     }
@@ -3600,7 +3588,12 @@ TextPropertyEditor.prototype = {
       if (this.removeOnRevert) {
         this.remove();
       } else {
-        this.prop.setValue(this.committed.value, this.committed.priority);
+        // update the editor back to committed value
+        this.update();
+
+        // undo the preview in content style
+        this.ruleEditor.rule.previewPropertyValue(this.prop,
+          this.prop.value, this.prop.priority);
       }
       return;
     }
@@ -3678,32 +3671,6 @@ TextPropertyEditor.prototype = {
       propertiesToAdd: propertiesToAdd,
       firstValue: firstValue
     };
-  },
-
-  /**
-   * Apply a new value.
-   *
-   * @param  {String} aValue
-   *         The value to replace.
-   * @param  {Boolean} markChanged=true
-   *         Set this to false if you need to prevent the property from being
-   *         marked as changed e.g. tooltips do this when <escape> is pressed
-   *         in order to revert the value.
-   */
-  _applyNewValue: function(aValue, markChanged=true) {
-    let val = parseSingleValue(aValue);
-
-    if (!markChanged) {
-      let store = this.prop.rule.elementStyle.store;
-      this.prop.editor.committed.value = aValue;
-      store.userProperties.setProperty(this.prop.rule.style,
-                                       this.prop.rule.name, aValue);
-    }
-
-    this.prop.setValue(val.value, val.priority, markChanged);
-    this.removeOnRevert = false;
-    this.committed.value = this.prop.value;
-    this.committed.priority = this.prop.priority;
   },
 
   /**
