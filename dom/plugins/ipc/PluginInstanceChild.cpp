@@ -1768,7 +1768,7 @@ PluginInstanceChild::SetCaptureHook(HWND aHwnd)
     wchar_t className[256] = {0};
     int numChars = GetClassNameW(aHwnd, className, ArrayLength(className));
     NS_NAMED_LITERAL_STRING(unityClassName, "Unity.WebPlayer");
-    if (numChars == unityClassName.Length() && unityClassName == className) {
+    if (numChars == unityClassName.Length() && unityClassName == wwc(className)) {
         sSetCaptureHookData = new SetCaptureHookData(aHwnd);
     }
     return sUser32SetCaptureHookStub(aHwnd);
