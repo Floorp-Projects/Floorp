@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={1169249}
+-->
+<head>
+  <title>Test for Bug {1169249}</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={1169249}">Mozilla Bug {1169249}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "gServiceWorkerManager",
+                                   "@mozilla.org/serviceworkers/manager;1",
+                                   "nsIServiceWorkerManager");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gAppsService",
+                                   "@mozilla.org/AppsService;1",
+                                   "nsIAppsService");
+SimpleTest.waitForExplicitFinish();
+
+const gOrigin = 'http://test/chrome/dom/workers/test/serviceworkers/app';
+const appManifestURL = gOrigin + '/manifest.webapp';
+let gApp;
+
+addLoadEvent(go);
+
+function setup() {
+  info('Setting up');
+  return new Promise((resolve, reject) => {
+    SpecialPowers.setAllAppsLaunchable(true);
+    SpecialPowers.pushPrefEnv({'set': [
+      ['dom.mozBrowserFramesEnabled', true],
+      ['dom.serviceWorkers.exemptFromPerDomainMax', true],
+      ['dom.serviceWorkers.enabled', true],
+      ['dom.serviceWorkers.testing.enabled', true]
+    ]}, () => {
+      SpecialPowers.pushPermissions([
+        { 'type': 'webapps-manage', 'allow': 1, 'context': document },
+        { 'type': 'browser', 'allow': 1, 'context': document },
+        { 'type': 'embed-apps', 'allow': 1, 'context': document }
+      ], () => {
+        SpecialPowers.autoConfirmAppInstall(() => {
+          SpecialPowers.autoConfirmAppUninstall(resolve);
+        });
+      });
+    });
+  });
+}
+
+function installApp() {
+  return new Promise((resolve, reject) => {
+    let req = navigator.mozApps.install(appManifestURL);
+    req.onsuccess = function() {
+      gApp = req.result;
+      is(req.result.manifestURL, appManifestURL, 'app installed');
+      if (req.result.installState == 'installed') {
+        is(req.result.installState, 'installed', 'app downloaded');
+        resolve()
+      } else {
+        req.result.ondownloadapplied = function() {
+          is(req.result.installState, 'installed', 'app downloaded');
+          resolve();
+        }
+      }
+    }
+    req.onerror = reject;
+  });
+}
+
+function checkSwRegistration(aExpectedRegistrations) {
+  return new Promise((resolve, reject) => {
+    let registrations = [];
+    registrations = gServiceWorkerManager.getAllRegistrations();
+    is(registrations.length, aExpectedRegistrations.length,
+       "There should be " + aExpectedRegistrations.length + " registrations");
+
+    for (let i = 0; i < registrations.length; i++) {
+      let registration = registrations.queryElementAt(i, Ci.nsIServiceWorkerInfo);
+      if (!registration) {
+        reject();
+        return;
+      }
+      is(registration.principal.origin, aExpectedRegistrations[i].origin,
+         "Registration principal should be as expected");
+    }
+    resolve();
+  });
+}
+
+
+function launchApp() {
+  if (!gApp) {
+    ok(false, 'No test application to launch');
+    return Promise.reject();
+  }
+  return new Promise((resolve, reject) => {
+    let iframe = document.createElement('iframe');
+    iframe.setAttribute('mozbrowser', 'true');
+    iframe.setAttribute('mozapp', gApp.manifestURL);
+    iframe.addEventListener('mozbrowsershowmodalprompt', function listener(e) {
+      let message = e.detail.message;
+      if (/OK/.exec(message)) {
+        ok(true, "Message from app: " + message);
+      } else if (/READY/.exec(message)) {
+        ok(true, 'Message from app: ' + message);
+        resolve();
+      }
+    }, false);
+    let domParent = document.getElementById('container');
+    domParent.appendChild(iframe);
+    ok(true, "origin " +  gOrigin + gApp.manifest.launch_path);
+    SpecialPowers.wrap(iframe.contentWindow).location =
+      gOrigin + gApp.manifest.launch_path;
+  });
+}
+
+function uninstallApp() {
+  return new Promise((resolve, reject) => {
+    if (!gApp) {
+      return reject();
+    }
+    let req = navigator.mozApps.mgmt.uninstall(gApp);
+    req.onsuccess = resolve;
+    req.onerror = reject;
+  });
+}
+
+function go() {
+  setup()
+    .then(installApp)
+    .then(launchApp)
+    .then(() => {
+      app = gAppsService.getAppByManifestURL(gApp.manifestURL);
+      return checkSwRegistration([{
+        origin: app.principal.origin
+      }]);
+    })
+    .then(uninstallApp)
+    .then(() => {
+      return checkSwRegistration([]);
+    })
+    .then(SimpleTest.finish)
+    .catch((e) => {
+      ok(false, 'Unexpected error ' + e);
+      SimpleTest.finish();
+    });
+}
+</script>
+</pre>
+<div id="container"></div>
+</body>
+</html>
