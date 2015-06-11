@@ -99,6 +99,11 @@ public:
   // This will be called should the demuxer be used with MediaSource.
   virtual void NotifyDataRemoved() { }
 
+  // Indicate to MediaFormatReader if it should compute the start time
+  // of the demuxed data. If true (default) the first sample returned will be
+  // used as reference time base.
+  virtual bool ShouldComputeStartTime() const { return true; }
+
 protected:
   virtual ~MediaDataDemuxer()
   {
