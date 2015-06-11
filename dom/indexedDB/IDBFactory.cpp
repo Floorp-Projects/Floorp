@@ -367,15 +367,14 @@ IDBFactory::AllowedForWindowInternal(nsPIDOMWindow* aWindow,
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  if (nsContentUtils::IsSystemPrincipal(principal)) {
-    principal.forget(aPrincipal);
-    return NS_OK;
+  bool isSystemPrincipal;
+  if (!AllowedForPrincipal(principal, &isSystemPrincipal)) {
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  bool isNullPrincipal;
-  if (NS_WARN_IF(NS_FAILED(principal->GetIsNullPrincipal(&isNullPrincipal))) ||
-      isNullPrincipal) {
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  if (isSystemPrincipal) {
+    principal.forget(aPrincipal);
+    return NS_OK;
   }
 
   // Whitelist about:home, since it doesn't have a base domain it would not
@@ -422,6 +421,36 @@ IDBFactory::AllowedForWindowInternal(nsPIDOMWindow* aWindow,
 
   principal.forget(aPrincipal);
   return NS_OK;
+}
+
+// static
+bool
+IDBFactory::AllowedForPrincipal(nsIPrincipal* aPrincipal,
+                                bool* aIsSystemPrincipal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+
+  if (NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate())) {
+    return false;
+  }
+
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    if (aIsSystemPrincipal) {
+      *aIsSystemPrincipal = true;
+    }
+    return true;
+  } else if (aIsSystemPrincipal) {
+    *aIsSystemPrincipal = false;
+  }
+
+  bool isNullPrincipal;
+  if (NS_WARN_IF(NS_FAILED(aPrincipal->GetIsNullPrincipal(&isNullPrincipal))) ||
+      isNullPrincipal) {
+    return false;
+  }
+
+  return true;
 }
 
 #ifdef DEBUG
