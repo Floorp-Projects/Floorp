@@ -1461,6 +1461,10 @@ DeviceStorageFile::collectFilesInternal(
     return;
   }
 
+  DeviceStorageTypeChecker* typeChecker
+    = DeviceStorageTypeChecker::CreateOrGet();
+  MOZ_ASSERT(typeChecker);
+
   nsCOMPtr<nsIDirectoryEnumerator> files = do_QueryInterface(e);
   nsCOMPtr<nsIFile> f;
 
@@ -1484,6 +1488,10 @@ DeviceStorageFile::collectFilesInternal(
     nsString fullpath;
     nsresult rv = f->GetPath(fullpath);
     if (NS_FAILED(rv)) {
+      continue;
+    }
+
+    if (isFile && !typeChecker->Check(mStorageType, fullpath)) {
       continue;
     }
 
@@ -2033,21 +2041,13 @@ ContinueCursorEvent::GetNextFile()
   nsString cursorStorageType;
   cursor->GetStorageType(cursorStorageType);
 
-  DeviceStorageTypeChecker* typeChecker
-    = DeviceStorageTypeChecker::CreateOrGet();
-  if (!typeChecker) {
-    return nullptr;
-  }
-
-  while (cursor->mFiles.Length() > 0) {
-    nsRefPtr<DeviceStorageFile> file = cursor->mFiles[0];
-    cursor->mFiles.RemoveElementAt(0);
-    if (!typeChecker->Check(cursorStorageType, file->mFile)) {
-      continue;
+  while (cursor->mIndex < cursor->mFiles.Length()) {
+    nsRefPtr<DeviceStorageFile> file = cursor->mFiles[cursor->mIndex].forget();
+    ++cursor->mIndex;
+    if (file) {
+      file->CalculateMimeType();
+      return file.forget();
     }
-
-    file->CalculateMimeType();
-    return file.forget();
   }
 
   return nullptr;
@@ -2172,6 +2172,7 @@ nsDOMDeviceStorageCursor::nsDOMDeviceStorageCursor(nsPIDOMWindow* aWindow,
   : DOMCursor(aWindow, nullptr)
   , mOkToCallContinue(false)
   , mSince(aSince)
+  , mIndex(0)
   , mFile(aFile)
   , mPrincipal(aPrincipal)
   , mRequester(new nsContentPermissionRequester(GetOwner()))

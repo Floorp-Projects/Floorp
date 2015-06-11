@@ -3680,7 +3680,9 @@ class CompartmentCheckTracer : public JS::CallbackTracer
     void trace(void** thingp, JS::TraceKind kind) override;
 
   public:
-    explicit CompartmentCheckTracer(JSRuntime* rt) : JS::CallbackTracer(rt) {}
+    explicit CompartmentCheckTracer(JSRuntime* rt)
+      : JS::CallbackTracer(rt), src(nullptr), zone(nullptr), compartment(nullptr)
+    {}
 
     Cell* src;
     JS::TraceKind srcKind;
@@ -4055,6 +4057,25 @@ GCRuntime::markAllGrayReferences(gcstats::Phase phase)
 }
 
 #ifdef DEBUG
+
+struct GCChunkHasher {
+    typedef gc::Chunk* Lookup;
+
+    /*
+     * Strip zeros for better distribution after multiplying by the golden
+     * ratio.
+     */
+    static HashNumber hash(gc::Chunk* chunk) {
+        MOZ_ASSERT(!(uintptr_t(chunk) & gc::ChunkMask));
+        return HashNumber(uintptr_t(chunk) >> gc::ChunkShift);
+    }
+
+    static bool match(gc::Chunk* k, gc::Chunk* l) {
+        MOZ_ASSERT(!(uintptr_t(k) & gc::ChunkMask));
+        MOZ_ASSERT(!(uintptr_t(l) & gc::ChunkMask));
+        return k == l;
+    }
+};
 
 class js::gc::MarkingValidator
 {

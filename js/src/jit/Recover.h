@@ -635,7 +635,6 @@ class RNewArray final : public RInstruction
 {
   private:
     uint32_t count_;
-    AllocatingBehaviour allocatingBehaviour_;
 
   public:
     RINSTRUCTION_HEADER_(NewArray)

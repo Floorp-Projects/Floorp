@@ -1,0 +1,40 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that registering a service worker uses the docuemnt URI for the secure origin check</title>
+  <script type="text/javascript" src="http://mochi.test:8888/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://mochi.test:8888/tests/SimpleTest/test.css" />
+  <base href="https://mozilla.org/">
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function runTest() {
+    navigator.serviceWorker.register("http://mochi.test:8888/tests/dom/workers/test/serviceworkers/empty.js")
+      .then(reg => {
+        ok(false, "Register should fail");
+        SimpleTest.finish();
+      }, err => {
+        is(err.name, "SecurityError", "Registration should fail with SecurityError");
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  onload = function() {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.enabled", true],
+    ]}, runTest);
+  };
+</script>
+</body>
+</html>

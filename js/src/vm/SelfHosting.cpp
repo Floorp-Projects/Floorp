@@ -300,81 +300,11 @@ js::intrinsic_NewDenseArray(JSContext* cx, unsigned argc, Value* vp)
     uint32_t length = args[0].toInt32();
 
     // Make a new buffer and initialize it up to length.
-    RootedArrayObject buffer(cx, NewDenseFullyAllocatedArray(cx, length));
+    RootedObject buffer(cx, NewFullyAllocatedArrayForCallingAllocationSite(cx, length));
     if (!buffer)
         return false;
 
-    ObjectGroup* newgroup = ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array);
-    if (!newgroup)
-        return false;
-    buffer->setGroup(newgroup);
-
-    DenseElementResult edr = buffer->ensureDenseElements(cx, length, 0);
-    switch (edr) {
-      case DenseElementResult::Success:
-        args.rval().setObject(*buffer);
-        return true;
-
-      case DenseElementResult::Incomplete: // shouldn't happen!
-        MOZ_ASSERT(!"%EnsureDenseArrayElements() would yield sparse array");
-        JS_ReportError(cx, "%EnsureDenseArrayElements() would yield sparse array");
-        break;
-
-      case DenseElementResult::Failure:
-        break;
-    }
-    return false;
-}
-
-/*
- * UnsafePutElements(arr0, idx0, elem0, ..., arrN, idxN, elemN): For each set of
- * (arr, idx, elem) arguments that are passed, performs the assignment
- * |arr[idx] = elem|. |arr| must be either a dense array or a typed array.
- *
- * If |arr| is a dense array, the index must be an int32 less than the
- * initialized length of |arr|. Use |%EnsureDenseResultArrayElements|
- * to ensure that the initialized length is long enough.
- *
- * If |arr| is a typed array, the index must be an int32 less than the
- * length of |arr|.
- */
-bool
-js::intrinsic_UnsafePutElements(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if ((args.length() % 3) != 0) {
-        JS_ReportError(cx, "Incorrect number of arguments, not divisible by 3");
-        return false;
-    }
-
-    for (uint32_t base = 0; base < args.length(); base += 3) {
-        uint32_t arri = base;
-        uint32_t idxi = base+1;
-        uint32_t elemi = base+2;
-
-        MOZ_ASSERT(args[arri].isObject());
-        MOZ_ASSERT(args[arri].toObject().isNative() || IsTypedObjectArray(args[arri].toObject()));
-        MOZ_ASSERT(args[idxi].isInt32());
-
-        RootedObject arrobj(cx, &args[arri].toObject());
-        uint32_t idx = args[idxi].toInt32();
-
-        if (IsAnyTypedArray(arrobj.get()) || arrobj->is<TypedObject>()) {
-            MOZ_ASSERT_IF(IsAnyTypedArray(arrobj.get()), idx < AnyTypedArrayLength(arrobj.get()));
-            MOZ_ASSERT_IF(arrobj->is<TypedObject>(), idx < uint32_t(arrobj->as<TypedObject>().length()));
-            // XXX: Always non-strict.
-            ObjectOpResult ignored;
-            RootedValue receiver(cx, ObjectValue(*arrobj));
-            if (!SetElement(cx, arrobj, idx, args[elemi], receiver, ignored))
-                return false;
-        } else {
-            MOZ_ASSERT(idx < arrobj->as<ArrayObject>().getDenseInitializedLength());
-            arrobj->as<ArrayObject>().setDenseElementWithType(cx, idx, args[elemi]);
-        }
-    }
-
-    args.rval().setUndefined();
+    args.rval().setObject(*buffer);
     return true;
 }
 
@@ -383,38 +313,47 @@ js::intrinsic_DefineDataProperty(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    MOZ_ASSERT(args.length() == 4);
+    MOZ_ASSERT(args.length() >= 3);
     MOZ_ASSERT(args[0].isObject());
-    MOZ_ASSERT(args[3].isInt32());
 
     RootedObject obj(cx, &args[0].toObject());
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, args[1], &id))
         return false;
     RootedValue value(cx, args[2]);
-    unsigned attributes = args[3].toInt32();
+
+    unsigned attrs = 0;
+    if (args.length() >= 4) {
+        unsigned attributes = args[3].toInt32();
+
+        MOZ_ASSERT(bool(attributes & ATTR_ENUMERABLE) != bool(attributes & ATTR_NONENUMERABLE),
+                   "_DefineDataProperty must receive either ATTR_ENUMERABLE xor ATTR_NONENUMERABLE");
+        if (attributes & ATTR_ENUMERABLE)
+            attrs |= JSPROP_ENUMERATE;
+
+        MOZ_ASSERT(bool(attributes & ATTR_CONFIGURABLE) != bool(attributes & ATTR_NONCONFIGURABLE),
+                   "_DefineDataProperty must receive either ATTR_CONFIGURABLE xor "
+                   "ATTR_NONCONFIGURABLE");
+        if (attributes & ATTR_NONCONFIGURABLE)
+            attrs |= JSPROP_PERMANENT;
+
+        MOZ_ASSERT(bool(attributes & ATTR_WRITABLE) != bool(attributes & ATTR_NONWRITABLE),
+                   "_DefineDataProperty must receive either ATTR_WRITABLE xor ATTR_NONWRITABLE");
+        if (attributes & ATTR_NONWRITABLE)
+            attrs |= JSPROP_READONLY;
+    } else {
+        // If the fourth argument is unspecified, the attributes are for a
+        // plain data property.
+        attrs = JSPROP_ENUMERATE;
+    }
 
     Rooted<PropertyDescriptor> desc(cx);
-    unsigned attrs = 0;
-
-    MOZ_ASSERT(bool(attributes & ATTR_ENUMERABLE) != bool(attributes & ATTR_NONENUMERABLE),
-               "_DefineDataProperty must receive either ATTR_ENUMERABLE xor ATTR_NONENUMERABLE");
-    if (attributes & ATTR_ENUMERABLE)
-        attrs |= JSPROP_ENUMERATE;
-
-    MOZ_ASSERT(bool(attributes & ATTR_CONFIGURABLE) != bool(attributes & ATTR_NONCONFIGURABLE),
-               "_DefineDataProperty must receive either ATTR_CONFIGURABLE xor "
-               "ATTR_NONCONFIGURABLE");
-    if (attributes & ATTR_NONCONFIGURABLE)
-        attrs |= JSPROP_PERMANENT;
-
-    MOZ_ASSERT(bool(attributes & ATTR_WRITABLE) != bool(attributes & ATTR_NONWRITABLE),
-               "_DefineDataProperty must receive either ATTR_WRITABLE xor ATTR_NONWRITABLE");
-    if (attributes & ATTR_NONWRITABLE)
-        attrs |= JSPROP_READONLY;
-
     desc.setDataDescriptor(value, attrs);
-    return StandardDefineProperty(cx, obj, id, desc);
+    if (!StandardDefineProperty(cx, obj, id, desc))
+        return false;
+
+    args.rval().setUndefined();
+    return true;
 }
 
 bool
@@ -1374,7 +1313,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),
     JS_FN("SubstringKernel",         intrinsic_SubstringKernel,         3,0),
 
-    JS_FN("UnsafePutElements",       intrinsic_UnsafePutElements,       3,0),
     JS_FN("_DefineDataProperty",     intrinsic_DefineDataProperty,      4,0),
     JS_FN("UnsafeSetReservedSlot",   intrinsic_UnsafeSetReservedSlot,   3,0),
     JS_FN("UnsafeGetReservedSlot",   intrinsic_UnsafeGetReservedSlot,   2,0),

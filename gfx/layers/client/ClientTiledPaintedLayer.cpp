@@ -144,8 +144,8 @@ ClientTiledPaintedLayer::BeginPaint()
 
   if (!displayPortAncestor || !scrollAncestor) {
     // No displayport or scroll ancestor, so we can't do progressive rendering.
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_B2G)
-    // Both Android and b2g are guaranteed to have a displayport set, so this
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+    // Both Android and b2g on phones are guaranteed to have a displayport set, so this
     // should never happen.
     NS_WARNING("Tiled PaintedLayer with no scrollable container ancestor");
 #endif
