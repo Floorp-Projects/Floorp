@@ -131,7 +131,6 @@ loop.StandaloneMozLoop = (function(mozL10n) {
         },
         async: async,
         success: function(responseData) {
-          console.log("done");
           try {
             callback(null, validate(responseData, expectedProps));
           } catch (err) {

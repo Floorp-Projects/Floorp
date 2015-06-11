@@ -109,7 +109,7 @@ struct KeyAlgorithmProxy
     mHmac.mHash.mName = aHashName;
   }
 
-  void
+  bool
   MakeRsa(const nsString& aName, uint32_t aModulusLength,
          const CryptoBuffer& aPublicExponent, const nsString& aHashName)
   {
@@ -118,7 +118,10 @@ struct KeyAlgorithmProxy
     mRsa.mName = aName;
     mRsa.mModulusLength = aModulusLength;
     mRsa.mHash.mName = aHashName;
-    mRsa.mPublicExponent.Assign(aPublicExponent);
+    if (!mRsa.mPublicExponent.Assign(aPublicExponent)) {
+      return false;
+    }
+    return true;
   }
 
   void
@@ -130,15 +133,20 @@ struct KeyAlgorithmProxy
     mEc.mNamedCurve = aNamedCurve;
   }
 
-  void
+  bool
   MakeDh(const nsString& aName, const CryptoBuffer& aPrime,
          const CryptoBuffer& aGenerator)
   {
     mType = DH;
     mName = aName;
     mDh.mName = aName;
-    mDh.mPrime.Assign(aPrime);
-    mDh.mGenerator.Assign(aGenerator);
+    if (!mDh.mPrime.Assign(aPrime)) {
+      return false;
+    }
+    if (!mDh.mGenerator.Assign(aGenerator)) {
+      return false;
+    }
+    return true;
   }
 };
 

@@ -8,6 +8,7 @@ describe("loop.roomViews", function () {
   var TestUtils = React.addons.TestUtils;
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
+  var sharedViews = loop.shared.views;
   var ROOM_STATES = loop.store.ROOM_STATES;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
 
@@ -66,6 +67,13 @@ describe("loop.roomViews", function () {
     roomStore = new loop.store.RoomStore(dispatcher, {
       mozLoop: fakeMozLoop,
       activeRoomStore: activeRoomStore
+    });
+    var textChatStore = new loop.store.TextChatStore(dispatcher, {
+      sdkDriver: {}
+    });
+
+    loop.store.StoreMixin.register({
+      textChatStore: textChatStore
     });
 
     fakeContextURL = {
@@ -422,16 +430,6 @@ describe("loop.roomViews", function () {
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           sinon.match.instanceOf(sharedActions.SetupStreamElements));
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-          sinon.match(function(value) {
-            return value.getLocalElementFunc() ===
-                   view.getDOMNode().querySelector(".local");
-          }));
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-          sinon.match(function(value) {
-            return value.getRemoteElementFunc() ===
-                   view.getDOMNode().querySelector(".remote");
-          }));
       }
 
       it("should dispatch a `SetupStreamElements` action when the MEDIA_WAIT state " +
@@ -516,6 +514,54 @@ describe("loop.roomViews", function () {
           TestUtils.findRenderedComponentWithType(view,
             loop.shared.views.FeedbackView);
         });
+
+      it("should display an avatar for remote video when the room has participants but video is not enabled",
+        function() {
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.HAS_PARTICIPANTS,
+            mediaConnected: true,
+            remoteVideoEnabled: false
+          });
+
+          view = mountTestComponent();
+
+          TestUtils.findRenderedComponentWithType(view, sharedViews.AvatarView);
+        });
+
+      it("should display the remote video when there are participants and video is enabled", function() {
+        activeRoomStore.setStoreState({
+          roomState: ROOM_STATES.HAS_PARTICIPANTS,
+          mediaConnected: true,
+          remoteVideoEnabled: true,
+          remoteSrcVideoObject: { fake: 1 }
+        });
+
+        view = mountTestComponent();
+
+        expect(view.getDOMNode().querySelector(".remote video")).not.eql(null);
+      });
+
+      it("should display an avatar for local video when the stream is muted", function() {
+        activeRoomStore.setStoreState({
+          videoMuted: true
+        });
+
+        view = mountTestComponent();
+
+        TestUtils.findRenderedComponentWithType(view, sharedViews.AvatarView);
+      });
+
+      it("should display the local video when the stream is enabled", function() {
+        activeRoomStore.setStoreState({
+          localSrcVideoObject: { fake: 1 },
+          videoMuted: false
+        });
+
+        view = mountTestComponent();
+
+        expect(view.getDOMNode().querySelector(".local video")).not.eql(null);
+      });
+
     });
 
     describe("Mute", function() {
@@ -641,6 +687,7 @@ describe("loop.roomViews", function () {
       props = _.extend({
         dispatcher: dispatcher,
         mozLoop: fakeMozLoop,
+        savingContext: false,
         show: true,
         roomData: {
           roomToken: "fakeToken"
@@ -726,7 +773,7 @@ describe("loop.roomViews", function () {
         expect(checkbox.classList.contains("disabled")).to.eql(true);
       });
 
-      it("should render the editMode view when the edit button is clicked", function(next) {
+      it("should render the editMode view when the edit button is clicked", function(done) {
         var roomName = "Hello, is it me you're looking for?";
         view = mountTestComponent({
           roomData: {
@@ -749,11 +796,11 @@ describe("loop.roomViews", function () {
           expect(node.querySelector(".room-context-url").value).to.eql(fakeContextURL.location);
           expect(node.querySelector(".room-context-comments").value).to.eql(fakeContextURL.description);
 
-          next();
+          done();
         });
       });
 
-      it("should hide the checkbox when no context data is stored or available", function(next) {
+      it("should hide the checkbox when no context data is stored or available", function(done) {
         view = mountTestComponent({
           roomData: {
             roomToken: "fakeToken",
@@ -771,7 +818,7 @@ describe("loop.roomViews", function () {
           var node = view.getDOMNode();
           expect(node.querySelector(".checkbox-wrapper").classList.contains("hide")).to.eql(true);
 
-          next();
+          done();
         });
       });
     });
@@ -831,6 +878,21 @@ describe("loop.roomViews", function () {
               newRoomThumbnail: fakeContextURL.thumbnail
             }));
         });
+
+      it("should close the edit form when context was saved successfully", function(done) {
+        view.setProps({ savingContext: true }, function() {
+          var node = view.getDOMNode();
+          // The button should show up as disabled.
+          expect(node.querySelector(".btn-info").hasAttribute("disabled")).to.eql(true);
+
+          // Now simulate a successful save.
+          view.setProps({ savingContext: false }, function() {
+            // The editMode flag should be updated.
+            expect(view.state.editMode).to.eql(false);
+            done();
+          });
+        });
+      });
     });
 
     describe("#handleCheckboxChange", function() {

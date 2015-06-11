@@ -55,6 +55,16 @@
       <menuitem id="request-menu-context-copy-image-as-data-uri"
                 label="&netmonitorUI.context.copyImageAsDataUri;"
                 accesskey="&netmonitorUI.context.copyImageAsDataUri.accesskey;"/>
+      <menuseparator class="request-menu-context-separator"/>
+      <menuitem id="request-menu-context-copy-all-as-har"
+                label="&netmonitorUI.context.copyAllAsHar;"
+                accesskey="&netmonitorUI.context.copyAllAsHar.accesskey;"
+                oncommand="NetMonitorView.RequestsMenu.copyAllAsHar();"/>
+      <menuitem id="request-menu-context-save-all-as-har"
+                label="&netmonitorUI.context.saveAllAsHar;"
+                accesskey="&netmonitorUI.context.saveAllAsHar.accesskey;"
+                oncommand="NetMonitorView.RequestsMenu.saveAllAsHar();"/>
+      <menuseparator class="request-menu-context-separator"/>
       <menuitem id="request-menu-context-resend"
                 label="&netmonitorUI.summary.editAndResend;"
                 accesskey="&netmonitorUI.summary.editAndResend.accesskey;"/>

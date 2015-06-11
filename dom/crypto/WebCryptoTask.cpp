@@ -1603,7 +1603,9 @@ private:
 
     // Extract relevant information from the public key
     mModulusLength = 8 * pubKey->u.rsa.modulus.len;
-    mPublicExponent.Assign(&pubKey->u.rsa.publicExponent);
+    if (!mPublicExponent.Assign(&pubKey->u.rsa.publicExponent)) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
 
     return NS_OK;
   }
@@ -1628,8 +1630,10 @@ private:
     }
 
     // Set an appropriate KeyAlgorithm
-    mKey->Algorithm().MakeRsa(mAlgName, mModulusLength,
-                              mPublicExponent, mHashName);
+    if (!mKey->Algorithm().MakeRsa(mAlgName, mModulusLength,
+                                   mPublicExponent, mHashName)) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
 
     if (mDataIsJwk && !JwkCompatible(mJwk, mKey)) {
       return NS_ERROR_DOM_DATA_ERR;
@@ -1879,7 +1883,9 @@ private:
       return NS_ERROR_DOM_DATA_ERR;
     }
 
-    mKey->Algorithm().MakeDh(mAlgName, mPrime, mGenerator);
+    if (!mKey->Algorithm().MakeDh(mAlgName, mPrime, mGenerator)) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
     return NS_OK;
   }
 };
@@ -2211,14 +2217,20 @@ public:
       }
 
       // Create algorithm
-      mKeyPair.mPublicKey.get()->Algorithm().MakeRsa(algName,
-                                                     modulusLength,
-                                                     publicExponent,
-                                                     hashName);
-      mKeyPair.mPrivateKey.get()->Algorithm().MakeRsa(algName,
-                                                      modulusLength,
-                                                      publicExponent,
-                                                      hashName);
+      if (!mKeyPair.mPublicKey.get()->Algorithm().MakeRsa(algName,
+                                                          modulusLength,
+                                                          publicExponent,
+                                                          hashName)) {
+        mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
+        return;
+      }
+      if (!mKeyPair.mPrivateKey.get()->Algorithm().MakeRsa(algName,
+                                                           modulusLength,
+                                                           publicExponent,
+                                                           hashName)) {
+        mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
+        return;
+      }
       mMechanism = CKM_RSA_PKCS_KEY_PAIR_GEN;
 
       // Set up params struct
@@ -2268,8 +2280,18 @@ public:
       }
 
       // Create algorithm.
-      mKeyPair.mPublicKey.get()->Algorithm().MakeDh(algName, prime, generator);
-      mKeyPair.mPrivateKey.get()->Algorithm().MakeDh(algName, prime, generator);
+      if (!mKeyPair.mPublicKey.get()->Algorithm().MakeDh(algName,
+                                                         prime,
+                                                         generator)) {
+        mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
+        return;
+      }
+      if (!mKeyPair.mPrivateKey.get()->Algorithm().MakeDh(algName,
+                                                          prime,
+                                                          generator)) {
+        mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
+        return;
+      }
       mMechanism = CKM_DH_PKCS_KEY_PAIR_GEN;
     } else {
       mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
@@ -2789,7 +2811,9 @@ private:
       }
 
       NS_ConvertUTF16toUTF8 utf8(json);
-      mResult.Assign((const uint8_t*) utf8.BeginReading(), utf8.Length());
+      if (!mResult.Assign((const uint8_t*) utf8.BeginReading(), utf8.Length())) {
+        return NS_ERROR_DOM_OPERATION_ERR;
+      }
     }
 
     return NS_OK;

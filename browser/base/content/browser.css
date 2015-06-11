@@ -1291,3 +1291,7 @@ toolbarpaletteitem[place="palette"][hidden] {
 .popup-notification-footer[popupid="bad-content"][trackingblockdisabled] {
   display: block;
 }
+
+#login-fill-doorhanger:not([inDetailView]) > #login-fill-clickcapturer {
+  pointer-events: none;
+}

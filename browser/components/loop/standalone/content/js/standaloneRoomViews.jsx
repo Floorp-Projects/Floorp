@@ -337,7 +337,11 @@ loop.standaloneRoomViews = (function(mozL10n) {
         React.PropTypes.instanceOf(loop.store.FxOSActiveRoomStore)
       ]).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      isFirefox: React.PropTypes.bool.isRequired
+      isFirefox: React.PropTypes.bool.isRequired,
+      // The poster URLs are for UI-showcase testing and development
+      localPosterUrl: React.PropTypes.string,
+      remotePosterUrl: React.PropTypes.string,
+      screenSharePosterUrl: React.PropTypes.string
     },
 
     getInitialState: function() {
@@ -385,10 +389,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       if (this.state.roomState !== ROOM_STATES.MEDIA_WAIT &&
           nextState.roomState === ROOM_STATES.MEDIA_WAIT) {
         this.props.dispatcher.dispatch(new sharedActions.SetupStreamElements({
-          publisherConfig: this.getDefaultPublisherConfig({publishVideo: true}),
-          getLocalElementFunc: this._getElement.bind(this, ".local"),
-          getRemoteElementFunc: this._getElement.bind(this, ".remote"),
-          getScreenShareElementFunc: this._getElement.bind(this, ".screen")
+          publisherConfig: this.getDefaultPublisherConfig({publishVideo: true})
         }));
       }
 
@@ -411,8 +412,10 @@ loop.standaloneRoomViews = (function(mozL10n) {
         // Remove the custom screenshare styles on the remote camera.
         var node = this._getElement(".remote");
         node.removeAttribute("style");
+      }
 
-        // Force the video sizes to update.
+      if (this.state.receivingScreenShare != nextState.receivingScreenShare ||
+          this.state.remoteVideoEnabled != nextState.remoteVideoEnabled) {
         this.updateVideoContainer();
       }
     },
@@ -423,6 +426,32 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
     leaveRoom: function() {
       this.props.dispatcher.dispatch(new sharedActions.LeaveRoom());
+    },
+
+    /**
+     * Wrapper for window.matchMedia so that we use an appropriate version
+     * for the ui-showcase, which puts views inside of their own iframes.
+     *
+     * Currently, we use an icky hack, and the showcase conspires with
+     * react-frame-component to set iframe.contentWindow.matchMedia onto
+     * activeRoomStore.  Once React context matures a bit (somewhere between
+     * 0.14 and 1.0, apparently):
+     *
+     * https://facebook.github.io/react/blog/2015/02/24/streamlining-react-elements.html#solution-make-context-parent-based-instead-of-owner-based
+     *
+     * we should be able to use those to clean this up.
+     *
+     * @param queryString
+     * @returns {MediaQueryList|null}
+     * @private
+     */
+    _matchMedia: function(queryString) {
+      if ("matchMedia" in this.state) {
+        return this.state.matchMedia(queryString);
+      } else if ("matchMedia" in window) {
+        return window.matchMedia(queryString);
+      }
+      return null;
     },
 
     /**
@@ -458,7 +487,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       var targetWidth;
 
       node.style.right = "auto";
-      if (window.matchMedia && window.matchMedia("screen and (max-width:640px)").matches) {
+      if (this._matchMedia("screen and (max-width:640px)").matches) {
         // For reduced screen widths, we just go for a fixed size and no overlap.
         targetWidth = 180;
         node.style.width = (targetWidth * ratio.width) + "px";
@@ -470,8 +499,25 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
         // Now position the local camera view correctly with respect to the remote
         // video stream or the screen share stream.
-        var remoteVideoDimensions = this.getRemoteVideoDimensions(
-          this.state.receivingScreenShare ? "screen" : "camera");
+        var remoteVideoDimensions;
+        var isScreenShare = this.state.receivingScreenShare;
+        var videoDisplayed = isScreenShare ?
+          this.state.screenShareVideoObject || this.props.screenSharePosterUrl :
+          this.state.remoteSrcVideoObject || this.props.remotePosterUrl;
+
+        if ((isScreenShare || this.shouldRenderRemoteVideo()) && videoDisplayed) {
+          remoteVideoDimensions = this.getRemoteVideoDimensions(
+            isScreenShare ? "screen" : "camera");
+        } else {
+          var remoteElement = this.getDOMNode().querySelector(".remote.focus-stream");
+          if (!remoteElement) {
+            return;
+          }
+          remoteVideoDimensions = {
+            streamWidth: remoteElement.offsetWidth,
+            offsetX: remoteElement.offsetLeft
+          };
+        }
 
         targetWidth = remoteVideoDimensions.streamWidth * LOCAL_STREAM_SIZE;
 
@@ -515,7 +561,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       }
       // XXX For the time being, if we're a narrow screen, aka mobile, we don't display
       // the remote media (bug 1133534).
-      if (window.matchMedia && window.matchMedia("screen and (max-width:640px)").matches) {
+      if (this._matchMedia("screen and (max-width:640px)").matches) {
         return;
       }
 
@@ -557,9 +603,51 @@ loop.standaloneRoomViews = (function(mozL10n) {
              this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS;
     },
 
+    /**
+     * Works out if remote video should be rended or not, depending on the
+     * room state and other flags.
+     *
+     * @return {Boolean} True if remote video should be rended.
+     */
+    shouldRenderRemoteVideo: function() {
+      switch(this.state.roomState) {
+        case ROOM_STATES.HAS_PARTICIPANTS:
+          if (this.state.remoteVideoEnabled) {
+            return true;
+          }
+
+          if (this.state.mediaConnected) {
+            // since the remoteVideo hasn't yet been enabled, if the
+            // media is connected, then we should be displaying an avatar.
+            return false;
+          }
+
+          return true;
+
+        case ROOM_STATES.READY:
+        case ROOM_STATES.INIT:
+        case ROOM_STATES.JOINING:
+        case ROOM_STATES.SESSION_CONNECTED:
+        case ROOM_STATES.JOINED:
+        case ROOM_STATES.MEDIA_WAIT:
+          // this case is so that we don't show an avatar while waiting for
+          // the other party to connect
+          return true;
+
+        case ROOM_STATES.CLOSING:
+          // the other person has shown up, so we don't want to show an avatar
+          return true;
+
+        default:
+          console.warn("StandaloneRoomView.shouldRenderRemoteVideo:" +
+            " unexpected roomState: ", this.state.roomState);
+          return true;
+
+      }
+    },
+
     render: function() {
       var localStreamClasses = React.addons.classSet({
-        hide: !this._roomIsActive(),
         local: true,
         "local-stream": true,
         "local-stream-audio": this.state.videoMuted
@@ -602,10 +690,25 @@ loop.standaloneRoomViews = (function(mozL10n) {
                   {mozL10n.get("self_view_hidden_message")}
                 </span>
                 <div className="video_wrapper remote_wrapper">
-                  <div className={remoteStreamClasses}></div>
-                  <div className={screenShareStreamClasses}></div>
+                  <div className={remoteStreamClasses}>
+                    <sharedViews.MediaView displayAvatar={!this.shouldRenderRemoteVideo()}
+                      posterUrl={this.props.remotePosterUrl}
+                      mediaType="remote"
+                      srcVideoObject={this.state.remoteSrcVideoObject} />
+                  </div>
+                  <div className={screenShareStreamClasses}>
+                    <sharedViews.MediaView displayAvatar={false}
+                      posterUrl={this.props.screenSharePosterUrl}
+                      mediaType="screen-share"
+                      srcVideoObject={this.state.screenShareVideoObject} />
+                  </div>
                 </div>
-                <div className={localStreamClasses}></div>
+                <div className={localStreamClasses}>
+                  <sharedViews.MediaView displayAvatar={this.state.videoMuted}
+                    posterUrl={this.props.localPosterUrl}
+                    mediaType="local"
+                    srcVideoObject={this.state.localSrcVideoObject} />
+                </div>
               </div>
               <sharedViews.ConversationToolbar
                 dispatcher={this.props.dispatcher}

@@ -12,18 +12,17 @@ loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "EventTarget", "sdk/event/target", true);
 loader.lazyRequireGetter(this, "StackFrameCache",
                          "devtools/server/actors/utils/stack", true);
-
 /**
  * A class that returns memory data for a parent actor's window.
  * Using a tab-scoped actor with this instance will measure the memory footprint of its
  * parent tab. Using a global-scoped actor instance however, will measure the memory
  * footprint of the chrome window referenced by its root actor.
  *
- * To be consumed by actor's, like MemoryActor using MemoryBridge to
+ * To be consumed by actor's, like MemoryActor using this module to
  * send information over RDP, and TimelineActor for using more light-weight
  * utilities like GC events and measuring memory consumption.
  */
-let MemoryBridge = Class({
+let Memory = exports.Memory = Class({
   extends: EventTarget,
 
   /**
@@ -335,5 +334,3 @@ let MemoryBridge = Class({
     return this._mgr.residentUnique;
   }
 });
-
-exports.MemoryBridge = MemoryBridge;

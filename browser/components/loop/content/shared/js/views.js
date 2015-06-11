@@ -678,13 +678,132 @@ loop.shared.views = (function(_, l10n) {
     }
   });
 
+  /**
+   * Renders an avatar element for display when video is muted.
+   */
+  var AvatarView = React.createClass({displayName: "AvatarView",
+    mixins: [React.addons.PureRenderMixin],
+
+    render: function() {
+        return React.createElement("div", {className: "avatar"});
+    }
+  });
+
+  /**
+   * Renders a media element for display. This also handles displaying an avatar
+   * instead of the video, and attaching a video stream to the video element.
+   */
+  var MediaView = React.createClass({displayName: "MediaView",
+    // srcVideoObject should be ok for a shallow comparison, so we are safe
+    // to use the pure render mixin here.
+    mixins: [React.addons.PureRenderMixin],
+
+    PropTypes: {
+      displayAvatar: React.PropTypes.bool.isRequired,
+      posterUrl: React.PropTypes.string,
+      // Expecting "local" or "remote".
+      mediaType: React.PropTypes.string.isRequired,
+      srcVideoObject: React.PropTypes.object
+    },
+
+    componentDidMount: function() {
+      if (!this.props.displayAvatar) {
+        this.attachVideo(this.props.srcVideoObject);
+      }
+    },
+
+    componentDidUpdate: function() {
+      if (!this.props.displayAvatar) {
+        this.attachVideo(this.props.srcVideoObject);
+      }
+    },
+
+    /**
+     * Attaches a video stream from a donor video element to this component's
+     * video element if the component is displaying one.
+     *
+     * @param {Object} srcVideoObject The src video object to clone the stream
+     *                                from.
+     *
+     * XXX need to have a corresponding detachVideo or change this to syncVideo
+     * to protect from leaks (bug 1171978)
+     */
+    attachVideo: function(srcVideoObject) {
+      if (!srcVideoObject) {
+        // Not got anything to display.
+        return;
+      }
+
+      var videoElement = this.getDOMNode();
+
+      if (videoElement.tagName.toLowerCase() !== "video") {
+        // Must be displaying the avatar view, so don't try and attach video.
+        return;
+      }
+
+      // Set the src of our video element
+      var attrName = "";
+      if ("srcObject" in videoElement) {
+        // srcObject is according to the standard.
+        attrName = "srcObject";
+      } else if ("mozSrcObject" in videoElement) {
+        // mozSrcObject is for Firefox
+        attrName = "mozSrcObject";
+      } else if ("src" in videoElement) {
+        // src is for Chrome.
+        attrName = "src";
+      } else {
+        console.error("Error attaching stream to element - no supported attribute found");
+        return;
+      }
+
+      // If the object hasn't changed it, then don't reattach it.
+      if (videoElement[attrName] !== srcVideoObject[attrName]) {
+        videoElement[attrName] = srcVideoObject[attrName];
+      }
+      videoElement.play();
+    },
+
+    render: function() {
+      if (this.props.displayAvatar) {
+        return React.createElement(AvatarView, null);
+      }
+
+      if (!this.props.srcVideoObject && !this.props.posterUrl) {
+        return React.createElement("div", {className: "no-video"});
+      }
+
+      var optionalPoster = {};
+      if (this.props.posterUrl) {
+        optionalPoster.poster = this.props.posterUrl;
+      }
+
+      // For now, always mute media. For local media, we should be muted anyway,
+      // as we don't want to hear ourselves speaking.
+      //
+      // For remote media, we would ideally have this live video element in
+      // control of the audio, but due to the current method of not rendering
+      // the element at all when video is muted we have to rely on the hidden
+      // dom element in the sdk driver to play the audio.
+      // We might want to consider changing this if we add UI controls relating
+      // to the remote audio at some stage in the future.
+      return (
+        React.createElement("video", React.__spread({},  optionalPoster, 
+               {className: this.props.mediaType + "-video", 
+               muted: true}))
+      );
+    }
+  });
+
   return {
+    AvatarView: AvatarView,
     Button: Button,
     ButtonGroup: ButtonGroup,
     Checkbox: Checkbox,
     ConversationView: ConversationView,
     ConversationToolbar: ConversationToolbar,
     MediaControlButton: MediaControlButton,
+    MediaView: MediaView,
     ScreenShareControlButton: ScreenShareControlButton,
     NotificationListView: NotificationListView
   };

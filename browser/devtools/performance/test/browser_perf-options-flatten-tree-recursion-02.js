@@ -9,7 +9,7 @@ function* spawnTest() {
   let { EVENTS, PerformanceController, DetailsView, MemoryFlameGraphView, RecordingUtils, FlameGraphUtils } = panel.panelWin;
 
   // Enable memory to test
-  Services.prefs.setBoolPref(MEMORY_PREF, true);
+  Services.prefs.setBoolPref(ALLOCATIONS_PREF, true);
   Services.prefs.setBoolPref(FLATTEN_PREF, true);
 
   yield startRecording(panel);

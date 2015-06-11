@@ -178,24 +178,16 @@ describe("loop.standaloneRoomViews", function() {
       return TestUtils.renderIntoDocument(
         React.createElement(
           loop.standaloneRoomViews.StandaloneRoomView, {
-            dispatcher: dispatcher,
-            activeRoomStore: activeRoomStore,
-            isFirefox: true
-          }));
+        dispatcher: dispatcher,
+        activeRoomStore: activeRoomStore,
+        isFirefox: true
+      }));
     }
 
     function expectActionDispatched(view) {
       sinon.assert.calledOnce(dispatch);
       sinon.assert.calledWithExactly(dispatch,
         sinon.match.instanceOf(sharedActions.SetupStreamElements));
-      sinon.assert.calledWithExactly(dispatch, sinon.match(function(value) {
-        return value.getLocalElementFunc() ===
-               view.getDOMNode().querySelector(".local");
-      }));
-      sinon.assert.calledWithExactly(dispatch, sinon.match(function(value) {
-        return value.getRemoteElementFunc() ===
-               view.getDOMNode().querySelector(".remote");
-      }));
     }
 
     describe("#componentWillUpdate", function() {
@@ -298,6 +290,10 @@ describe("loop.standaloneRoomViews", function() {
         sandbox.stub(window, "matchMedia").returns({
           matches: false
         });
+        activeRoomStore.setStoreState({
+          remoteSrcVideoObject: {},
+          remoteVideoEnabled: true
+        });
         view = mountTestComponent();
         localElement = view._getElement(".local");
       });
@@ -306,6 +302,34 @@ describe("loop.standaloneRoomViews", function() {
         sandbox.stub(view, "getRemoteVideoDimensions").returns({
           streamWidth: 640,
           offsetX: 0
+        });
+
+        view.updateLocalCameraPosition({
+          width: 1,
+          height: 0.75
+        });
+
+        expect(localElement.style.width).eql("160px");
+        expect(localElement.style.height).eql("120px");
+      });
+
+      it("should be a quarter of the width of the remote view element when there is no stream", function() {
+        activeRoomStore.setStoreState({
+          remoteSrcVideoObject: null,
+          remoteVideoEnabled: false
+        });
+
+        sandbox.stub(view, "getDOMNode").returns({
+          querySelector: function(selector) {
+            if (selector === ".local") {
+              return localElement;
+            }
+
+            return {
+              offsetWidth: 640,
+              offsetLeft: 0
+            };
+          }
         });
 
         view.updateLocalCameraPosition({
@@ -366,6 +390,34 @@ describe("loop.standaloneRoomViews", function() {
         sandbox.stub(view, "getRemoteVideoDimensions").returns({
           streamWidth: 640,
           offsetX: 0
+        });
+
+        view.updateLocalCameraPosition({
+          width: 1,
+          height: 0.75
+        });
+
+        expect(localElement.style.width).eql("160px");
+        expect(localElement.style.left).eql("600px");
+      });
+
+      it("should position the stream to overlap the remote view element when there is no stream", function() {
+        activeRoomStore.setStoreState({
+          remoteSrcVideoObject: null,
+          remoteVideoEnabled: false
+        });
+
+        sandbox.stub(view, "getDOMNode").returns({
+          querySelector: function(selector) {
+            if (selector === ".local") {
+              return localElement;
+            }
+
+            return {
+              offsetWidth: 640,
+              offsetLeft: 0
+            };
+          }
         });
 
         view.updateLocalCameraPosition({
@@ -576,6 +628,101 @@ describe("loop.standaloneRoomViews", function() {
         });
       });
 
+      describe("Participants", function() {
+        var videoElement;
+
+        beforeEach(function() {
+          videoElement = document.createElement("video");
+        });
+
+        it("should render local video when video_muted is false", function() {
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.HAS_PARTICIPANTS,
+            localSrcVideoObject: videoElement,
+            videoMuted: false
+          });
+
+          expect(view.getDOMNode().querySelector(".local video")).not.eql(null);
+        });
+
+        it("should not render a local avatar when video_muted is false", function() {
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.HAS_PARTICIPANTS,
+            videoMuted: false
+          });
+
+          expect(view.getDOMNode().querySelector(".local .avatar")).eql(null);
+        });
+
+        it("should render remote video when the room HAS_PARTICIPANTS and" +
+          " remoteVideoEnabled is true", function() {
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.HAS_PARTICIPANTS,
+            remoteSrcVideoObject: videoElement,
+            remoteVideoEnabled: true
+          });
+
+          expect(view.getDOMNode().querySelector(".remote video")).not.eql(null);
+        });
+
+        it("should not render remote video when the room HAS_PARTICIPANTS," +
+          " remoteVideoEnabled is false, and mediaConnected is true", function() {
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.HAS_PARTICIPANTS,
+            remoteSrcVideoObject: videoElement,
+            mediaConnected: true,
+            remoteVideoEnabled: false
+          });
+
+          expect(view.getDOMNode().querySelector(".remote video")).eql(null);
+        });
+
+        it("should render remote video when the room HAS_PARTICIPANTS," +
+          " and both remoteVideoEnabled and mediaConnected are false", function() {
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.HAS_PARTICIPANTS,
+            remoteSrcVideoObject: videoElement,
+            mediaConnected: false,
+            remoteVideoEnabled: false
+          });
+
+          expect(view.getDOMNode().querySelector(".remote video")).not.eql(null);
+        });
+
+        it("should not render a remote avatar when the room is in MEDIA_WAIT", function() {
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.MEDIA_WAIT,
+            remoteSrcVideoObject: videoElement,
+            remoteVideoEnabled: false
+          });
+
+          expect(view.getDOMNode().querySelector(".remote .avatar")).eql(null);
+        });
+
+        it("should not render a remote avatar when the room is CLOSING and" +
+          " remoteVideoEnabled is false", function() {
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.CLOSING,
+            remoteSrcVideoObject: videoElement,
+            remoteVideoEnabled: false
+          });
+
+          expect(view.getDOMNode().querySelector(".remote .avatar")).eql(null);
+        });
+
+        it("should render a remote avatar when the room HAS_PARTICIPANTS, " +
+          "remoteVideoEnabled is false, and mediaConnected is true", function() {
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.HAS_PARTICIPANTS,
+            remoteSrcVideoObject: videoElement,
+            remoteVideoEnabled: false,
+            mediaConnected: true
+          });
+
+          expect(view.getDOMNode().querySelector(".remote .avatar")).not.eql(null);
+        });
+      });
+
       describe("Leave button", function() {
         function getLeaveButton(view) {
           return view.getDOMNode().querySelector(".btn-hangup");
@@ -675,6 +822,18 @@ describe("loop.standaloneRoomViews", function() {
 
             expect(view.getDOMNode().querySelector(".local-stream-audio"))
               .not.eql(null);
+          });
+
+        it("should render a local avatar if the room HAS_PARTICIPANTS and" +
+          " .videoMuted is true",
+          function() {
+            activeRoomStore.setStoreState({
+              roomState: ROOM_STATES.HAS_PARTICIPANTS,
+              videoMuted: true
+            });
+
+            expect(view.getDOMNode().querySelector(".local .avatar")).
+              not.eql(null);
           });
       });
 
