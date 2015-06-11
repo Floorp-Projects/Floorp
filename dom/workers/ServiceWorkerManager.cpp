@@ -34,6 +34,7 @@
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/Headers.h"
+#include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
@@ -3539,6 +3540,9 @@ ServiceWorkerManager::CreateServiceWorker(nsIPrincipal* aPrincipal,
   }
 
   info.mPrincipal = aPrincipal;
+
+  info.mIndexedDBAllowed =
+    indexedDB::IDBFactory::AllowedForPrincipal(aPrincipal);
 
   // NOTE: this defaults the SW load context to:
   //  - private browsing = false
