@@ -574,10 +574,9 @@ TrackBuffersManager::SegmentParserLoop()
         continue;
       }
       // We have neither an init segment nor a media segment, this is invalid
-      // data. However, as we do not remove any bytes that are supposed to be
-      // ignored, we simply ignore them.
-      MSE_DEBUG("Found invalid data, ignoring for now");
-      NeedMoreData();
+      // data.
+      MSE_DEBUG("Found invalid data");
+      RejectAppend(NS_ERROR_FAILURE, __func__);
       return;
     }
 
