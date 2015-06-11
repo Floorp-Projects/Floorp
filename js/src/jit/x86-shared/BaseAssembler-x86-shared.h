@@ -3744,12 +3744,12 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
 
     void doubleConstant(double d)
     {
-        spew(".double %.20f", d);
+        spew(".double %.16g", d);
         m_formatter.doubleConstant(d);
     }
     void floatConstant(float f)
     {
-        spew(".float %.20f", f);
+        spew(".float %.16g", f);
         m_formatter.floatConstant(f);
     }
 
@@ -3761,7 +3761,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
     }
     void float32x4Constant(const float f[4])
     {
-        spew(".float %f,%f,%f,%f", f[0], f[1], f[2], f[3]);
+        spew(".float %g,%g,%g,%g", f[0], f[1], f[2], f[3]);
         MOZ_ASSERT(m_formatter.isAligned(16));
         m_formatter.float32x4Constant(f);
     }

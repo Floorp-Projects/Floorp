@@ -692,7 +692,7 @@ ArmDebugger::debug()
                                 i < 8 &&
                                 (i % 2) == 0) {
                                 dvalue = getRegisterPairDoubleValue(i);
-                                printf(" (%f)\n", dvalue);
+                                printf(" (%.16g)\n", dvalue);
                             } else {
                                 printf("\n");
                             }
@@ -700,7 +700,7 @@ ArmDebugger::debug()
                         for (uint32_t i = 0; i < FloatRegisters::TotalPhys; i++) {
                             dvalue = getVFPDoubleRegisterValue(i);
                             uint64_t as_words = mozilla::BitwiseCast<uint64_t>(dvalue);
-                            printf("%3s: %f 0x%08x %08x\n",
+                            printf("%3s: %.16g 0x%08x %08x\n",
                                    FloatRegister::FromCode(i).name(),
                                    dvalue,
                                    static_cast<uint32_t>(as_words >> 32),
@@ -711,7 +711,7 @@ ArmDebugger::debug()
                             printf("%s: 0x%08x %d \n", arg1, value, value);
                         } else if (getVFPDoubleValue(arg1, &dvalue)) {
                             uint64_t as_words = mozilla::BitwiseCast<uint64_t>(dvalue);
-                            printf("%s: %f 0x%08x %08x\n",
+                            printf("%s: %.16g 0x%08x %08x\n",
                                    arg1,
                                    dvalue,
                                    static_cast<uint32_t>(as_words >> 32),

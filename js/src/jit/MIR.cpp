@@ -775,12 +775,12 @@ MConstant::printOpcode(GenericPrinter& out) const
         out.printf("0x%x", value().toInt32());
         break;
       case MIRType_Double:
-        out.printf("%f", value().toDouble());
+        out.printf("%.16g", value().toDouble());
         break;
       case MIRType_Float32:
       {
         float val = value().toDouble();
-        out.printf("%f", val);
+        out.printf("%.16g", val);
         break;
       }
       case MIRType_Object:
