@@ -35,15 +35,15 @@ public:
 
   virtual ~MediaFormatReader();
 
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor) override;
+  nsresult Init(MediaDecoderReader* aCloneDonor) override;
 
-  virtual size_t SizeOfVideoQueueInFrames() override;
-  virtual size_t SizeOfAudioQueueInFrames() override;
+  size_t SizeOfVideoQueueInFrames() override;
+  size_t SizeOfAudioQueueInFrames() override;
 
-  virtual nsRefPtr<VideoDataPromise>
+  nsRefPtr<VideoDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold) override;
 
-  virtual nsRefPtr<AudioDataPromise> RequestAudioData() override;
+  nsRefPtr<AudioDataPromise> RequestAudioData() override;
 
   bool HasVideo() override
   {
@@ -55,47 +55,49 @@ public:
     return mInfo.HasAudio();
   }
 
-  virtual nsRefPtr<MetadataPromise> AsyncReadMetadata() override;
+  nsRefPtr<MetadataPromise> AsyncReadMetadata() override;
 
-  virtual void ReadUpdatedMetadata(MediaInfo* aInfo) override;
+  void ReadUpdatedMetadata(MediaInfo* aInfo) override;
 
-  virtual nsRefPtr<SeekPromise>
+  nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aUnused) override;
 
-  virtual bool IsMediaSeekable() override
+  bool IsMediaSeekable() override
   {
     return mSeekable;
   }
 
-  virtual int64_t GetEvictionOffset(double aTime) override;
-  virtual void NotifyDataArrived(const char* aBuffer,
+  int64_t GetEvictionOffset(double aTime) override;
+  void NotifyDataArrived(const char* aBuffer,
                                  uint32_t aLength,
                                  int64_t aOffset) override;
-  virtual void NotifyDataRemoved() override;
+  void NotifyDataRemoved() override;
 
-  virtual media::TimeIntervals GetBuffered() override;
+  media::TimeIntervals GetBuffered() override;
 
   // For Media Resource Management
-  virtual void SetIdle() override;
-  virtual bool IsDormantNeeded() override;
-  virtual void ReleaseMediaResources() override;
-  virtual void SetSharedDecoderManager(SharedDecoderManager* aManager)
+  void SetIdle() override;
+  bool IsDormantNeeded() override;
+  void ReleaseMediaResources() override;
+  void SetSharedDecoderManager(SharedDecoderManager* aManager)
     override;
 
-  virtual nsresult ResetDecode() override;
+  nsresult ResetDecode() override;
 
-  virtual nsRefPtr<ShutdownPromise> Shutdown() override;
+  nsRefPtr<ShutdownPromise> Shutdown() override;
 
-  virtual bool IsAsync() const override { return true; }
+  bool IsAsync() const override { return true; }
 
-  virtual bool VideoIsHardwareAccelerated() const override;
+  bool VideoIsHardwareAccelerated() const override;
 
-  virtual void DisableHardwareAcceleration() override;
+  void DisableHardwareAcceleration() override;
 
-  virtual bool IsWaitForDataSupported() override { return true; }
-  virtual nsRefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) override;
+  bool IsWaitForDataSupported() override { return true; }
+  nsRefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) override;
 
-  virtual bool IsWaitingOnCDMResource() override;
+  bool IsWaitingOnCDMResource() override;
+
+  int64_t ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio) override;
 
 private:
   bool InitDemuxer();
@@ -154,22 +156,22 @@ private:
       , mType(aType)
     {
     }
-    virtual void Output(MediaData* aSample) override {
+    void Output(MediaData* aSample) override {
       mReader->Output(mType, aSample);
     }
-    virtual void InputExhausted() override {
+    void InputExhausted() override {
       mReader->InputExhausted(mType);
     }
-    virtual void Error() override {
+    void Error() override {
       mReader->Error(mType);
     }
-    virtual void DrainComplete() override {
+    void DrainComplete() override {
       mReader->DrainComplete(mType);
     }
-    virtual void ReleaseMediaResources() override {
+    void ReleaseMediaResources() override {
       mReader->ReleaseMediaResources();
     }
-    virtual bool OnReaderTaskQueue() override {
+    bool OnReaderTaskQueue() override {
       return mReader->OnTaskQueue();
     }
 
