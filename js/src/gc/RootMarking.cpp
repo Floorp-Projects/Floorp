@@ -418,17 +418,10 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc,
     if (traceOrMark == MarkRuntime) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_CCWS);
 
-        /*
-         * For the first collection that happens in GCRuntime::collect() there
-         * should be no incoming edges from CCWs in uncollected zones, but for
-         * subsequent collections (e.g. caused by resets) this may no longer be
-         * true so we need to mark them here.
-         */
         for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
             if (!c->zone()->isCollecting())
                 c->markCrossCompartmentWrappers(trc);
         }
-
         Debugger::markIncomingCrossCompartmentEdges(trc);
     }
 
