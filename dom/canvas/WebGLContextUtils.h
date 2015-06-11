@@ -56,9 +56,6 @@ size_t GetBitsPerTexel(TexInternalFormat effectiveinternalformat);
 // Returns GL_NONE if passed an invalid texture image target
 TexTarget TexImageTargetToTexTarget(TexImageTarget texImageTarget);
 
-// Helper function to create a JS::Value from a C string
-JS::Value StringValue(JSContext* cx, const char* str, ErrorResult& rv);
-
 struct GLComponents
 {
     unsigned char mComponents;

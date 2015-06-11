@@ -36,12 +36,6 @@ WebGL2Context::DeleteSampler(WebGLSampler* sampler)
     if (!sampler || sampler->IsDeleted())
         return;
 
-    for (int n = 0; n < mGLMaxTextureUnits; n++) {
-        if (mBoundSamplers[n] == sampler) {
-            mBoundSamplers[n] = nullptr;
-        }
-    }
-
     sampler->RequestDelete();
 }
 
@@ -80,8 +74,6 @@ WebGL2Context::BindSampler(GLuint unit, WebGLSampler* sampler)
         return ErrorInvalidOperation("bindSampler: binding deleted sampler");
 
     WebGLContextUnchecked::BindSampler(unit, sampler);
-
-    mBoundSamplers[unit] = sampler;
 }
 
 void
