@@ -9090,7 +9090,7 @@ CodeGenerator::visitLoadUnboxedScalar(LLoadUnboxedScalar* lir)
     Scalar::Type readType = mir->readType();
     unsigned numElems = mir->numElems();
 
-    int width = Scalar::byteSize(mir->indexType());
+    int width = Scalar::byteSize(mir->storageType());
     bool canonicalizeDouble = mir->canonicalizeDoubles();
 
     Label fail;
@@ -9177,7 +9177,7 @@ CodeGenerator::visitStoreUnboxedScalar(LStoreUnboxedScalar* lir)
     Scalar::Type writeType = mir->writeType();
     unsigned numElems = mir->numElems();
 
-    int width = Scalar::byteSize(mir->indexType());
+    int width = Scalar::byteSize(mir->storageType());
 
     if (lir->index()->isConstant()) {
         Address dest(elements, ToInt32(lir->index()) * width + mir->offsetAdjustment());
