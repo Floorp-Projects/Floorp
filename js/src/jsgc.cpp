@@ -6091,49 +6091,6 @@ IsDeterministicGCReason(JS::gcreason::Reason reason)
 }
 #endif
 
-void
-GCRuntime::scheduleZonesWithIncomingCCWs()
-{
-    bool scheduledZones;
-    do {
-        scheduledZones = false;
-        for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-            if (zone->isGCScheduled())
-                continue;
-            for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-                for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
-                    const CrossCompartmentKey& key = e.front().key();
-                    if (key.kind == CrossCompartmentKey::ObjectWrapper) {
-                        Zone* dest = static_cast<JSObject*>(key.wrapped)->zone();
-                        if (dest->isGCScheduled()) {
-                            zone->scheduleGC();
-                            scheduledZones = true;
-                            goto nextZone;
-                        }
-                    }
-                }
-            }
-          nextZone:;
-        }
-    } while (scheduledZones);
-
-#ifdef DEBUG
-    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-        if (zone->isGCScheduled())
-            continue;
-        for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-            for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
-                const CrossCompartmentKey& key = e.front().key();
-                if (key.kind == CrossCompartmentKey::ObjectWrapper) {
-                    Zone* dest = static_cast<JSObject*>(key.wrapped)->zone();
-                    MOZ_ASSERT(!dest->isGCScheduled());
-                }
-            }
-        }
-    }
-#endif
-}
-
 gcstats::ZoneGCStats
 GCRuntime::scanZonesBeforeGC()
 {
@@ -6187,8 +6144,6 @@ GCRuntime::collect(bool incremental, SliceBudget budget, JS::gcreason::Reason re
 
     AutoStopVerifyingBarriers av(rt, reason == JS::gcreason::SHUTDOWN_CC ||
                                      reason == JS::gcreason::DESTROY_RUNTIME);
-
-    scheduleZonesWithIncomingCCWs();
 
     gcstats::AutoGCSlice agc(stats, scanZonesBeforeGC(), invocationKind, budget, reason);
 
