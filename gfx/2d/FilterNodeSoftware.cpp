@@ -1095,7 +1095,10 @@ FilterNodeTransformSoftware::Render(const IntRect& aRect)
   }
 
   DataSourceSurface::MappedSurface mapping;
-  surf->Map(DataSourceSurface::MapType::WRITE, &mapping);
+  if (!surf->Map(DataSourceSurface::MapType::WRITE, &mapping)) {
+    gfxCriticalError() << "FilterNodeTransformSoftware::Render failed to map surface";
+    return nullptr;
+  }
 
   RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
