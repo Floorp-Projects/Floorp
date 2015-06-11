@@ -27,7 +27,8 @@ public:
   typedef AppendPromise RangeRemovalPromise;
 
   static already_AddRefed<SourceBufferContentManager>
-  CreateManager(MediaSourceDecoder* aParentDecoder, const nsACString& aType);
+  CreateManager(dom::SourceBuffer* aParent, MediaSourceDecoder* aParentDecoder,
+                const nsACString& aType);
 
   // Add data to the end of the input buffer.
   // Returns false if the append failed.
@@ -81,6 +82,23 @@ public:
 
   // The parent SourceBuffer is about to be destroyed.
   virtual void Detach() = 0;
+
+  // Current state as per Segment Parser Loop Algorithm
+  // http://w3c.github.io/media-source/index.html#sourcebuffer-segment-parser-loop
+  enum class AppendState : int32_t
+  {
+    WAITING_FOR_SEGMENT,
+    PARSING_INIT_SEGMENT,
+    PARSING_MEDIA_SEGMENT,
+  };
+
+  virtual AppendState GetAppendState()
+  {
+    return AppendState::WAITING_FOR_SEGMENT;
+  }
+
+  virtual void SetGroupStartTimestamp(const TimeUnit& aGroupStartTimestamp) {}
+  virtual void RestartGroupStartTimestamp() {}
 
 #if defined(DEBUG)
   virtual void Dump(const char* aPath) { }

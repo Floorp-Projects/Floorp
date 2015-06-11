@@ -11,6 +11,7 @@
 #include "MediaSource.h"
 #include "js/RootingAPI.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/SourceBufferBinding.h"
@@ -32,8 +33,8 @@ namespace mozilla {
 
 class ErrorResult;
 class MediaLargeByteBuffer;
-class TrackBuffer;
 template <typename T> class AsyncEventRunner;
+class TrackBuffersManager;
 
 namespace dom {
 
@@ -62,7 +63,7 @@ public:
 
   double TimestampOffset() const
   {
-    return mTimestampOffset;
+    return mApparentTimestampOffset;
   }
 
   void SetTimestampOffset(double aTimestampOffset, ErrorResult& aRv);
@@ -132,6 +133,7 @@ private:
 
   friend class AsyncEventRunner<SourceBuffer>;
   friend class BufferAppendRunnable;
+  friend class mozilla::TrackBuffersManager;
   void DispatchSimpleEvent(const char* aName);
   void QueueAsyncSimpleEvent(const char* aName);
 
@@ -164,6 +166,9 @@ private:
   void AppendDataCompletedWithSuccess(bool aHasActiveTracks);
   void AppendDataErrored(nsresult aError);
 
+  // Set timestampOffset, must be called on the main thread.
+  void SetTimestampOffset(const TimeUnit& aTimestampOffset);
+
   nsRefPtr<MediaSource> mMediaSource;
 
   uint32_t mEvictionThreshold;
@@ -173,12 +178,15 @@ private:
   double mAppendWindowStart;
   double mAppendWindowEnd;
 
-  double mTimestampOffset;
+  double mApparentTimestampOffset;
+  TimeUnit mTimestampOffset;
 
   SourceBufferAppendMode mAppendMode;
   bool mUpdating;
+  bool mGenerateTimestamp;
+  bool mIsUsingFormatReader;
 
-  bool mActive;
+  mozilla::Atomic<bool> mActive;
 
   // Each time mUpdating is set to true, mUpdateID will be incremented.
   // This allows for a queued AppendData task to identify if it was earlier
