@@ -59,25 +59,32 @@ TrackBuffersManager::AppendData(MediaLargeByteBuffer* aData,
                                 TimeUnit aTimestampOffset)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MonitorAutoLock mon(mMonitor);
   MSE_DEBUG("Appending %lld bytes", aData->Length());
-  mIncomingBuffers.AppendElement(IncomingBuffer(aData, aTimestampOffset));
+
   mEnded = false;
+  nsCOMPtr<nsIRunnable> task =
+    NS_NewRunnableMethodWithArg<IncomingBuffer>(
+      this, &TrackBuffersManager::AppendIncomingBuffer,
+      IncomingBuffer(aData, aTimestampOffset));
+  GetTaskQueue()->Dispatch(task.forget());
   return true;
+}
+
+void
+TrackBuffersManager::AppendIncomingBuffer(IncomingBuffer aData)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  mIncomingBuffers.AppendElement(aData);
 }
 
 nsRefPtr<TrackBuffersManager::AppendPromise>
 TrackBuffersManager::BufferAppend()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mAppendPromise.IsEmpty());
-  nsRefPtr<AppendPromise> p = mAppendPromise.Ensure(__func__);
+  MSE_DEBUG("");
 
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableMethod(this, &TrackBuffersManager::InitSegmentParserLoop);
-  GetTaskQueue()->Dispatch(task.forget());
-
-  return p;
+  return ProxyMediaCall(GetTaskQueue(), this,
+                        __func__, &TrackBuffersManager::InitSegmentParserLoop);
 }
 
 // Abort any pending AppendData.
@@ -89,14 +96,16 @@ void
 TrackBuffersManager::AbortAppendData()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mAppendPromise.RejectIfExists(NS_ERROR_ABORT, __func__);
+  MSE_DEBUG("");
+
+  mAbort = true;
 }
 
 void
 TrackBuffersManager::ResetParserState()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mAppendPromise.IsEmpty(), "AbortAppendData must have been called");
+  MSE_DEBUG("");
 
   // 1. If the append state equals PARSING_MEDIA_SEGMENT and the input buffer contains some complete coded frames, then run the coded frame processing algorithm until all of these complete coded frames have been processed.
   if (mAppendState == AppendState::PARSING_MEDIA_SEGMENT) {
@@ -114,15 +123,13 @@ nsRefPtr<TrackBuffersManager::RangeRemovalPromise>
 TrackBuffersManager::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MSE_DEBUG("From %.2f to %.2f", aStart.ToSeconds(), aEnd.ToSeconds());
+
   mEnded = false;
 
-  nsRefPtr<RangeRemovalPromise> p = mRangeRemovalPromise.Ensure(__func__);
-
-  nsCOMPtr<nsIRunnable> task =
-  NS_NewRunnableMethodWithArg<TimeInterval>(
-    this, &TrackBuffersManager::CodedFrameRemoval, TimeInterval(aStart, aEnd));
-  GetTaskQueue()->Dispatch(task.forget());
-  return p;
+  return ProxyMediaCall(GetTaskQueue(), this, __func__,
+                        &TrackBuffersManager::CodedFrameRemovalWithPromise,
+                        TimeInterval(aStart, aEnd));
 }
 
 TrackBuffersManager::EvictDataResult
@@ -152,9 +159,9 @@ TrackBuffersManager::EvictBefore(TimeUnit aTime)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> task =
-  NS_NewRunnableMethodWithArg<TimeInterval>(
-    this, &TrackBuffersManager::CodedFrameRemoval,
-    TimeInterval(TimeUnit::FromSeconds(0), aTime));
+    NS_NewRunnableMethodWithArg<TimeInterval>(
+      this, &TrackBuffersManager::CodedFrameRemoval,
+      TimeInterval(TimeUnit::FromSeconds(0), aTime));
   GetTaskQueue()->Dispatch(task.forget());
 }
 
@@ -209,14 +216,13 @@ void
 TrackBuffersManager::Detach()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mAppendPromise.IsEmpty(), "Abort wasn't called");
-  // Abort any pending promises.
-  mRangeRemovalPromise.ResolveIfExists(false, __func__);
+  MSE_DEBUG("");
+
   // Clear our sourcebuffer
   nsCOMPtr<nsIRunnable> task =
-  NS_NewRunnableMethodWithArg<TimeInterval>(
-    this, &TrackBuffersManager::CodedFrameRemoval,
-    TimeInterval(TimeUnit::FromSeconds(0), TimeUnit::FromInfinity()));
+    NS_NewRunnableMethodWithArg<TimeInterval>(
+      this, &TrackBuffersManager::CodedFrameRemoval,
+      TimeInterval(TimeUnit::FromSeconds(0), TimeUnit::FromInfinity()));
   GetTaskQueue()->Dispatch(task.forget());
 }
 
@@ -250,6 +256,7 @@ void
 TrackBuffersManager::CompleteResetParserState()
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(mAppendPromise.IsEmpty());
 
   for (auto track : GetTracksList()) {
     // 2. Unset the last decode timestamp on all track buffers.
@@ -361,18 +368,26 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
   }
 }
 
-void
+nsRefPtr<TrackBuffersManager::RangeRemovalPromise>
+TrackBuffersManager::CodedFrameRemovalWithPromise(TimeInterval aInterval)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  bool rv = CodedFrameRemoval(aInterval);
+  return RangeRemovalPromise::CreateAndResolve(rv, __func__);
+}
+
+bool
 TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
 {
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(mAppendPromise.IsEmpty(), "Logic error: Append in progress");
   MSE_DEBUG("From %.2fs to %.2f",
             aInterval.mStart.ToSeconds(), aInterval.mEnd.ToSeconds());
 
   double mediaSourceDuration = mParentDecoder->GetMediaSourceDuration();
   if (IsNaN(mediaSourceDuration)) {
     MSE_DEBUG("Nothing to remove, aborting");
-    MonitorAutoLock mon(mMonitor);
-    mRangeRemovalPromise.ResolveIfExists(false, __func__);
-    return;
+    return false;
   }
   TimeUnit duration{TimeUnit::FromSeconds(mediaSourceDuration)};
 
@@ -390,6 +405,8 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
   TimeUnit start = aInterval.mStart;
   // 2. Let end be the end presentation timestamp for the removal range.
   TimeUnit end = aInterval.mEnd;
+
+  bool dataRemoved = false;
 
   // 3. For each track buffer in this source buffer, run the following steps:
   for (auto track : GetTracksList()) {
@@ -445,6 +462,7 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
         track->mSizeBuffer -= sizeof(*frame) + frame->mSize;
         data.RemoveElementAt(i);
       }
+      dataRemoved = true;
     }
     track->mBufferedRanges -= removedInterval;
 
@@ -476,14 +494,21 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
   // Update our reported total size.
   mSizeSourceBuffer = mVideoTracks.mSizeBuffer + mAudioTracks.mSizeBuffer;
 
-  mRangeRemovalPromise.ResolveIfExists(true, __func__);
+  return dataRemoved;
 }
 
-void
+nsRefPtr<TrackBuffersManager::AppendPromise>
 TrackBuffersManager::InitSegmentParserLoop()
 {
+  MOZ_ASSERT(OnTaskQueue());
+
+  MOZ_ASSERT(mAppendPromise.IsEmpty());
+  nsRefPtr<AppendPromise> p = mAppendPromise.Ensure(__func__);
+
   AppendIncomingBuffers();
   SegmentParserLoop();
+
+  return p;
 }
 
 void
