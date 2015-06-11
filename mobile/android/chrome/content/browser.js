@@ -6300,6 +6300,20 @@ var XPInstallObserver = {
   },
 
   onInstallFailed: function(aInstall) {
+    this._showErrorMessage(aInstall);
+  },
+
+  onDownloadProgress: function(aInstall) {},
+
+  onDownloadFailed: function(aInstall) {
+    this._showErrorMessage(aInstall);
+  },
+
+  onDownloadCancelled: function(aInstall) {
+    this._showErrorMessage(aInstall);
+  },
+
+  _showErrorMessage: function(aInstall) {
     // Don't create a notification for distribution add-ons.
     if (Distribution.pendingAddonInstalls.has(aInstall)) {
       Cu.reportError("Error installing distribution add-on: " + aInstall.addon.id);
@@ -6307,39 +6321,44 @@ var XPInstallObserver = {
       return;
     }
 
-    NativeWindow.toast.show(Strings.browser.GetStringFromName("alertAddonsFail"), "short");
-  },
-
-  onDownloadProgress: function xpidm_onDownloadProgress(aInstall) {},
-
-  onDownloadFailed: function(aInstall) {
-    this.onInstallFailed(aInstall);
-  },
-
-  onDownloadCancelled: function(aInstall) {
     let host = (aInstall.originatingURI instanceof Ci.nsIStandardURL) && aInstall.originatingURI.host;
-    if (!host)
+    if (!host) {
       host = (aInstall.sourceURI instanceof Ci.nsIStandardURL) && aInstall.sourceURI.host;
+    }
 
     let error = (host || aInstall.error == 0) ? "addonError" : "addonLocalError";
-    if (aInstall.error != 0)
+    if (aInstall.error < 0) {
       error += aInstall.error;
-    else if (aInstall.addon && aInstall.addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
+    } else if (aInstall.addon && aInstall.addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) {
       error += "Blocklisted";
-    else if (aInstall.addon && (!aInstall.addon.isCompatible || !aInstall.addon.isPlatformCompatible))
+    } else {
       error += "Incompatible";
-    else
-      return; // No need to show anything in this case.
+    }
 
     let msg = Strings.browser.GetStringFromName(error);
     // TODO: formatStringFromName
     msg = msg.replace("#1", aInstall.name);
-    if (host)
+    if (host) {
       msg = msg.replace("#2", host);
+    }
     msg = msg.replace("#3", Strings.brand.GetStringFromName("brandShortName"));
     msg = msg.replace("#4", Services.appinfo.version);
 
-    NativeWindow.toast.show(msg, "short");
+    if (aInstall.error == AddonManager.ERROR_SIGNEDSTATE_REQUIRED) {
+      new Prompt({
+        window: window,
+        title: Strings.browser.GetStringFromName("addonError.titleBlocked"),
+        message: msg,
+        buttons: [Strings.browser.GetStringFromName("addonError.learnMore")]
+      }).show((data) => {
+        if (data.button === 0) {
+          let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
+          BrowserApp.addTab(url, { parentId: BrowserApp.selectedTab.id });
+        }
+      });
+    } else {
+      Services.prompt.alert(null, Strings.browser.GetStringFromName("addonError.titleError"), msg);
+    }
   },
 
   showRestartPrompt: function() {

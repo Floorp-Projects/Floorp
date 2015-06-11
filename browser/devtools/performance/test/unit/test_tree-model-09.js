@@ -17,7 +17,7 @@ add_task(function test() {
 
   // Create a root node from a given samples array.
 
-  let root = getFrameNodePath(new ThreadNode(gThread, { contentOnly: true }), "(root)");
+  let root = getFrameNodePath(new ThreadNode(gThread, { startTime: 5, endTime: 25, contentOnly: true }), "(root)");
 
   /*
    * should have a tree like:
