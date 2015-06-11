@@ -38,7 +38,7 @@ function check_telemetry() {
   do_check_eq(histogram.counts[ 6], 0); // SEC_ERROR_UNTRUSTED_CERT
   do_check_eq(histogram.counts[ 7], 0); // SEC_ERROR_INADEQUATE_KEY_USAGE
   do_check_eq(histogram.counts[ 8], 2); // SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED
-  do_check_eq(histogram.counts[ 9], 6); // SSL_ERROR_BAD_CERT_DOMAIN
+  do_check_eq(histogram.counts[ 9], 10); // SSL_ERROR_BAD_CERT_DOMAIN
   do_check_eq(histogram.counts[10], 5); // SEC_ERROR_EXPIRED_CERTIFICATE
   do_check_eq(histogram.counts[11], 2); // MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY
   do_check_eq(histogram.counts[12], 1); // MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA
@@ -53,7 +53,7 @@ function check_telemetry() {
                            .snapshot();
   do_check_eq(keySizeHistogram.counts[0], 0);
   do_check_eq(keySizeHistogram.counts[1], 0); // 0 successful verifications of 2048-bit keys
-  do_check_eq(keySizeHistogram.counts[2], 4); // 4 successful verifications of 1024-bit keys
+  do_check_eq(keySizeHistogram.counts[2], 12); // 12 successful verifications of 1024-bit keys
   do_check_eq(keySizeHistogram.counts[3], 48); // 48 verification failures
 
   run_next_test();
@@ -107,7 +107,14 @@ function add_simple_tests() {
   add_cert_override_test("md5signature.example.com",
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
                          SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
+  // This has name information in the subject alternative names extension,
+  // but not the subject common name.
   add_cert_override_test("mismatch.example.com",
+                         Ci.nsICertOverrideService.ERROR_MISMATCH,
+                         SSL_ERROR_BAD_CERT_DOMAIN);
+  // This has name information in the subject common name but not the subject
+  // alternative names extension.
+  add_cert_override_test("mismatch-CN.example.com",
                          Ci.nsICertOverrideService.ERROR_MISMATCH,
                          SSL_ERROR_BAD_CERT_DOMAIN);
 
@@ -130,7 +137,8 @@ function add_simple_tests() {
     setCertTrust(rootCert, ",,");
     run_next_test();
   });
-  add_non_overridable_test("badSubjectAltNames.example.com", SEC_ERROR_BAD_DER);
+  add_non_overridable_test("nsCertTypeCritical.example.com",
+                           SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
   add_test(function() {
     let rootCert = constructCertFromFile("tlsserver/test-ca.der");
     setCertTrust(rootCert, "CTu,,");
@@ -183,6 +191,16 @@ function add_simple_tests() {
   // small and terminates the connection. The error is not overridable.
   add_non_overridable_test("inadequate-key-size-ee.example.com",
                            SSL_ERROR_WEAK_SERVER_CERT_KEY);
+
+  add_cert_override_test("ipAddressAsDNSNameInSAN.example.com",
+                         Ci.nsICertOverrideService.ERROR_MISMATCH,
+                         SSL_ERROR_BAD_CERT_DOMAIN);
+  add_cert_override_test("noValidNames.example.com",
+                         Ci.nsICertOverrideService.ERROR_MISMATCH,
+                         SSL_ERROR_BAD_CERT_DOMAIN);
+  add_cert_override_test("badSubjectAltNames.example.com",
+                         Ci.nsICertOverrideService.ERROR_MISMATCH,
+                         SSL_ERROR_BAD_CERT_DOMAIN);
 }
 
 function add_combo_tests() {

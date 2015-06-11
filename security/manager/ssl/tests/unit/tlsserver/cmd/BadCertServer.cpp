@@ -33,6 +33,7 @@ const BadCertHost sBadCertHosts[] =
   { "selfsigned.example.com", "selfsigned" },
   { "unknownissuer.example.com", "unknownissuer" },
   { "mismatch.example.com", "mismatch" },
+  { "mismatch-CN.example.com", "mismatchCN" },
   { "expiredissuer.example.com", "expiredissuer" },
   { "notyetvalidissuer.example.com", "notYetValidIssuer" },
   { "before-epoch-issuer.example.com", "beforeEpochIssuer" },
@@ -71,6 +72,8 @@ const BadCertHost sBadCertHosts[] =
   { "end-entity-issued-by-non-CA.example.com", "eeIssuedByNonCA" },
   { "inadequate-key-size-ee.example.com", "inadequateKeySizeEE" },
   { "badSubjectAltNames.example.com", "badSubjectAltNames" },
+  { "ipAddressAsDNSNameInSAN.example.com", "ipAddressAsDNSNameInSAN" },
+  { "noValidNames.example.com", "noValidNames" },
   { nullptr, nullptr }
 };
 
