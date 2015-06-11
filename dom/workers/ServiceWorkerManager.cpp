@@ -2679,7 +2679,7 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(nsIPrincipal* aPrincipal,
 
   nsAutoCString originAttributesSuffix;
   nsresult rv = PrincipalToScopeKey(aPrincipal, originAttributesSuffix);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
     return nullptr;
   }
 
@@ -2741,7 +2741,7 @@ ServiceWorkerManager::PrincipalToScopeKey(nsIPrincipal* aPrincipal,
 {
   MOZ_ASSERT(aPrincipal);
 
-  if (NS_WARN_IF(!BasePrincipal::Cast(aPrincipal)->IsCodebasePrincipal())) {
+  if (!BasePrincipal::Cast(aPrincipal)->IsCodebasePrincipal()) {
     return NS_ERROR_FAILURE;
   }
 
