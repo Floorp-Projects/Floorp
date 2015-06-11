@@ -124,12 +124,14 @@ public class AppConstants {
     public static final String USER_AGENT_BOT_LIKE = "Redirector/" + AppConstants.MOZ_APP_VERSION +
         " (Android; rv:" + AppConstants.MOZ_APP_VERSION + ")";
 
-    public static final String USER_AGENT_FENNEC_MOBILE = "Mozilla/5.0 (Android; Mobile; rv:" +
+    public static final String USER_AGENT_FENNEC_MOBILE = "Mozilla/5.0 (Android " +
+        Build.VERSION.RELEASE + "; Mobile; rv:" +
         AppConstants.MOZ_APP_VERSION + ") Gecko/" +
         AppConstants.MOZ_APP_VERSION + " Firefox/" +
         AppConstants.MOZ_APP_VERSION;
 
-    public static final String USER_AGENT_FENNEC_TABLET = "Mozilla/5.0 (Android; Tablet; rv:" +
+    public static final String USER_AGENT_FENNEC_TABLET = "Mozilla/5.0 (Android " +
+        Build.VERSION.RELEASE + "; Tablet; rv:" +
         AppConstants.MOZ_APP_VERSION + ") Gecko/" +
         AppConstants.MOZ_APP_VERSION + " Firefox/" +
         AppConstants.MOZ_APP_VERSION;
