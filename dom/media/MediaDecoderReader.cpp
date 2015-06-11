@@ -155,6 +155,7 @@ MediaDecoderReader::SetStartTime(int64_t aStartTime)
 media::TimeIntervals
 MediaDecoderReader::GetBuffered()
 {
+  NS_ENSURE_TRUE(mStartTime >= 0, media::TimeIntervals());
   AutoPinned<MediaResource> stream(mDecoder->GetResource());
   int64_t durationUs = 0;
   {

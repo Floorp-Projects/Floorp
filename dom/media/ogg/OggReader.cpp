@@ -1852,7 +1852,7 @@ nsresult OggReader::SeekBisection(int64_t aTarget,
 
 media::TimeIntervals OggReader::GetBuffered()
 {
-  MOZ_ASSERT(mStartTime != -1, "Need to finish metadata decode first");
+  NS_ENSURE_TRUE(mStartTime >= 0, media::TimeIntervals());
   {
     mozilla::ReentrantMonitorAutoEnter mon(mMonitor);
     if (mIsChained) {
