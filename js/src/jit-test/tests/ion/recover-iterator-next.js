@@ -1,3 +1,9 @@
+// |jit-test| test-join=--no-unboxed-objects
+//
+// Unboxed object optimization might not trigger in all cases, thus we ensure
+// that Scalar Replacement optimization is working well independently of the
+// object representation.
+
 // Ion eager fails the test below because we have not yet created any
 // template object in baseline before running the content of the top-level
 // function.
