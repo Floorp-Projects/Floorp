@@ -38,6 +38,53 @@ public:
     return sDisableAcceleration;
   }
 
+  // NOTE: These are the values reported to Telemetry (GRAPHICS_DRIVER_STARTUP_TEST).
+  // Values should not change; add new values to the end.
+  //
+  // We report exactly one of these values on every startup. The only exception
+  // is when we crash during driver initialization; the relevant value will be
+  // reported on the next startup. The value can change from startup to startup.
+  //
+  // The initial value for any profile is "EnvironmentChanged"; this means we
+  // have not seen the environment before. The environment includes graphics
+  // driver versions, adpater IDs, the MOZ_APP version, and blacklisting
+  // information.
+  //
+  // If the user crashes, the next startup will have the "RecoveredFromCrash"
+  // state. Graphics acceleration will be disabled. Subsequent startups will
+  // have the "DriverUseDisabled" state.
+  //
+  // If the user does not crash, subsequent startups will have the "Okay"
+  // state.
+  //
+  // If the environment changes, the state (no matter what it is) will
+  // transition back to "EnvironmentChanged".
+  enum class TelemetryState {
+    // Environment is the same as before, and we detected no crash at that time.
+    //
+    // Valid state transitions: Okay -> EnvironmentChanged.
+    Okay = 0,
+
+    // Environment has changed since the last time we checked drivers. If we
+    // detected a crash before, we re-enable acceleration to see if it will
+    // work in the new environment.
+    //
+    // Valid state transitions: EnvironmentChanged -> RecoveredFromCrash | Okay
+    EnvironmentChanged = 1,
+
+    // The last startup crashed trying to enable graphics acceleration, and
+    // acceleration has just been disabled.
+    //
+    // Valid state transitions: RecoveredFromCrash -> DriverUseDisabled | EnvironmentChanged
+    RecoveredFromCrash = 2,
+
+    // A previous session was in the RecoveredFromCrash state, and now graphics
+    // acceleration is disabled until the environment changes.
+    //
+    // Valid state transitions: DriverUseDisabled -> EnvironmentChanged
+    DriverUseDisabled = 3
+  };
+
 private:
   bool InitLockFilePath();
   bool UpdateEnvironment();
@@ -47,6 +94,8 @@ private:
   void AllowDriverInitAttempt();
   bool RecoverFromDriverInitCrash();
   void FlushPreferences();
+
+  void RecordTelemetry(TelemetryState aState);
 
 private:
   static bool sDisableAcceleration;
