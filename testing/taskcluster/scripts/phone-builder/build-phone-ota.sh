@@ -28,6 +28,9 @@ if ! test $BALROG_SERVER_CONFIG; then
   BALROG_SERVER_CONFIG=balrog/docker-worker.py
 fi
 
+rm -rf $WORKSPACE/B2G/upload-public/
+rm -rf $WORKSPACE/B2G/upload/
+
 ./mozharness/scripts/b2g_build.py \
   --config $MOZHARNESS_CONFIG \
   --config $BALROG_SERVER_CONFIG \
