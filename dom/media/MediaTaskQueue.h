@@ -99,6 +99,7 @@ protected:
     mQueueMonitor.AssertCurrentThreadOwns();
     if (mIsShutdown && !mIsRunning) {
       mShutdownPromise.ResolveIfExists(true, __func__);
+      mPool = nullptr;
     }
   }
 
