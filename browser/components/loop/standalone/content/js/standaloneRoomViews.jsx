@@ -262,7 +262,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
       return (
         <div className={classes}>
-          <img src={this.props.roomContextUrl.thumbnail || "shared/img/icons-16x16.svg#globe"} />
+            <img src={this.props.roomContextUrl.thumbnail} />
           <div className="standalone-context-url-description-wrapper">
             {this.props.roomContextUrl.description}
             <br /><a href={locationInfo.location}
