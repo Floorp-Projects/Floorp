@@ -2,14 +2,17 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that JITOptimizations create OptimizationSites, and the underlying
- * OptimizationSites methods work as expected.
+ * Tests that JITOptimizations track optimization sites and create
+ * an OptimizationSiteProfile when adding optimization sites, like from the
+ * FrameNode, and the returning of that data is as expected.
  */
 
-const RecordingUtils = devtools.require("devtools/performance/recording-utils");
+function run_test() {
+  run_next_test();
+}
 
-function test() {
-  let { JITOptimizations, OptimizationSite } = devtools.require("devtools/performance/jit");
+add_task(function test() {
+  let { JITOptimizations } = devtools.require("devtools/performance/jit");
 
   let rawSites = [];
   rawSites.push(gRawSite2);
@@ -24,24 +27,16 @@ function test() {
 
   let [first, second, third] = sites;
 
-  /* hasSuccessfulOutcome */
-  is(first.hasSuccessfulOutcome(), false, "optSite.hasSuccessfulOutcome() returns expected (1)");
-  is(second.hasSuccessfulOutcome(), true, "optSite.hasSuccessfulOutcome() returns expected (2)");
-  is(third.hasSuccessfulOutcome(), true, "optSite.hasSuccessfulOutcome() returns expected (3)");
-
-  /* getAttempts */
-  is(first.getAttempts().length, 2, "optSite.getAttempts() has the correct amount of attempts (1)");
-  is(second.getAttempts().length, 5, "optSite.getAttempts() has the correct amount of attempts (2)");
-  is(third.getAttempts().length, 3, "optSite.getAttempts() has the correct amount of attempts (3)");
-
-  /* getIonTypes */
-  is(first.getIonTypes().length, 1, "optSite.getIonTypes() has the correct amount of IonTypes (1)");
-  is(second.getIonTypes().length, 2, "optSite.getIonTypes() has the correct amount of IonTypes (2)");
-  is(third.getIonTypes().length, 1, "optSite.getIonTypes() has the correct amount of IonTypes (3)");
-
-  finish();
-}
-
+  equal(first.id, 0, "site id is array index");
+  equal(first.samples, 3, "first OptimizationSiteProfile has correct sample count");
+  equal(first.data.line, 34, "includes OptimizationSite as reference under `data`");
+  equal(second.id, 1, "site id is array index");
+  equal(second.samples, 2, "second OptimizationSiteProfile has correct sample count");
+  equal(second.data.line, 12, "includes OptimizationSite as reference under `data`");
+  equal(third.id, 2, "site id is array index");
+  equal(third.samples, 1, "third OptimizationSiteProfile has correct sample count");
+  equal(third.data.line, 78, "includes OptimizationSite as reference under `data`");
+});
 
 let gStringTable = new RecordingUtils.UniqueStrings();
 
@@ -60,13 +55,6 @@ let gRawSite1 = {
       name: uniqStr("Foo"),
       location: uniqStr("A (http://foo/bar/baz:12)")
     }, {
-      keyedBy: uniqStr("constructor"),
-      location: uniqStr("A (http://foo/bar/baz:12)")
-    }]
-  }, {
-    mirType: uniqStr("Int32"),
-    site: uniqStr("A (http://foo/bar/bar:12)"),
-    typeset: [{
       keyedBy: uniqStr("primitive"),
       location: uniqStr("self-hosted")
     }]
@@ -77,8 +65,6 @@ let gRawSite1 = {
       strategy: 1
     },
     data: [
-      [uniqStr("Failure1"), uniqStr("SomeGetter1")],
-      [uniqStr("Failure1"), uniqStr("SomeGetter1")],
       [uniqStr("Failure1"), uniqStr("SomeGetter1")],
       [uniqStr("Failure2"), uniqStr("SomeGetter2")],
       [uniqStr("Inlined"), uniqStr("SomeGetter3")]
@@ -99,7 +85,8 @@ let gRawSite2 = {
     },
     data: [
       [uniqStr("Failure1"), uniqStr("SomeGetter1")],
-      [uniqStr("Failure2"), uniqStr("SomeGetter2")]
+      [uniqStr("Failure2"), uniqStr("SomeGetter2")],
+      [uniqStr("Failure3"), uniqStr("SomeGetter3")]
     ]
   }
 };
