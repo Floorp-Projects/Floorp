@@ -234,15 +234,35 @@ Convert(const btrc_player_settings_t& aIn, BluetoothAvrcpPlayerSettings& aOut)
 nsresult
 Convert(const BluetoothGattId& aIn, btgatt_gatt_id_t& aOut)
 {
+  nsresult rv = Convert(aIn.mUuid, aOut.uuid);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  // HAL uses reversed UUID for GATT
+  for (uint8_t i = 0; i < sizeof(aOut.uuid.uu) / 2; i++) {
+    auto temp = aOut.uuid.uu[i];
+    aOut.uuid.uu[i] = aOut.uuid.uu[sizeof(aOut.uuid.uu) - i - 1];
+    aOut.uuid.uu[sizeof(aOut.uuid.uu) - i - 1] = temp;
+  }
   aOut.inst_id = aIn.mInstanceId;
-  return Convert(aIn.mUuid, aOut.uuid);
+  return NS_OK;
 }
 
 nsresult
 Convert(const btgatt_gatt_id_t& aIn, BluetoothGattId& aOut)
 {
+  nsresult rv = Convert(aIn.uuid, aOut.mUuid);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  // HAL uses reversed UUID for GATT
+  for (uint8_t i = 0; i < sizeof(aOut.mUuid.mUuid) / 2; i++) {
+    auto temp = aOut.mUuid.mUuid[i];
+    aOut.mUuid.mUuid[i] = aOut.mUuid.mUuid[sizeof(aOut.mUuid.mUuid) - i - 1];
+    aOut.mUuid.mUuid[sizeof(aOut.mUuid.mUuid) - i - 1] = temp;
+  }
   aOut.mInstanceId = aIn.inst_id;
-  return Convert(aIn.uuid, aOut.mUuid);
+  return NS_OK;
 }
 
 nsresult
