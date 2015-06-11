@@ -138,6 +138,9 @@ private:
   // Demuxer objects and methods.
   nsRefPtr<SourceBufferResource> mCurrentInputBuffer;
   nsRefPtr<MediaDataDemuxer> mInputDemuxer;
+  // Length already processed in current media segment.
+  uint32_t mProcessedInput;
+
   void OnDemuxerInitDone(nsresult);
   void OnDemuxerInitFailed(DemuxerFailureReason aFailure);
   MediaPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
@@ -168,20 +171,45 @@ private:
       , mSizeBuffer(0)
     {}
     uint32_t mNumTracks;
+    // Definition of variables:
+    // https://w3c.github.io/media-source/#track-buffers
+    // Last decode timestamp variable that stores the decode timestamp of the
+    // last coded frame appended in the current coded frame group.
+    // The variable is initially unset to indicate that no coded frames have
+    // been appended yet.
     Maybe<TimeUnit> mLastDecodeTimestamp;
+    // Last frame duration variable that stores the coded frame duration of the
+    // last coded frame appended in the current coded frame group.
+    // The variable is initially unset to indicate that no coded frames have
+    // been appended yet.
     Maybe<TimeUnit> mLastFrameDuration;
+    // Highest end timestamp variable that stores the highest coded frame end
+    // timestamp across all coded frames in the current coded frame group that
+    // were appended to this track buffer.
+    // The variable is initially unset to indicate that no coded frames have
+    // been appended yet.
     Maybe<TimeUnit> mHighestEndTimestamp;
     // Longest frame duration seen in a coded frame group.
     Maybe<TimeUnit> mLongestFrameDuration;
+    // Need random access point flag variable that keeps track of whether the
+    // track buffer is waiting for a random access point coded frame.
+    // The variable is initially set to true to indicate that random access
+    // point coded frame is needed before anything can be added to the track
+    // buffer.
     bool mNeedRandomAccessPoint;
     nsRefPtr<MediaTrackDemuxer> mDemuxer;
-    TrackBuffer mQueuedSamples;
     MediaPromiseRequestHolder<MediaTrackDemuxer::SamplesPromise> mDemuxRequest;
-    UniquePtr<TrackInfo> mInfo;
+    // Samples just demuxed, but not yet parsed.
+    TrackBuffer mQueuedSamples;
     // We only manage a single track of each type at this time.
     nsTArray<TrackBuffer> mBuffers;
+    // Track buffer ranges variable that represents the presentation time ranges
+    // occupied by the coded frames currently stored in the track buffer.
     TimeIntervals mBufferedRanges;
+    // Byte size of all samples contained in this track buffer.
     uint32_t mSizeBuffer;
+    // TrackInfo of the first metadata received.
+    UniquePtr<TrackInfo> mInfo;
   };
   bool ProcessFrame(MediaRawData* aSample, TrackData& aTrackData);
   MediaPromiseRequestHolder<CodedFrameProcessingPromise> mProcessingRequest;
@@ -234,13 +262,12 @@ private:
 
   // Monitor to protect following objects accessed across multipple threads.
   mutable Monitor mMonitor;
-  // Set by the main thread, but only when all our tasks are completes
-  // (e.g. when SourceBuffer.updating is false). So the monitor isn't
-  // technically required for mIncomingBuffer.
   typedef Pair<nsRefPtr<MediaLargeByteBuffer>, TimeUnit> IncomingBuffer;
   nsTArray<IncomingBuffer> mIncomingBuffers;
+  // Stable audio and video track time ranges.
   TimeIntervals mVideoBufferedRanges;
   TimeIntervals mAudioBufferedRanges;
+  // MediaInfo of the first init segment read.
   MediaInfo mInfo;
 };
 
