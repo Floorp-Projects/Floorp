@@ -508,7 +508,8 @@ jit::JitSpewStartVA(JitSpewChannel channel, const char* fmt, va_list ap)
         return;
 
     JitSpewHeader(channel);
-    vfprintf(stderr, fmt, ap);
+    Fprinter& out = JitSpewPrinter();
+    out.vprintf(fmt, ap);
 }
 
 void
@@ -517,7 +518,8 @@ jit::JitSpewContVA(JitSpewChannel channel, const char* fmt, va_list ap)
     if (!JitSpewEnabled(channel))
         return;
 
-    vfprintf(stderr, fmt, ap);
+    Fprinter& out = JitSpewPrinter();
+    out.vprintf(fmt, ap);
 }
 
 void
@@ -526,7 +528,8 @@ jit::JitSpewFin(JitSpewChannel channel)
     if (!JitSpewEnabled(channel))
         return;
 
-    fprintf(stderr, "\n");
+    Fprinter& out = JitSpewPrinter();
+    out.put("\n");
 }
 
 void
@@ -581,7 +584,8 @@ jit::JitSpewHeader(JitSpewChannel channel)
     if (!JitSpewEnabled(channel))
         return;
 
-    fprintf(stderr, "[%s] ", ChannelNames[channel]);
+    Fprinter& out = JitSpewPrinter();
+    out.printf("[%s] ", ChannelNames[channel]);
 }
 
 bool
