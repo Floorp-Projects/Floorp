@@ -11,8 +11,7 @@
  */
 
 [Constructor,
- Pref="media.webspeech.recognition.enable",
- Func="SpeechRecognition::IsAuthorized"]
+ Pref="media.webspeech.recognition.enable"]
 interface SpeechRecognition : EventTarget {
     // recognition parameters
     [Throws]

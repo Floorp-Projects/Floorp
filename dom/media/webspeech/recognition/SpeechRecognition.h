@@ -38,8 +38,6 @@ namespace dom {
 #define TEST_PREFERENCE_ENABLE "media.webspeech.test.enable"
 #define TEST_PREFERENCE_FAKE_FSM_EVENTS "media.webspeech.test.fake_fsm_events"
 #define TEST_PREFERENCE_FAKE_RECOGNITION_SERVICE "media.webspeech.test.fake_recognition_service"
-#define TEST_PREFERENCE_RECOGNITION_ENABLE "media.webspeech.recognition.enable"
-#define TEST_PREFERENCE_RECOGNITION_FORCE_ENABLE "media.webspeech.recognition.force_enable"
 #define SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC "SpeechRecognitionTest:RequestEvent"
 #define SPEECH_RECOGNITION_TEST_END_TOPIC "SpeechRecognitionTest:End"
 
@@ -66,8 +64,6 @@ public:
   nsISupports* GetParentObject() const;
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  static bool IsAuthorized(JSContext* aCx, JSObject* aGlobal);
 
   static already_AddRefed<SpeechRecognition>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
