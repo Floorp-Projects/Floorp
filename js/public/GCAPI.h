@@ -108,7 +108,8 @@ using mozilla::UniquePtr;
     D(FULL_GC_TIMER)                            \
     D(SHUTDOWN_CC)                              \
     D(FINISH_LARGE_EVALUATE)                    \
-    D(USER_INACTIVE)
+    D(USER_INACTIVE)                            \
+    D(XPCONNECT_SHUTDOWN)
 
 namespace gcreason {
 
