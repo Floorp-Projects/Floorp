@@ -327,7 +327,3 @@ user_pref("dom.serviceWorkers.periodic-updates.enabled", false);
 
 // Enable speech synth test service, and disable built in platform services.
 user_pref("media.webspeech.synth.test", true);
-
-// Turn off search suggestions in the location bar so as not to trigger network
-// connections.
-user_pref("browser.urlbar.suggest.searches", false);
