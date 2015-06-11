@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* globals gDevTools, DOMHelpers, toolboxStrings, InspectorFront, Selection,
-   getPerformanceActorsConnection, CommandUtils, DevToolsUtils, screenManager,
-   oscpu, Hosts, is64Bit */
+   CommandUtils, DevToolsUtils, screenManager, oscpu, Hosts, is64Bit,
+   osString, showDoorhanger, getHighlighterUtils, getPerformanceFront */
 
 "use strict";
 
@@ -21,24 +21,20 @@ let {Cc, Ci, Cu} = require("chrome");
 let {Promise: promise} = require("resource://gre/modules/Promise.jsm");
 let EventEmitter = require("devtools/toolkit/event-emitter");
 let Telemetry = require("devtools/shared/telemetry");
-let {getHighlighterUtils} = require("devtools/framework/toolbox-highlighter-utils");
 let HUDService = require("devtools/webconsole/hudservice");
-let {showDoorhanger} = require("devtools/shared/doorhanger");
 let sourceUtils = require("devtools/shared/source-utils");
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 Cu.import("resource:///modules/devtools/scratchpad-manager.jsm");
 Cu.import("resource:///modules/devtools/DOMHelpers.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-loader.lazyGetter(this, "Hosts", () => require("devtools/framework/toolbox-hosts").Hosts);
-
-loader.lazyImporter(this, "CommandUtils", "resource:///modules/devtools/DeveloperToolbar.jsm");
-
+loader.lazyImporter(this, "CommandUtils",
+  "resource:///modules/devtools/DeveloperToolbar.jsm");
 loader.lazyGetter(this, "toolboxStrings", () => {
-  let bundle = Services.strings.createBundle("chrome://browser/locale/devtools/toolbox.properties");
+  const properties = "chrome://browser/locale/devtools/toolbox.properties";
+  const bundle = Services.strings.createBundle(properties);
   return (name, ...args) => {
     try {
       if (!args.length) {
@@ -51,22 +47,31 @@ loader.lazyGetter(this, "toolboxStrings", () => {
     }
   };
 });
-
-loader.lazyGetter(this, "Selection", () => require("devtools/framework/selection").Selection);
-loader.lazyGetter(this, "InspectorFront", () => require("devtools/server/actors/inspector").InspectorFront);
-loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/toolkit/DevToolsUtils");
-loader.lazyRequireGetter(this, "getPerformanceFront", "devtools/performance/front", true);
-
-XPCOMUtils.defineLazyGetter(this, "screenManager", () => {
+loader.lazyRequireGetter(this, "getHighlighterUtils",
+  "devtools/framework/toolbox-highlighter-utils", true);
+loader.lazyRequireGetter(this, "Hosts",
+  "devtools/framework/toolbox-hosts", true);
+loader.lazyRequireGetter(this, "Selection",
+  "devtools/framework/selection", true);
+loader.lazyRequireGetter(this, "InspectorFront",
+  "devtools/server/actors/inspector", true);
+loader.lazyRequireGetter(this, "DevToolsUtils",
+  "devtools/toolkit/DevToolsUtils");
+loader.lazyRequireGetter(this, "showDoorhanger",
+  "devtools/shared/doorhanger", true);
+loader.lazyRequireGetter(this, "getPerformanceFront",
+  "devtools/performance/front", true);
+loader.lazyGetter(this, "osString", () => {
+  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
+});
+loader.lazyGetter(this, "screenManager", () => {
   return Cc["@mozilla.org/gfx/screenmanager;1"].getService(Ci.nsIScreenManager);
 });
-
-XPCOMUtils.defineLazyGetter(this, "oscpu", () => {
+loader.lazyGetter(this, "oscpu", () => {
   return Cc["@mozilla.org/network/protocol;1?name=http"]
            .getService(Ci.nsIHttpProtocolHandler).oscpu;
 });
-
-XPCOMUtils.defineLazyGetter(this, "is64Bit", () => {
+loader.lazyGetter(this, "is64Bit", () => {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).is64Bit;
 });
 
@@ -79,8 +84,9 @@ const ToolboxButtons = exports.ToolboxButtons = [
       target.getTrait("highlightable")
   },
   { id: "command-button-frames",
-    isTargetSupported: target =>
-      ( target.activeTab && target.activeTab.traits.frames )
+    isTargetSupported: target => {
+      return target.activeTab && target.activeTab.traits.frames;
+    }
   },
   { id: "command-button-splitconsole",
     isTargetSupported: target => !target.isAddon },
@@ -135,6 +141,7 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._onBottomHostMaximized = this._onBottomHostMaximized.bind(this);
   this._onToolSelectWhileMinimized = this._onToolSelectWhileMinimized.bind(this);
   this._onBottomHostWillChange = this._onBottomHostWillChange.bind(this);
+  this._toggleMinimizeMode = this._toggleMinimizeMode.bind(this);
 
   this._target.on("close", this.destroy);
 
@@ -481,7 +488,7 @@ Toolbox.prototype = {
       ["toolbox-force-reload-key", true],
       ["toolbox-force-reload-key2", true]
     ].forEach(([id, force]) => {
-      this.doc.getElementById(id).addEventListener("command", (event) => {
+      this.doc.getElementById(id).addEventListener("command", () => {
         this.reloadTarget(force);
       }, true);
     });
@@ -492,6 +499,9 @@ Toolbox.prototype = {
     nextKey.addEventListener("command", this.selectNextTool.bind(this), true);
     let prevKey = this.doc.getElementById("toolbox-previous-tool-key");
     prevKey.addEventListener("command", this.selectPreviousTool.bind(this), true);
+
+    let minimizeKey = this.doc.getElementById("toolbox-minimize-key");
+    minimizeKey.addEventListener("command", this._toggleMinimizeMode, true);
 
     // Split console uses keypress instead of command so the event can be
     // cancelled with stopPropagation on the keypress, and not preventDefault.
@@ -703,18 +713,11 @@ Toolbox.prototype = {
     if (this.hostType == Toolbox.HostType.BOTTOM) {
       let minimizeBtn = this.doc.createElement("toolbarbutton");
       minimizeBtn.id = "toolbox-dock-bottom-minimize";
-      minimizeBtn.className = "maximized";
-      minimizeBtn.setAttribute("tooltiptext",
-        toolboxStrings("toolboxDockButtons.bottom.minimize"));
-      // Calculate the height to which the host should be minimized so the
-      // tabbar is still visible.
-      let toolbarHeight = this.doc.querySelector(".devtools-tabbar")
-                                  .getBoxQuads({box: "content"})[0]
-                                  .bounds.height;
-      minimizeBtn.addEventListener("command", () => {
-        this._host.toggleMinimizeMode(toolbarHeight);
-      });
+
+      minimizeBtn.addEventListener("command", this._toggleMinimizeMode);
       dockBox.appendChild(minimizeBtn);
+      // Show the button in its maximized state.
+      this._onBottomHostMaximized();
 
       // Update the label and icon when the state changes.
       this._host.on("minimized", this._onBottomHostMinimized);
@@ -754,18 +757,29 @@ Toolbox.prototype = {
     }
   },
 
+  _getMinimizeButtonShortcutTooltip: function() {
+    let key = this.doc.getElementById("toolbox-minimize-key")
+                      .getAttribute("key");
+    return "(" + (osString == "Darwin" ? "Cmd+Shift+" : "Ctrl+Shift+") +
+           key.toUpperCase() + ")";
+  },
+
   _onBottomHostMinimized: function() {
     let btn = this.doc.querySelector("#toolbox-dock-bottom-minimize");
     btn.className = "minimized";
+
     btn.setAttribute("tooltiptext",
-      toolboxStrings("toolboxDockButtons.bottom.maximize"));
+      toolboxStrings("toolboxDockButtons.bottom.maximize") + " " +
+      this._getMinimizeButtonShortcutTooltip());
   },
 
   _onBottomHostMaximized: function() {
     let btn = this.doc.querySelector("#toolbox-dock-bottom-minimize");
     btn.className = "maximized";
+
     btn.setAttribute("tooltiptext",
-      toolboxStrings("toolboxDockButtons.bottom.minimize"));
+      toolboxStrings("toolboxDockButtons.bottom.minimize") + " " +
+      this._getMinimizeButtonShortcutTooltip());
   },
 
   _onToolSelectWhileMinimized: function() {
@@ -778,6 +792,19 @@ Toolbox.prototype = {
     this._host.off("minimized", this._onBottomHostMinimized);
     this._host.off("maximized", this._onBottomHostMaximized);
     this.off("before-select", this._onToolSelectWhileMinimized);
+  },
+
+  _toggleMinimizeMode: function() {
+    if (this.hostType !== Toolbox.HostType.BOTTOM) {
+      return;
+    }
+
+    // Calculate the height to which the host should be minimized so the
+    // tabbar is still visible.
+    let toolbarHeight = this.doc.querySelector(".devtools-tabbar")
+                                .getBoxQuads({box: "content"})[0]
+                                .bounds.height;
+    this._host.toggleMinimizeMode(toolbarHeight);
   },
 
   /**
