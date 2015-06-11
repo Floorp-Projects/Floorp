@@ -510,7 +510,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // use between one and three slots depending on its size and alignment
     // requirements.
     uint32_t usedIntSlots_;
-#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_ARM_SIMULATOR)
+#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_SIMULATOR_ARM)
     uint32_t usedFloatSlots_;
     bool usedFloat32_;
     uint32_t padding_;

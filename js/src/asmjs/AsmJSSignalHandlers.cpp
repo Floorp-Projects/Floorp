@@ -1163,7 +1163,7 @@ RedirectJitCodeToInterruptCheck(JSRuntime* rt, CONTEXT* context)
     if (AsmJSActivation* activation = rt->asmJSActivationStack()) {
         const AsmJSModule& module = activation->module();
 
-#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
+#ifdef JS_SIMULATOR
         if (module.containsFunctionPC((void*)rt->simulator()->get_pc()))
             rt->simulator()->set_resume_pc(int32_t(module.interruptExit()));
 #endif

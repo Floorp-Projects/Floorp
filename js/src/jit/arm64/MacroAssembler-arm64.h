@@ -3264,7 +3264,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     // Emits a simulator directive to save the current sp on an internal stack.
     void simulatorMarkSP() {
-#ifdef JS_ARM64_SIMULATOR
+#ifdef JS_SIMULATOR_ARM64
         svc(vixl::kMarkStackPointer);
 #endif
     }
@@ -3272,7 +3272,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     // Emits a simulator directive to pop from its internal stack
     // and assert that the value is equal to the current sp.
     void simulatorCheckSP() {
-#ifdef JS_ARM64_SIMULATOR
+#ifdef JS_SIMULATOR_ARM64
         svc(vixl::kCheckStackPointer);
 #endif
     }

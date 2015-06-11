@@ -6,7 +6,7 @@
 
 #include "jit/arm/Architecture-arm.h"
 
-#ifndef JS_ARM_SIMULATOR
+#ifndef JS_SIMULATOR_ARM
 #include <elf.h>
 #endif
 
@@ -16,7 +16,7 @@
 #include "jit/arm/Assembler-arm.h"
 #include "jit/RegisterSets.h"
 
-#if !defined(__linux__) || defined(ANDROID) || defined(JS_ARM_SIMULATOR)
+#if !defined(__linux__) || defined(ANDROID) || defined(JS_SIMULATOR_ARM)
 // The Android NDK and B2G do not include the hwcap.h kernel header, and it is not
 // defined when building the simulator, so inline the header defines we need.
 # define HWCAP_VFP        (1 << 6)
@@ -88,7 +88,7 @@ ParseARMCpuFeatures(const char* features, bool override = false)
             flags |= HWCAP_ARMv7;
         else if (count == 5 && strncmp(features, "align", 5) == 0)
             flags |= HWCAP_ALIGNMENT_FAULT;
-#if defined(JS_ARM_SIMULATOR)
+#if defined(JS_SIMULATOR_ARM)
         else if (count == 6 && strncmp(features, "hardfp", 6) == 0)
             flags |= HWCAP_USE_HARDFP_ABI;
 #endif
@@ -154,7 +154,7 @@ ParseARMHwCapFlags(const char* armHwCap)
                "  vfpd32   \n"
                "  armv7    \n"
                "  align    \n"
-#if defined(JS_ARM_SIMULATOR)
+#ifdef JS_SIMULATOR_ARM
                "  hardfp   \n"
 #endif
                "\n"
@@ -186,7 +186,7 @@ InitARMFlags()
     if (ParseARMHwCapFlags(env))
         return;
 
-#ifdef JS_ARM_SIMULATOR
+#ifdef JS_SIMULATOR_ARM
     flags = HWCAP_ARMv7 | HWCAP_VFP | HWCAP_VFPv3 | HWCAP_VFPv4 | HWCAP_NEON;
 #else
 
@@ -245,7 +245,7 @@ InitARMFlags()
     flags |= HWCAP_ARMv7;
 #endif
 
-#endif // JS_ARM_SIMULATOR
+#endif // JS_SIMULATOR_ARM
 
     armHwCapFlags = CanonicalizeARMHwCapFlags(flags);
 
@@ -304,7 +304,7 @@ bool HasIDIV()
 }
 
 // This is defined in the header and inlined when not using the simulator.
-#if defined(JS_ARM_SIMULATOR)
+#ifdef JS_SIMULATOR_ARM
 bool UseHardFpABI()
 {
     MOZ_ASSERT(armHwCapFlags != HWCAP_UNINITIALIZED);

@@ -414,9 +414,37 @@ elif CONFIG['JS_CODEGEN_ARM']:
         'jit/arm/MoveEmitter-arm.cpp',
         'jit/arm/Trampoline-arm.cpp',
     ]
-    if CONFIG['JS_ARM_SIMULATOR']:
+    if CONFIG['JS_SIMULATOR_ARM']:
         UNIFIED_SOURCES += [
             'jit/arm/Simulator-arm.cpp'
+        ]
+elif CONFIG['JS_CODEGEN_ARM64']:
+    UNIFIED_SOURCES += [
+        'jit/arm64/Architecture-arm64.cpp',
+        'jit/arm64/Assembler-arm64.cpp',
+        'jit/arm64/Bailouts-arm64.cpp',
+        'jit/arm64/BaselineIC-arm64.cpp',
+        'jit/arm64/CodeGenerator-arm64.cpp',
+        'jit/arm64/Lowering-arm64.cpp',
+        'jit/arm64/MacroAssembler-arm64.cpp',
+        'jit/arm64/MoveEmitter-arm64.cpp',
+        'jit/arm64/Trampoline-arm64.cpp',
+        'jit/arm64/vixl/Assembler-vixl.cpp',
+        'jit/arm64/vixl/Cpu-vixl.cpp',
+        'jit/arm64/vixl/Decoder-vixl.cpp',
+        'jit/arm64/vixl/Disasm-vixl.cpp',
+        'jit/arm64/vixl/Instructions-vixl.cpp',
+        'jit/arm64/vixl/Instrument-vixl.cpp',
+        'jit/arm64/vixl/MacroAssembler-vixl.cpp',
+        'jit/arm64/vixl/MozAssembler-vixl.cpp',
+        'jit/arm64/vixl/MozInstructions-vixl.cpp',
+        'jit/arm64/vixl/Utils-vixl.cpp'
+    ]
+    if CONFIG['JS_SIMULATOR_ARM64']:
+        UNIFIED_SOURCES += [
+            'jit/arm64/vixl/Debugger-vixl.cpp',
+            'jit/arm64/vixl/MozSimulator-vixl.cpp',
+            'jit/arm64/vixl/Simulator-vixl.cpp'
         ]
 elif CONFIG['JS_CODEGEN_MIPS']:
     UNIFIED_SOURCES += [
@@ -431,7 +459,7 @@ elif CONFIG['JS_CODEGEN_MIPS']:
         'jit/mips/MoveEmitter-mips.cpp',
         'jit/mips/Trampoline-mips.cpp',
     ]
-    if CONFIG['JS_MIPS_SIMULATOR']:
+    if CONFIG['JS_SIMULATOR_MIPS']:
         UNIFIED_SOURCES += [
             'jit/mips/Simulator-mips.cpp'
         ]
