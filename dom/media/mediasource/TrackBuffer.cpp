@@ -1091,7 +1091,7 @@ TrackBuffer::RemoveDecoder(SourceBufferDecoder* aDecoder)
   aDecoder->GetReader()->TaskQueue()->Dispatch(task.forget());
 }
 
-bool
+nsRefPtr<TrackBuffer::RangeRemovalPromise>
 TrackBuffer::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1103,14 +1103,14 @@ TrackBuffer::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
 
   if (!buffered.Length() || aStart > bufferedEnd || aEnd < bufferedStart) {
     // Nothing to remove.
-    return false;
+    return RangeRemovalPromise::CreateAndResolve(false, __func__);
   }
 
   if (aStart > bufferedStart && aEnd < bufferedEnd) {
     // TODO. We only handle trimming and removal from the start.
     NS_WARNING("RangeRemoval unsupported arguments. "
                "Can only handle trimming (trim left or trim right");
-    return false;
+    return RangeRemovalPromise::CreateAndResolve(false, __func__);
   }
 
   nsTArray<SourceBufferDecoder*> decoders;
@@ -1136,7 +1136,7 @@ TrackBuffer::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
           decoders[i]->GetResource()->EvictData(offset, offset, rv);
           if (NS_WARN_IF(rv.Failed())) {
             rv.SuppressException();
-            return false;
+            return RangeRemovalPromise::CreateAndResolve(false, __func__);
           }
         }
       }
@@ -1158,7 +1158,7 @@ TrackBuffer::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
   RemoveEmptyDecoders(decoders);
 
   NotifyTimeRangesChanged();
-  return true;
+  return RangeRemovalPromise::CreateAndResolve(true, __func__);
 }
 
 void
