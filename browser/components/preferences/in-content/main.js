@@ -695,12 +695,14 @@ var gMainPane = {
     let claimAllTypes = true;
     try {
       if (AppConstants.platform == "win") {
-        // In Windows 8+, the UI for selecting default protocol is much
+        // In Windows 10+, the UI for selecting default protocol is much
         // nicer than the UI for setting file type associations. So we
-        // only show the protocol association screen on Windows 8+.
-        // Windows 8 is version 6.2.
+        // only show the protocol association screen on Windows 10+.
+        // Windows 8.1 is version 6.3. The startup code still uses
+        // the default protocol dialog, but the preferences is more "advanced"
+        // and as such uses the file type associations.
         let version = Services.sysinfo.getProperty("version");
-        claimAllTypes = (parseFloat(version) < 6.2);
+        claimAllTypes = (parseFloat(version) <= 6.3);
       }
     } catch (ex) {}
     return claimAllTypes;
