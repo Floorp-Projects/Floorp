@@ -7844,6 +7844,24 @@
     "extended_statistics_ok": true,
     "description": "Sanitize: Time it takes to sanitize cookies (ms)"
   },
+  "FX_SANITIZE_COOKIES_2": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Sanitize: Time it takes to sanitize firefox cookies (ms). A subset of FX_SANITIZE_COOKIES."
+  },
+  "FX_SANITIZE_PLUGINS": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Sanitize: Time it takes to sanitize plugin cookies (ms). A subset of FX_SANITIZE_COOKIES."
+  },
   "FX_SANITIZE_OFFLINEAPPS": {
     "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
     "expires_in_version": "50",
