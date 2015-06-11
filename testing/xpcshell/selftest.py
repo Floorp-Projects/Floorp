@@ -357,6 +357,7 @@ class XPCShellTestsTests(unittest.TestCase):
     def setUp(self):
         self.log = StringIO()
         self.tempdir = tempfile.mkdtemp()
+        self.utility_path = os.path.join(objdir, 'dist', 'bin')
         logger = structured.commandline.setup_logging("selftest%s" % id(self),
                                                       {},
                                                       {"tbpl": self.log})
@@ -409,7 +410,8 @@ tail =
                                           shuffle=shuffle,
                                           testsRootDir=self.tempdir,
                                           verbose=verbose,
-                                          sequential=True),
+                                          sequential=True,
+                                          utility_path=self.utility_path),
                           msg="""Tests should have %s, log:
 ========
 %s
