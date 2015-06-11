@@ -225,6 +225,7 @@ public:
 
   bool BlockingReadNextMoof();
   bool HasMetadata();
+  MediaByteRange FirstCompleteMediaSegment();
 
   mozilla::MediaByteRange mInitRange;
   nsRefPtr<Stream> mSource;
@@ -240,6 +241,7 @@ public:
   nsTArray<Moof>& Moofs() { mMonitor->AssertCurrentThreadOwns(); return mMoofs; }
 private:
   nsTArray<Moof> mMoofs;
+  nsTArray<MediaByteRange> mMediaRanges;
   bool mIsAudio;
 };
 }
