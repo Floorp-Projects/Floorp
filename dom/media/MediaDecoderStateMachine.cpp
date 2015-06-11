@@ -2617,7 +2617,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       MaybeStartPlayback();
 
       AdvanceFrame();
-      NS_ASSERTION(mPlayState != MediaDecoder::PLAY_STATE_PLAYING ||
+      NS_ASSERTION(!IsPlaying() ||
                    mLogicallySeeking ||
                    IsStateMachineScheduled() ||
                    mPlaybackRate == 0.0, "Must have timer scheduled");
@@ -2678,6 +2678,9 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
     }
 
     case DECODER_STATE_COMPLETED: {
+      if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING && IsPlaying()) {
+        StopPlayback();
+      }
       // Play the remaining media. We want to run AdvanceFrame() at least
       // once to ensure the current playback position is advanced to the
       // end of the media, and so that we update the readyState.
@@ -2685,8 +2688,10 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
           (HasAudio() && !mAudioCompleted) ||
           (mAudioCaptured && !GetDecodedStream()->IsFinished()))
       {
+        // Start playback if necessary to play the remaining media.
+        MaybeStartPlayback();
         AdvanceFrame();
-        NS_ASSERTION(mPlayState != MediaDecoder::PLAY_STATE_PLAYING ||
+        NS_ASSERTION(!IsPlaying() ||
                      mLogicallySeeking ||
                      mPlaybackRate == 0 || IsStateMachineScheduled(),
                      "Must have timer scheduled");
@@ -2894,7 +2899,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
   NS_ASSERTION(!HasAudio() || mAudioStartTime != -1,
                "Should know audio start time if we have audio.");
 
-  if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING || mLogicallySeeking) {
+  if (!IsPlaying() || mLogicallySeeking) {
     return;
   }
 
@@ -3004,13 +3009,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
       // duration.
       RenderVideoFrame(currentFrame, presTime);
     }
-    // If we're no longer playing after dropping and reacquiring the lock,
-    // playback must've been stopped on the decode thread (by a seek, for
-    // example).  In that case, the current frame is probably out of date.
-    if (!IsPlaying()) {
-      ScheduleStateMachine();
-      return;
-    }
+    MOZ_ASSERT(IsPlaying());
     MediaDecoder::FrameStatistics& frameStats = mDecoder->GetFrameStatistics();
     frameStats.NotifyPresentedFrame();
     remainingTime = currentFrame->GetEndTime() - clock_time;
