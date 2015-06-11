@@ -213,14 +213,7 @@ nsJARChannel::nsJARChannel()
 
 nsJARChannel::~nsJARChannel()
 {
-    if (mLoadInfo) {
-      nsCOMPtr<nsIThread> mainThread;
-      NS_GetMainThread(getter_AddRefs(mainThread));
-
-      nsILoadInfo *forgetableLoadInfo;
-      mLoadInfo.forget(&forgetableLoadInfo);
-      NS_ProxyRelease(mainThread, forgetableLoadInfo, false);
-    }
+    NS_ReleaseOnMainThread(mLoadInfo);
 
     // release owning reference to the jar handler
     nsJARProtocolHandler *handler = gJarHandler;

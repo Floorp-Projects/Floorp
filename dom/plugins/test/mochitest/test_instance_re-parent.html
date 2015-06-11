@@ -12,6 +12,8 @@
   SimpleTest.waitForExplicitFinish();
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
+  const MAX_CHECK_PLUGIN_STOPPED_ATTEMPTS = 5;
+  var numCheckPluginStoppedAttempts = 0;
   var exceptionThrown = false;
   var p = null;
   var d1 = null;
@@ -36,6 +38,20 @@
         SimpleTest.finish();
       });
     });
+  }
+
+  function checkPluginStopped(callback, param) {
+    if (numCheckPluginStoppedAttempts < MAX_CHECK_PLUGIN_STOPPED_ATTEMPTS &&
+        !destroyed) {
+      ++numCheckPluginStoppedAttempts;
+      SimpleTest.executeSoon(function() {
+          checkPluginStopped(callback, param);
+      });
+    } else {
+      info("Number of check plugin stopped attempts: " +
+           numCheckPluginStoppedAttempts);
+      callback(param);
+    }
   }
 
   function runTests(callback) {
@@ -71,22 +87,23 @@
       is(destroyed, false, "No instances should have been destroyed at this point.");
       is(p.getInstanceCount(), 0, "No new instances should have been created at this point.");
 
-      // Removing the instance for a full event loop *should* respawn
       d2.removeChild(p);
-      SimpleTest.executeSoon(function() {
-        d2.appendChild(p);
-        SimpleTest.executeSoon(function() {
-          try {
-            is(p.getInstanceCount(), 1, "One new instance should have been created at this point.");
-          } catch (e) {
-            exceptionThrown = true;
-          }
-          is(exceptionThrown, false, "Testing for exception getting instance count from plugin.");
+      checkPluginStopped(continueTestsAfterPluginDestruction, callback);
+    });
+  }
 
-          p.stopWatchingInstanceCount();
-          callback.apply(null);
-        });
-      });
+  function continueTestsAfterPluginDestruction(callback) {
+    d2.appendChild(p);
+    SimpleTest.executeSoon(function() {
+      try {
+        is(p.getInstanceCount(), 1, "One new instance should have been created at this point.");
+      } catch (e) {
+        exceptionThrown = true;
+      }
+      is(exceptionThrown, false, "Testing for exception getting instance count from plugin.");
+
+      p.stopWatchingInstanceCount();
+      callback.apply(null);
     });
   }
   </script>

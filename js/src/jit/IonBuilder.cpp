@@ -6504,8 +6504,7 @@ IonBuilder::jsop_newarray(uint32_t count)
     }
     current->add(templateConst);
 
-    MNewArray* ins = MNewArray::New(alloc(), constraints(), count, templateConst,
-                                    heap, NewArray_FullyAllocating, pc);
+    MNewArray* ins = MNewArray::New(alloc(), constraints(), count, templateConst, heap, pc);
     current->add(ins);
     current->push(ins);
 
@@ -6623,7 +6622,15 @@ IonBuilder::jsop_initelem_array()
         return resumeAfter(store);
     }
 
-    MConstant* id = MConstant::New(alloc(), Int32Value(GET_UINT24(pc)));
+    return initializeArrayElement(obj, GET_UINT24(pc), value, unboxedType, /* addResumePoint = */ true);
+}
+
+bool
+IonBuilder::initializeArrayElement(MDefinition* obj, size_t index, MDefinition* value,
+                                   JSValueType unboxedType,
+                                   bool addResumePointAndIncrementInitializedLength)
+{
+    MConstant* id = MConstant::New(alloc(), Int32Value(index));
     current->add(id);
 
     // Get the elements vector.
@@ -6634,11 +6641,13 @@ IonBuilder::jsop_initelem_array()
         // Note: storeUnboxedValue takes care of any post barriers on the value.
         storeUnboxedValue(obj, elements, 0, id, unboxedType, value, /* preBarrier = */ false);
 
-        MInstruction* increment = MIncrementUnboxedArrayInitializedLength::New(alloc(), obj);
-        current->add(increment);
+        if (addResumePointAndIncrementInitializedLength) {
+            MInstruction* increment = MIncrementUnboxedArrayInitializedLength::New(alloc(), obj);
+            current->add(increment);
 
-        if (!resumeAfter(increment))
-            return false;
+            if (!resumeAfter(increment))
+                return false;
+        }
     } else {
         if (NeedsPostBarrier(info(), value))
             current->add(MPostWriteBarrier::New(alloc(), obj, value));
@@ -6654,14 +6663,16 @@ IonBuilder::jsop_initelem_array()
                                                   /* needsHoleCheck = */ false);
         current->add(store);
 
-        // Update the initialized length. (The template object for this array has
-        // the array's ultimate length, so the length field is already correct: no
-        // updating needed.)
-        MSetInitializedLength* initLength = MSetInitializedLength::New(alloc(), elements, id);
-        current->add(initLength);
+        if (addResumePointAndIncrementInitializedLength) {
+            // Update the initialized length. (The template object for this
+            // array has the array's ultimate length, so the length field is
+            // already correct: no updating needed.)
+            MSetInitializedLength* initLength = MSetInitializedLength::New(alloc(), elements, id);
+            current->add(initLength);
 
-        if (!resumeAfter(initLength))
-            return false;
+            if (!resumeAfter(initLength))
+                return false;
+        }
     }
 
     return true;
@@ -8530,12 +8541,7 @@ IonBuilder::jsop_getelem_dense(MDefinition* obj, MDefinition* index, JSValueType
     // Note: to help GVN, use the original MElements instruction and not
     // MConvertElementsToDoubles as operand. This is fine because converting
     // elements to double does not change the initialized length.
-    MInstruction* initLength;
-    if (unboxedType != JSVAL_TYPE_MAGIC)
-        initLength = MUnboxedArrayInitializedLength::New(alloc(), obj);
-    else
-        initLength = MInitializedLength::New(alloc(), elements);
-    current->add(initLength);
+    MInstruction* initLength = initializedLength(obj, elements, unboxedType);
 
     // If we can load the element as a definite double, make sure to check that
     // the array has been converted to homogenous doubles first.
@@ -8825,9 +8831,13 @@ IonBuilder::jsop_setelem()
     if (!setElemTryTypedArray(&emitted, object, index, value) || emitted)
         return emitted;
 
-    trackOptimizationAttempt(TrackedStrategy::SetElem_Dense);
-    if (!setElemTryDense(&emitted, object, index, value) || emitted)
-        return emitted;
+    {
+        trackOptimizationAttempt(TrackedStrategy::SetElem_Dense);
+        SetElemICInspector icInspect(inspector->setElemICInspector(pc));
+        bool writeHole = icInspect.sawOOBDenseWrite();
+        if (!setElemTryDense(&emitted, object, index, value, writeHole) || emitted)
+            return emitted;
+    }
 
     trackOptimizationAttempt(TrackedStrategy::SetElem_Arguments);
     if (!setElemTryArguments(&emitted, object, index, value) || emitted)
@@ -9020,7 +9030,7 @@ IonBuilder::setElemTryTypedArray(bool* emitted, MDefinition* object,
     }
 
     // Emit typed setelem variant.
-    if (!jsop_setelem_typed(arrayType, SetElem_Normal, object, index, value))
+    if (!jsop_setelem_typed(arrayType, object, index, value))
         return false;
 
     trackOptimizationSuccess();
@@ -9030,7 +9040,7 @@ IonBuilder::setElemTryTypedArray(bool* emitted, MDefinition* object,
 
 bool
 IonBuilder::setElemTryDense(bool* emitted, MDefinition* object,
-                            MDefinition* index, MDefinition* value)
+                            MDefinition* index, MDefinition* value, bool writeHole)
 {
     MOZ_ASSERT(*emitted == false);
 
@@ -9073,7 +9083,7 @@ IonBuilder::setElemTryDense(bool* emitted, MDefinition* object,
     }
 
     // Emit dense setelem variant.
-    if (!jsop_setelem_dense(conversion, SetElem_Normal, object, index, value, unboxedType))
+    if (!jsop_setelem_dense(conversion, object, index, value, unboxedType, writeHole))
         return false;
 
     trackOptimizationSuccess();
@@ -9159,9 +9169,8 @@ IonBuilder::setElemTryCache(bool* emitted, MDefinition* object,
 
 bool
 IonBuilder::jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
-                               SetElemSafety safety,
                                MDefinition* obj, MDefinition* id, MDefinition* value,
-                               JSValueType unboxedType)
+                               JSValueType unboxedType, bool writeHole)
 {
     MIRType elementType = MIRType_None;
     if (unboxedType == JSVAL_TYPE_MAGIC)
@@ -9213,20 +9222,12 @@ IonBuilder::jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
         MOZ_CRASH("Unknown double conversion");
     }
 
-    bool writeHole = false;
-    if (safety == SetElem_Normal) {
-        SetElemICInspector icInspect(inspector->setElemICInspector(pc));
-        writeHole = icInspect.sawOOBDenseWrite();
-    }
-
     // Use MStoreElementHole if this SETELEM has written to out-of-bounds
     // indexes in the past. Otherwise, use MStoreElement so that we can hoist
     // the initialized length and bounds check.
     MInstruction* store;
     MStoreElementCommon *common = nullptr;
     if (writeHole && writeOutOfBounds) {
-        MOZ_ASSERT(safety == SetElem_Normal);
-
         MStoreElementHole* ins = MStoreElementHole::New(alloc(), obj, elements, id, newValue, unboxedType);
         store = ins;
         common = ins;
@@ -9234,20 +9235,10 @@ IonBuilder::jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
         current->add(ins);
         current->push(value);
     } else {
-        MInstruction* initLength;
-        if (unboxedType != JSVAL_TYPE_MAGIC)
-            initLength = MUnboxedArrayInitializedLength::New(alloc(), obj);
-        else
-            initLength = MInitializedLength::New(alloc(), elements);
-        current->add(initLength);
+        MInstruction* initLength = initializedLength(obj, elements, unboxedType);
 
-        bool needsHoleCheck;
-        if (safety == SetElem_Normal) {
-            id = addBoundsCheck(id, initLength);
-            needsHoleCheck = !packed && !writeOutOfBounds;
-        } else {
-            needsHoleCheck = false;
-        }
+        id = addBoundsCheck(id, initLength);
+        bool needsHoleCheck = !packed && !writeOutOfBounds;
 
         if (unboxedType != JSVAL_TYPE_MAGIC) {
             store = storeUnboxedValue(obj, elements, 0, id, unboxedType, newValue);
@@ -9259,8 +9250,7 @@ IonBuilder::jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
             current->add(store);
         }
 
-        if (safety == SetElem_Normal)
-            current->push(value);
+        current->push(value);
     }
 
     if (!resumeAfter(store))
@@ -9280,16 +9270,11 @@ IonBuilder::jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
 
 
 bool
-IonBuilder::jsop_setelem_typed(Scalar::Type arrayType, SetElemSafety safety,
+IonBuilder::jsop_setelem_typed(Scalar::Type arrayType,
                                MDefinition* obj, MDefinition* id, MDefinition* value)
 {
-    bool expectOOB;
-    if (safety == SetElem_Normal) {
-        SetElemICInspector icInspect(inspector->setElemICInspector(pc));
-        expectOOB = icInspect.sawOOBTypedArrayWrite();
-    } else {
-        expectOOB = false;
-    }
+    SetElemICInspector icInspect(inspector->setElemICInspector(pc));
+    bool expectOOB = icInspect.sawOOBTypedArrayWrite();
 
     if (expectOOB)
         spew("Emitting OOB TypedArray SetElem");
@@ -9302,9 +9287,7 @@ IonBuilder::jsop_setelem_typed(Scalar::Type arrayType, SetElemSafety safety,
     // Get length, bounds-check, then get elements, and add all instructions.
     MInstruction* length;
     MInstruction* elements;
-    BoundsChecking checking = (!expectOOB && safety == SetElem_Normal)
-                              ? DoBoundsCheck
-                              : SkipBoundsCheck;
+    BoundsChecking checking = expectOOB ? SkipBoundsCheck : DoBoundsCheck;
     addTypedArrayLengthAndData(obj, checking, &id, &length, &elements);
 
     // Clamp value to [0, 255] for Uint8ClampedArray.
@@ -9325,29 +9308,9 @@ IonBuilder::jsop_setelem_typed(Scalar::Type arrayType, SetElemSafety safety,
     }
 
     current->add(ins);
-
-    if (safety == SetElem_Normal)
-        current->push(value);
+    current->push(value);
 
     return resumeAfter(ins);
-}
-
-bool
-IonBuilder::jsop_setelem_typed_object(Scalar::Type arrayType, SetElemSafety safety,
-                                      MDefinition* object, MDefinition* index, MDefinition* value)
-{
-    MOZ_ASSERT(safety == SetElem_Unsafe); // Can be fixed, but there's been no reason to as of yet
-
-    MInstruction* intIndex = MToInt32::New(alloc(), index);
-    current->add(intIndex);
-
-    size_t elemSize = ScalarTypeDescr::alignment(arrayType);
-
-    LinearSum byteOffset(alloc());
-    if (!byteOffset.add(intIndex, elemSize))
-        setForceAbort();
-
-    return storeScalarTypedObjectValue(object, byteOffset, arrayType, value);
 }
 
 bool
@@ -9511,8 +9474,7 @@ IonBuilder::jsop_rest()
     current->add(templateConst);
 
     MNewArray* array = MNewArray::New(alloc(), constraints(), numRest, templateConst,
-                                      templateObject->group()->initialHeap(constraints()),
-                                      NewArray_FullyAllocating, pc);
+                                      templateObject->group()->initialHeap(constraints()), pc);
     current->add(array);
 
     if (numRest == 0) {
@@ -12396,12 +12358,21 @@ IonBuilder::jsop_in()
     MDefinition* obj = current->peek(-1);
     MDefinition* id = current->peek(-2);
 
-    if (!shouldAbortOnPreliminaryGroups(obj) &&
-        ElementAccessIsDenseNative(constraints(), obj, id) &&
-        !ElementAccessHasExtraIndexedProperty(constraints(), obj))
-    {
-        return jsop_in_dense();
-    }
+    do {
+        if (shouldAbortOnPreliminaryGroups(obj))
+            break;
+
+        JSValueType unboxedType = UnboxedArrayElementType(constraints(), obj, id);
+        if (unboxedType == JSVAL_TYPE_MAGIC) {
+            if (!ElementAccessIsDenseNative(constraints(), obj, id))
+                break;
+        }
+
+        if (ElementAccessHasExtraIndexedProperty(constraints(), obj))
+            break;
+
+        return jsop_in_dense(unboxedType);
+    } while (false);
 
     current->pop();
     current->pop();
@@ -12414,7 +12385,7 @@ IonBuilder::jsop_in()
 }
 
 bool
-IonBuilder::jsop_in_dense()
+IonBuilder::jsop_in_dense(JSValueType unboxedType)
 {
     MDefinition* obj = current->pop();
     MDefinition* id = current->pop();
@@ -12427,11 +12398,10 @@ IonBuilder::jsop_in_dense()
     id = idInt32;
 
     // Get the elements vector.
-    MElements* elements = MElements::New(alloc(), obj);
+    MElements* elements = MElements::New(alloc(), obj, unboxedType != JSVAL_TYPE_MAGIC);
     current->add(elements);
 
-    MInitializedLength* initLength = MInitializedLength::New(alloc(), elements);
-    current->add(initLength);
+    MInstruction* initLength = initializedLength(obj, elements, unboxedType);
 
     // If there are no holes, speculate the InArray check will not fail.
     if (!needsHoleCheck && !failedBoundsCheck_) {
@@ -12440,7 +12410,8 @@ IonBuilder::jsop_in_dense()
     }
 
     // Check if id < initLength and elem[id] not a hole.
-    MInArray* ins = MInArray::New(alloc(), elements, id, initLength, obj, needsHoleCheck);
+    MInArray* ins = MInArray::New(alloc(), elements, id, initLength, obj, needsHoleCheck,
+                                  unboxedType);
 
     current->add(ins);
     current->push(ins);
@@ -13051,6 +13022,37 @@ MConstant*
 IonBuilder::constantInt(int32_t i)
 {
     return constant(Int32Value(i));
+}
+
+MInstruction*
+IonBuilder::initializedLength(MDefinition* obj, MDefinition* elements, JSValueType unboxedType)
+{
+    MInstruction* res;
+    if (unboxedType != JSVAL_TYPE_MAGIC)
+        res = MUnboxedArrayInitializedLength::New(alloc(), obj);
+    else
+        res = MInitializedLength::New(alloc(), elements);
+    current->add(res);
+    return res;
+}
+
+MInstruction*
+IonBuilder::setInitializedLength(MDefinition* obj, JSValueType unboxedType, size_t count)
+{
+    MOZ_ASSERT(count);
+
+    MInstruction* res;
+    if (unboxedType != JSVAL_TYPE_MAGIC) {
+        res = MSetUnboxedArrayInitializedLength::New(alloc(), obj, constant(Int32Value(count)));
+    } else {
+        // MSetInitializedLength takes the index of the last element, rather
+        // than the count itself.
+        MInstruction* elements = MElements::New(alloc(), obj, /* unboxed = */ false);
+        current->add(elements);
+        res = MSetInitializedLength::New(alloc(), elements, constant(Int32Value(count - 1)));
+    }
+    current->add(res);
+    return res;
 }
 
 MDefinition*

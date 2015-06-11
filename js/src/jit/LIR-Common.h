@@ -4198,6 +4198,30 @@ class LIncrementUnboxedArrayInitializedLength : public LInstructionHelper<0, 1, 
     }
 };
 
+class LSetUnboxedArrayInitializedLength : public LInstructionHelper<0, 2, 1>
+{
+  public:
+    LIR_HEADER(SetUnboxedArrayInitializedLength)
+
+    explicit LSetUnboxedArrayInitializedLength(const LAllocation& object,
+                                               const LAllocation& length,
+                                               const LDefinition& temp) {
+        setOperand(0, object);
+        setOperand(1, length);
+        setTemp(0, temp);
+    }
+
+    const LAllocation* object() {
+        return getOperand(0);
+    }
+    const LAllocation* length() {
+        return getOperand(1);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+};
+
 // Load the length from an elements header.
 class LArrayLength : public LInstructionHelper<1, 1, 0>
 {

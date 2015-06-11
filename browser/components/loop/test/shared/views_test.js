@@ -814,5 +814,125 @@ describe("loop.shared.views", function() {
       });
     });
   });
-});
 
+  describe("MediaView", function() {
+    var view;
+
+    function mountTestComponent(props) {
+      return TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.MediaView, props));
+    }
+
+    it("should display an avatar view", function() {
+      view = mountTestComponent({
+        displayAvatar: true,
+        mediaType: "local"
+      });
+
+      TestUtils.findRenderedComponentWithType(view,
+        sharedViews.AvatarView);
+    });
+
+    it("should display a no-video div if no source object is supplied", function() {
+      view = mountTestComponent({
+        displayAvatar: false,
+        mediaType: "local"
+      });
+
+      var element = view.getDOMNode();
+
+      expect(element.className).eql("no-video");
+    });
+
+    it("should display a video element if a source object is supplied", function() {
+      view = mountTestComponent({
+        displayAvatar: false,
+        mediaType: "local",
+        // This doesn't actually get assigned to the video element, but is enough
+        // for this test to check display of the video element.
+        srcVideoObject: {
+          fake: 1
+        }
+      });
+
+      var element = view.getDOMNode();
+
+      expect(element).not.eql(null);
+      expect(element.className).eql("local-video");
+      expect(element.muted).eql(true);
+    });
+
+    // We test this function by itself, as otherwise we'd be into creating fake
+    // streams etc.
+    describe("#attachVideo", function() {
+      var fakeViewElement;
+
+      beforeEach(function() {
+        fakeViewElement = {
+          play: sinon.stub(),
+          tagName: "VIDEO"
+        };
+
+        view = mountTestComponent({
+          displayAvatar: false,
+          mediaType: "local",
+          srcVideoObject: {
+            fake: 1
+          }
+        });
+      });
+
+      it("should not throw if no source object is specified", function() {
+        expect(function() {
+          view.attachVideo(null);
+        }).to.not.Throw();
+      });
+
+      it("should not throw if the element is not a video object", function() {
+        sinon.stub(view, "getDOMNode").returns({
+          tagName: "DIV"
+        });
+
+        expect(function() {
+          view.attachVideo({});
+        }).to.not.Throw();
+      });
+
+      it("should attach a video object according to the standard", function() {
+        fakeViewElement.srcObject = null;
+
+        sinon.stub(view, "getDOMNode").returns(fakeViewElement);
+
+        view.attachVideo({
+          srcObject: {fake: 1}
+        });
+
+        expect(fakeViewElement.srcObject).eql({fake: 1});
+      });
+
+      it("should attach a video object for Firefox", function() {
+        fakeViewElement.mozSrcObject = null;
+
+        sinon.stub(view, "getDOMNode").returns(fakeViewElement);
+
+        view.attachVideo({
+          mozSrcObject: {fake: 2}
+        });
+
+        expect(fakeViewElement.mozSrcObject).eql({fake: 2});
+      });
+
+      it("should attach a video object for Chrome", function() {
+        fakeViewElement.src = null;
+
+        sinon.stub(view, "getDOMNode").returns(fakeViewElement);
+
+        view.attachVideo({
+          src: {fake: 2}
+        });
+
+        expect(fakeViewElement.src).eql({fake: 2});
+      });
+    });
+  });
+});

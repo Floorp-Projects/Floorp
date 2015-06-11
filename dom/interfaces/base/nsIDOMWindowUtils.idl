@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(ec176f3b-2886-4090-938e-dded103c5f1c)]
+[scriptable, uuid(a01d5bb4-3e81-4529-b139-2f4ebb78f717)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1192,6 +1192,15 @@ interface nsIDOMWindowUtils : nsISupports {
    * stack, so that the operation can complete on the parent side.
    */
   void remoteFrameFullscreenReverted();
+
+  /**
+   * Calls the document to handle any pending fullscreen requests.
+   * It is called when the parent document has entered fullscreen, and
+   * we want to put the current document into fullscreen as well.
+   * The return value indicates whether there is any fullscreen request
+   * handled by this call.
+   */
+  boolean handleFullscreenRequests();
 
   /**
    * Called when the child frame has fully exit fullscreen, so that the parent

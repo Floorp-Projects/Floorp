@@ -43,6 +43,12 @@
                 data-pref="enable-memory"
                 label="&profilerUI.enableMemory;"
                 tooltiptext="&profilerUI.enableMemory.tooltiptext;"/>
+      <menuitem id="option-enable-allocations"
+                class="experimental-option"
+                type="checkbox"
+                data-pref="enable-allocations"
+                label="&profilerUI.enableAllocations;"
+                tooltiptext="&profilerUI.enableAllocations.tooltiptext;"/>
       <menuitem id="option-enable-framerate"
                 type="checkbox"
                 data-pref="enable-framerate"

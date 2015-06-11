@@ -423,7 +423,7 @@ var BrowserApp = {
 
     window.addEventListener("fullscreen", function() {
       Messaging.sendRequest({
-        type: window.fullScreen ? "ToggleChrome:Show" : "ToggleChrome:Hide"
+        type: window.fullScreen ? "ToggleChrome:Hide" : "ToggleChrome:Show"
       });
     }, false);
 
@@ -5851,7 +5851,7 @@ var FormAssistant = {
 
   // We only want to show autocomplete suggestions for certain elements
   _isAutoComplete: function _isAutoComplete(aElement) {
-    if (!(aElement instanceof HTMLInputElement) || aElement.readOnly ||
+    if (!(aElement instanceof HTMLInputElement) || aElement.readOnly || aElement.disabled ||
         (aElement.getAttribute("type") == "password") ||
         (aElement.hasAttribute("autocomplete") &&
          aElement.getAttribute("autocomplete").toLowerCase() == "off"))

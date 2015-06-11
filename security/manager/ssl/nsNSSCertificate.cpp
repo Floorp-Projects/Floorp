@@ -180,7 +180,7 @@ void nsNSSCertificate::destructorSafeDestroyNSSReference()
     if (mCertType == nsNSSCertificate::USER_CERT) {
       nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
       PK11_DeleteTokenCertAndKey(mCert.get(), cxt);
-    } else if (!PK11_IsReadOnly(mCert->slot)) {
+    } else if (mCert->slot && !PK11_IsReadOnly(mCert->slot)) {
       // If the list of built-ins does contain a non-removable
       // copy of this certificate, our call will not remove
       // the certificate permanently, but rather remove all trust.
@@ -225,12 +225,9 @@ nsNSSCertificate::MarkForPermDeletion()
   // make sure user is logged in to the token
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
 
-  if (PK11_NeedLogin(mCert->slot)
-      && !PK11_NeedUserInit(mCert->slot)
-      && !PK11_IsInternal(mCert->slot))
-  {
-    if (SECSuccess != PK11_Authenticate(mCert->slot, true, ctx))
-    {
+  if (mCert->slot && PK11_NeedLogin(mCert->slot) &&
+      !PK11_NeedUserInit(mCert->slot) && !PK11_IsInternal(mCert->slot)) {
+    if (SECSuccess != PK11_Authenticate(mCert->slot, true, ctx)) {
       return NS_ERROR_FAILURE;
     }
   }

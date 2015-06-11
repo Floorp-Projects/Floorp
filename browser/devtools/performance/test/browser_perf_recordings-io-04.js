@@ -75,7 +75,7 @@ let test = Task.async(function*() {
   let { $, EVENTS, PerformanceController, DetailsView, OverviewView, JsCallTreeView } = panel.panelWin;
 
   // Enable memory to test the memory-calltree and memory-flamegraph.
-  Services.prefs.setBoolPref(MEMORY_PREF, true);
+  Services.prefs.setBoolPref(ALLOCATIONS_PREF, true);
 
   // Create a structure from the data that mimics the old profiler's data.
   // Different name for `ticks`, different way of storing time,

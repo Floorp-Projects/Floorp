@@ -27,8 +27,6 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/FileUtils.h"
 
-#include "BootAnimation.h"
-
 using namespace android;
 
 
@@ -105,7 +103,7 @@ GonkDisplayICS::GonkDisplayICS()
             len = read(fd.get(), &buf, 1);
         } while (len < 0 && errno == EINTR);
         if (len < 0) {
-            LOGE("BootAnimation: wait_for_fb_sleep failed errno: %d", errno);
+            LOGE("wait_for_fb_sleep failed errno: %d", errno);
         }
     }
 
@@ -130,8 +128,6 @@ GonkDisplayICS::GonkDisplayICS()
 
     const framebuffer_device_t *fbdev = mFBSurface->getDevice();
     surfaceformat = fbdev->format;
-
-    StartBootAnimation();
 }
 
 GonkDisplayICS::~GonkDisplayICS()
@@ -215,7 +211,6 @@ GonkDisplayICS::GetNativeData(GonkDisplay::DisplayType aDisplayType,
     MOZ_ASSERT(aDisplayType == DISPLAY_PRIMARY, "ICS gonk supports primary display only.");
 
     NativeData data;
-    StopBootAnimation();
     data.mNativeWindow = static_cast<ANativeWindow *>(mFBSurface.get());
     data.mXdpi = xdpi;
 

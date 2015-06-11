@@ -104,9 +104,6 @@ loop.OTSdkDriver = (function() {
      *   with the action. See action.js.
      */
     setupStreamElements: function(actionData) {
-      this.getLocalElement = actionData.getLocalElementFunc;
-      this.getScreenShareElementFunc = actionData.getScreenShareElementFunc;
-      this.getRemoteElement = actionData.getRemoteElementFunc;
       this.publisherConfig = actionData.publisherConfig;
 
       this.sdk.on("exception", this._onOTException.bind(this));
@@ -122,8 +119,13 @@ loop.OTSdkDriver = (function() {
      * XXX This can be simplified when bug 1138851 is actioned.
      */
     _publishLocalStreams: function() {
-      this.publisher = this.sdk.initPublisher(this.getLocalElement(),
+      // We expect the local video to be muted automatically by the SDK. Hence
+      // we don't mute it manually here.
+      this._mockPublisherEl = document.createElement("div");
+
+      this.publisher = this.sdk.initPublisher(this._mockPublisherEl,
         _.extend(this._getDataChannelSettings, this._getCopyPublisherConfig));
+
       this.publisher.on("streamCreated", this._onLocalStreamCreated.bind(this));
       this.publisher.on("streamDestroyed", this._onLocalStreamDestroyed.bind(this));
       this.publisher.on("accessAllowed", this._onPublishComplete.bind(this));
@@ -182,7 +184,9 @@ loop.OTSdkDriver = (function() {
 
       var config = _.extend(this._getCopyPublisherConfig, options);
 
-      this.screenshare = this.sdk.initPublisher(this.getScreenShareElementFunc(),
+      this._mockScreenSharePreviewEl = document.createElement("div");
+
+      this.screenshare = this.sdk.initPublisher(this._mockScreenSharePreviewEl,
         config);
       this.screenshare.on("accessAllowed", this._onScreenShareGranted.bind(this));
       this.screenshare.on("accessDenied", this._onScreenShareDenied.bind(this));
@@ -209,7 +213,7 @@ loop.OTSdkDriver = (function() {
      * Ends an active screenshare session. Return `true` when an active screen-
      * sharing session was ended or `false` when no session is active.
      *
-     * @type {Boolean}
+     * @returns {Boolean}
      */
     endScreenShare: function() {
       if (!this.screenshare) {
@@ -222,6 +226,7 @@ loop.OTSdkDriver = (function() {
       this.screenshare.off("accessAllowed accessDenied streamCreated");
       this.screenshare.destroy();
       delete this.screenshare;
+      delete this._mockScreenSharePreviewEl;
       this._noteSharingState(this._windowId ? "browser" : "window", false);
       delete this._windowId;
       return true;
@@ -289,6 +294,7 @@ loop.OTSdkDriver = (function() {
       delete this._publisherReady;
       delete this._publishedLocalStream;
       delete this._subscribedRemoteStream;
+      delete this._mockPublisherEl;
       this.connections = {};
       this._setTwoWayMediaStartTime(this.CONNECTION_START_TIME_UNINITIALIZED);
     },
@@ -499,19 +505,23 @@ loop.OTSdkDriver = (function() {
      * https://tokbox.com/opentok/libraries/client/js/reference/Stream.html
      */
     _handleRemoteScreenShareCreated: function(stream) {
-      if (!this.getScreenShareElementFunc) {
-        return;
-      }
-
       // Let the stores know first so they can update the display.
-      this.dispatcher.dispatch(new sharedActions.ReceivingScreenShare({
-        receiving: true
-      }));
+      // XXX We do want to do this - we want them to start re-arranging the
+      // display so that we can a) indicate connecting, b) be ready for
+      // when we get the stream. However, we're currently limited by the fact
+      // the view calculations require the remote (aka screen share) element to
+      // be present and laid out. Hence, we need to drop this for the time being,
+      // and let the client know via _onScreenShareSubscribeCompleted.
+      // Bug 1171933 is going to look at fixing this.
+      // this.dispatcher.dispatch(new sharedActions.ReceivingScreenShare({
+      //  receiving: true
+      // }));
 
-      var remoteElement = this.getScreenShareElementFunc();
-
-      this.session.subscribe(stream,
-        remoteElement, this._getCopyPublisherConfig);
+      // There's no audio for screen shares so we don't need to worry about mute.
+      this._mockScreenShareEl = document.createElement("div");
+      this.session.subscribe(stream, this._mockScreenShareEl,
+        this._getCopyPublisherConfig,
+        this._onScreenShareSubscribeCompleted.bind(this));
     },
 
     /**
@@ -536,17 +546,88 @@ loop.OTSdkDriver = (function() {
         return;
       }
 
-      var remoteElement = this.getRemoteElement();
+      // Setting up the subscribe might want to be before the VideoDimensionsChange
+      // dispatch. If so, we might also want to consider moving the dispatch to
+      // _onSubscribeCompleted. However, this seems to work fine at the moment,
+      // so we haven't felt the need to move it.
+
+      // XXX This mock element currently handles playing audio for the session.
+      // We might want to consider making the react tree responsible for playing
+      // the audio, so that the incoming audio could be disable/tracked easly from
+      // the UI (bug 1171896).
+      this._mockSubscribeEl = document.createElement("div");
 
       this.subscriber = this.session.subscribe(event.stream,
-        remoteElement, this._getCopyPublisherConfig,
-        this._onRemoteSessionSubscribed.bind(this, event.stream.connection));
+        this._mockSubscribeEl, this._getCopyPublisherConfig,
+        this._onSubscribeCompleted.bind(this));
+    },
+
+    /**
+     * This method is passed as the "completionHandler" parameter to the SDK's
+     * Session.subscribe.
+     *
+     * @param err {(null|Error)} - null on success, an Error object otherwise
+     * @param sdkSubscriberObject {OT.Subscriber} - undocumented; returned on success
+     * @param subscriberVideo {HTMLVideoElement} - used for unit testing
+     */
+    _onSubscribeCompleted: function(err, sdkSubscriberObject, subscriberVideo) {
+      // XXX test for and handle errors better (bug 1172140)
+      if (err) {
+        console.log("subscribe error:", err);
+        return;
+      }
+
+      var sdkSubscriberVideo = subscriberVideo ? subscriberVideo :
+        this._mockSubscribeEl.querySelector("video");
+      if (!sdkSubscriberVideo) {
+        console.error("sdkSubscriberVideo unexpectedly falsy!");
+      }
+
+      sdkSubscriberObject.on("videoEnabled", this._onVideoEnabled.bind(this));
+      sdkSubscriberObject.on("videoDisabled", this._onVideoDisabled.bind(this));
+
+      // XXX for some reason, the SDK deliberately suppresses sending the
+      // videoEnabled event after subscribe, in spite of docs claiming
+      // otherwise, so we do it ourselves.
+      if (sdkSubscriberObject.stream.hasVideo) {
+        this.dispatcher.dispatch(new sharedActions.RemoteVideoEnabled({
+          srcVideoObject: sdkSubscriberVideo}));
+      }
 
       this._subscribedRemoteStream = true;
       if (this._checkAllStreamsConnected()) {
         this._setTwoWayMediaStartTime(performance.now());
         this.dispatcher.dispatch(new sharedActions.MediaConnected());
       }
+
+      this._setupDataChannelIfNeeded(sdkSubscriberObject.stream.connection);
+    },
+
+    /**
+     * This method is passed as the "completionHandler" parameter to the SDK's
+     * Session.subscribe.
+     *
+     * @param err {(null|Error)} - null on success, an Error object otherwise
+     * @param sdkSubscriberObject {OT.Subscriber} - undocumented; returned on success
+     * @param subscriberVideo {HTMLVideoElement} - used for unit testing
+     */
+    _onScreenShareSubscribeCompleted: function(err, sdkSubscriberObject, subscriberVideo) {
+      // XXX test for and handle errors better
+      if (err) {
+        console.log("subscribe error:", err);
+        return;
+      }
+
+      var sdkSubscriberVideo = subscriberVideo ? subscriberVideo :
+        this._mockScreenShareEl.querySelector("video");
+
+      // XXX no idea why this is necessary in addition to the dispatch in
+      // _handleRemoteScreenShareCreated.  Maybe these should be separate
+      // actions.  But even so, this shouldn't be necessary....
+      this.dispatcher.dispatch(new sharedActions.ReceivingScreenShare({
+        receiving: true, srcVideoObject: sdkSubscriberVideo
+      }));
+
     },
 
     /**
@@ -554,16 +635,11 @@ loop.OTSdkDriver = (function() {
      * channel set-up routines. A data channel cannot be requested before this
      * time as the peer connection is not set up.
      *
-     * @param {OT.Connection} connection The OT connection class object.
-     * @param {OT.Error}      err        Indicates if there's been an error in
-     *                                    completing the subscribe.
+     * @param {OT.Connection} connection The OT connection class object.paul
+     * sched
+     *
      */
-    _onRemoteSessionSubscribed: function(connection, err) {
-      if (err) {
-        console.error(err);
-        return;
-      }
-
+    _setupDataChannelIfNeeded: function(connection) {
       if (this._useDataChannels) {
         this.session.signal({
           type: "readyForDataChannel",
@@ -670,6 +746,12 @@ loop.OTSdkDriver = (function() {
       this._notifyMetricsEvent("Publisher.streamCreated");
 
       if (event.stream[STREAM_PROPERTIES.HAS_VIDEO]) {
+
+        var sdkLocalVideo = this._mockPublisherEl.querySelector("video");
+
+        this.dispatcher.dispatch(new sharedActions.LocalVideoEnabled(
+              {srcVideoObject: sdkLocalVideo}));
+
         this.dispatcher.dispatch(new sharedActions.VideoDimensionsChanged({
           isLocal: true,
           videoType: event.stream.videoType,
@@ -739,6 +821,7 @@ loop.OTSdkDriver = (function() {
       this._notifyMetricsEvent("Session.streamDestroyed");
 
       if (event.stream.videoType !== "screen") {
+        delete this._mockSubscribeEl;
         return;
       }
 
@@ -747,6 +830,8 @@ loop.OTSdkDriver = (function() {
       this.dispatcher.dispatch(new sharedActions.ReceivingScreenShare({
         receiving: false
       }));
+
+      delete this._mockScreenShareEl;
     },
 
     /**
@@ -754,6 +839,7 @@ loop.OTSdkDriver = (function() {
      */
     _onLocalStreamDestroyed: function() {
       this._notifyMetricsEvent("Publisher.streamDestroyed");
+      delete this._mockPublisherEl;
     },
 
     /**
@@ -793,6 +879,8 @@ loop.OTSdkDriver = (function() {
       this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
         reason: FAILURE_DETAILS.MEDIA_DENIED
       }));
+
+      delete this._mockPublisherEl;
     },
 
     _onOTException: function(event) {
@@ -804,6 +892,7 @@ loop.OTSdkDriver = (function() {
           this.publisher.off("accessAllowed accessDenied accessDialogOpened streamCreated");
           this.publisher.destroy();
           delete this.publisher;
+          delete this._mockPublisherEl;
         }
         this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
           reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
@@ -822,6 +911,42 @@ loop.OTSdkDriver = (function() {
           dimensions: event.stream[STREAM_PROPERTIES.VIDEO_DIMENSIONS]
         }));
       }
+    },
+
+    /**
+     * Handle the (remote) VideoEnabled event from the subscriber object
+     * by dispatching an action with the (hidden) video element from
+     * which to copy the stream when attaching it to visible video element
+     * that the views control directly.
+     *
+     * @param event {OT.VideoEnabledChangedEvent} from the SDK
+     *
+     * @see https://tokbox.com/opentok/libraries/client/js/reference/VideoEnabledChangedEvent.html
+     * @private
+     */
+    _onVideoEnabled: function(event) {
+      var sdkSubscriberVideo = this._mockSubscribeEl.querySelector("video");
+      if (!sdkSubscriberVideo) {
+        console.error("sdkSubscriberVideo unexpectedly falsy!");
+      }
+
+      this.dispatcher.dispatch(
+        new sharedActions.RemoteVideoEnabled(
+          {srcVideoObject: sdkSubscriberVideo}));
+    },
+
+    /**
+     * Handle the SDK disabling of remote video by dispatching the
+     * appropriate event.
+     *
+     * @param event {OT.VideoEnabledChangedEvent) from the SDK
+     *
+     * @see https://tokbox.com/opentok/libraries/client/js/reference/VideoEnabledChangedEvent.html
+     * @private
+     */
+    _onVideoDisabled: function(event) {
+      this.dispatcher.dispatch(
+        new sharedActions.RemoteVideoDisabled());
     },
 
     /**
@@ -868,6 +993,7 @@ loop.OTSdkDriver = (function() {
       this.dispatcher.dispatch(new sharedActions.ScreenSharingState({
         state: SCREEN_SHARE_STATES.INACTIVE
       }));
+      delete this._mockScreenSharePreviewEl;
     },
 
     /**

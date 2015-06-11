@@ -5,6 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+
+XPCOMUtils.defineLazyModuleGetter(this, "DevToolsUtils",
+  "resource://gre/modules/devtools/DevToolsUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "HarExporter", function() {
+  return devtools.require("devtools/netmonitor/har/har-exporter.js").HarExporter;
+});
+
+XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function() {
+  return devtools.require("devtools/toolkit/webconsole/network-helper");
+});
+
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const EPSILON = 0.001;
 const SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE = 102400; // 100 KB in bytes
@@ -571,7 +584,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    */
   copyUrlParams: function() {
     let selected = this.selectedItem.attachment;
-    let params = nsIURL(selected.url).query.split("&");
+    let params = NetworkHelper.nsIURL(selected.url).query.split("&");
     let string = params.join(Services.appinfo.OS === "WINNT" ? "\r\n" : "\n");
     clipboardHelper.copyString(string);
   },
@@ -631,7 +644,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     let params = [];
     formDataSections.forEach(section => {
-      let paramsArray = parseQueryString(section);
+      let paramsArray = NetworkHelper.parseQueryString(section);
       if (paramsArray) {
         params = [...params, ...paramsArray];
       }
@@ -683,6 +696,34 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
       clipboardHelper.copyString(Curl.generateCommand(data));
     });
+  },
+
+  /**
+   * Copy HAR from the network panel content to the clipboard.
+   */
+  copyAllAsHar: function() {
+    let options = this.getDefaultHarOptions();
+    return HarExporter.copy(options);
+  },
+
+  /**
+   * Save HAR from the network panel content to a file.
+   */
+  saveAllAsHar: function() {
+    let options = this.getDefaultHarOptions();
+    return HarExporter.save(options);
+  },
+
+  getDefaultHarOptions: function() {
+    let form = NetMonitorController._target.form;
+    let title = form.title || form.url;
+
+    return {
+      getString: gNetwork.getString.bind(gNetwork),
+      view: this,
+      items: NetMonitorView.RequestsMenu.items,
+      title: title
+    };
   },
 
   /**
@@ -1521,7 +1562,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       case "url": {
         let uri;
         try {
-          uri = nsIURL(aValue);
+          uri = NetworkHelper.nsIURL(aValue);
         } catch(e) {
           break; // User input may not make a well-formed url yet.
         }
@@ -1944,7 +1985,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     copyUrlElement.hidden = !selectedItem;
 
     let copyUrlParamsElement = $("#request-menu-context-copy-url-params");
-    copyUrlParamsElement.hidden = !selectedItem || !nsIURL(selectedItem.attachment.url).query;
+    copyUrlParamsElement.hidden = !selectedItem || !NetworkHelper.nsIURL(selectedItem.attachment.url).query;
 
     let copyPostDataElement = $("#request-menu-context-copy-post-data");
     copyPostDataElement.hidden = !selectedItem || !selectedItem.attachment.requestPostData;
@@ -1971,6 +2012,12 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     let separators = $all(".request-menu-context-separator");
     Array.forEach(separators, separator => separator.hidden = !selectedItem);
+
+    let copyAsHar = $("#request-menu-context-copy-all-as-har");
+    copyAsHar.hidden = !NetMonitorView.RequestsMenu.items.length;
+
+    let saveAsHar = $("#request-menu-context-save-all-as-har");
+    saveAsHar.hidden = !NetMonitorView.RequestsMenu.items.length;
 
     let newTabElement = $("#request-menu-context-newtab");
     newTabElement.hidden = !selectedItem;
@@ -2010,7 +2057,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    */
   _getUriNameWithQuery: function(aUrl) {
     if (!(aUrl instanceof Ci.nsIURL)) {
-      aUrl = nsIURL(aUrl);
+      aUrl = NetworkHelper.nsIURL(aUrl);
     }
     let name = NetworkHelper.convertToUnicode(unescape(aUrl.fileName || aUrl.filePath || "/"));
     let query = NetworkHelper.convertToUnicode(unescape(aUrl.query));
@@ -2018,7 +2065,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
   _getUriHostPort: function(aUrl) {
     if (!(aUrl instanceof Ci.nsIURL)) {
-      aUrl = nsIURL(aUrl);
+      aUrl = NetworkHelper.nsIURL(aUrl);
     }
     return NetworkHelper.convertToUnicode(unescape(aUrl.hostPort));
   },
@@ -2254,7 +2301,7 @@ CustomRequestView.prototype = {
    *        The URL to extract query string from.
    */
   updateCustomQuery: function(aUrl) {
-    let paramsArray = parseQueryString(nsIURL(aUrl).query);
+    let paramsArray = NetworkHelper.parseQueryString(NetworkHelper.nsIURL(aUrl).query);
     if (!paramsArray) {
       $("#custom-query").hidden = true;
       return;
@@ -2274,7 +2321,7 @@ CustomRequestView.prototype = {
     let queryString = writeQueryString(params);
 
     let url = $("#custom-url-value").value;
-    let oldQuery = nsIURL(url).query;
+    let oldQuery = NetworkHelper.nsIURL(url).query;
     let path = url.replace(oldQuery, queryString);
 
     $("#custom-url-value").value = path;
@@ -2687,7 +2734,7 @@ NetworkDetailsView.prototype = {
    *        The request's url.
    */
   _setRequestGetParams: function(aUrl) {
-    let query = nsIURL(aUrl).query;
+    let query = NetworkHelper.nsIURL(aUrl).query;
     if (query) {
       this._addParams(this._paramsQueryString, query);
     }
@@ -2758,7 +2805,7 @@ NetworkDetailsView.prototype = {
    *        A query string of params (e.g. "?foo=bar&baz=42").
    */
   _addParams: function(aName, aQueryString) {
-    let paramsArray = parseQueryString(aQueryString);
+    let paramsArray = NetworkHelper.parseQueryString(aQueryString);
     if (!paramsArray) {
       return;
     }
@@ -2852,7 +2899,7 @@ NetworkDetailsView.prototype = {
 
       // Immediately display additional information about the image:
       // file name, mime type and encoding.
-      $("#response-content-image-name-value").setAttribute("value", nsIURL(aUrl).fileName);
+      $("#response-content-image-name-value").setAttribute("value", NetworkHelper.nsIURL(aUrl).fileName);
       $("#response-content-image-mime-value").setAttribute("value", mimeType);
       $("#response-content-image-encoding-value").setAttribute("value", encoding);
 
@@ -3283,44 +3330,6 @@ PerformanceStatisticsView.prototype = {
  */
 let $ = (aSelector, aTarget = document) => aTarget.querySelector(aSelector);
 let $all = (aSelector, aTarget = document) => aTarget.querySelectorAll(aSelector);
-
-/**
- * Helper for getting an nsIURL instance out of a string.
- */
-function nsIURL(aUrl, aStore = nsIURL.store) {
-  if (aStore.has(aUrl)) {
-    return aStore.get(aUrl);
-  }
-  let uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
-  aStore.set(aUrl, uri);
-  return uri;
-}
-nsIURL.store = new Map();
-
-/**
- * Parse a url's query string into its components
- *
- * @param string aQueryString
- *        The query part of a url
- * @return array
- *         Array of query params {name, value}
- */
-function parseQueryString(aQueryString) {
-  // Make sure there's at least one param available.
-  // Be careful here, params don't necessarily need to have values, so
-  // no need to verify the existence of a "=".
-  if (!aQueryString) {
-    return;
-  }
-  // Turn the params string into an array containing { name: value } tuples.
-  let paramsArray = aQueryString.replace(/^[?&]/, "").split("&").map(e => {
-    let param = e.split("=");
-    return {
-      name: param[0] ? NetworkHelper.convertToUnicode(unescape(param[0])) : "",
-      value: param[1] ? NetworkHelper.convertToUnicode(unescape(param[1])) : ""
-    }});
-  return paramsArray;
-}
 
 /**
  * Parse text representation of multiple HTTP headers.

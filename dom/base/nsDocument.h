@@ -1216,20 +1216,14 @@ public:
 
   static void ExitFullscreen(nsIDocument* aDoc);
 
+  // Do the "fullscreen element ready check" from the fullscreen spec.
+  // It returns true if the given element is allowed to go into fullscreen.
+  bool FullscreenElementReadyCheck(Element* aElement, bool aWasCallerChrome);
+
   // This is called asynchronously by nsIDocument::AsyncRequestFullScreen()
-  // to move this document into full-screen mode if allowed. aWasCallerChrome
-  // should be true when nsIDocument::AsyncRequestFullScreen() was called
-  // by chrome code. aNotifyOnOriginChange denotes whether we should trigger
-  // a MozFullscreenOriginChanged event if requesting fullscreen in this
-  // document causes the origin which is fullscreen to change. We may want to
-  // *not* send this notification if we're calling RequestFullScreen() as part
-  // of a continuation of a request in a subdocument, whereupon the caller will
-  // need to send some notification itself with the origin of the document
-  // which originally requested fullscreen, not *this* document's origin.
+  // to move this document into full-screen mode if allowed.
   void RequestFullScreen(Element* aElement,
-                         mozilla::dom::FullScreenOptions& aOptions,
-                         bool aWasCallerChrome,
-                         bool aNotifyOnOriginChange);
+                         const mozilla::dom::FullScreenOptions& aOptions);
 
   // Removes all elements from the full-screen stack, removing full-scren
   // styles from the top element in the stack.
@@ -1517,6 +1511,10 @@ protected:
   void EnsureOnloadBlocker();
 
   void NotifyStyleSheetApplicableStateChanged();
+
+  // Apply the fullscreen state to the document, and trigger related events.
+  void ApplyFullscreen(Element* aElement,
+                       const mozilla::dom::FullScreenOptions& aOptions);
 
   nsTArray<nsIObserver*> mCharSetObservers;
 

@@ -1432,7 +1432,7 @@ TenuredCell::readBarrier(TenuredCell* thing)
 {
     MOZ_ASSERT(!CurrentThreadIsIonCompiling());
     MOZ_ASSERT(!isNullLike(thing));
-    if (!thing->shadowRuntimeFromAnyThread()->needsIncrementalBarrier())
+    if (thing->shadowRuntimeFromAnyThread()->isHeapBusy())
         return;
 
     JS::shadow::Zone* shadowZone = thing->shadowZoneFromAnyThread();
@@ -1450,7 +1450,7 @@ TenuredCell::readBarrier(TenuredCell* thing)
 TenuredCell::writeBarrierPre(TenuredCell* thing)
 {
     MOZ_ASSERT(!CurrentThreadIsIonCompiling());
-    if (isNullLike(thing) || !thing->shadowRuntimeFromAnyThread()->needsIncrementalBarrier())
+    if (isNullLike(thing) || thing->shadowRuntimeFromAnyThread()->isHeapBusy())
         return;
 
     JS::shadow::Zone* shadowZone = thing->shadowZoneFromAnyThread();

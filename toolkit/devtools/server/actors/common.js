@@ -7,6 +7,7 @@
 "use strict";
 
 const promise = require("promise");
+const { method } = require("devtools/server/protocol");
 
 /**
  * Creates "registered" actors factory meant for creating another kind of
@@ -519,3 +520,19 @@ function expectState(expectedState, method, activity) {
 }
 
 exports.expectState = expectState;
+
+/**
+ * Proxies a call from an actor to an underlying module, stored
+ * as `bridge` on the actor. This allows a module to be defined in one
+ * place, usable by other modules/actors on the server, but a separate
+ * module defining the actor/RDP definition.
+ *
+ * @see Framerate implementation: toolkit/devtools/shared/framerate.js
+ * @see Framerate actor definition: toolkit/devtools/server/actors/framerate.js
+ */
+function actorBridge (methodName, definition={}) {
+  return method(function () {
+    return this.bridge[methodName].apply(this.bridge, arguments);
+  }, definition);
+}
+exports.actorBridge = actorBridge;

@@ -78,6 +78,8 @@ public:
         GonkDisplay::DisplayType aDisplayType,
         android::IGraphicBufferProducer* aProducer = nullptr) = 0;
 
+    virtual void NotifyBootAnimationStopped() = 0;
+
     float xdpi;
     int32_t surfaceformat;
 };

@@ -290,7 +290,7 @@ this.ReaderMode = {
   ],
 
   _shouldCheckUri: function (uri) {
-    if (!(uri.schemeIs("http") || uri.schemeIs("https") || uri.schemeIs("file"))) {
+    if (!(uri.schemeIs("http") || uri.schemeIs("https"))) {
       this.log("Not parsing URI scheme: " + uri.scheme);
       return false;
     }
