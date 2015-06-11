@@ -156,6 +156,15 @@ public:
   // sample will contains multiple audio frames.
   virtual nsRefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) = 0;
 
+  // Returns true if a call to GetSamples() may block while waiting on the
+  // underlying resource to return the data.
+  // This is used by the MediaFormatReader to determine if buffering heuristics
+  // should be used.
+  virtual bool GetSamplesMayBlock() const
+  {
+    return true;
+  }
+
   // Cancel all pending actions (Seek, GetSamples) and reset current state
   // All pending promises are to be rejected with CANCEL.
   // The next call to GetSamples would return the first sample available in the
