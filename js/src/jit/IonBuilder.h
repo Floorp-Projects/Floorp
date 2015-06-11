@@ -1210,6 +1210,10 @@ class IonBuilder
             trackInlineSuccessUnchecked(status);
     }
 
+    bool forceInlineCaches() {
+        return MOZ_UNLIKELY(js_JitOptions.forceInlineCaches);
+    }
+
     // Out-of-line variants that don't check if optimization tracking is
     // enabled.
     void trackTypeInfoUnchecked(JS::TrackedTypeSite site, MIRType mirType,
