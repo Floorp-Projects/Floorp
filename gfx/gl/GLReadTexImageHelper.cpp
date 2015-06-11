@@ -217,7 +217,10 @@ static void
 SwapRAndBComponents(DataSourceSurface* surf)
 {
     DataSourceSurface::MappedSurface map;
-    MOZ_ALWAYS_TRUE( surf->Map(DataSourceSurface::MapType::READ_WRITE, &map) );
+    if (!surf->Map(DataSourceSurface::MapType::READ_WRITE, &map)) {
+        MOZ_ASSERT(false, "SwapRAndBComponents: Failed to map surface.");
+        return;
+    }
     MOZ_ASSERT(map.mStride >= 0);
 
     const size_t rowBytes = surf->GetSize().width*4;
@@ -288,8 +291,11 @@ CopyDataSourceSurface(DataSourceSurface* aSource,
 
     DataSourceSurface::MappedSurface srcMap;
     DataSourceSurface::MappedSurface destMap;
-    MOZ_ALWAYS_TRUE( aSource->Map(DataSourceSurface::MapType::READ, &srcMap) );
-    MOZ_ALWAYS_TRUE( aDest->Map(DataSourceSurface::MapType::WRITE, &destMap) );
+    if (!aSource->Map(DataSourceSurface::MapType::READ, &srcMap) ||
+        !aDest->Map(DataSourceSurface::MapType::WRITE, &destMap)) {
+        MOZ_ASSERT(false, "CopyDataSourceSurface: Failed to map surface.");
+        return;
+    }
     MOZ_ASSERT(srcMap.mStride >= 0);
     MOZ_ASSERT(destMap.mStride >= 0);
 
