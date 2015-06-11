@@ -139,6 +139,11 @@ IccService.prototype = {
 
     let icc = this.getIccByServiceId(aServiceId);
 
+    if (!icc.iccInfo || !icc.iccInfo.iccid) {
+      debug("Warning: got STK command when iccid is invalid.");
+      return;
+    }
+
     gIccMessenger.notifyStkProactiveCommand(icc.iccInfo.iccid, aStkcommand);
 
     icc._deliverListenerEvent("notifyStkCommand", [aStkcommand]);

@@ -1002,7 +1002,8 @@ loop.panel = (function(_, mozL10n) {
       mozLoop={navigator.mozLoop}
       dispatcher={dispatcher} />, document.querySelector("#main"));
 
-    document.body.setAttribute("dir", mozL10n.getDirection());
+    document.documentElement.setAttribute("lang", mozL10n.getLanguage());
+    document.documentElement.setAttribute("dir", mozL10n.getDirection());
     document.body.setAttribute("platform", loop.shared.utils.getPlatform());
 
     // Notify the window that we've finished initalization and initial layout

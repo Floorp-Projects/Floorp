@@ -51,10 +51,20 @@ add_task(function* test_fill() {
     Assert.equal(list.childNodes.length, 1,
                  "list.childNodes.length === 1");
 
+    // The button will be focused after the "transitionend" event.
+    list.focus();
+    yield new Promise(resolve => executeSoon(resolve));
+    let details = document.getElementById("login-fill-details");
+    let promiseSubview = BrowserTestUtils.waitForEvent(details,
+                                                       "transitionend", true,
+                                                       e => e.target == details);
+    EventUtils.sendMouseEvent({ type: "click" }, list.childNodes[0]);
+    yield promiseSubview;
+
+    // Clicking the button will dismiss the panel.
     let promiseHidden = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
                                                       "popuphidden");
-    list.focus();
-    EventUtils.sendMouseEvent({ type: "dblclick" }, list.childNodes[0]);
+    document.getElementById("login-fill-use").click();
     yield promiseHidden;
 
     let result = yield ContentTask.spawn(browser, null, function* () {

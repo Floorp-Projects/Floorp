@@ -36,14 +36,20 @@ PerformancePanel.prototype = {
     this.panelWin.gTarget = this.target;
     this._onRecordingStartOrStop = this._onRecordingStartOrStop.bind(this);
 
-    // Connection is already created in the toolbox; reuse
-    // the same connection.
-    this._connection = this.panelWin.gToolbox.getPerformanceActorsConnection();
-    // The toolbox will also open the connection, but attempt to open it again
-    // incase it's still in the process of opening.
-    yield this._connection.open();
+    // Actor is already created in the toolbox; reuse
+    // the same front, and the toolbox will also initialize the front,
+    // but redo it here so we can hook into the same event to prevent race conditions
+    // in the case of the front still being in the process of opening.
+    let front = yield this.panelWin.gToolbox.initPerformance();
 
-    this.panelWin.gFront = new PerformanceFront(this._connection);
+    // This should only happen if this is completely unsupported (when profiler
+    // does not exist), and in that case, the tool shouldn't be available,
+    // so let's ensure this assertion.
+    if (!front) {
+      Cu.reportError("No PerformanceFront found in toolbox.");
+    }
+
+    this.panelWin.gFront = front;
     this.panelWin.gFront.on("recording-started", this._onRecordingStartOrStop);
     this.panelWin.gFront.on("recording-stopped", this._onRecordingStartOrStop);
 

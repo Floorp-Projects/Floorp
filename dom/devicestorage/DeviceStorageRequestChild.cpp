@@ -193,11 +193,12 @@ DeviceStorageRequestChild::
         = static_cast<nsDOMDeviceStorageCursor*>(mRequest.get());
 
       uint32_t count = r.paths().Length();
+      cursor->mFiles.SetCapacity(count);
       for (uint32_t i = 0; i < count; i++) {
         nsRefPtr<DeviceStorageFile> dsf
           = new DeviceStorageFile(r.type(), r.paths()[i].storageName(),
                                   r.rootdir(), r.paths()[i].name());
-        cursor->mFiles.AppendElement(dsf);
+        cursor->mFiles.AppendElement(dsf.forget());
       }
 
       nsRefPtr<ContinueCursorEvent> event = new ContinueCursorEvent(cursor);

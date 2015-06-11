@@ -880,6 +880,8 @@ EnvironmentCache.prototype = {
     this._currentEnvironment.settings = this._currentEnvironment.settings || {};
     // Update the search engine entry in the current environment.
     this._currentEnvironment.settings.defaultSearchEngine = this._getDefaultSearchEngine();
+    this._currentEnvironment.settings.defaultSearchEngineData =
+      Services.search.getDefaultEngineInfo();
   },
 
   /**
@@ -900,13 +902,13 @@ EnvironmentCache.prototype = {
    */
   _getBuild: function () {
     let buildData = {
-      applicationId: Services.appinfo.ID,
-      applicationName: Services.appinfo.name,
+      applicationId: Services.appinfo.ID || null,
+      applicationName: Services.appinfo.name || null,
       architecture: Services.sysinfo.get("arch"),
-      buildId: Services.appinfo.appBuildID,
-      version: Services.appinfo.version,
-      vendor: Services.appinfo.vendor,
-      platformVersion: Services.appinfo.platformVersion,
+      buildId: Services.appinfo.appBuildID || null,
+      version: Services.appinfo.version || null,
+      vendor: Services.appinfo.vendor || null,
+      platformVersion: Services.appinfo.platformVersion || null,
       xpcomAbi: Services.appinfo.XPCOMABI,
       hotfixVersion: Preferences.get(PREF_HOTFIX_LASTVERSION, null),
     };

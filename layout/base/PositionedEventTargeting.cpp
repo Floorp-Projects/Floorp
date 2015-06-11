@@ -417,7 +417,8 @@ IsElementClickableAndReadable(nsIFrame* aFrame, WidgetGUIEvent* aEvent, const Ev
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
     nsLayoutUtils::FontSizeInflationFor(aFrame));
   if (fm) {
-    if ((pc->AppUnitsToGfxUnits(fm->EmHeight()) * cumulativeResolution) < limitReadableSize) {
+    if ((fm->EmHeight() > 0) && // See bug 1171731
+        (pc->AppUnitsToGfxUnits(fm->EmHeight()) * cumulativeResolution) < limitReadableSize) {
       return false;
     }
   }

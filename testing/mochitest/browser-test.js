@@ -461,7 +461,7 @@ Tester.prototype = {
         if (this._globalProperties.indexOf(prop) == -1) {
           this._globalProperties.push(prop);
           if (this._globalPropertyWhitelist.indexOf(prop) == -1)
-            this.currentTest.addResult(new testResult(false, "leaked window property: " + prop, "", false));
+            this.currentTest.addResult(new testResult(false, "test left unexpected property on window: " + prop, "", false));
         }
       }, this);
 

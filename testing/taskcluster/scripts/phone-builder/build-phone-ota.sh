@@ -16,7 +16,7 @@ mar_file=b2g-$PLATFORM-gecko-update.mar
 # We need different platform names for each variant (user, userdebug and
 # eng). We do not append variant suffix for "user" to keep compability with
 # verions already installed in the phones.
-if [ 0$DOGFOOD -ne 0 -o $VARIANT != "user" ]; then
+if [ 0$DOGFOOD -ne 1 -a $VARIANT != "user" ]; then
   PLATFORM=$PLATFORM-$VARIANT
 fi
 

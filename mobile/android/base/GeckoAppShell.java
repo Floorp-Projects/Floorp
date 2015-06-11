@@ -54,6 +54,7 @@ import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.PendingIntent;
@@ -1199,10 +1200,12 @@ public class GeckoAppShell
                 return null;
             }
 
-            // We only handle explicit Intents at the moment (see bug 851693 comment 20).
-            if (intent.getPackage() == null) {
-                return null;
-            }
+            // Only handle applications which can accept arbitrary data from a browser.
+            intent.addCategory(Intent.CATEGORY_BROWSABLE);
+
+            // Prevent site from explicitly opening our internal activities, which can leak data.
+            intent.setComponent(null);
+            nullIntentSelector(intent);
 
             return intent;
         }
@@ -1279,6 +1282,16 @@ public class GeckoAppShell
         intent.setData(pruned);
 
         return intent;
+    }
+
+    // We create a separate method to better encapsulate the @TargetApi use.
+    @TargetApi(15)
+    private static void nullIntentSelector(final Intent intent) {
+        if (!Versions.feature15Plus) {
+            return;
+        }
+
+        intent.setSelector(null);
     }
 
     /**
@@ -2410,17 +2423,6 @@ public class GeckoAppShell
                 GeckoNetworkManager.getInstance().disableNotifications();
             }
         });
-    }
-
-    /**
-     * Decodes a byte array from Base64 format.
-     * No blanks or line breaks are allowed within the Base64 encoded input data.
-     * @param s     A string containing the Base64 encoded data.
-     * @return      An array containing the decoded data bytes.
-     * @throws      IllegalArgumentException If the input is not valid Base64 encoded data.
-     */
-    public static byte[] decodeBase64(String s, int flags) {
-        return Base64.decode(s.getBytes(), flags);
     }
 
     @WrapElementForJNI(stubName = "GetScreenOrientationWrapper")

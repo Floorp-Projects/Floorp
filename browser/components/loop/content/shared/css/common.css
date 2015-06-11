@@ -426,7 +426,7 @@ p {
   border-radius: 2px;
 }
 
-body[dir=rtl] .dropdown-menu {
+html[dir="rtl"] .dropdown-menu {
   left: auto;
   right: 0;
 }
@@ -481,7 +481,7 @@ body[dir=rtl] .dropdown-menu {
   background-size: 1em 1em;
 }
 
-body[dir="rtl"] .checkbox {
+html[dir="rtl"] .checkbox {
   float: right;
 }
 

@@ -4,6 +4,14 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* ::::: Variables ::::: */
+.panel-arrowcontent {
+  --panel-arrowcontent-padding: 10px;
+  --panel-arrowcontent-background: -moz-Dialog;
+  --panel-arrowcontent-color: -moz-DialogText;
+  --panel-arrowcontent-border: 1px solid ThreeDShadow;
+}
+
 /* ::::: menupopup ::::: */
 
 menupopup,
@@ -32,10 +40,10 @@ panel[type="arrow"][side="right"] {
 }
 
 .panel-arrowcontent {
-  padding: 10px;
-  color: -moz-DialogText;
-  background: -moz-Dialog;
-  border: 1px solid ThreeDShadow;
+  padding: var(--panel-arrowcontent-padding);
+  color: var(--panel-arrowcontent-color);
+  background: var(--panel-arrowcontent-background);
+  border: var(--panel-arrowcontent-border);
 }
 
 .panel-arrow[side="top"],

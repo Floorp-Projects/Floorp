@@ -77,10 +77,15 @@ loop.store.ActiveRoomStore = (function() {
      */
     _statesToResetOnLeave: [
       "audioMuted",
+      "localSrcVideoObject",
       "localVideoDimensions",
+      "mediaConnected",
       "receivingScreenShare",
+      "remoteSrcVideoObject",
       "remoteVideoDimensions",
+      "remoteVideoEnabled",
       "screenSharingState",
+      "screenShareVideoObject",
       "videoMuted"
     ],
 
@@ -95,6 +100,7 @@ loop.store.ActiveRoomStore = (function() {
         roomState: ROOM_STATES.INIT,
         audioMuted: false,
         videoMuted: false,
+        remoteVideoEnabled: false,
         failureReason: undefined,
         // Tracks if the room has been used during this
         // session. 'Used' means at least one call has been placed
@@ -115,7 +121,10 @@ loop.store.ActiveRoomStore = (function() {
         roomInfoFailure: null,
         // The name of the room.
         roomName: null,
-        socialShareProviders: null
+        // Social API state.
+        socialShareProviders: null,
+        // True if media has been connected both-ways.
+        mediaConnected: false
       };
     },
 
@@ -169,11 +178,15 @@ loop.store.ActiveRoomStore = (function() {
         "windowUnload",
         "leaveRoom",
         "feedbackComplete",
+        "localVideoEnabled",
+        "remoteVideoEnabled",
+        "remoteVideoDisabled",
         "videoDimensionsChanged",
         "startScreenShare",
         "endScreenShare",
         "updateSocialShareInfo",
-        "connectionStatus"
+        "connectionStatus",
+        "mediaConnected"
       ]);
     },
 
@@ -551,6 +564,41 @@ loop.store.ActiveRoomStore = (function() {
     },
 
     /**
+     * Records the local video object for the room.
+     *
+     * @param {sharedActions.LocalVideoEnabled} actionData
+     */
+    localVideoEnabled: function(actionData) {
+      this.setStoreState({localSrcVideoObject: actionData.srcVideoObject});
+    },
+
+    /**
+     * Records the remote video object for the room.
+     *
+     * @param  {sharedActions.RemoteVideoEnabled} actionData
+     */
+    remoteVideoEnabled: function(actionData) {
+      this.setStoreState({
+        remoteVideoEnabled: true,
+        remoteSrcVideoObject: actionData.srcVideoObject
+      });
+    },
+
+    /**
+     * Records when remote video is disabled (e.g. due to mute).
+     */
+    remoteVideoDisabled: function() {
+      this.setStoreState({remoteVideoEnabled: false});
+    },
+
+    /**
+     * Records when the remote media has been connected.
+     */
+    mediaConnected: function() {
+      this.setStoreState({mediaConnected: true});
+    },
+
+    /**
      * Used to note the current screensharing state.
      */
     screenSharingState: function(actionData) {
@@ -563,6 +611,9 @@ loop.store.ActiveRoomStore = (function() {
 
     /**
      * Used to note the current state of receiving screenshare data.
+     *
+     * XXX this is going to need to be split into two actions so when
+     * can display a spinner when the screen share is pending (bug 1171933)
      */
     receivingScreenShare: function(actionData) {
       if (!actionData.receiving &&
@@ -573,10 +624,15 @@ loop.store.ActiveRoomStore = (function() {
         delete newDimensions.screen;
         this.setStoreState({
           receivingScreenShare: actionData.receiving,
-          remoteVideoDimensions: newDimensions
+          remoteVideoDimensions: newDimensions,
+          screenShareVideoObject: null
         });
       } else {
-        this.setStoreState({receivingScreenShare: actionData.receiving});
+        this.setStoreState({
+          receivingScreenShare: actionData.receiving,
+          screenShareVideoObject: actionData.srcVideoObject ?
+                                  actionData.srcVideoObject : null
+        });
       }
     },
 
@@ -676,7 +732,10 @@ loop.store.ActiveRoomStore = (function() {
      * one participantleaves.
      */
     remotePeerDisconnected: function() {
-      this.setStoreState({roomState: ROOM_STATES.SESSION_CONNECTED});
+      this.setStoreState({
+        roomState: ROOM_STATES.SESSION_CONNECTED,
+        remoteSrcVideoObject: null
+      });
     },
 
     /**

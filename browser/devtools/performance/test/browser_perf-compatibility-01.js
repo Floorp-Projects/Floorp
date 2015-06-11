@@ -13,6 +13,7 @@ function* spawnTest() {
     TEST_MOCK_TIMELINE_ACTOR: true
   });
   Services.prefs.setBoolPref(MEMORY_PREF, true);
+  Services.prefs.setBoolPref(ALLOCATIONS_PREF, true);
 
   let { memory, timeline } = front.getActorSupport();
   ok(!memory, "memory should be mocked.");

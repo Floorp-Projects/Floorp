@@ -93,6 +93,8 @@ loop.store = loop.store || {};
         callId: undefined,
         // The caller id of the contacting side
         callerId: undefined,
+        // True if media has been connected both-ways.
+        mediaConnected: false,
         // The connection progress url to connect the websocket
         progressURL: undefined,
         // The websocket token that allows connection to the progress url
@@ -103,10 +105,11 @@ loop.store = loop.store || {};
         sessionId: undefined,
         // SDK session token
         sessionToken: undefined,
-        // If the audio is muted
+        // If the local audio is muted
         audioMuted: false,
-        // If the video is muted
-        videoMuted: false
+        // If the local video is muted
+        videoMuted: false,
+        remoteVideoEnabled: false
       };
     },
 
@@ -232,6 +235,9 @@ loop.store = loop.store || {};
         "mediaConnected",
         "setMute",
         "fetchRoomEmailLink",
+        "localVideoEnabled",
+        "remoteVideoDisabled",
+        "remoteVideoEnabled",
         "windowUnload"
       ]);
 
@@ -408,6 +414,7 @@ loop.store = loop.store || {};
      */
     mediaConnected: function() {
       this._websocket.mediaUp();
+      this.setStoreState({mediaConnected: true});
     },
 
     /**
@@ -438,6 +445,44 @@ loop.store = loop.store || {};
         }
         this.setStoreState({"emailLink": createdRoomData.roomUrl});
       }.bind(this));
+    },
+
+    /**
+     * Handles when the remote stream has been enabled and is supplied.
+     *
+     * @param  {sharedActions.RemoteVideoEnabled} actionData
+     */
+    remoteVideoEnabled: function(actionData) {
+      this.setStoreState({
+        remoteVideoEnabled: true,
+        remoteSrcVideoObject: actionData.srcVideoObject
+      });
+    },
+
+    /**
+     * Handles when the remote stream has been disabled, e.g. due to video mute.
+     *
+     * @param {sharedActions.RemoteVideoDisabled} actionData
+     */
+    remoteVideoDisabled: function(actionData) {
+      this.setStoreState({
+        remoteVideoEnabled: false,
+        remoteSrcVideoObject: undefined});
+    },
+
+    /**
+     * Handles when the local stream is supplied.
+     *
+     * XXX should write a localVideoDisabled action in otSdkDriver.js to
+     * positively ensure proper cleanup (handled by window teardown currently)
+     * (see bug 1171978)
+     *
+     * @param  {sharedActions.LocalVideoEnabled} actionData
+     */
+    localVideoEnabled: function(actionData) {
+      this.setStoreState({
+        localSrcVideoObject: actionData.srcVideoObject
+      });
     },
 
     /**

@@ -84,15 +84,8 @@ ObjectActor.prototype = {
     };
 
     if (this.obj.class != "DeadObject") {
-      // Expose internal Promise state.
       if (this.obj.class == "Promise") {
-        const { state, value, reason } = getPromiseState(this.obj);
-        g.promiseState = { state };
-        if (state == "fulfilled") {
-          g.promiseState.value = this.hooks.createValueGrip(value);
-        } else if (state == "rejected") {
-          g.promiseState.reason = this.hooks.createValueGrip(reason);
-        }
+        g.promiseState = this._createPromiseState();
       }
 
       // FF40+: Allow to know how many properties an object has
@@ -133,6 +126,32 @@ ObjectActor.prototype = {
 
     this.hooks.decrementGripDepth();
     return g;
+  },
+
+  /**
+   * Returns an object exposing the internal Promise state.
+   */
+  _createPromiseState: function() {
+    const { state, value, reason } = getPromiseState(this.obj);
+    let promiseState = { state };
+    let rawPromise = this.obj.unsafeDereference();
+
+    if (state == "fulfilled") {
+      promiseState.value = this.hooks.createValueGrip(value);
+    } else if (state == "rejected") {
+      promiseState.reason = this.hooks.createValueGrip(reason);
+    }
+
+    promiseState.creationTimestamp = Date.now() -
+      PromiseDebugging.getPromiseLifetime(rawPromise);
+
+    // If the promise is not settled, avoid adding the timeToSettle property
+    // and catch the error thrown by PromiseDebugging.getTimeToSettle.
+    try {
+      promiseState.timeToSettle = PromiseDebugging.getTimeToSettle(rawPromise);
+    } catch(e) {}
+
+    return promiseState;
   },
 
   /**
@@ -499,6 +518,28 @@ ObjectActor.prototype = {
     }
 
     return { from: this.actorID, scope: envActor.form() };
+  },
+
+  /**
+   * Handle a protocol request to get the list of dependent promises of a
+   * promise.
+   *
+   * @return object
+   *         Returns an object containing an array of object grips of the
+   *         dependent promises
+   */
+  onDependentPromises: function() {
+    if (this.obj.class != "Promise") {
+      return { error: "objectNotPromise",
+               message: "'dependentPromises' request is only valid for " +
+                        "object grips with a 'Promise' class." };
+    }
+
+    let rawPromise = this.obj.unsafeDereference();
+    let promises = PromiseDebugging.getDependentPromises(rawPromise).map(p =>
+      this.hooks.createValueGrip(this.obj.makeDebuggeeValue(p)));
+
+    return { promises };
   }
 };
 
@@ -514,6 +555,7 @@ ObjectActor.prototype.requestTypes = {
   "decompile": ObjectActor.prototype.onDecompile,
   "release": ObjectActor.prototype.onRelease,
   "scope": ObjectActor.prototype.onScope,
+  "dependentPromises": ObjectActor.prototype.onDependentPromises
 };
 
 /**
