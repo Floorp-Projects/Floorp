@@ -235,9 +235,9 @@ ThreadNode.prototype = {
                                           leafTable);
         if (isLeaf) {
           frameNode.youngestFrameSamples++;
+          frameNode._addOptimizations(inflatedFrame.optimizations, stringTable);
         }
         frameNode.samples++;
-        frameNode._addOptimizations(inflatedFrame.optimizations, stringTable);
 
         prevFrameKey = frameKey;
         prevCalls = frameNode.calls;
