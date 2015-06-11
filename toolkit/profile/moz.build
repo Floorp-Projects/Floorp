@@ -15,12 +15,12 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'toolkitprofile'
 
 UNIFIED_SOURCES += [
-    '/profile/dirserviceprovider/nsProfileLock.cpp'
+    'nsProfileLock.cpp'
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
-        '/profile/dirserviceprovider/ProfileUnlockerWin.cpp'
+        'ProfileUnlockerWin.cpp'
     ]
 
 UNIFIED_SOURCES += [
@@ -29,7 +29,6 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += [
     '../xre',
-    '/profile/dirserviceprovider',
 ]
 
 FAIL_ON_WARNINGS = True
