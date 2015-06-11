@@ -7,35 +7,3 @@
 #identity-popup {
   margin-top: 1px;
 }
-
-/* Popup Icons */
-#identity-popup-icon {
-  height: 64px;
-  width: 64px;
-  padding: 0;
-  list-style-image: url("chrome://browser/skin/identity.png");
-  -moz-image-region: rect(0px, 64px, 64px, 0px);
-}
-
-#identity-popup.verifiedDomain > #identity-popup-container > #identity-popup-icon {
-  -moz-image-region: rect(64px, 64px, 128px, 0px);
-}
-
-#identity-popup.verifiedIdentity > #identity-popup-container > #identity-popup-icon {
-  -moz-image-region: rect(128px, 64px, 192px, 0px);
-}
-
-@media (min-resolution: 2dppx) {
-  #identity-popup-icon {
-    list-style-image: url("chrome://browser/skin/identity@2x.png");
-    -moz-image-region: rect(0px, 128px, 128px, 0px);
-  }
-
-  #identity-popup.verifiedDomain > #identity-popup-container > #identity-popup-icon {
-    -moz-image-region: rect(128px, 128px, 256px, 0px);
-  }
-
-  #identity-popup.verifiedIdentity > #identity-popup-container > #identity-popup-icon {
-    -moz-image-region: rect(256px, 128px, 384px, 0px);
-  }
-}

@@ -6605,11 +6605,6 @@ var gIdentityHandler = {
     delete this._identityBox;
     return this._identityBox = document.getElementById("identity-box");
   },
-  get _identityPopupContentBox () {
-    delete this._identityPopupContentBox;
-    return this._identityPopupContentBox =
-      document.getElementById("identity-popup-content-box");
-  },
   get _identityPopupContentHost () {
     delete this._identityPopupContentHost;
     return this._identityPopupContentHost =
@@ -6629,6 +6624,16 @@ var gIdentityHandler = {
     delete this._identityPopupContentVerif;
     return this._identityPopupContentVerif =
       document.getElementById("identity-popup-content-verifier");
+  },
+  get _identityPopupSecurityContent () {
+    delete this._identityPopupSecurityContent;
+    return this._identityPopupSecurityContent =
+      document.getElementById("identity-popup-security-content");
+  },
+  get _identityPopupSecurityView () {
+    delete this._identityPopupSecurityView;
+    return this._identityPopupSecurityView =
+      document.getElementById("identity-popup-securityView");
   },
   get _identityIconLabel () {
     delete this._identityIconLabel;
@@ -6683,6 +6688,11 @@ var gIdentityHandler = {
     displaySecurityInfo();
     event.stopPropagation();
     this._identityPopup.hidePopup();
+  },
+
+  showSubView(name, anchor) {
+    let view = document.getElementById("identity-popup-multiView");
+    view.showSubView(`identity-popup-${name}View`, anchor);
   },
 
   /**
@@ -6947,7 +6957,8 @@ var gIdentityHandler = {
   setPopupMessages : function(newMode) {
 
     this._identityPopup.className = newMode;
-    this._identityPopupContentBox.className = newMode;
+    this._identityPopupSecurityView.className = newMode;
+    this._identityPopupSecurityContent.className = newMode;
 
     // Initialize the optional strings to empty values
     let supplemental = "";
@@ -6955,16 +6966,11 @@ var gIdentityHandler = {
     let host = "";
     let owner = "";
 
-    if (newMode == this.IDENTITY_MODE_CHROMEUI) {
-      let brandBundle = document.getElementById("bundle_brand");
-      host = brandBundle.getString("brandFullName");
-    } else {
-      try {
-        host = this.getEffectiveHost();
-      } catch (e) {
-        // Some URIs might have no hosts.
-        host = this._lastUri.specIgnoringRef;
-      }
+    try {
+      host = this.getEffectiveHost();
+    } catch (e) {
+      // Some URIs might have no hosts.
+      host = this._lastUri.specIgnoringRef;
     }
 
     switch (newMode) {
@@ -7001,10 +7007,13 @@ var gIdentityHandler = {
     // Push the appropriate strings out to the UI. Need to use |value| for the
     // host as it's a <label> that will be cropped if too long. Using
     // |textContent| would simply wrap the value.
-    this._identityPopupContentHost.value = host;
+    this._identityPopupContentHost.setAttribute("value", host);
     this._identityPopupContentOwner.textContent = owner;
     this._identityPopupContentSupp.textContent = supplemental;
     this._identityPopupContentVerif.textContent = verifier;
+
+    // Hide subviews when updating panel information.
+    document.getElementById("identity-popup-multiView").showMainView();
   },
 
   /**
@@ -7129,6 +7138,7 @@ var gIdentityHandler = {
 
     let label = document.createElement("label");
     label.setAttribute("flex", "1");
+    label.setAttribute("class", "identity-popup-permission-label");
     label.setAttribute("control", menulist.getAttribute("id"));
     label.setAttribute("value", SitePermissions.getPermissionLabel(aPermission));
 
