@@ -58,34 +58,6 @@ private:
   uint32_t mUpdateID;
 };
 
-class RangeRemovalRunnable : public nsRunnable {
-public:
-  RangeRemovalRunnable(SourceBuffer* aSourceBuffer,
-                       double aStart,
-                       double aEnd)
-  : mSourceBuffer(aSourceBuffer)
-  , mStart(aStart)
-  , mEnd(aEnd)
-  { }
-
-  NS_IMETHOD Run() override final {
-
-    if (!mSourceBuffer->mUpdating) {
-      // abort was called in between.
-      return NS_OK;
-    }
-    mSourceBuffer->DoRangeRemoval(mStart, mEnd);
-    mSourceBuffer->StopUpdating();
-
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<SourceBuffer> mSourceBuffer;
-  double mStart;
-  double mEnd;
-};
-
 void
 SourceBuffer::SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv)
 {
@@ -245,29 +217,20 @@ SourceBuffer::Remove(double aStart, double aEnd, ErrorResult& aRv)
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
   }
 
-  StartUpdating();
-  nsCOMPtr<nsIRunnable> task = new RangeRemovalRunnable(this, aStart, aEnd);
-  NS_DispatchToMainThread(task);
+  RangeRemoval(aStart, aEnd);
 }
 
 void
 SourceBuffer::RangeRemoval(double aStart, double aEnd)
 {
   StartUpdating();
-  DoRangeRemoval(aStart, aEnd);
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableMethod(this, &SourceBuffer::StopUpdating);
-  NS_DispatchToMainThread(task);
-}
 
-void
-SourceBuffer::DoRangeRemoval(double aStart, double aEnd)
-{
-  MSE_DEBUG("DoRangeRemoval(%f, %f)", aStart, aEnd);
-  if (mContentManager && !IsInfinite(aStart)) {
-    mContentManager->RangeRemoval(TimeUnit::FromSeconds(aStart),
-                                  TimeUnit::FromSeconds(aEnd));
-  }
+  nsRefPtr<SourceBuffer> self = this;
+  mContentManager->RangeRemoval(TimeUnit::FromSeconds(aStart),
+                                TimeUnit::FromSeconds(aEnd))
+    ->Then(AbstractThread::MainThread(), __func__,
+           [self] (bool) { self->StopUpdating(); },
+           []() { MOZ_ASSERT(false); });
 }
 
 void

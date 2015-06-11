@@ -117,8 +117,6 @@ public:
 
   // Runs the range removal algorithm as defined by the MSE spec.
   void RangeRemoval(double aStart, double aEnd);
-  // Actually remove data between aStart and aEnd
-  void DoRangeRemoval(double aStart, double aEnd);
 
   bool IsActive() const
   {
@@ -134,7 +132,6 @@ private:
 
   friend class AsyncEventRunner<SourceBuffer>;
   friend class BufferAppendRunnable;
-  friend class RangeRemovalRunnable;
   void DispatchSimpleEvent(const char* aName);
   void QueueAsyncSimpleEvent(const char* aName);
 
