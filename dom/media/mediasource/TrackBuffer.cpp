@@ -138,18 +138,32 @@ TrackBuffer::ContinueShutdown()
   mShutdownPromise.Resolve(true, __func__);
 }
 
-nsRefPtr<TrackBuffer::AppendPromise>
+bool
 TrackBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  mInputBuffer = aData;
+  mTimestampOffset = aTimestampOffset;
+  return true;
+}
+
+nsRefPtr<TrackBuffer::AppendPromise>
+TrackBuffer::BufferAppend()
+{
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mInitializationPromise.IsEmpty());
+  MOZ_ASSERT(mInputBuffer);
+
+  if (mInputBuffer->IsEmpty()) {
+    return AppendPromise::CreateAndResolve(false, __func__);
+  }
 
   DecodersToInitialize decoders(this);
   nsRefPtr<AppendPromise> p = mInitializationPromise.Ensure(__func__);
   bool hadInitData = mParser->HasInitData();
   bool hadCompleteInitData = mParser->HasCompleteInitData();
   nsRefPtr<MediaLargeByteBuffer> oldInit = mParser->InitData();
-  bool newInitData = mParser->IsInitSegmentPresent(aData);
+  bool newInitData = mParser->IsInitSegmentPresent(mInputBuffer);
 
   // TODO: Run more of the buffer append algorithm asynchronously.
   if (newInitData) {
@@ -161,14 +175,14 @@ TrackBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset)
   }
 
   int64_t start = 0, end = 0;
-  bool gotMedia = mParser->ParseStartAndEndTimestamps(aData, start, end);
+  bool gotMedia = mParser->ParseStartAndEndTimestamps(mInputBuffer, start, end);
   bool gotInit = mParser->HasCompleteInitData();
 
   if (newInitData) {
     if (!gotInit) {
       // We need a new decoder, but we can't initialize it yet.
       nsRefPtr<SourceBufferDecoder> decoder =
-        NewDecoder(aTimestampOffset);
+        NewDecoder(mTimestampOffset);
       // The new decoder is stored in mDecoders/mCurrentDecoder, so we
       // don't need to do anything with 'decoder'. It's only a placeholder.
       if (!decoder) {
@@ -176,7 +190,7 @@ TrackBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset)
         return p;
       }
     } else {
-      if (!decoders.NewDecoder(aTimestampOffset)) {
+      if (!decoders.NewDecoder(mTimestampOffset)) {
         mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
         return p;
       }
@@ -189,9 +203,9 @@ TrackBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset)
   }
 
   if (gotMedia) {
-    if (mParser->IsMediaSegmentPresent(aData) && mLastEndTimestamp &&
+    if (mParser->IsMediaSegmentPresent(mInputBuffer) && mLastEndTimestamp &&
         (!mParser->TimestampsFuzzyEqual(start, mLastEndTimestamp.value()) ||
-         mLastTimestampOffset != aTimestampOffset ||
+         mLastTimestampOffset != mTimestampOffset ||
          mDecoderPerSegment ||
          (mCurrentDecoder && mCurrentDecoder->WasTrimmed()))) {
       MSE_DEBUG("Data last=[%lld, %lld] overlaps [%lld, %lld]",
@@ -202,7 +216,7 @@ TrackBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset)
         // processed or not continuous, so we must create a new decoder
         // to handle the decoding.
         if (!hadCompleteInitData ||
-            !decoders.NewDecoder(aTimestampOffset)) {
+            !decoders.NewDecoder(mTimestampOffset)) {
           mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
           return p;
         }
@@ -228,7 +242,7 @@ TrackBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset)
     mAdjustedTimestamp = starttu;
   }
 
-  if (!AppendDataToCurrentResource(aData, end - start)) {
+  if (!AppendDataToCurrentResource(mInputBuffer, end - start)) {
     mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
     return p;
   }
@@ -957,6 +971,7 @@ TrackBuffer::ResetParserState()
     mParser = ContainerParser::CreateForMIMEType(mType);
     DiscardCurrentDecoder();
   }
+  mInputBuffer = nullptr;
 }
 
 void

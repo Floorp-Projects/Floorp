@@ -28,11 +28,15 @@ public:
   static already_AddRefed<SourceBufferContentManager>
   CreateManager(MediaSourceDecoder* aParentDecoder, const nsACString& aType);
 
-  // Append data to the current decoder.  Also responsible for calling
-  // NotifyDataArrived on the decoder to keep buffered range computation up
-  // to date.  Returns false if the append failed.
-  virtual nsRefPtr<AppendPromise>
-  AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset /* microseconds */) = 0;
+  // Add data to the end of the input buffer.
+  // Returns false if the append failed.
+  virtual bool
+  AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset) = 0;
+
+  // Run MSE Buffer Append Algorithm
+  // 3.5.5 Buffer Append Algorithm.
+  // http://w3c.github.io/media-source/index.html#sourcebuffer-buffer-append
+  virtual nsRefPtr<AppendPromise> BufferAppend() = 0;
 
   // Abort any pending AppendData.
   virtual void AbortAppendData() = 0;
