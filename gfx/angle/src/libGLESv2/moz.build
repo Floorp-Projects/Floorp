@@ -226,6 +226,10 @@ else:
 
 GeckoSharedLibrary('libGLESv2', linkage=None)
 
+USE_LIBS += [
+    'mozalloc',
+]
+
 RCFILE = SRCDIR + '/libGLESv2.rc'
 DEFFILE = SRCDIR + '/libGLESv2.def'
 
