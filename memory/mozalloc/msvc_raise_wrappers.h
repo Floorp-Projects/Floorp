@@ -23,11 +23,11 @@ namespace std {
 // doing this after careful review because we want to define our own
 // exception throwing semantics.  Don't try this at home!
 
-MFBT_API __declspec(noreturn) void moz_Xinvalid_argument(const char*);
-MFBT_API __declspec(noreturn) void moz_Xlength_error(const char*);
-MFBT_API __declspec(noreturn) void moz_Xout_of_range(const char*);
-MFBT_API __declspec(noreturn) void moz_Xoverflow_error(const char*);
-MFBT_API __declspec(noreturn) void moz_Xruntime_error(const char*);
+MOZALLOC_EXPORT __declspec(noreturn) void moz_Xinvalid_argument(const char*);
+MOZALLOC_EXPORT __declspec(noreturn) void moz_Xlength_error(const char*);
+MOZALLOC_EXPORT __declspec(noreturn) void moz_Xout_of_range(const char*);
+MOZALLOC_EXPORT __declspec(noreturn) void moz_Xoverflow_error(const char*);
+MOZALLOC_EXPORT __declspec(noreturn) void moz_Xruntime_error(const char*);
 
 } // namespace std
 

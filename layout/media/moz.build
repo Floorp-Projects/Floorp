@@ -10,6 +10,7 @@ with Files('**'):
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     GeckoSharedLibrary('gkmedias', linkage=None)
     USE_LIBS += [
+        'mozalloc',
         'nspr',
     ]
 else:

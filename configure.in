@@ -9087,11 +9087,9 @@ esac
 
 if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC3" -o -n "$MOZ_REPLACE_MALLOC"; then
   ac_configure_args="--build=$build --host=$target --enable-stats --with-jemalloc-prefix=je_ --disable-valgrind"
-  # We're using memalign for _aligned_malloc in memory/build/mozmemory_wrap.c
-  # on Windows, so just export memalign on all platforms.
-  ac_configure_args="$ac_configure_args ac_cv_func_memalign=yes"
   if test -n "$MOZ_REPLACE_MALLOC"; then
-    # When using replace_malloc, we always want valloc exported from jemalloc.
+    # When using replace_malloc, we always want memalign and valloc exported from jemalloc.
+    ac_configure_args="$ac_configure_args ac_cv_func_memalign=yes"
     ac_configure_args="$ac_configure_args ac_cv_func_valloc=yes"
   fi
   if test -n "$MOZ_JEMALLOC3"; then
