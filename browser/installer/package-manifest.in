@@ -535,8 +535,6 @@
 @RESPATH@/components/messageWakeupService.manifest
 @RESPATH@/components/SettingsManager.js
 @RESPATH@/components/SettingsManager.manifest
-@BINPATH@/components/SettingsService.js
-@BINPATH@/components/SettingsService.manifest
 @RESPATH@/components/Webapps.js
 @RESPATH@/components/Webapps.manifest
 @RESPATH@/components/AppsService.js
