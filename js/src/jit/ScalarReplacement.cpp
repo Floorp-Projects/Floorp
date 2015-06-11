@@ -183,6 +183,8 @@ IsObjectEscaped(MInstruction* ins, JSObject* objDefault)
           case MDefinition::Op_StoreUnboxedScalar:
           case MDefinition::Op_LoadUnboxedObjectOrNull:
           case MDefinition::Op_StoreUnboxedObjectOrNull:
+          case MDefinition::Op_LoadUnboxedString:
+          case MDefinition::Op_StoreUnboxedString:
             // Not escaped if it is the first argument.
             if (def->indexOf(*i) != 0) {
                 JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
@@ -299,6 +301,12 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop
     void visitLoadUnboxedScalar(MLoadUnboxedScalar* ins);
     void visitStoreUnboxedObjectOrNull(MStoreUnboxedObjectOrNull* ins);
     void visitLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull* ins);
+    void visitStoreUnboxedString(MStoreUnboxedString* ins);
+    void visitLoadUnboxedString(MLoadUnboxedString* ins);
+
+  private:
+    void storeOffset(MInstruction* ins, size_t offset, MDefinition* value);
+    void loadOffset(MInstruction* ins, size_t offset);
 };
 
 const char* ObjectMemoryView::phaseName = "Scalar Replacement of Object";
@@ -627,21 +635,38 @@ GetOffsetOf(MDefinition* index, Scalar::Type type, int32_t baseOffset)
 }
 
 void
+ObjectMemoryView::storeOffset(MInstruction* ins, size_t offset, MDefinition* value)
+{
+    // Clone the state and update the slot value.
+    MOZ_ASSERT(state_->hasOffset(offset));
+    state_ = BlockState::Copy(alloc_, state_);
+    state_->setOffset(offset, value);
+    ins->block()->insertBefore(ins, state_);
+
+    // Remove original instruction.
+    ins->block()->discard(ins);
+}
+
+void
+ObjectMemoryView::loadOffset(MInstruction* ins, size_t offset)
+{
+    // Replace load by the slot value.
+    MOZ_ASSERT(state_->hasOffset(offset));
+    ins->replaceAllUsesWith(state_->getOffset(offset));
+
+    // Remove original instruction.
+    ins->block()->discard(ins);
+}
+
+void
 ObjectMemoryView::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins)
 {
     // Skip stores made on other objects.
     if (ins->elements() != obj_)
         return;
 
-    // Clone the state and update the slot value.
     size_t offset = GetOffsetOf(ins->index(), ins->storageType(), ins->offsetAdjustment());
-    MOZ_ASSERT(state_->hasOffset(offset));
-    state_ = BlockState::Copy(alloc_, state_);
-    state_->setOffset(offset, ins->value());
-    ins->block()->insertBefore(ins->toInstruction(), state_);
-
-    // Remove original instruction.
-    ins->block()->discard(ins);
+    storeOffset(ins, offset, ins->value());
 }
 
 void
@@ -653,11 +678,7 @@ ObjectMemoryView::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins)
 
     // Replace load by the slot value.
     size_t offset = GetOffsetOf(ins->index(), ins->storageType(), ins->offsetAdjustment());
-    MOZ_ASSERT(state_->hasOffset(offset));
-    ins->replaceAllUsesWith(state_->getOffset(offset));
-
-    // Remove original instruction.
-    ins->block()->discard(ins);
+    loadOffset(ins, offset);
 }
 
 void
@@ -669,13 +690,7 @@ ObjectMemoryView::visitStoreUnboxedObjectOrNull(MStoreUnboxedObjectOrNull* ins)
 
     // Clone the state and update the slot value.
     size_t offset = GetOffsetOf(ins->index(), sizeof(uintptr_t), ins->offsetAdjustment());
-    MOZ_ASSERT(state_->hasOffset(offset));
-    state_ = BlockState::Copy(alloc_, state_);
-    state_->setOffset(offset, ins->value());
-    ins->block()->insertBefore(ins->toInstruction(), state_);
-
-    // Remove original instruction.
-    ins->block()->discard(ins);
+    storeOffset(ins, offset, ins->value());
 }
 
 void
@@ -687,11 +702,31 @@ ObjectMemoryView::visitLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull* ins)
 
     // Replace load by the slot value.
     size_t offset = GetOffsetOf(ins->index(), sizeof(uintptr_t), ins->offsetAdjustment());
-    MOZ_ASSERT(state_->hasOffset(offset));
-    ins->replaceAllUsesWith(state_->getOffset(offset));
+    loadOffset(ins, offset);
+}
 
-    // Remove original instruction.
-    ins->block()->discard(ins);
+void
+ObjectMemoryView::visitStoreUnboxedString(MStoreUnboxedString* ins)
+{
+    // Skip stores made on other objects.
+    if (ins->elements() != obj_)
+        return;
+
+    // Clone the state and update the slot value.
+    size_t offset = GetOffsetOf(ins->index(), sizeof(uintptr_t), ins->offsetAdjustment());
+    storeOffset(ins, offset, ins->value());
+}
+
+void
+ObjectMemoryView::visitLoadUnboxedString(MLoadUnboxedString* ins)
+{
+    // Skip loads made on other objects.
+    if (ins->elements() != obj_)
+        return;
+
+    // Replace load by the slot value.
+    size_t offset = GetOffsetOf(ins->index(), sizeof(uintptr_t), ins->offsetAdjustment());
+    loadOffset(ins, offset);
 }
 
 static bool
