@@ -978,6 +978,39 @@ PLDHashTable::Iterator::Next()
   } while (IsOnNonLiveEntry());
 }
 
+PLDHashTable::RemovingIterator::RemovingIterator(RemovingIterator&& aOther)
+  : Iterator(mozilla::Move(aOther.mTable))
+  , mHaveRemoved(aOther.mHaveRemoved)
+{
+}
+
+PLDHashTable::RemovingIterator::RemovingIterator(PLDHashTable* aTable)
+  : Iterator(aTable)
+  , mHaveRemoved(false)
+{
+}
+
+PLDHashTable::RemovingIterator::~RemovingIterator()
+{
+  if (mHaveRemoved) {
+    // Why is this cast needed? In Iterator, |mTable| is const. In
+    // RemovingIterator it should be non-const, but it inherits from Iterator
+    // so that's not possible. But it's ok because RemovingIterator's
+    // constructor takes a pointer to a non-const table in the first place.
+    const_cast<PLDHashTable*>(mTable)->ShrinkIfAppropriate();
+  }
+}
+
+void
+PLDHashTable::RemovingIterator::Remove()
+{
+  METER(mStats.mRemoveEnums++);
+
+  // This cast is needed for the same reason as the one in the destructor.
+  const_cast<PLDHashTable*>(mTable)->RawRemove(Get());
+  mHaveRemoved = true;
+}
+
 #ifdef DEBUG
 MOZ_ALWAYS_INLINE void
 PLDHashTable::MarkImmutable()
