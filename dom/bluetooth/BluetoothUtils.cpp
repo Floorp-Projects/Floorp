@@ -43,17 +43,6 @@ UuidToString(const BluetoothUuid& aUuid, nsAString& aString)
 }
 
 void
-ReversedUuidToString(const BluetoothUuid& aUuid, nsAString& aString)
-{
-  BluetoothUuid uuid;
-  for (uint8_t i = 0; i < 16; i++) {
-    uuid.mUuid[i] = aUuid.mUuid[15 - i];
-  }
-
-  UuidToString(uuid, aString);
-}
-
-void
 StringToUuid(const char* aString, BluetoothUuid& aUuid)
 {
   uint32_t uuid0, uuid4;
@@ -103,7 +92,7 @@ GeneratePathFromGattId(const BluetoothGattId& aId,
                        nsAString& aPath,
                        nsAString& aUuidStr)
 {
-  ReversedUuidToString(aId.mUuid, aUuidStr);
+  UuidToString(aId.mUuid, aUuidStr);
 
   aPath.Assign(aUuidStr);
   aPath.AppendLiteral("_");
