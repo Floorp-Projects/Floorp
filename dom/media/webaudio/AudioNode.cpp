@@ -352,12 +352,10 @@ AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
         // Remove one instance of 'dest' from mOutputNodes. There could be
         // others, and it's not correct to remove them all since some of them
         // could be for different output ports.
-        nsRefPtr<AudioNode> output = mOutputNodes[i].forget();
+        nsCOMPtr<nsIRunnable> runnable =
+          new RunnableRelease(mOutputNodes[i].forget());
         mOutputNodes.RemoveElementAt(i);
-        if (mStream) {
-          nsRefPtr<nsIRunnable> runnable = new RunnableRelease(output.forget());
-          mStream->RunAfterPendingUpdates(runnable.forget());
-        }
+        mStream->RunAfterPendingUpdates(runnable.forget());
         break;
       }
     }
