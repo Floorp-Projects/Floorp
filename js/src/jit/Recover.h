@@ -697,9 +697,6 @@ class RNewDerivedTypedObject final : public RInstruction
 
 class RCreateThisWithTemplate final : public RInstruction
 {
-  private:
-    bool tenuredHeap_;
-
   public:
     RINSTRUCTION_HEADER_(CreateThisWithTemplate)
 

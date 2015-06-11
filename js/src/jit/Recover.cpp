@@ -1253,24 +1253,20 @@ MCreateThisWithTemplate::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
     writer.writeUnsigned(uint32_t(RInstruction::Recover_CreateThisWithTemplate));
-    writer.writeByte(bool(initialHeap() == gc::TenuredHeap));
     return true;
 }
 
 RCreateThisWithTemplate::RCreateThisWithTemplate(CompactBufferReader& reader)
 {
-    tenuredHeap_ = reader.readByte();
 }
 
 bool
 RCreateThisWithTemplate::recover(JSContext* cx, SnapshotIterator& iter) const
 {
-    RootedPlainObject templateObject(cx, &iter.read().toObject().as<PlainObject>());
+    RootedObject templateObject(cx, &iter.read().toObject());
 
     // See CodeGenerator::visitCreateThisWithTemplate
-    gc::AllocKind allocKind = templateObject->asTenured().getAllocKind();
-    gc::InitialHeap initialHeap = tenuredHeap_ ? gc::TenuredHeap : gc::DefaultHeap;
-    JSObject* resultObject = NativeObject::copy(cx, allocKind, initialHeap, templateObject);
+    JSObject* resultObject = NewObjectOperationWithTemplate(cx, templateObject);
     if (!resultObject)
         return false;
 
