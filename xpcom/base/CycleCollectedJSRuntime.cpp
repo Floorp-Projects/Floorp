@@ -740,7 +740,11 @@ CycleCollectedJSRuntime::GCSliceCallback(JSRuntime* aRuntime,
   MOZ_ASSERT(self->Runtime() == aRuntime);
 
   if (aProgress == JS::GC_CYCLE_END) {
-    NS_WARN_IF(NS_FAILED(DebuggerOnGCRunnable::Enqueue(aRuntime, aDesc)));
+    JS::gcreason::Reason reason = aDesc.reason_;
+    NS_WARN_IF(NS_FAILED(DebuggerOnGCRunnable::Enqueue(aRuntime, aDesc)) &&
+               reason != JS::gcreason::SHUTDOWN_CC &&
+               reason != JS::gcreason::DESTROY_RUNTIME &&
+               reason != JS::gcreason::XPCONNECT_SHUTDOWN);
   }
 
   if (self->mPrevGCSliceCallback) {
