@@ -850,6 +850,9 @@ MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
     aA.mParsed += decoder.mQueuedSamples.Length();
   }
   decoder.mQueuedSamples.Clear();
+
+  // We have serviced the decoder's request for more data.
+  decoder.mInputExhausted = false;
 }
 
 void
@@ -928,7 +931,6 @@ MediaFormatReader::Update(TrackType aTrack)
   }
 
   needInput = true;
-  decoder.mInputExhausted = false;
 
   LOGV("Update(%s) ni=%d no=%d ie=%d, in:%d out:%d qs=%d",
        TrackTypeToStr(aTrack), needInput, needOutput, decoder.mInputExhausted,
