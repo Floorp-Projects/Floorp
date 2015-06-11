@@ -519,7 +519,12 @@ CertVerifier::VerifySSLServerCert(CERTCertificate* peerCert,
   }
   result = CheckCertHostname(peerCertInput, hostnameInput);
   if (result != Success) {
-    PR_SetError(MapResultToPRErrorCode(result), 0);
+    // Treat malformed name information as a domain mismatch.
+    if (result == Result::ERROR_BAD_DER) {
+      PR_SetError(SSL_ERROR_BAD_CERT_DOMAIN, 0);
+    } else {
+      PR_SetError(MapResultToPRErrorCode(result), 0);
+    }
     return SECFailure;
   }
 
