@@ -95,7 +95,13 @@ ContainerParser::InitData()
 MediaByteRange
 ContainerParser::MediaSegmentRange()
 {
-  return mCompleteByteRange;
+  return mCompleteMediaSegmentRange;
+}
+
+MediaByteRange
+ContainerParser::InitSegmentRange()
+{
+  return mCompleteInitSegmentRange;
 }
 
 class WebMContainerParser : public ContainerParser {
@@ -186,6 +192,7 @@ public:
           // Super unlikely OOM
           return false;
         }
+        mCompleteInitSegmentRange = MediaByteRange(0, mParser.mInitEndOffset);
         char* buffer = reinterpret_cast<char*>(mInitData->Elements());
         mResource->ReadFromCache(buffer, 0, mParser.mInitEndOffset);
         MSE_DEBUG(WebMContainerParser, "Stashed init of %u bytes.",
@@ -314,6 +321,7 @@ public:
     if (initSegment || !HasCompleteInitData()) {
       MediaByteRange& range = mParser->mInitRange;
       if (range.Length()) {
+        mCompleteInitSegmentRange = range;
         if (!mInitData->SetLength(range.Length(), fallible)) {
           // Super unlikely OOM
           return false;
@@ -331,7 +339,7 @@ public:
     mp4_demuxer::Interval<mp4_demuxer::Microseconds> compositionRange =
       mParser->GetCompositionRange(byteRanges);
 
-    mCompleteByteRange = mParser->FirstCompleteMediaSegment();
+    mCompleteMediaSegmentRange = mParser->FirstCompleteMediaSegment();
     ErrorResult rv;
     mResource->EvictData(mParser->mOffset, mParser->mOffset, rv);
     if (NS_WARN_IF(rv.Failed())) {
