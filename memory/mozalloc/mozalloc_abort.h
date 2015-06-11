@@ -9,7 +9,19 @@
 #define mozilla_mozalloc_abort_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Types.h"
+
+#if defined(MOZALLOC_EXPORT)
+// do nothing: it's been defined to __declspec(dllexport) by
+// mozalloc*.cpp on platforms where that's required
+#elif defined(XP_WIN)
+#  define MOZALLOC_EXPORT __declspec(dllimport)
+#elif defined(HAVE_VISIBILITY_ATTRIBUTE)
+/* Make sure symbols are still exported even if we're wrapped in a
+ * |visibility push(hidden)| blanket. */
+#  define MOZALLOC_EXPORT __attribute__ ((visibility ("default")))
+#else
+#  define MOZALLOC_EXPORT
+#endif
 
 /**
  * Terminate this process in such a way that breakpad is triggered, if
@@ -18,7 +30,7 @@
  * Note: MOZ_NORETURN seems to break crash stacks on ARM, so we don't
  * use that annotation there.
  */
-MFBT_API
+MOZALLOC_EXPORT
 #if !defined(__arm__)
   MOZ_NORETURN
 #endif

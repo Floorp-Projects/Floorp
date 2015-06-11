@@ -24,9 +24,22 @@
 #include "mozilla/TemplateLib.h"
 #endif
 #include "mozilla/Attributes.h"
-#include "mozilla/Types.h"
 
 #define MOZALLOC_HAVE_XMALLOC
+
+#if defined(MOZALLOC_EXPORT)
+/* do nothing: it's been defined to __declspec(dllexport) by
+ * mozalloc*.cpp on platforms where that's required. */
+#elif defined(XP_WIN)
+#  define MOZALLOC_EXPORT __declspec(dllimport)
+#elif defined(HAVE_VISIBILITY_ATTRIBUTE)
+/* Make sure symbols are still exported even if we're wrapped in a
+ * |visibility push(hidden)| blanket. */
+#  define MOZALLOC_EXPORT __attribute__ ((visibility ("default")))
+#else
+#  define MOZALLOC_EXPORT
+#endif
+
 
 #if defined(MOZ_ALWAYS_INLINE_EVEN_DEBUG)
 #  define MOZALLOC_INLINE MOZ_ALWAYS_INLINE_EVEN_DEBUG
@@ -62,73 +75,73 @@ extern "C" {
  * passing that pointer to |moz_free()|.
  */
 
-MFBT_API
+MOZALLOC_EXPORT
 void moz_free(void* ptr);
 
-MFBT_API void* moz_xmalloc(size_t size)
+MOZALLOC_EXPORT void* moz_xmalloc(size_t size)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 
-MFBT_API
+MOZALLOC_EXPORT
 void* moz_malloc(size_t size)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 
 
-MFBT_API void* moz_xcalloc(size_t nmemb, size_t size)
+MOZALLOC_EXPORT void* moz_xcalloc(size_t nmemb, size_t size)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 
-MFBT_API void* moz_calloc(size_t nmemb, size_t size)
-    NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
-
-
-MFBT_API void* moz_xrealloc(void* ptr, size_t size)
-    NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
-
-MFBT_API void* moz_realloc(void* ptr, size_t size)
+MOZALLOC_EXPORT void* moz_calloc(size_t nmemb, size_t size)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 
 
-MFBT_API char* moz_xstrdup(const char* str)
+MOZALLOC_EXPORT void* moz_xrealloc(void* ptr, size_t size)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 
-MFBT_API char* moz_strdup(const char* str)
+MOZALLOC_EXPORT void* moz_realloc(void* ptr, size_t size)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 
-MFBT_API size_t moz_malloc_usable_size(void *ptr);
 
-MFBT_API size_t moz_malloc_size_of(const void *ptr);
+MOZALLOC_EXPORT char* moz_xstrdup(const char* str)
+    NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
+
+MOZALLOC_EXPORT char* moz_strdup(const char* str)
+    NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
+
+MOZALLOC_EXPORT size_t moz_malloc_usable_size(void *ptr);
+
+MOZALLOC_EXPORT size_t moz_malloc_size_of(const void *ptr);
 
 #if defined(HAVE_STRNDUP)
-MFBT_API char* moz_xstrndup(const char* str, size_t strsize)
+MOZALLOC_EXPORT char* moz_xstrndup(const char* str, size_t strsize)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 
-MFBT_API char* moz_strndup(const char* str, size_t strsize)
+MOZALLOC_EXPORT char* moz_strndup(const char* str, size_t strsize)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 #endif /* if defined(HAVE_STRNDUP) */
 
 
 #if defined(HAVE_POSIX_MEMALIGN)
-MFBT_API int moz_xposix_memalign(void **ptr, size_t alignment, size_t size)
+MOZALLOC_EXPORT int moz_xposix_memalign(void **ptr, size_t alignment, size_t size)
     NS_WARN_UNUSED_RESULT;
 
-MFBT_API int moz_posix_memalign(void **ptr, size_t alignment, size_t size)
+MOZALLOC_EXPORT int moz_posix_memalign(void **ptr, size_t alignment, size_t size)
     NS_WARN_UNUSED_RESULT;
 #endif /* if defined(HAVE_POSIX_MEMALIGN) */
 
 
 #if defined(HAVE_MEMALIGN)
-MFBT_API void* moz_xmemalign(size_t boundary, size_t size)
+MOZALLOC_EXPORT void* moz_xmemalign(size_t boundary, size_t size)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 
-MFBT_API void* moz_memalign(size_t boundary, size_t size)
+MOZALLOC_EXPORT void* moz_memalign(size_t boundary, size_t size)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 #endif /* if defined(HAVE_MEMALIGN) */
 
 
 #if defined(HAVE_VALLOC)
-MFBT_API void* moz_xvalloc(size_t size)
+MOZALLOC_EXPORT void* moz_xvalloc(size_t size)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 
-MFBT_API void* moz_valloc(size_t size)
+MOZALLOC_EXPORT void* moz_valloc(size_t size)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 #endif /* if defined(HAVE_VALLOC) */
 
@@ -163,7 +176,7 @@ MFBT_API void* moz_valloc(size_t size)
  * visibility on OS X/gcc. These symbols are force-inline and not
  * exported. */
 #if defined(XP_MACOSX)
-#  define MOZALLOC_EXPORT_NEW MFBT_API
+#  define MOZALLOC_EXPORT_NEW MOZALLOC_EXPORT
 #else
 #  define MOZALLOC_EXPORT_NEW
 #endif

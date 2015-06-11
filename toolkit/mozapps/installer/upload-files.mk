@@ -270,6 +270,7 @@ include $(MOZILLA_DIR)/config/android-common.mk
 DIST_FILES =
 
 # Place the files in the order they are going to be opened by the linker
+DIST_FILES += libmozalloc.so
 ifndef MOZ_FOLD_LIBS
 DIST_FILES += \
   libnspr4.so \
