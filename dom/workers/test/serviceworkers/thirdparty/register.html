@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<script>
+  function ok(v, msg) {
+    window.parent.postMessage({status: "ok", result: !!v, message: msg}, "*");
+  }
+
+  var isDone = false;
+  function done(reg) {
+    if (!isDone) {
+      ok(reg.waiting || reg.active,
+         "Either active or waiting worker should be available.");
+      window.parent.postMessage({status: "registrationdone"}, "*");
+      isDone = true;
+    }
+  }
+
+  navigator.serviceWorker.register("sw.js", {scope: "."})
+    .then(function(registration) {
+      if (registration.installing) {
+        registration.installing.onstatechange = function(e) {
+          done(registration);
+        };
+      } else {
+        done(registration);
+      }
+    });
+</script>
