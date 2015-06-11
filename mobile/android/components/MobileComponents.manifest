@@ -22,7 +22,7 @@ contract @mozilla.org/network/protocol/about;1?what=blocked {322ba47e-7047-4f71-
 contract @mozilla.org/network/protocol/about;1?what=devices {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 #endif
 #ifdef NIGHTLY_BUILD
-contract @mozilla.org/network/protocol/about;1?what=passwords {322ba47e-7047-4f71-aebf-cb7d69325cd9}
+contract @mozilla.org/network/protocol/about;1?what=logins {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 #endif
 
 # DirectoryProvider.js

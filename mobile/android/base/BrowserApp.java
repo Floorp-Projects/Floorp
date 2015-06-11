@@ -3422,7 +3422,7 @@ public class BrowserApp extends GeckoApp
         }
 
         if (itemId == R.id.logins) {
-            Tabs.getInstance().loadUrlInTab(AboutPages.PASSWORDS);
+            Tabs.getInstance().loadUrlInTab(AboutPages.LOGINS);
             return true;
         }
 

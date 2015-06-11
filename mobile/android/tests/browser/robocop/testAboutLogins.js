@@ -45,7 +45,7 @@ add_test(function password_setup() {
 
   // Load about:passwords.
   BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
-  browser = BrowserApp.addTab("about:passwords", { selected: true, parentId: BrowserApp.selectedTab.id }).browser;
+  browser = BrowserApp.addTab("about:logins", { selected: true, parentId: BrowserApp.selectedTab.id }).browser;
 
   browser.addEventListener("load", () => {
     browser.removeEventListener("load", this, true);
