@@ -145,24 +145,12 @@ IsObjectEscaped(MInstruction* ins, JSObject* objDefault)
     JitSpewDef(JitSpew_Escape, "Check object\n", ins);
     JitSpewIndent spewIndent(JitSpew_Escape);
 
-    JSObject* obj = nullptr;
-    if (ins->isNewObject())
-        obj = ins->toNewObject()->templateObject();
-    else if (ins->isCreateThisWithTemplate())
-        obj = ins->toCreateThisWithTemplate()->templateObject();
-    else if (ins->isNewCallObject())
-        obj = ins->toNewCallObject()->templateObject();
-    else
-        obj = objDefault;
+    JSObject* obj = objDefault;
+    if (!obj)
+        obj = MObjectState::templateObjectOf(ins);
 
     if (!obj) {
         JitSpew(JitSpew_Escape, "No template object defined.");
-        return true;
-    }
-
-    // Don't optimize unboxed objects, which aren't handled by MObjectState.
-    if (obj->is<UnboxedPlainObject>()) {
-        JitSpew(JitSpew_Escape, "Template object is an unboxed plain object.");
         return true;
     }
 

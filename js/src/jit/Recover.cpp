@@ -1369,13 +1369,30 @@ RObjectState::RObjectState(CompactBufferReader& reader)
 bool
 RObjectState::recover(JSContext* cx, SnapshotIterator& iter) const
 {
-    RootedNativeObject object(cx, &iter.read().toObject().as<NativeObject>());
-    MOZ_ASSERT(object->slotSpan() == numSlots());
-
+    RootedObject object(cx, &iter.read().toObject());
     RootedValue val(cx);
-    for (size_t i = 0; i < numSlots(); i++) {
-        val = iter.read();
-        object->setSlot(i, val);
+
+    if (object->is<UnboxedPlainObject>()) {
+        const UnboxedLayout& layout = object->as<UnboxedPlainObject>().layout();
+
+        const UnboxedLayout::PropertyVector& properties = layout.properties();
+        for (size_t i = 0; i < properties.length(); i++) {
+            val = iter.read();
+            // This is the default placeholder value of MObjectState, when no
+            // properties are defined yet.
+            if (val.isUndefined())
+                continue;
+
+            MOZ_ALWAYS_TRUE(object->as<UnboxedPlainObject>().setValue(cx, properties[i], val));
+        }
+    } else {
+        RootedNativeObject nativeObject(cx, &object->as<NativeObject>());
+        MOZ_ASSERT(nativeObject->slotSpan() == numSlots());
+
+        for (size_t i = 0; i < numSlots(); i++) {
+            val = iter.read();
+            nativeObject->setSlot(i, val);
+        }
     }
 
     val.setObject(*object);

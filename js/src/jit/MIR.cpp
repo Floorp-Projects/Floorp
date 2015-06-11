@@ -3929,20 +3929,75 @@ MCreateThisWithTemplate::canRecoverOnBailout() const
     return true;
 }
 
-MObjectState::MObjectState(MDefinition* obj)
+bool
+OperandIndexMap::init(TempAllocator& alloc, JSObject* templateObject)
+{
+    const UnboxedLayout& layout =
+        templateObject->as<UnboxedPlainObject>().layoutDontCheckGeneration();
+
+    // 0 is used as an error code.
+    const UnboxedLayout::PropertyVector& properties = layout.properties();
+    MOZ_ASSERT(properties.length() < 255);
+
+    // Allocate an array of indexes, where the top of each field correspond to
+    // the index of the operand in the MObjectState instance.
+    if (!map.init(alloc, layout.size()))
+        return false;
+
+    // Reset all indexes to 0, which is an error code.
+    for (size_t i = 0; i < map.length(); i++)
+        map[i] = 0;
+
+    // Map the property offsets to the indexes of MObjectState operands.
+    uint8_t index = 1;
+    for (size_t i = 0; i < properties.length(); i++, index++)
+        map[properties[i].offset] = index;
+
+    return true;
+}
+
+MObjectState::MObjectState(MObjectState* state)
+  : numSlots_(state->numSlots_),
+    numFixedSlots_(state->numFixedSlots_),
+    operandIndex_(state->operandIndex_)
 {
     // This instruction is only used as a summary for bailout paths.
     setResultType(MIRType_Object);
     setRecoveredOnBailout();
-    NativeObject* templateObject = nullptr;
+}
+
+MObjectState::MObjectState(JSObject *templateObject, OperandIndexMap* operandIndex)
+{
+    // This instruction is only used as a summary for bailout paths.
+    setResultType(MIRType_Object);
+    setRecoveredOnBailout();
+
+    if (templateObject->is<NativeObject>()) {
+        NativeObject* nativeObject = &templateObject->as<NativeObject>();
+        numSlots_ = nativeObject->slotSpan();
+        numFixedSlots_ = nativeObject->numFixedSlots();
+    } else {
+        const UnboxedLayout& layout =
+            templateObject->as<UnboxedPlainObject>().layoutDontCheckGeneration();
+        // Same as UnboxedLayout::makeNativeGroup
+        numSlots_ = layout.properties().length();
+        numFixedSlots_ = gc::GetGCKindSlots(layout.getAllocKind());
+    }
+
+    operandIndex_ = operandIndex;
+}
+
+JSObject*
+MObjectState::templateObjectOf(MDefinition* obj)
+{
     if (obj->isNewObject())
-        templateObject = &obj->toNewObject()->templateObject()->as<PlainObject>();
+        return obj->toNewObject()->templateObject();
     else if (obj->isCreateThisWithTemplate())
-        templateObject = &obj->toCreateThisWithTemplate()->templateObject()->as<PlainObject>();
+        return obj->toCreateThisWithTemplate()->templateObject();
     else
-        templateObject = obj->toNewCallObject()->templateObject();
-    numSlots_ = templateObject->slotSpan();
-    numFixedSlots_ = templateObject->numFixedSlots();
+        return obj->toNewCallObject()->templateObject();
+
+    return nullptr;
 }
 
 bool
@@ -3958,7 +4013,17 @@ MObjectState::init(TempAllocator& alloc, MDefinition* obj)
 MObjectState*
 MObjectState::New(TempAllocator& alloc, MDefinition* obj, MDefinition* undefinedVal)
 {
-    MObjectState* res = new(alloc) MObjectState(obj);
+    JSObject* templateObject = templateObjectOf(obj);
+    MOZ_ASSERT(templateObject, "Unexpected object creation.");
+
+    OperandIndexMap* operandIndex = nullptr;
+    if (templateObject->is<UnboxedPlainObject>()) {
+        operandIndex = new(alloc) OperandIndexMap;
+        if (!operandIndex || !operandIndex->init(alloc, templateObject))
+            return nullptr;
+    }
+
+    MObjectState* res = new(alloc) MObjectState(templateObject, operandIndex);
     if (!res || !res->init(alloc, obj))
         return nullptr;
     for (size_t i = 0; i < res->numSlots(); i++)
@@ -3969,9 +4034,8 @@ MObjectState::New(TempAllocator& alloc, MDefinition* obj, MDefinition* undefined
 MObjectState*
 MObjectState::Copy(TempAllocator& alloc, MObjectState* state)
 {
-    MDefinition* obj = state->object();
-    MObjectState* res = new(alloc) MObjectState(obj);
-    if (!res || !res->init(alloc, obj))
+    MObjectState* res = new(alloc) MObjectState(state);
+    if (!res || !res->init(alloc, state->object()))
         return nullptr;
     for (size_t i = 0; i < res->numSlots(); i++)
         res->initSlot(i, state->getSlot(i));
