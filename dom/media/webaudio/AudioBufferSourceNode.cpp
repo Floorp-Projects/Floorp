@@ -729,6 +729,11 @@ AudioBufferSourceNode::NotifyMainThreadStreamFinished()
       }
 
       mNode->DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
+
+      // Release stream resources.
+      //
+      // DestroyMediaStream() will remove this stream listener.
+      mNode->DestroyMediaStream();
       return NS_OK;
     }
   private:
@@ -736,9 +741,6 @@ AudioBufferSourceNode::NotifyMainThreadStreamFinished()
   };
 
   NS_DispatchToMainThread(new EndedEventDispatcher(this));
-  // Release stream resources.
-  // DestroyMediaStream() will remove this stream listener.
-  DestroyMediaStream();
 
   // Drop the playing reference
   // Warning: The below line might delete this.
