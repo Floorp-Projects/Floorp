@@ -217,11 +217,18 @@ private:
     // TrackInfo of the first metadata received.
     UniquePtr<TrackInfo> mInfo;
   };
+
   bool ProcessFrame(MediaRawData* aSample, TrackData& aTrackData);
+  void RejectProcessing(nsresult aRejectValue, const char* aName);
+  void ResolveProcessing(bool aResolveValue, const char* aName);
   MediaPromiseRequestHolder<CodedFrameProcessingPromise> mProcessingRequest;
   MediaPromiseHolder<CodedFrameProcessingPromise> mProcessingPromise;
 
   MediaPromiseHolder<AppendPromise> mAppendPromise;
+  // Set to true while SegmentParserLoop is running. This is used for diagnostic
+  // purposes only. We can't rely on mAppendPromise to be empty as it is only
+  // cleared in a follow up task.
+  bool mAppendRunning;
 
   // Trackbuffers definition.
   nsTArray<TrackData*> GetTracksList();
