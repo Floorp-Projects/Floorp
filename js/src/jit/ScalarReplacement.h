@@ -15,7 +15,7 @@ class MIRGenerator;
 class MIRGraph;
 
 bool
-ScalarReplacement(MIRGenerator* mir, MIRGraph& graph);
+ScalarReplacement(MIRGenerator* mir, MIRGraph& graph, bool* success);
 
 } // namespace jit
 } // namespace js
