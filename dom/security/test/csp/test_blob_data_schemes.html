@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1086999 - Wildcard should not match blob:, data:</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * We load an image using a data: and a blob: scheme and make
+ * sure a CSP containing a single ASTERISK (*) does not whitelist
+ * those loads. The single ASTERISK character should not match a
+ * URI's scheme of a type designating globally unique identifier
+ * (such as blob:, data:, or filesystem:)
+ */
+
+var tests = [
+  {
+    policy : "default-src 'unsafe-inline' blob: data:",
+    expected : "allowed",
+  },
+  {
+    policy : "default-src 'unsafe-inline' *",
+    expected : "blocked"
+  }
+];
+
+var testIndex = 0;
+var messageCounter = 0;
+var curTest;
+
+// onError handler is over-reporting, hence we make sure that
+// we get an error for both testcases: data and blob before we
+// move on to the next test.
+var dataRan = false;
+var blobRan = false;
+
+// a postMessage handler to communicate the results back to the parent.
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event)
+{
+  is(event.data.result, curTest.expected, event.data.scheme + " should be " + curTest.expected);
+
+  if (event.data.scheme === "data") {
+    dataRan = true;
+  }
+  if (event.data.scheme === "blob") {
+    blobRan = true;
+  }
+  if (dataRan && blobRan) {
+    loadNextTest();
+  }
+}
+
+function loadNextTest() {
+  if (testIndex === tests.length) {
+    window.removeEventListener("message", receiveMessage, false);
+    SimpleTest.finish();
+    return;
+  }
+
+  dataRan = false;
+  blobRan = false;
+
+  curTest = tests[testIndex++];
+  // reset the messageCounter to make sure we receive all the postMessages from the iframe
+  messageCounter = 0;
+
+  var src = "file_testserver.sjs";
+  // append the file that should be served
+  src += "?file=" + escape("tests/dom/security/test/csp/file_blob_data_schemes.html");
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(curTest.policy);
+
+  document.getElementById("testframe").src = src;
+}
+
+SimpleTest.waitForExplicitFinish();
+loadNextTest();
+
+</script>
+</body>
+</html>

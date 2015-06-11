@@ -258,13 +258,8 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     }
 
     /* Rekey an entry when moved, ensuring we do not trigger barriers. */
-    void entryMoved(Enum& eArg, const Key& k) {
-        typedef typename HashMap<typename Unbarriered<Key>::type,
-                                 typename Unbarriered<Value>::type,
-                                 typename Unbarriered<HashPolicy>::type,
-                                 RuntimeAllocPolicy>::Enum UnbarrieredEnum;
-        UnbarrieredEnum& e = reinterpret_cast<UnbarrieredEnum&>(eArg);
-        e.rekeyFront(reinterpret_cast<const typename Unbarriered<Key>::type&>(k));
+    void entryMoved(Enum& e, const Key& k) {
+        e.rekeyFront(k);
     }
 
 protected:
@@ -279,28 +274,6 @@ protected:
 #endif
     }
 };
-
-/*
- * At times, you will need to ignore barriers when accessing WeakMap entries.
- * Localize the templatized casting craziness here.
- */
-template <class Key, class Value>
-static inline gc::HashKeyRef<HashMap<Key, Value, DefaultHasher<Key>, RuntimeAllocPolicy>, Key>
-UnbarrieredRef(WeakMap<PreBarriered<Key>, RelocatablePtr<Value>>* map, Key key)
-{
-    /*
-     * Some compilers complain about instantiating the WeakMap class for
-     * unbarriered type arguments, so we cast to a HashMap instead. Because of
-     * WeakMap's multiple inheritance, we need to do this in two stages, first
-     * to the HashMap base class and then to the unbarriered version.
-     */
-
-    typedef typename WeakMap<PreBarriered<Key>, RelocatablePtr<Value>>::Base BaseMap;
-    auto baseMap = static_cast<BaseMap*>(map);
-    typedef HashMap<Key, Value, DefaultHasher<Key>, RuntimeAllocPolicy> UnbarrieredMap;
-    typedef gc::HashKeyRef<UnbarrieredMap, Key> UnbarrieredKeyRef;
-    return UnbarrieredKeyRef(reinterpret_cast<UnbarrieredMap*>(baseMap), key);
-}
 
 /* WeakMap methods exposed so they can be installed in the self-hosting global. */
 

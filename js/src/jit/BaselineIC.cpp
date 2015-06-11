@@ -9306,8 +9306,8 @@ TryAttachFunCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, 
 }
 
 static bool
-GetTemplateObjectForNative(JSContext* cx, HandleScript script, jsbytecode* pc,
-                           Native native, const CallArgs& args, MutableHandleObject res)
+GetTemplateObjectForNative(JSContext* cx, Native native, const CallArgs& args,
+                           MutableHandleObject res)
 {
     // Check for natives to which template objects can be attached. This is
     // done to provide templates to Ion for inlining these natives later on.
@@ -9321,27 +9321,16 @@ GetTemplateObjectForNative(JSContext* cx, HandleScript script, jsbytecode* pc,
             count = args.length();
         else if (args.length() == 1 && args[0].isInt32() && args[0].toInt32() >= 0)
             count = args[0].toInt32();
-        res.set(NewDenseUnallocatedArray(cx, count, nullptr, TenuredObject));
-        if (!res)
-            return false;
 
-        ObjectGroup* group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
-        if (!group)
-            return false;
-        res->setGroup(group);
-        return true;
-    }
-
-    if (native == intrinsic_NewDenseArray) {
-        res.set(NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject));
-        if (!res)
-            return false;
-
-        ObjectGroup* group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
-        if (!group)
-            return false;
-        res->setGroup(group);
-        return true;
+        if (count <= ArrayObject::EagerAllocationMaxLength) {
+            // With this and other array templates, set forceAnalyze so that we
+            // don't end up with a template whose structure might change later.
+            res.set(NewFullyAllocatedArrayForCallingAllocationSite(cx, count, TenuredObject,
+                                                                   /* forceAnalyze = */ true));
+            if (!res)
+                return false;
+            return true;
+        }
     }
 
     if (native == js::array_concat || native == js::array_slice) {
@@ -9354,14 +9343,10 @@ GetTemplateObjectForNative(JSContext* cx, HandleScript script, jsbytecode* pc,
     }
 
     if (native == js::str_split && args.length() == 1 && args[0].isString()) {
-        res.set(NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject));
+        res.set(NewFullyAllocatedArrayForCallingAllocationSite(cx, 0, TenuredObject,
+                                                               /* forceAnalyze = */ true));
         if (!res)
             return false;
-
-        ObjectGroup* group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
-        if (!group)
-            return false;
-        res->setGroup(group);
         return true;
     }
 
@@ -9655,7 +9640,7 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
         RootedObject templateObject(cx);
         if (MOZ_LIKELY(!isSpread)) {
             CallArgs args = CallArgsFromVp(argc, vp);
-            if (!GetTemplateObjectForNative(cx, script, pc, fun->native(), args, &templateObject))
+            if (!GetTemplateObjectForNative(cx, fun->native(), args, &templateObject))
                 return false;
         }
 
@@ -9677,24 +9662,16 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
 }
 
 static bool
-CopyArray(JSContext* cx, HandleArrayObject obj, MutableHandleValue result)
+CopyArray(JSContext* cx, HandleObject obj, MutableHandleValue result)
 {
-    MOZ_ASSERT(obj->is<ArrayObject>());
-    uint32_t length = obj->as<ArrayObject>().length();
-    MOZ_ASSERT(obj->getDenseInitializedLength() == length);
-
-    RootedObjectGroup group(cx, obj->getGroup(cx));
-    if (!group)
+    uint32_t length = GetAnyBoxedOrUnboxedArrayLength(obj);
+    JSObject* nobj = NewFullyAllocatedArrayTryReuseGroup(cx, obj, length, TenuredObject,
+                                                         /* forceAnalyze = */ true);
+    if (!nobj)
         return false;
+    CopyAnyBoxedOrUnboxedDenseElements(cx, nobj, obj, 0, 0, length);
 
-    RootedArrayObject newObj(cx, NewDenseFullyAllocatedArray(cx, length, nullptr, TenuredObject));
-    if (!newObj)
-        return false;
-
-    newObj->setGroup(group);
-    newObj->setDenseInitializedLength(length);
-    newObj->initDenseElements(0, obj->getDenseElements(), length);
-    result.setObject(*newObj);
+    result.setObject(*nobj);
     return true;
 }
 
@@ -9722,7 +9699,7 @@ TryAttachStringSplit(JSContext* cx, ICCall_Fallback* stub, HandleScript script,
 
     RootedString thisString(cx, thisv.toString());
     RootedString argString(cx, args[0].toString());
-    RootedArrayObject obj(cx, &res.toObject().as<ArrayObject>());
+    RootedObject obj(cx, &res.toObject());
     RootedValue arr(cx);
 
     // Copy the array before storing in stub.
@@ -9730,14 +9707,17 @@ TryAttachStringSplit(JSContext* cx, ICCall_Fallback* stub, HandleScript script,
         return false;
 
     // Atomize all elements of the array.
-    RootedArrayObject arrObj(cx, &arr.toObject().as<ArrayObject>());
-    uint32_t initLength = arrObj->length();
+    RootedObject arrObj(cx, &arr.toObject());
+    uint32_t initLength = GetAnyBoxedOrUnboxedArrayLength(arrObj);
     for (uint32_t i = 0; i < initLength; i++) {
-        JSAtom* str = js::AtomizeString(cx, arrObj->getDenseElement(i).toString());
+        JSAtom* str = js::AtomizeString(cx, GetAnyBoxedOrUnboxedDenseElement(arrObj, i).toString());
         if (!str)
             return false;
 
-        arrObj->setDenseElement(i, StringValue(str));
+        if (!SetAnyBoxedOrUnboxedDenseElement(cx, arrObj, i, StringValue(str))) {
+            // The value could not be stored to an unboxed dense element.
+            return true;
+        }
     }
 
     ICCall_StringSplit::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
@@ -10595,7 +10575,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
     return true;
 }
 
-typedef bool (*CopyArrayFn)(JSContext*, HandleArrayObject, MutableHandleValue);
+typedef bool (*CopyArrayFn)(JSContext*, HandleObject, MutableHandleValue);
 static const VMFunction CopyArrayInfo = FunctionInfo<CopyArrayFn>(CopyArray);
 
 bool

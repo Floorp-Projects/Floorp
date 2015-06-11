@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Content Security Policy "no eval" base restriction</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<iframe style="width:100%;height:300px;" id='cspframe'></iframe>
+<iframe style="width:100%;height:300px;" id='cspframe2'></iframe>
+<script class="testbody" type="text/javascript">
+
+var evalScriptsThatRan = 0;
+var evalScriptsBlocked = 0;
+var evalScriptsTotal = 17;
+
+// called by scripts that run
+var scriptRan = function(shouldrun, testname, data) {
+  evalScriptsThatRan++;
+  ok(shouldrun, 'EVAL SCRIPT RAN: ' + testname + '(' + data + ')');
+  checkTestResults();
+}
+
+// called when a script is blocked
+var scriptBlocked = function(shouldrun, testname, data) {
+  evalScriptsBlocked++;
+  ok(!shouldrun, 'EVAL SCRIPT BLOCKED: ' + testname + '(' + data + ')');
+  checkTestResults();
+}
+
+var verifyZeroRetVal = function(val, testname) {
+  ok(val === 0, 'RETURN VALUE SHOULD BE ZERO, was ' + val + ': ' + testname);
+}
+
+// Check to see if all the tests have run
+var checkTestResults = function() {
+  // if any test is incomplete, keep waiting
+  if (evalScriptsTotal - evalScriptsBlocked - evalScriptsThatRan > 0)
+    return;
+
+  // ... otherwise, finish
+  SimpleTest.finish();
+}
+
+//////////////////////////////////////////////////////////////////////
+// set up and go
+SimpleTest.waitForExplicitFinish();
+
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_evalscript_main.html';
+document.getElementById('cspframe2').src = 'file_evalscript_main_allowed.html';
+</script>
+</pre>
+</body>
+</html>

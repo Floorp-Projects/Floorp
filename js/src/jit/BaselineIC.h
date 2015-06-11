@@ -609,6 +609,11 @@ class ICNewArray_Fallback : public ICFallbackStub
     HeapPtrObjectGroup& templateGroup() {
         return templateGroup_;
     }
+
+    void setTemplateGroup(ObjectGroup* group) {
+        templateObject_ = nullptr;
+        templateGroup_ = group;
+    }
 };
 
 class ICNewObject_Fallback : public ICFallbackStub
@@ -4914,10 +4919,10 @@ class ICCall_StringSplit : public ICMonitoredStub
     uint32_t pcOffset_;
     HeapPtrString expectedThis_;
     HeapPtrString expectedArg_;
-    HeapPtrArrayObject templateObject_;
+    HeapPtrObject templateObject_;
 
     ICCall_StringSplit(JitCode* stubCode, ICStub* firstMonitorStub, uint32_t pcOffset, JSString* thisString,
-                       JSString* argString, ArrayObject* templateObject)
+                       JSString* argString, JSObject* templateObject)
       : ICMonitoredStub(ICStub::Call_StringSplit, stubCode, firstMonitorStub),
         pcOffset_(pcOffset), expectedThis_(thisString), expectedArg_(argString),
         templateObject_(templateObject)
@@ -4944,7 +4949,7 @@ class ICCall_StringSplit : public ICMonitoredStub
         return expectedArg_;
     }
 
-    HeapPtrArrayObject& templateObject() {
+    HeapPtrObject& templateObject() {
         return templateObject_;
     }
 
@@ -4954,7 +4959,7 @@ class ICCall_StringSplit : public ICMonitoredStub
         uint32_t pcOffset_;
         RootedString expectedThis_;
         RootedString expectedArg_;
-        RootedArrayObject templateObject_;
+        RootedObject templateObject_;
 
         bool generateStubCode(MacroAssembler& masm);
 
@@ -4971,7 +4976,7 @@ class ICCall_StringSplit : public ICMonitoredStub
             pcOffset_(pcOffset),
             expectedThis_(cx, thisString),
             expectedArg_(cx, argString),
-            templateObject_(cx, &templateObject.toObject().as<ArrayObject>())
+            templateObject_(cx, &templateObject.toObject())
         { }
 
         ICStub* getStub(ICStubSpace* space) {

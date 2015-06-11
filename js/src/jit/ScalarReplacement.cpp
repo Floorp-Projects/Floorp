@@ -605,13 +605,6 @@ IsArrayEscaped(MInstruction* ins)
     MOZ_ASSERT(ins->isNewArray());
     uint32_t count = ins->toNewArray()->count();
 
-    // The array is probably too large to be represented efficiently with
-    // MArrayState, and we do not want to make huge allocations during bailouts.
-    if (ins->toNewArray()->allocatingBehaviour() == NewArray_Unallocating) {
-        JitSpewDef(JitSpew_Escape, "Array is not allocated\n", ins);
-        return true;
-    }
-
     JSObject* obj = ins->toNewArray()->templateObject();
     if (!obj || obj->is<UnboxedArrayObject>())
         return true;

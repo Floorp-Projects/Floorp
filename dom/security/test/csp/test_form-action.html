@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 529697 - Test mapping of form submission to form-action</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="visibility: hidden">
+    <iframe style="width:100%;" id="testframe"></iframe>
+  </div>
+
+<script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ *   We load a page with a given CSP and verify that form submissions are correctly
+ *   evaluated through the "form-action" directive.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+var tests = [
+  {
+    page   : "file_form-action.html",
+    result : "allowed",
+    policy : "form-action 'self'"
+  },
+  {
+    page   : "file_form-action.html",
+    result : "blocked",
+    policy : "form-action 'none'"
+  }
+];
+
+// initializing to -1 so we start at index 0 when we start the test
+var counter = -1;
+
+function checkResult(aResult) {
+  is(aResult, tests[counter].result, "should be " + tests[counter].result + " in test " + counter + "!");
+  loadNextTest();
+}
+
+// We use the examiner to identify requests that hit the wire and requests
+// that are blocked by CSP and bubble up the result to the including iframe
+// document (parent).
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+   if (topic === "specialpowers-http-notify-request") {
+      // making sure we do not bubble a result for something other
+      // then the request in question.
+      if (!data.includes("submit-form")) {
+        return;
+      }
+      checkResult("allowed");
+    }
+
+    if (topic === "csp-on-violate-policy") {
+      // making sure we do not bubble a result for something other
+      // then the request in question.
+      var asciiSpec = SpecialPowers.getPrivilegedProps(
+                        SpecialPowers.do_QueryInterface(subject, "nsIURI"),
+                        "asciiSpec");
+      if (!asciiSpec.includes("submit-form")) {
+        return;
+      }
+      checkResult("blocked");
+    }
+  },
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
+  }
+}
+window.FormActionExaminer = new examiner();
+
+function loadNextTest() {
+  counter++;
+  if (counter == tests.length) {
+    window.FormActionExaminer.remove();
+    SimpleTest.finish();
+    return;
+  }
+
+  var src = "file_testserver.sjs";
+  // append the file that should be served
+  src += "?file=" + escape("tests/dom/security/test/csp/" + tests[counter].page);
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(tests[counter].policy);
+
+  document.getElementById("testframe").src = src;
+}
+
+// start running the tests
+loadNextTest();
+
+</script>
+</body>
+</html>

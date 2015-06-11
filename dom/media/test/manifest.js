@@ -228,7 +228,7 @@ var gPlayTests = [
   { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
   // Test playback of a MP4 file with a non-zero start time (and audio starting
   // a second later).
-  { name:"bipbop-lateaudio.mp4", type:"video/mp4", duration:2.401 },
+  { name:"bipbop-lateaudio.mp4", type:"video/mp4" },
 
   { name:"small-shot.m4a", type:"audio/mp4", duration:0.29 },
   { name:"small-shot.mp3", type:"audio/mpeg", duration:0.27 },

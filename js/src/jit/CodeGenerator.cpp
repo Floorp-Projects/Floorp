@@ -4154,9 +4154,20 @@ typedef JSObject* (*NewArrayOperationFn)(JSContext*, HandleScript, jsbytecode*, 
 static const VMFunction NewArrayOperationInfo =
     FunctionInfo<NewArrayOperationFn>(NewArrayOperation);
 
-typedef ArrayObject* (*NewDenseArrayFn)(ExclusiveContext*, uint32_t, HandleObjectGroup,
-                                        AllocatingBehaviour, bool);
-static const VMFunction NewDenseArrayInfo = FunctionInfo<NewDenseArrayFn>(NewDenseArray);
+static JSObject*
+NewArrayWithGroup(JSContext* cx, uint32_t length, HandleObjectGroup group,
+                  bool convertDoubleElements)
+{
+    JSObject* res = NewFullyAllocatedArrayTryUseGroup(cx, group, length);
+    if (!res)
+        return nullptr;
+    if (convertDoubleElements)
+        res->as<ArrayObject>().setShouldConvertDoubleElements();
+    return res;
+}
+
+typedef JSObject* (*NewArrayWithGroupFn)(JSContext*, uint32_t, HandleObjectGroup, bool);
+static const VMFunction NewArrayWithGroupInfo = FunctionInfo<NewArrayWithGroupFn>(NewArrayWithGroup);
 
 void
 CodeGenerator::visitNewArrayCallVM(LNewArray* lir)
@@ -4168,13 +4179,12 @@ CodeGenerator::visitNewArrayCallVM(LNewArray* lir)
 
     JSObject* templateObject = lir->mir()->templateObject();
 
-    if (templateObject && !templateObject->is<UnboxedArrayObject>()) {
+    if (templateObject) {
         pushArg(Imm32(lir->mir()->convertDoubleElements()));
-        pushArg(Imm32(lir->mir()->allocatingBehaviour()));
         pushArg(ImmGCPtr(templateObject->group()));
         pushArg(Imm32(lir->mir()->count()));
 
-        callVM(NewDenseArrayInfo, lir);
+        callVM(NewArrayWithGroupInfo, lir);
     } else {
         pushArg(Imm32(GenericObject));
         pushArg(Imm32(lir->mir()->count()));
@@ -4297,7 +4307,7 @@ CodeGenerator::visitNewArrayCopyOnWrite(LNewArrayCopyOnWrite* lir)
     masm.bind(ool->rejoin());
 }
 
-typedef ArrayObject* (*ArrayConstructorOneArgFn)(JSContext*, HandleObjectGroup, int32_t length);
+typedef JSObject* (*ArrayConstructorOneArgFn)(JSContext*, HandleObjectGroup, int32_t length);
 static const VMFunction ArrayConstructorOneArgInfo =
     FunctionInfo<ArrayConstructorOneArgFn>(ArrayConstructorOneArg);
 
@@ -4308,32 +4318,47 @@ CodeGenerator::visitNewArrayDynamicLength(LNewArrayDynamicLength* lir)
     Register objReg = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
 
-    ArrayObject* templateObject = lir->mir()->templateObject();
+    JSObject* templateObject = lir->mir()->templateObject();
     gc::InitialHeap initialHeap = lir->mir()->initialHeap();
 
     OutOfLineCode* ool = oolCallVM(ArrayConstructorOneArgInfo, lir,
                                    (ArgList(), ImmGCPtr(templateObject->group()), lengthReg),
                                    StoreRegisterTo(objReg));
 
-    size_t numSlots = gc::GetGCKindSlots(templateObject->asTenured().getAllocKind());
-    size_t inlineLength = numSlots >= ObjectElements::VALUES_PER_HEADER
-                        ? numSlots - ObjectElements::VALUES_PER_HEADER
-                        : 0;
+    bool canInline = true;
+    size_t inlineLength = 0;
+    if (templateObject->is<ArrayObject>()) {
+        if (templateObject->as<ArrayObject>().hasFixedElements()) {
+            size_t numSlots = gc::GetGCKindSlots(templateObject->asTenured().getAllocKind());
+            inlineLength = numSlots - ObjectElements::VALUES_PER_HEADER;
+        } else {
+            canInline = false;
+        }
+    } else {
+        if (templateObject->as<UnboxedArrayObject>().hasInlineElements()) {
+            size_t nbytes =
+                templateObject->tenuredSizeOfThis() - UnboxedArrayObject::offsetOfInlineElements();
+            inlineLength = nbytes / templateObject->as<UnboxedArrayObject>().elementSize();
+        } else {
+            canInline = false;
+        }
+    }
 
-    // Try to do the allocation inline if the template object is big enough
-    // for the length in lengthReg. If the length is bigger we could still
-    // use the template object and not allocate the elements, but it's more
-    // efficient to do a single big allocation than (repeatedly) reallocating
-    // the array later on when filling it.
-    if (!templateObject->isSingleton() && templateObject->length() <= inlineLength)
-        masm.branch32(Assembler::Above, lengthReg, Imm32(templateObject->length()), ool->entry());
-    else
+    if (canInline) {
+        // Try to do the allocation inline if the template object is big enough
+        // for the length in lengthReg. If the length is bigger we could still
+        // use the template object and not allocate the elements, but it's more
+        // efficient to do a single big allocation than (repeatedly) reallocating
+        // the array later on when filling it.
+        masm.branch32(Assembler::Above, lengthReg, Imm32(inlineLength), ool->entry());
+
+        masm.createGCObject(objReg, tempReg, templateObject, initialHeap, ool->entry());
+
+        size_t lengthOffset = NativeObject::offsetOfFixedElements() + ObjectElements::offsetOfLength();
+        masm.store32(lengthReg, Address(objReg, lengthOffset));
+    } else {
         masm.jump(ool->entry());
-
-    masm.createGCObject(objReg, tempReg, templateObject, initialHeap, ool->entry());
-
-    size_t lengthOffset = NativeObject::offsetOfFixedElements() + ObjectElements::offsetOfLength();
-    masm.store32(lengthReg, Address(objReg, lengthOffset));
+    }
 
     masm.bind(ool->rejoin());
 }
@@ -6396,6 +6421,25 @@ CodeGenerator::visitIncrementUnboxedArrayInitializedLength(LIncrementUnboxedArra
 {
     Register obj = ToRegister(lir->object());
     masm.add32(Imm32(1), Address(obj, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength()));
+}
+
+void
+CodeGenerator::visitSetUnboxedArrayInitializedLength(LSetUnboxedArrayInitializedLength* lir)
+{
+    Register obj = ToRegister(lir->object());
+    Int32Key key = ToInt32Key(lir->length());
+    Register temp = ToRegister(lir->temp());
+
+    Address initLengthAddr(obj, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength());
+    masm.load32(initLengthAddr, temp);
+    masm.and32(Imm32(UnboxedArrayObject::CapacityMask), temp);
+
+    if (key.isRegister())
+        masm.or32(key.reg(), temp);
+    else
+        masm.or32(Imm32(key.constant()), temp);
+
+    masm.store32(temp, initLengthAddr);
 }
 
 void
@@ -9360,7 +9404,7 @@ CodeGenerator::visitInArray(LInArray* lir)
         }
 
         masm.branch32(Assembler::BelowOrEqual, initLength, Imm32(index), failedInitLength);
-        if (mir->needsHoleCheck()) {
+        if (mir->needsHoleCheck() && mir->unboxedType() == JSVAL_TYPE_MAGIC) {
             NativeObject::elementsSizeMustNotOverflow();
             Address address = Address(elements, index * sizeof(Value));
             masm.branchTestMagic(Assembler::Equal, address, &falseBranch);
@@ -9373,7 +9417,7 @@ CodeGenerator::visitInArray(LInArray* lir)
             failedInitLength = &negativeIntCheck;
 
         masm.branch32(Assembler::BelowOrEqual, initLength, index, failedInitLength);
-        if (mir->needsHoleCheck()) {
+        if (mir->needsHoleCheck() && mir->unboxedType() == JSVAL_TYPE_MAGIC) {
             BaseIndex address = BaseIndex(elements, ToRegister(lir->index()), TimesEight);
             masm.branchTestMagic(Assembler::Equal, address, &falseBranch);
         }

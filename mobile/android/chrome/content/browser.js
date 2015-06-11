@@ -423,7 +423,7 @@ var BrowserApp = {
 
     window.addEventListener("fullscreen", function() {
       Messaging.sendRequest({
-        type: window.fullScreen ? "ToggleChrome:Show" : "ToggleChrome:Hide"
+        type: window.fullScreen ? "ToggleChrome:Hide" : "ToggleChrome:Show"
       });
     }, false);
 

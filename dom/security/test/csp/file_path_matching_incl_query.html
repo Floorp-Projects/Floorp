@@ -1,0 +1,10 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 1147026 - CSP should ignore query string when checking a resource load</title>
+  </head>
+  <body>
+  <div id="testdiv">blocked</div>
+  <script src="http://test1.example.com/tests/dom/security/test/csp/file_path_matching.js?val=foo"></script>
+</body>
+</html>

@@ -71,13 +71,17 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
                                   headerRange.mEnd + sizeof(bigLength));
     if ((mParent && !mParent->mRange.Contains(bigLengthRange)) ||
         !byteRange->Contains(bigLengthRange) ||
-        !mContext->mSource->CachedReadAt(aOffset, bigLength,
+        !mContext->mSource->CachedReadAt(aOffset + 8, bigLength,
                                          sizeof(bigLength), &bytes) ||
         bytes != sizeof(bigLength)) {
       return;
     }
     size = BigEndian::readUint64(bigLength);
     mBodyOffset = bigLengthRange.mEnd;
+  } else if (size == 0) {
+    // box extends to end of file.
+    size = mContext->mByteRanges.LastElement().mEnd - aOffset;
+    mBodyOffset = headerRange.mEnd;
   } else {
     mBodyOffset = headerRange.mEnd;
   }
