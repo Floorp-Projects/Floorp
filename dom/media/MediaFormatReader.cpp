@@ -341,7 +341,11 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
   mSeekable = mDemuxer->IsSeekable();
 
   // Create demuxer object for main thread.
-  mMainThreadDemuxer = mDemuxer->Clone();
+  if (mDemuxer->IsThreadSafe()) {
+    mMainThreadDemuxer = mDemuxer;
+  } else {
+    mMainThreadDemuxer = mDemuxer->Clone();
+  }
   if (!mMainThreadDemuxer) {
     mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
     NS_WARNING("Unable to clone current MediaDataDemuxer");
