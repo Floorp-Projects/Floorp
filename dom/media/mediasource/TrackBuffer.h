@@ -30,11 +30,12 @@ public:
 
   nsRefPtr<ShutdownPromise> Shutdown();
 
+  bool AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset) override;
+
   // Append data to the current decoder.  Also responsible for calling
   // NotifyDataArrived on the decoder to keep buffered range computation up
-  // to date.  Returns false if the append failed.
-  nsRefPtr<AppendPromise> AppendData(MediaLargeByteBuffer* aData,
-                                     TimeUnit aTimestampOffset /* microseconds */) override;
+  // to date.
+  nsRefPtr<AppendPromise> BufferAppend() override;
 
   // Evicts data held in the current decoders SourceBufferResource from the
   // start of the buffer through to aPlaybackTime. aThreshold is used to
@@ -162,6 +163,7 @@ private:
                          SourceBufferDecoder* aDecoder);
 
   nsAutoPtr<ContainerParser> mParser;
+  nsRefPtr<MediaLargeByteBuffer> mInputBuffer;
 
   // A task queue using the shared media thread pool.  Used exclusively to
   // initialize (i.e. call ReadMetadata on) decoders as they are created via
@@ -196,6 +198,7 @@ private:
 
   // The timestamp offset used by our current decoder.
   TimeUnit mLastTimestampOffset;
+  TimeUnit mTimestampOffset;
   TimeUnit mAdjustedTimestamp;
 
   // True if at least one of our decoders has encrypted content.
