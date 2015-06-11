@@ -62,10 +62,11 @@ BluetoothGattService::BluetoothGattService(
   MOZ_ASSERT(aOwner);
   MOZ_ASSERT(!mAppUuid.IsEmpty());
 
-  // Generate bluetooth signal path and a string representation to provide
-  // uuid of this service to applications
+  UuidToString(mServiceId.mId.mUuid, mUuidStr);
+
+  // Generate bluetooth signal path of this service to applications
   nsString path;
-  GeneratePathFromGattId(mServiceId.mId, path, mUuidStr);
+  GeneratePathFromGattId(mServiceId.mId, path);
   RegisterBluetoothSignalHandler(path, this);
 }
 

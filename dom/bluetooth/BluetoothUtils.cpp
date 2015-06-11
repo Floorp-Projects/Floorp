@@ -89,22 +89,14 @@ GenerateUuid(nsAString &aUuidString)
 
 void
 GeneratePathFromGattId(const BluetoothGattId& aId,
-                       nsAString& aPath,
-                       nsAString& aUuidStr)
-{
-  UuidToString(aId.mUuid, aUuidStr);
-
-  aPath.Assign(aUuidStr);
-  aPath.AppendLiteral("_");
-  aPath.AppendInt(aId.mInstanceId);
-}
-
-void
-GeneratePathFromGattId(const BluetoothGattId& aId,
                        nsAString& aPath)
 {
   nsString uuidStr;
-  GeneratePathFromGattId(aId, aPath, uuidStr);
+  UuidToString(aId.mUuid, uuidStr);
+
+  aPath.Assign(uuidStr);
+  aPath.AppendLiteral("_");
+  aPath.AppendInt(aId.mInstanceId);
 }
 
 void

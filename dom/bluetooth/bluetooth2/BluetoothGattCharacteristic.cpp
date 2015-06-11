@@ -68,10 +68,11 @@ BluetoothGattCharacteristic::BluetoothGattCharacteristic(
   MOZ_ASSERT(aOwner);
   MOZ_ASSERT(mService);
 
-  // Generate bluetooth signal path and a string representation to provide uuid
-  // of this characteristic to applications
+  UuidToString(mCharId.mUuid, mUuidStr);
+
+  // Generate bluetooth signal path of this characteristic to applications
   nsString path;
-  GeneratePathFromGattId(mCharId, path, mUuidStr);
+  GeneratePathFromGattId(mCharId, path);
   RegisterBluetoothSignalHandler(path, this);
 }
 
