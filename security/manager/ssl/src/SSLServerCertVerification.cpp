@@ -433,7 +433,9 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
       return SECFailure;
     }
     result = CheckCertHostname(certInput, hostnameInput);
-    if (result == Result::ERROR_BAD_CERT_DOMAIN) {
+    // Treat malformed name information as a domain mismatch.
+    if (result == Result::ERROR_BAD_DER ||
+        result == Result::ERROR_BAD_CERT_DOMAIN) {
       collectedErrors |= nsICertOverrideService::ERROR_MISMATCH;
       errorCodeMismatch = SSL_ERROR_BAD_CERT_DOMAIN;
     } else if (result != Success) {
