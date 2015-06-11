@@ -112,31 +112,43 @@ UseTileTexture(CompositableTextureHostRef& aTexture,
                TextureHost* aNewTexture,
                Compositor* aCompositor)
 {
-  if (aTexture && aTexture->GetFormat() != aNewTexture->GetFormat()) {
-    // Only reuse textures if their format match the new texture's.
-    aTextureSource = nullptr;
-    aTexture = nullptr;
+  MOZ_ASSERT(aNewTexture);
+  if (!aNewTexture) {
+    return;
   }
-  aTexture = aNewTexture;
-  if (aTexture) {
-    if (aCompositor) {
-      aTexture->SetCompositor(aCompositor);
-    }
 
-    if (!aUpdateRect.IsEmpty()) {
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-      aTexture->Updated(nullptr);
-#else
-      // We possibly upload the entire texture contents here. This is a purposeful
-      // decision, as sub-image upload can often be slow and/or unreliable, but
-      // we may want to reevaluate this in the future.
-      // For !HasInternalBuffer() textures, this is likely a no-op.
-      nsIntRegion region = aUpdateRect;
-      aTexture->Updated(&region);
-#endif
+  if (aTexture) {
+    aTexture->SetCompositor(aCompositor);
+    aNewTexture->SetCompositor(aCompositor);
+
+    if (aTexture->GetFormat() != aNewTexture->GetFormat()) {
+      // Only reuse textures if their format match the new texture's.
+      aTextureSource = nullptr;
+      aTexture = nullptr;
     }
-    aTexture->PrepareTextureSource(aTextureSource);
   }
+
+  aTexture = aNewTexture;
+
+
+  if (aCompositor) {
+    aTexture->SetCompositor(aCompositor);
+  }
+
+  if (!aUpdateRect.IsEmpty()) {
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+    aTexture->Updated(nullptr);
+#else
+    // We possibly upload the entire texture contents here. This is a purposeful
+    // decision, as sub-image upload can often be slow and/or unreliable, but
+    // we may want to reevaluate this in the future.
+    // For !HasInternalBuffer() textures, this is likely a no-op.
+    nsIntRegion region = aUpdateRect;
+    aTexture->Updated(&region);
+#endif
+  }
+
+  aTexture->PrepareTextureSource(aTextureSource);
 }
 
 bool
@@ -183,27 +195,22 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
     return false;
   }
 
-  int newFirstTileX = aTiles.firstTileX();
-  int newFirstTileY = aTiles.firstTileY();
-  int oldFirstTileX = mFirstTileX;
-  int oldFirstTileY = mFirstTileY;
-  int newRetainedWidth = aTiles.retainedWidth();
-  int newRetainedHeight = aTiles.retainedHeight();
-  int oldRetainedWidth = mRetainedWidth;
-  int oldRetainedHeight = mRetainedHeight;
+  TilesPlacement oldTiles = mTiles;
+  TilesPlacement newTiles(aTiles.firstTileX(), aTiles.firstTileY(),
+                          aTiles.retainedWidth(), aTiles.retainedHeight());
 
   const InfallibleTArray<TileDescriptor>& tileDescriptors = aTiles.tiles();
 
-  nsTArray<TileHost> oldTiles;
-  mRetainedTiles.SwapElements(oldTiles);
+  nsTArray<TileHost> oldRetainedTiles;
+  mRetainedTiles.SwapElements(oldRetainedTiles);
   mRetainedTiles.SetLength(tileDescriptors.Length());
 
   // Step 1, we need to unlock tiles that don't have an internal buffer after the
   // next frame where they are replaced.
   // Since we are about to replace the tiles' textures, we need to keep their locks
   // somewhere (in mPreviousSharedLock) until we composite the layer.
-  for (size_t i = 0; i < oldTiles.Length(); ++i) {
-    TileHost& tile = oldTiles[i];
+  for (size_t i = 0; i < oldRetainedTiles.Length(); ++i) {
+    TileHost& tile = oldRetainedTiles[i];
     // It can happen that we still have a previous lock at this point,
     // if we changed a tile's front buffer (causing mSharedLock to
     // go into mPreviousSharedLock, and then did not composite that tile until
@@ -213,12 +220,8 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
 
     if (tile.mTextureHost && !tile.mTextureHost->HasInternalBuffer()) {
       MOZ_ASSERT(tile.mSharedLock);
-      int tileX = i / oldRetainedHeight + oldFirstTileX;
-      int tileY = i % oldRetainedHeight + oldFirstTileY;
-
-      if (tileX >= newFirstTileX && tileY >= newFirstTileY &&
-          tileX < (newFirstTileX + newRetainedWidth) &&
-          tileY < (newFirstTileY + newRetainedHeight)) {
+      const TileIntPoint tilePosition = oldTiles.TilePosition(i);
+      if (newTiles.HasTile(tilePosition)) {
         // This tile still exist in the new buffer
         tile.mPreviousSharedLock = tile.mSharedLock;
         tile.mSharedLock = nullptr;
@@ -237,29 +240,25 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
   // they should be with the new retained with and height rather than the
   // old one.
   for (size_t i = 0; i < tileDescriptors.Length(); i++) {
-    int tileX = i / newRetainedHeight + newFirstTileX;
-    int tileY = i % newRetainedHeight + newFirstTileY;
-
+    const TileIntPoint tilePosition = newTiles.TilePosition(i);
     // First, get the already existing tiles to the right place in the array,
     // and use placeholders where there was no tiles.
-    if (tileX < oldFirstTileX || tileY < oldFirstTileY ||
-        tileX >= (oldFirstTileX + oldRetainedWidth) ||
-        tileY >= (oldFirstTileY + oldRetainedHeight)) {
+    if (!oldTiles.HasTile(tilePosition)) {
       mRetainedTiles[i] = GetPlaceholderTile();
     } else {
-      mRetainedTiles[i] = oldTiles[(tileX - oldFirstTileX) * oldRetainedHeight +
-                                   (tileY - oldFirstTileY)];
+      mRetainedTiles[i] = oldRetainedTiles[oldTiles.TileIndex(tilePosition)];
       // If we hit this assertion it means we probably mixed something up in the
       // logic that tries to reuse tiles on the compositor side. It is most likely
       // benign, but we are missing some fast paths so let's try to make it not happen.
-      MOZ_ASSERT(tileX == mRetainedTiles[i].x && tileY == mRetainedTiles[i].y);
+      MOZ_ASSERT(tilePosition.x == mRetainedTiles[i].x &&
+                 tilePosition.y == mRetainedTiles[i].y);
     }
   }
 
   // It is important to remove the duplicated reference to tiles before calling
   // TextureHost::PrepareTextureSource, etc. because depending on the textures
   // ref counts we may or may not get some of the fast paths.
-  oldTiles.Clear();
+  oldRetainedTiles.Clear();
 
   // Step 3, handle the texture updates and release the copy-on-write locks.
   for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
@@ -333,17 +332,13 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
         break;
       }
     }
-
-    tile.x = i / newRetainedHeight + newFirstTileX;
-    tile.y = i % newRetainedHeight + newFirstTileY;
+    TileIntPoint tilePosition = newTiles.TilePosition(i);
+    tile.x = tilePosition.x;
+    tile.y = tilePosition.y;
   }
 
-  mFirstTileX = newFirstTileX;
-  mFirstTileY = newFirstTileY;
-  mRetainedWidth = newRetainedWidth;
-  mRetainedHeight = newRetainedHeight;
+  mTiles = newTiles;
   mValidRegion = aTiles.validRegion();
-
   mResolution = aTiles.resolution();
   mFrameResolution = CSSToParentLayerScale2D(aTiles.frameXResolution(),
                                              aTiles.frameYResolution());
@@ -359,10 +354,8 @@ TiledLayerBufferComposite::Clear()
     tile.ReadUnlockPrevious();
   }
   mRetainedTiles.Clear();
-  mFirstTileX = 0;
-  mFirstTileY = 0;
-  mRetainedWidth = 0;
-  mRetainedHeight = 0;
+  mTiles.mFirst = TileIntPoint();
+  mTiles.mSize = TileIntSize();
   mValidRegion = nsIntRegion();
   mPaintedRegion = nsIntRegion();
   mResolution = 1.0;
@@ -427,7 +420,6 @@ TiledContentHost::Composite(EffectChain& aEffectChain,
 
 void
 TiledContentHost::RenderTile(TileHost& aTile,
-                             const gfxRGBA* aBackgroundColor,
                              EffectChain& aEffectChain,
                              float aOpacity,
                              const gfx::Matrix4x4& aTransform,
@@ -438,20 +430,7 @@ TiledContentHost::RenderTile(TileHost& aTile,
                              const IntSize& aTextureBounds,
                              const gfx::Rect& aVisibleRect)
 {
-  if (aTile.IsPlaceholderTile()) {
-    // This shouldn't ever happen, but let's fail semi-gracefully. No need
-    // to warn, the texture update would have already caught this.
-    return;
-  }
-
-  if (aBackgroundColor) {
-    aEffectChain.mPrimaryEffect = new EffectSolidColor(ToColor(*aBackgroundColor));
-    nsIntRegionRectIterator it(aScreenRegion);
-    for (const IntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
-      Rect graphicsRect(rect->x, rect->y, rect->width, rect->height);
-      mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, 1.0, aTransform);
-    }
-  }
+  MOZ_ASSERT(!aTile.IsPlaceholderTile());
 
   AutoLockTextureHost autoLock(aTile.mTextureHost);
   AutoLockTextureHost autoLockOnWhite(aTile.mTextureHostOnWhite);
@@ -519,9 +498,9 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
   float resolution = aLayerBuffer.GetResolution();
   gfx::Size layerScale(1, 1);
 
-  // We assume that the current frame resolution is the one used in our high
-  // precision layer buffer. Compensate for a changing frame resolution when
-  // rendering the low precision buffer.
+  // Make sure we don't render at low resolution where we have valid high
+  // resolution content, to avoid overdraw and artifacts with semi-transparent
+  // layers.
   if (aLayerBuffer.GetFrameResolution() != mTiledBuffer.GetFrameResolution()) {
     const CSSToParentLayerScale2D& layerResolution = aLayerBuffer.GetFrameResolution();
     const CSSToParentLayerScale2D& localResolution = mTiledBuffer.GetFrameResolution();
@@ -548,55 +527,57 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
 
   DiagnosticFlags componentAlphaDiagnostic = DiagnosticFlags::NO_DIAGNOSTIC;
 
-  uint32_t rowCount = 0;
-  uint32_t tileX = 0;
+  nsIntRegion compositeRegion = aLayerBuffer.GetValidRegion();
+  compositeRegion.AndWith(aVisibleRegion);
+  compositeRegion.SubOut(maskRegion);
+
   IntRect visibleRect = aVisibleRegion.GetBounds();
-  gfx::IntSize scaledTileSize = aLayerBuffer.GetScaledTileSize();
-  for (int32_t x = visibleRect.x; x < visibleRect.x + visibleRect.width;) {
-    rowCount++;
-    int32_t tileStartX = aLayerBuffer.GetTileStart(x, scaledTileSize.width);
-    int32_t w = scaledTileSize.width - tileStartX;
-    if (x + w > visibleRect.x + visibleRect.width) {
-      w = visibleRect.x + visibleRect.width - x;
-    }
-    int tileY = 0;
-    for (int32_t y = visibleRect.y; y < visibleRect.y + visibleRect.height;) {
-      int32_t tileStartY = aLayerBuffer.GetTileStart(y, scaledTileSize.height);
-      int32_t h = scaledTileSize.height - tileStartY;
-      if (y + h > visibleRect.y + visibleRect.height) {
-        h = visibleRect.y + visibleRect.height - y;
-      }
 
-      nsIntPoint tileOrigin = nsIntPoint(aLayerBuffer.RoundDownToTileEdge(x, scaledTileSize.width),
-                                         aLayerBuffer.RoundDownToTileEdge(y, scaledTileSize.height));
-      TileHost& tileTexture = aLayerBuffer.GetTile(tileOrigin);
-      if (!tileTexture.IsPlaceholderTile()) {
-        nsIntRegion tileDrawRegion;
-        tileDrawRegion.And(IntRect(x, y, w, h), aLayerBuffer.GetValidRegion());
-        tileDrawRegion.And(tileDrawRegion, aVisibleRegion);
-        tileDrawRegion.Sub(tileDrawRegion, maskRegion);
-
-        if (!tileDrawRegion.IsEmpty()) {
-          tileDrawRegion.ScaleRoundOut(resolution, resolution);
-          IntPoint tileOffset((x - tileStartX) * resolution,
-                                (y - tileStartY) * resolution);
-          gfx::IntSize tileSize = aLayerBuffer.GetTileSize();
-          RenderTile(tileTexture, aBackgroundColor, aEffectChain, aOpacity, aTransform,
-                     aFilter, aClipRect, tileDrawRegion, tileOffset,
-                     IntSize(tileSize.width, tileSize.height),
-                     gfx::Rect(visibleRect.x, visibleRect.y,
-                               visibleRect.width, visibleRect.height));
-          if (tileTexture.mTextureHostOnWhite) {
-            componentAlphaDiagnostic = DiagnosticFlags::COMPONENT_ALPHA;
-          }
-        }
-      }
-      tileY++;
-      y += h;
-    }
-    tileX++;
-    x += w;
+  if (compositeRegion.IsEmpty()) {
+    return;
   }
+
+  if (aBackgroundColor) {
+    nsIntRegion backgroundRegion = compositeRegion;
+    backgroundRegion.ScaleRoundOut(resolution, resolution);
+    EffectChain effect;
+    effect.mPrimaryEffect = new EffectSolidColor(ToColor(*aBackgroundColor));
+    nsIntRegionRectIterator it(backgroundRegion);
+    for (const IntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
+      Rect graphicsRect(rect->x, rect->y, rect->width, rect->height);
+      mCompositor->DrawQuad(graphicsRect, aClipRect, effect, 1.0, aTransform);
+    }
+  }
+
+  for (size_t i = 0; i < aLayerBuffer.GetTileCount(); ++i) {
+    TileHost& tile = aLayerBuffer.GetTile(i);
+    if (tile.IsPlaceholderTile()) {
+      continue;
+    }
+
+    TileIntPoint tilePosition = aLayerBuffer.GetPlacement().TilePosition(i);
+    // A sanity check that catches a lot of mistakes.
+    MOZ_ASSERT(tilePosition.x == tile.x && tilePosition.y == tile.y);
+
+    IntPoint tileOffset = aLayerBuffer.GetTileOffset(tilePosition);
+    nsIntRegion tileDrawRegion = IntRect(tileOffset, aLayerBuffer.GetScaledTileSize());
+    tileDrawRegion.AndWith(compositeRegion);
+
+    if (tileDrawRegion.IsEmpty()) {
+      continue;
+    }
+
+    tileDrawRegion.ScaleRoundOut(resolution, resolution);
+    RenderTile(tile, aEffectChain, aOpacity,
+               aTransform, aFilter, aClipRect, tileDrawRegion,
+               tileOffset * resolution, aLayerBuffer.GetTileSize(),
+               gfx::Rect(visibleRect.x, visibleRect.y,
+                         visibleRect.width, visibleRect.height));
+    if (tile.mTextureHostOnWhite) {
+      componentAlphaDiagnostic = DiagnosticFlags::COMPONENT_ALPHA;
+    }
+  }
+
   gfx::Rect rect(visibleRect.x, visibleRect.y,
                  visibleRect.width, visibleRect.height);
   GetCompositor()->DrawDiagnostics(DiagnosticFlags::CONTENT | componentAlphaDiagnostic,

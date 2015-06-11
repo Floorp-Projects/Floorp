@@ -1121,6 +1121,8 @@ DumpHeap(JSContext* cx, unsigned argc, Value* vp)
 
     if (i != args.length()) {
         JS_ReportError(cx, "bad arguments passed to dumpHeap");
+        if (dumpFile)
+            fclose(dumpFile);
         return false;
     }
 

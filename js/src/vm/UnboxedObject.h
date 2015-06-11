@@ -416,7 +416,8 @@ class UnboxedArrayObject : public JSObject
 
     static bool convertToNative(JSContext* cx, JSObject* obj);
     static UnboxedArrayObject* create(ExclusiveContext* cx, HandleObjectGroup group,
-                                      uint32_t length, NewObjectKind newKind);
+                                      uint32_t length, NewObjectKind newKind,
+                                      uint32_t maxLength = MaximumCapacity);
 
     void fillAfterConvert(ExclusiveContext* cx,
                           const AutoValueVector& values, size_t* valueCursor);
