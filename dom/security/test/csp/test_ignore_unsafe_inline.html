@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1004703 - ignore 'unsafe-inline' if nonce- or hash-source specified</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * We load a page that contains three scripts using different policies
+ * and make sure 'unsafe-inline' is ignored within script-src if hash-source
+ * or nonce-source is specified.
+ *
+ * The expected output of each test is a sequence of chars.
+ * E.g. the default char we expect is 'a', depending on what inline scripts
+ * are allowed to run we also expect 'b', 'c', 'd'.
+ */
+
+var POLICY_PREFIX = "default-src 'none'; script-src ";
+
+var tests = [
+  {
+    policy: POLICY_PREFIX + "'unsafe-inline'",
+    description: "'unsafe-inline' allows all scripts to execute",
+    file: "file_ignore_unsafe_inline.html",
+    result: "abcd",
+  },
+  {
+    policy: POLICY_PREFIX + "'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI='",
+    description: "defining a hash should only allow one script to execute",
+    file: "file_ignore_unsafe_inline.html",
+    result: "ac",
+  },
+  {
+    policy: POLICY_PREFIX + "'unsafe-inline' 'nonce-FooNonce'",
+    description: "defining a nonce should only allow one script to execute",
+    file: "file_ignore_unsafe_inline.html",
+    result: "ad",
+  },
+  {
+    policy: POLICY_PREFIX + "'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI=' 'nonce-FooNonce'",
+    description: "defining hash and nonce should allow two scripts to execute",
+    file: "file_ignore_unsafe_inline.html",
+    result: "acd",
+  },
+  {
+    policy: POLICY_PREFIX + "'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI=' 'nonce-FooNonce' 'unsafe-inline'",
+    description: "defining hash, nonce and 'unsafe-inline' twice should still only allow two scripts to execute",
+    file: "file_ignore_unsafe_inline.html",
+    result: "acd",
+  },
+  {
+    policy: "default-src 'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI=' 'nonce-FooNonce' ",
+    description: "unsafe-inline should *not* be ignored within default-src even if hash or nonce is specified",
+    file: "file_ignore_unsafe_inline.html",
+    result: "abcd",
+  },
+];
+
+var counter = 0;
+var curTest;
+
+function loadNextTest() {
+  if (counter == tests.length) {
+    document.getElementById("testframe").removeEventListener("load", test, false);
+    SimpleTest.finish();
+    return;
+  }
+
+  curTest = tests[counter++];
+  var src = "file_testserver.sjs?file=";
+  // append the file that should be served
+  src += escape("tests/dom/security/test/csp/" + curTest.file);
+
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(curTest.policy);
+
+  document.getElementById("testframe").addEventListener("load", test, false);
+  document.getElementById("testframe").src = src;
+}
+
+function test() {
+  try {
+    document.getElementById("testframe").removeEventListener('load', test, false);
+    var testframe = document.getElementById("testframe");
+    var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
+    // sort the characters to make sure the result is in ascending order
+    // in case handlers run out of order
+    divcontent = divcontent.split('').sort().join('');
+
+    is(divcontent, curTest.result, curTest.description);
+  }
+  catch (e) {
+    ok(false, "error: could not access content for test " + curTest.description + "!");
+  }
+  loadNextTest();
+}
+
+loadNextTest();
+
+</script>
+</body>
+</html>

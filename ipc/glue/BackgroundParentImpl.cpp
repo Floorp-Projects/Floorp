@@ -27,6 +27,7 @@
 #include "nsThreadUtils.h"
 #include "nsTraceRefcnt.h"
 #include "nsXULAppAPI.h"
+#include "ServiceWorkerManagerParent.h"
 
 #ifdef DISABLE_ASSERTS_FOR_FUZZING
 #define ASSERT_UNLESS_FUZZING(...) do { } while (0)
@@ -82,6 +83,7 @@ namespace ipc {
 using mozilla::dom::ContentParent;
 using mozilla::dom::BroadcastChannelParent;
 using mozilla::dom::ServiceWorkerRegistrationData;
+using mozilla::dom::workers::ServiceWorkerManagerParent;
 
 BackgroundParentImpl::BackgroundParentImpl()
 {
@@ -468,6 +470,27 @@ BackgroundParentImpl::DeallocPBroadcastChannelParent(
   return true;
 }
 
+mozilla::dom::PServiceWorkerManagerParent*
+BackgroundParentImpl::AllocPServiceWorkerManagerParent()
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return new ServiceWorkerManagerParent();
+}
+
+bool
+BackgroundParentImpl::DeallocPServiceWorkerManagerParent(
+                                            PServiceWorkerManagerParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  delete static_cast<ServiceWorkerManagerParent*>(aActor);
+  return true;
+}
+
 media::PMediaParent*
 BackgroundParentImpl::AllocPMediaParent()
 {
@@ -478,187 +501,6 @@ bool
 BackgroundParentImpl::DeallocPMediaParent(media::PMediaParent *aActor)
 {
   return media::DeallocPMediaParent(aActor);
-}
-
-namespace {
-
-class RegisterServiceWorkerCallback final : public nsRunnable
-{
-public:
-  explicit RegisterServiceWorkerCallback(
-                                     const ServiceWorkerRegistrationData& aData)
-    : mData(aData)
-  {
-    AssertIsInMainProcess();
-    AssertIsOnBackgroundThread();
-  }
-
-  NS_IMETHODIMP
-  Run()
-  {
-    AssertIsInMainProcess();
-    AssertIsOnBackgroundThread();
-
-    nsRefPtr<dom::ServiceWorkerRegistrar> service =
-      dom::ServiceWorkerRegistrar::Get();
-    MOZ_ASSERT(service);
-
-    service->RegisterServiceWorker(mData);
-    return NS_OK;
-  }
-
-private:
-  ServiceWorkerRegistrationData mData;
-};
-
-class UnregisterServiceWorkerCallback final : public nsRunnable
-{
-public:
-  UnregisterServiceWorkerCallback(const PrincipalInfo& aPrincipalInfo,
-                                  const nsString& aScope)
-    : mPrincipalInfo(aPrincipalInfo)
-    , mScope(aScope)
-  {
-    AssertIsInMainProcess();
-    AssertIsOnBackgroundThread();
-  }
-
-  NS_IMETHODIMP
-  Run()
-  {
-    AssertIsInMainProcess();
-    AssertIsOnBackgroundThread();
-
-    nsRefPtr<dom::ServiceWorkerRegistrar> service =
-      dom::ServiceWorkerRegistrar::Get();
-    MOZ_ASSERT(service);
-
-    service->UnregisterServiceWorker(mPrincipalInfo,
-                                     NS_ConvertUTF16toUTF8(mScope));
-    return NS_OK;
-  }
-
-private:
-  const PrincipalInfo mPrincipalInfo;
-  nsString mScope;
-};
-
-class CheckPrincipalWithCallbackRunnable final : public nsRunnable
-{
-public:
-  CheckPrincipalWithCallbackRunnable(already_AddRefed<ContentParent> aParent,
-                                     const PrincipalInfo& aPrincipalInfo,
-                                     nsRunnable* aCallback)
-    : mContentParent(aParent)
-    , mPrincipalInfo(aPrincipalInfo)
-    , mCallback(aCallback)
-    , mBackgroundThread(NS_GetCurrentThread())
-  {
-    AssertIsInMainProcess();
-    AssertIsOnBackgroundThread();
-
-    MOZ_ASSERT(mContentParent);
-    MOZ_ASSERT(mCallback);
-    MOZ_ASSERT(mBackgroundThread);
-  }
-
-  NS_IMETHODIMP Run()
-  {
-    if (NS_IsMainThread()) {
-      nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(mPrincipalInfo);
-      AssertAppPrincipal(mContentParent, principal);
-      mContentParent = nullptr;
-
-      mBackgroundThread->Dispatch(this, NS_DISPATCH_NORMAL);
-      return NS_OK;
-    }
-
-    AssertIsOnBackgroundThread();
-    if (mCallback) {
-      mCallback->Run();
-      mCallback = nullptr;
-    }
-
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<ContentParent> mContentParent;
-  PrincipalInfo mPrincipalInfo;
-  nsRefPtr<nsRunnable> mCallback;
-  nsCOMPtr<nsIThread> mBackgroundThread;
-};
-
-} // anonymous namespace
-
-bool
-BackgroundParentImpl::RecvRegisterServiceWorker(
-                                     const ServiceWorkerRegistrationData& aData)
-{
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-
-  // Basic validation.
-  if (aData.scope().IsEmpty() ||
-      aData.scriptSpec().IsEmpty() ||
-      aData.principal().type() == PrincipalInfo::TNullPrincipalInfo ||
-      aData.principal().type() == PrincipalInfo::TSystemPrincipalInfo) {
-    return false;
-  }
-
-  nsRefPtr<RegisterServiceWorkerCallback> callback =
-    new RegisterServiceWorkerCallback(aData);
-
-  nsRefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
-
-  // If the ContentParent is null we are dealing with a same-process actor.
-  if (!parent) {
-    callback->Run();
-    return true;
-  }
-
-  nsRefPtr<CheckPrincipalWithCallbackRunnable> runnable =
-    new CheckPrincipalWithCallbackRunnable(parent.forget(), aData.principal(),
-                                           callback);
-  nsresult rv = NS_DispatchToMainThread(runnable);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
-
-  return true;
-}
-
-bool
-BackgroundParentImpl::RecvUnregisterServiceWorker(
-                                            const PrincipalInfo& aPrincipalInfo,
-                                            const nsString& aScope)
-{
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-
-  // Basic validation.
-  if (aScope.IsEmpty() ||
-      aPrincipalInfo.type() == PrincipalInfo::TNullPrincipalInfo ||
-      aPrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
-    return false;
-  }
-
-  nsRefPtr<UnregisterServiceWorkerCallback> callback =
-    new UnregisterServiceWorkerCallback(aPrincipalInfo, aScope);
-
-  nsRefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
-
-  // If the ContentParent is null we are dealing with a same-process actor.
-  if (!parent) {
-    callback->Run();
-    return true;
-  }
-
-  nsRefPtr<CheckPrincipalWithCallbackRunnable> runnable =
-    new CheckPrincipalWithCallbackRunnable(parent.forget(), aPrincipalInfo,
-                                           callback);
-  nsresult rv = NS_DispatchToMainThread(runnable);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
-
-  return true;
 }
 
 bool

@@ -836,20 +836,6 @@ class HeapSlotArray
     }
 };
 
-/*
- * Operations on a Heap thing inside the GC need to strip the barriers from
- * pointer operations. This template helps do that in contexts where the type
- * is templatized.
- */
-template <typename T> struct Unbarriered {};
-template <typename S> struct Unbarriered< PreBarriered<S> > { typedef S* type; };
-template <typename S> struct Unbarriered< RelocatablePtr<S> > { typedef S* type; };
-template <> struct Unbarriered<PreBarrieredValue> { typedef Value type; };
-template <> struct Unbarriered<RelocatableValue> { typedef Value type; };
-template <typename S> struct Unbarriered< DefaultHasher< PreBarriered<S> > > {
-    typedef DefaultHasher<S*> type;
-};
-
 } /* namespace js */
 
 #endif /* gc_Barrier_h */

@@ -345,7 +345,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsFrameLoader* frameLoader = FrameLoader();
   RenderFrameParent* rfp = nullptr;
   if (frameLoader) {
-    rfp = frameLoader->GetCurrentRemoteFrame();
+    rfp = frameLoader->GetCurrentRenderFrame();
   }
 
   // If we are pointer-events:none then we don't need to HitTest background

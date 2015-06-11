@@ -406,7 +406,7 @@ class JS_FRIEND_API(ElementAdder)
 
     GetBehavior getBehavior() const { return getBehavior_; }
 
-    void append(JSContext* cx, JS::HandleValue v);
+    bool append(JSContext* cx, JS::HandleValue v);
     void appendHole();
 };
 

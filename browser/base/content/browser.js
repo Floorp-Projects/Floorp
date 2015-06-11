@@ -2674,6 +2674,12 @@ let gMenuButtonUpdateBadge = {
   }
 };
 
+// Values for telemtery bins: see TLS_ERROR_REPORT_UI in Histograms.json
+const TLS_ERROR_REPORT_TELEMETRY_AUTO_CHECKED   = 2;
+const TLS_ERROR_REPORT_TELEMETRY_AUTO_UNCHECKED = 3;
+const TLS_ERROR_REPORT_TELEMETRY_MANUAL_SEND    = 4;
+const TLS_ERROR_REPORT_TELEMETRY_AUTO_SEND      = 5;
+
 /**
  * Handle command events bubbling up from error page content
  * or from about:newtab or from remote error pages that invoke
@@ -2687,6 +2693,7 @@ let BrowserOnClick = {
     mm.addMessageListener("Browser:EnableOnlineMode", this);
     mm.addMessageListener("Browser:SendSSLErrorReport", this);
     mm.addMessageListener("Browser:SetSSLErrorReportAuto", this);
+    mm.addMessageListener("Browser:SSLErrorReportTelemetry", this);
   },
 
   uninit: function () {
@@ -2696,6 +2703,7 @@ let BrowserOnClick = {
     mm.removeMessageListener("Browser:EnableOnlineMode", this);
     mm.removeMessageListener("Browser:SendSSLErrorReport", this);
     mm.removeMessageListener("Browser:SetSSLErrorReportAuto", this);
+    mm.removeMessageListener("Browser:SSLErrorReportTelemetry", this);
   },
 
   handleEvent: function (event) {
@@ -2742,6 +2750,16 @@ let BrowserOnClick = {
       break;
       case "Browser:SetSSLErrorReportAuto":
         Services.prefs.setBoolPref("security.ssl.errorReporting.automatic", msg.json.automatic);
+        let bin = TLS_ERROR_REPORT_TELEMETRY_AUTO_UNCHECKED;
+        if (msg.json.automatic) {
+          bin = TLS_ERROR_REPORT_TELEMETRY_AUTO_CHECKED;
+        }
+        Services.telemetry.getHistogramById("TLS_ERROR_REPORT_UI").add(bin);
+      break;
+      case "Browser:SSLErrorReportTelemetry":
+        let reportStatus = msg.data.reportStatus;
+        Services.telemetry.getHistogramById("TLS_ERROR_REPORT_UI")
+          .add(reportStatus);
       break;
     }
   },
@@ -2762,6 +2780,12 @@ let BrowserOnClick = {
       Cu.reportError("User requested certificate error report sending, but certificate error reporting is disabled");
       return;
     }
+
+    let bin = TLS_ERROR_REPORT_TELEMETRY_MANUAL_SEND;
+    if (Services.prefs.getBoolPref("security.ssl.errorReporting.automatic")) {
+      bin = TLS_ERROR_REPORT_TELEMETRY_AUTO_SEND;
+    }
+    Services.telemetry.getHistogramById("TLS_ERROR_REPORT_UI").add(bin);
 
     let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
                            .getService(Ci.nsISerializationHelper);

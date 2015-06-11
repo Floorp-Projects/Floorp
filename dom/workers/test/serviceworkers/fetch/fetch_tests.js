@@ -134,7 +134,7 @@ fetchXHR('hello-after-extracting.gz', function(xhr) {
   finish();
 });
 
-fetchXHR('http://example.com/tests/dom/base/test/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*', function(xhr) {
+fetchXHR('http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*', function(xhr) {
   my_ok(xhr.status == 200, "cross origin load with correct headers should be successful");
   my_ok(xhr.getResponseHeader("access-control-allow-origin") == null, "cors headers should be filtered out");
   finish();
@@ -160,7 +160,7 @@ fetchXHR('redirect_serviceworker.sjs', function(xhr) {
 });
 
 expectAsyncResult();
-fetch('http://example.com/tests/dom/base/test/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*')
+fetch('http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*')
 .then(function(res) {
   my_ok(res.ok, "Valid CORS request should receive valid response");
   my_ok(res.type == "cors", "Response type should be CORS");
@@ -174,7 +174,7 @@ fetch('http://example.com/tests/dom/base/test/file_CrossSiteXHR_server.sjs?statu
 });
 
 expectAsyncResult();
-fetch('http://example.com/tests/dom/base/test/file_CrossSiteXHR_server.sjs?status=200', { mode: 'no-cors' })
+fetch('http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200', { mode: 'no-cors' })
 .then(function(res) {
   my_ok(res.type == "opaque", "Response type should be opaque");
   my_ok(res.status == 0, "Status should be 0");

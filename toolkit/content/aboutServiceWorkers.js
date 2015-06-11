@@ -132,7 +132,7 @@ function display(info) {
   let updateButton = document.createElement("button");
   updateButton.appendChild(document.createTextNode(bundle.GetStringFromName('update')));
   updateButton.onclick = function() {
-    gSWM.softUpdate(info.principal.originAttributes, info.scope);
+    gSWM.propagateSoftUpdate(info.principal.originAttributes, info.scope);
   };
   div.appendChild(updateButton);
 
@@ -164,7 +164,7 @@ function display(info) {
     };
 
     loadingMessage.classList.remove('inactive');
-    gSWM.unregister(info.principal, cb, info.scope);
+    gSWM.propagateUnregister(info.principal, cb, info.scope);
   };
 
   let sep = document.createElement('hr');

@@ -34,7 +34,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_GONK
-#include "GonkDisplay.h"
+#include "BootAnimation.h"
 #endif
 
 #include "BinaryPath.h"
@@ -148,8 +148,8 @@ static int do_main(int argc, char* argv[])
   }
 
 #ifdef MOZ_WIDGET_GONK
-  /* Called to start the boot animation */
-  (void) mozilla::GetGonkDisplay();
+  /* Start boot animation */
+  mozilla::StartBootAnimation();
 #endif
 
   if (appini) {
