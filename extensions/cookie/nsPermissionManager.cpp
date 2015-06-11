@@ -384,7 +384,8 @@ static const char kPermissionChangeNotification[] = PERM_CHANGE_NOTIFICATION;
 NS_IMPL_ISUPPORTS(nsPermissionManager, nsIPermissionManager, nsIObserver, nsISupportsWeakReference)
 
 nsPermissionManager::nsPermissionManager()
- : mLargestID(0)
+ : mMemoryOnlyDB(false)
+ , mLargestID(0)
  , mIsShuttingDown(false)
 {
 }
@@ -426,6 +427,10 @@ nsPermissionManager::Init()
 {
   nsresult rv;
 
+  // If the 'permissions.memory_only' pref is set to true, then don't write any
+  // permission settings to disk, but keep them in a memory-only database.
+  mMemoryOnlyDB = mozilla::Preferences::GetBool("permissions.memory_only", false);
+
   mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv)) {
     mObserverService->AddObserver(this, "profile-before-change", true);
@@ -458,6 +463,23 @@ nsPermissionManager::RefreshPermission() {
 }
 
 nsresult
+nsPermissionManager::OpenDatabase(nsIFile* aPermissionsFile)
+{
+  nsresult rv;
+  nsCOMPtr<mozIStorageService> storage = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+  if (!storage) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  // cache a connection to the hosts database
+  if (mMemoryOnlyDB) {
+    rv = storage->OpenSpecialDatabase("memory", getter_AddRefs(mDBConn));
+  } else {
+    rv = storage->OpenDatabase(aPermissionsFile, getter_AddRefs(mDBConn));
+  }
+  return rv;
+}
+
+nsresult
 nsPermissionManager::InitDB(bool aRemoveFile)
 {
   nsCOMPtr<nsIFile> permissionsFile;
@@ -480,13 +502,10 @@ nsPermissionManager::InitDB(bool aRemoveFile)
     }
   }
 
-  nsCOMPtr<mozIStorageService> storage = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-  if (!storage)
-    return NS_ERROR_UNEXPECTED;
-
-  // cache a connection to the hosts database
-  rv = storage->OpenDatabase(permissionsFile, getter_AddRefs(mDBConn));
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
+  rv = OpenDatabase(permissionsFile);
+  if (rv == NS_ERROR_UNEXPECTED) {
+    return rv;
+  } else if (rv == NS_ERROR_FILE_CORRUPTED) {
     LogToConsole(NS_LITERAL_STRING("permissions.sqlite is corrupted! Try again!"));
 
     // Add telemetry probe
@@ -497,7 +516,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
     NS_ENSURE_SUCCESS(rv, rv);
     LogToConsole(NS_LITERAL_STRING("Corrupted permissions.sqlite has been removed."));
 
-    rv = storage->OpenDatabase(permissionsFile, getter_AddRefs(mDBConn));
+    rv = OpenDatabase(permissionsFile);
     NS_ENSURE_SUCCESS(rv, rv);
     LogToConsole(NS_LITERAL_STRING("OpenDatabase to permissions.sqlite is successful!"));
   }
@@ -515,7 +534,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
     // Add telemetry probe
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::DEFECTIVE_PERMISSIONS_SQL_REMOVED, 1);
 
-    rv = storage->OpenDatabase(permissionsFile, getter_AddRefs(mDBConn));
+    rv = OpenDatabase(permissionsFile);
     NS_ENSURE_SUCCESS(rv, rv);
     LogToConsole(NS_LITERAL_STRING("OpenDatabase to permissions.sqlite is successful!"));
 
