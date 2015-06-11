@@ -14,7 +14,7 @@ let { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils
 let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 let { merge } = devtools.require("sdk/util/object");
 let { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-let { getPerformanceActorsConnection, PerformanceFront } = devtools.require("devtools/performance/front");
+let { getPerformanceFront, PerformanceFront } = devtools.require("devtools/performance/front");
 let TargetFactory = devtools.TargetFactory;
 
 let mm = null;
@@ -31,6 +31,7 @@ const PROFILER_SAMPLE_RATE_PREF = "devtools.performance.profiler.sample-frequenc
 
 const FRAMERATE_PREF = "devtools.performance.ui.enable-framerate";
 const MEMORY_PREF = "devtools.performance.ui.enable-memory";
+const ALLOCATIONS_PREF = "devtools.performance.ui.enable-allocations";
 
 const PLATFORM_DATA_PREF = "devtools.performance.ui.show-platform-data";
 const IDLE_PREF = "devtools.performance.ui.show-idle-blocks";
@@ -52,6 +53,7 @@ let DEFAULT_PREFS = [
   "devtools.performance.ui.show-platform-data",
   "devtools.performance.ui.show-idle-blocks",
   "devtools.performance.ui.enable-memory",
+  "devtools.performance.ui.enable-allocations",
   "devtools.performance.ui.enable-framerate",
   "devtools.performance.ui.show-jit-optimizations",
   "devtools.performance.memory.sample-probability",
@@ -192,10 +194,8 @@ function initBackend(aUrl, targetOps={}) {
     // TEST_PROFILER_FILTER_STATUS = array
     merge(target, targetOps);
 
-    let connection = getPerformanceActorsConnection(target);
-    yield connection.open();
-
-    let front = new PerformanceFront(connection);
+    let front = getPerformanceFront(target);
+    yield front.open();
     return { target, front };
   });
 }
@@ -264,9 +264,9 @@ function consoleExecute (console, method, val) {
 
 function waitForProfilerConnection() {
   let { promise, resolve } = Promise.defer();
-  Services.obs.addObserver(resolve, "performance-actors-connection-opened", false);
+  Services.obs.addObserver(resolve, "performance-tools-connection-opened", false);
   return promise.then(() =>
-    Services.obs.removeObserver(resolve, "performance-actors-connection-opened"));
+    Services.obs.removeObserver(resolve, "performance-tools-connection-opened"));
 }
 
 function* teardown(panel) {
@@ -346,12 +346,13 @@ function* startRecording(panel, options = {
   click(win, button);
   yield clicked;
 
+  yield willStart;
+
   ok(button.hasAttribute("checked"),
     "The record button should now be checked.");
   ok(button.hasAttribute("locked"),
     "The record button should be locked.");
 
-  yield willStart;
   let stateChanged = options.waitForStateChanged
     ? once(win.PerformanceView, win.EVENTS.UI_STATE_CHANGED)
     : Promise.resolve();
@@ -393,12 +394,12 @@ function* stopRecording(panel, options = {
   click(win, button);
   yield clicked;
 
+  yield willStop;
   ok(!button.hasAttribute("checked"),
     "The record button should not be checked.");
   ok(button.hasAttribute("locked"),
     "The record button should be locked.");
 
-  yield willStop;
   let stateChanged = options.waitForStateChanged
     ? once(win.PerformanceView, win.EVENTS.UI_STATE_CHANGED)
     : Promise.resolve();

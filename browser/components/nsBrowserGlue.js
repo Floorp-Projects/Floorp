@@ -1113,7 +1113,10 @@ BrowserGlue.prototype = {
       }
       catch (ex) { /* Don't break the default prompt if telemetry is broken. */ }
 
-      Services.prefs.setBoolPref("browser.shell.isSetAsDefaultBrowser", isDefault);
+      if (isDefault) {
+        let now = Date.now().toString().slice(0, -3);
+        Services.prefs.setCharPref("browser.shell.mostRecentDateSetAsDefault", now);
+      }
 
       if (shouldCheck && !isDefault && !willRecoverSession) {
         Services.tm.mainThread.dispatch(function() {

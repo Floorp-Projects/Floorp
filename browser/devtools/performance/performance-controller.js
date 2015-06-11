@@ -154,7 +154,7 @@ const EVENTS = {
 };
 
 /**
- * The current target and the profiler connection, set by this tool's host.
+ * The current target, toolbox and PerformanceFront, set by this tool's host.
  */
 let gToolbox, gTarget, gFront;
 
@@ -297,7 +297,7 @@ let PerformanceController = {
       withMarkers: true,
       withMemory: this.getOption("enable-memory"),
       withTicks: this.getOption("enable-framerate"),
-      withAllocations: this.getOption("enable-memory"),
+      withAllocations: this.getOption("enable-allocations"),
       allocationsSampleProbability: this.getPref("memory-sample-probability"),
       allocationsMaxLogLength: this.getPref("memory-max-log-length"),
       bufferSize: this.getPref("profiler-buffer-size"),
@@ -458,6 +458,7 @@ let PerformanceController = {
     if (state !== "recording-starting" && this.getRecordings().indexOf(model) === -1) {
       return;
     }
+
     switch (state) {
       // Fired when a RecordingModel was just created from the front
       case "recording-starting":

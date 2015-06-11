@@ -13,9 +13,10 @@ import org.json.JSONObject;
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.home.SearchEngineBar;
+import org.mozilla.gecko.R;
 
 import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 
 import com.jayway.android.robotium.solo.Condition;
@@ -145,15 +146,17 @@ public class testAddSearchEngine extends AboutHomeTest {
         boolean correctNumSearchEnginesDisplayed = waitForCondition(new Condition() {
             @Override
             public boolean isSatisfied() {
-                ListView list = findListViewWithTag(HomePager.LIST_TAG_BROWSER_SEARCH);
-                if (list == null) {
+                ListView searchResultList = findListViewWithTag(HomePager.LIST_TAG_BROWSER_SEARCH);
+                if (searchResultList == null || searchResultList.getAdapter() == null) {
                     return false;
                 }
-                ListAdapter adapter = list.getAdapter();
-                if (adapter == null) {
+
+                SearchEngineBar searchEngineBar = (SearchEngineBar) mSolo.getView(R.id.search_engine_bar);
+                if (searchEngineBar == null || searchEngineBar.getAdapter() == null) {
                     return false;
                 }
-                return (adapter.getCount() == expectedCount);
+
+                return (searchResultList.getAdapter().getCount() + searchEngineBar.getAdapter().getCount() == expectedCount);
             }
         }, MAX_WAIT_TEST_MS);
 

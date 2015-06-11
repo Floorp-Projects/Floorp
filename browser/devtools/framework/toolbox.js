@@ -55,7 +55,7 @@ loader.lazyGetter(this, "toolboxStrings", () => {
 loader.lazyGetter(this, "Selection", () => require("devtools/framework/selection").Selection);
 loader.lazyGetter(this, "InspectorFront", () => require("devtools/server/actors/inspector").InspectorFront);
 loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/toolkit/DevToolsUtils");
-loader.lazyRequireGetter(this, "getPerformanceActorsConnection", "devtools/performance/front", true);
+loader.lazyRequireGetter(this, "getPerformanceFront", "devtools/performance/front", true);
 
 XPCOMUtils.defineLazyGetter(this, "screenManager", () => {
   return Cc["@mozilla.org/gfx/screenmanager;1"].getService(Ci.nsIScreenManager);
@@ -288,6 +288,14 @@ Toolbox.prototype = {
   },
 
   /**
+   * Get the toolbox's performance front. Note that it may not always have been
+   * initialized first. Use `initPerformance()` if needed.
+   */
+  get performance() {
+    return this._performance;
+  },
+
+  /**
    * Get the toolbox's inspector front. Note that it may not always have been
    * initialized first. Use `initInspector()` if needed.
    */
@@ -398,9 +406,8 @@ Toolbox.prototype = {
       ]);
 
       // Lazily connect to the profiler here and don't wait for it to complete,
-      // used to intercept console.profile calls before the performance tools
-      // are open.
-      let profilerReady = this._connectProfiler();
+      // used to intercept console.profile calls before the performance tools are open.
+      let profilerReady = this.initPerformance();
 
       // However, while testing, we must wait for the performance connection to
       // finish, as most tests shut down without waiting for a toolbox
@@ -1889,7 +1896,7 @@ Toolbox.prototype = {
     }));
 
     // Destroy the profiler connection
-    outstanding.push(this._disconnectProfiler());
+    outstanding.push(this.destroyPerformance());
 
     // We need to grab a reference to win before this._host is destroyed.
     let win = this.frame.ownerGlobal;
@@ -1982,27 +1989,28 @@ Toolbox.prototype = {
      "cmd_copy", "cmd_paste", "cmd_selectAll"].forEach(window.goUpdateCommand);
   },
 
-  getPerformanceActorsConnection: function() {
-    if (!this._performanceConnection) {
-      this._performanceConnection = getPerformanceActorsConnection(this.target);
-    }
-    return this._performanceConnection;
-  },
-
   /**
    * Connects to the SPS profiler when the developer tools are open. This is
    * necessary because of the WebConsole's `profile` and `profileEnd` methods.
    */
-  _connectProfiler: Task.async(function*() {
+  initPerformance: Task.async(function*() {
     // If target does not have profiler actor (addons), do not
     // even register the shared performance connection.
     if (!this.target.hasActor("profiler")) {
       return;
     }
 
-    yield this.getPerformanceActorsConnection().open();
+    if (this.performance) {
+      yield this.performance.open();
+      return this.performance;
+    }
+
+    this._performance = getPerformanceFront(this.target);
+    yield this.performance.open();
     // Emit an event when connected, but don't wait on startup for this.
     this.emit("profiler-connected");
+
+    return this.performance;
   }),
 
   /**
@@ -2010,12 +2018,12 @@ Toolbox.prototype = {
    * has not finished initializing, as opening a toolbox does not wait,
    * the performance connection destroy method will wait for it on its own.
    */
-  _disconnectProfiler: Task.async(function*() {
-    if (!this._performanceConnection) {
+  destroyPerformance: Task.async(function*() {
+    if (!this.performance) {
       return;
     }
-    yield this._performanceConnection.destroy();
-    this._performanceConnection = null;
+    yield this.performance.destroy();
+    this._performance = null;
   }),
 
   /**

@@ -971,6 +971,61 @@ describe("loop.store.ActiveRoomStore", function () {
     });
   });
 
+  describe("#localVideoEnabled", function() {
+    it("should add a localSrcVideoObject to the store", function() {
+      var fakeVideoElement = {name: "fakeVideoElement"};
+      expect(store.getStoreState()).to.not.have.property("localSrcVideoObject");
+
+      store.localVideoEnabled({srcVideoObject: fakeVideoElement});
+
+      expect(store.getStoreState()).to.have.property("localSrcVideoObject",
+        fakeVideoElement);
+    });
+  });
+
+  describe("#remoteVideoEnabled", function() {
+    var fakeVideoElement;
+
+    beforeEach(function() {
+      fakeVideoElement = {name: "fakeVideoElement"};
+    });
+
+    it("should add a remoteSrcVideoObject to the store", function() {
+      expect(store.getStoreState()).to.not.have.property("remoteSrcVideoObject");
+
+      store.remoteVideoEnabled({srcVideoObject: fakeVideoElement});
+
+      expect(store.getStoreState()).to.have.property("remoteSrcVideoObject",
+        fakeVideoElement);
+    });
+
+    it("should set remoteVideoEnabled", function() {
+      store.remoteVideoEnabled({srcVideoObject: fakeVideoElement});
+
+      expect(store.getStoreState().remoteVideoEnabled).eql(true);
+    });
+  });
+
+  describe("#remoteVideoDisabled", function() {
+    it("should set remoteVideoEnabled to false", function() {
+      store.setStoreState({
+        remoteVideoEnabled: true
+      });
+
+      store.remoteVideoDisabled();
+
+      expect(store.getStoreState().remoteVideoEnabled).eql(false);
+    });
+  });
+
+  describe("#mediaConnected", function() {
+    it("should set mediaConnected to true", function() {
+      store.mediaConnected();
+
+      expect(store.getStoreState().mediaConnected).eql(true);
+    });
+  });
+
   describe("#screenSharingState", function() {
     beforeEach(function() {
       store.setStoreState({windowId: "1234"});
@@ -1010,6 +1065,34 @@ describe("loop.store.ActiveRoomStore", function () {
       }));
 
       expect(store.getStoreState().receivingScreenShare).eql(true);
+    });
+
+    it("should add a screenShareVideoObject to the store when sharing is active", function() {
+      var fakeVideoElement = {name: "fakeVideoElement"};
+      expect(store.getStoreState()).to.not.have.property("screenShareVideoObject");
+
+      store.receivingScreenShare(new sharedActions.ReceivingScreenShare({
+        receiving: true,
+        srcVideoObject: fakeVideoElement
+      }));
+
+      expect(store.getStoreState()).to.have.property("screenShareVideoObject",
+        fakeVideoElement);
+    });
+
+    it("should clear the screenShareVideoObject from the store when sharing is inactive", function() {
+      store.setStoreState({
+        screenShareVideoObject: {
+          name: "fakeVideoElement"
+        }
+      });
+
+      store.receivingScreenShare(new sharedActions.ReceivingScreenShare({
+        receiving: false,
+        srcVideoObject: null
+      }));
+
+      expect(store.getStoreState().screenShareVideoObject).eql(null);
     });
 
     it("should delete the screen remote video dimensions if screen sharing is not active", function() {
@@ -1161,6 +1244,16 @@ describe("loop.store.ActiveRoomStore", function () {
       store.remotePeerDisconnected();
 
       expect(store.getStoreState().roomState).eql(ROOM_STATES.SESSION_CONNECTED);
+    });
+
+    it("should clear the remoteSrcVideoObject", function() {
+      store.setStoreState({
+        remoteSrcVideoObject: { name: "fakeVideoElement" }
+      });
+
+      store.remotePeerDisconnected();
+
+      expect(store.getStoreState().remoteSrcVideoObject).eql(null);
     });
   });
 

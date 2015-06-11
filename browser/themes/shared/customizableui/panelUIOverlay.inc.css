@@ -461,6 +461,8 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 /* has the minimum size we want, but no padding/margin. */
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-badge-container > .toolbarbutton-icon,
 .customization-palette .toolbarbutton-1 > .toolbarbutton-badge-container > .toolbarbutton-icon {
+  width: 32px;
+  height: 32px;
   min-width: 32px;
   min-height: 32px;
   margin: 0;

@@ -138,7 +138,7 @@ let restart = Task.async(function*() {
 
   browser.reload();
 
-  yield waitForEvent(browser, "load", true);
+  yield BrowserTestUtils.browserLoaded(browser);
   is(browser.getAttribute("remote"), expectedRemote, "Browser should be in the right process");
   browser.messageManager.loadFrameScript("data:,(" + frameScript.toString() + ")();", true);
   return browser;

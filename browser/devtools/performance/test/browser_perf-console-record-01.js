@@ -6,21 +6,21 @@
  * before it was opened.
  */
 
-let { getPerformanceActorsConnection } = devtools.require("devtools/performance/front");
+let { getPerformanceFront } = devtools.require("devtools/performance/front");
 let WAIT_TIME = 10;
 
 function* spawnTest() {
   let profilerConnected = waitForProfilerConnection();
   let { target, toolbox, console } = yield initConsole(SIMPLE_URL);
   yield profilerConnected;
-  let connection = getPerformanceActorsConnection(target);
+  let front = getPerformanceFront(target);
 
-  let profileStart = once(connection, "recording-started");
+  let profileStart = once(front, "recording-started");
   console.profile("rust");
   yield profileStart;
 
   busyWait(WAIT_TIME);
-  let profileEnd = once(connection, "recording-stopped");
+  let profileEnd = once(front, "recording-stopped");
   console.profileEnd("rust");
   yield profileEnd;
 

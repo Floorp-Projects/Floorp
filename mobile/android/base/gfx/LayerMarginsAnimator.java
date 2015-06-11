@@ -110,9 +110,24 @@ public class LayerMarginsAnimator {
         }
 
         ImmutableViewportMetrics metrics = mTarget.getViewportMetrics();
+        if (!canAnimateMargins(metrics, left, top, right, bottom)) {
+            return;
+        }
 
         mAnimationTask = new LayerMarginsAnimationTask(false, metrics, left, top, right, bottom);
         mTarget.getView().postRenderTask(mAnimationTask);
+    }
+
+    /**
+     * Returns true if we can animate the margins from their current position, false otherwise.
+     * We can animate if the given values are not identical (i.e. there is somewhere to animate to).
+     */
+    private static boolean canAnimateMargins(final ImmutableViewportMetrics metrics,
+            final float left, final float top, final float right, final float bottom) {
+        return !(FloatUtils.fuzzyEquals(left, metrics.marginLeft) &&
+                    FloatUtils.fuzzyEquals(top, metrics.marginTop) &&
+                    FloatUtils.fuzzyEquals(right, metrics.marginRight) &&
+                    FloatUtils.fuzzyEquals(bottom, metrics.marginBottom));
     }
 
     /**

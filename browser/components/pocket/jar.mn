@@ -34,7 +34,6 @@ browser.jar:
   content/browser/pocket/panels/img/tag_close@2x.png               (panels/img/tag_close@2x.png)
   content/browser/pocket/panels/img/tag_closeactive@1x.png         (panels/img/tag_closeactive@1x.png)
   content/browser/pocket/panels/img/tag_closeactive@2x.png         (panels/img/tag_closeactive@2x.png)
-  content/browser/pocket/panels/js/dictionary.js                   (panels/js/dictionary.js)
   content/browser/pocket/panels/js/messages.js                     (panels/js/messages.js)
   content/browser/pocket/panels/js/saved.js                        (panels/js/saved.js)
   content/browser/pocket/panels/js/signup.js                       (panels/js/signup.js)

@@ -5,6 +5,9 @@
 
 package org.mozilla.gecko;
 
+import com.nineoldandroids.animation.Animator;
+import com.nineoldandroids.animation.AnimatorListenerAdapter;
+import com.nineoldandroids.animation.ObjectAnimator;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.DynamicToolbar.PinReason;
 import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
@@ -154,7 +157,7 @@ public class BrowserApp extends GeckoApp
                                    BrowserSearch.OnEditSuggestionListener,
                                    OnUrlOpenListener,
                                    OnUrlOpenInBackgroundListener,
-                                   AnchoredPopup.OnShowListener,
+                                   AnchoredPopup.OnVisibilityChangeListener,
                                    ActionModeCompat.Presenter,
                                    LayoutInflater.Factory {
     private static final String LOGTAG = "GeckoBrowserApp";
@@ -184,6 +187,7 @@ public class BrowserApp extends GeckoApp
     public ViewFlipper mActionBarFlipper;
     public ActionModeCompatView mActionBar;
     private BrowserToolbar mBrowserToolbar;
+    private View mDoorhangerOverlay;
     // We can't name the TabStrip class because it's not included on API 9.
     private Refreshable mTabStrip;
     private ToolbarProgressView mProgressView;
@@ -771,6 +775,7 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
             "Menu:Open",
             "Menu:Update",
+            "LightweightTheme:Update",
             "Search:Keyword",
             "Prompt:ShowTop",
             "Accounts:Exist");
@@ -914,6 +919,11 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onAttachedToWindow() {
+        // Gingerbread 2.3 doesn't handle starting alphas correctly, so disable doorhanger overlays for that, and perf.
+        if (!Versions.preHC){
+            mDoorhangerOverlay = findViewById(R.id.doorhanger_overlay);
+            mDoorhangerOverlay.setVisibility(View.VISIBLE);
+        }
         // We can't show the first run experience until Gecko has finished initialization (bug 1077583).
         checkFirstrun(this, new SafeIntent(getIntent()));
     }
@@ -1340,6 +1350,7 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
             "Menu:Open",
             "Menu:Update",
+            "LightweightTheme:Update",
             "Search:Keyword",
             "Prompt:ShowTop",
             "Accounts:Exist");
@@ -1379,7 +1390,7 @@ public class BrowserApp extends GeckoApp
         super.initializeChrome();
 
         mDoorHangerPopup.setAnchor(mBrowserToolbar.getDoorHangerAnchor());
-        mDoorHangerPopup.setOnShowListener(this);
+        mDoorHangerPopup.setOnVisibilityChangeListener(this);
 
         mDynamicToolbar.setLayerView(mLayerView);
         setDynamicToolbarEnabled(mDynamicToolbar.isEnabled());
@@ -1396,12 +1407,32 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onDoorHangerShow() {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
-            }
-        });
+        mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
+
+        if (Versions.preHC) {
+            return;
+        }
+
+        final Animator alphaAnimator = ObjectAnimator.ofFloat(mDoorhangerOverlay, "alpha", 1);
+        alphaAnimator.setDuration(250);
+        TransitionsTracker.track(alphaAnimator);
+
+        alphaAnimator.start();
+
+    }
+
+    @Override
+    public void onDoorHangerHide() {
+        if (Versions.preHC) {
+            return;
+        }
+
+        final Animator alphaAnimator = ObjectAnimator.ofFloat(mDoorhangerOverlay, "alpha", 0);
+        alphaAnimator.setDuration(200);
+
+        TransitionsTracker.track(alphaAnimator);
+
+        alphaAnimator.start();
     }
 
     private void handleClearHistory(final boolean clearSearchHistory) {
@@ -1890,6 +1921,13 @@ public class BrowserApp extends GeckoApp
 
             } else if (event.equals("Search:Keyword")) {
                 storeSearchQuery(message.getString("query"));
+            } else if (event.equals("LightweightTheme:Update")) {
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
+                    }
+                });
             } else if (event.equals("Prompt:ShowTop")) {
                 // Bring this activity to front so the prompt is visible..
                 Intent bringToFrontIntent = new Intent();

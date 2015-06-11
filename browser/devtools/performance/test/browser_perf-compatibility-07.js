@@ -14,11 +14,11 @@ function* spawnTest() {
 
   yield startRecording(panel);
 
-  yield once(front._connection._profiler, "profiler-status");
+  yield once(front._profiler, "profiler-status");
   ok(!$("#details-pane-container").getAttribute("buffer-status"),
     "container does not have [buffer-status] attribute when not supported");
 
-  yield once(front._connection._profiler, "profiler-status");
+  yield once(front._profiler, "profiler-status");
   ok(!$("#details-pane-container").getAttribute("buffer-status"),
     "container does not have [buffer-status] attribute when not supported");
 

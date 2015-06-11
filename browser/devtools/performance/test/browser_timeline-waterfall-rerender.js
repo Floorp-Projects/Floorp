@@ -24,6 +24,7 @@ function* spawnTest() {
   ok(true, "Recording has ended.");
 
   let initialBarsCount = $$(".waterfall-marker-bar").length;
+  info("Initial bars count: " + initialBarsCount);
 
   // Select a portion of the overview.
   let timeline = OverviewView.graphs.get("timeline");
@@ -40,6 +41,7 @@ function* spawnTest() {
   WaterfallView._markersRoot.getChild(1).focus();
 
   let beforeResizeBarsCount = $$(".waterfall-marker-bar").length;
+  info("Before resize bars count: " + beforeResizeBarsCount);
   ok(beforeResizeBarsCount < initialBarsCount,
     "A subset of the total markers was selected.");
 
@@ -53,6 +55,7 @@ function* spawnTest() {
   yield rerendered;
 
   let afterResizeBarsCount = $$(".waterfall-marker-bar").length;
+  info("After resize bars count: " + afterResizeBarsCount);
   is(afterResizeBarsCount, beforeResizeBarsCount,
     "The same subset of the total markers remained visible.");
 
