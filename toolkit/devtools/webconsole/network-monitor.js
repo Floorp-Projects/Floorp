@@ -15,7 +15,18 @@ loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 loader.lazyServiceGetter(this, "gActivityDistributor",
                          "@mozilla.org/network/http-activity-distributor;1",
                          "nsIHttpActivityDistributor");
-loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
+let _testing = false;
+Object.defineProperty(this, "gTesting", {
+  get: function() {
+    try {
+      const { gDevTools } = require("resource:///modules/devtools/gDevTools.jsm");
+      _testing = gDevTools.testing;
+    } catch (e) {
+      // gDevTools is not present on B2G.
+    }
+    return _testing;
+  }
+});
 
 ///////////////////////////////////////////////////////////////////////////////
 // Network logging
@@ -747,7 +758,7 @@ NetworkMonitor.prototype = {
     // TODO: one particular test (browser_styleeditor_fetch-from-cache.js) needs
     // the gDevTools.testing check. We will move to a better way to serve its
     // needs in bug 1167188, where this check should be removed.
-    if (!gDevTools.testing && aChannel.loadInfo &&
+    if (!gTesting && aChannel.loadInfo &&
         aChannel.loadInfo.loadingDocument === null &&
         aChannel.loadInfo.loadingPrincipal === Services.scriptSecurityManager.getSystemPrincipal()) {
       return false;
@@ -768,12 +779,6 @@ NetworkMonitor.prototype = {
       }
     }
 
-    if (aChannel.loadInfo) {
-      if (aChannel.loadInfo.contentPolicyType == Ci.nsIContentPolicy.TYPE_BEACON) {
-        return true;
-      }
-    }
-
     if (this.topFrame) {
       let topFrame = NetworkHelper.getTopFrameForRequest(aChannel);
       if (topFrame && topFrame === this.topFrame) {
@@ -784,6 +789,24 @@ NetworkMonitor.prototype = {
     if (this.appId) {
       let appId = NetworkHelper.getAppIdForRequest(aChannel);
       if (appId && appId == this.appId) {
+        return true;
+      }
+    }
+
+    // The following check is necessary because beacon channels don't come
+    // associated with a load group. Bug 1160837 will hopefully introduce a
+    // platform fix that will render the following code entirely useless.
+    if (aChannel.loadInfo &&
+        aChannel.loadInfo.contentPolicyType == Ci.nsIContentPolicy.TYPE_BEACON) {
+      let nonE10sMatch = this.window &&
+                         aChannel.loadInfo.loadingDocument === this.window.document;
+      let e10sMatch = this.topFrame &&
+                      this.topFrame.contentPrincipal &&
+                      this.topFrame.contentPrincipal.equals(aChannel.loadInfo.loadingPrincipal) &&
+                      this.topFrame.contentPrincipal.URI.spec == aChannel.referrer.spec;
+      let b2gMatch = this.appId &&
+                     aChannel.loadInfo.loadingPrincipal.appId === this.appId;
+      if (nonE10sMatch || e10sMatch || b2gMatch) {
         return true;
       }
     }
