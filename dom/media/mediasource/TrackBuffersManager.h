@@ -84,7 +84,8 @@ public:
 
 private:
   virtual ~TrackBuffersManager();
-  void InitSegmentParserLoop();
+  // All following functions run on the taskqueue.
+  nsRefPtr<AppendPromise> InitSegmentParserLoop();
   void ScheduleSegmentParserLoop();
   void SegmentParserLoop();
   void AppendIncomingBuffers();
@@ -95,12 +96,13 @@ private:
   // Will return a promise that will be resolved once all frames of the current
   // media segment have been processed.
   nsRefPtr<CodedFrameProcessingPromise> CodedFrameProcessing();
-  // Called by ResetParserState. Complete parsing the input buffer for the
-  // current media segment
-  void FinishCodedFrameProcessing();
   void CompleteCodedFrameProcessing();
+  // Called by ResetParserState. Complete parsing the input buffer for the
+  // current media segment.
+  void FinishCodedFrameProcessing();
   void CompleteResetParserState();
-  void CodedFrameRemoval(TimeInterval aInterval);
+  nsRefPtr<RangeRemovalPromise> CodedFrameRemovalWithPromise(TimeInterval aInterval);
+  bool CodedFrameRemoval(TimeInterval aInterval);
   void SetAppendState(AppendState aAppendState);
 
   bool HasVideo() const
@@ -111,6 +113,10 @@ private:
   {
     return mAudioTracks.mNumTracks > 0;
   }
+
+  typedef Pair<nsRefPtr<MediaLargeByteBuffer>, TimeUnit> IncomingBuffer;
+  void AppendIncomingBuffer(IncomingBuffer aData);
+  nsTArray<IncomingBuffer> mIncomingBuffers;
 
   // The input buffer as per http://w3c.github.io/media-source/index.html#sourcebuffer-input-buffer
   nsRefPtr<MediaLargeByteBuffer> mInputBuffer;
@@ -215,9 +221,7 @@ private:
   MediaPromiseRequestHolder<CodedFrameProcessingPromise> mProcessingRequest;
   MediaPromiseHolder<CodedFrameProcessingPromise> mProcessingPromise;
 
-  // SourceBuffer media promise (resolved on the main thread)
   MediaPromiseHolder<AppendPromise> mAppendPromise;
-  MediaPromiseHolder<RangeRemovalPromise> mRangeRemovalPromise;
 
   // Trackbuffers definition.
   nsTArray<TrackData*> GetTracksList();
@@ -262,8 +266,6 @@ private:
 
   // Monitor to protect following objects accessed across multipple threads.
   mutable Monitor mMonitor;
-  typedef Pair<nsRefPtr<MediaLargeByteBuffer>, TimeUnit> IncomingBuffer;
-  nsTArray<IncomingBuffer> mIncomingBuffers;
   // Stable audio and video track time ranges.
   TimeIntervals mVideoBufferedRanges;
   TimeIntervals mAudioBufferedRanges;
