@@ -7391,7 +7391,9 @@ nsContentUtils::GetSurfaceData(mozilla::gfx::DataSourceSurface* aSurface,
                                size_t* aLength, int32_t* aStride)
 {
   mozilla::gfx::DataSourceSurface::MappedSurface map;
-  aSurface->Map(mozilla::gfx::DataSourceSurface::MapType::READ, &map);
+  if (NS_WARN_IF(!aSurface->Map(mozilla::gfx::DataSourceSurface::MapType::READ, &map))) {
+    return nullptr;
+  }
   mozilla::gfx::IntSize size = aSurface->GetSize();
   mozilla::CheckedInt32 requiredBytes =
     mozilla::CheckedInt32(map.mStride) * mozilla::CheckedInt32(size.height);
