@@ -10,11 +10,9 @@
 #include "AudioSegment.h"
 #include "VideoSegment.h"
 #include "nsContentUtils.h"
-#include "nsIAppShell.h"
 #include "nsIObserver.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
-#include "nsWidgetsCID.h"
 #include "prerror.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Attributes.h"
@@ -1839,8 +1837,6 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
 }
 
 
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
 void
 MediaStreamGraphImpl::EnsureRunInStableState()
 {
@@ -1850,12 +1846,7 @@ MediaStreamGraphImpl::EnsureRunInStableState()
     return;
   mPostedRunInStableState = true;
   nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable(this, false);
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  if (appShell) {
-    appShell->RunInStableState(event);
-  } else {
-    NS_ERROR("Appshell already destroyed?");
-  }
+  nsContentUtils::RunInStableState(event.forget());
 }
 
 void
