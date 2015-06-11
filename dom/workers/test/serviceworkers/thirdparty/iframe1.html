@@ -1,0 +1,30 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+  <title>SW third party iframe test</title>
+
+  <script type="text/javascript;version=1.7">
+    function messageListener(event) {
+      let message = eval(event.data);
+
+      dump("got message " + JSON.stringify(message) + "\n");
+      if (message.source == "parent") {
+        document.getElementById("iframe2").src = message.href;
+      }
+      else if (message.source == "iframe") {
+        parent.postMessage(event.data, "*");
+      }
+    }
+  </script>
+
+</head>
+
+<body onload="window.addEventListener('message', messageListener, false);">
+  <iframe id="iframe2"></iframe>
+</body>
+
+</html>
