@@ -5955,7 +5955,7 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
             mIMModule->OnUpdateComposition();
             return NS_OK;
         case NOTIFY_IME_OF_SELECTION_CHANGE:
-            mIMModule->OnSelectionChange(this);
+            mIMModule->OnSelectionChange(this, aIMENotification);
             return NS_OK;
         default:
             return NS_ERROR_NOT_IMPLEMENTED;
