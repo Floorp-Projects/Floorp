@@ -1300,7 +1300,7 @@ MediaFormatReader::GetBuffered()
   int64_t startTime;
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    MOZ_ASSERT(mStartTime != -1, "Need to finish metadata decode first");
+    NS_ENSURE_TRUE(mStartTime >= 0, media::TimeIntervals());
     startTime = mStartTime;
   }
   if (NS_IsMainThread()) {
