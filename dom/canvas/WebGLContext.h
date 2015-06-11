@@ -65,16 +65,6 @@ class nsIDocShell;
 #define MINVALUE_GL_MAX_RENDERBUFFER_SIZE             1024  // Different from the spec, which sets it to 1 on page 164
 #define MINVALUE_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS  8     // Page 164
 
-/*
- * WebGL-only GLenums
- */
-#define LOCAL_GL_BROWSER_DEFAULT_WEBGL                       0x9244
-#define LOCAL_GL_CONTEXT_LOST_WEBGL                          0x9242
-#define LOCAL_GL_MAX_CLIENT_WAIT_TIMEOUT_WEBGL               0x9247
-#define LOCAL_GL_UNPACK_COLORSPACE_CONVERSION_WEBGL          0x9243
-#define LOCAL_GL_UNPACK_FLIP_Y_WEBGL                         0x9240
-#define LOCAL_GL_UNPACK_PREMULTIPLY_ALPHA_WEBGL              0x9241
-
 namespace mozilla {
 
 class WebGLActiveInfo;
@@ -965,7 +955,7 @@ public:
     void Disable(GLenum cap);
     void Enable(GLenum cap);
     bool GetStencilBits(GLint* out_stencilBits);
-    virtual JS::Value GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv);
+    JS::Value GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv);
 
     void GetParameter(JSContext* cx, GLenum pname,
                       JS::MutableHandle<JS::Value> retval, ErrorResult& rv)
@@ -1445,7 +1435,6 @@ protected:
     nsTArray<WebGLRefPtr<WebGLTexture> > mBound2DTextures;
     nsTArray<WebGLRefPtr<WebGLTexture> > mBoundCubeMapTextures;
     nsTArray<WebGLRefPtr<WebGLTexture> > mBound3DTextures;
-    nsTArray<WebGLRefPtr<WebGLSampler> > mBoundSamplers;
 
     void ResolveTexturesForDraw() const;
 
