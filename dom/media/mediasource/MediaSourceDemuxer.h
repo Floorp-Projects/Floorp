@@ -58,8 +58,8 @@ public:
 private:
   ~MediaSourceDemuxer();
   friend class MediaSourceTrackDemuxer;
-  // Scan source buffers and update information. Must own lock.
-  void ScanSourceBuffersForContent();
+  // Scan source buffers and update information.
+  bool ScanSourceBuffersForContent();
   nsRefPtr<InitPromise> AttemptInit();
   TrackBuffersManager* GetManager(TrackInfo::TrackType aType);
   TrackInfo* GetTrackInfo(TrackInfo::TrackType);
