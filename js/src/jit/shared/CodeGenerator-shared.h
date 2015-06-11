@@ -8,6 +8,7 @@
 #define jit_shared_CodeGenerator_shared_h
 
 #include "mozilla/Alignment.h"
+#include "mozilla/Move.h"
 
 #include "jit/JitFrames.h"
 #include "jit/LIR.h"
@@ -578,69 +579,57 @@ class OutOfLineCodeBase : public OutOfLineCode
 // ArgSeq store arguments for OutOfLineCallVM.
 //
 // OutOfLineCallVM are created with "oolCallVM" function. The third argument of
-// this function is an instance of a class which provides a "generate" function
-// to call the "pushArg" needed by the VMFunction call.  The list of argument
-// can be created by using the ArgList function which create an empty list of
-// arguments.  Arguments are added to this list by using the comma operator.
-// The type of the argument list is returned by the comma operator, and due to
-// templates arguments, it is quite painful to write by hand.  It is recommended
-// to use it directly as argument of a template function which would get its
-// arguments infered by the compiler (such as oolCallVM).  The list of arguments
-// must be written in the same order as if you were calling the function in C++.
+// this function is an instance of a class which provides a "generate" in charge
+// of pushing the argument, with "pushArg", for a VMFunction.
+//
+// Such list of arguments can be created by using the "ArgList" function which
+// creates one instance of "ArgSeq", where the type of the arguments are inferred
+// from the type of the arguments.
+//
+// The list of arguments must be written in the same order as if you were
+// calling the function in C++.
 //
 // Example:
-//   (ArgList(), ToRegister(lir->lhs()), ToRegister(lir->rhs()))
+//   ArgList(ToRegister(lir->lhs()), ToRegister(lir->rhs()))
 
-template <class SeqType, typename LastType>
-class ArgSeq : public SeqType
-{
-  private:
-    typedef ArgSeq<SeqType, LastType> ThisType;
-    LastType last_;
+template <typename... ArgTypes>
+class ArgSeq;
 
-  public:
-    ArgSeq(const SeqType& seq, const LastType& last)
-      : SeqType(seq),
-        last_(last)
-    { }
-
-    template <typename NextType>
-    inline ArgSeq<ThisType, NextType>
-    operator, (const NextType& last) const {
-        return ArgSeq<ThisType, NextType>(*this, last);
-    }
-
-    inline void generate(CodeGeneratorShared* codegen) const {
-        codegen->pushArg(last_);
-        this->SeqType::generate(codegen);
-    }
-};
-
-// Mark the end of an argument list.
 template <>
-class ArgSeq<void, void>
+class ArgSeq<>
 {
-  private:
-    typedef ArgSeq<void, void> ThisType;
-
   public:
     ArgSeq() { }
-    ArgSeq(const ThisType&) { }
-
-    template <typename NextType>
-    inline ArgSeq<ThisType, NextType>
-    operator, (const NextType& last) const {
-        return ArgSeq<ThisType, NextType>(*this, last);
-    }
 
     inline void generate(CodeGeneratorShared* codegen) const {
     }
 };
 
-inline ArgSeq<void, void>
-ArgList()
+template <typename HeadType, typename... TailTypes>
+class ArgSeq<HeadType, TailTypes...> : public ArgSeq<TailTypes...>
 {
-    return ArgSeq<void, void>();
+  private:
+    HeadType head_;
+
+  public:
+    explicit ArgSeq(HeadType&& head, TailTypes&&... tail)
+      : ArgSeq<TailTypes...>(mozilla::Move(tail)...),
+        head_(mozilla::Move(head))
+    { }
+
+    // Arguments are pushed in reverse order, from last argument to first
+    // argument.
+    inline void generate(CodeGeneratorShared* codegen) const {
+        this->ArgSeq<TailTypes...>::generate(codegen);
+        codegen->pushArg(head_);
+    }
+};
+
+template <typename... ArgTypes>
+inline ArgSeq<ArgTypes...>
+ArgList(ArgTypes... args)
+{
+    return ArgSeq<ArgTypes...>(mozilla::Move(args)...);
 }
 
 // Store wrappers, to generate the right move of data after the VM call.
