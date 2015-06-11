@@ -82,6 +82,15 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
 }
 
 MediaByteRange
+MoofParser::FirstCompleteMediaHeader()
+{
+  if (Moofs().IsEmpty()) {
+    return MediaByteRange();
+  }
+  return Moofs()[0].mRange;
+}
+
+MediaByteRange
 MoofParser::FirstCompleteMediaSegment()
 {
   for (uint32_t i = 0 ; i < mMediaRanges.Length(); i++) {

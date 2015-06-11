@@ -93,15 +93,21 @@ ContainerParser::InitData()
 }
 
 MediaByteRange
-ContainerParser::MediaSegmentRange()
-{
-  return mCompleteMediaSegmentRange;
-}
-
-MediaByteRange
 ContainerParser::InitSegmentRange()
 {
   return mCompleteInitSegmentRange;
+}
+
+MediaByteRange
+ContainerParser::MediaHeaderRange()
+{
+  return mCompleteMediaHeaderRange;
+}
+
+MediaByteRange
+ContainerParser::MediaSegmentRange()
+{
+  return mCompleteMediaSegmentRange;
 }
 
 class WebMContainerParser : public ContainerParser {
@@ -339,6 +345,7 @@ public:
     mp4_demuxer::Interval<mp4_demuxer::Microseconds> compositionRange =
       mParser->GetCompositionRange(byteRanges);
 
+    mCompleteMediaHeaderRange = mParser->FirstCompleteMediaHeader();
     mCompleteMediaSegmentRange = mParser->FirstCompleteMediaSegment();
     ErrorResult rv;
     mResource->EvictData(mParser->mOffset, mParser->mOffset, rv);
