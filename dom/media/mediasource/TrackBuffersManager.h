@@ -171,6 +171,8 @@ private:
     Maybe<TimeUnit> mLastDecodeTimestamp;
     Maybe<TimeUnit> mLastFrameDuration;
     Maybe<TimeUnit> mHighestEndTimestamp;
+    // Longest frame duration seen in a coded frame group.
+    Maybe<TimeUnit> mLongestFrameDuration;
     bool mNeedRandomAccessPoint;
     nsRefPtr<MediaTrackDemuxer> mDemuxer;
     TrackBuffer mQueuedSamples;
