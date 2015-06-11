@@ -1539,11 +1539,10 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                 let index = (match[1] || 1) - 1;
 
                 if (index >= 0 && index < aReplacements.length) {
-                  let replacement = aReplacements[index];
-                  pairs.push([...replacement]);
+                  pairs.push([...aReplacements[index]]);
                 }
               } else {
-                pairs.push([part, false]);
+                pairs.push([part]);
               }
             }
 
@@ -1572,8 +1571,15 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             if (emphasise) {
               let span = aDescriptionElement.appendChild(
                 document.createElementNS("http://www.w3.org/1999/xhtml", "span"));
-              span.className = "ac-emphasize-text";
               span.textContent = text;
+              switch(emphasise) {
+                case "match":
+                  span.className = "ac-emphasize-text";
+                  break;
+                case "selected":
+                  span.className = "ac-selected-text";
+                  break;
+              }
             } else {
               aDescriptionElement.appendChild(document.createTextNode(text));
             }
@@ -1629,10 +1635,22 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             } else if (action.type == "searchengine") {
               emphasiseUrl = false;
 
-              let sourceStr = this._stringBundle.GetStringFromName("searchWithEngineForQuery");
-              title = this._generateEmphasisPairs(sourceStr, [
-                                                    [action.params.engineName, false],
-                                                    [action.params.searchQuery, true]
+              // The order here is not localizable, we default to appending
+              // "- Search with Engine" to the search string, to be able to
+              // properly generate emphasis pairs. That said, no localization
+              // changed the order while it was possible, so doesn't look like
+              // there's a strong need for that.
+              let {engineName, searchSuggestion, searchQuery} = action.params;
+              let engineStr = "- " +
+                this._stringBundle.formatStringFromName("searchWithEngine",
+                                                        [engineName], 1);
+              let suggestedPart = "";
+              if (searchSuggestion) {
+                suggestedPart = searchSuggestion.substr(searchQuery.length);
+              }
+              title = this._generateEmphasisPairs(`%1$S${suggestedPart} %2$S`, [
+                                                    [searchQuery, "match"],
+                                                    [engineStr, "selected"],
                                                   ]);
               // If this is a default search match, we remove the image so we
               // can style it ourselves with a generic search icon.
@@ -1649,7 +1667,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
               let sourceStr = this._stringBundle.GetStringFromName("visitURL");
               title = this._generateEmphasisPairs(sourceStr, [
-                                                    [displayUrl, true],
+                                                    [displayUrl, "match"],
                                                   ]);
             }
 
@@ -1679,7 +1697,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
             let sourceStr = this._stringBundle.GetStringFromName("visitURL");
             title = this._generateEmphasisPairs(sourceStr, [
-                                                 [displayUrl, true],
+                                                 [displayUrl, "match"],
                                                 ]);
 
             types.delete("autofill");
