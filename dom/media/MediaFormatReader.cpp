@@ -1141,7 +1141,12 @@ MediaFormatReader::OnVideoSkipFailed(MediaTrackDemuxer::SkipFailureHolder aFailu
   mDecoder->NotifyDecodedFrames(aFailure.mSkipped, 0, aFailure.mSkipped);
   MOZ_ASSERT(mVideo.HasPromise());
   if (aFailure.mFailure == DemuxerFailureReason::END_OF_STREAM) {
+    mVideo.mDemuxEOS = true;
+    ScheduleUpdate(TrackType::kVideoTrack);
     mVideo.RejectPromise(END_OF_STREAM, __func__);
+  } else if (aFailure.mFailure == DemuxerFailureReason::WAITING_FOR_DATA) {
+    NotifyWaitingForData(TrackType::kVideoTrack);
+    mVideo.RejectPromise(WAITING_FOR_DATA, __func__);
   } else {
     mVideo.RejectPromise(DECODE_ERROR, __func__);
   }
