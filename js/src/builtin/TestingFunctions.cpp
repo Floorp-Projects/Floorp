@@ -808,8 +808,8 @@ class HasChildTracer : public JS::CallbackTracer
     RootedValue child_;
     bool found_;
 
-    void trace(void** thingp, JS::TraceKind kind) {
-        if (*thingp == child_.toGCThing())
+    void onChild(const JS::GCCellPtr& thing) override {
+        if (thing.asCell() == child_.toGCThing())
             found_ = true;
     }
 

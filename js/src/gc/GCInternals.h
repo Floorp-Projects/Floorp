@@ -138,9 +138,15 @@ void
 CheckHashTablesAfterMovingGC(JSRuntime* rt);
 #endif
 
-struct MovingTracer : JS::CallbackTracer {
+struct MovingTracer : JS::CallbackTracer
+{
     explicit MovingTracer(JSRuntime* rt) : CallbackTracer(rt, TraceWeakMapKeysValues) {}
-    void trace(void** thingp, JS::TraceKind kind) override;
+
+    void onObjectEdge(JSObject** objp) override;
+    void onChild(const JS::GCCellPtr& thing) override {
+        MOZ_ASSERT(!RelocationOverlay::isCellForwarded(thing.asCell()));
+    }
+
 #ifdef DEBUG
     TracerKind getTracerKind() const override { return TracerKind::Moving; }
 #endif
