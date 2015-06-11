@@ -27,7 +27,8 @@ const ALL_MENU_ITEMS = [
   "node-menu-pseudo-hover",
   "node-menu-pseudo-active",
   "node-menu-pseudo-focus",
-  "node-menu-scrollnodeintoview"
+  "node-menu-scrollnodeintoview",
+  "node-menu-screenshotnode"
 ].concat(PASTE_MENU_ITEMS);
 
 const ITEMS_WITHOUT_SHOWDOMPROPS =
@@ -93,7 +94,16 @@ const TEST_CASES = [
       "node-menu-copyimagedatauri",
       "node-menu-pastebefore",
       "node-menu-pasteafter",
-    ]
+      "node-menu-screenshotnode",
+    ],
+  },
+  {
+    desc: "<head> with no html on clipboard",
+    selector: "head",
+    disabled: PASTE_MENU_ITEMS.concat([
+      "node-menu-copyimagedatauri",
+      "node-menu-screenshotnode",
+    ]),
   },
   {
     desc: "<element> with text on clipboard",
@@ -125,6 +135,22 @@ const TEST_CASES = [
     selector: "#paste-area",
     disabled: PASTE_MENU_ITEMS.concat(["node-menu-copyimagedatauri"]),
   },
+  {
+    desc: "<element> that isn't visible on the page, empty clipboard",
+    selector: "#hiddenElement",
+    disabled: PASTE_MENU_ITEMS.concat([
+      "node-menu-copyimagedatauri",
+      "node-menu-screenshotnode",
+    ]),
+  },
+  {
+    desc: "<element> nested in another hidden element, empty clipboard",
+    selector: "#nestedHiddenElement",
+    disabled: PASTE_MENU_ITEMS.concat([
+      "node-menu-copyimagedatauri",
+      "node-menu-screenshotnode",
+    ]),
+  }
 ];
 
 let clipboard = require("sdk/clipboard");

@@ -130,6 +130,12 @@
 <!ENTITY profilerUI.enableMemory             "Record Memory">
 <!ENTITY profilerUI.enableMemory.tooltiptext "Record memory consumption while profiling.">
 
+<!-- LOCALIZATION NOTE (profilerUI.enableAllocations): This string
+  -  is displayed next to a checkbox determining whether or not allocation
+  -  measurements are enabled. -->
+<!ENTITY profilerUI.enableAllocations             "Record Allocations">
+<!ENTITY profilerUI.enableAllocations.tooltiptext "Record Object allocations while profiling.">
+
 <!-- LOCALIZATION NOTE (profilerUI.enableFramerate): This string
   -  is displayed next to a checkbox determining whether or not framerate
   -  is recorded. -->

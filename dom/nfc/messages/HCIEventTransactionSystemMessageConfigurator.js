@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -13,10 +13,23 @@ XPCOMUtils.defineLazyServiceGetter(this, "appsService",
                                    "@mozilla.org/AppsService;1",
                                    "nsIAppsService");
 
-let DEBUG = false;
+XPCOMUtils.defineLazyServiceGetter(this, "aceService",
+                                   "@mozilla.org/secureelement/access-control/ace;1",
+                                   "nsIAccessControlEnforcer");
+
+XPCOMUtils.defineLazyModuleGetter(this, "SEUtils",
+                                  "resource://gre/modules/SEUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "SE", () => {
+  let obj = {};
+  Cu.import("resource://gre/modules/se_consts.js", obj);
+  return obj;
+});
+
+let DEBUG = SE.DEBUG_SE;
 function debug(aMsg) {
   if (DEBUG) {
-    dump("-- HCIEventTransactionSystemMessageConfigurator.js " + Date.now() + " : " + aMsg + "\n");
+    dump("-*- HCIEventTransaction: " + aMsg);
   }
 }
 
@@ -41,33 +54,32 @@ HCIEventTransactionSystemMessageConfigurator.prototype = {
       return Promise.resolve(false);
     }
 
+    let appId = appsService.getAppLocalIdByManifestURL(aManifestURL);
+    if (appId === Ci.nsIScriptSecurityManager.NO_APP_ID) {
+      return Promise.resolve(false);
+    }
+
     return new Promise((resolve, reject) => {
       appsService.getManifestFor(aManifestURL)
       .then((aManifest) => this._checkAppManifest(aMessage.origin, aMessage.aid, aManifest))
-      .then(() => {
-        // FIXME: Bug 884594: Access Control Enforcer
-        // Here we will call ace.isAllowed function which will also return
-        // a Promise, for now we're just resolving shouldDispatch promise
-        debug("dispatching message");
-        resolve(true);
+      .then(() => aceService.isAccessAllowed(appId, aMessage.origin, aMessage.aid))
+      .then((allowed) => {
+        debug("dispatching message: " + allowed);
+        resolve(allowed);
       })
       .catch(() => {
-        // if the Promise chain was broken we don't dispatch the message
         debug("not dispatching");
         resolve(false);
       });
     });
   },
 
-  // we might be doing some async hash computations here, returning
-  // a resolved/rejected promise for now so we can easily fit the method
-  // into a Promise chain
   _checkAppManifest: function _checkAppManifest(aOrigin, aAid, aManifest) {
     DEBUG && debug("aManifest " + JSON.stringify(aManifest));
 
     // convert AID and Secure Element name to uppercased string for comparison
     // with manifest secure_element_access rules
-    let aid = this._byteAIDToHex(aAid);
+    let aid = SEUtils.byteArrayToHexString(aAid);
     let seName = (aOrigin) ? aOrigin.toUpperCase() : "";
 
     let hciRules = aManifest["secure_element_access"] || [];
@@ -93,21 +105,6 @@ HCIEventTransactionSystemMessageConfigurator.prototype = {
     });
 
     return (matchingRule) ? Promise.resolve() : Promise.reject();
-  },
-
-  // FIXME: there is probably something which does this
-  _byteAIDToHex: function _byteAIDToHex(uint8arr) {
-    if (!uint8arr) {
-      return "";
-    }
-
-    var hexStr = "";
-    for (var i = 0; i < uint8arr.length; i++) {
-      var hex = (uint8arr[i] & 0xff).toString(16);
-      hex = (hex.length === 1) ? '0' + hex : hex;
-      hexStr += hex;
-    }
-    return hexStr.toUpperCase();
   },
 
   classID: Components.ID("{b501edd0-28bd-11e4-8c21-0800200c9a66}"),
