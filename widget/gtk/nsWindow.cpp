@@ -5951,6 +5951,9 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
         case NOTIFY_IME_OF_BLUR:
             mIMModule->OnFocusChangeInGecko(false);
             return NS_OK;
+        case NOTIFY_IME_OF_POSITION_CHANGE:
+            mIMModule->OnLayoutChange();
+            return NS_OK;
         case NOTIFY_IME_OF_COMPOSITION_UPDATE:
             mIMModule->OnUpdateComposition();
             return NS_OK;
@@ -5994,7 +5997,8 @@ nsIMEUpdatePreference
 nsWindow::GetIMEUpdatePreference()
 {
     nsIMEUpdatePreference updatePreference(
-        nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE);
+        nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
+        nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE);
     // We shouldn't notify IME of selection change caused by changes of
     // composition string.  Therefore, we don't need to be notified selection
     // changes which are caused by compositionchange events handled.
