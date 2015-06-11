@@ -6,24 +6,24 @@
  * also console recordings that have finished before it was opened.
  */
 
-let { getPerformanceActorsConnection } = devtools.require("devtools/performance/front");
+let { getPerformanceFront } = devtools.require("devtools/performance/front");
 let WAIT_TIME = 10;
 
 function* spawnTest() {
   let profilerConnected = waitForProfilerConnection();
   let { target, toolbox, console } = yield initConsole(SIMPLE_URL);
   yield profilerConnected;
-  let connection = getPerformanceActorsConnection(target);
+  let front = getPerformanceFront(target);
 
-  let profileStart = once(connection, "recording-started");
+  let profileStart = once(front, "recording-started");
   console.profile("rust");
   yield profileStart;
 
-  let profileEnd = once(connection, "recording-stopped");
+  let profileEnd = once(front, "recording-stopped");
   console.profileEnd("rust");
   yield profileEnd;
 
-  profileStart = once(connection, "recording-started");
+  profileStart = once(front, "recording-started");
   console.profile("rust2");
   yield profileStart;
 
@@ -43,7 +43,7 @@ function* spawnTest() {
   is(RecordingsView.selectedItem.attachment, recordings[0],
     "The first console recording should be selected.");
 
-  profileEnd = once(connection, "recording-stopped");
+  profileEnd = once(front, "recording-stopped");
   console.profileEnd("rust2");
   yield profileEnd;
 

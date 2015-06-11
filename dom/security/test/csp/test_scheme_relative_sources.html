@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 921493 - CSP: test whitelisting of scheme-relative sources</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * We load http and https pages and verify that scheme relative sources
+ * are allowed unless its a downgrade from https -> http.
+ *
+ * Please note that the policy contains 'unsafe-inline' so we can use
+ * an inline script to query the result from within the sandboxed iframe
+ * and report it back to the parent document.
+ */
+
+var POLICY = "default-src 'none'; script-src 'unsafe-inline' example.com;";
+
+var tests = [
+  {
+    description: "http -> http",
+    from: "http",
+    to: "http",
+    result: "allowed",
+  },
+  {
+    description: "http -> https",
+    from: "http",
+    to: "https",
+    result: "allowed",
+  },
+  {
+    description: "https -> https",
+    from: "https",
+    to: "https",
+    result: "allowed",
+  },
+  {
+    description: "https -> http",
+    from: "https",
+    to: "http",
+    result: "blocked",
+  }
+];
+
+var counter = 0;
+var curTest;
+
+function loadNextTest() {
+  if (counter == tests.length) {
+    window.removeEventListener("message", receiveMessage, false);
+    SimpleTest.finish();
+    return;
+  }
+
+  curTest = tests[counter++];
+
+  var src = curTest.from +
+             "://example.com/tests/dom/security/test/csp/file_scheme_relative_sources.sjs" +
+            "?scheme=" + curTest.to +
+            "&policy=" + escape(POLICY);
+
+  document.getElementById("testframe").src = src;
+}
+
+// using a postMessage handler to report the result back from
+// within the sandboxed iframe without 'allow-same-origin'.
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event) {
+
+  is(event.data.result, curTest.result,
+     "should be " + curTest.result + " in test (" + curTest.description + ")!");
+
+  loadNextTest();
+}
+
+// get the test started
+loadNextTest();
+
+</script>
+</body>
+</html>

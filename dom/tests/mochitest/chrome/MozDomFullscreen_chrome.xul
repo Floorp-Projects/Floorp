@@ -43,15 +43,16 @@ function firstEntry(event) {
   if (event.type == "MozDOMFullscreen:Entered") {
     window.removeEventListener("MozDOMFullscreen:Entered", firstEntry, false);
     ok(!gReceivedFullscreenEnteredEvent, "MozDOMFullscreen:Entered shouldn't have been triggered twice");
+    ok(event.target, gOuterDoc.body, "First MozDOMFullscreen:Entered should be targeted at outer body");
     gReceivedFullscreenEnteredEvent = true;
   } else if (event.type == "MozDOMFullscreen:NewOrigin") {
     window.removeEventListener("MozDOMFullscreen:NewOrigin", firstEntry, false);
     ok(!gReceivedNewOriginEvent, "MozDOMFullscreen:NewOrigin shouldn't have been triggered twice");
+    ok(event.target, gOuterDoc, "First MozDOMFullscreen:NewOrigin should be targeted at outer doc");
     gReceivedNewOriginEvent = true;
   } else {
     ok(false, "Unknown event received");
   }
-  is(event.target, gOuterDoc, "First " + event.type + " should be targeted at outer doc");
   if (!gReceivedFullscreenEnteredEvent || !gReceivedNewOriginEvent) {
     return;
   }

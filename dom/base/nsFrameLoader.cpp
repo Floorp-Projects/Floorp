@@ -136,6 +136,9 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   : mOwnerContent(aOwner)
   , mAppIdSentToPermissionManager(nsIScriptSecurityManager::NO_APP_ID)
   , mDetachedSubdocViews(nullptr)
+  , mRemoteBrowser(nullptr)
+  , mChildID(0)
+  , mEventMode(EVENT_MODE_NORMAL_DISPATCH)
   , mIsPrerendered(false)
   , mDepthTooGreat(false)
   , mIsTopLevelContent(false)
@@ -151,10 +154,6 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   , mClampScrollPosition(true)
   , mObservingOwnerContent(false)
   , mVisible(true)
-  , mCurrentRemoteFrame(nullptr)
-  , mRemoteBrowser(nullptr)
-  , mChildID(0)
-  , mEventMode(EVENT_MODE_NORMAL_DISPATCH)
 {
   ResetPermissionManagerStatus();
 }
@@ -1489,7 +1488,7 @@ nsFrameLoader::SetOwnerContent(Element* aContent)
     mOwnerContent->RemoveMutationObserver(this);
   }
   mOwnerContent = aContent;
-  if (RenderFrameParent* rfp = GetCurrentRemoteFrame()) {
+  if (RenderFrameParent* rfp = GetCurrentRenderFrame()) {
     rfp->OwnerContentChanged(aContent);
   }
 
@@ -2199,7 +2198,6 @@ nsFrameLoader::TryRemoteBrowser()
     return false;
   }
 
-  mContentParent = mRemoteBrowser->Manager();
   mChildID = mRemoteBrowser->Manager()->ChildID();
 
   nsCOMPtr<nsIDocShellTreeItem> rootItem;
@@ -2224,9 +2222,18 @@ nsFrameLoader::TryRemoteBrowser()
 }
 
 mozilla::dom::PBrowserParent*
-nsFrameLoader::GetRemoteBrowser()
+nsFrameLoader::GetRemoteBrowser() const
 {
   return mRemoteBrowser;
+}
+
+RenderFrameParent*
+nsFrameLoader::GetCurrentRenderFrame() const
+{
+  if (mRemoteBrowser) {
+    return mRemoteBrowser->GetRenderFrame();
+  }
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -2531,7 +2538,6 @@ void
 nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
 {
   MOZ_ASSERT(!mRemoteBrowser);
-  MOZ_ASSERT(!mCurrentRemoteFrame);
   mRemoteFrame = true;
   mRemoteBrowser = TabParent::GetFrom(aTabParent);
   mChildID = mRemoteBrowser ? mRemoteBrowser->Manager()->ChildID() : 0;

@@ -26,6 +26,10 @@
 #endif
 
 namespace mozilla {
+
+struct TileUnit {};
+template<> struct IsPixel<TileUnit> : mozilla::TrueType {};
+
 namespace layers {
 
 // You can enable all the TILING_LOG print statements by
@@ -37,6 +41,24 @@ namespace layers {
 #else
 #  define TILING_LOG(...)
 #endif
+
+// Normal integer division truncates towards zero,
+// we instead want to floor to hangle negative numbers.
+static inline int floor_div(int a, int b)
+{
+  int rem = a % b;
+  int div = a/b;
+  if (rem == 0) {
+    return div;
+  } else {
+    // If the signs are different substract 1.
+    int sub;
+    sub = a ^ b;
+    // The results of this shift is either 0 or -1.
+    sub >>= 8*sizeof(int)-1;
+    return div+sub;
+  }
+}
 
 // An abstract implementation of a tile buffer. This code covers the logic of
 // moving and reusing tiles and leaves the validation up to the implementor. To
@@ -89,17 +111,56 @@ namespace layers {
 // should always be a factor of the tile length, to avoid tiles covering
 // non-integer amounts of pixels.
 
+// Size and Point in number of tiles rather than in pixels
+typedef gfx::IntSizeTyped<TileUnit> TileIntSize;
+typedef gfx::IntPointTyped<TileUnit> TileIntPoint;
+
+/**
+ * Stores the origin and size of a tile buffer and handles switching between
+ * tile indices and tile positions.
+ *
+ * Tile positions in TileIntPoint take the first tile offset into account which
+ * means that two TilesPlacement of the same layer and resolution give tile
+ * positions in the same coordinate space (useful when changing the offset and/or
+ * size of a tile buffer).
+ */
+struct TilesPlacement {
+  // in tiles
+  TileIntPoint mFirst;
+  TileIntSize mSize;
+
+  TilesPlacement(int aFirstX, int aFirstY,
+                 int aRetainedWidth, int aRetainedHeight)
+  : mFirst(aFirstX, aFirstY)
+  , mSize(aRetainedWidth, aRetainedHeight)
+  {}
+
+  int TileIndex(TileIntPoint aPosition) const {
+    return (aPosition.x - mFirst.x) * mSize.height + aPosition.y - mFirst.y;
+  }
+
+  TileIntPoint TilePosition(size_t aIndex) const {
+    return TileIntPoint(
+      mFirst.x + aIndex / mSize.height,
+      mFirst.y + aIndex % mSize.height
+    );
+  }
+
+  bool HasTile(TileIntPoint aPosition) {
+    return aPosition.x >= mFirst.x && aPosition.x < mFirst.x + mSize.width &&
+           aPosition.y >= mFirst.y && aPosition.y < mFirst.y + mSize.height;
+  }
+};
+
 template<typename Derived, typename Tile>
 class TiledLayerBuffer
 {
 public:
   TiledLayerBuffer()
-    : mFirstTileX(0)
-    , mFirstTileY(0)
-    , mRetainedWidth(0)
-    , mRetainedHeight(0)
+    : mTiles(0, 0, 0, 0)
     , mResolution(1)
-    , mTileSize(gfxPlatform::GetPlatform()->GetTileWidth(), gfxPlatform::GetPlatform()->GetTileHeight())
+    , mTileSize(gfxPlatform::GetPlatform()->GetTileWidth(),
+                gfxPlatform::GetPlatform()->GetTileHeight())
   {}
 
   ~TiledLayerBuffer() {}
@@ -117,13 +178,23 @@ public:
   //  GetScaledTileSize().width, GetScaledTileSize().height)
   Tile& GetTile(int x, int y);
 
+  Tile& GetTile(size_t i) { return mRetainedTiles[i]; }
+
+  gfx::IntPoint GetTileOffset(TileIntPoint aPosition) const {
+    gfx::IntSize scaledTileSize = GetScaledTileSize();
+    return gfx::IntPoint(aPosition.x * scaledTileSize.width,
+                         aPosition.y * scaledTileSize.height);
+  }
+
+  const TilesPlacement& GetPlacement() const { return mTiles; }
+
   int TileIndex(const gfx::IntPoint& aTileOrigin) const;
-  int TileIndex(int x, int y) const { return x * mRetainedHeight + y; }
+  int TileIndex(int x, int y) const { return x * mTiles.mSize.height + y; }
 
   bool HasTile(int index) const { return index >= 0 && index < (int)mRetainedTiles.Length(); }
   bool HasTile(const gfx::IntPoint& aTileOrigin) const;
   bool HasTile(int x, int y) const {
-    return x >= 0 && x < mRetainedWidth && y >= 0 && y < mRetainedHeight;
+    return x >= 0 && x < mTiles.mSize.width && y >= 0 && y < mTiles.mSize.height;
   }
 
   const gfx::IntSize& GetTileSize() const { return mTileSize; }
@@ -139,8 +210,8 @@ public:
   void ResetPaintedAndValidState() {
     mPaintedRegion.SetEmpty();
     mValidRegion.SetEmpty();
-    mRetainedWidth = 0;
-    mRetainedHeight = 0;
+    mTiles.mSize.width = 0;
+    mTiles.mSize.height = 0;
     for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
       if (!mRetainedTiles[i].IsPlaceholderTile()) {
         AsDerived().ReleaseTile(mRetainedTiles[i]);
@@ -188,7 +259,7 @@ protected:
   nsIntRegion     mPaintedRegion;
 
   /**
-   * mRetainedTiles is a rectangular buffer of mRetainedWidth x mRetainedHeight
+   * mRetainedTiles is a rectangular buffer of mTiles.mSize.width x mTiles.mSize.height
    * stored as column major with the same origin as mValidRegion.GetBounds().
    * Any tile that does not intersect mValidRegion is a PlaceholderTile.
    * Only the region intersecting with mValidRegion should be read from a tile,
@@ -196,10 +267,7 @@ protected:
    * tiles is scaled by mResolution.
    */
   nsTArray<Tile>  mRetainedTiles;
-  int             mFirstTileX;
-  int             mFirstTileY;
-  int             mRetainedWidth;  // in tiles
-  int             mRetainedHeight; // in tiles
+  TilesPlacement  mTiles;
   float           mResolution;
   gfx::IntSize    mTileSize;
 
@@ -239,29 +307,11 @@ public:
   virtual const nsIntRegion& GetValidRegion() const = 0;
 };
 
-// Normal integer division truncates towards zero,
-// we instead want to floor to hangle negative numbers.
-static inline int floor_div(int a, int b)
-{
-  int rem = a % b;
-  int div = a/b;
-  if (rem == 0) {
-    return div;
-  } else {
-    // If the signs are different substract 1.
-    int sub;
-    sub = a ^ b;
-    // The results of this shift is either 0 or -1.
-    sub >>= 8*sizeof(int)-1;
-    return div+sub;
-  }
-}
-
 template<typename Derived, typename Tile> bool
 TiledLayerBuffer<Derived, Tile>::HasTile(const gfx::IntPoint& aTileOrigin) const {
   gfx::IntSize scaledTileSize = GetScaledTileSize();
-  return HasTile(floor_div(aTileOrigin.x, scaledTileSize.width) - mFirstTileX,
-                 floor_div(aTileOrigin.y, scaledTileSize.height) - mFirstTileY);
+  return HasTile(floor_div(aTileOrigin.x, scaledTileSize.width) - mTiles.mFirst.x,
+                 floor_div(aTileOrigin.y, scaledTileSize.height) - mTiles.mFirst.y);
 }
 
 template<typename Derived, typename Tile> Tile&
@@ -279,8 +329,8 @@ TiledLayerBuffer<Derived, Tile>::TileIndex(const gfx::IntPoint& aTileOrigin) con
   // Find the tile x/y of the first tile and the target tile relative to the (0, 0)
   // origin, the difference is the tile x/y relative to the start of the tile buffer.
   gfx::IntSize scaledTileSize = GetScaledTileSize();
-  return TileIndex(floor_div(aTileOrigin.x, scaledTileSize.width) - mFirstTileX,
-                   floor_div(aTileOrigin.y, scaledTileSize.height) - mFirstTileY);
+  return TileIndex(floor_div(aTileOrigin.x, scaledTileSize.width) - mTiles.mFirst.x,
+                   floor_div(aTileOrigin.y, scaledTileSize.height) - mTiles.mFirst.y);
 }
 
 template<typename Derived, typename Tile> Tile&
@@ -342,7 +392,7 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& newValidRegion,
   // This is the reason we break the style guide with newValidRegion instead
   // of aNewValidRegion - so that the names match better and code easier to read
   const nsIntRegion& oldValidRegion = mValidRegion;
-  const int oldRetainedHeight = mRetainedHeight;
+  const int oldRetainedHeight = mTiles.mSize.height;
 
 #ifdef GFX_TILEDLAYER_RETAINING_LOG
   { // scope ss
@@ -426,8 +476,8 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& newValidRegion,
 
   // Keep track of the number of horizontal/vertical tiles
   // in the buffer so that we can easily look up a tile.
-  mRetainedWidth = tileX;
-  mRetainedHeight = tileY;
+  mTiles.mSize.width = tileX;
+  mTiles.mSize.height = tileY;
 
 #ifdef GFX_TILEDLAYER_RETAINING_LOG
   { // scope ss
@@ -621,8 +671,8 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& newValidRegion,
   mRetainedTiles = newRetainedTiles;
   mValidRegion = newValidRegion;
 
-  mFirstTileX = floor_div(mValidRegion.GetBounds().x, scaledTileSize.width);
-  mFirstTileY = floor_div(mValidRegion.GetBounds().y, scaledTileSize.height);
+  mTiles.mFirst.x = floor_div(mValidRegion.GetBounds().x, scaledTileSize.width);
+  mTiles.mFirst.y = floor_div(mValidRegion.GetBounds().y, scaledTileSize.height);
 
   mPaintedRegion.Or(mPaintedRegion, aPaintRegion);
 }

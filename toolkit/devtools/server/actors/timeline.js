@@ -26,7 +26,7 @@ const events = require("sdk/event/core");
 const {setTimeout, clearTimeout} = require("sdk/timers");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 
-const {MemoryBridge} = require("devtools/server/actors/utils/memory-bridge");
+const {Memory} = require("devtools/toolkit/shared/memory");
 const {FramerateActor} = require("devtools/server/actors/framerate");
 const {StackFrameCache} = require("devtools/server/actors/utils/stack");
 
@@ -265,7 +265,7 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
       docShell.recordProfileTimelineMarkers = true;
     }
 
-    this._memoryBridge = new MemoryBridge(this.tabActor, this._stackFrames);
+    this._memoryBridge = new Memory(this.tabActor, this._stackFrames);
     this._memoryBridge.attach();
     events.on(this._memoryBridge, "garbage-collection", this._onGarbageCollection);
 

@@ -70,8 +70,7 @@ const TARGET_SEARCHENGINE_PREFIX = "searchEngine-";
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let ConsoleAPI = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).ConsoleAPI;
   let consoleOptions = {
-    // toLowerCase is because the loglevel values use title case to be compatible with Log.jsm.
-    maxLogLevel: Services.prefs.getCharPref(PREF_LOG_LEVEL).toLowerCase(),
+    maxLogLevelPref: PREF_LOG_LEVEL,
     prefix: "UITour",
   };
   return new ConsoleAPI(consoleOptions);

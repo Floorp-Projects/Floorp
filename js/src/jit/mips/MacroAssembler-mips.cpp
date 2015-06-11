@@ -1674,6 +1674,12 @@ MacroAssemblerMIPSCompat::or32(Imm32 imm, const Address& dest)
 }
 
 void
+MacroAssemblerMIPSCompat::or32(Register src, Register dest)
+{
+    ma_or(dest, src);
+}
+
+void
 MacroAssemblerMIPSCompat::xor32(Imm32 imm, Register dest)
 {
     ma_xor(dest, imm);

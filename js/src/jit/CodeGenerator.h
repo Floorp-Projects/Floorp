@@ -198,6 +198,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitUnboxedArrayLength(LUnboxedArrayLength* lir);
     void visitUnboxedArrayInitializedLength(LUnboxedArrayInitializedLength* lir);
     void visitIncrementUnboxedArrayInitializedLength(LIncrementUnboxedArrayInitializedLength* lir);
+    void visitSetUnboxedArrayInitializedLength(LSetUnboxedArrayInitializedLength* lir);
     void visitNotO(LNotO* ins);
     void visitNotV(LNotV* ins);
     void visitBoundsCheck(LBoundsCheck* lir);

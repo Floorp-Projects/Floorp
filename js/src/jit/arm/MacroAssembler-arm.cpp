@@ -2006,6 +2006,12 @@ MacroAssemblerARMCompat::or32(Imm32 imm, Register dest)
 }
 
 void
+MacroAssemblerARMCompat::or32(Register src, Register dest)
+{
+    ma_orr(src, dest);
+}
+
+void
 MacroAssemblerARMCompat::xorPtr(Imm32 imm, Register dest)
 {
     ma_eor(imm, dest);

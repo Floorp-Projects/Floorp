@@ -12,10 +12,9 @@ const WAIT_TIME = 1000; // ms
 function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { gFront: front, gTarget: target } = panel.panelWin;
-  let connection = getPerformanceActorsConnection(target);
 
   // Explicitly override the profiler's trait `filterable`
-  connection._profiler.traits.filterable = false;
+  front._profiler.traits.filterable = false;
 
   // Ugly, but we need to also not send the startTime to the server
   // so we don't filter it both on the server and client
