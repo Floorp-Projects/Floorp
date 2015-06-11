@@ -845,6 +845,15 @@ CompositorParent::RecvNotifyRegionInvalidated(const nsIntRegion& aRegion)
   return true;
 }
 
+void
+CompositorParent::Invalidate()
+{
+  if (mLayerManager && mLayerManager->GetRoot()) {
+    mLayerManager->AddInvalidRegion(
+        mLayerManager->GetRoot()->GetVisibleRegion().GetBounds());
+  }
+}
+
 bool
 CompositorParent::RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex)
 {
@@ -894,6 +903,14 @@ void
 CompositorParent::ScheduleRenderOnCompositorThread()
 {
   CancelableTask *renderTask = NewRunnableMethod(this, &CompositorParent::ScheduleComposition);
+  MOZ_ASSERT(CompositorLoop());
+  CompositorLoop()->PostTask(FROM_HERE, renderTask);
+}
+
+void
+CompositorParent::InvalidateOnCompositorThread()
+{
+  CancelableTask *renderTask = NewRunnableMethod(this, &CompositorParent::Invalidate);
   MOZ_ASSERT(CompositorLoop());
   CompositorLoop()->PostTask(FROM_HERE, renderTask);
 }
