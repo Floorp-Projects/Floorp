@@ -15,6 +15,7 @@ function test() {
   run_test_subset([
     test_locbar_suggestion_retention("history", true),
     test_locbar_suggestion_retention("bookmark", true),
+    test_locbar_suggestion_retention("searches", true),
     test_locbar_suggestion_retention("openpage", false),
     test_locbar_suggestion_retention("history", true),
     test_locbar_suggestion_retention("history", false),
