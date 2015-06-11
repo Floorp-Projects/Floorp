@@ -331,7 +331,7 @@ class Node {
     // JS::ubi::Node are both essentially tagged references to other sorts of
     // objects, so letting conversions happen automatically is appropriate.
     MOZ_IMPLICIT Node(JS::HandleValue value);
-    Node(JS::TraceKind kind, void* ptr);
+    explicit Node(const JS::GCCellPtr& thing);
 
     // copy construction and copy assignment just use memcpy, since we know
     // instances contain nothing but a vtable pointer and a data pointer.
