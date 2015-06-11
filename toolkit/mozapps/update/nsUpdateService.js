@@ -520,25 +520,25 @@ function hasUpdateMutex() {
 #endif // XP_WIN
 }
 
-XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpdates() {
+function getCanApplyUpdates() {
   let useService = false;
   if (shouldUseService() && isServiceInstalled()) {
     // No need to perform directory write checks, the maintenance service will
     // be able to write to all directories.
-    LOG("gCanApplyUpdates - bypass the write checks because we'll use the service");
+    LOG("getCanApplyUpdates - bypass the write checks because we'll use the service");
     useService = true;
   }
 
   if (!useService) {
     try {
       var updateTestFile = getUpdateFile([FILE_PERMS_TEST]);
-      LOG("gCanApplyUpdates - testing write access " + updateTestFile.path);
+      LOG("getCanApplyUpdates - testing write access " + updateTestFile.path);
       testWriteAccess(updateTestFile, false);
 #ifdef XP_MACOSX
       // Check that the application bundle can be written to.
       var appDirTestFile = getAppBaseDir();
       appDirTestFile.append(FILE_PERMS_TEST);
-      LOG("gCanApplyUpdates - testing write access " + appDirTestFile.path);
+      LOG("getCanApplyUpdates - testing write access " + appDirTestFile.path);
       if (appDirTestFile.exists()) {
         appDirTestFile.remove(false)
       }
@@ -550,7 +550,7 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
 
       // Example windowsVersion:  Windows XP == 5.1
       var windowsVersion = sysInfo.getProperty("version");
-      LOG("gCanApplyUpdates - windowsVersion = " + windowsVersion);
+      LOG("getCanApplyUpdates - windowsVersion = " + windowsVersion);
 
     /**
      * For Vista, updates can be performed to a location requiring admin
@@ -575,13 +575,13 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
           // appDir is under Program Files, so check if the user can elevate
           userCanElevate = Services.appinfo.QueryInterface(Ci.nsIWinAppHelper).
                            userCanElevate;
-          LOG("gCanApplyUpdates - on Vista, userCanElevate: " + userCanElevate);
+          LOG("getCanApplyUpdates - on Vista, userCanElevate: " + userCanElevate);
         }
         catch (ex) {
           // When the installation directory is not under Program Files,
           // fall through to checking if write access to the
           // installation directory is available.
-          LOG("gCanApplyUpdates - on Vista, appDir is not under Program Files");
+          LOG("getCanApplyUpdates - on Vista, appDir is not under Program Files");
         }
       }
 
@@ -609,7 +609,7 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
         // if we're unable to create the test file this will throw an exception.
         var appDirTestFile = getAppBaseDir();
         appDirTestFile.append(FILE_PERMS_TEST);
-        LOG("gCanApplyUpdates - testing write access " + appDirTestFile.path);
+        LOG("getCanApplyUpdates - testing write access " + appDirTestFile.path);
         if (appDirTestFile.exists())
           appDirTestFile.remove(false)
         appDirTestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
@@ -618,15 +618,15 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
 #endif //XP_WIN
     }
     catch (e) {
-       LOG("gCanApplyUpdates - unable to apply updates. Exception: " + e);
+       LOG("getCanApplyUpdates - unable to apply updates. Exception: " + e);
       // No write privileges to install directory
       return false;
     }
   } // if (!useService)
 
-  LOG("gCanApplyUpdates - able to apply updates");
+  LOG("getCanApplyUpdates - able to apply updates");
   return true;
-});
+}
 
 /**
  * Whether or not the application can stage an update.
@@ -2419,7 +2419,7 @@ UpdateService.prototype = {
     // UPDATE_UNABLE_TO_APPLY_EXTERNAL
     // UPDATE_UNABLE_TO_APPLY_NOTIFY
     AUSTLMY.pingGeneric("UPDATE_UNABLE_TO_APPLY_" + this._pingSuffix,
-                        gCanApplyUpdates, true);
+                        getCanApplyUpdates(), true);
     // Histogram IDs:
     // UPDATE_CANNOT_STAGE_EXTERNAL
     // UPDATE_CANNOT_STAGE_NOTIFY
@@ -2666,7 +2666,7 @@ UpdateService.prototype = {
       return;
     }
 
-    if (!gCanApplyUpdates) {
+    if (!getCanApplyUpdates()) {
       LOG("UpdateService:_selectAndInstallUpdate - the user is unable to " +
           "apply updates... prompting");
       this._showPrompt(update);
@@ -2875,7 +2875,7 @@ UpdateService.prototype = {
     if (--this._updateCheckCount > 0)
       return;
 
-    if (this._incompatibleAddons.length > 0 || !gCanApplyUpdates) {
+    if (this._incompatibleAddons.length > 0 || !getCanApplyUpdates()) {
       LOG("UpdateService:onUpdateEnded - prompting because there are " +
           "incompatible add-ons");
       if (this._incompatibleAddons.length > 0) {
@@ -2923,7 +2923,7 @@ UpdateService.prototype = {
    * See nsIUpdateService.idl
    */
   get canApplyUpdates() {
-    return gCanApplyUpdates && hasUpdateMutex();
+    return getCanApplyUpdates() && hasUpdateMutex();
   },
 
   /**

@@ -13,7 +13,7 @@
  * overrideCallback (optional)
  *   The function to call for the next test. This is typically called when the
  *   wizard page changes but can also be called for other events by the previous
- *   test. If this property isn't defined then the defailtCallback function will
+ *   test. If this property isn't defined then the defaultCallback function will
  *   be called. If this property is defined then all other properties are
  *   optional.
  *
@@ -136,7 +136,7 @@ const PAGEID_DUMMY            = "dummy";                 // Done
 const PAGEID_CHECKING         = "checking";              // Done
 const PAGEID_PLUGIN_UPDATES   = "pluginupdatesfound";
 const PAGEID_NO_UPDATES_FOUND = "noupdatesfound";        // Done
-const PAGEID_MANUAL_UPDATE    = "manualUpdate"; // Tested on license load failure
+const PAGEID_MANUAL_UPDATE    = "manualUpdate";          // Done
 const PAGEID_UNSUPPORTED      = "unsupported";           // Done
 const PAGEID_INCOMPAT_CHECK   = "incompatibleCheck";     // Done
 const PAGEID_FOUND_BASIC      = "updatesfoundbasic";     // Done
@@ -1162,7 +1162,7 @@ function setupAddons(aCallback) {
       // Start the timout timer before the update window is displayed so it can
       // clean up tests that don't successfully display the update window.
       setupTimer(gTestTimeout);
-      aCallback();
+      SimpleTest.executeSoon(aCallback);
     });
   }
 
@@ -1274,7 +1274,7 @@ function resetAddons(aCallback) {
             aAddon.userDisabled = false;
           }
         });
-        aCallback();
+        SimpleTest.executeSoon(aCallback);
       });
     }
   }
