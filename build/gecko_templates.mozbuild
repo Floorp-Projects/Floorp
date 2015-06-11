@@ -32,15 +32,12 @@ def GeckoBinary(linkage='dependent', msvcrt='dynamic', mozglue=None):
         xpcomglue = 'xpcomglue_staticruntime'
         if not CONFIG['GNU_CC']:
             mozglue = None
-            if linkage == 'dependent':
-                USE_LIBS += [
-                    'mozalloc_staticruntime',
-                ]
     else:
         error('msvcrt must be "dynamic" or "static"')
 
     if linkage == 'dependent':
         USE_LIBS += [
+            'mozalloc',
             'nspr',
             '%s_s' % xpcomglue,
             'xul',

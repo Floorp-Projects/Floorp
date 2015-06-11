@@ -7,7 +7,7 @@
 with Files('nsString*'):
     BUG_COMPONENT = ('Core', 'String')
 
-DIRS += ['standalone']
+DIRS += ['standalone', 'nomozalloc']
 
 # On win we build two glue libs - glue linked to crt dlls here and in staticruntime we build
 # a statically linked glue lib.
