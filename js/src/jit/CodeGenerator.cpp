@@ -189,7 +189,7 @@ CodeGenerator::visitValueToInt32(LValueToInt32* lir)
         Register stringReg;
         if (input->mightBeType(MIRType_String)) {
             stringReg = ToRegister(lir->temp());
-            OutOfLineCode* oolString = oolCallVM(StringToNumberInfo, lir, (ArgList(), stringReg),
+            OutOfLineCode* oolString = oolCallVM(StringToNumberInfo, lir, ArgList(stringReg),
                                                  StoreFloatRegisterTo(temp));
             stringEntry = oolString->entry();
             stringRejoin = oolString->rejoin();
@@ -850,7 +850,7 @@ CodeGenerator::visitIntToString(LIntToString* lir)
     Register input = ToRegister(lir->input());
     Register output = ToRegister(lir->output());
 
-    OutOfLineCode* ool = oolCallVM(IntToStringInfo, lir, (ArgList(), input),
+    OutOfLineCode* ool = oolCallVM(IntToStringInfo, lir, ArgList(input),
                                    StoreRegisterTo(output));
 
     emitIntToString(input, output, ool->entry());
@@ -868,7 +868,7 @@ CodeGenerator::visitDoubleToString(LDoubleToString* lir)
     Register temp = ToRegister(lir->tempInt());
     Register output = ToRegister(lir->output());
 
-    OutOfLineCode* ool = oolCallVM(DoubleToStringInfo, lir, (ArgList(), input),
+    OutOfLineCode* ool = oolCallVM(DoubleToStringInfo, lir, ArgList(input),
                                    StoreRegisterTo(output));
 
     // Try double to integer conversion and run integer to string code.
@@ -887,7 +887,7 @@ CodeGenerator::visitValueToString(LValueToString* lir)
     ValueOperand input = ToValue(lir, LValueToString::Input);
     Register output = ToRegister(lir->output());
 
-    OutOfLineCode* ool = oolCallVM(PrimitiveToStringInfo, lir, (ArgList(), input),
+    OutOfLineCode* ool = oolCallVM(PrimitiveToStringInfo, lir, ArgList(input),
                                    StoreRegisterTo(output));
 
     Label done;
@@ -982,7 +982,7 @@ CodeGenerator::visitValueToObjectOrNull(LValueToObjectOrNull* lir)
     ValueOperand input = ToValue(lir, LValueToObjectOrNull::Input);
     Register output = ToRegister(lir->output());
 
-    OutOfLineCode* ool = oolCallVM(ToObjectInfo, lir, (ArgList(), input, Imm32(0)),
+    OutOfLineCode* ool = oolCallVM(ToObjectInfo, lir, ArgList(input, Imm32(0)),
                                    StoreRegisterTo(output));
 
     Label done;
@@ -1701,7 +1701,7 @@ CodeGenerator::visitLambda(LLambda* lir)
     Register tempReg = ToRegister(lir->temp());
     const LambdaFunctionInfo& info = lir->mir()->info();
 
-    OutOfLineCode* ool = oolCallVM(LambdaInfo, lir, (ArgList(), ImmGCPtr(info.fun), scopeChain),
+    OutOfLineCode* ool = oolCallVM(LambdaInfo, lir, ArgList(ImmGCPtr(info.fun), scopeChain),
                                    StoreRegisterTo(output));
 
     MOZ_ASSERT(!info.singletonType);
@@ -2515,7 +2515,7 @@ CodeGenerator::visitConvertElementsToDoubles(LConvertElementsToDoubles* lir)
     Register elements = ToRegister(lir->elements());
 
     OutOfLineCode* ool = oolCallVM(ConvertElementsToDoublesInfo, lir,
-                                   (ArgList(), elements), StoreNothing());
+                                   ArgList(elements), StoreNothing());
 
     Address convertedAddress(elements, ObjectElements::offsetOfFlags());
     Imm32 bit(ObjectElements::CONVERT_DOUBLE_ELEMENTS);
@@ -2561,7 +2561,7 @@ CodeGenerator::visitMaybeCopyElementsForWrite(LMaybeCopyElementsForWrite* lir)
     Register temp = ToRegister(lir->temp());
 
     OutOfLineCode* ool = oolCallVM(CopyElementsForWriteInfo, lir,
-                                   (ArgList(), object), StoreNothing());
+                                   ArgList(object), StoreNothing());
 
     if (lir->mir()->checkNative()) {
         masm.loadObjClass(object, temp);
@@ -4299,7 +4299,7 @@ CodeGenerator::visitNewArrayCopyOnWrite(LNewArrayCopyOnWrite* lir)
 
     // If we have a template object, we can inline call object creation.
     OutOfLineCode* ool = oolCallVM(NewArrayCopyOnWriteInfo, lir,
-                                   (ArgList(), ImmGCPtr(templateObject), Imm32(initialHeap)),
+                                   ArgList(ImmGCPtr(templateObject), Imm32(initialHeap)),
                                    StoreRegisterTo(objReg));
 
     masm.createGCObject(objReg, tempReg, templateObject, initialHeap, ool->entry());
@@ -4322,7 +4322,7 @@ CodeGenerator::visitNewArrayDynamicLength(LNewArrayDynamicLength* lir)
     gc::InitialHeap initialHeap = lir->mir()->initialHeap();
 
     OutOfLineCode* ool = oolCallVM(ArrayConstructorOneArgInfo, lir,
-                                   (ArgList(), ImmGCPtr(templateObject->group()), lengthReg),
+                                   ArgList(ImmGCPtr(templateObject->group()), lengthReg),
                                    StoreRegisterTo(objReg));
 
     bool canInline = true;
@@ -4559,7 +4559,7 @@ CodeGenerator::visitNewTypedObject(LNewTypedObject* lir)
     gc::InitialHeap initialHeap = lir->mir()->initialHeap();
 
     OutOfLineCode* ool = oolCallVM(NewTypedObjectInfo, lir,
-                                   (ArgList(), ImmGCPtr(templateObject), Imm32(initialHeap)),
+                                   ArgList(ImmGCPtr(templateObject), Imm32(initialHeap)),
                                    StoreRegisterTo(object));
 
     masm.createGCObject(object, temp, templateObject, initialHeap, ool->entry());
@@ -4581,7 +4581,7 @@ CodeGenerator::visitSimdBox(LSimdBox* lir)
     MOZ_ASSERT(lir->safepoint()->liveRegs().has(in),
                "Save the input register across the oolCallVM");
     OutOfLineCode* ool = oolCallVM(NewTypedObjectInfo, lir,
-                                   (ArgList(), ImmGCPtr(templateObject), Imm32(initialHeap)),
+                                   ArgList(ImmGCPtr(templateObject), Imm32(initialHeap)),
                                    StoreRegisterTo(object));
 
     masm.createGCObject(object, temp, templateObject, initialHeap, ool->entry());
@@ -4705,8 +4705,7 @@ CodeGenerator::visitNewDeclEnvObject(LNewDeclEnvObject* lir)
 
     // If we have a template object, we can inline call object creation.
     OutOfLineCode* ool = oolCallVM(NewDeclEnvObjectInfo, lir,
-                                   (ArgList(), ImmGCPtr(info.funMaybeLazy()),
-                                    Imm32(gc::DefaultHeap)),
+                                   ArgList(ImmGCPtr(info.funMaybeLazy()), Imm32(gc::DefaultHeap)),
                                    StoreRegisterTo(objReg));
 
     bool initContents = ShouldInitFixedSlots(lir, templateObj);
@@ -4731,9 +4730,9 @@ CodeGenerator::visitNewCallObject(LNewCallObject* lir)
     JSScript* script = lir->mir()->block()->info().script();
     uint32_t lexicalBegin = script->bindings.aliasedBodyLevelLexicalBegin();
     OutOfLineCode* ool = oolCallVM(NewCallObjectInfo, lir,
-                                   (ArgList(), ImmGCPtr(templateObj->lastProperty()),
-                                               ImmGCPtr(templateObj->group()),
-                                               Imm32(lexicalBegin)),
+                                   ArgList(ImmGCPtr(templateObj->lastProperty()),
+                                           ImmGCPtr(templateObj->group()),
+                                           Imm32(lexicalBegin)),
                                    StoreRegisterTo(objReg));
 
     // Inline call object creation, using the OOL path only for tricky cases.
@@ -4759,8 +4758,8 @@ CodeGenerator::visitNewSingletonCallObject(LNewSingletonCallObject* lir)
     uint32_t lexicalBegin = script->bindings.aliasedBodyLevelLexicalBegin();
     OutOfLineCode* ool;
     ool = oolCallVM(NewSingletonCallObjectInfo, lir,
-                    (ArgList(), ImmGCPtr(templateObj->as<CallObject>().lastProperty()),
-                                Imm32(lexicalBegin)),
+                    ArgList(ImmGCPtr(templateObj->as<CallObject>().lastProperty()),
+                            Imm32(lexicalBegin)),
                     StoreRegisterTo(objReg));
 
     // Objects can only be given singleton types in VM calls.  We make the call
@@ -4782,7 +4781,7 @@ CodeGenerator::visitNewStringObject(LNewStringObject* lir)
 
     StringObject* templateObj = lir->mir()->templateObj();
 
-    OutOfLineCode* ool = oolCallVM(NewStringObjectInfo, lir, (ArgList(), input),
+    OutOfLineCode* ool = oolCallVM(NewStringObjectInfo, lir, ArgList(input),
                                    StoreRegisterTo(output));
 
     masm.createGCObject(output, temp, templateObj, gc::DefaultHeap, ool->entry());
@@ -4934,7 +4933,7 @@ CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate* lir)
     Register tempReg = ToRegister(lir->temp());
 
     OutOfLineCode* ool = oolCallVM(NewInitObjectWithTemplateInfo, lir,
-                                   (ArgList(), ImmGCPtr(templateObject)),
+                                   ArgList(ImmGCPtr(templateObject)),
                                    StoreRegisterTo(objReg));
 
     // Allocate. If the FreeList is empty, call to VM, which may GC.
@@ -5037,7 +5036,7 @@ CodeGenerator::visitComputeThis(LComputeThis* lir)
     ValueOperand value = ToValue(lir, LComputeThis::ValueIndex);
     Register output = ToRegister(lir->output());
 
-    OutOfLineCode* ool = oolCallVM(BoxNonStrictThisInfo, lir, (ArgList(), value),
+    OutOfLineCode* ool = oolCallVM(BoxNonStrictThisInfo, lir, ArgList(value),
                                    StoreRegisterTo(output));
 
     masm.branchTestObject(Assembler::NotEqual, value, ool->entry());
@@ -5465,10 +5464,10 @@ CodeGenerator::emitCompareS(LInstruction* lir, JSOp op, Register left, Register 
     OutOfLineCode* ool = nullptr;
 
     if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
-        ool = oolCallVM(StringsEqualInfo, lir, (ArgList(), left, right),  StoreRegisterTo(output));
+        ool = oolCallVM(StringsEqualInfo, lir, ArgList(left, right),  StoreRegisterTo(output));
     } else {
         MOZ_ASSERT(op == JSOP_NE || op == JSOP_STRICTNE);
-        ool = oolCallVM(StringsNotEqualInfo, lir, (ArgList(), left, right), StoreRegisterTo(output));
+        ool = oolCallVM(StringsNotEqualInfo, lir, ArgList(left, right), StoreRegisterTo(output));
     }
 
     masm.compareStrings(op, left, right, output, ool->entry());
@@ -5819,7 +5818,7 @@ static const VMFunction ConcatStringsInfo = FunctionInfo<ConcatStringsFn>(Concat
 void
 CodeGenerator::emitConcat(LInstruction* lir, Register lhs, Register rhs, Register output)
 {
-    OutOfLineCode* ool = oolCallVM(ConcatStringsInfo, lir, (ArgList(), lhs, rhs),
+    OutOfLineCode* ool = oolCallVM(ConcatStringsInfo, lir, ArgList(lhs, rhs),
                                    StoreRegisterTo(output));
 
     JitCode* stringConcatStub = gen->compartment->jitCompartment()->stringConcatStubNoBarrier();
@@ -6009,8 +6008,8 @@ CodeGenerator::visitSubstr(LSubstr* lir)
     // can be handled by allocate in ool code and returning to jit code to fill
     // in all data.
     OutOfLineCode* ool = oolCallVM(SubstringKernelInfo, lir,
-                                   (ArgList(), string, begin, length),
-                                    StoreRegisterTo(output));
+                                   ArgList(string, begin, length),
+                                   StoreRegisterTo(output));
     Label* slowPath = ool->entry();
     Label* done = ool->rejoin();
 
@@ -6338,7 +6337,7 @@ CodeGenerator::visitCharCodeAt(LCharCodeAt* lir)
     Register index = ToRegister(lir->index());
     Register output = ToRegister(lir->output());
 
-    OutOfLineCode* ool = oolCallVM(CharCodeAtInfo, lir, (ArgList(), str, index), StoreRegisterTo(output));
+    OutOfLineCode* ool = oolCallVM(CharCodeAtInfo, lir, ArgList(str, index), StoreRegisterTo(output));
 
     masm.branchIfRope(str, ool->entry());
     masm.loadStringChar(str, index, output);
@@ -6355,7 +6354,7 @@ CodeGenerator::visitFromCharCode(LFromCharCode* lir)
     Register code = ToRegister(lir->code());
     Register output = ToRegister(lir->output());
 
-    OutOfLineCode* ool = oolCallVM(StringFromCharCodeInfo, lir, (ArgList(), code), StoreRegisterTo(output));
+    OutOfLineCode* ool = oolCallVM(StringFromCharCodeInfo, lir, ArgList(code), StoreRegisterTo(output));
 
     // OOL path if code >= UNIT_STATIC_LIMIT.
     masm.branch32(Assembler::AboveOrEqual, code, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
@@ -6996,7 +6995,7 @@ CodeGenerator::visitConvertUnboxedObjectToNative(LConvertUnboxedObjectToNative* 
     OutOfLineCode* ool = oolCallVM(lir->mir()->group()->unboxedLayoutDontCheckGeneration().isArray()
                                    ? ConvertUnboxedArrayObjectToNativeInfo
                                    : ConvertUnboxedPlainObjectToNativeInfo,
-                                   lir, (ArgList(), object), StoreNothing());
+                                   lir, ArgList(object), StoreNothing());
 
     masm.branchPtr(Assembler::Equal, Address(object, JSObject::offsetOfGroup()),
                    ImmGCPtr(lir->mir()->group()), ool->entry());
@@ -7014,10 +7013,10 @@ CodeGenerator::emitArrayPopShift(LInstruction* lir, const MArrayPopShift* mir, R
     OutOfLineCode* ool;
 
     if (mir->mode() == MArrayPopShift::Pop) {
-        ool = oolCallVM(ArrayPopDenseInfo, lir, (ArgList(), obj), StoreValueTo(out));
+        ool = oolCallVM(ArrayPopDenseInfo, lir, ArgList(obj), StoreValueTo(out));
     } else {
         MOZ_ASSERT(mir->mode() == MArrayPopShift::Shift);
-        ool = oolCallVM(ArrayShiftDenseInfo, lir, (ArgList(), obj), StoreValueTo(out));
+        ool = oolCallVM(ArrayShiftDenseInfo, lir, ArgList(obj), StoreValueTo(out));
     }
 
     // VM call if a write barrier is necessary.
@@ -7138,7 +7137,7 @@ void
 CodeGenerator::emitArrayPush(LInstruction* lir, const MArrayPush* mir, Register obj,
                              ConstantOrRegister value, Register elementsTemp, Register length)
 {
-    OutOfLineCode* ool = oolCallVM(ArrayPushDenseInfo, lir, (ArgList(), obj, value), StoreRegisterTo(length));
+    OutOfLineCode* ool = oolCallVM(ArrayPushDenseInfo, lir, ArgList(obj, value), StoreRegisterTo(length));
 
     Int32Key key = Int32Key(length);
     if (mir->unboxedType() == JSVAL_TYPE_MAGIC) {
@@ -7328,7 +7327,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart* lir)
     uint32_t flags = lir->mir()->flags();
 
     OutOfLineCode* ool = oolCallVM(GetIteratorObjectInfo, lir,
-                                   (ArgList(), obj, Imm32(flags)), StoreRegisterTo(output));
+                                   ArgList(obj, Imm32(flags)), StoreRegisterTo(output));
 
     const Register temp1 = ToRegister(lir->temp1());
     const Register temp2 = ToRegister(lir->temp2());
@@ -7457,7 +7456,7 @@ CodeGenerator::visitIteratorMore(LIteratorMore* lir)
     const ValueOperand output = ToOutValue(lir);
     const Register temp = ToRegister(lir->temp());
 
-    OutOfLineCode* ool = oolCallVM(IteratorMoreInfo, lir, (ArgList(), obj), StoreValueTo(output));
+    OutOfLineCode* ool = oolCallVM(IteratorMoreInfo, lir, ArgList(obj), StoreValueTo(output));
 
     Register outputScratch = output.scratchReg();
     LoadNativeIterator(masm, obj, outputScratch, ool->entry());
@@ -7512,7 +7511,7 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd* lir)
     const Register temp2 = ToRegister(lir->temp2());
     const Register temp3 = ToRegister(lir->temp3());
 
-    OutOfLineCode* ool = oolCallVM(CloseIteratorInfo, lir, (ArgList(), obj), StoreNothing());
+    OutOfLineCode* ool = oolCallVM(CloseIteratorInfo, lir, ArgList(obj), StoreNothing());
 
     LoadNativeIterator(masm, obj, temp1, ool->entry());
 
@@ -8869,11 +8868,10 @@ CodeGenerator::visitToIdV(LToIdV* lir)
     ValueOperand index = ToValue(lir, LToIdV::Index);
 
     OutOfLineCode* ool = oolCallVM(ToIdInfo, lir,
-                                   (ArgList(),
-                                   ImmGCPtr(current->mir()->info().script()),
-                                   ImmPtr(lir->mir()->resumePoint()->pc()),
-                                   ToValue(lir, LToIdV::Object),
-                                   ToValue(lir, LToIdV::Index)),
+                                   ArgList(ImmGCPtr(current->mir()->info().script()),
+                                           ImmPtr(lir->mir()->resumePoint()->pc()),
+                                           ToValue(lir, LToIdV::Object),
+                                           ToValue(lir, LToIdV::Index)),
                                    StoreValueTo(out));
 
     Register tag = masm.splitTagForTest(index);
@@ -9346,7 +9344,7 @@ CodeGenerator::visitClampVToUint8(LClampVToUint8* lir)
     Label* stringEntry;
     Label* stringRejoin;
     if (input->mightBeType(MIRType_String)) {
-        OutOfLineCode* oolString = oolCallVM(StringToNumberInfo, lir, (ArgList(), output),
+        OutOfLineCode* oolString = oolCallVM(StringToNumberInfo, lir, ArgList(output),
                                              StoreFloatRegisterTo(tempFloat));
         stringEntry = oolString->entry();
         stringRejoin = oolString->rejoin();
@@ -9398,7 +9396,7 @@ CodeGenerator::visitInArray(LInArray* lir)
         MOZ_ASSERT_IF(index < 0, mir->needsNegativeIntCheck());
         if (mir->needsNegativeIntCheck()) {
             ool = oolCallVM(OperatorInIInfo, lir,
-                            (ArgList(), Imm32(index), ToRegister(lir->object())),
+                            ArgList(Imm32(index), ToRegister(lir->object())),
                             StoreRegisterTo(output));
             failedInitLength = ool->entry();
         }
@@ -9426,7 +9424,7 @@ CodeGenerator::visitInArray(LInArray* lir)
         if (mir->needsNegativeIntCheck()) {
             masm.bind(&negativeIntCheck);
             ool = oolCallVM(OperatorInIInfo, lir,
-                            (ArgList(), index, ToRegister(lir->object())),
+                            ArgList(index, ToRegister(lir->object())),
                             StoreRegisterTo(output));
 
             masm.branch32(Assembler::LessThan, index, Imm32(0), ool->entry());
@@ -9528,7 +9526,7 @@ CodeGenerator::emitInstanceOf(LInstruction* ins, JSObject* prototypeObject)
     // register is already correct.
 
     OutOfLineCode* ool = oolCallVM(IsDelegateObjectInfo, ins,
-                                   (ArgList(), ImmGCPtr(prototypeObject), objReg),
+                                   ArgList(ImmGCPtr(prototypeObject), objReg),
                                    StoreRegisterTo(output));
 
     // Regenerate the original lhs object for the VM call.
@@ -10060,7 +10058,7 @@ CodeGenerator::visitAssertRangeV(LAssertRangeV* ins)
 void
 CodeGenerator::visitInterruptCheck(LInterruptCheck* lir)
 {
-    OutOfLineCode* ool = oolCallVM(InterruptCheckInfo, lir, (ArgList()), StoreNothing());
+    OutOfLineCode* ool = oolCallVM(InterruptCheckInfo, lir, ArgList(), StoreNothing());
 
     AbsoluteAddress interruptAddr(GetJitContext()->runtime->addressOfInterruptUint32());
     masm.branch32(Assembler::NotEqual, interruptAddr, Imm32(0), ool->entry());
@@ -10096,9 +10094,9 @@ CodeGenerator::visitRecompileCheck(LRecompileCheck* ins)
     Register tmp = ToRegister(ins->scratch());
     OutOfLineCode* ool;
     if (ins->mir()->forceRecompilation())
-        ool = oolCallVM(ForcedRecompileFnInfo, ins, (ArgList()), StoreRegisterTo(tmp));
+        ool = oolCallVM(ForcedRecompileFnInfo, ins, ArgList(), StoreRegisterTo(tmp));
     else
-        ool = oolCallVM(RecompileFnInfo, ins, (ArgList()), StoreRegisterTo(tmp));
+        ool = oolCallVM(RecompileFnInfo, ins, ArgList(), StoreRegisterTo(tmp));
 
     // Check if warm-up counter is high enough.
     AbsoluteAddress warmUpCount = AbsoluteAddress(ins->mir()->script()->addressOfWarmUpCounter());
