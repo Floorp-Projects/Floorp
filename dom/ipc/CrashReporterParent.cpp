@@ -139,15 +139,13 @@ CrashReporterParent::GenerateChildData(const AnnotationTable* processNotes)
         mNotes.Put(NS_LITERAL_CSTRING("Notes"), mAppNotes);
     }
 
-    bool ret = true;
-
     // Append these notes to the end of the extra file based on the current
     // dump id we obtained from CreatePairedMinidumps.
-    ret = CrashReporter::AppendExtraData(mChildDumpID, mNotes);
+    bool ret = CrashReporter::AppendExtraData(mChildDumpID, mNotes);
     if (ret && processNotes) {
         ret = CrashReporter::AppendExtraData(mChildDumpID, *processNotes);
-    if (!ret)
     }
+
     if (!ret) {
         NS_WARNING("problem appending child data to .extra");
     }
