@@ -159,10 +159,13 @@ private:
     OnDemuxFailed(TrackType::kAudioTrack, aFailure);
   }
 
+  void DoEvictData(const TimeUnit& aPlaybackTime, uint32_t aThreshold);
+
   struct TrackData {
     TrackData()
       : mNumTracks(0)
       , mNeedRandomAccessPoint(true)
+      , mSizeBuffer(0)
     {}
     uint32_t mNumTracks;
     Maybe<TimeUnit> mLastDecodeTimestamp;
@@ -176,6 +179,7 @@ private:
     // We only manage a single track of each type at this time.
     nsTArray<TrackBuffer> mBuffers;
     TimeIntervals mBufferedRanges;
+    uint32_t mSizeBuffer;
   };
   bool ProcessFrame(MediaRawData* aSample, TrackData& aTrackData);
   MediaPromiseRequestHolder<CodedFrameProcessingPromise> mProcessingRequest;
@@ -222,6 +226,9 @@ private:
   Atomic<bool> mAbort;
   // Set to true if mediasource state changed to ended.
   Atomic<bool> mEnded;
+
+  // Global size of this source buffer content.
+  Atomic<int64_t> mSizeSourceBuffer;
 
   // Monitor to protect following objects accessed across multipple threads.
   mutable Monitor mMonitor;
