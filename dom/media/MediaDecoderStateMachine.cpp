@@ -2155,18 +2155,22 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
   mDecoder->SetMediaSeekable(mReader->IsMediaSeekable());
   mInfo = aMetadata->mInfo;
   mMetadataTags = aMetadata->mTags.forget();
-
-  mStartTimeRendezvous = new StartTimeRendezvous(TaskQueue(), HasAudio(), HasVideo(),
-                                                 mReader->ForceZeroStartTime() || IsRealTime());
-
   nsRefPtr<MediaDecoderStateMachine> self = this;
-  mStartTimeRendezvous->AwaitStartTime()->Then(TaskQueue(), __func__,
-    [self] () -> void {
-      ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
-      self->mReader->SetStartTime(self->StartTime());
-    },
-    [] () -> void { NS_WARNING("Setting start time on reader failed"); }
-  );
+
+  // Set up the start time rendezvous if it doesn't already exist (which is
+  // generally the case, unless we're coming out of dormant mode).
+  if (!mStartTimeRendezvous) {
+    mStartTimeRendezvous = new StartTimeRendezvous(TaskQueue(), HasAudio(), HasVideo(),
+                                                   mReader->ForceZeroStartTime() || IsRealTime());
+
+    mStartTimeRendezvous->AwaitStartTime()->Then(TaskQueue(), __func__,
+      [self] () -> void {
+        ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
+        self->mReader->SetStartTime(self->StartTime());
+      },
+      [] () -> void { NS_WARNING("Setting start time on reader failed"); }
+    );
+  }
 
   if (mInfo.mMetadataDuration.isSome()) {
     RecomputeDuration();
