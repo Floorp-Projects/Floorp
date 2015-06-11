@@ -10,7 +10,6 @@
 #include "nsString.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/gfx/Logging.h"
 
 namespace mozilla {
@@ -29,16 +28,13 @@ DriverInitCrashDetection::DriverInitCrashDetection()
     return;
   }
 
-  if (sDisableAcceleration) {
-    // We already disabled acceleration earlier.
-    return;
-  }
-
   if (RecoverFromDriverInitCrash()) {
-    // This is the first time we're checking for a crash recovery, so print
-    // a message and disable acceleration for anyone who asks for it.
-    gfxCriticalError(CriticalLog::DefaultOptions(false)) << "Recovered from graphics driver startup crash; acceleration disabled.";
-    sDisableAcceleration = true;
+    if (!sDisableAcceleration) {
+      // This is the first time we're checking for a crash recovery, so print
+      // a message and disable acceleration for anyone who asks for it.
+      gfxCriticalError(CriticalLog::DefaultOptions(false)) << "Recovered from graphics driver startup crash; acceleration disabled.";
+      sDisableAcceleration = true;
+    }
     return;
   }
 
@@ -57,8 +53,6 @@ DriverInitCrashDetection::DriverInitCrashDetection()
     sEnvironmentHasBeenUpdated = true;
     return;
   }
-
-  RecordTelemetry(TelemetryState::Okay);
 }
 
 DriverInitCrashDetection::~DriverInitCrashDetection()
@@ -102,10 +96,6 @@ DriverInitCrashDetection::AllowDriverInitAttempt()
 
   // Flush preferences, so if we crash, we don't think the environment has changed again.
   FlushPreferences();
-
-  // If we crash, we'll just lose this. Not a big deal, next startup we'll
-  // record the failure.
-  RecordTelemetry(TelemetryState::EnvironmentChanged);
 }
 
 bool
@@ -123,13 +113,11 @@ DriverInitCrashDetection::RecoverFromDriverInitCrash()
     gfxPrefs::SetDriverInitStatus(int32_t(DriverInitStatus::Recovered));
     UpdateEnvironment();
     FlushPreferences();
-    RecordTelemetry(TelemetryState::RecoveredFromCrash);
     return true;
   }
   if (gfxPrefs::DriverInitStatus() == int32_t(DriverInitStatus::Recovered)) {
     // If we get here, we crashed in the current environment and have already
     // disabled acceleration.
-    RecordTelemetry(TelemetryState::DriverUseDisabled);
     return true;
   }
   return false;
@@ -214,26 +202,6 @@ DriverInitCrashDetection::FlushPreferences()
   if (nsIPrefService* prefService = Preferences::GetService()) {
     prefService->SavePrefFile(nullptr);
   }
-}
-
-void
-DriverInitCrashDetection::RecordTelemetry(TelemetryState aState)
-{
-  // Since we run this in each child process, we only want the initial results
-  // from the chrome process.
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
-    return;
-  }
-
-  // Since we instantiate this class more than once, make sure we only record
-  // the first state (since that is really all we care about).
-  static bool sTelemetryStateRecorded = false;
-  if (sTelemetryStateRecorded) {
-    return;
-  }
-
-  Telemetry::Accumulate(Telemetry::GRAPHICS_DRIVER_STARTUP_TEST, int32_t(aState));
-  sTelemetryStateRecorded = true;
 }
 
 } // namespace gfx
