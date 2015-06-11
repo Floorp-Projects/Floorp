@@ -233,7 +233,7 @@ let TabStateInternal = {
         if (value.hasOwnProperty("index")) {
           tabData.index = value.index;
         }
-      } else if (value) {
+      } else {
         tabData[key] = value;
       }
     }
