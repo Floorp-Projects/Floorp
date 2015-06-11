@@ -173,6 +173,21 @@ public:
     MOZ_ASSERT(!IsInfinite() && !aOther.IsInfinite());
     return TimeUnit(mValue - aOther.mValue);
   }
+  TimeUnit& operator += (const TimeUnit& aOther) {
+    *this = *this + aOther;
+    return *this;
+  }
+  TimeUnit& operator -= (const TimeUnit& aOther) {
+    *this = *this - aOther;
+    return *this;
+  }
+
+  friend TimeUnit operator* (int aVal, const TimeUnit& aUnit) {
+    return TimeUnit(aUnit.mValue * aVal);
+  }
+  friend TimeUnit operator* (const TimeUnit& aUnit, int aVal) {
+    return TimeUnit(aUnit.mValue * aVal);
+  }
 
   bool IsValid() const
   {
