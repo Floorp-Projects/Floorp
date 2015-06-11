@@ -61,28 +61,46 @@ private:
 void
 SourceBuffer::SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv)
 {
+  typedef mozilla::SourceBufferContentManager::AppendState AppendState;
+
   MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SetMode(aMode=%d)", aMode);
   if (!IsAttached() || mUpdating) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  if (aMode == SourceBufferAppendMode::Sequence) {
+  if (!mIsUsingFormatReader && aMode == SourceBufferAppendMode::Sequence) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+  if (mIsUsingFormatReader && mGenerateTimestamp &&
+      aMode == SourceBufferAppendMode::Segments) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
   }
   MOZ_ASSERT(mMediaSource->ReadyState() != MediaSourceReadyState::Closed);
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
   }
-  // TODO: Test append state.
-  // TODO: If aMode is "sequence", set sequence start time.
+  if (mIsUsingFormatReader &&
+      mContentManager->GetAppendState() == AppendState::PARSING_MEDIA_SEGMENT){
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  if (mIsUsingFormatReader && aMode == SourceBufferAppendMode::Sequence) {
+    // Will set GroupStartTimestamp to GroupEndTimestamp.
+    mContentManager->RestartGroupStartTimestamp();
+  }
+
   mAppendMode = aMode;
 }
 
 void
 SourceBuffer::SetTimestampOffset(double aTimestampOffset, ErrorResult& aRv)
 {
+  typedef mozilla::SourceBufferContentManager::AppendState AppendState;
+
   MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SetTimestampOffset(aTimestampOffset=%f)", aTimestampOffset);
   if (!IsAttached() || mUpdating) {
@@ -93,9 +111,25 @@ SourceBuffer::SetTimestampOffset(double aTimestampOffset, ErrorResult& aRv)
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
   }
-  // TODO: Test append state.
-  // TODO: If aMode is "sequence", set sequence start time.
+  if (mIsUsingFormatReader &&
+      mContentManager->GetAppendState() == AppendState::PARSING_MEDIA_SEGMENT){
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+  mApparentTimestampOffset = aTimestampOffset;
+  mTimestampOffset = TimeUnit::FromSeconds(aTimestampOffset);
+  if (mIsUsingFormatReader && mAppendMode == SourceBufferAppendMode::Sequence) {
+    mContentManager->SetGroupStartTimestamp(mTimestampOffset);
+  }
+}
+
+void
+SourceBuffer::SetTimestampOffset(const TimeUnit& aTimestampOffset)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
   mTimestampOffset = aTimestampOffset;
+  mApparentTimestampOffset = aTimestampOffset.ToSeconds();
 }
 
 already_AddRefed<TimeRanges>
@@ -187,7 +221,7 @@ SourceBuffer::AbortBufferAppend()
 {
   if (mUpdating) {
     mPendingAppend.DisconnectIfExists();
-    // TODO: Abort segment parser loop, and stream append loop algorithms.
+    // TODO: Abort stream append loop algorithms.
     // cancel any pending buffer append.
     mContentManager->AbortAppendData();
     AbortUpdating();
@@ -260,7 +294,7 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   , mMediaSource(aMediaSource)
   , mAppendWindowStart(0)
   , mAppendWindowEnd(PositiveInfinity<double>())
-  , mTimestampOffset(0)
+  , mApparentTimestampOffset(0)
   , mAppendMode(SourceBufferAppendMode::Segments)
   , mUpdating(false)
   , mActive(false)
@@ -271,9 +305,26 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   MOZ_ASSERT(aMediaSource);
   mEvictionThreshold = Preferences::GetUint("media.mediasource.eviction_threshold",
                                             75 * (1 << 20));
-  mContentManager = SourceBufferContentManager::CreateManager(aMediaSource->GetDecoder(), aType);
+  mContentManager =
+    SourceBufferContentManager::CreateManager(this,
+                                              aMediaSource->GetDecoder(),
+                                              aType);
   MSE_DEBUG("Create mContentManager=%p",
             mContentManager.get());
+  if (aType.LowerCaseEqualsLiteral("audio/mpeg") ||
+      aType.LowerCaseEqualsLiteral("audio/aac")) {
+    mGenerateTimestamp = true;
+  } else {
+    mGenerateTimestamp = false;
+  }
+  mIsUsingFormatReader =
+    Preferences::GetBool("media.mediasource.format-reader", false);
+  ErrorResult dummy;
+  if (mGenerateTimestamp) {
+    SetMode(SourceBufferAppendMode::Sequence, dummy);
+  } else {
+    SetMode(SourceBufferAppendMode::Segments, dummy);
+  }
 }
 
 SourceBuffer::~SourceBuffer()
@@ -370,7 +421,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   if (!data) {
     return;
   }
-  mContentManager->AppendData(data, TimeUnit::FromSeconds(mTimestampOffset));
+  mContentManager->AppendData(data, mTimestampOffset);
 
   StartUpdating();
 
