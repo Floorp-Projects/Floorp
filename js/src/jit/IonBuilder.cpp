@@ -10612,43 +10612,45 @@ MInstruction*
 IonBuilder::loadUnboxedProperty(MDefinition* obj, size_t offset, JSValueType unboxedType,
                                 BarrierKind barrier, TemporaryTypeSet* types)
 {
-    size_t scaledOffsetConstant = offset / UnboxedTypeSize(unboxedType);
-    MInstruction* scaledOffset = MConstant::New(alloc(), Int32Value(scaledOffsetConstant));
-    current->add(scaledOffset);
+    // loadUnboxedValue is designed to load any value as if it were contained in
+    // an array. Thus a property offset is converted to an index, when the
+    // object is reinterpreted as an array of properties of the same size.
+    size_t index = offset / UnboxedTypeSize(unboxedType);
+    MInstruction* indexConstant = MConstant::New(alloc(), Int32Value(index));
+    current->add(indexConstant);
 
     return loadUnboxedValue(obj, UnboxedPlainObject::offsetOfData(),
-                            scaledOffset, unboxedType, barrier, types);
+                            indexConstant, unboxedType, barrier, types);
 }
 
 MInstruction*
 IonBuilder::loadUnboxedValue(MDefinition* elements, size_t elementsOffset,
-                             MDefinition* scaledOffset, JSValueType unboxedType,
+                             MDefinition* index, JSValueType unboxedType,
                              BarrierKind barrier, TemporaryTypeSet* types)
 {
-
     MInstruction* load;
     switch (unboxedType) {
       case JSVAL_TYPE_BOOLEAN:
-        load = MLoadUnboxedScalar::New(alloc(), elements, scaledOffset, Scalar::Uint8,
+        load = MLoadUnboxedScalar::New(alloc(), elements, index, Scalar::Uint8,
                                        DoesNotRequireMemoryBarrier, elementsOffset);
         load->setResultType(MIRType_Boolean);
         break;
 
       case JSVAL_TYPE_INT32:
-        load = MLoadUnboxedScalar::New(alloc(), elements, scaledOffset, Scalar::Int32,
+        load = MLoadUnboxedScalar::New(alloc(), elements, index, Scalar::Int32,
                                        DoesNotRequireMemoryBarrier, elementsOffset);
         load->setResultType(MIRType_Int32);
         break;
 
       case JSVAL_TYPE_DOUBLE:
-        load = MLoadUnboxedScalar::New(alloc(), elements, scaledOffset, Scalar::Float64,
+        load = MLoadUnboxedScalar::New(alloc(), elements, index, Scalar::Float64,
                                        DoesNotRequireMemoryBarrier, elementsOffset,
                                        /* canonicalizeDoubles = */ false);
         load->setResultType(MIRType_Double);
         break;
 
       case JSVAL_TYPE_STRING:
-        load = MLoadUnboxedString::New(alloc(), elements, scaledOffset, elementsOffset);
+        load = MLoadUnboxedString::New(alloc(), elements, index, elementsOffset);
         break;
 
       case JSVAL_TYPE_OBJECT: {
@@ -10657,7 +10659,7 @@ IonBuilder::loadUnboxedValue(MDefinition* elements, size_t elementsOffset,
             nullBehavior = MLoadUnboxedObjectOrNull::HandleNull;
         else
             nullBehavior = MLoadUnboxedObjectOrNull::NullNotPossible;
-        load = MLoadUnboxedObjectOrNull::New(alloc(), elements, scaledOffset, nullBehavior,
+        load = MLoadUnboxedObjectOrNull::New(alloc(), elements, index, nullBehavior,
                                              elementsOffset);
         break;
       }
