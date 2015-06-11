@@ -507,28 +507,28 @@ struct FunctionInfo<R (*)(Context, Args...)> : public VMFunction
 {
     typedef R (*pf)(Context, Args...);
 
-    static inline DataType returnType() {
+    static DataType returnType() {
         return TypeToDataType<R>::result;
     }
-    static inline DataType outParam() {
+    static DataType outParam() {
         return OutParamToDataType<typename LastArg<Args...>::Type>::result;
     }
-    static inline RootType outParamRootType() {
+    static RootType outParamRootType() {
         return OutParamToRootType<typename LastArg<Args...>::Type>::result;
     }
-    static inline size_t NbArgs() {
+    static size_t NbArgs() {
         return LastArg<Args...>::nbArgs;
     }
-    static inline size_t explicitArgs() {
+    static size_t explicitArgs() {
         return NbArgs() - (outParam() != Type_Void ? 1 : 0);
     }
-    static inline uint32_t argumentProperties() {
+    static uint32_t argumentProperties() {
         return BitMask<TypeToArgProperties, uint32_t, 2, Args...>::result;
     }
-    static inline uint32_t argumentPassedInFloatRegs() {
+    static uint32_t argumentPassedInFloatRegs() {
         return BitMask<TypeToPassInFloatReg, uint32_t, 2, Args...>::result;
     }
-    static inline uint64_t argumentRootTypes() {
+    static uint64_t argumentRootTypes() {
         return BitMask<TypeToRootType, uint64_t, 3, Args...>::result;
     }
     explicit FunctionInfo(pf fun, PopValues extraValuesToPop = PopValues(0))
