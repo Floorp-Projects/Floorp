@@ -69,6 +69,7 @@ public:
                          const InputContextAction* aAction);
     InputContext GetInputContext();
     void OnUpdateComposition();
+    void OnLayoutChange();
 
 protected:
     ~nsGtkIMModule();
@@ -255,6 +256,9 @@ protected:
     // mIsDeletingSurrounding is true while OnDeleteSurroundingNative() is
     // trying to delete the surrounding text.
     bool mIsDeletingSurrounding;
+    // mLayoutChanged is true after OnLayoutChange() is called.  This is reset
+    // when NS_COMPOSITION_CHANGE is being dispatched.
+    bool mLayoutChanged;
 
     // sLastFocusedModule is a pointer to the last focused instance of this
     // class.  When a instance is destroyed and sLastFocusedModule refers it,
