@@ -60,9 +60,11 @@ private:
   friend class MediaSourceTrackDemuxer;
   // Scan source buffers and update information. Must own lock.
   void ScanSourceBuffersForContent();
-  void AttemptInit();
+  nsRefPtr<InitPromise> AttemptInit();
   TrackBuffersManager* GetManager(TrackInfo::TrackType aType);
   TrackInfo* GetTrackInfo(TrackInfo::TrackType);
+  void DoAttachSourceBuffer(TrackBuffersManager* aSourceBuffer);
+  void DoDetachSourceBuffer(TrackBuffersManager* aSourceBuffer);
   bool OnTaskQueue()
   {
     return !GetTaskQueue() || GetTaskQueue()->IsCurrentThreadIn();
@@ -70,14 +72,14 @@ private:
 
   RefPtr<MediaTaskQueue> mTaskQueue;
   nsTArray<nsRefPtr<MediaSourceTrackDemuxer>> mDemuxers;
-  MediaPromiseHolder<InitPromise> mInitPromise;
+
+  nsTArray<nsRefPtr<TrackBuffersManager>> mSourceBuffers;
 
   // Monitor to protect members below across multiple threads.
   mutable Monitor mMonitor;
-  MediaInfo mInfo;
-  nsTArray<nsRefPtr<TrackBuffersManager>> mSourceBuffers;
   nsRefPtr<TrackBuffersManager> mAudioTrack;
   nsRefPtr<TrackBuffersManager> mVideoTrack;
+  MediaInfo mInfo;
 };
 
 class MediaSourceTrackDemuxer : public MediaTrackDemuxer
@@ -110,10 +112,9 @@ public:
   void NotifyTimeRangesChanged();
 
 private:
-  void DoReset();
-  void DoSeek(const media::TimeUnit& aTime);
-  void DoGetSamples(int32_t aNumSamples);
-  void DoSkipToNextRandomAccessPoint(const TimeUnit& aTimeThreadshold);
+  nsRefPtr<SeekPromise> DoSeek(media::TimeUnit aTime);
+  nsRefPtr<SamplesPromise> DoGetSamples(int32_t aNumSamples);
+  nsRefPtr<SkipAccessPointPromise> DoSkipToNextRandomAccessPoint(TimeUnit aTimeThreadshold);
   already_AddRefed<MediaRawData> GetSample(DemuxerFailureReason& aFailure);
   // Return the timestamp of the next keyframe after mLastSampleIndex.
   TimeUnit GetNextRandomAccessPoint();
@@ -123,11 +124,9 @@ private:
   TrackInfo::TrackType mType;
   uint32_t mNextSampleIndex;
   media::TimeUnit mNextSampleTime;
+  // Monitor protecting members below accessed from multiple threads.
+  Monitor mMonitor;
   media::TimeUnit mNextRandomAccessPoint;
-  MediaPromiseHolder<SeekPromise> mSeekPromise;
-  MediaPromiseHolder<SamplesPromise> mSamplePromise;
-  MediaPromiseHolder<SkipAccessPointPromise> mSkipPromise;
-  Atomic<bool> mDetached;
 };
 
 } // namespace mozilla
