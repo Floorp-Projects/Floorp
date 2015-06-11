@@ -1058,18 +1058,29 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
        decodeTimestamp < trackBuffer.mLastDecodeTimestamp.ref()) ||
       (trackBuffer.mLastDecodeTimestamp.isSome() &&
        decodeTimestamp - trackBuffer.mLastDecodeTimestamp.ref() > 2*trackBuffer.mLastFrameDuration.ref())) {
+
+    // 1a. If mode equals "segments":
     if (mParent->mAppendMode == SourceBufferAppendMode::Segments) {
+      // Set group end timestamp to presentation timestamp.
       mGroupEndTimestamp = presentationTimestamp;
     }
+    // 1b. If mode equals "sequence":
     if (mParent->mAppendMode == SourceBufferAppendMode::Sequence) {
+      // Set group start timestamp equal to the group end timestamp.
       mGroupStartTimestamp = Some(mGroupEndTimestamp);
     }
     for (auto& track : tracks) {
+      // 2. Unset the last decode timestamp on all track buffers.
       track->mLastDecodeTimestamp.reset();
+      // 3. Unset the last frame duration on all track buffers.
       track->mLastFrameDuration.reset();
+      // 4. Unset the highest end timestamp on all track buffers.
       track->mHighestEndTimestamp.reset();
+      // 5. Set the need random access point flag on all track buffers to true.
       track->mNeedRandomAccessPoint = true;
     }
+    MSE_DEBUG("Detected discontinuity. Restarting process");
+    // 6. Jump to the Loop Top step above to restart processing of the current coded frame.
     return true;
   }
 
@@ -1179,7 +1190,18 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
   if (firstRemovedIndex >= 0) {
     data.InsertElementAt(firstRemovedIndex, aSample);
   } else {
-    data.AppendElement(aSample);
+    if (data.IsEmpty() || aSample->mTimecode > data.LastElement()->mTimecode) {
+      data.AppendElement(aSample);
+    } else {
+      // Find where to insert frame.
+      for (uint32_t i = 0; i < data.Length(); i++) {
+        const auto& sample = data[i];
+        if (sample->mTimecode > aSample->mTimecode) {
+          data.InsertElementAt(i, aSample);
+          break;
+        }
+      }
+    }
   }
   trackBuffer.mSizeBuffer += sizeof(*aSample) + aSample->mSize;
 
