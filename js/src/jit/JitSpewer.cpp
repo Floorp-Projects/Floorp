@@ -97,6 +97,13 @@ static const char * const ChannelNames[] =
 #undef JITSPEW_CHANNEL
 };
 
+static size_t ChannelIndentLevel[] =
+{
+#define JITSPEW_CHANNEL(name) 0,
+    JITSPEW_CHANNEL_LIST(JITSPEW_CHANNEL)
+#undef JITSPEW_CHANNEL
+};
+
 static bool
 FilterContainsLocation(JSScript* function)
 {
@@ -501,6 +508,17 @@ jit::CheckLogging()
     JitSpewPrinter().init(stderr);
 }
 
+JitSpewIndent::JitSpewIndent(JitSpewChannel channel)
+  : channel_(channel)
+{
+    ChannelIndentLevel[channel]++;
+}
+
+JitSpewIndent::~JitSpewIndent()
+{
+    ChannelIndentLevel[channel_]--;
+}
+
 void
 jit::JitSpewStartVA(JitSpewChannel channel, const char* fmt, va_list ap)
 {
@@ -586,6 +604,8 @@ jit::JitSpewHeader(JitSpewChannel channel)
 
     Fprinter& out = JitSpewPrinter();
     out.printf("[%s] ", ChannelNames[channel]);
+    for (size_t i = ChannelIndentLevel[channel]; i != 0; i--)
+        out.put("  ");
 }
 
 bool
