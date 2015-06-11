@@ -91,17 +91,59 @@ EmulateStateOf<MemoryView>::run(MemoryView& view)
     return true;
 }
 
+static bool
+IsObjectEscaped(MInstruction* ins, JSObject* objDefault = nullptr);
+
+// Returns False if the lambda is not escaped and if it is optimizable by
+// ScalarReplacementOfObject.
+static bool
+IsLambdaEscaped(MLambda* lambda, JSObject* obj)
+{
+    JitSpewDef(JitSpew_Escape, "Check lambda\n", lambda);
+    JitSpewIndent spewIndent(JitSpew_Escape);
+
+    // The scope chain is not escaped if none of the Lambdas which are
+    // capturing it are escaped.
+    for (MUseIterator i(lambda->usesBegin()); i != lambda->usesEnd(); i++) {
+        MNode* consumer = (*i)->consumer();
+        if (!consumer->isDefinition()) {
+            // Cannot optimize if it is observable from fun.arguments or others.
+            if (!consumer->toResumePoint()->isRecoverableOperand(*i)) {
+                JitSpew(JitSpew_Escape, "Observable lambda cannot be recovered");
+                return true;
+            }
+            continue;
+        }
+
+        MDefinition* def = consumer->toDefinition();
+        if (!def->isFunctionEnvironment()) {
+            JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
+            return true;
+        }
+
+        if (IsObjectEscaped(def->toInstruction(), obj)) {
+            JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+            return true;
+        }
+    }
+    JitSpew(JitSpew_Escape, "Lambda is not escaped");
+    return false;
+}
+
 // Returns False if the object is not escaped and if it is optimizable by
 // ScalarReplacementOfObject.
 //
 // For the moment, this code is dumb as it only supports objects which are not
 // changing shape, and which are known by TI at the object creation.
 static bool
-IsObjectEscaped(MInstruction* ins, JSObject* objDefault = nullptr)
+IsObjectEscaped(MInstruction* ins, JSObject* objDefault)
 {
     MOZ_ASSERT(ins->type() == MIRType_Object);
     MOZ_ASSERT(ins->isNewObject() || ins->isGuardShape() || ins->isCreateThisWithTemplate() ||
                ins->isNewCallObject() || ins->isFunctionEnvironment());
+
+    JitSpewDef(JitSpew_Escape, "Check object\n", ins);
+    JitSpewIndent spewIndent(JitSpew_Escape);
 
     JSObject* obj = nullptr;
     if (ins->isNewObject())
@@ -113,12 +155,16 @@ IsObjectEscaped(MInstruction* ins, JSObject* objDefault = nullptr)
     else
         obj = objDefault;
 
-    if (!obj)
+    if (!obj) {
+        JitSpew(JitSpew_Escape, "No template object defined.");
         return true;
+    }
 
     // Don't optimize unboxed objects, which aren't handled by MObjectState.
-    if (obj->is<UnboxedPlainObject>())
+    if (obj->is<UnboxedPlainObject>()) {
+        JitSpew(JitSpew_Escape, "Template object is an unboxed plain object.");
         return true;
+    }
 
     // Check if the object is escaped. If the object is not the first argument
     // of either a known Store / Load, then we consider it as escaped. This is a
@@ -128,7 +174,7 @@ IsObjectEscaped(MInstruction* ins, JSObject* objDefault = nullptr)
         if (!consumer->isDefinition()) {
             // Cannot optimize if it is observable from fun.arguments or others.
             if (!consumer->toResumePoint()->isRecoverableOperand(*i)) {
-                JitSpewDef(JitSpew_Escape, "Observable object cannot be recovered\n", ins);
+                JitSpew(JitSpew_Escape, "Observable object cannot be recovered");
                 return true;
             }
             continue;
@@ -142,8 +188,7 @@ IsObjectEscaped(MInstruction* ins, JSObject* objDefault = nullptr)
             if (def->indexOf(*i) == 0)
                 break;
 
-            JitSpewDef(JitSpew_Escape, "Object ", ins);
-            JitSpewDef(JitSpew_Escape, "  is escaped by\n", def);
+            JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
             return true;
 
           case MDefinition::Op_PostWriteBarrier:
@@ -169,38 +214,22 @@ IsObjectEscaped(MInstruction* ins, JSObject* objDefault = nullptr)
             MGuardShape* guard = def->toGuardShape();
             MOZ_ASSERT(!ins->isGuardShape());
             if (obj->as<NativeObject>().lastProperty() != guard->shape()) {
-                JitSpewDef(JitSpew_Escape, "Object ", ins);
-                JitSpewDef(JitSpew_Escape, "  has a non-matching guard shape\n", guard);
+                JitSpewDef(JitSpew_Escape, "has a non-matching guard shape\n", guard);
                 return true;
             }
-            if (IsObjectEscaped(def->toInstruction(), obj))
+            if (IsObjectEscaped(def->toInstruction(), obj)) {
+                JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
                 return true;
+            }
             break;
           }
 
           case MDefinition::Op_Lambda: {
             MLambda* lambda = def->toLambda();
-            // The scope chain is not escaped if none of the Lambdas which are
-            // capturing it are escaped.
-            for (MUseIterator i(lambda->usesBegin()); i != lambda->usesEnd(); i++) {
-                MNode* consumer = (*i)->consumer();
-                if (!consumer->isDefinition()) {
-                    // Cannot optimize if it is observable from fun.arguments or others.
-                    if (!consumer->toResumePoint()->isRecoverableOperand(*i)) {
-                        JitSpewDef(JitSpew_Escape, "Observable object cannot be recovered\n", ins);
-                        return true;
-                    }
-                    continue;
-                }
-
-                MDefinition* def = consumer->toDefinition();
-                if (!def->isFunctionEnvironment() || IsObjectEscaped(def->toInstruction(), obj)) {
-                    JitSpewDef(JitSpew_Escape, "Object ", ins);
-                    JitSpewDef(JitSpew_Escape, "  is escaped through a lambda by\n", def);
-                    return true;
-                }
+            if (IsLambdaEscaped(lambda, obj)) {
+                JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", lambda);
+                return true;
             }
-
             break;
           }
 
@@ -210,13 +239,12 @@ IsObjectEscaped(MInstruction* ins, JSObject* objDefault = nullptr)
             break;
 
           default:
-            JitSpewDef(JitSpew_Escape, "Object ", ins);
-            JitSpewDef(JitSpew_Escape, "  is escaped by\n", def);
+            JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
             return true;
         }
     }
 
-    JitSpewDef(JitSpew_Escape, "Object is not escaped\n", ins);
+    JitSpew(JitSpew_Escape, "Object is not escaped");
     return false;
 }
 
@@ -593,6 +621,105 @@ IndexOf(MDefinition* ins, int32_t* res)
     return true;
 }
 
+// Returns False if the elements is not escaped and if it is optimizable by
+// ScalarReplacementOfArray.
+static bool
+IsElementEscaped(MElements* def, uint32_t arraySize)
+{
+    JitSpewDef(JitSpew_Escape, "Check elements\n", def);
+    JitSpewIndent spewIndent(JitSpew_Escape);
+
+    for (MUseIterator i(def->usesBegin()); i != def->usesEnd(); i++) {
+        // The MIRType_Elements cannot be captured in a resume point as
+        // it does not represent a value allocation.
+        MDefinition* access = (*i)->consumer()->toDefinition();
+
+        switch (access->op()) {
+          case MDefinition::Op_LoadElement: {
+            MOZ_ASSERT(access->toLoadElement()->elements() == def);
+
+            // If we need hole checks, then the array cannot be escaped
+            // as the array might refer to the prototype chain to look
+            // for properties, thus it might do additional side-effects
+            // which are not reflected by the alias set, is we are
+            // bailing on holes.
+            if (access->toLoadElement()->needsHoleCheck()) {
+                JitSpewDef(JitSpew_Escape,
+                           "has a load element with a hole check\n", access);
+                return true;
+            }
+
+            // If the index is not a constant then this index can alias
+            // all others. We do not handle this case.
+            int32_t index;
+            if (!IndexOf(access, &index)) {
+                JitSpewDef(JitSpew_Escape,
+                           "has a load element with a non-trivial index\n", access);
+                return true;
+            }
+            if (index < 0 || arraySize <= uint32_t(index)) {
+                JitSpewDef(JitSpew_Escape,
+                           "has a load element with an out-of-bound index\n", access);
+                return true;
+            }
+            break;
+          }
+
+          case MDefinition::Op_StoreElement: {
+            MOZ_ASSERT(access->toStoreElement()->elements() == def);
+
+            // If we need hole checks, then the array cannot be escaped
+            // as the array might refer to the prototype chain to look
+            // for properties, thus it might do additional side-effects
+            // which are not reflected by the alias set, is we are
+            // bailing on holes.
+            if (access->toStoreElement()->needsHoleCheck()) {
+                JitSpewDef(JitSpew_Escape,
+                           "has a store element with a hole check\n", access);
+                return true;
+            }
+
+            // If the index is not a constant then this index can alias
+            // all others. We do not handle this case.
+            int32_t index;
+            if (!IndexOf(access, &index)) {
+                JitSpewDef(JitSpew_Escape, "has a store element with a non-trivial index\n", access);
+                return true;
+            }
+            if (index < 0 || arraySize <= uint32_t(index)) {
+                JitSpewDef(JitSpew_Escape, "has a store element with an out-of-bound index\n", access);
+                return true;
+            }
+
+            // We are not yet encoding magic hole constants in resume points.
+            if (access->toStoreElement()->value()->type() == MIRType_MagicHole) {
+                JitSpewDef(JitSpew_Escape, "has a store element with an magic-hole constant\n", access);
+                return true;
+            }
+            break;
+          }
+
+          case MDefinition::Op_SetInitializedLength:
+            MOZ_ASSERT(access->toSetInitializedLength()->elements() == def);
+            break;
+
+          case MDefinition::Op_InitializedLength:
+            MOZ_ASSERT(access->toInitializedLength()->elements() == def);
+            break;
+
+          case MDefinition::Op_ArrayLength:
+            MOZ_ASSERT(access->toArrayLength()->elements() == def);
+            break;
+
+          default:
+            JitSpewDef(JitSpew_Escape, "is escaped by\n", access);
+            return true;
+        }
+    }
+    JitSpew(JitSpew_Escape, "Elements is not escaped");
+    return false;
+}
+
 // Returns False if the array is not escaped and if it is optimizable by
 // ScalarReplacementOfArray.
 //
@@ -605,12 +732,22 @@ IsArrayEscaped(MInstruction* ins)
     MOZ_ASSERT(ins->isNewArray());
     uint32_t count = ins->toNewArray()->count();
 
+    JitSpewDef(JitSpew_Escape, "Check array\n", ins);
+    JitSpewIndent spewIndent(JitSpew_Escape);
+
     JSObject* obj = ins->toNewArray()->templateObject();
-    if (!obj || obj->is<UnboxedArrayObject>())
+    if (!obj) {
+        JitSpew(JitSpew_Escape, "No template object defined.");
         return true;
+    }
+
+    if (obj->is<UnboxedArrayObject>()) {
+        JitSpew(JitSpew_Escape, "Template object is an unboxed plain object.");
+        return true;
+    }
 
     if (count >= 16) {
-        JitSpewDef(JitSpew_Escape, "Array has too many elements\n", ins);
+        JitSpew(JitSpew_Escape, "Array has too many elements");
         return true;
     }
 
@@ -622,7 +759,7 @@ IsArrayEscaped(MInstruction* ins)
         if (!consumer->isDefinition()) {
             // Cannot optimize if it is observable from fun.arguments or others.
             if (!consumer->toResumePoint()->isRecoverableOperand(*i)) {
-                JitSpewDef(JitSpew_Escape, "Observable array cannot be recovered\n", ins);
+                JitSpew(JitSpew_Escape, "Observable array cannot be recovered");
                 return true;
             }
             continue;
@@ -631,101 +768,11 @@ IsArrayEscaped(MInstruction* ins)
         MDefinition* def = consumer->toDefinition();
         switch (def->op()) {
           case MDefinition::Op_Elements: {
-            MOZ_ASSERT(def->toElements()->object() == ins);
-            for (MUseIterator i(def->usesBegin()); i != def->usesEnd(); i++) {
-                // The MIRType_Elements cannot be captured in a resume point as
-                // it does not represent a value allocation.
-                MDefinition* access = (*i)->consumer()->toDefinition();
-
-                switch (access->op()) {
-                  case MDefinition::Op_LoadElement: {
-                    MOZ_ASSERT(access->toLoadElement()->elements() == def);
-
-                    // If we need hole checks, then the array cannot be escaped
-                    // as the array might refer to the prototype chain to look
-                    // for properties, thus it might do additional side-effects
-                    // which are not reflected by the alias set, is we are
-                    // bailing on holes.
-                    if (access->toLoadElement()->needsHoleCheck()) {
-                        JitSpewDef(JitSpew_Escape, "Array ", ins);
-                        JitSpewDef(JitSpew_Escape,
-                                   "  has a load element with a hole check\n", access);
-                        return true;
-                    }
-
-                    // If the index is not a constant then this index can alias
-                    // all others. We do not handle this case.
-                    int32_t index;
-                    if (!IndexOf(access, &index)) {
-                        JitSpewDef(JitSpew_Escape, "Array ", ins);
-                        JitSpewDef(JitSpew_Escape,
-                                   "  has a load element with a non-trivial index\n", access);
-                        return true;
-                    }
-                    if (index < 0 || count <= uint32_t(index)) {
-                        JitSpewDef(JitSpew_Escape, "Array ", ins);
-                        JitSpewDef(JitSpew_Escape,
-                                   "  has a load element with an out-of-bound index\n", access);
-                        return true;
-                    }
-                    break;
-                  }
-
-                  case MDefinition::Op_StoreElement: {
-                    MOZ_ASSERT(access->toStoreElement()->elements() == def);
-
-                    // If we need hole checks, then the array cannot be escaped
-                    // as the array might refer to the prototype chain to look
-                    // for properties, thus it might do additional side-effects
-                    // which are not reflected by the alias set, is we are
-                    // bailing on holes.
-                    if (access->toStoreElement()->needsHoleCheck()) {
-                        JitSpewDef(JitSpew_Escape, "Array ", ins);
-                        JitSpewDef(JitSpew_Escape,
-                                   "  has a store element with a hole check\n", access);
-                        return true;
-                    }
-
-                    // If the index is not a constant then this index can alias
-                    // all others. We do not handle this case.
-                    int32_t index;
-                    if (!IndexOf(access, &index)) {
-                        JitSpewDef(JitSpew_Escape, "Array ", ins);
-                        JitSpewDef(JitSpew_Escape, "  has a store element with a non-trivial index\n", access);
-                        return true;
-                    }
-                    if (index < 0 || count <= uint32_t(index)) {
-                        JitSpewDef(JitSpew_Escape, "Array ", ins);
-                        JitSpewDef(JitSpew_Escape, "  has a store element with an out-of-bound index\n", access);
-                        return true;
-                    }
-
-                    // We are not yet encoding magic hole constants in resume points.
-                    if (access->toStoreElement()->value()->type() == MIRType_MagicHole) {
-                        JitSpewDef(JitSpew_Escape, "Array ", ins);
-                        JitSpewDef(JitSpew_Escape, "  has a store element with an magic-hole constant\n", access);
-                        return true;
-                    }
-                    break;
-                  }
-
-                  case MDefinition::Op_SetInitializedLength:
-                    MOZ_ASSERT(access->toSetInitializedLength()->elements() == def);
-                    break;
-
-                  case MDefinition::Op_InitializedLength:
-                    MOZ_ASSERT(access->toInitializedLength()->elements() == def);
-                    break;
-
-                  case MDefinition::Op_ArrayLength:
-                    MOZ_ASSERT(access->toArrayLength()->elements() == def);
-                    break;
-
-                  default:
-                    JitSpewDef(JitSpew_Escape, "Array's element ", ins);
-                    JitSpewDef(JitSpew_Escape, "  is escaped by\n", def);
-                    return true;
-                }
+            MElements *elem = def->toElements();
+            MOZ_ASSERT(elem->object() == ins);
+            if (IsElementEscaped(elem, count)) {
+                JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", elem);
+                return true;
             }
 
             break;
@@ -737,13 +784,12 @@ IsArrayEscaped(MInstruction* ins)
             break;
 
           default:
-            JitSpewDef(JitSpew_Escape, "Array ", ins);
-            JitSpewDef(JitSpew_Escape, "  is escaped by\n", def);
+            JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
             return true;
         }
     }
 
-    JitSpewDef(JitSpew_Escape, "Array is not escaped\n", ins);
+    JitSpew(JitSpew_Escape, "Array is not escaped");
     return false;
 }
 
