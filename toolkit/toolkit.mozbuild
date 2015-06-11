@@ -117,8 +117,6 @@ else:
 
 # toolkit
 
-DIRS += ['/profile']
-
 # This must precede xpfe.
 if CONFIG['MOZ_JPROF']:
     DIRS += ['/tools/jprof']

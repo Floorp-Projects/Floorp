@@ -8,6 +8,7 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 XPIDL_SOURCES += [
     'nsIProfileMigrator.idl',
+    'nsIProfileUnlocker.idl',
     'nsIToolkitProfile.idl',
     'nsIToolkitProfileService.idl',
 ]
