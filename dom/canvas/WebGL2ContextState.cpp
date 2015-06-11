@@ -75,7 +75,9 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
     }
 
     /* GLint64 */
-    //case LOCAL_GL_MAX_CLIENT_WAIT_TIMEOUT_WEBGL:
+    case LOCAL_GL_MAX_CLIENT_WAIT_TIMEOUT_WEBGL:
+      return JS::NumberValue(0); // TODO
+
     case LOCAL_GL_MAX_ELEMENT_INDEX:
     case LOCAL_GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS:
     case LOCAL_GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS:
