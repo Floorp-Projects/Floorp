@@ -84,6 +84,26 @@ TextEventDispatcher::BeginInputTransactionInternal(
 }
 
 void
+TextEventDispatcher::EndInputTransaction(TextEventDispatcherListener* aListener)
+{
+  if (NS_WARN_IF(IsComposing()) || NS_WARN_IF(IsDispatchingEvent())) {
+    return;
+  }
+
+  nsCOMPtr<TextEventDispatcherListener> listener = do_QueryReferent(mListener);
+  if (NS_WARN_IF(!listener)) {
+    return;
+  }
+
+  if (NS_WARN_IF(listener != aListener)) {
+    return;
+  }
+
+  mListener = nullptr;
+  listener->OnRemovedFrom(this);
+}
+
+void
 TextEventDispatcher::OnDestroyWidget()
 {
   mWidget = nullptr;

@@ -186,7 +186,14 @@ TextInputProcessor::BeginInputTransactionInternal(
 
   // This instance has finished preparing to link to the dispatcher.  Therefore,
   // let's forget the old dispatcher and purpose.
-  UnlinkFromTextEventDispatcher();
+  if (mDispatcher) {
+    mDispatcher->EndInputTransaction(this);
+    if (NS_WARN_IF(mDispatcher)) {
+      // Forcibly initialize the members if we failed to end the input
+      // transaction.
+      UnlinkFromTextEventDispatcher();
+    }
+  }
 
   if (aForTests) {
     rv = dispatcher->BeginInputTransactionForTests(this);
