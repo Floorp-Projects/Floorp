@@ -37,30 +37,24 @@ namespace mozilla {
 
 namespace dom {
 
-class AppendDataRunnable : public nsRunnable {
+class BufferAppendRunnable : public nsRunnable {
 public:
-  AppendDataRunnable(SourceBuffer* aSourceBuffer,
-                     MediaLargeByteBuffer* aData,
-                     TimeUnit aTimestampOffset,
-                     uint32_t aUpdateID)
+  BufferAppendRunnable(SourceBuffer* aSourceBuffer,
+                       uint32_t aUpdateID)
   : mSourceBuffer(aSourceBuffer)
-  , mData(aData)
-  , mTimestampOffset(aTimestampOffset)
   , mUpdateID(aUpdateID)
   {
   }
 
   NS_IMETHOD Run() override final {
 
-    mSourceBuffer->AppendData(mData, mTimestampOffset, mUpdateID);
+    mSourceBuffer->BufferAppend(mUpdateID);
 
     return NS_OK;
   }
 
 private:
   nsRefPtr<SourceBuffer> mSourceBuffer;
-  nsRefPtr<MediaLargeByteBuffer> mData;
-  TimeUnit mTimestampOffset;
   uint32_t mUpdateID;
 };
 
@@ -413,18 +407,18 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   if (!data) {
     return;
   }
+  mContentManager->AppendData(data, TimeUnit::FromSeconds(mTimestampOffset));
+
   StartUpdating();
 
   MOZ_ASSERT(mAppendMode == SourceBufferAppendMode::Segments,
              "We don't handle timestampOffset for sequence mode yet");
-  nsCOMPtr<nsIRunnable> task =
-    new AppendDataRunnable(this, data, TimeUnit::FromSeconds(mTimestampOffset), mUpdateID);
+  nsCOMPtr<nsIRunnable> task = new BufferAppendRunnable(this, mUpdateID);
   NS_DispatchToMainThread(task);
 }
 
 void
-SourceBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset,
-                         uint32_t aUpdateID)
+SourceBuffer::BufferAppend(uint32_t aUpdateID)
 {
   if (!mUpdating || aUpdateID != mUpdateID) {
     // The buffer append algorithm has been interrupted by abort().
@@ -439,12 +433,7 @@ SourceBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset,
   MOZ_ASSERT(mMediaSource);
   MOZ_ASSERT(!mPendingAppend.Exists());
 
-  if (!aData->Length()) {
-    StopUpdating();
-    return;
-  }
-
-  mPendingAppend.Begin(mContentManager->AppendData(aData, aTimestampOffset)
+  mPendingAppend.Begin(mContentManager->BufferAppend()
                        ->Then(AbstractThread::MainThread(), __func__, this,
                               &SourceBuffer::AppendDataCompletedWithSuccess,
                               &SourceBuffer::AppendDataErrored));
