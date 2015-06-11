@@ -6,6 +6,8 @@
 
 #include "ServiceWorkerManager.h"
 
+#include "mozIApplication.h"
+#include "mozIApplicationClearPrivateDataParams.h"
 #include "nsIAppsService.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDocument.h"
@@ -78,6 +80,7 @@ BEGIN_WORKERS_NAMESPACE
 
 #define PURGE_DOMAIN_DATA "browser:purge-domain-data"
 #define PURGE_SESSION_HISTORY "browser:purge-session-history"
+#define WEBAPPS_CLEAR_DATA "webapps-clear-data"
 
 static_assert(nsIHttpChannelInternal::CORS_MODE_SAME_ORIGIN == static_cast<uint32_t>(RequestMode::Same_origin),
               "RequestMode enumeration value should match Necko CORS mode value.");
@@ -414,6 +417,8 @@ ServiceWorkerManager::Init()
       rv = obs->AddObserver(this, PURGE_SESSION_HISTORY, false /* ownsWeak */);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       rv = obs->AddObserver(this, PURGE_DOMAIN_DATA, false /* ownsWeak */);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      rv = obs->AddObserver(this, WEBAPPS_CLEAR_DATA, false /* ownsWeak */);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
@@ -4032,9 +4037,9 @@ HasRootDomain(nsIURI* aURI, const nsACString& aDomain)
   return prevChar == '.';
 }
 
-struct UnregisterIfMatchesHostData
+struct UnregisterIfMatchesHostOrPrincipalData
 {
-  UnregisterIfMatchesHostData(
+  UnregisterIfMatchesHostOrPrincipalData(
     ServiceWorkerManager::RegistrationDataPerPrincipal* aRegistrationData,
     void* aUserData)
     : mRegistrationData(aRegistrationData)
@@ -4051,8 +4056,8 @@ UnregisterIfMatchesHost(const nsACString& aScope,
                         ServiceWorkerRegistrationInfo* aReg,
                         void* aPtr)
 {
-  UnregisterIfMatchesHostData* data =
-    static_cast<UnregisterIfMatchesHostData*>(aPtr);
+  UnregisterIfMatchesHostOrPrincipalData* data =
+    static_cast<UnregisterIfMatchesHostOrPrincipalData*>(aPtr);
 
   // We avoid setting toRemove = aReg by default since there is a possibility
   // of failure when data->mUserData is passed, in which case we don't want to
@@ -4084,8 +4089,44 @@ UnregisterIfMatchesHostPerPrincipal(const nsACString& aKey,
                                     ServiceWorkerManager::RegistrationDataPerPrincipal* aData,
                                     void* aUserData)
 {
-  UnregisterIfMatchesHostData data(aData, aUserData);
+  UnregisterIfMatchesHostOrPrincipalData data(aData, aUserData);
   aData->mInfos.EnumerateRead(UnregisterIfMatchesHost, &data);
+  return PL_DHASH_NEXT;
+}
+
+PLDHashOperator
+UnregisterIfMatchesPrincipal(const nsACString& aScope,
+                             ServiceWorkerRegistrationInfo* aReg,
+                             void* aPtr)
+{
+  UnregisterIfMatchesHostOrPrincipalData* data =
+    static_cast<UnregisterIfMatchesHostOrPrincipalData*>(aPtr);
+
+  if (data->mUserData) {
+    nsIPrincipal *principal = static_cast<nsIPrincipal*>(data->mUserData);
+    MOZ_ASSERT(principal);
+    MOZ_ASSERT(aReg->mPrincipal);
+    bool equals;
+    aReg->mPrincipal->Equals(principal, &equals);
+    if (equals) {
+      nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+      swm->ForceUnregister(data->mRegistrationData, aReg);
+    }
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+PLDHashOperator
+UnregisterIfMatchesPrincipal(const nsACString& aKey,
+                             ServiceWorkerManager::RegistrationDataPerPrincipal* aData,
+                             void* aUserData)
+{
+  UnregisterIfMatchesHostOrPrincipalData data(aData, aUserData);
+  // We can use EnumerateRead because ForceUnregister (and Unregister) are async.
+  // Otherwise doing some R/W operations on an hashtable during an EnumerateRead
+  // will crash.
+  aData->mInfos.EnumerateRead(UnregisterIfMatchesPrincipal, &data);
   return PL_DHASH_NEXT;
 }
 
@@ -4257,6 +4298,17 @@ UpdateEachRegistration(const nsACString& aKey,
   return PL_DHASH_NEXT;
 }
 
+void
+ServiceWorkerManager::RemoveAllRegistrations(nsIPrincipal* aPrincipal)
+{
+  AssertIsOnMainThread();
+
+  MOZ_ASSERT(aPrincipal);
+
+  mRegistrationInfos.EnumerateRead(UnregisterIfMatchesPrincipal,
+                                   aPrincipal);
+}
+
 static PLDHashOperator
 UpdateEachRegistrationPerPrincipal(const nsACString& aKey,
                                    ServiceWorkerManager::RegistrationDataPerPrincipal* aData,
@@ -4298,12 +4350,43 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
     }
 
     Remove(NS_ConvertUTF16toUTF8(domain));
+  } else if (strcmp(aTopic, WEBAPPS_CLEAR_DATA) == 0) {
+    nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
+      do_QueryInterface(aSubject);
+    if (NS_WARN_IF(!params)) {
+      return NS_OK;
+    }
+
+    uint32_t appId;
+    nsresult rv = params->GetAppId(&appId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIAppsService> appsService =
+      do_GetService(APPS_SERVICE_CONTRACTID);
+    if (NS_WARN_IF(!appsService)) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<mozIApplication> app;
+    appsService->GetAppByLocalId(appId, getter_AddRefs(app));
+    if (NS_WARN_IF(!app)) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIPrincipal> principal;
+    app->GetPrincipal(getter_AddRefs(principal));
+    if (NS_WARN_IF(!principal)) {
+      return NS_OK;
+    }
+
+    RemoveAllRegistrations(principal);
   } else if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       obs->RemoveObserver(this, PURGE_SESSION_HISTORY);
       obs->RemoveObserver(this, PURGE_DOMAIN_DATA);
+      obs->RemoveObserver(this, WEBAPPS_CLEAR_DATA);
     }
   } else {
     MOZ_CRASH("Received message we aren't supposed to be registered for!");
