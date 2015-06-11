@@ -978,7 +978,7 @@ already_AddRefed<AndroidSurfaceTexture> nsNPAPIPluginInstance::CreateSurfaceText
 void nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable()
 {
   if (mRunning == RUNNING && mOwner)
-    AndroidBridge::Bridge()->ScheduleComposite();
+    AndroidBridge::Bridge()->InvalidateAndScheduleComposite();
 }
 
 void* nsNPAPIPluginInstance::AcquireContentWindow()

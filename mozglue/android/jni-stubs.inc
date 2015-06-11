@@ -210,21 +210,21 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv * arg0, jclass a
 
 #ifdef JNI_STUBS
 
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite_t)(JNIEnv *, jclass);
-static Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite_t f_Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite;
+typedef void (*Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite_t)(JNIEnv *, jclass);
+static Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite_t f_Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite;
 extern "C" NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(JNIEnv * arg0, jclass arg1) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite) {
+Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite(JNIEnv * arg0, jclass arg1) {
+    if (!f_Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
                        "JNI Function called before it was loaded");
         return ;
     }
-     f_Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(arg0, arg1);
+     f_Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite(arg0, arg1);
 }
 #endif
 
 #ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite", &f_Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite);
+  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite", &f_Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite);
 #endif
 
 #ifdef JNI_STUBS
