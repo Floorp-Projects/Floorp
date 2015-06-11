@@ -287,7 +287,9 @@ YCbCrImageDataDeserializer::ToDataSourceSurface()
   }
 
   DataSourceSurface::MappedSurface map;
-  result->Map(DataSourceSurface::MapType::WRITE, &map);
+  if (NS_WARN_IF(!result->Map(DataSourceSurface::MapType::WRITE, &map))) {
+    return nullptr;
+  }
 
   gfx::ConvertYCbCrToRGB32(GetYData(), GetCbData(), GetCrData(),
                            map.mData,
