@@ -227,9 +227,6 @@ nsScreenGonk::GetSurfaceFormat()
 ANativeWindow*
 nsScreenGonk::GetNativeWindow()
 {
-    if (IsPrimaryScreen()) {
-        StopBootAnimation();
-    }
     return mNativeWindow.get();
 }
 

@@ -90,7 +90,7 @@ Tools.inspector = {
   panelLabel: l10n("inspector.panelLabel", inspectorStrings),
   get tooltip() {
     return l10n("inspector.tooltip2", inspectorStrings,
-    ( osString == "Darwin" ? "Cmd+Alt" : "Ctrl+Shift+" ) + this.key);
+    ( osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+" ) + this.key);
   },
   inMenu: true,
   commands: [
@@ -127,7 +127,7 @@ Tools.webConsole = {
   panelLabel: l10n("ToolboxWebConsole.panelLabel", webConsoleStrings),
   get tooltip() {
     return l10n("ToolboxWebconsole.tooltip2", webConsoleStrings,
-    ( osString == "Darwin" ? "Cmd+Alt" : "Ctrl+Shift+" ) + this.key);
+    ( osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+" ) + this.key);
   },
   inMenu: true,
   commands: "devtools/webconsole/console-commands",
@@ -163,7 +163,7 @@ Tools.jsdebugger = {
   panelLabel: l10n("ToolboxDebugger.panelLabel", debuggerStrings),
   get tooltip() {
     return l10n("ToolboxDebugger.tooltip2", debuggerStrings,
-    ( osString == "Darwin" ? "Cmd+Alt" : "Ctrl+Shift+" ) + this.key);
+    ( osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+" ) + this.key);
   },
   inMenu: true,
   commands: "devtools/debugger/debugger-commands",
@@ -288,7 +288,7 @@ Tools.netMonitor = {
   panelLabel: l10n("netmonitor.panelLabel", netMonitorStrings),
   get tooltip() {
     return l10n("netmonitor.tooltip2", netMonitorStrings,
-    ( osString == "Darwin" ? "Cmd+Alt" : "Ctrl+Shift+" ) + this.key);
+    ( osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+" ) + this.key);
   },
   inMenu: true,
 

@@ -13,6 +13,8 @@
 # include "jit/x64/SharedICRegisters-x64.h"
 #elif defined(JS_CODEGEN_ARM)
 # include "jit/arm/SharedICRegisters-arm.h"
+#elif defined(JS_CODEGEN_ARM64)
+# include "jit/arm64/SharedICRegisters-arm64.h"
 #elif defined(JS_CODEGEN_MIPS)
 # include "jit/mips/SharedICRegisters-mips.h"
 #elif defined(JS_CODEGEN_NONE)

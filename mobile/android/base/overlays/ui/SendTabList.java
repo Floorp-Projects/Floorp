@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.overlays.ui;
 
-import static org.mozilla.gecko.overlays.ui.SendTabList.State.LIST;
 import static org.mozilla.gecko.overlays.ui.SendTabList.State.LOADING;
 import static org.mozilla.gecko.overlays.ui.SendTabList.State.SHOW_DEVICES;
 
@@ -15,13 +14,12 @@ import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.overlays.service.sharemethods.ParcelableClientRecord;
+import org.mozilla.gecko.db.RemoteClient;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.util.AttributeSet;
-import android.view.MotionEvent;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
@@ -110,10 +108,10 @@ public class SendTabList extends ListView {
         }
     }
 
-    public void setSyncClients(final ParcelableClientRecord[] c) {
-        final ParcelableClientRecord[] clients = c == null ? new ParcelableClientRecord[0] : c;
+    public void setSyncClients(final RemoteClient[] c) {
+        final RemoteClient[] clients = c == null ? new RemoteClient[0] : c;
 
-        clientListAdapter.setClientRecordList(Arrays.asList(clients));
+        clientListAdapter.setRemoteClientsList(Arrays.asList(clients));
     }
 
     /**
@@ -131,7 +129,7 @@ public class SendTabList extends ListView {
             builder = new AlertDialog.Builder(context);
         }
 
-        final ParcelableClientRecord[] records = clientListAdapter.toArray();
+        final RemoteClient[] records = clientListAdapter.toArray();
         final String[] dialogElements = new String[records.length];
 
         for (int i = 0; i < records.length; i++) {

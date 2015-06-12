@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the querySelector / querySelectorAll helpers</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the querySelector / querySelectorAll helpers</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+let gState;
+
+function evaluateJS(input) {
+  return new Promise((resolve) => gState.client.evaluateJS(input, resolve));
+}
+
+function startTest() {
+  removeEventListener("load", startTest);
+  attachConsole([], state => {
+    gState = state;
+    let tests = [checkQuerySelectorAll, checkQuerySelectorAllNotExist];
+    runTests(tests, testEnd);
+  }, true);
+}
+
+let checkQuerySelectorAll = Task.async(function*() {
+  info ("$$ returns an array");
+  let response = yield evaluateJS("$$('body')");
+  basicResultCheck(response, "$$('body')", {
+    type: "object",
+    class: "Array",
+    preview: {
+      length: 1
+    }
+  });
+  nextTest();
+});
+
+let checkQuerySelectorAllNotExist = Task.async(function*() {
+  info ("$$ returns an array even if query yields no results");
+  let response = yield evaluateJS("$$('foobar')");
+  basicResultCheck(response, "$$('foobar')", {
+    type: "object",
+    class: "Array",
+    preview: {
+      length: 0
+    }
+  });
+  nextTest();
+});
+
+function basicResultCheck(response, input, output) {
+  checkObject(response, {
+    from: gState.actor,
+    input: input,
+    result: output,
+  });
+  ok(!response.exception, "no eval exception");
+  ok(!response.helperResult, "no helper result");
+}
+
+function testEnd() {
+  closeDebugger(gState, function() {
+    gState = null;
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>

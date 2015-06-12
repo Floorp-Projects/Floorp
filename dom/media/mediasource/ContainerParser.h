@@ -9,6 +9,7 @@
 
 #include "nsRefPtr.h"
 #include "nsString.h"
+#include "MediaResource.h"
 
 namespace mozilla {
 
@@ -51,6 +52,15 @@ public:
   }
 
   bool HasCompleteInitData();
+  // Returns the byte range of the first complete init segment, or an empty
+  // range if not complete.
+  MediaByteRange InitSegmentRange();
+  // Returns the byte range of the first complete media segment header,
+  // or an empty range if not complete.
+  MediaByteRange MediaHeaderRange();
+  // Returns the byte range of the first complete media segment or an empty
+  // range if not complete.
+  MediaByteRange MediaSegmentRange();
 
   static ContainerParser* CreateForMIMEType(const nsACString& aType);
 
@@ -58,6 +68,9 @@ protected:
   nsRefPtr<MediaLargeByteBuffer> mInitData;
   nsRefPtr<SourceBufferResource> mResource;
   bool mHasInitData;
+  MediaByteRange mCompleteInitSegmentRange;
+  MediaByteRange mCompleteMediaHeaderRange;
+  MediaByteRange mCompleteMediaSegmentRange;
   const nsCString mType;
 };
 

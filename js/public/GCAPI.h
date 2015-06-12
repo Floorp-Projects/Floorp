@@ -108,7 +108,8 @@ using mozilla::UniquePtr;
     D(FULL_GC_TIMER)                            \
     D(SHUTDOWN_CC)                              \
     D(FINISH_LARGE_EVALUATE)                    \
-    D(USER_INACTIVE)
+    D(USER_INACTIVE)                            \
+    D(XPCONNECT_SHUTDOWN)
 
 namespace gcreason {
 
@@ -332,9 +333,10 @@ enum GCProgress {
 struct JS_PUBLIC_API(GCDescription) {
     bool isCompartment_;
     JSGCInvocationKind invocationKind_;
+    gcreason::Reason reason_;
 
-    GCDescription(bool isCompartment, JSGCInvocationKind kind)
-      : isCompartment_(isCompartment), invocationKind_(kind) {}
+    GCDescription(bool isCompartment, JSGCInvocationKind kind, gcreason::Reason reason)
+      : isCompartment_(isCompartment), invocationKind_(kind), reason_(reason) {}
 
     char16_t* formatSliceMessage(JSRuntime* rt) const;
     char16_t* formatSummaryMessage(JSRuntime* rt) const;

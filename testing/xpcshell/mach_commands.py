@@ -173,6 +173,7 @@ class XPCShellRunner(MozbuildObject):
             'jsDebugger': jsDebugger,
             'jsDebuggerPort': jsDebuggerPort,
             'test_tags': test_tags,
+            'utility_path': self.bindir,
         }
 
         if test_path is not None:

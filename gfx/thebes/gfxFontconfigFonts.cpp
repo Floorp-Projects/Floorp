@@ -184,9 +184,11 @@ public:
     {
         cairo_font_face_reference(mFontFace);
         cairo_font_face_set_user_data(mFontFace, &sFontEntryKey, this, nullptr);
-        mPatterns.AppendElement();
+
         // mPatterns is an nsAutoTArray with 1 space always available, so the
         // AppendElement always succeeds.
+        // FIXME: Make this infallible after bug 968520 is done.
+        MOZ_ALWAYS_TRUE(mPatterns.AppendElement(fallible));
         mPatterns[0] = aFontPattern;
 
         FcChar8 *name;
@@ -248,7 +250,7 @@ gfxSystemFcFontEntry::CopyFontTable(uint32_t aTableTag,
     if (FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, nullptr, &length) != 0) {
         return NS_ERROR_NOT_AVAILABLE;
     }
-    if (!aBuffer.SetLength(length)) {
+    if (!aBuffer.SetLength(length, fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
     if (FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, aBuffer.Elements(), &length) != 0) {
@@ -419,7 +421,7 @@ public:
                         const nsTArray< nsCountedRef<FcPattern> >& aPatterns)
         : gfxUserFcFontEntry(aFontName, aWeight, aStretch, aItalic)
     {
-        if (!mPatterns.SetCapacity(aPatterns.Length()))
+        if (!mPatterns.SetCapacity(aPatterns.Length(), fallible))
             return; // OOM
 
         for (uint32_t i = 0; i < aPatterns.Length(); ++i) {
@@ -429,7 +431,8 @@ public:
 
             AdjustPatternToCSS(pattern);
 
-            mPatterns.AppendElement();
+            // FIXME: Make this infallible after bug 968520 is done.
+            MOZ_ALWAYS_TRUE(mPatterns.AppendElement(fallible));
             mPatterns[i].own(pattern);
         }
         mIsLocalUserFont = true;
@@ -617,7 +620,8 @@ gfxDownloadedFcFontEntry::InitPattern()
     AddDownloadedFontEntry(pattern, this);
 
     // There is never more than one pattern
-    mPatterns.AppendElement();
+    // FIXME: Make this infallible after bug 968520 is done.
+    MOZ_ALWAYS_TRUE(mPatterns.AppendElement(fallible));
     mPatterns[0].own(pattern);
 }
 

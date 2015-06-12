@@ -340,7 +340,7 @@ MediaCodecReader::DispatchVideoTask(int64_t aTimeThreshold)
 nsRefPtr<MediaDecoderReader::AudioDataPromise>
 MediaCodecReader::RequestAudioData()
 {
-  MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
+  MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(HasAudio());
 
   MonitorAutoLock al(mAudioTrack.mTrackMonitor);
@@ -355,7 +355,7 @@ nsRefPtr<MediaDecoderReader::VideoDataPromise>
 MediaCodecReader::RequestVideoData(bool aSkipToNextKeyframe,
                                    int64_t aTimeThreshold)
 {
-  MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
+  MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(HasVideo());
 
   int64_t threshold = sInvalidTimestampUs;
@@ -659,7 +659,7 @@ MediaCodecReader::AsyncReadMetadata()
 
   nsRefPtr<MediaCodecReader> self = this;
   mMediaResourceRequest.Begin(CreateMediaCodecs()
-    ->Then(GetTaskQueue(), __func__,
+    ->Then(TaskQueue(), __func__,
       [self] (bool) -> void {
         self->mMediaResourceRequest.Complete();
         self->HandleResourceAllocated();

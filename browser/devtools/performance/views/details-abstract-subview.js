@@ -20,7 +20,6 @@ let DetailsSubview = {
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.PREF_CHANGED, this._onPrefChanged);
     OverviewView.on(EVENTS.OVERVIEW_RANGE_SELECTED, this._onOverviewRangeChange);
-    OverviewView.on(EVENTS.OVERVIEW_RANGE_CLEARED, this._onOverviewRangeChange);
     DetailsView.on(EVENTS.DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
   },
 
@@ -34,7 +33,6 @@ let DetailsSubview = {
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
     OverviewView.off(EVENTS.OVERVIEW_RANGE_SELECTED, this._onOverviewRangeChange);
-    OverviewView.off(EVENTS.OVERVIEW_RANGE_CLEARED, this._onOverviewRangeChange);
     DetailsView.off(EVENTS.DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
   },
 
@@ -92,7 +90,7 @@ let DetailsSubview = {
       return;
     }
     if (DetailsView.isViewSelected(this) || this.canUpdateWhileHidden) {
-      this.render();
+      this.render(OverviewView.getTimeInterval());
     } else {
       this.shouldUpdateWhenShown = true;
     }
@@ -160,8 +158,3 @@ let DetailsSubview = {
     }
   }
 };
-
-/**
- * Convenient way of emitting events from the view.
- */
-EventEmitter.decorate(DetailsSubview);

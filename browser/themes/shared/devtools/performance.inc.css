@@ -639,25 +639,24 @@ menuitem.marker-color-graphs-blue:before,
 
 #jit-optimizations-view .opt-icon::before {
   content: "";
-  background-image: url(chrome://browser/skin/devtools/webconsole.png);
+  background-image: url(chrome://browser/skin/devtools/webconsole.svg);
   background-repeat: no-repeat;
-  background-size: 48px 40px;
-  margin: 5px 6px 0 0;
-  width: 8px;
-  height: 8px;
-  max-height: 8px;
+  background-size: 72px 60px;
+  width: 12px;
+  height: 12px;
   display: inline-block;
+
+  margin: 5px 6px 0 0;
+  max-height: 12px;
+}
+.theme-light #jit-optimizations-view .opt-icon::before {
+  background-image: url(chrome://browser/skin/devtools/webconsole.svg#light-icons);
 }
 
 #jit-optimizations-view .opt-icon[severity=warning]::before {
-  background-position: -16px -16px;
+  background-position: -24px -24px;
 }
 
-@media (min-resolution: 1.25dppx) {
-  #jit-optimizations-view .opt-icon::before {
-    background-image: url(chrome://browser/skin/devtools/webconsole@2x.png);
-  }
-}
 
 /**
  * Configurable Options
@@ -671,21 +670,21 @@ menuitem.marker-color-graphs-blue:before,
  */
 menuitem.experimental-option::before {
   content: "";
-  background-image: url(chrome://browser/skin/devtools/webconsole.png);
+  background-image: url(chrome://browser/skin/devtools/webconsole.svg);
   background-repeat: no-repeat;
-  background-size: 48px 40px;
-  margin: 2px 5px 0 0;
-  width: 8px;
-  height: 8px;
-  max-height: 8px;
+  background-size: 72px 60px;
+  width: 12px;
+  height: 12px;
   display: inline-block;
-  background-position: -16px -16px;
+
+  background-position: -24px -24px;
+  margin: 2px 5px 0 0;
+  max-height: 12px;
 }
-@media (min-resolution: 1.25dppx) {
-  menuitem.experimental-option::before {
-    background-image: url(chrome://browser/skin/devtools/webconsole@2x.png);
-  }
+.theme-light menuitem.experimental-option::before {
+  background-image: url(chrome://browser/skin/devtools/webconsole.svg#light-icons);
 }
+
 #performance-options-menupopup:not(.experimental-enabled) .experimental-option,
 #performance-options-menupopup:not(.experimental-enabled) .experimental-option::before {
   display: none;

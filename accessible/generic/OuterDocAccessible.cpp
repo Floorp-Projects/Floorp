@@ -8,6 +8,8 @@
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
 #include "DocAccessible-inl.h"
+#include "mozilla/a11y/DocAccessibleParent.h"
+#include "mozilla/dom/TabParent.h"
 #include "Role.h"
 #include "States.h"
 
@@ -26,6 +28,7 @@ OuterDocAccessible::
   OuterDocAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   AccessibleWrap(aContent, aDoc)
 {
+  mType = eOuterDocType;
 }
 
 OuterDocAccessible::~OuterDocAccessible()
@@ -180,4 +183,25 @@ OuterDocAccessible::CacheChildren()
     if (innerDoc)
       GetAccService()->GetDocAccessible(innerDoc);
   }
+}
+
+ProxyAccessible*
+OuterDocAccessible::RemoteChildDoc() const
+{
+  dom::TabParent* tab = dom::TabParent::GetFrom(GetContent());
+  if (!tab)
+    return nullptr;
+
+  // XXX Consider managing non top level remote documents with there parent
+  // document.
+  const nsTArray<PDocAccessibleParent*>& docs = tab->ManagedPDocAccessibleParent();
+  size_t docCount = docs.Length();
+  for (size_t i = 0; i < docCount; i++) {
+    auto doc = static_cast<DocAccessibleParent*>(docs[i]);
+    if (!doc->ParentDoc())
+      return doc;
+  }
+
+  MOZ_ASSERT(false, "no top level tab document?");
+  return nullptr;
 }

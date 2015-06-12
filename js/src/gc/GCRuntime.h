@@ -771,28 +771,30 @@ class GCRuntime
     JS::Zone* getCurrentZoneGroup() { return currentZoneGroup; }
     void setFoundBlackGrayEdges() { foundBlackGrayEdges = true; }
 
-    uint64_t gcNumber() { return number; }
+    uint64_t gcNumber() const { return number; }
     void incGcNumber() { ++number; }
 
-    uint64_t minorGCCount() { return minorGCNumber; }
+    uint64_t minorGCCount() const { return minorGCNumber; }
     void incMinorGcNumber() { ++minorGCNumber; }
 
-    uint64_t majorGCCount() { return majorGCNumber; }
+    uint64_t majorGCCount() const { return majorGCNumber; }
     void incMajorGcNumber() { ++majorGCNumber; }
 
-    bool isIncrementalGc() { return isIncremental; }
-    bool isFullGc() { return isFull; }
+    int64_t defaultSliceBudget() const { return sliceBudget; }
+
+    bool isIncrementalGc() const { return isIncremental; }
+    bool isFullGc() const { return isFull; }
 
     bool shouldCleanUpEverything() { return cleanUpEverything; }
 
-    bool areGrayBitsValid() { return grayBitsValid; }
+    bool areGrayBitsValid() const { return grayBitsValid; }
     void setGrayBitsInvalid() { grayBitsValid = false; }
 
     bool minorGCRequested() const { return minorGCTriggerReason != JS::gcreason::NO_REASON; }
     bool majorGCRequested() const { return majorGCTriggerReason != JS::gcreason::NO_REASON; }
     bool isGcNeeded() { return minorGCRequested() || majorGCRequested(); }
 
-    bool fullGCForAtomsRequested() { return fullGCForAtomsRequested_; }
+    bool fullGCForAtomsRequested() const { return fullGCForAtomsRequested_; }
 
     double computeHeapGrowthFactor(size_t lastBytes);
     size_t computeTriggerBytes(double growthFactor, size_t lastBytes);
@@ -1161,7 +1163,7 @@ class GCRuntime
      */
     bool interFrameGC;
 
-    /* Default budget for incremental GC slice. See SliceBudget in jsgc.h. */
+    /* Default budget for incremental GC slice. See js/SliceBudget.h. */
     int64_t sliceBudget;
 
     /*

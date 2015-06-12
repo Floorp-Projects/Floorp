@@ -14,6 +14,7 @@ using namespace mozilla;
 
 typedef media::Interval<uint8_t> ByteInterval;
 typedef media::Interval<int> IntInterval;
+typedef media::IntervalSet<int> IntIntervals;
 
 ByteInterval CreateByteInterval(int32_t aStart, int32_t aEnd)
 {
@@ -150,18 +151,18 @@ TEST(IntervalSet, Equals)
 
 TEST(IntervalSet, IntersectionIntervalSet)
 {
-  media::IntervalSet<int> i0;
+  IntIntervals i0;
   i0 += IntInterval(5, 10);
   i0 += IntInterval(20, 25);
   i0 += IntInterval(40, 60);
 
-  media::IntervalSet<int> i1;
+  IntIntervals i1;
   i1.Add(IntInterval(7, 15));
   i1.Add(IntInterval(16, 27));
   i1.Add(IntInterval(45, 50));
   i1.Add(IntInterval(53, 57));
 
-  media::IntervalSet<int> i = media::Intersection(i0, i1);
+  IntIntervals i = media::Intersection(i0, i1);
 
   EXPECT_EQ(4u, i.Length());
 
@@ -192,10 +193,10 @@ static void Compare(const media::IntervalSet<T>& aI1,
   }
 }
 
-static void GeneratePermutations(media::IntervalSet<int> aI1,
-                                 media::IntervalSet<int> aI2)
+static void GeneratePermutations(IntIntervals aI1,
+                                 IntIntervals aI2)
 {
-  media::IntervalSet<int> i_ref = media::Intersection(aI1, aI2);
+  IntIntervals i_ref = media::Intersection(aI1, aI2);
   // Test all permutations possible
   std::vector<uint32_t> comb1;
   for (uint32_t i = 0; i < aI1.Length(); i++) {
@@ -209,13 +210,13 @@ static void GeneratePermutations(media::IntervalSet<int> aI1,
   do {
     do {
       // Create intervals according to new indexes.
-      media::IntervalSet<int> i_0;
+      IntIntervals i_0;
       for (uint32_t i = 0; i < comb1.size(); i++) {
         i_0 += aI1[comb1[i]];
       }
       // Test that intervals are always normalized.
       Compare(aI1, i_0);
-      media::IntervalSet<int> i_1;
+      IntIntervals i_1;
       for (uint32_t i = 0; i < comb2.size(); i++) {
         i_1 += aI2[comb2[i]];
       }
@@ -228,12 +229,12 @@ static void GeneratePermutations(media::IntervalSet<int> aI1,
 
 TEST(IntervalSet, IntersectionNormalizedIntervalSet)
 {
-  media::IntervalSet<int> i0;
+  IntIntervals i0;
   i0 += IntInterval(5, 10);
   i0 += IntInterval(20, 25);
   i0 += IntInterval(40, 60);
 
-  media::IntervalSet<int> i1;
+  IntIntervals i1;
   i1.Add(IntInterval(7, 15));
   i1.Add(IntInterval(16, 27));
   i1.Add(IntInterval(45, 50));
@@ -244,12 +245,12 @@ TEST(IntervalSet, IntersectionNormalizedIntervalSet)
 
 TEST(IntervalSet, IntersectionUnorderedNonNormalizedIntervalSet)
 {
-  media::IntervalSet<int> i0;
+  IntIntervals i0;
   i0 += IntInterval(5, 10);
   i0 += IntInterval(8, 25);
   i0 += IntInterval(24, 60);
 
-  media::IntervalSet<int> i1;
+  IntIntervals i1;
   i1.Add(IntInterval(7, 15));
   i1.Add(IntInterval(10, 27));
   i1.Add(IntInterval(45, 50));
@@ -260,7 +261,7 @@ TEST(IntervalSet, IntersectionUnorderedNonNormalizedIntervalSet)
 
 TEST(IntervalSet, IntersectionNonNormalizedInterval)
 {
-  media::IntervalSet<int> i0;
+  IntIntervals i0;
   i0 += IntInterval(5, 10);
   i0 += IntInterval(8, 25);
   i0 += IntInterval(30, 60);
@@ -274,7 +275,7 @@ TEST(IntervalSet, IntersectionNonNormalizedInterval)
 
 TEST(IntervalSet, IntersectionUnorderedNonNormalizedInterval)
 {
-  media::IntervalSet<int> i0;
+  IntIntervals i0;
   i0 += IntInterval(1, 3);
   i0 += IntInterval(1, 10);
   i0 += IntInterval(9, 12);
@@ -291,22 +292,22 @@ TEST(IntervalSet, IntersectionUnorderedNonNormalizedInterval)
   EXPECT_EQ(i0[0].mEnd, i1.mEnd);
 }
 
-static media::IntervalSet<int> Duplicate(const media::IntervalSet<int>& aValue)
+static IntIntervals Duplicate(const IntIntervals& aValue)
 {
-  media::IntervalSet<int> value(aValue);
+  IntIntervals value(aValue);
   return value;
 }
 
 TEST(IntervalSet, Normalize)
 {
-  media::IntervalSet<int> i;
+  IntIntervals i;
   // Test IntervalSet<T> + Interval<T> operator.
   i = i + IntInterval(20, 30);
   // Test Internal<T> + IntervalSet<T> operator.
   i = IntInterval(2, 7) + i;
   // Test Interval<T> + IntervalSet<T> operator
   i = IntInterval(1, 8) + i;
-  media::IntervalSet<int> interval;
+  IntIntervals interval;
   interval += IntInterval(5, 10);
   // Test += with rval move.
   i += Duplicate(interval);
@@ -333,7 +334,7 @@ TEST(IntervalSet, Normalize)
 
 TEST(IntervalSet, ContainValue)
 {
-  media::IntervalSet<int> i0;
+  IntIntervals i0;
   i0 += IntInterval(0, 10);
   i0 += IntInterval(15, 20);
   i0 += IntInterval(30, 50);
@@ -345,7 +346,7 @@ TEST(IntervalSet, ContainValue)
 
 TEST(IntervalSet, ContainValueWithFuzz)
 {
-  media::IntervalSet<int> i0;
+  IntIntervals i0;
   i0 += IntInterval(0, 10);
   i0 += IntInterval(15, 20, 1);
   i0 += IntInterval(30, 50);
@@ -357,7 +358,7 @@ TEST(IntervalSet, ContainValueWithFuzz)
 
 TEST(IntervalSet, ContainInterval)
 {
-  media::IntervalSet<int> i0;
+  IntIntervals i0;
   i0 += IntInterval(0, 10);
   i0 += IntInterval(15, 20);
   i0 += IntInterval(30, 50);
@@ -373,7 +374,7 @@ TEST(IntervalSet, ContainInterval)
 
 TEST(IntervalSet, ContainIntervalWithFuzz)
 {
-  media::IntervalSet<int> i0;
+  IntIntervals i0;
   i0 += IntInterval(0, 10);
   i0 += IntInterval(15, 20);
   i0 += IntInterval(30, 50);
@@ -386,7 +387,7 @@ TEST(IntervalSet, ContainIntervalWithFuzz)
   EXPECT_FALSE(i0.Contains(IntInterval(15, 30)));
   EXPECT_FALSE(i0.Contains(IntInterval(30, 55)));
 
-  media::IntervalSet<int> i1;
+  IntIntervals i1;
   i1 += IntInterval(0, 10, 1);
   i1 += IntInterval(15, 20, 1);
   i1 += IntInterval(30, 50, 1);
@@ -408,18 +409,18 @@ TEST(IntervalSet, Span)
 
 TEST(IntervalSet, Union)
 {
-  media::IntervalSet<int> i0;
+  IntIntervals i0;
   i0 += IntInterval(5, 10);
   i0 += IntInterval(20, 25);
   i0 += IntInterval(40, 60);
 
-  media::IntervalSet<int> i1;
+  IntIntervals i1;
   i1.Add(IntInterval(7, 15));
   i1.Add(IntInterval(16, 27));
   i1.Add(IntInterval(45, 50));
   i1.Add(IntInterval(53, 57));
 
-  media::IntervalSet<int> i = media::Union(i0, i1);
+  IntIntervals i = media::Union(i0, i1);
 
   EXPECT_EQ(3u, i.Length());
 
@@ -435,18 +436,18 @@ TEST(IntervalSet, Union)
 
 TEST(IntervalSet, UnionNotOrdered)
 {
-  media::IntervalSet<int> i0;
+  IntIntervals i0;
   i0 += IntInterval(20, 25);
   i0 += IntInterval(40, 60);
   i0 += IntInterval(5, 10);
 
-  media::IntervalSet<int> i1;
+  IntIntervals i1;
   i1.Add(IntInterval(16, 27));
   i1.Add(IntInterval(7, 15));
   i1.Add(IntInterval(53, 57));
   i1.Add(IntInterval(45, 50));
 
-  media::IntervalSet<int> i = media::Union(i0, i1);
+  IntIntervals i = media::Union(i0, i1);
 
   EXPECT_EQ(3u, i.Length());
 
@@ -462,7 +463,7 @@ TEST(IntervalSet, UnionNotOrdered)
 
 TEST(IntervalSet, NormalizeFuzz)
 {
-  media::IntervalSet<int> i0;
+  IntIntervals i0;
   i0 += IntInterval(11, 25, 0);
   i0 += IntInterval(5, 10, 1);
   i0 += IntInterval(40, 60, 1);
@@ -478,7 +479,7 @@ TEST(IntervalSet, NormalizeFuzz)
 
 TEST(IntervalSet, UnionFuzz)
 {
-  media::IntervalSet<int> i0;
+  IntIntervals i0;
   i0 += IntInterval(5, 10, 1);
   i0 += IntInterval(11, 25, 0);
   i0 += IntInterval(40, 60, 1);
@@ -488,7 +489,7 @@ TEST(IntervalSet, UnionFuzz)
   EXPECT_EQ(40, i0[1].mStart);
   EXPECT_EQ(60, i0[1].mEnd);
 
-  media::IntervalSet<int> i1;
+  IntIntervals i1;
   i1.Add(IntInterval(7, 15, 1));
   i1.Add(IntInterval(16, 27, 1));
   i1.Add(IntInterval(45, 50, 1));
@@ -501,7 +502,7 @@ TEST(IntervalSet, UnionFuzz)
   EXPECT_EQ(53, i1[2].mStart);
   EXPECT_EQ(57, i1[2].mEnd);
 
-  media::IntervalSet<int> i = media::Union(i0, i1);
+  IntIntervals i = media::Union(i0, i1);
 
   EXPECT_EQ(2u, i.Length());
 
@@ -712,9 +713,67 @@ TEST(IntervalSet, FooIntervalSet)
 
 TEST(IntervalSet, StaticAssert)
 {
-  typedef media::IntervalSet<int> IntIntervals;
   media::Interval<int> i;
 
   static_assert(mozilla::IsSame<nsTArray_CopyChooser<IntIntervals>::Type, nsTArray_CopyWithConstructors<IntIntervals>>::value, "Must use copy constructor");
   static_assert(mozilla::IsSame<nsTArray_CopyChooser<media::TimeIntervals>::Type, nsTArray_CopyWithConstructors<media::TimeIntervals>>::value, "Must use copy constructor");
+}
+
+TEST(IntervalSet, Substraction)
+{
+  IntIntervals i0;
+  i0 += IntInterval(5, 10);
+  i0 += IntInterval(20, 25);
+  i0 += IntInterval(40, 60);
+
+  IntInterval i1(8, 15);
+  i0 -= i1;
+
+  EXPECT_EQ(3u, i0.Length());
+  EXPECT_EQ(5, i0[0].mStart);
+  EXPECT_EQ(8, i0[0].mEnd);
+  EXPECT_EQ(20, i0[1].mStart);
+  EXPECT_EQ(25, i0[1].mEnd);
+  EXPECT_EQ(40, i0[2].mStart);
+  EXPECT_EQ(60, i0[2].mEnd);
+
+  i0 = IntIntervals();
+  i0 += IntInterval(5, 10);
+  i0 += IntInterval(20, 25);
+  i0 += IntInterval(40, 60);
+  i1 = IntInterval(0, 60);
+  i0 -= i1;
+  EXPECT_EQ(0u, i0.Length());
+
+  i0 = IntIntervals();
+  i0 += IntInterval(5, 10);
+  i0 += IntInterval(20, 25);
+  i0 += IntInterval(40, 60);
+  i1 = IntInterval(0, 45);
+  i0 -= i1;
+  EXPECT_EQ(1u, i0.Length());
+  EXPECT_EQ(45, i0[0].mStart);
+  EXPECT_EQ(60, i0[0].mEnd);
+
+  i0 = IntIntervals();
+  i0 += IntInterval(5, 10);
+  i0 += IntInterval(20, 25);
+  i0 += IntInterval(40, 60);
+  i1 = IntInterval(8, 45);
+  i0 -= i1;
+  EXPECT_EQ(2u, i0.Length());
+  EXPECT_EQ(5, i0[0].mStart);
+  EXPECT_EQ(8, i0[0].mEnd);
+  EXPECT_EQ(45, i0[1].mStart);
+  EXPECT_EQ(60, i0[1].mEnd);
+
+  i0 = IntIntervals();
+  i0 += IntInterval(5, 10);
+  i0 += IntInterval(20, 25);
+  i0 += IntInterval(40, 60);
+  i1 = IntInterval(8, 70);
+  i0 -= i1;
+  EXPECT_EQ(1u, i0.Length());
+  EXPECT_EQ(5, i0[0].mStart);
+  EXPECT_EQ(8, i0[0].mEnd);
 }

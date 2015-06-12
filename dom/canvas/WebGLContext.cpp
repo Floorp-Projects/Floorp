@@ -325,6 +325,7 @@ WebGLContext::DestroyResourcesAndContext()
     mBound2DTextures.Clear();
     mBoundCubeMapTextures.Clear();
     mBound3DTextures.Clear();
+    mBoundSamplers.Clear();
     mBoundArrayBuffer = nullptr;
     mBoundCopyReadBuffer = nullptr;
     mBoundCopyWriteBuffer = nullptr;
@@ -1949,6 +1950,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLContext,
   mBound2DTextures,
   mBoundCubeMapTextures,
   mBound3DTextures,
+  mBoundSamplers,
   mBoundArrayBuffer,
   mBoundCopyReadBuffer,
   mBoundCopyWriteBuffer,

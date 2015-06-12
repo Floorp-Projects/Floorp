@@ -563,25 +563,6 @@ nsPersistentProperties::GetStringProperty(const nsACString& aKey,
   return NS_OK;
 }
 
-static PLDHashOperator
-AddElemToArray(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-               uint32_t aIndex, void* aArg)
-{
-  nsCOMArray<nsIPropertyElement>* props =
-    static_cast<nsCOMArray<nsIPropertyElement>*>(aArg);
-  PropertyTableEntry* entry =
-    static_cast<PropertyTableEntry*>(aHdr);
-
-  nsPropertyElement* element =
-    new nsPropertyElement(nsDependentCString(entry->mKey),
-                          nsDependentString(entry->mValue));
-
-  props->AppendObject(element);
-
-  return PL_DHASH_NEXT;
-}
-
-
 NS_IMETHODIMP
 nsPersistentProperties::Enumerate(nsISimpleEnumerator** aResult)
 {
@@ -591,9 +572,17 @@ nsPersistentProperties::Enumerate(nsISimpleEnumerator** aResult)
   props.SetCapacity(mTable.EntryCount());
 
   // Step through hash entries populating a transient array
-  uint32_t n = PL_DHashTableEnumerate(&mTable, AddElemToArray, (void*)&props);
-  if (n < mTable.EntryCount()) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  PLDHashTable::Iterator iter(&mTable);
+  while (iter.HasMoreEntries()) {
+    auto entry = static_cast<PropertyTableEntry*>(iter.NextEntry());
+
+    nsRefPtr<nsPropertyElement> element =
+      new nsPropertyElement(nsDependentCString(entry->mKey),
+                            nsDependentString(entry->mValue));
+
+    if (!props.AppendObject(element)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   return NS_NewArrayEnumerator(aResult, props);

@@ -48,6 +48,7 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
+    'AutoTimelineMarker.cpp',
     'LoadContext.cpp',
     'nsAboutRedirector.cpp',
     'nsDefaultURIFixup.cpp',

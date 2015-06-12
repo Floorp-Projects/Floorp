@@ -3170,7 +3170,8 @@ BrowserObj.prototype.register = function(uid, target) {
 BrowserObj.prototype.hasRemotenessChange = function() {
   // None of these checks are relevant on b2g or if we don't have a tab yet,
   // and may not apply on Fennec.
-  if (this.driver.appName != "Firefox" || this.tab === null) {
+  if (this.driver.appName != "Firefox" || this.tab === null ||
+      !this.browserForTab) {
     return false;
   }
 

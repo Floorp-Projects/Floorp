@@ -39,8 +39,8 @@
   locale/@AB_CD@/browser/handling.properties      (%chrome/handling.properties)
   locale/@AB_CD@/browser/webapp.properties        (%chrome/webapp.properties)
 #ifdef NIGHTLY_BUILD
-  locale/@AB_CD@/browser/aboutPasswords.dtd       (%chrome/aboutPasswords.dtd)
-  locale/@AB_CD@/browser/aboutPasswords.properties (%chrome/aboutPasswords.properties)
+  locale/@AB_CD@/browser/aboutLogins.dtd          (%chrome/aboutLogins.dtd)
+  locale/@AB_CD@/browser/aboutLogins.properties  (%chrome/aboutLogins.properties)
   locale/@AB_CD@/browser/webcompatReporter.properties (%chrome/webcompatReporter.properties)
 #endif
 

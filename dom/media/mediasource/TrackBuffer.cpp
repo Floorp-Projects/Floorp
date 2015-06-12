@@ -112,7 +112,7 @@ TrackBuffer::Shutdown()
   RefPtr<MediaTaskQueue> queue = mTaskQueue;
   mTaskQueue = nullptr;
   queue->BeginShutdown()
-       ->Then(mParentDecoder->GetReader()->GetTaskQueue(), __func__, this,
+       ->Then(mParentDecoder->GetReader()->TaskQueue(), __func__, this,
               &TrackBuffer::ContinueShutdown, &TrackBuffer::ContinueShutdown);
 
   return p;
@@ -124,7 +124,7 @@ TrackBuffer::ContinueShutdown()
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
   if (mDecoders.Length()) {
     mDecoders[0]->GetReader()->Shutdown()
-                ->Then(mParentDecoder->GetReader()->GetTaskQueue(), __func__, this,
+                ->Then(mParentDecoder->GetReader()->TaskQueue(), __func__, this,
                        &TrackBuffer::ContinueShutdown, &TrackBuffer::ContinueShutdown);
     mShutdownDecoders.AppendElement(mDecoders[0]);
     mDecoders.RemoveElementAt(0);
@@ -138,18 +138,32 @@ TrackBuffer::ContinueShutdown()
   mShutdownPromise.Resolve(true, __func__);
 }
 
-nsRefPtr<TrackBuffer::AppendPromise>
+bool
 TrackBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  mInputBuffer = aData;
+  mTimestampOffset = aTimestampOffset;
+  return true;
+}
+
+nsRefPtr<TrackBuffer::AppendPromise>
+TrackBuffer::BufferAppend()
+{
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mInitializationPromise.IsEmpty());
+  MOZ_ASSERT(mInputBuffer);
+
+  if (mInputBuffer->IsEmpty()) {
+    return AppendPromise::CreateAndResolve(false, __func__);
+  }
 
   DecodersToInitialize decoders(this);
   nsRefPtr<AppendPromise> p = mInitializationPromise.Ensure(__func__);
   bool hadInitData = mParser->HasInitData();
   bool hadCompleteInitData = mParser->HasCompleteInitData();
   nsRefPtr<MediaLargeByteBuffer> oldInit = mParser->InitData();
-  bool newInitData = mParser->IsInitSegmentPresent(aData);
+  bool newInitData = mParser->IsInitSegmentPresent(mInputBuffer);
 
   // TODO: Run more of the buffer append algorithm asynchronously.
   if (newInitData) {
@@ -161,14 +175,14 @@ TrackBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset)
   }
 
   int64_t start = 0, end = 0;
-  bool gotMedia = mParser->ParseStartAndEndTimestamps(aData, start, end);
+  bool gotMedia = mParser->ParseStartAndEndTimestamps(mInputBuffer, start, end);
   bool gotInit = mParser->HasCompleteInitData();
 
   if (newInitData) {
     if (!gotInit) {
       // We need a new decoder, but we can't initialize it yet.
       nsRefPtr<SourceBufferDecoder> decoder =
-        NewDecoder(aTimestampOffset);
+        NewDecoder(mTimestampOffset);
       // The new decoder is stored in mDecoders/mCurrentDecoder, so we
       // don't need to do anything with 'decoder'. It's only a placeholder.
       if (!decoder) {
@@ -176,7 +190,7 @@ TrackBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset)
         return p;
       }
     } else {
-      if (!decoders.NewDecoder(aTimestampOffset)) {
+      if (!decoders.NewDecoder(mTimestampOffset)) {
         mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
         return p;
       }
@@ -189,9 +203,9 @@ TrackBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset)
   }
 
   if (gotMedia) {
-    if (mParser->IsMediaSegmentPresent(aData) && mLastEndTimestamp &&
+    if (mParser->IsMediaSegmentPresent(mInputBuffer) && mLastEndTimestamp &&
         (!mParser->TimestampsFuzzyEqual(start, mLastEndTimestamp.value()) ||
-         mLastTimestampOffset != aTimestampOffset ||
+         mLastTimestampOffset != mTimestampOffset ||
          mDecoderPerSegment ||
          (mCurrentDecoder && mCurrentDecoder->WasTrimmed()))) {
       MSE_DEBUG("Data last=[%lld, %lld] overlaps [%lld, %lld]",
@@ -202,7 +216,7 @@ TrackBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset)
         // processed or not continuous, so we must create a new decoder
         // to handle the decoding.
         if (!hadCompleteInitData ||
-            !decoders.NewDecoder(aTimestampOffset)) {
+            !decoders.NewDecoder(mTimestampOffset)) {
           mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
           return p;
         }
@@ -228,7 +242,7 @@ TrackBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset)
     mAdjustedTimestamp = starttu;
   }
 
-  if (!AppendDataToCurrentResource(aData, end - start)) {
+  if (!AppendDataToCurrentResource(mInputBuffer, end - start)) {
     mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
     return p;
   }
@@ -274,7 +288,7 @@ TrackBuffer::NotifyTimeRangesChanged()
   RefPtr<nsIRunnable> task =
     NS_NewRunnableMethod(mParentDecoder->GetReader(),
                          &MediaSourceReader::NotifyTimeRangesChanged);
-  mParentDecoder->GetReader()->GetTaskQueue()->Dispatch(task.forget());
+  mParentDecoder->GetReader()->TaskQueue()->Dispatch(task.forget());
 }
 
 class DecoderSorter
@@ -566,7 +580,7 @@ TrackBuffer::NewDecoder(TimeUnit aTimestampOffset)
   mLastEndTimestamp.reset();
   mLastTimestampOffset = aTimestampOffset;
 
-  decoder->SetTaskQueue(decoder->GetReader()->GetTaskQueue());
+  decoder->SetTaskQueue(decoder->GetReader()->TaskQueue());
   return decoder.forget();
 }
 
@@ -582,7 +596,7 @@ TrackBuffer::QueueInitializeDecoder(SourceBufferDecoder* aDecoder)
                                                       &TrackBuffer::InitializeDecoder,
                                                       aDecoder);
   // We need to initialize the reader on its own task queue
-  aDecoder->GetReader()->GetTaskQueue()->Dispatch(task.forget());
+  aDecoder->GetReader()->TaskQueue()->Dispatch(task.forget());
   return true;
 }
 
@@ -646,7 +660,7 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
     return;
   }
 
-  MOZ_ASSERT(aDecoder->GetReader()->GetTaskQueue()->IsCurrentThreadIn());
+  MOZ_ASSERT(aDecoder->GetReader()->OnTaskQueue());
 
   MediaDecoderReader* reader = aDecoder->GetReader();
 
@@ -681,7 +695,7 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
     return;
   }
 
-  mMetadataRequest.Begin(promise->Then(reader->GetTaskQueue(), __func__,
+  mMetadataRequest.Begin(promise->Then(reader->TaskQueue(), __func__,
                                        recipient.get(),
                                        &MetadataRecipient::OnMetadataRead,
                                        &MetadataRecipient::OnMetadataNotRead));
@@ -692,7 +706,7 @@ TrackBuffer::OnMetadataRead(MetadataHolder* aMetadata,
                             SourceBufferDecoder* aDecoder,
                             bool aWasEnded)
 {
-  MOZ_ASSERT(aDecoder->GetReader()->GetTaskQueue()->IsCurrentThreadIn());
+  MOZ_ASSERT(aDecoder->GetReader()->OnTaskQueue());
 
   mParentDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
@@ -752,7 +766,7 @@ void
 TrackBuffer::OnMetadataNotRead(ReadMetadataFailureReason aReason,
                                SourceBufferDecoder* aDecoder)
 {
-  MOZ_ASSERT(aDecoder->GetReader()->GetTaskQueue()->IsCurrentThreadIn());
+  MOZ_ASSERT(aDecoder->GetReader()->TaskQueue()->IsCurrentThreadIn());
 
   mParentDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
@@ -957,6 +971,7 @@ TrackBuffer::ResetParserState()
     mParser = ContainerParser::CreateForMIMEType(mType);
     DiscardCurrentDecoder();
   }
+  mInputBuffer = nullptr;
 }
 
 void
@@ -1073,10 +1088,10 @@ TrackBuffer::RemoveDecoder(SourceBufferDecoder* aDecoder)
     mInitializedDecoders.RemoveElement(aDecoder);
     mDecoders.RemoveElement(aDecoder);
   }
-  aDecoder->GetReader()->GetTaskQueue()->Dispatch(task.forget());
+  aDecoder->GetReader()->TaskQueue()->Dispatch(task.forget());
 }
 
-bool
+nsRefPtr<TrackBuffer::RangeRemovalPromise>
 TrackBuffer::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1088,14 +1103,14 @@ TrackBuffer::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
 
   if (!buffered.Length() || aStart > bufferedEnd || aEnd < bufferedStart) {
     // Nothing to remove.
-    return false;
+    return RangeRemovalPromise::CreateAndResolve(false, __func__);
   }
 
   if (aStart > bufferedStart && aEnd < bufferedEnd) {
     // TODO. We only handle trimming and removal from the start.
     NS_WARNING("RangeRemoval unsupported arguments. "
                "Can only handle trimming (trim left or trim right");
-    return false;
+    return RangeRemovalPromise::CreateAndResolve(false, __func__);
   }
 
   nsTArray<SourceBufferDecoder*> decoders;
@@ -1121,7 +1136,7 @@ TrackBuffer::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
           decoders[i]->GetResource()->EvictData(offset, offset, rv);
           if (NS_WARN_IF(rv.Failed())) {
             rv.SuppressException();
-            return false;
+            return RangeRemovalPromise::CreateAndResolve(false, __func__);
           }
         }
       }
@@ -1143,7 +1158,7 @@ TrackBuffer::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
   RemoveEmptyDecoders(decoders);
 
   NotifyTimeRangesChanged();
-  return true;
+  return RangeRemovalPromise::CreateAndResolve(true, __func__);
 }
 
 void

@@ -131,3 +131,5 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
 
   toString: () => "[object JsCallTreeView]"
 });
+
+EventEmitter.decorate(JsCallTreeView);

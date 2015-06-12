@@ -31,7 +31,7 @@ typedef MediaPromise<bool, bool, false> ShutdownPromise;
 // to make this threadsafe for objects that aren't already threadsafe.
 class MediaTaskQueue : public AbstractThread {
 public:
-  explicit MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool, bool aRequireTailDispatch = false);
+  explicit MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool, bool aSupportsTailDispatch = false);
 
   void Dispatch(TemporaryRef<nsIRunnable> aRunnable,
                 DispatchFailureHandling aFailureHandling = AssertDispatchSuccess)

@@ -1755,6 +1755,7 @@ WebGLContext::InitAndValidateGL()
     mBound2DTextures.Clear();
     mBoundCubeMapTextures.Clear();
     mBound3DTextures.Clear();
+    mBoundSamplers.Clear();
 
     mBoundArrayBuffer = nullptr;
     mBoundTransformFeedbackBuffer = nullptr;
@@ -1798,6 +1799,7 @@ WebGLContext::InitAndValidateGL()
     mBound2DTextures.SetLength(mGLMaxTextureUnits);
     mBoundCubeMapTextures.SetLength(mGLMaxTextureUnits);
     mBound3DTextures.SetLength(mGLMaxTextureUnits);
+    mBoundSamplers.SetLength(mGLMaxTextureUnits);
 
     if (MinCapabilityMode()) {
         mGLMaxTextureSize = MINVALUE_GL_MAX_TEXTURE_SIZE;
