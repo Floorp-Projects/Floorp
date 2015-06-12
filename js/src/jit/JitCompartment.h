@@ -557,6 +557,51 @@ void FinishInvalidation(FreeOp* fop, JSScript* script);
 const unsigned WINDOWS_BIG_FRAME_TOUCH_INCREMENT = 4096 - 1;
 #endif
 
+// If ExecutableAllocator::nonWritableJitCode is |true|, this class will ensure
+// JIT code is writable (has RW permissions) in its scope. If nonWritableJitCode
+// is |false|, it's a no-op.
+class MOZ_STACK_CLASS AutoWritableJitCode
+{
+    JSRuntime* rt_;
+    void* addr_;
+    size_t size_;
+
+  public:
+    AutoWritableJitCode(JSRuntime* rt, void* addr, size_t size)
+      : rt_(rt), addr_(addr), size_(size)
+    {
+        rt_->toggleAutoWritableJitCodeActive(true);
+        ExecutableAllocator::makeWritable(addr_, size_);
+    }
+    AutoWritableJitCode(void* addr, size_t size)
+      : AutoWritableJitCode(TlsPerThreadData.get()->runtimeFromMainThread(), addr, size)
+    {}
+    explicit AutoWritableJitCode(JitCode* code)
+      : AutoWritableJitCode(code->runtimeFromMainThread(), code->raw(), code->bufferSize())
+    {}
+    ~AutoWritableJitCode() {
+        ExecutableAllocator::makeExecutable(addr_, size_);
+        rt_->toggleAutoWritableJitCodeActive(false);
+    }
+};
+
+enum ReprotectCode { Reprotect = true, DontReprotect = false };
+
+class MOZ_STACK_CLASS MaybeAutoWritableJitCode
+{
+    mozilla::Maybe<AutoWritableJitCode> awjc_;
+
+  public:
+    MaybeAutoWritableJitCode(void* addr, size_t size, ReprotectCode reprotect) {
+        if (reprotect)
+            awjc_.emplace(addr, size);
+    }
+    MaybeAutoWritableJitCode(JitCode* code, ReprotectCode reprotect) {
+        if (reprotect)
+            awjc_.emplace(code);
+    }
+};
+
 } // namespace jit
 } // namespace js
 

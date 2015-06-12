@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ *
  * Copyright (C) 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,14 +57,6 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
 
 #if defined(JS_CODEGEN_MIPS) && defined(__linux__) && !defined(JS_MIPS_SIMULATOR)
 #include <sys/cachectl.h>
-#endif
-
-#if ENABLE_ASSEMBLER_WX_EXCLUSIVE
-#define PROTECTION_FLAGS_RW (PROT_READ | PROT_WRITE)
-#define PROTECTION_FLAGS_RX (PROT_READ | PROT_EXEC)
-#define INITIAL_PROTECTION_FLAGS PROTECTION_FLAGS_RX
-#else
-#define INITIAL_PROTECTION_FLAGS (PROT_READ | PROT_WRITE | PROT_EXEC)
 #endif
 
 namespace JS {
@@ -177,12 +171,14 @@ namespace jit {
     }
 };
 
-class ExecutableAllocator {
+class ExecutableAllocator
+{
     typedef void (*DestroyCallback)(void* addr, size_t size);
-    enum ProtectionSetting { Writable, Executable };
     DestroyCallback destroyCallback;
 
   public:
+    enum ProtectionSetting { Writable, Executable };
+
     ExecutableAllocator()
       : destroyCallback(nullptr)
     {
@@ -266,6 +262,8 @@ class ExecutableAllocator {
     void setDestroyCallback(DestroyCallback destroyCallback) {
         this->destroyCallback = destroyCallback;
     }
+
+    static bool nonWritableJitCode;
 
   private:
     static size_t pageSize;
@@ -379,21 +377,19 @@ class ExecutableAllocator {
         return pool;
     }
 
-#if ENABLE_ASSEMBLER_WX_EXCLUSIVE
     static void makeWritable(void* start, size_t size)
     {
-        reprotectRegion(start, size, Writable);
+        if (nonWritableJitCode)
+            reprotectRegion(start, size, Writable);
     }
 
     static void makeExecutable(void* start, size_t size)
     {
-        reprotectRegion(start, size, Executable);
+        if (nonWritableJitCode)
+            reprotectRegion(start, size, Executable);
     }
-#else
-    static void makeWritable(void*, size_t) {}
-    static void makeExecutable(void*, size_t) {}
-#endif
 
+    static unsigned initialProtectionFlags(ProtectionSetting protection);
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     static void cacheFlush(void*, size_t)
@@ -446,9 +442,7 @@ class ExecutableAllocator {
     ExecutableAllocator(const ExecutableAllocator&) = delete;
     void operator=(const ExecutableAllocator&) = delete;
 
-#if ENABLE_ASSEMBLER_WX_EXCLUSIVE
     static void reprotectRegion(void*, size_t, ProtectionSetting);
-#endif
 
     // These are strong references;  they keep pools alive.
     static const size_t maxSmallPools = 4;

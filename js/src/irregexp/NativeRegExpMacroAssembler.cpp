@@ -442,6 +442,8 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
     writePerfSpewerJitCodeProfile(code, "RegExp");
 #endif
 
+    AutoWritableJitCode awjc(code);
+
     for (size_t i = 0; i < labelPatches.length(); i++) {
         LabelPatch& v = labelPatches[i];
         MOZ_ASSERT(!v.label);

@@ -1,4 +1,6 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ *
  * Copyright (C) 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +37,8 @@
 
 using namespace js::jit;
 
-size_t ExecutableAllocator::determinePageSize()
+size_t
+ExecutableAllocator::determinePageSize()
 {
     return getpagesize();
 }
@@ -57,24 +60,29 @@ js::jit::DeallocateExecutableMemory(void* addr, size_t bytes, size_t pageSize)
     MOZ_ASSERT(!result || errno == ENOMEM);
 }
 
-ExecutablePool::Allocation ExecutableAllocator::systemAlloc(size_t n)
+ExecutablePool::Allocation
+ExecutableAllocator::systemAlloc(size_t n)
 {
-    void* allocation = AllocateExecutableMemory(nullptr, n, INITIAL_PROTECTION_FLAGS,
+    void* allocation = AllocateExecutableMemory(nullptr, n, initialProtectionFlags(Executable),
                                                 "js-jit-code", pageSize);
     ExecutablePool::Allocation alloc = { reinterpret_cast<char*>(allocation), n };
     return alloc;
 }
 
-void ExecutableAllocator::systemRelease(const ExecutablePool::Allocation& alloc)
+void
+ExecutableAllocator::systemRelease(const ExecutablePool::Allocation& alloc)
 {
     DeallocateExecutableMemory(alloc.pages, alloc.size, pageSize);
 }
 
-#if WTF_ENABLE_ASSEMBLER_WX_EXCLUSIVE
-void ExecutableAllocator::reprotectRegion(void* start, size_t size, ProtectionSetting setting)
+static const unsigned FLAGS_RW = PROT_READ | PROT_WRITE;
+static const unsigned FLAGS_RX = PROT_READ | PROT_EXEC;
+
+void
+ExecutableAllocator::reprotectRegion(void* start, size_t size, ProtectionSetting setting)
 {
-    if (!pageSize)
-        intializePageSize();
+    MOZ_ASSERT(nonWritableJitCode);
+    MOZ_ASSERT(pageSize);
 
     // Calculate the start of the page containing this region,
     // and account for this extra memory within size.
@@ -87,7 +95,14 @@ void ExecutableAllocator::reprotectRegion(void* start, size_t size, ProtectionSe
     size += (pageSize - 1);
     size &= ~(pageSize - 1);
 
-    mprotect(pageStart, size, (setting == Writable) ? PROTECTION_FLAGS_RW : PROTECTION_FLAGS_RX);
+    mprotect(pageStart, size, (setting == Writable) ? FLAGS_RW : FLAGS_RX);
 }
-#endif
 
+/* static */ unsigned
+ExecutableAllocator::initialProtectionFlags(ProtectionSetting protection)
+{
+    if (!nonWritableJitCode)
+        return FLAGS_RW | FLAGS_RX;
+
+    return (protection == Writable) ? FLAGS_RW : FLAGS_RX;
+}
