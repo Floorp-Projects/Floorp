@@ -100,7 +100,7 @@ WebGLContextLossHandler::RunTimer()
 void
 WebGLContextLossHandler::DisableTimer()
 {
-    if (mIsDisabled)
+    if (!mIsDisabled)
         return;
 
     mIsDisabled = true;
