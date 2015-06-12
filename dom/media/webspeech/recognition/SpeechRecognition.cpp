@@ -9,6 +9,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/SpeechRecognitionBinding.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/MediaStreamError.h"
@@ -141,6 +142,16 @@ JSObject*
 SpeechRecognition::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return SpeechRecognitionBinding::Wrap(aCx, this, aGivenProto);
+}
+
+bool
+SpeechRecognition::IsAuthorized(JSContext* aCx, JSObject* aGlobal)
+{
+  bool inCertifiedApp = IsInCertifiedApp(aCx, aGlobal);
+  bool enableTests = Preferences::GetBool(TEST_PREFERENCE_ENABLE);
+  bool enableRecognitionEnable = Preferences::GetBool(TEST_PREFERENCE_RECOGNITION_ENABLE);
+  bool enableRecognitionForceEnable = Preferences::GetBool(TEST_PREFERENCE_RECOGNITION_FORCE_ENABLE);
+  return (inCertifiedApp || enableRecognitionForceEnable || enableTests) && enableRecognitionEnable;
 }
 
 already_AddRefed<SpeechRecognition>
