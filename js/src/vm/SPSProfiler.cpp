@@ -329,8 +329,9 @@ SPSProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
 
     // Determine the required buffer size.
     size_t len = lenFilename + lenLineno + 1; // +1 for the ":" separating them.
-    if (atom)
-        len += atom->length() + 3; // +3 for the " (" and ")" it adds.
+    if (atom) {
+        len += JS::GetDeflatedUTF8StringLength(atom) + 3; // +3 for the " (" and ")" it adds.
+    }
 
     // Allocate the buffer.
     char* cstr = js_pod_malloc<char>(len + 1);
@@ -341,10 +342,13 @@ SPSProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
     DebugOnly<size_t> ret;
     if (atom) {
         JS::AutoCheckCannotGC nogc;
-        if (atom->hasLatin1Chars())
-            ret = JS_snprintf(cstr, len + 1, "%s (%s:%llu)", atom->latin1Chars(nogc), filename, lineno);
-        else
-            ret = JS_snprintf(cstr, len + 1, "%hs (%s:%llu)", atom->twoByteChars(nogc), filename, lineno);
+        auto atomStr = mozilla::UniquePtr<char, JS::FreePolicy>(
+            atom->hasLatin1Chars()
+            ? JS::CharsToNewUTF8CharsZ(nullptr, atom->latin1Range(nogc)).c_str()
+            : JS::CharsToNewUTF8CharsZ(nullptr, atom->twoByteRange(nogc)).c_str());
+        if (!atomStr)
+            return nullptr;
+        ret = JS_snprintf(cstr, len + 1, "%s (%s:%llu)", atomStr.get(), filename, lineno);
     } else {
         ret = JS_snprintf(cstr, len + 1, "%s:%llu", filename, lineno);
     }
