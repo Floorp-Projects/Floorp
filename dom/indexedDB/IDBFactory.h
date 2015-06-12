@@ -105,6 +105,10 @@ public:
   static bool
   AllowedForWindow(nsPIDOMWindow* aWindow);
 
+  static bool
+  AllowedForPrincipal(nsIPrincipal* aPrincipal,
+                      bool* aIsSystemPrincipal = nullptr);
+
   void
   AssertIsOnOwningThread() const
 #ifdef DEBUG

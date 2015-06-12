@@ -77,7 +77,6 @@ xpcom_glue_src = [
     'nsProxyRelease.cpp',
     'nsQuickSort.cpp',
     'nsTArray.cpp',
-    'nsTHashtable.cpp',
     'nsTObserverArray.cpp',
     'nsThreadUtils.cpp',
     'nsWeakReference.cpp',

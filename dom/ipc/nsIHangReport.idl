@@ -18,7 +18,7 @@ interface nsIFrameLoader;
  * process will continue to run uninhibitedly during this time.
  */
 
-[scriptable, uuid(3b88d100-8d5b-11e4-b4a9-0800200c9a66)]
+[scriptable, uuid(90cea731-dd3e-459e-b017-f9a14697b56e)]
 interface nsIHangReport : nsISupports
 {
   const unsigned long SLOW_SCRIPT = 1;
@@ -37,6 +37,10 @@ interface nsIHangReport : nsISupports
   // For PLUGIN_HANGs, this field contains information about the plugin.
   // Only valid for PLUGIN_HANG reports.
   readonly attribute ACString pluginName;
+
+  // Called by front end code when user ignores or cancels
+  // the notification.
+  void userCanceled();
 
   // Terminate the slow script if it is still running.
   // Only valid for SLOW_SCRIPT reports.

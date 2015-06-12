@@ -10,8 +10,7 @@ s = new Set(null);
 assertEq(s.size, 0);
 
 // FIXME: bug 1083752
-options("werror");
-assertEq(evaluate("Set()", {catchTermination: true}), "terminated");
+assertWarning(() => Set(), "None");
 // assertThrowsInstanceOf(() => Set(), TypeError);
 // assertThrowsInstanceOf(() => Set(undefined), TypeError);
 // assertThrowsInstanceOf(() => Set(null), TypeError);

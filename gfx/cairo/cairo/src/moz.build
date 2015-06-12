@@ -198,7 +198,7 @@ for var in ('MOZ_TREE_CAIRO', 'MOZ_TREE_PIXMAN'):
         DEFINES[var] = True
 
 if CONFIG['GNU_CC']:
-    DEFINES['HAVE_INTEL_ATOMIC_PRIMITIVES'] = True
+    DEFINES['HAVE_CXX11_ATOMIC_PRIMITIVES'] = True
     # We would normally use autoconf to set these up, using AC_CHECK_SIZEOF.
     # But AC_CHECK_SIZEOF requires running programs to determine the sizes,
     # and that doesn't work so well with cross-compiling.  So instead we

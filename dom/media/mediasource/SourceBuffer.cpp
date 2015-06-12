@@ -37,86 +37,70 @@ namespace mozilla {
 
 namespace dom {
 
-class AppendDataRunnable : public nsRunnable {
+class BufferAppendRunnable : public nsRunnable {
 public:
-  AppendDataRunnable(SourceBuffer* aSourceBuffer,
-                     MediaLargeByteBuffer* aData,
-                     TimeUnit aTimestampOffset,
-                     uint32_t aUpdateID)
+  BufferAppendRunnable(SourceBuffer* aSourceBuffer,
+                       uint32_t aUpdateID)
   : mSourceBuffer(aSourceBuffer)
-  , mData(aData)
-  , mTimestampOffset(aTimestampOffset)
   , mUpdateID(aUpdateID)
   {
   }
 
   NS_IMETHOD Run() override final {
 
-    mSourceBuffer->AppendData(mData, mTimestampOffset, mUpdateID);
+    mSourceBuffer->BufferAppend(mUpdateID);
 
     return NS_OK;
   }
 
 private:
   nsRefPtr<SourceBuffer> mSourceBuffer;
-  nsRefPtr<MediaLargeByteBuffer> mData;
-  TimeUnit mTimestampOffset;
   uint32_t mUpdateID;
-};
-
-class RangeRemovalRunnable : public nsRunnable {
-public:
-  RangeRemovalRunnable(SourceBuffer* aSourceBuffer,
-                       double aStart,
-                       double aEnd)
-  : mSourceBuffer(aSourceBuffer)
-  , mStart(aStart)
-  , mEnd(aEnd)
-  { }
-
-  NS_IMETHOD Run() override final {
-
-    if (!mSourceBuffer->mUpdating) {
-      // abort was called in between.
-      return NS_OK;
-    }
-    mSourceBuffer->DoRangeRemoval(mStart, mEnd);
-    mSourceBuffer->StopUpdating();
-
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<SourceBuffer> mSourceBuffer;
-  double mStart;
-  double mEnd;
 };
 
 void
 SourceBuffer::SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv)
 {
+  typedef mozilla::SourceBufferContentManager::AppendState AppendState;
+
   MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SetMode(aMode=%d)", aMode);
   if (!IsAttached() || mUpdating) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  if (aMode == SourceBufferAppendMode::Sequence) {
+  if (!mIsUsingFormatReader && aMode == SourceBufferAppendMode::Sequence) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+  if (mIsUsingFormatReader && mGenerateTimestamp &&
+      aMode == SourceBufferAppendMode::Segments) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
   }
   MOZ_ASSERT(mMediaSource->ReadyState() != MediaSourceReadyState::Closed);
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
   }
-  // TODO: Test append state.
-  // TODO: If aMode is "sequence", set sequence start time.
+  if (mIsUsingFormatReader &&
+      mContentManager->GetAppendState() == AppendState::PARSING_MEDIA_SEGMENT){
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  if (mIsUsingFormatReader && aMode == SourceBufferAppendMode::Sequence) {
+    // Will set GroupStartTimestamp to GroupEndTimestamp.
+    mContentManager->RestartGroupStartTimestamp();
+  }
+
   mAppendMode = aMode;
 }
 
 void
 SourceBuffer::SetTimestampOffset(double aTimestampOffset, ErrorResult& aRv)
 {
+  typedef mozilla::SourceBufferContentManager::AppendState AppendState;
+
   MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SetTimestampOffset(aTimestampOffset=%f)", aTimestampOffset);
   if (!IsAttached() || mUpdating) {
@@ -127,9 +111,25 @@ SourceBuffer::SetTimestampOffset(double aTimestampOffset, ErrorResult& aRv)
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
   }
-  // TODO: Test append state.
-  // TODO: If aMode is "sequence", set sequence start time.
+  if (mIsUsingFormatReader &&
+      mContentManager->GetAppendState() == AppendState::PARSING_MEDIA_SEGMENT){
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+  mApparentTimestampOffset = aTimestampOffset;
+  mTimestampOffset = TimeUnit::FromSeconds(aTimestampOffset);
+  if (mIsUsingFormatReader && mAppendMode == SourceBufferAppendMode::Sequence) {
+    mContentManager->SetGroupStartTimestamp(mTimestampOffset);
+  }
+}
+
+void
+SourceBuffer::SetTimestampOffset(const TimeUnit& aTimestampOffset)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
   mTimestampOffset = aTimestampOffset;
+  mApparentTimestampOffset = aTimestampOffset.ToSeconds();
 }
 
 already_AddRefed<TimeRanges>
@@ -221,7 +221,7 @@ SourceBuffer::AbortBufferAppend()
 {
   if (mUpdating) {
     mPendingAppend.DisconnectIfExists();
-    // TODO: Abort segment parser loop, and stream append loop algorithms.
+    // TODO: Abort stream append loop algorithms.
     // cancel any pending buffer append.
     mContentManager->AbortAppendData();
     AbortUpdating();
@@ -251,29 +251,20 @@ SourceBuffer::Remove(double aStart, double aEnd, ErrorResult& aRv)
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
   }
 
-  StartUpdating();
-  nsCOMPtr<nsIRunnable> task = new RangeRemovalRunnable(this, aStart, aEnd);
-  NS_DispatchToMainThread(task);
+  RangeRemoval(aStart, aEnd);
 }
 
 void
 SourceBuffer::RangeRemoval(double aStart, double aEnd)
 {
   StartUpdating();
-  DoRangeRemoval(aStart, aEnd);
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableMethod(this, &SourceBuffer::StopUpdating);
-  NS_DispatchToMainThread(task);
-}
 
-void
-SourceBuffer::DoRangeRemoval(double aStart, double aEnd)
-{
-  MSE_DEBUG("DoRangeRemoval(%f, %f)", aStart, aEnd);
-  if (mContentManager && !IsInfinite(aStart)) {
-    mContentManager->RangeRemoval(TimeUnit::FromSeconds(aStart),
-                                  TimeUnit::FromSeconds(aEnd));
-  }
+  nsRefPtr<SourceBuffer> self = this;
+  mContentManager->RangeRemoval(TimeUnit::FromSeconds(aStart),
+                                TimeUnit::FromSeconds(aEnd))
+    ->Then(AbstractThread::MainThread(), __func__,
+           [self] (bool) { self->StopUpdating(); },
+           []() { MOZ_ASSERT(false); });
 }
 
 void
@@ -303,7 +294,7 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   , mMediaSource(aMediaSource)
   , mAppendWindowStart(0)
   , mAppendWindowEnd(PositiveInfinity<double>())
-  , mTimestampOffset(0)
+  , mApparentTimestampOffset(0)
   , mAppendMode(SourceBufferAppendMode::Segments)
   , mUpdating(false)
   , mActive(false)
@@ -314,9 +305,26 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   MOZ_ASSERT(aMediaSource);
   mEvictionThreshold = Preferences::GetUint("media.mediasource.eviction_threshold",
                                             75 * (1 << 20));
-  mContentManager = SourceBufferContentManager::CreateManager(aMediaSource->GetDecoder(), aType);
+  mContentManager =
+    SourceBufferContentManager::CreateManager(this,
+                                              aMediaSource->GetDecoder(),
+                                              aType);
   MSE_DEBUG("Create mContentManager=%p",
             mContentManager.get());
+  if (aType.LowerCaseEqualsLiteral("audio/mpeg") ||
+      aType.LowerCaseEqualsLiteral("audio/aac")) {
+    mGenerateTimestamp = true;
+  } else {
+    mGenerateTimestamp = false;
+  }
+  mIsUsingFormatReader =
+    Preferences::GetBool("media.mediasource.format-reader", false);
+  ErrorResult dummy;
+  if (mGenerateTimestamp) {
+    SetMode(SourceBufferAppendMode::Sequence, dummy);
+  } else {
+    SetMode(SourceBufferAppendMode::Segments, dummy);
+  }
 }
 
 SourceBuffer::~SourceBuffer()
@@ -413,18 +421,18 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   if (!data) {
     return;
   }
+  mContentManager->AppendData(data, mTimestampOffset);
+
   StartUpdating();
 
   MOZ_ASSERT(mAppendMode == SourceBufferAppendMode::Segments,
              "We don't handle timestampOffset for sequence mode yet");
-  nsCOMPtr<nsIRunnable> task =
-    new AppendDataRunnable(this, data, TimeUnit::FromSeconds(mTimestampOffset), mUpdateID);
+  nsCOMPtr<nsIRunnable> task = new BufferAppendRunnable(this, mUpdateID);
   NS_DispatchToMainThread(task);
 }
 
 void
-SourceBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset,
-                         uint32_t aUpdateID)
+SourceBuffer::BufferAppend(uint32_t aUpdateID)
 {
   if (!mUpdating || aUpdateID != mUpdateID) {
     // The buffer append algorithm has been interrupted by abort().
@@ -439,12 +447,7 @@ SourceBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset,
   MOZ_ASSERT(mMediaSource);
   MOZ_ASSERT(!mPendingAppend.Exists());
 
-  if (!aData->Length()) {
-    StopUpdating();
-    return;
-  }
-
-  mPendingAppend.Begin(mContentManager->AppendData(aData, aTimestampOffset)
+  mPendingAppend.Begin(mContentManager->BufferAppend()
                        ->Then(AbstractThread::MainThread(), __func__, this,
                               &SourceBuffer::AppendDataCompletedWithSuccess,
                               &SourceBuffer::AppendDataErrored));

@@ -87,14 +87,26 @@ nsresult UnregisterAppMemory(void* ptr);
 // Functions for working with minidumps and .extras
 typedef nsDataHashtable<nsCStringHashKey, nsCString> AnnotationTable;
 
+void DeleteMinidumpFilesForID(const nsAString& id);
 bool GetMinidumpForID(const nsAString& id, nsIFile** minidump);
 bool GetIDFromMinidump(nsIFile* minidump, nsAString& id);
 bool GetExtraFileForID(const nsAString& id, nsIFile** extraFile);
 bool GetExtraFileForMinidump(nsIFile* minidump, nsIFile** extraFile);
 bool AppendExtraData(const nsAString& id, const AnnotationTable& data);
 bool AppendExtraData(nsIFile* extraFile, const AnnotationTable& data);
-void RenameAdditionalHangMinidump(nsIFile* minidump, nsIFile* childMinidump,
-                                  const nsACString& name);
+
+/*
+ * Renames the stand alone dump file aDumpFile to:
+ *  |aOwnerDumpFile-aDumpFileProcessType.dmp|
+ * and moves it into the same directory as aOwnerDumpFile. Does not
+ * modify aOwnerDumpFile in any way.
+ *
+ * @param aDumpFile - the dump file to associate with aOwnerDumpFile.
+ * @param aOwnerDumpFile - the new owner of aDumpFile.
+ * @param aDumpFileProcessType - process name associated with aDumpFile.
+ */
+void RenameAdditionalHangMinidump(nsIFile* aDumpFile, const nsIFile* aOwnerDumpFile,
+                                  const nsACString& aDumpFileProcessType);
 
 #ifdef XP_WIN32
   nsresult WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo);
@@ -115,6 +127,17 @@ nsresult SetSubmitReports(bool aSubmitReport);
 // from off the main thread, this method will synchronously proxy to the main
 // thread.
 void OOPInit();
+
+/*
+ * Takes a minidump for the current process and returns the dump file.
+ * Callers are responsible for managing the resulting file.
+ *
+ * @param aResult - file pointer that holds the resulting minidump.
+ * @param aMoveToPending - if true move the report to the report
+ *   pending directory.
+ * @returns boolean indicating success or failure.
+ */
+bool TakeMinidump(nsIFile** aResult, bool aMoveToPending = false);
 
 // Return true if a dump was found for |childPid|, and return the
 // path in |dump|.  The caller owns the last reference to |dump| if it
@@ -143,19 +166,31 @@ typedef int ThreadId;
 // hoops for us.
 ThreadId CurrentThreadId();
 
-// Create a hang report with two minidumps that are snapshots of the state
-// of this parent process and |childPid|. The "main" minidump will be the
-// child process, and this parent process will have the -browser extension.
-//
-// Returns true on success. If this function fails, it will attempt to delete
-// any files that were created.
-//
-// The .extra information created will not include an additional_minidumps
-// annotation: the caller should annotate additional_minidumps with
-// at least "browser" and perhaps other minidumps attached to this report.
-bool CreatePairedMinidumps(ProcessHandle childPid,
-                           ThreadId childBlamedThread,
-                           nsIFile** childDump);
+/*
+ * Take a minidump of the target process and pair it with an incoming minidump
+ * provided by the caller or a new minidump of the calling process and thread.
+ * The caller will own both dumps after this call. If this function fails
+ * it will attempt to delete any files that were created.
+ *
+ * The .extra information created will not include an 'additional_minidumps'
+ * annotation.
+ *
+ * @param aTargetPid The target process for the minidump.
+ * @param aTargetBlamedThread The target thread for the minidump.
+ * @param aIncomingPairName The name to apply to the paired dump the caller
+ *   passes in.
+ * @param aIncomingDumpToPair Existing dump to pair with the new dump. if this
+ *   is null, TakeMinidumpAndPair will take a new minidump of the calling
+ *   process and thread and use it in aIncomingDumpToPairs place.
+ * @param aTargetDumpOut The target minidump file paired up with
+ *   aIncomingDumpToPair.
+ * @return bool indicating success or failure
+ */
+bool CreateMinidumpsAndPair(ProcessHandle aTargetPid,
+                            ThreadId aTargetBlamedThread,
+                            const nsACString& aIncomingPairName,
+                            nsIFile* aIncomingDumpToPair,
+                            nsIFile** aTargetDumpOut);
 
 // Create an additional minidump for a child of a process which already has
 // a minidump (|parentMinidump|).

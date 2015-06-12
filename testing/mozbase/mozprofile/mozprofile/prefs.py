@@ -164,8 +164,6 @@ class Preferences(object):
                               to str.format to interpolate preference values.
         """
 
-        comment = re.compile('/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/', re.MULTILINE)
-
         marker = '##//' # magical marker
         lines = [i.strip() for i in mozfile.load(path).readlines() if i.strip()]
         _lines = []
@@ -176,7 +174,6 @@ class Preferences(object):
                 line = line.replace('//', marker)
             _lines.append(line)
         string = '\n'.join(_lines)
-        string = re.sub(comment, '', string)
 
         # skip trailing comments
         processed_tokens = []

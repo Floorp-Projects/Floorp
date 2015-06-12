@@ -408,6 +408,9 @@ public:
                                         const uint64_t& aChildID,
                                         uint32_t* aChildIdx) override final;
 
+  virtual bool RecvEmbeddedChildAt(const uint64_t& aID, const uint32_t& aIdx,
+                                   uint64_t* aChildID) override final;
+
   virtual bool RecvChildAtPoint(const uint64_t& aID,
                                 const int32_t& aX,
                                 const int32_t& aY,

@@ -2352,10 +2352,15 @@ private:
 void
 CanvasRenderingContext2D::UpdateFilter()
 {
-  nsIPresShell* presShell = GetPresShell();
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   if (!presShell || presShell->IsDestroying()) {
     return;
   }
+
+  // The filter might reference an SVG filter that is declared inside this
+  // document. Flush frames so that we'll have an nsSVGFilterFrame to work
+  // with.
+  presShell->FlushPendingNotifications(Flush_Frames);
 
   CurrentState().filter =
     nsFilterInstance::GetFilterDescription(mCanvasElement,
@@ -4700,11 +4705,17 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
     RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
     RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
 
+    DataSourceSurface::MappedSurface rawData;
+    if (NS_WARN_IF(!data->Map(DataSourceSurface::READ, &rawData))) {
+        error.Throw(NS_ERROR_FAILURE);
+        return;
+    }
     RefPtr<SourceSurface> source =
-      mTarget->CreateSourceSurfaceFromData(data->GetData(),
+      mTarget->CreateSourceSurfaceFromData(rawData.mData,
                                            data->GetSize(),
-                                           data->Stride(),
+                                           rawData.mStride,
                                            data->GetFormat());
+    data->Unmap();
 
     if (!source) {
       error.Throw(NS_ERROR_FAILURE);
@@ -4979,12 +4990,13 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
   IntRect destRect(aX, aY, aWidth, aHeight);
   IntRect srcReadRect = srcRect.Intersect(destRect);
   RefPtr<DataSourceSurface> readback;
+  DataSourceSurface::MappedSurface rawData;
   if (!srcReadRect.IsEmpty() && !mZero) {
     RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
     if (snapshot) {
       readback = snapshot->GetDataSurface();
     }
-    if (!readback || !readback->GetData()) {
+    if (!readback || !readback->Map(DataSourceSurface::READ, &rawData)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -5006,8 +5018,8 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
   uint32_t srcStride;
 
   if (readback) {
-    srcStride = readback->Stride();
-    src = readback->GetData() + srcReadRect.y * srcStride + srcReadRect.x * 4;
+    srcStride = rawData.mStride;
+    src = rawData.mData + srcReadRect.y * srcStride + srcReadRect.x * 4;
   }
 
   JS::AutoCheckCannotGC nogc;
@@ -5069,6 +5081,10 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
     }
     src += srcStride - (dstWriteRect.width * 4);
     dst += (aWidth * 4) - (dstWriteRect.width * 4);
+  }
+
+  if (readback) {
+    readback->Unmap();
   }
 
   *aRetval = darray;
