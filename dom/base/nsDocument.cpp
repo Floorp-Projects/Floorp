@@ -2006,9 +2006,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   }
 
   if (tmp->mSubDocuments) {
-    PLDHashTable::Iterator iter(tmp->mSubDocuments);
-    while (iter.HasMoreEntries()) {
-      auto entry = static_cast<SubDocMapEntry*>(iter.NextEntry());
+    for (auto iter = tmp->mSubDocuments->Iter(); !iter.Done(); iter.Next()) {
+      auto entry = static_cast<SubDocMapEntry*>(iter.Get());
 
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
                                          "mSubDocuments entry->mKey");
@@ -4023,9 +4022,8 @@ nsDocument::FindContentForSubDocument(nsIDocument *aDocument) const
     return nullptr;
   }
 
-  PLDHashTable::Iterator iter(mSubDocuments);
-  while (iter.HasMoreEntries()) {
-    auto entry = static_cast<SubDocMapEntry*>(iter.NextEntry());
+  for (auto iter = mSubDocuments->Iter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<SubDocMapEntry*>(iter.Get());
     if (entry->mSubDocument == aDocument) {
       return entry->mKey;
     }
@@ -8717,9 +8715,8 @@ nsDocument::EnumerateSubDocuments(nsSubDocEnumFunc aCallback, void *aData)
     return;
   }
 
-  PLDHashTable::Iterator iter(mSubDocuments);
-  while (iter.HasMoreEntries()) {
-    auto entry = static_cast<SubDocMapEntry*>(iter.NextEntry());
+  for (auto iter = mSubDocuments->Iter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<SubDocMapEntry*>(iter.Get());
     nsIDocument* subdoc = entry->mSubDocument;
     bool next = subdoc ? aCallback(subdoc, aData) : true;
     if (!next) {
@@ -8827,9 +8824,8 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
   }
 
   if (mSubDocuments) {
-    PLDHashTable::Iterator iter(mSubDocuments);
-    while (iter.HasMoreEntries()) {
-      auto entry = static_cast<SubDocMapEntry*>(iter.NextEntry());
+    for (auto iter = mSubDocuments->Iter(); !iter.Done(); iter.Next()) {
+      auto entry = static_cast<SubDocMapEntry*>(iter.Get());
       nsIDocument* subdoc = entry->mSubDocument;
 
       // The aIgnoreRequest we were passed is only for us, so don't pass it on.

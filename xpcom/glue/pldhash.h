@@ -292,26 +292,51 @@ public:
   void DumpMeter(PLDHashEnumerator aDump, FILE* aFp);
 #endif
 
-  /**
-   * This is an iterator that works over the elements of PLDHashtable. It is not
-   * safe to modify the hashtable while it is being iterated over; on debug
-   * builds, attempting to do so will result in an assertion failure.
-   */
-  class Iterator {
+  // This is an iterator for PLDHashtable. It is not safe to modify the
+  // table while it is being iterated over; on debug builds, attempting to do
+  // so will result in an assertion failure.
+  //
+  // Example usage:
+  //
+  //   for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
+  //     auto entry = static_cast<FooEntry*>(iter.Get());
+  //     // ... do stuff with |entry| ...
+  //   }
+  //
+  // or:
+  //
+  //   for (PLDHashTable::Iterator iter(&table); !iter.Done(); iter.Next()) {
+  //     auto entry = static_cast<FooEntry*>(iter.Get());
+  //     // ... do stuff with |entry| ...
+  //   }
+  //
+  // The latter form is more verbose but is easier to work with when
+  // making subclasses of Iterator.
+  //
+  class Iterator
+  {
   public:
     explicit Iterator(const PLDHashTable* aTable);
-    Iterator(const Iterator& aIterator);
+    Iterator(Iterator&& aOther);
     ~Iterator();
-    bool HasMoreEntries() const;
-    PLDHashEntryHdr* NextEntry();
+    bool Done() const;                // Have we finished?
+    PLDHashEntryHdr* Get() const;     // Get the current entry.
+    void Next();                      // Advance to the next entry.
 
   private:
-    const PLDHashTable* mTable;       /* Main table pointer */
-    char* mEntryAddr;                 /* Pointer to the next entry to check */
-    uint32_t mEntryOffset;            /* The number of the elements returned */
+    const PLDHashTable* mTable;       // Main table pointer.
+    char* mCurrent;                   // Pointer to the current entry.
+    char* mLimit;                     // One past the last entry.
+
+    bool IsOnNonLiveEntry() const;
+
+    Iterator() = delete;
+    Iterator(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&&) = delete;
   };
 
-  Iterator Iterate() const { return Iterator(this); }
+  Iterator Iter() const { return Iterator(this); }
 
 private:
   static bool EntryIsFree(PLDHashEntryHdr* aEntry);
