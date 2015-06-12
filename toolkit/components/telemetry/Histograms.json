@@ -8200,5 +8200,13 @@
     "expires_in_version": "45",
     "kind": "boolean",
     "description": "Set if media.eme.enabled is false, in a build that supports the Adobe Primetime Content Decryption Module."
+  },
+  "GRAPHICS_DRIVER_STARTUP_TEST": {
+    "alert_emails": ["danderson@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "releaseChannelCollection": "opt-out",
+    "description": "Reports whether or not graphics drivers crashed during startup."
   }
 }
