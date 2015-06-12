@@ -47,6 +47,12 @@ struct JsepOfferOptions : public JsepOAOptions {
 };
 struct JsepAnswerOptions : public JsepOAOptions {};
 
+enum JsepBundlePolicy {
+  kBundleBalanced,
+  kBundleMaxCompat,
+  kBundleMaxBundle
+};
+
 class JsepSession
 {
 public:
@@ -73,6 +79,7 @@ public:
   // Set up the ICE And DTLS data.
   virtual nsresult SetIceCredentials(const std::string& ufrag,
                                      const std::string& pwd) = 0;
+  virtual nsresult SetBundlePolicy(JsepBundlePolicy policy) = 0;
   virtual bool RemoteIsIceLite() const = 0;
   virtual std::vector<std::string> GetIceOptions() const = 0;
 
