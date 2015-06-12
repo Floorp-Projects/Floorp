@@ -318,6 +318,20 @@ function deflateMarkers(markers, uniqueStacks) {
  * @return object
  */
 function deflateThread(thread, uniqueStacks) {
+  // Some extra threads in a profile come stringified as a full profile (so
+  // it has nested threads itself) so the top level "thread" does not have markers
+  // or samples. We don't use this anyway so just make this safe to deflate.
+  // can be a string rather than an object on import. Bug 1173695
+  if (typeof thread === "string") {
+    thread = JSON.parse(thread);
+  }
+  if (!thread.samples) {
+    thread.samples = [];
+  }
+  if (!thread.markers) {
+    thread.markers = [];
+  }
+
   return {
     name: thread.name,
     tid: thread.tid,
