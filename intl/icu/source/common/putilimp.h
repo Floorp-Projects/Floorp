@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1997-2013, International Business Machines
+*   Copyright (C) 1997-2014, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -85,7 +85,7 @@ typedef size_t uintptr_t;
 
 #ifdef U_HAVE_NL_LANGINFO_CODESET
     /* Use the predefined value. */
-#elif U_PLATFORM_HAS_WIN32_API
+#elif U_PLATFORM_HAS_WIN32_API || U_PLATFORM == U_PF_ANDROID || U_PLATFORM == U_PF_QNX
 #   define U_HAVE_NL_LANGINFO_CODESET 0
 #else
 #   define U_HAVE_NL_LANGINFO_CODESET 1
@@ -116,9 +116,13 @@ typedef size_t uintptr_t;
 #elif U_PLATFORM == U_PF_ANDROID
 #   define U_TIMEZONE timezone
 #elif U_PLATFORM_IS_LINUX_BASED
-#   if !defined(__UCLIBC__)
-    /* __timezone is only available in glibc */
-#       define U_TIMEZONE __timezone
+#   if defined(__UCLIBC__)
+       /* uClibc does not have __timezone or _timezone. */
+#   elif defined(_NEWLIB_VERSION)
+#      define U_TIMEZONE      _timezone
+#   elif defined(__GLIBC__)
+       /* glibc */
+#      define U_TIMEZONE      __timezone
 #   endif
 #elif U_PLATFORM_USES_ONLY_WIN32_API
 #   define U_TIMEZONE _timezone

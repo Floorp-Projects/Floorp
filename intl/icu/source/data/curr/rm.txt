@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/rm.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/rm.xml
- */
 rm{
     Currencies{
         ADP{
@@ -89,7 +86,7 @@ rm{
         }
         AWG{
             "AWG",
-            "flurin da l'Aruba",
+            "flurin da l’Aruba",
         }
         AZM{
             "AZM",
@@ -309,7 +306,7 @@ rm{
         }
         DDM{
             "DDM",
-            "marc da la Germania da l'Ost",
+            "marc da la Germania da l’Ost",
         }
         DEM{
             "DEM",
@@ -337,7 +334,7 @@ rm{
         }
         ECV{
             "ECV",
-            "unitad da scuntrada da l'Ecuador",
+            "unitad da scuntrada da l’Ecuador",
         }
         EEK{
             "EEK",
@@ -709,7 +706,7 @@ rm{
         }
         MXP{
             "MXP",
-            "peso d'argient mexican (1861–1992)",
+            "peso d’argient mexican (1861–1992)",
         }
         MXV{
             "MXV",
@@ -765,7 +762,7 @@ rm{
         }
         OMR{
             "OMR",
-            "rial da l'Oman",
+            "rial da l’Oman",
         }
         PAB{
             "PAB",
@@ -877,7 +874,7 @@ rm{
         }
         SHP{
             "SHP",
-            "glivra da Sontg'Elena",
+            "glivra da Sontg’Elena",
         }
         SIT{
             "SIT",
@@ -913,7 +910,7 @@ rm{
         }
         SVC{
             "SVC",
-            "colon da l'El Salvador",
+            "colon da l’El Salvador",
         }
         SYP{
             "SYP",
@@ -924,7 +921,7 @@ rm{
             "lilangeni dal Swaziland",
         }
         THB{
-            "฿",
+            "THB",
             "baht tailandais",
         }
         TJR{
@@ -945,7 +942,7 @@ rm{
         }
         TOP{
             "TOP",
-            "pa'anga da Tonga",
+            "pa’anga da Tonga",
         }
         TPE{
             "TPE",
@@ -989,27 +986,27 @@ rm{
         }
         USD{
             "US$",
-            "dollar dals Stadis Unids da l'America",
+            "dollar dals Stadis Unids da l’America",
         }
         USN{
             "USN",
-            "dollar dals Stadis Unids da l'America (proxim di)",
+            "dollar dals Stadis Unids da l’America (proxim di)",
         }
         USS{
             "USS",
-            "dollar dals Stadis Unids da l'America (medem di)",
+            "dollar dals Stadis Unids da l’America (medem di)",
         }
         UYI{
             "UYI",
-            "peso da l'Uruguay (unidades indexadas)",
+            "peso da l’Uruguay (unidades indexadas)",
         }
         UYP{
             "UYP",
-            "nov peso da l'Uruguay (1975–1993)",
+            "nov peso da l’Uruguay (1975–1993)",
         }
         UYU{
             "UYU",
-            "peso da l'Uruguay",
+            "peso da l’Uruguay",
         }
         UZS{
             "UZS",
@@ -1073,7 +1070,7 @@ rm{
         }
         XFO{
             "XFO",
-            "franc d'aur franzos",
+            "franc d’aur franzos",
         }
         XFU{
             "XFU",
@@ -1160,9 +1157,115 @@ rm{
             "dollar dal Simbabwe",
         }
     }
+    CurrencyPlurals{
+        AUD{
+            one{"dollar australian"}
+            other{"dollar australian"}
+        }
+        CAD{
+            one{"dollar canadais"}
+            other{"dollar canadais"}
+        }
+        CHF{
+            one{"franc svizzer"}
+            other{"franc svizzer"}
+        }
+        DKK{
+            one{"cruna danaisa"}
+            other{"cruna danaisa"}
+        }
+        EEK{
+            one{"cruna estona"}
+            other{"cruna estona"}
+        }
+        EUR{
+            one{"euro"}
+            other{"euro"}
+        }
+        FIM{
+            one{"marc finlandais"}
+            other{"marc finlandais"}
+        }
+        GBP{
+            one{"glivra sterlina"}
+            other{"glivra sterlina"}
+        }
+        HNL{
+            one{"lempira hondurian"}
+            other{"lempira hondurian"}
+        }
+        IEP{
+            one{"glivra indonaisa"}
+            other{"glivra indonaisa"}
+        }
+        ISJ{
+            one{"veglia cruna islandaisa"}
+            other{"veglia cruna islandaisa"}
+        }
+        ISK{
+            one{"cruna islandaisa"}
+            other{"cruna islandaisa"}
+        }
+        JMD{
+            one{"dollar giamaican"}
+            other{"dollar giamaican"}
+        }
+        KYD{
+            one{"dollar da las Inslas Cayman"}
+            other{"dollar da las Inslas Cayman"}
+        }
+        MXN{
+            one{"peso mexican"}
+            other{"peso mexican"}
+        }
+        NOK{
+            one{"cruna norvegiaisa"}
+            other{"cruna norvegiaisa"}
+        }
+        PLN{
+            one{"zloty polac"}
+            other{"zloty polac"}
+        }
+        PLZ{
+            one{"zloty polac (1950–1995)"}
+            other{"zloty polac (1950–1995)"}
+        }
+        RUB{
+            one{"rubel russ (nov)"}
+            other{"rubel russ (nov)"}
+        }
+        RUR{
+            one{"rubel russ (vegl)"}
+            other{"rubel russ (vegl)"}
+        }
+        SAR{
+            one{"riyal saudit"}
+            other{"riyal saudit"}
+        }
+        SEK{
+            one{"cruna svedaisa"}
+            other{"cruna svedaisa"}
+        }
+        TRY{
+            one{"nova lira tirca"}
+            other{"nova lira tirca"}
+        }
+        USD{
+            one{"dollar dals Stadis Unids da l’America"}
+            other{"dollar dals Stadis Unids da l’America"}
+        }
+        XCD{
+            one{"dollar da la Caribica Orientala"}
+            other{"dollar da la Caribica Orientala"}
+        }
+        XXX{
+            one{"valuta nunenconuschenta"}
+            other{"valuta nunenconuschenta"}
+        }
+    }
     CurrencyUnitPatterns{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
 }

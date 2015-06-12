@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ko.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/ko.xml
- */
 ko{
     AuxExemplarCharacters{
         "[ᄀ-ᄒ ᅡ-ᅵ ᆨ-ᇂ 丘 串 乃 久 乖 九 乞 乫 乾 亂 亘 交 京 仇 今 介 件 价 企 伋 伎 伽 佳 佶 侃 來 侊 供 係 俓 俱 個"
@@ -48,12 +45,9 @@ ko{
         "＂ “ ” ( （ ) ） \\[ ［ \\] ］ \\{ ｛ \\} ｝ 〈 〉 《 》 「 」 『 』 【 】 〔 〕 § ¶ @ ＠ * ＊ / "
         "／ \\\\ ＼ \\& ＆ # ＃ % ％ ‰ † ‡ ′ ″ 〃 ※]"
     }
-    LocaleScript{
-        "Hang",
-        "Hani",
-    }
     MoreInformation{"?"}
     NumberElements{
+        default{"latn"}
         latn{
             miscPatterns{
                 atLeast{"{0}+"}
@@ -61,7 +55,7 @@ ko{
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
-                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -158,10 +152,13 @@ ko{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
+        minimumGroupingDigits{"1"}
+        native{"latn"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
     calendar{
         buddhist{
             eras{
@@ -176,8 +173,8 @@ ko{
                 "a h시 m분 s초 z",
                 "a h:mm:ss",
                 "a h:mm",
-                "U년 M월 d일 EEEE",
-                "U년 M월 d일",
+                "U년 MMM d일 EEEE",
+                "U년 MMM d일",
                 "y. M. d.",
                 "y. M. d.",
                 "{1} {0}",
@@ -196,7 +193,7 @@ ko{
                 GyMMMd{"U년 MMM d일"}
                 H{"H시"}
                 Hms{"H시 m분 s초"}
-                M{"M월"}
+                M{"MMM"}
                 MEEEEd{"M. d. EEEE"}
                 MEd{"M. d. (E)"}
                 MMM{"LLL"}
@@ -223,6 +220,36 @@ ko{
                 yyyyQQQQ{"U년 QQQQ"}
             }
             cyclicNameSets{
+                solarTerms{
+                    format{
+                        abbreviated{
+                            "입춘",
+                            "우수",
+                            "경칩",
+                            "춘분",
+                            "청명",
+                            "곡우",
+                            "입하",
+                            "소만",
+                            "망종",
+                            "하지",
+                            "소서",
+                            "대서",
+                            "입추",
+                            "처서",
+                            "백로",
+                            "추분",
+                            "한로",
+                            "상강",
+                            "입동",
+                            "소설",
+                            "대설",
+                            "동지",
+                            "소한",
+                            "대한",
+                        }
+                    }
+                }
                 years{
                     format{
                         abbreviated{
@@ -290,6 +317,71 @@ ko{
                     }
                 }
             }
+            monthNames{
+                format{
+                    abbreviated{
+                        "1월",
+                        "2월",
+                        "3월",
+                        "4월",
+                        "5월",
+                        "6월",
+                        "7월",
+                        "8월",
+                        "9월",
+                        "10월",
+                        "11월",
+                        "12월",
+                    }
+                    wide{
+                        "1월",
+                        "2월",
+                        "3월",
+                        "4월",
+                        "5월",
+                        "6월",
+                        "7월",
+                        "8월",
+                        "9월",
+                        "10월",
+                        "11월",
+                        "12월",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                }
+            }
+            monthPatterns{
+                format{
+                    wide{
+                        leap{"윤{0}"}
+                    }
+                }
+                numeric{
+                    all{
+                        leap{"윤{0}"}
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        leap{"윤{0}"}
+                    }
+                }
+            }
         }
         coptic{
             monthNames{
@@ -350,8 +442,8 @@ ko{
                 "a h시 m분 s초 z",
                 "a h:mm:ss",
                 "a h:mm",
-                "U년 M월 d일 EEEE",
-                "U년 M월 d일",
+                "U년 MMM d일 EEEE",
+                "U년 MMM d일",
                 "y. M. d.",
                 "y. M. d.",
                 "{1} {0}",
@@ -376,6 +468,102 @@ ko{
                             "유",
                             "술",
                             "해",
+                        }
+                    }
+                }
+                solarTerms{
+                    format{
+                        abbreviated{
+                            "입춘",
+                            "우수",
+                            "경칩",
+                            "춘분",
+                            "청명",
+                            "곡우",
+                            "입하",
+                            "소만",
+                            "망종",
+                            "하지",
+                            "소서",
+                            "대서",
+                            "입추",
+                            "처서",
+                            "백로",
+                            "추분",
+                            "한로",
+                            "상강",
+                            "입동",
+                            "소설",
+                            "대설",
+                            "동지",
+                            "소한",
+                            "대한",
+                        }
+                    }
+                }
+                years{
+                    format{
+                        abbreviated{
+                            "갑자",
+                            "을축",
+                            "병인",
+                            "정묘",
+                            "무진",
+                            "기사",
+                            "경오",
+                            "신미",
+                            "임신",
+                            "계유",
+                            "갑술",
+                            "을해",
+                            "병자",
+                            "정축",
+                            "무인",
+                            "기묘",
+                            "경진",
+                            "신사",
+                            "임오",
+                            "계미",
+                            "갑신",
+                            "을유",
+                            "병술",
+                            "정해",
+                            "무자",
+                            "기축",
+                            "경인",
+                            "신묘",
+                            "임진",
+                            "계사",
+                            "갑오",
+                            "을미",
+                            "병신",
+                            "정유",
+                            "무술",
+                            "기해",
+                            "경자",
+                            "신축",
+                            "임인",
+                            "계묘",
+                            "갑진",
+                            "을사",
+                            "병오",
+                            "정미",
+                            "무신",
+                            "기유",
+                            "경술",
+                            "신해",
+                            "임자",
+                            "계축",
+                            "갑인",
+                            "을묘",
+                            "병진",
+                            "정사",
+                            "무오",
+                            "기미",
+                            "경신",
+                            "신유",
+                            "임술",
+                            "계해",
                         }
                     }
                 }
@@ -485,6 +673,23 @@ ko{
                         "10월",
                         "11월",
                         "12월",
+                    }
+                }
+            }
+            monthPatterns{
+                format{
+                    wide{
+                        leap{"윤{0}"}
+                    }
+                }
+                numeric{
+                    all{
+                        leap{"윤{0}"}
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        leap{"윤{0}"}
                     }
                 }
             }
@@ -630,7 +835,7 @@ ko{
                     d{"M월 d일 (E) ~ d일 (E)"}
                 }
                 MMMM{
-                    M{"LLLL-LLLL"}
+                    M{"LLLL–LLLL"}
                 }
                 MMMd{
                     M{"M월 d일 ~ M월 d일"}
@@ -709,6 +914,10 @@ ko{
                 "오전",
                 "오후",
             }
+            AmPmMarkersNarrow{
+                "오전",
+                "오후",
+            }
             DateTimePatterns{
                 "a h시 m분 s초 zzzz",
                 "a h시 m분 s초 z",
@@ -724,10 +933,13 @@ ko{
                 "{1} {0}",
                 "{1} {0}",
             }
+            NoonMarker{"정오"}
+            NoonMarkerNarrow{"정오"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                E{"ccc"}
                 EEEEd{"d일 EEEE"}
                 EHm{"(E) HH:mm"}
                 EHms{"(E) HH:mm:ss"}
@@ -743,6 +955,8 @@ ko{
                 HHmmss{"HH:mm:ss"}
                 Hm{"HH:mm"}
                 Hms{"H시 m분 s초"}
+                Hmsv{"H시 m분 s초 v"}
+                Hmv{"HH:mm v"}
                 M{"M월"}
                 MEEEEd{"M. d. EEEE"}
                 MEd{"M. d. (E)"}
@@ -755,6 +969,8 @@ ko{
                 h{"a h시"}
                 hm{"a h:mm"}
                 hms{"a h:mm:ss"}
+                hmsv{"a h:mm:ss v"}
+                hmv{"a h:mm v"}
                 mmss{"mm:ss"}
                 ms{"mm:ss"}
                 y{"y년"}
@@ -773,6 +989,15 @@ ko{
             dayNames{
                 format{
                     abbreviated{
+                        "일",
+                        "월",
+                        "화",
+                        "수",
+                        "목",
+                        "금",
+                        "토",
+                    }
+                    narrow{
                         "일",
                         "월",
                         "화",
@@ -801,6 +1026,15 @@ ko{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "일",
+                        "월",
+                        "화",
+                        "수",
+                        "목",
+                        "금",
+                        "토",
+                    }
                     narrow{
                         "일",
                         "월",
@@ -819,6 +1053,15 @@ ko{
                         "금",
                         "토",
                     }
+                    wide{
+                        "일요일",
+                        "월요일",
+                        "화요일",
+                        "수요일",
+                        "목요일",
+                        "금요일",
+                        "토요일",
+                    }
                 }
             }
             eras{
@@ -826,14 +1069,18 @@ ko{
                     "기원전",
                     "서기",
                 }
+                abbreviated%variant{
+                    "BCE",
+                    "CE",
+                }
                 wide{
-                    "서력기원전",
-                    "서력기원",
+                    "기원전",
+                    "서기",
                 }
             }
             intervalFormats{
                 H{
-                    H{"HH ~ HH시"}
+                    H{"H ~ H시"}
                 }
                 Hm{
                     H{"HH:mm ~ HH:mm"}
@@ -847,32 +1094,32 @@ ko{
                     H{"HH ~ HH시 v"}
                 }
                 M{
-                    M{"M월 ~ M월"}
+                    M{"M월~M월"}
                 }
                 MEd{
                     M{"M. d (E) ~ M. d (E)"}
                     d{"M. d (E) ~ M. d (E)"}
                 }
                 MMM{
-                    M{"MMM ~ MMM"}
+                    M{"MMM~MMM"}
                 }
                 MMMEd{
                     M{"M월 d일 (E) ~ M월 d일 (E)"}
                     d{"M월 d일 (E) ~ d일 (E)"}
                 }
                 MMMM{
-                    M{"LLLL-LLLL"}
+                    M{"LLLL–LLLL"}
                 }
                 MMMd{
                     M{"M월 d일 ~ M월 d일"}
-                    d{"M월 d일 ~ d일"}
+                    d{"MMM d일~d일"}
                 }
                 Md{
                     M{"M. d ~ M. d"}
                     d{"M. d ~ M. d"}
                 }
                 d{
-                    d{"d일 ~ d일"}
+                    d{"d일~d일"}
                 }
                 fallback{"{0} ~ {1}"}
                 h{
@@ -920,8 +1167,8 @@ ko{
                     y{"y년 M월 d일 (E) ~ y년 M월 d일 (E)"}
                 }
                 yMMMM{
-                    M{"y년 MM월 ~ MM월"}
-                    y{"y년 MM월 ~ y년 MM월"}
+                    M{"y년 MMMM ~ MMMM"}
+                    y{"y년 MMMM ~ y년 MMMM"}
                 }
                 yMMMd{
                     M{"y년 M월 d일 ~ M월 d일"}
@@ -995,6 +1242,20 @@ ko{
                         "12월",
                     }
                     narrow{
+                        "1월",
+                        "2월",
+                        "3월",
+                        "4월",
+                        "5월",
+                        "6월",
+                        "7월",
+                        "8월",
+                        "9월",
+                        "10월",
+                        "11월",
+                        "12월",
+                    }
+                    wide{
                         "1월",
                         "2월",
                         "3월",
@@ -1378,11 +1639,6 @@ ko{
         quotationEnd{"”"}
         quotationStart{"“"}
     }
-    durationUnits{
-        hm{"h:mm"}
-        hms{"h:mm:ss"}
-        ms{"m:ss"}
-    }
     fields{
         day{
             dn{"일"}
@@ -1393,6 +1649,28 @@ ko{
                 "1"{"내일"}
                 "2"{"모레"}
             }
+            relativeTime{
+                future{
+                    other{"{0}일 후"}
+                }
+                past{
+                    other{"{0}일 전"}
+                }
+            }
+        }
+        day-narrow{
+            dn{"일"}
+            relativeTime{
+                future{
+                    other{"{0}일 후"}
+                }
+                past{
+                    other{"{0}일 전"}
+                }
+            }
+        }
+        day-short{
+            dn{"일"}
             relativeTime{
                 future{
                     other{"{0}일 후"}
@@ -1415,7 +1693,43 @@ ko{
                 "1"{"다음 금요일"}
             }
         }
+        fri-narrow{
+            relative{
+                "-1"{"지난 금요일"}
+                "0"{"이번 금요일"}
+                "1"{"다음 금요일"}
+            }
+        }
+        fri-short{
+            relative{
+                "-1"{"지난 금요일"}
+                "0"{"이번 금요일"}
+                "1"{"다음 금요일"}
+            }
+        }
         hour{
+            dn{"시"}
+            relativeTime{
+                future{
+                    other{"{0}시간 후"}
+                }
+                past{
+                    other{"{0}시간 전"}
+                }
+            }
+        }
+        hour-narrow{
+            dn{"시"}
+            relativeTime{
+                future{
+                    other{"{0}시간 후"}
+                }
+                past{
+                    other{"{0}시간 전"}
+                }
+            }
+        }
+        hour-short{
             dn{"시"}
             relativeTime{
                 future{
@@ -1437,7 +1751,43 @@ ko{
                 }
             }
         }
+        minute-narrow{
+            dn{"분"}
+            relativeTime{
+                future{
+                    other{"{0}분 후"}
+                }
+                past{
+                    other{"{0}분 전"}
+                }
+            }
+        }
+        minute-short{
+            dn{"분"}
+            relativeTime{
+                future{
+                    other{"{0}분 후"}
+                }
+                past{
+                    other{"{0}분 전"}
+                }
+            }
+        }
         mon{
+            relative{
+                "-1"{"지난 월요일"}
+                "0"{"이번 월요일"}
+                "1"{"다음 월요일"}
+            }
+        }
+        mon-narrow{
+            relative{
+                "-1"{"지난 월요일"}
+                "0"{"이번 월요일"}
+                "1"{"다음 월요일"}
+            }
+        }
+        mon-short{
             relative{
                 "-1"{"지난 월요일"}
                 "0"{"이번 월요일"}
@@ -1460,7 +1810,76 @@ ko{
                 }
             }
         }
+        month-narrow{
+            dn{"월"}
+            relativeTime{
+                future{
+                    other{"{0}개월 후"}
+                }
+                past{
+                    other{"{0}개월 전"}
+                }
+            }
+        }
+        month-short{
+            dn{"월"}
+            relativeTime{
+                future{
+                    other{"{0}개월 후"}
+                }
+                past{
+                    other{"{0}개월 전"}
+                }
+            }
+        }
+        quarter{
+            dn{"분기"}
+            relativeTime{
+                future{
+                    other{"{0}분기 후"}
+                }
+                past{
+                    other{"{0}분기 전"}
+                }
+            }
+        }
+        quarter-narrow{
+            dn{"분기"}
+            relativeTime{
+                future{
+                    other{"{0}분기 후"}
+                }
+                past{
+                    other{"{0}분기 전"}
+                }
+            }
+        }
+        quarter-short{
+            dn{"분기"}
+            relativeTime{
+                future{
+                    other{"{0}분기 후"}
+                }
+                past{
+                    other{"{0}분기 전"}
+                }
+            }
+        }
         sat{
+            relative{
+                "-1"{"지난 토요일"}
+                "0"{"이번 토요일"}
+                "1"{"다음 토요일"}
+            }
+        }
+        sat-narrow{
+            relative{
+                "-1"{"지난 토요일"}
+                "0"{"이번 토요일"}
+                "1"{"다음 토요일"}
+            }
+        }
+        sat-short{
             relative{
                 "-1"{"지난 토요일"}
                 "0"{"이번 토요일"}
@@ -1481,7 +1900,43 @@ ko{
                 }
             }
         }
+        second-narrow{
+            dn{"초"}
+            relativeTime{
+                future{
+                    other{"{0}초 후"}
+                }
+                past{
+                    other{"{0}초 전"}
+                }
+            }
+        }
+        second-short{
+            dn{"초"}
+            relativeTime{
+                future{
+                    other{"{0}초 후"}
+                }
+                past{
+                    other{"{0}초 전"}
+                }
+            }
+        }
         sun{
+            relative{
+                "-1"{"지난 일요일"}
+                "0"{"이번 일요일"}
+                "1"{"다음 일요일"}
+            }
+        }
+        sun-narrow{
+            relative{
+                "-1"{"지난 일요일"}
+                "0"{"이번 일요일"}
+                "1"{"다음 일요일"}
+            }
+        }
+        sun-short{
             relative{
                 "-1"{"지난 일요일"}
                 "0"{"이번 일요일"}
@@ -1495,6 +1950,20 @@ ko{
                 "1"{"다음 목요일"}
             }
         }
+        thu-narrow{
+            relative{
+                "-1"{"지난 목요일"}
+                "0"{"이번 목요일"}
+                "1"{"다음 목요일"}
+            }
+        }
+        thu-short{
+            relative{
+                "-1"{"지난 목요일"}
+                "0"{"이번 목요일"}
+                "1"{"다음 목요일"}
+            }
+        }
         tue{
             relative{
                 "-1"{"지난 화요일"}
@@ -1502,7 +1971,35 @@ ko{
                 "1"{"다음 화요일"}
             }
         }
+        tue-narrow{
+            relative{
+                "-1"{"지난 화요일"}
+                "0"{"이번 화요일"}
+                "1"{"다음 화요일"}
+            }
+        }
+        tue-short{
+            relative{
+                "-1"{"지난 화요일"}
+                "0"{"이번 화요일"}
+                "1"{"다음 화요일"}
+            }
+        }
         wed{
+            relative{
+                "-1"{"지난 수요일"}
+                "0"{"이번 수요일"}
+                "1"{"다음 수요일"}
+            }
+        }
+        wed-narrow{
+            relative{
+                "-1"{"지난 수요일"}
+                "0"{"이번 수요일"}
+                "1"{"다음 수요일"}
+            }
+        }
+        wed-short{
             relative{
                 "-1"{"지난 수요일"}
                 "0"{"이번 수요일"}
@@ -1525,16 +2022,60 @@ ko{
                 }
             }
         }
+        week-narrow{
+            dn{"주"}
+            relativeTime{
+                future{
+                    other{"{0}주 후"}
+                }
+                past{
+                    other{"{0}주 전"}
+                }
+            }
+        }
+        week-short{
+            dn{"주"}
+            relativeTime{
+                future{
+                    other{"{0}주 후"}
+                }
+                past{
+                    other{"{0}주 전"}
+                }
+            }
+        }
         weekday{
             dn{"요일"}
         }
         year{
             dn{"년"}
             relative{
-                "-1"{"지난해"}
+                "-1"{"작년"}
                 "0"{"올해"}
                 "1"{"내년"}
             }
+            relativeTime{
+                future{
+                    other{"{0}년 후"}
+                }
+                past{
+                    other{"{0}년 전"}
+                }
+            }
+        }
+        year-narrow{
+            dn{"년"}
+            relativeTime{
+                future{
+                    other{"{0}년 후"}
+                }
+                past{
+                    other{"{0}년 전"}
+                }
+            }
+        }
+        year-short{
+            dn{"년"}
             relativeTime{
                 future{
                     other{"{0}년 후"}
@@ -1561,6 +2102,12 @@ ko{
             middle{"{0} {1}"}
             start{"{0} {1}"}
         }
+        unit-narrow{
+            2{"{0} {1}"}
+            end{"{0} {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
+        }
         unit-short{
             2{"{0} {1}"}
             end{"{0} {1}"}
@@ -1569,8 +2116,8 @@ ko{
         }
     }
     measurementSystemNames{
-        UK{"영국"}
-        US{"미국"}
+        UK{"영국식"}
+        US{"미국식"}
         metric{"미터법"}
     }
     transformNames{
@@ -1584,500 +2131,5 @@ ko{
         x-Jamo{"자모"}
         x-Pinyin{"병음"}
         x-Publishing{"게시"}
-    }
-    units{
-        acceleration{
-            g-force{
-                other{"{0}중력가속도"}
-            }
-        }
-        angle{
-            arc-minute{
-                other{"{0}분"}
-            }
-            arc-second{
-                other{"{0}초"}
-            }
-            degree{
-                other{"{0}도"}
-            }
-        }
-        area{
-            acre{
-                other{"{0}에이커"}
-            }
-            hectare{
-                other{"{0}헥타르"}
-            }
-            square-foot{
-                other{"{0}제곱피트"}
-            }
-            square-kilometer{
-                other{"{0}제곱킬로미터"}
-            }
-            square-meter{
-                other{"{0}제곱미터"}
-            }
-            square-mile{
-                other{"{0}제곱마일"}
-            }
-        }
-        compound{
-            per{"{1}당 {0}"}
-        }
-        duration{
-            day{
-                other{"{0}일"}
-            }
-            hour{
-                other{"{0}시간"}
-            }
-            millisecond{
-                other{"{0}밀리초"}
-            }
-            minute{
-                other{"{0}분"}
-            }
-            month{
-                other{"{0}개월"}
-            }
-            second{
-                other{"{0}초"}
-            }
-            week{
-                other{"{0}주"}
-            }
-            year{
-                other{"{0}년"}
-            }
-        }
-        length{
-            centimeter{
-                other{"{0}센티미터"}
-            }
-            foot{
-                other{"{0}피트"}
-            }
-            inch{
-                other{"{0}인치"}
-            }
-            kilometer{
-                other{"{0}킬로미터"}
-            }
-            light-year{
-                other{"{0}광년"}
-            }
-            meter{
-                other{"{0}미터"}
-            }
-            mile{
-                other{"{0}마일"}
-            }
-            millimeter{
-                other{"{0}밀리미터"}
-            }
-            picometer{
-                other{"{0}피코미터"}
-            }
-            yard{
-                other{"{0}야드"}
-            }
-        }
-        mass{
-            gram{
-                other{"{0}그램"}
-            }
-            kilogram{
-                other{"{0}킬로그램"}
-            }
-            ounce{
-                other{"{0}온스"}
-            }
-            pound{
-                other{"{0}파운드"}
-            }
-        }
-        power{
-            horsepower{
-                other{"{0}마력"}
-            }
-            kilowatt{
-                other{"{0}킬로와트"}
-            }
-            watt{
-                other{"{0}와트"}
-            }
-        }
-        pressure{
-            hectopascal{
-                other{"{0}헥토파스칼"}
-            }
-            inch-hg{
-                other{"{0}수은주인치"}
-            }
-            millibar{
-                other{"{0}밀리바"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                other{"시속 {0}킬로미터"}
-            }
-            meter-per-second{
-                other{"초속 {0}미터"}
-            }
-            mile-per-hour{
-                other{"시속 {0}마일"}
-            }
-        }
-        temperature{
-            celsius{
-                other{"섭씨 {0}도"}
-            }
-            fahrenheit{
-                other{"화씨 {0}도"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                other{"{0}세제곱킬로미터"}
-            }
-            cubic-mile{
-                other{"{0}세제곱마일"}
-            }
-            liter{
-                other{"{0}리터"}
-            }
-        }
-    }
-    unitsNarrow{
-        acceleration{
-            g-force{
-                other{"{0}G"}
-            }
-        }
-        angle{
-            arc-minute{
-                other{"{0}′"}
-            }
-            arc-second{
-                other{"{0}″"}
-            }
-            degree{
-                other{"{0}°"}
-            }
-        }
-        area{
-            acre{
-                other{"{0}ac"}
-            }
-            hectare{
-                other{"{0}ha"}
-            }
-            square-foot{
-                other{"{0}ft²"}
-            }
-            square-kilometer{
-                other{"{0}km²"}
-            }
-            square-meter{
-                other{"{0}m²"}
-            }
-            square-mile{
-                other{"{0}mi²"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                other{"{0}일"}
-            }
-            hour{
-                other{"{0}시간"}
-            }
-            millisecond{
-                other{"{0}ms"}
-            }
-            minute{
-                other{"{0}분"}
-            }
-            month{
-                other{"{0}개월"}
-            }
-            second{
-                other{"{0}초"}
-            }
-            week{
-                other{"{0}주"}
-            }
-            year{
-                other{"{0}년"}
-            }
-        }
-        length{
-            centimeter{
-                other{"{0}cm"}
-            }
-            foot{
-                other{"{0}′"}
-            }
-            inch{
-                other{"{0}″"}
-            }
-            kilometer{
-                other{"{0}km"}
-            }
-            light-year{
-                other{"{0}ly"}
-            }
-            meter{
-                other{"{0}m"}
-            }
-            mile{
-                other{"{0}mi"}
-            }
-            millimeter{
-                other{"{0}mm"}
-            }
-            picometer{
-                other{"{0}pm"}
-            }
-            yard{
-                other{"{0}yd"}
-            }
-        }
-        mass{
-            gram{
-                other{"{0}g"}
-            }
-            kilogram{
-                other{"{0}kg"}
-            }
-            ounce{
-                other{"{0}oz"}
-            }
-            pound{
-                other{"{0}lb"}
-            }
-        }
-        power{
-            horsepower{
-                other{"{0}HP"}
-            }
-            kilowatt{
-                other{"{0}kW"}
-            }
-            watt{
-                other{"{0}W"}
-            }
-        }
-        pressure{
-            hectopascal{
-                other{"{0}hPa"}
-            }
-            inch-hg{
-                other{"{0}\u0022Hg"}
-            }
-            millibar{
-                other{"{0}mb"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                other{"{0}km/h"}
-            }
-            meter-per-second{
-                other{"{0}m/s"}
-            }
-            mile-per-hour{
-                other{"{0}mph"}
-            }
-        }
-        temperature{
-            celsius{
-                other{"{0}°"}
-            }
-            fahrenheit{
-                other{"{0}°F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                other{"{0}km³"}
-            }
-            cubic-mile{
-                other{"{0}mi³"}
-            }
-            liter{
-                other{"{0}ℓ"}
-            }
-        }
-    }
-    unitsShort{
-        acceleration{
-            g-force{
-                other{"{0} G"}
-            }
-        }
-        angle{
-            arc-minute{
-                other{"{0}분"}
-            }
-            arc-second{
-                other{"{0}초"}
-            }
-            degree{
-                other{"{0}도"}
-            }
-        }
-        area{
-            acre{
-                other{"{0}ac"}
-            }
-            hectare{
-                other{"{0}ha"}
-            }
-            square-foot{
-                other{"{0}ft²"}
-            }
-            square-kilometer{
-                other{"{0}km²"}
-            }
-            square-meter{
-                other{"{0}m²"}
-            }
-            square-mile{
-                other{"{0}mi²"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                other{"{0}일"}
-            }
-            hour{
-                other{"{0}시간"}
-            }
-            millisecond{
-                other{"{0}ms"}
-            }
-            minute{
-                other{"{0}분"}
-            }
-            month{
-                other{"{0}개월"}
-            }
-            second{
-                other{"{0}초"}
-            }
-            week{
-                other{"{0}주"}
-            }
-            year{
-                other{"{0}년"}
-            }
-        }
-        length{
-            centimeter{
-                other{"{0}cm"}
-            }
-            foot{
-                other{"{0}ft"}
-            }
-            inch{
-                other{"{0}in"}
-            }
-            kilometer{
-                other{"{0}km"}
-            }
-            light-year{
-                other{"{0}ly"}
-            }
-            meter{
-                other{"{0}m"}
-            }
-            mile{
-                other{"{0}mil"}
-            }
-            millimeter{
-                other{"{0}mm"}
-            }
-            picometer{
-                other{"{0}pm"}
-            }
-            yard{
-                other{"{0}yd"}
-            }
-        }
-        mass{
-            gram{
-                other{"{0}g"}
-            }
-            kilogram{
-                other{"{0}kg"}
-            }
-            ounce{
-                other{"{0}oz"}
-            }
-            pound{
-                other{"{0}lb"}
-            }
-        }
-        power{
-            horsepower{
-                other{"{0}HP"}
-            }
-            kilowatt{
-                other{"{0}kW"}
-            }
-            watt{
-                other{"{0}W"}
-            }
-        }
-        pressure{
-            hectopascal{
-                other{"{0}hPa"}
-            }
-            inch-hg{
-                other{"{0}inHg"}
-            }
-            millibar{
-                other{"{0}mb"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                other{"시속 {0}km"}
-            }
-            meter-per-second{
-                other{"초속 {0}m"}
-            }
-            mile-per-hour{
-                other{"시속 {0}mi"}
-            }
-        }
-        temperature{
-            celsius{
-                other{"{0}°C"}
-            }
-            fahrenheit{
-                other{"{0}°F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                other{"{0}km³"}
-            }
-            cubic-mile{
-                other{"{0}mi³"}
-            }
-            liter{
-                other{"{0}L"}
-            }
-        }
     }
 }

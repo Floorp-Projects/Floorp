@@ -1,12 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/de_AT.xml
 // *
 // ***************************************************************************
 de_AT{
+    ExemplarCharactersIndex{"[A Ä B C D E F G H I J K L M N O Ö P Q R S T U Ü V W X Y Z]"}
     NumberElements{
         latn{
             patterns{
@@ -14,41 +15,9 @@ de_AT{
             }
         }
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.50"}
     calendar{
-        generic{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, dd. MMMM y G",
-                "dd. MMMM y G",
-                "dd.MM.y G",
-                "dd.MM.yy GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-        }
         gregorian{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, dd. MMMM y",
-                "dd. MMMM y",
-                "dd.MM.y",
-                "dd.MM.yy",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
             monthNames{
                 format{
                     abbreviated{

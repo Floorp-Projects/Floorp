@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ky.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/ky.xml
- */
 ky{
     AuxExemplarCharacters{"[в ф ц щ ь]"}
     Ellipsis{
@@ -20,21 +17,20 @@ ky{
         word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{"[а б г д е ё ж з и й к л м н ӊ о ө п р с т у ү х ч ш ъ ы э ю я]"}
+    ExemplarCharactersIndex{"[А Б В Г Д Е Ё Ж З И Й К Л М Н Ң О Ө П Р С Т У Ү Ф Х Ц Ч Ш Щ Ъ Ы Ь Э Ю Я]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ‚ \u0022 “ „ « » ( ) \\[ \\] \\{ \\} § @ * / "
         "\\& #]"
-    }
-    LocaleScript{
-        "Cyrl",
     }
     MoreInformation{"?"}
     NumberElements{
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"{0}+"}
                 range{"{0}–{1}"}
             }
             patterns{
+                accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -155,10 +151,12 @@ ky{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
+        minimumGroupingDigits{"1"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
     calendar{
         generic{
             DateTimePatterns{
@@ -202,72 +200,76 @@ ky{
             }
             intervalFormats{
                 M{
-                    M{"M-M"}
+                    M{"M–M"}
                 }
                 MEd{
-                    M{"E, dd.MM - E, dd.MM"}
-                    d{"E, dd.MM - E, dd.MM"}
+                    M{"E, dd.MM – E, dd.MM"}
+                    d{"E, dd.MM – E, dd.MM"}
                 }
                 MMM{
-                    M{"MMM-MMM"}
+                    M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"E, d MMM - E, d MMM"}
-                    d{"E, d - E, d MMM"}
+                    M{"E, d MMM – E, d MMM"}
+                    d{"E, d – E, d MMM"}
                 }
                 MMMd{
-                    M{"d MMM - d MMM"}
-                    d{"d-d MMM"}
+                    M{"d MMM – d MMM"}
+                    d{"d–d MMM"}
                 }
                 Md{
-                    M{"dd.MM - dd.MM"}
-                    d{"dd.MM - dd.MM"}
+                    M{"dd.MM – dd.MM"}
+                    d{"dd.MM – dd.MM"}
                 }
                 d{
-                    d{"d-d"}
+                    d{"d–d"}
                 }
                 fallback{"{0} - {1}"}
                 y{
-                    y{"y-y G"}
+                    y{"y–y G"}
                 }
                 yM{
-                    M{"MM.y - MM.y G"}
-                    y{"MM.y - MM.y G"}
+                    M{"MM.y – MM.y G"}
+                    y{"MM.y – MM.y G"}
                 }
                 yMEd{
-                    M{"E, dd.MM.y - E, dd.MM.y G"}
-                    d{"E, dd.MM.y - E, dd.MM.y G"}
-                    y{"E, dd.MM.y - E, dd.MM.y G"}
+                    M{"E, dd.MM.y – E, dd.MM.y G"}
+                    d{"E, dd.MM.y – E, dd.MM.y G"}
+                    y{"E, dd.MM.y – E, dd.MM.y G"}
                 }
                 yMMM{
-                    M{"MMM-MMM y-'ж'. G"}
+                    M{"MMM–MMM y-'ж'. G"}
                     y{"MMM y-'ж'. - MMM y-'ж'. G"}
                 }
                 yMMMEd{
-                    M{"E, d-MMM - E, d-MMM y-'ж'. G"}
-                    d{"E, d - E, d-MMM y-'ж'. G"}
+                    M{"E, d-MMM – E, d-MMM y-'ж'. G"}
+                    d{"E, d – E, d-MMM y-'ж'. G"}
                     y{"E, d-MMM y-'ж'. - E, d-MMM y-'ж'. G"}
                 }
                 yMMMM{
-                    M{"G y-'ж'. MMMM - MMMM"}
-                    y{"G y-'ж'. MMMM - y-'ж'. MMMM"}
+                    M{"G y-'ж'. MMMM – MMMM"}
+                    y{"G y-'ж'. MMMM – y-'ж'. MMMM"}
                 }
                 yMMMd{
-                    M{"d-MMM - d-MMM y-'ж'. G"}
-                    d{"d-d-MMM y-'ж'. G"}
+                    M{"d-MMM – d-MMM y-'ж'. G"}
+                    d{"d–d-MMM y-'ж'. G"}
                     y{"d-MMM y-'ж'. - d-MMM y-'ж'. G"}
                 }
                 yMd{
-                    M{"dd.MM.y - dd.MM.y G"}
-                    d{"dd.MM.y - dd.MM.y G"}
-                    y{"dd.MM.y - dd.MM.y G"}
+                    M{"dd.MM.y – dd.MM.y G"}
+                    d{"dd.MM.y – dd.MM.y G"}
+                    y{"dd.MM.y – dd.MM.y G"}
                 }
             }
         }
         gregorian{
             AmPmMarkers{
-                "түшкө чейинки",
-                "түштөн кийинки",
+                "таңкы",
+                "түштөн кийин",
+            }
+            AmPmMarkersNarrow{
+                "тң",
+                "тк",
             }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -275,8 +277,8 @@ ky{
                 "HH:mm:ss",
                 "HH:mm",
                 "EEEE, d-MMMM, y-'ж'.",
-                "d-MMMM, y-'ж'.",
-                "dd.MM.y",
+                "y MMMM d",
+                "y MMM d",
                 "dd.MM.yy",
                 "{1} {0}",
                 "{1} {0}",
@@ -284,14 +286,17 @@ ky{
                 "{1} {0}",
                 "{1} {0}",
             }
+            NoonMarker{"чак түш"}
+            NoonMarkerNarrow{"чт"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                E{"ccc"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d, E"}
-                Ehm{"E a h:mm"}
+                Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
                 Gy{"G y-'ж'."}
                 GyMMM{"G y-'ж'. MMM"}
@@ -307,9 +312,9 @@ ky{
                 MMMd{"d-MMM"}
                 Md{"dd-MM"}
                 d{"d"}
-                h{"a h"}
-                hm{"a h:mm"}
-                hms{"a h:mm:ss"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"y-MM"}
@@ -324,13 +329,13 @@ ky{
             dayNames{
                 format{
                     abbreviated{
-                        "Жк",
-                        "Дш",
-                        "Ше",
-                        "Ша",
-                        "Бш",
-                        "Жм",
-                        "Иш",
+                        "жек.",
+                        "дүй.",
+                        "шейш.",
+                        "шарш.",
+                        "бейш.",
+                        "жума",
+                        "ишм.",
                     }
                     narrow{
                         "Ж",
@@ -342,33 +347,33 @@ ky{
                         "И",
                     }
                     short{
-                        "Жк",
-                        "Дш",
-                        "Ше",
-                        "Ша",
-                        "Бш",
-                        "Жм",
-                        "Иш",
+                        "жек.",
+                        "дүй.",
+                        "шейш.",
+                        "шарш.",
+                        "бейш.",
+                        "жума",
+                        "ишм.",
                     }
                     wide{
-                        "Жек",
-                        "Дүй",
-                        "Шей",
-                        "Шар",
-                        "Бей",
-                        "Жум",
-                        "Ишм",
+                        "жекшемби",
+                        "дүйшөмбү",
+                        "шейшемби",
+                        "шаршемби",
+                        "бейшемби",
+                        "жума",
+                        "ишемби",
                     }
                 }
                 stand-alone{
                     abbreviated{
-                        "Жек",
-                        "Дүй",
-                        "Шей",
-                        "Шар",
-                        "Бей",
-                        "Жум",
-                        "Ишм",
+                        "жек.",
+                        "дүй.",
+                        "шейш.",
+                        "шарш.",
+                        "бейш.",
+                        "жума",
+                        "ишм.",
                     }
                     narrow{
                         "Ж",
@@ -380,124 +385,128 @@ ky{
                         "И",
                     }
                     short{
-                        "Жк",
-                        "Дш",
-                        "Ше",
-                        "Ша",
-                        "Бш",
-                        "Жм",
-                        "Иш",
+                        "жк",
+                        "дш.",
+                        "шш.",
+                        "шр.",
+                        "бш.",
+                        "жм.",
+                        "иш.",
                     }
                     wide{
-                        "Жекшемби",
-                        "Дүйшөмбү",
-                        "Шейшемби",
-                        "Шаршемби",
-                        "Бейшемби",
-                        "Жума",
-                        "Ишемби",
+                        "жекшемби",
+                        "дүйшөмбү",
+                        "шейшемби",
+                        "шаршемби",
+                        "бейшемби",
+                        "жума",
+                        "ишемби",
                     }
                 }
             }
             eras{
                 abbreviated{
-                    "б.з. ч.",
+                    "б.з.ч.",
                     "б.з.",
+                }
+                wide{
+                    "биздин заманга чейин",
+                    "биздин заман",
                 }
             }
             intervalFormats{
                 H{
-                    H{"HH-HH"}
+                    H{"HH–HH"}
                 }
                 Hm{
-                    H{"HH:mm-HH:mm"}
-                    m{"HH:mm-HH:mm"}
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
                 }
                 Hmv{
-                    H{"HH:mm-HH:mm v"}
-                    m{"HH:mm-HH:mm v"}
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
                 }
                 Hv{
-                    H{"HH-HH v"}
+                    H{"HH–HH v"}
                 }
                 M{
-                    M{"M-M"}
+                    M{"MM–MM"}
                 }
                 MEd{
-                    M{"E, dd.MM - E, dd.MM"}
-                    d{"E, dd.MM - E, dd.MM"}
+                    M{"MM-dd, E – MM-dd, E"}
+                    d{"MM-dd, E – MM-dd, E"}
                 }
                 MMM{
-                    M{"MMM-MMM"}
+                    M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"E, d-MMM - E, d-MMM"}
-                    d{"E, d - E, d-MMM"}
+                    M{"MMM d, E – MMM d, E"}
+                    d{"MMM d, E – MMM d, E"}
                 }
                 MMMd{
-                    M{"d-MMM - d-MMM"}
-                    d{"d-d-MMM"}
+                    M{"d-MMM – d-MMM"}
+                    d{"d–d-MMM"}
                 }
                 Md{
-                    M{"dd.MM - dd.MM"}
-                    d{"dd.MM - dd.MM"}
+                    M{"dd.MM – dd.MM"}
+                    d{"dd.MM – dd.MM"}
                 }
                 d{
-                    d{"d-d"}
+                    d{"d–d"}
                 }
                 fallback{"{0} - {1}"}
                 h{
                     a{"a h – a h"}
-                    h{"a h-h"}
+                    h{"a h–h"}
                 }
                 hm{
                     a{"a h:mm – a h:mm"}
-                    h{"a h:mm-h:mm"}
-                    m{"a h:mm-h:mm"}
+                    h{"a h:mm–h:mm"}
+                    m{"a h:mm–h:mm"}
                 }
                 hmv{
                     a{"a h:mm – a h:mm v"}
-                    h{"a h:mm-h:mm v"}
-                    m{"a h:mm-h:mm v"}
+                    h{"a h:mm–h:mm v"}
+                    m{"a h:mm–h:mm v"}
                 }
                 hv{
                     a{"a h – a h v"}
-                    h{"a h-h v"}
+                    h{"a h–h v"}
                 }
                 y{
-                    y{"y-y"}
+                    y{"y–y"}
                 }
                 yM{
-                    M{"MM.y - MM.y"}
-                    y{"MM.y - MM.y"}
+                    M{"y-MM – y-MM"}
+                    y{"MM.y – MM.y"}
                 }
                 yMEd{
-                    M{"E, dd.MM.y - E, dd.MM.y"}
-                    d{"E, dd.MM.y - E, dd.MM.y"}
-                    y{"E, dd.MM.y - E, dd.MM.y"}
+                    M{"y-MM-dd, E – y-MM-dd, E"}
+                    d{"E, dd.MM.y – E, dd.MM.y"}
+                    y{"y-MM-dd, E – y-MM-dd, E"}
                 }
                 yMMM{
-                    M{"MMM-MMM y-'ж'."}
+                    M{"MMM–MMM y-'ж'."}
                     y{"MMM y-'ж'. - MMM y-'ж'."}
                 }
                 yMMMEd{
-                    M{"E, d-MMM - E, d-MMM y-'ж'."}
-                    d{"E, d - E, d-MMM y-'ж'."}
-                    y{"E, d-MMM y-'ж'. - E, d-MMM y-'ж'."}
+                    M{"y MMM d, E – MMM d, E"}
+                    d{"y MMM d, E – MMM d, E"}
+                    y{"y MMM d, E – y MMM d, E"}
                 }
                 yMMMM{
-                    M{"MMMM - MMMM y"}
-                    y{"MMMM y - MMMM y"}
+                    M{"MMMM – MMMM y"}
+                    y{"MMMM y – MMMM y"}
                 }
                 yMMMd{
-                    M{"d-MMM - d-MMM y-'ж'."}
-                    d{"d-d-MMM y-'ж'."}
+                    M{"d-MMM – d-MMM y-'ж'."}
+                    d{"d–d-MMM y-'ж'."}
                     y{"d-MMM y-'ж'. - d-MMM y-'ж'."}
                 }
                 yMd{
-                    M{"dd.MM.y - dd.MM.y"}
-                    d{"dd.MM.y - dd.MM.y"}
-                    y{"dd.MM.y - dd.MM.y"}
+                    M{"dd.MM.y – dd.MM.y"}
+                    d{"dd.MM.y – dd.MM.y"}
+                    y{"dd.MM.y – dd.MM.y"}
                 }
             }
             monthNames{
@@ -547,18 +556,18 @@ ky{
                 }
                 stand-alone{
                     abbreviated{
-                        "янв.",
-                        "фев.",
-                        "мар.",
-                        "апр.",
-                        "май",
-                        "июн.",
-                        "июл.",
-                        "авг.",
-                        "сен.",
-                        "окт.",
-                        "ноя.",
-                        "дек.",
+                        "Янв",
+                        "Фев",
+                        "Мар",
+                        "Апр",
+                        "Май",
+                        "Июн",
+                        "Июл",
+                        "Авг",
+                        "Сен",
+                        "Окт",
+                        "Ноя",
+                        "Дек",
                     }
                     narrow{
                         "Я",
@@ -575,18 +584,18 @@ ky{
                         "Д",
                     }
                     wide{
-                        "январь",
-                        "февраль",
-                        "март",
-                        "апрель",
-                        "май",
-                        "июнь",
-                        "июль",
-                        "август",
-                        "сентябрь",
-                        "октябрь",
-                        "ноябрь",
-                        "декабрь",
+                        "Январь",
+                        "Февраль",
+                        "Март",
+                        "Апрель",
+                        "Май",
+                        "Июнь",
+                        "Июль",
+                        "Август",
+                        "Сентябрь",
+                        "Октябрь",
+                        "Ноябрь",
+                        "Декабрь",
                     }
                 }
             }
@@ -640,11 +649,6 @@ ky{
         quotationEnd{"»"}
         quotationStart{"«"}
     }
-    durationUnits{
-        hm{"h:mm"}
-        hms{"h:mm:ss"}
-        ms{"m:ss"}
-    }
     fields{
         day{
             dn{"күн"}
@@ -666,6 +670,32 @@ ky{
                 }
             }
         }
+        day-narrow{
+            dn{"күн"}
+            relativeTime{
+                future{
+                    one{"+{0} күн"}
+                    other{"+{0} күн"}
+                }
+                past{
+                    one{"-{0} күн"}
+                    other{"-{0} күн"}
+                }
+            }
+        }
+        day-short{
+            dn{"күн"}
+            relativeTime{
+                future{
+                    one{"{0} күндөн кийин"}
+                    other{"{0} күндөн кийин"}
+                }
+                past{
+                    one{"{0} күн мурун"}
+                    other{"{0} күн мурун"}
+                }
+            }
+        }
         dayperiod{
             dn{"ТЧ/ТК"}
         }
@@ -674,9 +704,23 @@ ky{
         }
         fri{
             relative{
-                "-1"{"өткөн Жума көнү"}
-                "0"{"ушул Жума күнү"}
-                "1"{"эмдиги Жума күнү"}
+                "-1"{"өткөн жума күнү"}
+                "0"{"ушул жума күнү"}
+                "1"{"келерки жума күнү"}
+            }
+        }
+        fri-narrow{
+            relative{
+                "-1"{"өткөн жума күнү"}
+                "0"{"ушул жума күнү"}
+                "1"{"келерки жума күнү"}
+            }
+        }
+        fri-short{
+            relative{
+                "-1"{"өткөн жума күнү"}
+                "0"{"ушул жума күнү"}
+                "1"{"келерки жума күнү"}
             }
         }
         hour{
@@ -689,6 +733,32 @@ ky{
                 past{
                     one{"{0} саат мурун"}
                     other{"{0} саат мурун"}
+                }
+            }
+        }
+        hour-narrow{
+            dn{"с"}
+            relativeTime{
+                future{
+                    one{"+{0} с."}
+                    other{"+{0} с."}
+                }
+                past{
+                    one{"-{0} с."}
+                    other{"-{0} с."}
+                }
+            }
+        }
+        hour-short{
+            dn{"с."}
+            relativeTime{
+                future{
+                    one{"{0} саат. кийин"}
+                    other{"{0} саат. кийин"}
+                }
+                past{
+                    one{"{0} саат. мурун"}
+                    other{"{0} саат. мурун"}
                 }
             }
         }
@@ -705,11 +775,51 @@ ky{
                 }
             }
         }
+        minute-narrow{
+            dn{"м."}
+            relativeTime{
+                future{
+                    one{"+{0} м."}
+                    other{"-{0} м."}
+                }
+                past{
+                    one{"-{0} м."}
+                    other{"-{0} м."}
+                }
+            }
+        }
+        minute-short{
+            dn{"мүн."}
+            relativeTime{
+                future{
+                    one{"{0} мүн. кийин"}
+                    other{"{0} мүн. кийин"}
+                }
+                past{
+                    one{"{0} мүн. мурун"}
+                    other{"{0} мүн. мурун"}
+                }
+            }
+        }
         mon{
             relative{
-                "-1"{"өткөн Дүйшөмбүдө"}
-                "0"{"ушул Дүйшөмбүдө"}
-                "1"{"кийинки Дүйшөмбүдө"}
+                "-1"{"өткөн дүйшөмбүдө"}
+                "0"{"ушул дүйшөмбүдө"}
+                "1"{"келерки дүйшөмбүдө"}
+            }
+        }
+        mon-narrow{
+            relative{
+                "-1"{"өткөн дш."}
+                "0"{"ушул дш."}
+                "1"{"келерки дш."}
+            }
+        }
+        mon-short{
+            relative{
+                "-1"{"өткөн дүйш."}
+                "0"{"ушул дүйш."}
+                "1"{"келерки дүйш."}
             }
         }
         month{
@@ -730,11 +840,90 @@ ky{
                 }
             }
         }
+        month-narrow{
+            dn{"ай"}
+            relativeTime{
+                future{
+                    one{"+{0} ай"}
+                    other{"+{0} ай"}
+                }
+                past{
+                    one{"-{0} ай"}
+                    other{"-{0} ай"}
+                }
+            }
+        }
+        month-short{
+            dn{"ай"}
+            relativeTime{
+                future{
+                    one{"{0} айдан кийин"}
+                    other{"{0} айдан кийин"}
+                }
+                past{
+                    one{"{0} ай мурун"}
+                    other{"{0} ай мурун"}
+                }
+            }
+        }
+        quarter{
+            dn{"чейрек"}
+            relativeTime{
+                future{
+                    one{"кийинки {0} чейректе"}
+                    other{"кийинки {0} чейректе"}
+                }
+                past{
+                    one{"{0} чейрек мурун"}
+                    other{"{0} чейрек мурун"}
+                }
+            }
+        }
+        quarter-narrow{
+            dn{"чейр."}
+            relativeTime{
+                future{
+                    one{"+{0} чейр."}
+                    other{"+{0} чейр."}
+                }
+                past{
+                    one{"-{0} чейр."}
+                    other{"-{0} чейр."}
+                }
+            }
+        }
+        quarter-short{
+            dn{"чейр."}
+            relativeTime{
+                future{
+                    one{"кийинки {0} чейр."}
+                    other{"кийинки {0} чейр."}
+                }
+                past{
+                    one{"{0} чейр. мурун"}
+                    other{"{0} чейр. мурун"}
+                }
+            }
+        }
         sat{
             relative{
-                "-1"{"өткөн Ишембиде"}
-                "0"{"ушул Ишембиде"}
-                "1"{"келерки Ишембиде"}
+                "-1"{"өткөн ишембиде"}
+                "0"{"ушул ишембиде"}
+                "1"{"келерки ишембиде"}
+            }
+        }
+        sat-narrow{
+            relative{
+                "-1"{"өткөн ишм."}
+                "0"{"ушул ишм."}
+                "1"{"келерки ишм."}
+            }
+        }
+        sat-short{
+            relative{
+                "-1"{"өткөн ишм."}
+                "0"{"ушул ишм."}
+                "1"{"келерки ишм."}
             }
         }
         second{
@@ -753,32 +942,114 @@ ky{
                 }
             }
         }
+        second-narrow{
+            dn{"сек."}
+            relativeTime{
+                future{
+                    one{"+{0} сек."}
+                    other{"+{0} сек."}
+                }
+                past{
+                    one{"-{0} сек. мурун"}
+                    other{"-{0} сек. мурун"}
+                }
+            }
+        }
+        second-short{
+            dn{"сек."}
+            relativeTime{
+                future{
+                    one{"{0} сек. кийин"}
+                    other{"{0} сек. кийин"}
+                }
+                past{
+                    one{"{0} сек. мурун"}
+                    other{"{0} сек. мурун"}
+                }
+            }
+        }
         sun{
             relative{
-                "-1"{"өткөн дем алышта"}
-                "0"{"ушул дем алышта"}
-                "1"{"келерки дем алышта"}
+                "-1"{"өткөн жекшембиде"}
+                "0"{"ушул жекшембиде"}
+                "1"{"келерки жекшембиде"}
+            }
+        }
+        sun-narrow{
+            relative{
+                "-1"{"өткөн жекш."}
+                "0"{"ушул жекш."}
+                "1"{"келерки жекш."}
+            }
+        }
+        sun-short{
+            relative{
+                "-1"{"өткөн жекш."}
+                "0"{"ушул жекш."}
+                "1"{"келерки жекш."}
             }
         }
         thu{
             relative{
-                "-1"{"өткөн Бейшембиде"}
-                "0"{"ушул Бейшембиде"}
-                "1"{"эмдиги Бейшембиде"}
+                "-1"{"өткөн бейшембиде"}
+                "0"{"ушул бейшембиде"}
+                "1"{"келерки бейшембиде"}
+            }
+        }
+        thu-narrow{
+            relative{
+                "-1"{"өткөн бш."}
+                "0"{"ушул бш."}
+                "1"{"келерки бш."}
+            }
+        }
+        thu-short{
+            relative{
+                "-1"{"өткөн бейш."}
+                "0"{"ушул бейш."}
+                "1"{"келерки бейш."}
             }
         }
         tue{
             relative{
-                "-1"{"өткөн Шейшембиде"}
-                "0"{"ушул Шейшембиде"}
-                "1"{"эмки Шейшембиде"}
+                "-1"{"өткөн шейшембиде"}
+                "0"{"ушул шейшембиде"}
+                "1"{"келерки шейшембиде"}
+            }
+        }
+        tue-narrow{
+            relative{
+                "-1"{"өткөн шш."}
+                "0"{"ушул шш."}
+                "1"{"ушул шш."}
+            }
+        }
+        tue-short{
+            relative{
+                "-1"{"өткөн шейш."}
+                "0"{"ушул шейш."}
+                "1"{"келерки шейш."}
             }
         }
         wed{
             relative{
-                "-1"{"өткөн Шаршембиде"}
-                "0"{"ушул Шаршембиде"}
-                "1"{"эмки Шаршембиде"}
+                "-1"{"өткөн шаршембиде"}
+                "0"{"ушул шаршембиде"}
+                "1"{"келерки шаршембиде"}
+            }
+        }
+        wed-narrow{
+            relative{
+                "-1"{"өткөн шр."}
+                "0"{"ушул шр."}
+                "1"{"келерки шр."}
+            }
+        }
+        wed-short{
+            relative{
+                "-1"{"өткөн шарш."}
+                "0"{"ушул шарш."}
+                "1"{"келерки шарш."}
             }
         }
         week{
@@ -799,8 +1070,34 @@ ky{
                 }
             }
         }
+        week-narrow{
+            dn{"апта"}
+            relativeTime{
+                future{
+                    one{"+{0} апт."}
+                    other{"+{0} апт."}
+                }
+                past{
+                    one{"-{0} апт."}
+                    other{"-{0} апт."}
+                }
+            }
+        }
+        week-short{
+            dn{"апта"}
+            relativeTime{
+                future{
+                    one{"{0} апт. кийин"}
+                    other{"{0} апт. кийин"}
+                }
+                past{
+                    one{"{0} апт. мурун"}
+                    other{"{0} апт. мурун"}
+                }
+            }
+        }
         weekday{
-            dn{"апта күнү"}
+            dn{"аптанын күнү"}
         }
         year{
             dn{"жыл"}
@@ -813,6 +1110,32 @@ ky{
                 future{
                     one{"{0} жылдан кийин"}
                     other{"{0} жылдан кийин"}
+                }
+                past{
+                    one{"{0} жыл мурун"}
+                    other{"{0} жыл мурун"}
+                }
+            }
+        }
+        year-narrow{
+            dn{"ж."}
+            relativeTime{
+                future{
+                    one{"{0} жыл. кийин"}
+                    other{"{0} жыл. кийин"}
+                }
+                past{
+                    one{"{0} жыл мурун"}
+                    other{"{0} жыл мурун"}
+                }
+            }
+        }
+        year-short{
+            dn{"ж."}
+            relativeTime{
+                future{
+                    one{"{0} жыл. кийин"}
+                    other{"{0} жыл. кийин"}
                 }
                 past{
                     one{"{0} жыл мурун"}
@@ -848,638 +1171,5 @@ ky{
         UK{"Британия"}
         US{"АКШ"}
         metric{"метрикалык"}
-    }
-    units{
-        acceleration{
-            g-force{
-                one{"{0} оордук күчү"}
-                other{"{0} оордук күчү"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-            degree{
-                one{"{0} градус"}
-                other{"{0} градус"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} акр"}
-                other{"{0} акр"}
-            }
-            hectare{
-                one{"{0} гектар"}
-                other{"{0} гектар"}
-            }
-            square-foot{
-                one{"{0} чарчы фут"}
-                other{"{0} чарчы фут"}
-            }
-            square-kilometer{
-                one{"{0} чарчы километр"}
-                other{"{0} чарчы километр"}
-            }
-            square-meter{
-                one{"{0} чарчы метр"}
-                other{"{0} чарчы метр"}
-            }
-            square-mile{
-                one{"{0} чарчы чакырым"}
-                other{"{0} чарчы чакырым"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} күн"}
-                other{"{0} күн"}
-            }
-            hour{
-                one{"{0} саат"}
-                other{"{0} саат"}
-            }
-            millisecond{
-                one{"{0} миллисекунд"}
-                other{"{0} миллисекунд"}
-            }
-            minute{
-                one{"{0} мүнөт"}
-                other{"{0} мүнөт"}
-            }
-            month{
-                one{"{0} ай"}
-                other{"{0} ай"}
-            }
-            second{
-                one{"{0} секунд"}
-                other{"{0} секунд"}
-            }
-            week{
-                one{"{0} апта"}
-                other{"{0} апта"}
-            }
-            year{
-                one{"{0} жыл"}
-                other{"{0} жыл"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} см"}
-                other{"{0} см"}
-            }
-            foot{
-                one{"{0} фут"}
-                other{"{0} фут"}
-            }
-            inch{
-                one{"{0} дүйм"}
-                other{"{0} дүйм"}
-            }
-            kilometer{
-                one{"{0} километр"}
-                other{"{0} километр"}
-            }
-            light-year{
-                one{"{0} жарык жылы"}
-                other{"{0} жарык жылы"}
-            }
-            meter{
-                one{"{0} метр"}
-                other{"{0} метр"}
-            }
-            mile{
-                one{"{0} чакырым"}
-                other{"{0} чакырым"}
-            }
-            millimeter{
-                one{"{0} миллиметр"}
-                other{"{0} миллиметр"}
-            }
-            picometer{
-                one{"{0} пикометр"}
-                other{"{0} пикометр"}
-            }
-            yard{
-                one{"{0} ярд"}
-                other{"{0} ярд"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} грамм"}
-                other{"{0} грамм"}
-            }
-            kilogram{
-                one{"{0} килограмм"}
-                other{"{0} килограмм"}
-            }
-            ounce{
-                one{"{0} унция"}
-                other{"{0} унция"}
-            }
-            pound{
-                one{"{0} фунт"}
-                other{"{0} фунт"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} аттын күчү"}
-                other{"{0} аттын күчү"}
-            }
-            kilowatt{
-                one{"{0} киловатт"}
-                other{"{0} киловатт"}
-            }
-            watt{
-                one{"{0} ватт"}
-                other{"{0} ватт"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"гектопаскаль"}
-                other{"{0} гектопаскаль"}
-            }
-            inch-hg{
-                one{"{0} дүйм сымап мамычасы"}
-                other{"{0} дүйм сымап мамычасы"}
-            }
-            millibar{
-                one{"{0} миллибар"}
-                other{"{0} миллибар"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"саатына {0} километр"}
-                other{"саатына {0} километр"}
-            }
-            meter-per-second{
-                one{"секундуна {0} метр"}
-                other{"секундуна {0} метр"}
-            }
-            mile-per-hour{
-                one{"саатына {0} чакырым"}
-                other{"саатына {0} чакырым"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°C"}
-                other{"{0}°C"}
-            }
-            fahrenheit{
-                one{"{0}°F"}
-                other{"{0}°F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} куб километр"}
-                other{"{0} куб километр"}
-            }
-            cubic-mile{
-                one{"{0} куб чакырым"}
-                other{"{0}куб чакырым"}
-            }
-            liter{
-                one{"{0} литр"}
-                other{"{0} литр"}
-            }
-        }
-    }
-    unitsNarrow{
-        acceleration{
-            g-force{
-                one{"{0} о.к."}
-                other{"{0} о.к."}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-            degree{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} акр"}
-                other{"{0} акр"}
-            }
-            hectare{
-                one{"{0} га"}
-                other{"{0} га"}
-            }
-            square-foot{
-                one{"{0} фут²"}
-                other{"{0} фут²"}
-            }
-            square-kilometer{
-                one{"{0} км²"}
-                other{"{0} км²"}
-            }
-            square-meter{
-                one{"{0} м²"}
-                other{"{0} м²"}
-            }
-            square-mile{
-                one{"{0} чак²"}
-                other{"{0} чак²"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} к"}
-                other{"{0} к"}
-            }
-            hour{
-                one{"{0} с"}
-                other{"{0} с"}
-            }
-            millisecond{
-                one{"{0} мс"}
-                other{"{0} мс"}
-            }
-            minute{
-                one{"{0} мүн"}
-                other{"{0} мүн"}
-            }
-            month{
-                one{"{0} ай"}
-                other{"{0} ай"}
-            }
-            second{
-                one{"{0} сек"}
-                other{"{0} сек"}
-            }
-            week{
-                one{"{0} ап"}
-                other{"{0} ап"}
-            }
-            year{
-                one{"{0} ж."}
-                other{"{0} ж."}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} см"}
-                other{"{0} см"}
-            }
-            foot{
-                one{"{0} фут"}
-                other{"{0} фут"}
-            }
-            inch{
-                one{"{0} д"}
-                other{"{0} д"}
-            }
-            kilometer{
-                one{"{0} км"}
-                other{"{0} км"}
-            }
-            light-year{
-                one{"{0} жар.ж."}
-                other{"{0} жар.ж."}
-            }
-            meter{
-                one{"{0} м"}
-                other{"{0} м"}
-            }
-            mile{
-                one{"{0} чак"}
-                other{"{0} чак"}
-            }
-            millimeter{
-                one{"{0} мм"}
-                other{"{0} мм"}
-            }
-            picometer{
-                one{"{0} пм"}
-                other{"{0} пм"}
-            }
-            yard{
-                one{"{0} ярд"}
-                other{"{0} ярд"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} г"}
-                other{"{0} г"}
-            }
-            kilogram{
-                one{"{0} кг"}
-                other{"{0} кг"}
-            }
-            ounce{
-                one{"{0} унция"}
-                other{"{0} унция"}
-            }
-            pound{
-                one{"{0} фунт"}
-                other{"{0} фунт"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} ат"}
-                other{"{0} ат"}
-            }
-            kilowatt{
-                one{"{0} кВт"}
-                other{"{0} кВт"}
-            }
-            watt{
-                one{"{0} Вт"}
-                other{"{0} Вт"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} гПа"}
-                other{"{0} гПа"}
-            }
-            inch-hg{
-                one{"{0} inHg"}
-                other{"{0} inHg"}
-            }
-            millibar{
-                one{"{0} мб"}
-                other{"{0} мб"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} км/с"}
-                other{"{0} км/с"}
-            }
-            meter-per-second{
-                one{"{0} м/с"}
-                other{"{0} м/с"}
-            }
-            mile-per-hour{
-                one{"{0} чак/с"}
-                other{"{0} чак/с"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-            fahrenheit{
-                one{"{0}°F"}
-                other{"{0}°F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} км³"}
-                other{"{0} км³"}
-            }
-            cubic-mile{
-                one{"{0} чак³"}
-                other{"{0} чак³"}
-            }
-            liter{
-                one{"{0} л"}
-                other{"{0} л"}
-            }
-        }
-    }
-    unitsShort{
-        acceleration{
-            g-force{
-                one{"{0} о.к."}
-                other{"{0} о.к."}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-            degree{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} акр"}
-                other{"{0} акр"}
-            }
-            hectare{
-                one{"{0} га"}
-                other{"{0} га"}
-            }
-            square-foot{
-                one{"{0} фут²"}
-                other{"{0} фут²"}
-            }
-            square-kilometer{
-                one{"{0} км²"}
-                other{"{0} км²"}
-            }
-            square-meter{
-                one{"{0} м²"}
-                other{"{0} м²"}
-            }
-            square-mile{
-                one{"{0} чак²"}
-                other{"{0} чак²"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} күн"}
-                other{"{0} күн"}
-            }
-            hour{
-                one{"{0} с"}
-                other{"{0} с"}
-            }
-            millisecond{
-                one{"{0} мс"}
-                other{"{0} мс"}
-            }
-            minute{
-                one{"{0} мүн"}
-                other{"{0} мүн"}
-            }
-            month{
-                one{"{0} ай"}
-                other{"{0} ай"}
-            }
-            second{
-                one{"{0} сек"}
-                other{"{0} сек"}
-            }
-            week{
-                one{"{0} ап"}
-                other{"{0} ап"}
-            }
-            year{
-                one{"{0} ж."}
-                other{"{0} ж."}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} см"}
-                other{"{0} см"}
-            }
-            foot{
-                one{"{0} фут"}
-                other{"{0} фут"}
-            }
-            inch{
-                one{"{0} д"}
-                other{"{0} д"}
-            }
-            kilometer{
-                one{"{0} км"}
-                other{"{0} км"}
-            }
-            light-year{
-                one{"{0} жар.ж."}
-                other{"{0} жар.ж."}
-            }
-            meter{
-                one{"{0} м"}
-                other{"{0} м"}
-            }
-            mile{
-                one{"{0} чак"}
-                other{"{0} чак"}
-            }
-            millimeter{
-                one{"{0} мм"}
-                other{"{0} мм"}
-            }
-            picometer{
-                one{"{0} пм"}
-                other{"{0} пм"}
-            }
-            yard{
-                one{"{0} ярд"}
-                other{"{0} ярд"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} г"}
-                other{"{0} г"}
-            }
-            kilogram{
-                one{"{0} кг"}
-                other{"{0} кг"}
-            }
-            ounce{
-                one{"{0} унция"}
-                other{"{0} унция"}
-            }
-            pound{
-                one{"{0} фунт"}
-                other{"{0} фунт"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} ат"}
-                other{"{0} ат"}
-            }
-            kilowatt{
-                one{"{0} кВт"}
-                other{"{0} кВт"}
-            }
-            watt{
-                one{"{0} Вт"}
-                other{"{0} Вт"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} гПа"}
-                other{"{0} гПа"}
-            }
-            inch-hg{
-                one{"{0} дүйм сымап"}
-                other{"{0} дүйм сымап"}
-            }
-            millibar{
-                one{"{0} мб"}
-                other{"{0} мб"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} км/с"}
-                other{"{0} км/с"}
-            }
-            meter-per-second{
-                one{"{0} м/с"}
-                other{"{0} м/с"}
-            }
-            mile-per-hour{
-                one{"{0} чак/с"}
-                other{"{0} чак/с"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°C"}
-                other{"{0}°C"}
-            }
-            fahrenheit{
-                one{"{0}°F"}
-                other{"{0}°F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} км³"}
-                other{"{0} км³"}
-            }
-            cubic-mile{
-                one{"{0} чак³"}
-                other{"{0} чак³"}
-            }
-            liter{
-                one{"{0} л"}
-                other{"{0} л"}
-            }
-        }
     }
 }

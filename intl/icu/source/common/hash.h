@@ -1,6 +1,6 @@
 /*
 ******************************************************************************
-*   Copyright (C) 1997-2011, International Business Machines
+*   Copyright (C) 1997-2014, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ******************************************************************************
 *   Date        Name        Description
@@ -85,6 +85,10 @@ public:
 
     const UHashElement* find(const UnicodeString& key) const;
 
+    /**
+     * @param pos - must be UHASH_FIRST on first call, and untouched afterwards.
+     * @see uhash_nextElement
+     */
     const UHashElement* nextElement(int32_t& pos) const;
     
     UKeyComparator* setKeyComparator(UKeyComparator*keyComp);

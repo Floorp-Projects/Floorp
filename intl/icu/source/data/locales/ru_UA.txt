@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ru_UA.xml
 // *
 // ***************************************************************************
 ru_UA{
-    Version{"2.0.90.61"}
+    Version{"2.1.12.48"}
     calendar{
         generic{
             DateTimePatterns{
@@ -16,8 +16,8 @@ ru_UA{
                 "HH:mm:ss",
                 "HH:mm",
                 "EEEE, d MMMM y 'г'. G",
-                "d MMMM y G",
-                "d MMM y G",
+                "d MMMM y 'г'. G",
+                "d MMM y 'г'. G",
                 "dd.MM.y G",
                 "{1}, {0}",
                 "{1}, {0}",
@@ -33,8 +33,8 @@ ru_UA{
                 "HH:mm:ss",
                 "HH:mm",
                 "EEEE, d MMMM y 'г'.",
-                "d MMMM y",
-                "d MMM y",
+                "d MMMM y 'г'.",
+                "d MMM y 'г'.",
                 "dd.MM.yy",
                 "{1}, {0}",
                 "{1}, {0}",

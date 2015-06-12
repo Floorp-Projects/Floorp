@@ -1,6 +1,6 @@
 /*
  **********************************************************************
- *   Copyright (C) 2005-2013, International Business Machines
+ *   Copyright (C) 2005-2015, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  **********************************************************************
  */
@@ -110,6 +110,7 @@ static void U_CALLCONV initRecognizers(UErrorCode &status) {
         new CSRecognizerInfo(new CharsetRecog_big5(), TRUE),
 
         new CSRecognizerInfo(new CharsetRecog_2022JP(), TRUE),
+#if !UCONFIG_ONLY_HTML_CONVERSION
         new CSRecognizerInfo(new CharsetRecog_2022KR(), TRUE),
         new CSRecognizerInfo(new CharsetRecog_2022CN(), TRUE),
 
@@ -117,6 +118,7 @@ static void U_CALLCONV initRecognizers(UErrorCode &status) {
         new CSRecognizerInfo(new CharsetRecog_IBM424_he_ltr(), FALSE),
         new CSRecognizerInfo(new CharsetRecog_IBM420_ar_rtl(), FALSE),
         new CSRecognizerInfo(new CharsetRecog_IBM420_ar_ltr(), FALSE)
+#endif
     };
     int32_t rCount = ARRAY_SIZE(tempArray);
 

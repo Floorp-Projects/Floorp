@@ -1,6 +1,6 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/nl_BE.xml
@@ -14,7 +14,7 @@ nl_BE{
             }
         }
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.11.73"}
     calendar{
         generic{
             DateTimePatterns{
@@ -24,7 +24,7 @@ nl_BE{
                 "HH:mm",
                 "EEEE d MMMM y G",
                 "d MMMM y G",
-                "d-MMM-y G",
+                "d MMM y G",
                 "d/MM/yy GGGGG",
                 "{1} {0}",
                 "{1} {0}",
@@ -41,7 +41,7 @@ nl_BE{
                 "HH:mm",
                 "EEEE d MMMM y",
                 "d MMMM y",
-                "d-MMM-y",
+                "d MMM y",
                 "d/MM/yy",
                 "{1} {0}",
                 "{1} {0}",

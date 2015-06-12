@@ -1,16 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/collation/si.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/xml/collation/si.xml
- */
 si{
-    Version{"2.0.89.0"}
+    Version{"2.0.96.14"}
     collations{
         dictionary{
             Sequence{
@@ -18,7 +15,7 @@ si{
                 "&ඖ<ං<ඃ"
                 "&ජ්ඤ<<ඥ"
             }
-            Version{"24"}
+            Version{"27.0.1"}
         }
         standard{
             Sequence{
@@ -26,7 +23,7 @@ si{
                 "&ඖ<ං<ඃ"
                 "&ඥ<ඤ"
             }
-            Version{"24"}
+            Version{"27.0.1"}
         }
     }
 }

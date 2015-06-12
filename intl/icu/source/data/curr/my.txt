@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/my.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/my.xml
- */
 my{
     Currencies{
         AED{
@@ -161,7 +158,7 @@ my{
         }
         CUC{
             "CUC",
-            "ႏိုင္ငံျခားေငြလဲလွယ္ႏိုင္ေသာ က်ဴးဘားပီဆို ေငြ။",
+            "နိုင်ငံခြားငွေလဲလှယ်နိုင်သော ကျူးဘားပီဆိုငွေ",
         }
         CUP{
             "CUP",
@@ -397,7 +394,7 @@ my{
         }
         MGA{
             "MGA",
-            "မလာဂစ္စီ အရီရရီ ေငြေႀကး။",
+            "မလာဂစ်စီ အရီရရီ ငွေကြေး",
         }
         MKD{
             "MKD",
@@ -824,7 +821,7 @@ my{
             other{"ကော့စ်တာရီကာ ခိုလုံး"}
         }
         CUC{
-            other{"ႏိုင္ငံျခားေငြလဲလွယ္ႏိုင္ေသာ က်ဴးဘားပီဆို ေငြ။"}
+            other{"နိုင်ငံခြားငွေလဲလှယ်နိုင်သော ကျူးဘားပီဆိုငွေ"}
         }
         CVE{
             other{"ခေ့ပ်ဗာဒူ အက်စ်ခူဒို"}
@@ -971,7 +968,7 @@ my{
             other{"မောလ်ဒိုဗာလယ်အို"}
         }
         MGA{
-            other{"မလာဂစ္စီ အရီရရီ ေငြေႀကး။"}
+            other{"မလာဂစ်စီ အရီရရီ ငွေကြေး"}
         }
         MKD{
             other{"မာစီဒိုးနီးယားဒီနာ"}
@@ -1178,5 +1175,5 @@ my{
             other{"ဇင်ဘာဘွေခွါးချာ"}
         }
     }
-    Version{"2.0.93.16"}
+    Version{"2.1.13.21"}
 }

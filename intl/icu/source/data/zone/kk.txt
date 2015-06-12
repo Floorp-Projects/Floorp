@@ -1,16 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/kk.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/kk.xml
- */
 kk{
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абиджан"}
@@ -459,9 +456,6 @@ kk{
         "America:Montevideo"{
             ec{"Монтевидео"}
         }
-        "America:Montreal"{
-            ec{"Монреаль"}
-        }
         "America:Montserrat"{
             ec{"Монсеррат"}
         }
@@ -508,7 +502,7 @@ kk{
             ec{"Порт-о-Пренс"}
         }
         "America:Port_of_Spain"{
-            ec{"Порт-оф-Спейн"}
+            ec{"Испания порты"}
         }
         "America:Porto_Velho"{
             ec{"Порту-Велью"}
@@ -551,9 +545,6 @@ kk{
         }
         "America:Scoresbysund"{
             ec{"Скорсбиссун"}
-        }
-        "America:Shiprock"{
-            ec{"Шипрок"}
         }
         "America:Sitka"{
             ec{"Ситка"}
@@ -619,7 +610,7 @@ kk{
             ec{"Дэйвис"}
         }
         "Antarctica:DumontDUrville"{
-            ec{"Дюмон-д'Юрвиль"}
+            ec{"Дюмон-д’Юрвиль"}
         }
         "Antarctica:Macquarie"{
             ec{"Маккуори"}
@@ -636,11 +627,11 @@ kk{
         "Antarctica:Rothera"{
             ec{"Ротера"}
         }
-        "Antarctica:South_Pole"{
-            ec{"Оңтүстік полюс"}
-        }
         "Antarctica:Syowa"{
             ec{"Сева"}
+        }
+        "Antarctica:Troll"{
+            ec{"Тролл"}
         }
         "Antarctica:Vostok"{
             ec{"Восток"}
@@ -667,7 +658,7 @@ kk{
             ec{"Ақтөбе"}
         }
         "Asia:Ashgabat"{
-            ec{"Азхабат"}
+            ec{"Ашхабад"}
         }
         "Asia:Baghdad"{
             ec{"Бағдат"}
@@ -691,13 +682,10 @@ kk{
             ec{"Бруней"}
         }
         "Asia:Calcutta"{
-            ec{"Колката"}
+            ec{"Калькутта"}
         }
         "Asia:Choibalsan"{
             ec{"Чойбалсан"}
-        }
-        "Asia:Chongqing"{
-            ec{"Чунцин"}
         }
         "Asia:Colombo"{
             ec{"Коломбо"}
@@ -719,9 +707,6 @@ kk{
         }
         "Asia:Gaza"{
             ec{"Газа"}
-        }
-        "Asia:Harbin"{
-            ec{"Харбин"}
         }
         "Asia:Hebron"{
             ec{"Хеврон"}
@@ -752,9 +737,6 @@ kk{
         }
         "Asia:Karachi"{
             ec{"Карачи"}
-        }
-        "Asia:Kashgar"{
-            ec{"Қашқар"}
         }
         "Asia:Katmandu"{
             ec{"Катманду"}
@@ -1294,9 +1276,9 @@ kk{
             ls{"Аляска стандартты уақыты"}
         }
         "meta:Amazon"{
-            ld{"Амазонка жазғы уақыты"}
-            lg{"Амазонка уақыты"}
-            ls{"Амазонка стандартты уақыты"}
+            ld{"Амазон жазғы уақыты"}
+            lg{"Амазон уақыты"}
+            ls{"Амазон стандартты уақыты"}
         }
         "meta:America_Central"{
             ld{"Солтүстік Америка орталығының күндізгі уақыты"}
@@ -1317,6 +1299,11 @@ kk{
             ld{"Тынық мұхитындағы Оңтүстік Америка жазғы уақыты"}
             lg{"Тынық мұхитындағы Оңтүстік Америка уақыты"}
             ls{"Тынық мұхитындағы Оңтүстік Америка стандартты уақыты"}
+        }
+        "meta:Apia"{
+            ld{"Апиа жазғы уақыты"}
+            lg{"Апиа уақыты"}
+            ls{"Апиа стандартты уақыты"}
         }
         "meta:Arabian"{
             ld{"Сауд Арабиясы күндізгі уақыты"}
@@ -1341,7 +1328,7 @@ kk{
         "meta:Atlantic"{
             ld{"Атлантикалық жаздық уақыт"}
             lg{"Атлантика уақыты"}
-            ls{"Атлантика стандарт уақыты"}
+            ls{"Атлантика стандартты уақыты"}
         }
         "meta:Australia_Central"{
             ld{"Австралиялық орталық жаздық уақыт"}
@@ -1445,7 +1432,7 @@ kk{
             ls{"Дейвис уақыты"}
         }
         "meta:DumontDUrville"{
-            ls{"Дюмон д'Юрвиль уақыты"}
+            ls{"Дюмон д’Юрвиль уақыты"}
         }
         "meta:East_Timor"{
             ls{"Шығыс Тимор уақыты"}
@@ -1470,6 +1457,9 @@ kk{
             sd{"EEST"}
             sg{"EET"}
             ss{"EET"}
+        }
+        "meta:Europe_Further_Eastern"{
+            ls{"Қашық Шығыс Еуропа Уақыты"}
         }
         "meta:Europe_Western"{
             ld{"Батыс Еуропа жаздық уақыты"}
@@ -1635,6 +1625,16 @@ kk{
         }
         "meta:Mawson"{
             ls{"Моусон уақыты"}
+        }
+        "meta:Mexico_Northwest"{
+            ld{"Солтүстік Мексика Күндізгі Уақыты"}
+            lg{"Солтүстік Мексика Уақыты"}
+            ls{"Солтүстік Мексика Стандартты Уақыты"}
+        }
+        "meta:Mexico_Pacific"{
+            ld{"Мексика Тынық Мұхит Күндізгі Уақыты"}
+            lg{"Мексика Тынық Мұхит Уақыты"}
+            ls{"Мексика Тынық Мұхит Стандартты Уақыты"}
         }
         "meta:Mongolia"{
             ld{"Улан-Батор жазғы уақыты"}
@@ -1843,7 +1843,7 @@ kk{
             ls{"Екатеринбург стандартты уақыты"}
         }
         fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
+        gmtFormat{"ГОУ{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} уақыты"}

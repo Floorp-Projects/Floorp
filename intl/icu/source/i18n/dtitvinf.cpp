@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (C) 2008-2012, International Business Machines Corporation and
+* Copyright (C) 2008-2015, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 *
@@ -223,7 +223,7 @@ DateIntervalInfo::initializeData(const Locale& locale, UErrorCode& err)
   char parentLocale[ULOC_FULLNAME_CAPACITY];
   uprv_strcpy(parentLocale, locName);
   UErrorCode status = U_ZERO_ERROR;
-  Hashtable skeletonSet(FALSE, status);
+  Hashtable skeletonKeyPairs(FALSE, status);
   if ( U_FAILURE(status) ) {
       return;
   }
@@ -277,10 +277,6 @@ DateIntervalInfo::initializeData(const Locale& locale, UErrorCode& err)
                     continue;
                 }
                 UnicodeString skeletonUniStr(skeleton, -1, US_INV);
-                if ( skeletonSet.geti(skeletonUniStr) == 1 ) {
-                    continue;
-                }
-                skeletonSet.puti(skeletonUniStr, 1, status);
                 if ( uprv_strcmp(skeleton, gFallbackPatternTag) == 0 ) {
                     continue;  // fallback
                 }
@@ -304,6 +300,12 @@ DateIntervalInfo::initializeData(const Locale& locale, UErrorCode& err)
                     if ( U_FAILURE(status) ) {
                         break;
                     }
+                    UnicodeString keyUniStr(key, -1, US_INV);
+                    UnicodeString skeletonKeyPair(skeletonUniStr + keyUniStr);
+                    if ( skeletonKeyPairs.geti(skeletonKeyPair) == 1 ) {
+                        continue;
+                    }
+                    skeletonKeyPairs.puti(skeletonKeyPair, 1, status);
         
                     UCalendarDateFields calendarField = UCAL_FIELD_COUNT;
                     if ( !uprv_strcmp(key, "y") ) {
@@ -481,7 +483,7 @@ DateIntervalInfo::getBestSkeleton(const UnicodeString& skeleton,
     bestMatchDistanceInfo = 0;
     int8_t fieldLength = sizeof(skeletonFieldWidth)/sizeof(skeletonFieldWidth[0]);
 
-    int32_t pos = -1;
+    int32_t pos = UHASH_FIRST;
     const UHashElement* elem = NULL;
     while ( (elem = fIntervalPatterns->nextElement(pos)) != NULL ) {
         const UHashTok keyTok = elem->key;
@@ -586,7 +588,7 @@ DateIntervalInfo::deleteHash(Hashtable* hTable)
     if ( hTable == NULL ) {
         return;
     }
-    int32_t pos = -1;
+    int32_t pos = UHASH_FIRST;
     const UHashElement* element = NULL;
     while ( (element = hTable->nextElement(pos)) != NULL ) {
         const UHashTok valueTok = element->value;
@@ -649,7 +651,7 @@ DateIntervalInfo::copyHash(const Hashtable* source,
     if ( U_FAILURE(status) ) {
         return;
     }
-    int32_t pos = -1;
+    int32_t pos = UHASH_FIRST;
     const UHashElement* element = NULL;
     if ( source ) {
         while ( (element = source->nextElement(pos)) != NULL ) {

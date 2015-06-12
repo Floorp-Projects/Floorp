@@ -1,6 +1,6 @@
 /**
  *******************************************************************************
- * Copyright (C) 2001-2004, International Business Machines Corporation and    *
+ * Copyright (C) 2001-2014, International Business Machines Corporation and    *
  * others. All Rights Reserved.                                                *
  *******************************************************************************
  *
@@ -17,7 +17,6 @@
 #include "ustrfmt.h"
 #include "uhash.h"
 #include "charstr.h"
-#include "ucln_cmn.h"
 #include "uassert.h"
 
 #define UNDERSCORE_CHAR ((UChar)0x005f)
@@ -159,13 +158,13 @@ UnicodeString&
 LocaleKey::debug(UnicodeString& result) const
 {
     ICUServiceKey::debug(result);
-    result.append(" kind: ");
+    result.append((UnicodeString)" kind: ");
     result.append(_kind);
-    result.append(" primaryID: ");
+    result.append((UnicodeString)" primaryID: ");
     result.append(_primaryID);
-    result.append(" fallbackID: ");
+    result.append((UnicodeString)" fallbackID: ");
     result.append(_fallbackID);
-    result.append(" currentID: ");
+    result.append((UnicodeString)" currentID: ");
     result.append(_currentID);
     return result;
 }
@@ -173,7 +172,7 @@ LocaleKey::debug(UnicodeString& result) const
 UnicodeString&
 LocaleKey::debugClass(UnicodeString& result) const
 {
-    return result.append("LocaleKey ");
+    return result.append((UnicodeString)"LocaleKey ");
 }
 #endif
 

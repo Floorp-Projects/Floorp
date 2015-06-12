@@ -1,0 +1,17 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2015 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/segments/zh.xml ../../xml/brkitr/zh.xml
+// *
+// ***************************************************************************
+zh{
+    Version{"2.1.12.96"}
+    boundaries{
+        line:process(dependency){"line.brk"}
+        line_loose:process(dependency){"line_loose_cj.brk"}
+        line_normal:process(dependency){"line_normal_cj.brk"}
+        line_strict:process(dependency){"line.brk"}
+    }
+}

@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/cy.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/cy.xml
- */
 cy{
     Currencies{
         AED{
@@ -197,7 +194,7 @@ cy{
         }
         GBP{
             "£",
-            "Punt Sterling Prydain",
+            "Punt Prydain",
         }
         GEL{
             "GEL",
@@ -250,6 +247,10 @@ cy{
         IDR{
             "IDR",
             "Rupiah Indonesia",
+        }
+        IEP{
+            "IEP",
+            "Punt Iwerddon",
         }
         ILS{
             "₪",
@@ -385,7 +386,7 @@ cy{
         }
         MVR{
             "MVR",
-            "Rufiyaa'r Maldives",
+            "Rufiyaa’r Maldives",
         }
         MWK{
             "MWK",
@@ -1014,12 +1015,12 @@ cy{
             zero{"Punt Ynysoedd Falkland/Malvinas"}
         }
         GBP{
-            few{"Punt Sterling Prydain"}
-            many{"Punt Sterling Prydain"}
-            one{"Punt Sterling Prydain"}
-            other{"Punt Sterling Prydain"}
-            two{"Punt Sterling Prydain"}
-            zero{"Punt Sterling Prydain"}
+            few{"Punt Prydain"}
+            many{"Punt Prydain"}
+            one{"Punt Prydain"}
+            other{"Punt Prydain"}
+            two{"Punt Prydain"}
+            zero{"Punt Prydain"}
         }
         GEL{
             few{"Lari Georgia"}
@@ -1124,6 +1125,14 @@ cy{
             other{"Rupiah Indonesia"}
             two{"Rupiah Indonesia"}
             zero{"Rupiah Indonesia"}
+        }
+        IEP{
+            few{"Punt Iwerddon"}
+            many{"Punt Iwerddon"}
+            one{"Punt Iwerddon"}
+            other{"Punt Iwerddon"}
+            two{"Punt Iwerddon"}
+            zero{"Punt Iwerddon"}
         }
         ILS{
             few{"Shegel Newydd Israel"}
@@ -1390,12 +1399,12 @@ cy{
             zero{"Rwpî Mauritius"}
         }
         MVR{
-            few{"Rufiyaa'r Maldives"}
-            many{"Rufiyaa'r Maldives"}
-            one{"Rufiyaa'r Maldives"}
-            other{"Rufiyaa'r Maldives"}
-            two{"Rufiyaa'r Maldives"}
-            zero{"Rufiyaa'r Maldives"}
+            few{"Rufiyaa’r Maldives"}
+            many{"Rufiyaa’r Maldives"}
+            one{"Rufiyaa’r Maldives"}
+            other{"Rufiyaa’r Maldives"}
+            two{"Rufiyaa’r Maldives"}
+            zero{"Rufiyaa’r Maldives"}
         }
         MWK{
             few{"Kwacha Malawi"}
@@ -1918,5 +1927,5 @@ cy{
         two{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"2.0.93.7"}
+    Version{"2.1.10.93"}
 }

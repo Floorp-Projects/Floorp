@@ -1,0 +1,188 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2015 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/pt_PT.xml
+// *
+// ***************************************************************************
+pt_PT{
+    Keys{
+        colBackwards{"Ordenação de acentos invertida"}
+        colCaseLevel{"Ordenação sensível a maiúsculas e minúsculas"}
+        colHiraganaQuaternary{"Ordenação kana"}
+        colNormalization{"Ordenação normalizada"}
+        colNumeric{"Ordenação numérica"}
+        colStrength{"Força da ordenação"}
+        variableTop{"Ordenar como símbolos"}
+        x{"Utilização privada"}
+    }
+    Languages{
+        af{"africânder"}
+        arn{"mapuche"}
+        bax{"bamun"}
+        bbj{"ghomala"}
+        chn{"jargão chinook"}
+        ckb{"sorani curdo"}
+        cs{"checo"}
+        dsb{"baixo sórabio"}
+        ee{"ewe"}
+        egy{"egípcio clássico"}
+        en_CA{"inglês canadiano"}
+        enm{"inglês medieval"}
+        et{"estónio"}
+        fr_CA{"francês canadiano"}
+        frm{"francês medieval"}
+        frs{"frísio oriental"}
+        fy{"frísico ocidental"}
+        gmh{"alemão medieval alto"}
+        grc{"grego clássico"}
+        ha{"haúça"}
+        hi{"hindi"}
+        hsb{"alto sórabio"}
+        hy{"arménio"}
+        ig{"igbo"}
+        kea{"cabo-verdiano"}
+        kg{"conguês"}
+        kn{"canarim"}
+        lez{"lezghiano"}
+        lg{"ganda"}
+        luo{"luo"}
+        mga{"irlandês, medieval"}
+        mk{"macedónio"}
+        nb{"norueguês bokmål"}
+        nn{"norueguês nynorsk"}
+        oc{"provençal"}
+        os{"ossético"}
+        pl{"polaco"}
+        ps{"pastó"}
+        rom{"romanês"}
+        sah{"sakha"}
+        shu{"árabe do Chade"}
+        tk{"turcomano"}
+        to{"tonga"}
+        vai{"vai"}
+        xog{"soga"}
+    }
+    Languages%short{
+        en_GB{"inglês (RU)"}
+        en_US{"inglês (EUA)"}
+    }
+    Scripts{
+        Armn{"arménio"}
+        Egyd{"egípcio demótico"}
+        Egyh{"egípcio hierático"}
+        Gujr{"guzerate"}
+        Inds{"indus"}
+        Sylo{"siloti nagri"}
+        Tale{"tai le"}
+        Telu{"telugu"}
+        Zsym{"símbolos"}
+        Zxxx{"não escrito"}
+    }
+    Types{
+        calendar{
+            buddhist{"Calendário budista"}
+            chinese{"Calendário chinês"}
+            coptic{"Calendário copta"}
+            dangi{"Calendário dangi"}
+            ethiopic{"Calendário etíope"}
+            ethiopic-amete-alem{"Calendário Etíope Amete Alem"}
+            gregorian{"Calendário gregoriano"}
+            hebrew{"Calendário hebraico"}
+            islamic{"Calendário islâmico"}
+            japanese{"Calendário japonês"}
+            persian{"Calendário persa"}
+        }
+        colAlternate{
+            non-ignorable{"Ordenar símbolos"}
+            shifted{"Ordenar símbolos ignorados"}
+        }
+        colBackwards{
+            no{"Ordenar acentos normalmente"}
+            yes{"Ordenar acentos inversamente"}
+        }
+        colCaseFirst{
+            lower{"Ordenar por minúsculas"}
+            no{"Ordenar disposição de tipo de letra normal"}
+            upper{"Ordenar por maiúsculas"}
+        }
+        colCaseLevel{
+            no{"Ordenar insensível a maiúsculas/minúsculas"}
+            yes{"Ordenar sensível a maiúsculas/minúsculas"}
+        }
+        colHiraganaQuaternary{
+            no{"Ordenar kana separadamente"}
+            yes{"Ordenar kana diferentemente"}
+        }
+        colNormalization{
+            no{"Ordenar sem normalização"}
+            yes{"Ordenar Unicode normalizado"}
+        }
+        colNumeric{
+            no{"Ordenar dígitos individualmente"}
+            yes{"Ordenar dígitos numericamente"}
+        }
+        colStrength{
+            identical{"Ordenar tudo"}
+            primary{"Ordenar apenas letras básicas"}
+            quaternary{"Ordenar acentos/tipo de letra/largura/kana"}
+            secondary{"Ordenar acentos"}
+            tertiary{"Ordenar acentos/tipo de letra/largura"}
+        }
+        collation{
+            dictionary{"Ordenação do dicionário"}
+            ducet{"Ordenação unicode predefinida"}
+            phonebook{"Ordem da lista telefónica"}
+            phonetic{"Sequência de ordenação fonética"}
+            reformed{"Reforma da ordenação"}
+            standard{"Ordenação padrão"}
+            stroke{"Ordem por traços"}
+            traditional{"Ordem tradicional"}
+            unihan{"Ordem por radical e traços"}
+        }
+        numbers{
+            armn{"Numeração arménia"}
+            armnlow{"Numeração arménia minúscula"}
+            beng{"Algarismos bengalis"}
+            deva{"Algarismos devanágaris"}
+            ethi{"Numeração etíope"}
+            finance{"Algarismos financeiros"}
+            fullwide{"Algarismos de largura completa"}
+            geor{"Numeração georgiana"}
+            grek{"Numeração grega"}
+            greklow{"Numeração grega minúscula"}
+            gujr{"Algarismos de guzerate"}
+            guru{"Algarismos de gurmukhi"}
+            hanidec{"Numeração decimal chinesa"}
+            hans{"Numeração em chinês simplificado"}
+            hansfin{"Numeração financeira em chinês simplificado"}
+            hant{"Numeração em chinês tradicional"}
+            hantfin{"Numeração financeira em chinês tradicional"}
+            hebr{"Numeração hebraica"}
+            jpan{"Numeração japonesa"}
+            jpanfin{"Numeração financeira japonesa"}
+            khmr{"Algarismos de cmer"}
+            knda{"Algarismos de canarim"}
+            mlym{"Algarismos de malaiala"}
+            mymr{"Algarismos birmaneses"}
+            orya{"Algarismos de oriya"}
+            roman{"Numeração romana"}
+            romanlow{"Numeração romana minúscula"}
+            taml{"Numeração tâmil"}
+            tamldec{"Algarismos de tâmil"}
+            telu{"Algarismos de telugu"}
+            traditional{"Algarismos tradicionais"}
+        }
+    }
+    Variants{
+        AREVELA{"arménio oriental"}
+        AREVMDA{"arménio ocidental"}
+        MONOTON{"monotónico"}
+        POLYTON{"politónico"}
+    }
+    Version{"2.1.13.23"}
+    codePatterns{
+        script{"Escrita: {0}"}
+    }
+}

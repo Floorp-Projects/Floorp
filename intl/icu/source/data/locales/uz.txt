@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/uz.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/uz.xml
- */
 uz{
     AuxExemplarCharacters{"[c w]"}
     Ellipsis{
@@ -27,9 +24,6 @@ uz{
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ‚ \u0022 “ „ « » ( ) \\[ \\] \\{ \\} § @ * / "
         "\\& #]"
-    }
-    LocaleScript{
-        "Latn",
     }
     MoreInformation{"?"}
     NumberElements{
@@ -51,6 +45,7 @@ uz{
                 percentSign{"٪"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{"٫"}
             }
         }
         latn{
@@ -59,6 +54,7 @@ uz{
                 range{"{0}–{1}"}
             }
             patterns{
+                accountingFormat{"¤ #,##0.00"}
                 currencyFormat{"¤ #,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -179,10 +175,12 @@ uz{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
+        minimumGroupingDigits{"1"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
     calendar{
         generic{
             DateTimePatterns{
@@ -290,8 +288,12 @@ uz{
         }
         gregorian{
             AmPmMarkers{
-                "AM",
-                "PM",
+                "TO",
+                "TK",
+            }
+            AmPmMarkersNarrow{
+                "o",
+                "k",
             }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -308,10 +310,13 @@ uz{
                 "{1} {0}",
                 "{1} {0}",
             }
+            NoonMarker{"tush payti"}
+            NoonMarkerNarrow{"t.p."}
             appendItems{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                E{"ccc"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d, E"}
@@ -404,13 +409,13 @@ uz{
                         "S",
                     }
                     short{
-                        "Yaksh",
-                        "Dush",
-                        "Sesh",
-                        "Chor",
-                        "Pay",
-                        "Jum",
-                        "Shan",
+                        "Ya",
+                        "Du",
+                        "Se",
+                        "Cho",
+                        "Pa",
+                        "Ju",
+                        "Sha",
                     }
                     wide{
                         "yakshanba",
@@ -427,6 +432,18 @@ uz{
                 abbreviated{
                     "M.A.",
                     "E",
+                }
+                abbreviated%variant{
+                    "Eramizdan avvalgi",
+                    "CE",
+                }
+                wide{
+                    "M.A.",
+                    "E",
+                }
+                wide%variant{
+                    "Eramizdan avvalgi",
+                    "CE",
                 }
             }
             intervalFormats{
@@ -563,8 +580,8 @@ uz{
                         "Iyun",
                         "Iyul",
                         "Avgust",
-                        "Sentyabr",
-                        "Oktyabr",
+                        "Sentabr",
+                        "Oktabr",
                         "Noyabr",
                         "Dekabr",
                     }
@@ -607,8 +624,8 @@ uz{
                         "Iyun",
                         "Iyul",
                         "Avgust",
-                        "Sentyabr",
-                        "Oktyabr",
+                        "Sentabr",
+                        "Oktabr",
                         "Noyabr",
                         "Dekabr",
                     }
@@ -684,11 +701,6 @@ uz{
         quotationEnd{"\u0022"}
         quotationStart{"\u0022"}
     }
-    durationUnits{
-        hm{"h:mm"}
-        hms{"h:mm:ss"}
-        ms{"m:ss"}
-    }
     fields{
         day{
             dn{"Kun"}
@@ -697,6 +709,22 @@ uz{
                 "0"{"bugun"}
                 "1"{"ertaga"}
             }
+            relativeTime{
+                future{
+                    one{"{0} kundan soʻng"}
+                    other{"{0} kundan soʻng"}
+                }
+                past{
+                    one{"{0} kun oldin"}
+                    other{"{0} kun oldin"}
+                }
+            }
+        }
+        day-narrow{
+            dn{"Kun"}
+        }
+        day-short{
+            dn{"Kun"}
             relativeTime{
                 future{
                     one{"{0} kundan soʻng"}
@@ -747,6 +775,22 @@ uz{
                 }
             }
         }
+        minute-narrow{
+            dn{"daq."}
+            relativeTime{
+                future{
+                    one{"{0} daqiqadan soʻng"}
+                    other{"{0} daqiqadan soʻng"}
+                }
+                past{
+                    one{"{0} daqiqa oldin"}
+                    other{"{0} daqiqa oldin"}
+                }
+            }
+        }
+        minute-short{
+            dn{"daq."}
+        }
         mon{
             relative{
                 "-1"{"oʻtgan dushanba"}
@@ -769,6 +813,37 @@ uz{
                 past{
                     one{"{0} oy avval"}
                     other{"{0} oy avval"}
+                }
+            }
+        }
+        month-narrow{
+            dn{"Oy"}
+        }
+        month-short{
+            dn{"Oy"}
+        }
+        quarter{
+            dn{"Chorak"}
+            relativeTime{
+                future{
+                    one{"{0} chorakda"}
+                    other{"{0} chorakda"}
+                }
+                past{
+                    one{"{0} chorak avval"}
+                    other{"{0} chorak avval"}
+                }
+            }
+        }
+        quarter-narrow{
+            relativeTime{
+                future{
+                    one{"{0} chorakda"}
+                    other{"{0} chorakda"}
+                }
+                past{
+                    one{"{0} chorak avval"}
+                    other{"{0} chorak avval"}
                 }
             }
         }
@@ -795,6 +870,12 @@ uz{
                 }
             }
         }
+        second-narrow{
+            dn{"son."}
+        }
+        second-short{
+            dn{"son."}
+        }
         sun{
             relative{
                 "-1"{"oʻtgan yakshanba"}
@@ -819,7 +900,7 @@ uz{
         wed{
             relative{
                 "-1"{"oʻtgan chorshanba"}
-                "0"{"this Wednesday"}
+                "0"{"bu chorshanba"}
                 "1"{"keyingi chorshanba"}
             }
         }
@@ -862,6 +943,22 @@ uz{
                 }
             }
         }
+        year-narrow{
+            dn{"Yil"}
+        }
+        year-short{
+            dn{"Yil"}
+            relativeTime{
+                future{
+                    one{"{0} yildan soʻng"}
+                    other{"{0} yildan soʻng"}
+                }
+                past{
+                    one{"{0} yil avval"}
+                    other{"{0} yil avval"}
+                }
+            }
+        }
         zone{
             dn{"Mintaqa"}
         }
@@ -879,6 +976,12 @@ uz{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        unit-narrow{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         unit-short{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
@@ -888,640 +991,7 @@ uz{
     }
     measurementSystemNames{
         UK{"BQ"}
-        US{"AQSh"}
+        US{"AQSH"}
         metric{"Metrik"}
-    }
-    units{
-        acceleration{
-            g-force{
-                one{"{0} G"}
-                other{"{0} G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-            degree{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} ac"}
-                other{"{0} ac"}
-            }
-            hectare{
-                one{"{0} ha"}
-                other{"{0} ha"}
-            }
-            square-foot{
-                one{"{0} ft²"}
-                other{"{0} ft²"}
-            }
-            square-kilometer{
-                one{"{0} km²"}
-                other{"{0} km²"}
-            }
-            square-meter{
-                one{"{0} m²"}
-                other{"{0} m²"}
-            }
-            square-mile{
-                one{"{0} mi²"}
-                other{"{0} mi²"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} kun"}
-                other{"{0} kun"}
-            }
-            hour{
-                one{"{0} soat"}
-                other{"{0} soat"}
-            }
-            millisecond{
-                one{"{0} millisoniya"}
-                other{"{0} millisoniya"}
-            }
-            minute{
-                one{"{0} daqiqa"}
-                other{"{0} daqiqa"}
-            }
-            month{
-                one{"{0} oy"}
-                other{"{0} oy"}
-            }
-            second{
-                one{"{0} soniya"}
-                other{"{0} soniya"}
-            }
-            week{
-                one{"{0} hafta"}
-                other{"{0} hafta"}
-            }
-            year{
-                one{"{0} yil"}
-                other{"{0} yil"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} sm"}
-                other{"{0} sm"}
-            }
-            foot{
-                one{"{0} fut"}
-                other{"{0} fut"}
-            }
-            inch{
-                one{"{0} dyuym"}
-                other{"{0} dyuym"}
-            }
-            kilometer{
-                one{"{0} km"}
-                other{"{0} km"}
-            }
-            light-year{
-                one{"{0} yo.y."}
-                other{"{0} yo.y."}
-            }
-            meter{
-                one{"{0} m"}
-                other{"{0} m"}
-            }
-            mile{
-                one{"{0} milya"}
-                other{"{0} milya"}
-            }
-            millimeter{
-                one{"{0} mm"}
-                other{"{0} mm"}
-            }
-            picometer{
-                one{"{0} pm"}
-                other{"{0} pm"}
-            }
-            yard{
-                one{"{0} yard"}
-                other{"{0} yard"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} g"}
-                other{"{0} g"}
-            }
-            kilogram{
-                one{"{0} kg"}
-                other{"{0} kg"}
-            }
-            ounce{
-                one{"{0} untsiya"}
-                other{"{0} untsiya"}
-            }
-            pound{
-                one{"{0} funt"}
-                other{"{0} funt"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} hp"}
-                other{"{0} hp"}
-            }
-            kilowatt{
-                one{"{0} kW"}
-                other{"{0} kW"}
-            }
-            watt{
-                one{"{0} W"}
-                other{"{0} W"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} hPa"}
-                other{"{0} hPa"}
-            }
-            inch-hg{
-                one{"{0} inHg"}
-                other{"{0} inHg"}
-            }
-            millibar{
-                one{"{0} mbar"}
-                other{"{0} mbar"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} kilometr/soatiga"}
-                other{"{0} kilometr/soatiga"}
-            }
-            meter-per-second{
-                one{"{0} m/s"}
-                other{"{0} m/s"}
-            }
-            mile-per-hour{
-                one{"{0} mi/h"}
-                other{"{0} mi/h"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°C"}
-                other{"{0}°C"}
-            }
-            fahrenheit{
-                one{"{0}°F"}
-                other{"{0}°F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} km³"}
-                other{"{0} km³"}
-            }
-            cubic-mile{
-                one{"{0} mi³"}
-                other{"{0} mi³"}
-            }
-            liter{
-                one{"{0} litr"}
-                other{"{0} litr"}
-            }
-        }
-    }
-    unitsNarrow{
-        acceleration{
-            g-force{
-                one{"{0} G"}
-                other{"{0} G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-            degree{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} ac"}
-                other{"{0} ac"}
-            }
-            hectare{
-                one{"{0} ha"}
-                other{"{0} ha"}
-            }
-            square-foot{
-                one{"{0} ft²"}
-                other{"{0} ft²"}
-            }
-            square-kilometer{
-                one{"{0} km²"}
-                other{"{0} km²"}
-            }
-            square-meter{
-                one{"{0} m²"}
-                other{"{0} m²"}
-            }
-            square-mile{
-                one{"{0} mi²"}
-                other{"{0} mi²"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} k"}
-                other{"{0} k"}
-            }
-            hour{
-                one{"{0} s"}
-                other{"{0} s"}
-            }
-            millisecond{
-                one{"{0} ms"}
-                other{"{0} ms"}
-            }
-            minute{
-                one{"{0} daq"}
-                other{"{0} daq"}
-            }
-            month{
-                one{"{0} oy"}
-                other{"{0} oy"}
-            }
-            second{
-                one{"{0} son"}
-                other{"{0} son"}
-            }
-            week{
-                one{"{0} haft"}
-                other{"{0} haft"}
-            }
-            year{
-                one{"{0} y"}
-                other{"{0} y"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} cm"}
-                other{"{0} cm"}
-            }
-            foot{
-                one{"{0} fut"}
-                other{"{0} fut"}
-            }
-            inch{
-                one{"{0} dyuym"}
-                other{"{0} dyuym"}
-            }
-            kilometer{
-                one{"{0} km"}
-                other{"{0} km"}
-            }
-            light-year{
-                one{"{0} yo.y."}
-                other{"{0} yo.y."}
-            }
-            meter{
-                one{"{0} m"}
-                other{"{0} m"}
-            }
-            mile{
-                one{"{0} milya"}
-                other{"{0} milya"}
-            }
-            millimeter{
-                one{"{0} mm"}
-                other{"{0} mm"}
-            }
-            picometer{
-                one{"{0} pm"}
-                other{"{0} pm"}
-            }
-            yard{
-                one{"{0} yard"}
-                other{"{0} yard"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} g"}
-                other{"{0} g"}
-            }
-            kilogram{
-                one{"{0} kg"}
-                other{"{0} kg"}
-            }
-            ounce{
-                one{"{0} untsiya"}
-                other{"{0} untsiya"}
-            }
-            pound{
-                one{"{0} funt"}
-                other{"{0} funt"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} hp"}
-                other{"{0} hp"}
-            }
-            kilowatt{
-                one{"{0} kW"}
-                other{"{0} kW"}
-            }
-            watt{
-                one{"{0} W"}
-                other{"{0} W"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} hPa"}
-                other{"{0} hPa"}
-            }
-            inch-hg{
-                one{"{0} inHg"}
-                other{"{0} inHg"}
-            }
-            millibar{
-                one{"{0} mbar"}
-                other{"{0} mbar"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} km/h"}
-                other{"{0} km/h"}
-            }
-            meter-per-second{
-                one{"{0} m/s"}
-                other{"{0} m/s"}
-            }
-            mile-per-hour{
-                one{"{0} mi/h"}
-                other{"{0} mi/h"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-            fahrenheit{
-                one{"{0}°F"}
-                other{"{0}°F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} km³"}
-                other{"{0} km³"}
-            }
-            cubic-mile{
-                one{"{0} mi³"}
-                other{"{0} mi³"}
-            }
-            liter{
-                one{"{0} l"}
-                other{"{0} l"}
-            }
-        }
-    }
-    unitsShort{
-        acceleration{
-            g-force{
-                one{"{0} G"}
-                other{"{0} G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-            degree{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} ac"}
-                other{"{0} ac"}
-            }
-            hectare{
-                one{"{0} ha"}
-                other{"{0} ha"}
-            }
-            square-foot{
-                one{"{0} ft²"}
-                other{"{0} ft²"}
-            }
-            square-kilometer{
-                one{"{0} km²"}
-                other{"{0} km²"}
-            }
-            square-meter{
-                one{"{0} m²"}
-                other{"{0} m²"}
-            }
-            square-mile{
-                one{"{0} mi²"}
-                other{"{0} mi²"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} kun"}
-                other{"{0} kun"}
-            }
-            hour{
-                one{"{0} soat"}
-                other{"{0} soat"}
-            }
-            millisecond{
-                one{"{0} ms"}
-                other{"{0} ms"}
-            }
-            minute{
-                one{"{0} daq"}
-                other{"{0} daq"}
-            }
-            month{
-                one{"{0} oy"}
-                other{"{0} oy"}
-            }
-            second{
-                one{"{0} soniya"}
-                other{"{0} soniya"}
-            }
-            week{
-                one{"{0} haft"}
-                other{"{0} haft"}
-            }
-            year{
-                one{"{0} yil"}
-                other{"{0} yil"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} cm"}
-                other{"{0} cm"}
-            }
-            foot{
-                one{"{0} fut"}
-                other{"{0} fut"}
-            }
-            inch{
-                one{"{0} dyuym"}
-                other{"{0} dyuym"}
-            }
-            kilometer{
-                one{"{0} km"}
-                other{"{0} km"}
-            }
-            light-year{
-                one{"{0} yo.y."}
-                other{"{0} yo.y."}
-            }
-            meter{
-                one{"{0} m"}
-                other{"{0} m"}
-            }
-            mile{
-                one{"{0} milya"}
-                other{"{0} milya"}
-            }
-            millimeter{
-                one{"{0} mm"}
-                other{"{0} mm"}
-            }
-            picometer{
-                one{"{0} pm"}
-                other{"{0} pm"}
-            }
-            yard{
-                one{"{0} yard"}
-                other{"{0} yard"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} g"}
-                other{"{0} g"}
-            }
-            kilogram{
-                one{"{0} kg"}
-                other{"{0} kg"}
-            }
-            ounce{
-                one{"{0} untsiya"}
-                other{"{0} untsiya"}
-            }
-            pound{
-                one{"{0} funt"}
-                other{"{0} funt"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} hp"}
-                other{"{0} hp"}
-            }
-            kilowatt{
-                one{"{0} kW"}
-                other{"{0} kW"}
-            }
-            watt{
-                one{"{0} W"}
-                other{"{0} W"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} hPa"}
-                other{"{0} hPa"}
-            }
-            inch-hg{
-                one{"{0} inHg"}
-                other{"{0} inHg"}
-            }
-            millibar{
-                one{"{0} mbar"}
-                other{"{0} mbar"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} km/h"}
-                other{"{0} km/h"}
-            }
-            meter-per-second{
-                one{"{0} m/s"}
-                other{"{0} m/s"}
-            }
-            mile-per-hour{
-                one{"{0} mi/h"}
-                other{"{0} mi/h"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°C"}
-                other{"{0}°C"}
-            }
-            fahrenheit{
-                one{"{0}°F"}
-                other{"{0}°F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} km³"}
-                other{"{0} km³"}
-            }
-            cubic-mile{
-                one{"{0} mi³"}
-                other{"{0} mi³"}
-            }
-            liter{
-                one{"{0} l"}
-                other{"{0} l"}
-            }
-        }
     }
 }

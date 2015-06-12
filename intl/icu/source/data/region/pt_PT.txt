@@ -1,0 +1,63 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2015 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/pt_PT.xml
+// *
+// ***************************************************************************
+pt_PT{
+    Countries{
+        009{"Oceânia"}
+        015{"Norte de África"}
+        029{"Caraíbas"}
+        154{"Europa do Norte"}
+        AI{"Anguila"}
+        AM{"Arménia"}
+        BH{"Barém"}
+        BJ{"Benim"}
+        CD{"Congo-Kinshasa"}
+        CG{"Congo-Brazzaville"}
+        CM{"Camarões"}
+        CW{"Curaçau"}
+        CZ{"República Checa"}
+        DM{"Domínica"}
+        EE{"Estónia"}
+        FK{"Ilhas Falkland"}
+        FO{"Ilhas Faroé"}
+        GL{"Gronelândia"}
+        GU{"Guame"}
+        IR{"Irão"}
+        KE{"Quénia"}
+        KY{"Ilhas Caimão"}
+        LV{"Letónia"}
+        MC{"Mónaco"}
+        MG{"Madagáscar"}
+        MK{"Macedónia"}
+        MS{"Monserrate"}
+        MU{"Maurícia"}
+        NC{"Nova Caledónia"}
+        PL{"Polónia"}
+        PN{"Pitcairn"}
+        PS{"Territórios palestinianos"}
+        QO{"Oceânia Insular"}
+        RO{"Roménia"}
+        SC{"Seicheles"}
+        SG{"Singapura"}
+        SI{"Eslovénia"}
+        SM{"São Marino"}
+        TK{"Toquelau"}
+        TM{"Turquemenistão"}
+        TT{"Trindade e Tobago"}
+        VN{"Vietname"}
+        YE{"Iémen"}
+        YT{"Maiote"}
+        ZW{"Zimbabué"}
+    }
+    Countries%variant{
+        CG{"República do Congo"}
+        FK{"Ilhas Malvinas"}
+        MK{"Antiga República Jugoslava da Macedónia"}
+    }
+    Version{"2.1.13.23"}
+}

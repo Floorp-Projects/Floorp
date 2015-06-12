@@ -1,21 +1,15 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/mg.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/mg.xml
- */
 mg{
     AuxExemplarCharacters{"[c q u w x]"}
     ExemplarCharacters{"[a à â b d e é è ê ë f g h i ì î ï j k l m n ñ o ô p r s t v y z]"}
     ExemplarCharactersIndex{"[A B D E F G H I J K L M N O P R S T V Y Z]"}
-    LocaleScript{
-        "Latn",
-    }
     NumberElements{
         latn{
             patterns{
@@ -23,7 +17,7 @@ mg{
             }
         }
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.7.39"}
     calendar{
         generic{
             DateTimePatterns{
@@ -49,7 +43,6 @@ mg{
                 MMMMEd{"E d MMMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
-                MMMdd{"dd MMM"}
                 MMd{"d/MM"}
                 MMdd{"dd/MM"}
                 Md{"d/M"}
@@ -90,7 +83,6 @@ mg{
                 MMMMEd{"E d MMMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
-                MMMdd{"dd MMM"}
                 MMd{"d/MM"}
                 MMdd{"dd/MM"}
                 Md{"d/M"}
@@ -145,8 +137,8 @@ mg{
                     "AD",
                 }
                 wide{
-                    "Alohan'i JK",
-                    "Aorian'i JK",
+                    "Alohan’i JK",
+                    "Aorian’i JK",
                 }
             }
             monthNames{

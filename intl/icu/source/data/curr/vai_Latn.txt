@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/vai_Latn.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/vai_Latn.xml
- */
 vai_Latn{
     %%Parent{"root"}
     Currencies{
@@ -82,7 +79,7 @@ vai_Latn{
         }
         GBP{
             "£",
-            "Jengési Pɔɔ̃ Sitɛ́liŋ",
+            "Jengési Pɔɔ̃",
         }
         GHC{
             "GHC",
@@ -229,5 +226,5 @@ vai_Latn{
             "Zimbhabhuwe Dala",
         }
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.10.42"}
 }
