@@ -1,1 +1,4 @@
 41.0a1
+# Version to display in the about box:
+41.0a1
+
