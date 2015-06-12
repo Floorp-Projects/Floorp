@@ -1,7 +1,7 @@
 diff --git a/intl/icu/source/acinclude.m4 b/intl/icu/source/acinclude.m4
 --- a/intl/icu/source/acinclude.m4
 +++ b/intl/icu/source/acinclude.m4
-@@ -466,30 +466,36 @@ AC_DEFUN([AC_CHECK_STRICT_COMPILE],
+@@ -473,30 +473,36 @@ AC_DEFUN([AC_CHECK_STRICT_COMPILE],
              *)
                  # Do not use -ansi. It limits us to C90, and it breaks some platforms.
                  # We use -std=c99 to disable the gnu99 defaults and its associated warnings
@@ -20,7 +20,7 @@ diff --git a/intl/icu/source/acinclude.m4 b/intl/icu/source/acinclude.m4
                  then
                      CFLAGS="$CFLAGS /W4"
                  fi ;;
-             *-*-mingw32|*-*-mingw64)
+             *-*-mingw*)
                  CFLAGS="$CFLAGS -W4" ;;
              esac
          fi
@@ -37,11 +37,11 @@ diff --git a/intl/icu/source/acinclude.m4 b/intl/icu/source/acinclude.m4
                  then
                      CXXFLAGS="$CXXFLAGS /W4"
                  fi ;;
-             *-*-mingw32|*-*-mingw64)
+             *-*-mingw*)
 diff --git a/intl/icu/source/configure b/intl/icu/source/configure
 --- a/intl/icu/source/configure
 +++ b/intl/icu/source/configure
-@@ -4089,30 +4089,36 @@ fi
+@@ -4319,30 +4319,36 @@ fi
              *)
                  # Do not use -ansi. It limits us to C90, and it breaks some platforms.
                  # We use -std=c99 to disable the gnu99 defaults and its associated warnings
@@ -60,7 +60,7 @@ diff --git a/intl/icu/source/configure b/intl/icu/source/configure
                  then
                      CFLAGS="$CFLAGS /W4"
                  fi ;;
-             *-*-mingw32|*-*-mingw64)
+             *-*-mingw*)
                  CFLAGS="$CFLAGS -W4" ;;
              esac
          fi
@@ -77,4 +77,4 @@ diff --git a/intl/icu/source/configure b/intl/icu/source/configure
                  then
                      CXXFLAGS="$CXXFLAGS /W4"
                  fi ;;
-             *-*-mingw32|*-*-mingw64)
+             *-*-mingw*)
