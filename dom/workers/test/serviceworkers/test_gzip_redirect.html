@@ -1,0 +1,84 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 982726 - Test service worker post message </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  var registration;
+  function start() {
+    return navigator.serviceWorker.register("gzip_redirect_worker.js",
+                                            { scope: "./sw_clients/" })
+      .then((swr) => registration = swr);
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    }, function(e) {
+      dump("Unregistering the SW failed with " + e + "\n");
+    });
+  }
+
+
+  function testGzipRedirect(swr) {
+    var p = new Promise(function(res, rej) {
+      var navigatorReady = false;
+      var finalReady = false;
+
+      window.onmessage = function(e) {
+        if (e.data === "NAVIGATOR_READY") {
+          ok(!navigatorReady, "should only get navigator ready message once");
+          ok(!finalReady, "should get navigator ready before final redirect ready message");
+          navigatorReady = true;
+          iframe.contentWindow.postMessage({
+            type: "NAVIGATE",
+            url: "does_not_exist.html"
+          }, "*");
+        } else if (e.data === "READY") {
+          ok(navigatorReady, "should only get navigator ready message once");
+          ok(!finalReady, "should get final ready message only once");
+          finalReady = true;
+          res();
+        }
+      }
+    });
+
+    var content = document.getElementById("content");
+    ok(content, "Parent exists.");
+
+    iframe = document.createElement("iframe");
+    iframe.setAttribute('src', "sw_clients/navigator.html");
+    content.appendChild(iframe);
+
+    return p.then(() => content.removeChild(iframe));
+  }
+
+  function runTest() {
+    start()
+      .then(testGzipRedirect)
+      .then(unregister)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
