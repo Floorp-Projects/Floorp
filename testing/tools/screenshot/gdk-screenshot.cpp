@@ -63,7 +63,8 @@ int main(int argc, char** argv)
 #if defined(HAVE_LIBXSS) && defined(MOZ_WIDGET_GTK)
   int event_base, error_base;
   Bool have_xscreensaver =
-    XScreenSaverQueryExtension(GDK_DISPLAY(), &event_base, &error_base);
+    XScreenSaverQueryExtension(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),
+                               &event_base, &error_base);
 
   if (!have_xscreensaver) {
     fprintf(stderr, "No XScreenSaver extension on display\n");
@@ -73,7 +74,8 @@ int main(int argc, char** argv)
       fprintf(stderr, "%s: Out of memory\n", argv[0]);
       return 1;
     }
-    XScreenSaverQueryInfo(GDK_DISPLAY(), GDK_ROOT_WINDOW(), info);
+    XScreenSaverQueryInfo(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),
+                          GDK_ROOT_WINDOW(), info);
 
     const char* state;
     const char* til_or_since = nullptr;
