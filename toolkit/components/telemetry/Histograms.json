@@ -275,6 +275,22 @@
     "n_buckets": 50,
     "description": "Time spent running JS GC (ms)"
   },
+  "GC_BUDGET_MS": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "100",
+    "n_buckets": 10,
+    "description": "Requested GC slice budget (ms)"
+  },
+  "GC_ANIMATION_MS": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent running JS GC when animating (ms)"
+  },
   "GC_MAX_PAUSE_MS": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",

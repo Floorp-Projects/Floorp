@@ -47,6 +47,12 @@ set -x -e
 
 : WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
 
+# files to be "uploaded" (moved to ~/artifacts) from obj-firefox/dist
+: DIST_UPLOADS                  ${DIST_UPLOADS:=""}
+# files which will be be prefixed with target before being sent to artifacts
+# e.g. DIST_TARGET_UPLOADS="a.zip" runs mv v2.0.a.zip mv artifacts/target.a.zip
+: DIST_TARGET_UPLOADS           ${DIST_TARGET_UPLOADS:=""}
+
 set -v
 
 # Don't run the upload step; this is passed through mozharness to mach.  Once
@@ -86,13 +92,6 @@ fi
 
 # and check out mozilla-central where mozharness will use it as a cache (/builds/hg-shared)
 tc-vcs checkout $WORKSPACE/build/src $GECKO_BASE_REPOSITORY $GECKO_HEAD_REPOSITORY $GECKO_HEAD_REV $GECKO_HEAD_REF
-
-# the TC docker worker looks for artifacts to upload in $HOME/artifacts, but
-# mach wants to put them in $WORKSPACE/build/upload; symlinking lets everyone
-# win!
-rm -rf $WORKSPACE/build/upload
-mkdir -p $HOME/artifacts
-ln -s $HOME/artifacts $WORKSPACE/build/upload
 
 # run mozharness in XVfb, if necessary; this is an array to maintain the quoting in the -s argument
 if $NEED_XVFB; then
@@ -172,3 +171,18 @@ done
   --no-action=generate-build-stats \
   --branch=${MH_BRANCH} \
   --build-pool=${MH_BUILD_POOL}
+
+# upload auxiliary files
+cd $WORKSPACE/build/src/obj-firefox/dist
+
+for file in $DIST_UPLOADS
+do
+    mv $file $HOME/artifacts/$file
+done
+
+# Discard version numbers from packaged files, they just make it hard to write
+# the right filename in the task payload where artifacts are declared
+for file in $DIST_TARGET_UPLOADS
+do
+    mv *.$file $HOME/artifacts/target.$file
+done

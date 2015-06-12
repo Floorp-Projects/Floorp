@@ -505,7 +505,7 @@ void nsBidi::GetDirProps(const char16_t *aText)
       } else if  (state == SEEKING_STRONG_FOR_FSI) {
         if (stackLast <= NSBIDI_MAX_EXPLICIT_LEVEL) {
           dirProps[isolateStartStack[stackLast]] = LRI;
-          flags |= LRI;
+          flags |= DIRPROP_FLAG(LRI);
         }
         state = LOOKING_FOR_PDI;
       }
@@ -518,7 +518,7 @@ void nsBidi::GetDirProps(const char16_t *aText)
       } else if  (state == SEEKING_STRONG_FOR_FSI) {
         if (stackLast <= NSBIDI_MAX_EXPLICIT_LEVEL) {
           dirProps[isolateStartStack[stackLast]] = RLI;
-          flags |= RLI;
+          flags |= DIRPROP_FLAG(RLI);
         }
         state = LOOKING_FOR_PDI;
       }

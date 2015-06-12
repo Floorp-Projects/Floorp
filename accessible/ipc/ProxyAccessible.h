@@ -49,6 +49,7 @@ public:
   // XXX evaluate if this is fast enough.
   size_t IndexInParent() const { return Parent()->mChildren.IndexOf(this); }
   int32_t IndexOfEmbeddedChild(const ProxyAccessible*);
+  ProxyAccessible* EmbeddedChildAt(size_t aChildIdx);
   bool MustPruneChildren() const;
 
   void Shutdown();

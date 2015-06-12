@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test WaveShaperNode with no curve</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  var context = new OfflineAudioContext(1, 2048, 44100);
+
+  var osc=context.createOscillator();
+  var gain=context.createGain();
+  var shaper=context.createWaveShaper();
+  gain.gain.value=0.1;
+  shaper.curve=new Float32Array([-0.5,-0.5,1,1]);
+
+  osc.connect(gain);
+  gain.connect(shaper);
+  shaper.connect(context.destination);
+  osc.start(0);
+
+  context.startRendering().then(function(buffer) {
+    var samples = buffer.getChannelData(0);
+    // the signal should be scaled
+    var failures = 0;
+    for (var i = 0; i < 2048; ++i) {
+      if (samples[i] > 0.5) {
+        failures = failures + 1;
+      }
+    }
+    ok(failures == 0, "signal should have been rescaled by gain: found " + failures + " points too loud.");
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

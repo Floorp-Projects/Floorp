@@ -846,7 +846,7 @@ public:
   // The task queue in which we run decode tasks. This is referred to as
   // the "decode thread", though in practise tasks can run on a different
   // thread every time they're called.
-  MediaTaskQueue* DecodeTaskQueue() const { return mReader->GetTaskQueue(); }
+  MediaTaskQueue* DecodeTaskQueue() const { return mReader->TaskQueue(); }
 
   // The time that playback started from the system clock. This is used for
   // timing the presentation of video frames when there's no audio.

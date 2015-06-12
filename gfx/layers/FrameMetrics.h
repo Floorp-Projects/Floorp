@@ -48,7 +48,7 @@ public:
     , mScrollableRect(0, 0, 0, 0)
     , mCumulativeResolution()
     , mDevPixelsPerCSSPixel(1)
-    , mIsRoot(false)
+    , mIsRootContent(false)
     , mHasScrollgrab(false)
     , mScrollId(NULL_SCROLL_ID)
     , mScrollParentId(NULL_SCROLL_ID)
@@ -89,7 +89,7 @@ public:
            mCumulativeResolution == aOther.mCumulativeResolution &&
            mDevPixelsPerCSSPixel == aOther.mDevPixelsPerCSSPixel &&
            mPresShellId == aOther.mPresShellId &&
-           mIsRoot == aOther.mIsRoot &&
+           mIsRootContent == aOther.mIsRootContent &&
            mScrollId == aOther.mScrollId &&
            mScrollParentId == aOther.mScrollParentId &&
            mScrollOffset == aOther.mScrollOffset &&
@@ -118,11 +118,6 @@ public:
 
     def.mPresShellId = mPresShellId;
     return (def == *this);
-  }
-
-  bool IsRootScrollable() const
-  {
-    return mIsRoot;
   }
 
   bool IsScrollable() const
@@ -298,14 +293,14 @@ public:
     return mDevPixelsPerCSSPixel;
   }
 
-  void SetIsRoot(bool aIsRoot)
+  void SetIsRootContent(bool aIsRootContent)
   {
-    mIsRoot = aIsRoot;
+    mIsRootContent = aIsRootContent;
   }
 
-  bool GetIsRoot() const
+  bool IsRootContent() const
   {
-    return mIsRoot;
+    return mIsRootContent;
   }
 
   void SetHasScrollgrab(bool aHasScrollgrab)
@@ -626,7 +621,7 @@ private:
   CSSToLayoutDeviceScale mDevPixelsPerCSSPixel;
 
   // Whether or not this is the root scroll frame for the root content document.
-  bool mIsRoot;
+  bool mIsRootContent;
 
   // Whether or not this frame is for an element marked 'scrollgrab'.
   bool mHasScrollgrab;

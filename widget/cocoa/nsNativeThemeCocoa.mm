@@ -90,6 +90,20 @@ extern "C" {
 
 @end
 
+// These two classes don't actually add any behavior over NSButtonCell. Their
+// purpose is to make it easy to distinguish NSCell objects that are used for
+// drawing radio buttons / checkboxes from other cell types.
+// The class names are made up, there are no classes with these names in AppKit.
+// The reason we need them is that calling [cell setButtonType:NSRadioButton]
+// doesn't leave an easy-to-check "marker" on the cell object - there is no
+// -[NSButtonCell buttonType] method.
+@interface RadioButtonCell : NSButtonCell
+@end;
+@implementation RadioButtonCell @end;
+@interface CheckboxCell : NSButtonCell
+@end;
+@implementation CheckboxCell @end;
+
 static void
 DrawFocusRingForCellIfNeeded(NSCell* aCell, NSRect aWithFrame, NSView* aInView)
 {
@@ -120,7 +134,7 @@ DrawFocusRingForCellIfNeeded(NSCell* aCell, NSRect aWithFrame, NSView* aInView)
 }
 
 static bool
-FocusIsDrawnByDrawWithFrame()
+FocusIsDrawnByDrawWithFrame(NSCell* aCell)
 {
 #if defined(MAC_OS_X_VERSION_10_8) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_8
   // When building with the 10.8 SDK or higher, focus rings don't draw as part
@@ -130,9 +144,19 @@ FocusIsDrawnByDrawWithFrame()
   // https://developer.apple.com/library/mac/releasenotes/AppKit/RN-AppKitOlderNotes/#X10_8Notes
   return false;
 #else
-  // On 10.10 and up, this is the case even when building against the 10.7 SDK
-  // or lower.
-  return !nsCocoaFeatures::OnYosemiteOrLater();
+  if (!nsCocoaFeatures::OnYosemiteOrLater()) {
+    // When building with the 10.7 SDK or lower, focus rings always draw as
+    // part of -[NSCell drawWithFrame:inView:] if the build is run on 10.9 or
+    // lower.
+    return true;
+  }
+
+  // On 10.10, whether the focus ring is drawn as part of
+  // -[NSCell drawWithFrame:inView:] depends on the cell type.
+  // Radio buttons and checkboxes draw their own focus rings, other cell
+  // types need -[NSCell drawFocusRingMaskWithFrame:inView:].
+  return [aCell isKindOfClass:[RadioButtonCell class]] ||
+         [aCell isKindOfClass:[CheckboxCell class]];
 #endif
 }
 
@@ -141,7 +165,7 @@ DrawCellIncludingFocusRing(NSCell* aCell, NSRect aWithFrame, NSView* aInView)
 {
   [aCell drawWithFrame:aWithFrame inView:aInView];
 
-  if (!FocusIsDrawnByDrawWithFrame()) {
+  if (!FocusIsDrawnByDrawWithFrame(aCell)) {
     DrawFocusRingForCellIfNeeded(aCell, aWithFrame, aInView);
   }
 }
@@ -322,7 +346,11 @@ static BOOL IsToolbarStyleContainer(nsIFrame* aFrame)
 {
   [super drawWithFrame:rect inView:controlView];
 
-  if (FocusIsDrawnByDrawWithFrame()) {
+  if (FocusIsDrawnByDrawWithFrame(self)) {
+    // For some reason, -[NSSearchFieldCell drawWithFrame:inView] doesn't draw a
+    // focus ring in 64 bit mode, no matter what SDK is used or what OS X version
+    // we're running on. But if FocusIsDrawnByDrawWithFrame(self), then our
+    // caller expects us to draw a focus ring. So we just do that here.
     DrawFocusRingForCellIfNeeded(self, rect, controlView);
   }
 }
@@ -340,11 +368,13 @@ static BOOL IsToolbarStyleContainer(nsIFrame* aFrame)
 #endif
 
 #define HITHEME_ORIENTATION kHIThemeOrientationNormal
-#define MAX_FOCUS_RING_WIDTH 4
+
+static CGFloat kMaxFocusRingWidth = 0; // initialized by the nsNativeThemeCocoa constructor
 
 // These enums are for indexing into the margin array.
 enum {
-  leopardOS = 0
+  leopardOSorlater = 0, // 10.6 - 10.9
+  yosemiteOSorlater = 1 // 10.10+
 };
 
 enum {
@@ -393,7 +423,8 @@ static void InflateControlRect(NSRect* rect, NSControlSize cocoaControlSize, con
   if (!marginSet)
     return;
 
-  static int osIndex = leopardOS;
+  static int osIndex = nsCocoaFeatures::OnYosemiteOrLater() ?
+                         yosemiteOSorlater : leopardOSorlater;
   size_t controlSize = EnumSizeForCocoaSize(cocoaControlSize);
   const float* buttonMargins = marginSet[osIndex][controlSize];
   rect->origin.x -= buttonMargins[leftMargin];
@@ -490,6 +521,8 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  kMaxFocusRingWidth = nsCocoaFeatures::OnYosemiteOrLater() ? 7 : 4;
+
   // provide a local autorelease pool, as this is called during startup
   // before the main event-loop pool is in place
   nsAutoreleasePool pool;
@@ -508,10 +541,10 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   [mPushButtonCell setButtonType:NSMomentaryPushInButton];
   [mPushButtonCell setHighlightsBy:NSPushInCellMask];
 
-  mRadioButtonCell = [[NSButtonCell alloc] initTextCell:nil];
+  mRadioButtonCell = [[RadioButtonCell alloc] initTextCell:nil];
   [mRadioButtonCell setButtonType:NSRadioButton];
 
-  mCheckboxCell = [[NSButtonCell alloc] initTextCell:nil];
+  mCheckboxCell = [[CheckboxCell alloc] initTextCell:nil];
   [mCheckboxCell setButtonType:NSSwitchButton];
   [mCheckboxCell setAllowsMixedState:YES];
 
@@ -655,14 +688,14 @@ static void DrawCellWithScaling(NSCell *cell,
   else {
     float w = ceil(drawRect.size.width);
     float h = ceil(drawRect.size.height);
-    NSRect tmpRect = NSMakeRect(MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH, w, h);
+    NSRect tmpRect = NSMakeRect(kMaxFocusRingWidth, kMaxFocusRingWidth, w, h);
 
     // inflate to figure out the frame we need to tell NSCell to draw in, to get something that's 0,0,w,h
     InflateControlRect(&tmpRect, controlSize, marginSet);
 
-    // and then, expand by MAX_FOCUS_RING_WIDTH size to make sure we can capture any focus ring
-    w += MAX_FOCUS_RING_WIDTH * 2.0;
-    h += MAX_FOCUS_RING_WIDTH * 2.0;
+    // and then, expand by kMaxFocusRingWidth size to make sure we can capture any focus ring
+    w += kMaxFocusRingWidth * 2.0;
+    h += kMaxFocusRingWidth * 2.0;
 
     int backingScaleFactor = GetBackingScaleFactorForRendering(cgContext);
     CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
@@ -700,12 +733,12 @@ static void DrawCellWithScaling(NSCell *cell,
     CGImageRef img = CGBitmapContextCreateImage(ctx);
 
     // Drop the image into the original destination rectangle, scaling to fit
-    // Only scale MAX_FOCUS_RING_WIDTH by xscale/yscale when the resulting rect
+    // Only scale kMaxFocusRingWidth by xscale/yscale when the resulting rect
     // doesn't extend beyond the overflow rect
     float xscale = destRect.size.width / drawRect.size.width;
     float yscale = destRect.size.height / drawRect.size.height;
-    float scaledFocusRingX = xscale < 1.0f ? MAX_FOCUS_RING_WIDTH * xscale : MAX_FOCUS_RING_WIDTH;
-    float scaledFocusRingY = yscale < 1.0f ? MAX_FOCUS_RING_WIDTH * yscale : MAX_FOCUS_RING_WIDTH;
+    float scaledFocusRingX = xscale < 1.0f ? kMaxFocusRingWidth * xscale : kMaxFocusRingWidth;
+    float scaledFocusRingY = yscale < 1.0f ? kMaxFocusRingWidth * yscale : kMaxFocusRingWidth;
     CGContextDrawImage(cgContext, CGRectMake(destRect.origin.x - scaledFocusRingX,
                                              destRect.origin.y - scaledFocusRingY,
                                              destRect.size.width + scaledFocusRingX * 2,
@@ -736,10 +769,10 @@ struct CellRenderSettings {
   NSSize minimumSizes[3];
 
   // A three-dimensional array,
-  // with the first dimension being the OS version (only Leopard for the moment),
+  // with the first dimension being the OS version ([0] 10.6-10.9, [1] 10.10 and above),
   // the second being the control size (mini, small, regular), and the third
   // being the 4 margin values (left, top, right, bottom).
-  float margins[1][3][4];
+  float margins[2][3][4];
 };
 
 /*
@@ -965,6 +998,11 @@ static const CellRenderSettings radioSettings = {
       {0, 0, 0, 0},     // mini
       {0, 1, 1, 1},     // small
       {0, 0, 0, 0}      // regular
+    },
+    { // Yosemite
+      {0, 0, 0, 0},     // mini
+      {1, 1, 1, 2},     // small
+      {0, 0, 0, 0}      // regular
     }
   }
 };
@@ -980,6 +1018,11 @@ static const CellRenderSettings checkboxSettings = {
   },
   {
     { // Leopard
+      {0, 1, 0, 0},     // mini
+      {0, 1, 0, 1},     // small
+      {0, 1, 0, 1}      // regular
+    },
+    { // Yosemite
       {0, 1, 0, 0},     // mini
       {0, 1, 0, 1},     // small
       {0, 1, 0, 1}      // regular
@@ -1033,6 +1076,11 @@ static const CellRenderSettings searchFieldSettings = {
   },
   {
     { // Leopard
+      {0, 0, 0, 0},     // mini
+      {0, 0, 0, 0},     // small
+      {0, 0, 0, 0}      // regular
+    },
+    { // Yosemite
       {0, 0, 0, 0},     // mini
       {0, 0, 0, 0},     // small
       {0, 0, 0, 0}      // regular
@@ -1143,6 +1191,11 @@ static const CellRenderSettings pushButtonSettings = {
   },
   {
     { // Leopard
+      {0, 0, 0, 0},    // mini
+      {4, 0, 4, 1},    // small
+      {5, 0, 5, 2}     // regular
+    },
+    { // Yosemite
       {0, 0, 0, 0},    // mini
       {4, 0, 4, 1},    // small
       {5, 0, 5, 2}     // regular
@@ -1258,8 +1311,8 @@ RenderTransformedHIThemeControl(CGContextRef aCGContext, const HIRect& aRect,
     aFunc(aCGContext, drawRect, aData);
   } else {
     // Inflate the buffer to capture focus rings.
-    int w = ceil(drawRect.size.width) + 2 * MAX_FOCUS_RING_WIDTH;
-    int h = ceil(drawRect.size.height) + 2 * MAX_FOCUS_RING_WIDTH;
+    int w = ceil(drawRect.size.width) + 2 * kMaxFocusRingWidth;
+    int h = ceil(drawRect.size.height) + 2 * kMaxFocusRingWidth;
 
     int backingScaleFactor = GetBackingScaleFactorForRendering(aCGContext);
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
@@ -1273,7 +1326,7 @@ RenderTransformedHIThemeControl(CGContextRef aCGContext, const HIRect& aRect,
     CGColorSpaceRelease(colorSpace);
 
     CGContextScaleCTM(bitmapctx, backingScaleFactor, backingScaleFactor);
-    CGContextTranslateCTM(bitmapctx, MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH);
+    CGContextTranslateCTM(bitmapctx, kMaxFocusRingWidth, kMaxFocusRingWidth);
 
     // Set the context's "base transform" to in order to get correctly-sized focus rings.
     CGContextSetBaseCTM(bitmapctx, CGAffineTransformMakeScale(backingScaleFactor, backingScaleFactor));
@@ -1298,7 +1351,7 @@ RenderTransformedHIThemeControl(CGContextRef aCGContext, const HIRect& aRect,
       CGContextScaleCTM(aCGContext, -1.0f, 1.0f);
     }
 
-    HIRect inflatedDrawRect = CGRectMake(-MAX_FOCUS_RING_WIDTH, -MAX_FOCUS_RING_WIDTH, w, h);
+    HIRect inflatedDrawRect = CGRectMake(-kMaxFocusRingWidth, -kMaxFocusRingWidth, w, h);
     CGContextDrawImage(aCGContext, inflatedDrawRect, bitmap);
 
     CGContextSetCTM(aCGContext, ctm);
@@ -1414,6 +1467,11 @@ static const CellRenderSettings dropdownSettings = {
       {1, 1, 2, 1},    // mini
       {3, 0, 3, 1},    // small
       {3, 0, 3, 0}     // regular
+    },
+    { // Yosemite
+      {1, 1, 2, 1},    // mini
+      {3, 0, 3, 1},    // small
+      {3, 0, 3, 0}     // regular
     }
   }
 };
@@ -1431,6 +1489,11 @@ static const CellRenderSettings editableMenulistSettings = {
   },
   {
     { // Leopard
+      {0, 0, 2, 2},    // mini
+      {0, 0, 3, 2},    // small
+      {0, 1, 3, 3}     // regular
+    },
+    { // Yosemite
       {0, 0, 2, 2},    // mini
       {0, 0, 3, 2},    // small
       {0, 1, 3, 3}     // regular
@@ -1475,6 +1538,11 @@ static const CellRenderSettings spinnerSettings = {
   },
   {
     { // Leopard
+      {0, 0, 0, 0},    // mini
+      {0, 0, 0, 0},    // small
+      {0, 0, 0, 0}     // regular
+    },
+    { // Yosemite
       {0, 0, 0, 0},    // mini
       {0, 0, 0, 0},    // small
       {0, 0, 0, 0}     // regular
@@ -1644,6 +1712,11 @@ static const CellRenderSettings progressSettings[2][2] = {
           {0, 0, 0, 0},     // mini
           {1, 1, 1, 1},     // small
           {1, 0, 1, 0}      // regular
+        },
+        { // Yosemite
+          {0, 0, 0, 0},     // mini
+          {1, 1, 1, 1},     // small
+          {1, 0, 1, 0}      // regular
         }
       }
     }
@@ -1665,6 +1738,11 @@ static const CellRenderSettings progressSettings[2][2] = {
           {0, 0, 0, 0},     // mini
           {1, 1, 1, 1},     // small
           {1, 1, 1, 1}      // regular
+        },
+        { // Yosemite
+          {0, 0, 0, 0},     // mini
+          {1, 1, 1, 1},     // small
+          {1, 1, 1, 1}      // regular
         }
       }
     },
@@ -1680,6 +1758,11 @@ static const CellRenderSettings progressSettings[2][2] = {
       },
       {
         { // Leopard
+          {0, 0, 0, 0},     // mini
+          {1, 1, 1, 1},     // small
+          {0, 1, 0, 1}      // regular
+        },
+        { // Yosemite
           {0, 0, 0, 0},     // mini
           {1, 1, 1, 1},     // small
           {0, 1, 0, 1}      // regular
@@ -1725,6 +1808,11 @@ static const CellRenderSettings meterSetting = {
   },
   {
     { // Leopard
+      {1, 1, 1, 1},     // mini
+      {1, 1, 1, 1},     // small
+      {1, 1, 1, 1}      // regular
+    },
+    { // Yosemite
       {1, 1, 1, 1},     // mini
       {1, 1, 1, 1},     // small
       {1, 1, 1, 1}      // regular
@@ -3139,10 +3227,10 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFram
     {
       // We assume that the above widgets can draw a focus ring that will be less than
       // or equal to 4 pixels thick.
-      nsIntMargin extraSize = nsIntMargin(MAX_FOCUS_RING_WIDTH,
-                                          MAX_FOCUS_RING_WIDTH,
-                                          MAX_FOCUS_RING_WIDTH,
-                                          MAX_FOCUS_RING_WIDTH);
+      nsIntMargin extraSize = nsIntMargin(kMaxFocusRingWidth,
+                                          kMaxFocusRingWidth,
+                                          kMaxFocusRingWidth,
+                                          kMaxFocusRingWidth);
       nsMargin m(NSIntPixelsToAppUnits(extraSize.top, p2a),
                  NSIntPixelsToAppUnits(extraSize.right, p2a),
                  NSIntPixelsToAppUnits(extraSize.bottom, p2a),

@@ -1,0 +1,174 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+  <title>Bug 1152899 - Disallow the interception of third-party iframes using service workers when the third-party cookie preference is set</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe></iframe>
+</div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+
+let index = 0;
+function next() {
+  info("Step " + index);
+  if (index >= steps.length) {
+    SimpleTest.finish();
+    return;
+  }
+  try {
+    let i = index++;
+    steps[i]();
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+}
+
+onload = next;
+
+let iframe;
+let basePath = "/tests/dom/workers/test/serviceworkers/thirdparty/";
+let origin = window.location.protocol + "//" + window.location.host;
+let thirdPartyOrigin = "https://example.com";
+
+function testIframeLoaded() {
+  ok(true, "Iframe loaded");
+  iframe.removeEventListener("load", testIframeLoaded);
+  let message = {
+    source: "parent",
+    href: origin + basePath + "iframe2.html"
+  };
+  iframe.contentWindow.postMessage(message.toSource(), "*");
+}
+
+function loadThirdPartyIframe() {
+  let message = {
+    source: "parent",
+    href: thirdPartyOrigin + basePath + "iframe2.html"
+  }
+  iframe.contentWindow.postMessage(message.toSource(), "*");
+}
+
+function runTest(aExpectedResponses) {
+  iframe = document.querySelector("iframe");
+  iframe.src = thirdPartyOrigin + basePath + "register.html";
+  let responsesIndex = 0;
+  window.onmessage = function(e) {
+    let status = e.data.status;
+    let expected = aExpectedResponses[responsesIndex];
+    if (status == expected.status) {
+      ok(true, "Received expected " + expected.status);
+      if (expected.next) {
+        expected.next();
+      }
+    } else {
+      ok(false, "Expected " + expected.status + " got " + status);
+    }
+    responsesIndex++;
+  };
+}
+
+function testShouldIntercept(done) {
+  runTest([{
+    status: "ok"
+  }, {
+    status: "registrationdone",
+    next: function() {
+      iframe.addEventListener("load", testIframeLoaded);
+      iframe.src = origin + basePath + "iframe1.html";
+    }
+  }, {
+    status: "networkresponse",
+    next: loadThirdPartyIframe
+  }, {
+    status: "swresponse",
+    next: function() {
+      iframe.src = origin + basePath + "unregister.html";
+    }
+  }, {
+    status: "unregistrationdone",
+    next: function() {
+      window.onmessage = null;
+      ok(true, "Test finished successfully");
+      done();
+    }
+  }]);
+}
+
+function testShouldNotIntercept(done) {
+  runTest([{
+    status: "ok"
+  }, {
+    status: "registrationdone",
+    next: function() {
+      iframe.addEventListener("load", testIframeLoaded);
+      iframe.src = origin + basePath + "iframe1.html";
+    }
+  }, {
+    status: "networkresponse",
+    next: loadThirdPartyIframe
+  }, {
+    status: "networkresponse",
+    next: function() {
+      iframe.src = origin + basePath + "unregister.html";
+    }
+  }, {
+    status: "unregistrationdone",
+    next: function() {
+      window.onmessage = null;
+      ok(true, "Test finished successfully");
+      done();
+    }
+  }]);
+}
+
+const COOKIE_BEHAVIOR_ACCEPT        = 0;
+const COOKIE_BEHAVIOR_REJECTFOREIGN = 1;
+const COOKIE_BEHAVIOR_REJECT        = 2;
+const COOKIE_BEHAVIOR_LIMITFOREIGN  = 3;
+
+let steps = [() => {
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["browser.dom.window.dump.enabled", true],
+    ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_ACCEPT]
+  ]}, next);
+}, () => {
+  testShouldIntercept(next);
+}, () => {
+  SpecialPowers.pushPrefEnv({"set": [
+    ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_REJECTFOREIGN]
+  ]}, next);
+}, () => {
+  testShouldNotIntercept(next);
+}, () => {
+  SpecialPowers.pushPrefEnv({"set": [
+    ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_REJECT]
+  ]}, next);
+}, () => {
+  testShouldIntercept(next);
+}, () => {
+  SpecialPowers.pushPrefEnv({"set": [
+    ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_LIMITFOREIGN]
+  ]}, next);
+}, () => {
+  testShouldIntercept(next);
+}];
+
+</script>
+</pre>
+</body>
+</html>
