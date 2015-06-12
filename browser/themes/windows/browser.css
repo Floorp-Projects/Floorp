@@ -1488,16 +1488,19 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   padding: 0 3px;
 }
 
-@media (-moz-os-version: windows-xp),
+@media not all and (-moz-os-version: windows-vista),
        not all and (-moz-windows-default-theme) {
-  richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-box > .ac-action-icon {
-    -moz-image-region: rect(11px, 16px, 22px, 0);
-  }
+  @media not all and (-moz-os-version: windows-win7),
+         not all and (-moz-windows-default-theme) {
+    richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-box > .ac-action-icon {
+      -moz-image-region: rect(11px, 16px, 22px, 0);
+    }
 
-  .ac-comment[selected="true"],
-  .ac-url-text[selected="true"],
-  .ac-action-text[selected="true"] {
-    color: inherit !important;
+    .ac-comment[selected="true"],
+    .ac-url-text[selected="true"],
+    .ac-action-text[selected="true"] {
+      color: inherit !important;
+    }
   }
 }
 
