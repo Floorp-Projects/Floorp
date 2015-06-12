@@ -7812,3 +7812,31 @@ nsContentUtils::GetWindowRoot(nsIDocument* aDoc)
   }
   return nullptr;
 }
+
+/* static */
+nsContentPolicyType
+nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType)
+{
+  switch (aType) {
+  case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
+  case nsIContentPolicy::TYPE_INTERNAL_WORKER:
+  case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
+    return nsIContentPolicy::TYPE_SCRIPT;
+
+  case nsIContentPolicy::TYPE_INTERNAL_EMBED:
+  case nsIContentPolicy::TYPE_INTERNAL_OBJECT:
+    return nsIContentPolicy::TYPE_OBJECT;
+
+  case nsIContentPolicy::TYPE_INTERNAL_FRAME:
+  case nsIContentPolicy::TYPE_INTERNAL_IFRAME:
+    return nsIContentPolicy::TYPE_SUBDOCUMENT;
+
+  case nsIContentPolicy::TYPE_INTERNAL_AUDIO:
+  case nsIContentPolicy::TYPE_INTERNAL_VIDEO:
+  case nsIContentPolicy::TYPE_INTERNAL_TRACK:
+    return nsIContentPolicy::TYPE_MEDIA;
+
+  default:
+    return aType;
+  }
+}
