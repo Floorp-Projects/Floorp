@@ -868,6 +868,7 @@ this.PlacesUIUtils = {
       }
 
       aWindow.openUILinkIn(aNode.uri, aWhere, {
+        allowPopups: url.startsWith("javascript:"),
         inBackground: Services.prefs.getBoolPref("browser.tabs.loadBookmarksInBackground"),
         private: aPrivate,
       });
