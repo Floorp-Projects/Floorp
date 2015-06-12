@@ -212,6 +212,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     ctypesActivityCallback(nullptr),
     offthreadIonCompilationEnabled_(true),
     parallelParsingEnabled_(true),
+    autoWritableJitCodeActive_(false),
 #ifdef DEBUG
     enteredPolicy(nullptr),
 #endif

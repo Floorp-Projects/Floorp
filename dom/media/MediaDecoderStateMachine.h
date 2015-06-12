@@ -427,41 +427,6 @@ protected:
   void LogicalPlaybackRateChanged();
   void PreservesPitchChanged();
 
-  class WakeDecoderRunnable : public nsRunnable {
-  public:
-    explicit WakeDecoderRunnable(MediaDecoderStateMachine* aSM)
-      : mMutex("WakeDecoderRunnable"), mStateMachine(aSM) {}
-    NS_IMETHOD Run() override
-    {
-      nsRefPtr<MediaDecoderStateMachine> stateMachine;
-      {
-        // Don't let Run() (called by media stream graph thread) race with
-        // Revoke() (called by decoder state machine thread)
-        MutexAutoLock lock(mMutex);
-        if (!mStateMachine)
-          return NS_OK;
-        stateMachine = mStateMachine;
-      }
-      stateMachine->ScheduleStateMachineWithLockAndWakeDecoder();
-      return NS_OK;
-    }
-    void Revoke()
-    {
-      MutexAutoLock lock(mMutex);
-      mStateMachine = nullptr;
-    }
-
-    Mutex mMutex;
-    // Protected by mMutex.
-    // We don't use an owning pointer here, because keeping mStateMachine alive
-    // would mean in some cases we'd have to destroy mStateMachine from this
-    // object, which would be problematic since MediaDecoderStateMachine can
-    // only be destroyed on the main thread whereas this object can be destroyed
-    // on the media stream graph thread.
-    MediaDecoderStateMachine* mStateMachine;
-  };
-  WakeDecoderRunnable* GetWakeDecoderRunnable();
-
   MediaQueue<AudioData>& AudioQueue() { return mAudioQueue; }
   MediaQueue<VideoData>& VideoQueue() { return mVideoQueue; }
 
@@ -975,13 +940,6 @@ protected:
   // The reader, don't call its methods with the decoder monitor held.
   // This is created in the state machine's constructor.
   nsRefPtr<MediaDecoderReader> mReader;
-
-  // Accessed only on the state machine thread.
-  // Not an nsRevocableEventPtr since we must Revoke() it well before
-  // this object is destroyed, anyway.
-  // Protected by decoder monitor except during the SHUTDOWN state after the
-  // decoder thread has been stopped.
-  nsRevocableEventPtr<WakeDecoderRunnable> mPendingWakeDecoder;
 
   // The time of the current frame in microseconds, corresponding to the "current
   // playback position" in HTML5. This is referenced from 0, which is the initial

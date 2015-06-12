@@ -413,8 +413,6 @@ MediaSource::Detach()
     MOZ_ASSERT(mActiveSourceBuffers->IsEmpty() && mSourceBuffers->IsEmpty());
     return;
   }
-  mDecoder->DetachMediaSource();
-  mDecoder = nullptr;
   mMediaElement = nullptr;
   mFirstSourceBufferInitialized = false;
   SetReadyState(MediaSourceReadyState::Closed);
@@ -424,6 +422,8 @@ MediaSource::Detach()
   if (mSourceBuffers) {
     mSourceBuffers->Clear();
   }
+  mDecoder->DetachMediaSource();
+  mDecoder = nullptr;
 }
 
 MediaSource::MediaSource(nsPIDOMWindow* aWindow)
