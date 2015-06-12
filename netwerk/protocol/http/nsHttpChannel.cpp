@@ -157,8 +157,6 @@ bool IsRedirectStatus(uint32_t status)
            status == 307 || status == 308;
 }
 
-} // unnamed namespace
-
 // We only treat 3xx responses as redirects if they have a Location header and
 // the status code is in a whitelist.
 bool
@@ -167,6 +165,8 @@ WillRedirect(const nsHttpResponseHead * response)
     return IsRedirectStatus(response->Status()) &&
            response->PeekHeader(nsHttp::Location);
 }
+
+} // unnamed namespace
 
 nsresult
 StoreAuthorizationMetaData(nsICacheEntry *entry, nsHttpRequestHead *requestHead);
