@@ -1300,7 +1300,7 @@ MediaFormatReader::GetBuffered()
   int64_t startTime;
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    NS_ENSURE_TRUE(mStartTime >= 0, media::TimeIntervals());
+    MOZ_ASSERT(mStartTime != -1, "Need to finish metadata decode first");
     startTime = mStartTime;
   }
   if (NS_IsMainThread()) {
@@ -1474,10 +1474,13 @@ MediaFormatReader::NotifyDataRemoved()
   TaskQueue()->Dispatch(task.forget());
 }
 
-bool
-MediaFormatReader::ForceZeroStartTime() const
+int64_t
+MediaFormatReader::ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio)
 {
-  return !mDemuxer->ShouldComputeStartTime();
+  if (mDemuxer->ShouldComputeStartTime()) {
+    return MediaDecoderReader::ComputeStartTime(aVideo, aAudio);
+  }
+  return 0;
 }
 
 } // namespace mozilla

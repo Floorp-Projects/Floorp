@@ -75,8 +75,6 @@ public:
 
   media::TimeIntervals GetBuffered() override;
 
-  virtual bool ForceZeroStartTime() const override;
-
   // For Media Resource Management
   void SetIdle() override;
   bool IsDormantNeeded() override;
@@ -98,6 +96,8 @@ public:
   nsRefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) override;
 
   bool IsWaitingOnCDMResource() override;
+
+  int64_t ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio) override;
 
   bool UseBufferingHeuristics() override
   {
