@@ -152,11 +152,13 @@ PhysicalCoordFromFlexRelativeCoord(nscoord aFlexRelativeCoord,
   (axisTracker_).IsCrossAxisHorizontal() ? (width_) : (height_)
 
 // Logical versions of helper-macros above:
-#define GET_MAIN_COMPONENT_LOGICAL(axisTracker_, isize_, bsize_)  \
-  (axisTracker_).IsRowOriented() ? (isize_) : (bsize_)
+#define GET_MAIN_COMPONENT_LOGICAL(axisTracker_, wm_, isize_, bsize_)  \
+  wm_.IsOrthogonalTo(axisTracker_.GetWritingMode()) != \
+    (axisTracker_).IsRowOriented() ? (isize_) : (bsize_)
 
-#define GET_CROSS_COMPONENT_LOGICAL(axisTracker_, inline_, block_)  \
-  (axisTracker_).IsRowOriented() ? (block_) : (inline_)
+#define GET_CROSS_COMPONENT_LOGICAL(axisTracker_, wm_, isize_, bsize_)  \
+  wm_.IsOrthogonalTo(axisTracker_.GetWritingMode()) != \
+    (axisTracker_).IsRowOriented() ? (bsize_) : (isize_)
 
 // Encapsulates our flex container's main & cross axes.
 class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
@@ -179,6 +181,9 @@ public:
     return !IsMainAxisHorizontal();
   }
   // XXXdholbert [END DEPRECATED]
+
+  // Returns the flex container's writing mode.
+  WritingMode GetWritingMode() const { return mWM; }
 
   // Returns true if our main axis is in the reverse direction of our
   // writing mode's corresponding axis. (From 'flex-direction: *-reverse')
@@ -1060,16 +1065,17 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
   const nsStylePosition* stylePos = aChildFrame->StylePosition();
   float flexGrow   = stylePos->mFlexGrow;
   float flexShrink = stylePos->mFlexShrink;
+  WritingMode childWM = childRS.GetWritingMode();
 
   // MAIN SIZES (flex base size, min/max size)
   // -----------------------------------------
-  nscoord flexBaseSize = GET_MAIN_COMPONENT_LOGICAL(aAxisTracker,
+  nscoord flexBaseSize = GET_MAIN_COMPONENT_LOGICAL(aAxisTracker, childWM,
                                                     childRS.ComputedISize(),
                                                     childRS.ComputedBSize());
-  nscoord mainMinSize = GET_MAIN_COMPONENT_LOGICAL(aAxisTracker,
+  nscoord mainMinSize = GET_MAIN_COMPONENT_LOGICAL(aAxisTracker, childWM,
                                                    childRS.ComputedMinISize(),
                                                    childRS.ComputedMinBSize());
-  nscoord mainMaxSize = GET_MAIN_COMPONENT_LOGICAL(aAxisTracker,
+  nscoord mainMaxSize = GET_MAIN_COMPONENT_LOGICAL(aAxisTracker, childWM,
                                                    childRS.ComputedMaxISize(),
                                                    childRS.ComputedMaxBSize());
   // This is enforced by the nsHTMLReflowState where these values come from:
@@ -1081,15 +1087,15 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
   // or we might resolve it to something else in SizeItemInCrossAxis(); hence,
   // it's tentative. See comment under "Cross Size Determination" for more.
   nscoord tentativeCrossSize =
-    GET_CROSS_COMPONENT_LOGICAL(aAxisTracker,
+    GET_CROSS_COMPONENT_LOGICAL(aAxisTracker, childWM,
                                 childRS.ComputedISize(),
                                 childRS.ComputedBSize());
   nscoord crossMinSize =
-    GET_CROSS_COMPONENT_LOGICAL(aAxisTracker,
+    GET_CROSS_COMPONENT_LOGICAL(aAxisTracker, childWM,
                                 childRS.ComputedMinISize(),
                                 childRS.ComputedMinBSize());
   nscoord crossMaxSize =
-    GET_CROSS_COMPONENT_LOGICAL(aAxisTracker,
+    GET_CROSS_COMPONENT_LOGICAL(aAxisTracker, childWM,
                                 childRS.ComputedMaxISize(),
                                 childRS.ComputedMaxBSize());
 
@@ -1210,7 +1216,7 @@ CrossSizeToUseWithRatio(const FlexItem& aFlexItem,
 
   if (IsCrossSizeDefinite(aItemReflowState, aAxisTracker)) {
     // Definite cross size.
-    return GET_CROSS_COMPONENT_LOGICAL(aAxisTracker,
+    return GET_CROSS_COMPONENT_LOGICAL(aAxisTracker, aFlexItem.GetWritingMode(),
                                        aItemReflowState.ComputedISize(),
                                        aItemReflowState.ComputedBSize());
   }
@@ -1218,7 +1224,7 @@ CrossSizeToUseWithRatio(const FlexItem& aFlexItem,
   if (aMinSizeFallback) {
     // Indefinite cross-size, and we're resolving main min-size, so we'll fall
     // back to ussing the cross min-size (which should be definite).
-    return GET_CROSS_COMPONENT_LOGICAL(aAxisTracker,
+    return GET_CROSS_COMPONENT_LOGICAL(aAxisTracker, aFlexItem.GetWritingMode(),
                                        aItemReflowState.ComputedMinISize(),
                                        aItemReflowState.ComputedMinBSize());
   }
@@ -1280,7 +1286,7 @@ PartiallyResolveAutoMinSize(const FlexItem& aFlexItem,
 
   // * the computed max-width (max-height), if that value is definite:
   nscoord maxSize =
-    GET_MAIN_COMPONENT_LOGICAL(aAxisTracker,
+    GET_MAIN_COMPONENT_LOGICAL(aAxisTracker, aFlexItem.GetWritingMode(),
                                aItemReflowState.ComputedMaxISize(),
                                aItemReflowState.ComputedMaxBSize());
   if (maxSize != NS_UNCONSTRAINEDSIZE) {
@@ -1384,7 +1390,7 @@ nsFlexContainerFrame::
     // XXXdholbert Maybe this should share logic with ComputeCrossSize()...
     // Alternately, maybe tentative container cross size should be passed down.
     nscoord containerCrossSize =
-      GET_CROSS_COMPONENT_LOGICAL(aAxisTracker,
+      GET_CROSS_COMPONENT_LOGICAL(aAxisTracker, aAxisTracker.GetWritingMode(),
                                   flexContainerRS->ComputedISize(),
                                   flexContainerRS->ComputedBSize());
     // Is container's cross size "definite"?
@@ -3124,7 +3130,7 @@ nsFlexContainerFrame::GenerateFlexLines(
     // least wrap when we hit its max main-size.
     if (wrapThreshold == NS_UNCONSTRAINEDSIZE) {
       const nscoord flexContainerMaxMainSize =
-        GET_MAIN_COMPONENT_LOGICAL(aAxisTracker,
+        GET_MAIN_COMPONENT_LOGICAL(aAxisTracker, aAxisTracker.GetWritingMode(),
                                    aReflowState.ComputedMaxISize(),
                                    aReflowState.ComputedMaxBSize());
 
