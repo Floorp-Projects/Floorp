@@ -18,7 +18,10 @@ from __future__ import unicode_literals
 
 import os
 
-from collections import OrderedDict
+from collections import (
+    Counter,
+    OrderedDict,
+)
 from mozbuild.util import (
     HierarchicalStringList,
     HierarchicalStringListWithFlagsFactory,
@@ -573,6 +576,49 @@ class Files(SubContext):
         if 'BUG_COMPONENT' in self:
             bc = self['BUG_COMPONENT']
             d['bug_component'] = (bc.product, bc.component)
+
+        return d
+
+    @staticmethod
+    def aggregate(files):
+        """Given a mapping of path to Files, obtain aggregate results.
+
+        Consumers may want to extract useful information from a collection of
+        Files describing paths. e.g. given the files info data for N paths,
+        recommend a single bug component based on the most frequent one. This
+        function provides logic for deriving aggregate knowledge from a
+        collection of path File metadata.
+
+        Note: the intent of this function is to operate on the result of
+        :py:func:`mozbuild.frontend.reader.BuildReader.files_info`. The
+        :py:func:`mozbuild.frontend.context.Files` instances passed in are
+        thus the "collapsed" (``__iadd__``ed) results of all ``Files`` from all
+        moz.build files relevant to a specific path, not individual ``Files``
+        instances from a single moz.build file.
+        """
+        d = {}
+
+        bug_components = Counter()
+
+        for f in files.values():
+            bug_component = f.get('BUG_COMPONENT')
+            if bug_component:
+                bug_components[bug_component] += 1
+
+        d['bug_component_counts'] = []
+        for c, count in bug_components.most_common():
+            component = (c.product, c.component)
+            d['bug_component_counts'].append((c, count))
+
+            if 'recommended_bug_component' not in d:
+                d['recommended_bug_component'] = component
+                recommended_count = count
+            elif count == recommended_count:
+                # Don't recommend a component if it doesn't have a clear lead.
+                d['recommended_bug_component'] = None
+
+        # In case no bug components.
+        d.setdefault('recommended_bug_component', None)
 
         return d
 
