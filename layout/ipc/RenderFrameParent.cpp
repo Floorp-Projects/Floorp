@@ -198,7 +198,7 @@ public:
 
   void ClearRenderFrame() { mRenderFrame = nullptr; }
 
-  virtual void SendAsyncScrollDOMEvent(bool aIsRoot,
+  virtual void SendAsyncScrollDOMEvent(bool aIsRootContent,
                                        const CSSRect& aContentRect,
                                        const CSSSize& aContentSize) override
   {
@@ -207,10 +207,10 @@ public:
         FROM_HERE,
         NewRunnableMethod(this,
                           &RemoteContentController::SendAsyncScrollDOMEvent,
-                          aIsRoot, aContentRect, aContentSize));
+                          aIsRootContent, aContentRect, aContentSize));
       return;
     }
-    if (mRenderFrame && aIsRoot) {
+    if (mRenderFrame && aIsRootContent) {
       TabParent* browser = TabParent::GetFrom(mRenderFrame->Manager());
       BrowserElementParent::DispatchAsyncScrollEvent(browser, aContentRect,
                                                      aContentSize);

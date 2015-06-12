@@ -1205,7 +1205,7 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
   NS_ENSURE_ARG(aPrincipal);
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
-  if (!(mCheckMalware || mCheckPhishing)) {
+  if (!(mCheckMalware || mCheckPhishing || aTrackingProtectionEnabled)) {
     *result = false;
     return NS_OK;
   }

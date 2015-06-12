@@ -140,6 +140,14 @@ fails == 1147834-relative-overconstrained-vertical-rl-rtl.html 1147834-top-left-
 == 1157758-1-vertical-arabic.html 1157758-1-vertical-arabic-ref.html
 == 1158549-1-vertical-block-size-constraints.html 1158549-1-vertical-block-size-constraints-ref.html
 == 1163238-orthogonal-auto-margins.html 1163238-orthogonal-auto-margins-ref.html
+== 1172774-percent-margin-1.html 1172774-percent-horizontal-ref.html
+== 1172774-percent-margin-2.html 1172774-percent-horizontal-ref.html
+== 1172774-percent-margin-3.html 1172774-percent-vertical-ref.html
+== 1172774-percent-margin-4.html 1172774-percent-vertical-ref.html
+== 1172774-percent-padding-1.html 1172774-percent-horizontal-ref.html
+== 1172774-percent-padding-2.html 1172774-percent-horizontal-ref.html
+== 1172774-percent-padding-3.html 1172774-percent-vertical-ref.html
+== 1172774-percent-padding-4.html 1172774-percent-vertical-ref.html
 
 # Suite of tests from Gérard Talbot in bug 1079151
 include abspos/reftest.list

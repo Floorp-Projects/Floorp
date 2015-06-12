@@ -174,8 +174,12 @@ let Probes = {
    * `durations`.
    */
   jank: new Probe("jank", {
-    set isActive(x) { /* always active in the current implementation */ },
-    get isActive() { return true; },
+    set isActive(x) {
+      performanceStatsService.isMonitoringJank = x;
+    },
+    get isActive() {
+      return performanceStatsService.isMonitoringJank;
+    },
     extract: function(xpcom) {
       let durations = xpcom.getDurations();
       return {
@@ -225,8 +229,12 @@ let Probes = {
    * spent executing blocking cross-process calls, in µs.
    */
   cpow: new Probe("cpow", {
-    set isActive(x) { /* always active in the current implementation */ },
-    get isActive() { return true; },
+    set isActive(x) {
+      performanceStatsService.isMonitoringCPOW = x;
+    },
+    get isActive() {
+      return performanceStatsService.isMonitoringCPOW;
+    },
     extract: function(xpcom) {
       return {
         totalCPOWTime: xpcom.totalCPOWTime
@@ -528,7 +536,3 @@ function Snapshot({xpcom, probes}) {
   }
   this.processData = new PerformanceData({xpcom: xpcom.getProcessData(), probes});
 }
-
-
-// In the current implementation, all probes are always active.
-performanceStatsService.isStopwatchActive = true;

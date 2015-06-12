@@ -17,44 +17,47 @@ const FRAME_TITLE = `Subframe for test browser_compartments.js ${Math.random()}`
 
 // This function is injected as source as a frameScript
 function frameScript() {
-  "use strict";
+  try {
+    "use strict";
 
-  const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
-  Cu.import("resource://gre/modules/PerformanceStats.jsm");
+    const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
+    Cu.import("resource://gre/modules/PerformanceStats.jsm");
 
-  let performanceStatsService =
-    Cc["@mozilla.org/toolkit/performance-stats-service;1"].
-    getService(Ci.nsIPerformanceStatsService);
+    let performanceStatsService =
+      Cc["@mozilla.org/toolkit/performance-stats-service;1"].
+      getService(Ci.nsIPerformanceStatsService);
 
-  // Make sure that the stopwatch is now active.
-  performanceStatsService.isStopwatchActive = true;
+    // Make sure that the stopwatch is now active.
+    let monitor = PerformanceStats.getMonitor(["jank", "cpow", "ticks"]);
 
-  let monitor = PerformanceStats.getMonitor(["jank", "cpow", "ticks"]);
-
-  addMessageListener("compartments-test:getStatistics", () => {
-    try {
-      monitor.promiseSnapshot().then(snapshot => {
-        sendAsyncMessage("compartments-test:getStatistics", snapshot);
-      });
-    } catch (ex) {
-      Cu.reportError("Error in content: " + ex);
-      Cu.reportError(ex.stack);
-    }
-  });
-
-  addMessageListener("compartments-test:setTitles", titles => {
-    try {
-      content.document.title = titles.data.parent;
-      for (let i = 0; i < content.frames.length; ++i) {
-        content.frames[i].postMessage({title: titles.data.frames}, "*");
+    addMessageListener("compartments-test:getStatistics", () => {
+      try {
+        monitor.promiseSnapshot().then(snapshot => {
+          sendAsyncMessage("compartments-test:getStatistics", snapshot);
+        });
+      } catch (ex) {
+        Cu.reportError("Error in content (getStatistics): " + ex);
+        Cu.reportError(ex.stack);
       }
-      console.log("content", "Done setting titles", content.document.title);
-      sendAsyncMessage("compartments-test:setTitles");
-    } catch (ex) {
-      Cu.reportError("Error in content: " + ex);
-      Cu.reportError(ex.stack);
-    }
-  });
+    });
+
+    addMessageListener("compartments-test:setTitles", titles => {
+      try {
+        content.document.title = titles.data.parent;
+        for (let i = 0; i < content.frames.length; ++i) {
+          content.frames[i].postMessage({title: titles.data.frames}, "*");
+        }
+        console.log("content", "Done setting titles", content.document.title);
+        sendAsyncMessage("compartments-test:setTitles");
+      } catch (ex) {
+        Cu.reportError("Error in content (setTitles): " + ex);
+        Cu.reportError(ex.stack);
+      }
+    });
+  } catch (ex) {
+    Cu.reportError("Error in content (setup): " + ex);
+    Cu.reportError(ex.stack);    
+  }
 }
 
 // A variant of `Assert` that doesn't spam the logs

@@ -532,7 +532,7 @@ FT2FontEntry::CopyFontTable(uint32_t aTableTag,
         return NS_ERROR_FAILURE;
     }
 
-    if (!aBuffer.SetLength(len)) {
+    if (!aBuffer.SetLength(len, fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
     uint8_t *buf = aBuffer.Elements();

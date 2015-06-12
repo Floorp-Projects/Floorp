@@ -10,7 +10,6 @@
 #include <stdio.h>                      // for FILE
 #include <stdint.h>                     // for int32_t, int64_t
 #include <algorithm>                    // for min/max
-#include "nsDebug.h"                    // for NS_WARNING
 #include "gfxCore.h"                    // for NS_GFX
 #include "mozilla/Likely.h"             // for MOZ_UNLIKELY
 #include "mozilla/gfx/Rect.h"
@@ -80,7 +79,6 @@ struct NS_GFX nsRect :
     result.x = std::min(aRect.x, x);
     int64_t w = std::max(int64_t(aRect.x) + aRect.width, int64_t(x) + width) - result.x;
     if (MOZ_UNLIKELY(w > nscoord_MAX)) {
-      NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord width");
       // Clamp huge negative x to nscoord_MIN / 2 and try again.
       result.x = std::max(result.x, nscoord_MIN / 2);
       w = std::max(int64_t(aRect.x) + aRect.width, int64_t(x) + width) - result.x;
@@ -93,7 +91,6 @@ struct NS_GFX nsRect :
     result.y = std::min(aRect.y, y);
     int64_t h = std::max(int64_t(aRect.y) + aRect.height, int64_t(y) + height) - result.y;
     if (MOZ_UNLIKELY(h > nscoord_MAX)) {
-      NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord height");
       // Clamp huge negative y to nscoord_MIN / 2 and try again.
       result.y = std::max(result.y, nscoord_MIN / 2);
       h = std::max(int64_t(aRect.y) + aRect.height, int64_t(y) + height) - result.y;

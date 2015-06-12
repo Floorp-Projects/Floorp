@@ -636,7 +636,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
     // been set up by whatever may have launched the browser.
     const char* prevInterpose = PR_GetEnv("DYLD_INSERT_LIBRARIES");
     nsCString interpose;
-    if (prevInterpose) {
+    if (prevInterpose && strlen(prevInterpose) > 0) {
       interpose.Assign(prevInterpose);
       interpose.Append(':');
     }

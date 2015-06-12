@@ -35,6 +35,9 @@
 #include "rlogringbuffer.h"
 #include "runnable_utils.h"
 #include "stunserver.h"
+#include "nr_socket_prsock.h"
+#include "test_nr_socket.h"
+#include "ice_ctx.h"
 // TODO(bcampen@mozilla.com): Big fat hack since the build system doesn't give
 // us a clean way to add object files to a single executable.
 #include "stunserver.cpp"
@@ -250,13 +253,21 @@ class IceTestPeer : public sigslot::has_slots<> {
       expected_remote_type_(NrIceCandidate::ICE_HOST),
       trickle_mode_(TRICKLE_NONE),
       trickled_(0),
-      simulate_ice_lite_(false) {
+      simulate_ice_lite_(false),
+      nat_(new TestNat) {
     ice_ctx_->SignalGatheringStateChange.connect(
         this,
         &IceTestPeer::GatheringStateChange);
     ice_ctx_->SignalConnectionStateChange.connect(
         this,
         &IceTestPeer::ConnectionStateChange);
+
+    nr_socket_factory *fac;
+    int r = nat_->create_socket_factory(&fac);
+    MOZ_ASSERT(!r);
+    if (!r) {
+      nr_ice_ctx_set_socket_factory(ice_ctx_->ctx(), fac);
+    }
   }
 
   ~IceTestPeer() {
@@ -317,6 +328,11 @@ class IceTestPeer : public sigslot::has_slots<> {
     ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetStunServers(stun_servers)));
   }
 
+  void UseTestStunServer() {
+    SetStunServer(TestStunServer::GetInstance()->addr(),
+                  TestStunServer::GetInstance()->port());
+  }
+
   void SetTurnServer(const std::string addr, uint16_t port,
                      const std::string username,
                      const std::string password,
@@ -369,6 +385,25 @@ class IceTestPeer : public sigslot::has_slots<> {
         NS_DISPATCH_SYNC);
 
     ASSERT_TRUE(NS_SUCCEEDED(res));
+  }
+
+  void UseNat() {
+    nat_->enabled_ = true;
+  }
+
+  void SetFilteringType(TestNat::NatBehavior type) {
+    MOZ_ASSERT(!nat_->has_port_mappings());
+    nat_->filtering_type_ = type;
+  }
+
+  void SetMappingType(TestNat::NatBehavior type) {
+    MOZ_ASSERT(!nat_->has_port_mappings());
+    nat_->mapping_type_ = type;
+  }
+
+  void SetBlockUdp(bool block) {
+    MOZ_ASSERT(!nat_->has_port_mappings());
+    nat_->block_udp_ = block;
   }
 
   // Get various pieces of state
@@ -1008,6 +1043,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   TrickleMode trickle_mode_;
   int trickled_;
   bool simulate_ice_lite_;
+  nsRefPtr<mozilla::TestNat> nat_;
 };
 
 void SchedulableTrickleCandidate::Trickle() {
@@ -1065,6 +1101,12 @@ class IceGatherTest : public ::testing::Test {
                          TestStunServer::GetInstance()->port());
   }
 
+  void UseTestStunServer() {
+    TestStunServer::GetInstance()->Reset();
+    peer_->SetStunServer(TestStunServer::GetInstance()->addr(),
+                         TestStunServer::GetInstance()->port());
+  }
+
   // NB: Only does substring matching, watch out for stuff like "1.2.3.4"
   // matching "21.2.3.47". " 1.2.3.4 " should not have false positives.
   bool StreamHasMatchingCandidate(unsigned int stream,
@@ -1084,7 +1126,12 @@ class IceGatherTest : public ::testing::Test {
 
 class IceConnectTest : public ::testing::Test {
  public:
-  IceConnectTest() : initted_(false) {}
+  IceConnectTest() :
+    initted_(false),
+    use_nat_(false),
+    filtering_type_(TestNat::ENDPOINT_INDEPENDENT),
+    mapping_type_(TestNat::ENDPOINT_INDEPENDENT),
+    block_udp_(false) {}
 
   void SetUp() {
     nsresult rv;
@@ -1126,8 +1173,25 @@ class IceConnectTest : public ::testing::Test {
 
   bool Gather(unsigned int waitTime = kDefaultTimeout) {
     Init(false, false);
-    p1_->SetStunServer(g_stun_server_address, kDefaultStunServerPort);
-    p2_->SetStunServer(g_stun_server_address, kDefaultStunServerPort);
+    if (use_nat_) {
+      // If we enable nat simulation, but still use a real STUN server somewhere
+      // on the internet, we will see failures if there is a real NAT in
+      // addition to our simulated one, particularly if it disallows
+      // hairpinning.
+      UseTestStunServer();
+      p1_->UseNat();
+      p2_->UseNat();
+      p1_->SetFilteringType(filtering_type_);
+      p2_->SetFilteringType(filtering_type_);
+      p1_->SetMappingType(mapping_type_);
+      p2_->SetMappingType(mapping_type_);
+      p1_->SetBlockUdp(block_udp_);
+      p2_->SetBlockUdp(block_udp_);
+    } else {
+      p1_->SetStunServer(g_stun_server_address, kDefaultStunServerPort);
+      p2_->SetStunServer(g_stun_server_address, kDefaultStunServerPort);
+    }
+
     p1_->Gather();
     p2_->Gather();
 
@@ -1140,6 +1204,28 @@ class IceConnectTest : public ::testing::Test {
         return false;
     }
     return true;
+  }
+
+  void UseNat() {
+    use_nat_ = true;
+  }
+
+  void SetFilteringType(TestNat::NatBehavior type) {
+    filtering_type_ = type;
+  }
+
+  void SetMappingType(TestNat::NatBehavior type) {
+    mapping_type_ = type;
+  }
+
+  void BlockUdp() {
+    block_udp_ = true;
+  }
+
+  void UseTestStunServer() {
+    TestStunServer::GetInstance()->Reset();
+    p1_->UseTestStunServer();
+    p2_->UseTestStunServer();
   }
 
   void SetTurnServer(const std::string addr, uint16_t port,
@@ -1277,6 +1363,10 @@ class IceConnectTest : public ::testing::Test {
   nsCOMPtr<nsIEventTarget> target_;
   mozilla::ScopedDeletePtr<IceTestPeer> p1_;
   mozilla::ScopedDeletePtr<IceTestPeer> p2_;
+  bool use_nat_;
+  TestNat::NatBehavior filtering_type_;
+  TestNat::NatBehavior mapping_type_;
+  bool block_udp_;
 };
 
 class PrioritizerTest : public ::testing::Test {
@@ -1641,6 +1731,147 @@ TEST_F(IceConnectTest, TestTrickleIceLiteOfferer) {
   ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
   ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
   AssertCheckingReached();
+}
+
+TEST_F(IceConnectTest, TestGatherFullCone) {
+  AddStream("first", 1);
+  UseNat();
+  SetFilteringType(TestNat::ENDPOINT_INDEPENDENT);
+  SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
+  ASSERT_TRUE(Gather());
+}
+
+TEST_F(IceConnectTest, TestGatherFullConeAutoPrioritize) {
+  Init(false, true);
+  AddStream("first", 1);
+  UseNat();
+  SetFilteringType(TestNat::ENDPOINT_INDEPENDENT);
+  SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
+  ASSERT_TRUE(Gather());
+}
+
+
+TEST_F(IceConnectTest, TestConnectFullCone) {
+  AddStream("first", 1);
+  UseNat();
+  SetFilteringType(TestNat::ENDPOINT_INDEPENDENT);
+  SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
+  SetExpectedTypes(NrIceCandidate::Type::ICE_SERVER_REFLEXIVE,
+                   NrIceCandidate::Type::ICE_SERVER_REFLEXIVE);
+  ASSERT_TRUE(Gather());
+  Connect();
+}
+
+TEST_F(IceConnectTest, TestGatherAddressRestrictedCone) {
+  AddStream("first", 1);
+  UseNat();
+  SetFilteringType(TestNat::ADDRESS_DEPENDENT);
+  SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
+  ASSERT_TRUE(Gather());
+}
+
+TEST_F(IceConnectTest, TestConnectAddressRestrictedCone) {
+  AddStream("first", 1);
+  UseNat();
+  SetFilteringType(TestNat::ADDRESS_DEPENDENT);
+  SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
+  SetExpectedTypes(NrIceCandidate::Type::ICE_SERVER_REFLEXIVE,
+                   NrIceCandidate::Type::ICE_SERVER_REFLEXIVE);
+  ASSERT_TRUE(Gather());
+  Connect();
+}
+
+TEST_F(IceConnectTest, TestGatherPortRestrictedCone) {
+  AddStream("first", 1);
+  UseNat();
+  SetFilteringType(TestNat::PORT_DEPENDENT);
+  SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
+  ASSERT_TRUE(Gather());
+}
+
+TEST_F(IceConnectTest, TestConnectPortRestrictedCone) {
+  AddStream("first", 1);
+  UseNat();
+  SetFilteringType(TestNat::PORT_DEPENDENT);
+  SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
+  SetExpectedTypes(NrIceCandidate::Type::ICE_SERVER_REFLEXIVE,
+                   NrIceCandidate::Type::ICE_SERVER_REFLEXIVE);
+  ASSERT_TRUE(Gather());
+  Connect();
+}
+
+TEST_F(IceConnectTest, TestGatherSymmetricNat) {
+  AddStream("first", 1);
+  UseNat();
+  SetFilteringType(TestNat::PORT_DEPENDENT);
+  SetMappingType(TestNat::PORT_DEPENDENT);
+  ASSERT_TRUE(Gather());
+}
+
+TEST_F(IceConnectTest, TestConnectSymmetricNat) {
+  if (g_turn_server.empty())
+    return;
+
+  AddStream("first", 1);
+  UseNat();
+  SetFilteringType(TestNat::PORT_DEPENDENT);
+  SetMappingType(TestNat::PORT_DEPENDENT);
+  p1_->SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
+                        NrIceCandidate::Type::ICE_RELAYED);
+  p2_->SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
+                        NrIceCandidate::Type::ICE_RELAYED);
+  SetTurnServer(g_turn_server, kDefaultStunServerPort,
+                g_turn_user, g_turn_password);
+  ASSERT_TRUE(Gather());
+  Connect();
+}
+
+TEST_F(IceConnectTest, TestGatherNatBlocksUDP) {
+  if (g_turn_server.empty())
+    return;
+
+  AddStream("first", 1);
+  UseNat();
+  BlockUdp();
+  std::vector<NrIceTurnServer> turn_servers;
+  std::vector<unsigned char> password_vec(g_turn_password.begin(),
+                                          g_turn_password.end());
+  turn_servers.push_back(
+      *NrIceTurnServer::Create(g_turn_server, kDefaultStunServerPort,
+                               g_turn_user, password_vec, kNrIceTransportTcp));
+  turn_servers.push_back(
+      *NrIceTurnServer::Create(g_turn_server, kDefaultStunServerPort,
+                               g_turn_user, password_vec, kNrIceTransportUdp));
+  SetTurnServers(turn_servers);
+  // We have to wait for the UDP-based stuff to time out.
+  ASSERT_TRUE(Gather(kDefaultTimeout * 3));
+}
+
+TEST_F(IceConnectTest, TestConnectNatBlocksUDP) {
+  if (g_turn_server.empty())
+    return;
+
+  AddStream("first", 1);
+  UseNat();
+  BlockUdp();
+  std::vector<NrIceTurnServer> turn_servers;
+  std::vector<unsigned char> password_vec(g_turn_password.begin(),
+                                          g_turn_password.end());
+  turn_servers.push_back(
+      *NrIceTurnServer::Create(g_turn_server, kDefaultStunServerPort,
+                               g_turn_user, password_vec, kNrIceTransportTcp));
+  turn_servers.push_back(
+      *NrIceTurnServer::Create(g_turn_server, kDefaultStunServerPort,
+                               g_turn_user, password_vec, kNrIceTransportUdp));
+  SetTurnServers(turn_servers);
+  p1_->SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
+                        NrIceCandidate::Type::ICE_RELAYED,
+                        kNrIceTransportTcp);
+  p2_->SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
+                        NrIceCandidate::Type::ICE_RELAYED,
+                        kNrIceTransportTcp);
+  ASSERT_TRUE(Gather(kDefaultTimeout * 3));
+  Connect();
 }
 
 TEST_F(IceConnectTest, TestConnectTwoComponents) {

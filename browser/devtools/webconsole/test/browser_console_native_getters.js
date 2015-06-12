@@ -77,7 +77,7 @@ let test = asyncTest(function*() {
   [result] = yield waitForMessages({
     webconsole: hud,
     messages: [{
-      text: "NodeList [",
+      text: "Array [",
       category: CATEGORY_OUTPUT,
       objects: true,
     }],

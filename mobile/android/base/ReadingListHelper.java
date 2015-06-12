@@ -8,7 +8,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.db.DBUtils;
 import org.mozilla.gecko.db.ReadingListAccessor;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.mozglue.RobocopTarget;
@@ -23,21 +22,32 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
-import android.net.Uri;
 import android.util.Log;
-import android.widget.Toast;
 
 public final class ReadingListHelper implements NativeEventListener {
     private static final String LOGTAG = "GeckoReadingListHelper";
+
+    public interface OnReadingListEventListener {
+        void onAddedToReadingList(String url);
+        void onRemovedFromReadingList(String url);
+        void onAlreadyInReadingList(String url);
+    }
+
+    private enum ReadingListEvent {
+        ADDED,
+        REMOVED,
+        ALREADY_EXISTS
+    }
 
     protected final Context context;
     private final BrowserDB db;
     private final ReadingListAccessor readingListAccessor;
     private final ContentObserver contentObserver;
+    private final OnReadingListEventListener onReadingListEventListener;
 
     volatile boolean fetchInBackground = true;
 
-    public ReadingListHelper(Context context, GeckoProfile profile) {
+    public ReadingListHelper(Context context, GeckoProfile profile, OnReadingListEventListener listener) {
         this.context = context;
         this.db = profile.getDB();
         this.readingListAccessor = db.getReadingListAccessor();
@@ -56,6 +66,8 @@ public final class ReadingListHelper implements NativeEventListener {
         };
 
         this.readingListAccessor.registerContentObserver(context, contentObserver);
+
+        onReadingListEventListener = listener;
     }
 
     public void uninit() {
@@ -110,11 +122,11 @@ public final class ReadingListHelper implements NativeEventListener {
             @Override
             public void run() {
                 if (readingListAccessor.isReadingListItem(cr, url)) {
-                    showToast(R.string.reading_list_duplicate, Toast.LENGTH_SHORT);
+                    handleEvent(ReadingListEvent.ALREADY_EXISTS, url);
                     callback.sendError("URL already in reading list: " + url);
                 } else {
                     readingListAccessor.addReadingListItem(cr, values);
-                    showToast(R.string.reading_list_added, Toast.LENGTH_SHORT);
+                    handleEvent(ReadingListEvent.ADDED, url);
                     callback.sendSuccess(url);
                 }
             }
@@ -227,7 +239,7 @@ public final class ReadingListHelper implements NativeEventListener {
             @Override
             public void run() {
                 readingListAccessor.removeReadingListItemWithURL(context.getContentResolver(), url);
-                showToast(R.string.reading_list_removed, Toast.LENGTH_SHORT);
+                handleEvent(ReadingListEvent.REMOVED, url);
             }
         });
     }
@@ -257,13 +269,23 @@ public final class ReadingListHelper implements NativeEventListener {
     }
 
     /**
-     * Show various status toasts.
+     * Handle various reading list events (and display appropriate toasts).
      */
-    private void showToast(final int resId, final int duration) {
+    private void handleEvent(final ReadingListEvent event, final String url) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context, resId, duration).show();
+                switch(event) {
+                    case ADDED:
+                        onReadingListEventListener.onAddedToReadingList(url);
+                        break;
+                    case REMOVED:
+                        onReadingListEventListener.onRemovedFromReadingList(url);
+                        break;
+                    case ALREADY_EXISTS:
+                        onReadingListEventListener.onAlreadyInReadingList(url);
+                        break;
+                }
             }
         });
     }
