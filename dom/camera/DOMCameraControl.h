@@ -182,6 +182,7 @@ protected:
   bool IsWindowStillActive();
   nsresult SelectPreviewSize(const dom::CameraSize& aRequestedPreviewSize, ICameraControl::Size& aSelectedPreviewSize);
 
+  void ReleaseAudioChannelAgent();
   nsresult NotifyRecordingStatusChange(const nsString& aMsg);
 
   already_AddRefed<dom::Promise> CreatePromise(ErrorResult& aRv);
@@ -223,7 +224,7 @@ protected:
   dom::CameraStartRecordingOptions mOptions;
   nsRefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
   DOMCameraControlListener::PreviewState mPreviewState;
-
+  bool mRecording;
   bool mSetInitialConfig;
 
 #ifdef MOZ_WIDGET_GONK
