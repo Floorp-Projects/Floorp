@@ -14,12 +14,12 @@ add_task(function test() {
 
   // Create a root node from a given samples array.
 
-  let root = getFrameNodePath(new ThreadNode(gThread), "(root)");
+  let thread = new ThreadNode(gThread, { startTime: 0, endTime: 10 });
+  let root = getFrameNodePath(thread, "(root)");
 
-  // Test the root node.
-
-  equal(root.duration, 5,
-    "The correct duration was calculated for the root node.");
+  // Test the ThreadNode, only node with a duration.
+  equal(thread.duration, 10,
+    "The correct duration was calculated for the ThreadNode.");
 
   equal(root.calls.length, 1,
     "The correct number of child calls were calculated for the root node.");

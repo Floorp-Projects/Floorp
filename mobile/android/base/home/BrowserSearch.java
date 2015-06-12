@@ -345,9 +345,7 @@ public class BrowserSearch extends HomeFragment
         // If the view backed by this Fragment is being recreated, we will not receive
         // a new search engine data event so refresh the new search engine bar's data
         // & Views with the data we have.
-        mSearchEngineBar.setSearchEngines(
-                mSearchEngines.subList(getPrimaryEngineCount(), mSearchEngines.size())
-        );
+        updateSearchEngineBar();
         mSearchEngineBar.setOnSearchBarClickListener(this);
     }
 
@@ -586,9 +584,7 @@ public class BrowserSearch extends HomeFragment
                 mAdapter.notifyDataSetChanged();
             }
 
-            mSearchEngineBar.setSearchEngines(
-                    mSearchEngines.subList(getPrimaryEngineCount(), mSearchEngines.size())
-            );
+            updateSearchEngineBar();
 
             // Show suggestions opt-in prompt only if suggestions are not enabled yet,
             // user hasn't been prompted and we're not on a private browsing tab.
@@ -600,6 +596,19 @@ public class BrowserSearch extends HomeFragment
         }
 
         filterSuggestions();
+    }
+
+    private void updateSearchEngineBar() {
+        final int primaryEngineCount = getPrimaryEngineCount();
+
+        if (primaryEngineCount < mSearchEngines.size()) {
+            mSearchEngineBar.setSearchEngines(
+                    mSearchEngines.subList(primaryEngineCount, mSearchEngines.size())
+            );
+            mSearchEngineBar.setVisibility(View.VISIBLE);
+        } else {
+            mSearchEngineBar.setVisibility(View.GONE);
+        }
     }
 
     @Override

@@ -104,12 +104,17 @@ interface nsIPerformanceSnapshot: nsISupports {
   nsIPerformanceStats getProcessData();
 };
 
-[scriptable, builtinclass, uuid(3a20d41d-9f24-44b3-bd65-0910f92d33d2)]
+[scriptable, builtinclass, uuid(0469e6af-95c3-4961-a385-4bc009128939)]
 interface nsIPerformanceStatsService : nsISupports {
   /**
-   * `true` if we should monitor performance, `false` otherwise.
+   * `true` if we should monitor CPOW, `false` otherwise.
    */
-  [implicit_jscontext] attribute bool isStopwatchActive;
+  [implicit_jscontext] attribute bool isMonitoringCPOW;
+
+  /**
+   * `true` if we should monitor jank, `false` otherwise.
+   */
+  [implicit_jscontext] attribute bool isMonitoringJank;
 
   /**
    * Capture a snapshot of the performance data.

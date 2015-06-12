@@ -159,7 +159,7 @@ function run_test() {
 add_task(function test() {
   let { ThreadNode } = devtools.require("devtools/performance/tree-model");
 
-  let root = new ThreadNode(gThread);
+  let root = new ThreadNode(gThread, { startTime: 0, endTime: 4 });
 
   let A = getFrameNodePath(root, "(root) > A");
 

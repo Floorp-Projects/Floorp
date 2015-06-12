@@ -30,10 +30,12 @@ this.WifiNetUtil = function(controlMessage) {
 
   var util = {};
 
-  util.runDhcp = function (ifname, callback) {
+  util.runDhcp = function (ifname, gen, callback) {
     util.stopDhcp(ifname, function() {
       gNetworkService.dhcpRequest(ifname, function(success, dhcpInfo) {
-        util.runIpConfig(ifname, dhcpInfo, callback);
+        util.runIpConfig(ifname, dhcpInfo, function(data) {
+          callback(data, gen);
+        });
       });
     });
   };

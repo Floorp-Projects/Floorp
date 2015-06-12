@@ -204,10 +204,8 @@ add_test(function test_update_email() {
       // pin2.
       equal(this.readString(), null);
 
-      if (!ril.v5Legacy) {
-        // AID. Ignore because it's from modem.
-        this.readInt32();
-      }
+      // AID. Ignore because it's from modem.
+      this.readInt32();
 
       if (count == NUM_TESTS) {
         run_next_test();
@@ -350,10 +348,8 @@ add_test(function test_update_anr() {
       // pin2.
       equal(this.readString(), null);
 
-      if (!ril.v5Legacy) {
-        // AID. Ignore because it's from modem.
-        this.readInt32();
-      }
+      // AID. Ignore because it's from modem.
+       this.readInt32();
 
       if (count == NUM_TESTS) {
         run_next_test();
@@ -487,10 +483,8 @@ add_test(function test_update_iap() {
       // pin2.
       equal(this.readString(), null);
 
-      if (!ril.v5Legacy) {
-        // AID. Ignore because it's from modem.
-        this.readInt32();
-      }
+      // AID. Ignore because it's from modem.
+      this.readInt32();
 
       run_next_test();
     };
@@ -563,10 +557,8 @@ add_test(function test_update_adn_like() {
       equal(this.readString(), "1111");
     }
 
-    if (!ril.v5Legacy) {
-      // AID. Ignore because it's from modem.
-      this.readInt32();
-    }
+    // AID. Ignore because it's from modem.
+    this.readInt32();
 
     if (fileId == ICC_EF_FDN) {
       run_next_test();

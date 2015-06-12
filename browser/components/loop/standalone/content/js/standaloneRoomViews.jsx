@@ -220,10 +220,10 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
     render: function() {
       return (
-        <footer>
+        <footer className="rooms-footer">
+          <div className="footer-logo" />
           <p dangerouslySetInnerHTML={{__html: this._getContent()}}
              onClick={this.recordClick}></p>
-          <div className="footer-logo" />
         </footer>
       );
     }

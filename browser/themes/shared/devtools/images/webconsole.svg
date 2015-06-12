@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="72" height="60" viewBox="0 0 72 60">
+  <defs>
+    <rect id="glyphShape-colorSwatch" width="8" height="8" ry="2" rx="2"/>
+    <rect id="glyphShape-colorSwatch-border" width="10" height="10" ry="2" rx="2"/>
+    <polygon id="glyphShape-errorX" points="9.9,8.5 8.5,9.9 6,7.4 3.6,9.8 2.2,8.4 4.6,6 2.2,3.6 3.6,2.2 6,4.6 8.4,2.2 9.8,3.6 7.4,6"/>
+    <path id="glyphShape-warningTriangle" d="M9.9,8.6l-3.1-6C6.6,2.2,6.3,2,6,2C5.7,2,5.4,2.2,5.2,2.5l-3.1,6C2,8.9,2,9.3,2.1,9.6C2.3,9.8,2.6,10,2.9,10 h6.1c0.4,0,0.6-0.2,0.8-0.4C10,9.3,10,8.9,9.9,8.6z"/>
+    <path id="glyphShape-exclamationPoint" d="M6,7.7c-0.6,0-1,0.4-1,0.8C5,9,5.4,9.3,6,9.3c0.6,0,1-0.4,1-0.8 C7,8.1,6.6,7.7,6,7.7z M6,7c0.6,0,1-0.4,1-1V5c0-0.6-0.4-1-1-1S5,4.4,5,5v1C5,6.6,5.4,7,6,7z"/>
+    <circle id="glyphShape-infoCircle" cx="6" cy="6" r="4"/>
+    <path id="glyphShape-infoGlyph" d="M6,6C5.4,6,5,6.4,5,7v1c0,0.6,0.4,1,1,1s1-0.4,1-1V7C7,6.4,6.6,6,6,6z M6,5c0.6,0,1-0.4,1-1S6.6,3,6,3S5,3.4,5,4S5.4,5,6,5z"/>
+    <style>
+      .icon-colorSwatch-border {
+        fill: #fff;
+        fill-opacity: .7;
+      }
+      .icon-colorSwatch-network {
+        fill: #000;
+      }
+      .icon-colorSwatch-css {
+        fill: #00b6f0;
+      }
+      .icon-colorSwatch-js {
+        fill: #fb9500;
+      }
+      .icon-colorSwatch-logging {
+        fill: #808080;
+      }
+      .icon-colorSwatch-security {
+        fill: #ec1e0d;
+      }
+      .icon-glyphOverlay {
+        fill: #fff;
+      }
+
+      #icon-indicator-input {
+        fill: #8fa1b2;
+      }
+      #icon-indicator-output {
+        fill: #667380;
+      }
+      #light-icons:target #icon-indicator-input {
+        fill: #45494d;
+      }
+      #light-icons:target #icon-indicator-output {
+        fill: #8a9199;
+      }
+    </style>
+  </defs>
+  <g id="icon-colorSwatch-network">
+    <use xlink:href="#glyphShape-colorSwatch-border" class="icon-colorSwatch-border" x="1" y="1"/>
+    <use xlink:href="#glyphShape-colorSwatch" class="icon-colorSwatch-network" x="2" y="2"/>
+  </g>
+  <g id="icon-colorSwatch-css" transform="translate(0 12)">
+    <use xlink:href="#glyphShape-colorSwatch-border" class="icon-colorSwatch-border" x="1" y="1"/>
+    <use xlink:href="#glyphShape-colorSwatch" class="icon-colorSwatch-css" x="2" y="2"/>
+  </g>
+  <g id="icon-colorSwatch-js" transform="translate(0 24)">
+    <use xlink:href="#glyphShape-colorSwatch-border" class="icon-colorSwatch-border" x="1" y="1"/>
+    <use xlink:href="#glyphShape-colorSwatch" class="icon-colorSwatch-js" x="2" y="2"/>
+  </g>
+  <g id="icon-colorSwatch-logging" transform="translate(0 36)">
+    <use xlink:href="#glyphShape-colorSwatch-border" class="icon-colorSwatch-border" x="1" y="1"/>
+    <use xlink:href="#glyphShape-colorSwatch" class="icon-colorSwatch-logging" x="2" y="2"/>
+  </g>
+  <g id="icon-colorSwatch-security" transform="translate(0 48)">
+    <use xlink:href="#glyphShape-colorSwatch-border" class="icon-colorSwatch-border" x="1" y="1"/>
+    <use xlink:href="#glyphShape-colorSwatch" class="icon-colorSwatch-security" x="2" y="2"/>
+  </g>
+  <use xlink:href="#glyphShape-errorX" id="icon-errorX-network" class="icon-colorSwatch-network" transform="translate(12)"/>
+  <use xlink:href="#glyphShape-errorX" id="icon-errorX-css" class="icon-colorSwatch-css" transform="translate(12 12)"/>
+  <use xlink:href="#glyphShape-errorX" id="icon-errorX-js" class="icon-colorSwatch-js" transform="translate(12 24)"/>
+  <use xlink:href="#glyphShape-errorX" id="icon-errorX-logging" class="icon-colorSwatch-logging" transform="translate(12 36)"/>
+  <use xlink:href="#glyphShape-errorX" id="icon-errorX-security" class="icon-colorSwatch-security" transform="translate(12 48)"/>
+  <g id="icon-warningTriangle-css" transform="translate(24 12)">
+    <use xlink:href="#glyphShape-warningTriangle" class="icon-colorSwatch-css"/>
+    <use xlink:href="#glyphShape-exclamationPoint" class="icon-glyphOverlay"/>
+  </g>
+  <g id="icon-warningTriangle-js" transform="translate(24 24)">
+    <use xlink:href="#glyphShape-warningTriangle" class="icon-colorSwatch-js"/>
+    <use xlink:href="#glyphShape-exclamationPoint" class="icon-glyphOverlay"/>
+  </g>
+  <g id="icon-warningTriangle-logging" transform="translate(24 36)">
+    <use xlink:href="#glyphShape-warningTriangle" class="icon-colorSwatch-logging"/>
+    <use xlink:href="#glyphShape-exclamationPoint" class="icon-glyphOverlay"/>
+  </g>
+  <g id="icon-warningTriangle-security" transform="translate(24 48)">
+    <use xlink:href="#glyphShape-warningTriangle" class="icon-colorSwatch-security"/>
+    <use xlink:href="#glyphShape-exclamationPoint" class="icon-glyphOverlay"/>
+  </g>
+  <g id="icon-infoCircle-logging" transform="translate(36 36)">
+    <use xlink:href="#glyphShape-infoCircle" class="icon-colorSwatch-logging"/>
+    <use xlink:href="#glyphShape-infoGlyph" class="icon-glyphOverlay"/>
+  </g>
+  <g id="light-icons">
+    <path id="icon-indicator-input" d="M6.5,1.2L5.4,2.3L9,6L5.3,9.7l1.1,1.1L11,6L6.5,1.2z M1.5,1.2 L0.4,2.3L4,6L0.3,9.7l1.1,1.1L6,6L1.5,1.2z" transform="translate(48 36)"/>
+    <polygon id="icon-indicator-output" points="10,5 4.3,5 6.8,2.4 5.5,1.2 1,6 5.5,10.8 6.9,9.6 4.3,7 10,7" transform="translate(60 36)"/>
+  </g>
+</svg>

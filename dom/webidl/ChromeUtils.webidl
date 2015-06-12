@@ -28,6 +28,15 @@ interface ChromeUtils {
    */
   [Throws, NewObject]
   static HeapSnapshot readHeapSnapshot(DOMString filePath);
+
+  /**
+   * A helper that converts OriginAttributesDictionary to cookie jar opaque
+   * identfier.
+   *
+   * @param originAttrs       The originAttributes from the caller.
+   */
+  static ByteString
+  originAttributesToCookieJar(optional OriginAttributesDictionary originAttrs);
 };
 
 /**
@@ -60,4 +69,18 @@ dictionary HeapSnapshotBoundaries {
   sequence<object> globals;
   object           debugger;
   boolean          runtime;
+};
+
+/**
+ * Used by principals and the script security manager to represent origin
+ * attributes.
+ *
+ * IMPORTANT: If you add any members here, you need to update the
+ * methods on mozilla::OriginAttributes, and bump the CIDs of all
+ * the principal implementations that use OriginAttributes in their
+ * nsISerializable implementations.
+ */
+dictionary OriginAttributesDictionary {
+  unsigned long appId = 0;
+  boolean inBrowser = false;
 };

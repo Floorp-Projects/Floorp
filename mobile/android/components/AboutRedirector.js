@@ -88,8 +88,8 @@ if (AppConstants.MOZ_DEVICES) {
   };
 }
 if (AppConstants.NIGHTLY_BUILD) {
-  modules['passwords'] = {
-    uri: "chrome://browser/content/aboutPasswords.xhtml",
+  modules['logins'] = {
+    uri: "chrome://browser/content/aboutLogins.xhtml",
     privileged: true
   };
 }

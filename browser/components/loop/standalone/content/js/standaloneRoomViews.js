@@ -220,10 +220,10 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
     render: function() {
       return (
-        React.createElement("footer", null, 
+        React.createElement("footer", {className: "rooms-footer"}, 
+          React.createElement("div", {className: "footer-logo"}), 
           React.createElement("p", {dangerouslySetInnerHTML: {__html: this._getContent()}, 
-             onClick: this.recordClick}), 
-          React.createElement("div", {className: "footer-logo"})
+             onClick: this.recordClick})
         )
       );
     }

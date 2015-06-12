@@ -40,7 +40,7 @@
 
         <org.mozilla.gecko.preferences.LinkPreference android:key="android.not_a_preference.signon.manage"
                                                       android:title="@string/pref_manage_logins"
-                                                      url="about:passwords"/>
+                                                      url="about:logins"/>
 
         <CheckBoxPreference android:key="signon.rememberSignons"
                             android:title="@string/pref_remember_signons"
