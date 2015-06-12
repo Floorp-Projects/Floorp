@@ -6,9 +6,22 @@
 
 #ifndef MacIOSurface_h__
 #define MacIOSurface_h__
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
 #include <QuartzCore/QuartzCore.h>
+#include <CoreVideo/CoreVideo.h>
 #include <dlfcn.h>
+
+struct _CGLContextObject;
+
+typedef _CGLContextObject* CGLContextObj;
+typedef struct CGContext* CGContextRef;
+typedef struct CGImage* CGImageRef;
+typedef uint32_t IOSurfaceID;
+
+#ifdef XP_IOS
+typedef kern_return_t IOReturn;
+typedef int CGLError;
+#endif
 
 typedef CFTypeRef IOSurfacePtr;
 typedef IOSurfacePtr (*IOSurfaceCreateFunc) (CFDictionaryRef properties);
@@ -42,17 +55,15 @@ typedef IOSurfacePtr (*CVPixelBufferGetIOSurfaceFunc)(
 
 typedef OSType (*IOSurfacePixelFormatFunc)(IOSurfacePtr io_surface);
 
+#ifdef XP_MACOSX
 #import <OpenGL/OpenGL.h>
+#else
+#import <OpenGLES/ES2/gl.h>
+#endif
+
 #include "2D.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/RefCounted.h"
-
-struct _CGLContextObject;
-
-typedef _CGLContextObject* CGLContextObj;
-typedef struct CGContext* CGContextRef;
-typedef struct CGImage* CGImageRef;
-typedef uint32_t IOSurfaceID;
 
 enum CGContextType {
   CG_CONTEXT_TYPE_UNKNOWN = 0,
