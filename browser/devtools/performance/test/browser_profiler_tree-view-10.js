@@ -10,7 +10,7 @@ function test() {
   let { ThreadNode } = devtools.require("devtools/performance/tree-model");
   let { CallView } = devtools.require("devtools/performance/tree-view");
 
-  let threadNode = new ThreadNode(gThread, { invertTree: true });
+  let threadNode = new ThreadNode(gThread, { invertTree: true, startTime: 0, endTime: 50 });
   let treeRoot = new CallView({ frame: threadNode, inverted: true, hidden: true });
 
   let container = document.createElement("vbox");

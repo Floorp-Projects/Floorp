@@ -20,9 +20,9 @@ XPCOMUtils.defineLazyGetter(window, "gChromeWin", function()
 XPCOMUtils.defineLazyModuleGetter(this, "Prompt",
                                   "resource://gre/modules/Prompt.jsm");
 
-let debug = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.d.bind(null, "AboutPasswords");
+let debug = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.d.bind(null, "AboutLogins");
 
-let gStringBundle = Services.strings.createBundle("chrome://browser/locale/aboutPasswords.properties");
+let gStringBundle = Services.strings.createBundle("chrome://browser/locale/aboutLogins.properties");
 
 function copyStringAndToast(string, notifyString) {
   try {
@@ -30,15 +30,15 @@ function copyStringAndToast(string, notifyString) {
     clipboard.copyString(string);
     gChromeWin.NativeWindow.toast.show(notifyString, "short");
   } catch (e) {
-    debug("Error copying from about:passwords");
-    gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("passwordsDetails.copyFailed"), "short");
+    debug("Error copying from about:logins");
+    gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("loginsDetails.copyFailed"), "short");
   }
 }
 
 // Delay filtering while typing in MS
 const FILTER_DELAY = 500;
 
-let Passwords = {
+let Logins = {
   _logins: [],
   _filterTimer: null,
 
@@ -157,11 +157,11 @@ let Passwords = {
       window: window,
     });
     let menuItems = [
-      { label: gStringBundle.GetStringFromName("passwordsMenu.showPassword") },
-      { label: gStringBundle.GetStringFromName("passwordsMenu.copyPassword") },
-      { label: gStringBundle.GetStringFromName("passwordsMenu.copyUsername") },
-      { label: gStringBundle.GetStringFromName("passwordsMenu.details") },
-      { label: gStringBundle.GetStringFromName("passwordsMenu.delete") }
+      { label: gStringBundle.GetStringFromName("loginsMenu.showPassword") },
+      { label: gStringBundle.GetStringFromName("loginsMenu.copyPassword") },
+      { label: gStringBundle.GetStringFromName("loginsMenu.copyUsername") },
+      { label: gStringBundle.GetStringFromName("loginsMenu.details") },
+      { label: gStringBundle.GetStringFromName("loginsMenu.delete") }
     ];
 
     prompt.setSingleChoiceItems(menuItems);
@@ -173,21 +173,21 @@ let Passwords = {
             window: window,
             message: login.password,
             buttons: [
-              gStringBundle.GetStringFromName("passwordsDialog.copy"),
-              gStringBundle.GetStringFromName("passwordsDialog.cancel") ]
+              gStringBundle.GetStringFromName("loginsDialog.copy"),
+              gStringBundle.GetStringFromName("loginsDialog.cancel") ]
           }).show((data) => {
             switch (data.button) {
               case 0:
                 // Corresponds to "Copy password" button.
-                copyStringAndToast(login.password, gStringBundle.GetStringFromName("passwordsDetails.passwordCopied"));
+                copyStringAndToast(login.password, gStringBundle.GetStringFromName("loginsDetails.passwordCopied"));
             }
           });
           break;
         case 1:
-          copyStringAndToast(login.password, gStringBundle.GetStringFromName("passwordsDetails.passwordCopied"));
+          copyStringAndToast(login.password, gStringBundle.GetStringFromName("loginsDetails.passwordCopied"));
           break;
         case 2:
-          copyStringAndToast(login.username, gStringBundle.GetStringFromName("passwordsDetails.usernameCopied"));
+          copyStringAndToast(login.username, gStringBundle.GetStringFromName("loginsDetails.usernameCopied"));
           break;
         case 3:
           this._showDetails(loginItem);
@@ -196,10 +196,10 @@ let Passwords = {
         case 4:
           let confirmPrompt = new Prompt({
             window: window,
-            message: gStringBundle.GetStringFromName("passwordsDialog.confirmDelete"),
+            message: gStringBundle.GetStringFromName("loginsDialog.confirmDelete"),
             buttons: [
-              gStringBundle.GetStringFromName("passwordsDialog.confirm"),
-              gStringBundle.GetStringFromName("passwordsDialog.cancel") ]
+              gStringBundle.GetStringFromName("loginsDialog.confirm"),
+              gStringBundle.GetStringFromName("loginsDialog.cancel") ]
           });
           confirmPrompt.show((data) => {
             switch (data.button) {
@@ -287,7 +287,7 @@ let Passwords = {
   observe: function (subject, topic, data) {
     switch(topic) {
       case "passwordmgr-storage-changed": {
-        // Reload passwords content.
+        // Reload logins content.
         this._loadList(this._getLogins());
         break;
       }
@@ -317,7 +317,7 @@ let Passwords = {
 
     let lastChanged = new Date(login.QueryInterface(Ci.nsILoginMetaInfo).timePasswordChanged);
     let days = Math.round((Date.now() - lastChanged) / 1000 / 60 / 60/ 24);
-    document.getElementById("detail-age").textContent = gStringBundle.formatStringFromName("passwordsDetails.age", [days], 1);
+    document.getElementById("detail-age").textContent = gStringBundle.formatStringFromName("loginsDetails.age", [days], 1);
 
     let list = document.getElementById("logins-list");
     list.setAttribute("hidden", "true");
@@ -334,13 +334,13 @@ let Passwords = {
   _copyUsername: function() {
     let detailItem = document.querySelector("#login-details > .login-item");
     let login = detailItem.login;
-    copyStringAndToast(login.username, gStringBundle.GetStringFromName("passwordsDetails.usernameCopied"));
+    copyStringAndToast(login.username, gStringBundle.GetStringFromName("loginsDetails.usernameCopied"));
   },
 
   _copyPassword: function() {
     let detailItem = document.querySelector("#login-details > .login-item");
     let login = detailItem.login;
-    copyStringAndToast(login.password, gStringBundle.GetStringFromName("passwordsDetails.passwordCopied"));
+    copyStringAndToast(login.password, gStringBundle.GetStringFromName("loginsDetails.passwordCopied"));
   },
 
   _openLink: function (clickEvent) {
@@ -370,5 +370,5 @@ let Passwords = {
   }
 };
 
-window.addEventListener("load", Passwords.init.bind(Passwords), false);
-window.addEventListener("unload", Passwords.uninit.bind(Passwords), false);
+window.addEventListener("load", Logins.init.bind(Logins), false);
+window.addEventListener("unload", Logins.uninit.bind(Logins), false);

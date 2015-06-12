@@ -61,7 +61,7 @@ function* spawnTest() {
 
     // Force a rerender
     let rendered = once(JsCallTreeView, EVENTS.JS_CALL_TREE_RENDERED);
-    JsCallTreeView.render();
+    JsCallTreeView.render(OverviewView.getTimeInterval());
     yield rendered;
 
     Services.prefs.setBoolPref(JIT_PREF, true);

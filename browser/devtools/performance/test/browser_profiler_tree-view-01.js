@@ -10,7 +10,7 @@ function test() {
   let { ThreadNode } = devtools.require("devtools/performance/tree-model");
   let { CallView } = devtools.require("devtools/performance/tree-view");
 
-  let threadNode = new ThreadNode(gThread);
+  let threadNode = new ThreadNode(gThread, { startTime: 0, endTime: 20 });
   // Don't display the synthesized (root) and the real (root) node twice.
   threadNode.calls = threadNode.calls[0].calls;
   let treeRoot = new CallView({ frame: threadNode });
@@ -31,7 +31,7 @@ function test() {
 
   is(container.childNodes[0].childNodes[0].getAttribute("type"), "duration",
     "The root node in the tree has a duration cell.");
-  is(container.childNodes[0].childNodes[0].getAttribute("value"), "15 ms",
+  is(container.childNodes[0].childNodes[0].getAttribute("value"), "20 ms",
     "The root node in the tree has the correct duration cell value.");
 
   is(container.childNodes[0].childNodes[1].getAttribute("type"), "percentage",
@@ -51,7 +51,7 @@ function test() {
 
   is(container.childNodes[0].childNodes[4].getAttribute("type"), "samples",
     "The root node in the tree has an samples cell.");
-  is(container.childNodes[0].childNodes[4].getAttribute("value"), "4",
+  is(container.childNodes[0].childNodes[4].getAttribute("value"), "0",
     "The root node in the tree has the correct samples cell value.");
 
   is(container.childNodes[0].childNodes[5].getAttribute("type"), "function",

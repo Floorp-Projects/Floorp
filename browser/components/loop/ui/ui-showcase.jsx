@@ -922,6 +922,22 @@
             </FramedExample>
           </Section>
 
+          <Section name="StandaloneRoomView (Mobile)">
+            <FramedExample width={600} height={480}
+                           onContentsRendered={updatingActiveRoomStore.forcedUpdate}
+                           summary="Standalone room conversation (has-participants, 600x480)">
+                <div className="standalone">
+                  <StandaloneRoomView
+                    dispatcher={dispatcher}
+                    activeRoomStore={updatingActiveRoomStore}
+                    roomState={ROOM_STATES.HAS_PARTICIPANTS}
+                    isFirefox={true}
+                    localPosterUrl="sample-img/video-screen-local.png"
+                    remotePosterUrl="sample-img/video-screen-remote.png" />
+                </div>
+            </FramedExample>
+          </Section>
+
           <Section name="SVG icons preview" className="svg-icons">
             <Example summary="10x10">
               <SVGIcons size="10x10"/>

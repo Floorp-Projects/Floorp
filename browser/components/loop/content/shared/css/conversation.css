@@ -812,16 +812,6 @@ html, .fx-embedded, #main,
   background: transparent url("../img/svg/glyph-help-16x16.svg") no-repeat;
 }
 
-.room-conversation-wrapper footer {
-  background: #000;
-  height: 60px;
-  margin-top: -12px;
-}
-
-.room-conversation-wrapper footer a {
-  color: #555;
-}
-
 .fx-embedded .room-conversation .conversation-toolbar .btn-hangup {
   background-image: url("../img/icons-16x16.svg#leave");
 }
@@ -1127,7 +1117,10 @@ html[dir="rtl"] .room-context-btn-edit {
 }
 
 .standalone .room-conversation-wrapper .video-layout-wrapper {
-  height: calc(100% - 50px - 60px);
+  /* 50px = height of header, 3em = height of footer */
+  /* XXX This is currently wrong for narrow/mobile display,
+     bug 1168829  will hopefully address it. */
+  height: calc(100% - 50px - 3em);
 }
 
 .standalone .room-conversation-wrapper .room-inner-info-area {
@@ -1330,16 +1323,6 @@ html[dir="rtl"] .room-context-btn-edit {
   .standalone .media.nested {
     /* This forces the remote video stream to fit within wrapper's height */
     min-height: 0px;
-  }
-  .standalone .room-conversation-wrapper footer {
-    font-size: 80%;
-    height: 25px;
-  }
-  .standalone .room-conversation-wrapper footer p {
-    padding-top: 4px;
-  }
-  .standalone .room-conversation-wrapper footer .footer-logo {
-    display: none;
   }
 }
 

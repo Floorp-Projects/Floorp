@@ -876,7 +876,9 @@ MobileConnection::SetCallWaitingOption(bool aEnabled, ErrorResult& aRv)
   nsRefPtr<MobileConnectionCallback> requestCallback =
     new MobileConnectionCallback(GetOwner(), request);
 
-  nsresult rv = mMobileConnection->SetCallWaiting(aEnabled, requestCallback);
+  nsresult rv = mMobileConnection->SetCallWaiting(aEnabled,
+                                                  nsIMobileConnection::ICC_SERVICE_CLASS_VOICE,
+                                                  requestCallback);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;

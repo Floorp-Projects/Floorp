@@ -108,7 +108,7 @@ interface nsIMobileConnectionListener : nsISupports
 #define NO_ADDITIONAL_INFORMATION 0
 %}
 
-[scriptable, uuid(14d66926-8434-11e4-8c3f-f724194bb5f1)]
+[scriptable, uuid(ef5e02a6-adff-4425-8634-ec49ced1f14f)]
 interface nsIMobileConnectionCallback : nsISupports
 {
   /**
@@ -127,6 +127,8 @@ interface nsIMobileConnectionCallback : nsISupports
   void notifyGetCallBarringSuccess(in unsigned short program,
                                    in boolean enabled,
                                    in unsigned short serviceClass);
+
+  void notifyGetCallWaitingSuccess(in unsigned short serviceClass);
 
   void notifyGetClirStatusSuccess(in unsigned short n, in unsigned short m);
 
@@ -163,7 +165,7 @@ already_AddRefed<nsIMobileConnectionService>
 NS_CreateMobileConnectionService();
 %}
 
-[scriptable, uuid(59a6d450-144b-47f9-8f4a-2132331e9e05)]
+[scriptable, uuid(d7173ff3-a8da-41c1-a976-440e5402b856)]
 interface nsIMobileConnection : nsISupports
 {
   /*
@@ -601,6 +603,8 @@ interface nsIMobileConnection : nsISupports
    *
    * @param enabled
    *        Boolean indicates the desired call waiting status.
+   * @param serviceClass
+   *        One of the nsIMobileConnection.ICC_SERVICE_CLASS_* values.
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -611,6 +615,7 @@ interface nsIMobileConnection : nsISupports
    * 'GenericFailure'.
    */
   void setCallWaiting(in bool enabled,
+                      in unsigned short serviceClass,
                       in nsIMobileConnectionCallback requestCallback);
 
   /**
@@ -619,8 +624,12 @@ interface nsIMobileConnection : nsISupports
    * @param requestCallback
    *        Called when request is finished.
    *
-   * If successful, the notifySuccessWithBoolean() will be called. And the result
-   * will be a boolean indicating the call waiting status.
+   * If successful, the notifyGetCallWaitingSuccess() will be called. And the
+   * result will be a service class bit vector of services for which call
+   * waiting is enabled. e.g. 3 means call waiting is enabled for data
+   * and voice and disabled for everything else. 0 means call waiting is
+   * disabled for all service.
+   * @see nsIMobileConnection.ICC_SERVICE_CLASS_*.
    *
    * Otherwise, the notifyError() will be called, and the error will be either
    * 'RadioNotAvailable', 'RequestNotSupported', 'IllegalSIMorME', or

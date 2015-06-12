@@ -32,7 +32,7 @@ public class StringHelper {
     public final String ABOUT_DOWNLOADS_URL = "about:downloads";
     public final String ABOUT_HOME_URL = "about:home";
     public final String ABOUT_ADDONS_URL = "about:addons";
-    public static final String ABOUT_PASSWORDS_URL = "about:passwords";
+    public static final String ABOUT_LOGINS_URL = "about:logins";
     public final String ABOUT_APPS_URL = "about:apps";
     public final String ABOUT_ABOUT_URL = "about:about";
     public final String ABOUT_SCHEME = "about:";

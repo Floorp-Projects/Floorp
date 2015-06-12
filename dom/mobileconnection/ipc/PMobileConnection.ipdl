@@ -133,6 +133,7 @@ struct ChangeCallBarringPasswordRequest
 struct SetCallWaitingRequest
 {
   bool enabled;
+  uint16_t serviceClass;
 };
 
 struct GetCallWaitingRequest

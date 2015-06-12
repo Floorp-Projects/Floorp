@@ -166,6 +166,15 @@ PluginScriptableObjectParent::ScriptableDeallocate(NPObject* aObject)
   }
 
   ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
+
+  if (object->asyncWrapperCount > 0) {
+    // In this case we should just drop the refcount to the asyncWrapperCount
+    // instead of deallocating because there are still some async wrappers
+    // out there that are referencing this object.
+    object->referenceCount = object->asyncWrapperCount;
+    return;
+  }
+
   PluginScriptableObjectParent* actor = object->parent;
   if (actor) {
     NS_ASSERTION(actor->Type() == Proxy, "Bad type!");

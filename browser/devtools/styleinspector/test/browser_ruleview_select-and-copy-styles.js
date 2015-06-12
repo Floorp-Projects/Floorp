@@ -33,8 +33,7 @@ add_task(function*() {
     '</div>';
   content.document.title = "Rule view context menu test";
 
-  info("Opening the computed view");
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
 
   info("Selecting the test node");
   yield selectNode("div", inspector);
@@ -43,17 +42,18 @@ add_task(function*() {
   yield checkSelectAll(view);
 });
 
-function checkCopySelection(view) {
+function* checkCopySelection(view) {
   info("Testing selection copy");
 
   let contentDoc = view.doc;
+  let win = contentDoc.defaultView;
   let prop = contentDoc.querySelector(".ruleview-property");
   let values = contentDoc.querySelectorAll(".ruleview-propertyvaluecontainer");
 
   let range = contentDoc.createRange();
   range.setStart(prop, 0);
   range.setEnd(values[4], 2);
-  let selection = view.doc.defaultView.getSelection().addRange(range);
+  view.doc.defaultView.getSelection().addRange(range);
 
   info("Checking that _Copy() returns the correct clipboard value");
 
@@ -65,19 +65,28 @@ function checkCopySelection(view) {
                         "html {[\\r\\n]+" +
                         "    color: #000;[\\r\\n]*";
 
-  return waitForClipboard(() => {
-    fireCopyEvent(prop);
-  }, () => {
-    return checkClipboardData(expectedPattern);
-  }).then(() => {}, () => {
+  let onPopup = once(view._contextmenu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(prop,
+    {button: 2, type: "contextmenu"}, win);
+  yield onPopup;
+
+  ok(!view.menuitemCopy.hidden, "Copy menu item is not hidden as expected");
+
+  try {
+    yield waitForClipboard(() => view.menuitemCopy.click(),
+      () => checkClipboardData(expectedPattern));
+  } catch(e) {
     failedClipboard(expectedPattern);
-  });
+  }
+
+  view._contextmenu.hidePopup();
 }
 
-function checkSelectAll(view) {
+function* checkSelectAll(view) {
   info("Testing select-all copy");
 
   let contentDoc = view.doc;
+  let win = contentDoc.defaultView;
   let prop = contentDoc.querySelector(".ruleview-property");
 
   info("Checking that _SelectAll() then copy returns the correct clipboard value");
@@ -93,13 +102,21 @@ function checkSelectAll(view) {
                         "    color: #000;[\\r\\n]+" +
                         "}[\\r\\n]*";
 
-  return waitForClipboard(() => {
-    fireCopyEvent(prop);
-  }, () => {
-    return checkClipboardData(expectedPattern);
-  }).then(() => {}, () => {
+  let onPopup = once(view._contextmenu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(prop,
+    {button: 2, type: "contextmenu"}, win);
+  yield onPopup;
+
+  ok(!view.menuitemCopy.hidden, "Copy menu item is not hidden as expected");
+
+  try {
+    yield waitForClipboard(() => view.menuitemCopy.click(),
+      () => checkClipboardData(expectedPattern));
+  } catch(e) {
     failedClipboard(expectedPattern);
-  });
+  }
+
+  view._contextmenu.hidePopup();
 }
 
 function checkClipboardData(expectedPattern) {

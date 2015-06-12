@@ -54,10 +54,6 @@ body,
 /*
  * Top/Bottom spacing
  **/
-.standalone-footer {
-  margin-bottom: 2rem;
-}
-
 .container {
   display: flex;
   flex-direction: column;
@@ -79,6 +75,8 @@ body,
   align-content: center;
 }
 
+/* call-url only */
+
 .terms-service,
 .terms-service a {
   font-size: .6rem;
@@ -98,6 +96,10 @@ body,
     color: #777;
   }
 
+.standalone-footer {
+  margin-bottom: 2rem;
+}
+
 .footer-external-links {
   padding: .2rem .7rem;
 }
@@ -112,6 +114,8 @@ body,
   color: #777;
 }
 
+/* Both call-url & rooms */
+
 .footer-logo {
   width: 100px;
   margin: 0 auto;
@@ -119,6 +123,69 @@ body,
   background-size: contain;
   background-image: url("../shared/img/mozilla-logo.png");
   background-repeat: no-repeat;
+}
+
+/* Rooms Footer */
+
+.rooms-footer {
+  background: #000;
+  margin: 0 20px;
+  text-align: left;
+  height: 3em;
+  position: relative;
+}
+
+html[dir="rtl"] .rooms-footer {
+  text-align: right;
+}
+
+.rooms-footer p {
+  /* Right-margin offset to account for .footer-logo plus 20px. */
+  /* Zero other margins due to 1em margin from reset.css. */
+  margin: 0 120px 0 0;
+  /* Vertically align in the middle. */
+  position: absolute;
+  top: 50%;
+  transform: translate(0, -50%);
+}
+
+html[dir="rtl"] .rooms-footer p {
+  margin: 0 0 0 120px;
+}
+
+.rooms-footer a {
+  color: #555;
+}
+
+.rooms-footer .footer-logo {
+  /* Vertically-align in the middle. */
+  position: absolute;
+  top: 50%;
+  transform: translate(0, -50%);
+  /* Align to the right. */
+  right: 0;
+}
+
+html[dir="rtl"] .rooms-footer .footer-logo {
+  left: 0;
+  right: auto;
+}
+
+@media screen and (max-width:640px) {
+  .rooms-footer {
+    font-size: 80%;
+    height: 25px;
+    text-align: center;
+  }
+
+  .rooms-footer p {
+    margin: 0;
+    width: 100%;
+  }
+
+  .rooms-footer .footer-logo {
+    display: none;
+  }
 }
 
 .loop-logo {
