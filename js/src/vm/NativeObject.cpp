@@ -333,8 +333,10 @@ NativeObject::setLastPropertyMakeNonNative(Shape* shape)
 
     if (hasDynamicElements())
         js_free(getElementsHeader());
-    if (hasDynamicSlots())
+    if (hasDynamicSlots()) {
         js_free(slots_);
+        slots_ = nullptr;
+    }
 
     shape_ = shape;
 }
@@ -396,6 +398,7 @@ NativeObject::growSlots(ExclusiveContext* cx, uint32_t oldCount, uint32_t newCou
     MOZ_ASSERT(newCount < NELEMENTS_LIMIT);
 
     if (!oldCount) {
+        MOZ_ASSERT(!slots_);
         slots_ = AllocateObjectBuffer<HeapSlot>(cx, this, newCount);
         if (!slots_)
             return false;
