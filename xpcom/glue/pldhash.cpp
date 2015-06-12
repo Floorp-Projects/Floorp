@@ -910,7 +910,7 @@ PLDHashTable::Iterator::Iterator(const PLDHashTable* aTable)
   // mEntryAddr, respectively.
   uint32_t capacity = mTable->Capacity();
 
-  if (ChaosMode::isActive(ChaosMode::HashTableIteration)) {
+  if (ChaosMode::isActive(ChaosMode::HashTableIteration) && capacity > 0) {
     // Start iterating at a random point in the hashtable. It would be
     // even more chaotic to iterate in fully random order, but that's a lot
     // more work.
