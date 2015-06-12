@@ -25,6 +25,7 @@ addLoadEvent(function() {
     sp.onaudioprocess = null;
     SimpleTest.finish();
   };
+  sp.connect(ctx.destination); // work around bug 916387
 });
 
 
