@@ -240,20 +240,24 @@ function waitForNetworkEvents(aMonitor, aGetRequests, aPostRequests = 0) {
     maybeResolve(event, actor);
   }
 
-  function maybeResolve(event, [actor, url]) {
+  function maybeResolve(event, actor) {
     info("> Network events progress: " +
       genericEvents + "/" + ((aGetRequests + aPostRequests) * 13) + ", " +
       postEvents + "/" + (aPostRequests * 2) + ", " +
       "got " + event + " for " + actor);
 
+    let networkInfo =
+      panel.NetMonitorController.webConsoleClient.getNetworkRequest(actor)
+    let url = networkInfo.request.url;
     updateProgressForURL(url, event);
+
     info("> Current state: " + JSON.stringify(progress, null, 2));
 
     // There are 15 updates which need to be fired for a request to be
     // considered finished. The "requestPostData" packet isn't fired for
     // non-POST requests.
-    if (genericEvents == (aGetRequests + aPostRequests) * 13 &&
-        postEvents == aPostRequests * 2) {
+    if (genericEvents >= (aGetRequests + aPostRequests) * 13 &&
+        postEvents >= aPostRequests * 2) {
 
       awaitedEventsToListeners.forEach(([e, l]) => panel.off(events[e], l));
       executeSoon(deferred.resolve);
