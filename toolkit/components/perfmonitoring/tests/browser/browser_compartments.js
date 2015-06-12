@@ -28,7 +28,7 @@ function frameScript() {
       getService(Ci.nsIPerformanceStatsService);
 
     // Make sure that the stopwatch is now active.
-    let monitor = PerformanceStats.getMonitor(["jank", "cpow", "ticks"]);
+    let monitor = PerformanceStats.getMonitor(["jank", "cpow", "ticks", "compartments"]);
 
     addMessageListener("compartments-test:getStatistics", () => {
       try {
@@ -158,8 +158,10 @@ function monotinicity_tester(source, testName) {
         ["jank", "totalSystemTime"],
         ["cpow", "totalCPOWTime"]
       ]) {
-        SilentAssert.leq(item[probe][k], snapshot.processData[probe][k],
-          `Sanity check (${testName}): component has a lower ${k} than process`);
+        // Note that we cannot expect components data to be always smaller
+        // than process data, as `getrusage` & co are not monotonic.
+        SilentAssert.leq(item[probe][k], 2 * snapshot.processData[probe][k],
+          `Sanity check (${testName}): ${k} of component is not impossibly larger than that of process`);
       }
 
       let key = item.groupId;
@@ -168,6 +170,24 @@ function monotinicity_tester(source, testName) {
         Assert.ok(false, `Component ${key} has already been seen. Latest: ${item.title||item.addonId||item.name}, previous: ${old.title||old.addonId||old.name}`);
       }
       map.set(key, item);
+    }
+    for (let item of snapshot.componentsData) {
+      if (!item.parentId) {
+        continue;
+      }
+      let parent = map.get(item.parentId);
+      SilentAssert.ok(parent, `The parent exists ${item.parentId}`);
+
+      for (let [probe, k] of [
+        ["jank", "totalUserTime"],
+        ["jank", "totalSystemTime"],
+        ["cpow", "totalCPOWTime"]
+      ]) {
+        // Note that we cannot expect components data to be always smaller
+        // than parent data, as `getrusage` & co are not monotonic.
+        SilentAssert.leq(item[probe][k], 2 * parent[probe][k],
+          `Sanity check (${testName}): ${k} of component is not impossibly larger than that of parent`);
+      }
     }
     for (let [key, item] of map) {
       sanityCheck(previous.componentsMap.get(key), item);
