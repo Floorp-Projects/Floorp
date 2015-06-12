@@ -10,11 +10,8 @@ const Cu = Components.utils;
 
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/event-emitter.js");
-const {DeferredTask} = Cu.import("resource://gre/modules/DeferredTask.jsm", {});
 
 this.EXPORTED_SYMBOLS = ["SideMenuWidget"];
-
-const SCROLL_FREQUENCY = 16;
 
 /**
  * A simple side menu, with the ability of grouping menu items.
@@ -82,14 +79,6 @@ SideMenuWidget.prototype = {
   groupSortPredicate: function(a, b) a.localeCompare(b),
 
   /**
-   * Specifies that the container viewport should be "stuck" to the
-   * bottom. That is, the container is automatically scrolled down to
-   * keep appended items visible, but only when the scroll position is
-   * already at the bottom.
-   */
-  autoscrollWithAppendedItems: false,
-
-  /**
    * Inserts an item in this container at the specified index, optionally
    * grouping by name.
    *
@@ -106,28 +95,9 @@ SideMenuWidget.prototype = {
    *         The element associated with the displayed item.
    */
   insertItemAt: function(aIndex, aContents, aAttachment={}) {
-    // Maintaining scroll position at the bottom when a new item is inserted
-    // depends on several factors (the order of testing is important to avoid
-    // needlessly expensive operations that may cause reflows):
-    let maintainScrollAtBottom =
-      // 1. The behavior should be enabled,
-      this.autoscrollWithAppendedItems &&
-      // 2. There shouldn't currently be any selected item in the list.
-      !this._selectedItem &&
-      // 3. The new item should be appended at the end of the list.
-      (aIndex < 0 || aIndex >= this._orderedMenuElementsArray.length) &&
-      // 4. We aren't waiting for a scroll to happen.
-      (!this._scrollToBottomTask || !this._scrollToBottomTask.isArmed) &&
-      // 5. The list should already be scrolled at the bottom.
-      this.isScrolledToBottom();
-
     let group = this._getMenuGroupForName(aAttachment.group);
     let item = this._getMenuItemForGroup(group, aContents, aAttachment);
     let element = item.insertSelfAt(aIndex);
-
-    if (maintainScrollAtBottom) {
-      this.scrollToBottom();
-    }
 
     return element;
   },
@@ -158,30 +128,8 @@ SideMenuWidget.prototype = {
    * If the user scrolls in the meantime, cancel this operation.
    */
   scrollToBottom: function() {
-    // Lazily attach this functionality to the object, so it won't get
-    // created unless if this scrollToBottom behavior is needed.
-    if (!this._scrollToBottomTask) {
-      // The scroll event fires asynchronously, so we need to keep a bit to
-      // distinguish between user-initiated events and scrollTop assignment.
-      let ignoreNextScroll = false;
-
-      this._scrollToBottomTask = new DeferredTask(() => {
-        ignoreNextScroll = true;
-        this._list.scrollTop = this._list.scrollHeight;
-        this.emit("scroll-to-bottom");
-      }, SCROLL_FREQUENCY);
-
-      // On a user scroll, cancel any pending calls to the scroll function.
-      this._list.addEventListener("scroll", () => {
-        if (!ignoreNextScroll && this._scrollToBottomTask.isArmed &&
-            !this.isScrolledToBottom()) {
-          this._scrollToBottomTask.disarm();
-        }
-        ignoreNextScroll = false;
-      }, true);
-    }
-
-    this._scrollToBottomTask.arm();
+    this._list.scrollTop = this._list.scrollHeight;
+    this.emit("scroll-to-bottom");
   },
 
   /**
