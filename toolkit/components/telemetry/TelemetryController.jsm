@@ -720,11 +720,11 @@ let Impl = {
 
     // Now do an orderly shutdown.
     try {
-      // First wait for clients processing shutdown.
-      yield this._shutdownBarrier.wait();
-
       // Stop any ping sending.
       yield TelemetrySend.shutdown();
+
+      // First wait for clients processing shutdown.
+      yield this._shutdownBarrier.wait();
 
       // ... and wait for any outstanding async ping activity.
       yield this._connectionsBarrier.wait();
