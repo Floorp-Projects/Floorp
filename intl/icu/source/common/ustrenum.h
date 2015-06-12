@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-* Copyright (c) 2002-2012, International Business Machines
+* Copyright (c) 2002-2014, International Business Machines
 * Corporation and others.  All Rights Reserved.
 **********************************************************************
 * Author: Alan Liu
@@ -73,6 +73,8 @@ public:
      */
     static UClassID U_EXPORT2 getStaticClassID();
 
+    static UStringEnumeration * U_EXPORT2 fromUEnumeration(
+            UEnumeration *enumToAdopt, UErrorCode &status);
 private:
     UEnumeration *uenum; // owned
 };

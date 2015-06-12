@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/xog.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/xog.xml
- */
 xog{
     Currencies{
         AED{
@@ -17,11 +14,11 @@ xog{
         }
         AOA{
             "AOA",
-            "Kwanza y'Angola",
+            "Kwanza y’Angola",
         }
         AUD{
             "A$",
-            "Doola y'Awusiturelya",
+            "Doola y’Awusiturelya",
         }
         BHD{
             "BHD",
@@ -45,7 +42,7 @@ xog{
         }
         CHF{
             "CHF",
-            "Faranga ey'eSwitizirandi",
+            "Faranga ey’eSwitizirandi",
         }
         CNY{
             "CN¥",
@@ -61,7 +58,7 @@ xog{
         }
         DZD{
             "DZD",
-            "Dinaali y'Aligerya",
+            "Dinaali y’Aligerya",
         }
         EGP{
             "EGP",
@@ -125,55 +122,55 @@ xog{
         }
         MAD{
             "MAD",
-            "Diraamu ey'eMoroko",
+            "Diraamu ey’eMoroko",
         }
         MGA{
             "MGA",
-            "Faranga ey'eMalagase",
+            "Faranga ey’eMalagase",
         }
         MRO{
             "MRO",
-            "Wugwiya ey'eMawritenya",
+            "Wugwiya ey’eMawritenya",
         }
         MUR{
             "MUR",
-            "Rupiya ey'eMawurisyasi",
+            "Rupiya ey’eMawurisyasi",
         }
         MWK{
             "MWK",
-            "Kwaca ey'eMalawi",
+            "Kwaca ey’eMalawi",
         }
         MZM{
             "MZM",
-            "Metikaali ey'eMozambiiki",
+            "Metikaali ey’eMozambiiki",
         }
         NGN{
             "NGN",
-            "Nayira ey'eNayijerya",
+            "Nayira ey’eNayijerya",
         }
         RWF{
             "RWF",
-            "Faranga ey'eRwanda",
+            "Faranga ey’eRwanda",
         }
         SAR{
             "SAR",
-            "Riyaali ey'eBuwarabu",
+            "Riyaali ey’eBuwarabu",
         }
         SCR{
             "SCR",
-            "Rupiya ey'eSesere",
+            "Rupiya ey’eSesere",
         }
         SDG{
             "SDG",
-            "Dinaali ey'eSudaani",
+            "Dinaali ey’eSudaani",
         }
         SDP{
             "SDP",
-            "Pawunda ey'eSudaani",
+            "Pawunda ey’eSudaani",
         }
         SHP{
             "SHP",
-            "Pawunda ey'eSenti Herena",
+            "Pawunda ey’eSenti Herena",
         }
         SLL{
             "SLL",
@@ -181,11 +178,11 @@ xog{
         }
         SOS{
             "SOS",
-            "Silingi ey'eSomaliya",
+            "Silingi ey’eSomaliya",
         }
         STD{
             "STD",
-            "Dobura ey'eSantome ne Purincipe",
+            "Dobura ey’eSantome ne Purincipe",
         }
         SZL{
             "SZL",
@@ -193,11 +190,11 @@ xog{
         }
         TND{
             "TND",
-            "Dinaali ey'eTunizya",
+            "Dinaali ey’eTunizya",
         }
         TZS{
             "TZS",
-            "Silingi ey'eTanzaniya",
+            "Silingi ey’eTanzaniya",
         }
         UGX{
             "USh",
@@ -205,7 +202,7 @@ xog{
         }
         USD{
             "US$",
-            "Doola ey'Amerika",
+            "Doola ey’Amerika",
         }
         XAF{
             "FCFA",
@@ -217,20 +214,20 @@ xog{
         }
         ZAR{
             "ZAR",
-            "Randi ey'eSawusafirika",
+            "Randi ey’eSawusafirika",
         }
         ZMK{
             "ZMK",
-            "Kwaca ey'eZambya (1968–2012)",
+            "Kwaca ey’eZambya (1968–2012)",
         }
         ZMW{
             "ZMW",
-            "Kwaca ey'eZambya",
+            "Kwaca ey’eZambya",
         }
         ZWD{
             "ZWD",
-            "Doola ey'eZimbabwe",
+            "Doola ey’eZimbabwe",
         }
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.7.39"}
 }

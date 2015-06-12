@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/el.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/el.xml
- */
 el{
     AuxExemplarCharacters{
         "[ἀ ἄ ἂ ἆ ἁ ἅ ἃ ἇ ὰ ᾶ ἐ ἔ ἒ ἑ ἕ ἓ ὲ ἠ ἤ ἢ ἦ ἡ ἥ ἣ ἧ ὴ ῆ ἰ ἴ ἲ ἶ ἱ ἵ ἳ ἷ ὶ ῖ ῒ"
@@ -24,19 +21,17 @@ el{
     }
     ExemplarCharacters{"[α ά β γ δ ε έ ζ η ή θ ι ί ϊ ΐ κ λ μ ν ξ ο ό π ρ σ ς τ υ ύ ϋ ΰ φ χ ψ ω ώ]"}
     ExemplarCharactersIndex{"[Α Β Γ Δ Ε Ζ Η Θ Ι Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω]"}
-    ExemplarCharactersPunctuation{"[\\- ‐ – — , ; \\: ! . … \u0022 ( ) \\[ \\] § @ * / \\\\ \\&]"}
-    LocaleScript{
-        "Grek",
-    }
+    ExemplarCharactersPunctuation{"[\\- ‐ – — , ; \\: ! . … \u0022 « » ( ) \\[ \\] § @ * / \\\\ \\&]"}
     MoreInformation{";"}
     NumberElements{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"{0}+"}
                 range{"{0}–{1}"}
             }
             patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -158,12 +153,14 @@ el{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
+        minimumGroupingDigits{"1"}
         native{"latn"}
         traditional{"grek"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
     calendar{
         buddhist{
             eras{
@@ -191,7 +188,7 @@ el{
             availableFormats{
                 Ed{"E d"}
                 Gy{"y G"}
-                GyMMM{"LLL y G"}
+                GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 H{"HH"}
@@ -212,15 +209,15 @@ el{
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 ms{"mm:ss"}
-                y{"y"}
+                y{"y G"}
                 yyyy{"y G"}
-                yyyyM{"M/y G"}
-                yyyyMEd{"E, d/M/y G"}
-                yyyyMMM{"LLL y G"}
+                yyyyM{"M/y GGGGG"}
+                yyyyMEd{"E, d/M/y GGGGG"}
+                yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E, d MMM y G"}
-                yyyyMMMM{"LLLL y G"}
+                yyyyMMMM{"MMMM y G"}
                 yyyyMMMd{"d MMM y G"}
-                yyyyMd{"d/M/y G"}
+                yyyyMd{"d/M/y GGGGG"}
                 yyyyQQQ{"G y QQQ"}
                 yyyyQQQQ{"G y QQQQ"}
             }
@@ -240,83 +237,83 @@ el{
                     H{"HH–HH v"}
                 }
                 M{
-                    M{"M-M"}
+                    M{"M–M"}
                 }
                 MEd{
-                    M{"E, dd/MM - E, dd/MM"}
-                    d{"E, dd/MM - E, dd/MM"}
+                    M{"E, dd/MM – E, dd/MM"}
+                    d{"E, dd/MM – E, dd/MM"}
                 }
                 MMM{
-                    M{"LLL-LLL"}
+                    M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"E, dd MMM - E, dd MMM"}
-                    d{"E, dd - E, dd MMM"}
+                    M{"E, dd MMM – E, dd MMM"}
+                    d{"E, dd – E, dd MMM"}
                 }
                 MMMd{
-                    M{"dd MMM - dd MMM"}
-                    d{"dd-dd MMM"}
+                    M{"dd MMM – dd MMM"}
+                    d{"dd–dd MMM"}
                 }
                 Md{
-                    M{"dd/MM - dd/MM"}
-                    d{"dd/MM - dd/MM"}
+                    M{"dd/MM – dd/MM"}
+                    d{"dd/MM – dd/MM"}
                 }
                 d{
-                    d{"d-d"}
+                    d{"d–d"}
                 }
                 fallback{"{0} - {1}"}
                 h{
-                    a{"h a - h a"}
-                    h{"h-h a"}
+                    a{"h a – h a"}
+                    h{"h–h a"}
                 }
                 hm{
-                    a{"h:mm a - h:mm a"}
-                    h{"h:mm-h:mm a"}
-                    m{"h:mm-h:mm a"}
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
                 }
                 hmv{
-                    a{"h:mm a - h:mm a v"}
-                    h{"h:mm-h:mm a v"}
-                    m{"h:mm-h:mm a v"}
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
                 }
                 hv{
-                    a{"h a - h a v"}
-                    h{"h-h a v"}
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
                 }
                 y{
-                    y{"y-y G"}
+                    y{"y–y G"}
                 }
                 yM{
-                    M{"MM/y - MM/y G"}
-                    y{"MM/y - MM/y G"}
+                    M{"MM/y – MM/y GGGGG"}
+                    y{"MM/y – MM/y GGGGG"}
                 }
                 yMEd{
-                    M{"E, dd/MM/y - E, dd/MM/y G"}
-                    d{"E, dd/MM/y - E, dd/MM/y G"}
-                    y{"E, dd/MM/y - E, dd/MM/y G"}
+                    M{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                    d{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                    y{"E, dd/MM/y – E, dd/MM/y GGGGG"}
                 }
                 yMMM{
-                    M{"LLL-LLL y"}
-                    y{"LLL y - LLL y G"}
+                    M{"MMM–MMM y G"}
+                    y{"MMM y – MMM y G"}
                 }
                 yMMMEd{
-                    M{"E, dd MMM - E, dd MMM y G"}
-                    d{"E, dd - E, dd MMM y G"}
-                    y{"E, dd MMM y - E, dd MMM y G"}
+                    M{"E, dd MMM – E, dd MMM y G"}
+                    d{"E, dd – E, dd MMM y G"}
+                    y{"E, dd MMM y – E, dd MMM y G"}
                 }
                 yMMMM{
-                    M{"LLLL-LLLL y G"}
-                    y{"LLLL y - LLLL y G"}
+                    M{"MMMM–MMMM y G"}
+                    y{"MMMM y – MMMM y G"}
                 }
                 yMMMd{
-                    M{"dd MMM - dd MMM y G"}
-                    d{"dd-dd MMM y G"}
-                    y{"dd MMM y - dd MMM y G"}
+                    M{"dd MMM – dd MMM y G"}
+                    d{"dd–dd MMM y G"}
+                    y{"dd MMM y – dd MMM y G"}
                 }
                 yMd{
-                    M{"dd/MM/y - dd/MM/y G"}
-                    d{"dd/MM/y - dd/MM/y G"}
-                    y{"dd/MM/y - dd/MM/y G"}
+                    M{"dd/MM/y – dd/MM/y GGGGG"}
+                    d{"dd/MM/y – dd/MM/y GGGGG"}
+                    y{"dd/MM/y – dd/MM/y GGGGG"}
                 }
             }
         }
@@ -324,6 +321,10 @@ el{
             AmPmMarkers{
                 "π.μ.",
                 "μ.μ.",
+            }
+            AmPmMarkersNarrow{
+                "π",
+                "μ",
             }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -334,16 +335,19 @@ el{
                 "d MMMM y",
                 "d MMM y",
                 "d/M/yy",
+                "{1}, {0}",
                 "{1} - {0}",
                 "{1} - {0}",
-                "{1} - {0}",
-                "{1} - {0}",
-                "{1} - {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
+            NoonMarker{"μεσημέρι"}
+            NoonMarkerNarrow{"μεσ."}
             appendItems{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                E{"ccc"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E d"}
@@ -374,9 +378,9 @@ el{
                 y{"y"}
                 yM{"M/y"}
                 yMEd{"E, d/M/y"}
-                yMMM{"LLL y"}
+                yMMM{"MMM y"}
                 yMMMEd{"E, d MMM y"}
-                yMMMM{"LLLL y"}
+                yMMMM{"MMMM y"}
                 yMMMd{"d MMM y"}
                 yMd{"d/M/y"}
                 yQQQ{"y QQQ"}
@@ -465,6 +469,18 @@ el{
                     "π.Χ.",
                     "μ.Χ.",
                 }
+                abbreviated%variant{
+                    "π.Κ.Χ.",
+                    "ΚΧ",
+                }
+                wide{
+                    "προ Χριστού",
+                    "μετά Χριστόν",
+                }
+                wide%variant{
+                    "πριν από την Κοινή Χρονολογία",
+                    "Κοινή Χρονολογία",
+                }
             }
             intervalFormats{
                 H{
@@ -482,83 +498,83 @@ el{
                     H{"HH–HH v"}
                 }
                 M{
-                    M{"M-M"}
+                    M{"M–M"}
                 }
                 MEd{
-                    M{"E, dd/MM - E, dd/MM"}
-                    d{"E, dd/MM - E, dd/MM"}
+                    M{"E, dd/MM – E, dd/MM"}
+                    d{"E, dd/MM – E, dd/MM"}
                 }
                 MMM{
-                    M{"LLL-LLL"}
+                    M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"E, dd MMM - E, dd MMM"}
-                    d{"E, dd - E, dd MMM"}
+                    M{"E, dd MMM – E, dd MMM"}
+                    d{"E, dd – E, dd MMM"}
                 }
                 MMMd{
-                    M{"dd MMM - dd MMM"}
-                    d{"dd-dd MMM"}
+                    M{"dd MMM – dd MMM"}
+                    d{"dd–dd MMM"}
                 }
                 Md{
-                    M{"dd/MM - dd/MM"}
-                    d{"dd/MM - dd/MM"}
+                    M{"dd/MM – dd/MM"}
+                    d{"dd/MM – dd/MM"}
                 }
                 d{
-                    d{"d-d"}
+                    d{"d–d"}
                 }
                 fallback{"{0} - {1}"}
                 h{
-                    a{"h a - h a"}
-                    h{"h-h a"}
+                    a{"h a – h a"}
+                    h{"h–h a"}
                 }
                 hm{
-                    a{"h:mm a - h:mm a"}
-                    h{"h:mm-h:mm a"}
-                    m{"h:mm-h:mm a"}
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
                 }
                 hmv{
-                    a{"h:mm a - h:mm a v"}
-                    h{"h:mm-h:mm a v"}
-                    m{"h:mm-h:mm a v"}
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
                 }
                 hv{
-                    a{"h a - h a v"}
-                    h{"h-h a v"}
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
                 }
                 y{
-                    y{"y-y"}
+                    y{"y–y"}
                 }
                 yM{
-                    M{"MM/y - MM/y"}
-                    y{"MM/y - MM/y"}
+                    M{"MM/y – MM/y"}
+                    y{"MM/y – MM/y"}
                 }
                 yMEd{
-                    M{"E, dd/MM/y - E, dd/MM/y"}
-                    d{"E, dd/MM/y - E, dd/MM/y"}
-                    y{"E, dd/MM/y - E, dd/MM/y"}
+                    M{"E, dd/MM/y – E, dd/MM/y"}
+                    d{"E, dd/MM/y – E, dd/MM/y"}
+                    y{"E, dd/MM/y – E, dd/MM/y"}
                 }
                 yMMM{
-                    M{"LLL-LLL y"}
-                    y{"MMM y - MMM y"}
+                    M{"MMM–MMM y"}
+                    y{"MMM y – MMM y"}
                 }
                 yMMMEd{
-                    M{"E, dd MMM - E, dd MMM y"}
-                    d{"E, dd MMM - E, dd MMM y"}
-                    y{"E, dd MMM y - E, dd MMM y"}
+                    M{"E, dd MMM – E, dd MMM y"}
+                    d{"E, dd MMM – E, dd MMM y"}
+                    y{"E, dd MMM y – E, dd MMM y"}
                 }
                 yMMMM{
-                    M{"LLLL-LLLL y"}
-                    y{"LLLL y - LLLL y"}
+                    M{"MMMM–MMMM y"}
+                    y{"MMMM y – MMMM y"}
                 }
                 yMMMd{
-                    M{"dd MMM - dd MMM y"}
-                    d{"dd-dd MMM y"}
-                    y{"dd MMM y - dd MMM y"}
+                    M{"dd MMM – dd MMM y"}
+                    d{"dd–dd MMM y"}
+                    y{"dd MMM y – dd MMM y"}
                 }
                 yMd{
-                    M{"dd/MM/y - dd/MM/y"}
-                    d{"dd/MM/y - dd/MM/y"}
-                    y{"dd/MM/y - dd/MM/y"}
+                    M{"dd/MM/y – dd/MM/y"}
+                    d{"dd/MM/y – dd/MM/y"}
+                    y{"dd/MM/y – dd/MM/y"}
                 }
             }
             monthNames{
@@ -697,7 +713,10 @@ el{
         hebrew{
             eras{
                 abbreviated{
-                    "π.μ.",
+                    "AM",
+                }
+                wide{
+                    "AM",
                 }
             }
         }
@@ -744,16 +763,17 @@ el{
             }
         }
     }
+    contextTransforms{
+        relative:intvector{
+            1,
+            1,
+        }
+    }
     delimiters{
         alternateQuotationEnd{"\u0022"}
         alternateQuotationStart{"\u0022"}
         quotationEnd{"»"}
         quotationStart{"«"}
-    }
-    durationUnits{
-        hm{"h:mm"}
-        hms{"h:mm:ss"}
-        ms{"m:ss"}
     }
     fields{
         day{
@@ -767,12 +787,38 @@ el{
             }
             relativeTime{
                 future{
-                    one{"Σε {0} ημέρα"}
-                    other{"Σε {0} ημέρες"}
+                    one{"σε {0} ημέρα"}
+                    other{"σε {0} ημέρες"}
                 }
                 past{
-                    one{"Πριν από {0} ημέρα"}
-                    other{"Πριν από {0} ημέρες"}
+                    one{"πριν από {0} ημέρα"}
+                    other{"πριν από {0} ημέρες"}
+                }
+            }
+        }
+        day-narrow{
+            dn{"ημέρα"}
+            relativeTime{
+                future{
+                    one{"σε {0} ημέρα"}
+                    other{"σε {0} ημέρες"}
+                }
+                past{
+                    one{"πριν από {0} ημέρα"}
+                    other{"πριν από {0} ημέρες"}
+                }
+            }
+        }
+        day-short{
+            dn{"ημέρα"}
+            relativeTime{
+                future{
+                    one{"σε {0} ημέρα"}
+                    other{"σε {0} ημέρες"}
+                }
+                past{
+                    one{"πριν από {0} ημέρα"}
+                    other{"πριν από {0} ημέρες"}
                 }
             }
         }
@@ -789,16 +835,56 @@ el{
                 "1"{"επόμενη Παρασκευή"}
             }
         }
+        fri-narrow{
+            relative{
+                "-1"{"προηγ. Πα"}
+                "0"{"αυτήν την Πα"}
+                "1"{"επόμ. Πα"}
+            }
+        }
+        fri-short{
+            relative{
+                "-1"{"προηγ. Παρ."}
+                "0"{"αυτήν την Παρ."}
+                "1"{"επόμ. Παρ."}
+            }
+        }
         hour{
             dn{"Ώρα"}
             relativeTime{
                 future{
-                    one{"Σε {0} ώρα"}
-                    other{"Σε {0} ώρες"}
+                    one{"σε {0} ώρα"}
+                    other{"σε {0} ώρες"}
                 }
                 past{
-                    one{"Πριν από {0} ώρα"}
-                    other{"Πριν από {0} ώρες"}
+                    one{"πριν από {0} ώρα"}
+                    other{"πριν από {0} ώρες"}
+                }
+            }
+        }
+        hour-narrow{
+            dn{"ώ"}
+            relativeTime{
+                future{
+                    one{"+{0} ώ"}
+                    other{"+{0} ώ"}
+                }
+                past{
+                    one{"-{0} ώ"}
+                    other{"-{0} ώ"}
+                }
+            }
+        }
+        hour-short{
+            dn{"ώρ."}
+            relativeTime{
+                future{
+                    one{"σε {0} ώρα"}
+                    other{"σε {0} ώρ."}
+                }
+                past{
+                    one{"πριν από {0} ώρα"}
+                    other{"πριν από {0} ώρ."}
                 }
             }
         }
@@ -806,12 +892,38 @@ el{
             dn{"Λεπτό"}
             relativeTime{
                 future{
-                    one{"Σε {0} λεπτό"}
-                    other{"Σε {0} λεπτά"}
+                    one{"σε {0} λεπτό"}
+                    other{"σε {0} λεπτά"}
                 }
                 past{
-                    one{"Πριν από {0} λεπτό"}
-                    other{"Πριν από {0} λεπτά"}
+                    one{"πριν από {0} λεπτό"}
+                    other{"πριν από {0} λεπτά"}
+                }
+            }
+        }
+        minute-narrow{
+            dn{"λ"}
+            relativeTime{
+                future{
+                    one{"+{0} λ"}
+                    other{"+{0} λ"}
+                }
+                past{
+                    one{"-{0} λ"}
+                    other{"-{0} λ"}
+                }
+            }
+        }
+        minute-short{
+            dn{"λεπ."}
+            relativeTime{
+                future{
+                    one{"σε {0} λεπ."}
+                    other{"σε {0} λεπ."}
+                }
+                past{
+                    one{"πριν από {0} λεπ."}
+                    other{"πριν από {0} λεπ."}
                 }
             }
         }
@@ -820,6 +932,20 @@ el{
                 "-1"{"προηγούμενη Δευτέρα"}
                 "0"{"αυτήν τη Δευτέρα"}
                 "1"{"επόμενη Δευτέρα"}
+            }
+        }
+        mon-narrow{
+            relative{
+                "-1"{"προηγ. Δε"}
+                "0"{"αυτήν τη Δε"}
+                "1"{"επόμ. Δε"}
+            }
+        }
+        mon-short{
+            relative{
+                "-1"{"προηγ. Δευτ."}
+                "0"{"αυτήν τη Δευτ."}
+                "1"{"επόμ. Δευτ."}
             }
         }
         month{
@@ -831,12 +957,77 @@ el{
             }
             relativeTime{
                 future{
-                    one{"Σε {0} μήνα"}
-                    other{"Σε {0} μήνες"}
+                    one{"σε {0} μήνα"}
+                    other{"σε {0} μήνες"}
                 }
                 past{
-                    one{"Πριν από {0} μήνα"}
-                    other{"Πριν από {0} μήνες"}
+                    one{"πριν από {0} μήνα"}
+                    other{"πριν από {0} μήνες"}
+                }
+            }
+        }
+        month-narrow{
+            dn{"μήν."}
+            relativeTime{
+                future{
+                    one{"+{0} μήν."}
+                    other{"+{0} μήν."}
+                }
+                past{
+                    one{"-{0} μήν."}
+                    other{"-{0} μήν."}
+                }
+            }
+        }
+        month-short{
+            dn{"μήν."}
+            relativeTime{
+                future{
+                    one{"σε {0} μήν."}
+                    other{"σε {0} μήν."}
+                }
+                past{
+                    one{"πριν από {0} μήν."}
+                    other{"πριν από {0} μήν."}
+                }
+            }
+        }
+        quarter{
+            dn{"Τρίμηνο"}
+            relativeTime{
+                future{
+                    one{"σε {0} τρίμηνο"}
+                    other{"σε {0} τρίμηνα"}
+                }
+                past{
+                    one{"πριν από {0} τρίμηνο"}
+                    other{"πριν από {0} τρίμηνα"}
+                }
+            }
+        }
+        quarter-narrow{
+            dn{"τρίμ."}
+            relativeTime{
+                future{
+                    one{"+{0} Τ"}
+                    other{"+{0} Τ"}
+                }
+                past{
+                    one{"-{0} Τ"}
+                    other{"-{0} Τ"}
+                }
+            }
+        }
+        quarter-short{
+            dn{"τρίμ."}
+            relativeTime{
+                future{
+                    one{"σε {0} τρίμ."}
+                    other{"σε {0} τρίμ."}
+                }
+                past{
+                    one{"πριν από {0} τρίμ."}
+                    other{"πριν από {0} τρίμ."}
                 }
             }
         }
@@ -847,6 +1038,20 @@ el{
                 "1"{"επόμενο Σάββατο"}
             }
         }
+        sat-narrow{
+            relative{
+                "-1"{"προηγ. Σά"}
+                "0"{"αυτό το Σά"}
+                "1"{"επόμ. Σά"}
+            }
+        }
+        sat-short{
+            relative{
+                "-1"{"προηγ. Σάβ."}
+                "0"{"αυτό το Σάβ."}
+                "1"{"επόμ. Σάβ."}
+            }
+        }
         second{
             dn{"Δευτερόλεπτο"}
             relative{
@@ -854,12 +1059,38 @@ el{
             }
             relativeTime{
                 future{
-                    one{"Σε {0} δευτερόλεπτο"}
-                    other{"Σε {0} δευτερόλεπτα"}
+                    one{"σε {0} δευτερόλεπτο"}
+                    other{"σε {0} δευτερόλεπτα"}
                 }
                 past{
-                    one{"Πριν από {0} δευτερόλεπτο"}
-                    other{"Πριν από {0} δευτερόλεπτα"}
+                    one{"πριν από {0} δευτερόλεπτο"}
+                    other{"πριν από {0} δευτερόλεπτα"}
+                }
+            }
+        }
+        second-narrow{
+            dn{"δ"}
+            relativeTime{
+                future{
+                    one{"+{0} δ"}
+                    other{"+{0} δ"}
+                }
+                past{
+                    one{"-{0} δ"}
+                    other{"-{0} δ"}
+                }
+            }
+        }
+        second-short{
+            dn{"δευτ."}
+            relativeTime{
+                future{
+                    one{"σε {0} δευτ."}
+                    other{"σε {0} δευτ."}
+                }
+                past{
+                    one{"πριν από {0} δευτ."}
+                    other{"πριν από {0} δευτ."}
                 }
             }
         }
@@ -870,11 +1101,39 @@ el{
                 "1"{"επόμενη Κυριακή"}
             }
         }
+        sun-narrow{
+            relative{
+                "-1"{"προηγ. Κυ"}
+                "0"{"αυτήν την Κυ"}
+                "1"{"επόμ. Κυ"}
+            }
+        }
+        sun-short{
+            relative{
+                "-1"{"προηγ. Κυρ."}
+                "0"{"αυτήν την Κυρ."}
+                "1"{"επόμ. Κυρ."}
+            }
+        }
         thu{
             relative{
                 "-1"{"επόμενη Πέμπτη"}
                 "0"{"αυτήν την Πέμπτη"}
                 "1"{"επόμενη Πέμπτη"}
+            }
+        }
+        thu-narrow{
+            relative{
+                "-1"{"προηγ. Πέ"}
+                "0"{"αυτήν την Πέ"}
+                "1"{"επόμ. Πέ"}
+            }
+        }
+        thu-short{
+            relative{
+                "-1"{"προηγ. Πέμ."}
+                "0"{"αυτήν την Πέμ."}
+                "1"{"επόμ. Πέμ."}
             }
         }
         tue{
@@ -884,11 +1143,39 @@ el{
                 "1"{"επόμενη Τρίτη"}
             }
         }
+        tue-narrow{
+            relative{
+                "-1"{"προηγ. Τρ"}
+                "0"{"αυτήν την Τρ"}
+                "1"{"επόμ. Τρ"}
+            }
+        }
+        tue-short{
+            relative{
+                "-1"{"προηγ. Τρ."}
+                "0"{"αυτήν την Τρ."}
+                "1"{"επόμ. Τρ."}
+            }
+        }
         wed{
             relative{
                 "-1"{"προηγούμενη Τετάρτη"}
                 "0"{"αυτήν την Τετάρτη"}
                 "1"{"επόμενη Τετάρτη"}
+            }
+        }
+        wed-narrow{
+            relative{
+                "-1"{"προηγ. Τε"}
+                "0"{"αυτήν την Τε"}
+                "1"{"επόμ. Τε"}
+            }
+        }
+        wed-short{
+            relative{
+                "-1"{"προηγ. Τετ."}
+                "0"{"αυτήν την Τετ."}
+                "1"{"επόμ. Τετ."}
             }
         }
         week{
@@ -900,12 +1187,38 @@ el{
             }
             relativeTime{
                 future{
-                    one{"Σε {0} εβδομάδα"}
-                    other{"Σε {0} εβδομάδες"}
+                    one{"σε {0} εβδομάδα"}
+                    other{"σε {0} εβδομάδες"}
                 }
                 past{
-                    one{"Πριν από {0} εβδομάδα"}
-                    other{"Πριν από {0} εβδομάδες"}
+                    one{"πριν από {0} εβδομάδα"}
+                    other{"πριν από {0} εβδομάδες"}
+                }
+            }
+        }
+        week-narrow{
+            dn{"εβδ."}
+            relativeTime{
+                future{
+                    one{"+{0} εβδ."}
+                    other{"+{0} εβδ."}
+                }
+                past{
+                    one{"-{0} εβδ."}
+                    other{"-{0} εβδ."}
+                }
+            }
+        }
+        week-short{
+            dn{"εβδ."}
+            relativeTime{
+                future{
+                    one{"σε {0} εβδ."}
+                    other{"σε {0} εβδ."}
+                }
+                past{
+                    one{"πριν από {0} εβδ."}
+                    other{"πριν από {0} εβδ."}
                 }
             }
         }
@@ -921,17 +1234,43 @@ el{
             }
             relativeTime{
                 future{
-                    one{"Σε {0} έτος"}
-                    other{"Σε {0} έτη"}
+                    one{"σε {0} έτος"}
+                    other{"σε {0} έτη"}
                 }
                 past{
-                    one{"Πριν από {0} έτος"}
-                    other{"Πριν από {0} έτη"}
+                    one{"πριν από {0} έτος"}
+                    other{"πριν από {0} έτη"}
+                }
+            }
+        }
+        year-narrow{
+            dn{"έτ."}
+            relativeTime{
+                future{
+                    one{"+{0} έτος"}
+                    other{"+{0} έτη"}
+                }
+                past{
+                    one{"-{0} έτος"}
+                    other{"-{0} έτη"}
+                }
+            }
+        }
+        year-short{
+            dn{"έτ."}
+            relativeTime{
+                future{
+                    one{"σε {0} έτος"}
+                    other{"σε {0} έτη"}
+                }
+                past{
+                    one{"πριν από {0} έτος"}
+                    other{"πριν από {0} έτη"}
                 }
             }
         }
         zone{
-            dn{"Ζώνη"}
+            dn{"Ζώνη ώρας"}
         }
     }
     listPattern{
@@ -976,638 +1315,5 @@ el{
         x-Jamo{"Τζάμο [Jamo]"}
         x-Pinyin{"Πινγίν"}
         x-Publishing{"Έκδοση"}
-    }
-    units{
-        acceleration{
-            g-force{
-                one{"{0} G"}
-                other{"{0} G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0} λεπτό"}
-                other{"{0} λεπτά"}
-            }
-            arc-second{
-                one{"{0} δευτερόλεπτο"}
-                other{"{0} δευτερόλεπτα"}
-            }
-            degree{
-                one{"{0} μοίρα"}
-                other{"{0} μοίρες"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} ακρ"}
-                other{"{0} ακρ"}
-            }
-            hectare{
-                one{"{0} εκτάριο"}
-                other{"{0} εκτάρια"}
-            }
-            square-foot{
-                one{"{0} τετραγωνικό πόδι"}
-                other{"{0} τετραγωνικά πόδια"}
-            }
-            square-kilometer{
-                one{"{0} τετραγωνικό χιλιόμετρο"}
-                other{"{0} τετραγωνικά χιλιόμετρα"}
-            }
-            square-meter{
-                one{"{0} τετραγωνικό μέτρο"}
-                other{"{0} τετραγωνικά μέτρα"}
-            }
-            square-mile{
-                one{"{0} τετραγωνικό μίλι"}
-                other{"{0} τετραγωνικά μίλια"}
-            }
-        }
-        compound{
-            per{"{0} ανά {1}"}
-        }
-        duration{
-            day{
-                one{"{0} ημέρα"}
-                other{"{0} ημέρες"}
-            }
-            hour{
-                one{"{0} ώρα"}
-                other{"{0} ώρες"}
-            }
-            millisecond{
-                one{"{0} χιλιοστό του δευτερολέπτου"}
-                other{"{0} χιλιοστά του δευτερολέπτου"}
-            }
-            minute{
-                one{"{0} λεπτό"}
-                other{"{0} λεπτά"}
-            }
-            month{
-                one{"{0} μήνας"}
-                other{"{0} μήνες"}
-            }
-            second{
-                one{"{0} δευτερόλεπτο"}
-                other{"{0} δευτερόλεπτα"}
-            }
-            week{
-                one{"{0} εβδομάδα"}
-                other{"{0} εβδομάδες"}
-            }
-            year{
-                one{"{0} έτος"}
-                other{"{0} έτη"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} εκατοστό"}
-                other{"{0} εκατοστά"}
-            }
-            foot{
-                one{"{0} πόδι"}
-                other{"{0} πόδια"}
-            }
-            inch{
-                one{"{0} ίντσα"}
-                other{"{0} ίντσες"}
-            }
-            kilometer{
-                one{"{0} χιλιόμετρο"}
-                other{"{0} χιλιόμετρα"}
-            }
-            light-year{
-                one{"{0} έτος φωτός"}
-                other{"{0} έτη φωτός"}
-            }
-            meter{
-                one{"{0} μέτρο"}
-                other{"{0} μέτρα"}
-            }
-            mile{
-                one{"{0} μίλι"}
-                other{"{0} μίλια"}
-            }
-            millimeter{
-                one{"{0} χιλιοστόμετρο"}
-                other{"{0} χιλιοστόμετρα"}
-            }
-            picometer{
-                one{"{0} πικόμετρο"}
-                other{"{0} πικόμετρα"}
-            }
-            yard{
-                one{"{0} γιάρδα"}
-                other{"{0} γιάρδες"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} γραμμάριο"}
-                other{"{0} γραμμάρια"}
-            }
-            kilogram{
-                one{"{0} χιλιόγραμμο"}
-                other{"{0} χιλιόγραμμα"}
-            }
-            ounce{
-                one{"{0} ουγγιά"}
-                other{"{0} ουγγιές"}
-            }
-            pound{
-                one{"{0} λίβρα"}
-                other{"{0} λίβρες"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} ίππος"}
-                other{"{0} ίπποι"}
-            }
-            kilowatt{
-                one{"{0} κιλοβάτ"}
-                other{"{0} κιλοβάτ"}
-            }
-            watt{
-                one{"{0} watt"}
-                other{"{0} watt"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} εκτοπασκάλ"}
-                other{"{0} εκτοπασκάλ"}
-            }
-            inch-hg{
-                one{"{0} ίντσα στήλης υδραργύρου"}
-                other{"{0} ίντσες στήλης υδραργύρου"}
-            }
-            millibar{
-                one{"{0} μιλιμπάρ"}
-                other{"{0} μιλιμπάρ"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} χιλιόμετρο ανά ώρα"}
-                other{"{0} χιλιόμετρα ανά ώρα"}
-            }
-            meter-per-second{
-                one{"{0} μέτρο ανά δευτερόλεπτο"}
-                other{"{0} μέτρα ανά δευτερόλεπτο"}
-            }
-            mile-per-hour{
-                one{"{0} μίλι ανά ώρα"}
-                other{"{0} μίλια ανά ώρα"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0} βαθμός Κελσίου"}
-                other{"{0} βαθμοί Κελσίου"}
-            }
-            fahrenheit{
-                one{"{0} βαθμός Φαρενάιτ"}
-                other{"{0} βαθμοί Φαρενάιτ"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} κυβικό χιλιόμετρο"}
-                other{"{0} κυβικά χιλιόμετρα"}
-            }
-            cubic-mile{
-                one{"{0} κυβικό μίλι"}
-                other{"{0} κυβικά μίλια"}
-            }
-            liter{
-                one{"{0} λίτρο"}
-                other{"{0} λίτρα"}
-            }
-        }
-    }
-    unitsNarrow{
-        acceleration{
-            g-force{
-                one{"{0} G"}
-                other{"{0} G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-            degree{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} ac"}
-                other{"{0} ac"}
-            }
-            hectare{
-                one{"{0} ha"}
-                other{"{0} ha"}
-            }
-            square-foot{
-                one{"{0} ft²"}
-                other{"{0} ft²"}
-            }
-            square-kilometer{
-                one{"{0} km²"}
-                other{"{0} km²"}
-            }
-            square-meter{
-                one{"{0} m²"}
-                other{"{0} m²"}
-            }
-            square-mile{
-                one{"{0} mi²"}
-                other{"{0} mi²"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} ημ."}
-                other{"{0} ημ."}
-            }
-            hour{
-                one{"{0} ώρα"}
-                other{"{0} ώρες"}
-            }
-            millisecond{
-                one{"{0} ms"}
-                other{"{0} ms"}
-            }
-            minute{
-                one{"{0} λεπ."}
-                other{"{0} λεπ."}
-            }
-            month{
-                one{"{0} μήν."}
-                other{"{0} μήν."}
-            }
-            second{
-                one{"{0} δευτ."}
-                other{"{0} δευτ."}
-            }
-            week{
-                one{"{0} εβδ."}
-                other{"{0} εβδ."}
-            }
-            year{
-                one{"{0} έτ."}
-                other{"{0} έτ."}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} εκ."}
-                other{"{0} εκ."}
-            }
-            foot{
-                one{"{0} ft"}
-                other{"{0} ft"}
-            }
-            inch{
-                one{"{0} in"}
-                other{"{0} in"}
-            }
-            kilometer{
-                one{"{0} χλμ."}
-                other{"{0} χλμ."}
-            }
-            light-year{
-                one{"{0} ly"}
-                other{"{0} ly"}
-            }
-            meter{
-                one{"{0} μ."}
-                other{"{0} μ."}
-            }
-            mile{
-                one{"{0} mi"}
-                other{"{0} mi"}
-            }
-            millimeter{
-                one{"{0} χλστ."}
-                other{"{0} χλστ."}
-            }
-            picometer{
-                one{"{0} pm"}
-                other{"{0} pm"}
-            }
-            yard{
-                one{"{0} yd"}
-                other{"{0} yd"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} g"}
-                other{"{0} g"}
-            }
-            kilogram{
-                one{"{0} kg"}
-                other{"{0} kg"}
-            }
-            ounce{
-                one{"{0} oz"}
-                other{"{0} oz"}
-            }
-            pound{
-                one{"{0} lb"}
-                other{"{0} lb"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} hp"}
-                other{"{0} hp"}
-            }
-            kilowatt{
-                one{"{0} kW"}
-                other{"{0} kW"}
-            }
-            watt{
-                one{"{0} W"}
-                other{"{0} W"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} hPa"}
-                other{"{0} hPa"}
-            }
-            inch-hg{
-                one{"{0} inHg"}
-                other{"{0} inHg"}
-            }
-            millibar{
-                one{"{0} mbar"}
-                other{"{0} mbar"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} χλμ./ώρα"}
-                other{"{0} χλμ./ώρα"}
-            }
-            meter-per-second{
-                one{"{0} m/s"}
-                other{"{0} m/s"}
-            }
-            mile-per-hour{
-                one{"{0} mi/h"}
-                other{"{0} mi/h"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-            fahrenheit{
-                one{"{0}°F"}
-                other{"{0}°F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} km³"}
-                other{"{0} km³"}
-            }
-            cubic-mile{
-                one{"{0} mi³"}
-                other{"{0} mi³"}
-            }
-            liter{
-                one{"{0} l"}
-                other{"{0} l"}
-            }
-        }
-    }
-    unitsShort{
-        acceleration{
-            g-force{
-                one{"{0} G"}
-                other{"{0} G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0} λεπ."}
-                other{"{0} λεπ."}
-            }
-            arc-second{
-                one{"{0} δευτ."}
-                other{"{0} δευτ."}
-            }
-            degree{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} ac"}
-                other{"{0} ac"}
-            }
-            hectare{
-                one{"{0} ha"}
-                other{"{0} ha"}
-            }
-            square-foot{
-                one{"{0} ft²"}
-                other{"{0} ft²"}
-            }
-            square-kilometer{
-                one{"{0} km²"}
-                other{"{0} km²"}
-            }
-            square-meter{
-                one{"{0} m²"}
-                other{"{0} m²"}
-            }
-            square-mile{
-                one{"{0} mi²"}
-                other{"{0} mi²"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} ημέρα"}
-                other{"{0} ημέρες"}
-            }
-            hour{
-                one{"{0} ώρα"}
-                other{"{0} ώρες"}
-            }
-            millisecond{
-                one{"{0} ms"}
-                other{"{0} ms"}
-            }
-            minute{
-                one{"{0} λεπ."}
-                other{"{0} λεπ."}
-            }
-            month{
-                one{"{0} μήν."}
-                other{"{0} μήν."}
-            }
-            second{
-                one{"{0} δευτ."}
-                other{"{0} δευτ."}
-            }
-            week{
-                one{"{0} εβδ."}
-                other{"{0} εβδ."}
-            }
-            year{
-                one{"{0} έτος"}
-                other{"{0} έτη"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} εκ."}
-                other{"{0} εκ."}
-            }
-            foot{
-                one{"{0} ft"}
-                other{"{0} ft"}
-            }
-            inch{
-                one{"{0} in"}
-                other{"{0} in"}
-            }
-            kilometer{
-                one{"{0} χλμ."}
-                other{"{0} χλμ."}
-            }
-            light-year{
-                one{"{0} ly"}
-                other{"{0} ly"}
-            }
-            meter{
-                one{"{0} μ."}
-                other{"{0} μ."}
-            }
-            mile{
-                one{"{0} mi"}
-                other{"{0} mi"}
-            }
-            millimeter{
-                one{"{0} χλστ."}
-                other{"{0} χλστ."}
-            }
-            picometer{
-                one{"{0} pm"}
-                other{"{0} pm"}
-            }
-            yard{
-                one{"{0} yd"}
-                other{"{0} yd"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} γρ."}
-                other{"{0} γρ."}
-            }
-            kilogram{
-                one{"{0} χλγρ."}
-                other{"{0} χλγρ."}
-            }
-            ounce{
-                one{"{0} oz"}
-                other{"{0} oz"}
-            }
-            pound{
-                one{"{0} lb"}
-                other{"{0} lb"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} hp"}
-                other{"{0} hp"}
-            }
-            kilowatt{
-                one{"{0} kW"}
-                other{"{0} kW"}
-            }
-            watt{
-                one{"{0} W"}
-                other{"{0} W"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} hPa"}
-                other{"{0} hPa"}
-            }
-            inch-hg{
-                one{"{0} inHg"}
-                other{"{0} inHg"}
-            }
-            millibar{
-                one{"{0} mbar"}
-                other{"{0} mbar"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} χλμ./ώρα"}
-                other{"{0} χλμ./ώρα"}
-            }
-            meter-per-second{
-                one{"{0} μέτρο/δευτ."}
-                other{"{0} μέτρα/δευτ."}
-            }
-            mile-per-hour{
-                one{"{0} μίλι/ώρα"}
-                other{"{0} μίλια/ώρα"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°C"}
-                other{"{0}°C"}
-            }
-            fahrenheit{
-                one{"{0}°F"}
-                other{"{0}°F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} km³"}
-                other{"{0} km³"}
-            }
-            cubic-mile{
-                one{"{0} mi³"}
-                other{"{0} mi³"}
-            }
-            liter{
-                one{"{0} λίτ."}
-                other{"{0} λίτ."}
-            }
-        }
     }
 }

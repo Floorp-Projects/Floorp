@@ -1,11 +1,11 @@
 /*
  ********************************************************************
  * COPYRIGHT:
- * Copyright (c) 1996-2013, International Business Machines Corporation and
+ * Copyright (c) 1996-2015, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************
  *
- *  uconv_bld.cpp:
+ *  ucnv_bld.cpp:
  *
  *  Defines functions that are used in the creation/initialization/deletion
  *  of converters and related structures.
@@ -64,33 +64,51 @@ converterData[UCNV_NUMBER_OF_SUPPORTED_CONVERTER_TYPES]={
 #endif
 
     &_Latin1Data,
-    &_UTF8Data, &_UTF16BEData, &_UTF16LEData, &_UTF32BEData, &_UTF32LEData,
+    &_UTF8Data, &_UTF16BEData, &_UTF16LEData,
+#if UCONFIG_ONLY_HTML_CONVERSION
+    NULL, NULL,
+#else
+    &_UTF32BEData, &_UTF32LEData,
+#endif
     NULL,
 
 #if UCONFIG_NO_LEGACY_CONVERSION
     NULL,
+#else
+    &_ISO2022Data,
+#endif
+
+#if UCONFIG_NO_LEGACY_CONVERSION || UCONFIG_ONLY_HTML_CONVERSION
     NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL,
     NULL,
 #else
-    &_ISO2022Data,
     &_LMBCSData1,&_LMBCSData2, &_LMBCSData3, &_LMBCSData4, &_LMBCSData5, &_LMBCSData6,
     &_LMBCSData8,&_LMBCSData11,&_LMBCSData16,&_LMBCSData17,&_LMBCSData18,&_LMBCSData19,
     &_HZData,
 #endif
 
+#if UCONFIG_ONLY_HTML_CONVERSION
+    NULL,
+#else
     &_SCSUData,
+#endif
 
-#if UCONFIG_NO_LEGACY_CONVERSION
+
+#if UCONFIG_NO_LEGACY_CONVERSION || UCONFIG_ONLY_HTML_CONVERSION
     NULL,
 #else
     &_ISCIIData,
 #endif
 
     &_ASCIIData,
+#if UCONFIG_ONLY_HTML_CONVERSION
+    NULL, NULL, &_UTF16Data, NULL, NULL, NULL,
+#else
     &_UTF7Data, &_Bocu1Data, &_UTF16Data, &_UTF32Data, &_CESU8Data, &_IMAPData,
+#endif
 
-#if UCONFIG_NO_LEGACY_CONVERSION
+#if UCONFIG_NO_LEGACY_CONVERSION || UCONFIG_ONLY_HTML_CONVERSION
     NULL,
 #else
     &_CompoundTextData
@@ -105,18 +123,24 @@ static struct {
   const char *name;
   const UConverterType type;
 } const cnvNameType[] = {
+#if !UCONFIG_ONLY_HTML_CONVERSION
   { "bocu1", UCNV_BOCU1 },
   { "cesu8", UCNV_CESU8 },
-#if !UCONFIG_NO_LEGACY_CONVERSION
+#endif
+#if !UCONFIG_NO_LEGACY_CONVERSION && !UCONFIG_ONLY_HTML_CONVERSION
   { "hz",UCNV_HZ },
 #endif
+#if !UCONFIG_ONLY_HTML_CONVERSION
   { "imapmailboxname", UCNV_IMAP_MAILBOX },
-#if !UCONFIG_NO_LEGACY_CONVERSION
+#endif
+#if !UCONFIG_NO_LEGACY_CONVERSION && !UCONFIG_ONLY_HTML_CONVERSION
   { "iscii", UCNV_ISCII },
+#endif
+#if !UCONFIG_NO_LEGACY_CONVERSION
   { "iso2022", UCNV_ISO_2022 },
 #endif
   { "iso88591", UCNV_LATIN_1 },
-#if !UCONFIG_NO_LEGACY_CONVERSION
+#if !UCONFIG_NO_LEGACY_CONVERSION && !UCONFIG_ONLY_HTML_CONVERSION
   { "lmbcs1", UCNV_LMBCS_1 },
   { "lmbcs11",UCNV_LMBCS_11 },
   { "lmbcs16",UCNV_LMBCS_16 },
@@ -130,7 +154,9 @@ static struct {
   { "lmbcs6", UCNV_LMBCS_6 },
   { "lmbcs8", UCNV_LMBCS_8 },
 #endif
+#if !UCONFIG_ONLY_HTML_CONVERSION
   { "scsu", UCNV_SCSU },
+#endif
   { "usascii", UCNV_US_ASCII },
   { "utf16", UCNV_UTF16 },
   { "utf16be", UCNV_UTF16_BigEndian },
@@ -142,6 +168,7 @@ static struct {
   { "utf16oppositeendian", UCNV_UTF16_BigEndian},
   { "utf16platformendian", UCNV_UTF16_LittleEndian },
 #endif
+#if !UCONFIG_ONLY_HTML_CONVERSION
   { "utf32", UCNV_UTF32 },
   { "utf32be", UCNV_UTF32_BigEndian },
   { "utf32le", UCNV_UTF32_LittleEndian },
@@ -152,9 +179,14 @@ static struct {
   { "utf32oppositeendian", UCNV_UTF32_BigEndian },
   { "utf32platformendian", UCNV_UTF32_LittleEndian },
 #endif
+#endif
+#if !UCONFIG_ONLY_HTML_CONVERSION
   { "utf7", UCNV_UTF7 },
+#endif
   { "utf8", UCNV_UTF8 },
+#if !UCONFIG_ONLY_HTML_CONVERSION
   { "x11compoundtext", UCNV_COMPOUND_TEXT}
+#endif
 };
 
 
@@ -1086,7 +1118,7 @@ ucnv_flushCache ()
     i = 0;
     do {
         remaining = 0;
-        pos = -1;
+        pos = UHASH_FIRST;
         while ((e = uhash_nextElement (SHARED_DATA_HASHTABLE, &pos)) != NULL)
         {
             mySharedData = (UConverterSharedData *) e->value.pointer;

@@ -1,14 +1,14 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/en_PK.xml
 // *
 // ***************************************************************************
 en_PK{
-    %%Parent{"en_GB"}
-    Version{"2.0.92.87"}
+    %%Parent{"en_001"}
+    Version{"2.1.11.51"}
     calendar{
         generic{
             DateTimePatterns{
@@ -16,15 +16,15 @@ en_PK{
                 "h:mm:ss a z",
                 "h:mm:ss a",
                 "h:mm a",
-                "EEEE d MMMM y G",
+                "EEEE, d MMMM y G",
                 "d MMMM y G",
                 "dd-MMM-y G",
                 "dd/MM/y GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}, {0}",
+                "{1} 'at' {0}",
+                "{1} 'at' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
         }
         gregorian{
@@ -33,15 +33,15 @@ en_PK{
                 "h:mm:ss a z",
                 "h:mm:ss a",
                 "h:mm a",
-                "EEEE d MMMM y",
+                "EEEE, d MMMM y",
                 "d MMMM y",
                 "dd-MMM-y",
                 "dd/MM/y",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}, {0}",
+                "{1} 'at' {0}",
+                "{1} 'at' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
         }
     }

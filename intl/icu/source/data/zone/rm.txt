@@ -1,16 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/rm.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/rm.xml
- */
 rm{
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
     zoneStrings{
         "Africa:Addis_Ababa"{
             ec{"Addis Abeba"}
@@ -189,9 +186,6 @@ rm{
         "Antarctica:McMurdo"{
             ec{"Mac Murdo"}
         }
-        "Antarctica:South_Pole"{
-            ec{"Pol dal Sid"}
-        }
         "Antarctica:Syowa"{
             ec{"Showa"}
         }
@@ -224,9 +218,6 @@ rm{
         }
         "Asia:Karachi"{
             ec{"Karatschi"}
-        }
-        "Asia:Kashgar"{
-            ec{"Kaschgar"}
         }
         "Asia:Krasnoyarsk"{
             ec{"Krasnojarsk"}
@@ -301,7 +292,7 @@ rm{
             ec{"Georgia dal Sid"}
         }
         "Atlantic:St_Helena"{
-            ec{"Sontg'elena"}
+            ec{"Sontg’elena"}
         }
         "Atlantic:Stanley"{
             ec{"Port Stanley"}

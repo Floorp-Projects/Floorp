@@ -1,23 +1,66 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/to.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/to.xml
- */
 to{
     Currencies{
+        AUD{
+            "AUD$",
+            "AUD",
+        }
+        FJD{
+            "FJD",
+            "FJD",
+        }
+        NZD{
+            "NZD$",
+            "NZD",
+        }
+        PGK{
+            "PGK",
+            "PGK",
+        }
+        SBD{
+            "SBD",
+            "SBD",
+        }
         TOP{
             "T$",
-            "Tongan Pa'anga",
+            "Paʻanga fakatonga",
+        }
+        VUV{
+            "VUV",
+            "VUV",
+        }
+        WST{
+            "WST",
+            "Tala fakahaʻamoa",
+        }
+        XPF{
+            "CFPF",
+            "XPF",
+        }
+    }
+    Currencies%narrow{
+        AUD{"$"}
+        FJD{"$"}
+        NZD{"$"}
+        SBD{"$"}
+    }
+    CurrencyPlurals{
+        TOP{
+            other{"Paʻanga fakatonga"}
+        }
+        WST{
+            other{"Tala fakahaʻamoa"}
         }
     }
     CurrencyUnitPatterns{
         other{"{1} {0}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
 }

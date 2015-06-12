@@ -1,21 +1,15 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/luo.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/luo.xml
- */
 luo{
     AuxExemplarCharacters{"[q x z]"}
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p r s t u v w y]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P R S T U V W Y]"}
-    LocaleScript{
-        "Latn",
-    }
     NumberElements{
         latn{
             patterns{
@@ -23,7 +17,7 @@ luo{
             }
         }
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.7.39"}
     calendar{
         generic{
             DateTimePatterns{
@@ -124,7 +118,7 @@ luo{
                         "Wuok Tich",
                         "Tich Ariyo",
                         "Tich Adek",
-                        "Tich Ang'wen",
+                        "Tich Ang’wen",
                         "Tich Abich",
                         "Ngeso",
                     }
@@ -171,7 +165,7 @@ luo{
                         "Dwe mar Achiel",
                         "Dwe mar Ariyo",
                         "Dwe mar Adek",
-                        "Dwe mar Ang'wen",
+                        "Dwe mar Ang’wen",
                         "Dwe mar Abich",
                         "Dwe mar Auchiel",
                         "Dwe mar Abiriyo",
@@ -225,7 +219,7 @@ luo{
     }
     fields{
         day{
-            dn{"chieng'"}
+            dn{"chieng’"}
             relative{
                 "-1"{"nyoro"}
                 "0"{"kawuono"}
@@ -233,7 +227,7 @@ luo{
             }
         }
         dayperiod{
-            dn{"odieochieng'/otieno"}
+            dn{"odieochieng’/otieno"}
         }
         era{
             dn{"ndalo"}

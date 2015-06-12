@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 2004-2013, International Business Machines
+*   Copyright (C) 2004-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   file name:  uregex.h
@@ -607,6 +607,54 @@ U_STABLE int32_t U_EXPORT2
 uregex_groupCount(URegularExpression *regexp,
                   UErrorCode         *status);
 
+#ifndef U_HIDE_DRAFT_API
+/**
+  * Get the group number corresponding to a named capture group.
+  * The returned number can be used with any function that access
+  * capture groups by number.
+  *
+  * The function returns an error status if the specified name does not
+  * appear in the pattern.
+  *
+  * @param  regexp      The compiled regular expression.
+  * @param  groupName   The capture group name.
+  * @param  nameLength  The length of the name, or -1 if the name is a
+  *                     nul-terminated string.
+  * @param  status      A pointer to a UErrorCode to receive any errors.
+  *
+  * @draft ICU 55
+  */
+U_DRAFT int32_t U_EXPORT2
+uregex_groupNumberFromName(URegularExpression *regexp,
+                           const UChar        *groupName,
+                           int32_t             nameLength,
+                           UErrorCode          *status);
+
+
+/**
+  * Get the group number corresponding to a named capture group.
+  * The returned number can be used with any function that access
+  * capture groups by number.
+  *
+  * The function returns an error status if the specified name does not
+  * appear in the pattern.
+  *
+  * @param  regexp      The compiled regular expression.
+  * @param  groupName   The capture group name,
+  *                     platform invariant characters only.
+  * @param  nameLength  The length of the name, or -1 if the name is
+  *                     nul-terminated.
+  * @param  status      A pointer to a UErrorCode to receive any errors.
+  *
+  * @draft ICU 55
+  */
+U_DRAFT int32_t U_EXPORT2
+uregex_groupNumberFromCName(URegularExpression *regexp,
+                            const char         *groupName,
+                            int32_t             nameLength,
+                            UErrorCode          *status);
+#endif  /* U_HIDE_DRAFT_API */
+
 /** Extract the string for the specified matching expression or subexpression.
   * Group #0 is the complete string of matched text.
   * Group #1 is the text matched by the first set of capturing parentheses.
@@ -630,8 +678,8 @@ uregex_group(URegularExpression *regexp,
              int32_t             destCapacity,
              UErrorCode          *status);
 
-/** Returns a shallow immutable clone of the entire input string.  The returned UText current native index
-  *   is set to the beginning of the requested capture group.  The capture group length is also
+/** Returns a shallow immutable clone of the entire input string with the current index set
+  *   to the beginning of the requested capture group.  The capture group length is also
   *   returned via groupLength.
   * Group #0 is the complete string of matched text.
   * Group #1 is the text matched by the first set of capturing parentheses.
@@ -644,7 +692,7 @@ uregex_group(URegularExpression *regexp,
   *   @param   dest         A mutable UText in which to store the current input.
   *                         If NULL, a new UText will be created as an immutable shallow clone
   *                         of the entire input string.
-  *   @param   groupLength  The group length of the desired capture group.
+  *   @param   groupLength  The group length of the desired capture group. Output parameter.
   *   @param   status       A reference to a UErrorCode to receive any errors.
   *   @return               The subject text currently associated with this regular expression.
   *                         If a pre-allocated UText was provided, it will always be used and returned.
@@ -658,31 +706,6 @@ uregex_groupUText(URegularExpression *regexp,
                   UText              *dest,
                   int64_t            *groupLength,
                   UErrorCode         *status);
-
-#ifndef U_HIDE_INTERNAL_API
-/** Extract the string for the specified matching expression or subexpression.
-  * Group #0 is the complete string of matched text.
-  * Group #1 is the text matched by the first set of capturing parentheses.
-  *
-  *   @param   regexp       The compiled regular expression.
-  *   @param   groupNum     The capture group to extract.  Group 0 is the complete
-  *                         match.  The value of this parameter must be
-  *                         less than or equal to the number of capture groups in
-  *                         the pattern.
-  *   @param   dest         Mutable UText to receive the matching string data.
-  *                         If NULL, a new UText will be created (which may not be mutable).
-  *   @param   status       A reference to a UErrorCode to receive any errors.
-  *   @return               The matching string data. If a pre-allocated UText was provided,
-  *                          it will always be used and returned.
-  *
-  *   @internal ICU 4.4 technology preview
-  */
-U_INTERNAL UText * U_EXPORT2 
-uregex_groupUTextDeep(URegularExpression *regexp,
-                  int32_t             groupNum,
-                  UText              *dest,
-                  UErrorCode         *status);
-#endif  /* U_HIDE_INTERNAL_API */
 
 /**
   *   Returns the index in the input string of the start of the text matched by the

@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/kok.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/kok.xml
- */
 kok{
     AuxExemplarCharacters{"[\u200C\u200D]"}
     ExemplarCharacters{
@@ -16,9 +13,6 @@ kok{
         "{क\u093C} ख {ख\u093C} ग {ग\u093C} घ ङ च छ ज {ज\u093C} झ ञ ट ठ ड {ड\u093C} ढ "
         "{ढ\u093C} ण त थ द ध न प फ {फ\u093C} ब भ म य {य\u093C} र ल व श ष स ह ळ ऽ ा ि "
         "ी \u0941 \u0942 \u0943 \u0944 \u0945 \u0947 \u0948 ॉ ो ौ \u094D]"
-    }
-    LocaleScript{
-        "Deva",
     }
     NumberElements{
         default{"latn"}
@@ -31,7 +25,7 @@ kok{
         }
         native{"deva"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.6.69"}
     calendar{
         gregorian{
             AmPmMarkers{

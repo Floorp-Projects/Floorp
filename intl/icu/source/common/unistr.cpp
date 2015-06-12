@@ -1,6 +1,6 @@
 /*
 ******************************************************************************
-* Copyright (C) 1999-2013, International Business Machines Corporation and
+* Copyright (C) 1999-2014, International Business Machines Corporation and
 * others. All Rights Reserved.
 ******************************************************************************
 *
@@ -133,7 +133,7 @@ UnicodeString::refCount() const {
 
 void
 UnicodeString::releaseArray() {
-  if((fFlags & kRefCounted) && removeRef() == 0) {
+  if((fUnion.fFields.fLengthAndFlags & kRefCounted) && removeRef() == 0) {
     uprv_free((int32_t *)fUnion.fFields.fArray - 1);
   }
 }
@@ -146,10 +146,8 @@ UnicodeString::releaseArray() {
 
 // The default constructor is inline in unistr.h.
 
-UnicodeString::UnicodeString(int32_t capacity, UChar32 c, int32_t count)
-  : fShortLength(0),
-    fFlags(0)
-{
+UnicodeString::UnicodeString(int32_t capacity, UChar32 c, int32_t count) {
+  fUnion.fFields.fLengthAndFlags = 0;
   if(count <= 0 || (uint32_t)c > 0x10ffff) {
     // just allocate and do not do anything else
     allocate(capacity);
@@ -191,48 +189,38 @@ UnicodeString::UnicodeString(int32_t capacity, UChar32 c, int32_t count)
   }
 }
 
-UnicodeString::UnicodeString(UChar ch)
-  : fShortLength(1),
-    fFlags(kShortString)
-{
-  fUnion.fStackBuffer[0] = ch;
+UnicodeString::UnicodeString(UChar ch) {
+  fUnion.fFields.fLengthAndFlags = kLength1 | kShortString;
+  fUnion.fStackFields.fBuffer[0] = ch;
 }
 
-UnicodeString::UnicodeString(UChar32 ch)
-  : fShortLength(0),
-    fFlags(kShortString)
-{
+UnicodeString::UnicodeString(UChar32 ch) {
+  fUnion.fFields.fLengthAndFlags = kShortString;
   int32_t i = 0;
   UBool isError = FALSE;
-  U16_APPEND(fUnion.fStackBuffer, i, US_STACKBUF_SIZE, ch, isError);
+  U16_APPEND(fUnion.fStackFields.fBuffer, i, US_STACKBUF_SIZE, ch, isError);
   // We test isError so that the compiler does not complain that we don't.
   // If isError then i==0 which is what we want anyway.
   if(!isError) {
-    fShortLength = (int8_t)i;
+    setShortLength(i);
   }
 }
 
-UnicodeString::UnicodeString(const UChar *text)
-  : fShortLength(0),
-    fFlags(kShortString)
-{
+UnicodeString::UnicodeString(const UChar *text) {
+  fUnion.fFields.fLengthAndFlags = kShortString;
   doReplace(0, 0, text, 0, -1);
 }
 
 UnicodeString::UnicodeString(const UChar *text,
-                             int32_t textLength)
-  : fShortLength(0),
-    fFlags(kShortString)
-{
+                             int32_t textLength) {
+  fUnion.fFields.fLengthAndFlags = kShortString;
   doReplace(0, 0, text, 0, textLength);
 }
 
 UnicodeString::UnicodeString(UBool isTerminated,
                              const UChar *text,
-                             int32_t textLength)
-  : fShortLength(0),
-    fFlags(kReadonlyAlias)
-{
+                             int32_t textLength) {
+  fUnion.fFields.fLengthAndFlags = kReadonlyAlias;
   if(text == NULL) {
     // treat as an empty string, do not alias
     setToEmpty();
@@ -252,10 +240,8 @@ UnicodeString::UnicodeString(UBool isTerminated,
 
 UnicodeString::UnicodeString(UChar *buff,
                              int32_t buffLength,
-                             int32_t buffCapacity)
-  : fShortLength(0),
-    fFlags(kWritableAlias)
-{
+                             int32_t buffCapacity) {
+  fUnion.fFields.fLengthAndFlags = kWritableAlias;
   if(buff == NULL) {
     // treat as an empty string, do not alias
     setToEmpty();
@@ -274,10 +260,8 @@ UnicodeString::UnicodeString(UChar *buff,
   }
 }
 
-UnicodeString::UnicodeString(const char *src, int32_t length, EInvariant)
-  : fShortLength(0),
-    fFlags(kShortString)
-{
+UnicodeString::UnicodeString(const char *src, int32_t length, EInvariant) {
+  fUnion.fFields.fLengthAndFlags = kShortString;
   if(src==NULL) {
     // treat as an empty string
   } else {
@@ -295,17 +279,15 @@ UnicodeString::UnicodeString(const char *src, int32_t length, EInvariant)
 
 #if U_CHARSET_IS_UTF8
 
-UnicodeString::UnicodeString(const char *codepageData)
-  : fShortLength(0),
-    fFlags(kShortString) {
+UnicodeString::UnicodeString(const char *codepageData) {
+  fUnion.fFields.fLengthAndFlags = kShortString;
   if(codepageData != 0) {
     setToUTF8(codepageData);
   }
 }
 
-UnicodeString::UnicodeString(const char *codepageData, int32_t dataLength)
-  : fShortLength(0),
-    fFlags(kShortString) {
+UnicodeString::UnicodeString(const char *codepageData, int32_t dataLength) {
+  fUnion.fFields.fLengthAndFlags = kShortString;
   // if there's nothing to convert, do nothing
   if(codepageData == 0 || dataLength == 0 || dataLength < -1) {
     return;
@@ -319,30 +301,21 @@ UnicodeString::UnicodeString(const char *codepageData, int32_t dataLength)
 // else see unistr_cnv.cpp
 #endif
 
-UnicodeString::UnicodeString(const UnicodeString& that)
-  : Replaceable(),
-    fShortLength(0),
-    fFlags(kShortString)
-{
+UnicodeString::UnicodeString(const UnicodeString& that) {
+  fUnion.fFields.fLengthAndFlags = kShortString;
   copyFrom(that);
 }
 
 UnicodeString::UnicodeString(const UnicodeString& that,
-                             int32_t srcStart)
-  : Replaceable(),
-    fShortLength(0),
-    fFlags(kShortString)
-{
+                             int32_t srcStart) {
+  fUnion.fFields.fLengthAndFlags = kShortString;
   setTo(that, srcStart);
 }
 
 UnicodeString::UnicodeString(const UnicodeString& that,
                              int32_t srcStart,
-                             int32_t srcLength)
-  : Replaceable(),
-    fShortLength(0),
-    fFlags(kShortString)
-{
+                             int32_t srcLength) {
+  fUnion.fFields.fLengthAndFlags = kShortString;
   setTo(that, srcStart, srcLength);
 }
 
@@ -365,7 +338,7 @@ UnicodeString::clone() const {
 UBool
 UnicodeString::allocate(int32_t capacity) {
   if(capacity <= US_STACKBUF_SIZE) {
-    fFlags = kShortString;
+    fUnion.fFields.fLengthAndFlags = kShortString;
   } else {
     // count bytes for the refCounter and the string capacity, and
     // round up to a multiple of 16; then divide by 4 and allocate int32_t's
@@ -380,12 +353,11 @@ UnicodeString::allocate(int32_t capacity) {
       // have fArray point to the first UChar
       fUnion.fFields.fArray = (UChar *)array;
       fUnion.fFields.fCapacity = (int32_t)((words - 1) * (sizeof(int32_t) / U_SIZEOF_UCHAR));
-      fFlags = kLongString;
+      fUnion.fFields.fLengthAndFlags = kLongString;
     } else {
-      fShortLength = 0;
+      fUnion.fFields.fLengthAndFlags = kIsBogus;
       fUnion.fFields.fArray = 0;
       fUnion.fFields.fCapacity = 0;
-      fFlags = kIsBogus;
       return FALSE;
     }
   }
@@ -459,12 +431,12 @@ UnicodeString::fastCopyFrom(const UnicodeString &src) {
 UnicodeString &
 UnicodeString::copyFrom(const UnicodeString &src, UBool fastCopy) {
   // if assigning to ourselves, do nothing
-  if(this == 0 || this == &src) {
+  if(this == &src) {
     return *this;
   }
 
   // is the right side bogus?
-  if(&src == 0 || src.isBogus()) {
+  if(src.isBogus()) {
     setToBogus();
     return *this;
   }
@@ -478,25 +450,24 @@ UnicodeString::copyFrom(const UnicodeString &src, UBool fastCopy) {
     return *this;
   }
 
-  // we always copy the length
-  int32_t srcLength = src.length();
-  setLength(srcLength);
-
   // fLength>0 and not an "open" src.getBuffer(minCapacity)
-  switch(src.fFlags) {
+  fUnion.fFields.fLengthAndFlags = src.fUnion.fFields.fLengthAndFlags;
+  switch(src.fUnion.fFields.fLengthAndFlags & kAllStorageFlags) {
   case kShortString:
     // short string using the stack buffer, do the same
-    fFlags = kShortString;
-    uprv_memcpy(fUnion.fStackBuffer, src.fUnion.fStackBuffer, srcLength * U_SIZEOF_UCHAR);
+    uprv_memcpy(fUnion.fStackFields.fBuffer, src.fUnion.fStackFields.fBuffer,
+                getShortLength() * U_SIZEOF_UCHAR);
     break;
   case kLongString:
     // src uses a refCounted string buffer, use that buffer with refCount
-    // src is const, use a cast - we don't really change it
+    // src is const, use a cast - we don't actually change it
     ((UnicodeString &)src).addRef();
     // copy all fields, share the reference-counted buffer
     fUnion.fFields.fArray = src.fUnion.fFields.fArray;
     fUnion.fFields.fCapacity = src.fUnion.fFields.fCapacity;
-    fFlags = src.fFlags;
+    if(!hasShortLength()) {
+      fUnion.fFields.fLength = src.fUnion.fFields.fLength;
+    }
     break;
   case kReadonlyAlias:
     if(fastCopy) {
@@ -504,25 +475,29 @@ UnicodeString::copyFrom(const UnicodeString &src, UBool fastCopy) {
       // -> maintain the readonly alias as such
       fUnion.fFields.fArray = src.fUnion.fFields.fArray;
       fUnion.fFields.fCapacity = src.fUnion.fFields.fCapacity;
-      fFlags = src.fFlags;
+      if(!hasShortLength()) {
+        fUnion.fFields.fLength = src.fUnion.fFields.fLength;
+      }
       break;
     }
     // else if(!fastCopy) fall through to case kWritableAlias
     // -> allocate a new buffer and copy the contents
-  case kWritableAlias:
+  case kWritableAlias: {
     // src is a writable alias; we make a copy of that instead
+    int32_t srcLength = src.length();
     if(allocate(srcLength)) {
       uprv_memcpy(getArrayStart(), src.getArrayStart(), srcLength * U_SIZEOF_UCHAR);
+      setLength(srcLength);
       break;
     }
     // if there is not enough memory, then fall through to setting to bogus
+  }
   default:
     // if src is bogus, set ourselves to bogus
-    // do not call setToBogus() here because fArray and fFlags are not consistent here
-    fShortLength = 0;
+    // do not call setToBogus() here because fArray and flags are not consistent here
+    fUnion.fFields.fLengthAndFlags = kIsBogus;
     fUnion.fFields.fArray = 0;
     fUnion.fFields.fCapacity = 0;
-    fFlags = kIsBogus;
     break;
   }
 
@@ -827,7 +802,7 @@ UnicodeString::tempSubString(int32_t start, int32_t len) const {
   pinIndices(start, len);
   const UChar *array = getBuffer();  // not getArrayStart() to check kIsBogus & kOpenGetBuffer
   if(array==NULL) {
-    array=fUnion.fStackBuffer;  // anything not NULL because that would make an empty string
+    array=fUnion.fStackFields.fBuffer;  // anything not NULL because that would make an empty string
     len=-2;  // bogus result string
   }
   return UnicodeString(FALSE, array + start, len);
@@ -1111,16 +1086,15 @@ UnicodeString::setToBogus()
 {
   releaseArray();
 
-  fShortLength = 0;
+  fUnion.fFields.fLengthAndFlags = kIsBogus;
   fUnion.fFields.fArray = 0;
   fUnion.fFields.fCapacity = 0;
-  fFlags = kIsBogus;
 }
 
 // turn a bogus string into an empty one
 void
 UnicodeString::unBogus() {
-  if(fFlags & kIsBogus) {
+  if(fUnion.fFields.fLengthAndFlags & kIsBogus) {
     setToEmpty();
   }
 }
@@ -1133,7 +1107,7 @@ UnicodeString::getTerminatedBuffer() {
   UChar *array = getArrayStart();
   int32_t len = length();
   if(len < getCapacity()) {
-    if(fFlags & kBufferIsReadonly) {
+    if(fUnion.fFields.fLengthAndFlags & kBufferIsReadonly) {
       // If len<capacity on a read-only alias, then array[len] is
       // either the original NUL (if constructed with (TRUE, s, length))
       // or one of the original string contents characters (if later truncated),
@@ -1141,7 +1115,7 @@ UnicodeString::getTerminatedBuffer() {
       if(array[len] == 0) {
         return array;
       }
-    } else if(((fFlags & kRefCounted) == 0 || refCount() == 1)) {
+    } else if(((fUnion.fFields.fLengthAndFlags & kRefCounted) == 0 || refCount() == 1)) {
       // kRefCounted: Do not write the NUL if the buffer is shared.
       // That is mostly safe, except when the length of one copy was modified
       // without copy-on-write, e.g., via truncate(newLength) or remove(void).
@@ -1169,7 +1143,7 @@ UnicodeString::setTo(UBool isTerminated,
                      const UChar *text,
                      int32_t textLength)
 {
-  if(fFlags & kOpenGetBuffer) {
+  if(fUnion.fFields.fLengthAndFlags & kOpenGetBuffer) {
     // do not modify a string that has an "open" getBuffer(minCapacity)
     return *this;
   }
@@ -1195,9 +1169,8 @@ UnicodeString::setTo(UBool isTerminated,
     // text is terminated, or else it would have failed the above test
     textLength = u_strlen(text);
   }
+  fUnion.fFields.fLengthAndFlags = kReadonlyAlias;
   setArray((UChar *)text, textLength, isTerminated ? textLength + 1 : textLength);
-
-  fFlags = kReadonlyAlias;
   return *this;
 }
 
@@ -1206,7 +1179,7 @@ UnicodeString &
 UnicodeString::setTo(UChar *buffer,
                      int32_t buffLength,
                      int32_t buffCapacity) {
-  if(fFlags & kOpenGetBuffer) {
+  if(fUnion.fFields.fLengthAndFlags & kOpenGetBuffer) {
     // do not modify a string that has an "open" getBuffer(minCapacity)
     return *this;
   }
@@ -1232,8 +1205,8 @@ UnicodeString::setTo(UChar *buffer,
 
   releaseArray();
 
+  fUnion.fFields.fLengthAndFlags = kWritableAlias;
   setArray(buffer, buffLength, buffCapacity);
-  fFlags = kWritableAlias;
   return *this;
 }
 
@@ -1338,7 +1311,7 @@ UnicodeString::doReplace(int32_t start,
   int32_t oldLength = this->length();
 
   // optimize (read-only alias).remove(0, start) and .remove(start, end)
-  if((fFlags&kBufferIsReadonly) && srcLength == 0) {
+  if((fUnion.fFields.fLengthAndFlags&kBufferIsReadonly) && srcLength == 0) {
     if(start == 0) {
       // remove prefix by adjusting the array pointer
       pinIndex(length);
@@ -1403,10 +1376,10 @@ UnicodeString::doReplace(int32_t start,
   // therefore we need to keep the current fArray
   UChar oldStackBuffer[US_STACKBUF_SIZE];
   UChar *oldArray;
-  if((fFlags&kUsingStackBuffer) && (newLength > US_STACKBUF_SIZE)) {
+  if((fUnion.fFields.fLengthAndFlags&kUsingStackBuffer) && (newLength > US_STACKBUF_SIZE)) {
     // copy the stack buffer contents because it will be overwritten with
     // fUnion.fFields values
-    u_memcpy(oldStackBuffer, fUnion.fStackBuffer, oldLength);
+    u_memcpy(oldStackBuffer, fUnion.fStackFields.fBuffer, oldLength);
     oldArray = oldStackBuffer;
   } else {
     oldArray = getArrayStart();
@@ -1603,8 +1576,8 @@ UnicodeString::doHashCode() const
 UChar *
 UnicodeString::getBuffer(int32_t minCapacity) {
   if(minCapacity>=-1 && cloneArrayIfNeeded(minCapacity)) {
-    fFlags|=kOpenGetBuffer;
-    fShortLength=0;
+    fUnion.fFields.fLengthAndFlags|=kOpenGetBuffer;
+    setZeroLength();
     return getArrayStart();
   } else {
     return 0;
@@ -1613,7 +1586,7 @@ UnicodeString::getBuffer(int32_t minCapacity) {
 
 void
 UnicodeString::releaseBuffer(int32_t newLength) {
-  if(fFlags&kOpenGetBuffer && newLength>=-1) {
+  if(fUnion.fFields.fLengthAndFlags&kOpenGetBuffer && newLength>=-1) {
     // set the new fLength
     int32_t capacity=getCapacity();
     if(newLength==-1) {
@@ -1627,7 +1600,7 @@ UnicodeString::releaseBuffer(int32_t newLength) {
       newLength=capacity;
     }
     setLength(newLength);
-    fFlags&=~kOpenGetBuffer;
+    fUnion.fFields.fLengthAndFlags&=~kOpenGetBuffer;
   }
 }
 
@@ -1661,8 +1634,8 @@ UnicodeString::cloneArrayIfNeeded(int32_t newCapacity,
    * Return FALSE if memory could not be allocated.
    */
   if(forceClone ||
-     fFlags & kBufferIsReadonly ||
-     (fFlags & kRefCounted && refCount() > 1) ||
+     fUnion.fFields.fLengthAndFlags & kBufferIsReadonly ||
+     (fUnion.fFields.fLengthAndFlags & kRefCounted && refCount() > 1) ||
      newCapacity > getCapacity()
   ) {
     // check growCapacity for default value and use of the stack buffer
@@ -1675,17 +1648,18 @@ UnicodeString::cloneArrayIfNeeded(int32_t newCapacity,
     // save old values
     UChar oldStackBuffer[US_STACKBUF_SIZE];
     UChar *oldArray;
-    uint8_t flags = fFlags;
+    int32_t oldLength = length();
+    int16_t flags = fUnion.fFields.fLengthAndFlags;
 
     if(flags&kUsingStackBuffer) {
       U_ASSERT(!(flags&kRefCounted)); /* kRefCounted and kUsingStackBuffer are mutally exclusive */
       if(doCopyArray && growCapacity > US_STACKBUF_SIZE) {
         // copy the stack buffer contents because it will be overwritten with
         // fUnion.fFields values
-        us_arrayCopy(fUnion.fStackBuffer, 0, oldStackBuffer, 0, fShortLength);
+        us_arrayCopy(fUnion.fStackFields.fBuffer, 0, oldStackBuffer, 0, oldLength);
         oldArray = oldStackBuffer;
       } else {
-        oldArray = 0; // no need to copy from stack buffer to itself
+        oldArray = NULL; // no need to copy from the stack buffer to itself
       }
     } else {
       oldArray = fUnion.fFields.fArray;
@@ -1696,18 +1670,20 @@ UnicodeString::cloneArrayIfNeeded(int32_t newCapacity,
     if(allocate(growCapacity) ||
        (newCapacity < growCapacity && allocate(newCapacity))
     ) {
-      if(doCopyArray && oldArray != 0) {
+      if(doCopyArray) {
         // copy the contents
         // do not copy more than what fits - it may be smaller than before
-        int32_t minLength = length();
+        int32_t minLength = oldLength;
         newCapacity = getCapacity();
         if(newCapacity < minLength) {
           minLength = newCapacity;
-          setLength(minLength);
         }
-        us_arrayCopy(oldArray, 0, getArrayStart(), 0, minLength);
+        if(oldArray != NULL) {
+          us_arrayCopy(oldArray, 0, getArrayStart(), 0, minLength);
+        }
+        setLength(minLength);
       } else {
-        fShortLength = 0;
+        setZeroLength();
       }
 
       // release the old array
@@ -1732,7 +1708,7 @@ UnicodeString::cloneArrayIfNeeded(int32_t newCapacity,
       if(!(flags&kUsingStackBuffer)) {
         fUnion.fFields.fArray = oldArray;
       }
-      fFlags = flags;
+      fUnion.fFields.fLengthAndFlags = flags;
       setToBogus();
       return FALSE;
     }
