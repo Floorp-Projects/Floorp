@@ -28,10 +28,22 @@ add_task(function* test_mozLoop_getSelectedTabMetadata() {
   metadata = yield promiseGetMetadata();
 
   Assert.strictEqual(metadata.url, null, "URL should be empty for about:home");
-  Assert.ok(metadata.favicon.startsWith("data:image/x-icon;base64,"),
-    "Favicon should be set for about:home");
+  Assert.strictEqual(metadata.favicon, null, "Favicon should be empty for about:home");
   Assert.ok(metadata.title, "Title should be set for about:home");
   Assert.deepEqual(metadata.previews, [], "No previews available for about:home");
+
+  gBrowser.removeTab(tab);
+});
+
+add_task(function* test_mozLoop_getSelectedTabMetadata_defaultIcon() {
+  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  yield promiseTabLoadEvent(tab, "http://example.com/");
+  let metadata = yield promiseGetMetadata();
+
+  Assert.strictEqual(metadata.url, "http://example.com/", "URL should match");
+  Assert.strictEqual(metadata.favicon, null, "Favicon should be empty");
+  Assert.ok(metadata.title, "Title should be set");
+  Assert.deepEqual(metadata.previews, [], "No previews available");
 
   gBrowser.removeTab(tab);
 });

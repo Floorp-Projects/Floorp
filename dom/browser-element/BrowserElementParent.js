@@ -199,7 +199,7 @@ BrowserElementParent.prototype = {
       "got-can-go-forward": this._gotDOMRequestResult,
       "requested-dom-fullscreen": this._requestedDOMFullscreen,
       "fullscreen-origin-change": this._fullscreenOriginChange,
-      "exited-dom-fullscreen": this._exitedDomFullscreen,
+      "exit-dom-fullscreen": this._exitDomFullscreen,
       "got-visible": this._gotDOMRequestResult,
       "visibilitychange": this._childVisibilityChange,
       "got-set-input-method-active": this._gotDOMRequestResult,
@@ -1005,7 +1005,7 @@ BrowserElementParent.prototype = {
       this._frameElement, "fullscreen-origin-change", data.json.originNoSuffix);
   },
 
-  _exitedDomFullscreen: function(data) {
+  _exitDomFullscreen: function(data) {
     this._windowUtils.remoteFrameFullscreenReverted();
   },
 

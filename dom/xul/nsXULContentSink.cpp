@@ -1024,7 +1024,13 @@ XULContentSinkImpl::AddText(const char16_t* aText,
             return rv;
         }
       } else {
-        mTextSize += aLength;
+        CheckedInt32 size = mTextSize;
+        size += aLength;
+        if (!size.isValid()) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        mTextSize = size.value();
+
         mText = (char16_t *) realloc(mText, sizeof(char16_t) * mTextSize);
         if (nullptr == mText) {
             return NS_ERROR_OUT_OF_MEMORY;

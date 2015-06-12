@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function startTest(test, token)
+{
+  // Three cases:
+  // 1. setting MediaKeys on an element captured by MediaElementSource should fail, and
+  // 2. creating a MediaElementSource on a media element with a MediaKeys should fail, and
+  // 3. capturing a media element with mozCaptureStream that has a MediaKeys should fail.
+
+  // Case 3. capturing a media element with mozCaptureStream that has a MediaKeys should fail.
+  var case3token = token + "_case3";
+  var v3 = SetupEME(test, case3token);
+  v3.addEventListener("loadeddata", function(ev) {
+    ok(true, TimeStamp(case3token) + " should reach loadeddata");
+    var threw = false;
+    try {
+      var stream = v3.mozCaptureStreamUntilEnded();
+    } catch (e) {
+      threw = true;
+    }
+    ok(threw, TimeStamp(case3token) + " Should throw an error calling mozCaptureStreamUntilEnded an EME video.");
+    manager.finished(case3token);
+  });
+  manager.started(case3token);
+  LoadTestWithManagedLoadToken(test, v3, manager, case3token,
+                               { onlyLoadFirstFragments:2, noEndOfStream:true });
+}
+
+function beginTest() {
+  manager.runTests(gEMETests, startTest);
+}
+
+SimpleTest.waitForExplicitFinish();
+SetupEMEPref(beginTest);
+</script>
+</pre>
+</body>
+</html>
