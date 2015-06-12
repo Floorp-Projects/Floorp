@@ -1060,10 +1060,14 @@ Blocklist.prototype = {
   /* See nsIBlocklistService */
   getPluginBlocklistState: function Blocklist_getPluginBlocklistState(plugin,
                            appVersion, toolkitVersion) {
+#ifdef ANDROID
+    return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
+#else
     if (!this._isBlocklistLoaded())
       this._loadBlocklist();
     return this._getPluginBlocklistState(plugin, this._pluginEntries,
                                          appVersion, toolkitVersion);
+#endif // ifdef ANDROID
   },
 
   /**

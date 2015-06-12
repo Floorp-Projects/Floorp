@@ -22,8 +22,9 @@ class GMPVideoEncoderChild : public PGMPVideoEncoderChild,
                              public GMPSharedMemManager
 {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPVideoEncoderChild);
+
   explicit GMPVideoEncoderChild(GMPContentChild* aPlugin);
-  virtual ~GMPVideoEncoderChild();
 
   void Init(GMPVideoEncoder* aEncoder);
   GMPVideoHostImpl& Host();
@@ -35,28 +36,13 @@ public:
   virtual void Error(GMPErr aError) override;
 
   // GMPSharedMemManager
-  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem) override
-  {
-#ifndef SHMEM_ALLOC_IN_CHILD
-    return CallNeedShmem(aSize, aMem);
-#else
-#ifdef GMP_SAFE_SHMEM
-    return AllocShmem(aSize, aType, aMem);
-#else
-    return AllocUnsafeShmem(aSize, aType, aMem);
-#endif
-#endif
-  }
-  virtual void Dealloc(Shmem& aMem) override
-  {
-#ifndef SHMEM_ALLOC_IN_CHILD
-    SendParentShmemForPool(aMem);
-#else
-    DeallocShmem(aMem);
-#endif
-  }
+  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType,
+    Shmem* aMem) override;
+  virtual void Dealloc(Shmem& aMem) override;
 
 private:
+  virtual ~GMPVideoEncoderChild();
+
   // PGMPVideoEncoderChild
   virtual bool RecvInitEncode(const GMPVideoCodec& aCodecSettings,
                               InfallibleTArray<uint8_t>&& aCodecSpecific,
@@ -76,6 +62,11 @@ private:
   GMPContentChild* mPlugin;
   GMPVideoEncoder* mVideoEncoder;
   GMPVideoHostImpl mVideoHost;
+
+  // Non-zero when a GMP is blocked spinning the IPC message loop while
+  // waiting on an NeedShmem to complete.
+  int mNeedShmemIntrCount;
+  bool mPendingEncodeComplete;
 };
 
 } // namespace gmp

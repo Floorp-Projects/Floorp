@@ -38,6 +38,7 @@
 #include "mozilla/plugins/BrowserStreamChild.h"
 #include "mozilla/plugins/PluginStreamChild.h"
 #include "mozilla/dom/CrashReporterChild.h"
+#include "mozilla/unused.h"
 
 #include "nsNPAPIPlugin.h"
 
@@ -2570,13 +2571,16 @@ PluginModuleChild::RecvStopProfiler()
 }
 
 bool
-PluginModuleChild::AnswerGetProfile(nsCString* aProfile)
+PluginModuleChild::RecvGatherProfile()
 {
+    nsCString profileCString;
     UniquePtr<char[]> profile = profiler_get_profile();
     if (profile != nullptr) {
-        *aProfile = nsCString(profile.get(), strlen(profile.get()));
+        profileCString = nsCString(profile.get(), strlen(profile.get()));
     } else {
-        *aProfile = nsCString("", 0);
+        profileCString = nsCString("", 0);
     }
+
+    unused << SendProfile(profileCString);
     return true;
 }

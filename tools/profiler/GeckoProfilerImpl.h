@@ -156,6 +156,13 @@ JSObject* profiler_get_profile_jsobject(JSContext* aCx, float aSinceTime = 0)
 }
 
 static inline
+void profiler_get_profile_jsobject_async(float aSinceTime = 0,
+                                         mozilla::dom::Promise* aPromise = 0)
+{
+  mozilla_sampler_get_profile_data_async(aSinceTime, aPromise);
+}
+
+static inline
 void profiler_save_profile_to_file(const char* aFilename)
 {
   return mozilla_sampler_save_profile_to_file(aFilename);

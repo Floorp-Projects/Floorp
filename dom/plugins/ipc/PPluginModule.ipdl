@@ -99,8 +99,7 @@ child:
                       nsCString[] aThreadNameFilters);
   async StopProfiler();
 
-  intr GetProfile()
-    returns (nsCString aProfile);
+  async GatherProfile();
 
   async SettingChanged(PluginSettings settings);
 
@@ -147,6 +146,8 @@ parent:
   // process was destroyed. The chrome process may choose to asynchronously shut
   // down the plugin process in response.
   async NotifyContentModuleDestroyed();
+
+  async Profile(nsCString aProfile);
 };
 
 } // namespace plugins
