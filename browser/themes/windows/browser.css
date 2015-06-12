@@ -1482,6 +1482,13 @@ richlistitem[type~="action"][actiontype="searchengine"] > .ac-title-box > .ac-si
   }
 }
 
+@media (-moz-os-version: windows-win10) and (-moz-windows-default-theme) {
+  .ac-url-text:not([selected="true"]),
+  .ac-action-text:not([selected="true"]) {
+    color: Highlight;
+  }
+}
+
 richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
   list-style-image: url("chrome://browser/skin/actionicon-tab.png");
   -moz-image-region: rect(0, 16px, 11px, 0);
