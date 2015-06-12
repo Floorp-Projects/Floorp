@@ -65,3 +65,6 @@
 
     // Disable periodic updates of service workers.
     branch.setBoolPref("dom.serviceWorkers.periodic-updates.enabled", false);
+
+    // Allow XUL and XBL files to be opened from file:// URIs
+    branch.setBoolPref("dom.allow_XUL_XBL_for_file", true);
