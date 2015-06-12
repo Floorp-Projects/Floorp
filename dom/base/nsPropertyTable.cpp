@@ -137,9 +137,8 @@ void
 nsPropertyTable::EnumerateAll(NSPropertyFunc aCallBack, void* aData)
 {
   for (PropertyList* prop = mPropertyList; prop; prop = prop->mNext) {
-    PLDHashTable::Iterator iter(&prop->mObjectValueMap);
-    while (iter.HasMoreEntries()) {
-      auto entry = static_cast<PropertyListMapEntry*>(iter.NextEntry());
+    for (auto iter = prop->mObjectValueMap.Iter(); !iter.Done(); iter.Next()) {
+      auto entry = static_cast<PropertyListMapEntry*>(iter.Get());
       aCallBack(const_cast<void*>(entry->key), prop->mName, entry->value,
                 aData);
     }
@@ -285,9 +284,8 @@ nsPropertyTable::PropertyList::Destroy()
 {
   // Enumerate any remaining object/value pairs and destroy the value object.
   if (mDtorFunc) {
-    PLDHashTable::Iterator iter(&mObjectValueMap);
-    while (iter.HasMoreEntries()) {
-      auto entry = static_cast<PropertyListMapEntry*>(iter.NextEntry());
+    for (auto iter = mObjectValueMap.Iter(); !iter.Done(); iter.Next()) {
+      auto entry = static_cast<PropertyListMapEntry*>(iter.Get());
       mDtorFunc(const_cast<void*>(entry->key), mName, entry->value, mDtorData);
     }
   }

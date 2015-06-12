@@ -3992,9 +3992,8 @@ nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments()
     return;
   }
 
-  PLDHashTable::Iterator iter(sEventListenerManagersHash);
-  while (iter.HasMoreEntries()) {
-    auto entry = static_cast<EventListenerManagerMapEntry*>(iter.NextEntry());
+  for (auto i = sEventListenerManagersHash->Iter(); !i.Done(); i.Next()) {
+    auto entry = static_cast<EventListenerManagerMapEntry*>(i.Get());
     nsINode* n = static_cast<nsINode*>(entry->mListenerManager->GetTarget());
     if (n && n->IsInDoc() &&
         nsCCUncollectableMarker::InGeneration(n->OwnerDoc()->GetMarkedCCGeneration())) {
