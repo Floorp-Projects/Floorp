@@ -734,9 +734,7 @@ InitGlobals(nsPresContext* aPresContext)
   // observer and will be deleted at shutdown. We now add some private
   // per font-family tables for stretchy operators, in order of preference.
   // Do not include the Unicode table in this list.
-  if (!glyphTableList->AddGlyphTable(NS_LITERAL_STRING("MathJax_Main")) ||
-      !glyphTableList->AddGlyphTable(NS_LITERAL_STRING("STIXGeneral")) ||
-      !glyphTableList->AddGlyphTable(NS_LITERAL_STRING("Standard Symbols L"))
+  if (!glyphTableList->AddGlyphTable(NS_LITERAL_STRING("STIXGeneral"))
 #ifdef XP_WIN
       || !glyphTableList->AddGlyphTable(NS_LITERAL_STRING("Symbol"))
 #endif
