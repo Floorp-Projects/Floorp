@@ -235,6 +235,10 @@ RemoteFinderListener.prototype = {
         this._finder.highlight(data.highlight, data.word);
         break;
 
+      case "Finder:EnableSelection":
+        this._finder.enableSelection();
+        break;
+
       case "Finder:RemoveSelection":
         this._finder.removeSelection();
         break;
