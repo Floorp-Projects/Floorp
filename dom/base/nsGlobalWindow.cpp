@@ -2380,6 +2380,17 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   jsapi.Init();
   JSContext *cx = jsapi.cx();
 
+  // Check if we're anywhere near the stack limit before we reach the
+  // transplanting code, since it has no good way to handle errors. This uses
+  // the untrusted script limit, which is not strictly necessary since no
+  // actual script should run.
+  bool overrecursed = false;
+  JS_CHECK_RECURSION_CONSERVATIVE_DONT_REPORT(cx, overrecursed = true);
+  if (overrecursed) {
+    NS_WARNING("Overrecursion in SetNewDocument");
+    return NS_ERROR_FAILURE;
+  }
+
   if (!mDoc) {
     // First document load.
 
@@ -2435,12 +2446,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   bool createdInnerWindow = false;
 
   bool thisChrome = IsChromeWindow();
-
-  // Check if we're anywhere near the stack limit before we reach the
-  // transplanting code, since it has no good way to handle errors. This uses
-  // the untrusted script limit, which is not strictly necessary since no
-  // actual script should run.
-  JS_CHECK_RECURSION_CONSERVATIVE(cx, return NS_ERROR_FAILURE);
 
   nsCOMPtr<WindowStateHolder> wsh = do_QueryInterface(aState);
   NS_ASSERTION(!aState || wsh, "What kind of weird state are you giving me here?");
