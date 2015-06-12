@@ -183,7 +183,6 @@ function enter_from_arg_test_1(event) {
   ok(document.mozFullScreen, "Should have entered full-screen after calling with bogus (ignored) argument (fourth time)");
   addFullscreenChangeContinuation("exit", exit_to_arg_test_2);
   document.mozCancelFullScreen();
-  ok(!document.mozFullScreen, "Should have left full-screen mode.");
 }
 
 function exit_to_arg_test_2(event) {
@@ -204,7 +203,6 @@ function enter_from_arg_test_2(event) {
   ok(document.mozFullScreen, "Should have entered full-screen after calling with vrDisplay null argument (fifth time)");
   addFullscreenChangeContinuation("exit", exit4);
   document.mozCancelFullScreen();
-  ok(!document.mozFullScreen, "Should have left full-screen mode.");
 }
 
 function exit4(event) {
@@ -228,7 +226,6 @@ function enter5(event) {
   ok(document.mozFullScreen, "Moved to full-screen after mouse click");
   addFullscreenChangeContinuation("exit", exit5);
   document.mozCancelFullScreen();
-  ok(!document.mozFullScreen, "Should have left full-screen mode.");
 }
 
 function exit5(event) {
