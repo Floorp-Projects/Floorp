@@ -32,6 +32,7 @@ class BluetoothGattCharacteristic final : public nsISupports
                                         , public nsWrapperCache
                                         , public BluetoothSignalObserver
 {
+  friend class BluetoothGattService;
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BluetoothGattCharacteristic)
@@ -106,10 +107,10 @@ private:
    * Add newly discovered GATT descriptors into mDescriptors and update the
    * cache value of mDescriptors.
    *
-   * @param aValue [in] BluetoothValue which contains an array of
-   *                    BluetoothGattId of all discovered descriptors.
+   * @param aDescriptorIds [in] An array of BluetoothGattId for each descriptor
+   *                            that belongs to this characteristic.
    */
-  void HandleDescriptorsDiscovered(const BluetoothValue& aValue);
+  void AssignDescriptors(const nsTArray<BluetoothGattId>& aDescriptorIds);
 
   /**
    * Update the value of this characteristic.
