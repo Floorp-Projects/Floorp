@@ -13,6 +13,7 @@
 #include "jsprf.h"
 
 #include "mozilla/Vector.h"
+#include "mozilla/Snprintf.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -286,8 +287,6 @@ static bool cvt_ll(SprintfState* ss, int64_t num, int width, int prec, int radix
 /*
  * Convert a double precision floating point number into its printable
  * form.
- *
- * XXX stop using sprintf to convert floating point
  */
 static bool cvt_f(SprintfState* ss, double d, const char* fmt0, const char* fmt1)
 {
@@ -303,7 +302,7 @@ static bool cvt_f(SprintfState* ss, double d, const char* fmt0, const char* fmt1
     js_memcpy(fin, fmt0, (size_t)amount);
     fin[amount] = 0;
 
-    // Convert floating point using the native sprintf code
+    // Convert floating point using the native snprintf code
 #ifdef DEBUG
     {
         const char* p = fin;
@@ -313,12 +312,7 @@ static bool cvt_f(SprintfState* ss, double d, const char* fmt0, const char* fmt1
         }
     }
 #endif
-    sprintf(fout, fin, d);
-
-    // This assert will catch overflow's of fout, when building with
-    // debugging on. At least this way we can track down the evil piece
-    // of calling code and fix it!
-    MOZ_ASSERT(strlen(fout) < sizeof(fout));
+    snprintf_literal(fout, fin, d);
 
     return (*ss->stuff)(ss, fout, strlen(fout));
 }
