@@ -188,7 +188,6 @@ class RefTest(object):
 
         locations = mozprofile.permissions.ServerLocations()
         locations.add_host(server, port=0)
-        locations.add_host('<file>', port=0)
 
         # Set preferences for communication between our command line arguments
         # and the reftest harness.  Preferences that are required for reftest
