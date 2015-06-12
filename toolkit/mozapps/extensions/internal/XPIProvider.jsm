@@ -1003,12 +1003,13 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.targetPlatforms = [];
   }
 
+  // Load the storage service before NSS (nsIRandomGenerator),
+  // to avoid a SQLite initialization error (bug 717904).
+  let storage = Services.storage;
+
   // Define .syncGUID as a lazy property which is also settable
   Object.defineProperty(addon, "syncGUID", {
     get: () => {
-      // Load the storage service before NSS (nsIRandomGenerator),
-      // to avoid a SQLite initialization error (bug 717904).
-      let storage = Services.storage;
 
       // Generate random GUID used for Sync.
       // This was lifted from util.js:makeGUID() from services-sync.

@@ -134,16 +134,18 @@ JS::DeflateStringToUTF8Buffer(JSFlatString* src, mozilla::RangedPtr<char> dst)
 
 template <typename CharT>
 UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(js::ExclusiveContext* cx, const mozilla::Range<const CharT> chars)
+JS::CharsToNewUTF8CharsZ(js::ExclusiveContext* maybeCx, const mozilla::Range<const CharT> chars)
 {
-    MOZ_ASSERT(cx);
-
     /* Get required buffer size. */
     const CharT* str = chars.start().get();
     size_t len = ::GetDeflatedUTF8StringLength(str, chars.length());
 
     /* Allocate buffer. */
-    char* utf8 = cx->pod_malloc<char>(len + 1);
+    char* utf8;
+    if (maybeCx)
+        utf8 = maybeCx->pod_malloc<char>(len + 1);
+    else
+        utf8 = js_pod_malloc<char>(len + 1);
     if (!utf8)
         return UTF8CharsZ();
 
@@ -155,10 +157,12 @@ JS::CharsToNewUTF8CharsZ(js::ExclusiveContext* cx, const mozilla::Range<const Ch
 }
 
 template UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(js::ExclusiveContext* cx, const mozilla::Range<const Latin1Char> chars);
+JS::CharsToNewUTF8CharsZ(js::ExclusiveContext* maybeCx,
+                         const mozilla::Range<const Latin1Char> chars);
 
 template UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(js::ExclusiveContext* cx, const mozilla::Range<const char16_t> chars);
+JS::CharsToNewUTF8CharsZ(js::ExclusiveContext* maybeCx,
+                         const mozilla::Range<const char16_t> chars);
 
 static const uint32_t INVALID_UTF8 = UINT32_MAX;
 

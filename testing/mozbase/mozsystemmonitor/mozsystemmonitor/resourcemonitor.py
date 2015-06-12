@@ -7,16 +7,46 @@ import sys
 import time
 import warnings
 
-# psutil will raise NotImplementedError if the platform is not supported.
-try:
-    import psutil
-except Exception:
-    psutil = None
-
 from collections import (
     OrderedDict,
     namedtuple,
 )
+
+class PsutilStub(object):
+    def __init__(self):
+        self.sswap = namedtuple('sswap', ['total', 'used', 'free', 'percent', 'sin',
+                                          'sout'])
+        self.sdiskio = namedtuple('sdiskio', ['read_count', 'write_count',
+                                              'read_bytes', 'write_bytes',
+                                              'read_time', 'write_time'])
+        self.pcputimes = namedtuple('pcputimes', ['user', 'system'])
+        self.svmem = namedtuple(
+            'svmem', ['total', 'available', 'percent', 'used', 'free',
+                      'active', 'inactive', 'buffers', 'cached'])
+
+    def cpu_percent(self, a, b):
+        return [0]
+    def cpu_times(self, percpu):
+        if percpu:
+            return [self.pcputimes(0, 0)]
+        else:
+            return self.pcputimes(0, 0)
+    def disk_io_counters(self):
+        return self.sdiskio(0, 0, 0, 0, 0, 0)
+    def swap_memory(self):
+        return self.sswap(0, 0, 0, 0, 0, 0)
+    def virtual_memory(self):
+        return self.svmem(0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+# psutil will raise NotImplementedError if the platform is not supported.
+try:
+    import psutil
+except Exception:
+    try:
+        # The PsutilStub should get us time intervals, at least
+        psutil = PsutilStub()
+    except Exception:
+        psutil = None
 
 from contextlib import contextmanager
 

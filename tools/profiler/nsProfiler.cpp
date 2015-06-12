@@ -17,7 +17,11 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "shared-libraries.h"
 #include "js/Value.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/Promise.h"
 
+using mozilla::ErrorResult;
+using mozilla::dom::Promise;
 using std::string;
 
 NS_IMPL_ISUPPORTS(nsProfiler, nsIProfiler)
@@ -209,6 +213,34 @@ nsProfiler::GetProfileData(float aSinceTime, JSContext* aCx,
     return NS_ERROR_FAILURE;
   }
   aResult.setObject(*obj);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProfiler::GetProfileDataAsync(float aSinceTime, JSContext* aCx,
+                                nsISupports** aPromise)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (NS_WARN_IF(!aCx)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIGlobalObject* go = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+
+  if (NS_WARN_IF(!go)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult result;
+  nsRefPtr<Promise> promise = Promise::Create(go, result);
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+  profiler_get_profile_jsobject_async(aSinceTime, promise);
+
+  promise.forget(aPromise);
   return NS_OK;
 }
 

@@ -261,8 +261,6 @@ nsSimpleURI::GetUserPass(nsACString &result)
 NS_IMETHODIMP
 nsSimpleURI::SetUserPass(const nsACString &userPass)
 {
-    NS_ENSURE_STATE(mMutable);
-    
     return NS_ERROR_FAILURE;
 }
 
