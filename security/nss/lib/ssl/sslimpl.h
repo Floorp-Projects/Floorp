@@ -153,6 +153,15 @@ typedef enum { SSLAppOpRead = 0,
 
 #define EXPORT_RSA_KEY_LENGTH 64	/* bytes */
 
+/* The minimum server key sizes accepted by the clients.
+ * Not 1024 to be conservative. */
+#define SSL_RSA_MIN_MODULUS_BITS 1023
+/* 1023 to avoid cases where p = 2q+1 for a 512-bit q turns out to be
+ * only 1023 bits and similar.  We don't have good data on whether this
+ * happens because NSS used to count bit lengths incorrectly. */
+#define SSL_DH_MIN_P_BITS 1023
+#define SSL_DSA_MIN_P_BITS 1023
+
 #define INITIAL_DTLS_TIMEOUT_MS   1000  /* Default value from RFC 4347 = 1s*/
 #define MAX_DTLS_TIMEOUT_MS      60000  /* 1 minute */
 #define DTLS_FINISHED_TIMER_MS  120000  /* Time to wait in FINISHED state */
