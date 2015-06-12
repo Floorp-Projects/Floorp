@@ -85,7 +85,11 @@ class MozbuildFileCommands(MachCommandBase):
     @Command('file-info', category='build-dev',
              description='Query for metadata about files.')
     def file_info(self):
-        pass
+        """Show files metadata derived from moz.build files.
+
+        moz.build files contain "Files" sub-contexts for declaring metadata
+        against file patterns. This command suite is used to query that data.
+        """
 
     @SubCommand('file-info', 'bugzilla-component',
                 'Show Bugzilla component info for files listed.')
@@ -94,6 +98,11 @@ class MozbuildFileCommands(MachCommandBase):
     @CommandArgument('paths', nargs='+',
                      help='Paths whose data to query')
     def file_info_bugzilla(self, paths, rev=None):
+        """Show Bugzilla component for a set of files.
+
+        Given a requested set of files (which can be specified using
+        wildcards), print the Bugzilla component for each file.
+        """
         components = defaultdict(set)
         try:
             for p, m in self._get_files_info(paths, rev=rev).items():

@@ -410,6 +410,15 @@ public:
     return mRanges ? mRanges->TargetClauseOffset() : 0;
   }
 
+  uint32_t TargetClauseLength() const
+  {
+    uint32_t length = UINT32_MAX;
+    if (mRanges) {
+      length = mRanges->TargetClauseLength();
+    }
+    return length == UINT32_MAX ? mData.Length() : length;
+  }
+
   uint32_t RangeCount() const
   {
     return mRanges ? mRanges->Length() : 0;

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+
+var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+svg.setAttribute('style', 'display: block; width: 0; height: 0');
+
+var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+
+var dropShadowFilter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+dropShadowFilter.setAttribute('id', 'drop-shadow');
+
+var gaussianFilter = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
+gaussianFilter.setAttribute('in', 'SourceAlpha');
+gaussianFilter.setAttribute('stdDeviation', '0');
+dropShadowFilter.appendChild(gaussianFilter);
+
+var offset = document.createElementNS('http://www.w3.org/2000/svg', 'feOffset');
+offset.setAttribute('dx', '0');
+offset.setAttribute('dy', '0');
+offset.setAttribute('result', 'offsetblur');
+dropShadowFilter.appendChild(offset);
+
+var flood = document.createElementNS('http://www.w3.org/2000/svg', 'feFlood');
+flood.setAttribute('flood-color', 'rgba(0,0,0,1)');
+dropShadowFilter.appendChild(flood);
+
+var composite = document.createElementNS('http://www.w3.org/2000/svg', 'feComposite');
+composite.setAttribute('in2', 'offsetblur');
+composite.setAttribute('operator', 'in');
+dropShadowFilter.appendChild(composite);
+
+var merge = document.createElementNS('http://www.w3.org/2000/svg', 'feMerge');
+var mergeNode = document.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode');
+merge.appendChild(mergeNode);
+
+var mergeNode = document.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode');
+mergeNode.setAttribute('in', 'SourceGraphic');
+merge.appendChild(mergeNode);
+dropShadowFilter.appendChild(merge);
+
+defs.appendChild(dropShadowFilter);
+svg.appendChild(defs);
+
+document.body.appendChild(svg);
+
+</script>
+<canvas id="canvas" width="100" height="100"></canvas>
+<script>
+
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+
+ctx.filter = 'url(#drop-shadow)';
+
+offset.setAttribute('dy', '10');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(25, 25, 50, 40);
+
+</script>
+</body>
+</html>

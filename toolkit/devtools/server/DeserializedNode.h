@@ -57,29 +57,36 @@ struct DeserializedNode {
   using EdgeVector = Vector<DeserializedEdge>;
   using UniqueStringPtr = UniquePtr<char16_t[]>;
 
-  NodeId         id;
+  NodeId          id;
   // A borrowed reference to a string owned by this node's owning HeapSnapshot.
   const char16_t* typeName;
-  uint64_t       size;
-  EdgeVector     edges;
+  uint64_t        size;
+  EdgeVector      edges;
   // A weak pointer to this node's owning `HeapSnapshot`. Safe without
   // AddRef'ing because this node's lifetime is equal to that of its owner.
-  HeapSnapshot*  owner;
-
-  // Create a new `DeserializedNode` from the given `protobuf::Node` message.
-  static UniquePtr<DeserializedNode> Create(const protobuf::Node& node,
-                                            HeapSnapshot& owner);
+  HeapSnapshot*   owner;
 
   DeserializedNode(NodeId id,
                    const char16_t* typeName,
                    uint64_t size,
                    EdgeVector&& edges,
-                   HeapSnapshot& owner);
+                   HeapSnapshot& owner)
+    : id(id)
+    , typeName(typeName)
+    , size(size)
+    , edges(Move(edges))
+    , owner(&owner)
+  { }
   virtual ~DeserializedNode() { }
+
+  DeserializedNode(DeserializedNode&& rhs);
+  DeserializedNode& operator=(DeserializedNode&& rhs);
 
   // Get a borrowed reference to the given edge's referent. This method is
   // virtual to provide a hook for gmock and gtest.
-  virtual DeserializedNode& getEdgeReferent(const DeserializedEdge& edge);
+  virtual JS::ubi::Node getEdgeReferent(const DeserializedEdge& edge);
+
+  struct HashPolicy;
 
 protected:
   // This is only for use with `MockDeserializedNode` in testing.
@@ -88,6 +95,25 @@ protected:
 private:
   DeserializedNode(const DeserializedNode&) = delete;
   DeserializedNode& operator=(const DeserializedNode&) = delete;
+};
+
+struct DeserializedNode::HashPolicy
+{
+  using Lookup = NodeId;
+
+  static js::HashNumber hash(const Lookup& lookup) {
+    // NodeIds are always 64 bits, but they are derived from the original
+    // referents' addresses, which could have been either 32 or 64 bits long.
+    // As such, a NodeId has little entropy in its bottom three bits, and may or
+    // may not have entropy in its upper 32 bits. This hash should manage both
+    // cases well.
+    uint64_t id = lookup >> 3;
+    return js::HashNumber((id >> 32) ^ id);
+  }
+
+  static bool match(const DeserializedNode& existing, const Lookup& lookup) {
+    return existing.id == lookup;
+  }
 };
 
 } // namespace devtools

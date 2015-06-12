@@ -10,15 +10,15 @@ interface nsISupports;
 interface SpeechRecognitionEvent : Event
 {
   readonly attribute unsigned long resultIndex;
-  readonly attribute nsISupports? results;
-  readonly attribute DOMString? interpretation;
+  readonly attribute SpeechRecognitionResultList? results;
+  readonly attribute any interpretation;
   readonly attribute Document? emma;
 };
 
 dictionary SpeechRecognitionEventInit : EventInit
 {
   unsigned long resultIndex = 0;
-  nsISupports? results = null;
-  DOMString interpretation = "";
+  SpeechRecognitionResultList? results = null;
+  any interpretation = null;
   Document? emma = null;
 };

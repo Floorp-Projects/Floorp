@@ -4018,6 +4018,9 @@ namespace JS {
  *
  * The provided chain of SavedFrame objects can live in any compartment,
  * although it will be copied to the compartment where the stack is captured.
+ *
+ * See also `js/src/doc/SavedFrame/SavedFrame.md` for documentation on async
+ * stack frames.
  */
 class MOZ_STACK_CLASS JS_PUBLIC_API(AutoSetAsyncStackForNewCalls)
 {
@@ -5301,6 +5304,8 @@ CaptureCurrentStack(JSContext* cx, MutableHandleObject stackp, unsigned maxFrame
  * caller's principals do not subsume any of the chained SavedFrame object's
  * principals, `SavedFrameResult::AccessDenied` is returned and a (hopefully)
  * sane default value is chosen for the out param.
+ *
+ * See also `js/src/doc/SavedFrame/SavedFrame.md`.
  */
 
 enum class SavedFrameResult {
