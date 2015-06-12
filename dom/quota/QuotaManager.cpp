@@ -4548,20 +4548,37 @@ StorageDirectoryHelper::CreateOrUpgradeMetadataFiles(bool aCreate)
     nsCOMPtr<nsIFile> originDir = do_QueryInterface(entry);
     MOZ_ASSERT(originDir);
 
+    nsString leafName;
+    rv = originDir->GetLeafName(leafName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
     bool isDirectory;
     rv = originDir->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    if (!isDirectory) {
-      nsString leafName;
-      rv = originDir->GetLeafName(leafName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
 
+    if (isDirectory) {
+      if (leafName.EqualsLiteral("moz-safe-about+++home")) {
+        // This directory was accidentally created by a buggy nightly and can
+        // be safely removed.
+
+        QM_WARNING("Deleting accidental moz-safe-about+++home directory!");
+
+        rv = originDir->Remove(/* aRecursive */ true);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        continue;
+      }
+    } else {
       if (!leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
-        NS_WARNING("Something in the storage directory that doesn't belong!");
+        QM_WARNING("Something (%s) in the storage directory that doesn't belong!",
+                   NS_ConvertUTF16toUTF8(leafName).get());
+
       }
       continue;
     }
