@@ -6,7 +6,7 @@
 set -e
 
 # Usage: update-icu.sh <URL of ICU SVN with release>
-# E.g., for ICU 52.1: update-icu.sh http://source.icu-project.org/repos/icu/icu/tags/release-52-1/
+# E.g., for ICU 55.1: update-icu.sh http://source.icu-project.org/repos/icu/icu/tags/release-55-1/
 
 if [ $# -lt 1 ]; then
   echo "Usage: update-icu.sh <URL of ICU SVN with release>"
@@ -49,6 +49,8 @@ rm ${icu_dir}/source/data/translit/*
 # possible to run the command at the top of this script and make no changes to
 # the tree.)
 svn info $1 | grep -v '^Revision: [[:digit:]]\+$' > ${icu_dir}/SVN-INFO
+
+exit 0
 
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-724533
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-899722-4
