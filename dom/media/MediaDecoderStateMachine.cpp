@@ -2165,6 +2165,7 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
 
     mStartTimeRendezvous->AwaitStartTime()->Then(TaskQueue(), __func__,
       [self] () -> void {
+        NS_ENSURE_TRUE_VOID(!self->IsShutdown());
         ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
         self->mReader->SetStartTime(self->StartTime());
       },
@@ -2177,6 +2178,7 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
   } else if (mInfo.mUnadjustedMetadataEndTime.isSome()) {
     mStartTimeRendezvous->AwaitStartTime()->Then(TaskQueue(), __func__,
       [self] () -> void {
+        NS_ENSURE_TRUE_VOID(!self->IsShutdown());
         TimeUnit unadjusted = self->mInfo.mUnadjustedMetadataEndTime.ref();
         TimeUnit adjustment = TimeUnit::FromMicroseconds(self->StartTime());
         self->mInfo.mMetadataDuration.emplace(unadjusted - adjustment);
@@ -3339,7 +3341,6 @@ void MediaDecoderStateMachine::PreservesPitchChanged()
 
 bool MediaDecoderStateMachine::IsShutdown()
 {
-  AssertCurrentThreadInMonitor();
   return mState == DECODER_STATE_ERROR ||
          mState == DECODER_STATE_SHUTDOWN;
 }
