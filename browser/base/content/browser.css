@@ -34,8 +34,8 @@
   * along any dimension beyond the point at which an overflow event would
   * occur".  But none of -moz-{fit,max,min}-content do what we want here. So..
   */
-  min-width: 320px;
-  min-height: 280px;
+  min-width: 260px;
+  min-height: 315px;
 }
 
 #main-window[customize-entered] {
@@ -907,8 +907,32 @@ chatbox {
   width: 260px; /* CHAT_WIDTH_OPEN in socialchat.xml */
 }
 
-chatbox[large="true"] {
-  width: 300px;
+chatbox[customSize] {
+  width: 300px; /* CHAT_WIDTH_OPEN_ALT in socialchat.xml */
+}
+
+#chat-window[customSize] {
+  min-width: 300px;
+}
+
+chatbox[customSize="loopChatEnabled"] {
+  /* 325px as defined per UX */
+  height: 325px;
+}
+
+#chat-window[customSize="loopChatEnabled"] {
+  /* 325px + 30px top bar height. */
+  min-height: calc(325px + 30px);
+}
+
+chatbox[customSize="loopChatMessageAppended"] {
+  /* 445px as defined per UX */
+  height: 445px;
+}
+
+#chat-window[customSize="loopChatMessageAppended"] {
+  /* 445px + 30px top bar height. */
+  min-height: calc(445px + 30px);
 }
 
 chatbox[minimized="true"] {
@@ -920,6 +944,15 @@ chatbar {
   -moz-binding: url("chrome://browser/content/socialchat.xml#chatbar");
   height: 0;
   max-height: 0;
+}
+
+.chatbar-innerbox {
+  margin: -285px 0 0;
+}
+
+chatbar[customSize] > .chatbar-innerbox {
+  /* 425px to make room for the maximum custom-size chatbox; currently 'loopChatMessageAppended'. */
+  margin-top: -425px;
 }
 
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */
