@@ -48,10 +48,9 @@ EXPORTS.mozilla.gfx += [
     'UserData.h',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
     EXPORTS.mozilla.gfx += [
         'MacIOSurface.h',
-        'QuartzSupport.h',
     ]
     UNIFIED_SOURCES += [
         'DrawTargetCG.cpp',
@@ -160,6 +159,9 @@ SOURCES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    EXPORTS.mozilla.gfx += [
+        'QuartzSupport.h',
+    ]
     SOURCES += [
         'MacIOSurface.cpp',
         'QuartzSupport.mm',

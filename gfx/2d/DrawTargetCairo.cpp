@@ -24,7 +24,9 @@
 
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
 #include "cairo-quartz.h"
+#ifdef MOZ_WIDGET_COCOA
 #include <ApplicationServices/ApplicationServices.h>
+#endif
 #endif
 
 #ifdef CAIRO_HAS_XLIB_SURFACE

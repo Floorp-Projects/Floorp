@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <dlfcn.h>
 #include "BorrowedContext.h"
 #include "DataSurfaceHelpers.h"
 #include "DrawTargetCG.h"
@@ -177,6 +178,7 @@ DrawTargetCG::GetType() const
 BackendType
 DrawTargetCG::GetBackendType() const
 {
+#ifdef MOZ_WIDGET_COCOA
   // It may be worth spliting Bitmap and IOSurface DrawTarget
   // into seperate classes.
   if (GetContextType(mCg) == CG_CONTEXT_TYPE_IOSURFACE) {
@@ -184,15 +186,20 @@ DrawTargetCG::GetBackendType() const
   } else {
     return BackendType::COREGRAPHICS;
   }
+#else
+  return BackendType::COREGRAPHICS;
+#endif
 }
 
 already_AddRefed<SourceSurface>
 DrawTargetCG::Snapshot()
 {
   if (!mSnapshot) {
+#ifdef MOZ_WIDGET_COCOA
     if (GetContextType(mCg) == CG_CONTEXT_TYPE_IOSURFACE) {
       return MakeAndAddRef<SourceSurfaceCGIOSurfaceContext>(this);
     }
+#endif
     Flush();
     mSnapshot = new SourceSurfaceCGBitmapContext(this);
   }
@@ -1717,12 +1724,14 @@ DrawTargetCG::Init(BackendType aType,
 
   mSize = aSize;
 
+#ifdef MOZ_WIDGET_COCOA
   if (aType == BackendType::COREGRAPHICS_ACCELERATED) {
     RefPtr<MacIOSurface> ioSurface = MacIOSurface::CreateIOSurface(aSize.width, aSize.height);
     mCg = ioSurface->CreateIOSurfaceContext();
     // If we don't have the symbol for 'CreateIOSurfaceContext' mCg will be null
     // and we will fallback to software below
   }
+#endif
 
   mFormat = SurfaceFormat::B8G8R8A8;
 
@@ -1820,6 +1829,7 @@ EnsureValidPremultipliedData(CGContextRef aContext)
 void
 DrawTargetCG::Flush()
 {
+#ifdef MOZ_WIDGET_COCOA
   if (GetContextType(mCg) == CG_CONTEXT_TYPE_IOSURFACE) {
     CGContextFlush(mCg);
   } else if (GetContextType(mCg) == CG_CONTEXT_TYPE_BITMAP &&
@@ -1835,6 +1845,9 @@ DrawTargetCG::Flush()
     EnsureValidPremultipliedData(mCg);
     mMayContainInvalidPremultipliedData = false;
   }
+#else
+  //TODO
+#endif
 }
 
 bool
@@ -1874,7 +1887,9 @@ DrawTargetCG::Init(CGContextRef cgContext, const IntSize &aSize)
   mOriginalTransform = CGContextGetCTM(mCg);
 
   mFormat = SurfaceFormat::B8G8R8A8;
+#ifdef MOZ_WIDGET_COCOA
   if (GetContextType(mCg) == CG_CONTEXT_TYPE_BITMAP) {
+#endif
     CGColorSpaceRef colorspace;
     CGBitmapInfo bitinfo = CGBitmapContextGetBitmapInfo(mCg);
     colorspace = CGBitmapContextGetColorSpace (mCg);
@@ -1883,7 +1898,9 @@ DrawTargetCG::Init(CGContextRef cgContext, const IntSize &aSize)
     } else if ((bitinfo & kCGBitmapAlphaInfoMask) == kCGImageAlphaNoneSkipFirst) {
       mFormat = SurfaceFormat::B8G8R8X8;
     }
+#ifdef MOZ_WIDGET_COCOA
   }
+#endif
 
   return true;
 }
@@ -1906,12 +1923,16 @@ DrawTargetCG::CreatePathBuilder(FillRule aFillRule) const
 void*
 DrawTargetCG::GetNativeSurface(NativeSurfaceType aType)
 {
+#ifdef MOZ_WIDGET_COCOA
   if ((aType == NativeSurfaceType::CGCONTEXT && GetContextType(mCg) == CG_CONTEXT_TYPE_BITMAP) ||
       (aType == NativeSurfaceType::CGCONTEXT_ACCELERATED && GetContextType(mCg) == CG_CONTEXT_TYPE_IOSURFACE)) {
     return mCg;
   } else {
     return nullptr;
   }
+#else
+  return mCg;
+#endif
 }
 
 void
