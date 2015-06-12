@@ -29,7 +29,7 @@ loop.shared.views.TextChatView = (function(mozl10n) {
 
       return (
         <div className={classes}>
-          {this.props.message}
+          <span>{this.props.message}</span>
         </div>
       );
     }
@@ -49,6 +49,9 @@ loop.shared.views.TextChatView = (function(mozl10n) {
 
     componentWillUpdate: function() {
       var node = this.getDOMNode();
+      if (!node) {
+        return;
+      }
       // Scroll only if we're right at the bottom of the display.
       this.shouldScroll = node.scrollHeight === node.scrollTop + node.clientHeight;
     },
@@ -64,17 +67,23 @@ loop.shared.views.TextChatView = (function(mozl10n) {
     },
 
     render: function() {
+      if (!this.props.messageList.length) {
+        return null;
+      }
+
       return (
         <div className="text-chat-entries">
-          {
-            this.props.messageList.map(function(entry, i) {
-              return (
-                <TextChatEntry key={i}
-                               message={entry.message}
-                               type={entry.type} />
-              );
-            }, this)
-          }
+          <div className="text-chat-scroller">
+            {
+              this.props.messageList.map(function(entry, i) {
+                return (
+                  <TextChatEntry key={i}
+                                 message={entry.message}
+                                 type={entry.type} />
+                );
+              }, this)
+            }
+          </div>
         </div>
       );
     }
@@ -134,12 +143,15 @@ loop.shared.views.TextChatView = (function(mozl10n) {
         return null;
       }
 
+      var messageList = this.state.messageList;
+
       return (
         <div className="text-chat-view">
-          <TextChatEntriesView messageList={this.state.messageList} />
+          <TextChatEntriesView messageList={messageList} />
           <div className="text-chat-box">
             <form onSubmit={this.handleFormSubmit}>
               <input type="text"
+                     placeholder={messageList.length ? "" : mozl10n.get("chat_textbox_placeholder")}
                      onKeyDown={this.handleKeyDown}
                      valueLink={this.linkState("messageDetail")} />
             </form>
