@@ -283,7 +283,6 @@
 #define LOCAL_GL_BOOL_VEC4_ARB                               0x8B59
 #define LOCAL_GL_BOUNDING_BOX_NV                             0x908D
 #define LOCAL_GL_BOUNDING_BOX_OF_BOUNDING_BOXES_NV           0x909C
-#define LOCAL_GL_BROWSER_DEFAULT_WEBGL                       0x9244
 #define LOCAL_GL_BUFFER                                      0x82E0
 #define LOCAL_GL_BUFFER_ACCESS                               0x88BB
 #define LOCAL_GL_BUFFER_ACCESS_ARB                           0x88BB
@@ -731,7 +730,6 @@
 #define LOCAL_GL_CONTEXT_FLAG_DEBUG_BIT_KHR                  0x00000002
 #define LOCAL_GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT         0x00000001
 #define LOCAL_GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT_ARB          0x00000004
-#define LOCAL_GL_CONTEXT_LOST_WEBGL                          0x9242
 #define LOCAL_GL_CONTEXT_PROFILE_MASK                        0x9126
 #define LOCAL_GL_CONTEXT_ROBUST_ACCESS_EXT                   0x90F3
 #define LOCAL_GL_CONTINUOUS_AMD                              0x9007
@@ -4680,19 +4678,16 @@
 #define LOCAL_GL_UNPACK_ALIGNMENT                            0x0CF5
 #define LOCAL_GL_UNPACK_CLIENT_STORAGE_APPLE                 0x85B2
 #define LOCAL_GL_UNPACK_CMYK_HINT_EXT                        0x800F
-#define LOCAL_GL_UNPACK_COLORSPACE_CONVERSION_WEBGL          0x9243
 #define LOCAL_GL_UNPACK_COMPRESSED_BLOCK_DEPTH               0x9129
 #define LOCAL_GL_UNPACK_COMPRESSED_BLOCK_HEIGHT              0x9128
 #define LOCAL_GL_UNPACK_COMPRESSED_BLOCK_SIZE                0x912A
 #define LOCAL_GL_UNPACK_COMPRESSED_BLOCK_WIDTH               0x9127
 #define LOCAL_GL_UNPACK_COMPRESSED_SIZE_SGIX                 0x831A
 #define LOCAL_GL_UNPACK_CONSTANT_DATA_SUNX                   0x81D5
-#define LOCAL_GL_UNPACK_FLIP_Y_WEBGL                         0x9240
 #define LOCAL_GL_UNPACK_IMAGE_DEPTH_SGIS                     0x8133
 #define LOCAL_GL_UNPACK_IMAGE_HEIGHT                         0x806E
 #define LOCAL_GL_UNPACK_IMAGE_HEIGHT_EXT                     0x806E
 #define LOCAL_GL_UNPACK_LSB_FIRST                            0x0CF1
-#define LOCAL_GL_UNPACK_PREMULTIPLY_ALPHA_WEBGL              0x9241
 #define LOCAL_GL_UNPACK_RESAMPLE_OML                         0x8985
 #define LOCAL_GL_UNPACK_RESAMPLE_SGIX                        0x842D
 #define LOCAL_GL_UNPACK_ROW_BYTES_APPLE                      0x8A16

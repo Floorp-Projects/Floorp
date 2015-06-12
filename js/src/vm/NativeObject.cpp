@@ -1205,7 +1205,78 @@ GetExistingPropertyValue(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
     }
     if (!cx->shouldBeJSContext())
         return false;
+
+    MOZ_ASSERT(shape->propid() == id);
+    MOZ_ASSERT(obj->contains(cx, shape));
+
     return GetExistingProperty<CanGC>(cx->asJSContext(), obj, obj, shape, vp);
+}
+
+/*
+ * If ES6 draft rev 37 9.1.6.3 ValidateAndApplyPropertyDescriptor step 4 would
+ * return early, because desc is redundant with an existing own property obj[id],
+ * then set *redundant = true and return true.
+ */
+static bool
+DefinePropertyIsRedundant(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
+                          HandleShape shape, unsigned shapeAttrs,
+                          Handle<PropertyDescriptor> desc, bool *redundant)
+{
+    *redundant = false;
+
+    if (desc.hasConfigurable() && desc.configurable() != ((shapeAttrs & JSPROP_PERMANENT) == 0))
+        return true;
+    if (desc.hasEnumerable() && desc.enumerable() != ((shapeAttrs & JSPROP_ENUMERATE) != 0))
+        return true;
+    if (desc.isDataDescriptor()) {
+        if ((shapeAttrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0)
+            return true;
+        if (desc.hasWritable() && desc.writable() != ((shapeAttrs & JSPROP_READONLY) == 0))
+            return true;
+        if (desc.hasValue()) {
+            // Get the current value of the existing property.
+            RootedValue currentValue(cx);
+            if (!IsImplicitDenseOrTypedArrayElement(shape) &&
+                shape->hasSlot() &&
+                shape->hasDefaultGetter())
+            {
+                // Inline GetExistingPropertyValue in order to omit a type
+                // correctness assertion that's too strict for this particular
+                // call site. For details, see bug 1125624 comments 13-16.
+                currentValue.set(obj->getSlot(shape->slot()));
+            } else {
+                if (!GetExistingPropertyValue(cx, obj, id, shape, &currentValue))
+                    return false;
+            }
+
+            // The specification calls for SameValue here, but it seems to be a
+            // bug. See <https://bugs.ecmascript.org/show_bug.cgi?id=3508>.
+            if (desc.value() != currentValue)
+                return true;
+        }
+
+        GetterOp existingGetterOp =
+            IsImplicitDenseOrTypedArrayElement(shape) ? nullptr : shape->getter();
+        if (desc.getter() != existingGetterOp)
+            return true;
+
+        SetterOp existingSetterOp =
+            IsImplicitDenseOrTypedArrayElement(shape) ? nullptr : shape->setter();
+        if (desc.setter() != existingSetterOp)
+            return true;
+    } else {
+        if (desc.hasGetterObject()) {
+            if (!(shapeAttrs & JSPROP_GETTER) || desc.getterObject() != shape->getterObject())
+                return true;
+        }
+        if (desc.hasSetterObject()) {
+            if (!(shapeAttrs & JSPROP_SETTER) || desc.setterObject() != shape->setterObject())
+                return true;
+        }
+    }
+
+    *redundant = true;
+    return true;
 }
 
 bool
@@ -1296,6 +1367,25 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
 
     MOZ_ASSERT(shape);
 
+    // Steps 3-4. (Step 3 is a special case of step 4.) We use shapeAttrs as a
+    // stand-in for shape in many places below, since shape might not be a
+    // pointer to a real Shape (see IsImplicitDenseOrTypedArrayElement).
+    unsigned shapeAttrs = GetShapeAttributes(obj, shape);
+    bool redundant;
+    if (!DefinePropertyIsRedundant(cx, obj, id, shape, shapeAttrs, desc, &redundant))
+        return false;
+    if (redundant) {
+        // In cases involving JSOP_NEWOBJECT and JSOP_INITPROP, obj can have a
+        // type for this property that doesn't match the value in the slot.
+        // Update the type here, even though this DefineProperty call is
+        // otherwise a no-op. (See bug 1125624 comment 13.)
+        if (!IsImplicitDenseOrTypedArrayElement(shape) && desc.hasValue()) {
+            if (!UpdateShapeTypeAndValue(cx, obj, shape, desc.value()))
+                return false;
+        }
+        return result.succeed();
+    }
+
     // Non-standard hack: Allow redefining non-configurable properties if
     // JSPROP_REDEFINE_NONCONFIGURABLE is set _and_ the object is a non-DOM
     // global. The idea is that a DOM object can never have such a thing on
@@ -1306,12 +1396,7 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
                               obj->is<GlobalObject>() &&
                               !obj->getClass()->isDOMClass();
 
-    // Steps 3-4 are redundant.
-
-    // Step 5. We use shapeAttrs as a stand-in for shape in many places below
-    // since shape might not be a pointer to a real Shape (see
-    // IsImplicitDenseOrTypedArrayElement).
-    unsigned shapeAttrs = GetShapeAttributes(obj, shape);
+    // Step 5.
     if (!IsConfigurable(shapeAttrs) && !skipRedefineChecks) {
         if (desc.hasConfigurable() && desc.configurable())
             return result.fail(JSMSG_CANT_REDEFINE_PROP);

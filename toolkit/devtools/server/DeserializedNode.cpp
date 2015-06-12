@@ -49,55 +49,30 @@ DeserializedEdge::init(const protobuf::Edge& edge, HeapSnapshot& owner)
   return true;
 }
 
-/* static */ UniquePtr<DeserializedNode>
-DeserializedNode::Create(const protobuf::Node& node, HeapSnapshot& owner)
+DeserializedNode::DeserializedNode(DeserializedNode&& rhs)
 {
-  if (!node.has_id())
-    return nullptr;
-  NodeId id = node.id();
+  id = rhs.id;
+  rhs.id = 0;
 
-  if (!node.has_typename_())
-    return nullptr;
+  typeName = rhs.typeName;
+  rhs.typeName = nullptr;
 
-  const char16_t* duplicatedTypeName = reinterpret_cast<const char16_t*>(node.typename_().c_str());
-  const char16_t* uniqueTypeName = owner.borrowUniqueString(duplicatedTypeName,
-                                                            node.typename_().length() / sizeof(char16_t));
-  if (!uniqueTypeName)
-    return nullptr;
+  size = rhs.size;
+  rhs.size = 0;
 
-  auto edgesLength = node.edges_size();
-  EdgeVector edges;
-  if (!edges.reserve(edgesLength))
-    return nullptr;
-  for (decltype(edgesLength) i = 0; i < edgesLength; i++) {
-    DeserializedEdge edge;
-    if (!edge.init(node.edges(i), owner))
-      return nullptr;
-    edges.infallibleAppend(Move(edge));
-  }
+  edges = Move(rhs.edges);
 
-  if (!node.has_size())
-    return nullptr;
-  uint64_t size = node.size();
-
-  return MakeUnique<DeserializedNode>(id,
-                                      uniqueTypeName,
-                                      size,
-                                      Move(edges),
-                                      owner);
+  owner = rhs.owner;
+  rhs.owner = nullptr;
 }
 
-DeserializedNode::DeserializedNode(NodeId id,
-                                   const char16_t* typeName,
-                                   uint64_t size,
-                                   EdgeVector&& edges,
-                                   HeapSnapshot& owner)
-  : id(id)
-  , typeName(typeName)
-  , size(size)
-  , edges(Move(edges))
-  , owner(&owner)
-{ }
+DeserializedNode& DeserializedNode::operator=(DeserializedNode&& rhs)
+{
+  MOZ_ASSERT(&rhs != this);
+  this->~DeserializedNode();
+  new(this) DeserializedNode(Move(rhs));
+  return *this;
+}
 
 DeserializedNode::DeserializedNode(NodeId id, const char16_t* typeName, uint64_t size)
   : id(id)
@@ -107,12 +82,19 @@ DeserializedNode::DeserializedNode(NodeId id, const char16_t* typeName, uint64_t
   , owner(nullptr)
 { }
 
-DeserializedNode&
+JS::ubi::Node
 DeserializedNode::getEdgeReferent(const DeserializedEdge& edge)
 {
   auto ptr = owner->nodes.lookup(edge.referent);
   MOZ_ASSERT(ptr);
-  return *ptr->value();
+
+  // `HashSets` only provide const access to their values, because mutating a
+  // value might change its hash, rendering it unfindable in the set.
+  // Unfortunately, the `ubi::Node` constructor requires a non-const pointer to
+  // its referent.  However, the only aspect of a `DeserializedNode` we hash on
+  // is its id, which can't be changed via `ubi::Node`, so this cast can't cause
+  // the trouble `HashSet` is concerned a non-const reference would cause.
+  return JS::ubi::Node(const_cast<DeserializedNode*>(&*ptr));
 }
 
 } // namespace devtools
@@ -171,8 +153,8 @@ public:
           return false;
       }
 
-      DeserializedNode& referent = node.getEdgeReferent(*edgep);
-      edges.infallibleAppend(mozilla::Move(SimpleEdge(name, Node(&referent))));
+      auto referent = node.getEdgeReferent(*edgep);
+      edges.infallibleAppend(mozilla::Move(SimpleEdge(name, referent)));
     }
 
     settle();

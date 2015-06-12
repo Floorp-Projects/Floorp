@@ -1536,21 +1536,21 @@ DrawTargetD2D1::OptimizeSourceSurface(SourceSurface* aSurface) const
 
   RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
 
-  DataSourceSurface::MappedSurface map;
-  if (!data->Map(DataSourceSurface::MapType::READ, &map)) {
-    return nullptr;
-  }
-
   RefPtr<ID2D1Bitmap1> bitmap;
-  HRESULT hr = mDC->CreateBitmap(D2DIntSize(data->GetSize()), map.mData, map.mStride,
-                                 D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_NONE, D2DPixelFormat(data->GetFormat())),
-                                 byRef(bitmap));
+  {
+    DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
+    if (MOZ2D_WARN_IF(!map.IsMapped())) {
+      return nullptr;
+    }
 
-  if (FAILED(hr)) {
-    gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(data->GetSize()))) << "[D2D1.1] 4CreateBitmap failure " << data->GetSize() << " Code: " << hexa(hr);
+    HRESULT hr = mDC->CreateBitmap(D2DIntSize(data->GetSize()), map.GetData(), map.GetStride(),
+                                   D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_NONE, D2DPixelFormat(data->GetFormat())),
+                                   byRef(bitmap));
+
+    if (FAILED(hr)) {
+      gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(data->GetSize()))) << "[D2D1.1] 4CreateBitmap failure " << data->GetSize() << " Code: " << hexa(hr);
+    }
   }
-
-  data->Unmap();
 
   if (!bitmap) {
     return data.forget();

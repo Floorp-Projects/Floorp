@@ -119,7 +119,7 @@ class TurnClient : public ::testing::Test {
     r = nr_ip4_port_to_transport_addr(0, 0, protocol_, &addr);
     ASSERT_EQ(0, r);
 
-    r = nr_socket_local_create(&addr, &real_socket_);
+    r = nr_socket_local_create(nullptr, &addr, &real_socket_);
     ASSERT_EQ(0, r);
 
     if (protocol_ == IPPROTO_TCP) {

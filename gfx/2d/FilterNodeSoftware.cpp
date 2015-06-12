@@ -195,9 +195,12 @@ FillRectWithPixel(DataSourceSurface *aSurface, const IntRect &aFillRect, IntPoin
   MOZ_ASSERT(SurfaceContainsPoint(aSurface, aPixelPos),
              "aPixelPos needs to be inside the surface");
 
-  int32_t stride = aSurface->Stride();
-  uint8_t* sourcePixelData = DataAtOffset(aSurface, aPixelPos);
-  uint8_t* data = DataAtOffset(aSurface, aFillRect.TopLeft());
+  DataSourceSurface::ScopedMap surfMap(aSurface, DataSourceSurface::READ_WRITE);
+  if(MOZ2D_WARN_IF(!surfMap.IsMapped())) {
+    return;
+  }
+  uint8_t* sourcePixelData = DataAtOffset(aSurface, surfMap.GetMappedSurface(), aPixelPos);
+  uint8_t* data = DataAtOffset(aSurface, surfMap.GetMappedSurface(), aFillRect.TopLeft());
   int bpp = BytesPerPixel(aSurface->GetFormat());
 
   // Fill the first row by hand.
@@ -213,7 +216,7 @@ FillRectWithPixel(DataSourceSurface *aSurface, const IntRect &aFillRect, IntPoin
 
   // Copy the first row into the other rows.
   for (int32_t y = 1; y < aFillRect.height; y++) {
-    PodCopy(data + y * stride, data, aFillRect.width * bpp);
+    PodCopy(data + y * surfMap.GetStride(), data, aFillRect.width * bpp);
   }
 }
 
@@ -229,18 +232,22 @@ FillRectWithVerticallyRepeatingHorizontalStrip(DataSourceSurface *aSurface,
   MOZ_ASSERT(IntRect(IntPoint(), aSurface->GetSize()).Contains(aSampleRect),
              "aSampleRect needs to be completely inside the surface");
 
-  int32_t stride = aSurface->Stride();
-  uint8_t* sampleData = DataAtOffset(aSurface, aSampleRect.TopLeft());
-  uint8_t* data = DataAtOffset(aSurface, aFillRect.TopLeft());
+  DataSourceSurface::ScopedMap surfMap(aSurface, DataSourceSurface::READ_WRITE);
+  if (MOZ2D_WARN_IF(!surfMap.IsMapped())) {
+    return;
+  }
+
+  uint8_t* sampleData = DataAtOffset(aSurface, surfMap.GetMappedSurface(), aSampleRect.TopLeft());
+  uint8_t* data = DataAtOffset(aSurface, surfMap.GetMappedSurface(), aFillRect.TopLeft());
   if (BytesPerPixel(aSurface->GetFormat()) == 4) {
     for (int32_t y = 0; y < aFillRect.height; y++) {
       PodCopy((uint32_t*)data, (uint32_t*)sampleData, aFillRect.width);
-      data += stride;
+      data += surfMap.GetStride();
     }
   } else if (BytesPerPixel(aSurface->GetFormat()) == 1) {
     for (int32_t y = 0; y < aFillRect.height; y++) {
       PodCopy(data, sampleData, aFillRect.width);
-      data += stride;
+      data += surfMap.GetStride();
     }
   }
 }
@@ -257,24 +264,28 @@ FillRectWithHorizontallyRepeatingVerticalStrip(DataSourceSurface *aSurface,
   MOZ_ASSERT(IntRect(IntPoint(), aSurface->GetSize()).Contains(aSampleRect),
              "aSampleRect needs to be completely inside the surface");
 
-  int32_t stride = aSurface->Stride();
-  uint8_t* sampleData = DataAtOffset(aSurface, aSampleRect.TopLeft());
-  uint8_t* data = DataAtOffset(aSurface, aFillRect.TopLeft());
+  DataSourceSurface::ScopedMap surfMap(aSurface, DataSourceSurface::READ_WRITE);
+  if (MOZ2D_WARN_IF(!surfMap.IsMapped())) {
+    return;
+  }
+
+  uint8_t* sampleData = DataAtOffset(aSurface, surfMap.GetMappedSurface(), aSampleRect.TopLeft());
+  uint8_t* data = DataAtOffset(aSurface, surfMap.GetMappedSurface(), aFillRect.TopLeft());
   if (BytesPerPixel(aSurface->GetFormat()) == 4) {
     for (int32_t y = 0; y < aFillRect.height; y++) {
       int32_t sampleColor = *((uint32_t*)sampleData);
       for (int32_t x = 0; x < aFillRect.width; x++) {
         *((uint32_t*)data + x) = sampleColor;
       }
-      data += stride;
-      sampleData += stride;
+      data += surfMap.GetStride();
+      sampleData += surfMap.GetStride();
     }
   } else if (BytesPerPixel(aSurface->GetFormat()) == 1) {
     for (int32_t y = 0; y < aFillRect.height; y++) {
       uint8_t sampleColor = *sampleData;
       memset(data, sampleColor, aFillRect.width);
-      data += stride;
-      sampleData += stride;
+      data += surfMap.GetStride();
+      sampleData += surfMap.GetStride();
     }
   }
 }
@@ -987,12 +998,18 @@ FilterNodeBlendSoftware::Render(const IntRect& aRect)
 
   CopyRect(input1, target, IntRect(IntPoint(), size), IntPoint());
 
+  // This needs to stay in scope until the draw target has been flushed.
+  DataSourceSurface::ScopedMap targetMap(target, DataSourceSurface::READ_WRITE);
+  if (MOZ2D_WARN_IF(!targetMap.IsMapped())) {
+    return nullptr;
+  }
+
   RefPtr<DrawTarget> dt =
-	    Factory::CreateDrawTargetForData(BackendType::CAIRO,
-	                                     target->GetData(),
-	                                     target->GetSize(),
-	                                     target->Stride(),
-	                                     target->GetFormat());
+    Factory::CreateDrawTargetForData(BackendType::CAIRO,
+                                     targetMap.GetData(),
+                                     target->GetSize(),
+                                     targetMap.GetStride(),
+                                     target->GetFormat());
 
   if (!dt) {
     gfxWarning() << "FilterNodeBlendSoftware::Render failed in CreateDrawTargetForData";
@@ -1095,7 +1112,10 @@ FilterNodeTransformSoftware::Render(const IntRect& aRect)
   }
 
   DataSourceSurface::MappedSurface mapping;
-  surf->Map(DataSourceSurface::MapType::WRITE, &mapping);
+  if (!surf->Map(DataSourceSurface::MapType::WRITE, &mapping)) {
+    gfxCriticalError() << "FilterNodeTransformSoftware::Render failed to map surface";
+    return nullptr;
+  }
 
   RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
@@ -1195,14 +1215,18 @@ ApplyMorphology(const IntRect& aSourceRect, DataSourceSurface* aInput,
       return nullptr;
     }
 
-    int32_t sourceStride = aInput->Stride();
-    uint8_t* sourceData = DataAtOffset(aInput, destRect.TopLeft() - srcRect.TopLeft());
-
-    int32_t tmpStride = tmp->Stride();
-    uint8_t* tmpData = DataAtOffset(tmp, destRect.TopLeft() - tmpRect.TopLeft());
+    DataSourceSurface::ScopedMap sourceMap(aInput, DataSourceSurface::READ);
+    DataSourceSurface::ScopedMap tmpMap(tmp, DataSourceSurface::WRITE);
+    if (MOZ2D_WARN_IF(!sourceMap.IsMapped() || !tmpMap.IsMapped())) {
+      return nullptr;
+    }
+    uint8_t* sourceData = DataAtOffset(aInput, sourceMap.GetMappedSurface(),
+                                       destRect.TopLeft() - srcRect.TopLeft());
+    uint8_t* tmpData = DataAtOffset(tmp, tmpMap.GetMappedSurface(),
+                                    destRect.TopLeft() - tmpRect.TopLeft());
 
     FilterProcessing::ApplyMorphologyHorizontal(
-      sourceData, sourceStride, tmpData, tmpStride, tmpRect, rx, aOperator);
+      sourceData, sourceMap.GetStride(), tmpData, tmpMap.GetStride(), tmpRect, rx, aOperator);
   }
 
   RefPtr<DataSourceSurface> dest;
@@ -1214,11 +1238,16 @@ ApplyMorphology(const IntRect& aSourceRect, DataSourceSurface* aInput,
       return nullptr;
     }
 
-    int32_t tmpStride = tmp->Stride();
-    uint8_t* tmpData = DataAtOffset(tmp, destRect.TopLeft() - tmpRect.TopLeft());
+    DataSourceSurface::ScopedMap tmpMap(tmp, DataSourceSurface::READ);
+    DataSourceSurface::ScopedMap destMap(dest, DataSourceSurface::WRITE);
+    if (MOZ2D_WARN_IF(!tmpMap.IsMapped() || !destMap.IsMapped())) {
+      return nullptr;
+    }
+    int32_t tmpStride = tmpMap.GetStride();
+    uint8_t* tmpData = DataAtOffset(tmp, tmpMap.GetMappedSurface(), destRect.TopLeft() - tmpRect.TopLeft());
 
-    int32_t destStride = dest->Stride();
-    uint8_t* destData = dest->GetData();
+    int32_t destStride = destMap.GetStride();
+    uint8_t* destData = destMap.GetData();
 
     FilterProcessing::ApplyMorphologyVertical(
       tmpData, tmpStride, destData, destStride, destRect, ry, aOperator);
@@ -1313,10 +1342,16 @@ Premultiply(DataSourceSurface* aSurface)
     return nullptr;
   }
 
-  uint8_t* inputData = aSurface->GetData();
-  int32_t inputStride = aSurface->Stride();
-  uint8_t* targetData = target->GetData();
-  int32_t targetStride = target->Stride();
+  DataSourceSurface::ScopedMap inputMap(aSurface, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap targetMap(target, DataSourceSurface::WRITE);
+  if (MOZ2D_WARN_IF(!inputMap.IsMapped() || !targetMap.IsMapped())) {
+    return nullptr;
+  }
+
+  uint8_t* inputData = inputMap.GetData();
+  int32_t inputStride = inputMap.GetStride();
+  uint8_t* targetData = targetMap.GetData();
+  int32_t targetStride = targetMap.GetStride();
 
   FilterProcessing::DoPremultiplicationCalculation(
     size, targetData, targetStride, inputData, inputStride);
@@ -1339,10 +1374,16 @@ Unpremultiply(DataSourceSurface* aSurface)
     return nullptr;
   }
 
-  uint8_t* inputData = aSurface->GetData();
-  int32_t inputStride = aSurface->Stride();
-  uint8_t* targetData = target->GetData();
-  int32_t targetStride = target->Stride();
+  DataSourceSurface::ScopedMap inputMap(aSurface, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap targetMap(target, DataSourceSurface::WRITE);
+  if (MOZ2D_WARN_IF(!inputMap.IsMapped() || !targetMap.IsMapped())) {
+    return nullptr;
+  }
+
+  uint8_t* inputData = inputMap.GetData();
+  int32_t inputStride = inputMap.GetStride();
+  uint8_t* targetData = targetMap.GetData();
+  int32_t targetStride = targetMap.GetStride();
 
   FilterProcessing::DoUnpremultiplicationCalculation(
     size, targetData, targetStride, inputData, inputStride);
@@ -1429,8 +1470,13 @@ FilterNodeFloodSoftware::Render(const IntRect& aRect)
     return nullptr;
   }
 
-  uint8_t* targetData = target->GetData();
-  uint32_t stride = target->Stride();
+  DataSourceSurface::ScopedMap targetMap(target, DataSourceSurface::WRITE);
+  if (MOZ2D_WARN_IF(!targetMap.IsMapped())) {
+    return nullptr;
+  }
+
+  uint8_t* targetData = targetMap.GetData();
+  int32_t stride = targetMap.GetStride();
 
   if (format == SurfaceFormat::B8G8R8A8) {
     uint32_t color = ColorToBGRA(mColor);
@@ -1649,10 +1695,16 @@ static void TransferComponents(DataSourceSurface* aInput,
   MOZ_ASSERT(aInput->GetFormat() == aTarget->GetFormat(), "different formats");
   IntSize size = aInput->GetSize();
 
-  uint8_t* sourceData = aInput->GetData();
-  uint8_t* targetData = aTarget->GetData();
-  uint32_t sourceStride = aInput->Stride();
-  uint32_t targetStride = aTarget->Stride();
+  DataSourceSurface::ScopedMap sourceMap(aInput, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap targetMap(aTarget, DataSourceSurface::WRITE);
+  if (MOZ2D_WARN_IF(!sourceMap.IsMapped() || !targetMap.IsMapped())) {
+    return;
+  }
+
+  uint8_t* sourceData = sourceMap.GetData();
+  int32_t sourceStride = sourceMap.GetStride();
+  uint8_t* targetData = targetMap.GetData();
+  int32_t targetStride = targetMap.GetStride();
 
   for (int32_t y = 0; y < size.height; y++) {
     for (int32_t x = 0; x < size.width; x++) {
@@ -2392,10 +2444,16 @@ FilterNodeConvolveMatrixSoftware::DoRender(const IntRect& aRect,
 
   IntPoint offset = aRect.TopLeft() - srcRect.TopLeft();
 
-  uint8_t* sourceData = DataAtOffset(input, offset);
-  int32_t sourceStride = input->Stride();
-  uint8_t* targetData = target->GetData();
-  int32_t targetStride = target->Stride();
+  DataSourceSurface::ScopedMap sourceMap(input, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap targetMap(target, DataSourceSurface::WRITE);
+  if (MOZ2D_WARN_IF(!sourceMap.IsMapped() || !targetMap.IsMapped())) {
+    return nullptr;
+  }
+
+  uint8_t* sourceData = DataAtOffset(input, sourceMap.GetMappedSurface(), offset);
+  int32_t sourceStride = sourceMap.GetStride();
+  uint8_t* targetData = targetMap.GetData();
+  int32_t targetStride = targetMap.GetStride();
 
   // Why exactly are we reversing the kernel?
   std::vector<Float> kernel = ReversedVector(mKernelMatrix);
@@ -2538,12 +2596,19 @@ FilterNodeDisplacementMapSoftware::Render(const IntRect& aRect)
 
   IntPoint offset = aRect.TopLeft() - srcRect.TopLeft();
 
-  uint8_t* sourceData = DataAtOffset(input, offset);
-  int32_t sourceStride = input->Stride();
-  uint8_t* mapData = map->GetData();
-  int32_t mapStride = map->Stride();
-  uint8_t* targetData = target->GetData();
-  int32_t targetStride = target->Stride();
+  DataSourceSurface::ScopedMap inputMap(input, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap mapMap(map, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap targetMap(target, DataSourceSurface::WRITE);
+  if (MOZ2D_WARN_IF(!(inputMap.IsMapped() && mapMap.IsMapped() && targetMap.IsMapped()))) {
+    return nullptr;
+  }
+
+  uint8_t* sourceData = DataAtOffset(input, inputMap.GetMappedSurface(), offset);
+  int32_t sourceStride = inputMap.GetStride();
+  uint8_t* mapData = mapMap.GetData();
+  int32_t mapStride = mapMap.GetStride();
+  uint8_t* targetData = targetMap.GetData();
+  int32_t targetStride = targetMap.GetStride();
 
   static const ptrdiff_t channelMap[4] = {
                              B8G8R8A8_COMPONENT_BYTEOFFSET_R,
@@ -2885,19 +2950,35 @@ FilterNodeBlurXYSoftware::Render(const IntRect& aRect)
       return nullptr;
     }
     CopyRect(input, target, IntRect(IntPoint(), input->GetSize()), IntPoint());
-    AlphaBoxBlur blur(r, target->Stride(), sigmaXY.width, sigmaXY.height);
-    blur.Blur(target->GetData());
+
+    DataSourceSurface::ScopedMap targetMap(target, DataSourceSurface::READ_WRITE);
+    if (MOZ2D_WARN_IF(!targetMap.IsMapped())) {
+      return nullptr;
+    }
+    AlphaBoxBlur blur(r, targetMap.GetStride(), sigmaXY.width, sigmaXY.height);
+    blur.Blur(targetMap.GetData());
   } else {
     RefPtr<DataSourceSurface> channel0, channel1, channel2, channel3;
     FilterProcessing::SeparateColorChannels(input, channel0, channel1, channel2, channel3);
-    if (MOZ2D_WARN_IF(!(channel0 && channel1 && channel2))) {
+    if (MOZ2D_WARN_IF(!(channel0 && channel1 && channel2 && channel3))) {
       return nullptr;
     }
-    AlphaBoxBlur blur(r, channel0->Stride(), sigmaXY.width, sigmaXY.height);
-    blur.Blur(channel0->GetData());
-    blur.Blur(channel1->GetData());
-    blur.Blur(channel2->GetData());
-    blur.Blur(channel3->GetData());
+    {
+      DataSourceSurface::ScopedMap channel0Map(channel0, DataSourceSurface::READ_WRITE);
+      DataSourceSurface::ScopedMap channel1Map(channel1, DataSourceSurface::READ_WRITE);
+      DataSourceSurface::ScopedMap channel2Map(channel2, DataSourceSurface::READ_WRITE);
+      DataSourceSurface::ScopedMap channel3Map(channel3, DataSourceSurface::READ_WRITE);
+      if (MOZ2D_WARN_IF(!(channel0Map.IsMapped() && channel1Map.IsMapped() &&
+                          channel2Map.IsMapped() && channel3Map.IsMapped()))) {
+        return nullptr;
+      }
+
+      AlphaBoxBlur blur(r, channel0Map.GetStride(), sigmaXY.width, sigmaXY.height);
+      blur.Blur(channel0Map.GetData());
+      blur.Blur(channel1Map.GetData());
+      blur.Blur(channel2Map.GetData());
+      blur.Blur(channel3Map.GetData());
+    }
     target = FilterProcessing::CombineColorChannels(channel0, channel1, channel2, channel3);
   }
 
@@ -3414,10 +3495,17 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
 
   IntPoint offset = aRect.TopLeft() - srcRect.TopLeft();
 
-  uint8_t* sourceData = DataAtOffset(input, offset);
-  int32_t sourceStride = input->Stride();
-  uint8_t* targetData = target->GetData();
-  int32_t targetStride = target->Stride();
+
+  DataSourceSurface::ScopedMap sourceMap(input, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap targetMap(target, DataSourceSurface::WRITE);
+  if (MOZ2D_WARN_IF(!(sourceMap.IsMapped() && targetMap.IsMapped()))) {
+    return nullptr;
+  }
+
+  uint8_t* sourceData = DataAtOffset(input, sourceMap.GetMappedSurface(), offset);
+  int32_t sourceStride = sourceMap.GetStride();
+  uint8_t* targetData = targetMap.GetData();
+  int32_t targetStride = targetMap.GetStride();
 
   uint32_t lightColor = ColorToBGRA(mColor);
   mLight.Prepare();

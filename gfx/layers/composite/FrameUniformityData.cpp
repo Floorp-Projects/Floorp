@@ -137,7 +137,8 @@ FrameUniformityData::ToJS(JS::MutableHandleValue aOutValue, JSContext* aContext)
     uintptr_t layerAddr = iter->first;
     float uniformity = iter->second;
 
-    layers.AppendElement();
+    // FIXME: Make this infallible after bug 968520 is done.
+    MOZ_ALWAYS_TRUE(layers.AppendElement(fallible));
     dom::FrameUniformity& entry = layers.LastElement();
 
     entry.mLayerAddress.Construct() = layerAddr;

@@ -2529,6 +2529,36 @@ nsWebBrowserPersist::EnumCleanupUploadList(nsISupports *aKey, UploadData *aData,
     return PL_DHASH_NEXT;
 }
 
+static void
+AppendXMLAttr(const nsAString& key, const nsAString& aValue, nsAString& aBuffer)
+{
+    if (!aBuffer.IsEmpty()) {
+        aBuffer.Append(' ');
+    }
+    aBuffer.Append(key);
+    aBuffer.AppendLiteral("=\"");
+    for (size_t i = 0; i < aValue.Length(); ++i) {
+        switch (aValue[i]) {
+            case '&':
+                aBuffer.AppendLiteral("&amp;");
+                break;
+            case '<':
+                aBuffer.AppendLiteral("&lt;");
+                break;
+            case '>':
+                aBuffer.AppendLiteral("&gt;");
+                break;
+            case '"':
+                aBuffer.AppendLiteral("&quot;");
+                break;
+            default:
+                aBuffer.Append(aValue[i]);
+                break;
+        }
+    }
+    aBuffer.Append('"');
+}
+
 nsresult nsWebBrowserPersist::FixupXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, const nsAString &aHref)
 {
     NS_ENSURE_ARG_POINTER(aPI);
@@ -2568,30 +2598,28 @@ nsresult nsWebBrowserPersist::FixupXMLStyleSheetLink(nsIDOMProcessingInstruction
                                                 nsGkAtoms::media,
                                                 media);
 
-        NS_NAMED_LITERAL_STRING(kCloseAttr, "\" ");
         nsAutoString newData;
-        newData += NS_LITERAL_STRING("href=\"") + aHref + kCloseAttr;
+        AppendXMLAttr(NS_LITERAL_STRING("href"), aHref, newData);
         if (!title.IsEmpty())
         {
-            newData += NS_LITERAL_STRING("title=\"") + title + kCloseAttr;
+            AppendXMLAttr(NS_LITERAL_STRING("title"), title, newData);
         }
         if (!media.IsEmpty())
         {
-            newData += NS_LITERAL_STRING("media=\"") + media + kCloseAttr;
+            AppendXMLAttr(NS_LITERAL_STRING("media"), media, newData);
         }
         if (!type.IsEmpty())
         {
-            newData += NS_LITERAL_STRING("type=\"") + type + kCloseAttr;
+            AppendXMLAttr(NS_LITERAL_STRING("type"), type, newData);
         }
         if (!charset.IsEmpty())
         {
-            newData += NS_LITERAL_STRING("charset=\"") + charset + kCloseAttr;
+            AppendXMLAttr(NS_LITERAL_STRING("charset"), charset, newData);
         }
         if (!alternate.IsEmpty())
         {
-            newData += NS_LITERAL_STRING("alternate=\"") + alternate + kCloseAttr;
+            AppendXMLAttr(NS_LITERAL_STRING("alternate"), alternate, newData);
         }
-        newData.Truncate(newData.Length() - 1);  // Remove the extra space on the end.
         aPI->SetData(newData);
     }
 

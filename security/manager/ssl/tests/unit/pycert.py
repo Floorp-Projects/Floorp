@@ -19,7 +19,9 @@ Known extensions are:
 basicConstraints:[cA],[pathLenConstraint]
 keyUsage:[digitalSignature,nonRepudiation,keyEncipherment,
           dataEncipherment,keyAgreement,keyCertSign,cRLSign]
-extKeyUsage:[serverAuth,clientAuth,codeSigning,emailProtection]
+extKeyUsage:[serverAuth,clientAuth,codeSigning,emailProtection
+             nsSGC, # Netscape Server Gated Crypto
+             OCSPSigning,timeStamping]
 
 In the future it will be possible to specify other properties of the
 generated certificate (for example, its validity period, signature
@@ -283,6 +285,12 @@ class Certificate:
             return rfc2459.id_kp_codeSigning
         if keyPurpose == 'emailProtection':
             return rfc2459.id_kp_emailProtection
+        if keyPurpose == 'nsSGC':
+            return univ.ObjectIdentifier('2.16.840.1.113730.4.1')
+        if keyPurpose == 'OCSPSigning':
+            return univ.ObjectIdentifier('1.3.6.1.5.5.7.3.9')
+        if keyPurpose == 'timeStamping':
+            return rfc2459.id_kp_timeStamping
         raise UnknownKeyPurposeTypeError(keyPurpose)
 
     def addExtKeyUsage(self, extKeyUsage):

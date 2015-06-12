@@ -1,3 +1,5 @@
+load(libdir + "class.js");
+
 var JSMSG_ILLEGAL_CHARACTER = "illegal character";
 var JSMSG_UNTERMINATED_STRING = "unterminated string literal";
 
@@ -24,7 +26,6 @@ function test_eval(code) {
   }
   assertEq(caught, true);
 }
-
 
 function test(code) {
   test_reflect(code);
@@ -468,16 +469,18 @@ test_no_fun_no_eval("export const a = 1, b = @");
 test_no_fun_no_eval("export const a = 1, b = 2 @");
 test_no_fun_no_eval("export const a = 1, b = 2; @");
 
-test_no_fun_no_eval("export class @");
-test_no_fun_no_eval("export class Foo @");
-test_no_fun_no_eval("export class Foo {  @");
-test_no_fun_no_eval("export class Foo { constructor @");
-test_no_fun_no_eval("export class Foo { constructor( @");
-test_no_fun_no_eval("export class Foo { constructor() @");
-test_no_fun_no_eval("export class Foo { constructor() { @");
-test_no_fun_no_eval("export class Foo { constructor() {} @");
-test_no_fun_no_eval("export class Foo { constructor() {} } @");
-test_no_fun_no_eval("export class Foo { constructor() {} }; @");
+if (classesEnabled()) {
+    test_no_fun_no_eval("export class @");
+    test_no_fun_no_eval("export class Foo @");
+    test_no_fun_no_eval("export class Foo {  @");
+    test_no_fun_no_eval("export class Foo { constructor @");
+    test_no_fun_no_eval("export class Foo { constructor( @");
+    test_no_fun_no_eval("export class Foo { constructor() @");
+    test_no_fun_no_eval("export class Foo { constructor() { @");
+    test_no_fun_no_eval("export class Foo { constructor() {} @");
+    test_no_fun_no_eval("export class Foo { constructor() {} } @");
+    test_no_fun_no_eval("export class Foo { constructor() {} }; @");
+}
 
 test_no_fun_no_eval("export default @");
 test_no_fun_no_eval("export default 1 @");
@@ -496,25 +499,27 @@ test_no_fun_no_eval("export default function foo() { @");
 test_no_fun_no_eval("export default function foo() {} @");
 test_no_fun_no_eval("export default function foo() {}; @");
 
-test_no_fun_no_eval("export default class @");
-test_no_fun_no_eval("export default class { @");
-test_no_fun_no_eval("export default class { constructor @");
-test_no_fun_no_eval("export default class { constructor( @");
-test_no_fun_no_eval("export default class { constructor() @");
-test_no_fun_no_eval("export default class { constructor() { @");
-test_no_fun_no_eval("export default class { constructor() {} @");
-test_no_fun_no_eval("export default class { constructor() {} } @");
-test_no_fun_no_eval("export default class { constructor() {} }; @");
+if (classesEnabled()) {
+    test_no_fun_no_eval("export default class @");
+    test_no_fun_no_eval("export default class { @");
+    test_no_fun_no_eval("export default class { constructor @");
+    test_no_fun_no_eval("export default class { constructor( @");
+    test_no_fun_no_eval("export default class { constructor() @");
+    test_no_fun_no_eval("export default class { constructor() { @");
+    test_no_fun_no_eval("export default class { constructor() {} @");
+    test_no_fun_no_eval("export default class { constructor() {} } @");
+    test_no_fun_no_eval("export default class { constructor() {} }; @");
 
-test_no_fun_no_eval("export default class Foo @");
-test_no_fun_no_eval("export default class Foo { @");
-test_no_fun_no_eval("export default class Foo { constructor @");
-test_no_fun_no_eval("export default class Foo { constructor( @");
-test_no_fun_no_eval("export default class Foo { constructor() @");
-test_no_fun_no_eval("export default class Foo { constructor() { @");
-test_no_fun_no_eval("export default class Foo { constructor() {} @");
-test_no_fun_no_eval("export default class Foo { constructor() {} } @");
-test_no_fun_no_eval("export default class Foo { constructor() {} }; @");
+    test_no_fun_no_eval("export default class Foo @");
+    test_no_fun_no_eval("export default class Foo { @");
+    test_no_fun_no_eval("export default class Foo { constructor @");
+    test_no_fun_no_eval("export default class Foo { constructor( @");
+    test_no_fun_no_eval("export default class Foo { constructor() @");
+    test_no_fun_no_eval("export default class Foo { constructor() { @");
+    test_no_fun_no_eval("export default class Foo { constructor() {} @");
+    test_no_fun_no_eval("export default class Foo { constructor() {} } @");
+    test_no_fun_no_eval("export default class Foo { constructor() {} }; @");
+}
 
 // import
 
