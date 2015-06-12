@@ -486,6 +486,14 @@ function runTest() {
   xhr.send();
   yield undefined;
 
+  history.pushState({}, "pushStateTest", window.location.href + "/pushStateTest");
+  ok(document.documentURI.indexOf("pushStateTest") > -1);
+
+  var chromeDoc = SpecialPowers.wrap(document);
+  ok(chromeDoc.documentURI.indexOf("pushStateTest") > -1);
+
+  history.back();
+
   SimpleTest.finish();
   SpecialPowers.removePermission("systemXHR", document);
   yield undefined;
