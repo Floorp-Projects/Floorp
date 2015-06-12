@@ -2670,11 +2670,8 @@ CheckHasNoSuchProperty(JSContext* cx, HandleObject obj, HandlePropertyName name,
     while (curObj) {
         if (curObj->isNative()) {
             // Don't handle proto chains with resolve hooks.
-            if (ClassMayResolveId(cx->names(), curObj->getClass(), NameToId(name), curObj) ||
-                curObj->getClass()->addProperty)
-            {
+            if (ClassMayResolveId(cx->names(), curObj->getClass(), NameToId(name), curObj))
                 return false;
-            }
             if (curObj->as<NativeObject>().contains(cx, NameToId(name)))
                 return false;
         } else if (curObj != obj) {
