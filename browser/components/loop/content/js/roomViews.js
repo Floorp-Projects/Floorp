@@ -718,7 +718,6 @@ loop.roomViews = (function(mozL10n) {
 
           return (
             React.createElement("div", {className: "room-conversation-wrapper"}, 
-              React.createElement(sharedViews.TextChatView, {dispatcher: this.props.dispatcher}), 
               React.createElement(DesktopRoomInvitationView, {
                 dispatcher: this.props.dispatcher, 
                 error: this.state.error, 
@@ -761,7 +760,8 @@ loop.roomViews = (function(mozL10n) {
                 savingContext: this.state.savingContext, 
                 mozLoop: this.props.mozLoop, 
                 roomData: roomData, 
-                show: !shouldRenderInvitationOverlay && shouldRenderContextView})
+                show: !shouldRenderInvitationOverlay && shouldRenderContextView}), 
+              React.createElement(sharedViews.TextChatView, {dispatcher: this.props.dispatcher})
             )
           );
         }

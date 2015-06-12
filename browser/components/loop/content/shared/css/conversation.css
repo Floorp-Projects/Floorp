@@ -651,27 +651,6 @@ html, .fx-embedded, #main,
   height: 100%;
 }
 
-/**
- * The .fx-embbeded .text-chat-* styles are very temporarily whilst we work on
- * text chat (bug 1108892 and dependencies).
- */
-.fx-embedded .text-chat-view {
-  height: 60px;
-  color: white;
-  background-color: black;
-}
-
-.fx-embedded .text-chat-entries {
-  /* XXX Should use flex, this is just for the initial implementation. */
-  height: calc(100% - 2em);
-  width: 100%;
-}
-
-.fx-embedded .text-chat-box {
-  width: 100%;
-  margin: auto;
-}
-
 /* We use 641px rather than 640, as min-width and max-width are inclusive */
 @media screen and (min-width:641px) {
   .standalone .conversation-toolbar {
@@ -679,10 +658,6 @@ html, .fx-embedded, #main,
     bottom: 0;
     left: 0;
     right: 0;
-  }
-
-  .fx-embedded .local-stream {
-    position: fixed;
   }
 
   .standalone .local-stream,
@@ -697,7 +672,7 @@ html, .fx-embedded, #main,
   }
 
   /* Nested video elements */
-  .conversation .media.nested {
+  .standalone .conversation .media.nested {
     position: relative;
     height: 100%;
   }
@@ -744,7 +719,7 @@ html, .fx-embedded, #main,
   }
 
   /* Nested video elements */
-  .conversation .media.nested {
+  .standalone .conversation .media.nested {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1239,18 +1214,64 @@ html[dir="rtl"] .room-context-btn-edit {
   height: auto;
 }
 
+/* Text chat in rooms styles */
+
+.fx-embedded .room-conversation-wrapper {
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.fx-embedded .video-layout-wrapper {
+  flex: 1 1 auto;
+}
+
+.text-chat-view {
+  background: #fff;
+}
+
+.fx-embedded .text-chat-view {
+  flex: 1 0 auto;
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.fx-embedded .text-chat-entries {
+  flex: 1 1 auto;
+  max-height: 120px;
+  min-height: 60px;
+  padding: .7em .5em 0;
+}
+
+.fx-embedded .text-chat-box {
+  flex: 0 0 auto;
+  max-height: 40px;
+  min-height: 40px;
+  width: 100%;
+}
+
 .text-chat-entries {
-  margin: auto;
   overflow: scroll;
-  border: 1px solid red;
 }
 
 .text-chat-entry {
-  text-align: left;
+  text-align: end;
+  margin-bottom: 1.5em;
+}
+
+.text-chat-entry > span {
+  border-width: 1px;
+  border-style: solid;
+  border-color: #0095dd;
+  border-radius: 10000px;
+  padding: .5em 1em;
 }
 
 .text-chat-entry.received {
-  text-align: right;
+  text-align: start;
+}
+
+.text-chat-entry.received > span {
+  border-color: #d8d8d8;
 }
 
 .text-chat-box {
@@ -1259,6 +1280,14 @@ html[dir="rtl"] .room-context-btn-edit {
 
 .text-chat-box > form > input {
   width: 100%;
+  height: 40px;
+  padding: 0 .5em .5em;
+  font-size: 1.1em;
+}
+
+.fx-embedded .text-chat-box > form > input {
+  border: 0;
+  border-top: 1px solid #999;
 }
 
 @media screen and (max-width:640px) {

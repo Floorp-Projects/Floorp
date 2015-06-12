@@ -718,7 +718,6 @@ loop.roomViews = (function(mozL10n) {
 
           return (
             <div className="room-conversation-wrapper">
-              <sharedViews.TextChatView dispatcher={this.props.dispatcher} />
               <DesktopRoomInvitationView
                 dispatcher={this.props.dispatcher}
                 error={this.state.error}
@@ -762,6 +761,7 @@ loop.roomViews = (function(mozL10n) {
                 mozLoop={this.props.mozLoop}
                 roomData={roomData}
                 show={!shouldRenderInvitationOverlay && shouldRenderContextView} />
+              <sharedViews.TextChatView dispatcher={this.props.dispatcher} />
             </div>
           );
         }
