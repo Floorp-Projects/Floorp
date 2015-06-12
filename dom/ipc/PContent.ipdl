@@ -758,7 +758,7 @@ parent:
 
     PSpeechSynthesis();
 
-    PStorage();
+    prio(urgent) async PStorage();
 
     PTelephony();
 
