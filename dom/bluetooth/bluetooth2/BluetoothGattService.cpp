@@ -17,33 +17,10 @@ using namespace mozilla::dom;
 
 USING_BLUETOOTH_NAMESPACE
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(BluetoothGattService)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BluetoothGattService)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIncludedServices)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCharacteristics)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-
-  /**
-   * Unregister the bluetooth signal handler after unlinked.
-   *
-   * This is needed to avoid ending up with exposing a deleted object to JS or
-   * accessing deleted objects while receiving signals from parent process
-   * after unlinked. Please see Bug 1138267 for detail informations.
-   */
-  nsString path;
-  GeneratePathFromGattId(tmp->mServiceId.mId, path);
-  UnregisterBluetoothSignalHandler(path, tmp);
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BluetoothGattService)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIncludedServices)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCharacteristics)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(BluetoothGattService)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(BluetoothGattService,
+                                      mOwner,
+                                      mIncludedServices,
+                                      mCharacteristics)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(BluetoothGattService)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(BluetoothGattService)
@@ -63,72 +40,49 @@ BluetoothGattService::BluetoothGattService(
   MOZ_ASSERT(!mAppUuid.IsEmpty());
 
   UuidToString(mServiceId.mId.mUuid, mUuidStr);
-
-  // Generate bluetooth signal path of this service to applications
-  nsString path;
-  GeneratePathFromGattId(mServiceId.mId, path);
-  RegisterBluetoothSignalHandler(path, this);
 }
 
 BluetoothGattService::~BluetoothGattService()
 {
-  nsString path;
-  GeneratePathFromGattId(mServiceId.mId, path);
-  UnregisterBluetoothSignalHandler(path, this);
 }
 
 void
-BluetoothGattService::HandleIncludedServicesDiscovered(
-  const BluetoothValue& aValue)
+BluetoothGattService::AssignIncludedServices(
+  const nsTArray<BluetoothGattServiceId>& aServiceIds)
 {
-  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothGattServiceId);
-
-  const InfallibleTArray<BluetoothGattServiceId>& includedServIds =
-    aValue.get_ArrayOfBluetoothGattServiceId();
-
   mIncludedServices.Clear();
-  for (uint32_t i = 0; i < includedServIds.Length(); i++) {
+  for (uint32_t i = 0; i < aServiceIds.Length(); i++) {
     mIncludedServices.AppendElement(new BluetoothGattService(
-      GetParentObject(), mAppUuid, includedServIds[i]));
+      GetParentObject(), mAppUuid, aServiceIds[i]));
   }
 
   BluetoothGattServiceBinding::ClearCachedIncludedServicesValue(this);
 }
 
 void
-BluetoothGattService::HandleCharacteristicsDiscovered(
-  const BluetoothValue& aValue)
+BluetoothGattService::AssignCharacteristics(
+  const nsTArray<BluetoothGattCharAttribute>& aCharacteristics)
 {
-  MOZ_ASSERT(aValue.type() ==
-             BluetoothValue::TArrayOfBluetoothGattCharAttribute);
-
-  const InfallibleTArray<BluetoothGattCharAttribute>& characteristics =
-    aValue.get_ArrayOfBluetoothGattCharAttribute();
-
   mCharacteristics.Clear();
-  for (uint32_t i = 0; i < characteristics.Length(); i++) {
+  for (uint32_t i = 0; i < aCharacteristics.Length(); i++) {
     mCharacteristics.AppendElement(new BluetoothGattCharacteristic(
-      GetParentObject(), this, characteristics[i]));
+      GetParentObject(), this, aCharacteristics[i]));
   }
 
   BluetoothGattServiceBinding::ClearCachedCharacteristicsValue(this);
 }
 
 void
-BluetoothGattService::Notify(const BluetoothSignal& aData)
+BluetoothGattService::AssignDescriptors(
+  const BluetoothGattId& aCharacteristicId,
+  const nsTArray<BluetoothGattId>& aDescriptorIds)
 {
-  BT_LOGD("[D] %s", NS_ConvertUTF16toUTF8(aData.name()).get());
-  NS_ENSURE_TRUE_VOID(mSignalRegistered);
+  size_t index = mCharacteristics.IndexOf(aCharacteristicId);
+  NS_ENSURE_TRUE_VOID(index != mCharacteristics.NoIndex);
 
-  BluetoothValue v = aData.value();
-  if (aData.name().EqualsLiteral("IncludedServicesDiscovered")) {
-    HandleIncludedServicesDiscovered(v);
-  } else if (aData.name().EqualsLiteral("CharacteristicsDiscovered")) {
-    HandleCharacteristicsDiscovered(v);
-  } else {
-    BT_WARNING("Not handling GATT Service signal: %s",
-               NS_ConvertUTF16toUTF8(aData.name()).get());
-  }
+  nsRefPtr<BluetoothGattCharacteristic> characteristic =
+    mCharacteristics.ElementAt(index);
+  characteristic->AssignDescriptors(aDescriptorIds);
 }
 
 JSObject*

@@ -25,6 +25,11 @@ describe("loop.store.TextChatStore", function () {
     store = new loop.store.TextChatStore(dispatcher, {
       sdkDriver: fakeSdkDriver
     });
+
+    sandbox.stub(window, "dispatchEvent");
+    sandbox.stub(window, "CustomEvent", function(name) {
+      this.name = name;
+    });
   });
 
   afterEach(function() {
@@ -36,6 +41,14 @@ describe("loop.store.TextChatStore", function () {
       store.dataChannelsAvailable();
 
       expect(store.getStoreState("textChatEnabled")).eql(true);
+    });
+
+    it("should dispatch a LoopChatEnabled event", function() {
+      store.dataChannelsAvailable();
+
+      sinon.assert.calledOnce(window.dispatchEvent);
+      sinon.assert.calledWithExactly(window.dispatchEvent,
+        new CustomEvent("LoopChatEnabled"));
     });
   });
 
@@ -62,6 +75,17 @@ describe("loop.store.TextChatStore", function () {
       });
 
       expect(store.getStoreState("messageList").length).eql(0);
+    });
+
+    it("should dispatch a LoopChatMessageAppended event", function() {
+      store.receivedTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Hello!"
+      });
+
+      sinon.assert.calledOnce(window.dispatchEvent);
+      sinon.assert.calledWithExactly(window.dispatchEvent,
+        new CustomEvent("LoopChatMessageAppended"));
     });
   });
 
@@ -91,6 +115,17 @@ describe("loop.store.TextChatStore", function () {
         contentType: messageData.contentType,
         message: messageData.message
       }]);
+    });
+
+    it("should dipatch a LoopChatMessageAppended event", function() {
+      store.sendTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Hello!"
+      });
+
+      sinon.assert.calledOnce(window.dispatchEvent);
+      sinon.assert.calledWithExactly(window.dispatchEvent,
+        new CustomEvent("LoopChatMessageAppended"));
     });
   });
 });

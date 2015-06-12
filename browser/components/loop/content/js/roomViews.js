@@ -480,7 +480,7 @@ loop.roomViews = (function(mozL10n) {
       }
 
       var url = this._getURL();
-      var thumbnail = url && url.thumbnail || "";
+      var thumbnail = url && url.thumbnail || "loop/shared/img/icons-16x16.svg#globe";
       var urlDescription = url && url.description || "";
       var location = url && url.location || "";
       var locationData = null;
@@ -718,7 +718,6 @@ loop.roomViews = (function(mozL10n) {
 
           return (
             React.createElement("div", {className: "room-conversation-wrapper"}, 
-              React.createElement(sharedViews.TextChatView, {dispatcher: this.props.dispatcher}), 
               React.createElement(DesktopRoomInvitationView, {
                 dispatcher: this.props.dispatcher, 
                 error: this.state.error, 
@@ -761,7 +760,8 @@ loop.roomViews = (function(mozL10n) {
                 savingContext: this.state.savingContext, 
                 mozLoop: this.props.mozLoop, 
                 roomData: roomData, 
-                show: !shouldRenderInvitationOverlay && shouldRenderContextView})
+                show: !shouldRenderInvitationOverlay && shouldRenderContextView}), 
+              React.createElement(sharedViews.TextChatView, {dispatcher: this.props.dispatcher})
             )
           );
         }

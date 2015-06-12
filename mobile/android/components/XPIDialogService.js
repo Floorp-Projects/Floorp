@@ -8,6 +8,8 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
+
 // -----------------------------------------------------------------------
 // Web Install Prompt service
 // -----------------------------------------------------------------------
@@ -27,7 +29,15 @@ WebInstallPrompt.prototype = {
     let button = bundle.GetStringFromName("addonsConfirmInstall.install");
 
     aInstalls.forEach(function(install) {
-      let result = (prompt.confirmEx(aBrowser.contentWindow, title, install.name, flags, button, null, null, null, {value: false}) == 0);
+      let message;
+      if (install.addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
+        title = bundle.GetStringFromName("addonsConfirmInstallUnsigned.title")
+        message = bundle.GetStringFromName("addonsConfirmInstallUnsigned.message") + "\n\n" + install.name;
+      } else {
+        message = install.name;
+      }
+
+      let result = (prompt.confirmEx(aBrowser.contentWindow, title, message, flags, button, null, null, null, {value: false}) == 0);
       if (result)
         install.install();
       else
