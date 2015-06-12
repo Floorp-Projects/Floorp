@@ -10,6 +10,7 @@
 
 namespace mozilla {
 namespace a11y {
+class ProxyAccessible;
 
 /**
  * Used for <browser>, <frame>, <iframe>, <page> or editor> elements.
@@ -26,6 +27,8 @@ public:
   OuterDocAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
+
+  ProxyAccessible* RemoteChildDoc() const;
 
   // Accessible
   virtual void Shutdown() override;
@@ -44,6 +47,11 @@ protected:
   virtual void CacheChildren() override;
 };
 
+inline OuterDocAccessible*
+Accessible::AsOuterDoc()
+{
+  return IsOuterDoc() ? static_cast<OuterDocAccessible*>(this) : nullptr;
+}
 } // namespace a11y
 } // namespace mozilla
 

@@ -259,7 +259,9 @@ BluetoothDaemonGattModule::ClientSearchServiceCmd(
                            16)); // UUID
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aConnId),
-                        PackConversion<bool, uint8_t>(aFiltered), aUuid, *pdu);
+                        PackConversion<bool, uint8_t>(aFiltered),
+                        PackReversed<BluetoothUuid>(aUuid),
+                        *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }

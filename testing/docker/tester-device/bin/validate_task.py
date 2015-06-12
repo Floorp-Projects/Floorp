@@ -18,11 +18,11 @@ def get_task(taskid):
 def check_task(task):
     payload = task['payload']
 
-    if 'DEVICE_CAPABILITIES' not in payload['env']:
+    if 'phone' not in payload.get('capabilities', {}).get('devices', {}):
         print('Device capalities are required.', file=sys.stderr)
         return -1
 
-    capabilities = json.loads(payload['env']['DEVICE_CAPABILITIES'])
+    capabilities = payload['capabilities']['devices']['phone']
 
     if 'build' not in capabilities:
         print('Build image url is required', file=sys.stderr)

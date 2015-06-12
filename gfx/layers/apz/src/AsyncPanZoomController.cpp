@@ -1287,7 +1287,7 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
   // would have to be adjusted (as e.g. it would no longer be valid to take
   // the minimum or maximum of the ratios of the widths and heights of the
   // page rect and the composition bounds).
-  MOZ_ASSERT(mFrameMetrics.IsRootScrollable());
+  MOZ_ASSERT(mFrameMetrics.IsRootContent());
   MOZ_ASSERT(mFrameMetrics.GetZoom().AreScalesSame());
 
   float prevSpan = aEvent.mPreviousSpan;
@@ -1433,7 +1433,7 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
       MOZ_ASSERT_UNREACHABLE("unexpected scroll delta type");
   }
 
-  if (mFrameMetrics.GetIsRoot() && gfxPrefs::MouseWheelHasRootScrollDeltaOverride()) {
+  if (mFrameMetrics.IsRootContent() && gfxPrefs::MouseWheelHasRootScrollDeltaOverride()) {
     // Only apply delta multipliers if we're increasing the delta.
     double hfactor = double(gfxPrefs::MouseWheelRootHScrollDeltaFactor()) / 100;
     double vfactor = double(gfxPrefs::MouseWheelRootVScrollDeltaFactor()) / 100;
@@ -2996,7 +2996,7 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
   // would have to be adjusted (as e.g. it would no longer be valid to take
   // the minimum or maximum of the ratios of the widths and heights of the
   // page rect and the composition bounds).
-  MOZ_ASSERT(mFrameMetrics.IsRootScrollable());
+  MOZ_ASSERT(mFrameMetrics.IsRootContent());
   MOZ_ASSERT(mFrameMetrics.GetZoom().AreScalesSame());
 
   SetState(ANIMATING_ZOOM);
@@ -3190,19 +3190,19 @@ void AsyncPanZoomController::SendAsyncScrollEvent() {
     return;
   }
 
-  bool isRoot;
+  bool isRootContent;
   CSSRect contentRect;
   CSSSize scrollableSize;
   {
     ReentrantMonitorAutoEnter lock(mMonitor);
 
-    isRoot = mFrameMetrics.GetIsRoot();
+    isRootContent = mFrameMetrics.IsRootContent();
     scrollableSize = mFrameMetrics.GetScrollableRect().Size();
     contentRect = mFrameMetrics.CalculateCompositedRectInCssPixels();
     contentRect.MoveTo(mCurrentAsyncScrollOffset);
   }
 
-  controller->SendAsyncScrollDOMEvent(isRoot, contentRect, scrollableSize);
+  controller->SendAsyncScrollDOMEvent(isRootContent, contentRect, scrollableSize);
 }
 
 bool AsyncPanZoomController::Matches(const ScrollableLayerGuid& aGuid)

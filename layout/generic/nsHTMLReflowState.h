@@ -124,12 +124,23 @@ public:
   const LogicalMargin ComputedLogicalPadding() const
     { return LogicalMargin(mWritingMode, mComputedPadding); }
 
+  void SetComputedLogicalMargin(mozilla::WritingMode aWM,
+                                const LogicalMargin& aMargin)
+    { mComputedMargin = aMargin.GetPhysicalMargin(aWM); }
   void SetComputedLogicalMargin(const LogicalMargin& aMargin)
-    { mComputedMargin = aMargin.GetPhysicalMargin(mWritingMode); }
+    { SetComputedLogicalMargin(mWritingMode, aMargin); }
+
+  void SetComputedLogicalBorderPadding(mozilla::WritingMode aWM,
+                                       const LogicalMargin& aMargin)
+    { mComputedBorderPadding = aMargin.GetPhysicalMargin(aWM); }
   void SetComputedLogicalBorderPadding(const LogicalMargin& aMargin)
-    { mComputedBorderPadding = aMargin.GetPhysicalMargin(mWritingMode); }
+    { SetComputedLogicalBorderPadding(mWritingMode, aMargin); }
+
+  void SetComputedLogicalPadding(mozilla::WritingMode aWM,
+                                 const LogicalMargin& aMargin)
+    { mComputedPadding = aMargin.GetPhysicalMargin(aWM); }
   void SetComputedLogicalPadding(const LogicalMargin& aMargin)
-    { mComputedPadding = aMargin.GetPhysicalMargin(mWritingMode); }
+    { SetComputedLogicalPadding(mWritingMode, aMargin); }
 
   WritingMode GetWritingMode() const { return mWritingMode; }
 
@@ -159,6 +170,7 @@ public:
   }
 
   nsCSSOffsetState(nsIFrame *aFrame, nsRenderingContext *aRenderingContext,
+                   mozilla::WritingMode aContainingBlockWritingMode,
                    nscoord aContainingBlockISize);
 
 #ifdef DEBUG
@@ -180,9 +192,11 @@ private:
    * Computes margin values from the specified margin style information, and
    * fills in the mComputedMargin member.
    *
+   * @param aWM Writing mode of the containing block
    * @param aPercentBasis
-   *    Logical size to use for resolving percentage margin values in
-   *    the inline and block axes.
+   *    Logical size in the writing mode of the containing block to use
+   *    for resolving percentage margin values in the inline and block
+   *    axes.
    *    The inline size is usually the containing block inline-size
    *    (width if writing mode is horizontal, and height if vertical).
    *    The block size is usually the containing block inline-size, per
@@ -191,15 +205,18 @@ private:
    *    Flexbox and Grid.
    * @return true if the margin is dependent on the containing block size.
    */
-  bool ComputeMargin(const mozilla::LogicalSize& aPercentBasis);
+  bool ComputeMargin(mozilla::WritingMode aWM,
+                     const mozilla::LogicalSize& aPercentBasis);
   
   /**
    * Computes padding values from the specified padding style information, and
    * fills in the mComputedPadding member.
    *
+   * @param aWM Writing mode of the containing block
    * @param aPercentBasis
-   *    Length to use for resolving percentage padding values in
-   *    the inline and block axes.
+   *    Logical size in the writing mode of the containing block to use
+   *    for resolving percentage padding values in the inline and block
+   *    axes.
    *    The inline size is usually the containing block inline-size
    *    (width if writing mode is horizontal, and height if vertical).
    *    The block size is usually the containing block inline-size, per
@@ -208,12 +225,14 @@ private:
    *    Flexbox and Grid.
    * @return true if the padding is dependent on the containing block size.
    */
-  bool ComputePadding(const mozilla::LogicalSize& aPercentBasis,
+  bool ComputePadding(mozilla::WritingMode aWM,
+                      const mozilla::LogicalSize& aPercentBasis,
                       nsIAtom* aFrameType);
 
 protected:
 
-  void InitOffsets(const mozilla::LogicalSize& aPercentBasis,
+  void InitOffsets(mozilla::WritingMode aWM,
+                   const mozilla::LogicalSize& aPercentBasis,
                    nsIAtom* aFrameType,
                    const nsMargin *aBorder = nullptr,
                    const nsMargin *aPadding = nullptr);

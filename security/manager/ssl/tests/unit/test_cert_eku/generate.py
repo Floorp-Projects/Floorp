@@ -1,28 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-# requires openssl >= 1.0.0
-
-import tempfile, os, sys, random
-libpath = os.path.abspath('../psm_common_py')
-
-sys.path.append(libpath)
-
-import CertUtils
-
-srcdir = os.getcwd()
-db = tempfile.mkdtemp()
-
-CA_basic_constraints = "basicConstraints = critical, CA:TRUE\n"
-EE_basic_constraints = "basicConstraints = CA:FALSE\n"
-
-CA_full_ku = "keyUsage = keyCertSign, digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement, cRLSign\n"
-EE_full_ku = "keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement\n"
-
-key_type = 'rsa'
 
 # codesigning differs significantly between mozilla::pkix and
 # classic NSS that actual testing on it is not very useful
@@ -32,7 +12,7 @@ eku_values = { 'SA': "serverAuth",
                'EP': "emailProtection",
                'TS': "timeStamping",
                'NS': "nsSGC", # Netscape Server Gated Crypto.
-               'OS': "1.3.6.1.5.5.7.3.9"
+               'OS': "OCSPSigning"
              }
 
 cert_usages = [ "certificateUsageSSLClient",
@@ -57,14 +37,12 @@ const certdb = Cc["@mozilla.org/security/x509certdb;1"]
                  .getService(Ci.nsIX509CertDB);
 
 function cert_from_file(filename) {
-  let der = readFile(do_get_file("test_cert_eku/" + filename, false));
-  return certdb.constructX509(der, der.length);
+  return constructCertFromFile(`test_cert_eku/${filename}.pem`);
 }
 
 function load_cert(cert_name, trust_string) {
-  let cert_filename = cert_name + ".der";
-  addCertFromFile(certdb, "test_cert_eku/" + cert_filename, trust_string);
-  return cert_from_file(cert_filename);
+  addCertFromFile(certdb, `test_cert_eku/${cert_name}.pem`, trust_string);
+  return cert_from_file(cert_name);
 }
 
 function run_test() {
@@ -87,7 +65,7 @@ def gen_int_js_output(int_string):
 
 def single_test_output(ee_name, cert_usage, error):
     return ("  checkCertErrorGeneric(certdb, cert_from_file('" + ee_name +
-            ".der'), " + error + ", " + cert_usage + ");\n")
+            "'), " + error + ", " + cert_usage + ");\n")
 
 def usage_to_abbreviation(usage):
     if usage is "certificateUsageStatusResponder":
@@ -169,17 +147,21 @@ def generate_test_eku():
     all_values = eku_values[eku_names[0]]
     for i in range (1, len(eku_names)):
         all_names = all_names + "_" + eku_names[i]
-        all_values = all_values + ", " + eku_values[eku_names[i]]
+        all_values = all_values + "," + eku_values[eku_names[i]]
     outmap[all_names] = all_values
     return outmap
 
-def generate_certs(do_cert_generation):
-    ca_name = "ca"
-    if do_cert_generation:
-        [ca_key, ca_cert] = CertUtils.generate_cert_generic(
-                              db, srcdir, 1, key_type, ca_name,
-                              CA_basic_constraints)
-    ee_ext_text = EE_basic_constraints + EE_full_ku
+def generate_certspec_file(issuer_name, name, extensions_list):
+    filename = name + ".pem.certspec"
+    with open(filename, "w") as f:
+        f.write("issuer:%s\n" % issuer_name)
+        f.write("subject:%s\n" % name)
+        for extension in extensions_list:
+            f.write("extension:%s\n" % extension)
+
+def generate_certs():
+    generate_certspec_file("ca", "ca", ["basicConstraints:cA,"])
+    cert_list = ["ca.pem"]
 
     # now we do it again for valid basic constraints but strange eku/ku at the
     # intermediate layer
@@ -192,30 +174,32 @@ def generate_certs(do_cert_generation):
 
         # generate int
         int_name = "int-EKU-" + eku_name
-        int_serial = random.randint(100, 40000000)
-        eku_text = "extendedKeyUsage = " + eku_dict[eku_name]
-        if (eku_name == "NONE"):
-            eku_text = ""
-        int_ext_text = CA_basic_constraints + CA_full_ku + eku_text
-        if do_cert_generation:
-            [int_key, int_cert] = CertUtils.generate_cert_generic(
-                                    db, srcdir, int_serial, key_type, int_name,
-                                    int_ext_text, ca_key, ca_cert)
+        int_eku = "extKeyUsage:" + eku_dict[eku_name]
+        int_extensions_list = [
+            "basicConstraints:cA,",
+            "keyUsage:keyCertSign,digitalSignature,nonRepudiation,keyEncipherment,dataEncipherment,keyAgreement,cRLSign"
+        ]
+        if eku_name != "NONE":
+            int_extensions_list.append(int_eku)
+        generate_certspec_file("ca", int_name, int_extensions_list)
+        cert_list.append(int_name + ".pem")
+
         js_outfile.write("\n")
         js_outfile.write(gen_int_js_output(int_name))
 
         for ee_eku_name in (sorted(eku_dict.keys())):
             ee_base_name = "ee-EKU-" + ee_eku_name
             ee_name = ee_base_name + "-" + int_name
-            ee_serial = random.randint(100, 40000000)
-            ee_eku = "extendedKeyUsage = critical," + eku_dict[ee_eku_name]
-            if (ee_eku_name == "NONE"):
-                ee_eku = ""
-            ee_ext_text = EE_basic_constraints + EE_full_ku + ee_eku
-            if do_cert_generation:
-                [ee_key, ee_cert] = CertUtils.generate_cert_generic(
-                                      db, srcdir, ee_serial, key_type, ee_name,
-                                      ee_ext_text, int_key, int_cert)
+            ee_eku = "extKeyUsage:" + eku_dict[ee_eku_name]
+            ee_extensions_list = [
+                "basicConstraints:,",
+                "keyUsage:digitalSignature,nonRepudiation,keyEncipherment,dataEncipherment,keyAgreement"
+            ]
+            if ee_eku_name != "NONE":
+                ee_extensions_list.append(ee_eku)
+            generate_certspec_file(int_name, ee_name, ee_extensions_list)
+            cert_list.append(ee_name + ".pem")
+
             for cert_usage in (cert_usages):
                 js_outfile.write(gen_ee_js_output(int_name, ee_base_name,
                                  cert_usage, ee_name))
@@ -223,7 +207,35 @@ def generate_certs(do_cert_generation):
         js_outfile.write(js_file_footer)
         js_outfile.close()
 
-# By default, re-generate the certificates. Anything can be passed as a
-# command-line option to prevent this.
-do_cert_generation = len(sys.argv) < 2
-generate_certs(do_cert_generation)
+    return cert_list
+
+def generate_mozbuild_file(generated_cert_filenames):
+    MOZ_BUILD_HEADER = """# AUTOGENERATED FILE, DO NOT EDIT
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+test_certificates = (
+"""
+
+    MOZ_BUILD_FOOTER = """)
+
+for test_certificate in test_certificates:
+    input_file = test_certificate + '.certspec'
+    GENERATED_FILES += [test_certificate]
+    props = GENERATED_FILES[test_certificate]
+    props.script = '../pycert.py'
+    props.inputs = [input_file, '!/config/buildid']
+    TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.test_cert_eku += ['!%s' % test_certificate]
+"""
+
+    with open("moz.build", "w") as f:
+        f.write(MOZ_BUILD_HEADER)
+        for cert_filename in sorted(generated_cert_filenames):
+            f.write("    '%s',\n" % cert_filename)
+        f.write(MOZ_BUILD_FOOTER)
+
+generated_cert_filenames = generate_certs()
+generate_mozbuild_file(generated_cert_filenames)

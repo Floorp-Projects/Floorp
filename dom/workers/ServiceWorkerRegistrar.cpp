@@ -149,12 +149,26 @@ ServiceWorkerRegistrar::RegisterServiceWorker(
     MonitorAutoLock lock(mMonitor);
     MOZ_ASSERT(mDataLoaded);
 
+    const mozilla::ipc::PrincipalInfo& newPrincipalInfo = aData.principal();
+    MOZ_ASSERT(newPrincipalInfo.type() ==
+               mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
+
+    const mozilla::ipc::ContentPrincipalInfo& newContentPrincipalInfo =
+      newPrincipalInfo.get_ContentPrincipalInfo();
+
     bool found = false;
     for (uint32_t i = 0, len = mData.Length(); i < len; ++i) {
       if (mData[i].scope() == aData.scope()) {
-        mData[i] = aData;
-        found = true;
-        break;
+        const mozilla::ipc::PrincipalInfo& existingPrincipalInfo =
+          mData[i].principal();
+        const mozilla::ipc::ContentPrincipalInfo& existingContentPrincipalInfo =
+          existingPrincipalInfo.get_ContentPrincipalInfo();
+
+        if (newContentPrincipalInfo == existingContentPrincipalInfo) {
+          mData[i] = aData;
+          found = true;
+          break;
+        }
       }
     }
 

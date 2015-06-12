@@ -1856,7 +1856,9 @@ var BrowserApp = {
 
       case "Viewport:FixedMarginsChanged":
         gViewportMargins = JSON.parse(aData);
-        this.selectedTab.updateViewportSize(gScreenWidth);
+        if (this.selectedTab) {
+          this.selectedTab.updateViewportSize(gScreenWidth);
+        }
         break;
 
       case "nsPref:changed":

@@ -395,6 +395,20 @@ DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
   JS::CompartmentOptions options;
   mWorkerPrivate->CopyJSCompartmentOptions(options);
 
+  const bool usesSystemPrincipal = mWorkerPrivate->UsesSystemPrincipal();
+
+  // Note that xpc::ShouldDiscardSystemSource() and
+  // xpc::ExtraWarningsForSystemJS() read prefs that are cached on the main
+  // thread. This is benignly racey.
+  const bool discardSource = (usesSystemPrincipal ||
+                              mWorkerPrivate->IsInPrivilegedApp()) &&
+                             xpc::ShouldDiscardSystemSource();
+  const bool extraWarnings = usesSystemPrincipal &&
+                             xpc::ExtraWarningsForSystemJS();
+
+  options.setDiscardSource(discardSource)
+         .extraWarningsOverride().set(extraWarnings);
+
   return DedicatedWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this,
                                                          options,
                                                          GetWorkerPrincipal(),

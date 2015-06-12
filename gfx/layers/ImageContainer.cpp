@@ -476,7 +476,12 @@ PlanarYCbCrImage::GetAsSourceSurface()
     return nullptr;
   }
 
-  gfx::ConvertYCbCrToRGB(mData, format, size, surface->GetData(), surface->Stride());
+  DataSourceSurface::ScopedMap mapping(surface, DataSourceSurface::WRITE);
+  if (NS_WARN_IF(!mapping.IsMapped())) {
+    return nullptr;
+  }
+
+  gfx::ConvertYCbCrToRGB(mData, format, size, mapping.GetData(), mapping.GetStride());
 
   mSourceSurface = surface;
 

@@ -3205,6 +3205,12 @@ class IDLInterfaceMember(IDLObjectWithIdentifier, IDLExposureMixins):
                                   "That seems rather unlikely.",
                                   [self.location])
 
+        if self.getExtendedAttribute("NewObject"):
+            if self.dependsOn == "Nothing" or self.dependsOn == "DOMState":
+                raise WebIDLError("A [NewObject] method is not idempotent, " 
+                                  "so it has to depend on something other than DOM state.",
+                                  [self.location])
+
     def _setDependsOn(self, dependsOn):
         if self.dependsOn != "Everything":
             raise WebIDLError("Trying to specify multiple different DependsOn, "

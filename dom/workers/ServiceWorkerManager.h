@@ -532,6 +532,10 @@ private:
   void
   RemoveRegistrationInternal(ServiceWorkerRegistrationInfo* aRegistration);
 
+  // Removes all service worker registrations for a given principal.
+  void
+  RemoveAllRegistrations(nsIPrincipal* aPrincipal);
+
   nsRefPtr<ServiceWorkerManagerChild> mActor;
 
   struct PendingOperation;

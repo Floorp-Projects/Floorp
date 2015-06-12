@@ -19,6 +19,43 @@ struct JSContext;
 namespace js {
 namespace jit {
 
+// This file contains all recover instructions.
+//
+// A recover instruction is an equivalent of a MIR instruction which is executed
+// before the reconstruction of a baseline frame. Recover instructions are used
+// by resume points to fill the value which are not produced by the code
+// compiled by IonMonkey. For example, if a value is optimized away by
+// IonMonkey, but required by Baseline, then we should have a recover
+// instruction to fill the missing baseline frame slot.
+//
+// Recover instructions are executed either during a bailout, or under a call
+// when the stack frame is introspected. If the stack is introspected, then any
+// use of recover instruction must lead to an invalidation of the code.
+//
+// For each MIR instruction where |canRecoverOnBailout| might return true, we
+// have a RInstruction of the same name.
+//
+// Recover instructions are encoded by code generator into a compact buffer
+// (RecoverWriter). The MIR instruction method |writeRecoverData| should write a
+// tag in the |CompactBufferWriter| which is used by
+// |RInstruction::readRecoverData| to dispatch to the right Recover
+// instruction. Then |writeRecoverData| writes any local fields which are
+// necessary for the execution of the |recover| method. These fields are decoded
+// by the Recover instruction constructor which has a |CompactBufferReader| as
+// argument. The constructor of the Recover instruction should follow the same
+// sequence as the |writeRecoverData| method of the MIR instruction.
+//
+// Recover instructions are decoded by the |SnapshotIterator| (RecoverReader),
+// which is given as argument of the |recover| methods, in order to read the
+// operands.  The number of operands read should be the same as the result of
+// |numOperands|, which corresponds to the number of operands of the MIR
+// instruction.  Operands should be decoded in the same order as the operands of
+// the MIR instruction.
+//
+// The result of the |recover| method should either be a failure, or a value
+// stored on the |SnapshotIterator|, by using the |storeInstructionResult|
+// method.
+
 #define RECOVER_OPCODE_LIST(_)                  \
     _(ResumePoint)                              \
     _(BitNot)                                   \
@@ -660,9 +697,6 @@ class RNewDerivedTypedObject final : public RInstruction
 
 class RCreateThisWithTemplate final : public RInstruction
 {
-  private:
-    bool tenuredHeap_;
-
   public:
     RINSTRUCTION_HEADER_(CreateThisWithTemplate)
 

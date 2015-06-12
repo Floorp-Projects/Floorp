@@ -653,7 +653,7 @@ int NrSocket::sendto(const void *msg, size_t len,
     if (PR_GetError() == PR_WOULD_BLOCK_ERROR)
       ABORT(R_WOULDBLOCK);
 
-    r_log(LOG_GENERIC, LOG_INFO, "Error in sendto %s", to->as_string);
+    r_log(LOG_GENERIC, LOG_INFO, "Error in sendto: %s", to->as_string);
     ABORT(R_IO_ERROR);
   }
 
@@ -674,7 +674,7 @@ int NrSocket::recvfrom(void * buf, size_t maxlen,
   if (status <= 0) {
     if (PR_GetError() == PR_WOULD_BLOCK_ERROR)
       ABORT(R_WOULDBLOCK);
-    r_log(LOG_GENERIC, LOG_INFO, "Error in recvfrom");
+    r_log(LOG_GENERIC, LOG_INFO, "Error in recvfrom: %d", (int)PR_GetError());
     ABORT(R_IO_ERROR);
   }
   *len=status;
@@ -1309,7 +1309,7 @@ static nr_socket_vtbl nr_socket_local_vtbl={
   nr_socket_local_close
 };
 
-int nr_socket_local_create(nr_transport_addr *addr, nr_socket **sockp) {
+int nr_socket_local_create(void *obj, nr_transport_addr *addr, nr_socket **sockp) {
   RefPtr<NrSocketBase> sock;
 
   // create IPC bridge for content process

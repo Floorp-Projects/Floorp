@@ -117,7 +117,10 @@ MOCHITEST_MANIFESTS += [
     'test/serviceworkers/mochitest.ini',
 ]
 
-MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+MOCHITEST_CHROME_MANIFESTS += [
+    'test/chrome.ini',
+    'test/serviceworkers/chrome.ini'
+]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 
