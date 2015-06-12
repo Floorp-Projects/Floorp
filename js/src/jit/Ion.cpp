@@ -767,6 +767,12 @@ JitCode::traceChildren(JSTracer* trc)
     if (invalidated())
         return;
 
+    // If we're moving objects, we need writable JIT code.
+    ReprotectCode reprotect = (trc->runtime()->isHeapMinorCollecting() || zone()->isGCCompacting())
+                              ? Reprotect
+                              : DontReprotect;
+    MaybeAutoWritableJitCode awjc(this, reprotect);
+
     if (jumpRelocTableBytes_) {
         uint8_t* start = code_ + jumpRelocTableOffset();
         CompactBufferReader reader(start, start + jumpRelocTableBytes_);
@@ -784,6 +790,8 @@ JitCode::fixupNurseryObjects(JSContext* cx, const ObjectVector& nurseryObjects)
 {
     if (nurseryObjects.empty() || !dataRelocTableBytes_)
         return;
+
+    AutoWritableJitCode awjc(this);
 
     uint8_t* start = code_ + dataRelocTableOffset();
     CompactBufferReader reader(start, start + dataRelocTableBytes_);
@@ -806,8 +814,11 @@ JitCode::finalize(FreeOp* fop)
     // Buffer can be freed at any time hereafter. Catch use-after-free bugs.
     // Don't do this if the Ion code is protected, as the signal handler will
     // deadlock trying to reacquire the interrupt lock.
-    memset(code_, JS_SWEPT_CODE_PATTERN, bufferSize_);
-    code_ = nullptr;
+    {
+        AutoWritableJitCode awjc(this);
+        memset(code_, JS_SWEPT_CODE_PATTERN, bufferSize_);
+        code_ = nullptr;
+    }
 
     // Code buffers are stored inside JSC pools.
     // Pools are refcounted. Releasing the pool may free it.
@@ -823,6 +834,7 @@ JitCode::finalize(FreeOp* fop)
 void
 JitCode::togglePreBarriers(bool enabled)
 {
+    AutoWritableJitCode awjc(this);
     uint8_t* start = code_ + preBarrierTableOffset();
     CompactBufferReader reader(start, start + preBarrierTableBytes_);
 
@@ -1215,6 +1227,7 @@ IonScript::purgeCaches()
     if (invalidated())
         return;
 
+    AutoWritableJitCode awjc(method());
     for (size_t i = 0; i < numCaches(); i++)
         getCacheFromIndex(i).reset();
 }
@@ -2829,6 +2842,7 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
         // the call sequence causing the safepoint being >= the size of
         // a uint32, which is checked during safepoint index
         // construction.
+        AutoWritableJitCode awjc(ionCode);
         const SafepointIndex* si = ionScript->getSafepointIndex(it.returnAddressToFp());
         CodeLocationLabel dataLabelToMunge(it.returnAddressToFp());
         ptrdiff_t delta = ionScript->invalidateEpilogueDataOffset() -

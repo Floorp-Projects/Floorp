@@ -180,6 +180,7 @@ Sanitizer.prototype = {
       clear: function ()
       {
         TelemetryStopwatch.start("FX_SANITIZE_COOKIES");
+        TelemetryStopwatch.start("FX_SANITIZE_COOKIES_2");
 
         var cookieMgr = Components.classes["@mozilla.org/cookiemanager;1"]
                                   .getService(Ci.nsICookieManager);
@@ -199,12 +200,15 @@ Sanitizer.prototype = {
           cookieMgr.removeAll();
         }
 
+        TelemetryStopwatch.finish("FX_SANITIZE_COOKIES_2");
+
         // Clear deviceIds. Done asynchronously (returns before complete).
         let mediaMgr = Components.classes["@mozilla.org/mediaManagerService;1"]
                                  .getService(Ci.nsIMediaManagerService);
         mediaMgr.sanitizeDeviceIds(this.range && this.range[0]);
 
         // Clear plugin data.
+        TelemetryStopwatch.start("FX_SANITIZE_PLUGINS");
         const phInterface = Ci.nsIPluginHost;
         const FLAG_CLEAR_ALL = phInterface.FLAG_CLEAR_ALL;
         let ph = Cc["@mozilla.org/plugin/host;1"].getService(phInterface);
@@ -234,6 +238,7 @@ Sanitizer.prototype = {
           }
         }
 
+        TelemetryStopwatch.finish("FX_SANITIZE_PLUGINS");
         TelemetryStopwatch.finish("FX_SANITIZE_COOKIES");
       },
 

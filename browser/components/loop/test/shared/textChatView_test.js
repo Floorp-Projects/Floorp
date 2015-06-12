@@ -80,5 +80,32 @@ describe("loop.shared.views.TextChatView", function () {
           message: "Hello!"
         }));
     });
+
+    it("should not render message entries when none are sent/ received yet", function() {
+      view = mountTestComponent();
+
+      expect(view.getDOMNode().querySelector(".text-chat-entries")).to.eql(null);
+    });
+
+    it("should render message entries when message were sent/ received", function() {
+      view = mountTestComponent();
+
+      store.receivedTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Hello!"
+      });
+      store.sendTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Is it me you're looking for?"
+      });
+
+      var node = view.getDOMNode();
+      expect(node.querySelector(".text-chat-entries")).to.not.eql(null);
+
+      var entries = node.querySelectorAll(".text-chat-entry");
+      expect(entries.length).to.eql(2);
+      expect(entries[0].classList.contains("received")).to.eql(true);
+      expect(entries[1].classList.contains("received")).to.not.eql(true);
+    });
   });
 });

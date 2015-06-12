@@ -1381,6 +1381,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool offthreadIonCompilationEnabled_;
     bool parallelParsingEnabled_;
 
+    bool autoWritableJitCodeActive_;
+
   public:
 
     // Note: these values may be toggled dynamically (in response to about:config
@@ -1396,6 +1398,12 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
     bool canUseParallelParsing() const {
         return parallelParsingEnabled_;
+    }
+
+    void toggleAutoWritableJitCodeActive(bool b) {
+        MOZ_ASSERT(autoWritableJitCodeActive_ != b, "AutoWritableJitCode should not be nested.");
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(this));
+        autoWritableJitCodeActive_ = b;
     }
 
     const JS::RuntimeOptions& options() const {
