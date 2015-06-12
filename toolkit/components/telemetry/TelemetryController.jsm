@@ -594,21 +594,20 @@ let Impl = {
     Telemetry.canRecordBase = enabled || IS_UNIFIED_TELEMETRY;
 
 #ifdef MOZILLA_OFFICIAL
-    if (!Telemetry.isOfficialTelemetry && !this._testMode) {
-      // We can't send data; no point in initializing observers etc.
-      // Only do this for official builds so that e.g. developer builds
-      // still enable Telemetry based on prefs.
-      Telemetry.canRecordExtended = false;
-      this._log.config("enableTelemetryRecording - Can't send data, disabling extended Telemetry recording.");
-    }
+    // Enable extended telemetry if:
+    //  * the telemetry preference is set and
+    //  * this is an official build or we are in test-mode
+    // We only do the latter check for official builds so that e.g. developer builds
+    // still enable Telemetry based on prefs.
+    Telemetry.canRecordExtended = enabled && (Telemetry.isOfficialTelemetry || this._testMode);
+#else
+    // Turn off extended telemetry recording if disabled by preferences or if base/telemetry
+    // telemetry recording is off.
+    Telemetry.canRecordExtended = enabled;
 #endif
 
-    if (!enabled || !Telemetry.canRecordBase) {
-      // Turn off extended telemetry recording if disabled by preferences or if base/telemetry
-      // telemetry recording is off.
-      Telemetry.canRecordExtended = false;
-      this._log.config("enableTelemetryRecording - Disabling extended Telemetry recording.");
-    }
+    this._log.config("enableTelemetryRecording - canRecordBase:" + Telemetry.canRecordBase +
+                     ", canRecordExtended: " + Telemetry.canRecordExtended);
 
     return Telemetry.canRecordBase;
   },
