@@ -217,7 +217,9 @@ private:
     // Byte size of all samples contained in this track buffer.
     uint32_t mSizeBuffer;
     // TrackInfo of the first metadata received.
-    UniquePtr<TrackInfo> mInfo;
+    nsRefPtr<SharedTrackInfo> mInfo;
+    // TrackInfo of the last metadata parsed (updated with each init segment.
+    nsRefPtr<SharedTrackInfo> mLastInfo;
   };
 
   bool ProcessFrame(MediaRawData* aSample, TrackData& aTrackData);
