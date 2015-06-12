@@ -188,6 +188,7 @@ function whereToOpenLink( e, ignoreButton, ignoreAlt )
  *   relatedToCurrent     (boolean)
  *   skipTabAnimation     (boolean)
  *   allowPinnedTabHostChange (boolean)
+ *   allowPopups          (boolean)
  */
 function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI) {
   var params;
@@ -230,6 +231,7 @@ function openLinkIn(url, where, params) {
   var aSkipTabAnimation     = params.skipTabAnimation;
   var aAllowPinnedTabHostChange = !!params.allowPinnedTabHostChange;
   var aNoReferrer           = params.noReferrer;
+  var aAllowPopups          = !!params.allowPopups;
 
   if (where == "save") {
     if (!aInitiatingDoc) {
@@ -342,8 +344,13 @@ function openLinkIn(url, where, params) {
     // i.e. it causes them not to load at all. Callers should strip
     // "javascript:" from pasted strings to protect users from malicious URIs
     // (see stripUnsafeProtocolOnPaste).
-    if (aDisallowInheritPrincipal && !(uriObj && uriObj.schemeIs("javascript")))
+    if (aDisallowInheritPrincipal && !(uriObj && uriObj.schemeIs("javascript"))) {
       flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+    }
+
+    if (aAllowPopups) {
+      flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_POPUPS;
+    }
 
     w.gBrowser.loadURIWithFlags(url, {
       flags: flags,
