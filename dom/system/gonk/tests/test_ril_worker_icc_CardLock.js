@@ -16,7 +16,6 @@ add_test(function test_icc_get_card_lock_enabled() {
   let buf = context.Buf;
   let ril = context.RIL;
   ril.aid = "123456789";
-  ril.v5Legacy = false;
 
   function do_test(aLock) {
     const serviceClass = ICC_SERVICE_CLASS_VOICE |
@@ -32,13 +31,11 @@ add_test(function test_icc_get_card_lock_enabled() {
 
       // Data
       let parcel = this.readStringList();
-      equal(parcel.length, ril.v5Legacy ? 3 : 4);
+      equal(parcel.length, 4);
       equal(parcel[0], GECKO_CARDLOCK_TO_FACILITY[aLock]);
       equal(parcel[1], "");
       equal(parcel[2], serviceClass.toString());
-      if (!ril.v5Legacy) {
-        equal(parcel[3], ril.aid);
-      }
+      equal(parcel[3], ril.aid);
     };
 
     ril.iccGetCardLockEnabled({lockType: aLock});
@@ -87,7 +84,6 @@ add_test(function test_icc_set_card_lock_enabled() {
   let buf = context.Buf;
   let ril = context.RIL;
   ril.aid = "123456789";
-  ril.v5Legacy = false;
 
   function do_test(aLock, aPassword, aEnabled) {
     const serviceClass = ICC_SERVICE_CLASS_VOICE |
@@ -103,14 +99,12 @@ add_test(function test_icc_set_card_lock_enabled() {
 
       // Data
       let parcel = this.readStringList();
-      equal(parcel.length, ril.v5Legacy ? 4 : 5);
+      equal(parcel.length, 5);
       equal(parcel[0], GECKO_CARDLOCK_TO_FACILITY[aLock]);
       equal(parcel[1], aEnabled ? "1" : "0");
       equal(parcel[2], aPassword);
       equal(parcel[3], serviceClass.toString());
-      if (!ril.v5Legacy) {
-        equal(parcel[4], ril.aid);
-      }
+      equal(parcel[4], ril.aid);
     };
 
     ril.iccSetCardLockEnabled({
@@ -151,12 +145,10 @@ add_test(function test_icc_change_card_lock_password() {
 
       // Data
       let parcel = this.readStringList();
-      equal(parcel.length, ril.v5Legacy ? 2 : 3);
+      equal(parcel.length, 3);
       equal(parcel[0], aPassword);
       equal(parcel[1], aNewPassword);
-      if (!ril.v5Legacy) {
-        equal(parcel[2], ril.aid);
-      }
+      equal(parcel[2], ril.aid);
     };
 
     ril.iccChangeCardLockPassword({
@@ -180,7 +172,6 @@ add_test(function test_icc_unlock_card_lock_pin() {
   let ril = context.RIL;
   let buf = context.Buf;
   ril.aid = "123456789";
-  ril.v5Legacy = false;
 
   function do_test(aLock, aPassword) {
     let GECKO_CARDLOCK_TO_REQUEST = {};
@@ -196,11 +187,9 @@ add_test(function test_icc_unlock_card_lock_pin() {
 
       // Data
       let parcel = this.readStringList();
-      equal(parcel.length, ril.v5Legacy ? 1 : 2);
+      equal(parcel.length, 2);
       equal(parcel[0], aPassword);
-      if (!ril.v5Legacy) {
-        equal(parcel[1], ril.aid);
-      }
+      equal(parcel[1], ril.aid);
     };
 
     ril.iccUnlockCardLock({
@@ -224,7 +213,6 @@ add_test(function test_icc_unlock_card_lock_puk() {
   let ril = context.RIL;
   let buf = context.Buf;
   ril.aid = "123456789";
-  ril.v5Legacy = false;
 
   function do_test(aLock, aPassword, aNewPin) {
     let GECKO_CARDLOCK_TO_REQUEST = {};
@@ -240,12 +228,10 @@ add_test(function test_icc_unlock_card_lock_puk() {
 
       // Data
       let parcel = this.readStringList();
-      equal(parcel.length, ril.v5Legacy ? 2 : 3);
+      equal(parcel.length, 3);
       equal(parcel[0], aPassword);
       equal(parcel[1], aNewPin);
-      if (!ril.v5Legacy) {
-        equal(parcel[2], ril.aid);
-      }
+      equal(parcel[2], ril.aid);
     };
 
     ril.iccUnlockCardLock({

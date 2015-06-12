@@ -276,9 +276,10 @@ MobileConnectionChild::ChangeCallBarringPassword(const nsAString& aPin,
 
 NS_IMETHODIMP
 MobileConnectionChild::SetCallWaiting(bool aEnabled,
+                                      uint16_t aServiceClass,
                                       nsIMobileConnectionCallback* aCallback)
 {
-  return SendRequest(SetCallWaitingRequest(aEnabled), aCallback)
+  return SendRequest(SetCallWaitingRequest(aEnabled, aServiceClass), aCallback)
     ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -551,6 +552,12 @@ MobileConnectionRequestChild::DoReply(const MobileConnectionReplySuccessCallBarr
 }
 
 bool
+MobileConnectionRequestChild::DoReply(const MobileConnectionReplySuccessCallWaiting& aReply)
+{
+  return NS_SUCCEEDED(mRequestCallback->NotifyGetCallWaitingSuccess(aReply.serviceClass()));
+}
+
+bool
 MobileConnectionRequestChild::DoReply(const MobileConnectionReplySuccessClirStatus& aReply)
 {
   return NS_SUCCEEDED(mRequestCallback->NotifyGetClirStatusSuccess(aReply.n(),
@@ -591,6 +598,8 @@ MobileConnectionRequestChild::Recv__delete__(const MobileConnectionReply& aReply
       return DoReply(aReply.get_MobileConnectionReplySuccessCallForwarding());
     case MobileConnectionReply::TMobileConnectionReplySuccessCallBarring:
       return DoReply(aReply.get_MobileConnectionReplySuccessCallBarring());
+    case MobileConnectionReply::TMobileConnectionReplySuccessCallWaiting:
+      return DoReply(aReply.get_MobileConnectionReplySuccessCallWaiting());
     case MobileConnectionReply::TMobileConnectionReplySuccessClirStatus:
       return DoReply(aReply.get_MobileConnectionReplySuccessClirStatus());
     case MobileConnectionReply::TMobileConnectionReplySuccessPreferredNetworkType:
