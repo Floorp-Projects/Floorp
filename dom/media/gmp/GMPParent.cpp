@@ -1025,19 +1025,21 @@ GMPParent::ReadGMPMetaData()
 bool
 GMPParent::CanBeSharedCrossNodeIds() const
 {
-  return mNodeId.IsEmpty() &&
-    // XXX bug 1159300 hack -- maybe remove after openh264 1.4
-    // We don't want to use CDM decoders for non-encrypted playback
-    // just yet; especially not for WebRTC. Don't allow CDMs to be used
-    // without a node ID.
-    !mCanDecrypt;
+  return !mAsyncShutdownInProgress &&
+         mNodeId.IsEmpty() &&
+         // XXX bug 1159300 hack -- maybe remove after openh264 1.4
+         // We don't want to use CDM decoders for non-encrypted playback
+         // just yet; especially not for WebRTC. Don't allow CDMs to be used
+         // without a node ID.
+         !mCanDecrypt;
 }
 
 bool
 GMPParent::CanBeUsedFrom(const nsACString& aNodeId) const
 {
-  return (mNodeId.IsEmpty() && State() == GMPStateNotLoaded) ||
-         mNodeId == aNodeId;
+  return !mAsyncShutdownInProgress &&
+         ((mNodeId.IsEmpty() && State() == GMPStateNotLoaded) ||
+          mNodeId == aNodeId);
 }
 
 void
