@@ -5566,11 +5566,19 @@ ResetStopwatches(JSRuntime*);
 /**
  * Turn on/off stopwatch-based CPU monitoring.
  *
- * `SetStopwatchActive` may return `false` if monitoring could not be
- * activated, which may happen if we are out of memory.
+ * `SetStopwatchIsMonitoringCPOW` or `SetStopwatchIsMonitoringJank`
+ * may return `false` if monitoring could not be activated, which may
+ * happen if we are out of memory.
  */
 extern JS_PUBLIC_API(bool)
-SetStopwatchActive(JSRuntime*, bool);
+SetStopwatchIsMonitoringCPOW(JSRuntime*, bool);
+extern JS_PUBLIC_API(bool)
+GetStopwatchIsMonitoringCPOW(JSRuntime*);
+extern JS_PUBLIC_API(bool)
+SetStopwatchIsMonitoringJank(JSRuntime*, bool);
+extern JS_PUBLIC_API(bool)
+GetStopwatchIsMonitoringJank(JSRuntime*);
+
 extern JS_PUBLIC_API(bool)
 IsStopwatchActive(JSRuntime*);
 
