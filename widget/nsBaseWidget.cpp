@@ -904,7 +904,8 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
   // that XUL widget opts in to acceleration, but that's probably OK.
   bool accelerateByDefault = nsCocoaFeatures::AccelerateByDefault();
 #elif defined(XP_WIN) || defined(ANDROID) || \
-    defined(MOZ_GL_PROVIDER) || defined(MOZ_WIDGET_QT)
+    defined(MOZ_GL_PROVIDER) || defined(MOZ_WIDGET_QT) || \
+    defined(MOZ_WIDGET_UIKIT)
   bool accelerateByDefault = true;
 #else
   bool accelerateByDefault = false;
