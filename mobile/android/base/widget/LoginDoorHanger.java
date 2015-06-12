@@ -38,7 +38,7 @@ public class LoginDoorHanger extends DoorHanger {
     private final TextView mTitle;
     private final TextView mMessage;
     private final TextView mLink;
-    private int mCallbackID;
+    private final DoorhangerConfig.ButtonConfig mButtonConfig;
 
     public LoginDoorHanger(Context context, DoorhangerConfig config) {
         super(context, config, Type.LOGIN);
@@ -48,6 +48,8 @@ public class LoginDoorHanger extends DoorHanger {
         mLink = (TextView) findViewById(R.id.doorhanger_link);
         mIcon.setImageResource(R.drawable.icon_key);
         mIcon.setVisibility(View.VISIBLE);
+
+        mButtonConfig = config.getPositiveButtonConfig();
 
         loadConfig(config);
     }
@@ -62,7 +64,6 @@ public class LoginDoorHanger extends DoorHanger {
         setOptions(config.getOptions());
         setMessage(config.getMessage());
         // Store the positive callback id for nested dialogs that need the same callback id.
-        mCallbackID = config.getPositiveButtonConfig().callback;
         addButtonsToLayout(config);
     }
 
@@ -160,12 +161,12 @@ public class LoginDoorHanger extends DoorHanger {
                     });
                     builder.setView(view);
 
-                    builder.setPositiveButton(R.string.button_remember, new DialogInterface.OnClickListener() {
+                    builder.setPositiveButton(mButtonConfig.label, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             JSONObject response = new JSONObject();
                             try {
-                                response.put("callback", mCallbackID);
+                                response.put("callback", mButtonConfig.callback);
                                 final JSONObject inputs = new JSONObject();
                                 inputs.put("username", username.getText());
                                 inputs.put("password", password.getText());
@@ -214,7 +215,7 @@ public class LoginDoorHanger extends DoorHanger {
                             public void onClick(DialogInterface dialog, int which) {
                                 final JSONObject response = new JSONObject();
                                 try {
-                                    response.put("callback", mCallbackID);
+                                    response.put("callback", mButtonConfig.callback);
                                     response.put("password", passwords[which]);
                                 } catch (JSONException e) {
                                     Log.e(LOGTAG, "Error making login select dialog JSON", e);
