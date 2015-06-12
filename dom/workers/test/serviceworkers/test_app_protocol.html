@@ -27,6 +27,7 @@ function setup() {
     SpecialPowers.pushPrefEnv({'set': [
       ['dom.mozBrowserFramesEnabled', true],
       ['dom.serviceWorkers.exemptFromPerDomainMax', true],
+      ["dom.serviceWorkers.interception.enabled", true],
       ['dom.serviceWorkers.enabled', true],
       ['dom.serviceWorkers.testing.enabled', true],
       ['dom.caches.enabled', true],
