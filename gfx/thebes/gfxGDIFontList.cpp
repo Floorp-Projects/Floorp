@@ -245,7 +245,7 @@ GDIFontEntry::CopyFontTable(uint32_t aTableTag,
                           NativeEndian::swapToBigEndian(aTableTag),
                           0, nullptr, 0);
         if (tableSize != GDI_ERROR) {
-            if (aBuffer.SetLength(tableSize)) {
+            if (aBuffer.SetLength(tableSize, fallible)) {
                 ::GetFontData(dc.GetDC(),
                               NativeEndian::swapToBigEndian(aTableTag), 0,
                               aBuffer.Elements(), tableSize);
@@ -976,7 +976,7 @@ int CALLBACK GDIFontInfo::EnumerateFontsForFamily(
         nameSize = ::GetFontData(hdc, kNAME, 0, nullptr, 0);
         if (nameSize != GDI_ERROR &&
             nameSize > 0 &&
-            nameData.SetLength(nameSize)) {
+            nameData.SetLength(nameSize, fallible)) {
             ::GetFontData(hdc, kNAME, 0, nameData.Elements(), nameSize);
 
             // face names
@@ -1019,7 +1019,7 @@ int CALLBACK GDIFontInfo::EnumerateFontsForFamily(
         cmapSize = ::GetFontData(hdc, kCMAP, 0, nullptr, 0);
         if (cmapSize != GDI_ERROR &&
             cmapSize > 0 &&
-            cmapData.SetLength(cmapSize)) {
+            cmapData.SetLength(cmapSize, fallible)) {
             ::GetFontData(hdc, kCMAP, 0, cmapData.Elements(), cmapSize);
             bool cmapLoaded = false;
             bool unicodeFont = false, symbolFont = false;

@@ -43,6 +43,7 @@
 #endif
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/UniquePtr.h"
 
 #include "logging.h"
 
@@ -1157,51 +1158,68 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     MOZ_MTLOG(ML_DEBUG, "Sending a video frame");
     // Not much for us to do with an error
     conduit->SendVideoFrame(y, I420SIZE(width, height), width, height, mozilla::kVideoI420, 0);
-  } else if(format == ImageFormat::CAIRO_SURFACE) {
-    layers::CairoImage* rgb =
-    const_cast<layers::CairoImage *>(
-          static_cast<const layers::CairoImage *>(img));
+  } else {
+    RefPtr<gfx::SourceSurface> surf = img->GetAsSourceSurface();
+    if (!surf) {
+      MOZ_MTLOG(ML_ERROR, "Getting surface from image failed");
+      return;
+    }
 
-    gfx::IntSize size = rgb->GetSize();
+    RefPtr<gfx::DataSourceSurface> data = surf->GetDataSurface();
+    if (!data) {
+      MOZ_MTLOG(ML_ERROR, "Getting data surface from image failed");
+      return;
+    }
+
+    gfx::IntSize size = img->GetSize();
     int half_width = (size.width + 1) >> 1;
     int half_height = (size.height + 1) >> 1;
     int c_size = half_width * half_height;
     int buffer_size = YSIZE(size.width, size.height) + 2 * c_size;
-    uint8* yuv = (uint8*) malloc(buffer_size); // fallible
-    if (!yuv)
+    UniquePtr<uint8[]> yuv_scoped(new (fallible) uint8[buffer_size]);
+    if (!yuv_scoped)
       return;
+    uint8* yuv = yuv_scoped.get();
 
-    int cb_offset = YSIZE(size.width, size.height);
-    int cr_offset = cb_offset + c_size;
-    RefPtr<gfx::SourceSurface> tempSurf = rgb->GetAsSourceSurface();
-    RefPtr<gfx::DataSourceSurface> surf = tempSurf->GetDataSurface();
+    {
+      DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
+      if (!map.IsMapped()) {
+        MOZ_MTLOG(ML_ERROR, "Reading DataSourceSurface failed");
+        return;
+      }
 
-    switch (surf->GetFormat()) {
-      case gfx::SurfaceFormat::B8G8R8A8:
-      case gfx::SurfaceFormat::B8G8R8X8:
-        libyuv::ARGBToI420(static_cast<uint8*>(surf->GetData()), surf->Stride(),
-                           yuv, size.width,
-                           yuv + cb_offset, half_width,
-                           yuv + cr_offset, half_width,
-                           size.width, size.height);
-        break;
-      case gfx::SurfaceFormat::R5G6B5:
-        libyuv::RGB565ToI420(static_cast<uint8*>(surf->GetData()), surf->Stride(),
-                             yuv, size.width,
-                             yuv + cb_offset, half_width,
-                             yuv + cr_offset, half_width,
-                             size.width, size.height);
-        break;
-      default:
-        MOZ_MTLOG(ML_ERROR, "Unsupported RGB video format");
-        MOZ_ASSERT(PR_FALSE);
+      int rv;
+      int cb_offset = YSIZE(size.width, size.height);
+      int cr_offset = cb_offset + c_size;
+      switch (surf->GetFormat()) {
+        case gfx::SurfaceFormat::B8G8R8A8:
+        case gfx::SurfaceFormat::B8G8R8X8:
+          rv = libyuv::ARGBToI420(static_cast<uint8*>(map.GetData()),
+                                  map.GetStride(),
+                                  yuv, size.width,
+                                  yuv + cb_offset, half_width,
+                                  yuv + cr_offset, half_width,
+                                  size.width, size.height);
+          break;
+        case gfx::SurfaceFormat::R5G6B5:
+          rv = libyuv::RGB565ToI420(static_cast<uint8*>(map.GetData()),
+                                    map.GetStride(),
+                                    yuv, size.width,
+                                    yuv + cb_offset, half_width,
+                                    yuv + cr_offset, half_width,
+                                    size.width, size.height);
+          break;
+        default:
+          MOZ_MTLOG(ML_ERROR, "Unsupported RGB video format");
+          MOZ_ASSERT(PR_FALSE);
+          return;
+      }
+      if (rv != 0) {
+        MOZ_MTLOG(ML_ERROR, "RGB to I420 conversion failed");
+        return;
+      }
     }
     conduit->SendVideoFrame(yuv, buffer_size, size.width, size.height, mozilla::kVideoI420, 0);
-    free(yuv);
-  } else {
-    MOZ_MTLOG(ML_ERROR, "Unsupported video format");
-    MOZ_ASSERT(PR_FALSE);
-    return;
   }
 }
 #endif

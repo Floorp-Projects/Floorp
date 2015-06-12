@@ -5,11 +5,16 @@ task:
   metadata:
     name: '[TC] Gaia Python Functional Integration Tests'
     description: Gaia Python Functional Integration Tests run {{chunk}}
-  workerType: testdroid-device
+  workerType: flame-kk-1-sim
 
   payload:
-    env:
-      DEVICE_CAPABILITIES: '{"type":"flame","memory":"319","sims": "1","build":"{{{img_url}}}"}'
+    capabilities:
+      devices:
+        phone:
+          type: 'flame'
+          memory: '319'
+          sims: '1'
+          build: '{{{img_url}}}'
     features:
       testdroidProxy: true
     maxRunTime: 7200

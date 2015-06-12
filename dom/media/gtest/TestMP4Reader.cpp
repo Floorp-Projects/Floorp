@@ -36,7 +36,6 @@ public:
     decoder->SetResource(resource);
 
     reader->Init(nullptr);
-    reader->EnsureTaskQueue();
     {
       // This needs to be done before invoking GetBuffered. This is normally
       // done by MediaDecoderStateMachine.
@@ -57,7 +56,7 @@ private:
   virtual ~TestBinding()
   {
     {
-      nsRefPtr<MediaTaskQueue> queue = reader->GetTaskQueue();
+      nsRefPtr<MediaTaskQueue> queue = reader->TaskQueue();
       nsCOMPtr<nsIRunnable> task = NS_NewRunnableMethod(reader, &MP4Reader::Shutdown);
       // Hackily bypass the tail dispatcher so that we can AwaitShutdownAndIdle.
       // In production code we'd use BeginShutdown + promises.

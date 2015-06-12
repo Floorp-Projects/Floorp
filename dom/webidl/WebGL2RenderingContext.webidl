@@ -312,6 +312,9 @@ interface WebGL2RenderingContext : WebGLRenderingContext
 
     const GLint64 TIMEOUT_IGNORED                              = -1;
 
+    /* WebGL-specific enums */
+    const GLenum MAX_CLIENT_WAIT_TIMEOUT_WEBGL                 = 0x9247;
+
     /* Buffer objects */
     void copyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset,
                            GLintptr writeOffset, GLsizeiptr size);

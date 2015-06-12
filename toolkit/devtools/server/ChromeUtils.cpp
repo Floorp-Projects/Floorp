@@ -8,9 +8,11 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/gzip_stream.h>
 
+#include "mozilla/devtools/AutoMemMap.h"
 #include "mozilla/devtools/HeapSnapshot.h"
 #include "mozilla/devtools/ZeroCopyNSIOutputStream.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/UniquePtr.h"
 
 #include "nsCRTGlue.h"
@@ -395,37 +397,23 @@ ChromeUtils::ReadHeapSnapshot(GlobalObject& global,
     return nullptr;
   }
 
-  PRFileInfo fileInfo;
-  if (PR_GetFileInfo(path.get(), &fileInfo) != PR_SUCCESS) {
-    rv.Throw(NS_ERROR_FILE_NOT_FOUND);
+  AutoMemMap mm;
+  rv = mm.init(path.get());
+  if (rv.Failed())
     return nullptr;
-  }
 
-  uint32_t size = fileInfo.size;
-  ScopedFreePtr<uint8_t> buffer(static_cast<uint8_t*>(malloc(size)));
-  if (!buffer) {
-    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return nullptr;
-  }
+  return HeapSnapshot::Create(cx, global,
+                              reinterpret_cast<const uint8_t*>(mm.address()),
+                              mm.size(), rv);
+}
 
-  PRFileDesc* fd = PR_Open(path.get(), PR_RDONLY, 0);
-  if (!fd) {
-    rv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  uint32_t bytesRead = 0;
-  while (bytesRead < size) {
-    uint32_t bytesLeft = size - bytesRead;
-    int32_t bytesReadThisTime = PR_Read(fd, buffer.get() + bytesRead, bytesLeft);
-    if (bytesReadThisTime < 1) {
-      rv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-    bytesRead += bytesReadThisTime;
-  }
-
-  return HeapSnapshot::Create(cx, global, buffer.get(), size, rv);
+/* static */ void
+ChromeUtils::OriginAttributesToCookieJar(GlobalObject& aGlobal,
+                                         const OriginAttributesDictionary& aAttrs,
+                                         nsCString& aCookieJar)
+{
+  OriginAttributes attrs(aAttrs);
+  attrs.CookieJar(aCookieJar);
 }
 
 } // namespace devtools

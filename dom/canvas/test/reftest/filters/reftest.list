@@ -1,0 +1,20 @@
+default-preferences pref(canvas.filters.enabled,true)
+
+== default-color.html ref.html
+== drop-shadow.html ref.html
+== drop-shadow-transformed.html ref.html
+== global-alpha.html global-alpha-ref.html
+== global-composite-operation.html global-composite-operation-ref.html
+== liveness.html ref.html
+== multiple-drop-shadows.html shadow-ref.html
+== shadow.html shadow-ref.html
+== subregion-fill-paint.html subregion-ref.html
+== subregion-stroke-paint.html subregion-ref.html
+== svg-bbox.html svg-bbox-ref.html
+== svg-inline.html ref.html
+== svg-liveness.html ref.html
+== svg-off-screen.html ref.html
+== units.html ref.html
+== units-em.html ref.html
+== units-ex.html ref.html
+== units-off-screen.html ref.html

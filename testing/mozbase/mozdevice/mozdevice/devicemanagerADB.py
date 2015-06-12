@@ -539,9 +539,10 @@ class DeviceManagerADB(DeviceManager):
         self.uninstallApp(appName)
         self.reboot()
 
-    def _runCmd(self, args, retryLimit=None):
+    def _runCmd(self, args, timeout=None, retryLimit=None):
         """
         Runs a command using adb
+        If timeout is specified, the process is killed after <timeout> seconds.
 
         returns: instance of ProcessHandler
         """
@@ -555,11 +556,17 @@ class DeviceManagerADB(DeviceManager):
             finalArgs.extend(['-s', self._deviceSerial])
         finalArgs.extend(args)
         self._logger.debug("_runCmd - command: %s" % ' '.join(finalArgs))
+        if not timeout:
+            timeout = self.default_timeout
+
+        def _timeout():
+            self._logger.error("Timeout exceeded for _runCmd call '%s'" % ' '.join(finalArgs))
+
         retries = 0
         while retries < retryLimit:
             proc = ProcessHandler(finalArgs, storeOutput=True,
-                    processOutputLine=self._log)
-            proc.run()
+                    processOutputLine=self._log, onTimeout=_timeout)
+            proc.run(timeout=timeout)
             proc.returncode = proc.wait()
             if proc.returncode == None:
                 proc.kill()

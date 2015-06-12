@@ -61,8 +61,6 @@
 #include "Layers.h"
 #include <limits>
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "nsIAppShell.h"
-#include "nsWidgetsCID.h"
 #include "nsMediaFragmentURIParser.h"
 #include "nsURIHashKey.h"
 #include "nsJSUtils.h"
@@ -758,13 +756,10 @@ public:
   }
 };
 
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
 void HTMLMediaElement::RunInStableState(nsIRunnable* aRunnable)
 {
   nsCOMPtr<nsIRunnable> event = new nsSyncSection(this, aRunnable);
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  appShell->RunInStableState(event);
+  nsContentUtils::RunInStableState(event.forget());
 }
 
 void HTMLMediaElement::QueueLoadFromSourceTask()

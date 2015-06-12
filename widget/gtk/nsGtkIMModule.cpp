@@ -14,6 +14,7 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
+#include "WritingModes.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -75,7 +76,29 @@ GetEventType(GdkEventKey* aKeyEvent)
     }
 }
 
+class GetWritingModeName : public nsAutoCString
+{
+public:
+  explicit GetWritingModeName(const WritingMode& aWritingMode)
+  {
+    if (!aWritingMode.IsVertical()) {
+      AssignLiteral("Horizontal");
+      return;
+    }
+    if (aWritingMode.IsVerticalLR()) {
+      AssignLiteral("Vertical (LTR)");
+      return;
+    }
+    AssignLiteral("Vertical (RTL)");
+  }
+  virtual ~GetWritingModeName() {}
+};
+
 const static bool kUseSimpleContextDefault = MOZ_WIDGET_GTK == 2;
+
+/******************************************************************************
+ * nsGtkIMModule
+ ******************************************************************************/
 
 nsGtkIMModule* nsGtkIMModule::sLastFocusedModule = nullptr;
 bool nsGtkIMModule::sUseSimpleContext;
@@ -89,10 +112,10 @@ nsGtkIMModule::nsGtkIMModule(nsWindow* aOwnerWindow)
     , mComposingContext(nullptr)
     , mCompositionStart(UINT32_MAX)
     , mProcessingKeyEvent(nullptr)
-    , mCompositionTargetOffset(UINT32_MAX)
     , mCompositionState(eCompositionState_NotComposing)
     , mIsIMFocused(false)
     , mIsDeletingSurrounding(false)
+    , mLayoutChanged(false)
 {
     if (!gGtkIMLog) {
         gGtkIMLog = PR_NewLogModule("nsGtkIMModuleWidgets");
@@ -418,6 +441,7 @@ nsGtkIMModule::OnFocusChangeInGecko(bool aFocus)
 
     // We shouldn't carry over the removed string to another editor.
     mSelectedString.Truncate();
+    mSelection.Clear();
 }
 
 void
@@ -506,13 +530,28 @@ nsGtkIMModule::EndIMEComposition(nsWindow* aCaller)
 }
 
 void
+nsGtkIMModule::OnLayoutChange()
+{
+    if (MOZ_UNLIKELY(IsDestroyed())) {
+        return;
+    }
+
+    SetCursorPosition(GetActiveContext());
+    mLayoutChanged = true;
+}
+
+void
 nsGtkIMModule::OnUpdateComposition()
 {
     if (MOZ_UNLIKELY(IsDestroyed())) {
         return;
     }
 
-    SetCursorPosition(GetActiveContext(), mCompositionTargetOffset);
+    // If we've already set candidate window position, we don't need to update
+    // the position with update composition notification.
+    if (!mLayoutChanged) {
+        SetCursorPosition(GetActiveContext());
+    }
 }
 
 void
@@ -714,8 +753,11 @@ nsGtkIMModule::Blur()
 }
 
 void
-nsGtkIMModule::OnSelectionChange(nsWindow* aCaller)
+nsGtkIMModule::OnSelectionChange(nsWindow* aCaller,
+                                 const IMENotification& aIMENotification)
 {
+    mSelection.Assign(aIMENotification);
+
     if (MOZ_UNLIKELY(IsDestroyed())) {
         return;
     }
@@ -739,42 +781,13 @@ nsGtkIMModule::OnSelectionChange(nsWindow* aCaller)
     // event handler.  So, we're dispatching NS_COMPOSITION_START,
     // we should ignore selection change notification.
     if (mCompositionState == eCompositionState_CompositionStartDispatched) {
-        nsCOMPtr<nsIWidget> focusedWindow(mLastFocusedWindow);
-        nsEventStatus status;
-        WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT,
-                                          focusedWindow);
-        InitEvent(selection);
-        mLastFocusedWindow->DispatchEvent(&selection, status);
-
-        bool cannotContinueComposition = false;
-        if (MOZ_UNLIKELY(IsDestroyed())) {
-            MOZ_LOG(gGtkIMLog, LogLevel::Info,
-                ("    ERROR: nsGtkIMModule instance is destroyed during "
-                 "querying selection offset"));
-            return;
-        } else if (NS_WARN_IF(!selection.mSucceeded)) {
-            cannotContinueComposition = true;
-            MOZ_LOG(gGtkIMLog, LogLevel::Info,
-                ("    ERROR: failed to retrieve new caret offset"));
-        } else if (selection.mReply.mOffset == UINT32_MAX) {
-            cannotContinueComposition = true;
+        if (NS_WARN_IF(!mSelection.IsValid())) {
             MOZ_LOG(gGtkIMLog, LogLevel::Info,
                 ("    ERROR: new offset is too large, cannot keep composing"));
-        } else if (!mLastFocusedWindow || focusedWindow != mLastFocusedWindow) {
-            cannotContinueComposition = true;
-            MOZ_LOG(gGtkIMLog, LogLevel::Info,
-                ("    ERROR: focus is changed during querying selection "
-                 "offset"));
-        } else if (focusedWindow->Destroyed()) {
-            cannotContinueComposition = true;
-            MOZ_LOG(gGtkIMLog, LogLevel::Info,
-                ("    ERROR: focused window started to be being destroyed "
-                 "during querying selection offset"));
-        }
-
-        if (!cannotContinueComposition) {
+        } else {
             // Modify the selection start offset with new offset.
-            mCompositionStart = selection.mReply.mOffset;
+            mCompositionStart = mSelection.mOffset;
+            // XXX We should modify mSelectedString? But how?
             MOZ_LOG(gGtkIMLog, LogLevel::Info,
                 ("    NOTE: mCompositionStart is updated to %u, "
                  "the selection change doesn't cause resetting IM context",
@@ -822,7 +835,8 @@ nsGtkIMModule::OnStartCompositionNative(GtkIMContext *aContext)
     if (!DispatchCompositionStart(aContext)) {
         return;
     }
-    mCompositionTargetOffset = mCompositionStart;
+    mCompositionTargetRange.mOffset = mCompositionStart;
+    mCompositionTargetRange.mLength = 0;
 }
 
 /* static */
@@ -1082,13 +1096,7 @@ nsGtkIMModule::DispatchCompositionStart(GtkIMContext* aContext)
         return false;
     }
 
-    nsEventStatus status;
-    WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT,
-                                      mLastFocusedWindow);
-    InitEvent(selection);
-    mLastFocusedWindow->DispatchEvent(&selection, status);
-
-    if (!selection.mSucceeded || selection.mReply.mOffset == UINT32_MAX) {
+    if (NS_WARN_IF(!EnsureToCacheSelection())) {
         MOZ_LOG(gGtkIMLog, LogLevel::Info,
             ("    FAILED, cannot query the selection offset"));
         return false;
@@ -1098,7 +1106,7 @@ nsGtkIMModule::DispatchCompositionStart(GtkIMContext* aContext)
     //     even though we strongly hope it doesn't happen.
     //     Every composition event should have the start offset for the result
     //     because it may high cost if we query the offset every time.
-    mCompositionStart = selection.mReply.mOffset;
+    mCompositionStart = mSelection.mOffset;
     mDispatchedCompositionString.Truncate();
 
     if (mProcessingKeyEvent && !mKeyDownEventWasSent &&
@@ -1126,6 +1134,7 @@ nsGtkIMModule::DispatchCompositionStart(GtkIMContext* aContext)
                                      mLastFocusedWindow);
     InitEvent(compEvent);
     nsCOMPtr<nsIWidget> kungFuDeathGrip = mLastFocusedWindow;
+    nsEventStatus status;
     mLastFocusedWindow->DispatchEvent(&compEvent, status);
     if (static_cast<nsWindow*>(kungFuDeathGrip.get())->IsDestroyed() ||
         kungFuDeathGrip != mLastFocusedWindow) {
@@ -1167,15 +1176,12 @@ nsGtkIMModule::DispatchCompositionChangeEvent(
     // Store the selected string which will be removed by following
     // compositionchange event.
     if (mCompositionState == eCompositionState_CompositionStartDispatched) {
-        // XXX We should assume, for now, any web applications don't change
-        //     selection at handling this compositionchange event.
-        WidgetQueryContentEvent querySelectedTextEvent(true,
-                                                       NS_QUERY_SELECTED_TEXT,
-                                                       mLastFocusedWindow);
-        mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
-        if (querySelectedTextEvent.mSucceeded) {
-            mSelectedString = querySelectedTextEvent.mReply.mString;
-            mCompositionStart = querySelectedTextEvent.mReply.mOffset;
+        if (NS_WARN_IF(!EnsureToCacheSelection(&mSelectedString))) {
+            // XXX How should we behave in this case??
+        } else {
+            // XXX We should assume, for now, any web applications don't change
+            //     selection at handling this compositionchange event.
+            mCompositionStart = mSelection.mOffset;
         }
     }
 
@@ -1194,6 +1200,14 @@ nsGtkIMModule::DispatchCompositionChangeEvent(
 
     mCompositionState = eCompositionState_CompositionChangeEventDispatched;
 
+    // We cannot call SetCursorPosition for e10s-aware.
+    // DispatchEvent is async on e10s, so composition rect isn't updated now
+    // on tab parent.
+    mLayoutChanged = false;
+    mCompositionTargetRange.mOffset = targetOffset;
+    mCompositionTargetRange.mLength =
+        compositionChangeEvent.mRanges->TargetClauseLength();
+
     mLastFocusedWindow->DispatchEvent(&compositionChangeEvent, status);
     if (lastFocusedWindow->IsDestroyed() ||
         lastFocusedWindow != mLastFocusedWindow) {
@@ -1202,12 +1216,6 @@ nsGtkIMModule::DispatchCompositionChangeEvent(
              "compositionchange event"));
         return false;
     }
-
-    // We cannot call SetCursorPosition for e10s-aware.
-    // DispatchEvent is async on e10s, so composition rect isn't updated now
-    // on tab parent.
-    mCompositionTargetOffset = targetOffset;
-
     return true;
 }
 
@@ -1249,7 +1257,7 @@ nsGtkIMModule::DispatchCompositionCommitEvent(
                                        NS_COMPOSITION_COMMIT_AS_IS;
     mCompositionState = eCompositionState_NotComposing;
     mCompositionStart = UINT32_MAX;
-    mCompositionTargetOffset = UINT32_MAX;
+    mCompositionTargetRange.Clear();
     mDispatchedCompositionString.Truncate();
 
     WidgetCompositionEvent compositionCommitEvent(true, message,
@@ -1404,16 +1412,19 @@ nsGtkIMModule::CreateTextRangeArray(GtkIMContext* aContext,
 }
 
 void
-nsGtkIMModule::SetCursorPosition(GtkIMContext* aContext,
-                                 uint32_t aTargetOffset)
+nsGtkIMModule::SetCursorPosition(GtkIMContext* aContext)
 {
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
-        ("GtkIMModule(%p): SetCursorPosition, aContext=%p, aTargetOffset=%u",
-         this, aContext, aTargetOffset));
+        ("GtkIMModule(%p): SetCursorPosition, aContext=%p, "
+         "mCompositionTargetRange={ mOffset=%u, mLength=%u }"
+         "mSelection.mWritingMode=%s",
+         this, aContext, mCompositionTargetRange.mOffset,
+         mCompositionTargetRange.mLength,
+         GetWritingModeName(mSelection.mWritingMode).get()));
 
-    if (aTargetOffset == UINT32_MAX) {
+    if (!mCompositionTargetRange.IsValid()) {
         MOZ_LOG(gGtkIMLog, LogLevel::Info,
-            ("    FAILED, aTargetOffset is wrong offset"));
+            ("    FAILED, mCompositionTargetRange is invalid"));
         return;
     }
 
@@ -1431,7 +1442,15 @@ nsGtkIMModule::SetCursorPosition(GtkIMContext* aContext,
 
     WidgetQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT,
                                      mLastFocusedWindow);
-    charRect.InitForQueryTextRect(aTargetOffset, 1);
+    if (mSelection.mWritingMode.IsVertical()) {
+        // For preventing the candidate window to overlap the target clause,
+        // we should set fake (typically, very tall) caret rect.
+        uint32_t length = mCompositionTargetRange.mLength ?
+            mCompositionTargetRange.mLength : 1;
+        charRect.InitForQueryTextRect(mCompositionTargetRange.mOffset, length);
+    } else {
+        charRect.InitForQueryTextRect(mCompositionTargetRange.mOffset, 1);
+    }
     InitEvent(charRect);
     nsEventStatus status;
     mLastFocusedWindow->DispatchEvent(&charRect, status);
@@ -1440,6 +1459,7 @@ nsGtkIMModule::SetCursorPosition(GtkIMContext* aContext,
             ("    FAILED, NS_QUERY_TEXT_RECT was failed"));
         return;
     }
+
     nsWindow* rootWindow =
         static_cast<nsWindow*>(mLastFocusedWindow->GetTopLevelWidget());
 
@@ -1483,14 +1503,14 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, uint32_t& aCursorPos)
     // current selection.
     if (!EditorHasCompositionString()) {
         // Query cursor position & selection
-        WidgetQueryContentEvent querySelectedTextEvent(true,
-                                                       NS_QUERY_SELECTED_TEXT,
-                                                       mLastFocusedWindow);
-        mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
-        NS_ENSURE_TRUE(querySelectedTextEvent.mSucceeded, NS_ERROR_FAILURE);
+        if (NS_WARN_IF(!EnsureToCacheSelection())) {
+            MOZ_LOG(gGtkIMLog, LogLevel::Info,
+                ("    FAILED, due to no valid selection information"));
+            return NS_ERROR_FAILURE;
+        }
 
-        selOffset = querySelectedTextEvent.mReply.mOffset;
-        selLength = querySelectedTextEvent.mReply.mString.Length();
+        selOffset = mSelection.mOffset;
+        selLength = mSelection.mLength;
     }
 
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
@@ -1588,14 +1608,12 @@ nsGtkIMModule::DeleteText(GtkIMContext* aContext,
             return NS_ERROR_FAILURE;
         }
     } else {
-        // Query cursor position & selection
-        WidgetQueryContentEvent querySelectedTextEvent(true,
-                                                       NS_QUERY_SELECTED_TEXT,
-                                                       mLastFocusedWindow);
-        lastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
-        NS_ENSURE_TRUE(querySelectedTextEvent.mSucceeded, NS_ERROR_FAILURE);
-
-        selOffset = querySelectedTextEvent.mReply.mOffset;
+        if (NS_WARN_IF(!EnsureToCacheSelection())) {
+            MOZ_LOG(gGtkIMLog, LogLevel::Info,
+                ("    FAILED, due to no valid selection information"));
+            return NS_ERROR_FAILURE;
+        }
+        selOffset = mSelection.mOffset;
     }
 
     // Get all text contents of the focused editor
@@ -1717,4 +1735,78 @@ void
 nsGtkIMModule::InitEvent(WidgetGUIEvent& aEvent)
 {
     aEvent.time = PR_Now() / 1000;
+}
+
+bool
+nsGtkIMModule::EnsureToCacheSelection(nsAString* aSelectedString)
+{
+    if (aSelectedString) {
+        aSelectedString->Truncate();
+    }
+
+    if (mSelection.IsValid() &&
+        (!mSelection.Collapsed() || !aSelectedString)) {
+       return true;
+    }
+
+    if (NS_WARN_IF(!mLastFocusedWindow)) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Error,
+                ("GtkIMModule(%p): EnsureToCacheSelection(), FAILED, due to "
+                 "no focused window", this));
+        return false;
+    }
+
+    nsEventStatus status;
+    WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT,
+                                      mLastFocusedWindow);
+    InitEvent(selection);
+    mLastFocusedWindow->DispatchEvent(&selection, status);
+    if (NS_WARN_IF(!selection.mSucceeded)) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Error,
+                ("GtkIMModule(%p): EnsureToCacheSelection(), FAILED, due to "
+                 "failure of query selection event", this));
+        return false;
+    }
+
+    mSelection.Assign(selection);
+    if (!mSelection.IsValid()) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Error,
+                ("GtkIMModule(%p): EnsureToCacheSelection(), FAILED, due to "
+                 "failure of query selection event (invalid result)", this));
+        return false;
+    }
+
+    if (!mSelection.Collapsed() && aSelectedString) {
+        aSelectedString->Assign(selection.mReply.mString);
+    }
+
+    MOZ_LOG(gGtkIMLog, LogLevel::Debug,
+            ("GtkIMModule(%p): EnsureToCacheSelection(), Succeeded, mSelection="
+             "{ mOffset=%u, mLength=%u, mWritingMode=%s }",
+             this, mSelection.mOffset, mSelection.mLength,
+             GetWritingModeName(mSelection.mWritingMode).get()));
+    return true;
+}
+
+/******************************************************************************
+ * nsGtkIMModule::Selection
+ ******************************************************************************/
+
+void
+nsGtkIMModule::Selection::Assign(const IMENotification& aIMENotification)
+{
+    MOZ_ASSERT(aIMENotification.mMessage == NOTIFY_IME_OF_SELECTION_CHANGE);
+    mOffset = aIMENotification.mSelectionChangeData.mOffset;
+    mLength = aIMENotification.mSelectionChangeData.mLength;
+    mWritingMode = aIMENotification.mSelectionChangeData.GetWritingMode();
+}
+
+void
+nsGtkIMModule::Selection::Assign(const WidgetQueryContentEvent& aEvent)
+{
+    MOZ_ASSERT(aEvent.message == NS_QUERY_SELECTED_TEXT);
+    MOZ_ASSERT(aEvent.mSucceeded);
+    mOffset = aEvent.mReply.mOffset;
+    mLength = aEvent.mReply.mString.Length();
+    mWritingMode = aEvent.GetWritingMode();
 }

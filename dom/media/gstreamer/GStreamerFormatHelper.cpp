@@ -8,12 +8,17 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsString.h"
 #include "GStreamerLoader.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 
 #define ENTRY_FORMAT(entry) entry[0]
 #define ENTRY_CAPS(entry) entry[1]
 
 namespace mozilla {
+
+extern PRLogModuleInfo* gMediaDecoderLog;
+#define LOG(msg, ...) \
+    MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, ("GStreamerFormatHelper " msg, ##__VA_ARGS__))
 
 GStreamerFormatHelper* GStreamerFormatHelper::gInstance = nullptr;
 bool GStreamerFormatHelper::sLoadOK = false;
@@ -236,6 +241,7 @@ GStreamerFormatHelper::IsPluginFeatureBlacklisted(GstPluginFeature *aFeature)
 
   for (unsigned int i = 0; i < G_N_ELEMENTS(sPluginBlacklist); i++) {
     if (!strcmp(factoryName, sPluginBlacklist[i])) {
+      LOG("rejecting disabled plugin %s", factoryName);
       return true;
     }
   }
