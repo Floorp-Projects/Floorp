@@ -56,6 +56,7 @@ enum OperatingSystem {
   DRIVER_OS_OS_X_10_9,
   DRIVER_OS_OS_X_10_10,
   DRIVER_OS_ANDROID,
+  DRIVER_OS_IOS,
   DRIVER_OS_ALL
 };
 
