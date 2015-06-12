@@ -7,6 +7,12 @@
         android:title="@string/fxaccount_status_signed_in_as" >
         <Preference
             android:editable="false"
+            android:key="profile"
+            android:icon="@drawable/sync_avatar_default"
+            android:persistent="false"
+            android:title="" />
+        <Preference
+            android:editable="false"
             android:key="email"
             android:persistent="false"
             android:title="@string/fxaccount_email_hint" />

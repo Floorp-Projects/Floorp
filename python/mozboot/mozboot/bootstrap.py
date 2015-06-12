@@ -64,7 +64,7 @@ class Bootstrapper(object):
         if sys.platform.startswith('linux'):
             distro, version, dist_id = platform.linux_distribution()
 
-            if distro == 'CentOS':
+            if distro in ('CentOS', 'CentOS Linux'):
                 cls = CentOSBootstrapper
             elif distro in ('Debian', 'debian'):
                 cls = DebianBootstrapper

@@ -21,6 +21,7 @@
 namespace mozilla {
 namespace plugins {
 
+struct ParentNPObject;
 class PluginInstanceParent;
 class PluginModuleParent;
 
@@ -168,7 +169,7 @@ struct AsyncNPObject : NPObject
   NPObject* GetRealObject();
 
   nsRefPtr<PluginAsyncSurrogate>  mSurrogate;
-  NPObject*                       mRealObject;
+  ParentNPObject*                 mRealObject;
 };
 
 class MOZ_STACK_CLASS PushSurrogateAcceptCalls

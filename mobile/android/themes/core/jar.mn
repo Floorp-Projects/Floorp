@@ -45,7 +45,7 @@ chrome.jar:
 #
 
 #ifdef NIGHTLY_BUILD
-* skin/aboutPasswords.css                   (aboutPasswords.css)
+* skin/aboutLogins.css                      (aboutLogins.css)
 #endif
 
   skin/images/search.png                    (images/search.png)

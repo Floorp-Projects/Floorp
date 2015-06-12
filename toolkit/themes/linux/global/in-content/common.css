@@ -78,6 +78,13 @@ xul|*.radio-label-box {
   -moz-appearance: none;
 }
 
+/* Override OS-theme-based color to make it visible
+   on dark color themes. */
+xul|radio:not([disabled="true"]):hover,
+xul|checkbox:not([disabled="true"]):hover {
+  color: var(--in-content-text-color);
+}
+
 xul|*.numberbox-input-box {
   -moz-appearance: none;
   border-width: 0;
@@ -91,3 +98,20 @@ xul|*.inline-link:-moz-focusring {
 xul|spinbuttons {
   -moz-appearance: none;
 }
+
+xul|treechildren::-moz-tree-row(multicol, odd) {
+  background-color: var(--in-content-box-background-odd);
+}
+
+/* These rules are duplicated from common.inc.css
+ * because above -moz-tree-row(multicol, odd) rule 
+ * overrides also hover/selected states. 
+ */
+xul|treechildren::-moz-tree-row(hover) {
+  background-color: var(--in-content-item-hover);
+}
+
+xul|treechildren::-moz-tree-row(selected) {
+  background-color: var(--in-content-item-selected);
+}
+

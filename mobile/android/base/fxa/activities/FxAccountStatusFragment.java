@@ -95,6 +95,7 @@ public class FxAccountStatusFragment
   private int debugClickCount = 0;
 
   protected PreferenceCategory accountCategory;
+  protected Preference profilePreference;
   protected Preference emailPreference;
   protected Preference authServerPreference;
 
@@ -160,7 +161,13 @@ public class FxAccountStatusFragment
     addPreferencesFromResource(R.xml.fxaccount_status_prefscreen);
 
     accountCategory = (PreferenceCategory) ensureFindPreference("signed_in_as_category");
+    profilePreference = ensureFindPreference("profile");
     emailPreference = ensureFindPreference("email");
+    if (AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
+      accountCategory.removePreference(emailPreference);
+    } else {
+      accountCategory.removePreference(profilePreference);
+    }
     authServerPreference = ensureFindPreference("auth_server");
 
     needsPasswordPreference = ensureFindPreference("needs_credentials");
@@ -184,7 +191,11 @@ public class FxAccountStatusFragment
       ALWAYS_SHOW_SYNC_SERVER = true;
     }
 
-    emailPreference.setOnPreferenceClickListener(this);
+    if (AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
+      profilePreference.setOnPreferenceClickListener(this);
+    } else {
+      emailPreference.setOnPreferenceClickListener(this);
+    }
 
     needsPasswordPreference.setOnPreferenceClickListener(this);
     needsVerificationPreference.setOnPreferenceClickListener(this);
@@ -222,7 +233,8 @@ public class FxAccountStatusFragment
 
   @Override
   public boolean onPreferenceClick(Preference preference) {
-    if (preference == emailPreference) {
+    final Preference personalInformationPreference = AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES ? profilePreference : emailPreference;
+    if (preference == personalInformationPreference) {
       debugClickCount += 1;
       if (NUMBER_OF_CLICKS_TO_TOGGLE_DEBUG > 0 && debugClickCount >= NUMBER_OF_CLICKS_TO_TOGGLE_DEBUG) {
         debugClickCount = 0;
@@ -493,7 +505,15 @@ public class FxAccountStatusFragment
       throw new IllegalArgumentException("fxAccount must not be null");
     }
 
-    emailPreference.setTitle(fxAccount.getEmail());
+    if (AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
+      if (AppConstants.Versions.feature11Plus) {
+        profilePreference.setIcon(getResources().getDrawable(R.drawable.sync_avatar_default));
+      }
+      profilePreference.setTitle(fxAccount.getAndroidAccount().name);
+    } else {
+      emailPreference.setTitle(fxAccount.getEmail());
+    }
+
     updateAuthServerPreference();
     updateSyncServerPreference();
 

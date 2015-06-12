@@ -5,12 +5,17 @@ task:
   metadata:
     name: '[TC] Gaia Python Integration Sanity Tests'
     description: Gaia Python Integration Sanity Tests run
-  workerType: testdroid-device
+  workerType: flame-kk-1-sim
   retries: 0
 
   payload:
-    env:
-      DEVICE_CAPABILITIES: '{"type":"flame","memory":"319","sims": "1","build":"{{{img_url}}}"}'
+    capabilities:
+      devices:
+        phone:
+          type: 'flame'
+          memory: '319'
+          sims: '1'
+          build: '{{{img_url}}}'
     features:
       testdroidProxy: true
     maxRunTime: 7200

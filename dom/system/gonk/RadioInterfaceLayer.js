@@ -732,8 +732,6 @@ WorkerMessenger.prototype = {
       quirks: {
         callstateExtraUint32:
           libcutils.property_get("ro.moz.ril.callstate_extra_int", "false") === "true",
-        v5Legacy:
-          libcutils.property_get("ro.moz.ril.v5_legacy", "true") === "true",
         requestUseDialEmergencyCall:
           libcutils.property_get("ro.moz.ril.dial_emergency_call", "false") === "true",
         simAppStateExtraFields:

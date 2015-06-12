@@ -28,7 +28,7 @@ const DEFAULT_SORTING_PREDICATE = (frameA, frameB) => {
     }
     return dataA.selfPercentage < dataB.selfPercentage ? 1 : - 1;
   }
-  return dataA.samples < dataB.samples ? 1 : -1;
+  return dataA.totalPercentage < dataB.totalPercentage ? 1 : -1;
 };
 
 const DEFAULT_AUTO_EXPAND_DEPTH = 3; // depth
@@ -358,54 +358,28 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
 
     // Leaf nodes in an inverted tree don't have to do anything special.
     let isLeaf = this._level === 0;
+    let totalSamples = this.root.frame.samples;
+    let totalDuration = this.root.frame.duration;
 
-    if (this.inverted && !isLeaf && this.parent != null) {
-      let calleeData = this.parent.getDisplayedData();
-      // Percentage of time that this frame called the callee
-      // in this branch
-      let callerPercentage = this.frame.samples / calleeData.samples;
+    // Self duration, cost
+    if (this.visibleCells.selfDuration) {
+      data.selfDuration = this.frame.youngestFrameSamples / totalSamples * totalDuration;
+    }
+    if (this.visibleCells.selfPercentage) {
+      data.selfPercentage = this.frame.youngestFrameSamples / totalSamples * 100;
+    }
 
-      // Self/total duration.
-      if (this.visibleCells.duration) {
-        data.totalDuration = calleeData.totalDuration * callerPercentage;
-      }
-      if (this.visibleCells.selfDuration) {
-        data.selfDuration = 0;
-      }
+    // Total duration, cost
+    if (this.visibleCells.duration) {
+      data.totalDuration = this.frame.samples / totalSamples * totalDuration;
+    }
+    if (this.visibleCells.percentage) {
+      data.totalPercentage = this.frame.samples / totalSamples * 100;
+    }
 
-      // Self/total samples percentage.
-      if (this.visibleCells.percentage) {
-        data.totalPercentage = calleeData.totalPercentage * callerPercentage;
-      }
-      if (this.visibleCells.selfPercentage) {
-        data.selfPercentage = 0;
-      }
-
-      // Raw samples.
-      if (this.visibleCells.samples) {
-        data.samples = this.frame.samples;
-      }
-    } else {
-      // Self/total duration.
-      if (this.visibleCells.duration) {
-        data.totalDuration = this.frame.duration;
-      }
-      if (this.visibleCells.selfDuration) {
-        data.selfDuration = this.root.frame.selfDuration[this.frame.key];
-      }
-
-      // Self/total samples percentage.
-      if (this.visibleCells.percentage) {
-        data.totalPercentage = this.frame.samples / this.root.frame.samples * 100;
-      }
-      if (this.visibleCells.selfPercentage) {
-        data.selfPercentage = this.root.frame.selfCount[this.frame.key] / this.root.frame.samples * 100;
-      }
-
-      // Raw samples.
-      if (this.visibleCells.samples) {
-        data.samples = this.frame.samples;
-      }
+    // Raw samples.
+    if (this.visibleCells.samples) {
+      data.samples = this.frame.youngestFrameSamples;
     }
 
     // Self/total allocations count.

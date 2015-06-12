@@ -9,6 +9,7 @@ import java.util.Collection;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.overlays.service.sharemethods.ParcelableClientRecord;
 import org.mozilla.gecko.overlays.ui.SendTabList.State;
 
@@ -22,19 +23,19 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClientRecord> {
+public class SendTabDeviceListArrayAdapter extends ArrayAdapter<RemoteClient> {
     @SuppressWarnings("unused")
     private static final String LOGTAG = "GeckoSendTabAdapter";
 
     private State currentState;
 
     // String to display when in a "button-like" special state. Instead of using a
-    // ParcelableClientRecord we override the rendering using this string.
+    // RemoteClient we override the rendering using this string.
     private String dummyRecordName;
 
     private final SendTabTargetSelectedListener listener;
 
-    private Collection<ParcelableClientRecord> records;
+    private Collection<RemoteClient> records;
 
     // The AlertDialog to show in the event the record is pressed while in the SHOW_DEVICES state.
     // This will show the user a prompt to select a device from a longer list of devices.
@@ -53,12 +54,12 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClient
      * Get an array of the contents of this adapter were it in the LIST state.
      * Useful for determining the "real" contents of the adapter.
      */
-    public ParcelableClientRecord[] toArray() {
-        return records.toArray(new ParcelableClientRecord[records.size()]);
+    public RemoteClient[] toArray() {
+        return records.toArray(new RemoteClient[records.size()]);
     }
 
-    public void setClientRecordList(Collection<ParcelableClientRecord> clientRecordList) {
-        records = clientRecordList;
+    public void setRemoteClientsList(Collection<RemoteClient> remoteClientsList) {
+        records = remoteClientsList;
         updateRecordList();
     }
 
@@ -77,7 +78,7 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClient
         if (AppConstants.Versions.feature11Plus) {
              addAll(records);
         } else {
-            for (ParcelableClientRecord record : records) {
+            for (RemoteClient record : records) {
                 add(record);
             }
         }
@@ -122,13 +123,13 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClient
         }
 
         // The remaining states delegate to the SentTabTargetSelectedListener.
-        final ParcelableClientRecord clientRecord = getItem(position);
+        final RemoteClient remoteClient = getItem(position);
         if (currentState == State.LIST) {
-            final Drawable clientIcon = context.getResources().getDrawable(getImage(clientRecord));
-            row.setText(clientRecord.name);
+            final Drawable clientIcon = context.getResources().getDrawable(getImage(remoteClient));
+            row.setText(remoteClient.name);
             row.setDrawable(clientIcon);
 
-            final String listenerGUID = clientRecord.guid;
+            final String listenerGUID = remoteClient.guid;
 
             row.setOnClickListener(new OnClickListener() {
                 @Override
@@ -148,8 +149,8 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClient
         return row;
     }
 
-    private static int getImage(ParcelableClientRecord record) {
-        if ("mobile".equals(record.type)) {
+    private static int getImage(RemoteClient record) {
+        if ("mobile".equals(record.deviceType)) {
             return R.drawable.device_mobile;
         }
 

@@ -12,6 +12,8 @@ if ! test $MOZHARNESS_CONFIG; then
   MOZHARNESS_CONFIG=b2g/taskcluster-phone.py
 fi
 
+rm -rf $WORKSPACE/B2G/upload/
+
 ./mozharness/scripts/b2g_build.py \
   --config $MOZHARNESS_CONFIG \
   "$debug_flag" \

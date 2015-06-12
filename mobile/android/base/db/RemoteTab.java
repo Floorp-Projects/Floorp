@@ -19,10 +19,12 @@ import android.os.Parcelable;
 public class RemoteTab implements Parcelable {
     public final String title;
     public final String url;
+    public final long lastUsed;
 
-    public RemoteTab(String title, String url) {
+    public RemoteTab(String title, String url, long lastUsed) {
         this.title = title;
         this.url = url;
+        this.lastUsed = lastUsed;
     }
 
     @Override
@@ -34,6 +36,7 @@ public class RemoteTab implements Parcelable {
     public void writeToParcel(Parcel parcel, int flags) {
         parcel.writeString(title);
         parcel.writeString(url);
+        parcel.writeLong(lastUsed);
     }
 
     public static final Creator<RemoteTab> CREATOR = new Creator<RemoteTab>() {
@@ -41,8 +44,8 @@ public class RemoteTab implements Parcelable {
         public RemoteTab createFromParcel(final Parcel source) {
             final String title = source.readString();
             final String url = source.readString();
-
-            return new RemoteTab(title, url);
+            final long lastUsed = source.readLong();
+            return new RemoteTab(title, url, lastUsed);
         }
 
         @Override

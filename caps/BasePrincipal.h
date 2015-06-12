@@ -11,7 +11,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsJSPrincipals.h"
 
-#include "mozilla/dom/SystemDictionariesBinding.h"
+#include "mozilla/dom/ChromeUtilsBinding.h"
 
 class nsIContentSecurityPolicy;
 class nsIObjectOutputStream;
@@ -28,6 +28,8 @@ public:
     mAppId = aAppId;
     mInBrowser = aInBrowser;
   }
+  explicit OriginAttributes(const OriginAttributesDictionary& aOther)
+    : OriginAttributesDictionary(aOther) {}
 
   bool operator==(const OriginAttributes& aOther) const
   {
@@ -44,6 +46,8 @@ public:
   // returns an empty string.
   void CreateSuffix(nsACString& aStr) const;
   bool PopulateFromSuffix(const nsACString& aStr);
+
+  void CookieJar(nsACString& aStr);
 };
 
 /*

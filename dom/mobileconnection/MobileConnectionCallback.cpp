@@ -192,6 +192,14 @@ MobileConnectionCallback::NotifyGetCallBarringSuccess(uint16_t aProgram,
 }
 
 NS_IMETHODIMP
+MobileConnectionCallback::NotifyGetCallWaitingSuccess(uint16_t aServiceClass)
+{
+  return (aServiceClass & nsIMobileConnection::ICC_SERVICE_CLASS_VOICE)
+           ? NotifySuccess(JS::TrueHandleValue)
+           : NotifySuccess(JS::FalseHandleValue);
+}
+
+NS_IMETHODIMP
 MobileConnectionCallback::NotifyGetClirStatusSuccess(uint16_t aN, uint16_t aM)
 {
   MozClirStatus result;

@@ -73,6 +73,11 @@ public:
                                                          JSContext* cx,
                                                          const nsAString& filePath,
                                                          ErrorResult& rv);
+
+  static void
+  OriginAttributesToCookieJar(dom::GlobalObject& aGlobal,
+                              const dom::OriginAttributesDictionary& aAttrs,
+                              nsCString& aCookieJar);
 };
 
 } // namespace devtools
