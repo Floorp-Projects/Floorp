@@ -81,6 +81,7 @@ public:
    */
   static uint32_t randomUint32LessThan(uint32_t aBound)
   {
+    MOZ_ASSERT(aBound != 0);
     return uint32_t(rand()) % aBound;
   }
 };
