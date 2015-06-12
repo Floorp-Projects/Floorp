@@ -259,7 +259,7 @@ UniquePtr<char[]> TableTicker::ToJSON(float aSinceTime)
 }
 
 struct SubprocessClosure {
-  explicit SubprocessClosure(SpliceableJSONWriter *aWriter)
+  explicit SubprocessClosure(SpliceableJSONWriter* aWriter)
     : mWriter(aWriter)
   {}
 
