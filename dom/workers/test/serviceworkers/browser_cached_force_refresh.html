@@ -1,0 +1,17 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+</head>
+<body>
+<script type="text/javascript">
+addEventListener('load', function(event) {
+  var custom = new Event('cached-load', { bubbles: true });
+  document.dispatchEvent(custom);
+});
+</script>
+</body>
+</html>
