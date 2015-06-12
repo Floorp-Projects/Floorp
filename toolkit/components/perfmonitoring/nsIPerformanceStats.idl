@@ -17,12 +17,12 @@
 
 /**
  * Snapshot of the performance of a component, e.g. an add-on, a web
- * page, system built-ins, or the entire process itself.
+ * page, system built-ins, a module or the entire process itself.
  *
  * All values are monotonic and are updated only when
  * `nsIPerformanceStatsService.isStopwatchActive` is `true`.
  */
-[scriptable, uuid(47f8d36d-1d67-43cb-befd-d2f4720ac568)]
+[scriptable, uuid(1bc2d016-e9ae-4186-97c6-9478eddda245)]
 interface nsIPerformanceStats: nsISupports {
   /**
    * An identifier unique to the component.
@@ -31,6 +31,16 @@ interface nsIPerformanceStats: nsISupports {
    * but clients should not rely upon the format.
    */
   readonly attribute AString groupId;
+
+  /**
+   * If this component is part of a larger component, the larger
+   * component. Otherwise, null.
+   *
+   * As of this writing, there can be at most two levels of components:
+   * - compartments (a single module, iframe, etc.);
+   * - groups (an entire add-on, an entire webpage, etc.).
+   */
+  readonly attribute AString parentId;
 
   /**
    * The name of the component:
@@ -112,7 +122,7 @@ interface nsIPerformanceSnapshot: nsISupports {
   nsIPerformanceStats getProcessData();
 };
 
-[scriptable, builtinclass, uuid(0469e6af-95c3-4961-a385-4bc009128939)]
+[scriptable, builtinclass, uuid(60973d54-13e2-455c-a3c6-84dea5dfc8b9)]
 interface nsIPerformanceStatsService : nsISupports {
   /**
    * `true` if we should monitor CPOW, `false` otherwise.
@@ -123,6 +133,13 @@ interface nsIPerformanceStatsService : nsISupports {
    * `true` if we should monitor jank, `false` otherwise.
    */
   [implicit_jscontext] attribute bool isMonitoringJank;
+
+  /**
+   * `true` if all compartments need to be monitored individually,
+   * `false` if only performance groups (i.e. entire add-ons, entire
+   * webpages, etc.) need to be monitored.
+   */
+  [implicit_jscontext] attribute bool isMonitoringPerCompartment;
 
   /**
    * Capture a snapshot of the performance data.
