@@ -1,0 +1,158 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1173580
+-->
+<head>
+  <title>Test for layerization</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="helper_subframe_style.css"/>
+  <style>
+  #container {
+    display: flex;
+  }
+  .outer-frame {
+    height: 500px;
+    overflow: scroll;
+    flex-basis: 100%;
+    background: repeating-linear-gradient(#CCC, #CCC 100px, #BBB 100px, #BBB 200px);
+  }
+  #page-content {
+    height: 200%;
+  }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1173580">APZ layerization tests</a>
+<p id="display"></p>
+<div id="container">
+  <div id="outer1" class="outer-frame">
+    <div id="inner1" class="inner-frame">
+      <div class="inner-content"></div>
+    </div>
+  </div>
+  <div id="outer2" class="outer-frame">
+    <div id="inner2" class="inner-frame">
+      <div class="inner-content"></div>
+    </div>
+  </div>
+  <iframe id="outer3" class="outer-frame" src="helper_iframe1.html"></iframe>
+  <iframe id="outer4" class="outer-frame" src="helper_iframe2.html"></iframe>
+</div>
+<!-- The page-content div ensures the page is scrollable, so none of the
+     subframes are layerized by the optimization that layerizes the
+     primary async-scrollable frame on page load. -->
+<div id="page-content"></div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+// Scroll the mouse wheel over |element|.
+function scrollWheelOver(element) {
+  var scale = window.devicePixelRatio;
+  var rect = element.getBoundingClientRect();
+  var x = (rect.left + 10) * scale;
+  var y = (rect.top + 10) * scale;
+  // Move the mouse to the desired wheel location.
+  // Not doing so can result in the wheel events from two consecutive
+  // scrollWheelOver() calls on different elements being incorrectly considered
+  // as part of the same wheel transaction.
+  // We also wait for the mouse move event to be processed before sending the
+  // wheel event, otherwise there is a chance they might get reordered, and
+  // we have the transaction problem again.
+  synthesizeNativeMouseMoveAndWaitForMoveEvent(element, x, y, function() {
+    synthesizeNativeWheelAndWaitForScrollEvent(element, x, y, 0, -10, driveTest);
+  });
+}
+
+var gTestContinuation = null;
+var utils;
+
+// Return whether the element with id |elementId| has been layerized.
+// Assumes |elementId| will be present in the content description for the
+// element, and not in the content descriptions of other elements.
+function isLayerized(elementId) {
+  var contentTestData = utils.getContentAPZTestData();
+  ok(contentTestData.paints.length > 0, "expected at least one paint");
+  var seqno = contentTestData.paints[contentTestData.paints.length - 1].sequenceNumber;
+  contentTestData = convertTestData(contentTestData);
+  var paint = contentTestData.paints[seqno];
+  for (var scrollId in paint) {
+    if ("contentDescription" in paint[scrollId]) {
+      if (paint[scrollId]["contentDescription"].includes(elementId)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function* runTest() {
+  utils = SpecialPowers.getDOMWindowUtils(window);
+
+  // Initially, nothing should be layerized.
+  ok(!isLayerized('outer1'), "initially 'outer1' should not be layerized");
+  ok(!isLayerized('inner1'), "initially 'inner1' should not be layerized");
+  ok(!isLayerized('outer2'), "initially 'outer2' should not be layerized");
+  ok(!isLayerized('inner2'), "initially 'inner2' should not be layerized");
+  ok(!isLayerized('outer3'), "initially 'outer3' should not be layerized");
+  ok(!isLayerized('inner3'), "initially 'inner3' should not be layerized");
+  ok(!isLayerized('outer4'), "initially 'outer4' should not be layerized");
+  ok(!isLayerized('inner4'), "initially 'inner4' should not be layerized");
+
+  // Scrolling over outer1 should layerize outer1, but not inner1.
+  yield scrollWheelOver(document.getElementById('outer1'));
+  ok(isLayerized('outer1'), "scrolling 'outer1' should cause it to be layerized");
+  ok(!isLayerized('inner1'), "scrolling 'outer1' should not cause 'inner1' to be layerized");
+
+  // Scrolling over inner2 should layerize both outer2 and inner2.
+  yield scrollWheelOver(document.getElementById('inner2'));
+  ok(isLayerized('inner2'), "scrolling 'inner2' should cause it to be layerized");
+  ok(isLayerized('outer2'), "scrolling 'inner2' should also cause 'outer2' to be layerized");
+
+  // The second half of the test repeats the same checks as the first half,
+  // but with an iframe as the outer scrollable frame.
+
+  // Scrolling over outer3 should layerize outer3, but not inner3.
+  yield scrollWheelOver(document.getElementById('outer3').contentDocument.documentElement);
+  ok(isLayerized('outer3'), "scrolling 'outer3' should cause it to be layerized");
+  ok(!isLayerized('inner3'), "scrolling 'outer3' should not cause 'inner3' to be layerized");
+
+  // Scrolling over outer4 should layerize both outer4 and inner4.
+  yield scrollWheelOver(document.getElementById('outer4').contentDocument.getElementById('inner4'));
+  ok(isLayerized('inner4'), "scrolling 'inner4' should cause it to be layerized");
+  ok(isLayerized('outer4'), "scrolling 'inner4' should also cause 'outer4' to be layerized");
+}
+
+function driveTest() {
+  if (!gTestContinuation) {
+    gTestContinuation = runTest();
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    SimpleTest.finish();
+  }
+}
+
+function startTest() {
+  // This test requires APZ - if it's not enabled, skip it.
+  var apzEnabled = SpecialPowers.getBoolPref("layers.async-pan-zoom.enabled");
+  if (!apzEnabled) {
+    ok(true, "APZ not enabled, skipping test");
+    SimpleTest.finish();
+    return;
+  }
+
+  driveTest();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(startTest, window);
+
+</script>
+</pre>
+</body>
+</html>
