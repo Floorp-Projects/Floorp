@@ -918,4 +918,5 @@ pref("consoleservice.logcat", true);
 // Enable Service Workers for Android on non-release builds
 #ifndef RELEASE_BUILD
 pref("dom.serviceWorkers.enabled", true);
+pref("dom.serviceWorkers.interception.enabled", true);
 #endif

@@ -1,0 +1,96 @@
+
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1173389 - Test fetch interception feature detection.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function register() {
+    // Randomness required to prevent reusing existing registration.
+    return navigator.serviceWorker.register("interception_featuredetect.js",
+                                            { scope: "featuredetect/" + Math.random() });
+  }
+
+  function registerWithPrefDisabled() {
+    return new Promise(function(resolve, reject) {
+      SpecialPowers.pushPrefEnv(
+        {"set": [["dom.serviceWorkers.interception.enabled", false]]},
+        function() {
+          register().then(function(v) {
+              ok(false, "Registration should fail when interception is disabled.");
+              reject();
+            }, function(e) {
+              ok(true, "Registration should fail when interception is disabled.");
+              resolve();
+            });
+        });
+    });
+  }
+
+  function registerWithPrefEnabled() {
+    return new Promise(function(resolve, reject) {
+      SpecialPowers.pushPrefEnv(
+        {"set": [["dom.serviceWorkers.interception.enabled", true]]},
+        function() {
+          register().then(function(v) {
+              ok(true, "Registration should succeed when interception is enabled.");
+              resolve();
+            }, function(e) {
+              ok(false, "Registration should succeed when interception is enabled.");
+              reject()
+            });
+        });
+    });
+  }
+
+  function unregister() {
+    return navigator.serviceWorker.getRegistrations().then(function(regs) {
+      var unregs = [];
+      regs.forEach(function(reg) {
+        if (reg.scope.indexOf("featuredetect") > -1) {
+          unregs.push(reg.unregister());
+        }
+      })
+
+      return Promise.all(unregs);
+    });
+  }
+
+  function runTest() {
+    Promise.resolve()
+      .then(registerWithPrefDisabled)
+      .then(registerWithPrefEnabled)
+      .then(registerWithPrefDisabled)
+      .then(unregister)
+      // put more tests here.
+      .then(function() {
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.interception.enabled", false],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+
