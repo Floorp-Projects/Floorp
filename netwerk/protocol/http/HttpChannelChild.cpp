@@ -44,6 +44,9 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
+extern bool
+WillRedirect(const nsHttpResponseHead * response);
+
 namespace {
 
 const uint32_t kMaxFileDescriptorsPerMessage = 250;
@@ -2186,8 +2189,11 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
                                                   nsIInputStream* aSynthesizedInput,
                                                   nsIStreamListener* aStreamListener)
 {
-  // Intercepted responses should already be decoded.
-  SetApplyConversion(false);
+  // Intercepted responses should already be decoded.  If its a redirect,
+  // however, we want to respect the encoding of the final result instead.
+  if (!WillRedirect(aResponseHead)) {
+    SetApplyConversion(false);
+  }
 
   mResponseHead = aResponseHead;
   mSynthesizedResponse = true;
