@@ -1409,7 +1409,7 @@ PackPDU(const BluetoothUuid& aIn, BluetoothDaemonPDU& aPDU)
 nsresult
 PackPDU(const BluetoothGattId& aIn, BluetoothDaemonPDU& aPDU)
 {
-  nsresult rv = PackPDU(aIn.mUuid, aPDU);
+  nsresult rv = PackPDU(PackReversed<BluetoothUuid>(aIn.mUuid), aPDU);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1734,7 +1734,7 @@ nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattId& aOut)
 {
   /* unpack UUID */
-  nsresult rv = UnpackPDU(aPDU, aOut.mUuid);
+  nsresult rv = UnpackPDU(aPDU, UnpackReversed<BluetoothUuid>(aOut.mUuid));
   if (NS_FAILED(rv)) {
     return rv;
   }
