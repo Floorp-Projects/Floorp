@@ -167,9 +167,7 @@ MediaTaskQueue::BeginShutdown()
   MonitorAutoLock mon(mQueueMonitor);
   mIsShutdown = true;
   nsRefPtr<ShutdownPromise> p = mShutdownPromise.Ensure(__func__);
-  if (!mIsRunning) {
-    mShutdownPromise.Resolve(true, __func__);
-  }
+  MaybeResolveShutdown();
   mon.NotifyAll();
   return p;
 }
@@ -238,7 +236,7 @@ MediaTaskQueue::Runner::Run()
     MOZ_ASSERT(mQueue->mIsRunning);
     if (mQueue->mTasks.size() == 0) {
       mQueue->mIsRunning = false;
-      mQueue->mShutdownPromise.ResolveIfExists(true, __func__);
+      mQueue->MaybeResolveShutdown();
       mon.NotifyAll();
       return NS_OK;
     }
@@ -269,7 +267,7 @@ MediaTaskQueue::Runner::Run()
     if (mQueue->mTasks.size() == 0) {
       // No more events to run. Exit the task runner.
       mQueue->mIsRunning = false;
-      mQueue->mShutdownPromise.ResolveIfExists(true, __func__);
+      mQueue->MaybeResolveShutdown();
       mon.NotifyAll();
       return NS_OK;
     }
@@ -286,6 +284,7 @@ MediaTaskQueue::Runner::Run()
     MonitorAutoLock mon(mQueue->mQueueMonitor);
     mQueue->mIsRunning = false;
     mQueue->mIsShutdown = true;
+    mQueue->MaybeResolveShutdown();
     mon.NotifyAll();
   }
 
