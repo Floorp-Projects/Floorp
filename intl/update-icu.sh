@@ -53,8 +53,4 @@ svn info $1 | grep -v '^Revision: [[:digit:]]\+$' > ${icu_dir}/SVN-INFO
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-915735
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/suppress-warnings.diff
 
-exit 0
-
-patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/clang-cl.diff
-
 hg addremove ${icu_dir}
