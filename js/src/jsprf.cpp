@@ -12,8 +12,8 @@
 
 #include "jsprf.h"
 
-#include "mozilla/Vector.h"
 #include "mozilla/Snprintf.h"
+#include "mozilla/Vector.h"
 
 #include <stdarg.h>
 #include <stdio.h>
