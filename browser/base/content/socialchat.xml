@@ -160,12 +160,21 @@
         <parameter name="aTarget"/>
         <body><![CDATA[
           aTarget.setAttribute("label", this.contentDocument.title);
-          if (this.getAttribute("dark") == "true")
-            aTarget.setAttribute("dark", "true");
+
           aTarget.src = this.src;
           aTarget.content.setAttribute("origin", this.content.getAttribute("origin"));
           aTarget.content.popupnotificationanchor.className = this.content.popupnotificationanchor.className;
           aTarget.content.swapDocShells(this.content);
+        ]]></body>
+      </method>
+
+      <method name="setDecorationAttributes">
+        <parameter name="aTarget"/>
+        <body><![CDATA[
+          for (let attr of ["dark", "customSize"]) {
+            if (this.hasAttribute(attr))
+              aTarget.setAttribute(attr, this.getAttribute(attr));
+          }
         ]]></body>
       </method>
 
@@ -211,6 +220,8 @@
           let chatbar = win.document.getElementById("pinnedchats");
           let origin = this.content.getAttribute("origin");
           let cb = chatbar.openChat(origin, title, "about:blank");
+          this.setDecorationAttributes(cb);
+
           cb.promiseChatLoaded.then(
             () => {
               this.swapDocShells(cb);
@@ -224,6 +235,12 @@
               // more than one chat window isn't possible.
               chatbar.chatboxForURL.delete("about:blank");
               chatbar.chatboxForURL.set(this.src, Cu.getWeakReference(cb));
+
+              let attachEvent = new cb.contentWindow.CustomEvent("socialFrameAttached", {
+                bubbles: true,
+                cancelable: true,
+              });
+              cb.contentDocument.dispatchEvent(attachEvent);
 
               deferred.resolve(cb);
             }
@@ -457,8 +474,10 @@
           // These are from the CSS for the chatbox and must be kept in sync.
           // We can't use calcTotalWidthOf due to the transitions...
           const CHAT_WIDTH_OPEN = 260;
+          const CHAT_WIDTH_OPEN_ALT = 300;
           const CHAT_WIDTH_MINIMIZED = 160;
-          let openWidth = aChatbox.hasAttribute("large") ? 300 : CHAT_WIDTH_OPEN;
+          let openWidth = aChatbox.hasAttribute("customSize") ?
+            CHAT_WIDTH_OPEN_ALT : CHAT_WIDTH_OPEN;
 
           return aChatbox.minimized ? CHAT_WIDTH_MINIMIZED : openWidth;
         ]]></body>
@@ -684,17 +703,26 @@
             if (event.target != otherWin.document)
               return;
 
+            if (aChatbox.hasAttribute("customSize")) {
+              otherWin.document.getElementById("chat-window").
+                setAttribute("customSize", aChatbox.getAttribute("customSize"));
+            }
+
+            let document = aChatbox.contentDocument;
             let detachEvent = new aChatbox.contentWindow.CustomEvent("socialFrameDetached", {
               bubbles: true,
               cancelable: true,
             });
-            aChatbox.contentDocument.dispatchEvent(detachEvent);
 
             otherWin.removeEventListener("load", _chatLoad, true);
             let otherChatbox = otherWin.document.getElementById("chatter");
+            aChatbox.setDecorationAttributes(otherChatbox);
             aChatbox.swapDocShells(otherChatbox);
             aChatbox.close();
             chatbar.chatboxForURL.set(aChatbox.src, Cu.getWeakReference(otherChatbox));
+
+            // All processing is done, now we can fire the event.
+            document.dispatchEvent(detachEvent);
 
             deferred.resolve(otherChatbox);
           }, true);

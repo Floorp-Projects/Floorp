@@ -195,7 +195,6 @@ chatbox[dark=true] > .chat-titlebar > hbox > .chat-title {
 
 .chatbar-innerbox {
   background: transparent;
-  margin: -285px 0 0;
   overflow: hidden;
 }
 
