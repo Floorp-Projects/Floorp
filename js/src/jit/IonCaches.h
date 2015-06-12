@@ -243,7 +243,7 @@ class IonCache
     {
     }
 
-    virtual void disable();
+    void disable(IonScript* ion);
     inline bool isDisabled() const {
         return disabled_;
     }

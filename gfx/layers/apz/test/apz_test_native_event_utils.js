@@ -65,10 +65,22 @@ function synthesizeNativeWheelAndWaitForObserver(aElement, aX, aY, aDeltaX, aDel
 // Synthesizes a native mousewheel event and invokes the callback once the
 // wheel event is dispatched to the window. See synthesizeNativeWheel for
 // details on the parameters.
-function synthesizeNativeWheelAndWaitForEvent(aElement, aX, aY, aDeltaX, aDeltaY, aCallback) {
+function synthesizeNativeWheelAndWaitForWheelEvent(aElement, aX, aY, aDeltaX, aDeltaY, aCallback) {
   window.addEventListener("wheel", function wheelWaiter(e) {
     window.removeEventListener("wheel", wheelWaiter);
     setTimeout(aCallback, 0);
   });
+  return synthesizeNativeWheel(aElement, aX, aY, aDeltaX, aDeltaY);
+}
+
+// Synthesizes a native mousewheel event and invokes the callback once the
+// first resulting scroll event is dispatched to the window.
+// See synthesizeNativeWheel for details on the parameters.
+function synthesizeNativeWheelAndWaitForScrollEvent(aElement, aX, aY, aDeltaX, aDeltaY, aCallback) {
+  var useCapture = true;  // scroll events don't always bubble
+  window.addEventListener("scroll", function scrollWaiter(e) {
+    window.removeEventListener("scroll", scrollWaiter, useCapture);
+    setTimeout(aCallback, 0);
+  }, useCapture);
   return synthesizeNativeWheel(aElement, aX, aY, aDeltaX, aDeltaY);
 }

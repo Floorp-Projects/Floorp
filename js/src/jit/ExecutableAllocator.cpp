@@ -62,3 +62,8 @@ ExecutableAllocator::addSizeOfCode(JS::CodeSizes* sizes) const
     }
 }
 
+#ifdef TARGET_OS_IPHONE
+bool ExecutableAllocator::nonWritableJitCode = true;
+#else
+bool ExecutableAllocator::nonWritableJitCode = false;
+#endif

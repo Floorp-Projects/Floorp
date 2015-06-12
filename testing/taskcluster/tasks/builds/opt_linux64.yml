@@ -33,6 +33,8 @@ task:
       TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
       RELENGAPI_TOKEN: 'TODO' # 1164612: encrypt this secret
       NEED_XVFB: true
+      DIST_UPLOADS: 'jsshell-linux-x86_64.zip'
+      DIST_TARGET_UPLOADS: 'x-test.linux-x86_64.tar.bz2 linux-x86_64.tar.bz2 linux-x86_64.json tests.zip crashreporter-symbols.zip'
 
     maxRunTime: 36000
 

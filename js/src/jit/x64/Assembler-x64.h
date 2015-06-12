@@ -265,7 +265,7 @@ class Assembler : public AssemblerX86Shared
     using AssemblerX86Shared::vmovq;
 
     static uint8_t* PatchableJumpAddress(JitCode* code, size_t index);
-    static void PatchJumpEntry(uint8_t* entry, uint8_t* target);
+    static void PatchJumpEntry(uint8_t* entry, uint8_t* target, ReprotectCode reprotect);
 
     Assembler()
       : extendedJumpTable_(0)
@@ -794,15 +794,20 @@ class Assembler : public AssemblerX86Shared
 };
 
 static inline void
-PatchJump(CodeLocationJump jump, CodeLocationLabel label)
+PatchJump(CodeLocationJump jump, CodeLocationLabel label, ReprotectCode reprotect = DontReprotect)
 {
     if (X86Encoding::CanRelinkJump(jump.raw(), label.raw())) {
+        MaybeAutoWritableJitCode awjc(jump.raw() - 8, 8, reprotect);
         X86Encoding::SetRel32(jump.raw(), label.raw());
     } else {
-        X86Encoding::SetRel32(jump.raw(), jump.jumpTableEntry());
-        Assembler::PatchJumpEntry(jump.jumpTableEntry(), label.raw());
+        {
+            MaybeAutoWritableJitCode awjc(jump.raw() - 8, 8, reprotect);
+            X86Encoding::SetRel32(jump.raw(), jump.jumpTableEntry());
+        }
+        Assembler::PatchJumpEntry(jump.jumpTableEntry(), label.raw(), reprotect);
     }
 }
+
 static inline void
 PatchBackedge(CodeLocationJump& jump_, CodeLocationLabel label, JitRuntime::BackedgeTarget target)
 {
