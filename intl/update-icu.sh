@@ -50,9 +50,10 @@ rm ${icu_dir}/source/data/translit/*
 # the tree.)
 svn info $1 | grep -v '^Revision: [[:digit:]]\+$' > ${icu_dir}/SVN-INFO
 
+patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-915735
+
 exit 0
 
-patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-915735
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/genrb-omitCollationRules.diff
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/qualify-uinitonce-windows.diff
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/suppress-warnings.diff
