@@ -1240,6 +1240,13 @@ public:
   }
 
   bool
+  InterceptionEnabled() const
+  {
+    AssertIsOnWorkerThread();
+    return mPreferences[WORKERPREF_INTERCEPTION_ENABLED];
+  }
+
+  bool
   OnLine() const
   {
     AssertIsOnWorkerThread();

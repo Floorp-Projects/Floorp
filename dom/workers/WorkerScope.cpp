@@ -621,6 +621,16 @@ ServiceWorkerGlobalScope::SkipWaiting(ErrorResult& aRv)
   return promise.forget();
 }
 
+// static
+bool
+ServiceWorkerGlobalScope::InterceptionEnabled(JSContext* aCx, JSObject* aObj)
+{
+  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(worker);
+  worker->AssertIsOnWorkerThread();
+  return worker->InterceptionEnabled();
+}
+
 WorkerDebuggerGlobalScope::WorkerDebuggerGlobalScope(
                                                   WorkerPrivate* aWorkerPrivate)
 : mWorkerPrivate(aWorkerPrivate)
