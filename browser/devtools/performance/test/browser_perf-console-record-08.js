@@ -24,64 +24,63 @@ function testRecordings (win, expected) {
 function spawnTest () {
   loadFrameScripts();
   let { target, toolbox, panel } = yield initPerformance(SIMPLE_URL);
-  let win = panel.panelWin;
-  let { $, EVENTS, gFront, PerformanceController, OverviewView, RecordingsView, WaterfallView } = win;
+  let { EVENTS, PerformanceController, OverviewView, RecordingsView, WaterfallView } = panel.panelWin;
 
   info("Starting console.profile()...");
-  yield consoleProfile(win);
-  testRecordings(win, [C+S+R]);
+  yield consoleProfile(panel.panelWin);
+  testRecordings(panel.panelWin, [C+S+R]);
   info("Starting manual recording...");
   yield startRecording(panel);
-  testRecordings(win, [C+R, R+S]);
+  testRecordings(panel.panelWin, [C+R, R+S]);
   info("Starting console.profile(\"3\")...");
-  yield consoleProfile(win, "3");
-  testRecordings(win, [C+R, R+S, C+R]);
+  yield consoleProfile(panel.panelWin, "3");
+  testRecordings(panel.panelWin, [C+R, R+S, C+R]);
   info("Starting console.profile(\"3\")...");
-  yield consoleProfile(win, "4");
-  testRecordings(win, [C+R, R+S, C+R, C+R]);
+  yield consoleProfile(panel.panelWin, "4");
+  testRecordings(panel.panelWin, [C+R, R+S, C+R, C+R]);
 
   info("Ending console.profileEnd()...");
-  yield consoleProfileEnd(win);
+  yield consoleProfileEnd(panel.panelWin);
 
-  testRecordings(win, [C+R, R+S, C+R, C]);
+  testRecordings(panel.panelWin, [C+R, R+S, C+R, C]);
   ok(OverviewView.isRendering(), "still rendering overview with manual recorded selected.");
 
   let onSelected = once(WaterfallView, EVENTS.WATERFALL_RENDERED);
   info("Select last recording...");
   RecordingsView.selectedIndex = 3;
   yield onSelected;
-  testRecordings(win, [C+R, R, C+R, C+S]);
+  testRecordings(panel.panelWin, [C+R, R, C+R, C+S]);
   ok(!OverviewView.isRendering(), "stop rendering overview when selected completed recording.");
 
   info("Manually stop manual recording...");
   yield stopRecording(panel);
-  testRecordings(win, [C+R, S, C+R, C]);
+  testRecordings(panel.panelWin, [C+R, S, C+R, C]);
   ok(!OverviewView.isRendering(), "stop rendering overview when selected completed recording.");
 
   onSelected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   info("Select first recording...");
   RecordingsView.selectedIndex = 0;
   yield onSelected;
-  testRecordings(win, [C+R+S, 0, C+R, C]);
+  testRecordings(panel.panelWin, [C+R+S, 0, C+R, C]);
   yield once(OverviewView, EVENTS.OVERVIEW_RENDERED);
   ok(OverviewView.isRendering(), "should be rendering overview when selected recording in progress.");
 
   info("Ending console.profileEnd()...");
-  yield consoleProfileEnd(win);
-  testRecordings(win, [C+R+S, 0, C, C]);
+  yield consoleProfileEnd(panel.panelWin);
+  testRecordings(panel.panelWin, [C+R+S, 0, C, C]);
   ok(OverviewView.isRendering(), "should still be rendering overview when selected recording in progress.");
   info("Start one more manual recording...");
   yield startRecording(panel);
-  testRecordings(win, [C+R, 0, C, C, R+S]);
+  testRecordings(panel.panelWin, [C+R, 0, C, C, R+S]);
   ok(OverviewView.isRendering(), "should be rendering overview when selected recording in progress.");
   info("Stop manual recording...");
   yield stopRecording(panel);
-  testRecordings(win, [C+R, 0, C, C, S]);
+  testRecordings(panel.panelWin, [C+R, 0, C, C, S]);
   ok(!OverviewView.isRendering(), "stop rendering overview when selected completed recording.");
 
   info("Ending console.profileEnd()...");
-  yield consoleProfileEnd(win);
-  testRecordings(win, [C, 0, C, C, S]);
+  yield consoleProfileEnd(panel.panelWin);
+  testRecordings(panel.panelWin, [C, 0, C, C, S]);
   ok(!OverviewView.isRendering(), "stop rendering overview when selected completed recording.");
 
   yield teardown(panel);
