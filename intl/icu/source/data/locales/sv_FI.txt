@@ -1,14 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/sv_FI.xml
 // *
 // ***************************************************************************
 sv_FI{
-    AuxExemplarCharacters{"[ã ç ë í ñ ó š ÿ ü ž]"}
-    Version{"2.0.92.80"}
+    Version{"2.1.11.81"}
     calendar{
         gregorian{
             DateTimePatterns{
@@ -16,7 +15,7 @@ sv_FI{
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE'en' 'den' d:'e' MMMM y",
+                "EEEE d MMMM y",
                 "d MMMM y",
                 "d MMM y",
                 "dd-MM-y",
@@ -25,78 +24,6 @@ sv_FI{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
-            }
-            eras{
-                wide{
-                    "före Kristus",
-                    "efter Kristus",
-                }
-            }
-        }
-    }
-    fields{
-        day{
-            dn{"dag"}
-        }
-        dayperiod{
-            dn{"dagsperiod"}
-        }
-        era{
-            dn{"era"}
-        }
-        minute{
-            dn{"minut"}
-        }
-        month{
-            dn{"månad"}
-        }
-        second{
-            dn{"sekund"}
-        }
-        week{
-            dn{"vecka"}
-        }
-        weekday{
-            dn{"veckodag"}
-        }
-        year{
-            dn{"år"}
-        }
-        zone{
-            dn{"tidszon"}
-        }
-    }
-    listPattern{
-        unit{
-            2{"{0} och {1}"}
-            end{"{0} och {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-short{
-            2{"{0} och {1}"}
-            end{"{0} och {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-    }
-    measurementSystemNames{
-        UK{"engelska enheter (UK)"}
-        US{"engelska enheter (USA)"}
-    }
-    units{
-        temperature{
-            celsius{
-                one{"{0} grader Celsius"}
-                other{"{0} grader Celsius"}
-            }
-        }
-    }
-    unitsNarrow{
-        speed{
-            kilometer-per-hour{
-                one{"{0} km/h"}
-                other{"{0} km/h"}
             }
         }
     }

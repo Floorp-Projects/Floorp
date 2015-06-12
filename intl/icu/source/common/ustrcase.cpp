@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2001-2011, International Business Machines
+*   Copyright (C) 2001-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -28,8 +28,7 @@
 #include "cmemory.h"
 #include "ucase.h"
 #include "ustr_imp.h"
-
-#define LENGTHOF(array) (int32_t)(sizeof(array)/sizeof((array)[0]))
+#include "uassert.h"
 
 U_NAMESPACE_USE
 
@@ -399,7 +398,7 @@ ustrcase_map(const UCaseMap *csm,
          (dest>=src && dest<(src+srcLength)))
     ) {
         /* overlap: provide a temporary destination buffer and later copy the result */
-        if(destCapacity<=LENGTHOF(buffer)) {
+        if(destCapacity<=UPRV_LENGTHOF(buffer)) {
             /* the stack buffer is large enough */
             temp=buffer;
         } else {
@@ -465,16 +464,38 @@ struct CmpEquivLevel {
 };
 typedef struct CmpEquivLevel CmpEquivLevel;
 
-/* internal function */
-U_CFUNC int32_t
-u_strcmpFold(const UChar *s1, int32_t length1,
-             const UChar *s2, int32_t length2,
-             uint32_t options,
-             UErrorCode *pErrorCode) {
+/**
+ * Internal implementation code comparing string with case fold.
+ * This function is called from u_strcmpFold() and u_caseInsensitivePrefixMatch().
+ *
+ * @param s1            input string 1
+ * @param length1       length of string 1, or -1 (NULL terminated)
+ * @param s2            input string 2
+ * @param length2       length of string 2, or -1 (NULL terminated)
+ * @param options       compare options
+ * @param matchLen1     (output) length of partial prefix match in s1
+ * @param matchLen2     (output) length of partial prefix match in s2
+ * @param pErrorCode    receives error status
+ * @return The result of comparison
+ */
+static int32_t _cmpFold(
+            const UChar *s1, int32_t length1,
+            const UChar *s2, int32_t length2,
+            uint32_t options,
+            int32_t *matchLen1, int32_t *matchLen2,
+            UErrorCode *pErrorCode) {
+    int32_t cmpRes = 0;
+
     const UCaseProps *csp;
 
     /* current-level start/limit - s1/s2 as current */
     const UChar *start1, *start2, *limit1, *limit2;
+
+    /* points to the original start address */
+    const UChar *org1, *org2;
+
+    /* points to the end of match + 1 */
+    const UChar *m1, *m2;
 
     /* case folding variables */
     const UChar *p;
@@ -504,14 +525,20 @@ u_strcmpFold(const UChar *s1, int32_t length1,
     }
 
     /* initialize */
-    start1=s1;
+    if(matchLen1) {
+        U_ASSERT(matchLen2 !=NULL);
+        *matchLen1=0;
+        *matchLen2=0;
+    }
+
+    start1=m1=org1=s1;
     if(length1==-1) {
         limit1=NULL;
     } else {
         limit1=s1+length1;
     }
 
-    start2=s2;
+    start2=m2=org2=s2;
     if(length2==-1) {
         limit2=NULL;
     } else {
@@ -579,15 +606,59 @@ u_strcmpFold(const UChar *s1, int32_t length1,
          * either variable c1, c2 is -1 only if the corresponding string is finished
          */
         if(c1==c2) {
+            const UChar *next1, *next2;
+
             if(c1<0) {
-                return 0;   /* c1==c2==-1 indicating end of strings */
+                cmpRes=0;   /* c1==c2==-1 indicating end of strings */
+                break;
+            }
+
+            /*
+             * Note: Move the match positions in both strings at the same time
+             *      only when corresponding code point(s) in the original strings
+             *      are fully consumed. For example, when comparing s1="Fust" and
+             *      s2="Fu\u00dfball", s2[2] is folded into "ss", and s1[2] matches
+             *      the first code point in the case-folded data. But the second "s"
+             *      has no matching code point in s1, so this implementation returns
+             *      2 as the prefix match length ("Fu").
+             */
+            next1=next2=NULL;
+            if(level1==0) {
+                next1=s1;
+            } else if(s1==limit1) {
+                /* Note: This implementation only use a single level of stack.
+                 *      If this code needs to be changed to use multiple levels
+                 *      of stacks, the code above should check if the current
+                 *      code is at the end of all stacks.
+                 */
+                U_ASSERT(level1==1);
+
+                /* is s1 at the end of the current stack? */
+                next1=stack1[0].s;
+            }
+
+            if (next1!=NULL) {
+                if(level2==0) {
+                    next2=s2;
+                } else if(s2==limit2) {
+                    U_ASSERT(level2==1);
+
+                    /* is s2 at the end of the current stack? */
+                    next2=stack2[0].s;
+                }
+                if(next2!=NULL) {
+                    m1=next1;
+                    m2=next2;
+                }
             }
             c1=c2=-1;       /* make us fetch new code units */
             continue;
         } else if(c1<0) {
-            return -1;      /* string 1 ends before string 2 */
+            cmpRes=-1;      /* string 1 ends before string 2 */
+            break;
         } else if(c2<0) {
-            return 1;       /* string 2 ends before string 1 */
+            cmpRes=1;       /* string 2 ends before string 1 */
+            break;
         }
         /* c1!=c2 && c1>=0 && c2>=0 */
 
@@ -646,6 +717,7 @@ u_strcmpFold(const UChar *s1, int32_t length1,
                      * the decomposition would replace the entire code point
                      */
                     --s2;
+                    --m2;
                     c2=*(s2-1);
                 }
             }
@@ -691,6 +763,7 @@ u_strcmpFold(const UChar *s1, int32_t length1,
                      * the decomposition would replace the entire code point
                      */
                     --s1;
+                    --m2;
                     c1=*(s1-1);
                 }
             }
@@ -759,8 +832,24 @@ u_strcmpFold(const UChar *s1, int32_t length1,
             }
         }
 
-        return c1-c2;
+        cmpRes=c1-c2;
+        break;
     }
+
+    if(matchLen1) {
+        *matchLen1=m1-org1;
+        *matchLen2=m2-org2;
+    }
+    return cmpRes;
+}
+
+/* internal function */
+U_CFUNC int32_t
+u_strcmpFold(const UChar *s1, int32_t length1,
+             const UChar *s2, int32_t length2,
+             uint32_t options,
+             UErrorCode *pErrorCode) {
+    return _cmpFold(s1, length1, s2, length2, options, NULL, NULL, pErrorCode);
 }
 
 /* public API functions */
@@ -805,4 +894,15 @@ u_strncasecmp(const UChar *s1, const UChar *s2, int32_t n, uint32_t options) {
     return u_strcmpFold(s1, n, s2, n,
                         options|(U_COMPARE_IGNORE_CASE|_STRNCMP_STYLE),
                         &errorCode);
+}
+
+/* internal API - detect length of shared prefix */
+U_CAPI void
+u_caseInsensitivePrefixMatch(const UChar *s1, int32_t length1,
+                             const UChar *s2, int32_t length2,
+                             uint32_t options,
+                             int32_t *matchLen1, int32_t *matchLen2,
+                             UErrorCode *pErrorCode) {
+    _cmpFold(s1, length1, s2, length2, options,
+        matchLen1, matchLen2, pErrorCode);
 }

@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/hy.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/hy.xml
- */
 hy{
     Currencies{
         AED{
@@ -24,7 +21,7 @@ hy{
             "Ալբանական լեկ",
         }
         AMD{
-            "դր.",
+            "֏",
             "Հայկական դրամ",
         }
         ANG{
@@ -197,7 +194,7 @@ hy{
         }
         GBP{
             "£",
-            "Բրիտանական ֆունտ ստեռլինգ",
+            "Բրիտանական ֆունտ",
         }
         GEL{
             "GEL",
@@ -644,6 +641,62 @@ hy{
             "Զամբիական կվաչա",
         }
     }
+    Currencies%narrow{
+        ARS{"$"}
+        AUD{"$"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BRL{"R$"}
+        BSD{"$"}
+        BYR{"р."}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
+        CRC{"₡"}
+        CUP{"$"}
+        DOP{"$"}
+        EUR{"€"}
+        FJD{"$"}
+        GBP{"£"}
+        GIP{"£"}
+        GYD{"$"}
+        HKD{"$"}
+        ILS{"₪"}
+        INR{"₹"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LRD{"$"}
+        MNT{"₮"}
+        MXN{"$"}
+        NAD{"$"}
+        NGN{"₦"}
+        NZD{"$"}
+        PHP{"₱"}
+        PYG{"₲"}
+        SBD{"$"}
+        SGD{"$"}
+        SRD{"$"}
+        SSP{"£"}
+        TRY{"₺"}
+        TTD{"$"}
+        TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$"}
+        VND{"₫"}
+    }
+    Currencies%variant{
+        AMD{"դր."}
+    }
     CurrencyPlurals{
         AED{
             one{"Արաբական Միացյալ Էմիրությունների դիրհամ"}
@@ -830,8 +883,8 @@ hy{
             other{"Ֆոլկլենդյան կղզիներ ֆունտ"}
         }
         GBP{
-            one{"Բրիտանական ֆունտ ստեռլինգ"}
-            other{"Բրիտանական ֆունտ ստեռլինգ"}
+            one{"Բրիտանական ֆունտ"}
+            other{"Բրիտանական ֆունտ"}
         }
         GEL{
             one{"Վրացական լարի"}
@@ -1282,5 +1335,5 @@ hy{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
 }

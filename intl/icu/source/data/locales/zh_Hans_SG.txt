@@ -1,6 +1,6 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/zh_Hans_SG.xml
@@ -10,19 +10,18 @@ zh_Hans_SG{
     NumberElements{
         latn{
             patterns{
-                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
             }
         }
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.13.23"}
     calendar{
         buddhist{
             DateTimePatterns{
-                "zzzzah:mm:ss",
-                "ahh:mm:ssz",
+                "zzzz ah:mm:ss",
+                "z ah:mm:ss",
                 "ah:mm:ss",
-                "ahh:mm",
+                "ah:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -36,10 +35,10 @@ zh_Hans_SG{
         }
         chinese{
             DateTimePatterns{
-                "zzzzah:mm:ss",
-                "ahh:mm:ssz",
+                "zzzz ah:mm:ss",
+                "z ah:mm:ss",
                 "ah:mm:ss",
-                "ahh:mm",
+                "ah:mm",
                 {
                     "U年MMMd日EEEE",
                     "hanidec",
@@ -52,7 +51,7 @@ zh_Hans_SG{
                     "U年MMMd日",
                     "hanidec",
                 }
-                "U-M-d",
+                "r-M-d",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -62,10 +61,10 @@ zh_Hans_SG{
         }
         generic{
             DateTimePatterns{
-                "zzzzah:mm:ss",
-                "ahh:mm:ssz",
+                "zzzz ah:mm:ss",
+                "z ah:mm:ss",
                 "ah:mm:ss",
-                "ahh:mm",
+                "ah:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -121,17 +120,17 @@ zh_Hans_SG{
         }
         gregorian{
             DateTimePatterns{
-                "zzzzah:mm:ss",
-                "ahh:mm:ssz",
+                "zzzz ah:mm:ss",
+                "z ah:mm:ss",
                 "ah:mm:ss",
-                "ahh:mm",
+                "ah:mm",
                 "y年M月d日EEEE",
                 "y年M月d日",
                 "y年M月d日",
                 "dd/MM/yy",
                 "{1} {0}",
-                "{1}{0}",
-                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -141,7 +140,6 @@ zh_Hans_SG{
                 MMMMdd{"M月d日"}
                 MMdd{"MM-dd"}
                 Md{"M-d"}
-                yM{"y年M月"}
                 yMEd{"y年M月d日，E"}
                 yMd{"y年M月d日"}
             }
@@ -185,10 +183,10 @@ zh_Hans_SG{
         }
         islamic{
             DateTimePatterns{
-                "zzzzah:mm:ss",
-                "ahh:mm:ssz",
+                "zzzz ah:mm:ss",
+                "z ah:mm:ss",
                 "ah:mm:ss",
-                "ahh:mm",
+                "ah:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -202,10 +200,10 @@ zh_Hans_SG{
         }
         japanese{
             DateTimePatterns{
-                "zzzzah:mm:ss",
-                "ahh:mm:ssz",
+                "zzzz ah:mm:ss",
+                "z ah:mm:ss",
                 "ah:mm:ss",
-                "ahh:mm",
+                "ah:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -223,10 +221,10 @@ zh_Hans_SG{
         }
         roc{
             DateTimePatterns{
-                "zzzzah:mm:ss",
-                "ahh:mm:ssz",
+                "zzzz ah:mm:ss",
+                "z ah:mm:ss",
                 "ah:mm:ss",
-                "ahh:mm",
+                "ah:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -253,84 +251,6 @@ zh_Hans_SG{
                 past{
                     other{"{0}秒前"}
                 }
-            }
-        }
-    }
-    units{
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            second{
-                other{"{0}秒"}
-            }
-        }
-    }
-    unitsNarrow{
-        length{
-            centimeter{
-                other{"{0}厘米"}
-            }
-            foot{
-                other{"{0}英尺"}
-            }
-            inch{
-                other{"{0}英寸"}
-            }
-            kilometer{
-                other{"{0}公里"}
-            }
-            light-year{
-                other{"{0}光年"}
-            }
-            meter{
-                other{"{0}米"}
-            }
-            mile{
-                other{"{0}英里"}
-            }
-            millimeter{
-                other{"{0}毫米"}
-            }
-            picometer{
-                other{"{0}皮米"}
-            }
-            yard{
-                other{"{0}码"}
-            }
-        }
-    }
-    unitsShort{
-        length{
-            centimeter{
-                other{"{0}厘米"}
-            }
-            foot{
-                other{"{0}英尺"}
-            }
-            inch{
-                other{"{0}英寸"}
-            }
-            kilometer{
-                other{"{0}公里"}
-            }
-            light-year{
-                other{"{0}光年"}
-            }
-            meter{
-                other{"{0}米"}
-            }
-            mile{
-                other{"{0}英里"}
-            }
-            millimeter{
-                other{"{0}毫米"}
-            }
-            picometer{
-                other{"{0}皮米"}
-            }
-            yard{
-                other{"{0}码"}
             }
         }
     }

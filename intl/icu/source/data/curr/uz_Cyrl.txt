@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/uz_Cyrl.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/uz_Cyrl.xml
- */
 uz_Cyrl{
     %%Parent{"root"}
     Currencies{
@@ -102,7 +99,7 @@ uz_Cyrl{
         }
         GBP{
             "£",
-            "Инглиз фунт стерлинги",
+            "Инглиз фунт",
         }
         GTQ{
             "GTQ",
@@ -323,8 +320,8 @@ uz_Cyrl{
             other{"Фолькленд ороли фунти"}
         }
         GBP{
-            one{"Инглиз фунт стерлинги"}
-            other{"Инглиз фунт стерлинги"}
+            one{"Инглиз фунт"}
+            other{"Инглиз фунт"}
         }
         GTQ{
             one{"Гватемала кветзали"}
@@ -419,5 +416,5 @@ uz_Cyrl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.10.42"}
 }

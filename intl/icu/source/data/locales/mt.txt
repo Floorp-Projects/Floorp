@@ -1,34 +1,49 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/mt.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/mt.xml
- */
 mt{
     AuxExemplarCharacters{"[c y]"}
-    ExemplarCharacters{"[a à b ċ d e è f ġ g {għ} h ħ i ì j k l m n o ò p q r s t u ù v w x ż z]"}
-    ExemplarCharactersIndex{"[A B Ċ C D E F Ġ G {GĦ} H Ħ I {IE} J K L M N O P Q R S T U V W X Y Ż Z]"}
-    ExemplarCharactersPunctuation{"[\\- , ; \\: ! ? . ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\}]"}
-    LocaleScript{
-        "Latn",
+    Ellipsis{
+        final{"{0}…"}
+        initial{"…{0}"}
+        medial{"{0}…{1}"}
+        word-final{"{0} …"}
+        word-initial{"… {0}"}
+        word-medial{"{0} … {1}"}
     }
+    ExemplarCharacters{"[a à b ċ d e è f ġ g {għ} h ħ i ì j k l m n o ò p q r s t u ù v w x ż z]"}
+    ExemplarCharactersIndex{"[A B Ċ C D E F Ġ G {GĦ} H Ħ I {IE*} J K L M N O P Q R S T U V W X Y Ż Z]"}
+    ExemplarCharactersPunctuation{"[\\- , ; \\: ! ? . ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\}]"}
+    MoreInformation{"?"}
     NumberElements{
+        default{"latn"}
         latn{
             patterns{
                 currencyFormat{"¤#,##0.00"}
             }
             symbols{
                 decimal{"."}
+                exponential{"E"}
                 group{","}
+                infinity{"∞"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
+        minimumGroupingDigits{"1"}
+        native{"latn"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.10.93"}
     calendar{
         generic{
             DateTimePatterns{
@@ -49,8 +64,8 @@ mt{
         }
         gregorian{
             AmPmMarkers{
-                "QN",
-                "WN",
+                "AM",
+                "PM",
             }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -98,14 +113,32 @@ mt{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "Ħad",
+                        "Tne",
+                        "Tli",
+                        "Erb",
+                        "Ħam",
+                        "Ġim",
+                        "Sib",
+                    }
                     narrow{
-                        "Ħ",
-                        "T",
-                        "T",
-                        "E",
-                        "Ħ",
-                        "Ġ",
-                        "S",
+                        "Ħd",
+                        "Tn",
+                        "Tl",
+                        "Er",
+                        "Ħm",
+                        "Ġm",
+                        "Sb",
+                    }
+                    wide{
+                        "Il-Ħadd",
+                        "It-Tnejn",
+                        "It-Tlieta",
+                        "L-Erbgħa",
+                        "Il-Ħamis",
+                        "Il-Ġimgħa",
+                        "Is-Sibt",
                     }
                 }
             }
@@ -113,6 +146,10 @@ mt{
                 abbreviated{
                     "QK",
                     "WK",
+                }
+                abbreviated%variant{
+                    "QEK",
+                    "EK",
                 }
                 wide{
                     "Qabel Kristu",
@@ -135,6 +172,20 @@ mt{
                         "Nov",
                         "Diċ",
                     }
+                    narrow{
+                        "J",
+                        "F",
+                        "M",
+                        "A",
+                        "M",
+                        "Ġ",
+                        "L",
+                        "A",
+                        "S",
+                        "O",
+                        "N",
+                        "D",
+                    }
                     wide{
                         "Jannar",
                         "Frar",
@@ -151,19 +202,33 @@ mt{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "Jan",
+                        "Fra",
+                        "Mar",
+                        "Apr",
+                        "Mej",
+                        "Ġun",
+                        "Lul",
+                        "Aww",
+                        "Set",
+                        "Ott",
+                        "Nov",
+                        "Diċ",
+                    }
                     narrow{
-                        "J",
-                        "F",
-                        "M",
-                        "A",
-                        "M",
-                        "Ġ",
-                        "L",
-                        "A",
-                        "S",
-                        "O",
-                        "N",
-                        "D",
+                        "Jn",
+                        "Fr",
+                        "Mz",
+                        "Ap",
+                        "Mj",
+                        "Ġn",
+                        "Lj",
+                        "Aw",
+                        "St",
+                        "Ob",
+                        "Nv",
+                        "Dċ",
                     }
                     wide{
                         "Jannar",
@@ -196,10 +261,10 @@ mt{
                         "4",
                     }
                     wide{
-                        "K1",
-                        "K2",
-                        "K3",
-                        "K4",
+                        "1el kwart",
+                        "2ni kwart",
+                        "3et kwart",
+                        "4ba’ kwart",
                     }
                 }
                 stand-alone{
@@ -219,11 +284,17 @@ mt{
                         "1el kwart",
                         "2ni kwart",
                         "3et kwart",
-                        "4ba' kwart",
+                        "4ba’ kwart",
                     }
                 }
             }
         }
+    }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
+        quotationEnd{"”"}
+        quotationStart{"“"}
     }
     fields{
         day{
@@ -295,6 +366,32 @@ mt{
         }
         zone{
             dn{"Żona"}
+        }
+    }
+    listPattern{
+        standard{
+            2{"{0} u {1}"}
+            end{"{0}, u {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit{
+            2{"{0} u {1}"}
+            end{"{0}, u {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-narrow{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-short{
+            2{"{0} u {1}"}
+            end{"{0}, u {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{

@@ -1,0 +1,27 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2015 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/az_Cyrl.xml
+// *
+// ***************************************************************************
+az_Cyrl{
+    %%Parent{"root"}
+    Languages{
+        az{"Азәрбајҹан"}
+        de{"алманҹа"}
+        en{"инҝилисҹә"}
+        es{"испанҹа"}
+        fr{"франсызҹа"}
+        it{"италјанҹа"}
+        ja{"јапонҹа"}
+        pt{"португалҹа"}
+        ru{"русҹа"}
+        zh{"чинҹә"}
+    }
+    Scripts{
+        Cyrl{"Кирил"}
+    }
+    Version{"2.1.10.34"}
+}

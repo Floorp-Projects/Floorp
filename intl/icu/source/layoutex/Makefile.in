@@ -1,6 +1,6 @@
 #******************************************************************************
 #
-#   Copyright (C) 1999-2011, International Business Machines
+#   Copyright (C) 1999-2014, International Business Machines
 #   Corporation and others.  All Rights Reserved.
 #
 #******************************************************************************
@@ -52,7 +52,15 @@ DYNAMICCXXFLAGS = $(SHAREDLIBCXXFLAGS)
 CFLAGS += $(LIBCFLAGS)
 CXXFLAGS += $(LIBCXXFLAGS)
 
-CPPFLAGS += -I$(srcdir) -I$(srcdir)/unicode -I$(srcdir)/.. -I$(top_srcdir)/common $(LIBCPPFLAGS)
+
+ifeq ($(USING_ICULEHB),no)
+# cppflags: load .. so that #include <layout/...> works
+ICULE_CFLAGS=-I$(srcdir)/..
+else
+ICULE_CFLAGS=$(ICULEHB_CFLAGS)
+endif
+
+CPPFLAGS += -I$(srcdir) -I$(srcdir)/unicode -I$(top_srcdir)/common $(ICULE_CFLAGS) $(LIBCPPFLAGS)
 DEFS += -DU_LAYOUTEX_IMPLEMENTATION
 LDFLAGS += $(LDFLAGSICULX)
 LIBS = $(LIBICUUC) $(LIBICULE) $(DEFAULT_LIBS)
@@ -93,6 +101,10 @@ check-exhaustive: check
 all-local: $(ALL_TARGETS)
 
 install-local: install-headers install-library
+ifneq ($(ICULE_CFLAGS),)
+	@echo "Installing icu-lx.pc"
+	$(MAKE) ALL_PKGCONFIG_SUFFIX=lx -C .. install-pkgconfig
+endif
 
 install-library: all-local
 	$(MKINSTALLDIRS) $(DESTDIR)$(libdir)

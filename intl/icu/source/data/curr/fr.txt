@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/fr.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/fr.xml
- */
 fr{
     Currencies{
         ADP{
@@ -236,7 +233,7 @@ fr{
             "peso chilien",
         }
         CNY{
-            "¥CN",
+            "CNY",
             "yuan renminbi chinois",
         }
         COP{
@@ -268,7 +265,7 @@ fr{
             "peso cubain",
         }
         CVE{
-            "$CV",
+            "CVE",
             "escudo capverdien",
         }
         CYP{
@@ -316,7 +313,7 @@ fr{
             "couronne estonienne",
         }
         EGP{
-            "£EG",
+            "EGP",
             "livre égyptienne",
         }
         ERN{
@@ -353,7 +350,7 @@ fr{
         }
         FKP{
             "£FK",
-            "livre des Falkland",
+            "livre des îles Malouines",
         }
         FRF{
             "F",
@@ -420,7 +417,7 @@ fr{
             "dollar du Guyana",
         }
         HKD{
-            "$HK",
+            "HKD",
             "dollar de Hong Kong",
         }
         HNL{
@@ -488,7 +485,7 @@ fr{
             "dinar jordanien",
         }
         JPY{
-            "¥JP",
+            "JPY",
             "yen japonais",
         }
         KES{
@@ -540,7 +537,7 @@ fr{
             "roupie srilankaise",
         }
         LRD{
-            "$LR",
+            "LRD",
             "dollar libérien",
         }
         LSL{
@@ -800,7 +797,7 @@ fr{
             "dinar soudanais",
         }
         SDG{
-            "£SD",
+            "SDG",
             "livre soudanaise",
         }
         SDP{
@@ -816,7 +813,7 @@ fr{
             "dollar de Singapour",
         }
         SHP{
-            "£SH",
+            "SHP",
             "livre de Sainte-Hélène",
         }
         SIT{
@@ -844,7 +841,7 @@ fr{
             "florin surinamais",
         }
         SSP{
-            "£SS",
+            "SSP",
             "livre sud-soudanaise",
         }
         STD{
@@ -912,7 +909,7 @@ fr{
             "dollar trinidadien",
         }
         TWD{
-            "$TW",
+            "TWD",
             "nouveau dollar taïwanais",
         }
         TZS{
@@ -1012,7 +1009,7 @@ fr{
             "unité de compte européenne (XBD)",
         }
         XCD{
-            "EC$",
+            "XCD",
             "dollar des Caraïbes orientales",
         }
         XDR{
@@ -1115,6 +1112,59 @@ fr{
             "ZWR",
             "dollar zimbabwéen (2008)",
         }
+    }
+    Currencies%narrow{
+        ARS{"$"}
+        AUD{"$"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BRL{"R$"}
+        BSD{"$"}
+        BYR{"р."}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
+        CRC{"₡"}
+        CUP{"$"}
+        DOP{"$"}
+        EUR{"€"}
+        FJD{"$"}
+        GBP{"£"}
+        GIP{"£"}
+        GYD{"$"}
+        HKD{"$"}
+        ILS{"₪"}
+        INR{"₹"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LRD{"$"}
+        MNT{"₮"}
+        MXN{"$"}
+        NAD{"$"}
+        NGN{"₦"}
+        NZD{"$"}
+        PHP{"₱"}
+        PYG{"₲"}
+        SBD{"$"}
+        SGD{"$"}
+        SRD{"$"}
+        SSP{"£"}
+        TRY{"₺"}
+        TTD{"$"}
+        TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$"}
+        VND{"₫"}
     }
     CurrencyPlurals{
         ADP{
@@ -1458,8 +1508,8 @@ fr{
             other{"dollars fidjiens"}
         }
         FKP{
-            one{"livre des Falkland"}
-            other{"livres des Falkland"}
+            one{"livre des îles Malouines"}
+            other{"livres des îles Malouines"}
         }
         FRF{
             one{"franc français"}
@@ -2158,8 +2208,8 @@ fr{
             other{"(devises de test)"}
         }
         XXX{
-            one{"devise inconnue ou non valide"}
-            other{"devise inconnue ou non valide"}
+            one{"(devise inconnue ou non valide)"}
+            other{"(devise inconnue ou non valide)"}
         }
         YDD{
             one{"dinar nord-yéménite"}
@@ -2222,5 +2272,5 @@ fr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.93.10"}
+    Version{"2.1.13.46"}
 }

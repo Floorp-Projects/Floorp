@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/agq.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/agq.xml
- */
 agq{
     AuxExemplarCharacters{"[q r x]"}
     ExemplarCharacters{
@@ -18,9 +15,6 @@ agq{
         "{ʉ\u030C} {ʉ\u0304} v w y z ʔ]"
     }
     ExemplarCharactersIndex{"[A B C D E Ɛ F G H I Ɨ K L M N Ŋ O Ɔ P S T U Ʉ V W Y Z ʔ]"}
-    LocaleScript{
-        "Latn",
-    }
     NumberElements{
         latn{
             patterns{
@@ -34,7 +28,7 @@ agq{
             }
         }
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.10.42"}
     calendar{
         generic{
             DateTimePatterns{

@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/zu.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/zu.xml
- */
 zu{
     AuxExemplarCharacters{
         "[á à ă â å ä ã ā æ ç é è ĕ ê ë ē í ì ĭ î ï ī ñ ó ò ŏ ô ö ø ō œ ú ù ŭ û ü ū ÿ"
@@ -18,6 +15,9 @@ zu{
         final{"{0}…"}
         initial{"…{0}"}
         medial{"{0}…{1}"}
+        word-final{"{0} …"}
+        word-initial{"… {0}"}
+        word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{
         "[a b {bh} c {ch} d {dl} {dy} e f g {gc} {gq} {gx} h {hh} {hl} i j k {kh} {kl"
@@ -25,12 +25,14 @@ zu{
         " {nx} {ny} o p {ph} q {qh} r {rh} s {sh} t {th} {tl} {ts} {tsh} u v w x {xh}"
         " y z]"
     }
-    LocaleScript{
-        "Latn",
-    }
     MoreInformation{"?"}
     NumberElements{
+        default{"latn"}
         latn{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}–{1}"}
+            }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
@@ -154,10 +156,13 @@ zu{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
+        minimumGroupingDigits{"1"}
+        native{"latn"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.10.93"}
     calendar{
         generic{
             DateTimePatterns{
@@ -252,7 +257,7 @@ zu{
                     d{"M/d – M/d"}
                 }
                 d{
-                    d{"d-d"}
+                    d{"d–d"}
                 }
                 fallback{"{0} – {1}"}
                 h{
@@ -274,7 +279,7 @@ zu{
                     h{"h–h a v"}
                 }
                 y{
-                    y{"y-y"}
+                    y{"y–y"}
                 }
                 yM{
                     M{"M/y – M/y"}
@@ -315,6 +320,10 @@ zu{
                 "Ekuseni",
                 "Ntambama",
             }
+            AmPmMarkersAbbr{
+                "AM",
+                "PM",
+            }
             AmPmMarkersNarrow{
                 "a",
                 "p",
@@ -324,17 +333,23 @@ zu{
                 "h:mm:ss a z",
                 "h:mm:ss a",
                 "h:mm a",
-                "EEEE dd MMMM y",
-                "d MMMM y",
-                "d MMM y",
-                "y-MM-dd",
+                "EEEE, MMMM d, y",
+                "MMMM d, y",
+                "MMM d, y",
+                "M/d/yy",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
+            NoonMarker{"Emini"}
+            NoonMarkerNarrow{"n"}
+            appendItems{
+                Timezone{"{0} {1}"}
+            }
             availableFormats{
+                E{"ccc"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d E"}
@@ -389,13 +404,13 @@ zu{
                         "M",
                     }
                     short{
-                        "Isonto",
-                        "Umsombuluko",
-                        "Ulwesibili",
-                        "Ulwesithathu",
-                        "Ulwesine",
-                        "Ulwesihlanu",
-                        "Umgqibelo",
+                        "Son",
+                        "Mso",
+                        "Bil",
+                        "Tha",
+                        "Sin",
+                        "Hla",
+                        "Mgq",
                     }
                     wide{
                         "Sonto",
@@ -451,6 +466,18 @@ zu{
                     "BC",
                     "AD",
                 }
+                abbreviated%variant{
+                    "BCE",
+                    "CE",
+                }
+                wide{
+                    "BC",
+                    "AD",
+                }
+                wide%variant{
+                    "BCE",
+                    "CE",
+                }
             }
             intervalFormats{
                 H{
@@ -490,7 +517,7 @@ zu{
                     d{"M/d – M/d"}
                 }
                 d{
-                    d{"d-d"}
+                    d{"d–d"}
                 }
                 fallback{"{0} – {1}"}
                 h{
@@ -512,7 +539,7 @@ zu{
                     h{"h–h a v"}
                 }
                 y{
-                    y{"y-y"}
+                    y{"y–y"}
                 }
                 yM{
                     M{"M/y – M/y"}
@@ -622,18 +649,18 @@ zu{
                         "D",
                     }
                     wide{
-                        "uJanuwari",
-                        "uFebruwari",
-                        "uMashi",
-                        "u-Apreli",
-                        "uMeyi",
-                        "uJuni",
-                        "uJulayi",
-                        "uAgasti",
-                        "uSepthemba",
-                        "u-Okthoba",
-                        "uNovemba",
-                        "uDisemba",
+                        "Januwari",
+                        "Februwari",
+                        "Mashi",
+                        "Apreli",
+                        "Meyi",
+                        "Juni",
+                        "Julayi",
+                        "Agasti",
+                        "Septhemba",
+                        "Okthoba",
+                        "Novemba",
+                        "Disemba",
                     }
                 }
             }
@@ -687,14 +714,9 @@ zu{
         quotationEnd{"”"}
         quotationStart{"“"}
     }
-    durationUnits{
-        hm{"h:mm"}
-        hms{"h:mm:ss"}
-        ms{"m:ss"}
-    }
     fields{
         day{
-            dn{"Usuku"}
+            dn{"usuku"}
             relative{
                 "-1"{"izolo"}
                 "-2"{"Usuku olwandulela olwayizolo"}
@@ -710,6 +732,32 @@ zu{
                 past{
                     one{"osukwini olungu-{0} olwedlule"}
                     other{"ezinsukwini ezingu-{0} ezedlule."}
+                }
+            }
+        }
+        day-narrow{
+            dn{"usuku"}
+            relativeTime{
+                future{
+                    one{"osukwini olungu{0}"}
+                    other{"ezinsukwini ezingu{0}"}
+                }
+                past{
+                    one{"{0} usuku olwedlule"}
+                    other{"{0} izinsuku ezedlule"}
+                }
+            }
+        }
+        day-short{
+            dn{"usuku"}
+            relativeTime{
+                future{
+                    one{"osukwini olungu{0}"}
+                    other{"ezinsukwini ezingu{0}"}
+                }
+                past{
+                    one{"{0} usuku olwedlule"}
+                    other{"{0} izinsuku ezedlule"}
                 }
             }
         }
@@ -739,6 +787,32 @@ zu{
                 }
             }
         }
+        hour-narrow{
+            dn{"Ihora"}
+            relativeTime{
+                future{
+                    one{"ehoreni elingu{0}"}
+                    other{"emahoreni angu{0}"}
+                }
+                past{
+                    one{"{0} ihora eledlule"}
+                    other{"{0} amahora adlule"}
+                }
+            }
+        }
+        hour-short{
+            dn{"Ihora"}
+            relativeTime{
+                future{
+                    one{"ehoreni elingu{0}"}
+                    other{"emahoreni angu{0}"}
+                }
+                past{
+                    one{"{0} ihora eledlule"}
+                    other{"{0} amahora adlule"}
+                }
+            }
+        }
         minute{
             dn{"Iminithi"}
             relativeTime{
@@ -749,6 +823,32 @@ zu{
                 past{
                     one{"eminithini elingu-{0} eledlule"}
                     other{"amaminithi angu-{0} adlule"}
+                }
+            }
+        }
+        minute-narrow{
+            dn{"Iminithi"}
+            relativeTime{
+                future{
+                    one{"eminithini engu{0}"}
+                    other{"emaminithini angu{0}"}
+                }
+                past{
+                    one{"{0} iminithi eledlule"}
+                    other{"{0} amaminithi adlule"}
+                }
+            }
+        }
+        minute-short{
+            dn{"Iminithi"}
+            relativeTime{
+                future{
+                    one{"eminithini engu{0}"}
+                    other{"emaminithini angu{0}"}
+                }
+                past{
+                    one{"{0} iminithi eledlule"}
+                    other{"{0} amaminithi adlule"}
                 }
             }
         }
@@ -772,8 +872,53 @@ zu{
                     other{"Ezinyangeni ezingu-{0}"}
                 }
                 past{
-                    one{"enyangeni engu-{0} eyedlule"}
-                    other{"ezinyangeni ezingu-{0} ezedlule"}
+                    one{"{0} inyanga edlule"}
+                    other{"{0} izinyanga ezedlule"}
+                }
+            }
+        }
+        month-narrow{
+            dn{"inyanga"}
+        }
+        month-short{
+            dn{"inyanga"}
+        }
+        quarter{
+            dn{"Ikota"}
+            relativeTime{
+                future{
+                    one{"kwikota engu-{0}"}
+                    other{"kumakota angu-{0}"}
+                }
+                past{
+                    one{"{0} ikota edlule"}
+                    other{"{0} amakota adlule"}
+                }
+            }
+        }
+        quarter-narrow{
+            dn{"ikota"}
+            relativeTime{
+                future{
+                    one{"kumakota angu-{0}"}
+                    other{"kumakota angu-{0}"}
+                }
+                past{
+                    one{"{0} amakota adlule"}
+                    other{"{0} amakota adlule"}
+                }
+            }
+        }
+        quarter-short{
+            dn{"ikota"}
+            relativeTime{
+                future{
+                    one{"kumakota angu-{0}"}
+                    other{"kumakota angu-{0}"}
+                }
+                past{
+                    one{"{0} amakota adlule"}
+                    other{"{0} amakota adlule"}
                 }
             }
         }
@@ -797,6 +942,32 @@ zu{
                 past{
                     one{"isekhondi elingu-{0} eledlule"}
                     other{"amasekhondi angu-{0} adlule"}
+                }
+            }
+        }
+        second-narrow{
+            dn{"Isekhondi"}
+            relativeTime{
+                future{
+                    one{"esekhondini elingu{0}"}
+                    other{"emasekhondini angu{0}"}
+                }
+                past{
+                    one{"{0} isekhondi eledlule"}
+                    other{"{0} amasekhondi adlule"}
+                }
+            }
+        }
+        second-short{
+            dn{"Isekhondi"}
+            relativeTime{
+                future{
+                    one{"esekhondini elingu{0}"}
+                    other{"emasekhondini angu{0}"}
+                }
+                past{
+                    one{"{0} isekhondi eledlule"}
+                    other{"{0} amasekhondi adlule"}
                 }
             }
         }
@@ -846,6 +1017,12 @@ zu{
                 }
             }
         }
+        week-narrow{
+            dn{"Iviki"}
+        }
+        week-short{
+            dn{"Iviki"}
+        }
         weekday{
             dn{"Usuku evikini"}
         }
@@ -858,12 +1035,24 @@ zu{
             }
             relativeTime{
                 future{
-                    one{"Onyakeni ongu-{0}"}
+                    one{"onyakeni ongu-{0}"}
                     other{"Eminyakeni engu-{0}"}
                 }
                 past{
-                    one{"enyakeni ongu-{0} owedlule"}
-                    other{"iminyaka engu-{0} eyedlule"}
+                    one{"{0} unyaka odlule"}
+                    other{"{0} iminyaka edlule"}
+                }
+            }
+        }
+        year-narrow{
+            dn{"Unyaka"}
+        }
+        year-short{
+            dn{"Unyaka"}
+            relativeTime{
+                past{
+                    one{"{0} unyaka odlule"}
+                    other{"{0} unyaka odlule"}
                 }
             }
         }
@@ -874,9 +1063,19 @@ zu{
     listPattern{
         standard{
             2{"I-{0} ne-{1}"}
-            end{"{0}, no-{1}"}
+            end{"{0}, ne-{1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
+        }
+        unit{
+            end{"{0}, {1}"}
+        }
+        unit-narrow{
+            end{"{0} {1}"}
+        }
+        unit-short{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
         }
     }
     measurementSystemNames{
@@ -895,320 +1094,5 @@ zu{
         x-Jamo{"i-Jamo"}
         x-Pinyin{"i-Pinyin"}
         x-Publishing{"Ukushicilela"}
-    }
-    units{
-        acceleration{
-            g-force{
-                one{"{0} g-force"}
-                other{"{0} G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-            degree{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        compound{
-            per{"{0} nge-{1}"}
-        }
-        duration{
-            day{
-                one{"usuku olungu-{0}"}
-                other{"{0} izinsuku"}
-            }
-            hour{
-                one{"ihora elingu-{0}"}
-                other{"{0} amahora"}
-            }
-            millisecond{
-                one{"{0} ms"}
-                other{"{0} ms"}
-            }
-            minute{
-                one{"iminithi elingu-{0}"}
-                other{"{0} amaminithi"}
-            }
-            month{
-                one{"inyana engu-{0}"}
-                other{"{0} izinyanga"}
-            }
-            second{
-                one{"isekhondi elingu-{0}"}
-                other{"{0} amasekhondi"}
-            }
-            week{
-                one{"iviki elingu-{0}"}
-                other{"{0} amaviki"}
-            }
-            year{
-                one{"{0} y"}
-                other{"{0} y"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} cm"}
-                other{"{0} cm"}
-            }
-            kilometer{
-                one{"{0} km"}
-                other{"{0} km"}
-            }
-            meter{
-                one{"{0} m"}
-                other{"{0} m"}
-            }
-            millimeter{
-                one{"{0} mm"}
-                other{"{0} mm"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} g"}
-                other{"{0} g"}
-            }
-            kilogram{
-                one{"{0} kg"}
-                other{"{0} kg"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} km/h"}
-                other{"{0} km/h"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°C"}
-                other{"{0}°C"}
-            }
-        }
-        volume{
-            liter{
-                one{"{0} l"}
-                other{"{0} l"}
-            }
-        }
-    }
-    unitsNarrow{
-        acceleration{
-            g-force{
-                one{"{0} G"}
-                other{"{0} G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-            degree{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0}"}
-                other{"{0} suku"}
-            }
-            hour{
-                one{"{0} hora"}
-                other{"{0} hora"}
-            }
-            millisecond{
-                one{"{0} ms"}
-                other{"{0} ms"}
-            }
-            minute{
-                one{"{0} min"}
-                other{"{0} min"}
-            }
-            month{
-                one{"{0} m"}
-                other{"{0} m"}
-            }
-            second{
-                one{"{0} s"}
-                other{"{0} s"}
-            }
-            week{
-                one{"{0} w"}
-                other{"{0} w"}
-            }
-            year{
-                one{"{0} y"}
-                other{"{0} y"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} cm"}
-                other{"{0} cm"}
-            }
-            kilometer{
-                one{"{0} km"}
-                other{"{0} km"}
-            }
-            meter{
-                one{"{0} m"}
-                other{"{0} m"}
-            }
-            millimeter{
-                one{"{0} mm"}
-                other{"{0} mm"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} g"}
-                other{"{0} g"}
-            }
-            kilogram{
-                one{"{0} kg"}
-                other{"{0} kg"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} km/h"}
-                other{"{0} km/h"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        volume{
-            liter{
-                one{"{0} l"}
-                other{"{0} l"}
-            }
-        }
-    }
-    unitsShort{
-        acceleration{
-            g-force{
-                one{"{0} G"}
-                other{"{0} G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-            degree{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} usuku"}
-                other{"{0} izinsuku"}
-            }
-            hour{
-                one{"{0} hora"}
-                other{"{0} amahora"}
-            }
-            millisecond{
-                one{"{0} ms"}
-                other{"{0} ms"}
-            }
-            minute{
-                one{"{0} iminithi"}
-                other{"{0} amaminithi"}
-            }
-            month{
-                one{"{0} nyanga"}
-                other{"{0} izinyanga"}
-            }
-            second{
-                one{"{0} sekhondi"}
-                other{"{0} s"}
-            }
-            week{
-                one{"{0} viki"}
-                other{"{0} amaviki"}
-            }
-            year{
-                one{"{0} y"}
-                other{"{0} yrs"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} cm"}
-                other{"{0} cm"}
-            }
-            kilometer{
-                one{"{0} km"}
-                other{"{0} km"}
-            }
-            meter{
-                one{"{0} m"}
-                other{"{0} m"}
-            }
-            millimeter{
-                one{"{0} mm"}
-                other{"{0} mm"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} g"}
-                other{"{0} g"}
-            }
-            kilogram{
-                one{"{0} kg"}
-                other{"{0} kg"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} km/h"}
-                other{"{0} km/h"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°C"}
-                other{"{0}°C"}
-            }
-        }
-        volume{
-            liter{
-                one{"{0} l"}
-                other{"{0} l"}
-            }
-        }
     }
 }

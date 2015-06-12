@@ -1,12 +1,21 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/bcp47/timezone.xml
 // *
 // ***************************************************************************
 timezoneTypes:table(nofallback){
+    bcpTypeAlias{
+        tz{
+            aqams{"nzakl"}
+            cnckg{"cnsha"}
+            cnhrb{"cnsha"}
+            cnkhg{"cnurc"}
+            usnavajo{"usden"}
+        }
+    }
     typeAlias{
         timezone{
             "Africa:Asmara"{"Africa/Asmera"}
@@ -26,12 +35,17 @@ timezoneTypes:table(nofallback){
             "America:Knox_IN"{"America/Indiana/Knox"}
             "America:Porto_Acre"{"America/Rio_Branco"}
             "America:Rosario"{"America/Cordoba"}
+            "America:Shiprock"{"America/Denver"}
             "America:Virgin"{"America/St_Thomas"}
+            "Antarctica:South_Pole"{"Pacific/Auckland"}
             "Asia:Ashkhabad"{"Asia/Ashgabat"}
-            "Asia:Chungking"{"Asia/Chongqing"}
+            "Asia:Chongqing"{"Asia/Shanghai"}
+            "Asia:Chungking"{"Asia/Shanghai"}
             "Asia:Dacca"{"Asia/Dhaka"}
+            "Asia:Harbin"{"Asia/Shanghai"}
             "Asia:Ho_Chi_Minh"{"Asia/Saigon"}
             "Asia:Istanbul"{"Europe/Istanbul"}
+            "Asia:Kashgar"{"Asia/Urumqi"}
             "Asia:Kathmandu"{"Asia/Katmandu"}
             "Asia:Kolkata"{"Asia/Calcutta"}
             "Asia:Macao"{"Asia/Macau"}
@@ -121,7 +135,7 @@ timezoneTypes:table(nofallback){
             MST{"Etc/GMT+7"}
             NZ{"Pacific/Auckland"}
             NZ-CHAT{"Pacific/Chatham"}
-            Navajo{"America/Shiprock"}
+            Navajo{"America/Denver"}
             PRC{"Asia/Shanghai"}
             Poland{"Europe/Warsaw"}
             Portugal{"Europe/Lisbon"}
@@ -318,7 +332,6 @@ timezoneTypes:table(nofallback){
             "America:Santo_Domingo"{"dosdq"}
             "America:Sao_Paulo"{"brsao"}
             "America:Scoresbysund"{"globy"}
-            "America:Shiprock"{"usnavajo"}
             "America:Sitka"{"ussit"}
             "America:St_Barthelemy"{"gpsbh"}
             "America:St_Johns"{"casjf"}
@@ -346,8 +359,8 @@ timezoneTypes:table(nofallback){
             "Antarctica:McMurdo"{"aqmcm"}
             "Antarctica:Palmer"{"aqplm"}
             "Antarctica:Rothera"{"aqrot"}
-            "Antarctica:South_Pole"{"aqams"}
             "Antarctica:Syowa"{"aqsyw"}
+            "Antarctica:Troll"{"aqtrl"}
             "Antarctica:Vostok"{"aqvos"}
             "Arctic:Longyearbyen"{"sjlyr"}
             "Asia:Aden"{"yeade"}
@@ -365,8 +378,8 @@ timezoneTypes:table(nofallback){
             "Asia:Bishkek"{"kgfru"}
             "Asia:Brunei"{"bnbwn"}
             "Asia:Calcutta"{"inccu"}
+            "Asia:Chita"{"ruchita"}
             "Asia:Choibalsan"{"mncoq"}
-            "Asia:Chongqing"{"cnckg"}
             "Asia:Colombo"{"lkcmb"}
             "Asia:Damascus"{"sydam"}
             "Asia:Dhaka"{"bddac"}
@@ -374,7 +387,6 @@ timezoneTypes:table(nofallback){
             "Asia:Dubai"{"aedxb"}
             "Asia:Dushanbe"{"tjdyu"}
             "Asia:Gaza"{"gaza"}
-            "Asia:Harbin"{"cnhrb"}
             "Asia:Hebron"{"hebron"}
             "Asia:Hong_Kong"{"hkhkg"}
             "Asia:Hovd"{"mnhvd"}
@@ -385,7 +397,6 @@ timezoneTypes:table(nofallback){
             "Asia:Kabul"{"afkbl"}
             "Asia:Kamchatka"{"rupkc"}
             "Asia:Karachi"{"pkkhi"}
-            "Asia:Kashgar"{"cnkhg"}
             "Asia:Katmandu"{"npktm"}
             "Asia:Khandyga"{"rukhndg"}
             "Asia:Krasnoyarsk"{"rukra"}
@@ -415,6 +426,7 @@ timezoneTypes:table(nofallback){
             "Asia:Seoul"{"krsel"}
             "Asia:Shanghai"{"cnsha"}
             "Asia:Singapore"{"sgsin"}
+            "Asia:Srednekolymsk"{"rusred"}
             "Asia:Taipei"{"twtpe"}
             "Asia:Tashkent"{"uztas"}
             "Asia:Tbilisi"{"getbs"}
@@ -548,6 +560,7 @@ timezoneTypes:table(nofallback){
             "Indian:Reunion"{"rereu"}
             "Pacific:Apia"{"wsapw"}
             "Pacific:Auckland"{"nzakl"}
+            "Pacific:Bougainville"{"pgraw"}
             "Pacific:Chatham"{"nzcht"}
             "Pacific:Easter"{"clipc"}
             "Pacific:Efate"{"vuvli"}

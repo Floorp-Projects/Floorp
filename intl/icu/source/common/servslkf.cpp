@@ -1,6 +1,6 @@
 /**
  *******************************************************************************
- * Copyright (C) 2001-2005, International Business Machines Corporation and    *
+ * Copyright (C) 2001-2014, International Business Machines Corporation and    *
  * others. All Rights Reserved.                                                *
  *******************************************************************************
  *
@@ -17,7 +17,6 @@
 #include "ustrfmt.h"
 #include "uhash.h"
 #include "charstr.h"
-#include "ucln_cmn.h"
 #include "uassert.h"
 
 #define UNDERSCORE_CHAR ((UChar)0x005f)
@@ -98,9 +97,9 @@ UnicodeString&
 SimpleLocaleKeyFactory::debug(UnicodeString& result) const
 {
     LocaleKeyFactory::debug(result);
-    result.append(", id: ");
+    result.append((UnicodeString)", id: ");
     result.append(_id);
-    result.append(", kind: ");
+    result.append((UnicodeString)", kind: ");
     result.append(_kind);
     return result;
 }
@@ -108,7 +107,7 @@ SimpleLocaleKeyFactory::debug(UnicodeString& result) const
 UnicodeString&
 SimpleLocaleKeyFactory::debugClass(UnicodeString& result) const
 {
-    return result.append("SimpleLocaleKeyFactory");
+    return result.append((UnicodeString)"SimpleLocaleKeyFactory");
 }
 #endif
 

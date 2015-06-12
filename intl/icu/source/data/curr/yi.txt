@@ -1,0 +1,43 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2015 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/yi.xml
+// *
+// ***************************************************************************
+yi{
+    Currencies{
+        BZD{
+            "BZD",
+            "בעליז דאלאַר",
+        }
+        CHF{
+            "CHF",
+            "שווייצער פֿראַנק",
+        }
+        EUR{
+            "€",
+            "איירא",
+        }
+        SEK{
+            "SEK",
+            "שוועדישע קראנע",
+        }
+        XAG{
+            "XAG",
+            "זילבער",
+        }
+        XAU{
+            "XAU",
+            "גאלד",
+        }
+    }
+    CurrencyPlurals{
+        EUR{
+            one{"איירא"}
+            other{"איירא"}
+        }
+    }
+    Version{"2.1.7.41"}
+}

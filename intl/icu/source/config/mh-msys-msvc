@@ -1,11 +1,16 @@
+## -*-makefile-*-
 ## MSYS with Microsoft Visual C++ compiler specific setup
-## Copyright (c) 2001-2013, International Business Machines Corporation and
+## Copyright (c) 2014, International Business Machines Corporation and
 ## others. All Rights Reserved.
 
 # We install sbin tools into the same bin directory because
 # pkgdata needs some of the tools in sbin, and we can't always depend on
 # icu-config working on Windows.
 sbindir=$(bindir)
+
+# Need this option to use / instead of - when specifying options for the
+# rc.exe command
+MSYS_RC_MODE=1
 
 ## Commands to generate dependency files
 GEN_DEPS.c=	:
@@ -214,4 +219,3 @@ PKGDATA_INVOKE_OPTS = MAKEFLAGS=
 ENABLE_SO_VERSION_DATA=1
 
 ## End MSYS-specific setup
-

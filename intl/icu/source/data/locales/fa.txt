@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/fa.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/fa.xml
- */
 fa{
     AuxExemplarCharacters{"[\u200C\u200D\u200E\u200F \u064E \u0650 \u064F \u0652 \u0656 \u0670 إ ك ى ي]"}
     Ellipsis{
@@ -20,14 +17,11 @@ fa{
         word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{
-        "[\u064B \u064D \u064C \u0651 أ ؤ آ ء ا و ئ ب پ ت ث ج چ ح خ د ذ ر ز ژ س ش ص ض"
-        " ط ظ ع غ ف ق ک گ ل م ن ه ة \u0654 ی]"
+        "[\u064B \u064D \u064C \u0651 \u0654 آ ا ء أ ؤ ئ ب پ ت ث ج چ ح خ د ذ ر ز ژ س "
+        "ش ص ض ط ظ ع غ ف ق ک گ ل م ن و ه ة ی]"
     }
-    ExemplarCharactersIndex{"[آ ا و ب پ ت ث ج چ ح خ د ذ ر ز ژ س ش ص ض ط ظ ع غ ف ق ک گ ل م ن ه ی]"}
+    ExemplarCharactersIndex{"[آ ا ب پ ت ث ج چ ح خ د ذ ر ز ژ س ش ص ض ط ظ ع غ ف ق ک گ ل م ن و ه ی]"}
     ExemplarCharactersPunctuation{"[\\- ‐ ، ٫ ٬ ؛ \\: ! ؟ . … ‹ › « » ( ) \\[ \\] * / \\\\]"}
-    LocaleScript{
-        "Arab",
-    }
     MoreInformation{"؟"}
     NumberElements{
         arabext{
@@ -48,13 +42,14 @@ fa{
                 percentSign{"٪"}
                 plusSign{"‎+‎"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         default{"arabext"}
         latn{
             miscPatterns{
-                atLeast{"{0}+‎"}
-                range{"{0}–{1}"}
+                atLeast{"‎{0}+‎"}
+                range{"{0} تا {1}"}
             }
             patterns{
                 accountingFormat{"‎¤#,##0.00;‎(¤#,##0.00)"}
@@ -179,11 +174,13 @@ fa{
                 percentSign{"%"}
                 plusSign{"‎+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
+        minimumGroupingDigits{"1"}
         native{"arabext"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
     calendar{
         chinese{
             cyclicNameSets{
@@ -226,6 +223,7 @@ fa{
             }
             appendItems{
                 Day-Of-Week{"{1} {0}"}
+                Timezone{"{0} ({1})"}
             }
             availableFormats{
                 Ed{"E d"}
@@ -362,6 +360,10 @@ fa{
                 "قبل‌ازظهر",
                 "بعدازظهر",
             }
+            AmPmMarkersNarrow{
+                "ق",
+                "ب",
+            }
             DateTimePatterns{
                 "H:mm:ss (zzzz)",
                 "H:mm:ss (z)",
@@ -377,11 +379,14 @@ fa{
                 "{1}،‏ {0}",
                 "{1}،‏ {0}",
             }
+            NoonMarker{"ظهر"}
+            NoonMarkerNarrow{"ظ"}
             appendItems{
                 Day-Of-Week{"{1} {0}"}
                 Timezone{"{0} ({1})"}
             }
             availableFormats{
+                E{"ccc"}
                 EHm{"E H:mm"}
                 EHms{"E H:mm:ss"}
                 Ed{"E d"}
@@ -504,6 +509,10 @@ fa{
                     "ق.م.",
                     "م.",
                 }
+                abbreviated%variant{
+                    "قبل از عصر حاضر",
+                    "عصر حاضر",
+                }
                 narrow{
                     "ق",
                     "م",
@@ -511,6 +520,10 @@ fa{
                 wide{
                     "قبل از میلاد",
                     "میلادی",
+                }
+                wide%variant{
+                    "قبل از عصر حاضر",
+                    "عصر حاضر",
                 }
             }
             intervalFormats{
@@ -869,6 +882,7 @@ fa{
                 GyMMMd{"d MMM y G"}
                 H{"H"}
                 Hm{"H:mm"}
+                HmZ{"HH:mm (Z)"}
                 Hms{"H:mm:ss"}
                 M{"L"}
                 MEd{"E M/d"}
@@ -1104,11 +1118,6 @@ fa{
         quotationEnd{"»"}
         quotationStart{"«"}
     }
-    durationUnits{
-        hm{"h:mm"}
-        hms{"h:mm:ss"}
-        ms{"m:ss"}
-    }
     fields{
         day{
             dn{"روز"}
@@ -1119,6 +1128,32 @@ fa{
                 "1"{"فردا"}
                 "2"{"پس‌فردا"}
             }
+            relativeTime{
+                future{
+                    one{"{0} روز بعد"}
+                    other{"{0} روز بعد"}
+                }
+                past{
+                    one{"{0} روز پیش"}
+                    other{"{0} روز پیش"}
+                }
+            }
+        }
+        day-narrow{
+            dn{"روز"}
+            relativeTime{
+                future{
+                    one{"{0} روز بعد"}
+                    other{"{0} روز بعد"}
+                }
+                past{
+                    one{"{0} روز پیش"}
+                    other{"{0} روز پیش"}
+                }
+            }
+        }
+        day-short{
+            dn{"روز"}
             relativeTime{
                 future{
                     one{"{0} روز بعد"}
@@ -1143,7 +1178,47 @@ fa{
                 "1"{"جمعهٔ آینده"}
             }
         }
+        fri-narrow{
+            relative{
+                "-1"{"جمعهٔ گذشته"}
+                "0"{"این جمعه"}
+                "1"{"جمعهٔ آینده"}
+            }
+        }
+        fri-short{
+            relative{
+                "-1"{"جمعهٔ گذشته"}
+                "0"{"این جمعه"}
+                "1"{"جمعهٔ آینده"}
+            }
+        }
         hour{
+            dn{"ساعت"}
+            relativeTime{
+                future{
+                    one{"{0} ساعت بعد"}
+                    other{"{0} ساعت بعد"}
+                }
+                past{
+                    one{"{0} ساعت پیش"}
+                    other{"{0} ساعت پیش"}
+                }
+            }
+        }
+        hour-narrow{
+            dn{"ساعت"}
+            relativeTime{
+                future{
+                    one{"{0} ساعت بعد"}
+                    other{"{0} ساعت بعد"}
+                }
+                past{
+                    one{"{0} ساعت پیش"}
+                    other{"{0} ساعت پیش"}
+                }
+            }
+        }
+        hour-short{
             dn{"ساعت"}
             relativeTime{
                 future{
@@ -1169,7 +1244,47 @@ fa{
                 }
             }
         }
+        minute-narrow{
+            dn{"دقیقه"}
+            relativeTime{
+                future{
+                    one{"{0} دقیقه بعد"}
+                    other{"{0} دقیقه بعد"}
+                }
+                past{
+                    one{"{0} دقیقه پیش"}
+                    other{"{0} دقیقه پیش"}
+                }
+            }
+        }
+        minute-short{
+            dn{"دقیقه"}
+            relativeTime{
+                future{
+                    one{"{0} دقیقه بعد"}
+                    other{"{0} دقیقه بعد"}
+                }
+                past{
+                    one{"{0} دقیقه پیش"}
+                    other{"{0} دقیقه پیش"}
+                }
+            }
+        }
         mon{
+            relative{
+                "-1"{"دوشنبهٔ گذشته"}
+                "0"{"این دوشنبه"}
+                "1"{"دوشنبهٔ آینده"}
+            }
+        }
+        mon-narrow{
+            relative{
+                "-1"{"دوشنبهٔ گذشته"}
+                "0"{"این دوشنبه"}
+                "1"{"دوشنبهٔ آینده"}
+            }
+        }
+        mon-short{
             relative{
                 "-1"{"دوشنبهٔ گذشته"}
                 "0"{"این دوشنبه"}
@@ -1194,7 +1309,86 @@ fa{
                 }
             }
         }
+        month-narrow{
+            dn{"ماه"}
+            relativeTime{
+                future{
+                    one{"{0} ماه بعد"}
+                    other{"{0} ماه بعد"}
+                }
+                past{
+                    one{"{0} ماه پیش"}
+                    other{"{0} ماه پیش"}
+                }
+            }
+        }
+        month-short{
+            dn{"ماه"}
+            relativeTime{
+                future{
+                    one{"{0} ماه بعد"}
+                    other{"{0} ماه بعد"}
+                }
+                past{
+                    one{"{0} ماه پیش"}
+                    other{"{0} ماه پیش"}
+                }
+            }
+        }
+        quarter{
+            dn{"سه‌ماهه"}
+            relativeTime{
+                future{
+                    one{"{0} سه‌ماهه بعد"}
+                    other{"{0} سه‌ماهه بعد"}
+                }
+                past{
+                    one{"{0} سه‌ماهه پیش"}
+                    other{"{0} سه‌ماهه پیش"}
+                }
+            }
+        }
+        quarter-narrow{
+            dn{"سه‌ماهه"}
+            relativeTime{
+                future{
+                    one{"{0} سه‌ماهه بعد"}
+                    other{"{0} سه‌ماهه بعد"}
+                }
+                past{
+                    one{"{0} سه‌ماهه پیش"}
+                    other{"{0} سه‌ماهه پیش"}
+                }
+            }
+        }
+        quarter-short{
+            dn{"سه‌ماهه"}
+            relativeTime{
+                future{
+                    one{"{0} سه‌ماهه بعد"}
+                    other{"{0} سه‌ماهه بعد"}
+                }
+                past{
+                    one{"{0} سه‌ماهه پیش"}
+                    other{"{0} سه‌ماهه پیش"}
+                }
+            }
+        }
         sat{
+            relative{
+                "-1"{"شنبهٔ گذشته"}
+                "0"{"این شنبه"}
+                "1"{"شنبهٔ آینده"}
+            }
+        }
+        sat-narrow{
+            relative{
+                "-1"{"شنبهٔ گذشته"}
+                "0"{"این شنبه"}
+                "1"{"شنبهٔ آینده"}
+            }
+        }
+        sat-short{
             relative{
                 "-1"{"شنبهٔ گذشته"}
                 "0"{"این شنبه"}
@@ -1217,7 +1411,47 @@ fa{
                 }
             }
         }
+        second-narrow{
+            dn{"ثانیه"}
+            relativeTime{
+                future{
+                    one{"{0} ثانیه بعد"}
+                    other{"{0} ثانیه بعد"}
+                }
+                past{
+                    one{"{0} ثانیه پیش"}
+                    other{"{0} ثانیه پیش"}
+                }
+            }
+        }
+        second-short{
+            dn{"ثانیه"}
+            relativeTime{
+                future{
+                    one{"{0} ثانیه بعد"}
+                    other{"{0} ثانیه بعد"}
+                }
+                past{
+                    one{"{0} ثانیه پیش"}
+                    other{"{0} ثانیه پیش"}
+                }
+            }
+        }
         sun{
+            relative{
+                "-1"{"یکشنبهٔ گذشته"}
+                "0"{"این یکشنبه"}
+                "1"{"یکشنبهٔ آینده"}
+            }
+        }
+        sun-narrow{
+            relative{
+                "-1"{"یکشنبهٔ گذشته"}
+                "0"{"این یکشنبه"}
+                "1"{"یکشنبهٔ آینده"}
+            }
+        }
+        sun-short{
             relative{
                 "-1"{"یکشنبهٔ گذشته"}
                 "0"{"این یکشنبه"}
@@ -1231,7 +1465,35 @@ fa{
                 "1"{"پنجشنبهٔ آینده"}
             }
         }
+        thu-narrow{
+            relative{
+                "-1"{"پنجشنبهٔ گذشته"}
+                "0"{"این پنجشنبه"}
+                "1"{"پنجشنبهٔ آینده"}
+            }
+        }
+        thu-short{
+            relative{
+                "-1"{"پنجشنبهٔ گذشته"}
+                "0"{"این پنجشنبه"}
+                "1"{"پنجشنبهٔ آینده"}
+            }
+        }
         tue{
+            relative{
+                "-1"{"سه‌شنبهٔ گذشته"}
+                "0"{"این سه‌شنبه"}
+                "1"{"سه‌شنبهٔ آینده"}
+            }
+        }
+        tue-narrow{
+            relative{
+                "-1"{"سه‌شنبهٔ گذشته"}
+                "0"{"این سه‌شنبه"}
+                "1"{"سه‌شنبهٔ آینده"}
+            }
+        }
+        tue-short{
             relative{
                 "-1"{"سه‌شنبهٔ گذشته"}
                 "0"{"این سه‌شنبه"}
@@ -1245,6 +1507,20 @@ fa{
                 "1"{"چهارشنبهٔ آینده"}
             }
         }
+        wed-narrow{
+            relative{
+                "-1"{"چهارشنبهٔ گذشته"}
+                "0"{"این چهارشنبه"}
+                "1"{"چهارشنبهٔ آینده"}
+            }
+        }
+        wed-short{
+            relative{
+                "-1"{"چهارشنبهٔ گذشته"}
+                "0"{"این چهارشنبه"}
+                "1"{"چهارشنبهٔ آینده"}
+            }
+        }
         week{
             dn{"هفته"}
             relative{
@@ -1252,6 +1528,32 @@ fa{
                 "0"{"این هفته"}
                 "1"{"هفتهٔ آینده"}
             }
+            relativeTime{
+                future{
+                    one{"{0} هفته بعد"}
+                    other{"{0} هفته بعد"}
+                }
+                past{
+                    one{"{0} هفته پیش"}
+                    other{"{0} هفته پیش"}
+                }
+            }
+        }
+        week-narrow{
+            dn{"هفته"}
+            relativeTime{
+                future{
+                    one{"{0} هفته بعد"}
+                    other{"{0} هفته بعد"}
+                }
+                past{
+                    one{"{0} هفته پیش"}
+                    other{"{0} هفته پیش"}
+                }
+            }
+        }
+        week-short{
+            dn{"هفته"}
             relativeTime{
                 future{
                     one{"{0} هفته بعد"}
@@ -1284,6 +1586,32 @@ fa{
                 }
             }
         }
+        year-narrow{
+            dn{"سال"}
+            relativeTime{
+                future{
+                    one{"{0} سال بعد"}
+                    other{"{0} سال بعد"}
+                }
+                past{
+                    one{"{0} سال پیش"}
+                    other{"{0} سال پیش"}
+                }
+            }
+        }
+        year-short{
+            dn{"سال"}
+            relativeTime{
+                future{
+                    one{"{0} سال بعد"}
+                    other{"{0} سال بعد"}
+                }
+                past{
+                    one{"{0} سال پیش"}
+                    other{"{0} سال پیش"}
+                }
+            }
+        }
         zone{
             dn{"منطقهٔ زمانی"}
         }
@@ -1305,12 +1633,14 @@ fa{
             start{"{0}،‏ {1}"}
         }
         unit-narrow{
-            2{"{0} و {1}"}
-            end{"{0} و {1}"}
+            2{"{0} {1}"}
+            end{"{0} {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
         }
         unit-short{
-            2{"{0} و {1}"}
-            end{"{0} و {1}"}
+            2{"{0}،‏ {1}"}
+            end{"{0}،‏ {1}"}
             middle{"{0}،‏ {1}"}
             start{"{0}،‏ {1}"}
         }
@@ -1331,632 +1661,5 @@ fa{
         x-Jamo{"جامو"}
         x-Pinyin{"پین‌یین"}
         x-Publishing{"نشر"}
-    }
-    units{
-        angle{
-            arc-minute{
-                one{"{0} دقیقه"}
-                other{"{0} دقیقه"}
-            }
-            arc-second{
-                one{"{0} ثانیه"}
-                other{"{0} ثانیه"}
-            }
-            degree{
-                one{"{0} درجه"}
-                other{"{0} درجه"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} جریب"}
-                other{"{0} جریب"}
-            }
-            hectare{
-                one{"{0} هکتار"}
-                other{"{0} هکتار"}
-            }
-            square-foot{
-                one{"{0} فوت مربع"}
-                other{"{0} فوت مربع"}
-            }
-            square-kilometer{
-                one{"{0} کیلومتر مربع"}
-                other{"{0} کیلومتر مربع"}
-            }
-            square-meter{
-                one{"{0} متر مربع"}
-                other{"{0} متر مربع"}
-            }
-            square-mile{
-                one{"{0} مایل مربع"}
-                other{"{0} مایل مربع"}
-            }
-        }
-        compound{
-            per{"{0} بر {1}"}
-        }
-        duration{
-            day{
-                one{"{0} روز"}
-                other{"{0} روز"}
-            }
-            hour{
-                one{"{0} ساعت"}
-                other{"{0} ساعت"}
-            }
-            millisecond{
-                one{"{0} میلی‌ثانیه"}
-                other{"{0} میلی‌ثانیه"}
-            }
-            minute{
-                one{"{0} دقیقه"}
-                other{"{0} دقیقه"}
-            }
-            month{
-                one{"{0} ماه"}
-                other{"{0} ماه"}
-            }
-            second{
-                one{"{0} ثانیه"}
-                other{"{0} ثانیه"}
-            }
-            week{
-                one{"{0} هفته"}
-                other{"{0} هفته"}
-            }
-            year{
-                one{"{0} سال"}
-                other{"{0} سال"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} سانتی‌متر"}
-                other{"{0} سانتی‌متر"}
-            }
-            foot{
-                one{"{0} فوت"}
-                other{"{0} فوت"}
-            }
-            inch{
-                one{"{0} اینچ"}
-                other{"{0} اینچ"}
-            }
-            kilometer{
-                one{"{0} کیلومتر"}
-                other{"{0} کیلومتر"}
-            }
-            light-year{
-                one{"{0} سال نوری"}
-                other{"{0} سال نوری"}
-            }
-            meter{
-                one{"{0} متر"}
-                other{"{0} متر"}
-            }
-            mile{
-                one{"{0} مایل"}
-                other{"{0} مایل"}
-            }
-            millimeter{
-                one{"{0} میلی‌متر"}
-                other{"{0} میلی‌متر"}
-            }
-            picometer{
-                one{"{0} پیکومتر"}
-                other{"{0} پیکومتر"}
-            }
-            yard{
-                one{"{0} یارد"}
-                other{"{0} یارد"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} گرم"}
-                other{"{0} گرم"}
-            }
-            kilogram{
-                one{"{0} کیلوگرم"}
-                other{"{0} کیلوگرم"}
-            }
-            ounce{
-                one{"{0} اونس"}
-                other{"{0} اونس"}
-            }
-            pound{
-                one{"{0} پوند"}
-                other{"{0} پوند"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} اسب بخار"}
-                other{"{0} اسب بخار"}
-            }
-            kilowatt{
-                one{"{0} کیلووات"}
-                other{"{0} کیلووات"}
-            }
-            watt{
-                one{"{0} وات"}
-                other{"{0} وات"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} هکتوپاسکال"}
-                other{"{0} هکتوپاسکال"}
-            }
-            inch-hg{
-                one{"{0} اینچ جیوه"}
-                other{"{0} اینچ جیوه"}
-            }
-            millibar{
-                one{"{0} میلی‌بار"}
-                other{"{0} میلی‌بار"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} کیلومتر در ساعت"}
-                other{"{0} کیلومتر در ساعت"}
-            }
-            meter-per-second{
-                one{"{0} متر در ثانیه"}
-                other{"{0} متر در ثانیه"}
-            }
-            mile-per-hour{
-                one{"{0} مایل در ساعت"}
-                other{"{0} مایل در ساعت"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0} درجهٔ سلسیوس"}
-                other{"{0} درجهٔ سلسیوس"}
-            }
-            fahrenheit{
-                one{"{0} درجهٔ فارنهایت"}
-                other{"{0} درجهٔ فارنهایت"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} کیلومتر مکعب"}
-                other{"{0} کیلومتر مکعب"}
-            }
-            cubic-mile{
-                one{"{0} مایل مکعب"}
-                other{"{0} مایل مکعب"}
-            }
-            liter{
-                one{"{0} لیتر"}
-                other{"{0} لیتر"}
-            }
-        }
-    }
-    unitsNarrow{
-        acceleration{
-            g-force{
-                one{"{0}G"}
-                other{"{0}G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-            degree{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        area{
-            acre{
-                one{"{0}جریب"}
-                other{"{0} جریب"}
-            }
-            hectare{
-                one{"{0}ha"}
-                other{"{0}ha"}
-            }
-            square-foot{
-                one{"{0}ft²"}
-                other{"{0}ft²"}
-            }
-            square-kilometer{
-                one{"{0}km²"}
-                other{"{0}km²"}
-            }
-            square-meter{
-                one{"{0}m²"}
-                other{"{0}m²"}
-            }
-            square-mile{
-                one{"{0} mi²"}
-                other{"{0} mi²"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} روز"}
-                other{"{0} روز"}
-            }
-            hour{
-                one{"{0} ساعت"}
-                other{"{0} ساعت"}
-            }
-            millisecond{
-                one{"{0}ms"}
-                other{"{0}ms"}
-            }
-            minute{
-                one{"{0} دقیقه"}
-                other{"{0} دقیقه"}
-            }
-            month{
-                one{"{0} ماه"}
-                other{"{0} ماه"}
-            }
-            second{
-                one{"{0}s"}
-                other{"{0}s"}
-            }
-            week{
-                one{"{0} هفته"}
-                other{"{0} هفته"}
-            }
-            year{
-                one{"{0} سال"}
-                other{"{0} سال"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} cm"}
-                other{"{0} cm"}
-            }
-            foot{
-                one{"{0}ft"}
-                other{"{0}ft"}
-            }
-            inch{
-                one{"{0}in"}
-                other{"{0}in"}
-            }
-            kilometer{
-                one{"{0}km"}
-                other{"{0}km"}
-            }
-            light-year{
-                one{"{0}ly"}
-                other{"{0}ly"}
-            }
-            meter{
-                one{"{0}m"}
-                other{"{0}m"}
-            }
-            mile{
-                one{"{0}mi"}
-                other{"{0}mi"}
-            }
-            millimeter{
-                one{"{0}mm"}
-                other{"{0}mm"}
-            }
-            picometer{
-                one{"{0}pm"}
-                other{"{0}pm"}
-            }
-            yard{
-                one{"{0}yd"}
-                other{"{0}yd"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0}g"}
-                other{"{0}g"}
-            }
-            kilogram{
-                one{"{0}kg"}
-                other{"{0}kg"}
-            }
-            ounce{
-                one{"{0}oz"}
-                other{"{0}oz"}
-            }
-            pound{
-                one{"{0}lb"}
-                other{"{0}lb"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0}hp"}
-                other{"{0}hp"}
-            }
-            kilowatt{
-                one{"{0}kW"}
-                other{"{0}kW"}
-            }
-            watt{
-                one{"{0}W"}
-                other{"{0}W"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0}hPa"}
-                other{"{0}hPa"}
-            }
-            inch-hg{
-                one{"{0}inHg"}
-                other{"{0}inHg"}
-            }
-            millibar{
-                one{"{0}mbar"}
-                other{"{0}mbar"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0}km/h"}
-                other{"{0}km/h"}
-            }
-            meter-per-second{
-                one{"{0}m/s"}
-                other{"{0}m/s"}
-            }
-            mile-per-hour{
-                one{"{0}mph"}
-                other{"{0}mph"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-            fahrenheit{
-                one{"{0}°F"}
-                other{"{0}°F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0}km³"}
-                other{"{0}km³"}
-            }
-            cubic-mile{
-                one{"{0}mi³"}
-                other{"{0}mi³"}
-            }
-            liter{
-                one{"{0} l"}
-                other{"{0} l"}
-            }
-        }
-    }
-    unitsShort{
-        acceleration{
-            g-force{
-                one{"{0}G"}
-                other{"{0}G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0} دق"}
-                other{"{0} دق"}
-            }
-            arc-second{
-                one{"{0} ث"}
-                other{"{0} ث"}
-            }
-            degree{
-                one{"{0} درجه"}
-                other{"{0} درجه"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} جریب"}
-                other{"{0} جریب"}
-            }
-            hectare{
-                one{"{0} هکتار"}
-                other{"{0} هکتار"}
-            }
-            square-foot{
-                one{"{0} فوت مربع"}
-                other{"{0} فوت مربع"}
-            }
-            square-kilometer{
-                one{"{0} کیلومترمربع"}
-                other{"{0} کیلومترمربع"}
-            }
-            square-meter{
-                one{"{0} مترمربع"}
-                other{"{0} مترمربع"}
-            }
-            square-mile{
-                one{"{0} مایل مربع"}
-                other{"{0} مایل مربع"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} روز"}
-                other{"{0} روز"}
-            }
-            hour{
-                one{"{0} ساعت"}
-                other{"{0} ساعت"}
-            }
-            millisecond{
-                one{"{0} میلی‌ثانیه"}
-                other{"{0} میلی‌ثانیه"}
-            }
-            minute{
-                one{"{0} دقیقه"}
-                other{"{0} دقیقه"}
-            }
-            month{
-                one{"{0} ماه"}
-                other{"{0} ماه"}
-            }
-            second{
-                one{"{0} ثانیه"}
-                other{"{0} ثانیه"}
-            }
-            week{
-                one{"{0} هفته"}
-                other{"{0} هفته"}
-            }
-            year{
-                one{"{0} سال"}
-                other{"{0} سال"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} سانت"}
-                other{"{0} سانت"}
-            }
-            foot{
-                one{"{0} فوت"}
-                other{"{0} فوت"}
-            }
-            inch{
-                one{"{0} اینچ"}
-                other{"{0} اینچ"}
-            }
-            kilometer{
-                one{"{0} کیلومتر"}
-                other{"{0} کیلومتر"}
-            }
-            light-year{
-                one{"{0} سال نوری"}
-                other{"{0} سال نوری"}
-            }
-            meter{
-                one{"{0} متر"}
-                other{"{0} متر"}
-            }
-            mile{
-                one{"{0} مایل"}
-                other{"{0} مایل"}
-            }
-            millimeter{
-                one{"{0} میلیمتر"}
-                other{"{0} میلیمتر"}
-            }
-            picometer{
-                one{"{0} پیکومتر"}
-                other{"{0} پیکومتر"}
-            }
-            yard{
-                one{"{0} یارد"}
-                other{"{0} یارد"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} گرم"}
-                other{"{0} گرم"}
-            }
-            kilogram{
-                one{"{0} کیلو"}
-                other{"{0} کیلو"}
-            }
-            ounce{
-                one{"{0} اونس"}
-                other{"{0} اونس"}
-            }
-            pound{
-                one{"{0} پوند"}
-                other{"{0} پوند"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} اسب بخار"}
-                other{"{0} اسب بخار"}
-            }
-            kilowatt{
-                one{"{0} کیلووات"}
-                other{"{0} کیلووات"}
-            }
-            watt{
-                one{"{0} وات"}
-                other{"{0} وات"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} هکتوپاسکال"}
-                other{"{0} هکتوپاسکال"}
-            }
-            inch-hg{
-                one{"{0} اینچ‌جیوه"}
-                other{"{0} اینچ‌جیوه"}
-            }
-            millibar{
-                one{"{0} میلی‌بار"}
-                other{"{0} میلی‌بار"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} کیلومتردرساعت"}
-                other{"{0} کیلومتردرساعت"}
-            }
-            meter-per-second{
-                one{"{0} متردرثانیه"}
-                other{"{0} متردرثانیه"}
-            }
-            mile-per-hour{
-                one{"{0} مایل‌درساعت"}
-                other{"{0} مایل‌درساعت"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°C"}
-                other{"{0}°C"}
-            }
-            fahrenheit{
-                one{"{0}°F"}
-                other{"{0}°F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} کیلومترمکعب"}
-                other{"{0} کیلومترمکعب"}
-            }
-            cubic-mile{
-                one{"{0} مایل مکعب"}
-                other{"{0} مایل مکعب"}
-            }
-            liter{
-                one{"{0} l"}
-                other{"{0} l"}
-            }
-        }
     }
 }

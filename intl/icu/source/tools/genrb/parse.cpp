@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 1998-2013, International Business Machines
+*   Copyright (C) 1998-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -18,7 +18,16 @@
 *******************************************************************************
 */
 
-#include "ucol_imp.h"
+// Safer use of UnicodeString.
+#ifndef UNISTR_FROM_CHAR_EXPLICIT
+#   define UNISTR_FROM_CHAR_EXPLICIT explicit
+#endif
+
+// Less important, but still a good idea.
+#ifndef UNISTR_FROM_STRING_EXPLICIT
+#   define UNISTR_FROM_STRING_EXPLICIT explicit
+#endif
+
 #include "parse.h"
 #include "errmsg.h"
 #include "uhash.h"
@@ -32,7 +41,17 @@
 #include "genrb.h"
 #include "unicode/ustring.h"
 #include "unicode/uscript.h"
+#include "unicode/utf16.h"
 #include "unicode/putil.h"
+#include "collationbuilder.h"
+#include "collationdata.h"
+#include "collationdatareader.h"
+#include "collationdatawriter.h"
+#include "collationfastlatinbuilder.h"
+#include "collationinfo.h"
+#include "collationroot.h"
+#include "collationruleparser.h"
+#include "collationtailoring.h"
 #include <stdio.h>
 
 /* Number of tokens to read ahead of the current stream position */
@@ -50,6 +69,9 @@
 #define ENDCOMMAND       0x005D
 #define OPENSQBRACKET    0x005B
 #define CLOSESQBRACKET   0x005D
+
+using icu::LocalPointer;
+using icu::UnicodeString;
 
 struct Lookahead
 {
@@ -84,6 +106,7 @@ typedef struct {
     uint32_t        inputdirLength;
     const char     *outputdir;
     uint32_t        outputdirLength;
+    const char     *filename;
     UBool           makeBinaryCollation;
     UBool           omitCollationRules;
 } ParseState;
@@ -623,10 +646,9 @@ parseAlias(ParseState* state, char *tag, uint32_t startline, const struct UStrin
     return result;
 }
 
-typedef struct{
-    const char* inputDir;
-    const char* outputDir;
-} GenrbData;
+#if !UCONFIG_NO_COLLATION
+
+namespace {
 
 static struct SResource* resLookup(struct SResource* res, const char* key){
     struct SResource *current = NULL;
@@ -647,17 +669,34 @@ static struct SResource* resLookup(struct SResource* res, const char* key){
     return NULL;
 }
 
-static const UChar* importFromDataFile(void* context, const char* locale, const char* type, int32_t* pLength, UErrorCode* status){
+class GenrbImporter : public icu::CollationRuleParser::Importer {
+public:
+    GenrbImporter(const char *in, const char *out) : inputDir(in), outputDir(out) {}
+    virtual ~GenrbImporter();
+    virtual void getRules(
+            const char *localeID, const char *collationType,
+            UnicodeString &rules,
+            const char *&errorReason, UErrorCode &errorCode);
+
+private:
+    const char *inputDir;
+    const char *outputDir;
+};
+
+GenrbImporter::~GenrbImporter() {}
+
+void
+GenrbImporter::getRules(
+        const char *localeID, const char *collationType,
+        UnicodeString &rules,
+        const char *& /*errorReason*/, UErrorCode &errorCode) {
     struct SRBRoot *data         = NULL;
     UCHARBUF       *ucbuf        = NULL;
-    GenrbData* genrbdata = (GenrbData*) context;
-    int localeLength = strlen(locale);
+    int localeLength = strlen(localeID);
     char* filename = (char*)uprv_malloc(localeLength+5);
     char           *inputDirBuf  = NULL;
     char           *openFileName = NULL;
     const char* cp = "";
-    UChar* urules = NULL;
-    int32_t urulesLength = 0;
     int32_t i = 0;
     int32_t dirlen  = 0;
     int32_t filelen = 0;
@@ -666,7 +705,7 @@ static const UChar* importFromDataFile(void* context, const char* locale, const 
     struct SResource* collation;
     struct SResource* sequence;
 
-    memcpy(filename, locale, localeLength);
+    memcpy(filename, localeID, localeLength);
     for(i = 0; i < localeLength; i++){
         if(filename[i] == '-'){
             filename[i] = '_';
@@ -679,16 +718,16 @@ static const UChar* importFromDataFile(void* context, const char* locale, const 
     filename[localeLength+4] = 0;
 
 
-    if (status==NULL || U_FAILURE(*status)) {
-        return NULL;
+    if (U_FAILURE(errorCode)) {
+        return;
     }
     if(filename==NULL){
-        *status=U_ILLEGAL_ARGUMENT_ERROR;
-        return NULL;
+        errorCode=U_ILLEGAL_ARGUMENT_ERROR;
+        return;
     }else{
         filelen = (int32_t)uprv_strlen(filename);
     }
-    if(genrbdata->inputDir == NULL) {
+    if(inputDir == NULL) {
         const char *filenameBegin = uprv_strrchr(filename, U_FILE_SEP_CHAR);
         openFileName = (char *) uprv_malloc(dirlen + filelen + 2);
         openFileName[0] = '\0';
@@ -700,27 +739,28 @@ static const UChar* importFromDataFile(void* context, const char* locale, const 
              * another file, like UCARules.txt or thaidict.brk.
              */
             int32_t filenameSize = (int32_t)(filenameBegin - filename + 1);
-            inputDirBuf = uprv_strncpy((char *)uprv_malloc(filenameSize), filename, filenameSize);
+            inputDirBuf = (char *)uprv_malloc(filenameSize);
 
             /* test for NULL */
             if(inputDirBuf == NULL) {
-                *status = U_MEMORY_ALLOCATION_ERROR;
+                errorCode = U_MEMORY_ALLOCATION_ERROR;
                 goto finish;
             }
 
+            uprv_strncpy(inputDirBuf, filename, filenameSize);
             inputDirBuf[filenameSize - 1] = 0;
-            genrbdata->inputDir = inputDirBuf;
-            dirlen  = (int32_t)uprv_strlen(genrbdata->inputDir);
+            inputDir = inputDirBuf;
+            dirlen  = (int32_t)uprv_strlen(inputDir);
         }
     }else{
-        dirlen  = (int32_t)uprv_strlen(genrbdata->inputDir);
+        dirlen  = (int32_t)uprv_strlen(inputDir);
 
-        if(genrbdata->inputDir[dirlen-1] != U_FILE_SEP_CHAR) {
+        if(inputDir[dirlen-1] != U_FILE_SEP_CHAR) {
             openFileName = (char *) uprv_malloc(dirlen + filelen + 2);
 
             /* test for NULL */
             if(openFileName == NULL) {
-                *status = U_MEMORY_ALLOCATION_ERROR;
+                errorCode = U_MEMORY_ALLOCATION_ERROR;
                 goto finish;
             }
 
@@ -736,8 +776,8 @@ static const UChar* importFromDataFile(void* context, const char* locale, const 
              * user should use
              * genrb -s. icu/data  --- start from CWD and look in icu/data dir
              */
-            if( (filename[0] != U_FILE_SEP_CHAR) && (genrbdata->inputDir[dirlen-1] !='.')){
-                uprv_strcpy(openFileName, genrbdata->inputDir);
+            if( (filename[0] != U_FILE_SEP_CHAR) && (inputDir[dirlen-1] !='.')){
+                uprv_strcpy(openFileName, inputDir);
                 openFileName[dirlen]     = U_FILE_SEP_CHAR;
             }
             openFileName[dirlen + 1] = '\0';
@@ -746,42 +786,44 @@ static const UChar* importFromDataFile(void* context, const char* locale, const 
 
             /* test for NULL */
             if(openFileName == NULL) {
-                *status = U_MEMORY_ALLOCATION_ERROR;
+                errorCode = U_MEMORY_ALLOCATION_ERROR;
                 goto finish;
             }
 
-            uprv_strcpy(openFileName, genrbdata->inputDir);
+            uprv_strcpy(openFileName, inputDir);
 
         }
     }
     uprv_strcat(openFileName, filename);
     /* printf("%s\n", openFileName);  */
-    *status = U_ZERO_ERROR;
-    ucbuf = ucbuf_open(openFileName, &cp,getShowWarning(),TRUE, status);
+    errorCode = U_ZERO_ERROR;
+    ucbuf = ucbuf_open(openFileName, &cp,getShowWarning(),TRUE, &errorCode);
 
-    if(*status == U_FILE_ACCESS_ERROR) {
+    if(errorCode == U_FILE_ACCESS_ERROR) {
 
         fprintf(stderr, "couldn't open file %s\n", openFileName == NULL ? filename : openFileName);
         goto finish;
     }
-    if (ucbuf == NULL || U_FAILURE(*status)) {
-        fprintf(stderr, "An error occured processing file %s. Error: %s\n", openFileName == NULL ? filename : openFileName,u_errorName(*status));
+    if (ucbuf == NULL || U_FAILURE(errorCode)) {
+        fprintf(stderr, "An error occured processing file %s. Error: %s\n", openFileName == NULL ? filename : openFileName,u_errorName(errorCode));
         goto finish;
     }
 
     /* Parse the data into an SRBRoot */
-    data = parse(ucbuf, genrbdata->inputDir, genrbdata->outputDir, FALSE, FALSE, status);
+    data = parse(ucbuf, inputDir, outputDir, filename, FALSE, FALSE, &errorCode);
+    if (U_FAILURE(errorCode)) {
+        goto finish;
+    }
 
     root = data->fRoot;
     collations = resLookup(root, "collations");
     if (collations != NULL) {
-      collation = resLookup(collations, type);
+      collation = resLookup(collations, collationType);
       if (collation != NULL) {
         sequence = resLookup(collation, "Sequence");
         if (sequence != NULL) {
-          urules = sequence->u.fString.fChars;
-          urulesLength = sequence->u.fString.fLength;
-          *pLength = urulesLength;
+          // No string pointer aliasing so that we need not hold onto the resource bundle.
+          rules.setTo(sequence->u.fString.fChars, sequence->u.fString.fLength);
         }
       }
     }
@@ -798,8 +840,6 @@ finish:
     if(ucbuf) {
         ucbuf_close(ucbuf);
     }
-
-    return urules;
 }
 
 // Quick-and-dirty escaping function.
@@ -823,17 +863,25 @@ escape(const UChar *s, char *buffer) {
     }
 }
 
+}  // namespace
+
+#endif  // !UCONFIG_NO_COLLATION
+
 static struct SResource *
-addCollation(ParseState* state, struct SResource  *result, uint32_t startline, UErrorCode *status)
+addCollation(ParseState* state, struct SResource  *result, const char *collationType,
+             uint32_t startline, UErrorCode *status)
 {
+    // TODO: Use LocalPointer for result, or make caller close it when there is a failure.
     struct SResource  *member = NULL;
     struct UString    *tokenValue;
     struct UString     comment;
     enum   ETokenType  token;
     char               subtag[1024];
+    UnicodeString      rules;
+    UBool              haveRules = FALSE;
     UVersionInfo       version;
     uint32_t           line;
-    GenrbData genrbdata;
+
     /* '{' . (name resource)* '}' */
     version[0]=0; version[1]=0; version[2]=0; version[3]=0;
 
@@ -844,7 +892,7 @@ addCollation(ParseState* state, struct SResource  *result, uint32_t startline, U
 
         if (token == TOK_CLOSE_BRACE)
         {
-            return result;
+            break;
         }
 
         if (token != TOK_STRING)
@@ -879,8 +927,11 @@ addCollation(ParseState* state, struct SResource  *result, uint32_t startline, U
             res_close(result);
             return NULL;
         }
-
-        if (uprv_strcmp(subtag, "Version") == 0)
+        if (result == NULL)
+        {
+            // Ignore the parsed resources, continue parsing.
+        }
+        else if (uprv_strcmp(subtag, "Version") == 0)
         {
             char     ver[40];
             int32_t length = member->u.fString.fLength;
@@ -894,13 +945,7 @@ addCollation(ParseState* state, struct SResource  *result, uint32_t startline, U
             u_versionFromString(version, ver);
 
             table_add(result, member, line, status);
-
-        }
-        else if (uprv_strcmp(subtag, "Override") == 0)
-        {
-            // UBool override = (u_strncmp(member->u.fString.fChars, trueValue, u_strlen(trueValue)) == 0);
-            table_add(result, member, line, status);
-
+            member = NULL;
         }
         else if(uprv_strcmp(subtag, "%%CollationBin")==0)
         {
@@ -908,110 +953,23 @@ addCollation(ParseState* state, struct SResource  *result, uint32_t startline, U
         }
         else if (uprv_strcmp(subtag, "Sequence") == 0)
         {
-#if UCONFIG_NO_COLLATION || UCONFIG_NO_FILE_IO
-            warning(line, "Not building collation elements because of UCONFIG_NO_COLLATION and/or UCONFIG_NO_FILE_IO, see uconfig.h");
-#else
-            if(state->makeBinaryCollation) {
-
-                /* do the collation elements */
-                int32_t     len   = 0;
-                uint8_t   *data  = NULL;
-                UCollator *coll  = NULL;
-                int32_t reorderCodes[USCRIPT_CODE_LIMIT + (UCOL_REORDER_CODE_LIMIT - UCOL_REORDER_CODE_FIRST)];
-                int32_t reorderCodeCount;
-                int32_t reorderCodeIndex;
-                UParseError parseError;
-
-                genrbdata.inputDir = state->inputdir;
-                genrbdata.outputDir = state->outputdir;
-
-                UErrorCode intStatus = U_ZERO_ERROR;
-                uprv_memset(&parseError, 0, sizeof(parseError));
-                coll = ucol_openRulesForImport(member->u.fString.fChars, member->u.fString.fLength,
-                                               UCOL_OFF, UCOL_DEFAULT_STRENGTH,&parseError, importFromDataFile, &genrbdata, &intStatus);
-
-                if (U_SUCCESS(intStatus) && coll != NULL)
-                {
-                    len = ucol_cloneBinary(coll, NULL, 0, &intStatus);
-                    data = (uint8_t *)uprv_malloc(len);
-                    intStatus = U_ZERO_ERROR;
-                    len = ucol_cloneBinary(coll, data, len, &intStatus);
-
-                    /* tailoring rules version */
-                    /* This is wrong! */
-                    /*coll->dataInfo.dataVersion[1] = version[0];*/
-                    /* Copy tailoring version. Builder version already */
-                    /* set in ucol_openRules */
-                    ((UCATableHeader *)data)->version[1] = version[0];
-                    ((UCATableHeader *)data)->version[2] = version[1];
-                    ((UCATableHeader *)data)->version[3] = version[2];
-
-                    if (U_SUCCESS(intStatus) && data != NULL)
-                    {
-                        struct SResource *collationBin = bin_open(state->bundle, "%%CollationBin", len, data, NULL, NULL, status);
-                        table_add(result, collationBin, line, status);
-                        uprv_free(data);
-
-                        reorderCodeCount = ucol_getReorderCodes(
-                            coll, reorderCodes, USCRIPT_CODE_LIMIT + (UCOL_REORDER_CODE_LIMIT - UCOL_REORDER_CODE_FIRST), &intStatus);
-                        if (U_SUCCESS(intStatus) && reorderCodeCount > 0) {
-                            struct SResource *reorderCodeRes = intvector_open(state->bundle, "%%ReorderCodes", NULL, status);
-                            for (reorderCodeIndex = 0; reorderCodeIndex < reorderCodeCount; reorderCodeIndex++) {
-                                intvector_add(reorderCodeRes, reorderCodes[reorderCodeIndex], status);
-                            }
-                            table_add(result, reorderCodeRes, line, status);
-                        }
-                    }
-                    else
-                    {
-                        warning(line, "could not obtain rules from collator");
-                        if(isStrict()){
-                            *status = U_INVALID_FORMAT_ERROR;
-                            return NULL;
-                        }
-                    }
-
-                    ucol_close(coll);
-                }
-                else
-                {
-                    if(intStatus == U_FILE_ACCESS_ERROR) {
-                        error(startline, "Collation could not be built- U_FILE_ACCESS_ERROR. Make sure ICU's data has been built and is loading properly.");
-                        *status = intStatus;
-                        return NULL;
-                    }
-                    char preBuffer[100], postBuffer[100];
-                    escape(parseError.preContext, preBuffer);
-                    escape(parseError.postContext, postBuffer);
-                    warning(line,
-                            "%%%%CollationBin could not be constructed from CollationElements\n"
-                            "  check context, check that the FractionalUCA.txt UCA version "
-                            "matches the current UCD version\n"
-                            "  UErrorCode=%s  UParseError={ line=%d offset=%d pre=<> post=<> }",
-                            u_errorName(intStatus),
-                            parseError.line,
-                            parseError.offset,
-                            preBuffer,
-                            postBuffer);
-                    if(isStrict()){
-                        *status = intStatus;
-                        return NULL;
-                    }
-                }
-            } else {
-                if(isVerbose()) {
-                    printf("Not building Collation binary\n");
-                }
-            }
-#endif
+            rules.setTo(member->u.fString.fChars, member->u.fString.fLength);
+            haveRules = TRUE;
+            // Defer building the collator until we have seen
+            // all sub-elements of the collation table, including the Version.
             /* in order to achieve smaller data files, we can direct genrb */
             /* to omit collation rules */
-            if(state->omitCollationRules) {
-                bundle_closeString(state->bundle, member);
-            } else {
+            if(!state->omitCollationRules) {
                 table_add(result, member, line, status);
+                member = NULL;
             }
         }
+        else  // Just copy non-special items.
+        {
+            table_add(result, member, line, status);
+            member = NULL;
+        }
+        res_close(member);  // TODO: use LocalPointer
         if (U_FAILURE(*status))
         {
             res_close(result);
@@ -1019,9 +977,117 @@ addCollation(ParseState* state, struct SResource  *result, uint32_t startline, U
         }
     }
 
-    // Reached the end without a TOK_CLOSE_BRACE.  Should be an error.
-    *status = U_INTERNAL_PROGRAM_ERROR;
-    return NULL;
+    if (!haveRules) { return result; }
+
+#if UCONFIG_NO_COLLATION || UCONFIG_NO_FILE_IO
+    warning(line, "Not building collation elements because of UCONFIG_NO_COLLATION and/or UCONFIG_NO_FILE_IO, see uconfig.h");
+    (void)collationType;
+#else
+    // CLDR ticket #3949, ICU ticket #8082:
+    // Do not build collation binary data for for-import-only "private" collation rule strings.
+    if (uprv_strncmp(collationType, "private-", 8) == 0) {
+        if(isVerbose()) {
+            printf("Not building %s~%s collation binary\n", state->filename, collationType);
+        }
+        return result;
+    }
+
+    if(!state->makeBinaryCollation) {
+        if(isVerbose()) {
+            printf("Not building %s~%s collation binary\n", state->filename, collationType);
+        }
+        return result;
+    }
+    UErrorCode intStatus = U_ZERO_ERROR;
+    UParseError parseError;
+    uprv_memset(&parseError, 0, sizeof(parseError));
+    GenrbImporter importer(state->inputdir, state->outputdir);
+    const icu::CollationTailoring *base = icu::CollationRoot::getRoot(intStatus);
+    if(U_FAILURE(intStatus)) {
+        error(line, "failed to load root collator (ucadata.icu) - %s", u_errorName(intStatus));
+        res_close(result);
+        return NULL;  // TODO: use LocalUResourceBundlePointer for result
+    }
+    icu::CollationBuilder builder(base, intStatus);
+    if(uprv_strncmp(collationType, "search", 6) == 0) {
+        builder.disableFastLatin();  // build fast-Latin table unless search collator
+    }
+    LocalPointer<icu::CollationTailoring> t(
+            builder.parseAndBuild(rules, version, &importer, &parseError, intStatus));
+    if(U_FAILURE(intStatus)) {
+        const char *reason = builder.getErrorReason();
+        if(reason == NULL) { reason = ""; }
+        error(line, "CollationBuilder failed at %s~%s/Sequence rule offset %ld: %s  %s",
+                state->filename, collationType,
+                (long)parseError.offset, u_errorName(intStatus), reason);
+        if(parseError.preContext[0] != 0 || parseError.postContext[0] != 0) {
+            // Print pre- and post-context.
+            char preBuffer[100], postBuffer[100];
+            escape(parseError.preContext, preBuffer);
+            escape(parseError.postContext, postBuffer);
+            error(line, "  error context: \"...%s\" ! \"%s...\"", preBuffer, postBuffer);
+        }
+        if(isStrict()) {
+            *status = intStatus;
+            res_close(result);
+            return NULL;
+        }
+    }
+    icu::LocalMemory<uint8_t> buffer;
+    int32_t capacity = 100000;
+    uint8_t *dest = buffer.allocateInsteadAndCopy(capacity);
+    if(dest == NULL) {
+        fprintf(stderr, "memory allocation (%ld bytes) for file contents failed\n",
+                (long)capacity);
+        *status = U_MEMORY_ALLOCATION_ERROR;
+        res_close(result);
+        return NULL;
+    }
+    int32_t indexes[icu::CollationDataReader::IX_TOTAL_SIZE + 1];
+    int32_t totalSize = icu::CollationDataWriter::writeTailoring(
+            *t, *t->settings, indexes, dest, capacity, intStatus);
+    if(intStatus == U_BUFFER_OVERFLOW_ERROR) {
+        intStatus = U_ZERO_ERROR;
+        capacity = totalSize;
+        dest = buffer.allocateInsteadAndCopy(capacity);
+        if(dest == NULL) {
+            fprintf(stderr, "memory allocation (%ld bytes) for file contents failed\n",
+                    (long)capacity);
+            *status = U_MEMORY_ALLOCATION_ERROR;
+            res_close(result);
+            return NULL;
+        }
+        totalSize = icu::CollationDataWriter::writeTailoring(
+                *t, *t->settings, indexes, dest, capacity, intStatus);
+    }
+    if(U_FAILURE(intStatus)) {
+        fprintf(stderr, "CollationDataWriter::writeTailoring() failed: %s\n",
+                u_errorName(intStatus));
+        res_close(result);
+        return NULL;
+    }
+    if(isVerbose()) {
+        printf("%s~%s collation tailoring part sizes:\n", state->filename, collationType);
+        icu::CollationInfo::printSizes(totalSize, indexes);
+        if(t->settings->hasReordering()) {
+            printf("%s~%s collation reordering ranges:\n", state->filename, collationType);
+            icu::CollationInfo::printReorderRanges(
+                    *t->data, t->settings->reorderCodes, t->settings->reorderCodesLength);
+        }
+    }
+    struct SResource *collationBin = bin_open(state->bundle, "%%CollationBin", totalSize, dest, NULL, NULL, status);
+    table_add(result, collationBin, line, status);
+    if (U_FAILURE(*status)) {
+        res_close(result);
+        return NULL;
+    }
+#endif
+    return result;
+}
+
+static UBool
+keepCollationType(const char * /*type*/) {
+    return TRUE;
 }
 
 static struct SResource *
@@ -1046,7 +1112,7 @@ parseCollationElements(ParseState* state, char *tag, uint32_t startline, UBool n
         printf(" collation elements %s at line %i \n",  (tag == NULL) ? "(null)" : tag, (int)startline);
     }
     if(!newCollation) {
-        return addCollation(state, result, startline, status);
+        return addCollation(state, result, "(no type)", startline, status);
     }
     else {
         for(;;) {
@@ -1103,9 +1169,14 @@ parseCollationElements(ParseState* state, char *tag, uint32_t startline, UBool n
                 /* then, we cannot handle aliases */
                 if(token == TOK_OPEN_BRACE) {
                     token = getToken(state, &tokenValue, &comment, &line, status);
-                    collationRes = table_open(state->bundle, subtag, NULL, status);
-                    collationRes = addCollation(state, collationRes, startline, status); /* need to parse the collation data regardless */
-                    if (gIncludeUnihanColl || uprv_strcmp(subtag, "unihan") != 0) {
+                    if (keepCollationType(subtag)) {
+                        collationRes = table_open(state->bundle, subtag, NULL, status);
+                    } else {
+                        collationRes = NULL;
+                    }
+                    // need to parse the collation data regardless
+                    collationRes = addCollation(state, collationRes, subtag, startline, status);
+                    if (collationRes != NULL) {
                         table_add(result, collationRes, startline, status);
                     }
                 } else if(token == TOK_COLON) { /* right now, we'll just try to see if we have aliases */
@@ -1797,22 +1868,22 @@ U_STRING_DECL(k_type_plugin_dependency,     "process(dependency)",       19);
 
 typedef enum EResourceType
 {
-    RT_UNKNOWN,
-    RT_STRING,
-    RT_BINARY,
-    RT_TABLE,
-    RT_TABLE_NO_FALLBACK,
-    RT_INTEGER,
-    RT_ARRAY,
-    RT_ALIAS,
-    RT_INTVECTOR,
-    RT_IMPORT,
-    RT_INCLUDE,
-    RT_PROCESS_UCA_RULES,
-    RT_PROCESS_COLLATION,
-    RT_PROCESS_TRANSLITERATOR,
-    RT_PROCESS_DEPENDENCY,
-    RT_RESERVED
+    RESTYPE_UNKNOWN,
+    RESTYPE_STRING,
+    RESTYPE_BINARY,
+    RESTYPE_TABLE,
+    RESTYPE_TABLE_NO_FALLBACK,
+    RESTYPE_INTEGER,
+    RESTYPE_ARRAY,
+    RESTYPE_ALIAS,
+    RESTYPE_INTVECTOR,
+    RESTYPE_IMPORT,
+    RESTYPE_INCLUDE,
+    RESTYPE_PROCESS_UCA_RULES,
+    RESTYPE_PROCESS_COLLATION,
+    RESTYPE_PROCESS_TRANSLITERATOR,
+    RESTYPE_PROCESS_DEPENDENCY,
+    RESTYPE_RESERVED
 } EResourceType;
 
 static struct {
@@ -1860,7 +1931,7 @@ void initParser()
 }
 
 static inline UBool isTable(enum EResourceType type) {
-    return (UBool)(type==RT_TABLE || type==RT_TABLE_NO_FALLBACK);
+    return (UBool)(type==RESTYPE_TABLE || type==RESTYPE_TABLE_NO_FALLBACK);
 }
 
 static enum EResourceType
@@ -1868,33 +1939,33 @@ parseResourceType(ParseState* state, UErrorCode *status)
 {
     struct UString        *tokenValue;
     struct UString        comment;
-    enum   EResourceType  result = RT_UNKNOWN;
+    enum   EResourceType  result = RESTYPE_UNKNOWN;
     uint32_t              line=0;
     ustr_init(&comment);
     expect(state, TOK_STRING, &tokenValue, &comment, &line, status);
 
     if (U_FAILURE(*status))
     {
-        return RT_UNKNOWN;
+        return RESTYPE_UNKNOWN;
     }
 
     *status = U_ZERO_ERROR;
 
     /* Search for normal types */
-    result=RT_UNKNOWN;
-    while ((result=(EResourceType)(result+1)) < RT_RESERVED) {
+    result=RESTYPE_UNKNOWN;
+    while ((result=(EResourceType)(result+1)) < RESTYPE_RESERVED) {
         if (u_strcmp(tokenValue->fChars, gResourceTypes[result].nameUChars) == 0) {
             break;
         }
     }
     /* Now search for the aliases */
     if (u_strcmp(tokenValue->fChars, k_type_int) == 0) {
-        result = RT_INTEGER;
+        result = RESTYPE_INTEGER;
     }
     else if (u_strcmp(tokenValue->fChars, k_type_bin) == 0) {
-        result = RT_BINARY;
+        result = RESTYPE_BINARY;
     }
-    else if (result == RT_RESERVED) {
+    else if (result == RESTYPE_RESERVED) {
         char tokenBuffer[1024];
         u_austrncpy(tokenBuffer, tokenValue->fChars, sizeof(tokenBuffer));
         tokenBuffer[sizeof(tokenBuffer) - 1] = 0;
@@ -1910,7 +1981,7 @@ static struct SResource *
 parseResource(ParseState* state, char *tag, const struct UString *comment, UErrorCode *status)
 {
     enum   ETokenType      token;
-    enum   EResourceType  resType = RT_UNKNOWN;
+    enum   EResourceType  resType = RESTYPE_UNKNOWN;
     ParseResourceFunction *parseFunction = NULL;
     struct UString        *tokenValue;
     uint32_t                 startline;
@@ -1959,7 +2030,7 @@ parseResource(ParseState* state, char *tag, const struct UString *comment, UErro
     }
 
 
-    if (resType == RT_UNKNOWN)
+    if (resType == RESTYPE_UNKNOWN)
     {
         /* No explicit type, so try to work it out.  At this point, we've read the first '{'.
         We could have any of the following:
@@ -1982,7 +2053,7 @@ parseResource(ParseState* state, char *tag, const struct UString *comment, UErro
 
         if (token == TOK_OPEN_BRACE || token == TOK_COLON ||token ==TOK_CLOSE_BRACE )
         {
-            resType = RT_ARRAY;
+            resType = RESTYPE_ARRAY;
         }
         else if (token == TOK_STRING)
         {
@@ -1995,10 +2066,10 @@ parseResource(ParseState* state, char *tag, const struct UString *comment, UErro
 
             switch (token)
             {
-            case TOK_COMMA:         resType = RT_ARRAY;  break;
-            case TOK_OPEN_BRACE:    resType = RT_TABLE;  break;
-            case TOK_CLOSE_BRACE:   resType = RT_STRING; break;
-            case TOK_COLON:         resType = RT_TABLE;  break;
+            case TOK_COMMA:         resType = RESTYPE_ARRAY;  break;
+            case TOK_OPEN_BRACE:    resType = RESTYPE_TABLE;  break;
+            case TOK_CLOSE_BRACE:   resType = RESTYPE_STRING; break;
+            case TOK_COLON:         resType = RESTYPE_TABLE;  break;
             default:
                 *status = U_INVALID_FORMAT_ERROR;
                 error(line, "Unexpected token after string, expected ',', '{' or '}'");
@@ -2013,7 +2084,7 @@ parseResource(ParseState* state, char *tag, const struct UString *comment, UErro
         }
 
         /* printf("Type guessed as %s\n", resourceNames[resType]); */
-    } else if(resType == RT_TABLE_NO_FALLBACK) {
+    } else if(resType == RESTYPE_TABLE_NO_FALLBACK) {
         *status = U_INVALID_FORMAT_ERROR;
         error(startline, "error: %s resource type not valid except on top bundle level", gResourceTypes[resType].nameChars);
         return NULL;
@@ -2036,7 +2107,7 @@ parseResource(ParseState* state, char *tag, const struct UString *comment, UErro
 
 /* parse the top-level resource */
 struct SRBRoot *
-parse(UCHARBUF *buf, const char *inputDir, const char *outputDir,
+parse(UCHARBUF *buf, const char *inputDir, const char *outputDir, const char *filename,
       UBool makeBinaryCollation, UBool omitCollationRules, UErrorCode *status)
 {
     struct UString    *tokenValue;
@@ -2060,6 +2131,7 @@ parse(UCHARBUF *buf, const char *inputDir, const char *outputDir,
     state.inputdirLength = (state.inputdir != NULL) ? (uint32_t)uprv_strlen(state.inputdir) : 0;
     state.outputdir       = outputDir;
     state.outputdirLength = (state.outputdir != NULL) ? (uint32_t)uprv_strlen(state.outputdir) : 0;
+    state.filename = filename;
     state.makeBinaryCollation = makeBinaryCollation;
     state.omitCollationRules = omitCollationRules;
 
@@ -2098,13 +2170,13 @@ parse(UCHARBUF *buf, const char *inputDir, const char *outputDir,
         if(token==TOK_OPEN_BRACE)
         {
             *status=U_ZERO_ERROR;
-            bundleType=RT_TABLE;
+            bundleType=RESTYPE_TABLE;
         }
         else
         {
             /* neither colon nor open brace */
             *status=U_PARSE_ERROR;
-            bundleType=RT_UNKNOWN;
+            bundleType=RESTYPE_UNKNOWN;
             error(line, "parse error, did not find open-brace '{' or colon ':', stopped with %s", u_errorName(*status));
         }
     }
@@ -2115,7 +2187,7 @@ parse(UCHARBUF *buf, const char *inputDir, const char *outputDir,
         return NULL;
     }
 
-    if(bundleType==RT_TABLE_NO_FALLBACK) {
+    if(bundleType==RESTYPE_TABLE_NO_FALLBACK) {
         /*
          * Parse a top-level table with the table(nofallback) declaration.
          * This is the same as a regular table, but also sets the

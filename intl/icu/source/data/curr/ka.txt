@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ka.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/ka.xml
- */
 ka{
     Currencies{
         ADP{
@@ -824,7 +821,7 @@ ka{
             "ტრინიდად და ტობაგოს დოლარი",
         }
         TWD{
-            "TWD",
+            "NT$",
             "ტაივანური ახალი დოლარი",
         }
         TZS{
@@ -957,7 +954,7 @@ ka{
         }
         ZMK{
             "ZMK",
-            "ზამბიური კვაჩა (1968–2012)",
+            "ზამბიური კვაჭა (1968–2012)",
         }
         ZMW{
             "ZMW",
@@ -976,6 +973,58 @@ ka{
             "ზიმბაბვეს დოლარი",
         }
     }
+    Currencies%narrow{
+        ARS{"$"}
+        AUD{"$"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BRL{"R$"}
+        BSD{"$"}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
+        CRC{"₡"}
+        CUP{"$"}
+        DOP{"$"}
+        EUR{"€"}
+        FJD{"$"}
+        GBP{"£"}
+        GIP{"£"}
+        GYD{"$"}
+        HKD{"$"}
+        ILS{"₪"}
+        INR{"₹"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LRD{"$"}
+        MNT{"₮"}
+        MXN{"$"}
+        NAD{"$"}
+        NGN{"₦"}
+        NZD{"$"}
+        PHP{"₱"}
+        PYG{"₲"}
+        SBD{"$"}
+        SGD{"$"}
+        SRD{"$"}
+        SSP{"£"}
+        TRY{"₺"}
+        TTD{"$"}
+        TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$"}
+        VND{"₫"}
+    }
     CurrencyPlurals{
         AED{
             one{"არაბთა გაერთიანებული საამიროების დირჰამი"}
@@ -983,7 +1032,7 @@ ka{
         }
         AFN{
             one{"ავღანური ავღანი"}
-            other{"ავღანი"}
+            other{"ავღანური ავღანი"}
         }
         ALL{
             one{"ალბანური ლეკი"}
@@ -1091,7 +1140,7 @@ ka{
         }
         CLP{
             one{"ჩილეს პესო"}
-            other{"ჩილიური პესო"}
+            other{"ჩილეს პესო"}
         }
         CNY{
             one{"ჩინური უანი"}
@@ -1195,7 +1244,7 @@ ka{
         }
         HKD{
             one{"ჰონკონგის დოლარი"}
-            other{"ჰონგ კონგის დოლარი"}
+            other{"ჰონკონგის დოლარი"}
         }
         HNL{
             one{"ჰონდურასული ლემპირა"}
@@ -1295,7 +1344,7 @@ ka{
         }
         LKR{
             one{"შრი-ლანკური რუპია"}
-            other{"შრი ლანკას რუპია"}
+            other{"შრი-ლანკური რუპია"}
         }
         LRD{
             one{"ლიბერიული დოლარი"}
@@ -1575,7 +1624,7 @@ ka{
         }
         WST{
             one{"დასავლეთ სამოას ტალა"}
-            other{"დასავლეთ სამოას ტალა"}
+            other{"სამოური ტალა"}
         }
         XAF{
             one{"CFA ფრანკი (BEAC)"}
@@ -1595,7 +1644,7 @@ ka{
         }
         XXX{
             one{"(ვალუტის უცნობი ერთეული)"}
-            other{"უცნობი ვალუტა"}
+            other{"(უცნობი ვალუტა)"}
         }
         YER{
             one{"იემენის რეალი"}
@@ -1618,5 +1667,5 @@ ka{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.93.8"}
+    Version{"2.1.13.22"}
 }

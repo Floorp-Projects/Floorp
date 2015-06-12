@@ -1,21 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/kl.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/kl.xml
- */
 kl{
+    AuxExemplarCharacters{"[]"}
     ExemplarCharacters{
         "[a á â ã b c d e é ê f g h i í î ĩ j k l m n o ô p q ĸ r s t u ú û ũ v w x y"
         " z æ ø å]"
-    }
-    LocaleScript{
-        "Latn",
     }
     NumberElements{
         latn{
@@ -29,7 +24,7 @@ kl{
             }
         }
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.6.69"}
     calendar{
         gregorian{
             dayNames{
@@ -147,11 +142,6 @@ kl{
             }
         }
     }
-    durationUnits{
-        hm{"h:mm"}
-        hms{"h:mm:ss"}
-        ms{"m:ss"}
-    }
     fields{
         day{
             relativeTime{
@@ -235,94 +225,6 @@ kl{
                     one{"for {0} ukioq siden"}
                     other{"for {0} ukioq siden"}
                 }
-            }
-        }
-    }
-    unitsNarrow{
-        area{
-            acre{
-                one{"{0} ac"}
-                other{"{0} ac"}
-            }
-            square-foot{
-                one{"{0} ft²"}
-                other{"{0} ft²"}
-            }
-            square-mile{
-                one{"{0} mi²"}
-                other{"{0} mi²"}
-            }
-        }
-        length{
-            mile{
-                one{"{0} mi"}
-                other{"{0} mi"}
-            }
-            yard{
-                one{"{0} yd"}
-                other{"{0} yd"}
-            }
-        }
-        pressure{
-            inch-hg{
-                one{"{0} inHg"}
-                other{"{0} inHg"}
-            }
-        }
-        speed{
-            mile-per-hour{
-                one{"{0} mi/h"}
-                other{"{0} mi/h"}
-            }
-        }
-        volume{
-            cubic-mile{
-                one{"{0} mi³"}
-                other{"{0} mi³"}
-            }
-        }
-    }
-    unitsShort{
-        area{
-            acre{
-                one{"{0} ac"}
-                other{"{0} ac"}
-            }
-            square-foot{
-                one{"{0} ft²"}
-                other{"{0} ft²"}
-            }
-            square-mile{
-                one{"{0} mi²"}
-                other{"{0} mi²"}
-            }
-        }
-        length{
-            mile{
-                one{"{0} mi"}
-                other{"{0} mi"}
-            }
-            yard{
-                one{"{0} yd"}
-                other{"{0} yd"}
-            }
-        }
-        pressure{
-            inch-hg{
-                one{"{0} inHg"}
-                other{"{0} inHg"}
-            }
-        }
-        speed{
-            mile-per-hour{
-                one{"{0} mi/h"}
-                other{"{0} mi/h"}
-            }
-        }
-        volume{
-            cubic-mile{
-                one{"{0} mi³"}
-                other{"{0} mi³"}
             }
         }
     }

@@ -1,21 +1,17 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/fa_AF.xml
 // *
 // ***************************************************************************
 fa_AF{
-    AuxExemplarCharacters{"[\u200C \u200D \u0656 \u0670 ټ ځ څ ډ ړ ږ ښ ګ ڼ ي]"}
-    NumberElements{
-        latn{
-            patterns{
-                percentFormat{"'‪'#,##0%'‬'"}
-            }
-        }
+    AuxExemplarCharacters{
+        "[\u200C \u200D \u200E\u200F \u064E \u0650 \u064F \u0652 \u0656 \u0670 إ ټ ځ "
+        "څ ډ ړ ږ ښ ك ګ ڼ ى ي]"
     }
-    Version{"2.0.92.80"}
+    Version{"2.1.12.17"}
     calendar{
         gregorian{
             monthNames{
@@ -68,11 +64,6 @@ fa_AF{
             }
         }
         persian{
-            eras{
-                abbreviated{
-                    "ه‍. ش.",
-                }
-            }
             monthNames{
                 format{
                     wide{

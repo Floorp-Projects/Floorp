@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 1999-2011, International Business Machines
+*   Copyright (C) 1999-2014, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -42,7 +42,7 @@ TransliterationRuleData::TransliterationRuleData(const TransliterationRuleData& 
     UErrorCode status = U_ZERO_ERROR;
     int32_t i = 0;
     variableNames.setValueDeleter(uprv_deleteUObject);
-    int32_t pos = -1;
+    int32_t pos = UHASH_FIRST;
     const UHashElement *e;
     while ((e = other.variableNames.nextElement(pos)) != 0) {
         UnicodeString* value =
@@ -72,7 +72,7 @@ TransliterationRuleData::TransliterationRuleData(const TransliterationRuleData& 
     }
     // Remove the array and exit if memory allocation error occured.
     if (U_FAILURE(status)) {
-        for (int32_t n = i-1; n >= 0; n++) {
+        for (int32_t n = i-1; n >= 0; n--) {
             delete variables[n];
         }
         uprv_free(variables);

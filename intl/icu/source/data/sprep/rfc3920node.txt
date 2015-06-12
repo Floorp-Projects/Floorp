@@ -1,5 +1,5 @@
 #####################################################################
-# Copyright (c) 2009, International Business Machines Corporation and
+# Copyright (c) 2015, International Business Machines Corporation and
 # others. All Rights Reserved.
 #####################################################################
 
@@ -1966,3 +1966,15 @@ E0020..E007F; ; PROHIBITED
 
 # Total code points 82
 
+# Additional prohibitions from XMPP Nodeprep profile (rfc3920.txt)
+
+0022; ; PROHIBITED
+0026; ; PROHIBITED
+0027; ; PROHIBITED
+002F; ; PROHIBITED
+003A; ; PROHIBITED
+003C; ; PROHIBITED
+003E; ; PROHIBITED
+0040; ; PROHIBITED
+
+# Total code points 8

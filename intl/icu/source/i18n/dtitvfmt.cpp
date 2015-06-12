@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (C) 2008-2013, International Business Machines Corporation and
+* Copyright (C) 2008-2014, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 *
@@ -513,20 +513,9 @@ DateIntervalFormat::createSDFPatternInstance(const UnicodeString& skeleton,
                                              DateTimePatternGenerator* dtpng,
                                              UErrorCode& status)
 {
-    if ( U_FAILURE(status) ) {
-        return NULL;
-    }
-
-    const UnicodeString pattern = dtpng->getBestPattern(skeleton, status);
-    if ( U_FAILURE(status) ) {
-        return NULL;
-    }
-    SimpleDateFormat* dtfmt = new SimpleDateFormat(pattern, locale, status);
-    if ( U_FAILURE(status) ) {
-        delete dtfmt;
-        return NULL;
-    }
-    return dtfmt;
+    DateFormat *df = DateFormat::internalCreateInstanceForSkeleton(
+            skeleton, locale, *dtpng, status);
+    return static_cast<SimpleDateFormat *>(df);
 }
 
 
@@ -820,6 +809,8 @@ DateIntervalFormat::getDateTimeSkeleton(const UnicodeString& skeleton,
           case LOW_G:
           case LOW_E:
           case LOW_C:
+          case CAP_U:
+          case LOW_R:
             normalizedDateSkeleton.append(ch);
             dateSkeleton.append(ch);
             break;
@@ -1470,7 +1461,10 @@ DateIntervalFormat::fgCalendarFieldToPatternLetter[] =
     /*wWd*/ LOW_W, CAP_W, LOW_D,
     /*DEF*/ CAP_D, CAP_E, CAP_F,
     /*ahH*/ LOW_A, LOW_H, CAP_H,
-    /*m..*/ LOW_M,
+    /*msS*/ LOW_M, LOW_S, CAP_S, // MINUTE, SECOND, MILLISECOND
+    /*z.Y*/ LOW_Z, SPACE, CAP_Y, // ZONE_OFFSET, DST_OFFSET, YEAR_WOY,
+    /*eug*/ LOW_E, LOW_U, LOW_G, // DOW_LOCAL, EXTENDED_YEAR, JULIAN_DAY,
+    /*A..*/ CAP_A, SPACE, SPACE, // MILLISECONDS_IN_DAY, IS_LEAP_MONTH, FIELD_COUNT
 };
 
 

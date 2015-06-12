@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ja.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/ja.xml
- */
 ja{
     Currencies{
         ADP{
@@ -26,6 +23,10 @@ ja{
         AFN{
             "AFN",
             "アフガニー",
+        }
+        ALK{
+            "ALK",
+            "アルバニア レク (1946–1965)",
         }
         ALL{
             "ALL",
@@ -263,6 +264,10 @@ ja{
             "CLP",
             "チリ ペソ",
         }
+        CNX{
+            "CNX",
+            "中国人民銀行ドル",
+        }
         CNY{
             "元",
             "中国人民元",
@@ -483,6 +488,10 @@ ja{
             "ILP",
             "イスラエル ポンド",
         }
+        ILR{
+            "ILR",
+            "イスラエル シェケル (1980–1985)",
+        }
         ILS{
             "₪",
             "イスラエル新シェケル",
@@ -498,6 +507,10 @@ ja{
         IRR{
             "IRR",
             "イラン リアル",
+        }
+        ISJ{
+            "ISJ",
+            "アイスランド クローナ (1918–1981)",
         }
         ISK{
             "ISK",
@@ -682,6 +695,10 @@ ja{
         MUR{
             "MUR",
             "モーリシャス ルピー",
+        }
+        MVP{
+            "MVP",
+            "モルディブ諸島 ルピー",
         }
         MVR{
             "MVR",
@@ -1180,6 +1197,60 @@ ja{
             "シンバブエ ドル（2008）",
         }
     }
+    Currencies%narrow{
+        ARS{"$"}
+        AUD{"$"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BRL{"R$"}
+        BSD{"$"}
+        BYR{"р."}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"￥"}
+        COP{"$"}
+        CRC{"₡"}
+        CUP{"$"}
+        DOP{"$"}
+        ESP{"₧"}
+        EUR{"€"}
+        FJD{"$"}
+        GBP{"£"}
+        GIP{"£"}
+        GYD{"$"}
+        HKD{"$"}
+        ILS{"₪"}
+        INR{"₹"}
+        JMD{"$"}
+        JPY{"￥"}
+        KHR{"៛"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LRD{"$"}
+        MNT{"₮"}
+        MXN{"$"}
+        NAD{"$"}
+        NGN{"₦"}
+        NZD{"$"}
+        PHP{"₱"}
+        PYG{"₲"}
+        SBD{"$"}
+        SGD{"$"}
+        SRD{"$"}
+        SSP{"£"}
+        TRY{"₺"}
+        TTD{"$"}
+        TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$"}
+        VND{"₫"}
+    }
     CurrencyPlurals{
         ADP{
             other{"アンドラ ペセタ"}
@@ -1192,6 +1263,9 @@ ja{
         }
         AFN{
             other{"アフガニー"}
+        }
+        ALK{
+            other{"アルバニア レク (1946–1965)"}
         }
         ALL{
             other{"アルバニア レク"}
@@ -1370,6 +1444,9 @@ ja{
         CLP{
             other{"チリ ペソ"}
         }
+        CNX{
+            other{"中国人民銀行ドル"}
+        }
         CNY{
             other{"中国人民元"}
         }
@@ -1535,6 +1612,9 @@ ja{
         ILP{
             other{"イスラエル ポンド"}
         }
+        ILR{
+            other{"イスラエル シェケル (1980–1985)"}
+        }
         ILS{
             other{"イスラエル新シェケル"}
         }
@@ -1546,6 +1626,9 @@ ja{
         }
         IRR{
             other{"イラン リアル"}
+        }
+        ISJ{
+            other{"アイスランド クローナ (1918–1981)"}
         }
         ISK{
             other{"アイスランド クローナ"}
@@ -1684,6 +1767,9 @@ ja{
         }
         MUR{
             other{"モーリシャス ルピー"}
+        }
+        MVP{
+            other{"モルディブ諸島 ルピー"}
         }
         MVR{
             other{"モルディブ諸島 ルフィア"}
@@ -2059,7 +2145,7 @@ ja{
         }
     }
     CurrencyUnitPatterns{
-        other{"{0} {1}"}
+        other{"{0}{1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
 }

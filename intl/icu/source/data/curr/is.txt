@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/is.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/is.xml
- */
 is{
     Currencies{
         ADP{
@@ -56,7 +53,7 @@ is{
             "Austurrískur skildingur",
         }
         AUD{
-            "A$",
+            "AUD",
             "Ástralskur dalur",
         }
         AWG{
@@ -120,7 +117,7 @@ is{
             "Bolivian Mvdol",
         }
         BRL{
-            "R$",
+            "BRL",
             "Brasilískt ríal",
         }
         BSD{
@@ -252,7 +249,7 @@ is{
             "Eþíópískt birr",
         }
         EUR{
-            "€",
+            "EUR",
             "Evra",
         }
         FIM{
@@ -272,7 +269,7 @@ is{
             "Franskur franki",
         }
         GBP{
-            "£",
+            "GBP",
             "Sterlingspund",
         }
         GEL{
@@ -348,7 +345,7 @@ is{
             "Nýr ísraelskur sikill",
         }
         INR{
-            "₹",
+            "INR",
             "Indversk rúpía",
         }
         IQD{
@@ -360,7 +357,7 @@ is{
             "Íranskt ríal",
         }
         ISK{
-            "kr",
+            "ISK",
             "Íslensk króna",
         }
         ITL{
@@ -400,7 +397,7 @@ is{
             "Norðurkóreskt vonn",
         }
         KRW{
-            "₩",
+            "KRW",
             "Suðurkóreskt vonn",
         }
         KWD{
@@ -572,7 +569,7 @@ is{
             "Nepölsk rúpía",
         }
         NZD{
-            "NZ$",
+            "NZD",
             "Nýsjálenskur dalur",
         }
         OMR{
@@ -728,7 +725,7 @@ is{
             "Svasílenskur lílangeni",
         }
         THB{
-            "฿",
+            "THB",
             "Taílenskt bat",
         }
         TJR{
@@ -772,7 +769,7 @@ is{
             "Trínidad og Tóbagó-dalur",
         }
         TWD{
-            "NT$",
+            "TWD",
             "Taívanskur dalur",
         }
         TZS{
@@ -820,7 +817,7 @@ is{
             "Venesúelskur bólívari",
         }
         VND{
-            "₫",
+            "VND",
             "Víetnamskt dong",
         }
         VUV{
@@ -895,6 +892,59 @@ is{
             "ZWD",
             "Simbabveskur dalur",
         }
+    }
+    Currencies%narrow{
+        ARS{"$"}
+        AUD{"$"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BRL{"R$"}
+        BSD{"$"}
+        BYR{"р."}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
+        CRC{"₡"}
+        CUP{"$"}
+        DOP{"$"}
+        EUR{"€"}
+        FJD{"$"}
+        GBP{"£"}
+        GIP{"£"}
+        GYD{"$"}
+        HKD{"$"}
+        ILS{"₪"}
+        INR{"₹"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LRD{"$"}
+        MNT{"₮"}
+        MXN{"$"}
+        NAD{"$"}
+        NGN{"₦"}
+        NZD{"$"}
+        PHP{"₱"}
+        PYG{"₲"}
+        SBD{"$"}
+        SGD{"$"}
+        SRD{"$"}
+        SSP{"£"}
+        TRY{"₺"}
+        TTD{"$"}
+        TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$"}
+        VND{"₫"}
     }
     CurrencyPlurals{
         AED{
@@ -1542,5 +1592,5 @@ is{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
 }

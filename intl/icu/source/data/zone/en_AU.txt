@@ -1,15 +1,20 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/en_AU.xml
 // *
 // ***************************************************************************
 en_AU{
-    %%Parent{"en_GB"}
-    Version{"2.0.92.87"}
+    %%Parent{"en_001"}
+    Version{"2.1.11.59"}
     zoneStrings{
+        "meta:Arabian"{
+            ld{"Arabian Summer Time"}
+            lg{"Arabian Time"}
+            ls{"Arabian Standard Time"}
+        }
         "meta:Australia_Central"{
             sd{"ACDT"}
             sg{"ACT"}
@@ -30,20 +35,30 @@ en_AU{
             sg{"AWT"}
             ss{"AWST"}
         }
-        "meta:Europe_Central"{
-            sd{"∅∅∅"}
-            sg{"∅∅∅"}
-            ss{"∅∅∅"}
+        "meta:China"{
+            ld{"China Summer Time"}
+            lg{"China Time"}
+            ls{"China Standard Time"}
         }
-        "meta:Europe_Eastern"{
-            sd{"∅∅∅"}
-            sg{"∅∅∅"}
-            ss{"∅∅∅"}
+        "meta:Iran"{
+            ld{"Iran Summer Time"}
+            lg{"Iran Time"}
+            ls{"Iran Standard Time"}
         }
-        "meta:Europe_Western"{
-            sd{"∅∅∅"}
-            sg{"∅∅∅"}
-            ss{"∅∅∅"}
+        "meta:Israel"{
+            ld{"Israel Summer Time"}
+            lg{"Israel Time"}
+            ls{"Israel Standard Time"}
+        }
+        "meta:Japan"{
+            ld{"Japan Summer Time"}
+            lg{"Japan Time"}
+            ls{"Japan Standard Time"}
+        }
+        "meta:Korea"{
+            ld{"Korean Summer Time"}
+            lg{"Korean Time"}
+            ls{"Korean Standard Time"}
         }
         "meta:Lord_Howe"{
             sd{"LHDT"}
@@ -54,6 +69,11 @@ en_AU{
             sd{"NZDT"}
             sg{"NZT"}
             ss{"NZST"}
+        }
+        "meta:Taipei"{
+            ld{"Taipei Summer Time"}
+            lg{"Taipei Time"}
+            ls{"Taipei Standard Time"}
         }
     }
 }

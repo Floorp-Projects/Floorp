@@ -1,6 +1,6 @@
 /*  
 ********************************************************************************
-*   Copyright (C) 1997-2013, International Business Machines
+*   Copyright (C) 1997-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 *
@@ -76,7 +76,7 @@ class Hashtable;
  * locale at least contains any resources that are to be particularized for the
  * calendar type.
  */
-class U_I18N_API DateFormatSymbols : public UObject {
+class U_I18N_API DateFormatSymbols U_FINAL : public UObject  {
 public:
     /**
      * Construct a DateFormatSymbols object by loading format data from
@@ -283,13 +283,11 @@ public:
          ABBREVIATED,
          WIDE,
          NARROW,
-#ifndef U_HIDE_DRAFT_API
          /**
           * Short width is currently only supported for weekday names.
-          * @draft ICU 51
+          * @stable ICU 51
           */
          SHORT,
-#endif /* U_HIDE_DRAFT_API */
          /**
           */
          DT_WIDTH_COUNT = 4
@@ -412,6 +410,91 @@ public:
 
 #ifndef U_HIDE_INTERNAL_API
     /**
+     * This default time separator is used for formatting when the locale
+     * doesn't specify any time separator, and always recognized when parsing.
+     * @internal
+     */
+    static const UChar DEFAULT_TIME_SEPARATOR = 0x003a;  // ':'
+
+    /**
+     * This alternate time separator is always recognized when parsing.
+     * @internal
+     */
+    static const UChar ALTERNATE_TIME_SEPARATOR = 0x002e;  // '.'
+#endif  /* U_HIDE_INTERNAL_API */
+
+#ifndef U_HIDE_DRAFT_API
+    /**
+     * Gets the time separator string. For example: ":".
+     * @param result Output param which will receive the time separator string.
+     * @return       A reference to 'result'.
+     * @draft ICU 55
+     */
+    UnicodeString& getTimeSeparatorString(UnicodeString& result) const;
+
+    /**
+     * Sets the time separator string. For example: ":".
+     * @param newTimeSeparator the new time separator string.
+     * @draft ICU 55
+     */
+    void setTimeSeparatorString(const UnicodeString& newTimeSeparator);
+#endif  /* U_HIDE_DRAFT_API */
+
+#ifndef U_HIDE_DRAFT_API
+    /**
+     * Gets cyclic year name strings if the calendar has them, by width and context.
+     * For example: "jia-zi", "yi-chou", etc.
+     * @param count     Filled in with length of the array.
+     * @param context   The usage context: FORMAT, STANDALONE.
+     * @param width     The requested name width: WIDE, ABBREVIATED, NARROW.
+     * @return          The year name strings (DateFormatSymbols retains ownership),
+     *                  or null if they are not available for this calendar.
+     * @draft ICU 54
+     */
+    const UnicodeString* getYearNames(int32_t& count,
+                            DtContextType context, DtWidthType width) const;
+
+    /**
+     * Sets cyclic year name strings by width and context. For example: "jia-zi", "yi-chou", etc.
+     *
+     * @param yearNames The new cyclic year name strings (not adopted; caller retains ownership).
+     * @param count     The length of the array.
+     * @param context   The usage context: FORMAT, STANDALONE (currently only FORMAT is supported).
+     * @param width     The name width: WIDE, ABBREVIATED, NARROW (currently only ABBREVIATED is supported).
+     * @draft ICU 54
+     */
+    void setYearNames(const UnicodeString* yearNames, int32_t count,
+                            DtContextType context, DtWidthType width);
+
+    /**
+     * Gets calendar zodiac name strings if the calendar has them, by width and context.
+     * For example: "Rat", "Ox", "Tiger", etc.
+     * @param count     Filled in with length of the array.
+     * @param context   The usage context: FORMAT, STANDALONE.
+     * @param width     The requested name width: WIDE, ABBREVIATED, NARROW.
+     * @return          The zodiac name strings (DateFormatSymbols retains ownership),
+     *                  or null if they are not available for this calendar.
+     * @draft ICU 54
+     */
+    const UnicodeString* getZodiacNames(int32_t& count,
+                            DtContextType context, DtWidthType width) const;
+
+    /**
+     * Sets calendar zodiac name strings by width and context. For example: "Rat", "Ox", "Tiger", etc.
+     *
+     * @param zodiacNames The new zodiac name strings (not adopted; caller retains ownership).
+     * @param count     The length of the array.
+     * @param context   The usage context: FORMAT, STANDALONE (currently only FORMAT is supported).
+     * @param width     The name width: WIDE, ABBREVIATED, NARROW (currently only ABBREVIATED is supported).
+     * @draft ICU 54
+     */
+    void setZodiacNames(const UnicodeString* zodiacNames, int32_t count,
+                            DtContextType context, DtWidthType width);
+
+#endif  /* U_HIDE_DRAFT_API */
+
+#ifndef U_HIDE_INTERNAL_API
+    /**
      * Somewhat temporary constants for leap month pattern types, adequate for supporting
      * just leap month patterns as needed for Chinese lunar calendar.
      * Eventually we will add full support for different month pattern types (needed for
@@ -505,13 +588,16 @@ public:
      */
     Locale getLocale(ULocDataLocaleType type, UErrorCode& status) const;
 
+    /* The following type and kCapContextUsageTypeCount cannot be #ifndef U_HIDE_INTERNAL_API,
+       they are needed for .h file declarations. */ 
     /**
      * Constants for capitalization context usage types.
      * @internal
      */
     enum ECapitalizationContextUsageType
     {
-        kCapContextUsageOther,
+#ifndef U_HIDE_INTERNAL_API
+        kCapContextUsageOther = 0,
         kCapContextUsageMonthFormat,     /* except narrow */
         kCapContextUsageMonthStandalone, /* except narrow */
         kCapContextUsageMonthNarrow,
@@ -525,7 +611,8 @@ public:
         kCapContextUsageZoneShort,
         kCapContextUsageMetazoneLong,
         kCapContextUsageMetazoneShort,
-        kCapContextUsageTypeCount
+#endif /* U_HIDE_INTERNAL_API */
+        kCapContextUsageTypeCount = 14
     };
 
     /**
@@ -656,6 +743,17 @@ private:
     int32_t         fAmPmsCount;
 
     /**
+     * Narrow Ampm strings. For example: "a" and "p".
+     */
+    UnicodeString*  fNarrowAmPms;
+    int32_t         fNarrowAmPmsCount;
+
+    /**
+     * Time separator string. For example: ":".
+     */
+    UnicodeString   fTimeSeparator;
+
+    /**
      * Quarter strings. For example: "1st quarter", "2nd quarter", etc.
      */
     UnicodeString  *fQuarters;
@@ -686,10 +784,20 @@ private:
     int32_t         fLeapMonthPatternsCount;
 
     /**
-     * (Format) Short cyclic year names, for example: "jia-zi", "yi-chou", ... "gui-hai"
+     * Cyclic year names, for example: "jia-zi", "yi-chou", ... "gui-hai";
+     * currently we only have data for format/abbreviated.
+     * For the others, just get from format/abbreviated, ignore set.
      */
-    UnicodeString*  fShortYearNames;
+    UnicodeString  *fShortYearNames;
     int32_t         fShortYearNamesCount;
+
+    /**
+     * Cyclic zodiac names, for example "Rat", "Ox", "Tiger", etc.;
+     * currently we only have data for format/abbreviated.
+     * For the others, just get from format/abbreviated, ignore set.
+     */
+    UnicodeString  *fShortZodiacNames;
+    int32_t         fShortZodiacNamesCount;
 
     /**
      * Localized names of time zones in this locale.  This is a
@@ -837,6 +945,22 @@ private:
      * Returns TRUE if c (repeated count times) is the pattern character for a numeric field.
      */
     static UBool U_EXPORT2 isNumericPatternChar(UChar c, int32_t count);
+public:
+#ifndef U_HIDE_INTERNAL_API
+    /**
+     * Gets a DateFormatSymbols by locale.
+     * Unlike the constructors which always use gregorian calendar, this
+     * method uses the calendar in the locale. If the locale contains no
+     * explicit calendar, this method uses the default calendar for that
+     * locale.
+     * @param locale the locale.
+     * @param status error returned here.
+     * @return the new DateFormatSymbols which the caller owns.
+     * @internal For ICU use only.
+     */
+    static DateFormatSymbols * U_EXPORT2 createForLocale(
+            const Locale &locale, UErrorCode &status);
+#endif  /* U_HIDE_INTERNAL_API */
 };
 
 U_NAMESPACE_END

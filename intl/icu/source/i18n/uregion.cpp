@@ -1,6 +1,6 @@
 /*
 *****************************************************************************************
-* Copyright (C) 2013, International Business Machines Corporation and others.
+* Copyright (C) 2013-2015, International Business Machines Corporation and others.
 * All Rights Reserved.
 *****************************************************************************************
 */
@@ -12,6 +12,7 @@
 #include "unicode/uregion.h"
 #include "unicode/region.h"
 #include "unicode/uenum.h"
+#include "unicode/strenum.h"
 
 U_NAMESPACE_USE
 
@@ -33,7 +34,8 @@ uregion_getRegionFromNumericCode (int32_t code, UErrorCode *status)
 U_CAPI UEnumeration* U_EXPORT2
 uregion_getAvailable(URegionType type, UErrorCode *status)
 {
-    return uenum_openFromStringEnumeration( Region::getAvailable(type), status );
+    StringEnumeration* strenum = Region::getAvailable(type, *status);
+    return uenum_openFromStringEnumeration( strenum, status );
 }
 
 
@@ -61,14 +63,16 @@ uregion_getContainingRegionOfType(const URegion* uregion, URegionType type)
 U_CAPI UEnumeration* U_EXPORT2
 uregion_getContainedRegions(const URegion* uregion, UErrorCode *status)
 {
-    return uenum_openFromStringEnumeration( ((Region*)uregion)->getContainedRegions(), status);
+    StringEnumeration* strenum = ((Region*)uregion)->getContainedRegions(*status);
+    return uenum_openFromStringEnumeration( strenum, status);
 }
 
 
 U_CAPI UEnumeration* U_EXPORT2
 uregion_getContainedRegionsOfType(const URegion* uregion, URegionType type, UErrorCode *status)
 {
-    return uenum_openFromStringEnumeration( ((Region*)uregion)->getContainedRegions(type), status);
+    StringEnumeration* strenum = ((Region*)uregion)->getContainedRegions(type, *status);
+    return uenum_openFromStringEnumeration( strenum, status);
 }
 
 
@@ -82,7 +86,8 @@ uregion_contains(const URegion* uregion, const URegion* otherRegion)
 U_CAPI UEnumeration* U_EXPORT2
 uregion_getPreferredValues(const URegion* uregion, UErrorCode *status)
 {
-    return uenum_openFromStringEnumeration( ((Region*)uregion)->getPreferredValues(), status);
+    StringEnumeration* strenum = ((Region*)uregion)->getPreferredValues(*status);
+    return uenum_openFromStringEnumeration( strenum, status);
 }
 
 

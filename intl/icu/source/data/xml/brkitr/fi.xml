@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
- Copyright (c) 2010 International Business Machines Corporation and others. All rights reserved.
+ Copyright (c) 2010-2015 International Business Machines Corporation and others. All rights reserved.
 -->
 <!DOCTYPE ldml SYSTEM "http://www.unicode.org/repos/cldr/trunk/common/dtd/ldml.dtd"
 [
@@ -18,6 +18,9 @@
         <icu:breakIteratorData>
             <icu:boundaries>
                 <icu:line     icu:dependency="line_fi.brk"/>
+                <icu:line     alt="loose"  icu:dependency="line_loose_fi.brk"/>
+                <icu:line     alt="normal" icu:dependency="line_normal_fi.brk"/>
+                <icu:line     alt="strict" icu:dependency="line_fi.brk"/>
             </icu:boundaries>
         </icu:breakIteratorData>
     </special>

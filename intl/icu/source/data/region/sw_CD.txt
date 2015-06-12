@@ -1,0 +1,25 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2015 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/sw_CD.xml
+// *
+// ***************************************************************************
+sw_CD{
+    Countries{
+        AF{"Afuganistani"}
+        BJ{"Benini"}
+        CG{"Kongo"}
+        CI{"Kodivaa"}
+        CY{"Kuprosi"}
+        IR{"Uajemi"}
+        LI{"Lishenteni"}
+        MG{"Bukini"}
+        MM{"Myama"}
+        NF{"Kisiwa cha Norfok"}
+        NG{"Nijeria"}
+        TL{"Timori ya Mashariki"}
+    }
+    Version{"2.1.11.52"}
+}

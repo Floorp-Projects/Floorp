@@ -1,0 +1,31 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2015 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/fr_CA.xml
+// *
+// ***************************************************************************
+fr_CA{
+    Languages{
+        luo{"luo"}
+    }
+    Scripts{
+        Deva{"devanagari"}
+        Gujr{"gujarati"}
+    }
+    Types{
+        calendar{
+            ethiopic-amete-alem{"Calendrier éthiopien de l’An de grâce"}
+        }
+        collation{
+            dictionary{"Ordre de tri du dictionnaire"}
+            reformed{"Ordre de tri réformé"}
+        }
+        numbers{
+            mong{"Chiffres mongols"}
+            taml{"chiffres tamouls traditionnels"}
+        }
+    }
+    Version{"2.1.13.23"}
+}
