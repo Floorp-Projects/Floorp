@@ -124,16 +124,18 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
     nsFormControlFrame::RegUnRegAccessKey(this, true);
   }
 
-  // The width of our content box, which is the available width
+  const WritingMode myWM = aReflowState.GetWritingMode();
+
+  // The ISize of our content box, which is the available ISize
   // for our anonymous content:
-  const nscoord contentBoxWidth = aReflowState.ComputedWidth();
-  nscoord contentBoxHeight = aReflowState.ComputedHeight();
+  const nscoord contentBoxISize = aReflowState.ComputedISize();
+  nscoord contentBoxBSize = aReflowState.ComputedBSize();
 
   nsIFrame* outerWrapperFrame = mOuterWrapper->GetPrimaryFrame();
 
   if (!outerWrapperFrame) { // display:none?
-    if (contentBoxHeight == NS_INTRINSICSIZE) {
-      contentBoxHeight = 0;
+    if (contentBoxBSize == NS_INTRINSICSIZE) {
+      contentBoxBSize = 0;
     }
   } else {
     NS_ASSERTION(outerWrapperFrame == mFrames.FirstChild(), "huh?");
@@ -157,29 +159,32 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
     ReflowChild(outerWrapperFrame, aPresContext, wrappersDesiredSize,
                 wrapperReflowState, xoffset, yoffset, 0, childStatus);
     MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(childStatus),
-               "We gave our child unconstrained height, so it should be complete");
+               "We gave our child unconstrained available block-size, "
+               "so it should be complete");
 
-    nscoord wrappersMarginBoxHeight = wrappersDesiredSize.Height() +
-      wrapperReflowState.ComputedPhysicalMargin().TopBottom();
+    LogicalMargin wrapperMargin =
+      wrapperReflowState.ComputedLogicalMargin().ConvertTo(myWM, wrapperWM);
+    nscoord wrappersMarginBoxBSize =
+      wrappersDesiredSize.BSize(myWM) + wrapperMargin.BStartEnd(myWM);
 
-    if (contentBoxHeight == NS_INTRINSICSIZE) {
+    if (contentBoxBSize == NS_INTRINSICSIZE) {
       // We are intrinsically sized -- we should shrinkwrap the outer wrapper's
-      // height:
-      contentBoxHeight = wrappersMarginBoxHeight;
+      // block-size:
+      contentBoxBSize = wrappersMarginBoxBSize;
 
-      // Make sure we obey min/max-height in the case when we're doing intrinsic
+      // Make sure we obey min/max-bsize in the case when we're doing intrinsic
       // sizing (we get it for free when we have a non-intrinsic
-      // aReflowState.ComputedHeight()).  Note that we do this before
-      // adjusting for borderpadding, since mComputedMaxHeight and
-      // mComputedMinHeight are content heights.
-      contentBoxHeight =
-        NS_CSS_MINMAX(contentBoxHeight,
-                      aReflowState.ComputedMinHeight(),
-                      aReflowState.ComputedMaxHeight());
+      // aReflowState.ComputedBSize()).  Note that we do this before
+      // adjusting for borderpadding, since ComputedMaxBSize and
+      // ComputedMinBSize are content heights.
+      contentBoxBSize =
+        NS_CSS_MINMAX(contentBoxBSize,
+                      aReflowState.ComputedMinBSize(),
+                      aReflowState.ComputedMaxBSize());
     }
 
-    // Center child vertically
-    nscoord extraSpace = contentBoxHeight - wrappersMarginBoxHeight;
+    // Center child in block axis
+    nscoord extraSpace = contentBoxBSize - wrappersMarginBoxBSize;
     yoffset += std::max(0, extraSpace / 2);
 
     // Place the child
@@ -189,13 +194,16 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
     aDesiredSize.SetBlockStartAscent(
        wrappersDesiredSize.BlockStartAscent() +
        outerWrapperFrame->BStart(aReflowState.GetWritingMode(),
-                                 contentBoxWidth));
+                                 contentBoxISize));
   }
 
-  aDesiredSize.Width() = contentBoxWidth +
-                         aReflowState.ComputedPhysicalBorderPadding().LeftRight();
-  aDesiredSize.Height() = contentBoxHeight +
-                          aReflowState.ComputedPhysicalBorderPadding().TopBottom();
+  LogicalSize
+    logicalDesiredSize(myWM,
+                       contentBoxISize +
+                       aReflowState.ComputedLogicalBorderPadding().IStartEnd(myWM),
+                       contentBoxBSize +
+                       aReflowState.ComputedLogicalBorderPadding().BStartEnd(myWM));
+  aDesiredSize.SetSize(myWM, logicalDesiredSize);
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
 
