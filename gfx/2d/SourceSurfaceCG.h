@@ -6,11 +6,17 @@
 #ifndef _MOZILLA_GFX_SOURCESURFACECG_H
 #define _MOZILLA_GFX_SOURCESURFACECG_H
 
+#ifdef MOZ_WIDGET_COCOA
 #include <ApplicationServices/ApplicationServices.h>
+#else
+#include <CoreGraphics/CoreGraphics.h>
+#endif
 
 #include "2D.h"
 
+#ifdef MOZ_WIDGET_COCOA
 class MacIOSurface;
+#endif
 
 namespace mozilla {
 namespace gfx {
@@ -163,6 +169,7 @@ private:
   IntSize mSize;
 };
 
+#ifdef MOZ_WIDGET_COCOA
 class SourceSurfaceCGIOSurfaceContext : public SourceSurfaceCGContext
 {
 public:
@@ -196,6 +203,7 @@ private:
 
   IntSize mSize;
 };
+#endif
 
 
 } // namespace gfx
