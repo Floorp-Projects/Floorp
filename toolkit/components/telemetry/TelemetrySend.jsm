@@ -263,13 +263,21 @@ let TelemetrySendImpl = {
     this._server = Preferences.get(PREF_SERVER, undefined);
 
     // If any pings were submitted before the delayed init finished
-    // we will send them now.
-    yield this._sendPersistedPings();
+    // we will send them now. We don't wait on sending as this could take some time.
+    this._sendPersistedPings();
 
     // Check the pending pings on disk now.
-    yield this._checkPendingPings();
+    let haveOverduePings = yield this._checkPendingPings();
+    if (haveOverduePings) {
+      // We don't wait on sending as this could take some time.
+      this._sendPersistedPings();
+    }
   }),
 
+  /**
+   * Discard old pings from the pending pings and detect overdue ones.
+   * @return {Boolean} True if we have overdue pings, false otherwise.
+   */
   _checkPendingPings: Task.async(function*() {
     // Scan the pending pings - that gives us a list sorted by last modified, descending.
     let infos = yield TelemetryStorage.loadPendingPingList();
@@ -319,13 +327,14 @@ let TelemetrySendImpl = {
       (now.getTime() - info.lastModificationDate) > OVERDUE_PING_FILE_AGE);
     this._overduePingCount = overduePings.length;
 
-
     if (overduePings.length > 0) {
       this._log.trace("_checkForOverduePings - Have " + overduePings.length +
-                       " overdue pending pings, sending " + infos.length +
+                       " overdue pending pings, ready to send " + infos.length +
                        " pings now.");
-      yield this._sendPersistedPings();
+      return true;
     }
+
+    return false;
    }),
 
   shutdown: Task.async(function*() {
