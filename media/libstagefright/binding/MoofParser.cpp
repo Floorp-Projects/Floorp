@@ -6,6 +6,7 @@
 #include "mp4_demuxer/Box.h"
 #include "mp4_demuxer/SinfParser.h"
 #include <limits>
+#include "Intervals.h"
 
 #include "mozilla/Logging.h"
 
@@ -42,6 +43,7 @@ bool
 MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
 {
   bool foundValidMoof = false;
+  bool foundMdat = false;
 
   for (Box box(&aContext, mOffset); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("moov")) {
@@ -62,11 +64,41 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
       }
 
       mMoofs.AppendElement(moof);
+      mMediaRanges.AppendElement(moof.mRange);
       foundValidMoof = true;
+    } else if (box.IsType("mdat") && !Moofs().IsEmpty()) {
+      // Check if we have all our data from last moof.
+      Moof& moof = Moofs().LastElement();
+      media::Interval<int64_t> datarange(moof.mMdatRange.mStart, moof.mMdatRange.mEnd, 0);
+      media::Interval<int64_t> mdat(box.Range().mStart, box.Range().mEnd, 0);
+      if (datarange.Intersects(mdat)) {
+        mMediaRanges.LastElement() =
+          mMediaRanges.LastElement().Extents(box.Range());
+      }
     }
     mOffset = box.NextOffset();
   }
   return foundValidMoof;
+}
+
+MediaByteRange
+MoofParser::FirstCompleteMediaHeader()
+{
+  if (Moofs().IsEmpty()) {
+    return MediaByteRange();
+  }
+  return Moofs()[0].mRange;
+}
+
+MediaByteRange
+MoofParser::FirstCompleteMediaSegment()
+{
+  for (uint32_t i = 0 ; i < mMediaRanges.Length(); i++) {
+    if (mMediaRanges[i].Contains(Moofs()[i].mMdatRange)) {
+      return mMediaRanges[i];
+    }
+  }
+  return MediaByteRange();
 }
 
 class BlockingStream : public Stream {
@@ -463,7 +495,7 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
   uint64_t decodeTime = *aDecodeTime;
   nsTArray<Interval<Microseconds>> timeRanges;
 
-  if (!mIndex.SetCapacity(sampleCount)) {
+  if (!mIndex.SetCapacity(sampleCount, fallible)) {
     LOG(Moof, "Out of Memory");
     return false;
   }
@@ -497,7 +529,8 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
     // because every audio sample is a keyframe.
     sample.mSync = !(sampleFlags & 0x1010000) || aIsAudio;
 
-    MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample));
+    // FIXME: Make this infallible after bug 968520 is done.
+    MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample, fallible));
 
     mMdatRange = mMdatRange.Extents(sample.mByteRange);
   }

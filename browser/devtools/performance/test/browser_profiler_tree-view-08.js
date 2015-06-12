@@ -26,7 +26,7 @@ function test() {
    *   - (JS)
    */
 
-  let threadNode = new ThreadNode(gThread, { contentOnly: true });
+  let threadNode = new ThreadNode(gThread, { startTime: 0, endTime: 30, contentOnly: true });
   // Don't display the synthesized (root) and the real (root) node twice.
   threadNode.calls = threadNode.calls[0].calls;
   let treeRoot = new CallView({ frame: threadNode, autoExpandDepth: 10 });

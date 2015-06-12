@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd" >
+%globalDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % aboutDTD SYSTEM "chrome://browser/locale/aboutLogins.dtd" >
+%aboutDTD;
+]>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+- License, v. 2.0. If a copy of the MPL was not distributed with this
+- file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>&aboutLogins.title;</title>
+    <meta name="viewport" content="width=device-width; user-scalable=0" />
+    <link rel="icon" type="image/png" sizes="64x64" href="chrome://branding/content/favicon64.png" />
+    <link rel="stylesheet" href="chrome://browser/skin/aboutBase.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://browser/skin/aboutLogins.css" type="text/css"/>
+    <script type="application/javascript;version=1.8" src="chrome://browser/content/aboutLogins.js"></script>
+  </head>
+  <body dir="&locale.dir;">
+    <div id="logins-header" class="header">
+      <div>&aboutLogins.title;</div>
+      <ul class="toolbar-buttons">
+        <li id="filter-button"></li>
+      </ul>
+    </div>
+    <div id="logins-list" class="list" hidden="true">
+    </div>
+    <div id="login-details" class="list" hidden="true">
+      <div class="login-item list-item">
+        <div class="icon"/>
+        <div id="details-header" class="inner">
+          <div class="details">
+            <div id="detail-hostname" class="hostname"></div>
+            <div id="detail-realm" class="realm"></div>
+          </div>
+          <div id="detail-username" class="username"></div>
+          <div id="detail-age"></div>
+        </div>
+        <div class="buttons">
+          <button id="copyusername-btn">&aboutLogins.copyUsername;</button>
+          <button id="copypassword-btn">&aboutLogins.copyPassword;</button>
+        </div>
+      </div>
+    </div>
+    <div id="filter-input-container" hidden="true">
+      <input id="filter-input" type="search"/>
+      <div id="filter-clear"></div>
+    </div>
+  </body>
+</html>

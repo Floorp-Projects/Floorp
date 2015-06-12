@@ -7,12 +7,15 @@
 #include "nsISupports.idl"
 
 interface nsIRunnable;
+%{ C++
+template <class T> struct already_AddRefed;
+%}
 
 /**
  * Interface for the native event system layer.  This interface is designed
  * to be used on the main application thread only.
  */
-[uuid(2d10ca53-f143-439a-bb2e-c1fbc71f6a05)]
+[uuid(3d09973e-3975-4fd4-b103-276300cc8437)]
 interface nsIAppShell : nsISupports
 {
   /**
@@ -71,16 +74,20 @@ interface nsIAppShell : nsISupports
    */
   readonly attribute unsigned long eventloopNestingLevel;
   
+%{ C++
   /**
-   * Allows running of a "synchronous section", in the form of an nsIRunnable
-   * once the event loop has reached a "stable state". We've reached a stable
-   * state when the currently executing task/event has finished, see:
+   * Add a "synchronous section", in the form of an nsIRunnable run once the
+   * event loop has reached a "stable state". |runnable| must not cause any
+   * queued events to be processed (i.e. must not spin the event loop). We've
+   * reached a stable state when the currently executing task/event has
+   * finished, see:
    * http://www.whatwg.org/specs/web-apps/current-work/multipage/webappapis.html#synchronous-section
    * In practice this runs aRunnable once the currently executing event
    * finishes. If called multiple times per task/event, all the runnables will
    * be executed, in the order in which runInStableState() was called.
    */
-  void runInStableState(in nsIRunnable runnable);
+  virtual void RunInStableState(already_AddRefed<nsIRunnable> runnable) = 0;
+%}
 
   /**
    * Run the given runnable before the next iteration of the event loop (this

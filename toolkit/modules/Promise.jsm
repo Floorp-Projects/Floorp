@@ -96,17 +96,6 @@ this.Ci = Components.interfaces;
 this.Cu = Components.utils;
 this.Cr = Components.results;
 
-// Promise-backend.js can either be loaded as a subscript by this file, or
-// required as a CommonJS module by the worker loader. Because certain APIS (in
-// particular, Components) are not available in workers, Promise-backend.js
-// behaves slightly different in the latter case.
-//
-// To distinguish between these two cases, the worker loader defines a global
-// variable isWorker, and sets it to true. When loading Promise-backend.js as
-// a subscript, we need to make sure this variable is defined as well, and set
-// it to false.
-this.isWorker = false;
-
 this.Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(this.Ci.mozIJSSubScriptLoader)
     .loadSubScript("resource://gre/modules/Promise-backend.js", this);

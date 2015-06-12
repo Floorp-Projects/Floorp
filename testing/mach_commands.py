@@ -184,6 +184,24 @@ class Test(MachCommandBase):
     @Command('test', category='testing', description='Run tests (detects the kind of test and runs it).')
     @CommandArgument('what', default=None, nargs='*', help=TEST_HELP)
     def test(self, what):
+        """Run tests from names or paths.
+
+        mach test accepts arguments specifying which tests to run. Each argument
+        can be:
+
+        * The path to a test file
+        * A directory containing tests
+        * A test suite name
+        * An alias to a test suite name (codes used on TreeHerder)
+
+        When paths or directories are given, they are first resolved to test
+        files known to the build system.
+
+        If resolved tests belong to more than one test type/flavor/harness,
+        the harness for each relevant type/flavor will be invoked. e.g. if
+        you specify a directory with xpcshell and browser chrome mochitests,
+        both harnesses will be invoked.
+        """
         from mozbuild.testing import TestResolver
 
         # Parse arguments and assemble a test "plan."

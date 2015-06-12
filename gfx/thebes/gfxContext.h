@@ -28,6 +28,8 @@ struct RectCornerRadii;
 }
 }
 
+class ClipExporter;
+
 /**
  * This is the main class for doing actual drawing. It is initialized using
  * a surface and can be drawn on. It manages various state information like
@@ -457,6 +459,11 @@ public:
      */
     bool ClipContainsRect(const gfxRect& aRect);
 
+     /**
+      * Exports the current clip using the provided exporter.
+      */
+    bool ExportClip(ClipExporter& aExporter);
+
     /**
      * Groups
      */
@@ -726,6 +733,14 @@ private:
 
   gfxContext *mContext;
   mozilla::gfx::Pattern *mPattern;
+};
+
+/* This interface should be implemented to handle exporting the clip from a context.
+ */
+class ClipExporter : public mozilla::gfx::PathSink {
+public:
+  virtual void BeginClip(const mozilla::gfx::Matrix& aMatrix) = 0;
+  virtual void EndClip() = 0;
 };
 
 #endif /* GFX_CONTEXT_H */

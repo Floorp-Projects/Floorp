@@ -204,3 +204,14 @@ if (typeof assertDeepEq === 'undefined') {
         };
     })();
 }
+
+if (typeof assertWarning === 'undefined') {
+    function assertWarning(func, name) {
+        enableLastWarning();
+        func();
+        var warning = getLastWarning();
+        assertEq(warning !== null, true);
+        assertEq(warning.name, name);
+        disableLastWarning();
+    }
+}

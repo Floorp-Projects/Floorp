@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>CSS Writing Modes Test: margin percentage and 'vertical-lr'</title>
+  <link rel="author" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/">
+  <meta content="This test checks that percentages on the margin are calculated with respect to the inline size (height!) of the containing block if 'writing-mode' of such containing block is 'vertical-lr'. In this test, div.outer's computed 'writing-mode' value is 'vertical-lr' and it is the div.inner's containing block." name="assert">
+  <style type="text/css">
+  div.outer
+    {
+      background-color: blue;
+      border: blue solid 3px;
+      height: 200px;
+      -ah-writing-mode: vertical-lr;
+      -webkit-writing-mode: vertical-lr;
+      writing-mode: tb-lr; /* IE11 */
+      writing-mode: vertical-lr;
+    }
+
+  hr
+    {
+      background-color: transparent;
+      border: transparent none 0px;
+      width: 3px;
+      margin: auto 0.5em;
+    }
+
+  div.inner
+    {
+      background-color: yellow;
+      height: 50px;
+      width: 50px;
+      -ah-writing-mode: horizontal-tb;
+      -webkit-writing-mode: horizontal-tb;
+      writing-mode: lr-tb; /* IE11 */
+      writing-mode: horizontal-tb;
+    }
+
+  div.foo
+    {
+      margin-left: 2.5%; /* 5px */
+      margin-top: 50%; /* 100px */
+      margin-bottom: 25%; /* 50px */
+      margin-right: 10%; /* 20px */
+    }
+
+  div.bar
+    {
+      margin-left: 10%;
+      margin-top: 25%;
+      margin-bottom: 50%;
+      margin-right: 2.5%;
+    }
+  </style>
+ </head>
+
+ <body>
+  <div class="outer">
+    <div class="inner bar"></div>
+    <hr>
+    <div class="inner foo"></div>
+  </div>
+ </body>
+</html>

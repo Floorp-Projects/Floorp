@@ -16,13 +16,12 @@
 #include "AudioNodeStream.h"
 #include "MediaStreamGraph.h"
 #include "OfflineAudioCompletionEvent.h"
+#include "nsContentUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShell.h"
 #include "nsIPermissionManager.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIAppShell.h"
-#include "nsWidgetsCID.h"
 #include "mozilla/dom/Promise.h"
 
 namespace mozilla {
@@ -684,17 +683,16 @@ AudioDestinationNode::NotifyStableState()
   mExtraCurrentTimeUpdatedSinceLastStableState = false;
 }
 
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
 void
 AudioDestinationNode::ScheduleStableStateNotification()
 {
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  if (appShell) {
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(this, &AudioDestinationNode::NotifyStableState);
-    appShell->RunInStableState(event);
-  }
+  nsCOMPtr<nsIRunnable> event =
+    NS_NewRunnableMethod(this, &AudioDestinationNode::NotifyStableState);
+  // Dispatch will fail if this is called on AudioNode destruction during
+  // shutdown, in which case failure can be ignored.
+  nsContentUtils::RunInStableState(event.forget(),
+                                   nsContentUtils::
+                                     DispatchFailureHandling::IgnoreFailure);
 }
 
 double

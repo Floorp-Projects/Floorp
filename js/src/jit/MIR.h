@@ -3359,6 +3359,18 @@ class MNewDerivedTypedObject
     }
 };
 
+// This vector is used when the recovered object is kept unboxed. We map the
+// offset of each property to the index of the corresponding operands in the
+// object state.
+struct OperandIndexMap : public TempObject
+{
+    // The number of properties is limited by scalar replacement. Thus we cannot
+    // have any large number of properties.
+    FixedList<uint8_t> map;
+
+    bool init(TempAllocator& alloc, JSObject* templateObject);
+};
+
 // Represent the content of all slots of an object.  This instruction is not
 // lowered and is not used to generate code.
 class MObjectState
@@ -3367,9 +3379,15 @@ class MObjectState
 {
   private:
     uint32_t numSlots_;
-    uint32_t numFixedSlots_;
+    uint32_t numFixedSlots_;        // valid if isUnboxed() == false.
+    OperandIndexMap* operandIndex_; // valid if isUnboxed() == true.
 
-    explicit MObjectState(MDefinition* obj);
+    bool isUnboxed() const {
+        return operandIndex_ != nullptr;
+    }
+
+    MObjectState(JSObject *templateObject, OperandIndexMap* operandIndex);
+    explicit MObjectState(MObjectState* state);
 
     bool init(TempAllocator& alloc, MDefinition* obj);
 
@@ -3380,6 +3398,10 @@ class MObjectState
   public:
     INSTRUCTION_HEADER(ObjectState)
 
+    // Return the template object of any object creation which can be recovered
+    // on bailout.
+    static JSObject* templateObjectOf(MDefinition* obj);
+
     static MObjectState* New(TempAllocator& alloc, MDefinition* obj, MDefinition* undefinedVal);
     static MObjectState* Copy(TempAllocator& alloc, MObjectState* state);
 
@@ -3388,6 +3410,7 @@ class MObjectState
     }
 
     size_t numFixedSlots() const {
+        MOZ_ASSERT(!isUnboxed());
         return numFixedSlots_;
     }
     size_t numSlots() const {
@@ -3421,6 +3444,18 @@ class MObjectState
     }
     void setDynamicSlot(uint32_t slot, MDefinition* def) {
         setSlot(slot + numFixedSlots(), def);
+    }
+
+    // Interface reserved for unboxed objects.
+    bool hasOffset(uint32_t offset) const {
+        MOZ_ASSERT(isUnboxed());
+        return offset < operandIndex_->map.length() && operandIndex_->map[offset] != 0;
+    }
+    MDefinition* getOffset(uint32_t offset) const {
+        return getOperand(operandIndex_->map[offset]);
+    }
+    void setOffset(uint32_t offset, MDefinition* def) {
+        replaceOperand(operandIndex_->map[offset], def);
     }
 
     bool writeRecoverData(CompactBufferWriter& writer) const override;
@@ -9323,7 +9358,7 @@ class MLoadUnboxedScalar
   : public MBinaryInstruction,
     public SingleObjectPolicy::Data
 {
-    Scalar::Type indexType_;
+    Scalar::Type storageType_;
     Scalar::Type readType_;
     unsigned numElems_; // used only for SIMD
     bool requiresBarrier_;
@@ -9331,11 +9366,11 @@ class MLoadUnboxedScalar
     bool canonicalizeDoubles_;
 
     MLoadUnboxedScalar(MDefinition* elements, MDefinition* index,
-                       Scalar::Type indexType, MemoryBarrierRequirement requiresBarrier,
+                       Scalar::Type storageType, MemoryBarrierRequirement requiresBarrier,
                        int32_t offsetAdjustment, bool canonicalizeDoubles)
       : MBinaryInstruction(elements, index),
-        indexType_(indexType),
-        readType_(indexType),
+        storageType_(storageType),
+        readType_(storageType),
         numElems_(1),
         requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier),
         offsetAdjustment_(offsetAdjustment),
@@ -9348,20 +9383,20 @@ class MLoadUnboxedScalar
             setMovable();
         MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
         MOZ_ASSERT(index->type() == MIRType_Int32);
-        MOZ_ASSERT(indexType >= 0 && indexType < Scalar::MaxTypedArrayViewType);
+        MOZ_ASSERT(storageType >= 0 && storageType < Scalar::MaxTypedArrayViewType);
     }
 
   public:
     INSTRUCTION_HEADER(LoadUnboxedScalar)
 
     static MLoadUnboxedScalar* New(TempAllocator& alloc, MDefinition* elements, MDefinition* index,
-                                   Scalar::Type indexType,
+                                   Scalar::Type storageType,
                                    MemoryBarrierRequirement requiresBarrier
                                        = DoesNotRequireMemoryBarrier,
                                    int32_t offsetAdjustment = 0,
                                    bool canonicalizeDoubles = true)
     {
-        return new(alloc) MLoadUnboxedScalar(elements, index, indexType,
+        return new(alloc) MLoadUnboxedScalar(elements, index, storageType,
                                              requiresBarrier, offsetAdjustment,
                                              canonicalizeDoubles);
     }
@@ -9377,8 +9412,8 @@ class MLoadUnboxedScalar
         return readType_;
     }
 
-    Scalar::Type indexType() const {
-        return indexType_;
+    Scalar::Type storageType() const {
+        return storageType_;
     }
     bool fallible() const {
         // Bailout if the result does not fit in an int32.
@@ -9413,7 +9448,7 @@ class MLoadUnboxedScalar
         if (!ins->isLoadUnboxedScalar())
             return false;
         const MLoadUnboxedScalar* other = ins->toLoadUnboxedScalar();
-        if (indexType_ != other->indexType_)
+        if (storageType_ != other->storageType_)
             return false;
         if (readType_ != other->readType_)
             return false;
@@ -9430,7 +9465,7 @@ class MLoadUnboxedScalar
 
     void computeRange(TempAllocator& alloc) override;
 
-    bool canProduceFloat32() const override { return indexType_ == Scalar::Float32; }
+    bool canProduceFloat32() const override { return storageType_ == Scalar::Float32; }
 
     ALLOW_CLONE(MLoadUnboxedScalar)
 };
@@ -9609,17 +9644,17 @@ class MStoreUnboxedScalar
     public StoreUnboxedScalarBase,
     public StoreUnboxedScalarPolicy::Data
 {
-    Scalar::Type indexType_;
+    Scalar::Type storageType_;
     bool requiresBarrier_;
     int32_t offsetAdjustment_;
     unsigned numElems_; // used only for SIMD
 
     MStoreUnboxedScalar(MDefinition* elements, MDefinition* index, MDefinition* value,
-                        Scalar::Type indexType, MemoryBarrierRequirement requiresBarrier,
+                        Scalar::Type storageType, MemoryBarrierRequirement requiresBarrier,
                         int32_t offsetAdjustment)
       : MTernaryInstruction(elements, index, value),
-        StoreUnboxedScalarBase(indexType),
-        indexType_(indexType),
+        StoreUnboxedScalarBase(storageType),
+        storageType_(storageType),
         requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier),
         offsetAdjustment_(offsetAdjustment),
         numElems_(1)
@@ -9630,7 +9665,7 @@ class MStoreUnboxedScalar
             setMovable();
         MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
         MOZ_ASSERT(index->type() == MIRType_Int32);
-        MOZ_ASSERT(indexType >= 0 && indexType < Scalar::MaxTypedArrayViewType);
+        MOZ_ASSERT(storageType >= 0 && storageType < Scalar::MaxTypedArrayViewType);
     }
 
   public:
@@ -9638,12 +9673,12 @@ class MStoreUnboxedScalar
 
     static MStoreUnboxedScalar* New(TempAllocator& alloc,
                                     MDefinition* elements, MDefinition* index,
-                                    MDefinition* value, Scalar::Type indexType,
+                                    MDefinition* value, Scalar::Type storageType,
                                     MemoryBarrierRequirement requiresBarrier =
                                         DoesNotRequireMemoryBarrier,
                                     int32_t offsetAdjustment = 0)
     {
-        return new(alloc) MStoreUnboxedScalar(elements, index, value, indexType,
+        return new(alloc) MStoreUnboxedScalar(elements, index, value, storageType,
                                               requiresBarrier, offsetAdjustment);
     }
 
@@ -9655,8 +9690,8 @@ class MStoreUnboxedScalar
     unsigned numElems() const {
         return numElems_;
     }
-    Scalar::Type indexType() const {
-        return indexType_;
+    Scalar::Type storageType() const {
+        return storageType_;
     }
     MDefinition* elements() const {
         return getOperand(0);

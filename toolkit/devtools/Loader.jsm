@@ -30,7 +30,6 @@ this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
 let loaderModules = {
   "Services": Object.create(Services),
   "toolkit/loader": loader,
-  "promise": promise,
   "PromiseDebugging": PromiseDebugging
 };
 XPCOMUtils.defineLazyGetter(loaderModules, "Debugger", () => {
@@ -96,6 +95,7 @@ BuiltinProvider.prototype = {
         "devtools/content-observer": "resource://gre/modules/devtools/content-observer",
         "gcli": "resource://gre/modules/devtools/gcli",
         "projecteditor": "resource:///modules/devtools/projecteditor",
+        "promise": "resource://gre/modules/Promise-backend.js",
         "acorn": "resource://gre/modules/devtools/acorn",
         "acorn/util/walk": "resource://gre/modules/devtools/acorn/walk.js",
         "tern": "resource://gre/modules/devtools/tern",
@@ -135,6 +135,7 @@ SrcdirProvider.prototype = {
     srcdir = OS.Path.normalize(srcdir.data.trim());
     let devtoolsDir = OS.Path.join(srcdir, "browser", "devtools");
     let toolkitDir = OS.Path.join(srcdir, "toolkit", "devtools");
+    let modulesDir = OS.Path.join(srcdir, "toolkit", "modules");
     let mainURI = this.fileURI(OS.Path.join(devtoolsDir, "main.js"));
     let definitionsURI = this.fileURI(OS.Path.join(devtoolsDir, "definitions.js"));
     let devtoolsURI = this.fileURI(devtoolsDir);
@@ -153,6 +154,7 @@ SrcdirProvider.prototype = {
     let contentObserverURI = this.fileURI(OS.Path.join(toolkitDir), "content-observer.js");
     let gcliURI = this.fileURI(OS.Path.join(toolkitDir, "gcli", "source", "lib", "gcli"));
     let projecteditorURI = this.fileURI(OS.Path.join(devtoolsDir, "projecteditor"));
+    let promiseURI = this.fileURI(OS.Path.join(modulesDir, "promise-backend.js"));
     let acornURI = this.fileURI(OS.Path.join(toolkitDir, "acorn"));
     let acornWalkURI = OS.Path.join(acornURI, "walk.js");
     let ternURI = OS.Path.join(toolkitDir, "tern");
@@ -180,6 +182,7 @@ SrcdirProvider.prototype = {
         "devtools/content-observer": contentObserverURI,
         "gcli": gcliURI,
         "projecteditor": projecteditorURI,
+        "promise": promiseURI,
         "acorn": acornURI,
         "acorn/util/walk": acornWalkURI,
         "tern": ternURI,

@@ -1,0 +1,1 @@
+// Useless service worker.

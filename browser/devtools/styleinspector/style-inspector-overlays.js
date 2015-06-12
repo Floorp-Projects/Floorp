@@ -37,6 +37,7 @@ const VIEW_NODE_SELECTOR_TYPE = exports.VIEW_NODE_SELECTOR_TYPE = 1;
 const VIEW_NODE_PROPERTY_TYPE = exports.VIEW_NODE_PROPERTY_TYPE = 2;
 const VIEW_NODE_VALUE_TYPE = exports.VIEW_NODE_VALUE_TYPE = 3;
 const VIEW_NODE_IMAGE_URL_TYPE = exports.VIEW_NODE_IMAGE_URL_TYPE = 4;
+const VIEW_NODE_LOCATION_TYPE = exports.VIEW_NODE_LOCATION_TYPE = 5;
 
 /**
  * Manages all highlighters in the style-inspector.

@@ -75,6 +75,18 @@ TexImageTargetToTexTarget(TexImageTarget texImageTarget)
     }
 }
 
+JS::Value
+StringValue(JSContext* cx, const char* chars, ErrorResult& rv)
+{
+    JSString* str = JS_NewStringCopyZ(cx, chars);
+    if (!str) {
+        rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return JS::NullValue();
+    }
+
+    return JS::StringValue(str);
+}
+
 GLComponents::GLComponents(TexInternalFormat internalformat)
 {
     TexInternalFormat unsizedformat = UnsizedInternalFormatFromInternalFormat(internalformat);

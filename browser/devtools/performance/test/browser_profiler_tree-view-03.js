@@ -10,7 +10,7 @@ function test() {
   let { ThreadNode } = devtools.require("devtools/performance/tree-model");
   let { CallView } = devtools.require("devtools/performance/tree-view");
 
-  let threadNode = new ThreadNode(gThread);
+  let threadNode = new ThreadNode(gThread, { startTime: 0, endTime: 20 });
   // Don't display the synthesized (root) and the real (root) node twice.
   threadNode.calls = threadNode.calls[0].calls;
   let treeRoot = new CallView({ frame: threadNode });
@@ -57,19 +57,19 @@ function test() {
   is($$name(6).getAttribute("value"), "F",
     "The .A.E.F node's function cell displays the correct name.");
 
-  is($$duration(0).getAttribute("value"), "15 ms",
+  is($$duration(0).getAttribute("value"), "20 ms",
     "The root node's function cell displays the correct duration.");
-  is($$duration(1).getAttribute("value"), "15 ms",
+  is($$duration(1).getAttribute("value"), "20 ms",
     "The .A node's function cell displays the correct duration.");
-  is($$duration(2).getAttribute("value"), "8 ms",
+  is($$duration(2).getAttribute("value"), "15 ms",
     "The .A.B node's function cell displays the correct duration.");
-  is($$duration(3).getAttribute("value"), "3 ms",
+  is($$duration(3).getAttribute("value"), "10 ms",
     "The .A.B.D node's function cell displays the correct duration.");
   is($$duration(4).getAttribute("value"), "5 ms",
     "The .A.B.C node's function cell displays the correct duration.");
-  is($$duration(5).getAttribute("value"), "7 ms",
+  is($$duration(5).getAttribute("value"), "5 ms",
     "The .A.E node's function cell displays the correct duration.");
-  is($$duration(6).getAttribute("value"), "7 ms",
+  is($$duration(6).getAttribute("value"), "5 ms",
     "The .A.E.F node's function cell displays the correct duration.");
 
   finish();

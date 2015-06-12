@@ -275,6 +275,22 @@
     "n_buckets": 50,
     "description": "Time spent running JS GC (ms)"
   },
+  "GC_BUDGET_MS": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "100",
+    "n_buckets": 10,
+    "description": "Requested GC slice budget (ms)"
+  },
+  "GC_ANIMATION_MS": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent running JS GC when animating (ms)"
+  },
   "GC_MAX_PAUSE_MS": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
@@ -6770,6 +6786,48 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Was WebIDE's debug button used during this runtime connection?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_TYPE": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What runtime type did WebIDE connect to?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_ID": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What runtime ID did WebIDE connect to?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_PROCESSOR": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What runtime processor did WebIDE connect to?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_OS": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What runtime OS did WebIDE connect to?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_PLATFORM_VERSION": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What runtime platform version did WebIDE connect to?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_APP_TYPE": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What runtime app type did WebIDE connect to?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_VERSION": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What runtime version did WebIDE connect to?"
   },
   "DEVTOOLS_OS_ENUMERATED_PER_USER": {
     "expires_in_version": "never",

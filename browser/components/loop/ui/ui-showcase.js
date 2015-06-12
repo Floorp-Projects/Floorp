@@ -922,6 +922,22 @@
             )
           ), 
 
+          React.createElement(Section, {name: "StandaloneRoomView (Mobile)"}, 
+            React.createElement(FramedExample, {width: 600, height: 480, 
+                           onContentsRendered: updatingActiveRoomStore.forcedUpdate, 
+                           summary: "Standalone room conversation (has-participants, 600x480)"}, 
+                React.createElement("div", {className: "standalone"}, 
+                  React.createElement(StandaloneRoomView, {
+                    dispatcher: dispatcher, 
+                    activeRoomStore: updatingActiveRoomStore, 
+                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
+                    isFirefox: true, 
+                    localPosterUrl: "sample-img/video-screen-local.png", 
+                    remotePosterUrl: "sample-img/video-screen-remote.png"})
+                )
+            )
+          ), 
+
           React.createElement(Section, {name: "SVG icons preview", className: "svg-icons"}, 
             React.createElement(Example, {summary: "10x10"}, 
               React.createElement(SVGIcons, {size: "10x10"})

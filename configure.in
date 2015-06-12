@@ -4952,6 +4952,13 @@ if test -n "$MOZ_ANDROID_SHARE_OVERLAY"; then
     AC_DEFINE(MOZ_ANDROID_SHARE_OVERLAY)
 fi
 
+dnl ========================================================
+dnl = Show Firefox Account profile details on Android
+dnl ========================================================
+if test -n "$MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES"; then
+    AC_DEFINE(MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES)
+fi
+
 dnl = Include Tab Queue on Android
 dnl = Temporary build flag to allow development in Nightly
 dnl ========================================================
@@ -5125,11 +5132,6 @@ fi
 dnl ========================================================
 dnl = Disable Speech API pocketsphinx backend
 dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(webspeechpocketsphinx,
-[  --disable-webspeechpocketsphinx        Disable support for HTML Speech API Pocketsphinx Backend],
-    MOZ_WEBSPEECH_POCKETSPHINX=,
-    MOZ_WEBSPEECH_POCKETSPHINX=1)
-
 if test -n "$MOZ_WEBSPEECH_POCKETSPHINX"; then
     AC_DEFINE(MOZ_WEBSPEECH_POCKETSPHINX)
 fi
@@ -5171,11 +5173,6 @@ AC_SUBST(MOZ_WEBSPEECH_TEST_BACKEND)
 dnl ========================================================
 dnl = Disable Speech API models
 dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(webspeechmodels,
-[  --disable-webspeechmodels        Disable support for HTML Speech API Models],
-    MOZ_WEBSPEECH_MODELS=,
-    MOZ_WEBSPEECH_MODELS=1)
-
 if test -z "$MOZ_WEBSPEECH"; then
 MOZ_WEBSPEECH_MODELS=
 fi
@@ -8540,6 +8537,7 @@ AC_SUBST(MOZ_ANDROID_GECKOLIBS_AAR)
 AC_SUBST(MOZ_ANDROID_READING_LIST_SERVICE)
 AC_SUBST(MOZ_ANDROID_SEARCH_ACTIVITY)
 AC_SUBST(MOZ_ANDROID_SHARE_OVERLAY)
+AC_SUBST(MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES)
 AC_SUBST(MOZ_ANDROID_TAB_QUEUE)
 AC_SUBST(MOZ_ANDROID_MLS_STUMBLER)
 AC_SUBST(MOZ_ANDROID_DOWNLOADS_INTEGRATION)
