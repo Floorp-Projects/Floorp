@@ -3340,7 +3340,7 @@ bool RangeAnalysis::tryRemovingGuards()
     MDefinitionVector guards(alloc());
 
     for (ReversePostorderIterator block = graph_.rpoBegin(); block != graph_.rpoEnd(); block++) {
-        for (MInstructionReverseIterator iter = block->rbegin(); iter != block->rend(); iter++) {
+        for (MDefinitionIterator iter(*block); iter; iter++) {
             if (!iter->isGuardRangeBailouts())
                 continue;
 
