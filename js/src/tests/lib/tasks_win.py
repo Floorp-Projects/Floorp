@@ -1,96 +1,67 @@
-# Multiprocess activities with a push-driven divide-process-collect model.
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+from __future__ import print_function, unicode_literals, division
 
-from __future__ import print_function
-
-from threading import Thread, Lock
+import sys
+from threading import Thread
 from Queue import Queue, Empty
-from datetime import datetime
 
-class Source:
-    def __init__(self, task_list, results, timeout, verbose=False):
-        self.tasks = Queue()
-        for task in task_list:
-            self.tasks.put_nowait(task)
 
-        self.results = results
-        self.timeout = timeout
-        self.verbose = verbose
+class EndMarker:
+    pass
 
-    def start(self, worker_count):
-        t0 = datetime.now()
 
-        sink = Sink(self.results)
-        self.workers = [Worker(_ + 1, self.tasks, sink, self.timeout,
-                               self.verbose)
-                        for _ in range(worker_count)]
-        if self.verbose:
-            print('[P] Starting workers.')
-        for w in self.workers:
-            w.t0 = t0
-            w.start()
-        ans = self.join_workers()
-        if self.verbose:
-            print('[P] Finished.')
-        return ans
+def _do_work(qTasks, qResults, timeout):
+    while True:
+        test = qTasks.get(block=True, timeout=sys.maxint)
+        if test is EndMarker:
+            qResults.put(EndMarker)
+            return
+        qResults.put(test.run(test.js_cmd_prefix, timeout))
 
-    def join_workers(self):
-        try:
-            for w in self.workers:
-                w.join(20000)
-            return True
-        except KeyboardInterrupt:
-            for w in self.workers:
-                w.stop = True
-            return False
 
-class Sink:
-    def __init__(self, results):
-        self.results = results
-        self.lock = Lock()
+def run_all_tests_gen(tests, results, options):
+    """
+    Uses scatter-gather to a thread-pool to manage children.
+    """
+    qTasks, qResults = Queue(), Queue()
 
-    def push(self, result):
-        self.lock.acquire()
-        try:
-            self.results.push(result)
-        finally:
-            self.lock.release()
+    workers = []
+    for _ in range(options.worker_count):
+        worker = Thread(target=_do_work, args=(qTasks, qResults, options.timeout))
+        worker.setDaemon(True)
+        worker.start()
+        workers.append(worker)
 
-class Worker(Thread):
-    def __init__(self, id, tasks, sink, timeout, verbose):
-        Thread.__init__(self)
-        self.setDaemon(True)
-        self.id = id
-        self.tasks = tasks
-        self.sink = sink
-        self.timeout = timeout
-        self.verbose = verbose
+    # Insert all jobs into the queue, followed by the queue-end
+    # marker, one per worker. This will not block on growing the
+    # queue, only on waiting for more items in the generator. The
+    # workers are already started, however, so this will process as
+    # fast as we can produce tests from the filesystem.
+    for test in tests:
+        qTasks.put(test)
+    for _ in workers:
+        qTasks.put(EndMarker)
 
-        self.thread = None
-        self.stop = False
-        self.t0 = 0
+    # Read from the results.
+    ended = 0
+    while ended < len(workers):
+        result = qResults.get(block=True, timeout=sys.maxint)
+        if result is EndMarker:
+            ended += 1
+        else:
+            yield result
 
-    def log(self, msg):
-        if self.verbose:
-            dd = datetime.now() - self.t0
-            dt = dd.seconds + 1e-6 * dd.microseconds
-            print('[W{:d} {:.3f}] {}'.format(self.id, dt, msg))
+    # Cleanup and exit.
+    for worker in workers:
+        worker.join()
+    assert qTasks.empty(), "Send queue not drained"
+    assert qResults.empty(), "Result queue not drained"
 
-    def run(self):
-        try:
-            while True:
-                if self.stop:
-                    break
-                self.log('Get next task.')
-                task = self.tasks.get(False)
-                self.log('Start task {}.'.format(str(task)))
-                result = task.run(task.js_cmd_prefix, self.timeout)
-                self.log('Finished task.')
-                self.sink.push(result)
-                self.log('Pushed result.')
-        except Empty:
-            pass
 
 def run_all_tests(tests, results, options):
-    pipeline = Source(tests, results, options.timeout, False)
-    return pipeline.start(options.worker_count)
+    for result in run_all_tests_gen(tests, results, options):
+        results.push(result)
+    return True
 
