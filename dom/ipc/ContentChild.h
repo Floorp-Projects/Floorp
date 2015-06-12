@@ -398,7 +398,7 @@ public:
                                    nsTArray<nsCString>&& aFeatures,
                                    nsTArray<nsCString>&& aThreadNameFilters) override;
     virtual bool RecvStopProfiler() override;
-    virtual bool RecvGetProfile(nsCString* aProfile) override;
+    virtual bool RecvGatherProfile() override;
     virtual bool RecvDomainSetChanged(const uint32_t& aSetType, const uint32_t& aChangeType,
                                       const OptionalURIParams& aDomain) override;
     virtual bool RecvShutdown() override;

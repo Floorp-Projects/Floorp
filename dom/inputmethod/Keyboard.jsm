@@ -94,6 +94,7 @@ this.Keyboard = {
     Services.obs.addObserver(this, 'inprocess-browser-shown', false);
     Services.obs.addObserver(this, 'remote-browser-shown', false);
     Services.obs.addObserver(this, 'oop-frameloader-crashed', false);
+    Services.obs.addObserver(this, 'message-manager-close', false);
 
     for (let name of this._messageNames) {
       ppmm.addMessageListener('Keyboard:' + name, this);
@@ -107,10 +108,18 @@ this.Keyboard = {
   },
 
   observe: function keyboardObserve(subject, topic, data) {
-    let frameLoader = subject.QueryInterface(Ci.nsIFrameLoader);
-    let mm = frameLoader.messageManager;
+    let frameLoader = null;
+    let mm = null;
 
-    if (topic == 'oop-frameloader-crashed') {
+    if (topic == 'message-manager-close') {
+      mm = subject;
+    } else {
+      frameLoader = subject.QueryInterface(Ci.nsIFrameLoader);
+      mm = frameLoader.messageManager;
+    }
+
+    if (topic == 'oop-frameloader-crashed' ||
+	topic == 'message-manager-close') {
       if (this.formMM == mm) {
         // The application has been closed unexpectingly. Let's tell the
         // keyboard app that the focus has been lost.
@@ -290,6 +299,8 @@ this.Keyboard = {
         if (mm !== this.formMM) {
           return false;
         }
+
+        this.formMM = null;
       }
     }
 

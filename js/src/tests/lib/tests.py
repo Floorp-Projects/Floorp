@@ -15,7 +15,7 @@ JITFLAGS = {
     'all': [
         [], # no flags, normal baseline and ion
         ['--ion-eager', '--ion-offthread-compile=off'], # implies --baseline-eager
-        ['--ion-eager', '--ion-offthread-compile=off',
+        ['--ion-eager', '--ion-offthread-compile=off', '--non-writable-jitcode',
          '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3', '--no-threads'],
         ['--baseline-eager'],
         ['--baseline-eager', '--no-fpu'],

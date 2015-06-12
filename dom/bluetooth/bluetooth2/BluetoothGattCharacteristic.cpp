@@ -142,18 +142,13 @@ BluetoothGattCharacteristic::StopNotifications(ErrorResult& aRv)
 }
 
 void
-BluetoothGattCharacteristic::HandleDescriptorsDiscovered(
-  const BluetoothValue& aValue)
+BluetoothGattCharacteristic::AssignDescriptors(
+  const nsTArray<BluetoothGattId>& aDescriptorIds)
 {
-  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothGattId);
-
-  const InfallibleTArray<BluetoothGattId>& descriptorIds =
-    aValue.get_ArrayOfBluetoothGattId();
-
   mDescriptors.Clear();
-  for (uint32_t i = 0; i < descriptorIds.Length(); i++) {
+  for (uint32_t i = 0; i < aDescriptorIds.Length(); i++) {
     mDescriptors.AppendElement(new BluetoothGattDescriptor(
-      GetParentObject(), this, descriptorIds[i]));
+      GetParentObject(), this, aDescriptorIds[i]));
   }
 
   BluetoothGattCharacteristicBinding::ClearCachedDescriptorsValue(this);
@@ -175,9 +170,7 @@ BluetoothGattCharacteristic::Notify(const BluetoothSignal& aData)
   NS_ENSURE_TRUE_VOID(mSignalRegistered);
 
   BluetoothValue v = aData.value();
-  if (aData.name().EqualsLiteral("DescriptorsDiscovered")) {
-    HandleDescriptorsDiscovered(v);
-  } else if (aData.name().EqualsLiteral("CharacteristicValueUpdated")) {
+  if (aData.name().EqualsLiteral("CharacteristicValueUpdated")) {
     HandleCharacteristicValueUpdated(v);
   } else {
     BT_WARNING("Not handling GATT Characteristic signal: %s",

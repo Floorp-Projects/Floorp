@@ -72,6 +72,7 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mInitDone(false)
   , mSeekable(false)
   , mIsEncrypted(false)
+  , mTrackDemuxersMayBlock(false)
   , mCachedTimeRangesStale(true)
 #if defined(READER_DORMANT_HEURISTIC)
   , mDormantEnabled(Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
@@ -304,6 +305,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
     mInfo.mVideo = *mVideo.mTrackDemuxer->GetInfo()->GetAsVideoInfo();
     mVideo.mCallback = new DecoderCallback(this, TrackInfo::kVideoTrack);
     mVideo.mTimeRanges = mVideo.mTrackDemuxer->GetBuffered();
+    mTrackDemuxersMayBlock |= mVideo.mTrackDemuxer->GetSamplesMayBlock();
   }
 
   bool audioActive = !!mDemuxer->GetNumberTracks(TrackInfo::kAudioTrack);
@@ -313,6 +315,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
     mInfo.mAudio = *mAudio.mTrackDemuxer->GetInfo()->GetAsAudioInfo();
     mAudio.mCallback = new DecoderCallback(this, TrackInfo::kAudioTrack);
     mAudio.mTimeRanges = mAudio.mTrackDemuxer->GetBuffered();
+    mTrackDemuxersMayBlock |= mAudio.mTrackDemuxer->GetSamplesMayBlock();
   }
 
   UniquePtr<EncryptionInfo> crypto = mDemuxer->GetCrypto();
@@ -341,7 +344,11 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
   mSeekable = mDemuxer->IsSeekable();
 
   // Create demuxer object for main thread.
-  mMainThreadDemuxer = mDemuxer->Clone();
+  if (mDemuxer->IsThreadSafe()) {
+    mMainThreadDemuxer = mDemuxer;
+  } else {
+    mMainThreadDemuxer = mDemuxer->Clone();
+  }
   if (!mMainThreadDemuxer) {
     mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
     NS_WARNING("Unable to clone current MediaDataDemuxer");
@@ -846,6 +853,9 @@ MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
     aA.mParsed += decoder.mQueuedSamples.Length();
   }
   decoder.mQueuedSamples.Clear();
+
+  // We have serviced the decoder's request for more data.
+  decoder.mInputExhausted = false;
 }
 
 void
@@ -924,7 +934,6 @@ MediaFormatReader::Update(TrackType aTrack)
   }
 
   needInput = true;
-  decoder.mInputExhausted = false;
 
   LOGV("Update(%s) ni=%d no=%d ie=%d, in:%d out:%d qs=%d",
        TrackTypeToStr(aTrack), needInput, needOutput, decoder.mInputExhausted,
@@ -1137,7 +1146,12 @@ MediaFormatReader::OnVideoSkipFailed(MediaTrackDemuxer::SkipFailureHolder aFailu
   mDecoder->NotifyDecodedFrames(aFailure.mSkipped, 0, aFailure.mSkipped);
   MOZ_ASSERT(mVideo.HasPromise());
   if (aFailure.mFailure == DemuxerFailureReason::END_OF_STREAM) {
+    mVideo.mDemuxEOS = true;
+    ScheduleUpdate(TrackType::kVideoTrack);
     mVideo.RejectPromise(END_OF_STREAM, __func__);
+  } else if (aFailure.mFailure == DemuxerFailureReason::WAITING_FOR_DATA) {
+    NotifyWaitingForData(TrackType::kVideoTrack);
+    mVideo.RejectPromise(WAITING_FOR_DATA, __func__);
   } else {
     mVideo.RejectPromise(DECODE_ERROR, __func__);
   }
@@ -1458,6 +1472,15 @@ MediaFormatReader::NotifyDataRemoved()
       this, &MediaFormatReader::NotifyDemuxer,
       0, 0);
   TaskQueue()->Dispatch(task.forget());
+}
+
+int64_t
+MediaFormatReader::ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio)
+{
+  if (mDemuxer->ShouldComputeStartTime()) {
+    return MediaDecoderReader::ComputeStartTime(aVideo, aAudio);
+  }
+  return 0;
 }
 
 } // namespace mozilla
