@@ -17,13 +17,14 @@
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+class BluetoothGatt;
 class BluetoothSignal;
 class BluetoothValue;
 
 class BluetoothGattService final : public nsISupports
                                  , public nsWrapperCache
-                                 , public BluetoothSignalObserver
 {
+  friend class BluetoothGatt;
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BluetoothGattService)
@@ -71,8 +72,6 @@ public:
     return mServiceId;
   }
 
-  void Notify(const BluetoothSignal& aData); // BluetoothSignalObserver
-
   nsPIDOMWindow* GetParentObject() const
   {
      return mOwner;
@@ -92,20 +91,36 @@ private:
    * Add newly discovered GATT included services into mIncludedServices and
    * update the cache value of mIncludedServices.
    *
-   * @param aValue [in] BluetoothValue which contains an array of
-   *                    BluetoothGattServiceId of all discovered included
-   *                    services.
+   * @param aServiceIds [in] An array of BluetoothGattServiceId for each
+   *                         included service that belongs to this service.
    */
-  void HandleIncludedServicesDiscovered(const BluetoothValue& aValue);
+  void AssignIncludedServices(
+    const nsTArray<BluetoothGattServiceId>& aServiceIds);
 
   /**
    * Add newly discovered GATT characteristics into mCharacteristics and
    * update the cache value of mCharacteristics.
    *
-   * @param aValue [in] BluetoothValue which contains an array of
-   *                    BluetoothGattId of all discovered characteristics.
+   * @param aCharacteristics [in] An array of BluetoothGattCharAttribute for
+   *                              each characteristic that belongs to this
+   *                              service.
    */
-  void HandleCharacteristicsDiscovered(const BluetoothValue& aValue);
+  void AssignCharacteristics(
+    const nsTArray<BluetoothGattCharAttribute>& aCharacteristics);
+
+  /**
+   * Add newly discovered GATT descriptors into mDescriptors of
+   * BluetoothGattCharacteristic and update the cache value of mDescriptors.
+   *
+   * @param aCharacteristicId [in] BluetoothGattId of a characteristic that
+   *                               belongs to this service.
+   * @param aDescriptorIds [in] An array of BluetoothGattId for each descriptor
+   *                            that belongs to the characteristic referred by
+   *                            aCharacteristicId.
+   */
+  void AssignDescriptors(
+    const BluetoothGattId& aCharacteristicId,
+    const nsTArray<BluetoothGattId>& aDescriptorIds);
 
   /****************************************************************************
    * Variables

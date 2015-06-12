@@ -29,7 +29,7 @@ loop.shared.views.TextChatView = (function(mozl10n) {
 
       return (
         React.createElement("div", {className: classes}, 
-          this.props.message
+          React.createElement("span", null, this.props.message)
         )
       );
     }
@@ -49,6 +49,9 @@ loop.shared.views.TextChatView = (function(mozl10n) {
 
     componentWillUpdate: function() {
       var node = this.getDOMNode();
+      if (!node) {
+        return;
+      }
       // Scroll only if we're right at the bottom of the display.
       this.shouldScroll = node.scrollHeight === node.scrollTop + node.clientHeight;
     },
@@ -64,17 +67,23 @@ loop.shared.views.TextChatView = (function(mozl10n) {
     },
 
     render: function() {
+      if (!this.props.messageList.length) {
+        return null;
+      }
+
       return (
         React.createElement("div", {className: "text-chat-entries"}, 
-          
-            this.props.messageList.map(function(entry, i) {
-              return (
-                React.createElement(TextChatEntry, {key: i, 
-                               message: entry.message, 
-                               type: entry.type})
-              );
-            }, this)
-          
+          React.createElement("div", {className: "text-chat-scroller"}, 
+            
+              this.props.messageList.map(function(entry, i) {
+                return (
+                  React.createElement(TextChatEntry, {key: i, 
+                                 message: entry.message, 
+                                 type: entry.type})
+                );
+              }, this)
+            
+          )
         )
       );
     }
@@ -134,12 +143,15 @@ loop.shared.views.TextChatView = (function(mozl10n) {
         return null;
       }
 
+      var messageList = this.state.messageList;
+
       return (
         React.createElement("div", {className: "text-chat-view"}, 
-          React.createElement(TextChatEntriesView, {messageList: this.state.messageList}), 
+          React.createElement(TextChatEntriesView, {messageList: messageList}), 
           React.createElement("div", {className: "text-chat-box"}, 
             React.createElement("form", {onSubmit: this.handleFormSubmit}, 
               React.createElement("input", {type: "text", 
+                     placeholder: messageList.length ? "" : mozl10n.get("chat_textbox_placeholder"), 
                      onKeyDown: this.handleKeyDown, 
                      valueLink: this.linkState("messageDetail")})
             )
