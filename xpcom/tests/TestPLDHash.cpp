@@ -71,9 +71,7 @@ static bool test_pldhash_lazy_storage()
     return false;   // enumeration count is non-zero?
   }
 
-  for (PLDHashTable::Iterator iter = t.Iterate();
-       iter.HasMoreEntries();
-       iter.NextEntry()) {
+  for (auto iter = t.Iter(); !iter.Done(); iter.Get()) {
     return false; // shouldn't hit this on an empty table
   }
 
@@ -91,17 +89,24 @@ static bool test_pldhash_lazy_storage()
 // test_pldhash_grow_to_max_capacity() because we insert the integers 0..,
 // which means it's collision-free.
 static PLDHashNumber
-trivial_hash(PLDHashTable *table, const void *key)
+TrivialHash(PLDHashTable *table, const void *key)
 {
   return (PLDHashNumber)(size_t)key;
 }
 
+static void
+TrivialInitEntry(PLDHashEntryHdr* aEntry, const void* aKey)
+{
+  auto entry = static_cast<PLDHashEntryStub*>(aEntry);
+  entry->key = aKey;
+}
+
 static const PLDHashTableOps trivialOps = {
-  trivial_hash,
+  TrivialHash,
   PL_DHashMatchEntryStub,
   PL_DHashMoveEntryStub,
   PL_DHashClearEntryStub,
-  nullptr
+  TrivialInitEntry
 };
 
 static bool test_pldhash_move_semantics()
@@ -180,6 +185,52 @@ static bool test_pldhash_Clear()
   return true;
 }
 
+static bool test_pldhash_Iterator()
+{
+  PLDHashTable t(&trivialOps, sizeof(PLDHashEntryStub));
+
+  // Explicitly test the move constructor. We do this because, due to copy
+  // elision, compilers might optimize away move constructor calls for normal
+  // iterator use.
+  {
+    PLDHashTable::Iterator iter1(&t);
+    PLDHashTable::Iterator iter2(mozilla::Move(iter1));
+  }
+
+  // Iterate through the empty table.
+  for (PLDHashTable::Iterator iter(&t); !iter.Done(); iter.Next()) {
+    (void) iter.Get();
+    return false;   // shouldn't hit this
+  }
+
+  // Add three entries.
+  PL_DHashTableAdd(&t, (const void*)77);
+  PL_DHashTableAdd(&t, (const void*)88);
+  PL_DHashTableAdd(&t, (const void*)99);
+
+  // Check the iterator goes through each entry once.
+  bool saw77 = false, saw88 = false, saw99 = false;
+  int n = 0;
+  for (auto iter(t.Iter()); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<PLDHashEntryStub*>(iter.Get());
+    if (entry->key == (const void*)77) {
+      saw77 = true;
+    }
+    if (entry->key == (const void*)88) {
+      saw88 = true;
+    }
+    if (entry->key == (const void*)99) {
+      saw99 = true;
+    }
+    n++;
+  }
+  if (!saw77 || !saw88 || !saw99 || n != 3) {
+    return false;
+  }
+
+  return true;
+}
+
 // See bug 931062, we skip this test on Android due to OOM.
 #ifndef MOZ_WIDGET_ANDROID
 static bool test_pldhash_grow_to_max_capacity()
@@ -222,7 +273,9 @@ static const struct Test {
   DECL_TEST(test_pldhash_lazy_storage),
   DECL_TEST(test_pldhash_move_semantics),
   DECL_TEST(test_pldhash_Clear),
-// See bug 931062, we skip this test on Android due to OOM.
+  DECL_TEST(test_pldhash_Iterator),
+// See bug 931062, we skip this test on Android due to OOM. Also, it's slow,
+// and so should always be last.
 #ifndef MOZ_WIDGET_ANDROID
   DECL_TEST(test_pldhash_grow_to_max_capacity),
 #endif

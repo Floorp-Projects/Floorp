@@ -1351,9 +1351,8 @@ void nsDocLoader::ClearRequestInfoHash(void)
 int64_t nsDocLoader::CalculateMaxProgress()
 {
   int64_t max = mCompletedTotalProgress;
-  PLDHashTable::Iterator iter(&mRequestInfoHash);
-  while (iter.HasMoreEntries()) {
-    auto info = static_cast<const nsRequestInfo*>(iter.NextEntry());
+  for (auto iter = mRequestInfoHash.Iter(); !iter.Done(); iter.Next()) {
+    auto info = static_cast<const nsRequestInfo*>(iter.Get());
 
     if (info->mMaxProgress < info->mCurrentProgress) {
       return int64_t(-1);
