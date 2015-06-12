@@ -1093,7 +1093,7 @@ nsresult WebMReader::SeekInternal(int64_t aTarget)
 
 media::TimeIntervals WebMReader::GetBuffered()
 {
-  NS_ENSURE_TRUE(mStartTime >= 0, media::TimeIntervals());
+  MOZ_ASSERT(mStartTime != -1, "Need to finish metadata decode first");
   AutoPinned<MediaResource> resource(mDecoder->GetResource());
 
   media::TimeIntervals buffered;
