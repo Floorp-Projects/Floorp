@@ -378,7 +378,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     this.allowFocusOnRightClick = true;
     this.maintainSelectionVisible = true;
-    this.widget.autoscrollWithAppendedItems = true;
 
     this.widget.addEventListener("select", this._onSelect, false);
     this.widget.addEventListener("swap", this._onSwap, false);
@@ -1336,6 +1335,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       return;
     }
 
+    let widget = NetMonitorView.RequestsMenu.widget;
+    let isScrolledToBottom = widget.isScrolledToBottom();
+
     for (let [id, startedDateTime, method, url, isXHR, fromCache] of this._addQueue) {
       // Convert the received date/time string to a unix timestamp.
       let unixTime = Date.parse(startedDateTime);
@@ -1377,6 +1379,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       window.emit(EVENTS.REQUEST_ADDED, id);
     }
 
+    if (isScrolledToBottom && this._addQueue.length) {
+      widget.scrollToBottom();
+    }
 
     // For each queued additional information packet, get the corresponding
     // request item in the view and update it based on the specified data.
