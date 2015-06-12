@@ -50,6 +50,14 @@ public:
   // again to retry once more data has been received.
   virtual nsRefPtr<InitPromise> Init() = 0;
 
+  // MediaFormatReader ensures that calls to the MediaDataDemuxer are thread-safe.
+  // This is done by having multiple demuxers, created with Clone(), one per
+  // running thread.
+  // However, should the MediaDataDemuxer object guaranteed to be thread-safe
+  // such cloning is unecessary and only one demuxer will be used across
+  // all threads.
+  virtual bool IsThreadSafe() { return false; }
+
   // Clone the demuxer and return a new initialized demuxer.
   // This can only be called once Init() has succeeded.
   // The new demuxer can be immediately use to retrieve the track demuxers.
@@ -90,6 +98,11 @@ public:
   // its TimeIntervals.
   // This will be called should the demuxer be used with MediaSource.
   virtual void NotifyDataRemoved() { }
+
+  // Indicate to MediaFormatReader if it should compute the start time
+  // of the demuxed data. If true (default) the first sample returned will be
+  // used as reference time base.
+  virtual bool ShouldComputeStartTime() const { return true; }
 
 protected:
   virtual ~MediaDataDemuxer()
@@ -142,6 +155,15 @@ public:
   // A video sample is typically made of a single video frame while an audio
   // sample will contains multiple audio frames.
   virtual nsRefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) = 0;
+
+  // Returns true if a call to GetSamples() may block while waiting on the
+  // underlying resource to return the data.
+  // This is used by the MediaFormatReader to determine if buffering heuristics
+  // should be used.
+  virtual bool GetSamplesMayBlock() const
+  {
+    return true;
+  }
 
   // Cancel all pending actions (Seek, GetSamples) and reset current state
   // All pending promises are to be rejected with CANCEL.

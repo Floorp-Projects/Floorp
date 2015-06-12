@@ -13,7 +13,7 @@ task:
         phone:
           type: 'flame'
           memory: '319'
-          sims: '1'
+          sims: '2'
           build: '{{{img_url}}}'
     features:
       testdroidProxy: true

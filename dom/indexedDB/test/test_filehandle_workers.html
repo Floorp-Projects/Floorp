@@ -14,15 +14,26 @@
   {
     const name = window.location.pathname;
 
-    var testBuffer = getRandomBuffer(100000);
+    let testBuffer = getRandomBuffer(100000);
 
     let request = indexedDB.open(name, 1);
     request.onerror = errorHandler;
-    request.onsuccess = grabEventAndContinueHandler;
+    request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = errorHandler;
     let event = yield undefined;
+
+    is(event.type, "upgradeneeded", "Got correct event type");
 
     let db = event.target.result;
     db.onerror = errorHandler;
+
+    db.createObjectStore("Foo", { });
+
+    request.onupgradeneeded = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    is(event.type, "success", "Got correct event type");
 
     request = db.createMutableFile("test.txt");
     request.onerror = errorHandler;
@@ -30,6 +41,28 @@
     event = yield undefined;
 
     let mutableFile = event.target.result;
+
+    function dummyWorkerScript() {
+      onmessage = function(event) {
+        throw("Shouldn't be called!");
+      }
+    }
+
+    let url =
+      URL.createObjectURL(new Blob(["(", dummyWorkerScript.toSource(), ")()"]));
+
+    let worker = new Worker(url);
+    try {
+      worker.postMessage(mutableFile);
+      ok(false, "Should have thrown!");
+    }
+    catch (e) {
+      ok(e instanceof DOMException, "Got exception.");
+      is(e.name, "DataCloneError", "Good error.");
+      is(e.code, DOMException.DATA_CLONE_ERR, "Good error code.")
+    }
+    worker.terminate();
+
     mutableFile.onerror = errorHandler;
 
     let fileHandle = mutableFile.open("readwrite");
@@ -44,7 +77,8 @@
 
     let file = event.target.result;
 
-    var worker = new Worker("dummy_worker.js");
+    worker = new Worker(url);
+    URL.revokeObjectURL(url);
     try {
       worker.postMessage(file);
       ok(false, "Should have thrown!");
@@ -54,6 +88,51 @@
       is(e.name, "DataCloneError", "Good error.");
       is(e.code, DOMException.DATA_CLONE_ERR, "Good error code.")
     }
+    worker.terminate();
+
+    let objectStore =
+      db.transaction("Foo", "readwrite").objectStore("Foo");
+
+    request = objectStore.add(mutableFile, 42);
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    function workerScript() {
+      onmessage = function(event) {
+        var name = event.data;
+        var request = indexedDB.open(name, 1);
+        request.onsuccess = function(event) {
+          var db = event.target.result;
+          let objectStore = db.transaction("Foo").objectStore("Foo");
+          request = objectStore.get(42);
+          request.onsuccess = function(event) {
+            try {
+              let result = request.result;
+              postMessage("error");
+            }
+            catch (e) {
+              postMessage("success");
+            }
+          }
+          request.onerror = function(event) {
+            postMessage("error");
+          }
+        }
+        request.onerror = function(event) {
+          postMessage("error");
+        }
+      }
+    }
+
+    url = URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+
+    worker = new Worker(url);
+    URL.revokeObjectURL(url);
+    worker.postMessage(name);
+    worker.onmessage = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    is(event.data, "success", "Good response.");
     worker.terminate();
 
     finishTest();

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<script>
+function ok(condition, message) {
+  parent.postMessage({type: "ok", status: condition, msg: message}, "*");
+}
+
+function done() {
+  parent.postMessage({type: "done"}, "*");
+}
+
+ok(location.protocol == "https:", "We should be loaded from HTTPS");
+
+navigator.serviceWorker.register("empty.js", {scope: "register-https"})
+  .then(reg => {
+    ok(false, "Registration should fail");
+    done();
+  }).catch(err => {
+    ok(err.name === "SecurityError", "Registration should fail with SecurityError");
+    done();
+  });
+</script>

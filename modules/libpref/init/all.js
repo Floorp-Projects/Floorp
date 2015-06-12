@@ -454,6 +454,9 @@ pref("media.mediasource.whitelist", false);
 pref("media.mediasource.mp4.enabled", true);
 pref("media.mediasource.webm.enabled", false);
 
+// Enable new MediaSource architecture.
+pref("media.mediasource.format-reader", false);
+
 // Enable new MediaFormatReader architecture for mp4 in MSE
 pref("media.mediasource.format-reader.mp4", true);
 // Enable new MediaFormatReader architecture for plain mp4.
