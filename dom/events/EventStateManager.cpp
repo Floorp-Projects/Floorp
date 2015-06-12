@@ -3708,8 +3708,18 @@ EventStateManager::IsHandlingUserInput()
   }
 
   TimeDuration timeout = nsContentUtils::HandlingUserInputTimeout();
-  return timeout <= TimeDuration(0) ||
-         (TimeStamp::Now() - sHandlingInputStart) <= timeout;
+  TimeDuration elapsed = TimeStamp::Now() - sHandlingInputStart;
+  bool inTime = timeout <= TimeDuration(0) || elapsed <= timeout;
+
+  if (!inTime) {
+#ifdef DEBUG
+    printf("EventStateManager::IsHandlingUserInput() has timed out "
+           "(timeout: %f, elapsed: %f)\n",
+           timeout.ToMilliseconds(), elapsed.ToMilliseconds());
+#endif
+    return false;
+  }
+  return true;
 }
 
 static void
