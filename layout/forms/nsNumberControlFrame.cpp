@@ -140,9 +140,9 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
 
     nsHTMLReflowMetrics wrappersDesiredSize(aReflowState);
 
-    WritingMode wm = outerWrapperFrame->GetWritingMode();
-    LogicalSize availSize = aReflowState.ComputedSize(wm);
-    availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
+    WritingMode wrapperWM = outerWrapperFrame->GetWritingMode();
+    LogicalSize availSize = aReflowState.ComputedSize(wrapperWM);
+    availSize.BSize(wrapperWM) = NS_UNCONSTRAINEDSIZE;
 
     nsHTMLReflowState wrapperReflowState(aPresContext, aReflowState,
                                          outerWrapperFrame, availSize);
