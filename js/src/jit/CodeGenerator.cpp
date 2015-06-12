@@ -7996,10 +7996,43 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 
     script->setIonScript(cx, ionScript);
 
-    invalidateEpilogueData_.fixup(&masm);
-    Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, invalidateEpilogueData_),
-                                       ImmPtr(ionScript),
-                                       ImmPtr((void*)-1));
+    {
+        AutoWritableJitCode awjc(code);
+        invalidateEpilogueData_.fixup(&masm);
+        Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, invalidateEpilogueData_),
+                                           ImmPtr(ionScript),
+                                           ImmPtr((void*)-1));
+
+        for (size_t i = 0; i < ionScriptLabels_.length(); i++) {
+            ionScriptLabels_[i].fixup(&masm);
+            Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, ionScriptLabels_[i]),
+                                               ImmPtr(ionScript),
+                                               ImmPtr((void*)-1));
+        }
+
+#ifdef JS_TRACE_LOGGING
+        TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+        for (uint32_t i = 0; i < patchableTraceLoggers_.length(); i++) {
+            patchableTraceLoggers_[i].fixup(&masm);
+            Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, patchableTraceLoggers_[i]),
+                                               ImmPtr(logger),
+                                               ImmPtr(nullptr));
+        }
+
+        if (patchableTLScripts_.length() > 0) {
+            MOZ_ASSERT(TraceLogTextIdEnabled(TraceLogger_Scripts));
+            TraceLoggerEvent event(logger, TraceLogger_Scripts, script);
+            ionScript->setTraceLoggerEvent(event);
+            uint32_t textId = event.payload()->textId();
+            for (uint32_t i = 0; i < patchableTLScripts_.length(); i++) {
+                patchableTLScripts_[i].fixup(&masm);
+                Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, patchableTLScripts_[i]),
+                                                   ImmPtr((void*) uintptr_t(textId)),
+                                                   ImmPtr((void*)0));
+            }
+        }
+#endif
+    }
 
     JitSpew(JitSpew_Codegen, "Created IonScript %p (raw %p)",
             (void*) ionScript, (void*) code->raw());
@@ -8016,13 +8049,6 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     if (PerfEnabled())
         perfSpewer_.writeProfile(script, code, masm);
 #endif
-
-    for (size_t i = 0; i < ionScriptLabels_.length(); i++) {
-        ionScriptLabels_[i].fixup(&masm);
-        Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, ionScriptLabels_[i]),
-                                           ImmPtr(ionScript),
-                                           ImmPtr((void*)-1));
-    }
 
     // for generating inline caches during the execution.
     if (runtimeData_.length())
@@ -8050,29 +8076,6 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
         ionScript->copyConstants(graph.constantPool());
     if (patchableBackedges_.length() > 0)
         ionScript->copyPatchableBackedges(cx, code, patchableBackedges_.begin(), masm);
-
-#ifdef JS_TRACE_LOGGING
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
-    for (uint32_t i = 0; i < patchableTraceLoggers_.length(); i++) {
-        patchableTraceLoggers_[i].fixup(&masm);
-        Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, patchableTraceLoggers_[i]),
-                                           ImmPtr(logger),
-                                           ImmPtr(nullptr));
-    }
-
-    if (patchableTLScripts_.length() > 0) {
-        MOZ_ASSERT(TraceLogTextIdEnabled(TraceLogger_Scripts));
-        TraceLoggerEvent event(logger, TraceLogger_Scripts, script);
-        ionScript->setTraceLoggerEvent(event);
-        uint32_t textId = event.payload()->textId();
-        for (uint32_t i = 0; i < patchableTLScripts_.length(); i++) {
-            patchableTLScripts_[i].fixup(&masm);
-            Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, patchableTLScripts_[i]),
-                                               ImmPtr((void*) uintptr_t(textId)),
-                                               ImmPtr((void*)0));
-        }
-    }
-#endif
 
     // Replace dummy JSObject pointers embedded by LNurseryObject.
     code->fixupNurseryObjects(cx, gen->nurseryObjects());

@@ -493,8 +493,14 @@ class ABIArgGenerator
     static const Register NonReturn_VolatileReg1;
 };
 
-static inline void PatchJump(CodeLocationJump&, CodeLocationLabel) { MOZ_CRASH(); }
+static inline void
+PatchJump(CodeLocationJump&, CodeLocationLabel, ReprotectCode reprotect = DontReprotect)
+{
+    MOZ_CRASH();
+}
+
 static inline bool GetTempRegForIntArg(uint32_t, uint32_t, Register*) { MOZ_CRASH(); }
+
 static inline
 void PatchBackedge(CodeLocationJump& jump_, CodeLocationLabel label, JitRuntime::BackedgeTarget target)
 {

@@ -62,7 +62,8 @@ TraceDataRelocations(JSTracer* trc, uint8_t* buffer, CompactBufferReader& reader
             layout.asBits = *word;
             Value v = IMPL_TO_JSVAL(layout);
             TraceManuallyBarrieredEdge(trc, &v, "ion-masm-value");
-            *word = JSVAL_TO_IMPL(v).asBits;
+            if (*word != JSVAL_TO_IMPL(v).asBits)
+                *word = JSVAL_TO_IMPL(v).asBits;
             continue;
         }
 #endif
