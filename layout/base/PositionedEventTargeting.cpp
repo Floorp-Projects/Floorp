@@ -387,11 +387,14 @@ GetClosest(nsIFrame* aRoot, const nsPoint& aPointRelativeToRootFrame,
 
 /*
  * Return always true when touch cluster detection is OFF.
- * When cluster detection is ON, return true if the text inside
- * the frame is readable (by human eyes):
- *   in this case, the frame is really clickable.
- * Frames with a too small size will return false:
- *   in this case, the frame is considered not clickable.
+ * When cluster detection is ON, return true:
+ *   if the text inside the frame is readable (by human eyes)
+ *   or
+ *   if the structure is too complex to determine the size.
+ * In both cases, the frame is considered as clickable.
+ *
+ * Frames with a too small size will return false.
+ * In this case, the frame is considered not clickable.
  */
 static bool
 IsElementClickableAndReadable(nsIFrame* aFrame, WidgetGUIEvent* aEvent, const EventRadiusPrefs* aPrefs)
@@ -413,11 +416,37 @@ IsElementClickableAndReadable(nsIFrame* aFrame, WidgetGUIEvent* aEvent, const Ev
       (pc->AppUnitsToGfxUnits(frameSize.width) * cumulativeResolution) < limitReadableSize) {
     return false;
   }
-  nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
-    nsLayoutUtils::FontSizeInflationFor(aFrame));
-  if (fm) {
-    if ((fm->EmHeight() > 0) && // See bug 1171731
+  // We want to detect small clickable text elements using the font size.
+  // Two common cases are supported for now:
+  //    1. text node
+  //    2. any element with only one child of type text node
+  // All the other cases are currently ignored.
+  nsIContent *content = aFrame->GetContent();
+  bool testFontSize = false;
+  if (content) {
+    nsINodeList* childNodes = content->ChildNodes();
+    uint32_t childNodeCount = childNodes->Length();
+    if ((content->IsNodeOfType(nsINode::eTEXT)) ||
+      // click occurs on the text inside <a></a> or other clickable tags with text inside
+
+      (childNodeCount == 1 && childNodes->Item(0) &&
+        childNodes->Item(0)->IsNodeOfType(nsINode::eTEXT))) {
+      // The click occurs on an element with only one text node child. In this case, the font size
+      // can be tested.
+      // The number of child nodes is tested to avoid the following cases (See bug 1172488):
+      //   Some jscript libraries transform text elements into Canvas elements but keep the text nodes
+      //   with a very small size (1px) to handle the selection of text.
+      //   With such libraries, the font size of the text elements is not relevant to detect small elements.
+
+      testFontSize = true;
+    }
+  }
+
+  if (testFontSize) {
+    nsRefPtr<nsFontMetrics> fm;
+    nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
+      nsLayoutUtils::FontSizeInflationFor(aFrame));
+    if (fm && fm->EmHeight() > 0 && // See bug 1171731
         (pc->AppUnitsToGfxUnits(fm->EmHeight()) * cumulativeResolution) < limitReadableSize) {
       return false;
     }
