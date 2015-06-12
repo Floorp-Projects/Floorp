@@ -3619,30 +3619,22 @@ GenerateDenseElementHole(JSContext* cx, MacroAssembler& masm, IonCache::StubAtta
     }
 
     // Ensure the index is an int32 value.
-    Register indexReg = InvalidReg;
-    Register elementsReg = InvalidReg;
+    Register indexReg = scratchReg;
 
-    if (index.reg().hasValue()) {
-        indexReg = scratchReg;
-        MOZ_ASSERT(indexReg != InvalidReg);
-        ValueOperand val = index.reg().valueReg();
+    MOZ_ASSERT(index.reg().hasValue());
+    ValueOperand val = index.reg().valueReg();
 
-        masm.branchTestInt32(Assembler::NotEqual, val, &failures);
+    masm.branchTestInt32(Assembler::NotEqual, val, &failures);
 
-        // Unbox the index.
-        masm.unboxInt32(val, indexReg);
+    // Unbox the index.
+    masm.unboxInt32(val, indexReg);
 
-        // Make sure index is nonnegative.
-        masm.branch32(Assembler::LessThan, indexReg, Imm32(0), &failures);
+    // Make sure index is nonnegative.
+    masm.branch32(Assembler::LessThan, indexReg, Imm32(0), &failures);
 
-        // Save the object register.
-        masm.push(object);
-        elementsReg = object;
-    } else {
-        MOZ_ASSERT(!index.reg().typedReg().isFloat());
-        indexReg = index.reg().typedReg().gpr();
-        elementsReg = scratchReg;
-    }
+    // Save the object register.
+    Register elementsReg = object;
+    masm.push(object);
 
     // Load elements vector.
     masm.loadPtr(Address(object, NativeObject::offsetOfElements()), elementsReg);
