@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+      window { padding: 8px; }
+      image {
+        border: 1px dashed gray;
+        padding: 1px;
+        object-fit: cover;
+        float: left;
+      }
+
+      .bigWide {
+        width: 52px;
+        height: 36px;
+      }
+      .bigTall {
+        width: 36px;
+        height: 52px;
+      }
+      .small {
+        width: 12px;
+        height: 12px;
+      }
+
+      br { clear: both; }
+
+      .tr { object-position: top right }
+      .bl { object-position: bottom left }
+      .tl { object-position: top 25% left 25% }
+      .br { object-position: bottom 1px right 2px }
+
+      .tc { object-position: top 3px center }
+      .cr { object-position: center right 25% }
+  ]]></style>
+  <hbox>
+    <!-- big/wide: -->
+    <image src="colors-8x16.svg" class="bigWide tr"/>
+    <image src="colors-8x16.svg" class="bigWide bl"/>
+    <image src="colors-8x16.svg" class="bigWide tl"/>
+    <image src="colors-8x16.svg" class="bigWide br"/>
+    <image src="colors-8x16.svg" class="bigWide tc"/>
+    <image src="colors-8x16.svg" class="bigWide cr"/>
+    <image src="colors-8x16.svg" class="bigWide"/>
+  </hbox>
+  <hbox>
+    <!-- big/tall: -->
+    <image src="colors-8x16.svg" class="bigTall tr"/>
+    <image src="colors-8x16.svg" class="bigTall bl"/>
+    <image src="colors-8x16.svg" class="bigTall tl"/>
+    <image src="colors-8x16.svg" class="bigTall br"/>
+    <image src="colors-8x16.svg" class="bigTall tc"/>
+    <image src="colors-8x16.svg" class="bigTall cr"/>
+    <image src="colors-8x16.svg" class="bigTall"/>
+  </hbox>
+  <hbox>
+    <!-- small: -->
+    <image src="colors-8x16.svg" class="small tr"/>
+    <image src="colors-8x16.svg" class="small bl"/>
+    <image src="colors-8x16.svg" class="small tl"/>
+    <image src="colors-8x16.svg" class="small br"/>
+    <image src="colors-8x16.svg" class="small tc"/>
+    <image src="colors-8x16.svg" class="small cr"/>
+    <image src="colors-8x16.svg" class="small"/>
+  </hbox>
+</window>
