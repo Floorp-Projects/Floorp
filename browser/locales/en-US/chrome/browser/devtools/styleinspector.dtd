@@ -27,6 +27,11 @@
   -  tree. -->
 <!ENTITY selectedElementLabel  "Selected element:">
 
+<!-- LOCALIZATION NOTE (togglePseudoClassPanel): This is the tooltip
+  -  shown when hovering over the `Toggle Pseudo Class Panel` button in the
+  -  rule view toolbar. -->
+<!ENTITY togglePseudoClassPanel  "Toggle pseudo-classes">
+
 <!-- LOCALIZATION NOTE (noPropertiesFound): In the case where there are no CSS
   -  properties to display e.g. due to search criteria this message is
   -  displayed. -->
