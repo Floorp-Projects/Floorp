@@ -17,46 +17,48 @@ skip-if((B2G&&browserIsRemote)||Mulet) == text-small-caps-1.xul text-small-caps-
 # the reftest-chunking in a way that makes later tests fail (likely through no
 # fault of these tests here, aside from their impact on chunking). See:
 #   https://bugzilla.mozilla.org/show_bug.cgi?id=1170052#c25
+# And they're skipped on B2G Emulator (like everything else in this file)
+# because XUL reftests trigger error pages on that platform.
 default-preferences test-pref(layout.css.object-fit-and-position.enabled,true)
-skip-if(Mulet) == object-fit-contain-png-001.xul object-fit-contain-png-001-ref.html
-skip-if(Mulet) == object-fit-contain-png-002.xul object-fit-contain-png-002-ref.html
-skip-if(Mulet) == object-fit-contain-svg-001.xul object-fit-contain-svg-001-ref.html
-skip-if(Mulet) == object-fit-contain-svg-002.xul object-fit-contain-svg-002-ref.html
-skip-if(Mulet) == object-fit-contain-svg-003.xul object-fit-contain-svg-003-ref.html
-skip-if(Mulet) == object-fit-contain-svg-004.xul object-fit-contain-svg-004-ref.html
-skip-if(Mulet) == object-fit-contain-svg-005.xul object-fit-contain-svg-005-ref.html
-skip-if(Mulet) == object-fit-contain-svg-006.xul object-fit-contain-svg-006-ref.html
-skip-if(Mulet) == object-fit-cover-png-001.xul object-fit-cover-png-001-ref.html
-skip-if(Mulet) == object-fit-cover-png-002.xul object-fit-cover-png-002-ref.html
-skip-if(Mulet) == object-fit-cover-svg-001.xul object-fit-cover-svg-001-ref.html
-skip-if(Mulet) == object-fit-cover-svg-002.xul object-fit-cover-svg-002-ref.html
-skip-if(Mulet) == object-fit-cover-svg-003.xul object-fit-cover-svg-003-ref.html
-skip-if(Mulet) == object-fit-cover-svg-004.xul object-fit-cover-svg-004-ref.html
-skip-if(Mulet) == object-fit-cover-svg-005.xul object-fit-cover-svg-005-ref.html
-skip-if(Mulet) == object-fit-cover-svg-006.xul object-fit-cover-svg-006-ref.html
-skip-if(Mulet) == object-fit-fill-png-001.xul object-fit-fill-png-001-ref.html
-skip-if(Mulet) == object-fit-fill-png-002.xul object-fit-fill-png-002-ref.html
-skip-if(Mulet) == object-fit-fill-svg-001.xul object-fit-fill-svg-001-ref.html
-skip-if(Mulet) == object-fit-fill-svg-002.xul object-fit-fill-svg-002-ref.html
-skip-if(Mulet) == object-fit-fill-svg-003.xul object-fit-fill-svg-003-ref.html
-skip-if(Mulet) == object-fit-fill-svg-004.xul object-fit-fill-svg-004-ref.html
-skip-if(Mulet) fails == object-fit-fill-svg-005.xul object-fit-fill-svg-005-ref.html # bug 1092436
-skip-if(Mulet) fails == object-fit-fill-svg-006.xul object-fit-fill-svg-006-ref.html # bug 1092436
-skip-if(Mulet) == object-fit-none-png-001.xul object-fit-none-png-001-ref.html
-skip-if(Mulet) == object-fit-none-png-002.xul object-fit-none-png-002-ref.html
-skip-if(Mulet) == object-fit-none-svg-001.xul object-fit-none-svg-001-ref.html
-skip-if(Mulet) == object-fit-none-svg-002.xul object-fit-none-svg-002-ref.html
-skip-if(Mulet) == object-fit-none-svg-003.xul object-fit-none-svg-003-ref.html
-skip-if(Mulet) == object-fit-none-svg-004.xul object-fit-none-svg-004-ref.html
-skip-if(Mulet) == object-fit-none-svg-005.xul object-fit-none-svg-005-ref.html
-skip-if(Mulet) == object-fit-none-svg-006.xul object-fit-none-svg-006-ref.html
-skip-if(Mulet) == object-fit-scale-down-png-001.xul object-fit-scale-down-png-001-ref.html
-skip-if(Mulet) == object-fit-scale-down-png-002.xul object-fit-scale-down-png-002-ref.html
-skip-if(Mulet) == object-fit-scale-down-svg-001.xul object-fit-scale-down-svg-001-ref.html
-skip-if(Mulet) == object-fit-scale-down-svg-002.xul object-fit-scale-down-svg-002-ref.html
-skip-if(Mulet) == object-fit-scale-down-svg-003.xul object-fit-scale-down-svg-003-ref.html
-skip-if(Mulet) == object-fit-scale-down-svg-004.xul object-fit-scale-down-svg-004-ref.html
-skip-if(Mulet) == object-fit-scale-down-svg-005.xul object-fit-scale-down-svg-005-ref.html
-skip-if(Mulet) == object-fit-scale-down-svg-006.xul object-fit-scale-down-svg-006-ref.html
-skip-if(Mulet) == object-position-png-001.xul object-position-png-001-ref.html
-skip-if(Mulet) == object-position-png-002.xul object-position-png-002-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-png-001.xul object-fit-contain-png-001-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-png-002.xul object-fit-contain-png-002-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-svg-001.xul object-fit-contain-svg-001-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-svg-002.xul object-fit-contain-svg-002-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-svg-003.xul object-fit-contain-svg-003-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-svg-004.xul object-fit-contain-svg-004-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-svg-005.xul object-fit-contain-svg-005-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-svg-006.xul object-fit-contain-svg-006-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-png-001.xul object-fit-cover-png-001-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-png-002.xul object-fit-cover-png-002-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-svg-001.xul object-fit-cover-svg-001-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-svg-002.xul object-fit-cover-svg-002-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-svg-003.xul object-fit-cover-svg-003-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-svg-004.xul object-fit-cover-svg-004-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-svg-005.xul object-fit-cover-svg-005-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-svg-006.xul object-fit-cover-svg-006-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-png-001.xul object-fit-fill-png-001-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-png-002.xul object-fit-fill-png-002-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-001.xul object-fit-fill-svg-001-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-002.xul object-fit-fill-svg-002-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-003.xul object-fit-fill-svg-003-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-004.xul object-fit-fill-svg-004-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) fails == object-fit-fill-svg-005.xul object-fit-fill-svg-005-ref.html # bug 1092436
+skip-if((B2G&&browserIsRemote)||Mulet) fails == object-fit-fill-svg-006.xul object-fit-fill-svg-006-ref.html # bug 1092436
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-png-001.xul object-fit-none-png-001-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-png-002.xul object-fit-none-png-002-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-svg-001.xul object-fit-none-svg-001-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-svg-002.xul object-fit-none-svg-002-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-svg-003.xul object-fit-none-svg-003-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-svg-004.xul object-fit-none-svg-004-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-svg-005.xul object-fit-none-svg-005-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-svg-006.xul object-fit-none-svg-006-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-png-001.xul object-fit-scale-down-png-001-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-png-002.xul object-fit-scale-down-png-002-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-svg-001.xul object-fit-scale-down-svg-001-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-svg-002.xul object-fit-scale-down-svg-002-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-svg-003.xul object-fit-scale-down-svg-003-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-svg-004.xul object-fit-scale-down-svg-004-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-svg-005.xul object-fit-scale-down-svg-005-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-svg-006.xul object-fit-scale-down-svg-006-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-position-png-001.xul object-position-png-001-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) == object-position-png-002.xul object-position-png-002-ref.html
