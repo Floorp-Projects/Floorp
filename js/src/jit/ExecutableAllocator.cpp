@@ -29,10 +29,6 @@
 
 #include "js/MemoryMetrics.h"
 
-#ifdef __APPLE__
-#include <TargetConditionals.h>
-#endif
-
 using namespace js::jit;
 
 size_t ExecutableAllocator::pageSize = 0;
