@@ -32,6 +32,7 @@ public:
   JsepSessionImpl(const std::string& name, UniquePtr<JsepUuidGenerator> uuidgen)
       : JsepSession(name),
         mIsOfferer(false),
+        mWasOffererLastTime(false),
         mIceControlling(false),
         mRemoteIsIceLite(false),
         mSessionId(0),
@@ -240,7 +241,7 @@ private:
                          const Sdp& oldAnswer,
                          Sdp* newSdp);
   void SetupBundle(Sdp* sdp) const;
-  nsresult FinalizeTransportAttributes(Sdp* sdp);
+  nsresult SetupTransportAttributes(const Sdp& newOffer, Sdp* local);
   void SetupMsidSemantic(const std::vector<std::string>& msids, Sdp* sdp) const;
   nsresult GetIdsFromMsid(const Sdp& sdp,
                           const SdpMediaSection& msection,
@@ -286,11 +287,15 @@ private:
   nsresult FinalizeTransport(const SdpAttributeList& remote,
                              const SdpAttributeList& answer,
                              const RefPtr<JsepTransport>& transport);
+  bool AreOldTransportParamsValid(const Sdp& oldAnswer,
+                                  const Sdp& newOffer,
+                                  size_t level);
 
   nsresult AddCandidateToSdp(Sdp* sdp,
                              const std::string& candidate,
                              const std::string& mid,
                              uint16_t level);
+  nsresult GetComponent(const std::string& candidate, size_t* component);
 
   SdpMediaSection* FindMsectionByMid(Sdp& sdp,
                                      const std::string& mid) const;
@@ -330,6 +335,7 @@ private:
   std::vector<JsepTrackPair> mNegotiatedTrackPairs;
 
   bool mIsOfferer;
+  bool mWasOffererLastTime;
   bool mIceControlling;
   std::string mIceUfrag;
   std::string mIcePwd;
