@@ -42,8 +42,8 @@ skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-001.xul object-fit
 skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-002.xul object-fit-fill-svg-002-ref.html
 skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-003.xul object-fit-fill-svg-003-ref.html
 skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-004.xul object-fit-fill-svg-004-ref.html
-skip-if((B2G&&browserIsRemote)||Mulet) fails == object-fit-fill-svg-005.xul object-fit-fill-svg-005-ref.html # bug 1092436
-skip-if((B2G&&browserIsRemote)||Mulet) fails == object-fit-fill-svg-006.xul object-fit-fill-svg-006-ref.html # bug 1092436
+fails skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-005.xul object-fit-fill-svg-005-ref.html # bug 1092436
+fails skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-006.xul object-fit-fill-svg-006-ref.html # bug 1092436
 skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-png-001.xul object-fit-none-png-001-ref.html
 skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-png-002.xul object-fit-none-png-002-ref.html
 skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-svg-001.xul object-fit-none-svg-001-ref.html
