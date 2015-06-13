@@ -341,17 +341,17 @@ nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
   nsCOMPtr<imgIContainer> imgCon;
   mImageRequest->GetImage(getter_AddRefs(imgCon));
 
-  if (imgCon) {
-    bool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
-    return
-      nsLayoutUtils::DrawSingleImage(*aRenderingContext.ThebesContext(),
-        PresContext(), imgCon,
-        nsLayoutUtils::GetGraphicsFilterForFrame(this),
-        rect, dirty, nullptr, aFlags, nullptr,
-        hasSubRect ? &mSubRect : nullptr);
+  if (!imgCon) {
+    return DrawResult::NOT_READY;
   }
 
-  return DrawResult::NOT_READY;
+  bool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
+  return nsLayoutUtils::DrawSingleImage(
+           *aRenderingContext.ThebesContext(),
+           PresContext(), imgCon,
+           nsLayoutUtils::GetGraphicsFilterForFrame(this),
+           rect, dirty, nullptr, aFlags, nullptr,
+           hasSubRect ? &mSubRect : nullptr);
 }
 
 void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
