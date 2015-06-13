@@ -6,6 +6,7 @@
 
 #include "Activity.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/ContentChild.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsIConsoleService.h"
@@ -81,7 +82,11 @@ Activity::Initialize(nsPIDOMWindow* aWindow,
   ok = JS_WrapValue(aCx, &optionsValue);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  mProxy->StartActivity(static_cast<nsIDOMDOMRequest*>(this), optionsValue, aWindow);
+  ContentChild *cpc = ContentChild::GetSingleton();
+  uint64_t childID = cpc ? cpc->GetID() : 0;
+
+  mProxy->StartActivity(static_cast<nsIDOMDOMRequest*>(this), optionsValue,
+                        aWindow, childID);
   return NS_OK;
 }
 

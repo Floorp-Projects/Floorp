@@ -9,11 +9,12 @@ interface nsIDOMWindow;
 /**
   * Implemented by @mozilla.org/dom/activities/proxy;1
   */
-[scriptable, uuid(60adef0f-c1a7-4dc5-bc0d-4b879f1e59ca)]
+[scriptable, uuid(e04c0bbc-ab7d-41ba-b801-1068dd58660b)]
 interface nsIActivityProxy : nsISupports
 {
     void startActivity(in nsISupports /* MozActivity */ activity,
                        in jsval options,
-                       in nsIDOMWindow window);
+                       in nsIDOMWindow window,
+                       in unsigned long long childID);
     void cleanup();
 };
