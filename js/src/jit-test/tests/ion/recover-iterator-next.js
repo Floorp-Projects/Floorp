@@ -16,6 +16,10 @@ if (getJitCompilerOptions()["ion.warmup.trigger"] <= 90)
 if (getJitCompilerOptions()["ion.forceinlineCaches"])
     setJitCompilerOption("ion.forceinlineCaches", 0);
 
+// Frequent GCs can interfere with the tests being performed here.
+if (typeof gczeal != "undefined")
+    gczeal(0);
+
 var arr = new Array();
 var max = 2000;
 for (var i=0; i < max; i++)

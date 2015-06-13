@@ -67,12 +67,12 @@ NewDenseFullyAllocatedArray(ExclusiveContext* cx, uint32_t length, HandleObject 
 
 /* Create a dense array with a copy of the dense array elements in src. */
 extern ArrayObject*
-NewDenseCopiedArray(JSContext* cx, uint32_t length, HandleArrayObject src,
+NewDenseCopiedArray(ExclusiveContext* cx, uint32_t length, HandleArrayObject src,
                     uint32_t elementOffset, HandleObject proto = nullptr);
 
 /* Create a dense array from the given array values, which must be rooted */
 extern ArrayObject*
-NewDenseCopiedArray(JSContext* cx, uint32_t length, const Value* values,
+NewDenseCopiedArray(ExclusiveContext* cx, uint32_t length, const Value* values,
                     HandleObject proto = nullptr, NewObjectKind newKind = GenericObject);
 
 /* Create a dense array based on templateObject with the given length. */
@@ -86,10 +86,11 @@ NewDenseCopyOnWriteArray(JSContext* cx, HandleArrayObject templateObject, gc::In
 // The methods below can create either boxed or unboxed arrays.
 
 extern JSObject*
-NewFullyAllocatedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length);
+NewFullyAllocatedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length,
+                                  NewObjectKind newKind = GenericObject);
 
 extern JSObject*
-NewPartlyAllocatedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length);
+NewPartlyAllocatedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length);
 
 extern JSObject*
 NewFullyAllocatedArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length,
@@ -107,8 +108,17 @@ NewFullyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length,
 extern JSObject*
 NewPartlyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length);
 
+enum class ShouldUpdateTypes
+{
+    Update,
+    DontUpdate
+};
+
 extern JSObject*
-NewCopiedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, const Value* vp, size_t length);
+NewCopiedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group,
+                          const Value* vp, size_t length,
+                          NewObjectKind newKind = GenericObject,
+                          ShouldUpdateTypes updateTypes = ShouldUpdateTypes::Update);
 
 extern JSObject*
 NewCopiedArrayForCallingAllocationSite(JSContext* cx, const Value* vp, size_t length);

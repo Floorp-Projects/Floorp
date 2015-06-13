@@ -1398,12 +1398,6 @@ class AutoEnterOOMUnsafeRegion
 class AutoEnterOOMUnsafeRegion {};
 #endif /* DEBUG */
 
-// This tests whether something is inside the GGC's nursery only;
-// use sparingly, mostly testing for any nursery, using IsInsideNursery,
-// is appropriate.
-bool
-IsInsideGGCNursery(const gc::Cell* cell);
-
 // A singly linked list of zones.
 class ZoneList
 {
