@@ -46,8 +46,7 @@
                      android:layout_marginTop="1dip"
                      android:layout_marginBottom="1dip"
                      android:layout_marginLeft="4dip"
-                     android:layout_marginRight="10dip"
-                     android:layout_centerHorizontal="true"/>
+                     android:layout_marginRight="10dip" />
     </LinearLayout>
 
 </LinearLayout>
