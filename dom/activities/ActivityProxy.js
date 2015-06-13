@@ -36,7 +36,8 @@ function ActivityProxy() {
 }
 
 ActivityProxy.prototype = {
-  startActivity: function actProxy_startActivity(aActivity, aOptions, aWindow) {
+  startActivity: function actProxy_startActivity(aActivity, aOptions, aWindow,
+                                                 aChildID) {
     debug("startActivity");
 
     this.window = aWindow;
@@ -97,7 +98,8 @@ ActivityProxy.prototype = {
         },
         getFilterResults: aOptions.getFilterResults,
         manifestURL: manifestURL,
-        pageURL: aWindow.document.location.href });
+        pageURL: aWindow.document.location.href,
+        childID: aChildID });
   },
 
   receiveMessage: function actProxy_receiveMessage(aMessage) {
