@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1433264296000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1433888926000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -159,6 +159,15 @@
                     <prefs>
                   <pref>browser.startup.homepage</pref>
                   <pref>browser.search.defaultenginename</pref>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i926" id="{B1FC07E1-E05B-4567-8891-E63FBE545BA8}">
+                        <versionRange  minVersion="0" maxVersion="1.2.0" severity="1">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="39.0a1" maxVersion="*" />
+                          </targetApplication>
+                    </versionRange>
+                    <prefs>
               </prefs>
     </emItem>
       <emItem  blockID="i62" id="jid0-EcdqvFOgWLKHNJPuqAnawlykCGZ@jetpack">
@@ -766,6 +775,15 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i924" id="{DAC3F861-B30D-40dd-9166-F4E75327FAC7}">
+                        <versionRange  minVersion="0" maxVersion="1.3.1" severity="1">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="39.0a1" maxVersion="*" />
+                          </targetApplication>
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i740" id="ascsurfingprotection@iobit.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -972,6 +990,15 @@
     </emItem>
       <emItem  blockID="i816" id="noOpus@outlook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i922" id="{34712C68-7391-4c47-94F3-8F88D49AD632}">
+                        <versionRange  minVersion="0" maxVersion="1.3.0" severity="1">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="39.0a1" maxVersion="*" />
+                          </targetApplication>
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1691,6 +1718,15 @@
     </emItem>
       <emItem  blockID="i523" id="/^({7e8a1050-cf67-4575-92df-dcc60e7d952d}|{b3420a9c-a397-4409-b90d-bcf22da1a08a}|{eca6641f-2176-42ba-bdbe-f3e327f8e0af}|{707dca12-3f99-4d94-afea-06dcc0ae0108}|{aea20431-87fc-40be-bc5b-18066fe2819c}|{30ee6676-1ba6-455a-a7e8-298fa863a546})$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i920" id="{FCE04E1F-9378-4f39-96F6-5689A9159E45}">
+                        <versionRange  minVersion="0" maxVersion="1.3.2" severity="1">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="39.0a1" maxVersion="*" />
+                          </targetApplication>
                     </versionRange>
                     <prefs>
               </prefs>
