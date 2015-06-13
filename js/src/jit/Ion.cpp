@@ -168,8 +168,7 @@ JitRuntime::JitRuntime()
     osrTempData_(nullptr),
     mutatingBackedgeList_(false),
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),
-    jitcodeGlobalTable_(nullptr),
-    hasIonNurseryObjects_(false)
+    jitcodeGlobalTable_(nullptr)
 {
 }
 
@@ -642,9 +641,10 @@ JitCompartment::mark(JSTracer* trc, JSCompartment* compartment)
 void
 JitCompartment::sweep(FreeOp* fop, JSCompartment* compartment)
 {
-    // Cancel any active or pending off thread compilations. Note that the
-    // MIR graph does not hold any nursery pointers, so there's no need to
-    // do this for minor GCs.
+    // Cancel any active or pending off thread compilations. The MIR graph only
+    // contains nursery pointers if cancelIonCompilations() is set on the store
+    // buffer, in which case store buffer marking will take care of this during
+    // minor GCs.
     MOZ_ASSERT(!fop->runtime()->isHeapMinorCollecting());
     CancelOffThreadIonCompile(compartment, nullptr);
     FinishAllOffThreadCompilations(compartment);
@@ -783,19 +783,6 @@ JitCode::traceChildren(JSTracer* trc)
         CompactBufferReader reader(start, start + dataRelocTableBytes_);
         MacroAssembler::TraceDataRelocations(trc, this, reader);
     }
-}
-
-void
-JitCode::fixupNurseryObjects(JSContext* cx, const ObjectVector& nurseryObjects)
-{
-    if (nurseryObjects.empty() || !dataRelocTableBytes_)
-        return;
-
-    AutoWritableJitCode awjc(this);
-
-    uint8_t* start = code_ + dataRelocTableOffset();
-    CompactBufferReader reader(start, start + dataRelocTableBytes_);
-    MacroAssembler::FixupNurseryObjects(cx, this, reader, nurseryObjects);
 }
 
 void
@@ -1738,7 +1725,7 @@ CodeGenerator*
 CompileBackEnd(MIRGenerator* mir)
 {
     // Everything in CompileBackEnd can potentially run on a helper thread.
-    AutoEnterIonCompilation enter;
+    AutoEnterIonCompilation enter(mir->safeForMinorGC());
     AutoSpewEndFunction spewEndFunction(mir);
 
     if (!OptimizeMIR(mir))
@@ -1865,65 +1852,6 @@ AttachFinishedCompilations(JSContext* cx)
     }
 
     js_delete(debuggerAlloc);
-}
-
-void
-MIRGenerator::traceNurseryObjects(JSTracer* trc)
-{
-    TraceRootRange(trc, nurseryObjects_.length(), nurseryObjects_.begin(), "ion-nursery-objects");
-}
-
-class MarkOffThreadNurseryObjects : public gc::BufferableRef
-{
-  public:
-    void trace(JSTracer* trc) override;
-};
-
-void
-MarkOffThreadNurseryObjects::trace(JSTracer* trc)
-{
-    JSRuntime* rt = trc->runtime();
-
-    if (trc->runtime()->isHeapMinorCollecting()) {
-        // Only reset hasIonNurseryObjects if we're doing an actual minor GC.
-        MOZ_ASSERT(rt->jitRuntime()->hasIonNurseryObjects());
-        rt->jitRuntime()->setHasIonNurseryObjects(false);
-    }
-
-    AutoLockHelperThreadState lock;
-    if (!HelperThreadState().threads)
-        return;
-
-    // Trace nursery objects of any builders which haven't started yet.
-    GlobalHelperThreadState::IonBuilderVector& worklist = HelperThreadState().ionWorklist();
-    for (size_t i = 0; i < worklist.length(); i++) {
-        jit::IonBuilder* builder = worklist[i];
-        if (builder->script()->runtimeFromAnyThread() == rt)
-            builder->traceNurseryObjects(trc);
-    }
-
-    // Trace nursery objects of in-progress entries.
-    for (size_t i = 0; i < HelperThreadState().threadCount; i++) {
-        HelperThread& helper = HelperThreadState().threads[i];
-        if (helper.ionBuilder && helper.ionBuilder->script()->runtimeFromAnyThread() == rt)
-            helper.ionBuilder->traceNurseryObjects(trc);
-    }
-
-    // Trace nursery objects of any completed entries.
-    GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList();
-    for (size_t i = 0; i < finished.length(); i++) {
-        jit::IonBuilder* builder = finished[i];
-        if (builder->script()->runtimeFromAnyThread() == rt)
-            builder->traceNurseryObjects(trc);
-    }
-
-    // Trace nursery objects of lazy-linked builders.
-    jit::IonBuilder* builder = HelperThreadState().ionLazyLinkList().getFirst();
-    while (builder) {
-        if (builder->script()->runtimeFromAnyThread() == rt)
-            builder->traceNurseryObjects(trc);
-        builder = builder->getNext();
-    }
 }
 
 static void
@@ -2059,6 +1987,9 @@ IonCompile(JSContext* cx, JSScript* script,
     if (!builder)
         return AbortReason_Alloc;
 
+    if (cx->runtime()->gc.storeBuffer.cancelIonCompilations())
+        builder->setNotSafeForMinorGC();
+
     MOZ_ASSERT(recompile == builder->script()->hasIonScript());
     MOZ_ASSERT(builder->script()->canIonCompile());
 
@@ -2115,15 +2046,6 @@ IonCompile(JSContext* cx, JSScript* script,
         JitSpew(JitSpew_IonSyncLogs, "Can't log script %s:%" PRIuSIZE
                 ". (Compiled on background thread.)",
                 builderScript->filename(), builderScript->lineno());
-
-        JSRuntime* rt = cx->runtime();
-        if (!builder->nurseryObjects().empty() && !rt->jitRuntime()->hasIonNurseryObjects()) {
-            // Ensure the builder's nursery objects are marked when a nursery
-            // GC happens on the main thread.
-            MarkOffThreadNurseryObjects mark;
-            rt->gc.storeBuffer.putGeneric(mark);
-            rt->jitRuntime()->setHasIonNurseryObjects(true);
-        }
 
         if (!StartOffThreadIonCompile(cx, builder)) {
             JitSpew(JitSpew_IonAbort, "Unable to start off-thread ion compilation.");

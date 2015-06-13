@@ -311,11 +311,13 @@ class JSObject : public js::gc::Cell
     // along with them, and are not each their own malloc blocks.
     size_t sizeOfIncludingThisInNursery() const;
 
-    /*
-     * Marks this object as having a singleton type, and leave the group lazy.
-     * Constructs a new, unique shape for the object.
-     */
+    // Marks this object as having a singleton group, and leave the group lazy.
+    // Constructs a new, unique shape for the object. This should only be
+    // called for an object that was just created.
     static inline bool setSingleton(js::ExclusiveContext* cx, js::HandleObject obj);
+
+    // Change an existing object to have a singleton group.
+    static bool changeToSingleton(JSContext* cx, js::HandleObject obj);
 
     inline js::ObjectGroup* getGroup(JSContext* cx);
 

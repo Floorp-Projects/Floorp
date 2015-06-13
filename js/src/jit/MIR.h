@@ -1309,17 +1309,20 @@ class MConstant : public MNullaryInstruction
     Value value_;
 
   protected:
-    MConstant(const Value& v, CompilerConstraintList* constraints);
-    explicit MConstant(JSObject* obj);
+    MConstant(const Value& v, CompilerConstraintList* constraints, MIRGenerator* gen);
+    explicit MConstant(JSObject* obj, MIRGenerator* gen);
 
   public:
     INSTRUCTION_HEADER(Constant)
     static MConstant* New(TempAllocator& alloc, const Value& v,
-                          CompilerConstraintList* constraints = nullptr);
+                          CompilerConstraintList* constraints = nullptr,
+                          MIRGenerator* gen = nullptr);
     static MConstant* NewTypedValue(TempAllocator& alloc, const Value& v, MIRType type,
-                                    CompilerConstraintList* constraints = nullptr);
+                                    CompilerConstraintList* constraints = nullptr,
+                                    MIRGenerator* gen = nullptr);
     static MConstant* NewAsmJS(TempAllocator& alloc, const Value& v, MIRType type);
-    static MConstant* NewConstraintlessObject(TempAllocator& alloc, JSObject* v);
+    static MConstant* NewConstraintlessObject(TempAllocator& alloc, JSObject* v,
+                                              MIRGenerator* gen);
 
     const js::Value& value() const {
         return value_;
@@ -1359,33 +1362,6 @@ class MConstant : public MNullaryInstruction
     bool canProduceFloat32() const override;
 
     ALLOW_CLONE(MConstant)
-};
-
-class MNurseryObject : public MNullaryInstruction
-{
-    // Index in MIRGenerator::nurseryObjects_.
-    uint32_t index_;
-
-  protected:
-    MNurseryObject(JSObject* obj, uint32_t index, CompilerConstraintList* constraints);
-
-  public:
-    INSTRUCTION_HEADER(NurseryObject)
-    static MNurseryObject* New(TempAllocator& alloc, JSObject* obj, uint32_t index,
-                               CompilerConstraintList* constraints = nullptr);
-
-    HashNumber valueHash() const override;
-    bool congruentTo(const MDefinition* ins) const override;
-
-    uint32_t index() const {
-        return index_;
-    }
-
-    AliasSet getAliasSet() const override {
-        return AliasSet::None();
-    }
-
-    ALLOW_CLONE(MNurseryObject)
 };
 
 // Generic constructor of SIMD valuesX4.
@@ -13633,7 +13609,7 @@ void AddObjectsForPropertyRead(MDefinition* obj, PropertyName* name,
 bool CanWriteProperty(TempAllocator& alloc, CompilerConstraintList* constraints,
                       HeapTypeSetKey property, MDefinition* value,
                       MIRType implicitType = MIRType_None);
-bool PropertyWriteNeedsTypeBarrier(TempAllocator& alloc, CompilerConstraintList* constraints,
+bool PropertyWriteNeedsTypeBarrier(MIRGenerator* gen, CompilerConstraintList* constraints,
                                    MBasicBlock* current, MDefinition** pobj,
                                    PropertyName* name, MDefinition** pvalue,
                                    bool canModify, MIRType implicitType = MIRType_None);
