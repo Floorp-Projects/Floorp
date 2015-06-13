@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+      window { padding: 8px; }
+      image {
+        background: lightgray;
+        margin-right: 2px;
+        object-fit: contain;
+        float: left;
+        width: 20px;
+        height: 20px;
+      }
+
+      .op_x-7  { object-position: -7%  50% }
+      .op_x13  { object-position: 13%  50% }
+      .op_x23  { object-position: 23%  50% }
+      .op_x50  { object-position: 50%  50% }
+      .op_x75  { object-position: 75%  50% }
+      .op_x88  { object-position: 88%  50% }
+      .op_x111 { object-position: 111% 50% }
+
+  ]]></style>
+  <hbox>
+    <image src="colors-8x16.png" class="op_x-7"/>
+    <image src="colors-8x16.png" class="op_x13"/>
+    <image src="colors-8x16.png" class="op_x23"/>
+    <image src="colors-8x16.png" class="op_x50"/>
+    <image src="colors-8x16.png" class="op_x75"/>
+    <image src="colors-8x16.png" class="op_x88"/>
+    <image src="colors-8x16.png" class="op_x111"/>
+  </hbox>
+</window>
