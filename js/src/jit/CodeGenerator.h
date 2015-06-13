@@ -109,7 +109,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitLambdaArrow(LLambdaArrow* lir);
     void visitLambdaForSingleton(LLambdaForSingleton* lir);
     void visitPointer(LPointer* lir);
-    void visitNurseryObject(LNurseryObject* lir);
     void visitKeepAliveObject(LKeepAliveObject* lir);
     void visitSlots(LSlots* lir);
     void visitLoadSlotT(LLoadSlotT* lir);
@@ -371,8 +370,8 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     void visitAssertResultV(LAssertResultV* ins);
     void visitAssertResultT(LAssertResultT* ins);
-    void emitAssertResultV(const ValueOperand output, TemporaryTypeSet* typeset);
-    void emitAssertObjectOrStringResult(Register input, MIRType type, TemporaryTypeSet* typeset);
+    void emitAssertResultV(const ValueOperand output, const TemporaryTypeSet* typeset);
+    void emitAssertObjectOrStringResult(Register input, MIRType type, const TemporaryTypeSet* typeset);
 
     void visitInterruptCheck(LInterruptCheck* lir);
     void visitAsmJSInterruptCheck(LAsmJSInterruptCheck* lir);

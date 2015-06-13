@@ -166,12 +166,6 @@ class MacroAssemblerNone : public Assembler
     static void TraceJumpRelocations(JSTracer*, JitCode*, CompactBufferReader&) { MOZ_CRASH(); }
     static void TraceDataRelocations(JSTracer*, JitCode*, CompactBufferReader&) { MOZ_CRASH(); }
 
-    static void FixupNurseryObjects(JSContext*, JitCode*, CompactBufferReader&,
-                                    const ObjectVector&)
-    {
-        MOZ_CRASH();
-    }
-
     static bool SupportsFloatingPoint() { return false; }
     static bool SupportsSimd() { return false; }
 

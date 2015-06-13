@@ -216,9 +216,6 @@ class Assembler : public AssemblerX86Shared
         masm.push_i32(int32_t(ptr.value));
         writeDataRelocation(ptr);
     }
-    void push(ImmMaybeNurseryPtr ptr) {
-        push(noteMaybeNurseryPtr(ptr));
-    }
     void push(const ImmWord imm) {
         push(Imm32(imm.value));
     }
@@ -368,9 +365,6 @@ class Assembler : public AssemblerX86Shared
           default:
             MOZ_CRASH("unexpected operand kind");
         }
-    }
-    void cmpl(ImmMaybeNurseryPtr rhs, const Operand& lhs) {
-        cmpl(noteMaybeNurseryPtr(rhs), lhs);
     }
     void cmpl(Register rhs, AsmJSAbsoluteAddress lhs) {
         masm.cmpl_rm_disp32(rhs.encoding(), (void*)-1);
