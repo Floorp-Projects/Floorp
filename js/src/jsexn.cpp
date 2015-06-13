@@ -360,6 +360,10 @@ Error(JSContext* cx, unsigned argc, Value* vp)
             return false;
     } else {
         lineNumber = iter.done() ? 0 : iter.computeLine(&columnNumber);
+        // XXX: Make the column 1-based as in other browsers, instead of 0-based
+        // which is how SpiderMonkey stores it internally. This will be
+        // unnecessary once bug 1144340 is fixed.
+        ++columnNumber;
     }
 
     RootedObject stack(cx);
@@ -867,6 +871,10 @@ ErrorReport::populateUncaughtExceptionReportVA(JSContext* cx, va_list ap)
     if (!iter.done()) {
         ownedReport.filename = iter.scriptFilename();
         ownedReport.lineno = iter.computeLine(&ownedReport.column);
+        // XXX: Make the column 1-based as in other browsers, instead of 0-based
+        // which is how SpiderMonkey stores it internally. This will be
+        // unnecessary once bug 1144340 is fixed.
+        ++ownedReport.column;
         ownedReport.isMuted = iter.mutedErrors();
     }
 
