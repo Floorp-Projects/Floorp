@@ -235,6 +235,8 @@ function createMockPluginFilesIfNeeded(aFile, aPluginId) {
   
   createFile(libName);
   createFile(id + ".info");
+  if (aPluginId == "gmp-eme-adobe")
+    createFile(id + ".voucher");
 }
 
 // Array.includes is only in 41, so polyfill for 40/39 uplift.
