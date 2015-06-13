@@ -11,6 +11,7 @@ from mozbuild.frontend.context import (
     Context,
     ContextDerivedTypedList,
     ContextDerivedTypedListWithItems,
+    Files,
     FUNCTIONS,
     ObjDirPath,
     Path,
@@ -564,6 +565,65 @@ class TestPaths(unittest.TestCase):
             self.assertEqual(p_path, Path(ctxt1, p_str))
             self.assertEqual(l[p_str].foo, True)
             self.assertEqual(l[p_path].foo, True)
+
+
+class TestFiles(unittest.TestCase):
+    def test_aggregate_empty(self):
+        c = Context({})
+
+        files = {'moz.build': Files(c, pattern='**')}
+
+        self.assertEqual(Files.aggregate(files), {
+            'bug_component_counts': [],
+            'recommended_bug_component': None,
+        })
+
+    def test_single_bug_component(self):
+        c = Context({})
+        f = Files(c, pattern='**')
+        f['BUG_COMPONENT'] = (u'Product1', u'Component1')
+
+        files = {'moz.build': f}
+        self.assertEqual(Files.aggregate(files), {
+            'bug_component_counts': [((u'Product1', u'Component1'), 1)],
+            'recommended_bug_component': (u'Product1', u'Component1'),
+        })
+
+    def test_multiple_bug_components(self):
+        c = Context({})
+        f1 = Files(c, pattern='**')
+        f1['BUG_COMPONENT'] = (u'Product1', u'Component1')
+
+        f2 = Files(c, pattern='**')
+        f2['BUG_COMPONENT'] = (u'Product2', u'Component2')
+
+        files = {'a': f1, 'b': f2, 'c': f1}
+        self.assertEqual(Files.aggregate(files), {
+            'bug_component_counts': [
+                ((u'Product1', u'Component1'), 2),
+                ((u'Product2', u'Component2'), 1),
+            ],
+            'recommended_bug_component': (u'Product1', u'Component1'),
+        })
+
+    def test_no_recommended_bug_component(self):
+        """If there is no clear count winner, we don't recommend a bug component."""
+        c = Context({})
+        f1 = Files(c, pattern='**')
+        f1['BUG_COMPONENT'] = (u'Product1', u'Component1')
+
+        f2 = Files(c, pattern='**')
+        f2['BUG_COMPONENT'] = (u'Product2', u'Component2')
+
+        files = {'a': f1, 'b': f2}
+        self.assertEqual(Files.aggregate(files), {
+            'bug_component_counts': [
+                ((u'Product1', u'Component1'), 1),
+                ((u'Product2', u'Component2'), 1),
+            ],
+            'recommended_bug_component': None,
+        })
+
 
 if __name__ == '__main__':
     main()
