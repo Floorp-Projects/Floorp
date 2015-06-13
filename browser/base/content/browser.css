@@ -1328,3 +1328,11 @@ toolbarpaletteitem[place="palette"][hidden] {
 #login-fill-doorhanger:not([inDetailView]) > #login-fill-clickcapturer {
   pointer-events: none;
 }
+
+.popup-notification-invalid-input {
+  box-shadow: 0 0 1.5px 1px red;
+}
+
+.popup-notification-invalid-input[focused] {
+  box-shadow: 0 0 2px 2px rgba(255,0,0,0.4);
+}
