@@ -821,6 +821,8 @@
                        ondrop="PlacesMenuDNDHandler.onDrop(event);"
                        cui-areatype="toolbar"
                        oncommand="BookmarkingUI.onCommand(event);">
+          <observes element="bookmarkThisPageBroadcaster" attribute="starred"/>
+          <observes element="bookmarkThisPageBroadcaster" attribute="buttontooltiptext"/>
           <menupopup id="BMB_bookmarksPopup"
                      class="cui-widget-panel cui-widget-panelview cui-widget-panelWithFooter PanelUI-subView"
                      placespopup="true"
