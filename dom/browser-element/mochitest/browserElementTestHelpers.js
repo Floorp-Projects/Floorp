@@ -51,7 +51,7 @@ const browserElementTestHelpers = {
   enableProcessPriorityManager: function() {
     this._setPrefs(
       ['dom.ipc.processPriorityManager.BACKGROUND.LRUPoolLevels', 2],
-      ['dom.ipc.processPriorityManager.FOREGROUND.LRUPoolLevels', 2],
+      ['dom.ipc.processPriorityManager.BACKGROUND_PERCEIVABLE.LRUPoolLevels', 2],
       ['dom.ipc.processPriorityManager.testMode', true],
       ['dom.ipc.processPriorityManager.enabled', true]
     );
