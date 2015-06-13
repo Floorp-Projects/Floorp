@@ -74,6 +74,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     private TextView mOwnerLabel;
     private TextView mOwner;
     private TextView mVerifier;
+    private TextView mSiteSettingsLink;
 
     private View mDivider;
 
@@ -88,6 +89,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
         mContentButtonClickListener = new ContentNotificationButtonListener();
         EventDispatcher.getInstance().registerGeckoThreadListener(this, "Doorhanger:Logins");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Permissions:CheckResult");
     }
 
     @Override
@@ -116,14 +118,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         mVerifier = (TextView) mIdentityKnownContainer.findViewById(R.id.verifier);
         mDivider = mIdentity.findViewById(R.id.divider_doorhanger);
 
-        final TextView siteSettingsLink = (TextView) mIdentity.findViewById(R.id.site_settings_link);
-        siteSettingsLink.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Get", null));
-                dismiss();
-            }
-        });
+        mSiteSettingsLink = (TextView) mIdentity.findViewById(R.id.site_settings_link);
     }
 
     private void updateIdentity(final SiteIdentity siteIdentity) {
@@ -137,6 +132,9 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         if (isIdentityKnown) {
             updateIdentityInformation(siteIdentity);
         }
+
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(
+            "Permissions:Check", null));
     }
 
     @Override
@@ -154,6 +152,24 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
             } catch (JSONException e) {
                 Log.e(LOGTAG, "Error accessing logins in Doorhanger:Logins message", e);
             }
+        } else if ("Permissions:CheckResult".equals(event)) {
+            final boolean hasPermissions = geckoObject.optBoolean("hasPermissions", false);
+            if (hasPermissions) {
+                mSiteSettingsLink.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Get", null));
+                        dismiss();
+                    }
+                });
+            }
+
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mSiteSettingsLink.setVisibility(hasPermissions ? View.VISIBLE : View.GONE);
+                }
+            });
         }
     }
 
@@ -466,6 +482,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
     void destroy() {
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Doorhanger:Logins");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Permissions:CheckResult");
     }
 
     @Override
