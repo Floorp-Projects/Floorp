@@ -805,7 +805,11 @@ getParentCB(AtkObject *aAtkObj)
       atkParent = GetWrapperFor(parent);
     } else {
       // Otherwise this should be the proxy for the tab's top level document.
-      atkParent = AccessibleWrap::GetAtkObject(proxy->OuterDocOfRemoteBrowser());
+      Accessible* outerDocParent = proxy->OuterDocOfRemoteBrowser();
+      NS_ASSERTION(outerDocParent, "this document should have an outerDoc as a parent");
+      if (outerDocParent) {
+        atkParent = AccessibleWrap::GetAtkObject(outerDocParent);
+      }
     }
   }
 
