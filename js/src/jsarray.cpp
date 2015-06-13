@@ -248,9 +248,8 @@ ElementAdder::append(JSContext* cx, HandleValue v)
 {
     MOZ_ASSERT(index_ < length_);
     if (resObj_) {
-        DenseElementResult result = SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, resObj_, index_,
-                                                                              v.address(), 1,
-                                                                              UpdateTypes);
+        DenseElementResult result =
+            SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, resObj_, index_, v.address(), 1);
         if (result == DenseElementResult::Failure)
             return false;
         if (result == DenseElementResult::Incomplete) {
@@ -366,8 +365,7 @@ SetArrayElement(JSContext* cx, HandleObject obj, double index, HandleValue v)
 
     if ((obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>()) && !obj->isIndexed() && index <= UINT32_MAX) {
         DenseElementResult result =
-            SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, obj, uint32_t(index), v.address(), 1,
-                                                      UpdateTypes);
+            SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, obj, uint32_t(index), v.address(), 1);
         if (result != DenseElementResult::Incomplete)
             return result == DenseElementResult::Success;
     }
@@ -1208,7 +1206,9 @@ js::array_join(JSContext* cx, unsigned argc, Value* vp)
 
 /* vector must point to rooted memory. */
 static bool
-InitArrayElements(JSContext* cx, HandleObject obj, uint32_t start, uint32_t count, const Value* vector, ShouldUpdateTypes updateTypes)
+InitArrayElements(JSContext* cx, HandleObject obj, uint32_t start,
+                  uint32_t count, const Value* vector,
+                  ShouldUpdateTypes updateTypes = ShouldUpdateTypes::Update)
 {
     MOZ_ASSERT(count <= MAX_ARRAY_INDEX);
 
@@ -1954,7 +1954,7 @@ js::array_sort(JSContext* cx, unsigned argc, Value* vp)
             }
         }
 
-        if (!InitArrayElements(cx, obj, 0, uint32_t(n), vec.begin(), DontUpdateTypes))
+        if (!InitArrayElements(cx, obj, 0, uint32_t(n), vec.begin(), ShouldUpdateTypes::DontUpdate))
             return false;
     }
 
@@ -2013,7 +2013,7 @@ js::array_push(JSContext* cx, unsigned argc, Value* vp)
     if (!ObjectMayHaveExtraIndexedProperties(obj)) {
         DenseElementResult result =
             SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, obj, length,
-                                                      args.array(), args.length(), UpdateTypes);
+                                                      args.array(), args.length());
         if (result != DenseElementResult::Incomplete) {
             if (result == DenseElementResult::Failure)
                 return false;
@@ -2031,7 +2031,7 @@ js::array_push(JSContext* cx, unsigned argc, Value* vp)
     }
 
     /* Steps 4-5. */
-    if (!InitArrayElements(cx, obj, length, args.length(), args.array(), UpdateTypes))
+    if (!InitArrayElements(cx, obj, length, args.length(), args.array()))
         return false;
 
     /* Steps 6-7. */
@@ -2277,7 +2277,7 @@ js::array_unshift(JSContext* cx, unsigned argc, Value* vp)
         }
 
         /* Copy from args to the bottom of the array. */
-        if (!InitArrayElements(cx, obj, 0, args.length(), args.array(), UpdateTypes))
+        if (!InitArrayElements(cx, obj, 0, args.length(), args.array()))
             return false;
 
         newlen += args.length();
@@ -3443,7 +3443,7 @@ js::NewDenseUnallocatedArray(ExclusiveContext* cx, uint32_t length,
 }
 
 ArrayObject*
-js::NewDenseCopiedArray(JSContext* cx, uint32_t length, HandleArrayObject src,
+js::NewDenseCopiedArray(ExclusiveContext* cx, uint32_t length, HandleArrayObject src,
                         uint32_t elementOffset, HandleObject proto /* = nullptr */)
 {
     MOZ_ASSERT(!src->isIndexed());
@@ -3463,11 +3463,11 @@ js::NewDenseCopiedArray(JSContext* cx, uint32_t length, HandleArrayObject src,
 
 // values must point at already-rooted Value objects
 ArrayObject*
-js::NewDenseCopiedArray(JSContext* cx, uint32_t length, const Value* values,
+js::NewDenseCopiedArray(ExclusiveContext* cx, uint32_t length, const Value* values,
                         HandleObject proto /* = nullptr */,
                         NewObjectKind newKind /* = GenericObject */)
 {
-    ArrayObject* arr = NewArray<UINT32_MAX>(cx, length, proto);
+    ArrayObject* arr = NewArray<UINT32_MAX>(cx, length, proto, newKind);
     if (!arr)
         return nullptr;
 
@@ -3522,7 +3522,7 @@ js::NewDenseCopyOnWriteArray(JSContext* cx, HandleArrayObject templateObject, gc
 // capacity (up to maxLength), using the specified group if possible.
 template <uint32_t maxLength>
 static inline JSObject*
-NewArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length,
+NewArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length,
                     NewObjectKind newKind = GenericObject, bool forceAnalyze = false)
 {
     MOZ_ASSERT(newKind != SingletonObject);
@@ -3558,13 +3558,14 @@ NewArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length,
 }
 
 JSObject*
-js::NewFullyAllocatedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length)
+js::NewFullyAllocatedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length,
+                                      NewObjectKind newKind)
 {
-    return NewArrayTryUseGroup<UINT32_MAX>(cx, group, length);
+    return NewArrayTryUseGroup<UINT32_MAX>(cx, group, length, newKind);
 }
 
 JSObject*
-js::NewPartlyAllocatedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length)
+js::NewPartlyAllocatedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length)
 {
     return NewArrayTryUseGroup<ArrayObject::EagerAllocationMaxLength>(cx, group, length);
 }
@@ -3627,25 +3628,27 @@ js::NewPartlyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length
 }
 
 JSObject*
-js::NewCopiedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, const Value* vp, size_t length)
+js::NewCopiedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group,
+                              const Value* vp, size_t length, NewObjectKind newKind,
+                              ShouldUpdateTypes updateTypes)
 {
-    JSObject* obj = NewFullyAllocatedArrayTryUseGroup(cx, group, length);
+    JSObject* obj = NewFullyAllocatedArrayTryUseGroup(cx, group, length, newKind);
     if (!obj)
         return nullptr;
 
     DenseElementResult result =
-        SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, obj, 0, vp, length, UpdateTypes);
+        SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, obj, 0, vp, length, updateTypes);
     if (result == DenseElementResult::Failure)
         return nullptr;
     if (result == DenseElementResult::Success)
         return obj;
 
     MOZ_ASSERT(obj->is<UnboxedArrayObject>());
-    if (!UnboxedArrayObject::convertToNative(cx, obj))
+    if (!UnboxedArrayObject::convertToNative(cx->asJSContext(), obj))
         return nullptr;
 
     result = SetOrExtendBoxedOrUnboxedDenseElements<JSVAL_TYPE_MAGIC>(cx, obj, 0, vp, length,
-                                                                      UpdateTypes);
+                                                                      updateTypes);
     MOZ_ASSERT(result != DenseElementResult::Incomplete);
     if (result == DenseElementResult::Failure)
         return nullptr;

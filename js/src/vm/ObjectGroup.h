@@ -586,14 +586,20 @@ class ObjectGroup : public gc::TenuredCell
 
     // Static accessors for ObjectGroupCompartment ArrayObjectTable and PlainObjectTable.
 
-    // Update the group of a freshly created array according to
-    // the object's current contents.
-    static void fixArrayGroup(ExclusiveContext* cx, ArrayObject* obj);
+    enum class NewArrayKind {
+        Normal,       // Specialize array group based on its element type.
+        CopyOnWrite,  // Make an array with copy-on-write elements.
+        UnknownIndex  // Make an array with an unknown element type.
+    };
 
-    // Update the group of a freshly created 'rest' arguments object.
-    static void fixRestArgumentsGroup(ExclusiveContext* cx, ArrayObject* obj);
+    // Create an ArrayObject or UnboxedArrayObject with the specified elements
+    // and a group specialized for the elements.
+    static JSObject* newArrayObject(ExclusiveContext* cx, const Value* vp, size_t length,
+                                    NewObjectKind newKind,
+                                    NewArrayKind arrayKind = NewArrayKind::Normal);
 
-    // Create a PlainObject or UnboxedPlainObject with the specified properties.
+    // Create a PlainObject or UnboxedPlainObject with the specified properties
+    // and a group specialized for those properties.
     static JSObject* newPlainObject(ExclusiveContext* cx,
                                     IdValuePair* properties, size_t nproperties,
                                     NewObjectKind newKind);
@@ -623,8 +629,6 @@ class ObjectGroup : public gc::TenuredCell
 
   private:
     static ObjectGroup* defaultNewGroup(JSContext* cx, JSProtoKey key);
-    static void setGroupToHomogenousArray(ExclusiveContext* cx, JSObject* obj,
-                                          TypeSet::Type type);
 };
 
 // Structure used to manage the groups in a compartment.

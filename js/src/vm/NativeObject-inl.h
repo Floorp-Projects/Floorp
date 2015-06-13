@@ -240,29 +240,6 @@ NativeObject::getDenseOrTypedArrayElement(uint32_t idx)
     return getDenseElement(idx);
 }
 
-inline void
-NativeObject::initDenseElementsUnbarriered(uint32_t dstStart, const Value* src, uint32_t count) {
-    /*
-     * For use by parallel threads, which since they cannot see nursery
-     * things do not require a barrier.
-     */
-    MOZ_ASSERT(dstStart + count <= getDenseCapacity());
-    MOZ_ASSERT(!denseElementsAreCopyOnWrite());
-#ifdef DEBUG
-    /*
-     * This asserts a global invariant: parallel code does not
-     * observe objects inside the generational GC's nursery.
-     */
-    MOZ_ASSERT(!gc::IsInsideGGCNursery(this));
-    for (uint32_t index = 0; index < count; ++index) {
-        const Value& value = src[index];
-        if (value.isMarkable())
-            MOZ_ASSERT(!gc::IsInsideGGCNursery(static_cast<gc::Cell*>(value.toGCThing())));
-    }
-#endif
-    memcpy(&elements_[dstStart], src, count * sizeof(HeapSlot));
-}
-
 /* static */ inline NativeObject*
 NativeObject::copy(ExclusiveContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
                    HandleNativeObject templateObject)

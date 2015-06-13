@@ -432,17 +432,11 @@ EnsureBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj, size_t count)
     return true;
 }
 
-enum ShouldUpdateTypes
-{
-    UpdateTypes = true,
-    DontUpdateTypes = false
-};
-
 template <JSValueType Type>
 static inline DenseElementResult
-SetOrExtendBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj,
+SetOrExtendBoxedOrUnboxedDenseElements(ExclusiveContext* cx, JSObject* obj,
                                        uint32_t start, const Value* vp, uint32_t count,
-                                       ShouldUpdateTypes updateTypes)
+                                       ShouldUpdateTypes updateTypes = ShouldUpdateTypes::Update)
 {
     if (Type == JSVAL_TYPE_MAGIC) {
         NativeObject* nobj = &obj->as<NativeObject>();
@@ -461,7 +455,7 @@ SetOrExtendBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj,
         if (obj->is<ArrayObject>() && start + count >= obj->as<ArrayObject>().length())
             obj->as<ArrayObject>().setLengthInt32(start + count);
 
-        if (updateTypes == DontUpdateTypes && !nobj->shouldConvertDoubleElements()) {
+        if (updateTypes == ShouldUpdateTypes::DontUpdate && !nobj->shouldConvertDoubleElements()) {
             nobj->copyDenseElements(start, vp, count);
         } else {
             for (size_t i = 0; i < count; i++)
@@ -491,7 +485,7 @@ SetOrExtendBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj,
     // which will overwrite the already-modified elements as well as the ones
     // that were left alone.
     size_t i = 0;
-    if (updateTypes == DontUpdateTypes) {
+    if (updateTypes == ShouldUpdateTypes::DontUpdate) {
         for (size_t j = start; i < count && j < oldInitlen; i++)
             nobj->setElementNoTypeChangeSpecific<Type>(j, vp[i]);
     } else {
@@ -503,7 +497,7 @@ SetOrExtendBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj,
 
     if (i != count) {
         obj->as<UnboxedArrayObject>().setInitializedLength(start + count);
-        if (updateTypes == DontUpdateTypes) {
+        if (updateTypes == ShouldUpdateTypes::DontUpdate) {
             for (; i < count; i++)
                 nobj->initElementNoTypeChangeSpecific<Type>(start + i, vp[i]);
         } else {
@@ -680,9 +674,9 @@ struct Signature ## Functor {                                           \
 }
 
 DenseElementResult
-SetOrExtendAnyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj,
+SetOrExtendAnyBoxedOrUnboxedDenseElements(ExclusiveContext* cx, JSObject* obj,
                                           uint32_t start, const Value* vp, uint32_t count,
-                                          ShouldUpdateTypes updateTypes);
+                                          ShouldUpdateTypes updateTypes = ShouldUpdateTypes::Update);
 
 DenseElementResult
 MoveAnyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj,
