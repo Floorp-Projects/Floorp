@@ -469,7 +469,9 @@ GMPWrapper.prototype = {
     let libName = AppConstants.DLL_PREFIX + id + AppConstants.DLL_SUFFIX;
 
     return fileExists(this.gmpPath, libName) &&
-           fileExists(this.gmpPath, id + ".info");
+           fileExists(this.gmpPath, id + ".info") &&
+           (this._plugin.id != EME_ADOBE_ID ||
+            fileExists(this.gmpPath, id + ".voucher"));
   },
 
   validate: function() {
