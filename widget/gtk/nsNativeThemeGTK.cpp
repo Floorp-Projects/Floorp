@@ -822,13 +822,13 @@ DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
 
 #ifndef MOZ_TREE_CAIRO
   // Directly use the Cairo draw target to render the widget if using system Cairo everywhere.
-  BorrowedCairoContext borrow(aDrawTarget);
-  if (borrow.mCairo) {
-    cairo_set_matrix(borrow.mCairo, &mat);
+  BorrowedCairoContext borrowCairo(aDrawTarget);
+  if (borrowCairo.mCairo) {
+    cairo_set_matrix(borrowCairo.mCairo, &mat);
 
-    moz_gtk_widget_paint(aGTKWidgetType, borrow.mCairo, &aGDKRect, &aState, aFlags, aDirection);
+    moz_gtk_widget_paint(aGTKWidgetType, borrowCairo.mCairo, &aGDKRect, &aState, aFlags, aDirection);
 
-    borrow.Finish();
+    borrowCairo.Finish();
     return;
   }
 #endif
