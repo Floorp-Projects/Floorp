@@ -1309,3 +1309,11 @@ toolbarpaletteitem[place="palette"][hidden] {
 .popup-notification-footer[popupid="bad-content"][trackingblockdisabled] {
   display: block;
 }
+
+.popup-notification-invalid-input {
+  box-shadow: 0 0 1.5px 1px red;
+}
+
+.popup-notification-invalid-input[focused] {
+  box-shadow: 0 0 2px 2px rgba(255,0,0,0.4);
+}
