@@ -85,7 +85,6 @@ class CompileRuntime
     const MathCache* maybeGetMathCache();
 
     const Nursery& gcNursery();
-    void setMinorGCShouldCancelIonCompilations();
 };
 
 class CompileZone

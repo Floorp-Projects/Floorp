@@ -45,12 +45,6 @@ js::CurrentThreadIsIonCompiling()
 }
 
 bool
-js::CurrentThreadIsIonCompilingSafeForMinorGC()
-{
-    return TlsPerThreadData.get()->ionCompilingSafeForMinorGC;
-}
-
-bool
 js::CurrentThreadIsGCSweeping()
 {
     return js::TlsPerThreadData.get()->gcSweeping;
