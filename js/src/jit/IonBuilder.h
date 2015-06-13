@@ -228,8 +228,6 @@ class IonBuilder
     void trackActionableAbort(const char* message);
     void spew(const char* message);
 
-    MInstruction* constantMaybeNursery(JSObject* obj);
-
     JSFunction* getSingleCallTarget(TemporaryTypeSet* calleeTypes);
     bool getPolyCallTargets(TemporaryTypeSet* calleeTypes, bool constructing,
                             ObjectVector& targets, uint32_t maxTargets);
