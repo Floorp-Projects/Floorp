@@ -51,8 +51,11 @@ var PermissionsHelper = {
 
   observe: function observe(aSubject, aTopic, aData) {
     let uri = BrowserApp.selectedBrowser.currentURI;
+    let check = false;
 
     switch (aTopic) {
+      case "Permissions:Check":
+        check = true;
       case "Permissions:Get":
         let permissions = [];
         for (let i = 0; i < this._permissonTypes.length; i++) {
@@ -63,6 +66,13 @@ var PermissionsHelper = {
           if (value == Services.perms.UNKNOWN_ACTION)
             continue;
 
+          if (check) {
+            Messaging.sendRequest({
+              type: "Permissions:CheckResult",
+              hasPermissions: true
+            });
+            return;
+          }
           // Get the strings that correspond to the permission type
           let typeStrings = this._permissionStrings[type];
           let label = Strings.browser.GetStringFromName(typeStrings["label"]);
@@ -77,6 +87,14 @@ var PermissionsHelper = {
             setting: label,
             value: valueString
           });
+        }
+
+        if (check) {
+          Messaging.sendRequest({
+            type: "Permissions:CheckResult",
+            hasPermissions: false
+          });
+          return;
         }
 
         // Keep track of permissions, so we know which ones to clear
