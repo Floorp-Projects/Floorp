@@ -1729,7 +1729,16 @@ class IDLType(IDLObject):
     def isArrayBufferView(self):
         return False
 
+    def isSharedArrayBuffer(self):
+        return False
+
+    def isSharedArrayBufferView(self):
+        return False
+
     def isTypedArray(self):
+        return False
+
+    def isSharedTypedArray(self):
         return False
 
     def isCallbackInterface(self):
@@ -1751,7 +1760,10 @@ class IDLType(IDLObject):
             only returns true for the types from the TypedArray spec. """
         return self.isInterface() and (self.isArrayBuffer() or \
                                        self.isArrayBufferView() or \
-                                       self.isTypedArray())
+                                       self.isSharedArrayBuffer() or \
+                                       self.isSharedArrayBufferView() or \
+                                       self.isTypedArray() or \
+                                       self.isSharedTypedArray())
 
     def isDictionary(self):
         return False
@@ -1933,8 +1945,17 @@ class IDLNullableType(IDLType):
     def isArrayBufferView(self):
         return self.inner.isArrayBufferView()
 
+    def isSharedArrayBuffer(self):
+        return self.inner.isSharedArrayBuffer()
+
+    def isSharedArrayBufferView(self):
+        return self.inner.isSharedArrayBufferView()
+
     def isTypedArray(self):
         return self.inner.isTypedArray()
+
+    def isSharedTypedArray(self):
+        return self.inner.isSharedTypedArray()
 
     def isDictionary(self):
         return self.inner.isDictionary()
@@ -2424,8 +2445,17 @@ class IDLTypedefType(IDLType):
     def isArrayBufferView(self):
         return self.inner.isArrayBufferView()
 
+    def isSharedArrayBuffer(self):
+        return self.inner.isSharedArrayBuffer()
+
+    def isSharedArrayBufferView(self):
+        return self.inner.isSharedArrayBufferView()
+
     def isTypedArray(self):
         return self.inner.isTypedArray()
+
+    def isSharedTypedArray(self):
+        return self.inner.isSharedTypedArray()
 
     def isInterface(self):
         return self.inner.isInterface()
@@ -2684,6 +2714,8 @@ class IDLBuiltinType(IDLType):
         # Funny stuff
         'ArrayBuffer',
         'ArrayBufferView',
+        'SharedArrayBuffer',
+        'SharedArrayBufferView',
         'Int8Array',
         'Uint8Array',
         'Uint8ClampedArray',
@@ -2692,7 +2724,16 @@ class IDLBuiltinType(IDLType):
         'Int32Array',
         'Uint32Array',
         'Float32Array',
-        'Float64Array'
+        'Float64Array',
+        'SharedInt8Array',
+        'SharedUint8Array',
+        'SharedUint8ClampedArray',
+        'SharedInt16Array',
+        'SharedUint16Array',
+        'SharedInt32Array',
+        'SharedUint32Array',
+        'SharedFloat32Array',
+        'SharedFloat64Array'
         )
 
     TagLookup = {
@@ -2718,6 +2759,8 @@ class IDLBuiltinType(IDLType):
             Types.void: IDLType.Tags.void,
             Types.ArrayBuffer: IDLType.Tags.interface,
             Types.ArrayBufferView: IDLType.Tags.interface,
+            Types.SharedArrayBuffer: IDLType.Tags.interface,
+            Types.SharedArrayBufferView: IDLType.Tags.interface,
             Types.Int8Array: IDLType.Tags.interface,
             Types.Uint8Array: IDLType.Tags.interface,
             Types.Uint8ClampedArray: IDLType.Tags.interface,
@@ -2726,7 +2769,16 @@ class IDLBuiltinType(IDLType):
             Types.Int32Array: IDLType.Tags.interface,
             Types.Uint32Array: IDLType.Tags.interface,
             Types.Float32Array: IDLType.Tags.interface,
-            Types.Float64Array: IDLType.Tags.interface
+            Types.Float64Array: IDLType.Tags.interface,
+            Types.SharedInt8Array: IDLType.Tags.interface,
+            Types.SharedUint8Array: IDLType.Tags.interface,
+            Types.SharedUint8ClampedArray: IDLType.Tags.interface,
+            Types.SharedInt16Array: IDLType.Tags.interface,
+            Types.SharedUint16Array: IDLType.Tags.interface,
+            Types.SharedInt32Array: IDLType.Tags.interface,
+            Types.SharedUint32Array: IDLType.Tags.interface,
+            Types.SharedFloat32Array: IDLType.Tags.interface,
+            Types.SharedFloat64Array: IDLType.Tags.interface
         }
 
     def __init__(self, location, name, type):
@@ -2766,9 +2818,19 @@ class IDLBuiltinType(IDLType):
     def isArrayBufferView(self):
         return self._typeTag == IDLBuiltinType.Types.ArrayBufferView
 
+    def isSharedArrayBuffer(self):
+        return self._typeTag == IDLBuiltinType.Types.SharedArrayBuffer
+
+    def isSharedArrayBufferView(self):
+        return self._typeTag == IDLBuiltinType.Types.SharedArrayBufferView
+
     def isTypedArray(self):
         return self._typeTag >= IDLBuiltinType.Types.Int8Array and \
                self._typeTag <= IDLBuiltinType.Types.Float64Array
+
+    def isSharedTypedArray(self):
+        return self._typeTag >= IDLBuiltinType.Types.SharedInt8Array and \
+               self._typeTag <= IDLBuiltinType.Types.SharedFloat64Array
 
     def isInterface(self):
         # TypedArray things are interface types per the TypedArray spec,
@@ -2776,7 +2838,10 @@ class IDLBuiltinType(IDLType):
         # all of it internally.
         return self.isArrayBuffer() or \
                self.isArrayBufferView() or \
-               self.isTypedArray()
+               self.isSharedArrayBuffer() or \
+               self.isSharedArrayBufferView() or \
+               self.isTypedArray() or \
+               self.isSharedTypedArray()
 
     def isNonCallbackInterface(self):
         # All the interfaces we can be are non-callback
@@ -2847,15 +2912,20 @@ class IDLBuiltinType(IDLType):
                  # ArrayBuffer is distinguishable from everything
                  # that's not an ArrayBuffer or a callback interface
                  (self.isArrayBuffer() and not other.isArrayBuffer()) or
+                 (self.isSharedArrayBuffer() and not other.isSharedArrayBuffer()) or
                  # ArrayBufferView is distinguishable from everything
                  # that's not an ArrayBufferView or typed array.
                  (self.isArrayBufferView() and not other.isArrayBufferView() and
                   not other.isTypedArray()) or
+                 (self.isSharedArrayBufferView() and not other.isSharedArrayBufferView() and
+                  not other.isSharedTypedArray()) or
                  # Typed arrays are distinguishable from everything
                  # except ArrayBufferView and the same type of typed
                  # array
                  (self.isTypedArray() and not other.isArrayBufferView() and not
-                  (other.isTypedArray() and other.name == self.name)))))
+                  (other.isTypedArray() and other.name == self.name)) or
+                 (self.isSharedTypedArray() and not other.isSharedArrayBufferView() and not
+                  (other.isSharedTypedArray() and other.name == self.name)))))
 
     def _getDependentObjects(self):
         return set()
@@ -2927,6 +2997,12 @@ BuiltinTypes = {
       IDLBuiltinType.Types.ArrayBufferView:
           IDLBuiltinType(BuiltinLocation("<builtin type>"), "ArrayBufferView",
                          IDLBuiltinType.Types.ArrayBufferView),
+      IDLBuiltinType.Types.SharedArrayBuffer:
+          IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedArrayBuffer",
+                         IDLBuiltinType.Types.SharedArrayBuffer),
+      IDLBuiltinType.Types.SharedArrayBufferView:
+          IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedArrayBufferView",
+                         IDLBuiltinType.Types.SharedArrayBufferView),
       IDLBuiltinType.Types.Int8Array:
           IDLBuiltinType(BuiltinLocation("<builtin type>"), "Int8Array",
                          IDLBuiltinType.Types.Int8Array),
@@ -2953,7 +3029,34 @@ BuiltinTypes = {
                          IDLBuiltinType.Types.Float32Array),
       IDLBuiltinType.Types.Float64Array:
           IDLBuiltinType(BuiltinLocation("<builtin type>"), "Float64Array",
-                         IDLBuiltinType.Types.Float64Array)
+                         IDLBuiltinType.Types.Float64Array),
+      IDLBuiltinType.Types.SharedInt8Array:
+          IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedInt8Array",
+                         IDLBuiltinType.Types.SharedInt8Array),
+      IDLBuiltinType.Types.SharedUint8Array:
+          IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedUint8Array",
+                         IDLBuiltinType.Types.SharedUint8Array),
+      IDLBuiltinType.Types.SharedUint8ClampedArray:
+          IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedUint8ClampedArray",
+                         IDLBuiltinType.Types.SharedUint8ClampedArray),
+      IDLBuiltinType.Types.SharedInt16Array:
+          IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedInt16Array",
+                         IDLBuiltinType.Types.SharedInt16Array),
+      IDLBuiltinType.Types.SharedUint16Array:
+          IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedUint16Array",
+                         IDLBuiltinType.Types.SharedUint16Array),
+      IDLBuiltinType.Types.SharedInt32Array:
+          IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedInt32Array",
+                         IDLBuiltinType.Types.SharedInt32Array),
+      IDLBuiltinType.Types.SharedUint32Array:
+          IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedUint32Array",
+                         IDLBuiltinType.Types.SharedUint32Array),
+      IDLBuiltinType.Types.SharedFloat32Array:
+          IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedFloat32Array",
+                         IDLBuiltinType.Types.SharedFloat32Array),
+      IDLBuiltinType.Types.SharedFloat64Array:
+          IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedFloat64Array",
+                         IDLBuiltinType.Types.SharedFloat64Array)
     }
 
 
@@ -4413,6 +4516,7 @@ class Tokenizer(object):
         "<": "LT",
         ">": "GT",
         "ArrayBuffer": "ARRAYBUFFER",
+        "SharedArrayBuffer": "SHAREDARRAYBUFFER",
         "or": "OR"
         }
 
@@ -5460,12 +5564,15 @@ class Parser(Tokenizer):
         """
             NonAnyType : PrimitiveOrStringType TypeSuffix
                        | ARRAYBUFFER TypeSuffix
+                       | SHAREDARRAYBUFFER TypeSuffix
                        | OBJECT TypeSuffix
         """
         if p[1] == "object":
             type = BuiltinTypes[IDLBuiltinType.Types.object]
         elif p[1] == "ArrayBuffer":
             type = BuiltinTypes[IDLBuiltinType.Types.ArrayBuffer]
+        elif p[1] == "SharedArrayBuffer":
+            type = BuiltinTypes[IDLBuiltinType.Types.SharedArrayBuffer]
         else:
             type = BuiltinTypes[p[1]]
 
@@ -5859,7 +5966,7 @@ class Parser(Tokenizer):
         assert isinstance(scope, IDLScope)
 
         # xrange omits the last value.
-        for x in xrange(IDLBuiltinType.Types.ArrayBuffer, IDLBuiltinType.Types.Float64Array + 1):
+        for x in xrange(IDLBuiltinType.Types.ArrayBuffer, IDLBuiltinType.Types.SharedFloat64Array + 1):
             builtin = BuiltinTypes[x]
             name = builtin.name
             typedef = IDLTypedef(BuiltinLocation("<builtin type>"), scope, builtin, name)
@@ -5920,6 +6027,7 @@ class Parser(Tokenizer):
     _builtins = """
         typedef unsigned long long DOMTimeStamp;
         typedef (ArrayBufferView or ArrayBuffer) BufferSource;
+        typedef (SharedArrayBufferView or SharedArrayBuffer) SharedBufferSource;
     """
 
 def main():
