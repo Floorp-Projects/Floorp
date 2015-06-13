@@ -37,8 +37,7 @@
                  android:layout_marginTop="1dip"
                  android:layout_marginBottom="1dip"
                  android:layout_marginLeft="10dip"
-                 android:layout_marginRight="10dip"
-                 android:layout_centerHorizontal="true" />
+                 android:layout_marginRight="10dip" />
 
     <TextView android:id="@+id/notification_text"
               android:textAppearance="@android:style/TextAppearance.StatusBar.EventContent"

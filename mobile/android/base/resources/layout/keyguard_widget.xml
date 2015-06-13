@@ -21,7 +21,6 @@
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="match_parent"
-        android:layout_centerVertical="true"
         android:contentDescription="@string/new_tab"
         android:gravity="center"
         android:orientation="horizontal"
