@@ -1888,9 +1888,6 @@ js::TryConvertToUnboxedLayout(ExclusiveContext* cx, Shape* templateShape,
         if (!obj)
             continue;
 
-        if (obj->isSingleton() || obj->group() != group)
-            return true;
-
         objectCount++;
 
         if (isArray) {

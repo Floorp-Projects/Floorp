@@ -42,7 +42,7 @@ MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOpti
     modifiesFrameArguments_(false),
     instrumentedProfiling_(false),
     instrumentedProfilingIsCached_(false),
-    safeForMinorGC_(true),
+    nurseryObjects_(*alloc),
     outOfBoundsLabel_(outOfBoundsLabel),
     conversionErrorLabel_(conversionErrorLabel),
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)

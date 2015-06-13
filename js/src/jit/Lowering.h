@@ -296,6 +296,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitLexicalCheck(MLexicalCheck* ins);
     void visitThrowUninitializedLexical(MThrowUninitializedLexical* ins);
     void visitDebugger(MDebugger* ins);
+    void visitNurseryObject(MNurseryObject* ins);
     void visitNewTarget(MNewTarget* ins);
     void visitArrowNewTarget(MArrowNewTarget* ins);
 };

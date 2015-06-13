@@ -414,7 +414,8 @@ GeneratePrototypeGuards(JSContext* cx, IonScript* ion, MacroAssembler& masm, JSO
         // use objectReg in the rest of this function.
         masm.loadPtr(Address(objectReg, JSObject::offsetOfGroup()), scratchReg);
         Address proto(scratchReg, ObjectGroup::offsetOfProto());
-        masm.branchPtr(Assembler::NotEqual, proto, ImmGCPtr(obj->getProto()), failures);
+        masm.branchPtr(Assembler::NotEqual, proto,
+                       ImmMaybeNurseryPtr(obj->getProto()), failures);
     }
 
     JSObject* pobj = IsCacheableDOMProxy(obj)
@@ -425,7 +426,7 @@ GeneratePrototypeGuards(JSContext* cx, IonScript* ion, MacroAssembler& masm, JSO
     while (pobj != holder) {
         if (pobj->hasUncacheableProto()) {
             MOZ_ASSERT(!pobj->isSingleton());
-            masm.movePtr(ImmGCPtr(pobj), scratchReg);
+            masm.movePtr(ImmMaybeNurseryPtr(pobj), scratchReg);
             Address groupAddr(scratchReg, JSObject::offsetOfGroup());
             masm.branchPtr(Assembler::NotEqual, groupAddr, ImmGCPtr(pobj->group()), failures);
         }
@@ -804,7 +805,7 @@ GenerateReadSlot(JSContext* cx, IonScript* ion, MacroAssembler& masm,
         if (holder) {
             // Guard on the holder's shape.
             holderReg = scratchReg;
-            masm.movePtr(ImmGCPtr(holder), holderReg);
+            masm.movePtr(ImmMaybeNurseryPtr(holder), holderReg);
             masm.branchPtr(Assembler::NotEqual,
                            Address(holderReg, JSObject::offsetOfShape()),
                            ImmGCPtr(holder->as<NativeObject>().lastProperty()),
@@ -980,7 +981,7 @@ EmitGetterCall(JSContext* cx, MacroAssembler& masm,
         } else {
             // If the holder is on the prototype chain, the prototype-guarding
             // only allows objects with the same holder.
-            masm.movePtr(ImmGCPtr(holder), scratchReg);
+            masm.movePtr(ImmMaybeNurseryPtr(holder), scratchReg);
             masm.Push(scratchReg);
         }
         masm.moveStackPtrTo(argObjReg);
@@ -1033,7 +1034,7 @@ EmitGetterCall(JSContext* cx, MacroAssembler& masm,
             masm.Push(UndefinedValue());
         masm.Push(TypedOrValueRegister(MIRType_Object, AnyRegister(object)));
 
-        masm.movePtr(ImmGCPtr(target), scratchReg);
+        masm.movePtr(ImmMaybeNurseryPtr(target), scratchReg);
 
         descriptor = MakeFrameDescriptor(argSize + padding, JitFrame_IonAccessorIC);
         masm.Push(Imm32(0)); // argc
@@ -1090,7 +1091,7 @@ GenerateCallGetter(JSContext* cx, IonScript* ion, MacroAssembler& masm,
 
     // Guard on the holder's shape.
     Register holderReg = scratchReg;
-    masm.movePtr(ImmGCPtr(holder), holderReg);
+    masm.movePtr(ImmMaybeNurseryPtr(holder), holderReg);
     masm.branchPtr(Assembler::NotEqual,
                    Address(holderReg, JSObject::offsetOfShape()),
                    ImmGCPtr(holder->as<NativeObject>().lastProperty()),
@@ -1693,7 +1694,7 @@ GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext* cx, HandleScript outerScri
         Register holderReg = scratchReg;
 
         // Guard on the holder of the property
-        masm.movePtr(ImmGCPtr(holder), holderReg);
+        masm.movePtr(ImmMaybeNurseryPtr(holder), holderReg);
         masm.branchPtr(Assembler::NotEqual,
                     Address(holderReg, JSObject::offsetOfShape()),
                     ImmGCPtr(holder->lastProperty()),
@@ -2403,7 +2404,7 @@ GenerateCallSetter(JSContext* cx, IonScript* ion, MacroAssembler& masm,
         if (obj != holder)
             GeneratePrototypeGuards(cx, ion, masm, obj, holder, object, scratchReg, &protoFailure);
 
-        masm.movePtr(ImmGCPtr(holder), scratchReg);
+        masm.movePtr(ImmMaybeNurseryPtr(holder), scratchReg);
         masm.branchPtr(Assembler::NotEqual,
                        Address(scratchReg, JSObject::offsetOfShape()),
                        ImmGCPtr(holder->as<NativeObject>().lastProperty()),
@@ -2588,7 +2589,7 @@ GenerateCallSetter(JSContext* cx, IonScript* ion, MacroAssembler& masm,
         masm.Push(value);
         masm.Push(TypedOrValueRegister(MIRType_Object, AnyRegister(object)));
 
-        masm.movePtr(ImmGCPtr(target), scratchReg);
+        masm.movePtr(ImmMaybeNurseryPtr(target), scratchReg);
 
         descriptor = MakeFrameDescriptor(argSize + padding, JitFrame_IonAccessorIC);
         masm.Push(Imm32(1)); // argc
@@ -3587,14 +3588,15 @@ GenerateDenseElementHole(JSContext* cx, MacroAssembler& masm, IonCache::StubAtta
     if (obj->hasUncacheableProto()) {
         masm.loadPtr(Address(object, JSObject::offsetOfGroup()), scratchReg);
         Address proto(scratchReg, ObjectGroup::offsetOfProto());
-        masm.branchPtr(Assembler::NotEqual, proto, ImmGCPtr(obj->getProto()), &failures);
+        masm.branchPtr(Assembler::NotEqual, proto,
+                       ImmMaybeNurseryPtr(obj->getProto()), &failures);
     }
 
     JSObject* pobj = obj->getProto();
     while (pobj) {
         MOZ_ASSERT(pobj->as<NativeObject>().lastProperty());
 
-        masm.movePtr(ImmGCPtr(pobj), scratchReg);
+        masm.movePtr(ImmMaybeNurseryPtr(pobj), scratchReg);
         if (pobj->hasUncacheableProto()) {
             MOZ_ASSERT(!pobj->isSingleton());
             Address groupAddr(scratchReg, JSObject::offsetOfGroup());
