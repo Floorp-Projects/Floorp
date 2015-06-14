@@ -4216,10 +4216,19 @@ pref("layers.offmainthreadcomposition.frame-rate", -1);
 pref("layers.async-video.enabled", true);
 pref("layers.async-video-oop.enabled",true);
 
+#ifdef MOZ_WIDGET_UIKIT
+pref("layers.async-pan-zoom.enabled", true);
+#endif
+
+#ifdef MOZ_WIDGET_UIKIT
+pref("layers.async-pan-zoom.enabled", true);
+#endif
+
 #ifdef XP_MACOSX
 pref("layers.enable-tiles", true);
 pref("layers.tiled-drawtarget.enabled", true);
 #endif
+
 
 // same effect as layers.offmainthreadcomposition.enabled, but specifically for
 // use with tests.

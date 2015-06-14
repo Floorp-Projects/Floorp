@@ -21,54 +21,58 @@ function test(f, col) {
 function foo(o) {
 	return o.p;
 }
-test(foo, 1);
+test(foo, 2);
 
-//234567890123456789
-test(function(f) { return f.bar; }, 19);
-//        1         2
-//2345678901234567890123456
-test(function(f) { return f(); }, 26);
+//345678901234567890
+test(function(f) { return f.bar; }, 20);
+//       1         2
+//3456789012345678901234567
+test(function(f) { return f(); }, 27);
 /* Cover negative colspan case using for(;;) loop with error in update part. */
 test(function(){
-        //0         1         2         3         4
-        //012345678901234567890123456789012345678901
+        //         1         2         3         4
+        //123456789012345678901234567890123456789012
     eval("function baz() { for (var i = 0; i < 10; i += a.b); assertEq(i !== i, true); }");
     baz();
-}, 41);
+}, 42);
 
-//        1         2         3
-//234567890123456789012345678901234
-test(function() { var tmp = null; tmp(); }, 34)
-test(function() { var tmp = null;  tmp.foo; }, 35)
+//       1         2         3
+//3456789012345678901234567890123456
+test(function() { var tmp = null; tmp(); }, 35)
+test(function() { var tmp = null;  tmp.foo; }, 36)
 
 /* Just a generic 'throw'. */
 test(function() {
-//234567890123456789
+//       1         2
+//345678901234567890
     foo({}); throw new Error('a');
-}, 19);
+}, 20);
 
 /* Be sure to report the right statement */
 test(function() {
     function f() { return true; }
     function g() { return false; }
-//234567890123456789012345678
+//       1         2
+//345678901234567890123456789
     f(); g(); f(); if (f()) a += e;
-}, 28);
+}, 29);
 
-//2345678901234567890
-test(function() { e++; }, 18);
-test(function() {print += e; }, 17);
-test(function(){e += 1 }, 16);
-test(function() {  print[e]; }, 19);
-test(function() { e[1]; }, 18);
-test(function() { e(); }, 18);
-test(function() { 1(); }, 18);
-test(function() { Object.defineProperty() }, 18);
+//       1         2
+//345678901234567890
+test(function() { e++; }, 19);
+test(function() {print += e; }, 18);
+test(function(){e += 1 }, 17);
+test(function() {  print[e]; }, 20);
+test(function() { e[1]; }, 19);
+test(function() { e(); }, 19);
+test(function() { 1(); }, 19);
+test(function() { Object.defineProperty() }, 19);
 
 test(function() {
-//23456789012345678901
+//       1         2
+//34567890123456789012
     function foo() { asdf; } foo()
-}, 21);
+}, 22);
 
 reportCompare(0, 0, "ok");
 

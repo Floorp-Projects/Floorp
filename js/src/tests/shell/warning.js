@@ -16,7 +16,7 @@ assertEq(warning !== null, true);
 assertEq(warning.name, "None");
 assertEq(warning.message.includes("mutating"), true);
 assertEq(warning.lineNumber, 1);
-assertEq(warning.columnNumber, 1);
+assertEq(warning.columnNumber, 2);
 
 // Clear last warning.
 

@@ -214,6 +214,12 @@ endif # !GNU_CC
 
 endif # WINNT
 
+ifeq (arm-Darwin,$(CPU_ARCH)-$(OS_TARGET))
+ifdef PROGRAM
+MOZ_PROGRAM_LDFLAGS += -Wl,-rpath -Wl,@executable_path/Frameworks
+endif
+endif
+
 ifeq ($(SOLARIS_SUNPRO_CXX),1)
 ifeq (86,$(findstring 86,$(OS_TEST)))
 OS_LDFLAGS += -M $(MOZILLA_DIR)/config/solaris_ia32.map
@@ -390,7 +396,12 @@ ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
 EXTRA_DSO_LDOPTS	+= -bundle
 else
-EXTRA_DSO_LDOPTS	+= -dynamiclib -install_name @executable_path/$(SHARED_LIBRARY) -compatibility_version 1 -current_version 1 -single_module
+ifdef MOZ_IOS
+_LOADER_PATH := @rpath
+else
+_LOADER_PATH := @executable_path
+endif
+EXTRA_DSO_LDOPTS	+= -dynamiclib -install_name $(_LOADER_PATH)/$(SHARED_LIBRARY) -compatibility_version 1 -current_version 1 -single_module
 endif
 endif
 endif

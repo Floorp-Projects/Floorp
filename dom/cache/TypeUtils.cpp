@@ -242,7 +242,7 @@ TypeUtils::ToCacheResponse(CacheResponse& aOut, Response& aIn, ErrorResult& aRv)
   }
 
   nsCOMPtr<nsIInputStream> stream;
-  aIn.GetBody(getter_AddRefs(stream));
+  ir->GetInternalBody(getter_AddRefs(stream));
   if (stream) {
     aIn.SetBodyUsed();
   }

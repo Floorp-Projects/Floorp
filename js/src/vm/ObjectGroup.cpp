@@ -16,8 +16,11 @@
 
 #include "jsobjinlines.h"
 
+#include "vm/UnboxedObject-inl.h"
+
 using namespace js;
 
+using mozilla::DebugOnly;
 using mozilla::PodZero;
 
 /////////////////////////////////////////////////////////////////////
@@ -724,26 +727,25 @@ ObjectGroup::defaultNewGroup(JSContext* cx, JSProtoKey key)
 struct ObjectGroupCompartment::ArrayObjectKey : public DefaultHasher<ArrayObjectKey>
 {
     TypeSet::Type type;
-    JSObject* proto;
 
     ArrayObjectKey()
-      : type(TypeSet::UndefinedType()), proto(nullptr)
+      : type(TypeSet::UndefinedType())
     {}
 
-    ArrayObjectKey(TypeSet::Type type, JSObject* proto)
-      : type(type), proto(proto)
+    explicit ArrayObjectKey(TypeSet::Type type)
+      : type(type)
     {}
 
     static inline uint32_t hash(const ArrayObjectKey& v) {
-        return (uint32_t) (v.type.raw() ^ ((uint32_t)(size_t)v.proto >> 2));
+        return v.type.raw();
     }
 
     static inline bool match(const ArrayObjectKey& v1, const ArrayObjectKey& v2) {
-        return v1.type == v2.type && v1.proto == v2.proto;
+        return v1.type == v2.type;
     }
 
     bool operator==(const ArrayObjectKey& other) {
-        return type == other.type && proto == other.proto;
+        return type == other.type;
     }
 
     bool operator!=(const ArrayObjectKey& other) {
@@ -771,52 +773,39 @@ GetValueTypeForTable(const Value& v)
     return type;
 }
 
-/* static */ void
-ObjectGroup::fixArrayGroup(ExclusiveContext* cx, ArrayObject* obj)
+/* static */ JSObject*
+ObjectGroup::newArrayObject(ExclusiveContext* cx,
+                            const Value* vp, size_t length,
+                            NewObjectKind newKind, NewArrayKind arrayKind)
 {
-    AutoEnterAnalysis enter(cx);
+    MOZ_ASSERT(newKind != SingletonObject);
 
-    /*
-     * If the array is of homogenous type, pick a group which will be
-     * shared with all other singleton/JSON arrays of the same type.
-     * If the array is heterogenous, keep the existing group, which has
-     * unknown properties.
-     */
-
-    unsigned len = obj->getDenseInitializedLength();
-    if (len == 0)
-        return;
-
-    TypeSet::Type type = GetValueTypeForTable(obj->getDenseElement(0));
-
-    for (unsigned i = 1; i < len; i++) {
-        TypeSet::Type ntype = GetValueTypeForTable(obj->getDenseElement(i));
-        if (ntype != type) {
-            if (NumberTypes(type, ntype))
-                type = TypeSet::DoubleType();
-            else
-                return;
-        }
+    // If we are making a copy on write array, don't try to adjust the group as
+    // getOrFixupCopyOnWriteObject will do this before any objects are copied
+    // from this one.
+    if (arrayKind == NewArrayKind::CopyOnWrite) {
+        ArrayObject* obj = NewDenseCopiedArray(cx, length, vp, nullptr, newKind);
+        if (!obj || !ObjectElements::MakeElementsCopyOnWrite(cx, obj))
+            return nullptr;
+        return obj;
     }
 
-    setGroupToHomogenousArray(cx, obj, type);
-}
-
-/* static */ void
-ObjectGroup::fixRestArgumentsGroup(ExclusiveContext* cx, ArrayObject* obj)
-{
-    AutoEnterAnalysis enter(cx);
-
-    // Tracking element types for rest argument arrays is not worth it, but we
-    // still want it to be known that it's a dense array.
-    setGroupToHomogenousArray(cx, obj, TypeSet::UnknownType());
-}
-
-/* static */ void
-ObjectGroup::setGroupToHomogenousArray(ExclusiveContext* cx, JSObject* obj,
-                                       TypeSet::Type elementType)
-{
-    MOZ_ASSERT(cx->zone()->types.activeAnalysis);
+    // Get a type which captures all the elements in the array to be created.
+    TypeSet::Type elementType = TypeSet::UnknownType();
+    if (arrayKind != NewArrayKind::UnknownIndex && length != 0) {
+        elementType = GetValueTypeForTable(vp[0]);
+        for (unsigned i = 1; i < length; i++) {
+            TypeSet::Type ntype = GetValueTypeForTable(vp[i]);
+            if (ntype != elementType) {
+                if (NumberTypes(elementType, ntype)) {
+                    elementType = TypeSet::DoubleType();
+                } else {
+                    elementType = TypeSet::UnknownType();
+                    break;
+                }
+            }
+        }
+    }
 
     ObjectGroupCompartment::ArrayObjectTable*& table =
         cx->compartment()->objectGroups.arrayObjectTable;
@@ -827,29 +816,49 @@ ObjectGroup::setGroupToHomogenousArray(ExclusiveContext* cx, JSObject* obj,
             ReportOutOfMemory(cx);
             js_delete(table);
             table = nullptr;
-            return;
+            return nullptr;
         }
     }
 
-    ObjectGroupCompartment::ArrayObjectKey key(elementType, obj->getProto());
+    ObjectGroupCompartment::ArrayObjectKey key(elementType);
     DependentAddPtr<ObjectGroupCompartment::ArrayObjectTable> p(cx, *table, key);
-    if (p) {
-        obj->setGroup(p->value());
-    } else {
-        // Make a new group to use for future arrays with the same elements.
-        RootedObject objProto(cx, obj->getProto());
-        Rooted<TaggedProto> taggedProto(cx, TaggedProto(objProto));
-        ObjectGroup* group = ObjectGroupCompartment::makeGroup(cx, &ArrayObject::class_, taggedProto);
+
+    if (!p) {
+        RootedArrayObject obj(cx, NewDenseCopiedArray(cx, length, vp, nullptr, TenuredObject));
+        if (!obj)
+            return nullptr;
+
+        Rooted<TaggedProto> proto(cx, TaggedProto(obj->getProto()));
+        RootedObjectGroup group(cx, ObjectGroupCompartment::makeGroup(cx, &ArrayObject::class_,
+                                                                      proto));
         if (!group)
-            return;
-        obj->setGroup(group);
+            return nullptr;
 
         AddTypePropertyId(cx, group, nullptr, JSID_VOID, elementType);
 
-        key.proto = objProto;
+        obj->setGroup(group);
+
+        if (elementType != TypeSet::UnknownType()) {
+            // Keep track of the initial objects we create with this type.
+            // If the initial ones have a consistent shape and property types, we
+            // will try to use an unboxed layout for the group.
+            PreliminaryObjectArrayWithTemplate* preliminaryObjects =
+                cx->new_<PreliminaryObjectArrayWithTemplate>(nullptr);
+            if (!preliminaryObjects)
+                return nullptr;
+            group->setPreliminaryObjects(preliminaryObjects);
+            preliminaryObjects->registerNewObject(obj);
+        }
+
         if (!p.add(cx, *table, key, group))
-            cx->recoverFromOutOfMemory();
+            return nullptr;
+
+        return obj;
     }
+
+    RootedObjectGroup group(cx, p->value());
+    return NewCopiedArrayTryUseGroup(cx, group, vp, length, newKind,
+                                     ShouldUpdateTypes::DontUpdate);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1449,11 +1458,6 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
                     remove = true;
                 else
                     key.type = TypeSet::ObjectType(group);
-            }
-            if (key.proto && key.proto != TaggedProto::LazyProto &&
-                IsAboutToBeFinalizedUnbarriered(&key.proto))
-            {
-                remove = true;
             }
             if (IsAboutToBeFinalized(&e.front().value()))
                 remove = true;

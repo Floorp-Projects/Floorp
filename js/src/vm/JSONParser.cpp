@@ -598,12 +598,10 @@ JSONParserBase::finishArray(MutableHandleValue vp, ElementVector& elements)
 {
     MOZ_ASSERT(&elements == &stack.back().elements());
 
-    ArrayObject* obj = NewDenseCopiedArray(cx, elements.length(), elements.begin());
+    JSObject* obj = ObjectGroup::newArrayObject(cx, elements.begin(), elements.length(),
+                                                GenericObject);
     if (!obj)
         return false;
-
-    /* Try to assign a new group to the array according to its elements. */
-    ObjectGroup::fixArrayGroup(cx, obj);
 
     vp.setObject(*obj);
     if (!freeElements.append(&elements))

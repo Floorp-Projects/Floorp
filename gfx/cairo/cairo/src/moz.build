@@ -56,7 +56,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         ]
     else:
         DEFINES['CAIRO_OMIT_WIN32_PRINTING'] = True
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] in {'cocoa', 'uikit'}:
     EXPORTS.cairo += [
         'cairo-quartz-image.h',
         'cairo-quartz.h',

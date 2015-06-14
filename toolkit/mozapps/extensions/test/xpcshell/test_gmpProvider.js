@@ -235,6 +235,8 @@ function createMockPluginFilesIfNeeded(aFile, aPluginId) {
 
   createFile(libName);
   createFile(id + ".info");
+  if (aPluginId == "gmp-eme-adobe")
+    createFile(id + ".voucher");
 }
 
 // Array.includes() is only in Nightly channel, so polyfill so we don't fail
