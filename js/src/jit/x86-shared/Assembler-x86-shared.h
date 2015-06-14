@@ -229,8 +229,11 @@ class AssemblerX86Shared : public AssemblerShared
     CompactBufferWriter preBarriers_;
 
     void writeDataRelocation(ImmGCPtr ptr) {
-        if (ptr.value)
+        if (ptr.value) {
+            if (gc::IsInsideNursery(ptr.value))
+                embedsNurseryPointers_ = true;
             dataRelocations_.writeUnsigned(masm.currentOffset());
+        }
     }
     void writePrebarrierOffset(CodeOffsetLabel label) {
         preBarriers_.writeUnsigned(label.offset());
@@ -347,9 +350,6 @@ class AssemblerX86Shared : public AssemblerShared
     }
 
     static void TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
-
-    static void FixupNurseryObjects(JSContext* cx, JitCode* code, CompactBufferReader& reader,
-                                    const ObjectVector& nurseryObjects);
 
     // MacroAssemblers hold onto gcthings, so they are traced by the GC.
     void trace(JSTracer* trc);

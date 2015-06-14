@@ -64,6 +64,9 @@ class CacheObserver : public nsIObserver
   static bool const CacheFSReported()
     { return sCacheFSReported; }
   static void SetCacheFSReported();
+  static bool const HashStatsReported()
+    { return sHashStatsReported; }
+  static void SetHashStatsReported();
   static void ParentDirOverride(nsIFile ** aDir);
 
   static bool const EntryIsTooBig(int64_t aSize, bool aUsingDisk);
@@ -73,6 +76,7 @@ private:
 
   void StoreDiskCacheCapacity();
   void StoreCacheFSReported();
+  void StoreHashStatsReported();
   void AttachToPreferences();
 
   static uint32_t sUseNewCache;
@@ -96,6 +100,7 @@ private:
   static bool sSanitizeOnShutdown;
   static bool sClearCacheOnShutdown;
   static bool sCacheFSReported;
+  static bool sHashStatsReported;
 
   // Non static properties, accessible via sSelf
   nsCOMPtr<nsIFile> mCacheParentDirectoryOverride;
