@@ -7,7 +7,7 @@
 
 #include <SkPreConfig.h>
 
-#if defined(__clang__) || (defined(__GNUC__) && !defined(SK_BUILD_FOR_MAC))
+#if defined(__clang__) || (defined(__GNUC__) && !(defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)))
 
 #define EXTRACT_ALPHA(var1, var2) \
     movdqa      %var1, %var2;           /* Clone source pixels to extract alpha */\
@@ -50,7 +50,7 @@
     .type S32A_Opaque_BlitRow32_SSE4_asm, @function
 #endif
     .p2align 4
-#if defined(SK_BUILD_FOR_MAC)
+#if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
     .global _S32A_Opaque_BlitRow32_SSE4_asm
     .private_extern _S32A_Opaque_BlitRow32_SSE4_asm
 _S32A_Opaque_BlitRow32_SSE4_asm:

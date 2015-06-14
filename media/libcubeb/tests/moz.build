@@ -44,10 +44,15 @@ else:
             'speex',
         ]
 
-if CONFIG['OS_TARGET'] == 'Darwin':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     OS_LIBS += [
         '-framework AudioUnit',
         '-framework CoreAudio',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
+    OS_LIBS += [
+      '-framework CoreFoundation',
+      '-framework AudioToolbox',
     ]
 elif CONFIG['OS_TARGET'] == 'OpenBSD':
     OS_LIBS += [

@@ -43,7 +43,7 @@
           'webrtc/voice_engine/voice_engine.gyp:voice_engine',
         ],
         'conditions': [
-          ['OS!="android"', {
+          ['OS!="android" and OS!="ios"', {
             'dependencies': [
               'webrtc/modules/modules.gyp:desktop_capture',
             ],

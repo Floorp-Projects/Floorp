@@ -14,15 +14,15 @@ static uint32_t column = 0;
 
 BEGIN_TEST(testErrorCopying_columnCopied)
 {
-        //0         1         2
-        //0123456789012345678901234567
+        //0        1         2
+        //1234567890123456789012345678
     EXEC("function check() { Object; foo; }");
 
     JS::RootedValue rval(cx);
     JS_SetErrorReporter(rt, my_ErrorReporter);
     CHECK(!JS_CallFunctionName(cx, global, "check", JS::HandleValueArray::empty(),
                                &rval));
-    CHECK(column == 27);
+    CHECK(column == 28);
     return true;
 }
 

@@ -3459,13 +3459,14 @@ BaselineCompiler::emit_JSOP_REST()
 {
     frame.syncStack(0);
 
-    ArrayObject* templateObject = NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject);
+    JSObject* templateObject =
+        ObjectGroup::newArrayObject(cx, nullptr, 0, TenuredObject,
+                                    ObjectGroup::NewArrayKind::UnknownIndex);
     if (!templateObject)
         return false;
-    ObjectGroup::fixRestArgumentsGroup(cx, templateObject);
 
     // Call IC.
-    ICRest_Fallback::Compiler compiler(cx, templateObject);
+    ICRest_Fallback::Compiler compiler(cx, &templateObject->as<ArrayObject>());
     if (!emitOpIC(compiler.getStub(&stubSpace_)))
         return false;
 

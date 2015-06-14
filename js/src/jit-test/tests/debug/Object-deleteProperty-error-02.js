@@ -8,7 +8,7 @@ dbg.onDebuggerStatement = function (frame) {
         assertEq(exc.message, "diaf");
         assertEq(exc.fileName, "fail");
         assertEq(exc.lineNumber, 4);
-        assertEq(exc.columnNumber, 24);
+        assertEq(exc.columnNumber, 25);
         return;
     }
     throw new Error("deleteProperty should throw");

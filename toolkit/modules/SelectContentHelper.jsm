@@ -45,7 +45,7 @@ this.SelectContentHelper.prototype = {
     this.global.sendAsyncMessage("Forms:ShowDropDown", {
       rect: rect,
       options: this._buildOptionList(),
-      selectedIndex: this.element.selectedIndex,
+      selectedIndex: this.element.selectedIndex
     });
   },
 
