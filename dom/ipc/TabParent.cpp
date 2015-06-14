@@ -970,11 +970,13 @@ TabParent::UpdateDimensions(const nsIntRect& rect, const ScreenIntSize& size)
   LayoutDeviceIntPoint chromeOffset = -GetChildProcessOffset();
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
-  nsIntRect contentRect = rect;
-  if (widget) {
-    contentRect.x += widget->GetClientOffset().x;
-    contentRect.y += widget->GetClientOffset().y;
+  if (!widget) {
+    NS_WARNING("No widget found in TabParent::UpdateDimensions");
+    return;
   }
+  nsIntRect contentRect = rect;
+  contentRect.x += widget->GetClientOffset().x;
+  contentRect.y += widget->GetClientOffset().y;
 
   if (!mUpdatedDimensions || mOrientation != orientation ||
       mDimensions != size || !mRect.IsEqualEdges(contentRect) ||
@@ -986,10 +988,7 @@ TabParent::UpdateDimensions(const nsIntRect& rect, const ScreenIntSize& size)
     mOrientation = orientation;
     mChromeOffset = chromeOffset;
 
-    CSSToLayoutDeviceScale widgetScale;
-    if (widget) {
-      widgetScale = widget->GetDefaultScale();
-    }
+    CSSToLayoutDeviceScale widgetScale = widget->GetDefaultScale();
 
     LayoutDeviceIntRect devicePixelRect =
       ViewAs<LayoutDevicePixel>(mRect,
