@@ -1751,11 +1751,6 @@ MacroAssemblerMIPSCompat::movePtr(ImmGCPtr imm, Register dest)
 }
 
 void
-MacroAssemblerMIPSCompat::movePtr(ImmMaybeNurseryPtr imm, Register dest)
-{
-    movePtr(noteMaybeNurseryPtr(imm), dest);
-}
-void
 MacroAssemblerMIPSCompat::movePtr(ImmPtr imm, Register dest)
 {
     movePtr(ImmWord(uintptr_t(imm.value)), dest);

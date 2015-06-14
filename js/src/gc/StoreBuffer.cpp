@@ -73,6 +73,7 @@ StoreBuffer::clear()
         return true;
 
     aboutToOverflow_ = false;
+    cancelIonCompilations_ = false;
 
     bufferVal.clear();
     bufferCell.clear();
