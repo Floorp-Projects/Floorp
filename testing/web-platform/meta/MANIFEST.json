@@ -24658,8 +24658,19 @@
     ]
   },
   "local_changes": {
-    "deleted": [],
-    "items": {},
+    "deleted": [
+      "webaudio/the-audio-api/the-gainnode-interface/test.html"
+    ],
+    "items": {
+      "testharness": {
+        "webaudio/the-audio-api/the-gainnode-interface/test-gainnode.html": [
+          {
+            "path": "webaudio/the-audio-api/the-gainnode-interface/test-gainnode.html",
+            "url": "/webaudio/the-audio-api/the-gainnode-interface/test-gainnode.html"
+          }
+        ]
+      }
+    },
     "reftest_nodes": {}
   },
   "reftest_nodes": {
