@@ -292,6 +292,9 @@ var MigrationWizard = {
       case "firefox":
         source = "sourceNameFirefox";
         break;
+      case "360se":
+        source = "sourceName360se";
+        break;
     }
 
     // semi-wallpaper for crash when multiple profiles exist, since we haven't initialized mSourceProfile in places

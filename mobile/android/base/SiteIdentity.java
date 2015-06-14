@@ -5,11 +5,13 @@
 
 package org.mozilla.gecko;
 
+import android.util.Log;
 import org.json.JSONObject;
 
 import android.text.TextUtils;
 
 public class SiteIdentity {
+    private final String LOGTAG = "GeckoSiteIdentity";
     private SecurityMode mSecurityMode;
     private MixedMode mMixedMode;
     private TrackingMode mTrackingMode;
@@ -17,7 +19,8 @@ public class SiteIdentity {
     private String mOwner;
     private String mSupplemental;
     private String mVerifier;
-    private String mEncrypted;
+    private boolean mEncrypted;
+    private String mOrigin;
 
     // The order of the items here relate to image levels in
     // site_security_level.xml
@@ -124,11 +127,12 @@ public class SiteIdentity {
 
     public void resetIdentity() {
         mSecurityMode = SecurityMode.UNKNOWN;
+        mOrigin = null;
         mHost = null;
         mOwner = null;
         mSupplemental = null;
         mVerifier = null;
-        mEncrypted = null;
+        mEncrypted = false;
     }
 
     public void reset() {
@@ -166,12 +170,14 @@ public class SiteIdentity {
             }
 
             try {
+                mOrigin = identityData.getString("origin");
                 mHost = identityData.getString("host");
                 mOwner = identityData.optString("owner", null);
                 mSupplemental = identityData.optString("supplemental", null);
                 mVerifier = identityData.getString("verifier");
-                mEncrypted = identityData.getString("encrypted");
+                mEncrypted = identityData.optBoolean("encrypted", false);
             } catch (Exception e) {
+                Log.e(LOGTAG, "Error fetching Site identity host info", e);
                 resetIdentity();
             }
         } catch (Exception e) {
@@ -181,6 +187,10 @@ public class SiteIdentity {
 
     public SecurityMode getSecurityMode() {
         return mSecurityMode;
+    }
+
+    public String getOrigin() {
+        return mOrigin;
     }
 
     public String getHost() {
@@ -199,7 +209,7 @@ public class SiteIdentity {
         return mVerifier;
     }
 
-    public String getEncrypted() {
+    public boolean getEncrypted() {
         return mEncrypted;
     }
 

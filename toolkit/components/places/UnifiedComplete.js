@@ -35,6 +35,7 @@ const PREF_SUGGEST_HISTORY =        [ "suggest.history",        true ];
 const PREF_SUGGEST_BOOKMARK =       [ "suggest.bookmark",       true ];
 const PREF_SUGGEST_OPENPAGE =       [ "suggest.openpage",       true ];
 const PREF_SUGGEST_HISTORY_ONLYTYPED = [ "suggest.history.onlyTyped", false ];
+const PREF_SUGGEST_SEARCHES =       [ "suggest.searches",       true ];
 
 // Match type constants.
 // These indicate what type of search function we should be using.
@@ -64,6 +65,13 @@ const TELEMETRY_1ST_RESULT = "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS";
 const TELEMETRY_6_FIRST_RESULTS = "PLACES_AUTOCOMPLETE_6_FIRST_RESULTS_TIME_MS";
 // The default frecency value used when inserting matches with unknown frecency.
 const FRECENCY_DEFAULT = 1000;
+
+// Search suggestion results are mixed in with all other results after they
+// become available, but they're only inserted once every N results whose
+// frecencies are less than FRECENCY_DEFAULT.  In other words, for every N
+// results that fall below that frecency threshold, one search suggestion is
+// inserted.  This value = N.
+const SEARCH_SUGGESTION_INSERT_INTERVAL = 2;
 
 // A regex that matches "single word" hostnames for whitelisting purposes.
 // The hostname will already have been checked for general validity, so we
@@ -344,10 +352,15 @@ XPCOMUtils.defineLazyGetter(this, "SwitchToTabStorage", () => Object.seal({
  */
 XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
   let prefs = new Preferences(PREF_BRANCH);
-  let types = ["History", "Bookmark", "Openpage", "Typed"];
+  let types = ["History", "Bookmark", "Openpage", "Typed", "Searches"];
 
   function syncEnabledPref(init = false) {
-    let suggestPrefs = [PREF_SUGGEST_HISTORY, PREF_SUGGEST_BOOKMARK, PREF_SUGGEST_OPENPAGE];
+    let suggestPrefs = [
+      PREF_SUGGEST_HISTORY,
+      PREF_SUGGEST_BOOKMARK,
+      PREF_SUGGEST_OPENPAGE,
+      PREF_SUGGEST_SEARCHES,
+    ];
 
     if (init) {
       // Make sure to initialize the properties when first called with init = true.
@@ -356,6 +369,7 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
       store.suggestBookmark = prefs.get(...PREF_SUGGEST_BOOKMARK);
       store.suggestOpenpage = prefs.get(...PREF_SUGGEST_OPENPAGE);
       store.suggestTyped = prefs.get(...PREF_SUGGEST_HISTORY_ONLYTYPED);
+      store.suggestSearches = prefs.get(...PREF_SUGGEST_SEARCHES);
     }
 
     if (store.enabled) {
@@ -395,6 +409,7 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     store.suggestBookmark = prefs.get(...PREF_SUGGEST_BOOKMARK);
     store.suggestOpenpage = prefs.get(...PREF_SUGGEST_OPENPAGE);
     store.suggestTyped = prefs.get(...PREF_SUGGEST_HISTORY_ONLYTYPED);
+    store.suggestSearches = prefs.get(...PREF_SUGGEST_SEARCHES);
 
     // If history is not set, onlyTyped value should be ignored.
     if (!store.suggestHistory) {
@@ -566,6 +581,7 @@ function Search(searchString, searchParam, autocompleteListener,
   let params = new Set(searchParam.split(" "));
   this._enableActions = params.has("enable-actions");
   this._disablePrivateActions = params.has("disable-private-actions");
+  this._inPrivateWindow = params.has("private-window");
 
   this._searchTokens =
     this.filterTokens(getUnfilteredSearchTokens(this._searchString));
@@ -599,6 +615,8 @@ function Search(searchString, searchParam, autocompleteListener,
   // These are used to avoid adding duplicate entries to the results.
   this._usedURLs = new Set();
   this._usedPlaceIds = new Set();
+
+  this._searchSuggestionInsertCounter = 0;
 }
 
 Search.prototype = {
@@ -704,6 +722,10 @@ Search.prototype = {
       this._sleepDeferred.resolve();
       this._sleepDeferred = null;
     }
+    if (this._searchSuggestionController) {
+      this._searchSuggestionController.stop();
+      this._searchSuggestionController = null;
+    }
     this.pending = false;
   },
 
@@ -806,7 +828,22 @@ Search.prototype = {
     // IMPORTANT: No other first result heuristics should run after
     // _matchHeuristicFallback().
 
-    yield this._sleep(Prefs.delay);
+    yield this._sleep(Math.round(Prefs.delay / 2));
+    if (!this.pending)
+      return;
+
+    // Start fetching search suggestions a little earlier than Prefs.delay since
+    // they're remote and will probably take longer to arrive.
+    if (this.hasBehavior("searches")) {
+      this._searchSuggestionController =
+        PlacesSearchAutocompleteProvider.getSuggestionController(
+          this._originalSearchString,
+          this._inPrivateWindow,
+          Prefs.maxRichResults
+        );
+    }
+
+    yield this._sleep(Math.round(Prefs.delay / 2));
     if (!this.pending)
       return;
 
@@ -836,6 +873,13 @@ Search.prototype = {
         if (!this.pending)
           return;
       }
+    }
+
+    // If we still don't have enough results, fill the remaining space with
+    // search suggestions.
+    if (this._searchSuggestionController && this.pending) {
+      yield this._searchSuggestionController.fetchCompletePromise;
+      while (this.pending && this._maybeAddSearchSuggestionMatch());
     }
   }),
 
@@ -966,7 +1010,7 @@ Search.prototype = {
     match.engineAlias = alias;
     let query = this._searchTokens.slice(1).join(" ");
 
-    yield this._addSearchEngineMatch(match, query);
+    this._addSearchEngineMatch(match, query);
     return true;
   },
 
@@ -976,16 +1020,17 @@ Search.prototype = {
       return;
 
     let query = this._originalSearchString;
-
-    yield this._addSearchEngineMatch(match, query);
+    this._addSearchEngineMatch(match, query);
   },
 
-  _addSearchEngineMatch: function* (match, query) {
+  _addSearchEngineMatch(match, query, suggestion) {
     let actionURLParams = {
       engineName: match.engineName,
       input: this._originalSearchString,
       searchQuery: query,
     };
+    if (suggestion)
+      actionURLParams.searchSuggestion = suggestion;
     if (match.engineAlias) {
       actionURLParams.alias = match.engineAlias;
     }
@@ -1129,11 +1174,42 @@ Search.prototype = {
                     parseResult.engineName;
   },
 
+  _maybeAddSearchSuggestionMatch() {
+    if (this._searchSuggestionController) {
+      let [match, suggestion] = this._searchSuggestionController.consume();
+      if (suggestion) {
+        this._addSearchEngineMatch(match, this._originalSearchString,
+                                   suggestion);
+        return true;
+      }
+    }
+    return false;
+  },
+
   _addMatch: function (match) {
     // A search could be canceled between a query start and its completion,
     // in such a case ensure we won't notify any result for it.
     if (!this.pending)
       return;
+
+    // Mix in search suggestions.  Insert one suggestion every N non-suggestion
+    // matches that fall below the default frecency, and start inserting them as
+    // soon as they become available.  N = SEARCH_SUGGESTION_INSERT_INTERVAL.
+    if (match.frecency < FRECENCY_DEFAULT) {
+      if (this._searchSuggestionInsertCounter %
+          SEARCH_SUGGESTION_INSERT_INTERVAL == 0) {
+        // Search engine matches are created with FRECENCY_DEFAULT, so there's
+        // no danger of infinite indirect recursion.
+        if (this._maybeAddSearchSuggestionMatch()) {
+          if (!this.pending) {
+            return;
+          }
+          this._searchSuggestionInsertCounter++;
+        }
+      } else {
+        this._searchSuggestionInsertCounter++;
+      }
+    }
 
     let notifyResults = false;
 

@@ -635,9 +635,21 @@ AsyncFetchAndSetIconFromNetwork::OnStopRequest(nsIRequest* aRequest,
     return NS_OK;
   }
 
-  NS_SniffContent(NS_DATA_SNIFFER_CATEGORY, aRequest,
-                  TO_INTBUFFER(mIcon.data), mIcon.data.Length(),
-                  mIcon.mimeType);
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  // aRequest should always QI to nsIChannel.
+  // See AsyncFetchAndSetIconFromNetwork::Run()
+  MOZ_ASSERT(channel);
+
+  nsAutoCString contentType;
+  channel->GetContentType(contentType);
+  // Bug 366324 - can't sniff SVG yet, so rely on server-specified type
+  if (contentType.EqualsLiteral("image/svg+xml")) {
+    mIcon.mimeType.AssignLiteral("image/svg+xml");
+  } else {
+    NS_SniffContent(NS_DATA_SNIFFER_CATEGORY, aRequest,
+                    TO_INTBUFFER(mIcon.data), mIcon.data.Length(),
+                    mIcon.mimeType);
+  }
 
   // If the icon does not have a valid MIME type, add it to the failed cache.
   if (mIcon.mimeType.IsEmpty()) {
@@ -649,10 +661,6 @@ AsyncFetchAndSetIconFromNetwork::OnStopRequest(nsIRequest* aRequest,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-  // aRequest should always QI to nsIChannel.
-  // See AsyncFetchAndSetIconFromNetwork::Run()
-  MOZ_ASSERT(channel);
   mIcon.expiration = GetExpirationTimeFromChannel(channel);
 
   // Telemetry probes to measure the favicon file sizes for each different file type.

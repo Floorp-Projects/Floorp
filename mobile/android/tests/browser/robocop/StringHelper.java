@@ -193,6 +193,7 @@ public class StringHelper {
     public final String SETTINGS_LABEL;
     public final String GUEST_MODE_LABEL;
     public final String TAB_QUEUE_LABEL;
+    public final String TAB_QUEUE_SUMMARY;
 
     // Android 3.0+
     public final String TOOLS_LABEL;
@@ -367,6 +368,7 @@ public class StringHelper {
         SETTINGS_LABEL = res.getString(R.string.settings);
         GUEST_MODE_LABEL = res.getString(R.string.new_guest_session);
         TAB_QUEUE_LABEL = res.getString(R.string.pref_tab_queue_title);
+        TAB_QUEUE_SUMMARY = res.getString(R.string.pref_tab_queue_summary);
 
         // Android 3.0+
         TOOLS_LABEL = res.getString(R.string.tools);

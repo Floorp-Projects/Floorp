@@ -347,6 +347,7 @@ pref("browser.urlbar.match.url", "@");
 pref("browser.urlbar.suggest.history",              true);
 pref("browser.urlbar.suggest.bookmark",             true);
 pref("browser.urlbar.suggest.openpage",             true);
+pref("browser.urlbar.suggest.searches",             true);
 
 // Restrictions to current suggestions can also be applied (intersection).
 // Typed suggestion works only if history is set to true.
@@ -357,8 +358,8 @@ pref("browser.urlbar.trimURLs", true);
 
 pref("browser.altClickSave", false);
 
-// Enable logging downloads operations to the Error Console.
-pref("browser.download.debug", false);
+// Enable logging downloads operations to the Console.
+pref("browser.download.loglevel", "Error");
 
 // Number of milliseconds to wait for the http headers (and thus
 // the Content-Disposition filename) before giving up and falling back to

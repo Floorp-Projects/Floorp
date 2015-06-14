@@ -206,8 +206,7 @@ public class testSettingsMenuItems extends PixelTest {
 
         // Tab Queue
         if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_ANDROID_TAB_QUEUE) {
-            final String expected = "Queue links for later instead of switching to " + mStringHelper.BRAND_NAME + " each time";
-            String[] tabQueue = { mStringHelper.TAB_QUEUE_LABEL, expected };
+            final String[] tabQueue = { mStringHelper.TAB_QUEUE_LABEL, mStringHelper.TAB_QUEUE_SUMMARY };
             settingsMap.get(PATH_CUSTOMIZE).add(tabQueue);
         }
 
