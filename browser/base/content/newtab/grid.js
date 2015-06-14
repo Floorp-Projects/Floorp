@@ -159,6 +159,7 @@ let gGrid = {
 
     // Create the site's inner HTML code.
     site.innerHTML =
+      '<span class="newtab-sponsored">' + newTabString("sponsored.button") + '</span>' +
       '<a class="newtab-link">' +
       '  <span class="newtab-thumbnail"/>' +
       '  <span class="newtab-thumbnail enhanced-content"/>' +
@@ -168,7 +169,6 @@ let gGrid = {
       '       class="newtab-control newtab-control-pin"/>' +
       '<input type="button" title="' + newTabString("block") + '"' +
       '       class="newtab-control newtab-control-block"/>' +
-      '<span class="newtab-sponsored">' + newTabString("sponsored.button") + '</span>' +
       '<span class="newtab-suggested"/>';
 
     this._siteFragment = document.createDocumentFragment();
