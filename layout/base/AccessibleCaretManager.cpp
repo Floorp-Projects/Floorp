@@ -831,7 +831,7 @@ AccessibleCaretManager::AdjustDragBoundary(const nsPoint& aPoint) const
   if (GetCaretMode() == CaretMode::Selection) {
     if (mActiveCaret == mFirstCaret.get()) {
       nscoord dragDownBoundaryY = mSecondCaret->LogicalPosition().y;
-      if (adjustedPoint.y > dragDownBoundaryY) {
+      if (dragDownBoundaryY > 0 && adjustedPoint.y > dragDownBoundaryY) {
         adjustedPoint.y = dragDownBoundaryY;
       }
     } else {
