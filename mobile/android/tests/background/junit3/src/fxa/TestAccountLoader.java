@@ -58,6 +58,7 @@ public class TestAccountLoader extends AndroidSyncTestCaseWithAccounts {
   private static final String TEST_SYNCPASSWORD = "testSyncPassword";
 
   private static final String TEST_TOKEN_SERVER_URI = "testTokenServerURI";
+  private static final String TEST_PROFILE_SERVER_URI = "testProfileServerURI";
   private static final String TEST_AUTH_SERVER_URI = "testAuthServerURI";
   private static final String TEST_PROFILE = "testProfile";
 
@@ -175,8 +176,8 @@ public class TestAccountLoader extends AndroidSyncTestCaseWithAccounts {
     // This account will get cleaned up in tearDown.
     final State state = new Separated(TEST_USERNAME, "uid", false); // State choice is arbitrary.
     final AndroidFxAccount account = AndroidFxAccount.addAndroidAccount(context,
-        TEST_USERNAME, TEST_PROFILE, TEST_AUTH_SERVER_URI, TEST_TOKEN_SERVER_URI, state,
-        AndroidSyncTestCaseWithAccounts.TEST_SYNC_AUTOMATICALLY_MAP_WITH_ALL_AUTHORITIES_DISABLED);
+        TEST_USERNAME, TEST_PROFILE, TEST_AUTH_SERVER_URI, TEST_TOKEN_SERVER_URI, TEST_PROFILE_SERVER_URI,
+        state, AndroidSyncTestCaseWithAccounts.TEST_SYNC_AUTOMATICALLY_MAP_WITH_ALL_AUTHORITIES_DISABLED);
     assertNotNull(account);
     assertFirefoxAccount(getLoaderResultSynchronously(loader));
   }
