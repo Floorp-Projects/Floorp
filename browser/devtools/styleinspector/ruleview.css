@@ -31,10 +31,10 @@ body {
 
 #pseudo-class-panel {
   position: relative;
-  top: -1px;
+  margin-top: -1px;
+  margin-bottom: -1px;
   overflow-y: hidden;
   max-height: 24px;
-  justify-content: space-around;
   transition-property: max-height;
   transition-duration: 150ms;
   transition-timing-function: ease;
@@ -46,6 +46,7 @@ body {
 
 #pseudo-class-panel > label {
   -moz-user-select: none;
+  flex-grow: 1;
 }
 
 .ruleview {
