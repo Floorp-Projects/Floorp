@@ -89,6 +89,9 @@ bool CacheObserver::sClearCacheOnShutdown = kDefaultClearCacheOnShutdown;
 static bool kDefaultCacheFSReported = false;
 bool CacheObserver::sCacheFSReported = kDefaultCacheFSReported;
 
+static bool kDefaultHashStatsReported = false;
+bool CacheObserver::sHashStatsReported = kDefaultHashStatsReported;
+
 NS_IMPL_ISUPPORTS(CacheObserver,
                   nsIObserver,
                   nsISupportsWeakReference)
@@ -344,6 +347,32 @@ CacheObserver::StoreCacheFSReported()
 {
   mozilla::Preferences::SetInt("browser.cache.disk.filesystem_reported",
                                sCacheFSReported);
+}
+
+// static
+void
+CacheObserver::SetHashStatsReported()
+{
+  sHashStatsReported = true;
+
+  if (!sSelf) {
+    return;
+  }
+
+  if (NS_IsMainThread()) {
+    sSelf->StoreHashStatsReported();
+  } else {
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethod(sSelf, &CacheObserver::StoreHashStatsReported);
+    NS_DispatchToMainThread(event);
+  }
+}
+
+void
+CacheObserver::StoreHashStatsReported()
+{
+  mozilla::Preferences::SetInt("browser.cache.disk.hashstats_reported",
+                               sHashStatsReported);
 }
 
 // static
