@@ -2392,6 +2392,22 @@ js::SetClassAndProto(JSContext* cx, HandleObject obj,
     return true;
 }
 
+/* static */ bool
+JSObject::changeToSingleton(JSContext* cx, HandleObject obj)
+{
+    MOZ_ASSERT(!obj->isSingleton());
+
+    MarkObjectGroupUnknownProperties(cx, obj->group());
+
+    ObjectGroup* group = ObjectGroup::lazySingletonGroup(cx, obj->getClass(),
+                                                         obj->getTaggedProto());
+    if (!group)
+        return false;
+
+    obj->group_ = group;
+    return true;
+}
+
 static bool
 MaybeResolveConstructor(ExclusiveContext* cxArg, Handle<GlobalObject*> global, JSProtoKey key)
 {

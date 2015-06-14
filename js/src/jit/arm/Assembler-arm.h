@@ -1285,8 +1285,12 @@ class Assembler : public AssemblerShared
     // As opposed to x86/x64 version, the data relocation has to be executed
     // before to recover the pointer, and not after.
     void writeDataRelocation(ImmGCPtr ptr) {
-        if (ptr.value)
-            tmpDataRelocations_.append(nextOffset());
+        if (ptr.value) {
+            if (gc::IsInsideNursery(ptr.value))
+                embedsNurseryPointers_ = true;
+            if (ptr.value)
+                tmpDataRelocations_.append(nextOffset());
+        }
     }
     void writePrebarrierOffset(CodeOffsetLabel label) {
         tmpPreBarriers_.append(BufferOffset(label.offset()));
@@ -1642,9 +1646,6 @@ class Assembler : public AssemblerShared
   public:
     static void TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
     static void TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
-
-    static void FixupNurseryObjects(JSContext* cx, JitCode* code, CompactBufferReader& reader,
-                                    const ObjectVector& nurseryObjects);
 
     static bool SupportsFloatingPoint() {
         return HasVFP();

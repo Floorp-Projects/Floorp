@@ -102,7 +102,7 @@ MacroAssembler::guardTypeSet(const Source& address, const TypeSet *types, Barrie
 
         if (obj == scratch)
             extractObject(address, scratch);
-        guardTypeSetMightBeIncomplete(obj, scratch, &matched);
+        guardTypeSetMightBeIncomplete(types, obj, scratch, &matched);
 
         assumeUnreachable("Unexpected object type");
 #endif
@@ -111,20 +111,38 @@ MacroAssembler::guardTypeSet(const Source& address, const TypeSet *types, Barrie
     bind(&matched);
 }
 
+template <typename TypeSet>
 void
-MacroAssembler::guardTypeSetMightBeIncomplete(Register obj, Register scratch, Label* label)
+MacroAssembler::guardTypeSetMightBeIncomplete(TypeSet* types, Register obj, Register scratch, Label* label)
 {
     // Type set guards might miss when an object's group changes. In this case
-    // either its properties will become unknown, or it will change to a native
-    // object with an original unboxed group. Jump to label if this might have
-    // happened for the input object.
+    // either its old group's properties will become unknown, or it will change
+    // to a native object with an original unboxed group. Jump to label if this
+    // might have happened for the input object.
+
+    if (types->unknownObject()) {
+        jump(label);
+        return;
+    }
 
     loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
     load32(Address(scratch, ObjectGroup::offsetOfFlags()), scratch);
-    branchTest32(Assembler::NonZero, scratch, Imm32(OBJECT_FLAG_UNKNOWN_PROPERTIES), label);
     and32(Imm32(OBJECT_FLAG_ADDENDUM_MASK), scratch);
     branch32(Assembler::Equal,
              scratch, Imm32(ObjectGroup::addendumOriginalUnboxedGroupValue()), label);
+
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        if (JSObject* singleton = types->getSingletonNoBarrier(i)) {
+            movePtr(ImmGCPtr(singleton), scratch);
+            loadPtr(Address(scratch, JSObject::offsetOfGroup()), scratch);
+        } else if (ObjectGroup* group = types->getGroupNoBarrier(i)) {
+            movePtr(ImmGCPtr(group), scratch);
+        } else {
+            continue;
+        }
+        branchTest32(Assembler::NonZero, Address(scratch, ObjectGroup::offsetOfFlags()),
+                     Imm32(OBJECT_FLAG_UNKNOWN_PROPERTIES), label);
+    }
 }
 
 void
@@ -204,6 +222,10 @@ template void MacroAssembler::guardTypeSet(const ValueOperand& value, const Type
                                            BarrierKind kind, Register scratch, Label* miss);
 template void MacroAssembler::guardTypeSet(const TypedOrValueRegister& value, const TypeSet* types,
                                            BarrierKind kind, Register scratch, Label* miss);
+
+template void MacroAssembler::guardTypeSetMightBeIncomplete(const TemporaryTypeSet* types,
+                                                            Register obj, Register scratch,
+                                                            Label* label);
 
 template<typename S, typename T>
 static void
