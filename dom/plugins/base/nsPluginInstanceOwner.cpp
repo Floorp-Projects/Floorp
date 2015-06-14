@@ -547,43 +547,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
   return rv;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const char *aStatusMsg)
-{
-  nsresult  rv = NS_ERROR_FAILURE;
-
-  rv = this->ShowStatus(NS_ConvertUTF8toUTF16(aStatusMsg).get());
-
-  return rv;
-}
-
-NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const char16_t *aStatusMsg)
-{
-  nsresult  rv = NS_ERROR_FAILURE;
-
-  if (!mPluginFrame) {
-    return rv;
-  }
-  nsCOMPtr<nsIDocShellTreeItem> docShellItem = mPluginFrame->PresContext()->GetDocShell();
-  if (NS_FAILED(rv) || !docShellItem) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  rv = docShellItem->GetTreeOwner(getter_AddRefs(treeOwner));
-  if (NS_FAILED(rv) || !treeOwner) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner, &rv));
-  if (NS_FAILED(rv) || !browserChrome) {
-    return rv;
-  }
-  rv = browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT,
-                                aStatusMsg);
-
-  return rv;
-}
-
 NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(nsIDocument* *aDocument)
 {
   nsCOMPtr<nsIContent> content = do_QueryReferent(mContent);
