@@ -189,6 +189,13 @@ CompileRuntime::gcNursery()
     return runtime()->gc.nursery;
 }
 
+void
+CompileRuntime::setMinorGCShouldCancelIonCompilations()
+{
+    MOZ_ASSERT(onMainThread());
+    runtime()->gc.storeBuffer.setShouldCancelIonCompilations();
+}
+
 Zone*
 CompileZone::zone()
 {

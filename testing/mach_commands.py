@@ -382,23 +382,6 @@ class JsapiTestsCommand(MachCommandBase):
         return jsapi_tests_result
 
 
-AUTOTRY_HELP_MSG = """
-Autotry is in beta, please file bugs blocking 1149670.
-
-Push test from the specified paths to try. A set of test
-jobs will be selected based on the tests present in the tree, however
-specifying platforms is still required with the -p argument (a default
-is taken from the AUTOTRY_PLATFORM_HINT environment variable if set).
-
-The -u argument may be used to specify additional unittest suites to run.
-
-Selected tests will be run in a single chunk of the relevant suite, at this
-time in chunk 1.
-
-The following types of tests are eligible to be selected automatically
-by this command at this time: %s
-""" % list(AutoTry.test_flavors)
-
 @CommandProvider
 class PushToTry(MachCommandBase):
 
@@ -423,18 +406,18 @@ class PushToTry(MachCommandBase):
 
         return builds, platforms
 
-    @Command('try', category='testing', description=AUTOTRY_HELP_MSG)
+    @Command('try', category='testing', description='Push selected tests to the try server')
     @CommandArgument('paths', nargs='*', help='Paths to search for tests to run on try.')
-    @CommandArgument('-v', dest='verbose', action='store_true', default=True,
+    @CommandArgument('-n', dest='verbose', action='store_true', default=False,
                      help='Print detailed information about the resulting test selection '
                           'and commands performed.')
     @CommandArgument('-p', dest='platforms', required='AUTOTRY_PLATFORM_HINT' not in os.environ,
                      help='Platforms to run. (required if not found in the environment)')
     @CommandArgument('-u', dest='tests',
-                     help='Test jobs to run. These will be use in place of test jobs '
+                     help='Test jobs to run. These will be used in place of suites '
                           'determined by test paths, if any.')
     @CommandArgument('--extra', dest='extra_tests',
-                     help='Additional tests to run. These will be added to test jobs '
+                     help='Additional tests to run. These will be added to suites '
                           'determined by test paths, if any.')
     @CommandArgument('-b', dest='builds', default='do',
                      help='Build types to run (d for debug, o for optimized)')
@@ -444,8 +427,31 @@ class PushToTry(MachCommandBase):
                      help='Do not push to try as a result of running this command (if '
                           'specified this command will only print calculated try '
                           'syntax and selection info).')
-    def autotry(self, builds=None, platforms=None, paths=None, verbose=None, extra_tests=None,
-                push=None, tags=None, tests=None):
+    def autotry(self, builds=None, platforms=None, paths=None, verbose=None,
+                extra_tests=None, push=None, tags=None, tests=None):
+        """Autotry is in beta, please file bugs blocking 1149670.
+
+        Pushes the specified tests to try. The simplest way to specify tests is
+        by using the -u argument, which will behave as usual for try syntax.
+        This command also provides a mechanism to select test jobs and tests
+        within a job by path based on tests present in the tree under that
+        path. Mochitests, xpcshell tests, and reftests are eligible for
+        selection by this mechanism. Selected tests will be run in a single
+        chunk of the relevant suite, at this time in chunk 1.
+
+        Specifying platforms is still required with the -p argument (a default
+        is taken from the AUTOTRY_PLATFORM_HINT environment variable if set).
+
+        Tests may be further filtered by passing one or more --tag to the
+        command.
+
+        To run suites in addition to those determined from the tree, they
+        can be passed to the --extra arguent.
+
+        The command requires either its own mercurial extension ("push-to-try",
+        installable from mach mercurial-setup) or a git repo using git-cinnabar
+        (available at https://github.com/glandium/git-cinnabar).
+        """
 
         from mozbuild.testing import TestResolver
         from mozbuild.controller.building import BuildDriver
@@ -478,12 +484,12 @@ class PushToTry(MachCommandBase):
         msg = at.calc_try_syntax(platforms, manifests_by_flavor.keys(), tests,
                                  extra_tests, builds, all_manifests, tags)
 
-        if verbose:
+        if verbose and manifests_by_flavor:
             print('Tests from the following manifests will be selected: ')
             pprint.pprint(manifests_by_flavor)
 
         if verbose:
-            print('The following try message was calculated:\n\n\t%s\n' % msg)
+            print('The following try syntax was calculated:\n\n\t%s\n' % msg)
 
         if push:
             at.push_to_try(msg, verbose)

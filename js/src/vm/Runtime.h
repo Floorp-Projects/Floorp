@@ -523,6 +523,11 @@ class PerThreadData : public PerThreadDataFriendFields
     // Whether this thread is actively Ion compiling.
     bool ionCompiling;
 
+    // Whether this thread is actively Ion compiling in a context where a minor
+    // GC could happen simultaneously. If this is true, this thread cannot use
+    // any pointers into the nursery.
+    bool ionCompilingSafeForMinorGC;
+
     // Whether this thread is currently sweeping GC things.
     bool gcSweeping;
 #endif
@@ -1933,13 +1938,16 @@ extern const JSSecurityCallbacks NullSecurityCallbacks;
 class AutoEnterIonCompilation
 {
   public:
-    explicit AutoEnterIonCompilation(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
+    explicit AutoEnterIonCompilation(bool safeForMinorGC
+                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
 #ifdef DEBUG
         PerThreadData* pt = js::TlsPerThreadData.get();
         MOZ_ASSERT(!pt->ionCompiling);
+        MOZ_ASSERT(!pt->ionCompilingSafeForMinorGC);
         pt->ionCompiling = true;
+        pt->ionCompilingSafeForMinorGC = safeForMinorGC;
 #endif
     }
 
@@ -1948,6 +1956,7 @@ class AutoEnterIonCompilation
         PerThreadData* pt = js::TlsPerThreadData.get();
         MOZ_ASSERT(pt->ionCompiling);
         pt->ionCompiling = false;
+        pt->ionCompilingSafeForMinorGC = false;
 #endif
     }
 
