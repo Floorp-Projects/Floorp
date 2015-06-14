@@ -12580,10 +12580,10 @@ static bool DoRestFallback(JSContext* cx, BaselineFrame* frame, ICRest_Fallback*
     unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
     Value* rest = frame->argv() + numFormals;
 
-    ArrayObject* obj = NewDenseCopiedArray(cx, numRest, rest, nullptr);
+    JSObject* obj = ObjectGroup::newArrayObject(cx, rest, numRest, GenericObject,
+                                                ObjectGroup::NewArrayKind::UnknownIndex);
     if (!obj)
         return false;
-    ObjectGroup::fixRestArgumentsGroup(cx, obj);
     res.setObject(*obj);
     return true;
 }

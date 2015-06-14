@@ -4598,7 +4598,6 @@ ParseNode::getConstantValue(ExclusiveContext* cx, AllowConstantObjects allowObje
         return true;
       case PNK_CALLSITEOBJ:
       case PNK_ARRAY: {
-        RootedValue value(cx);
         unsigned count;
         ParseNode* pn;
 
@@ -4606,8 +4605,12 @@ ParseNode::getConstantValue(ExclusiveContext* cx, AllowConstantObjects allowObje
             vp.setMagic(JS_GENERIC_MAGIC);
             return true;
         }
-        if (allowObjects == DontAllowNestedObjects)
+
+        ObjectGroup::NewArrayKind arrayKind = ObjectGroup::NewArrayKind::Normal;
+        if (allowObjects == ForCopyOnWriteArray) {
+            arrayKind = ObjectGroup::NewArrayKind::CopyOnWrite;
             allowObjects = DontAllowObjects;
+        }
 
         if (getKind() == PNK_CALLSITEOBJ) {
             count = pn_count - 1;
@@ -4618,26 +4621,25 @@ ParseNode::getConstantValue(ExclusiveContext* cx, AllowConstantObjects allowObje
             pn = pn_head;
         }
 
-        RootedArrayObject obj(cx, NewDenseFullyAllocatedArray(cx, count, nullptr, newKind));
-        if (!obj)
+        AutoValueVector values(cx);
+        if (!values.appendN(MagicValue(JS_ELEMENTS_HOLE), count))
             return false;
-
-        unsigned idx = 0;
-        RootedId id(cx);
-        for (; pn; idx++, pn = pn->pn_next) {
-            if (!pn->getConstantValue(cx, allowObjects, &value))
+        size_t idx;
+        for (idx = 0; pn; idx++, pn = pn->pn_next) {
+            if (!pn->getConstantValue(cx, allowObjects, values[idx]))
                 return false;
-            if (value.isMagic(JS_GENERIC_MAGIC)) {
+            if (values[idx].isMagic(JS_GENERIC_MAGIC)) {
                 vp.setMagic(JS_GENERIC_MAGIC);
                 return true;
             }
-            id = INT_TO_JSID(idx);
-            if (!DefineProperty(cx, obj, id, value, nullptr, nullptr, JSPROP_ENUMERATE))
-                return false;
         }
         MOZ_ASSERT(idx == count);
 
-        ObjectGroup::fixArrayGroup(cx, obj);
+        JSObject* obj = ObjectGroup::newArrayObject(cx, values.begin(), values.length(),
+                                                    newKind, arrayKind);
+        if (!obj)
+            return false;
+
         vp.setObject(*obj);
         return true;
       }
@@ -4649,8 +4651,7 @@ ParseNode::getConstantValue(ExclusiveContext* cx, AllowConstantObjects allowObje
             vp.setMagic(JS_GENERIC_MAGIC);
             return true;
         }
-        if (allowObjects == DontAllowNestedObjects)
-            allowObjects = DontAllowObjects;
+        MOZ_ASSERT(allowObjects == AllowObjects);
 
         AutoIdValueVector properties(cx);
 
@@ -7894,7 +7895,7 @@ BytecodeEmitter::emitTree(ParseNode* pn)
             // every time the initializer executes.
             if (emitterMode != BytecodeEmitter::SelfHosting && pn->pn_count != 0) {
                 RootedValue value(cx);
-                if (!pn->getConstantValue(cx, ParseNode::DontAllowNestedObjects, &value))
+                if (!pn->getConstantValue(cx, ParseNode::ForCopyOnWriteArray, &value))
                     return false;
                 if (!value.isMagic(JS_GENERIC_MAGIC)) {
                     // Note: the group of the template object might not yet reflect
@@ -7904,9 +7905,9 @@ BytecodeEmitter::emitTree(ParseNode* pn)
                     // group for the template is accurate. We don't do this here as we
                     // want to use ObjectGroup::allocationSiteGroup, which requires a
                     // finished script.
-                    NativeObject* obj = &value.toObject().as<NativeObject>();
-                    if (!ObjectElements::MakeElementsCopyOnWrite(cx, obj))
-                        return false;
+                    JSObject* obj = &value.toObject();
+                    MOZ_ASSERT(obj->is<ArrayObject>() &&
+                               obj->as<ArrayObject>().denseElementsAreCopyOnWrite());
 
                     ObjectBox* objbox = parser->newObjectBox(obj);
                     if (!objbox)

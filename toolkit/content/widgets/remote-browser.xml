@@ -315,7 +315,7 @@
               }
 
               let menulist = document.getElementById(this.getAttribute("selectmenulist"));
-              this._selectParentHelper.populate(menulist, data.options, data.selectedIndex);
+              this._selectParentHelper.populate(menulist, data.options, data.selectedIndex, this._fullZoom);
               this._selectParentHelper.open(this, menulist, data.rect);
               break;
             }

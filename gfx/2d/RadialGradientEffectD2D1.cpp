@@ -251,7 +251,7 @@ RadialGradientEffectD2D1::MapInvalidRect(UINT32 inputIndex,
                                          D2D1_RECT_L invalidInputRect,
                                          D2D1_RECT_L* pInvalidOutputRect) const
 {
-  MOZ_ASSERT(inputIndex = 0);
+  MOZ_ASSERT(inputIndex == 0);
 
   *pInvalidOutputRect = invalidInputRect;
   return S_OK;

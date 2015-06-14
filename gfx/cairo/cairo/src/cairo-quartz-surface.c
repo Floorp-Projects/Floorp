@@ -34,7 +34,9 @@
  *	Vladimir Vukicevic <vladimir@mozilla.com>
  */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE /* required for RTLD_DEFAULT */
+#endif
 #include "cairoint.h"
 
 #include "cairo-quartz-private.h"
@@ -177,10 +179,15 @@ static void quartz_ensure_symbols(void)
 
     CTFontDrawGlyphsPtr = dlsym(RTLD_DEFAULT, "CTFontDrawGlyphs");
 
+#if !TARGET_OS_IPHONE
     if (Gestalt(gestaltSystemVersion, &_cairo_quartz_osx_version) != noErr) {
         // assume 10.5
         _cairo_quartz_osx_version = 0x1050;
     }
+#else
+    //TODO: this is not great
+    _cairo_quartz_osx_version = 0x1050;
+#endif
 
     _cairo_quartz_symbol_lookup_done = TRUE;
 }

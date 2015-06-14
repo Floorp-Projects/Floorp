@@ -172,6 +172,8 @@ done
   --branch=${MH_BRANCH} \
   --build-pool=${MH_BUILD_POOL}
 
+mkdir -p /home/worker/artifacts
+
 # upload auxiliary files
 cd $WORKSPACE/build/src/obj-firefox/dist
 

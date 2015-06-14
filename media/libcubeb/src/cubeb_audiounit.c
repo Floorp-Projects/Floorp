@@ -5,21 +5,35 @@
  * accompanying file LICENSE for details.
  */
 #undef NDEBUG
+
+#include <TargetConditionals.h>
 #include <assert.h>
+#include <mach/mach_time.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <AudioUnit/AudioUnit.h>
+#if !TARGET_OS_IPHONE
 #include <CoreAudio/AudioHardware.h>
 #include <CoreAudio/HostTime.h>
 #include <CoreFoundation/CoreFoundation.h>
+#else
+#include <CoreAudio/CoreAudioTypes.h>
+#include <AudioToolbox/AudioToolbox.h>
+#endif
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 #include "cubeb_panner.h"
+#if !TARGET_OS_IPHONE
 #include "cubeb_osx_run_loop.h"
+#endif
 
 #if !defined(kCFCoreFoundationVersionNumber10_7)
 /* From CoreFoundation CFBase.h */
 #define kCFCoreFoundationVersionNumber10_7 635.00
+#endif
+
+#if !TARGET_OS_IPHONE && MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+#define MACOSX_LESS_THAN_106
 #endif
 
 #define CUBEB_STREAM_MAX 8
@@ -51,6 +65,31 @@ struct cubeb_stream {
   uint64_t hw_latency_frames;
   float panning;
 };
+
+#if TARGET_OS_IPHONE
+typedef UInt32 AudioDeviceID;
+typedef UInt32 AudioObjectID;
+
+#define AudioGetCurrentHostTime mach_absolute_time
+
+uint64_t
+AudioConvertHostTimeToNanos(uint64_t host_time)
+{
+  static struct mach_timebase_info timebase_info;
+  static bool initialized = false;
+  if (!initialized) {
+    mach_timebase_info(&timebase_info);
+    initialized = true;
+  }
+
+  long double answer = host_time;
+  if (timebase_info.numer != timebase_info.denom) {
+    answer *= timebase_info.numer;
+    answer /= timebase_info.denom;
+  }
+  return (uint64_t)answer;
+}
+#endif
 
 static int64_t
 audiotimestamp_to_latency(AudioTimeStamp const * tstamp, cubeb_stream * stream)
@@ -145,8 +184,9 @@ audiounit_init(cubeb ** context, char const * context_name)
   ctx->active_streams = 0;
 
   ctx->limit_streams = kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber10_7;
-
+#if !TARGET_OS_IPHONE
   cubeb_set_coreaudio_notification_runloop();
+#endif
 
   *context = ctx;
 
@@ -159,6 +199,7 @@ audiounit_get_backend_id(cubeb * ctx)
   return "audiounit";
 }
 
+#if !TARGET_OS_IPHONE
 static int
 audiounit_get_output_device_id(AudioDeviceID * device_id)
 {
@@ -357,10 +398,15 @@ audiounit_get_acceptable_latency_range(AudioValueRange * latency_range)
 
   return CUBEB_OK;
 }
+#endif /* !TARGET_OS_IPHONE */
 
 int
 audiounit_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 {
+#if TARGET_OS_IPHONE
+  //TODO: [[AVAudioSession sharedInstance] maximumOutputNumberOfChannels]
+  *max_channels = 2;
+#else
   UInt32 size;
   OSStatus r;
   AudioDeviceID output_device_id;
@@ -390,20 +436,24 @@ audiounit_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
   }
 
   *max_channels = stream_format.mChannelsPerFrame;
-
+#endif
   return CUBEB_OK;
 }
 
 static int
 audiounit_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_ms)
 {
+#if TARGET_OS_IPHONE
+  //TODO: [[AVAudioSession sharedInstance] inputLatency]
+  return CUBEB_ERROR_NOT_SUPPORTED;
+#else
   AudioValueRange latency_range;
-
   if (audiounit_get_acceptable_latency_range(&latency_range) != CUBEB_OK) {
     return CUBEB_ERROR;
   }
 
   *latency_ms = (latency_range.mMinimum * 1000 + params.rate - 1) / params.rate;
+#endif
 
   return CUBEB_OK;
 }
@@ -411,6 +461,10 @@ audiounit_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * la
 static int
 audiounit_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
 {
+#if TARGET_OS_IPHONE
+  //TODO
+  return CUBEB_ERROR_NOT_SUPPORTED;
+#else
   UInt32 size;
   OSStatus r;
   Float64 fsamplerate;
@@ -438,7 +492,7 @@ audiounit_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
   }
 
   *rate = (uint32_t)fsamplerate;
-
+#endif
   return CUBEB_OK;
 }
 
@@ -465,7 +519,7 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
                       void * user_ptr)
 {
   AudioStreamBasicDescription ss;
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+#if MACOSX_LESS_THAN_106
   ComponentDescription desc;
   Component comp;
 #else
@@ -526,11 +580,16 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
   pthread_mutex_unlock(&context->mutex);
 
   desc.componentType = kAudioUnitType_Output;
-  desc.componentSubType = kAudioUnitSubType_DefaultOutput;
+  desc.componentSubType =
+#if TARGET_OS_IPHONE
+    kAudioUnitSubType_RemoteIO;
+#else
+    kAudioUnitSubType_DefaultOutput;
+#endif
   desc.componentManufacturer = kAudioUnitManufacturer_Apple;
   desc.componentFlags = 0;
   desc.componentFlagsMask = 0;
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+#if MACOSX_LESS_THAN_106
   comp = FindNextComponent(NULL, &desc);
 #else
   comp = AudioComponentFindNext(NULL, &desc);
@@ -560,7 +619,7 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
   stm->current_latency_frames = 0;
   stm->hw_latency_frames = UINT64_MAX;
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+#if MACOSX_LESS_THAN_106
   r = OpenAComponent(comp, &stm->unit);
 #else
   r = AudioComponentInstanceNew(comp, &stm->unit);
@@ -583,6 +642,7 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
 
   /* Get the range of latency this particular device can work with, and clamp
    * the requested latency to this acceptable range. */
+#if !TARGET_OS_IPHONE
   if (audiounit_get_acceptable_latency_range(&latency_range) != CUBEB_OK) {
     audiounit_stream_destroy(stm);
     return CUBEB_ERROR;
@@ -606,6 +666,10 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
     audiounit_stream_destroy(stm);
     return CUBEB_ERROR;
   }
+#else  // TARGET_OS_IPHONE
+  //TODO: [[AVAudioSession sharedInstance] inputLatency]
+  // http://stackoverflow.com/questions/13157523/kaudiodevicepropertybufferframesize-replacement-for-ios
+#endif
 
   // Setting the latency doesn't work well for USB headsets (eg. plantronics).
   // Keep the default latency for now.
@@ -637,9 +701,11 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
 
   *stream = stm;
 
+#if !TARGET_OS_IPHONE
   /* we dont' check the return value here, because we want to be able to play
    * even if we can't detect device changes. */
   audiounit_install_device_changed_callback(stm);
+#endif
 
   return CUBEB_OK;
 }
@@ -654,14 +720,16 @@ audiounit_stream_destroy(cubeb_stream * stm)
   if (stm->unit) {
     AudioOutputUnitStop(stm->unit);
     AudioUnitUninitialize(stm->unit);
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+#if MACOSX_LESS_THAN_106
     CloseComponent(stm->unit);
 #else
     AudioComponentInstanceDispose(stm->unit);
 #endif
   }
 
+#if !TARGET_OS_IPHONE
   audiounit_uninstall_device_changed_callback(stm);
+#endif
 
   r = pthread_mutex_destroy(&stm->mutex);
   assert(r == 0);
@@ -706,6 +774,10 @@ audiounit_stream_get_position(cubeb_stream * stm, uint64_t * position)
 int
 audiounit_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 {
+#if TARGET_OS_IPHONE
+  //TODO
+  return CUBEB_ERROR_NOT_SUPPORTED;
+#else
   pthread_mutex_lock(&stm->mutex);
   if (stm->hw_latency_frames == UINT64_MAX) {
     UInt32 size;
@@ -778,6 +850,7 @@ audiounit_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
   pthread_mutex_unlock(&stm->mutex);
 
   return CUBEB_OK;
+#endif
 }
 
 int audiounit_stream_set_volume(cubeb_stream * stm, float volume)
@@ -811,6 +884,10 @@ int audiounit_stream_set_panning(cubeb_stream * stm, float panning)
 int audiounit_stream_get_current_device(cubeb_stream * stm,
                                         cubeb_device ** const  device)
 {
+#if TARGET_OS_IPHONE
+  //TODO
+  return CUBEB_ERROR_NOT_SUPPORTED;
+#else
   OSStatus r;
   UInt32 size;
   UInt32 data;
@@ -897,6 +974,7 @@ int audiounit_stream_get_current_device(cubeb_stream * stm,
   (*device)->input_name[size] = '\0';
 
   return CUBEB_OK;
+#endif
 }
 
 int audiounit_stream_device_destroy(cubeb_stream * stream,

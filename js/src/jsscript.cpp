@@ -3087,13 +3087,7 @@ js::CloneScript(JSContext* cx, HandleObject enclosingScope, HandleFunction fun, 
                     clone = CloneFunctionAndScript(cx, enclosingScope, innerFun, polluted);
                 }
             } else {
-                /*
-                 * Clone object literals emitted for the JSOP_NEWOBJECT opcode. We only emit that
-                 * instead of the less-optimized JSOP_NEWINIT for self-hosted code or code compiled
-                 * with JSOPTION_COMPILE_N_GO set. As we don't clone the latter type of code, this
-                 * case should only ever be hit when cloning objects from self-hosted code.
-                 */
-                clone = CloneObjectLiteral(cx, obj);
+                clone = DeepCloneObjectLiteral(cx, obj, TenuredObject);
             }
             if (!clone || !objects.append(clone))
                 return nullptr;

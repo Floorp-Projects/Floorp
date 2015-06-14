@@ -155,7 +155,7 @@ int32_t ViECapturer::Init(const char* device_unique_idUTF8,
   CaptureDeviceType type = config_.Get<CaptureDeviceInfo>().type;
 
   if(type != CaptureDeviceType::Camera) {
-#if !defined(ANDROID)
+#if !defined(ANDROID) && !defined(WEBRTC_IOS)
     capture_module_ = DesktopCaptureImpl::Create(
       ViEModuleId(engine_id_, capture_id_), device_unique_idUTF8, type);
 #endif
