@@ -34,12 +34,12 @@ table {
   font: message-box;
   text-align: start;
   width: 100%;
-  border: 1px solid var(--in-content-table-border-color);
+  border: 1px solid var(--in-content-border-color);
   border-spacing: 0px;
 }
 
 th, td {
-  border: 1px solid var(--in-content-table-border-color);
+  border: 1px solid var(--in-content-border-color);
   padding: 4px;
 }
 
@@ -82,7 +82,7 @@ td {
 
 #action-box {
   background-color: var(--aboutSupport-table-background);
-  border: 1px solid var(--in-content-table-border-color);
+  border: 1px solid var(--in-content-border-color);
   color: var(--in-content-text-color);
   float: right;
   margin-top: 2em;
