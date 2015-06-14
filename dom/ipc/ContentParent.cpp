@@ -79,7 +79,9 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
+#ifdef MOZ_ENABLE_PROFILER_SPS
 #include "mozilla/ProfileGatherer.h"
+#endif
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
@@ -239,7 +241,9 @@ static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
 using base::ChildPrivileges;
 using base::KillProcess;
+#ifdef MOZ_ENABLE_PROFILER_SPS
 using mozilla::ProfileGatherer;
+#endif
 
 #ifdef MOZ_CRASHREPORTER
 using namespace CrashReporter;
@@ -5106,12 +5110,14 @@ ContentParent::RecvGamepadListenerRemoved()
 bool
 ContentParent::RecvProfile(const nsCString& aProfile)
 {
+#ifdef MOZ_ENABLE_PROFILER_SPS
     if (NS_WARN_IF(!mGatherer)) {
         return true;
     }
     mProfile = aProfile;
     mGatherer->GatheredOOPProfile();
     mGatherer = nullptr;
+#endif
     return true;
 }
 
