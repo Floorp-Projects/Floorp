@@ -30,6 +30,16 @@ add_task(function*() {
   ok(parseInt(toolbox._host.frame.style.marginBottom, 10) == 0,
      "The toolbox host is shown again");
 
+  info("Try to minimize again using the keyboard shortcut");
+  yield minimizeWithShortcut(toolbox);
+  ok(parseInt(toolbox._host.frame.style.marginBottom, 10) < 0,
+     "The toolbox host has been hidden away with a negative-margin");
+
+  info("Try to maximize again using the keyboard shortcut");
+  yield maximizeWithShortcut(toolbox);
+  ok(parseInt(toolbox._host.frame.style.marginBottom, 10) == 0,
+     "The toolbox host is shown again");
+
   info("Minimize again and switch to another tool");
   yield minimize(toolbox);
   let onMaximized = toolbox._host.once("maximized");
@@ -67,9 +77,27 @@ function* minimize(toolbox) {
   yield onMinimized;
 }
 
+function* minimizeWithShortcut(toolbox) {
+  let key = toolbox.doc.getElementById("toolbox-minimize-key")
+                       .getAttribute("key");
+  let onMinimized = toolbox._host.once("minimized");
+  EventUtils.synthesizeKey(key, {accelKey: true, shiftKey: true},
+                           toolbox.doc.defaultView);
+  yield onMinimized;
+}
+
 function* maximize(toolbox) {
   let button = toolbox.doc.querySelector("#toolbox-dock-bottom-minimize");
   let onMaximized = toolbox._host.once("maximized");
   EventUtils.synthesizeMouseAtCenter(button, {}, toolbox.doc.defaultView);
+  yield onMaximized;
+}
+
+function* maximizeWithShortcut(toolbox) {
+  let key = toolbox.doc.getElementById("toolbox-minimize-key")
+                       .getAttribute("key");
+  let onMaximized = toolbox._host.once("maximized");
+  EventUtils.synthesizeKey(key, {accelKey: true, shiftKey: true},
+                           toolbox.doc.defaultView);
   yield onMaximized;
 }

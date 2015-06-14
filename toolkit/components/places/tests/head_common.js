@@ -57,6 +57,16 @@ XPCOMUtils.defineLazyGetter(this, "SMALLPNG_DATA_URI", function() {
          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAA" +
          "AAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==");
 });
+XPCOMUtils.defineLazyGetter(this, "SMALLSVG_DATA_URI", function() {
+  return NetUtil.newURI(
+         "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy5" +
+         "3My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBmaWxs" +
+         "PSIjNDI0ZTVhIj4NCiAgPGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iN" +
+         "DQiIHN0cm9rZT0iIzQyNGU1YSIgc3Ryb2tlLXdpZHRoPSIxMSIgZmlsbD" +
+         "0ibm9uZSIvPg0KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjI0LjYiIHI9IjY" +
+         "uNCIvPg0KICA8cmVjdCB4PSI0NSIgeT0iMzkuOSIgd2lkdGg9IjEwLjEi" +
+         "IGhlaWdodD0iNDEuOCIvPg0KPC9zdmc%2BDQo%3D");
+});
 
 let gTestDir = do_get_cwd();
 

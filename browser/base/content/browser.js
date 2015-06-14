@@ -7189,15 +7189,18 @@ let gPrivateBrowsingUI = {
       }
     }
 
-    if (gURLBar &&
-        !PrivateBrowsingUtils.permanentPrivateBrowsing) {
-      // Disable switch to tab autocompletion for private windows.
-      // We leave it enabled for permanent private browsing mode though.
+    if (gURLBar) {
       let value = gURLBar.getAttribute("autocompletesearchparam") || "";
-      if (!value.includes("disable-private-actions")) {
-        gURLBar.setAttribute("autocompletesearchparam",
-                             value + " disable-private-actions");
+      if (!PrivateBrowsingUtils.permanentPrivateBrowsing &&
+          !value.includes("disable-private-actions")) {
+        // Disable switch to tab autocompletion for private windows.
+        // We leave it enabled for permanent private browsing mode though.
+        value += " disable-private-actions";
       }
+      if (!value.includes("private-window")) {
+        value += " private-window";
+      }
+      gURLBar.setAttribute("autocompletesearchparam", value);
     }
   }
 };

@@ -33,10 +33,7 @@ this.EXPORTED_SYMBOLS = [
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -65,8 +62,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadsLogger",
-                                  "resource:///modules/DownloadsLogger.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "DownloadsLogger", () => {
+  let { ConsoleAPI } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+  let consoleOptions = {
+    maxLogLevelPref: "browser.download.loglevel",
+    prefix: "Downloads"
+  };
+  return new ConsoleAPI(consoleOptions);
+});
 
 const nsIDM = Ci.nsIDownloadManager;
 
@@ -124,7 +128,6 @@ let PrefObserver = {
 
 PrefObserver.register({
   // prefName: defaultValue
-  debug: false,
   animateNotifications: true
 });
 
@@ -143,20 +146,6 @@ this.DownloadsCommon = {
   BLOCK_VERDICT_MALWARE: "Malware",
   BLOCK_VERDICT_POTENTIALLY_UNWANTED: "PotentiallyUnwanted",
   BLOCK_VERDICT_UNCOMMON: "Uncommon",
-
-  log(...aMessageArgs) {
-    if (!PrefObserver.debug) {
-      return;
-    }
-    DownloadsLogger.log(...aMessageArgs);
-  },
-
-  error(...aMessageArgs) {
-    if (!PrefObserver.debug) {
-      return;
-    }
-    DownloadsLogger.reportError(...aMessageArgs);
-  },
 
   /**
    * Returns an object whose keys are the string names from the downloads string
@@ -600,6 +589,13 @@ this.DownloadsCommon = {
     return (rv == 0);
   }),
 };
+
+XPCOMUtils.defineLazyGetter(this.DownloadsCommon, "log", () => {
+  return DownloadsLogger.log.bind(DownloadsLogger);
+});
+XPCOMUtils.defineLazyGetter(this.DownloadsCommon, "error", () => {
+  return DownloadsLogger.error.bind(DownloadsLogger);
+});
 
 /**
  * Returns true if we are executing on Windows Vista or a later version.

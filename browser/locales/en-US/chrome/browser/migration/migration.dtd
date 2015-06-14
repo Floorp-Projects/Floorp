@@ -19,6 +19,8 @@
 <!ENTITY importFromChrome.accesskey     "C">
 <!ENTITY importFromFirefox.label        "Firefox">
 <!ENTITY importFromFirefox.accesskey    "X">
+<!ENTITY importFrom360se.label          "360 Secure Browser">
+<!ENTITY importFrom360se.accesskey      "3">
 
 <!ENTITY noMigrationSources.label       "No programs that contain bookmarks, history or password data could be found.">
 

@@ -63,6 +63,8 @@ function loadDocument(browser) {
 function testNetmonitor(toolbox) {
   let monitor = toolbox.getCurrentPanel();
   let { RequestsMenu } = monitor.panelWin.NetMonitorView;
+  RequestsMenu.lazyUpdate = false;
+
   is(RequestsMenu.itemCount, 1, "Network request appears in the network panel");
 
   let item = RequestsMenu.getItemAtIndex(0);
