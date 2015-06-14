@@ -507,8 +507,20 @@ ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
             clasp = &PlainObject::class_;
     }
 
-    if (proto.isObject() && !proto.toObject()->setDelegate(cx))
-        return nullptr;
+    if (proto.isObject() && !proto.toObject()->isDelegate()) {
+        RootedObject protoObj(cx, proto.toObject());
+        if (!protoObj->setDelegate(cx))
+            return nullptr;
+
+        // Objects which are prototypes of one another should be singletons, so
+        // that their type information can be tracked more precisely. Limit
+        // this group change to plain objects, to avoid issues with other types
+        // of singletons like typed arrays.
+        if (protoObj->is<PlainObject>() && !protoObj->isSingleton()) {
+            if (!JSObject::changeToSingleton(cx->asJSContext(), protoObj))
+                return nullptr;
+        }
+    }
 
     ObjectGroupCompartment::NewTable::AddPtr p =
         table->lookupForAdd(ObjectGroupCompartment::NewEntry::Lookup(clasp, proto, associated));

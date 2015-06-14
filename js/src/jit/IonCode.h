@@ -114,8 +114,6 @@ class JitCode : public gc::TenuredCell
         invalidated_ = true;
     }
 
-    void fixupNurseryObjects(JSContext* cx, const ObjectVector& nurseryObjects);
-
     void setHasBytecodeMap() {
         hasBytecodeMap_ = true;
     }

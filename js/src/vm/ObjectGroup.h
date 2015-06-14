@@ -157,10 +157,11 @@ enum NewObjectKind {
  *
  * Object groups which represent at most one JS object are constructed lazily.
  * These include groups for native functions, standard classes, scripted
- * functions defined at the top level of global/eval scripts, and in some
- * other cases. Typical web workloads often create many windows (and many
- * copies of standard natives) and many scripts, with comparatively few
- * non-singleton groups.
+ * functions defined at the top level of global/eval scripts, objects which
+ * dynamically become the prototype of some other object, and in some other
+ * cases. Typical web workloads often create many windows (and many copies of
+ * standard natives) and many scripts, with comparatively few non-singleton
+ * groups.
  *
  * We can recover the type information for the object from examining it,
  * so don't normally track the possible types of its properties as it is

@@ -502,9 +502,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         movePtr(rhs, ScratchReg);
         cmpPtr(lhs, ScratchReg);
     }
-    void cmpPtr(const Operand& lhs, const ImmMaybeNurseryPtr rhs) {
-        cmpPtr(lhs, noteMaybeNurseryPtr(rhs));
-    }
     void cmpPtr(const Operand& lhs, const ImmWord rhs) {
         if ((intptr_t)rhs.value <= INT32_MAX && (intptr_t)rhs.value >= INT32_MIN) {
             cmpPtr(lhs, Imm32((int32_t)rhs.value));
@@ -732,9 +729,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void movePtr(ImmGCPtr imm, Register dest) {
         movq(imm, dest);
-    }
-    void movePtr(ImmMaybeNurseryPtr imm, Register dest) {
-        movePtr(noteMaybeNurseryPtr(imm), dest);
     }
     void loadPtr(AbsoluteAddress address, Register dest) {
         if (X86Encoding::IsAddressImmediate(address.addr)) {

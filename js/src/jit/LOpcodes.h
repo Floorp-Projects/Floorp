@@ -349,7 +349,6 @@
     _(AssertResultT)                \
     _(LexicalCheck)                 \
     _(ThrowUninitializedLexical)    \
-    _(NurseryObject)                \
     _(Debugger)                     \
     _(NewTarget)                    \
     _(ArrowNewTarget)
