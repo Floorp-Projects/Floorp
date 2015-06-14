@@ -214,39 +214,6 @@ struct PatchedImmPtr {
 class AssemblerShared;
 class ImmGCPtr;
 
-// Used for immediates which require relocation and may be traced during minor GC.
-class ImmMaybeNurseryPtr
-{
-    friend class AssemblerShared;
-    friend class ImmGCPtr;
-    const gc::Cell* value;
-
-    ImmMaybeNurseryPtr() : value(0) {}
-
-  public:
-    explicit ImmMaybeNurseryPtr(const gc::Cell* ptr) : value(ptr)
-    {
-        // asm.js shouldn't be creating GC things
-        MOZ_ASSERT(!IsCompilingAsmJS());
-    }
-};
-
-// Dummy value used for nursery pointers during Ion compilation, see
-// LNurseryObject.
-class IonNurseryPtr
-{
-    const gc::Cell* ptr;
-
-  public:
-    friend class ImmGCPtr;
-
-    explicit IonNurseryPtr(const gc::Cell* ptr) : ptr(ptr)
-    {
-        MOZ_ASSERT(ptr);
-        MOZ_ASSERT(uintptr_t(ptr) & 0x1);
-    }
-};
-
 // Used for immediates which require relocation.
 class ImmGCPtr
 {
@@ -255,15 +222,10 @@ class ImmGCPtr
 
     explicit ImmGCPtr(const gc::Cell* ptr) : value(ptr)
     {
-        MOZ_ASSERT_IF(ptr, ptr->isTenured());
-
-        // asm.js shouldn't be creating GC things
-        MOZ_ASSERT(!IsCompilingAsmJS());
-    }
-
-    explicit ImmGCPtr(IonNurseryPtr ptr) : value(ptr.ptr)
-    {
-        MOZ_ASSERT(value);
+        // Nursery pointers can't be used if the main thread might be currently
+        // performing a minor GC.
+        MOZ_ASSERT_IF(ptr && !ptr->isTenured(),
+                      !CurrentThreadIsIonCompilingSafeForMinorGC());
 
         // asm.js shouldn't be creating GC things
         MOZ_ASSERT(!IsCompilingAsmJS());
@@ -271,13 +233,6 @@ class ImmGCPtr
 
   private:
     ImmGCPtr() : value(0) {}
-
-    friend class AssemblerShared;
-    explicit ImmGCPtr(ImmMaybeNurseryPtr ptr) : value(ptr.value)
-    {
-        // asm.js shouldn't be creating GC things
-        MOZ_ASSERT(!IsCompilingAsmJS());
-    }
 };
 
 // Pointer to be embedded as an immediate that is loaded/stored from by an
@@ -984,18 +939,6 @@ class AssemblerShared
 
     bool embedsNurseryPointers() const {
         return embedsNurseryPointers_;
-    }
-
-    ImmGCPtr noteMaybeNurseryPtr(ImmMaybeNurseryPtr ptr) {
-        if (ptr.value && gc::IsInsideNursery(ptr.value)) {
-            // noteMaybeNurseryPtr can be reached from off-thread compilation,
-            // though not with an actual nursery pointer argument in that case.
-            MOZ_ASSERT(GetJitContext()->runtime->onMainThread());
-            // Do not be ion-compiling on the main thread.
-            MOZ_ASSERT(!GetJitContext()->runtime->mainThread()->ionCompiling);
-            embedsNurseryPointers_ = true;
-        }
-        return ImmGCPtr(ptr);
     }
 
     void append(const CallSiteDesc& desc, size_t currentOffset, size_t framePushed) {

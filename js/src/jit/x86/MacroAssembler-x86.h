@@ -238,7 +238,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         jsval_layout jv = JSVAL_TO_IMPL(val);
         push(Imm32(jv.s.tag));
         if (val.isMarkable())
-            push(ImmMaybeNurseryPtr(reinterpret_cast<gc::Cell*>(val.toGCThing())));
+            push(ImmGCPtr(reinterpret_cast<gc::Cell*>(val.toGCThing())));
         else
             push(Imm32(jv.s.payload.i32));
     }
@@ -569,9 +569,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void cmpPtr(Register lhs, Register rhs) {
         cmp32(lhs, rhs);
     }
-    void cmpPtr(const Operand& lhs, ImmMaybeNurseryPtr rhs) {
-        cmpl(rhs, lhs);
-    }
     void testPtr(Register lhs, Register rhs) {
         test32(lhs, rhs);
     }
@@ -734,9 +731,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void movePtr(ImmGCPtr imm, Register dest) {
         movl(imm, dest);
-    }
-    void movePtr(ImmMaybeNurseryPtr imm, Register dest) {
-        movePtr(noteMaybeNurseryPtr(imm), dest);
     }
     void loadPtr(const Address& address, Register dest) {
         movl(Operand(address), dest);
