@@ -17,6 +17,7 @@ add_task(function*() {
   let target = TargetFactory.forTab(tab);
   let toolbox = yield gDevTools.showToolbox(target, "netmonitor");
   let netmonitor = toolbox.getPanel("netmonitor");
+  netmonitor._view.RequestsMenu.lazyUpdate = false;
 
   info("Navigating to test page");
   yield navigateTo(TEST_URL);

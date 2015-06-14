@@ -452,7 +452,6 @@ size. -->
 <!ENTITY button_clear_data "Clear data">
 <!ENTITY button_set "Set">
 <!ENTITY button_clear "Clear">
-<!ENTITY button_remember "Remember">
 <!ENTITY button_copy "Copy">
 
 <!ENTITY firstrun_panel_title_welcome "Welcome">
@@ -548,6 +547,7 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY identity_run_by "which is run by">
 <!ENTITY identity_no_info "This website does not supply identity information.">
 <!ENTITY identity_not_encrypted "Your connection to this website is not encrypted.">
+<!ENTITY identity_encrypted "Encrypted">
 
 <!-- Mixed content notifications in site identity popup -->
 <!ENTITY loaded_mixed_content_message "This page is displaying content that isn\'t secure.">

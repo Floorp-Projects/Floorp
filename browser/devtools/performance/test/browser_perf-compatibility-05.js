@@ -35,6 +35,7 @@ function* spawnTest() {
   busyWait(WAIT_TIME); // allow the profiler module to sample some cpu activity
 
   yield front.stopRecording(firstRecording);
+  info("The first recording is " + firstRecording.getDuration() + "ms long.");
 
   is(firstRecordingStartTime, 0,
     "The profiling start time should be 0 for the first recording.");
@@ -50,6 +51,8 @@ function* spawnTest() {
   busyWait(WAIT_TIME); // allow the profiler module to sample more cpu activity
 
   yield front.stopRecording(secondRecording);
+  info("The second recording is " + secondRecording.getDuration() + "ms long.");
+
   let secondRecordingProfile = secondRecording.getProfile();
   let secondRecordingSamples = secondRecordingProfile.threads[0].samples.data;
 

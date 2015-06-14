@@ -68,6 +68,18 @@
   list-style-image: url("chrome://browser/skin/content-contextmenu.svg#bookmark-disabled");
 }
 
+#context-bookmarkpage[starred=true] {
+  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#bookmarked");
+}
+
+#context-bookmarkpage[starred=true][_moz-menuactive=true] {
+  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#bookmarked-active");
+}
+
+#context-bookmarkpage[starred=true][disabled=true] {
+  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#bookmarked-disabled");
+}
+
 #context-back:-moz-locale-dir(rtl),
 #context-forward:-moz-locale-dir(rtl),
 #context-reload:-moz-locale-dir(rtl) {

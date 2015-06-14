@@ -839,17 +839,12 @@ let SessionStoreInternal = {
   },
 
   /**
-   * If it's the first window load since app start...
-   * - determine if we're reloading after a crash or a forced-restart
-   * - restore window state
-   * - restart downloads
-   * Set up event listeners for this window's tabs
+   * Registers and tracks a given window.
+   *
    * @param aWindow
    *        Window reference
-   * @param aInitialState
-   *        The initial state to be loaded after startup (optional)
    */
-  onLoad: function ssi_onLoad(aWindow, aInitialState = null) {
+  onLoad(aWindow) {
     // return if window has already been initialized
     if (aWindow && aWindow.__SSi && this._windows[aWindow.__SSi])
       return;
@@ -874,13 +869,42 @@ let SessionStoreInternal = {
     // and create its data object
     this._windows[aWindow.__SSi] = { tabs: [], selected: 0, _closedTabs: [], busy: false };
 
-    let isPrivateWindow = false;
     if (PrivateBrowsingUtils.isWindowPrivate(aWindow))
-      this._windows[aWindow.__SSi].isPrivate = isPrivateWindow = true;
+      this._windows[aWindow.__SSi].isPrivate = true;
     if (!this._isWindowLoaded(aWindow))
       this._windows[aWindow.__SSi]._restoring = true;
     if (!aWindow.toolbar.visible)
       this._windows[aWindow.__SSi].isPopup = true;
+
+    let tabbrowser = aWindow.gBrowser;
+
+    // add tab change listeners to all already existing tabs
+    for (let i = 0; i < tabbrowser.tabs.length; i++) {
+      this.onTabAdd(aWindow, tabbrowser.tabs[i], true);
+    }
+    // notification of tab add/remove/selection/show/hide
+    TAB_EVENTS.forEach(function(aEvent) {
+      tabbrowser.tabContainer.addEventListener(aEvent, this, true);
+    }, this);
+
+    // Keep track of a browser's latest frameLoader.
+    aWindow.gBrowser.addEventListener("XULFrameLoaderCreated", this);
+  },
+
+  /**
+   * Initializes a given window.
+   *
+   * Windows are registered as soon as they are created but we need to wait for
+   * the session file to load, and the initial window's delayed startup to
+   * finish before initializing a window, i.e. restoring data into it.
+   *
+   * @param aWindow
+   *        Window reference
+   * @param aInitialState
+   *        The initial state to be loaded after startup (optional)
+   */
+  initializeWindow(aWindow, aInitialState = null) {
+    let isPrivateWindow = PrivateBrowsingUtils.isWindowPrivate(aWindow);
 
     // perform additional initialization when the first window is loading
     if (RunState.isStopped) {
@@ -1007,20 +1031,6 @@ let SessionStoreInternal = {
       // undoCloseWindow was executed.
       this._restoreLastWindow = false;
     }
-
-    var tabbrowser = aWindow.gBrowser;
-
-    // add tab change listeners to all already existing tabs
-    for (let i = 0; i < tabbrowser.tabs.length; i++) {
-      this.onTabAdd(aWindow, tabbrowser.tabs[i], true);
-    }
-    // notification of tab add/remove/selection/show/hide
-    TAB_EVENTS.forEach(function(aEvent) {
-      tabbrowser.tabContainer.addEventListener(aEvent, this, true);
-    }, this);
-
-    // Keep track of a browser's latest frameLoader.
-    aWindow.gBrowser.addEventListener("XULFrameLoaderCreated", this);
   },
 
   /**
@@ -1029,9 +1039,12 @@ let SessionStoreInternal = {
    *        Window reference
    */
   onBeforeBrowserWindowShown: function (aWindow) {
-    // Just call onLoad() directly if we're initialized already.
+    // Register the window.
+    this.onLoad(aWindow);
+
+    // Just call initializeWindow() directly if we're initialized already.
     if (this._sessionInitialized) {
-      this.onLoad(aWindow);
+      this.initializeWindow(aWindow);
       return;
     }
 
@@ -1067,13 +1080,13 @@ let SessionStoreInternal = {
       }
 
       if (this._sessionInitialized) {
-        this.onLoad(aWindow);
+        this.initializeWindow(aWindow);
       } else {
         let initialState = this.initSession();
         this._sessionInitialized = true;
 
         TelemetryStopwatch.start("FX_SESSION_RESTORE_STARTUP_ONLOAD_INITIAL_WINDOW_MS");
-        this.onLoad(aWindow, initialState);
+        this.initializeWindow(aWindow, initialState);
         TelemetryStopwatch.finish("FX_SESSION_RESTORE_STARTUP_ONLOAD_INITIAL_WINDOW_MS");
 
         // Let everyone know we're done.
@@ -2173,6 +2186,7 @@ let SessionStoreInternal = {
    */
   navigateAndRestore(tab, loadArguments, historyIndex) {
     let window = tab.ownerDocument.defaultView;
+    NS_ASSERT(window.__SSi, "tab's window must be tracked");
     let browser = tab.linkedBrowser;
 
     // Set tab title to "Connecting..." and start the throbber to pretend we're

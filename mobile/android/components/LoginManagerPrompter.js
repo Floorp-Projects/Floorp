@@ -146,15 +146,23 @@ LoginManagerPrompter.prototype = {
      *        String message to be displayed in the doorhanger
      * @param aButtons
      *        Buttons to display with the doorhanger
-     * @param aActionText
-     *        Object with text to be displayed as clickable, along with a bundle to create an action
-     *
+     * @param aUsername
+     *        Username string used in creating a doorhanger action
+     * @param aPassword
+     *        Password string used in creating a doorhanger action
      */
-    _showLoginNotification : function (aTitle, aBody, aButtons, aActionText) {
+    _showLoginNotification : function (aTitle, aBody, aButtons, aUsername, aPassword) {
         let notifyWin = this._window.top;
         let chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
         let browser = chromeWin.BrowserApp.getBrowserForWindow(notifyWin);
         let tabID = chromeWin.BrowserApp.getTabForBrowser(browser).id;
+
+        let actionText = {
+            text: aUsername,
+            type: "EDIT",
+            bundle: { username: aUsername,
+                      password: aPassword }
+        };
 
         // The page we're going to hasn't loaded yet, so we want to persist
         // across the first location change.
@@ -163,12 +171,11 @@ LoginManagerPrompter.prototype = {
         // at the post-authentication page. I don't see a good way to
         // heuristically determine when to ignore such location changes, so
         // we'll try ignoring location changes based on a time interval.
-
         let options = {
             persistWhileVisible: true,
             timeout: Date.now() + 10000,
             title: aTitle,
-            actionText: aActionText
+            actionText: actionText
         }
 
         var nativeWindow = this._getNativeWindow();
@@ -193,13 +200,6 @@ LoginManagerPrompter.prototype = {
         let title = { text: displayHost, resource: aLogin.hostname };
 
         let username = aLogin.username ? this._sanitizeUsername(aLogin.username) : "";
-
-        let actionText = {
-            text: username,
-            type: "EDIT",
-            bundle: { username: username,
-                       password: aLogin.password }
-        };
 
         // The callbacks in |buttons| have a closure to access the variables
         // in scope here; set one to |this._pwmgr| so we can get back to pwmgr
@@ -230,7 +230,7 @@ LoginManagerPrompter.prototype = {
             }
         ];
 
-        this._showLoginNotification(title, notificationText, buttons, actionText);
+        this._showLoginNotification(title, notificationText, buttons, aLogin.username, aLogin.password);
     },
 
     /*
@@ -280,15 +280,17 @@ LoginManagerPrompter.prototype = {
             },
             {
                 label: this._getLocalizedString("updateButton"),
-                callback:  function() {
-                    self._updateLogin(aOldLogin, aNewPassword);
-                    promptHistogram.add(PROMPT_UPDATE);
+                callback:  function(checked, response) {
+                   let password = response ? response["password"] : aNewPassword;
+                   self._updateLogin(aOldLogin, password);
+
+                   promptHistogram.add(PROMPT_UPDATE);
                 },
                 positive: true
             }
         ];
 
-        this._showLoginNotification(title, notificationText, buttons);
+        this._showLoginNotification(title, notificationText, buttons, aOldLogin.username, aNewPassword);
     },
 
 

@@ -22,6 +22,8 @@
 <!ENTITY  locbar.bookmarks.accesskey    "k">
 <!ENTITY  locbar.openpage.label         "Open tabs">
 <!ENTITY  locbar.openpage.accesskey     "O">
+<!ENTITY  locbar.searches.label         "Related searches from the default search engine">
+<!ENTITY  locbar.searches.accesskey     "d">
 
 <!ENTITY  acceptCookies.label           "Accept cookies from sites">
 <!ENTITY  acceptCookies.accesskey       "A">

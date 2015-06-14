@@ -427,6 +427,10 @@
         <item name="android:textSize">16dp</item>
     </style>
 
+    <style name="TextAppearance.DoorHanger.Medium.Bold">
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
     <style name="TextAppearance.DoorHanger.Medium.Light">
         <item name="android:fontFamily">sans-serif-light</item>
     </style>

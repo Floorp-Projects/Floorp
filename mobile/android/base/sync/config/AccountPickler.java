@@ -102,8 +102,8 @@ public class AccountPickler {
       final SyncAccountParameters params, final boolean syncAutomatically) {
     final ExtendedJSONObject o = params.asJSON();
     o.put(Constants.JSON_KEY_SYNC_AUTOMATICALLY, Boolean.valueOf(syncAutomatically));
-    o.put(Constants.JSON_KEY_VERSION, new Long(VERSION));
-    o.put(Constants.JSON_KEY_TIMESTAMP, new Long(System.currentTimeMillis()));
+    o.put(Constants.JSON_KEY_VERSION, Long.valueOf(VERSION));
+    o.put(Constants.JSON_KEY_TIMESTAMP, Long.valueOf(System.currentTimeMillis()));
 
     PrintStream ps = null;
     try {
