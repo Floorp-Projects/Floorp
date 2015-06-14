@@ -277,15 +277,67 @@ let emulator = (function() {
   }
 
   /**
+   * @param aVoiceType
+   *        The voice type of a mobileConnection, which can be obtained from
+   *        |<mobileConnection>.voice.type|.
+   * @return A string with format of the emulator voice tech.
+   */
+  function voiceTypeToTech(aVoiceType) {
+    switch(aVoiceType) {
+        case "gsm":
+        case "gprs":
+        case "edge":
+          return "gsm";
+
+        case "umts":
+        case "hsdpa":
+        case "hsupa":
+        case "hspa":
+        case "hspa+":
+          return "wcdma";
+
+        case "is95a":
+        case "is95b":
+        case "1xrtt":
+          return "cdma";
+
+        case "evdo0":
+        case "evdoa":
+        case "evdob":
+          return "evdo";
+
+        case "ehrpd":
+        case "lte":
+          return "lte";
+
+        default:
+          return null;
+      }
+  }
+
+  /**
    * @return Promise
    */
   function changeModemTech(aTech, aPreferredMask) {
-    return Promise.resolve()
+    let mobileConn = navigator.mozMobileConnections[0];
+
+    function isTechMatched() {
+      return aTech === voiceTypeToTech(mobileConn.voice.type);
+    }
+
+    let promise1 = isTechMatched() ? Promise.resolve()
+                                   : waitForEvent(mobileConn,
+                                                  "voicechange",
+                                                  isTechMatched);
+
+    let promise2 = Promise.resolve()
       .then(() => emulator.runCmd("modem tech " + aTech + " " + aPreferredMask))
       .then(() => emulator.runCmd("modem tech"))
       .then(result => is(result[0],
                          aTech + " " + aPreferredMask,
                          "Check modem 'tech/preferred mask'"));
+
+    return Promise.all([promise1, promise2]);
   }
 
   /**
