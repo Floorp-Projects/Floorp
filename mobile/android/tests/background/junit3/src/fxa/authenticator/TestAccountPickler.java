@@ -18,6 +18,7 @@ import android.test.RenamingDelegatingContext;
 
 public class TestAccountPickler extends AndroidSyncTestCaseWithAccounts {
   private static final String TEST_TOKEN_SERVER_URI = "tokenServerURI";
+  private static final String TEST_PROFILE_SERVER_URI = "profileServerURI";
   private static final String TEST_AUTH_SERVER_URI = "serverURI";
   private static final String TEST_PROFILE = "profile";
   private final static String FILENAME_PREFIX = "TestAccountPickler-";
@@ -55,7 +56,7 @@ public class TestAccountPickler extends AndroidSyncTestCaseWithAccounts {
   public AndroidFxAccount addTestAccount() throws Exception {
     final State state = new Separated(TEST_USERNAME, "uid", false); // State choice is arbitrary.
     final AndroidFxAccount account = AndroidFxAccount.addAndroidAccount(context, TEST_USERNAME,
-        TEST_PROFILE, TEST_AUTH_SERVER_URI, TEST_TOKEN_SERVER_URI, state,
+        TEST_PROFILE, TEST_AUTH_SERVER_URI, TEST_TOKEN_SERVER_URI, TEST_PROFILE_SERVER_URI, state,
         AndroidSyncTestCaseWithAccounts.TEST_SYNC_AUTOMATICALLY_MAP_WITH_ALL_AUTHORITIES_DISABLED);
     assertNotNull(account);
     assertNotNull(account.getProfile());
@@ -81,6 +82,7 @@ public class TestAccountPickler extends AndroidSyncTestCaseWithAccounts {
     assertEquals(TEST_PROFILE, o.getString(AccountPickler.KEY_PROFILE));
     assertEquals(TEST_AUTH_SERVER_URI, o.getString(AccountPickler.KEY_IDP_SERVER_URI));
     assertEquals(TEST_TOKEN_SERVER_URI, o.getString(AccountPickler.KEY_TOKEN_SERVER_URI));
+    assertEquals(TEST_PROFILE_SERVER_URI, o.getString(AccountPickler.KEY_PROFILE_SERVER_URI));
 
     assertNotNull(o.getObject(AccountPickler.KEY_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP));
     assertNotNull(o.get(AccountPickler.KEY_BUNDLE));

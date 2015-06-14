@@ -27,18 +27,24 @@ import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.fxa.login.StateFactory;
+import org.mozilla.gecko.fxa.sync.FxAccountProfileService;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.Constants;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.ResultReceiver;
 import android.util.Log;
+import android.support.v4.content.LocalBroadcastManager;
 
 /**
  * A Firefox Account that stores its details and state as user data attached to
@@ -59,24 +65,33 @@ public class AndroidFxAccount {
   public static final String ACCOUNT_KEY_ACCOUNT_VERSION = "version";
   public static final String ACCOUNT_KEY_PROFILE = "profile";
   public static final String ACCOUNT_KEY_IDP_SERVER = "idpServerURI";
+  private static final String ACCOUNT_KEY_PROFILE_SERVER = "profileServerURI";
 
   public static final String ACCOUNT_KEY_TOKEN_SERVER = "tokenServerURI";       // Sync-specific.
   public static final String ACCOUNT_KEY_DESCRIPTOR = "descriptor";
+  public static final String ACCOUNT_KEY_PROFILE_AVATAR = "avatar";
 
   public static final int CURRENT_BUNDLE_VERSION = 2;
   public static final String BUNDLE_KEY_BUNDLE_VERSION = "version";
   public static final String BUNDLE_KEY_STATE_LABEL = "stateLabel";
   public static final String BUNDLE_KEY_STATE = "state";
 
+  // Account authentication token type for fetching account profile.
+  public static final String PROFILE_OAUTH_TOKEN_TYPE = "oauth::profile";
+
   // Services may request OAuth tokens from the Firefox Account dynamically.
   // Each such token is prefixed with "oauth::" and a service-dependent scope.
   // Such tokens should be destroyed when the account is removed from the device.
   // This list collects all the known "oauth::" token types in order to delete them when necessary.
   private static final List<String> KNOWN_OAUTH_TOKEN_TYPES;
+
   static {
     final List<String> list = new ArrayList<>();
     if (AppConstants.MOZ_ANDROID_READING_LIST_SERVICE) {
       list.add(ReadingListConstants.AUTH_TOKEN_TYPE);
+    }
+    if (AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
+      list.add(PROFILE_OAUTH_TOKEN_TYPE);
     }
     KNOWN_OAUTH_TOKEN_TYPES = Collections.unmodifiableList(list);
   }
@@ -90,6 +105,13 @@ public class AndroidFxAccount {
   }
 
   private static final String PREF_KEY_LAST_SYNCED_TIMESTAMP = "lastSyncedTimestamp";
+  public static final String PREF_KEY_LAST_PROFILE_FETCH_TIME = "lastProfilefetchTime";
+  public static final String PREF_KEY_NUMBER_OF_PROFILE_FETCH = "numProfileFetch";
+
+  // Max wait time between successful profile avatar network fetch.
+  public static final long PROFILE_FETCH_RETRY_BACKOFF_DELTA_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
+  // Max attempts allowed for retrying profile avatar network fetch.
+  public static final int MAX_PROFILE_FETCH_RETRIES = 5;
 
   protected final Context context;
   protected final AccountManager accountManager;
@@ -105,6 +127,7 @@ public class AndroidFxAccount {
    */
   protected static final ConcurrentHashMap<String, ExtendedJSONObject> perAccountBundleCache =
       new ConcurrentHashMap<>();
+  private ExtendedJSONObject profileJson;
 
   public static void invalidateCaches() {
     perAccountBundleCache.clear();
@@ -285,6 +308,10 @@ public class AndroidFxAccount {
     return accountManager.getUserData(account, ACCOUNT_KEY_TOKEN_SERVER);
   }
 
+  public String getProfileServerURI() {
+    return accountManager.getUserData(account, ACCOUNT_KEY_PROFILE_SERVER);
+  }
+
   public String getOAuthServerURI() {
     // Allow testing against stage.
     if (FxAccountConstants.STAGE_AUTH_SERVER_ENDPOINT.equals(getAccountServerURI())) {
@@ -370,10 +397,11 @@ public class AndroidFxAccount {
       String profile,
       String idpServerURI,
       String tokenServerURI,
+      String profileServerURI,
       State state,
       final Map<String, Boolean> authoritiesToSyncAutomaticallyMap)
           throws UnsupportedEncodingException, GeneralSecurityException, URISyntaxException {
-    return addAndroidAccount(context, email, profile, idpServerURI, tokenServerURI, state,
+    return addAndroidAccount(context, email, profile, idpServerURI, tokenServerURI, profileServerURI, state,
         authoritiesToSyncAutomaticallyMap,
         CURRENT_ACCOUNT_VERSION, false, null);
   }
@@ -384,6 +412,7 @@ public class AndroidFxAccount {
       String profile,
       String idpServerURI,
       String tokenServerURI,
+      String profileServerURI,
       State state,
       final Map<String, Boolean> authoritiesToSyncAutomaticallyMap,
       final int accountVersion,
@@ -402,6 +431,9 @@ public class AndroidFxAccount {
     if (tokenServerURI == null) {
       throw new IllegalArgumentException("tokenServerURI must not be null");
     }
+    if (profileServerURI == null) {
+      throw new IllegalArgumentException("profileServerURI must not be null");
+    }
     if (state == null) {
       throw new IllegalArgumentException("state must not be null");
     }
@@ -418,6 +450,7 @@ public class AndroidFxAccount {
     userdata.putString(ACCOUNT_KEY_ACCOUNT_VERSION, "" + CURRENT_ACCOUNT_VERSION);
     userdata.putString(ACCOUNT_KEY_IDP_SERVER, idpServerURI);
     userdata.putString(ACCOUNT_KEY_TOKEN_SERVER, tokenServerURI);
+    userdata.putString(ACCOUNT_KEY_PROFILE_SERVER, profileServerURI);
     userdata.putString(ACCOUNT_KEY_PROFILE, profile);
 
     if (bundle == null) {
@@ -634,6 +667,41 @@ public class AndroidFxAccount {
     return intent;
   }
 
+  private void setLastProfileFetchTimestampAndAttempts(long now, int attempts) {
+    try {
+      getSyncPrefs().edit().putLong(PREF_KEY_LAST_PROFILE_FETCH_TIME, now).commit();
+      getSyncPrefs().edit().putInt(PREF_KEY_NUMBER_OF_PROFILE_FETCH, attempts);
+    } catch (Exception e) {
+      Logger.warn(LOG_TAG, "Got exception setting last profile fetch time & attempts; ignoring.", e);
+    }
+  }
+
+  private long getLastProfileFetchTimestamp() {
+    final long neverFetched = -1L;
+    try {
+      return getSyncPrefs().getLong(PREF_KEY_LAST_PROFILE_FETCH_TIME, neverFetched);
+    } catch (Exception e) {
+      Logger.warn(LOG_TAG, "Got exception getting last profile fetch time; ignoring.", e);
+      return neverFetched;
+    }
+  }
+
+  private int getNumberOfProfileFetch() {
+    final int neverFetched = 0;
+    try {
+      return getSyncPrefs().getInt(PREF_KEY_NUMBER_OF_PROFILE_FETCH, neverFetched);
+    } catch (Exception e) {
+      Logger.warn(LOG_TAG, "Got exception getting number of profile fetch; ignoring.", e);
+      return neverFetched;
+    }
+  }
+
+  private boolean canScheduleProfileFetch() {
+    final int attempts = getNumberOfProfileFetch();
+    final long delta = System.currentTimeMillis() - getLastProfileFetchTimestamp();
+    return delta > PROFILE_FETCH_RETRY_BACKOFF_DELTA_IN_MILLISECONDS || attempts < MAX_PROFILE_FETCH_RETRIES;
+  }
+
   public void setLastSyncedTimestamp(long now) {
     try {
       getSyncPrefs().edit().putLong(PREF_KEY_LAST_SYNCED_TIMESTAMP, now).commit();
@@ -656,17 +724,19 @@ public class AndroidFxAccount {
   public void unsafeTransitionToDefaultEndpoints() {
     unsafeTransitionToStageEndpoints(
         FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT,
-        FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT);
+        FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT,
+        FxAccountConstants.DEFAULT_PROFILE_SERVER_ENDPOINT);
     }
 
   // Debug only!  This is dangerous!
   public void unsafeTransitionToStageEndpoints() {
     unsafeTransitionToStageEndpoints(
         FxAccountConstants.STAGE_AUTH_SERVER_ENDPOINT,
-        FxAccountConstants.STAGE_TOKEN_SERVER_ENDPOINT);
+        FxAccountConstants.STAGE_TOKEN_SERVER_ENDPOINT,
+        FxAccountConstants.STAGE_PROFILE_SERVER_ENDPOINT);
   }
 
-  protected void unsafeTransitionToStageEndpoints(String authServerEndpoint, String tokenServerEndpoint) {
+  protected void unsafeTransitionToStageEndpoints(String authServerEndpoint, String tokenServerEndpoint, String profileServerEndpoint) {
     try {
       getReadingListPrefs().edit().clear().commit();
     } catch (UnsupportedEncodingException | GeneralSecurityException e) {
@@ -681,7 +751,126 @@ public class AndroidFxAccount {
     setState(state.makeSeparatedState());
     accountManager.setUserData(account, ACCOUNT_KEY_IDP_SERVER, authServerEndpoint);
     accountManager.setUserData(account, ACCOUNT_KEY_TOKEN_SERVER, tokenServerEndpoint);
+    accountManager.setUserData(account, ACCOUNT_KEY_PROFILE_SERVER, profileServerEndpoint);
     ContentResolver.setIsSyncable(account, BrowserContract.READING_LIST_AUTHORITY, 1);
+  }
+
+  // Helper function to create intent for profile avatar updated event.
+  private Intent getProfileAvatarUpdatedIntent() {
+    final Intent profileCachedIntent = new Intent();
+    profileCachedIntent.setAction(FxAccountConstants.ACCOUNT_PROFILE_AVATAR_UPDATED_ACTION);
+    return profileCachedIntent;
+  }
+
+  /**
+   * Returns the cached profile JSON object if available or null.
+   *
+   * @return profile JSON Object.
+   */
+  public ExtendedJSONObject getCachedProfileJSON() {
+    if (profileJson == null) {
+      // Try to retrieve and parse the json string from account manager.
+      final String profileJsonString = accountManager.getUserData(account, ACCOUNT_KEY_PROFILE_AVATAR);
+      if (profileJsonString != null) {
+        Logger.info(LOG_TAG, "Cached Profile information retrieved from AccountManager.");
+        try {
+          profileJson = ExtendedJSONObject.parseJSONObject(profileJsonString);
+        } catch (Exception e) {
+          Logger.error(LOG_TAG, "Failed to parse profile json; ignoring.", e);
+        }
+      }
+    }
+    return profileJson;
+  }
+
+  /**
+   * Fetches the profile json from the server and updates the local cache.
+   *
+   * <p>
+   * On successful fetch and cache, LocalBroadcastManager is used to notify the receivers asynchronously.
+   * </p>
+   *
+   * @param isForceFetch boolean to isForceFetch fetch from the server.
+   */
+  public void maybeUpdateProfileJSON(final boolean isForceFetch) {
+    final ExtendedJSONObject profileJson = getCachedProfileJSON();
+    final Intent profileAvatarUpdatedIntent = getProfileAvatarUpdatedIntent();
+
+    if (!isForceFetch && profileJson != null && !profileJson.keySet().isEmpty()) {
+      // Second line of defense, cache may have been updated in between.
+      Logger.info(LOG_TAG, "Profile already cached.");
+      LocalBroadcastManager.getInstance(context).sendBroadcast(profileAvatarUpdatedIntent);
+      return;
+    }
+
+    if (!isForceFetch && !canScheduleProfileFetch()) {
+      // Rate limiting repeated attempts to fetch the profile information.
+      Logger.info(LOG_TAG, "Too many attempts to fetch the profile information.");
+      return;
+    }
+
+    ThreadUtils.postToBackgroundThread(new Runnable() {
+      @Override
+      public void run() {
+        // Fetch profile information from server.
+        String authToken;
+        try {
+          authToken = accountManager.blockingGetAuthToken(account, AndroidFxAccount.PROFILE_OAUTH_TOKEN_TYPE, true);
+          if (authToken == null) {
+            throw new RuntimeException("Couldn't get oauth token!  Aborting profile fetch.");
+          }
+        } catch (Exception e) {
+          Logger.error(LOG_TAG, "Error fetching profile information; ignoring.", e);
+          return;
+        }
+
+        Logger.info(LOG_TAG, "Intent service launched to fetch profile.");
+        final Intent intent = new Intent(context, FxAccountProfileService.class);
+        intent.putExtra(FxAccountProfileService.KEY_AUTH_TOKEN, authToken);
+        intent.putExtra(FxAccountProfileService.KEY_PROFILE_SERVER_URI, getProfileServerURI());
+        intent.putExtra(FxAccountProfileService.KEY_RESULT_RECEIVER, new ProfileResultReceiver(profileAvatarUpdatedIntent));
+        context.startService(intent);
+
+        // Update the profile fetch time and attempts, resetting the attempts if last fetch was over a day old.
+        final int attempts = getNumberOfProfileFetch();
+        final long now = System.currentTimeMillis();
+        final long delta = now - getLastProfileFetchTimestamp();
+        setLastProfileFetchTimestampAndAttempts(now, delta < PROFILE_FETCH_RETRY_BACKOFF_DELTA_IN_MILLISECONDS ? attempts + 1 : 1);
+      }
+    });
+  }
+
+  private class ProfileResultReceiver extends ResultReceiver {
+    private final Intent profileAvatarUpdatedIntent;
+
+    public ProfileResultReceiver(Intent broadcastIntent) {
+      super(new Handler());
+      this.profileAvatarUpdatedIntent = broadcastIntent;
+    }
+
+    @Override
+    protected void onReceiveResult(int resultCode, Bundle bundle) {
+      super.onReceiveResult(resultCode, bundle);
+      switch (resultCode) {
+        case Activity.RESULT_OK:
+          try {
+            final String resultData = bundle.getString(FxAccountProfileService.KEY_RESULT_STRING);
+            profileJson = ExtendedJSONObject.parseJSONObject(resultData);
+            accountManager.setUserData(account, ACCOUNT_KEY_PROFILE_AVATAR, resultData);
+            Logger.pii(LOG_TAG, "Profile fetch successful." + resultData);
+            LocalBroadcastManager.getInstance(context).sendBroadcast(profileAvatarUpdatedIntent);
+          } catch (Exception e) {
+            Logger.error(LOG_TAG, "Failed to parse profile json; ignoring.", e);
+          }
+          break;
+        case Activity.RESULT_CANCELED:
+          Logger.warn(LOG_TAG, "Failed to fetch profile; ignoring.");
+          break;
+        default:
+          Logger.warn(LOG_TAG, "Invalid Result code received; ignoring.");
+          break;
+      }
+    }
   }
 
   /**
