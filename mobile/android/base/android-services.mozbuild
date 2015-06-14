@@ -889,6 +889,7 @@ sync_java_files = [
     'fxa/receivers/FxAccountUpgradeReceiver.java',
     'fxa/sync/FxAccountGlobalSession.java',
     'fxa/sync/FxAccountNotificationManager.java',
+    'fxa/sync/FxAccountProfileService.java',
     'fxa/sync/FxAccountSchedulePolicy.java',
     'fxa/sync/FxAccountSyncAdapter.java',
     'fxa/sync/FxAccountSyncDelegate.java',
