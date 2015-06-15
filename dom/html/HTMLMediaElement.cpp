@@ -1167,8 +1167,12 @@ nsresult HTMLMediaElement::LoadResource()
     return NS_ERROR_FAILURE;
   }
 
+  MOZ_ASSERT(IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video));
+  nsContentPolicyType contentPolicyType = IsHTMLElement(nsGkAtoms::audio) ?
+    nsIContentPolicy::TYPE_INTERNAL_AUDIO : nsIContentPolicy::TYPE_INTERNAL_VIDEO;
+
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_MEDIA,
+  nsresult rv = NS_CheckContentLoadPolicy(contentPolicyType,
                                           mLoadingSrc,
                                           NodePrincipal(),
                                           static_cast<Element*>(this),
@@ -1246,7 +1250,7 @@ nsresult HTMLMediaElement::LoadResource()
                      mLoadingSrc,
                      static_cast<Element*>(this),
                      securityFlags,
-                     nsIContentPolicy::TYPE_MEDIA,
+                     contentPolicyType,
                      loadGroup,
                      nullptr,   // aCallbacks
                      nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
