@@ -24,8 +24,7 @@ self.addEventListener("fetch", function(event) {
       event.respondWith(fetch("realaudio.ogg"));
     }
   } else if (event.request.url.indexOf("video.ogg") >= 0) {
-    // FIXME: Bug 1147668: This should be "video".
-    if (event.request.context == "audio") {
+    if (event.request.context == "video") {
       event.respondWith(fetch("realaudio.ogg"));
     }
   } else if (event.request.url.indexOf("beacon.sjs") >= 0) {

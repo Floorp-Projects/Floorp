@@ -209,7 +209,7 @@ HTMLTrackElement::LoadResource()
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_MEDIA,
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_TRACK,
                                  uri,
                                  NodePrincipal(),
                                  static_cast<Element*>(this),
@@ -236,7 +236,7 @@ HTMLTrackElement::LoadResource()
                      uri,
                      static_cast<Element*>(this),
                      nsILoadInfo::SEC_NORMAL,
-                     nsIContentPolicy::TYPE_MEDIA,
+                     nsIContentPolicy::TYPE_INTERNAL_TRACK,
                      loadGroup);
 
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
