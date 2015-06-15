@@ -77,6 +77,7 @@ function run_test() {
   // setup and start ocsp responder
   Services.prefs.setCharPref("network.dns.localDomains",
                              'www.example.com, crl.example.com');
+  Services.prefs.setIntPref("security.OCSP.enabled", 1);
 
   add_test(function () {
     clearOCSPCache();
