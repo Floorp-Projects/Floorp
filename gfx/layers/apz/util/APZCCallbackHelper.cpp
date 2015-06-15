@@ -185,7 +185,7 @@ APZCCallbackHelper::UpdateRootFrame(FrameMetrics& aMetrics)
   }
 
   nsCOMPtr<nsIPresShell> shell = GetPresShell(content);
-  if (!shell) {
+  if (!shell || aMetrics.GetPresShellId() != shell->GetPresShellId()) {
     return;
   }
 
