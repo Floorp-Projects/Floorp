@@ -208,6 +208,13 @@ this.TelemetrySend = {
   setServer: function(server) {
     return TelemetrySendImpl.setServer(server);
   },
+
+  /**
+   * Only used in tests to wait on outgoing pending pings.
+   */
+  testWaitOnOutgoingPings: function() {
+    return TelemetrySendImpl.promisePendingPingActivity();
+  },
 };
 
 let TelemetrySendImpl = {
@@ -217,8 +224,8 @@ let TelemetrySendImpl = {
   _pingSendTimer: null,
   // This tracks all pending ping requests to the server.
   _pendingPingRequests: new Map(),
-  // This is a private barrier blocked by pending async ping activity (sending & saving).
-  _connectionsBarrier: new AsyncShutdown.Barrier("TelemetrySend: Waiting for pending ping activity"),
+  // This tracks all the pending async ping activity.
+  _pendingPingActivity: new Set(),
   // This is true when running in the test infrastructure.
   _testMode: false,
 
@@ -350,7 +357,7 @@ let TelemetrySendImpl = {
     // Cancel any outgoing requests.
     yield this._cancelOutgoingRequests();
     // ... and wait for any outstanding async ping activity.
-    yield this._connectionsBarrier.wait();
+    yield this.promisePendingPingActivity();
   }),
 
   reset: function() {
@@ -702,6 +709,20 @@ let TelemetrySendImpl = {
    * This is needed to block shutdown on any outstanding ping activity.
    */
   _trackPendingPingTask: function (promise) {
-    this._connectionsBarrier.client.addBlocker("Waiting for ping task", promise);
+    let clear = () => this._pendingPingActivity.delete(promise);
+    promise.then(clear, clear);
+    this._pendingPingActivity.add(promise);
+  },
+
+  /**
+   * Return a promise that allows to wait on pending pings.
+   * @return {Object<Promise>} A promise resolved when all the pending pings promises
+   *         are resolved.
+   */
+  promisePendingPingActivity: function () {
+    this._log.trace("promisePendingPingActivity - Waiting for ping task");
+    return Promise.all([for (p of this._pendingPingActivity) p.catch(ex => {
+      this._log.error("promisePendingPingActivity - ping activity had an error", ex);
+    })]);
   },
 };
