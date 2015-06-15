@@ -1,0 +1,8 @@
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>addon</ShortName>
+<Description>addon</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Url type="text/html" method="GET" template="http://searchtest.local">
+  <Param name="search" value="{searchTerms}"/>
+</Url>
+</SearchPlugin>

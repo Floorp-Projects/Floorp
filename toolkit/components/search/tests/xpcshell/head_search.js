@@ -97,6 +97,90 @@ function configureToLoadJarEngines(loadFromJars = true)
 }
 
 /**
+ * Fake the installation of an add-on in the profile, by creating the
+ * directory and registering it with the directory service.
+ */
+function installAddonEngine(name = "engine-addon")
+{
+  const XRE_EXTENSIONS_DIR_LIST = "XREExtDL";
+  const gProfD = do_get_profile().QueryInterface(Ci.nsILocalFile);
+
+  let dir = gProfD.clone();
+  dir.append("extensions");
+  if (!dir.exists())
+    dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+
+  dir.append("search-engine@tests.mozilla.org");
+  dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+
+  do_get_file("data/install.rdf").copyTo(dir, "install.rdf");
+  let addonDir = dir.clone();
+  dir.append("searchplugins");
+  dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  do_get_file("data/" + name + ".xml").copyTo(dir, "bug645970.xml");
+
+  Services.dirsvc.registerProvider({
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider,
+                                           Ci.nsIDirectoryServiceProvider2]),
+
+    getFile: function (prop, persistant) {
+      throw Cr.NS_ERROR_FAILURE;
+    },
+
+    getFiles: function (prop) {
+      let result = [];
+
+      switch (prop) {
+      case XRE_EXTENSIONS_DIR_LIST:
+        result.push(addonDir);
+        break;
+      default:
+        throw Cr.NS_ERROR_FAILURE;
+      }
+
+      return {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
+        hasMoreElements: () => result.length > 0,
+        getNext: () => result.shift()
+      };
+    }
+  });
+}
+
+/**
+ * Copy the engine-distribution.xml engine to a fake distribution
+ * created in the profile, and registered with the directory service.
+ */
+function installDistributionEngine()
+{
+  const XRE_APP_DISTRIBUTION_DIR = "XREAppDist";
+
+  const gProfD = do_get_profile().QueryInterface(Ci.nsILocalFile);
+
+  let dir = gProfD.clone();
+  dir.append("distribution");
+  dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  let distDir = dir.clone();
+
+  dir.append("searchplugins");
+  dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+
+  dir.append("common");
+  dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+
+  do_get_file("data/engine-override.xml").copyTo(dir, "bug645970.xml");
+
+  Services.dirsvc.registerProvider({
+    getFile: function(aProp, aPersistent) {
+      aPersistent.value = true;
+      if (aProp == XRE_APP_DISTRIBUTION_DIR)
+        return distDir.clone();
+      return null;
+    }
+  });
+}
+
+/**
  * Clean the profile of any metadata files left from a previous run.
  */
 function removeMetadata()
