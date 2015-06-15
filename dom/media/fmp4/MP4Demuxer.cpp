@@ -20,7 +20,7 @@ namespace mozilla {
 MP4Demuxer::MP4Demuxer(MediaResource* aResource)
   : mResource(aResource)
   , mStream(new mp4_demuxer::ResourceStream(aResource))
-  , mInitData(new MediaLargeByteBuffer)
+  , mInitData(new MediaByteBuffer)
 {
 }
 

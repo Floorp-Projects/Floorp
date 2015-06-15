@@ -10,7 +10,7 @@
 #include "MediaResource.h"
 
 namespace mozilla {
-class MediaLargeByteBuffer;
+class MediaByteBuffer;
 }
 
 namespace mp4_demuxer {
@@ -22,7 +22,7 @@ public:
    * Therefore BufferStream shouldn't get used after aData is destroyed.
    */
   BufferStream();
-  explicit BufferStream(mozilla::MediaLargeByteBuffer* aBuffer);
+  explicit BufferStream(mozilla::MediaByteBuffer* aBuffer);
 
   virtual bool ReadAt(int64_t aOffset, void* aData, size_t aLength,
                       size_t* aBytesRead) override;
@@ -39,7 +39,7 @@ public:
 private:
   ~BufferStream();
   int64_t mStartOffset;
-  nsRefPtr<mozilla::MediaLargeByteBuffer> mData;
+  nsRefPtr<mozilla::MediaByteBuffer> mData;
 };
 }
 

@@ -33,7 +33,7 @@ public:
   // Add data to the end of the input buffer.
   // Returns false if the append failed.
   virtual bool
-  AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset) = 0;
+  AppendData(MediaByteBuffer* aData, TimeUnit aTimestampOffset) = 0;
 
   // Run MSE Buffer Append Algorithm
   // 3.5.5 Buffer Append Algorithm.
