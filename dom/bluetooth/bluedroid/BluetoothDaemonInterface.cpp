@@ -1404,7 +1404,7 @@ const int BluetoothDaemonCoreModule::MAX_NUM_CLIENTS = 1;
 // |UnregisterModule| works like |RegisterModule|, but for cleanups.
 //
 // |BluetoothDaemonProtocol| also handles PDU receiving. It implements
-// the method |Handle| from |BluetoothDaemonPDUConsumer|. The socket
+// the method |Handle| from |DaemonSocketIOConsumer|. The socket
 // connections of type |BluetoothDaemonConnection| invoke this method
 // to forward received PDUs for processing by higher layers. The
 // implementation of |Handle| checks the service id of the PDU and
@@ -1427,7 +1427,7 @@ const int BluetoothDaemonCoreModule::MAX_NUM_CLIENTS = 1;
 // PDUs into a module.
 //
 class BluetoothDaemonProtocol final
-  : public BluetoothDaemonPDUConsumer
+  : public DaemonSocketIOConsumer
   , public BluetoothDaemonSetupModule
   , public BluetoothDaemonCoreModule
   , public BluetoothDaemonSocketModule
