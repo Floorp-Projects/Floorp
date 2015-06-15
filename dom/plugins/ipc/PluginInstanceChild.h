@@ -65,7 +65,8 @@ class PluginInstanceChild : public PPluginInstanceChild
 #endif
 
 protected:
-    virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window) override;
+    bool AnswerNPP_SetWindow(const NPRemoteWindow& window,
+                             NPRemoteWindow* aChildWindowToBeAdopted) override;
 
     virtual bool
     AnswerNPP_GetValue_NPPVpluginWantsAllNetworkStreams(bool* wantsAllStreams, NPError* rv) override;
@@ -278,7 +279,6 @@ private:
     static bool RegisterWindowClass();
     bool CreatePluginWindow();
     void DestroyPluginWindow();
-    void ReparentPluginWindow(HWND hWndParent);
     void SizePluginWindow(int width, int height);
     int16_t WinlessHandleEvent(NPEvent& event);
     void CreateWinlessPopupSurrogate();
