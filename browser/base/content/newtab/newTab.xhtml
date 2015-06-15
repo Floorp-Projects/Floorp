@@ -4,21 +4,27 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/contentSearchUI.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/newtab/newTab.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/newtab/newTab.css" type="text/css"?>
-
-<!DOCTYPE window [
+<!DOCTYPE html [
   <!ENTITY % newTabDTD SYSTEM "chrome://browser/locale/newTab.dtd">
   %newTabDTD;
   <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
   %browserDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
 ]>
 
-<xul:window id="newtab-window" xmlns="http://www.w3.org/1999/xhtml"
-            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            title="&newtab.pageTitle;">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>&newtab.pageTitle;</title>
+
+  <link rel="stylesheet" type="text/css" media="all" href="chrome://global/skin/" />
+  <link rel="stylesheet" type="text/css" media="all" href="chrome://browser/content/contentSearchUI.css" />
+  <link rel="stylesheet" type="text/css" media="all" href="chrome://browser/content/newtab/newTab.css" />
+  <link rel="stylesheet" type="text/css" media="all" href="chrome://browser/skin/newtab/newTab.css" />
+</head>
+
+<body dir="&locale.dir;">
+  <div id="newtab-customize-overlay"></div>
 
   <div class="newtab-customize-panel-container">
     <div id="newtab-customize-panel" orient="vertical">
@@ -47,8 +53,6 @@
     </div>
   </div>
 
-  <div id="newtab-customize-overlay"></div>
-
   <div id="newtab-intro-mask">
     <div id="newtab-intro-modal">
       <div id="newtab-intro-header"/>
@@ -70,27 +74,18 @@
     </div>
   </div>
 
-  <div id="newtab-scrollbox">
-
     <div id="newtab-vertical-margin">
-
       <div id="newtab-margin-top"/>
-
-      <div id="newtab-margin-undo-container">
-        <div id="newtab-undo-container" undo-disabled="true">
-          <xul:label id="newtab-undo-label"
-                     value="&newtab.undo.removedLabel;" />
-          <xul:button id="newtab-undo-button" tabindex="-1"
-                      label="&newtab.undo.undoButton;"
-                      class="newtab-undo-button" />
-          <xul:button id="newtab-undo-restore-button" tabindex="-1"
-                      label="&newtab.undo.restoreButton;"
-                      class="newtab-undo-button" />
-          <xul:toolbarbutton id="newtab-undo-close-button" tabindex="-1"
-                             class="close-icon tabbable"
-                             tooltiptext="&newtab.undo.closeTooltip;" />
+        <div id="newtab-margin-undo-container">
+          <div id="newtab-undo-container" undo-disabled="true">
+            <label id="newtab-undo-label">&newtab.undo.removedLabel;</label>
+            <button id="newtab-undo-button" tabindex="-1"
+                    class="newtab-undo-button">&newtab.undo.undoButton;</button>
+            <button id="newtab-undo-restore-button" tabindex="-1"
+                    class="newtab-undo-button">&newtab.undo.restoreButton;</button>
+            <button id="newtab-undo-close-button" tabindex="-1" title="&newtab.undo.closeTooltip;"/>
+          </div>
         </div>
-      </div>
 
       <div id="newtab-search-container">
         <div id="newtab-search-form">
@@ -112,13 +107,9 @@
       </div>
 
       <div id="newtab-margin-bottom"/>
-
-    </div>
-    <input id="newtab-customize-button" type="button" title="&newtab.customize.title;"/>
   </div>
-
-  <xul:script type="text/javascript;version=1.8"
-              src="chrome://browser/content/contentSearchUI.js"/>
-  <xul:script type="text/javascript;version=1.8"
-              src="chrome://browser/content/newtab/newTab.js"/>
-</xul:window>
+      <input id="newtab-customize-button" type="button" dir="&locale.dir;" title="&newtab.customize.title;"/>
+</body>
+<script type="text/javascript;version=1.8" src="chrome://browser/content/contentSearchUI.js"/>
+<script type="text/javascript;version=1.8" src="chrome://browser/content/newtab/newTab.js"/>
+</html>
