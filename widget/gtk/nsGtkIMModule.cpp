@@ -547,6 +547,14 @@ nsGtkIMModule::OnUpdateComposition()
         return;
     }
 
+    if (!IsComposing()) {
+        // Composition has been committed.  So we need update selection for
+        // caret
+        mSelection.Clear();
+        EnsureToCacheSelection();
+        mLayoutChanged = false;
+    }
+
     // If we've already set candidate window position, we don't need to update
     // the position with update composition notification.
     if (!mLayoutChanged) {
@@ -774,6 +782,12 @@ nsGtkIMModule::OnSelectionChange(nsWindow* aCaller,
              "mLastFocusedWindow=%p",
              mLastFocusedWindow));
         return;
+    }
+
+    if (!IsComposing()) {
+        // Now we have no composition (mostly situation on calling this method)
+        // If we have it, it will set by NOTIFY_IME_OF_COMPOSITION_UPDATE.
+        SetCursorPosition(GetActiveContext());
     }
 
     // The focused editor might have placeholder text with normal text node.
@@ -1417,15 +1431,21 @@ nsGtkIMModule::SetCursorPosition(GtkIMContext* aContext)
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
         ("GtkIMModule(%p): SetCursorPosition, aContext=%p, "
          "mCompositionTargetRange={ mOffset=%u, mLength=%u }"
-         "mSelection.mWritingMode=%s",
+         "mSelection={ mOffset=%u, mLength=%u, mWritingMode=%s }",
          this, aContext, mCompositionTargetRange.mOffset,
          mCompositionTargetRange.mLength,
+         mSelection.mOffset, mSelection.mLength,
          GetWritingModeName(mSelection.mWritingMode).get()));
 
+    bool useCaret = false;
     if (!mCompositionTargetRange.IsValid()) {
-        MOZ_LOG(gGtkIMLog, LogLevel::Info,
-            ("    FAILED, mCompositionTargetRange is invalid"));
-        return;
+        if (!mSelection.IsValid()) {
+            MOZ_LOG(gGtkIMLog, LogLevel::Info,
+                ("    FAILED, mCompositionTargetRange and mSelection are "
+                 "invalid"));
+            return;
+        }
+        useCaret = true;
     }
 
     if (!mLastFocusedWindow) {
@@ -1440,23 +1460,31 @@ nsGtkIMModule::SetCursorPosition(GtkIMContext* aContext)
         return;
     }
 
-    WidgetQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT,
+    WidgetQueryContentEvent charRect(true,
+                                     useCaret ? NS_QUERY_CARET_RECT :
+                                                NS_QUERY_TEXT_RECT,
                                      mLastFocusedWindow);
-    if (mSelection.mWritingMode.IsVertical()) {
-        // For preventing the candidate window to overlap the target clause,
-        // we should set fake (typically, very tall) caret rect.
-        uint32_t length = mCompositionTargetRange.mLength ?
-            mCompositionTargetRange.mLength : 1;
-        charRect.InitForQueryTextRect(mCompositionTargetRange.mOffset, length);
+    if (useCaret) {
+        charRect.InitForQueryCaretRect(mSelection.mOffset);
     } else {
-        charRect.InitForQueryTextRect(mCompositionTargetRange.mOffset, 1);
+        if (mSelection.mWritingMode.IsVertical()) {
+            // For preventing the candidate window to overlap the target
+            // clause, we should set fake (typically, very tall) caret rect.
+            uint32_t length = mCompositionTargetRange.mLength ?
+                mCompositionTargetRange.mLength : 1;
+            charRect.InitForQueryTextRect(mCompositionTargetRange.mOffset,
+                                          length);
+        } else {
+            charRect.InitForQueryTextRect(mCompositionTargetRange.mOffset, 1);
+        }
     }
     InitEvent(charRect);
     nsEventStatus status;
     mLastFocusedWindow->DispatchEvent(&charRect, status);
     if (!charRect.mSucceeded) {
         MOZ_LOG(gGtkIMLog, LogLevel::Info,
-            ("    FAILED, NS_QUERY_TEXT_RECT was failed"));
+            ("    FAILED, %s was failed",
+             useCaret ? "NS_QUERY_CARET_RECT" : "NS_QUERY_TEXT_RECT"));
         return;
     }
 
