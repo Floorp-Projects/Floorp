@@ -435,8 +435,6 @@ let {
   } else { // Worker thread
     let requestors = [];
 
-    let scope = this;
-
     let xpcInspector = {
       get lastNestRequestor() {
         return requestors.length === 0 ? null : requestors[0];
@@ -444,13 +442,13 @@ let {
 
       enterNestedEventLoop: function (requestor) {
         requestors.push(requestor);
-        scope.enterEventLoop();
+        this.enterEventLoop();
         return requestors.length;
       },
 
       exitNestedEventLoop: function () {
         requestors.pop();
-        scope.leaveEventLoop();
+        this.leaveEventLoop();
         return requestors.length;
       }
     };

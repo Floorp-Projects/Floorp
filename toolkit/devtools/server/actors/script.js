@@ -15,7 +15,6 @@ const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { dbg_assert, dumpn, update, fetch } = DevToolsUtils;
 const { dirname, joinURI } = require("devtools/toolkit/path");
 const promise = require("promise");
-const PromiseDebugging = require("PromiseDebugging");
 const xpcInspector = require("xpcInspector");
 const ScriptStore = require("./utils/ScriptStore");
 const {DevToolsWorker} = require("devtools/toolkit/shared/worker.js");
@@ -1495,7 +1494,7 @@ ThreadActor.prototype = {
     // Clear DOM event breakpoints.
     // XPCShell tests don't use actual DOM windows for globals and cause
     // removeListenerForAllEvents to throw.
-    if (!isWorker && this.global && !this.global.toString().includes("Sandbox")) {
+    if (this.global && !this.global.toString().includes("Sandbox")) {
       let els = Cc["@mozilla.org/eventlistenerservice;1"]
                 .getService(Ci.nsIEventListenerService);
       els.removeListenerForAllEvents(this.global, this._allEventsListener, true);
@@ -1934,7 +1933,7 @@ ThreadActor.prototype = {
     }
 
     if (promises.length > 0) {
-      this.synchronize(promise.all(promises));
+      this.synchronize(Promise.all(promises));
     }
 
     return true;
@@ -2871,10 +2870,10 @@ SourceActor.prototype = {
         actor,
         GeneratedLocation.fromOriginalLocation(originalLocation)
       )) {
-        return promise.resolve(null);
+        return Promise.resolve(null);
       }
 
-      return promise.resolve(originalLocation);
+      return Promise.resolve(originalLocation);
     } else {
       return this.sources.getAllGeneratedLocations(originalLocation)
                          .then((generatedLocations) => {
