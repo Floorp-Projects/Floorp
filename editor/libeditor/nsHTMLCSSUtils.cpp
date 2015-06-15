@@ -613,12 +613,19 @@ nsHTMLCSSUtils::GetDefaultLengthUnit(nsAString & aLengthUnit)
   }
 }
 
-// Unfortunately, CSSStyleDeclaration::GetPropertyCSSValue is not yet implemented...
-// We need then a way to determine the number part and the unit from aString, aString
-// being the result of a GetPropertyValue query...
+// Unfortunately, CSSStyleDeclaration::GetPropertyCSSValue is not yet
+// implemented... We need then a way to determine the number part and the unit
+// from aString, aString being the result of a GetPropertyValue query...
 void
-nsHTMLCSSUtils::ParseLength(const nsAString & aString, float * aValue, nsIAtom ** aUnit)
+nsHTMLCSSUtils::ParseLength(const nsAString& aString, float* aValue,
+                            nsIAtom** aUnit)
 {
+  if (aString.IsEmpty()) {
+    *aValue = 0;
+    *aUnit = NS_NewAtom(aString).take();
+    return;
+  }
+
   nsAString::const_iterator iter;
   aString.BeginReading(iter);
 

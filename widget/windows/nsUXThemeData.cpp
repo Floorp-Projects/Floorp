@@ -30,7 +30,8 @@ nsUXThemeData::sFlatMenus = false;
 
 bool nsUXThemeData::sTitlebarInfoPopulatedAero = false;
 bool nsUXThemeData::sTitlebarInfoPopulatedThemed = false;
-SIZE nsUXThemeData::sCommandButtons[4];
+const int NUM_COMMAND_BUTTONS = 4;
+SIZE nsUXThemeData::sCommandButtons[NUM_COMMAND_BUTTONS];
 
 void
 nsUXThemeData::Teardown() {
@@ -220,6 +221,15 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
   // close
   sCommandButtons[2].cx = info.rgrect[5].right - info.rgrect[5].left;
   sCommandButtons[2].cy = info.rgrect[5].bottom - info.rgrect[5].top;
+
+#ifdef DEBUG
+  // Verify that all values for the command buttons are positive values
+  // otherwise we have cached bad values for the caption buttons
+  for (int i = 0; i < NUM_COMMAND_BUTTONS; i++) {
+    MOZ_ASSERT(sCommandButtons[i].cx > 0);
+    MOZ_ASSERT(sCommandButtons[i].cy > 0);
+  }
+#endif
 
   sTitlebarInfoPopulatedThemed = true;
 }

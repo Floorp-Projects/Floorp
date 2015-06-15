@@ -139,7 +139,7 @@ TrackBuffer::ContinueShutdown()
 }
 
 bool
-TrackBuffer::AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset)
+TrackBuffer::AppendData(MediaByteBuffer* aData, TimeUnit aTimestampOffset)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mInputBuffer = aData;
@@ -162,7 +162,7 @@ TrackBuffer::BufferAppend()
   nsRefPtr<AppendPromise> p = mInitializationPromise.Ensure(__func__);
   bool hadInitData = mParser->HasInitData();
   bool hadCompleteInitData = mParser->HasCompleteInitData();
-  nsRefPtr<MediaLargeByteBuffer> oldInit = mParser->InitData();
+  nsRefPtr<MediaByteBuffer> oldInit = mParser->InitData();
   bool newInitData = mParser->IsInitSegmentPresent(mInputBuffer);
 
   // TODO: Run more of the buffer append algorithm asynchronously.
@@ -262,7 +262,7 @@ TrackBuffer::BufferAppend()
 }
 
 bool
-TrackBuffer::AppendDataToCurrentResource(MediaLargeByteBuffer* aData, uint32_t aDuration)
+TrackBuffer::AppendDataToCurrentResource(MediaByteBuffer* aData, uint32_t aDuration)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mCurrentDecoder) {
@@ -724,7 +724,7 @@ TrackBuffer::OnMetadataRead(MetadataHolder* aMetadata,
 
   // Adding an empty buffer will reopen the SourceBufferResource
   if (!aWasEnded) {
-    nsRefPtr<MediaLargeByteBuffer> emptyBuffer = new MediaLargeByteBuffer;
+    nsRefPtr<MediaByteBuffer> emptyBuffer = new MediaByteBuffer;
     aDecoder->GetResource()->AppendData(emptyBuffer);
   }
   // HACK END.

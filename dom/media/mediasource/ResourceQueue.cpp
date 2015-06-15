@@ -20,7 +20,7 @@ extern PRLogModuleInfo* GetSourceBufferResourceLog();
 
 namespace mozilla {
 
-ResourceItem::ResourceItem(MediaLargeByteBuffer* aData)
+ResourceItem::ResourceItem(MediaByteBuffer* aData)
   : mData(aData)
 {
 }
@@ -82,7 +82,7 @@ ResourceQueue::CopyData(uint64_t aOffset, uint32_t aCount, char* aDest)
 }
 
 void
-ResourceQueue::AppendItem(MediaLargeByteBuffer* aData)
+ResourceQueue::AppendItem(MediaByteBuffer* aData)
 {
   mLogicalLength += aData->Length();
   Push(new ResourceItem(aData));
@@ -111,7 +111,7 @@ uint32_t ResourceQueue::EvictBefore(uint64_t aOffset, ErrorResult& aRv)
       uint32_t offset = aOffset - mOffset;
       mOffset += offset;
       evicted += offset;
-      nsRefPtr<MediaLargeByteBuffer> data = new MediaLargeByteBuffer;
+      nsRefPtr<MediaByteBuffer> data = new MediaByteBuffer;
       if (!data->AppendElements(item->mData->Elements() + offset,
                                 item->mData->Length() - offset,
                                 fallible)) {
