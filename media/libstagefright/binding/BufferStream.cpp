@@ -13,11 +13,11 @@ namespace mp4_demuxer {
 
 BufferStream::BufferStream()
   : mStartOffset(0)
-  , mData(new mozilla::MediaLargeByteBuffer)
+  , mData(new mozilla::MediaByteBuffer)
 {
 }
 
-BufferStream::BufferStream(mozilla::MediaLargeByteBuffer* aBuffer)
+BufferStream::BufferStream(mozilla::MediaByteBuffer* aBuffer)
   : mStartOffset(0)
   , mData(aBuffer)
 {

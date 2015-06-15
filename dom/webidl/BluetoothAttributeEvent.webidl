@@ -15,5 +15,5 @@ interface BluetoothAttributeEvent : Event
 
 dictionary BluetoothAttributeEventInit : EventInit
 {
-  required sequence<DOMString> attrs;
+  sequence<DOMString> attrs = [];
 };
