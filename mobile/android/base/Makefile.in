@@ -44,7 +44,6 @@ GARBAGE += \
   res/raw/browsersearch.json \
   res/raw/suggestedsites.json \
   .aapt.deps \
-  fennec_ids.txt \
   javah.out \
   jni-stubs.inc \
   GeneratedJNIWrappers.cpp \
@@ -236,6 +235,7 @@ GeneratedJNIWrappers.cpp: $(ALL_JARS)
 manifest := \
   AndroidManifest.xml.in \
   WebappManifestFragment.xml.frag.in \
+  fennec_ids.txt.in \
   $(NULL)
 
 PP_TARGETS += manifest
@@ -449,9 +449,6 @@ $(eval $(call aapt_command,.aapt.deps,$(all_resources),gecko.ap_,generated/,./))
 # .aapt.nodeps: $(CURDIR)/AndroidManifest.xml FORCE
 $(eval $(call aapt_command,.aapt.nodeps,$(CURDIR)/AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
 
-fennec_ids.txt: generated/org/mozilla/gecko/R.java fennec-ids-generator.py
-	$(PYTHON) $(topsrcdir)/mobile/android/base/fennec-ids-generator.py -i $< -o $@
-
 # Override the Java settings with some specific android settings
 include $(topsrcdir)/config/android-common.mk
 
@@ -488,7 +485,7 @@ gradle-omnijar: $(abspath $(DIST)/fennec/$(OMNIJAR_NAME))
 
 .PHONY: gradle-targets gradle-omnijar
 
-libs:: geckoview_resources.zip classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp fennec_ids.txt
+libs:: geckoview_resources.zip classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp $(CURDIR)/fennec_ids.txt
 	$(INSTALL) geckoview_resources.zip $(FINAL_TARGET)
 	$(INSTALL) classes.dex $(FINAL_TARGET)
 	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null && diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null) || \
