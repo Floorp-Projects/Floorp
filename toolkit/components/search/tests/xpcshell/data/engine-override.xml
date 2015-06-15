@@ -1,0 +1,8 @@
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>bug645970</ShortName>
+<Description>override</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Url type="text/html" method="GET" template="http://searchtest.local">
+  <Param name="search" value="{searchTerms}"/>
+</Url>
+</SearchPlugin>
