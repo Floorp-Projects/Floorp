@@ -18,7 +18,7 @@ namespace mozilla {
 namespace ipc {
 
 class DaemonSocketConsumer;
-class BluetoothDaemonConnectionIO;
+class DaemonSocketIO;
 class DaemonSocketIOConsumer;
 
 /*
@@ -144,7 +144,7 @@ public:
   void OnDisconnect() override;
 
 private:
-  BluetoothDaemonConnectionIO* mIO;
+  DaemonSocketIO* mIO;
   DaemonSocketIOConsumer* mIOConsumer;
   DaemonSocketConsumer* mConsumer;
   int mIndex;
