@@ -277,15 +277,15 @@ BuildClonedMessageData(typename BlobTraits<Flavor>::ConcreteContentManagerType* 
   SerializedStructuredCloneBuffer& buffer = aClonedData.data();
   buffer.data = aData.mData;
   buffer.dataLength = aData.mDataLength;
-  const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = aData.mClosure.mBlobImpls;
-  if (!blobImpls.IsEmpty()) {
+  const nsTArray<nsRefPtr<Blob>>& blobs = aData.mClosure.mBlobs;
+  if (!blobs.IsEmpty()) {
     typedef typename BlobTraits<Flavor>::ProtocolType ProtocolType;
     InfallibleTArray<ProtocolType*>& blobList = DataBlobs<Flavor>::Blobs(aClonedData);
-    uint32_t length = blobImpls.Length();
+    uint32_t length = blobs.Length();
     blobList.SetCapacity(length);
     for (uint32_t i = 0; i < length; ++i) {
       typename BlobTraits<Flavor>::BlobType* protocolActor =
-        aManager->GetOrCreateActorForBlobImpl(blobImpls[i]);
+        aManager->GetOrCreateActorForBlob(blobs[i]);
       if (!protocolActor) {
         return false;
       }
@@ -323,7 +323,7 @@ UnpackClonedMessageData(const ClonedMessageData& aData)
   cloneData.mDataLength = buffer.dataLength;
   if (!blobs.IsEmpty()) {
     uint32_t length = blobs.Length();
-    cloneData.mClosure.mBlobImpls.SetCapacity(length);
+    cloneData.mClosure.mBlobs.SetCapacity(length);
     for (uint32_t i = 0; i < length; ++i) {
       auto* blob =
         static_cast<typename BlobTraits<Flavor>::BlobType*>(blobs[i]);
@@ -332,7 +332,10 @@ UnpackClonedMessageData(const ClonedMessageData& aData)
       nsRefPtr<BlobImpl> blobImpl = blob->GetBlobImpl();
       MOZ_ASSERT(blobImpl);
 
-      cloneData.mClosure.mBlobImpls.AppendElement(blobImpl);
+      // This object will be duplicated with a correct parent before being
+      // exposed to JS.
+      nsRefPtr<Blob> domBlob = Blob::Create(nullptr, blobImpl);
+      cloneData.mClosure.mBlobs.AppendElement(domBlob);
     }
   }
   return cloneData;

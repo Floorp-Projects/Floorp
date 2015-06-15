@@ -19,7 +19,7 @@ namespace dom {
 struct
 StructuredCloneClosure
 {
-  nsTArray<nsRefPtr<BlobImpl>> mBlobImpls;
+  nsTArray<nsRefPtr<Blob>> mBlobs;
 };
 
 struct

@@ -12,7 +12,6 @@
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
 #include "WorkerPrivate.h"
-#include "WorkerStructuredClone.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -76,18 +75,16 @@ class ServiceWorkerClientPostMessageRunnable final : public nsRunnable
 {
   uint64_t mWindowId;
   JSAutoStructuredCloneBuffer mBuffer;
-  WorkerStructuredCloneClosure mClosure;
+  nsTArray<nsCOMPtr<nsISupports>> mClonedObjects;
 
 public:
   ServiceWorkerClientPostMessageRunnable(uint64_t aWindowId,
                                          JSAutoStructuredCloneBuffer&& aData,
-                                         WorkerStructuredCloneClosure& aClosure)
+                                         nsTArray<nsCOMPtr<nsISupports>>& aClonedObjects)
     : mWindowId(aWindowId),
       mBuffer(Move(aData))
   {
-    mClosure.mClonedObjects.SwapElements(aClosure.mClonedObjects);
-    MOZ_ASSERT(aClosure.mMessagePorts.IsEmpty());
-    mClosure.mMessagePortIdentifiers.SwapElements(aClosure.mMessagePortIdentifiers);
+    mClonedObjects.SwapElements(aClonedObjects);
   }
 
   NS_IMETHOD
@@ -121,10 +118,8 @@ private:
 
     // Release reference to objects that were AddRef'd for
     // cloning into worker when array goes out of scope.
-    WorkerStructuredCloneClosure closure;
-    closure.mClonedObjects.SwapElements(mClosure.mClonedObjects);
-    MOZ_ASSERT(mClosure.mMessagePorts.IsEmpty());
-    closure.mMessagePortIdentifiers.SwapElements(mClosure.mMessagePortIdentifiers);
+    nsTArray<nsCOMPtr<nsISupports>> clonedObjects;
+    clonedObjects.SwapElements(mClonedObjects);
 
     JS::Rooted<JS::Value> messageData(aCx);
     if (!mBuffer.read(aCx, &messageData,
@@ -190,17 +185,16 @@ ServiceWorkerClient::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 
   const JSStructuredCloneCallbacks* callbacks = WorkerStructuredCloneCallbacks(false);
 
-  WorkerStructuredCloneClosure closure;
+  nsTArray<nsCOMPtr<nsISupports>> clonedObjects;
 
   JSAutoStructuredCloneBuffer buffer;
-  if (!buffer.write(aCx, aMessage, transferable, callbacks, &closure)) {
+  if (!buffer.write(aCx, aMessage, transferable, callbacks, &clonedObjects)) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }
 
   nsRefPtr<ServiceWorkerClientPostMessageRunnable> runnable =
-    new ServiceWorkerClientPostMessageRunnable(mWindowId, Move(buffer),
-                                               closure);
+    new ServiceWorkerClientPostMessageRunnable(mWindowId, Move(buffer), clonedObjects);
   nsresult rv = NS_DispatchToMainThread(runnable);
   if (NS_FAILED(rv)) {
     aRv.Throw(NS_ERROR_FAILURE);
