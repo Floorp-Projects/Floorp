@@ -9,14 +9,6 @@
   display: none;
 }
 
-.details {
-  width: 100%;
-}
-
-.details > div {
-  display: inline;
-}
-
 .username {
   width: 100%;
   overflow: hidden;
