@@ -16,9 +16,9 @@ namespace mozilla {
 namespace ipc {
 
 /*
- * |BluetoothDaemonConnectionConsumer| handles socket events.
+ * |DaemonSocketConsumer| handles socket events.
  */
-class BluetoothDaemonConnectionConsumer
+class DaemonSocketConsumer
 {
 public:
   /**
@@ -43,8 +43,8 @@ public:
   virtual void OnDisconnect(int aIndex) = 0;
 
 protected:
-  BluetoothDaemonConnectionConsumer();
-  virtual ~BluetoothDaemonConnectionConsumer();
+  DaemonSocketConsumer();
+  virtual ~DaemonSocketConsumer();
 };
 
 }

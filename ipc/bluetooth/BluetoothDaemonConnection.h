@@ -17,7 +17,7 @@ class MessageLoop;
 namespace mozilla {
 namespace ipc {
 
-class BluetoothDaemonConnectionConsumer;
+class DaemonSocketConsumer;
 class BluetoothDaemonConnectionIO;
 class BluetoothDaemonPDUConsumer;
 
@@ -118,7 +118,7 @@ class BluetoothDaemonConnection : public ConnectionOrientedSocket
 {
 public:
   BluetoothDaemonConnection(BluetoothDaemonPDUConsumer* aPDUConsumer,
-                            BluetoothDaemonConnectionConsumer* aConsumer,
+                            DaemonSocketConsumer* aConsumer,
                             int aIndex);
   virtual ~BluetoothDaemonConnection();
 
@@ -146,7 +146,7 @@ public:
 private:
   BluetoothDaemonConnectionIO* mIO;
   BluetoothDaemonPDUConsumer* mPDUConsumer;
-  BluetoothDaemonConnectionConsumer* mConsumer;
+  DaemonSocketConsumer* mConsumer;
   int mIndex;
 };
 

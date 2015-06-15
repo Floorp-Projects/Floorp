@@ -10,13 +10,13 @@ namespace mozilla {
 namespace ipc {
 
 //
-// BluetoothDaemonConnectionConsumer
+// DaemonSocketConsumer
 //
 
-BluetoothDaemonConnectionConsumer::BluetoothDaemonConnectionConsumer()
+DaemonSocketConsumer::DaemonSocketConsumer()
 { }
 
-BluetoothDaemonConnectionConsumer::~BluetoothDaemonConnectionConsumer()
+DaemonSocketConsumer::~DaemonSocketConsumer()
 { }
 
 }
