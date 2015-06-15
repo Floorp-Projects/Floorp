@@ -22,23 +22,15 @@
 #include "nsIDOMWindow.h"
 #include "nsGlobalWindow.h"
 
-#if defined(XP_WIN)
-#include "Windows.h"
-#else
-#include <unistd.h>
-#endif
-
 class nsPerformanceStats: public nsIPerformanceStats {
 public:
   nsPerformanceStats(const nsAString& aName,
-                     const nsAString& aGroupId,
                      const nsAString& aAddonId,
                      const nsAString& aTitle,
                      const uint64_t aWindowId,
                      const bool aIsSystem,
                      const js::PerformanceData& aPerformanceData)
     : mName(aName)
-    , mGroupId(aGroupId)
     , mAddonId(aAddonId)
     , mTitle(aTitle)
     , mWindowId(aWindowId)
@@ -56,13 +48,7 @@ public:
     return NS_OK;
   };
 
-  /* readonly attribute AString groupId; */
-  NS_IMETHOD GetGroupId(nsAString& aGroupId) override {
-    aGroupId.Assign(mGroupId);
-    return NS_OK;
-  };
-
-  /* readonly attribute AString addonId; */
+  /* readonly attribute AString addon id; */
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override {
     aAddonId.Assign(mAddonId);
     return NS_OK;
@@ -125,7 +111,6 @@ public:
 
 private:
   nsString mName;
-  nsString mGroupId;
   nsString mAddonId;
   nsString mTitle;
   uint64_t mWindowId;
@@ -146,7 +131,7 @@ public:
   NS_DECL_NSIPERFORMANCESNAPSHOT
 
   nsPerformanceSnapshot();
-  nsresult Init(JSContext*, uint64_t processId);
+  nsresult Init(JSContext*);
 private:
   virtual ~nsPerformanceSnapshot();
 
@@ -160,22 +145,20 @@ private:
    * entire process, rather than the statistics for a specific set of
    * compartments.
    */
-  already_AddRefed<nsIPerformanceStats> ImportStats(JSContext* cx, const js::PerformanceData& data, uint64_t uid);
+  already_AddRefed<nsIPerformanceStats> ImportStats(JSContext* cx, const js::PerformanceData& data);
 
   /**
    * Callbacks for iterating through the `PerformanceStats` of a runtime.
    */
-  bool IterPerformanceStatsCallbackInternal(JSContext* cx, const js::PerformanceData& stats, uint64_t uid);
-  static bool IterPerformanceStatsCallback(JSContext* cx, const js::PerformanceData& stats, uint64_t uid, void* self);
+  bool IterPerformanceStatsCallbackInternal(JSContext* cx, const js::PerformanceData& stats);
+  static bool IterPerformanceStatsCallback(JSContext* cx, const js::PerformanceData& stats, void* self);
 
   // If the context represents a window, extract the title and window ID.
   // Otherwise, extract "" and 0.
   static void GetWindowData(JSContext*,
                             nsString& title,
                             uint64_t* windowId);
-  void GetGroupId(JSContext*,
-                  uint64_t uid,
-                  nsString& groupId);
+
   // If the context presents an add-on, extract the addon ID.
   // Otherwise, extract "".
   static void GetAddonId(JSContext*,
@@ -189,7 +172,6 @@ private:
 private:
   nsCOMArray<nsIPerformanceStats> mComponentsData;
   nsCOMPtr<nsIPerformanceStats> mProcessData;
-  uint64_t mProcessId;
 };
 
 NS_IMPL_ISUPPORTS(nsPerformanceSnapshot, nsIPerformanceSnapshot)
@@ -251,22 +233,6 @@ nsPerformanceSnapshot::GetAddonId(JSContext*,
   AssignJSFlatString(addonId, (JSFlatString*)jsid);
 }
 
-void
-nsPerformanceSnapshot::GetGroupId(JSContext* cx,
-                                  uint64_t uid,
-                                  nsString& groupId)
-{
-  JSRuntime* rt = JS_GetRuntime(cx);
-  uint64_t runtimeId = reinterpret_cast<uintptr_t>(rt);
-
-  groupId.AssignLiteral("process: ");
-  groupId.AppendInt(mProcessId);
-  groupId.AssignLiteral(", thread: ");
-  groupId.AppendInt(runtimeId);
-  groupId.AppendLiteral(", group: ");
-  groupId.AppendInt(uid);
-}
-
 /* static */ bool
 nsPerformanceSnapshot::GetIsSystem(JSContext*,
                                    JS::Handle<JSObject*> global)
@@ -275,7 +241,7 @@ nsPerformanceSnapshot::GetIsSystem(JSContext*,
 }
 
 already_AddRefed<nsIPerformanceStats>
-nsPerformanceSnapshot::ImportStats(JSContext* cx, const js::PerformanceData& performance, const uint64_t uid) {
+nsPerformanceSnapshot::ImportStats(JSContext* cx, const js::PerformanceData& performance) {
   JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
 
   if (!global) {
@@ -283,9 +249,6 @@ nsPerformanceSnapshot::ImportStats(JSContext* cx, const js::PerformanceData& per
     // (e.g. atoms), this compartment is not very interesting for us.
     return nullptr;
   }
-
-  nsString groupId;
-  GetGroupId(cx, uid, groupId);
 
   nsString addonId;
   GetAddonId(cx, global, addonId);
@@ -302,18 +265,18 @@ nsPerformanceSnapshot::ImportStats(JSContext* cx, const js::PerformanceData& per
   bool isSystem = GetIsSystem(cx, global);
 
   nsCOMPtr<nsIPerformanceStats> result =
-    new nsPerformanceStats(name, groupId, addonId, title, windowId, isSystem, performance);
+    new nsPerformanceStats(name, addonId, title, windowId, isSystem, performance);
   return result.forget();
 }
 
 /*static*/ bool
-nsPerformanceSnapshot::IterPerformanceStatsCallback(JSContext* cx, const js::PerformanceData& stats, const uint64_t uid, void* self) {
-  return reinterpret_cast<nsPerformanceSnapshot*>(self)->IterPerformanceStatsCallbackInternal(cx, stats, uid);
+nsPerformanceSnapshot::IterPerformanceStatsCallback(JSContext* cx, const js::PerformanceData& stats, void* self) {
+  return reinterpret_cast<nsPerformanceSnapshot*>(self)->IterPerformanceStatsCallbackInternal(cx, stats);
 }
 
 bool
-nsPerformanceSnapshot::IterPerformanceStatsCallbackInternal(JSContext* cx, const js::PerformanceData& stats, const uint64_t uid) {
-  nsCOMPtr<nsIPerformanceStats> result = ImportStats(cx, stats, uid);
+nsPerformanceSnapshot::IterPerformanceStatsCallbackInternal(JSContext* cx, const js::PerformanceData& stats) {
+  nsCOMPtr<nsIPerformanceStats> result = ImportStats(cx, stats);
   if (result) {
     mComponentsData.AppendElement(result);
   }
@@ -322,15 +285,13 @@ nsPerformanceSnapshot::IterPerformanceStatsCallbackInternal(JSContext* cx, const
 }
 
 nsresult
-nsPerformanceSnapshot::Init(JSContext* cx, uint64_t processId) {
-  mProcessId = processId;
+nsPerformanceSnapshot::Init(JSContext* cx) {
   js::PerformanceData processStats;
   if (!js::IterPerformanceStats(cx, nsPerformanceSnapshot::IterPerformanceStatsCallback, &processStats, this)) {
     return NS_ERROR_UNEXPECTED;
   }
 
   mProcessData = new nsPerformanceStats(NS_LITERAL_STRING("<process>"), // name
-                                        NS_LITERAL_STRING("<process:?>"), // group id
                                         NS_LITERAL_STRING(""),          // add-on id
                                         NS_LITERAL_STRING(""),          // title
                                         0,                              // window id
@@ -365,11 +326,6 @@ NS_IMETHODIMP nsPerformanceSnapshot::GetProcessData(nsIPerformanceStats * *aProc
 NS_IMPL_ISUPPORTS(nsPerformanceStatsService, nsIPerformanceStatsService)
 
 nsPerformanceStatsService::nsPerformanceStatsService()
-#if defined(XP_WIN)
-  : mProcessId(GetCurrentProcessId())
-#else
-  : mProcessId(getpid())
-#endif
 {
 }
 
@@ -411,7 +367,7 @@ NS_IMETHODIMP nsPerformanceStatsService::SetIsMonitoringJank(JSContext* cx, bool
 NS_IMETHODIMP nsPerformanceStatsService::GetSnapshot(JSContext* cx, nsIPerformanceSnapshot * *aSnapshot)
 {
   nsRefPtr<nsPerformanceSnapshot> snapshot = new nsPerformanceSnapshot();
-  nsresult rv = snapshot->Init(cx, mProcessId);
+  nsresult rv = snapshot->Init(cx);
   if (NS_FAILED(rv)) {
     return rv;
   }
