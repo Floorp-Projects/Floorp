@@ -220,5 +220,17 @@ TVTuner::DispatchCurrentSourceChangedEvent(TVSource* aSource)
   return NS_DispatchToCurrentThread(runnable);
 }
 
+nsresult
+TVTuner::NotifyImageSizeChanged(uint32_t aWidth, uint32_t aHeight)
+{
+  DOMHwMediaStream* hwMediaStream = mStream->AsDOMHwMediaStream();
+
+  if (hwMediaStream) {
+    hwMediaStream->SetImageSize(aWidth, aHeight);
+  }
+
+  return NS_OK;
+}
+
 } // namespace dom
 } // namespace mozilla
