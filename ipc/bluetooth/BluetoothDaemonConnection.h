@@ -19,7 +19,7 @@ namespace ipc {
 
 class DaemonSocketConsumer;
 class BluetoothDaemonConnectionIO;
-class BluetoothDaemonPDUConsumer;
+class DaemonSocketIOConsumer;
 
 /*
  * |BlutoothDaemonPDU| represents a single PDU that is transfered from or to
@@ -58,7 +58,7 @@ public:
   BluetoothDaemonPDU(size_t aPayloadSize);
   ~BluetoothDaemonPDU();
 
-  void SetConsumer(BluetoothDaemonPDUConsumer* aConsumer)
+  void SetConsumer(DaemonSocketIOConsumer* aConsumer)
   {
     mConsumer = aConsumer;
   }
@@ -87,37 +87,37 @@ private:
   size_t GetPayloadSize() const;
   void OnError(const char* aFunction, int aErrno);
 
-  BluetoothDaemonPDUConsumer* mConsumer;
+  DaemonSocketIOConsumer* mConsumer;
   void* mUserData;
   ScopedClose mReceivedFd;
 };
 
 /*
- * |BluetoothDaemonPDUConsumer| processes incoming PDUs from the Bluetooth
+ * |DaemonSocketIOConsumer| processes incoming PDUs from the Bluetooth
  * daemon. Please note that its method |Handle| runs on a different than the
  * consumer thread.
  */
-class BluetoothDaemonPDUConsumer
+class DaemonSocketIOConsumer
 {
 public:
-  virtual ~BluetoothDaemonPDUConsumer();
+  virtual ~DaemonSocketIOConsumer();
 
   virtual void Handle(BluetoothDaemonPDU& aPDU) = 0;
   virtual void StoreUserData(const BluetoothDaemonPDU& aPDU) = 0;
 
 protected:
-  BluetoothDaemonPDUConsumer();
+  DaemonSocketIOConsumer();
 };
 
 /*
  * |BluetoothDaemonConnection| represents the socket to connect to the
  * Bluetooth daemon. It offers connection establishment and sending
- * PDUs. PDU receiving is performed by |BluetoothDaemonPDUConsumer|.
+ * PDUs. PDU receiving is performed by |DaemonSocketIOConsumer|.
  */
 class BluetoothDaemonConnection : public ConnectionOrientedSocket
 {
 public:
-  BluetoothDaemonConnection(BluetoothDaemonPDUConsumer* aPDUConsumer,
+  BluetoothDaemonConnection(DaemonSocketIOConsumer* aIOConsumer,
                             DaemonSocketConsumer* aConsumer,
                             int aIndex);
   virtual ~BluetoothDaemonConnection();
@@ -145,7 +145,7 @@ public:
 
 private:
   BluetoothDaemonConnectionIO* mIO;
-  BluetoothDaemonPDUConsumer* mPDUConsumer;
+  DaemonSocketIOConsumer* mIOConsumer;
   DaemonSocketConsumer* mConsumer;
   int mIndex;
 };
