@@ -23,6 +23,7 @@ static const uint32_t MAX_MAIN_THREAD_LOCALS_AND_ARGS = 256;
 // Possible register allocators which may be used.
 enum IonRegisterAllocator {
     RegisterAllocator_Backtracking,
+    RegisterAllocator_Testbed,
     RegisterAllocator_Stupid
 };
 
@@ -31,6 +32,8 @@ LookupRegisterAllocator(const char* name)
 {
     if (!strcmp(name, "backtracking"))
         return mozilla::Some(RegisterAllocator_Backtracking);
+    if (!strcmp(name, "testbed"))
+        return mozilla::Some(RegisterAllocator_Testbed);
     if (!strcmp(name, "stupid"))
         return mozilla::Some(RegisterAllocator_Stupid);
     return mozilla::Nothing();
