@@ -408,15 +408,6 @@ private:
   MediaRawData(const MediaRawData&); // Not implemented
 };
 
-  // MediaLargeByteBuffer is a ref counted fallible TArray.
-  // It is designed to share potentially big byte arrays.
-class MediaLargeByteBuffer : public FallibleTArray<uint8_t> {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaLargeByteBuffer);
-
-private:
-  ~MediaLargeByteBuffer() {}
-};
-
   // MediaByteBuffer is a ref counted infallible TArray.
 class MediaByteBuffer : public nsTArray<uint8_t> {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaByteBuffer);
