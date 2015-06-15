@@ -16,7 +16,7 @@
 
 // LUL needs a callback for its logging sink.
 static void
-gtest_logging_sink_for_LUL(const char* str) {
+gtest_logging_sink_for_LulIntegration(const char* str) {
   if (DEBUG_LUL_TEST == 0) {
     return;
   }
@@ -32,11 +32,11 @@ gtest_logging_sink_for_LUL(const char* str) {
   }
 }
 
-TEST(LUL, unwind_consistency) {
+TEST(LulIntegration, unwind_consistency) {
   // Set up LUL and get it to read unwind info for libxul.so, which is
   // all we care about here, plus (incidentally) practically every
   // other object in the process too.
-  lul::LUL* lul = new lul::LUL(gtest_logging_sink_for_LUL);
+  lul::LUL* lul = new lul::LUL(gtest_logging_sink_for_LulIntegration);
   read_procmaps(lul);
 
   // Run unwind tests and receive information about how many there
