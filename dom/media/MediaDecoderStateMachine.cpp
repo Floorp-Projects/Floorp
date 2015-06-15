@@ -171,9 +171,11 @@ static int64_t DurationToUsecs(TimeDuration aDuration) {
 static const uint32_t MIN_VIDEO_QUEUE_SIZE = 3;
 static const uint32_t MAX_VIDEO_QUEUE_SIZE = 10;
 static const uint32_t SCARCE_VIDEO_QUEUE_SIZE = 1;
+static const uint32_t VIDEO_QUEUE_SEND_TO_COMPOSITOR_SIZE = 9999;
 
 static uint32_t sVideoQueueDefaultSize = MAX_VIDEO_QUEUE_SIZE;
 static uint32_t sVideoQueueHWAccelSize = MIN_VIDEO_QUEUE_SIZE;
+static uint32_t sVideoQueueSendToCompositorSize = VIDEO_QUEUE_SEND_TO_COMPOSITOR_SIZE;
 
 MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                                    MediaDecoderReader* aReader,
@@ -260,6 +262,9 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
     Preferences::AddUintVarCache(&sVideoQueueHWAccelSize,
                                  "media.video-queue.hw-accel-size",
                                  MIN_VIDEO_QUEUE_SIZE);
+    Preferences::AddUintVarCache(&sVideoQueueSendToCompositorSize,
+                                 "media.video-queue.send-to-compositor-size",
+                                 VIDEO_QUEUE_SEND_TO_COMPOSITOR_SIZE);
   }
 
   mBufferingWait = IsRealTime() ? 0 : 15;
@@ -2694,7 +2699,7 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
     }
   }
 
-  RenderVideoFrames(1, clockTime, nowTime);
+  RenderVideoFrames(sVideoQueueSendToCompositorSize, clockTime, nowTime);
 
   // Check to see if we don't have enough data to play up to the next frame.
   // If we don't, switch to buffering mode.
