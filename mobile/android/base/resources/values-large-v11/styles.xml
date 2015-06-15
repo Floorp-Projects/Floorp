@@ -126,36 +126,6 @@
         <item name="android:paddingRight">32dp</item>
     </style>
 
-    <!-- Tabs panel -->
-    <style name="PrivateTabsPanelFrame">
-        <item name="android:orientation">vertical</item>
-
-        <!-- We want to center the content on the screen, not in
-             the View, so add padding to compensate for the header. -->
-        <item name="android:layout_gravity">center</item>
-        <item name="android:paddingBottom">@dimen/browser_toolbar_height</item>
-    </style>
-
-    <style name="TabsPanelSection.PrivateTabs">
-        <item name="android:layout_weight">1</item>
-        <item name="android:layout_marginLeft">20dp</item>
-        <item name="android:layout_marginRight">20dp</item>
-    </style>
-
-    <style name="TabsPanelSection.PrivateTabs.Header">
-        <item name="android:paddingTop">10dp</item>
-    </style>
-
-    <style name="TabsPanelItem.TextAppearance.Header.PrivateTabs">
-        <item name="android:visibility">visible</item>
-    </style>
-
-    <style name="TabsPanelItem.TextAppearance.Linkified.LearnMore">
-        <item name="android:layout_height">match_parent</item>
-        <item name="android:gravity">center</item>
-        <item name="android:layout_gravity">center</item>
-    </style>
-
     <style name="TextAppearance.UrlBar.Title" parent="TextAppearance.Medium">
         <item name="android:textSize">16sp</item>
     </style>
