@@ -299,7 +299,7 @@ nsLocation::GetHash(nsAString& aHash)
 
   rv = uri->GetRef(ref);
 
-  if (nsContentUtils::EncodeDecodeURLHash()) {
+  if (nsContentUtils::GettersDecodeURLHash()) {
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsITextToSubURI> textToSubURI(
           do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv));
