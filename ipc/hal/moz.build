@@ -5,13 +5,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.ipc += [
-    'BluetoothDaemonConnection.h',
-    'BluetoothDaemonConnectionConsumer.h'
+    'DaemonSocket.h',
+    'DaemonSocketConsumer.h',
+    'DaemonSocketPDU.h'
 ]
 
-SOURCES += [
-    'BluetoothDaemonConnection.cpp',
-    'BluetoothDaemonConnectionConsumer.cpp'
+UNIFIED_SOURCES += [
+    'DaemonSocket.cpp',
+    'DaemonSocketConsumer.cpp',
+    'DaemonSocketPDU.cpp'
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

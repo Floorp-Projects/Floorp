@@ -8,8 +8,15 @@
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
-  let {toolbox, inspector, panel} = yield openAnimationInspector();
 
+  let {inspector, panel} = yield openAnimationInspector();
+  yield testRefresh(inspector, panel);
+
+  ({inspector, panel}) = yield closeAnimationInspectorAndRestartWithNewUI();
+  yield testRefresh(inspector, panel);
+});
+
+function* testRefresh(inspector, panel) {
   info("Select a non animated node");
   yield selectNode(".still", inspector);
 
@@ -19,14 +26,14 @@ add_task(function*() {
   info("Select the animated node now");
   yield selectNode(".animated", inspector);
 
-  ok(!panel.playerWidgets || !panel.playerWidgets.length,
+  assertAnimationsDisplayed(panel, 0,
     "The panel doesn't show the animation data while inactive");
 
   info("Switch to the animation panel");
   inspector.sidebar.select("animationinspector");
   yield panel.once(panel.UI_UPDATED_EVENT);
 
-  is(panel.playerWidgets.length, 1,
+  assertAnimationsDisplayed(panel, 1,
     "The panel shows the animation data after selecting it");
 
   info("Switch again to the rule-view");
@@ -35,13 +42,13 @@ add_task(function*() {
   info("Select the non animated node again");
   yield selectNode(".still", inspector);
 
-  is(panel.playerWidgets.length, 1,
+  assertAnimationsDisplayed(panel, 1,
     "The panel still shows the previous animation data since it is inactive");
 
   info("Switch to the animation panel again");
   inspector.sidebar.select("animationinspector");
   yield panel.once(panel.UI_UPDATED_EVENT);
 
-  ok(!panel.playerWidgets || !panel.playerWidgets.length,
+  assertAnimationsDisplayed(panel, 0,
     "The panel is now empty after refreshing");
-});
+}

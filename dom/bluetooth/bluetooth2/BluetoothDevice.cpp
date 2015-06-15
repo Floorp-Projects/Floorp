@@ -292,7 +292,7 @@ BluetoothDevice::HandlePropertyChanged(const BluetoothValue& aValue)
     // BluetoothDeviceAttribute properties
     if (IsDeviceAttributeChanged(type, arr[i].value())) {
       SetPropertyByValue(arr[i]);
-      BT_APPEND_ENUM_STRING(types, BluetoothDeviceAttribute, type);
+      BT_APPEND_ENUM_STRING_FALLIBLE(types, BluetoothDeviceAttribute, type);
     }
   }
 

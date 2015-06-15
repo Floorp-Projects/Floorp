@@ -92,13 +92,16 @@ BluetoothLeDeviceEvent::Constructor(
   e->mDevice = aEventInitDict.mDevice;
   e->mRssi = aEventInitDict.mRssi;
 
-  aEventInitDict.mScanRecord.ComputeLengthAndData();
-  const uint8_t* data = aEventInitDict.mScanRecord.Data();
-  size_t length = aEventInitDict.mScanRecord.Length();
-  e->mScanRecord = ArrayBuffer::Create(aGlobal.Context(), length, data);
-  if (!e->mScanRecord) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return nullptr;
+  if (!aEventInitDict.mScanRecord.IsNull()) {
+    const auto& scanRecord = aEventInitDict.mScanRecord.Value();
+    scanRecord.ComputeLengthAndData();
+    e->mScanRecord = ArrayBuffer::Create(aGlobal.Context(),
+                                         scanRecord.Length(),
+                                         scanRecord.Data());
+    if (!e->mScanRecord) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
   }
 
   e->SetTrusted(trusted);
@@ -106,7 +109,7 @@ BluetoothLeDeviceEvent::Constructor(
 }
 
 BluetoothDevice*
-BluetoothLeDeviceEvent::Device() const
+BluetoothLeDeviceEvent::GetDevice() const
 {
   return mDevice;
 }

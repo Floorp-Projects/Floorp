@@ -47,7 +47,7 @@ public:
                 const BluetoothLeDeviceEventInit& aEventInitDict,
                 ErrorResult& aRv);
 
-  BluetoothDevice* Device() const;
+  BluetoothDevice* GetDevice() const;
 
   int16_t Rssi() const;
 

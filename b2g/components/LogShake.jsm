@@ -277,7 +277,7 @@ let LogShake = {
 
     try {
       LogCapture.getScreenshot().then(screenshot => {
-        logArrays["logshake-screenshot.png"] = screenshot;
+        logArrays["screenshot.png"] = screenshot;
       });
     } catch (ex) {
       Cu.reportError("Unable to get screenshot dump: " + ex);

@@ -114,6 +114,7 @@ let AnimationsController = {
                                                           "setPlaybackRate");
     this.hasTargetNode = yield target.actorHasMethod("domwalker",
                                                      "getNodeFromActor");
+    this.isNewUI = Services.prefs.getBoolPref("devtools.inspector.animationInspectorV3");
 
     if (this.destroyed) {
       console.warn("Could not fully initialize the AnimationsController");
@@ -240,11 +241,15 @@ let AnimationsController = {
     for (let {type, player} of changes) {
       if (type === "added") {
         this.animationPlayers.push(player);
-        player.startAutoRefresh();
+        if (!this.isNewUI) {
+          player.startAutoRefresh();
+        }
       }
 
       if (type === "removed") {
-        player.stopAutoRefresh();
+        if (!this.isNewUI) {
+          player.stopAutoRefresh();
+        }
         yield player.release();
         let index = this.animationPlayers.indexOf(player);
         this.animationPlayers.splice(index, 1);
@@ -256,12 +261,20 @@ let AnimationsController = {
   }),
 
   startAllAutoRefresh: function() {
+    if (this.isNewUI) {
+      return;
+    }
+
     for (let front of this.animationPlayers) {
       front.startAutoRefresh();
     }
   },
 
   stopAllAutoRefresh: function() {
+    if (this.isNewUI) {
+      return;
+    }
+
     for (let front of this.animationPlayers) {
       front.stopAutoRefresh();
     }

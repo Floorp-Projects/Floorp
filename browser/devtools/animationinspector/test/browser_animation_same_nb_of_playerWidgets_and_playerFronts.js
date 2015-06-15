@@ -22,4 +22,16 @@ add_task(function*() {
     is(widget.el.parentNode, panel.playersEl,
       "The player widget has been appended to the panel");
   }
+
+  info("Test again with the new UI, making sure the same number of " +
+       "animation timelines is created");
+  ({inspector, panel, controller}) = yield closeAnimationInspectorAndRestartWithNewUI();
+  let timeline = panel.animationsTimelineComponent;
+
+  info("Selecting the test animated node again");
+  yield selectNode(".multi", inspector);
+
+  is(controller.animationPlayers.length,
+    timeline.animationsEl.querySelectorAll(".animation").length,
+    "As many timeline elements were created as there are playerFronts");
 });

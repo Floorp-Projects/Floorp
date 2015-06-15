@@ -9,7 +9,7 @@
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel, window} = yield openAnimationInspector();
+  let {inspector, window} = yield openAnimationInspector();
   let doc = window.document;
 
   let toolbar = doc.querySelector("#toolbar");
