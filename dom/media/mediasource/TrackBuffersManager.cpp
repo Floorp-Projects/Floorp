@@ -168,6 +168,10 @@ TrackBuffersManager::EvictData(TimeUnit aPlaybackTime,
   if (toEvict <= 0) {
     return EvictDataResult::NO_DATA_EVICTED;
   }
+  if (toEvict <= 512*1024) {
+    // Don't bother evicting less than 512KB.
+    return EvictDataResult::CANT_EVICT;
+  }
   MSE_DEBUG("Reaching our size limit, schedule eviction of %lld bytes", toEvict);
 
   nsCOMPtr<nsIRunnable> task =
