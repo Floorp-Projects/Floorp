@@ -81,7 +81,7 @@ endif
 automation-partial-patch: complete-patch
 	rm -rf current current.work previous
 	mkdir current previous
-	latestmar=$$(ssh -l $(UPLOAD_USER) -i $(UPLOAD_SSH_KEY) $(UPLOAD_HOST) 'ls -1t $(LATEST_MAR_DIR) | grep $(MOZ_PKG_PLATFORM).complete.mar$$ | head -n 1'); \
+	latestmar=$$(ssh -l $(UPLOAD_USER) -i $(UPLOAD_SSH_KEY) $(UPLOAD_HOST) 'ls -1t $(LATEST_MAR_DIR) | grep "\.$(AB_CD)\.$(MOZ_PKG_PLATFORM)\.complete\.mar$$" | head -n 1'); \
 	  if test -n "$$latestmar"; then \
 	    wget -O $(STAGE_DIR)/previous.mar http://$(UPLOAD_HOST)/$(LATEST_MAR_DIR)/$$latestmar && \
 	    (cd previous; \
@@ -90,7 +90,7 @@ automation-partial-patch: complete-patch
 	      MAR=$(MAR_BIN) perl $(topsrcdir)/tools/update-packaging/unwrap_full_update.pl '$(abspath $(DIST)/$(COMPLETE_MAR))') && \
 	    find current -name \*.pgc -print -delete && \
 	    find previous -name \*.pgc -print -delete && \
-	    rm -f $(STAGE_DIR)/*.partial.*.mar && \
+	    rm -f $(STAGE_DIR)/*.$(AB_CD).$(MOZ_PKG_PLATFORM).partial.*.mar && \
 	    SRC_BUILD_ID=$$(python $(topsrcdir)/config/printconfigsetting.py $$(find previous -maxdepth 4 -type f -name application.ini) App BuildID) \
 	    DST_BUILD_ID=$$(cat $(DEPTH)/config/buildid) \
 	    SRC_BUILD=previous DST_BUILD=current \
