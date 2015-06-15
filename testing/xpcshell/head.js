@@ -1232,54 +1232,74 @@ function do_load_child_test_harness()
  * Runs an entire xpcshell unit test in a child process (rather than in chrome,
  * which is the default).
  *
- * This function returns immediately, before the test has completed.  
+ * This function returns immediately, before the test has completed.
  *
  * @param testFile
  *        The name of the script to run.  Path format same as load().
  * @param optionalCallback.
  *        Optional function to be called (in parent) when test on child is
  *        complete.  If provided, the function must call do_test_finished();
+ * @return Promise Resolved when the test in the child is complete.
  */
-function run_test_in_child(testFile, optionalCallback) 
+function run_test_in_child(testFile, optionalCallback)
 {
-  var callback = (typeof optionalCallback == 'undefined') ? 
-                    do_test_finished : optionalCallback;
+  return new Promise((resolve) => {
+    var callback = () => {
+      resolve();
+      if (typeof optionalCallback == 'undefined') {
+        do_test_finished();
+      } else {
+        optionalCallback();
+      }
+    };
 
-  do_load_child_test_harness();
+    do_load_child_test_harness();
 
-  var testPath = do_get_file(testFile).path.replace(/\\/g, "/");
-  do_test_pending("run in child");
-  sendCommand("_testLogger.info('CHILD-TEST-STARTED'); "
-              + "const _TEST_FILE=['" + testPath + "']; "
-              + "_execute_test(); "
-              + "_testLogger.info('CHILD-TEST-COMPLETED');",
-              callback);
+    var testPath = do_get_file(testFile).path.replace(/\\/g, "/");
+    do_test_pending("run in child");
+    sendCommand("_testLogger.info('CHILD-TEST-STARTED'); "
+                + "const _TEST_FILE=['" + testPath + "']; "
+                + "_execute_test(); "
+                + "_testLogger.info('CHILD-TEST-COMPLETED');",
+                callback);
+  });
 }
 
 /**
  * Execute a given function as soon as a particular cross-process message is received.
  * Must be paired with do_send_remote_message or equivalent ProcessMessageManager calls.
+ *
+ * @param optionalCallback
+ *        Optional callback that is invoked when the message is received.  If provided,
+ *        the function must call do_test_finished().
+ * @return Promise Promise that is resolved when the message is received.
  */
-function do_await_remote_message(name, callback)
+function do_await_remote_message(name, optionalCallback)
 {
-  var listener = {
-    receiveMessage: function(message) {
-      if (message.name == name) {
-        mm.removeMessageListener(name, listener);
-        callback();
-        do_test_finished();
+  return new Promise((resolve) => {
+    var listener = {
+      receiveMessage: function(message) {
+        if (message.name == name) {
+          mm.removeMessageListener(name, listener);
+          resolve();
+          if (optionalCallback) {
+            optionalCallback();
+          } else {
+            do_test_finished();
+          }
+        }
       }
-    }
-  };
+    };
 
-  var mm;
-  if (runningInParent) {
-    mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIMessageBroadcaster);
-  } else {
-    mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
-  }
-  do_test_pending();
-  mm.addMessageListener(name, listener);
+    var mm;
+    if (runningInParent) {
+      mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIMessageBroadcaster);
+    } else {
+      mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
+    }
+    do_test_pending();
+    mm.addMessageListener(name, listener);
+  });
 }
 
 /**

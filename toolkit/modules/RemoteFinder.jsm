@@ -152,6 +152,9 @@ RemoteFinder.prototype = {
   keyPress: function (aEvent) {
     this._browser.messageManager.sendAsyncMessage("Finder:KeyPress",
                                                   { keyCode: aEvent.keyCode,
+                                                    ctrlKey: aEvent.ctrlKey,
+                                                    metaKey: aEvent.metaKey,
+                                                    altKey: aEvent.altKey,
                                                     shiftKey: aEvent.shiftKey });
   },
 
@@ -233,6 +236,10 @@ RemoteFinderListener.prototype = {
 
       case "Finder:Highlight":
         this._finder.highlight(data.highlight, data.word);
+        break;
+
+      case "Finder:EnableSelection":
+        this._finder.enableSelection();
         break;
 
       case "Finder:RemoveSelection":

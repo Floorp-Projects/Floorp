@@ -5,7 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 EXTRA_JS_MODULES.devtools.animationinspector += [
     'components.js',
+    'utils.js',
 ]

@@ -255,9 +255,9 @@ BluetoothManager::DispatchAttributeEvent()
   BT_API2_LOGR();
 
   Sequence<nsString> types;
-  BT_APPEND_ENUM_STRING(types,
-                        BluetoothManagerAttribute,
-                        BluetoothManagerAttribute::DefaultAdapter);
+  BT_APPEND_ENUM_STRING_FALLIBLE(types,
+                                 BluetoothManagerAttribute,
+                                 BluetoothManagerAttribute::DefaultAdapter);
 
   // Notify application of default adapter change
   BluetoothAttributeEventInit init;
