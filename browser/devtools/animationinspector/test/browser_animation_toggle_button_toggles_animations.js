@@ -11,7 +11,7 @@
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel} = yield openAnimationInspector();
+  let {panel} = yield openAnimationInspector();
 
   info("Click the toggle button");
   yield panel.toggleAll();

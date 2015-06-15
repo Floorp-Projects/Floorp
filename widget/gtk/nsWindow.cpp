@@ -4937,49 +4937,54 @@ get_gtk_cursor(nsCursor aCursor)
     // Spec is here: http://www.freedesktop.org/wiki/Specifications/cursor-spec/
     switch (aCursor) {
     case eCursor_standard:
-        gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_LEFT_PTR);
         break;
     case eCursor_wait:
-        gdkcursor = gdk_cursor_new(GDK_WATCH);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_WATCH);
         break;
     case eCursor_select:
-        gdkcursor = gdk_cursor_new(GDK_XTERM);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_XTERM);
         break;
     case eCursor_hyperlink:
-        gdkcursor = gdk_cursor_new(GDK_HAND2);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_HAND2);
         break;
     case eCursor_n_resize:
-        gdkcursor = gdk_cursor_new(GDK_TOP_SIDE);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_TOP_SIDE);
         break;
     case eCursor_s_resize:
-        gdkcursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_BOTTOM_SIDE);
         break;
     case eCursor_w_resize:
-        gdkcursor = gdk_cursor_new(GDK_LEFT_SIDE);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_LEFT_SIDE);
         break;
     case eCursor_e_resize:
-        gdkcursor = gdk_cursor_new(GDK_RIGHT_SIDE);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_RIGHT_SIDE);
         break;
     case eCursor_nw_resize:
-        gdkcursor = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay,
+                                               GDK_TOP_LEFT_CORNER);
         break;
     case eCursor_se_resize:
-        gdkcursor = gdk_cursor_new(GDK_BOTTOM_RIGHT_CORNER);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay,
+                                               GDK_BOTTOM_RIGHT_CORNER);
         break;
     case eCursor_ne_resize:
-        gdkcursor = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay,
+                                               GDK_TOP_RIGHT_CORNER);
         break;
     case eCursor_sw_resize:
-        gdkcursor = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay,
+                                               GDK_BOTTOM_LEFT_CORNER);
         break;
     case eCursor_crosshair:
-        gdkcursor = gdk_cursor_new(GDK_CROSSHAIR);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_CROSSHAIR);
         break;
     case eCursor_move:
-        gdkcursor = gdk_cursor_new(GDK_FLEUR);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_FLEUR);
         break;
     case eCursor_help:
-        gdkcursor = gdk_cursor_new(GDK_QUESTION_ARROW);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay,
+                                               GDK_QUESTION_ARROW);
         break;
     case eCursor_copy: // CSS3
         gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "copy");
@@ -4997,7 +5002,7 @@ get_gtk_cursor(nsCursor aCursor)
             newType = MOZ_CURSOR_CONTEXT_MENU;
         break;
     case eCursor_cell:
-        gdkcursor = gdk_cursor_new(GDK_PLUS);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_PLUS);
         break;
     // Those two aren’t standardized. Trying both KDE’s and GNOME’s names
     case eCursor_grab:
@@ -5043,7 +5048,7 @@ get_gtk_cursor(nsCursor aCursor)
         newType = MOZ_CURSOR_VERTICAL_TEXT;
         break;
     case eCursor_all_scroll:
-        gdkcursor = gdk_cursor_new(GDK_FLEUR);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_FLEUR);
         break;
     case eCursor_nesw_resize:
         gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "size_bdiag");
@@ -5056,28 +5061,32 @@ get_gtk_cursor(nsCursor aCursor)
             newType = MOZ_CURSOR_NWSE_RESIZE;
         break;
     case eCursor_ns_resize:
-        gdkcursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay,
+                                               GDK_SB_V_DOUBLE_ARROW);
         break;
     case eCursor_ew_resize:
-        gdkcursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay,
+                                               GDK_SB_H_DOUBLE_ARROW);
         break;
     // Here, two better fitting cursors exist in some cursor themes. Try those first
     case eCursor_row_resize:
         gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "split_v");
         if (!gdkcursor)
-            gdkcursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+            gdkcursor = gdk_cursor_new_for_display(defaultDisplay,
+                                                   GDK_SB_V_DOUBLE_ARROW);
         break;
     case eCursor_col_resize:
         gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "split_h");
         if (!gdkcursor)
-            gdkcursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
+            gdkcursor = gdk_cursor_new_for_display(defaultDisplay,
+                                                   GDK_SB_H_DOUBLE_ARROW);
         break;
     case eCursor_none:
         newType = MOZ_CURSOR_NONE;
         break;
     default:
         NS_ASSERTION(aCursor, "Invalid cursor type");
-        gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
+        gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_LEFT_PTR);
         break;
     }
 

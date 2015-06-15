@@ -66,5 +66,55 @@ this.ContentTaskUtils = {
         tries++;
       }, interval);
     });
-  }
+  },
+
+  /**
+   * Waits for an event to be fired on a specified element.
+   *
+   * Usage:
+   *    let promiseEvent = ContentTasKUtils.waitForEvent(element, "eventName");
+   *    // Do some processing here that will cause the event to be fired
+   *    // ...
+   *    // Now yield until the Promise is fulfilled
+   *    let receivedEvent = yield promiseEvent;
+   *
+   * @param {Element} subject
+   *        The element that should receive the event.
+   * @param {string} eventName
+   *        Name of the event to listen to.
+   * @param {bool} capture [optional]
+   *        True to use a capturing listener.
+   * @param {function} checkFn [optional]
+   *        Called with the Event object as argument, should return true if the
+   *        event is the expected one, or false if it should be ignored and
+   *        listening should continue. If not specified, the first event with
+   *        the specified name resolves the returned promise.
+   *
+   * @note Because this function is intended for testing, any error in checkFn
+   *       will cause the returned promise to be rejected instead of waiting for
+   *       the next event, since this is probably a bug in the test.
+   *
+   * @returns {Promise}
+   * @resolves The Event object.
+   */
+  waitForEvent(subject, eventName, capture, checkFn) {
+    return new Promise((resolve, reject) => {
+      subject.addEventListener(eventName, function listener(event) {
+        try {
+          if (checkFn && !checkFn(event)) {
+            return;
+          }
+          subject.removeEventListener(eventName, listener, capture);
+          resolve(event);
+        } catch (ex) {
+          try {
+            subject.removeEventListener(eventName, listener, capture);
+          } catch (ex2) {
+            // Maybe the provided object does not support removeEventListener.
+          }
+          reject(ex);
+        }
+      }, capture);
+    });
+  },
 };
