@@ -30,7 +30,7 @@ public:
 
   static const int MAX_NUM_CLIENTS;
 
-  virtual nsresult Send(BluetoothDaemonPDU* aPDU, void* aUserData) = 0;
+  virtual nsresult Send(DaemonSocketPDU* aPDU, void* aUserData) = 0;
 
   virtual nsresult RegisterModule(uint8_t aId, uint8_t aMode,
                                   uint32_t aMaxNumClients,
@@ -52,11 +52,11 @@ public:
                          BluetoothA2dpResultHandler* aRes);
 
 protected:
-  nsresult Send(BluetoothDaemonPDU* aPDU,
+  nsresult Send(DaemonSocketPDU* aPDU,
                 BluetoothA2dpResultHandler* aRes);
 
-  void HandleSvc(const BluetoothDaemonPDUHeader& aHeader,
-                 BluetoothDaemonPDU& aPDU, void* aUserData);
+  void HandleSvc(const DaemonSocketPDUHeader& aHeader,
+                 DaemonSocketPDU& aPDU, void* aUserData);
 
   //
   // Responses
@@ -69,20 +69,20 @@ protected:
                                    BluetoothStatus, BluetoothStatus>
     ErrorRunnable;
 
-  void ErrorRsp(const BluetoothDaemonPDUHeader& aHeader,
-                BluetoothDaemonPDU& aPDU,
+  void ErrorRsp(const DaemonSocketPDUHeader& aHeader,
+                DaemonSocketPDU& aPDU,
                 BluetoothA2dpResultHandler* aRes);
 
-  void ConnectRsp(const BluetoothDaemonPDUHeader& aHeader,
-                  BluetoothDaemonPDU& aPDU,
+  void ConnectRsp(const DaemonSocketPDUHeader& aHeader,
+                  DaemonSocketPDU& aPDU,
                   BluetoothA2dpResultHandler* aRes);
 
-  void DisconnectRsp(const BluetoothDaemonPDUHeader& aHeader,
-                     BluetoothDaemonPDU& aPDU,
+  void DisconnectRsp(const DaemonSocketPDUHeader& aHeader,
+                     DaemonSocketPDU& aPDU,
                      BluetoothA2dpResultHandler* aRes);
 
-  void HandleRsp(const BluetoothDaemonPDUHeader& aHeader,
-                 BluetoothDaemonPDU& aPDU,
+  void HandleRsp(const DaemonSocketPDUHeader& aHeader,
+                 DaemonSocketPDU& aPDU,
                  void* aUserData);
 
   //
@@ -114,17 +114,17 @@ protected:
   class AudioStateInitOp;
   class AudioConfigInitOp;
 
-  void ConnectionStateNtf(const BluetoothDaemonPDUHeader& aHeader,
-                          BluetoothDaemonPDU& aPDU);
+  void ConnectionStateNtf(const DaemonSocketPDUHeader& aHeader,
+                          DaemonSocketPDU& aPDU);
 
-  void AudioStateNtf(const BluetoothDaemonPDUHeader& aHeader,
-                     BluetoothDaemonPDU& aPDU);
+  void AudioStateNtf(const DaemonSocketPDUHeader& aHeader,
+                     DaemonSocketPDU& aPDU);
 
-  void AudioConfigNtf(const BluetoothDaemonPDUHeader& aHeader,
-                      BluetoothDaemonPDU& aPDU);
+  void AudioConfigNtf(const DaemonSocketPDUHeader& aHeader,
+                      DaemonSocketPDU& aPDU);
 
-  void HandleNtf(const BluetoothDaemonPDUHeader& aHeader,
-                 BluetoothDaemonPDU& aPDU,
+  void HandleNtf(const DaemonSocketPDUHeader& aHeader,
+                 DaemonSocketPDU& aPDU,
                  void* aUserData);
 
   static BluetoothA2dpNotificationHandler* sNotificationHandler;

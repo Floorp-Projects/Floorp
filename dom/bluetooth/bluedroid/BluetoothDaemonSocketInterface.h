@@ -20,7 +20,7 @@ class BluetoothDaemonSocketModule
 public:
   static const int MAX_NUM_CLIENTS;
 
-  virtual nsresult Send(BluetoothDaemonPDU* aPDU, void* aUserData) = 0;
+  virtual nsresult Send(DaemonSocketPDU* aPDU, void* aUserData) = 0;
 
   // Commands
   //
@@ -43,10 +43,10 @@ public:
 
 protected:
 
-  void HandleSvc(const BluetoothDaemonPDUHeader& aHeader,
-                 BluetoothDaemonPDU& aPDU, void* aUserData);
+  void HandleSvc(const DaemonSocketPDUHeader& aHeader,
+                 DaemonSocketPDU& aPDU, void* aUserData);
 
-  nsresult Send(BluetoothDaemonPDU* aPDU, BluetoothSocketResultHandler* aRes);
+  nsresult Send(DaemonSocketPDU* aPDU, BluetoothSocketResultHandler* aRes);
 
 private:
   class AcceptWatcher;
@@ -74,16 +74,16 @@ private:
                                    int, const nsAString_internal&, int>
     IntStringIntResultRunnable;
 
-  void ErrorRsp(const BluetoothDaemonPDUHeader& aHeader,
-                BluetoothDaemonPDU& aPDU,
+  void ErrorRsp(const DaemonSocketPDUHeader& aHeader,
+                DaemonSocketPDU& aPDU,
                 BluetoothSocketResultHandler* aRes);
 
-  void ListenRsp(const BluetoothDaemonPDUHeader& aHeader,
-                 BluetoothDaemonPDU& aPDU,
+  void ListenRsp(const DaemonSocketPDUHeader& aHeader,
+                 DaemonSocketPDU& aPDU,
                  BluetoothSocketResultHandler* aRes);
 
-  void ConnectRsp(const BluetoothDaemonPDUHeader& aHeader,
-                  BluetoothDaemonPDU& aPDU,
+  void ConnectRsp(const DaemonSocketPDUHeader& aHeader,
+                  DaemonSocketPDU& aPDU,
                   BluetoothSocketResultHandler* aRes);
 };
 

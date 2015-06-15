@@ -22,7 +22,7 @@ class BluetoothDaemonConnectionIO;
 class DaemonSocketIOConsumer;
 
 /*
- * |BlutoothDaemonPDU| represents a single PDU that is transfered from or to
+ * |DaemonSocketPDU| represents a single PDU that is transfered from or to
  * the Bluetooth daemon. Each PDU contains exactly one command.
  *
  * A PDU as the following format
@@ -41,7 +41,7 @@ class DaemonSocketIOConsumer;
  *    https://git.kernel.org/cgit/bluetooth/bluez.git/tree/android/hal-ipc-api.txt?id=5.24
  *
  */
-class BluetoothDaemonPDU final : public UnixSocketIOBuffer
+class DaemonSocketPDU final : public UnixSocketIOBuffer
 {
 public:
   enum {
@@ -53,10 +53,10 @@ public:
     MAX_PAYLOAD_LENGTH = 1 << 16
   };
 
-  BluetoothDaemonPDU(uint8_t aService, uint8_t aOpcode,
+  DaemonSocketPDU(uint8_t aService, uint8_t aOpcode,
                      uint16_t aPayloadSize);
-  BluetoothDaemonPDU(size_t aPayloadSize);
-  ~BluetoothDaemonPDU();
+  DaemonSocketPDU(size_t aPayloadSize);
+  ~DaemonSocketPDU();
 
   void SetConsumer(DaemonSocketIOConsumer* aConsumer)
   {
@@ -102,8 +102,8 @@ class DaemonSocketIOConsumer
 public:
   virtual ~DaemonSocketIOConsumer();
 
-  virtual void Handle(BluetoothDaemonPDU& aPDU) = 0;
-  virtual void StoreUserData(const BluetoothDaemonPDU& aPDU) = 0;
+  virtual void Handle(DaemonSocketPDU& aPDU) = 0;
+  virtual void StoreUserData(const DaemonSocketPDU& aPDU) = 0;
 
 protected:
   DaemonSocketIOConsumer();
