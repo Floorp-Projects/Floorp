@@ -160,7 +160,8 @@ def WebIDLTest(parser, harness):
                  "optional Dict2", "sequence<long>", "sequence<short>",
                  "MozMap<object>", "MozMap<Dict>", "MozMap<long>",
                  "long[]", "short[]", "Date", "Date?", "any",
-                 "USVString" ]
+                 "USVString", "ArrayBuffer", "ArrayBufferView", "SharedArrayBuffer", "SharedArrayBufferView",
+                 "Uint8Array", "SharedUint8Array", "Uint16Array", "SharedUint16Array" ]
     # When we can parse Date and RegExp, we need to add them here.
 
     # Try to categorize things a bit to keep list lengths down
@@ -175,8 +176,10 @@ def WebIDLTest(parser, harness):
     nonStrings = allBut(argTypes, strings)
     nonObjects = primitives + strings
     objects = allBut(argTypes, nonObjects )
+    bufferSourceTypes = ["ArrayBuffer", "ArrayBufferView", "Uint8Array", "Uint16Array"]
+    sharedBufferSourceTypes = ["SharedArrayBuffer", "SharedArrayBufferView", "SharedUint8Array", "SharedUint16Array"]
     interfaces = [ "Interface", "Interface?", "AncestorInterface",
-                   "UnrelatedInterface", "ImplementedInterface" ]
+                   "UnrelatedInterface", "ImplementedInterface" ] + bufferSourceTypes + sharedBufferSourceTypes
     nullables = ["long?", "short?", "boolean?", "Interface?",
                  "CallbackInterface?", "optional Dict", "optional Dict2",
                  "Date?", "any"]
@@ -186,7 +189,7 @@ def WebIDLTest(parser, harness):
     nonUserObjects = nonObjects + interfaces + dates + sequences
     otherObjects = allBut(argTypes, nonUserObjects + ["object"])
     notRelatedInterfaces = (nonObjects + ["UnrelatedInterface"] +
-                            otherObjects + dates + sequences)
+                            otherObjects + dates + sequences + bufferSourceTypes + sharedBufferSourceTypes)
     mozMaps = [ "MozMap<object>", "MozMap<Dict>", "MozMap<long>" ]
 
     # Build a representation of the distinguishability table as a dict
@@ -235,6 +238,14 @@ def WebIDLTest(parser, harness):
     setDistinguishable("Date", allBut(argTypes, dates + ["object"]))
     setDistinguishable("Date?", allBut(argTypes, dates + nullables + ["object"]))
     setDistinguishable("any", [])
+    setDistinguishable("ArrayBuffer", allBut(argTypes, ["ArrayBuffer", "object"]))
+    setDistinguishable("ArrayBufferView", allBut(argTypes, ["ArrayBufferView", "Uint8Array", "Uint16Array", "object"]))
+    setDistinguishable("Uint8Array", allBut(argTypes, ["ArrayBufferView", "Uint8Array", "object"]))
+    setDistinguishable("Uint16Array", allBut(argTypes, ["ArrayBufferView", "Uint16Array", "object"]))
+    setDistinguishable("SharedArrayBuffer", allBut(argTypes, ["SharedArrayBuffer", "object"]))
+    setDistinguishable("SharedArrayBufferView", allBut(argTypes, ["SharedArrayBufferView", "SharedUint8Array", "SharedUint16Array", "object"]))
+    setDistinguishable("SharedUint8Array", allBut(argTypes, ["SharedArrayBufferView", "SharedUint8Array", "object"]))
+    setDistinguishable("SharedUint16Array", allBut(argTypes, ["SharedArrayBufferView", "SharedUint16Array", "object"]))
 
     def areDistinguishable(type1, type2):
         return data[type1].get(type2, False)

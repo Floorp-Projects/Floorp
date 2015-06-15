@@ -1756,6 +1756,7 @@ BorrowedXlibDrawable::Init(DrawTarget* aDT)
   if (cairo_surface_get_type(surf) != CAIRO_SURFACE_TYPE_XLIB) {
     return false;
   }
+  cairo_surface_flush(surf);
 
   cairoDT->WillChange();
 
@@ -1774,6 +1775,9 @@ BorrowedXlibDrawable::Init(DrawTarget* aDT)
 void
 BorrowedXlibDrawable::Finish()
 {
+  DrawTargetCairo* cairoDT = static_cast<DrawTargetCairo*>(mDT);
+  cairo_surface_t* surf = cairoDT->mSurface;
+  cairo_surface_mark_dirty(surf);
   if (mDrawable) {
     mDrawable = None;
   }
