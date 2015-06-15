@@ -177,7 +177,6 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
   aOut.mode() = aIn->Mode();
   aOut.credentials() = aIn->GetCredentialsMode();
   aOut.contentPolicyType() = aIn->ContentPolicyType();
-  aOut.context() = aIn->Context();
   aOut.requestCache() = aIn->GetCacheMode();
 
   if (aBodyAction == IgnoreBody) {
@@ -328,10 +327,6 @@ TypeUtils::ToInternalRequest(const CacheRequest& aIn)
   internalRequest->SetMode(aIn.mode());
   internalRequest->SetCredentialsMode(aIn.credentials());
   internalRequest->SetContentPolicyType(aIn.contentPolicyType());
-  DebugOnly<RequestContext> contextAfterSetContentPolicyType = internalRequest->Context();
-  internalRequest->SetContext(aIn.context());
-  MOZ_ASSERT(contextAfterSetContentPolicyType.value == internalRequest->Context(),
-             "The RequestContext and nsContentPolicyType values should not get out of sync");
   internalRequest->SetCacheMode(aIn.requestCache());
 
   nsRefPtr<InternalHeaders> internalHeaders =
