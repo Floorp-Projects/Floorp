@@ -208,6 +208,10 @@ private:
     bool mNeedRandomAccessPoint;
     nsRefPtr<MediaTrackDemuxer> mDemuxer;
     MediaPromiseRequestHolder<MediaTrackDemuxer::SamplesPromise> mDemuxRequest;
+    // If set, position where the next contiguous frame will be inserted.
+    // If a discontinuity is detected, it will be unset and recalculated upon
+    // the next insertion.
+    Maybe<size_t> mNextInsertionIndex;
     // Samples just demuxed, but not yet parsed.
     TrackBuffer mQueuedSamples;
     // We only manage a single track of each type at this time.
