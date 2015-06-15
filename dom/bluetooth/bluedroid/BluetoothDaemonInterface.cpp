@@ -2321,7 +2321,7 @@ BluetoothDaemonInterface::GetBluetoothGattInterface()
   return mGattInterface;
 }
 
-// |BluetoothDaemonConnectionConsumer|, |ListenSocketConsumer|
+// |DaemonSocketConsumer|, |ListenSocketConsumer|
 
 void
 BluetoothDaemonInterface::OnConnectSuccess(int aIndex)

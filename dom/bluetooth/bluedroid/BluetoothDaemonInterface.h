@@ -31,7 +31,7 @@ class BluetoothDaemonSocketInterface;
 
 class BluetoothDaemonInterface final
   : public BluetoothInterface
-  , public mozilla::ipc::BluetoothDaemonConnectionConsumer
+  , public mozilla::ipc::DaemonSocketConsumer
   , public mozilla::ipc::ListenSocketConsumer
 {
 public:
@@ -143,7 +143,7 @@ protected:
                                      unsigned long aPostfixLength,
                                      nsACString& aAddress);
 
-  // Methods for |BluetoothDaemonConnectionConsumer| and |ListenSocketConsumer|
+  // Methods for |DaemonSocketConsumer| and |ListenSocketConsumer|
   //
 
   void OnConnectSuccess(int aIndex) override;

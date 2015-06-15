@@ -344,7 +344,7 @@ BluetoothDaemonConnectionIO::ShutdownOnIOThread()
 
 BluetoothDaemonConnection::BluetoothDaemonConnection(
   BluetoothDaemonPDUConsumer* aPDUConsumer,
-  BluetoothDaemonConnectionConsumer* aConsumer,
+  DaemonSocketConsumer* aConsumer,
   int aIndex)
   : mIO(nullptr)
   , mPDUConsumer(aPDUConsumer)
