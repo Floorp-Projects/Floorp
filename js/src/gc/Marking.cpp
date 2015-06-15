@@ -1230,8 +1230,8 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
       case SavedValueArrayTag: {
         MOZ_ASSERT(!(addr & CellMask));
         JSObject* obj = reinterpret_cast<JSObject*>(addr);
-        HeapValue* vp;
-        HeapValue* end;
+        HeapSlot* vp;
+        HeapSlot* end;
         if (restoreValueArray(obj, (void**)&vp, (void**)&end))
             pushValueArray(&obj->as<NativeObject>(), vp, end);
         else
@@ -2278,9 +2278,9 @@ TypeSet::MarkTypeUnbarriered(JSTracer* trc, TypeSet::Type* v, const char* name)
 #ifdef DEBUG
 struct AssertNonGrayTracer : public JS::CallbackTracer {
     explicit AssertNonGrayTracer(JSRuntime* rt) : JS::CallbackTracer(rt) {}
-    void trace(void** thingp, JS::TraceKind kind) override {
-        DebugOnly<Cell*> thing(static_cast<Cell*>(*thingp));
-        MOZ_ASSERT_IF(thing->isTenured(), !thing->asTenured().isMarked(js::gc::GRAY));
+    void onChild(const JS::GCCellPtr& thing) override {
+        MOZ_ASSERT_IF(thing.asCell()->isTenured(),
+                      !thing.asCell()->asTenured().isMarked(js::gc::GRAY));
     }
 };
 #endif
@@ -2305,7 +2305,7 @@ struct UnmarkGrayTracer : public JS::CallbackTracer
         unmarkedAny(false)
     {}
 
-    void trace(void** thingp, JS::TraceKind kind) override;
+    void onChild(const JS::GCCellPtr& thing) override;
 
     /* True iff we are tracing the immediate children of a shape. */
     bool tracingShape;
@@ -2348,7 +2348,7 @@ struct UnmarkGrayTracer : public JS::CallbackTracer
  *   containers.
  */
 void
-UnmarkGrayTracer::trace(void** thingp, JS::TraceKind kind)
+UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing)
 {
     int stackDummy;
     if (!JS_CHECK_STACK_SIZE(runtime()->mainThread.nativeStackLimit[StackForSystemCode],
@@ -2362,14 +2362,14 @@ UnmarkGrayTracer::trace(void** thingp, JS::TraceKind kind)
         return;
     }
 
-    Cell* cell = static_cast<Cell*>(*thingp);
+    Cell* cell = thing.asCell();
 
     // Cells in the nursery cannot be gray, and therefore must necessarily point
     // to only black edges.
     if (!cell->isTenured()) {
 #ifdef DEBUG
         AssertNonGrayTracer nongray(runtime());
-        TraceChildren(&nongray, cell, kind);
+        TraceChildren(&nongray, cell, thing.kind());
 #endif
         return;
     }
@@ -2386,16 +2386,16 @@ UnmarkGrayTracer::trace(void** thingp, JS::TraceKind kind)
     // The parent will later trace |tenured|. This is done to avoid increasing
     // the stack depth during shape tracing. It is safe to do because a shape
     // can only have one child that is a shape.
-    UnmarkGrayTracer childTracer(this, kind == JS::TraceKind::Shape);
+    UnmarkGrayTracer childTracer(this, thing.kind() == JS::TraceKind::Shape);
 
-    if (kind != JS::TraceKind::Shape) {
-        TraceChildren(&childTracer, &tenured, kind);
+    if (thing.kind() != JS::TraceKind::Shape) {
+        TraceChildren(&childTracer, &tenured, thing.kind());
         MOZ_ASSERT(!childTracer.previousShape);
         unmarkedAny |= childTracer.unmarkedAny;
         return;
     }
 
-    MOZ_ASSERT(kind == JS::TraceKind::Shape);
+    MOZ_ASSERT(thing.kind() == JS::TraceKind::Shape);
     Shape* shape = static_cast<Shape*>(&tenured);
     if (tracingShape) {
         MOZ_ASSERT(!previousShape);

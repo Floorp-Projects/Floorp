@@ -46,9 +46,8 @@ T
 DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name)
 {
     CheckTracedThing(trc, *thingp);
-    JS::TraceKind kind = MapTypeToTraceKind<typename mozilla::RemovePointer<T>::Type>::kind;
     JS::AutoTracingName ctx(trc, name);
-    trc->trace(reinterpret_cast<void**>(thingp), kind);
+    trc->dispatchToOnEdge(thingp);
     return *thingp;
 }
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type, _) \
@@ -322,21 +321,19 @@ struct ObjectGroupCycleCollectorTracer : public JS::CallbackTracer
           innerTracer(innerTracer)
     {}
 
-    void trace(void** thingp, JS::TraceKind kind) override;
+    void onChild(const JS::GCCellPtr& thing) override;
 
     JS::CallbackTracer* innerTracer;
     Vector<ObjectGroup*, 4, SystemAllocPolicy> seen, worklist;
 };
 
 void
-ObjectGroupCycleCollectorTracer::trace(void** thingp, JS::TraceKind kind)
+ObjectGroupCycleCollectorTracer::onChild(const JS::GCCellPtr& thing)
 {
-    JS::GCCellPtr thing(*thingp, kind);
-
     if (thing.isObject() || thing.isScript()) {
         // Invoke the inner cycle collector callback on this child. It will not
         // recurse back into TraceChildren.
-        innerTracer->trace(thingp, kind);
+        innerTracer->onChild(thing);
         return;
     }
 

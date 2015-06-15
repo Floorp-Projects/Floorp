@@ -8,16 +8,16 @@
 #include "jsapi-tests/tests.h"
 
 class CCWTestTracer : public JS::CallbackTracer {
-    void trace(void** thingp, JS::TraceKind kind) {
+    void onChild(const JS::GCCellPtr& thing) override {
         numberOfThingsTraced++;
 
-        printf("*thingp         = %p\n", *thingp);
+        printf("*thingp         = %p\n", thing.asCell());
         printf("*expectedThingp = %p\n", *expectedThingp);
 
-        printf("kind         = %d\n", static_cast<int>(kind));
+        printf("kind         = %d\n", static_cast<int>(thing.kind()));
         printf("expectedKind = %d\n", static_cast<int>(expectedKind));
 
-        if (*thingp != *expectedThingp || kind != expectedKind)
+        if (thing.asCell() != *expectedThingp || thing.kind() != expectedKind)
             okay = false;
     }
 

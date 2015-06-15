@@ -8,13 +8,13 @@
 #define mozilla_dom_bluetooth_bluedroid_bluetoothdaemoninterface_h__
 
 #include "BluetoothInterface.h"
-#include "mozilla/ipc/BluetoothDaemonConnectionConsumer.h"
+#include "mozilla/ipc/DaemonSocketConsumer.h"
 #include "mozilla/ipc/ListenSocketConsumer.h"
 
 namespace mozilla {
 namespace ipc {
 
-class BluetoothDaemonConnection;
+class DaemonSocket;
 class ListenSocket;
 
 }
@@ -31,7 +31,7 @@ class BluetoothDaemonSocketInterface;
 
 class BluetoothDaemonInterface final
   : public BluetoothInterface
-  , public mozilla::ipc::BluetoothDaemonConnectionConsumer
+  , public mozilla::ipc::DaemonSocketConsumer
   , public mozilla::ipc::ListenSocketConsumer
 {
 public:
@@ -143,7 +143,7 @@ protected:
                                      unsigned long aPostfixLength,
                                      nsACString& aAddress);
 
-  // Methods for |BluetoothDaemonConnectionConsumer| and |ListenSocketConsumer|
+  // Methods for |DaemonSocketConsumer| and |ListenSocketConsumer|
   //
 
   void OnConnectSuccess(int aIndex) override;
@@ -156,8 +156,8 @@ private:
 
   nsCString mListenSocketName;
   nsRefPtr<mozilla::ipc::ListenSocket> mListenSocket;
-  nsRefPtr<mozilla::ipc::BluetoothDaemonConnection> mCmdChannel;
-  nsRefPtr<mozilla::ipc::BluetoothDaemonConnection> mNtfChannel;
+  nsRefPtr<mozilla::ipc::DaemonSocket> mCmdChannel;
+  nsRefPtr<mozilla::ipc::DaemonSocket> mNtfChannel;
   nsAutoPtr<BluetoothDaemonProtocol> mProtocol;
 
   nsTArray<nsRefPtr<BluetoothResultHandler> > mResultHandlerQ;

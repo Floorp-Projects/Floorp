@@ -1216,7 +1216,7 @@ IonScript::purgeCaches()
 
     AutoWritableJitCode awjc(method());
     for (size_t i = 0; i < numCaches(); i++)
-        getCacheFromIndex(i).reset();
+        getCacheFromIndex(i).reset(DontReprotect);
 }
 
 void

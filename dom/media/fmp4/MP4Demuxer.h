@@ -51,7 +51,7 @@ private:
   friend class MP4TrackDemuxer;
   nsRefPtr<MediaResource> mResource;
   nsRefPtr<mp4_demuxer::ResourceStream> mStream;
-  nsRefPtr<MediaLargeByteBuffer> mInitData;
+  nsRefPtr<MediaByteBuffer> mInitData;
   UniquePtr<mp4_demuxer::MP4Metadata> mMetadata;
   nsTArray<nsRefPtr<MP4TrackDemuxer>> mDemuxers;
 };

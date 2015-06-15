@@ -237,7 +237,7 @@ IMFYCbCrImage::GetTextureClient(CompositableClient* aClient)
   RefPtr<ID3D11DeviceContext> ctx;
   device->GetImmediateContext(byRef(ctx));
 
-  CD3D11_TEXTURE2D_DESC newDesc(DXGI_FORMAT_A8_UNORM,
+  CD3D11_TEXTURE2D_DESC newDesc(DXGI_FORMAT_R8_UNORM,
                                 mData.mYSize.width, mData.mYSize.height, 1, 1);
 
   newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;

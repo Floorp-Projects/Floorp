@@ -42,6 +42,7 @@
 #include "js/MemoryMetrics.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/SharedArrayObject.h"
 #include "vm/WrapperObject.h"
 
 #include "jsatominlines.h"
@@ -1285,6 +1286,14 @@ js::UnwrapArrayBufferView(JSObject* obj)
     return nullptr;
 }
 
+JS_FRIEND_API(JSObject*)
+js::UnwrapSharedArrayBufferView(JSObject* obj)
+{
+    if (JSObject* unwrapped = CheckedUnwrap(obj))
+        return unwrapped->is<SharedTypedArrayObject>() ? unwrapped : nullptr;
+    return nullptr;
+}
+
 JS_FRIEND_API(uint32_t)
 JS_GetArrayBufferByteLength(JSObject* obj)
 {
@@ -1346,6 +1355,13 @@ JS_NewArrayBuffer(JSContext* cx, uint32_t nbytes)
     return ArrayBufferObject::create(cx, nbytes);
 }
 
+JS_FRIEND_API(JSObject*)
+JS_NewSharedArrayBuffer(JSContext* cx, uint32_t nbytes)
+{
+    MOZ_ASSERT(nbytes <= INT32_MAX);
+    return SharedArrayBufferObject::New(cx, nbytes);
+}
+
 JS_PUBLIC_API(JSObject*)
 JS_NewArrayBufferWithContents(JSContext* cx, size_t nbytes, void* data)
 {
@@ -1373,6 +1389,14 @@ js::UnwrapArrayBuffer(JSObject* obj)
 {
     if (JSObject* unwrapped = CheckedUnwrap(obj))
         return unwrapped->is<ArrayBufferObject>() ? unwrapped : nullptr;
+    return nullptr;
+}
+
+JS_FRIEND_API(JSObject*)
+js::UnwrapSharedArrayBuffer(JSObject* obj)
+{
+    if (JSObject* unwrapped = CheckedUnwrap(obj))
+        return unwrapped->is<SharedArrayBufferObject>() ? unwrapped : nullptr;
     return nullptr;
 }
 

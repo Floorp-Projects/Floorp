@@ -9,10 +9,10 @@
              optional BluetoothGattCharacteristicEventInit eventInitDict)]
 interface BluetoothGattCharacteristicEvent : Event
 {
-  readonly attribute BluetoothGattCharacteristic characteristic;
+  readonly attribute BluetoothGattCharacteristic? characteristic;
 };
 
 dictionary BluetoothGattCharacteristicEventInit : EventInit
 {
-  required BluetoothGattCharacteristic characteristic;
+  BluetoothGattCharacteristic? characteristic = null;
 };

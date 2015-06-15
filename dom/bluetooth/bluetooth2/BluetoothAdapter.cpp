@@ -1019,9 +1019,9 @@ BluetoothAdapter::SetAdapterState(BluetoothAdapterState aState)
 
   // Fire BluetoothAttributeEvent for changed adapter state
   Sequence<nsString> types;
-  BT_APPEND_ENUM_STRING(types,
-                        BluetoothAdapterAttribute,
-                        BluetoothAdapterAttribute::State);
+  BT_APPEND_ENUM_STRING_FALLIBLE(types,
+                                 BluetoothAdapterAttribute,
+                                 BluetoothAdapterAttribute::State);
   DispatchAttributeEvent(types);
 }
 
@@ -1047,7 +1047,7 @@ BluetoothAdapter::HandlePropertyChanged(const BluetoothValue& aValue)
     // BluetoothAdapterAttribute properties
     if (IsAdapterAttributeChanged(type, arr[i].value())) {
       SetPropertyByValue(arr[i]);
-      BT_APPEND_ENUM_STRING(types, BluetoothAdapterAttribute, type);
+      BT_APPEND_ENUM_STRING_FALLIBLE(types, BluetoothAdapterAttribute, type);
     }
   }
 
