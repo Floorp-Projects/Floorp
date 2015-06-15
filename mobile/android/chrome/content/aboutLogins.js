@@ -63,10 +63,6 @@ let Logins = {
 
     this._loadList(this._getLogins());
 
-    document.getElementById("copyusername-btn").addEventListener("click", this._copyUsername.bind(this), false);
-    document.getElementById("copypassword-btn").addEventListener("click", this._copyPassword.bind(this), false);
-    document.getElementById("details-header").addEventListener("click", this._openLink.bind(this), false);
-
     let filterInput = document.getElementById("filter-input");
     let filterContainer = document.getElementById("filter-input-container");
 
@@ -125,24 +121,8 @@ let Logins = {
   },
 
   _showList: function () {
-    // Hide the detail page and show the list
-    let details = document.getElementById("login-details");
-    details.setAttribute("hidden", "true");
     let list = document.getElementById("logins-list");
     list.removeAttribute("hidden");
-  },
-
-  _onPopState: function (event) {
-    // Called when back/forward is used to change the state of the page
-    if (event.state) {
-      // Show the detail page for an addon
-      this._showDetails(this._getElementForLogin(event.state.id));
-    } else {
-      // Clear any previous detail addon
-      let detailItem = document.querySelector("#login-details > .login-item");
-      detailItem.login = null;
-      this._showList();
-    }
   },
 
   _onLoginClick: function (event) {
@@ -160,7 +140,6 @@ let Logins = {
       { label: gStringBundle.GetStringFromName("loginsMenu.showPassword") },
       { label: gStringBundle.GetStringFromName("loginsMenu.copyPassword") },
       { label: gStringBundle.GetStringFromName("loginsMenu.copyUsername") },
-      { label: gStringBundle.GetStringFromName("loginsMenu.details") },
       { label: gStringBundle.GetStringFromName("loginsMenu.delete") }
     ];
 
@@ -190,10 +169,6 @@ let Logins = {
           copyStringAndToast(login.username, gStringBundle.GetStringFromName("loginsDetails.usernameCopied"));
           break;
         case 3:
-          this._showDetails(loginItem);
-          history.pushState({ id: login.guid }, document.title);
-          break;
-        case 4:
           let confirmPrompt = new Prompt({
             window: window,
             message: gStringBundle.GetStringFromName("loginsDialog.confirmDelete"),
@@ -265,12 +240,6 @@ let Logins = {
     return loginItem;
   },
 
-  _getElementForLogin: function (login) {
-    let list = document.getElementById("logins-list");
-    let element = list.querySelector("div[loginID=" + login.quote() + "]");
-    return element;
-  },
-
   handleEvent: function (event) {
     switch (event.type) {
       case "popstate": {
@@ -292,61 +261,6 @@ let Logins = {
         break;
       }
     }
-  },
-
-  _showDetails: function (listItem) {
-    let detailItem = document.querySelector("#login-details > .login-item");
-    let login = detailItem.login = listItem.login;
-    let favicon = detailItem.querySelector(".icon");
-    favicon.style["background-image"] = listItem.querySelector(".icon").style["background-image"];
-    favicon.style.visibility = "visible";
-    document.getElementById("details-header").setAttribute("link", login.hostname);
-
-    document.getElementById("detail-hostname").textContent = login.hostname;
-    document.getElementById("detail-realm").textContent = login.httpRealm;
-    document.getElementById("detail-username").textContent = login.username;
-
-    // Borrowed from desktop Firefox: http://mxr.mozilla.org/mozilla-central/source/browser/base/content/urlbarBindings.xml#204
-    let matchedURL = login.hostname.match(/^((?:[a-z]+:\/\/)?(?:[^\/]+@)?)(.+?)(?::\d+)?(?:\/|$)/);
-
-    let userInputs = [];
-    if (matchedURL) {
-      let [, , domain] = matchedURL;
-      userInputs = domain.split(".").filter(part => part.length > 3);
-    }
-
-    let lastChanged = new Date(login.QueryInterface(Ci.nsILoginMetaInfo).timePasswordChanged);
-    let days = Math.round((Date.now() - lastChanged) / 1000 / 60 / 60/ 24);
-    document.getElementById("detail-age").textContent = gStringBundle.formatStringFromName("loginsDetails.age", [days], 1);
-
-    let list = document.getElementById("logins-list");
-    list.setAttribute("hidden", "true");
-
-    let loginDetails = document.getElementById("login-details");
-    loginDetails.removeAttribute("hidden");
-
-    // Password details page is loaded.
-    let loadEvent = document.createEvent("Events");
-    loadEvent.initEvent("PasswordsDetailsLoad", true, false);
-    window.dispatchEvent(loadEvent);
-  },
-
-  _copyUsername: function() {
-    let detailItem = document.querySelector("#login-details > .login-item");
-    let login = detailItem.login;
-    copyStringAndToast(login.username, gStringBundle.GetStringFromName("loginsDetails.usernameCopied"));
-  },
-
-  _copyPassword: function() {
-    let detailItem = document.querySelector("#login-details > .login-item");
-    let login = detailItem.login;
-    copyStringAndToast(login.password, gStringBundle.GetStringFromName("loginsDetails.passwordCopied"));
-  },
-
-  _openLink: function (clickEvent) {
-    let url = clickEvent.currentTarget.getAttribute("link");
-    let BrowserApp = gChromeWin.BrowserApp;
-    BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id });
   },
 
   _filter: function(event) {
