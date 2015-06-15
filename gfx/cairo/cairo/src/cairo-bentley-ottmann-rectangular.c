@@ -674,10 +674,19 @@ _cairo_bentley_ottmann_tessellate_rectangular_traps (cairo_traps_t *traps,
     cairo_status_t status;
     int i;
 
-    if (unlikely (traps->num_traps <= 1))
-	return CAIRO_STATUS_SUCCESS;
-
     assert (traps->is_rectangular);
+
+    if (unlikely (traps->num_traps <= 1)) {
+        if (traps->num_traps == 1) {
+            cairo_trapezoid_t *trap = traps->traps;
+            if (trap->left.p1.x > trap->right.p1.x) {
+                cairo_line_t tmp = trap->left;
+                trap->left = trap->right;
+                trap->right = tmp;
+          }
+        }
+        return CAIRO_STATUS_SUCCESS;
+    }
 
     dump_traps (traps, "bo-rects-traps-in.txt");
 
