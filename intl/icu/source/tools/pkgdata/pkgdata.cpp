@@ -2171,7 +2171,7 @@ static void pkg_createOptMatchArch(char *optMatchArch) {
         T_FileStream_writeLine(stream, code);
         T_FileStream_close(stream);
 
-        char cmd[SMALL_BUFFER_MAX_SIZE];
+        char cmd[LARGE_BUFFER_MAX_SIZE];
         sprintf(cmd, "%s %s -o %s",
             pkgDataFlags[COMPILER],
             source,
