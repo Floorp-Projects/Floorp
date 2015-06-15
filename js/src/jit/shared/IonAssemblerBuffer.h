@@ -99,10 +99,10 @@ class BufferSlice
 template<int SliceSize, class Inst>
 class AssemblerBuffer
 {
+  protected:
     typedef BufferSlice<SliceSize> Slice;
     typedef AssemblerBuffer<SliceSize, Inst> AssemblerBuffer_;
 
-  protected:
     // Doubly-linked list of BufferSlices, with the most recent in tail position.
     Slice* head;
     Slice* tail;
