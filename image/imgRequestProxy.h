@@ -204,7 +204,10 @@ private:
   // mListener is only promised to be a weak ref (see imgILoader.idl),
   // but we actually keep a strong ref to it until we've seen our
   // first OnStopRequest.
-  imgINotificationObserver* mListener;
+  imgINotificationObserver* MOZ_UNSAFE_REF("Observers must call Cancel() or "
+                                           "CancelAndForgetObserver() before "
+                                           "they are destroyed") mListener;
+
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   nsLoadFlags mLoadFlags;
