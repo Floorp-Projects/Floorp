@@ -5448,9 +5448,6 @@ struct PerformanceGroup {
     // Performance data for this group.
     PerformanceData data;
 
-    // An id unique to this runtime.
-    const uint64_t uid;
-
     // `true` if an instance of `AutoStopwatch` is already monitoring
     // the performance of this performance group for this iteration
     // of the event loop, `false` otherwise.
@@ -5475,7 +5472,12 @@ struct PerformanceGroup {
         stopwatch_ = nullptr;
     }
 
-    explicit PerformanceGroup(JSContext* cx, void* key);
+    explicit PerformanceGroup(void* key)
+      : stopwatch_(nullptr)
+      , iteration_(0)
+      , key_(key)
+      , refCount_(0)
+    { }
     ~PerformanceGroup()
     {
         MOZ_ASSERT(refCount_ == 0);
@@ -5587,7 +5589,7 @@ extern JS_PUBLIC_API(PerformanceData*)
 GetPerformanceData(JSRuntime*);
 
 typedef bool
-(PerformanceStatsWalker)(JSContext* cx, const PerformanceData& stats, uint64_t uid, void* closure);
+(PerformanceStatsWalker)(JSContext* cx, const PerformanceData& stats, void* closure);
 
 /**
  * Extract the performance statistics.
