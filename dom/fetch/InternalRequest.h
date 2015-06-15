@@ -55,7 +55,6 @@ namespace dom {
  * plugin            | TYPE_OBJECT_SUBREQUEST
  * prefetch          |
  * script            | TYPE_SCRIPT
- * serviceworker     |
  * sharedworker      |
  * subresource       | Not supported by Gecko
  * style             | TYPE_STYLESHEET
