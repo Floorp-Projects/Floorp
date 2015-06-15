@@ -19,14 +19,29 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationTimeline)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+namespace {
+  struct AddAnimationParams {
+    AnimationTimeline::AnimationSequence& mSequence;
+#ifdef DEBUG
+    // This is only used for a pointer-equality assertion
+    AnimationTimeline* mTimeline;
+#endif
+  };
+}
+
 static PLDHashOperator
 AppendAnimationToSequence(nsRefPtrHashKey<dom::Animation>* aKey,
-                          void* aSequence)
+                          void* aParams)
 {
   Animation* animation = aKey->GetKey();
-  AnimationTimeline::AnimationSequence* sequence =
-    static_cast<AnimationTimeline::AnimationSequence*>(aSequence);
-  sequence->AppendElement(animation);
+  AddAnimationParams* params = static_cast<AddAnimationParams*>(aParams);
+
+  MOZ_ASSERT(animation->IsRelevant(),
+             "Animations registered with a timeline should be relevant");
+  MOZ_ASSERT(animation->GetTimeline() == params->mTimeline,
+             "Animation should refer to this timeline");
+
+  params->mSequence.AppendElement(animation);
 
   return PL_DHASH_NEXT;
 }
@@ -36,7 +51,12 @@ AnimationTimeline::GetAnimations(AnimationSequence& aAnimations)
 {
   // FIXME: Flush the document here (fixed in a subsequent patch)
 
-  mAnimations.EnumerateEntries(AppendAnimationToSequence, &aAnimations);
+#ifdef DEBUG
+  AddAnimationParams params{ aAnimations, this };
+#else
+  AddAnimationParams params{ aAnimations };
+#endif
+  mAnimations.EnumerateEntries(AppendAnimationToSequence, &params);
 }
 
 void
