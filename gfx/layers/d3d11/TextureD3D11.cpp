@@ -34,7 +34,7 @@ SurfaceFormatToDXGIFormat(gfx::SurfaceFormat aFormat)
     case SurfaceFormat::R8G8B8X8:
       return DXGI_FORMAT_R8G8B8A8_UNORM;
     case SurfaceFormat::A8:
-      return DXGI_FORMAT_A8_UNORM;
+      return DXGI_FORMAT_R8_UNORM;
     default:
       MOZ_ASSERT(false, "unsupported format");
       return DXGI_FORMAT_UNKNOWN;
@@ -451,7 +451,7 @@ TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlag
 
   if (gfxPrefs::Direct2DUse1_1() && d3d11device) {
 
-    CD3D11_TEXTURE2D_DESC newDesc(mFormat == SurfaceFormat::A8 ? DXGI_FORMAT_A8_UNORM : DXGI_FORMAT_B8G8R8A8_UNORM,
+    CD3D11_TEXTURE2D_DESC newDesc(mFormat == SurfaceFormat::A8 ? DXGI_FORMAT_R8_UNORM : DXGI_FORMAT_B8G8R8A8_UNORM,
                                   aSize.width, aSize.height, 1, 1,
                                   D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
 

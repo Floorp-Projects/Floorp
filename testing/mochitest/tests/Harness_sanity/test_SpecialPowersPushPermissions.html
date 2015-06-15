@@ -17,6 +17,17 @@ const ACCESS_SESSION = SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION;
 const ACCESS_ALLOW_FIRST_PARTY_ONLY = SpecialPowers.Ci.nsICookiePermission.ACCESS_ALLOW_FIRST_PARTY_ONLY;
 const ACCESS_LIMIT_THIRD_PARTY = SpecialPowers.Ci.nsICookiePermission.ACCESS_LIMIT_THIRD_PARTY;
 
+const EXPIRE_TIME = SpecialPowers.Ci.nsIPermissionManager.EXPIRE_TIME;
+var start;
+const DELAY = 500;
+// PR_Now() that called in nsPermissionManager to get the system time and
+// Date.now() are out of sync on win32 platform(XP/win7). The PR_Now() is
+// 15~20ms less than Date.now(). Unfortunately, this time skew can't be
+// avoided, so it needs to add a time buffer to compensate.
+const TIME_SKEW = 100;
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('specialPowers_framescript.js'));
+SimpleTest.requestFlakyTimeout("untriaged");
+
 function starttest(){
   SpecialPowers.addPermission("pPROMPT", PROMPT_ACTION, document);
   SpecialPowers.addPermission("pALLOW", ALLOW_ACTION, document);
@@ -136,8 +147,69 @@ function test6() {
     dump('/**** pTHIRDPARTY still set ****/\n');
     setTimeout(test6, 0);
   } else {
-    SimpleTest.finish();
+    test7();
   }
+}
+
+function test7() {
+  afterPermissionChanged('pEXPIRE', 'deleted', test8);
+  afterPermissionChanged('pEXPIRE', 'added', permissionPollingCheck);
+  start = Number(Date.now());
+  SpecialPowers.addPermission('pEXPIRE', true, document, EXPIRE_TIME, start + DELAY);
+}
+
+function test8() {
+  afterPermissionChanged('pEXPIRE', 'deleted', SimpleTest.finish);
+  afterPermissionChanged('pEXPIRE', 'added', permissionPollingCheck);
+  start = Number(Date.now());
+  SpecialPowers.pushPermissions([
+    { 'type': 'pEXPIRE',
+      'allow': true,
+      'expireType': EXPIRE_TIME,
+      'expireTime': start + DELAY,
+      'context': document
+    }], function() {
+      info("Wait permission changed signal!");
+    }
+  );
+}
+
+function afterPermissionChanged(type, op, callback) {
+  // handle the message from specialPowers_framescript.js
+  gScript.addMessageListener('perm-changed', function onChange(msg) {
+    if (msg.type == type && msg.op == op) {
+      gScript.removeMessageListener('perm-changed', onChange);
+      callback();
+    }
+  });
+}
+
+function permissionPollingCheck() {
+  var now = Number(Date.now());
+  if (now < start + DELAY) {
+    ok(SpecialPowers.testPermission('pEXPIRE', ALLOW_ACTION, document),
+       'unexpired permission is still there!');
+    setTimeout(permissionPollingCheck, DELAY);
+    return;
+  }
+
+  if (SpecialPowers.testPermission('pEXPIRE', ALLOW_ACTION, document) &&
+      (now < start + DELAY + TIME_SKEW) &&
+      isWin32()) {
+    setTimeout(permissionPollingCheck, DELAY);
+    return;
+  }
+
+  // The permission is already expired!
+  ok(!SpecialPowers.testPermission('pEXPIRE', ALLOW_ACTION, document),
+     'expired permission should be removed!');
+}
+
+function isWin32() {
+  var version = SpecialPowers.Services.sysinfo.getProperty('version');
+  version = parseFloat(version);
+  // version 5.1 is win XP, 6.1 is win7
+  return (navigator.platform.indexOf('Win') == 0) && (version <= 6.1);
 }
 </script>
 </pre>

@@ -6189,19 +6189,21 @@ let HealthReportStatusListener = {
 };
 
 var XPInstallObserver = {
-  init: function xpi_init() {
-    Services.obs.addObserver(XPInstallObserver, "addon-install-blocked", false);
-    Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
+  init: function() {
+    Services.obs.addObserver(this, "addon-install-blocked", false);
+    Services.obs.addObserver(this, "addon-install-started", false);
+    Services.obs.addObserver(this, "xpi-signature-changed", false);
+    Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
 
-    AddonManager.addInstallListener(XPInstallObserver);
+    AddonManager.addInstallListener(this);
   },
 
-  observe: function xpi_observer(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "addon-install-started":
         NativeWindow.toast.show(Strings.browser.GetStringFromName("alertAddonsDownloading"), "short");
         break;
-      case "addon-install-blocked":
+      case "addon-install-blocked": {
         let installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
         let tab = BrowserApp.getTabForBrowser(installInfo.browser);
         if (!tab)
@@ -6268,7 +6270,41 @@ var XPInstallObserver = {
         }
         NativeWindow.doorhanger.show(message, aTopic, buttons, tab.id);
         break;
+      }
+      case "xpi-signature-changed": {
+        if (JSON.parse(aData).disabled.length) {
+          this._notifyUnsignedAddonsDisabled();
+        }
+        break;
+      }
+      case "browser-delayed-startup-finished": {
+        let disabledAddons = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_DISABLED);
+        for (let id of disabledAddons) {
+          if (AddonManager.getAddonByID(id).signedState <= AddonManager.SIGNEDSTATE_MISSING) {
+            this._notifyUnsignedAddonsDisabled();
+            break;
+          }
+        }
+        break;
+      }
     }
+  },
+
+  _notifyUnsignedAddonsDisabled: function() {
+    new Prompt({
+      window: window,
+      title: Strings.browser.GetStringFromName("unsignedAddonsDisabled.title"),
+      message: Strings.browser.GetStringFromName("unsignedAddonsDisabled.message"),
+      buttons: [
+        Strings.browser.GetStringFromName("unsignedAddonsDisabled.viewAddons"),
+        Strings.browser.GetStringFromName("unsignedAddonsDisabled.dismiss")
+      ]
+    }).show((data) => {
+      if (data.button === 0) {
+        // TODO: Open about:addons to show only unsigned add-ons?
+        BrowserApp.addTab("about:addons", { parentId: BrowserApp.selectedTab.id });
+      }
+    });
   },
 
   onInstallEnded: function(aInstall, aAddon) {
