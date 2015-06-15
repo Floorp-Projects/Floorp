@@ -5,6 +5,7 @@
 #ifndef INDEX_H_
 #define INDEX_H_
 
+#include "MediaData.h"
 #include "MediaResource.h"
 #include "mozilla/Monitor.h"
 #include "mp4_demuxer/Interval.h"
