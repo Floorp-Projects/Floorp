@@ -197,55 +197,6 @@ function getProfileThreadFromAllocations(allocations) {
 }
 
 /**
- * Gets the current timeline blueprint without the hidden markers.
- *
- * @param blueprint
- *        The default timeline blueprint.
- * @param array hiddenMarkers
- *        A list of hidden markers' names.
- * @return object
- *         The filtered timeline blueprint.
- */
-function getFilteredBlueprint({ blueprint, hiddenMarkers }) {
-  // Clone functions here just to prevent an error, as the blueprint
-  // contains functions (even though we do not use them).
-  let filteredBlueprint = Cu.cloneInto(blueprint, {}, { cloneFunctions: true });
-  let maybeRemovedGroups = new Set();
-  let removedGroups = new Set();
-
-  // 1. Remove hidden markers from the blueprint.
-
-  for (let hiddenMarkerName of hiddenMarkers) {
-    maybeRemovedGroups.add(filteredBlueprint[hiddenMarkerName].group);
-    delete filteredBlueprint[hiddenMarkerName];
-  }
-
-  // 2. Get a list of all the groups that will be removed.
-
-  for (let maybeRemovedGroup of maybeRemovedGroups) {
-    let markerNames = Object.keys(filteredBlueprint);
-    let isGroupRemoved = markerNames.every(e => filteredBlueprint[e].group != maybeRemovedGroup);
-    if (isGroupRemoved) {
-      removedGroups.add(maybeRemovedGroup);
-    }
-  }
-
-  // 3. Offset groups so that their indices are consecutive.
-
-  for (let removedGroup of removedGroups) {
-    let markerNames = Object.keys(filteredBlueprint);
-    for (let markerName of markerNames) {
-      let markerDetails = filteredBlueprint[markerName];
-      if (markerDetails.group > removedGroup) {
-        markerDetails.group--;
-      }
-    }
-  }
-
-  return filteredBlueprint;
-};
-
-/**
  * Deduplicates a profile by deduplicating stacks, frames, and strings.
  *
  * This is used to adapt version 2 profiles from the backend to version 3, for
@@ -571,7 +522,6 @@ exports.offsetSampleTimes = offsetSampleTimes;
 exports.offsetMarkerTimes = offsetMarkerTimes;
 exports.offsetAndScaleTimestamps = offsetAndScaleTimestamps;
 exports.getProfileThreadFromAllocations = getProfileThreadFromAllocations;
-exports.getFilteredBlueprint = getFilteredBlueprint;
 exports.deflateProfile = deflateProfile;
 exports.deflateThread = deflateThread;
 exports.UniqueStrings = UniqueStrings;
