@@ -49,7 +49,13 @@ AppendAnimationToSequence(nsRefPtrHashKey<dom::Animation>* aKey,
 void
 AnimationTimeline::GetAnimations(AnimationSequence& aAnimations)
 {
-  // FIXME: Flush the document here (fixed in a subsequent patch)
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mWindow);
+  if (mWindow) {
+    nsIDocument* doc = window->GetDoc();
+    if (doc) {
+      doc->FlushPendingNotifications(Flush_Style);
+    }
+  }
 
 #ifdef DEBUG
   AddAnimationParams params{ aAnimations, this };
