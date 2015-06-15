@@ -21,6 +21,10 @@ loader.lazyRequireGetter(this, "L10N",
   "devtools/performance/global", true);
 loader.lazyRequireGetter(this, "TickUtils",
   "devtools/performance/waterfall-ticks", true);
+loader.lazyRequireGetter(this, "MarkerUtils",
+  "devtools/performance/marker-utils");
+loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
+  "devtools/performance/markers", true);
 
 const OVERVIEW_HEADER_HEIGHT = 14; // px
 const OVERVIEW_ROW_HEIGHT = 11; // px
@@ -28,14 +32,12 @@ const OVERVIEW_ROW_HEIGHT = 11; // px
 const OVERVIEW_SELECTION_LINE_COLOR = "#666";
 const OVERVIEW_CLIPHEAD_LINE_COLOR = "#555";
 
-const FIND_OPTIMAL_TICK_INTERVAL_MAX_ITERS = 100;
 const OVERVIEW_HEADER_TICKS_MULTIPLE = 100; // ms
 const OVERVIEW_HEADER_TICKS_SPACING_MIN = 75; // px
 const OVERVIEW_HEADER_TEXT_FONT_SIZE = 9; // px
 const OVERVIEW_HEADER_TEXT_FONT_FAMILY = "sans-serif";
 const OVERVIEW_HEADER_TEXT_PADDING_LEFT = 6; // px
 const OVERVIEW_HEADER_TEXT_PADDING_TOP = 1; // px
-const OVERVIEW_MARKERS_COLOR_STOPS = [0, 0.1, 0.75, 1];
 const OVERVIEW_MARKER_WIDTH_MIN = 4; // px
 const OVERVIEW_GROUP_VERTICAL_PADDING = 5; // px
 
@@ -44,13 +46,13 @@ const OVERVIEW_GROUP_VERTICAL_PADDING = 5; // px
  *
  * @param nsIDOMNode parent
  *        The parent node holding the overview.
- * @param Object blueprint
- *        List of names and colors defining markers.
+ * @param Array<String> filter
+ *        List of names of marker types that should not be shown.
  */
-function MarkersOverview(parent, blueprint, ...args) {
+function MarkersOverview(parent, filter=[], ...args) {
   AbstractCanvasGraph.apply(this, [parent, "markers-overview", ...args]);
   this.setTheme();
-  this.setBlueprint(blueprint);
+  this.setFilter(filter);
 }
 
 MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
@@ -64,21 +66,36 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * Compute the height of the overview.
    */
   get fixedHeight() {
-    return this.headerHeight + this.rowHeight * (this._lastGroup + 1);
+    return this.headerHeight + this.rowHeight * this._numberOfGroups;
   },
 
   /**
-   * List of names and colors used to paint this overview.
-   * @see TIMELINE_BLUEPRINT in timeline/widgets/global.js
+   * List of marker types that should not be shown in the graph.
    */
-  setBlueprint: function(blueprint) {
+  setFilter: function (filter) {
     this._paintBatches = new Map();
-    this._lastGroup = 0;
+    this._filter = filter;
+    this._groupMap = Object.create(null);
 
-    for (let type in blueprint) {
-      this._paintBatches.set(type, { style: blueprint[type], batch: [] });
-      this._lastGroup = Math.max(this._lastGroup, blueprint[type].group || 0);
+    let observedGroups = new Set();
+
+    for (let type in TIMELINE_BLUEPRINT) {
+      if (filter.indexOf(type) !== -1) {
+        continue;
+      }
+      this._paintBatches.set(type, { definition: TIMELINE_BLUEPRINT[type], batch: [] });
+      observedGroups.add(TIMELINE_BLUEPRINT[type].group);
     }
+
+    // Take our set of observed groups and order them and map
+    // the group numbers to fill in the holes via `_groupMap`.
+    // This normalizes our rows by removing rows that aren't used
+    // if filters are enabled.
+    let actualPosition = 0;
+    for (let groupNumber of Array.from(observedGroups).sort()) {
+      this._groupMap[groupNumber] = actualPosition++;
+    }
+    this._numberOfGroups = Object.keys(this._groupMap).length;
   },
 
   /**
@@ -103,17 +120,19 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
 
     // Group markers into separate paint batches. This is necessary to
     // draw all markers sharing the same style at once.
-
     for (let marker of markers) {
-      let markerType = this._paintBatches.get(marker.name);
-      if (markerType) {
-        markerType.batch.push(marker);
+      // Again skip over markers that we're filtering -- we don't want them
+      // to be labeled as "Unknown"
+      if (!MarkerUtils.isMarkerValid(marker, this._filter)) {
+        continue;
       }
+
+      let markerType = this._paintBatches.get(marker.name) || this._paintBatches.get("UNKNOWN");
+      markerType.batch.push(marker);
     }
 
     // Calculate each row's height, and the time-based scaling.
 
-    let totalGroups = this._lastGroup + 1;
     let groupHeight = this.rowHeight * this._pixelRatio;
     let groupPadding = this.groupPadding * this._pixelRatio;
     let headerHeight = this.headerHeight * this._pixelRatio;
@@ -132,7 +151,7 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     ctx.fillStyle = this.alternatingBackgroundColor;
     ctx.beginPath();
 
-    for (let i = 0; i < totalGroups; i += 2) {
+    for (let i = 0; i < this._numberOfGroups; i += 2) {
       let top = headerHeight + i * groupHeight;
       ctx.rect(0, top, canvasWidth, groupHeight);
     }
@@ -172,11 +191,12 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
 
     // Draw the timeline markers.
 
-    for (let [, { style, batch }] of this._paintBatches) {
-      let top = headerHeight + style.group * groupHeight + groupPadding / 2;
+    for (let [, { definition, batch }] of this._paintBatches) {
+      let group = this._groupMap[definition.group];
+      let top = headerHeight + group * groupHeight + groupPadding / 2;
       let height = groupHeight - groupPadding;
 
-      let color = getColor(style.colorName, this.theme);
+      let color = getColor(definition.colorName, this.theme);
       ctx.fillStyle = color;
       ctx.beginPath();
 

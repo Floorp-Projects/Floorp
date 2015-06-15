@@ -7,9 +7,10 @@
 const Cu = Components.utils;
 const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {require} = devtools;
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const TargetFactory = devtools.TargetFactory;
-const {console} = Components.utils.import("resource://gre/modules/devtools/Console.jsm", {});
+const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 const {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
 
 // All tests are asynchronous
@@ -19,16 +20,19 @@ const TEST_URL_ROOT = "http://example.com/browser/browser/devtools/animationinsp
 const ROOT_TEST_DIR = getRootDirectory(gTestPath);
 const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
 const COMMON_FRAME_SCRIPT_URL = "chrome://browser/content/devtools/frame-script-utils.js";
+const NEW_UI_PREF = "devtools.inspector.animationInspectorV3";
 
 // Auto clean-up when a test ends
 registerCleanupFunction(function*() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  yield gDevTools.closeToolbox(target);
+  yield closeAnimationInspector();
 
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
   }
 });
+
+// Make sure the new UI is off by default.
+Services.prefs.setBoolPref(NEW_UI_PREF, false);
 
 // Uncomment this pref to dump all devtools emitted events to the console.
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
@@ -45,6 +49,7 @@ registerCleanupFunction(() => gDevTools.testing = false);
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.dump.emit");
   Services.prefs.clearUserPref("devtools.debugger.log");
+  Services.prefs.clearUserPref(NEW_UI_PREF);
 });
 
 /**
@@ -75,6 +80,13 @@ function addTab(url) {
   }, true);
 
   return def.promise;
+}
+
+/**
+ * Switch ON the new UI pref.
+ */
+function enableNewUI() {
+  Services.prefs.setBoolPref(NEW_UI_PREF, true);
 }
 
 /**
@@ -120,6 +132,25 @@ let selectNode = Task.async(function*(data, inspector, reason="test") {
 });
 
 /**
+ * Check if there are the expected number of animations being displayed in the
+ * panel right now.
+ * @param {AnimationsPanel} panel
+ * @param {Number} nbAnimations The expected number of animations.
+ * @param {String} msg An optional string to be used as the assertion message.
+ */
+function assertAnimationsDisplayed(panel, nbAnimations, msg="") {
+  let isNewUI = Services.prefs.getBoolPref(NEW_UI_PREF);
+  msg = msg || `There are ${nbAnimations} animations in the panel`;
+  if (isNewUI) {
+    is(panel.animationsTimelineComponent.animationsEl.childNodes.length,
+       nbAnimations, msg);
+  } else {
+    is(panel.playersEl.querySelectorAll(".player-widget").length,
+       nbAnimations, msg);
+  }
+}
+
+/**
  * Takes an Inspector panel that was just created, and waits
  * for a "inspector-updated" event as well as the animation inspector
  * sidebar to be ready. Returns a promise once these are completed.
@@ -131,10 +162,9 @@ let waitForAnimationInspectorReady = Task.async(function*(inspector) {
   let win = inspector.sidebar.getWindowForTab("animationinspector");
   let updated = inspector.once("inspector-updated");
 
-  // In e10s, if we wait for underlying toolbox actors to
-  // load (by setting gDevTools.testing to true), we miss the "animationinspector-ready"
-  // event on the sidebar, so check to see if the iframe
-  // is already loaded.
+  // In e10s, if we wait for underlying toolbox actors to load (by setting
+  // gDevTools.testing to true), we miss the "animationinspector-ready" event on
+  // the sidebar, so check to see if the iframe is already loaded.
   let tabReady = win.document.readyState === "complete" ?
                  promise.resolve() :
                  inspector.sidebar.once("animationinspector-ready");
@@ -145,7 +175,7 @@ let waitForAnimationInspectorReady = Task.async(function*(inspector) {
 /**
  * Open the toolbox, with the inspector tool visible and the animationinspector
  * sidebar selected.
- * @return a promise that resolves when the inspector is ready
+ * @return a promise that resolves when the inspector is ready.
  */
 let openAnimationInspector = Task.async(function*() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
@@ -186,6 +216,45 @@ let openAnimationInspector = Task.async(function*() {
 });
 
 /**
+ * Turn on the new timeline-based UI pref ON, and then open the toolbox, with
+ * the inspector tool visible and the animationinspector sidebar selected.
+ * @return a promise that resolves when the inspector is ready.
+ */
+function openAnimationInspectorNewUI() {
+  enableNewUI();
+  return openAnimationInspector();
+}
+
+/**
+ * Close the toolbox.
+ * @return a promise that resolves when the toolbox has closed.
+ */
+let closeAnimationInspector = Task.async(function*() {
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  yield gDevTools.closeToolbox(target);
+});
+
+/**
+ * During the time period we migrate from the playerWidgets-based UI to the new
+ * AnimationTimeline UI, we'll want to run certain tests against both UI.
+ * This closes the toolbox, switch the new UI pref ON, and opens the toolbox
+ * again, with the animation inspector panel selected.
+ * @param {Boolean} reload Optionally reload the page after the toolbox was
+ * closed and before it is opened again.
+ * @return a promise that resolves when the animation inspector is ready.
+ */
+let closeAnimationInspectorAndRestartWithNewUI = Task.async(function*(reload) {
+  info("Close the toolbox and test again with the new UI");
+  yield closeAnimationInspector();
+  if (reload) {
+    yield reloadTab();
+  }
+  enableNewUI();
+  return yield openAnimationInspector();
+});
+
+
+/**
  * Wait for the toolbox frame to receive focus after it loads
  * @param {Toolbox} toolbox
  * @return a promise that resolves when focus has been received
@@ -214,7 +283,7 @@ function hasSideBarTab(inspector, id) {
  * @param {Object} target An observable object that either supports on/off or
  * addEventListener/removeEventListener
  * @param {String} eventName
- * @param {Boolean} useCapture Optional, for addEventListener/removeEventListener
+ * @param {Boolean} useCapture Optional, for add/removeEventListener
  * @return A promise that resolves when the event has been handled
  */
 function once(target, eventName, useCapture=false) {
@@ -278,9 +347,9 @@ function executeInContent(name, data={}, objects={}, expectResponse=true) {
   mm.sendAsyncMessage(name, data, objects);
   if (expectResponse) {
     return waitForContentMessage(name);
-  } else {
-    return promise.resolve();
   }
+
+  return promise.resolve();
 }
 
 function onceNextPlayerRefresh(player) {
@@ -293,7 +362,9 @@ function onceNextPlayerRefresh(player) {
  * Simulate a click on the playPause button of a playerWidget.
  */
 let togglePlayPauseButton = Task.async(function*(widget) {
-  let nextState = widget.player.state.playState === "running" ? "paused" : "running";
+  let nextState = widget.player.state.playState === "running"
+                  ? "paused"
+                  : "running";
 
   // Note that instead of simulating a real event here, the callback is just
   // called. This is better because the callback returns a promise, so we know
@@ -344,7 +415,8 @@ let waitForStateCondition = Task.async(function*(player, conditionCheck, desc=""
  * provided string.
  * @param {AnimationPlayerFront} player
  * @param {String} playState The playState to expect.
- * @return {Promise} Resolves when the playState has changed to the expected value.
+ * @return {Promise} Resolves when the playState has changed to the expected
+ * value.
  */
 function waitForPlayState(player, playState) {
   return waitForStateCondition(player, state => {
