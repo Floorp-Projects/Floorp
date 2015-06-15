@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace ipc {
 
-class BluetoothDaemonConnection;
+class DaemonSocket;
 class ListenSocket;
 
 }
@@ -156,8 +156,8 @@ private:
 
   nsCString mListenSocketName;
   nsRefPtr<mozilla::ipc::ListenSocket> mListenSocket;
-  nsRefPtr<mozilla::ipc::BluetoothDaemonConnection> mCmdChannel;
-  nsRefPtr<mozilla::ipc::BluetoothDaemonConnection> mNtfChannel;
+  nsRefPtr<mozilla::ipc::DaemonSocket> mCmdChannel;
+  nsRefPtr<mozilla::ipc::DaemonSocket> mNtfChannel;
   nsAutoPtr<BluetoothDaemonProtocol> mProtocol;
 
   nsTArray<nsRefPtr<BluetoothResultHandler> > mResultHandlerQ;
