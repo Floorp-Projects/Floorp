@@ -42,6 +42,19 @@ AppendAnimationToSequence(nsRefPtrHashKey<dom::Animation>* aKey,
   MOZ_ASSERT(animation->GetTimeline() == params->mTimeline,
              "Animation should refer to this timeline");
 
+  // Bug 1174575: Until we implement a suitable PseudoElement interface we
+  // don't have anything to return for the |target| attribute of
+  // KeyframeEffect(ReadOnly) objects that refer to pseudo-elements.
+  // Rather than return some half-baked version of these objects (e.g.
+  // we a null effect attribute) we simply don't provide access to animations
+  // whose effect refers to a pseudo-element until we can support them properly.
+  Element* target;
+  nsCSSPseudoElements::Type pseudoType;
+  animation->GetEffect()->GetTarget(target, pseudoType);
+  if (pseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+    return PL_DHASH_NEXT;
+  }
+
   params->mSequence.AppendElement(animation);
 
   return PL_DHASH_NEXT;
