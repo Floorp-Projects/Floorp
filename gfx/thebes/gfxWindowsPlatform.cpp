@@ -1830,23 +1830,7 @@ bool DoesD3D11TextureSharingWork(ID3D11Device *device)
 
 bool DoesD3D11AlphaTextureSharingWork(ID3D11Device *device)
 {
-  nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-  if (gfxInfo) {
-    // A8 texture sharing crashes on this intel driver version (and no others)
-    // so just avoid using it in that case.
-    nsString adapterVendor;
-    nsString driverVersion;
-    gfxInfo->GetAdapterVendorID(adapterVendor);
-    gfxInfo->GetAdapterDriverVersion(driverVersion);
-
-    nsAString &intelVendorID = (nsAString &)GfxDriverInfo::GetDeviceVendor(VendorIntel);
-    if (adapterVendor.Equals(intelVendorID, nsCaseInsensitiveStringComparator()) &&
-        driverVersion.Equals(NS_LITERAL_STRING("8.15.10.2086"))) {
-      return false;
-    }
-  }
-
-  return DoesD3D11TextureSharingWorkInternal(device, DXGI_FORMAT_A8_UNORM, D3D11_BIND_SHADER_RESOURCE);
+  return DoesD3D11TextureSharingWorkInternal(device, DXGI_FORMAT_R8_UNORM, D3D11_BIND_SHADER_RESOURCE);
 }
 
 void
