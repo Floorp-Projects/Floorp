@@ -40,8 +40,11 @@ public:
 
   nsIGlobalObject* GetParentObject() const { return mWindow; }
 
+  typedef nsTArray<nsRefPtr<Animation>> AnimationSequence;
+
   // AnimationTimeline methods
   virtual Nullable<TimeDuration> GetCurrentTime() const = 0;
+  void GetAnimations(AnimationSequence& aAnimations);
 
   // Wrapper functions for AnimationTimeline DOM methods when called from
   // script.
