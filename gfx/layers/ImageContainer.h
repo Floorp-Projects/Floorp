@@ -466,29 +466,6 @@ public:
     return mDroppedImageCount;
   }
 
-  /**
-   * Increments mPaintCount if this is the first time aPainted has been
-   * painted, and sets mPaintTime if the painted image is the current image.
-   * current image.  Can be called from any thread.
-   */
-  void NotifyPaintedImage(Image* aPainted) {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-    nsRefPtr<Image> current = mActiveImage;
-    if (aPainted == current) {
-      if (mPaintTime.IsNull()) {
-        mPaintTime = TimeStamp::Now();
-        mPaintCount++;
-      }
-    } else if (!mPreviousImagePainted) {
-      // While we were painting this image, the current image changed. We
-      // still must count it as painted, but can't set mPaintTime, since we're
-      // no longer the current image.
-      mPaintCount++;
-      mPreviousImagePainted = true;
-    }
-  }
-
   PImageContainerChild* GetPImageContainerChild();
   static void NotifyComposite(const ImageCompositeNotification& aNotification);
 
@@ -508,15 +485,6 @@ private:
 
   void NotifyCompositeInternal(const ImageCompositeNotification& aNotification);
 
-  // Performs necessary housekeeping to ensure the painted frame statistics
-  // are accurate. Must be called by SetCurrentImage() implementations with
-  // mReentrantMonitor held.
-  void CurrentImageChanged() {
-    mReentrantMonitor.AssertCurrentThreadIn();
-    mPreviousImagePainted = !mPaintTime.IsNull();
-    mPaintTime = TimeStamp();
-  }
-
   // ReentrantMonitor to protect thread safe access to the "current
   // image", and any other state which is shared between threads.
   ReentrantMonitor mReentrantMonitor;
@@ -532,18 +500,11 @@ private:
   // threadsafe.
   uint32_t mPaintCount;
 
-  // Time stamp at which the current image was first painted.  It's up to the
-  // ImageContainer implementation to ensure accesses to this are threadsafe.
-  TimeStamp mPaintTime;
-
   // See GetPaintDelay. Accessed only with mReentrantMonitor held.
   TimeDuration mPaintDelay;
 
   // See GetDroppedImageCount. Accessed only with mReentrantMonitor held.
   uint32_t mDroppedImageCount;
-
-  // Denotes whether the previous image was painted.
-  bool mPreviousImagePainted;
 
   bool mCurrentImageComposited;
 
