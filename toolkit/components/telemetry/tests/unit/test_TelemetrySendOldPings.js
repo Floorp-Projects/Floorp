@@ -319,6 +319,7 @@ add_task(function* test_overdue_old_format() {
   }
 
   yield TelemetryController.reset();
+  yield TelemetrySend.testWaitOnOutgoingPings();
   assertReceivedPings(OLD_FORMAT_PINGS);
 
   // |TelemetryStorage.cleanup| doesn't know how to remove a ping with no slug or id,
@@ -345,6 +346,7 @@ add_task(function* test_overdue_pings_trigger_send() {
   let overduePings = pings.slice(-OVERDUE_PINGS);
 
   yield TelemetryController.reset();
+  yield TelemetrySend.testWaitOnOutgoingPings();
   assertReceivedPings(TOTAL_EXPECTED_PINGS);
 
   yield assertNotSaved(recentPings);
@@ -398,6 +400,7 @@ add_task(function* test_overdue_old_format() {
   });
 
   yield TelemetryController.reset();
+  yield TelemetrySend.testWaitOnOutgoingPings();
   Assert.equal(receivedPings, 1, "We must receive a ping in the old format.");
 
   yield clearPendingPings();
