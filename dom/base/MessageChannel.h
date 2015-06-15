@@ -31,6 +31,8 @@ public:
   static bool Enabled(JSContext* aCx, JSObject* aGlobal);
 
 public:
+  explicit MessageChannel(nsPIDOMWindow* aWindow);
+
   nsPIDOMWindow*
   GetParentObject() const
   {
@@ -56,7 +58,6 @@ public:
   }
 
 private:
-  explicit MessageChannel(nsPIDOMWindow* aWindow);
   ~MessageChannel();
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
