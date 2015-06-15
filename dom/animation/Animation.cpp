@@ -815,6 +815,12 @@ Animation::UpdateTiming(SeekFlag aSeekFlag)
   // have no way of notifying its animations). For now, however, we can
   // simply store just the relevant animations.
   if (mTimeline) {
+    // FIXME: Once we expect animations to go back and forth betweeen being
+    // inactive and active, we will need to store more than just relevant
+    // animations on the timeline. This is because an animation might be
+    // deemed irrelevant because its timeline is inactive. If it is removed
+    // from the timeline at that point the timeline will have no way of
+    // getting the animation to add itself again once it becomes active.
     if (IsRelevant()) {
       mTimeline->AddAnimation(*this);
     } else {
