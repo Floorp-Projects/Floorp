@@ -22,6 +22,7 @@
 
 const {Cu} = require("chrome");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {
   createNode,
   drawGraphElementBackground,
@@ -618,6 +619,8 @@ let TimeScale = {
     return L10N.getFormatStr("player.timeLabel", (time / 1000).toFixed(1));
   }
 };
+
+exports.TimeScale = TimeScale;
 
 /**
  * UI component responsible for displaying a timeline for animations.

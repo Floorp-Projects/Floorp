@@ -107,12 +107,11 @@ exports.drawGraphElementBackground = drawGraphElementBackground;
  * @param {Number} timeScale How many px is 1ms in the graph.
  * @param {Number} minSpacing The minimum spacing between 2 graduations,
  * defaults to TIME_GRADUATION_MIN_SPACING.
- * @return {Number} The optional interval, in pixels.
+ * @return {Number} The optimal interval, in pixels.
  */
 function findOptimalTimeInterval(timeScale,
                                  minSpacing=TIME_GRADUATION_MIN_SPACING) {
   let timingStep = TIME_INTERVAL_MULTIPLE;
-  let maxIters = OPTIMAL_TIME_INTERVAL_MAX_ITERS;
   let numIters = 0;
 
   if (timeScale > minSpacing) {
@@ -121,7 +120,7 @@ function findOptimalTimeInterval(timeScale,
 
   while (true) {
     let scaledStep = timeScale * timingStep;
-    if (++numIters > maxIters) {
+    if (++numIters > OPTIMAL_TIME_INTERVAL_MAX_ITERS) {
       return scaledStep;
     }
     if (scaledStep < minSpacing) {
