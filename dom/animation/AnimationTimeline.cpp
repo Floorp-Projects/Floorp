@@ -19,6 +19,26 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationTimeline)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+static PLDHashOperator
+AppendAnimationToSequence(nsRefPtrHashKey<dom::Animation>* aKey,
+                          void* aSequence)
+{
+  Animation* animation = aKey->GetKey();
+  AnimationTimeline::AnimationSequence* sequence =
+    static_cast<AnimationTimeline::AnimationSequence*>(aSequence);
+  sequence->AppendElement(animation);
+
+  return PL_DHASH_NEXT;
+}
+
+void
+AnimationTimeline::GetAnimations(AnimationSequence& aAnimations)
+{
+  // FIXME: Flush the document here (fixed in a subsequent patch)
+
+  mAnimations.EnumerateEntries(AppendAnimationToSequence, &aAnimations);
+}
+
 void
 AnimationTimeline::AddAnimation(Animation& aAnimation)
 {
