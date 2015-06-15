@@ -8,6 +8,7 @@
  */
 
 typedef (Request or USVString) RequestInfo;
+typedef unsigned long nsContentPolicyType;
 
 [Constructor(RequestInfo input, optional RequestInit init),
  Exposed=(Window,Worker)]
@@ -27,7 +28,7 @@ interface Request {
 
   // Bug 1124638 - Allow chrome callers to set the context.
   [ChromeOnly]
-  void setContext(RequestContext context);
+  void setContentPolicyType(nsContentPolicyType context);
 };
 Request implements Body;
 

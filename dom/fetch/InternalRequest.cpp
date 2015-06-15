@@ -39,7 +39,6 @@ InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult
   // The default referrer is already about:client.
 
   copy->mContentPolicyType = nsIContentPolicy::TYPE_FETCH;
-  copy->mContext = RequestContext::Fetch;
   copy->mMode = mMode;
   copy->mCredentialsMode = mCredentialsMode;
   copy->mCacheMode = mCacheMode;
@@ -76,7 +75,6 @@ InternalRequest::InternalRequest(const InternalRequest& aOther)
   , mURL(aOther.mURL)
   , mHeaders(new InternalHeaders(*aOther.mHeaders))
   , mContentPolicyType(aOther.mContentPolicyType)
-  , mContext(aOther.mContext)
   , mReferrer(aOther.mReferrer)
   , mMode(aOther.mMode)
   , mCredentialsMode(aOther.mCredentialsMode)
@@ -104,78 +102,85 @@ void
 InternalRequest::SetContentPolicyType(nsContentPolicyType aContentPolicyType)
 {
   mContentPolicyType = aContentPolicyType;
+}
+
+/* static */
+RequestContext
+InternalRequest::MapContentPolicyTypeToRequestContext(nsContentPolicyType aContentPolicyType)
+{
+  RequestContext context = RequestContext::Internal;
   switch (aContentPolicyType) {
   case nsIContentPolicy::TYPE_OTHER:
-    mContext = RequestContext::Internal;
+    context = RequestContext::Internal;
     break;
   case nsIContentPolicy::TYPE_SCRIPT:
-    mContext = RequestContext::Script;
+    context = RequestContext::Script;
     break;
   case nsIContentPolicy::TYPE_IMAGE:
-    mContext = RequestContext::Image;
+    context = RequestContext::Image;
     break;
   case nsIContentPolicy::TYPE_STYLESHEET:
-    mContext = RequestContext::Style;
+    context = RequestContext::Style;
     break;
   case nsIContentPolicy::TYPE_OBJECT:
-    mContext = RequestContext::Object;
+    context = RequestContext::Object;
     break;
   case nsIContentPolicy::TYPE_DOCUMENT:
-    mContext = RequestContext::Internal;
+    context = RequestContext::Internal;
     break;
   case nsIContentPolicy::TYPE_SUBDOCUMENT:
-    mContext = RequestContext::Iframe;
+    context = RequestContext::Iframe;
     break;
   case nsIContentPolicy::TYPE_REFRESH:
-    mContext = RequestContext::Internal;
+    context = RequestContext::Internal;
     break;
   case nsIContentPolicy::TYPE_XBL:
-    mContext = RequestContext::Internal;
+    context = RequestContext::Internal;
     break;
   case nsIContentPolicy::TYPE_PING:
-    mContext = RequestContext::Ping;
+    context = RequestContext::Ping;
     break;
   case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
-    mContext = RequestContext::Xmlhttprequest;
+    context = RequestContext::Xmlhttprequest;
     break;
   case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
-    mContext = RequestContext::Plugin;
+    context = RequestContext::Plugin;
     break;
   case nsIContentPolicy::TYPE_DTD:
-    mContext = RequestContext::Internal;
+    context = RequestContext::Internal;
     break;
   case nsIContentPolicy::TYPE_FONT:
-    mContext = RequestContext::Font;
+    context = RequestContext::Font;
     break;
   case nsIContentPolicy::TYPE_MEDIA:
-    mContext = RequestContext::Audio;
+    context = RequestContext::Audio;
     break;
   case nsIContentPolicy::TYPE_WEBSOCKET:
-    mContext = RequestContext::Internal;
+    context = RequestContext::Internal;
     break;
   case nsIContentPolicy::TYPE_CSP_REPORT:
-    mContext = RequestContext::Cspreport;
+    context = RequestContext::Cspreport;
     break;
   case nsIContentPolicy::TYPE_XSLT:
-    mContext = RequestContext::Xslt;
+    context = RequestContext::Xslt;
     break;
   case nsIContentPolicy::TYPE_BEACON:
-    mContext = RequestContext::Beacon;
+    context = RequestContext::Beacon;
     break;
   case nsIContentPolicy::TYPE_FETCH:
-    mContext = RequestContext::Fetch;
+    context = RequestContext::Fetch;
     break;
   case nsIContentPolicy::TYPE_IMAGESET:
-    mContext = RequestContext::Imageset;
+    context = RequestContext::Imageset;
     break;
   case nsIContentPolicy::TYPE_WEB_MANIFEST:
-    mContext = RequestContext::Manifest;
+    context = RequestContext::Manifest;
     break;
   default:
     MOZ_ASSERT(false, "Unhandled nsContentPolicyType value");
-    mContext = RequestContext::Internal;
     break;
   }
+  return context;
 }
 
 } // namespace dom

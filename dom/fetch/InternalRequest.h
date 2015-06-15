@@ -26,8 +26,7 @@ namespace dom {
 /*
  * The mapping of RequestContext and nsContentPolicyType is currently as the
  * following.  Note that this mapping is not perfect yet (see the TODO comments
- * below for examples), so for now we'll have to keep both an mContext and an
- * mContentPolicyType, because we cannot have a two way conversion.
+ * below for examples).
  *
  * RequestContext    | nsContentPolicyType
  * ------------------+--------------------
@@ -281,13 +280,7 @@ public:
   RequestContext
   Context() const
   {
-    return mContext;
-  }
-
-  void
-  SetContext(RequestContext aContext)
-  {
-    mContext = aContext;
+    return MapContentPolicyTypeToRequestContext(mContentPolicyType);
   }
 
   bool
@@ -371,13 +364,15 @@ private:
 
   ~InternalRequest();
 
+  static RequestContext
+  MapContentPolicyTypeToRequestContext(nsContentPolicyType aContentPolicyType);
+
   nsCString mMethod;
   nsCString mURL;
   nsRefPtr<InternalHeaders> mHeaders;
   nsCOMPtr<nsIInputStream> mBodyStream;
 
   nsContentPolicyType mContentPolicyType;
-  RequestContext mContext;
 
   // Empty string: no-referrer
   // "about:client": client (default)
