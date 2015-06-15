@@ -42,7 +42,7 @@ MOCHITEST_CHROME_MANIFESTS += [
     'mochitest/whatwg/chrome.ini',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gtk2':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('gtk2', 'gtk3'):
     # Bug 788164.
     MOCHITEST_MANIFESTS += [
         'mochitest/pointerlock/mochitest.ini',
