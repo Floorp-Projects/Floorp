@@ -868,6 +868,10 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
 
     bool disabled = Preferences::GetBool("webgl.disabled", false);
+
+    // TODO: When we have software webgl support we should use that instead.
+    disabled |= gfxPlatform::InSafeMode();
+
     if (disabled) {
         GenerateWarning("WebGL creation is disabled, and so disallowed here.");
         return NS_ERROR_FAILURE;
