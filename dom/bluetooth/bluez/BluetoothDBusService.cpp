@@ -91,7 +91,7 @@ USING_BLUETOOTH_NAMESPACE
 #define TIMEOUT_FORCE_TO_DISABLE_BT 5
 #define BT_LAZY_THREAD_TIMEOUT_MS 3000
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 // missing on blutooth2
 #else
 // Set Class of Device value bit
@@ -149,7 +149,7 @@ public:
       return true;
     }
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
     // TODO: This is the wrong place for handling manager classes
     BluetoothProfileManagerBase* profile;
     profile = BluetoothHfpManager::Get();
@@ -627,7 +627,7 @@ public:
     BluetoothService* bs = BluetoothService::Get();
     NS_ENSURE_TRUE_VOID(bs);
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 // Missing in bluetooth2
 #else
     bs->AdapterAddedReceived();
@@ -663,7 +663,7 @@ private:
   bool mDelay;
 };
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 // Missing in bluetooth2
 #else
 class InternalStopDiscoveryTask : public nsRunnable
@@ -918,7 +918,7 @@ HasAudioService(uint32_t aCodValue)
   return ((aCodValue & 0x200000) == 0x200000);
 }
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 static bool
 ContainsIcon(const InfallibleTArray<BluetoothNamedValue>& aProperties)
 {
@@ -1782,7 +1782,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
     BluetoothService* bs = BluetoothService::Get();
     NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
 
@@ -1886,7 +1886,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
         BluetoothNamedValue(NS_LITERAL_STRING("Path"),
                             GetObjectPathFromAddress(signalPath, address)));
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
       if (!ContainsIcon(properties)) {
 #else
       if (FindProperty(properties, "Icon") < 0) {
@@ -1908,7 +1908,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
         }
       }
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 // Missing in bluetooth2
 #else
       if (FindProperty(properties, "Class") < 0) {
@@ -1987,7 +1987,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
                         sAdapterProperties,
                         ArrayLength(sAdapterProperties));
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 // Missing in bluetooth2
 #else
     BluetoothNamedValue& property = v.get_ArrayOfBluetoothNamedValue()[0];
@@ -2020,7 +2020,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
       // "bluetooth-pairedstatuschanged" from BluetoothService.
       BluetoothValue newValue(v);
       ToLowerCase(newValue.get_ArrayOfBluetoothNamedValue()[0].name());
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
       BluetoothSignal signal(NS_LITERAL_STRING("pairedstatuschanged"),
                              NS_LITERAL_STRING(KEY_LOCAL_AGENT),
                              newValue);
@@ -2294,7 +2294,7 @@ public:
   }
 };
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 nsresult
 BluetoothDBusService::StartInternal(BluetoothReplyRunnable* aRunnable)
 {
@@ -2429,7 +2429,7 @@ public:
   }
 };
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 nsresult
 BluetoothDBusService::StopInternal(BluetoothReplyRunnable* aRunnable)
 {
@@ -2587,7 +2587,7 @@ private:
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
 };
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 nsresult
 BluetoothDBusService::GetAdaptersInternal(BluetoothReplyRunnable* aRunnable)
 {
@@ -2639,7 +2639,7 @@ OnSendDiscoveryMessageReply(DBusMessage *aReply, void *aData)
     errorStr.AssignLiteral("SendDiscovery failed");
   }
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 // Missing in blueooth2
 #else
   // aData may be a nullptr because we may call StopDiscovery internally when
@@ -2672,7 +2672,7 @@ public:
     , mRunnable(aRunnable)
   {
     MOZ_ASSERT(!mMessageName.IsEmpty());
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
     MOZ_ASSERT(mRunnable);
 #else
     // Missing in bluetooth1
@@ -2710,7 +2710,7 @@ BluetoothDBusService::SendDiscoveryMessage(const char* aMessageName,
   MOZ_ASSERT(!sAdapterPath.IsEmpty());
 
   if (!IsReady()) {
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
     NS_NAMED_LITERAL_STRING(errorStr, "Bluetooth service is not ready yet!");
     DispatchBluetoothReply(aRunnable, BluetoothValue(), errorStr);
 #else
@@ -2910,7 +2910,7 @@ public:
     // Icon as audio-card. This is for PTS test TC_AG_COD_BV_02_I.
     // As HFP specification defined that
     // service class is "Audio" can be considered as HFP AG.
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
     if (!ContainsIcon(devicePropertiesArray)) {
 #else
     if (FindProperty(devicePropertiesArray, "Icon") < 0) {
@@ -2928,7 +2928,7 @@ public:
       }
     }
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
     // Missing in bluetooth2
 #else
     // Check whether the properties array contains CoD. If it doesn't, fallback to restore
@@ -3111,7 +3111,7 @@ BluetoothDBusService::GetPairedDevicePropertiesInternal(
   return NS_OK;
 }
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 nsresult
 BluetoothDBusService::FetchUuidsInternal(const nsAString& aDeviceAddress,
                                          BluetoothReplyRunnable* aRunnable)
@@ -3496,7 +3496,7 @@ private:
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
 };
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 void
 BluetoothDBusService::PinReplyInternal(
   const nsAString& aDeviceAddress, bool aAccept,
@@ -3601,7 +3601,7 @@ private:
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
 };
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 void
 BluetoothDBusService::SetPasskeyInternal(const nsAString& aDeviceAddress,
                                          uint32_t aPasskey,
@@ -3627,7 +3627,7 @@ BluetoothDBusService::SetPasskeyInternal(const nsAString& aDeviceAddress,
 }
 #endif
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 void
 BluetoothDBusService::SetPairingConfirmationInternal(
                                               const nsAString& aDeviceAddress,
@@ -3714,7 +3714,7 @@ BluetoothDBusService::Disconnect(const nsAString& aDeviceAddress,
   ConnectDisconnect(false, aDeviceAddress, aRunnable, aServiceUuid);
 }
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 bool
 BluetoothDBusService::IsConnected(const uint16_t aServiceUuid)
 {
@@ -3787,7 +3787,7 @@ BluetoothDBusService::ToggleCalls(BluetoothReplyRunnable* aRunnable)
 class OnUpdateSdpRecordsRunnable : public nsRunnable
 {
 public:
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
   OnUpdateSdpRecordsRunnable(const nsAString& aObjectPath,
                              BluetoothProfileManagerBase* aManager)
     : mManager(aManager)
@@ -3818,7 +3818,7 @@ public:
     return NS_OK;
   }
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
   // Missing in bluetooth2
 #else
   void
@@ -4013,7 +4013,7 @@ public:
     MOZ_ASSERT(sDBusConnection);
     MOZ_ASSERT(!sAdapterPath.IsEmpty());
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
     const nsString objectPath =
       GetObjectPathFromAddress(sAdapterPath, mDeviceAddress);
 
@@ -4055,7 +4055,7 @@ public:
   }
 
 protected:
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
   // Missing in bluetooth2
 #else
   static void CreateDeviceCallback(DBusMessage* aMsg, void* aData)
@@ -4096,7 +4096,7 @@ protected:
   {
     MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
     nsRefPtr<OnUpdateSdpRecordsRunnable> r(
       static_cast<OnUpdateSdpRecordsRunnable*>(aData));
     NS_DispatchToMainThread(r);
@@ -4124,7 +4124,7 @@ BluetoothDBusService::UpdateSdpRecords(const nsAString& aDeviceAddress,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
   Task* task = new UpdateSdpRecordsTask(aDeviceAddress, aManager);
   DispatchToDBusThread(task);
 #else
@@ -4379,7 +4379,7 @@ BluetoothDBusService::SendMetaData(const nsAString& aTitle,
   a2dp->GetTitle(prevTitle);
   a2dp->GetAlbum(prevAlbum);
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
   uint64_t mediaNumber = static_cast<uint64_t>(aMediaNumber);
   if (mediaNumber != a2dp->GetMediaNumber() ||
       !aTitle.Equals(prevTitle) ||
@@ -4690,7 +4690,7 @@ BluetoothDBusService::UpdateNotification(ControlEventId aEventId,
   DispatchToDBusThread(task);
 }
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
 void
 BluetoothDBusService::StartLeScanInternal(
   const nsTArray<nsString>& aServiceUuids,
