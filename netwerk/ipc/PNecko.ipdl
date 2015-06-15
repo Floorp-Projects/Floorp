@@ -28,6 +28,7 @@ include URIParams;
 include InputStreamParams;
 include NeckoChannelParams;
 include PBrowserOrId;
+include PBackgroundSharedTypes;
 
 using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
@@ -66,7 +67,8 @@ parent:
   PFTPChannel(PBrowserOrId browser, SerializedLoadContext loadContext,
               FTPChannelCreationArgs args);
 
-  PWebSocket(PBrowserOrId browser, SerializedLoadContext loadContext);
+  PWebSocket(PBrowserOrId browser, SerializedLoadContext loadContext,
+             PrincipalInfo requestingPrincipalInfo);
   PTCPServerSocket(uint16_t localPort, uint16_t backlog, nsString binaryType);
   PUDPSocket(Principal principal, nsCString filter);
 

@@ -12,6 +12,7 @@
 #include "prenv.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Preferences.h"
+#include "nsILoadInfo.h"
 
 namespace mozilla { namespace dom {
 class TabChild;
@@ -120,10 +121,11 @@ UsingNeckoIPCSecurity()
 
 inline bool
 MissingRequiredTabChild(mozilla::dom::TabChild* tabChild,
+                        nsILoadInfo* loadInfo,
                         const char* context)
 {
   if (UsingNeckoIPCSecurity()) {
-    if (!tabChild) {
+    if (!tabChild && (!loadInfo || !loadInfo->LoadingPrincipal())) {
       printf_stderr("WARNING: child tried to open %s IPDL channel w/o "
                     "security info\n", context);
       return true;

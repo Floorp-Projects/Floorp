@@ -134,6 +134,7 @@ WyciwygChannelParent::SetupAppData(const IPC::SerializedLoadContext& loadContext
     return true;
 
   const char* error = NeckoParent::CreateChannelLoadContext(aParent,
+                                                            nullptr,
                                                             Manager()->Manager(),
                                                             loadContext,
                                                             mLoadContext);

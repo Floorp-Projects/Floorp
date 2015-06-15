@@ -208,7 +208,7 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
   if (iTabChild) {
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
   }
-  if (MissingRequiredTabChild(tabChild, "ftp")) {
+  if (MissingRequiredTabChild(tabChild, mLoadInfo, "ftp")) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
