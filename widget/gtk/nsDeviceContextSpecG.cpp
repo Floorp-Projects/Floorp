@@ -245,13 +245,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget *aWidget,
   return NS_OK;
 }
 
-/* static !! */
-nsresult nsDeviceContextSpecGTK::GetPrintMethod(const char *aPrinter, PrintMethod &aMethod)
-{
-  aMethod = pmPostScript;
-  return NS_OK;
-}
-
 static void
 #if (MOZ_WIDGET_GTK == 3)
 print_callback(GtkPrintJob *aJob, gpointer aData, const GError *aError) {
@@ -424,24 +417,8 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::GetDefaultPrinterName(char16_t **aDefaultP
 NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const char16_t *aPrinterName, nsIPrintSettings *aPrintSettings)
 {
   DO_PR_DEBUG_LOG(("nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter()"));
-  nsresult rv;
 
-  NS_ENSURE_ARG_POINTER(aPrinterName);
   NS_ENSURE_ARG_POINTER(aPrintSettings);
-  
-  NS_ENSURE_TRUE(*aPrinterName, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(aPrintSettings, NS_ERROR_FAILURE);
-
-  nsXPIDLCString fullPrinterName, /* Full name of printer incl. driver-specific prefix */ 
-                 printerName;     /* "Stripped" name of printer */
-  fullPrinterName.Assign(NS_ConvertUTF16toUTF8(aPrinterName));
-  printerName.Assign(NS_ConvertUTF16toUTF8(aPrinterName));
-  DO_PR_DEBUG_LOG(("printerName='%s'\n", printerName.get()));
-  
-  PrintMethod type = pmInvalid;
-  rv = nsDeviceContextSpecGTK::GetPrintMethod(printerName, type);
-  if (NS_FAILED(rv))
-    return rv;
 
   /* Set filename */
   nsAutoCString filename;
@@ -460,25 +437,19 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const char16_
 
   aPrintSettings->SetIsInitializedFromPrinter(true);
 
-  if (type == pmPostScript) {
-    DO_PR_DEBUG_LOG(("InitPrintSettingsFromPrinter() for PostScript printer\n"));
-     
-    /* PostScript module does not support changing the plex mode... */
-    DO_PR_DEBUG_LOG(("setting default plex to '%s'\n", "default"));
-    aPrintSettings->SetPlexName(MOZ_UTF16("default"));
+  /* PostScript module does not support changing the plex mode... */
+  DO_PR_DEBUG_LOG(("setting default plex to '%s'\n", "default"));
+  aPrintSettings->SetPlexName(MOZ_UTF16("default"));
 
-    /* PostScript module does not support changing the resolution mode... */
-    DO_PR_DEBUG_LOG(("setting default resolution to '%s'\n", "default"));
-    aPrintSettings->SetResolutionName(MOZ_UTF16("default"));
+  /* PostScript module does not support changing the resolution mode... */
+  DO_PR_DEBUG_LOG(("setting default resolution to '%s'\n", "default"));
+  aPrintSettings->SetResolutionName(MOZ_UTF16("default"));
 
-    /* PostScript module does not support changing the colorspace... */
-    DO_PR_DEBUG_LOG(("setting default colorspace to '%s'\n", "default"));
-    aPrintSettings->SetColorspace(MOZ_UTF16("default"));
+  /* PostScript module does not support changing the colorspace... */
+  DO_PR_DEBUG_LOG(("setting default colorspace to '%s'\n", "default"));
+  aPrintSettings->SetColorspace(MOZ_UTF16("default"));
 
-    return NS_OK;    
-  }
-
-  return NS_ERROR_UNEXPECTED;
+  return NS_OK;    
 }
 
 NS_IMETHODIMP nsPrinterEnumeratorGTK::DisplayPropertiesDlg(const char16_t *aPrinter, nsIPrintSettings *aPrintSettings)

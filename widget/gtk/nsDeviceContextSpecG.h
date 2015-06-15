@@ -21,12 +21,6 @@
 #define NS_PORTRAIT  0
 #define NS_LANDSCAPE 1
 
-typedef enum
-{
-  pmInvalid = 0,
-  pmPostScript
-} PrintMethod;
-
 class nsPrintSettingsGTK;
 
 class nsDeviceContextSpecGTK : public nsIDeviceContextSpec
@@ -45,8 +39,6 @@ public:
   NS_IMETHOD EndDocument() override;
   NS_IMETHOD BeginPage() override { return NS_OK; }
   NS_IMETHOD EndPage() override { return NS_OK; }
-
-  static nsresult GetPrintMethod(const char *aPrinter, PrintMethod &aMethod);
 
 protected:
   virtual ~nsDeviceContextSpecGTK();
