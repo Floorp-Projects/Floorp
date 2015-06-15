@@ -29,11 +29,11 @@ namespace dom {
 namespace cache {
 namespace db {
 
-const int32_t kMaxWipeSchemaVersion = 11;
+const int32_t kMaxWipeSchemaVersion = 12;
 
 namespace {
 
-const int32_t kLatestSchemaVersion = 11;
+const int32_t kLatestSchemaVersion = 12;
 const int32_t kMaxEntriesPerStatement = 255;
 
 const uint32_t kPageSize = 4 * 1024;
@@ -101,15 +101,14 @@ static_assert(int(RequestContext::Audio) == 0 &&
               int(RequestContext::Plugin) == 21 &&
               int(RequestContext::Prefetch) == 22 &&
               int(RequestContext::Script) == 23 &&
-              int(RequestContext::Serviceworker) == 24 &&
-              int(RequestContext::Sharedworker) == 25 &&
-              int(RequestContext::Subresource) == 26 &&
-              int(RequestContext::Style) == 27 &&
-              int(RequestContext::Track) == 28 &&
-              int(RequestContext::Video) == 29 &&
-              int(RequestContext::Worker) == 30 &&
-              int(RequestContext::Xmlhttprequest) == 31 &&
-              int(RequestContext::Xslt) == 32,
+              int(RequestContext::Sharedworker) == 24 &&
+              int(RequestContext::Subresource) == 25 &&
+              int(RequestContext::Style) == 26 &&
+              int(RequestContext::Track) == 27 &&
+              int(RequestContext::Video) == 28 &&
+              int(RequestContext::Worker) == 29 &&
+              int(RequestContext::Xmlhttprequest) == 30 &&
+              int(RequestContext::Xslt) == 31,
               "RequestContext values are as expected");
 static_assert(int(RequestCache::Default) == 0 &&
               int(RequestCache::No_store) == 1 &&
