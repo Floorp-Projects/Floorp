@@ -147,7 +147,7 @@ PluginModuleChild::PluginModuleChild(bool aIsChrome)
         MOZ_ASSERT(!gChromeInstance);
         gChromeInstance = this;
     }
-    mUserAgent.SetIsVoid(true);
+
 #ifdef XP_MACOSX
     if (aIsChrome) {
       mac_plugin_interposing::child::SetUpCocoaInterposing();
