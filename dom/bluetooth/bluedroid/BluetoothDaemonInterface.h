@@ -8,7 +8,7 @@
 #define mozilla_dom_bluetooth_bluedroid_bluetoothdaemoninterface_h__
 
 #include "BluetoothInterface.h"
-#include "mozilla/ipc/BluetoothDaemonConnectionConsumer.h"
+#include "mozilla/ipc/DaemonSocketConsumer.h"
 #include "mozilla/ipc/ListenSocketConsumer.h"
 
 namespace mozilla {

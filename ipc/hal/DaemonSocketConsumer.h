@@ -4,18 +4,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ipc_BluetoothDaemonConnectionConsumer_h
-#define mozilla_ipc_BluetoothDaemonConnectionConsumer_h
-
-#include "mozilla/Attributes.h"
-#include "mozilla/FileUtils.h"
-#include "mozilla/ipc/ConnectionOrientedSocket.h"
-#include "nsAutoPtr.h"
+#ifndef mozilla_ipc_DaemonSocketConsumer_h
+#define mozilla_ipc_DaemonSocketConsumer_h
 
 namespace mozilla {
 namespace ipc {
 
-/*
+class DaemonSocketPDU;
+
+/**
+ * |DaemonSocketIOConsumer| processes incoming PDUs from the
+ * HAL daemon. Please note that its method |Handle| runs on a
+ * different than the  consumer thread.
+ */
+class DaemonSocketIOConsumer
+{
+public:
+  virtual ~DaemonSocketIOConsumer();
+
+  virtual void Handle(DaemonSocketPDU& aPDU) = 0;
+  virtual void StoreUserData(const DaemonSocketPDU& aPDU) = 0;
+
+protected:
+  DaemonSocketIOConsumer();
+};
+
+/**
  * |DaemonSocketConsumer| handles socket events.
  */
 class DaemonSocketConsumer

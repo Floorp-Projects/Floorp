@@ -10,7 +10,7 @@
 #include "BluetoothCommon.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
-#include "mozilla/ipc/BluetoothDaemonConnection.h"
+#include "mozilla/ipc/DaemonSocketPDU.h"
 #include "nsThreadUtils.h"
 
 using namespace mozilla::ipc;
