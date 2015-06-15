@@ -1615,39 +1615,35 @@ DrawTargetCG::CopySurface(SourceSurface *aSurface,
 
   MarkChanged();
 
-  if (aSurface->GetType() == SurfaceType::COREGRAPHICS_IMAGE ||
-      aSurface->GetType() == SurfaceType::COREGRAPHICS_CGCONTEXT ||
-      aSurface->GetType() == SurfaceType::DATA) {
-    CGImageRef image = GetRetainedImageFromSourceSurface(aSurface);
+  CGImageRef image = GetRetainedImageFromSourceSurface(aSurface);
 
-    // XXX: it might be more efficient for us to do the copy directly if we have access to the bits
+  // XXX: it might be more efficient for us to do the copy directly if we have access to the bits
 
-    CGContextSaveGState(mCg);
-    CGContextSetCTM(mCg, mOriginalTransform);
+  CGContextSaveGState(mCg);
+  CGContextSetCTM(mCg, mOriginalTransform);
 
-    // CopySurface ignores the clip, so we need to use private API to temporarily reset it
-    CGContextResetClip(mCg);
-    CGRect destRect = CGRectMake(aDestination.x, aDestination.y,
-                                 aSourceRect.width, aSourceRect.height);
-    CGContextClipToRect(mCg, destRect);
+  // CopySurface ignores the clip, so we need to use private API to temporarily reset it
+  CGContextResetClip(mCg);
+  CGRect destRect = CGRectMake(aDestination.x, aDestination.y,
+                               aSourceRect.width, aSourceRect.height);
+  CGContextClipToRect(mCg, destRect);
 
-    CGContextSetBlendMode(mCg, kCGBlendModeCopy);
+  CGContextSetBlendMode(mCg, kCGBlendModeCopy);
 
-    CGContextScaleCTM(mCg, 1, -1);
+  CGContextScaleCTM(mCg, 1, -1);
 
-    CGRect flippedRect = CGRectMake(aDestination.x - aSourceRect.x, -(aDestination.y - aSourceRect.y + double(CGImageGetHeight(image))),
-                                    CGImageGetWidth(image), CGImageGetHeight(image));
+  CGRect flippedRect = CGRectMake(aDestination.x - aSourceRect.x, -(aDestination.y - aSourceRect.y + double(CGImageGetHeight(image))),
+                                  CGImageGetWidth(image), CGImageGetHeight(image));
 
-    // Quartz seems to copy A8 surfaces incorrectly if we don't initialize them
-    // to transparent first.
-    if (mFormat == SurfaceFormat::A8) {
-      CGContextClearRect(mCg, flippedRect);
-    }
-    CGContextDrawImage(mCg, flippedRect, image);
-
-    CGContextRestoreGState(mCg);
-    CGImageRelease(image);
+  // Quartz seems to copy A8 surfaces incorrectly if we don't initialize them
+  // to transparent first.
+  if (mFormat == SurfaceFormat::A8) {
+    CGContextClearRect(mCg, flippedRect);
   }
+  CGContextDrawImage(mCg, flippedRect, image);
+
+  CGContextRestoreGState(mCg);
+  CGImageRelease(image);
 }
 
 void

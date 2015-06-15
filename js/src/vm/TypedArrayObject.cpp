@@ -2211,6 +2211,18 @@ JS_GetArrayBufferViewType(JSObject* obj)
     MOZ_CRASH("invalid ArrayBufferView type");
 }
 
+JS_FRIEND_API(js::Scalar::Type)
+JS_GetSharedArrayBufferViewType(JSObject* obj)
+{
+    obj = CheckedUnwrap(obj);
+    if (!obj)
+        return Scalar::MaxTypedArrayViewType;
+
+    if (obj->is<SharedTypedArrayObject>())
+        return obj->as<SharedTypedArrayObject>().type();
+    MOZ_CRASH("invalid SharedArrayBufferView type");
+}
+
 JS_FRIEND_API(int8_t*)
 JS_GetInt8ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&)
 {

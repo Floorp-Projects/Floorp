@@ -127,6 +127,7 @@ static inline SurfaceFormat ToPixelFormat(const D2D1_PIXEL_FORMAT &aFormat)
 {
   switch(aFormat.format) {
   case DXGI_FORMAT_A8_UNORM:
+  case DXGI_FORMAT_R8_UNORM:
     return SurfaceFormat::A8;
   case DXGI_FORMAT_B8G8R8A8_UNORM:
     if (aFormat.alphaMode == D2D1_ALPHA_MODE_IGNORE) {

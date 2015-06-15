@@ -9,7 +9,9 @@
 
 #include <limits.h>
 
-#include "js/TracingAPI.h"
+#include "jspubtd.h"
+
+#include "js/TraceKind.h"
 #include "js/Utility.h"
 
 /* These values are private to the JS engine. */
@@ -165,6 +167,7 @@ class JS_FRIEND_API(GCCellPtr)
     explicit GCCellPtr(JSFunction* fun) : ptr(checkedCast(fun, JS::TraceKind::Object)) { }
     explicit GCCellPtr(JSString* str) : ptr(checkedCast(str, JS::TraceKind::String)) { }
     explicit GCCellPtr(JSFlatString* str) : ptr(checkedCast(str, JS::TraceKind::String)) { }
+    explicit GCCellPtr(JS::Symbol* sym) : ptr(checkedCast(sym, JS::TraceKind::Symbol)) { }
     explicit GCCellPtr(JSScript* script) : ptr(checkedCast(script, JS::TraceKind::Script)) { }
     explicit GCCellPtr(const Value& v);
 
