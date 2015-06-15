@@ -75,10 +75,14 @@ ChromeProcessController::RequestContentRepaint(const FrameMetrics& aFrameMetrics
     return;
   }
 
-  nsCOMPtr<nsIContent> targetContent = nsLayoutUtils::FindContentFor(aFrameMetrics.GetScrollId());
-  if (targetContent) {
-    FrameMetrics metrics = aFrameMetrics;
-    APZCCallbackHelper::UpdateSubFrame(targetContent, metrics);
+  FrameMetrics metrics = aFrameMetrics;
+  if (metrics.IsRootContent()) {
+    APZCCallbackHelper::UpdateRootFrame(metrics);
+  } else {
+    nsCOMPtr<nsIContent> targetContent = nsLayoutUtils::FindContentFor(aFrameMetrics.GetScrollId());
+    if (targetContent) {
+      APZCCallbackHelper::UpdateSubFrame(targetContent, metrics);
+    }
   }
 }
 

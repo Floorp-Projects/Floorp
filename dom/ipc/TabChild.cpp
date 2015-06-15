@@ -423,6 +423,7 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
                defaultZoom <= viewportInfo.GetMaxZoom());
     metrics.SetZoom(CSSToParentLayerScale2D(ConvertScaleForRoot(defaultZoom)));
 
+    metrics.SetPresShellId(presShellId);
     metrics.SetScrollId(viewId);
   }
 
