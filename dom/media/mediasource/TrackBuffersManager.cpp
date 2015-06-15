@@ -304,6 +304,7 @@ TrackBuffersManager::CompleteResetParserState()
     // to discard now.
     track->mQueuedSamples.Clear();
     track->mLongestFrameDuration.reset();
+    track->mNextInsertionIndex.reset();
   }
   // 6. Remove all bytes from the input buffer.
   mIncomingBuffers.Clear();
@@ -456,17 +457,17 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
     // 3. Remove all media data, from this track buffer, that contain starting
     // timestamps greater than or equal to start and less than the remove end timestamp.
     TimeInterval removedInterval;
-    int32_t firstRemovedIndex = -1;
+    Maybe<uint32_t> firstRemovedIndex;
     TrackBuffer& data = track->mBuffers.LastElement();
     for (uint32_t i = 0; i < data.Length(); i++) {
       const auto& frame = data[i];
       if (frame->mTime >= start.ToMicroseconds() &&
           frame->mTime < removeEndTimestamp.ToMicroseconds()) {
-        if (firstRemovedIndex < 0) {
+        if (firstRemovedIndex.isNothing()) {
           removedInterval =
             TimeInterval(TimeUnit::FromMicroseconds(frame->mTime),
                          TimeUnit::FromMicroseconds(frame->mTime + frame->mDuration));
-          firstRemovedIndex = i;
+          firstRemovedIndex = Some(i);
         } else {
           removedInterval = removedInterval.Span(
             TimeInterval(TimeUnit::FromMicroseconds(frame->mTime),
@@ -478,8 +479,8 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
     }
     // 4. Remove decoding dependencies of the coded frames removed in the previous step:
     // Remove all coded frames between the coded frames removed in the previous step and the next random access point after those removed frames.
-    if (firstRemovedIndex >= 0) {
-      for (uint32_t i = firstRemovedIndex; i < data.Length(); i++) {
+    if (firstRemovedIndex.isSome()) {
+      for (uint32_t i = firstRemovedIndex.ref(); i < data.Length(); i++) {
         const auto& frame = data[i];
         if (frame->mKeyframe) {
           break;
@@ -521,6 +522,10 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
 
   // Update our reported total size.
   mSizeSourceBuffer = mVideoTracks.mSizeBuffer + mAudioTracks.mSizeBuffer;
+
+  // Reset our insertion indexes as they are now invalid.
+  mAudioTracks.mNextInsertionIndex.reset();
+  mVideoTracks.mNextInsertionIndex.reset();
 
   // Tell our demuxer that data was removed.
   mMediaSourceDemuxer->NotifyTimeRangesChanged();
@@ -1061,6 +1066,16 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
     }
   }
   mVideoTracks.mQueuedSamples.Clear();
+#if defined(DEBUG)
+  if (HasVideo()) {
+    const auto& track = mVideoTracks.mBuffers.LastElement();
+    MOZ_ASSERT(track.IsEmpty() || track[0]->mKeyframe);
+    for (uint32_t i = 1; i < track.Length(); i++) {
+      MOZ_ASSERT((track[i-1]->mTrackInfo->GetID() == track[i]->mTrackInfo->GetID() && track[i-1]->mTimecode < track[i]->mTimecode) ||
+                 track[i]->mKeyframe);
+    }
+  }
+#endif
 
   for (auto& sample : mAudioTracks.mQueuedSamples) {
     while (true) {
@@ -1070,6 +1085,16 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
     }
   }
   mAudioTracks.mQueuedSamples.Clear();
+#if defined(DEBUG)
+  if (HasAudio()) {
+    const auto& track = mAudioTracks.mBuffers.LastElement();
+    MOZ_ASSERT(track.IsEmpty() || track[0]->mKeyframe);
+    for (uint32_t i = 1; i < track.Length(); i++) {
+      MOZ_ASSERT((track[i-1]->mTrackInfo->GetID() == track[i]->mTrackInfo->GetID() && track[i-1]->mTimecode < track[i]->mTimecode) ||
+                 track[i]->mKeyframe);
+    }
+  }
+#endif
 
   {
     MonitorAutoLock mon(mMonitor);
@@ -1221,9 +1246,11 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
       // 5. Set the need random access point flag on all track buffers to true.
       track->mNeedRandomAccessPoint = true;
 
-      trackBuffer.mLongestFrameDuration.reset();
+      track->mLongestFrameDuration.reset();
+      track->mNextInsertionIndex.reset();
     }
-    MSE_DEBUG("Detected discontinuity. Restarting process");
+
+    MSE_DEBUG("Discontinuity detected. Restarting process");
     // 6. Jump to the Loop Top step above to restart processing of the current coded frame.
     return true;
   }
@@ -1266,70 +1293,70 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
   // skip this step.
 
   // 14. Remove existing coded frames in track buffer:
+  //   a) If highest end timestamp for track buffer is not set:
+  //      Remove all coded frames from track buffer that have a presentation timestamp greater than or equal to presentation timestamp and less than frame end timestamp.
+  //   b) If highest end timestamp for track buffer is set and less than or equal to presentation timestamp:
+  //      Remove all coded frames from track buffer that have a presentation timestamp greater than or equal to highest end timestamp and less than frame end timestamp
 
   // There is an ambiguity on how to remove frames, which was lodged with:
   // https://www.w3.org/Bugs/Public/show_bug.cgi?id=28710, implementing as per
   // bug description.
-  int firstRemovedIndex = -1;
+  Maybe<uint32_t> firstRemovedIndex;
   TimeInterval removedInterval;
   TrackBuffer& data = trackBuffer.mBuffers.LastElement();
-  if (trackBuffer.mBufferedRanges.Contains(presentationTimestamp)) {
-    if (trackBuffer.mHighestEndTimestamp.isNothing()) {
-      for (uint32_t i = 0; i < data.Length(); i++) {
-        MediaRawData* sample = data[i].get();
-        if (sample->mTime >= presentationTimestamp.ToMicroseconds() &&
-            sample->mTime < frameEndTimestamp.ToMicroseconds()) {
-          if (firstRemovedIndex < 0) {
-            removedInterval =
-              TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
-                           TimeUnit::FromMicroseconds(sample->mTime + sample->mDuration));
-            firstRemovedIndex = i;
-          } else {
-            removedInterval = removedInterval.Span(
-              TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
-                           TimeUnit::FromMicroseconds(sample->mTime + sample->mDuration)));
-          }
-          trackBuffer.mSizeBuffer -= sizeof(*sample) + sample->mSize;
-          data.RemoveElementAt(i);
+  if (trackBuffer.mBufferedRanges.ContainsStrict(presentationTimestamp)) {
+    TimeUnit lowerBound =
+      trackBuffer.mHighestEndTimestamp.valueOr(presentationTimestamp);
+    for (uint32_t i = 0; i < data.Length();) {
+      MediaRawData* sample = data[i].get();
+      if (sample->mTime >= lowerBound.ToMicroseconds() &&
+          sample->mTime < frameEndTimestamp.ToMicroseconds()) {
+        if (firstRemovedIndex.isNothing()) {
+          removedInterval =
+            TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
+                         TimeUnit::FromMicroseconds(sample->GetEndTime()));
+          firstRemovedIndex = Some(i);
+        } else {
+          removedInterval = removedInterval.Span(
+            TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
+                         TimeUnit::FromMicroseconds(sample->GetEndTime())));
         }
-      }
-    } else if (trackBuffer.mHighestEndTimestamp.ref() <= presentationTimestamp) {
-      for (uint32_t i = 0; i < data.Length(); i++) {
-        MediaRawData* sample = data[i].get();
-        if (sample->mTime >= trackBuffer.mHighestEndTimestamp.ref().ToMicroseconds() &&
-            sample->mTime < frameEndTimestamp.ToMicroseconds()) {
-          if (firstRemovedIndex < 0) {
-            removedInterval =
-              TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
-                           TimeUnit::FromMicroseconds(sample->mTime + sample->mDuration));
-            firstRemovedIndex = i;
-          } else {
-            removedInterval = removedInterval.Span(
-              TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
-                           TimeUnit::FromMicroseconds(sample->mTime + sample->mDuration)));
-          }
-          trackBuffer.mSizeBuffer -= sizeof(*sample) + sample->mSize;
-          data.RemoveElementAt(i);
-        }
+        trackBuffer.mSizeBuffer -= sizeof(*sample) + sample->mSize;
+        MSE_DEBUGV("Overlapping frame:%u ([%f, %f))",
+                  i,
+                  TimeUnit::FromMicroseconds(sample->mTime).ToSeconds(),
+                  TimeUnit::FromMicroseconds(sample->GetEndTime()).ToSeconds());
+        data.RemoveElementAt(i);
+      } else {
+        i++;
       }
     }
   }
   // 15. Remove decoding dependencies of the coded frames removed in the previous step:
   // Remove all coded frames between the coded frames removed in the previous step and the next random access point after those removed frames.
-  if (firstRemovedIndex >= 0) {
-    for (uint32_t i = firstRemovedIndex; i < data.Length(); i++) {
-      MediaRawData* sample = data[i].get();
+  if (firstRemovedIndex.isSome()) {
+    uint32_t start = firstRemovedIndex.ref();
+    uint32_t end = start;
+    for (;end < data.Length(); end++) {
+      MediaRawData* sample = data[end].get();
       if (sample->mKeyframe) {
         break;
       }
       removedInterval = removedInterval.Span(
         TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
-                     TimeUnit::FromMicroseconds(sample->mTime + sample->mDuration)));
-      trackBuffer.mSizeBuffer -= sizeof(*aSample) + sample->mSize;
-      data.RemoveElementAt(i);
+                     TimeUnit::FromMicroseconds(sample->GetEndTime())));
+      trackBuffer.mSizeBuffer -= sizeof(*sample) + sample->mSize;
     }
+    data.RemoveElementsAt(start, end - start);
+
+    MSE_DEBUG("Removing undecodable frames from:%u (frames:%u) ([%f, %f))",
+              start, end - start,
+              removedInterval.mStart.ToSeconds(), removedInterval.mEnd.ToSeconds());
+
     // Update our buffered range to exclude the range just removed.
     trackBuffer.mBufferedRanges -= removedInterval;
+    MOZ_ASSERT(trackBuffer.mNextInsertionIndex.isNothing() ||
+               trackBuffer.mNextInsertionIndex.ref() <= start);
   }
 
   // 16. Add the coded frame with the presentation timestamp, decode timestamp, and frame duration to the track buffer.
@@ -1337,21 +1364,50 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
   aSample->mTimecode = decodeTimestamp.ToMicroseconds();
   aSample->mTrackInfo = trackBuffer.mLastInfo;
 
-  if (firstRemovedIndex >= 0) {
-    data.InsertElementAt(firstRemovedIndex, aSample);
+  if (data.IsEmpty()) {
+    data.AppendElement(aSample);
+    MOZ_ASSERT(aSample->mKeyframe);
+    trackBuffer.mNextInsertionIndex = Some(data.Length());
+  } else if (trackBuffer.mNextInsertionIndex.isSome()) {
+    data.InsertElementAt(trackBuffer.mNextInsertionIndex.ref(), aSample);
+    MOZ_ASSERT(trackBuffer.mNextInsertionIndex.ref() == 0 ||
+               data[trackBuffer.mNextInsertionIndex.ref()]->mTrackInfo->GetID() == data[trackBuffer.mNextInsertionIndex.ref()-1]->mTrackInfo->GetID() ||
+               data[trackBuffer.mNextInsertionIndex.ref()]->mKeyframe);
+    trackBuffer.mNextInsertionIndex.ref()++;
+  } else if (presentationTimestamp < trackBuffer.mBufferedRanges.GetStart()) {
+    data.InsertElementAt(0, aSample);
+    MOZ_ASSERT(aSample->mKeyframe);
+    trackBuffer.mNextInsertionIndex = Some(size_t(1));
+  } else if (presentationTimestamp >= trackBuffer.mBufferedRanges.GetEnd()) {
+    data.AppendElement(aSample);
+    MOZ_ASSERT(data.Length() <= 2 ||
+               data[data.Length()-1]->mTrackInfo->GetID() == data[data.Length()-2]->mTrackInfo->GetID() ||
+               data[data.Length()-1]->mKeyframe);
+    trackBuffer.mNextInsertionIndex = Some(data.Length());
   } else {
-    if (data.IsEmpty() || aSample->mTimecode > data.LastElement()->mTimecode) {
-      data.AppendElement(aSample);
-    } else {
-      // Find where to insert frame.
-      for (uint32_t i = 0; i < data.Length(); i++) {
-        const auto& sample = data[i];
-        if (sample->mTimecode > aSample->mTimecode) {
-          data.InsertElementAt(i, aSample);
-          break;
-        }
+    // Find which discontinuity we should insert the frame before.
+    TimeInterval target;
+    for (const auto& interval : trackBuffer.mBufferedRanges) {
+      if (presentationTimestamp < interval.mStart) {
+        target = interval;
+        break;
       }
     }
+    for (uint32_t i = 0; i < data.Length(); i++) {
+      const nsRefPtr<MediaRawData>& sample = data[i];
+      TimeInterval sampleInterval{
+        TimeUnit::FromMicroseconds(sample->mTime),
+        TimeUnit::FromMicroseconds(sample->GetEndTime())};
+      if (target.Intersects(sampleInterval)) {
+        data.InsertElementAt(i, aSample);
+        MOZ_ASSERT(i != 0 &&
+                   (data[i]->mTrackInfo->GetID() == data[i-1]->mTrackInfo->GetID() ||
+                    data[i]->mKeyframe));
+        trackBuffer.mNextInsertionIndex = Some(size_t(i) + 1);
+        break;
+      }
+    }
+    MOZ_ASSERT(aSample->mKeyframe);
   }
   trackBuffer.mSizeBuffer += sizeof(*aSample) + aSample->mSize;
 
