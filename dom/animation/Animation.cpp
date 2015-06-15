@@ -62,6 +62,10 @@ Animation::SetTimeline(AnimationTimeline* aTimeline)
     return;
   }
 
+  if (mTimeline) {
+    mTimeline->RemoveAnimation(*this);
+  }
+
   mTimeline = aTimeline;
 
   // FIXME(spec): Once we implement the seeking defined in the spec
@@ -788,6 +792,35 @@ Animation::UpdateTiming(SeekFlag aSeekFlag)
   // can change the current time, which is used by the latter.
   UpdateFinishedState(aSeekFlag);
   UpdateEffect();
+
+  // Unconditionally Add/Remove from the timeline. This is ok because if the
+  // animation has already been added/removed (which will be true more often
+  // than not) the work done by AnimationTimeline/DocumentTimeline is still
+  // negligible and its easier than trying to detect whenever we are switching
+  // to/from being relevant.
+  //
+  // We need to do this after calling UpdateEffect since it updates some
+  // cached state used by IsRelevant.
+  //
+  // Note that we only store relevant animations on the timeline since they
+  // are the only ones that need ticks and are the only ones returned from
+  // AnimationTimeline::GetAnimations. Storing any more than that would mean
+  // that we fail to garbage collect irrelevant animations since the timeline
+  // keeps a strong reference to each animation.
+  //
+  // Once we tick animations from the their timeline, and once we expect
+  // timelines to go in and out of being inactive, we will also need to store
+  // non-idle animations that are waiting for their timeline to become active
+  // on their timeline (as otherwise once the timeline becomes active it will
+  // have no way of notifying its animations). For now, however, we can
+  // simply store just the relevant animations.
+  if (mTimeline) {
+    if (IsRelevant()) {
+      mTimeline->AddAnimation(*this);
+    } else {
+      mTimeline->RemoveAnimation(*this);
+    }
+  }
 }
 
 void
