@@ -81,7 +81,7 @@ class js::VerifyPreTracer : public JS::CallbackTracer
 {
     JS::AutoDisableGenerationalGC noggc;
 
-    void trace(void** thingp, JS::TraceKind kind) override;
+    void onChild(const JS::GCCellPtr& thing) override;
 
   public:
     /* The gcNumber when the verification began. */
@@ -112,9 +112,9 @@ class js::VerifyPreTracer : public JS::CallbackTracer
  * node.
  */
 void
-VerifyPreTracer::trace(void** thingp, JS::TraceKind kind)
+VerifyPreTracer::onChild(const JS::GCCellPtr& thing)
 {
-    MOZ_ASSERT(!IsInsideNursery(*reinterpret_cast<Cell**>(thingp)));
+    MOZ_ASSERT(!IsInsideNursery(thing.asCell()));
 
     edgeptr += sizeof(EdgeValue);
     if (edgeptr >= term) {
@@ -125,8 +125,8 @@ VerifyPreTracer::trace(void** thingp, JS::TraceKind kind)
     VerifyNode* node = curnode;
     uint32_t i = node->count;
 
-    node->edges[i].thing = *thingp;
-    node->edges[i].kind = kind;
+    node->edges[i].thing = thing.asCell();
+    node->edges[i].kind = thing.kind();
     node->edges[i].label = contextName();
     node->count++;
 }
@@ -252,7 +252,7 @@ IsMarkedOrAllocated(TenuredCell* cell)
 struct CheckEdgeTracer : public JS::CallbackTracer {
     VerifyNode* node;
     explicit CheckEdgeTracer(JSRuntime* rt) : JS::CallbackTracer(rt), node(nullptr) {}
-    void trace(void** thingp, JS::TraceKind kind) override;
+    void onChild(const JS::GCCellPtr& thing) override;
 };
 
 static const uint32_t MAX_VERIFIER_EDGES = 1000;
@@ -265,15 +265,15 @@ static const uint32_t MAX_VERIFIER_EDGES = 1000;
  * been modified) must point to marked objects.
  */
 void
-CheckEdgeTracer::trace(void** thingp, JS::TraceKind kind)
+CheckEdgeTracer::onChild(const JS::GCCellPtr& thing)
 {
     /* Avoid n^2 behavior. */
     if (node->count > MAX_VERIFIER_EDGES)
         return;
 
     for (uint32_t i = 0; i < node->count; i++) {
-        if (node->edges[i].thing == *thingp) {
-            MOZ_ASSERT(node->edges[i].kind == kind);
+        if (node->edges[i].thing == thing.asCell()) {
+            MOZ_ASSERT(node->edges[i].kind == thing.kind());
             node->edges[i].thing = nullptr;
             return;
         }

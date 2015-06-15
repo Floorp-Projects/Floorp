@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* globals ViewHelpers */
 
 "use strict";
 
@@ -19,11 +20,20 @@
 // 4. destroy the component:
 //    c.destroy();
 
-const {Cu} = require('chrome');
+const {Cu} = require("chrome");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const {
+  createNode,
+  drawGraphElementBackground,
+  findOptimalTimeInterval
+} = require("devtools/animationinspector/utils");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/animationinspector.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const MILLIS_TIME_FORMAT_MAX_DURATION = 4000;
+// The minimum spacing between 2 time graduation headers in the timeline (ms).
+const TIME_GRADUATION_MIN_SPACING = 40;
 
 /**
  * UI component responsible for displaying and updating the player meta-data:
@@ -75,9 +85,9 @@ PlayerMetaDataHeader.prototype = {
     // Animation duration.
     this.durationLabel = createNode({
       parent: metaData,
-      nodeType: "span"
+      nodeType: "span",
+      textContent: L10N.getStr("player.animationDurationLabel")
     });
-    this.durationLabel.textContent = L10N.getStr("player.animationDurationLabel");
 
     this.durationValue = createNode({
       parent: metaData,
@@ -90,9 +100,9 @@ PlayerMetaDataHeader.prototype = {
       nodeType: "span",
       attributes: {
         "style": "display:none;"
-      }
+      },
+      textContent: L10N.getStr("player.animationDelayLabel")
     });
-    this.delayLabel.textContent = L10N.getStr("player.animationDelayLabel");
 
     this.delayValue = createNode({
       parent: metaData,
@@ -106,9 +116,9 @@ PlayerMetaDataHeader.prototype = {
       nodeType: "span",
       attributes: {
         "style": "display:none;"
-      }
+      },
+      textContent: L10N.getStr("player.animationIterationCountLabel")
     });
-    this.iterationLabel.textContent = L10N.getStr("player.animationIterationCountLabel");
 
     this.iterationValue = createNode({
       parent: metaData,
@@ -224,7 +234,7 @@ PlaybackRateSelector.prototype = {
    * different from the existing presets.
    */
   getCurrentPresets: function({playbackRate}) {
-    return [...new Set([...this.PRESETS, playbackRate])].sort((a,b) => a > b);
+    return [...new Set([...this.PRESETS, playbackRate])].sort((a, b) => a > b);
   },
 
   render: function(state) {
@@ -248,9 +258,9 @@ PlaybackRateSelector.prototype = {
         nodeType: "option",
         attributes: {
           value: preset,
-        }
+        },
+        textContent: L10N.getFormatStr("player.playbackRateLabel", preset)
       });
-      option.textContent = L10N.getFormatStr("player.playbackRateLabel", preset);
       if (preset === state.playbackRate) {
         option.setAttribute("selected", "");
       }
@@ -261,7 +271,7 @@ PlaybackRateSelector.prototype = {
     this.currentRate = state.playbackRate;
   },
 
-  onSelectionChanged: function(e) {
+  onSelectionChanged: function() {
     this.emit("rate-changed", parseFloat(this.el.value));
   }
 };
@@ -272,9 +282,13 @@ PlaybackRateSelector.prototype = {
  * @param {InspectorPanel} inspector Requires a reference to the inspector-panel
  * to highlight and select the node, as well as refresh it when there are
  * mutations.
+ * @param {Object} options Supported properties are:
+ * - compact {Boolean} Defaults to false. If true, nodes will be previewed like
+ *   tag#id.class instead of <tag id="id" class="class">
  */
-function AnimationTargetNode(inspector) {
+function AnimationTargetNode(inspector, options={}) {
   this.inspector = inspector;
+  this.options = options;
 
   this.onPreviewMouseOver = this.onPreviewMouseOver.bind(this);
   this.onPreviewMouseOut = this.onPreviewMouseOut.bind(this);
@@ -313,7 +327,9 @@ AnimationTargetNode.prototype = {
       nodeType: "span"
     });
 
-    this.previewEl.appendChild(document.createTextNode("<"));
+    if (!this.options.compact) {
+      this.previewEl.appendChild(document.createTextNode("<"));
+    }
 
     // Tag name.
     this.tagNameEl = createNode({
@@ -330,15 +346,26 @@ AnimationTargetNode.prototype = {
       nodeType: "span"
     });
 
-    createNode({
-      parent: this.idEl,
-      nodeType: "span",
-      attributes: {
-        "class": "attribute-name theme-fg-color2"
-      }
-    }).textContent = "id";
-
-    this.idEl.appendChild(document.createTextNode("=\""));
+    if (!this.options.compact) {
+      createNode({
+        parent: this.idEl,
+        nodeType: "span",
+        attributes: {
+          "class": "attribute-name theme-fg-color2"
+        },
+        textContent: "id"
+      });
+      this.idEl.appendChild(document.createTextNode("=\""));
+    } else {
+      createNode({
+        parent: this.idEl,
+        nodeType: "span",
+        attributes: {
+          "class": "theme-fg-color2"
+        },
+        textContent: "#"
+      });
+    }
 
     createNode({
       parent: this.idEl,
@@ -348,7 +375,9 @@ AnimationTargetNode.prototype = {
       }
     });
 
-    this.idEl.appendChild(document.createTextNode("\""));
+    if (!this.options.compact) {
+      this.idEl.appendChild(document.createTextNode("\""));
+    }
 
     // Class attribute container.
     this.classEl = createNode({
@@ -356,15 +385,26 @@ AnimationTargetNode.prototype = {
       nodeType: "span"
     });
 
-    createNode({
-      parent: this.classEl,
-      nodeType: "span",
-      attributes: {
-        "class": "attribute-name theme-fg-color2"
-      }
-    }).textContent = "class";
-
-    this.classEl.appendChild(document.createTextNode("=\""));
+    if (!this.options.compact) {
+      createNode({
+        parent: this.classEl,
+        nodeType: "span",
+        attributes: {
+          "class": "attribute-name theme-fg-color2"
+        },
+        textContent: "class"
+      });
+      this.classEl.appendChild(document.createTextNode("=\""));
+    } else {
+      createNode({
+        parent: this.classEl,
+        nodeType: "span",
+        attributes: {
+          "class": "theme-fg-color6"
+        },
+        textContent: "."
+      });
+    }
 
     createNode({
       parent: this.classEl,
@@ -374,9 +414,10 @@ AnimationTargetNode.prototype = {
       }
     });
 
-    this.classEl.appendChild(document.createTextNode("\""));
-
-    this.previewEl.appendChild(document.createTextNode(">"));
+    if (!this.options.compact) {
+      this.classEl.appendChild(document.createTextNode("\""));
+      this.previewEl.appendChild(document.createTextNode(">"));
+    }
 
     // Init events for highlighting and selecting the node.
     this.previewEl.addEventListener("mouseover", this.onPreviewMouseOver);
@@ -430,73 +471,359 @@ AnimationTargetNode.prototype = {
     }
   },
 
-  render: function(playerFront) {
+  render: Task.async(function*(playerFront) {
     this.playerFront = playerFront;
-    this.inspector.walker.getNodeFromActor(playerFront.actorID, ["node"]).then(nodeFront => {
-      // We might have been destroyed in the meantime, or the node might not be found.
-      if (!this.el || !nodeFront) {
-        return;
-      }
+    this.nodeFront = undefined;
 
-      this.nodeFront = nodeFront;
-      let {tagName, attributes} = nodeFront;
-
-      this.tagNameEl.textContent = tagName.toLowerCase();
-
-      let idIndex = attributes.findIndex(({name}) => name === "id");
-      if (idIndex > -1 && attributes[idIndex].value) {
-        this.idEl.querySelector(".attribute-value").textContent =
-          attributes[idIndex].value;
-        this.idEl.style.display = "inline";
-      } else {
-        this.idEl.style.display = "none";
-      }
-
-      let classIndex = attributes.findIndex(({name}) => name === "class");
-      if (classIndex > -1 && attributes[classIndex].value) {
-        this.classEl.querySelector(".attribute-value").textContent =
-          attributes[classIndex].value;
-        this.classEl.style.display = "inline";
-      } else {
-        this.classEl.style.display = "none";
-      }
-
-      this.emit("target-retrieved");
-    }, e => {
-      this.nodeFront = null;
+    try {
+      this.nodeFront = yield this.inspector.walker.getNodeFromActor(
+                             playerFront.actorID, ["node"]);
+    } catch (e) {
+      // We might have been destroyed in the meantime, or the node might not be
+      // found.
       if (!this.el) {
-        console.warn("Cound't retrieve the animation target node, widget destroyed");
-      } else {
-        console.error(e);
+        console.warn("Cound't retrieve the animation target node, widget " +
+                     "destroyed");
       }
-    });
-  }
+      console.error(e);
+      return;
+    }
+
+    if (!this.nodeFront || !this.el) {
+      return;
+    }
+
+    let {tagName, attributes} = this.nodeFront;
+
+    this.tagNameEl.textContent = tagName.toLowerCase();
+
+    let idIndex = attributes.findIndex(({name}) => name === "id");
+    if (idIndex > -1 && attributes[idIndex].value) {
+      this.idEl.querySelector(".attribute-value").textContent =
+        attributes[idIndex].value;
+      this.idEl.style.display = "inline";
+    } else {
+      this.idEl.style.display = "none";
+    }
+
+    let classIndex = attributes.findIndex(({name}) => name === "class");
+    if (classIndex > -1 && attributes[classIndex].value) {
+      let value = attributes[classIndex].value;
+      if (this.options.compact) {
+        value = value.split(" ").join(".");
+      }
+
+      this.classEl.querySelector(".attribute-value").textContent = value;
+      this.classEl.style.display = "inline";
+    } else {
+      this.classEl.style.display = "none";
+    }
+
+    this.emit("target-retrieved");
+  })
 };
 
 /**
- * DOM node creation helper function.
- * @param {Object} Options to customize the node to be created.
- * - nodeType {String} Optional, defaults to "div",
- * - attributes {Object} Optional attributes object like
- *   {attrName1:value1, attrName2: value2, ...}
- * - parent {DOMNode} Mandatory node to append the newly created node to.
- * @return {DOMNode} The newly created node.
+ * The TimeScale helper object is used to know which size should something be
+ * displayed with in the animation panel, depending on the animations that are
+ * currently displayed.
+ * If there are 5 animations displayed, and the first one starts at 10000ms and
+ * the last one ends at 20000ms, then this helper can be used to convert any
+ * time in this range to a distance in pixels.
+ *
+ * For the helper to know how to convert, it needs to know all the animations.
+ * Whenever a new animation is added to the panel, addAnimation(state) should be
+ * called. reset() can be called to start over.
  */
-function createNode(options) {
-  if (!options.parent) {
-    throw new Error("Missing parent DOMNode to create new node");
+let TimeScale = {
+  minStartTime: Infinity,
+  maxEndTime: 0,
+
+  /**
+   * Add a new animation to time scale.
+   * @param {Object} state A PlayerFront.state object.
+   */
+  addAnimation: function({startTime, delay, duration, iterationCount}) {
+    this.minStartTime = Math.min(this.minStartTime, startTime);
+    let length = delay + (duration * (!iterationCount ? 1 : iterationCount));
+    this.maxEndTime = Math.max(this.maxEndTime, startTime + length);
+  },
+
+  /**
+   * Reset the current time scale.
+   */
+  reset: function() {
+    this.minStartTime = Infinity;
+    this.maxEndTime = 0;
+  },
+
+  /**
+   * Convert a startTime to a distance in pixels, in the current time scale.
+   * @param {Number} time
+   * @param {Number} containerWidth The width of the container element.
+   * @return {Number}
+   */
+  startTimeToDistance: function(time, containerWidth) {
+    time -= this.minStartTime;
+    return this.durationToDistance(time, containerWidth);
+  },
+
+  /**
+   * Convert a duration to a distance in pixels, in the current time scale.
+   * @param {Number} time
+   * @param {Number} containerWidth The width of the container element.
+   * @return {Number}
+   */
+  durationToDistance: function(duration, containerWidth) {
+    return containerWidth * duration / (this.maxEndTime - this.minStartTime);
+  },
+
+  /**
+   * Convert a distance in pixels to a time, in the current time scale.
+   * @param {Number} distance
+   * @param {Number} containerWidth The width of the container element.
+   * @return {Number}
+   */
+  distanceToTime: function(distance, containerWidth) {
+    return this.minStartTime +
+      ((this.maxEndTime - this.minStartTime) * distance / containerWidth);
+  },
+
+  /**
+   * Convert a distance in pixels to a time, in the current time scale.
+   * The time will be relative to the current minimum start time.
+   * @param {Number} distance
+   * @param {Number} containerWidth The width of the container element.
+   * @return {Number}
+   */
+  distanceToRelativeTime: function(distance, containerWidth) {
+    let time = this.distanceToTime(distance, containerWidth);
+    return time - this.minStartTime;
+  },
+
+  /**
+   * Depending on the time scale, format the given time as milliseconds or
+   * seconds.
+   * @param {Number} time
+   * @return {String} The formatted time string.
+   */
+  formatTime: function(time) {
+    let duration = this.maxEndTime - this.minStartTime;
+
+    // Format in milliseconds if the total duration is short enough.
+    if (duration <= MILLIS_TIME_FORMAT_MAX_DURATION) {
+      return L10N.getFormatStr("timeline.timeGraduationLabel", time.toFixed(0));
+    }
+
+    // Otherwise format in seconds.
+    return L10N.getFormatStr("player.timeLabel", (time / 1000).toFixed(1));
   }
+};
 
-  let type = options.nodeType || "div";
-  let node = options.parent.ownerDocument.createElement(type);
+exports.TimeScale = TimeScale;
 
-  for (let name in options.attributes || {}) {
-    let value = options.attributes[name];
-    node.setAttribute(name, value);
-  }
+/**
+ * UI component responsible for displaying a timeline for animations.
+ * The timeline is essentially a graph with time along the x axis and animations
+ * along the y axis.
+ * The time is represented with a graduation header at the top and a current
+ * time play head.
+ * Animations are organized by lines, with a left margin containing the preview
+ * of the target DOM element the animation applies to.
+ */
+function AnimationsTimeline(inspector) {
+  this.animations = [];
+  this.targetNodes = [];
+  this.inspector = inspector;
 
-  options.parent.appendChild(node);
-  return node;
+  this.onAnimationStateChanged = this.onAnimationStateChanged.bind(this);
 }
 
-exports.createNode = createNode;
+exports.AnimationsTimeline = AnimationsTimeline;
+
+AnimationsTimeline.prototype = {
+  init: function(containerEl) {
+    this.win = containerEl.ownerDocument.defaultView;
+
+    this.rootWrapperEl = createNode({
+      parent: containerEl,
+      attributes: {
+        "class": "animation-timeline"
+      }
+    });
+
+    this.timeHeaderEl = createNode({
+      parent: this.rootWrapperEl,
+      attributes: {
+        "class": "time-header"
+      }
+    });
+
+    this.animationsEl = createNode({
+      parent: this.rootWrapperEl,
+      nodeType: "ul",
+      attributes: {
+        "class": "animations"
+      }
+    });
+  },
+
+  destroy: function() {
+    this.unrender();
+
+    this.rootWrapperEl.remove();
+    this.animations = [];
+
+    this.rootWrapperEl = null;
+    this.timeHeaderEl = null;
+    this.animationsEl = null;
+    this.win = null;
+    this.inspector = null;
+  },
+
+  destroyTargetNodes: function() {
+    for (let targetNode of this.targetNodes) {
+      targetNode.destroy();
+    }
+    this.targetNodes = [];
+  },
+
+  unrender: function() {
+    for (let animation of this.animations) {
+      animation.off("changed", this.onAnimationStateChanged);
+    }
+
+    TimeScale.reset();
+    this.destroyTargetNodes();
+    this.animationsEl.innerHTML = "";
+  },
+
+  render: function(animations) {
+    this.unrender();
+
+    this.animations = animations;
+    if (!this.animations.length) {
+      return;
+    }
+
+    // Loop first to set the time scale for all current animations.
+    for (let {state} of animations) {
+      TimeScale.addAnimation(state);
+    }
+
+    this.drawHeaderAndBackground();
+
+    for (let animation of this.animations) {
+      animation.on("changed", this.onAnimationStateChanged);
+
+      // Each line contains the target animated node and the animation time
+      // block.
+      let animationEl = createNode({
+        parent: this.animationsEl,
+        nodeType: "li",
+        attributes: {
+          "class": "animation"
+        }
+      });
+
+      // Left sidebar for the animated node.
+      let animatedNodeEl = createNode({
+        parent: animationEl,
+        attributes: {
+          "class": "target"
+        }
+      });
+
+      let timeBlockEl = createNode({
+        parent: animationEl,
+        attributes: {
+          "class": "time-block"
+        }
+      });
+
+      this.drawTimeBlock(animation, timeBlockEl);
+
+      // Draw the animated node target.
+      let targetNode = new AnimationTargetNode(this.inspector, {compact: true});
+      targetNode.init(animatedNodeEl);
+      targetNode.render(animation);
+
+      // Save the targetNode so it can be destroyed later.
+      this.targetNodes.push(targetNode);
+    }
+  },
+
+  onAnimationStateChanged: function() {
+    // For now, simply re-render the component. The animation front's state has
+    // already been updated.
+    this.render(this.animations);
+  },
+
+  drawHeaderAndBackground: function() {
+    let width = this.timeHeaderEl.offsetWidth;
+    let scale = width / (TimeScale.maxEndTime - TimeScale.minStartTime);
+    drawGraphElementBackground(this.win.document, "time-graduations", width, scale);
+
+    // And the time graduation header.
+    this.timeHeaderEl.innerHTML = "";
+    let interval = findOptimalTimeInterval(scale, TIME_GRADUATION_MIN_SPACING);
+    for (let i = 0; i < width; i += interval) {
+      createNode({
+        parent: this.timeHeaderEl,
+        nodeType: "span",
+        attributes: {
+          "class": "time-tick",
+          "style": `left:${i}px`
+        },
+        textContent: TimeScale.formatTime(
+          TimeScale.distanceToRelativeTime(i, width))
+      });
+    }
+  },
+
+  drawTimeBlock: function({state}, el) {
+    let width = el.offsetWidth;
+
+    // Container for all iterations and delay. Positioned at the right start
+    // time.
+    let x = TimeScale.startTimeToDistance(state.startTime + (state.delay || 0),
+                                          width);
+    // With the right width (duration*duration).
+    let count = state.iterationCount || 1;
+    let w = TimeScale.durationToDistance(state.duration, width);
+
+    let iterations = createNode({
+      parent: el,
+      attributes: {
+        "class": "iterations" + (state.iterationCount ? "" : " infinite"),
+        // Individual iterations are represented by setting the size of the
+        // repeating linear-gradient.
+        "style": `left:${x}px;
+                  width:${w * count}px;
+                  background-size:${Math.max(w, 2)}px 100%;`
+      }
+    });
+
+    // The animation name is displayed over the iterations.
+    createNode({
+      parent: iterations,
+      attributes: {
+        "class": "name"
+      },
+      textContent: state.name
+    });
+
+    // Delay.
+    if (state.delay) {
+      let delay = TimeScale.durationToDistance(state.delay, width);
+      createNode({
+        parent: iterations,
+        attributes: {
+          "class": "delay",
+          "style": `left:-${delay}px;
+                    width:${delay}px;`
+        }
+      });
+    }
+  }
+};

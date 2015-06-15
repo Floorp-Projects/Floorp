@@ -65,9 +65,9 @@ struct Node::ConstructFunctor : public js::BoolDefaultAdaptor<Value, false> {
     template <typename T> bool operator()(T* t, Node* node) { node->construct(t); return true; }
 };
 
-Node::Node(JS::TraceKind kind, void* ptr)
+Node::Node(const JS::GCCellPtr &thing)
 {
-    js::gc::CallTyped(ConstructFunctor(), ptr, kind, this);
+    js::gc::CallTyped(ConstructFunctor(), thing.asCell(), thing.kind(), this);
 }
 
 Node::Node(HandleValue value)
@@ -111,7 +111,7 @@ class SimpleEdgeVectorTracer : public JS::CallbackTracer {
     // True if we should populate the edge's names.
     bool wantNames;
 
-    void trace(void** thingp, JS::TraceKind kind) {
+    void onChild(const JS::GCCellPtr& thing) override {
         if (!okay)
             return;
 
@@ -139,7 +139,7 @@ class SimpleEdgeVectorTracer : public JS::CallbackTracer {
         // ownership of name; if the append succeeds, the vector element
         // then takes ownership; if the append fails, then the temporary
         // retains it, and its destructor will free it.
-        if (!vec->append(mozilla::Move(SimpleEdge(name16, Node(kind, *thingp))))) {
+        if (!vec->append(mozilla::Move(SimpleEdge(name16, Node(thing))))) {
             okay = false;
             return;
         }

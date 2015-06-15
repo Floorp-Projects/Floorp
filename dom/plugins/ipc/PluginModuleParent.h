@@ -35,7 +35,9 @@ class nsIProfileSaveEvent;
 class nsPluginTag;
 
 namespace mozilla {
+#ifdef MOZ_ENABLE_PROFILER_SPS
 class ProfileGatherer;
+#endif
 namespace dom {
 class PCrashReporterParent;
 class CrashReporterParent;
@@ -417,8 +419,10 @@ class PluginModuleChromeParent
     void OnEnteredSyncSend() override;
     void OnExitedSyncSend() override;
 
+#ifdef  MOZ_ENABLE_PROFILER_SPS
     void GatherAsyncProfile(mozilla::ProfileGatherer* aGatherer);
     void GatheredAsyncProfile(nsIProfileSaveEvent* aSaveEvent);
+#endif
 
     virtual bool
     RecvProfile(const nsCString& aProfile) override;
@@ -580,7 +584,9 @@ private:
     NPError             mAsyncInitError;
     dom::ContentParent* mContentParent;
     nsCOMPtr<nsIObserver> mOfflineObserver;
+#ifdef MOZ_ENABLE_PROFILER_SPS
     nsRefPtr<mozilla::ProfileGatherer> mGatherer;
+#endif
     nsCString mProfile;
     bool mIsBlocklisted;
     static bool sInstantiated;

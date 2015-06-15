@@ -37,7 +37,9 @@ class nsIWidget;
 
 namespace mozilla {
 class PRemoteSpellcheckEngineParent;
+#ifdef MOZ_ENABLE_PROFILER_SPS
 class ProfileGatherer;
+#endif
 
 namespace ipc {
 class OptionalURIParams;
@@ -933,7 +935,9 @@ private:
 #endif
 
     PProcessHangMonitorParent* mHangMonitorActor;
+#ifdef MOZ_ENABLE_PROFILER_SPS
     nsRefPtr<mozilla::ProfileGatherer> mGatherer;
+#endif
     nsCString mProfile;
 };
 

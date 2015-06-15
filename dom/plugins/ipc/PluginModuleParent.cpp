@@ -22,7 +22,9 @@
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/Preferences.h"
+#ifdef MOZ_ENABLE_PROFILER_SPS
 #include "mozilla/ProfileGatherer.h"
+#endif
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -59,7 +61,9 @@
 using base::KillProcess;
 
 using mozilla::PluginLibrary;
+#ifdef MOZ_ENABLE_PROFILER_SPS
 using mozilla::ProfileGatherer;
+#endif
 using mozilla::ipc::MessageChannel;
 using mozilla::ipc::GeckoChildProcessHost;
 using mozilla::dom::PCrashReporterParent;
@@ -3106,10 +3110,12 @@ PluginModuleChromeParent::GatheredAsyncProfile(nsIProfileSaveEvent* aSaveEvent)
         mProfile.Truncate();
     }
 }
+#endif // MOZ_ENABLE_PROFILER_SPS
 
 bool
 PluginModuleChromeParent::RecvProfile(const nsCString& aProfile)
 {
+#ifdef MOZ_ENABLE_PROFILER_SPS
     if (NS_WARN_IF(!mGatherer)) {
         return true;
     }
@@ -3117,7 +3123,8 @@ PluginModuleChromeParent::RecvProfile(const nsCString& aProfile)
     mProfile = aProfile;
     mGatherer->GatheredOOPProfile();
     mGatherer = nullptr;
+#endif
     return true;
 }
 
-#endif
+
