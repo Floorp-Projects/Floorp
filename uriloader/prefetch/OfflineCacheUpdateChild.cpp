@@ -401,7 +401,7 @@ OfflineCacheUpdateChild::Schedule()
     // the one and only TabChild.
     TabChild* child = tabchild ? static_cast<TabChild*>(tabchild.get()) : nullptr;
 
-    if (MissingRequiredTabChild(child, nullptr, "offlinecacheupdate")) {
+    if (MissingRequiredTabChild(child, "offlinecacheupdate")) {
       return NS_ERROR_FAILURE;
     }
 
