@@ -710,13 +710,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::SetEventModel(int32_t eventModel)
 #endif
 }
 
-// This is no longer used, just leaving it here so we don't have to change
-// the nsIPluginInstanceOwner interface.
-NPError nsPluginInstanceOwner::ShowNativeContextMenu(NPMenu* menu, void* event)
-{
-  return NPERR_GENERIC_ERROR;
-}
-
 #ifdef XP_MACOSX
 NPBool nsPluginInstanceOwner::ConvertPointPuppet(PuppetWidget *widget,
                                                  nsPluginFrame* pluginFrame,
