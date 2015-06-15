@@ -455,9 +455,7 @@ var BrowserApp = {
     XPInstallObserver.init();
     CharacterEncoding.init();
     ActivityObserver.init();
-    // TODO: replace with Android implementation of WebappOSUtils.isLaunchable.
     Cu.import("resource://gre/modules/Webapps.jsm");
-    DOMApplicationRegistry.allAppsLaunchable = true;
     RemoteDebugger.init();
     UserAgentOverrides.init();
     DesktopUserAgent.init();
