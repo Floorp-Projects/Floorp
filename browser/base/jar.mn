@@ -105,7 +105,7 @@ browser.jar:
         content/browser/gcli_sec_bad.svg              (content/gcli_sec_bad.svg)
         content/browser/gcli_sec_good.svg             (content/gcli_sec_good.svg)
         content/browser/gcli_sec_moderate.svg         (content/gcli_sec_moderate.svg)
-        content/browser/newtab/newTab.xul             (content/newtab/newTab.xul)
+        content/browser/newtab/newTab.xhtml           (content/newtab/newTab.xhtml)
 *       content/browser/newtab/newTab.js              (content/newtab/newTab.js)
         content/browser/newtab/newTab.css             (content/newtab/newTab.css)
         content/browser/newtab/newTab.inadjacent.json         (content/newtab/newTab.inadjacent.json)
