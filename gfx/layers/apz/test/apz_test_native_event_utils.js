@@ -31,6 +31,15 @@ function nativeHorizontalWheelEventMsg() {
   throw "Native wheel events not supported on platform " + getPlatform();
 }
 
+function nativeMouseMoveEventMsg() {
+  switch (getPlatform()) {
+    case "windows": return 1; // MOUSEEVENTF_MOVE
+    case "mac": return 5; // NSMouseMoved
+    case "linux": return 3; // GDK_MOTION_NOTIFY
+  }
+  throw "Native wheel events not supported on platform " + getPlatform();
+}
+
 // Synthesizes a native mousewheel event and returns immediately. This does not
 // guarantee anything; you probably want to use one of the other functions below
 // which actually wait for results.
@@ -90,4 +99,28 @@ function synthesizeNativeWheelAndWaitForScrollEvent(aElement, aX, aY, aDeltaX, a
     setTimeout(aCallback, 0);
   }, useCapture);
   return synthesizeNativeWheel(aElement, aX, aY, aDeltaX, aDeltaY);
+}
+
+// Synthesizes a native mouse move event and returns immediately.
+// aX and aY are relative to the top-left of |aElement|'s containing window.
+function synthesizeNativeMouseMove(aElement, aX, aY) {
+  var targetWindow = aElement.ownerDocument.defaultView;
+  aX += targetWindow.mozInnerScreenX;
+  aY += targetWindow.mozInnerScreenY;
+  _getDOMWindowUtils().sendNativeMouseEvent(aX, aY, nativeMouseMoveEventMsg(), 0, aElement);
+  return true;
+}
+
+// Synthesizes a native mouse move event and invokes the callback once the
+// mouse move event is dispatched to |aElement|'s containing window. If the event
+// targets content in a subdocument, |aElement| should be inside the
+// subdocument. See synthesizeNativeMouseMove for details on the other
+// parameters.
+function synthesizeNativeMouseMoveAndWaitForMoveEvent(aElement, aX, aY, aCallback) {
+  var targetWindow = aElement.ownerDocument.defaultView;
+  targetWindow.addEventListener("mousemove", function mousemoveWaiter(e) {
+    targetWindow.removeEventListener("mousemove", mousemoveWaiter);
+    setTimeout(aCallback, 0);
+  });
+  return synthesizeNativeMouseMove(aElement, aX, aY);
 }
