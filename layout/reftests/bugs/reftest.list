@@ -817,7 +817,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 394676-1.xhtml 394676-1-ref.xhtml # bu
 skip-if((B2G&&browserIsRemote)||Mulet) == 395331-1.xml 395331-1-ref.xml # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 == 395390-1.html 395390-1-ref.html
 == 396286-1.html about:blank  # crash test
-fuzzy-if(Android,2,140) == 397428-1.html 397428-1-ref.html
+fuzzy-if(Android,5,283) == 397428-1.html 397428-1-ref.html
 == 397844-1.xhtml 397844-1-ref.xhtml
 == 398092-1.html 398092-1-ref.html
 == 398101-1.html 398101-1-ref.html
@@ -1925,3 +1925,4 @@ skip-if(B2G||Mulet) == 1150021-1.xul 1150021-1-ref.xul
 == 1151306-1.html 1151306-1-ref.html
 == 1153845-1.html 1153845-1-ref.html
 == 1156129-1.html 1156129-1-ref.html
+== 1169331-1.html 1169331-1-ref.html
