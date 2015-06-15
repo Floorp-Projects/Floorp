@@ -212,15 +212,14 @@ public:
     PBackgroundChild* backgroundManager = mActor->Manager();
     MOZ_ASSERT(backgroundManager);
 
-    const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = mData->mClosure.mBlobImpls;
+    const nsTArray<nsRefPtr<Blob>>& blobs = mData->mClosure.mBlobs;
 
-    if (!blobImpls.IsEmpty()) {
-      message.blobsChild().SetCapacity(blobImpls.Length());
+    if (!blobs.IsEmpty()) {
+      message.blobsChild().SetCapacity(blobs.Length());
 
-      for (uint32_t i = 0, len = blobImpls.Length(); i < len; ++i) {
+      for (uint32_t i = 0, len = blobs.Length(); i < len; ++i) {
         PBlobChild* blobChild =
-          BackgroundChild::GetOrCreateActorForBlobImpl(backgroundManager,
-                                                       blobImpls[i]);
+          BackgroundChild::GetOrCreateActorForBlob(backgroundManager, blobs[i]);
         MOZ_ASSERT(blobChild);
 
         message.blobsChild().AppendElement(blobChild);
@@ -542,9 +541,9 @@ BroadcastChannel::PostMessageInternal(JSContext* aCx,
     return;
   }
 
-  const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = data->mClosure.mBlobImpls;
-  for (uint32_t i = 0, len = blobImpls.Length(); i < len; ++i) {
-    if (!blobImpls[i]->MayBeClonedToOtherThreads()) {
+  const nsTArray<nsRefPtr<Blob>>& blobs = data->mClosure.mBlobs;
+  for (uint32_t i = 0, len = blobs.Length(); i < len; ++i) {
+    if (!blobs[i]->Impl()->MayBeClonedToOtherThreads()) {
       aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
       return;
     }

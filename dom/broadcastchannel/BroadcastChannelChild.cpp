@@ -42,7 +42,7 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
 {
   // Make sure to retrieve all blobs from the message before returning to avoid
   // leaking their actors.
-  nsTArray<nsRefPtr<BlobImpl>> blobs;
+  nsTArray<nsRefPtr<Blob>> blobs;
   if (!aData.blobsChild().IsEmpty()) {
     blobs.SetCapacity(aData.blobsChild().Length());
 
@@ -50,7 +50,8 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
       nsRefPtr<BlobImpl> impl =
         static_cast<BlobChild*>(aData.blobsChild()[i])->GetBlobImpl();
 
-      blobs.AppendElement(impl);
+      nsRefPtr<Blob> blob = Blob::Create(mBC ? mBC->GetOwner() : nullptr, impl);
+      blobs.AppendElement(blob);
     }
   }
 
@@ -91,7 +92,7 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
   StructuredCloneData cloneData;
   cloneData.mData = buffer.data;
   cloneData.mDataLength = buffer.dataLength;
-  cloneData.mClosure.mBlobImpls.SwapElements(blobs);
+  cloneData.mClosure.mBlobs.SwapElements(blobs);
 
   JS::Rooted<JS::Value> value(cx, JS::NullValue());
   if (cloneData.mDataLength && !ReadStructuredClone(cx, cloneData, &value)) {

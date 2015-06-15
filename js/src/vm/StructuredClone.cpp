@@ -1908,12 +1908,10 @@ JS_WriteStructuredClone(JSContext* cx, HandleValue value, uint64_t** bufp, size_
 JS_PUBLIC_API(bool)
 JS_ClearStructuredClone(uint64_t* data, size_t nbytes,
                         const JSStructuredCloneCallbacks* optionalCallbacks,
-                        void* closure, bool freeData)
+                        void* closure)
 {
     DiscardTransferables(data, nbytes, optionalCallbacks, closure);
-    if (freeData) {
-      js_free(data);
-    }
+    js_free(data);
     return true;
 }
 

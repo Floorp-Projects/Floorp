@@ -43,9 +43,9 @@ public:
   PrefEnabled();
 
   virtual void
-  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const Optional<Sequence<JS::Value>>& aTransferable,
-              ErrorResult& aRv) override;
+  PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                 const Optional<Sequence<JS::Value>>& aTransferable,
+                 ErrorResult& aRv) override;
 
   virtual void
   Start() override;
@@ -71,8 +71,8 @@ public:
   virtual void
   SetOnmessage(EventHandlerNonNull* aCallback) override;
 
-  virtual bool
-  CloneAndDisentangle(MessagePortIdentifier& aIdentifier) override;
+  virtual already_AddRefed<MessagePortBase>
+  Clone() override;
 
   bool
   IsClosed() const

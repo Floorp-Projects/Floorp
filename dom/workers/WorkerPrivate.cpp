@@ -52,8 +52,6 @@
 #include "mozilla/dom/ImageDataBinding.h"
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
-#include "mozilla/dom/MessagePort.h"
-#include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/MessagePortList.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseDebugging.h"
@@ -107,7 +105,6 @@
 #include "WorkerFeature.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
-#include "WorkerStructuredClone.h"
 #include "WorkerThread.h"
 
 #ifdef XP_WIN
@@ -514,7 +511,7 @@ bool
 WriteBlobOrFile(JSContext* aCx,
                 JSStructuredCloneWriter* aWriter,
                 BlobImpl* aBlobOrBlobImpl,
-                WorkerStructuredCloneClosure& aClosure)
+                nsTArray<nsCOMPtr<nsISupports>>& aClonedObjects)
 {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aWriter);
@@ -532,7 +529,7 @@ WriteBlobOrFile(JSContext* aCx,
     return false;
   }
 
-  aClosure.mClonedObjects.AppendElement(aBlobOrBlobImpl);
+  aClonedObjects.AppendElement(aBlobOrBlobImpl);
   return true;
 }
 
@@ -550,7 +547,7 @@ bool
 WriteFormData(JSContext* aCx,
               JSStructuredCloneWriter* aWriter,
               nsFormData* aFormData,
-              WorkerStructuredCloneClosure& aClosure)
+              nsTArray<nsCOMPtr<nsISupports>>& aClonedObjects)
 {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aWriter);
@@ -563,11 +560,11 @@ WriteFormData(JSContext* aCx,
   class MOZ_STACK_CLASS Closure {
     JSContext* mCx;
     JSStructuredCloneWriter* mWriter;
-    WorkerStructuredCloneClosure& mClones;
+    nsTArray<nsCOMPtr<nsISupports>>& mClones;
 
   public:
     Closure(JSContext* aCx, JSStructuredCloneWriter* aWriter,
-            WorkerStructuredCloneClosure& aClones)
+            nsTArray<nsCOMPtr<nsISupports>>& aClones)
       : mCx(aCx), mWriter(aWriter), mClones(aClones)
     { }
 
@@ -598,7 +595,7 @@ WriteFormData(JSContext* aCx,
     }
   };
 
-  Closure closure(aCx, aWriter, aClosure);
+  Closure closure(aCx, aWriter, aClonedObjects);
   return aFormData->ForEach(Closure::Write, &closure);
 }
 
@@ -642,7 +639,9 @@ struct WorkerStructuredCloneCallbacks
   {
     NS_ASSERTION(aClosure, "Null pointer!");
 
-    auto* closure = static_cast<WorkerStructuredCloneClosure*>(aClosure);
+    // We'll stash any nsISupports pointers that need to be AddRef'd here.
+    auto* clonedObjects =
+      static_cast<nsTArray<nsCOMPtr<nsISupports>>*>(aClosure);
 
     // See if this is a Blob/File object.
     {
@@ -651,7 +650,7 @@ struct WorkerStructuredCloneCallbacks
         BlobImpl* blobImpl = blob->Impl();
         MOZ_ASSERT(blobImpl);
 
-        if (WriteBlobOrFile(aCx, aWriter, blobImpl, *closure)) {
+        if (WriteBlobOrFile(aCx, aWriter, blobImpl, *clonedObjects)) {
           return true;
         }
       }
@@ -669,7 +668,7 @@ struct WorkerStructuredCloneCallbacks
     {
       nsFormData* formData = nullptr;
       if (NS_SUCCEEDED(UNWRAP_OBJECT(FormData, aObj, formData))) {
-        if (WriteFormData(aCx, aWriter, formData, *closure)) {
+        if (WriteFormData(aCx, aWriter, formData, *clonedObjects)) {
           return true;
         }
       }
@@ -684,96 +683,15 @@ struct WorkerStructuredCloneCallbacks
   {
     Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
   }
-
-  static bool
-  ReadTransfer(JSContext* aCx, JSStructuredCloneReader* aReader,
-               uint32_t aTag, void* aContent, uint64_t aExtraData,
-               void* aClosure, JS::MutableHandle<JSObject*> aReturnObject)
-  {
-    MOZ_ASSERT(aClosure);
-
-    auto* closure = static_cast<WorkerStructuredCloneClosure*>(aClosure);
-
-    if (aTag == SCTAG_DOM_MAP_MESSAGEPORT) {
-      MOZ_ASSERT(!aContent);
-      MOZ_ASSERT(aExtraData < closure->mMessagePortIdentifiers.Length());
-
-      ErrorResult rv;
-      nsRefPtr<MessagePortBase> port =
-        dom::MessagePort::Create(closure->mParentWindow,
-                                 closure->mMessagePortIdentifiers[aExtraData],
-                                 rv);
-
-      if (NS_WARN_IF(rv.Failed())) {
-        return false;
-      }
-
-      closure->mMessagePorts.AppendElement(port);
-
-      JS::Rooted<JS::Value> value(aCx);
-      if (!GetOrCreateDOMReflector(aCx, port, &value)) {
-        JS_ClearPendingException(aCx);
-        return false;
-      }
-
-      aReturnObject.set(&value.toObject());
-      return true;
-    }
-
-    return false;
-  }
-
-  static bool
-  Transfer(JSContext* aCx, JS::Handle<JSObject*> aObj, void* aClosure,
-           uint32_t* aTag, JS::TransferableOwnership* aOwnership,
-           void** aContent, uint64_t *aExtraData)
-  {
-    MOZ_ASSERT(aClosure);
-
-    auto* closure = static_cast<WorkerStructuredCloneClosure*>(aClosure);
-
-    MessagePortBase* port;
-    nsresult rv = UNWRAP_OBJECT(MessagePort, aObj, port);
-    if (NS_SUCCEEDED(rv)) {
-      if (NS_WARN_IF(closure->mTransferredPorts.Contains(port))) {
-        // No duplicates.
-        return false;
-      }
-
-      MessagePortIdentifier identifier;
-      if (!port->CloneAndDisentangle(identifier)) {
-        return false;
-      }
-
-      closure->mMessagePortIdentifiers.AppendElement(identifier);
-      closure->mTransferredPorts.AppendElement(port);
-
-      *aTag = SCTAG_DOM_MAP_MESSAGEPORT;
-      *aOwnership = JS::SCTAG_TMO_CUSTOM;
-      *aContent = nullptr;
-      *aExtraData = closure->mMessagePortIdentifiers.Length() - 1;
-
-      return true;
-    }
-
-    return false;
-  }
-
-  static void
-  FreeTransfer(uint32_t aTag, JS::TransferableOwnership aOwnership,
-               void *aContent, uint64_t aExtraData, void* aClosure)
-  {
-    // Nothing to do.
-  }
 };
 
 const JSStructuredCloneCallbacks gWorkerStructuredCloneCallbacks = {
   WorkerStructuredCloneCallbacks::Read,
   WorkerStructuredCloneCallbacks::Write,
   WorkerStructuredCloneCallbacks::Error,
-  WorkerStructuredCloneCallbacks::ReadTransfer,
-  WorkerStructuredCloneCallbacks::Transfer,
-  WorkerStructuredCloneCallbacks::FreeTransfer
+  nullptr,
+  nullptr,
+  nullptr
 };
 
 struct MainThreadWorkerStructuredCloneCallbacks
@@ -813,7 +731,9 @@ struct MainThreadWorkerStructuredCloneCallbacks
 
     NS_ASSERTION(aClosure, "Null pointer!");
 
-    auto* closure = static_cast<WorkerStructuredCloneClosure*>(aClosure);
+    // We'll stash any nsISupports pointers that need to be AddRef'd here.
+    auto* clonedObjects =
+      static_cast<nsTArray<nsCOMPtr<nsISupports>>*>(aClosure);
 
     // See if this is a Blob/File object.
     {
@@ -824,7 +744,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
 
         if (!blobImpl->MayBeClonedToOtherThreads()) {
           NS_WARNING("Not all the blob implementations can be sent between threads.");
-        } else if (WriteBlobOrFile(aCx, aWriter, blobImpl, *closure)) {
+        } else if (WriteBlobOrFile(aCx, aWriter, blobImpl, *clonedObjects)) {
           return true;
         }
       }
@@ -847,9 +767,9 @@ const JSStructuredCloneCallbacks gMainThreadWorkerStructuredCloneCallbacks = {
   MainThreadWorkerStructuredCloneCallbacks::Read,
   MainThreadWorkerStructuredCloneCallbacks::Write,
   MainThreadWorkerStructuredCloneCallbacks::Error,
-  WorkerStructuredCloneCallbacks::ReadTransfer,
-  WorkerStructuredCloneCallbacks::Transfer,
-  WorkerStructuredCloneCallbacks::FreeTransfer
+  nullptr,
+  nullptr,
+  nullptr
 };
 
 struct ChromeWorkerStructuredCloneCallbacks
@@ -880,9 +800,9 @@ const JSStructuredCloneCallbacks gChromeWorkerStructuredCloneCallbacks = {
   ChromeWorkerStructuredCloneCallbacks::Read,
   ChromeWorkerStructuredCloneCallbacks::Write,
   ChromeWorkerStructuredCloneCallbacks::Error,
-  WorkerStructuredCloneCallbacks::ReadTransfer,
-  WorkerStructuredCloneCallbacks::Transfer,
-  WorkerStructuredCloneCallbacks::FreeTransfer
+  nullptr,
+  nullptr,
+  nullptr
 };
 
 struct MainThreadChromeWorkerStructuredCloneCallbacks
@@ -1233,7 +1153,7 @@ private:
 class MessageEventRunnable final : public WorkerRunnable
 {
   JSAutoStructuredCloneBuffer mBuffer;
-  WorkerStructuredCloneClosure mClosure;
+  nsTArray<nsCOMPtr<nsISupports> > mClonedObjects;
   uint64_t mMessagePortSerial;
   bool mToMessagePort;
 
@@ -1243,24 +1163,15 @@ class MessageEventRunnable final : public WorkerRunnable
 public:
   MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                        TargetAndBusyBehavior aBehavior,
+                       JSAutoStructuredCloneBuffer&& aData,
+                       nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects,
                        bool aToMessagePort, uint64_t aMessagePortSerial)
   : WorkerRunnable(aWorkerPrivate, aBehavior)
+  , mBuffer(Move(aData))
   , mMessagePortSerial(aMessagePortSerial)
   , mToMessagePort(aToMessagePort)
   {
-  }
-
-  bool
-  Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
-        JS::Handle<JS::Value> aTransferredValue,
-        const JSStructuredCloneCallbacks *aCallbacks)
-   {
-    bool ok = mBuffer.write(aCx, aValue, aTransferredValue, aCallbacks,
-                            &mClosure);
-    // This hashtable has to be empty because it could contain MessagePort
-    // objects that cannot be freed on a different thread.
-    mClosure.mTransferredPorts.Clear();
-    return ok;
+    mClonedObjects.SwapElements(aClonedObjects);
   }
 
   void
@@ -1275,19 +1186,12 @@ public:
   {
     // Release reference to objects that were AddRef'd for
     // cloning into worker when array goes out of scope.
-    WorkerStructuredCloneClosure closure;
-    closure.mClonedObjects.SwapElements(mClosure.mClonedObjects);
-    MOZ_ASSERT(mClosure.mMessagePorts.IsEmpty());
-    closure.mMessagePortIdentifiers.SwapElements(mClosure.mMessagePortIdentifiers);
-
-    if (aIsMainThread) {
-      closure.mParentWindow = do_QueryInterface(aTarget->GetParentObject());
-    }
+    nsTArray<nsCOMPtr<nsISupports>> clonedObjects;
+    clonedObjects.SwapElements(mClonedObjects);
 
     JS::Rooted<JS::Value> messageData(aCx);
     if (!mBuffer.read(aCx, &messageData,
-                      workers::WorkerStructuredCloneCallbacks(aIsMainThread),
-                      &closure)) {
+                      workers::WorkerStructuredCloneCallbacks(aIsMainThread))) {
       xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
       return false;
     }
@@ -1313,8 +1217,7 @@ public:
     }
 
     event->SetTrusted(true);
-    event->SetPorts(new MessagePortList(static_cast<dom::Event*>(event.get()),
-                                        closure.mMessagePorts));
+
     nsCOMPtr<nsIDOMEvent> domEvent = do_QueryObject(event);
 
     nsEventStatus dummy = nsEventStatus_eIgnore;
@@ -1340,7 +1243,7 @@ private:
           aWorkerPrivate->DispatchMessageEventToMessagePort(aCx,
                                                             mMessagePortSerial,
                                                             Move(mBuffer),
-                                                            mClosure);
+                                                            mClonedObjects);
       }
 
       if (aWorkerPrivate->IsFrozen()) {
@@ -3476,16 +3379,19 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
     transferable.setObject(*array);
   }
 
-  nsRefPtr<MessageEventRunnable> runnable =
-    new MessageEventRunnable(ParentAsWorkerPrivate(),
-                             WorkerRunnable::WorkerThreadModifyBusyCount,
-                             aToMessagePort, aMessagePortSerial);
+  nsTArray<nsCOMPtr<nsISupports>> clonedObjects;
 
-  if (!runnable->Write(aCx, aMessage, transferable, callbacks)) {
+  JSAutoStructuredCloneBuffer buffer;
+  if (!buffer.write(aCx, aMessage, transferable, callbacks, &clonedObjects)) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }
 
+  nsRefPtr<MessageEventRunnable> runnable =
+    new MessageEventRunnable(ParentAsWorkerPrivate(),
+                             WorkerRunnable::WorkerThreadModifyBusyCount,
+                             Move(buffer), clonedObjects, aToMessagePort,
+                             aMessagePortSerial);
   runnable->SetMessageSource(aClientInfo);
 
   if (!runnable->Dispatch(aCx)) {
@@ -3526,16 +3432,14 @@ bool
 WorkerPrivateParent<Derived>::DispatchMessageEventToMessagePort(
                                 JSContext* aCx, uint64_t aMessagePortSerial,
                                 JSAutoStructuredCloneBuffer&& aBuffer,
-                                WorkerStructuredCloneClosure& aClosure)
+                                nsTArray<nsCOMPtr<nsISupports>>& aClonedObjects)
 {
   AssertIsOnMainThread();
 
   JSAutoStructuredCloneBuffer buffer(Move(aBuffer));
 
-  WorkerStructuredCloneClosure closure;
-  closure.mClonedObjects.SwapElements(aClosure.mClonedObjects);
-  MOZ_ASSERT(aClosure.mMessagePorts.IsEmpty());
-  closure.mMessagePortIdentifiers.SwapElements(aClosure.mMessagePortIdentifiers);
+  nsTArray<nsCOMPtr<nsISupports>> clonedObjects;
+  clonedObjects.SwapElements(aClonedObjects);
 
   SharedWorker* sharedWorker;
   if (!mSharedWorkers.Get(aMessagePortSerial, &sharedWorker)) {
@@ -3550,8 +3454,6 @@ WorkerPrivateParent<Derived>::DispatchMessageEventToMessagePort(
     return true;
   }
 
-  closure.mParentWindow = do_QueryInterface(port->GetParentObject());
-
   AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(port->GetParentObject()))) {
     return false;
@@ -3559,8 +3461,7 @@ WorkerPrivateParent<Derived>::DispatchMessageEventToMessagePort(
   JSContext* cx = jsapi.cx();
 
   JS::Rooted<JS::Value> data(cx);
-  if (!buffer.read(cx, &data, WorkerStructuredCloneCallbacks(true),
-                   &closure)) {
+  if (!buffer.read(cx, &data, WorkerStructuredCloneCallbacks(true))) {
     return false;
   }
 
@@ -3577,7 +3478,11 @@ WorkerPrivateParent<Derived>::DispatchMessageEventToMessagePort(
 
   event->SetTrusted(true);
 
-  event->SetPorts(new MessagePortList(port, closure.mMessagePorts));
+  nsTArray<nsRefPtr<MessagePortBase>> ports;
+  ports.AppendElement(port);
+
+  nsRefPtr<MessagePortList> portList = new MessagePortList(port, ports);
+  event->SetPorts(portList);
 
   nsCOMPtr<nsIDOMEvent> domEvent;
   CallQueryInterface(event.get(), getter_AddRefs(domEvent));
@@ -6277,16 +6182,19 @@ WorkerPrivate::PostMessageToParentInternal(
     &gChromeWorkerStructuredCloneCallbacks :
     &gWorkerStructuredCloneCallbacks;
 
-  nsRefPtr<MessageEventRunnable> runnable =
-    new MessageEventRunnable(this,
-                             WorkerRunnable::ParentThreadUnchangedBusyCount,
-                             aToMessagePort, aMessagePortSerial);
+  nsTArray<nsCOMPtr<nsISupports>> clonedObjects;
 
-  if (!runnable->Write(aCx, aMessage, transferable, callbacks)) {
+  JSAutoStructuredCloneBuffer buffer;
+  if (!buffer.write(aCx, aMessage, transferable, callbacks, &clonedObjects)) {
     aRv = NS_ERROR_DOM_DATA_CLONE_ERR;
     return;
   }
 
+  nsRefPtr<MessageEventRunnable> runnable =
+    new MessageEventRunnable(this,
+                             WorkerRunnable::ParentThreadUnchangedBusyCount,
+                             Move(buffer), clonedObjects, aToMessagePort,
+                             aMessagePortSerial);
   if (!runnable->Dispatch(aCx)) {
     aRv = NS_ERROR_FAILURE;
   }
@@ -7439,21 +7347,5 @@ ChromeWorkerStructuredCloneCallbacks(bool aMainRuntime)
 
 // Force instantiation.
 template class WorkerPrivateParent<WorkerPrivate>;
-
-WorkerStructuredCloneClosure::WorkerStructuredCloneClosure()
-{}
-
-WorkerStructuredCloneClosure::~WorkerStructuredCloneClosure()
-{}
-
-void
-WorkerStructuredCloneClosure::Clear()
-{
-  mParentWindow = nullptr;
-  mClonedObjects.Clear();
-  mMessagePorts.Clear();
-  mMessagePortIdentifiers.Clear();
-  mTransferredPorts.Clear();
-}
 
 END_WORKERS_NAMESPACE
