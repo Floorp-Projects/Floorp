@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ipc_bluetooth_BluetoothDaemonConnection_h
-#define mozilla_ipc_bluetooth_BluetoothDaemonConnection_h
+#ifndef mozilla_ipc_bluetooth_DaemonSocket_h
+#define mozilla_ipc_bluetooth_DaemonSocket_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/FileUtils.h"
@@ -110,17 +110,17 @@ protected:
 };
 
 /*
- * |BluetoothDaemonConnection| represents the socket to connect to the
+ * |DaemonSocket| represents the socket to connect to the
  * Bluetooth daemon. It offers connection establishment and sending
  * PDUs. PDU receiving is performed by |DaemonSocketIOConsumer|.
  */
-class BluetoothDaemonConnection : public ConnectionOrientedSocket
+class DaemonSocket : public ConnectionOrientedSocket
 {
 public:
-  BluetoothDaemonConnection(DaemonSocketIOConsumer* aIOConsumer,
-                            DaemonSocketConsumer* aConsumer,
-                            int aIndex);
-  virtual ~BluetoothDaemonConnection();
+  DaemonSocket(DaemonSocketIOConsumer* aIOConsumer,
+               DaemonSocketConsumer* aConsumer,
+               int aIndex);
+  virtual ~DaemonSocket();
 
   // Methods for |ConnectionOrientedSocket|
   //
