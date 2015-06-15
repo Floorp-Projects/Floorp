@@ -71,18 +71,11 @@ ChromeProcessController::RequestContentRepaint(const FrameMetrics& aFrameMetrics
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (aFrameMetrics.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
-    return;
-  }
-
   FrameMetrics metrics = aFrameMetrics;
   if (metrics.IsRootContent()) {
     APZCCallbackHelper::UpdateRootFrame(metrics);
   } else {
-    nsCOMPtr<nsIContent> targetContent = nsLayoutUtils::FindContentFor(aFrameMetrics.GetScrollId());
-    if (targetContent) {
-      APZCCallbackHelper::UpdateSubFrame(targetContent, metrics);
-    }
+    APZCCallbackHelper::UpdateSubFrame(metrics);
   }
 }
 
