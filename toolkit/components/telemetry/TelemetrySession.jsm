@@ -58,7 +58,7 @@ const MIN_SUBSESSION_LENGTH_MS = 10 * 60 * 1000;
 #expand const HISTOGRAMS_FILE_VERSION = "__HISTOGRAMS_FILE_VERSION__";
 
 const LOGGER_NAME = "Toolkit.Telemetry";
-const LOGGER_PREFIX = "TelemetrySession::";
+const LOGGER_PREFIX = "TelemetrySession" + (IS_CONTENT_PROCESS ? "#content::" : "::");
 
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
@@ -775,7 +775,7 @@ this.TelemetrySession = Object.freeze({
 let Impl = {
   _histograms: {},
   _initialized: false,
-  _log: null,
+  _logger: null,
   _prevValues: {},
   // Regex that matches histograms we care about during startup.
   // Keep this in sync with gen-histogram-bucket-ranges.py.
@@ -816,6 +816,13 @@ let Impl = {
   _delayedInitTaskDeferred: null,
   // Used to serialize session state writes to disk.
   _stateSaveSerializer: new SaveSerializer(),
+
+  get _log() {
+    if (!this._logger) {
+      this._logger = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
+    }
+    return this._logger;
+  },
 
   /**
    * Gets a series of simple measurements (counters). At the moment, this
@@ -1415,10 +1422,6 @@ let Impl = {
    */
   setupChromeProcess: function setupChromeProcess(testing) {
     this._initStarted = true;
-    if (testing && !this._log) {
-      this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
-    }
-
     this._log.trace("setupChromeProcess");
 
     if (this._delayedInitTask) {
@@ -1718,10 +1721,6 @@ let Impl = {
    * This observer drives telemetry.
    */
   observe: function (aSubject, aTopic, aData) {
-    if (!this._log) {
-      this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
-    }
-
     // Prevent the cycle collector begin topic from cluttering the log.
     if (aTopic != TOPIC_CYCLE_COLLECTOR_BEGIN) {
       this._log.trace("observe - " + aTopic + " notified.");

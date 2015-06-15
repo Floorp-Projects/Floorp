@@ -5,7 +5,8 @@
 "use strict";
 
 /**
- * Set of actors that expose the Web Animations API to devtools protocol clients.
+ * Set of actors that expose the Web Animations API to devtools protocol
+ * clients.
  *
  * The |Animations| actor is the main entry point. It is used to discover
  * animation players on given nodes.
@@ -29,11 +30,15 @@ const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {setInterval, clearInterval} = require("sdk/timers");
 const protocol = require("devtools/server/protocol");
-const {ActorClass, Actor, FrontClass, Front, Arg, method, RetVal, types} = protocol;
+const {ActorClass, Actor, FrontClass, Front,
+       Arg, method, RetVal, types} = protocol;
+// Make sure the nodeActor type is know here.
 const {NodeActor} = require("devtools/server/actors/inspector");
 const events = require("sdk/event/core");
 
-const PLAYER_DEFAULT_AUTO_REFRESH_TIMEOUT = 500; // ms
+// How long (in ms) should we wait before polling again the state of an
+// animationPlayer.
+const PLAYER_DEFAULT_AUTO_REFRESH_TIMEOUT = 500;
 
 /**
  * The AnimationPlayerActor provides information about a given animation: its
@@ -47,6 +52,13 @@ const PLAYER_DEFAULT_AUTO_REFRESH_TIMEOUT = 500; // ms
 let AnimationPlayerActor = ActorClass({
   typeName: "animationplayer",
 
+  events: {
+    "changed": {
+      type: "changed",
+      state: Arg(0, "json")
+    }
+  },
+
   /**
    * @param {AnimationsActor} The main AnimationsActor instance
    * @param {AnimationPlayer} The player object returned by getAnimationPlayers
@@ -58,14 +70,29 @@ let AnimationPlayerActor = ActorClass({
   initialize: function(animationsActor, player, playerIndex) {
     Actor.prototype.initialize.call(this, animationsActor.conn);
 
+    this.onAnimationMutation = this.onAnimationMutation.bind(this);
+
+    this.tabActor = animationsActor.tabActor;
     this.player = player;
     this.node = player.effect.target;
     this.playerIndex = playerIndex;
-    this.styles = this.node.ownerDocument.defaultView.getComputedStyle(this.node);
+
+    let win = this.node.ownerDocument.defaultView;
+    this.styles = win.getComputedStyle(this.node);
+
+    // Listen to animation mutations on the node to alert the front when the
+    // current animation changes.
+    this.observer = new win.MutationObserver(this.onAnimationMutation);
+    this.observer.observe(this.node, {animations: true});
   },
 
   destroy: function() {
-    this.player = this.node = this.styles = null;
+    // Only try to disconnect the observer if it's not already dead (i.e. if the
+    // container view hasn't navigated since).
+    if (this.observer && !Cu.isDeadWrapper(this.observer)) {
+      this.observer.disconnect();
+    }
+    this.tabActor = this.player = this.node = this.styles = this.observer = null;
     Actor.prototype.destroy.call(this);
   },
 
@@ -95,14 +122,14 @@ let AnimationPlayerActor = ActorClass({
    */
   getPlayerIndex: function() {
     let names = this.styles.animationName;
+    if (names === "none") {
+      names = this.styles.transitionProperty;
+    }
 
-    // If no names are found, then it's probably a transition, in which case we
-    // can't find the actual index, so just trust the playerIndex passed by
-    // the AnimationsActor at initialization time.
-    // Note that this may be incorrect if by the time the AnimationPlayerActor
-    // is initialized, one of the transitions has ended, but it's the best we
-    // can do for now.
-    if (!names) {
+    // If we still don't have a name, let's fall back to the provided index
+    // which may, by now, be wrong, but it's the best we can do until the waapi
+    // gives us a way to get duration, delay, ... directly.
+    if (!names || names === "none") {
       return this.playerIndex;
     }
 
@@ -114,7 +141,7 @@ let AnimationPlayerActor = ActorClass({
     // If there are several names, retrieve the index of the animation name in
     // the list.
     names = names.split(",").map(n => n.trim());
-    for (let i = 0; i < names.length; i ++) {
+    for (let i = 0; i < names.length; i++) {
       if (names[i] === this.player.effect.name) {
         return i;
       }
@@ -245,6 +272,27 @@ let AnimationPlayerActor = ActorClass({
   }),
 
   /**
+   * Executed when the current animation changes, used to emit the new state
+   * the the front.
+   */
+  onAnimationMutation: function(mutations) {
+    let hasChanged = false;
+    for (let {changedAnimations} of mutations) {
+      if (!changedAnimations.length) {
+        return;
+      }
+      if (changedAnimations.some(animation => animation === this.player)) {
+        hasChanged = true;
+        break;
+      }
+    }
+
+    if (hasChanged) {
+      events.emit(this, "changed", this.getCurrentState());
+    }
+  },
+
+  /**
    * Pause the player.
    */
   pause: method(function() {
@@ -348,8 +396,17 @@ let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
       delay: this._form.delay,
       iterationCount: this._form.iterationCount,
       isRunningOnCompositor: this._form.isRunningOnCompositor
-    }
+    };
   },
+
+  /**
+   * Executed when the AnimationPlayerActor emits a "changed" event. Used to
+   * update the local knowledge of the state.
+   */
+  onChanged: protocol.preEvent("changed", function(partialState) {
+    let {state} = this.reconstructState(partialState);
+    this.state = state;
+  }),
 
   // About auto-refresh:
   //
@@ -416,19 +473,28 @@ let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
    */
   getCurrentState: protocol.custom(function() {
     this.currentStateHasChanged = false;
-    return this._getCurrentState().then(data => {
-      for (let key in this.state) {
-        if (typeof data[key] === "undefined") {
-          data[key] = this.state[key];
-        } else if (data[key] !== this.state[key]) {
-          this.currentStateHasChanged = true;
-        }
-      }
-      return data;
+    return this._getCurrentState().then(partialData => {
+      let {state, hasChanged} = this.reconstructState(partialData);
+      this.currentStateHasChanged = hasChanged;
+      return state;
     });
   }, {
     impl: "_getCurrentState"
   }),
+
+  reconstructState: function(data) {
+    let hasChanged = false;
+
+    for (let key in this.state) {
+      if (typeof data[key] === "undefined") {
+        data[key] = this.state[key];
+      } else if (data[key] !== this.state[key]) {
+        hasChanged = true;
+      }
+    }
+
+    return {state: data, hasChanged};
+  }
 });
 
 /**
@@ -449,7 +515,7 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
   typeName: "animations",
 
   events: {
-    "mutations" : {
+    "mutations": {
       type: "mutations",
       changes: Arg(0, "array:animationMutationChange")
     }
@@ -500,7 +566,7 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
     // No care is taken here to destroy the previously stored actors because it
     // is assumed that the client is responsible for lifetimes of actors.
     this.actors = [];
-    for (let i = 0; i < animations.length; i ++) {
+    for (let i = 0; i < animations.length; i++) {
       // XXX: for now the index is passed along as the AnimationPlayerActor uses
       // it to retrieve animation information from CSS.
       let actor = AnimationPlayerActor(this, animations[i], i);
@@ -532,7 +598,7 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
   onAnimationMutation: function(mutations) {
     let eventData = [];
 
-    for (let {addedAnimations, changedAnimations, removedAnimations} of mutations) {
+    for (let {addedAnimations, removedAnimations} of mutations) {
       for (let player of removedAnimations) {
         // Note that animations are reported as removed either when they are
         // actually removed from the node (e.g. css class removed) or when they
@@ -588,9 +654,9 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
   },
 
   /**
-   * After the client has called getAnimationPlayersForNode for a given DOM node,
-   * the actor starts sending animation mutations for this node. If the client
-   * doesn't want this to happen anymore, it should call this method.
+   * After the client has called getAnimationPlayersForNode for a given DOM
+   * node, the actor starts sending animation mutations for this node. If the
+   * client doesn't want this to happen anymore, it should call this method.
    */
   stopAnimationPlayerUpdates: method(function() {
     if (this.observer && !Cu.isDeadWrapper(this.observer)) {
@@ -666,7 +732,7 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
 
   /**
    * Play all animations in the current tabActor's frames.
-   * This method only returns when the animations have left their pending states.
+   * This method only returns when animations have left their pending states.
    */
   playAll: method(function() {
     let readyPromises = [];
@@ -687,9 +753,8 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
   toggleAll: method(function() {
     if (this.allAnimationsPaused) {
       return this.playAll();
-    } else {
-      return this.pauseAll();
     }
+    return this.pauseAll();
   }, {
     request: {},
     response: {}
