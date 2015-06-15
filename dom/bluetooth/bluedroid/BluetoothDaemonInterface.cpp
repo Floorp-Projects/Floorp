@@ -34,7 +34,7 @@ static const int sRetryInterval = 100; // ms
 class BluetoothDaemonSetupModule
 {
 public:
-  virtual nsresult Send(BluetoothDaemonPDU* aPDU, void* aUserData) = 0;
+  virtual nsresult Send(DaemonSocketPDU* aPDU, void* aUserData) = 0;
 
   // Commands
   //
@@ -45,7 +45,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x00, 0x01, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x00, 0x01, 0));
 
 #if ANDROID_VERSION >= 21
     nsresult rv = PackPDU(aId, aMode, aMaxNumClients, *pdu);
@@ -68,7 +68,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x00, 0x02, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x00, 0x02, 0));
 
     nsresult rv = PackPDU(aId, *pdu);
     if (NS_FAILED(rv)) {
@@ -87,7 +87,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x00, 0x03, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x00, 0x03, 0));
 
     nsresult rv = PackPDU(
       aLen, PackArray<BluetoothConfigurationParameter>(aParam, aLen), *pdu);
@@ -106,12 +106,12 @@ protected:
 
   // Called to handle PDUs with Service field equal to 0x00, which
   // contains internal operations for setup and configuration.
-  void HandleSvc(const BluetoothDaemonPDUHeader& aHeader,
-                 BluetoothDaemonPDU& aPDU, void* aUserData)
+  void HandleSvc(const DaemonSocketPDUHeader& aHeader,
+                 DaemonSocketPDU& aPDU, void* aUserData)
   {
     static void (BluetoothDaemonSetupModule::* const HandleRsp[])(
-      const BluetoothDaemonPDUHeader&,
-      BluetoothDaemonPDU&,
+      const DaemonSocketPDUHeader&,
+      DaemonSocketPDU&,
       BluetoothSetupResultHandler*) = {
       INIT_ARRAY_AT(0x00, &BluetoothDaemonSetupModule::ErrorRsp),
       INIT_ARRAY_AT(0x01, &BluetoothDaemonSetupModule::RegisterModuleRsp),
@@ -135,7 +135,7 @@ protected:
     (this->*(HandleRsp[aHeader.mOpcode]))(aHeader, aPDU, res);
   }
 
-  nsresult Send(BluetoothDaemonPDU* aPDU, BluetoothSetupResultHandler* aRes)
+  nsresult Send(DaemonSocketPDU* aPDU, BluetoothSetupResultHandler* aRes)
   {
     aRes->AddRef(); // Keep reference for response
     return Send(aPDU, static_cast<void*>(aRes));
@@ -154,8 +154,8 @@ private:
     ErrorRunnable;
 
   void
-  ErrorRsp(const BluetoothDaemonPDUHeader& aHeader,
-           BluetoothDaemonPDU& aPDU,
+  ErrorRsp(const DaemonSocketPDUHeader& aHeader,
+           DaemonSocketPDU& aPDU,
            BluetoothSetupResultHandler* aRes)
   {
     ErrorRunnable::Dispatch(
@@ -163,8 +163,8 @@ private:
   }
 
   void
-  RegisterModuleRsp(const BluetoothDaemonPDUHeader& aHeader,
-                    BluetoothDaemonPDU& aPDU,
+  RegisterModuleRsp(const DaemonSocketPDUHeader& aHeader,
+                    DaemonSocketPDU& aPDU,
                     BluetoothSetupResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -173,8 +173,8 @@ private:
   }
 
   void
-  UnregisterModuleRsp(const BluetoothDaemonPDUHeader& aHeader,
-                      BluetoothDaemonPDU& aPDU,
+  UnregisterModuleRsp(const DaemonSocketPDUHeader& aHeader,
+                      DaemonSocketPDU& aPDU,
                       BluetoothSetupResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -183,8 +183,8 @@ private:
   }
 
   void
-  ConfigurationRsp(const BluetoothDaemonPDUHeader& aHeader,
-                   BluetoothDaemonPDU& aPDU,
+  ConfigurationRsp(const DaemonSocketPDUHeader& aHeader,
+                   DaemonSocketPDU& aPDU,
                    BluetoothSetupResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -205,13 +205,13 @@ public:
 
   static const int MAX_NUM_CLIENTS;
 
-  virtual nsresult Send(BluetoothDaemonPDU* aPDU, void* aUserData) = 0;
+  virtual nsresult Send(DaemonSocketPDU* aPDU, void* aUserData) = 0;
 
   nsresult EnableCmd(BluetoothResultHandler* aRes)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x01, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x01, 0));
 
     nsresult rv = Send(pdu, aRes);
     if (NS_FAILED(rv)) {
@@ -225,7 +225,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x02, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x02, 0));
 
     nsresult rv = Send(pdu, aRes);
     if (NS_FAILED(rv)) {
@@ -239,7 +239,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x03, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x03, 0));
 
     nsresult rv = Send(pdu, aRes);
     if (NS_FAILED(rv)) {
@@ -254,7 +254,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x04, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x04, 0));
 
     nsresult rv = PackPDU(
       PackConversion<const nsAString, BluetoothPropertyType>(aName), *pdu);
@@ -274,7 +274,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x05, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x05, 0));
 
     nsresult rv = PackPDU(aProperty, *pdu);
     if (NS_FAILED(rv)) {
@@ -293,7 +293,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x06, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x06, 0));
 
     nsresult rv = PackPDU(
       PackConversion<nsAString, BluetoothAddress>(aRemoteAddr), *pdu);
@@ -314,7 +314,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x07, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x07, 0));
 
     nsresult rv = PackPDU(
       PackConversion<nsAString, BluetoothAddress>(aRemoteAddr),
@@ -336,7 +336,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x08, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x08, 0));
 
     nsresult rv = PackPDU(
       PackConversion<nsAString, BluetoothAddress>(aRemoteAddr),
@@ -358,7 +358,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x09, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x09, 0));
 
     nsresult rv = PackPDU(
       PackConversion<nsAString, BluetoothAddress>(aRemoteAddr),
@@ -379,7 +379,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x0a, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x0a, 0));
 
     nsresult rv = PackPDU(
       PackConversion<nsAString, BluetoothAddress>(aRemoteAddr), *pdu);
@@ -398,7 +398,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x0b, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x0b, 0));
 
     nsresult rv = Send(pdu, aRes);
     if (NS_FAILED(rv)) {
@@ -412,7 +412,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x0c, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x0c, 0));
 
     nsresult rv = Send(pdu, aRes);
     if (NS_FAILED(rv)) {
@@ -428,7 +428,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x0d, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x0d, 0));
 
 #if ANDROID_VERSION >= 21
     nsresult rv = PackPDU(
@@ -453,7 +453,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x0e, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x0e, 0));
 
     nsresult rv = PackPDU(
       PackConversion<nsAString, BluetoothAddress>(aBdAddr), *pdu);
@@ -473,7 +473,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x0f, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x0f, 0));
 
     nsresult rv = PackPDU(
       PackConversion<nsAString, BluetoothAddress>(aBdAddr), *pdu);
@@ -494,7 +494,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x10, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x10, 0));
 
     nsresult rv = PackPDU(
       PackConversion<nsAString, BluetoothAddress>(aBdAddr),
@@ -517,7 +517,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x11, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x11, 0));
 
     nsresult rv = PackPDU(
       PackConversion<nsAString, BluetoothAddress>(aBdAddr),
@@ -537,7 +537,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x12, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x12, 0));
 
     nsresult rv = PackPDU(aEnable, *pdu);
     if (NS_FAILED(rv)) {
@@ -556,7 +556,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x13, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x13, 0));
 
     nsresult rv = PackPDU(aOpcode, aLen, PackArray<uint8_t>(aBuf, aLen),
                           *pdu);
@@ -576,7 +576,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x14, 0));
+    nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x14, 0));
 
     nsresult rv = PackPDU(aOpcode, aLen, PackArray<uint8_t>(aBuf, aLen),
                           *pdu);
@@ -593,11 +593,11 @@ public:
 
 protected:
 
-  void HandleSvc(const BluetoothDaemonPDUHeader& aHeader,
-                 BluetoothDaemonPDU& aPDU, void* aUserData)
+  void HandleSvc(const DaemonSocketPDUHeader& aHeader,
+                 DaemonSocketPDU& aPDU, void* aUserData)
   {
     static void (BluetoothDaemonCoreModule::* const HandleOp[])(
-      const BluetoothDaemonPDUHeader&, BluetoothDaemonPDU&, void*) = {
+      const DaemonSocketPDUHeader&, DaemonSocketPDU&, void*) = {
       INIT_ARRAY_AT(0, &BluetoothDaemonCoreModule::HandleRsp),
       INIT_ARRAY_AT(1, &BluetoothDaemonCoreModule::HandleNtf),
     };
@@ -607,7 +607,7 @@ protected:
     (this->*(HandleOp[!!(aHeader.mOpcode & 0x80)]))(aHeader, aPDU, aUserData);
   }
 
-  nsresult Send(BluetoothDaemonPDU* aPDU, BluetoothResultHandler* aRes)
+  nsresult Send(DaemonSocketPDU* aPDU, BluetoothResultHandler* aRes)
   {
     aRes->AddRef(); // Keep reference for response
     return Send(aPDU, static_cast<void*>(aRes));
@@ -625,32 +625,32 @@ private:
                                    BluetoothStatus, BluetoothStatus>
     ErrorRunnable;
 
-  void ErrorRsp(const BluetoothDaemonPDUHeader& aHeader,
-                BluetoothDaemonPDU& aPDU,
+  void ErrorRsp(const DaemonSocketPDUHeader& aHeader,
+                DaemonSocketPDU& aPDU,
                 BluetoothResultHandler* aRes)
   {
     ErrorRunnable::Dispatch(
       aRes, &BluetoothResultHandler::OnError, UnpackPDUInitOp(aPDU));
   }
 
-  void EnableRsp(const BluetoothDaemonPDUHeader& aHeader,
-                 BluetoothDaemonPDU& aPDU,
+  void EnableRsp(const DaemonSocketPDUHeader& aHeader,
+                 DaemonSocketPDU& aPDU,
                  BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
       aRes, &BluetoothResultHandler::Enable, UnpackPDUInitOp(aPDU));
   }
 
-  void DisableRsp(const BluetoothDaemonPDUHeader& aHeader,
-                  BluetoothDaemonPDU& aPDU,
+  void DisableRsp(const DaemonSocketPDUHeader& aHeader,
+                  DaemonSocketPDU& aPDU,
                   BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
       aRes, &BluetoothResultHandler::Disable, UnpackPDUInitOp(aPDU));
   }
 
-  void GetAdapterPropertiesRsp(const BluetoothDaemonPDUHeader& aHeader,
-                               BluetoothDaemonPDU& aPDU,
+  void GetAdapterPropertiesRsp(const DaemonSocketPDUHeader& aHeader,
+                               DaemonSocketPDU& aPDU,
                                BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -658,8 +658,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void GetAdapterPropertyRsp(const BluetoothDaemonPDUHeader& aHeader,
-                             BluetoothDaemonPDU& aPDU,
+  void GetAdapterPropertyRsp(const DaemonSocketPDUHeader& aHeader,
+                             DaemonSocketPDU& aPDU,
                              BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -667,8 +667,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void SetAdapterPropertyRsp(const BluetoothDaemonPDUHeader& aHeader,
-                             BluetoothDaemonPDU& aPDU,
+  void SetAdapterPropertyRsp(const DaemonSocketPDUHeader& aHeader,
+                             DaemonSocketPDU& aPDU,
                              BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -676,8 +676,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void GetRemoteDevicePropertiesRsp(const BluetoothDaemonPDUHeader& aHeader,
-                                    BluetoothDaemonPDU& aPDU,
+  void GetRemoteDevicePropertiesRsp(const DaemonSocketPDUHeader& aHeader,
+                                    DaemonSocketPDU& aPDU,
                                     BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -686,8 +686,8 @@ private:
   }
 
   void
-  GetRemoteDevicePropertyRsp(const BluetoothDaemonPDUHeader& aHeader,
-                             BluetoothDaemonPDU& aPDU,
+  GetRemoteDevicePropertyRsp(const DaemonSocketPDUHeader& aHeader,
+                             DaemonSocketPDU& aPDU,
                              BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -695,8 +695,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void SetRemoteDevicePropertyRsp(const BluetoothDaemonPDUHeader& aHeader,
-                                  BluetoothDaemonPDU& aPDU,
+  void SetRemoteDevicePropertyRsp(const DaemonSocketPDUHeader& aHeader,
+                                  DaemonSocketPDU& aPDU,
                                   BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -704,8 +704,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void GetRemoteServiceRecordRsp(const BluetoothDaemonPDUHeader& aHeader,
-                                 BluetoothDaemonPDU& aPDU,
+  void GetRemoteServiceRecordRsp(const DaemonSocketPDUHeader& aHeader,
+                                 DaemonSocketPDU& aPDU,
                                  BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -713,8 +713,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void GetRemoteServicesRsp(const BluetoothDaemonPDUHeader& aHeader,
-                            BluetoothDaemonPDU& aPDU,
+  void GetRemoteServicesRsp(const DaemonSocketPDUHeader& aHeader,
+                            DaemonSocketPDU& aPDU,
                             BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -722,8 +722,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void StartDiscoveryRsp(const BluetoothDaemonPDUHeader& aHeader,
-                         BluetoothDaemonPDU& aPDU,
+  void StartDiscoveryRsp(const DaemonSocketPDUHeader& aHeader,
+                         DaemonSocketPDU& aPDU,
                          BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -731,8 +731,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void CancelDiscoveryRsp(const BluetoothDaemonPDUHeader& aHeader,
-                          BluetoothDaemonPDU& aPDU,
+  void CancelDiscoveryRsp(const DaemonSocketPDUHeader& aHeader,
+                          DaemonSocketPDU& aPDU,
                           BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -740,8 +740,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void CreateBondRsp(const BluetoothDaemonPDUHeader& aHeader,
-                     BluetoothDaemonPDU& aPDU,
+  void CreateBondRsp(const DaemonSocketPDUHeader& aHeader,
+                     DaemonSocketPDU& aPDU,
                      BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -749,8 +749,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void RemoveBondRsp(const BluetoothDaemonPDUHeader& aHeader,
-                     BluetoothDaemonPDU& aPDU,
+  void RemoveBondRsp(const DaemonSocketPDUHeader& aHeader,
+                     DaemonSocketPDU& aPDU,
                      BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -758,8 +758,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void CancelBondRsp(const BluetoothDaemonPDUHeader& aHeader,
-                     BluetoothDaemonPDU& aPDU,
+  void CancelBondRsp(const DaemonSocketPDUHeader& aHeader,
+                     DaemonSocketPDU& aPDU,
                      BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -767,8 +767,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void PinReplyRsp(const BluetoothDaemonPDUHeader& aHeader,
-                   BluetoothDaemonPDU& aPDU,
+  void PinReplyRsp(const DaemonSocketPDUHeader& aHeader,
+                   DaemonSocketPDU& aPDU,
                    BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -776,8 +776,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void SspReplyRsp(const BluetoothDaemonPDUHeader& aHeader,
-                   BluetoothDaemonPDU& aPDU,
+  void SspReplyRsp(const DaemonSocketPDUHeader& aHeader,
+                   DaemonSocketPDU& aPDU,
                    BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -785,8 +785,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void DutModeConfigureRsp(const BluetoothDaemonPDUHeader& aHeader,
-                           BluetoothDaemonPDU& aPDU,
+  void DutModeConfigureRsp(const DaemonSocketPDUHeader& aHeader,
+                           DaemonSocketPDU& aPDU,
                            BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -794,8 +794,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void DutModeSendRsp(const BluetoothDaemonPDUHeader& aHeader,
-                      BluetoothDaemonPDU& aPDU,
+  void DutModeSendRsp(const DaemonSocketPDUHeader& aHeader,
+                      DaemonSocketPDU& aPDU,
                       BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -803,8 +803,8 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void LeTestModeRsp(const BluetoothDaemonPDUHeader& aHeader,
-                     BluetoothDaemonPDU& aPDU,
+  void LeTestModeRsp(const DaemonSocketPDUHeader& aHeader,
+                     DaemonSocketPDU& aPDU,
                      BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
@@ -812,12 +812,12 @@ private:
       UnpackPDUInitOp(aPDU));
   }
 
-  void HandleRsp(const BluetoothDaemonPDUHeader& aHeader,
-                 BluetoothDaemonPDU& aPDU, void* aUserData)
+  void HandleRsp(const DaemonSocketPDUHeader& aHeader,
+                 DaemonSocketPDU& aPDU, void* aUserData)
   {
     static void (BluetoothDaemonCoreModule::* const HandleRsp[])(
-      const BluetoothDaemonPDUHeader&,
-      BluetoothDaemonPDU&,
+      const DaemonSocketPDUHeader&,
+      DaemonSocketPDU&,
       BluetoothResultHandler*) = {
       INIT_ARRAY_AT(0x00, &BluetoothDaemonCoreModule::ErrorRsp),
       INIT_ARRAY_AT(0x01, &BluetoothDaemonCoreModule::EnableRsp),
@@ -939,8 +939,8 @@ private:
                                          BluetoothStatus, uint16_t>
     LeTestModeNotification;
 
-  void AdapterStateChangedNtf(const BluetoothDaemonPDUHeader& aHeader,
-                              BluetoothDaemonPDU& aPDU)
+  void AdapterStateChangedNtf(const DaemonSocketPDUHeader& aHeader,
+                              DaemonSocketPDU& aPDU)
   {
     AdapterStateChangedNotification::Dispatch(
       &BluetoothNotificationHandler::AdapterStateChangedNotification,
@@ -951,7 +951,7 @@ private:
   class AdapterPropertiesInitOp final : private PDUInitOp
   {
   public:
-    AdapterPropertiesInitOp(BluetoothDaemonPDU& aPDU)
+    AdapterPropertiesInitOp(DaemonSocketPDU& aPDU)
     : PDUInitOp(aPDU)
     { }
 
@@ -959,7 +959,7 @@ private:
     operator () (BluetoothStatus& aArg1, int& aArg2,
                  nsAutoArrayPtr<BluetoothProperty>& aArg3) const
     {
-      BluetoothDaemonPDU& pdu = GetPDU();
+      DaemonSocketPDU& pdu = GetPDU();
 
       /* Read status */
       nsresult rv = UnpackPDU(pdu, aArg1);
@@ -986,8 +986,8 @@ private:
     }
   };
 
-  void AdapterPropertiesNtf(const BluetoothDaemonPDUHeader& aHeader,
-                            BluetoothDaemonPDU& aPDU)
+  void AdapterPropertiesNtf(const DaemonSocketPDUHeader& aHeader,
+                            DaemonSocketPDU& aPDU)
   {
     AdapterPropertiesNotification::Dispatch(
       &BluetoothNotificationHandler::AdapterPropertiesNotification,
@@ -998,7 +998,7 @@ private:
   class RemoteDevicePropertiesInitOp final : private PDUInitOp
   {
   public:
-    RemoteDevicePropertiesInitOp(BluetoothDaemonPDU& aPDU)
+    RemoteDevicePropertiesInitOp(DaemonSocketPDU& aPDU)
     : PDUInitOp(aPDU)
     { }
 
@@ -1006,7 +1006,7 @@ private:
     operator () (BluetoothStatus& aArg1, nsString& aArg2, int& aArg3,
                  nsAutoArrayPtr<BluetoothProperty>& aArg4) const
     {
-      BluetoothDaemonPDU& pdu = GetPDU();
+      DaemonSocketPDU& pdu = GetPDU();
 
       /* Read status */
       nsresult rv = UnpackPDU(pdu, aArg1);
@@ -1040,8 +1040,8 @@ private:
     }
   };
 
-  void RemoteDevicePropertiesNtf(const BluetoothDaemonPDUHeader& aHeader,
-                                 BluetoothDaemonPDU& aPDU)
+  void RemoteDevicePropertiesNtf(const DaemonSocketPDUHeader& aHeader,
+                                 DaemonSocketPDU& aPDU)
   {
     RemoteDevicePropertiesNotification::Dispatch(
       &BluetoothNotificationHandler::RemoteDevicePropertiesNotification,
@@ -1052,14 +1052,14 @@ private:
   class DeviceFoundInitOp final : private PDUInitOp
   {
   public:
-    DeviceFoundInitOp(BluetoothDaemonPDU& aPDU)
+    DeviceFoundInitOp(DaemonSocketPDU& aPDU)
     : PDUInitOp(aPDU)
     { }
 
     nsresult
     operator () (int& aArg1, nsAutoArrayPtr<BluetoothProperty>& aArg2) const
     {
-      BluetoothDaemonPDU& pdu = GetPDU();
+      DaemonSocketPDU& pdu = GetPDU();
 
       /* Read number of properties */
       uint8_t numProperties;
@@ -1080,16 +1080,16 @@ private:
     }
   };
 
-  void DeviceFoundNtf(const BluetoothDaemonPDUHeader& aHeader,
-                      BluetoothDaemonPDU& aPDU)
+  void DeviceFoundNtf(const DaemonSocketPDUHeader& aHeader,
+                      DaemonSocketPDU& aPDU)
   {
     DeviceFoundNotification::Dispatch(
       &BluetoothNotificationHandler::DeviceFoundNotification,
       DeviceFoundInitOp(aPDU));
   }
 
-  void DiscoveryStateChangedNtf(const BluetoothDaemonPDUHeader& aHeader,
-                                BluetoothDaemonPDU& aPDU)
+  void DiscoveryStateChangedNtf(const DaemonSocketPDUHeader& aHeader,
+                                DaemonSocketPDU& aPDU)
   {
     DiscoveryStateChangedNotification::Dispatch(
       &BluetoothNotificationHandler::DiscoveryStateChangedNotification,
@@ -1100,14 +1100,14 @@ private:
   class PinRequestInitOp final : private PDUInitOp
   {
   public:
-    PinRequestInitOp(BluetoothDaemonPDU& aPDU)
+    PinRequestInitOp(DaemonSocketPDU& aPDU)
     : PDUInitOp(aPDU)
     { }
 
     nsresult
     operator () (nsString& aArg1, nsString& aArg2, uint32_t& aArg3) const
     {
-      BluetoothDaemonPDU& pdu = GetPDU();
+      DaemonSocketPDU& pdu = GetPDU();
 
       /* Read remote address */
       nsresult rv = UnpackPDU(
@@ -1133,8 +1133,8 @@ private:
     }
   };
 
-  void PinRequestNtf(const BluetoothDaemonPDUHeader& aHeader,
-                     BluetoothDaemonPDU& aPDU)
+  void PinRequestNtf(const DaemonSocketPDUHeader& aHeader,
+                     DaemonSocketPDU& aPDU)
   {
     PinRequestNotification::Dispatch(
       &BluetoothNotificationHandler::PinRequestNotification,
@@ -1145,7 +1145,7 @@ private:
   class SspRequestInitOp final : private PDUInitOp
   {
   public:
-    SspRequestInitOp(BluetoothDaemonPDU& aPDU)
+    SspRequestInitOp(DaemonSocketPDU& aPDU)
     : PDUInitOp(aPDU)
     { }
 
@@ -1153,7 +1153,7 @@ private:
     operator () (nsString& aArg1, nsString& aArg2, uint32_t& aArg3,
                  BluetoothSspVariant& aArg4, uint32_t& aArg5) const
     {
-      BluetoothDaemonPDU& pdu = GetPDU();
+      DaemonSocketPDU& pdu = GetPDU();
 
       /* Read remote address */
       nsresult rv = UnpackPDU(
@@ -1191,8 +1191,8 @@ private:
     }
   };
 
-  void SspRequestNtf(const BluetoothDaemonPDUHeader& aHeader,
-                     BluetoothDaemonPDU& aPDU)
+  void SspRequestNtf(const DaemonSocketPDUHeader& aHeader,
+                     DaemonSocketPDU& aPDU)
   {
     SspRequestNotification::Dispatch(
       &BluetoothNotificationHandler::SspRequestNotification,
@@ -1203,7 +1203,7 @@ private:
   class BondStateChangedInitOp final : private PDUInitOp
   {
   public:
-    BondStateChangedInitOp(BluetoothDaemonPDU& aPDU)
+    BondStateChangedInitOp(DaemonSocketPDU& aPDU)
     : PDUInitOp(aPDU)
     { }
 
@@ -1211,7 +1211,7 @@ private:
     operator () (BluetoothStatus& aArg1, nsString& aArg2,
                  BluetoothBondState& aArg3) const
     {
-      BluetoothDaemonPDU& pdu = GetPDU();
+      DaemonSocketPDU& pdu = GetPDU();
 
       /* Read status */
       nsresult rv = UnpackPDU(pdu, aArg1);
@@ -1236,8 +1236,8 @@ private:
     }
   };
 
-  void BondStateChangedNtf(const BluetoothDaemonPDUHeader& aHeader,
-                           BluetoothDaemonPDU& aPDU)
+  void BondStateChangedNtf(const DaemonSocketPDUHeader& aHeader,
+                           DaemonSocketPDU& aPDU)
   {
     BondStateChangedNotification::Dispatch(
       &BluetoothNotificationHandler::BondStateChangedNotification,
@@ -1248,14 +1248,14 @@ private:
   class AclStateChangedInitOp final : private PDUInitOp
   {
   public:
-    AclStateChangedInitOp(BluetoothDaemonPDU& aPDU)
+    AclStateChangedInitOp(DaemonSocketPDU& aPDU)
     : PDUInitOp(aPDU)
     { }
 
     nsresult
     operator () (BluetoothStatus& aArg1, nsString& aArg2, bool& aArg3) const
     {
-      BluetoothDaemonPDU& pdu = GetPDU();
+      DaemonSocketPDU& pdu = GetPDU();
 
       /* Read status */
       nsresult rv = UnpackPDU(pdu, aArg1);
@@ -1281,8 +1281,8 @@ private:
     }
   };
 
-  void AclStateChangedNtf(const BluetoothDaemonPDUHeader& aHeader,
-                          BluetoothDaemonPDU& aPDU)
+  void AclStateChangedNtf(const DaemonSocketPDUHeader& aHeader,
+                          DaemonSocketPDU& aPDU)
   {
     AclStateChangedNotification::Dispatch(
       &BluetoothNotificationHandler::AclStateChangedNotification,
@@ -1293,7 +1293,7 @@ private:
   class DutModeRecvInitOp final : private PDUInitOp
   {
   public:
-    DutModeRecvInitOp(BluetoothDaemonPDU& aPDU)
+    DutModeRecvInitOp(DaemonSocketPDU& aPDU)
     : PDUInitOp(aPDU)
     { }
 
@@ -1301,7 +1301,7 @@ private:
     operator () (uint16_t& aArg1, nsAutoArrayPtr<uint8_t>& aArg2,
                  uint8_t& aArg3) const
     {
-      BluetoothDaemonPDU& pdu = GetPDU();
+      DaemonSocketPDU& pdu = GetPDU();
 
       /* Read opcode */
       nsresult rv = UnpackPDU(pdu, aArg1);
@@ -1325,27 +1325,27 @@ private:
     }
   };
 
-  void DutModeRecvNtf(const BluetoothDaemonPDUHeader& aHeader,
-                      BluetoothDaemonPDU& aPDU)
+  void DutModeRecvNtf(const DaemonSocketPDUHeader& aHeader,
+                      DaemonSocketPDU& aPDU)
   {
     DutModeRecvNotification::Dispatch(
       &BluetoothNotificationHandler::DutModeRecvNotification,
       DutModeRecvInitOp(aPDU));
   }
 
-  void LeTestModeNtf(const BluetoothDaemonPDUHeader& aHeader,
-                     BluetoothDaemonPDU& aPDU)
+  void LeTestModeNtf(const DaemonSocketPDUHeader& aHeader,
+                     DaemonSocketPDU& aPDU)
   {
     LeTestModeNotification::Dispatch(
       &BluetoothNotificationHandler::LeTestModeNotification,
       UnpackPDUInitOp(aPDU));
   }
 
-  void HandleNtf(const BluetoothDaemonPDUHeader& aHeader,
-                 BluetoothDaemonPDU& aPDU, void* aUserData)
+  void HandleNtf(const DaemonSocketPDUHeader& aHeader,
+                 DaemonSocketPDU& aPDU, void* aUserData)
   {
     static void (BluetoothDaemonCoreModule::* const HandleNtf[])(
-      const BluetoothDaemonPDUHeader&, BluetoothDaemonPDU&) = {
+      const DaemonSocketPDUHeader&, DaemonSocketPDU&) = {
       INIT_ARRAY_AT(0, &BluetoothDaemonCoreModule::AdapterStateChangedNtf),
       INIT_ARRAY_AT(1, &BluetoothDaemonCoreModule::AdapterPropertiesNtf),
       INIT_ARRAY_AT(2, &BluetoothDaemonCoreModule::RemoteDevicePropertiesNtf),
@@ -1450,32 +1450,32 @@ public:
   // Outgoing PDUs
   //
 
-  nsresult Send(BluetoothDaemonPDU* aPDU, void* aUserData) override;
+  nsresult Send(DaemonSocketPDU* aPDU, void* aUserData) override;
 
-  void StoreUserData(const BluetoothDaemonPDU& aPDU) override;
+  void StoreUserData(const DaemonSocketPDU& aPDU) override;
 
   // Incoming PUDs
   //
 
-  void Handle(BluetoothDaemonPDU& aPDU) override;
+  void Handle(DaemonSocketPDU& aPDU) override;
 
-  void* FetchUserData(const BluetoothDaemonPDUHeader& aHeader);
+  void* FetchUserData(const DaemonSocketPDUHeader& aHeader);
 
 private:
-  void HandleSetupSvc(const BluetoothDaemonPDUHeader& aHeader,
-                      BluetoothDaemonPDU& aPDU, void* aUserData);
-  void HandleCoreSvc(const BluetoothDaemonPDUHeader& aHeader,
-                     BluetoothDaemonPDU& aPDU, void* aUserData);
-  void HandleSocketSvc(const BluetoothDaemonPDUHeader& aHeader,
-                       BluetoothDaemonPDU& aPDU, void* aUserData);
-  void HandleHandsfreeSvc(const BluetoothDaemonPDUHeader& aHeader,
-                          BluetoothDaemonPDU& aPDU, void* aUserData);
-  void HandleA2dpSvc(const BluetoothDaemonPDUHeader& aHeader,
-                     BluetoothDaemonPDU& aPDU, void* aUserData);
-  void HandleAvrcpSvc(const BluetoothDaemonPDUHeader& aHeader,
-                      BluetoothDaemonPDU& aPDU, void* aUserData);
-  void HandleGattSvc(const BluetoothDaemonPDUHeader& aHeader,
-                     BluetoothDaemonPDU& aPDU, void* aUserData);
+  void HandleSetupSvc(const DaemonSocketPDUHeader& aHeader,
+                      DaemonSocketPDU& aPDU, void* aUserData);
+  void HandleCoreSvc(const DaemonSocketPDUHeader& aHeader,
+                     DaemonSocketPDU& aPDU, void* aUserData);
+  void HandleSocketSvc(const DaemonSocketPDUHeader& aHeader,
+                       DaemonSocketPDU& aPDU, void* aUserData);
+  void HandleHandsfreeSvc(const DaemonSocketPDUHeader& aHeader,
+                          DaemonSocketPDU& aPDU, void* aUserData);
+  void HandleA2dpSvc(const DaemonSocketPDUHeader& aHeader,
+                     DaemonSocketPDU& aPDU, void* aUserData);
+  void HandleAvrcpSvc(const DaemonSocketPDUHeader& aHeader,
+                      DaemonSocketPDU& aPDU, void* aUserData);
+  void HandleGattSvc(const DaemonSocketPDUHeader& aHeader,
+                     DaemonSocketPDU& aPDU, void* aUserData);
 
   BluetoothDaemonConnection* mConnection;
   nsTArray<void*> mUserDataQ;
@@ -1507,7 +1507,7 @@ BluetoothDaemonProtocol::UnregisterModule(uint8_t aId,
 }
 
 nsresult
-BluetoothDaemonProtocol::Send(BluetoothDaemonPDU* aPDU, void* aUserData)
+BluetoothDaemonProtocol::Send(DaemonSocketPDU* aPDU, void* aUserData)
 {
   MOZ_ASSERT(mConnection);
   MOZ_ASSERT(aPDU);
@@ -1528,7 +1528,7 @@ BluetoothDaemonProtocol::Send(BluetoothDaemonPDU* aPDU, void* aUserData)
 
 void
 BluetoothDaemonProtocol::HandleSetupSvc(
-  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
   void* aUserData)
 {
   BluetoothDaemonSetupModule::HandleSvc(aHeader, aPDU, aUserData);
@@ -1536,7 +1536,7 @@ BluetoothDaemonProtocol::HandleSetupSvc(
 
 void
 BluetoothDaemonProtocol::HandleCoreSvc(
-  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
   void* aUserData)
 {
   BluetoothDaemonCoreModule::HandleSvc(aHeader, aPDU, aUserData);
@@ -1544,7 +1544,7 @@ BluetoothDaemonProtocol::HandleCoreSvc(
 
 void
 BluetoothDaemonProtocol::HandleSocketSvc(
-  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
   void* aUserData)
 {
   BluetoothDaemonSocketModule::HandleSvc(aHeader, aPDU, aUserData);
@@ -1552,7 +1552,7 @@ BluetoothDaemonProtocol::HandleSocketSvc(
 
 void
 BluetoothDaemonProtocol::HandleHandsfreeSvc(
-  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
   void* aUserData)
 {
   BluetoothDaemonHandsfreeModule::HandleSvc(aHeader, aPDU, aUserData);
@@ -1560,7 +1560,7 @@ BluetoothDaemonProtocol::HandleHandsfreeSvc(
 
 void
 BluetoothDaemonProtocol::HandleA2dpSvc(
-  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
   void* aUserData)
 {
   BluetoothDaemonA2dpModule::HandleSvc(aHeader, aPDU, aUserData);
@@ -1568,7 +1568,7 @@ BluetoothDaemonProtocol::HandleA2dpSvc(
 
 void
 BluetoothDaemonProtocol::HandleAvrcpSvc(
-  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
   void* aUserData)
 {
   BluetoothDaemonAvrcpModule::HandleSvc(aHeader, aPDU, aUserData);
@@ -1576,17 +1576,17 @@ BluetoothDaemonProtocol::HandleAvrcpSvc(
 
 void
 BluetoothDaemonProtocol::HandleGattSvc(
-  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
   void* aUserData)
 {
   BluetoothDaemonGattModule::HandleSvc(aHeader, aPDU, aUserData);
 }
 
 void
-BluetoothDaemonProtocol::Handle(BluetoothDaemonPDU& aPDU)
+BluetoothDaemonProtocol::Handle(DaemonSocketPDU& aPDU)
 {
   static void (BluetoothDaemonProtocol::* const HandleSvc[])(
-    const BluetoothDaemonPDUHeader&, BluetoothDaemonPDU&, void*) = {
+    const DaemonSocketPDUHeader&, DaemonSocketPDU&, void*) = {
     INIT_ARRAY_AT(0x00, &BluetoothDaemonProtocol::HandleSetupSvc),
     INIT_ARRAY_AT(0x01, &BluetoothDaemonProtocol::HandleCoreSvc),
     INIT_ARRAY_AT(0x02, &BluetoothDaemonProtocol::HandleSocketSvc),
@@ -1603,7 +1603,7 @@ BluetoothDaemonProtocol::Handle(BluetoothDaemonPDU& aPDU)
       &BluetoothDaemonProtocol::HandleGattSvc)
   };
 
-  BluetoothDaemonPDUHeader header;
+  DaemonSocketPDUHeader header;
 
   if (NS_FAILED(UnpackPDU(aPDU, header)) ||
       NS_WARN_IF(!(header.mService < MOZ_ARRAY_LENGTH(HandleSvc))) ||
@@ -1615,7 +1615,7 @@ BluetoothDaemonProtocol::Handle(BluetoothDaemonPDU& aPDU)
 }
 
 void
-BluetoothDaemonProtocol::StoreUserData(const BluetoothDaemonPDU& aPDU)
+BluetoothDaemonProtocol::StoreUserData(const DaemonSocketPDU& aPDU)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -1623,7 +1623,7 @@ BluetoothDaemonProtocol::StoreUserData(const BluetoothDaemonPDU& aPDU)
 }
 
 void*
-BluetoothDaemonProtocol::FetchUserData(const BluetoothDaemonPDUHeader& aHeader)
+BluetoothDaemonProtocol::FetchUserData(const DaemonSocketPDUHeader& aHeader)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 

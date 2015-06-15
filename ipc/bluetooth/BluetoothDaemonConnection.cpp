@@ -37,10 +37,10 @@ namespace ipc {
 static const char sBluetoothdSocketName[] = "bluez_hal_socket";
 
 //
-// BluetoothDaemonPDU
+// DaemonSocketPDU
 //
 
-BluetoothDaemonPDU::BluetoothDaemonPDU(uint8_t aService, uint8_t aOpcode,
+DaemonSocketPDU::DaemonSocketPDU(uint8_t aService, uint8_t aOpcode,
                                        uint16_t aPayloadSize)
   : mConsumer(nullptr)
   , mUserData(nullptr)
@@ -59,7 +59,7 @@ BluetoothDaemonPDU::BluetoothDaemonPDU(uint8_t aService, uint8_t aOpcode,
   memcpy(data + OFF_LENGTH, &aPayloadSize, sizeof(aPayloadSize));
 }
 
-BluetoothDaemonPDU::BluetoothDaemonPDU(size_t aPayloadSize)
+DaemonSocketPDU::DaemonSocketPDU(size_t aPayloadSize)
   : mConsumer(nullptr)
   , mUserData(nullptr)
 {
@@ -67,14 +67,14 @@ BluetoothDaemonPDU::BluetoothDaemonPDU(size_t aPayloadSize)
   ResetBuffer(new uint8_t[availableSpace], 0, 0, availableSpace);
 }
 
-BluetoothDaemonPDU::~BluetoothDaemonPDU()
+DaemonSocketPDU::~DaemonSocketPDU()
 {
   nsAutoArrayPtr<uint8_t> data(GetBuffer());
   ResetBuffer(nullptr, 0, 0, 0);
 }
 
 void
-BluetoothDaemonPDU::GetHeader(uint8_t& aService, uint8_t& aOpcode,
+DaemonSocketPDU::GetHeader(uint8_t& aService, uint8_t& aOpcode,
                               uint16_t& aPayloadSize)
 {
   memcpy(&aService, GetData(OFF_SERVICE), sizeof(aService));
@@ -83,7 +83,7 @@ BluetoothDaemonPDU::GetHeader(uint8_t& aService, uint8_t& aOpcode,
 }
 
 ssize_t
-BluetoothDaemonPDU::Send(int aFd)
+DaemonSocketPDU::Send(int aFd)
 {
   struct iovec iv;
   memset(&iv, 0, sizeof(iv));
@@ -120,7 +120,7 @@ BluetoothDaemonPDU::Send(int aFd)
       ((_cmsghdr)->cmsg_type == SCM_RIGHTS) )
 
 ssize_t
-BluetoothDaemonPDU::Receive(int aFd)
+DaemonSocketPDU::Receive(int aFd)
 {
   struct iovec iv;
   memset(&iv, 0, sizeof(iv));
@@ -163,13 +163,13 @@ BluetoothDaemonPDU::Receive(int aFd)
 }
 
 int
-BluetoothDaemonPDU::AcquireFd()
+DaemonSocketPDU::AcquireFd()
 {
   return mReceivedFd.forget();
 }
 
 nsresult
-BluetoothDaemonPDU::UpdateHeader()
+DaemonSocketPDU::UpdateHeader()
 {
   size_t len = GetPayloadSize();
   if (len >= MAX_PAYLOAD_LENGTH) {
@@ -183,7 +183,7 @@ BluetoothDaemonPDU::UpdateHeader()
 }
 
 size_t
-BluetoothDaemonPDU::GetPayloadSize() const
+DaemonSocketPDU::GetPayloadSize() const
 {
   MOZ_ASSERT(GetSize() >= HEADER_SIZE);
 
@@ -191,7 +191,7 @@ BluetoothDaemonPDU::GetPayloadSize() const
 }
 
 void
-BluetoothDaemonPDU::OnError(const char* aFunction, int aErrno)
+DaemonSocketPDU::OnError(const char* aFunction, int aErrno)
 {
   CHROMIUM_LOG("%s failed with error %d (%s)",
                aFunction, aErrno, strerror(aErrno));
@@ -242,7 +242,7 @@ public:
 private:
   BluetoothDaemonConnection* mConnection;
   DaemonSocketIOConsumer* mConsumer;
-  nsAutoPtr<BluetoothDaemonPDU> mPDU;
+  nsAutoPtr<DaemonSocketPDU> mPDU;
   bool mShuttingDownOnIOThread;
 };
 
@@ -276,7 +276,7 @@ BluetoothDaemonConnectionIO::QueryReceiveBuffer(UnixSocketIOBuffer** aBuffer)
 
   if (!mPDU) {
     /* There's only one PDU for receiving. We reuse it every time. */
-    mPDU = new BluetoothDaemonPDU(BluetoothDaemonPDU::MAX_PAYLOAD_LENGTH);
+    mPDU = new DaemonSocketPDU(DaemonSocketPDU::MAX_PAYLOAD_LENGTH);
   }
   *aBuffer = mPDU.get();
 

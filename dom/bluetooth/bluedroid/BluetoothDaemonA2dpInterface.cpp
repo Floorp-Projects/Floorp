@@ -27,7 +27,7 @@ BluetoothDaemonA2dpModule::SetNotificationHandler(
 }
 
 nsresult
-BluetoothDaemonA2dpModule::Send(BluetoothDaemonPDU* aPDU,
+BluetoothDaemonA2dpModule::Send(DaemonSocketPDU* aPDU,
                                 BluetoothA2dpResultHandler* aRes)
 {
   aRes->AddRef(); // Keep reference for response
@@ -35,11 +35,11 @@ BluetoothDaemonA2dpModule::Send(BluetoothDaemonPDU* aPDU,
 }
 
 void
-BluetoothDaemonA2dpModule::HandleSvc(const BluetoothDaemonPDUHeader& aHeader,
-                                     BluetoothDaemonPDU& aPDU, void* aUserData)
+BluetoothDaemonA2dpModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
+                                     DaemonSocketPDU& aPDU, void* aUserData)
 {
   static void (BluetoothDaemonA2dpModule::* const HandleOp[])(
-    const BluetoothDaemonPDUHeader&, BluetoothDaemonPDU&, void*) = {
+    const DaemonSocketPDUHeader&, DaemonSocketPDU&, void*) = {
     INIT_ARRAY_AT(0, &BluetoothDaemonA2dpModule::HandleRsp),
     INIT_ARRAY_AT(1, &BluetoothDaemonA2dpModule::HandleNtf),
   };
@@ -61,7 +61,7 @@ BluetoothDaemonA2dpModule::ConnectCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(SERVICE_ID,
+  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(SERVICE_ID,
                                                            OPCODE_CONNECT,
                                                            6)); // Address
   nsresult rv = PackPDU(
@@ -83,7 +83,7 @@ BluetoothDaemonA2dpModule::DisconnectCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(SERVICE_ID,
+  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(SERVICE_ID,
                                                            OPCODE_DISCONNECT,
                                                            6)); // Address
   nsresult rv = PackPDU(
@@ -104,8 +104,8 @@ BluetoothDaemonA2dpModule::DisconnectCmd(
 
 void
 BluetoothDaemonA2dpModule::ErrorRsp(
-  const BluetoothDaemonPDUHeader& aHeader,
-  BluetoothDaemonPDU& aPDU, BluetoothA2dpResultHandler* aRes)
+  const DaemonSocketPDUHeader& aHeader,
+  DaemonSocketPDU& aPDU, BluetoothA2dpResultHandler* aRes)
 {
   ErrorRunnable::Dispatch(
     aRes, &BluetoothA2dpResultHandler::OnError, UnpackPDUInitOp(aPDU));
@@ -113,7 +113,7 @@ BluetoothDaemonA2dpModule::ErrorRsp(
 
 void
 BluetoothDaemonA2dpModule::ConnectRsp(
-  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
   BluetoothA2dpResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
@@ -122,7 +122,7 @@ BluetoothDaemonA2dpModule::ConnectRsp(
 
 void
 BluetoothDaemonA2dpModule::DisconnectRsp(
-  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
   BluetoothA2dpResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
@@ -131,12 +131,12 @@ BluetoothDaemonA2dpModule::DisconnectRsp(
 
 void
 BluetoothDaemonA2dpModule::HandleRsp(
-  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
   void* aUserData)
 {
   static void (BluetoothDaemonA2dpModule::* const HandleRsp[])(
-    const BluetoothDaemonPDUHeader&,
-    BluetoothDaemonPDU&,
+    const DaemonSocketPDUHeader&,
+    DaemonSocketPDU&,
     BluetoothA2dpResultHandler*) = {
     INIT_ARRAY_AT(OPCODE_ERROR,
       &BluetoothDaemonA2dpModule::ErrorRsp),
@@ -186,14 +186,14 @@ class BluetoothDaemonA2dpModule::ConnectionStateInitOp final
   : private PDUInitOp
 {
 public:
-  ConnectionStateInitOp(BluetoothDaemonPDU& aPDU)
+  ConnectionStateInitOp(DaemonSocketPDU& aPDU)
     : PDUInitOp(aPDU)
   { }
 
   nsresult
   operator () (BluetoothA2dpConnectionState& aArg1, nsString& aArg2) const
   {
-    BluetoothDaemonPDU& pdu = GetPDU();
+    DaemonSocketPDU& pdu = GetPDU();
 
     /* Read state */
     nsresult rv = UnpackPDU(pdu, aArg1);
@@ -214,7 +214,7 @@ public:
 
 void
 BluetoothDaemonA2dpModule::ConnectionStateNtf(
-  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU)
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   ConnectionStateNotification::Dispatch(
     &BluetoothA2dpNotificationHandler::ConnectionStateNotification,
@@ -226,7 +226,7 @@ class BluetoothDaemonA2dpModule::AudioStateInitOp final
   : private PDUInitOp
 {
 public:
-  AudioStateInitOp(BluetoothDaemonPDU& aPDU)
+  AudioStateInitOp(DaemonSocketPDU& aPDU)
     : PDUInitOp(aPDU)
   { }
 
@@ -234,7 +234,7 @@ public:
   operator () (BluetoothA2dpAudioState& aArg1,
                nsString& aArg2) const
   {
-    BluetoothDaemonPDU& pdu = GetPDU();
+    DaemonSocketPDU& pdu = GetPDU();
 
     /* Read state */
     nsresult rv = UnpackPDU(pdu, aArg1);
@@ -255,7 +255,7 @@ public:
 
 void
 BluetoothDaemonA2dpModule::AudioStateNtf(
-  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU)
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   AudioStateNotification::Dispatch(
     &BluetoothA2dpNotificationHandler::AudioStateNotification,
@@ -267,14 +267,14 @@ class BluetoothDaemonA2dpModule::AudioConfigInitOp final
   : private PDUInitOp
 {
 public:
-  AudioConfigInitOp(BluetoothDaemonPDU& aPDU)
+  AudioConfigInitOp(DaemonSocketPDU& aPDU)
     : PDUInitOp(aPDU)
   { }
 
   nsresult
   operator () (nsString& aArg1, uint32_t aArg2, uint8_t aArg3) const
   {
-    BluetoothDaemonPDU& pdu = GetPDU();
+    DaemonSocketPDU& pdu = GetPDU();
 
     /* Read address */
     nsresult rv = UnpackPDU(
@@ -301,7 +301,7 @@ public:
 
 void
 BluetoothDaemonA2dpModule::AudioConfigNtf(
-  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU)
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   AudioConfigNotification::Dispatch(
     &BluetoothA2dpNotificationHandler::AudioConfigNotification,
@@ -310,11 +310,11 @@ BluetoothDaemonA2dpModule::AudioConfigNtf(
 
 void
 BluetoothDaemonA2dpModule::HandleNtf(
-  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
   void* aUserData)
 {
   static void (BluetoothDaemonA2dpModule::* const HandleNtf[])(
-    const BluetoothDaemonPDUHeader&, BluetoothDaemonPDU&) = {
+    const DaemonSocketPDUHeader&, DaemonSocketPDU&) = {
     INIT_ARRAY_AT(0, &BluetoothDaemonA2dpModule::ConnectionStateNtf),
     INIT_ARRAY_AT(1, &BluetoothDaemonA2dpModule::AudioStateNtf),
 #if ANDROID_VERSION >= 21
