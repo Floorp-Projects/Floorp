@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AnimationTimeline.h"
+#include "mozilla/AnimationComparator.h"
 
 namespace mozilla {
 namespace dom {
@@ -63,6 +64,9 @@ AnimationTimeline::GetAnimations(AnimationSequence& aAnimations)
   AddAnimationParams params{ aAnimations };
 #endif
   mAnimations.EnumerateEntries(AppendAnimationToSequence, &params);
+
+  // Sort animations by priority
+  aAnimations.Sort(AnimationPtrComparator<nsRefPtr<Animation>>());
 }
 
 void
