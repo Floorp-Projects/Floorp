@@ -286,6 +286,51 @@
     border-image: url("chrome://browser/skin/urlbar-arrow@2x.png") 0 16 0 0 fill;
   }
 
+  .webRTC-shareDevices-notification-icon,
+  #webRTC-shareDevices-notification-icon {
+    list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16@2x.png);
+  }
+
+  .webRTC-sharingDevices-notification-icon,
+  #webRTC-sharingDevices-notification-icon {
+    list-style-image: url(chrome://browser/skin/webRTC-sharingDevice-16@2x.png);
+  }
+
+  .webRTC-shareMicrophone-notification-icon,
+  #webRTC-shareMicrophone-notification-icon {
+    list-style-image: url(chrome://browser/skin/webRTC-shareMicrophone-16@2x.png);
+  }
+
+  .webRTC-sharingMicrophone-notification-icon,
+  #webRTC-sharingMicrophone-notification-icon {
+    list-style-image: url(chrome://browser/skin/webRTC-sharingMicrophone-16@2x.png);
+  }
+
+  .webRTC-shareScreen-notification-icon,
+  #webRTC-shareScreen-notification-icon {
+    list-style-image: url(chrome://browser/skin/webRTC-shareScreen-16@2x.png);
+  }
+
+  .webRTC-sharingScreen-notification-icon,
+  #webRTC-sharingScreen-notification-icon {
+    list-style-image: url(chrome://browser/skin/webRTC-sharingScreen-16@2x.png);
+  }
+
+  .popup-notification-icon[popupid="webRTC-sharingDevices"],
+  .popup-notification-icon[popupid="webRTC-shareDevices"] {
+    list-style-image: url(chrome://browser/skin/webRTC-shareDevice-64@2x.png);
+  }
+
+  .popup-notification-icon[popupid="webRTC-sharingMicrophone"],
+  .popup-notification-icon[popupid="webRTC-shareMicrophone"] {
+    list-style-image: url(chrome://browser/skin/webRTC-shareMicrophone-64@2x.png);
+  }
+
+  .popup-notification-icon[popupid="webRTC-sharingScreen"],
+  .popup-notification-icon[popupid="webRTC-shareScreen"] {
+    list-style-image: url(chrome://browser/skin/webRTC-shareScreen-64@2x.png);
+  }
+
 %ifdef XP_MACOSX
 /* OSX only until we have icons for Windows and Linux */
   .default-notification-icon,
@@ -352,36 +397,6 @@
     list-style-image: url(chrome://browser/skin/bad-content-unblocked-16@2x.png);
   }
 
-  .webRTC-shareDevices-notification-icon,
-  #webRTC-shareDevices-notification-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16@2x.png);
-  }
-
-  .webRTC-sharingDevices-notification-icon,
-  #webRTC-sharingDevices-notification-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-sharingDevice-16@2x.png);
-  }
-
-  .webRTC-shareMicrophone-notification-icon,
-  #webRTC-shareMicrophone-notification-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-shareMicrophone-16@2x.png);
-  }
-
-  .webRTC-sharingMicrophone-notification-icon,
-  #webRTC-sharingMicrophone-notification-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-sharingMicrophone-16@2x.png);
-  }
-
-  .webRTC-shareScreen-notification-icon,
-  #webRTC-shareScreen-notification-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-shareScreen-16@2x.png);
-  }
-
-  .webRTC-sharingScreen-notification-icon,
-  #webRTC-sharingScreen-notification-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-sharingScreen-16@2x.png);
-  }
-
   .web-notifications-notification-icon,
   #web-notifications-notification-icon {
     list-style-image: url(chrome://browser/skin/notification-16@2x.png);
@@ -427,21 +442,6 @@
 
   .popup-notification-icon[popupid="pointerLock"] {
     list-style-image: url(chrome://browser/skin/pointerLock-64@2x.png);
-  }
-
-  .popup-notification-icon[popupid="webRTC-sharingDevices"],
-  .popup-notification-icon[popupid="webRTC-shareDevices"] {
-    list-style-image: url(chrome://browser/skin/webRTC-shareDevice-64@2x.png);
-  }
-
-  .popup-notification-icon[popupid="webRTC-sharingMicrophone"],
-  .popup-notification-icon[popupid="webRTC-shareMicrophone"] {
-    list-style-image: url(chrome://browser/skin/webRTC-shareMicrophone-64@2x.png);
-  }
-
-  .popup-notification-icon[popupid="webRTC-sharingScreen"],
-  .popup-notification-icon[popupid="webRTC-shareScreen"] {
-    list-style-image: url(chrome://browser/skin/webRTC-shareScreen-64@2x.png);
   }
 
   .popup-notification-icon[popupid="servicesInstall"] {
