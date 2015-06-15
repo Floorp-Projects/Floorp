@@ -338,7 +338,7 @@ IterPerformanceStats(JSContext* cx,
             continue;
         }
 
-        if (!(*walker)(cx, group->data, group->uid, closure)) {
+        if (!(*walker)(cx, group->data, closure)) {
             // Issue in callback
             return false;
         }
