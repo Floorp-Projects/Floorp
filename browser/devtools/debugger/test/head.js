@@ -512,9 +512,13 @@ function getTab(aTarget, aWindow) {
 }
 
 function getSources(aClient) {
+  info("Getting sources.");
+
   let deferred = promise.defer();
 
-  aClient.getSources(({sources}) => deferred.resolve(sources));
+  aClient.getSources((packet) => {
+    deferred.resolve(packet.sources);
+  });
 
   return deferred.promise;
 }
@@ -1129,6 +1133,15 @@ function waitForWorkerListChanged(tabClient) {
   });
 }
 
+function attachThread(workerClient, options) {
+  info("Attaching to thread.");
+  return new Promise(function(resolve, reject) {
+    workerClient.attachThread(options, function (response, threadClient) {
+      resolve([response, threadClient]);
+    });
+  });
+}
+
 function waitForWorkerClose(workerClient) {
   info("Waiting for worker to close.");
   return new Promise(function (resolve) {
@@ -1155,4 +1168,53 @@ function waitForWorkerThaw(workerClient) {
       resolve();
     });
   });
+}
+
+function resume(threadClient) {
+  info("Resuming thread.");
+  return rdpInvoke(threadClient, threadClient.resume);
+}
+
+function findSource(sources, url) {
+  info("Finding source with url '" + url + "'.\n");
+  for (let source of sources) {
+    if (source.url === url) {
+      return source;
+    }
+  }
+  return null;
+}
+
+function setBreakpoint(sourceClient, location) {
+  info("Setting breakpoint.\n");
+  return new Promise(function (resolve) {
+    sourceClient.setBreakpoint(location, function (response, breakpointClient) {
+      resolve([response, breakpointClient]);
+    });
+  });
+}
+
+function waitForEvent(client, type, predicate) {
+  return new Promise(function (resolve) {
+    function listener(type, packet) {
+      if (!predicate(packet)) {
+        return;
+      }
+      client.removeListener(listener);
+      resolve(packet);
+    }
+
+    if (predicate) {
+      client.addListener(type, listener);
+    } else {
+      client.addOneTimeListener(type, function (type, packet) {
+        resolve(packet);
+      });
+    }
+  });
+}
+
+function waitForPause(threadClient) {
+  info("Waiting for pause.\n");
+  return waitForEvent(threadClient, "paused");
 }

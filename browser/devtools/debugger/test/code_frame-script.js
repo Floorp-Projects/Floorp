@@ -83,3 +83,15 @@ addMessageListener("jsonrpc", function ({ data: { method, params, id } }) {
     });
   });
 });
+
+addMessageListener("test:postMessageToWorker", function (message) {
+  dump("Posting message '" + message.data.message + "' to worker with url '" +
+       message.data.url + "'.\n");
+
+  let worker = workers[message.data.url];
+  worker.postMessage(message.data.message);
+  worker.addEventListener("message", function listener() {
+    worker.removeEventListener("message", listener);
+    sendAsyncMessage("test:postMessageToWorker");
+  });
+});
