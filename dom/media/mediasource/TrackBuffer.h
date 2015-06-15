@@ -22,7 +22,7 @@ namespace mozilla {
 
 class ContainerParser;
 class MediaSourceDecoder;
-class MediaLargeByteBuffer;
+class MediaByteBuffer;
 
 class TrackBuffer final : public SourceBufferContentManager {
 public:
@@ -30,7 +30,7 @@ public:
 
   nsRefPtr<ShutdownPromise> Shutdown();
 
-  bool AppendData(MediaLargeByteBuffer* aData, TimeUnit aTimestampOffset) override;
+  bool AppendData(MediaByteBuffer* aData, TimeUnit aTimestampOffset) override;
 
   // Append data to the current decoder.  Also responsible for calling
   // NotifyDataArrived on the decoder to keep buffered range computation up
@@ -119,7 +119,7 @@ private:
 
   // Helper for AppendData, ensures NotifyDataArrived is called whenever
   // data is appended to the current decoder's SourceBufferResource.
-  bool AppendDataToCurrentResource(MediaLargeByteBuffer* aData,
+  bool AppendDataToCurrentResource(MediaByteBuffer* aData,
                                    uint32_t aDuration /* microseconds */);
   // Queue on the parent's decoder task queue a call to NotifyTimeRangesChanged.
   void NotifyTimeRangesChanged();
@@ -163,7 +163,7 @@ private:
                          SourceBufferDecoder* aDecoder);
 
   nsAutoPtr<ContainerParser> mParser;
-  nsRefPtr<MediaLargeByteBuffer> mInputBuffer;
+  nsRefPtr<MediaByteBuffer> mInputBuffer;
 
   // A task queue using the shared media thread pool.  Used exclusively to
   // initialize (i.e. call ReadMetadata on) decoders as they are created via

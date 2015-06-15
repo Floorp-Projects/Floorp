@@ -22,7 +22,6 @@ class Image;
 class ImageContainer;
 }
 
-class MediaLargeByteBuffer;
 class MediaByteBuffer;
 
 // Container that holds media samples.
@@ -369,7 +368,7 @@ private:
   explicit MediaRawDataWriter(MediaRawData* aMediaRawData);
   bool EnsureSize(size_t aSize);
   MediaRawData* mTarget;
-  nsRefPtr<MediaLargeByteBuffer> mBuffer;
+  nsRefPtr<MediaByteBuffer> mBuffer;
 };
 
 class MediaRawData : public MediaData {
@@ -403,7 +402,7 @@ private:
   // read as required by some data decoders.
   // Returns false if memory couldn't be allocated.
   bool EnsureCapacity(size_t aSize);
-  nsRefPtr<MediaLargeByteBuffer> mBuffer;
+  nsRefPtr<MediaByteBuffer> mBuffer;
   CryptoSample mCryptoInternal;
   uint32_t mPadding;
   MediaRawData(const MediaRawData&); // Not implemented
