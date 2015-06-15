@@ -469,6 +469,9 @@ pref("security.mixed_content.block_active_content", true);
 // Enable pinning
 pref("security.cert_pinning.enforcement_level", 1);
 
+// Only fetch OCSP for EV certificates
+pref("security.OCSP.enabled", 2);
+
 // Override some named colors to avoid inverse OS themes
 pref("ui.-moz-dialog", "#efebe7");
 pref("ui.-moz-dialogtext", "#101010");

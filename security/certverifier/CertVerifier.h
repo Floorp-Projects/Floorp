@@ -75,11 +75,13 @@ public:
     pinningEnforceTestMode = 3
   };
 
-  enum OcspDownloadConfig { ocspOff = 0, ocspOn };
+  enum OcspDownloadConfig {
+    ocspOff = 0,
+    ocspOn = 1,
+    ocspEVOnly = 2
+  };
   enum OcspStrictConfig { ocspRelaxed = 0, ocspStrict };
   enum OcspGetConfig { ocspGetDisabled = 0, ocspGetEnabled = 1 };
-
-  bool IsOCSPDownloadEnabled() const { return mOCSPDownloadEnabled; }
 
   CertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
                OcspGetConfig ogc, PinningMode pinningMode);
@@ -87,7 +89,7 @@ public:
 
   void ClearOCSPCache() { mOCSPCache.Clear(); }
 
-  const bool mOCSPDownloadEnabled;
+  const OcspDownloadConfig mOCSPDownloadConfig;
   const bool mOCSPStrict;
   const bool mOCSPGETEnabled;
   const PinningMode mPinningMode;
