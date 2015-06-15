@@ -113,9 +113,9 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mNextInFlow = static_cast<nsBlockFrame*>(mBlock->GetNextInFlow());
 
   LAYOUT_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != aReflowState.ComputedISize(),
-                   "have unconstrained width; this should only result from "
-                   "very large sizes, not attempts at intrinsic width "
-                   "calculation");
+                       "have unconstrained width; this should only result "
+                       "from very large sizes, not attempts at intrinsic "
+                       "width calculation");
   mContentArea.ISize(wm) = aReflowState.ComputedISize();
 
   // Compute content area height. Unlike the width, if we have a
