@@ -171,7 +171,6 @@ ImageContainer::ImageContainer(Mode flag)
   mGenerationCounter(++sGenerationCounter),
   mPaintCount(0),
   mDroppedImageCount(0),
-  mPreviousImagePainted(false),
   mCurrentImageComposited(false),
   mImageFactory(new ImageFactory()),
   mRecycleBin(new BufferRecycleBin()),
@@ -251,7 +250,6 @@ ImageContainer::SetCurrentImageInternal(Image *aImage,
     mActiveImage = aImage;
     mCurrentImageTimeStamp = aTimeStamp;
   }
-  CurrentImageChanged();
 }
 
 void
@@ -352,6 +350,11 @@ void
 ImageContainer::NotifyCompositeInternal(const ImageCompositeNotification& aNotification)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  // An image composition notification is sent the first time a particular
+  // image is composited by an ImageHost. Thus, every time we receive such
+  // a notification, a new image has been painted.
+  ++mPaintCount;
 
   while (!mFrameIDsNotYetComposited.IsEmpty()) {
     if (mFrameIDsNotYetComposited[0] <= aNotification.frameID()) {
