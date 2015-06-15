@@ -128,7 +128,7 @@ struct NoteWeakMapChildrenTracer : public JS::CallbackTracer
       mKey(nullptr), mKeyDelegate(nullptr)
   {
   }
-  void trace(void** aThingp, JS::TraceKind aKind) override;
+  void onChild(const JS::GCCellPtr& aThing) override;
   nsCycleCollectionNoteRootCallback& mCb;
   bool mTracedAny;
   JSObject* mMap;
@@ -137,23 +137,21 @@ struct NoteWeakMapChildrenTracer : public JS::CallbackTracer
 };
 
 void
-NoteWeakMapChildrenTracer::trace(void** aThingp, JS::TraceKind aKind)
+NoteWeakMapChildrenTracer::onChild(const JS::GCCellPtr& aThing)
 {
-  JS::GCCellPtr thing(*aThingp, aKind);
-
-  if (thing.isString()) {
+  if (aThing.isString()) {
     return;
   }
 
-  if (!JS::GCThingIsMarkedGray(thing) && !mCb.WantAllTraces()) {
+  if (!JS::GCThingIsMarkedGray(aThing) && !mCb.WantAllTraces()) {
     return;
   }
 
-  if (AddToCCKind(thing.kind())) {
-    mCb.NoteWeakMapping(mMap, mKey, mKeyDelegate, thing);
+  if (AddToCCKind(aThing.kind())) {
+    mCb.NoteWeakMapping(mMap, mKey, mKeyDelegate, aThing);
     mTracedAny = true;
   } else {
-    JS_TraceChildren(this, thing.asCell(), thing.kind());
+    JS_TraceChildren(this, aThing.asCell(), aThing.kind());
   }
 }
 
@@ -359,15 +357,15 @@ struct TraversalTracer : public JS::CallbackTracer
     : JS::CallbackTracer(aRt, DoNotTraceWeakMaps), mCb(aCb)
   {
   }
-  void trace(void** aThingp, JS::TraceKind aTraceKind) override;
+  void onChild(const JS::GCCellPtr& aThing) override;
   nsCycleCollectionTraversalCallback& mCb;
 };
 
-static void
-NoteJSChild(TraversalTracer* aTrc, JS::GCCellPtr aThing)
+void
+TraversalTracer::onChild(const JS::GCCellPtr& aThing)
 {
   // Don't traverse non-gray objects, unless we want all traces.
-  if (!JS::GCThingIsMarkedGray(aThing) && !aTrc->mCb.WantAllTraces()) {
+  if (!JS::GCThingIsMarkedGray(aThing) && !mCb.WantAllTraces()) {
     return;
   }
 
@@ -379,42 +377,35 @@ NoteJSChild(TraversalTracer* aTrc, JS::GCCellPtr aThing)
    * use special APIs to handle such chains iteratively.
    */
   if (AddToCCKind(aThing.kind())) {
-    if (MOZ_UNLIKELY(aTrc->mCb.WantDebugInfo())) {
+    if (MOZ_UNLIKELY(mCb.WantDebugInfo())) {
       char buffer[200];
-      aTrc->getTracingEdgeName(buffer, sizeof(buffer));
-      aTrc->mCb.NoteNextEdgeName(buffer);
+      getTracingEdgeName(buffer, sizeof(buffer));
+      mCb.NoteNextEdgeName(buffer);
     }
     if (aThing.isObject()) {
-      aTrc->mCb.NoteJSObject(aThing.toObject());
+      mCb.NoteJSObject(aThing.toObject());
     } else {
-      aTrc->mCb.NoteJSScript(aThing.toScript());
+      mCb.NoteJSScript(aThing.toScript());
     }
   } else if (aThing.isShape()) {
     // The maximum depth of traversal when tracing a Shape is unbounded, due to
     // the parent pointers on the shape.
-    JS_TraceShapeCycleCollectorChildren(aTrc, aThing);
+    JS_TraceShapeCycleCollectorChildren(this, aThing);
   } else if (aThing.isObjectGroup()) {
     // The maximum depth of traversal when tracing an ObjectGroup is unbounded,
     // due to information attached to the groups which can lead other groups to
     // be traced.
-    JS_TraceObjectGroupCycleCollectorChildren(aTrc, aThing);
+    JS_TraceObjectGroupCycleCollectorChildren(this, aThing);
   } else if (!aThing.isString()) {
-    JS_TraceChildren(aTrc, aThing.asCell(), aThing.kind());
+    JS_TraceChildren(this, aThing.asCell(), aThing.kind());
   }
-}
-
-void
-TraversalTracer::trace(void** aThingp, JS::TraceKind aTraceKind)
-{
-  JS::GCCellPtr thing(*aThingp, aTraceKind);
-  NoteJSChild(this, thing);
 }
 
 static void
 NoteJSChildGrayWrapperShim(void* aData, JS::GCCellPtr aThing)
 {
   TraversalTracer* trc = static_cast<TraversalTracer*>(aData);
-  NoteJSChild(trc, aThing);
+  trc->onChild(aThing);
 }
 
 /*

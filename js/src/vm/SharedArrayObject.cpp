@@ -382,9 +382,36 @@ js::AsSharedArrayBuffer(HandleObject obj)
     return obj->as<SharedArrayBufferObject>();
 }
 
+JS_FRIEND_API(void)
+js::GetSharedArrayBufferViewLengthAndData(JSObject* obj, uint32_t* length, uint8_t** data)
+{
+    MOZ_ASSERT(obj->is<SharedTypedArrayObject>());
+
+    *length = obj->as<SharedTypedArrayObject>().byteLength();
+
+    *data = static_cast<uint8_t*>(obj->as<SharedTypedArrayObject>().viewData());
+}
+
+JS_FRIEND_API(void)
+js::GetSharedArrayBufferLengthAndData(JSObject* obj, uint32_t* length, uint8_t** data)
+{
+    MOZ_ASSERT(obj->is<SharedArrayBufferObject>());
+    *length = obj->as<SharedArrayBufferObject>().byteLength();
+    *data = obj->as<SharedArrayBufferObject>().dataPointer();
+}
+
 JS_FRIEND_API(bool)
 JS_IsSharedArrayBufferObject(JSObject* obj)
 {
     obj = CheckedUnwrap(obj);
-    return obj ? obj->is<ArrayBufferObject>() : false;
+    return obj ? obj->is<SharedArrayBufferObject>() : false;
+}
+
+JS_FRIEND_API(uint8_t*)
+JS_GetSharedArrayBufferData(JSObject* obj, const JS::AutoCheckCannotGC&)
+{
+    obj = CheckedUnwrap(obj);
+    if (!obj)
+        return nullptr;
+    return obj->as<SharedArrayBufferObject>().dataPointer();
 }

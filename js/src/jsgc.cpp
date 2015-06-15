@@ -2207,19 +2207,10 @@ GCRuntime::relocateArenas(Zone* zone, JS::gcreason::Reason reason, SliceBudget& 
 }
 
 void
-MovingTracer::trace(void** thingp, JS::TraceKind kind)
+MovingTracer::onObjectEdge(JSObject** objp)
 {
-    TenuredCell* thing = TenuredCell::fromPointer(*thingp);
-
-    // Currently we only relocate objects.
-    if (kind != JS::TraceKind::Object) {
-        MOZ_ASSERT(!RelocationOverlay::isCellForwarded(thing));
-        return;
-    }
-
-    JSObject* obj = reinterpret_cast<JSObject*>(thing);
-    if (IsForwarded(obj))
-        *thingp = Forwarded(obj);
+    if (IsForwarded(*objp))
+        *objp = Forwarded(*objp);
 }
 
 void
@@ -3677,7 +3668,7 @@ GCRuntime::shouldPreserveJITCode(JSCompartment* comp, int64_t currentTime,
 #ifdef DEBUG
 class CompartmentCheckTracer : public JS::CallbackTracer
 {
-    void trace(void** thingp, JS::TraceKind kind) override;
+    void onChild(const JS::GCCellPtr& thing) override;
 
   public:
     explicit CompartmentCheckTracer(JSRuntime* rt)
@@ -3720,17 +3711,17 @@ struct MaybeCompartmentFunctor {
 };
 
 void
-CompartmentCheckTracer::trace(void** thingp, JS::TraceKind kind)
+CompartmentCheckTracer::onChild(const JS::GCCellPtr& thing)
 {
-    TenuredCell* thing = TenuredCell::fromPointer(*thingp);
+    TenuredCell* tenured = TenuredCell::fromPointer(thing.asCell());
 
-    JSCompartment* comp = CallTyped(MaybeCompartmentFunctor(), thing, kind);
+    JSCompartment* comp = CallTyped(MaybeCompartmentFunctor(), tenured, thing.kind());
     if (comp && compartment) {
         MOZ_ASSERT(comp == compartment || runtime()->isAtomsCompartment(comp) ||
                    (srcKind == JS::TraceKind::Object &&
-                    InCrossCompartmentMap(static_cast<JSObject*>(src), thing, kind)));
+                    InCrossCompartmentMap(static_cast<JSObject*>(src), tenured, thing.kind())));
     } else {
-        MOZ_ASSERT(thing->zone() == zone || thing->zone()->isAtomsZone());
+        MOZ_ASSERT(tenured->zone() == zone || tenured->zone()->isAtomsZone());
     }
 }
 
