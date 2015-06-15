@@ -14,7 +14,7 @@ let { Ci, Cc, CC, Cu, Cr } = require("chrome");
 let Services = require("Services");
 let { ActorPool, OriginalLocation, RegisteredActorFactory,
       ObservedActorFactory } = require("devtools/server/actors/common");
-let { LocalDebuggerTransport, ChildDebuggerTransport, WorkerDebuggerTransport } =
+let { LocalDebuggerTransport, ChildDebuggerTransport } =
   require("devtools/toolkit/transport/transport");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { dumpn, dumpv, dbg_assert } = DevToolsUtils;
@@ -685,13 +685,10 @@ var DebuggerServer = {
    *    "debug:<prefix>:packet", and all its actors will have names
    *    beginning with "<prefix>/".
    */
-  connectToParent: function(aPrefix, aScopeOrManager) {
+  connectToParent: function(aPrefix, aMessageManager) {
     this._checkInit();
 
-    let transport = isWorker ?
-                    new WorkerDebuggerTransport(aScopeOrManager, aPrefix) :
-                    new ChildDebuggerTransport(aScopeOrManager, aPrefix);
-
+    let transport = new ChildDebuggerTransport(aMessageManager, aPrefix);
     return this._onConnection(transport, aPrefix, true);
   },
 
@@ -756,83 +753,6 @@ var DebuggerServer = {
     events.on(aConnection, "closed", onClose);
 
     return deferred.promise;
-  },
-
-  connectToWorker: function (aConnection, aDbg, aId, aOptions) {
-    return new Promise((resolve, reject) => {
-      // Step 1: Initialize the worker debugger.
-      aDbg.initialize("resource://gre/modules/devtools/server/worker.js");
-
-      // Step 2: Send a connect request to the worker debugger.
-      aDbg.postMessage(JSON.stringify({
-        type: "connect",
-        id: aId,
-        options: aOptions
-      }));
-
-      // Steps 3-5 are performed on the worker thread (see worker.js).
-
-      // Step 6: Wait for a response from the worker debugger.
-      let listener = {
-        onClose: () => {
-          aDbg.removeListener(listener);
-
-          reject("closed");
-        },
-
-        onMessage: (message) => {
-          let packet = JSON.parse(message);
-          if (packet.type !== "message" || packet.id !== aId) {
-            return;
-          }
-
-          message = packet.message;
-          if (message.error) {
-            reject(error);
-          }
-
-          if (message.type !== "paused") {
-            return;
-          }
-
-          aDbg.removeListener(listener);
-
-          // Step 7: Create a transport for the connection to the worker.
-          let transport = new WorkerDebuggerTransport(aDbg, aId);
-          transport.ready();
-          transport.hooks = {
-            onClosed: () => {
-              if (!aDbg.isClosed) {
-                aDbg.postMessage(JSON.stringify({
-                  type: "disconnect",
-                  id: aId
-                }));
-              }
-
-              aConnection.cancelForwarding(aId);
-            },
-
-            onPacket: (packet) => {
-              // Ensure that any packets received from the server on the worker
-              // thread are forwarded to the client on the main thread, as if
-              // they had been sent by the server on the main thread.
-              aConnection.send(packet);
-            }
-          };
-
-          // Ensure that any packets received from the client on the main thread
-          // to actors on the worker thread are forwarded to the server on the
-          // worker thread.
-          aConnection.setForwarding(aId, transport);
-
-          resolve({
-            threadActor: message.from,
-            transport: transport
-          });
-        }
-      };
-      aDbg.addListener(listener);
-    });
   },
 
   /**
