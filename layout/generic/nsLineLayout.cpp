@@ -10,6 +10,7 @@
 #define PL_ARENA_CONST_ALIGN_MASK (sizeof(void*)-1)
 #include "nsLineLayout.h"
 
+#include "LayoutLogging.h"
 #include "SVGTextFrame.h"
 #include "nsBlockFrame.h"
 #include "nsFontMetrics.h"
@@ -154,7 +155,7 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
                               const nsSize& aContainerSize)
 {
   NS_ASSERTION(nullptr == mRootSpan, "bad linelayout user");
-  NS_WARN_IF_FALSE(aISize != NS_UNCONSTRAINEDSIZE,
+  LAYOUT_WARN_IF_FALSE(aISize != NS_UNCONSTRAINEDSIZE,
                    "have unconstrained width; this should only result from "
                    "very large sizes, not attempts at intrinsic width "
                    "calculation");
@@ -878,7 +879,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // Inline-ish and text-ish things don't compute their width;
   // everything else does.  We need to give them an available width that
   // reflects the space left on the line.
-  NS_WARN_IF_FALSE(psd->mIEnd != NS_UNCONSTRAINEDSIZE,
+  LAYOUT_WARN_IF_FALSE(psd->mIEnd != NS_UNCONSTRAINEDSIZE,
                    "have unconstrained width; this should only result from "
                    "very large sizes, not attempts at intrinsic width "
                    "calculation");
@@ -3052,7 +3053,7 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
    */
   PerSpanData* psd = mRootSpan;
   WritingMode lineWM = psd->mWritingMode;
-  NS_WARN_IF_FALSE(psd->mIEnd != NS_UNCONSTRAINEDSIZE,
+  LAYOUT_WARN_IF_FALSE(psd->mIEnd != NS_UNCONSTRAINEDSIZE,
                    "have unconstrained width; this should only result from "
                    "very large sizes, not attempts at intrinsic width "
                    "calculation");
