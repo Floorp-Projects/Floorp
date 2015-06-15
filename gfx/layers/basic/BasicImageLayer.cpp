@@ -91,7 +91,6 @@ BasicImageLayer::Paint(DrawTarget* aDT,
                    aMaskLayer);
 
   mContainer->SetImageFactory(originalIF);
-  GetContainer()->NotifyPaintedImage(image);
 }
 
 already_AddRefed<SourceSurface>

@@ -257,7 +257,6 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
     newBuf->mImageSerial = image->GetSerial();
     newBuf->mTextureClient = texture;
 
-    aContainer->NotifyPaintedImage(image);
     texture->SyncWithObject(GetForwarder()->GetSyncObject());
   }
 
@@ -310,8 +309,6 @@ ImageClientBridge::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
   }
   mAsyncContainerID = aContainer->GetAsyncContainerID();
   static_cast<ShadowLayerForwarder*>(GetForwarder())->AttachAsyncCompositable(mAsyncContainerID, mLayer);
-  AutoLockImage autoLock(aContainer);
-  aContainer->NotifyPaintedImage(autoLock.GetImage());
   return true;
 }
 
