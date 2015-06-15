@@ -552,6 +552,8 @@ JS_Init(void)
     if (!TlsPerThreadData.initialized() && !TlsPerThreadData.init())
         return false;
 
+    jit::ExecutableAllocator::initStatic();
+
     if (!jit::InitializeIon())
         return false;
 
