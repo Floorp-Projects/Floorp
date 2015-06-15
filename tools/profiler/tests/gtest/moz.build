@@ -7,6 +7,8 @@
 if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
     UNIFIED_SOURCES += [
         'LulTest.cpp',
+        'LulTestDwarf.cpp',
+        'LulTestInfrastructure.cpp',
     ]
 
 LOCAL_INCLUDES += [
