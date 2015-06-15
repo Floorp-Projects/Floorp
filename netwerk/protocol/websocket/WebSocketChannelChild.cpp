@@ -494,7 +494,7 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
   if (iTabChild) {
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
   }
-  if (MissingRequiredTabChild(tabChild, "websocket")) {
+  if (MissingRequiredTabChild(tabChild, mLoadInfo, "websocket")) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -507,8 +507,13 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
   WebSocketLoadInfoArgs wsArgs;
   propagateLoadInfo(mLoadInfo, wsArgs);
 
+  mozilla::ipc::PrincipalInfo requestingPrincipalInfo;
+  mozilla::ipc::PrincipalToPrincipalInfo(mLoadInfo->LoadingPrincipal(),
+                                         &requestingPrincipalInfo);
+
   gNeckoChild->SendPWebSocketConstructor(this, tabChild,
-                                         IPC::SerializedLoadContext(this));
+                                         IPC::SerializedLoadContext(this),
+                                         requestingPrincipalInfo);
   if (!SendAsyncOpen(uri, nsCString(aOrigin), mProtocol, mEncrypted,
                      mPingInterval, mClientSetPingInterval,
                      mPingResponseTimeout, mClientSetPingTimeout, wsArgs)) {
