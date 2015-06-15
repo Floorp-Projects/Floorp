@@ -883,6 +883,14 @@ LoginManagerPrompter.prototype = {
       updateButtonLabel();
     };
 
+    let onPasswordFocus = () => {
+      chromeDoc.getElementById("password-notification-password").type = "";
+    };
+
+    let onPasswordBlur = () => {
+      chromeDoc.getElementById("password-notification-password").type = "password";
+    };
+
     let persistData = () => {
       let foundLogins = Services.logins.findLogins({}, login.hostname,
                                                    login.formSubmitURL,
@@ -959,6 +967,10 @@ LoginManagerPrompter.prototype = {
                        .addEventListener("input", onInput);
               chromeDoc.getElementById("password-notification-password")
                        .addEventListener("input", onInput);
+              chromeDoc.getElementById("password-notification-password")
+                       .addEventListener("focus", onPasswordFocus);
+              chromeDoc.getElementById("password-notification-password")
+                       .addEventListener("blur", onPasswordBlur);
               break;
             case "shown":
               writeDataToUI();
@@ -972,6 +984,10 @@ LoginManagerPrompter.prototype = {
                        .removeEventListener("input", onInput);
               chromeDoc.getElementById("password-notification-password")
                        .removeEventListener("input", onInput);
+              chromeDoc.getElementById("password-notification-password")
+                       .removeEventListener("focus", onPasswordFocus);
+              chromeDoc.getElementById("password-notification-password")
+                       .removeEventListener("blur", onPasswordBlur);
               break;
           }
           return false;
