@@ -79,7 +79,7 @@ function fetchManifest() {
       reqInit.credentials = 'include';
     }
     const req = new content.Request(manifestURL, reqInit);
-    req.setContext('manifest');
+    req.setContentPolicyType(Ci.nsIContentPolicy.TYPE_WEB_MANIFEST);
     const response = yield content.fetch(req);
     const manifest = yield processResponse(response, content);
     return manifest;
