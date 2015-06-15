@@ -42,6 +42,9 @@ typedef nsTArray<float> AudioFloatArray;
 
 class PeriodicWave {
 public:
+
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PeriodicWave);
+
     static PeriodicWave* createSine(float sampleRate);
     static PeriodicWave* createSquare(float sampleRate);
     static PeriodicWave* createSawtooth(float sampleRate);
@@ -75,6 +78,7 @@ public:
 
 private:
     explicit PeriodicWave(float sampleRate);
+    ~PeriodicWave() {}
 
     void generateBasicWaveform(mozilla::dom::OscillatorType);
 
