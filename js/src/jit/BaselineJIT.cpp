@@ -912,7 +912,6 @@ BaselineScript::initTraceLogger(JSRuntime* runtime, JSScript* script)
         traceLoggerScriptEvent_ = TraceLoggerEvent(logger, TraceLogger_Scripts);
 
     if (TraceLogTextIdEnabled(TraceLogger_Engine) || TraceLogTextIdEnabled(TraceLogger_Scripts)) {
-        AutoWritableJitCode awjc(method_);
         CodeLocationLabel enter(method_, CodeOffsetLabel(traceLoggerEnterToggleOffset_));
         CodeLocationLabel exit(method_, CodeOffsetLabel(traceLoggerExitToggleOffset_));
         Assembler::ToggleToCmp(enter);
