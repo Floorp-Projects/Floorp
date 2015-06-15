@@ -84,6 +84,7 @@ EXPORTS.mozilla += [
     'CSSVariableDeclarations.h',
     'CSSVariableResolver.h',
     'CSSVariableValues.h',
+    'IncrementalClearCOMRuleArray.h',
     'StyleAnimationValue.h',
 ]
 
@@ -125,6 +126,7 @@ UNIFIED_SOURCES += [
     'FontFace.cpp',
     'FontFaceSetIterator.cpp',
     'ImageLoader.cpp',
+    'IncrementalClearCOMRuleArray.cpp',
     'Loader.cpp',
     'MediaQueryList.cpp',
     'nsAnimationManager.cpp',
