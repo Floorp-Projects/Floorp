@@ -198,13 +198,13 @@ BluetoothDaemonPDU::OnError(const char* aFunction, int aErrno)
 }
 
 //
-// BluetoothDaemonPDUConsumer
+// DaemonSocketIOConsumer
 //
 
-BluetoothDaemonPDUConsumer::BluetoothDaemonPDUConsumer()
+DaemonSocketIOConsumer::DaemonSocketIOConsumer()
 { }
 
-BluetoothDaemonPDUConsumer::~BluetoothDaemonPDUConsumer()
+DaemonSocketIOConsumer::~DaemonSocketIOConsumer()
 { }
 
 //
@@ -219,7 +219,7 @@ public:
                               int aFd, ConnectionStatus aConnectionStatus,
                               UnixSocketConnector* aConnector,
                               BluetoothDaemonConnection* aConnection,
-                              BluetoothDaemonPDUConsumer* aConsumer);
+                              DaemonSocketIOConsumer* aConsumer);
 
   // Methods for |DataSocketIO|
   //
@@ -241,7 +241,7 @@ public:
 
 private:
   BluetoothDaemonConnection* mConnection;
-  BluetoothDaemonPDUConsumer* mConsumer;
+  DaemonSocketIOConsumer* mConsumer;
   nsAutoPtr<BluetoothDaemonPDU> mPDU;
   bool mShuttingDownOnIOThread;
 };
@@ -253,7 +253,7 @@ BluetoothDaemonConnectionIO::BluetoothDaemonConnectionIO(
   ConnectionStatus aConnectionStatus,
   UnixSocketConnector* aConnector,
   BluetoothDaemonConnection* aConnection,
-  BluetoothDaemonPDUConsumer* aConsumer)
+  DaemonSocketIOConsumer* aConsumer)
   : ConnectionOrientedSocketIO(aConsumerLoop,
                                aIOLoop,
                                aFd,
@@ -343,11 +343,11 @@ BluetoothDaemonConnectionIO::ShutdownOnIOThread()
 //
 
 BluetoothDaemonConnection::BluetoothDaemonConnection(
-  BluetoothDaemonPDUConsumer* aPDUConsumer,
+  DaemonSocketIOConsumer* aIOConsumer,
   DaemonSocketConsumer* aConsumer,
   int aIndex)
   : mIO(nullptr)
-  , mPDUConsumer(aPDUConsumer)
+  , mIOConsumer(aIOConsumer)
   , mConsumer(aConsumer)
   , mIndex(aIndex)
 {
@@ -371,7 +371,7 @@ BluetoothDaemonConnection::PrepareAccept(UnixSocketConnector* aConnector,
 
   mIO = new BluetoothDaemonConnectionIO(
     aConsumerLoop, aIOLoop, -1, UnixSocketWatcher::SOCKET_IS_CONNECTING,
-    aConnector, this, mPDUConsumer);
+    aConnector, this, mIOConsumer);
   aIO = mIO;
 
   return NS_OK;
