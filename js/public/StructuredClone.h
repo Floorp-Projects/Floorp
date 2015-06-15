@@ -148,7 +148,7 @@ JS_WriteStructuredClone(JSContext* cx, JS::HandleValue v, uint64_t** datap, size
 JS_PUBLIC_API(bool)
 JS_ClearStructuredClone(uint64_t* data, size_t nbytes,
                         const JSStructuredCloneCallbacks* optionalCallbacks,
-                        void* closure);
+                        void *closure, bool freeData = true);
 
 JS_PUBLIC_API(bool)
 JS_StructuredCloneHasTransferables(const uint64_t* data, size_t nbytes, bool* hasTransferable);

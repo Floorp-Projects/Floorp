@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+  <script type="application/javascript">
+
+  var a = new SharedWorker('sharedWorker2_messageChannel.js');
+  a.port.onmessage = function(evt) {
+    evt.ports[0].postMessage("Hello from the iframe!");
+  }
+
+  </script>
+</body>
+</html>
+
