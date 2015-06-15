@@ -179,9 +179,6 @@ EXPORTS.mozilla.dom += [
     'ImageEncoder.h',
     'ImportManager.h',
     'Link.h',
-    'MessageChannel.h',
-    'MessagePort.h',
-    'MessagePortList.h',
     'NameSpaceConstants.h',
     'Navigator.h',
     'NodeInfo.h',
@@ -237,8 +234,6 @@ UNIFIED_SOURCES += [
     'ImageEncoder.cpp',
     'ImportManager.cpp',
     'Link.cpp',
-    'MessageChannel.cpp',
-    'MessagePortList.cpp',
     'MultipartBlobImpl.cpp',
     'Navigator.cpp',
     'NodeInfo.cpp',
@@ -329,6 +324,7 @@ UNIFIED_SOURCES += [
     'PerformanceMark.cpp',
     'PerformanceMeasure.cpp',
     'PerformanceResourceTiming.cpp',
+    'PostMessageEvent.cpp',
     'ProcessGlobal.cpp',
     'ResponsiveImageSelector.cpp',
     'SameProcessMessageQueue.cpp',
@@ -353,8 +349,6 @@ if CONFIG['MOZ_WEBRTC']:
 
 # these files couldn't be in UNIFIED_SOURCES for now for reasons given below:
 SOURCES += [
-    # this file doesn't like windows.h
-    'MessagePort.cpp',
     # Because of OS X headers.
     'nsContentUtils.cpp',
     # this file doesn't like windows.h

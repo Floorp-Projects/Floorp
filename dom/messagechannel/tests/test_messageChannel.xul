@@ -23,7 +23,7 @@
   }
 
   var ifr = document.createElement('browser');
-  ifr.setAttribute("src", "http://mochi.test:8888/tests/dom/base/test/iframe_messageChannel_chrome.html");
+  ifr.setAttribute("src", "iframe_messageChannel_chrome.html");
   ifr.setAttribute("flex", "1");
   ifr.addEventListener('load', function() {
     ifr.contentWindow.postMessage(channel.port2, '*', [channel.port2]);
