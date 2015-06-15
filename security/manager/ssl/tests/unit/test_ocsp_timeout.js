@@ -26,6 +26,7 @@ let gSocketListener = {
 
 function run_test() {
   do_get_profile();
+  Services.prefs.setIntPref("security.OCSP.enabled", 1);
 
   add_tls_server_setup("OCSPStaplingServer");
 
