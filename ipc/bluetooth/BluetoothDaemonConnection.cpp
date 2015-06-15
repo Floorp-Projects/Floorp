@@ -218,7 +218,7 @@ public:
                  MessageLoop* aIOLoop,
                  int aFd, ConnectionStatus aConnectionStatus,
                  UnixSocketConnector* aConnector,
-                 BluetoothDaemonConnection* aConnection,
+                 DaemonSocket* aConnection,
                  DaemonSocketIOConsumer* aConsumer);
 
   // Methods for |DataSocketIO|
@@ -240,7 +240,7 @@ public:
   void ShutdownOnIOThread() override;
 
 private:
-  BluetoothDaemonConnection* mConnection;
+  DaemonSocket* mConnection;
   DaemonSocketIOConsumer* mConsumer;
   nsAutoPtr<DaemonSocketPDU> mPDU;
   bool mShuttingDownOnIOThread;
@@ -252,7 +252,7 @@ DaemonSocketIO::DaemonSocketIO(
   int aFd,
   ConnectionStatus aConnectionStatus,
   UnixSocketConnector* aConnector,
-  BluetoothDaemonConnection* aConnection,
+  DaemonSocket* aConnection,
   DaemonSocketIOConsumer* aConsumer)
   : ConnectionOrientedSocketIO(aConsumerLoop,
                                aIOLoop,
@@ -339,10 +339,10 @@ DaemonSocketIO::ShutdownOnIOThread()
 }
 
 //
-// BluetoothDaemonConnection
+// DaemonSocket
 //
 
-BluetoothDaemonConnection::BluetoothDaemonConnection(
+DaemonSocket::DaemonSocket(
   DaemonSocketIOConsumer* aIOConsumer,
   DaemonSocketConsumer* aConsumer,
   int aIndex)
@@ -354,16 +354,16 @@ BluetoothDaemonConnection::BluetoothDaemonConnection(
   MOZ_ASSERT(mConsumer);
 }
 
-BluetoothDaemonConnection::~BluetoothDaemonConnection()
+DaemonSocket::~DaemonSocket()
 { }
 
 // |ConnectionOrientedSocket|
 
 nsresult
-BluetoothDaemonConnection::PrepareAccept(UnixSocketConnector* aConnector,
-                                         MessageLoop* aConsumerLoop,
-                                         MessageLoop* aIOLoop,
-                                         ConnectionOrientedSocketIO*& aIO)
+DaemonSocket::PrepareAccept(UnixSocketConnector* aConnector,
+                            MessageLoop* aConsumerLoop,
+                            MessageLoop* aIOLoop,
+                            ConnectionOrientedSocketIO*& aIO)
 {
   MOZ_ASSERT(!mIO);
 
@@ -380,7 +380,7 @@ BluetoothDaemonConnection::PrepareAccept(UnixSocketConnector* aConnector,
 // |DataSocket|
 
 void
-BluetoothDaemonConnection::SendSocketData(UnixSocketIOBuffer* aBuffer)
+DaemonSocket::SendSocketData(UnixSocketIOBuffer* aBuffer)
 {
   MOZ_ASSERT(mIO);
   MOZ_ASSERT(mIO->IsConsumerThread());
@@ -393,7 +393,7 @@ BluetoothDaemonConnection::SendSocketData(UnixSocketIOBuffer* aBuffer)
 // |SocketBase|
 
 void
-BluetoothDaemonConnection::Close()
+DaemonSocket::Close()
 {
   if (!mIO) {
     CHROMIUM_LOG("Bluetooth daemon already disconnected!");
@@ -410,19 +410,19 @@ BluetoothDaemonConnection::Close()
 }
 
 void
-BluetoothDaemonConnection::OnConnectSuccess()
+DaemonSocket::OnConnectSuccess()
 {
   mConsumer->OnConnectSuccess(mIndex);
 }
 
 void
-BluetoothDaemonConnection::OnConnectError()
+DaemonSocket::OnConnectError()
 {
   mConsumer->OnConnectError(mIndex);
 }
 
 void
-BluetoothDaemonConnection::OnDisconnect()
+DaemonSocket::OnDisconnect()
 {
   mConsumer->OnDisconnect(mIndex);
 }

@@ -1405,7 +1405,7 @@ const int BluetoothDaemonCoreModule::MAX_NUM_CLIENTS = 1;
 //
 // |BluetoothDaemonProtocol| also handles PDU receiving. It implements
 // the method |Handle| from |DaemonSocketIOConsumer|. The socket
-// connections of type |BluetoothDaemonConnection| invoke this method
+// connections of type |DaemonSocket| invoke this method
 // to forward received PDUs for processing by higher layers. The
 // implementation of |Handle| checks the service id of the PDU and
 // forwards it to the correct module class using the module's method
@@ -1439,7 +1439,7 @@ class BluetoothDaemonProtocol final
 public:
   BluetoothDaemonProtocol();
 
-  void SetConnection(BluetoothDaemonConnection* aConnection);
+  void SetConnection(DaemonSocket* aConnection);
 
   nsresult RegisterModule(uint8_t aId, uint8_t aMode, uint32_t aMaxNumClients,
                           BluetoothSetupResultHandler* aRes) override;
@@ -1477,7 +1477,7 @@ private:
   void HandleGattSvc(const DaemonSocketPDUHeader& aHeader,
                      DaemonSocketPDU& aPDU, void* aUserData);
 
-  BluetoothDaemonConnection* mConnection;
+  DaemonSocket* mConnection;
   nsTArray<void*> mUserDataQ;
 };
 
@@ -1485,7 +1485,7 @@ BluetoothDaemonProtocol::BluetoothDaemonProtocol()
 { }
 
 void
-BluetoothDaemonProtocol::SetConnection(BluetoothDaemonConnection* aConnection)
+BluetoothDaemonProtocol::SetConnection(DaemonSocket* aConnection)
 {
   mConnection = aConnection;
 }
@@ -1863,7 +1863,7 @@ BluetoothDaemonInterface::Init(
   // Init, step 1: Listen for command channel... */
 
   if (!mCmdChannel) {
-    mCmdChannel = new BluetoothDaemonConnection(mProtocol, this, CMD_CHANNEL);
+    mCmdChannel = new DaemonSocket(mProtocol, this, CMD_CHANNEL);
   } else if (
     NS_WARN_IF(mCmdChannel->GetConnectionStatus() == SOCKET_CONNECTED)) {
     // Command channel should not be open; let's close it.
@@ -2355,7 +2355,7 @@ BluetoothDaemonInterface::OnConnectSuccess(int aIndex)
     case CMD_CHANNEL:
       // Init, step 3: Listen for notification channel...
       if (!mNtfChannel) {
-        mNtfChannel = new BluetoothDaemonConnection(mProtocol, this, NTF_CHANNEL);
+        mNtfChannel = new DaemonSocket(mProtocol, this, NTF_CHANNEL);
       } else if (
         NS_WARN_IF(mNtfChannel->GetConnectionStatus() == SOCKET_CONNECTED)) {
         /* Notification channel should not be open; let's close it. */
