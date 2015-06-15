@@ -186,12 +186,14 @@ function promiseRejects(promise) {
   return promise.then(() => false, () => true);
 }
 
-// Set logging preferences for all the tests.
-Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");
-TelemetryController.initLogging();
+if (runningInParent) {
+  // Set logging preferences for all the tests.
+  Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");
+  // Telemetry archiving should be on.
+  Services.prefs.setBoolPref("toolkit.telemetry.archive.enabled", true);
+}
 
-// Telemetry archiving should be on.
-Services.prefs.setBoolPref("toolkit.telemetry.archive.enabled", true);
+TelemetryController.initLogging();
 
 // Avoid timers interrupting test behavior.
 fakeSchedulerTimer(() => {}, () => {});

@@ -135,8 +135,8 @@ MemoryGraph.prototype = Heritage.extend(PerformanceGraph.prototype, {
   }
 });
 
-function TimelineGraph(parent, blueprint) {
-  MarkersOverview.call(this, parent, blueprint);
+function TimelineGraph(parent, filter) {
+  MarkersOverview.call(this, parent, filter);
 }
 
 TimelineGraph.prototype = Heritage.extend(MarkersOverview.prototype, {
@@ -163,7 +163,6 @@ const GRAPH_DEFINITIONS = {
   timeline: {
     constructor: TimelineGraph,
     selector: "#markers-overview",
-    needsBlueprints: true,
     primaryLink: true
   }
 };
@@ -174,15 +173,15 @@ const GRAPH_DEFINITIONS = {
  *
  * @param {object} definition
  * @param {DOMElement} root
- * @param {function} getBlueprint
+ * @param {function} getFilter
  * @param {function} getTheme
  */
-function GraphsController ({ definition, root, getBlueprint, getTheme }) {
+function GraphsController ({ definition, root, getFilter, getTheme }) {
   this._graphs = {};
   this._enabled = new Set();
   this._definition = definition || GRAPH_DEFINITIONS;
   this._root = root;
-  this._getBlueprint = getBlueprint;
+  this._getFilter = getFilter;
   this._getTheme = getTheme;
   this._primaryLink = Object.keys(this._definition).filter(name => this._definition[name].primaryLink)[0];
   this.$ = root.ownerDocument.querySelector.bind(root.ownerDocument);
@@ -369,8 +368,8 @@ GraphsController.prototype = {
   _construct: Task.async(function *(graphName) {
     let def = this._definition[graphName];
     let el = this.$(def.selector);
-    let blueprint = def.needsBlueprints ? this._getBlueprint() : void 0;
-    let graph = this._graphs[graphName] = new def.constructor(el, blueprint);
+    let filter = this._getFilter();
+    let graph = this._graphs[graphName] = new def.constructor(el, filter);
     graph.graphName = graphName;
 
     yield graph.ready();

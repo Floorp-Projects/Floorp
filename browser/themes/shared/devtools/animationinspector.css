@@ -1,3 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Animation-inspector specific theme variables */
+
+.theme-dark {
+  --even-animation-timeline-background-color: rgba(255,255,255,0.03);
+}
+
+.theme-light {
+  --even-animation-timeline-background-color: rgba(128,128,128,0.03);
+}
+
 html {
   height: 100%;
 }
@@ -32,6 +46,13 @@ body {
   min-height: 20px;
 }
 
+/* The main animations container */
+
+#players {
+  height: calc(100% - 20px);
+  overflow: auto;
+}
+
 /* The error message, shown when an invalid/unanimated element is selected */
 
 #error-message {
@@ -44,12 +65,6 @@ body {
   display: none;
 }
 
-/* The animation players container */
-
-#players {
-  flex: 1;
-  overflow: auto;
-}
 
 /* Element picker and toggle-all buttons */
 
@@ -97,6 +112,156 @@ body {
   #toggle-all.paused::before {
     background-image: url("debugger-play@2x.png");
   }
+}
+
+/* Animation timeline component */
+
+.animation-timeline {
+  height: 100%;
+  overflow: hidden;
+  /* The timeline gets its background-image from a canvas element created in
+     /browser/devtools/animationinspector/utils.js drawGraphElementBackground
+     thanks to document.mozSetImageElement("time-graduations", canvas)
+     This is done so that the background can be built dynamically from script */
+  background-image: -moz-element(#time-graduations);
+  background-repeat: repeat-y;
+  /* The animations are drawn 150px from the left edge so that animated nodes
+     can be displayed in a sidebar */
+  background-position: 150px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.animation-timeline .time-header {
+  margin-left: 150px;
+  height: 20px;
+  overflow: hidden;
+  position: relative;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.animation-timeline .time-header .time-tick {
+  position: absolute;
+  top: 3px;
+}
+
+.animation-timeline .animations {
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+/* Animation block widgets */
+
+.animation-timeline .animation {
+  margin: 4px 0;
+  height: 20px;
+  position: relative;
+}
+
+.animation-timeline .animation:nth-child(2n) {
+  background-color: var(--even-animation-timeline-background-color);
+}
+
+.animation-timeline .animation .target {
+  width: 150px;
+  overflow: hidden;
+  height: 100%;
+}
+
+.animation-timeline .animation-target {
+  background-color: transparent;
+}
+
+.animation-timeline .animation .time-block {
+  position: absolute;
+  top: 0;
+  left: 150px;
+  right: 0;
+  height: 100%;
+}
+
+/* Animation iterations */
+
+.animation-timeline .animation .iterations {
+  position: relative;
+  height: 100%;
+  border: 1px solid var(--theme-highlight-lightorange);
+  box-sizing: border-box;
+  background: var(--theme-contrast-background);
+  /* Iterations are displayed with a repeating linear-gradient which size is
+     dynamically changed from JS */
+  background-image:
+    linear-gradient(to right,
+                    var(--theme-highlight-lightorange) 0,
+                    var(--theme-highlight-lightorange) 1px,
+                    transparent 1px,
+                    transparent 2px);
+  background-repeat: repeat-x;
+  background-position: -1px 0;
+}
+
+.animation-timeline .animation .iterations.infinite {
+  border-right-width: 0;
+}
+
+.animation-timeline .animation .iterations.infinite::before,
+.animation-timeline .animation .iterations.infinite::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-right: 4px solid var(--theme-body-background);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+}
+
+.animation-timeline .animation .iterations.infinite::after {
+  bottom: 0;
+  top: unset;
+}
+
+.animation-timeline .animation .animation-title {
+  height: 1.5em;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.animation-timeline .animation .delay {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background-image: linear-gradient(to bottom,
+                                    transparent,
+                                    transparent 9px,
+                                    var(--theme-highlight-lightorange) 9px,
+                                    var(--theme-highlight-lightorange) 11px,
+                                    transparent 11px,
+                                    transparent);
+}
+
+.animation-timeline .animation .delay::before {
+  position: absolute;
+  content: "";
+  left: 0;
+  width: 2px;
+  height: 8px;
+  top: 50%;
+  margin-top: -4px;
+  background: var(--theme-highlight-lightorange);
+}
+
+.animation-timeline .animation .name {
+  position: absolute;
+  z-index: 1;
+  padding: 2px;
+  white-space: nowrap;
 }
 
 /* Animation target node gutter, contains a preview of the dom node */

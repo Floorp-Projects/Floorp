@@ -399,16 +399,6 @@ let PerformanceController = {
   },
 
   /**
-   * Gets the current timeline blueprint without the hidden markers.
-   * @return object
-   */
-  getTimelineBlueprint: function() {
-    let blueprint = TIMELINE_BLUEPRINT;
-    let hiddenMarkers = this.getPref("hidden-markers");
-    return RecordingUtils.getFilteredBlueprint({ blueprint, hiddenMarkers });
-  },
-
-  /**
    * Fired from RecordingsView, we listen on the PerformanceController so we can
    * set it here and re-emit on the controller, where all views can listen.
    */

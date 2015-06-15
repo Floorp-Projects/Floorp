@@ -58,6 +58,14 @@ var ContextMenus = {
       document.getElementById("contextmenu-uninstall").removeAttribute("hidden");
     }
 
+    // Hide the enable/disable context menu items if the add-on was disabled by
+    // Firefox (e.g. unsigned or blocklisted add-on).
+    if (addon.appDisabled) {
+      document.getElementById("contextmenu-enable").setAttribute("hidden", "true");
+      document.getElementById("contextmenu-disable").setAttribute("hidden", "true");
+      return;
+    }
+
     let enabled = this.target.getAttribute("isDisabled") != "true";
     if (enabled) {
       document.getElementById("contextmenu-enable").setAttribute("hidden", "true");
@@ -311,16 +319,18 @@ var Addons = {
       gStringBundle.formatStringFromName("addonStatus.uninstalled", [addon.name], 1);
 
     let enableBtn = document.getElementById("enable-btn");
-    if (addon.appDisabled)
+    if (addon.appDisabled) {
       enableBtn.setAttribute("disabled", "true");
-    else
+    } else {
       enableBtn.removeAttribute("disabled");
+    }
 
     let uninstallBtn = document.getElementById("uninstall-btn");
-    if (addon.scope == AddonManager.SCOPE_APPLICATION)
+    if (addon.scope == AddonManager.SCOPE_APPLICATION) {
       uninstallBtn.setAttribute("disabled", "true");
-    else
+    } else {
       uninstallBtn.removeAttribute("disabled");
+    }
 
     let box = document.querySelector("#addons-details > .addon-item .options-box");
     box.innerHTML = "";

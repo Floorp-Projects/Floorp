@@ -3,14 +3,17 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* globals AnimationsController, document, performance, promise,
+   gToolbox, gInspector, requestAnimationFrame, cancelAnimationFrame, L10N */
 
 "use strict";
 
+const {createNode} = require("devtools/animationinspector/utils");
 const {
   PlayerMetaDataHeader,
   PlaybackRateSelector,
   AnimationTargetNode,
-  createNode
+  AnimationsTimeline
 } = require("devtools/animationinspector/components");
 
 /**
@@ -22,7 +25,8 @@ let AnimationsPanel = {
 
   initialize: Task.async(function*() {
     if (AnimationsController.destroyed) {
-      console.warn("Could not initialize the animation-panel, controller was destroyed");
+      console.warn("Could not initialize the animation-panel, controller " +
+                   "was destroyed");
       return;
     }
     if (this.initialized) {
@@ -45,13 +49,18 @@ let AnimationsPanel = {
     this.togglePicker = hUtils.togglePicker.bind(hUtils);
     this.onPickerStarted = this.onPickerStarted.bind(this);
     this.onPickerStopped = this.onPickerStopped.bind(this);
-    this.createPlayerWidgets = this.createPlayerWidgets.bind(this);
+    this.refreshAnimations = this.refreshAnimations.bind(this);
     this.toggleAll = this.toggleAll.bind(this);
     this.onTabNavigated = this.onTabNavigated.bind(this);
 
     this.startListeners();
 
-    yield this.createPlayerWidgets();
+    if (AnimationsController.isNewUI) {
+      this.animationsTimelineComponent = new AnimationsTimeline(gInspector);
+      this.animationsTimelineComponent.init(this.playersEl);
+    }
+
+    yield this.refreshAnimations();
 
     this.initialized.resolve();
 
@@ -69,6 +78,11 @@ let AnimationsPanel = {
     this.destroyed = promise.defer();
 
     this.stopListeners();
+
+    if (this.animationsTimelineComponent) {
+      this.animationsTimelineComponent.destroy();
+      this.animationsTimelineComponent = null;
+    }
     yield this.destroyPlayerWidgets();
 
     this.playersEl = this.errorMessageEl = null;
@@ -79,7 +93,7 @@ let AnimationsPanel = {
 
   startListeners: function() {
     AnimationsController.on(AnimationsController.PLAYERS_UPDATED_EVENT,
-      this.createPlayerWidgets);
+      this.refreshAnimations);
 
     this.pickerButtonEl.addEventListener("click", this.togglePicker, false);
     gToolbox.on("picker-started", this.onPickerStarted);
@@ -91,7 +105,7 @@ let AnimationsPanel = {
 
   stopListeners: function() {
     AnimationsController.off(AnimationsController.PLAYERS_UPDATED_EVENT,
-      this.createPlayerWidgets);
+      this.refreshAnimations);
 
     this.pickerButtonEl.removeEventListener("click", this.togglePicker, false);
     gToolbox.off("picker-started", this.onPickerStarted);
@@ -122,16 +136,18 @@ let AnimationsPanel = {
   toggleAll: Task.async(function*() {
     let btnClass = this.toggleAllButtonEl.classList;
 
-    // Toggling all animations is async and it may be some time before each of
-    // the current players get their states updated, so toggle locally too, to
-    // avoid the timelines from jumping back and forth.
-    if (this.playerWidgets) {
-      let currentWidgetStateChange = [];
-      for (let widget of this.playerWidgets) {
-        currentWidgetStateChange.push(btnClass.contains("paused")
-          ? widget.play() : widget.pause());
+    if (!AnimationsController.isNewUI) {
+      // Toggling all animations is async and it may be some time before each of
+      // the current players get their states updated, so toggle locally too, to
+      // avoid the timelines from jumping back and forth.
+      if (this.playerWidgets) {
+        let currentWidgetStateChange = [];
+        for (let widget of this.playerWidgets) {
+          currentWidgetStateChange.push(btnClass.contains("paused")
+            ? widget.play() : widget.pause());
+        }
+        yield promise.all(currentWidgetStateChange).catch(Cu.reportError);
       }
-      yield promise.all(currentWidgetStateChange).catch(Cu.reportError);
     }
 
     btnClass.toggle("paused");
@@ -142,14 +158,21 @@ let AnimationsPanel = {
     this.toggleAllButtonEl.classList.remove("paused");
   },
 
-  createPlayerWidgets: Task.async(function*() {
+  refreshAnimations: Task.async(function*() {
     let done = gInspector.updating("animationspanel");
 
     // Empty the whole panel first.
     this.hideErrorMessage();
     yield this.destroyPlayerWidgets();
 
-    // If there are no players to show, show the error message instead and return.
+    // Re-render the timeline component.
+    if (this.animationsTimelineComponent) {
+      this.animationsTimelineComponent.render(
+        AnimationsController.animationPlayers);
+    }
+
+    // If there are no players to show, show the error message instead and
+    // return.
     if (!AnimationsController.animationPlayers.length) {
       this.displayErrorMessage();
       this.emit(this.UI_UPDATED_EVENT);
@@ -157,17 +180,21 @@ let AnimationsPanel = {
       return;
     }
 
-    // Otherwise, create player widgets.
-    this.playerWidgets = [];
-    let initPromises = [];
+    // Otherwise, create player widgets (only when isNewUI is false, the
+    // timeline has already been re-rendered).
+    if (!AnimationsController.isNewUI) {
+      this.playerWidgets = [];
+      let initPromises = [];
 
-    for (let player of AnimationsController.animationPlayers) {
-      let widget = new PlayerWidget(player, this.playersEl);
-      initPromises.push(widget.initialize());
-      this.playerWidgets.push(widget);
+      for (let player of AnimationsController.animationPlayers) {
+        let widget = new PlayerWidget(player, this.playersEl);
+        initPromises.push(widget.initialize());
+        this.playerWidgets.push(widget);
+      }
+
+      yield initPromises;
     }
 
-    yield initPromises;
     this.emit(this.UI_UPDATED_EVENT);
     done();
   }),
@@ -392,9 +419,8 @@ PlayerWidget.prototype = {
   onPlayPauseBtnClick: function() {
     if (this.player.state.playState === "running") {
       return this.pause();
-    } else {
-      return this.play();
     }
+    return this.play();
   },
 
   onRewindBtnClick: function() {
@@ -406,7 +432,7 @@ PlayerWidget.prototype = {
 
     let time = state.duration;
     if (state.iterationCount) {
-     time = state.iterationCount * state.duration;
+      time = state.iterationCount * state.duration;
     }
     this.setCurrentTime(time, true);
   },
@@ -466,7 +492,8 @@ PlayerWidget.prototype = {
    */
   setCurrentTime: Task.async(function*(time, shouldPause) {
     if (!AnimationsController.hasSetCurrentTime) {
-      throw new Error("This server version doesn't support setting animations' currentTime");
+      throw new Error("This server version doesn't support setting " +
+                      "animations' currentTime");
     }
 
     if (shouldPause) {
@@ -492,7 +519,8 @@ PlayerWidget.prototype = {
    */
   setPlaybackRate: function(rate) {
     if (!AnimationsController.hasSetPlaybackRate) {
-      throw new Error("This server version doesn't support setting animations' playbackRate");
+      throw new Error("This server version doesn't support setting " +
+                      "animations' playbackRate");
     }
 
     return this.player.setPlaybackRate(rate);

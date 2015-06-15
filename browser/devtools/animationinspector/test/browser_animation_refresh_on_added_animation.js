@@ -8,13 +8,19 @@
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
-  let {toolbox, inspector, panel} = yield openAnimationInspector();
 
+  let {inspector, panel} = yield openAnimationInspector();
+  yield testRefreshOnNewAnimation(inspector, panel);
+
+  ({inspector, panel}) = yield closeAnimationInspectorAndRestartWithNewUI();
+  yield testRefreshOnNewAnimation(inspector, panel);
+});
+
+function* testRefreshOnNewAnimation(inspector, panel) {
   info("Select a non animated node");
   yield selectNode(".still", inspector);
 
-  is(panel.playersEl.querySelectorAll(".player-widget").length, 0,
-    "There are no player widgets in the panel");
+  assertAnimationsDisplayed(panel, 0);
 
   info("Listen to the next UI update event");
   let onPanelUpdated = panel.once(panel.UI_UPDATED_EVENT);
@@ -29,6 +35,14 @@ add_task(function*() {
   yield onPanelUpdated;
   ok(true, "The panel update event was fired");
 
-  is(panel.playersEl.querySelectorAll(".player-widget").length, 1,
-    "There is one player widget in the panel");
-});
+  assertAnimationsDisplayed(panel, 1);
+
+  info("Remove the animation class on the node");
+  onPanelUpdated = panel.once(panel.UI_UPDATED_EVENT);
+  yield executeInContent("devtools:test:setAttribute", {
+    selector: ".ball.animated",
+    attributeName: "class",
+    attributeValue: "ball still"
+  });
+  yield onPanelUpdated;
+}
