@@ -1232,13 +1232,17 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
   TimeUnit frameEndTimestamp = presentationTimestamp + frameDuration;
 
   // 8. If presentation timestamp is less than appendWindowStart, then set the need random access point flag to true, drop the coded frame, and jump to the top of the loop to start processing the next coded frame.
-  if (presentationTimestamp.ToSeconds() < mParent->mAppendWindowStart) {
-    trackBuffer.mNeedRandomAccessPoint = true;
-    return false;
-  }
-
   // 9. If frame end timestamp is greater than appendWindowEnd, then set the need random access point flag to true, drop the coded frame, and jump to the top of the loop to start processing the next coded frame.
-  if (frameEndTimestamp.ToSeconds() > mParent->mAppendWindowEnd) {
+
+  // We apply a fuzz search += mLongestFrameDuration to get around videos where
+  // the start time is negative but close to 0.
+  TimeInterval targetWindow{
+    TimeInterval(TimeUnit::FromSeconds(mParent->mAppendWindowStart),
+                 TimeUnit::FromSeconds(mParent->mAppendWindowEnd),
+                 trackBuffer.mLongestFrameDuration.valueOr(frameDuration))};
+  TimeInterval frameInterval{presentationTimestamp, frameEndTimestamp};
+
+  if (!targetWindow.Contains(frameInterval)) {
     trackBuffer.mNeedRandomAccessPoint = true;
     return false;
   }
