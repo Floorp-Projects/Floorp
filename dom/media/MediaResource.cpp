@@ -891,15 +891,11 @@ ChannelMediaResource::RecreateChannel()
     securityFlags = nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 
-  MOZ_ASSERT(element->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video));
-  nsContentPolicyType contentPolicyType = element->IsHTMLElement(nsGkAtoms::audio) ?
-    nsIContentPolicy::TYPE_INTERNAL_AUDIO : nsIContentPolicy::TYPE_INTERNAL_VIDEO;
-
   nsresult rv = NS_NewChannel(getter_AddRefs(mChannel),
                               mURI,
                               element,
                               securityFlags,
-                              contentPolicyType,
+                              nsIContentPolicy::TYPE_MEDIA,
                               loadGroup,
                               nullptr,  // aCallbacks
                               loadFlags);
@@ -1422,17 +1418,13 @@ already_AddRefed<MediaResource> FileMediaResource::CloneData(MediaDecoder* aDeco
     securityFlags = nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 
-  MOZ_ASSERT(element->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video));
-  nsContentPolicyType contentPolicyType = element->IsHTMLElement(nsGkAtoms::audio) ?
-    nsIContentPolicy::TYPE_INTERNAL_AUDIO : nsIContentPolicy::TYPE_INTERNAL_VIDEO;
-
   nsCOMPtr<nsIChannel> channel;
   nsresult rv =
     NS_NewChannel(getter_AddRefs(channel),
                   mURI,
                   element,
                   securityFlags,
-                  contentPolicyType,
+                  nsIContentPolicy::TYPE_MEDIA,
                   loadGroup);
 
   if (NS_FAILED(rv))
