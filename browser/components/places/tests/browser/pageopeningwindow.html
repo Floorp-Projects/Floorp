@@ -1,0 +1,9 @@
+<meta charset="UTF-8">
+Hi, I was opened via a <script>document.write(location.search ?
+  "popup call from the opened window... uh oh, that shouldn't happen!" :
+  "bookmarklet, and I will open a new window myself.")</script><br>
+<script>
+  if (!location.search) {
+    open(location.href + "?donotopen=true", '_blank');
+  }
+</script>

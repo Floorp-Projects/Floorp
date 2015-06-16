@@ -351,7 +351,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 allowThirdPartyFixup: true,
                 disallowInheritPrincipal: !mayInheritPrincipal,
                 allowPinnedTabHostChange: true,
-                postData: postData
+                postData: postData,
+                allowPopups: url.startsWith("javascript:"),
               });
               // Ensure the start of the URL is visible for UX reasons:
               this.selectionStart = this.selectionEnd = 0;
