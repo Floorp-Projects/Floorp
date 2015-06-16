@@ -82,14 +82,18 @@ public:
    * @param aDestLength [IN/OUT] the length of the destination data buffer;
    *                    after conversion will contain the number of Unicode
    *                    characters written
-   * @return            NS_PARTIAL_MORE_INPUT if only a partial conversion was
-   *                    done; more input is needed to continue
-   *                    NS_PARTIAL_MORE_OUTPUT if only  a partial conversion
-   *                    was done; more output space is needed to continue
-   *                    NS_ERROR_ILLEGAL_INPUT if an illegal input sequence
+   * @return            NS_ERROR_UDEC_ILLEGALINPUT if an illegal input sequence
    *                    was encountered and the behavior was set to "signal";
    *                    the caller must skip over one byte, reset the decoder
    *                    and retry.
+   *                    NS_OK_UDEC_MOREOUTPUT if only a partial conversion
+   *                    was done; more output space is needed to continue
+   *                    NS_OK_UDEC_MOREINPUT if the input ended in the middle
+   *                    of an input code unit sequence. If this is the last
+   *                    result the caller has at the end of the stream, the
+   *                    caller must append one U+FFFD to the output.
+   *                    NS_OK if the input ended after a complete input code
+   *                    unit sequence.
    */
   NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength, 
       char16_t * aDest, int32_t * aDestLength) = 0;
