@@ -10,6 +10,12 @@ SOURCES += [
     'TestInterval.cpp',
 ]
 
+if CONFIG['MOZ_RUST']:
+    UNIFIED_SOURCES += ['TestMP4Rust.cpp',]
+    TEST_HARNESS_FILES.gtest += [
+        '../../../dom/media/test/street.mp4',
+    ]
+
 FINAL_LIBRARY = 'xul-gtest'
 
 FAIL_ON_WARNINGS = True
