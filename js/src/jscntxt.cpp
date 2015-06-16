@@ -233,7 +233,7 @@ ReportError(JSContext* cx, const char* message, JSErrorReport* reportp,
          * The AutoJSAPI error reporter only allows warnings to be reported so
          * just ignore this error rather than try to report it.
          */
-        if (cx->options().autoJSAPIOwnsErrorReporting())
+        if (cx->options().autoJSAPIOwnsErrorReporting() && !JSREPORT_IS_WARNING(reportp->flags))
             return;
     }
 
