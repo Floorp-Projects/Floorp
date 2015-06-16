@@ -84,13 +84,13 @@ fuzzy-if(Android,17,13320) == radial-shape-farthest-side-1c.html radial-shape-fa
 == radial-size-1b.html radial-size-1-ref.html
 fuzzy-if(Android,4,248) == radial-zero-length-1a.html radial-zero-length-1-ref.html
 fuzzy-if(Android,4,248) == radial-zero-length-1b.html radial-zero-length-1-ref.html
-== radial-zero-length-1c.html radial-zero-length-1-ref.html
+fuzzy-if(Android,4,248) == radial-zero-length-1c.html radial-zero-length-1-ref.html
 fuzzy-if(Android,4,248) == radial-zero-length-1d.html radial-zero-length-1-ref.html
-== radial-zero-length-1e.html radial-zero-length-1-ref.html
+fuzzy-if(Android,4,248) == radial-zero-length-1e.html radial-zero-length-1-ref.html
 fuzzy-if(Android,4,248) == radial-zero-length-1f.html radial-zero-length-1-ref.html
-== radial-zero-length-1g.html radial-zero-length-1-ref.html
+fuzzy-if(Android,4,248) == radial-zero-length-1g.html radial-zero-length-1-ref.html
 fuzzy-if(Android,4,248) == radial-zero-length-1h.html radial-zero-length-1-ref.html
-== radial-zero-length-1i.html radial-zero-length-1-ref.html
+fuzzy-if(Android,4,248) == radial-zero-length-1i.html radial-zero-length-1-ref.html
 fuzzy-if(Android,4,248) == radial-zero-length-1j.html radial-zero-length-1-ref.html
 == radial-premul.html radial-premul-ref.html
 == repeated-final-stop-1.html repeated-final-stop-1-ref.html
