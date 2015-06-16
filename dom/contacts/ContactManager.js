@@ -312,7 +312,7 @@ ContactManager.prototype = {
       }
     } catch (e) {
       // And then make sure we throw a proper error message (no internal file and line #)
-      throw new this._window.DOMError(e.name, e.message);
+      throw new this._window.Error(e.message);
     }
 
     let request = this.createRequest();
