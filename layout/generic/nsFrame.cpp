@@ -4096,39 +4096,33 @@ IntrinsicSizeOffsets(nsIFrame* aFrame, bool aForISize)
   nsIFrame::IntrinsicISizeOffsetData result;
   WritingMode wm = aFrame->GetWritingMode();
   const nsStyleMargin* styleMargin = aFrame->StyleMargin();
-  bool orthogonal = aForISize == wm.IsVertical();
-  AddCoord(orthogonal ? styleMargin->mMargin.GetTop()
-                      : styleMargin->mMargin.GetLeft(),
+  bool verticalAxis = aForISize == wm.IsVertical();
+  AddCoord(verticalAxis ? styleMargin->mMargin.GetTop()
+                        : styleMargin->mMargin.GetLeft(),
            aFrame, &result.hMargin, &result.hPctMargin,
            false);
-  AddCoord(orthogonal ? styleMargin->mMargin.GetBottom()
-                      : styleMargin->mMargin.GetRight(),
+  AddCoord(verticalAxis ? styleMargin->mMargin.GetBottom()
+                        : styleMargin->mMargin.GetRight(),
            aFrame, &result.hMargin, &result.hPctMargin,
            false);
 
   const nsStylePadding* stylePadding = aFrame->StylePadding();
-  AddCoord(orthogonal ? stylePadding->mPadding.GetTop()
-                      : stylePadding->mPadding.GetLeft(),
+  AddCoord(verticalAxis ? stylePadding->mPadding.GetTop()
+                        : stylePadding->mPadding.GetLeft(),
            aFrame, &result.hPadding, &result.hPctPadding,
            true);
-  AddCoord(orthogonal ? stylePadding->mPadding.GetBottom()
-                      : stylePadding->mPadding.GetRight(),
+  AddCoord(verticalAxis ? stylePadding->mPadding.GetBottom()
+                        : stylePadding->mPadding.GetRight(),
            aFrame, &result.hPadding, &result.hPctPadding,
            true);
 
-  if (aForISize) {
-    const nsStyleBorder* styleBorder = aFrame->StyleBorder();
-    result.hBorder += styleBorder->GetComputedBorderWidth(
-      wm.PhysicalSideForInlineAxis(eLogicalEdgeStart));
-    result.hBorder += styleBorder->GetComputedBorderWidth(
-      wm.PhysicalSideForInlineAxis(eLogicalEdgeEnd));
+  const nsStyleBorder* styleBorder = aFrame->StyleBorder();
+  if (verticalAxis) {
+    result.hBorder += styleBorder->GetComputedBorderWidth(NS_SIDE_TOP);
+    result.hBorder += styleBorder->GetComputedBorderWidth(NS_SIDE_BOTTOM);
   } else {
-    auto wm = aFrame->StyleVisibility()->mWritingMode;
-    const nsStyleBorder* styleBorder = aFrame->StyleBorder();
-    result.hBorder += styleBorder->GetComputedBorderWidth(
-      WritingMode::PhysicalSideForBlockAxis(wm, eLogicalEdgeStart));
-    result.hBorder += styleBorder->GetComputedBorderWidth(
-      WritingMode::PhysicalSideForBlockAxis(wm, eLogicalEdgeEnd));
+    result.hBorder += styleBorder->GetComputedBorderWidth(NS_SIDE_LEFT);
+    result.hBorder += styleBorder->GetComputedBorderWidth(NS_SIDE_RIGHT);
   }
 
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
@@ -4140,16 +4134,16 @@ IntrinsicSizeOffsets(nsIFrame* aFrame, bool aForISize)
                                              aFrame, disp->mAppearance,
                                              &border);
     result.hBorder =
-      presContext->DevPixelsToAppUnits(orthogonal ? border.TopBottom()
-                                                  : border.LeftRight());
+      presContext->DevPixelsToAppUnits(verticalAxis ? border.TopBottom()
+                                                    : border.LeftRight());
 
     nsIntMargin padding;
     if (presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
                                                   aFrame, disp->mAppearance,
                                                   &padding)) {
       result.hPadding =
-        presContext->DevPixelsToAppUnits(orthogonal ? padding.TopBottom()
-                                                    : padding.LeftRight());
+        presContext->DevPixelsToAppUnits(verticalAxis ? padding.TopBottom()
+                                                      : padding.LeftRight());
       result.hPctPadding = 0;
     }
   }
