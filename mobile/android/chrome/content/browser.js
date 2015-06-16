@@ -311,6 +311,15 @@ XPCOMUtils.defineLazyModuleGetter(
   }
 );
 
+XPCOMUtils.defineLazyModuleGetter(this, "Log",
+  "resource://gre/modules/AndroidLog.jsm", "AndroidLog");
+
+// Define the "dump" function as a binding of the Log.d function so it specifies
+// the "debug" priority and a log tag.
+function dump(msg) {
+  Log.d("Browser", msg);
+}
+
 const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 const kXLinkNamespace = "http://www.w3.org/1999/xlink";
@@ -319,12 +328,6 @@ const kDefaultCSSViewportWidth = 980;
 const kDefaultCSSViewportHeight = 480;
 
 const kViewportRemeasureThrottle = 500;
-
-let Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog;
-
-// Define the "dump" function as a binding of the Log.d function so it specifies
-// the "debug" priority and a log tag.
-let dump = Log.d.bind(null, "Browser");
 
 function doChangeMaxLineBoxWidth(aWidth) {
   gReflowPending = null;
@@ -6082,10 +6085,10 @@ let HealthReportStatusListener = {
     try {
       AddonManager.addAddonListener(this);
     } catch (ex) {
-      console.log("Failed to initialize add-on status listener. FHR cannot report add-on state. " + ex);
+      dump("Failed to initialize add-on status listener. FHR cannot report add-on state. " + ex);
     }
 
-    console.log("Adding HealthReport:RequestSnapshot observer.");
+    dump("Adding HealthReport:RequestSnapshot observer.");
     Services.obs.addObserver(this, "HealthReport:RequestSnapshot", false);
     Services.prefs.addObserver(this.PREF_ACCEPT_LANG, this, false);
     Services.prefs.addObserver(this.PREF_BLOCKLIST_ENABLED, this, false);
