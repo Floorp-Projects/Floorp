@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
     'Icc.cpp',
     'IccCallback.cpp',
     'IccCardLockError.cpp',
+    'IccContact.cpp',
     "IccInfo.cpp",
     'IccListener.cpp',
     'IccManager.cpp',
