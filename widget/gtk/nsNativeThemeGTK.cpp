@@ -259,6 +259,13 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
 
         aState->focused = TRUE;
         aState->depressed = TRUE; // see moz_gtk_entry_paint()
+      } else if (aWidgetType == NS_THEME_BUTTON ||
+                 aWidgetType == NS_THEME_TOOLBAR_BUTTON ||
+                 aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON ||
+                 aWidgetType == NS_THEME_TOOLBAR_BUTTON_DROPDOWN ||
+                 aWidgetType == NS_THEME_DROPDOWN ||
+                 aWidgetType == NS_THEME_DROPDOWN_BUTTON) {
+        aState->active &= aState->inHover;
       }
 
       if (IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) {
