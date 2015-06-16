@@ -113,6 +113,7 @@
 #include "nsFocusManager.h"
 #include "nsIFrame.h"
 #include "nsIContent.h"
+#include "nsLayoutStylesheetCache.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -146,26 +147,6 @@ static bool ConvertToMidasInternalCommand(const nsAString & inCommandID,
 // ==================================================================
 // =
 // ==================================================================
-static nsresult
-RemoveFromAgentSheets(nsCOMArray<nsIStyleSheet> &aAgentSheets, const nsAString& url)
-{
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), url);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  for (int32_t i = aAgentSheets.Count() - 1; i >= 0; --i) {
-    nsIStyleSheet* sheet = aAgentSheets[i];
-    nsIURI* sheetURI = sheet->GetSheetURI();
-
-    bool equals = false;
-    uri->Equals(sheetURI, &equals);
-    if (equals) {
-      aAgentSheets.RemoveObjectAt(i);
-    }
-  }
-
-  return NS_OK;
-}
 
 nsresult
 NS_NewHTMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData)
@@ -2660,9 +2641,9 @@ nsHTMLDocument::TearingDownEditor(nsIEditor *aEditor)
     nsCOMArray<nsIStyleSheet> agentSheets;
     presShell->GetAgentStyleSheets(agentSheets);
 
-    RemoveFromAgentSheets(agentSheets, NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
+    agentSheets.RemoveObject(nsLayoutStylesheetCache::ContentEditableSheet());
     if (oldState == eDesignMode)
-      RemoveFromAgentSheets(agentSheets, NS_LITERAL_STRING("resource://gre/res/designmode.css"));
+      agentSheets.RemoveObject(nsLayoutStylesheetCache::DesignModeSheet());
 
     presShell->SetAgentStyleSheets(agentSheets);
 
@@ -2800,41 +2781,34 @@ nsHTMLDocument::EditingStateChanged()
     rv = presShell->GetAgentStyleSheets(agentSheets);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri),
-                   NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
-    NS_ENSURE_SUCCESS(rv, rv);
+    CSSStyleSheet* contentEditableSheet =
+      nsLayoutStylesheetCache::ContentEditableSheet();
 
-    nsRefPtr<CSSStyleSheet> sheet;
-    rv = LoadChromeSheetSync(uri, true, getter_AddRefs(sheet));
-    NS_ENSURE_TRUE(sheet, rv);
+    bool result;
 
-    bool result = agentSheets.AppendObject(sheet);
-    NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
+    if (!agentSheets.Contains(contentEditableSheet)) {
+      bool result = agentSheets.AppendObject(contentEditableSheet);
+      NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
+    }
 
     // Should we update the editable state of all the nodes in the document? We
     // need to do this when the designMode value changes, as that overrides
     // specific states on the elements.
     if (designMode) {
       // designMode is being turned on (overrides contentEditable).
-      rv = NS_NewURI(getter_AddRefs(uri),
-                     NS_LITERAL_STRING("resource://gre/res/designmode.css"));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = LoadChromeSheetSync(uri, true, getter_AddRefs(sheet));
-      NS_ENSURE_TRUE(sheet, rv);
-
-      result = agentSheets.AppendObject(sheet);
-      NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
+      CSSStyleSheet* designModeSheet =
+        nsLayoutStylesheetCache::DesignModeSheet();
+      if (!agentSheets.Contains(designModeSheet)) {
+        result = agentSheets.AppendObject(designModeSheet);
+        NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
+      }
 
       updateState = true;
       spellRecheckAll = oldState == eContentEditable;
     }
     else if (oldState == eDesignMode) {
       // designMode is being turned off (contentEditable is still on).
-      RemoveFromAgentSheets(agentSheets,
-        NS_LITERAL_STRING("resource://gre/res/designmode.css"));
-
+      agentSheets.RemoveObject(nsLayoutStylesheetCache::DesignModeSheet());
       updateState = true;
     }
 

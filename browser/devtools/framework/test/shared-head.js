@@ -30,9 +30,11 @@ function getFrameScript() {
 }
 
 gDevTools.testing = true;
-SimpleTest.registerCleanupFunction(() => {
+registerCleanupFunction(() => {
   gDevTools.testing = false;
   Services.prefs.clearUserPref("devtools.dump.emit");
+  Services.prefs.clearUserPref("devtools.toolbox.host");
+  Services.prefs.clearUserPref("devtools.toolbox.previousHost");
 });
 
 registerCleanupFunction(function cleanup() {

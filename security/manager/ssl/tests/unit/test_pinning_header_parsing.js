@@ -11,20 +11,19 @@ const certdb = Cc["@mozilla.org/security/x509certdb;1"]
 let gSSService = Cc["@mozilla.org/ssservice;1"]
                    .getService(Ci.nsISiteSecurityService);
 
-function certFromFile(filename) {
-  let der = readFile(do_get_file("test_pinning_dynamic/" + filename, false));
-  return certdb.constructX509(der, der.length);
+function certFromFile(cert_name) {
+  return constructCertFromFile("test_pinning_dynamic/" + cert_name + ".pem");
 }
 
 function loadCert(cert_name, trust_string) {
-  let cert_filename = cert_name + ".der";
-  addCertFromFile(certdb, "test_pinning_dynamic/" + cert_filename, trust_string);
-  return certFromFile(cert_filename);
+  let cert_filename = "test_pinning_dynamic/" + cert_name + ".pem";
+  addCertFromFile(certdb,  cert_filename, trust_string);
+  return constructCertFromFile(cert_filename);
 }
 
 function checkFailParseInvalidPin(pinValue) {
   let sslStatus = new FakeSSLStatus(
-                        certFromFile('cn-a.pinning2.example.com-pinningroot.der'));
+                        certFromFile('cn-a.pinning2.example.com-pinningroot'));
   let uri = Services.io.newURI("https://a.pinning2.example.com", null, null);
   try {
     gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
@@ -37,7 +36,7 @@ function checkFailParseInvalidPin(pinValue) {
 
 function checkPassValidPin(pinValue, settingPin) {
   let sslStatus = new FakeSSLStatus(
-                        certFromFile('cn-a.pinning2.example.com-pinningroot.der'));
+                        certFromFile('cn-a.pinning2.example.com-pinningroot'));
   let uri = Services.io.newURI("https://a.pinning2.example.com", null, null);
 
   // setup preconditions for the test, if setting ensure there is no previous
@@ -78,7 +77,7 @@ function checkPassRemovingPin(pinValue) {
 
 const NON_ISSUED_KEY_HASH1 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 const NON_ISSUED_KEY_HASH2 = "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ=";
-const PINNING_ROOT_KEY_HASH ="kXoHD1ZGyMuowchJwy+xgHlzh0kJFoI9KX0o0IrzTps=";
+const PINNING_ROOT_KEY_HASH = "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=";
 const MAX_AGE_ZERO = "max-age=0;"
 const VALID_PIN1 = "pin-sha256=\""+ PINNING_ROOT_KEY_HASH + "\";";
 const BACKUP_PIN1 = "pin-sha256=\""+ NON_ISSUED_KEY_HASH1 + "\";";
