@@ -1307,10 +1307,18 @@ public:
   enum {
     IGNORE_PADDING = 0x01
   };
+  static nscoord IntrinsicForWM(mozilla::WritingMode aWM,
+                                nsRenderingContext*  aRenderingContext,
+                                nsIFrame*            aFrame,
+                                IntrinsicISizeType   aType,
+                                uint32_t             aFlags = 0);
+  /**
+   * Identical to IntrinsicForWM(aFrame->GetParent()->GetWritingMode(), ...)
+   */
   static nscoord IntrinsicForContainer(nsRenderingContext* aRenderingContext,
-                                       nsIFrame* aFrame,
-                                       IntrinsicISizeType aType,
-                                       uint32_t aFlags = 0);
+                                       nsIFrame*           aFrame,
+                                       IntrinsicISizeType  aType,
+                                       uint32_t            aFlags = 0);
 
   /*
    * Convert nsStyleCoord to nscoord when percentages depend on the
