@@ -139,10 +139,10 @@ typedef struct CapturingContentInfo {
   mozilla::StaticRefPtr<nsIContent> mContent;
 } CapturingContentInfo;
 
-// a7ef8bb3-d628-4965-80f3-a326e089fb7f
+// 7f0ae6b1-5fa1-4ba7-885e-a93e17d72cd2
 #define NS_IPRESSHELL_IID \
-{ 0xa7ef8bb3, 0xd628, 0x4965, \
-  { 0x80, 0xf3, 0xa3, 0x26, 0xe0, 0x89, 0xfb, 0x7f } }
+{ 0x7f0ae6b1, 0x5fa1, 0x4ba7, \
+  { 0x88, 0x5e, 0xa9, 0x3e, 0x17, 0xd7, 0x2c, 0xd2 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -355,15 +355,11 @@ public:
   void ReconstructStyleData() { ReconstructStyleDataExternal(); }
 #endif
 
-  /** Setup all style rules required to implement preferences
-   * - used for background/text/link colors and link underlining
-   *    may be extended for any prefs that are implemented via style rules
-   * - aForceReflow argument is used to force a full reframe to make the rules show
-   *   (only used when the current page needs to reflect changed pref rules)
-   *
-   * - initially created for bugs 31816, 20760, 22963
+  /**
+   * Update the style set somehow to take into account changed prefs which
+   * affect document styling.
    */
-  virtual nsresult SetPreferenceStyleRules(bool aForceReflow) = 0;
+  virtual void UpdatePreferenceStyles() = 0;
 
   /**
    * FrameSelection will return the Frame based selection API.

@@ -1903,6 +1903,13 @@ class NonBuiltinFrameIter : public FrameIter
         settle();
     }
 
+    NonBuiltinFrameIter(JSContext* cx, JSPrincipals* principals)
+        : FrameIter(cx, FrameIter::ALL_CONTEXTS, FrameIter::GO_THROUGH_SAVED,
+                    FrameIter::FOLLOW_DEBUGGER_EVAL_PREV_LINK, principals)
+    {
+        settle();
+    }
+
     explicit NonBuiltinFrameIter(const FrameIter::Data& data)
       : FrameIter(data)
     {}

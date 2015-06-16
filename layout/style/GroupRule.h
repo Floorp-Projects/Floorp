@@ -12,9 +12,9 @@
 #define mozilla_css_GroupRule_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/IncrementalClearCOMRuleArray.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/Rule.h"
-#include "nsCOMArray.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -57,7 +57,7 @@ public:
   int32_t StyleRuleCount() const { return mRules.Count(); }
   Rule* GetStyleRuleAt(int32_t aIndex) const;
 
-  typedef nsCOMArray<Rule>::nsCOMArrayEnumFunc RuleEnumFunc;
+  typedef IncrementalClearCOMRuleArray::nsCOMArrayEnumFunc RuleEnumFunc;
   bool EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const;
 
   /*
@@ -80,7 +80,7 @@ public:
   CloneRuleInto(Rule* aRule, void* aArray)
   {
     nsRefPtr<Rule> clone = aRule->Clone();
-    static_cast<nsCOMArray<Rule>*>(aArray)->AppendObject(clone);
+    static_cast<IncrementalClearCOMRuleArray*>(aArray)->AppendObject(clone);
     return true;
   }
 
@@ -95,7 +95,7 @@ protected:
                       uint32_t* _retval);
   nsresult DeleteRule(uint32_t aIndex);
 
-  nsCOMArray<Rule> mRules;
+  IncrementalClearCOMRuleArray mRules;
   nsRefPtr<GroupRuleRuleList> mRuleCollection; // lazily constructed
 };
 

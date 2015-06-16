@@ -261,9 +261,9 @@ public:
 
   void GetPath(nsAString& aName, ErrorResult& aRv);
 
-  void GetMozFullPath(nsAString& aFilename, ErrorResult& aRv);
+  void GetMozFullPath(nsAString& aFilename, ErrorResult& aRv) const;
 
-  void GetMozFullPathInternal(nsAString& aName, ErrorResult& aRv);
+  void GetMozFullPathInternal(nsAString& aName, ErrorResult& aRv) const;
 
 protected:
   virtual bool HasFileInterface() const override { return true; }
@@ -293,9 +293,9 @@ public:
 
   virtual void SetLastModified(int64_t aLastModified) = 0;
 
-  virtual void GetMozFullPath(nsAString& aName, ErrorResult& aRv) = 0;
+  virtual void GetMozFullPath(nsAString& aName, ErrorResult& aRv) const = 0;
 
-  virtual void GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv) = 0;
+  virtual void GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv) const = 0;
 
   virtual uint64_t GetSize(ErrorResult& aRv) = 0;
 
@@ -434,10 +434,10 @@ public:
 
   virtual void SetLastModified(int64_t aLastModified) override;
 
-  virtual void GetMozFullPath(nsAString& aName, ErrorResult& aRv) override;
+  virtual void GetMozFullPath(nsAString& aName, ErrorResult& aRv) const override;
 
   virtual void GetMozFullPathInternal(nsAString& aFileName,
-                                      ErrorResult& aRv) override;
+                                      ErrorResult& aRv) const override;
 
   virtual uint64_t GetSize(ErrorResult& aRv) override
   {
@@ -822,7 +822,7 @@ public:
   virtual int64_t GetLastModified(ErrorResult& aRv) override;
   virtual void SetLastModified(int64_t aLastModified) override;
   virtual void GetMozFullPathInternal(nsAString& aFullPath,
-                                      ErrorResult& aRv) override;
+                                      ErrorResult& aRv) const override;
   virtual void GetInternalStream(nsIInputStream** aInputStream,
                                  ErrorResult& aRv) override;
 

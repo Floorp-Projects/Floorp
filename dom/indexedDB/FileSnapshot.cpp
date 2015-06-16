@@ -125,7 +125,7 @@ BlobImplSnapshot::CreateSlice(uint64_t aStart,
 
 void
 BlobImplSnapshot::GetMozFullPathInternal(nsAString& aFilename,
-                                         ErrorResult& aRv)
+                                         ErrorResult& aRv) const
 {
   AssertSanity();
   MOZ_ASSERT(mIsFile);

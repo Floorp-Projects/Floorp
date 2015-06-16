@@ -33,9 +33,13 @@ class DeviceRunner(BaseRunner):
 
     def __init__(self, device_class, device_args=None, **kwargs):
         process_log = tempfile.NamedTemporaryFile(suffix='pidlog')
-        self._env = dict(self.env)
-        self._env['MOZ_PROCESS_LOG'] = process_log.name
-        self._env.update(kwargs.pop('env', {}) or {})
+        # the env will be passed to the device, it is not a *real* env
+        self._device_env = dict(DeviceRunner.env)
+        self._device_env['MOZ_PROCESS_LOG'] = process_log.name
+        # be sure we do not pass env to the parent class ctor
+        env = kwargs.pop('env', None)
+        if env:
+            self._device_env.update(env)
 
         process_args = {'stream': sys.stdout,
                         'processOutputLine': self.on_output,
@@ -44,7 +48,6 @@ class DeviceRunner(BaseRunner):
         process_args.update(kwargs.get('process_args') or {})
 
         kwargs['process_args'] = process_args
-        kwargs['env'] = {}
         BaseRunner.__init__(self, **kwargs)
 
         device_args = device_args or {}
@@ -56,7 +59,7 @@ class DeviceRunner(BaseRunner):
         if self.app_ctx.dm._deviceSerial:
             cmd.extend(['-s', self.app_ctx.dm._deviceSerial])
         cmd.append('shell')
-        for k, v in self._env.iteritems():
+        for k, v in self._device_env.iteritems():
             cmd.append('%s=%s' % (k, v))
         cmd.append(self.app_ctx.remote_binary)
         return cmd
@@ -75,13 +78,7 @@ class DeviceRunner(BaseRunner):
         if not self.device.wait_for_net():
             raise Exception("Network did not come up when starting device")
 
-        # In this case we need to pass in env as part of the command.
-        # Make this empty so BaseRunner doesn't pass anything into the
-        # process class.
-        self._env = self.env
-        self.env = None
         BaseRunner.start(self, *args, **kwargs)
-        self.env = self._env
 
         timeout = 10 # seconds
         starttime = datetime.datetime.now()
