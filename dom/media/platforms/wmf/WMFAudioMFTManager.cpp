@@ -289,19 +289,18 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
   }
 
   buffer->Unlock();
-  int64_t timestamp;
-  hr = FramesToUsecs(mAudioFrameOffset + mAudioFrameSum, mAudioRate, &timestamp);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  CheckedInt64 timestamp = FramesToUsecs(mAudioFrameOffset + mAudioFrameSum, mAudioRate);
+  NS_ENSURE_TRUE(timestamp.isValid(), E_FAIL);
 
   mAudioFrameSum += numFrames;
 
-  int64_t duration;
-  hr = FramesToUsecs(numFrames, mAudioRate, &duration);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  CheckedInt64 duration = FramesToUsecs(numFrames, mAudioRate);
+  NS_ENSURE_TRUE(duration.isValid(), E_FAIL);
 
   aOutData = new AudioData(aStreamOffset,
-                           timestamp,
-                           duration,
+                           timestamp.value(),
+                           duration.value(),
                            numFrames,
                            audioData.forget(),
                            mAudioChannels,

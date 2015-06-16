@@ -2334,6 +2334,20 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
       styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
     }
 
+    if (nsLayoutUtils::ShouldUseNoScriptSheet(aDocument)) {
+      sheet = nsLayoutStylesheetCache::NoScriptSheet();
+      if (sheet) {
+        styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
+      }
+    }
+
+    if (nsLayoutUtils::ShouldUseNoFramesSheet(aDocument)) {
+      sheet = nsLayoutStylesheetCache::NoFramesSheet();
+      if (sheet) {
+        styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
+      }
+    }
+
     sheet = nsLayoutStylesheetCache::HTMLSheet();
     if (sheet) {
       styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);

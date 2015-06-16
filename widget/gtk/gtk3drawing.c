@@ -2635,12 +2635,6 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
             style = gtk_widget_get_style_context(gEntryWidget);
             moz_gtk_add_style_border(style, left, top, right, bottom);
 
-            /* Use the document padding in HTML
-               and GTK style padding in XUL. */
-            if (!inhtml) {
-                moz_gtk_add_style_padding(style, left, top, right, bottom);
-            }
-
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_TREEVIEW:

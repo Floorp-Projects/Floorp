@@ -274,6 +274,9 @@ public:
   // while keeping the old behavior as the default.
   void TakeOwnershipOfErrorReporting();
   bool OwnsErrorReporting() { return mOwnErrorReporting; }
+  // If HasException, report it.  Otherwise, a no-op.  This must be
+  // called only if OwnsErrorReporting().
+  void ReportException();
 
   bool HasException() const {
     MOZ_ASSERT(CxPusherIsStackTop());

@@ -63,6 +63,18 @@ function testSteps()
     // This one lives in storage/default/file++++c++
     { url: "file:///c:/", dbName: "dbQ", dbVersion: 1 },
 
+    // This one lives in storage/default/file++++Users+joe+c+++index.html
+    { url: "file:///Users/joe/c++/index.html", dbName: "dbR", dbVersion: 1 },
+
+    // This one lives in storage/default/file++++Users+joe+c+++index.html
+    { url: "file:///Users/joe/c///index.html", dbName: "dbR", dbVersion: 1 },
+
+    // This one lives in storage/default/file++++++index.html
+    { url: "file:///+/index.html", dbName: "dbS", dbVersion: 1 },
+
+    // This one lives in storage/default/file++++++index.html
+    { url: "file://///index.html", dbName: "dbS", dbVersion: 1 },
+
     // This one lives in storage/temporary/http+++localhost
     { url: "http://localhost", dbName: "dbZ",
       dbOptions: { version: 1, storage: "temporary" } }
