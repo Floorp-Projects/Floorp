@@ -311,7 +311,8 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   nsCOMPtr<nsIURI> originalUri;
   rv = oldChannel->GetOriginalURI(getter_AddRefs(originalUri));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsContentPolicyType policyType = loadInfo->GetContentPolicyType();
+  nsContentPolicyType policyType =
+    nsContentUtils::InternalContentPolicyTypeToExternal(loadInfo->GetContentPolicyType());
 
   int16_t aDecision = nsIContentPolicy::ACCEPT;
   csp->ShouldLoad(policyType,     // load type per nsIContentPolicy (uint32_t)
