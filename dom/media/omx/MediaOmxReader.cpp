@@ -489,9 +489,8 @@ void MediaOmxReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, in
 
   int64_t duration = mMP3FrameParser.GetDuration();
   if (duration != mLastParserDuration) {
-    ReentrantMonitorAutoEnter mon(decoder->GetReentrantMonitor());
     mLastParserDuration = duration;
-    decoder->UpdateEstimatedMediaDuration(mLastParserDuration);
+    decoder->DispatchUpdateEstimatedMediaDuration(mLastParserDuration);
   }
 }
 

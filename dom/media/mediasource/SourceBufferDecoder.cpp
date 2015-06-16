@@ -179,12 +179,6 @@ SourceBufferDecoder::Trim(int64_t aDuration)
 }
 
 void
-SourceBufferDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
-{
-  MSE_DEBUG("UNIMPLEMENTED");
-}
-
-void
 SourceBufferDecoder::SetMediaSeekable(bool aMediaSeekable)
 {
   MSE_DEBUG("UNIMPLEMENTED");
