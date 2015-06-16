@@ -45,6 +45,14 @@ class CloneCleanupTest(unittest.TestCase):
         # clone should still be around on the filesystem
         self.assertTrue(os.path.exists(clone.profile))
 
+    def test_cleanup_on_garbage_collected(self):
+        clone = Profile.clone(self.profile.profile)
+        profile_dir = clone.profile
+        self.assertTrue(os.path.exists(profile_dir))
+        del clone
+        # clone should be deleted
+        self.assertFalse(os.path.exists(profile_dir))
+
 
 if __name__ == '__main__':
     unittest.main()
