@@ -802,7 +802,11 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
     }
 
     DataSourceSurface::MappedSurface map;
-    aSurface->Map(DataSourceSurface::MapType::READ, &map);
+    if (!aSurface->Map(DataSourceSurface::MapType::READ, &map)) {
+      gfxCriticalError() << "Failed to map surface.";
+      Reset();
+      return false;
+    }
 
     if (aDestRegion) {
       nsIntRegionRectIterator iter(*aDestRegion);
