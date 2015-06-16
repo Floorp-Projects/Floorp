@@ -933,6 +933,9 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
 
   ourFrameFrame->EndSwapDocShells(otherFrame);
 
+  ourShell->BackingScaleFactorChanged();
+  otherShell->BackingScaleFactorChanged();
+
   ourDoc->FlushPendingNotifications(Flush_Layout);
   otherDoc->FlushPendingNotifications(Flush_Layout);
 
