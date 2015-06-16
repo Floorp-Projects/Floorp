@@ -180,6 +180,10 @@ let NetMonitorView = {
    * @return string (e.g, "network-inspector-view" or "network-statistics-view")
    */
   get currentFrontendMode() {
+    // The getter may be called from a timeout after the panel is destroyed.
+    if (!this._body.selectedPanel) {
+      return null;
+    }
     return this._body.selectedPanel.id;
   },
 
