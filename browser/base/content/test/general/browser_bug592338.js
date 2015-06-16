@@ -48,7 +48,7 @@ function test_install_lwtheme() {
   is(LightweightThemeManager.currentTheme, null, "Should be no lightweight theme selected");
 
   var pm = Services.perms;
-  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+  pm.add(makeURI("https://example.com/"), "install", pm.ALLOW_ACTION);
 
   gBrowser.selectedTab = gBrowser.addTab("https://example.com/browser/browser/base/content/test/general/bug592338.html");
   gBrowser.selectedBrowser.addEventListener("pageshow", function() {
