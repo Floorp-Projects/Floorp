@@ -4340,47 +4340,47 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
   // percentages do not operate linearly.
   // Doing this is ok because although percentages aren't handled
   // linearly, they are handled monotonically.
-  nscoord coordOutsideISize = 0;
-  float pctOutsideISize = 0;
+  nscoord coordOutsideSize = 0;
+  float pctOutsideSize = 0;
   float pctTotal = 0.0f;
 
   if (!(aFlags & nsLayoutUtils::IGNORE_PADDING)) {
-    coordOutsideISize += aOffsets.hPadding;
-    pctOutsideISize += aOffsets.hPctPadding;
+    coordOutsideSize += aOffsets.hPadding;
+    pctOutsideSize += aOffsets.hPctPadding;
 
     if (aBoxSizing == NS_STYLE_BOX_SIZING_PADDING) {
-      min += coordOutsideISize;
-      result = NSCoordSaturatingAdd(result, coordOutsideISize);
-      pctTotal += pctOutsideISize;
+      min += coordOutsideSize;
+      result = NSCoordSaturatingAdd(result, coordOutsideSize);
+      pctTotal += pctOutsideSize;
 
-      coordOutsideISize = 0;
-      pctOutsideISize = 0.0f;
+      coordOutsideSize = 0;
+      pctOutsideSize = 0.0f;
     }
   }
 
-  coordOutsideISize += aOffsets.hBorder;
+  coordOutsideSize += aOffsets.hBorder;
 
   if (aBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
-    min += coordOutsideISize;
-    result = NSCoordSaturatingAdd(result, coordOutsideISize);
-    pctTotal += pctOutsideISize;
+    min += coordOutsideSize;
+    result = NSCoordSaturatingAdd(result, coordOutsideSize);
+    pctTotal += pctOutsideSize;
 
-    coordOutsideISize = 0;
-    pctOutsideISize = 0.0f;
+    coordOutsideSize = 0;
+    pctOutsideSize = 0.0f;
   }
 
-  coordOutsideISize += aOffsets.hMargin;
-  pctOutsideISize += aOffsets.hPctMargin;
+  coordOutsideSize += aOffsets.hMargin;
+  pctOutsideSize += aOffsets.hPctMargin;
 
-  min += coordOutsideISize;
-  result = NSCoordSaturatingAdd(result, coordOutsideISize);
-  pctTotal += pctOutsideISize;
+  min += coordOutsideSize;
+  result = NSCoordSaturatingAdd(result, coordOutsideSize);
+  pctTotal += pctOutsideSize;
 
   nscoord w;
   if (GetAbsoluteCoord(aStyleSize, w) ||
       GetIntrinsicCoord(aStyleSize, aRenderingContext, aFrame,
                         PROP_WIDTH, w)) {
-    result = AddPercents(aType, w + coordOutsideISize, pctOutsideISize);
+    result = AddPercents(aType, w + coordOutsideSize, pctOutsideSize);
   }
   else if (aType == nsLayoutUtils::MIN_ISIZE &&
            // The only cases of coord-percent-calc() units that
@@ -4400,37 +4400,37 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
     result = AddPercents(aType, result, pctTotal);
   }
 
-  nscoord maxISize;
-  bool haveFixedMaxISize = GetAbsoluteCoord(aStyleMaxSize, maxISize);
-  nscoord minISize;
+  nscoord maxSize;
+  bool haveFixedMaxSize = GetAbsoluteCoord(aStyleMaxSize, maxSize);
+  nscoord minSize;
 
   // Treat "min-width: auto" as 0.
-  bool haveFixedMinISize;
+  bool haveFixedMinSize;
   if (eStyleUnit_Auto == aStyleMinSize.GetUnit()) {
     // NOTE: Technically, "auto" is supposed to behave like "min-content" on
     // flex items. However, we don't need to worry about that here, because
     // flex items' min-sizes are intentionally ignored until the flex
     // container explicitly considers them during space distribution.
-    minISize = 0;
-    haveFixedMinISize = true;
+    minSize = 0;
+    haveFixedMinSize = true;
   } else {
-    haveFixedMinISize = GetAbsoluteCoord(aStyleMinSize, minISize);
+    haveFixedMinSize = GetAbsoluteCoord(aStyleMinSize, minSize);
   }
 
-  if (haveFixedMaxISize ||
+  if (haveFixedMaxSize ||
       GetIntrinsicCoord(aStyleMaxSize, aRenderingContext, aFrame,
-                        PROP_MAX_WIDTH, maxISize)) {
-    maxISize = AddPercents(aType, maxISize + coordOutsideISize, pctOutsideISize);
-    if (result > maxISize)
-      result = maxISize;
+                        PROP_MAX_WIDTH, maxSize)) {
+    maxSize = AddPercents(aType, maxSize + coordOutsideSize, pctOutsideSize);
+    if (result > maxSize)
+      result = maxSize;
   }
 
-  if (haveFixedMinISize ||
+  if (haveFixedMinSize ||
       GetIntrinsicCoord(aStyleMinSize, aRenderingContext, aFrame,
-                        PROP_MIN_WIDTH, minISize)) {
-    minISize = AddPercents(aType, minISize + coordOutsideISize, pctOutsideISize);
-    if (result < minISize)
-      result = minISize;
+                        PROP_MIN_WIDTH, minSize)) {
+    minSize = AddPercents(aType, minSize + coordOutsideSize, pctOutsideSize);
+    if (result < minSize)
+      result = minSize;
   }
 
   min = AddPercents(aType, min, pctTotal);
@@ -4446,16 +4446,16 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
       GetMinimumWidgetSize(presContext, aFrame, disp->mAppearance,
                            &size, &canOverride);
 
-    nscoord themeISize =
+    nscoord themeSize =
       presContext->DevPixelsToAppUnits(aContainerWM.IsVertical() ? size.height
                                                                  : size.width);
 
     // GMWS() returns a border-box width
-    themeISize += aOffsets.hMargin;
-    themeISize = AddPercents(aType, themeISize, aOffsets.hPctMargin);
+    themeSize += aOffsets.hMargin;
+    themeSize = AddPercents(aType, themeSize, aOffsets.hPctMargin);
 
-    if (themeISize > result || !canOverride) {
-      result = themeISize;
+    if (themeSize > result || !canOverride) {
+      result = themeSize;
     }
   }
   return result;
