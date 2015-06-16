@@ -161,7 +161,8 @@ function createNewChannel(uri, node, principal) {
     uri: uri,
     loadingNode: node,
     loadingPrincipal: principal,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER});
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
+  });
 }
 
 function asyncFetchChannel(channel, callback) {
