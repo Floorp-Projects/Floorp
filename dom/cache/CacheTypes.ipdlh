@@ -12,7 +12,6 @@ using HeadersGuardEnum from "mozilla/dom/cache/IPCUtils.h";
 using RequestCredentials from "mozilla/dom/cache/IPCUtils.h";
 using RequestMode from "mozilla/dom/cache/IPCUtils.h";
 using RequestCache from "mozilla/dom/cache/IPCUtils.h";
-using RequestContext from "mozilla/dom/cache/IPCUtils.h";
 using ResponseType from "mozilla/dom/cache/IPCUtils.h";
 using mozilla::void_t from "ipc/IPCMessageUtils.h";
 using struct nsID from "nsID.h";
@@ -63,7 +62,6 @@ struct CacheRequest
   RequestCredentials credentials;
   CacheReadStreamOrVoid body;
   uint32_t contentPolicyType;
-  RequestContext context;
   RequestCache requestCache;
 };
 

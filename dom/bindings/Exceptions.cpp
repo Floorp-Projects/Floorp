@@ -142,9 +142,9 @@ ThrowAndReport(nsPIDOMWindow* aWindow, nsresult aRv, const char* aMessage)
   if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(aWindow))) {
     return;
   }
+  jsapi.TakeOwnershipOfErrorReporting();
 
   Throw(jsapi.cx(), aRv, aMessage);
-  (void) JS_ReportPendingException(jsapi.cx());
 }
 
 already_AddRefed<Exception>

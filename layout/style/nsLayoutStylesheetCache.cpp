@@ -192,6 +192,84 @@ nsLayoutStylesheetCache::CounterStylesSheet()
   return gStyleCache->mCounterStylesSheet;
 }
 
+CSSStyleSheet*
+nsLayoutStylesheetCache::NoScriptSheet()
+{
+  EnsureGlobal();
+
+  if (!gStyleCache->mNoScriptSheet) {
+    LoadSheetURL("resource://gre-resources/noscript.css",
+                 gStyleCache->mNoScriptSheet, true);
+  }
+
+  return gStyleCache->mNoScriptSheet;
+}
+
+CSSStyleSheet*
+nsLayoutStylesheetCache::NoFramesSheet()
+{
+  EnsureGlobal();
+
+  if (!gStyleCache->mNoFramesSheet) {
+    LoadSheetURL("resource://gre-resources/noframes.css",
+                 gStyleCache->mNoFramesSheet, true);
+  }
+
+  return gStyleCache->mNoFramesSheet;
+}
+
+/* static */ CSSStyleSheet*
+nsLayoutStylesheetCache::ChromePreferenceSheet(nsPresContext* aPresContext)
+{
+  EnsureGlobal();
+
+  if (!gStyleCache->mChromePreferenceSheet) {
+    gStyleCache->BuildPreferenceSheet(gStyleCache->mChromePreferenceSheet,
+                                      aPresContext);
+  }
+
+  return gStyleCache->mChromePreferenceSheet;
+}
+
+/* static */ CSSStyleSheet*
+nsLayoutStylesheetCache::ContentPreferenceSheet(nsPresContext* aPresContext)
+{
+  EnsureGlobal();
+
+  if (!gStyleCache->mContentPreferenceSheet) {
+    gStyleCache->BuildPreferenceSheet(gStyleCache->mContentPreferenceSheet,
+                                      aPresContext);
+  }
+
+  return gStyleCache->mContentPreferenceSheet;
+}
+
+/* static */ CSSStyleSheet*
+nsLayoutStylesheetCache::ContentEditableSheet()
+{
+  EnsureGlobal();
+
+  if (!gStyleCache->mContentEditableSheet) {
+    LoadSheetURL("resource://gre/res/contenteditable.css",
+                 gStyleCache->mContentEditableSheet, true);
+  }
+
+  return gStyleCache->mContentEditableSheet;
+}
+
+/* static */ CSSStyleSheet*
+nsLayoutStylesheetCache::DesignModeSheet()
+{
+  EnsureGlobal();
+
+  if (!gStyleCache->mDesignModeSheet) {
+    LoadSheetURL("resource://gre/res/designmode.css",
+                 gStyleCache->mDesignModeSheet, true);
+  }
+
+  return gStyleCache->mDesignModeSheet;
+}
+
 void
 nsLayoutStylesheetCache::Shutdown()
 {
@@ -219,12 +297,18 @@ nsLayoutStylesheetCache::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf
 
   #define MEASURE(s) n += s ? s->SizeOfIncludingThis(aMallocSizeOf) : 0;
 
+  MEASURE(mChromePreferenceSheet);
+  MEASURE(mContentEditableSheet);
+  MEASURE(mContentPreferenceSheet);
   MEASURE(mCounterStylesSheet);
+  MEASURE(mDesignModeSheet);
   MEASURE(mFormsSheet);
   MEASURE(mFullScreenOverrideSheet);
   MEASURE(mHTMLSheet);
   MEASURE(mMathMLSheet);
   MEASURE(mMinimalXULSheet);
+  MEASURE(mNoFramesSheet);
+  MEASURE(mNoScriptSheet);
   MEASURE(mNumberControlSheet);
   MEASURE(mQuirkSheet);
   MEASURE(mSVGSheet);
@@ -430,6 +514,133 @@ nsLayoutStylesheetCache::DependentPrefChanged(const char* aPref, void* aData)
   // for layout.css.ruby.enabled
   InvalidateSheet(gStyleCache->mUASheet);
   InvalidateSheet(gStyleCache->mHTMLSheet);
+}
+
+/* static */ void
+nsLayoutStylesheetCache::InvalidatePreferenceSheets()
+{
+  if (!gStyleCache) {
+    return;
+  }
+
+  gStyleCache->mContentPreferenceSheet = nullptr;
+  gStyleCache->mChromePreferenceSheet = nullptr;
+}
+
+/* static */ void
+nsLayoutStylesheetCache::AppendPreferenceRule(CSSStyleSheet* aSheet,
+                                              const nsAString& aString)
+{
+  uint32_t result;
+  aSheet->InsertRuleInternal(aString, aSheet->StyleRuleCount(), &result);
+}
+
+/* static */ void
+nsLayoutStylesheetCache::AppendPreferenceColorRule(CSSStyleSheet* aSheet,
+                                                   const char* aString,
+                                                   nscolor aColor)
+{
+  nsAutoString rule;
+  rule.AppendPrintf(
+      aString, NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
+  AppendPreferenceRule(aSheet, rule);
+}
+
+void
+nsLayoutStylesheetCache::BuildPreferenceSheet(nsRefPtr<CSSStyleSheet>& aSheet,
+                                              nsPresContext* aPresContext)
+{
+  aSheet = new CSSStyleSheet(CORS_NONE, mozilla::net::RP_Default);
+
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet", nullptr);
+  MOZ_ASSERT(uri, "URI creation shouldn't fail");
+
+  aSheet->SetURIs(uri, uri, uri);
+  aSheet->SetComplete();
+
+  AppendPreferenceRule(aSheet,
+      NS_LITERAL_STRING("@namespace url(http://www.w3.org/1999/xhtml);"));
+  AppendPreferenceRule(aSheet,
+      NS_LITERAL_STRING("@namespace svg url(http://www.w3.org/2000/svg);"));
+
+  // Rules for link styling.
+
+  AppendPreferenceColorRule(aSheet,
+      "*|*:link { color: #%02x%02x%02x; }",
+      aPresContext->DefaultLinkColor());
+  AppendPreferenceColorRule(aSheet,
+      "*|*:-moz-any-link:active { color: #%02x%02x%02x; }",
+      aPresContext->DefaultActiveLinkColor());
+  AppendPreferenceColorRule(aSheet,
+      "*|*:visited { color: #%02x%02x%02x; }",
+      aPresContext->DefaultVisitedLinkColor());
+
+  AppendPreferenceRule(aSheet,
+      aPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks) ?
+        NS_LITERAL_STRING(
+            "*|*:-moz-any-link:not(svg|a) { text-decoration: underline; }") :
+        NS_LITERAL_STRING(
+            "*|*:-moz-any-link{ text-decoration: none; }"));
+
+  // Rules for focus styling.
+
+  bool focusRingOnAnything = aPresContext->GetFocusRingOnAnything();
+  uint8_t focusRingWidth = aPresContext->FocusRingWidth();
+  uint8_t focusRingStyle = aPresContext->GetFocusRingStyle();
+
+  if ((focusRingWidth != 1 && focusRingWidth <= 4) || focusRingOnAnything) {
+    if (focusRingWidth != 1) {
+      // If the focus ring width is different from the default, fix buttons
+      // with rings.
+      nsString rule;
+      rule.AppendPrintf(
+          "button::-moz-focus-inner, input[type=\"reset\"]::-moz-focus-inner, "
+          "input[type=\"button\"]::-moz-focus-inner, "
+          "input[type=\"submit\"]::-moz-focus-inner { "
+          "padding: 1px 2px 1px 2px; "
+          "border: %d %s transparent !important; }",
+          focusRingWidth,
+          focusRingWidth == 0 ? (const char*) "solid" : (const char*) "dotted");
+      AppendPreferenceRule(aSheet, rule);
+
+      // NS_LITERAL_STRING doesn't work with concatenated string literals, hence
+      // the newline escaping.
+      AppendPreferenceRule(aSheet, NS_LITERAL_STRING("\
+button:focus::-moz-focus-inner, \
+input[type=\"reset\"]:focus::-moz-focus-inner, \
+input[type=\"button\"]:focus::-moz-focus-inner, \
+input[type=\"submit\"]:focus::-moz-focus-inner { \
+border-color: ButtonText !important; }"));
+    }
+
+    nsString rule;
+    if (focusRingOnAnything) {
+      rule.AppendLiteral(":focus");
+    } else {
+      rule.AppendLiteral("*|*:link:focus, *|*:visited:focus");
+    }
+    rule.AppendPrintf(" { outline: %dpx ", focusRingWidth);
+    if (focusRingStyle == 0) { // solid
+      rule.AppendLiteral("solid -moz-mac-focusring !important; "
+                         "-moz-outline-radius: 3px; outline-offset: 1px; }");
+    } else {
+      rule.AppendLiteral("dotted WindowText !important; }");
+    }
+    AppendPreferenceRule(aSheet, rule);
+  }
+
+  if (aPresContext->GetUseFocusColors()) {
+    nsString rule;
+    nscolor focusText = aPresContext->FocusTextColor();
+    nscolor focusBG = aPresContext->FocusBackgroundColor();
+    rule.AppendPrintf(
+        "*:focus, *:focus > font { color: #%02x%02x%02x !important; "
+        "background-color: #%02x%02x%02x !important; }",
+        NS_GET_R(focusText), NS_GET_G(focusText), NS_GET_B(focusText),
+        NS_GET_R(focusBG), NS_GET_G(focusBG), NS_GET_B(focusBG));
+    AppendPreferenceRule(aSheet, rule);
+  }
 }
 
 mozilla::StaticRefPtr<nsLayoutStylesheetCache>

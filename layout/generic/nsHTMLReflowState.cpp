@@ -7,6 +7,7 @@
 
 #include "nsHTMLReflowState.h"
 
+#include "LayoutLogging.h"
 #include "nsStyleConsts.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsFrame.h"
@@ -357,10 +358,10 @@ nsHTMLReflowState::Init(nsPresContext*     aPresContext,
     }
   }
 
-  NS_WARN_IF_FALSE(AvailableISize() != NS_UNCONSTRAINEDSIZE,
-                   "have unconstrained inline-size; this should only result from "
-                   "very large sizes, not attempts at intrinsic inline-size "
-                   "calculation");
+  LAYOUT_WARN_IF_FALSE(AvailableISize() != NS_UNCONSTRAINEDSIZE,
+                       "have unconstrained inline-size; this should only "
+                       "result from very large sizes, not attempts at "
+                       "intrinsic inline-size calculation");
 
   mStylePosition = frame->StylePosition();
   mStyleDisplay = frame->StyleDisplay();
@@ -446,13 +447,13 @@ nsHTMLReflowState::Init(nsPresContext*     aPresContext,
     AvailableBSize() = NS_UNCONSTRAINEDSIZE;
   }
 
-  NS_WARN_IF_FALSE((mFrameType == NS_CSS_FRAME_TYPE_INLINE &&
-                    !frame->IsFrameOfType(nsIFrame::eReplaced)) ||
-                   type == nsGkAtoms::textFrame ||
-                   ComputedISize() != NS_UNCONSTRAINEDSIZE,
-                   "have unconstrained inline-size; this should only result from "
-                   "very large sizes, not attempts at intrinsic inline-size "
-                   "calculation");
+  LAYOUT_WARN_IF_FALSE((mFrameType == NS_CSS_FRAME_TYPE_INLINE &&
+                        !frame->IsFrameOfType(nsIFrame::eReplaced)) ||
+                       type == nsGkAtoms::textFrame ||
+                       ComputedISize() != NS_UNCONSTRAINEDSIZE,
+                       "have unconstrained inline-size; this should only "
+                       "result from very large sizes, not attempts at "
+                       "intrinsic inline-size calculation");
 }
 
 void nsHTMLReflowState::InitCBReflowState()
@@ -2453,11 +2454,11 @@ nsHTMLReflowState::CalculateBlockSideMargins(nsIAtom* aFrameType)
     computedISizeCBWM = availISizeCBWM;
   }
 
-  NS_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != computedISizeCBWM &&
-                   NS_UNCONSTRAINEDSIZE != availISizeCBWM,
-                   "have unconstrained inline-size; this should only result from "
-                   "very large sizes, not attempts at intrinsic inline-size "
-                   "calculation");
+  LAYOUT_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != computedISizeCBWM &&
+                       NS_UNCONSTRAINEDSIZE != availISizeCBWM,
+                       "have unconstrained inline-size; this should only "
+                       "result from very large sizes, not attempts at "
+                       "intrinsic inline-size calculation");
 
   LogicalMargin margin =
     ComputedLogicalMargin().ConvertTo(cbWM, mWritingMode);
