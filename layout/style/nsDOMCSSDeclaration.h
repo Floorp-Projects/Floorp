@@ -134,12 +134,18 @@ protected:
   // fly.  This is why we don't use CSSParsingEnvironment as a return
   // value, to avoid multiple-refcounting of mBaseURI.
   struct CSSParsingEnvironment {
-    nsIURI* mSheetURI;
+    nsIURI* MOZ_UNSAFE_REF("user of CSSParsingEnviroment must hold an owning "
+                           "reference; reference counting here has unacceptable "
+                           "performance overhead (see bug 649163)") mSheetURI;
     nsCOMPtr<nsIURI> mBaseURI;
-    nsIPrincipal* mPrincipal;
-    mozilla::css::Loader* mCSSLoader;
+    nsIPrincipal* MOZ_UNSAFE_REF("user of CSSParsingEnviroment must hold an owning "
+                                 "reference; reference counting here has unacceptable "
+                                 "performance overhead (see bug 649163)") mPrincipal;
+    mozilla::css::Loader* MOZ_UNSAFE_REF("user of CSSParsingEnviroment must hold an owning "
+                                         "reference; reference counting here has unacceptable "
+                                         "performance overhead (see bug 649163)") mCSSLoader;
   };
-  
+
   // On failure, mPrincipal should be set to null in aCSSParseEnv.
   // If mPrincipal is null, the other members may not be set to
   // anything meaningful.
