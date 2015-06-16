@@ -961,11 +961,24 @@ public class GeckoAppShell
         return getHandlersForIntent(intent);
     }
 
+    static List<ResolveInfo> queryIntentActivities(Intent intent) {
+        final PackageManager pm = getContext().getPackageManager();
+
+        // Exclude any non-exported activities: we can't open them even if we want to!
+        // Bug 1031569 has some details.
+        final ArrayList<ResolveInfo> list = new ArrayList<>();
+        for (ResolveInfo ri: pm.queryIntentActivities(intent, 0)) {
+            if (ri.activityInfo.exported) {
+                list.add(ri);
+            }
+        }
+
+        return list;
+    }
+
     static boolean hasHandlersForIntent(Intent intent) {
         try {
-            PackageManager pm = getContext().getPackageManager();
-            List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
-            return !list.isEmpty();
+            return !queryIntentActivities(intent).isEmpty();
         } catch (Exception ex) {
             Log.e(LOGTAG, "Exception in GeckoAppShell.hasHandlersForIntent");
             return false;
@@ -973,11 +986,12 @@ public class GeckoAppShell
     }
 
     static String[] getHandlersForIntent(Intent intent) {
+        final PackageManager pm = getContext().getPackageManager();
         try {
-            PackageManager pm = getContext().getPackageManager();
-            List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
+            final List<ResolveInfo> list = queryIntentActivities(intent);
+
             int numAttr = 4;
-            String[] ret = new String[list.size() * numAttr];
+            final String[] ret = new String[list.size() * numAttr];
             for (int i = 0; i < list.size(); i++) {
                 ResolveInfo resolveInfo = list.get(i);
                 ret[i * numAttr] = resolveInfo.loadLabel(pm).toString();
@@ -1098,6 +1112,10 @@ public class GeckoAppShell
             context.startActivity(intent);
             return true;
         } catch (ActivityNotFoundException e) {
+            Log.w(LOGTAG, "Activity not found.", e);
+            return false;
+        } catch (SecurityException e) {
+            Log.w(LOGTAG, "Forbidden to launch activity.", e);
             return false;
         }
     }
@@ -1174,6 +1192,8 @@ public class GeckoAppShell
                                    final String action,
                                    final String title) {
 
+        // The resultant chooser can return non-exported activities in 4.1 and earlier.
+        // https://code.google.com/p/android/issues/detail?id=29535
         final Intent intent = getOpenURIIntentInner(context, targetURI, mimeType, action, title);
 
         if (intent != null) {
