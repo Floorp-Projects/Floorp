@@ -614,22 +614,6 @@ template<typename T>
 struct Or {
     static T apply(T l, T r) { return l | r; }
 };
-template<typename T>
-struct WithX {
-    static T apply(int32_t lane, T scalar, T x) { return lane == 0 ? scalar : x; }
-};
-template<typename T>
-struct WithY {
-    static T apply(int32_t lane, T scalar, T x) { return lane == 1 ? scalar : x; }
-};
-template<typename T>
-struct WithZ {
-    static T apply(int32_t lane, T scalar, T x) { return lane == 2 ? scalar : x; }
-};
-template<typename T>
-struct WithW {
-    static T apply(int32_t lane, T scalar, T x) { return lane == 3 ? scalar : x; }
-};
 // For the following three operators, if the value v we're trying to shift is
 // such that v << bits can't fit in the int32 range, then we have undefined
 // behavior, according to C++11 [expr.shift]p2.
@@ -717,26 +701,33 @@ BinaryFunc(JSContext* cx, unsigned argc, Value* vp)
     return CoercedBinaryFunc<In, Out, Op, Out>(cx, argc, vp);
 }
 
-template<typename V, template<typename T> class OpWith>
+template<typename V>
 static bool
-FuncWith(JSContext* cx, unsigned argc, Value* vp)
+ReplaceLane(JSContext* cx, unsigned argc, Value* vp)
 {
     typedef typename V::Elem Elem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    // Only the first argument is mandatory
-    if (args.length() < 1 || !IsVectorObject<V>(args[0]))
+    // Only the first and second arguments are mandatory
+    if (args.length() < 2 || !IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
 
     Elem* vec = TypedObjectMemory<Elem*>(args[0]);
     Elem result[V::lanes];
 
+    if (!args[1].isInt32())
+        return ErrorBadArgs(cx);
+    int32_t lanearg = args[1].toInt32();
+    if (lanearg < 0 || uint32_t(lanearg) >= V::lanes)
+        return ErrorBadArgs(cx);
+    uint32_t lane = uint32_t(lanearg);
+
     Elem value;
-    if (!V::toType(cx, args.get(1), &value))
+    if (!V::toType(cx, args.get(2), &value))
         return false;
 
     for (unsigned i = 0; i < V::lanes; i++)
-        result[i] = OpWith<Elem>::apply(i, value, vec[i]);
+        result[i] = i == lane ? value : vec[i];
     return StoreResult<V>(cx, args, result);
 }
 
@@ -1170,4 +1161,3 @@ js::simd_int32x4_##Name(JSContext* cx, unsigned argc, Value* vp)   \
 }
 INT32X4_FUNCTION_LIST(DEFINE_SIMD_INT32X4_FUNCTION)
 #undef DEFINE_SIMD_INT32X4_FUNCTION
-
