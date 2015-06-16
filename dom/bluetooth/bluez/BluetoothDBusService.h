@@ -47,7 +47,7 @@ public:
 
   bool IsReady();
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
   virtual nsresult StartInternal(BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult StopInternal(BluetoothReplyRunnable* aRunnable) override;
@@ -109,7 +109,7 @@ public:
   RemoveDeviceInternal(const nsAString& aDeviceObjectPath,
                        BluetoothReplyRunnable* aRunnable) override;
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
   virtual void
   PinReplyInternal(const nsAString& aDeviceAddress,
                    bool aAccept,
@@ -153,7 +153,7 @@ public:
           uint16_t aServiceUuid,
           BluetoothReplyRunnable* aRunnable) override;
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
   virtual bool
   IsConnected(uint16_t aServiceUuid) override;
 #else
@@ -233,7 +233,7 @@ public:
   SendInputMessage(const nsAString& aDeviceAddresses,
                    const nsAString& aMessage) override;
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
   virtual void
   StartLeScanInternal(const nsTArray<nsString>& aServiceUuids,
                       BluetoothReplyRunnable* aRunnable) override;
