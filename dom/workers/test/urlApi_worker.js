@@ -111,7 +111,7 @@ onmessage = function() {
     { url: 'http://example.com/carrot#question%3f',
       base: undefined,
       error: false,
-      hash: '#question?'
+      hash: '#question%3f'
     },
     { url: 'https://example.com:4443?',
       base: undefined,
