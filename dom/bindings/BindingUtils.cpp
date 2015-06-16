@@ -277,16 +277,6 @@ ErrorResult::ReportJSException(JSContext* cx)
 }
 
 void
-ErrorResult::ReportJSExceptionFromJSImplementation(JSContext* aCx)
-{
-  MOZ_ASSERT(!mMightHaveUnreportedJSException,
-             "Why didn't you tell us you planned to handle JS exceptions?");
-
-  // Just report it.
-  ReportJSException(aCx);
-}
-
-void
 ErrorResult::StealJSException(JSContext* cx,
                               JS::MutableHandle<JS::Value> value)
 {
