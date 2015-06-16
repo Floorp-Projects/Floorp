@@ -1292,9 +1292,8 @@ void GStreamerReader::NotifyDataArrived(const char *aBuffer,
   int64_t duration = mMP3FrameParser.GetDuration();
   if (duration != mLastParserDuration && mUseParserDuration) {
     MOZ_ASSERT(mDecoder);
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mLastParserDuration = duration;
-    mDecoder->UpdateEstimatedMediaDuration(mLastParserDuration);
+    mDecoder->DispatchUpdateEstimatedMediaDuration(mLastParserDuration);
   }
 }
 
