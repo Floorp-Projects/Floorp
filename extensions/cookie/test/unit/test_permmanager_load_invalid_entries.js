@@ -121,7 +121,7 @@ function run_test() {
 
   // The schema should be upgraded to 4, and a 'modificationTime' column should
   // exist with all records having a value of 0.
-  do_check_eq(connection.schemaVersion, 4);
+  do_check_eq(connection.schemaVersion, 5);
 
   let select = connection.createStatement("SELECT modificationTime FROM moz_hosts")
   let numMigrated = 0;
