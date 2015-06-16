@@ -761,7 +761,10 @@ loop.roomViews = (function(mozL10n) {
                 mozLoop={this.props.mozLoop}
                 roomData={roomData}
                 show={!shouldRenderInvitationOverlay && shouldRenderContextView} />
-              <sharedViews.TextChatView dispatcher={this.props.dispatcher} />
+              <sharedViews.TextChatView
+                dispatcher={this.props.dispatcher}
+                showAlways={false}
+                showRoomName={false} />
             </div>
           );
         }

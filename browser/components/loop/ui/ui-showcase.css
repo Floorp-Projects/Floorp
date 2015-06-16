@@ -151,3 +151,8 @@ body {
   margin-left: .5rem;
   border: 0;
 }
+
+/* Temporary until bug 1168829 is completed */
+.standalone.text-chat-example .text-chat-view {
+  height: 400px;
+}
