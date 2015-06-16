@@ -14,6 +14,8 @@ Cu.import("resource://gre/modules/Task.jsm");
 const TEST_DATASET_ID = "test-dataset-id";
 const TEST_URL = "http://test.com";
 const TEST_TITLE = "Test";
+const TEST_BACKGROUND_URL = "http://example.com/background";
+const TEST_BACKGROUND_COLOR = "#FF9500";
 
 const PREF_SYNC_CHECK_INTERVAL_SECS = "home.sync.checkIntervalSecs";
 const TEST_INTERVAL_SECS = 1;
@@ -48,7 +50,12 @@ add_test(function test_periodic_sync() {
 add_task(function test_save_and_delete() {
   // Use the HomeProvider API to save some data.
   let storage = HomeProvider.getStorage(TEST_DATASET_ID);
-  yield storage.save([{ title: TEST_TITLE, url: TEST_URL }]);
+  yield storage.save([{
+    title: TEST_TITLE,
+    url: TEST_URL,
+    background_url: TEST_BACKGROUND_URL,
+    background_color: TEST_BACKGROUND_COLOR
+  }]);
 
   // Peek in the DB to make sure we have the right data.
   let db = yield Sqlite.openConnection({ path: DB_PATH });
@@ -60,6 +67,8 @@ add_task(function test_save_and_delete() {
   let result = yield db.execute("SELECT * FROM items", null, function onRow(row){
     do_check_eq(row.getResultByName("dataset_id"), TEST_DATASET_ID);
     do_check_eq(row.getResultByName("url"), TEST_URL);
+    do_check_eq(row.getResultByName("background_url"), TEST_BACKGROUND_URL);
+    do_check_eq(row.getResultByName("background_color"), TEST_BACKGROUND_COLOR);
   });
 
   // Use the HomeProvider API to delete the data.
