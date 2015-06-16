@@ -8,7 +8,6 @@
  */
 
 input[type="number"] {
-  writing-mode: horizontal-tb !important; /* XXX remove when bug 1123299 is done */
   -moz-appearance: number-input;
   /* Has to revert some properties applied by the generic input rule. */
   -moz-binding: none;

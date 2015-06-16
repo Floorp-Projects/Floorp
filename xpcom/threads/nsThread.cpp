@@ -72,6 +72,7 @@
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
+#include "TracedTaskCommon.h"
 using namespace mozilla::tasktracer;
 #endif
 
@@ -540,6 +541,7 @@ nsThread::DispatchInternal(nsIRunnable* aEvent, uint32_t aFlags,
 
 #ifdef MOZ_TASK_TRACER
   nsCOMPtr<nsIRunnable> tracedRunnable = CreateTracedRunnable(aEvent);
+  (static_cast<TracedRunnable*>(tracedRunnable.get()))->DispatchTask();
   aEvent = tracedRunnable;
 #endif
 

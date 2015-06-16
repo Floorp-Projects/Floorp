@@ -1299,18 +1299,27 @@ public:
 
   /**
    * Get the contribution of aFrame to its containing block's intrinsic
-   * width.  This considers the child's intrinsic width, its 'width',
-   * 'min-width', and 'max-width' properties, and its padding, border,
-   * and margin.
+   * size for the given physical axis.  This considers the child's intrinsic
+   * width, its 'width', 'min-width', and 'max-width' properties (or 'height'
+   * variations if that's what matches aAxis) and its padding, border and margin
+   * in the corresponding dimension.
    */
   enum IntrinsicISizeType { MIN_ISIZE, PREF_ISIZE };
   enum {
     IGNORE_PADDING = 0x01
   };
+  static nscoord IntrinsicForAxis(mozilla::PhysicalAxis aAxis,
+                                  nsRenderingContext*   aRenderingContext,
+                                  nsIFrame*             aFrame,
+                                  IntrinsicISizeType    aType,
+                                  uint32_t              aFlags = 0);
+  /**
+   * Calls IntrinsicForAxis with aFrame's parent's inline physical axis.
+   */
   static nscoord IntrinsicForContainer(nsRenderingContext* aRenderingContext,
-                                       nsIFrame* aFrame,
-                                       IntrinsicISizeType aType,
-                                       uint32_t aFlags = 0);
+                                       nsIFrame*           aFrame,
+                                       IntrinsicISizeType  aType,
+                                       uint32_t            aFlags = 0);
 
   /*
    * Convert nsStyleCoord to nscoord when percentages depend on the

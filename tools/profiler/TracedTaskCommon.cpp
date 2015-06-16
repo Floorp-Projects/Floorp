@@ -7,49 +7,80 @@
 #include "GeckoTaskTracerImpl.h"
 #include "TracedTaskCommon.h"
 
+// NS_ENSURE_TRUE_VOID() without the warning on the debug build.
+#define ENSURE_TRUE_VOID(x)   \
+  do {                        \
+    if (MOZ_UNLIKELY(!(x))) { \
+       return;                \
+    }                         \
+  } while(0)
+
 namespace mozilla {
 namespace tasktracer {
 
 TracedTaskCommon::TracedTaskCommon()
-  : mSourceEventId(0)
-  , mSourceEventType(SourceEventType::Unknown)
+  : mSourceEventType(SourceEventType::Unknown)
+  , mSourceEventId(0)
+  , mParentTaskId(0)
+  , mTaskId(0)
+  , mIsTraceInfoInit(false)
 {
-  Init();
+}
+
+TracedTaskCommon::~TracedTaskCommon()
+{
 }
 
 void
 TracedTaskCommon::Init()
 {
   TraceInfo* info = GetOrCreateTraceInfo();
-  NS_ENSURE_TRUE_VOID(info);
+  ENSURE_TRUE_VOID(info);
 
   mTaskId = GenNewUniqueTaskId();
   mSourceEventId = info->mCurTraceSourceId;
   mSourceEventType = info->mCurTraceSourceType;
-
-  LogDispatch(mTaskId, info->mCurTaskId, mSourceEventId, mSourceEventType);
+  mParentTaskId = info->mCurTaskId;
+  mIsTraceInfoInit = true;
 }
 
 void
-TracedTaskCommon::SetTraceInfo()
+TracedTaskCommon::DispatchTask(int aDelayTimeMs)
 {
-  TraceInfo* info = GetOrCreateTraceInfo();
-  if (!info) {
-    return;
-  }
-
-  info->mCurTraceSourceId = mSourceEventId;
-  info->mCurTraceSourceType = mSourceEventType;
-  info->mCurTaskId = mTaskId;
+  LogDispatch(mTaskId, mParentTaskId, mSourceEventId, mSourceEventType,
+              aDelayTimeMs);
 }
 
 void
-TracedTaskCommon::ClearTraceInfo()
+TracedTaskCommon::GetTLSTraceInfo()
 {
   TraceInfo* info = GetOrCreateTraceInfo();
-  if (!info) {
-    return;
+  ENSURE_TRUE_VOID(info);
+
+  mSourceEventType = info->mCurTraceSourceType;
+  mSourceEventId = info->mCurTraceSourceId;
+  mTaskId = info->mCurTaskId;
+  mIsTraceInfoInit = true;
+}
+
+void
+TracedTaskCommon::SetTLSTraceInfo()
+{
+  TraceInfo* info = GetOrCreateTraceInfo();
+  ENSURE_TRUE_VOID(info);
+
+  if (mIsTraceInfoInit) {
+    info->mCurTraceSourceId = mSourceEventId;
+    info->mCurTraceSourceType = mSourceEventType;
+    info->mCurTaskId = mTaskId;
   }
+}
+
+void
+TracedTaskCommon::ClearTLSTraceInfo()
+{
+  TraceInfo* info = GetOrCreateTraceInfo();
+  ENSURE_TRUE_VOID(info);
 
   info->mCurTraceSourceId = 0;
   info->mCurTraceSourceType = SourceEventType::Unknown;
@@ -63,19 +94,23 @@ TracedRunnable::TracedRunnable(nsIRunnable* aOriginalObj)
   : TracedTaskCommon()
   , mOriginalObj(aOriginalObj)
 {
+  Init();
   LogVirtualTablePtr(mTaskId, mSourceEventId, *(int**)(aOriginalObj));
+}
+
+TracedRunnable::~TracedRunnable()
+{
 }
 
 NS_IMETHODIMP
 TracedRunnable::Run()
 {
+  SetTLSTraceInfo();
   LogBegin(mTaskId, mSourceEventId);
-
-  SetTraceInfo();
   nsresult rv = mOriginalObj->Run();
-  ClearTraceInfo();
-
   LogEnd(mTaskId, mSourceEventId);
+  ClearTLSTraceInfo();
+
   return rv;
 }
 
@@ -86,54 +121,26 @@ TracedTask::TracedTask(Task* aOriginalObj)
   : TracedTaskCommon()
   , mOriginalObj(aOriginalObj)
 {
+  Init();
   LogVirtualTablePtr(mTaskId, mSourceEventId, *(int**)(aOriginalObj));
+}
+
+TracedTask::~TracedTask()
+{
+  if (mOriginalObj) {
+    delete mOriginalObj;
+    mOriginalObj = nullptr;
+  }
 }
 
 void
 TracedTask::Run()
 {
+  SetTLSTraceInfo();
   LogBegin(mTaskId, mSourceEventId);
-
-  SetTraceInfo();
   mOriginalObj->Run();
-  ClearTraceInfo();
-
   LogEnd(mTaskId, mSourceEventId);
-}
-
-FakeTracedTask::FakeTracedTask(int* aVptr)
-  : TracedTaskCommon()
-{
-  LogVirtualTablePtr(mTaskId, mSourceEventId, aVptr);
-}
-
-void
-FakeTracedTask::BeginFakeTracedTask()
-{
-  LogBegin(mTaskId, mSourceEventId);
-  SetTraceInfo();
-}
-
-void
-FakeTracedTask::EndFakeTracedTask()
-{
-  ClearTraceInfo();
-  LogEnd(mTaskId, mSourceEventId);
-}
-
-AutoRunFakeTracedTask::AutoRunFakeTracedTask(FakeTracedTask* aFakeTracedTask)
-  : mFakeTracedTask(aFakeTracedTask)
-{
-  if (mFakeTracedTask) {
-    mFakeTracedTask->BeginFakeTracedTask();
-  }
-}
-
-AutoRunFakeTracedTask::~AutoRunFakeTracedTask()
-{
-  if (mFakeTracedTask) {
-    mFakeTracedTask->EndFakeTracedTask();
-  }
+  ClearTLSTraceInfo();
 }
 
 /**
@@ -156,17 +163,6 @@ CreateTracedTask(Task* aTask)
 {
   Task* task = new TracedTask(aTask);
   return task;
-}
-
-/**
- * CreateFakeTracedTask() returns a FakeTracedTask tracking the event which is
- * not dispatched from its parent task directly, such as timer events.
- */
-already_AddRefed<FakeTracedTask>
-CreateFakeTracedTask(int* aVptr)
-{
-  nsRefPtr<FakeTracedTask> task(new FakeTracedTask(aVptr));
-  return task.forget();
 }
 
 } // namespace tasktracer

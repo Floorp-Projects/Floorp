@@ -312,15 +312,27 @@ void
 LogDispatch(uint64_t aTaskId, uint64_t aParentTaskId, uint64_t aSourceEventId,
             SourceEventType aSourceEventType)
 {
+  LogDispatch(aTaskId, aParentTaskId, aSourceEventId, aSourceEventType, 0);
+}
+
+void
+LogDispatch(uint64_t aTaskId, uint64_t aParentTaskId, uint64_t aSourceEventId,
+            SourceEventType aSourceEventType, int aDelayTimeMs)
+{
   TraceInfo* info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
+
+  // aDelayTimeMs is the expected delay time in milliseconds, thus the dispatch
+  // time calculated of it might be slightly off in the real world.
+  uint64_t time = (aDelayTimeMs <= 0) ? GetTimestamp() :
+                  GetTimestamp() + aDelayTimeMs;
 
   // Log format:
   // [0 taskId dispatchTime sourceEventId sourceEventType parentTaskId]
   nsCString* log = info->AppendLog();
   if (log) {
     log->AppendPrintf("%d %lld %lld %lld %d %lld",
-                      ACTION_DISPATCH, aTaskId, GetTimestamp(), aSourceEventId,
+                      ACTION_DISPATCH, aTaskId, time, aSourceEventId,
                       aSourceEventType, aParentTaskId);
   }
 }

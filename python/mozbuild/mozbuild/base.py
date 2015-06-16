@@ -43,8 +43,8 @@ def ancestors(path):
 def samepath(path1, path2):
     if hasattr(os.path, 'samefile'):
         return os.path.samefile(path1, path2)
-    return os.path.normpath(os.path.realpath(path1)) == \
-        os.path.normpath(os.path.realpath(path2))
+    return os.path.normcase(os.path.realpath(path1)) == \
+        os.path.normcase(os.path.realpath(path2))
 
 class BadEnvironmentException(Exception):
     """Base class for errors raised when the build environment is not sane."""

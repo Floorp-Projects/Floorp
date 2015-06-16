@@ -17,6 +17,10 @@
 #ifdef MOZ_NUWA_PROCESS
 #include "ipc/Nuwa.h"
 #endif
+#ifdef MOZ_TASK_TRACER
+#include "GeckoTaskTracerImpl.h"
+using namespace mozilla::tasktracer;
+#endif
 
 using mozilla::Atomic;
 using mozilla::LogLevel;
@@ -556,13 +560,6 @@ nsTimerImpl::Fire()
                  js::ProfileEntry::Category::OTHER);
 #endif
 
-#ifdef MOZ_TASK_TRACER
-  // mTracedTask is an instance of FakeTracedTask created by
-  // DispatchTracedTask(). AutoRunFakeTracedTask logs the begin/end time of the
-  // timer/FakeTracedTask instance in ctor/dtor.
-  mozilla::tasktracer::AutoRunFakeTracedTask runTracedTask(mTracedTask);
-#endif
-
   TimeStamp now = TimeStamp::Now();
   if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
     TimeDuration   a = now - mStart; // actual delay in intervals
@@ -752,6 +749,14 @@ nsTimerImpl::PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef)
     }
   }
 
+#ifdef MOZ_TASK_TRACER
+  // During the dispatch of TimerEvent, we overwrite the current TraceInfo
+  // partially with the info saved in timer earlier, and restore it back by
+  // AutoSaveCurTraceInfo.
+  AutoSaveCurTraceInfo saveCurTraceInfo;
+  (timer->GetTracedTask()).SetTLSTraceInfo();
+#endif
+
   nsIEventTarget* target = timer->mEventTarget;
   event->SetTimer(timer.forget());
 
@@ -795,3 +800,18 @@ nsTimerImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
 }
+
+#ifdef MOZ_TASK_TRACER
+void
+nsTimerImpl::GetTLSTraceInfo()
+{
+  mTracedTask.GetTLSTraceInfo();
+}
+
+TracedTaskCommon
+nsTimerImpl::GetTracedTask()
+{
+  return mTracedTask;
+}
+#endif
+

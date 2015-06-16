@@ -6942,11 +6942,11 @@ PresShell::HandleEvent(nsIFrame* aFrame,
   // Make touch events, mouse events and hardware key events to be the source
   // events of TaskTracer, and originate the rest correlation tasks from here.
   SourceEventType type = SourceEventType::Unknown;
-  if (WidgetTouchEvent* inputEvent = aEvent->AsTouchEvent()) {
+  if (aEvent->AsTouchEvent()) {
     type = SourceEventType::Touch;
-  } else if (WidgetMouseEvent* inputEvent = aEvent->AsMouseEvent()) {
+  } else if (aEvent->AsMouseEvent()) {
     type = SourceEventType::Mouse;
-  } else if (WidgetKeyboardEvent* inputEvent = aEvent->AsKeyboardEvent()) {
+  } else if (aEvent->AsKeyboardEvent()) {
     type = SourceEventType::Key;
   }
   AutoSourceEvent taskTracerEvent(type);

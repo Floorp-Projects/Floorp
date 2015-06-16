@@ -381,7 +381,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     nsresult res;
 
     test_utils->sts_target()->Dispatch(
-        WrapRunnableRet(ice_ctx_, &NrIceCtx::StartGathering, &res),
+        WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartGathering),
         NS_DISPATCH_SYNC);
 
     ASSERT_TRUE(NS_SUCCEEDED(res));
@@ -420,7 +420,7 @@ class IceTestPeer : public sigslot::has_slots<> {
 
     RUN_ON_THREAD(
         test_utils->sts_target(),
-        WrapRunnableRet(this, &IceTestPeer::GetCandidates_s, stream, &v));
+        WrapRunnableRet(&v, this, &IceTestPeer::GetCandidates_s, stream));
 
     return v;
   }
@@ -480,7 +480,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   {
     bool result;
     test_utils->sts_target()->Dispatch(
-        WrapRunnableRet(this, &IceTestPeer::is_ready_s, stream, &result),
+        WrapRunnableRet(&result, this, &IceTestPeer::is_ready_s, stream),
         NS_DISPATCH_SYNC);
     return result;
   }
@@ -706,7 +706,7 @@ class IceTestPeer : public sigslot::has_slots<> {
 
     // Now start checks
     test_utils->sts_target()->Dispatch(
-        WrapRunnableRet(ice_ctx_, &NrIceCtx::StartChecks, &res),
+        WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartChecks),
         NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
@@ -783,11 +783,10 @@ class IceTestPeer : public sigslot::has_slots<> {
                              std::vector<NrIceCandidatePair>* pairs) {
     nsresult v;
     test_utils->sts_target()->Dispatch(
-        WrapRunnableRet(this,
+        WrapRunnableRet(&v, this,
                         &IceTestPeer::GetCandidatePairs_s,
                         stream_index,
-                        pairs,
-                        &v),
+                        pairs),
         NS_DISPATCH_SYNC);
     return v;
   }
@@ -993,10 +992,9 @@ class IceTestPeer : public sigslot::has_slots<> {
   void SetControlling(NrIceCtx::Controlling controlling) {
     nsresult res;
     test_utils->sts_target()->Dispatch(
-        WrapRunnableRet(ice_ctx_,
+        WrapRunnableRet(&res, ice_ctx_,
                         &NrIceCtx::SetControlling,
-                        controlling,
-                        &res),
+                        controlling),
         NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
