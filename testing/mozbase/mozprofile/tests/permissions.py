@@ -40,7 +40,16 @@ http://127.0.0.1:8888           privileged
 
         cursor.execute("PRAGMA user_version=%d;" % version)
 
-        if version == 4:
+        if version == 5:
+            cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
+              id INTEGER PRIMARY KEY,
+              origin TEXT,
+              type TEXT,
+              permission INTEGER,
+              expireType INTEGER,
+              expireTime INTEGER,
+              modificationTime INTEGER)""")
+        elif version == 4:
             cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
                id INTEGER PRIMARY KEY,
                host TEXT,
@@ -70,7 +79,7 @@ http://127.0.0.1:8888           privileged
                expireType INTEGER,
                expireTime INTEGER)""")
         else:
-            raise Exception("version must be 2, 3 or 4")
+            raise Exception("version must be 2, 3, 4 or 5")
 
         permDB.commit()
         cursor.close()
@@ -79,7 +88,7 @@ http://127.0.0.1:8888           privileged
         perms = Permissions(self.profile_dir, self.locations_file.name)
         perms_db_filename = os.path.join(self.profile_dir, 'permissions.sqlite')
 
-        select_stmt = 'select host, type, permission from moz_hosts'
+        select_stmt = 'select origin, type, permission from moz_hosts'
 
         con = sqlite3.connect(perms_db_filename)
         cur = con.cursor()
@@ -88,32 +97,32 @@ http://127.0.0.1:8888           privileged
 
         self.assertEqual(len(entries), 3)
 
-        self.assertEqual(entries[0][0], 'mochi.test')
+        self.assertEqual(entries[0][0], 'http://mochi.test:8888')
         self.assertEqual(entries[0][1], 'allowXULXBL')
         self.assertEqual(entries[0][2], 1)
 
-        self.assertEqual(entries[1][0], '127.0.0.1')
+        self.assertEqual(entries[1][0], 'http://127.0.0.1')
         self.assertEqual(entries[1][1], 'allowXULXBL')
         self.assertEqual(entries[1][2], 2)
 
-        self.assertEqual(entries[2][0], '127.0.0.1')
+        self.assertEqual(entries[2][0], 'http://127.0.0.1:8888')
         self.assertEqual(entries[2][1], 'allowXULXBL')
         self.assertEqual(entries[2][2], 1)
 
-        perms._locations.add_host('a.b.c', options='noxul')
+        perms._locations.add_host('a.b.c', port='8081', scheme='https', options='noxul')
 
         cur.execute(select_stmt)
         entries = cur.fetchall()
 
         self.assertEqual(len(entries), 4)
-        self.assertEqual(entries[3][0], 'a.b.c')
+        self.assertEqual(entries[3][0], 'https://a.b.c:8081')
         self.assertEqual(entries[3][1], 'allowXULXBL')
         self.assertEqual(entries[3][2], 2)
 
-        # when creating a DB we should default to user_version==2
+        # when creating a DB we should default to user_version==5
         cur.execute('PRAGMA user_version')
         entries = cur.fetchall()
-        self.assertEqual(entries[0][0], 2)
+        self.assertEqual(entries[0][0], 5)
 
         perms.clean_db()
         # table should be removed
@@ -160,7 +169,14 @@ http://127.0.0.1:8888           privileged
 
         self.assertEqual(len(entries), 3)
 
-        columns = 9 if version == 4 else (8 if version == 3 else 6)
+        columns = {
+            1: 6,
+            2: 6,
+            3: 8,
+            4: 9,
+            5: 7,
+        }[version]
+
         self.assertEqual(len(entries[0]), columns)
         for x in range(4, columns):
             self.assertEqual(entries[0][x], 0)
@@ -173,6 +189,9 @@ http://127.0.0.1:8888           privileged
 
     def test_existing_permissions_db_v4(self):
         self.verify_user_version(4)
+
+    def test_existing_permissions_db_v5(self):
+        self.verify_user_version(5)
 
 if __name__ == '__main__':
     unittest.main()
