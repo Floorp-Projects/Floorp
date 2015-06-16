@@ -350,6 +350,11 @@ pref("dom.w3c_touch_events.enabled", 1);
 pref("dom.w3c_touch_events.safetyX", 0); // escape borders in units of 1/240"
 pref("dom.w3c_touch_events.safetyY", 120); // escape borders in units of 1/240"
 
+// W3C draft pointer events
+pref("dom.w3c_pointer_events.enabled", false);
+// W3C touch-action css property (related to touch and pointer events)
+pref("layout.css.touch_action.enabled", false);
+
 #ifdef MOZ_SAFE_BROWSING
 // Safe browsing does nothing unless this pref is set
 pref("browser.safebrowsing.enabled", false);
