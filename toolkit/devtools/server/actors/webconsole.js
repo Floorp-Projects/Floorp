@@ -811,18 +811,14 @@ WebConsoleActor.prototype =
     if (evalResult) {
       if ("return" in evalResult) {
         result = evalResult.return;
-      }
-      else if ("yield" in evalResult) {
+      } else if ("yield" in evalResult) {
         result = evalResult.yield;
-      }
-      else if ("throw" in evalResult) {
+      } else if ("throw" in evalResult) {
         let error = evalResult.throw;
         errorGrip = this.createValueGrip(error);
-        let errorToString = evalInfo.window
-                            .evalInGlobalWithBindings("ex + ''", {ex: error});
-        if (errorToString && typeof errorToString.return == "string") {
-          errorMessage = errorToString.return;
-        }
+        errorMessage = error && (typeof error === "object")
+          ? error.unsafeDereference().toString()
+          : "" + error;
       }
     }
 
