@@ -16,38 +16,6 @@
 
 namespace mozilla {
 
-nsCString
-GetGUIDName(const GUID& guid);
-
-// Returns true if the reader has a stream with the specified index.
-// Index can be a specific index, or one of:
-//   MF_SOURCE_READER_FIRST_VIDEO_STREAM
-//   MF_SOURCE_READER_FIRST_AUDIO_STREAM
-bool
-SourceReaderHasStream(IMFSourceReader* aReader, const DWORD aIndex);
-
-// Auto manages the lifecycle of a PROPVARIANT.
-class AutoPropVar {
-public:
-  AutoPropVar() {
-    PropVariantInit(&mVar);
-  }
-  ~AutoPropVar() {
-    PropVariantClear(&mVar);
-  }
-  operator PROPVARIANT&() {
-    return mVar;
-  }
-  PROPVARIANT* operator->() {
-    return &mVar;
-  }
-  PROPVARIANT* operator&() {
-    return &mVar;
-  }
-private:
-  PROPVARIANT mVar;
-};
-
 // Converts from microseconds to hundreds of nanoseconds.
 // We use microseconds for our timestamps, whereas WMF uses
 // hundreds of nanoseconds.
@@ -64,16 +32,8 @@ HNsToUsecs(int64_t hNanoSecs) {
   return hNanoSecs / 10;
 }
 
-// Assigns aUnknown to *aInterface, and AddRef's it.
-// Helper for MSCOM QueryInterface implementations.
-HRESULT
-DoGetInterface(IUnknown* aUnknown, void** aInterface);
-
 HRESULT
 HNsToFrames(int64_t aHNs, uint32_t aRate, int64_t* aOutFrames);
-
-HRESULT
-FramesToUsecs(int64_t aSamples, uint32_t aRate, int64_t* aOutUsecs);
 
 HRESULT
 GetDefaultStride(IMFMediaType *aType, uint32_t* aOutStride);
