@@ -128,4 +128,34 @@ describe("loop.store.TextChatStore", function () {
         new CustomEvent("LoopChatMessageAppended"));
     });
   });
+
+  describe("#updateRoomInfo", function() {
+    it("should add the room name to the list", function() {
+      sandbox.stub(navigator.mozL10n, "get").returns("Let's really share!");
+
+      store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
+        roomName: "Let's share!",
+        roomOwner: "Mark",
+        roomUrl: "fake"
+      }));
+
+      expect(store.getStoreState("messageList")).eql([{
+        type: CHAT_MESSAGE_TYPES.SPECIAL,
+        contentType: CHAT_CONTENT_TYPES.ROOM_NAME,
+        message: "Let's really share!"
+      }]);
+    });
+
+    it("should not dispatch a LoopChatMessageAppended event", function() {
+      sandbox.stub(navigator.mozL10n, "get").returns("Let's really share!");
+
+      store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
+        roomName: "Let's share!",
+        roomOwner: "Mark",
+        roomUrl: "fake"
+      }));
+
+      sinon.assert.notCalled(window.dispatchEvent);
+    });
+  });
 });

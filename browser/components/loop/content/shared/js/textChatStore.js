@@ -5,18 +5,20 @@
 var loop = loop || {};
 loop.store = loop.store || {};
 
-loop.store.TextChatStore = (function() {
+loop.store.TextChatStore = (function(mozL10n) {
   "use strict";
 
   var sharedActions = loop.shared.actions;
 
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES = {
     RECEIVED: "recv",
-    SENT: "sent"
+    SENT: "sent",
+    SPECIAL: "special"
   };
 
   var CHAT_CONTENT_TYPES = loop.store.CHAT_CONTENT_TYPES = {
-    TEXT: "chat-text"
+    TEXT: "chat-text",
+    ROOM_NAME: "room-name"
   };
 
   /**
@@ -27,7 +29,8 @@ loop.store.TextChatStore = (function() {
     actions: [
       "dataChannelsAvailable",
       "receivedTextChatMessage",
-      "sendTextChatMessage"
+      "sendTextChatMessage",
+      "updateRoomInfo"
     ],
 
     /**
@@ -88,7 +91,11 @@ loop.store.TextChatStore = (function() {
       var newList = this._storeState.messageList.concat(message);
       this.setStoreState({ messageList: newList });
 
-      window.dispatchEvent(new CustomEvent("LoopChatMessageAppended"));
+      // Notify MozLoopService if appropriate that a message has been appended
+      // and it should therefore check if we need a different sized window or not.
+      if (type != CHAT_MESSAGE_TYPES.SPECIAL) {
+        window.dispatchEvent(new CustomEvent("LoopChatMessageAppended"));
+      }
     },
 
     /**
@@ -114,8 +121,23 @@ loop.store.TextChatStore = (function() {
     sendTextChatMessage: function(actionData) {
       this._appendTextChatMessage(CHAT_MESSAGE_TYPES.SENT, actionData);
       this._sdkDriver.sendTextChatMessage(actionData);
+    },
+
+    /**
+     * Handles receiving information about the room - specifically the room name
+     * so it can be added to the list.
+     *
+     * @param  {sharedActions.UpdateRoomInfo} actionData
+     */
+    updateRoomInfo: function(actionData) {
+      // XXX When we add special messages to desktop, we'll need to not post
+      // multiple changes of room name, only the first. Bug 1171940 should fix this.
+      this._appendTextChatMessage(CHAT_MESSAGE_TYPES.SPECIAL, {
+        contentType: CHAT_CONTENT_TYPES.ROOM_NAME,
+        message: mozL10n.get("rooms_welcome_title", {conversationName: actionData.roomName})
+      });
     }
   });
 
   return TextChatStore;
-})();
+})(navigator.mozL10n || window.mozL10n);
