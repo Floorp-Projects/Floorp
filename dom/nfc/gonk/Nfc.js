@@ -215,17 +215,10 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     },
 
     notifyFocusApp: function notifyFocusApp(options) {
-      let target, tabId;
-      if (this.eventListeners[this.focusApp]) {
-        target = this.eventListeners[this.focusApp];
-        tabId = this.focusApp;
-      } else {
-        target = this.eventListeners[NFC.SYSTEM_APP_ID];
-        tabId = NFC.SYSTEM_APP_ID;
-      }
+      let tabId = this.getFocusTabId();
       options.tabId = tabId;
 
-      this.notifyDOMEvent(target, options);
+      this.notifyDOMEvent(this.eventListeners[tabId], options);
     },
 
     notifyDOMEvent: function notifyDOMEvent(target, options) {
@@ -235,6 +228,11 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       }
 
       target.sendAsyncMessage("NFC:DOMEvent", options);
+    },
+
+    getFocusTabId: function getFocusTabId() {
+      return this.eventListeners[this.focusApp] ? this.focusApp
+                                                : NFC.SYSTEM_APP_ID;
     },
 
     setFocusApp: function setFocusApp(id, isFocus) {
@@ -295,13 +293,12 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     notifyUserAcceptedP2P: function notifyUserAcceptedP2P(appId) {
       let target = this.peerTargets[appId];
       let sessionToken = SessionHelper.getCurrentP2PToken();
-      let isValid = (sessionToken != null) && (target != null);
-      if (!isValid) {
+      if (!sessionToken || !target) {
         debug("Peer already lost or " + appId + " is not a registered PeerReadytarget");
         return;
       }
 
-      this.notifyDOMEvent(target, {tabId: this.focusApp,
+      this.notifyDOMEvent(target, {tabId: this.getFocusTabId(),
                                    event: NFC.PEER_EVENT_READY,
                                    sessionToken: sessionToken});
     },
