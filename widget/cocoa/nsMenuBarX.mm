@@ -497,6 +497,14 @@ char nsMenuBarX::GetLocalizedAccelKey(const char *shortcutID)
   return retval;
 }
 
+/* static */
+void nsMenuBarX::ResetNativeApplicationMenu()
+{
+  [sApplicationMenu removeAllItems];
+  [sApplicationMenu release];
+  sApplicationMenu = nil;
+}
+
 // Hide the item in the menu by setting the 'hidden' attribute. Returns it in |outHiddenNode| so
 // the caller can hang onto it if they so choose. It is acceptable to pass nsull
 // for |outHiddenNode| if the caller doesn't care about the hidden node.
