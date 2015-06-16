@@ -277,15 +277,21 @@ public class DoorHangerPopup extends AnchoredPopup
         // Show doorhangers for the selected tab
         int tabId = tab.getId();
         boolean shouldShowPopup = false;
+        DoorHanger firstDoorhanger = null;
         for (DoorHanger dh : mDoorHangers) {
             if (dh.getTabId() == tabId) {
                 dh.setVisibility(View.VISIBLE);
                 shouldShowPopup = true;
+                if (firstDoorhanger == null) {
+                    firstDoorhanger = dh;
+                } else {
+                    dh.hideTitle();
+                }
             } else {
                 dh.setVisibility(View.GONE);
             }
         }
- 
+
         // Dismiss the popup if there are no doorhangers to show for this tab
         if (!shouldShowPopup) {
             dismiss();
@@ -297,6 +303,8 @@ public class DoorHangerPopup extends AnchoredPopup
             show();
             return;
         }
+
+        firstDoorhanger.showTitle(tab.getFavicon(), tab.getBaseDomain());
 
         // Make the popup focusable for accessibility. This gets done here
         // so the node can be accessibility focused, but on pre-ICS devices this
