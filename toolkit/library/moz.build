@@ -32,6 +32,12 @@ def Libxul(name):
     if CONFIG['MOZ_WEBRTC']:
         DELAYLOAD_DLLS += ['msdmo.dll']
 
+    if CONFIG['OS_ARCH'] == 'WINNT':
+        DELAYLOAD_DLLS += [
+            'api-ms-win-core-winrt-l1-1-0.dll',
+            'api-ms-win-core-winrt-string-l1-1-0.dll',
+        ]
+
     if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
         LOCAL_INCLUDES += [
             '/widget/windows',
