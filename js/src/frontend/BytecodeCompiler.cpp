@@ -144,11 +144,10 @@ MaybeCheckEvalFreeVariables(ExclusiveContext* cxArg, HandleScript evalCaller, Ha
 }
 
 static inline bool
-CanLazilyParse(ExclusiveContext* cx, HandleObject staticScope,
-               const ReadOnlyCompileOptions& options)
+CanLazilyParse(ExclusiveContext* cx, const ReadOnlyCompileOptions& options)
 {
     return options.canLazilyParse &&
-           !HasNonSyntacticStaticScopeChain(staticScope) &&
+           !options.hasPollutedGlobalScope &&
            !cx->compartment()->options().disableLazyParsing() &&
            !cx->compartment()->options().discardSource() &&
            !options.sourceIsLazy;
@@ -261,7 +260,7 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
             return nullptr;
     }
 
-    bool canLazilyParse = CanLazilyParse(cx, enclosingStaticScope, options);
+    bool canLazilyParse = CanLazilyParse(cx, options);
 
     Maybe<Parser<SyntaxParseHandler> > syntaxParser;
     if (canLazilyParse) {
@@ -562,7 +561,7 @@ CompileFunctionBody(JSContext* cx, MutableHandleFunction fun, const ReadOnlyComp
             return false;
     }
 
-    bool canLazilyParse = CanLazilyParse(cx, enclosingStaticScope, options);
+    bool canLazilyParse = CanLazilyParse(cx, options);
 
     Maybe<Parser<SyntaxParseHandler> > syntaxParser;
     if (canLazilyParse) {
