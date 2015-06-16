@@ -25,6 +25,14 @@ ContentDispatchChooser.prototype =
     return this._protoSvc;
   },
 
+  _getChromeWin: function getChromeWin() {
+    try {
+      return Services.wm.getMostRecentWindow("navigator:browser");
+    } catch (e) {
+      throw Cr.NS_ERROR_FAILURE;
+    }
+  },
+
   ask: function ask(aHandler, aWindowContext, aURI, aReason) {
     let window = null;
     try {
@@ -41,12 +49,26 @@ ContentDispatchChooser.prototype =
     if (aHandler.possibleApplicationHandlers.length > 1) {
       aHandler.launchWithURI(aURI, aWindowContext);
     } else {
-      let msg = {
-        type: "Intent:OpenNoHandler",
-        uri: aURI.spec,
-      };
+      let win = this._getChromeWin();
+      if (win && win.NativeWindow) {
+        let bundle = Services.strings.createBundle("chrome://browser/locale/handling.properties");
+        let failedText = bundle.GetStringFromName("protocol.failed");
+        let searchText = bundle.GetStringFromName("protocol.toast.search");
 
-      Messaging.sendRequest(msg);
+        win.NativeWindow.toast.show(failedText, "long", {
+          button: {
+            label: searchText,
+            callback: function() {
+              let message = {
+                type: "Intent:Open",
+                url: "market://search?q=" + aURI.scheme,
+              };
+
+              Messaging.sendRequest(message);
+            }
+          }
+        });
+      }
     }
   },
 };
