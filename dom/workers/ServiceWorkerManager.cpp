@@ -3580,6 +3580,24 @@ ServiceWorkerManager::CreateServiceWorker(nsIPrincipal* aPrincipal,
   info.mIndexedDBAllowed =
     indexedDB::IDBFactory::AllowedForPrincipal(aPrincipal);
 
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  rv = aPrincipal->GetCsp(getter_AddRefs(csp));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  info.mCSP = csp;
+  if (info.mCSP) {
+    rv = info.mCSP->GetAllowsEval(&info.mReportCSPViolations,
+                                  &info.mEvalAllowed);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    info.mEvalAllowed = true;
+    info.mReportCSPViolations = false;
+  }
+
   // NOTE: this defaults the SW load context to:
   //  - private browsing = false
   //  - content = true
