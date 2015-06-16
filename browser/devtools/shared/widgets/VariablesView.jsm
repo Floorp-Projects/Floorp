@@ -1543,7 +1543,7 @@ Scope.prototype = {
    *
    * @param string a
    * @param string b
-   * @return number 
+   * @return number
    *         -1 if a is less than b, 0 if no change in order, +1 if a is greater than 0
    */
   _naturalSort: function(a,b) {

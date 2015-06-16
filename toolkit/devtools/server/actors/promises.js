@@ -145,7 +145,9 @@ let PromisesActor = protocol.ActorClass({
       sources: () => DevToolsUtils.reportException("PromisesActor",
         Error("sources not yet implemented")),
       createEnvironmentActor: () => DevToolsUtils.reportException(
-        "PromisesActor", Error("createEnvironmentActor not yet implemented"))
+        "PromisesActor", Error("createEnvironmentActor not yet implemented")),
+      getGlobalDebugObject: () => DevToolsUtils.reportException(
+        "PromisesActor", Error("getGlobalDebugObject not yet implemented")),
     });
 
     this._navigationLifetimePool.addActor(actor);
