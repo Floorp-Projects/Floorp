@@ -128,7 +128,18 @@ static_assert(nsIContentPolicy::TYPE_INVALID == 0 &&
               nsIContentPolicy::TYPE_XSLT == 18 &&
               nsIContentPolicy::TYPE_BEACON == 19 &&
               nsIContentPolicy::TYPE_FETCH == 20 &&
-              nsIContentPolicy::TYPE_IMAGESET == 21,
+              nsIContentPolicy::TYPE_IMAGESET == 21 &&
+              nsIContentPolicy::TYPE_WEB_MANIFEST == 22 &&
+              nsIContentPolicy::TYPE_INTERNAL_SCRIPT == 23 &&
+              nsIContentPolicy::TYPE_INTERNAL_WORKER == 24 &&
+              nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER == 25 &&
+              nsIContentPolicy::TYPE_INTERNAL_EMBED == 26 &&
+              nsIContentPolicy::TYPE_INTERNAL_OBJECT == 27 &&
+              nsIContentPolicy::TYPE_INTERNAL_FRAME == 28 &&
+              nsIContentPolicy::TYPE_INTERNAL_IFRAME == 29 &&
+              nsIContentPolicy::TYPE_INTERNAL_AUDIO == 30 &&
+              nsIContentPolicy::TYPE_INTERNAL_VIDEO == 31 &&
+              nsIContentPolicy::TYPE_INTERNAL_TRACK == 32,
               "nsContentPolicytType values are as expected");
 
 namespace {
