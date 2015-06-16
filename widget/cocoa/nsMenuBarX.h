@@ -126,6 +126,7 @@ public:
   void              ForceUpdateNativeMenuAt(const nsAString& indexString);
   void              ForceNativeMenuReload(); // used for testing
   static char       GetLocalizedAccelKey(const char *shortcutID);
+  static void       ResetNativeApplicationMenu();
 
 protected:
   void              ConstructNativeMenus();
