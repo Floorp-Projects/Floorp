@@ -54,6 +54,8 @@ const IS_UNIFIED_TELEMETRY = Preferences.get(PREF_UNIFIED, false);
 
 const PING_FORMAT_VERSION = 4;
 
+const PING_TYPE_DELETION = "deletion";
+
 // We try to spread "midnight" pings out over this interval.
 const MIDNIGHT_FUZZING_INTERVAL_MS = 60 * 60 * 1000;
 // We delay sending "midnight" pings on this client by this interval.
@@ -91,6 +93,15 @@ let Policy = {
 function isV4PingFormat(aPing) {
   return ("id" in aPing) && ("application" in aPing) &&
          ("version" in aPing) && (aPing.version >= 2);
+}
+
+/**
+ * Check if the provided ping is a deletion ping.
+ * @param {Object} aPing The ping to check.
+ * @return {Boolean} True if the ping is a deletion ping, false otherwise.
+ */
+function isDeletionPing(aPing) {
+  return isV4PingFormat(aPing) && (aPing.type == PING_TYPE_DELETION);
 }
 
 function tomorrow(date) {
@@ -208,6 +219,13 @@ this.TelemetrySend = {
   setServer: function(server) {
     return TelemetrySendImpl.setServer(server);
   },
+
+  /**
+   * Only used in tests to wait on outgoing pending pings.
+   */
+  testWaitOnOutgoingPings: function() {
+    return TelemetrySendImpl.promisePendingPingActivity();
+  },
 };
 
 let TelemetrySendImpl = {
@@ -217,8 +235,8 @@ let TelemetrySendImpl = {
   _pingSendTimer: null,
   // This tracks all pending ping requests to the server.
   _pendingPingRequests: new Map(),
-  // This is a private barrier blocked by pending async ping activity (sending & saving).
-  _connectionsBarrier: new AsyncShutdown.Barrier("TelemetrySend: Waiting for pending ping activity"),
+  // This tracks all the pending async ping activity.
+  _pendingPingActivity: new Set(),
   // This is true when running in the test infrastructure.
   _testMode: false,
 
@@ -263,13 +281,21 @@ let TelemetrySendImpl = {
     this._server = Preferences.get(PREF_SERVER, undefined);
 
     // If any pings were submitted before the delayed init finished
-    // we will send them now.
-    yield this._sendPersistedPings();
+    // we will send them now. We don't wait on sending as this could take some time.
+    this._sendPersistedPings();
 
     // Check the pending pings on disk now.
-    yield this._checkPendingPings();
+    let haveOverduePings = yield this._checkPendingPings();
+    if (haveOverduePings) {
+      // We don't wait on sending as this could take some time.
+      this._sendPersistedPings();
+    }
   }),
 
+  /**
+   * Discard old pings from the pending pings and detect overdue ones.
+   * @return {Boolean} True if we have overdue pings, false otherwise.
+   */
   _checkPendingPings: Task.async(function*() {
     // Scan the pending pings - that gives us a list sorted by last modified, descending.
     let infos = yield TelemetryStorage.loadPendingPingList();
@@ -319,13 +345,14 @@ let TelemetrySendImpl = {
       (now.getTime() - info.lastModificationDate) > OVERDUE_PING_FILE_AGE);
     this._overduePingCount = overduePings.length;
 
-
     if (overduePings.length > 0) {
       this._log.trace("_checkForOverduePings - Have " + overduePings.length +
-                       " overdue pending pings, sending " + infos.length +
+                       " overdue pending pings, ready to send " + infos.length +
                        " pings now.");
-      yield this._sendPersistedPings();
+      return true;
     }
+
+    return false;
    }),
 
   shutdown: Task.async(function*() {
@@ -341,7 +368,7 @@ let TelemetrySendImpl = {
     // Cancel any outgoing requests.
     yield this._cancelOutgoingRequests();
     // ... and wait for any outstanding async ping activity.
-    yield this._connectionsBarrier.wait();
+    yield this.promisePendingPingActivity();
   }),
 
   reset: function() {
@@ -370,7 +397,7 @@ let TelemetrySendImpl = {
   },
 
   submitPing: function(ping) {
-    if (!this._canSend()) {
+    if (!this._canSend(ping)) {
       this._log.trace("submitPing - Telemetry is not allowed to send pings.");
       return Promise.resolve();
     }
@@ -550,7 +577,7 @@ let TelemetrySendImpl = {
   },
 
   _doPing: function(ping, id, isPersisted) {
-    if (!this._canSend()) {
+    if (!this._canSend(ping)) {
       // We can't send the pings to the server, so don't try to.
       this._log.trace("_doPing - Sending is disabled.");
       return Promise.resolve();
@@ -654,12 +681,14 @@ let TelemetrySendImpl = {
 
   /**
    * Check if pings can be sent to the server. If FHR is not allowed to upload,
-   * pings are not sent to the server (Telemetry is a sub-feature of FHR).
+   * pings are not sent to the server (Telemetry is a sub-feature of FHR). If trying
+   * to send a deletion ping, don't block it.
    * If unified telemetry is off, don't send pings if Telemetry is disabled.
    *
+   * @param {Object} [ping=null] A ping to be checked.
    * @return {Boolean} True if pings can be send to the servers, false otherwise.
    */
-  _canSend: function() {
+  _canSend: function(ping = null) {
     // We only send pings from official builds, but allow overriding this for tests.
     if (!Telemetry.isOfficialTelemetry && !this._testMode) {
       return false;
@@ -668,6 +697,10 @@ let TelemetrySendImpl = {
     // With unified Telemetry, the FHR upload setting controls whether we can send pings.
     // The Telemetry pref enables sending extended data sets instead.
     if (IS_UNIFIED_TELEMETRY) {
+      // Deletion pings are sent even if the upload is disabled.
+      if (ping && isDeletionPing(ping)) {
+        return true;
+      }
       return Preferences.get(PREF_FHR_UPLOAD_ENABLED, false);
     }
 
@@ -693,6 +726,20 @@ let TelemetrySendImpl = {
    * This is needed to block shutdown on any outstanding ping activity.
    */
   _trackPendingPingTask: function (promise) {
-    this._connectionsBarrier.client.addBlocker("Waiting for ping task", promise);
+    let clear = () => this._pendingPingActivity.delete(promise);
+    promise.then(clear, clear);
+    this._pendingPingActivity.add(promise);
+  },
+
+  /**
+   * Return a promise that allows to wait on pending pings.
+   * @return {Object<Promise>} A promise resolved when all the pending pings promises
+   *         are resolved.
+   */
+  promisePendingPingActivity: function () {
+    this._log.trace("promisePendingPingActivity - Waiting for ping task");
+    return Promise.all([for (p of this._pendingPingActivity) p.catch(ex => {
+      this._log.error("promisePendingPingActivity - ping activity had an error", ex);
+    })]);
   },
 };

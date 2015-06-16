@@ -1378,6 +1378,7 @@ pref("devtools.webide.enabled", true);
 pref("devtools.toolbox.footer.height", 250);
 pref("devtools.toolbox.sidebar.width", 500);
 pref("devtools.toolbox.host", "bottom");
+pref("devtools.toolbox.previousHost", "side");
 pref("devtools.toolbox.selectedTool", "webconsole");
 pref("devtools.toolbox.toolbarSpec", '["splitconsole", "paintflashing toggle","tilt toggle","scratchpad","resize toggle","eyedropper","screenshot --fullpage", "rulers"]');
 pref("devtools.toolbox.sideEnabled", true);
