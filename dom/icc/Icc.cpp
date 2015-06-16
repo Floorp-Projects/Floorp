@@ -15,11 +15,9 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsIIccInfo.h"
-#include "nsIIccProvider.h"
 #include "nsIIccService.h"
 #include "nsIStkCmdFactory.h"
 #include "nsIStkProactiveCmd.h"
-#include "nsRadioInterfaceLayer.h"
 #include "nsServiceManagerUtils.h"
 
 using mozilla::dom::icc::IccCallback;

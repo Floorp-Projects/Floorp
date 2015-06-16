@@ -10,7 +10,6 @@
 #include "IccManager.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIIccInfo.h"
-#include "nsRadioInterfaceLayer.h"
 
 using namespace mozilla::dom;
 

@@ -8,7 +8,6 @@
 #define mozilla_dom_IccListener_h
 
 #include "nsAutoPtr.h"
-#include "nsIIccProvider.h"
 #include "nsIIccService.h"
 
 namespace mozilla {
