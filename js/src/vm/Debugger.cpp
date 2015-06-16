@@ -6937,17 +6937,17 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext* cx, unsigned argc, Value* vp)
     return FromPropertyDescriptor(cx, desc, args.rval());
 }
 
-static bool
-DebuggerObject_getOwnPropertyNames(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "getOwnPropertyNames", args, obj);
 
+static bool
+getOwnPropertyKeys(JSContext* cx, unsigned argc, unsigned flags, Value* vp)
+{
+    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "getOwnPropertyKeys", args, obj);
     AutoIdVector keys(cx);
     {
         Maybe<AutoCompartment> ac;
         ac.emplace(cx, obj);
         ErrorCopier ec(ac);
-        if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &keys))
+        if (!GetPropertyKeys(cx, obj, flags, &keys))
             return false;
     }
 
@@ -6964,8 +6964,10 @@ DebuggerObject_getOwnPropertyNames(JSContext* cx, unsigned argc, Value* vp)
              vals[i].setString(str);
          } else if (JSID_IS_ATOM(id)) {
              vals[i].setString(JSID_TO_STRING(id));
+         } else if (JSID_IS_SYMBOL(id)) {
+             vals[i].setSymbol(JSID_TO_SYMBOL(id));
          } else {
-             MOZ_ASSERT_UNREACHABLE("GetPropertyKeys must return only string and int jsids");
+             MOZ_ASSERT_UNREACHABLE("GetPropertyKeys must return only string, int, and Symbol jsids");
          }
     }
 
@@ -6974,6 +6976,18 @@ DebuggerObject_getOwnPropertyNames(JSContext* cx, unsigned argc, Value* vp)
         return false;
     args.rval().setObject(*aobj);
     return true;
+}
+
+static bool
+DebuggerObject_getOwnPropertyNames(JSContext* cx, unsigned argc, Value* vp) {
+    return getOwnPropertyKeys(cx, argc, JSITER_OWNONLY | JSITER_HIDDEN, vp);
+}
+
+static bool
+DebuggerObject_getOwnPropertySymbols(JSContext* cx, unsigned argc, Value* vp) {
+    return getOwnPropertyKeys(cx, argc,
+                              JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS | JSITER_SYMBOLSONLY,
+                              vp);
 }
 
 static bool
@@ -7408,6 +7422,7 @@ static const JSPropertySpec DebuggerObject_properties[] = {
 static const JSFunctionSpec DebuggerObject_methods[] = {
     JS_FN("getOwnPropertyDescriptor", DebuggerObject_getOwnPropertyDescriptor, 1, 0),
     JS_FN("getOwnPropertyNames", DebuggerObject_getOwnPropertyNames, 0, 0),
+    JS_FN("getOwnPropertySymbols", DebuggerObject_getOwnPropertySymbols, 0, 0),
     JS_FN("defineProperty", DebuggerObject_defineProperty, 2, 0),
     JS_FN("defineProperties", DebuggerObject_defineProperties, 1, 0),
     JS_FN("deleteProperty", DebuggerObject_deleteProperty, 1, 0),
