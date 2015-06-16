@@ -112,6 +112,9 @@ WriteStatusApplied(LPCWSTR updateDirPath);
 namespace mozilla {
 namespace startup {
 extern GeckoProcessType sChildProcessType;
+
+void SetSafeMode();
+bool IsSafeMode() { return gSafeMode; }
 }
 }
 
