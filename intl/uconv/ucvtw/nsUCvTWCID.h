@@ -8,24 +8,9 @@
 
 #include "nsISupports.h"
 
-// Class ID for our BIG5ToUnicode charset converter
-// {EFC323E1-EC62-11d2-8AAC-00600811A836}
-#define NS_BIG5TOUNICODE_CID \
-  { 0xefc323e1, 0xec62, 0x11d2, {0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36}}
-
 // Class ID for our UnicodeToBIG5 charset converter
 // {EFC323E2-EC62-11d2-8AAC-00600811A836}
 #define NS_UNICODETOBIG5_CID \
   { 0xefc323e2, 0xec62, 0x11d2, {0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36}}
-
-// Class ID for our BIG5HKSCSToUnicode charset converter
-// {BA6151BB-EC62-11d2-8AAC-00600811A836}
-#define NS_BIG5HKSCSTOUNICODE_CID \
-  { 0xba6151bb, 0xec62, 0x11d2, {0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36}}
-
-// Class ID for our UnicodeToBIG5HKSCS charset converter
-// {BA6151BC-EC62-11d2-8AAC-00600811A836}
-#define NS_UNICODETOBIG5HKSCS_CID \
-  { 0xba6151bc, 0xec62, 0x11d2, {0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36}}
 
 #endif /* nsUCvTWCID_h___ */

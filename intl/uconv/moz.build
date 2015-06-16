@@ -137,10 +137,8 @@ UNIFIED_SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
-    'ucvtw/nsBIG5HKSCSToUnicode.cpp',
     'ucvtw/nsBIG5ToUnicode.cpp',
     'ucvtw/nsUnicodeToBIG5.cpp',
-    'ucvtw/nsUnicodeToBIG5HKSCS.cpp',
 ]
 
 UNIFIED_SOURCES += [
