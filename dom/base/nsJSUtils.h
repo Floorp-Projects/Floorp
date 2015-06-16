@@ -53,13 +53,6 @@ public:
    */
   static uint64_t GetCurrentlyRunningCodeInnerWindowID(JSContext *aContext);
 
-  /**
-   * Report a pending exception on aContext, if any.  Note that this
-   * can be called when the context has a JS stack.  If that's the
-   * case, the stack will be set aside before reporting the exception.
-   */
-  static void ReportPendingException(JSContext *aContext);
-
   static nsresult CompileFunction(mozilla::dom::AutoJSAPI& jsapi,
                                   JS::AutoObjectVector& aScopeChain,
                                   JS::CompileOptions& aOptions,
@@ -86,7 +79,9 @@ public:
 
   // aEvaluationGlobal is the global to evaluate in.  The return value
   // will then be wrapped back into the compartment aCx is in when
-  // this function is called.
+  // this function is called.  For all the EvaluateString overloads,
+  // the JSContext must come from an AutoJSAPI that has had
+  // TakeOwnershipOfErrorReporting() called on it.
   static nsresult EvaluateString(JSContext* aCx,
                                  const nsAString& aScript,
                                  JS::Handle<JSObject*> aEvaluationGlobal,

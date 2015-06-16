@@ -1120,6 +1120,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   // http://www.whatwg.org/specs/web-apps/current-work/#execute-the-script-block
   AutoEntryScript entryScript(globalObject, "<script> element", true,
                               context->GetNativeContext());
+  entryScript.TakeOwnershipOfErrorReporting();
   JS::Rooted<JSObject*> global(entryScript.cx(),
                                globalObject->GetGlobalJSObject());
 
