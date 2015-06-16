@@ -1539,11 +1539,10 @@ MediaFormatReader::NotifyDemuxer(uint32_t aLength, int64_t aOffset)
 }
 
 void
-MediaFormatReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
+MediaFormatReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  MOZ_ASSERT(aBuffer || aLength);
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(aLength);
   if (mDataRange.IsEmpty()) {
     mDataRange = ByteInterval(aOffset, aOffset + aLength);
   } else {

@@ -466,7 +466,7 @@ nsresult MP3FrameParser::ParseBuffer(const uint8_t* aBuffer,
   return NS_OK;
 }
 
-void MP3FrameParser::Parse(const char* aBuffer, uint32_t aLength, uint64_t aOffset)
+void MP3FrameParser::Parse(const uint8_t* aBuffer, uint32_t aLength, uint64_t aOffset)
 {
   MutexAutoLock mon(mLock);
 
@@ -475,7 +475,7 @@ void MP3FrameParser::Parse(const char* aBuffer, uint32_t aLength, uint64_t aOffs
     return;
   }
 
-  const uint8_t* buffer = reinterpret_cast<const uint8_t*>(aBuffer);
+  const uint8_t* buffer = aBuffer;
   int32_t length = aLength;
   uint64_t offset = aOffset;
 
