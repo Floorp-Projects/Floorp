@@ -328,7 +328,7 @@ UiccConnector.prototype = {
   unregisterListener: function(listener) {
     let idx = this._SEListeners.indexOf(listener);
     if (idx !== -1) {
-      this._listeners.splice(idx, 1);
+      this._SEListeners.splice(idx, 1);
     }
   },
 
