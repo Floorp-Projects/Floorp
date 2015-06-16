@@ -24,11 +24,19 @@ namespace detail {
 void LayoutLogWarning(const char* aStr, const char* aExpr,
                       const char* aFile, int32_t aLine)
 {
-  MOZ_LOG(GetLayoutLog(),
-          mozilla::LogLevel::Warning,
-          ("[%d] WARNING: %s: '%s', file %s, line %d",
-           base::GetCurrentProcId(),
-           aStr, aExpr, aFile, aLine));
+  if (aExpr) {
+    MOZ_LOG(GetLayoutLog(),
+            mozilla::LogLevel::Warning,
+            ("[%d] WARNING: %s: '%s', file %s, line %d",
+             base::GetCurrentProcId(),
+             aStr, aExpr, aFile, aLine));
+  } else {
+    MOZ_LOG(GetLayoutLog(),
+            mozilla::LogLevel::Warning,
+            ("[%d] WARNING: %s: file %s, line %d",
+             base::GetCurrentProcId(),
+             aStr, aFile, aLine));
+  }
 }
 
 } // namespace detail
