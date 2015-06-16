@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="e862ab9177af664f00b4522e2350f4cb13866d73">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="0c073eda92b099bc008488e52edb0745c5f7975e"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="62ba52866f4e5ca9120dad5bfe62fc5df981dc39"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="3477513bcd385571aa01c0d074849e35bd5e2376"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -151,7 +151,7 @@
   <project name="platform/vendor/qcom/copper" path="device/qcom/msm8974" revision="ec7bc1a26610922156d7d412b4d3de6b4adb93da"/>
   <project name="vendor_broadcom_wlan" path="vendor/broadcom/wlan" remote="b2g" revision="114b9491a8a919687da4e22fbd89fab511d6d8d7"/>
   <!-- Shinano specific things -->
-  <project name="device-shinano" path="device/sony/shinano" remote="b2g" revision="a7cb315bc0704f589858feb2a34956364acacb08"/>
+  <project name="device-shinano" path="device/sony/shinano" remote="b2g" revision="afb93dac826346fdeaab6f8ce5dd70eaaaec676d"/>
   <!-- Aries specific things -->
-  <project name="device-aries" path="device/sony/aries" remote="b2g" revision="75c7e6ca80d0c7a53f346ecfcde2343be95808c9"/>
+  <project name="device-aries" path="device/sony/aries" remote="b2g" revision="2916e2368074b5383c80bf5a0fba3fc83ba310bd"/>
 </manifest>
