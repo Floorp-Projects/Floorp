@@ -7,11 +7,6 @@
 // Note code is not run, so the only issue here is whether it compiles
 // properly as asm.js.
 
-/*
-
-// Commented out until we can fix bug #1172517, which makes this fail
-// for other reasons.
-
 function module_a(stdlib, foreign, heap) {
     "use asm";
 
@@ -31,8 +26,6 @@ function module_a(stdlib, foreign, heap) {
 
 if (this.SharedArrayBuffer)
     assertEq(isAsmJSModule(module_a), true);
-
-*/
 
 function module_b(stdlib, foreign, heap) {
     "use asm";
