@@ -4055,7 +4055,6 @@ nsIFrame::InlinePrefISizeData::ForceBreak(nsRenderingContext *aRenderingContext)
 
 static void
 AddCoord(const nsStyleCoord& aStyle,
-         nsRenderingContext* aRenderingContext,
          nsIFrame* aFrame,
          nscoord* aCoord, float* aPercent,
          bool aClampNegativeToZero)
@@ -4092,9 +4091,7 @@ AddCoord(const nsStyleCoord& aStyle,
 }
 
 static nsIFrame::IntrinsicISizeOffsetData
-IntrinsicSizeOffsets(nsIFrame* aFrame,
-                     nsRenderingContext* aRenderingContext,
-                     bool aForISize)
+IntrinsicSizeOffsets(nsIFrame* aFrame, bool aForISize)
 {
   nsIFrame::IntrinsicISizeOffsetData result;
   WritingMode wm = aFrame->GetWritingMode();
@@ -4102,21 +4099,21 @@ IntrinsicSizeOffsets(nsIFrame* aFrame,
   bool orthogonal = aForISize == wm.IsVertical();
   AddCoord(orthogonal ? styleMargin->mMargin.GetTop()
                       : styleMargin->mMargin.GetLeft(),
-           aRenderingContext, aFrame, &result.hMargin, &result.hPctMargin,
+           aFrame, &result.hMargin, &result.hPctMargin,
            false);
   AddCoord(orthogonal ? styleMargin->mMargin.GetBottom()
                       : styleMargin->mMargin.GetRight(),
-           aRenderingContext, aFrame, &result.hMargin, &result.hPctMargin,
+           aFrame, &result.hMargin, &result.hPctMargin,
            false);
 
   const nsStylePadding* stylePadding = aFrame->StylePadding();
   AddCoord(orthogonal ? stylePadding->mPadding.GetTop()
                       : stylePadding->mPadding.GetLeft(),
-           aRenderingContext, aFrame, &result.hPadding, &result.hPctPadding,
+           aFrame, &result.hPadding, &result.hPctPadding,
            true);
   AddCoord(orthogonal ? stylePadding->mPadding.GetBottom()
                       : stylePadding->mPadding.GetRight(),
-           aRenderingContext, aFrame, &result.hPadding, &result.hPctPadding,
+           aFrame, &result.hPadding, &result.hPctPadding,
            true);
 
   if (aForISize) {
@@ -4160,15 +4157,15 @@ IntrinsicSizeOffsets(nsIFrame* aFrame,
 }
 
 /* virtual */ nsIFrame::IntrinsicISizeOffsetData
-nsFrame::IntrinsicISizeOffsets(nsRenderingContext* aRC)
+nsFrame::IntrinsicISizeOffsets()
 {
-  return IntrinsicSizeOffsets(this, aRC, true);
+  return IntrinsicSizeOffsets(this, true);
 }
 
 nsIFrame::IntrinsicISizeOffsetData
-nsIFrame::IntrinsicBSizeOffsets(nsRenderingContext* aRC)
+nsIFrame::IntrinsicBSizeOffsets()
 {
-  return IntrinsicSizeOffsets(this, aRC, false);
+  return IntrinsicSizeOffsets(this, false);
 }
 
 /* virtual */ IntrinsicSize

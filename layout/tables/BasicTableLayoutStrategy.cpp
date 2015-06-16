@@ -104,7 +104,7 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
         // outer edges near the end of this function.
 
         // XXX Should we ignore percentage padding?
-        nsIFrame::IntrinsicISizeOffsetData offsets = aFrame->IntrinsicISizeOffsets(aRenderingContext);
+        nsIFrame::IntrinsicISizeOffsetData offsets = aFrame->IntrinsicISizeOffsets();
 
         // In quirks mode, table cell width should be content-box,
         // but height should be border box.
