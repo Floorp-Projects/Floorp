@@ -161,7 +161,7 @@ class TestAgent {
 
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
-      WrapRunnableRet(audio_->GetStream(), &Fake_MediaStream::Start, &ret));
+      WrapRunnableRet(&ret, audio_->GetStream(), &Fake_MediaStream::Start));
 
     ASSERT_TRUE(NS_SUCCEEDED(ret));
   }

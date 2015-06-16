@@ -96,11 +96,11 @@ class TestNrSocketTest : public ::testing::Test {
                                        const char* ip_str = "127.0.0.1") {
     nsRefPtr<TestNat> result;
     sts_->Dispatch(
-        WrapRunnableRet(this,
+        WrapRunnableRet(&result,
+                        this,
                         &TestNrSocketTest::CreatePrivateAddrs_s,
                         size,
-                        ip_str,
-                        &result),
+                        ip_str),
         NS_DISPATCH_SYNC);
     return result;
   }
@@ -132,11 +132,11 @@ class TestNrSocketTest : public ::testing::Test {
     }
 
     int result = 0;
-    sts_->Dispatch(WrapRunnableRet(this,
+    sts_->Dispatch(WrapRunnableRet(&result,
+                                   this,
                                    &TestNrSocketTest::SendData_s,
                                    from,
-                                   via,
-                                   &result),
+                                   via),
                    NS_DISPATCH_SYNC);
     if (result) {
       return false;
@@ -152,11 +152,11 @@ class TestNrSocketTest : public ::testing::Test {
     }
 
     MOZ_ASSERT(to);
-    sts_->Dispatch(WrapRunnableRet(this,
+    sts_->Dispatch(WrapRunnableRet(&result,
+                                   this,
                                    &TestNrSocketTest::RecvData_s,
                                    to,
-                                   sender_external_address,
-                                   &result),
+                                   sender_external_address),
                    NS_DISPATCH_SYNC);
 
     return !result;
@@ -182,11 +182,11 @@ class TestNrSocketTest : public ::testing::Test {
     MOZ_ASSERT(sock);
     MOZ_ASSERT(address);
     int r;
-    sts_->Dispatch(WrapRunnableRet(this,
+    sts_->Dispatch(WrapRunnableRet(&r,
+                                   this,
                                    &TestNrSocketTest::GetAddress_s,
                                    sock,
-                                   address,
-                                   &r),
+                                   address),
                    NS_DISPATCH_SYNC);
     return r;
   }

@@ -38,7 +38,7 @@ class TimerTest : public ::testing::Test {
     int ret;
 
     test_utils->sts_target()->Dispatch(
-        WrapRunnableRet(this, &TimerTest::ArmTimer_w, timeout, &ret),
+        WrapRunnableRet(&ret, this, &TimerTest::ArmTimer_w, timeout),
         NS_DISPATCH_SYNC);
 
     return ret;
@@ -48,7 +48,7 @@ class TimerTest : public ::testing::Test {
     int ret;
 
     test_utils->sts_target()->Dispatch(
-        WrapRunnableRet(this, &TimerTest::ArmCancelTimer_w, timeout, &ret),
+        WrapRunnableRet(&ret, this, &TimerTest::ArmCancelTimer_w, timeout),
         NS_DISPATCH_SYNC);
 
     return ret;
@@ -71,7 +71,7 @@ class TimerTest : public ::testing::Test {
     int ret;
 
     test_utils->sts_target()->Dispatch(
-        WrapRunnableRet(this, &TimerTest::CancelTimer_w, &ret),
+        WrapRunnableRet(&ret, this, &TimerTest::CancelTimer_w),
         NS_DISPATCH_SYNC);
 
     return ret;
@@ -85,7 +85,7 @@ class TimerTest : public ::testing::Test {
     int ret;
 
     test_utils->sts_target()->Dispatch(
-        WrapRunnableRet(this, &TimerTest::Schedule_w, &ret),
+        WrapRunnableRet(&ret, this, &TimerTest::Schedule_w),
         NS_DISPATCH_SYNC);
 
     return ret;

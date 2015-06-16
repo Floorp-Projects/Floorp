@@ -43,36 +43,38 @@ BasicTableLayoutStrategy::~BasicTableLayoutStrategy()
 /* virtual */ nscoord
 BasicTableLayoutStrategy::GetMinISize(nsRenderingContext* aRenderingContext)
 {
-    DISPLAY_MIN_WIDTH(mTableFrame, mMinWidth);
-    if (mMinWidth == NS_INTRINSIC_WIDTH_UNKNOWN)
+    DISPLAY_MIN_WIDTH(mTableFrame, mMinISize);
+    if (mMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
         ComputeIntrinsicISizes(aRenderingContext);
-    return mMinWidth;
+    }
+    return mMinISize;
 }
 
 /* virtual */ nscoord
 BasicTableLayoutStrategy::GetPrefISize(nsRenderingContext* aRenderingContext,
                                        bool aComputingSize)
 {
-    DISPLAY_PREF_WIDTH(mTableFrame, mPrefWidth);
-    NS_ASSERTION((mPrefWidth == NS_INTRINSIC_WIDTH_UNKNOWN) ==
-                 (mPrefWidthPctExpand == NS_INTRINSIC_WIDTH_UNKNOWN),
+    DISPLAY_PREF_WIDTH(mTableFrame, mPrefISize);
+    NS_ASSERTION((mPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN) ==
+                 (mPrefISizePctExpand == NS_INTRINSIC_WIDTH_UNKNOWN),
                  "dirtyness out of sync");
-    if (mPrefWidth == NS_INTRINSIC_WIDTH_UNKNOWN)
+    if (mPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
         ComputeIntrinsicISizes(aRenderingContext);
-    return aComputingSize ? mPrefWidthPctExpand : mPrefWidth;
+    }
+    return aComputingSize ? mPrefISizePctExpand : mPrefISize;
 }
 
-struct CellWidthInfo {
-    CellWidthInfo(nscoord aMinCoord, nscoord aPrefCoord,
-                  float aPrefPercent, bool aHasSpecifiedWidth)
-        : hasSpecifiedWidth(aHasSpecifiedWidth)
+struct CellISizeInfo {
+    CellISizeInfo(nscoord aMinCoord, nscoord aPrefCoord,
+                  float aPrefPercent, bool aHasSpecifiedISize)
+        : hasSpecifiedISize(aHasSpecifiedISize)
         , minCoord(aMinCoord)
         , prefCoord(aPrefCoord)
         , prefPercent(aPrefPercent)
     {
     }
 
-    bool hasSpecifiedWidth;
+    bool hasSpecifiedISize;
     nscoord minCoord;
     nscoord prefCoord;
     float prefPercent;
@@ -80,9 +82,9 @@ struct CellWidthInfo {
 
 // Used for both column and cell calculations.  The parts needed only
 // for cells are skipped when aIsCell is false.
-static CellWidthInfo
-GetWidthInfo(nsRenderingContext *aRenderingContext,
-             nsIFrame *aFrame, bool aIsCell)
+static CellISizeInfo
+GetISizeInfo(nsRenderingContext *aRenderingContext,
+             nsIFrame *aFrame, WritingMode aWM, bool aIsCell)
 {
     nscoord minCoord, prefCoord;
     const nsStylePosition *stylePos = aFrame->StylePosition();
@@ -97,20 +99,21 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
         minCoord = aFrame->GetMinISize(aRenderingContext);
         prefCoord = aFrame->GetPrefISize(aRenderingContext);
         // Until almost the end of this function, minCoord and prefCoord
-        // represent the box-sizing based width values (which mean they
-        // should include horizontal padding and border width when
+        // represent the box-sizing based isize values (which mean they
+        // should include inline padding and border width when
         // box-sizing is set to border-box).
-        // Note that this function returns border-box width, we add the
+        // Note that this function returns border-box isize, we add the
         // outer edges near the end of this function.
 
         // XXX Should we ignore percentage padding?
-        nsIFrame::IntrinsicISizeOffsetData offsets = aFrame->IntrinsicISizeOffsets(aRenderingContext);
+        nsIFrame::IntrinsicISizeOffsetData offsets =
+            aFrame->IntrinsicISizeOffsets();
 
-        // In quirks mode, table cell width should be content-box,
-        // but height should be border box.
+        // In quirks mode, table cell isize should be content-box,
+        // but bsize should be border box.
         // Because of this historic anomaly, we do not use quirk.css.
-        // (We can't specify one value of box-sizing for width and another
-        // for height).
+        // (We can't specify one value of box-sizing for isize and another
+        // for bsize).
         // For this reason, we also do not use box-sizing for just one of
         // them, as this may be confusing.
         if (isQuirks) {
@@ -138,106 +141,106 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
         prefCoord = 0;
     }
     float prefPercent = 0.0f;
-    bool hasSpecifiedWidth = false;
+    bool hasSpecifiedISize = false;
 
-    const nsStyleCoord &width = stylePos->mWidth;
-    nsStyleUnit unit = width.GetUnit();
+    const nsStyleCoord& iSize = stylePos->ISize(aWM);
+    nsStyleUnit unit = iSize.GetUnit();
     // NOTE: We're ignoring calc() units with percentages here, for lack of a
     // sensible idea for what to do with them.  This means calc() with
     // percentages is basically handled like 'auto' for table cells and
     // columns.
-    if (width.ConvertsToLength()) {
-        hasSpecifiedWidth = true;
-        // Note: since ComputeWidthValue was designed to return content-box
-        // width, it will (in some cases) subtract the box-sizing edges.
+    if (iSize.ConvertsToLength()) {
+        hasSpecifiedISize = true;
+        // Note: since ComputeISizeValue was designed to return content-box
+        // isize, it will (in some cases) subtract the box-sizing edges.
         // We prevent this unwanted behavior by calling it with
         // aContentEdgeToBoxSizing and aBoxSizingToMarginEdge set to 0.
-        nscoord w = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
-                                                     aFrame, 0, 0, 0, width);
+        nscoord c = nsLayoutUtils::ComputeISizeValue(aRenderingContext,
+                                                     aFrame, 0, 0, 0, iSize);
         // Quirk: A cell with "nowrap" set and a coord value for the
-        // width which is bigger than the intrinsic minimum width uses
-        // that coord value as the minimum width.
+        // isize which is bigger than the intrinsic minimum isize uses
+        // that coord value as the minimum isize.
         // This is kept up-to-date with dynamic changes to nowrap by code in
         // nsTableCellFrame::AttributeChanged
-        if (aIsCell && w > minCoord && isQuirks &&
+        if (aIsCell && c > minCoord && isQuirks &&
             aFrame->GetContent()->HasAttr(kNameSpaceID_None,
                                           nsGkAtoms::nowrap)) {
-            minCoord = w;
+            minCoord = c;
         }
-        prefCoord = std::max(w, minCoord);
+        prefCoord = std::max(c, minCoord);
     } else if (unit == eStyleUnit_Percent) {
-        prefPercent = width.GetPercentValue();
+        prefPercent = iSize.GetPercentValue();
     } else if (unit == eStyleUnit_Enumerated && aIsCell) {
-        switch (width.GetIntValue()) {
+        switch (iSize.GetIntValue()) {
             case NS_STYLE_WIDTH_MAX_CONTENT:
-                // 'width' only affects pref width, not min
-                // width, so don't change anything
+                // 'inline-size' only affects pref isize, not min
+                // isize, so don't change anything
                 break;
             case NS_STYLE_WIDTH_MIN_CONTENT:
                 prefCoord = minCoord;
                 break;
             case NS_STYLE_WIDTH_FIT_CONTENT:
             case NS_STYLE_WIDTH_AVAILABLE:
-                // act just like 'width: auto'
+                // act just like 'inline-size: auto'
                 break;
             default:
                 NS_NOTREACHED("unexpected enumerated value");
         }
     }
 
-    nsStyleCoord maxWidth(stylePos->mMaxWidth);
-    if (maxWidth.GetUnit() == eStyleUnit_Enumerated) {
-        if (!aIsCell || maxWidth.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE)
-            maxWidth.SetNoneValue();
-        else if (maxWidth.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT)
-            // for 'max-width', '-moz-fit-content' is like
+    nsStyleCoord maxISize(stylePos->MaxISize(aWM));
+    if (maxISize.GetUnit() == eStyleUnit_Enumerated) {
+        if (!aIsCell || maxISize.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE) {
+            maxISize.SetNoneValue();
+        } else if (maxISize.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT) {
+            // for 'max-inline-size', '-moz-fit-content' is like
             // '-moz-max-content'
-            maxWidth.SetIntValue(NS_STYLE_WIDTH_MAX_CONTENT,
+            maxISize.SetIntValue(NS_STYLE_WIDTH_MAX_CONTENT,
                                  eStyleUnit_Enumerated);
+        }
     }
-    unit = maxWidth.GetUnit();
-    // XXX To really implement 'max-width' well, we'd need to store
+    unit = maxISize.GetUnit();
+    // XXX To really implement 'max-inline-size' well, we'd need to store
     // it separately on the columns.
-    if (maxWidth.ConvertsToLength() || unit == eStyleUnit_Enumerated) {
-        nscoord w =
-            nsLayoutUtils::ComputeWidthValue(aRenderingContext, aFrame,
-                                             0, 0, 0, maxWidth);
-        if (w < minCoord)
-            minCoord = w;
-        if (w < prefCoord)
-            prefCoord = w;
+    if (maxISize.ConvertsToLength() || unit == eStyleUnit_Enumerated) {
+        nscoord c =
+            nsLayoutUtils::ComputeISizeValue(aRenderingContext, aFrame,
+                                             0, 0, 0, maxISize);
+        minCoord = std::min(c, minCoord);
+        prefCoord = std::min(c, prefCoord);
     } else if (unit == eStyleUnit_Percent) {
-        float p = stylePos->mMaxWidth.GetPercentValue();
-        if (p < prefPercent)
+        float p = stylePos->MaxISize(aWM).GetPercentValue();
+        if (p < prefPercent) {
             prefPercent = p;
+        }
     }
-    // treat calc() with percentages on max-width just like 'none'.
+    // treat calc() with percentages on max-inline-size just like 'none'.
 
-    nsStyleCoord minWidth(stylePos->mMinWidth);
-    if (minWidth.GetUnit() == eStyleUnit_Enumerated) {
-        if (!aIsCell || minWidth.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE)
-            minWidth.SetCoordValue(0);
-        else if (minWidth.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT)
-            // for 'min-width', '-moz-fit-content' is like
+    nsStyleCoord minISize(stylePos->MinISize(aWM));
+    if (minISize.GetUnit() == eStyleUnit_Enumerated) {
+        if (!aIsCell || minISize.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE) {
+            minISize.SetCoordValue(0);
+        } else if (minISize.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT) {
+            // for 'min-inline-size', '-moz-fit-content' is like
             // '-moz-min-content'
-            minWidth.SetIntValue(NS_STYLE_WIDTH_MIN_CONTENT,
+            minISize.SetIntValue(NS_STYLE_WIDTH_MIN_CONTENT,
                                  eStyleUnit_Enumerated);
+        }
     }
-    unit = minWidth.GetUnit();
-    if (minWidth.ConvertsToLength() || unit == eStyleUnit_Enumerated) {
-        nscoord w =
-            nsLayoutUtils::ComputeWidthValue(aRenderingContext, aFrame,
-                                             0, 0, 0, minWidth);
-        if (w > minCoord)
-            minCoord = w;
-        if (w > prefCoord)
-            prefCoord = w;
+    unit = minISize.GetUnit();
+    if (minISize.ConvertsToLength() || unit == eStyleUnit_Enumerated) {
+        nscoord c =
+            nsLayoutUtils::ComputeISizeValue(aRenderingContext, aFrame,
+                                             0, 0, 0, minISize);
+        minCoord = std::max(c, minCoord);
+        prefCoord = std::max(c, prefCoord);
     } else if (unit == eStyleUnit_Percent) {
-        float p = stylePos->mMinWidth.GetPercentValue();
-        if (p > prefPercent)
+        float p = stylePos->MinISize(aWM).GetPercentValue();
+        if (p > prefPercent) {
             prefPercent = p;
+        }
     }
-    // treat calc() with percentages on min-width just like '0'.
+    // treat calc() with percentages on min-inline-size just like '0'.
 
     // XXX Should col frame have border/padding considered?
     if (aIsCell) {
@@ -245,21 +248,21 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
         prefCoord = NSCoordSaturatingAdd(prefCoord, boxSizingToBorderEdge);
     }
 
-    return CellWidthInfo(minCoord, prefCoord, prefPercent, hasSpecifiedWidth);
+    return CellISizeInfo(minCoord, prefCoord, prefPercent, hasSpecifiedISize);
 }
 
-static inline CellWidthInfo
-GetCellWidthInfo(nsRenderingContext *aRenderingContext,
-                 nsTableCellFrame *aCellFrame)
+static inline CellISizeInfo
+GetCellISizeInfo(nsRenderingContext *aRenderingContext,
+                 nsTableCellFrame *aCellFrame, WritingMode aWM)
 {
-    return GetWidthInfo(aRenderingContext, aCellFrame, true);
+    return GetISizeInfo(aRenderingContext, aCellFrame, aWM, true);
 }
 
-static inline CellWidthInfo
-GetColWidthInfo(nsRenderingContext *aRenderingContext,
-                nsIFrame *aFrame)
+static inline CellISizeInfo
+GetColISizeInfo(nsRenderingContext *aRenderingContext,
+                nsIFrame *aFrame, WritingMode aWM)
 {
-    return GetWidthInfo(aRenderingContext, aFrame, false);
+    return GetISizeInfo(aRenderingContext, aFrame, aWM, false);
 }
 
 
@@ -274,6 +277,7 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicISizes(nsRenderingContext* aRend
 {
     nsTableFrame *tableFrame = mTableFrame;
     nsTableCellMap *cellMap = tableFrame->GetCellMap();
+    WritingMode wm = tableFrame->GetWritingMode();
 
     mozilla::AutoStackArena arena;
     SpanningCellSorter spanningCells;
@@ -290,29 +294,31 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicISizes(nsRenderingContext* aRend
         colFrame->ResetIntrinsics();
         colFrame->ResetSpanIntrinsics();
 
-        // Consider the widths on the column.
-        CellWidthInfo colInfo = GetColWidthInfo(aRenderingContext, colFrame);
+        // Consider the isizes on the column.
+        CellISizeInfo colInfo = GetColISizeInfo(aRenderingContext,
+                                                colFrame, wm);
         colFrame->AddCoords(colInfo.minCoord, colInfo.prefCoord,
-                            colInfo.hasSpecifiedWidth);
+                            colInfo.hasSpecifiedISize);
         colFrame->AddPrefPercent(colInfo.prefPercent);
 
-        // Consider the widths on the column-group.  Note that we follow
-        // what the HTML spec says here, and make the width apply to
+        // Consider the isizes on the column-group.  Note that we follow
+        // what the HTML spec says here, and make the isize apply to
         // each column in the group, not the group as a whole.
 
-        // If column has width, column-group doesn't override width.
+        // If column has isize, column-group doesn't override isize.
         if (colInfo.minCoord == 0 && colInfo.prefCoord == 0 &&
             colInfo.prefPercent == 0.0f) {
             NS_ASSERTION(colFrame->GetParent()->GetType() ==
                              nsGkAtoms::tableColGroupFrame,
                          "expected a column-group");
-            colInfo = GetColWidthInfo(aRenderingContext, colFrame->GetParent());
+            colInfo = GetColISizeInfo(aRenderingContext,
+                                      colFrame->GetParent(), wm);
             colFrame->AddCoords(colInfo.minCoord, colInfo.prefCoord,
-                                colInfo.hasSpecifiedWidth);
+                                colInfo.hasSpecifiedISize);
             colFrame->AddPrefPercent(colInfo.prefPercent);
         }
 
-        // Consider the contents of and the widths on the cells without
+        // Consider the contents of and the isizes on the cells without
         // colspans.
         nsCellMapColumnIterator columnIter(cellMap, col);
         int32_t row, colSpan;
@@ -323,10 +329,11 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicISizes(nsRenderingContext* aRend
                 continue;
             }
 
-            CellWidthInfo info = GetCellWidthInfo(aRenderingContext, cellFrame);
+            CellISizeInfo info = GetCellISizeInfo(aRenderingContext,
+                                                  cellFrame, wm);
 
             colFrame->AddCoords(info.minCoord, info.prefCoord,
-                                info.hasSpecifiedWidth);
+                                info.hasSpecifiedISize);
             colFrame->AddPrefPercent(info.prefPercent);
         }
 #ifdef DEBUG_dbaron_off
@@ -343,17 +350,17 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicISizes(nsRenderingContext* aRend
 
     // Consider the cells with a colspan that we saved in the loop above
     // into the spanning cell sorter.  We consider these cells by seeing
-    // if they require adding to the widths resulting only from cells
+    // if they require adding to the isizes resulting only from cells
     // with a smaller colspan, and therefore we must process them sorted
     // in increasing order by colspan.  For each colspan group, we
     // accumulate new values to accumulate in the column frame's Span*
     // members.
     //
-    // Considering things only relative to the widths resulting from
+    // Considering things only relative to the isizes resulting from
     // cells with smaller colspans (rather than incrementally including
     // the results from spanning cells, or doing spanning and
     // non-spanning cells in a single pass) means that layout remains
-    // row-order-invariant and (except for percentage widths that add to
+    // row-order-invariant and (except for percentage isizes that add to
     // more than 100%) column-order invariant.
     //
     // Starting with smaller colspans makes it more likely that we
@@ -374,16 +381,17 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicISizes(nsRenderingContext* aRend
             nsTableCellFrame *cellFrame = cellData->GetCellFrame();
             NS_ASSERTION(cellFrame, "bogus result from spanning cell sorter");
 
-            CellWidthInfo info = GetCellWidthInfo(aRenderingContext, cellFrame);
+            CellISizeInfo info =
+                GetCellISizeInfo(aRenderingContext, cellFrame, wm);
 
             if (info.prefPercent > 0.0f) {
-                DistributePctWidthToColumns(info.prefPercent,
+                DistributePctISizeToColumns(info.prefPercent,
                                             col, colSpan);
             }
-            DistributeWidthToColumns(info.minCoord, col, colSpan, 
-                                     BTLS_MIN_WIDTH, info.hasSpecifiedWidth);
-            DistributeWidthToColumns(info.prefCoord, col, colSpan, 
-                                     BTLS_PREF_WIDTH, info.hasSpecifiedWidth);
+            DistributeISizeToColumns(info.minCoord, col, colSpan, 
+                                     BTLS_MIN_ISIZE, info.hasSpecifiedISize);
+            DistributeISizeToColumns(info.prefCoord, col, colSpan, 
+                                     BTLS_PREF_ISIZE, info.hasSpecifiedISize);
         } while ((item = item->next));
 
         // Combine the results of the span analysis into the main results,
@@ -456,7 +464,7 @@ BasicTableLayoutStrategy::ComputeIntrinsicISizes(nsRenderingContext* aRenderingC
         pref = NSCoordSaturatingAdd(pref, colFrame->GetPrefCoord());
 
         // Percentages are of the table, so we have to reverse them for
-        // intrinsic widths.
+        // intrinsic isizes.
         float p = colFrame->GetPrefPercent();
         if (p > 0.0f) {
             nscoord colPref = colFrame->GetPrefCoord();
@@ -475,18 +483,18 @@ BasicTableLayoutStrategy::ComputeIntrinsicISizes(nsRenderingContext* aRenderingC
 
     nscoord pref_pct_expand = pref;
 
-    // Account for small percentages expanding the preferred width of
+    // Account for small percentages expanding the preferred isize of
     // *other* columns.
     if (max_small_pct_pref > pref_pct_expand) {
         pref_pct_expand = max_small_pct_pref;
     }
 
-    // Account for large percentages expanding the preferred width of
+    // Account for large percentages expanding the preferred isize of
     // themselves.  There's no need to iterate over the columns multiple
     // times, since when there is such a need, the small percentage
     // effect is bigger anyway.  (I think!)
     NS_ASSERTION(0.0f <= pct_total && pct_total <= 1.0f,
-                 "column percentage widths not adjusted down to 100%");
+                 "column percentage inline-sizes not adjusted down to 100%");
     if (pct_total == 1.0f) {
         if (nonpct_pref_total > 0) {
             pref_pct_expand = nscoord_MAX;
@@ -509,45 +517,47 @@ BasicTableLayoutStrategy::ComputeIntrinsicISizes(nsRenderingContext* aRenderingC
         pref_pct_expand = NSCoordSaturatingAdd(pref_pct_expand, add);
     }
 
-    mMinWidth = min;
-    mPrefWidth = pref;
-    mPrefWidthPctExpand = pref_pct_expand;
+    mMinISize = min;
+    mPrefISize = pref;
+    mPrefISizePctExpand = pref_pct_expand;
 }
 
 /* virtual */ void
 BasicTableLayoutStrategy::MarkIntrinsicISizesDirty()
 {
-    mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
-    mPrefWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
-    mPrefWidthPctExpand = NS_INTRINSIC_WIDTH_UNKNOWN;
-    mLastCalcWidth = nscoord_MIN;
+    mMinISize = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mPrefISize = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mPrefISizePctExpand = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mLastCalcISize = nscoord_MIN;
 }
 
 /* virtual */ void
 BasicTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowState)
 {
-    nscoord width = aReflowState.ComputedWidth();
+    nscoord iSize = aReflowState.ComputedISize();
 
-    if (mLastCalcWidth == width)
+    if (mLastCalcISize == iSize) {
         return;
-    mLastCalcWidth = width;
+    }
+    mLastCalcISize = iSize;
 
-    NS_ASSERTION((mMinWidth == NS_INTRINSIC_WIDTH_UNKNOWN) ==
-                 (mPrefWidth == NS_INTRINSIC_WIDTH_UNKNOWN),
+    NS_ASSERTION((mMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) ==
+                 (mPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN),
                  "dirtyness out of sync");
-    NS_ASSERTION((mMinWidth == NS_INTRINSIC_WIDTH_UNKNOWN) ==
-                 (mPrefWidthPctExpand == NS_INTRINSIC_WIDTH_UNKNOWN),
+    NS_ASSERTION((mMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) ==
+                 (mPrefISizePctExpand == NS_INTRINSIC_WIDTH_UNKNOWN),
                  "dirtyness out of sync");
     // XXX Is this needed?
-    if (mMinWidth == NS_INTRINSIC_WIDTH_UNKNOWN)
+    if (mMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
         ComputeIntrinsicISizes(aReflowState.rendContext);
+    }
 
     nsTableCellMap *cellMap = mTableFrame->GetCellMap();
     int32_t colCount = cellMap->GetColCount();
     if (colCount <= 0)
         return; // nothing to do
 
-    DistributeWidthToColumns(width, 0, colCount, BTLS_FINAL_WIDTH, false);
+    DistributeISizeToColumns(iSize, 0, colCount, BTLS_FINAL_ISIZE, false);
 
 #ifdef DEBUG_TABLE_STRATEGY
     printf("ComputeColumnISizes final\n");
@@ -556,14 +566,14 @@ BasicTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowSt
 }
 
 void
-BasicTableLayoutStrategy::DistributePctWidthToColumns(float aSpanPrefPct,
+BasicTableLayoutStrategy::DistributePctISizeToColumns(float aSpanPrefPct,
                                                       int32_t aFirstCol,
                                                       int32_t aColCount)
 {
     // First loop to determine:
-    int32_t nonPctColCount = 0; // number of spanned columns without % width
-    nscoord nonPctTotalPrefWidth = 0; // total pref width of those columns
-    // and to reduce aSpanPrefPct by columns that already have % width
+    int32_t nonPctColCount = 0; // number of spanned columns without % isize
+    nscoord nonPctTotalPrefISize = 0; // total pref isize of those columns
+    // and to reduce aSpanPrefPct by columns that already have % isize
 
     int32_t scol, scol_end;
     nsTableCellMap *cellMap = mTableFrame->GetCellMap();
@@ -576,7 +586,7 @@ BasicTableLayoutStrategy::DistributePctWidthToColumns(float aSpanPrefPct,
         }
         float scolPct = scolFrame->GetPrefPercent();
         if (scolPct == 0.0f) {
-            nonPctTotalPrefWidth += scolFrame->GetPrefCoord();
+            nonPctTotalPrefISize += scolFrame->GetPrefCoord();
             if (cellMap->GetNumCellsOriginatingInCol(scol) > 0) {
                 ++nonPctColCount;
             }
@@ -586,14 +596,14 @@ BasicTableLayoutStrategy::DistributePctWidthToColumns(float aSpanPrefPct,
     }
 
     if (aSpanPrefPct <= 0.0f || nonPctColCount == 0) {
-        // There's no %-width on the colspan left over to distribute,
-        // or there are no columns to which we could distribute %-width
+        // There's no %-isize on the colspan left over to distribute,
+        // or there are no columns to which we could distribute %-isize
         return;
     }
 
     // Second loop, to distribute what remains of aSpanPrefPct
-    // between the non-percent-width spanned columns
-    const bool spanHasNonPctPref = nonPctTotalPrefWidth > 0; // Loop invariant
+    // between the non-percent-isize spanned columns
+    const bool spanHasNonPctPref = nonPctTotalPrefISize > 0; // Loop invariant
     for (scol = aFirstCol, scol_end = aFirstCol + aColCount;
          scol < scol_end; ++scol) {
         nsTableColFrame *scolFrame = mTableFrame->GetColFrame(scol);
@@ -604,20 +614,20 @@ BasicTableLayoutStrategy::DistributePctWidthToColumns(float aSpanPrefPct,
 
         if (scolFrame->GetPrefPercent() == 0.0f) {
             NS_ASSERTION((!spanHasNonPctPref ||
-                          nonPctTotalPrefWidth != 0) &&
+                          nonPctTotalPrefISize != 0) &&
                          nonPctColCount != 0,
                          "should not be zero if we haven't allocated "
                          "all pref percent");
 
-            float allocatedPct; // % width to be given to this column
+            float allocatedPct; // % isize to be given to this column
             if (spanHasNonPctPref) {
                 // Group so we're multiplying by 1.0f when we need
                 // to use up aSpanPrefPct.
                 allocatedPct = aSpanPrefPct *
                     (float(scolFrame->GetPrefCoord()) /
-                     float(nonPctTotalPrefWidth));
+                     float(nonPctTotalPrefISize));
             } else if (cellMap->GetNumCellsOriginatingInCol(scol) > 0) {
-                // distribute equally when all pref widths are 0
+                // distribute equally when all pref isizes are 0
                 allocatedPct = aSpanPrefPct / float(nonPctColCount);
             } else {
                 allocatedPct = 0.0f;
@@ -628,18 +638,18 @@ BasicTableLayoutStrategy::DistributePctWidthToColumns(float aSpanPrefPct,
             // To avoid accumulating rounding error from division,
             // subtract this column's values from the totals.
             aSpanPrefPct -= allocatedPct;
-            nonPctTotalPrefWidth -= scolFrame->GetPrefCoord();
+            nonPctTotalPrefISize -= scolFrame->GetPrefCoord();
             if (cellMap->GetNumCellsOriginatingInCol(scol) > 0) {
                 --nonPctColCount;
             }
 
             if (!aSpanPrefPct) {
-                // No more span-percent-width to distribute --> we're done.
+                // No more span-percent-isize to distribute --> we're done.
                 NS_ASSERTION(spanHasNonPctPref ? 
-                             nonPctTotalPrefWidth == 0 :
+                             nonPctTotalPrefISize == 0 :
                              nonPctColCount == 0,
-                             "No more pct width to distribute, but there are "
-                             "still cols that need some.");
+                             "No more pct inline-size to distribute, "
+                             "but there are still cols that need some.");
                 return;
             }
         }
@@ -647,20 +657,19 @@ BasicTableLayoutStrategy::DistributePctWidthToColumns(float aSpanPrefPct,
 }
 
 void
-BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth, 
-                                                   int32_t aFirstCol, 
+BasicTableLayoutStrategy::DistributeISizeToColumns(nscoord aISize,
+                                                   int32_t aFirstCol,
                                                    int32_t aColCount,
-                                                   BtlsWidthType aWidthType,
-                                                   bool aSpanHasSpecifiedWidth)
+                                                   BtlsISizeType aISizeType,
+                                                   bool aSpanHasSpecifiedISize)
 {
-    NS_ASSERTION(aWidthType != BTLS_FINAL_WIDTH || 
+    NS_ASSERTION(aISizeType != BTLS_FINAL_ISIZE ||
                  (aFirstCol == 0 && 
                   aColCount == mTableFrame->GetCellMap()->GetColCount()),
-            "Computing final column widths, but didn't get full column range");
-
+            "Computing final column isizes, but didn't get full column range");
 
     nscoord subtract = 0;
-    // aWidth initially includes border-spacing for the boundaries in between
+    // aISize initially includes border-spacing for the boundaries in between
     // each of the columns. We start at aFirstCol + 1 because the first
     // in-between boundary would be at the left edge of column aFirstCol + 1
     for (int32_t col = aFirstCol + 1; col < aFirstCol + aColCount; ++col) {
@@ -669,61 +678,61 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
             subtract += mTableFrame->GetColSpacing(col - 1);
         }
     }
-    if (aWidthType == BTLS_FINAL_WIDTH) {
-        // If we're computing final col-width, then aWidth initially includes
-        // border spacing on the table's far left + far right edge, too.  Need
+    if (aISizeType == BTLS_FINAL_ISIZE) {
+        // If we're computing final col-isize, then aISize initially includes
+        // border spacing on the table's far istart + far iend edge, too.  Need
         // to subtract those out, too.
         subtract += (mTableFrame->GetColSpacing(-1) +
                      mTableFrame->GetColSpacing(aColCount));
     }
-    aWidth = NSCoordSaturatingSubtract(aWidth, subtract, nscoord_MAX);
+    aISize = NSCoordSaturatingSubtract(aISize, subtract, nscoord_MAX);
 
     /*
-     * The goal of this function is to distribute |aWidth| between the
-     * columns by making an appropriate AddSpanCoords or SetFinalWidth
+     * The goal of this function is to distribute |aISize| between the
+     * columns by making an appropriate AddSpanCoords or SetFinalISize
      * call for each column.  (We call AddSpanCoords if we're 
-     * distributing a column-spanning cell's minimum or preferred width
-     * to its spanned columns.  We call SetFinalWidth if we're 
-     * distributing a table's final width to its columns.)
+     * distributing a column-spanning cell's minimum or preferred isize
+     * to its spanned columns.  We call SetFinalISize if we're 
+     * distributing a table's final isize to its columns.)
      *
-     * The idea is to either assign one of the following sets of widths
-     * or a weighted average of two adjacent sets of widths.  It is not
+     * The idea is to either assign one of the following sets of isizes
+     * or a weighted average of two adjacent sets of isizes.  It is not
      * possible to assign values smaller than the smallest set of
-     * widths.  However, see below for handling the case of assigning
-     * values larger than the largest set of widths.  From smallest to
+     * isizes.  However, see below for handling the case of assigning
+     * values larger than the largest set of isizes.  From smallest to
      * largest, these are:
      *
-     * 1. [guess_min] Assign all columns their min width.
+     * 1. [guess_min] Assign all columns their min isize.
      *
-     * 2. [guess_min_pct] Assign all columns with percentage widths
-     * their percentage width, and all other columns their min width.
+     * 2. [guess_min_pct] Assign all columns with percentage isizes
+     * their percentage isize, and all other columns their min isize.
      *
-     * 3. [guess_min_spec] Assign all columns with percentage widths
-     * their percentage width, all columns with specified coordinate
-     * widths their pref width (since it doesn't matter whether it's the
-     * largest contributor to the pref width that was the specified
-     * contributor), and all other columns their min width.
+     * 3. [guess_min_spec] Assign all columns with percentage isizes
+     * their percentage isize, all columns with specified coordinate
+     * isizes their pref isize (since it doesn't matter whether it's the
+     * largest contributor to the pref isize that was the specified
+     * contributor), and all other columns their min isize.
      *
-     * 4. [guess_pref] Assign all columns with percentage widths their
-     * specified width, and all other columns their pref width.
+     * 4. [guess_pref] Assign all columns with percentage isizes their
+     * specified isize, and all other columns their pref isize.
      *
-     * If |aWidth| is *larger* than what we would assign in (4), then we
+     * If |aISize| is *larger* than what we would assign in (4), then we
      * expand the columns:
      *
-     *   a. if any columns without a specified coordinate width or
-     *   percent width have nonzero pref width, in proportion to pref
-     *   width [total_flex_pref]
+     *   a. if any columns without a specified coordinate isize or
+     *   percent isize have nonzero pref isize, in proportion to pref
+     *   isize [total_flex_pref]
      *
      *   b. otherwise, if any columns without a specified coordinate
-     *   width or percent width, but with cells originating in them,
-     *   have zero pref width, equally between these
-     *   [numNonSpecZeroWidthCols]
+     *   isize or percent isize, but with cells originating in them,
+     *   have zero pref isize, equally between these
+     *   [numNonSpecZeroISizeCols]
      *
-     *   c. otherwise, if any columns without percent width have nonzero
-     *   pref width, in proportion to pref width [total_fixed_pref]
+     *   c. otherwise, if any columns without percent isize have nonzero
+     *   pref isize, in proportion to pref isize [total_fixed_pref]
      *
-     *   d. otherwise, if any columns have nonzero percentage widths, in
-     *   proportion to the percentage widths [total_pct]
+     *   d. otherwise, if any columns have nonzero percentage isizes, in
+     *   proportion to the percentage isizes [total_pct]
      *
      *   e. otherwise, equally.
      */
@@ -738,8 +747,8 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
             total_flex_pref = 0,
             total_fixed_pref = 0;
     float total_pct = 0.0f; // 0.0f to 1.0f
-    int32_t numInfiniteWidthCols = 0;
-    int32_t numNonSpecZeroWidthCols = 0;
+    int32_t numInfiniteISizeCols = 0;
+    int32_t numNonSpecZeroISizeCols = 0;
 
     int32_t col;
     nsTableCellMap *cellMap = mTableFrame->GetCellMap();
@@ -749,38 +758,39 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
             NS_ERROR("column frames out of sync with cell map");
             continue;
         }
-        nscoord min_width = colFrame->GetMinCoord();
-        guess_min += min_width;
+        nscoord min_iSize = colFrame->GetMinCoord();
+        guess_min += min_iSize;
         if (colFrame->GetPrefPercent() != 0.0f) {
             float pct = colFrame->GetPrefPercent();
             total_pct += pct;
-            nscoord val = nscoord(float(aWidth) * pct);
-            if (val < min_width)
-                val = min_width;
+            nscoord val = nscoord(float(aISize) * pct);
+            if (val < min_iSize) {
+                val = min_iSize;
+            }
             guess_min_pct += val;
             guess_pref = NSCoordSaturatingAdd(guess_pref, val);
         } else {
-            nscoord pref_width = colFrame->GetPrefCoord();
-            if (pref_width == nscoord_MAX) {
-                ++numInfiniteWidthCols;
+            nscoord pref_iSize = colFrame->GetPrefCoord();
+            if (pref_iSize == nscoord_MAX) {
+                ++numInfiniteISizeCols;
             }
-            guess_pref = NSCoordSaturatingAdd(guess_pref, pref_width);
-            guess_min_pct += min_width;
+            guess_pref = NSCoordSaturatingAdd(guess_pref, pref_iSize);
+            guess_min_pct += min_iSize;
             if (colFrame->GetHasSpecifiedCoord()) {
                 // we'll add on the rest of guess_min_spec outside the
                 // loop
-                nscoord delta = NSCoordSaturatingSubtract(pref_width, 
-                                                          min_width, 0);
+                nscoord delta = NSCoordSaturatingSubtract(pref_iSize, 
+                                                          min_iSize, 0);
                 guess_min_spec = NSCoordSaturatingAdd(guess_min_spec, delta);
                 total_fixed_pref = NSCoordSaturatingAdd(total_fixed_pref, 
-                                                        pref_width);
-            } else if (pref_width == 0) {
+                                                        pref_iSize);
+            } else if (pref_iSize == 0) {
                 if (cellMap->GetNumCellsOriginatingInCol(col) > 0) {
-                    ++numNonSpecZeroWidthCols;
+                    ++numNonSpecZeroISizeCols;
                 }
             } else {
                 total_flex_pref = NSCoordSaturatingAdd(total_flex_pref,
-                                                       pref_width);
+                                                       pref_iSize);
             }
         }
     }
@@ -802,42 +812,42 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
     // These are constants (over columns) for each case's math.  We use
     // a pair of nscoords rather than a float so that we can subtract
     // each column's allocation so we avoid accumulating rounding error.
-    nscoord space; // the amount of extra width to allocate
+    nscoord space; // the amount of extra isize to allocate
     union {
         nscoord c;
         float f;
     } basis; // the sum of the statistic over columns to divide it
-    if (aWidth < guess_pref) {
-        if (aWidthType != BTLS_FINAL_WIDTH && aWidth <= guess_min) {
+    if (aISize < guess_pref) {
+        if (aISizeType != BTLS_FINAL_ISIZE && aISize <= guess_min) {
             // Return early -- we don't have any extra space to distribute.
             return;
         }
-        NS_ASSERTION(!(aWidthType == BTLS_FINAL_WIDTH && aWidth < guess_min),
-                     "Table width is less than the "
-                     "sum of its columns' min widths");
-        if (aWidth < guess_min_pct) {
+        NS_ASSERTION(!(aISizeType == BTLS_FINAL_ISIZE && aISize < guess_min),
+                     "Table inline-size is less than the "
+                     "sum of its columns' min inline-sizes");
+        if (aISize < guess_min_pct) {
             l2t = FLEX_PCT_SMALL;
-            space = aWidth - guess_min;
+            space = aISize - guess_min;
             basis.c = guess_min_pct - guess_min;
-        } else if (aWidth < guess_min_spec) {
+        } else if (aISize < guess_min_spec) {
             l2t = FLEX_FIXED_SMALL;
-            space = aWidth - guess_min_pct;
+            space = aISize - guess_min_pct;
             basis.c = NSCoordSaturatingSubtract(guess_min_spec, guess_min_pct,
                                                 nscoord_MAX);
         } else {
             l2t = FLEX_FLEX_SMALL;
-            space = aWidth - guess_min_spec;
+            space = aISize - guess_min_spec;
             basis.c = NSCoordSaturatingSubtract(guess_pref, guess_min_spec,
                                                 nscoord_MAX);
         }
     } else {
-        space = NSCoordSaturatingSubtract(aWidth, guess_pref, nscoord_MAX);
+        space = NSCoordSaturatingSubtract(aISize, guess_pref, nscoord_MAX);
         if (total_flex_pref > 0) {
             l2t = FLEX_FLEX_LARGE;
             basis.c = total_flex_pref;
-        } else if (numNonSpecZeroWidthCols > 0) {
+        } else if (numNonSpecZeroISizeCols > 0) {
             l2t = FLEX_FLEX_LARGE_ZERO;
-            basis.c = numNonSpecZeroWidthCols;
+            basis.c = numNonSpecZeroISizeCols;
         } else if (total_fixed_pref > 0) {
             l2t = FLEX_FIXED_LARGE;
             basis.c = total_fixed_pref;
@@ -851,10 +861,10 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
     }
 
 #ifdef DEBUG_dbaron_off
-    printf("ComputeColumnISizes: %d columns in width %d,\n"
+    printf("ComputeColumnISizes: %d columns in isize %d,\n"
            "  guesses=[%d,%d,%d,%d], totals=[%d,%d,%f],\n"
            "  l2t=%d, space=%d, basis.c=%d\n",
-           aColCount, aWidth,
+           aColCount, aISize,
            guess_min, guess_min_pct, guess_min_spec, guess_pref,
            total_flex_pref, total_fixed_pref, total_pct,
            l2t, space, basis.c);
@@ -866,75 +876,76 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
             NS_ERROR("column frames out of sync with cell map");
             continue;
         }
-        nscoord col_width;
+        nscoord col_iSize;
 
         float pct = colFrame->GetPrefPercent();
         if (pct != 0.0f) {
-            col_width = nscoord(float(aWidth) * pct);
+            col_iSize = nscoord(float(aISize) * pct);
             nscoord col_min = colFrame->GetMinCoord();
-            if (col_width < col_min)
-                col_width = col_min;
+            if (col_iSize < col_min) {
+                col_iSize = col_min;
+            }
         } else {
-            col_width = colFrame->GetPrefCoord();
+            col_iSize = colFrame->GetPrefCoord();
         }
 
-        nscoord col_width_before_adjust = col_width;
+        nscoord col_iSize_before_adjust = col_iSize;
 
         switch (l2t) {
             case FLEX_PCT_SMALL:
-                col_width = col_width_before_adjust = colFrame->GetMinCoord();
+                col_iSize = col_iSize_before_adjust = colFrame->GetMinCoord();
                 if (pct != 0.0f) {
                     nscoord pct_minus_min =
-                        nscoord(float(aWidth) * pct) - col_width;
+                        nscoord(float(aISize) * pct) - col_iSize;
                     if (pct_minus_min > 0) {
                         float c = float(space) / float(basis.c);
                         basis.c -= pct_minus_min;
-                        col_width += NSToCoordRound(float(pct_minus_min) * c);
+                        col_iSize += NSToCoordRound(float(pct_minus_min) * c);
                     }
                 }
                 break;
             case FLEX_FIXED_SMALL:
                 if (pct == 0.0f) {
-                    NS_ASSERTION(col_width == colFrame->GetPrefCoord(),
-                                 "wrong width assigned");
+                    NS_ASSERTION(col_iSize == colFrame->GetPrefCoord(),
+                                 "wrong inline-size assigned");
                     if (colFrame->GetHasSpecifiedCoord()) {
                         nscoord col_min = colFrame->GetMinCoord();
-                        nscoord pref_minus_min = col_width - col_min;
-                        col_width = col_width_before_adjust = col_min;
+                        nscoord pref_minus_min = col_iSize - col_min;
+                        col_iSize = col_iSize_before_adjust = col_min;
                         if (pref_minus_min != 0) {
                             float c = float(space) / float(basis.c);
                             basis.c -= pref_minus_min;
-                            col_width += NSToCoordRound(
+                            col_iSize += NSToCoordRound(
                                 float(pref_minus_min) * c);
                         }
                     } else
-                        col_width = col_width_before_adjust =
+                        col_iSize = col_iSize_before_adjust =
                             colFrame->GetMinCoord();
                 }
                 break;
             case FLEX_FLEX_SMALL:
                 if (pct == 0.0f &&
                     !colFrame->GetHasSpecifiedCoord()) {
-                    NS_ASSERTION(col_width == colFrame->GetPrefCoord(),
-                                 "wrong width assigned");
+                    NS_ASSERTION(col_iSize == colFrame->GetPrefCoord(),
+                                 "wrong inline-size assigned");
                     nscoord col_min = colFrame->GetMinCoord();
                     nscoord pref_minus_min = 
-                        NSCoordSaturatingSubtract(col_width, col_min, 0);
-                    col_width = col_width_before_adjust = col_min;
+                        NSCoordSaturatingSubtract(col_iSize, col_min, 0);
+                    col_iSize = col_iSize_before_adjust = col_min;
                     if (pref_minus_min != 0) {
                         float c = float(space) / float(basis.c);
-                        // If we have infinite-width cols, then the standard
-                        // adjustment to col_width using 'c' won't work,
+                        // If we have infinite-isize cols, then the standard
+                        // adjustment to col_iSize using 'c' won't work,
                         // because basis.c and pref_minus_min are both
                         // nscoord_MAX and will cancel each other out in the
-                        // col_width adjustment (making us assign all the
-                        // space to the first inf-width col).  To correct for
-                        // this, we'll also divide by numInfiniteWidthCols to
-                        // spread the space equally among the inf-width cols.
-                        if (numInfiniteWidthCols) {
+                        // col_iSize adjustment (making us assign all the
+                        // space to the first inf-isize col).  To correct for
+                        // this, we'll also divide by numInfiniteISizeCols to
+                        // spread the space equally among the inf-isize cols.
+                        if (numInfiniteISizeCols) {
                             if (colFrame->GetPrefCoord() == nscoord_MAX) {
-                                c = c / float(numInfiniteWidthCols);
-                                --numInfiniteWidthCols;
+                                c = c / float(numInfiniteISizeCols);
+                                --numInfiniteISizeCols;
                             } else {
                                 c = 0.0f;
                             }
@@ -942,7 +953,7 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
                         basis.c = NSCoordSaturatingSubtract(basis.c, 
                                                             pref_minus_min,
                                                             nscoord_MAX);
-                        col_width += NSToCoordRound(
+                        col_iSize += NSToCoordRound(
                             float(pref_minus_min) * c);
                     }
                 }
@@ -950,16 +961,16 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
             case FLEX_FLEX_LARGE:
                 if (pct == 0.0f &&
                     !colFrame->GetHasSpecifiedCoord()) {
-                    NS_ASSERTION(col_width == colFrame->GetPrefCoord(),
-                                 "wrong width assigned");
-                    if (col_width != 0) {
+                    NS_ASSERTION(col_iSize == colFrame->GetPrefCoord(),
+                                 "wrong inline-size assigned");
+                    if (col_iSize != 0) {
                         if (space == nscoord_MAX) {
-                            basis.c -= col_width;
-                            col_width = nscoord_MAX;
+                            basis.c -= col_iSize;
+                            col_iSize = nscoord_MAX;
                         } else {
                             float c = float(space) / float(basis.c);
-                            basis.c -= col_width;
-                            col_width += NSToCoordRound(float(col_width) * c);
+                            basis.c -= col_iSize;
+                            col_iSize += NSToCoordRound(float(col_iSize) * c);
                         }
                     }
                 }
@@ -969,27 +980,27 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
                     !colFrame->GetHasSpecifiedCoord() &&
                     cellMap->GetNumCellsOriginatingInCol(col) > 0) {
 
-                    NS_ASSERTION(col_width == 0 &&
+                    NS_ASSERTION(col_iSize == 0 &&
                                  colFrame->GetPrefCoord() == 0,
                                  "Since we're in FLEX_FLEX_LARGE_ZERO case, "
-                                 "all auto-width cols should have zero pref "
-                                 "width.");
+                                 "all auto-inline-size cols should have zero "
+                                 "pref inline-size.");
                     float c = float(space) / float(basis.c);
-                    col_width += NSToCoordRound(c);
+                    col_iSize += NSToCoordRound(c);
                     --basis.c;
                 }
                 break;
             case FLEX_FIXED_LARGE:
                 if (pct == 0.0f) {
-                    NS_ASSERTION(col_width == colFrame->GetPrefCoord(),
-                                 "wrong width assigned");
+                    NS_ASSERTION(col_iSize == colFrame->GetPrefCoord(),
+                                 "wrong inline-size assigned");
                     NS_ASSERTION(colFrame->GetHasSpecifiedCoord() ||
                                  colFrame->GetPrefCoord() == 0,
                                  "wrong case");
-                    if (col_width != 0) {
+                    if (col_iSize != 0) {
                         float c = float(space) / float(basis.c);
-                        basis.c -= col_width;
-                        col_width += NSToCoordRound(float(col_width) * c);
+                        basis.c -= col_iSize;
+                        col_iSize += NSToCoordRound(float(col_iSize) * c);
                     }
                 }
                 break;
@@ -998,14 +1009,14 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
                              "wrong case");
                 if (pct != 0.0f) {
                     float c = float(space) / basis.f;
-                    col_width += NSToCoordRound(pct * c);
+                    col_iSize += NSToCoordRound(pct * c);
                     basis.f -= pct;
                 }
                 break;
             case FLEX_ALL_LARGE:
                 {
                     float c = float(space) / float(basis.c);
-                    col_width += NSToCoordRound(c);
+                    col_iSize += NSToCoordRound(c);
                     --basis.c;
                 }
                 break;
@@ -1013,44 +1024,45 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
 
         // Only subtract from space if it's a real number.
         if (space != nscoord_MAX) {
-            NS_ASSERTION(col_width != nscoord_MAX,
-                 "How is col_width nscoord_MAX if space isn't?");
-            NS_ASSERTION(col_width_before_adjust != nscoord_MAX,
-                 "How is col_width_before_adjust nscoord_MAX if space isn't?");
-            space -= col_width - col_width_before_adjust;
+            NS_ASSERTION(col_iSize != nscoord_MAX,
+                 "How is col_iSize nscoord_MAX if space isn't?");
+            NS_ASSERTION(col_iSize_before_adjust != nscoord_MAX,
+                 "How is col_iSize_before_adjust nscoord_MAX if space isn't?");
+            space -= col_iSize - col_iSize_before_adjust;
         }
 
-        NS_ASSERTION(col_width >= colFrame->GetMinCoord(),
-                     "assigned width smaller than min");
+        NS_ASSERTION(col_iSize >= colFrame->GetMinCoord(),
+                     "assigned inline-size smaller than min");
         
-        // Apply the new width
-        switch (aWidthType) {
-            case BTLS_MIN_WIDTH:
+        // Apply the new isize
+        switch (aISizeType) {
+            case BTLS_MIN_ISIZE:
                 {
-                    // Note: AddSpanCoords requires both a min and pref width.
-                    // For the pref width, we'll just pass in our computed
-                    // min width, because the real pref width will be at least
+                    // Note: AddSpanCoords requires both a min and pref isize.
+                    // For the pref isize, we'll just pass in our computed
+                    // min isize, because the real pref isize will be at least
                     // as big
-                    colFrame->AddSpanCoords(col_width, col_width, 
-                                            aSpanHasSpecifiedWidth);
+                    colFrame->AddSpanCoords(col_iSize, col_iSize, 
+                                            aSpanHasSpecifiedISize);
                 }
                 break;
-            case BTLS_PREF_WIDTH:
+            case BTLS_PREF_ISIZE:
                 {
-                    // Note: AddSpanCoords requires both a min and pref width.
-                    // For the min width, we'll just pass in 0, because
-                    // the real min width will be at least 0
-                    colFrame->AddSpanCoords(0, col_width, 
-                                            aSpanHasSpecifiedWidth);
+                    // Note: AddSpanCoords requires both a min and pref isize.
+                    // For the min isize, we'll just pass in 0, because
+                    // the real min isize will be at least 0
+                    colFrame->AddSpanCoords(0, col_iSize, 
+                                            aSpanHasSpecifiedISize);
                 }
                 break;
-            case BTLS_FINAL_WIDTH:
+            case BTLS_FINAL_ISIZE:
                 {
                     nscoord old_final = colFrame->GetFinalISize();
-                    colFrame->SetFinalISize(col_width);
+                    colFrame->SetFinalISize(col_iSize);
                     
-                    if (old_final != col_width)
+                    if (old_final != col_iSize) {
                         mTableFrame->DidResizeColumns();
+                    }
                 }
                 break;                
         }

@@ -12,7 +12,6 @@ EXPORTS.mtransport += [
     '../nriceresolverfake.h',
     '../rlogringbuffer.h',
     '../runnable_utils.h',
-    '../runnable_utils_generated.h',
     '../sigslot.h',
     '../simpletokenbucket.h',
     '../stun_udp_socket_filter.h',
