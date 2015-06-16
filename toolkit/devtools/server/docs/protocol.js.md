@@ -201,6 +201,8 @@ Moving right along, let's say you want to pass/return an array of Incrementors. 
         response: { incrementors: RetVal("array:incrementor") }
     })
 
+You can use an iterator in place of an array as an argument or return value, and the library will handle the conversion automatically.
+
 Or maybe you want to return a dictionary where one item is a incrementor.  To do this you need to tell the type system which members of the dictionary need custom marshallers:
 
     protocol.types.addDictType("contrivedObject", {
