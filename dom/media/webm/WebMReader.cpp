@@ -1145,10 +1145,12 @@ media::TimeIntervals WebMReader::GetBuffered()
   return buffered;
 }
 
-void WebMReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength,
-                                   int64_t aOffset)
+void WebMReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
 {
-  mBufferedState->NotifyDataArrived(aBuffer, aLength, aOffset);
+  MOZ_ASSERT(OnTaskQueue());
+  nsRefPtr<MediaByteBuffer> bytes = mDecoder->GetResource()->SilentReadAt(aOffset, aLength);
+  NS_ENSURE_TRUE_VOID(bytes);
+  mBufferedState->NotifyDataArrived(bytes->Elements(), aLength, aOffset);
 }
 
 int64_t WebMReader::GetEvictionOffset(double aTime)
