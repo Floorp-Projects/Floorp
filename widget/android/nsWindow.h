@@ -200,6 +200,7 @@ protected:
 
     nsRefPtr<mozilla::TextComposition> GetIMEComposition();
     void RemoveIMEComposition();
+    void SendIMEDummyKeyEvents();
     void AddIMETextChange(const IMEChange& aChange);
     void PostFlushIMEChanges();
     void FlushIMEChanges();
