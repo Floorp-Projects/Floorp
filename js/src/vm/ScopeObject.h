@@ -340,10 +340,12 @@ class DeclEnvObject : public ScopeObject
 
   public:
     static const uint32_t RESERVED_SLOTS = 2;
+    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKGROUND;
+
     static const Class class_;
 
     static DeclEnvObject*
-    createTemplateObject(JSContext* cx, HandleFunction fun, NewObjectKind newKind);
+    createTemplateObject(JSContext* cx, HandleFunction fun, gc::InitialHeap heap);
 
     static DeclEnvObject* create(JSContext* cx, HandleObject enclosing, HandleFunction callee);
 
@@ -360,6 +362,8 @@ class StaticEvalObject : public ScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 2;
+    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKGROUND;
+
     static const Class class_;
 
     static StaticEvalObject* create(JSContext* cx, HandleObject enclosing);
@@ -432,6 +436,8 @@ class StaticWithObject : public NestedScopeObject
 {
   public:
     static const unsigned RESERVED_SLOTS = 1;
+    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKGROUND;
+
     static const Class class_;
 
     static StaticWithObject* create(ExclusiveContext* cx);
@@ -446,6 +452,8 @@ class DynamicWithObject : public NestedScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 4;
+    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT4_BACKGROUND;
+
     static const Class class_;
 
     enum WithKind {
@@ -497,6 +505,8 @@ class BlockObject : public NestedScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 2;
+    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT4_BACKGROUND;
+
     static const Class class_;
 
     /* Return the abstract stack depth right before entering this nested scope. */
@@ -583,7 +593,7 @@ class StaticBlockObject : public BlockObject
      * variable of the block isAliased.
      */
     bool needsClone() {
-        return numVariables() > 0 && !getSlot(RESERVED_SLOTS).isFalse();
+        return !getFixedSlot(RESERVED_SLOTS).isFalse();
     }
 
     /* Frontend-only functions ***********************************************/
@@ -687,6 +697,8 @@ class UninitializedLexicalObject : public ScopeObject
 {
   public:
     static const unsigned RESERVED_SLOTS = 1;
+    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKGROUND;
+
     static const Class class_;
 
     static UninitializedLexicalObject* create(JSContext* cx, HandleObject enclosing);
