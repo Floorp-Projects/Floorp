@@ -293,7 +293,7 @@ class GlobalSharedContext : public SharedContext
         inWith_(computeInWith())
     {}
 
-    ObjectBox* toObjectBox() { return nullptr; }
+    ObjectBox* toObjectBox() override { return nullptr; }
     HandleObject topStaticScope() const { return topStaticScope_; }
     bool allowSyntax(AllowedSyntax allowSyntax) const override {
         switch (allowSyntax) {
@@ -338,7 +338,7 @@ class FunctionBox : public ObjectBox, public SharedContext
                 ParseContext<ParseHandler>* pc, Directives directives,
                 bool extraWarnings, GeneratorKind generatorKind);
 
-    ObjectBox* toObjectBox() { return this; }
+    ObjectBox* toObjectBox() override { return this; }
     JSFunction* function() const { return &object->as<JSFunction>(); }
 
     GeneratorKind generatorKind() const { return GeneratorKindFromBits(generatorKindBits_); }
