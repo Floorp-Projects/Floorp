@@ -52,6 +52,8 @@ class nsLayoutStylesheetCache final
   static mozilla::CSSStyleSheet* NoFramesSheet();
   static mozilla::CSSStyleSheet* ChromePreferenceSheet(nsPresContext* aPresContext);
   static mozilla::CSSStyleSheet* ContentPreferenceSheet(nsPresContext* aPresContext);
+  static mozilla::CSSStyleSheet* ContentEditableSheet();
+  static mozilla::CSSStyleSheet* DesignModeSheet();
 
   static void InvalidatePreferenceSheets();
 
@@ -85,8 +87,10 @@ private:
   static mozilla::StaticRefPtr<nsLayoutStylesheetCache> gStyleCache;
   static mozilla::css::Loader* gCSSLoader;
   nsRefPtr<mozilla::CSSStyleSheet> mChromePreferenceSheet;
+  nsRefPtr<mozilla::CSSStyleSheet> mContentEditableSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mContentPreferenceSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mCounterStylesSheet;
+  nsRefPtr<mozilla::CSSStyleSheet> mDesignModeSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mFormsSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mFullScreenOverrideSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mHTMLSheet;
