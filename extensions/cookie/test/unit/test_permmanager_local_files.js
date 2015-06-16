@@ -39,10 +39,4 @@ function run_test() {
   do_check_eq(pm.testPermissionFromPrincipal(principal, "test/local-files"), pm.UNKNOWN_ACTION);
   do_check_eq(pm.testPermissionFromPrincipal(witnessPrincipal, "test/local-files"), pm.UNKNOWN_ACTION);
   do_check_eq(pm.testPermissionFromPrincipal(fileInDirPrincipal, "test/local-files"), pm.UNKNOWN_ACTION);
-
-  // Add the magic "<file>" permission and make sure all "file://" now have the permission.
-  pm.addFromPrincipal(getPrincipalFromURIString("http://<file>"), "test/local-files", pm.ALLOW_ACTION, 0, 0);
-  do_check_eq(pm.testPermissionFromPrincipal(principal, "test/local-files"), pm.ALLOW_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(witnessPrincipal, "test/local-files"), pm.ALLOW_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(fileInDirPrincipal, "test/local-files"), pm.ALLOW_ACTION);
 }
