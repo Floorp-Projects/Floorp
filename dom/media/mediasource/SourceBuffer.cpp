@@ -487,6 +487,8 @@ SourceBuffer::AppendDataCompletedWithSuccess(bool aHasActiveTracks)
         mMediaSource->GetDecoder()->NotifyWaitingForResourcesStatusChanged();
       }
     }
+  }
+  if (mActive) {
     // Tell our parent decoder that we have received new data.
     // The information provided do not matter much so long as it is monotonically
     // increasing.
