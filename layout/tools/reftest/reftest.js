@@ -1177,6 +1177,9 @@ function ServeFiles(manifestPrincipal, depth, aURL, files)
     var testbase = gIOService.newURI("http://localhost:" + gHttpServerPort +
                                      path + dirPath, null, null);
 
+    // Give the testbase URI access to XUL and XBL
+    Services.perms.add(testbase, "allowXULXBL", Services.perms.ALLOW_ACTION);
+
     function FileToURI(file)
     {
         // Only serve relative URIs via the HTTP server, not absolute
