@@ -264,14 +264,29 @@ var Scratchpad = {
     this._updateViewMenuItem(SHOW_LINE_NUMBERS, "sp-menu-line-numbers");
     this._updateViewMenuItem(WRAP_TEXT, "sp-menu-word-wrap");
     this._updateViewMenuItem(SHOW_TRAILING_SPACE, "sp-menu-highlight-trailing-space");
+    this._updateViewFontMenuItem(MINIMUM_FONT_SIZE, "sp-cmd-smaller-font");
+    this._updateViewFontMenuItem(MAXIMUM_FONT_SIZE, "sp-cmd-larger-font");
   },
 
+  /**
+   * Check or uncheck view menu item according to stored preferences.
+   */
   _updateViewMenuItem: function SP_updateViewMenuItem(preferenceName, menuId) {
     let checked = Services.prefs.getBoolPref(preferenceName);
     if (checked) {
         document.getElementById(menuId).setAttribute('checked', true);
     } else {
         document.getElementById(menuId).removeAttribute('checked');
+    }
+  },
+
+  /**
+   * Disable view menu item if the stored font size is equals to the given one.
+   */
+  _updateViewFontMenuItem: function SP_updateViewFontMenuItem(fontSize, commandId) {
+    let prefFontSize = Services.prefs.getIntPref(EDITOR_FONT_SIZE);
+    if (prefFontSize === fontSize) {
+      document.getElementById(commandId).setAttribute('disabled', true);
     }
   },
 
@@ -1939,6 +1954,12 @@ var Scratchpad = {
       let newFontSize = size + 1;
       this.editor.setFontSize(newFontSize);
       Services.prefs.setIntPref(EDITOR_FONT_SIZE, newFontSize);
+
+      if (newFontSize === MAXIMUM_FONT_SIZE) {
+        document.getElementById("sp-cmd-larger-font").setAttribute('disabled', true);
+      }
+
+      document.getElementById("sp-cmd-smaller-font").removeAttribute('disabled');
     }
   },
 
@@ -1953,7 +1974,13 @@ var Scratchpad = {
       let newFontSize = size - 1;
       this.editor.setFontSize(newFontSize);
       Services.prefs.setIntPref(EDITOR_FONT_SIZE, newFontSize);
+
+      if (newFontSize === MINIMUM_FONT_SIZE) {
+        document.getElementById("sp-cmd-smaller-font").setAttribute('disabled', true);
+      }
     }
+
+    document.getElementById("sp-cmd-larger-font").removeAttribute('disabled');
   },
 
   /**
@@ -1963,6 +1990,9 @@ var Scratchpad = {
   {
     this.editor.setFontSize(NORMAL_FONT_SIZE);
     Services.prefs.setIntPref(EDITOR_FONT_SIZE, NORMAL_FONT_SIZE);
+
+    document.getElementById("sp-cmd-larger-font").removeAttribute('disabled');
+    document.getElementById("sp-cmd-smaller-font").removeAttribute('disabled');
   },
 
   _observers: [],
