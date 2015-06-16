@@ -28,6 +28,7 @@ DIRS += [
     'finalizationwitness',
     'formautofill',
     'find',
+    'gfx',
     'jsdownloads',
     'mediasniffer',
     'microformats',
