@@ -348,7 +348,9 @@ public:
     mCompleteMediaHeaderRange = mParser->FirstCompleteMediaHeader();
     mCompleteMediaSegmentRange = mParser->FirstCompleteMediaSegment();
     ErrorResult rv;
-    mResource->EvictData(mParser->mOffset, mParser->mOffset, rv);
+    if (HasCompleteInitData()) {
+      mResource->EvictData(mParser->mOffset, mParser->mOffset, rv);
+    }
     if (NS_WARN_IF(rv.Failed())) {
       rv.SuppressException();
       return false;
