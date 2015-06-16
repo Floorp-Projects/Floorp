@@ -507,7 +507,7 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, global);
     MOZ_ASSERT(global->is<GlobalObject>());
-    MOZ_RELEASE_ASSERT(scriptArg->hasNonSyntacticScope());
+    MOZ_RELEASE_ASSERT(scriptArg->hasPollutedGlobalScope());
 
     RootedScript script(cx, scriptArg);
     if (script->compartment() != cx->compartment()) {
