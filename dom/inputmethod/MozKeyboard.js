@@ -402,8 +402,7 @@ MozInputMethod.prototype = {
 
   _ensureIsSystem: function() {
     if (!this._isSystem) {
-      throw new this._window.DOMError("Security",
-                                      "Should have 'input-manage' permssion.");
+      throw new this._window.Error("Should have 'input-manage' permssion.");
     }
   },
 
