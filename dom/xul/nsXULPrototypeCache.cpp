@@ -56,12 +56,16 @@ UpdategDisableXULCache()
 static void
 DisableXULCacheChangedCallback(const char* aPref, void* aClosure)
 {
+    bool wasEnabled = !gDisableXULCache;
     UpdategDisableXULCache();
 
-    // Flush the cache, regardless
-    nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
-    if (cache)
-        cache->Flush();
+    if (wasEnabled && gDisableXULCache) {
+        nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
+        if (cache) {
+            // AbortCaching() calls Flush() for us.
+            cache->AbortCaching();
+        }
+    }
 }
 
 //----------------------------------------------------------------------
@@ -309,8 +313,6 @@ nsXULPrototypeCache::IsEnabled()
     return !gDisableXULCache;
 }
 
-static bool gDisableXULDiskCache = false;           // enabled by default
-
 void
 nsXULPrototypeCache::AbortCaching()
 {
@@ -471,22 +473,6 @@ nsXULPrototypeCache::HasData(nsIURI* uri, bool* exists)
     return NS_OK;
 }
 
-static void
-CachePrefChangedCallback(const char* aPref, void* aClosure)
-{
-    bool wasEnabled = !gDisableXULDiskCache;
-    gDisableXULDiskCache =
-        Preferences::GetBool(kDisableXULCachePref,
-                             gDisableXULDiskCache);
-
-    if (wasEnabled && gDisableXULDiskCache) {
-        nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
-
-        if (cache)
-            cache->AbortCaching();
-    }
-}
-
 nsresult
 nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
 {
@@ -501,13 +487,7 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
     if (!startupCache)
         return NS_ERROR_FAILURE;
 
-    gDisableXULDiskCache =
-        Preferences::GetBool(kDisableXULCachePref, gDisableXULDiskCache);
-
-    Preferences::RegisterCallback(CachePrefChangedCallback,
-                                  kDisableXULCachePref);
-
-    if (gDisableXULDiskCache)
+    if (gDisableXULCache)
         return NS_ERROR_NOT_AVAILABLE;
 
     // Get the chrome directory to validate against the one stored in the
