@@ -256,21 +256,21 @@ class SharedContext
 class GlobalSharedContext : public SharedContext
 {
   private:
-    Handle<ScopeObject*> topStaticScope_;
+    Handle<StaticEvalObject*> staticEvalScope_;
 
   public:
     GlobalSharedContext(ExclusiveContext* cx,
-                        Directives directives, Handle<ScopeObject*> topStaticScope,
+                        Directives directives, Handle<StaticEvalObject*> staticEvalScope,
                         bool extraWarnings)
       : SharedContext(cx, directives, extraWarnings),
-        topStaticScope_(topStaticScope)
+        staticEvalScope_(staticEvalScope)
     {}
 
     ObjectBox* toObjectBox() { return nullptr; }
-    HandleObject topStaticScope() const { return topStaticScope_; }
+    HandleObject evalStaticScope() const { return staticEvalScope_; }
 
     bool allowSyntax(AllowedSyntax allowed) const {
-        StaticScopeIter<CanGC> it(context, topStaticScope_);
+        StaticScopeIter<CanGC> it(context, staticEvalScope_);
         for (; !it.done(); it++) {
             if (it.type() == StaticScopeIter<CanGC>::Function &&
                 !it.fun().isArrow())
