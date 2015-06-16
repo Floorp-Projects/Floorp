@@ -927,65 +927,50 @@ enum Role {
   MATHML_ERROR = 157,
 
   /**
-   * A MathML semantics annotation element (semantics in MathML).
-   */
-  MATHML_SEMANTICS = 158,
-
-  /**
-   * A MathML annotation (annotation in MathML).
-   */
-  MATHML_ANNOTATION = 159,
-
-  /**
-   * A MathML XML annotation (annotation-xml in MathML).
-   */
-  MATHML_XML_ANNOTATION = 160,
-
-  /**
    * A MathML stacked (rows of numbers) element (mstack in MathML).
    */
-  MATHML_STACK = 161,
+  MATHML_STACK = 158,
 
   /**
    * A MathML long division element (mlongdiv in MathML).
    */
-  MATHML_LONG_DIVISION = 162,
+  MATHML_LONG_DIVISION = 159,
 
   /**
    * A MathML stack group (msgroup in MathML).
    */
-  MATHML_STACK_GROUP = 163,
+  MATHML_STACK_GROUP = 160,
 
   /**
    * A MathML stack row (msrow in MathML).
    */
-  MATHML_STACK_ROW = 164,
+  MATHML_STACK_ROW = 161,
 
   /**
    * MathML carries, borrows, or crossouts for a row (mscarries in MathML).
    */
-  MATHML_STACK_CARRIES = 165,
+  MATHML_STACK_CARRIES = 162,
 
   /**
    * A MathML carry, borrow, or crossout for a column (mscarry in MathML).
    */
-  MATHML_STACK_CARRY = 166,
+  MATHML_STACK_CARRY = 163,
 
   /**
    * A MathML line in a stack (msline in MathML).
    */
-  MATHML_STACK_LINE = 167,
+  MATHML_STACK_LINE = 164,
 
   /**
    * A group containing radio buttons
    */
-  RADIO_GROUP = 168,
+  RADIO_GROUP = 165,
 
   /**
    * A text container exposing brief amount of information. See related
    * TEXT_CONTAINER role.
    */
-  TEXT = 169,
+  TEXT = 166,
 
   LAST_ROLE = TEXT
 };
