@@ -14,6 +14,7 @@ let state = {windows:[{tabs:[
 
 function test() {
   waitForExplicitFinish();
+  requestLongerTimeout(2);
 
   registerCleanupFunction(function () {
     Services.prefs.clearUserPref("browser.sessionstore.restore_hidden_tabs");
