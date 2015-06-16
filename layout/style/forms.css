@@ -990,17 +990,24 @@ input[type=number]::-moz-number-text {
 }
 
 input[type=number]::-moz-number-spin-box {
+  writing-mode: horizontal-tb;
   display: flex;
   flex-direction: column;
 %ifdef XP_WIN
   /* The Window's Theme's spin buttons have a very narrow minimum width, so
    * make it something reasonable:
-   * XXX What about vertical mode? How will the spin buttons be arranged?
-   * This may need to be adjusted when bug 1123299 is implemented.
    */
   width: 16px;
 %endif
-  height: 0;
+  /* If the spin-box has auto height, it ends up enlarging the default height
+   * of the control, so we limit it to 1em here. The height doesn't affect
+   * the rendering of the spinner-buttons; it's only for layout purposes.
+   *
+   * This is a temporary hack until we implement better positioning for the
+   * spin-box in vertical mode; it works OK at default size but less well
+   * if the font-size is made substantially larger or smaller. (Bug 1175074.)
+   */
+  max-height: 1em;
   align-self: center;
   justify-content: center;
 }

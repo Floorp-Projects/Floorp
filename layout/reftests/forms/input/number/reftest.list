@@ -10,6 +10,8 @@ skip-if(!Android&&!B2G&&!Mulet) == number-same-as-text-unthemed.html number-same
 # should look the same as type=text, except for the spin box
 == number-similar-to-text-unthemed.html number-similar-to-text-unthemed-ref.html
 == number-similar-to-text-unthemed-rtl.html number-similar-to-text-unthemed-rtl-ref.html
+pref(layout.css.vertical-text.enabled,true) == number-similar-to-text-unthemed-vertical-lr.html number-similar-to-text-unthemed-vertical-lr-ref.html
+pref(layout.css.vertical-text.enabled,true) == number-similar-to-text-unthemed-vertical-rl.html number-similar-to-text-unthemed-vertical-rl-ref.html
 
 # dynamic type changes:
 fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),64,4) fuzzy-if(cocoaWidget,63,4) == to-number-from-other-type-unthemed-1.html to-number-from-other-type-unthemed-1-ref.html
