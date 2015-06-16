@@ -18,7 +18,7 @@ for (var name in Reflect)
 // The name and length of all the standard Reflect methods.
 var methods = {
     apply: 3,
-    //construct: 2,
+    construct: 2,
     defineProperty: 3,
     deleteProperty: 2,
     //enumerate: 1,
