@@ -1364,17 +1364,14 @@ bool
 SetAddonInterposition(const nsACString& addonIdStr, nsIAddonInterposition* interposition)
 {
     JSAddonId* addonId;
-    {
-        // We enter the junk scope just to allocate a string, which actually will go
-        // in the system zone.
-        AutoJSAPI jsapi;
-        jsapi.Init(xpc::PrivilegedJunkScope());
-        addonId = NewAddonId(jsapi.cx(), addonIdStr);
-        if (!addonId)
-            return false;
-    }
-
-    return XPCWrappedNativeScope::SetAddonInterposition(addonId, interposition);
+    // We enter the junk scope just to allocate a string, which actually will go
+    // in the system zone.
+    AutoJSAPI jsapi;
+    jsapi.Init(xpc::PrivilegedJunkScope());
+    addonId = NewAddonId(jsapi.cx(), addonIdStr);
+    if (!addonId)
+        return false;
+    return XPCWrappedNativeScope::SetAddonInterposition(jsapi.cx(), addonId, interposition);
 }
 
 } // namespace xpc

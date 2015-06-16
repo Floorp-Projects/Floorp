@@ -33,6 +33,7 @@
 #include "nsWindowMemoryReporter.h"
 #include "nsDOMClassInfo.h"
 #include "ShimInterfaceInfo.h"
+#include "nsIAddonInterposition.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -3486,8 +3487,9 @@ nsXPCComponents_Utils::SetAddonInterposition(const nsACString& addonIdStr,
     JSAddonId* addonId = xpc::NewAddonId(cx, addonIdStr);
     if (!addonId)
         return NS_ERROR_FAILURE;
-    if (!XPCWrappedNativeScope::SetAddonInterposition(addonId, interposition))
+    if (!XPCWrappedNativeScope::SetAddonInterposition(cx, addonId, interposition))
         return NS_ERROR_FAILURE;
+
     return NS_OK;
 }
 
