@@ -1646,26 +1646,18 @@ void MediaDecoderStateMachine::NotifyDataArrived(const char* aBuffer,
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   mReader->NotifyDataArrived(aBuffer, aLength, aOffset);
 
-  // While playing an unseekable stream of unknown duration, mDuration is
-  // updated (in AdvanceFrame()) as we play. But if data is being downloaded
-  // faster than played, mDuration won't reflect the end of playable data
+  // While playing an unseekable stream of unknown duration, mObservedDuration
+  // is updated (in AdvanceFrame()) as we play. But if data is being downloaded
+  // faster than played, mObserved won't reflect the end of playable data
   // since we haven't played the frame at the end of buffered data. So update
-  // mDuration here as new data is downloaded to prevent such a lag.
-  //
-  // Make sure to only do this if we have a start time, otherwise the reader
-  // doesn't know how to compute GetBuffered.
-  if (!mDecoder->IsInfinite() || !HaveStartTime())
-  {
-    return;
-  }
-
+  // mObservedDuration here as new data is downloaded to prevent such a lag.
   media::TimeIntervals buffered{mDecoder->GetBuffered()};
   if (!buffered.IsInvalid()) {
     bool exists;
     media::TimeUnit end{buffered.GetEnd(&exists)};
     if (exists) {
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      mDuration = Some(std::max<TimeUnit>(Duration(), end));
+      mObservedDuration = std::max(mObservedDuration.Ref(), end);
     }
   }
 }
