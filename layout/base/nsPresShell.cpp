@@ -1368,9 +1368,6 @@ PresShell::SetPreferenceStyleRules(bool aForceReflow)
       result = SetPrefFocusRules();
     }
     if (NS_SUCCEEDED(result)) {
-      result = SetPrefNoScriptRule();
-    }
-    if (NS_SUCCEEDED(result)) {
       result = SetPrefNoFramesRule();
     }
 #ifdef DEBUG_attinasi
@@ -1450,34 +1447,6 @@ PresShell::CreatePreferenceStyleSheet()
 // for these rules, or can we call StyleRule::StyleRuleCount()
 // and just "append"?
 static uint32_t sInsertPrefSheetRulesAt = 2;
-
-nsresult
-PresShell::SetPrefNoScriptRule()
-{
-  nsresult rv = NS_OK;
-
-  // also handle the case where print is done from print preview
-  // see bug #342439 for more details
-  nsIDocument* doc = mDocument;
-  if (doc->IsStaticDocument()) {
-    doc = doc->GetOriginalDocument();
-  }
-
-  bool scriptEnabled = doc->IsScriptEnabled();
-  if (scriptEnabled) {
-    if (!mPrefStyleSheet) {
-      rv = CreatePreferenceStyleSheet();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    uint32_t index = 0;
-    mPrefStyleSheet->
-      InsertRuleInternal(NS_LITERAL_STRING("noscript{display:none!important}"),
-                         sInsertPrefSheetRulesAt, &index);
-  }
-
-  return rv;
-}
 
 nsresult PresShell::SetPrefNoFramesRule(void)
 {

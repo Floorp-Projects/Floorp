@@ -192,6 +192,19 @@ nsLayoutStylesheetCache::CounterStylesSheet()
   return gStyleCache->mCounterStylesSheet;
 }
 
+CSSStyleSheet*
+nsLayoutStylesheetCache::NoScriptSheet()
+{
+  EnsureGlobal();
+
+  if (!gStyleCache->mNoScriptSheet) {
+    LoadSheetURL("resource://gre-resources/noscript.css",
+                 gStyleCache->mNoScriptSheet, true);
+  }
+
+  return gStyleCache->mNoScriptSheet;
+}
+
 void
 nsLayoutStylesheetCache::Shutdown()
 {
@@ -225,6 +238,7 @@ nsLayoutStylesheetCache::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf
   MEASURE(mHTMLSheet);
   MEASURE(mMathMLSheet);
   MEASURE(mMinimalXULSheet);
+  MEASURE(mNoScriptSheet);
   MEASURE(mNumberControlSheet);
   MEASURE(mQuirkSheet);
   MEASURE(mSVGSheet);
