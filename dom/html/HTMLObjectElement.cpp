@@ -161,7 +161,12 @@ HTMLObjectElement::OnFocusBlurPlugin(Element* aElement, bool aFocus)
     nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(aElement);
     bool hasRunningPlugin = false;
     if (olc) {
-      olc->GetHasRunningPlugin(&hasRunningPlugin);
+      // nsIObjectLoadingContent::GetHasRunningPlugin() fails when
+      // nsContentUtils::IsCallerChrome() returns false (which it can do even
+      // when we're processing a trusted focus event).  We work around this by
+      // calling nsObjectLoadingContent::HasRunningPlugin() directly.
+      hasRunningPlugin =
+        static_cast<nsObjectLoadingContent*>(olc.get())->HasRunningPlugin();
     }
     if (!hasRunningPlugin) {
       aFocus = false;
