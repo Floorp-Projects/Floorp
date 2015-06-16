@@ -61,9 +61,7 @@ let TabAttributesInternal = {
 
     // Set attributes.
     for (let name in data) {
-      if (!this._skipAttrs.has(name)) {
-        tab.setAttribute(name, data[name]);
-      }
+      tab.setAttribute(name, data[name]);
     }
   }
 };

@@ -36,8 +36,7 @@ add_task(function* test() {
   // Make sure we're backwards compatible and restore old 'image' attributes.
   let state = {
     entries: [{url: "about:mozilla"}],
-    attributes: {custom: "foobaz"},
-    image: gBrowser.getIcon(tab)
+    attributes: {custom: "foobaz", image: gBrowser.getIcon(tab)}
   };
 
   // Prepare a pending tab waiting to be restored.
@@ -46,8 +45,7 @@ add_task(function* test() {
   yield promise;
 
   ok(tab.hasAttribute("pending"), "tab is pending");
-  is(gBrowser.getIcon(tab), state.image, "tab has correct icon");
-  ok(!state.attributes.image, "'image' attribute not saved");
+  is(gBrowser.getIcon(tab), state.attributes.image, "tab has correct icon");
 
   // Let the pending tab load.
   gBrowser.selectedTab = tab;
