@@ -4650,8 +4650,7 @@ nsLayoutUtils::IntrinsicForWM(WritingMode         aWM,
     min = aFrame->GetMinISize(aRenderingContext);
   }
 
-  nsIFrame::IntrinsicISizeOffsetData offsets =
-    aFrame->IntrinsicISizeOffsets(aRenderingContext);
+  nsIFrame::IntrinsicISizeOffsetData offsets = aFrame->IntrinsicISizeOffsets();
   result = AddIntrinsicSizeOffset(aRenderingContext, aFrame, offsets, aType,
                                   boxSizing, result, min, styleISize,
                                   haveFixedMinISize ? &minISize : nullptr,
