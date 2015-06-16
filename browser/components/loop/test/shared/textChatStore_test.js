@@ -64,7 +64,8 @@ describe("loop.store.TextChatStore", function () {
       expect(store.getStoreState("messageList")).eql([{
         type: CHAT_MESSAGE_TYPES.RECEIVED,
         contentType: CHAT_CONTENT_TYPES.TEXT,
-        message: message
+        message: message,
+        extraData: undefined
       }]);
     });
 
@@ -113,7 +114,8 @@ describe("loop.store.TextChatStore", function () {
       expect(store.getStoreState("messageList")).eql([{
         type: CHAT_MESSAGE_TYPES.SENT,
         contentType: messageData.contentType,
-        message: messageData.message
+        message: messageData.message,
+        extraData: undefined
       }]);
     });
 
@@ -142,8 +144,41 @@ describe("loop.store.TextChatStore", function () {
       expect(store.getStoreState("messageList")).eql([{
         type: CHAT_MESSAGE_TYPES.SPECIAL,
         contentType: CHAT_CONTENT_TYPES.ROOM_NAME,
-        message: "Let's really share!"
+        message: "Let's really share!",
+        extraData: undefined
       }]);
+    });
+
+    it("should add the context to the list", function() {
+      sandbox.stub(navigator.mozL10n, "get").returns("Let's really share!");
+
+      store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
+        roomName: "Let's share!",
+        roomOwner: "Mark",
+        roomUrl: "fake",
+        urls: [{
+          description: "A wonderful event",
+          location: "http://wonderful.invalid",
+          thumbnail: "fake"
+        }]
+      }));
+
+      expect(store.getStoreState("messageList")).eql([
+        {
+          type: CHAT_MESSAGE_TYPES.SPECIAL,
+          contentType: CHAT_CONTENT_TYPES.ROOM_NAME,
+          message: "Let's really share!",
+          extraData: undefined
+        }, {
+          type: CHAT_MESSAGE_TYPES.SPECIAL,
+          contentType: CHAT_CONTENT_TYPES.CONTEXT,
+          message: "A wonderful event",
+          extraData: {
+            location: "http://wonderful.invalid",
+            thumbnail: "fake"
+          }
+        }
+      ]);
     });
 
     it("should not dispatch a LoopChatMessageAppended event", function() {

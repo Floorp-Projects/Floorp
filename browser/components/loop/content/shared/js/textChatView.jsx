@@ -5,8 +5,9 @@
 var loop = loop || {};
 loop.shared = loop.shared || {};
 loop.shared.views = loop.shared.views || {};
-loop.shared.views.TextChatView = (function(mozl10n) {
+loop.shared.views.TextChatView = (function(mozL10n) {
   var sharedActions = loop.shared.actions;
+  var sharedViews = loop.shared.views;
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES;
   var CHAT_CONTENT_TYPES = loop.store.CHAT_CONTENT_TYPES;
 
@@ -32,7 +33,7 @@ loop.shared.views.TextChatView = (function(mozl10n) {
 
       return (
         <div className={classes}>
-          <span>{this.props.message}</span>
+          <p>{this.props.message}</p>
         </div>
       );
     }
@@ -47,6 +48,7 @@ loop.shared.views.TextChatView = (function(mozl10n) {
     mixins: [React.addons.PureRenderMixin],
 
     propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       messageList: React.PropTypes.array.isRequired
     },
 
@@ -79,6 +81,23 @@ loop.shared.views.TextChatView = (function(mozl10n) {
           <div className="text-chat-scroller">
             {
               this.props.messageList.map(function(entry, i) {
+                if (entry.type === CHAT_MESSAGE_TYPES.SPECIAL &&
+                    entry.contentType === CHAT_CONTENT_TYPES.CONTEXT) {
+                  return (
+                    <div className="context-url-view-wrapper">
+                      <sharedViews.ContextUrlView
+                        allowClick={true}
+                        description={entry.message}
+                        dispatcher={this.props.dispatcher}
+                        key={i}
+                        showContextTitle={true}
+                        thumbnail={entry.extraData.thumbnail}
+                        url={entry.extraData.location}
+                        useDesktopPaths={false} />
+                    </div>
+                  );
+                }
+
                 return (
                   <TextChatEntry key={i}
                                  contentType={entry.contentType}
@@ -157,7 +176,7 @@ loop.shared.views.TextChatView = (function(mozl10n) {
         <div className="text-chat-box">
           <form onSubmit={this.handleFormSubmit}>
             <input type="text"
-                   placeholder={this.props.showPlaceholder ? mozl10n.get("chat_textbox_placeholder") : ""}
+                   placeholder={this.props.showPlaceholder ? mozL10n.get("chat_textbox_placeholder") : ""}
                    onKeyDown={this.handleKeyDown}
                    valueLink={this.linkState("messageDetail")} />
           </form>
@@ -216,7 +235,9 @@ loop.shared.views.TextChatView = (function(mozl10n) {
 
       return (
         <div className="text-chat-view">
-          <TextChatEntriesView messageList={messageList} />
+          <TextChatEntriesView
+            dispatcher={this.props.dispatcher}
+            messageList={messageList} />
           <TextChatInputView
             dispatcher={this.props.dispatcher}
             showPlaceholder={!hasNonSpecialMessages}
