@@ -3309,23 +3309,11 @@ IsFunctionCloneable(HandleFunction fun, HandleObject dynamicScope)
 
     // If a function was compiled to be lexically nested inside some other
     // script, we cannot clone it without breaking the compiler's assumptions.
-    if (JSObject* scope = fun->nonLazyScript()->enclosingStaticScope()) {
-        // If the script already deals with a non-syntactic scope, we can clone
-        // it.
-        if (scope->is<StaticNonSyntacticScopeObjects>())
-            return true;
-
-        // If the script is an indirect eval that is immediately scoped under
-        // the global, we can clone it.
-        if (scope->is<StaticEvalObject>() &&
-            !scope->as<StaticEvalObject>().isDirect() &&
-            !scope->as<StaticEvalObject>().isStrict())
-        {
-            return true;
-        }
-
-        // Any other enclosing static scope (e.g., function, block) cannot be
-        // cloned.
+    JSObject* scope = fun->nonLazyScript()->enclosingStaticScope();
+    if (scope && (!scope->is<StaticEvalObject>() ||
+                  scope->as<StaticEvalObject>().isDirect() ||
+                  scope->as<StaticEvalObject>().isStrict()))
+    {
         return false;
     }
 
@@ -3333,8 +3321,7 @@ IsFunctionCloneable(HandleFunction fun, HandleObject dynamicScope)
 }
 
 static JSObject*
-CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject dynamicScope,
-                    Handle<ScopeObject*> staticScope)
+CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject dynamicScope)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -3371,21 +3358,7 @@ CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject dynamicScop
         return nullptr;
     }
 
-    if (CanReuseScriptForClone(cx->compartment(), fun, dynamicScope)) {
-        // If the script is to be reused, either the script can already handle
-        // non-syntactic scopes, or there is no new static scope.
-#ifdef DEBUG
-        // Fail here if we OOM during debug asserting.
-        // CloneFunctionReuseScript will delazify the script anyways, so we
-        // are not creating an extra failure condition for DEBUG builds.
-        if (!fun->getOrCreateScript(cx))
-            return nullptr;
-        MOZ_ASSERT(!staticScope || fun->nonLazyScript()->hasNonSyntacticScope());
-#endif
-        return CloneFunctionReuseScript(cx, fun, dynamicScope, fun->getAllocKind());
-    }
-
-    return CloneFunctionAndScript(cx, fun, dynamicScope, staticScope, fun->getAllocKind());
+    return CloneFunctionObject(cx, fun, dynamicScope, fun->getAllocKind());
 }
 
 namespace JS {
@@ -3393,18 +3366,18 @@ namespace JS {
 JS_PUBLIC_API(JSObject*)
 CloneFunctionObject(JSContext* cx, JS::Handle<JSObject*> funobj)
 {
-    return CloneFunctionObject(cx, funobj, cx->global(), /* staticScope = */ nullptr);
+    return CloneFunctionObject(cx, funobj, cx->global());
 }
 
 extern JS_PUBLIC_API(JSObject*)
 CloneFunctionObject(JSContext* cx, HandleObject funobj, AutoObjectVector& scopeChain)
 {
     RootedObject dynamicScope(cx);
-    Rooted<ScopeObject*> staticScope(cx);
-    if (!CreateNonSyntacticScopeChain(cx, scopeChain, &dynamicScope, &staticScope))
+    RootedObject unusedStaticScope(cx);
+    if (!CreateScopeObjectsForScopeChain(cx, scopeChain, &dynamicScope, &unusedStaticScope))
         return nullptr;
 
-    return CloneFunctionObject(cx, funobj, dynamicScope, staticScope);
+    return CloneFunctionObject(cx, funobj, dynamicScope);
 }
 
 } // namespace JS
@@ -4290,7 +4263,7 @@ JS::CloneAndExecuteScript(JSContext* cx, HandleScript scriptArg)
     CHECK_REQUEST(cx);
     RootedScript script(cx, scriptArg);
     if (script->compartment() != cx->compartment()) {
-        script = CloneGlobalScript(cx, /* enclosingScope = */ nullptr, script);
+        script = CloneScript(cx, nullptr, nullptr, script);
         if (!script)
             return false;
 
