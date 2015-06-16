@@ -1,11 +1,12 @@
-// obj.getOwnPropertyNames() works when obj's referent is itself a cross-compartment wrapper.
+// obj.getOwnPropertySymbols() works when obj's referent is itself a cross-compartment wrapper.
 
 var g = newGlobal();
 var dbg = Debugger();
 var gobj = dbg.addDebuggee(g);
 g.p = {xyzzy: 8};  // makes a cross-compartment wrapper
-g.p[Symbol.for("plugh")] = 9;
+var sym = Symbol("plugh");
+g.p[sym] = 9;
 var wp = gobj.getOwnPropertyDescriptor("p").value;
-var names = wp.getOwnPropertyNames();
+var names = wp.getOwnPropertySymbols();
 assertEq(names.length, 1);
-assertEq(names[0], "xyzzy");
+assertEq(names[0], sym);
