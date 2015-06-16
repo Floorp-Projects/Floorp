@@ -153,7 +153,12 @@ AssertDynamicScopeMatchesStaticScope(JSContext* cx, JSScript* script, JSObject* 
 #ifdef DEBUG
     RootedObject enclosingScope(cx, script->enclosingStaticScope());
     for (StaticScopeIter<NoGC> i(enclosingScope); !i.done(); i++) {
-        if (i.hasDynamicScopeObject()) {
+        if (i.type() == StaticScopeIter<NoGC>::NonSyntactic) {
+            while (scope->is<DynamicWithObject>()) {
+                MOZ_ASSERT(!scope->as<DynamicWithObject>().isSyntactic());
+                scope = &scope->as<DynamicWithObject>().enclosingScope();
+            }
+        } else if (i.hasSyntacticDynamicScopeObject()) {
             switch (i.type()) {
               case StaticScopeIter<NoGC>::Function:
                 MOZ_ASSERT(scope->as<CallObject>().callee().nonLazyScript() == i.funScript());
@@ -173,13 +178,16 @@ AssertDynamicScopeMatchesStaticScope(JSContext* cx, JSScript* script, JSObject* 
               case StaticScopeIter<NoGC>::Eval:
                 scope = &scope->as<CallObject>().enclosingScope();
                 break;
+              case StaticScopeIter<NoGC>::NonSyntactic:
+                MOZ_CRASH("NonSyntactic should not have a syntactic scope");
+                break;
             }
         }
     }
 
     // The scope chain is always ended by one or more non-syntactic
-    // ScopeObjects (viz. GlobalObject or a non-syntactic WithObject).
-    MOZ_ASSERT(!IsSyntacticScope(scope));
+    // ScopeObjects (viz. GlobalObject or an unqualified varobj).
+    MOZ_ASSERT(!scope->is<ScopeObject>());
 #endif
 }
 
@@ -246,7 +254,7 @@ InterpreterFrame::epilogue(JSContext* cx)
                 DebugScopes::onPopStrictEvalScope(this);
         } else if (isDirectEvalFrame()) {
             if (isDebuggerEvalFrame())
-                MOZ_ASSERT(!IsSyntacticScope(scopeChain()));
+                MOZ_ASSERT(!scopeChain()->is<ScopeObject>());
         } else {
             /*
              * Debugger.Object.prototype.evalInGlobal creates indirect eval
