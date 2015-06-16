@@ -20,7 +20,6 @@
 #endif
 #include "jit/SharedICHelpers.h"
 #include "jit/VMFunctions.h"
-#include "vm/ScopeObject.h"
 #include "vm/TraceLogging.h"
 
 #include "jsscriptinlines.h"
@@ -129,7 +128,7 @@ BaselineCompiler::compile()
                 return Method_Error;
 
             if (fun->isNamedLambda()) {
-                RootedObject declEnvObject(cx, DeclEnvObject::createTemplateObject(cx, fun, TenuredObject));
+                RootedObject declEnvObject(cx, DeclEnvObject::createTemplateObject(cx, fun, gc::TenuredHeap));
                 if (!declEnvObject)
                     return Method_Error;
                 templateScope->as<ScopeObject>().setEnclosingScope(declEnvObject);
@@ -2063,7 +2062,7 @@ BaselineCompiler::emit_JSOP_IN()
 bool
 BaselineCompiler::emit_JSOP_GETGNAME()
 {
-    if (script->hasNonSyntacticScope())
+    if (script->hasPollutedGlobalScope())
         return emit_JSOP_GETNAME();
 
     RootedPropertyName name(cx, script->getName(pc));
@@ -2098,7 +2097,7 @@ BaselineCompiler::emit_JSOP_GETGNAME()
 bool
 BaselineCompiler::emit_JSOP_BINDGNAME()
 {
-    if (!script->hasNonSyntacticScope()) {
+    if (!script->hasPollutedGlobalScope()) {
         frame.push(ObjectValue(script->global()));
         return true;
     }
@@ -2921,7 +2920,7 @@ BaselineCompiler::emit_JSOP_IMPLICITTHIS()
 bool
 BaselineCompiler::emit_JSOP_GIMPLICITTHIS()
 {
-    if (!script->hasNonSyntacticScope()) {
+    if (!script->hasPollutedGlobalScope()) {
         frame.push(UndefinedValue());
         return true;
     }
