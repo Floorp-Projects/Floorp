@@ -48,6 +48,7 @@ class nsLayoutStylesheetCache final
   static mozilla::CSSStyleSheet* SVGSheet();
   static mozilla::CSSStyleSheet* MathMLSheet();
   static mozilla::CSSStyleSheet* CounterStylesSheet();
+  static mozilla::CSSStyleSheet* NoScriptSheet();
 
   static void Shutdown();
 
@@ -78,6 +79,7 @@ private:
   nsRefPtr<mozilla::CSSStyleSheet> mHTMLSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mMathMLSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mMinimalXULSheet;
+  nsRefPtr<mozilla::CSSStyleSheet> mNoScriptSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mNumberControlSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mQuirkSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mSVGSheet;

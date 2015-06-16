@@ -8449,3 +8449,14 @@ nsLayoutUtils::TransformToAncestorAndCombineRegions(
   nsRegion* dest = isPrecise ? aPreciseTargetDest : aImpreciseTargetDest;
   dest->OrWith(transformed);
 }
+
+/* static */ bool
+nsLayoutUtils::ShouldUseNoScriptSheet(nsIDocument* aDocument)
+{
+  // also handle the case where print is done from print preview
+  // see bug #342439 for more details
+  if (aDocument->IsStaticDocument()) {
+    aDocument = aDocument->GetOriginalDocument();
+  }
+  return aDocument->IsScriptEnabled();
+}
