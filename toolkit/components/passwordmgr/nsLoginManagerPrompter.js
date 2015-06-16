@@ -957,6 +957,7 @@ LoginManagerPrompter.prototype = {
       secondaryActions,
       {
         timeout: Date.now() + 10000,
+        origin: login.hostname,
         persistWhileVisible: true,
         passwordNotificationType: type,
         eventCallback: function (topic) {
