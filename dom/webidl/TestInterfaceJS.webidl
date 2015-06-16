@@ -56,6 +56,18 @@ interface TestInterfaceJS {
   [Throws]
   void testThrowDOMException();
 
+  [Throws]
+  void testThrowTypeError();
+
+  [Throws]
+  void testThrowCallbackError(Function callback);
+
+  [Throws]
+  void testThrowXraySelfHosted();
+
+  [Throws]
+  void testThrowSelfHosted();
+
   // Tests for promise-rejection behavior
   Promise<void> testPromiseWithThrowingChromePromiseInit();
   Promise<void> testPromiseWithThrowingContentPromiseInit(PromiseInit func);
