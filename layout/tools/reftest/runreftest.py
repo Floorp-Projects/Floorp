@@ -177,7 +177,7 @@ class RefTest(object):
     def makeJSString(self, s):
         return '"%s"' % re.sub(r'([\\"])', r'\\\1', s)
 
-    def createReftestProfile(self, options, manifest, server='localhost',
+    def createReftestProfile(self, options, manifest, server='localhost', port=0,
                              special_powers=True, profile_to_clone=None):
         """
           Sets up a profile for reftest.
@@ -187,7 +187,8 @@ class RefTest(object):
         """
 
         locations = mozprofile.permissions.ServerLocations()
-        locations.add_host(server, port=0)
+        locations.add_host(server, scheme='http', port=port)
+        locations.add_host(server, scheme='https', port=port)
 
         # Set preferences for communication between our command line arguments
         # and the reftest harness.  Preferences that are required for reftest
