@@ -86,12 +86,6 @@ BufferDecoder::NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
 }
 
 void
-BufferDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
-{
-  // ignore
-}
-
-void
 BufferDecoder::SetMediaSeekable(bool aMediaSeekable)
 {
   // ignore
