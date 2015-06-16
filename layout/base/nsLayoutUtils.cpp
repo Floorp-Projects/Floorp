@@ -4463,14 +4463,15 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
 }
 
 /* static */ nscoord
-nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
-                                     nsIFrame *aFrame,
-                                     IntrinsicISizeType aType,
-                                     uint32_t aFlags)
+nsLayoutUtils::IntrinsicForWM(WritingMode         aWM,
+                              nsRenderingContext* aRenderingContext,
+                              nsIFrame*           aFrame,
+                              IntrinsicISizeType  aType,
+                              uint32_t            aFlags)
 {
   NS_PRECONDITION(aFrame, "null frame");
   NS_PRECONDITION(aFrame->GetParent(),
-                  "IntrinsicForContainer called on frame not in tree");
+                  "IntrinsicForWM called on frame not in tree");
   NS_PRECONDITION(aType == MIN_ISIZE || aType == PREF_ISIZE, "bad type");
 
 #ifdef DEBUG_INTRINSIC_WIDTH
@@ -4487,13 +4488,12 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
   // We want the size this frame will contribute to the parent's inline-size,
   // so we work in the parent's writing mode; but if aFrame is orthogonal to
   // its parent, we'll need to look at its BSize instead of min/pref-ISize.
-  WritingMode wm = aFrame->GetParent()->GetWritingMode();
   const nsStylePosition* stylePos = aFrame->StylePosition();
   uint8_t boxSizing = stylePos->mBoxSizing;
 
-  const nsStyleCoord& styleISize = stylePos->ISize(wm);
-  const nsStyleCoord& styleMinISize = stylePos->MinISize(wm);
-  const nsStyleCoord& styleMaxISize = stylePos->MaxISize(wm);
+  const nsStyleCoord& styleISize = stylePos->ISize(aWM);
+  const nsStyleCoord& styleMinISize = stylePos->MinISize(aWM);
+  const nsStyleCoord& styleMaxISize = stylePos->MaxISize(aWM);
 
   // We build up two values starting with the content box, and then
   // adding padding, border and margin.  The result is normally
@@ -4543,7 +4543,7 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
     ++gNoiseIndent;
 #endif
     WritingMode ourWM = aFrame->GetWritingMode();
-    if (ourWM.IsOrthogonalTo(wm)) {
+    if (ourWM.IsOrthogonalTo(aWM)) {
       // We need aFrame's block-dir size, which will become its inline-size
       // contribution in the container.
       // XXX Unfortunately, we probably don't know this yet, so this is wrong...
@@ -4573,9 +4573,9 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
     // since that's what it means in all cases except for on flex items -- and
     // even there, we're supposed to ignore it (i.e. treat it as 0) until the
     // flex container explicitly considers it.
-    const nsStyleCoord& styleBSize = stylePos->BSize(wm);
-    const nsStyleCoord& styleMinBSize = stylePos->MinBSize(wm);
-    const nsStyleCoord& styleMaxBSize = stylePos->MaxBSize(wm);
+    const nsStyleCoord& styleBSize = stylePos->BSize(aWM);
+    const nsStyleCoord& styleMinBSize = stylePos->MinBSize(aWM);
+    const nsStyleCoord& styleMaxBSize = stylePos->MaxBSize(aWM);
 
     if (styleBSize.GetUnit() != eStyleUnit_Auto ||
         !(styleMinBSize.GetUnit() == eStyleUnit_Auto ||
@@ -4583,24 +4583,24 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
            styleMinBSize.GetCoordValue() == 0)) ||
         styleMaxBSize.GetUnit() != eStyleUnit_None) {
 
-      LogicalSize ratio(wm, aFrame->GetIntrinsicRatio());
+      LogicalSize ratio(aWM, aFrame->GetIntrinsicRatio());
 
-      if (ratio.BSize(wm) != 0) {
+      if (ratio.BSize(aWM) != 0) {
         nscoord bSizeTakenByBoxSizing = 0;
         switch (boxSizing) {
         case NS_STYLE_BOX_SIZING_BORDER: {
           const nsStyleBorder* styleBorder = aFrame->StyleBorder();
           bSizeTakenByBoxSizing +=
-            wm.IsVertical() ? styleBorder->GetComputedBorder().LeftRight()
-                            : styleBorder->GetComputedBorder().TopBottom();
+            aWM.IsVertical() ? styleBorder->GetComputedBorder().LeftRight()
+                             : styleBorder->GetComputedBorder().TopBottom();
           // fall through
         }
         case NS_STYLE_BOX_SIZING_PADDING: {
           if (!(aFlags & IGNORE_PADDING)) {
             const nsStyleSides& stylePadding =
               aFrame->StylePadding()->mPadding;
-            const nsStyleCoord& paddingStart = stylePadding.GetBStart(wm);
-            const nsStyleCoord& paddingEnd = stylePadding.GetBEnd(wm);
+            const nsStyleCoord& paddingStart = stylePadding.GetBStart(aWM);
+            const nsStyleCoord& paddingEnd = stylePadding.GetBEnd(aWM);
             nscoord pad;
             if (GetAbsoluteCoord(paddingStart, pad) ||
                 GetPercentBSize(paddingStart, aFrame, pad)) {
@@ -4622,13 +4622,13 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
         if (GetAbsoluteCoord(styleBSize, h) ||
             GetPercentBSize(styleBSize, aFrame, h)) {
           h = std::max(0, h - bSizeTakenByBoxSizing);
-          result = NSCoordMulDiv(h, ratio.ISize(wm), ratio.BSize(wm));
+          result = NSCoordMulDiv(h, ratio.ISize(aWM), ratio.BSize(aWM));
         }
 
         if (GetAbsoluteCoord(styleMaxBSize, h) ||
             GetPercentBSize(styleMaxBSize, aFrame, h)) {
           h = std::max(0, h - bSizeTakenByBoxSizing);
-          nscoord maxISize = NSCoordMulDiv(h, ratio.ISize(wm), ratio.BSize(wm));
+          nscoord maxISize = NSCoordMulDiv(h, ratio.ISize(aWM), ratio.BSize(aWM));
           if (maxISize < result)
             result = maxISize;
         }
@@ -4636,7 +4636,7 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
         if (GetAbsoluteCoord(styleMinBSize, h) ||
             GetPercentBSize(styleMinBSize, aFrame, h)) {
           h = std::max(0, h - bSizeTakenByBoxSizing);
-          nscoord minISize = NSCoordMulDiv(h, ratio.ISize(wm), ratio.BSize(wm));
+          nscoord minISize = NSCoordMulDiv(h, ratio.ISize(aWM), ratio.BSize(aWM));
           if (minISize > result)
             result = minISize;
         }
@@ -4658,7 +4658,7 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
                                   styleMinISize,
                                   haveFixedMaxISize ? &maxISize : nullptr,
                                   styleMaxISize,
-                                  aFlags, wm);
+                                  aFlags, aWM);
 
 #ifdef DEBUG_INTRINSIC_WIDTH
   nsFrame::IndentBy(stderr, gNoiseIndent);
@@ -4668,6 +4668,19 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
 #endif
 
   return result;
+}
+
+/* static */ nscoord
+nsLayoutUtils::IntrinsicForContainer(nsRenderingContext* aRenderingContext,
+                                     nsIFrame* aFrame,
+                                     IntrinsicISizeType aType,
+                                     uint32_t aFlags)
+{
+  // We want the size this frame will contribute to the parent's inline-size,
+  // so we work in the parent's writing mode; but if aFrame is orthogonal to
+  // its parent, we'll need to look at its BSize instead of min/pref-ISize.
+  WritingMode wm = aFrame->GetParent()->GetWritingMode();
+  return IntrinsicForWM(wm, aRenderingContext, aFrame, aType, aFlags);
 }
 
 /* static */ nscoord
