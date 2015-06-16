@@ -418,11 +418,6 @@
   <string name="home_remote_tabs_many_hidden_devices">&home_remote_tabs_many_hidden_devices;</string>
   <string name="home_remote_tabs_hidden_devices_title">&home_remote_tabs_hidden_devices_title;</string>
   <string name="home_remote_tabs_unhide_selected_devices">&home_remote_tabs_unhide_selected_devices;</string>
-  <string name="private_browsing_title">&private_browsing_title;</string>
-  <string name="private_tabs_panel_empty_desc">&private_tabs_panel_empty_desc;</string>
-  <string name="private_tabs_panel_learn_more">&private_tabs_panel_learn_more;</string>
-  <!-- https://support.mozilla.org/%LOCALE%/kb/mobile-private-browsing-browse-web-without-saving-syncing-info -->
-  <string name="private_tabs_panel_learn_more_link">https://support.mozilla.org/&formatS1;/kb/mobile-private-browsing-browse-web-without-saving-syncing-info</string>
   <string name="pin_site_dialog_hint">&pin_site_dialog_hint;</string>
 
   <string name="remote_tabs_panel_moved_title">&remote_tabs_panel_moved_title;</string>
