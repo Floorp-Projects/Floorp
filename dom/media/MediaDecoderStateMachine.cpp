@@ -1639,12 +1639,10 @@ void MediaDecoderStateMachine::LogicallySeekingChanged()
   ScheduleStateMachine();
 }
 
-void MediaDecoderStateMachine::NotifyDataArrived(const char* aBuffer,
-                                                     uint32_t aLength,
-                                                     int64_t aOffset)
+void MediaDecoderStateMachine::NotifyDataArrived(uint32_t aLength,
+                                                 int64_t aOffset)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-  mReader->NotifyDataArrived(aBuffer, aLength, aOffset);
+  MOZ_ASSERT(OnTaskQueue());
 
   // While playing an unseekable stream of unknown duration, mObservedDuration
   // is updated (in AdvanceFrame()) as we play. But if data is being downloaded

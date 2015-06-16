@@ -68,9 +68,9 @@ public:
   }
 
   int64_t GetEvictionOffset(double aTime) override;
-  void NotifyDataArrived(const char* aBuffer,
-                                 uint32_t aLength,
-                                 int64_t aOffset) override;
+protected:
+  void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) override;
+public:
   void NotifyDataRemoved() override;
 
   media::TimeIntervals GetBuffered() override;

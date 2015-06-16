@@ -335,7 +335,7 @@ nsresult GStreamerReader::ParseMP3Headers()
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(bytesRead, NS_ERROR_FAILURE);
 
-    mMP3FrameParser.Parse(bytes, bytesRead, offset);
+    mMP3FrameParser.Parse(reinterpret_cast<uint8_t*>(bytes), bytesRead, offset);
     offset += bytesRead;
   } while (!mMP3FrameParser.ParsedHeaders());
 
@@ -1272,11 +1272,10 @@ GStreamerReader::AutoplugSortCb(GstElement* aElement, GstPad* aPad,
  * If this is an MP3 stream, pass any new data we get to the MP3 frame parser
  * for duration estimation.
  */
-void GStreamerReader::NotifyDataArrived(const char *aBuffer,
-                                        uint32_t aLength,
-                                        int64_t aOffset)
+void GStreamerReader::NotifyDataArrivedInternal(uint32_t aLength,
+                                                int64_t aOffset)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(OnTaskQueue());
   if (HasVideo()) {
     return;
   }
@@ -1284,7 +1283,9 @@ void GStreamerReader::NotifyDataArrived(const char *aBuffer,
     return;
   }
 
-  mMP3FrameParser.Parse(aBuffer, aLength, aOffset);
+  nsRefPtr<MediaByteBuffer> bytes = mDecoder->GetResource()->SilentReadAt(aOffset, aLength);
+  NS_ENSURE_TRUE_VOID(bytes);
+  mMP3FrameParser.Parse(bytes->Elements(), aLength, aOffset);
   if (!mMP3FrameParser.IsMP3()) {
     return;
   }
