@@ -750,12 +750,6 @@ NetworkMonitor.prototype = {
       }
     }
 
-    if (aChannel.loadInfo) {
-      if (aChannel.loadInfo.contentPolicyType == Ci.nsIContentPolicy.TYPE_BEACON) {
-        return true;
-      }
-    }
-
     if (this.topFrame) {
       let topFrame = NetworkHelper.getTopFrameForRequest(aChannel);
       if (topFrame && topFrame === this.topFrame) {
@@ -766,6 +760,24 @@ NetworkMonitor.prototype = {
     if (this.appId) {
       let appId = NetworkHelper.getAppIdForRequest(aChannel);
       if (appId && appId == this.appId) {
+        return true;
+      }
+    }
+
+    // The following check is necessary because beacon channels don't come
+    // associated with a load group. Bug 1160837 will hopefully introduce a
+    // platform fix that will render the following code entirely useless.
+    if (aChannel.loadInfo &&
+        aChannel.loadInfo.contentPolicyType == Ci.nsIContentPolicy.TYPE_BEACON) {
+      let nonE10sMatch = this.window &&
+                         aChannel.loadInfo.loadingDocument === this.window.document;
+      let e10sMatch = this.topFrame &&
+                      this.topFrame.contentPrincipal &&
+                      this.topFrame.contentPrincipal.equals(aChannel.loadInfo.loadingPrincipal) &&
+                      this.topFrame.contentPrincipal.URI.spec == aChannel.referrer.spec;
+      let b2gMatch = this.appId &&
+                     aChannel.loadInfo.loadingPrincipal.appId === this.appId;
+      if (nonE10sMatch || e10sMatch || b2gMatch) {
         return true;
       }
     }
