@@ -292,6 +292,35 @@ RuntimeScanners.add(DeprecatedAdbScanner);
 // ADB Helper 0.7.0 and later will replace this scanner on startup
 exports.DeprecatedAdbScanner = DeprecatedAdbScanner;
 
+/**
+ * This is a lazy ADB scanner shim which only tells the ADB Helper to start and
+ * stop as needed.  The real scanner that lists devices lives in ADB Helper.
+ * ADB Helper 0.8.0 and later wait until these signals are received before
+ * starting ADB polling.  For earlier versions, they have no effect.
+ */
+let LazyAdbScanner = {
+
+  enable() {
+    Devices.emit("adb-start-polling");
+  },
+
+  disable() {
+    Devices.emit("adb-stop-polling");
+  },
+
+  scan() {
+    return promise.resolve();
+  },
+
+  listRuntimes: function() {
+    return [];
+  }
+
+};
+
+EventEmitter.decorate(LazyAdbScanner);
+RuntimeScanners.add(LazyAdbScanner);
+
 let WiFiScanner = {
 
   _runtimes: [],
