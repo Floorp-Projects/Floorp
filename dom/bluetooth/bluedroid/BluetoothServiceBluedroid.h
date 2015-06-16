@@ -359,12 +359,8 @@ public:
   virtual void LeTestModeNotification(BluetoothStatus aStatus,
                                       uint16_t aNumPackets) override;
 
-#ifndef MOZ_B2G_BT_API_V1
-  // Missing in Bluetooth v2
-#else
   virtual void EnergyInfoNotification(
     const BluetoothActivityEnergyInfo& aInfo) override;
-#endif
 
   virtual void BackendErrorNotification(bool aCrashed) override;
 
@@ -377,13 +373,14 @@ protected:
   static ControlPlayStatus PlayStatusStringToControlPlayStatus(
     const nsAString& aPlayStatus);
 
-#ifndef MOZ_B2G_BT_API_V1
   static void ConnectDisconnect(bool aConnect,
                                 const nsAString& aDeviceAddress,
                                 BluetoothReplyRunnable* aRunnable,
                                 uint16_t aServiceUuid, uint32_t aCod = 0);
   static void NextBluetoothProfileController();
 
+#ifndef MOZ_B2G_BT_API_V1
+  // Missing in Bluetooth v2
 #else
   static bool EnsureBluetoothHalLoad();
 
