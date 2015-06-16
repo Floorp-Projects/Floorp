@@ -6,7 +6,6 @@
 
 #include "WMF.h"
 #include "WMFDecoderModule.h"
-#include "WMFDecoder.h"
 #include "WMFVideoMFTManager.h"
 #include "WMFAudioMFTManager.h"
 #include "mozilla/Preferences.h"
@@ -22,17 +21,26 @@
 
 namespace mozilla {
 
-bool WMFDecoderModule::sIsWMFEnabled = false;
-bool WMFDecoderModule::sDXVAEnabled = false;
+static bool sIsWMFEnabled = false;
+static bool sDXVAEnabled = false;
 
 WMFDecoderModule::WMFDecoderModule()
+  : mWMFInitialized(false)
 {
 }
 
 WMFDecoderModule::~WMFDecoderModule()
 {
-  DebugOnly<HRESULT> hr = wmf::MFShutdown();
-  NS_ASSERTION(SUCCEEDED(hr), "MFShutdown failed");
+  if (mWMFInitialized) {
+    DebugOnly<HRESULT> hr = wmf::MFShutdown();
+    NS_ASSERTION(SUCCEEDED(hr), "MFShutdown failed");
+  }
+}
+
+void
+WMFDecoderModule::DisableHardwareAcceleration()
+{
+  sDXVAEnabled = false;
 }
 
 /* static */
@@ -41,12 +49,6 @@ WMFDecoderModule::Init()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   sIsWMFEnabled = Preferences::GetBool("media.windows-media-foundation.enabled", false);
-  if (!sIsWMFEnabled) {
-    return;
-  }
-  if (NS_FAILED(WMFDecoder::LoadDLLs())) {
-    sIsWMFEnabled = false;
-  }
   sDXVAEnabled = !gfxWindowsPlatform::GetPlatform()->IsWARP() &&
                  gfxPlatform::CanUseHardwareVideoDecoding();
 }
@@ -54,14 +56,10 @@ WMFDecoderModule::Init()
 nsresult
 WMFDecoderModule::Startup()
 {
-  if (!sIsWMFEnabled) {
-    return NS_ERROR_FAILURE;
+  if (sIsWMFEnabled) {
+    mWMFInitialized = SUCCEEDED(wmf::MFStartup());
   }
-  if (FAILED(wmf::MFStartup())) {
-    NS_WARNING("Failed to initialize Windows Media Foundation");
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
+  return mWMFInitialized ? NS_OK : NS_ERROR_FAILURE;
 }
 
 already_AddRefed<MediaDataDecoder>

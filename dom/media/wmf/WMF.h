@@ -53,20 +53,17 @@ extern "C" const CLSID CLSID_CMSAACDecMFT;
 namespace mozilla {
 namespace wmf {
 
-// Loads/Unloads all the DLLs in which the WMF functions are located.
-// The DLLs must be loaded before any of the WMF functions below will work.
-// All the function definitions below are wrappers which locate the
-// corresponding WMF function in the appropriate DLL (hence why LoadDLL()
-// must be called first...).
-HRESULT LoadDLLs();
-HRESULT UnloadDLLs();
+// If successful, loads all required WMF DLLs and calls the WMF MFStartup()
+// function.
+HRESULT MFStartup();
+
+// Calls the WMF MFShutdown() function. Call this once for every time
+// wmf::MFStartup() succeeds. Note: does not unload the WMF DLLs loaded by
+// MFStartup(); leaves them in memory to save I/O at next MFStartup() call.
+HRESULT MFShutdown();
 
 // All functions below are wrappers around the corresponding WMF function,
 // and automatically locate and call the corresponding function in the WMF DLLs.
-
-HRESULT MFStartup();
-
-HRESULT MFShutdown();
 
 HRESULT MFCreateAsyncResult(IUnknown *aUunkObject,
                             IMFAsyncCallback *aCallback,
