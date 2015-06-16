@@ -266,11 +266,6 @@
   z-index: 1001;
 }
 
-.standalone .room-conversation .local-stream,
-.standalone .room-conversation .remote-inset-stream {
-  box-shadow: none;
-}
-
 /* Side by side video elements */
 
 .conversation .media.side-by-side .focus-stream {
@@ -715,7 +710,6 @@ html, .fx-embedded, #main,
     min-width: 120px;
     min-height: 150px;
     width: 100%;
-    box-shadow: none;
   }
 
   /* Nested video elements */
