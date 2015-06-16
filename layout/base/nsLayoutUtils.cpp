@@ -4354,7 +4354,7 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
                        const nscoord* aFixedMaxSize,
                        const nsStyleCoord& aStyleMaxSize,
                        uint32_t aFlags,
-                       WritingMode aContainerWM)
+                       PhysicalAxis aAxis)
 {
   nscoord result = aContentSize;
   nscoord min = aContentMinSize;
@@ -4449,8 +4449,8 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
     pc->GetTheme()->GetMinimumWidgetSize(pc, aFrame, disp->mAppearance,
                                          &devSize, &canOverride);
     nscoord themeSize =
-      pc->DevPixelsToAppUnits(aContainerWM.IsVertical() ? devSize.height
-                                                        : devSize.width);
+      pc->DevPixelsToAppUnits(aAxis == eAxisVertical ? devSize.height
+                                                     : devSize.width);
     // GetMinimumWidgetSize() returns a border-box width.
     themeSize += aOffsets.hMargin;
     themeSize = AddPercents(aType, themeSize, aOffsets.hPctMargin);
@@ -4657,7 +4657,7 @@ nsLayoutUtils::IntrinsicForWM(WritingMode         aWM,
                                   styleMinISize,
                                   haveFixedMaxISize ? &maxISize : nullptr,
                                   styleMaxISize,
-                                  aFlags, aWM);
+                                  aFlags, aWM.PhysicalAxis(eLogicalAxisInline));
 
 #ifdef DEBUG_INTRINSIC_WIDTH
   nsFrame::IndentBy(stderr, gNoiseIndent);
