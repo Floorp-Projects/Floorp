@@ -24,7 +24,25 @@ if CONFIG['MOZ_B2G_BT']:
             'BluetoothRilListener.cpp'
         ]
 
-    if CONFIG['MOZ_B2G_BT_API_V2']:
+    if CONFIG['MOZ_B2G_BT_API_V1']:
+        SOURCES += [
+            'bluetooth1/BluetoothAdapter.cpp',
+            'bluetooth1/BluetoothDevice.cpp',
+            'bluetooth1/BluetoothManager.cpp',
+            'bluetooth1/BluetoothProfileController.cpp',
+            'bluetooth1/BluetoothPropertyContainer.cpp',
+            'bluetooth1/BluetoothReplyRunnable.cpp',
+            'bluetooth1/BluetoothService.cpp',
+            'bluetooth1/ipc/BluetoothChild.cpp',
+            'bluetooth1/ipc/BluetoothParent.cpp',
+            'bluetooth1/ipc/BluetoothServiceChildProcess.cpp',
+        ]
+        LOCAL_INCLUDES += [
+            'bluetooth1',
+            'bluetooth1/ipc',
+        ]
+        DEFINES['MOZ_B2G_BT_API_V1'] = True
+    else:
         SOURCES += [
             'bluetooth2/BluetoothAdapter.cpp',
             'bluetooth2/BluetoothClassOfDevice.cpp',
@@ -48,24 +66,6 @@ if CONFIG['MOZ_B2G_BT']:
         LOCAL_INCLUDES += [
             'bluetooth2',
             'bluetooth2/ipc',
-        ]
-        DEFINES['MOZ_B2G_BT_API_V2'] = True
-    else:
-        SOURCES += [
-            'bluetooth1/BluetoothAdapter.cpp',
-            'bluetooth1/BluetoothDevice.cpp',
-            'bluetooth1/BluetoothManager.cpp',
-            'bluetooth1/BluetoothProfileController.cpp',
-            'bluetooth1/BluetoothPropertyContainer.cpp',
-            'bluetooth1/BluetoothReplyRunnable.cpp',
-            'bluetooth1/BluetoothService.cpp',
-            'bluetooth1/ipc/BluetoothChild.cpp',
-            'bluetooth1/ipc/BluetoothParent.cpp',
-            'bluetooth1/ipc/BluetoothServiceChildProcess.cpp',
-        ]
-        LOCAL_INCLUDES += [
-            'bluetooth1',
-            'bluetooth1/ipc',
         ]
 
     #
@@ -130,7 +130,7 @@ if CONFIG['MOZ_B2G_BT']:
                 LOCAL_INCLUDES += [
                     'bluedroid/hfp-fallback',
                 ]
-            if CONFIG['MOZ_B2G_BT_API_V2']:
+            if not CONFIG['MOZ_B2G_BT_API_V1']:
                 SOURCES += [
                     'bluedroid/BluetoothGattManager.cpp',
                 ]
@@ -163,7 +163,21 @@ EXPORTS.mozilla.dom.bluetooth += [
   'BluetoothCommon.h'
 ]
 
-if CONFIG['MOZ_B2G_BT_API_V2']:
+if CONFIG['MOZ_B2G_BT_API_V1']:
+    EXPORTS.mozilla.dom.bluetooth.ipc += [
+        'bluetooth1/ipc/BluetoothMessageUtils.h',
+    ]
+    EXPORTS.mozilla.dom.bluetooth += [
+        'bluetooth1/BluetoothAdapter.h',
+        'bluetooth1/BluetoothDevice.h',
+        'bluetooth1/BluetoothManager.h',
+    ]
+    IPDL_SOURCES += [
+        'bluetooth1/ipc/BluetoothTypes.ipdlh',
+        'bluetooth1/ipc/PBluetooth.ipdl',
+        'bluetooth1/ipc/PBluetoothRequest.ipdl',
+    ]
+else:
     EXPORTS.mozilla.dom.bluetooth.ipc += [
         'bluetooth2/ipc/BluetoothMessageUtils.h',
     ]
@@ -185,20 +199,6 @@ if CONFIG['MOZ_B2G_BT_API_V2']:
         'bluetooth2/ipc/BluetoothTypes.ipdlh',
         'bluetooth2/ipc/PBluetooth.ipdl',
         'bluetooth2/ipc/PBluetoothRequest.ipdl',
-    ]
-else:
-    EXPORTS.mozilla.dom.bluetooth.ipc += [
-        'bluetooth1/ipc/BluetoothMessageUtils.h',
-    ]
-    EXPORTS.mozilla.dom.bluetooth += [
-        'bluetooth1/BluetoothAdapter.h',
-        'bluetooth1/BluetoothDevice.h',
-        'bluetooth1/BluetoothManager.h',
-    ]
-    IPDL_SOURCES += [
-        'bluetooth1/ipc/BluetoothTypes.ipdlh',
-        'bluetooth1/ipc/PBluetooth.ipdl',
-        'bluetooth1/ipc/PBluetoothRequest.ipdl',
     ]
 
 FAIL_ON_WARNINGS = True
