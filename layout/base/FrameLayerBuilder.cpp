@@ -51,53 +51,6 @@ class PaintedDisplayItemLayerUserData;
 
 static nsTHashtable<nsPtrHashKey<FrameLayerBuilder::DisplayItemData>>* sAliveDisplayItemDatas;
 
-static const nsIntSize kRegionTileSize(128, 128);
-
-/**
- * An alternative to nsIntRegion that keeps the region simple by snapping all
- * accumulated rects outwards to tiles. It keeps track of the bounds of the
- * true unsimplified region so that the result still has the bounds you'd
- * expect.
- * This approach doesn't guarantee a maximum number of rectangles in the
- * region, but it has the advantage that region simplification doesn't merge
- * rectangles that are very far apart; the simplification impact is local.
- * This representation also has the property of being canonical: the result
- * is independent of the order in which the rectangles are added.
- */
-struct nsIntRegionSimplifiedToTiles
-{
-  nsIntRegionSimplifiedToTiles(const nsIntPoint& aTileOrigin,
-                               const nsIntSize& aTileSize)
-    : mTileOrigin(aTileOrigin)
-    , mTileSize(aTileSize)
-  {}
-
-  nsIntRegion Get() const { return mRegion.Intersect(mBounds); }
-
-  void Accumulate(const nsIntRect& aRect)
-  {
-    mBounds = mBounds.Union(aRect);
-    nsIntRect rect = aRect - mTileOrigin;
-    rect.InflateToMultiple(mTileSize);
-    mRegion.OrWith(rect + mTileOrigin);
-  }
-
-  bool IsEmpty() const { return mBounds.IsEmpty(); }
-  void SetEmpty()
-  { mRegion.SetEmpty(); mBounds.SetEmpty(); }
-  nsIntRegion Intersect(const nsIntRegion& aRegion) const
-  { return Get().Intersect(aRegion); }
-  bool Intersects(const nsIntRect& aRect) const
-  { return mRegion.Intersects(mBounds.Intersect(aRect)); }
-  nsIntRect GetBounds() const { return mBounds; }
-
-private:
-  nsIntRegion mRegion;
-  nsIntRect mBounds;
-  nsIntPoint mTileOrigin;
-  nsIntSize mTileSize;
-};
-
 FrameLayerBuilder::DisplayItemData::DisplayItemData(LayerManagerData* aParent, uint32_t aKey,
                                                     Layer* aLayer, nsIFrame* aFrame)
 
@@ -333,12 +286,8 @@ struct AssignedDisplayItem
  */
 class PaintedLayerData {
 public:
-  PaintedLayerData(const nsIFrame* aAnimatedGeometryRoot,
-                   const nsPoint& aTopLeft,
-                   const nsIntPoint& aSnappedOffset) :
-    mVisibleRegion(aSnappedOffset, kRegionTileSize),
-    mAnimatedGeometryRoot(aAnimatedGeometryRoot),
-    mAnimatedGeometryRootOffset(aTopLeft),
+  PaintedLayerData() :
+    mAnimatedGeometryRoot(nullptr),
     mFixedPosFrameForLayerData(nullptr),
     mReferenceFrame(nullptr),
     mLayer(nullptr),
@@ -351,8 +300,7 @@ public:
     mOpaqueForAnimatedGeometryRootParent(false),
     mImage(nullptr),
     mCommonClipCount(-1),
-    mNewChildLayersIndex(-1),
-    mVisibleAboveRegion(aSnappedOffset, kRegionTileSize)
+    mNewChildLayersIndex(-1)
   {}
 
 #ifdef MOZ_DUMP_PAINTING
@@ -429,7 +377,7 @@ public:
    * container layer (which is at the snapped top-left of the display
    * list reference frame).
    */
-  nsIntRegionSimplifiedToTiles mVisibleRegion;
+  nsIntRegion  mVisibleRegion;
   /**
    * The region of visible content in the layer that is opaque.
    * Same coordinate system as mVisibleRegion.
@@ -570,7 +518,7 @@ public:
    * next PaintedLayerData currently in the stack, if any.
    * This is a conservative approximation: it contains the true region.
    */
-  nsIntRegionSimplifiedToTiles mVisibleAboveRegion;
+  nsIntRegion mVisibleAboveRegion;
   /**
    * All the display items that have been assigned to this painted layer.
    * These items get added by Accumulate().
@@ -647,8 +595,7 @@ class PaintedLayerDataNode {
 public:
   PaintedLayerDataNode(PaintedLayerDataTree& aTree,
                        PaintedLayerDataNode* aParent,
-                       const nsIFrame* aAnimatedGeometryRoot,
-                       const nsIntPoint& aSnappedOffset);
+                       const nsIFrame* aAnimatedGeometryRoot);
   ~PaintedLayerDataNode();
 
   const nsIFrame* AnimatedGeometryRoot() const { return mAnimatedGeometryRoot; }
@@ -746,7 +693,6 @@ protected:
   PaintedLayerDataTree& mTree;
   PaintedLayerDataNode* mParent;
   const nsIFrame* mAnimatedGeometryRoot;
-  const nsIntPoint mSnappedAnimatedGeometryRootOffset;
 
   /**
    * Our contents: a PaintedLayerData stack and our child nodes.
@@ -772,7 +718,7 @@ protected:
    * should be considered infinite, mAllDrawingAboveBackground will be true and
    * the value of mVisibleAboveBackgroundRegion will be meaningless.
    */
-  nsIntRegionSimplifiedToTiles mVisibleAboveBackgroundRegion;
+  nsIntRegion mVisibleAboveBackgroundRegion;
 
   /**
    * Our clip, if we have any. If not, that means we can move anywhere, and
@@ -1042,19 +988,8 @@ public:
                                         mAppUnitsPerDevPixel);
   }
 
-  nsIntPoint SnapPointToPixels(const nsPoint& aPoint) const
-  {
-    return aPoint.ScaleToNearestPixels(mParameters.mXScale, mParameters.mYScale,
-                                       mAppUnitsPerDevPixel);
-  }
-
   nsIFrame* GetContainerFrame() const { return mContainerFrame; }
   nsDisplayListBuilder* Builder() const { return mBuilder; }
-
-  nsIntPoint GetSnappedOffsetToContainerReferenceFrame(const nsIFrame* aFrame)
-  {
-    return SnapPointToPixels(aFrame->GetOffsetToCrossDoc(mContainerReferenceFrame));
-  }
 
   /**
    * Sets aOuterVisibleRegion as aLayer's visible region. aOuterVisibleRegion
@@ -2563,12 +2498,10 @@ PaintedLayerData::GetContainerForImageLayer(nsDisplayListBuilder* aBuilder)
 
 PaintedLayerDataNode::PaintedLayerDataNode(PaintedLayerDataTree& aTree,
                                            PaintedLayerDataNode* aParent,
-                                           const nsIFrame* aAnimatedGeometryRoot,
-                                           const nsIntPoint& aSnappedOffset)
+                                           const nsIFrame* aAnimatedGeometryRoot)
   : mTree(aTree)
   , mParent(aParent)
   , mAnimatedGeometryRoot(aAnimatedGeometryRoot)
-  , mVisibleAboveBackgroundRegion(aSnappedOffset, kRegionTileSize)
   , mAllDrawingAboveBackground(false)
 {
   MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(mTree.Builder()->RootReferenceFrame(), mAnimatedGeometryRoot));
@@ -2585,9 +2518,8 @@ PaintedLayerDataNode*
 PaintedLayerDataNode::AddChildNodeFor(const nsIFrame* aAnimatedGeometryRoot)
 {
   MOZ_ASSERT(mTree.GetParentAnimatedGeometryRoot(aAnimatedGeometryRoot) == mAnimatedGeometryRoot);
-  nsIntPoint snappedOffset = mTree.ContState().GetSnappedOffsetToContainerReferenceFrame(aAnimatedGeometryRoot);
   UniquePtr<PaintedLayerDataNode> child =
-    MakeUnique<PaintedLayerDataNode>(mTree, this, aAnimatedGeometryRoot, snappedOffset);
+    MakeUnique<PaintedLayerDataNode>(mTree, this, aAnimatedGeometryRoot);
   mChildren.AppendElement(Move(child));
   return mChildren.LastElement().get();
 }
@@ -2663,10 +2595,11 @@ PaintedLayerDataNode::Finish(bool aParentNeedsAccurateVisibleAboveRegion)
 void
 PaintedLayerDataNode::AddToVisibleAboveRegion(const nsIntRect& aRect)
 {
-  nsIntRegionSimplifiedToTiles& visibleAboveRegion = mPaintedLayerDataStack.IsEmpty()
+  nsIntRegion& visibleAboveRegion = mPaintedLayerDataStack.IsEmpty()
     ? mVisibleAboveBackgroundRegion
     : mPaintedLayerDataStack.LastElement().mVisibleAboveRegion;
-  visibleAboveRegion.Accumulate(aRect);
+  visibleAboveRegion.Or(visibleAboveRegion, aRect);
+  visibleAboveRegion.SimplifyOutward(8);
 }
 
 void
@@ -2684,7 +2617,7 @@ PaintedLayerDataNode::PopPaintedLayerData()
   size_t lastIndex = mPaintedLayerDataStack.Length() - 1;
   PaintedLayerData& data = mPaintedLayerDataStack[lastIndex];
   mTree.ContState().FinishPaintedLayerData(data, [this, &data, lastIndex]() {
-    return this->FindOpaqueBackgroundColor(data.mVisibleRegion.Get(), lastIndex);
+    return this->FindOpaqueBackgroundColor(data.mVisibleRegion, lastIndex);
   });
   mPaintedLayerDataStack.RemoveElementAt(lastIndex);
 }
@@ -2841,8 +2774,7 @@ PaintedLayerDataTree::EnsureNodeFor(const nsIFrame* aAnimatedGeometryRoot)
   if (!parentAnimatedGeometryRoot) {
     MOZ_ASSERT(!mRoot);
     MOZ_ASSERT(aAnimatedGeometryRoot == Builder()->RootReferenceFrame());
-    nsIntPoint snappedOffset = ContState().GetSnappedOffsetToContainerReferenceFrame(aAnimatedGeometryRoot);
-    mRoot = MakeUnique<PaintedLayerDataNode>(*this, nullptr, aAnimatedGeometryRoot, snappedOffset);
+    mRoot = MakeUnique<PaintedLayerDataNode>(*this, nullptr, aAnimatedGeometryRoot);
     node = mRoot.get();
   } else {
     PaintedLayerDataNode* parentNode = EnsureNodeFor(parentAnimatedGeometryRoot);
@@ -3113,12 +3045,12 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
   }
 
   if (mLayerBuilder->IsBuildingRetainedLayers()) {
-    newLayerEntry->mVisibleRegion = data->mVisibleRegion.Get();
+    newLayerEntry->mVisibleRegion = data->mVisibleRegion;
     newLayerEntry->mOpaqueRegion = data->mOpaqueRegion;
     newLayerEntry->mHideAllLayersBelow = data->mHideAllLayersBelow;
     newLayerEntry->mOpaqueForAnimatedGeometryRootParent = data->mOpaqueForAnimatedGeometryRootParent;
   } else {
-    SetOuterVisibleRegionForLayer(layer, data->mVisibleRegion.Get());
+    SetOuterVisibleRegionForLayer(layer, data->mVisibleRegion);
   }
 
   nsIntRect layerBounds = data->mBounds;
@@ -3136,7 +3068,7 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
 #endif
 
   nsIntRegion transparentRegion;
-  transparentRegion.Sub(data->mVisibleRegion.Get(), data->mOpaqueRegion);
+  transparentRegion.Sub(data->mVisibleRegion, data->mOpaqueRegion);
   bool isOpaque = transparentRegion.IsEmpty();
   // For translucent PaintedLayers, try to find an opaque background
   // color that covers the entire area beneath it so we can pull that
@@ -3176,14 +3108,14 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
     // data->mCommonClipCount may be -1 if we haven't put any actual
     // drawable items in this layer (i.e. it's only catching events).
     int32_t commonClipCount = std::max(0, data->mCommonClipCount);
-    SetupMaskLayer(layer, data->mItemClip, data->mVisibleRegion.Get(), commonClipCount);
+    SetupMaskLayer(layer, data->mItemClip, data->mVisibleRegion, commonClipCount);
     // copy commonClipCount to the entry
     FrameLayerBuilder::PaintedLayerItemsEntry* entry = mLayerBuilder->
       GetPaintedLayerItemsEntry(static_cast<PaintedLayer*>(layer.get()));
     entry->mCommonClipCount = commonClipCount;
   } else {
     // mask layer for image and color layers
-    SetupMaskLayer(layer, data->mItemClip, data->mVisibleRegion.Get());
+    SetupMaskLayer(layer, data->mItemClip, data->mVisibleRegion);
   }
 
   uint32_t flags = 0;
@@ -3319,7 +3251,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
   mAssignedDisplayItems.AppendElement(AssignedDisplayItem(aItem, aClip, aLayerState));
 
   if (!mIsSolidColorInVisibleRegion && mOpaqueRegion.Contains(aVisibleRect) &&
-      mVisibleRegion.Get().Contains(aVisibleRect) && !mImage) {
+      mVisibleRegion.Contains(aVisibleRect) && !mImage) {
     // A very common case! Most pages have a PaintedLayer with the page
     // background (opaque) visible and most or all of the page content over the
     // top of that background.
@@ -3334,8 +3266,8 @@ PaintedLayerData::Accumulate(ContainerState* aState,
   /* Mark as available for conversion to image layer if this is a nsDisplayImage and
    * it's the only thing visible in this layer.
    */
-  if (nsIntRegion(aVisibleRect).Contains(mVisibleRegion.Get()) &&
-      aClippedOpaqueRegion.Contains(mVisibleRegion.Get()) &&
+  if (nsIntRegion(aVisibleRect).Contains(mVisibleRegion) &&
+      aClippedOpaqueRegion.Contains(mVisibleRegion) &&
       aItem->SupportsOptimizingToImage()) {
     mImage = static_cast<nsDisplayImageContainer*>(aItem);
     FLB_LOG_PAINTED_LAYER_DECISION(this, "  Tracking image: nsDisplayImageContainer covers the layer\n");
@@ -3377,7 +3309,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
         mSolidColor = uniformColor;
         mIsSolidColorInVisibleRegion = true;
       } else if (mIsSolidColorInVisibleRegion &&
-                 mVisibleRegion.Get().IsEqual(nsIntRegion(aVisibleRect)) &&
+                 mVisibleRegion.IsEqual(nsIntRegion(aVisibleRect)) &&
                  clipMatches) {
         // we can just blend the colors together
         mSolidColor = NS_ComposeColors(mSolidColor, uniformColor);
@@ -3390,7 +3322,8 @@ PaintedLayerData::Accumulate(ContainerState* aState,
       mIsSolidColorInVisibleRegion = false;
     }
 
-    mVisibleRegion.Accumulate(aVisibleRect);
+    mVisibleRegion.Or(mVisibleRegion, aVisibleRect);
+    mVisibleRegion.SimplifyOutward(4);
   }
 
   if (!aClippedOpaqueRegion.IsEmpty()) {
@@ -3436,7 +3369,9 @@ ContainerState::NewPaintedLayerData(nsDisplayItem* aItem,
                                     const nsPoint& aTopLeft,
                                     bool aShouldFixToViewport)
 {
-  PaintedLayerData data(aAnimatedGeometryRoot, aTopLeft, SnapPointToPixels(aTopLeft));
+  PaintedLayerData data;
+  data.mAnimatedGeometryRoot = aAnimatedGeometryRoot;
+  data.mAnimatedGeometryRootOffset = aTopLeft;
   data.mFixedPosFrameForLayerData =
     FindFixedPosFrameForLayerData(aAnimatedGeometryRoot, aShouldFixToViewport);
   data.mReferenceFrame = aItem->ReferenceFrame();
