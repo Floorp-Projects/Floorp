@@ -69,7 +69,7 @@ public:
 
   virtual void NotifyWaitingForResourcesStatusChanged() final override;
 
-  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) final override;
+  virtual void NotifyDataArrived(uint32_t aLength, int64_t aOffset) final override;
 
 private:
   virtual ~BufferDecoder();

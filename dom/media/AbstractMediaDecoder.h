@@ -117,7 +117,7 @@ public:
 
   // Called by the reader's MediaResource as data arrives over the network.
   // Must be called on the main thread.
-  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) = 0;
+  virtual void NotifyDataArrived(uint32_t aLength, int64_t aOffset) = 0;
 
   // Set by Reader if the current audio track can be offloaded
   virtual void SetPlatformCanOffloadAudio(bool aCanOffloadAudio) {}

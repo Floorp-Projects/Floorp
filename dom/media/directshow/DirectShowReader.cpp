@@ -84,7 +84,7 @@ ParseMP3Headers(MP3FrameParser *aParser, MediaResource *aResource)
       return NS_ERROR_FAILURE;
     }
 
-    aParser->Parse(buffer, bytesRead, offset);
+    aParser->Parse(reinterpret_cast<uint8_t*>(buffer), bytesRead, offset);
     offset += bytesRead;
   }
 
@@ -401,14 +401,16 @@ DirectShowReader::SeekInternal(int64_t aTargetUs)
 }
 
 void
-DirectShowReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
+DirectShowReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(OnTaskQueue());
   if (!mMP3FrameParser.NeedsData()) {
     return;
   }
 
-  mMP3FrameParser.Parse(aBuffer, aLength, aOffset);
+  nsRefPtr<MediaByteBuffer> bytes = mDecoder->GetResource()->SilentReadAt(aOffset, aLength);
+  NS_ENSURE_TRUE_VOID(bytes);
+  mMP3FrameParser.Parse(bytes->Elements(), aLength, aOffset);
   if (!mMP3FrameParser.IsMP3()) {
     return;
   }

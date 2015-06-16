@@ -154,7 +154,7 @@ BufferDecoder::NotifyWaitingForResourcesStatusChanged()
 }
 
 void
-BufferDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
+BufferDecoder::NotifyDataArrived(uint32_t aLength, int64_t aOffset)
 {
   // ignore
 }
