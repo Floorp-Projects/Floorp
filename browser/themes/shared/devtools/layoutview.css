@@ -329,3 +329,11 @@ body {
 .size > span {
   cursor: default;
 }
+
+/* Hide all values when the view is inactive */
+
+body.inactive > #header > #element-position,
+body.inactive > #header > #element-size,
+body.inactive > #main > p {
+   visibility: hidden;
+}
