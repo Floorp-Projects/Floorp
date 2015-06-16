@@ -8,6 +8,7 @@ let gContentAPI;
 let gContentWindow;
 
 Components.utils.import("resource:///modules/UITour.jsm");
+Components.utils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
 
 function test() {
   UITourTest();
@@ -400,13 +401,24 @@ let tests = [
       });
     });
   },
-  function test_treatment_tag(done) {
+  taskify(function* test_treatment_tag(done) {
+    let ac = new TelemetryArchiveTesting.Checker();
+    yield ac.promiseInit();
     gContentAPI.setTreatmentTag("foobar", "baz");
     gContentAPI.getTreatmentTag("foobar", (data) => {
       is(data.value, "baz", "set and retrieved treatmentTag");
-      done();
+      ac.promiseFindPing("uitour-tag", [
+        [["payload", "tagName"], "foobar"],
+        [["payload", "tagValue"], "baz"],
+      ]).then((found) => {
+        ok(found, "Telemetry ping submitted for setTreatmentTag");
+        done();
+      }, (err) => {
+        ok(false, "Exeption finding uitour telemetry ping: " + err);
+        done();
+      });
     });
-  },
+  }),
 
   // Make sure this test is last in the file so the appMenu gets left open and done will confirm it got tore down.
   taskify(function* cleanupMenus() {
