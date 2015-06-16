@@ -231,18 +231,26 @@ class Permissions(object):
         # SQL copied from
         # http://mxr.mozilla.org/mozilla-central/source/extensions/cookie/nsPermissionManager.cpp
         cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
-           id INTEGER PRIMARY KEY,
-           host TEXT,
-           type TEXT,
-           permission INTEGER,
-           expireType INTEGER,
-           expireTime INTEGER)""")
+              id INTEGER PRIMARY KEY
+             ,origin TEXT
+             ,type TEXT
+             ,permission INTEGER
+             ,expireType INTEGER
+             ,expireTime INTEGER
+             ,modificationTime INTEGER
+           )""")
 
         rows = cursor.execute("PRAGMA table_info(moz_hosts)")
         count = len(rows.fetchall())
 
+        using_origin = False
+        # if the db contains 7 columns, we're using user_version 5
+        if count == 7:
+            statement = "INSERT INTO moz_hosts values(NULL, ?, ?, ?, 0, 0, 0)"
+            cursor.execute("PRAGMA user_version=5;")
+            using_origin = True
         # if the db contains 9 columns, we're using user_version 4
-        if count == 9:
+        elif count == 9:
             statement = "INSERT INTO moz_hosts values(NULL, ?, ?, ?, 0, 0, 0, 0, 0)"
             cursor.execute("PRAGMA user_version=4;")
         # if the db contains 8 columns, we're using user_version 3
@@ -262,8 +270,26 @@ class Permissions(object):
                 else:
                     permission_type = 2
 
-                cursor.execute(statement,
-                               (location.host, perm, permission_type))
+                if using_origin:
+                    # This is a crude approximation of the origin generation logic from
+                    # nsPrincipal and nsStandardURL. It should suffice for the permissions
+                    # which the test runners will want to insert into the system.
+                    origin = location.scheme + "://" + location.host
+                    if (location.scheme != 'http' or location.port != '80') and \
+                       (location.scheme != 'https' or location.port != '443'):
+                        origin += ':' + str(location.port)
+
+                    cursor.execute(statement,
+                                   (origin, perm, permission_type))
+                else:
+                    # The database is still using a legacy system based on hosts
+                    # We can insert the permission as a host
+                    #
+                    # XXX This codepath should not be hit, as tests are run with
+                    # fresh profiles. However, if it was hit, permissions would
+                    # not be added to the database correctly (bug 1183185).
+                    cursor.execute(statement,
+                                   (location.host, perm, permission_type))
 
         # Commit and close
         permDB.commit()
