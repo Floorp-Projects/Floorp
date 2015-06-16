@@ -12,9 +12,9 @@ const XPI_MIMETYPE = "application/x-xpinstall";
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
 
-  Services.prefs.setCharPref("xpinstall.whitelist.add", "test1.com,test2.com");
-  Services.prefs.setCharPref("xpinstall.whitelist.add.36", "test3.com,www.test4.com");
-  Services.prefs.setCharPref("xpinstall.whitelist.add.test5", "test5.com");
+  Services.prefs.setCharPref("xpinstall.whitelist.add", "https://test1.com,https://test2.com");
+  Services.prefs.setCharPref("xpinstall.whitelist.add.36", "https://test3.com,https://www.test4.com");
+  Services.prefs.setCharPref("xpinstall.whitelist.add.test5", "https://test5.com");
 
   Services.perms.add(NetUtil.newURI("https://www.test9.com"), "install",
                      AM_Ci.nsIPermissionManager.ALLOW_ACTION);
