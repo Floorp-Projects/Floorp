@@ -34,10 +34,6 @@ function run_test() {
   let uri0 = NetUtil.newURI("http://google.com/search?q=foo#hashtag", null, null);
   let uri1 = NetUtil.newURI("http://hangouts.google.com/subdir", null, null);
   let uri2 = NetUtil.newURI("http://google.org/", null, null);
-
-  // NOTE: These entries have different ports/schemes, but will be considered
-  // the same right now (as permissions are based on host only). With bug 1165263
-  // this will be fixed.
   let uri3 = NetUtil.newURI("https://google.com/some/random/subdirectory", null, null);
   let uri4 = NetUtil.newURI("https://hangouts.google.com/#!/hangout", null, null);
   let uri5 = NetUtil.newURI("http://google.com:8096/", null, null);
@@ -88,41 +84,41 @@ function run_test() {
   pm.addFromPrincipal(uri0_2000_y, "test/matches", pm.ALLOW_ACTION);
   let perm_2000_y = pm.getPermissionObject(uri0_2000_y, "test/matches", true);
 
-  matches_always(perm_n_n, [uri0_n_n, uri3_n_n, uri5_n_n]);
-  matches_weak(perm_n_n, [uri1_n_n, uri4_n_n]);
-  matches_never(perm_n_n, [uri2_n_n,
+  matches_always(perm_n_n, [uri0_n_n]);
+  matches_weak(perm_n_n, [uri1_n_n]);
+  matches_never(perm_n_n, [uri2_n_n, uri3_n_n, uri4_n_n, uri5_n_n,
                            uri0_1000_n, uri1_1000_n, uri2_1000_n, uri3_1000_n, uri4_1000_n, uri5_1000_n,
                            uri0_1000_y, uri1_1000_y, uri2_1000_y, uri3_1000_y, uri4_1000_y, uri5_1000_y,
                            uri0_2000_n, uri1_2000_n, uri2_2000_n, uri3_2000_n, uri4_2000_n, uri5_2000_n,
                            uri0_2000_y, uri1_2000_y, uri2_2000_y, uri3_2000_y, uri4_2000_y, uri5_2000_y]);
 
-  matches_always(perm_1000_n, [uri0_1000_n, uri3_1000_n, uri5_1000_n]);
-  matches_weak(perm_1000_n, [uri1_1000_n, uri4_1000_n]);
-  matches_never(perm_1000_n, [uri2_1000_n,
+  matches_always(perm_1000_n, [uri0_1000_n]);
+  matches_weak(perm_1000_n, [uri1_1000_n]);
+  matches_never(perm_1000_n, [uri2_1000_n, uri3_1000_n, uri4_1000_n, uri5_1000_n,
                               uri0_n_n, uri1_n_n, uri2_n_n, uri3_n_n, uri4_n_n, uri5_n_n,
                               uri0_1000_y, uri1_1000_y, uri2_1000_y, uri3_1000_y, uri4_1000_y, uri5_1000_y,
                               uri0_2000_n, uri1_2000_n, uri2_2000_n, uri3_2000_n, uri4_2000_n, uri5_2000_n,
                               uri0_2000_y, uri1_2000_y, uri2_2000_y, uri3_2000_y, uri4_2000_y, uri5_2000_y]);
 
-  matches_always(perm_1000_y, [uri0_1000_y, uri3_1000_y, uri5_1000_y]);
-  matches_weak(perm_1000_y, [uri1_1000_y, uri4_1000_y]);
-  matches_never(perm_1000_y, [uri2_1000_y,
+  matches_always(perm_1000_y, [uri0_1000_y]);
+  matches_weak(perm_1000_y, [uri1_1000_y]);
+  matches_never(perm_1000_y, [uri2_1000_y, uri3_1000_y, uri4_1000_y, uri5_1000_y,
                               uri0_n_n, uri1_n_n, uri2_n_n, uri3_n_n, uri4_n_n, uri5_n_n,
                               uri0_1000_n, uri1_1000_n, uri2_1000_n, uri3_1000_n, uri4_1000_n, uri5_1000_n,
                               uri0_2000_n, uri1_2000_n, uri2_2000_n, uri3_2000_n, uri4_2000_n, uri5_2000_n,
                               uri0_2000_y, uri1_2000_y, uri2_2000_y, uri3_2000_y, uri4_2000_y, uri5_2000_y]);
 
-  matches_always(perm_2000_n, [uri0_2000_n, uri3_2000_n, uri5_2000_n]);
-  matches_weak(perm_2000_n, [uri1_2000_n, uri4_2000_n]);
-  matches_never(perm_2000_n, [uri2_2000_n,
+  matches_always(perm_2000_n, [uri0_2000_n]);
+  matches_weak(perm_2000_n, [uri1_2000_n]);
+  matches_never(perm_2000_n, [uri2_2000_n, uri3_2000_n, uri4_2000_n, uri5_2000_n,
                               uri0_n_n, uri1_n_n, uri2_n_n, uri3_n_n, uri4_n_n, uri5_n_n,
                               uri0_2000_y, uri1_2000_y, uri2_2000_y, uri3_2000_y, uri4_2000_y, uri5_2000_y,
                               uri0_1000_n, uri1_1000_n, uri2_1000_n, uri3_1000_n, uri4_1000_n, uri5_1000_n,
                               uri0_1000_y, uri1_1000_y, uri2_1000_y, uri3_1000_y, uri4_1000_y, uri5_1000_y]);
 
-  matches_always(perm_2000_y, [uri0_2000_y, uri3_2000_y, uri5_2000_y]);
-  matches_weak(perm_2000_y, [uri1_2000_y, uri4_2000_y]);
-  matches_never(perm_2000_y, [uri2_2000_y,
+  matches_always(perm_2000_y, [uri0_2000_y]);
+  matches_weak(perm_2000_y, [uri1_2000_y]);
+  matches_never(perm_2000_y, [uri2_2000_y, uri3_2000_y, uri4_2000_y, uri5_2000_y,
                               uri0_n_n, uri1_n_n, uri2_n_n, uri3_n_n, uri4_n_n, uri5_n_n,
                               uri0_2000_n, uri1_2000_n, uri2_2000_n, uri3_2000_n, uri4_2000_n, uri5_2000_n,
                               uri0_1000_n, uri1_1000_n, uri2_1000_n, uri3_1000_n, uri4_1000_n, uri5_1000_n,
