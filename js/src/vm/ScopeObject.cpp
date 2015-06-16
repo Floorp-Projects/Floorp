@@ -323,10 +323,22 @@ const Class DeclEnvObject::class_ = {
  * scope and callee) or used as a template for jit compilation.
  */
 DeclEnvObject*
-DeclEnvObject::createTemplateObject(JSContext* cx, HandleFunction fun, NewObjectKind newKind)
+DeclEnvObject::createTemplateObject(JSContext* cx, HandleFunction fun, gc::InitialHeap heap)
 {
-    Rooted<DeclEnvObject*> obj(cx);
-    obj = NewObjectWithNullTaggedProto<DeclEnvObject>(cx, newKind, BaseShape::DELEGATE);
+    MOZ_ASSERT(IsNurseryAllocable(FINALIZE_KIND));
+
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
+    if (!group)
+        return nullptr;
+
+    RootedShape emptyDeclEnvShape(cx);
+    emptyDeclEnvShape = EmptyShape::getInitialShape(cx, &class_, TaggedProto(nullptr),
+                                                    FINALIZE_KIND, BaseShape::DELEGATE);
+    if (!emptyDeclEnvShape)
+        return nullptr;
+
+    RootedNativeObject obj(cx, MaybeNativeObject(JSObject::create(cx, FINALIZE_KIND, heap,
+                                                                  emptyDeclEnvShape, group)));
     if (!obj)
         return nullptr;
 
@@ -344,13 +356,13 @@ DeclEnvObject::createTemplateObject(JSContext* cx, HandleFunction fun, NewObject
         return nullptr;
 
     MOZ_ASSERT(!obj->hasDynamicSlots());
-    return obj;
+    return &obj->as<DeclEnvObject>();
 }
 
 DeclEnvObject*
 DeclEnvObject::create(JSContext* cx, HandleObject enclosing, HandleFunction callee)
 {
-    Rooted<DeclEnvObject*> obj(cx, createTemplateObject(cx, callee, GenericObject));
+    Rooted<DeclEnvObject*> obj(cx, createTemplateObject(cx, callee, gc::DefaultHeap));
     if (!obj)
         return nullptr;
 
@@ -388,7 +400,20 @@ js::XDRStaticWithObject(XDRState<XDR_DECODE>*, HandleObject, MutableHandle<Stati
 StaticWithObject*
 StaticWithObject::create(ExclusiveContext* cx)
 {
-    return NewObjectWithNullTaggedProto<StaticWithObject>(cx, TenuredObject, BaseShape::DELEGATE);
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
+    if (!group)
+        return nullptr;
+
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &class_, TaggedProto(nullptr),
+                                                      FINALIZE_KIND));
+    if (!shape)
+        return nullptr;
+
+    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, shape, group));
+    if (!obj)
+        return nullptr;
+
+    return &obj->as<StaticWithObject>();
 }
 
 static JSObject*
@@ -408,11 +433,18 @@ DynamicWithObject::create(JSContext* cx, HandleObject object, HandleObject enclo
                           HandleObject staticWith, WithKind kind)
 {
     MOZ_ASSERT(staticWith->is<StaticWithObject>());
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_,
+                                                             TaggedProto(staticWith.get())));
+    if (!group)
+        return nullptr;
 
-    Rooted<TaggedProto> proto(cx, TaggedProto(staticWith));
-    Rooted<DynamicWithObject*> obj(cx);
-    obj = NewObjectWithGivenTaggedProto<DynamicWithObject>(cx, proto, GenericObject,
-                                                           BaseShape::DELEGATE);
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &class_, TaggedProto(staticWith),
+                                                      FINALIZE_KIND));
+    if (!shape)
+        return nullptr;
+
+    RootedNativeObject obj(cx, MaybeNativeObject(JSObject::create(cx, FINALIZE_KIND,
+                                                                  gc::DefaultHeap, shape, group)));
     if (!obj)
         return nullptr;
 
@@ -425,7 +457,7 @@ DynamicWithObject::create(JSContext* cx, HandleObject object, HandleObject enclo
     obj->setFixedSlot(THIS_SLOT, ObjectValue(*thisp));
     obj->setFixedSlot(KIND_SLOT, Int32Value(kind));
 
-    return obj;
+    return &obj->as<DynamicWithObject>();
 }
 
 static bool
@@ -535,14 +567,23 @@ const Class DynamicWithObject::class_ = {
 /* static */ StaticEvalObject*
 StaticEvalObject::create(JSContext* cx, HandleObject enclosing)
 {
-    StaticEvalObject* obj =
-        NewObjectWithNullTaggedProto<StaticEvalObject>(cx, TenuredObject, BaseShape::DELEGATE);
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
+    if (!group)
+        return nullptr;
+
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &class_, TaggedProto(nullptr),
+                                                      FINALIZE_KIND, BaseShape::DELEGATE));
+    if (!shape)
+        return nullptr;
+
+    RootedNativeObject obj(cx, MaybeNativeObject(JSObject::create(cx, FINALIZE_KIND,
+                                                                  gc::TenuredHeap, shape, group)));
     if (!obj)
         return nullptr;
 
     obj->setReservedSlot(SCOPE_CHAIN_SLOT, ObjectOrNullValue(enclosing));
     obj->setReservedSlot(STRICT_SLOT, BooleanValue(false));
-    return obj;
+    return &obj->as<StaticEvalObject>();
 }
 
 const Class StaticEvalObject::class_ = {
@@ -565,10 +606,7 @@ ClonedBlockObject::create(JSContext* cx, Handle<StaticBlockObject*> block, Handl
 
     RootedShape shape(cx, block->lastProperty());
 
-    gc::AllocKind allocKind = gc::GetGCObjectKind(&BlockObject::class_);
-    if (CanBeFinalizedInBackground(allocKind, &BlockObject::class_))
-        allocKind = GetBackgroundAllocKind(allocKind);
-    RootedNativeObject obj(cx, MaybeNativeObject(JSObject::create(cx, allocKind,
+    RootedNativeObject obj(cx, MaybeNativeObject(JSObject::create(cx, FINALIZE_KIND,
                                                                   gc::TenuredHeap, shape, group)));
     if (!obj)
         return nullptr;
@@ -642,7 +680,22 @@ ClonedBlockObject::clone(JSContext* cx, Handle<ClonedBlockObject*> clonedBlock)
 StaticBlockObject*
 StaticBlockObject::create(ExclusiveContext* cx)
 {
-    return NewObjectWithNullTaggedProto<StaticBlockObject>(cx, TenuredObject, BaseShape::DELEGATE);
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &BlockObject::class_,
+                                                             TaggedProto(nullptr)));
+    if (!group)
+        return nullptr;
+
+    RootedShape emptyBlockShape(cx);
+    emptyBlockShape = EmptyShape::getInitialShape(cx, &BlockObject::class_, TaggedProto(nullptr),
+                                                  FINALIZE_KIND, BaseShape::DELEGATE);
+    if (!emptyBlockShape)
+        return nullptr;
+
+    JSObject* obj = JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, emptyBlockShape, group);
+    if (!obj)
+        return nullptr;
+
+    return &obj->as<StaticBlockObject>();
 }
 
 /* static */ Shape*
@@ -840,13 +893,22 @@ js::CloneNestedScopeObject(JSContext* cx, HandleObject enclosingScope, Handle<Ne
 /* static */ UninitializedLexicalObject*
 UninitializedLexicalObject::create(JSContext* cx, HandleObject enclosing)
 {
-    UninitializedLexicalObject* obj =
-        NewObjectWithNullTaggedProto<UninitializedLexicalObject>(cx, GenericObject,
-                                                                 BaseShape::DELEGATE);
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
+    if (!group)
+        return nullptr;
+
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &class_, TaggedProto(nullptr),
+                                                      FINALIZE_KIND));
+    if (!shape)
+        return nullptr;
+
+    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape, group));
     if (!obj)
         return nullptr;
+
     obj->as<ScopeObject>().setEnclosingScope(enclosing);
-    return obj;
+
+    return &obj->as<UninitializedLexicalObject>();
 }
 
 static void
