@@ -263,6 +263,21 @@ ReportWrapperDenial(JSContext* cx, HandleId id, WrapperDenialType type, const ch
     return true;
 }
 
+bool JSXrayTraits::getOwnPropertyFromWrapperIfSafe(JSContext* cx,
+                                                   HandleObject wrapper,
+                                                   HandleId id,
+                                                   MutableHandle<JSPropertyDescriptor> outDesc)
+{
+    MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
+    RootedObject target(cx, getTargetObject(wrapper));
+    {
+        JSAutoCompartment ac(cx, target);
+        if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, id, outDesc))
+            return false;
+    }
+    return JS_WrapPropertyDescriptor(cx, outDesc);
+}
+
 bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext* cx,
                                                   HandleObject target,
                                                   HandleObject wrapper,
@@ -358,12 +373,7 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
         // "should" look like over Xrays, the underlying object is squishy enough
         // that it makes sense to just treat them like Objects for Xray purposes.
         if (key == JSProto_Object || key == JSProto_Array) {
-            {
-                JSAutoCompartment ac(cx, target);
-                if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, id, desc))
-                    return false;
-            }
-            return JS_WrapPropertyDescriptor(cx, desc);
+            return getOwnPropertyFromWrapperIfSafe(cx, wrapper, id, desc);
         } else if (IsTypedArrayKey(key)) {
             if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {
                 JS_ReportError(cx, "Accessing TypedArray data over Xrays is slow, and forbidden "
@@ -426,10 +436,8 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
                 return true;
             }
         } else if (key == JSProto_RegExp) {
-            if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_LASTINDEX)) {
-                JSAutoCompartment ac(cx, target);
-                return getOwnPropertyFromTargetIfSafe(cx, target, wrapper, id, desc);
-            }
+            if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_LASTINDEX))
+                return getOwnPropertyFromWrapperIfSafe(cx, wrapper, id, desc);
         }
 
         // The rest of this function applies only to prototypes.
@@ -475,10 +483,8 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
     }
 
     // Handle the 'lastIndex' property for RegExp prototypes.
-    if (key == JSProto_RegExp && id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_LASTINDEX)) {
-        JSAutoCompartment ac(cx, target);
-        return getOwnPropertyFromTargetIfSafe(cx, target, wrapper, id, desc);
-    }
+    if (key == JSProto_RegExp && id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_LASTINDEX))
+        return getOwnPropertyFromWrapperIfSafe(cx, wrapper, id, desc);
 
     // Grab the JSClass. We require all Xrayable classes to have a ClassSpec.
     const js::Class* clasp = js::GetObjectClass(target);
