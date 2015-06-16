@@ -4683,7 +4683,7 @@ CodeGenerator::visitSimdUnbox(LSimdUnbox* lir)
     bailoutFrom(&bail, lir->snapshot());
 }
 
-typedef js::DeclEnvObject* (*NewDeclEnvObjectFn)(JSContext*, HandleFunction, NewObjectKind);
+typedef js::DeclEnvObject* (*NewDeclEnvObjectFn)(JSContext*, HandleFunction, gc::InitialHeap);
 static const VMFunction NewDeclEnvObjectInfo =
     FunctionInfo<NewDeclEnvObjectFn>(DeclEnvObject::createTemplateObject);
 
@@ -4697,7 +4697,7 @@ CodeGenerator::visitNewDeclEnvObject(LNewDeclEnvObject* lir)
 
     // If we have a template object, we can inline call object creation.
     OutOfLineCode* ool = oolCallVM(NewDeclEnvObjectInfo, lir,
-                                   ArgList(ImmGCPtr(info.funMaybeLazy()), Imm32(GenericObject)),
+                                   ArgList(ImmGCPtr(info.funMaybeLazy()), Imm32(gc::DefaultHeap)),
                                    StoreRegisterTo(objReg));
 
     bool initContents = ShouldInitFixedSlots(lir, templateObj);
