@@ -41,7 +41,7 @@ pub struct TrackHeaderBox {
     pub height: u32,
 }
 
-extern crate byteorder;
+mod byteorder;
 use byteorder::{BigEndian, ReadBytesExt};
 use std::io::{Read, Result, Seek, SeekFrom, Take};
 use std::io::Cursor;
