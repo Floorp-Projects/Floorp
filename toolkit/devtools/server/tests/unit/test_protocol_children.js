@@ -82,6 +82,19 @@ let ChildActor = protocol.ActorClass({
     }
   }),
 
+  getIntArray: method(function(inputArray) {
+    // Test that protocol.js converts an iterator to an array.
+    let f = function*() {
+      for (let i of inputArray) {
+        yield 2 * i;
+      }
+    };
+    return f();
+  }, {
+    request: { inputArray: Arg(0, "array:number") },
+    response: RetVal("array:number")
+  }),
+
   getSibling: method(function(id) {
     return this.parent().getChild(id);
   }, {
@@ -190,6 +203,18 @@ let RootActor = protocol.ActorClass({
     return ids.map(id => this.getChild(id));
   }, {
     request: { ids: Arg(0, "array:string") },
+    response: { children: RetVal("array:childActor") },
+  }),
+
+  getChildren2: method(function(ids) {
+    let f = function*() {
+      for (let c of ids) {
+        yield c;
+      }
+    };
+    return f();
+  }, {
+    request: { ids: Arg(0, "array:childActor") },
     response: { children: RetVal("array:childActor") },
   }),
 
@@ -441,6 +466,34 @@ function run_test()
       do_check_eq(ret.child5.childID, "child5");
       do_check_eq(ret.more[0].childID, "child6");
       do_check_eq(ret.more[1].childID, "child7");
+    }).then(() => {
+      // Test accepting a generator.
+      let f = function*() {
+        for (let i of [1, 2, 3, 4, 5]) {
+          yield i;
+        }
+      };
+      return childFront.getIntArray(f());
+    }).then((ret) => {
+      do_check_eq(ret.length, 5);
+      let expected = [2, 4, 6, 8, 10];
+      for (let i = 0; i < 5; ++i) {
+        do_check_eq(ret[i], expected[i]);
+      }
+    }).then(() => {
+      return rootFront.getChildren(["child1", "child2"]);
+    }).then(ids => {
+      let f = function*() {
+        for (let id of ids) {
+          yield id;
+        }
+      };
+      return rootFront.getChildren2(f());
+    }).then(ret => {
+      do_check_eq(ret.length, 2);
+      do_check_true(ret[0] === childFront);
+      do_check_true(ret[1] !== childFront);
+      do_check_true(ret[1] instanceof ChildFront);
     }).then(() => {
       client.close(() => {
         do_test_finished();

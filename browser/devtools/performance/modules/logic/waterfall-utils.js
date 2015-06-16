@@ -7,23 +7,28 @@
  * Utility functions for collapsing markers into a waterfall.
  */
 
-loader.lazyRequireGetter(this, "getBlueprintFor",
-  "devtools/performance/marker-utils", true);
+loader.lazyRequireGetter(this, "MarkerUtils",
+  "devtools/performance/marker-utils");
 
 /**
  * Collapses markers into a tree-like structure.
  * @param object markerNode
  * @param array markersList
+ * @param array filter
  */
-function collapseMarkersIntoNode({ markerNode, markersList }) {
+function collapseMarkersIntoNode({ markerNode, markersList, filter }) {
   let { getCurrentParentNode, collapseMarker, addParentNode, popParentNode } = createParentNodeFactory(markerNode);
 
   for (let i = 0, len = markersList.length; i < len; i++) {
     let curr = markersList[i];
 
-    let parentNode = getCurrentParentNode();
-    let blueprint = getBlueprintFor(curr);
+    // If this marker type should not be displayed, just skip
+    if (!MarkerUtils.isMarkerValid(curr, filter)) {
+      continue;
+    }
 
+    let parentNode = getCurrentParentNode();
+    let blueprint = MarkerUtils.getBlueprintFor(curr);
     let collapse = blueprint.collapseFunc || (() => null);
     let peek = distance => markersList[i + distance];
 

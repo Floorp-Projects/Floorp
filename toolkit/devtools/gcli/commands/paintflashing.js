@@ -112,9 +112,9 @@ exports.items = [
     }],
     exec: function*(args, context) {
       if (!args.chrome) {
-        const value = yield context.updateExec("paintflashing_server --state on");
-        isContentPaintFlashing = value;
-        onPaintFlashingChanged(context.environment.target, value);
+        const output = yield context.updateExec("paintflashing_server --state on");
+        isContentPaintFlashing = output.data;
+        onPaintFlashingChanged(context.environment.target, output.data);
       }
       else {
         setPaintFlashing(context.environment.chromeWindow, "on");
@@ -142,9 +142,9 @@ exports.items = [
     }],
     exec: function*(args, context) {
       if (!args.chrome) {
-        const value = yield context.updateExec("paintflashing_server --state off");
-        isContentPaintFlashing = value;
-        onPaintFlashingChanged(context.environment.target, value);
+        const output = yield context.updateExec("paintflashing_server --state off");
+        isContentPaintFlashing = output.data;
+        onPaintFlashingChanged(context.environment.target, output.data);
       }
       else {
         setPaintFlashing(context.environment.chromeWindow, "off");
@@ -167,9 +167,9 @@ exports.items = [
     description: l10n.lookup("paintflashingToggleDesc"),
     manual: l10n.lookup("paintflashingManual"),
     exec: function*(args, context) {
-      const value = yield context.updateExec("paintflashing_server --state toggle");
-      isContentPaintFlashing = value;
-      onPaintFlashingChanged(context.environment.target, value);
+      const output = yield context.updateExec("paintflashing_server --state toggle");
+      isContentPaintFlashing = output.data;
+      onPaintFlashingChanged(context.environment.target, output.data);
     }
   },
   {
