@@ -6,45 +6,20 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-    <ScrollView android:layout_width="match_parent"
-                android:layout_height="match_parent">
+    <FrameLayout android:id="@+id/private_tabs_empty"
+                 android:layout_width="match_parent"
+                 android:layout_height="match_parent">
 
-        <LinearLayout android:id="@+id/private_tabs_empty"
-                      style="@style/PrivateTabsPanelFrame"
-                      android:layout_width="@dimen/private_tabs_panel_empty_width"
-                      android:layout_height="@dimen/private_tabs_panel_empty_height">
+        <!-- TODO: Remove the negative marginTop once we get rid of the 
+                   browser chrome at the bottom of the tabs tray. 
+                   Bug 1161638 -->
+        <ImageView android:layout_height="wrap_content"
+                   android:layout_width="wrap_content"
+                   android:src="@drawable/private_masq"
+                   android:layout_gravity="center"
+                   android:layout_marginTop="-10dp"/>
 
-            <LinearLayout style="@style/TabsPanelSection.PrivateTabs.Header"
-                          android:layout_width="match_parent"
-                          android:layout_height="wrap_content">
-
-                <TextView android:id="@+id/private_tabs_empty_header"
-                          style="@style/TabsPanelItem.TextAppearance.Header.PrivateTabs"
-                          android:layout_width="match_parent"
-                          android:layout_height="wrap_content"
-                          android:text="@string/private_browsing_title"/>
-
-                <TextView style="@style/TabsPanelItem.TextAppearance"
-                          android:layout_width="match_parent"
-                          android:layout_height="wrap_content"
-                          android:text="@string/private_tabs_panel_empty_desc"/>
-
-            </LinearLayout>
-
-            <LinearLayout style="@style/TabsPanelSection.PrivateTabs"
-                          android:layout_width="match_parent"
-                          android:layout_height="match_parent">
-
-                <TextView android:id="@+id/private_tabs_learn_more"
-                          style="@style/TabsPanelItem.TextAppearance.Linkified.LearnMore"
-                          android:layout_width="match_parent"
-                          android:text="@string/private_tabs_panel_learn_more"/>
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-    </ScrollView>
+    </FrameLayout>
 
     <!-- Note: for an unknown reason, scrolling in the TabsLayout
          does not work unless it is laid out after the empty view. -->
