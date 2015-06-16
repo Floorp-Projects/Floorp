@@ -19,22 +19,25 @@ class TracedTaskCommon
 {
 public:
   TracedTaskCommon();
-  virtual ~TracedTaskCommon() {}
+  virtual ~TracedTaskCommon();
+
+  void DispatchTask(int aDelayTimeMs = 0);
+
+  void SetTLSTraceInfo();
+  void GetTLSTraceInfo();
+  void ClearTLSTraceInfo();
 
 protected:
   void Init();
 
-  // Sets up the metadata on the current thread's TraceInfo for this task.
-  // After Run(), ClearTraceInfo is called to reset the metadata.
-  void SetTraceInfo();
-  void ClearTraceInfo();
-
-  // Its own task Id, an unique number base on its thread Id and a last unique
-  // task Id stored in its TraceInfo.
-  uint64_t mTaskId;
-
-  uint64_t mSourceEventId;
+  // TraceInfo of TLS will be set by the following parameters, including source
+  // event type, source event ID, parent task ID, and task ID of this traced
+  // task/runnable.
   SourceEventType mSourceEventType;
+  uint64_t mSourceEventId;
+  uint64_t mParentTaskId;
+  uint64_t mTaskId;
+  bool mIsTraceInfoInit;
 };
 
 class TracedRunnable : public TracedTaskCommon
@@ -46,7 +49,7 @@ public:
   TracedRunnable(nsIRunnable* aOriginalObj);
 
 private:
-  virtual ~TracedRunnable() {}
+  virtual ~TracedRunnable();
 
   nsCOMPtr<nsIRunnable> mOriginalObj;
 };
@@ -56,46 +59,12 @@ class TracedTask : public TracedTaskCommon
 {
 public:
   TracedTask(Task* aOriginalObj);
-  ~TracedTask()
-  {
-    if (mOriginalObj) {
-      delete mOriginalObj;
-      mOriginalObj = nullptr;
-    }
-  }
+  ~TracedTask();
 
   virtual void Run();
 
 private:
   Task* mOriginalObj;
-};
-
-// FakeTracedTask is for tracking events that are not directly dispatched from
-// their parents, e.g. The timer events.
-class FakeTracedTask : public TracedTaskCommon
-{
-public:
-  NS_INLINE_DECL_REFCOUNTING(FakeTracedTask)
-
-  FakeTracedTask(int* aVptr);
-  void BeginFakeTracedTask();
-  void EndFakeTracedTask();
-private:
-  virtual ~FakeTracedTask() {}
-
-  // No copy allowed.
-  FakeTracedTask() = delete;
-  FakeTracedTask(const FakeTracedTask& aTask) = delete;
-  FakeTracedTask& operator=(const FakeTracedTask& aTask) = delete;
-};
-
-class AutoRunFakeTracedTask
-{
-public:
-  AutoRunFakeTracedTask(FakeTracedTask* aFakeTracedTask);
-  ~AutoRunFakeTracedTask();
-private:
-  nsRefPtr<FakeTracedTask> mFakeTracedTask;
 };
 
 } // namespace tasktracer

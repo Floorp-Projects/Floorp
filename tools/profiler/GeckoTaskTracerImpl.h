@@ -86,6 +86,10 @@ enum ActionType {
 void LogDispatch(uint64_t aTaskId, uint64_t aParentTaskId,
                  uint64_t aSourceEventId, SourceEventType aSourceEventType);
 
+void LogDispatch(uint64_t aTaskId, uint64_t aParentTaskId,
+                 uint64_t aSourceEventId, SourceEventType aSourceEventType,
+                 int aDelayTimeMs);
+
 void LogBegin(uint64_t aTaskId, uint64_t aSourceEventId);
 
 void LogEnd(uint64_t aTaskId, uint64_t aSourceEventId);
