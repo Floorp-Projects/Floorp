@@ -2673,6 +2673,7 @@ public:
   static bool ContainsMetricsWithId(const Layer* aLayer, const ViewID& aScrollId);
 
   static bool ShouldUseNoScriptSheet(nsIDocument* aDocument);
+  static bool ShouldUseNoFramesSheet(nsIDocument* aDocument);
 
 private:
   static uint32_t sFontSizeInflationEmPerLine;

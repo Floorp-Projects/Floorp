@@ -2341,6 +2341,13 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
       }
     }
 
+    if (nsLayoutUtils::ShouldUseNoFramesSheet(aDocument)) {
+      sheet = nsLayoutStylesheetCache::NoFramesSheet();
+      if (sheet) {
+        styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
+      }
+    }
+
     sheet = nsLayoutStylesheetCache::HTMLSheet();
     if (sheet) {
       styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
