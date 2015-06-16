@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf-8," +
   "<p>browser_telemetry_button_paintflashing.js</p>";
 
@@ -30,27 +32,28 @@ function* testButton(toolbox, Telemetry) {
   let button = toolbox.doc.querySelector("#command-button-paintflashing");
   ok(button, "Captain, we have the button");
 
-  yield delayedClicks(button, 4);
+  yield* delayedClicks(toolbox, button, 4);
   checkResults("_PAINTFLASHING_", Telemetry);
 }
 
-function delayedClicks(node, clicks) {
-  return new Promise(resolve => {
-    let clicked = 0;
+function* delayedClicks(toolbox, node, clicks) {
+  for (let i = 0; i < clicks; i++) {
+    yield new Promise(resolve => {
+      // See TOOL_DELAY for why we need setTimeout here
+      setTimeout(() => resolve(), TOOL_DELAY);
+    });
 
-    // See TOOL_DELAY for why we need setTimeout here
-    setTimeout(function delayedClick() {
-      info("Clicking button " + node.id);
-      node.click();
-      clicked++;
+    // this event will fire once the command execution starts and
+    // the output object is created
+    let clicked = toolbox._requisition.commandOutputManager.onOutput.once();
 
-      if (clicked >= clicks) {
-        resolve(node);
-      } else {
-        setTimeout(delayedClick, TOOL_DELAY);
-      }
-    }, TOOL_DELAY);
-  });
+    info("Clicking button " + node.id);
+    node.click();
+
+    let outputEvent = yield clicked;
+    // promise gets resolved once execution finishes and output is ready
+    yield outputEvent.output.promise;
+  }
 }
 
 function checkResults(histIdFocus, Telemetry) {

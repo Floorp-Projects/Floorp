@@ -140,8 +140,6 @@
     <dimen name="tabs_counter_size">22sp</dimen>
     <dimen name="tabs_panel_indicator_width">60dp</dimen>
     <dimen name="tabs_panel_list_padding">16dip</dimen>
-    <dimen name="private_tabs_panel_empty_width">@dimen/match_parent</dimen>
-    <dimen name="private_tabs_panel_empty_height">@dimen/match_parent</dimen>
     <dimen name="tabs_list_divider_height">2dp</dimen>
     <dimen name="tabs_strip_height">40dp</dimen>
     <dimen name="tabs_strip_button_width">100dp</dimen>

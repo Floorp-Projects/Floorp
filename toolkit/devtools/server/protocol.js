@@ -109,6 +109,11 @@ function identityWrite(v) {
   if (v === undefined) {
     throw Error("undefined passed where a value is required");
   }
+  // This has to handle iterator->array conversion because arrays of
+  // primitive types pass through here.
+  if (v && typeof (v) === "object" && Symbol.iterator in v) {
+    return [...v];
+  }
   return v;
 }
 
@@ -190,8 +195,8 @@ types.addArrayType = function(subtype) {
   }
   return types.addType(name, {
     category: "array",
-    read: (v, ctx) => v.map(i => subtype.read(i, ctx)),
-    write: (v, ctx) => v.map(i => subtype.write(i, ctx))
+    read: (v, ctx) => [...v].map(i => subtype.read(i, ctx)),
+    write: (v, ctx) => [...v].map(i => subtype.write(i, ctx))
   });
 };
 
