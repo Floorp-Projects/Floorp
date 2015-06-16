@@ -31,12 +31,10 @@ public final class GeckoLoader {
     private static File sCacheFile;
     private static File sGREDir;
 
-    private static final Object sLibLoadingLock = new Object();
-    // Must hold sLibLoadingLock while accessing the following boolean variables.
+    /* Synchronized on GeckoLoader.class. */
     private static boolean sSQLiteLibsLoaded;
     private static boolean sNSSLibsLoaded;
     private static boolean sMozGlueLoaded;
-    private static boolean sLibsSetup;
 
     private GeckoLoader() {
         // prevent instantiation
@@ -192,14 +190,7 @@ public final class GeckoLoader {
         sIntent = null;
     }
 
-    private static void loadLibsSetup(Context context) {
-        synchronized (sLibLoadingLock) {
-            if (sLibsSetup) {
-                return;
-            }
-            sLibsSetup = true;
-        }
-
+    private static void loadLibsSetupLocked(Context context) {
         // The package data lib directory isn't placed in ld.so's
         // search path, so we have to manually load libraries that
         // libxul will depend on.  Not ideal.
@@ -237,30 +228,26 @@ public final class GeckoLoader {
     }
 
     @RobocopTarget
-    public static void loadSQLiteLibs(final Context context, final String apkName) {
-        synchronized (sLibLoadingLock) {
-            if (sSQLiteLibsLoaded) {
-                return;
-            }
-            sSQLiteLibsLoaded = true;
+    public synchronized static void loadSQLiteLibs(final Context context, final String apkName) {
+        if (sSQLiteLibsLoaded) {
+            return;
         }
 
         loadMozGlue(context);
-        loadLibsSetup(context);
+        loadLibsSetupLocked(context);
         loadSQLiteLibsNative(apkName);
+        sSQLiteLibsLoaded = true;
     }
 
-    public static void loadNSSLibs(final Context context, final String apkName) {
-        synchronized (sLibLoadingLock) {
-            if (sNSSLibsLoaded) {
-                return;
-            }
-            sNSSLibsLoaded = true;
+    public synchronized static void loadNSSLibs(final Context context, final String apkName) {
+        if (sNSSLibsLoaded) {
+            return;
         }
 
         loadMozGlue(context);
-        loadLibsSetup(context);
+        loadLibsSetupLocked(context);
         loadNSSLibsNative(apkName);
+        sNSSLibsLoaded = true;
     }
 
     @SuppressWarnings("deprecation")
@@ -509,19 +496,17 @@ public final class GeckoLoader {
         throw new RuntimeException(message, e);
     }
 
-    public static void loadMozGlue(final Context context) {
-        synchronized (sLibLoadingLock) {
-            if (sMozGlueLoaded) {
-                return;
-            }
-            sMozGlueLoaded = true;
+    public synchronized static void loadMozGlue(final Context context) {
+        if (sMozGlueLoaded) {
+            return;
         }
 
         doLoadLibrary(context, "mozglue");
+        sMozGlueLoaded = true;
     }
 
-    public static void loadGeckoLibs(final Context context, final String apkName) {
-        loadLibsSetup(context);
+    public synchronized static void loadGeckoLibs(final Context context, final String apkName) {
+        loadLibsSetupLocked(context);
         loadGeckoLibsNative(apkName);
     }
 
