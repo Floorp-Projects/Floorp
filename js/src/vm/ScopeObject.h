@@ -399,9 +399,17 @@ class StaticEvalObject : public ScopeObject
 // scopes on the dynamic scope chain.
 //
 // There are two flavors of polluting global scopes on the dynamic scope
-// chain: either 0+ non-syntactic DynamicWithObjects, or 1
-// NonSyntacticVariablesObject, created exclusively in
-// js::ExecuteInGlobalAndReturnScope.
+// chain:
+//
+// 1. 0+ non-syntactic DynamicWithObjects. This static scope helps ScopeIter
+//    iterate these DynamicWithObjects.
+//
+// 2. 1 PlainObject that is a both a QualifiedVarObj and an UnqualifiedVarObj,
+//    created exclusively in js::ExecuteInGlobalAndReturnScope.
+//
+//    Since this PlainObject is not a ScopeObject, ScopeIter cannot iterate
+//    through it. Instead, this PlainObject always comes after the syntactic
+//    portion of the dynamic scope chain in front of a GlobalObject.
 class StaticNonSyntacticScopeObjects : public ScopeObject
 {
   public:
@@ -413,22 +421,6 @@ class StaticNonSyntacticScopeObjects : public ScopeObject
     JSObject* enclosingScopeForStaticScopeIter() {
         return getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
     }
-};
-
-// A non-syntactic dynamic scope object that captures non-lexical
-// bindings. That is, a scope object that captures both qualified var
-// assignments and unqualified bareword assignments. Its parent is always the
-// real global.
-//
-// This is used in ExecuteInGlobalAndReturnScope and sits in front of the
-// global scope to capture 'var' and bareword asignments.
-class NonSyntacticVariablesObject : public ScopeObject
-{
-  public:
-    static const unsigned RESERVED_SLOTS = 1;
-    static const Class class_;
-
-    static NonSyntacticVariablesObject* create(JSContext* cx, Handle<GlobalObject*> global);
 };
 
 class NestedScopeObject : public ScopeObject
@@ -1048,8 +1040,7 @@ JSObject::is<js::ScopeObject>() const
     return is<js::CallObject>() ||
            is<js::DeclEnvObject>() ||
            is<js::NestedScopeObject>() ||
-           is<js::UninitializedLexicalObject>() ||
-           is<js::NonSyntacticVariablesObject>();
+           is<js::UninitializedLexicalObject>();
 }
 
 template<>
@@ -1081,8 +1072,8 @@ inline bool
 IsSyntacticScope(JSObject* scope)
 {
     return scope->is<ScopeObject>() &&
-           (!scope->is<DynamicWithObject>() || scope->as<DynamicWithObject>().isSyntactic()) &&
-           !scope->is<NonSyntacticVariablesObject>();
+           (!scope->is<DynamicWithObject>() ||
+            scope->as<DynamicWithObject>().isSyntactic());
 }
 
 inline const Value&
@@ -1120,8 +1111,7 @@ ScopeIter::hasNonSyntacticScopeObject() const
     if (ssi_.type() == StaticScopeIter<CanGC>::NonSyntactic) {
         MOZ_ASSERT_IF(scope_->is<DynamicWithObject>(),
                       !scope_->as<DynamicWithObject>().isSyntactic());
-        return scope_->is<DynamicWithObject>() ||
-               scope_->is<NonSyntacticVariablesObject>();
+        return scope_->is<DynamicWithObject>();
     }
     return false;
 }
@@ -1151,9 +1141,6 @@ ScopeIter::canHaveSyntacticScopeObject() const
       case NonSyntactic:
         return false;
     }
-
-    // Silence warnings.
-    return false;
 }
 
 inline JSObject&
