@@ -8,6 +8,7 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/httpd.js");
 
 // Import common head.
 {
@@ -29,7 +30,14 @@ function* cleanup() {
   Services.prefs.clearUserPref("browser.urlbar.autoFill");
   Services.prefs.clearUserPref("browser.urlbar.autoFill.typed");
   Services.prefs.clearUserPref("browser.urlbar.autoFill.searchEngines");
-  for (let type of ["history", "bookmark", "history.onlyTyped", "openpage"]) {
+  let suggestPrefs = [
+    "history",
+    "bookmark",
+    "history.onlyTyped",
+    "openpage",
+    "searches",
+  ];
+  for (let type of suggestPrefs) {
     Services.prefs.clearUserPref("browser.urlbar.suggest." + type);
   }
   yield PlacesUtils.bookmarks.eraseEverything();
@@ -222,7 +230,7 @@ function* check_autocomplete(test) {
 
       // We didn't hit the break, so we must have not found it
       if (j == matches.length)
-        do_throw(`Didn't find the current result ("${result.value}", "${result.comment}") in matches`);
+        do_throw(`Didn't find the current result ("${result.value}", "${result.comment}") in matches`); //' (Emacs syntax highlighting fix)
     }
 
     Assert.equal(controller.matchCount, matches.length,
@@ -393,11 +401,55 @@ function setFaviconForHref(href, iconHref) {
   });
 }
 
+function makeTestServer(port=-1) {
+  let httpServer = new HttpServer();
+  httpServer.start(port);
+  do_register_cleanup(() => httpServer.stop(() => {}));
+  return httpServer;
+}
+
+function* addTestEngine(basename, httpServer=undefined) {
+  httpServer = httpServer || makeTestServer();
+  httpServer.registerDirectory("/", do_get_cwd());
+  let dataUrl =
+    "http://localhost:" + httpServer.identity.primaryPort + "/data/";
+
+  do_print("Adding engine: " + basename);
+  return yield new Promise(resolve => {
+    Services.obs.addObserver(function obs(subject, topic, data) {
+      let engine = subject.QueryInterface(Ci.nsISearchEngine);
+      do_print("Observed " + data + " for " + engine.name);
+      if (data != "engine-added" || engine.name != basename) {
+        return;
+      }
+
+      Services.obs.removeObserver(obs, "browser-search-engine-modified");
+      do_register_cleanup(() => Services.search.removeEngine(engine));
+      resolve(engine);
+    }, "browser-search-engine-modified", false);
+
+    do_print("Adding engine from URL: " + dataUrl + basename);
+    Services.search.addEngine(dataUrl + basename,
+                              Ci.nsISearchEngine.DATA_XML, null, false);
+  });
+}
+
 // Ensure we have a default search engine and the keyword.enabled preference
 // set.
 add_task(function ensure_search_engine() {
   // keyword.enabled is necessary for the tests to see keyword searches.
   Services.prefs.setBoolPref("keyword.enabled", true);
+
+  // Initialize the search service, but first set this geo IP pref to a dummy
+  // string.  When the search service is initialized, it contacts the URI named
+  // in this pref, which breaks the test since outside connections aren't
+  // allowed.
+  let geoPref = "browser.search.geoip.url";
+  Services.prefs.setCharPref(geoPref, "");
+  do_register_cleanup(() => Services.prefs.clearUserPref(geoPref));
+  yield new Promise(resolve => {
+    Services.search.init(resolve);
+  });
 
   // Remove any existing engines before adding ours.
   for (let engine of Services.search.getEngines()) {
