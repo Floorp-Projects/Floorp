@@ -44,6 +44,7 @@ function runTextDecoderOptions()
   }, "testDecodeABVOption");
   test(testDecoderForThaiEncoding, "testDecoderForThaiEncoding");
   test(testInvalid2022JP, "testInvalid2022JP");
+  test(testDecoderForBig5, "testDecoderForBig5");
 }
 
 /*
@@ -355,8 +356,7 @@ function testDecoderGetEncoding()
     {encoding: "x-mac-cyrillic", labels: ["x-mac-cyrillic", "x-mac-ukrainian"]},
     {encoding: "gbk", labels: ["chinese", "csgb2312", "csiso58gb231280", "gb2312", "gb_2312", "gb_2312-80", "gbk", "iso-ir-58", "x-gbk"]},
     {encoding: "gb18030", labels: ["gb18030"]},
-    {encoding: "big5", labels: ["big5", "cn-big5", "csbig5", "x-x-big5"]},
-    {encoding: "big5-hkscs", labels: ["big5-hkscs"]},
+    {encoding: "big5", labels: ["big5", "cn-big5", "csbig5", "x-x-big5", "big5-hkscs"]},
     {encoding: "euc-jp", labels: ["cseucpkdfmtjapanese", "euc-jp", "x-euc-jp"]},
     {encoding: "iso-2022-jp", labels: ["csiso2022jp", "iso-2022-jp"]},
     {encoding: "shift_jis", labels: ["csshiftjis", "ms_kanji", "shift-jis", "shift_jis", "sjis", "windows-31j", "x-sjis"]},
@@ -462,4 +462,79 @@ function testInvalid2022JP()
     }
   });
   assert_equals(failureCount, 0, failureCount + " of " + inputs.length + " tests failed");
+}
+
+function testDecoderForBig5()
+{
+  const inputs = [
+    [ 0x61, 0x62 ],
+    [ 0x87, 0x40 ],
+    [ 0xFE, 0xFE ],
+    [ 0xFE, 0xFD ],
+    [ 0x88, 0x62 ],
+    [ 0x88, 0x64 ],
+    [ 0x88, 0x66 ],
+    [ 0x88, 0xA3 ],
+    [ 0x88, 0xA5 ],
+    [ 0x88, 0xA7 ],
+    [ 0x99, 0xD4 ],
+    [ 0x99, 0xD5 ],
+    [ 0x99, 0xD6 ],
+    [ 0x61, 0x87, 0x40, 0x62 ],
+    [ 0x61, 0xFE, 0xFE, 0x62 ],
+    [ 0x61, 0xFE, 0xFD, 0x62 ],
+    [ 0x61, 0x88, 0x62, 0x62 ],
+    [ 0x61, 0x88, 0x64, 0x62 ],
+    [ 0x61, 0x88, 0x66, 0x62 ],
+    [ 0x61, 0x88, 0xA3, 0x62 ],
+    [ 0x61, 0x88, 0xA5, 0x62 ],
+    [ 0x61, 0x88, 0xA7, 0x62 ],
+    [ 0x61, 0x99, 0xD4, 0x62 ],
+    [ 0x61, 0x99, 0xD5, 0x62 ],
+    [ 0x61, 0x99, 0xD6, 0x62 ],
+    [ 0x80, 0x61 ],
+    [ 0xFF, 0x61 ],
+    [ 0xFE, 0x39 ],
+    [ 0x87, 0x66 ],
+    [ 0x81, 0x40 ],
+    [ 0x61, 0x81 ],
+  ];
+  const expectations = [
+    "\u0061\u0062",
+    "\u43F0",
+    "\u79D4",
+    "\uD864\uDD0D",
+    "\u00CA\u0304",
+    "\u00CA\u030C",
+    "\u00CA",
+    "\u00EA\u0304",
+    "\u00EA\u030C",
+    "\u00EA",
+    "\u8991",
+    "\uD85E\uDD67",
+    "\u8A29",
+    "\u0061\u43F0\u0062",
+    "\u0061\u79D4\u0062",
+    "\u0061\uD864\uDD0D\u0062",
+    "\u0061\u00CA\u0304\u0062",
+    "\u0061\u00CA\u030C\u0062",
+    "\u0061\u00CA\u0062",
+    "\u0061\u00EA\u0304\u0062",
+    "\u0061\u00EA\u030C\u0062",
+    "\u0061\u00EA\u0062",
+    "\u0061\u8991\u0062",
+    "\u0061\uD85E\uDD67\u0062",
+    "\u0061\u8A29\u0062",
+    "\uFFFD\u0061",
+    "\uFFFD\u0061",
+    "\uFFFD\u0039",
+    "\uFFFD\u0066",
+    "\uFFFD\u0040",
+    "\u0061\uFFFD",
+  ];
+
+  for (var i = 0; i < inputs.length; i++) {
+    testCharset({encoding: "big5", input: inputs[i], expected: expectations[i],
+      msg: "decoder test #" + i + " for big5."});
+  }
 }
