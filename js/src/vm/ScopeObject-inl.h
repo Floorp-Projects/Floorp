@@ -84,8 +84,6 @@ StaticScopeIter<allowGC>::operator++(int)
         obj = obj->template as<NestedScopeObject>().enclosingScopeForStaticScopeIter();
     } else if (obj->template is<StaticEvalObject>()) {
         obj = obj->template as<StaticEvalObject>().enclosingScopeForStaticScopeIter();
-    } else if (obj->template is<StaticNonSyntacticScopeObjects>()) {
-        obj = obj->template as<StaticNonSyntacticScopeObjects>().enclosingScopeForStaticScopeIter();
     } else if (onNamedLambda || !obj->template as<JSFunction>().isNamedLambda()) {
         onNamedLambda = false;
         obj = obj->template as<JSFunction>().nonLazyScript()->enclosingStaticScope();
@@ -94,32 +92,27 @@ StaticScopeIter<allowGC>::operator++(int)
     }
     MOZ_ASSERT_IF(obj, obj->template is<NestedScopeObject>() ||
                        obj->template is<StaticEvalObject>() ||
-                       obj->template is<StaticNonSyntacticScopeObjects>() ||
                        obj->template is<JSFunction>());
     MOZ_ASSERT_IF(onNamedLambda, obj->template is<JSFunction>());
 }
 
 template <AllowGC allowGC>
 inline bool
-StaticScopeIter<allowGC>::hasSyntacticDynamicScopeObject() const
+StaticScopeIter<allowGC>::hasDynamicScopeObject() const
 {
-    if (obj->template is<JSFunction>())
-        return obj->template as<JSFunction>().isHeavyweight();
-    if (obj->template is<StaticBlockObject>())
-        return obj->template as<StaticBlockObject>().needsClone();
-    if (obj->template is<StaticWithObject>())
-        return true;
-    if (obj->template is<StaticEvalObject>())
-        return obj->template as<StaticEvalObject>().isStrict();
-    MOZ_ASSERT(obj->template is<StaticNonSyntacticScopeObjects>());
-    return false;
+    return obj->template is<StaticBlockObject>()
+           ? obj->template as<StaticBlockObject>().needsClone()
+           : (obj->template is<StaticEvalObject>()
+              ? obj->template as<StaticEvalObject>().isStrict()
+              : (obj->template is<StaticWithObject>() ||
+                 obj->template as<JSFunction>().isHeavyweight()));
 }
 
 template <AllowGC allowGC>
 inline Shape*
 StaticScopeIter<allowGC>::scopeShape() const
 {
-    MOZ_ASSERT(hasSyntacticDynamicScopeObject());
+    MOZ_ASSERT(hasDynamicScopeObject());
     MOZ_ASSERT(type() != NamedLambda && type() != Eval);
     if (type() == Block)
         return block().lastProperty();
@@ -138,8 +131,6 @@ StaticScopeIter<allowGC>::type() const
               ? With
               : (obj->template is<StaticEvalObject>()
                  ? Eval
-                 : (obj->template is<StaticNonSyntacticScopeObjects>())
-                 ? NonSyntactic
                  : Function));
 }
 
@@ -165,14 +156,6 @@ StaticScopeIter<allowGC>::eval() const
 {
     MOZ_ASSERT(type() == Eval);
     return obj->template as<StaticEvalObject>();
-}
-
-template <AllowGC allowGC>
-inline StaticNonSyntacticScopeObjects&
-StaticScopeIter<allowGC>::nonSyntactic() const
-{
-    MOZ_ASSERT(type() == NonSyntactic);
-    return obj->template as<StaticNonSyntacticScopeObjects>();
 }
 
 template <AllowGC allowGC>

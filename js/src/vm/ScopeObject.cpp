@@ -43,7 +43,7 @@ js::ScopeCoordinateToStaticScopeShape(JSScript* script, jsbytecode* pc)
     uint32_t hops = ScopeCoordinate(pc).hops();
     while (true) {
         MOZ_ASSERT(!ssi.done());
-        if (ssi.hasSyntacticDynamicScopeObject()) {
+        if (ssi.hasDynamicScopeObject()) {
             if (!hops)
                 break;
             hops--;
@@ -107,7 +107,7 @@ js::ScopeCoordinateFunctionScript(JSScript* script, jsbytecode* pc)
     StaticScopeIter<NoGC> ssi(script->innermostStaticScopeInScript(pc));
     uint32_t hops = ScopeCoordinate(pc).hops();
     while (true) {
-        if (ssi.hasSyntacticDynamicScopeObject()) {
+        if (ssi.hasDynamicScopeObject()) {
             if (!hops)
                 break;
             hops--;
@@ -212,7 +212,7 @@ CallObject::create(JSContext* cx, HandleScript script, HandleObject enclosing, H
     if (!callobj)
         return nullptr;
 
-    callobj->setEnclosingScope(enclosing);
+    callobj->as<ScopeObject>().setEnclosingScope(enclosing);
     callobj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
 
     if (script->treatAsRunOnce()) {
@@ -420,7 +420,7 @@ DynamicWithObject::create(JSContext* cx, HandleObject object, HandleObject enclo
     if (!thisp)
         return nullptr;
 
-    obj->setEnclosingScope(enclosing);
+    obj->as<ScopeObject>().setEnclosingScope(enclosing);
     obj->setFixedSlot(OBJECT_SLOT, ObjectValue(*object));
     obj->setFixedSlot(THIS_SLOT, ObjectValue(*thisp));
     obj->setFixedSlot(KIND_SLOT, Int32Value(kind));
@@ -548,25 +548,6 @@ StaticEvalObject::create(JSContext* cx, HandleObject enclosing)
 const Class StaticEvalObject::class_ = {
     "StaticEval",
     JSCLASS_HAS_RESERVED_SLOTS(StaticEvalObject::RESERVED_SLOTS) |
-    JSCLASS_IS_ANONYMOUS
-};
-
-/* static */ StaticNonSyntacticScopeObjects*
-StaticNonSyntacticScopeObjects::create(JSContext*cx, HandleObject enclosing)
-{
-    StaticNonSyntacticScopeObjects* obj =
-        NewObjectWithNullTaggedProto<StaticNonSyntacticScopeObjects>(cx, TenuredObject,
-                                                                     BaseShape::DELEGATE);
-    if (!obj)
-        return nullptr;
-
-    obj->setReservedSlot(SCOPE_CHAIN_SLOT, ObjectOrNullValue(enclosing));
-    return obj;
-}
-
-const Class StaticNonSyntacticScopeObjects::class_ = {
-    "StaticNonSyntacticScopeObjects",
-    JSCLASS_HAS_RESERVED_SLOTS(StaticNonSyntacticScopeObjects::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS
 };
 
@@ -864,7 +845,7 @@ UninitializedLexicalObject::create(JSContext* cx, HandleObject enclosing)
                                                                  BaseShape::DELEGATE);
     if (!obj)
         return nullptr;
-    obj->setEnclosingScope(enclosing);
+    obj->as<ScopeObject>().setEnclosingScope(enclosing);
     return obj;
 }
 
@@ -1002,14 +983,7 @@ ScopeIter::ScopeIter(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc
 void
 ScopeIter::incrementStaticScopeIter()
 {
-    // If settled on a non-syntactic static scope, only increment ssi_ once
-    // we've iterated through all the non-syntactic dynamic ScopeObjects.
-    if (ssi_.type() == StaticScopeIter<CanGC>::NonSyntactic) {
-        if (!hasNonSyntacticScopeObject())
-            ssi_++;
-    } else {
-        ssi_++;
-    }
+    ssi_++;
 
     // For named lambdas, DeclEnvObject scopes are always attached to their
     // CallObjects. Skip it here, as they are special cased in users of
@@ -1036,7 +1010,7 @@ ScopeIter::settle()
         frame_ = NullFramePtr();
 
 #ifdef DEBUG
-    if (!ssi_.done() && hasAnyScopeObject()) {
+    if (!ssi_.done() && hasScopeObject()) {
         switch (ssi_.type()) {
           case StaticScopeIter<CanGC>::Function:
             MOZ_ASSERT(scope_->as<CallObject>().callee().nonLazyScript() == ssi_.funScript());
@@ -1050,9 +1024,6 @@ ScopeIter::settle()
           case StaticScopeIter<CanGC>::Eval:
             MOZ_ASSERT(scope_->as<CallObject>().isForEval());
             break;
-          case StaticScopeIter<CanGC>::NonSyntactic:
-            MOZ_ASSERT(!IsSyntacticScope(scope_));
-            break;
           case StaticScopeIter<CanGC>::NamedLambda:
             MOZ_CRASH("named lambda static scopes should have been skipped");
         }
@@ -1063,7 +1034,7 @@ ScopeIter::settle()
 ScopeIter&
 ScopeIter::operator++()
 {
-    if (hasAnyScopeObject()) {
+    if (hasScopeObject()) {
         scope_ = &scope_->as<ScopeObject>().enclosingScope();
         if (scope_->is<DeclEnvObject>())
             scope_ = &scope_->as<DeclEnvObject>().enclosingScope();
@@ -1089,8 +1060,6 @@ ScopeIter::type() const
         return With;
       case StaticScopeIter<CanGC>::Eval:
         return Eval;
-      case StaticScopeIter<CanGC>::NonSyntactic:
-        return NonSyntactic;
       case StaticScopeIter<CanGC>::NamedLambda:
         MOZ_CRASH("named lambda static scopes should have been skipped");
       default:
@@ -1101,7 +1070,7 @@ ScopeIter::type() const
 ScopeObject&
 ScopeIter::scope() const
 {
-    MOZ_ASSERT(hasAnyScopeObject());
+    MOZ_ASSERT(hasScopeObject());
     return scope_->as<ScopeObject>();
 }
 
@@ -1120,8 +1089,6 @@ ScopeIter::maybeStaticScope() const
         return &staticWith();
       case StaticScopeIter<CanGC>::Eval:
         return &staticEval();
-      case StaticScopeIter<CanGC>::NonSyntactic:
-        return &staticNonSyntactic();
       case StaticScopeIter<CanGC>::NamedLambda:
         MOZ_CRASH("named lambda static scopes should have been skipped");
       default:
@@ -1721,7 +1688,7 @@ const DebugScopeProxy DebugScopeProxy::singleton;
 DebugScopeObject::create(JSContext* cx, ScopeObject& scope, HandleObject enclosing)
 {
     MOZ_ASSERT(scope.compartment() == cx->compartment());
-    MOZ_ASSERT(!enclosing->is<ScopeObject>());
+    MOZ_ASSERT(!IsSyntacticScope(enclosing));
 
     RootedValue priv(cx, ObjectValue(scope));
     JSObject* obj = NewProxyObject(cx, &DebugScopeProxy::singleton, priv,
@@ -1983,7 +1950,7 @@ DebugScopes::addDebugScope(JSContext* cx, ScopeObject& scope, DebugScopeObject& 
 DebugScopeObject*
 DebugScopes::hasDebugScope(JSContext* cx, const ScopeIter& si)
 {
-    MOZ_ASSERT(!si.hasSyntacticScopeObject());
+    MOZ_ASSERT(!si.hasScopeObject());
 
     DebugScopes* scopes = cx->compartment()->debugScopes;
     if (!scopes)
@@ -1999,7 +1966,7 @@ DebugScopes::hasDebugScope(JSContext* cx, const ScopeIter& si)
 bool
 DebugScopes::addDebugScope(JSContext* cx, const ScopeIter& si, DebugScopeObject& debugScope)
 {
-    MOZ_ASSERT(!si.hasSyntacticScopeObject());
+    MOZ_ASSERT(!si.hasScopeObject());
     MOZ_ASSERT(cx->compartment() == debugScope.compartment());
     MOZ_ASSERT_IF(si.withinInitialFrame() && si.initialFrame().isFunctionFrame(),
                   !si.initialFrame().callee()->isGenerator());
@@ -2217,7 +2184,7 @@ DebugScopes::updateLiveScopes(JSContext* cx)
             continue;
 
         for (ScopeIter si(cx, frame, i.pc()); si.withinInitialFrame(); ++si) {
-            if (si.hasSyntacticScopeObject()) {
+            if (si.hasScopeObject()) {
                 MOZ_ASSERT(si.scope().compartment() == cx->compartment());
                 DebugScopes* scopes = ensureCompartmentData(cx);
                 if (!scopes)
@@ -2335,7 +2302,7 @@ GetDebugScopeForScope(JSContext* cx, const ScopeIter& si)
 static DebugScopeObject*
 GetDebugScopeForMissing(JSContext* cx, const ScopeIter& si)
 {
-    MOZ_ASSERT(!si.hasSyntacticScopeObject() && si.canHaveSyntacticScopeObject());
+    MOZ_ASSERT(!si.hasScopeObject() && si.canHaveScopeObject());
 
     if (DebugScopeObject* debugScope = DebugScopes::hasDebugScope(cx, si))
         return debugScope;
@@ -2402,8 +2369,6 @@ GetDebugScopeForMissing(JSContext* cx, const ScopeIter& si)
       case ScopeIter::With:
       case ScopeIter::Eval:
         MOZ_CRASH("should already have a scope");
-      case ScopeIter::NonSyntactic:
-        MOZ_CRASH("non-syntactic scopes cannot be synthesized");
     }
     if (!debugScope)
         return nullptr;
@@ -2418,11 +2383,11 @@ static JSObject*
 GetDebugScopeForNonScopeObject(const ScopeIter& si)
 {
     JSObject& enclosing = si.enclosingScope();
-    MOZ_ASSERT(!enclosing.is<ScopeObject>());
+    MOZ_ASSERT(!IsSyntacticScope(&enclosing));
 #ifdef DEBUG
     JSObject* o = &enclosing;
     while ((o = o->enclosingScope()))
-        MOZ_ASSERT(!o->is<ScopeObject>());
+        MOZ_ASSERT(!IsSyntacticScope(o));
 #endif
     return &enclosing;
 }
@@ -2435,10 +2400,10 @@ GetDebugScope(JSContext* cx, const ScopeIter& si)
     if (si.done())
         return GetDebugScopeForNonScopeObject(si);
 
-    if (si.hasAnyScopeObject())
+    if (si.hasScopeObject())
         return GetDebugScopeForScope(cx, si);
 
-    if (si.canHaveSyntacticScopeObject())
+    if (si.canHaveScopeObject())
         return GetDebugScopeForMissing(cx, si);
 
     ScopeIter copy(cx, si);
