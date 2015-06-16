@@ -6,6 +6,7 @@ describe("loop.shared.views.TextChatView", function () {
 
   var expect = chai.expect;
   var sharedActions = loop.shared.actions;
+  var sharedViews = loop.shared.views;
   var TestUtils = React.addons.TestUtils;
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES;
   var CHAT_CONTENT_TYPES = loop.store.CHAT_CONTENT_TYPES;
@@ -127,6 +128,28 @@ describe("loop.shared.views.TextChatView", function () {
       expect(entries.length).eql(1);
       expect(entries[0].classList.contains("special")).eql(true);
       expect(entries[0].classList.contains("room-name")).eql(true);
+    });
+
+    it("should render a special entry for the context url", function() {
+      view = mountTestComponent({
+        showRoomName: true
+      });
+
+      store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
+        roomName: "A Very Long Conversation Name",
+        roomOwner: "fake",
+        roomUrl: "http://showcase",
+        urls: [{
+          description: "A wonderful page!",
+          location: "http://wonderful.invalid"
+          // use the fallback thumbnail
+        }]
+      }));
+
+      var node = view.getDOMNode();
+      expect(node.querySelector(".text-chat-entries")).to.not.eql(null);
+
+      expect(node.querySelector(".context-url-view-wrapper")).to.not.eql(null);
     });
 
     it("should dispatch SendTextChatMessage action when enter is pressed", function() {

@@ -17,6 +17,7 @@ loop.store.TextChatStore = (function(mozL10n) {
   };
 
   var CHAT_CONTENT_TYPES = loop.store.CHAT_CONTENT_TYPES = {
+    CONTEXT: "chat-context",
     TEXT: "chat-text",
     ROOM_NAME: "room-name"
   };
@@ -77,16 +78,20 @@ loop.store.TextChatStore = (function(mozL10n) {
     /**
      * Appends a message to the store, which may be of type 'sent' or 'received'.
      *
-     * @param {String} type
-     * @param {sharedActions.ReceivedTextChatMessage|sharedActions.SendTextChatMessage} actionData
+     * @param {CHAT_MESSAGE_TYPES} type
+     * @param {Object} messageData Data for this message. Options are:
+     * - {CHAT_CONTENT_TYPES} contentType
+     * - {String}             message     The message detail.
+     * - {Object}             extraData   Extra data associated with the message.
      */
-    _appendTextChatMessage: function(type, actionData) {
+    _appendTextChatMessage: function(type, messageData) {
       // We create a new list to avoid updating the store's state directly,
       // which confuses the views.
       var message = {
         type: type,
-        contentType: actionData.contentType,
-        message: actionData.message
+        contentType: messageData.contentType,
+        message: messageData.message,
+        extraData: messageData.extraData
       };
       var newList = this._storeState.messageList.concat(message);
       this.setStoreState({ messageList: newList });
@@ -136,6 +141,21 @@ loop.store.TextChatStore = (function(mozL10n) {
         contentType: CHAT_CONTENT_TYPES.ROOM_NAME,
         message: mozL10n.get("rooms_welcome_title", {conversationName: actionData.roomName})
       });
+
+      // Append the context if we have any.
+      if ("urls" in actionData && actionData.urls.length) {
+        // We only support the first url at the moment.
+        var urlData = actionData.urls[0];
+
+        this._appendTextChatMessage(CHAT_MESSAGE_TYPES.SPECIAL, {
+          contentType: CHAT_CONTENT_TYPES.CONTEXT,
+          message: urlData.description,
+          extraData: {
+            location: urlData.location,
+            thumbnail: urlData.thumbnail
+          }
+        });
+      }
     }
   });
 

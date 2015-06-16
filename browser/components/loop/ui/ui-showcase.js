@@ -261,7 +261,12 @@
   textChatStore.updateRoomInfo(new sharedActions.UpdateRoomInfo({
     roomName: "A Very Long Conversation Name",
     roomOwner: "fake",
-    roomUrl: "http://showcase"
+    roomUrl: "http://showcase",
+    urls: [{
+      description: "A wonderful page!",
+      location: "http://wonderful.invalid"
+      // use the fallback thumbnail
+    }]
   }));
 
   loop.store.StoreMixin.register({

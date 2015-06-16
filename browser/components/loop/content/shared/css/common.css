@@ -501,3 +501,59 @@ html[dir="rtl"] .checkbox {
 .checkbox.checked.disabled {
   background-image: url("../img/check.svg#check-disabled");
 }
+
+/* ContextUrlView classes */
+
+.context-content {
+  color: black;
+  text-align: left;
+}
+
+html[dir="rtl"] .context-content {
+  text-align: right;
+}
+
+.context-content > p {
+  font-weight: bold;
+  margin-bottom: .8em;
+  margin-top: 0;
+}
+
+.context-wrapper {
+  border: 1px solid #0096dd;
+  border-radius: 3px;
+  background: #fff;
+  padding: .8em;
+  /* Use the flex row mode to position the elements next to each other. */
+  display: flex;
+  flex-flow: row nowrap;
+  line-height: 1.1em;
+}
+
+.context-wrapper > .context-preview {
+  float: left;
+  /* 16px is standard height/width for a favicon */
+  width: 16px;
+  max-height: 16px;
+  margin-right: .8em;
+  flex: 0 1 auto;
+}
+
+html[dir="rtl"] .context-wrapper > .context-preview {
+  float: left;
+  margin-left: .8em;
+  margin-right: 0;
+}
+
+.context-wrapper > .context-description {
+  flex: 0 1 auto;
+  display: block;
+  color: black;
+}
+
+.context-wrapper > .context-description > .context-url {
+  display: block;
+  color: #59A1D7;
+  font-weight: 700;
+  clear: both;
+}
