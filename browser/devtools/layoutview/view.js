@@ -7,19 +7,19 @@
 
 "use strict";
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
-const Cc = Components.classes;
+const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
 
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
-const {InplaceEditor, editableItem} = devtools.require("devtools/shared/inplace-editor");
-const {ReflowFront} = devtools.require("devtools/server/actors/layout");
+const {require} = devtools;
+const {InplaceEditor, editableItem} = require("devtools/shared/inplace-editor");
+const {ReflowFront} = require("devtools/server/actors/layout");
 
-const SHARED_L10N = new ViewHelpers.L10N("chrome://browser/locale/devtools/shared.properties");
+const STRINGS_URI = "chrome://browser/locale/devtools/shared.properties";
+const SHARED_L10N = new ViewHelpers.L10N(STRINGS_URI);
 const NUMERIC = /^-?[\d\.]+$/;
 const LONG_TEXT_ROTATE_LIMIT = 3;
 
@@ -265,11 +265,11 @@ LayoutView.prototype = {
       element: element,
       initial: initialValue,
 
-      start: (editor) => {
+      start: editor => {
         editor.elt.parentNode.classList.add("editing");
       },
 
-      change: (value) => {
+      change: value => {
         if (NUMERIC.test(value)) {
           value += "px";
         }
