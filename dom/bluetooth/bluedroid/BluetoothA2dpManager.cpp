@@ -1065,7 +1065,7 @@ BluetoothA2dpManager::GetPlayStatusNotification()
     return;
   }
 
-#ifdef MOZ_B2G_BT_API_V2
+#ifndef MOZ_B2G_BT_API_V1
   bs->DistributeSignal(NS_LITERAL_STRING(REQUEST_MEDIA_PLAYSTATUS_ID),
                        NS_LITERAL_STRING(KEY_ADAPTER));
 #else
