@@ -271,7 +271,7 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   }
 
   int16_t decision = REJECT_REQUEST;
-  rv = ShouldLoad(contentPolicyType,
+  rv = ShouldLoad(nsContentUtils::InternalContentPolicyTypeToExternal(contentPolicyType),
                   newUri,
                   requestingLocation,
                   loadInfo->LoadingNode(),
