@@ -109,7 +109,7 @@ public class DefaultDoorHanger extends DoorHanger {
                     PromptInput input = PromptInput.getInput(inputs.getJSONObject(i));
                     mInputs.add(input);
 
-                    final int padding = mResources.getDimensionPixelSize(R.dimen.doorhanger_padding);
+                    final int padding = mResources.getDimensionPixelSize(R.dimen.doorhanger_section_padding_small);
                     View v = input.getView(getContext());
                     styleInput(input, v);
                     v.setPadding(0, 0, 0, padding);
@@ -198,7 +198,7 @@ public class DefaultDoorHanger extends DoorHanger {
         if (input instanceof PromptInput.MenulistInput) {
             styleDropdownInputs(input, view);
         }
-        view.setPadding(0, 0, 0, mResources.getDimensionPixelSize(R.dimen.doorhanger_padding));
+        view.setPadding(0, 0, 0, mResources.getDimensionPixelSize(R.dimen.doorhanger_subsection_padding));
     }
 
     private void styleDropdownInputs(PromptInput input, View view) {
