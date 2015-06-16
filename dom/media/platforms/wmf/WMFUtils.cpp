@@ -25,203 +25,6 @@ DEFINE_GUID(CLSID_CMSAACDecMFT, 0x32D186A7, 0x218F, 0x4C75, 0x88, 0x76, 0xDD, 0x
 
 namespace mozilla {
 
-struct GuidToName {
-  GUID guid;
-  const char* name;
-};
-
-#define GUID_TO_NAME_ENTRY(g) { g, #g }
-#define INTERFACE_TO_NAME_ENTRY(i) {IID_##i, #i }
-
-GuidToName GuidToNameTable[] = {
-  GUID_TO_NAME_ENTRY(MF_MT_MAJOR_TYPE),
-  GUID_TO_NAME_ENTRY(MF_MT_MAJOR_TYPE),
-  GUID_TO_NAME_ENTRY(MF_MT_SUBTYPE),
-  GUID_TO_NAME_ENTRY(MF_MT_ALL_SAMPLES_INDEPENDENT),
-  GUID_TO_NAME_ENTRY(MF_MT_FIXED_SIZE_SAMPLES),
-  GUID_TO_NAME_ENTRY(MF_MT_COMPRESSED),
-  GUID_TO_NAME_ENTRY(MF_MT_SAMPLE_SIZE),
-  GUID_TO_NAME_ENTRY(MF_MT_WRAPPED_TYPE),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_NUM_CHANNELS),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_SAMPLES_PER_SECOND),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_FLOAT_SAMPLES_PER_SECOND),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_AVG_BYTES_PER_SECOND),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_BLOCK_ALIGNMENT),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_BITS_PER_SAMPLE),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_VALID_BITS_PER_SAMPLE),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_SAMPLES_PER_BLOCK),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_CHANNEL_MASK),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_FOLDDOWN_MATRIX),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_WMADRC_PEAKREF),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_WMADRC_PEAKTARGET),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_WMADRC_AVGREF),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_WMADRC_AVGTARGET),
-  GUID_TO_NAME_ENTRY(MF_MT_AUDIO_PREFER_WAVEFORMATEX),
-  GUID_TO_NAME_ENTRY(MF_MT_AAC_PAYLOAD_TYPE),
-  GUID_TO_NAME_ENTRY(MF_MT_AAC_AUDIO_PROFILE_LEVEL_INDICATION),
-  GUID_TO_NAME_ENTRY(MF_MT_FRAME_SIZE),
-  GUID_TO_NAME_ENTRY(MF_MT_FRAME_RATE),
-  GUID_TO_NAME_ENTRY(MF_MT_FRAME_RATE_RANGE_MAX),
-  GUID_TO_NAME_ENTRY(MF_MT_FRAME_RATE_RANGE_MIN),
-  GUID_TO_NAME_ENTRY(MF_MT_PIXEL_ASPECT_RATIO),
-  GUID_TO_NAME_ENTRY(MF_MT_DRM_FLAGS),
-  GUID_TO_NAME_ENTRY(MF_MT_PAD_CONTROL_FLAGS),
-  GUID_TO_NAME_ENTRY(MF_MT_SOURCE_CONTENT_HINT),
-  GUID_TO_NAME_ENTRY(MF_MT_VIDEO_CHROMA_SITING),
-  GUID_TO_NAME_ENTRY(MF_MT_INTERLACE_MODE),
-  GUID_TO_NAME_ENTRY(MF_MT_TRANSFER_FUNCTION),
-  GUID_TO_NAME_ENTRY(MF_MT_VIDEO_PRIMARIES),
-  GUID_TO_NAME_ENTRY(MF_MT_CUSTOM_VIDEO_PRIMARIES),
-  GUID_TO_NAME_ENTRY(MF_MT_YUV_MATRIX),
-  GUID_TO_NAME_ENTRY(MF_MT_VIDEO_LIGHTING),
-  GUID_TO_NAME_ENTRY(MF_MT_VIDEO_NOMINAL_RANGE),
-  GUID_TO_NAME_ENTRY(MF_MT_GEOMETRIC_APERTURE),
-  GUID_TO_NAME_ENTRY(MF_MT_MINIMUM_DISPLAY_APERTURE),
-  GUID_TO_NAME_ENTRY(MF_MT_PAN_SCAN_APERTURE),
-  GUID_TO_NAME_ENTRY(MF_MT_PAN_SCAN_ENABLED),
-  GUID_TO_NAME_ENTRY(MF_MT_AVG_BITRATE),
-  GUID_TO_NAME_ENTRY(MF_MT_AVG_BIT_ERROR_RATE),
-  GUID_TO_NAME_ENTRY(MF_MT_MAX_KEYFRAME_SPACING),
-  GUID_TO_NAME_ENTRY(MF_MT_DEFAULT_STRIDE),
-  GUID_TO_NAME_ENTRY(MF_MT_PALETTE),
-  GUID_TO_NAME_ENTRY(MF_MT_USER_DATA),
-  GUID_TO_NAME_ENTRY(MF_MT_AM_FORMAT_TYPE),
-  GUID_TO_NAME_ENTRY(MF_MT_MPEG_START_TIME_CODE),
-  GUID_TO_NAME_ENTRY(MF_MT_MPEG2_PROFILE),
-  GUID_TO_NAME_ENTRY(MF_MT_MPEG2_LEVEL),
-  GUID_TO_NAME_ENTRY(MF_MT_MPEG2_FLAGS),
-  GUID_TO_NAME_ENTRY(MF_MT_MPEG_SEQUENCE_HEADER),
-  GUID_TO_NAME_ENTRY(MF_MT_DV_AAUX_SRC_PACK_0),
-  GUID_TO_NAME_ENTRY(MF_MT_DV_AAUX_CTRL_PACK_0),
-  GUID_TO_NAME_ENTRY(MF_MT_DV_AAUX_SRC_PACK_1),
-  GUID_TO_NAME_ENTRY(MF_MT_DV_AAUX_CTRL_PACK_1),
-  GUID_TO_NAME_ENTRY(MF_MT_DV_VAUX_SRC_PACK),
-  GUID_TO_NAME_ENTRY(MF_MT_DV_VAUX_CTRL_PACK),
-  GUID_TO_NAME_ENTRY(MF_MT_ARBITRARY_HEADER),
-  GUID_TO_NAME_ENTRY(MF_MT_ARBITRARY_FORMAT),
-  GUID_TO_NAME_ENTRY(MF_MT_IMAGE_LOSS_TOLERANT),
-  GUID_TO_NAME_ENTRY(MF_MT_MPEG4_SAMPLE_DESCRIPTION),
-  GUID_TO_NAME_ENTRY(MF_MT_MPEG4_CURRENT_SAMPLE_ENTRY),
-  GUID_TO_NAME_ENTRY(MF_MT_ORIGINAL_4CC),
-  GUID_TO_NAME_ENTRY(MF_MT_ORIGINAL_WAVE_FORMAT_TAG),
-
-  GUID_TO_NAME_ENTRY(MFMediaType_Audio),
-  GUID_TO_NAME_ENTRY(MFMediaType_Video),
-  GUID_TO_NAME_ENTRY(MFMediaType_Protected),
-  GUID_TO_NAME_ENTRY(MFMediaType_SAMI),
-  GUID_TO_NAME_ENTRY(MFMediaType_Script),
-  GUID_TO_NAME_ENTRY(MFMediaType_Image),
-  GUID_TO_NAME_ENTRY(MFMediaType_HTML),
-  GUID_TO_NAME_ENTRY(MFMediaType_Binary),
-  GUID_TO_NAME_ENTRY(MFMediaType_FileTransfer),
-
-  GUID_TO_NAME_ENTRY(MFVideoFormat_AI44),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_ARGB32),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_AYUV),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_DV25),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_DV50),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_DVH1),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_DVSD),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_DVSL),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_H264),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_I420),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_IYUV),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_M4S2),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_MJPG),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_MP43),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_MP4S),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_MP4V),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_MPG1),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_MSS1),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_MSS2),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_NV11),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_NV12),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_P010),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_P016),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_P210),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_P216),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_RGB24),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_RGB32),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_RGB555),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_RGB565),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_RGB8),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_UYVY),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_v210),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_v410),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_WMV1),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_WMV2),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_WMV3),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_WVC1),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_Y210),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_Y216),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_Y410),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_Y416),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_Y41P),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_Y41T),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_YUY2),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_YV12),
-  GUID_TO_NAME_ENTRY(MFVideoFormat_YVYU),
-
-  GUID_TO_NAME_ENTRY(MFAudioFormat_PCM),
-  GUID_TO_NAME_ENTRY(MFAudioFormat_Float),
-  GUID_TO_NAME_ENTRY(MFAudioFormat_DTS),
-  GUID_TO_NAME_ENTRY(MFAudioFormat_Dolby_AC3_SPDIF),
-  GUID_TO_NAME_ENTRY(MFAudioFormat_DRM),
-  GUID_TO_NAME_ENTRY(MFAudioFormat_WMAudioV8),
-  GUID_TO_NAME_ENTRY(MFAudioFormat_WMAudioV9),
-  GUID_TO_NAME_ENTRY(MFAudioFormat_WMAudio_Lossless),
-  GUID_TO_NAME_ENTRY(MFAudioFormat_WMASPDIF),
-  GUID_TO_NAME_ENTRY(MFAudioFormat_MSP1),
-  GUID_TO_NAME_ENTRY(MFAudioFormat_MP3),
-  GUID_TO_NAME_ENTRY(MFAudioFormat_MPEG),
-  GUID_TO_NAME_ENTRY(MFAudioFormat_AAC),
-  GUID_TO_NAME_ENTRY(MFAudioFormat_ADTS),
-
-  // Interfaces which may be implemented by WMFByteStream.
-  INTERFACE_TO_NAME_ENTRY(IUnknown),
-  INTERFACE_TO_NAME_ENTRY(IMFByteStream),
-  INTERFACE_TO_NAME_ENTRY(IMFMediaSource),
-  INTERFACE_TO_NAME_ENTRY(IMFAttributes),
-  INTERFACE_TO_NAME_ENTRY(IMFByteStreamBuffering),
-};
-
-nsCString GetGUIDName(const GUID& guid)
-{
-  const unsigned numTypes = ArrayLength(GuidToNameTable);
-  for (unsigned i = 0; i < numTypes; i++) {
-    if (guid == GuidToNameTable[i].guid) {
-      return nsDependentCString(GuidToNameTable[i].name);
-    }
-  }
-
-  WCHAR* name = nullptr;
-  HRESULT hr = StringFromCLSID(guid , &name);
-  if (FAILED(hr)) {
-    return nsDependentCString("GuidUnknown");
-  }
-  nsCString name_u8(NS_ConvertUTF16toUTF8(nsDependentString((char16_t*)(name))));
-  CoTaskMemFree(name);
-  return name_u8;
-}
-
-bool
-SourceReaderHasStream(IMFSourceReader* aReader, const DWORD aIndex)
-{
-  RefPtr<IMFMediaType> nativeType;
-  HRESULT hr = aReader->GetNativeMediaType(aIndex, 0, byRef(nativeType));
-  return FAILED(hr) ? false : true;
-}
-
-HRESULT
-DoGetInterface(IUnknown* aUnknown, void** aInterface)
-{
-  if (!aInterface)
-    return E_POINTER;
-  *aInterface = aUnknown;
-  aUnknown->AddRef();
-  return S_OK;
-}
-
 HRESULT
 HNsToFrames(int64_t aHNs, uint32_t aRate, int64_t* aOutFrames)
 {
@@ -232,18 +35,6 @@ HNsToFrames(int64_t aHNs, uint32_t aRate, int64_t* aOutFrames)
   i /= HNS_PER_S;
   NS_ENSURE_TRUE(i.isValid(), E_FAIL);
   *aOutFrames = i.value();
-  return S_OK;
-}
-
-HRESULT
-FramesToUsecs(int64_t aSamples, uint32_t aRate, int64_t* aOutUsecs)
-{
-  MOZ_ASSERT(aOutUsecs);
-  CheckedInt<int64_t> i = aSamples;
-  i *= USECS_PER_S;
-  i /= aRate;
-  NS_ENSURE_TRUE(i.isValid(), E_FAIL);
-  *aOutUsecs = i.value();
   return S_OK;
 }
 
@@ -357,9 +148,9 @@ namespace wmf {
 
 static const wchar_t* sDLLs[] = {
   L"mfplat.dll",
-  L"propsys.dll",
   L"mf.dll",
   L"dxva2.dll",
+  L"evr.dll",
 };
 
 HRESULT
@@ -439,116 +230,20 @@ MFShutdown()
 }
 
 HRESULT
-MFCreateAsyncResult(IUnknown *aUnkObject,
-                    IMFAsyncCallback *aCallback,
-                    IUnknown *aUnkState,
-                    IMFAsyncResult **aOutAsyncResult)
-{
-  ENSURE_FUNCTION_PTR(MFCreateAsyncResult, Mfplat.dll)
-  return (MFCreateAsyncResultPtr)(aUnkObject, aCallback, aUnkState, aOutAsyncResult);
-}
-
-HRESULT
-MFInvokeCallback(IMFAsyncResult *aAsyncResult)
-{
-  ENSURE_FUNCTION_PTR(MFInvokeCallback, Mfplat.dll);
-  return (MFInvokeCallbackPtr)(aAsyncResult);
-}
-
-HRESULT
 MFCreateMediaType(IMFMediaType **aOutMFType)
 {
   ENSURE_FUNCTION_PTR(MFCreateMediaType, Mfplat.dll)
   return (MFCreateMediaTypePtr)(aOutMFType);
 }
 
-HRESULT
-MFCreateSourceReaderFromByteStream(IMFByteStream *aByteStream,
-                                   IMFAttributes *aAttributes,
-                                   IMFSourceReader **aOutSourceReader)
-{
-  ENSURE_FUNCTION_PTR(MFCreateSourceReaderFromByteStream, Mfreadwrite.dll)
-  return (MFCreateSourceReaderFromByteStreamPtr)(aByteStream,
-                                                 aAttributes,
-                                                 aOutSourceReader);
-}
-
-HRESULT
-PropVariantToUInt32(REFPROPVARIANT aPropvar, ULONG *aOutUL)
-{
-  // decltype is unusable for overloaded functions
-  DECL_FUNCTION_PTR(PropVariantToUInt32, REFPROPVARIANT, ULONG *);
-  ENSURE_FUNCTION_PTR_(PropVariantToUInt32, Propsys.dll)
-  return (PropVariantToUInt32Ptr)(aPropvar, aOutUL);
-}
-
-HRESULT PropVariantToInt64(REFPROPVARIANT aPropVar, LONGLONG *aOutLL)
-{
-  ENSURE_FUNCTION_PTR(PropVariantToInt64, Propsys.dll)
-  return (PropVariantToInt64Ptr)(aPropVar, aOutLL);
-}
-
-HRESULT
-MFTGetInfo(CLSID aClsidMFT,
-           LPWSTR *aOutName,
-           MFT_REGISTER_TYPE_INFO **aOutInputTypes,
-           UINT32 *aOutNumInputTypes,
-           MFT_REGISTER_TYPE_INFO **aOutOutputTypes,
-           UINT32 *aOutNumOutputTypes,
-           IMFAttributes **aOutAttributes)
-{
-  ENSURE_FUNCTION_PTR(MFTGetInfo, Mfplat.dll)
-  return (MFTGetInfoPtr)(aClsidMFT,
-                         aOutName,
-                         aOutInputTypes,
-                         aOutNumInputTypes,
-                         aOutOutputTypes,
-                         aOutNumOutputTypes,
-                         aOutAttributes);
-}
 
 HRESULT
 MFGetStrideForBitmapInfoHeader(DWORD aFormat,
                                DWORD aWidth,
                                LONG *aOutStride)
 {
-  ENSURE_FUNCTION_PTR(MFGetStrideForBitmapInfoHeader, Mfplat.dll)
+  ENSURE_FUNCTION_PTR(MFGetStrideForBitmapInfoHeader, evr.dll)
   return (MFGetStrideForBitmapInfoHeaderPtr)(aFormat, aWidth, aOutStride);
-}
-
-HRESULT
-MFCreateSourceReaderFromURL(LPCWSTR aURL,
-                            IMFAttributes *aAttributes,
-                            IMFSourceReader **aSourceReader)
-{
-  ENSURE_FUNCTION_PTR(MFCreateSourceReaderFromURL, Mfreadwrite.dll)
-  return (MFCreateSourceReaderFromURLPtr)(aURL, aAttributes, aSourceReader);
-}
-
-HRESULT
-MFCreateAttributes(IMFAttributes **ppMFAttributes, UINT32 cInitialSize)
-{
-  ENSURE_FUNCTION_PTR(MFCreateAttributes, mfplat.dll)
-  return (MFCreateAttributesPtr)(ppMFAttributes, cInitialSize);
-}
-
-HRESULT
-MFGetPluginControl(IMFPluginControl **aOutPluginControl)
-{
-  ENSURE_FUNCTION_PTR(MFGetPluginControl, mfplat.dll)
-  return (MFGetPluginControlPtr)(aOutPluginControl);
-}
-
-HRESULT
-MFTEnumEx(GUID guidCategory,
-          UINT32 Flags,
-          const MFT_REGISTER_TYPE_INFO *pInputType,
-          const MFT_REGISTER_TYPE_INFO *pOutputType,
-          IMFActivate ***pppMFTActivate,
-          UINT32 *pcMFTActivate)
-{
-  ENSURE_FUNCTION_PTR(MFTEnumEx, mfplat.dll)
-  return (MFTEnumExPtr)(guidCategory, Flags, pInputType, pOutputType, pppMFTActivate, pcMFTActivate);
 }
 
 HRESULT MFGetService(IUnknown *punkObject,
