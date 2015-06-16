@@ -1158,9 +1158,8 @@ ScopeIter::enclosingScope() const
 extern bool
 CreateScopeObjectsForScopeChain(JSContext* cx, AutoObjectVector& scopeChain,
                                 HandleObject dynamicTerminatingScope,
-                                MutableHandleObject dynamicScopeObj);
-
-bool HasNonSyntacticStaticScopeChain(JSObject* staticScope);
+                                MutableHandleObject dynamicScopeObj,
+                                MutableHandleObject staticScopeObj);
 
 #ifdef DEBUG
 bool
