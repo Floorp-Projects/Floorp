@@ -4091,63 +4091,84 @@ AddCoord(const nsStyleCoord& aStyle,
   }
 }
 
-/* virtual */ nsIFrame::IntrinsicISizeOffsetData
-nsFrame::IntrinsicISizeOffsets(nsRenderingContext* aRenderingContext)
+static nsIFrame::IntrinsicISizeOffsetData
+IntrinsicSizeOffsets(nsIFrame* aFrame,
+                     nsRenderingContext* aRenderingContext,
+                     bool aForISize)
 {
-  IntrinsicISizeOffsetData result;
-
-  WritingMode wm = GetWritingMode();
-
-  const nsStyleMargin *styleMargin = StyleMargin();
-  AddCoord(wm.IsVertical() ? styleMargin->mMargin.GetTop()
-                           : styleMargin->mMargin.GetLeft(),
-           aRenderingContext, this, &result.hMargin, &result.hPctMargin,
+  nsIFrame::IntrinsicISizeOffsetData result;
+  WritingMode wm = aFrame->GetWritingMode();
+  const nsStyleMargin* styleMargin = aFrame->StyleMargin();
+  bool orthogonal = aForISize == wm.IsVertical();
+  AddCoord(orthogonal ? styleMargin->mMargin.GetTop()
+                      : styleMargin->mMargin.GetLeft(),
+           aRenderingContext, aFrame, &result.hMargin, &result.hPctMargin,
            false);
-  AddCoord(wm.IsVertical() ? styleMargin->mMargin.GetBottom()
-                           : styleMargin->mMargin.GetRight(),
-           aRenderingContext, this, &result.hMargin, &result.hPctMargin,
+  AddCoord(orthogonal ? styleMargin->mMargin.GetBottom()
+                      : styleMargin->mMargin.GetRight(),
+           aRenderingContext, aFrame, &result.hMargin, &result.hPctMargin,
            false);
 
-  const nsStylePadding *stylePadding = StylePadding();
-  AddCoord(wm.IsVertical() ? stylePadding->mPadding.GetTop()
-                           : stylePadding->mPadding.GetLeft(),
-           aRenderingContext, this, &result.hPadding, &result.hPctPadding,
+  const nsStylePadding* stylePadding = aFrame->StylePadding();
+  AddCoord(orthogonal ? stylePadding->mPadding.GetTop()
+                      : stylePadding->mPadding.GetLeft(),
+           aRenderingContext, aFrame, &result.hPadding, &result.hPctPadding,
            true);
-  AddCoord(wm.IsVertical() ? stylePadding->mPadding.GetBottom()
-                           : stylePadding->mPadding.GetRight(),
-           aRenderingContext, this, &result.hPadding, &result.hPctPadding,
+  AddCoord(orthogonal ? stylePadding->mPadding.GetBottom()
+                      : stylePadding->mPadding.GetRight(),
+           aRenderingContext, aFrame, &result.hPadding, &result.hPctPadding,
            true);
 
-  const nsStyleBorder *styleBorder = StyleBorder();
-  result.hBorder += styleBorder->GetComputedBorderWidth(
-    wm.PhysicalSideForInlineAxis(eLogicalEdgeStart));
-  result.hBorder += styleBorder->GetComputedBorderWidth(
-    wm.PhysicalSideForInlineAxis(eLogicalEdgeEnd));
+  if (aForISize) {
+    const nsStyleBorder* styleBorder = aFrame->StyleBorder();
+    result.hBorder += styleBorder->GetComputedBorderWidth(
+      wm.PhysicalSideForInlineAxis(eLogicalEdgeStart));
+    result.hBorder += styleBorder->GetComputedBorderWidth(
+      wm.PhysicalSideForInlineAxis(eLogicalEdgeEnd));
+  } else {
+    auto wm = aFrame->StyleVisibility()->mWritingMode;
+    const nsStyleBorder* styleBorder = aFrame->StyleBorder();
+    result.hBorder += styleBorder->GetComputedBorderWidth(
+      WritingMode::PhysicalSideForBlockAxis(wm, eLogicalEdgeStart));
+    result.hBorder += styleBorder->GetComputedBorderWidth(
+      WritingMode::PhysicalSideForBlockAxis(wm, eLogicalEdgeEnd));
+  }
 
-  const nsStyleDisplay *disp = StyleDisplay();
-  if (IsThemed(disp)) {
-    nsPresContext *presContext = PresContext();
+  const nsStyleDisplay* disp = aFrame->StyleDisplay();
+  if (aFrame->IsThemed(disp)) {
+    nsPresContext* presContext = aFrame->PresContext();
 
     nsIntMargin border;
     presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
-                                             this, disp->mAppearance,
+                                             aFrame, disp->mAppearance,
                                              &border);
     result.hBorder =
-      presContext->DevPixelsToAppUnits(wm.IsVertical() ? border.TopBottom()
-                                                       : border.LeftRight());
+      presContext->DevPixelsToAppUnits(orthogonal ? border.TopBottom()
+                                                  : border.LeftRight());
 
     nsIntMargin padding;
     if (presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
-                                                  this, disp->mAppearance,
+                                                  aFrame, disp->mAppearance,
                                                   &padding)) {
       result.hPadding =
-        presContext->DevPixelsToAppUnits(wm.IsVertical() ? padding.TopBottom()
-                                                         : padding.LeftRight());
+        presContext->DevPixelsToAppUnits(orthogonal ? padding.TopBottom()
+                                                    : padding.LeftRight());
       result.hPctPadding = 0;
     }
   }
-
   return result;
+}
+
+/* virtual */ nsIFrame::IntrinsicISizeOffsetData
+nsFrame::IntrinsicISizeOffsets(nsRenderingContext* aRC)
+{
+  return IntrinsicSizeOffsets(this, aRC, true);
+}
+
+nsIFrame::IntrinsicISizeOffsetData
+nsIFrame::IntrinsicBSizeOffsets(nsRenderingContext* aRC)
+{
+  return IntrinsicSizeOffsets(this, aRC, false);
 }
 
 /* virtual */ IntrinsicSize

@@ -1651,6 +1651,13 @@ public:
   virtual IntrinsicISizeOffsetData
     IntrinsicISizeOffsets(nsRenderingContext* aRenderingContext) = 0;
 
+  /**
+   * Return the bsize components of padding, border, and margin
+   * that contribute to the intrinsic width that applies to the parent.
+   */
+  IntrinsicISizeOffsetData
+    IntrinsicBSizeOffsets(nsRenderingContext* aRenderingContext);
+
   virtual mozilla::IntrinsicSize GetIntrinsicSize() = 0;
 
   /*
