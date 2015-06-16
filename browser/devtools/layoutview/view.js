@@ -300,11 +300,23 @@ LayoutView.prototype = {
   },
 
   /**
-   * Is the layoutview visible in the sidebar?
+   * Is the layoutview visible in the sidebar.
+   * @return {Boolean}
    */
-  isActive: function() {
+  isViewVisible: function() {
     return this.inspector &&
            this.inspector.sidebar.getCurrentTabID() == "layoutview";
+  },
+
+  /**
+   * Is the layoutview visible in the sidebar and is the current node valid to
+   * be displayed in the view.
+   * @return {Boolean}
+   */
+  isViewVisibleAndNodeValid: function() {
+    return this.isViewVisible() &&
+           this.inspector.selection.isConnected() &&
+           this.inspector.selection.isElementNode();
   },
 
   /**
@@ -328,9 +340,7 @@ LayoutView.prototype = {
   },
 
   onSidebarSelect: function(e, sidebar) {
-    if (sidebar !== "layoutview") {
-      this.dim();
-    }
+    this.setActive(sidebar === "layoutview");
   },
 
   /**
@@ -348,35 +358,27 @@ LayoutView.prototype = {
    * @return a promise that resolves when the view has been updated
    */
   onNewNode: function() {
-    if (this.isActive() &&
-        this.inspector.selection.isConnected() &&
-        this.inspector.selection.isElementNode()) {
-      this.undim();
-    } else {
-      this.dim();
-    }
-
+    this.setActive(this.isViewVisibleAndNodeValid());
     return this.update();
   },
 
   /**
-   * Hide the layout boxes and stop refreshing on reflows. No node is selected
-   * or the layout-view sidebar is inactive.
+   * Stop tracking reflows and hide all values when no node is selected or the
+   * layout-view is hidden, otherwise track reflows and show values.
+   * @param {Boolean} isActive
    */
-  dim: function() {
-    this.untrackReflows();
-    this.doc.body.classList.add("dim");
-    this.dimmed = true;
-  },
+  setActive: function(isActive) {
+    if (isActive === this.isActive) {
+      return;
+    }
+    this.isActive = isActive;
 
-  /**
-   * Show the layout boxes and start refreshing on reflows. A node is selected
-   * and the layout-view side is active.
-   */
-  undim: function() {
-    this.trackReflows();
-    this.doc.body.classList.remove("dim");
-    this.dimmed = false;
+    this.doc.body.classList.toggle("inactive", !isActive);
+    if (isActive) {
+      this.trackReflows();
+    } else {
+      this.untrackReflows();
+    }
   },
 
   /**
@@ -386,15 +388,13 @@ LayoutView.prototype = {
    */
   update: function() {
     let lastRequest = Task.spawn((function*() {
-      if (!this.isActive() ||
-          !this.inspector.selection.isConnected() ||
-          !this.inspector.selection.isElementNode()) {
+      if (!this.isViewVisibleAndNodeValid()) {
         return;
       }
 
       let node = this.inspector.selection.nodeFront;
       let layout = yield this.inspector.pageStyle.getLayout(node, {
-        autoMargins: !this.dimmed
+        autoMargins: this.isActive
       });
       let styleEntries = yield this.inspector.pageStyle.getApplied(node, {});
 
@@ -412,8 +412,8 @@ LayoutView.prototype = {
         this.sizeHeadingLabel.textContent = newLabel;
       }
 
-      // If the view is dimmed, no need to do anything more.
-      if (this.dimmed) {
+      // If the view isn't active, no need to do anything more.
+      if (!this.isActive) {
         this.inspector.emit("layoutview-updated");
         return null;
       }
@@ -436,10 +436,18 @@ LayoutView.prototype = {
       }
 
       let margins = layout.autoMargins;
-      if ("top" in margins) this.map.marginTop.value = "auto";
-      if ("right" in margins) this.map.marginRight.value = "auto";
-      if ("bottom" in margins) this.map.marginBottom.value = "auto";
-      if ("left" in margins) this.map.marginLeft.value = "auto";
+      if ("top" in margins) {
+        this.map.marginTop.value = "auto";
+      }
+      if ("right" in margins) {
+        this.map.marginRight.value = "auto";
+      }
+      if ("bottom" in margins) {
+        this.map.marginBottom.value = "auto";
+      }
+      if ("left" in margins) {
+        this.map.marginLeft.value = "auto";
+      }
 
       for (let i in this.map) {
         let selector = this.map[i].selector;
