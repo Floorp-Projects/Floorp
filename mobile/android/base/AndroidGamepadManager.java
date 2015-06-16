@@ -6,7 +6,6 @@
 package org.mozilla.gecko;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -17,6 +16,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.hardware.input.InputManager;
+import android.util.SparseArray;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -129,8 +129,8 @@ public class AndroidGamepadManager {
     }
 
     private static boolean sStarted;
-    private static HashMap<Integer, Gamepad> sGamepads;
-    private static HashMap<Integer, List<KeyEvent>> sPendingGamepads;
+    private static final SparseArray<Gamepad> sGamepads = new SparseArray<>();
+    private static final SparseArray<List<KeyEvent>> sPendingGamepads = new SparseArray<>();
     private static InputManager.InputDeviceListener sListener;
     private static Timer sPollTimer;
 
@@ -140,8 +140,6 @@ public class AndroidGamepadManager {
     public static void startup() {
         ThreadUtils.assertOnUiThread();
         if (!sStarted) {
-            sGamepads = new HashMap<Integer, Gamepad>();
-            sPendingGamepads = new HashMap<Integer, List<KeyEvent>>();
             scanForGamepads();
             addDeviceListener();
             sStarted = true;
@@ -152,8 +150,8 @@ public class AndroidGamepadManager {
         ThreadUtils.assertOnUiThread();
         if (sStarted) {
             removeDeviceListener();
-            sPendingGamepads = null;
-            sGamepads = null;
+            sPendingGamepads.clear();
+            sGamepads.clear();
             sStarted = false;
         }
     }
@@ -163,12 +161,13 @@ public class AndroidGamepadManager {
         if (!sStarted) {
             return;
         }
-        if (!sPendingGamepads.containsKey(deviceId)) {
+
+        final List<KeyEvent> pending = sPendingGamepads.get(deviceId);
+        if (pending == null) {
             removeGamepad(deviceId);
             return;
         }
 
-        List<KeyEvent> pending = sPendingGamepads.get(deviceId);
         sPendingGamepads.remove(deviceId);
         sGamepads.put(deviceId, new Gamepad(serviceId, deviceId));
         // Handle queued KeyEvents
@@ -200,12 +199,12 @@ public class AndroidGamepadManager {
             return false;
         }
 
-        if (!sGamepads.containsKey(ev.getDeviceId())) {
+        final Gamepad gamepad = sGamepads.get(ev.getDeviceId());
+        if (gamepad == null) {
             // Not a device we care about.
             return false;
         }
 
-        Gamepad gamepad = sGamepads.get(ev.getDeviceId());
         // First check the analog stick axes
         boolean[] valid = new boolean[Axis.values().length];
         float[] axes = new float[Axis.values().length];
@@ -254,13 +253,14 @@ public class AndroidGamepadManager {
         }
 
         int deviceId = ev.getDeviceId();
-        if (sPendingGamepads.containsKey(deviceId)) {
+        final List<KeyEvent> pendingGamepad = sPendingGamepads.get(deviceId);
+        if (pendingGamepad != null) {
             // Queue up key events for pending devices.
-            sPendingGamepads.get(deviceId).add(ev);
+            pendingGamepad.add(ev);
             return true;
         }
 
-        if (!sGamepads.containsKey(deviceId)) {
+        if (sGamepads.get(deviceId) == null) {
             InputDevice device = ev.getDevice();
             if (device != null &&
                 (device.getSources() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
@@ -336,7 +336,8 @@ public class AndroidGamepadManager {
             sPollTimer.scheduleAtFixedRate(new TimerTask() {
                     @Override
                     public void run() {
-                        for (Integer deviceId : sGamepads.keySet()) {
+                        for (int i = 0; i < sGamepads.size(); ++i) {
+                            final int deviceId = sGamepads.keyAt(i);
                             if (InputDevice.getDevice(deviceId) == null) {
                                 removeGamepad(deviceId);
                             }
@@ -359,13 +360,13 @@ public class AndroidGamepadManager {
 
                 @Override
                 public void onInputDeviceRemoved(int deviceId) {
-                    if (sPendingGamepads.containsKey(deviceId)) {
+                    if (sPendingGamepads.get(deviceId) != null) {
                         // Got removed before Gecko's ack reached us.
                         // gamepadAdded will deal with it.
                         sPendingGamepads.remove(deviceId);
                         return;
                     }
-                    if (sGamepads.containsKey(deviceId)) {
+                    if (sGamepads.get(deviceId) != null) {
                         removeGamepad(deviceId);
                     }
                 }
