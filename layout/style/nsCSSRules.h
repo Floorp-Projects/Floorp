@@ -379,7 +379,7 @@ protected:
 
   // This reference is not reference-counted. The rule object tells us
   // when it's about to go away.
-  nsCSSKeyframeRule *mRule;
+  nsCSSKeyframeRule* MOZ_NON_OWNING_REF mRule;
 };
 
 class nsCSSKeyframeRule final : public mozilla::css::Rule,
@@ -512,7 +512,7 @@ protected:
 
   // This reference is not reference-counted. The rule object tells us
   // when it's about to go away.
-  nsCSSPageRule *mRule;
+  nsCSSPageRule* MOZ_NON_OWNING_REF mRule;
 };
 
 class nsCSSPageRule final : public mozilla::css::Rule,
