@@ -541,12 +541,16 @@ let elts;
 
 let onmouseover = function(e) {
   let region = e.target.getAttribute("data-box");
+  if (!region) {
+    return false;
+  }
+
   this.layoutview.showBoxModel({region});
 
   return false;
 }.bind(window);
 
-let onmouseout = function(e) {
+let onmouseout = function() {
   this.layoutview.hideBoxModel();
   return false;
 }.bind(window);
