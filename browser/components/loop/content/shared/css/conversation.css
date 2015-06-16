@@ -1268,6 +1268,20 @@ html[dir="rtl"] .room-context-btn-edit {
   border-color: #d8d8d8;
 }
 
+.text-chat-entry.special > span {
+  border: none;
+}
+
+.text-chat-entry.special.room-name {
+  color: black;
+  font-weight: bold;
+  text-align: start;
+  background-color: #E8F6FE;
+  padding-top: 1em;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
 .text-chat-box {
   margin: auto;
 }

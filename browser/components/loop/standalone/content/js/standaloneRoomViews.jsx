@@ -669,7 +669,10 @@ loop.standaloneRoomViews = (function(mozL10n) {
       return (
         <div className="room-conversation-wrapper">
           <div className="beta-logo" />
-          <sharedViews.TextChatView dispatcher={this.props.dispatcher} />
+          <sharedViews.TextChatView
+            dispatcher={this.props.dispatcher}
+            showAlways={true}
+            showRoomName={true} />
           <StandaloneRoomHeader dispatcher={this.props.dispatcher} />
           <StandaloneRoomInfoArea roomState={this.state.roomState}
                                   failureReason={this.state.failureReason}
