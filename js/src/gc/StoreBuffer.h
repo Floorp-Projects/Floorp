@@ -351,8 +351,6 @@ class StoreBuffer
     MonoTypeBuffer<CellPtrEdge> bufferCell;
     MonoTypeBuffer<SlotsEdge> bufferSlot;
     MonoTypeBuffer<WholeCellEdges> bufferWholeCell;
-    MonoTypeBuffer<ValueEdge> bufferRelocVal;
-    MonoTypeBuffer<CellPtrEdge> bufferRelocCell;
     GenericBuffer bufferGeneric;
     bool cancelIonCompilations_;
 
@@ -365,10 +363,9 @@ class StoreBuffer
 
   public:
     explicit StoreBuffer(JSRuntime* rt, const Nursery& nursery)
-      : bufferVal(), bufferCell(), bufferSlot(), bufferWholeCell(),
-        bufferRelocVal(), bufferRelocCell(), bufferGeneric(), cancelIonCompilations_(false),
-        runtime_(rt), nursery_(nursery), aboutToOverflow_(false), enabled_(false),
-        mEntered(false)
+      : bufferVal(), bufferCell(), bufferSlot(), bufferWholeCell(), bufferGeneric(),
+        cancelIonCompilations_(false), runtime_(rt), nursery_(nursery), aboutToOverflow_(false),
+        enabled_(false), mEntered(false)
     {
     }
 
@@ -384,28 +381,16 @@ class StoreBuffer
     bool cancelIonCompilations() const { return cancelIonCompilations_; }
 
     /* Insert a single edge into the buffer/remembered set. */
-    void putValueFromAnyThread(JS::Value* valuep) { putFromAnyThread(bufferVal, ValueEdge(valuep)); }
+    void putValueFromAnyThread(JS::Value* vp) { putFromAnyThread(bufferVal, ValueEdge(vp)); }
+    void unputValueFromAnyThread(JS::Value* vp) { unputFromAnyThread(bufferVal, ValueEdge(vp)); }
     void putCellFromAnyThread(Cell** cellp) { putFromAnyThread(bufferCell, CellPtrEdge(cellp)); }
+    void unputCellFromAnyThread(Cell** cellp) { unputFromAnyThread(bufferCell, CellPtrEdge(cellp)); }
     void putSlotFromAnyThread(NativeObject* obj, int kind, int32_t start, int32_t count) {
         putFromAnyThread(bufferSlot, SlotsEdge(obj, kind, start, count));
     }
     void putWholeCellFromMainThread(Cell* cell) {
         MOZ_ASSERT(cell->isTenured());
         putFromMainThread(bufferWholeCell, WholeCellEdges(cell));
-    }
-
-    /* Insert or update a single edge in the Relocatable buffer. */
-    void putRelocatableValueFromAnyThread(JS::Value* valuep) {
-        putFromAnyThread(bufferRelocVal, ValueEdge(valuep));
-    }
-    void removeRelocatableValueFromAnyThread(JS::Value* valuep) {
-        unputFromAnyThread(bufferRelocVal, ValueEdge(valuep));
-    }
-    void putRelocatableCellFromAnyThread(Cell** cellp) {
-        putFromAnyThread(bufferRelocCell, CellPtrEdge(cellp));
-    }
-    void removeRelocatableCellFromAnyThread(Cell** cellp) {
-        unputFromAnyThread(bufferRelocCell, CellPtrEdge(cellp));
     }
 
     /* Insert an entry into the generic buffer. */
@@ -427,8 +412,6 @@ class StoreBuffer
     void traceCells(TenuringTracer& mover)             { bufferCell.trace(this, mover); }
     void traceSlots(TenuringTracer& mover)             { bufferSlot.trace(this, mover); }
     void traceWholeCells(TenuringTracer& mover)        { bufferWholeCell.trace(this, mover); }
-    void traceRelocatableValues(TenuringTracer& mover) { bufferRelocVal.trace(this, mover); }
-    void traceRelocatableCells(TenuringTracer& mover)  { bufferRelocCell.trace(this, mover); }
     void traceGenericEntries(JSTracer *trc)            { bufferGeneric.trace(this, trc); }
 
     /* For use by our owned buffers and for testing. */
