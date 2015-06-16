@@ -1749,7 +1749,6 @@ js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(StoreBuffer* owner, TenuringTracer
     mozilla::ReentrancyGuard g(*owner);
     MOZ_ASSERT(owner->isEnabled());
     MOZ_ASSERT(stores_.initialized());
-    sinkStores(owner);
     for (typename StoreSet::Range r = stores_.all(); !r.empty(); r.popFront())
         r.front().trace(mover);
 }
