@@ -51,7 +51,7 @@ interface TestInterfaceJS {
 
   // Tests for exception-throwing behavior
   [Throws]
-  void testThrowDOMError();
+  void testThrowError();
 
   [Throws]
   void testThrowDOMException();
