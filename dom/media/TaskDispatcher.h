@@ -56,6 +56,7 @@ public:
                        already_AddRefed<nsIRunnable> aRunnable,
                        AbstractThread::DispatchFailureHandling aFailureHandling = AbstractThread::AssertDispatchSuccess) = 0;
 
+  virtual void DispatchTasksFor(AbstractThread* aThread) = 0;
   virtual bool HasTasksFor(AbstractThread* aThread) = 0;
   virtual void DrainDirectTasks() = 0;
 };
@@ -82,14 +83,7 @@ public:
     MOZ_ASSERT(mDirectTasks.empty());
 
     for (size_t i = 0; i < mTaskGroups.Length(); ++i) {
-      UniquePtr<PerThreadTaskGroup> group(Move(mTaskGroups[i]));
-      nsRefPtr<AbstractThread> thread = group->mThread;
-
-      AbstractThread::DispatchFailureHandling failureHandling = group->mFailureHandling;
-      AbstractThread::DispatchReason reason = mIsTailDispatcher ? AbstractThread::TailDispatch
-                                                                : AbstractThread::NormalDispatch;
-      nsCOMPtr<nsIRunnable> r = new TaskGroupRunnable(Move(group));
-      thread->Dispatch(r.forget(), failureHandling, reason);
+      DispatchTaskGroup(Move(mTaskGroups[i]));
     }
   }
 
@@ -130,6 +124,17 @@ public:
   bool HasTasksFor(AbstractThread* aThread) override
   {
     return !!GetTaskGroup(aThread) || (aThread == AbstractThread::GetCurrent() && !mDirectTasks.empty());
+  }
+
+  void DispatchTasksFor(AbstractThread* aThread) override
+  {
+    for (size_t i = 0; i < mTaskGroups.Length(); ++i) {
+      if (mTaskGroups[i]->mThread == aThread) {
+        DispatchTaskGroup(Move(mTaskGroups[i]));
+        mTaskGroups.RemoveElementAt(i);
+        return;
+      }
+    }
   }
 
 private:
@@ -213,6 +218,17 @@ private:
 
     // Not found.
     return nullptr;
+  }
+
+  void DispatchTaskGroup(UniquePtr<PerThreadTaskGroup> aGroup)
+  {
+    nsRefPtr<AbstractThread> thread = aGroup->mThread;
+
+    AbstractThread::DispatchFailureHandling failureHandling = aGroup->mFailureHandling;
+    AbstractThread::DispatchReason reason = mIsTailDispatcher ? AbstractThread::TailDispatch
+                                                              : AbstractThread::NormalDispatch;
+    nsCOMPtr<nsIRunnable> r = new TaskGroupRunnable(Move(aGroup));
+    thread->Dispatch(r.forget(), failureHandling, reason);
   }
 
   // Direct tasks.

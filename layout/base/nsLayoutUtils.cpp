@@ -7516,11 +7516,26 @@ nsLayoutUtils::GetBoxShadowRectForFrame(nsIFrame* aFrame,
   if (!boxShadows) {
     return nsRect();
   }
+
+  bool nativeTheme;
+  const nsStyleDisplay* styleDisplay = aFrame->StyleDisplay();
+  nsITheme::Transparency transparency;
+  if (aFrame->IsThemed(styleDisplay, &transparency)) {
+    // For opaque (rectangular) theme widgets we can take the generic
+    // border-box path with border-radius disabled.
+    nativeTheme = transparency != nsITheme::eOpaque;
+  } else {
+    nativeTheme = false;
+  }
+
+  nsRect frameRect = nativeTheme ?
+    aFrame->GetVisualOverflowRectRelativeToSelf() :
+    nsRect(nsPoint(0, 0), aFrameSize);
   
   nsRect shadows;
   int32_t A2D = aFrame->PresContext()->AppUnitsPerDevPixel();
   for (uint32_t i = 0; i < boxShadows->Length(); ++i) {
-    nsRect tmpRect(nsPoint(0, 0), aFrameSize);
+    nsRect tmpRect = frameRect;
     nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
 
     // inset shadows are never painted outside the frame
@@ -8433,4 +8448,26 @@ nsLayoutUtils::TransformToAncestorAndCombineRegions(
     aFrame, aBounds, aAncestorFrame);
   nsRegion* dest = isPrecise ? aPreciseTargetDest : aImpreciseTargetDest;
   dest->OrWith(transformed);
+}
+
+/* static */ bool
+nsLayoutUtils::ShouldUseNoScriptSheet(nsIDocument* aDocument)
+{
+  // also handle the case where print is done from print preview
+  // see bug #342439 for more details
+  if (aDocument->IsStaticDocument()) {
+    aDocument = aDocument->GetOriginalDocument();
+  }
+  return aDocument->IsScriptEnabled();
+}
+
+/* static */ bool
+nsLayoutUtils::ShouldUseNoFramesSheet(nsIDocument* aDocument)
+{
+  bool allowSubframes = true;
+  nsIDocShell* docShell = aDocument->GetDocShell();
+  if (docShell) {
+    docShell->GetAllowSubframes(&allowSubframes);
+  }
+  return !allowSubframes;
 }

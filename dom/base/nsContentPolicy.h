@@ -49,7 +49,7 @@ class nsContentPolicy : public nsIContentPolicy
     //Helper method that applies policyMethod across all policies in mPolicies
     // with the given parameters
     nsresult CheckPolicy(CPMethod policyMethod, SCPMethod simplePolicyMethod,
-                         uint32_t contentType,
+                         nsContentPolicyType contentType,
                          nsIURI *aURI, nsIURI *origURI,
                          nsISupports *requestingContext,
                          const nsACString &mimeGuess, nsISupports *extra,
