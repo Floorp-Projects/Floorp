@@ -41,7 +41,7 @@ IccListener::IccListener(IccManager* aIccManager, uint32_t aClientId)
     nsString iccId;
     iccInfo->GetIccid(iccId);
     if (!iccId.IsEmpty()) {
-      mIcc = new Icc(mIccManager->GetOwner(), mClientId, mHandler, iccInfo);
+      mIcc = new Icc(mIccManager->GetOwner(), mHandler, iccInfo);
     }
   }
 
@@ -123,7 +123,7 @@ IccListener::NotifyIccInfoChanged()
       nsString iccId;
       iccInfo->GetIccid(iccId);
       if (!iccId.IsEmpty()) {
-        mIcc = new Icc(mIccManager->GetOwner(), mClientId, mHandler, iccInfo);
+        mIcc = new Icc(mIccManager->GetOwner(), mHandler, iccInfo);
         mIccManager->NotifyIccAdd(iccId);
         mIcc->NotifyEvent(NS_LITERAL_STRING("iccinfochange"));
       }
