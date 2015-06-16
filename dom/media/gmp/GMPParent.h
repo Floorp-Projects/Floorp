@@ -220,6 +220,12 @@ private:
 #ifdef PR_LOGGING
   int mChildPid;
 #endif
+
+  // We hold a self reference to ourself while the child process is alive.
+  // This ensures that if the GMPService tries to shut us down and drops
+  // its reference to us, we stay alive long enough for the child process
+  // to terminate gracefully.
+  bool mHoldingSelfRef;
 };
 
 } // namespace gmp
