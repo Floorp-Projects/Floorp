@@ -1653,14 +1653,18 @@ GenerateLIR(MIRGenerator* mir)
     {
         AutoTraceLog log(logger, TraceLogger_RegisterAllocation);
 
-        switch (mir->optimizationInfo().registerAllocator()) {
-          case RegisterAllocator_Backtracking: {
+        IonRegisterAllocator allocator = mir->optimizationInfo().registerAllocator();
+
+        switch (allocator) {
+          case RegisterAllocator_Backtracking:
+          case RegisterAllocator_Testbed: {
 #ifdef DEBUG
             if (!integrity.record())
                 return nullptr;
 #endif
 
-            BacktrackingAllocator regalloc(mir, &lirgen, *lir);
+            BacktrackingAllocator regalloc(mir, &lirgen, *lir,
+                                           allocator == RegisterAllocator_Testbed);
             if (!regalloc.go())
                 return nullptr;
 

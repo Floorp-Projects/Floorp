@@ -29,11 +29,11 @@ namespace dom {
 namespace cache {
 namespace db {
 
-const int32_t kMaxWipeSchemaVersion = 11;
+const int32_t kMaxWipeSchemaVersion = 13;
 
 namespace {
 
-const int32_t kLatestSchemaVersion = 11;
+const int32_t kLatestSchemaVersion = 13;
 const int32_t kMaxEntriesPerStatement = 255;
 
 const uint32_t kPageSize = 4 * 1024;
@@ -77,40 +77,6 @@ static_assert(int(RequestCredentials::Omit) == 0 &&
               int(RequestCredentials::Include) == 2 &&
               int(RequestCredentials::EndGuard_) == 3,
               "RequestCredentials values are as expected");
-static_assert(int(RequestContext::Audio) == 0 &&
-              int(RequestContext::Beacon) == 1 &&
-              int(RequestContext::Cspreport) == 2 &&
-              int(RequestContext::Download) == 3 &&
-              int(RequestContext::Embed) == 4 &&
-              int(RequestContext::Eventsource) == 5 &&
-              int(RequestContext::Favicon) == 6 &&
-              int(RequestContext::Fetch) == 7 &&
-              int(RequestContext::Font) == 8 &&
-              int(RequestContext::Form) == 9 &&
-              int(RequestContext::Frame) == 10 &&
-              int(RequestContext::Hyperlink) == 11 &&
-              int(RequestContext::Iframe) == 12 &&
-              int(RequestContext::Image) == 13 &&
-              int(RequestContext::Imageset) == 14 &&
-              int(RequestContext::Import) == 15 &&
-              int(RequestContext::Internal) == 16 &&
-              int(RequestContext::Location) == 17 &&
-              int(RequestContext::Manifest) == 18 &&
-              int(RequestContext::Object) == 19 &&
-              int(RequestContext::Ping) == 20 &&
-              int(RequestContext::Plugin) == 21 &&
-              int(RequestContext::Prefetch) == 22 &&
-              int(RequestContext::Script) == 23 &&
-              int(RequestContext::Serviceworker) == 24 &&
-              int(RequestContext::Sharedworker) == 25 &&
-              int(RequestContext::Subresource) == 26 &&
-              int(RequestContext::Style) == 27 &&
-              int(RequestContext::Track) == 28 &&
-              int(RequestContext::Video) == 29 &&
-              int(RequestContext::Worker) == 30 &&
-              int(RequestContext::Xmlhttprequest) == 31 &&
-              int(RequestContext::Xslt) == 32,
-              "RequestContext values are as expected");
 static_assert(int(RequestCache::Default) == 0 &&
               int(RequestCache::No_store) == 1 &&
               int(RequestCache::Reload) == 2 &&
@@ -291,7 +257,6 @@ CreateSchema(mozIStorageConnection* aConn)
         "request_mode INTEGER NOT NULL, "
         "request_credentials INTEGER NOT NULL, "
         "request_contentpolicytype INTEGER NOT NULL, "
-        "request_context INTEGER NOT NULL, "
         "request_cache INTEGER NOT NULL, "
         "request_body_id TEXT NULL, "
         "response_type INTEGER NOT NULL, "
@@ -1462,7 +1427,6 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       "request_mode, "
       "request_credentials, "
       "request_contentpolicytype, "
-      "request_context, "
       "request_cache, "
       "request_body_id, "
       "response_type, "
@@ -1484,7 +1448,6 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       ":request_mode, "
       ":request_credentials, "
       ":request_contentpolicytype, "
-      ":request_context, "
       ":request_cache, "
       ":request_body_id, "
       ":response_type, "
@@ -1531,10 +1494,6 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
 
   rv = state->BindInt32ByName(NS_LITERAL_CSTRING("request_contentpolicytype"),
     static_cast<int32_t>(aRequest.contentPolicyType()));
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
-  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("request_context"),
-    static_cast<int32_t>(aRequest.context()));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->BindInt32ByName(NS_LITERAL_CSTRING("request_cache"),
@@ -1780,7 +1739,6 @@ ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
       "request_mode, "
       "request_credentials, "
       "request_contentpolicytype, "
-      "request_context, "
       "request_cache, "
       "request_body_id "
     "FROM entries "
@@ -1830,25 +1788,19 @@ ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
   aSavedRequestOut->mValue.contentPolicyType() =
     static_cast<nsContentPolicyType>(requestContentPolicyType);
 
-  int32_t requestContext;
-  rv = state->GetInt32(8, &requestContext);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-  aSavedRequestOut->mValue.context() =
-    static_cast<RequestContext>(requestContext);
-
   int32_t requestCache;
-  rv = state->GetInt32(9, &requestCache);
+  rv = state->GetInt32(8, &requestCache);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mValue.requestCache() =
     static_cast<RequestCache>(requestCache);
 
   bool nullBody = false;
-  rv = state->GetIsNull(10, &nullBody);
+  rv = state->GetIsNull(9, &nullBody);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mHasBodyId = !nullBody;
 
   if (aSavedRequestOut->mHasBodyId) {
-    rv = ExtractId(state, 10, &aSavedRequestOut->mBodyId);
+    rv = ExtractId(state, 9, &aSavedRequestOut->mBodyId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   }
 

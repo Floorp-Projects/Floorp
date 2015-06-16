@@ -74,7 +74,7 @@ private:
 #endif
 
   virtual void
-  GetMozFullPathInternal(nsAString& aFullPath, ErrorResult& aRv) override;
+  GetMozFullPathInternal(nsAString& aFullPath, ErrorResult& aRv) const override;
 
   virtual void
   GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv) override;

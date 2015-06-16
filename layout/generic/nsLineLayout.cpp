@@ -10,6 +10,7 @@
 #define PL_ARENA_CONST_ALIGN_MASK (sizeof(void*)-1)
 #include "nsLineLayout.h"
 
+#include "LayoutLogging.h"
 #include "SVGTextFrame.h"
 #include "nsBlockFrame.h"
 #include "nsFontMetrics.h"
@@ -154,10 +155,10 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
                               const nsSize& aContainerSize)
 {
   NS_ASSERTION(nullptr == mRootSpan, "bad linelayout user");
-  NS_WARN_IF_FALSE(aISize != NS_UNCONSTRAINEDSIZE,
-                   "have unconstrained width; this should only result from "
-                   "very large sizes, not attempts at intrinsic width "
-                   "calculation");
+  LAYOUT_WARN_IF_FALSE(aISize != NS_UNCONSTRAINEDSIZE,
+                       "have unconstrained width; this should only result from "
+                       "very large sizes, not attempts at intrinsic width "
+                       "calculation");
 #ifdef DEBUG
   if ((aISize != NS_UNCONSTRAINEDSIZE) && CRAZY_SIZE(aISize)) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
@@ -878,10 +879,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // Inline-ish and text-ish things don't compute their width;
   // everything else does.  We need to give them an available width that
   // reflects the space left on the line.
-  NS_WARN_IF_FALSE(psd->mIEnd != NS_UNCONSTRAINEDSIZE,
-                   "have unconstrained width; this should only result from "
-                   "very large sizes, not attempts at intrinsic width "
-                   "calculation");
+  LAYOUT_WARN_IF_FALSE(psd->mIEnd != NS_UNCONSTRAINEDSIZE,
+                      "have unconstrained width; this should only result from "
+                      "very large sizes, not attempts at intrinsic width "
+                      "calculation");
   nscoord availableSpaceOnLine = psd->mIEnd - psd->mICoord;
 
   // Setup reflow state for reflowing the frame
@@ -3052,10 +3053,10 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
    */
   PerSpanData* psd = mRootSpan;
   WritingMode lineWM = psd->mWritingMode;
-  NS_WARN_IF_FALSE(psd->mIEnd != NS_UNCONSTRAINEDSIZE,
-                   "have unconstrained width; this should only result from "
-                   "very large sizes, not attempts at intrinsic width "
-                   "calculation");
+  LAYOUT_WARN_IF_FALSE(psd->mIEnd != NS_UNCONSTRAINEDSIZE,
+                       "have unconstrained width; this should only result from "
+                       "very large sizes, not attempts at intrinsic width "
+                       "calculation");
   nscoord availISize = psd->mIEnd - psd->mIStart;
   nscoord remainingISize = availISize - aLine->ISize();
 #ifdef NOISY_INLINEDIR_ALIGN

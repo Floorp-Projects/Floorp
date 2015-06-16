@@ -73,6 +73,22 @@ TestInterfaceJS.prototype = {
                                      "NotSupportedError");
   },
 
+  testThrowTypeError: function() {
+    throw new this._win.TypeError("We are a TypeError");
+  },
+
+  testThrowCallbackError: function(callback) {
+    callback();
+  },
+
+  testThrowXraySelfHosted: function() {
+    this._win.Array.indexOf();
+  },
+
+  testThrowSelfHosted: function() {
+    Array.indexOf();
+  },
+
   testPromiseWithThrowingChromePromiseInit: function() {
     return new this._win.Promise(function() {
       noSuchMethodExistsYo1();
