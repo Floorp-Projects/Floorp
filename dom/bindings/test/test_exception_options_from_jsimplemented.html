@@ -51,9 +51,86 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
          "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
          "Should still have the right file name");
       is(e.lineNumber, 38, "Should still have the right line number");
-      todo_is(e.columnNumber, 7,
-              "No column number support for DOMException yet");
+      todo_isnot(e.columnNumber, 0,
+                 "No column number support for DOMException yet");
     }
+
+    try {
+      t.testThrowTypeError();
+    } catch (e) {
+      ok(e instanceof TypeError, "Should have a TypeError here");
+      ok(!(e instanceof DOMException), "Should not have DOMException here (2)");
+      ok(!("code" in e), "Should not have a 'code' property (2)");
+      is(e.name, "TypeError", "Should be named TypeError");
+      is(e.message, "We are a TypeError",
+         "Should also have the right message (2)");
+      is(e.stack,
+         "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:59:7\n",
+         "Exception stack for TypeError should only show our code");
+      is(e.fileName,
+         "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
+         "Should still have the right file name for TypeError");
+      is(e.lineNumber, 59, "Should still have the right line number for TypeError");
+      is(e.columnNumber, 7, "Should have the right column number for TypeError");
+    }
+
+    try {
+      t.testThrowCallbackError(function() { Array.indexOf() });
+    } catch (e) {
+      ok(e instanceof TypeError, "Should have a TypeError here (3)");
+      ok(!(e instanceof DOMException), "Should not have DOMException here (3)");
+      ok(!("code" in e), "Should not have a 'code' property (3)");
+      is(e.name, "TypeError", "Should be named TypeError (3)");
+      is(e.message, "missing argument 0 when calling function Array.indexOf",
+         "Should also have the right message (3)");
+      is(e.stack,
+         "doTest/<@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:78:45\n" +
+         "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:78:7\n"
+  ,
+         "Exception stack for TypeError should only show our code (3)");
+      is(e.fileName,
+         "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
+         "Should still have the right file name for TypeError (3)");
+      is(e.lineNumber, 78, "Should still have the right line number for TypeError (3)");
+      is(e.columnNumber, 45, "Should have the right column number for TypeError (3)");
+    }
+
+    try {
+      t.testThrowXraySelfHosted();
+    } catch (e) {
+      ok(!(e instanceof Error), "Should have an Exception here (4)");
+      ok(!(e instanceof DOMException), "Should not have DOMException here (4)");
+      ok(!("code" in e), "Should not have a 'code' property (4)");
+      is(e.name, "NS_ERROR_UNEXPECTED", "Name should be sanitized (4)");
+      is(e.message, "", "Message should be sanitized (5)");
+      is(e.stack,
+         "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:99:7\n",
+         "Exception stack for sanitized exception should only show our code (4)");
+      is(e.filename,
+         "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
+         "Should still have the right file name for sanitized exception (4)");
+      is(e.lineNumber, 99, "Should still have the right line number for sanitized exception (4)");
+      todo_isnot(e.columnNumber, 0, "Should have the right column number for sanitized exception (4)");
+    }
+
+    try {
+      t.testThrowSelfHosted();
+    } catch (e) {
+      ok(!(e instanceof Error), "Should have an Exception here (5)");
+      ok(!(e instanceof DOMException), "Should not have DOMException here (5)");
+      ok(!("code" in e), "Should not have a 'code' property (5)");
+      is(e.name, "NS_ERROR_UNEXPECTED", "Name should be sanitized (5)");
+      is(e.message, "", "Message should be sanitized (5)");
+      is(e.stack,
+         "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:117:7\n",
+         "Exception stack for sanitized exception should only show our code (5)");
+      is(e.filename,
+         "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
+         "Should still have the right file name for sanitized exception (5)");
+      is(e.lineNumber, 117, "Should still have the right line number for sanitized exception (5)");
+      todo_isnot(e.columnNumber, 0, "Should have the right column number for sanitized exception (5)");
+    }
+
     SimpleTest.finish();
   }
 
