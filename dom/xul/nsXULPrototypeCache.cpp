@@ -325,7 +325,7 @@ nsXULPrototypeCache::AbortCaching()
     Flush();
 
     // Clear the cache set
-    mCacheURITable.Clear();
+    mStartupCacheURITable.Clear();
 }
 
 
@@ -430,7 +430,7 @@ nsXULPrototypeCache::FinishOutputStream(nsIURI* uri)
                                     &len);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!mCacheURITable.GetEntry(uri)) {
+    if (!mStartupCacheURITable.GetEntry(uri)) {
         nsAutoCString spec(kXULCachePrefix);
         rv = PathifyURI(uri, spec);
         if (NS_FAILED(rv))
@@ -438,7 +438,7 @@ nsXULPrototypeCache::FinishOutputStream(nsIURI* uri)
         rv = sc->PutBuffer(spec.get(), buf, len);
         if (NS_SUCCEEDED(rv)) {
             mOutputStreamTable.Remove(uri);
-            mCacheURITable.RemoveEntry(uri);
+            mStartupCacheURITable.PutEntry(uri);
         }
     }
 
@@ -539,6 +539,7 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
             // XXX This blows away work that other consumers (like
             // mozJSComponentLoader) have done, need more fine-grained control.
             startupCache->InvalidateCache();
+            mStartupCacheURITable.Clear();
             rv = NS_ERROR_UNEXPECTED;
         }
     } else if (rv != NS_ERROR_NOT_AVAILABLE)
@@ -593,13 +594,10 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
         // Failed again, just bail.
         if (NS_FAILED(rv)) {
             startupCache->InvalidateCache();
+            mStartupCacheURITable.Clear();
             return NS_ERROR_FAILURE;
         }
     }
-
-    // Success!  Insert this URI into the mCacheURITable
-    // and commit locals to globals.
-    mCacheURITable.PutEntry(aURI);
 
     return NS_OK;
 }
