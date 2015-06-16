@@ -35,11 +35,12 @@ describe("loop.store.FeedbackStore", function () {
     });
 
     it("should set the store to the INIT feedback state", function() {
-      var store = new loop.store.FeedbackStore(dispatcher, {
+      var fakeStore = new loop.store.FeedbackStore(dispatcher, {
         feedbackClient: feedbackClient
       });
 
-      expect(store.getStoreState("feedbackState")).eql(FEEDBACK_STATES.INIT);
+      expect(fakeStore.getStoreState("feedbackState"))
+          .eql(FEEDBACK_STATES.INIT);
     });
   });
 

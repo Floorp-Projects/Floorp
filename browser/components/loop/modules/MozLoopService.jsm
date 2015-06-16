@@ -357,8 +357,8 @@ let MozLoopServiceInternal = {
     log.debug("createNotificationChannel", channelID, sessionType, serviceType);
     // Wrap the push notification registration callback in a Promise.
     return new Promise((resolve, reject) => {
-      let onRegistered = (error, pushURL, channelID) => {
-        log.debug("createNotificationChannel onRegistered:", error, pushURL, channelID);
+      let onRegistered = (error, pushURL, chID) => {
+        log.debug("createNotificationChannel onRegistered:", error, pushURL, chID);
         if (error) {
           reject(Error(error));
         } else {
@@ -511,26 +511,26 @@ let MozLoopServiceInternal = {
         roomsPushURL = pushURLs ? pushURLs.rooms : null;
     this.pushURLs.delete(sessionType);
 
-    let unregister = (sessionType, pushURL) => {
+    let unregister = (sessType, pushURL) => {
       if (!pushURL) {
         return Promise.resolve("no pushURL of this type to unregister");
       }
 
       let unregisterURL = "/registration?simplePushURL=" + encodeURIComponent(pushURL);
-      return this.hawkRequestInternal(sessionType, unregisterURL, "DELETE").then(
+      return this.hawkRequestInternal(sessType, unregisterURL, "DELETE").then(
         () => {
-          log.debug("Successfully unregistered from server for sessionType = ", sessionType);
-          return "unregistered sessionType " + sessionType;
+          log.debug("Successfully unregistered from server for sessionType = ", sessType);
+          return "unregistered sessionType " + sessType;
         },
-        error => {
-          if (error.code === 401) {
+        err => {
+          if (err.code === 401) {
             // Authorization failed, invalid token. This is fine since it may mean we already logged out.
-            log.debug("already unregistered - invalid token", sessionType);
-            return "already unregistered, sessionType = " + sessionType;
+            log.debug("already unregistered - invalid token", sessType);
+            return "already unregistered, sessionType = " + sessType;
           }
 
           log.error("Failed to unregister with the loop server. Error: ", error);
-          throw error;
+          throw err;
         });
     };
 
@@ -885,10 +885,10 @@ let MozLoopServiceInternal = {
           LoopChatMessageAppended: "loopChatMessageAppended"
         };
 
-        function onChatEvent(event) {
+        function onChatEvent(ev) {
           // When the chat box or messages are shown, resize the panel or window
           // to be slightly higher to accomodate them.
-          let customSize = kSizeMap[event.type];
+          let customSize = kSizeMap[ev.type];
           if (customSize) {
             chatbox.setAttribute("customSize", customSize);
             chatbox.parentNode.setAttribute("customSize", customSize);
@@ -909,8 +909,8 @@ let MozLoopServiceInternal = {
           }
 
           // Chat Window Id, this is different that the internal winId
-          let windowId = window.location.hash.slice(1);
-          var context = this.conversationContexts.get(windowId);
+          let chatWindowId = window.location.hash.slice(1);
+          var context = this.conversationContexts.get(chatWindowId);
           var exists = pc.id.match(/session=(\S+)/);
           if (context && !exists) {
             // Not ideal but insert our data amidst existing data like this:
@@ -942,16 +942,17 @@ let MozLoopServiceInternal = {
       }.bind(this), true);
     };
 
-    let chatbox = Chat.open(null, origin, "", url, undefined, undefined, callback);
-    if (!chatbox) {
+    let chatboxInstance = Chat.open(null, origin, "", url, undefined, undefined,
+                                    callback);
+    if (!chatboxInstance) {
       return null;
     // It's common for unit tests to overload Chat.open.
-    } else if (chatbox.setAttribute) {
+    } else if (chatboxInstance.setAttribute) {
       // Set properties that influence visual appeara nce of the chatbox right
       // away to circumvent glitches.
-      chatbox.setAttribute("dark", true);
-      chatbox.setAttribute("customSize", "loopDefault");
-      chatbox.parentNode.setAttribute("customSize", "loopDefault");
+      chatboxInstance.setAttribute("dark", true);
+      chatboxInstance.setAttribute("customSize", "loopDefault");
+      chatboxInstance.parentNode.setAttribute("customSize", "loopDefault");
     }
     return windowId;
   },
@@ -1232,10 +1233,10 @@ this.MozLoopService = {
       return;
     }
 
-    // The particpant that joined isn't necessarily included in room.participants (depending on
+    // The participant that joined isn't necessarily included in room.participants (depending on
     // when the broadcast happens) so concatenate.
-    for (let participant of room.participants.concat(participant)) {
-      if (participant.owner) {
+    for (let roomParticipant of room.participants.concat(participant)) {
+      if (roomParticipant.owner) {
         isOwnerInRoom = true;
       } else {
         isOtherInRoom = true;
