@@ -4328,7 +4328,9 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
                        nscoord aContentSize,
                        nscoord aContentMinSize,
                        const nsStyleCoord& aStyleSize,
+                       const nscoord* aFixedMinSize,
                        const nsStyleCoord& aStyleMinSize,
+                       const nscoord* aFixedMaxSize,
                        const nsStyleCoord& aStyleMaxSize,
                        uint32_t aFlags,
                        WritingMode aContainerWM)
@@ -4402,24 +4404,8 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
     result = AddPercents(aType, result, pctTotal);
   }
 
-  nscoord maxSize;
-  bool haveFixedMaxSize = GetAbsoluteCoord(aStyleMaxSize, maxSize);
-  nscoord minSize;
-
-  // Treat "min-width: auto" as 0.
-  bool haveFixedMinSize;
-  if (eStyleUnit_Auto == aStyleMinSize.GetUnit()) {
-    // NOTE: Technically, "auto" is supposed to behave like "min-content" on
-    // flex items. However, we don't need to worry about that here, because
-    // flex items' min-sizes are intentionally ignored until the flex
-    // container explicitly considers them during space distribution.
-    minSize = 0;
-    haveFixedMinSize = true;
-  } else {
-    haveFixedMinSize = GetAbsoluteCoord(aStyleMinSize, minSize);
-  }
-
-  if (haveFixedMaxSize ||
+  nscoord maxSize = aFixedMaxSize ? *aFixedMaxSize : 0;
+  if (aFixedMaxSize ||
       GetIntrinsicCoord(aStyleMaxSize, aRenderingContext, aFrame,
                         PROP_MAX_WIDTH, maxSize)) {
     maxSize = AddPercents(aType, maxSize + coordOutsideSize, pctOutsideSize);
@@ -4427,7 +4413,8 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
       result = maxSize;
   }
 
-  if (haveFixedMinSize ||
+  nscoord minSize = aFixedMinSize ? *aFixedMinSize : 0;
+  if (aFixedMinSize ||
       GetIntrinsicCoord(aStyleMinSize, aRenderingContext, aFrame,
                         PROP_MIN_WIDTH, minSize)) {
     minSize = AddPercents(aType, minSize + coordOutsideSize, pctOutsideSize);
@@ -4655,8 +4642,11 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
     aFrame->IntrinsicISizeOffsets(aRenderingContext);
   result = AddIntrinsicSizeOffset(aRenderingContext, aFrame, offsets, aType,
                                   boxSizing, result, min, styleISize,
-                                  styleMinISize, styleMaxISize, aFlags,
-                                  wm);
+                                  haveFixedMinISize ? &minISize : nullptr,
+                                  styleMinISize,
+                                  haveFixedMaxISize ? &maxISize : nullptr,
+                                  styleMaxISize,
+                                  aFlags, wm);
 
 #ifdef DEBUG_INTRINSIC_WIDTH
   nsFrame::IndentBy(stderr, gNoiseIndent);
