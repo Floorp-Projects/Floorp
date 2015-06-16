@@ -2356,14 +2356,13 @@ BytecodeEmitter::checkRunOnceContext()
 bool
 BytecodeEmitter::needsImplicitThis()
 {
-    if (sc->inWith())
+    if (sc->isFunctionBox() && sc->asFunctionBox()->inWith)
         return true;
 
     for (StmtInfoBCE* stmt = topStmt; stmt; stmt = stmt->down) {
         if (stmt->type == STMT_WITH)
             return true;
     }
-
     return false;
 }
 

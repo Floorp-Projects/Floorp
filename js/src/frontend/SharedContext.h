@@ -235,7 +235,6 @@ class SharedContext
         SuperProperty
     };
     virtual bool allowSyntax(AllowedSyntax allowed) const = 0;
-    virtual bool inWith() const = 0;
 
   protected:
     static bool FunctionAllowsSyntax(JSFunction* func, AllowedSyntax allowed)
@@ -258,11 +257,19 @@ class GlobalSharedContext : public SharedContext
 {
   private:
     Handle<ScopeObject*> topStaticScope_;
-    bool allowNewTarget_;
-    bool allowSuperProperty_;
-    bool inWith_;
 
-    bool computeAllowSyntax(AllowedSyntax allowed) const {
+  public:
+    GlobalSharedContext(ExclusiveContext* cx,
+                        Directives directives, Handle<ScopeObject*> topStaticScope,
+                        bool extraWarnings)
+      : SharedContext(cx, directives, extraWarnings),
+        topStaticScope_(topStaticScope)
+    {}
+
+    ObjectBox* toObjectBox() { return nullptr; }
+    HandleObject topStaticScope() const { return topStaticScope_; }
+
+    bool allowSyntax(AllowedSyntax allowed) const {
         StaticScopeIter<CanGC> it(context, topStaticScope_);
         for (; !it.done(); it++) {
             if (it.type() == StaticScopeIter<CanGC>::Function &&
@@ -274,39 +281,13 @@ class GlobalSharedContext : public SharedContext
         return false;
     }
 
-    bool computeInWith() const {
+    bool inWith() const {
         for (StaticScopeIter<CanGC> it(context, topStaticScope_); !it.done(); it++) {
             if (it.type() == StaticScopeIter<CanGC>::With)
                 return true;
         }
         return false;
     }
-
-  public:
-    GlobalSharedContext(ExclusiveContext* cx,
-                        Directives directives, Handle<ScopeObject*> topStaticScope,
-                        bool extraWarnings)
-      : SharedContext(cx, directives, extraWarnings),
-        topStaticScope_(topStaticScope),
-        allowNewTarget_(computeAllowSyntax(AllowedSyntax::NewTarget)),
-        allowSuperProperty_(computeAllowSyntax(AllowedSyntax::SuperProperty)),
-        inWith_(computeInWith())
-    {}
-
-    ObjectBox* toObjectBox() { return nullptr; }
-    HandleObject topStaticScope() const { return topStaticScope_; }
-    bool allowSyntax(AllowedSyntax allowSyntax) const override {
-        switch (allowSyntax) {
-          case AllowedSyntax::NewTarget:
-            // Any function supports new.target
-            return allowNewTarget_;
-          case AllowedSyntax::SuperProperty:
-            return allowSuperProperty_;
-          default:;
-        }
-        MOZ_CRASH("Unknown AllowedSyntax query");
-    }
-    bool inWith() const override { return inWith_; }
 };
 
 class FunctionBox : public ObjectBox, public SharedContext
@@ -320,7 +301,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     uint16_t        length;
 
     uint8_t         generatorKindBits_;     /* The GeneratorKind of this function. */
-    bool            inWith_:1;              /* some enclosing scope is a with-statement */
+    bool            inWith:1;               /* some enclosing scope is a with-statement */
     bool            inGenexpLambda:1;       /* lambda from generator expression */
     bool            hasDestructuringArgs:1; /* arguments list contains destructuring expression */
     bool            useAsm:1;               /* see useAsmOrInsideUseAsm */
@@ -399,12 +380,8 @@ class FunctionBox : public ObjectBox, public SharedContext
                isGenerator();
     }
 
-    bool allowSyntax(AllowedSyntax allowed) const override {
+    bool allowSyntax(AllowedSyntax allowed) const {
         return FunctionAllowsSyntax(function(), allowed);
-    }
-
-    bool inWith() const override {
-        return inWith_;
     }
 };
 
