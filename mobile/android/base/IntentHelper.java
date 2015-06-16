@@ -102,7 +102,13 @@ public final class IntentHelper implements GeckoEventListener {
                                                        message.optString("title"));
         intent.setClassName(message.optString("packageName"), message.optString("className"));
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        ActivityHandlerHelper.startIntentForActivity(activity, intent, new ResultHandler(message));
+
+        final ResultHandler handler = new ResultHandler(message);
+        try {
+            ActivityHandlerHelper.startIntentForActivity(activity, intent, handler);
+        } catch (SecurityException e) {
+            Log.w(LOGTAG, "Forbidden to launch activity.", e);
+        }
     }
 
     private void openWebActivity(JSONObject message) throws JSONException {
