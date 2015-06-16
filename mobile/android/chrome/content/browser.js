@@ -14,13 +14,14 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/DelayedInit.jsm");
-Cu.import('resource://gre/modules/Payment.jsm');
-Cu.import("resource://gre/modules/NotificationDB.jsm");
-Cu.import("resource://gre/modules/SpatialNavigation.jsm");
 
 if (AppConstants.ACCESSIBILITY) {
-  Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
+  XPCOMUtils.defineLazyModuleGetter(this, "AccessFu",
+                                    "resource://gre/modules/accessibility/AccessFu.jsm");
 }
+
+XPCOMUtils.defineLazyModuleGetter(this, "SpatialNavigation",
+                                  "resource://gre/modules/SpatialNavigation.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadNotifications",
                                   "resource://gre/modules/DownloadNotifications.jsm");
@@ -411,6 +412,10 @@ const kFormHelperModeEnabled = 1;
 const kFormHelperModeDynamic = 2;   // disabled on tablets
 const kMaxHistoryListSize = 50;
 
+function InitLater(fn, object, name) {
+  return DelayedInit.schedule(fn, object, name, 15000 /* 15s max wait */);
+}
+
 var BrowserApp = {
   _tabs: [],
   _selectedTab: null,
@@ -507,7 +512,6 @@ var BrowserApp = {
     window.addEventListener("MozShowFullScreenWarning", showFullScreenWarning, true);
 
     NativeWindow.init();
-    LightWeightThemeWebInstaller.init();
     FormAssistant.init();
     IndexedDB.init();
     HealthReportStatusListener.init();
@@ -520,12 +524,6 @@ var BrowserApp = {
     Distribution.init();
     Tabs.init();
     SearchEngines.init();
-    if (AppConstants.ACCESSIBILITY) {
-      AccessFu.attach(window);
-    }
-    if (AppConstants.NIGHTLY_BUILD) {
-      ShumwayUtils.init();
-    }
 
     let url = null;
     if ("arguments" in window) {
@@ -536,11 +534,6 @@ var BrowserApp = {
       if (window.arguments[2])
         gScreenHeight = window.arguments[2];
     }
-
-    // The order that context menu items are added is important
-    // Make sure the "Open in App" context menu item appears at the bottom of the list
-    this.initContextMenu();
-    ExternalApps.init();
 
     // XXX maybe we don't do this if the launch was kicked off from external
     Services.io.offline = false;
@@ -570,8 +563,21 @@ var BrowserApp = {
       // Tiles reporting is disabled.
     }
 
-    let mm = window.getGroupMessageManager("browsers");
-    mm.loadFrameScript("chrome://browser/content/content.js", true);
+    InitLater(() => {
+      // The order that context menu items are added is important
+      // Make sure the "Open in App" context menu item appears at the bottom of the list
+      this.initContextMenu();
+      ExternalApps.init();
+    }, NativeWindow, "contextmenus");
+
+    InitLater(() => {
+      let mm = window.getGroupMessageManager("browsers");
+      mm.loadFrameScript("chrome://browser/content/content.js", true);
+    });
+
+    if (AppConstants.ACCESSIBILITY) {
+      InitLater(() => AccessFu.attach(window), window, "AccessFu");
+    }
 
     // Notify Java that Gecko has loaded.
     Messaging.sendRequest({ type: "Gecko:Ready" });
@@ -579,19 +585,21 @@ var BrowserApp = {
     this.deck.addEventListener("DOMContentLoaded", function BrowserApp_delayedStartup() {
       BrowserApp.deck.removeEventListener("DOMContentLoaded", BrowserApp_delayedStartup, false);
 
-      function InitLater(fn, object, name) {
-        return DelayedInit.schedule(fn, object, name, 15000 /* 15s max wait */);
-      }
+      InitLater(() => Cu.import("resource://gre/modules/NotificationDB.jsm"));
+      InitLater(() => Cu.import("resource://gre/modules/Payment.jsm"));
 
       InitLater(() => Services.obs.notifyObservers(window, "browser-delayed-startup-finished", ""));
       InitLater(() => Messaging.sendRequest({ type: "Gecko:DelayedStartup" }));
 
       if (AppConstants.NIGHTLY_BUILD) {
+        InitLater(() => ShumwayUtils.init(), window, "ShumwayUtils");
         InitLater(() => Telemetry.addData("TRACKING_PROTECTION_ENABLED",
             Services.prefs.getBoolPref("privacy.trackingprotection.enabled")));
         InitLater(() => WebcompatReporter.init());
       }
 
+      InitLater(() => LightWeightThemeWebInstaller.init());
+      InitLater(() => SpatialNavigation.init(BrowserApp.deck, null), window, "SpatialNavigation");
       InitLater(() => CastingApps.init(), window, "CastingApps");
       InitLater(() => Services.search.init(), Services, "search");
       InitLater(() => DownloadNotifications.init(), window, "DownloadNotifications");
@@ -602,6 +610,7 @@ var BrowserApp = {
       }
 
       InitLater(() => Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager));
+      InitLater(() => LoginManagerParent.init(), window, "LoginManagerParent");
 
       InitLater(() => {
           BrowserApp.gmpInstallManager = new GMPInstallManager();
@@ -2404,7 +2413,9 @@ var NativeWindow = {
     DEFAULT_HTML5_ORDER: -1, // Sort order for HTML5 context menu items
 
     init: function() {
-      BrowserApp.deck.addEventListener("contextmenu", this.show.bind(this), false);
+      // Accessing "NativeWindow.contextmenus" initializes context menus if needed.
+      BrowserApp.deck.addEventListener(
+          "contextmenu", (e) => NativeWindow.contextmenus.show(e), false);
     },
 
     add: function() {
@@ -5093,10 +5104,9 @@ var BrowserEventHandler = {
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
     BrowserApp.deck.addEventListener("touchstart", this, true);
     BrowserApp.deck.addEventListener("MozMouseHittest", this, true);
-    BrowserApp.deck.addEventListener("click", InputWidgetHelper, true);
-    BrowserApp.deck.addEventListener("click", SelectHelper, true);
 
-    SpatialNavigation.init(BrowserApp.deck, null);
+    InitLater(() => BrowserApp.deck.addEventListener("click", InputWidgetHelper, true));
+    InitLater(() => BrowserApp.deck.addEventListener("click", SelectHelper, true));
 
     document.addEventListener("MozMagnifyGesture", this, true);
 
@@ -5736,8 +5746,6 @@ var FormAssistant = {
     BrowserApp.deck.addEventListener("click", this, true);
     BrowserApp.deck.addEventListener("input", this, false);
     BrowserApp.deck.addEventListener("pageshow", this, false);
-
-    LoginManagerParent.init();
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -6916,7 +6924,7 @@ var CharacterEncoding = {
   init: function init() {
     Services.obs.addObserver(this, "CharEncoding:Get", false);
     Services.obs.addObserver(this, "CharEncoding:Set", false);
-    this.sendState();
+    InitLater(() => this.sendState());
   },
 
   observe: function observe(aSubject, aTopic, aData) {
