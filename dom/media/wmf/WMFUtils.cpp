@@ -15,6 +15,7 @@
 #include "mozilla/CheckedInt.h"
 #include "VideoUtils.h"
 #include <initguid.h>
+#include "nsTArray.h"
 
 #ifdef WMF_MUST_DEFINE_AAC_MFT_CLSID
 // Some SDK versions don't define the AAC decoder CLSID.
@@ -354,91 +355,18 @@ GetPictureRegion(IMFMediaType* aMediaType, nsIntRect& aOutPictureRegion)
 
 namespace wmf {
 
-static bool
-IsSupportedDecoder(const GUID& aDecoderGUID)
-{
-  return aDecoderGUID == CLSID_CMSH264DecoderMFT ||
-         aDecoderGUID == CLSID_CMSAACDecMFT ||
-         aDecoderGUID == CLSID_CMP3DecMediaObject;
-}
-
-static HRESULT
-DisableBlockedDecoders(IMFPluginControl* aPluginControl,
-                       const GUID& aCategory)
-{
-  HRESULT hr = S_OK;
-
-  UINT32 numMFTs = 0;
-  IMFActivate **ppActivate = nullptr;
-  hr = wmf::MFTEnumEx(aCategory,
-                      MFT_ENUM_FLAG_ALL,
-                      nullptr, // Input type, nullptr -> match all.
-                      nullptr, // Output type, nullptr -> match all.
-                      &ppActivate,
-                      &numMFTs);
-
-  if (SUCCEEDED(hr) && numMFTs == 0) {
-    hr = MF_E_TOPO_CODEC_NOT_FOUND;
-  }
-
-  for (UINT32 i = 0; i < numMFTs; i++) {
-    // Note: We must release all IMFActivate objects in the list, hence
-    // we're putting individual IMFActivate objects in into a smart ptr.
-    RefPtr<IMFActivate> activate = ppActivate[i];
-    GUID guid = GUID_NULL;
-    hr = activate->GetGUID(MFT_TRANSFORM_CLSID_Attribute, &guid);
-    if (FAILED(hr)) {
-      NS_WARNING("FAILED to get IMFActivate clsid");
-      continue;
-    }
-    if (!IsSupportedDecoder(guid)) {
-      hr = aPluginControl->SetDisabled(MF_Plugin_Type_MFT, guid, TRUE);
-      NS_ASSERTION(SUCCEEDED(hr), "Failed to disable plugin!");
-    }
-  }
-  CoTaskMemFree(ppActivate);
-
-  return hr;
-}
-
-static HRESULT
-DisableBlockedDecoders()
-{
-  RefPtr<IMFPluginControl> pluginControl;
-  HRESULT hr = wmf::MFGetPluginControl(byRef(pluginControl));
-  if (SUCCEEDED(hr) && pluginControl) {
-    hr = DisableBlockedDecoders(pluginControl,
-                                MFT_CATEGORY_VIDEO_DECODER);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-    hr = DisableBlockedDecoders(pluginControl,
-                                MFT_CATEGORY_AUDIO_DECODER);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  }
-
-  return S_OK;
-}
-
-static bool sDLLsLoaded = false;
-static bool sFailedToLoadDlls = false;
-
-struct WMFModule {
-  const wchar_t* name;
-  HMODULE handle;
-};
-
-static WMFModule sDLLs[] = {
-  { L"mfplat.dll", nullptr },
-  { L"mfreadwrite.dll", nullptr },
-  { L"propsys.dll", nullptr },
-  { L"mf.dll", nullptr },
-  { L"dxva2.dll", nullptr }
+static const wchar_t* sDLLs[] = {
+  L"mfplat.dll",
+  L"propsys.dll",
+  L"mf.dll",
+  L"dxva2.dll",
 };
 
 HRESULT
 LoadDLLs()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  static bool sDLLsLoaded = false;
+  static bool sFailedToLoadDlls = false;
 
   if (sDLLsLoaded) {
     return S_OK;
@@ -447,45 +375,22 @@ LoadDLLs()
     return E_FAIL;
   }
 
-  // Try to load all the required DLLs.
-  const uint32_t dllLength = ArrayLength(sDLLs);
-  for (uint32_t i = 0; i < dllLength; i++) {
-    sDLLs[i].handle = LoadLibrarySystem32(sDLLs[i].name);
-    if (!sDLLs[i].handle) {
-      sFailedToLoadDlls = true;
+  // Try to load all the required DLLs. If we fail to load any dll,
+  // unload the dlls we succeeded in loading.
+  nsTArray<const wchar_t*> loadedDlls;
+  for (const wchar_t* dll : sDLLs) {
+    if (!LoadLibrarySystem32(dll)) {
       NS_WARNING("Failed to load WMF DLLs");
-      UnloadDLLs();
+      for (const wchar_t* loadedDll : loadedDlls) {
+        FreeLibrary(GetModuleHandleW(loadedDll));
+      }
+      sFailedToLoadDlls = true;
       return E_FAIL;
     }
+    loadedDlls.AppendElement(dll);
   }
-
-  // Enumerate all the decoders on the system, and disable the ones except
-  // those which we expect to use, the MP3, AAC and H.264 decoders.
-  if (FAILED(DisableBlockedDecoders())) {
-    sFailedToLoadDlls = true;
-    NS_WARNING("Failed to disable non whitelisted WMF decoders");
-    UnloadDLLs();
-    return E_FAIL;
-  }
-
   sDLLsLoaded = true;
 
-  return S_OK;
-}
-
-HRESULT
-UnloadDLLs()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-
-  const uint32_t length = ArrayLength(sDLLs);
-  for (uint32_t i = 0; i < length; i++) {
-    if (sDLLs[i].handle) {
-      FreeLibrary(sDLLs[i].handle);
-      sDLLs[i].handle = nullptr;
-    }
-    sDLLsLoaded = false;
-  }
   return S_OK;
 }
 
@@ -511,6 +416,9 @@ UnloadDLLs()
 HRESULT
 MFStartup()
 {
+  HRESULT hr = LoadDLLs();
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
   const int MF_VISTA_VERSION = (0x0001 << 16 | MF_API_VERSION);
   const int MF_WIN7_VERSION = (0x0002 << 16 | MF_API_VERSION);
 

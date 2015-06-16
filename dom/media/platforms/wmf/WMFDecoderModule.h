@@ -33,11 +33,7 @@ public:
 
   bool SupportsMimeType(const nsACString& aMimeType) override;
 
-  virtual void DisableHardwareAcceleration() override
-  {
-    sDXVAEnabled = false;
-  }
-
+  virtual void DisableHardwareAcceleration() override;
   virtual bool SupportsSharedDecoders(const VideoInfo& aConfig) const override;
 
   virtual ConversionRequired
@@ -54,9 +50,7 @@ public:
   static void Init();
 private:
   bool ShouldUseDXVA(const VideoInfo& aConfig) const;
-
-  static bool sIsWMFEnabled;
-  static bool sDXVAEnabled;
+  bool mWMFInitialized;
 };
 
 } // namespace mozilla
