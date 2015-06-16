@@ -4524,6 +4524,7 @@ nsLayoutUtils::IntrinsicForWM(WritingMode         aWM,
     haveFixedMinISize = GetAbsoluteCoord(styleMinISize, minISize);
   }
 
+  WritingMode ourWM = aFrame->GetWritingMode();
   // If we have a specified width (or a specified 'min-width' greater
   // than the specified 'max-width', which works out to the same thing),
   // don't even bother getting the frame's intrinsic width, because in
@@ -4542,7 +4543,6 @@ nsLayoutUtils::IntrinsicForWM(WritingMode         aWM,
 #ifdef DEBUG_INTRINSIC_WIDTH
     ++gNoiseIndent;
 #endif
-    WritingMode ourWM = aFrame->GetWritingMode();
     if (ourWM.IsOrthogonalTo(aWM)) {
       // We need aFrame's block-dir size, which will become its inline-size
       // contribution in the container.
@@ -4650,7 +4650,9 @@ nsLayoutUtils::IntrinsicForWM(WritingMode         aWM,
     min = aFrame->GetMinISize(aRenderingContext);
   }
 
-  nsIFrame::IntrinsicISizeOffsetData offsets = aFrame->IntrinsicISizeOffsets();
+  nsIFrame::IntrinsicISizeOffsetData offsets =
+    aWM.IsOrthogonalTo(ourWM) ? aFrame->IntrinsicBSizeOffsets()
+                              : aFrame->IntrinsicISizeOffsets();
   result = AddIntrinsicSizeOffset(aRenderingContext, aFrame, offsets, aType,
                                   boxSizing, result, min, styleISize,
                                   haveFixedMinISize ? &minISize : nullptr,
