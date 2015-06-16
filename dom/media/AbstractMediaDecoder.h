@@ -74,10 +74,16 @@ public:
 
   virtual AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() { return nullptr; };
 
-  // Sets the duration of the media in microseconds. The MediaDecoder
-  // fires a durationchange event to its owner (e.g., an HTML audio
-  // tag).
-  virtual void UpdateEstimatedMediaDuration(int64_t aDuration) = 0;
+protected:
+  virtual void UpdateEstimatedMediaDuration(int64_t aDuration) {};
+public:
+  void DispatchUpdateEstimatedMediaDuration(int64_t aDuration)
+  {
+    nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableMethodWithArg<int64_t>(this, &AbstractMediaDecoder::UpdateEstimatedMediaDuration,
+                                           aDuration);
+    NS_DispatchToMainThread(r);
+  }
 
   // Set the media as being seekable or not.
   virtual void SetMediaSeekable(bool aMediaSeekable) = 0;

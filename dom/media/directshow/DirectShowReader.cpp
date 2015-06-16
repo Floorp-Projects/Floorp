@@ -416,9 +416,8 @@ DirectShowReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64
   int64_t duration = mMP3FrameParser.GetDuration();
   if (duration != mDuration) {
     MOZ_ASSERT(mDecoder);
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mDuration = duration;
-    mDecoder->UpdateEstimatedMediaDuration(mDuration);
+    mDecoder->DispatchUpdateEstimatedMediaDuration(mDuration);
   }
 }
 

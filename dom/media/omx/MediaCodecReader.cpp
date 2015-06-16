@@ -652,8 +652,7 @@ MediaCodecReader::ParseDataSegment(const char* aBuffer,
 
   if (durationUpdateRequired) {
     MOZ_ASSERT(mDecoder);
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mDecoder->UpdateEstimatedMediaDuration(duration);
+    mDecoder->DispatchUpdateEstimatedMediaDuration(duration);
   }
 
   return true;

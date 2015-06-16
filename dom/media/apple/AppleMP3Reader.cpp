@@ -543,9 +543,8 @@ AppleMP3Reader::NotifyDataArrived(const char* aBuffer,
   if (duration != mDuration) {
     LOGD("Updating media duration to %lluus\n", duration);
     MOZ_ASSERT(mDecoder);
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mDuration = duration;
-    mDecoder->UpdateEstimatedMediaDuration(duration);
+    mDecoder->DispatchUpdateEstimatedMediaDuration(duration);
   }
 }
 
