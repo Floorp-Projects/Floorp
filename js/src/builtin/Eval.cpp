@@ -350,7 +350,7 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
                                                   : SourceBufferHolder::NoOwnership;
         SourceBufferHolder srcBuf(chars, linearStr->length(), ownership);
         JSScript* compiled = frontend::CompileScript(cx, &cx->tempLifoAlloc(),
-                                                     scopeobj, callerScript, staticScope,
+                                                     scopeobj, staticScope, callerScript,
                                                      options, srcBuf, linearStr, staticLevel);
         if (!compiled)
             return false;
@@ -436,7 +436,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
                                                   : SourceBufferHolder::NoOwnership;
         SourceBufferHolder srcBuf(chars, linearStr->length(), ownership);
         JSScript* compiled = frontend::CompileScript(cx, &cx->tempLifoAlloc(),
-                                                     scopeobj, callerScript, staticScope,
+                                                     scopeobj, staticScope, callerScript,
                                                      options, srcBuf, linearStr, staticLevel);
         if (!compiled)
             return false;

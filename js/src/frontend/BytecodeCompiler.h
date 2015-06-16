@@ -17,18 +17,17 @@ class AutoNameVector;
 class LazyScript;
 class LifoAlloc;
 class ScriptSourceObject;
-class StaticEvalObject;
+class ScopeObject;
 struct SourceCompressionTask;
 
 namespace frontend {
 
 JSScript*
 CompileScript(ExclusiveContext* cx, LifoAlloc* alloc,
-              HandleObject scopeChain, HandleScript evalCaller,
-              Handle<StaticEvalObject*> evalStaticScope,
-              const ReadOnlyCompileOptions& options, SourceBufferHolder& srcBuf,
-              JSString* source_ = nullptr, unsigned staticLevel = 0,
-              SourceCompressionTask* extraSct = nullptr);
+              HandleObject scopeChain, Handle<ScopeObject*> enclosingStaticScope,
+              HandleScript evalCaller, const ReadOnlyCompileOptions& options,
+              SourceBufferHolder& srcBuf, JSString* source_ = nullptr,
+              unsigned staticLevel = 0, SourceCompressionTask* extraSct = nullptr);
 
 bool
 CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const char16_t* chars, size_t length);
