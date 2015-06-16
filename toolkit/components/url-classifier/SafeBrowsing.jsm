@@ -90,15 +90,36 @@ this.SafeBrowsing = {
   gethashURL:            null,
 
   reportURL:             null,
-  reportGenericURL:      null,
-  reportErrorURL:        null,
-  reportPhishURL:        null,
-  reportMalwareURL:      null,
-  reportMalwareErrorURL: null,
 
+  getReportURL: function(kind, URI) {
+    let pref;
+    switch (kind) {
+      case "Phish":
+        pref = "browser.safebrowsing.reportPhishURL";
+        break;
+      case "PhishMistake":
+        pref = "browser.safebrowsing.reportPhishMistakeURL";
+        break;
+      case "MalwareMistake":
+        pref = "browser.safebrowsing.reportMalwareMistakeURL";
+        break;
 
-  getReportURL: function(kind) {
-    return this["report"  + kind + "URL"];
+      default:
+        let err = "SafeBrowsing getReportURL() called with unknown kind: " + kind;
+        Components.utils.reportError(err);
+        throw err;
+    }
+    let reportUrl = Services.urlFormatter.formatURLPref(pref);
+
+    let pageUri = URI.clone();
+
+    // Remove the query to avoid including potentially sensitive data
+    if (pageUri instanceof Ci.nsIURL)
+      pageUri.query = '';
+
+    reportUrl += encodeURIComponent(pageUri.asciiSpec);
+
+    return reportUrl;
   },
 
 
@@ -128,19 +149,10 @@ this.SafeBrowsing = {
     }
 
     log("initializing safe browsing URLs, client id ", clientID);
-    let basePref = "browser.safebrowsing.";
-
-    // Urls to HTML report pages
-    this.reportURL             = Services.urlFormatter.formatURLPref(basePref + "reportURL");
-    this.reportGenericURL      = Services.urlFormatter.formatURLPref(basePref + "reportGenericURL");
-    this.reportErrorURL        = Services.urlFormatter.formatURLPref(basePref + "reportErrorURL");
-    this.reportPhishURL        = Services.urlFormatter.formatURLPref(basePref + "reportPhishURL");
-    this.reportMalwareURL      = Services.urlFormatter.formatURLPref(basePref + "reportMalwareURL");
-    this.reportMalwareErrorURL = Services.urlFormatter.formatURLPref(basePref + "reportMalwareErrorURL");
 
     // Urls used to update DB
-    this.updateURL  = Services.urlFormatter.formatURLPref(basePref + "updateURL");
-    this.gethashURL = Services.urlFormatter.formatURLPref(basePref + "gethashURL");
+    this.updateURL  = Services.urlFormatter.formatURLPref("browser.safebrowsing.updateURL");
+    this.gethashURL = Services.urlFormatter.formatURLPref("browser.safebrowsing.gethashURL");
 
     this.updateURL  = this.updateURL.replace("SAFEBROWSING_ID", clientID);
     this.gethashURL = this.gethashURL.replace("SAFEBROWSING_ID", clientID);
