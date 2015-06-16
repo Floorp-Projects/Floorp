@@ -3,28 +3,23 @@
 
 // Tests for the argumentList argument to Reflect.apply and Reflect.construct.
 
-if (Reflect.construct) {
-    throw new Error("Congratulations on implementing Reflect.construct! " +
-                    "Please uncomment the Reflect.construct tests below.");
-}
-
 // Reflect.apply and Reflect.construct require an argumentList argument that must be an object.
 assertThrowsInstanceOf(() => Reflect.apply(Math.min, undefined),  // missing
                        TypeError);
-//assertThrowsInstanceOf(() => Reflect.construct(Object),  // missing
-//                       TypeError);
+assertThrowsInstanceOf(() => Reflect.construct(Object),  // missing
+                       TypeError);
 for (var primitive of SOME_PRIMITIVE_VALUES) {
     assertThrowsInstanceOf(() => Reflect.apply(Math.min, undefined, primitive),
                            TypeError);
-    //assertThrowsInstanceOf(() => Reflect.construct(Object, primitive),
-    //                       TypeError);
+    assertThrowsInstanceOf(() => Reflect.construct(Object, primitive),
+                           TypeError);
 }
 
 // Array used by several tests below.
 var BOTH = [
     Reflect.apply,
     // Adapt Reflect.construct to accept the same arguments as Reflect.apply.
-    //(target, thisArgument, argumentList) => Reflect.construct(target, argumentList)
+    (target, thisArgument, argumentList) => Reflect.construct(target, argumentList)
 ];
 
 // The argumentList is copied and becomes the list of arguments passed to the function.
@@ -50,7 +45,7 @@ function testLess(a, b, c, d, e) {
 }
 args = [1, true, "three", Symbol.for];
 assertEq(Reflect.apply(testLess, undefined, args), "ok");
-//assertEq(Reflect.construct(testLess, args) instanceof testLess, true);
+assertEq(Reflect.construct(testLess, args) instanceof testLess, true);
 
 // argumentList.length can be more than func.length.
 function testMoar(a) {
@@ -58,7 +53,7 @@ function testMoar(a) {
     return "good";
 }
 assertEq(Reflect.apply(testMoar, undefined, args), "good");
-//assertEq(Reflect.construct(testMoar, args) instanceof testMoar, true);
+assertEq(Reflect.construct(testMoar, args) instanceof testMoar, true);
 
 // argumentList can be any object with a .length property.
 function getArgs(...args) {
@@ -163,6 +158,6 @@ function testMany(...args) {
     return this;
 }
 assertEq(Reflect.apply(testMany, "pass", args), "pass");
-//assertEq(Reflect.construct(testMany, args) instanceof testMany, true);
+assertEq(Reflect.construct(testMany, args) instanceof testMany, true);
 
 reportCompare(0, 0);

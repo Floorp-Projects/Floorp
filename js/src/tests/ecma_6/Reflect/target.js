@@ -7,7 +7,7 @@
 // that would be OK after a suitable target argument.
 var methodInfo = {
     apply: [undefined, []],
-    //construct: [[]],
+    construct: [[]],
     defineProperty: ["x", {}],
     deleteProperty: ["x"],
     //enumerate: [],
