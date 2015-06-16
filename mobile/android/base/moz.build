@@ -44,6 +44,8 @@ if CONFIG['MOZ_NATIVE_DEVICES']:
     resjar.generated_sources += ['android/support/v7/appcompat/R.java']
     resjar.generated_sources += ['android/support/v7/mediarouter/R.java']
 
+resjar.generated_sources += ['android/support/v7/recyclerview/R.java']
+
 resjar.javac_flags += ['-Xlint:all']
 
 mgjar = add_java_jar('gecko-mozglue')
@@ -616,6 +618,7 @@ moz_native_devices_sources = [
 if CONFIG['MOZ_NATIVE_DEVICES']:
     gbjar.extra_jars += moz_native_devices_jars
     gbjar.sources += moz_native_devices_sources
+gbjar.extra_jars += [CONFIG['ANDROID_RECYCLERVIEW_LIB']]
 
 gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough', '-J-Xmx512m', '-J-Xms128m']
 
