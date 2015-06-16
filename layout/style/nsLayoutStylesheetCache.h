@@ -48,6 +48,14 @@ class nsLayoutStylesheetCache final
   static mozilla::CSSStyleSheet* SVGSheet();
   static mozilla::CSSStyleSheet* MathMLSheet();
   static mozilla::CSSStyleSheet* CounterStylesSheet();
+  static mozilla::CSSStyleSheet* NoScriptSheet();
+  static mozilla::CSSStyleSheet* NoFramesSheet();
+  static mozilla::CSSStyleSheet* ChromePreferenceSheet(nsPresContext* aPresContext);
+  static mozilla::CSSStyleSheet* ContentPreferenceSheet(nsPresContext* aPresContext);
+  static mozilla::CSSStyleSheet* ContentEditableSheet();
+  static mozilla::CSSStyleSheet* DesignModeSheet();
+
+  static void InvalidatePreferenceSheets();
 
   static void Shutdown();
 
@@ -69,15 +77,27 @@ private:
                         bool aEnableUnsafeRules);
   static void InvalidateSheet(nsRefPtr<mozilla::CSSStyleSheet>& aSheet);
   static void DependentPrefChanged(const char* aPref, void* aData);
+  void BuildPreferenceSheet(nsRefPtr<mozilla::CSSStyleSheet>& aSheet,
+                            nsPresContext* aPresContext);
+  static void AppendPreferenceRule(mozilla::CSSStyleSheet* aSheet,
+                                   const nsAString& aRule);
+  static void AppendPreferenceColorRule(mozilla::CSSStyleSheet* aSheet,
+                                        const char* aString, nscolor aColor);
 
   static mozilla::StaticRefPtr<nsLayoutStylesheetCache> gStyleCache;
   static mozilla::css::Loader* gCSSLoader;
+  nsRefPtr<mozilla::CSSStyleSheet> mChromePreferenceSheet;
+  nsRefPtr<mozilla::CSSStyleSheet> mContentEditableSheet;
+  nsRefPtr<mozilla::CSSStyleSheet> mContentPreferenceSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mCounterStylesSheet;
+  nsRefPtr<mozilla::CSSStyleSheet> mDesignModeSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mFormsSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mFullScreenOverrideSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mHTMLSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mMathMLSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mMinimalXULSheet;
+  nsRefPtr<mozilla::CSSStyleSheet> mNoFramesSheet;
+  nsRefPtr<mozilla::CSSStyleSheet> mNoScriptSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mNumberControlSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mQuirkSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mSVGSheet;

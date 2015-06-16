@@ -180,16 +180,8 @@ class Profile(object):
             path_to = tempdir
         copytree(path_from, path_to)
 
-        def cleanup_clone(fn):
-            """Deletes a cloned profile when restore is True"""
-            def wrapped(self):
-                fn(self)
-                if self.restore and os.path.exists(self.profile):
-                    mozfile.remove(self.profile)
-            return wrapped
-
         c = cls(path_to, **kwargs)
-        c.__del__ = c.cleanup = types.MethodType(cleanup_clone(cls.cleanup), c)
+        c.create_new = True  # deletes a cloned profile when restore is True
         return c
 
     def exists(self):

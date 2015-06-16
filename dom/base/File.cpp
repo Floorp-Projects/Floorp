@@ -531,13 +531,13 @@ File::GetLastModified(ErrorResult& aRv)
 }
 
 void
-File::GetMozFullPath(nsAString& aFilename, ErrorResult& aRv)
+File::GetMozFullPath(nsAString& aFilename, ErrorResult& aRv) const
 {
   mImpl->GetMozFullPath(aFilename, aRv);
 }
 
 void
-File::GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv)
+File::GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv) const
 {
   mImpl->GetMozFullPathInternal(aFileName, aRv);
 }
@@ -735,7 +735,7 @@ BlobImplBase::GetPath(nsAString& aPath, ErrorResult& aRv)
 }
 
 void
-BlobImplBase::GetMozFullPath(nsAString& aFileName, ErrorResult& aRv)
+BlobImplBase::GetMozFullPath(nsAString& aFileName, ErrorResult& aRv) const
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
 
@@ -759,7 +759,7 @@ BlobImplBase::GetMozFullPath(nsAString& aFileName, ErrorResult& aRv)
 }
 
 void
-BlobImplBase::GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv)
+BlobImplBase::GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv) const
 {
   if (!mIsFile) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -950,7 +950,7 @@ BlobImplFile::CreateSlice(uint64_t aStart, uint64_t aLength,
 }
 
 void
-BlobImplFile::GetMozFullPathInternal(nsAString& aFilename, ErrorResult& aRv)
+BlobImplFile::GetMozFullPathInternal(nsAString& aFilename, ErrorResult& aRv) const
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
   aRv = mFile->GetPath(aFilename);

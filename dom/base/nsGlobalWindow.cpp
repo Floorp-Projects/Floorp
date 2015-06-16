@@ -12463,6 +12463,7 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
     // New script entry point required, due to the "Create a script" sub-step of
     // http://www.whatwg.org/specs/web-apps/current-work/#timer-initialisation-steps
     AutoEntryScript entryScript(this, reason, true, aScx->GetNativeContext());
+    entryScript.TakeOwnershipOfErrorReporting();
     JS::CompileOptions options(entryScript.cx());
     options.setFileAndLine(filename, lineNo)
            .setVersion(JSVERSION_DEFAULT);

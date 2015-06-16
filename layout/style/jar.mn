@@ -10,6 +10,8 @@ toolkit.jar:
    res/plaintext.css     (plaintext.css)
    res/viewsource.css    (viewsource.css)
    res/counterstyles.css (counterstyles.css)
+   res/noscript.css (noscript.css)
+   res/noframes.css (noframes.css)
 *  res/forms.css    (forms.css)
    res/number-control.css    (number-control.css)
    res/arrow.gif    (arrow.gif)

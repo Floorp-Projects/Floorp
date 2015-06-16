@@ -313,34 +313,7 @@ AutoJSAPI::~AutoJSAPI()
   if (mOwnErrorReporting) {
     MOZ_ASSERT(NS_IsMainThread(), "See corresponding assertion in TakeOwnershipOfErrorReporting()");
 
-    if (HasException()) {
-
-      // AutoJSAPI uses a JSAutoNullableCompartment, and may be in a null
-      // compartment when the destructor is called. However, the JS engine
-      // requires us to be in a compartment when we fetch the pending exception.
-      // In this case, we enter the privileged junk scope and don't dispatch any
-      // error events.
-      JS::Rooted<JSObject*> errorGlobal(cx(), JS::CurrentGlobalOrNull(cx()));
-      if (!errorGlobal)
-        errorGlobal = xpc::PrivilegedJunkScope();
-      JSAutoCompartment ac(cx(), errorGlobal);
-      nsCOMPtr<nsPIDOMWindow> win = xpc::WindowGlobalOrNull(errorGlobal);
-      JS::Rooted<JS::Value> exn(cx());
-      js::ErrorReport jsReport(cx());
-      if (StealException(&exn) && jsReport.init(cx(), exn)) {
-        nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
-        xpcReport->Init(jsReport.report(), jsReport.message(),
-                        nsContentUtils::IsCallerChrome(),
-                        win ? win->WindowID() : 0);
-        if (win) {
-          DispatchScriptErrorEvent(win, JS_GetRuntime(cx()), xpcReport, exn);
-        } else {
-          xpcReport->LogToConsole();
-        }
-      } else {
-        NS_WARNING("OOMed while acquiring uncaught exception from JSAPI");
-      }
-    }
+    ReportException();
 
     // We need to do this _after_ processing the existing exception, because the
     // JS engine can throw while doing that, and uses this bit to determine what
@@ -506,6 +479,41 @@ AutoJSAPI::TakeOwnershipOfErrorReporting()
   mOldAutoJSAPIOwnsErrorReporting = JS::ContextOptionsRef(cx()).autoJSAPIOwnsErrorReporting();
   JS::ContextOptionsRef(cx()).setAutoJSAPIOwnsErrorReporting(true);
   JS_SetErrorReporter(rt, WarningOnlyErrorReporter);
+}
+
+void
+AutoJSAPI::ReportException()
+{
+  MOZ_ASSERT(OwnsErrorReporting(), "This is not our exception to report!");
+  if (!HasException()) {
+    return;
+  }
+
+  // AutoJSAPI uses a JSAutoNullableCompartment, and may be in a null
+  // compartment when the destructor is called. However, the JS engine
+  // requires us to be in a compartment when we fetch the pending exception.
+  // In this case, we enter the privileged junk scope and don't dispatch any
+  // error events.
+  JS::Rooted<JSObject*> errorGlobal(cx(), JS::CurrentGlobalOrNull(cx()));
+  if (!errorGlobal)
+    errorGlobal = xpc::PrivilegedJunkScope();
+  JSAutoCompartment ac(cx(), errorGlobal);
+  nsCOMPtr<nsPIDOMWindow> win = xpc::WindowGlobalOrNull(errorGlobal);
+  JS::Rooted<JS::Value> exn(cx());
+  js::ErrorReport jsReport(cx());
+  if (StealException(&exn) && jsReport.init(cx(), exn)) {
+    nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
+    xpcReport->Init(jsReport.report(), jsReport.message(),
+                    nsContentUtils::IsCallerChrome(),
+                    win ? win->WindowID() : 0);
+    if (win) {
+      DispatchScriptErrorEvent(win, JS_GetRuntime(cx()), xpcReport, exn);
+    } else {
+      xpcReport->LogToConsole();
+    }
+  } else {
+    NS_WARNING("OOMed while acquiring uncaught exception from JSAPI");
+  }
 }
 
 bool

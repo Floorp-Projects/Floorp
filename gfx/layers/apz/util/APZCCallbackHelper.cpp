@@ -163,18 +163,35 @@ SetDisplayPortMargins(nsIPresShell* aPresShell,
   nsLayoutUtils::SetDisplayPortBaseIfNotSet(aContent, base);
 }
 
-void
-APZCCallbackHelper::UpdateRootFrame(nsIPresShell* aPresShell,
-                                    FrameMetrics& aMetrics)
+static already_AddRefed<nsIPresShell>
+GetPresShell(const nsIContent* aContent)
 {
-  // Precondition checks
-  MOZ_ASSERT(aPresShell);
-  MOZ_ASSERT(aMetrics.GetUseDisplayPortMargins());
+  nsCOMPtr<nsIPresShell> result;
+  if (nsIDocument* doc = aContent->GetComposedDoc()) {
+    result = doc->GetShell();
+  }
+  return result.forget();
+}
+
+void
+APZCCallbackHelper::UpdateRootFrame(FrameMetrics& aMetrics)
+{
   if (aMetrics.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
     return;
   }
+  nsIContent* content = nsLayoutUtils::FindContentFor(aMetrics.GetScrollId());
+  if (!content) {
+    return;
+  }
 
-  float presShellResolution = nsLayoutUtils::GetResolution(aPresShell);
+  nsCOMPtr<nsIPresShell> shell = GetPresShell(content);
+  if (!shell || aMetrics.GetPresShellId() != shell->GetPresShellId()) {
+    return;
+  }
+
+  MOZ_ASSERT(aMetrics.GetUseDisplayPortMargins());
+
+  float presShellResolution = nsLayoutUtils::GetResolution(shell);
 
   // If the pres shell resolution has changed on the content side side
   // the time this repaint request was fired, consider this request out of date
@@ -194,45 +211,39 @@ APZCCallbackHelper::UpdateRootFrame(nsIPresShell* aPresShell,
   // Note that this needs to happen before scrolling the frame (in UpdateFrameCommon),
   // otherwise the scroll position may get clamped incorrectly.
   CSSSize scrollPort = aMetrics.CalculateCompositedSizeInCssPixels();
-  nsLayoutUtils::SetScrollPositionClampingScrollPortSize(aPresShell, scrollPort);
+  nsLayoutUtils::SetScrollPositionClampingScrollPortSize(shell, scrollPort);
 
   // The pres shell resolution is updated by the the async zoom since the
   // last paint.
   presShellResolution = aMetrics.GetPresShellResolution()
                       * aMetrics.GetAsyncZoom().scale;
-  nsLayoutUtils::SetResolutionAndScaleTo(aPresShell, presShellResolution);
+  nsLayoutUtils::SetResolutionAndScaleTo(shell, presShellResolution);
 
   // Do this as late as possible since scrolling can flush layout. It also
   // adjusts the display port margins, so do it before we set those.
-  nsIContent* content = nsLayoutUtils::FindContentFor(aMetrics.GetScrollId());
   ScrollFrame(content, aMetrics);
 
-  SetDisplayPortMargins(aPresShell, content, aMetrics);
-}
-
-static already_AddRefed<nsIPresShell>
-GetPresShell(const nsIContent* aContent)
-{
-  nsCOMPtr<nsIPresShell> result;
-  if (nsIDocument* doc = aContent->GetComposedDoc()) {
-    result = doc->GetShell();
-  }
-  return result.forget();
+  SetDisplayPortMargins(shell, content, aMetrics);
 }
 
 void
-APZCCallbackHelper::UpdateSubFrame(nsIContent* aContent,
-                                   FrameMetrics& aMetrics)
+APZCCallbackHelper::UpdateSubFrame(FrameMetrics& aMetrics)
 {
-  // Precondition checks
-  MOZ_ASSERT(aContent);
+  if (aMetrics.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
+    return;
+  }
+  nsIContent* content = nsLayoutUtils::FindContentFor(aMetrics.GetScrollId());
+  if (!content) {
+    return;
+  }
+
   MOZ_ASSERT(aMetrics.GetUseDisplayPortMargins());
 
   // We don't currently support zooming for subframes, so nothing extra
   // needs to be done beyond the tasks common to this and UpdateRootFrame.
-  ScrollFrame(aContent, aMetrics);
-  if (nsCOMPtr<nsIPresShell> shell = GetPresShell(aContent)) {
-    SetDisplayPortMargins(shell, aContent, aMetrics);
+  ScrollFrame(content, aMetrics);
+  if (nsCOMPtr<nsIPresShell> shell = GetPresShell(content)) {
+    SetDisplayPortMargins(shell, content, aMetrics);
   }
 }
 
