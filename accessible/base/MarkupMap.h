@@ -237,18 +237,6 @@ MARKUPMAP(merror_,
           New_HyperText,
           roles::MATHML_ERROR)
 
-MARKUPMAP(semantics_,
-          New_HyperText,
-          roles::MATHML_SEMANTICS)
-
-MARKUPMAP(annotation_,
-          New_HyperText,
-          roles::MATHML_ANNOTATION)
-
-MARKUPMAP(annotation_xml_,
-          New_HyperText,
-          roles::MATHML_XML_ANNOTATION)
-
 MARKUPMAP(mstack_,
           New_HyperText,
           roles::MATHML_STACK,
