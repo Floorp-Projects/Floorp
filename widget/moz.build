@@ -26,6 +26,7 @@ if toolkit == 'windows':
         'nsITaskbarProgress.idl',
         'nsITaskbarTabPreview.idl',
         'nsITaskbarWindowPreview.idl',
+        'nsIWindowsUIUtils.idl',
         'nsIWinTaskbar.idl',
     ]
 elif toolkit == 'cocoa':
