@@ -70,23 +70,23 @@ function run_test() {
 
   {
     let perm = mk_permission(uri0);
-    matches_always(perm, [uri0, uri2, uri5, uri7]);
-    matches_weak(perm, [uri1, uri4, uri6]);
-    matches_never(perm, [uri3, fileuri1, fileuri2, fileuri3]);
+    matches_always(perm, [uri0, uri2]);
+    matches_weak(perm, [uri1, uri4]);
+    matches_never(perm, [uri3, uri5, uri6, uri7, fileuri1, fileuri2, fileuri3]);
   }
 
   {
     let perm = mk_permission(uri1);
-    matches_always(perm, [uri1, uri6]);
+    matches_always(perm, [uri1]);
     matches_weak(perm, [uri4]);
-    matches_never(perm, [uri0, uri2, uri3, uri5, uri7, fileuri1, fileuri2, fileuri3]);
+    matches_never(perm, [uri0, uri2, uri3, uri5, uri6, uri7, fileuri1, fileuri2, fileuri3]);
   }
 
   {
     let perm = mk_permission(uri2);
-    matches_always(perm, [uri0, uri2, uri5, uri7]);
-    matches_weak(perm, [uri1, uri4, uri6]);
-    matches_never(perm, [uri3, fileuri1, fileuri2, fileuri3]);
+    matches_always(perm, [uri0, uri2]);
+    matches_weak(perm, [uri1, uri4]);
+    matches_never(perm, [uri3, uri5, uri6, uri7, fileuri1, fileuri2, fileuri3]);
   }
 
   {
@@ -105,23 +105,23 @@ function run_test() {
 
   {
     let perm = mk_permission(uri5);
-    matches_always(perm, [uri0, uri2, uri5, uri7]);
-    matches_weak(perm, [uri1, uri4, uri6]);
-    matches_never(perm, [uri3, fileuri1, fileuri2, fileuri3]);
+    matches_always(perm, [uri5, uri7]);
+    matches_weak(perm, [uri6]);
+    matches_never(perm, [uri0, uri1, uri2, uri3, uri4, fileuri1, fileuri2, fileuri3]);
   }
 
   {
     let perm = mk_permission(uri6);
-    matches_always(perm, [uri1, uri6]);
-    matches_weak(perm, [uri4]);
-    matches_never(perm, [uri0, uri2, uri3, uri5, uri7, fileuri1, fileuri2, fileuri3]);
+    matches_always(perm, [uri6]);
+    matches_weak(perm, []);
+    matches_never(perm, [uri0, uri1, uri2, uri3, uri4, uri5, uri7, fileuri1, fileuri2, fileuri3]);
   }
 
   {
     let perm = mk_permission(uri7);
-    matches_always(perm, [uri0, uri2, uri5, uri7]);
-    matches_weak(perm, [uri1, uri4, uri6]);
-    matches_never(perm, [uri3, fileuri1, fileuri2, fileuri3]);
+    matches_always(perm, [uri5, uri7]);
+    matches_weak(perm, [uri6]);
+    matches_never(perm, [uri0, uri1, uri2, uri3, uri4, fileuri1, fileuri2, fileuri3]);
   }
 
   {
