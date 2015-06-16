@@ -1587,9 +1587,9 @@ BytecodeEmitter::tryConvertFreeName(ParseNode* pn)
     if (insideNonGlobalEval)
         return false;
 
-    // Skip trying to use GNAME ops if we know our script has a polluted
-    // global scope, since they'll just get treated as NAME ops anyway.
-    if (script->hasPollutedGlobalScope())
+    // Skip trying to use GNAME ops if we know our script has a non-syntactic
+    // scope, since they'll just get treated as NAME ops anyway.
+    if (script->hasNonSyntacticScope())
         return false;
 
     // Deoptimized names also aren't necessarily globals.
