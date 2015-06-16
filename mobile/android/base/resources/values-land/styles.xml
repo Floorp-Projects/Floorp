@@ -19,34 +19,14 @@
     </style>
 
     <!-- Tabs panel -->
-    <style name="PrivateTabsPanelFrame">
-        <item name="android:paddingLeft">16dp</item>
-        <item name="android:paddingRight">16dp</item>
-        <item name="android:orientation">horizontal</item>
-    </style>
-
     <style name="TabsPanelSection" parent="TabsPanelSectionBase">
         <item name="android:layout_weight">1</item>
-    </style>
-
-    <style name="TabsPanelSection.PrivateTabs.Header">
-        <item name="android:paddingTop">10dp</item>
     </style>
 
     <style name="TabsPanelItem">
         <item name="android:layout_marginBottom">20dp</item>
         <item name="android:layout_gravity">left</item>
         <item name="android:gravity">left</item>
-    </style>
-
-    <style name="TabsPanelItem.TextAppearance.Header.PrivateTabs">
-        <item name="android:visibility">gone</item>
-    </style>
-
-    <style name="TabsPanelItem.TextAppearance.Linkified.LearnMore">
-        <item name="android:layout_height">match_parent</item>
-        <item name="android:gravity">center</item>
-        <item name="android:layout_gravity">center</item>
     </style>
 
 </resources>

@@ -113,6 +113,10 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    */
   _onObservedPrefChange: function(_, prefName) {
     this._hiddenMarkers = PerformanceController.getPref("hidden-markers");
+
+    // Clear the cache as we'll need to recompute the collapsed
+    // marker model
+    this._cache = new WeakMap();
   },
 
   /**
@@ -137,6 +141,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     WaterfallUtils.collapseMarkersIntoNode({
       markerNode: rootMarkerNode,
       markersList: markers,
+      filter: this._hiddenMarkers
     });
 
     this._cache.set(markers, rootMarkerNode);
