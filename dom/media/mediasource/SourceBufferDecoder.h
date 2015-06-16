@@ -54,7 +54,6 @@ public:
   virtual void QueueMetadata(int64_t aTime, nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags) final override;
   virtual void RemoveMediaTracks() final override;
   virtual void SetMediaSeekable(bool aMediaSeekable) final override;
-  virtual void UpdateEstimatedMediaDuration(int64_t aDuration) final override;
   virtual bool HasInitializationData() final override;
 
   // SourceBufferResource specific interface below.
