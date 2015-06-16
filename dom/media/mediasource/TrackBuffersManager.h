@@ -8,6 +8,7 @@
 #define MOZILLA_TRACKBUFFERSMANAGER_H_
 
 #include "SourceBufferContentManager.h"
+#include "MediaDataDemuxer.h"
 #include "MediaSourceDecoder.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
@@ -79,6 +80,14 @@ public:
   {
     return mEnded;
   }
+  TimeUnit Seek(TrackInfo::TrackType aTrack, const TimeUnit& aTime);
+  uint32_t SkipToNextRandomAccessPoint(TrackInfo::TrackType aTrack,
+                                       const TimeUnit& aTimeThreadshold,
+                                       bool& aFound);
+  already_AddRefed<MediaRawData> GetSample(TrackInfo::TrackType aTrack,
+                                           const TimeUnit& aFuzz,
+                                           bool& aError);
+  TimeUnit GetNextRandomAccessPoint(TrackInfo::TrackType aTrack);
 
 #if defined(DEBUG)
   void Dump(const char* aPath) override;
@@ -225,6 +234,13 @@ private:
     nsRefPtr<SharedTrackInfo> mInfo;
     // TrackInfo of the last metadata parsed (updated with each init segment.
     nsRefPtr<SharedTrackInfo> mLastInfo;
+
+    // If set, position of the next sample to be retrieved by GetSample().
+    Maybe<uint32_t> mNextGetSampleIndex;
+    // Approximation of the next sample's decode timestamp.
+    TimeUnit mNextSampleTimecode;
+    // Approximation of the next sample's presentation timestamp.
+    TimeUnit mNextSampleTime;
 
     void ResetAppendState()
     {
