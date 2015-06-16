@@ -22,7 +22,7 @@
 
 namespace js {
 
-class StaticEvalObject;
+class ScopeObject;
 
 namespace frontend {
 
