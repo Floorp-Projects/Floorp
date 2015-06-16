@@ -13,6 +13,7 @@
 #include "GMPService.h"
 #include "VideoUtils.h"
 #include "nsPrintfCString.h"
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 namespace dom {
@@ -491,6 +492,12 @@ GMPVideoDecoderTrialCreator::MaybeAwaitTrialCreate(const nsAString& aKeySystem,
                                                    nsPIDOMWindow* aParent)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    // Currently broken with e10s...
+    aPromisey->Resolve();
+    return;
+  }
 
   if (!mTestCreate.Contains(aKeySystem)) {
     mTestCreate.Put(aKeySystem, new TrialCreateData(aKeySystem));
