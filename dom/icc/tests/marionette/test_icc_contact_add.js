@@ -72,7 +72,7 @@ function removeContact(aIcc, aContactId, aType, aPin2) {
       ", type=" + aType + ", pin2=" + aPin2);
 
   let contact = new mozContact({});
-  contact.id = aIcc.iccInfo.iccid + aContactId;
+  contact.id = aContactId;
 
   return aIcc.updateContact(aType, contact, aPin2);
 }
