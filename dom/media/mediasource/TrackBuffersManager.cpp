@@ -664,6 +664,7 @@ TrackBuffersManager::SegmentParserLoop()
     // following steps:
     if (mAppendState == AppendState::PARSING_INIT_SEGMENT) {
       if (mParser->InitSegmentRange().IsNull()) {
+        mInputBuffer = nullptr;
         NeedMoreData();
         return;
       }
@@ -678,6 +679,8 @@ TrackBuffersManager::SegmentParserLoop()
       }
       // 2. If the input buffer does not contain a complete media segment header yet, then jump to the need more data step below.
       if (mParser->MediaHeaderRange().IsNull()) {
+        mCurrentInputBuffer->AppendData(mInputBuffer);
+        mInputBuffer = nullptr;
         NeedMoreData();
         return;
       }
@@ -762,12 +765,9 @@ TrackBuffersManager::InitializationSegmentReceived()
   mInitData = mParser->InitData();
   mCurrentInputBuffer = new SourceBufferResource(mType);
   mCurrentInputBuffer->AppendData(mInitData);
-  uint32_t initLength = mParser->InitSegmentRange().mEnd;
-  if (mInputBuffer->Length() == initLength) {
-    mInputBuffer = nullptr;
-  } else {
-    mInputBuffer->RemoveElementsAt(0, initLength);
-  }
+  uint32_t length =
+    mParser->InitSegmentRange().mEnd - (mProcessedInput - mInputBuffer->Length());
+  mInputBuffer->RemoveElementsAt(0, length);
   CreateDemuxerforMIMEType();
   if (!mInputDemuxer) {
     MOZ_ASSERT(false, "TODO type not supported");
