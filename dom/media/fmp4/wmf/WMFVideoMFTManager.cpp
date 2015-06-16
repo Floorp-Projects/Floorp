@@ -20,6 +20,7 @@
 #include "gfxWindowsPlatform.h"
 #include "IMFYCbCrImage.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/Preferences.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* GetDemuxerLog();
@@ -135,6 +136,7 @@ public:
   NS_IMETHOD Run() {
     NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
     if (mBackend == LayersBackend::LAYERS_D3D11 &&
+        Preferences::GetBool("media.windows-media-foundation.allow-d3d11-dxva", false) &&
         IsWin8OrLater()) {
       mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA();
     } else {
