@@ -320,7 +320,7 @@ loop.store.ActiveRoomStore = (function() {
           roomInfoData.roomName = realResult.roomName;
 
           dispatcher.dispatch(roomInfoData);
-        }, function(err) {
+        }, function(error) {
           roomInfoData.roomInfoFailure = ROOM_INFO_FAILURES.DECRYPT_FAILED;
           dispatcher.dispatch(roomInfoData);
         });

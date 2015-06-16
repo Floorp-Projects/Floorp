@@ -504,40 +504,40 @@ describe("loop.shared.views", function() {
       });
 
       describe("#publishStream", function() {
-        var comp;
+        var component;
 
         beforeEach(function() {
-          comp = mountTestComponent({
+          component = mountTestComponent({
             sdk: fakeSDK,
             model: model,
             video: {enabled: false}
           });
-          comp.startPublishing();
+          component.startPublishing();
         });
 
         it("should start streaming local audio", function() {
-          comp.publishStream("audio", true);
+          component.publishStream("audio", true);
 
           sinon.assert.calledOnce(fakePublisher.publishAudio);
           sinon.assert.calledWithExactly(fakePublisher.publishAudio, true);
         });
 
         it("should stop streaming local audio", function() {
-          comp.publishStream("audio", false);
+          component.publishStream("audio", false);
 
           sinon.assert.calledOnce(fakePublisher.publishAudio);
           sinon.assert.calledWithExactly(fakePublisher.publishAudio, false);
         });
 
         it("should start streaming local video", function() {
-          comp.publishStream("video", true);
+          component.publishStream("video", true);
 
           sinon.assert.calledOnce(fakePublisher.publishVideo);
           sinon.assert.calledWithExactly(fakePublisher.publishVideo, true);
         });
 
         it("should stop streaming local video", function() {
-          comp.publishStream("video", false);
+          component.publishStream("video", false);
 
           sinon.assert.calledOnce(fakePublisher.publishVideo);
           sinon.assert.calledWithExactly(fakePublisher.publishVideo, false);
