@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Testcase for bug 1174450</title>
+  <style type="text/css">
+body,html { color:black; background:white; font-size:12px; line-height:16px; padding:0; margin:0; }
+	
+div.h, div.v {
+  display: block;
+  border: 1px dashed silver;
+  float: left;
+}
+.v { 
+  writing-mode: vertical-lr;
+}
+.h { 
+  writing-mode: horizontal-tb;
+}
+
+span { 
+  display: block;
+  width: 30px;
+  height: 10px;
+  background: lime;
+  margin: 7px 13px 50% 20%;
+  padding: 1px 3px 10% 30%;
+  border-width: 5px 9px 1px 7px;
+  border-style: solid;
+}
+
+.a { position:absolute; }
+.t2 {top:100px;}
+.t3 {top:200px;}
+.t4 {top:300px;}
+  
+  </style>
+</head>
+<body>
+
+
+<div class="a t1">
+<pre>vertical container, horizontal child</pre>
+<div class="v"><span class="h"></span></div>
+</div>
+<div class="a t2">
+<pre>vertical container, vertical child</pre>
+<div class="v"><span class="v"></span></div>
+</div>
+<div class="a t3">
+<pre>horizontal container, horizontal child</pre>
+<div class="h"><span class="h"></span></div>
+</div>
+<div class="a t4">
+<pre>horizontal container, vertical child</pre>
+<div class="h"><span class="v"></span></div>
+</div>
+
+</body>
+</html>

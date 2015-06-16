@@ -37,10 +37,6 @@ namespace tasktracer {
 enum {
   FORKED_AFTER_NUWA = 1 << 0
 };
-void InitTaskTracer(uint32_t aFlags = 0);
-void ShutdownTaskTracer();
-
-class FakeTracedTask;
 
 enum SourceEventType {
   Unknown = 0,
@@ -58,6 +54,9 @@ public:
   AutoSourceEvent(SourceEventType aType);
   ~AutoSourceEvent();
 };
+
+void InitTaskTracer(uint32_t aFlags = 0);
+void ShutdownTaskTracer();
 
 // Add a label to the currently running task, aFormat is the message to log,
 // followed by corresponding parameters.
@@ -77,8 +76,6 @@ const PRTime GetStartTime();
 Task* CreateTracedTask(Task* aTask);
 
 already_AddRefed<nsIRunnable> CreateTracedRunnable(nsIRunnable* aRunnable);
-
-already_AddRefed<FakeTracedTask> CreateFakeTracedTask(int* aVptr);
 
 // Free the TraceInfo allocated on a thread's TLS. Currently we are wrapping
 // tasks running on nsThreads and base::thread, so FreeTraceInfo is called at

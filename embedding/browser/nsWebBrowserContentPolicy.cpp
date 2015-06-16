@@ -34,6 +34,9 @@ nsWebBrowserContentPolicy::ShouldLoad(uint32_t aContentType,
 {
   NS_PRECONDITION(aShouldLoad, "Null out param");
 
+  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+             "We should only see external content policy types here.");
+
   *aShouldLoad = nsIContentPolicy::ACCEPT;
 
   nsIDocShell* shell = NS_CP_GetDocShellFromContext(aRequestingContext);
@@ -83,6 +86,9 @@ nsWebBrowserContentPolicy::ShouldProcess(uint32_t aContentType,
                                          int16_t* aShouldProcess)
 {
   NS_PRECONDITION(aShouldProcess, "Null out param");
+
+  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+             "We should only see external content policy types here.");
 
   *aShouldProcess = nsIContentPolicy::ACCEPT;
 

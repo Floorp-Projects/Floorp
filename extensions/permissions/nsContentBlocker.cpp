@@ -14,6 +14,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsIObjectLoadingContent.h"
 #include "mozilla/ArrayUtils.h"
+#include "nsContentUtils.h"
 
 // Possible behavior pref values
 // Those map to the nsIPermissionManager values where possible
@@ -150,6 +151,9 @@ nsContentBlocker::ShouldLoad(uint32_t          aContentType,
                              nsIPrincipal     *aRequestPrincipal,
                              int16_t          *aDecision)
 {
+  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+             "We should only see external content policy types here.");
+
   *aDecision = nsIContentPolicy::ACCEPT;
   nsresult rv;
 
@@ -201,6 +205,9 @@ nsContentBlocker::ShouldProcess(uint32_t          aContentType,
                                 nsIPrincipal     *aRequestPrincipal,
                                 int16_t          *aDecision)
 {
+  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+             "We should only see external content policy types here.");
+
   // For loads where aRequestingContext is chrome, we should just
   // accept.  Those are most likely toplevel loads in windows, and
   // chrome generally knows what it's doing anyway.

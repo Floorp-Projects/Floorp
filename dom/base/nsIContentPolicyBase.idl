@@ -259,8 +259,9 @@ interface nsIContentPolicyBase : nsISupports
 
   /* When adding new content types, please update nsContentBlocker,
    * NS_CP_ContentTypeName, nsCSPContext, all nsIContentPolicy
-   * implementations, and other things that are not listed here that are
-   * related to nsIContentPolicy. */
+   * implementations, the static_assert in dom/cache/DBSchema.cpp,
+   * and other things that are not listed here that are related to
+   * nsIContentPolicy. */
 
   //////////////////////////////////////////////////////////////////////
 

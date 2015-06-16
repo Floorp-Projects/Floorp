@@ -66,6 +66,7 @@ MemoryStats.dump = function (testNumber,
 
     var mrm = MemoryStats._getService("@mozilla.org/memory-reporter-manager;1",
                                       "nsIMemoryReporterManager");
+    var statMessage = "";
     for (var stat in MemoryStats._hasMemoryStatistics) {
         var supported = MemoryStats._hasMemoryStatistics[stat];
         var firstAccess = false;
@@ -80,10 +81,14 @@ MemoryStats.dump = function (testNumber,
             MemoryStats._hasMemoryStatistics[stat] = supported;
         }
         if (supported == MEM_STAT_SUPPORTED) {
-            info("MEMORY STAT " + stat + " after test: " + mrm[stat]);
+            var sizeInMB = Math.round(mrm[stat] / (1024 * 1024));
+            statMessage += " | " + stat + " " + sizeInMB + "MB";
         } else if (firstAccess) {
             info("MEMORY STAT " + stat + " not supported in this build configuration.");
         }
+    }
+    if (statMessage.length > 0) {
+        info("MEMORY STAT" + statMessage);
     }
 
     if (dumpAboutMemory) {
