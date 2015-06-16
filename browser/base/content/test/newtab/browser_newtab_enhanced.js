@@ -8,7 +8,7 @@ let suggestedLink = {
   imageURI: "data:image/png;base64,helloWORLD3",
   title: "title2",
   type: "affiliate",
-  frecent_sites: ["classroom.google.com", "codecademy.com", "elearning.ut.ac.id", "khanacademy.org", "learn.jquery.com", "teamtreehouse.com", "tutorialspoint.com", "udacity.com", "w3cschool.cc", "w3schools.com"]
+  frecent_sites: ["classroom.google.com", "codeacademy.org", "codecademy.com", "codeschool.com", "codeyear.com", "elearning.ut.ac.id", "how-to-build-websites.com", "htmlcodetutorial.com", "htmldog.com", "htmlplayground.com", "learn.jquery.com", "quackit.com", "roseindia.net", "teamtreehouse.com", "tizag.com", "tutorialspoint.com", "udacity.com", "w3schools.com", "webdevelopersnotes.com"]
 };
 
 gDirectorySource = "data:application/json," + JSON.stringify({
@@ -139,7 +139,7 @@ function runTests() {
   is(type, "affiliate", "suggested link is affiliate");
   is(enhanced, "", "suggested link has no enhanced image");
   is(title, "title2");
-  ok(suggested.indexOf("Suggested for <strong> Web Education </strong> visitors") > -1, "Suggested for 'Web Education'");
+  ok(suggested.indexOf("Suggested for <strong> webdev education </strong> visitors") > -1, "Suggested for 'webdev education'");
 
   // Enhanced history link shows up second
   ({type, enhanced, title, suggested} = getData(1));
@@ -176,7 +176,7 @@ function runTests() {
   ok(suggested.indexOf("Suggested for <strong> Technology </strong> enthusiasts who visit sites like <strong> classroom.google.com </strong>") > -1, "Suggested for 'Technology' enthusiasts");
 
 
-    // Test server provided explanation string without category override.
+  // Test server provided explanation string without category override.
   delete suggestedLink.adgroup_name;
   Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE,
     "data:application/json," + encodeURIComponent(JSON.stringify({"suggested": [suggestedLink]})));
@@ -185,5 +185,31 @@ function runTests() {
   yield addNewTabPageTab();
   ({type, enhanced, title, suggested} = getData(0));
   Cu.reportError("SUGGEST " + suggested);
-  ok(suggested.indexOf("Suggested for <strong> Web Education </strong> enthusiasts who visit sites like <strong> classroom.google.com </strong>") > -1, "Suggested for 'Web Education' enthusiasts");
+  ok(suggested.indexOf("Suggested for <strong> webdev education </strong> enthusiasts who visit sites like <strong> classroom.google.com </strong>") > -1, "Suggested for 'webdev education' enthusiasts");
+
+
+
+  // Test with xml entities in category name
+  suggestedLink.url = "http://example1.com/3";
+  suggestedLink.adgroup_name = ">angles< & \"quotes\'";
+  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE,
+    "data:application/json," + encodeURIComponent(JSON.stringify({"suggested": [suggestedLink]})));
+  yield watchLinksChangeOnce().then(TestRunner.next);
+
+  yield addNewTabPageTab();
+  ({type, enhanced, title, suggested} = getData(0));
+  Cu.reportError("SUGGEST " + suggested);
+  ok(suggested.indexOf("Suggested for <strong> &gt;angles&lt; &amp; \"quotes\' </strong> enthusiasts who visit sites like <strong> classroom.google.com </strong>") > -1, "Suggested for 'xml entities' enthusiasts");
+
+
+  // Test with xml entities in explanation.
+  suggestedLink.explanation = "Testing junk explanation &<>\"'";
+  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE,
+    "data:application/json," + encodeURIComponent(JSON.stringify({"suggested": [suggestedLink]})));
+  yield watchLinksChangeOnce().then(TestRunner.next);
+
+  yield addNewTabPageTab();
+  ({type, enhanced, title, suggested} = getData(0));
+  Cu.reportError("SUGGEST " + suggested);
+  ok(suggested.indexOf("Testing junk explanation &amp;&lt;&gt;\"'") > -1, "Junk test");
 }
