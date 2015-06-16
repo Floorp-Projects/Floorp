@@ -283,14 +283,11 @@ public:
 
   ~Mirror()
   {
-    if (mImpl->OwnerThread()->IsCurrentThreadIn()) {
-      mImpl->DisconnectIfConnected();
-    } else {
-      // If holder destruction happens on a thread other than the mirror's
-      // owner thread, manual disconnection is mandatory. We should make this
-      // more automatic by hooking it up to task queue shutdown.
-      MOZ_DIAGNOSTIC_ASSERT(!mImpl->IsConnected());
-    }
+    // As a member of complex objects, a Mirror<T> may be destroyed on a
+    // different thread than its owner, or late in shutdown during CC. Given
+    // that, we require manual disconnection so that callers can put things in
+    // the right place.
+    MOZ_DIAGNOSTIC_ASSERT(!mImpl->IsConnected());
   }
 
 private:
