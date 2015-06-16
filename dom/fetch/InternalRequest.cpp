@@ -152,14 +152,8 @@ InternalRequest::MapContentPolicyTypeToRequestContext(nsContentPolicyType aConte
   case nsIContentPolicy::TYPE_FONT:
     context = RequestContext::Font;
     break;
-  case nsIContentPolicy::TYPE_INTERNAL_AUDIO:
+  case nsIContentPolicy::TYPE_MEDIA:
     context = RequestContext::Audio;
-    break;
-  case nsIContentPolicy::TYPE_INTERNAL_VIDEO:
-    context = RequestContext::Video;
-    break;
-  case nsIContentPolicy::TYPE_INTERNAL_TRACK:
-    context = RequestContext::Track;
     break;
   case nsIContentPolicy::TYPE_WEBSOCKET:
     context = RequestContext::Internal;
