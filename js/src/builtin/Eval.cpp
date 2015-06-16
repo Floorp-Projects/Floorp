@@ -502,14 +502,9 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
         Debugger::onNewScript(cx, script);
     }
 
-    RootedObject scope(cx, JS_NewPlainObject(cx));
+    Rooted<GlobalObject*> globalRoot(cx, &global->as<GlobalObject>());
+    Rooted<ScopeObject*> scope(cx, NonSyntacticVariablesObject::create(cx, globalRoot));
     if (!scope)
-        return false;
-
-    if (!scope->setQualifiedVarObj(cx))
-        return false;
-
-    if (!scope->setUnqualifiedVarObj(cx))
         return false;
 
     JSObject* thisobj = GetThisObject(cx, global);
@@ -518,8 +513,6 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
 
     RootedValue thisv(cx, ObjectValue(*thisobj));
     RootedValue rval(cx);
-    // XXXbz when this is fixed to pass in an actual ScopeObject, fix
-    // up the assert in js::CloneFunctionObject accordingly.
     if (!ExecuteKernel(cx, script, *scope, thisv, UndefinedValue(), EXECUTE_GLOBAL,
                        NullFramePtr() /* evalInFrame */, rval.address()))
     {
