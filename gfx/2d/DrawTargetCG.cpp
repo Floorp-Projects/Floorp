@@ -1315,11 +1315,7 @@ DrawTargetCG::ClearRect(const Rect &aRect)
 
   MarkChanged();
 
-  CGContextSaveGState(mCg);
-
   CGContextClearRect(mCg, RectToCGRect(aRect));
-
-  CGContextRestoreGState(mCg);
 }
 
 void
