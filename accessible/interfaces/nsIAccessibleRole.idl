@@ -8,7 +8,7 @@
 /**
  * Defines cross platform (Gecko) roles.
  */
-[scriptable, uuid(94add87a-190c-443e-9549-d11131affb2a)]
+[scriptable, uuid(da0c7824-147c-11e5-917c-60a44c717042)]
 interface nsIAccessibleRole : nsISupports
 {
   /**
@@ -921,63 +921,48 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_MATHML_ERROR = 157;
 
   /**
-   * A MathML semantics annotation element (semantics in MathML).
-   */
-  const unsigned long ROLE_MATHML_SEMANTICS = 158;
-
-  /**
-   * A MathML annotation (annotation in MathML).
-   */
-  const unsigned long ROLE_MATHML_ANNOTATION = 159;
-
-  /**
-   * A MathML XML annotation (annotation-xml in MathML).
-   */
-  const unsigned long ROLE_MATHML_XML_ANNOTATION = 160;
-
-  /**
    * A MathML stacked (rows of numbers) element (mstack in MathML).
    */
-  const unsigned long ROLE_MATHML_STACK = 161;
+  const unsigned long ROLE_MATHML_STACK = 158;
 
   /**
    * A MathML long division element (mlongdiv in MathML).
    */
-  const unsigned long ROLE_MATHML_LONG_DIVISION = 162;
+  const unsigned long ROLE_MATHML_LONG_DIVISION = 159;
 
   /**
    * A MathML stack group (msgroup in MathML).
    */
-  const unsigned long ROLE_MATHML_STACK_GROUP = 163;
+  const unsigned long ROLE_MATHML_STACK_GROUP = 160;
 
   /**
    * A MathML stack row (msrow in MathML).
    */
-  const unsigned long ROLE_MATHML_STACK_ROW = 164;
+  const unsigned long ROLE_MATHML_STACK_ROW = 161;
 
   /**
    * MathML carries, borrows, or crossouts for a row (mscarries in MathML).
    */
-  const unsigned long ROLE_MATHML_STACK_CARRIES = 165;
+  const unsigned long ROLE_MATHML_STACK_CARRIES = 162;
 
   /**
    * A MathML carry, borrow, or crossout for a column (mscarry in MathML).
    */
-  const unsigned long ROLE_MATHML_STACK_CARRY = 166;
+  const unsigned long ROLE_MATHML_STACK_CARRY = 163;
 
   /**
    * A MathML line in a stack (msline in MathML).
    */
-  const unsigned long ROLE_MATHML_STACK_LINE = 167;
+  const unsigned long ROLE_MATHML_STACK_LINE = 164;
 
   /**
    * A group containing radio buttons
    */
-  const unsigned long ROLE_RADIO_GROUP = 168;
+  const unsigned long ROLE_RADIO_GROUP = 165;
 
   /**
    * A text container exposing brief amount of information. See related
    * TEXT_CONTAINER role.
    */
-  const unsigned long ROLE_TEXT = 169;
+  const unsigned long ROLE_TEXT = 166;
 };
