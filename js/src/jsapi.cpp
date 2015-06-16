@@ -4138,11 +4138,8 @@ CompileFunction(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
                   HasNonSyntacticStaticScopeChain(enclosingStaticScope));
 
     CompileOptions options(cx, optionsArg);
-    if (!frontend::CompileFunctionBody(cx, fun, options, formals, srcBuf,
-                                       enclosingStaticScope))
-    {
+    if (!frontend::CompileFunctionBody(cx, fun, options, formals, srcBuf, enclosingStaticScope))
         return false;
-    }
 
     return true;
 }
