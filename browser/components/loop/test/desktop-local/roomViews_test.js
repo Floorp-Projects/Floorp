@@ -439,7 +439,7 @@ describe("loop.roomViews", function () {
     });
 
     describe("#componentWillUpdate", function() {
-      function expectActionDispatched(view) {
+      function expectActionDispatched(component) {
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           sinon.match.instanceOf(sharedActions.SetupStreamElements));
@@ -448,21 +448,21 @@ describe("loop.roomViews", function () {
       it("should dispatch a `SetupStreamElements` action when the MEDIA_WAIT state " +
         "is entered", function() {
           activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
-          var view = mountTestComponent();
+          var component = mountTestComponent();
 
           activeRoomStore.setStoreState({roomState: ROOM_STATES.MEDIA_WAIT});
 
-          expectActionDispatched(view);
+          expectActionDispatched(component);
         });
 
       it("should dispatch a `SetupStreamElements` action on MEDIA_WAIT state is " +
         "re-entered", function() {
           activeRoomStore.setStoreState({roomState: ROOM_STATES.ENDED});
-          var view = mountTestComponent();
+          var component = mountTestComponent();
 
           activeRoomStore.setStoreState({roomState: ROOM_STATES.MEDIA_WAIT});
 
-          expectActionDispatched(view);
+          expectActionDispatched(component);
         });
     });
 

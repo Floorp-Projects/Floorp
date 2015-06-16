@@ -471,7 +471,7 @@ describe("loop.shared.mixins", function() {
   });
 
   describe("loop.shared.mixins.RoomsAudioMixin", function() {
-    var view, fakeAudioMixin, TestComp, comp;
+    var view, fakeAudioMixin, comp;
 
     function createTestComponent(initialState) {
       var TestComp = React.createClass({

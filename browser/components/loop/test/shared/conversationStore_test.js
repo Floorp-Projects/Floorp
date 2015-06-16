@@ -730,14 +730,14 @@ describe("loop.store.ConversationStore", function () {
   });
 
   describe("#hangupCall", function() {
-    var wsMediaFailSpy, wsCloseSpy;
+    var wsMediaFailSpy, wsHangupSpy;
     beforeEach(function() {
       wsMediaFailSpy = sinon.spy();
-      wsCloseSpy = sinon.spy();
+      wsHangupSpy = sinon.spy();
 
       store._websocket = {
         mediaFail: wsMediaFailSpy,
-        close: wsCloseSpy
+        close: wsHangupSpy
       };
       store.setStoreState({callState: CALL_STATES.ONGOING});
       store.setStoreState({windowId: "42"});
@@ -758,7 +758,7 @@ describe("loop.store.ConversationStore", function () {
     it("should ensure the websocket is closed", function() {
       store.hangupCall(new sharedActions.HangupCall());
 
-      sinon.assert.calledOnce(wsCloseSpy);
+      sinon.assert.calledOnce(wsHangupSpy);
     });
 
     it("should set the callState to finished", function() {
@@ -777,14 +777,14 @@ describe("loop.store.ConversationStore", function () {
   });
 
   describe("#remotePeerDisconnected", function() {
-    var wsMediaFailSpy, wsCloseSpy;
+    var wsMediaFailSpy, wsDisconnectSpy;
     beforeEach(function() {
       wsMediaFailSpy = sinon.spy();
-      wsCloseSpy = sinon.spy();
+      wsDisconnectSpy = sinon.spy();
 
       store._websocket = {
         mediaFail: wsMediaFailSpy,
-        close: wsCloseSpy
+        close: wsDisconnectSpy
       };
       store.setStoreState({callState: CALL_STATES.ONGOING});
       store.setStoreState({windowId: "42"});
@@ -803,7 +803,7 @@ describe("loop.store.ConversationStore", function () {
         peerHungup: true
       }));
 
-      sinon.assert.calledOnce(wsCloseSpy);
+      sinon.assert.calledOnce(wsDisconnectSpy);
     });
 
     it("should release mozLoop callsData", function() {
@@ -1055,10 +1055,10 @@ describe("loop.store.ConversationStore", function () {
   });
 
   describe("#windowUnload", function() {
-    var fakeWebsocket;
+    var fakeWs;
 
     beforeEach(function() {
-      fakeWebsocket = store._websocket = {
+      fakeWs = store._websocket = {
         close: sinon.stub(),
         decline: sinon.stub()
       };
@@ -1074,7 +1074,7 @@ describe("loop.store.ConversationStore", function () {
 
       store.windowUnload();
 
-      sinon.assert.calledOnce(fakeWebsocket.decline);
+      sinon.assert.calledOnce(fakeWs.decline);
     });
 
     it("should disconnect the sdk session", function() {
@@ -1086,7 +1086,7 @@ describe("loop.store.ConversationStore", function () {
     it("should close the websocket", function() {
       store.windowUnload();
 
-      sinon.assert.calledOnce(fakeWebsocket.close);
+      sinon.assert.calledOnce(fakeWs.close);
     });
 
     it("should clear the call in progress for the backend", function() {
