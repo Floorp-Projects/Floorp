@@ -113,13 +113,13 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
     }
   }
 
-  if (aOperator == CompositionOp::OP_SOURCE) {
-    // OP_SOURCE is unbounded in Azure, and we really don't want that behaviour here.
-    // We also can't do a ClearRect+FillRect since we need the drawing to happen
-    // as an atomic operation (to prevent flickering).
-    aTarget->PushClipRect(gfx::Rect(fillRect.x, fillRect.y,
-                                    fillRect.width, fillRect.height));
-  }
+  // OP_SOURCE is unbounded in Azure, and we really don't want that behaviour here.
+  // We also can't do a ClearRect+FillRect since we need the drawing to happen
+  // as an atomic operation (to prevent flickering).
+  // We also need this clip in the case where we have a mask, since the mask surface
+  // might cover more than fillRect, but we only want to touch the pixels inside
+  // fillRect.
+  aTarget->PushClipRect(gfx::ToRect(fillRect));
 
   if (aMask) {
     Matrix oldTransform = aTarget->GetTransform();
@@ -155,9 +155,7 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
                          DrawOptions(aOpacity, aOperator));
   }
 
-  if (aOperator == CompositionOp::OP_SOURCE) {
-    aTarget->PopClip();
-  }
+  aTarget->PopClip();
 }
 
 void

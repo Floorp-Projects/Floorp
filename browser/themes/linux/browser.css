@@ -680,17 +680,17 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 #back-button {
-  margin-top: 3px;
-  margin-bottom: 3px;
-  -moz-margin-start: 5px;
-  padding: 0;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 0;
   position: relative;
   z-index: 1;
-  border-radius: 10000px;
+  border-radius: 0 10000px 10000px 0;
 }
 
-#back-button:not(:-moz-lwtheme) {
-  background-color: -moz-dialog;
+#back-button:-moz-locale-dir(rtl) {
+  border-radius: 10000px 0 0 10000px;
 }
 
 #back-button > menupopup {
@@ -894,17 +894,13 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 @conditionalForwardWithUrlbar@ {
-  clip-path: url("chrome://browser/content/browser.xul#urlbar-clip-path");
-  -moz-margin-start: -5px;
-}
-
-@conditionalForwardWithUrlbar@:-moz-lwtheme {
   clip-path: url("chrome://browser/content/browser.xul#urlbar-back-button-clip-path");
+  -moz-margin-start: -5px;
 }
 
 @conditionalForwardWithUrlbar@:-moz-locale-dir(rtl),
 @conditionalForwardWithUrlbar@ > #urlbar:-moz-locale-dir(rtl) {
-  /* Let clip-path clip the urlbar-wrapper's right side for RTL. */
+  /* let urlbar-back-button-clip-path clip the urlbar's right side for RTL */
   transform: scaleX(-1);
 }
 

@@ -233,7 +233,7 @@ ReportError(JSContext* cx, const char* message, JSErrorReport* reportp,
          * The AutoJSAPI error reporter only allows warnings to be reported so
          * just ignore this error rather than try to report it.
          */
-        if (cx->options().autoJSAPIOwnsErrorReporting())
+        if (cx->options().autoJSAPIOwnsErrorReporting() && !JSREPORT_IS_WARNING(reportp->flags))
             return;
     }
 
@@ -253,9 +253,9 @@ PopulateReportBlame(JSContext* cx, JSErrorReport* report)
 {
     /*
      * Walk stack until we find a frame that is associated with a non-builtin
-     * rather than a builtin frame.
+     * rather than a builtin frame and which we're allowed to know about.
      */
-    NonBuiltinFrameIter iter(cx);
+    NonBuiltinFrameIter iter(cx, cx->compartment()->principals());
     if (iter.done())
         return;
 

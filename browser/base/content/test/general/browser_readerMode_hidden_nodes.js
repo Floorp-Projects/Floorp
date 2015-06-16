@@ -36,10 +36,19 @@ add_task(function* test_reader_button() {
   is_element_hidden(readerButton, "Reader mode button is not present on a new tab");
   // Point tab to a test page that is not reader-able due to hidden nodes.
   let url = TEST_PATH + "readerModeArticleHiddenNodes.html";
-  yield promiseTabLoadEvent(tab, url);
-  yield ContentTask.spawn(tab.linkedBrowser, "", function() {
-    return ContentTaskUtils.waitForEvent(content, "MozAfterPaint");
+  let paintPromise = ContentTask.spawn(tab.linkedBrowser, "", function() {
+    return new Promise(resolve => {
+      addEventListener("DOMContentLoaded", function onDCL() {
+        removeEventListener("DOMContentLoaded", onDCL);
+        addEventListener("MozAfterPaint", function onPaint() {
+          removeEventListener("MozAfterPaint", onPaint);
+          resolve();
+        });
+      });
+    });
   });
+  tab.linkedBrowser.loadURI(url);
+  yield paintPromise;
 
   is_element_hidden(readerButton, "Reader mode button is still not present on tab with unreadable content.");
 });

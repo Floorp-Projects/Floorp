@@ -579,9 +579,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
         is(e[name], undefined, name + " property censored after suspicious replacement");
       }
       testProperty('message', x => x == 'some message', 'some other message', 42);
-      testProperty('fileName', x => /xul/.test(x), 'otherFilename.html', new iwin.Object());
-      testProperty('columnNumber', x => x > 5 && x < 100, 99, 99.5);
-      testProperty('lineNumber', x => x > 100 && x < 10000, 50, 'foo');
+      testProperty('fileName', x => x == '', 'otherFilename.html', new iwin.Object());
+      testProperty('columnNumber', x => x == 1, 99, 99.5);
+      testProperty('lineNumber', x => x == 0, 50, 'foo');
 
       // Note - an Exception newed via Xrays is going to have an empty stack given the
       // current semantics and implementation. This tests the current behavior, but that

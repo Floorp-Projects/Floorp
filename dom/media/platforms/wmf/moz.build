@@ -5,13 +5,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
+    'DXVA2Manager.h',
     'MFTDecoder.h',
+    'WMF.h',
     'WMFAudioMFTManager.h',
     'WMFDecoderModule.h',
     'WMFMediaDataDecoder.h',
+    'WMFUtils.h',
     'WMFVideoMFTManager.h',
 ]
 UNIFIED_SOURCES += [
+    'DXVA2Manager.cpp',
     'MFTDecoder.cpp',
     'WMFAudioMFTManager.cpp',
     'WMFDecoderModule.cpp',
@@ -19,7 +23,16 @@ UNIFIED_SOURCES += [
     'WMFVideoMFTManager.cpp',
 ]
 
+SOURCES += [
+    'WMFUtils.cpp',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    DEFINES['NOMINMAX'] = True
 
 FAIL_ON_WARNINGS = True
 

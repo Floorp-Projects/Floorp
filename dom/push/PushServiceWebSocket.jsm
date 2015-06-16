@@ -951,24 +951,22 @@ this.PushServiceWebSocket = {
     }
 
     if (action == "register") {
-      record.channelID = this._generateID();
-    }
-    var data = {channelID: record.channelID,
-                messageType: action};
+      let data = {channelID: this._generateID(),
+                  messageType: action};
 
-    var p = new Promise((resolve, reject) => {
-      this._pendingRequests[data.channelID] = {record: record,
-                                               resolve: resolve,
-                                               reject: reject,
-                                               ctime: Date.now()
-                                              };
-      this._queueRequest(data);
-    });
-    if (action == "unregister") {
-      return Promise.resolve();
-    } else {
-      return p;
+      return new Promise((resolve, reject) => {
+        this._pendingRequests[data.channelID] = {record: record,
+                                                 resolve: resolve,
+                                                 reject: reject,
+                                                 ctime: Date.now()
+                                                };
+        this._queueRequest(data);
+      });
     }
+
+    this._queueRequest({channelID: record.channelID,
+                        messageType: action});
+    return Promise.resolve();
   },
 
   _queueStart: Promise.resolve(),
@@ -986,13 +984,11 @@ this.PushServiceWebSocket = {
 
   _send(data) {
     if (this._currentState == STATE_READY) {
-      if (data.messageType == "ack") {
+      if (data.messageType != "register" ||
+        typeof this._pendingRequests[data.channelID] == "object") {
+
+        // check if request has not been cancelled
         this._wsSendMessage(data);
-      } else {
-        // check if request has not been canelled
-        if (typeof this._pendingRequests[data.channelID] == "object") {
-          this._wsSendMessage(data);
-        }
       }
     }
   },

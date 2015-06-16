@@ -2,37 +2,35 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let temp = {}
-Cu.import("resource:///modules/devtools/gDevTools.jsm", temp);
-let DevTools = temp.DevTools;
+"use strict";
 
-Cu.import("resource://gre/modules/devtools/Loader.jsm", temp);
-let devtools = temp.devtools;
-
-let Toolbox = devtools.Toolbox;
-
+let {SIDE, BOTTOM, WINDOW} = devtools.Toolbox.HostType;
 let toolbox, target;
 
-function test()
-{
-  gBrowser.selectedTab = gBrowser.addTab();
-  target = TargetFactory.forTab(gBrowser.selectedTab);
+const URL = "data:text/html;charset=utf8,test for opening toolbox in different hosts";
 
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
-    gDevTools.showToolbox(target)
-             .then(testBottomHost, console.error)
-             .then(null, console.error);
-  }, true);
+add_task(function* runTest() {
+  info("Create a test tab and open the toolbox");
+  let tab = yield addTab(URL);
+  target = TargetFactory.forTab(tab);
+  toolbox = yield gDevTools.showToolbox(target, "webconsole");
 
-  content.location = "data:text/html,test for opening toolbox in different hosts";
-}
+  yield testBottomHost();
+  yield testSidebarHost();
+  yield testWindowHost();
+  yield testToolSelect();
+  yield testDestroy();
+  yield testRememberHost();
+  yield testPreviousHost();
 
-function testBottomHost(aToolbox)
-{
-  toolbox = aToolbox;
+  yield toolbox.destroy();
 
-  checkHostType(Toolbox.HostType.BOTTOM);
+  toolbox = target = null;
+  gBrowser.removeCurrentTab();
+});
+
+function* testBottomHost() {
+  checkHostType(toolbox, BOTTOM);
 
   // test UI presence
   let nbox = gBrowser.getNotificationBox();
@@ -40,13 +38,11 @@ function testBottomHost(aToolbox)
   ok(iframe, "toolbox bottom iframe exists");
 
   checkToolboxLoaded(iframe);
-
-  toolbox.switchHost(Toolbox.HostType.SIDE).then(testSidebarHost);
 }
 
-function testSidebarHost()
-{
-  checkHostType(Toolbox.HostType.SIDE);
+function* testSidebarHost() {
+  yield toolbox.switchHost(SIDE);
+  checkHostType(toolbox, SIDE);
 
   // test UI presence
   let nbox = gBrowser.getNotificationBox();
@@ -57,13 +53,11 @@ function testSidebarHost()
   ok(iframe, "toolbox side iframe exists");
 
   checkToolboxLoaded(iframe);
-
-  toolbox.switchHost(Toolbox.HostType.WINDOW).then(testWindowHost);
 }
 
-function testWindowHost()
-{
-  checkHostType(Toolbox.HostType.WINDOW);
+function* testWindowHost() {
+  yield toolbox.switchHost(WINDOW);
+  checkHostType(toolbox, WINDOW);
 
   let nbox = gBrowser.getNotificationBox();
   let sidebar = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-side-iframe");
@@ -74,57 +68,70 @@ function testWindowHost()
 
   let iframe = win.document.getElementById("toolbox-iframe");
   checkToolboxLoaded(iframe);
-
-  testToolSelect();
 }
 
-function testToolSelect()
-{
+function* testToolSelect() {
   // make sure we can load a tool after switching hosts
-  toolbox.selectTool("inspector").then(testDestroy);
+  yield toolbox.selectTool("inspector");
 }
 
-function testDestroy()
-{
-  toolbox.destroy().then(function() {
-    target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.showToolbox(target).then(testRememberHost);
-  });
+function* testDestroy() {
+  yield toolbox.destroy();
+  target = TargetFactory.forTab(gBrowser.selectedTab);
+  toolbox = yield gDevTools.showToolbox(target);
 }
 
-function testRememberHost(aToolbox)
-{
-  toolbox = aToolbox;
+function* testRememberHost() {
   // last host was the window - make sure it's the same when re-opening
-  is(toolbox.hostType, Toolbox.HostType.WINDOW, "host remembered");
+  is(toolbox.hostType, WINDOW, "host remembered");
 
   let win = Services.wm.getMostRecentWindow("devtools:toolbox");
   ok(win, "toolbox separate window exists");
-
-  cleanup();
 }
 
-function checkHostType(hostType)
-{
-  is(toolbox.hostType, hostType, "host type is " + hostType);
+function* testPreviousHost() {
+  // last host was the window - make sure it's the same when re-opening
+  is(toolbox.hostType, WINDOW, "host remembered");
 
-  let pref = Services.prefs.getCharPref("devtools.toolbox.host");
-  is(pref, hostType, "host pref is " + hostType);
+  info("Switching to side");
+  yield toolbox.switchHost(SIDE);
+  checkHostType(toolbox, SIDE, WINDOW);
+
+  info("Switching to bottom");
+  yield toolbox.switchHost(BOTTOM);
+  checkHostType(toolbox, BOTTOM, SIDE);
+
+  info("Switching from bottom to side");
+  yield toolbox.switchToPreviousHost();
+  checkHostType(toolbox, SIDE, BOTTOM);
+
+  info("Switching from side to bottom");
+  yield toolbox.switchToPreviousHost();
+  checkHostType(toolbox, BOTTOM, SIDE);
+
+  info("Switching to window");
+  yield toolbox.switchHost(WINDOW);
+  checkHostType(toolbox, WINDOW, BOTTOM);
+
+  info("Switching from window to bottom");
+  yield toolbox.switchToPreviousHost();
+  checkHostType(toolbox, BOTTOM, WINDOW);
+
+  info("Forcing the previous host to match the current (bottom)")
+  Services.prefs.setCharPref("devtools.toolbox.previousHost", BOTTOM);
+
+  info("Switching from bottom to side (since previous=current=bottom");
+  yield toolbox.switchToPreviousHost();
+  checkHostType(toolbox, SIDE, BOTTOM);
+
+  info("Forcing the previous host to match the current (side)")
+  Services.prefs.setCharPref("devtools.toolbox.previousHost", SIDE);
+  info("Switching from side to bottom (since previous=current=side");
+  yield toolbox.switchToPreviousHost();
+  checkHostType(toolbox, BOTTOM, SIDE);
 }
 
-function checkToolboxLoaded(iframe)
-{
+function checkToolboxLoaded(iframe) {
   let tabs = iframe.contentDocument.getElementById("toolbox-tabs");
   ok(tabs, "toolbox UI has been loaded into iframe");
 }
-
-function cleanup()
-{
-  Services.prefs.setCharPref("devtools.toolbox.host", Toolbox.HostType.BOTTOM);
-
-  toolbox.destroy().then(function() {
-    DevTools = Toolbox = toolbox = target = null;
-    gBrowser.removeCurrentTab();
-    finish();
-  });
- }

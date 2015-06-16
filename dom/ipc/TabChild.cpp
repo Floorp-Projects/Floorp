@@ -423,6 +423,7 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
                defaultZoom <= viewportInfo.GetMaxZoom());
     metrics.SetZoom(CSSToParentLayerScale2D(ConvertScaleForRoot(defaultZoom)));
 
+    metrics.SetPresShellId(presShellId);
     metrics.SetScrollId(viewId);
   }
 
@@ -561,13 +562,9 @@ TabChildBase::UpdateFrameHandler(const FrameMetrics& aFrameMetrics)
   } else {
     // aFrameMetrics.mIsRoot is false, so we are trying to update a subframe.
     // This requires special handling.
-    nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(
-                                      aFrameMetrics.GetScrollId());
-    if (content) {
-      FrameMetrics newSubFrameMetrics(aFrameMetrics);
-      APZCCallbackHelper::UpdateSubFrame(content, newSubFrameMetrics);
-      return true;
-    }
+    FrameMetrics newSubFrameMetrics(aFrameMetrics);
+    APZCCallbackHelper::UpdateSubFrame(newSubFrameMetrics);
+    return true;
   }
   return true;
 }
@@ -580,9 +577,7 @@ TabChildBase::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
     }
 
     FrameMetrics newMetrics = aFrameMetrics;
-    if (nsCOMPtr<nsIPresShell> presShell = GetPresShell()) {
-      APZCCallbackHelper::UpdateRootFrame(presShell, newMetrics);
-    }
+    APZCCallbackHelper::UpdateRootFrame(newMetrics);
 
     CSSSize cssCompositedSize = newMetrics.CalculateCompositedSizeInCssPixels();
     // The BrowserElementScrolling helper must know about these updated metrics

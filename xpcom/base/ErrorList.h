@@ -527,6 +527,12 @@
    * the second assignment throws NS_SUCCESS_DOM_NO_OPERATION.
    */
   ERROR(NS_SUCCESS_DOM_NO_OPERATION,               SUCCESS(1)),
+
+  /*
+   * A success code that indicates that evaluating a string of JS went
+   * just fine except it threw an exception.
+   */
+  ERROR(NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW,    SUCCESS(2)),
 #undef MODULE
 
 
