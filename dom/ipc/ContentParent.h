@@ -554,7 +554,8 @@ private:
                                                InfallibleTArray<nsString>* dictionaries,
                                                ClipboardCapabilities* clipboardCaps,
                                                DomainPolicyClone* domainPolicy,
-                                               OwningSerializedStructuredCloneBuffer* initialData) override;
+                                               OwningSerializedStructuredCloneBuffer* initialData,
+                                               bool* aIsSafeMode) override;
 
     virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) override;
 

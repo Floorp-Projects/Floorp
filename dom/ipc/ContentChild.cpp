@@ -68,6 +68,7 @@
 #include "mozilla/unused.h"
 
 #include "mozInlineSpellChecker.h"
+#include "nsAppRunner.h"
 #include "nsIConsoleListener.h"
 #include "nsICycleCollectorListener.h"
 #include "nsIDragService.h"
@@ -800,16 +801,22 @@ ContentChild::InitXPCOM()
 
     bool isOffline, isLangRTL;
     bool isConnected;
+    bool isSafeMode;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
     OwningSerializedStructuredCloneBuffer initialData;
 
     SendGetXPCOMProcessAttributes(&isOffline, &isConnected,
                                   &isLangRTL, &mAvailableDictionaries,
-                                  &clipboardCaps, &domainPolicy, &initialData);
+                                  &clipboardCaps, &domainPolicy, &initialData,
+                                  &isSafeMode);
     RecvSetOffline(isOffline);
     RecvSetConnectivity(isConnected);
     RecvBidiKeyboardNotify(isLangRTL);
+
+    if (isSafeMode) {
+      mozilla::startup::SetSafeMode();
+    }
 
     // Create the CPOW manager as soon as possible.
     SendPJavaScriptConstructor();
