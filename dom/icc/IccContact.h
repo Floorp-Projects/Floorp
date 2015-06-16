@@ -22,6 +22,13 @@ public:
   Create(mozContact& aMozContact,
          nsIIccContact** aIccContact);
 
+  static nsresult
+  Create(const nsAString& aId,
+         const nsTArray<nsString>& aNames,
+         const nsTArray<nsString>& aNumbers,
+         const nsTArray<nsString>& aEmails,
+         nsIIccContact** aIccContact);
+
 private:
   IccContact(const nsAString& aId,
              const nsTArray<nsString>& aNames,

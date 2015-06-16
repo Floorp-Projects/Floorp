@@ -69,6 +69,24 @@ IccContact::Create(mozContact& aMozContact, nsIIccContact** aIccContact)
   return NS_OK;
 }
 
+/*static*/ nsresult
+IccContact::Create(const nsAString& aId,
+                   const nsTArray<nsString>& aNames,
+                   const nsTArray<nsString>& aNumbers,
+                   const nsTArray<nsString>& aEmails,
+                   nsIIccContact** aIccContact)
+{
+  *aIccContact = nullptr;
+
+  nsCOMPtr<nsIIccContact> iccContact = new IccContact(aId,
+                                                      aNames,
+                                                      aNumbers,
+                                                      aEmails);
+  iccContact.forget(aIccContact);
+
+  return NS_OK;
+}
+
 IccContact::IccContact(const nsAString& aId,
                        const nsTArray<nsString>& aNames,
                        const nsTArray<nsString>& aNumbers,
