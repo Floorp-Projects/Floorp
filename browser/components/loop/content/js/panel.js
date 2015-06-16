@@ -765,20 +765,19 @@ loop.panel = (function(_, mozL10n) {
         hide: !hostname ||
           !this.props.mozLoop.getLoopPref("contextInConversations.enabled")
       });
-      var thumbnail = this.state.previewImage || "loop/shared/img/icons-16x16.svg#globe";
 
       return (
         React.createElement("div", {className: "new-room-view"}, 
           React.createElement("div", {className: contextClasses}, 
             React.createElement(Checkbox, {label: mozL10n.get("context_inroom_label"), 
                       onChange: this.onCheckboxChange}), 
-            React.createElement("div", {className: "context-content"}, 
-              React.createElement("img", {className: "context-preview", src: thumbnail}), 
-              React.createElement("span", {className: "context-description"}, 
-                this.state.description, 
-                React.createElement("span", {className: "context-url"}, hostname)
-              )
-            )
+            React.createElement(sharedViews.ContextUrlView, {
+              allowClick: false, 
+              description: this.state.description, 
+              showContextTitle: false, 
+              thumbnail: this.state.previewImage, 
+              url: this.state.url, 
+              useDesktopPaths: true})
           ), 
           React.createElement("button", {className: "btn btn-info new-room-button", 
                   onClick: this.handleCreateButtonClick, 

@@ -5,8 +5,9 @@
 var loop = loop || {};
 loop.shared = loop.shared || {};
 loop.shared.views = loop.shared.views || {};
-loop.shared.views.TextChatView = (function(mozl10n) {
+loop.shared.views.TextChatView = (function(mozL10n) {
   var sharedActions = loop.shared.actions;
+  var sharedViews = loop.shared.views;
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES;
   var CHAT_CONTENT_TYPES = loop.store.CHAT_CONTENT_TYPES;
 
@@ -32,7 +33,7 @@ loop.shared.views.TextChatView = (function(mozl10n) {
 
       return (
         React.createElement("div", {className: classes}, 
-          React.createElement("span", null, this.props.message)
+          React.createElement("p", null, this.props.message)
         )
       );
     }
@@ -47,6 +48,7 @@ loop.shared.views.TextChatView = (function(mozl10n) {
     mixins: [React.addons.PureRenderMixin],
 
     propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       messageList: React.PropTypes.array.isRequired
     },
 
@@ -79,6 +81,23 @@ loop.shared.views.TextChatView = (function(mozl10n) {
           React.createElement("div", {className: "text-chat-scroller"}, 
             
               this.props.messageList.map(function(entry, i) {
+                if (entry.type === CHAT_MESSAGE_TYPES.SPECIAL &&
+                    entry.contentType === CHAT_CONTENT_TYPES.CONTEXT) {
+                  return (
+                    React.createElement("div", {className: "context-url-view-wrapper"}, 
+                      React.createElement(sharedViews.ContextUrlView, {
+                        allowClick: true, 
+                        description: entry.message, 
+                        dispatcher: this.props.dispatcher, 
+                        key: i, 
+                        showContextTitle: true, 
+                        thumbnail: entry.extraData.thumbnail, 
+                        url: entry.extraData.location, 
+                        useDesktopPaths: false})
+                    )
+                  );
+                }
+
                 return (
                   React.createElement(TextChatEntry, {key: i, 
                                  contentType: entry.contentType, 
@@ -157,7 +176,7 @@ loop.shared.views.TextChatView = (function(mozl10n) {
         React.createElement("div", {className: "text-chat-box"}, 
           React.createElement("form", {onSubmit: this.handleFormSubmit}, 
             React.createElement("input", {type: "text", 
-                   placeholder: this.props.showPlaceholder ? mozl10n.get("chat_textbox_placeholder") : "", 
+                   placeholder: this.props.showPlaceholder ? mozL10n.get("chat_textbox_placeholder") : "", 
                    onKeyDown: this.handleKeyDown, 
                    valueLink: this.linkState("messageDetail")})
           )
@@ -216,7 +235,9 @@ loop.shared.views.TextChatView = (function(mozl10n) {
 
       return (
         React.createElement("div", {className: "text-chat-view"}, 
-          React.createElement(TextChatEntriesView, {messageList: messageList}), 
+          React.createElement(TextChatEntriesView, {
+            dispatcher: this.props.dispatcher, 
+            messageList: messageList}), 
           React.createElement(TextChatInputView, {
             dispatcher: this.props.dispatcher, 
             showPlaceholder: !hasNonSpecialMessages, 

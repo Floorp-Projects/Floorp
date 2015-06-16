@@ -881,6 +881,13 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   background-image: url("../img/icons-16x16.svg#add-active");
 }
 
+.context-url-view-wrapper {
+  padding-left: 1em;
+  padding-right: 1em;
+  padding-bottom: 0.5em;
+  background-color: #E8F6FE;
+}
+
 .room-context {
   background: rgba(0,0,0,.6);
   border-top: 2px solid #444;
@@ -1252,23 +1259,27 @@ html[dir="rtl"] .room-context-btn-edit {
   margin-bottom: 1.5em;
 }
 
-.text-chat-entry > span {
+.text-chat-entry > p {
   border-width: 1px;
   border-style: solid;
   border-color: #0095dd;
   border-radius: 10000px;
   padding: .5em 1em;
+  /* Drop the default margins from the 'p' element. */
+  margin: 0;
+  /* inline-block stops the elements taking 100% of the text-chat-view width */
+  display: inline-block;
 }
 
 .text-chat-entry.received {
   text-align: start;
 }
 
-.text-chat-entry.received > span {
+.text-chat-entry.received > p {
   border-color: #d8d8d8;
 }
 
-.text-chat-entry.special > span {
+.text-chat-entry.special > p {
   border: none;
 }
 
@@ -1277,7 +1288,6 @@ html[dir="rtl"] .room-context-btn-edit {
   font-weight: bold;
   text-align: start;
   background-color: #E8F6FE;
-  padding-top: 1em;
   padding-bottom: 0;
   margin-bottom: 0;
 }
