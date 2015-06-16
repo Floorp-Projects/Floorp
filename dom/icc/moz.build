@@ -15,7 +15,8 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla.dom.icc += [
     'ipc/IccChild.h',
-    'ipc/IccParent.h',
+    'ipc/IccIPCUtils.h',
+    'ipc/IccParent.h'
 ]
 
 UNIFIED_SOURCES += [
@@ -29,6 +30,7 @@ UNIFIED_SOURCES += [
     'IccManager.cpp',
     'ipc/IccChild.cpp',
     'ipc/IccIPCService.cpp',
+    'ipc/IccIPCUtils.cpp',
     'ipc/IccParent.cpp',
 ]
 

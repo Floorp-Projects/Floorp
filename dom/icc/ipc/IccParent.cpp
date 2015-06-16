@@ -4,46 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/icc/IccIPCUtils.h"
 #include "mozilla/dom/icc/IccParent.h"
-#include "IccInfo.h"
 #include "nsIIccService.h"
 #include "nsIStkCmdFactory.h"
 #include "nsIStkProactiveCmd.h"
 
-
-using mozilla::dom::IccInfo;
-
 namespace mozilla {
 namespace dom {
 namespace icc {
-
-namespace {
-
-static void
-GetIccInfoDataFromIccInfo(nsIIccInfo* aInInfo, IccInfoData& aOutData) {
-  aInInfo->GetIccType(aOutData.iccType());
-  aInInfo->GetIccid(aOutData.iccid());
-  aInInfo->GetMcc(aOutData.mcc());
-  aInInfo->GetMnc(aOutData.mnc());
-  aInInfo->GetSpn(aOutData.spn());
-  aInInfo->GetIsDisplayNetworkNameRequired(
-    &aOutData.isDisplayNetworkNameRequired());
-  aInInfo->GetIsDisplaySpnRequired(
-    &aOutData.isDisplaySpnRequired());
-
-  nsCOMPtr<nsIGsmIccInfo> gsmIccInfo(do_QueryInterface(aInInfo));
-  if (gsmIccInfo) {
-    gsmIccInfo->GetMsisdn(aOutData.phoneNumber());
-  }
-
-  nsCOMPtr<nsICdmaIccInfo> cdmaIccInfo(do_QueryInterface(aInInfo));
-  if (cdmaIccInfo) {
-    cdmaIccInfo->GetMdn(aOutData.phoneNumber());
-    cdmaIccInfo->GetPrlVersion(&aOutData.prlVersion());
-  }
-}
-
-} // namespace
 
 /**
  * PIccParent Implementation.
@@ -89,7 +58,7 @@ IccParent::RecvInit(OptionalIccInfoData* aInfoData,
 
   if (iccInfo) {
     IccInfoData data;
-    GetIccInfoDataFromIccInfo(iccInfo, data);
+    IccIPCUtils::GetIccInfoDataFromIccInfo(iccInfo, data);
     *aInfoData = OptionalIccInfoData(data);
 
     return true;
@@ -209,6 +178,10 @@ IccParent::RecvPIccRequestConstructor(PIccRequestParent* aActor,
       return actor->DoRequest(aRequest.get_MatchMvnoRequest());
     case IccRequest::TGetServiceStateEnabledRequest:
       return actor->DoRequest(aRequest.get_GetServiceStateEnabledRequest());
+    case IccRequest::TReadContactsRequest:
+      return actor->DoRequest(aRequest.get_ReadContactsRequest());
+    case IccRequest::TUpdateContactRequest:
+      return actor->DoRequest(aRequest.get_UpdateContactRequest());
     default:
       MOZ_CRASH("Received invalid request type!");
   }
@@ -269,7 +242,7 @@ IccParent::NotifyIccInfoChanged()
   }
 
   IccInfoData data;
-  GetIccInfoDataFromIccInfo(iccInfo, data);
+  IccIPCUtils::GetIccInfoDataFromIccInfo(iccInfo, data);
 
   return SendNotifyIccInfoChanged(OptionalIccInfoData(data))
     ? NS_OK : NS_ERROR_FAILURE;
@@ -347,6 +320,30 @@ IccRequestParent::DoRequest(const GetServiceStateEnabledRequest& aRequest)
                                                    this));
 }
 
+bool
+IccRequestParent::DoRequest(const ReadContactsRequest& aRequest)
+{
+  return NS_SUCCEEDED(mIcc->ReadContacts(aRequest.contactType(),
+                                         this));
+}
+
+bool
+IccRequestParent::DoRequest(const UpdateContactRequest& aRequest)
+{
+  nsCOMPtr<nsIIccContact> contact;
+  nsresult rv = IccContact::Create(aRequest.contact().id(),
+                                   aRequest.contact().names(),
+                                   aRequest.contact().numbers(),
+                                   aRequest.contact().emails(),
+                                   getter_AddRefs(contact));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return NS_SUCCEEDED(mIcc->UpdateContact(aRequest.contactType(),
+                                          contact,
+                                          aRequest.pin2(),
+                                          this));
+}
+
 nsresult
 IccRequestParent::SendReply(const IccReply& aReply)
 {
@@ -390,6 +387,36 @@ IccRequestParent::NotifyCardLockError(const nsAString & aErrorMsg,
                                       int32_t aRetryCount)
 {
   return SendReply(IccReplyCardLockError(aRetryCount, nsAutoString(aErrorMsg)));
+}
+
+NS_IMETHODIMP
+IccRequestParent::NotifyRetrievedIccContacts(nsIIccContact** aContacts,
+                                             unsigned int aCount)
+{
+  nsTArray<IccContactData> contacts;
+
+  for (uint32_t i = 0; i < aCount; i++) {
+    MOZ_ASSERT(aContacts[i]);
+
+    IccContactData contactData;
+
+    IccIPCUtils::GetIccContactDataFromIccContact(aContacts[i], contactData);
+    contacts.AppendElement(contactData);
+  }
+
+  return SendReply(IccReplyReadContacts(contacts));
+}
+
+NS_IMETHODIMP
+IccRequestParent::NotifyUpdatedIccContact(nsIIccContact* aContact)
+{
+  MOZ_ASSERT(aContact);
+
+  IccContactData contactData;
+
+  IccIPCUtils::GetIccContactDataFromIccContact(aContact, contactData);
+
+  return SendReply(IccReplyUpdateContact(contactData));
 }
 
 } // namespace icc
