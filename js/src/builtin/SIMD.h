@@ -59,15 +59,12 @@
   V(store2, (Store<Float32x4, 2>), 3)                                                 \
   V(store1, (Store<Float32x4, 1>), 3)                                                 \
   V(sub, (BinaryFunc<Float32x4, Sub, Float32x4>), 2)                                  \
-  V(withX, (FuncWith<Float32x4, WithX>), 2)                                           \
-  V(withY, (FuncWith<Float32x4, WithY>), 2)                                           \
-  V(withZ, (FuncWith<Float32x4, WithZ>), 2)                                           \
-  V(withW, (FuncWith<Float32x4, WithW>), 2)                                           \
   V(xor, (CoercedBinaryFunc<Float32x4, Int32x4, Xor, Float32x4>), 2)
 
 #define FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                            \
   V(bitselect, BitSelect<Float32x4>, 3)                                               \
   V(clamp, Clamp<Float32x4>, 3)                                                       \
+  V(replaceLane, (ReplaceLane<Float32x4>), 3)                                         \
   V(select, Select<Float32x4>, 3)
 
 #define FLOAT32X4_SHUFFLE_FUNCTION_LIST(V)                                            \
@@ -111,13 +108,12 @@
   V(notEqual, (CompareFunc<Float64x2, NotEqual>), 2)                                  \
   V(store,  (Store<Float64x2, 2>), 3)                                                 \
   V(store1, (Store<Float64x2, 1>), 3)                                                 \
-  V(sub, (BinaryFunc<Float64x2, Sub, Float64x2>), 2)                                  \
-  V(withX, (FuncWith<Float64x2, WithX>), 2)                                           \
-  V(withY, (FuncWith<Float64x2, WithY>), 2)
+  V(sub, (BinaryFunc<Float64x2, Sub, Float64x2>), 2)
 
 #define FLOAT64X2_TERNARY_FUNCTION_LIST(V)                                            \
   V(bitselect, BitSelect<Float64x2>, 3)                                               \
   V(clamp, Clamp<Float64x2>, 3)                                                       \
+  V(replaceLane, (ReplaceLane<Float64x2>), 3)                                         \
   V(select, Select<Float64x2>, 3)
 
 #define FLOAT64X2_SHUFFLE_FUNCTION_LIST(V)                                            \
@@ -163,14 +159,11 @@
   V(store3, (Store<Int32x4, 3>), 3)                                                   \
   V(store2, (Store<Int32x4, 2>), 3)                                                   \
   V(store1, (Store<Int32x4, 1>), 3)                                                   \
-  V(withX, (FuncWith<Int32x4, WithX>), 2)                                             \
-  V(withY, (FuncWith<Int32x4, WithY>), 2)                                             \
-  V(withZ, (FuncWith<Int32x4, WithZ>), 2)                                             \
-  V(withW, (FuncWith<Int32x4, WithW>), 2)                                             \
   V(xor, (BinaryFunc<Int32x4, Xor, Int32x4>), 2)
 
 #define INT32X4_TERNARY_FUNCTION_LIST(V)                                              \
   V(bitselect, BitSelect<Int32x4>, 3)                                                 \
+  V(replaceLane, (ReplaceLane<Int32x4>), 3)                                           \
   V(select, Select<Int32x4>, 3)
 
 #define INT32X4_QUARTERNARY_FUNCTION_LIST(V)                                          \
@@ -226,16 +219,11 @@
     _(notEqual)                      \
     _(greaterThan)                   \
     _(greaterThanOrEqual)
-#define WITH_COMMONX4_SIMD_OP(_)     \
-    _(withX)                         \
-    _(withY)                         \
-    _(withZ)                         \
-    _(withW)
 // TODO: remove when all SIMD calls are inlined (bug 1112155)
 #define ION_COMMONX4_SIMD_OP(_)      \
     ARITH_COMMONX4_SIMD_OP(_)        \
     BITWISE_COMMONX4_SIMD_OP(_)      \
-    WITH_COMMONX4_SIMD_OP(_)         \
+    _(replaceLane)                   \
     _(bitselect)                     \
     _(select)                        \
     _(splat)                         \
