@@ -22,7 +22,8 @@
 #define BEHAVIOR_NOFOREIGN 3
 
 // From nsIContentPolicy
-static const char *kTypeString[] = {"other",
+static const char *kTypeString[] = {
+                                    "other",
                                     "script",
                                     "image",
                                     "stylesheet",
@@ -43,7 +44,18 @@ static const char *kTypeString[] = {"other",
                                     "beacon",
                                     "fetch",
                                     "imageset",
-                                    "manifest"};
+                                    "manifest",
+                                    "", // TYPE_INTERNAL_SCRIPT
+                                    "", // TYPE_INTERNAL_WORKER
+                                    "", // TYPE_INTERNAL_SHARED_WORKER
+                                    "", // TYPE_INTERNAL_EMBED
+                                    "", // TYPE_INTERNAL_OBJECT
+                                    "", // TYPE_INTERNAL_FRAME
+                                    "", // TYPE_INTERNAL_IFRAME
+                                    "", // TYPE_INTERNAL_AUDIO
+                                    "", // TYPE_INTERNAL_VIDEO
+                                    ""  // TYPE_INTERNAL_TRACK
+};
 
 #define NUMBER_OF_TYPES MOZ_ARRAY_LENGTH(kTypeString)
 uint8_t nsContentBlocker::mBehaviorPref[NUMBER_OF_TYPES];
@@ -119,7 +131,8 @@ nsContentBlocker::PrefChanged(nsIPrefBranch *aPrefBranch,
 #define PREF_CHANGED(_P) (!aPref || !strcmp(aPref, _P))
 
   for(uint32_t i = 0; i < NUMBER_OF_TYPES; ++i) {
-    if (PREF_CHANGED(kTypeString[i]) &&
+    if (*kTypeString[i] &&
+        PREF_CHANGED(kTypeString[i]) &&
         NS_SUCCEEDED(aPrefBranch->GetIntPref(kTypeString[i], &val)))
       mBehaviorPref[i] = LIMIT(val, 1, 3, 1);
   }
@@ -237,6 +250,13 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
                                  bool *aFromPrefs)
 {
   *aFromPrefs = false;
+
+  if (!*kTypeString[aContentType - 1]) {
+    // Disallow internal content policy types, they should not be used here.
+    *aPermission = false;
+    return NS_OK;
+  }
+
   // This default will also get used if there is an unknown value in the
   // permission list, or if the permission manager returns unknown values.
   *aPermission = true;

@@ -79,13 +79,6 @@ public:
     return mRequest->Context();
   }
 
-  // [ChromeOnly]
-  void
-  SetContext(RequestContext aContext)
-  {
-    mRequest->SetContext(aContext);
-  }
-
   void
   SetContentPolicyType(nsContentPolicyType aContentPolicyType)
   {

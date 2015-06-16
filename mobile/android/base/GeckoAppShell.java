@@ -100,6 +100,7 @@ import android.os.Message;
 import android.os.MessageQueue;
 import android.os.SystemClock;
 import android.os.Vibrator;
+import android.provider.Browser;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -960,11 +961,24 @@ public class GeckoAppShell
         return getHandlersForIntent(intent);
     }
 
+    static List<ResolveInfo> queryIntentActivities(Intent intent) {
+        final PackageManager pm = getContext().getPackageManager();
+
+        // Exclude any non-exported activities: we can't open them even if we want to!
+        // Bug 1031569 has some details.
+        final ArrayList<ResolveInfo> list = new ArrayList<>();
+        for (ResolveInfo ri: pm.queryIntentActivities(intent, 0)) {
+            if (ri.activityInfo.exported) {
+                list.add(ri);
+            }
+        }
+
+        return list;
+    }
+
     static boolean hasHandlersForIntent(Intent intent) {
         try {
-            PackageManager pm = getContext().getPackageManager();
-            List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
-            return !list.isEmpty();
+            return !queryIntentActivities(intent).isEmpty();
         } catch (Exception ex) {
             Log.e(LOGTAG, "Exception in GeckoAppShell.hasHandlersForIntent");
             return false;
@@ -972,11 +986,12 @@ public class GeckoAppShell
     }
 
     static String[] getHandlersForIntent(Intent intent) {
+        final PackageManager pm = getContext().getPackageManager();
         try {
-            PackageManager pm = getContext().getPackageManager();
-            List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
+            final List<ResolveInfo> list = queryIntentActivities(intent);
+
             int numAttr = 4;
-            String[] ret = new String[list.size() * numAttr];
+            final String[] ret = new String[list.size() * numAttr];
             for (int i = 0; i < list.size(); i++) {
                 ResolveInfo resolveInfo = list.get(i);
                 ret[i * numAttr] = resolveInfo.loadLabel(pm).toString();
@@ -1097,6 +1112,10 @@ public class GeckoAppShell
             context.startActivity(intent);
             return true;
         } catch (ActivityNotFoundException e) {
+            Log.w(LOGTAG, "Activity not found.", e);
+            return false;
+        } catch (SecurityException e) {
+            Log.w(LOGTAG, "Forbidden to launch activity.", e);
             return false;
         }
     }
@@ -1173,6 +1192,26 @@ public class GeckoAppShell
                                    final String action,
                                    final String title) {
 
+        // The resultant chooser can return non-exported activities in 4.1 and earlier.
+        // https://code.google.com/p/android/issues/detail?id=29535
+        final Intent intent = getOpenURIIntentInner(context, targetURI, mimeType, action, title);
+
+        if (intent != null) {
+            // Only handle applications which can accept arbitrary data from a browser.
+            intent.addCategory(Intent.CATEGORY_BROWSABLE);
+
+            // Some applications use this field to return to the same browser after processing the
+            // Intent. While there is some danger (e.g. denial of service), other major browsers already
+            // use it and so it's the norm.
+            intent.putExtra(Browser.EXTRA_APPLICATION_ID, GeckoApp.class.getPackage().getName());
+        }
+
+        return intent;
+    }
+
+    private static Intent getOpenURIIntentInner(final Context context,  final String targetURI,
+            final String mimeType, final String action, final String title) {
+
         if (action.equalsIgnoreCase(Intent.ACTION_SEND)) {
             Intent shareIntent = getShareIntent(context, targetURI, mimeType, title);
             return Intent.createChooser(shareIntent,
@@ -1199,9 +1238,6 @@ public class GeckoAppShell
                 Log.e(LOGTAG, "Unable to parse URI - " + e);
                 return null;
             }
-
-            // Only handle applications which can accept arbitrary data from a browser.
-            intent.addCategory(Intent.CATEGORY_BROWSABLE);
 
             // Prevent site from explicitly opening our internal activities, which can leak data.
             intent.setComponent(null);

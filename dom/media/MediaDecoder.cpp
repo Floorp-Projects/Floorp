@@ -10,6 +10,7 @@
 #include <limits>
 #include "nsIObserver.h"
 #include "nsTArray.h"
+#include "CubebUtils.h"
 #include "VideoUtils.h"
 #include "MediaDecoderStateMachine.h"
 #include "ImageContainer.h"
@@ -27,10 +28,6 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/VideoTrack.h"
 #include "mozilla/dom/VideoTrackList.h"
-
-#ifdef MOZ_WMF
-#include "WMFDecoder.h"
-#endif
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -404,6 +401,11 @@ bool MediaDecoder::Init(MediaDecoderOwner* aOwner)
   mOwner = aOwner;
   mVideoFrameContainer = aOwner->GetVideoFrameContainer();
   MediaShutdownManager::Instance().Register(this);
+  // We don't use the cubeb context yet, but need to ensure it is created on
+  // the main thread.
+  if (!CubebUtils::GetCubebContext()) {
+    NS_WARNING("Audio backend initialization failed.");
+  }
   return true;
 }
 
@@ -1506,14 +1508,6 @@ bool
 MediaDecoder::IsAndroidMediaEnabled()
 {
   return Preferences::GetBool("media.plugins.enabled");
-}
-#endif
-
-#ifdef MOZ_WMF
-bool
-MediaDecoder::IsWMFEnabled()
-{
-  return WMFDecoder::IsEnabled();
 }
 #endif
 
