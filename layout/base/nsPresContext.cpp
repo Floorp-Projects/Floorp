@@ -67,6 +67,7 @@
 #include "mozilla/Preferences.h"
 #include "gfxTextRun.h"
 #include "nsFontFaceUtils.h"
+#include "nsLayoutStylesheetCache.h"
 
 #if defined(MOZ_WIDGET_GTK)
 #include "gfxPlatformGtk.h" // xxx - for UseFcFontList
@@ -929,6 +930,12 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
     mPrefChangedTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (!mPrefChangedTimer)
       return;
+    // We will end up calling InvalidatePreferenceSheets one from each pres
+    // context, but all it's doing is clearing its cached sheet pointers,
+    // so it won't be wastefully recreating the sheet multiple times.
+    // The first pres context that has its mPrefChangedTimer called will
+    // be the one to cause the reconstruction of the pref style sheet.
+    nsLayoutStylesheetCache::InvalidatePreferenceSheets();
     mPrefChangedTimer->InitWithFuncCallback(nsPresContext::PrefChangedUpdateTimerCallback, (void*)this, 0, nsITimer::TYPE_ONE_SHOT);
   }
   if (prefName.EqualsLiteral("nglayout.debug.paint_flashing") ||
@@ -953,7 +960,7 @@ nsPresContext::UpdateAfterPreferencesChanged()
 
   // update the presShell: tell it to set the preference style rules up
   if (mShell) {
-    mShell->SetPreferenceStyleRules(true);
+    mShell->UpdatePreferenceStyles();
   }
 
   InvalidatePaintedLayers();

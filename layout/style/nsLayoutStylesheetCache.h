@@ -50,6 +50,10 @@ class nsLayoutStylesheetCache final
   static mozilla::CSSStyleSheet* CounterStylesSheet();
   static mozilla::CSSStyleSheet* NoScriptSheet();
   static mozilla::CSSStyleSheet* NoFramesSheet();
+  static mozilla::CSSStyleSheet* ChromePreferenceSheet(nsPresContext* aPresContext);
+  static mozilla::CSSStyleSheet* ContentPreferenceSheet(nsPresContext* aPresContext);
+
+  static void InvalidatePreferenceSheets();
 
   static void Shutdown();
 
@@ -71,9 +75,17 @@ private:
                         bool aEnableUnsafeRules);
   static void InvalidateSheet(nsRefPtr<mozilla::CSSStyleSheet>& aSheet);
   static void DependentPrefChanged(const char* aPref, void* aData);
+  void BuildPreferenceSheet(nsRefPtr<mozilla::CSSStyleSheet>& aSheet,
+                            nsPresContext* aPresContext);
+  static void AppendPreferenceRule(mozilla::CSSStyleSheet* aSheet,
+                                   const nsAString& aRule);
+  static void AppendPreferenceColorRule(mozilla::CSSStyleSheet* aSheet,
+                                        const char* aString, nscolor aColor);
 
   static mozilla::StaticRefPtr<nsLayoutStylesheetCache> gStyleCache;
   static mozilla::css::Loader* gCSSLoader;
+  nsRefPtr<mozilla::CSSStyleSheet> mChromePreferenceSheet;
+  nsRefPtr<mozilla::CSSStyleSheet> mContentPreferenceSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mCounterStylesSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mFormsSheet;
   nsRefPtr<mozilla::CSSStyleSheet> mFullScreenOverrideSheet;
