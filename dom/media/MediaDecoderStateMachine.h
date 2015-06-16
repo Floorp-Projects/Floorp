@@ -271,7 +271,16 @@ public:
     return 0;
   }
 
-  void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
+private:
+  void NotifyDataArrived(uint32_t aLength, int64_t aOffset);
+public:
+  void DispatchNotifyDataArrived(uint32_t aLength, int64_t aOffset)
+  {
+    RefPtr<nsRunnable> r =
+      NS_NewRunnableMethodWithArgs<uint32_t, int64_t>(this, &MediaDecoderStateMachine::NotifyDataArrived, aLength, aOffset);
+    TaskQueue()->Dispatch(r.forget());
+    mReader->DispatchNotifyDataArrived(aLength, aOffset);
+  }
 
   // Returns the state machine task queue.
   MediaTaskQueue* TaskQueue() const { return mTaskQueue; }

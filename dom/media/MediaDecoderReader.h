@@ -239,9 +239,23 @@ public:
   virtual size_t SizeOfVideoQueueInFrames();
   virtual size_t SizeOfAudioQueueInFrames();
 
-  // Only used by WebMReader and MediaOmxReader for now, so stub here rather
-  // than in every reader than inherits from MediaDecoderReader.
-  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) {}
+protected:
+  virtual void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) { }
+  void NotifyDataArrived(uint32_t aLength, int64_t aOffset)
+  {
+    MOZ_ASSERT(OnTaskQueue());
+    NS_ENSURE_TRUE_VOID(!mShutdown);
+    NotifyDataArrivedInternal(aLength, aOffset);
+  }
+
+public:
+  void DispatchNotifyDataArrived(uint32_t aLength, int64_t aOffset)
+  {
+    RefPtr<nsRunnable> r =
+      NS_NewRunnableMethodWithArgs<uint32_t, int64_t>(this, &MediaDecoderReader::NotifyDataArrived, aLength, aOffset);
+    TaskQueue()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
+  }
+
   // Notify the reader that data from the resource was evicted (MediaSource only)
   virtual void NotifyDataRemoved() {}
   virtual int64_t GetEvictionOffset(double aTime) { return -1; }
