@@ -492,7 +492,16 @@ WebGLContext::GenerateWarning(const char* fmt, va_list ap)
 
     // no need to print to stderr, as JS_ReportWarning takes care of this for us.
 
-    AutoJSContext cx;
+    if (!mCanvasElement) {
+        return;
+    }
+
+    AutoJSAPI api;
+    if (!api.Init(mCanvasElement->OwnerDoc()->GetScopeObject())) {
+        return;
+    }
+
+    JSContext* cx = api.cx();
     JS_ReportWarning(cx, "WebGL: %s", buf);
     if (!ShouldGenerateWarnings()) {
         JS_ReportWarning(cx,

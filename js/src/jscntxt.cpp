@@ -253,9 +253,9 @@ PopulateReportBlame(JSContext* cx, JSErrorReport* report)
 {
     /*
      * Walk stack until we find a frame that is associated with a non-builtin
-     * rather than a builtin frame.
+     * rather than a builtin frame and which we're allowed to know about.
      */
-    NonBuiltinFrameIter iter(cx);
+    NonBuiltinFrameIter iter(cx, cx->compartment()->principals());
     if (iter.done())
         return;
 
