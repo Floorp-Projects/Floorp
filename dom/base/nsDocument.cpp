@@ -9765,26 +9765,8 @@ nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr,
 }
 
 void
-nsDocument::MaybePreconnect(nsIURI* aOrigURI, mozilla::CORSMode aCORSMode)
+nsDocument::MaybePreconnect(nsIURI* uri)
 {
-  nsCOMPtr<nsIURI> uri;
-  if (NS_FAILED(aOrigURI->Clone(getter_AddRefs(uri)))) {
-      return;
-  }
-
-  // The URI created here is used in 2 contexts. One is nsISpeculativeConnect
-  // which ignores the path and uses only the origin. The other is for the
-  // document mPreloadedPreconnects de-duplication hash. Anonymous vs
-  // non-Anonymous preconnects create different connections on the wire and
-  // therefore should not be considred duplicates of each other and we
-  // normalize the path before putting it in the hash to accomplish that.
-
-  if (aCORSMode == CORS_ANONYMOUS) {
-    uri->SetPath(NS_LITERAL_CSTRING("/anonymous"));
-  } else {
-    uri->SetPath(NS_LITERAL_CSTRING("/"));
-  }
-
   if (mPreloadedPreconnects.Contains(uri)) {
     return;
   }
@@ -9796,11 +9778,7 @@ nsDocument::MaybePreconnect(nsIURI* aOrigURI, mozilla::CORSMode aCORSMode)
     return;
   }
 
-  if (aCORSMode == CORS_ANONYMOUS) {
-    speculator->SpeculativeAnonymousConnect(uri, nullptr);
-  } else {
-    speculator->SpeculativeConnect(uri, nullptr);
-  }
+  speculator->SpeculativeConnect(uri, nullptr);
 }
 
 void

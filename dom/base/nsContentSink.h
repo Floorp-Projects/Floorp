@@ -151,7 +151,7 @@ protected:
   nsresult ProcessLink(const nsSubstring& aAnchor,
                        const nsSubstring& aHref, const nsSubstring& aRel,
                        const nsSubstring& aTitle, const nsSubstring& aType,
-                       const nsSubstring& aMedia, const nsSubstring& aCrossOrigin);
+                       const nsSubstring& aMedia);
 
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
                                     const nsSubstring& aHref,
@@ -225,7 +225,7 @@ public:
 
   // For Preconnect() aHref can either be the usual
   // URI format or of the form "//www.hostname.com" without a scheme.
-  void Preconnect(const nsAString& aHref, const nsAString& aCrossOrigin);
+  void Preconnect(const nsAString &aHref);
 
 protected:
   // Tries to scroll to the URI's named anchor. Once we've successfully
