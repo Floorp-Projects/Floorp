@@ -514,8 +514,9 @@ private:
   // Our array of "global" observers
   nsTObserverArray<nsCOMPtr<nsICSSLoaderObserver> > mObservers;
 
-  // the load data needs access to the document...
-  nsIDocument*      mDocument;  // the document we live for
+  // This reference is nulled by the Document in it's destructor through
+  // DropDocumentReference().
+  nsIDocument* MOZ_NON_OWNING_REF mDocument;  // the document we live for
 
 
   // Number of datas still waiting to be notified on if we're notifying on a

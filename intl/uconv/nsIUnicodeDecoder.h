@@ -103,10 +103,12 @@ public:
    * @param aSrcLength  [IN] the length of source data buffer
    * @param aDestLength [OUT] the needed size of the destination buffer
    * @return            NS_EXACT_LENGTH if an exact length was computed
+   *                    NS_ERROR_OUT_OF_MEMORY if OOM
    *                    NS_OK is all we have is an approximation
    */
-  NS_IMETHOD GetMaxLength(const char * aSrc, int32_t aSrcLength, 
-      int32_t * aDestLength) = 0;
+   MOZ_WARN_UNUSED_RESULT NS_IMETHOD GetMaxLength(const char* aSrc,
+                                                  int32_t aSrcLength,
+                                                  int32_t* aDestLength) = 0;
 
   /**
    * Resets the charset converter so it may be recycled for a completely 

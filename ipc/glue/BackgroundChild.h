@@ -15,6 +15,7 @@ class nsIIPCBackgroundChildCreateCallback;
 namespace mozilla {
 namespace dom {
 
+class BlobImpl;
 class ContentChild;
 class ContentParent;
 class PBlobChild;
@@ -66,6 +67,10 @@ public:
   static mozilla::dom::PBlobChild*
   GetOrCreateActorForBlob(PBackgroundChild* aBackgroundActor,
                           nsIDOMBlob* aBlob);
+
+  static mozilla::dom::PBlobChild*
+  GetOrCreateActorForBlobImpl(PBackgroundChild* aBackgroundActor,
+                              mozilla::dom::BlobImpl* aBlobImpl);
 
   // See above.
   static void

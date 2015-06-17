@@ -29,7 +29,7 @@
 #ifndef jit_arm_Simulator_arm_h
 #define jit_arm_Simulator_arm_h
 
-#ifdef JS_ARM_SIMULATOR
+#ifdef JS_SIMULATOR_ARM
 
 #include "jslock.h"
 
@@ -441,6 +441,6 @@ class Simulator
 } // namespace jit
 } // namespace js
 
-#endif /* JS_ARM_SIMULATOR */
+#endif /* JS_SIMULATOR_ARM */
 
 #endif /* jit_arm_Simulator_arm_h */

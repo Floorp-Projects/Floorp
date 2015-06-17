@@ -11,6 +11,7 @@
 #include "nsIComponentManager.h" 
 #include "nsIServiceManager.h"
 #include "nsIClipboard.h"
+#include "nsIFormControl.h"
 #include "nsISelection.h"
 #include "nsWidgetsCID.h"
 #include "nsXPCOM.h"

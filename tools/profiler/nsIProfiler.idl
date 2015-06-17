@@ -12,7 +12,7 @@ class nsCString;
 
 [ref] native StringArrayRef(const nsTArray<nsCString>);
 
-[scriptable, uuid(0f474ec5-b95c-45d9-a7c8-156da0e3fa25)]
+[scriptable, uuid(921e1223-b1ea-4906-bb26-a846e6b6835b)]
 interface nsIProfiler : nsISupports
 {
   void StartProfiler(in uint32_t aEntries, in double aInterval,
@@ -29,17 +29,17 @@ interface nsIProfiler : nsISupports
    * Returns the JSON string of the profile. If aSinceTime is passed, only
    * report samples taken at >= aSinceTime.
    */
-  string GetProfile([optional] in float aSinceTime);
+  string GetProfile([optional] in double aSinceTime);
 
   /*
    * Returns a JS object of the profile. If aSinceTime is passed, only report
    * samples taken at >= aSinceTime.
    */
   [implicit_jscontext]
-  jsval getProfileData([optional] in float aSinceTime);
+  jsval getProfileData([optional] in double aSinceTime);
 
   [implicit_jscontext]
-  nsISupports getProfileDataAsync([optional] in float aSinceTime);
+  nsISupports getProfileDataAsync([optional] in double aSinceTime);
 
   boolean IsActive();
   void GetFeatures(out uint32_t aCount, [retval, array, size_is(aCount)] out string aFeatures);
@@ -48,10 +48,11 @@ interface nsIProfiler : nsISupports
                      out uint32_t aGeneration);
 
   /**
-   * Returns the elapsed time, in milliseconds, since the last StartProfiler call.
-   * Returns 0 if there is no active sampler.
+   * Returns the elapsed time, in milliseconds, since the profiler's epoch.
+   * The epoch is guaranteed to be constant for the duration of the
+   * process, but is otherwise arbitrary.
    */
-  float getElapsedTime();
+  double getElapsedTime();
 
   /**
    * Returns a JSON string of an array of shared library objects.

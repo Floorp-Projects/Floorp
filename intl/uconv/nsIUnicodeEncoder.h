@@ -45,41 +45,6 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicharEncoder, NS_IUNICHARENCODER_IID)
 
-//
-// Malloc an Encoder (unicode -> charset) buffer if the
-// result won't fit in the static buffer
-//
-//    p = the buffer pointer   (char*)
-//    e = encoder              (nsIUnicodeEncoder*)
-//    s = string               (char16_t*)
-//    l = string length        (int32_t)
-//   sb = static buffer        (char[])
-//  sbl = static buffer length (uint32_t)
-//   al = actual buffer length (int32_t)
-//
-#define ENCODER_BUFFER_ALLOC_IF_NEEDED(p,e,s,l,sb,sbl,al) \
-  PR_BEGIN_MACRO                                          \
-    if (e                                                 \
-        && NS_SUCCEEDED((e)->GetMaxLength((s), (l), &(al)))\
-        && ((al) > (int32_t)(sbl))                        \
-        && (nullptr!=((p)=(char*)moz_xmalloc((al)+1)))    \
-        ) {                                               \
-    }                                                     \
-    else {                                                \
-      (p) = (char*)(sb);                                  \
-      (al) = (sbl);                                       \
-    }                                                     \
-  PR_END_MACRO 
-
-//
-// Free the Encoder buffer if it was allocated
-//
-#define ENCODER_BUFFER_FREE_IF_NEEDED(p,sb) \
-  PR_BEGIN_MACRO                            \
-    if ((p) != (char*)(sb))                 \
-      free(p);                              \
-  PR_END_MACRO 
-
 /**
  * Interface for a Converter from Unicode into a Charset.
  *
@@ -156,10 +121,12 @@ public:
    * @param aSrcLength  [IN] the length of source data buffer
    * @param aDestLength [OUT] the needed size of the destination buffer
    * @return            NS_OK_UENC_EXACTLENGTH if an exact length was computed
+   *                    NS_ERROR_OUT_OF_MEMORY if OOM
    *                    NS_OK if all we have is an approximation
    */
-  NS_IMETHOD GetMaxLength(const char16_t * aSrc, int32_t aSrcLength, 
-      int32_t * aDestLength) = 0;
+  MOZ_WARN_UNUSED_RESULT NS_IMETHOD GetMaxLength(const char16_t* aSrc,
+                                                 int32_t aSrcLength,
+                                                 int32_t* aDestLength) = 0;
 
   /**
    * Resets the charset converter so it may be recycled for a completely 

@@ -661,7 +661,7 @@ FuncCast(F* pf)
 static void*
 RedirectCall(void* fun, ABIFunctionType type)
 {
-#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
+#ifdef JS_SIMULATOR
     fun = Simulator::RedirectNativeFunction(fun, type);
 #endif
     return fun;

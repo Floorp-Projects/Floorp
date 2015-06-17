@@ -876,6 +876,9 @@ Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure(JNIEnv* jenv, jclass
 NS_EXPORT jdouble JNICALL
 Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime(JNIEnv *jenv, jclass jc)
 {
+  if (!profiler_is_active()) {
+    return 0.0;
+  }
   return profiler_time();
 }
 

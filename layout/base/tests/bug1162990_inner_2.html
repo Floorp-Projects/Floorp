@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1162990
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1162990</title>
+  <meta name="author" content="Maksim Lebedev" />
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    div#basket {
+      background: red;
+      padding: 10px;
+      margin: 10px;
+    }
+    div#target {
+      background: lightgreen;
+      padding: 10px;
+      margin: 10px;
+    }
+    div#child {
+      background: lightblue;
+      padding: 10px;
+      margin: 10px;
+    }
+    div#listener {
+      background: yellow;
+      padding: 10px;
+      margin: 10px;
+    }
+  </style>
+  <script type="application/javascript">
+    var basket;
+    var target;
+    var child;
+    var listener;
+
+    var test_basketLeave = 0;
+    var test_targetDown = 0;
+    var test_targetGotCapture = 0;
+    var test_targetLostCapture = 0;
+    var test_targetLeave = 0;
+    var test_childLeave = 0;
+    var test_listenerLeave = 0;
+
+    function basketLeaveHandler(event) {
+      logger("basket: " + event.type);
+      test_basketLeave++;
+    }
+    function targetDownHandler(event) {
+      logger("target: " + event.type);
+      target.setPointerCapture(event.pointerId);
+      test_targetDown++;
+    }
+    function targetGotHandler(event) {
+      logger("target: " + event.type);
+      test_targetGotCapture++;
+    }
+    function targetLostHandler(event) {
+      logger("target: " + event.type);
+      test_targetLostCapture++;
+    }
+    function targetLeaveHandler(event) {
+      logger("target: " + event.type);
+      test_targetLeave++;
+    }
+    function childLeaveHandler(event) {
+      logger("child: " + event.type);
+      test_childLeave++;
+    }
+    function listenerLeaveHandler(event) {
+      logger("listener: " + event.type);
+      test_listenerLeave++;
+    }
+
+    function prepareTest() {
+      parent.turnOnPointerEvents(executeTest);
+    }
+
+    function setEventHandlers() {
+      basket = document.getElementById("basket");
+      target = document.getElementById("target");
+      child = document.getElementById("child");
+      listener = document.getElementById("listener");
+
+      basket.addEventListener("pointerleave",       basketLeaveHandler,   false);
+      target.addEventListener("pointerdown",        targetDownHandler,    false);
+      target.addEventListener("gotpointercapture",  targetGotHandler,     false);
+      target.addEventListener("lostpointercapture", targetLostHandler,    false);
+      target.addEventListener("pointerleave",       targetLeaveHandler,   false);
+      child.addEventListener("pointerleave",        childLeaveHandler,    false);
+      listener.addEventListener("pointerleave",     listenerLeaveHandler, false);
+    }
+
+    function executeTest()
+    {
+      logger("executeTest");
+      setEventHandlers();
+      var rectTg = target.getBoundingClientRect();
+      var rectCd = child.getBoundingClientRect();
+      var rectLr = listener.getBoundingClientRect();
+      synthesizePointer(target,   rectTg.width/3, rectTg.height/7,  {type: "pointerdown"});
+      synthesizePointer(child,    rectCd.width/3, rectCd.height/2,  {type: "pointermove"});
+      synthesizePointer(listener, rectLr.width/3, rectLr.height/2,  {type: "pointermove"});
+      synthesizePointer(child,    rectCd.width/3, rectCd.height/2,  {type: "pointermove"});
+      synthesizePointer(target,   rectTg.width/3, rectTg.height/7,  {type: "pointermove"});
+      synthesizePointer(target,   rectTg.width/3, rectTg.height/7,  {type: "pointerup"});
+      synthesizePointer(target,   rectTg.width/3, rectTg.height/9,  {type: "pointermove"});
+      finishTest();
+    }
+
+    function finishTest() {
+      parent.is(test_basketLeave,       0, "Part2: basket should not receive pointerleave event after pointer capturing");
+      parent.is(test_targetDown,        1, "Part2: target should receive pointerdown event");
+      parent.is(test_targetGotCapture,  1, "Part2: target should receive gotpointercapture event");
+      parent.is(test_targetLostCapture, 1, "Part2: target should receive lostpointercapture event");
+      parent.is(test_targetLeave,       1, "Part2: target should receive pointerleave event");
+      parent.is(test_childLeave,        0, "Part2: child should not receive pointerleave event after pointer capturing");
+      parent.is(test_listenerLeave,     0, "Part2: listener should not receive pointerleave event after pointer capturing");
+      logger("finishTest");
+      parent.finishTest();
+    }
+
+    function logger(message) {
+      var log = document.getElementById('log');
+      log.innerHTML = message + "<br>" + log.innerHTML;
+    }
+  </script>
+</head>
+<body onload="prepareTest()">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1162990">Mozilla Bug 1162990 Test 2</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <div id="basket">div id=basket
+    <div id="target">div id=target
+      <div id="child">div id=child</div>
+    </div>
+  </div>
+  <div id="listener">div id=listener</div>
+  <pre id="log">
+  </pre>
+</body>
+</html>

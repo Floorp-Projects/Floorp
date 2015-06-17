@@ -41,7 +41,6 @@ nsPrintSettings::nsPrintSettings() :
   mPrintReversed(false),
   mPrintInColor(true),
   mOrientation(kPortraitOrientation),
-  mDownloadFonts(false),
   mNumCopies(1),
   mPrintToFile(false),
   mOutputFormat(kOutputFormatNative),
@@ -177,48 +176,6 @@ NS_IMETHODIMP nsPrintSettings::SetOrientation(int32_t aOrientation)
   return NS_OK;
 }
 
-/* attribute wstring colorspace; */
-NS_IMETHODIMP nsPrintSettings::GetColorspace(char16_t * *aColorspace)
-{
-  NS_ENSURE_ARG_POINTER(aColorspace);
-  if (!mColorspace.IsEmpty()) {
-    *aColorspace = ToNewUnicode(mColorspace);
-  } else {
-    *aColorspace = nullptr;
-  }
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetColorspace(const char16_t * aColorspace)
-{
-  if (aColorspace) {
-    mColorspace = aColorspace;
-  } else {
-    mColorspace.SetLength(0);
-  }
-  return NS_OK;
-}
-
-/* attribute wstring resolutionname; */
-NS_IMETHODIMP nsPrintSettings::GetResolutionName(char16_t * *aResolutionName)
-{
-  NS_ENSURE_ARG_POINTER(aResolutionName);
-  if (!mResolutionName.IsEmpty()) {
-    *aResolutionName = ToNewUnicode(mResolutionName);
-  } else {
-    *aResolutionName = nullptr;
-  }
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetResolutionName(const char16_t * aResolutionName)
-{
-  if (aResolutionName) {
-    mResolutionName = aResolutionName;
-  } else {
-    mResolutionName.SetLength(0);
-  }
-  return NS_OK;
-}
-
 /* attribute wstring resolution; */
 NS_IMETHODIMP nsPrintSettings::GetResolution(int32_t *aResolution)
 {
@@ -242,19 +199,6 @@ NS_IMETHODIMP nsPrintSettings::GetDuplex(int32_t *aDuplex)
 NS_IMETHODIMP nsPrintSettings::SetDuplex(const int32_t aDuplex)
 {
   mDuplex = aDuplex;
-  return NS_OK;
-}
-
-/* attribute boolean downloadFonts; */
-NS_IMETHODIMP nsPrintSettings::GetDownloadFonts(bool *aDownloadFonts)
-{
-  //NS_ENSURE_ARG_POINTER(aDownloadFonts);
-  *aDownloadFonts = mDownloadFonts;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetDownloadFonts(bool aDownloadFonts)
-{
-  mDownloadFonts = aDownloadFonts;
   return NS_OK;
 }
 
@@ -290,23 +234,6 @@ NS_IMETHODIMP nsPrintSettings::GetNumCopies(int32_t *aNumCopies)
 NS_IMETHODIMP nsPrintSettings::SetNumCopies(int32_t aNumCopies)
 {
   mNumCopies = aNumCopies;
-  return NS_OK;
-}
-
-/* attribute wstring printCommand; */
-NS_IMETHODIMP nsPrintSettings::GetPrintCommand(char16_t * *aPrintCommand)
-{
-  //NS_ENSURE_ARG_POINTER(aPrintCommand);
-  *aPrintCommand = ToNewUnicode(mPrintCommand);
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetPrintCommand(const char16_t * aPrintCommand)
-{
-  if (aPrintCommand) {
-    mPrintCommand = aPrintCommand;
-  } else {
-    mPrintCommand.SetLength(0);
-  }
   return NS_OK;
 }
 
@@ -901,27 +828,6 @@ NS_IMETHODIMP nsPrintSettings::SetPaperName(const char16_t * aPaperName)
   return NS_OK;
 }
 
-/* attribute wstring plexName; */
-NS_IMETHODIMP nsPrintSettings::GetPlexName(char16_t * *aPlexName)
-{
-  NS_ENSURE_ARG_POINTER(aPlexName);
-  if (!mPlexName.IsEmpty()) {
-    *aPlexName = ToNewUnicode(mPlexName);
-  } else {
-    *aPlexName = nullptr;
-  }
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetPlexName(const char16_t * aPlexName)
-{
-  if (aPlexName) {
-    mPlexName = aPlexName;
-  } else {
-    mPlexName.SetLength(0);
-  }
-  return NS_OK;
-}
-
 /* attribute boolean howToEnableFrameUI; */
 NS_IMETHODIMP nsPrintSettings::GetHowToEnableFrameUI(int16_t *aHowToEnableFrameUI)
 {
@@ -1174,7 +1080,6 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs)
   mShrinkToFit         = rhs.mShrinkToFit;
   mShowPrintProgress   = rhs.mShowPrintProgress;
   mPaperName           = rhs.mPaperName;
-  mPlexName            = rhs.mPlexName;
   mPaperSizeType       = rhs.mPaperSizeType;
   mPaperData           = rhs.mPaperData;
   mPaperWidth          = rhs.mPaperWidth;
@@ -1183,7 +1088,6 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs)
   mPrintReversed       = rhs.mPrintReversed;
   mPrintInColor        = rhs.mPrintInColor;
   mOrientation         = rhs.mOrientation;
-  mPrintCommand        = rhs.mPrintCommand;
   mNumCopies           = rhs.mNumCopies;
   mPrinter             = rhs.mPrinter;
   mPrintToFile         = rhs.mPrintToFile;

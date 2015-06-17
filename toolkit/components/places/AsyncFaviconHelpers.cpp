@@ -582,13 +582,23 @@ AsyncFetchAndSetIconFromNetwork::OnDataAvailable(nsIRequest* aRequest,
                                                  uint64_t aOffset,
                                                  uint32_t aCount)
 {
+  const size_t kMaxFaviconDownloadSize = 1 * 1024 * 1024;
+  if (mIcon.data.Length() + aCount > kMaxFaviconDownloadSize) {
+    mIcon.data.Truncate();
+    return NS_ERROR_FILE_TOO_BIG;
+  }
+
   nsAutoCString buffer;
   nsresult rv = NS_ConsumeStream(aInputStream, aCount, buffer);
   if (rv != NS_BASE_STREAM_WOULD_BLOCK && NS_FAILED(rv)) {
     return rv;
   }
 
-  mIcon.data.Append(buffer);
+  if (!mIcon.data.Append(buffer, fallible)) {
+    mIcon.data.Truncate();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   return NS_OK;
 }
 

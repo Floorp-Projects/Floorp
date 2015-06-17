@@ -101,8 +101,7 @@ ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
 inline bool
 ThrowMethodFailedWithDetails(JSContext* cx, ErrorResult& rv,
                              const char* ifaceName,
-                             const char* memberName,
-                             bool reportJSContentExceptions = false)
+                             const char* memberName)
 {
   if (rv.IsUncatchableException()) {
     // Nuke any existing exception on aCx, to make sure we're uncatchable.
@@ -116,11 +115,7 @@ ThrowMethodFailedWithDetails(JSContext* cx, ErrorResult& rv,
     return false;
   }
   if (rv.IsJSException()) {
-    if (reportJSContentExceptions) {
-      rv.ReportJSExceptionFromJSImplementation(cx);
-    } else {
-      rv.ReportJSException(cx);
-    }
+    rv.ReportJSException(cx);
     return false;
   }
   if (rv.IsNotEnoughArgsError()) {

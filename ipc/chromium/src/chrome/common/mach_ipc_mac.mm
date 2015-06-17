@@ -59,6 +59,21 @@ MachMessage::~MachMessage() {
   }
 }
 
+
+u_int32_t MachMessage::GetDataLength() {
+  return EndianU32_LtoN(GetDataPacket()->data_length);
+}
+
+  // The message ID may be used as a code identifying the type of message
+void MachMessage::SetMessageID(int32_t message_id) {
+  GetDataPacket()->id = EndianU32_NtoL(message_id);
+}
+
+int32_t MachMessage::GetMessageID() {
+  return EndianU32_LtoN(GetDataPacket()->id);
+}
+
+
 //==============================================================================
 // returns true if successful
 bool MachMessage::SetData(const void* data,
@@ -251,7 +266,7 @@ kern_return_t ReceivePort::WaitForMessage(MachReceiveMessage *out_message,
   out_message->Head()->msgh_id = 0;
 
   kern_return_t result = mach_msg(out_message->Head(),
-                                  MACH_RCV_MSG | MACH_RCV_TIMEOUT,
+                                  MACH_RCV_MSG | (timeout == MACH_MSG_TIMEOUT_NONE ? 0 : MACH_RCV_TIMEOUT),
                                   0,
                                   out_message->MaxSize(),
                                   port_,
@@ -260,6 +275,34 @@ kern_return_t ReceivePort::WaitForMessage(MachReceiveMessage *out_message,
 
   return result;
 }
+
+//==============================================================================
+// send a message to this port
+kern_return_t ReceivePort::SendMessageToSelf(MachSendMessage& message, mach_msg_timeout_t timeout) {
+  if (message.Head()->msgh_size == 0) {
+    NOTREACHED();
+    return KERN_INVALID_VALUE;    // just for safety -- never should occur
+  };
+
+  if (init_result_ != KERN_SUCCESS)
+    return init_result_;
+
+  message.Head()->msgh_remote_port = port_;
+  message.Head()->msgh_bits
+        = MACH_MSGH_BITS (MACH_MSG_TYPE_MAKE_SEND,
+                          MACH_MSG_TYPE_MAKE_SEND_ONCE);
+  kern_return_t result = mach_msg(message.Head(),
+                                  MACH_SEND_MSG | (timeout == MACH_MSG_TIMEOUT_NONE ? 0 : MACH_SEND_TIMEOUT),
+                                  message.Head()->msgh_size,
+                                  0,
+                                  MACH_PORT_NULL,
+                                  timeout,              // timeout in ms
+                                  MACH_PORT_NULL);
+
+  return result;
+
+}
+
 
 #pragma mark -
 
@@ -297,7 +340,7 @@ kern_return_t MachPortSender::SendMessage(MachSendMessage &message,
   message.Head()->msgh_remote_port = send_port_;
 
   kern_return_t result = mach_msg(message.Head(),
-                                  MACH_SEND_MSG | MACH_SEND_TIMEOUT,
+                                  MACH_SEND_MSG | (timeout == MACH_MSG_TIMEOUT_NONE ? 0 : MACH_SEND_TIMEOUT),
                                   message.Head()->msgh_size,
                                   0,
                                   MACH_PORT_NULL,

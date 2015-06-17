@@ -328,9 +328,8 @@ nsDiskCacheBindery::ActiveBindings()
     NS_ASSERTION(initialized, "nsDiskCacheBindery not initialized");
     if (!initialized) return false;
 
-    PLDHashTable::Iterator iter(&table);
-    while (iter.HasMoreEntries()) {
-        auto entry = static_cast<HashTableEntry*>(iter.NextEntry());
+    for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
+        auto entry = static_cast<HashTableEntry*>(iter.Get());
         nsDiskCacheBinding* binding = entry->mBinding;
         nsDiskCacheBinding* head = binding;
         do {
@@ -356,9 +355,8 @@ nsDiskCacheBindery::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 
     size_t size = 0;
 
-    PLDHashTable::Iterator iter(&table);
-    while (iter.HasMoreEntries()) {
-        auto entry = static_cast<HashTableEntry*>(iter.NextEntry());
+    for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
+        auto entry = static_cast<HashTableEntry*>(iter.Get());
         nsDiskCacheBinding* binding = entry->mBinding;
 
         nsDiskCacheBinding* head = binding;

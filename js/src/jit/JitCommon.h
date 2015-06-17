@@ -9,13 +9,13 @@
 
 // Various macros used by all JITs.
 
-#if defined(JS_ARM_SIMULATOR)
+#if defined(JS_SIMULATOR_ARM)
 #include "jit/arm/Simulator-arm.h"
-#elif defined(JS_MIPS_SIMULATOR)
+#elif defined(JS_SIMULATOR_MIPS)
 #include "jit/mips/Simulator-mips.h"
 #endif
 
-#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
+#if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS)
 // Call into cross-jitted code by following the ABI of the simulated architecture.
 #define CALL_GENERATED_CODE(entry, p0, p1, p2, p3, p4, p5, p6, p7)     \
     (js::jit::Simulator::Current()->call(                              \

@@ -266,7 +266,7 @@ function createScreenshotData(document, args) {
   }
   else if (args.selector) {
     const lh = new LayoutHelpers(window);
-    ({ top, left, width, height }) = lh.getRect(args.selector, window);
+    ({ top, left, width, height } = lh.getRect(args.selector, window));
   }
   else {
     left = window.scrollX;

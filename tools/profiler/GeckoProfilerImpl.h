@@ -144,19 +144,19 @@ void profiler_set_frame_number(int frameNumber)
 }
 
 static inline
-mozilla::UniquePtr<char[]> profiler_get_profile(float aSinceTime = 0)
+mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0)
 {
   return mozilla_sampler_get_profile(aSinceTime);
 }
 
 static inline
-JSObject* profiler_get_profile_jsobject(JSContext* aCx, float aSinceTime = 0)
+JSObject* profiler_get_profile_jsobject(JSContext* aCx, double aSinceTime = 0)
 {
   return mozilla_sampler_get_profile_data(aCx, aSinceTime);
 }
 
 static inline
-void profiler_get_profile_jsobject_async(float aSinceTime = 0,
+void profiler_get_profile_jsobject_async(double aSinceTime = 0,
                                          mozilla::dom::Promise* aPromise = 0)
 {
   mozilla_sampler_get_profile_data_async(aSinceTime, aPromise);

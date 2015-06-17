@@ -1280,30 +1280,6 @@ ROLE(MATHML_ERROR,
      IA2_ROLE_UNKNOWN,
      eNoNameRule)
 
-ROLE(MATHML_SEMANTICS,
-     "mathml semantics",
-     ATK_ROLE_UNKNOWN,
-     NSAccessibilityUnknownRole,
-     0,
-     IA2_ROLE_UNKNOWN,
-     eNoNameRule)
-
-ROLE(MATHML_ANNOTATION,
-     "mathml annotation",
-     ATK_ROLE_UNKNOWN,
-     NSAccessibilityUnknownRole,
-     0,
-     IA2_ROLE_UNKNOWN,
-     eNoNameRule)
-
-ROLE(MATHML_XML_ANNOTATION,
-     "mathml xml annotation",
-     ATK_ROLE_UNKNOWN,
-     NSAccessibilityUnknownRole,
-     0,
-     IA2_ROLE_UNKNOWN,
-     eNoNameRule)
-
 ROLE(MATHML_STACK,
      "mathml stack",
      ATK_ROLE_UNKNOWN,

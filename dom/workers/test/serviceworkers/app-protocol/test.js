@@ -18,7 +18,7 @@ function testFetchAppResource(aUrl,
                               aExpectedResponse,
                               aExpectedContentType) {
   return fetch(aUrl).then(res => {
-    ok(true, 'fetch should resolve');
+    ok(true, 'fetch should resolve for ' + aUrl);
     if (res.type == 'error') {
       ok(false, 'fetch failed');
     }

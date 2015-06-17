@@ -119,10 +119,14 @@ ProfilerFrontFacade.prototype = {
       interval: options.sampleFrequency ? (1000 / (options.sampleFrequency * 1000)) : void 0
     };
 
-    yield this.startProfiler(profilerOptions);
+    let startInfo = yield this.startProfiler(profilerOptions);
+    let startTime = 0;
+    if ('currentTime' in startInfo) {
+      startTime = startInfo.currentTime;
+    }
 
     this.emit("profiler-activated");
-    return { startTime: 0, position, generation, totalSize };
+    return { startTime, position, generation, totalSize };
   }),
 
   /**

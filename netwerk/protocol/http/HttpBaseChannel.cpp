@@ -1419,24 +1419,47 @@ HttpBaseChannel::SetRedirectionLimit(uint32_t value)
 nsresult
 HttpBaseChannel::OverrideSecurityInfo(nsISupports* aSecurityInfo)
 {
-  MOZ_RELEASE_ASSERT(!mSecurityInfo,
-                     "This can only be called when we don't have a security info object already");
+  MOZ_ASSERT(!mSecurityInfo,
+             "This can only be called when we don't have a security info object already");
   MOZ_RELEASE_ASSERT(aSecurityInfo,
                      "This can only be called with a valid security info object");
-  MOZ_RELEASE_ASSERT(ShouldIntercept(),
-                     "This can only be called on channels that can be intercepted");
+  MOZ_ASSERT(ShouldIntercept(),
+             "This can only be called on channels that can be intercepted");
+  if (mSecurityInfo) {
+    LOG(("HttpBaseChannel::OverrideSecurityInfo mSecurityInfo is null! "
+         "[this=%p]\n", this));
+    return NS_ERROR_UNEXPECTED;
+  }
+  if (!ShouldIntercept()) {
+    LOG(("HttpBaseChannel::OverrideSecurityInfo channel cannot be intercepted! "
+         "[this=%p]\n", this));
+    return NS_ERROR_UNEXPECTED;
+  }
+
   mSecurityInfo = aSecurityInfo;
   return NS_OK;
 }
 
-void
+nsresult
 HttpBaseChannel::OverrideURI(nsIURI* aRedirectedURI)
 {
-  MOZ_RELEASE_ASSERT(mLoadFlags & LOAD_REPLACE,
-                     "This can only happen if the LOAD_REPLACE flag is set");
-  MOZ_RELEASE_ASSERT(ShouldIntercept(),
-                     "This can only be called on channels that can be intercepted");
+  MOZ_ASSERT(mLoadFlags & LOAD_REPLACE,
+             "This can only happen if the LOAD_REPLACE flag is set");
+  MOZ_ASSERT(ShouldIntercept(),
+             "This can only be called on channels that can be intercepted");
+  if (!(mLoadFlags & LOAD_REPLACE)) {
+    LOG(("HttpBaseChannel::OverrideURI LOAD_REPLACE flag not set! [this=%p]\n",
+         this));
+    return NS_ERROR_UNEXPECTED;
+  }
+  if (!ShouldIntercept()) {
+    LOG(("HttpBaseChannel::OverrideURI channel cannot be intercepted! "
+         "[this=%p]\n", this));
+    return NS_ERROR_UNEXPECTED;
+  }
+
   mURI = aRedirectedURI;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

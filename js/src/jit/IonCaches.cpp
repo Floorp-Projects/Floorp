@@ -869,18 +869,24 @@ static void
 GenerateReadUnboxed(JSContext* cx, IonScript* ion, MacroAssembler& masm,
                     IonCache::StubAttacher& attacher, JSObject* obj,
                     const UnboxedLayout::Property* property,
-                    Register object, TypedOrValueRegister output)
+                    Register object, TypedOrValueRegister output,
+                    Label* failures = nullptr)
 {
-    // Guard on the type of the object.
-    attacher.branchNextStub(masm, Assembler::NotEqual,
-                            Address(object, JSObject::offsetOfGroup()),
-                            ImmGCPtr(obj->group()));
+    // Guard on the group of the object.
+    attacher.branchNextStubOrLabel(masm, Assembler::NotEqual,
+                                   Address(object, JSObject::offsetOfGroup()),
+                                   ImmGCPtr(obj->group()), failures);
 
     Address address(object, UnboxedPlainObject::offsetOfData() + property->offset);
 
     masm.loadUnboxedProperty(address, property->type, output);
 
     attacher.jumpRejoin(masm);
+
+    if (failures) {
+        masm.bind(failures);
+        attacher.jumpNextStub(masm);
+    }
 }
 
 static bool
@@ -3340,7 +3346,7 @@ const size_t GetElementIC::MAX_FAILED_UPDATES = 16;
 GetElementIC::canAttachGetProp(JSObject* obj, const Value& idval, jsid id)
 {
     uint32_t dummy;
-    return obj->isNative() &&
+    return (obj->isNative() || obj->is<UnboxedPlainObject>()) &&
            idval.isString() &&
            JSID_IS_ATOM(id) &&
            !JSID_TO_ATOM(id)->isIndex(&dummy);
@@ -3366,18 +3372,39 @@ GetElementIC::attachGetProp(JSContext* cx, HandleScript outerScript, IonScript* 
 {
     MOZ_ASSERT(index().reg().hasValue());
 
-    RootedNativeObject holder(cx);
+    RootedNativeObject baseHolder(cx);
     RootedShape shape(cx);
 
     GetPropertyIC::NativeGetPropCacheability canCache =
-        CanAttachNativeGetProp(cx, *this, obj, name, &holder, &shape,
+        CanAttachNativeGetProp(cx, *this, obj, name, &baseHolder, &shape,
                                /* skipArrayLen =*/true);
 
-    bool cacheable = canCache == GetPropertyIC::CanAttachReadSlot ||
-                     (canCache == GetPropertyIC::CanAttachCallGetter &&
-                      output().hasValue());
+    RootedObject holder(cx, baseHolder);
 
-    if (!cacheable) {
+    if (canCache == GetPropertyIC::CanAttachReadSlot) {
+        // OK to attach.
+    } else if (canCache == GetPropertyIC::CanAttachCallGetter) {
+        if (!output().hasValue()) {
+            JitSpew(JitSpew_IonIC, "GETELEM uncacheable property");
+            return true;
+        }
+    } else if (obj->is<UnboxedPlainObject>()) {
+        MOZ_ASSERT(canCache == GetPropertyIC::CanAttachNone);
+        const UnboxedLayout::Property* property =
+            obj->as<UnboxedPlainObject>().layout().lookup(name);
+        if (property) {
+            // OK to attach.
+        } else {
+            UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
+            shape = expando ? expando->lookup(cx, name) : nullptr;
+            if (!shape || !shape->hasDefaultGetter() || !shape->hasSlot()) {
+                JitSpew(JitSpew_IonIC, "GETELEM uncacheable property");
+                return true;
+            }
+            canCache = GetPropertyIC::CanAttachReadSlot;
+            holder = obj;
+        }
+    } else {
         JitSpew(JitSpew_IonIC, "GETELEM uncacheable property");
         return true;
     }
@@ -3440,9 +3467,7 @@ GetElementIC::attachGetProp(JSContext* cx, HandleScript outerScript, IonScript* 
     if (canCache == GetPropertyIC::CanAttachReadSlot) {
         GenerateReadSlot(cx, ion, masm, attacher, obj, holder, shape, object(), output(),
                          &failures);
-    } else {
-        MOZ_ASSERT(canCache == GetPropertyIC::CanAttachCallGetter);
-
+    } else if (canCache == GetPropertyIC::CanAttachCallGetter) {
         // Set the frame for bailout safety of the OOL call.
         void* returnAddr = GetReturnAddressToIonCode(cx);
         if (!GenerateCallGetter(cx, ion, masm, attacher, obj, name, holder, shape, liveRegs_,
@@ -3450,6 +3475,11 @@ GetElementIC::attachGetProp(JSContext* cx, HandleScript outerScript, IonScript* 
         {
             return false;
         }
+    } else {
+        MOZ_ASSERT(canCache == GetPropertyIC::CanAttachNone);
+        GenerateReadUnboxed(cx, ion, masm, attacher, obj,
+                            obj->as<UnboxedPlainObject>().layout().lookup(name),
+                            object(), output(), &failures);
     }
 
     return linkAndAttachStub(cx, masm, attacher, ion, "property");

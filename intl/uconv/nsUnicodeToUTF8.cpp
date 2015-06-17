@@ -6,33 +6,44 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 #include "nsUnicodeToUTF8.h"
+#include "mozilla/CheckedInt.h"
 
 NS_IMPL_ISUPPORTS(nsUnicodeToUTF8, nsIUnicodeEncoder)
 
 //----------------------------------------------------------------------
 // nsUnicodeToUTF8 class [implementation]
 
-NS_IMETHODIMP nsUnicodeToUTF8::GetMaxLength(const char16_t * aSrc, 
-                                              int32_t aSrcLength,
-                                              int32_t * aDestLength)
+NS_IMETHODIMP nsUnicodeToUTF8::GetMaxLength(const char16_t* aSrc,
+                                            int32_t aSrcLength,
+                                            int32_t* aDestLength)
 {
+  MOZ_ASSERT(aDestLength);
+
   // aSrc is interpreted as UTF16, 3 is normally enough.
-  // But when previous buffer only contains part of the surrogate pair, we 
+  // But when previous buffer only contains part of the surrogate pair, we
   // need to complete it here. If the first word in following buffer is not
   // in valid surrogate range, we need to convert the remaining of last buffer
   // to 3 bytes.
-  *aDestLength = 3*aSrcLength + 3;
+  mozilla::CheckedInt32 length = aSrcLength;
+  length *= 3;
+  length += 3;
+
+  if (!length.isValid()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  *aDestLength = length.value();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsUnicodeToUTF8::Convert(const char16_t * aSrc, 
-                                int32_t * aSrcLength, 
-                                char * aDest, 
-                                int32_t * aDestLength)
+NS_IMETHODIMP nsUnicodeToUTF8::Convert(const char16_t* aSrc,
+                                       int32_t* aSrcLength,
+                                       char* aDest,
+                                       int32_t* aDestLength)
 {
-  const char16_t * src = aSrc;
-  const char16_t * srcEnd = aSrc + *aSrcLength;
-  char * dest = aDest;
+  const char16_t* src = aSrc;
+  const char16_t* srcEnd = aSrc + *aSrcLength;
+  char* dest = aDest;
   int32_t destLen = *aDestLength;
   uint32_t n;
 

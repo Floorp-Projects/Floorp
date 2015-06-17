@@ -164,7 +164,7 @@ MozNFCTagImpl.prototype = {
   // NFCTag interface:
   readNDEF: function readNDEF() {
     if (this.isLost) {
-      throw new this._window.DOMError("InvalidStateError", "NFCTag object is invalid");
+      throw new this._window.Error("NFCTag object is invalid");
     }
 
     let callback = new NfcCallback(this._window);
@@ -174,11 +174,11 @@ MozNFCTagImpl.prototype = {
 
   writeNDEF: function writeNDEF(records) {
     if (this.isLost) {
-      throw new this._window.DOMError("InvalidStateError", "NFCTag object is invalid");
+      throw new this._window.Error("NFCTag object is invalid");
     }
 
     if (this.isReadOnly) {
-      throw new this._window.DOMError("InvalidAccessError", "NFCTag object is read-only");
+      throw new this._window.Error("NFCTag object is read-only");
     }
 
     let ndefLen = 0;
@@ -187,7 +187,7 @@ MozNFCTagImpl.prototype = {
     }
 
     if (ndefLen > this.maxNDEFSize) {
-      throw new this._window.DOMError("NotSupportedError", "Exceed max NDEF size");
+      throw new this._window.Error("Exceed max NDEF size");
     }
 
     let callback = new NfcCallback(this._window);
@@ -197,12 +197,11 @@ MozNFCTagImpl.prototype = {
 
   makeReadOnly: function makeReadOnly() {
     if (this.isLost) {
-      throw new this._window.DOMError("InvalidStateError", "NFCTag object is invalid");
+      throw new this._window.Error("NFCTag object is invalid");
     }
 
     if (!this.canBeMadeReadOnly) {
-      throw new this._window.DOMError("InvalidAccessError",
-                                      "NFCTag object cannot be made read-only");
+      throw new this._window.Error("NFCTag object cannot be made read-only");
     }
 
     let callback = new NfcCallback(this._window);
@@ -212,12 +211,11 @@ MozNFCTagImpl.prototype = {
 
   format: function format() {
     if (this.isLost) {
-      throw new this._window.DOMError("InvalidStateError", "NFCTag object is invalid");
+      throw new this._window.Error("NFCTag object is invalid");
     }
 
     if (!this.isFormatable) {
-      throw new this._window.DOMError("InvalidAccessError",
-                                      "NFCTag object is not formatable");
+      throw new this._window.Error("NFCTag object is not formatable");
     }
 
     let callback = new NfcCallback(this._window);
@@ -227,17 +225,16 @@ MozNFCTagImpl.prototype = {
 
   selectTech: function selectTech(tech) {
     if (this.isLost) {
-      throw new this._window.DOMError("InvalidStateError", "NFCTag object is invalid");
+      throw new this._window.Error("NFCTag object is invalid");
     }
 
     if (this.techList.indexOf(tech) == -1) {
-      throw new this._window.DOMError("InvalidAccessError",
+      throw new this._window.Error(
         "NFCTag does not contain selected tag technology");
     }
 
     if (this.createTech[tech] === undefined) {
-      throw new this._window.DOMError("InvalidAccessError",
-        "Technology is not supported now");
+      throw new this._window.Error("Technology is not supported now");
     }
 
     return this.createTech[tech](this._window, this._contentObj);
@@ -245,7 +242,7 @@ MozNFCTagImpl.prototype = {
 
   transceive: function transceive(tech, cmd) {
     if (this.isLost) {
-      throw new this._window.DOMError("InvalidStateError", "NFCTag object is invalid");
+      throw new this._window.Error("NFCTag object is invalid");
     }
 
     let callback = new NfcCallback(this._window);
@@ -285,7 +282,7 @@ MozNFCPeerImpl.prototype = {
   // NFCPeer interface:
   sendNDEF: function sendNDEF(records) {
     if (this.isLost) {
-      throw new this._window.DOMError("InvalidStateError", "NFCPeer object is invalid");
+      throw new this._window.Error("NFCPeer object is invalid");
     }
 
     // Just forward sendNDEF to writeNDEF
@@ -296,7 +293,7 @@ MozNFCPeerImpl.prototype = {
 
   sendFile: function sendFile(blob) {
     if (this.isLost) {
-      throw new this._window.DOMError("InvalidStateError", "NFCPeer object is invalid");
+      throw new this._window.Error("NFCPeer object is invalid");
     }
 
     let data = {

@@ -572,9 +572,8 @@ nsPersistentProperties::Enumerate(nsISimpleEnumerator** aResult)
   props.SetCapacity(mTable.EntryCount());
 
   // Step through hash entries populating a transient array
-  PLDHashTable::Iterator iter(&mTable);
-  while (iter.HasMoreEntries()) {
-    auto entry = static_cast<PropertyTableEntry*>(iter.NextEntry());
+  for (auto iter = mTable.Iter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<PropertyTableEntry*>(iter.Get());
 
     nsRefPtr<nsPropertyElement> element =
       new nsPropertyElement(nsDependentCString(entry->mKey),

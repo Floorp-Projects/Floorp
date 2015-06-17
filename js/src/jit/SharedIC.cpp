@@ -189,15 +189,17 @@ ICStub::trace(JSTracer* trc)
         TraceEdge(trc, &callStub->expectedThis(), "baseline-callstringsplit-this");
         break;
       }
-      case ICStub::GetElem_NativeSlot: {
-        ICGetElem_NativeSlot* getElemStub = toGetElem_NativeSlot();
-        TraceEdge(trc, &getElemStub->shape(), "baseline-getelem-native-shape");
+      case ICStub::GetElem_NativeSlot:
+      case ICStub::GetElem_UnboxedProperty: {
+        ICGetElemNativeSlotStub* getElemStub =
+            reinterpret_cast<ICGetElemNativeSlotStub*>(this);
+        getElemStub->receiverGuard().trace(trc);
         TraceEdge(trc, &getElemStub->name(), "baseline-getelem-native-name");
         break;
       }
       case ICStub::GetElem_NativePrototypeSlot: {
         ICGetElem_NativePrototypeSlot* getElemStub = toGetElem_NativePrototypeSlot();
-        TraceEdge(trc, &getElemStub->shape(), "baseline-getelem-nativeproto-shape");
+        getElemStub->receiverGuard().trace(trc);
         TraceEdge(trc, &getElemStub->name(), "baseline-getelem-nativeproto-name");
         TraceEdge(trc, &getElemStub->holder(), "baseline-getelem-nativeproto-holder");
         TraceEdge(trc, &getElemStub->holderShape(), "baseline-getelem-nativeproto-holdershape");
@@ -207,7 +209,7 @@ ICStub::trace(JSTracer* trc)
       case ICStub::GetElem_NativePrototypeCallScripted: {
         ICGetElemNativePrototypeCallStub* callStub =
             reinterpret_cast<ICGetElemNativePrototypeCallStub*>(this);
-        TraceEdge(trc, &callStub->shape(), "baseline-getelem-nativeprotocall-shape");
+        callStub->receiverGuard().trace(trc);
         TraceEdge(trc, &callStub->name(), "baseline-getelem-nativeprotocall-name");
         TraceEdge(trc, &callStub->getter(), "baseline-getelem-nativeprotocall-getter");
         TraceEdge(trc, &callStub->holder(), "baseline-getelem-nativeprotocall-holder");

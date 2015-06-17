@@ -911,3 +911,9 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/gmp-clearkey/0.1/@DLL_PREFIX@clearkey@DLL_SUFFIX@
 @RESPATH@/gmp-clearkey/0.1/clearkey.info
 #endif
+
+; gfx
+#ifdef XP_WIN
+@RESPATH@/components/GfxSanityTest.manifest
+@RESPATH@/components/SanityTest.js
+#endif

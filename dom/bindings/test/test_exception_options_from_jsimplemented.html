@@ -17,13 +17,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
   function doTest() {
     var t = new TestInterfaceJS();
     try {
-      t.testThrowDOMError();
+      t.testThrowError();
     } catch (e) {
       ok(e instanceof Error, "Should have an Error here");
       ok(!(e instanceof DOMException), "Should not have DOMException here");
       ok(!("code" in e), "Should not have a 'code' property");
       is(e.name, "Error", "Should not have an interesting name here");
-      is(e.message, "We are a DOMError", "Should have the right message");
+      is(e.message, "We are an Error", "Should have the right message");
       is(e.stack,
          "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:20:7\n",
          "Exception stack should still only show our code");

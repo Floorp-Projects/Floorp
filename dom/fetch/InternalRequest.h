@@ -30,7 +30,7 @@ namespace dom {
  *
  * RequestContext    | nsContentPolicyType
  * ------------------+--------------------
- * audio             | TYPE_MEDIA
+ * audio             | TYPE_INTERNAL_AUDIO
  * beacon            | TYPE_BEACON
  * cspreport         | TYPE_CSP_REPORT
  * download          |
@@ -57,15 +57,14 @@ namespace dom {
  * sharedworker      |
  * subresource       | Not supported by Gecko
  * style             | TYPE_STYLESHEET
- * track             | TYPE_MEDIA
- * video             | TYPE_MEDIA
+ * track             | TYPE_INTERNAL_TRACK
+ * video             | TYPE_INTERNAL_VIDEO
  * worker            |
  * xmlhttprequest    | TYPE_XMLHTTPREQUEST
  * xslt              | TYPE_XSLT
  *
  * TODO: Figure out if TYPE_REFRESH maps to anything useful
  * TODO: Figure out if TYPE_DTD maps to anything useful
- * TODO: Split TYPE_MEDIA into TYPE_AUDIO, TYPE_VIDEO and TYPE_TRACK
  * TODO: Split TYPE_XMLHTTPREQUEST and TYPE_DATAREQUEST for EventSource
  * TODO: Figure out if TYPE_WEBSOCKET maps to anything useful
  * TODO: Differentiate between frame and iframe

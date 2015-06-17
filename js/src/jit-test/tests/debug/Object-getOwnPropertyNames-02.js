@@ -9,4 +9,3 @@ var wp = gobj.getOwnPropertyDescriptor("p").value;
 var names = wp.getOwnPropertyNames();
 assertEq(names.length, 1);
 assertEq(names[0], "xyzzy");
-

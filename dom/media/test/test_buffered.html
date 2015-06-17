@@ -25,6 +25,7 @@ var manager = new MediaTestManager;
 
 function testBuffered(e) {
   var v = e.target;
+  v.removeEventListener('timeupdate', testBuffered);
   
   // The whole media should be buffered...
   var b = v.buffered;
@@ -94,12 +95,12 @@ function startTest(test, token) {
   // we have deterministic behaviour.
   var onfetched = function(uri) {
     var v = document.createElement('video');
-    v.preload = "metadata";
+    v.autoplay = true;
     v._token = token;
     v.src = uri;
     v._name = test.name;
     v._test = test;
-    v.addEventListener("loadedmetadata", testBuffered, false);
+    v.addEventListener("timeupdate", testBuffered, false);
     document.body.appendChild(v);
   };
 

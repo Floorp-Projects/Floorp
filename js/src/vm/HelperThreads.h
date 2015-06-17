@@ -146,7 +146,8 @@ class GlobalHelperThreadState
         return ionFinishedList_;
     }
     IonBuilderList& ionLazyLinkList() {
-        MOZ_ASSERT(isLocked());
+        MOZ_ASSERT(TlsPerThreadData.get()->runtimeFromMainThread(),
+                   "Should only be mutated by the main thread.");
         return ionLazyLinkList_;
     }
 

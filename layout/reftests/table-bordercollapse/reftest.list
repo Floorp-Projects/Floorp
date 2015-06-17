@@ -95,3 +95,4 @@
 == bordercolor-4.html bordercolor-4-ref.html
 == empty-toprow.html empty-toprow-ref.html
 == double_borders.html double_borders_ref.html
+== border-collapse-rtl.html border-collapse-rtl-ref.html

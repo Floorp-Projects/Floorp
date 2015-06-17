@@ -309,7 +309,7 @@ Context::QuotaInitRunnable::Run()
     {
       MOZ_ASSERT(NS_IsMainThread());
 
-      if (mCanceled) {
+      if (mCanceled || QuotaManager::IsShuttingDown()) {
         resolver->Resolve(NS_ERROR_ABORT);
         break;
       }

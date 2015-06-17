@@ -218,6 +218,7 @@ nsIPrincipal *nsContentUtils::sNullSubjectPrincipal;
 nsIParserService *nsContentUtils::sParserService = nullptr;
 nsNameSpaceManager *nsContentUtils::sNameSpaceManager;
 nsIIOService *nsContentUtils::sIOService;
+nsIUUIDGenerator *nsContentUtils::sUUIDGenerator;
 nsIConsoleService *nsContentUtils::sConsoleService;
 nsDataHashtable<nsISupportsHashKey, EventNameMapping>* nsContentUtils::sAtomEventTable = nullptr;
 nsDataHashtable<nsStringHashKey, EventNameMapping>* nsContentUtils::sStringEventTable = nullptr;
@@ -550,6 +551,13 @@ nsContentUtils::Init()
 #endif
 
   Element::InitCCCallbacks();
+
+  nsCOMPtr<nsIUUIDGenerator> uuidGenerator =
+    do_GetService("@mozilla.org/uuid-generator;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  uuidGenerator.forget(&sUUIDGenerator);
 
   sInitialized = true;
 
@@ -1803,6 +1811,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sNullSubjectPrincipal);
   NS_IF_RELEASE(sParserService);
   NS_IF_RELEASE(sIOService);
+  NS_IF_RELEASE(sUUIDGenerator);
   NS_IF_RELEASE(sLineBreaker);
   NS_IF_RELEASE(sWordBreaker);
   NS_IF_RELEASE(sBidiKeyboard);
@@ -3992,9 +4001,8 @@ nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments()
     return;
   }
 
-  PLDHashTable::Iterator iter(sEventListenerManagersHash);
-  while (iter.HasMoreEntries()) {
-    auto entry = static_cast<EventListenerManagerMapEntry*>(iter.NextEntry());
+  for (auto i = sEventListenerManagersHash->Iter(); !i.Done(); i.Next()) {
+    auto entry = static_cast<EventListenerManagerMapEntry*>(i.Get());
     nsINode* n = static_cast<nsINode*>(entry->mListenerManager->GetTarget());
     if (n && n->IsInDoc() &&
         nsCCUncollectableMarker::InGeneration(n->OwnerDoc()->GetMarkedCCGeneration())) {
@@ -7149,6 +7157,19 @@ nsContentUtils::IsJavascriptMIMEType(const nsAString& aMIMEType)
   }
 
   return false;
+}
+
+nsresult
+nsContentUtils::GenerateUUIDInPlace(nsID& aUUID)
+{
+  MOZ_ASSERT(sUUIDGenerator);
+
+  nsresult rv = sUUIDGenerator->GenerateUUIDInPlace(&aUUID);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 uint64_t

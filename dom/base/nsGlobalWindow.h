@@ -111,6 +111,7 @@ class MozSelfSupport;
 class Navigator;
 class OwningExternalOrWindowProxy;
 class Promise;
+class PostMessageEvent;
 struct RequestInit;
 class RequestOrUSVString;
 class Selection;
@@ -908,6 +909,13 @@ public:
   void GetSidebar(mozilla::dom::OwningExternalOrWindowProxy& aResult,
                   mozilla::ErrorResult& aRv);
   already_AddRefed<mozilla::dom::External> GetExternal(mozilla::ErrorResult& aRv);
+
+  // Exposed only for testing
+  static bool
+  TokenizeDialogOptions(nsAString& aToken, nsAString::const_iterator& aIter,
+                        nsAString::const_iterator aEnd);
+  static void
+  ConvertDialogOptions(const nsAString& aOptions, nsAString& aResult);
 
 protected:
   bool AlertOrConfirm(bool aAlert, const nsAString& aMessage,
@@ -1752,7 +1760,7 @@ protected:
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
-  friend class PostMessageEvent;
+  friend class mozilla::dom::PostMessageEvent;
   friend class DesktopNotification;
 
   static WindowByIdTable* sWindowsById;

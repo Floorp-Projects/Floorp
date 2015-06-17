@@ -161,6 +161,18 @@ var gTests = [
         document.body.appendChild(gMedia);
       },
     expectedEvents: ['loadstart', 'source_error', 'source_error']
+  }, {
+    // Test 6: (Bug 1165203) preload="none" then followed by an explicit
+    // call to load() should load metadata
+    create:
+      function(src, type) {
+        gMedia.preload = "none";
+        gMedia.src = src;
+        document.body.appendChild(gMedia);
+        addSource(src, type);
+        gMedia.load();
+      },
+    expectedEvents: ['emptied', 'ratechange',  'loadstart', 'durationchange', 'loadedmetadata', 'loadeddata']
   }
 ];
 

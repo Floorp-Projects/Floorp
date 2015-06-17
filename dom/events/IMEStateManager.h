@@ -169,6 +169,7 @@ protected:
   static nsPresContext* sPresContext;
   static bool           sInstalledMenuKeyboardListener;
   static bool           sIsGettingNewIMEState;
+  static bool           sCheckForIMEUnawareWebApps;
 
   class MOZ_STACK_CLASS GettingNewIMEStateBlocker final
   {

@@ -277,33 +277,6 @@ ErrorResult::ReportJSException(JSContext* cx)
 }
 
 void
-ErrorResult::ReportJSExceptionFromJSImplementation(JSContext* aCx)
-{
-  MOZ_ASSERT(!mMightHaveUnreportedJSException,
-             "Why didn't you tell us you planned to handle JS exceptions?");
-
-  // Check for a DOMError, since we convert that into an Error in the content
-  // compartment.  We can probably remove that now; see bug 1174954.
-  dom::DOMError* domError;
-  nsresult rv = UNWRAP_OBJECT(DOMError, &mJSException.toObject(), domError);
-  if (NS_FAILED(rv)) {
-    // Just report it.
-    ReportJSException(aCx);
-    return;
-  }
-
-  nsString message;
-  domError->GetMessage(message);
-
-  JS_ReportError(aCx, "%hs", message.get());
-  js::RemoveRawValueRoot(aCx, &mJSException);
-
-  // We no longer have a useful exception but we do want to signal that an error
-  // occured.
-  mResult = NS_ERROR_FAILURE;
-}
-
-void
 ErrorResult::StealJSException(JSContext* cx,
                               JS::MutableHandle<JS::Value> value)
 {
