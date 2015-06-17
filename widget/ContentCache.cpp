@@ -786,6 +786,12 @@ ContentCache::GetUnionTextRects(uint32_t aOffset,
      mTextRectArray.mStart, mTextRectArray.mRects.Length(),
      mSelection.mAnchor, mSelection.mFocus));
 
+  CheckedInt<uint32_t> endOffset =
+    CheckedInt<uint32_t>(aOffset) + aLength;
+  if (!endOffset.isValid()) {
+    return false;
+  }
+
   if (!mSelection.Collapsed() &&
       aOffset == mSelection.StartOffset() && aLength == mSelection.Length()) {
     NS_WARN_IF(mSelection.mRect.IsEmpty());
@@ -811,12 +817,34 @@ ContentCache::GetUnionTextRects(uint32_t aOffset,
     }
   }
 
-  if (!mTextRectArray.InRange(aOffset, aLength)) {
-    aUnionTextRect.SetEmpty();
+  // Even if some text rects are not cached of the queried range,
+  // we should return union rect when the first character's rect is cached
+  // since the first character rect is important and the others are not so
+  // in most cases.
+
+  if (!aOffset && aOffset != mSelection.mAnchor &&
+      aOffset != mSelection.mFocus && !mTextRectArray.InRange(aOffset)) {
+    // The first character rect isn't cached.
     return false;
   }
-  aUnionTextRect = mTextRectArray.GetUnionRect(aOffset, aLength);
-  return true;
+
+  if (mTextRectArray.IsOverlappingWith(aOffset, aLength)) {
+    aUnionTextRect =
+      mTextRectArray.GetUnionRectAsFarAsPossible(aOffset, aLength);
+  } else {
+    aUnionTextRect.SetEmpty();
+  }
+
+  if (!aOffset) {
+    aUnionTextRect = aUnionTextRect.Union(mFirstCharRect);
+  }
+  if (aOffset <= mSelection.mAnchor && mSelection.mAnchor < endOffset.value()) {
+    aUnionTextRect = aUnionTextRect.Union(mSelection.mAnchorCharRect);
+  }
+  if (aOffset <= mSelection.mFocus && mSelection.mFocus < endOffset.value()) {
+    aUnionTextRect = aUnionTextRect.Union(mSelection.mFocusCharRect);
+  }
+  return !aUnionTextRect.IsEmpty();
 }
 
 bool
@@ -990,6 +1018,23 @@ ContentCache::TextRectArray::GetUnionRect(uint32_t aOffset,
   }
   for (uint32_t i = 0; i < aLength; i++) {
     rect = rect.Union(mRects[aOffset - mStart + i]);
+  }
+  return rect;
+}
+
+LayoutDeviceIntRect
+ContentCache::TextRectArray::GetUnionRectAsFarAsPossible(
+                               uint32_t aOffset,
+                               uint32_t aLength) const
+{
+  LayoutDeviceIntRect rect;
+  if (!IsOverlappingWith(aOffset, aLength)) {
+    return rect;
+  }
+  uint32_t startOffset = std::max(aOffset, mStart);
+  uint32_t endOffset = std::min(aOffset + aLength, EndOffset());
+  for (uint32_t i = 0; i < endOffset - startOffset; i++) {
+    rect = rect.Union(mRects[startOffset - mStart + i]);
   }
   return rect;
 }
