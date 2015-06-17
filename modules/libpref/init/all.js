@@ -4787,6 +4787,9 @@ pref("camera.control.low_memory_thresholdMB", 404);
 // UDPSocket API
 pref("dom.udpsocket.enabled", false);
 
+// MessageChannel enabled by default.
+pref("dom.messageChannel.enabled", true);
+
 // Disable before keyboard events and after keyboard events by default.
 pref("dom.beforeAfterKeyboardEvent.enabled", false);
 
