@@ -473,9 +473,11 @@ nsresult imgFrame::Optimize()
       return NS_ERROR_OUT_OF_MEMORY;
 
     DataSourceSurface::MappedSurface mapping;
-    DebugOnly<bool> success =
-      surf->Map(DataSourceSurface::MapType::WRITE, &mapping);
-    NS_ASSERTION(success, "Failed to map surface");
+    if (!surf->Map(DataSourceSurface::MapType::WRITE, &mapping)) {
+      gfxCriticalError() << "imgFrame::Optimize failed to map surface";
+      return NS_ERROR_FAILURE;
+    }
+
     RefPtr<DrawTarget> target =
       Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                        mapping.mData,
@@ -877,9 +879,11 @@ imgFrame::Deoptimize()
         return NS_ERROR_OUT_OF_MEMORY;
 
       DataSourceSurface::MappedSurface mapping;
-      DebugOnly<bool> success =
-        surf->Map(DataSourceSurface::MapType::WRITE, &mapping);
-      NS_ASSERTION(success, "Failed to map surface");
+      if (!surf->Map(DataSourceSurface::MapType::WRITE, &mapping)) {
+        gfxCriticalError() << "imgFrame::Deoptimize failed to map surface";
+        return NS_ERROR_FAILURE;
+      }
+
       RefPtr<DrawTarget> target =
         Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                          mapping.mData,
