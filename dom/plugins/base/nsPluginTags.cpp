@@ -148,6 +148,7 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo,
                          bool fromExtension)
   : mId(sNextId++),
     mContentProcessRunningCount(0),
+    mHadLocalInstance(false),
     mName(aPluginInfo->fName),
     mDescription(aPluginInfo->fDescription),
     mLibrary(nullptr),
