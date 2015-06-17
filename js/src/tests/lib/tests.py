@@ -45,62 +45,6 @@ def get_jitflags(variant, **kwargs):
         return kwargs['none']
     return JITFLAGS[variant]
 
-def do_run_cmd(cmd):
-    l = [None, None]
-    th_run_cmd(cmd, l)
-    return l[1]
-
-def set_limits():
-    # resource module not supported on all platforms
-    try:
-        import resource
-        GB = 2**30
-        resource.setrlimit(resource.RLIMIT_AS, (2*GB, 2*GB))
-    except:
-        return
-
-def th_run_cmd(cmd, l):
-    t0 = datetime.datetime.now()
-
-    # close_fds and preexec_fn are not supported on Windows and will
-    # cause a ValueError.
-    options = {}
-    if sys.platform != 'win32':
-        options["close_fds"] = True
-        options["preexec_fn"] = set_limits
-    p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, **options)
-
-    l[0] = p
-    out, err = p.communicate()
-    t1 = datetime.datetime.now()
-    dd = t1-t0
-    dt = dd.seconds + 1e-6 * dd.microseconds
-    l[1] = (out, err, p.returncode, dt)
-
-def run_cmd(cmd, timeout=60.0):
-    if timeout is None:
-        return do_run_cmd(cmd)
-
-    l = [None, None]
-    timed_out = False
-    th = Thread(target=th_run_cmd, args=(cmd, l))
-    th.start()
-    th.join(timeout)
-    while th.isAlive():
-        if l[0] is not None:
-            try:
-                # In Python 3, we could just do l[0].kill().
-                import signal
-                if sys.platform != 'win32':
-                    os.kill(l[0].pid, signal.SIGKILL)
-                time.sleep(.1)
-                timed_out = True
-            except OSError:
-                # Expecting a "No such process" error
-                pass
-    th.join()
-    return l[1] + (timed_out,)
-
 class Test(object):
     """A runnable test."""
     def __init__(self, path):
@@ -123,11 +67,6 @@ class Test(object):
         cmd = prefix + self.jitflags + self.options \
               + Test.prefix_command(dirname) + ['-f', self.path]
         return cmd
-
-    def run(self, prefix, timeout=30.0):
-        cmd = self.get_command(prefix)
-        out, err, rc, dt, timed_out = run_cmd(cmd, timeout)
-        return TestOutput(self, cmd, out, err, rc, dt, timed_out)
 
 class TestCase(Test):
     """A test case consisting of a test and an expected result."""
