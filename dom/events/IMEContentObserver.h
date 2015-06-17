@@ -161,10 +161,33 @@ private:
   State GetState() const;
   bool IsObservingContent(nsPresContext* aPresContext,
                           nsIContent* aContent) const;
-  void MaybeNotifyIMEOfFocusSet();
-  void MaybeNotifyIMEOfTextChange(const TextChangeData& aTextChangeData);
-  void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition);
-  void MaybeNotifyIMEOfPositionChange();
+  bool IsReflowLocked() const;
+  bool IsSafeToNotifyIME() const;
+
+  void PostFocusSetNotification();
+  void MaybeNotifyIMEOfFocusSet()
+  {
+    PostFocusSetNotification();
+    FlushMergeableNotifications();
+  }
+  void PostTextChangeNotification(const TextChangeData& aTextChangeData);
+  void MaybeNotifyIMEOfTextChange(const TextChangeData& aTextChangeData)
+  {
+    PostTextChangeNotification(aTextChangeData);
+    FlushMergeableNotifications();
+  }
+  void PostSelectionChangeNotification(bool aCausedByComposition);
+  void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition)
+  {
+    PostSelectionChangeNotification(aCausedByComposition);
+    FlushMergeableNotifications();
+  }
+  void PostPositionChangeNotification();
+  void MaybeNotifyIMEOfPositionChange()
+  {
+    PostPositionChangeNotification();
+    FlushMergeableNotifications();
+  }
 
   void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
   void ObserveEditableNode();
@@ -300,6 +323,11 @@ private:
      * CanNotifyIME() checks if mIMEContentObserver can and should notify IME.
      */
     bool CanNotifyIME() const;
+
+    /**
+     * IsSafeToNotifyIME() checks if it's safe to noitify IME.
+     */
+    bool IsSafeToNotifyIME() const;
   };
 
   class FocusSetEvent: public AChangeEvent
