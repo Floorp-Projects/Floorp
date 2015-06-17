@@ -2915,7 +2915,6 @@ ContentParent::RecvAddNewProcess(const uint32_t& aPid,
     // Update offline settings.
     bool isOffline, isLangRTL;
     bool isConnected;
-    bool isSafeMode;
     InfallibleTArray<nsString> unusedDictionaries;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
@@ -2923,8 +2922,7 @@ ContentParent::RecvAddNewProcess(const uint32_t& aPid,
 
     RecvGetXPCOMProcessAttributes(&isOffline, &isConnected,
                                   &isLangRTL, &unusedDictionaries,
-                                  &clipboardCaps, &domainPolicy, &initialData,
-                                  &isSafeMode);
+                                  &clipboardCaps, &domainPolicy, &initialData);
     mozilla::unused << content->SendSetOffline(isOffline);
     mozilla::unused << content->SendSetConnectivity(isConnected);
     MOZ_ASSERT(!clipboardCaps.supportsSelectionClipboard() &&
