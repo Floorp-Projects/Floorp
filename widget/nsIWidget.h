@@ -18,6 +18,7 @@
 #include "nsITheme.h"
 #include "nsITimer.h"
 #include "nsXULAppAPI.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/RefPtr.h"
@@ -25,6 +26,7 @@
 #include "mozilla/gfx/Point.h"
 #include "nsDataHashtable.h"
 #include "nsIObserver.h"
+#include "FrameMetrics.h"
 #include "Units.h"
 
 // forward declarations
@@ -818,10 +820,12 @@ class nsIWidget : public nsISupports {
   public:
     typedef mozilla::layers::Composer2D Composer2D;
     typedef mozilla::layers::CompositorChild CompositorChild;
+    typedef mozilla::layers::FrameMetrics FrameMetrics;
     typedef mozilla::layers::LayerManager LayerManager;
     typedef mozilla::layers::LayerManagerComposite LayerManagerComposite;
     typedef mozilla::layers::LayersBackend LayersBackend;
     typedef mozilla::layers::PLayerTransactionChild PLayerTransactionChild;
+    typedef mozilla::layers::ZoomConstraints ZoomConstraints;
     typedef mozilla::widget::IMEMessage IMEMessage;
     typedef mozilla::widget::IMENotification IMENotification;
     typedef mozilla::widget::IMEState IMEState;
@@ -2437,6 +2441,10 @@ public:
      * determine how widget coordinates will be rounded.
      */
     virtual int32_t RoundsWidgetCoordinatesTo() { return 1; }
+
+    virtual void UpdateZoomConstraints(const uint32_t& aPresShellId,
+                                       const FrameMetrics::ViewID& aViewId,
+                                       const mozilla::Maybe<ZoomConstraints>& aConstraints) {};
 
     /**
      * GetTextEventDispatcher() returns TextEventDispatcher belonging to the
