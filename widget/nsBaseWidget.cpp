@@ -1011,6 +1011,19 @@ nsBaseWidget::SetConfirmedTargetAPZC(uint64_t aInputBlockId,
     mAPZC.get(), setTargetApzcFunc, aInputBlockId, mozilla::Move(aTargets)));
 }
 
+void
+nsBaseWidget::UpdateZoomConstraints(const uint32_t& aPresShellId,
+                                    const FrameMetrics::ViewID& aViewId,
+                                    const Maybe<ZoomConstraints>& aConstraints)
+{
+  if (!mCompositorParent || !mAPZC) {
+    return;
+  }
+  uint64_t layersId = mCompositorParent->RootLayerTreeId();
+  mAPZC->UpdateZoomConstraints(ScrollableLayerGuid(layersId, aPresShellId, aViewId),
+                               aConstraints);
+}
+
 bool
 nsBaseWidget::AsyncPanZoomEnabled() const
 {

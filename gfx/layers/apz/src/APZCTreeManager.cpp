@@ -1037,7 +1037,7 @@ APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
   if (aConstraints) {
     APZCTM_LOG("Recording constraints %s for guid %s\n",
       Stringify(aConstraints.value()).c_str(), Stringify(aGuid).c_str());
-    mZoomConstraints[aGuid] = aConstraints.value();
+    mZoomConstraints[aGuid] = aConstraints.ref();
   } else {
     APZCTM_LOG("Removing constraints for guid %s\n", Stringify(aGuid).c_str());
     mZoomConstraints.erase(aGuid);
