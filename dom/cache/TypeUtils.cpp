@@ -154,7 +154,8 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
   aIn->GetURL(aOut.url());
 
   bool schemeValid;
-  ProcessURL(aOut.url(), &schemeValid, &aOut.urlWithoutQuery(), aRv);
+  ProcessURL(aOut.url(), &schemeValid, &aOut.urlWithoutQuery(),
+             &aOut.urlQuery(), aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -205,7 +206,7 @@ TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
   if (aOut.url() != EmptyCString()) {
     // Pass all Response URL schemes through... The spec only requires we take
     // action on invalid schemes for Request objects.
-    ProcessURL(aOut.url(), nullptr, nullptr, aRv);
+    ProcessURL(aOut.url(), nullptr, nullptr, nullptr, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -373,7 +374,8 @@ TypeUtils::ToInternalHeaders(const nsTArray<HeadersEntry>& aHeadersEntryList,
 // static
 void
 TypeUtils::ProcessURL(nsACString& aUrl, bool* aSchemeValidOut,
-                      nsACString* aUrlWithoutQueryOut, ErrorResult& aRv)
+                      nsACString* aUrlWithoutQueryOut,nsACString* aUrlQueryOut,
+                      ErrorResult& aRv)
 {
   const nsAFlatCString& flatURL = PromiseFlatCString(aUrl);
   const char* url = flatURL.get();
@@ -422,17 +424,19 @@ TypeUtils::ProcessURL(nsACString& aUrl, bool* aSchemeValidOut,
     return;
   }
 
+  MOZ_ASSERT(aUrlQueryOut);
+
   if (queryLen < 0) {
     *aUrlWithoutQueryOut = aUrl;
+    *aUrlQueryOut = EmptyCString();
     return;
   }
 
   // ParsePath gives us query position relative to the start of the path
   queryPos += pathPos;
 
-  // We want everything before the query sine we already removed the trailing
-  // fragment
   *aUrlWithoutQueryOut = Substring(aUrl, 0, queryPos - 1);
+  *aUrlQueryOut = Substring(aUrl, queryPos - 1, queryLen + 1);
 }
 
 void

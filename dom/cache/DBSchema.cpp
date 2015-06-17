@@ -263,6 +263,7 @@ CreateSchema(mozIStorageConnection* aConn)
         "request_method TEXT NOT NULL, "
         "request_url TEXT NOT NULL, "
         "request_url_no_query TEXT NOT NULL, "
+        "request_url_query TEXT NOT NULL, "
         "request_referrer TEXT NOT NULL, "
         "request_headers_guard INTEGER NOT NULL, "
         "request_mode INTEGER NOT NULL, "
@@ -1433,6 +1434,7 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       "request_method, "
       "request_url, "
       "request_url_no_query, "
+      "request_url_query, "
       "request_referrer, "
       "request_headers_guard, "
       "request_mode, "
@@ -1454,6 +1456,7 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       ":request_method, "
       ":request_url, "
       ":request_url_no_query, "
+      ":request_url_query, "
       ":request_referrer, "
       ":request_headers_guard, "
       ":request_mode, "
@@ -1485,6 +1488,10 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
 
   rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("request_url_no_query"),
                                    aRequest.urlWithoutQuery());
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("request_url_query"),
+                                   aRequest.urlQuery());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->BindStringByName(NS_LITERAL_CSTRING("request_referrer"),
@@ -1745,6 +1752,7 @@ ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
       "request_method, "
       "request_url, "
       "request_url_no_query, "
+      "request_url_query, "
       "request_referrer, "
       "request_headers_guard, "
       "request_mode, "
@@ -1773,45 +1781,48 @@ ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
   rv = state->GetUTF8String(2, aSavedRequestOut->mValue.urlWithoutQuery());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->GetString(3, aSavedRequestOut->mValue.referrer());
+  rv = state->GetUTF8String(3, aSavedRequestOut->mValue.urlQuery());
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = state->GetString(4, aSavedRequestOut->mValue.referrer());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   int32_t guard;
-  rv = state->GetInt32(4, &guard);
+  rv = state->GetInt32(5, &guard);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mValue.headersGuard() =
     static_cast<HeadersGuardEnum>(guard);
 
   int32_t mode;
-  rv = state->GetInt32(5, &mode);
+  rv = state->GetInt32(6, &mode);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mValue.mode() = static_cast<RequestMode>(mode);
 
   int32_t credentials;
-  rv = state->GetInt32(6, &credentials);
+  rv = state->GetInt32(7, &credentials);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mValue.credentials() =
     static_cast<RequestCredentials>(credentials);
 
   int32_t requestContentPolicyType;
-  rv = state->GetInt32(7, &requestContentPolicyType);
+  rv = state->GetInt32(8, &requestContentPolicyType);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mValue.contentPolicyType() =
     static_cast<nsContentPolicyType>(requestContentPolicyType);
 
   int32_t requestCache;
-  rv = state->GetInt32(8, &requestCache);
+  rv = state->GetInt32(9, &requestCache);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mValue.requestCache() =
     static_cast<RequestCache>(requestCache);
 
   bool nullBody = false;
-  rv = state->GetIsNull(9, &nullBody);
+  rv = state->GetIsNull(10, &nullBody);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mHasBodyId = !nullBody;
 
   if (aSavedRequestOut->mHasBodyId) {
-    rv = ExtractId(state, 9, &aSavedRequestOut->mBodyId);
+    rv = ExtractId(state, 10, &aSavedRequestOut->mBodyId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   }
 
