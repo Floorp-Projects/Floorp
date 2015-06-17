@@ -631,7 +631,9 @@ TrackBuffersManager::SegmentParserLoop()
 
     // 3. Remove any bytes that the byte stream format specifications say must be
     // ignored from the start of the input buffer.
-    // TODO
+    // We do not remove bytes from our input buffer. Instead we enforce that
+    // our ContainerParser is able to skip over all data that is supposed to be
+    // ignored.
 
     // 4. If the append state equals WAITING_FOR_SEGMENT, then run the following
     // steps:
@@ -650,9 +652,10 @@ TrackBuffersManager::SegmentParserLoop()
         continue;
       }
       // We have neither an init segment nor a media segment, this is invalid
-      // data.
-      MSE_DEBUG("Found invalid data");
-      RejectAppend(NS_ERROR_FAILURE, __func__);
+      // data. We can ignore it.
+      MSE_DEBUG("Found invalid data, ignoring.");
+      mInputBuffer = nullptr;
+      NeedMoreData();
       return;
     }
 
@@ -767,7 +770,11 @@ TrackBuffersManager::InitializationSegmentReceived()
   mCurrentInputBuffer->AppendData(mInitData);
   uint32_t length =
     mParser->InitSegmentRange().mEnd - (mProcessedInput - mInputBuffer->Length());
-  mInputBuffer->RemoveElementsAt(0, length);
+  if (mInputBuffer->Length() == length) {
+    mInputBuffer = nullptr;
+  } else {
+    mInputBuffer->RemoveElementsAt(0, length);
+  }
   CreateDemuxerforMIMEType();
   if (!mInputDemuxer) {
     MOZ_ASSERT(false, "TODO type not supported");
