@@ -751,8 +751,9 @@ TrackBuffersManager::CreateDemuxerforMIMEType()
   }
   mInputDemuxer = nullptr;
   if (mType.LowerCaseEqualsLiteral("video/webm") || mType.LowerCaseEqualsLiteral("audio/webm")) {
-    MOZ_ASSERT(false, "Waiting on WebMDemuxer");
+    NS_WARNING("Waiting on WebMDemuxer");
   // mInputDemuxer = new WebMDemuxer(mCurrentInputBuffer);
+    return;
   }
 
 #ifdef MOZ_FMP4
@@ -761,7 +762,8 @@ TrackBuffersManager::CreateDemuxerforMIMEType()
     return;
   }
 #endif
-  MOZ_ASSERT(false, "Not supported (yet)");
+  NS_WARNING("Not supported (yet)");
+  return;
 }
 
 void
@@ -780,7 +782,8 @@ TrackBuffersManager::InitializationSegmentReceived()
   }
   CreateDemuxerforMIMEType();
   if (!mInputDemuxer) {
-    MOZ_ASSERT(false, "TODO type not supported");
+    NS_WARNING("TODO type not supported");
+    RejectAppend(NS_ERROR_DOM_NOT_SUPPORTED_ERR, __func__);
     return;
   }
   mDemuxerInitRequest.Begin(mInputDemuxer->Init()
