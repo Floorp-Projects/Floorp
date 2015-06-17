@@ -194,3 +194,7 @@ notification[type="info"]:not([value="translation"]) .close-icon:not(:hover) {
 .popup-notification-closeitem > .menu-iconic-left {
   display: none;
 }
+
+.popup-notification-menubutton > .button-menubutton-button[disabled] {
+  opacity: 0.5;
+}
