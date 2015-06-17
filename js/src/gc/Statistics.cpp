@@ -931,7 +931,7 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
     if (first)
         beginGC(gckind);
 
-    SliceData data(budget, reason, PRMJ_Now(), GetPageFaultCount());
+    SliceData data(budget, reason, PRMJ_Now(), JS_GetCurrentEmbedderTime(), GetPageFaultCount());
     if (!slices.append(data)) {
         // OOM testing fails if we CrashAtUnhandlableOOM here.
         aborted = true;
@@ -954,6 +954,7 @@ Statistics::endSlice()
 {
     if (!aborted) {
         slices.back().end = PRMJ_Now();
+        slices.back().endTimestamp = JS_GetCurrentEmbedderTime();
         slices.back().endFaults = GetPageFaultCount();
 
         int64_t sliceTime = slices.back().end - slices.back().start;
