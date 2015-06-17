@@ -567,6 +567,19 @@ RemoteOpenFileChild::SetRelativeDescriptor(nsIFile *fromFile,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+RemoteOpenFileChild::GetRelativePath(nsIFile *fromFile, nsACString& _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+RemoteOpenFileChild::SetRelativePath(nsIFile *fromFile,
+                                     const nsACString& relativePath)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult
 RemoteOpenFileChild::CopyTo(nsIFile *newParentDir, const nsAString &newName)
 {
