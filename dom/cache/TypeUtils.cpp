@@ -321,7 +321,11 @@ TypeUtils::ToInternalRequest(const CacheRequest& aIn)
   nsRefPtr<InternalRequest> internalRequest = new InternalRequest();
 
   internalRequest->SetMethod(aIn.method());
-  internalRequest->SetURL(aIn.url());
+
+  nsAutoCString url(aIn.urlWithoutQuery());
+  url.Append(aIn.urlQuery());
+  internalRequest->SetURL(url);
+
   internalRequest->SetReferrer(aIn.referrer());
   internalRequest->SetMode(aIn.mode());
   internalRequest->SetCredentialsMode(aIn.credentials());
