@@ -902,6 +902,23 @@ LoginManagerPrompter.prototype = {
       chromeDoc.getElementById("password-notification-password").type = "password";
     };
 
+    let onNotificationClick = (clickEvent) => {
+      // Removes focus from textboxes when we click elsewhere on the doorhanger.
+      let focusedElement = Services.focus.focusedElement;
+      if (!focusedElement || focusedElement.nodeName != "html:input") {
+        // No input is focused so we don't need to blur
+        return;
+      }
+
+      let focusedBindingParent = chromeDoc.getBindingParent(focusedElement);
+      if (!focusedBindingParent || focusedBindingParent.nodeName != "textbox" ||
+          clickEvent.explicitOriginalTarget == focusedBindingParent) {
+        // The focus wasn't in a textbox or the click was in the focused textbox.
+        return;
+      }
+      focusedBindingParent.blur();
+    };
+
     let persistData = () => {
       let foundLogins = Services.logins.findLogins({}, login.hostname,
                                                    login.formSubmitURL,
@@ -985,6 +1002,8 @@ LoginManagerPrompter.prototype = {
                        .addEventListener("blur", onPasswordBlur);
               break;
             case "shown":
+              chromeDoc.getElementById("notification-popup")
+                         .addEventListener("click", onNotificationClick);
               writeDataToUI();
               break;
             case "dismissed":
@@ -992,6 +1011,8 @@ LoginManagerPrompter.prototype = {
               // Fall through.
             case "removed":
               currentNotification = null;
+              chromeDoc.getElementById("notification-popup")
+                       .removeEventListener("click", onNotificationClick);
               chromeDoc.getElementById("password-notification-username")
                        .removeEventListener("input", onInput);
               chromeDoc.getElementById("password-notification-password")
