@@ -16,6 +16,12 @@ XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
 
 var uid = 1;
 
+// Helper tracer. Should be generic sharable by other modules (bug 1171927)
+const trace = {
+  log: function(...args) {
+  }
+}
+
 /**
  * This object represents the main public API designed to access
  * Network export logic. Clients, such as the Network panel itself,
@@ -76,6 +82,8 @@ const HarExporter = {
     if (!file) {
       return resolve();
     }
+
+    trace.log("HarExporter.save; " + options.defaultFileName, options);
 
     return this.fetchHarData(options).then(jsonString => {
       if (!HarUtils.saveToFile(file, jsonString, options.compress)) {

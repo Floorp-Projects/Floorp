@@ -74,6 +74,9 @@ loader.lazyGetter(this, "oscpu", () => {
 loader.lazyGetter(this, "is64Bit", () => {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).is64Bit;
 });
+loader.lazyGetter(this, "registerHarOverlay", () => {
+  return require("devtools/netmonitor/har/toolbox-overlay.js").register;
+});
 
 // White-list buttons that can be toggled to prevent adding prefs for
 // addons that have manually inserted toolbarbuttons into DOM.
@@ -375,6 +378,7 @@ Toolbox.prototype = {
       this._addKeysToWindow();
       this._addReloadKeys();
       this._addHostListeners();
+      this._registerOverlays();
       if (this._hostOptions && this._hostOptions.zoom === false) {
         this._disableZoomKeys();
       } else {
@@ -513,6 +517,10 @@ Toolbox.prototype = {
     this.doc.addEventListener("keypress", this._splitConsoleOnKeypress, false);
 
     this.doc.addEventListener("focus", this._onFocus, true);
+  },
+
+  _registerOverlays: function() {
+    registerHarOverlay(this);
   },
 
   _saveSplitConsoleHeight: function() {
