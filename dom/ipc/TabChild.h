@@ -599,9 +599,6 @@ private:
 
     bool HasValidInnerSize();
 
-    // Get the pres shell resolution of the document in this tab.
-    float GetPresShellResolution() const;
-
     void SetTabId(const TabId& aTabId);
 
     ScreenIntRect GetOuterRect();
