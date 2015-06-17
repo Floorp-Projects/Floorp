@@ -82,7 +82,7 @@ class ProfilerMarker {
 public:
   explicit ProfilerMarker(const char* aMarkerName,
                           ProfilerMarkerPayload* aPayload = nullptr,
-                          float aTime = 0);
+                          double aTime = 0);
 
   ~ProfilerMarker();
 
@@ -98,13 +98,13 @@ public:
     return mGenID + 2 <= aGenID;
   }
 
-  float GetTime() const;
+  double GetTime() const;
 
 private:
   char* mMarkerName;
   ProfilerMarkerPayload* mPayload;
   ProfilerMarker* mNext;
-  float mTime;
+  double mTime;
   uint32_t mGenID;
 };
 
@@ -235,7 +235,7 @@ public:
     mSleepId++;
   }
 
-  void addMarker(const char *aMarkerStr, ProfilerMarkerPayload *aPayload, float aTime)
+  void addMarker(const char* aMarkerStr, ProfilerMarkerPayload* aPayload, double aTime)
   {
     ProfilerMarker* marker = new ProfilerMarker(aMarkerStr, aPayload, aTime);
     mPendingMarkers.insert(marker);

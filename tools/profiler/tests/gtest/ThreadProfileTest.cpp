@@ -22,10 +22,10 @@ TEST(ThreadProfile, InsertOneTag) {
   Thread::tid_t tid = 1000;
   ThreadInfo info("testThread", tid, true, stack, nullptr);
   nsRefPtr<ProfileBuffer> pb = new ProfileBuffer(10);
-  pb->addTag(ProfileEntry('t', 123.1f));
+  pb->addTag(ProfileEntry('t', 123.1));
   ASSERT_TRUE(pb->mEntries != nullptr);
   ASSERT_TRUE(pb->mEntries[pb->mReadPos].mTagName == 't');
-  ASSERT_TRUE(pb->mEntries[pb->mReadPos].mTagFloat == 123.1f);
+  ASSERT_TRUE(pb->mEntries[pb->mReadPos].mTagDouble == 123.1);
 }
 
 // See if we can insert some tags
