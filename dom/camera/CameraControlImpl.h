@@ -20,6 +20,10 @@
 
 namespace mozilla {
 
+namespace dom {
+  class BlobImpl;
+}
+
 namespace layers {
   class Image;
 }
@@ -57,6 +61,7 @@ protected:
   void OnAutoFocusComplete(bool aAutoFocusSucceeded);
   void OnFacesDetected(const nsTArray<Face>& aFaces);
   void OnTakePictureComplete(const uint8_t* aData, uint32_t aLength, const nsAString& aMimeType);
+  void OnPoster(dom::BlobImpl* aBlobImpl);
 
   void OnRateLimitPreview(bool aLimit);
   bool OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight);
