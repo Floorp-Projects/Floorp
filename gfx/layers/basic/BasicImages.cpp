@@ -51,7 +51,7 @@ public:
   virtual void SetData(const Data& aData) override;
   virtual void SetDelayedConversion(bool aDelayed) override { mDelayedConversion = aDelayed; }
 
-  TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() override;
+  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
@@ -130,7 +130,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
   mSize = size;
 }
 
-TemporaryRef<gfx::SourceSurface>
+already_AddRefed<gfx::SourceSurface>
 BasicPlanarYCbCrImage::GetAsSourceSurface()
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be main thread");

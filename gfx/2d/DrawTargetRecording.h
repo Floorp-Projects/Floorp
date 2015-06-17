@@ -22,7 +22,7 @@ public:
   virtual DrawTargetType GetType() const override { return mFinalDT->GetType(); }
   virtual BackendType GetBackendType() const override { return mFinalDT->GetBackendType(); }
 
-  virtual TemporaryRef<SourceSurface> Snapshot() override;
+  virtual already_AddRefed<SourceSurface> Snapshot() override;
 
   virtual IntSize GetSize() override { return mFinalDT->GetSize(); }
 
@@ -210,7 +210,7 @@ public:
    *
    * The SourceSurface does not take ownership of aData, and may be freed at any time.
    */
-  virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
+  virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                                   const IntSize &aSize,
                                                                   int32_t aStride,
                                                                   SurfaceFormat aFormat) const override;
@@ -220,20 +220,20 @@ public:
    * an arbitrary other SourceSurface. This may return aSourceSurface or some
    * other existing surface.
    */
-  virtual TemporaryRef<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const override;
+  virtual already_AddRefed<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const override;
 
   /*
    * Create a SourceSurface for a type of NativeSurface. This may fail if the
    * draw target does not know how to deal with the type of NativeSurface passed
    * in.
    */
-  virtual TemporaryRef<SourceSurface>
+  virtual already_AddRefed<SourceSurface>
     CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const override;
 
   /*
    * Create a DrawTarget whose snapshot is optimized for use with this DrawTarget.
    */
-  virtual TemporaryRef<DrawTarget>
+  virtual already_AddRefed<DrawTarget>
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const override;
 
   /*
@@ -243,7 +243,7 @@ public:
    * ID2D1SimplifiedGeometrySink requires the fill mode
    * to be set before calling BeginFigure().
    */
-  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const override;
+  virtual already_AddRefed<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const override;
 
   /*
    * Create a GradientStops object that holds information about a set of
@@ -255,12 +255,12 @@ public:
    * aExtendNone This describes how to extend the stop color outside of the
    *             gradient area.
    */
-  virtual TemporaryRef<GradientStops>
+  virtual already_AddRefed<GradientStops>
     CreateGradientStops(GradientStop *aStops,
                         uint32_t aNumStops,
                         ExtendMode aExtendMode = ExtendMode::CLAMP) const override;
 
-  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType) override;
+  virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType) override;
 
   /*
    * Set a transform on the surface, this transform is applied at drawing time

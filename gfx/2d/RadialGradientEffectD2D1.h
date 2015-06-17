@@ -79,7 +79,7 @@ public:
   IUnknown *GetStopCollection() const { return mStopCollection; }
 
 private:
-  TemporaryRef<ID2D1ResourceTexture> CreateGradientTexture();
+  already_AddRefed<ID2D1ResourceTexture> CreateGradientTexture();
 
   RadialGradientEffectD2D1();
 

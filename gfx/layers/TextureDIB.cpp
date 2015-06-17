@@ -69,7 +69,7 @@ TextureClientMemoryDIB::~TextureClientMemoryDIB()
   MOZ_COUNT_DTOR(TextureClientMemoryDIB);
 }
 
-TemporaryRef<TextureClient>
+already_AddRefed<TextureClient>
 TextureClientMemoryDIB::CreateSimilar(TextureFlags aFlags,
                                       TextureAllocationFlags aAllocFlags) const
 {
@@ -137,7 +137,7 @@ TextureClientShmemDIB::~TextureClientShmemDIB()
   ::CloseHandle(mFileMapping);
 }
 
-TemporaryRef<TextureClient>
+already_AddRefed<TextureClient>
 TextureClientShmemDIB::CreateSimilar(TextureFlags aFlags,
                                      TextureAllocationFlags aAllocFlags) const
 {

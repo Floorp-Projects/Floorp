@@ -146,7 +146,7 @@ public:
    * this element. May return nullptr if there is no [valid] path. The path
    * that is created may be cached and returned on subsequent calls.
    */
-  virtual mozilla::TemporaryRef<Path> GetOrBuildPath(const DrawTarget& aDrawTarget,
+  virtual already_AddRefed<Path> GetOrBuildPath(const DrawTarget& aDrawTarget,
                                                      FillRule fillRule);
 
   /**
@@ -154,7 +154,7 @@ public:
    * previously cached Path, nor caches the Path that in does return).
    * this element. May return nullptr if there is no [valid] path.
    */
-  virtual mozilla::TemporaryRef<Path> BuildPath(PathBuilder* aBuilder) = 0;
+  virtual already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) = 0;
 
   /**
    * Returns a Path that can be used to measure the length of this elements
@@ -171,7 +171,7 @@ public:
    * run into problems with the inserted lines negatively affecting measuring
    * for content.
    */
-  virtual mozilla::TemporaryRef<Path> GetOrBuildPathForMeasuring();
+  virtual already_AddRefed<Path> GetOrBuildPathForMeasuring();
 
   /**
    * Returns the current computed value of the CSS property 'fill-rule' for

@@ -274,8 +274,8 @@ public:
   Color SinglePixelColor() const;
   bool IsSinglePixel() const;
 
-  TemporaryRef<SourceSurface> GetSurface();
-  TemporaryRef<DrawTarget> GetDrawTarget();
+  already_AddRefed<SourceSurface> GetSurface();
+  already_AddRefed<DrawTarget> GetDrawTarget();
 
   size_t SizeOfExcludingThis(gfxMemoryLocation aLocation,
                              MallocSizeOf aMallocSizeOf) const;
@@ -297,7 +297,7 @@ private: // methods
   uint32_t GetImageBytesPerRow() const;
   uint32_t GetImageDataLength() const;
   int32_t GetStride() const;
-  TemporaryRef<SourceSurface> GetSurfaceInternal();
+  already_AddRefed<SourceSurface> GetSurfaceInternal();
 
   uint32_t PaletteDataLength() const
   {

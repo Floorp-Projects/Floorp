@@ -104,7 +104,7 @@ native TempRefImageContainer(already_AddRefed<mozilla::layers::ImageContainer>);
 native Orientation(mozilla::image::Orientation);
 [ref] native TimeStamp(mozilla::TimeStamp);
 [ref] native MaybeSVGImageContext(mozilla::Maybe<mozilla::SVGImageContext>);
-native TempRefSourceSurface(mozilla::TemporaryRef<mozilla::gfx::SourceSurface>);
+native TempRefSourceSurface(already_AddRefed<mozilla::gfx::SourceSurface>);
 native TempRefImgIContainer(already_AddRefed<imgIContainer>);
 native nsIntSizeByVal(nsIntSize);
 
@@ -116,7 +116,7 @@ native nsIntSizeByVal(nsIntSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(f5e1230a-3733-477f-b49b-fee8717a786b)]
+[scriptable, builtinclass, uuid(f3596ad3-4238-4bc4-8093-90bc2d002ab6)]
 interface imgIContainer : nsISupports
 {
   /**

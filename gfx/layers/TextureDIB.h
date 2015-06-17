@@ -71,7 +71,7 @@ public:
   virtual bool AllocateForSurface(gfx::IntSize aSize,
     TextureAllocationFlags aFlags = ALLOC_DEFAULT) override;
 
-  virtual TemporaryRef<TextureClient>
+  virtual already_AddRefed<TextureClient>
   CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
@@ -99,7 +99,7 @@ public:
   virtual bool AllocateForSurface(gfx::IntSize aSize,
     TextureAllocationFlags aFlags = ALLOC_DEFAULT) override;
 
-  virtual TemporaryRef<TextureClient>
+  virtual already_AddRefed<TextureClient>
   CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
@@ -157,7 +157,7 @@ public:
   DIBTextureHost(TextureFlags aFlags,
                  const SurfaceDescriptorDIB& aDescriptor);
 
-  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override
+  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override
   {
     return nullptr; // TODO: cf bug 872568
   }
@@ -175,7 +175,7 @@ public:
                          const SurfaceDescriptorFileMapping& aDescriptor);
   ~TextureHostFileMapping();
 
-  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override
+  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override
   {
     MOZ_CRASH(); // Not implemented! It would be tricky to keep track of the
                  // scope of the file mapping. We could do this through UserData

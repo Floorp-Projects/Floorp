@@ -125,9 +125,9 @@ public:
   static void Dump(const char* aLabel);
 
   static VolumeArray::size_type NumVolumes();
-  static TemporaryRef<Volume> GetVolume(VolumeArray::index_type aIndex);
-  static TemporaryRef<Volume> FindVolumeByName(const nsCSubstring& aName);
-  static TemporaryRef<Volume> FindAddVolumeByName(const nsCSubstring& aName);
+  static already_AddRefed<Volume> GetVolume(VolumeArray::index_type aIndex);
+  static already_AddRefed<Volume> FindVolumeByName(const nsCSubstring& aName);
+  static already_AddRefed<Volume> FindAddVolumeByName(const nsCSubstring& aName);
   static void InitConfig();
 
   static void       PostCommand(VolumeCommand* aCommand);

@@ -30,7 +30,7 @@ public:
       CreateOffscreenSurface(const IntSize& size,
                              gfxContentType contentType) override;
 
-    virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont>
+    virtual already_AddRefed<mozilla::gfx::ScaledFont>
       GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont) override;
 
     virtual nsresult GetFontList(nsIAtom *aLangGroup,

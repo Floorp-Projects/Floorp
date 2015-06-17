@@ -427,7 +427,7 @@ gfxMacFont::InitMetricsFromPlatform()
     mIsValid = true;
 }
 
-TemporaryRef<ScaledFont>
+already_AddRefed<ScaledFont>
 gfxMacFont::GetScaledFont(DrawTarget *aTarget)
 {
   if (!mAzureScaledFont) {
@@ -441,7 +441,7 @@ gfxMacFont::GetScaledFont(DrawTarget *aTarget)
   return scaledFont.forget();
 }
 
-TemporaryRef<mozilla::gfx::GlyphRenderingOptions>
+already_AddRefed<mozilla::gfx::GlyphRenderingOptions>
 gfxMacFont::GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams)
 {
     if (aRunParams) {

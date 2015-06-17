@@ -69,7 +69,7 @@ PathBuilderRecording::CurrentPoint() const
   return mPathBuilder->CurrentPoint();
 }
 
-TemporaryRef<Path>
+already_AddRefed<Path>
 PathBuilderRecording::Finish()
 {
   RefPtr<Path> path = mPathBuilder->Finish();
@@ -84,7 +84,7 @@ PathRecording::~PathRecording()
   }
 }
 
-TemporaryRef<PathBuilder>
+already_AddRefed<PathBuilder>
 PathRecording::CopyToBuilder(FillRule aFillRule) const
 {
   RefPtr<PathBuilder> pathBuilder = mPath->CopyToBuilder(aFillRule);
@@ -93,7 +93,7 @@ PathRecording::CopyToBuilder(FillRule aFillRule) const
   return recording.forget();
 }
 
-TemporaryRef<PathBuilder>
+already_AddRefed<PathBuilder>
 PathRecording::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) const
 {
   RefPtr<PathBuilder> pathBuilder = mPath->TransformedCopyToBuilder(aTransform, aFillRule);

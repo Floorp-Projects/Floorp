@@ -42,7 +42,7 @@ public:
   virtual ~FilterNodeSoftware();
 
   // Factory method, intended to be called from DrawTarget*::CreateFilter.
-  static TemporaryRef<FilterNode> Create(FilterType aType);
+  static already_AddRefed<FilterNode> Create(FilterType aType);
 
   // Draw the filter, intended to be called by DrawTarget*::DrawFilter.
   void Draw(DrawTarget* aDrawTarget, const Rect &aSourceRect,
@@ -90,7 +90,7 @@ protected:
    * pass through input surfaces unchanged.
    * Callers need to treat the returned surface as immutable.
    */
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) = 0;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) = 0;
 
   /**
    * Call RequestRect (see below) on any input filters with the desired input
@@ -104,7 +104,7 @@ protected:
    * by subclasses that don't want to cache their output. Those classes should
    * call Render(aRect) directly from here.
    */
-  virtual TemporaryRef<DataSourceSurface> GetOutput(const IntRect &aRect);
+  virtual already_AddRefed<DataSourceSurface> GetOutput(const IntRect &aRect);
 
   // The following methods are non-virtual helper methods.
 
@@ -139,7 +139,7 @@ protected:
    * surface is guaranteed to be of SurfaceFormat::B8G8R8A8 always.
    * Each pixel row of the returned surface is guaranteed to be 16-byte aligned.
    */
-  TemporaryRef<DataSourceSurface>
+  already_AddRefed<DataSourceSurface>
     GetInputDataSourceSurface(uint32_t aInputEnumIndex, const IntRect& aRect,
                               FormatHint aFormatHint = CAN_HANDLE_A8,
                               ConvolveMatrixEdgeMode aEdgeMode = EDGE_MODE_NONE,
@@ -226,7 +226,7 @@ public:
   virtual void SetAttribute(uint32_t aIndex, const Matrix &aMatrix) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
@@ -247,7 +247,7 @@ public:
   virtual void SetAttribute(uint32_t aIndex, uint32_t aBlendMode) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
@@ -267,7 +267,7 @@ public:
   virtual void SetAttribute(uint32_t aIndex, uint32_t aOperator) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
@@ -287,7 +287,7 @@ public:
   virtual void SetAttribute(uint32_t aIndex, uint32_t aAlphaMode) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
@@ -306,8 +306,8 @@ public:
   virtual void SetAttribute(uint32_t aIndex, const Color &aColor) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> GetOutput(const IntRect &aRect) override;
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> GetOutput(const IntRect &aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
 
 private:
@@ -323,7 +323,7 @@ public:
   virtual void SetAttribute(uint32_t aIndex, const IntRect &aSourceRect) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
@@ -345,7 +345,7 @@ public:
   virtual void SetAttribute(uint32_t aIndex, bool aDisable) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
@@ -470,14 +470,14 @@ public:
   virtual void SetAttribute(uint32_t aIndex, bool aPreserveAlpha) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 
 private:
   template<typename CoordType>
-  TemporaryRef<DataSourceSurface> DoRender(const IntRect& aRect,
+  already_AddRefed<DataSourceSurface> DoRender(const IntRect& aRect,
                                            CoordType aKernelUnitLengthX,
                                            CoordType aKernelUnitLengthY);
 
@@ -506,7 +506,7 @@ public:
   virtual void SetAttribute(uint32_t aIndex, uint32_t aValue) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
@@ -532,7 +532,7 @@ public:
   virtual void SetAttribute(uint32_t aIndex, uint32_t aValue) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
 
@@ -555,7 +555,7 @@ public:
   virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
@@ -577,7 +577,7 @@ public:
   virtual void SetAttribute(uint32_t aIndex, uint32_t aOperator) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
@@ -593,7 +593,7 @@ class FilterNodeBlurXYSoftware : public FilterNodeSoftware
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeBlurXYSoftware, override)
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   IntRect InflatedSourceOrDestRect(const IntRect &aDestRect);
@@ -646,7 +646,7 @@ public:
   virtual void SetAttribute(uint32_t aIndex, const Rect &aSourceRect) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
@@ -661,7 +661,7 @@ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodePremultiplySoftware, override)
   virtual const char* GetName() override { return "Premultiply"; }
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
@@ -673,7 +673,7 @@ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeUnpremultiplySoftware, override)
   virtual const char* GetName() override { return "Unpremultiply"; }
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
@@ -697,14 +697,14 @@ public:
   virtual void SetAttribute(uint32_t aIndex, const Color &) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
   virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 
 private:
   template<typename CoordType>
-  TemporaryRef<DataSourceSurface> DoRender(const IntRect& aRect,
+  already_AddRefed<DataSourceSurface> DoRender(const IntRect& aRect,
                                            CoordType aKernelUnitLengthX,
                                            CoordType aKernelUnitLengthY);
 

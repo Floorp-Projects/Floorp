@@ -10,7 +10,7 @@
 #include "GLDefs.h"                     // for GLenum, LOCAL_GL_FRAMEBUFFER, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
+#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/gfx/Point.h"          // for IntSize, IntSizeTyped
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
 #include "mozilla/layers/Compositor.h"  // for SurfaceInitMode, etc
@@ -79,7 +79,7 @@ public:
    * Create a render target around the default FBO, for rendering straight to
    * the window.
    */
-  static TemporaryRef<CompositingRenderTargetOGL>
+  static already_AddRefed<CompositingRenderTargetOGL>
   RenderTargetForWindow(CompositorOGL* aCompositor,
                         const gfx::IntSize& aSize)
   {
@@ -146,7 +146,7 @@ public:
   }
 
 #ifdef MOZ_DUMP_PAINTING
-  virtual TemporaryRef<gfx::DataSourceSurface> Dump(Compositor* aCompositor) override;
+  virtual already_AddRefed<gfx::DataSourceSurface> Dump(Compositor* aCompositor) override;
 #endif
 
   const gfx::IntSize& GetInitSize() const {

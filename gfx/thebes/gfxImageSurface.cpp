@@ -318,7 +318,7 @@ gfxImageSurface::CopyTo(SourceSurface *aSurface) {
     return true;
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 gfxImageSurface::CopyToB8G8R8A8DataSourceSurface()
 {
   RefPtr<DataSourceSurface> dataSurface =

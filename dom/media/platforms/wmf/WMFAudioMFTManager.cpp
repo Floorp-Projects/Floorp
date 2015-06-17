@@ -113,7 +113,7 @@ WMFAudioMFTManager::GetMediaSubtypeGUID()
   };
 }
 
-TemporaryRef<MFTDecoder>
+already_AddRefed<MFTDecoder>
 WMFAudioMFTManager::Init()
 {
   NS_ENSURE_TRUE(mStreamType != Unknown, nullptr);

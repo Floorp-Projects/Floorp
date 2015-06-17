@@ -34,7 +34,7 @@ TextureClientX11::~TextureClientX11()
   MOZ_COUNT_DTOR(TextureClientX11);
 }
 
-TemporaryRef<TextureClient>
+already_AddRefed<TextureClient>
 TextureClientX11::CreateSimilar(TextureFlags aFlags,
                                 TextureAllocationFlags aAllocFlags) const
 {

@@ -144,7 +144,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LocalSourceStreamInfo)
 
 private:
-  TemporaryRef<MediaPipeline> ForgetPipelineByTrackId_m(
+  already_AddRefed<MediaPipeline> ForgetPipelineByTrackId_m(
       const std::string& trackId);
 };
 

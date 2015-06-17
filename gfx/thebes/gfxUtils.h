@@ -55,9 +55,9 @@ public:
     static bool UnpremultiplyDataSurface(DataSourceSurface* srcSurf,
                                          DataSourceSurface* destSurf);
 
-    static mozilla::TemporaryRef<DataSourceSurface>
+    static already_AddRefed<DataSourceSurface>
       CreatePremultipliedDataSurface(DataSourceSurface* srcSurf);
-    static mozilla::TemporaryRef<DataSourceSurface>
+    static already_AddRefed<DataSourceSurface>
       CreateUnpremultipliedDataSurface(DataSourceSurface* srcSurf);
 
     static void ConvertBGRAtoRGBA(uint8_t* aData, uint32_t aLength);
@@ -206,7 +206,7 @@ public:
      * realize format conversion may involve expensive copying/uploading/
      * readback.)
      */
-    static mozilla::TemporaryRef<DataSourceSurface>
+    static already_AddRefed<DataSourceSurface>
     CopySurfaceToDataSourceSurfaceWithFormat(SourceSurface* aSurface,
                                              SurfaceFormat aFormat);
 

@@ -877,7 +877,7 @@ gfxFontconfigFont::~gfxFontconfigFont()
 }
 
 #ifdef USE_SKIA
-mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions>
+already_AddRefed<mozilla::gfx::GlyphRenderingOptions>
 gfxFontconfigFont::GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams)
 {
   cairo_scaled_font_t *scaled_font = CairoScaledFont();

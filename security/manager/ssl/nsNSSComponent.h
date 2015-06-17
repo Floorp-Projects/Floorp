@@ -29,7 +29,7 @@ class SmartCardThreadList;
 namespace mozilla { namespace psm {
 
 MOZ_WARN_UNUSED_RESULT
-  ::mozilla::TemporaryRef<mozilla::psm::SharedCertVerifier>
+  ::already_AddRefed<mozilla::psm::SharedCertVerifier>
   GetDefaultCertVerifier();
 
 } } // namespace mozilla::psm
@@ -95,7 +95,7 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 
   NS_IMETHOD IsNSSInitialized(bool* initialized) = 0;
 
-  virtual ::mozilla::TemporaryRef<mozilla::psm::SharedCertVerifier>
+  virtual ::already_AddRefed<mozilla::psm::SharedCertVerifier>
     GetDefaultCertVerifier() = 0;
 };
 
@@ -152,7 +152,7 @@ public:
 
   NS_IMETHOD IsNSSInitialized(bool* initialized) override;
 
-  ::mozilla::TemporaryRef<mozilla::psm::SharedCertVerifier>
+  ::already_AddRefed<mozilla::psm::SharedCertVerifier>
     GetDefaultCertVerifier() override;
 
   // The following two methods are thread-safe.

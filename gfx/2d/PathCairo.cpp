@@ -122,7 +122,7 @@ PathBuilderCairo::CurrentPoint() const
   return mCurrentPoint;
 }
 
-TemporaryRef<Path>
+already_AddRefed<Path>
 PathBuilderCairo::Finish()
 {
   return MakeAndAddRef<PathCairo>(mFillRule, mPathData, mCurrentPoint);
@@ -159,7 +159,7 @@ PathCairo::~PathCairo()
   }
 }
 
-TemporaryRef<PathBuilder>
+already_AddRefed<PathBuilder>
 PathCairo::CopyToBuilder(FillRule aFillRule) const
 {
   RefPtr<PathBuilderCairo> builder = new PathBuilderCairo(aFillRule);
@@ -170,7 +170,7 @@ PathCairo::CopyToBuilder(FillRule aFillRule) const
   return builder.forget();
 }
 
-TemporaryRef<PathBuilder>
+already_AddRefed<PathBuilder>
 PathCairo::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) const
 {
   RefPtr<PathBuilderCairo> builder = new PathBuilderCairo(aFillRule);

@@ -102,7 +102,7 @@ public:
 
     NS_IMETHOD MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) /*override*/;
 
-    virtual mozilla::TemporaryRef<mozilla::gfx::DrawTarget>
+    virtual already_AddRefed<mozilla::gfx::DrawTarget>
         StartRemoteDrawing() override;
     virtual void EndRemoteDrawing() override;
 

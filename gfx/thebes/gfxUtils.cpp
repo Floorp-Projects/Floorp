@@ -323,7 +323,7 @@ MapSrcAndCreateMappedDest(DataSourceSurface* srcSurf,
     return true;
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 gfxUtils::CreatePremultipliedDataSurface(DataSourceSurface* srcSurf)
 {
     RefPtr<DataSourceSurface> destSurf;
@@ -344,7 +344,7 @@ gfxUtils::CreatePremultipliedDataSurface(DataSourceSurface* srcSurf)
     return destSurf.forget();
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 gfxUtils::CreateUnpremultipliedDataSurface(DataSourceSurface* srcSurf)
 {
     RefPtr<DataSourceSurface> destSurf;
@@ -705,7 +705,7 @@ ClipToRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion)
   aContext->Clip();
 }
 
-static TemporaryRef<Path>
+static already_AddRefed<Path>
 PathFromRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion)
 {
   RefPtr<PathBuilder> pb = aTarget->CreatePathBuilder();
@@ -1020,7 +1020,7 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
   cairo_destroy(ctx);
 }
 
-/* static */ TemporaryRef<DataSourceSurface>
+/* static */ already_AddRefed<DataSourceSurface>
 gfxUtils::CopySurfaceToDataSourceSurfaceWithFormat(SourceSurface* aSurface,
                                                    SurfaceFormat aFormat)
 {

@@ -68,9 +68,6 @@ public:
     template<class U>
     friend class ::mozilla::StaticRefPtr;
 
-    template<typename U>
-    friend class TemporaryRef;
-
     template<class U>
     friend class ::nsRefPtr;
 

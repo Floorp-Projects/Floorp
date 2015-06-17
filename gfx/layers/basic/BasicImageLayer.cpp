@@ -49,7 +49,7 @@ public:
                      const gfx::Point& aDeviceOffset,
                      Layer* aMaskLayer) override;
 
-  virtual TemporaryRef<SourceSurface> GetAsSourceSurface() override;
+  virtual already_AddRefed<SourceSurface> GetAsSourceSurface() override;
 
 protected:
   BasicLayerManager* BasicManager()
@@ -91,7 +91,7 @@ BasicImageLayer::Paint(DrawTarget* aDT,
   GetContainer()->NotifyPaintedImage(image);
 }
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 BasicImageLayer::GetAsSourceSurface()
 {
   if (!mContainer) {

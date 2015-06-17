@@ -252,7 +252,7 @@ LibHandle::MappableMUnmap(void *addr, size_t length) const
 /**
  * SystemElf
  */
-TemporaryRef<LibHandle>
+already_AddRefed<LibHandle>
 SystemElf::Load(const char *path, int flags)
 {
   /* The Android linker returns a handle when the file name matches an
@@ -331,7 +331,7 @@ SystemElf::FindExidx(int *pcount) const
 /* Unique ElfLoader instance */
 ElfLoader ElfLoader::Singleton;
 
-TemporaryRef<LibHandle>
+already_AddRefed<LibHandle>
 ElfLoader::Load(const char *path, int flags, LibHandle *parent)
 {
   /* Ensure logging is initialized or refresh if environment changed. */
@@ -406,7 +406,7 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
   return handle.forget();
 }
 
-mozilla::TemporaryRef<LibHandle>
+already_AddRefed<LibHandle>
 ElfLoader::GetHandleByPtr(void *addr)
 {
   /* Scan the list of handles we already have for a match */

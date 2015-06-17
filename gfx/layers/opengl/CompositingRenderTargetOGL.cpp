@@ -69,7 +69,7 @@ CompositingRenderTargetOGL::BindRenderTarget()
 }
 
 #ifdef MOZ_DUMP_PAINTING
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 CompositingRenderTargetOGL::Dump(Compositor* aCompositor)
 {
   MOZ_ASSERT(mInitParams.mStatus == InitParams::INITIALIZED);
