@@ -9,7 +9,6 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Monitor.h"
 #include "MediaDataDemuxer.h"
 #include "MediaDecoderReader.h"
 #include "MediaTaskQueue.h"
@@ -207,8 +206,6 @@ private:
       , mNumSamplesOutput(0)
       , mSizeOfQueue(0)
       , mLastStreamSourceID(UINT32_MAX)
-      , mMonitor(aType == MediaData::AUDIO_DATA ? "audio decoder data"
-                                                : "video decoder data")
     {}
 
     MediaFormatReader* mOwner;
@@ -295,9 +292,6 @@ private:
     Atomic<size_t> mSizeOfQueue;
     // Sample format monitoring.
     uint32_t mLastStreamSourceID;
-    // Monitor that protects all non-threadsafe state; the primitives
-    // that follow.
-    Monitor mMonitor;
     media::TimeIntervals mTimeRanges;
     nsRefPtr<SharedTrackInfo> mInfo;
   };
@@ -420,9 +414,6 @@ private:
   nsRefPtr<MediaDataDemuxer> mMainThreadDemuxer;
   nsRefPtr<MediaTrackDemuxer> mAudioTrackDemuxer;
   nsRefPtr<MediaTrackDemuxer> mVideoTrackDemuxer;
-  ByteInterval mDataRange;
-  media::TimeIntervals mCachedTimeRanges;
-  bool mCachedTimeRangesStale;
 
 #if defined(READER_DORMANT_HEURISTIC)
   const bool mDormantEnabled;

@@ -1075,6 +1075,7 @@ MP4Reader::GetEvictionOffset(double aTime)
 media::TimeIntervals
 MP4Reader::GetBuffered()
 {
+  MOZ_ASSERT(OnTaskQueue());
   MonitorAutoLock mon(mDemuxerMonitor);
   media::TimeIntervals buffered;
   if (!mIndexReady) {
