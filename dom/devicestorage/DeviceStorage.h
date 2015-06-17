@@ -104,7 +104,7 @@ public:
   void AccumDiskUsage(uint64_t* aPicturesSoFar, uint64_t* aVideosSoFar,
                       uint64_t* aMusicSoFar, uint64_t* aTotalSoFar);
 
-  void GetDiskFreeSpace(int64_t* aSoFar);
+  void GetStorageFreeSpace(int64_t* aSoFar);
   void GetStatus(nsAString& aStatus);
   void GetStorageStatus(nsAString& aStatus);
   void DoFormat(nsAString& aStatus);
@@ -182,6 +182,8 @@ public:
   explicit nsDOMDeviceStorage(nsPIDOMWindow* aWindow);
 
   static int InstanceCount() { return sInstanceCount; }
+
+  static void InvalidateVolumeCaches();
 
   nsresult Init(nsPIDOMWindow* aWindow, const nsAString& aType,
                 const nsAString& aVolName);

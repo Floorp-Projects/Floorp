@@ -49,26 +49,20 @@ ContentDispatchChooser.prototype =
     if (aHandler.possibleApplicationHandlers.length > 1) {
       aHandler.launchWithURI(aURI, aWindowContext);
     } else {
+      // xpcshell tests do not have an Android Bridge but we require Android
+      // Bridge when using Messaging so we guard against this case. xpcshell
+      // tests also do not have a window, so we use this state to guard.
       let win = this._getChromeWin();
-      if (win && win.NativeWindow) {
-        let bundle = Services.strings.createBundle("chrome://browser/locale/handling.properties");
-        let failedText = bundle.GetStringFromName("protocol.failed");
-        let searchText = bundle.GetStringFromName("protocol.toast.search");
-
-        win.NativeWindow.toast.show(failedText, "long", {
-          button: {
-            label: searchText,
-            callback: function() {
-              let message = {
-                type: "Intent:Open",
-                url: "market://search?q=" + aURI.scheme,
-              };
-
-              Messaging.sendRequest(message);
-            }
-          }
-        });
+      if (!win) {
+        return;
       }
+
+      let msg = {
+        type: "Intent:OpenNoHandler",
+        uri: aURI.spec,
+      };
+
+      Messaging.sendRequest(msg);
     }
   },
 };

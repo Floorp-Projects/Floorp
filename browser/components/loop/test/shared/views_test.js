@@ -815,6 +815,89 @@ describe("loop.shared.views", function() {
     });
   });
 
+  describe("ContextUrlView", function() {
+    var view;
+
+    function mountTestComponent(extraProps) {
+      var props = _.extend({
+        dispatcher: dispatcher
+      }, extraProps);
+      return TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.ContextUrlView, props));
+    }
+
+    it("should display nothing if the url is invalid", function() {
+      view = mountTestComponent({
+        url: "fjrTykyw"
+      });
+
+      expect(view.getDOMNode()).eql(null);
+    });
+
+    it("should use a default thumbnail if one is not supplied", function() {
+      view = mountTestComponent({
+        url: "http://wonderful.invalid"
+      });
+
+      expect(view.getDOMNode().querySelector(".context-preview").getAttribute("src"))
+        .eql("shared/img/icons-16x16.svg#globe");
+    });
+
+    it("should use a default thumbnail for desktop if one is not supplied", function() {
+      view = mountTestComponent({
+        useDesktopPaths: true,
+        url: "http://wonderful.invalid"
+      });
+
+      expect(view.getDOMNode().querySelector(".context-preview").getAttribute("src"))
+        .eql("loop/shared/img/icons-16x16.svg#globe");
+    });
+
+    it("should not display a title if by default", function() {
+      view = mountTestComponent({
+        url: "http://wonderful.invalid"
+      });
+
+      expect(view.getDOMNode().querySelector(".context-content > p")).eql(null);
+    });
+
+    it("should display a title if required", function() {
+      view = mountTestComponent({
+        showContextTitle: true,
+        url: "http://wonderful.invalid"
+      });
+
+      expect(view.getDOMNode().querySelector(".context-content > p")).not.eql(null);
+    });
+
+    it("should set the href on the link if clicks are allowed", function() {
+      view = mountTestComponent({
+        allowClick: true,
+        url: "http://wonderful.invalid"
+      });
+
+      expect(view.getDOMNode().querySelector(".context-url").href)
+        .eql("http://wonderful.invalid/");
+    });
+
+    it("should dispatch an action to record link clicks", function() {
+      view = mountTestComponent({
+        allowClick: true,
+        url: "http://wonderful.invalid"
+      });
+
+      var linkNode = view.getDOMNode().querySelector(".context-url");
+
+      TestUtils.Simulate.click(linkNode);
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWith(dispatcher.dispatch,
+        new sharedActions.RecordClick({
+          linkInfo: "Shared URL"
+        }));
+    });
+  });
+
   describe("MediaView", function() {
     var view;
 
