@@ -926,7 +926,7 @@ PLDHashTable::Iterator::~Iterator()
   }
 }
 
-MOZ_ALWAYS_INLINE bool
+bool
 PLDHashTable::Iterator::Done() const
 {
   return mCurrent == mLimit;
