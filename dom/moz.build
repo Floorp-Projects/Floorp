@@ -96,6 +96,7 @@ DIRS += [
     'camera',
     'audiochannel',
     'broadcastchannel',
+    'messagechannel',
     'promise',
     'smil',
     'telephony',

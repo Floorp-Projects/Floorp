@@ -10,6 +10,7 @@ include protocol PCache;
 include protocol PCacheStorage;
 include protocol PCacheStreamControl;
 include protocol PFileDescriptorSet;
+include protocol PMessagePort;
 include protocol PMedia;
 include protocol PServiceWorkerManager;
 include protocol PUDPSocket;
@@ -35,6 +36,7 @@ sync protocol PBackground
   manages PCacheStorage;
   manages PCacheStreamControl;
   manages PFileDescriptorSet;
+  manages PMessagePort;
   manages PMedia;
   manages PServiceWorkerManager;
   manages PUDPSocket;
@@ -58,6 +60,8 @@ parent:
   ShutdownServiceWorkerRegistrar();
 
   PCacheStorage(Namespace aNamespace, PrincipalInfo aPrincipalInfo);
+
+  PMessagePort(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
 
 child:
   PCache();
