@@ -51,7 +51,7 @@ loop
     orr     r8, r8, r10         ; differences of all 4 pixels
     ; calculate total sum
     add    r4, r4, r6           ; add positive differences to sum
-    sub    r4, r4, r7           ; substract negative differences from sum
+    sub    r4, r4, r7           ; subtract negative differences from sum
 
     ; calculate sse
     uxtb16  r7, r8              ; byte (two pixels) to halfwords
@@ -77,7 +77,7 @@ loop
 
     ; calculate total sum
     add     r4, r4, r6          ; add positive differences to sum
-    sub     r4, r4, r7          ; substract negative differences from sum
+    sub     r4, r4, r7          ; subtract negative differences from sum
 
     ; calculate sse
     uxtb16  r7, r8              ; byte (two pixels) to halfwords
