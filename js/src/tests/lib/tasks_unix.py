@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 from results import TestOutput
 
 class Task(object):
-    def __init__(self, test, pid, stdout, stderr):
+    def __init__(self, test, prefix, pid, stdout, stderr):
         self.test = test
-        self.cmd = test.get_command(test.js_cmd_prefix)
+        self.cmd = test.get_command(prefix)
         self.pid = pid
         self.stdout = stdout
         self.stderr = stderr
@@ -17,7 +17,7 @@ class Task(object):
         self.out = []
         self.err = []
 
-def spawn_test(test, passthrough=False):
+def spawn_test(test, prefix, passthrough=False):
     """Spawn one child, return a task struct."""
     if not passthrough:
         (rout, wout) = os.pipe()
@@ -29,7 +29,7 @@ def spawn_test(test, passthrough=False):
         if rv:
             os.close(wout)
             os.close(werr)
-            return Task(test, rv, rout, rerr)
+            return Task(test, prefix, rv, rout, rerr)
 
         # Child.
         os.close(rout)
@@ -38,7 +38,7 @@ def spawn_test(test, passthrough=False):
         os.dup2(wout, 1)
         os.dup2(werr, 2)
 
-    cmd = test.get_command(test.js_cmd_prefix)
+    cmd = test.get_command(prefix)
     os.execvp(cmd[0], cmd)
 
 def total_seconds(td):
@@ -180,7 +180,7 @@ def kill_undead(tasks, results, timeout):
         if timed_out(task, timeout):
             os.kill(task.pid, 9)
 
-def run_all_tests(tests, results, options):
+def run_all_tests(tests, prefix, results, options):
     # Copy and reverse for fast pop off end.
     tests = tests[:]
     tests.reverse()
@@ -190,7 +190,7 @@ def run_all_tests(tests, results, options):
 
     while len(tests) or len(tasks):
         while len(tests) and len(tasks) < options.worker_count:
-            tasks.append(spawn_test(tests.pop(), options.passthrough))
+            tasks.append(spawn_test(tests.pop(), prefix, options.passthrough))
 
         timeout = get_max_wait(tasks, results, options.timeout)
         read_input(tasks, timeout)
