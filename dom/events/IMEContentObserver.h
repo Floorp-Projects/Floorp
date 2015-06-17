@@ -273,46 +273,68 @@ private:
    * Helper classes to notify IME.
    */
 
-  class FocusSetEvent: public nsRunnable
+  class AChangeEvent: public nsRunnable
   {
-  public:
-    explicit FocusSetEvent(IMEContentObserver* aIMEContentObserver)
+  protected:
+    enum ChangeEventType
+    {
+      eChangeEventType_Focus,
+      eChangeEventType_Selection,
+      eChangeEventType_Text,
+      eChangeEventType_Position,
+      eChangeEventType_FlushPendingEvents
+    };
+
+    AChangeEvent(ChangeEventType aChangeEventType,
+                 IMEContentObserver* aIMEContentObserver)
       : mIMEContentObserver(aIMEContentObserver)
+      , mChangeEventType(aChangeEventType)
     {
       MOZ_ASSERT(mIMEContentObserver);
     }
-    NS_IMETHOD Run() override;
 
-  private:
     nsRefPtr<IMEContentObserver> mIMEContentObserver;
+    ChangeEventType mChangeEventType;
+
+    /**
+     * CanNotifyIME() checks if mIMEContentObserver can and should notify IME.
+     */
+    bool CanNotifyIME() const;
   };
 
-  class SelectionChangeEvent : public nsRunnable
+  class FocusSetEvent: public AChangeEvent
+  {
+  public:
+    explicit FocusSetEvent(IMEContentObserver* aIMEContentObserver)
+      : AChangeEvent(eChangeEventType_Focus, aIMEContentObserver)
+    {
+    }
+    NS_IMETHOD Run() override;
+  };
+
+  class SelectionChangeEvent : public AChangeEvent
   {
   public:
     SelectionChangeEvent(IMEContentObserver* aIMEContentObserver,
                          bool aCausedByComposition)
-      : mIMEContentObserver(aIMEContentObserver)
+      : AChangeEvent(eChangeEventType_Selection, aIMEContentObserver)
       , mCausedByComposition(aCausedByComposition)
     {
-      MOZ_ASSERT(mIMEContentObserver);
     }
     NS_IMETHOD Run() override;
 
   private:
-    nsRefPtr<IMEContentObserver> mIMEContentObserver;
     bool mCausedByComposition;
   };
 
-  class TextChangeEvent : public nsRunnable
+  class TextChangeEvent : public AChangeEvent
   {
   public:
     TextChangeEvent(IMEContentObserver* aIMEContentObserver,
                     TextChangeData& aData)
-      : mIMEContentObserver(aIMEContentObserver)
+      : AChangeEvent(eChangeEventType_Text, aIMEContentObserver)
       , mData(aData)
     {
-      MOZ_ASSERT(mIMEContentObserver);
       MOZ_ASSERT(mData.mStored);
       // Reset mStored because this now consumes the data.
       aData.mStored = false;
@@ -320,37 +342,28 @@ private:
     NS_IMETHOD Run() override;
 
   private:
-    nsRefPtr<IMEContentObserver> mIMEContentObserver;
     TextChangeData mData;
   };
 
-  class PositionChangeEvent final : public nsRunnable
+  class PositionChangeEvent final : public AChangeEvent
   {
   public:
     explicit PositionChangeEvent(IMEContentObserver* aIMEContentObserver)
-      : mIMEContentObserver(aIMEContentObserver)
+      : AChangeEvent(eChangeEventType_Position, aIMEContentObserver)
     {
-      MOZ_ASSERT(mIMEContentObserver);
     }
     NS_IMETHOD Run() override;
-
-  private:
-    nsRefPtr<IMEContentObserver> mIMEContentObserver;
   };
 
-  class AsyncMergeableNotificationsFlusher : public nsRunnable
+  class AsyncMergeableNotificationsFlusher : public AChangeEvent
   {
   public:
     explicit AsyncMergeableNotificationsFlusher(
       IMEContentObserver* aIMEContentObserver)
-      : mIMEContentObserver(aIMEContentObserver)
+      : AChangeEvent(eChangeEventType_FlushPendingEvents, aIMEContentObserver)
     {
-      MOZ_ASSERT(mIMEContentObserver);
     }
     NS_IMETHOD Run() override;
-
-  private:
-    nsRefPtr<IMEContentObserver> mIMEContentObserver;
   };
 };
 
