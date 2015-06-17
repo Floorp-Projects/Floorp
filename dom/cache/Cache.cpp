@@ -41,7 +41,7 @@ IsValidPutRequestURL(const nsAString& aUrl, ErrorResult& aRv)
   // make a copy because ProcessURL strips the fragmet
   NS_ConvertUTF16toUTF8 url(aUrl);
 
-  TypeUtils::ProcessURL(url, &validScheme, nullptr, aRv);
+  TypeUtils::ProcessURL(url, &validScheme, nullptr, nullptr, aRv);
   if (aRv.Failed()) {
     return false;
   }

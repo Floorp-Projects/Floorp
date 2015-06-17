@@ -108,11 +108,16 @@ public:
   //     if the aUrl's scheme is valid or not for storing in the cache.
   //  3) If aUrlWithoutQueryOut is set, then a url string is provided without
   //     the search section.
+  //  4) If aUrlQueryOut is set then its populated with the search section
+  //     of the URL.  Note, this parameter must be set if aUrlWithoutQueryOut
+  //     is set.  They must either both be nullptr or set to valid string
+  //     pointers.
   //
   // Any errors are thrown on ErrorResult.
   static void
   ProcessURL(nsACString& aUrl, bool* aSchemeValidOut,
-             nsACString* aUrlWithoutQueryOut, ErrorResult& aRv);
+             nsACString* aUrlWithoutQueryOut, nsACString* aUrlQueryOut,
+             ErrorResult& aRv);
 
 private:
   void
