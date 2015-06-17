@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1174521
+-->
+<head>
+  <title>Test for Bug 1174521</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1174521">Mozilla Bug 1174521</a>
+<div id="content">
+  <iframe src="bug1174521.html"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(function() {
+    var iframe = document.querySelector("iframe");
+    var win = iframe.contentWindow;
+    var doc = iframe.contentDocument;
+    var link = doc.querySelector("a");
+    SimpleTest.waitForFocus(function() {
+      synthesizeMouseAtCenter(link, {}, win);
+    }, win);
+  });
+
+  onmessage = function(e) {
+    ok(e.data.msg, "DONE", "We should be able to click the link");
+    SimpleTest.finish();
+  };
+
+</script>
+</pre>
+</body>
+</html>
