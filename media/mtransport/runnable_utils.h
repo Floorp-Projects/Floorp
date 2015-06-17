@@ -11,6 +11,7 @@
 
 #include "nsThreadUtils.h"
 #include "mozilla/IndexSequence.h"
+#include "mozilla/Move.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
 
@@ -109,8 +110,8 @@ class runnable_args_func : public detail::runnable_args_base<detail::NoResult>
 {
 public:
   // |explicit| to pacify static analysis when there are no |args|.
-  explicit runnable_args_func(FunType f, Args... args)
-    : mFunc(f), mArgs(args...)
+  explicit runnable_args_func(FunType f, Args&&... args)
+    : mFunc(f), mArgs(Forward<Args>(args)...)
   {}
 
   NS_IMETHOD Run() {
@@ -127,15 +128,15 @@ template<typename FunType, typename... Args>
 runnable_args_func<FunType, Args...>*
 WrapRunnableNM(FunType f, Args... args)
 {
-  return new runnable_args_func<FunType, Args...>(f, args...);
+  return new runnable_args_func<FunType, Args...>(f, Move(args)...);
 }
 
 template<typename Ret, typename FunType, typename... Args>
 class runnable_args_func_ret : public detail::runnable_args_base<detail::ReturnsResult>
 {
 public:
-  runnable_args_func_ret(Ret* ret, FunType f, Args... args)
-    : mReturn(ret), mFunc(f), mArgs(args...)
+  runnable_args_func_ret(Ret* ret, FunType f, Args&&... args)
+    : mReturn(ret), mFunc(f), mArgs(Forward<Args>(args)...)
   {}
 
   NS_IMETHOD Run() {
@@ -153,15 +154,15 @@ template<typename R, typename FunType, typename... Args>
 runnable_args_func_ret<R, FunType, Args...>*
 WrapRunnableNMRet(R* ret, FunType f, Args... args)
 {
-  return new runnable_args_func_ret<R, FunType, Args...>(ret, f, args...);
+  return new runnable_args_func_ret<R, FunType, Args...>(ret, f, Move(args)...);
 }
 
 template<typename Class, typename M, typename... Args>
 class runnable_args_memfn : public detail::runnable_args_base<detail::NoResult>
 {
 public:
-  runnable_args_memfn(Class obj, M method, Args... args)
-    : mObj(obj), mMethod(method), mArgs(args...)
+  runnable_args_memfn(Class obj, M method, Args&&... args)
+    : mObj(obj), mMethod(method), mArgs(Forward<Args>(args)...)
   {}
 
   NS_IMETHOD Run() {
@@ -179,7 +180,7 @@ template<typename Class, typename M, typename... Args>
 runnable_args_memfn<Class, M, Args...>*
 WrapRunnable(Class obj, M method, Args... args)
 {
-  return new runnable_args_memfn<Class, M, Args...>(obj, method, args...);
+  return new runnable_args_memfn<Class, M, Args...>(obj, method, Move(args)...);
 }
 
 template<typename Ret, typename Class, typename M, typename... Args>
@@ -187,7 +188,7 @@ class runnable_args_memfn_ret : public detail::runnable_args_base<detail::Return
 {
 public:
   runnable_args_memfn_ret(Ret* ret, Class obj, M method, Args... args)
-    : mReturn(ret), mObj(obj), mMethod(method), mArgs(args...)
+    : mReturn(ret), mObj(obj), mMethod(method), mArgs(Forward<Args>(args)...)
   {}
 
   NS_IMETHOD Run() {
@@ -206,7 +207,7 @@ template<typename R, typename Class, typename M, typename... Args>
 runnable_args_memfn_ret<R, Class, M, Args...>*
 WrapRunnableRet(R* ret, Class obj, M method, Args... args)
 {
-  return new runnable_args_memfn_ret<R, Class, M, Args...>(ret, obj, method, args...);
+  return new runnable_args_memfn_ret<R, Class, M, Args...>(ret, obj, method, Move(args)...);
 }
 
 static inline nsresult RUN_ON_THREAD(nsIEventTarget *thread, detail::runnable_args_base<detail::NoResult> *runnable, uint32_t flags) {
