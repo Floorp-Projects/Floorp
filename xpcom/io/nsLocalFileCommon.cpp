@@ -321,3 +321,16 @@ nsLocalFile::SetRelativeDescriptor(nsIFile* aFromFile,
 
   return InitWithFile(targetFile);
 }
+
+NS_IMETHODIMP
+nsLocalFile::GetRelativePath(nsIFile* aFromFile, nsACString& aResult)
+{
+  return GetRelativeDescriptor(aFromFile, aResult);
+}
+
+NS_IMETHODIMP
+nsLocalFile::SetRelativePath(nsIFile* aFromFile,
+                             const nsACString& aRelativePath)
+{
+  return SetRelativeDescriptor(aFromFile, aRelativePath);
+}
