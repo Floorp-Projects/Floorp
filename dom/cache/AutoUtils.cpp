@@ -292,8 +292,11 @@ MatchInPutList(InternalRequest* aRequest,
     nsAutoCString url;
     aRequest->GetURL(url);
 
+    nsAutoCString requestUrl(cachedRequest.urlWithoutQuery());
+    requestUrl.Append(cachedRequest.urlQuery());
+
     // If the URLs don't match, then just skip to the next entry.
-    if (url != cachedRequest.url()) {
+    if (url != requestUrl) {
       continue;
     }
 
