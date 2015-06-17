@@ -83,8 +83,21 @@ class FullParseHandler
         return node->isKind(PNK_CALL);
     }
 
-    bool isDestructuringTarget(ParseNode* node) {
-        return node->isKind(PNK_OBJECT) || node->isKind(PNK_ARRAY);
+    static bool isUnparenthesizedDestructuringPattern(ParseNode* node) {
+        return !node->isInParens() && (node->isKind(PNK_OBJECT) || node->isKind(PNK_ARRAY));
+    }
+
+    static bool isParenthesizedDestructuringPattern(ParseNode* node) {
+        // Technically this isn't a destructuring pattern at all -- the grammar
+        // doesn't treat it as such.  But we need to know when this happens to
+        // consider it a SyntaxError rather than an invalid-left-hand-side
+        // ReferenceError.
+        return node->isInParens() && (node->isKind(PNK_OBJECT) || node->isKind(PNK_ARRAY));
+    }
+
+    static bool isDestructuringPatternAnyParentheses(ParseNode* node) {
+        return isUnparenthesizedDestructuringPattern(node) ||
+               isParenthesizedDestructuringPattern(node);
     }
 
     FullParseHandler(ExclusiveContext* cx, LifoAlloc& alloc,
@@ -780,9 +793,25 @@ class FullParseHandler
     bool isConstant(ParseNode* pn) {
         return pn->isConstant();
     }
-    PropertyName* maybeName(ParseNode* pn) {
-        return pn->isKind(PNK_NAME) ? pn->pn_atom->asPropertyName() : nullptr;
+
+    PropertyName* maybeUnparenthesizedName(ParseNode* pn) {
+        if (!pn->isInParens() && pn->isKind(PNK_NAME))
+            return pn->pn_atom->asPropertyName();
+        return nullptr;
     }
+
+    PropertyName* maybeParenthesizedName(ParseNode* pn) {
+        if (pn->isInParens() && pn->isKind(PNK_NAME))
+            return pn->pn_atom->asPropertyName();
+        return nullptr;
+    }
+
+    PropertyName* maybeNameAnyParentheses(ParseNode* node) {
+        if (PropertyName* name = maybeUnparenthesizedName(node))
+            return name;
+        return maybeParenthesizedName(node);
+    }
+
     bool isCall(ParseNode* pn) {
         return pn->isKind(PNK_CALL);
     }

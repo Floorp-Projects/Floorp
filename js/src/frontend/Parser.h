@@ -683,11 +683,15 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
                                 ParseNodeKind headKind);
     bool checkForHeadConstInitializers(Node pn1);
 
-    bool isValidSimpleAssignmentTarget(Node node);
+    enum FunctionCallBehavior {
+        PermitAssignmentToFunctionCalls,
+        ForbidAssignmentToFunctionCalls
+    };
 
-    // Invalid assignment targets are handled differently in different places.
-    // Select the desired semantics using |flavor|.
-    bool reportIfArgumentsEvalTarget(Node target);
+    bool isValidSimpleAssignmentTarget(Node node,
+                                       FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
+
+    bool reportIfArgumentsEvalTarget(Node nameNode);
     bool reportIfNotValidSimpleAssignmentTarget(Node target, AssignmentFlavor flavor);
 
     bool checkAndMarkAsIncOperand(Node kid, AssignmentFlavor flavor);
@@ -712,9 +716,18 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node makeInitializedLexicalBinding(HandlePropertyName name, bool isConst, const TokenPos& pos);
 
     Node newBindingNode(PropertyName* name, bool functionScope, VarContext varContext = HoistVars);
-    bool checkDestructuring(BindData<ParseHandler>* data, Node left);
-    bool checkDestructuringObject(BindData<ParseHandler>* data, Node objectPattern);
+
+    // Top-level entrypoint into destructuring pattern checking/name-analyzing.
+    bool checkDestructuringPattern(BindData<ParseHandler>* data, Node pattern);
+
+    // Recursive methods for checking/name-analyzing subcomponents of a
+    // destructuring pattern.  The array/object methods *must* be passed arrays
+    // or objects.  The name method may be passed anything but will report an
+    // error if not passed a name.
     bool checkDestructuringArray(BindData<ParseHandler>* data, Node arrayPattern);
+    bool checkDestructuringObject(BindData<ParseHandler>* data, Node objectPattern);
+    bool checkDestructuringName(BindData<ParseHandler>* data, Node expr);
+
     bool bindInitialized(BindData<ParseHandler>* data, Node pn);
     bool makeSetCall(Node node, unsigned errnum);
     Node cloneDestructuringDefault(Node opn);
