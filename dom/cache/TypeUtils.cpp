@@ -151,11 +151,11 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
 
   aIn->GetMethod(aOut.method());
 
-  aIn->GetURL(aOut.url());
+  nsAutoCString url;
+  aIn->GetURL(url);
 
   bool schemeValid;
-  ProcessURL(aOut.url(), &schemeValid, &aOut.urlWithoutQuery(),
-             &aOut.urlQuery(), aRv);
+  ProcessURL(url, &schemeValid, &aOut.urlWithoutQuery(), &aOut.urlQuery(), aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -163,8 +163,8 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
   if (!schemeValid) {
     if (aSchemeAction == TypeErrorOnInvalidScheme) {
       NS_NAMED_LITERAL_STRING(label, "Request");
-      NS_ConvertUTF8toUTF16 url(aOut.url());
-      aRv.ThrowTypeError(MSG_INVALID_URL_SCHEME, &label, &url);
+      NS_ConvertUTF8toUTF16 urlUTF16(url);
+      aRv.ThrowTypeError(MSG_INVALID_URL_SCHEME, &label, &urlUTF16);
       return;
     }
   }
