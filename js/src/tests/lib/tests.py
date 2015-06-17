@@ -118,21 +118,19 @@ class Test(object):
         return Test.prefix_command(head) \
             + ['-f', os.path.join(path, 'shell.js')]
 
-    def get_command(self, js_cmd_prefix):
+    def get_command(self, prefix):
         dirname, filename = os.path.split(self.path)
-        cmd = js_cmd_prefix + self.jitflags + self.options \
+        cmd = prefix + self.jitflags + self.options \
               + Test.prefix_command(dirname) + ['-f', self.path]
         return cmd
 
-    def run(self, js_cmd_prefix, timeout=30.0):
-        cmd = self.get_command(js_cmd_prefix)
+    def run(self, prefix, timeout=30.0):
+        cmd = self.get_command(prefix)
         out, err, rc, dt, timed_out = run_cmd(cmd, timeout)
         return TestOutput(self, cmd, out, err, rc, dt, timed_out)
 
 class TestCase(Test):
     """A test case consisting of a test and an expected result."""
-    js_cmd_prefix = None
-
     def __init__(self, path):
         Test.__init__(self, path)
         self.enable = True   # bool: True => run test, False => don't run
@@ -163,15 +161,15 @@ class TestCase(Test):
             ans += ', debugMode'
         return ans
 
-    @classmethod
-    def set_js_cmd_prefix(self, js_path, js_args, debugger_prefix):
+    @staticmethod
+    def build_js_cmd_prefix(js_path, js_args, debugger_prefix):
         parts = []
         if debugger_prefix:
             parts += debugger_prefix
         parts.append(js_path)
         if js_args:
             parts += js_args
-        self.js_cmd_prefix = parts
+        return parts
 
     def __cmp__(self, other):
         if self.path == other.path:
