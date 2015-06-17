@@ -45,6 +45,7 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   : MediaDecoderReader(aDecoder)
   , mLastAudioTime(0)
   , mLastVideoTime(0)
+  , mOriginalSeekTime(-1)
   , mPendingSeekTime(-1)
   , mWaitingForSeekData(false)
   , mSeekToEnd(false)
@@ -837,6 +838,7 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aIgnored /* Used only for ogg whi
 
   // Store pending seek target in case the track buffers don't contain
   // the desired time and we delay doing the seek.
+  mOriginalSeekTime = aTime;
   mPendingSeekTime = aTime;
 
   {
@@ -921,7 +923,8 @@ MediaSourceReader::DoAudioSeek()
   if (mSeekToEnd) {
     seekTime = LastSampleTime(MediaData::AUDIO_DATA);
   }
-  if (SwitchAudioSource(&seekTime) == SOURCE_NONE) {
+  if (SwitchAudioSource(&seekTime) == SOURCE_NONE &&
+      SwitchAudioSource(&mOriginalSeekTime) == SOURCE_NONE) {
     // Data we need got evicted since the last time we checked for data
     // availability. Abort current seek attempt.
     mWaitingForSeekData = true;
