@@ -1478,7 +1478,7 @@ nsDOMWindowUtils::GetTranslationNodes(nsIDOMNode* aRoot,
   return NS_OK;
 }
 
-static TemporaryRef<DataSourceSurface>
+static already_AddRefed<DataSourceSurface>
 CanvasToDataSourceSurface(nsIDOMHTMLCanvasElement* aCanvas)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aCanvas);

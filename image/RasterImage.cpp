@@ -664,7 +664,7 @@ RasterImage::GetFirstFrameDelay()
   return mAnim->GetTimeoutForFrame(0);
 }
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 RasterImage::CopyFrame(uint32_t aWhichFrame, uint32_t aFlags)
 {
   if (aWhichFrame > FRAME_MAX_VALUE) {
@@ -740,7 +740,7 @@ RasterImage::CopyFrame(uint32_t aWhichFrame, uint32_t aFlags)
 //******************************************************************************
 /* [noscript] SourceSurface getFrame(in uint32_t aWhichFrame,
  *                                   in uint32_t aFlags); */
-NS_IMETHODIMP_(TemporaryRef<SourceSurface>)
+NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
 RasterImage::GetFrame(uint32_t aWhichFrame,
                       uint32_t aFlags)
 {

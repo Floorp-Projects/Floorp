@@ -27,7 +27,7 @@ public:
   virtual SurfaceType GetType() const { return SurfaceType::D2D1_DRAWTARGET; }
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const;
-  virtual TemporaryRef<DataSourceSurface> GetDataSurface();
+  virtual already_AddRefed<DataSourceSurface> GetDataSurface();
   virtual void *GetNativeSurface(NativeSurfaceType aType);
 
   DrawTargetD2D* GetDT() { return mDrawTarget; }

@@ -70,7 +70,7 @@ public:
    */
   virtual Point CurrentPoint() const;
 
-  virtual TemporaryRef<Path> Finish();
+  virtual already_AddRefed<Path> Finish();
 
   virtual BackendType GetBackendType() const { return BackendType::RECORDING; }
 
@@ -94,8 +94,8 @@ public:
   ~PathRecording();
 
   virtual BackendType GetBackendType() const { return BackendType::RECORDING; }
-  virtual TemporaryRef<PathBuilder> CopyToBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const;
-  virtual TemporaryRef<PathBuilder> TransformedCopyToBuilder(const Matrix &aTransform,
+  virtual already_AddRefed<PathBuilder> CopyToBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const;
+  virtual already_AddRefed<PathBuilder> TransformedCopyToBuilder(const Matrix &aTransform,
                                                              FillRule aFillRule = FillRule::FILL_WINDING) const;
   virtual bool ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
   { return mPath->ContainsPoint(aPoint, aTransform); }

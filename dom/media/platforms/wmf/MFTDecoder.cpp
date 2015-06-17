@@ -68,7 +68,7 @@ MFTDecoder::SetMediaTypes(IMFMediaType* aInputType,
   return S_OK;
 }
 
-TemporaryRef<IMFAttributes>
+already_AddRefed<IMFAttributes>
 MFTDecoder::GetAttributes()
 {
   RefPtr<IMFAttributes> attr;

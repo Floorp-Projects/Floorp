@@ -234,7 +234,7 @@ public:
                               const char16_t* encoderOptions,
                               nsIInputStream** out_stream) override;
 
-    mozilla::TemporaryRef<mozilla::gfx::SourceSurface>
+    already_AddRefed<mozilla::gfx::SourceSurface>
     GetSurfaceSnapshot(bool* out_premultAlpha) override;
 
     NS_IMETHOD SetIsOpaque(bool) override { return NS_OK; };

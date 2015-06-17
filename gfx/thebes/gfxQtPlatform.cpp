@@ -202,7 +202,7 @@ gfxQtPlatform::GetScreenDepth() const
     return mScreenDepth;
 }
 
-TemporaryRef<ScaledFont>
+already_AddRefed<ScaledFont>
 gfxQtPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont* aFont)
 {
     return GetScaledFontForFontWithCairoSkia(aTarget, aFont);

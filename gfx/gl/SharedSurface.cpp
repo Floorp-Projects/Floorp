@@ -327,7 +327,7 @@ SurfaceFactory::~SurfaceFactory()
     mRecycleFreePool.clear();
 }
 
-TemporaryRef<layers::SharedSurfaceTextureClient>
+already_AddRefed<layers::SharedSurfaceTextureClient>
 SurfaceFactory::NewTexClient(const gfx::IntSize& size)
 {
     while (!mRecycleFreePool.empty()) {

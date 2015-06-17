@@ -221,7 +221,7 @@ enum class MediaThreadType {
 };
 // Returns the thread pool that is shared amongst all decoder state machines
 // for decoding streams.
-TemporaryRef<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType);
+already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType);
 
 enum H264_PROFILE {
   H264_PROFILE_UNKNOWN                     = 0,

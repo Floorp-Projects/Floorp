@@ -401,7 +401,7 @@ int GonkNativeWindow::getSlotFromTextureClientLocked(
     return BAD_VALUE;
 }
 
-TemporaryRef<TextureClient>
+already_AddRefed<TextureClient>
 GonkNativeWindow::getTextureClientFromBuffer(ANativeWindowBuffer* buffer)
 {
   int buf = getSlotFromBufferLocked(buffer);
@@ -464,7 +464,7 @@ status_t GonkNativeWindow::queueBuffer(int buf, int64_t timestamp,
 }
 
 
-TemporaryRef<TextureClient>
+already_AddRefed<TextureClient>
 GonkNativeWindow::getCurrentBuffer() {
   CNW_LOGD("GonkNativeWindow::getCurrentBuffer");
   Mutex::Autolock lock(mMutex);

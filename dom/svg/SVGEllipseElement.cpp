@@ -121,7 +121,7 @@ SVGEllipseElement::GetGeometryBounds(
   return false;
 }
 
-TemporaryRef<Path>
+already_AddRefed<Path>
 SVGEllipseElement::BuildPath(PathBuilder* aBuilder)
 {
   float x, y, rx, ry;

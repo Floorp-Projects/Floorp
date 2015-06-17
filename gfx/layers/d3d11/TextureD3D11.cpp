@@ -141,7 +141,7 @@ static void UnlockD3DTexture(T* aTexture)
   }
 }
 
-TemporaryRef<TextureHost>
+already_AddRefed<TextureHost>
 CreateTextureHostD3D11(const SurfaceDescriptor& aDesc,
                        ISurfaceAllocator* aDeallocator,
                        TextureFlags aFlags)
@@ -213,7 +213,7 @@ TextureClientD3D11::~TextureClientD3D11()
 }
 
 // static
-TemporaryRef<TextureClientD3D11>
+already_AddRefed<TextureClientD3D11>
 TextureClientD3D11::Create(ISurfaceAllocator* aAllocator,
                            gfx::SurfaceFormat aFormat,
                            TextureFlags aFlags,
@@ -228,7 +228,7 @@ TextureClientD3D11::Create(ISurfaceAllocator* aAllocator,
   return texture.forget();
 }
 
-TemporaryRef<TextureClient>
+already_AddRefed<TextureClient>
 TextureClientD3D11::CreateSimilar(TextureFlags aFlags,
                                   TextureAllocationFlags aAllocFlags) const
 {
@@ -554,7 +554,7 @@ DXGIYCbCrTextureClient::~DXGIYCbCrTextureClient()
 }
 
 // static
-TemporaryRef<DXGIYCbCrTextureClient>
+already_AddRefed<DXGIYCbCrTextureClient>
 DXGIYCbCrTextureClient::Create(ISurfaceAllocator* aAllocator,
                                TextureFlags aFlags,
                                IUnknown* aTextureY,

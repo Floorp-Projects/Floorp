@@ -76,7 +76,7 @@ SkTypeface* ScaledFontMac::GetSkTypeface()
 // Note: cairo dlsyms it. We could do that but maybe it's
 // safe just to use?
 
-TemporaryRef<Path>
+already_AddRefed<Path>
 ScaledFontMac::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget)
 {
   if (aTarget->GetBackendType() == BackendType::COREGRAPHICS ||

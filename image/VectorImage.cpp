@@ -668,7 +668,7 @@ VectorImage::IsOpaque()
 //******************************************************************************
 /* [noscript] SourceSurface getFrame(in uint32_t aWhichFrame,
  *                                   in uint32_t aFlags; */
-NS_IMETHODIMP_(TemporaryRef<SourceSurface>)
+NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
 VectorImage::GetFrame(uint32_t aWhichFrame,
                       uint32_t aFlags)
 {

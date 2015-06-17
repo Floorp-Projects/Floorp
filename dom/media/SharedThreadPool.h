@@ -32,7 +32,7 @@ public:
   // Gets (possibly creating) the shared thread pool singleton instance with
   // thread pool named aName.
   // *Must* be called on the main thread.
-  static TemporaryRef<SharedThreadPool> Get(const nsCString& aName,
+  static already_AddRefed<SharedThreadPool> Get(const nsCString& aName,
                                             uint32_t aThreadLimit = 4);
 
   // We implement custom threadsafe AddRef/Release pair, that destroys the

@@ -605,7 +605,7 @@ private:
   // Methods to get information for a <textPath> frame.
   mozilla::dom::SVGPathElement*
   GetTextPathPathElement(nsIFrame* aTextPathFrame);
-  mozilla::TemporaryRef<Path> GetTextPath(nsIFrame* aTextPathFrame);
+  already_AddRefed<Path> GetTextPath(nsIFrame* aTextPathFrame);
   gfxFloat GetOffsetScale(nsIFrame* aTextPathFrame);
   gfxFloat GetStartOffset(nsIFrame* aTextPathFrame);
 

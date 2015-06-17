@@ -26,7 +26,7 @@ public:
                      bool aDXVAEnabled);
   ~WMFVideoMFTManager();
 
-  virtual TemporaryRef<MFTDecoder> Init() override;
+  virtual already_AddRefed<MFTDecoder> Init() override;
 
   virtual HRESULT Input(MediaRawData* aSample) override;
 
@@ -41,7 +41,7 @@ private:
 
   bool InitializeDXVA(bool aForceD3D9);
 
-  TemporaryRef<MFTDecoder> InitInternal(bool aForceD3D9);
+  already_AddRefed<MFTDecoder> InitInternal(bool aForceD3D9);
 
   HRESULT ConfigureVideoFrameGeometry();
 

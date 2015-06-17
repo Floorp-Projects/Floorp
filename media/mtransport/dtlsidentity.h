@@ -24,7 +24,7 @@ class DtlsIdentity {
 
  public:
   // Generate an identity with a random name.
-  static TemporaryRef<DtlsIdentity> Generate();
+  static already_AddRefed<DtlsIdentity> Generate();
 
   // Note: the following two functions just provide access. They
   // do not transfer ownership. If you want a pointer that lasts

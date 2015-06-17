@@ -11,7 +11,7 @@
 #include "gfx2DGlue.h"                  // for ImageFormatToSurfaceFormat
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
+#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
@@ -41,7 +41,7 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
-/* static */ TemporaryRef<ImageClient>
+/* static */ already_AddRefed<ImageClient>
 ImageClient::CreateImageClient(CompositableType aCompositableHostType,
                                CompositableForwarder* aForwarder,
                                TextureFlags aFlags)
@@ -117,7 +117,7 @@ TextureInfo ImageClientSingle::GetTextureInfo() const
   return TextureInfo(CompositableType::IMAGE);
 }
 
-TemporaryRef<AsyncTransactionTracker>
+already_AddRefed<AsyncTransactionTracker>
 ImageClientSingle::PrepareFlushAllImages()
 {
   return MakeAndAddRef<RemoveTextureFromCompositableTracker>();

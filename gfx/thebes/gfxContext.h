@@ -125,7 +125,7 @@ public:
     /**
      * Returns the current path.
      */
-    mozilla::TemporaryRef<Path> GetPath();
+    already_AddRefed<Path> GetPath();
 
     /**
      * Sets the given path as the current path.
@@ -483,7 +483,7 @@ public:
     already_AddRefed<gfxPattern> PopGroup();
     void PopGroupToSource();
 
-    mozilla::TemporaryRef<mozilla::gfx::SourceSurface>
+    already_AddRefed<mozilla::gfx::SourceSurface>
     PopGroupToSurface(mozilla::gfx::Matrix* aMatrix);
 
     mozilla::gfx::Point GetDeviceOffset() const;

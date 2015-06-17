@@ -311,7 +311,7 @@ public:
     virtual void dumpToString(String8& result, const char* prefix) const = 0;
 
     // Added by mozilla
-    virtual mozilla::TemporaryRef<mozilla::layers::TextureClient>
+    virtual already_AddRefed<mozilla::layers::TextureClient>
         getTextureClientFromBuffer(ANativeWindowBuffer* buffer) = 0;
 
     virtual int getSlotFromTextureClientLocked(mozilla::layers::TextureClient* client) const = 0;

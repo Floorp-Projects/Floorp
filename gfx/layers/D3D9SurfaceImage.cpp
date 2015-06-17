@@ -212,7 +212,7 @@ D3D9SurfaceImage::GetTextureClient(CompositableClient* aClient)
   return mTextureClient;
 }
 
-TemporaryRef<gfx::SourceSurface>
+already_AddRefed<gfx::SourceSurface>
 D3D9SurfaceImage::GetAsSourceSurface()
 {
   NS_ENSURE_TRUE(mTexture, nullptr);

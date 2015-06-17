@@ -40,7 +40,7 @@ SourceSurfaceD2D::IsValid() const
   return mDevice == Factory::GetDirect3D10Device();
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 SourceSurfaceD2D::GetDataSurface()
 {
   RefPtr<DataSourceSurfaceD2D> result = new DataSourceSurfaceD2D(this);

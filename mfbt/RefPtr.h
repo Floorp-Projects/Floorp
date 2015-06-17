@@ -278,11 +278,11 @@ public:
     return *this;
   }
 
-  TemporaryRef<T> forget()
+  already_AddRefed<T> forget()
   {
     T* tmp = mPtr;
     mPtr = nullptr;
-    return TemporaryRef<T>(tmp, DontRef());
+    return already_AddRefed<T>(tmp);
   }
 
   T* get() const { return mPtr; }
@@ -410,19 +410,14 @@ byRef(RefPtr<T>& aPtr)
 /**
  * Helper function to be able to conveniently write things like:
  *
- *   TemporaryRef<T>
+ *   already_AddRefed<T>
  *   f(...)
  *   {
  *     return MakeAndAddRef<T>(...);
  *   }
- *
- * since explicitly constructing TemporaryRef is unsightly.  Having an
- * explicit construction of TemporaryRef from T* also inhibits a future
- * auto-conversion from TemporaryRef to already_AddRefed, since the semantics
- * of TemporaryRef(T*) differ from already_AddRefed(T*).
  */
 template<typename T, typename... Args>
-TemporaryRef<T>
+already_AddRefed<T>
 MakeAndAddRef(Args&&... aArgs)
 {
   RefPtr<T> p(new T(Forward<Args>(aArgs)...));

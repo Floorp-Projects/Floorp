@@ -8,7 +8,7 @@
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
+#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
@@ -41,7 +41,7 @@ public:
     CanvasClientGLContext,
     CanvasClientTypeShSurf,
   };
-  static TemporaryRef<CanvasClient> CreateCanvasClient(CanvasClientType aType,
+  static already_AddRefed<CanvasClient> CreateCanvasClient(CanvasClientType aType,
                                                        CompositableForwarder* aFwd,
                                                        TextureFlags aFlags);
 
@@ -94,7 +94,7 @@ public:
   }
 
 private:
-  TemporaryRef<TextureClient>
+  already_AddRefed<TextureClient>
     CreateTextureClientForCanvas(gfx::SurfaceFormat aFormat,
                                  gfx::IntSize aSize,
                                  TextureFlags aFlags,

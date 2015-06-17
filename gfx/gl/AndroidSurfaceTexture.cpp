@@ -36,13 +36,13 @@ IsSTSupported()
   return AndroidBridge::Bridge()->GetAPIVersion() >= 14; /* ICS */
 }
 
-TemporaryRef<AndroidSurfaceTexture>
+already_AddRefed<AndroidSurfaceTexture>
 AndroidSurfaceTexture::Create()
 {
   return Create(nullptr, 0);
 }
 
-TemporaryRef<AndroidSurfaceTexture>
+already_AddRefed<AndroidSurfaceTexture>
 AndroidSurfaceTexture::Create(GLContext* aContext, GLuint aTexture)
 {
   if (!IsSTSupported()) {

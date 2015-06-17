@@ -155,17 +155,17 @@ public:
    * Create a Zip instance for the given file name. Returns nullptr in case
    * of failure.
    */
-  static mozilla::TemporaryRef<Zip> Create(const char *filename);
+  static already_AddRefed<Zip> Create(const char *filename);
 
   /**
    * Create a Zip instance using the given buffer.
    */
-  static mozilla::TemporaryRef<Zip> Create(void *buffer, size_t size) {
+  static already_AddRefed<Zip> Create(void *buffer, size_t size) {
     return Create(nullptr, buffer, size);
   }
 
 private:
-  static mozilla::TemporaryRef<Zip> Create(const char *filename,
+  static already_AddRefed<Zip> Create(const char *filename,
                                            void *buffer, size_t size);
 
   /**
@@ -455,7 +455,7 @@ public:
    * Get a Zip instance for the given path. If there is an existing one
    * already, return that one, otherwise create a new one.
    */
-  static mozilla::TemporaryRef<Zip> GetZip(const char *path);
+  static already_AddRefed<Zip> GetZip(const char *path);
 
 protected:
   friend class Zip;

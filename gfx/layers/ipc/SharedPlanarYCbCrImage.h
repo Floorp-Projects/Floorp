@@ -34,7 +34,7 @@ public:
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) override;
   virtual uint8_t* GetBuffer() override;
 
-  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() override;
+  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
   virtual void SetData(const PlanarYCbCrData& aData) override;
   virtual void SetDataNoCopy(const Data &aData) override;
 

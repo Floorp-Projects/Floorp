@@ -9,7 +9,7 @@
 namespace mozilla {
 namespace gfx {
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 DataSourceSurface::GetDataSurface()
 {
   RefPtr<DataSourceSurface> surface =

@@ -46,7 +46,7 @@ TextureSourceD3D9::~TextureSourceD3D9()
   }
 }
 
-TemporaryRef<TextureHost>
+already_AddRefed<TextureHost>
 CreateTextureHostD3D9(const SurfaceDescriptor& aDesc,
                       ISurfaceAllocator* aDeallocator,
                       TextureFlags aFlags)
@@ -165,7 +165,7 @@ CompositingRenderTargetD3D9::GetSize() const
  * The last three params are out params.
  * Returns the created texture, or null if we fail.
  */
-TemporaryRef<IDirect3DTexture9>
+already_AddRefed<IDirect3DTexture9>
 TextureSourceD3D9::InitTextures(DeviceManagerD3D9* aDeviceManager,
                                 const IntSize &aSize,
                                 _D3DFORMAT aFormat,
@@ -221,7 +221,7 @@ FinishTextures(DeviceManagerD3D9* aDeviceManager,
                                           nullptr);
 }
 
-TemporaryRef<IDirect3DTexture9>
+already_AddRefed<IDirect3DTexture9>
 TextureSourceD3D9::DataToTexture(DeviceManagerD3D9* aDeviceManager,
                                  unsigned char *aData,
                                  int aStride,
@@ -250,7 +250,7 @@ TextureSourceD3D9::DataToTexture(DeviceManagerD3D9* aDeviceManager,
   return texture.forget();
 }
 
-TemporaryRef<IDirect3DTexture9>
+already_AddRefed<IDirect3DTexture9>
 TextureSourceD3D9::TextureToTexture(DeviceManagerD3D9* aDeviceManager,
                                     IDirect3DTexture9* aTexture,
                                     const IntSize& aSize,
@@ -274,7 +274,7 @@ TextureSourceD3D9::TextureToTexture(DeviceManagerD3D9* aDeviceManager,
   return texture.forget();
 }
 
-TemporaryRef<IDirect3DTexture9>
+already_AddRefed<IDirect3DTexture9>
 TextureSourceD3D9::SurfaceToTexture(DeviceManagerD3D9* aDeviceManager,
                                     gfxWindowsSurface* aSurface,
                                     const IntSize& aSize,
@@ -576,7 +576,7 @@ CairoTextureClientD3D9::~CairoTextureClientD3D9()
   MOZ_COUNT_DTOR(CairoTextureClientD3D9);
 }
 
-TemporaryRef<TextureClient>
+already_AddRefed<TextureClient>
 CairoTextureClientD3D9::CreateSimilar(TextureFlags aFlags, TextureAllocationFlags aAllocFlags) const
 {
   RefPtr<TextureClient> tex = new CairoTextureClientD3D9(mAllocator, mFormat,
@@ -768,7 +768,7 @@ SharedTextureClientD3D9::~SharedTextureClientD3D9()
 }
 
 // static
-TemporaryRef<SharedTextureClientD3D9>
+already_AddRefed<SharedTextureClientD3D9>
 SharedTextureClientD3D9::Create(ISurfaceAllocator* aAllocator,
                                 gfx::SurfaceFormat aFormat,
                                 TextureFlags aFlags,

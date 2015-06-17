@@ -101,7 +101,7 @@ private:
 };
 
 
-TemporaryRef<LibHandle>
+already_AddRefed<LibHandle>
 CustomElf::Load(Mappable *mappable, const char *path, int flags)
 {
   DEBUG_LOG("CustomElf::Load(\"%s\", 0x%x) = ...", path, flags);

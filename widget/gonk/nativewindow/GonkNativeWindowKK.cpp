@@ -108,7 +108,7 @@ status_t GonkNativeWindow::setDefaultBufferFormat(uint32_t defaultFormat) {
     return mConsumer->setDefaultBufferFormat(defaultFormat);
 }
 
-TemporaryRef<TextureClient>
+already_AddRefed<TextureClient>
 GonkNativeWindow::getCurrentBuffer() {
     Mutex::Autolock _l(mMutex);
     BufferItem item;
@@ -158,7 +158,7 @@ void GonkNativeWindow::returnBuffer(TextureClient* client) {
     releaseBufferLocked(index, mSlots[index].mGraphicBuffer);
 }
 
-TemporaryRef<TextureClient>
+already_AddRefed<TextureClient>
 GonkNativeWindow::getTextureClientFromBuffer(ANativeWindowBuffer* buffer) {
     Mutex::Autolock lock(mMutex);
     return mConsumer->getTextureClientFromBuffer(buffer);

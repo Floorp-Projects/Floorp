@@ -20,7 +20,7 @@ public:
   WMFAudioMFTManager(const AudioInfo& aConfig);
   ~WMFAudioMFTManager();
 
-  virtual TemporaryRef<MFTDecoder> Init() override;
+  virtual already_AddRefed<MFTDecoder> Init() override;
 
   virtual HRESULT Input(MediaRawData* aSample) override;
 

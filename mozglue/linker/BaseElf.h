@@ -114,7 +114,7 @@ public:
    * Returns a LoadedElf corresponding to the already loaded ELF
    * at the given base address.
    */
-  static mozilla::TemporaryRef<LibHandle> Create(const char *path,
+  static already_AddRefed<LibHandle> Create(const char *path,
                                                  void *base_addr);
 
 private:

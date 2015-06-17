@@ -1316,7 +1316,7 @@ RefPtr<MediaPipeline> SourceStreamInfo::GetPipelineByTrackId_m(
   return nullptr;
 }
 
-TemporaryRef<MediaPipeline>
+already_AddRefed<MediaPipeline>
 LocalSourceStreamInfo::ForgetPipelineByTrackId_m(const std::string& trackId)
 {
   ASSERT_ON_THREAD(mParent->GetMainThread());

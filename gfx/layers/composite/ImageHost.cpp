@@ -241,7 +241,7 @@ ImageHost::GetRenderState()
   return LayerRenderState();
 }
 
-TemporaryRef<gfx::DataSourceSurface>
+already_AddRefed<gfx::DataSourceSurface>
 ImageHost::GetAsSurface()
 {
   return mFrontBuffer->GetAsSurface();
@@ -285,7 +285,7 @@ ImageHost::GetImageSize() const
   return IntSize();
 }
 
-TemporaryRef<TexturedEffect>
+already_AddRefed<TexturedEffect>
 ImageHost::GenEffect(const gfx::Filter& aFilter)
 {
   if (!mFrontBuffer->BindTextureSource(mTextureSource)) {

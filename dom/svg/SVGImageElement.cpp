@@ -242,7 +242,7 @@ SVGImageElement::GetGeometryBounds(
   return true;
 }
 
-TemporaryRef<Path>
+already_AddRefed<Path>
 SVGImageElement::BuildPath(PathBuilder* aBuilder)
 {
   // We get called in order to get bounds for this element, and for

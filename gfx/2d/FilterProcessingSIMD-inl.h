@@ -12,7 +12,7 @@ namespace mozilla {
 namespace gfx {
 
 template<typename u8x16_t>
-inline TemporaryRef<DataSourceSurface>
+inline already_AddRefed<DataSourceSurface>
 ConvertToB8G8R8A8_SIMD(SourceSurface* aSurface)
 {
   IntSize size = aSurface->GetSize();
@@ -284,7 +284,7 @@ ShuffleAndPackComponents(i32x4_t bbbb1234, i32x4_t gggg1234,
 }
 
 template<typename i32x4_t, typename i16x8_t, typename u8x16_t, BlendMode mode>
-inline TemporaryRef<DataSourceSurface>
+inline already_AddRefed<DataSourceSurface>
 ApplyBlending_SIMD(DataSourceSurface* aInput1, DataSourceSurface* aInput2)
 {
   IntSize size = aInput1->GetSize();
@@ -338,7 +338,7 @@ ApplyBlending_SIMD(DataSourceSurface* aInput1, DataSourceSurface* aInput2)
 }
 
 template<typename i32x4_t, typename i16x8_t, typename u8x16_t>
-static TemporaryRef<DataSourceSurface>
+static already_AddRefed<DataSourceSurface>
 ApplyBlending_SIMD(DataSourceSurface* aInput1, DataSourceSurface* aInput2,
                       BlendMode aBlendMode)
 {
@@ -509,7 +509,7 @@ ColorMatrixMultiply(i16x8_t p, i16x8_t rows_bg, i16x8_t rows_ra, const i32x4_t& 
 }
 
 template<typename i32x4_t, typename i16x8_t, typename u8x16_t>
-static TemporaryRef<DataSourceSurface>
+static already_AddRefed<DataSourceSurface>
 ApplyColorMatrix_SIMD(DataSourceSurface* aInput, const Matrix5x4 &aMatrix)
 {
   IntSize size = aInput->GetSize();
@@ -953,7 +953,7 @@ DoUnpremultiplicationCalculation_SIMD(const IntSize& aSize,
 }
 
 template<typename f32x4_t, typename i32x4_t, typename u8x16_t>
-static TemporaryRef<DataSourceSurface>
+static already_AddRefed<DataSourceSurface>
 RenderTurbulence_SIMD(const IntSize &aSize, const Point &aOffset, const Size &aBaseFrequency,
                       int32_t aSeed, int aNumOctaves, TurbulenceType aType, bool aStitch, const Rect &aTileRect)
 {
@@ -1013,7 +1013,7 @@ ArithmeticCombineTwoPixels(i16x8_t in1, i16x8_t in2,
 }
 
 template<typename i32x4_t, typename i16x8_t, typename u8x16_t>
-static TemporaryRef<DataSourceSurface>
+static already_AddRefed<DataSourceSurface>
 ApplyArithmeticCombine_SIMD(DataSourceSurface* aInput1, DataSourceSurface* aInput2,
                             Float aK1, Float aK2, Float aK3, Float aK4)
 {

@@ -58,7 +58,7 @@ SharedThreadPool::SpinUntilEmpty()
   }
 }
 
-TemporaryRef<SharedThreadPool>
+already_AddRefed<SharedThreadPool>
 SharedThreadPool::Get(const nsCString& aName, uint32_t aThreadLimit)
 {
   MOZ_ASSERT(sMonitor && sPools);

@@ -31,7 +31,7 @@ public:
   virtual SurfaceType GetType() const { return SurfaceType::RECORDING; }
   virtual IntSize GetSize() const { return mFinalSurface->GetSize(); }
   virtual SurfaceFormat GetFormat() const { return mFinalSurface->GetFormat(); }
-  virtual TemporaryRef<DataSourceSurface> GetDataSurface() { return mFinalSurface->GetDataSurface(); }
+  virtual already_AddRefed<DataSourceSurface> GetDataSurface() { return mFinalSurface->GetDataSurface(); }
 
   RefPtr<SourceSurface> mFinalSurface;
   RefPtr<DrawEventRecorderPrivate> mRecorder;
@@ -365,7 +365,7 @@ DrawTargetRecording::Stroke(const Path *aPath,
   mFinalDT->Stroke(GetPathForPathRecording(aPath), *AdjustedPattern(aPattern), aStrokeOptions, aOptions);
 }
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 DrawTargetRecording::Snapshot()
 {
   RefPtr<SourceSurface> surf = mFinalDT->Snapshot();
@@ -410,7 +410,7 @@ DrawTargetRecording::DrawFilter(FilterNode *aNode,
   mFinalDT->DrawFilter(GetFilterNode(aNode), aSourceRect, aDestPoint, aOptions);
 }
 
-TemporaryRef<FilterNode>
+already_AddRefed<FilterNode>
 DrawTargetRecording::CreateFilter(FilterType aType)
 {
   RefPtr<FilterNode> node = mFinalDT->CreateFilter(aType);
@@ -461,7 +461,7 @@ DrawTargetRecording::PopClip()
   mFinalDT->PopClip();
 }
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 DrawTargetRecording::CreateSourceSurfaceFromData(unsigned char *aData,
                                                  const IntSize &aSize,
                                                  int32_t aStride,
@@ -476,7 +476,7 @@ DrawTargetRecording::CreateSourceSurfaceFromData(unsigned char *aData,
   return retSurf.forget();
 }
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 DrawTargetRecording::OptimizeSourceSurface(SourceSurface *aSurface) const
 {
   RefPtr<SourceSurface> surf = mFinalDT->OptimizeSourceSurface(aSurface);
@@ -509,7 +509,7 @@ DrawTargetRecording::OptimizeSourceSurface(SourceSurface *aSurface) const
   return retSurf.forget();
 }
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 DrawTargetRecording::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const
 {
   RefPtr<SourceSurface> surf = mFinalDT->CreateSourceSurfaceFromNativeSurface(aSurface);
@@ -537,21 +537,21 @@ DrawTargetRecording::CreateSourceSurfaceFromNativeSurface(const NativeSurface &a
   return retSurf.forget();
 }
 
-TemporaryRef<DrawTarget>
+already_AddRefed<DrawTarget>
 DrawTargetRecording::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
 {
   RefPtr<DrawTarget> dt = mFinalDT->CreateSimilarDrawTarget(aSize, aFormat);
   return MakeAndAddRef<DrawTargetRecording>(mRecorder.get(), dt);
 }
 
-TemporaryRef<PathBuilder>
+already_AddRefed<PathBuilder>
 DrawTargetRecording::CreatePathBuilder(FillRule aFillRule) const
 {
   RefPtr<PathBuilder> builder = mFinalDT->CreatePathBuilder(aFillRule);
   return MakeAndAddRef<PathBuilderRecording>(builder, aFillRule);
 }
 
-TemporaryRef<GradientStops>
+already_AddRefed<GradientStops>
 DrawTargetRecording::CreateGradientStops(GradientStop *aStops,
                                          uint32_t aNumStops,
                                          ExtendMode aExtendMode) const

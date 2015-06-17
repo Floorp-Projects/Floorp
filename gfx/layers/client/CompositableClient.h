@@ -10,7 +10,7 @@
 #include <vector>                       // for vector
 #include <map>                          // for map
 #include "mozilla/Assertions.h"         // for MOZ_CRASH
-#include "mozilla/RefPtr.h"             // for TemporaryRef, RefCounted
+#include "mozilla/RefPtr.h"             // for already_AddRefed, RefCounted
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 #include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTracker
 #include "mozilla/layers/CompositorTypes.h"
@@ -129,13 +129,13 @@ public:
 
   LayersBackend GetCompositorBackendType() const;
 
-  TemporaryRef<BufferTextureClient>
+  already_AddRefed<BufferTextureClient>
   CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
                             gfx::IntSize aSize,
                             gfx::BackendType aMoz2dBackend = gfx::BackendType::NONE,
                             TextureFlags aFlags = TextureFlags::DEFAULT);
 
-  TemporaryRef<TextureClient>
+  already_AddRefed<TextureClient>
   CreateTextureClientForDrawing(gfx::SurfaceFormat aFormat,
                                 gfx::IntSize aSize,
                                 gfx::BackendType aMoz2DBackend,

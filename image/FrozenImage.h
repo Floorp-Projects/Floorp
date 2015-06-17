@@ -35,7 +35,7 @@ public:
   virtual void DecrementAnimationConsumers() override;
 
   NS_IMETHOD GetAnimated(bool* aAnimated) override;
-  NS_IMETHOD_(TemporaryRef<SourceSurface>)
+  NS_IMETHOD_(already_AddRefed<SourceSurface>)
     GetFrame(uint32_t aWhichFrame, uint32_t aFlags) override;
   NS_IMETHOD_(bool) IsImageContainerAvailable(layers::LayerManager* aManager,
                                               uint32_t aFlags) override;

@@ -324,7 +324,7 @@ public:
     // dump our state in a String
     virtual void dumpToString(String8& result, const char* prefix) const;
 
-     mozilla::TemporaryRef<TextureClient> getTextureClientFromBuffer(ANativeWindowBuffer* buffer);
+     already_AddRefed<TextureClient> getTextureClientFromBuffer(ANativeWindowBuffer* buffer);
 
     int getSlotFromTextureClientLocked(TextureClient* client) const;
 

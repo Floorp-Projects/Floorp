@@ -48,7 +48,7 @@ public:
 
   virtual void UnbindTextureSource() override;
 
-  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override;
+  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
   virtual void WaitAcquireFenceHandleSyncComplete() override;
 

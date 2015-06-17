@@ -47,7 +47,7 @@ class TextureClientX11 : public TextureClient
 
   virtual bool HasInternalBuffer() const override { return false; }
 
-  virtual TemporaryRef<TextureClient>
+  virtual already_AddRefed<TextureClient>
   CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 

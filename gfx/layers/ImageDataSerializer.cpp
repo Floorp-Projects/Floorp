@@ -147,7 +147,7 @@ ImageDataSerializerBase::GetFormat() const
   return GetBufferInfo(mData, mDataSize)->format;
 }
 
-TemporaryRef<DrawTarget>
+already_AddRefed<DrawTarget>
 ImageDataSerializerBase::GetAsDrawTarget(gfx::BackendType aBackend)
 {
   MOZ_ASSERT(IsValid());
@@ -156,7 +156,7 @@ ImageDataSerializerBase::GetAsDrawTarget(gfx::BackendType aBackend)
                                                GetStride(), GetFormat());
 }
 
-TemporaryRef<gfx::DataSourceSurface>
+already_AddRefed<gfx::DataSourceSurface>
 ImageDataSerializerBase::GetAsSurface()
 {
   MOZ_ASSERT(IsValid());

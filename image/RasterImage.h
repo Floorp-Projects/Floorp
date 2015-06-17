@@ -295,7 +295,7 @@ private:
                                           GraphicsFilter aFilter,
                                           uint32_t aFlags);
 
-  TemporaryRef<gfx::SourceSurface> CopyFrame(uint32_t aWhichFrame,
+  already_AddRefed<gfx::SourceSurface> CopyFrame(uint32_t aWhichFrame,
                                              uint32_t aFlags);
 
   Pair<DrawResult, RefPtr<gfx::SourceSurface>>

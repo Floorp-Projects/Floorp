@@ -9,7 +9,7 @@
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint32_t, uint64_t
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for TemporaryRef
+#include "mozilla/RefPtr.h"             // for already_AddRefed
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
 #include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTrackerHolder
 #include "mozilla/layers/CompositableForwarder.h"
@@ -192,8 +192,8 @@ public:
   virtual bool
   RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages) override;
 
-  TemporaryRef<ImageClient> CreateImageClient(CompositableType aType);
-  TemporaryRef<ImageClient> CreateImageClientNow(CompositableType aType);
+  already_AddRefed<ImageClient> CreateImageClient(CompositableType aType);
+  already_AddRefed<ImageClient> CreateImageClientNow(CompositableType aType);
 
   static void DispatchReleaseImageClient(ImageClient* aClient);
   static void DispatchReleaseTextureClient(TextureClient* aClient);

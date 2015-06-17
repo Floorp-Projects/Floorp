@@ -271,7 +271,7 @@ nsCertTree::GetCertAtIndex(int32_t index, int32_t *outAbsoluteCertOffset)
 }
 
 //  If the row at index is a cert, return that cert.  Otherwise, return null.
-TemporaryRef<nsCertTreeDispInfo>
+already_AddRefed<nsCertTreeDispInfo>
 nsCertTree::GetDispInfoAtIndex(int32_t index, 
                                int32_t *outAbsoluteCertOffset)
 {
