@@ -1328,6 +1328,14 @@ nsTextStore::Destroy()
     CommitCompositionInternal(false);
   }
 
+  if (mSink) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+      ("TSF: 0x%p   nsTextStore::Destroy(), calling "
+       "ITextStoreACPSink::OnLayoutChange(TS_LC_DESTROY)...",
+       this));
+    mSink->OnLayoutChange(TS_LC_DESTROY, TEXTSTORE_DEFAULT_VIEW);
+  }
+
   mLockedContent.Clear();
   mSelection.MarkDirty();
 
@@ -4265,6 +4273,15 @@ nsTextStore::CreateAndSetFocus(nsWindowBase* aFocusedWidget,
     return false;
   }
   sEnabledTextStore->SetInputScope(aContext.mHTMLInputType);
+
+  if (sEnabledTextStore->mSink) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Info,
+      ("TSF:   nsTextStore::CreateAndSetFocus(), calling "
+       "ITextStoreACPSink::OnLayoutChange(TS_LC_CREATE) for 0x%p...",
+       sEnabledTextStore.get()));
+    sEnabledTextStore->mSink->OnLayoutChange(TS_LC_CREATE,
+                                             TEXTSTORE_DEFAULT_VIEW);
+  }
   return true;
 }
 
