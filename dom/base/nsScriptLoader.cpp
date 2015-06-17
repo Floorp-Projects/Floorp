@@ -214,7 +214,7 @@ nsScriptLoader::CheckContentPolicy(nsIDocument* aDocument,
                                    const nsAString &aType)
 {
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT,
+  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_SCRIPT,
                                           aURI,
                                           aDocument->NodePrincipal(),
                                           aContext,
@@ -289,7 +289,7 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
                      aRequest->mURI,
                      mDocument,
                      nsILoadInfo::SEC_NORMAL,
-                     nsIContentPolicy::TYPE_SCRIPT,
+                     nsIContentPolicy::TYPE_INTERNAL_SCRIPT,
                      loadGroup,
                      prompter,
                      nsIRequest::LOAD_NORMAL |

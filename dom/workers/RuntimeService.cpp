@@ -2384,7 +2384,7 @@ RuntimeService::CreateSharedWorkerInternal(const GlobalObject& aGlobal,
   nsresult rv = WorkerPrivate::GetLoadInfo(cx, window, nullptr, aScriptURL,
                                            false,
                                            WorkerPrivate::OverrideLoadGroup,
-                                           &loadInfo);
+                                           aType, &loadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CreateSharedWorkerFromLoadInfo(cx, &loadInfo, aScriptURL, aName, aType,
