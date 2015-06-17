@@ -396,7 +396,7 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
     }
     partialEvict += sizeof(*frame) + frame->mSize;
   }
-  if (lastKeyFrameIndex < buffer.Length()) {
+  if (lastKeyFrameIndex + 1 < buffer.Length()) {
     CodedFrameRemoval(
       TimeInterval(TimeUnit::FromMicroseconds(buffer[lastKeyFrameIndex+1]->mTime),
                    TimeUnit::FromInfinity()));
@@ -1450,12 +1450,6 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
     data.InsertElementAt(0, aSample);
     MOZ_ASSERT(aSample->mKeyframe);
     trackBuffer.mNextInsertionIndex = Some(size_t(1));
-  } else if (presentationTimestamp >= trackBuffer.mBufferedRanges.GetEnd()) {
-    data.AppendElement(aSample);
-    MOZ_ASSERT(data.Length() <= 2 ||
-               data[data.Length()-1]->mTrackInfo->GetID() == data[data.Length()-2]->mTrackInfo->GetID() ||
-               data[data.Length()-1]->mKeyframe);
-    trackBuffer.mNextInsertionIndex = Some(data.Length());
   } else {
     // Find which discontinuity we should insert the frame before.
     TimeInterval target;
@@ -1464,6 +1458,15 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
         target = interval;
         break;
       }
+    }
+    if (target.IsEmpty()) {
+      // No existing ranges found after our frame presentation time.
+      // Insert frame at the end of array.
+      data.AppendElement(aSample);
+      MOZ_ASSERT(data.Length() <= 2 ||
+                 data[data.Length()-1]->mTrackInfo->GetID() == data[data.Length()-2]->mTrackInfo->GetID() ||
+                 data[data.Length()-1]->mKeyframe);
+      trackBuffer.mNextInsertionIndex = Some(data.Length());
     }
     for (uint32_t i = 0; i < data.Length(); i++) {
       const nsRefPtr<MediaRawData>& sample = data[i];
