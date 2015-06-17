@@ -10,7 +10,7 @@ const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { dbg_assert, fetch } = DevToolsUtils;
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const { OriginalLocation, GeneratedLocation, getOffsetColumn } = require("devtools/server/actors/common");
-const { resolve } = Promise;
+const { resolve } = require("promise");
 
 loader.lazyRequireGetter(this, "SourceActor", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "isEvalSource", "devtools/server/actors/script", true);
