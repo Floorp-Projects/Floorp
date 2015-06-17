@@ -70,7 +70,7 @@ window.onload = function() {
       if (lastTimestamp) {
         var delta = timestamp - lastTimestamp;
         info("delta since last timestamp", delta);
-        ok(delta >= 1000 /* 1 ms */,
+        ok(delta >= 1 /* ms */,
            "The timestamp should be about 1 ms after the last timestamp.");
       }
 
