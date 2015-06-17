@@ -24,8 +24,8 @@ describe("loop.conversationViews", function () {
   function stubComponent(obj, component, mockTagName){
     var reactClass = React.createClass({
       render: function() {
-        var mockTagName = mockTagName || "div";
-        return React.DOM[mockTagName](null, this.props.children);
+        var tagName = mockTagName || "div";
+        return React.DOM[tagName](null, this.props.children);
       }
     });
     return sandbox.stub(obj, component, reactClass);
@@ -270,7 +270,7 @@ describe("loop.conversationViews", function () {
   describe("CallFailedView", function() {
     var fakeAudio;
 
-    var contact = {email: [{value: "test@test.tld"}]};
+    var fakeContact = {email: [{value: "test@test.tld"}]};
 
     function mountTestComponent(options) {
       options = options || {};
@@ -292,7 +292,7 @@ describe("loop.conversationViews", function () {
 
     it("should dispatch a retryCall action when the retry button is pressed",
       function() {
-        view = mountTestComponent({contact: contact});
+        view = mountTestComponent({contact: fakeContact});
 
         var retryBtn = view.getDOMNode().querySelector(".btn-retry");
 
@@ -305,7 +305,7 @@ describe("loop.conversationViews", function () {
 
     it("should dispatch a cancelCall action when the cancel button is pressed",
       function() {
-        view = mountTestComponent({contact: contact});
+        view = mountTestComponent({contact: fakeContact});
 
         var cancelBtn = view.getDOMNode().querySelector(".btn-cancel");
 
@@ -318,7 +318,7 @@ describe("loop.conversationViews", function () {
 
     it("should dispatch a fetchRoomEmailLink action when the email button is pressed",
       function() {
-        view = mountTestComponent({contact: contact});
+        view = mountTestComponent({contact: fakeContact});
 
         var emailLinkBtn = view.getDOMNode().querySelector(".btn-email");
 
@@ -351,7 +351,7 @@ describe("loop.conversationViews", function () {
 
     it("should disable the email link button once the action is dispatched",
       function() {
-        view = mountTestComponent({contact: contact});
+        view = mountTestComponent({contact: fakeContact});
         var emailLinkBtn = view.getDOMNode().querySelector(".btn-email");
         React.addons.TestUtils.Simulate.click(emailLinkBtn);
 
@@ -360,7 +360,7 @@ describe("loop.conversationViews", function () {
 
     it("should compose an email once the email link is received", function() {
       var composeCallUrlEmail = sandbox.stub(sharedUtils, "composeCallUrlEmail");
-      view = mountTestComponent({contact: contact});
+      view = mountTestComponent({contact: fakeContact});
       conversationStore.setStoreState({emailLink: "http://fake.invalid/"});
 
       sinon.assert.calledOnce(composeCallUrlEmail);
@@ -370,7 +370,7 @@ describe("loop.conversationViews", function () {
 
     it("should close the conversation window once the email link is received",
       function() {
-        view = mountTestComponent({contact: contact});
+        view = mountTestComponent({contact: fakeContact});
 
         conversationStore.setStoreState({emailLink: "http://fake.invalid/"});
 
@@ -379,7 +379,7 @@ describe("loop.conversationViews", function () {
 
     it("should display an error message in case email link retrieval failed",
       function() {
-        view = mountTestComponent({contact: contact});
+        view = mountTestComponent({contact: fakeContact});
 
         conversationStore.trigger("error:emailLink");
 
@@ -388,7 +388,7 @@ describe("loop.conversationViews", function () {
 
     it("should allow retrying to get a call url if it failed previously",
       function() {
-        view = mountTestComponent({contact: contact});
+        view = mountTestComponent({contact: fakeContact});
 
         conversationStore.trigger("error:emailLink");
 
@@ -396,7 +396,7 @@ describe("loop.conversationViews", function () {
       });
 
     it("should play a failure sound, once", function() {
-      view = mountTestComponent({contact: contact});
+      view = mountTestComponent({contact: fakeContact});
 
       sinon.assert.calledOnce(navigator.mozLoop.getAudioBlob);
       sinon.assert.calledWithExactly(navigator.mozLoop.getAudioBlob,
@@ -409,7 +409,7 @@ describe("loop.conversationViews", function () {
       function () {
         conversationStore.setStoreState({callStateReason: WEBSOCKET_REASONS.MEDIA_FAIL});
 
-        view = mountTestComponent({contact: contact});
+        view = mountTestComponent({contact: fakeContact});
 
         sinon.assert.calledWith(document.mozL10n.get, "generic_failure_title");
       });
@@ -418,29 +418,31 @@ describe("loop.conversationViews", function () {
       function () {
         conversationStore.setStoreState({callStateReason: WEBSOCKET_REASONS.REJECT});
 
-        view = mountTestComponent({contact: contact});
+        view = mountTestComponent({contact: fakeContact});
 
         sinon.assert.calledWithExactly(document.mozL10n.get,
           "contact_unavailable_title",
-          {contactName: loop.conversationViews._getContactDisplayName(contact)});
+          {contactName: loop.conversationViews
+                            ._getContactDisplayName(fakeContact)});
       });
 
     it("should show 'contact unavailable' when the reason is WEBSOCKET_REASONS.BUSY",
       function () {
         conversationStore.setStoreState({callStateReason: WEBSOCKET_REASONS.BUSY});
 
-        view = mountTestComponent({contact: contact});
+        view = mountTestComponent({contact: fakeContact});
 
         sinon.assert.calledWithExactly(document.mozL10n.get,
           "contact_unavailable_title",
-          {contactName: loop.conversationViews._getContactDisplayName(contact)});
+          {contactName: loop.conversationViews
+                            ._getContactDisplayName(fakeContact)});
       });
 
     it("should show 'something went wrong' when the reason is 'setup'",
       function () {
         conversationStore.setStoreState({callStateReason: "setup"});
 
-        view = mountTestComponent({contact: contact});
+        view = mountTestComponent({contact: fakeContact});
 
         sinon.assert.calledWithExactly(document.mozL10n.get,
           "generic_failure_title");
@@ -450,18 +452,19 @@ describe("loop.conversationViews", function () {
       function () {
         conversationStore.setStoreState({callStateReason: REST_ERRNOS.USER_UNAVAILABLE});
 
-        view = mountTestComponent({contact: contact});
+        view = mountTestComponent({contact: fakeContact});
 
         sinon.assert.calledWithExactly(document.mozL10n.get,
           "contact_unavailable_title",
-          {contactName: loop.conversationViews._getContactDisplayName(contact)});
+          {contactName: loop.conversationViews
+                            ._getContactDisplayName(fakeContact)});
       });
 
     it("should show 'no media' when the reason is FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA",
       function () {
         conversationStore.setStoreState({callStateReason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA});
 
-        view = mountTestComponent({contact: contact});
+        view = mountTestComponent({contact: fakeContact});
 
         sinon.assert.calledWithExactly(document.mozL10n.get, "no_media_failure_message");
       });
@@ -765,7 +768,7 @@ describe("loop.conversationViews", function () {
   });
 
   describe("AcceptCallView", function() {
-    var view;
+    var callView;
 
     function mountTestComponent(extraProps) {
       var props = _.extend({dispatcher: dispatcher, mozLoop: fakeMozLoop}, extraProps);
@@ -774,11 +777,11 @@ describe("loop.conversationViews", function () {
     }
 
     afterEach(function() {
-      view = null;
+      callView = null;
     });
 
     it("should start alerting on display", function() {
-      view = mountTestComponent({
+      callView = mountTestComponent({
         callType: CALL_TYPES.AUDIO_VIDEO,
         callerId: "fake@invalid.com"
       });
@@ -787,49 +790,49 @@ describe("loop.conversationViews", function () {
     });
 
     it("should stop alerting when removed from the display", function() {
-      view = mountTestComponent({
+      callView = mountTestComponent({
         callType: CALL_TYPES.AUDIO_VIDEO,
         callerId: "fake@invalid.com"
       });
 
-      view.componentWillUnmount();
+      callView.componentWillUnmount();
 
       sinon.assert.calledOnce(fakeMozLoop.stopAlerting);
     });
 
     describe("default answer mode", function() {
       it("should display video as primary answer mode", function() {
-        view = mountTestComponent({
+        callView = mountTestComponent({
           callType: CALL_TYPES.AUDIO_VIDEO,
           callerId: "fake@invalid.com"
         });
 
-        var primaryBtn = view.getDOMNode()
-                                  .querySelector(".fx-embedded-btn-icon-video");
+        var primaryBtn = callView.getDOMNode()
+                                 .querySelector(".fx-embedded-btn-icon-video");
 
         expect(primaryBtn).not.to.eql(null);
       });
 
       it("should display audio as primary answer mode", function() {
-        view = mountTestComponent({
+        callView = mountTestComponent({
           callType: CALL_TYPES.AUDIO_ONLY,
           callerId: "fake@invalid.com"
         });
 
-        var primaryBtn = view.getDOMNode()
-                                  .querySelector(".fx-embedded-btn-icon-audio");
+        var primaryBtn = callView.getDOMNode()
+                                 .querySelector(".fx-embedded-btn-icon-audio");
 
         expect(primaryBtn).not.to.eql(null);
       });
 
       it("should accept call with video", function() {
-        view = mountTestComponent({
+        callView = mountTestComponent({
           callType: CALL_TYPES.AUDIO_VIDEO,
           callerId: "fake@invalid.com"
         });
 
-        var primaryBtn = view.getDOMNode()
-                                  .querySelector(".fx-embedded-btn-icon-video");
+        var primaryBtn = callView.getDOMNode()
+                                 .querySelector(".fx-embedded-btn-icon-video");
 
         React.addons.TestUtils.Simulate.click(primaryBtn);
 
@@ -841,13 +844,13 @@ describe("loop.conversationViews", function () {
       });
 
       it("should accept call with audio", function() {
-        view = mountTestComponent({
+        callView = mountTestComponent({
           callType: CALL_TYPES.AUDIO_ONLY,
           callerId: "fake@invalid.com"
         });
 
-        var primaryBtn = view.getDOMNode()
-                                  .querySelector(".fx-embedded-btn-icon-audio");
+        var primaryBtn = callView.getDOMNode()
+                                 .querySelector(".fx-embedded-btn-icon-audio");
 
         React.addons.TestUtils.Simulate.click(primaryBtn);
 
@@ -860,12 +863,12 @@ describe("loop.conversationViews", function () {
 
       it("should accept call with video when clicking on secondary btn",
         function() {
-          view = mountTestComponent({
+          callView = mountTestComponent({
             callType: CALL_TYPES.AUDIO_ONLY,
             callerId: "fake@invalid.com"
           });
 
-          var secondaryBtn = view.getDOMNode()
+          var secondaryBtn = callView.getDOMNode()
           .querySelector(".fx-embedded-btn-video-small");
 
           React.addons.TestUtils.Simulate.click(secondaryBtn);
@@ -879,12 +882,12 @@ describe("loop.conversationViews", function () {
 
       it("should accept call with audio when clicking on secondary btn",
         function() {
-          view = mountTestComponent({
+          callView = mountTestComponent({
             callType: CALL_TYPES.AUDIO_VIDEO,
             callerId: "fake@invalid.com"
           });
 
-          var secondaryBtn = view.getDOMNode()
+          var secondaryBtn = callView.getDOMNode()
           .querySelector(".fx-embedded-btn-audio-small");
 
           React.addons.TestUtils.Simulate.click(secondaryBtn);
@@ -899,12 +902,12 @@ describe("loop.conversationViews", function () {
 
     describe("click event on .btn-decline", function() {
       it("should dispatch a DeclineCall action", function() {
-        view = mountTestComponent({
+        callView = mountTestComponent({
           callType: CALL_TYPES.AUDIO_VIDEO,
           callerId: "fake@invalid.com"
         });
 
-        var buttonDecline = view.getDOMNode().querySelector(".btn-decline");
+        var buttonDecline = callView.getDOMNode().querySelector(".btn-decline");
 
         TestUtils.Simulate.click(buttonDecline);
 
@@ -916,12 +919,12 @@ describe("loop.conversationViews", function () {
 
     describe("click event on .btn-block", function() {
       it("should dispatch a DeclineCall action with blockCaller true", function() {
-        view = mountTestComponent({
+        callView = mountTestComponent({
           callType: CALL_TYPES.AUDIO_VIDEO,
           callerId: "fake@invalid.com"
         });
 
-        var buttonBlock = view.getDOMNode().querySelector(".btn-block");
+        var buttonBlock = callView.getDOMNode().querySelector(".btn-block");
 
         TestUtils.Simulate.click(buttonBlock);
 
@@ -933,7 +936,7 @@ describe("loop.conversationViews", function () {
   });
 
   describe("GenericFailureView", function() {
-    var view, fakeAudio;
+    var callView, fakeAudio;
 
     function mountTestComponent(props) {
       return TestUtils.renderIntoDocument(
@@ -951,7 +954,7 @@ describe("loop.conversationViews", function () {
     });
 
     it("should play a failure sound, once", function() {
-      view = mountTestComponent({cancelCall: function() {}});
+      callView = mountTestComponent({cancelCall: function() {}});
 
       sinon.assert.calledOnce(navigator.mozLoop.getAudioBlob);
       sinon.assert.calledWithExactly(navigator.mozLoop.getAudioBlob,
@@ -961,33 +964,38 @@ describe("loop.conversationViews", function () {
     });
 
     it("should set the title to generic_failure_title", function() {
-      view = mountTestComponent({cancelCall: function() {}});
+      callView = mountTestComponent({cancelCall: function() {}});
 
       expect(fakeWindow.document.title).eql("generic_failure_title");
     });
 
-    it("should show 'no media' for FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA reason", function() {
-      view = mountTestComponent({
-        cancelCall: function() {},
-        failureReason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
-      });
+    it("should show 'no media' for FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA reason",
+       function() {
+         callView = mountTestComponent({
+           cancelCall: function() {},
+           failureReason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
+         });
 
-      expect(view.getDOMNode().querySelector("h2").textContent).eql("no_media_failure_message");
-    });
+         expect(callView.getDOMNode().querySelector("h2").textContent)
+         .eql("no_media_failure_message");
+     });
 
     it("should show 'no media' for FAILURE_DETAILS.NO_MEDIA reason", function() {
-      view = mountTestComponent({
+      callView = mountTestComponent({
         cancelCall: function() {},
         failureReason: FAILURE_DETAILS.NO_MEDIA
       });
 
-      expect(view.getDOMNode().querySelector("h2").textContent).eql("no_media_failure_message");
+      expect(callView.getDOMNode().querySelector("h2").textContent)
+          .eql("no_media_failure_message");
     });
 
-    it("should show 'generic_failure_title' when no reason is specified", function() {
-      view = mountTestComponent({cancelCall: function() {}});
+    it("should show 'generic_failure_title' when no reason is specified",
+       function() {
+         callView = mountTestComponent({cancelCall: function() {}});
 
-      expect(view.getDOMNode().querySelector("h2").textContent).eql("generic_failure_title");
-    });
+         expect(callView.getDOMNode().querySelector("h2").textContent)
+            .eql("generic_failure_title");
+     });
   });
 });
