@@ -21,20 +21,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1; user-scalable=no"/>
     <link rel="stylesheet" href="chrome://browser/skin/aboutPrivateBrowsing.css" type="text/css" media="all"/>
     <link rel="icon" type="image/png" href="chrome://branding/content/favicon32.png" />
+    <script type="application/javascript;version=1.8" src="chrome://browser/content/aboutPrivateBrowsing.js"></script>
   </head>
 
   <body class="private">
-    <img class="showPrivate" src="chrome://browser/skin/images/privatebrowsing-mask.png" />
+    <img class="masq" src="chrome://browser/skin/images/privatebrowsing-mask.png" />
+
     <h1 class="showPrivate">&privatebrowsingpage.title;</h1>
-    <h1 class="showNormal">&privatebrowsingpage.issueDesc.normal;</h1>
+    <h1 class="showNormal">&privatebrowsingpage.title.normal;</h1>
 
     <div class="contentSection">
       <p class="showPrivate">&privatebrowsingpage.description.private;</p>
-      <p class="showNormal">&privatebrowsingpage.description;</p>
+      <p class="showNormal">&privatebrowsingpage.description.normal;</p>
 
-      <p>&privatebrowsingpage.moreInfo;</p>
+      <p class="showPrivate"><a href="https://support.mozilla.org/kb/private-browsing-firefox-android">&privatebrowsingpage.link.private;</a></p>
+      <p class="showNormal"><a href="#" id="newPrivateTabLink">&privatebrowsingpage.link.normal;</a></p>
     </div>
 
-    <script type="application/javascript;version=1.8" src="chrome://browser/content/aboutPrivateBrowsing.js"></script>
   </body>
 </html>
