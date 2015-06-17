@@ -89,7 +89,6 @@ public:
   explicit RemoteContentController(RenderFrameParent* aRenderFrame)
     : mUILoop(MessageLoop::current())
     , mRenderFrame(aRenderFrame)
-    , mHaveZoomConstraints(false)
   { }
 
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) override
@@ -222,14 +221,6 @@ public:
     MessageLoop::current()->PostDelayedTask(FROM_HERE, aTask, aDelayMs);
   }
 
-  virtual bool GetRootZoomConstraints(ZoomConstraints* aOutConstraints) override
-  {
-    if (mHaveZoomConstraints && aOutConstraints) {
-      *aOutConstraints = mZoomConstraints;
-    }
-    return mHaveZoomConstraints;
-  }
-
   virtual bool GetTouchSensitiveRegion(CSSRect* aOutRegion) override
   {
     if (mTouchSensitiveRegion.IsEmpty())
@@ -272,12 +263,6 @@ public:
 
   // Methods used by RenderFrameParent to set fields stored here.
 
-  void SaveZoomConstraints(const ZoomConstraints& aConstraints)
-  {
-    mHaveZoomConstraints = true;
-    mZoomConstraints = aConstraints;
-  }
-
   void SetTouchSensitiveRegion(const nsRegion& aRegion)
   {
     mTouchSensitiveRegion = aRegion;
@@ -286,8 +271,6 @@ private:
   MessageLoop* mUILoop;
   RenderFrameParent* mRenderFrame;
 
-  bool mHaveZoomConstraints;
-  ZoomConstraints mZoomConstraints;
   nsRegion mTouchSensitiveRegion;
 };
 
@@ -578,12 +561,8 @@ RenderFrameParent::SetAllowedTouchBehavior(uint64_t aInputBlockId,
 void
 RenderFrameParent::UpdateZoomConstraints(uint32_t aPresShellId,
                                          ViewID aViewId,
-                                         bool aIsRoot,
-                                         const ZoomConstraints& aConstraints)
+                                         const Maybe<ZoomConstraints>& aConstraints)
 {
-  if (mContentController && aIsRoot) {
-    mContentController->SaveZoomConstraints(aConstraints);
-  }
   if (GetApzcTreeManager()) {
     GetApzcTreeManager()->UpdateZoomConstraints(ScrollableLayerGuid(mLayersId, aPresShellId, aViewId),
                                                 aConstraints);

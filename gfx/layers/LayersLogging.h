@@ -130,6 +130,10 @@ void
 AppendToString(std::stringstream& aStream, const ScrollableLayerGuid& s,
                const char* pfx="", const char* sfx="");
 
+void
+AppendToString(std::stringstream& aStream, const ZoomConstraints& z,
+               const char* pfx="", const char* sfx="");
+
 template<class T>
 void
 AppendToString(std::stringstream& aStream, const mozilla::gfx::MarginTyped<T>& m,
