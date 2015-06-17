@@ -53,13 +53,13 @@ namespace dom {
  * ping              | TYPE_PING
  * plugin            | TYPE_OBJECT_SUBREQUEST
  * prefetch          |
- * script            | TYPE_INTERNAL_SCRIPT
- * sharedworker      | TYPE_INTERNAL_SHARED_WORKER
+ * script            | TYPE_SCRIPT
+ * sharedworker      |
  * subresource       | Not supported by Gecko
  * style             | TYPE_STYLESHEET
  * track             | TYPE_INTERNAL_TRACK
  * video             | TYPE_INTERNAL_VIDEO
- * worker            | TYPE_INTERNAL_WORKER
+ * worker            |
  * xmlhttprequest    | TYPE_XMLHTTPREQUEST
  * xslt              | TYPE_XSLT
  *
@@ -68,6 +68,7 @@ namespace dom {
  * TODO: Split TYPE_XMLHTTPREQUEST and TYPE_DATAREQUEST for EventSource
  * TODO: Figure out if TYPE_WEBSOCKET maps to anything useful
  * TODO: Differentiate between frame and iframe
+ * TODO: Add content types for different kinds of workers
  * TODO: Add a content type for prefetch
  * TODO: Use the content type for manifest when it becomes available
  * TODO: Add a content type for location
