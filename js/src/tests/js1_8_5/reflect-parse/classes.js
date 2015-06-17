@@ -118,6 +118,9 @@ function testClasses() {
     // Currently, we do not allow default constructors
     assertClassError("class NAME { }", TypeError);
 
+    // For now, disallow arrow functions in derived class constructors
+    assertClassError("class NAME extends null { constructor() { (() => 0); }", InternalError);
+
     // It is an error to have two methods named constructor, but not other
     // names, regardless if one is an accessor or a generator or static.
     assertClassError("class NAME { constructor() { } constructor(a) { } }", SyntaxError);
