@@ -17,7 +17,7 @@ typedef unsigned long nsSecurityFlags;
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(dcf54f49-2d63-4c34-9da1-54df235f354c)]
+[scriptable, builtinclass, uuid(f6bce897-1a4a-4664-b96b-abacd6543e95)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -153,8 +153,11 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute boolean loadingSandboxed;
 
   /**
-   * The contentPolicyType of the channel, used for security checks
+   * The external contentPolicyType of the channel, used for security checks
    * like Mixed Content Blocking and Content Security Policy.
+   *
+   * Specifically, content policy types with _INTERNAL_ in their name will
+   * never get returned from this attribute.
    */
   readonly attribute nsContentPolicyType contentPolicyType;
 
@@ -167,6 +170,19 @@ interface nsILoadInfo : nsISupports
     return result;
   }
 %}
+
+  /**
+   * The internal contentPolicyType of the channel, used for constructing
+   * RequestContext values when creating a fetch event for an intercepted
+   * channel.
+   *
+   * This should not be used for the purposes of security checks, since
+   * the content policy implementations cannot be expected to deal with
+   * _INTERNAL_ values.  Please use the contentPolicyType attribute above
+   * for that purpose.
+   */
+  [noscript, notxpcom]
+  nsContentPolicyType internalContentPolicyType();
 
   /**
    * A base URI for use in situations where it cannot otherwise be inferred.
