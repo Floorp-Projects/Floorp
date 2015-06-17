@@ -686,14 +686,18 @@ class Descriptor(DescriptorProvider):
 
     def needsHeaderInclude(self):
         """
-        An interface doesn't need a header file if it is not concrete,
-        not pref-controlled, has no prototype object, and has no
-        static methods or attributes.
+        An interface doesn't need a header file if it is not concrete, not
+        pref-controlled, has no prototype object, has no static methods or
+        attributes and has no parent.  The parent matters because we assert
+        things about refcounting that depend on the actual underlying type if we
+        have a parent.
+
         """
         return (self.interface.isExternal() or self.concrete or
             self.interface.hasInterfacePrototypeObject() or
             any((m.isAttr() or m.isMethod()) and m.isStatic() for m
-                in self.interface.members))
+                in self.interface.members) or
+            self.interface.parent)
 
     def hasThreadChecks(self):
         return ((self.isExposedConditionally() and
