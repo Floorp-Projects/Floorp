@@ -1221,7 +1221,7 @@ SavedStacksMetadataCallback(JSContext* cx, JSObject* target)
     if (!stacks.saveCurrentStack(cx, &frame))
         CrashAtUnhandlableOOM("SavedStacksMetadataCallback");
 
-    if (!Debugger::onLogAllocationSite(cx, obj, frame, PRMJ_Now()))
+    if (!Debugger::onLogAllocationSite(cx, obj, frame, JS_GetCurrentEmbedderTime()))
         CrashAtUnhandlableOOM("SavedStacksMetadataCallback");
 
     MOZ_ASSERT_IF(frame, !frame->is<WrapperObject>());
