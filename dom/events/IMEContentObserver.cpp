@@ -49,7 +49,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IMEContentObserver)
   tmp->NotifyIMEOfBlur();
   tmp->UnregisterObservers();
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWidget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootContent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditableNode)
@@ -92,6 +91,8 @@ IMEContentObserver::IMEContentObserver()
   , mSuppressNotifications(0)
   , mPreCharacterDataChangeLength(-1)
   , mIsObserving(false)
+  , mIMEHasFocus(false)
+  , mIsFocusEventPending(false)
   , mIsSelectionChangeEventPending(false)
   , mSelectionChangeCausedOnlyByComposition(false)
   , mIsPositionChangeEventPending(false)
@@ -179,7 +180,7 @@ IMEContentObserver::Init(nsIWidget* aWidget,
   NS_ENSURE_TRUE_VOID(mRootContent);
 
   if (firstInitialization) {
-    aWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS));
+    MaybeNotifyIMEOfFocusSet();
 
     // While Init() notifies IME of focus, pending layout may be flushed
     // because the notification may cause querying content.  Then, recursive
@@ -238,16 +239,28 @@ IMEContentObserver::ObserveEditableNode()
 void
 IMEContentObserver::NotifyIMEOfBlur()
 {
-  // If this failed to initialize, mRootContent may be null, then, we
-  // should not call NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR))
-  if (!mRootContent || !mWidget) {
+  // Prevent any notifications to be sent IME.
+  nsCOMPtr<nsIWidget> widget;
+  mWidget.swap(widget);
+
+  // If we hasn't been set focus, we shouldn't send blur notification to IME.
+  if (!mIMEHasFocus) {
     return;
   }
 
-  // A test event handler might destroy the widget.
-  if (mWidget) {
-    mWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
-  }
+  // mWidget must have been non-nullptr if IME has focus.
+  MOZ_RELEASE_ASSERT(widget);
+
+  // For now, we need to send blur notification in any condition because
+  // we don't have any simple ways to send blur notification asynchronously.
+  // After this call, Destroy() or Unlink() will stop observing the content
+  // and forget everything.  Therefore, if it's not safe to send notification
+  // when script blocker is unlocked, we cannot send blur notification after
+  // that and before next focus notification.
+  // Anyway, as far as we know, IME doesn't try to query content when it loses
+  // focus.  So, this may not cause any problem.
+  mIMEHasFocus = false;
+  widget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
 }
 
 void
@@ -294,7 +307,6 @@ IMEContentObserver::Destroy()
   UnregisterObservers();
 
   mEditor = nullptr;
-  // Even if there are some pending notification, it'll never notify the widget.
   mWidget = nullptr;
   mSelection = nullptr;
   mRootContent = nullptr;
@@ -982,6 +994,13 @@ IMEContentObserver::CancelEditAction()
 }
 
 void
+IMEContentObserver::MaybeNotifyIMEOfFocusSet()
+{
+  mIsFocusEventPending = true;
+  FlushMergeableNotifications();
+}
+
+void
 IMEContentObserver::MaybeNotifyIMEOfTextChange(const TextChangeData& aData)
 {
   StoreTextChangeData(aData);
@@ -1046,6 +1065,15 @@ IMEContentObserver::FlushMergeableNotifications()
 
   // NOTE: Reset each pending flag because sending notification may cause
   //       another change.
+
+  if (mIsFocusEventPending) {
+    mIsFocusEventPending = false;
+    nsContentUtils::AddScriptRunner(new FocusSetEvent(this));
+    // This is the first notification to IME. So, we don't need to notify any
+    // more since IME starts to query content after it gets focus.
+    ClearPendingNotifications();
+    return;
+  }
 
   if (mTextChangeData.mStored) {
     nsContentUtils::AddScriptRunner(new TextChangeEvent(this, mTextChangeData));
@@ -1527,12 +1555,42 @@ IMEContentObserver::TestMergingTextChangeData()
 #endif // #ifdef DEBUG
 
 /******************************************************************************
+ * mozilla::IMEContentObserver::FocusSetEvent
+ ******************************************************************************/
+
+NS_IMETHODIMP
+IMEContentObserver::FocusSetEvent::Run()
+{
+  if (NS_WARN_IF(mIMEContentObserver->mIMEHasFocus)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIWidget> widget = mIMEContentObserver->GetWidget();
+  if (!widget) {
+    // If IMEContentObserver has already gone, we don't need to notify IME of
+    // focus.
+    mIMEContentObserver->ClearPendingNotifications();
+    return NS_OK;
+  }
+
+  mIMEContentObserver->mIMEHasFocus = true;
+  widget->NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS));
+  return NS_OK;
+}
+
+/******************************************************************************
  * mozilla::IMEContentObserver::SelectionChangeEvent
  ******************************************************************************/
 
 NS_IMETHODIMP
 IMEContentObserver::SelectionChangeEvent::Run()
 {
+  // If IME has already lost focus, we shouldn't notify any pending
+  // notifications.
+  if (!mIMEContentObserver->mIMEHasFocus) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIWidget> widget = mIMEContentObserver->mWidget;
   nsPresContext* presContext = mIMEContentObserver->GetPresContext();
   if (!widget || !presContext) {
@@ -1576,6 +1634,12 @@ IMEContentObserver::SelectionChangeEvent::Run()
 NS_IMETHODIMP
 IMEContentObserver::TextChangeEvent::Run()
 {
+  // If IME has already lost focus, we shouldn't notify any pending
+  // notifications.
+  if (!mIMEContentObserver->mIMEHasFocus) {
+    return NS_OK;
+  }
+
   if (!mIMEContentObserver->mWidget) {
     return NS_OK;
   }
@@ -1596,6 +1660,12 @@ IMEContentObserver::TextChangeEvent::Run()
 NS_IMETHODIMP
 IMEContentObserver::PositionChangeEvent::Run()
 {
+  // If IME has already lost focus, we shouldn't notify any pending
+  // notifications.
+  if (!mIMEContentObserver->mIMEHasFocus) {
+    return NS_OK;
+  }
+
   if (mIMEContentObserver->mWidget) {
     mIMEContentObserver->mWidget->NotifyIME(
       IMENotification(NOTIFY_IME_OF_POSITION_CHANGE));
