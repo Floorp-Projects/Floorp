@@ -1210,6 +1210,7 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
       case ClassConstructor:
+      case DerivedClassConstructor:
         flags = JSFunction::INTERPRETED_CLASS_CONSTRUCTOR;
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
@@ -2243,6 +2244,8 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox* funbo
     lazy->setGeneratorKind(funbox->generatorKind());
     if (funbox->usesArguments && funbox->usesApply && funbox->usesThis)
         lazy->setUsesArgumentsApplyAndThis();
+    if (funbox->isDerivedClassConstructor())
+        lazy->setIsDerivedClassConstructor();
     PropagateTransitiveParseFlags(funbox, lazy);
 
     fun->initLazyScript(lazy);
@@ -2263,6 +2266,9 @@ Parser<FullParseHandler>::functionArgsAndBody(InHandling inHandling, ParseNode* 
     FunctionBox* funbox = newFunctionBox(pn, fun, pc, inheritedDirectives, generatorKind);
     if (!funbox)
         return false;
+
+    if (kind == DerivedClassConstructor)
+        funbox->setDerivedClassConstructor();
 
     YieldHandling yieldHandling = generatorKind != NotGenerator ? YieldIsKeyword : YieldIsName;
 
@@ -2425,6 +2431,9 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
     if (!funbox)
         return null();
     funbox->length = fun->nargs() - fun->hasRest();
+
+    if (fun->lazyScript()->isDerivedClassConstructor())
+        funbox->setDerivedClassConstructor();
 
     Directives newDirectives = directives;
     ParseContext<FullParseHandler> funpc(this, /* parent = */ nullptr, pn, funbox,
@@ -5960,7 +5969,8 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
 
     MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CLASS);
 
-    ParseNode* classMethods = propertyList(yieldHandling, ClassBody);
+    ParseNode* classMethods = propertyList(yieldHandling,
+                                           hasHeritage ? DerivedClassBody : ClassBody);
     if (!classMethods)
         return null();
 
@@ -6536,6 +6546,11 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
         TokenKind ignored;
         if (!tokenStream.peekToken(&ignored))
             return null();
+
+        if (pc->sc->isFunctionBox() && pc->sc->asFunctionBox()->isDerivedClassConstructor()) {
+            report(ParseError, false, null(), JSMSG_DISABLED_DERIVED_CLASS, "arrow functions");
+            return null();
+        }
 
         return functionDef(inHandling, yieldHandling, nullptr, Arrow, NotGenerator);
       }
@@ -8307,7 +8322,7 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::newPropertyListNode(PropListType type)
 {
-    if (type == ClassBody)
+    if (IsClassBody(type))
         return handler.newClassMethodList(pos().begin);
 
     MOZ_ASSERT(type == ObjectLiteral);
@@ -8335,7 +8350,7 @@ Parser<ParseHandler>::propertyList(YieldHandling yieldHandling, PropListType typ
             break;
 
         bool isStatic = false;
-        if (type == ClassBody) {
+        if (IsClassBody(type)) {
             if (ltok == TOK_SEMI)
                 continue;
 
@@ -8475,7 +8490,7 @@ Parser<ParseHandler>::propertyList(YieldHandling yieldHandling, PropListType typ
             }
         }
 
-        if (type == ClassBody) {
+        if (IsClassBody(type)) {
             if (!isStatic && atom == context->names().constructor) {
                 if (isGenerator || op != JSOP_INITPROP) {
                     report(ParseError, false, propname, JSMSG_BAD_METHOD_DEF);
@@ -8499,7 +8514,7 @@ Parser<ParseHandler>::propertyList(YieldHandling yieldHandling, PropListType typ
                 return null();
 
             if (tt == TOK_COLON) {
-                if (type == ClassBody) {
+                if (IsClassBody(type)) {
                     report(ParseError, false, null(), JSMSG_BAD_METHOD_DEF);
                     return null();
                 }
@@ -8541,7 +8556,7 @@ Parser<ParseHandler>::propertyList(YieldHandling yieldHandling, PropListType typ
                  * Support, e.g., |var {x, y} = o| as destructuring shorthand
                  * for |var {x: x, y: y} = o|, per proposed JS2/ES4 for JS1.8.
                  */
-                if (type == ClassBody) {
+                if (IsClassBody(type)) {
                     report(ParseError, false, null(), JSMSG_BAD_METHOD_DEF);
                     return null();
                 }
@@ -8563,7 +8578,9 @@ Parser<ParseHandler>::propertyList(YieldHandling yieldHandling, PropListType typ
             } else if (tt == TOK_LP) {
                 tokenStream.ungetToken();
                 if (!methodDefinition(yieldHandling, type, propList, propname,
-                                      isConstructor ? ClassConstructor : Method,
+                                      isConstructor ? type == DerivedClassBody ? DerivedClassConstructor
+                                                                               : ClassConstructor
+                                                    : Method,
                                       isGenerator ? StarGenerator : NotGenerator, isStatic, op))
                 {
                     return null();
@@ -8595,7 +8612,7 @@ Parser<ParseHandler>::propertyList(YieldHandling yieldHandling, PropListType typ
     }
 
     // Default constructors not yet implemented. See bug 1105463
-    if (type == ClassBody && !seenConstructor) {
+    if (IsClassBody(type) && !seenConstructor) {
         report(ParseError, false, null(), JSMSG_NO_CLASS_CONSTRUCTOR);
         return null();
     }
@@ -8610,7 +8627,8 @@ Parser<ParseHandler>::methodDefinition(YieldHandling yieldHandling, PropListType
                                        Node propList, Node propname, FunctionSyntaxKind kind,
                                        GeneratorKind generatorKind, bool isStatic, JSOp op)
 {
-    MOZ_ASSERT(kind == Method || kind == ClassConstructor || kind == Getter || kind == Setter);
+    MOZ_ASSERT(kind == Method || kind == ClassConstructor || kind == DerivedClassConstructor ||
+               kind == Getter || kind == Setter);
     /* NB: Getter function in { get x(){} } is unnamed. */
     RootedPropertyName funName(context);
     if ((kind == Method || kind == ClassConstructor) && tokenStream.isCurrentTokenType(TOK_NAME))
@@ -8622,7 +8640,7 @@ Parser<ParseHandler>::methodDefinition(YieldHandling yieldHandling, PropListType
     if (!fn)
         return false;
 
-    if (listType == ClassBody)
+    if (IsClassBody(listType))
         return handler.addClassMethodDefinition(propList, propname, fn, op, isStatic);
 
     MOZ_ASSERT(listType == ObjectLiteral);
