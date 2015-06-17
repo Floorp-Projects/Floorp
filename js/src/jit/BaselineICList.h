@@ -77,6 +77,7 @@ namespace jit {
     _(GetElem_NativePrototypeSlot)               \
     _(GetElem_NativePrototypeCallNative)         \
     _(GetElem_NativePrototypeCallScripted)       \
+    _(GetElem_UnboxedProperty)                   \
     _(GetElem_String)                            \
     _(GetElem_Dense)                             \
     _(GetElem_UnboxedArray)                      \
