@@ -211,19 +211,25 @@ nsUnicharStreamLoader::WriteSegmentFun(nsIInputStream *,
   uint32_t haveRead = self->mBuffer.Length();
   int32_t srcLen = aCount;
   int32_t dstLen;
-  self->mDecoder->GetMaxLength(aSegment, srcLen, &dstLen);
+
+  nsresult rv = self->mDecoder->GetMaxLength(aSegment, srcLen, &dstLen);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   uint32_t capacity = haveRead + dstLen;
   if (!self->mBuffer.SetCapacity(capacity, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  DebugOnly<nsresult> rv =
-    self->mDecoder->Convert(aSegment,
-                            &srcLen,
-                            self->mBuffer.BeginWriting() + haveRead,
-                            &dstLen);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  rv = self->mDecoder->Convert(aSegment,
+                               &srcLen,
+                               self->mBuffer.BeginWriting() + haveRead,
+                               &dstLen);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   MOZ_ASSERT(srcLen == static_cast<int32_t>(aCount));
   haveRead += dstLen;
 
