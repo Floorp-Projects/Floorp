@@ -18,7 +18,7 @@
     mov         rcx, 0x0400040
 
     movdqa      xmm4, [rdx]                 ;load filters
-    movd        xmm5, rcx
+    movq        xmm5, rcx
     packsswb    xmm4, xmm4
     pshuflw     xmm0, xmm4, 0b              ;k0_k1
     pshuflw     xmm1, xmm4, 01010101b       ;k2_k3
@@ -272,11 +272,9 @@
     punpcklbw   xmm2, xmm3                  ;C D
     punpcklbw   xmm4, xmm5                  ;E F
 
-
     movq        xmm6, [rsi + rbx + 8]       ;G
     movq        xmm7, [rax + rbx + 8]       ;H
     punpcklbw   xmm6, xmm7                  ;G H
-
 
     pmaddubsw   xmm0, k0k1
     pmaddubsw   xmm2, k2k3
@@ -284,10 +282,13 @@
     pmaddubsw   xmm6, k6k7
 
     paddsw      xmm0, xmm6
-    paddsw      xmm0, xmm2
+    movdqa      xmm1, xmm2
+    pmaxsw      xmm2, xmm4
+    pminsw      xmm4, xmm1
     paddsw      xmm0, xmm4
-    paddsw      xmm0, krd
+    paddsw      xmm0, xmm2
 
+    paddsw      xmm0, krd
     psraw       xmm0, 7
     packuswb    xmm0, xmm0
 
@@ -660,7 +661,7 @@ sym(vp9_filter_block1d16_v8_avg_ssse3):
     mov         rcx, 0x0400040
 
     movdqa      xmm4, [rdx]                 ;load filters
-    movd        xmm5, rcx
+    movq        xmm5, rcx
     packsswb    xmm4, xmm4
     pshuflw     xmm0, xmm4, 0b              ;k0_k1
     pshuflw     xmm1, xmm4, 01010101b       ;k2_k3
@@ -764,40 +765,50 @@ sym(vp9_filter_block1d16_v8_avg_ssse3):
 
     movq        xmm0,   [rsi - 3]           ;load src data
     movq        xmm4,   [rsi + 5]
-    movq        xmm7,   [rsi + 13]
+    movq        xmm6,   [rsi + 13]
     punpcklqdq  xmm0,   xmm4
-    punpcklqdq  xmm4,   xmm7
+    punpcklqdq  xmm4,   xmm6
 
+    movdqa      xmm7,   xmm0
+
+    punpcklbw   xmm7,   xmm7
+    punpckhbw   xmm0,   xmm0
     movdqa      xmm1,   xmm0
     movdqa      xmm2,   xmm0
     movdqa      xmm3,   xmm0
+
+    palignr     xmm0,   xmm7, 1
+    palignr     xmm1,   xmm7, 5
+    pmaddubsw   xmm0,   k0k1
+    palignr     xmm2,   xmm7, 9
+    pmaddubsw   xmm1,   k2k3
+    palignr     xmm3,   xmm7, 13
+
+    pmaddubsw   xmm2,   k4k5
+    pmaddubsw   xmm3,   k6k7
+    paddsw      xmm0,   xmm3
+
+    movdqa      xmm3,   xmm4
+    punpcklbw   xmm3,   xmm3
+    punpckhbw   xmm4,   xmm4
+
     movdqa      xmm5,   xmm4
     movdqa      xmm6,   xmm4
     movdqa      xmm7,   xmm4
 
-    pshufb      xmm0,   [GLOBAL(shuf_t0t1)]
-    pshufb      xmm1,   [GLOBAL(shuf_t2t3)]
-    pshufb      xmm2,   [GLOBAL(shuf_t4t5)]
-    pshufb      xmm3,   [GLOBAL(shuf_t6t7)]
-    pshufb      xmm4,   [GLOBAL(shuf_t0t1)]
-    pshufb      xmm5,   [GLOBAL(shuf_t2t3)]
-    pshufb      xmm6,   [GLOBAL(shuf_t4t5)]
-    pshufb      xmm7,   [GLOBAL(shuf_t6t7)]
+    palignr     xmm4,   xmm3, 1
+    palignr     xmm5,   xmm3, 5
+    palignr     xmm6,   xmm3, 9
+    palignr     xmm7,   xmm3, 13
 
-    pmaddubsw   xmm0,   k0k1
-    pmaddubsw   xmm1,   k2k3
-    pmaddubsw   xmm2,   k4k5
-    pmaddubsw   xmm3,   k6k7
-    pmaddubsw   xmm4,   k0k1
-    pmaddubsw   xmm5,   k2k3
-    pmaddubsw   xmm6,   k4k5
-    pmaddubsw   xmm7,   k6k7
-
-    paddsw      xmm0,   xmm3
     movdqa      xmm3,   xmm1
+    pmaddubsw   xmm4,   k0k1
     pmaxsw      xmm1,   xmm2
+    pmaddubsw   xmm5,   k2k3
     pminsw      xmm2,   xmm3
+    pmaddubsw   xmm6,   k4k5
     paddsw      xmm0,   xmm2
+    pmaddubsw   xmm7,   k6k7
     paddsw      xmm0,   xmm1
 
     paddsw      xmm4,   xmm7

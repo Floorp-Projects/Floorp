@@ -13,13 +13,14 @@
 #include "vpx_ports/mem.h"
 
 #define pair256_set_epi16(a, b) \
-  _mm256_set_epi16(b, a, b, a, b, a, b, a, b, a, b, a, b, a, b, a)
+  _mm256_set_epi16((int16_t)(b), (int16_t)(a), (int16_t)(b), (int16_t)(a), \
+                   (int16_t)(b), (int16_t)(a), (int16_t)(b), (int16_t)(a), \
+                   (int16_t)(b), (int16_t)(a), (int16_t)(b), (int16_t)(a), \
+                   (int16_t)(b), (int16_t)(a), (int16_t)(b), (int16_t)(a))
 
 #define pair256_set_epi32(a, b) \
-  _mm256_set_epi32(b, a, b, a, b, a, b, a)
-
-
-
+  _mm256_set_epi32((int)(b), (int)(a), (int)(b), (int)(a), \
+                   (int)(b), (int)(a), (int)(b), (int)(a))
 
 #if FDCT32x32_HIGH_PRECISION
 static INLINE __m256i k_madd_epi32_avx2(__m256i a, __m256i b) {
@@ -50,7 +51,7 @@ void FDCT32x32_2D_AVX2(const int16_t *input,
   //    When we use them, in one case, they are all the same. In all others
   //    it's a pair of them that we need to repeat four times. This is done
   //    by constructing the 32 bit constant corresponding to that pair.
-  const __m256i k__cospi_p16_p16 = _mm256_set1_epi16(+cospi_16_64);
+  const __m256i k__cospi_p16_p16 = _mm256_set1_epi16((int16_t)cospi_16_64);
   const __m256i k__cospi_p16_m16 = pair256_set_epi16(+cospi_16_64, -cospi_16_64);
   const __m256i k__cospi_m08_p24 = pair256_set_epi16(-cospi_8_64,   cospi_24_64);
   const __m256i k__cospi_m24_m08 = pair256_set_epi16(-cospi_24_64, -cospi_8_64);

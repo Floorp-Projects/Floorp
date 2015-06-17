@@ -8,8 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
-#include "vp9/common/vp9_blockd.h"
 #include "vp9/common/vp9_common_data.h"
 
 // Log 2 conversion lookup tables for block width and height
@@ -35,7 +33,6 @@ const int size_group_lookup[BLOCK_SIZES] =
 
 const int num_pels_log2_lookup[BLOCK_SIZES] =
   {4, 5, 5, 6, 7, 7, 8, 9, 9, 10, 11, 11, 12};
-
 
 const PARTITION_TYPE partition_lookup[][BLOCK_SIZES] = {
   {  // 4X4
@@ -105,6 +102,13 @@ const TX_SIZE max_txsize_lookup[BLOCK_SIZES] = {
   TX_8X8,   TX_8X8,   TX_8X8,
   TX_16X16, TX_16X16, TX_16X16,
   TX_32X32, TX_32X32, TX_32X32, TX_32X32
+};
+
+const BLOCK_SIZE txsize_to_bsize[TX_SIZES] = {
+    BLOCK_4X4,  // TX_4X4
+    BLOCK_8X8,  // TX_8X8
+    BLOCK_16X16,  // TX_16X16
+    BLOCK_32X32,  // TX_32X32
 };
 
 const TX_SIZE tx_mode_to_biggest_tx_size[TX_MODES] = {

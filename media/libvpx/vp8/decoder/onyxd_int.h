@@ -126,7 +126,7 @@ typedef struct VP8D_COMP
     int independent_partitions;
     int frame_corrupt_residual;
 
-    vp8_decrypt_cb *decrypt_cb;
+    vpx_decrypt_cb decrypt_cb;
     void *decrypt_state;
 } VP8D_COMP;
 
