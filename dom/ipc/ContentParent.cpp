@@ -3220,8 +3220,7 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
                                              InfallibleTArray<nsString>* dictionaries,
                                              ClipboardCapabilities* clipboardCaps,
                                              DomainPolicyClone* domainPolicy,
-                                             OwningSerializedStructuredCloneBuffer* initialData,
-                                             bool* aIsSafeMode)
+                                             OwningSerializedStructuredCloneBuffer* initialData)
 {
     nsCOMPtr<nsIIOService> io(do_GetIOService());
     MOZ_ASSERT(io, "No IO service?");
@@ -3275,8 +3274,6 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
 
         buffer.steal(&initialData->data, &initialData->dataLength);
     }
-
-    *aIsSafeMode = mozilla::startup::IsSafeMode();
 
     return true;
 }
