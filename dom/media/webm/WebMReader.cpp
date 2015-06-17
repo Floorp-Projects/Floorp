@@ -1093,6 +1093,7 @@ nsresult WebMReader::SeekInternal(int64_t aTarget)
 
 media::TimeIntervals WebMReader::GetBuffered()
 {
+  MOZ_ASSERT(OnTaskQueue());
   NS_ENSURE_TRUE(mStartTime >= 0, media::TimeIntervals());
   AutoPinned<MediaResource> resource(mDecoder->GetResource());
 
