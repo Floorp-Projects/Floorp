@@ -483,7 +483,7 @@ GetClosestInterestingAccessible(id anObject)
 struct RoleDescrMap
 {
   NSString* role;
-  const nsString& description;
+  const nsString description;
 };
 
 static const RoleDescrMap sRoleDescrMap[] = {
