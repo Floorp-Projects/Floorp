@@ -247,40 +247,6 @@ body {
   font-weight: 700;
 }
 
-.new-room-view > .context > .context-content {
-  border: 1px solid #0096dd;
-  border-radius: 3px;
-  background: #fff;
-  padding: .8em;
-  display: flex;
-  flex-flow: row nowrap;
-  line-height: 1.1em;
-}
-
-.new-room-view > .context > .context-content > .context-preview {
-  float: left;
-  width: 16px;
-  max-height: 16px;
-  -moz-margin-end: .8em;
-  flex: 0 1 auto;
-}
-
-html[dir="rtl"] .new-room-view > .context > .context-content > .context-preview {
-  float: left;
-}
-
-.new-room-view > .context > .context-content > .context-description {
-  flex: 0 1 auto;
-  display: block;
-}
-
-.new-room-view > .context > .context-content > .context-description > .context-url {
-  display: block;
-  color: #59A1D7;
-  font-weight: 700;
-  clear: both;
-}
-
 .new-room-view > .btn {
   display: block;
   font-size: 1rem;

@@ -11,6 +11,8 @@
   document.removeEventListener("DOMContentLoaded", loop.panel.init);
   document.removeEventListener("DOMContentLoaded", loop.conversation.init);
 
+  var sharedActions = loop.shared.actions;
+
   // 1. Desktop components
   // 1.1 Panel
   var PanelView = loop.panel.PanelView;
@@ -32,6 +34,7 @@
   var ConversationToolbar = loop.shared.views.ConversationToolbar;
   var FeedbackView = loop.shared.views.FeedbackView;
   var Checkbox = loop.shared.views.Checkbox;
+  var TextChatView = loop.shared.views.TextChatView;
 
   // Store constants
   var ROOM_STATES = loop.store.ROOM_STATES;
@@ -253,6 +256,18 @@
     // XXX Disabled until we start sorting out some of the layouts.
     textChatEnabled: false
   });
+
+  // Update the text chat store with the room info.
+  textChatStore.updateRoomInfo(new sharedActions.UpdateRoomInfo({
+    roomName: "A Very Long Conversation Name",
+    roomOwner: "fake",
+    roomUrl: "http://showcase",
+    urls: [{
+      description: "A wonderful page!",
+      location: "http://wonderful.invalid"
+      // use the fallback thumbnail
+    }]
+  }));
 
   loop.store.StoreMixin.register({
     conversationStore: conversationStore,
@@ -934,6 +949,18 @@
                     localPosterUrl="sample-img/video-screen-local.png"
                     remotePosterUrl="sample-img/video-screen-remote.png" />
                 </div>
+            </FramedExample>
+          </Section>
+
+          <Section name="TextChatView (standalone)">
+            <FramedExample width={200} height={400}
+                          summary="Standalone Text Chat conversation (200 x 400)">
+              <div className="standalone text-chat-example">
+                <TextChatView
+                  dispatcher={dispatcher}
+                  showAlways={true}
+                  showRoomName={true} />
+              </div>
             </FramedExample>
           </Section>
 
