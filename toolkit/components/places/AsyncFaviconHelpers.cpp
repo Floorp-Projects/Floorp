@@ -588,7 +588,11 @@ AsyncFetchAndSetIconFromNetwork::OnDataAvailable(nsIRequest* aRequest,
     return rv;
   }
 
-  mIcon.data.Append(buffer);
+  if (!mIcon.data.Append(buffer, fallible)) {
+    mIcon.data.Truncate();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   return NS_OK;
 }
 
