@@ -441,7 +441,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
 
   StartUpdating();
 
-  MOZ_ASSERT(mAppendMode == SourceBufferAppendMode::Segments,
+  MOZ_ASSERT(mIsUsingFormatReader || mAppendMode == SourceBufferAppendMode::Segments,
              "We don't handle timestampOffset for sequence mode yet");
   nsCOMPtr<nsIRunnable> task = new BufferAppendRunnable(this, mUpdateID);
   NS_DispatchToMainThread(task);
