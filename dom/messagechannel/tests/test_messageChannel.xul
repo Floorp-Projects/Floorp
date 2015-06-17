@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="Test for MessageChannel API"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" id="body">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  ok("MessageChannel" in window, "Should MessageChannel exist?");
+
+  var channel = new MessageChannel();
+  ok(channel, "MessageChannel is created");
+
+  channel.port1.onmessage = function(evt) {
+    ok(true, "message received!");
+    SimpleTest.finish();
+  }
+
+  var ifr = document.createElement('browser');
+  ifr.setAttribute("src", "iframe_messageChannel_chrome.html");
+  ifr.setAttribute("flex", "1");
+  ifr.addEventListener('load', function() {
+    ifr.contentWindow.postMessage(channel.port2, '*', [channel.port2]);
+  });
+
+  var body = document.getElementById("body");
+  body.appendChild(ifr);
+
+  SimpleTest.waitForExplicitFinish();
+
+  ]]></script>
+</window>

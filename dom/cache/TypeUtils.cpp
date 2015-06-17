@@ -23,6 +23,7 @@
 #include "nsIAsyncOutputStream.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "nsQueryObject.h"
+#include "nsPromiseFlatString.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsURLParsers.h"
@@ -152,10 +153,9 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
 
   nsAutoCString url;
   aIn->GetURL(url);
-  CopyUTF8toUTF16(url, aOut.url());
 
   bool schemeValid;
-  ProcessURL(aOut.url(), &schemeValid, &aOut.urlWithoutQuery(), aRv);
+  ProcessURL(url, &schemeValid, &aOut.urlWithoutQuery(), &aOut.urlQuery(), aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -163,7 +163,8 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
   if (!schemeValid) {
     if (aSchemeAction == TypeErrorOnInvalidScheme) {
       NS_NAMED_LITERAL_STRING(label, "Request");
-      aRv.ThrowTypeError(MSG_INVALID_URL_SCHEME, &label, &aOut.url());
+      NS_ConvertUTF8toUTF16 urlUTF16(url);
+      aRv.ThrowTypeError(MSG_INVALID_URL_SCHEME, &label, &urlUTF16);
       return;
     }
   }
@@ -200,14 +201,12 @@ TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
 {
   aOut.type() = aIn.Type();
 
-  nsAutoCString url;
-  aIn.GetUrl(url);
-  CopyUTF8toUTF16(url, aOut.url());
+  aIn.GetUrl(aOut.url());
 
-  if (aOut.url() != EmptyString()) {
+  if (aOut.url() != EmptyCString()) {
     // Pass all Response URL schemes through... The spec only requires we take
     // action on invalid schemes for Request objects.
-    ProcessURL(aOut.url(), nullptr, nullptr, aRv);
+    ProcessURL(aOut.url(), nullptr, nullptr, nullptr, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -279,7 +278,7 @@ TypeUtils::ToResponse(const CacheResponse& aIn)
 
   nsRefPtr<InternalResponse> ir = new InternalResponse(aIn.status(),
                                                        aIn.statusText());
-  ir->SetUrl(NS_ConvertUTF16toUTF8(aIn.url()));
+  ir->SetUrl(aIn.url());
 
   nsRefPtr<InternalHeaders> internalHeaders =
     ToInternalHeaders(aIn.headers(), aIn.headersGuard());
@@ -322,7 +321,11 @@ TypeUtils::ToInternalRequest(const CacheRequest& aIn)
   nsRefPtr<InternalRequest> internalRequest = new InternalRequest();
 
   internalRequest->SetMethod(aIn.method());
-  internalRequest->SetURL(NS_ConvertUTF16toUTF8(aIn.url()));
+
+  nsAutoCString url(aIn.urlWithoutQuery());
+  url.Append(aIn.urlQuery());
+  internalRequest->SetURL(url);
+
   internalRequest->SetReferrer(aIn.referrer());
   internalRequest->SetMode(aIn.mode());
   internalRequest->SetCredentialsMode(aIn.credentials());
@@ -374,10 +377,11 @@ TypeUtils::ToInternalHeaders(const nsTArray<HeadersEntry>& aHeadersEntryList,
 // they require going to the main thread.
 // static
 void
-TypeUtils::ProcessURL(nsAString& aUrl, bool* aSchemeValidOut,
-                      nsAString* aUrlWithoutQueryOut, ErrorResult& aRv)
+TypeUtils::ProcessURL(nsACString& aUrl, bool* aSchemeValidOut,
+                      nsACString* aUrlWithoutQueryOut,nsACString* aUrlQueryOut,
+                      ErrorResult& aRv)
 {
-  NS_ConvertUTF16toUTF8 flatURL(aUrl);
+  const nsAFlatCString& flatURL = PromiseFlatCString(aUrl);
   const char* url = flatURL.get();
 
   // off the main thread URL parsing using nsStdURLParser.
@@ -424,17 +428,19 @@ TypeUtils::ProcessURL(nsAString& aUrl, bool* aSchemeValidOut,
     return;
   }
 
+  MOZ_ASSERT(aUrlQueryOut);
+
   if (queryLen < 0) {
     *aUrlWithoutQueryOut = aUrl;
+    *aUrlQueryOut = EmptyCString();
     return;
   }
 
   // ParsePath gives us query position relative to the start of the path
   queryPos += pathPos;
 
-  // We want everything before the query sine we already removed the trailing
-  // fragment
   *aUrlWithoutQueryOut = Substring(aUrl, 0, queryPos - 1);
+  *aUrlQueryOut = Substring(aUrl, queryPos - 1, queryLen + 1);
 }
 
 void

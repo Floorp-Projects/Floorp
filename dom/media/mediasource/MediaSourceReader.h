@@ -94,7 +94,7 @@ public:
   // We can't compute a proper start time since we won't necessarily
   // have the first frame of the resource available. This does the same
   // as chrome/blink and assumes that we always start at t=0.
-  virtual int64_t ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio) override { return 0; }
+  virtual bool ForceZeroStartTime() const override { return true; }
 
   // Buffering heuristics don't make sense for MSE, because the arrival of data
   // is at least partly controlled by javascript, and javascript does not expect

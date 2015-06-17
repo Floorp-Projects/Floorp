@@ -488,6 +488,11 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
     if (httpChan) {
       nsCOMPtr<nsIHttpChannelInternal> internalChan = do_QueryInterface(httpChan);
       internalChan->ForceNoIntercept();
+    } else {
+      nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(chan);
+      // If it is not an http channel, it has to be a jar one.
+      MOZ_ASSERT(jarChannel);
+      jarChannel->ForceNoIntercept();
     }
   }
 

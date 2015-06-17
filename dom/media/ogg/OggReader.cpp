@@ -489,7 +489,7 @@ nsresult OggReader::ReadMetadata(MediaInfo* aInfo,
         endTime = RangeEndTime(length);
       }
       if (endTime != -1) {
-        mInfo.mMetadataEndTime.emplace(TimeUnit::FromMicroseconds(endTime));
+        mInfo.mUnadjustedMetadataEndTime.emplace(TimeUnit::FromMicroseconds(endTime));
         LOG(LogLevel::Debug, ("Got Ogg duration from seeking to end %lld", endTime));
       }
     }
@@ -1852,7 +1852,7 @@ nsresult OggReader::SeekBisection(int64_t aTarget,
 
 media::TimeIntervals OggReader::GetBuffered()
 {
-  MOZ_ASSERT(mStartTime != -1, "Need to finish metadata decode first");
+  NS_ENSURE_TRUE(mStartTime >= 0, media::TimeIntervals());
   {
     mozilla::ReentrantMonitorAutoEnter mon(mMonitor);
     if (mIsChained) {

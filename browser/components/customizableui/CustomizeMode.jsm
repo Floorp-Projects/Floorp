@@ -1643,7 +1643,6 @@ CustomizeMode.prototype = {
         if (!targetIsToolbar) {
           dragValue = "before";
         } else {
-          dragOverItem = this._findVisiblePreviousSiblingNode(targetParent.children[position]);
           // Check if the aDraggedItem is hovered past the first half of dragOverItem
           let window = dragOverItem.ownerDocument.defaultView;
           let direction = window.getComputedStyle(dragOverItem, null).direction;

@@ -53,8 +53,8 @@ struct HeadersEntry
 struct CacheRequest
 {
   nsCString method;
-  nsString url;
-  nsString urlWithoutQuery;
+  nsCString urlWithoutQuery;
+  nsCString urlQuery;
   HeadersEntry[] headers;
   HeadersGuardEnum headersGuard;
   nsString referrer;
@@ -74,7 +74,7 @@ union CacheRequestOrVoid
 struct CacheResponse
 {
   ResponseType type;
-  nsString url;
+  nsCString url;
   uint32_t status;
   nsCString statusText;
   HeadersEntry[] headers;

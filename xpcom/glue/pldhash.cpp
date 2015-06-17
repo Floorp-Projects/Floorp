@@ -754,8 +754,6 @@ PLDHashTable::Enumerate(PLDHashEnumerator aEtor, void* aArg)
 
   INCREMENT_RECURSION_LEVEL(this);
 
-  // Please keep this method in sync with the PLDHashTable::Iterator constructor
-  // and ::NextEntry methods below in this file.
   char* entryAddr = mEntryStore;
   uint32_t capacity = Capacity();
   uint32_t tableSize = capacity * mEntrySize;
@@ -895,93 +893,69 @@ PL_DHashTableSizeOfIncludingThis(
                                      aMallocSizeOf, aArg);
 }
 
-PLDHashTable::Iterator::Iterator(const PLDHashTable* aTable)
-: mTable(aTable),
-  mEntryAddr(mTable->mEntryStore),
-  mEntryOffset(0)
+PLDHashTable::Iterator::Iterator(Iterator&& aOther)
+  : mTable(aOther.mTable)
+  , mCurrent(aOther.mCurrent)
+  , mLimit(aOther.mLimit)
 {
-  // Make sure that modifications can't simultaneously happen while the iterator
-  // is active.
-  INCREMENT_RECURSION_LEVEL(mTable);
-
-  // The following code is taken from, and should be kept in sync with, the
-  // PLDHashTable::Enumerate method above. The variables i and entryAddr (which
-  // vary over the course of the for loop) are converted into mEntryOffset and
-  // mEntryAddr, respectively.
-  uint32_t capacity = mTable->Capacity();
-
-  if (ChaosMode::isActive(ChaosMode::HashTableIteration) && capacity > 0) {
-    // Start iterating at a random point in the hashtable. It would be
-    // even more chaotic to iterate in fully random order, but that's a lot
-    // more work.
-    mEntryAddr += ChaosMode::randomUint32LessThan(capacity) * mTable->mEntrySize;
-  }
+  // No need to change mRecursionLevel here.
+  aOther.mTable = nullptr;
+  aOther.mCurrent = nullptr;
+  aOther.mLimit = nullptr;
 }
 
-PLDHashTable::Iterator::Iterator(const Iterator& aIterator)
-: mTable(aIterator.mTable),
-  mEntryAddr(aIterator.mEntryAddr),
-  mEntryOffset(aIterator.mEntryOffset)
+PLDHashTable::Iterator::Iterator(const PLDHashTable* aTable)
+  : mTable(aTable)
+  , mCurrent(mTable->mEntryStore)
+  , mLimit(mTable->mEntryStore + mTable->Capacity() * mTable->mEntrySize)
 {
-  // We need the copy constructor only so that we can keep the recursion level
-  // consistent.
+  // Make sure that modifications can't simultaneously happen while the
+  // iterator is active.
   INCREMENT_RECURSION_LEVEL(mTable);
+
+  // Advance to the first live entry, or to the end if there are none.
+  while (IsOnNonLiveEntry()) {
+    mCurrent += mTable->mEntrySize;
+  }
 }
 
 PLDHashTable::Iterator::~Iterator()
 {
-  DECREMENT_RECURSION_LEVEL(mTable);
+  if (mTable) {
+    DECREMENT_RECURSION_LEVEL(mTable);
+  }
 }
 
 bool
-PLDHashTable::Iterator::HasMoreEntries() const
+PLDHashTable::Iterator::Done() const
 {
-  // Check the number of live entries seen, not the total number of entries
-  // seen. To see why, consider what happens if the last entry is not live: we
-  // would have to iterate after returning an entry to see if more live entries
-  // exist.
-  return mEntryOffset < mTable->EntryCount();
+  return mCurrent == mLimit;
+}
+
+MOZ_ALWAYS_INLINE bool
+PLDHashTable::Iterator::IsOnNonLiveEntry() const
+{
+  return !Done() && !ENTRY_IS_LIVE(reinterpret_cast<PLDHashEntryHdr*>(mCurrent));
 }
 
 PLDHashEntryHdr*
-PLDHashTable::Iterator::NextEntry()
+PLDHashTable::Iterator::Get() const
 {
-  MOZ_ASSERT(HasMoreEntries());
+  MOZ_ASSERT(!Done());
 
-  // The following code is taken from, and should be kept in sync with, the
-  // PLDHashTable::Enumerate method above. The variables i and entryAddr (which
-  // vary over the course of the for loop) are converted into mEntryOffset and
-  // mEntryAddr, respectively.
-  uint32_t capacity = mTable->Capacity();
-  uint32_t tableSize = capacity * mTable->mEntrySize;
-  char* entryLimit = mTable->mEntryStore + tableSize;
+  PLDHashEntryHdr* entry = reinterpret_cast<PLDHashEntryHdr*>(mCurrent);
+  MOZ_ASSERT(ENTRY_IS_LIVE(entry));
+  return entry;
+}
 
-  // Strictly speaking, we don't need to iterate over the full capacity each
-  // time. However, it is simpler to do so rather than unnecessarily track the
-  // current number of entries checked as opposed to only live entries. If debug
-  // checks pass, then this method will only iterate through the full capacity
-  // once. If they fail, then this loop may end up returning the early entries
-  // more than once.
-  MOZ_ASSERT_IF(capacity > 0, mTable->mEntryStore);
-  for (uint32_t e = 0; e < capacity; ++e) {
-    PLDHashEntryHdr* entry = (PLDHashEntryHdr*)mEntryAddr;
+void
+PLDHashTable::Iterator::Next()
+{
+  MOZ_ASSERT(!Done());
 
-    // Increment the count before returning so we don't keep returning the same
-    // address. This may wrap around if ChaosMode is enabled.
-    mEntryAddr += mTable->mEntrySize;
-    if (mEntryAddr >= entryLimit) {
-      mEntryAddr -= tableSize;
-    }
-    if (ENTRY_IS_LIVE(entry)) {
-      ++mEntryOffset;
-      return entry;
-    }
-  }
-
-  // If the debug checks pass, then the above loop should always find a live
-  // entry. If those checks are disabled, then it may be possible to reach this
-  // if the table is empty and this method is called.
-  MOZ_CRASH("Flagrant misuse of hashtable iterators not caught by checks.");
+  do {
+    mCurrent += mTable->mEntrySize;
+  } while (IsOnNonLiveEntry());
 }
 
 #ifdef DEBUG

@@ -337,7 +337,8 @@ UnboxedPlainObject::ensureExpando(JSContext* cx, Handle<UnboxedPlainObject*> obj
     if (obj->expando_)
         return obj->expando_;
 
-    UnboxedExpandoObject* expando = NewObjectWithGivenProto<UnboxedExpandoObject>(cx, nullptr);
+    UnboxedExpandoObject* expando =
+        NewObjectWithGivenProto<UnboxedExpandoObject>(cx, nullptr, AllocKind::OBJECT4);
     if (!expando)
         return nullptr;
 

@@ -53,7 +53,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           todo(false, "mousemove is fired twice.");
         }
 
-        isUnlocked = !document.mozPointerLockElement;
         unLockedCoords = {
           screenX: e.screenX,
           screenY: e.screenY,
@@ -65,6 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           return;
         }
 
+        isUnlocked = !document.mozPointerLockElement;
         div.mozRequestPointerLock();
       }
 
@@ -104,8 +104,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
             setTimeout(fullscreenchange, 250);
             return;
           }
-          div.addEventListener("mousemove", moveUnlocked, false);
-          synthesizeMouseAtCenter(div, { type: "mousemove" }, window);
+          // Synthesize mouse event asynchronously
+          SimpleTest.executeSoon(function () {
+            div.addEventListener("mousemove", moveUnlocked, false);
+            synthesizeMouseAtCenter(div, { type: "mousemove" }, window);
+          }, 0);
         } else {
           runTests();
           SimpleTest.finish();

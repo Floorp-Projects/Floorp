@@ -296,6 +296,11 @@ NS_IMETHODIMP DummyChannel::GetContentDispositionHeader(nsACString&)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP DummyChannel::ForceNoIntercept()
+{
+  return NS_OK;
+}
+
 /**
   * app:// protocol implementation.
   */

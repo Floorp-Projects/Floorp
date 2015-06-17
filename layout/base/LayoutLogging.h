@@ -17,7 +17,7 @@ PRLogModuleInfo* GetLayoutLog();
  * Use the layout log to warn if a given condition is false.
  *
  * This is only enabled in debug builds and the logging is only displayed if
- * the environmental variable NSPR_LOG_MODULES includes "layout:2" (or higher). 
+ * the environmental variable NSPR_LOG_MODULES includes "layout:2" (or higher).
  */
 #ifdef DEBUG
 #define LAYOUT_WARN_IF_FALSE(_cond, _msg)                                  \
@@ -30,6 +30,25 @@ PRLogModuleInfo* GetLayoutLog();
 #else
 #define LAYOUT_WARN_IF_FALSE(_cond, _msg) \
   PR_BEGIN_MACRO                          \
+  PR_END_MACRO
+#endif
+
+/**
+ * Use the layout log to emit a warning with the same format as NS_WARNING.
+ *
+ * This is only enabled in debug builds and the logging is only displayed if
+ * the environmental variable NSPR_LOG_MODULES includes "layout:2" (or higher).
+ */
+#ifdef DEBUG
+#define LAYOUT_WARNING(_msg)                                                \
+  PR_BEGIN_MACRO                                                            \
+    if (MOZ_LOG_TEST(GetLayoutLog(), mozilla::LogLevel::Warning)) {         \
+      mozilla::detail::LayoutLogWarning(_msg, nullptr, __FILE__, __LINE__); \
+    }                                                                       \
+  PR_END_MACRO
+#else
+#define LAYOUT_WARNING(_msg) \
+  PR_BEGIN_MACRO             \
   PR_END_MACRO
 #endif
 

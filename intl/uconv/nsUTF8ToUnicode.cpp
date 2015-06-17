@@ -6,6 +6,7 @@
 
 #include "nsUCSupport.h"
 #include "nsUTF8ToUnicode.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/SSE.h"
 #include "nsCharTraits.h"
 #include <algorithm>
@@ -52,7 +53,14 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
                                             int32_t aSrcLength,
                                             int32_t * aDestLength)
 {
-  *aDestLength = aSrcLength + 1;
+  mozilla::CheckedInt32 length = aSrcLength;
+  length += 1;
+
+  if (!length.isValid()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  *aDestLength = length.value();
   return NS_OK;
 }
 

@@ -76,6 +76,11 @@ if CONFIG['OS_TARGET'] == 'Android':
     UNIFIED_SOURCES += [
         'SharedMemoryBasic_android.cpp',
     ]
+elif CONFIG['OS_ARCH'] == 'Darwin':
+    EXPORTS.mozilla.ipc += ['SharedMemoryBasic_mach.h']
+    SOURCES += [
+        'SharedMemoryBasic_mach.cpp',
+    ]
 else:
     EXPORTS.mozilla.ipc += ['SharedMemoryBasic_chromium.h']
 

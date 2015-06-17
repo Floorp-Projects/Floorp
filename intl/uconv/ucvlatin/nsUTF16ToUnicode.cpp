@@ -5,6 +5,7 @@
 
 #include "nsUTF16ToUnicode.h"
 #include "nsCharTraits.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Endian.h"
 
 enum {
@@ -181,8 +182,18 @@ NS_IMETHODIMP
 nsUTF16ToUnicodeBase::GetMaxLength(const char * aSrc, int32_t aSrcLength, 
                                    int32_t * aDestLength)
 {
+  mozilla::CheckedInt32 length = aSrcLength;
+
+  if (STATE_HALF_CODE_POINT & mState) {
+    length += 1;
+  }
+
+  if (!length.isValid()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   // the left-over data of the previous run have to be taken into account.
-  *aDestLength = (aSrcLength + ((STATE_HALF_CODE_POINT & mState) ? 1 : 0)) / 2;
+  *aDestLength = length.value() / 2;
   if (mOddHighSurrogate)
     (*aDestLength)++;
   if (mOddLowSurrogate)

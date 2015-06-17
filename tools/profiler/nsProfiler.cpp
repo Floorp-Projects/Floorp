@@ -121,7 +121,7 @@ nsProfiler::AddMarker(const char *aMarker)
 }
 
 NS_IMETHODIMP
-nsProfiler::GetProfile(float aSinceTime, char **aProfile)
+nsProfiler::GetProfile(double aSinceTime, char** aProfile)
 {
   mozilla::UniquePtr<char[]> profile = profiler_get_profile(aSinceTime);
   if (profile) {
@@ -205,7 +205,7 @@ nsProfiler::DumpProfileToFile(const char* aFilename)
 }
 
 NS_IMETHODIMP
-nsProfiler::GetProfileData(float aSinceTime, JSContext* aCx,
+nsProfiler::GetProfileData(double aSinceTime, JSContext* aCx,
                            JS::MutableHandle<JS::Value> aResult)
 {
   JS::RootedObject obj(aCx, profiler_get_profile_jsobject(aCx, aSinceTime));
@@ -217,7 +217,7 @@ nsProfiler::GetProfileData(float aSinceTime, JSContext* aCx,
 }
 
 NS_IMETHODIMP
-nsProfiler::GetProfileDataAsync(float aSinceTime, JSContext* aCx,
+nsProfiler::GetProfileDataAsync(double aSinceTime, JSContext* aCx,
                                 nsISupports** aPromise)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -245,9 +245,9 @@ nsProfiler::GetProfileDataAsync(float aSinceTime, JSContext* aCx,
 }
 
 NS_IMETHODIMP
-nsProfiler::GetElapsedTime(float* aElapsedTime)
+nsProfiler::GetElapsedTime(double* aElapsedTime)
 {
-  *aElapsedTime = static_cast<float>(profiler_time());
+  *aElapsedTime = profiler_time();
   return NS_OK;
 }
 

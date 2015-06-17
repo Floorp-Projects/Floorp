@@ -388,7 +388,7 @@ MacroAssemblerCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
     // no other work needs to be done.
 }
 
-#if defined(DEBUG) && defined(JS_ARM64_SIMULATOR)
+#if defined(DEBUG) && defined(JS_SIMULATOR_ARM64)
 static void
 AssertValidABIFunctionType(uint32_t passedArgTypes)
 {
@@ -418,12 +418,12 @@ AssertValidABIFunctionType(uint32_t passedArgTypes)
         MOZ_CRASH("Unexpected type");
     }
 }
-#endif // DEBUG && JS_ARM64_SIMULATOR
+#endif // DEBUG && JS_SIMULATOR_ARM64
 
 void
 MacroAssemblerCompat::callWithABI(void* fun, MoveOp::Type result)
 {
-#ifdef JS_ARM64_SIMULATOR
+#ifdef JS_SIMULATOR_ARM64
     MOZ_ASSERT(passedIntArgs_ + passedFloatArgs_ <= 15);
     passedArgTypes_ <<= ArgType_Shift;
     switch (result) {
@@ -437,7 +437,7 @@ MacroAssemblerCompat::callWithABI(void* fun, MoveOp::Type result)
 # endif
     ABIFunctionType type = ABIFunctionType(passedArgTypes_);
     fun = vixl::Simulator::RedirectNativeFunction(fun, type);
-#endif // JS_ARM64_SIMULATOR
+#endif // JS_SIMULATOR_ARM64
 
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);

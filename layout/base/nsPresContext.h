@@ -1217,7 +1217,9 @@ protected:
   // please make the ownership explicit (pinkerton, scc).
 
   nsPresContextType     mType;
-  nsIPresShell*         mShell;         // [WEAK]
+  // the nsPresShell owns a strong reference to the nsPresContext, and is responsible
+  // for nulling this pointer before it is destroyed
+  nsIPresShell* MOZ_NON_OWNING_REF mShell;         // [WEAK]
   nsCOMPtr<nsIDocument> mDocument;
   nsRefPtr<nsDeviceContext> mDeviceContext; // [STRONG] could be weak, but
                                             // better safe than sorry.
@@ -1230,11 +1232,12 @@ protected:
   nsRefPtr<nsAnimationManager> mAnimationManager;
   nsRefPtr<mozilla::RestyleManager> mRestyleManager;
   nsRefPtr<mozilla::CounterStyleManager> mCounterStyleManager;
-  nsIAtom*              mMedium;        // initialized by subclass ctors;
-                                        // weak pointer to static atom
+  nsIAtom* MOZ_UNSAFE_REF("always a static atom") mMedium; // initialized by subclass ctors
   nsCOMPtr<nsIAtom> mMediaEmulated;
 
-  nsILinkHandler*       mLinkHandler;   // [WEAK]
+  // This pointer is nulled out through SetLinkHandler() in the destructors of
+  // the classes which set it. (using SetLinkHandler() again).
+  nsILinkHandler* MOZ_NON_OWNING_REF mLinkHandler;
 
   // Formerly mLangGroup; moving from charset-oriented langGroup to
   // maintaining actual language settings everywhere (see bug 524107).

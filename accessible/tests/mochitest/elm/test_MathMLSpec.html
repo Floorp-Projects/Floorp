@@ -267,28 +267,10 @@
       testElm("merror", obj);
 
       //////////////////////////////////////////////////////////////////////////
-      // semantics
-
-      obj = {
-        role: ROLE_MATHML_SEMANTICS,
-      };
-      testElm("semantics", obj);
-
-      //////////////////////////////////////////////////////////////////////////
-      // annotation
-
-      obj = {
-        role: ROLE_MATHML_ANNOTATION,
-      };
-      testElm("annotation", obj);
-
-      //////////////////////////////////////////////////////////////////////////
-      // annotation-xml
-
-      obj = {
-        role: ROLE_MATHML_XML_ANNOTATION,
-      };
-      testElm("annotation-xml", obj);
+      // semantics, annotation, annotation-xml
+      ok(!isAccessible("semantics"), "semantics should not have accessible");
+      ok(!isAccessible("annotation"), "annotation should not have accessible");
+      ok(!isAccessible("annotation-xml"), "annotation-xml should not have accessible");
 
       //////////////////////////////////////////////////////////////////////////
       // mstack

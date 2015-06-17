@@ -29,7 +29,7 @@
 #ifndef jit_mips_Simulator_mips_h
 #define jit_mips_Simulator_mips_h
 
-#ifdef JS_MIPS_SIMULATOR
+#ifdef JS_SIMULATOR_MIPS
 
 #include "jslock.h"
 
@@ -416,6 +416,6 @@ class Simulator {
 } // namespace jit
 } // namespace js
 
-#endif /* JS_MIPS_SIMULATOR */
+#endif /* JS_SIMULATOR_MIPS */
 
 #endif /* jit_mips_Simulator_mips_h */

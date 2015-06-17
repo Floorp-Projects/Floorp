@@ -22,7 +22,7 @@ function test()
  
   reportCompare(expect, actual, summary);
 
-  (function () { ({ y: [] }) = {} });
+  (function () { ({ y: [] } = {}); });
 
   exitFunc ('test');
 }

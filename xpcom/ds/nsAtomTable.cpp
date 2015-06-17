@@ -327,9 +327,8 @@ NS_PurgeAtomTable()
       uint32_t leaked = 0;
       printf("*** %d atoms still exist (including permanent):\n",
              gAtomTable->EntryCount());
-      PLDHashTable::Iterator iter(gAtomTable);
-      while (iter.HasMoreEntries()) {
-        auto entry = static_cast<AtomTableEntry*>(iter.NextEntry());
+      for (auto iter = gAtomTable->Iter(); !iter.Done(); iter.Next()) {
+        auto entry = static_cast<AtomTableEntry*>(iter.Get());
         AtomImpl* atom = entry->mAtom;
         if (!atom->IsPermanent()) {
           leaked++;

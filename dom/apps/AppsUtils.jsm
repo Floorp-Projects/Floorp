@@ -52,14 +52,7 @@ mozIApplication.prototype = {
     // This helper checks an URI inside |aApp|'s origin and part of |aApp| has a
     // specific permission. It is not checking if browsers inside |aApp| have such
     // permission.
-    let principal = this.principal;
-    if (this.installerIsBrowser) {
-      let uri = Services.io.newURI(this.origin, null, null);
-      principal =
-        Services.scriptSecurityManager.getAppCodebasePrincipal(uri, this.localId,
-                                                               /*mozbrowser*/false);
-    }
-    let perm = Services.perms.testExactPermissionFromPrincipal(principal,
+    let perm = Services.perms.testExactPermissionFromPrincipal(this.principal,
                                                                aPermission);
     return (perm === Ci.nsIPermissionManager.ALLOW_ACTION);
   },
@@ -84,7 +77,7 @@ mozIApplication.prototype = {
       this._principal = Services.scriptSecurityManager.getAppCodebasePrincipal(
         Services.io.newURI(this.origin, null, null),
         this.localId,
-        this.installerIsBrowser
+        false /* mozbrowser */
       );
     } catch(e) {
       dump("Could not create app principal " + e + "\n");

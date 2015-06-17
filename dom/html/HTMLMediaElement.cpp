@@ -540,7 +540,7 @@ void
 HTMLMediaElement::SetMozSrcObject(DOMMediaStream* aValue)
 {
   mSrcAttrStream = aValue;
-  Load();
+  DoLoad();
 }
 
 /* readonly attribute nsIDOMHTMLMediaElement mozAutoplayEnabled; */
@@ -784,8 +784,21 @@ void HTMLMediaElement::QueueSelectResourceTask()
 /* void load (); */
 NS_IMETHODIMP HTMLMediaElement::Load()
 {
-  if (mIsRunningLoadMethod)
+  if (mIsRunningLoadMethod) {
     return NS_OK;
+  }
+
+  mIsDoingExplicitLoad = true;
+  DoLoad();
+
+  return NS_OK;
+}
+
+void HTMLMediaElement::DoLoad()
+{
+  if (mIsRunningLoadMethod) {
+    return;
+  }
 
   SetPlayedOrSeeked(false);
   mIsRunningLoadMethod = true;
@@ -794,8 +807,6 @@ NS_IMETHODIMP HTMLMediaElement::Load()
   QueueSelectResourceTask();
   ResetState();
   mIsRunningLoadMethod = false;
-
-  return NS_OK;
 }
 
 void HTMLMediaElement::ResetState()
@@ -828,6 +839,7 @@ void HTMLMediaElement::SelectResourceWrapper()
   SelectResource();
   mIsRunningSelectResource = false;
   mHaveQueuedSelectResource = false;
+  mIsDoingExplicitLoad = false;
 }
 
 void HTMLMediaElement::SelectResource()
@@ -1108,7 +1120,12 @@ void HTMLMediaElement::UpdatePreloadAction()
     }
   }
 
+  if (nextAction == HTMLMediaElement::PRELOAD_NONE && mIsDoingExplicitLoad) {
+    nextAction = HTMLMediaElement::PRELOAD_METADATA;
+  }
+
   mPreloadAction = nextAction;
+
   if (nextAction == HTMLMediaElement::PRELOAD_ENOUGH) {
     if (mSuspendedForPreloadNone) {
       // Our load was previouly suspended due to the media having preload
@@ -1150,8 +1167,12 @@ nsresult HTMLMediaElement::LoadResource()
     return NS_ERROR_FAILURE;
   }
 
+  MOZ_ASSERT(IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video));
+  nsContentPolicyType contentPolicyType = IsHTMLElement(nsGkAtoms::audio) ?
+    nsIContentPolicy::TYPE_INTERNAL_AUDIO : nsIContentPolicy::TYPE_INTERNAL_VIDEO;
+
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_MEDIA,
+  nsresult rv = NS_CheckContentLoadPolicy(contentPolicyType,
                                           mLoadingSrc,
                                           NodePrincipal(),
                                           static_cast<Element*>(this),
@@ -1229,7 +1250,7 @@ nsresult HTMLMediaElement::LoadResource()
                      mLoadingSrc,
                      static_cast<Element*>(this),
                      securityFlags,
-                     nsIContentPolicy::TYPE_MEDIA,
+                     contentPolicyType,
                      loadGroup,
                      nullptr,   // aCallbacks
                      nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
@@ -1649,10 +1670,7 @@ HTMLMediaElement::Pause(ErrorResult& aRv)
 {
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
     LOG(LogLevel::Debug, ("Loading due to Pause()"));
-    aRv = Load();
-    if (aRv.Failed()) {
-      return;
-    }
+    DoLoad();
   } else if (mDecoder) {
     mDecoder->Pause();
   }
@@ -2054,6 +2072,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mEventDeliveryPaused(false),
     mWaitingFired(false),
     mIsRunningLoadMethod(false),
+    mIsDoingExplicitLoad(false),
     mIsLoadingFromSourceChildren(false),
     mDelayingLoadEvent(false),
     mIsRunningSelectResource(false),
@@ -2191,10 +2210,7 @@ HTMLMediaElement::Play(ErrorResult& aRv)
   SetPlayedOrSeeked(true);
 
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
-    aRv = Load();
-    if (aRv.Failed()) {
-      return;
-    }
+    DoLoad();
   }
   if (mSuspendedForPreloadNone) {
     ResumeLoad(PRELOAD_ENOUGH);
@@ -2476,7 +2492,7 @@ nsresult HTMLMediaElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   if (NS_FAILED(rv))
     return rv;
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {
-    Load();
+    DoLoad();
   }
   if (aNotify && aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::autoplay) {

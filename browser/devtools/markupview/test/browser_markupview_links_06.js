@@ -36,7 +36,7 @@ add_task(function*() {
   yield selectNode("script", inspector);
 
   info("Set the popupNode to the node that contains the uri");
-  ({editor}) = yield getContainerForSelector("script", inspector);
+  ({editor} = yield getContainerForSelector("script", inspector));
   popupNode = editor.attrElements.get("src").querySelector(".link");
   inspector.panelDoc.popupNode = popupNode;
 

@@ -18,6 +18,7 @@
 #include "nsIScrollObserver.h"
 #include "nsIWidget.h" // for nsIMEUpdatePreference
 #include "nsStubMutationObserver.h"
+#include "nsThreadUtils.h"
 #include "nsWeakReference.h"
 
 class nsIContent;
@@ -38,8 +39,6 @@ class IMEContentObserver final : public nsISelectionListener
                                , public nsSupportsWeakReference
                                , public nsIEditorObserver
 {
-  friend class AsyncMergeableNotificationsFlusher;
-
 public:
   IMEContentObserver();
 
@@ -162,9 +161,33 @@ private:
   State GetState() const;
   bool IsObservingContent(nsPresContext* aPresContext,
                           nsIContent* aContent) const;
-  void MaybeNotifyIMEOfTextChange(const TextChangeData& aTextChangeData);
-  void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition);
-  void MaybeNotifyIMEOfPositionChange();
+  bool IsReflowLocked() const;
+  bool IsSafeToNotifyIME() const;
+
+  void PostFocusSetNotification();
+  void MaybeNotifyIMEOfFocusSet()
+  {
+    PostFocusSetNotification();
+    FlushMergeableNotifications();
+  }
+  void PostTextChangeNotification(const TextChangeData& aTextChangeData);
+  void MaybeNotifyIMEOfTextChange(const TextChangeData& aTextChangeData)
+  {
+    PostTextChangeNotification(aTextChangeData);
+    FlushMergeableNotifications();
+  }
+  void PostSelectionChangeNotification(bool aCausedByComposition);
+  void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition)
+  {
+    PostSelectionChangeNotification(aCausedByComposition);
+    FlushMergeableNotifications();
+  }
+  void PostPositionChangeNotification();
+  void MaybeNotifyIMEOfPositionChange()
+  {
+    PostPositionChangeNotification();
+    FlushMergeableNotifications();
+  }
 
   void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
   void ObserveEditableNode();
@@ -178,6 +201,13 @@ private:
   void UnregisterObservers();
   void StoreTextChangeData(const TextChangeData& aTextChangeData);
   void FlushMergeableNotifications();
+  void ClearPendingNotifications()
+  {
+    mIsFocusEventPending = false;
+    mIsSelectionChangeEventPending = false;
+    mIsPositionChangeEventPending = false;
+    mTextChangeData.mStored = false;
+  }
 
 #ifdef DEBUG
   void TestMergingTextChangeData();
@@ -254,10 +284,115 @@ private:
   int64_t mPreCharacterDataChangeLength;
 
   bool mIsObserving;
+  bool mIMEHasFocus;
+  bool mIsFocusEventPending;
   bool mIsSelectionChangeEventPending;
   bool mSelectionChangeCausedOnlyByComposition;
   bool mIsPositionChangeEventPending;
   bool mIsFlushingPendingNotifications;
+
+
+  /**
+   * Helper classes to notify IME.
+   */
+
+  class AChangeEvent: public nsRunnable
+  {
+  protected:
+    enum ChangeEventType
+    {
+      eChangeEventType_Focus,
+      eChangeEventType_Selection,
+      eChangeEventType_Text,
+      eChangeEventType_Position,
+      eChangeEventType_FlushPendingEvents
+    };
+
+    AChangeEvent(ChangeEventType aChangeEventType,
+                 IMEContentObserver* aIMEContentObserver)
+      : mIMEContentObserver(aIMEContentObserver)
+      , mChangeEventType(aChangeEventType)
+    {
+      MOZ_ASSERT(mIMEContentObserver);
+    }
+
+    nsRefPtr<IMEContentObserver> mIMEContentObserver;
+    ChangeEventType mChangeEventType;
+
+    /**
+     * CanNotifyIME() checks if mIMEContentObserver can and should notify IME.
+     */
+    bool CanNotifyIME() const;
+
+    /**
+     * IsSafeToNotifyIME() checks if it's safe to noitify IME.
+     */
+    bool IsSafeToNotifyIME() const;
+  };
+
+  class FocusSetEvent: public AChangeEvent
+  {
+  public:
+    explicit FocusSetEvent(IMEContentObserver* aIMEContentObserver)
+      : AChangeEvent(eChangeEventType_Focus, aIMEContentObserver)
+    {
+    }
+    NS_IMETHOD Run() override;
+  };
+
+  class SelectionChangeEvent : public AChangeEvent
+  {
+  public:
+    SelectionChangeEvent(IMEContentObserver* aIMEContentObserver,
+                         bool aCausedByComposition)
+      : AChangeEvent(eChangeEventType_Selection, aIMEContentObserver)
+      , mCausedByComposition(aCausedByComposition)
+    {
+    }
+    NS_IMETHOD Run() override;
+
+  private:
+    bool mCausedByComposition;
+  };
+
+  class TextChangeEvent : public AChangeEvent
+  {
+  public:
+    TextChangeEvent(IMEContentObserver* aIMEContentObserver,
+                    TextChangeData& aData)
+      : AChangeEvent(eChangeEventType_Text, aIMEContentObserver)
+      , mData(aData)
+    {
+      MOZ_ASSERT(mData.mStored);
+      // Reset mStored because this now consumes the data.
+      aData.mStored = false;
+    }
+    NS_IMETHOD Run() override;
+
+  private:
+    TextChangeData mData;
+  };
+
+  class PositionChangeEvent final : public AChangeEvent
+  {
+  public:
+    explicit PositionChangeEvent(IMEContentObserver* aIMEContentObserver)
+      : AChangeEvent(eChangeEventType_Position, aIMEContentObserver)
+    {
+    }
+    NS_IMETHOD Run() override;
+  };
+
+  class AsyncMergeableNotificationsFlusher : public AChangeEvent
+  {
+  public:
+    explicit AsyncMergeableNotificationsFlusher(
+      IMEContentObserver* aIMEContentObserver)
+      : AChangeEvent(eChangeEventType_FlushPendingEvents, aIMEContentObserver)
+    {
+    }
+    NS_IMETHOD Run() override;
+  };
 };
 
 } // namespace mozilla

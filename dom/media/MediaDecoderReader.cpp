@@ -148,12 +148,14 @@ void
 MediaDecoderReader::SetStartTime(int64_t aStartTime)
 {
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+  MOZ_ASSERT(mStartTime == -1);
   mStartTime = aStartTime;
 }
 
 media::TimeIntervals
 MediaDecoderReader::GetBuffered()
 {
+  NS_ENSURE_TRUE(mStartTime >= 0, media::TimeIntervals());
   AutoPinned<MediaResource> stream(mDecoder->GetResource());
   int64_t durationUs = 0;
   {
@@ -161,20 +163,6 @@ MediaDecoderReader::GetBuffered()
     durationUs = mDecoder->GetMediaDuration();
   }
   return GetEstimatedBufferedTimeRanges(stream, durationUs);
-}
-
-int64_t
-MediaDecoderReader::ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio)
-{
-  int64_t startTime = std::min<int64_t>(aAudio ? aAudio->mTime : INT64_MAX,
-                                        aVideo ? aVideo->mTime : INT64_MAX);
-  if (startTime == INT64_MAX) {
-    startTime = 0;
-  }
-  DECODER_LOG("ComputeStartTime first video frame start %lld", aVideo ? aVideo->mTime : -1);
-  DECODER_LOG("ComputeStartTime first audio frame start %lld", aAudio ? aAudio->mTime : -1);
-  NS_ASSERTION(startTime >= 0, "Start time is negative");
-  return startTime;
 }
 
 nsRefPtr<MediaDecoderReader::MetadataPromise>

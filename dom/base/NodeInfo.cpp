@@ -111,7 +111,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(NodeInfo)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(NodeInfo)
 
-static const char* kNSURIs[] = {
+static const char* kNodeInfoNSURIs[] = {
   " ([none])",
   " (xmlns)",
   " (xml)",
@@ -129,8 +129,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(NodeInfo)
     char name[72];
     uint32_t nsid = tmp->NamespaceID();
     nsAtomCString localName(tmp->NameAtom());
-    if (nsid < ArrayLength(kNSURIs)) {
-      PR_snprintf(name, sizeof(name), "NodeInfo%s %s", kNSURIs[nsid],
+    if (nsid < ArrayLength(kNodeInfoNSURIs)) {
+      PR_snprintf(name, sizeof(name), "NodeInfo%s %s", kNodeInfoNSURIs[nsid],
                   localName.get());
     }
     else {

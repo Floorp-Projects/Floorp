@@ -100,9 +100,24 @@ public:
   ToInternalHeaders(const nsTArray<HeadersEntry>& aHeadersEntryList,
                     HeadersGuardEnum aGuard = HeadersGuardEnum::None);
 
+  // Utility method for parsing a URL and doing associated operations.  A mix
+  // of things are done in this one method to avoid duplicated parsing:
+  //
+  //  1) The aUrl argument is modified to strip the fragment
+  //  2) If aSchemaValidOut is set, then a boolean value is set indicating
+  //     if the aUrl's scheme is valid or not for storing in the cache.
+  //  3) If aUrlWithoutQueryOut is set, then a url string is provided without
+  //     the search section.
+  //  4) If aUrlQueryOut is set then its populated with the search section
+  //     of the URL.  Note, this parameter must be set if aUrlWithoutQueryOut
+  //     is set.  They must either both be nullptr or set to valid string
+  //     pointers.
+  //
+  // Any errors are thrown on ErrorResult.
   static void
-  ProcessURL(nsAString& aUrl, bool* aSchemeValidOut,
-             nsAString* aUrlWithoutQueryOut, ErrorResult& aRv);
+  ProcessURL(nsACString& aUrl, bool* aSchemeValidOut,
+             nsACString* aUrlWithoutQueryOut, nsACString* aUrlQueryOut,
+             ErrorResult& aRv);
 
 private:
   void

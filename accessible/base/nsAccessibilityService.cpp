@@ -1191,12 +1191,15 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
         newAcc = markupMap->new_func(content, aContext);
 
       // Fall back to text when encountering Content MathML.
-      if (!newAcc && !content->IsAnyOfMathMLElements(nsGkAtoms::mpadded_,
+      if (!newAcc && !content->IsAnyOfMathMLElements(nsGkAtoms::annotation_,
+                                                     nsGkAtoms::annotation_xml_,
+                                                     nsGkAtoms::mpadded_,
                                                      nsGkAtoms::mphantom_,
                                                      nsGkAtoms::maligngroup_,
                                                      nsGkAtoms::malignmark_,
-                                                     nsGkAtoms::mspace_)) {
-        newAcc = new HyperTextAccessible(content, document);
+                                                     nsGkAtoms::mspace_,
+                                                     nsGkAtoms::semantics_)) {
+       newAcc = new HyperTextAccessible(content, document);
       }
     }
   }

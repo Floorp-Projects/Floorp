@@ -45,6 +45,44 @@ using mozilla::DebugOnly;
 namespace js {
 namespace jit {
 
+static void
+GuardReceiverObject(MacroAssembler& masm, ReceiverGuard guard,
+                    Register object, Register scratch,
+                    size_t receiverGuardOffset, Label* failure)
+{
+    Address groupAddress(ICStubReg, receiverGuardOffset + HeapReceiverGuard::offsetOfGroup());
+    Address shapeAddress(ICStubReg, receiverGuardOffset + HeapReceiverGuard::offsetOfShape());
+    Address expandoAddress(object, UnboxedPlainObject::offsetOfExpando());
+
+    if (guard.group) {
+        masm.loadPtr(groupAddress, scratch);
+        masm.branchTestObjGroup(Assembler::NotEqual, object, scratch, failure);
+
+        if (guard.group->clasp() == &UnboxedPlainObject::class_ && !guard.shape) {
+            // Guard the unboxed object has no expando object.
+            masm.branchPtr(Assembler::NotEqual, expandoAddress, ImmWord(0), failure);
+        }
+    }
+
+    if (guard.shape) {
+        masm.loadPtr(shapeAddress, scratch);
+        if (guard.group && guard.group->clasp() == &UnboxedPlainObject::class_) {
+            // Guard the unboxed object has a matching expando object.
+            masm.branchPtr(Assembler::Equal, expandoAddress, ImmWord(0), failure);
+            Label done;
+            masm.push(object);
+            masm.loadPtr(expandoAddress, object);
+            masm.branchTestObjShape(Assembler::Equal, object, scratch, &done);
+            masm.pop(object);
+            masm.jump(failure);
+            masm.bind(&done);
+            masm.pop(object);
+        } else {
+            masm.branchTestObjShape(Assembler::NotEqual, object, scratch, failure);
+        }
+    }
+}
+
 //
 // WarmUpCounter_Fallback
 //
@@ -2928,10 +2966,11 @@ static const VMFunction LookupNoSuchMethodHandlerInfo =
     FunctionInfo<LookupNoSuchMethodHandlerFn>(LookupNoSuchMethodHandler);
 
 static bool
-GetElemNativeStubExists(ICGetElem_Fallback* stub, HandleNativeObject obj, HandleNativeObject holder,
+GetElemNativeStubExists(ICGetElem_Fallback* stub, HandleObject obj, HandleObject holder,
                         HandlePropertyName propName, bool needsAtomize)
 {
     bool indirect = (obj.get() != holder.get());
+    MOZ_ASSERT_IF(indirect, holder->isNative());
 
     for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd(); iter++) {
         if (iter->kind() != ICStub::GetElem_NativeSlot &&
@@ -2953,7 +2992,7 @@ GetElemNativeStubExists(ICGetElem_Fallback* stub, HandleNativeObject obj, Handle
         if (propName != getElemNativeStub->name())
             continue;
 
-        if (obj->lastProperty() != getElemNativeStub->shape())
+        if (ReceiverGuard(obj) != getElemNativeStub->receiverGuard())
             continue;
 
         // If the new stub needs atomization, and the old stub doesn't atomize, then
@@ -2969,7 +3008,7 @@ GetElemNativeStubExists(ICGetElem_Fallback* stub, HandleNativeObject obj, Handle
                 if (holder != protoStub->holder())
                     continue;
 
-                if (holder->lastProperty() != protoStub->holderShape())
+                if (holder->as<NativeObject>().lastProperty() != protoStub->holderShape())
                     continue;
             } else {
                 MOZ_ASSERT(iter->isGetElem_NativePrototypeCallNative() ||
@@ -2981,7 +3020,7 @@ GetElemNativeStubExists(ICGetElem_Fallback* stub, HandleNativeObject obj, Handle
                 if (holder != protoStub->holder())
                     continue;
 
-                if (holder->lastProperty() != protoStub->holderShape())
+                if (holder->as<NativeObject>().lastProperty() != protoStub->holderShape())
                     continue;
             }
         }
@@ -2992,11 +3031,12 @@ GetElemNativeStubExists(ICGetElem_Fallback* stub, HandleNativeObject obj, Handle
 }
 
 static void
-RemoveExistingGetElemNativeStubs(JSContext* cx, ICGetElem_Fallback* stub, HandleNativeObject obj,
-                                 HandleNativeObject holder, HandlePropertyName propName,
+RemoveExistingGetElemNativeStubs(JSContext* cx, ICGetElem_Fallback* stub, HandleObject obj,
+                                 HandleObject holder, HandlePropertyName propName,
                                  bool needsAtomize)
 {
     bool indirect = (obj.get() != holder.get());
+    MOZ_ASSERT_IF(indirect, holder->isNative());
 
     for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++) {
         switch (iter->kind()) {
@@ -3015,7 +3055,7 @@ RemoveExistingGetElemNativeStubs(JSContext* cx, ICGetElem_Fallback* stub, Handle
         if (propName != getElemNativeStub->name())
             continue;
 
-        if (obj->lastProperty() != getElemNativeStub->shape())
+        if (ReceiverGuard(obj) != getElemNativeStub->receiverGuard())
             continue;
 
         // For prototype gets, check the holder and holder shape.
@@ -3028,7 +3068,7 @@ RemoveExistingGetElemNativeStubs(JSContext* cx, ICGetElem_Fallback* stub, Handle
 
                 // If the holder matches, but the holder's lastProperty doesn't match, then
                 // this stub is invalid anyway.  Unlink it.
-                if (holder->lastProperty() != protoStub->holderShape()) {
+                if (holder->as<NativeObject>().lastProperty() != protoStub->holderShape()) {
                     iter.unlink(cx);
                     continue;
                 }
@@ -3044,7 +3084,7 @@ RemoveExistingGetElemNativeStubs(JSContext* cx, ICGetElem_Fallback* stub, Handle
 
                 // If the holder matches, but the holder's lastProperty doesn't match, then
                 // this stub is invalid anyway.  Unlink it.
-                if (holder->lastProperty() != protoStub->holderShape()) {
+                if (holder->as<NativeObject>().lastProperty() != protoStub->holderShape()) {
                     iter.unlink(cx);
                     continue;
                 }
@@ -3106,9 +3146,9 @@ IsOptimizableElementPropertyName(JSContext* cx, HandleValue key, MutableHandleId
 }
 
 static bool
-TryAttachNativeGetValueElemStub(JSContext* cx, HandleScript script, jsbytecode* pc,
-                                ICGetElem_Fallback* stub, HandleNativeObject obj,
-                                HandleValue key, bool* attached)
+TryAttachNativeOrUnboxedGetValueElemStub(JSContext* cx, HandleScript script, jsbytecode* pc,
+                                         ICGetElem_Fallback* stub, HandleObject obj,
+                                         HandleValue key, bool* attached)
 {
     RootedId id(cx);
     if (!IsOptimizableElementPropertyName(cx, key, &id))
@@ -3119,35 +3159,81 @@ TryAttachNativeGetValueElemStub(JSContext* cx, HandleScript script, jsbytecode* 
     bool isCallElem = (JSOp(*pc) == JSOP_CALLELEM);
 
     RootedShape shape(cx);
-    RootedObject baseHolder(cx);
-    if (!EffectlesslyLookupProperty(cx, obj, propName, &baseHolder, &shape))
+    RootedObject holder(cx);
+    if (!EffectlesslyLookupProperty(cx, obj, propName, &holder, &shape))
         return false;
-    if (!baseHolder || !baseHolder->isNative())
+    if (!holder || (holder != obj && !holder->isNative()))
         return true;
 
-    HandleNativeObject holder = baseHolder.as<NativeObject>();
+    // If a suitable stub already exists, nothing else to do.
+    if (GetElemNativeStubExists(stub, obj, holder, propName, needsAtomize))
+        return true;
 
-    if (IsCacheableGetPropReadSlot(obj, holder, shape)) {
-        // If a suitable stub already exists, nothing else to do.
-        if (GetElemNativeStubExists(stub, obj, holder, propName, needsAtomize))
+    // Remove any existing stubs that may interfere with the new stub being added.
+    RemoveExistingGetElemNativeStubs(cx, stub, obj, holder, propName, needsAtomize);
+
+    ICStub* monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
+
+    if (obj->is<UnboxedPlainObject>() && holder == obj) {
+        const UnboxedLayout::Property* property =
+            obj->as<UnboxedPlainObject>().layout().lookup(propName);
+        if (property) {
+            if (!cx->runtime()->jitSupportsFloatingPoint)
+                return true;
+
+            ICGetElemNativeCompiler compiler(cx, ICStub::GetElem_UnboxedProperty, isCallElem,
+                                             monitorStub, obj, holder, propName,
+                                             ICGetElemNativeStub::UnboxedProperty, needsAtomize,
+                                             property->offset + UnboxedPlainObject::offsetOfData(),
+                                             property->type);
+            ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
+            if (!newStub)
+                return false;
+
+            stub->addNewStub(newStub);
+            *attached = true;
             return true;
+        }
 
-        // Remove any existing stubs that may interfere with the new stub being added.
-        RemoveExistingGetElemNativeStubs(cx, stub, obj, holder, propName, needsAtomize);
+        Shape* shape = obj->as<UnboxedPlainObject>().maybeExpando()->lookup(cx, propName);
+        if (!shape->hasDefaultGetter() || !shape->hasSlot())
+            return true;
 
         bool isFixedSlot;
         uint32_t offset;
         GetFixedOrDynamicSlotOffset(shape, &isFixedSlot, &offset);
 
-        ICStub* monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
+        ICGetElemNativeStub::AccessType acctype =
+            isFixedSlot ? ICGetElemNativeStub::FixedSlot
+                        : ICGetElemNativeStub::DynamicSlot;
+        ICGetElemNativeCompiler compiler(cx, ICStub::GetElem_NativeSlot, isCallElem,
+                                         monitorStub, obj, holder, propName,
+                                         acctype, needsAtomize, offset);
+        ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
+        if (!newStub)
+            return false;
+
+        stub->addNewStub(newStub);
+        *attached = true;
+        return true;
+    }
+
+    if (!holder->isNative())
+        return true;
+
+    if (IsCacheableGetPropReadSlot(obj, holder, shape)) {
+        bool isFixedSlot;
+        uint32_t offset;
+        GetFixedOrDynamicSlotOffset(shape, &isFixedSlot, &offset);
+
         ICStub::Kind kind = (obj == holder) ? ICStub::GetElem_NativeSlot
                                             : ICStub::GetElem_NativePrototypeSlot;
 
         JitSpew(JitSpew_BaselineIC, "  Generating GetElem(Native %s%s slot) stub "
-                                    "(obj=%p, shape=%p, holder=%p, holderShape=%p)",
+                                    "(obj=%p, holder=%p, holderShape=%p)",
                     (obj == holder) ? "direct" : "prototype",
                     needsAtomize ? " atomizing" : "",
-                    obj.get(), obj->lastProperty(), holder.get(), holder->lastProperty());
+                obj.get(), holder.get(), holder->as<NativeObject>().lastProperty());
 
         ICGetElemNativeStub::AccessType acctype = isFixedSlot ? ICGetElemNativeStub::FixedSlot
                                                               : ICGetElemNativeStub::DynamicSlot;
@@ -3159,7 +3245,9 @@ TryAttachNativeGetValueElemStub(JSContext* cx, HandleScript script, jsbytecode* 
 
         stub->addNewStub(newStub);
         *attached = true;
+        return true;
     }
+
     return true;
 }
 
@@ -3382,11 +3470,11 @@ TryAttachGetElemStub(JSContext* cx, JSScript* script, jsbytecode* pc, ICGetElem_
         return true;
     }
 
-    // Check for NativeObject[id] shape-optimizable accesses.
-    if (obj->isNative() && rhs.isString()) {
+    // Check for NativeObject[id] and UnboxedPlainObject[id] shape-optimizable accesses.
+    if ((obj->isNative() || obj->is<UnboxedPlainObject>()) && rhs.isString()) {
         RootedScript rootedScript(cx, script);
-        if (!TryAttachNativeGetValueElemStub(cx, rootedScript, pc, stub,
-                                             obj.as<NativeObject>(), rhs, attached))
+        if (!TryAttachNativeOrUnboxedGetValueElemStub(cx, rootedScript, pc, stub,
+                                                      obj, rhs, attached))
         {
             return false;
         }
@@ -3699,10 +3787,9 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler& masm)
     // Unbox object.
     Register objReg = masm.extractObject(R0, ExtractTemp0);
 
-    // Check object shape.
-    masm.loadPtr(Address(objReg, JSObject::offsetOfShape()), scratchReg);
-    Address shapeAddr(ICStubReg, ICGetElemNativeStub::offsetOfShape());
-    masm.branchPtr(Assembler::NotEqual, shapeAddr, scratchReg, &failure);
+    // Check object shape/group.
+    GuardReceiverObject(masm, ReceiverGuard(obj_), objReg, scratchReg,
+                        ICGetElemNativeStub::offsetOfReceiverGuard(), &failure);
 
     // Check key identity.  Don't automatically fail if this fails, since the incoming
     // key maybe a non-interned string.  Switch to a slowpath vm-call based check.
@@ -3746,7 +3833,7 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler& masm)
         masm.bind(&skipAtomize);
     }
 
-    // Since this stub sometimes enter a stub frame, we manually set this to true (lie).
+    // Since this stub sometimes enters a stub frame, we manually set this to true (lie).
 #ifdef DEBUG
     entersStubFrame_ = true;
 #endif
@@ -3757,6 +3844,14 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler& masm)
     Register holderReg;
     if (obj_ == holder_) {
         holderReg = objReg;
+
+        if (obj_->is<UnboxedPlainObject>() && acctype_ != ICGetElemNativeStub::UnboxedProperty) {
+            // The property will be loaded off the unboxed expando.
+            masm.push(R1.scratchReg());
+            popR1 = true;
+            holderReg = R1.scratchReg();
+            masm.loadPtr(Address(objReg, UnboxedPlainObject::offsetOfExpando()), holderReg);
+        }
     } else {
         // Shape guard holder.
         if (regs.empty()) {
@@ -3855,6 +3950,13 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler& masm)
             masm.addToStackPtr(ImmWord(sizeof(size_t)));
 #endif
 
+    } else if (acctype_ == ICGetElemNativeStub::UnboxedProperty) {
+        masm.load32(Address(ICStubReg, ICGetElemNativeSlotStub::offsetOfOffset()),
+                    scratchReg);
+        masm.loadUnboxedProperty(BaseIndex(objReg, scratchReg, TimesOne), unboxedType_,
+                                 TypedOrValueRegister(R0));
+        if (popR1)
+            masm.addPtr(ImmWord(sizeof(size_t)), BaselineStackReg);
     } else {
         MOZ_ASSERT(acctype_ == ICGetElemNativeStub::NativeGetter ||
                    acctype_ == ICGetElemNativeStub::ScriptedGetter);
@@ -7264,44 +7366,6 @@ ICGetPropNativeCompiler::getStub(ICStubSpace* space)
 
       default:
         MOZ_CRASH("Bad stub kind");
-    }
-}
-
-static void
-GuardReceiverObject(MacroAssembler& masm, ReceiverGuard guard,
-                    Register object, Register scratch,
-                    size_t receiverGuardOffset, Label* failure)
-{
-    Address groupAddress(ICStubReg, receiverGuardOffset + HeapReceiverGuard::offsetOfGroup());
-    Address shapeAddress(ICStubReg, receiverGuardOffset + HeapReceiverGuard::offsetOfShape());
-    Address expandoAddress(object, UnboxedPlainObject::offsetOfExpando());
-
-    if (guard.group) {
-        masm.loadPtr(groupAddress, scratch);
-        masm.branchTestObjGroup(Assembler::NotEqual, object, scratch, failure);
-
-        if (guard.group->clasp() == &UnboxedPlainObject::class_ && !guard.shape) {
-            // Guard the unboxed object has no expando object.
-            masm.branchPtr(Assembler::NotEqual, expandoAddress, ImmWord(0), failure);
-        }
-    }
-
-    if (guard.shape) {
-        masm.loadPtr(shapeAddress, scratch);
-        if (guard.group && guard.group->clasp() == &UnboxedPlainObject::class_) {
-            // Guard the unboxed object has a matching expando object.
-            masm.branchPtr(Assembler::Equal, expandoAddress, ImmWord(0), failure);
-            Label done;
-            masm.push(object);
-            masm.loadPtr(expandoAddress, object);
-            masm.branchTestObjShape(Assembler::Equal, object, scratch, &done);
-            masm.pop(object);
-            masm.jump(failure);
-            masm.bind(&done);
-            masm.pop(object);
-        } else {
-            masm.branchTestObjShape(Assembler::NotEqual, object, scratch, failure);
-        }
     }
 }
 
@@ -10797,7 +10861,7 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler& masm)
     masm.passABIArg(argcReg);
     masm.passABIArg(vpReg);
 
-#if defined(JS_ARM_SIMULATOR) || defined(JS_ARM64_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
+#ifdef JS_SIMULATOR
     // The simulator requires VM calls to be redirected to a special swi
     // instruction to handle them, so we store the redirected pointer in the
     // stub and use that instead of the original one.
@@ -11923,10 +11987,10 @@ ICTypeUpdate_ObjectGroup::ICTypeUpdate_ObjectGroup(JitCode* stubCode, ObjectGrou
 
 ICGetElemNativeStub::ICGetElemNativeStub(ICStub::Kind kind, JitCode* stubCode,
                                          ICStub* firstMonitorStub,
-                                         Shape* shape, PropertyName* name,
+                                         ReceiverGuard guard, PropertyName* name,
                                          AccessType acctype, bool needsAtomize)
   : ICMonitoredStub(kind, stubCode, firstMonitorStub),
-    shape_(shape),
+    receiverGuard_(guard),
     name_(name)
 {
     extra_ = (static_cast<uint16_t>(acctype) << ACCESSTYPE_SHIFT) |
@@ -11938,9 +12002,9 @@ ICGetElemNativeStub::~ICGetElemNativeStub()
 
 ICGetElemNativeGetterStub::ICGetElemNativeGetterStub(
                         ICStub::Kind kind, JitCode* stubCode, ICStub* firstMonitorStub,
-                        Shape* shape, PropertyName* name, AccessType acctype,
+                        ReceiverGuard guard, PropertyName* name, AccessType acctype,
                         bool needsAtomize, JSFunction* getter, uint32_t pcOffset)
-  : ICGetElemNativeStub(kind, stubCode, firstMonitorStub, shape, name, acctype, needsAtomize),
+  : ICGetElemNativeStub(kind, stubCode, firstMonitorStub, guard, name, acctype, needsAtomize),
     getter_(getter),
     pcOffset_(pcOffset)
 {
@@ -11951,10 +12015,10 @@ ICGetElemNativeGetterStub::ICGetElemNativeGetterStub(
 
 ICGetElem_NativePrototypeSlot::ICGetElem_NativePrototypeSlot(
                             JitCode* stubCode, ICStub* firstMonitorStub,
-                            Shape* shape, PropertyName* name,
+                            ReceiverGuard guard, PropertyName* name,
                             AccessType acctype, bool needsAtomize, uint32_t offset,
                             JSObject* holder, Shape* holderShape)
-  : ICGetElemNativeSlotStub(ICStub::GetElem_NativePrototypeSlot, stubCode, firstMonitorStub, shape,
+  : ICGetElemNativeSlotStub(ICStub::GetElem_NativePrototypeSlot, stubCode, firstMonitorStub, guard,
                             name, acctype, needsAtomize, offset),
     holder_(holder),
     holderShape_(holderShape)
@@ -11962,10 +12026,10 @@ ICGetElem_NativePrototypeSlot::ICGetElem_NativePrototypeSlot(
 
 ICGetElemNativePrototypeCallStub::ICGetElemNativePrototypeCallStub(
                                 ICStub::Kind kind, JitCode* stubCode, ICStub* firstMonitorStub,
-                                Shape* shape, PropertyName* name,
+                                ReceiverGuard guard, PropertyName* name,
                                 AccessType acctype, bool needsAtomize, JSFunction* getter,
                                 uint32_t pcOffset, JSObject* holder, Shape* holderShape)
-  : ICGetElemNativeGetterStub(kind, stubCode, firstMonitorStub, shape, name, acctype, needsAtomize,
+  : ICGetElemNativeGetterStub(kind, stubCode, firstMonitorStub, guard, name, acctype, needsAtomize,
                               getter, pcOffset),
     holder_(holder),
     holderShape_(holderShape)
@@ -11978,7 +12042,7 @@ ICGetElem_NativePrototypeCallNative::Clone(JSContext* cx,
                                            ICGetElem_NativePrototypeCallNative& other)
 {
     return New<ICGetElem_NativePrototypeCallNative>(cx, space, other.jitCode(), firstMonitorStub,
-                                                    other.shape(), other.name(), other.accessType(),
+                                                    other.receiverGuard(), other.name(), other.accessType(),
                                                     other.needsAtomize(), other.getter(), other.pcOffset_,
                                                     other.holder(), other.holderShape());
 }
@@ -11990,7 +12054,7 @@ ICGetElem_NativePrototypeCallScripted::Clone(JSContext* cx,
                                              ICGetElem_NativePrototypeCallScripted& other)
 {
     return New<ICGetElem_NativePrototypeCallScripted>(cx, space, other.jitCode(), firstMonitorStub,
-                                                      other.shape(), other.name(),
+                                                      other.receiverGuard(), other.name(),
                                                       other.accessType(), other.needsAtomize(), other.getter(),
                                                       other.pcOffset_, other.holder(), other.holderShape());
 }
@@ -12416,7 +12480,7 @@ ICCall_Native::ICCall_Native(JitCode* stubCode, ICStub* firstMonitorStub,
     templateObject_(templateObject),
     pcOffset_(pcOffset)
 {
-#if defined(JS_ARM_SIMULATOR) || defined(JS_ARM64_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
+#ifdef JS_SIMULATOR
     // The simulator requires VM calls to be redirected to a special swi
     // instruction to handle them. To make this work, we store the redirected
     // pointer in the stub.
@@ -12442,7 +12506,7 @@ ICCall_ClassHook::ICCall_ClassHook(JitCode* stubCode, ICStub* firstMonitorStub,
     templateObject_(templateObject),
     pcOffset_(pcOffset)
 {
-#if defined(JS_ARM_SIMULATOR) || defined(JS_ARM64_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
+#ifdef JS_SIMULATOR
     // The simulator requires VM calls to be redirected to a special swi
     // instruction to handle them. To make this work, we store the redirected
     // pointer in the stub.

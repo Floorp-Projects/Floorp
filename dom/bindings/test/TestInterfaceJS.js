@@ -64,8 +64,8 @@ TestInterfaceJS.prototype = {
   testSequenceOverload: function(arg) {},
   testSequenceUnion: function(arg) {},
 
-  testThrowDOMError: function() {
-    throw new this._win.DOMError("NotSupportedError", "We are a DOMError");
+  testThrowError: function() {
+    throw new this._win.Error("We are an Error");
   },
 
   testThrowDOMException: function() {

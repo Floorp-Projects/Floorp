@@ -8,7 +8,7 @@
 interface nsIFile;
 interface nsIZipEntry;
 
-[scriptable, builtinclass, uuid(6b438dc3-9ba0-4f5f-b83f-82e1d7b98604)]
+[scriptable, builtinclass, uuid(fbdfaa6b-72dc-465e-af56-572fd13f153c)]
 interface nsIJARChannel : nsIChannel
 {
     /**
@@ -48,4 +48,10 @@ interface nsIJARChannel : nsIChannel
      * such as mmap/pread/pwrite.
      */
     void ensureChildFd();
+
+    /**
+     * Force the channel to skip any chack for possible interception and
+     * proceed immediately to the network.
+     */
+    void forceNoIntercept();
 };

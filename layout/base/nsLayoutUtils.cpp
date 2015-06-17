@@ -8422,11 +8422,13 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
     nsLayoutUtils::CalculateRootCompositionSize(aScrollFrame ? aScrollFrame : aForFrame,
                                                 isRootContentDocRootScrollFrame, metrics));
 
-  if (gfxPrefs::APZPrintTree()) {
+  if (gfxPrefs::APZPrintTree() || gfxPrefs::APZTestLoggingEnabled()) {
     if (nsIContent* content = frameForCompositionBoundsCalculation->GetContent()) {
       nsAutoString contentDescription;
       content->Describe(contentDescription);
       metrics.SetContentDescription(NS_LossyConvertUTF16toASCII(contentDescription));
+      nsLayoutUtils::LogTestDataForPaint(aLayer->Manager(), scrollId, "contentDescription",
+          metrics.GetContentDescription().get());
     }
   }
 
