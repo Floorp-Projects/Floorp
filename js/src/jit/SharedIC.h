@@ -693,6 +693,7 @@ class ICStub
           case GetElem_NativePrototypeSlot:
           case GetElem_NativePrototypeCallNative:
           case GetElem_NativePrototypeCallScripted:
+          case GetElem_UnboxedProperty:
           case GetProp_CallScripted:
           case GetProp_CallNative:
           case GetProp_CallDOMProxyNative:
