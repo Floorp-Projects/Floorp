@@ -148,7 +148,7 @@ GetFreeBytes(const nsAString& aStorageName)
   nsRefPtr<DeviceStorageFile> dsf(new DeviceStorageFile(NS_LITERAL_STRING(DEVICESTORAGE_PICTURES),
                                                         aStorageName));
   int64_t freeBytes = 0;
-  dsf->GetDiskFreeSpace(&freeBytes);
+  dsf->GetStorageFreeSpace(&freeBytes);
   return freeBytes;
 }
 
@@ -1628,7 +1628,7 @@ DeviceStorageFile::AccumDirectoryUsage(nsIFile* aFile,
 }
 
 void
-DeviceStorageFile::GetDiskFreeSpace(int64_t* aSoFar)
+DeviceStorageFile::GetStorageFreeSpace(int64_t* aSoFar)
 {
   DeviceStorageTypeChecker* typeChecker
     = DeviceStorageTypeChecker::CreateOrGet();
@@ -2838,7 +2838,7 @@ public:
 
     int64_t freeSpace = 0;
     if (mFile) {
-      mFile->GetDiskFreeSpace(&freeSpace);
+      mFile->GetStorageFreeSpace(&freeSpace);
     }
 
     nsCOMPtr<nsIRunnable> r;
@@ -3491,10 +3491,23 @@ nsDOMDeviceStorage::Shutdown()
 StaticAutoPtr<nsTArray<nsString>> nsDOMDeviceStorage::sVolumeNameCache;
 
 // static
+void nsDOMDeviceStorage::InvalidateVolumeCaches()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Currently there is only the one volume cache. DeviceStorageAreaListener
+  // calls this function any time it detects a volume was added or removed.
+
+  sVolumeNameCache = nullptr;
+}
+
+// static
 void
 nsDOMDeviceStorage::GetOrderedVolumeNames(
   nsDOMDeviceStorage::VolumeNameArray &aVolumeNames)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (sVolumeNameCache && sVolumeNameCache->Length() > 0) {
     aVolumeNames.AppendElements(*sVolumeNameCache);
     return;
@@ -3607,6 +3620,10 @@ nsDOMDeviceStorage::CreateDeviceStorageByNameAndType(
   nsRefPtr<nsDOMDeviceStorage> storage = GetStorageByNameAndType(aWin,
                                                                  aName,
                                                                  aType);
+  if (!storage) {
+    *aStore = nullptr;
+    return;
+  }
   NS_ADDREF(*aStore = storage.get());
 }
 
