@@ -7,6 +7,7 @@
 #include "ProcessGlobal.h"
 
 #include "nsContentCID.h"
+#include "nsDOMClassInfoID.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

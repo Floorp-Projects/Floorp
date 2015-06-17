@@ -914,17 +914,27 @@ PBlobChild*
 BackgroundChild::GetOrCreateActorForBlob(PBackgroundChild* aBackgroundActor,
                                          nsIDOMBlob* aBlob)
 {
-  MOZ_ASSERT(aBackgroundActor);
   MOZ_ASSERT(aBlob);
+
+  nsRefPtr<BlobImpl> blobImpl = static_cast<Blob*>(aBlob)->Impl();
+  MOZ_ASSERT(blobImpl);
+
+  return GetOrCreateActorForBlobImpl(aBackgroundActor, blobImpl);
+}
+
+// static
+PBlobChild*
+BackgroundChild::GetOrCreateActorForBlobImpl(PBackgroundChild* aBackgroundActor,
+                                             BlobImpl* aBlobImpl)
+{
+  MOZ_ASSERT(aBackgroundActor);
+  MOZ_ASSERT(aBlobImpl);
   MOZ_ASSERT(GetForCurrentThread(),
              "BackgroundChild not created on this thread yet!");
   MOZ_ASSERT(aBackgroundActor == GetForCurrentThread(),
              "BackgroundChild is bound to a different thread!");
 
-  nsRefPtr<BlobImpl> blobImpl = static_cast<Blob*>(aBlob)->Impl();
-  MOZ_ASSERT(blobImpl);
-
-  BlobChild* actor = BlobChild::GetOrCreate(aBackgroundActor, blobImpl);
+  BlobChild* actor = BlobChild::GetOrCreate(aBackgroundActor, aBlobImpl);
   if (NS_WARN_IF(!actor)) {
     return nullptr;
   }

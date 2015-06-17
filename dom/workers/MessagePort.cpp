@@ -17,6 +17,7 @@
 
 using mozilla::dom::EventHandlerNonNull;
 using mozilla::dom::MessagePortBase;
+using mozilla::dom::MessagePortIdentifier;
 using mozilla::dom::Optional;
 using mozilla::dom::Sequence;
 using mozilla::dom::AutoNoJSAPI;
@@ -96,9 +97,9 @@ MessagePort::~MessagePort()
 }
 
 void
-MessagePort::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                            const Optional<Sequence<JS::Value>>& aTransferable,
-                            ErrorResult& aRv)
+MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                         const Optional<Sequence<JS::Value>>& aTransferable,
+                         ErrorResult& aRv)
 {
   AssertCorrectThread();
 
@@ -198,11 +199,11 @@ MessagePort::SetOnmessage(EventHandlerNonNull* aCallback)
   Start();
 }
 
-already_AddRefed<MessagePortBase>
-MessagePort::Clone()
+bool
+MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
 {
   NS_WARNING("Haven't implemented structured clone for these ports yet!");
-  return nullptr;
+  return false;
 }
 
 void
