@@ -190,8 +190,7 @@ public:
     bool HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize);
     virtual bool DoUpdateZoomConstraints(const uint32_t& aPresShellId,
                                          const mozilla::layers::FrameMetrics::ViewID& aViewId,
-                                         const bool& aIsRoot,
-                                         const mozilla::layers::ZoomConstraints& aConstraints) = 0;
+                                         const Maybe<mozilla::layers::ZoomConstraints>& aConstraints) = 0;
 
     virtual ScreenIntSize GetInnerSize() = 0;
 
@@ -311,8 +310,7 @@ public:
                                     nsIPrincipal* aPrincipal) override;
     virtual bool DoUpdateZoomConstraints(const uint32_t& aPresShellId,
                                          const ViewID& aViewId,
-                                         const bool& aIsRoot,
-                                         const ZoomConstraints& aConstraints) override;
+                                         const Maybe<ZoomConstraints>& aConstraints) override;
     virtual bool RecvLoadURL(const nsCString& aURI,
                              const BrowserConfiguration& aConfiguration) override;
     virtual bool RecvCacheFileDescriptor(const nsString& aPath,
@@ -660,6 +658,7 @@ private:
     bool mParentIsActive;
     bool mAsyncPanZoomEnabled;
     CSSSize mUnscaledInnerSize;
+    Maybe<ScrollableLayerGuid> mLastZoomConstraintsGuid;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };
