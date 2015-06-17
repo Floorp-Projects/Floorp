@@ -459,6 +459,7 @@ FrameNode.prototype = {
     parsedData.categoryData = categoryData;
     parsedData.isContent = this.isContent;
     parsedData.isMetaCategory = this.isMetaCategory;
+    parsedData.hasOptimizations = this.hasOptimizations();
 
     return this._data = parsedData;
   },
