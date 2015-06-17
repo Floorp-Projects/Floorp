@@ -197,8 +197,10 @@ TVTuner::GetStream() const
 nsresult
 TVTuner::InitMediaStream()
 {
-  // TODO Instantiate |mStream| when bug 987498 is done.
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(GetOwner());
+  nsRefPtr<DOMHwMediaStream> stream = DOMHwMediaStream::CreateHwStream(window);
 
+  mStream = stream.forget();
   return NS_OK;
 }
 
