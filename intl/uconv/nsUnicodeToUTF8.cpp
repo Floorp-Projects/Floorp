@@ -29,21 +29,21 @@ NS_IMETHODIMP nsUnicodeToUTF8::GetMaxLength(const char16_t* aSrc,
   length += 3;
 
   if (!length.isValid()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   *aDestLength = length.value();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsUnicodeToUTF8::Convert(const char16_t * aSrc,
-                                       int32_t * aSrcLength,
-                                       char * aDest,
-                                       int32_t * aDestLength)
+NS_IMETHODIMP nsUnicodeToUTF8::Convert(const char16_t* aSrc,
+                                       int32_t* aSrcLength,
+                                       char* aDest,
+                                       int32_t* aDestLength)
 {
-  const char16_t * src = aSrc;
-  const char16_t * srcEnd = aSrc + *aSrcLength;
-  char * dest = aDest;
+  const char16_t* src = aSrc;
+  const char16_t* srcEnd = aSrc + *aSrcLength;
+  char* dest = aDest;
   int32_t destLen = *aDestLength;
   uint32_t n;
 

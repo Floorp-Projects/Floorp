@@ -124,9 +124,9 @@ public:
    *                    NS_ERROR_OUT_OF_MEMORY if OOM
    *                    NS_OK if all we have is an approximation
    */
-  MOZ_WARN_UNUSED_RESULT NS_IMETHOD GetMaxLength(const char16_t * aSrc,
+  MOZ_WARN_UNUSED_RESULT NS_IMETHOD GetMaxLength(const char16_t* aSrc,
                                                  int32_t aSrcLength,
-                                                 int32_t * aDestLength) = 0;
+                                                 int32_t* aDestLength) = 0;
 
   /**
    * Resets the charset converter so it may be recycled for a completely 

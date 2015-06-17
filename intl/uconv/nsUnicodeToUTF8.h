@@ -41,21 +41,21 @@ public:
    */
   nsUnicodeToUTF8() {mHighSurrogate = 0;}
 
-  NS_IMETHOD Convert(const char16_t * aSrc,
-                     int32_t * aSrcLength,
-                     char * aDest,
-                     int32_t * aDestLength) override;
+  NS_IMETHOD Convert(const char16_t*aSrc,
+                     int32_t* aSrcLength,
+                     char* aDest,
+                     int32_t* aDestLength) override;
 
-  NS_IMETHOD Finish(char * aDest, int32_t * aDestLength) override;
+  NS_IMETHOD Finish(char* aDest, int32_t* aDestLength) override;
 
-  MOZ_WARN_UNUSED_RESULT NS_IMETHOD GetMaxLength(const char16_t * aSrc,
+  MOZ_WARN_UNUSED_RESULT NS_IMETHOD GetMaxLength(const char16_t* aSrc,
                                                  int32_t aSrcLength,
-                                                 int32_t * aDestLength) override;
+                                                 int32_t* aDestLength) override;
 
   NS_IMETHOD Reset() override {mHighSurrogate = 0; return NS_OK;}
 
   NS_IMETHOD SetOutputErrorBehavior(int32_t aBehavior,
-    nsIUnicharEncoder * aEncoder, char16_t aChar) override {return NS_OK;}
+    nsIUnicharEncoder* aEncoder, char16_t aChar) override {return NS_OK;}
 
 protected:
   char16_t mHighSurrogate;

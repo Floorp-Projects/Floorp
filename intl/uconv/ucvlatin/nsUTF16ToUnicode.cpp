@@ -189,7 +189,7 @@ nsUTF16ToUnicodeBase::GetMaxLength(const char * aSrc, int32_t aSrcLength,
   }
 
   if (!length.isValid()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // the left-over data of the previous run have to be taken into account.
