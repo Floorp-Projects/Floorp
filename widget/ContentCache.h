@@ -229,6 +229,10 @@ private:
     return mSelection.IsValid() && mSelection.EndOffset() <= mText.Length();
   }
 
+  // Stores first char rect because Yosemite's Japanese IME sometimes tries
+  // to query it.  If there is no text, this is caret rect.
+  LayoutDeviceIntRect mFirstCharRect;
+
   struct Caret final
   {
     uint32_t mOffset;
