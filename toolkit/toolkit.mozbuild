@@ -94,7 +94,6 @@ DIRS += [
     '/dom',
     '/view',
     '/widget',
-    '/content',
     '/editor',
     '/layout',
     '/docshell',
