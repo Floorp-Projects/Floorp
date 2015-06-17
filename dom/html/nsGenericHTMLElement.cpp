@@ -1732,34 +1732,35 @@ nsGenericHTMLElement::GetURIListAttr(nsIAtom* aAttr, nsAString& aResult)
   nsIDocument* doc = OwnerDoc(); 
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
 
-  NS_ConvertUTF16toUTF8 str(value);
-  char* buffer = str.BeginWriting();
-
-  while (char* token = NS_strtok(" ", &buffer)) {
-    if (!aResult.IsEmpty()) {
-      aResult.Append(NS_LITERAL_STRING(" "));
+  // Value contains relative URIs split on spaces (U+0020)
+  const char16_t *start = value.BeginReading();
+  const char16_t *end   = value.EndReading();
+  const char16_t *iter  = start;
+  for (;;) {
+    if (iter < end && *iter != ' ') {
+      ++iter;
+    } else {  // iter is pointing at either end or a space
+      while (*start == ' ' && start < iter)
+        ++start;
+      if (iter != start) {
+        if (!aResult.IsEmpty())
+          aResult.Append(char16_t(' '));
+        const nsSubstring& uriPart = Substring(start, iter);
+        nsCOMPtr<nsIURI> attrURI;
+        nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),
+                                                  uriPart, doc, baseURI);
+        if (attrURI) {
+          nsAutoCString spec;
+          attrURI->GetSpec(spec);
+          AppendUTF8toUTF16(spec, aResult);
+        } else {
+          aResult.Append(uriPart);
+        }
+      }
+      start = iter = iter + 1;
+      if (iter >= end)
+        break;
     }
-
-    NS_ConvertUTF8toUTF16 uriPart(token);
-    nsCOMPtr<nsIURI> attrURI;
-    nsresult rv =
-      nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),
-                                                uriPart, doc, baseURI);
-    if (NS_FAILED(rv)) {
-      aResult.Append(uriPart);
-      continue;
-    }
-
-    MOZ_ASSERT(attrURI);
-
-    nsAutoCString spec;
-    rv = attrURI->GetSpec(spec);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aResult.Append(uriPart);
-      continue;
-    }
-
-    AppendUTF8toUTF16(spec, aResult);
   }
 
   return NS_OK;
