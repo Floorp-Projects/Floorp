@@ -4444,6 +4444,37 @@ JS::Construct(JSContext* cx, HandleValue fval, const JS::HandleValueArray& args,
     return InvokeConstructor(cx, fval, args.length(), args.begin(), false, rval);
 }
 
+JS_PUBLIC_API(bool)
+JS::Construct(JSContext* cx, HandleValue fval, HandleObject newTarget, const JS::HandleValueArray& args,
+              MutableHandleValue rval)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, fval, newTarget, args);
+    AutoLastFrameCheck lfc(cx);
+
+    // Reflect.construct ensures that the supplied new.target value is a
+    // constructor. Frankly, this makes good sense, so we reproduce the check.
+    if (!newTarget->isConstructor()) {
+        RootedValue val(cx, ObjectValue(*newTarget));
+        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, val, nullptr);
+        return false;
+    }
+
+    // This is a littlesilly, but we need to convert from what's useful for our
+    // consumers to what we can actually handle internally.
+    AutoValueVector argv(cx);
+    unsigned argc = args.length();
+    if (!argv.reserve(argc + 1))
+        return false;
+    for (unsigned i = 0; i < argc; i++) {
+        argv.infallibleAppend(args[i]);
+    }
+    argv.infallibleAppend(ObjectValue(*newTarget));
+
+    return InvokeConstructor(cx, fval, argc, argv.begin(), true, rval);
+}
+
 static JSObject*
 JS_NewHelper(JSContext* cx, HandleObject ctor, const JS::HandleValueArray& inputArgs)
 {
