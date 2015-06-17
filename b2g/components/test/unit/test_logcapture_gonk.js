@@ -33,7 +33,17 @@ add_test(function test_readProperties() {
   let propertiesLog = LogCapture.readProperties();
   notEqual(propertiesLog, null, "Properties should not be null");
   notEqual(propertiesLog, undefined, "Properties should not be undefined");
-  equal(propertiesLog["ro.kernel.qemu"], "1", "QEMU property should be 1");
+
+  for (let propertyName in propertiesLog) {
+    equal(typeof(propertiesLog[propertyName]), "string",
+          "Property " + propertyName + " should be a string");
+  }
+
+  equal(propertiesLog["ro.product.locale.language"], "en",
+        "Locale language should be read correctly. See bug 1171577.");
+
+  equal(propertiesLog["ro.product.locale.region"], "US",
+        "Locale region should be read correctly. See bug 1171577.");
 
   run_next_test();
 });

@@ -43,6 +43,17 @@ function test() {
     let [, breakpointClient2] = yield setBreakpoint(sourceClient2, location);
     yield resume(threadClient2);
 
+    let packet = yield source(sourceClient1);
+    let text = (yield new Promise(function (resolve) {
+      let request = new XMLHttpRequest();
+      request.open("GET", EXAMPLE_URL + WORKER_URL, true);
+      request.send();
+      request.onload = function () {
+        resolve(request.responseText);
+      };
+    }));
+    is(packet.source, text);
+
     postMessageToWorkerInTab(tab, WORKER_URL, "ping");
     yield Promise.all([
       waitForPause(threadClient1).then((packet) => {

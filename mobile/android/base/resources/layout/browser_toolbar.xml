@@ -48,7 +48,7 @@
                                               android:layout_alignLeft="@id/menu"
                                               android:layout_alignRight="@id/menu"
                                               android:gravity="center_vertical"
-                                              android:src="@drawable/menu_level"
+                                              android:src="@drawable/menu"
                                               android:visibility="gone"/>
 
     <org.mozilla.gecko.toolbar.PhoneTabsButton android:id="@+id/tabs"

@@ -713,29 +713,7 @@ NetworkEventsHandler.prototype = {
    *         are available, or rejected if something goes wrong.
    */
   getString: function(aStringGrip) {
-    // Make sure this is a long string.
-    if (typeof aStringGrip != "object" || aStringGrip.type != "longString") {
-      return promise.resolve(aStringGrip); // Go home string, you're drunk.
-    }
-    // Fetch the long string only once.
-    if (aStringGrip._fullText) {
-      return aStringGrip._fullText.promise;
-    }
-
-    let deferred = aStringGrip._fullText = promise.defer();
-    let { actor, initial, length } = aStringGrip;
-    let longStringClient = this.webConsoleClient.longString(aStringGrip);
-
-    longStringClient.substring(initial.length, length, aResponse => {
-      if (aResponse.error) {
-        Cu.reportError(aResponse.error + ": " + aResponse.message);
-        deferred.reject(aResponse);
-        return;
-      }
-      deferred.resolve(initial + aResponse.substring);
-    });
-
-    return deferred.promise;
+    return this.webConsoleClient.getString(aStringGrip);
   }
 };
 

@@ -426,9 +426,9 @@ let LoopContactsInternal = Object.freeze({
         return;
       }
 
-      LoopStorage.getStore(kObjectStoreName, (err, store) => {
-        if (err) {
-          callback(err);
+      LoopStorage.getStore(kObjectStoreName, (error, store) => {
+        if (error) {
+          callback(error);
           return;
         }
 
@@ -684,9 +684,9 @@ let LoopContactsInternal = Object.freeze({
         return;
       }
 
-      LoopStorage.getStore(kObjectStoreName, (err, store) => {
-        if (err) {
-          callback(err);
+      LoopStorage.getStore(kObjectStoreName, (error, store) => {
+        if (error) {
+          callback(error);
           return;
         }
 
