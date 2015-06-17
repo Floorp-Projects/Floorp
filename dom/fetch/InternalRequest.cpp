@@ -113,8 +113,14 @@ InternalRequest::MapContentPolicyTypeToRequestContext(nsContentPolicyType aConte
   case nsIContentPolicy::TYPE_OTHER:
     context = RequestContext::Internal;
     break;
-  case nsIContentPolicy::TYPE_SCRIPT:
+  case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
     context = RequestContext::Script;
+    break;
+  case nsIContentPolicy::TYPE_INTERNAL_WORKER:
+    context = RequestContext::Worker;
+    break;
+  case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
+    context = RequestContext::Sharedworker;
     break;
   case nsIContentPolicy::TYPE_IMAGE:
     context = RequestContext::Image;
