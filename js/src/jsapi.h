@@ -1053,6 +1053,25 @@ typedef void (*JS_ICUFreeFn)(const void*, void* p);
 extern JS_PUBLIC_API(bool)
 JS_SetICUMemoryFunctions(JS_ICUAllocFn allocFn, JS_ICUReallocFn reallocFn, JS_ICUFreeFn freeFn);
 
+typedef double (*JS_CurrentEmbedderTimeFunction)();
+
+/*
+ * The embedding can specify a time function that will be used in some
+ * situations.  The function can return the time however it likes; but
+ * the norm is to return times in units of milliseconds since an
+ * arbitrary, but consistent, epoch.  If the time function is not set,
+ * a built-in default will be used.
+ */
+JS_PUBLIC_API(void)
+JS_SetCurrentEmbedderTimeFunction(JS_CurrentEmbedderTimeFunction timeFn);
+
+/*
+ * Return the time as computed using the current time function, or a
+ * suitable default if one has not been set.
+ */
+JS_PUBLIC_API(double)
+JS_GetCurrentEmbedderTime();
+
 JS_PUBLIC_API(void*)
 JS_GetRuntimePrivate(JSRuntime* rt);
 
