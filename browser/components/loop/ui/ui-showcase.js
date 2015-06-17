@@ -100,9 +100,9 @@
    * @returns {loop.store.ActiveRoomStore}
    */
   function makeActiveRoomStore(options) {
-    var dispatcher = new loop.Dispatcher();
+    var roomDispatcher = new loop.Dispatcher();
 
-    var store = new loop.store.ActiveRoomStore(dispatcher, {
+    var store = new loop.store.ActiveRoomStore(roomDispatcher, {
       mozLoop: navigator.mozLoop,
       sdkDriver: mockSDK
     });
@@ -370,7 +370,9 @@
     propTypes: {
       width: React.PropTypes.number,
       height: React.PropTypes.number,
-      onContentsRendered: React.PropTypes.func
+      onContentsRendered: React.PropTypes.func,
+      dashed: React.PropTypes.bool,
+      cssClass: React.PropTypes.string
     },
 
     makeId: function(prefix) {
@@ -378,6 +380,15 @@
     },
 
     render: function() {
+      var height = this.props.height;
+      var width = this.props.width;
+
+      // make room for a 1-pixel border on each edge
+      if (this.props.dashed) {
+        height += 2;
+        width += 2;
+      }
+
       var cx = React.addons.classSet;
       return (
         React.createElement("div", {className: "example"}, 
@@ -385,10 +396,11 @@
             this.props.summary, 
             React.createElement("a", {href: this.makeId("#")}, " ¶")
           ), 
-          React.createElement("div", {className: cx({comp: true, dashed: this.props.dashed}), 
-               style: this.props.style}, 
-            React.createElement(Frame, {width: this.props.width, height: this.props.height, 
-                   onContentsRendered: this.props.onContentsRendered}, 
+          React.createElement("div", {className: "comp"}, 
+            React.createElement(Frame, {width: width, height: height, 
+                   onContentsRendered: this.props.onContentsRendered, 
+                   className: cx({dashed: this.props.dashed}), 
+                   cssClass: this.props.cssClass}, 
               this.props.children
             )
           )
@@ -815,8 +827,9 @@
           ), 
 
           React.createElement(Section, {name: "StandaloneRoomView"}, 
-            React.createElement(FramedExample, {width: 644, height: 483, 
-              summary: "Standalone room conversation (ready)"}, 
+            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
+                           cssClass: "standalone", 
+                           summary: "Standalone room conversation (ready)"}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
                   dispatcher: dispatcher, 
@@ -826,8 +839,9 @@
               )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, 
+            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
               summary: "Standalone room conversation (joined)", 
+              cssClass: "standalone", 
               onContentsRendered: joinedRoomStore.forcedUpdate}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
@@ -838,7 +852,8 @@
               )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, 
+            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
+                           cssClass: "standalone", 
                            onContentsRendered: updatingActiveRoomStore.forcedUpdate, 
                            summary: "Standalone room conversation (has-participants, 644x483)"}, 
                 React.createElement("div", {className: "standalone"}, 
@@ -852,7 +867,8 @@
                 )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, 
+            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
+                           cssClass: "standalone", 
                            onContentsRendered: localFaceMuteRoomStore.forcedUpdate, 
                            summary: "Standalone room conversation (local face mute, has-participants, 644x483)"}, 
               React.createElement("div", {className: "standalone"}, 
@@ -865,7 +881,8 @@
               )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, 
+            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
+                           cssClass: "standalone", 
                            onContentsRendered: remoteFaceMuteRoomStore.forcedUpdate, 
                            summary: "Standalone room conversation (remote face mute, has-participants, 644x483)"}, 
               React.createElement("div", {className: "standalone"}, 
@@ -878,7 +895,8 @@
               )
             ), 
 
-            React.createElement(FramedExample, {width: 800, height: 660, 
+            React.createElement(FramedExample, {width: 800, height: 660, dashed: true, 
+                           cssClass: "standalone", 
                            onContentsRendered: updatingSharingRoomStore.forcedUpdate, 
               summary: "Standalone room convo (has-participants, receivingScreenShare, 800x660)"}, 
                 React.createElement("div", {className: "standalone"}, 
@@ -894,7 +912,8 @@
                 )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, 
+            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
+                           cssClass: "standalone", 
                            summary: "Standalone room conversation (full - FFx user)"}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
@@ -904,8 +923,9 @@
               )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, 
-              summary: "Standalone room conversation (full - non FFx user)"}, 
+            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
+                           cssClass: "standalone", 
+                           summary: "Standalone room conversation (full - non FFx user)"}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
                   dispatcher: dispatcher, 
@@ -914,8 +934,9 @@
               )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, 
-              summary: "Standalone room conversation (feedback)"}, 
+            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
+                           cssClass: "standalone", 
+                           summary: "Standalone room conversation (feedback)"}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
                   dispatcher: dispatcher, 
@@ -925,7 +946,8 @@
               )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, 
+            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
+                           cssClass: "standalone", 
                            summary: "Standalone room conversation (failed)"}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
@@ -937,7 +959,7 @@
           ), 
 
           React.createElement(Section, {name: "StandaloneRoomView (Mobile)"}, 
-            React.createElement(FramedExample, {width: 600, height: 480, 
+            React.createElement(FramedExample, {width: 600, height: 480, cssClass: "standalone", 
                            onContentsRendered: updatingActiveRoomStore.forcedUpdate, 
                            summary: "Standalone room conversation (has-participants, 600x480)"}, 
                 React.createElement("div", {className: "standalone"}, 
@@ -953,7 +975,7 @@
           ), 
 
           React.createElement(Section, {name: "TextChatView (standalone)"}, 
-            React.createElement(FramedExample, {width: 200, height: 400, 
+            React.createElement(FramedExample, {width: 200, height: 400, cssClass: "standalone", 
                           summary: "Standalone Text Chat conversation (200 x 400)"}, 
               React.createElement("div", {className: "standalone text-chat-example"}, 
                 React.createElement(TextChatView, {
@@ -995,7 +1017,7 @@
 
     // Wait until all the FramedExamples have been fully loaded.
     setTimeout(function waitForQueuedFrames() {
-      if (window.queuedFrames.length != 0) {
+      if (window.queuedFrames.length !== 0) {
         setTimeout(waitForQueuedFrames, 500);
         return;
       }
