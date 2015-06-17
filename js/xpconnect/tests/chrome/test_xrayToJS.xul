@@ -616,7 +616,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
       // Test with modified flags accessors
       iwin.eval(`
-var props = ["global", "ignoreCase", "multiline", "sticky", "source"];
+var props = ["global", "ignoreCase", "multiline", "sticky"];
 var origDescs = {};
 for (var prop of props) {
   origDescs[prop] = Object.getOwnPropertyDescriptor(RegExp.prototype, prop);
