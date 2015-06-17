@@ -1440,12 +1440,9 @@ CompositorParent::AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aB
 {
   MOZ_ASSERT(aId == 0);
 
-  // mWidget doesn't belong to the compositor thread, so it should be set to
-  // nullptr before returning from this method, to avoid accessing it elsewhere.
   gfx::IntRect rect;
   mWidget->GetClientBounds(rect);
   InitializeLayerManager(aBackendHints);
-  mWidget = nullptr;
 
   if (!mLayerManager) {
     NS_WARNING("Failed to initialise Compositor");
@@ -2037,7 +2034,9 @@ UpdatePluginWindowState(uint64_t aId)
       // to do here is hide the plugins for the old tree, so don't waste time
       // calculating clipping.
       nsTArray<uintptr_t> aVisibleIdList;
-      unused << lts.mParent->SendUpdatePluginVisibility(aVisibleIdList);
+      uintptr_t parentWidget = (uintptr_t)lts.mParent->GetWidget();
+      unused << lts.mParent->SendUpdatePluginVisibility(parentWidget,
+                                                        aVisibleIdList);
       lts.mUpdatedPluginDataAvailable = false;
       return;
     }
