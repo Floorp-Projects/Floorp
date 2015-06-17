@@ -18,6 +18,7 @@
 #include "nsIScrollObserver.h"
 #include "nsIWidget.h" // for nsIMEUpdatePreference
 #include "nsStubMutationObserver.h"
+#include "nsThreadUtils.h"
 #include "nsWeakReference.h"
 
 class nsIContent;
@@ -38,8 +39,6 @@ class IMEContentObserver final : public nsISelectionListener
                                , public nsSupportsWeakReference
                                , public nsIEditorObserver
 {
-  friend class AsyncMergeableNotificationsFlusher;
-
 public:
   IMEContentObserver();
 
@@ -258,6 +257,77 @@ private:
   bool mSelectionChangeCausedOnlyByComposition;
   bool mIsPositionChangeEventPending;
   bool mIsFlushingPendingNotifications;
+
+
+  /**
+   * Helper classes to notify IME.
+   */
+
+  class SelectionChangeEvent : public nsRunnable
+  {
+  public:
+    SelectionChangeEvent(IMEContentObserver* aIMEContentObserver,
+                         bool aCausedByComposition)
+      : mIMEContentObserver(aIMEContentObserver)
+      , mCausedByComposition(aCausedByComposition)
+    {
+      MOZ_ASSERT(mIMEContentObserver);
+    }
+    NS_IMETHOD Run() override;
+
+  private:
+    nsRefPtr<IMEContentObserver> mIMEContentObserver;
+    bool mCausedByComposition;
+  };
+
+  class TextChangeEvent : public nsRunnable
+  {
+  public:
+    TextChangeEvent(IMEContentObserver* aIMEContentObserver,
+                    TextChangeData& aData)
+      : mIMEContentObserver(aIMEContentObserver)
+      , mData(aData)
+    {
+      MOZ_ASSERT(mIMEContentObserver);
+      MOZ_ASSERT(mData.mStored);
+      // Reset mStored because this now consumes the data.
+      aData.mStored = false;
+    }
+    NS_IMETHOD Run() override;
+
+  private:
+    nsRefPtr<IMEContentObserver> mIMEContentObserver;
+    TextChangeData mData;
+  };
+
+  class PositionChangeEvent final : public nsRunnable
+  {
+  public:
+    explicit PositionChangeEvent(IMEContentObserver* aIMEContentObserver)
+      : mIMEContentObserver(aIMEContentObserver)
+    {
+      MOZ_ASSERT(mIMEContentObserver);
+    }
+    NS_IMETHOD Run() override;
+
+  private:
+    nsRefPtr<IMEContentObserver> mIMEContentObserver;
+  };
+
+  class AsyncMergeableNotificationsFlusher : public nsRunnable
+  {
+  public:
+    explicit AsyncMergeableNotificationsFlusher(
+      IMEContentObserver* aIMEContentObserver)
+      : mIMEContentObserver(aIMEContentObserver)
+    {
+      MOZ_ASSERT(mIMEContentObserver);
+    }
+    NS_IMETHOD Run() override;
+
+  private:
+    nsRefPtr<IMEContentObserver> mIMEContentObserver;
+  };
 };
 
 } // namespace mozilla
