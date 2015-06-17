@@ -25,7 +25,6 @@ let JITOptimizationsView = {
   initialize: function () {
     this.reset = this.reset.bind(this);
     this._onFocusFrame = this._onFocusFrame.bind(this);
-    this._toggleVisibility = this._toggleVisibility.bind(this);
 
     this.el = $("#jit-optimizations-view");
     this.$headerName = $("#jit-optimizations-header .header-function-name");
@@ -40,10 +39,7 @@ let JITOptimizationsView = {
     // Start the tree by resetting.
     this.reset();
 
-    this._toggleVisibility();
-
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this.reset);
-    PerformanceController.on(EVENTS.PREF_CHANGED, this._toggleVisibility);
     JsCallTreeView.on("focus", this._onFocusFrame);
   },
 
@@ -54,7 +50,6 @@ let JITOptimizationsView = {
     this.tree = null;
     this.$headerName = this.$headerFile = this.$headerLine = this.el = null;
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this.reset);
-    PerformanceController.off(EVENTS.PREF_CHANGED, this._toggleVisibility);
     JsCallTreeView.off("focus", this._onFocusFrame);
   },
 
@@ -98,11 +93,20 @@ let JITOptimizationsView = {
     this.tree.clear();
   },
 
+  show: function () {
+    this.el.hidden = false;
+  },
+
+  hide: function () {
+    this.el.hidden = true;
+  },
+
   /**
    * Helper to determine whether or not this view should be enabled.
    */
   isEnabled: function () {
-    return PerformanceController.getOption("show-jit-optimizations");
+    let recording = PerformanceController.getCurrentRecording();
+    return !!(recording && recording.getConfiguration().withJITOptimizations);
   },
 
   /**
@@ -379,22 +383,6 @@ let JITOptimizationsView = {
        (url.indexOf("http") === 0 ||
         url.indexOf("resource://") === 0 ||
         url.indexOf("file://") === 0);
-  },
-
-  /**
-   * Toggles the visibility of the JITOptimizationsView based on the preference
-   * devtools.performance.ui.show-jit-optimizations.
-   */
-
-  _toggleVisibility: function () {
-    let enabled = this.isEnabled();
-    this.el.hidden = !enabled;
-
-    // If view is toggled on, and there's a frame node selected,
-    // attempt to render it
-    if (enabled) {
-      this.render();
-    }
   },
 
   /**
