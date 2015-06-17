@@ -73,7 +73,6 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mSeekable(false)
   , mIsEncrypted(false)
   , mTrackDemuxersMayBlock(false)
-  , mCachedTimeRangesStale(true)
 #if defined(READER_DORMANT_HEURISTIC)
   , mDormantEnabled(Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
 #endif
@@ -794,11 +793,8 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
   decoder.mWaitingForData = false;
   bool hasLastEnd;
   media::TimeUnit lastEnd = decoder.mTimeRanges.GetEnd(&hasLastEnd);
-  {
-    MonitorAutoLock lock(decoder.mMonitor);
-    // Update our cached TimeRange.
-    decoder.mTimeRanges = decoder.mTrackDemuxer->GetBuffered();
-  }
+  // Update our cached TimeRange.
+  decoder.mTimeRanges = decoder.mTrackDemuxer->GetBuffered();
   if (decoder.mTimeRanges.Length() &&
       (!hasLastEnd || decoder.mTimeRanges.GetEnd() > lastEnd)) {
     // New data was added after our previous end, we can clear the EOS flag.
@@ -1402,6 +1398,7 @@ MediaFormatReader::GetEvictionOffset(double aTime)
 media::TimeIntervals
 MediaFormatReader::GetBuffered()
 {
+  MOZ_ASSERT(OnTaskQueue());
   media::TimeIntervals videoti;
   media::TimeIntervals audioti;
   media::TimeIntervals intervals;
@@ -1415,54 +1412,25 @@ MediaFormatReader::GetBuffered()
     NS_ENSURE_TRUE(mStartTime >= 0, media::TimeIntervals());
     startTime = mStartTime;
   }
-  if (NS_IsMainThread()) {
-    if (mCachedTimeRangesStale) {
-      MOZ_ASSERT(mMainThreadDemuxer);
-      if (!mDataRange.IsEmpty()) {
-        mMainThreadDemuxer->NotifyDataArrived(mDataRange.Length(), mDataRange.mStart);
-      }
-      if (mVideoTrackDemuxer) {
-        videoti = mVideoTrackDemuxer->GetBuffered();
-      }
-      if (mAudioTrackDemuxer) {
-        audioti = mAudioTrackDemuxer->GetBuffered();
-      }
-      if (HasAudio() && HasVideo()) {
-        mCachedTimeRanges = media::Intersection(Move(videoti), Move(audioti));
-      } else if (HasAudio()) {
-        mCachedTimeRanges = Move(audioti);
-      } else if (HasVideo()) {
-        mCachedTimeRanges = Move(videoti);
-      }
-      mDataRange = ByteInterval();
-      mCachedTimeRangesStale = false;
-    }
-    intervals = mCachedTimeRanges;
-  } else {
-    if (OnTaskQueue()) {
-      // Ensure we have up to date buffered time range.
-      if (HasVideo()) {
-        UpdateReceivedNewData(TrackType::kVideoTrack);
-      }
-      if (HasAudio()) {
-        UpdateReceivedNewData(TrackType::kAudioTrack);
-      }
-    }
-    if (HasVideo()) {
-      MonitorAutoLock lock(mVideo.mMonitor);
-      videoti = mVideo.mTimeRanges;
-    }
-    if (HasAudio()) {
-      MonitorAutoLock lock(mAudio.mMonitor);
-      audioti = mAudio.mTimeRanges;
-    }
-    if (HasAudio() && HasVideo()) {
-      intervals = media::Intersection(Move(videoti), Move(audioti));
-    } else if (HasAudio()) {
-      intervals = Move(audioti);
-    } else if (HasVideo()) {
-      intervals = Move(videoti);
-    }
+  // Ensure we have up to date buffered time range.
+  if (HasVideo()) {
+    UpdateReceivedNewData(TrackType::kVideoTrack);
+  }
+  if (HasAudio()) {
+    UpdateReceivedNewData(TrackType::kAudioTrack);
+  }
+  if (HasVideo()) {
+    videoti = mVideo.mTimeRanges;
+  }
+  if (HasAudio()) {
+    audioti = mAudio.mTimeRanges;
+  }
+  if (HasAudio() && HasVideo()) {
+    intervals = media::Intersection(Move(videoti), Move(audioti));
+  } else if (HasAudio()) {
+    intervals = Move(audioti);
+  } else if (HasVideo()) {
+    intervals = Move(videoti);
   }
 
   return intervals.Shift(media::TimeUnit::FromMicroseconds(-startTime));
@@ -1543,46 +1511,39 @@ MediaFormatReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(aLength);
-  if (mDataRange.IsEmpty()) {
-    mDataRange = ByteInterval(aOffset, aOffset + aLength);
-  } else {
-    mDataRange = mDataRange.Span(ByteInterval(aOffset, aOffset + aLength));
-  }
-  mCachedTimeRangesStale = true;
 
   if (!mInitDone) {
     return;
   }
 
-  // Queue a task to notify our main demuxer.
-  RefPtr<nsIRunnable> task =
-    NS_NewRunnableMethodWithArgs<int32_t, uint64_t>(
-      this, &MediaFormatReader::NotifyDemuxer,
+  // Queue a task to notify our main thread demuxer.
+  nsCOMPtr<nsIRunnable> task =
+    NS_NewRunnableMethodWithArgs<uint32_t, int64_t>(
+      mMainThreadDemuxer, &MediaDataDemuxer::NotifyDataArrived,
       aLength, aOffset);
-  TaskQueue()->Dispatch(task.forget());
+  AbstractThread::MainThread()->Dispatch(task.forget());
+
+  NotifyDemuxer(aLength, aOffset);
 }
 
 void
 MediaFormatReader::NotifyDataRemoved()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mDataRange = ByteInterval();
-  mCachedTimeRangesStale = true;
+  MOZ_ASSERT(OnTaskQueue());
 
   if (!mInitDone) {
     return;
   }
 
   MOZ_ASSERT(mMainThreadDemuxer);
-  mMainThreadDemuxer->NotifyDataRemoved();
 
-  // Queue a task to notify our main demuxer.
-  RefPtr<nsIRunnable> task =
-    NS_NewRunnableMethodWithArgs<int32_t, uint64_t>(
-      this, &MediaFormatReader::NotifyDemuxer,
-      0, 0);
-  TaskQueue()->Dispatch(task.forget());
+  // Queue a task to notify our main thread demuxer.
+  nsCOMPtr<nsIRunnable> task =
+    NS_NewRunnableMethod(
+      mMainThreadDemuxer, &MediaDataDemuxer::NotifyDataRemoved);
+  AbstractThread::MainThread()->Dispatch(task.forget());
+
+  NotifyDemuxer(0, 0);
 }
 
 bool

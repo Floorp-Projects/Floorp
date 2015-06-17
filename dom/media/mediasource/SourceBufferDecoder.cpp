@@ -199,13 +199,6 @@ SourceBufferDecoder::GetOwner()
 void
 SourceBufferDecoder::NotifyDataArrived(uint32_t aLength, int64_t aOffset)
 {
-  mReader->DispatchNotifyDataArrived(aLength, aOffset);
-
-  // XXX: Params make no sense to parent decoder as it relates to a
-  // specific SourceBufferDecoder's data stream.  Pass bogus values here to
-  // force parent decoder's state machine to recompute end time for
-  // infinite length media.
-  mParentDecoder->NotifyDataArrived(0, 0);
 }
 
 media::TimeIntervals

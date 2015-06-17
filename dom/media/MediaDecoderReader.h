@@ -203,8 +203,10 @@ public:
     mIgnoreAudioOutputFormat = true;
   }
 
-  // Populates aBuffered with the time ranges which are buffered. This function
-  // is called on the main, decode, and state machine threads.
+  // Populates aBuffered with the time ranges which are buffered. This may only
+  // be called on the decode task queue, and should only be used internally by
+  // UpdateBuffered - mBuffered (or mirrors of it) should be used for everything
+  // else.
   //
   // This base implementation in MediaDecoderReader estimates the time ranges
   // buffered by interpolating the cached byte ranges with the duration
@@ -218,6 +220,9 @@ public:
   // since in FirefoxOS we can't do I/O on the main thread, where this is
   // called.
   virtual media::TimeIntervals GetBuffered();
+
+  // Recomputes mBuffered.
+  virtual void UpdateBuffered();
 
   // MediaSourceReader opts out of the start-time-guessing mechanism.
   virtual bool ForceZeroStartTime() const { return false; }
@@ -240,12 +245,14 @@ public:
   virtual size_t SizeOfAudioQueueInFrames();
 
 protected:
+  friend class TrackBuffer;
   virtual void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) { }
   void NotifyDataArrived(uint32_t aLength, int64_t aOffset)
   {
     MOZ_ASSERT(OnTaskQueue());
     NS_ENSURE_TRUE_VOID(!mShutdown);
     NotifyDataArrivedInternal(aLength, aOffset);
+    UpdateBuffered();
   }
 
 public:
@@ -276,7 +283,20 @@ public:
   // Indicates if the media is seekable.
   // ReadMetada should be called before calling this method.
   virtual bool IsMediaSeekable() = 0;
-  void SetStartTime(int64_t aStartTime);
+
+  void DispatchSetStartTime(int64_t aStartTime)
+  {
+    nsRefPtr<MediaDecoderReader> self = this;
+    nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableFunction([self, aStartTime] () -> void
+    {
+      MOZ_ASSERT(self->OnTaskQueue());
+      MOZ_ASSERT(self->mStartTime == -1);
+      self->mStartTime = aStartTime;
+      self->UpdateBuffered();
+    });
+    TaskQueue()->Dispatch(r.forget());
+  }
 
   MediaTaskQueue* TaskQueue() {
     return mTaskQueue;
@@ -334,6 +354,15 @@ protected:
 
   // Decode task queue.
   nsRefPtr<MediaTaskQueue> mTaskQueue;
+
+  // State-watching manager.
+  WatchManager<MediaDecoderReader> mWatchManager;
+
+  // Buffered range.
+  Canonical<media::TimeIntervals> mBuffered;
+public:
+  AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() { return &mBuffered; }
+protected:
 
   // Stores presentation info required for playback.
   MediaInfo mInfo;
