@@ -48,11 +48,11 @@ function addEVTest(expectedNamesForOCSP, rootCertFileName, intCertFileNames,
     clearOCSPCache();
     let ocspResponder = getOCSPResponder(expectedNamesForOCSP);
 
-    loadCert(`${rootCertFileName}.der`, "CTu,CTu,CTu");
+    loadCert(`${rootCertFileName}.pem`, "CTu,CTu,CTu");
     for (let intCertFileName of intCertFileNames) {
-      loadCert(`${intCertFileName}.der`, ",,");
+      loadCert(`${intCertFileName}.pem`, ",,");
     }
-    checkEVStatus(certDB, certFromFile(`${endEntityCertFileName}.der`),
+    checkEVStatus(certDB, certFromFile(`${endEntityCertFileName}.pem`),
                   certificateUsageSSLServer, expectedResult);
 
     ocspResponder.stop(run_next_test);
