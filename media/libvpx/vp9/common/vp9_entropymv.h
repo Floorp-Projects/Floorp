@@ -13,7 +13,9 @@
 #define VP9_COMMON_VP9_ENTROPYMV_H_
 
 #include "./vpx_config.h"
-#include "vp9/common/vp9_blockd.h"
+
+#include "vp9/common/vp9_mv.h"
+#include "vp9/common/vp9_prob.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,7 +28,7 @@ void vp9_init_mv_probs(struct VP9Common *cm);
 void vp9_adapt_mv_probs(struct VP9Common *cm, int usehp);
 int vp9_use_mv_hp(const MV *ref);
 
-#define NMV_UPDATE_PROB  252
+#define MV_UPDATE_PROB 252
 
 /* Symbols for coding which components are zero jointly */
 #define MV_JOINTS     4

@@ -17,6 +17,7 @@
 #include <limits.h>
 #include <math.h>
 #include "vp8/common/findnearmv.h"
+#include "vp8/common/common.h"
 
 #ifdef VP8_ENTROPY_STATS
 static int mv_ref_ct [31] [4] [2];
@@ -392,8 +393,8 @@ int vp8_find_best_sub_pixel_step(MACROBLOCK *x, BLOCK *b, BLOCKD *d,
 #endif
 
     /* central mv */
-    bestmv->as_mv.row <<= 3;
-    bestmv->as_mv.col <<= 3;
+    bestmv->as_mv.row *= 8;
+    bestmv->as_mv.col *= 8;
     startmv = *bestmv;
 
     /* calculate central point error */
@@ -887,6 +888,8 @@ int vp8_hex_search
     fcenter_mv.as_mv.row = center_mv->as_mv.row >> 3;
     fcenter_mv.as_mv.col = center_mv->as_mv.col >> 3;
 
+    (void)mvcost;
+
     /* adjust ref_mv to make sure it is within MV range */
     vp8_clamp_mv(ref_mv, x->mv_col_min, x->mv_col_max, x->mv_row_min, x->mv_row_max);
     br = ref_mv->as_mv.row;
@@ -910,6 +913,8 @@ int vp8_hex_search
     else if (search_param >= 1) hex_range = 63;
 
     dia_range = 8;
+#else
+    (void)search_param;
 #endif
 
     /* hex search */

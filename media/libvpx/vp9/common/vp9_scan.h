@@ -23,8 +23,6 @@ extern "C" {
 
 #define MAX_NEIGHBORS 2
 
-void vp9_init_neighbors();
-
 typedef struct {
   const int16_t *scan;
   const int16_t *iscan;

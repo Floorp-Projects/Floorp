@@ -23,7 +23,6 @@
 #warning No alignment directives known for this compiler.
 #define DECLARE_ALIGNED(n,typ,val)  typ val
 #endif
-#endif
 
 
 /* Declare an aligned array on the stack, for situations where the stack
@@ -44,4 +43,10 @@
 #define UNINITIALIZED_IS_SAFE(x) x=x
 #else
 #define UNINITIALIZED_IS_SAFE(x) x
+#endif
+
+#if HAVE_NEON && defined(_MSC_VER)
+#define __builtin_prefetch(x)
+#endif
+
 #endif  // VPX_PORTS_MEM_H_

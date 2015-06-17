@@ -591,6 +591,8 @@ static void read_mb_features(vp8_reader *r, MB_MODE_INFO *mi, MACROBLOCKD *x)
 static void decode_mb_mode_mvs(VP8D_COMP *pbi, MODE_INFO *mi,
                                MB_MODE_INFO *mbmi)
 {
+    (void)mbmi;
+
     /* Read the Macroblock segmentation map if it is being updated explicitly
      * this frame (reset to 0 above by default)
      * By default on a key frame reset all MBs to segment 0

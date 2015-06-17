@@ -11,21 +11,29 @@
 #include "vp9/common/vp9_common.h"
 #include "vp9/common/vp9_entropy.h"
 
-#include "vp9/encoder/vp9_treewriter.h"
+#include "vp9/encoder/vp9_cost.h"
 #include "vp9/encoder/vp9_writer.h"
 
 #define vp9_cost_upd256  ((int)(vp9_cost_one(upd) - vp9_cost_zero(upd)))
 
-static int update_bits[255];
-
-static int split_index(int i, int n, int modulus) {
-  int max1 = (n - 1 - modulus / 2) / modulus + 1;
-  if (i % modulus == modulus / 2)
-    i = i / modulus;
-  else
-    i = max1 + i - (i + modulus - modulus / 2) / modulus;
-  return i;
-}
+static const int update_bits[255] = {
+   5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,
+   6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,
+   8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,
+   8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,
+  10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+  10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+  10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+  10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+  10, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,  0,
+};
 
 static int recenter_nonneg(int v, int m) {
   if (v > (m << 1))
@@ -70,18 +78,6 @@ static int remap_prob(int v, int m) {
   return i;
 }
 
-static int count_term_subexp(int word) {
-  if (word < 16)
-    return 5;
-  if (word < 32)
-    return 6;
-  if (word < 64)
-    return 8;
-  if (word < 129)
-    return 10;
-  return 11;
-}
-
 static int prob_diff_update_cost(vp9_prob newp, vp9_prob oldp) {
   int delp = remap_prob(newp, oldp);
   return update_bits[delp] * 256;
@@ -120,12 +116,6 @@ void vp9_write_prob_diff_update(vp9_writer *w, vp9_prob newp, vp9_prob oldp) {
   encode_term_subexp(w, delp);
 }
 
-void vp9_compute_update_table() {
-  int i;
-  for (i = 0; i < 254; i++)
-    update_bits[i] = count_term_subexp(i);
-}
-
 int vp9_prob_diff_update_savings_search(const unsigned int *ct,
                                         vp9_prob oldp, vp9_prob *bestp,
                                         vp9_prob upd) {
@@ -151,7 +141,7 @@ int vp9_prob_diff_update_savings_search_model(const unsigned int *ct,
                                               const vp9_prob *oldp,
                                               vp9_prob *bestp,
                                               vp9_prob upd,
-                                              int b, int r) {
+                                              int stepsize) {
   int i, old_b, new_b, update_b, savings, bestsavings, step;
   int newp;
   vp9_prob bestnewp, newplist[ENTROPY_NODES], oldplist[ENTROPY_NODES];
@@ -164,24 +154,44 @@ int vp9_prob_diff_update_savings_search_model(const unsigned int *ct,
   bestsavings = 0;
   bestnewp = oldp[PIVOT_NODE];
 
-  step = (*bestp > oldp[PIVOT_NODE] ? -1 : 1);
-
-  for (newp = *bestp; newp != oldp[PIVOT_NODE]; newp += step) {
-    if (newp < 1 || newp > 255)
-      continue;
-    newplist[PIVOT_NODE] = newp;
-    vp9_model_to_full_probs(newplist, newplist);
-    for (i = UNCONSTRAINED_NODES, new_b = 0; i < ENTROPY_NODES; ++i)
-      new_b += cost_branch256(ct + 2 * i, newplist[i]);
-    new_b += cost_branch256(ct + 2 * PIVOT_NODE, newplist[PIVOT_NODE]);
-    update_b = prob_diff_update_cost(newp, oldp[PIVOT_NODE]) +
-        vp9_cost_upd256;
-    savings = old_b - new_b - update_b;
-    if (savings > bestsavings) {
-      bestsavings = savings;
-      bestnewp = newp;
+  if (*bestp > oldp[PIVOT_NODE]) {
+    step = -stepsize;
+    for (newp = *bestp; newp > oldp[PIVOT_NODE]; newp += step) {
+      if (newp < 1 || newp > 255)
+        continue;
+      newplist[PIVOT_NODE] = newp;
+      vp9_model_to_full_probs(newplist, newplist);
+      for (i = UNCONSTRAINED_NODES, new_b = 0; i < ENTROPY_NODES; ++i)
+        new_b += cost_branch256(ct + 2 * i, newplist[i]);
+      new_b += cost_branch256(ct + 2 * PIVOT_NODE, newplist[PIVOT_NODE]);
+      update_b = prob_diff_update_cost(newp, oldp[PIVOT_NODE]) +
+          vp9_cost_upd256;
+      savings = old_b - new_b - update_b;
+      if (savings > bestsavings) {
+        bestsavings = savings;
+        bestnewp = newp;
+      }
+    }
+  } else {
+    step = stepsize;
+    for (newp = *bestp; newp < oldp[PIVOT_NODE]; newp += step) {
+      if (newp < 1 || newp > 255)
+        continue;
+      newplist[PIVOT_NODE] = newp;
+      vp9_model_to_full_probs(newplist, newplist);
+      for (i = UNCONSTRAINED_NODES, new_b = 0; i < ENTROPY_NODES; ++i)
+        new_b += cost_branch256(ct + 2 * i, newplist[i]);
+      new_b += cost_branch256(ct + 2 * PIVOT_NODE, newplist[PIVOT_NODE]);
+      update_b = prob_diff_update_cost(newp, oldp[PIVOT_NODE]) +
+          vp9_cost_upd256;
+      savings = old_b - new_b - update_b;
+      if (savings > bestsavings) {
+        bestsavings = savings;
+        bestnewp = newp;
+      }
     }
   }
+
   *bestp = bestnewp;
   return bestsavings;
 }

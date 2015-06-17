@@ -96,6 +96,8 @@ static void mt_decode_macroblock(VP8D_COMP *pbi, MACROBLOCKD *xd,
     int i;
 #if CONFIG_ERROR_CONCEALMENT
     int corruption_detected = 0;
+#else
+    (void)mb_idx;
 #endif
 
     if (xd->mode_info_context->mbmi.mb_skip_coeff)
