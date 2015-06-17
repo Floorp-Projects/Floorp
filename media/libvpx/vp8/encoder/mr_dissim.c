@@ -15,6 +15,7 @@
 #include "mr_dissim.h"
 #include "vpx_mem/vpx_mem.h"
 #include "rdopt.h"
+#include "vp8/common/common.h"
 
 void vp8_cal_low_res_mb_cols(VP8_COMP *cpi)
 {

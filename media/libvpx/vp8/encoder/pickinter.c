@@ -14,6 +14,7 @@
 #include "onyx_int.h"
 #include "modecosts.h"
 #include "encodeintra.h"
+#include "vp8/common/common.h"
 #include "vp8/common/entropymode.h"
 #include "pickinter.h"
 #include "vp8/common/findnearmv.h"
@@ -39,6 +40,133 @@ extern const MB_PREDICTION_MODE vp8_mode_order[MAX_MODES];
 
 extern int vp8_cost_mv_ref(MB_PREDICTION_MODE m, const int near_mv_ref_ct[4]);
 
+// Fixed point implementation of a skin color classifier. Skin color
+// is model by a Gaussian distribution in the CbCr color space.
+// See ../../test/skin_color_detector_test.cc where the reference
+// skin color classifier is defined.
+
+// Fixed-point skin color model parameters.
+static const int skin_mean[2] = {7463, 9614};                 // q6
+static const int skin_inv_cov[4] = {4107, 1663, 1663, 2157};  // q16
+static const int skin_threshold = 1570636;                    // q18
+
+// Evaluates the Mahalanobis distance measure for the input CbCr values.
+static int evaluate_skin_color_difference(int cb, int cr)
+{
+  const int cb_q6 = cb << 6;
+  const int cr_q6 = cr << 6;
+  const int cb_diff_q12 = (cb_q6 - skin_mean[0]) * (cb_q6 - skin_mean[0]);
+  const int cbcr_diff_q12 = (cb_q6 - skin_mean[0]) * (cr_q6 - skin_mean[1]);
+  const int cr_diff_q12 = (cr_q6 - skin_mean[1]) * (cr_q6 - skin_mean[1]);
+  const int cb_diff_q2 = (cb_diff_q12 + (1 << 9)) >> 10;
+  const int cbcr_diff_q2 = (cbcr_diff_q12 + (1 << 9)) >> 10;
+  const int cr_diff_q2 = (cr_diff_q12 + (1 << 9)) >> 10;
+  const int skin_diff = skin_inv_cov[0] * cb_diff_q2 +
+      skin_inv_cov[1] * cbcr_diff_q2 +
+      skin_inv_cov[2] * cbcr_diff_q2 +
+      skin_inv_cov[3] * cr_diff_q2;
+  return skin_diff;
+}
+
+static int macroblock_corner_grad(unsigned char* signal, int stride,
+                                  int offsetx, int offsety, int sgnx, int sgny)
+{
+  int y1 = signal[offsetx * stride + offsety];
+  int y2 = signal[offsetx * stride + offsety + sgny];
+  int y3 = signal[(offsetx + sgnx) * stride + offsety];
+  int y4 = signal[(offsetx + sgnx) * stride + offsety + sgny];
+  return MAX(MAX(abs(y1 - y2), abs(y1 - y3)), abs(y1 - y4));
+}
+
+static int check_dot_artifact_candidate(VP8_COMP *cpi,
+                                        MACROBLOCK *x,
+                                        unsigned char *target_last,
+                                        int stride,
+                                        unsigned char* last_ref,
+                                        int mb_row,
+                                        int mb_col,
+                                        int channel)
+{
+  int threshold1 = 6;
+  int threshold2 = 3;
+  unsigned int max_num = (cpi->common.MBs) / 10;
+  int grad_last = 0;
+  int grad_source = 0;
+  int index = mb_row * cpi->common.mb_cols + mb_col;
+  // Threshold for #consecutive (base layer) frames using zero_last mode.
+  int num_frames = 30;
+  int shift = 15;
+  if (channel > 0) {
+    shift = 7;
+  }
+  if (cpi->oxcf.number_of_layers > 1)
+  {
+    num_frames = 20;
+  }
+  x->zero_last_dot_suppress = 0;
+  // Blocks on base layer frames that have been using ZEROMV_LAST repeatedly
+  // (i.e, at least |x| consecutive frames are candidates for increasing the
+  // rd adjustment for zero_last mode.
+  // Only allow this for at most |max_num| blocks per frame.
+  // Don't allow this for screen content input.
+  if (cpi->current_layer == 0 &&
+      cpi->consec_zero_last_mvbias[index] > num_frames &&
+      x->mbs_zero_last_dot_suppress < max_num &&
+      !cpi->oxcf.screen_content_mode)
+  {
+    // If this block is checked here, label it so we don't check it again until
+    // ~|x| framaes later.
+    x->zero_last_dot_suppress = 1;
+    // Dot artifact is noticeable as strong gradient at corners of macroblock,
+    // for flat areas. As a simple detector for now, we look for a high
+    // corner gradient on last ref, and a smaller gradient on source.
+    // Check 4 corners, return if any satisfy condition.
+    // Top-left:
+    grad_last = macroblock_corner_grad(last_ref, stride, 0, 0, 1, 1);
+    grad_source = macroblock_corner_grad(target_last, stride, 0, 0, 1, 1);
+    if (grad_last >= threshold1 && grad_source <= threshold2)
+    {
+       x->mbs_zero_last_dot_suppress++;
+       return 1;
+    }
+    // Top-right:
+    grad_last = macroblock_corner_grad(last_ref, stride, 0, shift, 1, -1);
+    grad_source = macroblock_corner_grad(target_last, stride, 0, shift, 1, -1);
+    if (grad_last >= threshold1 && grad_source <= threshold2)
+    {
+      x->mbs_zero_last_dot_suppress++;
+      return 1;
+    }
+    // Bottom-left:
+    grad_last = macroblock_corner_grad(last_ref, stride, shift, 0, -1, 1);
+    grad_source = macroblock_corner_grad(target_last, stride, shift, 0, -1, 1);
+    if (grad_last >= threshold1 && grad_source <= threshold2)
+    {
+      x->mbs_zero_last_dot_suppress++;
+      return 1;
+    }
+    // Bottom-right:
+    grad_last = macroblock_corner_grad(last_ref, stride, shift, shift, -1, -1);
+    grad_source = macroblock_corner_grad(target_last, stride, shift, shift, -1, -1);
+    if (grad_last >= threshold1 && grad_source <= threshold2)
+    {
+      x->mbs_zero_last_dot_suppress++;
+      return 1;
+    }
+    return 0;
+  }
+  return 0;
+}
+
+// Checks if the input yCbCr values corresponds to skin color.
+static int is_skin_color(int y, int cb, int cr)
+{
+  if (y < 40 || y > 220)
+  {
+    return 0;
+  }
+  return (evaluate_skin_color_difference(cb, cr) < skin_threshold);
+}
 
 int vp8_skip_fractional_mv_step(MACROBLOCK *mb, BLOCK *b, BLOCKD *d,
                                 int_mv *bestmv, int_mv *ref_mv,
@@ -52,6 +180,7 @@ int vp8_skip_fractional_mv_step(MACROBLOCK *mb, BLOCK *b, BLOCKD *d,
     (void) ref_mv;
     (void) error_per_bit;
     (void) vfp;
+    (void) mb;
     (void) mvcost;
     (void) distortion;
     (void) sse;
@@ -487,6 +616,7 @@ static int evaluate_inter_mode(unsigned int* sse, int rate2, int* distortion2,
     MB_PREDICTION_MODE this_mode = x->e_mbd.mode_info_context->mbmi.mode;
     int_mv mv = x->e_mbd.mode_info_context->mbmi.mv;
     int this_rd;
+    int denoise_aggressive = 0;
     /* Exit early and don't compute the distortion if this macroblock
      * is marked inactive. */
     if (cpi->active_map_enabled && x->active_ptr[0] == 0)
@@ -505,16 +635,24 @@ static int evaluate_inter_mode(unsigned int* sse, int rate2, int* distortion2,
 
     this_rd = RDCOST(x->rdmult, x->rddiv, rate2, *distortion2);
 
-    /* Adjust rd to bias to ZEROMV */
-    if(this_mode == ZEROMV)
+#if CONFIG_TEMPORAL_DENOISING
+    if (cpi->oxcf.noise_sensitivity > 0) {
+      denoise_aggressive =
+        (cpi->denoiser.denoiser_mode == kDenoiserOnYUVAggressive) ? 1 : 0;
+    }
+#endif
+
+    // Adjust rd for ZEROMV and LAST, if LAST is the closest reference frame.
+    // TODO: We should also add condition on distance of closest to current.
+    if(!cpi->oxcf.screen_content_mode &&
+       this_mode == ZEROMV &&
+       x->e_mbd.mode_info_context->mbmi.ref_frame == LAST_FRAME &&
+       (denoise_aggressive || (cpi->closest_reference_frame == LAST_FRAME)))
     {
-        /* Bias to ZEROMV on LAST_FRAME reference when it is available. */
-        if ((cpi->ref_frame_flags & VP8_LAST_FRAME &
-            cpi->common.refresh_last_frame)
-            && x->e_mbd.mode_info_context->mbmi.ref_frame != LAST_FRAME)
+        // No adjustment if block is considered to be skin area.
+        if(x->is_skin)
             rd_adj = 100;
 
-        // rd_adj <= 100
         this_rd = ((int64_t)this_rd) * rd_adj / 100;
     }
 
@@ -589,12 +727,21 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
     int distortion2;
     int bestsme = INT_MAX;
     int best_mode_index = 0;
-    unsigned int sse = INT_MAX, best_rd_sse = INT_MAX;
+    unsigned int sse = UINT_MAX, best_rd_sse = UINT_MAX;
 #if CONFIG_TEMPORAL_DENOISING
-    unsigned int zero_mv_sse = INT_MAX, best_sse = INT_MAX;
+    unsigned int zero_mv_sse = UINT_MAX, best_sse = UINT_MAX;
 #endif
 
     int sf_improved_mv_pred = cpi->sf.improved_mv_pred;
+
+#if CONFIG_MULTI_RES_ENCODING
+    int dissim = INT_MAX;
+    int parent_ref_frame = 0;
+    int_mv parent_ref_mv;
+    MB_PREDICTION_MODE parent_mode = 0;
+    int parent_ref_valid = 0;
+#endif
+
     int_mv mvp;
 
     int near_sadidx[8] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -605,14 +752,56 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
     unsigned char *plane[4][3];
     int ref_frame_map[4];
     int sign_bias = 0;
+    int dot_artifact_candidate = 0;
+    get_predictor_pointers(cpi, plane, recon_yoffset, recon_uvoffset);
+
+    // If the current frame is using LAST as a reference, check for
+    // biasing the mode selection for dot artifacts.
+    if (cpi->ref_frame_flags & VP8_LAST_FRAME) {
+      unsigned char* target_y = x->src.y_buffer;
+      unsigned char* target_u = x->block[16].src + *x->block[16].base_src;
+      unsigned char* target_v = x->block[20].src + *x->block[20].base_src;
+      int stride = x->src.y_stride;
+      int stride_uv = x->block[16].src_stride;
+#if CONFIG_TEMPORAL_DENOISING
+      if (cpi->oxcf.noise_sensitivity) {
+        const int uv_denoise = (cpi->oxcf.noise_sensitivity >= 2) ? 1 : 0;
+        target_y =
+            cpi->denoiser.yv12_running_avg[LAST_FRAME].y_buffer + recon_yoffset;
+        stride = cpi->denoiser.yv12_running_avg[LAST_FRAME].y_stride;
+        if (uv_denoise) {
+          target_u =
+              cpi->denoiser.yv12_running_avg[LAST_FRAME].u_buffer +
+                  recon_uvoffset;
+          target_v =
+              cpi->denoiser.yv12_running_avg[LAST_FRAME].v_buffer +
+                  recon_uvoffset;
+          stride_uv = cpi->denoiser.yv12_running_avg[LAST_FRAME].uv_stride;
+        }
+      }
+#endif
+      dot_artifact_candidate =
+          check_dot_artifact_candidate(cpi, x, target_y, stride,
+              plane[LAST_FRAME][0], mb_row, mb_col, 0);
+      // If not found in Y channel, check UV channel.
+      if (!dot_artifact_candidate) {
+        dot_artifact_candidate =
+            check_dot_artifact_candidate(cpi, x, target_u, stride_uv,
+                plane[LAST_FRAME][1], mb_row, mb_col, 1);
+        if (!dot_artifact_candidate) {
+          dot_artifact_candidate =
+              check_dot_artifact_candidate(cpi, x, target_v, stride_uv,
+                  plane[LAST_FRAME][2], mb_row, mb_col, 2);
+        }
+      }
+    }
 
 #if CONFIG_MULTI_RES_ENCODING
-    int dissim = INT_MAX;
-    int parent_ref_frame = 0;
-    int parent_ref_valid = cpi->oxcf.mr_encoder_id && cpi->mr_low_res_mv_avail;
-    int_mv parent_ref_mv;
-    MB_PREDICTION_MODE parent_mode = 0;
-
+    // |parent_ref_valid| will be set here if potentially we can do mv resue for
+    // this higher resol (|cpi->oxcf.mr_encoder_id| > 0) frame.
+    // |parent_ref_valid| may be reset depending on |parent_ref_frame| for
+    // the current macroblock below.
+    parent_ref_valid = cpi->oxcf.mr_encoder_id && cpi->mr_low_res_mv_avail;
     if (parent_ref_valid)
     {
         int parent_ref_flag;
@@ -630,17 +819,44 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
          * In this event, take the conservative approach of disabling the
          * lower res info for this MB.
          */
+
         parent_ref_flag = 0;
+        // Note availability for mv reuse is only based on last and golden.
         if (parent_ref_frame == LAST_FRAME)
             parent_ref_flag = (cpi->ref_frame_flags & VP8_LAST_FRAME);
         else if (parent_ref_frame == GOLDEN_FRAME)
             parent_ref_flag = (cpi->ref_frame_flags & VP8_GOLD_FRAME);
-        else if (parent_ref_frame == ALTREF_FRAME)
-            parent_ref_flag = (cpi->ref_frame_flags & VP8_ALTR_FRAME);
 
         //assert(!parent_ref_frame || parent_ref_flag);
+
+        // If |parent_ref_frame| did not match either last or golden then
+        // shut off mv reuse.
         if (parent_ref_frame && !parent_ref_flag)
             parent_ref_valid = 0;
+
+        // Don't do mv reuse since we want to allow for another mode besides
+        // ZEROMV_LAST to remove dot artifact.
+        if (dot_artifact_candidate)
+          parent_ref_valid = 0;
+    }
+#endif
+
+    // Check if current macroblock is in skin area.
+    {
+    const int y = x->src.y_buffer[7 * x->src.y_stride + 7];
+    const int cb = x->src.u_buffer[3 * x->src.uv_stride + 3];
+    const int cr = x->src.v_buffer[3 * x->src.uv_stride + 3];
+    x->is_skin = 0;
+    if (!cpi->oxcf.screen_content_mode)
+      x->is_skin = is_skin_color(y, cb, cr);
+    }
+#if CONFIG_TEMPORAL_DENOISING
+    if (cpi->oxcf.noise_sensitivity) {
+      // Under aggressive denoising mode, should we use skin map to reduce denoiser
+      // and ZEROMV bias? Will need to revisit the accuracy of this detection for
+      // very noisy input. For now keep this as is (i.e., don't turn it off). 
+      // if (cpi->denoiser.denoiser_mode == kDenoiserOnYUVAggressive)
+      //   x->is_skin = 0;
     }
 #endif
 
@@ -678,8 +894,6 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
         best_ref_mv.as_int = best_ref_mv_sb[sign_bias].as_int;
     }
 
-    get_predictor_pointers(cpi, plane, recon_yoffset, recon_uvoffset);
-
     /* Count of the number of MBs tested so far this frame */
     x->mbs_tested_so_far++;
 
@@ -689,9 +903,27 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
     x->e_mbd.mode_info_context->mbmi.ref_frame = INTRA_FRAME;
 
     /* If the frame has big static background and current MB is in low
-     * motion area, its mode decision is biased to ZEROMV mode.
-     */
-    calculate_zeromv_rd_adjustment(cpi, x, &rd_adjustment);
+    *  motion area, its mode decision is biased to ZEROMV mode.
+    *  No adjustment if cpu_used is <= -12 (i.e., cpi->Speed >= 12). 
+    *  At such speed settings, ZEROMV is already heavily favored.
+    */
+    if (cpi->Speed < 12) {
+      calculate_zeromv_rd_adjustment(cpi, x, &rd_adjustment);
+    }
+
+#if CONFIG_TEMPORAL_DENOISING
+    if (cpi->oxcf.noise_sensitivity) {
+      rd_adjustment = (int)(rd_adjustment *
+          cpi->denoiser.denoise_pars.pickmode_mv_bias / 100);
+    }
+#endif
+
+    if (dot_artifact_candidate)
+    {
+        // Bias against ZEROMV_LAST mode.
+        rd_adjustment = 150;
+    }
+
 
     /* if we encode a new mv this is important
      * find the best new motion vector
@@ -878,14 +1110,17 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
             step_param = cpi->sf.first_step + speed_adjust;
 
 #if CONFIG_MULTI_RES_ENCODING
-            /* If lower-res drops this frame, then higher-res encoder does
-               motion search without any previous knowledge. Also, since
-               last frame motion info is not stored, then we can not
+            /* If lower-res frame is not available for mv reuse (because of
+               frame dropping or different temporal layer pattern), then higher
+               resol encoder does motion search without any previous knowledge.
+               Also, since last frame motion info is not stored, then we can not
                use improved_mv_pred. */
-            if (cpi->oxcf.mr_encoder_id && !parent_ref_valid)
+            if (cpi->oxcf.mr_encoder_id)
                 sf_improved_mv_pred = 0;
 
-            if (parent_ref_valid && parent_ref_frame)
+            // Only use parent MV as predictor if this candidate reference frame
+            // (|this_ref_frame|) is equal to |parent_ref_frame|.
+            if (parent_ref_valid && (parent_ref_frame == this_ref_frame))
             {
                 /* Use parent MV as predictor. Adjust search range
                  * accordingly.
@@ -929,7 +1164,8 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
             }
 
 #if CONFIG_MULTI_RES_ENCODING
-            if (parent_ref_valid && parent_ref_frame && dissim <= 2 &&
+            if (parent_ref_valid && (parent_ref_frame == this_ref_frame) &&
+                dissim <= 2 &&
                 MAX(abs(best_ref_mv.as_mv.row - parent_ref_mv.as_mv.row),
                     abs(best_ref_mv.as_mv.col - parent_ref_mv.as_mv.col)) <= 4)
             {
@@ -966,10 +1202,12 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
                  * change the behavior in lowest-resolution encoder.
                  * Will improve it later.
                  */
-                 /* Set step_param to 0 to ensure large-range motion search
-                    when encoder drops this frame at lower-resolution.
-                  */
-                if (!parent_ref_valid)
+                /* Set step_param to 0 to ensure large-range motion search
+                 * when mv reuse if not valid (i.e. |parent_ref_valid| = 0),
+                 * or if this candidate reference frame (|this_ref_frame|) is
+                 * not equal to |parent_ref_frame|.
+                 */
+                if (!parent_ref_valid || (parent_ref_frame != this_ref_frame))
                     step_param = 0;
 #endif
                     bestsme = vp8_hex_search(x, b, d, &mvp_full, &d->bmi.mv,
@@ -1071,18 +1309,24 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
 #if CONFIG_TEMPORAL_DENOISING
         if (cpi->oxcf.noise_sensitivity)
         {
-
             /* Store for later use by denoiser. */
-            if (this_mode == ZEROMV && sse < zero_mv_sse )
+            // Dont' denoise with GOLDEN OR ALTREF is they are old reference
+            // frames (greater than MAX_GF_ARF_DENOISE_RANGE frames in past).
+            int skip_old_reference = ((this_ref_frame != LAST_FRAME) &&
+                (cpi->common.current_video_frame -
+                 cpi->current_ref_frames[this_ref_frame] >
+                 MAX_GF_ARF_DENOISE_RANGE)) ? 1 : 0;
+            if (this_mode == ZEROMV && sse < zero_mv_sse &&
+                !skip_old_reference)
             {
                 zero_mv_sse = sse;
                 x->best_zeromv_reference_frame =
                         x->e_mbd.mode_info_context->mbmi.ref_frame;
             }
 
-            /* Store the best NEWMV in x for later use in the denoiser. */
+            // Store the best NEWMV in x for later use in the denoiser.
             if (x->e_mbd.mode_info_context->mbmi.mode == NEWMV &&
-                    sse < best_sse)
+                sse < best_sse && !skip_old_reference)
             {
                 best_sse = sse;
                 x->best_sse_inter_mode = NEWMV;
@@ -1167,6 +1411,9 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
 #if CONFIG_TEMPORAL_DENOISING
     if (cpi->oxcf.noise_sensitivity)
     {
+        int block_index = mb_row * cpi->common.mb_cols + mb_col;
+        int reevaluate = 0;
+        int is_noisy = 0;
         if (x->best_sse_inter_mode == DC_PRED)
         {
             /* No best MV found. */
@@ -1176,16 +1423,52 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
             x->best_reference_frame = best_mbmode.ref_frame;
             best_sse = best_rd_sse;
         }
+        // For non-skin blocks that have selected ZEROMV for this current frame,
+        // and have been selecting ZEROMV_LAST (on the base layer frame) at
+        // least |x~20| consecutive past frames in a row, label the block for
+        // possible increase in denoising strength. We also condition this
+        // labeling on there being significant denoising in the scene
+        if  (cpi->oxcf.noise_sensitivity == 4) {
+          if (cpi->denoiser.nmse_source_diff >
+              70 * cpi->denoiser.threshold_aggressive_mode / 100)
+            is_noisy = 1;
+        } else {
+          if (cpi->mse_source_denoised > 1000)
+            is_noisy = 1;
+        }
+        x->increase_denoising = 0;
+        if (!x->is_skin &&
+            x->best_sse_inter_mode == ZEROMV &&
+            (x->best_reference_frame == LAST_FRAME ||
+            x->best_reference_frame == cpi->closest_reference_frame) &&
+            cpi->consec_zero_last[block_index] >= 20 &&
+            is_noisy) {
+            x->increase_denoising = 1;
+        }
+        x->denoise_zeromv = 0;
         vp8_denoiser_denoise_mb(&cpi->denoiser, x, best_sse, zero_mv_sse,
-                                recon_yoffset, recon_uvoffset);
+                                recon_yoffset, recon_uvoffset,
+                                &cpi->common.lf_info, mb_row, mb_col,
+                                block_index);
 
-
-        /* Reevaluate ZEROMV after denoising. */
-        if (best_mbmode.ref_frame == INTRA_FRAME &&
+        // Reevaluate ZEROMV after denoising: for large noise content
+        // (i.e., cpi->mse_source_denoised is above threshold), do this for all
+        // blocks that did not pick ZEROMV as best mode but are using ZEROMV
+        // for denoising. Otherwise, always re-evaluate for blocks that picked
+        // INTRA mode as best mode.
+        // Avoid blocks that have been biased against ZERO_LAST
+        // (i.e., dot artifact candidate blocks).
+        reevaluate = (best_mbmode.ref_frame == INTRA_FRAME) ||
+                     (best_mbmode.mode != ZEROMV &&
+                      x->denoise_zeromv &&
+                      cpi->mse_source_denoised > 2000);
+        if (!dot_artifact_candidate &&
+            reevaluate &&
             x->best_zeromv_reference_frame != INTRA_FRAME)
         {
             int this_rd = 0;
             int this_ref_frame = x->best_zeromv_reference_frame;
+            rd_adjustment = 100;
             rate2 = x->ref_frame_cost[this_ref_frame] +
                     vp8_cost_mv_ref(ZEROMV, mdcounts);
             distortion2 = 0;
@@ -1244,7 +1527,6 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
 
     update_mvcount(x, &best_ref_mv);
 }
-
 
 void vp8_pick_intra_mode(MACROBLOCK *x, int *rate_)
 {
