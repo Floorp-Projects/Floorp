@@ -25,6 +25,7 @@ const RecordingModel = function (options={}) {
     withTicks: options.withTicks || false,
     withMemory: options.withMemory || false,
     withAllocations: options.withAllocations || false,
+    withJITOptimizations: options.withJITOptimizations || false,
     allocationsSampleProbability: options.allocationsSampleProbability || 0,
     allocationsMaxLogLength: options.allocationsMaxLogLength || 0,
     bufferSize: options.bufferSize || 0,
@@ -184,7 +185,8 @@ RecordingModel.prototype = {
 
   /**
    * Returns configuration object of specifying whether the recording
-   * was started withTicks, withMemory and withAllocations.
+   * was started withTicks, withMemory and withAllocations and other
+   * recording options.
    * @return object
    */
   getConfiguration: function () {
