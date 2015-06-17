@@ -7,7 +7,7 @@
 /**
  * A collection of static utility methods that are only exposed to Chrome.
  */
-[ChromeOnly, Exposed=(Window,System)]
+[ChromeOnly, Exposed=(Window,System,Worker)]
 interface ChromeUtils {
   /**
    * Serialize a snapshot of the heap graph, as seen by |JS::ubi::Node| and
