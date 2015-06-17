@@ -937,19 +937,14 @@ QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
     "LEFT OUTER JOIN response_headers ON entries.id=response_headers.entry_id "
                                     "AND response_headers.name='vary' "
     "WHERE entries.cache_id=:cache_id "
-      "AND entries."
+      "AND entries.request_url_no_query=:url_no_query "
   );
 
-  nsAutoCString urlToMatch;
-  if (aParams.ignoreSearch()) {
-    urlToMatch = aRequest.urlWithoutQuery();
-    query.AppendLiteral("request_url_no_query");
-  } else {
-    urlToMatch = aRequest.url();
-    query.AppendLiteral("request_url");
+  if (!aParams.ignoreSearch()) {
+    query.AppendLiteral("AND entries.request_url_query=:url_query ");
   }
 
-  query.AppendLiteral("=:url GROUP BY entries.id ORDER BY entries.id;");
+  query.AppendLiteral("GROUP BY entries.id ORDER BY entries.id;");
 
   nsCOMPtr<mozIStorageStatement> state;
   nsresult rv = aConn->CreateStatement(query, getter_AddRefs(state));
@@ -958,8 +953,15 @@ QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
   rv = state->BindInt64ByName(NS_LITERAL_CSTRING("cache_id"), aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("url"), urlToMatch);
+  rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("url_no_query"),
+                                   aRequest.urlWithoutQuery());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  if (!aParams.ignoreSearch()) {
+    rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("url_query"),
+                                     aRequest.urlQuery());
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  }
 
   bool hasMoreData = false;
   while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
