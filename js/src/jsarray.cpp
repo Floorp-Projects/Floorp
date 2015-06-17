@@ -3195,9 +3195,6 @@ js::ArrayConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (args.isConstructing())
-        MOZ_ASSERT(args.newTarget().toObject().as<JSFunction>().native() == js::ArrayConstructor);
-
     if (args.length() != 1 || !args[0].isNumber())
         return ArrayFromCallArgs(cx, args);
 
