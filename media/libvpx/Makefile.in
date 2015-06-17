@@ -23,9 +23,6 @@ ifeq ($(OS_TARGET),Android)
 LOCAL_INCLUDES += -I$(ANDROID_NDK)/sources/android/cpufeatures
 endif
 
-ASM_OFFSETS = vpx_scale_asm_offsets.asm vp8_asm_enc_offsets.asm
-
-
 ifdef VPX_AS_CONVERSION
 # The ARM asm is written in ARM RVCT syntax, but we actually build it with
 # gas using GNU syntax. Add some rules to perform the conversion.
@@ -38,85 +35,7 @@ GENERATED_DIRS += $(dir $(ASFILES))
 endif
 endif
 
-ifdef VPX_NEED_OBJ_INT_EXTRACT
-
-# We don't have a compiler that supports a compatible inline asm syntax, so we
-# have to resort to extracting asm offsets from a compiled object. This only
-# works if we have the appropriate system headers obj_int_extract needs to
-# parse that format, and so only has limited support for cross-compilation.
-
-ifdef VPX_ARM_ASM
-VPX_OIE_FORMAT := rvds
-else
-VPX_OIE_FORMAT := gas
-endif
-
-GARBAGE += vpx_scale_asm_offsets.$(OBJ_SUFFIX) vpx_scale_asm_offsets.asm
-GARBAGE += vp8_asm_enc_offsets.$(OBJ_SUFFIX) vp8_asm_enc_offsets.asm
-
-else
-
-# We can extract the asm offsets directly from generated assembly using inline
-# asm. This is the preferred method. However we need to strip out CFLAGS that
-# cause LTO because then the resulting .S file is useless.
-
-vpx_scale_asm_offsets.s: CFLAGS := -DINLINE_ASM
-
-OFFSET_PATTERN := '^[a-zA-Z0-9_]* EQU'
-
-# This rule, as well as the rule for vp8_asm_enc_offsets.s further below are here
-# because the generic rule in rules.mk was made to not be implicit, and we
-# can't put the C files in CSRCS.
-vpx_scale_asm_offsets.s: $(srcdir)/vpx_scale/vpx_scale_asm_offsets.c
-	$(REPORT_BUILD)
-	$(CC) -S $(COMPILE_CFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
-
-vpx_scale_asm_offsets.asm: vpx_scale_asm_offsets.s
-	grep $(OFFSET_PATTERN) $< | sed -e 's/[$$\#]//g' \
-	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
-
-GARBAGE += vpx_scale_asm_offsets.s vpx_scale_asm_offsets.asm
-
-vp8_asm_enc_offsets.s: CFLAGS := -DINLINE_ASM
-
-vp8_asm_enc_offsets.s: $(srcdir)/vp8/encoder/vp8_asm_enc_offsets.c
-	$(REPORT_BUILD)
-	$(CC) -S $(COMPILE_CFLAGS) $(NO_INTEGRATED_AS_CFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
-
-vp8_asm_enc_offsets.asm: vp8_asm_enc_offsets.s
-	grep $(OFFSET_PATTERN) $< | sed -e 's/[$$\#]//g' \
-	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
-
-GARBAGE += vp8_asm_enc_offsets.s vp8_asm_enc_offsets.asm
-
-endif
-
-EXTRA_MDDEPEND_FILES = vp8_asm_enc_offsets.s.pp vp8_asm_enc_offsets.$(OBJ_SUFFIX).pp vpx_scale_asm_offsets.s.pp vpx_scale_asm_offsets.$(OBJ_SUFFIX).pp
-
 include $(topsrcdir)/config/rules.mk
-
-quantize_sse4.$(OBJ_SUFFIX): vp8_asm_enc_offsets.asm
-quantize_ssse3.$(OBJ_SUFFIX): vp8_asm_enc_offsets.asm
-
-ifdef VPX_NEED_OBJ_INT_EXTRACT
-
-vpx_scale_asm_offsets.asm: vpx_scale_asm_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
-	./$(HOST_PROGRAM) $(VPX_OIE_FORMAT) $< \
-	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
-
-# Filter out this object, because we don't want to link against it.
-# It was generated solely so it could be parsed by obj_int_extract.
-OBJS := $(filter-out vpx_scale_asm_offsets.$(OBJ_SUFFIX),$(OBJS))
-
-vp8_asm_enc_offsets.asm: vp8_asm_enc_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
-	./$(HOST_PROGRAM) $(VPX_OIE_FORMAT) $< \
-	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
-
-# Filter out this object, because we don't want to link against it.
-# It was generated solely so it could be parsed by obj_int_extract.
-OBJS := $(filter-out vp8_asm_enc_offsets.$(OBJ_SUFFIX),$(OBJS))
-
-endif
 
 # Workaround a bug of Sun Studio (CR 6963410)
 ifdef SOLARIS_SUNPRO_CC
