@@ -53,8 +53,8 @@ ProfileEntry::ProfileEntry(char aTagName, void *aTagPtr)
   , mTagName(aTagName)
 { }
 
-ProfileEntry::ProfileEntry(char aTagName, float aTagFloat)
-  : mTagFloat(aTagFloat)
+ProfileEntry::ProfileEntry(char aTagName, double aTagDouble)
+  : mTagDouble(aTagDouble)
   , mTagName(aTagName)
 { }
 
@@ -563,12 +563,12 @@ void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
 struct ProfileSample
 {
   uint32_t mStack;
-  Maybe<float> mTime;
-  Maybe<float> mResponsiveness;
-  Maybe<float> mRSS;
-  Maybe<float> mUSS;
+  Maybe<double> mTime;
+  Maybe<double> mResponsiveness;
+  Maybe<double> mRSS;
+  Maybe<double> mUSS;
   Maybe<int> mFrameNumber;
-  Maybe<float> mPower;
+  Maybe<double> mPower;
 };
 
 static void WriteSample(SpliceableJSONWriter& aWriter, ProfileSample& aSample)
@@ -632,13 +632,13 @@ static void WriteSample(SpliceableJSONWriter& aWriter, ProfileSample& aSample)
 }
 
 void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
-                                        float aSinceTime, JSRuntime* aRuntime,
+                                        double aSinceTime, JSRuntime* aRuntime,
                                         UniqueStacks& aUniqueStacks)
 {
   Maybe<ProfileSample> sample;
   int readPos = mReadPos;
   int currentThreadID = -1;
-  Maybe<float> currentTime;
+  Maybe<double> currentTime;
   UniquePtr<char[]> tagBuff = MakeUnique<char[]>(DYNAMIC_MAX_STRING);
 
   while (readPos != mWritePos) {
@@ -650,7 +650,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
       if (readAheadPos != mWritePos) {
         ProfileEntry readAheadEntry = mEntries[readAheadPos];
         if (readAheadEntry.mTagName == 't') {
-          currentTime = Some(readAheadEntry.mTagFloat);
+          currentTime = Some(readAheadEntry.mTagDouble);
         }
       }
     }
@@ -658,22 +658,22 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
       switch (entry.mTagName) {
       case 'r':
         if (sample.isSome()) {
-          sample->mResponsiveness = Some(entry.mTagFloat);
+          sample->mResponsiveness = Some(entry.mTagDouble);
         }
         break;
       case 'p':
         if (sample.isSome()) {
-          sample->mPower = Some(entry.mTagFloat);
+          sample->mPower = Some(entry.mTagDouble);
         }
         break;
       case 'R':
         if (sample.isSome()) {
-          sample->mRSS = Some(entry.mTagFloat);
+          sample->mRSS = Some(entry.mTagDouble);
         }
         break;
       case 'U':
         if (sample.isSome()) {
-          sample->mUSS = Some(entry.mTagFloat);
+          sample->mUSS = Some(entry.mTagDouble);
          }
         break;
       case 'f':
@@ -774,7 +774,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
 }
 
 void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
-                                        float aSinceTime, UniqueStacks& aUniqueStacks)
+                                        double aSinceTime, UniqueStacks& aUniqueStacks)
 {
   int readPos = mReadPos;
   int currentThreadID = -1;
@@ -829,7 +829,7 @@ void ProfileBuffer::DuplicateLastSample(int aThreadId)
         return;
       case 't':
         // Copy with new time
-        addTag(ProfileEntry('t', static_cast<float>((mozilla::TimeStamp::Now() - sStartTime).ToMilliseconds())));
+        addTag(ProfileEntry('t', (mozilla::TimeStamp::Now() - sStartTime).ToMilliseconds()));
         break;
       case 'm':
         // Don't copy markers
@@ -887,7 +887,7 @@ void ThreadProfile::addStoredMarker(ProfilerMarker *aStoredMarker) {
   mBuffer->addStoredMarker(aStoredMarker);
 }
 
-void ThreadProfile::StreamJSON(SpliceableJSONWriter& aWriter, float aSinceTime)
+void ThreadProfile::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
 {
   // mUniqueStacks may already be emplaced from FlushSamplesAndMarkers.
   if (!mUniqueStacks.isSome()) {
@@ -944,7 +944,7 @@ void ThreadProfile::StreamJSON(SpliceableJSONWriter& aWriter, float aSinceTime)
   mUniqueStacks.reset();
 }
 
-void ThreadProfile::StreamSamplesAndMarkers(SpliceableJSONWriter& aWriter, float aSinceTime,
+void ThreadProfile::StreamSamplesAndMarkers(SpliceableJSONWriter& aWriter, double aSinceTime,
                                             UniqueStacks& aUniqueStacks)
 {
   // Thread meta data

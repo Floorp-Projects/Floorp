@@ -59,10 +59,10 @@ const double* mozilla_sampler_get_responsiveness();
 
 void mozilla_sampler_save();
 
-mozilla::UniquePtr<char[]> mozilla_sampler_get_profile(float aSinceTime);
+mozilla::UniquePtr<char[]> mozilla_sampler_get_profile(double aSinceTime);
 
-JSObject *mozilla_sampler_get_profile_data(JSContext *aCx, float aSinceTime);
-void mozilla_sampler_get_profile_data_async(float aSinceTime,
+JSObject *mozilla_sampler_get_profile_data(JSContext* aCx, double aSinceTime);
+void mozilla_sampler_get_profile_data_async(double aSinceTime,
                                             mozilla::dom::Promise* aPromise);
 
 // Make this function easily callable from a debugger in a build without

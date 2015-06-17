@@ -97,10 +97,10 @@ class TableTicker: public Sampler {
     return mPrimaryThreadProfile;
   }
 
-  void ToStreamAsJSON(std::ostream& stream, float aSinceTime = 0);
-  virtual JSObject *ToJSObject(JSContext *aCx, float aSinceTime = 0);
-  mozilla::UniquePtr<char[]> ToJSON(float aSinceTime = 0);
-  virtual void ToJSObjectAsync(float aSinceTime = 0, mozilla::dom::Promise* aPromise = 0);
+  void ToStreamAsJSON(std::ostream& stream, double aSinceTime = 0);
+  virtual JSObject *ToJSObject(JSContext* aCx, double aSinceTime = 0);
+  mozilla::UniquePtr<char[]> ToJSON(double aSinceTime = 0);
+  virtual void ToJSObjectAsync(double aSinceTime = 0, mozilla::dom::Promise* aPromise = 0);
   void StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter);
   void StreamTaskTracer(SpliceableJSONWriter& aWriter);
   void FlushOnJSShutdown(JSRuntime* aRuntime);
@@ -128,7 +128,7 @@ protected:
   // Not implemented on platforms which do not support backtracing
   void doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample);
 
-  void StreamJSON(SpliceableJSONWriter& aWriter, float aSinceTime);
+  void StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime);
 
   // This represent the application's main thread (SAMPLER_INIT)
   ThreadProfile* mPrimaryThreadProfile;

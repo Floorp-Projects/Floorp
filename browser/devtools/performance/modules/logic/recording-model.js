@@ -144,7 +144,6 @@ RecordingModel.prototype = {
     // since the profiler is continuously running. Because of this, sample
     // times are not guaranteed to have a zero epoch, so offset the
     // timestamps.
-    // TODO move this into FakeProfilerFront in ./actors.js after bug 1154115
     RecordingUtils.offsetSampleTimes(this._profile, this._profilerStartTime);
 
     // Markers need to be sorted ascending by time, to be properly displayed
