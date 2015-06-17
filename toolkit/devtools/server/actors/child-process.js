@@ -18,7 +18,7 @@ function ChildProcessActor(aConnection) {
   this.conn = aConnection;
   this._contextPool = new ActorPool(this.conn);
   this.conn.addActorPool(this._contextPool);
-  this._threadActor = null;
+  this.threadActor = null;
 
   // Use a see-everything debugger
   this.makeDebugger = makeDebugger.bind(null, {
@@ -56,8 +56,8 @@ ChildProcessActor.prototype = {
 
   get sources() {
     if (!this._sources) {
-      dbg_assert(this._threadActor, "threadActor should exist when creating sources.");
-      this._sources = new TabSources(this._threadActor);
+      dbg_assert(this.threadActor, "threadActor should exist when creating sources.");
+      this._sources = new TabSources(this.threadActor);
     }
     return this._sources;
   },
@@ -68,9 +68,9 @@ ChildProcessActor.prototype = {
       this._contextPool.addActor(this._consoleActor);
     }
 
-    if (!this._threadActor) {
-      this._threadActor = new ChromeDebuggerActor(this.conn, this);
-      this._contextPool.addActor(this._threadActor);
+    if (!this.threadActor) {
+      this.threadActor = new ChromeDebuggerActor(this.conn, this);
+      this._contextPool.addActor(this.threadActor);
     }
 
     return {
@@ -78,7 +78,7 @@ ChildProcessActor.prototype = {
       name: "Content process",
 
       consoleActor: this._consoleActor.actorID,
-      chromeDebugger: this._threadActor.actorID,
+      chromeDebugger: this.threadActor.actorID,
 
       traits: {
         highlightable: false,
