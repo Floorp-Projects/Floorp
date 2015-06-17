@@ -3019,7 +3019,7 @@ let BrowserOnClick = {
         label: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.label"),
         accessKey: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.accessKey"),
         callback: function() {
-          openUILinkIn(gSafeBrowsing.getReportURL('MalwareError'), 'tab');
+          openUILinkIn(gSafeBrowsing.getReportURL('MalwareMistake'), 'tab');
         }
       };
     } else if (reason === 'phishing') {
@@ -3028,7 +3028,7 @@ let BrowserOnClick = {
         label: gNavigatorBundle.getString("safebrowsing.notAForgeryButton.label"),
         accessKey: gNavigatorBundle.getString("safebrowsing.notAForgeryButton.accessKey"),
         callback: function() {
-          openUILinkIn(gSafeBrowsing.getReportURL('Error'), 'tab');
+          openUILinkIn(gSafeBrowsing.getReportURL('PhishMistake'), 'tab');
         }
       };
     } else if (reason === 'unwanted') {

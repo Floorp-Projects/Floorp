@@ -27,7 +27,6 @@ function test() {
     // registered. Instead, we have to wait for the promise returned by
     // createWorker in the tab to be resolved.
     yield createWorkerInTab(tab, WORKER1_URL);
-
     let { workers } = yield listWorkers(tabClient);
     let [, workerClient1] = yield attachWorker(tabClient,
                                                findWorker(workers, WORKER1_URL));
