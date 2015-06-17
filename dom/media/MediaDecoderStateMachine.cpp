@@ -187,6 +187,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDelayedScheduler(this),
   mState(DECODER_STATE_DECODING_NONE, "MediaDecoderStateMachine::mState"),
   mPlayDuration(0),
+  mBuffered(mTaskQueue, TimeIntervals(), "MediaDecoderStateMachine::mBuffered (Mirror)"),
   mDuration(mTaskQueue, NullableTimeUnit(), "MediaDecoderStateMachine::mDuration (Canonical"),
   mEstimatedDuration(mTaskQueue, NullableTimeUnit(),
                     "MediaDecoderStateMachine::mEstimatedDuration (Mirror)"),
@@ -296,6 +297,7 @@ MediaDecoderStateMachine::InitializationTask()
   MOZ_ASSERT(OnTaskQueue());
 
   // Connect mirrors.
+  mBuffered.Connect(mReader->CanonicalBuffered());
   mEstimatedDuration.Connect(mDecoder->CanonicalEstimatedDuration());
   mExplicitDuration.Connect(mDecoder->CanonicalExplicitDuration());
   mPlayState.Connect(mDecoder->CanonicalPlayState());
@@ -306,6 +308,7 @@ MediaDecoderStateMachine::InitializationTask()
   mPreservesPitch.Connect(mDecoder->CanonicalPreservesPitch());
 
   // Initialize watchers.
+  mWatchManager.Watch(mBuffered, &MediaDecoderStateMachine::BufferedRangeUpdated);
   mWatchManager.Watch(mState, &MediaDecoderStateMachine::UpdateNextFrameStatus);
   mWatchManager.Watch(mAudioCompleted, &MediaDecoderStateMachine::UpdateNextFrameStatus);
   mWatchManager.Watch(mVolume, &MediaDecoderStateMachine::VolumeChanged);
@@ -1639,8 +1642,7 @@ void MediaDecoderStateMachine::LogicallySeekingChanged()
   ScheduleStateMachine();
 }
 
-void MediaDecoderStateMachine::NotifyDataArrived(uint32_t aLength,
-                                                 int64_t aOffset)
+void MediaDecoderStateMachine::BufferedRangeUpdated()
 {
   MOZ_ASSERT(OnTaskQueue());
 
@@ -1649,12 +1651,10 @@ void MediaDecoderStateMachine::NotifyDataArrived(uint32_t aLength,
   // faster than played, mObserved won't reflect the end of playable data
   // since we haven't played the frame at the end of buffered data. So update
   // mObservedDuration here as new data is downloaded to prevent such a lag.
-  media::TimeIntervals buffered{mDecoder->GetBuffered()};
-  if (!buffered.IsInvalid()) {
+  if (!mBuffered.Ref().IsInvalid()) {
     bool exists;
-    media::TimeUnit end{buffered.GetEnd(&exists)};
+    media::TimeUnit end{mBuffered.Ref().GetEnd(&exists)};
     if (exists) {
-      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
       mObservedDuration = std::max(mObservedDuration.Ref(), end);
     }
   }
@@ -2050,17 +2050,16 @@ bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
   NS_ASSERTION(mState > DECODER_STATE_DECODING_FIRSTFRAME,
-               "Must have loaded first frame for GetBuffered() to work");
+               "Must have loaded first frame for mBuffered to be valid");
 
-  // If we don't have a duration, GetBuffered is probably not going to produce
+  // If we don't have a duration, mBuffered is probably not going to have
   // a useful buffered range. Return false here so that we don't get stuck in
   // buffering mode for live streams.
   if (Duration().IsInfinite()) {
     return false;
   }
 
-  media::TimeIntervals buffered{mReader->GetBuffered()};
-  if (buffered.IsInvalid()) {
+  if (mBuffered.Ref().IsInvalid()) {
     return false;
   }
 
@@ -2082,7 +2081,7 @@ bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
   }
   media::TimeInterval interval(media::TimeUnit::FromMicroseconds(endOfDecodedData),
                                media::TimeUnit::FromMicroseconds(std::min(endOfDecodedData + aUsecs, Duration().ToMicroseconds())));
-  return endOfDecodedData != INT64_MAX && !buffered.Contains(interval);
+  return endOfDecodedData != INT64_MAX && !mBuffered.Ref().Contains(interval);
 }
 
 void
@@ -2134,8 +2133,7 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
     mStartTimeRendezvous->AwaitStartTime()->Then(TaskQueue(), __func__,
       [self] () -> void {
         NS_ENSURE_TRUE_VOID(!self->IsShutdown());
-        ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
-        self->mReader->SetStartTime(self->StartTime());
+        self->mReader->DispatchSetStartTime(self->StartTime());
       },
       [] () -> void { NS_WARNING("Setting start time on reader failed"); }
     );
@@ -2483,6 +2481,7 @@ MediaDecoderStateMachine::FinishShutdown()
   VideoQueue().ClearListeners();
 
   // Disconnect canonicals and mirrors before shutting down our task queue.
+  mBuffered.DisconnectIfConnected();
   mEstimatedDuration.DisconnectIfConnected();
   mExplicitDuration.DisconnectIfConnected();
   mPlayState.DisconnectIfConnected();

@@ -285,5 +285,6 @@ nsresult RawReader::SeekInternal(int64_t aTime)
 
 media::TimeIntervals RawReader::GetBuffered()
 {
+  MOZ_ASSERT(OnTaskQueue());
   return media::TimeIntervals();
 }

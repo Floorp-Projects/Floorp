@@ -147,6 +147,12 @@ SourceBuffer::GetBuffered(ErrorResult& aRv)
   return tr.forget();
 }
 
+media::TimeIntervals
+SourceBuffer::GetTimeIntervals()
+{
+  return mContentManager->Buffered();
+}
+
 void
 SourceBuffer::SetAppendWindowStart(double aAppendWindowStart, ErrorResult& aRv)
 {
