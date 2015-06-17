@@ -51,6 +51,7 @@ EXTRA_JS_MODULES.devtools.server += [
     'content-globals.js',
     'main.js',
     'protocol.js',
+    'worker.js'
 ]
 
 EXTRA_JS_MODULES.devtools.server.actors += [
