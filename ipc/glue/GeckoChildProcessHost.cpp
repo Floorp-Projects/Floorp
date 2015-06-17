@@ -14,6 +14,7 @@
 #include "chrome/common/mach_ipc_mac.h"
 #include "base/rand_util.h"
 #include "nsILocalFileMac.h"
+#include "SharedMemoryBasic.h"
 #endif
 
 #include "MainThreadUtils.h"
@@ -119,12 +120,16 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
 
   MOZ_COUNT_DTOR(GeckoChildProcessHost);
 
-  if (mChildProcessHandle > 0)
+  if (mChildProcessHandle > 0) {
+#if defined(MOZ_WIDGET_COCOA)
+    SharedMemoryBasic::CleanupForPid(mChildProcessHandle);
+#endif
     ProcessWatcher::EnsureProcessTerminated(mChildProcessHandle
 #if defined(NS_BUILD_REFCNT_LOGGING)
                                             , false // don't "force"
 #endif
     );
+  }
 
 #if defined(MOZ_WIDGET_COCOA)
   if (mChildTask != MACH_PORT_NULL)
@@ -783,9 +788,31 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   }
   MachPortSender parent_sender(child_message.GetTranslatedPort(1));
 
+  if (child_message.GetTranslatedPort(2) == MACH_PORT_NULL) {
+    CHROMIUM_LOG(ERROR) << "parent GetTranslatedPort(2) failed.";
+  }
+  MachPortSender* parent_recv_port_memory_ack = new MachPortSender(child_message.GetTranslatedPort(2));
+
+  if (child_message.GetTranslatedPort(3) == MACH_PORT_NULL) {
+    CHROMIUM_LOG(ERROR) << "parent GetTranslatedPort(3) failed.";
+  }
+  MachPortSender* parent_send_port_memory = new MachPortSender(child_message.GetTranslatedPort(3));
+
   MachSendMessage parent_message(/* id= */0);
   if (!parent_message.AddDescriptor(MachMsgPortDescriptor(bootstrap_port))) {
     CHROMIUM_LOG(ERROR) << "parent AddDescriptor(" << bootstrap_port << ") failed.";
+    return false;
+  }
+
+  ReceivePort* parent_recv_port_memory = new ReceivePort();
+  if (!parent_message.AddDescriptor(MachMsgPortDescriptor(parent_recv_port_memory->GetPort()))) {
+    CHROMIUM_LOG(ERROR) << "parent AddDescriptor(" << parent_recv_port_memory->GetPort() << ") failed.";
+    return false;
+  }
+
+  ReceivePort* parent_send_port_memory_ack = new ReceivePort();
+  if (!parent_message.AddDescriptor(MachMsgPortDescriptor(parent_send_port_memory_ack->GetPort()))) {
+    CHROMIUM_LOG(ERROR) << "parent AddDescriptor(" << parent_send_port_memory_ack->GetPort() << ") failed.";
     return false;
   }
 
@@ -795,6 +822,10 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
     CHROMIUM_LOG(ERROR) << "parent SendMessage() failed: " << errString;
     return false;
   }
+
+  SharedMemoryBasic::SetupMachMemory(process, parent_recv_port_memory, parent_recv_port_memory_ack,
+                                     parent_send_port_memory, parent_send_port_memory_ack, false);
+
 #endif
 
 //--------------------------------------------------
