@@ -2605,39 +2605,39 @@ DivideBCBorderSize(BCPixelSize  aPixelSize,
 LogicalMargin
 nsTableFrame::GetOuterBCBorder(const WritingMode aWM) const
 {
-  if (NeedToCalcBCBorders())
+  if (NeedToCalcBCBorders()) {
     const_cast<nsTableFrame*>(this)->CalcBCBorders();
+  }
 
   int32_t p2t = nsPresContext::AppUnitsPerCSSPixel();
   BCPropertyData* propData = GetBCProperty();
   if (propData) {
-    return LogicalMargin(
-      aWM,
-      BC_BORDER_START_HALF_COORD(p2t, propData->mTopBorderWidth),
-      BC_BORDER_END_HALF_COORD(p2t, propData->mRightBorderWidth),
-      BC_BORDER_END_HALF_COORD(p2t, propData->mBottomBorderWidth),
-      BC_BORDER_START_HALF_COORD(p2t, propData->mLeftBorderWidth));
+    nsMargin r(BC_BORDER_START_HALF_COORD(p2t, propData->mTopBorderWidth),
+               BC_BORDER_END_HALF_COORD(p2t, propData->mRightBorderWidth),
+               BC_BORDER_END_HALF_COORD(p2t, propData->mBottomBorderWidth),
+               BC_BORDER_START_HALF_COORD(p2t, propData->mLeftBorderWidth));
+    return LogicalMargin(aWM, r);
   }
-  return LogicalMargin(GetWritingMode());
+  return LogicalMargin(aWM);
 }
 
 LogicalMargin
 nsTableFrame::GetIncludedOuterBCBorder(const WritingMode aWM) const
 {
-  if (NeedToCalcBCBorders())
+  if (NeedToCalcBCBorders()) {
     const_cast<nsTableFrame*>(this)->CalcBCBorders();
+  }
 
   int32_t p2t = nsPresContext::AppUnitsPerCSSPixel();
   BCPropertyData* propData = GetBCProperty();
   if (propData) {
-    return LogicalMargin(
-      aWM,
-      BC_BORDER_START_HALF_COORD(p2t, propData->mTopBorderWidth),
-      BC_BORDER_END_HALF_COORD(p2t, propData->mRightCellBorderWidth),
-      BC_BORDER_END_HALF_COORD(p2t, propData->mBottomBorderWidth),
-      BC_BORDER_START_HALF_COORD(p2t, propData->mLeftCellBorderWidth));
+    nsMargin r(BC_BORDER_START_HALF_COORD(p2t, propData->mTopBorderWidth),
+               BC_BORDER_END_HALF_COORD(p2t, propData->mRightCellBorderWidth),
+               BC_BORDER_END_HALF_COORD(p2t, propData->mBottomBorderWidth),
+               BC_BORDER_START_HALF_COORD(p2t, propData->mLeftCellBorderWidth));
+    return LogicalMargin(aWM, r);
   }
-  return LogicalMargin(GetWritingMode());
+  return LogicalMargin(aWM);
 }
 
 LogicalMargin
