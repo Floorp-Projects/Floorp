@@ -39,7 +39,7 @@ IsValidPutRequestURL(const nsAString& aUrl, ErrorResult& aRv)
   bool validScheme = false;
 
   // make a copy because ProcessURL strips the fragmet
-  nsAutoString url(aUrl);
+  NS_ConvertUTF16toUTF8 url(aUrl);
 
   TypeUtils::ProcessURL(url, &validScheme, nullptr, aRv);
   if (aRv.Failed()) {
@@ -48,7 +48,7 @@ IsValidPutRequestURL(const nsAString& aUrl, ErrorResult& aRv)
 
   if (!validScheme) {
     NS_NAMED_LITERAL_STRING(label, "Request");
-    aRv.ThrowTypeError(MSG_INVALID_URL_SCHEME, &label, &url);
+    aRv.ThrowTypeError(MSG_INVALID_URL_SCHEME, &label, &aUrl);
     return false;
   }
 
