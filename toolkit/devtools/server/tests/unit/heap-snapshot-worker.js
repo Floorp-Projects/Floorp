@@ -8,13 +8,17 @@ self.onmessage = e => {
   try {
     const { filePath } = e.data;
 
-    ok(ChromeUtils, "Should have access to ChromeUtils");
-    ok(HeapSnapshot, "Should have access to HeapSnapshot");
+    ok(typeof ChromeUtils === "undefined",
+       "Should not have access to ChromeUtils in a worker.");
+    ok(ThreadSafeChromeUtils,
+       "Should have access to ThreadSafeChromeUtils in a worker.");
+    ok(HeapSnapshot,
+       "Should have access to HeapSnapshot in a worker.");
 
-    ChromeUtils.saveHeapSnapshot(filePath, { globals: [this] });
+    ThreadSafeChromeUtils.saveHeapSnapshot(filePath, { globals: [this] });
     ok(true, "Should be able to save a snapshot.");
 
-    const snapshot = ChromeUtils.readHeapSnapshot(filePath);
+    const snapshot = ThreadSafeChromeUtils.readHeapSnapshot(filePath);
     ok(snapshot, "Should be able to read a heap snapshot");
     ok(snapshot instanceof HeapSnapshot, "Should be an instanceof HeapSnapshot");
   } catch (e) {
