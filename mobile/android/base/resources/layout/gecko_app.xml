@@ -63,7 +63,8 @@
                           android:background="@color/dark_transparent_overlay"
                           android:visibility="gone"
                           android:alpha="0"
-                          android:layerType="hardware"/>
+                          android:layerType="hardware"
+                          android:orientation="horizontal" />
 
         </RelativeLayout>
 
