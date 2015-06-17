@@ -836,7 +836,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
         tabsButton.setPrivateMode(isPrivate);
         menuButton.setPrivateMode(isPrivate);
-        menuIcon.setPrivateMode(isPrivate);
         urlEditLayout.setPrivateMode(isPrivate);
     }
 

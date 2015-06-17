@@ -549,14 +549,14 @@ describe("loop.store.RoomStore", function () {
     });
 
     describe("ActiveRoomStore substore", function() {
-      var store, activeRoomStore;
+      var fakeStore, activeRoomStore;
 
       beforeEach(function() {
         activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
           mozLoop: fakeMozLoop,
           sdkDriver: {}
         });
-        store = new loop.store.RoomStore(dispatcher, {
+        fakeStore = new loop.store.RoomStore(dispatcher, {
           mozLoop: fakeMozLoop,
           activeRoomStore: activeRoomStore
         });
@@ -567,13 +567,13 @@ describe("loop.store.RoomStore", function () {
 
         activeRoomStore.setStoreState({serverData: fakeServerData});
 
-        expect(store.getStoreState().activeRoom.serverData)
+        expect(fakeStore.getStoreState().activeRoom.serverData)
           .eql(fakeServerData);
       });
 
       it("should trigger a change event when the substore is updated",
         function(done) {
-          store.once("change:activeRoom", function() {
+          fakeStore.once("change:activeRoom", function() {
             done();
           });
 

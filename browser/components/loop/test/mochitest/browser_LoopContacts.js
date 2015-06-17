@@ -89,9 +89,9 @@ const promiseLoadContacts = function() {
       }
 
       gExpectedAdds.push(...kContacts);
-      LoopContacts.addMany(kContacts, (err, contacts) => {
-        if (err) {
-          reject(err);
+      LoopContacts.addMany(kContacts, (error, contacts) => {
+        if (error) {
+          reject(error);
           return;
         }
         resolve(contacts);
@@ -123,7 +123,7 @@ let gExpectedRemovals = [];
 let gExpectedUpdates = [];
 
 const onContactAdded = function(e, contact) {
-  let expectedIds = gExpectedAdds.map(contact => contact.id);
+  let expectedIds = gExpectedAdds.map(contactEntry => contactEntry.id);
   let idx = expectedIds.indexOf(contact.id);
   Assert.ok(idx > -1, "Added contact should be expected");
   let expected = gExpectedAdds[idx];
@@ -169,9 +169,9 @@ add_task(function* () {
       compareContacts(contact, kDanglingContact);
 
       info("Check if it's persisted.");
-      LoopContacts.get(contact._guid, (err, contact) => {
-        Assert.ok(!err, "There shouldn't be an error");
-        compareContacts(contact, kDanglingContact);
+      LoopContacts.get(contact._guid, (error, contactEntry) => {
+        Assert.ok(!error, "There shouldn't be an error");
+        compareContacts(contactEntry, kDanglingContact);
         resolve();
       });
     });
@@ -185,8 +185,8 @@ add_task(function* () {
   yield new Promise((resolve, reject) => {
     LoopContacts.removeAll(function(err) {
       Assert.ok(!err, "There shouldn't be an error");
-      LoopContacts.getAll(function(err, found) {
-        Assert.ok(!err, "There shouldn't be an error");
+      LoopContacts.getAll(function(error, found) {
+        Assert.ok(!error, "There shouldn't be an error");
         Assert.equal(found.length, 0, "There shouldn't be any contacts left");
         resolve();
       });
@@ -239,10 +239,10 @@ add_task(function* () {
 
   info("Get all contacts.");
   yield new Promise((resolve, reject) => {
-    LoopContacts.getAll((err, contacts) => {
+    LoopContacts.getAll((err, allContacts) => {
       Assert.ok(!err, "There shouldn't be an error");
-      for (let i = 0, l = contacts.length; i < l; ++i) {
-        compareContacts(contacts[i], kContacts[i]);
+      for (let i = 0, l = allContacts.length; i < l; ++i) {
+        compareContacts(allContacts[i], kContacts[i]);
       }
       resolve();
     });
@@ -269,8 +269,8 @@ add_task(function* () {
     LoopContacts.remove(toRemove, err => {
       Assert.ok(!err, "There shouldn't be an error");
 
-      LoopContacts.get(toRemove, (err, contact) => {
-        Assert.ok(!err, "There shouldn't be an error");
+      LoopContacts.get(toRemove, (error, contact) => {
+        Assert.ok(!error, "There shouldn't be an error");
         Assert.ok(!contact, "There shouldn't be a contact");
         resolve();
       });
@@ -293,9 +293,9 @@ add_task(function* () {
     LoopContacts.removeMany(toRemove, err => {
       Assert.ok(!err, "There shouldn't be an error");
 
-      LoopContacts.getAll((err, contacts) => {
-        Assert.ok(!err, "There shouldn't be an error");
-        let ids = contacts.map(contact => contact._guid);
+      LoopContacts.getAll((error, allContacts) => {
+        Assert.ok(!error, "There shouldn't be an error");
+        let ids = allContacts.map(contact => contact._guid);
         Assert.equal(ids.indexOf(toRemove[0]), -1, "Contact '" + toRemove[0] +
                                                    "' shouldn't be there");
         Assert.equal(ids.indexOf(toRemove[1]), -1, "Contact '" + toRemove[1] +
@@ -323,8 +323,8 @@ add_task(function* () {
       Assert.ok(!err, "There shouldn't be an error");
       Assert.equal(result, toUpdate._guid, "Result should be the same as the contact ID");
 
-      LoopContacts.get(toUpdate._guid, (err, contact) => {
-        Assert.ok(!err, "There shouldn't be an error");
+      LoopContacts.get(toUpdate._guid, (error, contact) => {
+        Assert.ok(!error, "There shouldn't be an error");
         Assert.equal(contact.bday, newBday, "Birthday should be the same");
         info("Check that all other properties were left intact.");
         contacts[2].bday = newBday;
@@ -361,8 +361,8 @@ add_task(function* () {
       Assert.ok(!err, "There shouldn't be an error");
       Assert.equal(result, toBlock, "Result should be the same as the contact ID");
 
-      LoopContacts.get(toBlock, (err, contact) => {
-        Assert.ok(!err, "There shouldn't be an error");
+      LoopContacts.get(toBlock, (error, contact) => {
+        Assert.ok(!error, "There shouldn't be an error");
         Assert.strictEqual(contact.blocked, true, "Blocked status should be set");
         info("Check that all other properties were left intact.");
         delete contact.blocked;
@@ -390,8 +390,8 @@ add_task(function* () {
       Assert.ok(!err, "There shouldn't be an error");
       Assert.equal(result, toUnblock, "Result should be the same as the contact ID");
 
-      LoopContacts.get(toUnblock, (err, contact) => {
-        Assert.ok(!err, "There shouldn't be an error");
+      LoopContacts.get(toUnblock, (error, contact) => {
+        Assert.ok(!error, "There shouldn't be an error");
         Assert.strictEqual(contact.blocked, false, "Blocked status should be set");
         info("Check that all other properties were left intact.");
         delete contact.blocked;

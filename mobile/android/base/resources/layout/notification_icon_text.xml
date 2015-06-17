@@ -20,7 +20,7 @@
 
         <TextView android:id="@+id/notification_title"
                   android:textAppearance="@android:style/TextAppearance.StatusBar.EventContent.Title"
-                  android:layout_width="match_parent"
+                  android:layout_width="0dp"
                   android:layout_height="wrap_content"
                   android:layout_weight="1"
                   android:singleLine="true"

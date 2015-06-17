@@ -31,30 +31,30 @@ describe("loop.shared.views.FeedbackView", function() {
   });
 
   // local test helpers
-  function clickHappyFace(comp) {
-    var happyFace = comp.getDOMNode().querySelector(".face-happy");
+  function clickHappyFace(component) {
+    var happyFace = component.getDOMNode().querySelector(".face-happy");
     TestUtils.Simulate.click(happyFace);
   }
 
-  function clickSadFace(comp) {
-    var sadFace = comp.getDOMNode().querySelector(".face-sad");
+  function clickSadFace(component) {
+    var sadFace = component.getDOMNode().querySelector(".face-sad");
     TestUtils.Simulate.click(sadFace);
   }
 
-  function fillSadFeedbackForm(comp, category, text) {
+  function fillSadFeedbackForm(component, category, text) {
     TestUtils.Simulate.change(
-      comp.getDOMNode().querySelector("[value='" + category + "']"));
+      component.getDOMNode().querySelector("[value='" + category + "']"));
 
     if (text) {
       TestUtils.Simulate.change(
-        comp.getDOMNode().querySelector("[name='description']"), {
+        component.getDOMNode().querySelector("[name='description']"), {
           target: {value: "fake reason"}
         });
     }
   }
 
-  function submitSadFeedbackForm(comp, category, text) {
-    TestUtils.Simulate.submit(comp.getDOMNode().querySelector("form"));
+  function submitSadFeedbackForm(component, category, text) {
+    TestUtils.Simulate.submit(component.getDOMNode().querySelector("form"));
   }
 
   describe("Happy feedback", function() {

@@ -82,6 +82,16 @@ PlayerMetaDataHeader.prototype = {
       }
     });
 
+    // Animation is running on compositor
+    this.compositorIcon = createNode({
+      parent: metaData,
+      nodeType: "span",
+      attributes: {
+        "class": "compositor-icon",
+        "title": L10N.getStr("player.runningOnCompositorTooltip")
+      }
+    });
+
     // Animation duration.
     this.durationLabel = createNode({
       parent: metaData,
@@ -137,6 +147,7 @@ PlayerMetaDataHeader.prototype = {
     this.durationLabel = this.durationValue = null;
     this.delayLabel = this.delayValue = null;
     this.iterationLabel = this.iterationValue = null;
+    this.compositorIcon = null;
   },
 
   render: function(state) {
@@ -186,6 +197,16 @@ PlayerMetaDataHeader.prototype = {
         // Hide the iteration elements if iteration is 1.
         this.iterationLabel.style.display = "none";
         this.iterationValue.style.display = "none";
+      }
+    }
+
+    // Show the Running on compositor icon if needed.
+    if (state.isRunningOnCompositor !== this.state.isRunningOnCompositor) {
+      if (state.isRunningOnCompositor) {
+        this.compositorIcon.style.display = "inline";
+      } else {
+        // Hide the compositor icon
+        this.compositorIcon.style.display = "none";
       }
     }
 
