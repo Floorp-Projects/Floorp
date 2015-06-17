@@ -50,22 +50,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1173580
 <pre id="test">
 <script type="application/javascript;version=1.7">
 
-// Scroll the mouse wheel over |element|.
-function scrollWheelOver(element) {
-  var scale = window.devicePixelRatio;
-  var rect = element.getBoundingClientRect();
-  var x = (rect.left + 10) * scale;
-  var y = (rect.top + 10) * scale;
-  // Move the mouse to the desired wheel location.
-  // Not doing so can result in the wheel events from two consecutive
-  // scrollWheelOver() calls on different elements being incorrectly considered
-  // as part of the same wheel transaction.
-  // We also wait for the mouse move event to be processed before sending the
-  // wheel event, otherwise there is a chance they might get reordered, and
-  // we have the transaction problem again.
-  synthesizeNativeMouseMoveAndWaitForMoveEvent(element, x, y, function() {
-    synthesizeNativeWheelAndWaitForScrollEvent(element, x, y, 0, -10, driveTest);
-  });
+function scrollWheel(element) {
+    scrollWheelOver(element, -10, driveTest);
 }
 
 var gTestContinuation = null;
@@ -104,12 +90,12 @@ function* runTest() {
   ok(!isLayerized('inner4'), "initially 'inner4' should not be layerized");
 
   // Scrolling over outer1 should layerize outer1, but not inner1.
-  yield scrollWheelOver(document.getElementById('outer1'));
+  yield scrollWheel(document.getElementById('outer1'));
   ok(isLayerized('outer1'), "scrolling 'outer1' should cause it to be layerized");
   ok(!isLayerized('inner1'), "scrolling 'outer1' should not cause 'inner1' to be layerized");
 
   // Scrolling over inner2 should layerize both outer2 and inner2.
-  yield scrollWheelOver(document.getElementById('inner2'));
+  yield scrollWheel(document.getElementById('inner2'));
   ok(isLayerized('inner2'), "scrolling 'inner2' should cause it to be layerized");
   ok(isLayerized('outer2'), "scrolling 'inner2' should also cause 'outer2' to be layerized");
 
@@ -117,12 +103,12 @@ function* runTest() {
   // but with an iframe as the outer scrollable frame.
 
   // Scrolling over outer3 should layerize outer3, but not inner3.
-  yield scrollWheelOver(document.getElementById('outer3').contentDocument.documentElement);
+  yield scrollWheel(document.getElementById('outer3').contentDocument.documentElement);
   ok(isLayerized('outer3'), "scrolling 'outer3' should cause it to be layerized");
   ok(!isLayerized('inner3'), "scrolling 'outer3' should not cause 'inner3' to be layerized");
 
   // Scrolling over outer4 should layerize both outer4 and inner4.
-  yield scrollWheelOver(document.getElementById('outer4').contentDocument.getElementById('inner4'));
+  yield scrollWheel(document.getElementById('outer4').contentDocument.getElementById('inner4'));
   ok(isLayerized('inner4'), "scrolling 'inner4' should cause it to be layerized");
   ok(isLayerized('outer4'), "scrolling 'inner4' should also cause 'outer4' to be layerized");
 }
