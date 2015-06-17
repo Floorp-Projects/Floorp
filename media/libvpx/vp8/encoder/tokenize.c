@@ -213,6 +213,7 @@ static void tokenize1st_order_b
     /* Luma */
     for (block = 0; block < 16; block++, b++)
     {
+        const int eob = *b->eob;
         tmp1 = vp8_block2above[block];
         tmp2 = vp8_block2left[block];
         qcoeff_ptr = b->qcoeff;
@@ -223,7 +224,7 @@ static void tokenize1st_order_b
 
         c = type ? 0 : 1;
 
-        if(c >= *b->eob)
+        if(c >= eob)
         {
             /* c = band for this case */
             t->Token = DCT_EOB_TOKEN;
@@ -250,7 +251,8 @@ static void tokenize1st_order_b
         t++;
         c++;
 
-        for (; c < *b->eob; c++)
+        assert(eob <= 16);
+        for (; c < eob; c++)
         {
             rc = vp8_default_zig_zag1d[c];
             band = vp8_coef_bands[c];
@@ -286,6 +288,7 @@ static void tokenize1st_order_b
     /* Chroma */
     for (block = 16; block < 24; block++, b++)
     {
+        const int eob = *b->eob;
         tmp1 = vp8_block2above[block];
         tmp2 = vp8_block2left[block];
         qcoeff_ptr = b->qcoeff;
@@ -294,7 +297,7 @@ static void tokenize1st_order_b
 
         VP8_COMBINEENTROPYCONTEXTS(pt, *a, *l);
 
-        if(!(*b->eob))
+        if(!eob)
         {
             /* c = band for this case */
             t->Token = DCT_EOB_TOKEN;
@@ -321,7 +324,8 @@ static void tokenize1st_order_b
         t++;
         c = 1;
 
-        for (; c < *b->eob; c++)
+        assert(eob <= 16);
+        for (; c < eob; c++)
         {
             rc = vp8_default_zig_zag1d[c];
             band = vp8_coef_bands[c];
