@@ -69,7 +69,8 @@ child:
    * Sets the list of currently visible plugin windows based on a
    * list of plugin window ids.
    */
-  async UpdatePluginVisibility(uintptr_t[] aVisibleIdList);
+  async UpdatePluginVisibility(uintptr_t aOwnerWidget,
+                               uintptr_t[] aVisibleIdList);
 
   /**
    * Drop any buffers that might be retained on the child compositor
