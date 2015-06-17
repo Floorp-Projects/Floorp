@@ -191,10 +191,8 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
             } else if (rel->LowerCaseEqualsASCII("preconnect")) {
               nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
               if (url) {
-                nsString* crossOrigin =
-                  aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
                 mSpeculativeLoadQueue.AppendElement()->
-                  InitPreconnect(*url, (crossOrigin) ? *crossOrigin : NullString());
+                  InitPreconnect(*url);
               }
             }
           }

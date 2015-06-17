@@ -164,14 +164,12 @@ class nsHtml5SpeculativeLoad {
       mTypeOrCharsetSource.Assign((char16_t)aCharsetSource);
     }
 
-    inline void InitPreconnect(const nsAString& aUrl,
-                               const nsAString& aCrossOrigin)
+    inline void InitPreconnect(const nsAString& aUrl)
     {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadPreconnect;
       mUrl.Assign(aUrl);
-      mCrossOrigin.Assign(aCrossOrigin);
     }
 
     void Perform(nsHtml5TreeOpExecutor* aExecutor);
@@ -195,9 +193,9 @@ class nsHtml5SpeculativeLoad {
      */
     nsString mTypeOrCharsetSource;
     /**
-     * If mOpCode is eSpeculativeLoadImage or eSpeculativeLoadScript[FromHead]
-     * or eSpeculativeLoadPreconnect this is the value of the "crossorigin"
-     * attribute.  If the attribute is not set, this will be a void string.
+     * If mOpCode is eSpeculativeLoadImage or eSpeculativeLoadScript[FromHead],
+     * this is the value of the "crossorigin" attribute.  If the
+     * attribute is not set, this will be a void string.
      */
     nsString mCrossOrigin;
     /**
