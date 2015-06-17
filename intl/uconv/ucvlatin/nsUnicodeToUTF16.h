@@ -17,15 +17,15 @@ public:
   //--------------------------------------------------------------------
   // Interface nsIUnicodeEncoder [declaration]
 
-  NS_IMETHOD Convert(const char16_t * aSrc, int32_t * aSrcLength, 
-      char * aDest, int32_t * aDestLength);
-  MOZ_WARN_UNUSED_RESULT NS_IMETHOD GetMaxLength(const char16_t * aSrc,
+  NS_IMETHOD Convert(const char16_t* aSrc, int32_t* aSrcLength, 
+      char* aDest, int32_t* aDestLength);
+  MOZ_WARN_UNUSED_RESULT NS_IMETHOD GetMaxLength(const char16_t* aSrc,
                                                  int32_t aSrcLength,
-                                                 int32_t * aDestLength);
-  NS_IMETHOD Finish(char * aDest, int32_t * aDestLength);
+                                                 int32_t* aDestLength);
+  NS_IMETHOD Finish(char* aDest, int32_t* aDestLength);
   NS_IMETHOD Reset();
   NS_IMETHOD SetOutputErrorBehavior(int32_t aBehavior, 
-      nsIUnicharEncoder * aEncoder, char16_t aChar);
+      nsIUnicharEncoder* aEncoder, char16_t aChar);
 
 protected:
   char16_t mBOM;
