@@ -29,11 +29,11 @@ namespace dom {
 namespace cache {
 namespace db {
 
-const int32_t kMaxWipeSchemaVersion = 13;
+const int32_t kMaxWipeSchemaVersion = 14;
 
 namespace {
 
-const int32_t kLatestSchemaVersion = 13;
+const int32_t kLatestSchemaVersion = 14;
 const int32_t kMaxEntriesPerStatement = 255;
 
 const uint32_t kPageSize = 4 * 1024;
@@ -939,7 +939,7 @@ QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
       "AND entries."
   );
 
-  nsAutoString urlToMatch;
+  nsAutoCString urlToMatch;
   if (aParams.ignoreSearch()) {
     urlToMatch = aRequest.urlWithoutQuery();
     query.AppendLiteral("request_url_no_query");
@@ -957,7 +957,7 @@ QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
   rv = state->BindInt64ByName(NS_LITERAL_CSTRING("cache_id"), aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindStringByName(NS_LITERAL_CSTRING("url"), urlToMatch);
+  rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("url"), urlToMatch);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   bool hasMoreData = false;
@@ -1479,12 +1479,12 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
                                    aRequest.method());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindStringByName(NS_LITERAL_CSTRING("request_url"),
-                               aRequest.url());
+  rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("request_url"),
+                                   aRequest.url());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindStringByName(NS_LITERAL_CSTRING("request_url_no_query"),
-                               aRequest.urlWithoutQuery());
+  rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("request_url_no_query"),
+                                   aRequest.urlWithoutQuery());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->BindStringByName(NS_LITERAL_CSTRING("request_referrer"),
@@ -1518,8 +1518,8 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
                               static_cast<int32_t>(aResponse.type()));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindStringByName(NS_LITERAL_CSTRING("response_url"),
-                               aResponse.url());
+  rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("response_url"),
+                                   aResponse.url());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->BindInt32ByName(NS_LITERAL_CSTRING("response_status"),
@@ -1666,7 +1666,7 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedResponseOut->mValue.type() = static_cast<ResponseType>(type);
 
-  rv = state->GetString(1, aSavedResponseOut->mValue.url());
+  rv = state->GetUTF8String(1, aSavedResponseOut->mValue.url());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   int32_t status;
@@ -1767,10 +1767,10 @@ ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
   rv = state->GetUTF8String(0, aSavedRequestOut->mValue.method());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->GetString(1, aSavedRequestOut->mValue.url());
+  rv = state->GetUTF8String(1, aSavedRequestOut->mValue.url());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->GetString(2, aSavedRequestOut->mValue.urlWithoutQuery());
+  rv = state->GetUTF8String(2, aSavedRequestOut->mValue.urlWithoutQuery());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->GetString(3, aSavedRequestOut->mValue.referrer());

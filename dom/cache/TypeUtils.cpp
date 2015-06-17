@@ -23,6 +23,7 @@
 #include "nsIAsyncOutputStream.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "nsQueryObject.h"
+#include "nsPromiseFlatString.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsURLParsers.h"
@@ -150,9 +151,7 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
 
   aIn->GetMethod(aOut.method());
 
-  nsAutoCString url;
-  aIn->GetURL(url);
-  CopyUTF8toUTF16(url, aOut.url());
+  aIn->GetURL(aOut.url());
 
   bool schemeValid;
   ProcessURL(aOut.url(), &schemeValid, &aOut.urlWithoutQuery(), aRv);
@@ -163,7 +162,8 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
   if (!schemeValid) {
     if (aSchemeAction == TypeErrorOnInvalidScheme) {
       NS_NAMED_LITERAL_STRING(label, "Request");
-      aRv.ThrowTypeError(MSG_INVALID_URL_SCHEME, &label, &aOut.url());
+      NS_ConvertUTF8toUTF16 url(aOut.url());
+      aRv.ThrowTypeError(MSG_INVALID_URL_SCHEME, &label, &url);
       return;
     }
   }
@@ -200,11 +200,9 @@ TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
 {
   aOut.type() = aIn.Type();
 
-  nsAutoCString url;
-  aIn.GetUrl(url);
-  CopyUTF8toUTF16(url, aOut.url());
+  aIn.GetUrl(aOut.url());
 
-  if (aOut.url() != EmptyString()) {
+  if (aOut.url() != EmptyCString()) {
     // Pass all Response URL schemes through... The spec only requires we take
     // action on invalid schemes for Request objects.
     ProcessURL(aOut.url(), nullptr, nullptr, aRv);
@@ -279,7 +277,7 @@ TypeUtils::ToResponse(const CacheResponse& aIn)
 
   nsRefPtr<InternalResponse> ir = new InternalResponse(aIn.status(),
                                                        aIn.statusText());
-  ir->SetUrl(NS_ConvertUTF16toUTF8(aIn.url()));
+  ir->SetUrl(aIn.url());
 
   nsRefPtr<InternalHeaders> internalHeaders =
     ToInternalHeaders(aIn.headers(), aIn.headersGuard());
@@ -322,7 +320,7 @@ TypeUtils::ToInternalRequest(const CacheRequest& aIn)
   nsRefPtr<InternalRequest> internalRequest = new InternalRequest();
 
   internalRequest->SetMethod(aIn.method());
-  internalRequest->SetURL(NS_ConvertUTF16toUTF8(aIn.url()));
+  internalRequest->SetURL(aIn.url());
   internalRequest->SetReferrer(aIn.referrer());
   internalRequest->SetMode(aIn.mode());
   internalRequest->SetCredentialsMode(aIn.credentials());
@@ -374,10 +372,10 @@ TypeUtils::ToInternalHeaders(const nsTArray<HeadersEntry>& aHeadersEntryList,
 // they require going to the main thread.
 // static
 void
-TypeUtils::ProcessURL(nsAString& aUrl, bool* aSchemeValidOut,
-                      nsAString* aUrlWithoutQueryOut, ErrorResult& aRv)
+TypeUtils::ProcessURL(nsACString& aUrl, bool* aSchemeValidOut,
+                      nsACString* aUrlWithoutQueryOut, ErrorResult& aRv)
 {
-  NS_ConvertUTF16toUTF8 flatURL(aUrl);
+  const nsAFlatCString& flatURL = PromiseFlatCString(aUrl);
   const char* url = flatURL.get();
 
   // off the main thread URL parsing using nsStdURLParser.
