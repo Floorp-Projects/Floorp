@@ -4388,7 +4388,7 @@ nsTextStore::NotifyTSFOfTextChange(const TS_TEXTCHANGE& aTextChange)
 }
 
 nsresult
-nsTextStore::OnSelectionChangeInternal(void)
+nsTextStore::OnSelectionChangeInternal(const IMENotification& aIMENotification)
 {
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
          ("TSF: 0x%p   nsTextStore::OnSelectionChangeInternal(), "
@@ -4405,7 +4405,11 @@ nsTextStore::OnSelectionChangeInternal(void)
     return NS_OK;
   }
 
-  mSelection.MarkDirty();
+  mSelection.SetSelection(
+    aIMENotification.mSelectionChangeData.mOffset,
+    aIMENotification.mSelectionChangeData.mLength,
+    aIMENotification.mSelectionChangeData.mReversed,
+    aIMENotification.mSelectionChangeData.GetWritingMode());
 
   if (mIsRecordingActionsWithoutLock) {
     MOZ_LOG(sTextStoreLog, LogLevel::Info,
