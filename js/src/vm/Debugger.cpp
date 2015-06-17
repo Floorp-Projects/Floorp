@@ -7003,7 +7003,7 @@ DebuggerObject_defineProperty(JSContext* cx, unsigned argc, Value* vp)
             return false;
 
         ErrorCopier ec(ac);
-        if (!DefineProperty(cx, obj, id, desc))
+        if (!StandardDefineProperty(cx, obj, id, desc))
             return false;
     }
 
@@ -7046,7 +7046,7 @@ DebuggerObject_defineProperties(JSContext* cx, unsigned argc, Value* vp)
 
         ErrorCopier ec(ac);
         for (size_t i = 0; i < n; i++) {
-            if (!DefineProperty(cx, obj, ids[i], descs[i]))
+            if (!StandardDefineProperty(cx, obj, ids[i], descs[i]))
                 return false;
         }
     }
