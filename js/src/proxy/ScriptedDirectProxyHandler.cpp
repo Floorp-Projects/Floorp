@@ -548,7 +548,7 @@ ScriptedDirectProxyHandler::defineProperty(JSContext* cx, HandleObject proxy, Ha
 
     // step 8
     if (trap.isUndefined())
-        return DefineProperty(cx, target, id, desc, result);
+        return StandardDefineProperty(cx, target, id, desc, result);
 
     // step 9
     RootedValue descObj(cx);

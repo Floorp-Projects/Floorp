@@ -181,12 +181,12 @@ DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::
     return result.succeed();
   }
 
-  JS::Rooted<JSObject*> expando(cx, EnsureExpandoObject(cx, proxy));
+  JSObject* expando = EnsureExpandoObject(cx, proxy);
   if (!expando) {
     return false;
   }
 
-  if (!JS_DefinePropertyById(cx, expando, id, desc, result)) {
+  if (!js::DefineOwnProperty(cx, expando, id, desc, result)) {
     return false;
   }
   *defined = true;
