@@ -666,10 +666,15 @@ loop.standaloneRoomViews = (function(mozL10n) {
         hide: !this.state.receivingScreenShare
       });
 
+      // XXX Temporarily showAlways = showRoomName = false for TextChatView
+      // until bug 1168829 is completed.
       return (
         React.createElement("div", {className: "room-conversation-wrapper"}, 
           React.createElement("div", {className: "beta-logo"}), 
-          React.createElement(sharedViews.TextChatView, {dispatcher: this.props.dispatcher}), 
+          React.createElement(sharedViews.TextChatView, {
+            dispatcher: this.props.dispatcher, 
+            showAlways: false, 
+            showRoomName: false}), 
           React.createElement(StandaloneRoomHeader, {dispatcher: this.props.dispatcher}), 
           React.createElement(StandaloneRoomInfoArea, {roomState: this.state.roomState, 
                                   failureReason: this.state.failureReason, 
