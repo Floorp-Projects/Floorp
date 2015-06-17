@@ -748,6 +748,7 @@ BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
           case ICStub::GetElem_NativePrototypeSlot:
           case ICStub::GetElem_NativePrototypeCallNative:
           case ICStub::GetElem_NativePrototypeCallScripted:
+          case ICStub::GetElem_UnboxedProperty:
           case ICStub::GetElem_String:
           case ICStub::GetElem_Dense:
           case ICStub::GetElem_TypedArray:
