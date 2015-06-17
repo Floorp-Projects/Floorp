@@ -53,7 +53,6 @@ struct HeadersEntry
 struct CacheRequest
 {
   nsCString method;
-  nsCString url;
   nsCString urlWithoutQuery;
   nsCString urlQuery;
   HeadersEntry[] headers;
