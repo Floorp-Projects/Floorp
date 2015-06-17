@@ -57,7 +57,7 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
   length += 1;
 
   if (!length.isValid()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   *aDestLength = length.value();
