@@ -1675,8 +1675,7 @@ ThreadActor.prototype = {
         this.createEnvironmentActor(env, pool),
       promote: () => this.threadObjectGrip(actor),
       isThreadLifetimePool: () =>
-        actor.registeredPool !== this.threadLifetimePool,
-      getGlobalDebugObject: () => this.globalDebugObject
+        actor.registeredPool !== this.threadLifetimePool
     });
     aPool.addActor(actor);
     aPool.objectActors.set(aValue, actor);
