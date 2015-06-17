@@ -299,7 +299,7 @@ nsSpeechTask::DispatchStartImpl(const nsAString& aUri)
   mUtterance->mState = SpeechSynthesisUtterance::STATE_SPEAKING;
   mUtterance->mChosenVoiceURI = aUri;
   mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("start"), 0, 0,
-                                           NS_LITERAL_STRING(""));
+                                           EmptyString());
 
   return NS_OK;
 }
@@ -370,7 +370,7 @@ nsSpeechTask::DispatchPauseImpl(float aElapsedTime, uint32_t aCharIndex)
   mUtterance->mPaused = true;
   mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("pause"),
                                            aCharIndex, aElapsedTime,
-                                           NS_LITERAL_STRING(""));
+                                           EmptyString());
   return NS_OK;
 }
 
@@ -397,7 +397,7 @@ nsSpeechTask::DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex)
   mUtterance->mPaused = false;
   mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("resume"),
                                            aCharIndex, aElapsedTime,
-                                           NS_LITERAL_STRING(""));
+                                           EmptyString());
   return NS_OK;
 }
 
@@ -422,7 +422,7 @@ nsSpeechTask::DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex)
   mUtterance->mState = SpeechSynthesisUtterance::STATE_ENDED;
   mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("error"),
                                            aCharIndex, aElapsedTime,
-                                           NS_LITERAL_STRING(""));
+                                           EmptyString());
   return NS_OK;
 }
 
