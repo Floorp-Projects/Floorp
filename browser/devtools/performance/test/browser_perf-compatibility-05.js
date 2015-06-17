@@ -37,8 +37,6 @@ function* spawnTest() {
   yield front.stopRecording(firstRecording);
   info("The first recording is " + firstRecording.getDuration() + "ms long.");
 
-  is(firstRecordingStartTime, 0,
-    "The profiling start time should be 0 for the first recording.");
   ok(firstRecording.getDuration() >= WAIT_TIME,
     "The first recording duration is correct.");
 

@@ -17,7 +17,7 @@ public:
   NS_DECL_ISUPPORTS
 
   ProfileGatherer(TableTicker* aTicker,
-                  float aSinceTime,
+                  double aSinceTime,
                   mozilla::dom::Promise* aPromise);
   void WillGatherOOPProfile();
   void GatheredOOPProfile();
@@ -29,7 +29,7 @@ private:
 
   nsRefPtr<mozilla::dom::Promise> mPromise;
   TableTicker* mTicker;
-  float mSinceTime;
+  double mSinceTime;
   uint32_t mPendingProfiles;
 };
 
