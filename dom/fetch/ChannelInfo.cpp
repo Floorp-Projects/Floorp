@@ -121,7 +121,10 @@ ChannelInfo::ResurrectInfoOnChannel(nsIChannel* aChannel)
     if (httpChannel) {
       net::HttpBaseChannel* httpBaseChannel =
         static_cast<net::HttpBaseChannel*>(httpChannel.get());
-      httpBaseChannel->OverrideURI(redirectedURI);
+      rv = httpBaseChannel->OverrideURI(redirectedURI);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     } else {
       if (NS_WARN_IF(!jarChannel)) {
         return NS_ERROR_FAILURE;
