@@ -3,23 +3,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cc, Ci, Cu, Cr } = require("chrome");
+const Cu = Components.utils;
 
-const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-const { ViewHelpers } = require("resource:///modules/devtools/ViewHelpers.jsm");
-const { Heritage, setNamedTimeout, clearNamedTimeout } = require("resource:///modules/devtools/ViewHelpers.jsm");
+Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
+const {DevToolsWorker} = Cu.import("resource://gre/modules/devtools/shared/worker.js", {});
+const {LayoutHelpers} = Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm", {});
 
-loader.lazyRequireGetter(this, "promise");
-loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/toolkit/event-emitter");
-
-loader.lazyImporter(this, "DevToolsWorker",
-  "resource://gre/modules/devtools/shared/worker.js");
+this.EXPORTED_SYMBOLS = [
+  "GraphCursor",
+  "GraphArea",
+  "GraphAreaDragger",
+  "GraphAreaResizer",
+  "AbstractCanvasGraph",
+  "LineGraphWidget",
+  "BarGraphWidget",
+  "CanvasGraphUtils"
+];
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const GRAPH_SRC = "chrome://browser/content/devtools/graphs-frame.xhtml";
 const WORKER_URL = "resource:///modules/devtools/GraphsWorker.js";
-
 const L10N = new ViewHelpers.L10N();
 
 // Generic constants.
@@ -2218,15 +2224,6 @@ function findFirst(array, predicate) {
     if (predicate(element)) return element;
   }
 }
-
-exports.GraphCursor = GraphCursor;
-exports.GraphArea = GraphArea;
-exports.GraphAreaDragger = GraphAreaDragger;
-exports.GraphAreaResizer = GraphAreaResizer;
-exports.AbstractCanvasGraph = AbstractCanvasGraph;
-exports.LineGraphWidget = LineGraphWidget;
-exports.BarGraphWidget = BarGraphWidget;
-exports.CanvasGraphUtils = CanvasGraphUtils;
 
 /**
  * Finds the last element in an array that validates a predicate.

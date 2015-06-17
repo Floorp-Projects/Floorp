@@ -19,7 +19,7 @@ for (let frameRate of FRAMES) {
   }
 }
 
-let {LineGraphWidget} = devtools.require("devtools/shared/widgets/Graphs");
+let {LineGraphWidget} = Cu.import("resource:///modules/devtools/Graphs.jsm", {});
 let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
 
 add_task(function*() {

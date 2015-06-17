@@ -10,7 +10,7 @@ importScripts("resource://gre/modules/workers/require.js");
 const { createTask } = require("resource://gre/modules/devtools/shared/worker-helper");
 
 /**
- * @see LineGraphWidget.prototype.setDataFromTimestamps in Graphs.js
+ * @see LineGraphWidget.prototype.setDataFromTimestamps in Graphs.jsm
  * @param number id
  * @param array timestamps
  * @param number interval
