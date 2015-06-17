@@ -123,6 +123,7 @@ public:
                                          gfxContext* aCtx, const nsIntRect&) override;
     virtual void GetLibraryPath(nsACString& aPath) { aPath.Assign(mFilePath); }
     virtual nsresult GetRunID(uint32_t* aRunID) override { return NS_ERROR_NOT_IMPLEMENTED; }
+    virtual void SetHasLocalInstance() override { }
 
 private:
     NP_InitializeFunc mNP_Initialize;
