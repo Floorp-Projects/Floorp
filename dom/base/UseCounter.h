@@ -22,6 +22,12 @@ enum UseCounter : int16_t {
 #undef USE_COUNTER_DOM_METHOD
 #undef USE_COUNTER_DOM_ATTRIBUTE
 #undef USE_COUNTER_CSS_PROPERTY
+
+#define DEPRECATED_OPERATION(op_) \
+  eUseCounter_##op_,
+#include "nsDeprecatedOperationList.h"
+#undef DEPRECATED_OPERATION
+
   eUseCounter_Count
 };
 
