@@ -126,6 +126,7 @@ PluginModuleChild::PluginModuleChild(bool aIsChrome)
   , mPluginFilename("")
   , mQuirks(QUIRKS_NOT_INITIALIZED)
   , mIsChrome(aIsChrome)
+  , mHasShutdown(false)
   , mTransport(nullptr)
   , mShutdownFunc(0)
   , mInitializeFunc(0)
@@ -681,11 +682,15 @@ PluginModuleChild::DeinitGraphics()
 #endif
 }
 
-bool
-PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
+NPError
+PluginModuleChild::NP_Shutdown()
 {
     AssertPluginThread();
     MOZ_ASSERT(mIsChrome);
+
+    if (mHasShutdown) {
+        return NPERR_NO_ERROR;
+    }
 
 #if defined XP_WIN
     mozilla::widget::StopAudioSession();
@@ -694,7 +699,7 @@ PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
     // the PluginModuleParent shuts down this process after this interrupt
     // call pops off its stack
 
-    *rv = mShutdownFunc ? mShutdownFunc() : NPERR_NO_ERROR;
+    NPError rv = mShutdownFunc ? mShutdownFunc() : NPERR_NO_ERROR;
 
     // weakly guard against re-entry after NP_Shutdown
     memset(&mFunctions, 0, sizeof(mFunctions));
@@ -705,6 +710,15 @@ PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
 
     GetIPCChannel()->SetAbortOnError(false);
 
+    mHasShutdown = true;
+
+    return rv;
+}
+
+bool
+PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
+{
+    *rv = NP_Shutdown();
     return true;
 }
 
@@ -824,6 +838,11 @@ PluginModuleChild::ActorDestroy(ActorDestroyReason why)
     if (AbnormalShutdown == why) {
         NS_WARNING("shutting down early because of crash!");
         QuickExit();
+    }
+
+    if (!mHasShutdown) {
+        MOZ_ASSERT(gChromeInstance == this);
+        NP_Shutdown();
     }
 
     // doesn't matter why we're being destroyed; it's up to us to
