@@ -438,6 +438,11 @@ IonBuilder::canInlineTarget(JSFunction* target, CallInfo& callInfo)
         return DontInline(inlineScript, "Callee is not a constructor");
     }
 
+    if (!callInfo.constructing() && target->isClassConstructor()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineClassConstructor);
+        return DontInline(inlineScript, "Not constructing class constructor");
+    }
+
     AnalysisMode analysisMode = info().analysisMode();
     if (!CanIonCompile(inlineScript, analysisMode)) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineDisabledIon);
