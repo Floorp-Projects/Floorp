@@ -1739,7 +1739,7 @@ nsGenericHTMLElement::GetURIListAttr(nsIAtom* aAttr, nsAString& aResult)
   value.BeginReading(iter);
 
   while (iter != end) {
-    while (nsCRT::IsAsciiSpace(*iter) && iter != end) {
+    while (*iter == ' ' && iter != end) {
       ++iter;
     }
 
@@ -1749,7 +1749,7 @@ nsGenericHTMLElement::GetURIListAttr(nsIAtom* aAttr, nsAString& aResult)
 
     nsAString::const_iterator start = iter;
 
-    while (iter != end && !nsCRT::IsAsciiSpace(*iter)) {
+    while (iter != end && *iter != ' ') {
       ++iter;
     }
 
