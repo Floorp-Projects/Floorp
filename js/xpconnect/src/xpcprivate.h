@@ -539,6 +539,7 @@ public:
         IDX_STACK                   ,
         IDX_MESSAGE                 ,
         IDX_LASTINDEX               ,
+        IDX_SOURCE                  ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
