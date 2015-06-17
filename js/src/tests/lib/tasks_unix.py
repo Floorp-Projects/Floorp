@@ -4,6 +4,7 @@
 
 import errno, os, select
 from datetime import datetime, timedelta
+from progressbar import ProgressBar
 from results import TestOutput
 
 class Task(object):
@@ -48,13 +49,13 @@ def total_seconds(td):
     return (float(td.microseconds) \
             + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6
 
-def get_max_wait(tasks, results, timeout):
+def get_max_wait(tasks, timeout):
     """
     Return the maximum time we can wait before any task should time out.
     """
 
     # If we have a progress-meter, we need to wake up to update it frequently.
-    wait = results.pb.update_granularity()
+    wait = ProgressBar.update_granularity()
 
     # If a timeout is supplied, we need to wake up for the first task to
     # timeout if that is sooner.
@@ -134,13 +135,14 @@ def timed_out(task, timeout):
         return (now - task.start) > timedelta(seconds=timeout)
     return False
 
-def reap_zombies(tasks, results, timeout):
+def reap_zombies(tasks, timeout):
     """
     Search for children of this process that have finished.  If they are tasks,
     then this routine will clean up the child and send a TestOutput to the
     results channel.  This method returns a new task list that has had the ended
     tasks removed.
     """
+    finished = []
     while True:
         try:
             pid, status = os.waitpid(0, os.WNOHANG)
@@ -161,18 +163,18 @@ def reap_zombies(tasks, results, timeout):
         if os.WIFSIGNALED(status):
             returncode = -os.WTERMSIG(status)
 
-        out = TestOutput(
-            ended.test,
-            ended.cmd,
-            ''.join(ended.out),
-            ''.join(ended.err),
-            returncode,
-            total_seconds(datetime.now() - ended.start),
-            timed_out(ended, timeout))
-        results.push(out)
-    return tasks
+        finished.append(
+            TestOutput(
+                ended.test,
+                ended.cmd,
+                ''.join(ended.out),
+                ''.join(ended.err),
+                returncode,
+                total_seconds(datetime.now() - ended.start),
+                timed_out(ended, timeout)))
+    return tasks, finished
 
-def kill_undead(tasks, results, timeout):
+def kill_undead(tasks, timeout):
     """
     Signal all children that are over the given timeout.
     """
@@ -180,7 +182,7 @@ def kill_undead(tasks, results, timeout):
         if timed_out(task, timeout):
             os.kill(task.pid, 9)
 
-def run_all_tests(tests, prefix, results, options):
+def run_all_tests_gen(tests, prefix, results, options):
     # Copy and reverse for fast pop off end.
     tests = tests[:]
     tests.reverse()
@@ -192,12 +194,21 @@ def run_all_tests(tests, prefix, results, options):
         while len(tests) and len(tasks) < options.worker_count:
             tasks.append(spawn_test(tests.pop(), prefix, options.passthrough))
 
-        timeout = get_max_wait(tasks, results, options.timeout)
+        timeout = get_max_wait(tasks, options.timeout)
         read_input(tasks, timeout)
 
-        kill_undead(tasks, results, options.timeout)
-        tasks = reap_zombies(tasks, results, options.timeout)
+        kill_undead(tasks, options.timeout)
+        tasks, finished = reap_zombies(tasks, options.timeout)
 
-        results.pb.poke()
+        # With Python3.4+ we could use yield from to remove this loop.
+        for out in finished:
+            yield out
 
     return True
+
+def run_all_tests(tests, prefix, results, options):
+    for out in run_all_tests_gen(tests, prefix, results, options):
+        results.push(out)
+    results.pb.poke()
+
+
