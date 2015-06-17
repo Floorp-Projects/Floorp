@@ -334,6 +334,9 @@ TrackBuffersManager::CompleteResetParserState()
 
   // 7. Set append state to WAITING_FOR_SEGMENT.
   SetAppendState(AppendState::WAITING_FOR_SEGMENT);
+
+  // Reject our promise immediately.
+  mAppendPromise.RejectIfExists(NS_ERROR_ABORT, __func__);
 }
 
 void
