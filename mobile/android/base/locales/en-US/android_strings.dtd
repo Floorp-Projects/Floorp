@@ -659,3 +659,5 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!-- LOCALIZATION NOTE (find_matchcase): This is meant to appear as an icon that changes color
      if match-case is activated. i.e. No more than two letters, one uppercase, one lowercase. -->
 <!ENTITY find_matchcase "Aa">
+
+<!ENTITY intent_uri_cannot_open "Cannot open link">

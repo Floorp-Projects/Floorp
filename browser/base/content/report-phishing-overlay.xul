@@ -29,7 +29,7 @@
               accesskey="&reportPhishSiteMenu.accesskey;"
               insertbefore="aboutSeparator"
               observes="reportPhishingErrorBroadcaster"
-              oncommand="openUILinkIn(gSafeBrowsing.getReportURL('Error'), 'tab');"
+              oncommand="openUILinkIn(gSafeBrowsing.getReportURL('PhishMistake'), 'tab');"
               onclick="checkForMiddleClick(this, event);"/>
   </menupopup>
 </overlay>
