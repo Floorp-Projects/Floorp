@@ -177,7 +177,6 @@ public class SiteIdentity {
                 mVerifier = identityData.getString("verifier");
                 mEncrypted = identityData.optBoolean("encrypted", false);
             } catch (Exception e) {
-                Log.e(LOGTAG, "Error fetching Site identity host info", e);
                 resetIdentity();
             }
         } catch (Exception e) {
