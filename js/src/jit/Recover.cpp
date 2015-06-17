@@ -1378,10 +1378,19 @@ RObjectState::recover(JSContext* cx, SnapshotIterator& iter) const
         const UnboxedLayout::PropertyVector& properties = layout.properties();
         for (size_t i = 0; i < properties.length(); i++) {
             val = iter.read();
+
             // This is the default placeholder value of MObjectState, when no
             // properties are defined yet.
             if (val.isUndefined())
                 continue;
+
+            // In order to simplify the code, we do not have a
+            // MStoreUnboxedBoolean, but we reuse the MStoreUnboxedScalar code.
+            // This has a nasty side-effect of add a MTruncate which coerce the
+            // boolean into an Int32. The following code check that if the
+            // property was expected to be a boolean, then we coerce it here.
+            if (properties[i].type == JSVAL_TYPE_BOOLEAN)
+                val.setBoolean(val.toInt32() != 0);
 
             MOZ_ALWAYS_TRUE(object->as<UnboxedPlainObject>().setValue(cx, properties[i], val));
         }
