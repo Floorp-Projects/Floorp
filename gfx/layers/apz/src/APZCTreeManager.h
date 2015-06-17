@@ -236,9 +236,11 @@ public:
 
   /**
    * Updates any zoom constraints contained in the <meta name="viewport"> tag.
+   * If the |aConstraints| is Nothing() then previously-provided constraints for
+   * the given |aGuid| are cleared.
    */
   void UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
-                             const ZoomConstraints& aConstraints);
+                             const Maybe<ZoomConstraints>& aConstraints);
 
   /**
    * Cancels any currently running animation. Note that all this does is set the
@@ -487,10 +489,14 @@ private:
    * isolation (that is, if its tree pointers are not being accessed or mutated). The
    * lock also needs to be held when accessing the mRootNode instance variable, as that
    * is considered part of the APZC tree management state.
-   * Finally, the lock needs to be held when accessing mOverscrollHandoffChain.
+   * Finally, the lock needs to be held when accessing mZoomConstraints.
    * IMPORTANT: See the note about lock ordering at the top of this file. */
   mutable mozilla::Monitor mTreeLock;
   nsRefPtr<HitTestingTreeNode> mRootNode;
+  /* Holds the zoom constraints for scrollable layers, as determined by the
+   * the main-thread gecko code. */
+  std::map<ScrollableLayerGuid, ZoomConstraints> mZoomConstraints;
+
   /* This tracks the APZC that should receive all inputs for the current input event block.
    * This allows touch points to move outside the thing they started on, but still have the
    * touch events delivered to the same initial APZC. This will only ever be touched on the

@@ -322,6 +322,8 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
                                      HitTestingTreeNode* aNextSibling,
                                      TreeBuildingState& aState)
 {
+  mTreeLock.AssertCurrentThreadOwns();
+
   bool needsApzc = true;
   if (!aMetrics.IsScrollable()) {
     needsApzc = false;
@@ -464,22 +466,18 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
     }
 
     if (newApzc) {
-      if (apzc->IsRootContent()) {
-        // If we just created a new root-content apzc, then we need to update
-        // its zoom constraints which might have arrived before it was created.
-        ZoomConstraints constraints;
-        if (state->mController->GetRootZoomConstraints(&constraints)) {
-          apzc->UpdateZoomConstraints(constraints);
-        }
+      auto it = mZoomConstraints.find(guid);
+      if (it != mZoomConstraints.end()) {
+        // We have a zoomconstraints for this guid, apply it.
+        apzc->UpdateZoomConstraints(it->second);
       } else if (!apzc->HasNoParentWithSameLayersId()) {
-        // Otherwise, an APZC that has a parent in the same layer tree gets
-        // the same zoom constraints as its parent. This ensures that if e.g.
-        // user-scalable=no was specified on the root, none of the APZCs allow
-        // double-tap to zoom.
+        // This is a sub-APZC, so inherit the zoom constraints from its parent.
+        // This ensures that if e.g. user-scalable=no was specified, none of the
+        // APZCs for that subtree allow double-tap to zoom.
         apzc->UpdateZoomConstraints(apzc->GetParent()->GetZoomConstraints());
       }
-      // Otherwise, if the APZC has no parent in the same layer tree, leave
-      // it with the existing zoom constraints.
+      // Otherwise, this is the root of a layers id, but we didn't have a saved
+      // zoom constraints. Leave it empty for now.
     }
 
     // Add a guid -> APZC mapping for the newly created APZC.
@@ -1028,16 +1026,24 @@ APZCTreeManager::SetTargetAPZC(uint64_t aInputBlockId, const ScrollableLayerGuid
 
 void
 APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
-                                       const ZoomConstraints& aConstraints)
+                                       const Maybe<ZoomConstraints>& aConstraints)
 {
   MonitorAutoLock lock(mTreeLock);
   nsRefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, nullptr);
   MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
 
-  // For a given layers id, non-{root content} APZCs inherit the zoom constraints
-  // of their root.
-  if (node && node->GetApzc()->IsRootContent()) {
-    UpdateZoomConstraintsRecursively(node.get(), aConstraints);
+  // Propagate the zoom constraints down to the subtree, stopping at APZCs
+  // which have their own zoom constraints or are in a different layers id.
+  if (aConstraints) {
+    APZCTM_LOG("Recording constraints %s for guid %s\n",
+      Stringify(aConstraints.value()).c_str(), Stringify(aGuid).c_str());
+    mZoomConstraints[aGuid] = aConstraints.value();
+  } else {
+    APZCTM_LOG("Removing constraints for guid %s\n", Stringify(aGuid).c_str());
+    mZoomConstraints.erase(aGuid);
+  }
+  if (node && aConstraints) {
+    UpdateZoomConstraintsRecursively(node.get(), aConstraints.ref());
   }
 }
 
@@ -1052,9 +1058,13 @@ APZCTreeManager::UpdateZoomConstraintsRecursively(HitTestingTreeNode* aNode,
     aNode->GetApzc()->UpdateZoomConstraints(aConstraints);
   }
   for (HitTestingTreeNode* child = aNode->GetLastChild(); child; child = child->GetPrevSibling()) {
-    // We can have subtrees with their own layers id - leave those alone.
-    if (child->GetApzc() && child->GetApzc()->HasNoParentWithSameLayersId()) {
-      continue;
+    if (AsyncPanZoomController* childApzc = child->GetApzc()) {
+      // We can have subtrees with their own zoom constraints or separate layers
+      // id - leave those alone.
+      if (childApzc->HasNoParentWithSameLayersId() ||
+          mZoomConstraints.find(childApzc->GetGuid()) != mZoomConstraints.end()) {
+        continue;
+      }
     }
     UpdateZoomConstraintsRecursively(child, aConstraints);
   }

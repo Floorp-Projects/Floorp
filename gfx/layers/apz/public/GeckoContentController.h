@@ -91,16 +91,6 @@ public:
   virtual void PostDelayedTask(Task* aTask, int aDelayMs) = 0;
 
   /**
-   * Retrieves the last known zoom constraints for the root scrollable layer
-   * for this layers tree. This function should return false if there are no
-   * last known zoom constraints.
-   */
-  virtual bool GetRootZoomConstraints(ZoomConstraints* aOutConstraints)
-  {
-    return false;
-  }
-
-  /**
    * APZ uses |FrameMetrics::mCompositionBounds| for hit testing. Sometimes,
    * widget code has knowledge of a touch-sensitive region that should
    * additionally constrain hit testing for all frames associated with the
