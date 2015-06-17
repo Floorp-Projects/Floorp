@@ -67,7 +67,6 @@ const wchar_t * kMozillaWindowClass = L"MozillaWindowClass";
 namespace {
 // see PluginModuleChild::GetChrome()
 PluginModuleChild* gChromeInstance = nullptr;
-nsTArray<PluginModuleChild*>* gAllInstances;
 }
 
 #ifdef MOZ_WIDGET_QT
@@ -142,11 +141,6 @@ PluginModuleChild::PluginModuleChild(bool aIsChrome)
   , mGlobalCallWndProcHook(nullptr)
 #endif
 {
-    if (!gAllInstances) {
-        gAllInstances = new nsTArray<PluginModuleChild*>(1);
-    }
-    gAllInstances->AppendElement(this);
-
     memset(&mFunctions, 0, sizeof(mFunctions));
     if (mIsChrome) {
         MOZ_ASSERT(!gChromeInstance);
@@ -168,13 +162,6 @@ PluginModuleChild::~PluginModuleChild()
         // code is only invoked for PluginModuleChild instances created via
         // bridging; otherwise mTransport is null.
         XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new DeleteTask<Transport>(mTransport));
-    }
-
-    gAllInstances->RemoveElement(this);
-    MOZ_ASSERT_IF(mIsChrome, gAllInstances->Length() == 0);
-    if (gAllInstances->IsEmpty()) {
-        delete gAllInstances;
-        gAllInstances = nullptr;
     }
 
     if (mIsChrome) {
