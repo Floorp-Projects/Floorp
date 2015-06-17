@@ -141,11 +141,11 @@ public:
       sEnabledTextStore->OnTextChangeInternal(aIMENotification) : NS_OK;
   }
 
-  static nsresult OnSelectionChange(void)
+  static nsresult OnSelectionChange(const IMENotification& aIMENotification)
   {
     NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
     return sEnabledTextStore ?
-      sEnabledTextStore->OnSelectionChangeInternal() : NS_OK;
+      sEnabledTextStore->OnSelectionChangeInternal(aIMENotification) : NS_OK;
   }
 
   static nsresult OnLayoutChange()
@@ -265,7 +265,7 @@ protected:
                                          TS_TEXTCHANGE* aTextChange);
   void     CommitCompositionInternal(bool);
   nsresult OnTextChangeInternal(const IMENotification& aIMENotification);
-  nsresult OnSelectionChangeInternal(void);
+  nsresult OnSelectionChangeInternal(const IMENotification& aIMENotification);
   nsresult OnMouseButtonEventInternal(const IMENotification& aIMENotification);
   HRESULT  GetDisplayAttribute(ITfProperty* aProperty,
                                ITfRange* aRange,
