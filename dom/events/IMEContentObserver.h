@@ -161,6 +161,7 @@ private:
   State GetState() const;
   bool IsObservingContent(nsPresContext* aPresContext,
                           nsIContent* aContent) const;
+  void MaybeNotifyIMEOfFocusSet();
   void MaybeNotifyIMEOfTextChange(const TextChangeData& aTextChangeData);
   void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition);
   void MaybeNotifyIMEOfPositionChange();
@@ -177,6 +178,13 @@ private:
   void UnregisterObservers();
   void StoreTextChangeData(const TextChangeData& aTextChangeData);
   void FlushMergeableNotifications();
+  void ClearPendingNotifications()
+  {
+    mIsFocusEventPending = false;
+    mIsSelectionChangeEventPending = false;
+    mIsPositionChangeEventPending = false;
+    mTextChangeData.mStored = false;
+  }
 
 #ifdef DEBUG
   void TestMergingTextChangeData();
@@ -253,6 +261,8 @@ private:
   int64_t mPreCharacterDataChangeLength;
 
   bool mIsObserving;
+  bool mIMEHasFocus;
+  bool mIsFocusEventPending;
   bool mIsSelectionChangeEventPending;
   bool mSelectionChangeCausedOnlyByComposition;
   bool mIsPositionChangeEventPending;
@@ -262,6 +272,20 @@ private:
   /**
    * Helper classes to notify IME.
    */
+
+  class FocusSetEvent: public nsRunnable
+  {
+  public:
+    explicit FocusSetEvent(IMEContentObserver* aIMEContentObserver)
+      : mIMEContentObserver(aIMEContentObserver)
+    {
+      MOZ_ASSERT(mIMEContentObserver);
+    }
+    NS_IMETHOD Run() override;
+
+  private:
+    nsRefPtr<IMEContentObserver> mIMEContentObserver;
+  };
 
   class SelectionChangeEvent : public nsRunnable
   {
