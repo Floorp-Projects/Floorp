@@ -35,7 +35,7 @@ let Accounts = Object.freeze({
   _accountsExist: function (kind) {
     return Messaging.sendRequestForResult({
       type: "Accounts:Exist",
-      kind: kind,
+      kind: kind
     }).then(data => data.exists);
   },
 
@@ -64,7 +64,23 @@ let Accounts = Object.freeze({
   launchSetup: function (extras) {
     Messaging.sendRequest({
       type: "Accounts:Create",
-      extras: extras,
+      extras: extras
     });
   },
+
+  /**
+   * Create a new Android Account corresponding to the given
+   * fxa-content-server "login" JSON datum.  The new account will be
+   * in the "Engaged" state, and will start syncing immediately.
+   *
+   * It is an error if an Android Account already exists.
+   *
+   * Returns a Promise that resolves to a boolean indicating success.
+   */
+  createFirefoxAccountFromJSON: function (json) {
+    return Messaging.sendRequestForResponse({
+      type: "Accounts:CreateFirefoxAccountFromJSON",
+      json: json
+    });
+  }
 });
