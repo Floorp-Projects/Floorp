@@ -9,7 +9,8 @@
               android:layout_height="wrap_content"
               android:layout_alignParentRight="true"
               android:minWidth="@dimen/menu_popup_width"
-              android:background="@drawable/menu_popup_bg">
+              android:background="@drawable/menu_popup_bg"
+              android:orientation="horizontal">
 
     <!-- MenuPanel will be added here dynamically -->
 

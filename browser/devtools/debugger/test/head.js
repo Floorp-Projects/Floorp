@@ -934,10 +934,13 @@ function attachAddonActorForUrl(aClient, aUrl) {
 
 function rdpInvoke(aClient, aMethod, ...args) {
   return promiseInvoke(aClient, aMethod, ...args)
-    .then(({error, message }) => {
+    .then((packet) => {
+      let { error, message } = packet;
       if (error) {
         throw new Error(error + ": " + message);
       }
+
+      return packet;
     });
 }
 
@@ -1185,15 +1188,6 @@ function findSource(sources, url) {
   return null;
 }
 
-function setBreakpoint(sourceClient, location) {
-  info("Setting breakpoint.\n");
-  return new Promise(function (resolve) {
-    sourceClient.setBreakpoint(location, function (response, breakpointClient) {
-      resolve([response, breakpointClient]);
-    });
-  });
-}
-
 function waitForEvent(client, type, predicate) {
   return new Promise(function (resolve) {
     function listener(type, packet) {
@@ -1217,4 +1211,14 @@ function waitForEvent(client, type, predicate) {
 function waitForPause(threadClient) {
   info("Waiting for pause.\n");
   return waitForEvent(threadClient, "paused");
+}
+
+function setBreakpoint(sourceClient, location) {
+  info("Setting breakpoint.\n");
+  return rdpInvoke(sourceClient, sourceClient.setBreakpoint, location);
+}
+
+function source(sourceClient) {
+  info("Getting source.\n");
+  return rdpInvoke(sourceClient, sourceClient.source);
 }

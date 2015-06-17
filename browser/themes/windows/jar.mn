@@ -364,6 +364,7 @@ browser.jar:
         skin/classic/browser/devtools/pseudo-class.svg              (../shared/devtools/images/pseudo-class.svg)
         skin/classic/browser/devtools/controls.png                  (../shared/devtools/images/controls.png)
         skin/classic/browser/devtools/controls@2x.png               (../shared/devtools/images/controls@2x.png)
+        skin/classic/browser/devtools/animation-fast-track.svg      (../shared/devtools/images/animation-fast-track.svg)
         skin/classic/browser/devtools/performance-icons.svg         (../shared/devtools/images/performance-icons.svg)
         skin/classic/browser/devtools/newtab.png                    (../shared/devtools/images/newtab.png)
         skin/classic/browser/devtools/newtab@2x.png                 (../shared/devtools/images/newtab@2x.png)

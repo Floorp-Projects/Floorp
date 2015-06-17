@@ -19,7 +19,7 @@
                    android:src="@drawable/larry"
                    android:paddingRight="@dimen/doorhanger_padding"/>
 
-        <LinearLayout android:layout_width="match_parent"
+        <LinearLayout android:layout_width="0dp"
                      android:layout_height="wrap_content"
                      android:orientation="vertical"
                      android:layout_weight="1.0">

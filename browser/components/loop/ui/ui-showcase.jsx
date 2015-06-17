@@ -100,9 +100,9 @@
    * @returns {loop.store.ActiveRoomStore}
    */
   function makeActiveRoomStore(options) {
-    var dispatcher = new loop.Dispatcher();
+    var roomDispatcher = new loop.Dispatcher();
 
-    var store = new loop.store.ActiveRoomStore(dispatcher, {
+    var store = new loop.store.ActiveRoomStore(roomDispatcher, {
       mozLoop: navigator.mozLoop,
       sdkDriver: mockSDK
     });
@@ -995,7 +995,7 @@
 
     // Wait until all the FramedExamples have been fully loaded.
     setTimeout(function waitForQueuedFrames() {
-      if (window.queuedFrames.length != 0) {
+      if (window.queuedFrames.length !== 0) {
         setTimeout(waitForQueuedFrames, 500);
         return;
       }

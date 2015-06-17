@@ -20,6 +20,7 @@ let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { dumpn, dumpv, dbg_assert } = DevToolsUtils;
 let EventEmitter = require("devtools/toolkit/event-emitter");
 let Debugger = require("Debugger");
+let Promise = require("promise");
 
 DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
   let { DebuggerSocket } = require("devtools/toolkit/security/socket");
@@ -760,8 +761,53 @@ var DebuggerServer = {
 
   connectToWorker: function (aConnection, aDbg, aId, aOptions) {
     return new Promise((resolve, reject) => {
-      // Step 1: Initialize the worker debugger.
-      aDbg.initialize("resource://gre/modules/devtools/server/worker.js");
+      // Step 1: Ensure the worker debugger is initialized.
+      if (!aDbg.isInitialized) {
+        aDbg.initialize("resource://gre/modules/devtools/server/worker.js");
+
+        // Create a listener for rpc requests from the worker debugger. Only do
+        // this once, when the worker debugger is first initialized, rather than
+        // for each connection.
+        let listener = {
+          onClose: () => {
+            aDbg.removeListener(listener);
+          },
+
+          onMessage: (message) => {
+            let packet = JSON.parse(message);
+            if (packet.type !== "rpc") {
+              return;
+            }
+
+            Promise.resolve().then(() => {
+              let method = {
+                "fetch": DevToolsUtils.fetch,
+              }[packet.method];
+              if (!method) {
+                throw Error("Unknown method: " + packet.method);
+              }
+
+              return method.apply(undefined, packet.params);
+            }).then((value) => {
+              aDbg.postMessage(JSON.stringify({
+                type: "rpc",
+                result: value,
+                error: null,
+                id: packet.id
+              }));
+            }, (reason) => {
+              aDbg.postMessage(JSON.stringify({
+                type: "rpc",
+                result: null,
+                error: reason,
+                id: packet.id
+              }));
+            });
+          }
+        };
+
+        aDbg.addListener(listener);
+      }
 
       // Step 2: Send a connect request to the worker debugger.
       aDbg.postMessage(JSON.stringify({

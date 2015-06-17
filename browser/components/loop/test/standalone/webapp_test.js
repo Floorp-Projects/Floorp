@@ -586,7 +586,7 @@ describe("loop.webapp", function() {
     });
 
     describe("FailedConversationView", function() {
-      var view, conversation, client, fakeAudio;
+      var view, fakeConversation, fakeClient, fakeAudio;
 
       beforeEach(function() {
         sandbox.stub(window, "XMLHttpRequest").returns(fakeAudioXHR);
@@ -598,20 +598,20 @@ describe("loop.webapp", function() {
         };
         sandbox.stub(window, "Audio").returns(fakeAudio);
 
-        client = new loop.StandaloneClient({
+        fakeClient = new loop.StandaloneClient({
           baseServerUrl: "http://fake.example.com"
         });
-        conversation = new sharedModels.ConversationModel({}, {
+        fakeConversation = new sharedModels.ConversationModel({}, {
           sdk: {}
         });
-        conversation.set("loopToken", "fakeToken");
+        fakeConversation.set("loopToken", "fakeToken");
 
-        sandbox.stub(client, "requestCallUrlInfo");
+        sandbox.stub(fakeClient, "requestCallUrlInfo");
         view = React.addons.TestUtils.renderIntoDocument(
           React.createElement(
             loop.webapp.FailedConversationView, {
-              conversation: conversation,
-              client: client,
+              conversation: fakeConversation,
+              client: fakeClient,
               notifications: notifications
             }));
       });
@@ -1120,13 +1120,13 @@ describe("loop.webapp", function() {
     });
 
     describe("Setup call", function() {
-      var conversation, setupOutgoingCall, view, requestCallUrlInfo;
+      var fakeConversation, setupOutgoingCall, view, requestCallUrlInfo;
 
       beforeEach(function() {
-        conversation = new loop.webapp.FxOSConversationModel({
+        fakeConversation = new loop.webapp.FxOSConversationModel({
           loopToken: "fakeToken"
         });
-        setupOutgoingCall = sandbox.stub(conversation, "setupOutgoingCall");
+        setupOutgoingCall = sandbox.stub(fakeConversation, "setupOutgoingCall");
 
         var standaloneClientStub = {
           requestCallUrlInfo: function(token, cb) {
@@ -1138,7 +1138,7 @@ describe("loop.webapp", function() {
         view = React.addons.TestUtils.renderIntoDocument(
           React.createElement(
             loop.webapp.StartConversationView, {
-              conversation: conversation,
+              conversation: fakeConversation,
               notifications: notifications,
               client: standaloneClientStub
             }));

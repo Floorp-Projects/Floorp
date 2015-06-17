@@ -759,14 +759,14 @@ describe("loop.OTSdkDriver", function () {
     });
 
     describe("streamCreated (publisher/local)", function() {
-      var fakeStream, fakeMockVideo;
+      var stream, fakeMockVideo;
 
       beforeEach(function() {
         driver._mockPublisherEl = document.createElement("div");
         fakeMockVideo = document.createElement("video");
 
         driver._mockPublisherEl.appendChild(fakeMockVideo);
-        fakeStream = {
+        stream = {
           hasVideo: true,
           videoType: "camera",
           videoDimensions: {width: 1, height: 2}
@@ -774,7 +774,7 @@ describe("loop.OTSdkDriver", function () {
       });
 
       it("should dispatch a VideoDimensionsChanged action", function() {
-        publisher.trigger("streamCreated", { stream: fakeStream });
+        publisher.trigger("streamCreated", { stream: stream });
 
         sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
@@ -786,7 +786,7 @@ describe("loop.OTSdkDriver", function () {
       });
 
       it("should dispatch a LocalVideoEnabled action", function() {
-        publisher.trigger("streamCreated", { stream: fakeStream });
+        publisher.trigger("streamCreated", { stream: stream });
 
         sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
@@ -799,7 +799,7 @@ describe("loop.OTSdkDriver", function () {
         driver._metrics.recvStreams = 1;
         driver._metrics.connections = 2;
 
-        publisher.trigger("streamCreated", {stream: fakeStream});
+        publisher.trigger("streamCreated", {stream: stream});
 
         sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
@@ -1018,16 +1018,16 @@ describe("loop.OTSdkDriver", function () {
     });
 
     describe("streamDestroyed: session/remote", function() {
-      var fakeStream;
+      var stream;
 
       beforeEach(function() {
-        fakeStream = {
+        stream = {
           videoType: "screen"
         };
       });
 
       it("should dispatch a ReceivingScreenShare action", function() {
-        session.trigger("streamDestroyed", { stream: fakeStream });
+        session.trigger("streamDestroyed", { stream: stream });
 
         sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
@@ -1041,7 +1041,7 @@ describe("loop.OTSdkDriver", function () {
         driver._metrics.sendStreams = 1;
         driver._metrics.recvStreams = 1;
 
-        session.trigger("streamDestroyed", {stream: fakeStream});
+        session.trigger("streamDestroyed", {stream: stream});
 
         sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
@@ -1055,9 +1055,9 @@ describe("loop.OTSdkDriver", function () {
       });
 
       it("should not dispatch an action if the videoType is camera", function() {
-        fakeStream.videoType = "camera";
+        stream.videoType = "camera";
 
-        session.trigger("streamDestroyed", { stream: fakeStream });
+        session.trigger("streamDestroyed", { stream: stream });
 
         sinon.assert.neverCalledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "receivingScreenShare"));
@@ -1065,7 +1065,7 @@ describe("loop.OTSdkDriver", function () {
     });
 
     describe("streamPropertyChanged", function() {
-      var fakeStream = {
+      var stream = {
         connection: { id: "fake" },
         videoType: "screen",
         videoDimensions: {
@@ -1076,11 +1076,11 @@ describe("loop.OTSdkDriver", function () {
 
       it("should not dispatch a VideoDimensionsChanged action for other properties", function() {
         session.trigger("streamPropertyChanged", {
-          stream: fakeStream,
+          stream: stream,
           changedProperty: STREAM_PROPERTIES.HAS_AUDIO
         });
         session.trigger("streamPropertyChanged", {
-          stream: fakeStream,
+          stream: stream,
           changedProperty: STREAM_PROPERTIES.HAS_VIDEO
         });
 
@@ -1092,7 +1092,7 @@ describe("loop.OTSdkDriver", function () {
           id: "localUser"
         };
         session.trigger("streamPropertyChanged", {
-          stream: fakeStream,
+          stream: stream,
           changedProperty: STREAM_PROPERTIES.VIDEO_DIMENSIONS
         });
 

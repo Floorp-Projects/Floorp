@@ -51,7 +51,6 @@
     "no-new": 0,                  // TODO: Remove (use default)
     "no-redeclare": 0,            // TODO: Remove (use default)
     "no-return-assign": 0,        // TODO: Remove (use default)
-    "no-shadow": 0,               // TODO: Remove (use default)
     "no-underscore-dangle": 0,    // Leave as 0. Commonly used for private variables.
     "no-unneeded-ternary": 2,
     "no-unused-expressions": 0,   // TODO: Remove (use default)

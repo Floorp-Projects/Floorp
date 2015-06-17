@@ -21,7 +21,8 @@ loop.store.StandaloneAppStore = (function() {
   /**
    * Constructor
    *
-   * @param {Object} options Options for the store. Should contain the dispatcher.
+   * @param {Object} options Options for the store. Should contain the
+   *                         dispatcher.
    */
   var StandaloneAppStore = function(options) {
     if (!options.dispatcher) {
@@ -69,9 +70,9 @@ loop.store.StandaloneAppStore = (function() {
       var windowType = "home";
 
       function extractId(path, regexp) {
-        var match = path.match(regexp);
-        if (match && match[1]) {
-          return match;
+        var pathMatch = path.match(regexp);
+        if (pathMatch && pathMatch[1]) {
+          return pathMatch;
         }
         return null;
       }
@@ -141,8 +142,8 @@ loop.store.StandaloneAppStore = (function() {
         unsupportedPlatform: unsupportedPlatform
       });
 
-      // If we've not got a window ID, don't dispatch the action, as we don't need
-      // it.
+      // If we've not got a window ID, don't dispatch the action, as we don't
+      // need it.
       if (token) {
         this._dispatcher.dispatch(new loop.shared.actions.FetchServerData({
           cryptoKey: this._extractCryptoKey(actionData.windowHash),

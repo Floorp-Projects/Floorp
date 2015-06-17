@@ -106,9 +106,9 @@ loop.Client = (function($) {
               expectedPostCallProperties);
 
             cb(null, outgoingCallData);
-          } catch (err) {
-            console.log("Error requesting call info", err);
-            cb(err);
+          } catch (ex) {
+            console.log("Error requesting call info", ex);
+            cb(ex);
           }
         }.bind(this)
       );
