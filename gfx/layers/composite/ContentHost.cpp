@@ -444,7 +444,7 @@ ContentHostTexture::GetRenderState()
   return result;
 }
 
-TemporaryRef<TexturedEffect>
+already_AddRefed<TexturedEffect>
 ContentHostTexture::GenEffect(const gfx::Filter& aFilter)
 {
   if (!mTextureHost) {
@@ -465,7 +465,7 @@ ContentHostTexture::GenEffect(const gfx::Filter& aFilter)
                               GetRenderState());
 }
 
-TemporaryRef<gfx::DataSourceSurface>
+already_AddRefed<gfx::DataSourceSurface>
 ContentHostTexture::GetAsSurface()
 {
   if (!mTextureHost) {

@@ -52,7 +52,7 @@ D3D11ShareHandleImage::GetTextureClient(CompositableClient* aClient)
   return mTextureClient;
 }
 
-TemporaryRef<gfx::SourceSurface>
+already_AddRefed<gfx::SourceSurface>
 D3D11ShareHandleImage::GetAsSourceSurface()
 {
   if (!mTexture) {

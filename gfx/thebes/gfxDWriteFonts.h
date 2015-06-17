@@ -59,7 +59,7 @@ public:
     virtual int32_t GetGlyphWidth(DrawTarget& aDrawTarget,
                                   uint16_t aGID) override;
 
-    virtual mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions>
+    virtual already_AddRefed<mozilla::gfx::GlyphRenderingOptions>
     GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams = nullptr) override;
 
     virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
@@ -69,7 +69,7 @@ public:
 
     virtual FontType GetType() const { return FONT_TYPE_DWRITE; }
 
-    virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont>
+    virtual already_AddRefed<mozilla::gfx::ScaledFont>
     GetScaledFont(mozilla::gfx::DrawTarget *aTarget) override;
 
     virtual cairo_scaled_font_t *GetCairoScaledFont() override;

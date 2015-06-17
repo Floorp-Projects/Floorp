@@ -24,7 +24,7 @@ public:
 
   // Creates an initializs the MFTDecoder.
   // Returns nullptr on failure.
-  virtual TemporaryRef<MFTDecoder> Init() = 0;
+  virtual already_AddRefed<MFTDecoder> Init() = 0;
 
   // Submit a compressed sample for decoding.
   // This should forward to the MFTDecoder after performing

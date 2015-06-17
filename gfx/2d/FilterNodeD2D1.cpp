@@ -150,7 +150,7 @@ D2D1_CHANNEL_SELECTOR D2DChannelSelector(uint32_t aMode)
   return D2D1_CHANNEL_SELECTOR_R;
 }
 
-TemporaryRef<ID2D1Image> GetImageForSourceSurface(DrawTarget *aDT, SourceSurface *aSurface)
+already_AddRefed<ID2D1Image> GetImageForSourceSurface(DrawTarget *aDT, SourceSurface *aSurface)
 {
   if (aDT->IsTiledDrawTarget() || aDT->IsDualDrawTarget()) {
       MOZ_CRASH("Incompatible draw target type!");
@@ -537,7 +537,7 @@ IsTransferFilterType(FilterType aType)
 }
 
 /* static */
-TemporaryRef<FilterNode>
+already_AddRefed<FilterNode>
 FilterNodeD2D1::Create(ID2D1DeviceContext *aDC, FilterType aType)
 {
   if (aType == FilterType::CONVOLVE_MATRIX) {

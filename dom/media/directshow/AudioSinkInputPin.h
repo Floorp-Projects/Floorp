@@ -54,7 +54,7 @@ public:
   // Returns the IMediaSeeking interface of the connected output pin.
   // We forward seeking requests upstream from the sink to the source
   // filters.
-  TemporaryRef<IMediaSeeking> GetConnectedPinSeeking();
+  already_AddRefed<IMediaSeeking> GetConnectedPinSeeking();
 
   SampleSink* GetSampleSink();
 

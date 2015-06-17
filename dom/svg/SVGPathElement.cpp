@@ -305,7 +305,7 @@ SVGPathElement::IsAttributeMapped(const nsIAtom* name) const
     SVGPathElementBase::IsAttributeMapped(name);
 }
 
-TemporaryRef<Path>
+already_AddRefed<Path>
 SVGPathElement::GetOrBuildPathForMeasuring()
 {
   return mD.GetAnimValue().BuildPathForMeasuring();
@@ -364,7 +364,7 @@ SVGPathElement::GetPathLengthScale(PathLengthScaleForType aFor)
   return 1.0;
 }
 
-TemporaryRef<Path>
+already_AddRefed<Path>
 SVGPathElement::BuildPath(PathBuilder* aBuilder)
 {
   // The Moz2D PathBuilder that our SVGPathData will be using only cares about

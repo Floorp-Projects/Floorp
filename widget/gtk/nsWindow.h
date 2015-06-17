@@ -194,7 +194,7 @@ public:
                                                guint            aTime,
                                                gpointer         aData);
 
-    virtual mozilla::TemporaryRef<mozilla::gfx::DrawTarget>
+    virtual already_AddRefed<mozilla::gfx::DrawTarget>
                        StartRemoteDrawing() override;
     virtual void       EndRemoteDrawingInRegion(mozilla::gfx::DrawTarget* aDrawTarget,
                                                 nsIntRegion& aInvalidRegion) override;

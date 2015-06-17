@@ -126,7 +126,7 @@ status_t GonkBufferQueue::setTransformHint(uint32_t hint) {
     return NO_ERROR;
 }
 
-TemporaryRef<TextureClient>
+already_AddRefed<TextureClient>
 GonkBufferQueue::getTextureClientFromBuffer(ANativeWindowBuffer* buffer)
 {
     Mutex::Autolock _l(mMutex);

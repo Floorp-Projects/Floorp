@@ -273,7 +273,7 @@ ApproximateZeroLengthSubpathSquareCaps(PathBuilder* aPB,
     }                                                                         \
   } while(0)
 
-TemporaryRef<Path>
+already_AddRefed<Path>
 SVGPathData::BuildPath(PathBuilder* builder,
                        uint8_t aStrokeLineCap,
                        Float aStrokeWidth) const
@@ -507,7 +507,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
   return builder->Finish();
 }
 
-TemporaryRef<Path>
+already_AddRefed<Path>
 SVGPathData::BuildPathForMeasuring() const
 {
   // Since the path that we return will not be used for painting it doesn't

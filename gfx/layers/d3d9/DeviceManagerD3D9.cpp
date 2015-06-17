@@ -821,7 +821,7 @@ DeviceManagerD3D9::CreateVertexBuffer()
   return true;
 }
 
-TemporaryRef<IDirect3DTexture9>
+already_AddRefed<IDirect3DTexture9>
 DeviceManagerD3D9::CreateTexture(const IntSize &aSize,
                                  _D3DFORMAT aFormat,
                                  D3DPOOL aPool,

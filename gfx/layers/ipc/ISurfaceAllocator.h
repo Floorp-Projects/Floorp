@@ -62,8 +62,8 @@ bool IsSurfaceDescriptorValid(const SurfaceDescriptor& aSurface);
 bool IsSurfaceDescriptorOwned(const SurfaceDescriptor& aDescriptor);
 bool ReleaseOwnedSurfaceDescriptor(const SurfaceDescriptor& aDescriptor);
 
-TemporaryRef<gfx::DrawTarget> GetDrawTargetForDescriptor(const SurfaceDescriptor& aDescriptor, gfx::BackendType aBackend);
-TemporaryRef<gfx::DataSourceSurface> GetSurfaceForDescriptor(const SurfaceDescriptor& aDescriptor);
+already_AddRefed<gfx::DrawTarget> GetDrawTargetForDescriptor(const SurfaceDescriptor& aDescriptor, gfx::BackendType aBackend);
+already_AddRefed<gfx::DataSourceSurface> GetSurfaceForDescriptor(const SurfaceDescriptor& aDescriptor);
 /**
  * An interface used to create and destroy surfaces that are shared with the
  * Compositor process (using shmem, or gralloc, or other platform specific memory)

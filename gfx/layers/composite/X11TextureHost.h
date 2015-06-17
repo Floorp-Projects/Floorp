@@ -36,7 +36,7 @@ public:
     return !!aTexture;
   }
 
-  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override;
+  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() override { return "X11TextureHost"; }

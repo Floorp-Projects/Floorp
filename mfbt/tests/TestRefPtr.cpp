@@ -8,7 +8,6 @@
 
 using mozilla::RefCounted;
 using mozilla::RefPtr;
-using mozilla::TemporaryRef;
 
 class Foo : public RefCounted<Foo>
 {
@@ -33,14 +32,14 @@ int Foo::sNumDestroyed;
 
 struct Bar : public Foo {};
 
-TemporaryRef<Foo>
+already_AddRefed<Foo>
 NewFoo()
 {
   RefPtr<Foo> f(new Foo());
   return f.forget();
 }
 
-TemporaryRef<Foo>
+already_AddRefed<Foo>
 NewBar()
 {
   RefPtr<Bar> bar = new Bar();
@@ -72,7 +71,7 @@ void
 GetPassedFoo(RefPtr<Foo>* aFoo)
 {}
 
-TemporaryRef<Foo>
+already_AddRefed<Foo>
 GetNullFoo()
 {
   return 0;
@@ -114,8 +113,10 @@ main()
   MOZ_RELEASE_ASSERT(5 == Foo::sNumDestroyed);
 
   {
-    RefPtr<Foo> f = new Foo();
-    f.forget();
+    {
+      RefPtr<Foo> f = new Foo();
+      RefPtr<Foo> g = f.forget();
+    }
     MOZ_RELEASE_ASSERT(6 == Foo::sNumDestroyed);
   }
 

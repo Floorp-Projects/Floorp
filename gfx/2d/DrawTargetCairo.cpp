@@ -678,7 +678,7 @@ DrawTargetCairo::GetSize()
   return mSize;
 }
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 DrawTargetCairo::Snapshot()
 {
   if (mSnapshot) {
@@ -1369,7 +1369,7 @@ DrawTargetCairo::PopClip()
              "Transforms are out of sync");
 }
 
-TemporaryRef<PathBuilder>
+already_AddRefed<PathBuilder>
 DrawTargetCairo::CreatePathBuilder(FillRule aFillRule /* = FillRule::FILL_WINDING */) const
 {
   return MakeAndAddRef<PathBuilderCairo>(aFillRule);
@@ -1388,20 +1388,20 @@ DrawTargetCairo::ClearSurfaceForUnboundedSource(const CompositionOp &aOperator)
 }
 
 
-TemporaryRef<GradientStops>
+already_AddRefed<GradientStops>
 DrawTargetCairo::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops,
                                      ExtendMode aExtendMode) const
 {
   return MakeAndAddRef<GradientStopsCairo>(aStops, aNumStops, aExtendMode);
 }
 
-TemporaryRef<FilterNode>
+already_AddRefed<FilterNode>
 DrawTargetCairo::CreateFilter(FilterType aType)
 {
   return FilterNodeSoftware::Create(aType);
 }
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 DrawTargetCairo::CreateSourceSurfaceFromData(unsigned char *aData,
                                              const IntSize &aSize,
                                              int32_t aStride,
@@ -1443,7 +1443,7 @@ DestroyPixmap(void *data)
 }
 #endif
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 DrawTargetCairo::OptimizeSourceSurface(SourceSurface *aSurface) const
 {
   RefPtr<SourceSurface> surface(aSurface);
@@ -1532,7 +1532,7 @@ DrawTargetCairo::OptimizeSourceSurface(SourceSurface *aSurface) const
   return surface.forget();
 }
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 DrawTargetCairo::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const
 {
   if (aSurface.mType == NativeSurfaceType::CAIRO_SURFACE) {
@@ -1548,7 +1548,7 @@ DrawTargetCairo::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurf
   return nullptr;
 }
 
-TemporaryRef<DrawTarget>
+already_AddRefed<DrawTarget>
 DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
 {
   cairo_surface_t* similar = cairo_surface_create_similar(mSurface,
@@ -1600,7 +1600,7 @@ DrawTargetCairo::InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize&
   return true;
 }
 
-TemporaryRef<DrawTarget>
+already_AddRefed<DrawTarget>
 DrawTargetCairo::CreateShadowDrawTarget(const IntSize &aSize, SurfaceFormat aFormat,
                                         float aSigma) const
 {

@@ -43,7 +43,7 @@ public:
   virtual SurfaceType GetType() const { return SurfaceType::COREGRAPHICS_IMAGE; }
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const;
-  virtual TemporaryRef<DataSourceSurface> GetDataSurface();
+  virtual already_AddRefed<DataSourceSurface> GetDataSurface();
 
   CGImageRef GetImage() { return mImage; }
 
@@ -115,7 +115,7 @@ public:
   virtual SurfaceType GetType() const { return SurfaceType::COREGRAPHICS_CGCONTEXT; }
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const { return mFormat; }
-  virtual TemporaryRef<DataSourceSurface> GetDataSurface()
+  virtual already_AddRefed<DataSourceSurface> GetDataSurface()
   {
     // This call to DrawTargetWillChange() is needed to make a local copy of
     // the data from mDrawTarget.  If we don't do that, the data can end up

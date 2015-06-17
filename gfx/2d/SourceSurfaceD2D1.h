@@ -30,7 +30,7 @@ public:
   virtual IntSize GetSize() const { return mSize; }
   virtual SurfaceFormat GetFormat() const { return mFormat; }
   virtual bool IsValid() const;
-  virtual TemporaryRef<DataSourceSurface> GetDataSurface();
+  virtual already_AddRefed<DataSourceSurface> GetDataSurface();
 
   ID2D1Image *GetImage() { return mImage; }
 

@@ -76,7 +76,7 @@ GetAddressFromDescriptor(const SurfaceDescriptor& aDescriptor, size_t& aSize)
   }
 }
 
-TemporaryRef<gfx::DrawTarget>
+already_AddRefed<gfx::DrawTarget>
 GetDrawTargetForDescriptor(const SurfaceDescriptor& aDescriptor, gfx::BackendType aBackend)
 {
   size_t size;
@@ -85,7 +85,7 @@ GetDrawTargetForDescriptor(const SurfaceDescriptor& aDescriptor, gfx::BackendTyp
   return image.GetAsDrawTarget(aBackend);
 }
 
-TemporaryRef<gfx::DataSourceSurface>
+already_AddRefed<gfx::DataSourceSurface>
 GetSurfaceForDescriptor(const SurfaceDescriptor& aDescriptor)
 {
   size_t size;

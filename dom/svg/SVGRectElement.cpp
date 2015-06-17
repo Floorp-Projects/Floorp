@@ -168,7 +168,7 @@ SVGRectElement::GetAsSimplePath(SimplePath* aSimplePath)
   aSimplePath->SetRect(x, y, width, height);
 }
 
-TemporaryRef<Path>
+already_AddRefed<Path>
 SVGRectElement::BuildPath(PathBuilder* aBuilder)
 {
   float x, y, width, height, rx, ry;

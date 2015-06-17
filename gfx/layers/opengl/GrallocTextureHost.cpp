@@ -230,7 +230,7 @@ GrallocTextureHostOGL::GetRenderState()
   return LayerRenderState();
 }
 
-TemporaryRef<gfx::DataSourceSurface>
+already_AddRefed<gfx::DataSourceSurface>
 GrallocTextureHostOGL::GetAsSurface() {
   android::GraphicBuffer* graphicBuffer = GetGraphicBufferFromDesc(mGrallocHandle).get();
   if (!graphicBuffer) {

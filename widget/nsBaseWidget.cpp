@@ -1259,7 +1259,7 @@ CompositorChild* nsBaseWidget::GetRemoteRenderer()
   return mCompositorChild;
 }
 
-TemporaryRef<mozilla::gfx::DrawTarget> nsBaseWidget::StartRemoteDrawing()
+already_AddRefed<mozilla::gfx::DrawTarget> nsBaseWidget::StartRemoteDrawing()
 {
   return nullptr;
 }
@@ -1943,7 +1943,7 @@ nsIWidget::UpdateRegisteredPluginWindowVisibility(uintptr_t aOwnerWidget,
 #endif
 }
 
-TemporaryRef<mozilla::gfx::SourceSurface>
+already_AddRefed<mozilla::gfx::SourceSurface>
 nsIWidget::SnapshotWidgetOnScreen()
 {
   // This is only supported on a widget with a compositor.

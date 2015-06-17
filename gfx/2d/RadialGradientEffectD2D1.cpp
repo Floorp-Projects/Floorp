@@ -309,7 +309,7 @@ RadialGradientEffectD2D1::SetStopCollection(IUnknown *aStopCollection)
   return E_INVALIDARG;
 }
 
-TemporaryRef<ID2D1ResourceTexture>
+already_AddRefed<ID2D1ResourceTexture>
 RadialGradientEffectD2D1::CreateGradientTexture()
 {
   std::vector<D2D1_GRADIENT_STOP> rawStops;

@@ -163,7 +163,7 @@ DynamicImage::GetAnimated(bool* aAnimated)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(TemporaryRef<SourceSurface>)
+NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
 DynamicImage::GetFrame(uint32_t aWhichFrame,
                        uint32_t aFlags)
 {

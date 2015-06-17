@@ -180,7 +180,7 @@ NS_lround(double x)
   return x >= 0.0 ? int32_t(x + 0.5) : int32_t(x - 0.5);
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 CloneAligned(DataSourceSurface* aSource)
 {
   return CreateDataSourceSurfaceByCloning(aSource);
@@ -393,7 +393,7 @@ TileSurface(DataSourceSurface* aSource, DataSourceSurface* aTarget, const IntPoi
   }
 }
 
-static TemporaryRef<DataSourceSurface>
+static already_AddRefed<DataSourceSurface>
 GetDataSurfaceInRect(SourceSurface *aSurface,
                      const IntRect &aSurfaceRect,
                      const IntRect &aDestRect,
@@ -446,7 +446,7 @@ GetDataSurfaceInRect(SourceSurface *aSurface,
   return target.forget();
 }
 
-/* static */ TemporaryRef<FilterNode>
+/* static */ already_AddRefed<FilterNode>
 FilterNodeSoftware::Create(FilterType aType)
 {
   RefPtr<FilterNodeSoftware> filter;
@@ -601,7 +601,7 @@ FilterNodeSoftware::Draw(DrawTarget* aDrawTarget,
   }
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeSoftware::GetOutput(const IntRect &aRect)
 {
   MOZ_ASSERT(GetOutputRectInRect(aRect).Contains(aRect));
@@ -662,7 +662,7 @@ FilterNodeSoftware::DesiredFormat(SurfaceFormat aCurrentFormat,
   return SurfaceFormat::B8G8R8A8;
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
                                               const IntRect& aRect,
                                               FormatHint aFormatHint,
@@ -961,7 +961,7 @@ static CompositionOp ToBlendOp(BlendMode aOp)
   return CompositionOp::OP_OVER;
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeBlendSoftware::Render(const IntRect& aRect)
 {
   RefPtr<DataSourceSurface> input1 =
@@ -1086,7 +1086,7 @@ FilterNodeTransformSoftware::SourceRectForOutputRect(const IntRect &aRect)
   return GetInputRectInRect(IN_TRANSFORM_IN, neededIntRect);
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeTransformSoftware::Render(const IntRect& aRect)
 {
   IntRect srcRect = SourceRectForOutputRect(aRect);
@@ -1192,7 +1192,7 @@ FilterNodeMorphologySoftware::SetAttribute(uint32_t aIndex,
   Invalidate();
 }
 
-static TemporaryRef<DataSourceSurface>
+static already_AddRefed<DataSourceSurface>
 ApplyMorphology(const IntRect& aSourceRect, DataSourceSurface* aInput,
                 const IntRect& aDestRect, int32_t rx, int32_t ry,
                 MorphologyOperator aOperator)
@@ -1256,7 +1256,7 @@ ApplyMorphology(const IntRect& aSourceRect, DataSourceSurface* aInput,
   return dest.forget();
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeMorphologySoftware::Render(const IntRect& aRect)
 {
   IntRect srcRect = aRect;
@@ -1327,7 +1327,7 @@ FilterNodeColorMatrixSoftware::SetAttribute(uint32_t aIndex,
   Invalidate();
 }
 
-static TemporaryRef<DataSourceSurface>
+static already_AddRefed<DataSourceSurface>
 Premultiply(DataSourceSurface* aSurface)
 {
   if (aSurface->GetFormat() == SurfaceFormat::A8) {
@@ -1359,7 +1359,7 @@ Premultiply(DataSourceSurface* aSurface)
   return target.forget();
 }
 
-static TemporaryRef<DataSourceSurface>
+static already_AddRefed<DataSourceSurface>
 Unpremultiply(DataSourceSurface* aSurface)
 {
   if (aSurface->GetFormat() == SurfaceFormat::A8) {
@@ -1391,7 +1391,7 @@ Unpremultiply(DataSourceSurface* aSurface)
   return target.forget();
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeColorMatrixSoftware::Render(const IntRect& aRect)
 {
   RefPtr<DataSourceSurface> input =
@@ -1460,7 +1460,7 @@ FormatForColor(Color aColor)
   return SurfaceFormat::B8G8R8A8;
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeFloodSoftware::Render(const IntRect& aRect)
 {
   SurfaceFormat format = FormatForColor(mColor);
@@ -1503,7 +1503,7 @@ FilterNodeFloodSoftware::Render(const IntRect& aRect)
 
 // Override GetOutput to get around caching. Rendering simple floods is
 // comparatively fast.
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeFloodSoftware::GetOutput(const IntRect& aRect)
 {
   return Render(aRect);
@@ -1556,7 +1556,7 @@ struct CompareIntRects
 };
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeTileSoftware::Render(const IntRect& aRect)
 {
   if (mSourceRect.IsEmpty()) {
@@ -1728,7 +1728,7 @@ IsAllZero(uint8_t aLookupTable[256])
   return true;
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeComponentTransferSoftware::Render(const IntRect& aRect)
 {
   if (mDisableR && mDisableG && mDisableB && mDisableA) {
@@ -2342,7 +2342,7 @@ ConvolvePixel(const uint8_t *aSourceData,
   }
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeConvolveMatrixSoftware::Render(const IntRect& aRect)
 {
   if (mKernelUnitLength.width == floor(mKernelUnitLength.width) &&
@@ -2409,7 +2409,7 @@ TranslateDoubleToShifts(double aDouble, int32_t &aShiftL, int32_t &aShiftR)
 }
 
 template<typename CoordType>
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeConvolveMatrixSoftware::DoRender(const IntRect& aRect,
                                            CoordType aKernelUnitLengthX,
                                            CoordType aKernelUnitLengthY)
@@ -2580,7 +2580,7 @@ FilterNodeDisplacementMapSoftware::SetAttribute(uint32_t aIndex, uint32_t aValue
   Invalidate();
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeDisplacementMapSoftware::Render(const IntRect& aRect)
 {
   IntRect srcRect = InflatedSourceOrDestRect(aRect);
@@ -2729,7 +2729,7 @@ FilterNodeTurbulenceSoftware::SetAttribute(uint32_t aIndex, uint32_t aValue)
   Invalidate();
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeTurbulenceSoftware::Render(const IntRect& aRect)
 {
   return FilterProcessing::RenderTurbulence(
@@ -2774,7 +2774,7 @@ FilterNodeArithmeticCombineSoftware::SetAttribute(uint32_t aIndex,
   Invalidate();
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeArithmeticCombineSoftware::Render(const IntRect& aRect)
 {
   RefPtr<DataSourceSurface> input1 =
@@ -2848,7 +2848,7 @@ FilterNodeCompositeSoftware::SetAttribute(uint32_t aIndex, uint32_t aCompositeOp
   Invalidate();
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeCompositeSoftware::Render(const IntRect& aRect)
 {
   RefPtr<DataSourceSurface> start =
@@ -2924,7 +2924,7 @@ FilterNodeBlurXYSoftware::InputIndex(uint32_t aInputEnumIndex)
   }
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeBlurXYSoftware::Render(const IntRect& aRect)
 {
   Size sigmaXY = StdDeviationXY();
@@ -3102,7 +3102,7 @@ FilterNodeCropSoftware::SetAttribute(uint32_t aIndex,
   Invalidate();
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeCropSoftware::Render(const IntRect& aRect)
 {
   return GetInputDataSourceSurface(IN_CROP_IN, aRect.Intersect(mCropRect));
@@ -3129,7 +3129,7 @@ FilterNodePremultiplySoftware::InputIndex(uint32_t aInputEnumIndex)
   }
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodePremultiplySoftware::Render(const IntRect& aRect)
 {
   RefPtr<DataSourceSurface> input =
@@ -3158,7 +3158,7 @@ FilterNodeUnpremultiplySoftware::InputIndex(uint32_t aInputEnumIndex)
   }
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeUnpremultiplySoftware::Render(const IntRect& aRect)
 {
   RefPtr<DataSourceSurface> input =
@@ -3438,7 +3438,7 @@ GenerateNormal(const uint8_t *data, int32_t stride,
 }
 
 template<typename LightType, typename LightingType>
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeLightingSoftware<LightType, LightingType>::Render(const IntRect& aRect)
 {
   if (mKernelUnitLength.width == floor(mKernelUnitLength.width) &&
@@ -3459,7 +3459,7 @@ FilterNodeLightingSoftware<LightType, LightingType>::RequestFromInputsForRect(co
 }
 
 template<typename LightType, typename LightingType> template<typename CoordType>
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRect,
                                                               CoordType aKernelUnitLengthX,
                                                               CoordType aKernelUnitLengthY)

@@ -142,7 +142,7 @@ public:
 
     virtual uint32_t GetGLFrameBufferFormat() override;
 
-    mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
+    already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
 
     // Widget notifications
     virtual void OnPaint();

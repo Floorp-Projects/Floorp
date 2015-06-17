@@ -50,7 +50,7 @@ SourceSurfaceD2DTarget::GetFormat() const
   return mFormat;
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 SourceSurfaceD2DTarget::GetDataSurface()
 {
   RefPtr<DataSourceSurfaceD2DTarget> dataSurf =

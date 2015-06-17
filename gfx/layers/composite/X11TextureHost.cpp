@@ -86,7 +86,7 @@ X11TextureHost::GetSize() const
   return mSurface->GetSize();
 }
 
-TemporaryRef<gfx::DataSourceSurface>
+already_AddRefed<gfx::DataSourceSurface>
 X11TextureHost::GetAsSurface()
 {
   if (!mTextureSource || !mTextureSource->AsSourceBasic()) {

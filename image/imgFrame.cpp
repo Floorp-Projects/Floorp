@@ -48,7 +48,7 @@ VolatileSurfaceStride(const IntSize& size, SurfaceFormat format)
   return (size.width * BytesPerPixel(format) + 0x3) & ~0x3;
 }
 
-static TemporaryRef<DataSourceSurface>
+static already_AddRefed<DataSourceSurface>
 CreateLockedSurface(VolatileBuffer* vbuf,
                     const IntSize& size,
                     SurfaceFormat format)
@@ -69,7 +69,7 @@ CreateLockedSurface(VolatileBuffer* vbuf,
   return surf.forget();
 }
 
-static TemporaryRef<VolatileBuffer>
+static already_AddRefed<VolatileBuffer>
 AllocateBufferForImage(const IntSize& size, SurfaceFormat format)
 {
   int32_t stride = VolatileSurfaceStride(size, format);
@@ -1045,14 +1045,14 @@ imgFrame::IsSinglePixel() const
   return mSinglePixel;
 }
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 imgFrame::GetSurface()
 {
   MonitorAutoLock lock(mMonitor);
   return GetSurfaceInternal();
 }
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 imgFrame::GetSurfaceInternal()
 {
   mMonitor.AssertCurrentThreadOwns();
@@ -1083,7 +1083,7 @@ imgFrame::GetSurfaceInternal()
   return CreateLockedSurface(mVBuf, mSize, mFormat);
 }
 
-TemporaryRef<DrawTarget>
+already_AddRefed<DrawTarget>
 imgFrame::GetDrawTarget()
 {
   MonitorAutoLock lock(mMonitor);
