@@ -11,28 +11,10 @@ include('sources.mozbuild')
 
 EXPORTS.vpx += files['EXPORTS']
 
-if CONFIG['VPX_NEED_OBJ_INT_EXTRACT']:
-    HOST_SOURCES += [
-        'build/make/obj_int_extract.c',
-    ]
-
-    HostProgram('host_obj_int_extract')
-
 SOURCES += files['SOURCES']
 
 if CONFIG['MOZ_VPX_ERROR_CONCEALMENT']:
     SOURCES += files['ERROR_CONCEALMENT']
-
-if CONFIG['VPX_X86_ASM'] and CONFIG['OS_TARGET'] == 'WINNT':
-    offset_sources = [
-        'vp8/encoder/vp8_asm_enc_offsets.c',
-        'vpx_scale/vpx_scale_asm_offsets.c',
-    ]
-    SOURCES += offset_sources
-    # Bug 934984 - MSVC bustage when /GL is specified
-    if CONFIG['_MSC_VER']:
-        for s in offset_sources:
-            SOURCES[s].flags += ['-GL-']
 
 if CONFIG['VPX_X86_ASM']:
     SOURCES += files['X86_ASM']
