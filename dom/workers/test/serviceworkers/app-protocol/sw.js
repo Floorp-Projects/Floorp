@@ -17,6 +17,12 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.url.indexOf('foo.txt') >= 0) {
+    var url = new URL(event.request.url);
+    var shouldFetch = url.searchParams.get('fetch');
+    if (shouldFetch) {
+      event.respondWith(fetch(event.request));
+      return;
+    }
     event.respondWith(new Response('swresponse', {
       headers: {'Content-Type': 'text/plain'}
     }));
