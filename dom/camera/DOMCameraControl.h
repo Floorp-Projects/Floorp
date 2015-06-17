@@ -39,6 +39,7 @@ namespace dom {
 }
 class ErrorResult;
 class StartRecordingHelper;
+class RecorderPosterHelper;
 
 #define NS_DOM_CAMERA_CONTROL_CID \
 { 0x3700c096, 0xf920, 0x438d, \
@@ -163,6 +164,7 @@ protected:
 
   friend class DOMCameraControlListener;
   friend class mozilla::StartRecordingHelper;
+  friend class mozilla::RecorderPosterHelper;
 
   void OnCreatedFileDescriptor(bool aSucceeded);
 
@@ -170,6 +172,7 @@ protected:
   void OnAutoFocusMoving(bool aIsMoving);
   void OnTakePictureComplete(nsIDOMBlob* aPicture);
   void OnFacesDetected(const nsTArray<ICameraControl::Face>& aFaces);
+  void OnPoster(dom::BlobImpl* aPoster);
 
   void OnGetCameraComplete();
   void OnHardwareStateChange(DOMCameraControlListener::HardwareState aState, nsresult aReason);
@@ -225,6 +228,7 @@ protected:
   nsRefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
   DOMCameraControlListener::PreviewState mPreviewState;
   bool mRecording;
+  bool mRecordingStoppedDeferred;
   bool mSetInitialConfig;
 
 #ifdef MOZ_WIDGET_GONK

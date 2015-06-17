@@ -65,6 +65,7 @@ FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [
     '../base',
+    '/media/libyuv/include',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

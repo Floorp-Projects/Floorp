@@ -47,6 +47,7 @@ namespace mozilla {
 namespace layers {
   class TextureClient;
   class ImageContainer;
+  class Image;
 }
 
 class nsGonkCameraControl : public CameraControlImpl
@@ -60,6 +61,7 @@ public:
   void OnTakePictureComplete(uint8_t* aData, uint32_t aLength);
   void OnTakePictureError();
   void OnRateLimitPreview(bool aLimit);
+  void OnPoster(void* aData, uint32_t aLength);
   void OnNewPreviewFrame(layers::TextureClient* aBuffer);
 #ifdef MOZ_WIDGET_GONK
   void OnRecorderEvent(int msg, int ext1, int ext2);
@@ -149,6 +151,8 @@ protected:
   nsresult PausePreview();
   nsresult GetSupportedSize(const Size& aSize, const nsTArray<Size>& supportedSizes, Size& best);
 
+  void CreatePoster(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight, int32_t aRotation);
+
   nsresult LoadRecorderProfiles();
   static PLDHashOperator Enumerate(const nsAString& aProfileName,
                                    RecorderProfile* aProfile,
@@ -197,6 +201,9 @@ protected:
 
   nsRefPtr<DeviceStorageFile> mVideoFile;
   nsString                  mFileFormat;
+
+  Atomic<bool>              mCapturePoster;
+  int32_t                   mVideoRotation;
 
   bool                      mAutoFocusPending;
   nsCOMPtr<nsITimer>        mAutoFocusCompleteTimer;
