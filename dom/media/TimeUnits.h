@@ -254,7 +254,7 @@ public:
     return TimeIntervals(TimeInterval(TimeUnit::FromMicroseconds(INT64_MIN),
                                       TimeUnit::FromMicroseconds(INT64_MIN)));
   }
-  bool IsInvalid()
+  bool IsInvalid() const
   {
     return Length() == 1 && Start(0).ToMicroseconds() == INT64_MIN &&
       End(0).ToMicroseconds() == INT64_MIN;
