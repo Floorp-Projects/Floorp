@@ -119,10 +119,14 @@ AUTOMATION_EXTRA_CMDLINE-pretty-package-tests = -j1
 # However, the target automation/buildsymbols will still be executed in this
 # case because it is a prerequisite of automation/upload.
 define automation_commands
-$(call BUILDSTATUS,TIER_START $1)
 @$(MAKE) $1 $(AUTOMATION_EXTRA_CMDLINE-$1)
 $(call BUILDSTATUS,TIER_FINISH $1)
 endef
 
-automation/%:
+# The tier start message is in a separate target so make doesn't buffer it
+# until the step completes with output syncing enabled.
+automation-start/%:
+	$(if $(filter $*,$(MOZ_AUTOMATION_TIERS)),$(call BUILDSTATUS,TIER_START $*))
+
+automation/%: automation-start/%
 	$(if $(filter $*,$(MOZ_AUTOMATION_TIERS)),$(call automation_commands,$*))
