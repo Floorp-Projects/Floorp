@@ -190,6 +190,8 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
         // composition window position.
         if (IsIMMActive()) {
           nsIMM32Handler::OnUpdateComposition(aWindow);
+        } else {
+          nsTextStore::OnUpdateComposition();
         }
         return NS_OK;
       case NOTIFY_IME_OF_TEXT_CHANGE:
