@@ -143,7 +143,7 @@ include cssom/reftest.list
 include columns/reftest.list
 
 # content/
-include ../../content/test/reftest/reftest.list
+include ../../dom/tests/reftest/reftest.list
 
 # counters/
 include counters/reftest.list
@@ -353,7 +353,7 @@ include webcomponents/reftest.list
 include ../../widget/reftests/reftest.list
 
 # xml-stylesheet/
-include ../../content/test/reftest/xml-stylesheet/reftest.list
+include ../../dom/tests/reftest/xml-stylesheet/reftest.list
 
 # xul-document-load/
 include xul-document-load/reftest.list
