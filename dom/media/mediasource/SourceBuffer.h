@@ -60,6 +60,7 @@ public:
   }
 
   already_AddRefed<TimeRanges> GetBuffered(ErrorResult& aRv);
+  TimeIntervals GetTimeIntervals();
 
   double TimestampOffset() const
   {

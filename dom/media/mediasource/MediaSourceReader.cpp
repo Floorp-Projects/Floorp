@@ -553,10 +553,32 @@ MediaSourceReader::BreakCycles()
 already_AddRefed<SourceBufferDecoder>
 MediaSourceReader::SelectDecoder(int64_t aTarget,
                                  int64_t aTolerance,
-                                 const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders)
+                                 TrackBuffer* aTrackBuffer)
 {
-  return static_cast<MediaSourceDecoder*>(mDecoder)
-      ->SelectDecoder(aTarget, aTolerance, aTrackDecoders);
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
+  media::TimeUnit target{media::TimeUnit::FromMicroseconds(aTarget)};
+  media::TimeUnit tolerance{media::TimeUnit::FromMicroseconds(aTolerance + aTarget)};
+
+  const nsTArray<nsRefPtr<SourceBufferDecoder>>& decoders{aTrackBuffer->Decoders()};
+
+  // aTolerance gives a slight bias toward the start of a range only.
+  // Consider decoders in order of newest to oldest, as a newer decoder
+  // providing a given buffered range is expected to replace an older one.
+  for (int32_t i = decoders.Length() - 1; i >= 0; --i) {
+    nsRefPtr<SourceBufferDecoder> newDecoder = decoders[i];
+    media::TimeIntervals ranges = aTrackBuffer->GetBuffered(newDecoder);
+    for (uint32_t j = 0; j < ranges.Length(); j++) {
+      if (target < ranges.End(j) && tolerance >= ranges.Start(j)) {
+        return newDecoder.forget();
+      }
+    }
+    MSE_DEBUGV("SelectDecoder(%lld fuzz:%lld) newDecoder=%p (%d/%d) target not in ranges=%s",
+               aTarget, aTolerance, newDecoder.get(), i+1,
+               decoders.Length(), DumpTimeRanges(ranges).get());
+  }
+
+  return nullptr;
 }
 
 bool
@@ -564,7 +586,7 @@ MediaSourceReader::HaveData(int64_t aTarget, MediaData::Type aType)
 {
   TrackBuffer* trackBuffer = aType == MediaData::AUDIO_DATA ? mAudioTrack : mVideoTrack;
   MOZ_ASSERT(trackBuffer);
-  nsRefPtr<SourceBufferDecoder> decoder = SelectDecoder(aTarget, EOS_FUZZ_US, trackBuffer->Decoders());
+  nsRefPtr<SourceBufferDecoder> decoder = SelectDecoder(aTarget, EOS_FUZZ_US, trackBuffer);
   return !!decoder;
 }
 
@@ -582,9 +604,9 @@ MediaSourceReader::SwitchAudioSource(int64_t* aTarget)
   // reader and skip the last few samples of the current one.
   bool usedFuzz = false;
   nsRefPtr<SourceBufferDecoder> newDecoder =
-    SelectDecoder(*aTarget, /* aTolerance = */ 0, mAudioTrack->Decoders());
+    SelectDecoder(*aTarget, /* aTolerance = */ 0, mAudioTrack);
   if (!newDecoder) {
-    newDecoder = SelectDecoder(*aTarget, EOS_FUZZ_US, mAudioTrack->Decoders());
+    newDecoder = SelectDecoder(*aTarget, EOS_FUZZ_US, mAudioTrack);
     usedFuzz = true;
   }
   if (GetAudioReader() && mAudioSourceDecoder != newDecoder) {
@@ -627,9 +649,9 @@ MediaSourceReader::SwitchVideoSource(int64_t* aTarget)
   // reader and skip the last few samples of the current one.
   bool usedFuzz = false;
   nsRefPtr<SourceBufferDecoder> newDecoder =
-    SelectDecoder(*aTarget, /* aTolerance = */ 0, mVideoTrack->Decoders());
+    SelectDecoder(*aTarget, /* aTolerance = */ 0, mVideoTrack);
   if (!newDecoder) {
-    newDecoder = SelectDecoder(*aTarget, EOS_FUZZ_US, mVideoTrack->Decoders());
+    newDecoder = SelectDecoder(*aTarget, EOS_FUZZ_US, mVideoTrack);
     usedFuzz = true;
   }
   if (GetVideoReader() && mVideoSourceDecoder != newDecoder) {
@@ -732,10 +754,7 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType, int64_t aTimestampO
   // MSE uses a start time of 0 everywhere. Set that immediately on the
   // subreader to make sure that it's always in a state where we can invoke
   // GetBuffered on it.
-  {
-    ReentrantMonitorAutoEnter mon(decoder->GetReentrantMonitor());
-    reader->SetStartTime(0);
-  }
+  reader->DispatchSetStartTime(0);
 
 #ifdef MOZ_FMP4
   reader->SetSharedDecoderManager(mSharedDecoderManager);
@@ -1013,6 +1032,7 @@ MediaSourceReader::DoVideoSeek()
 media::TimeIntervals
 MediaSourceReader::GetBuffered()
 {
+  MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   media::TimeIntervals buffered;
 
@@ -1256,25 +1276,27 @@ MediaSourceReader::GetMozDebugReaderData(nsAString& aString)
   if (mAudioTrack) {
     result += nsPrintfCString("\tDumping Audio Track Decoders: - mLastAudioTime: %f\n", double(mLastAudioTime) / USECS_PER_S);
     for (int32_t i = mAudioTrack->Decoders().Length() - 1; i >= 0; --i) {
-      nsRefPtr<MediaDecoderReader> newReader = mAudioTrack->Decoders()[i]->GetReader();
-
-      media::TimeIntervals ranges = mAudioTrack->Decoders()[i]->GetBuffered();
+      const nsRefPtr<SourceBufferDecoder>& newDecoder{mAudioTrack->Decoders()[i]};
+      media::TimeIntervals ranges = mAudioTrack->GetBuffered(newDecoder);
       result += nsPrintfCString("\t\tReader %d: %p ranges=%s active=%s size=%lld\n",
-                                i, newReader.get(), DumpTimeRanges(ranges).get(),
-                                newReader.get() == GetAudioReader() ? "true" : "false",
-                                mAudioTrack->Decoders()[i]->GetResource()->GetSize());
+                                i,
+                                newDecoder->GetReader(),
+                                DumpTimeRanges(ranges).get(),
+                                newDecoder->GetReader() == GetAudioReader() ? "true" : "false",
+                                newDecoder->GetResource()->GetSize());
     }
   }
 
   if (mVideoTrack) {
     result += nsPrintfCString("\tDumping Video Track Decoders - mLastVideoTime: %f\n", double(mLastVideoTime) / USECS_PER_S);
     for (int32_t i = mVideoTrack->Decoders().Length() - 1; i >= 0; --i) {
-      nsRefPtr<MediaDecoderReader> newReader = mVideoTrack->Decoders()[i]->GetReader();
-
-      media::TimeIntervals ranges = mVideoTrack->Decoders()[i]->GetBuffered();
+      const nsRefPtr<SourceBufferDecoder>& newDecoder{mVideoTrack->Decoders()[i]};
+      media::TimeIntervals ranges = mVideoTrack->GetBuffered(newDecoder);
       result += nsPrintfCString("\t\tReader %d: %p ranges=%s active=%s size=%lld\n",
-                                i, newReader.get(), DumpTimeRanges(ranges).get(),
-                                newReader.get() == GetVideoReader() ? "true" : "false",
+                                i,
+                                newDecoder->GetReader(),
+                                DumpTimeRanges(ranges).get(),
+                                newDecoder->GetReader() == GetVideoReader() ? "true" : "false",
                                 mVideoTrack->Decoders()[i]->GetResource()->GetSize());
     }
   }
