@@ -8,6 +8,7 @@
 #include "mozilla/dom/DeviceStorageAreaListenerBinding.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Services.h"
+#include "DeviceStorage.h"
 #include "nsIObserverService.h"
 #ifdef MOZ_WIDGET_GONK
 #include "nsIVolume.h"
@@ -86,6 +87,8 @@ DeviceStorageAreaListener::DeviceStorageAreaListener(nsPIDOMWindow* aWindow)
 {
   MOZ_ASSERT(aWindow);
 
+  MOZ_ASSERT(NS_IsMainThread());
+
   mVolumeStateObserver = new VolumeStateObserver(this);
 #ifdef MOZ_WIDGET_GONK
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -139,10 +142,12 @@ DeviceStorageAreaListener::DispatchStorageAreaChangedEvent(
                                                init);
   event->SetTrusted(true);
 
+  mStorageAreaStateMap[aStorageName] = aOperation;
+
+  nsDOMDeviceStorage::InvalidateVolumeCaches();
+
   bool ignore;
   DOMEventTargetHelper::DispatchEvent(event, &ignore);
-
-  mStorageAreaStateMap[aStorageName] = aOperation;
 }
 
 } // namespace dom

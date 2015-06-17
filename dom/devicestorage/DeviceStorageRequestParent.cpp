@@ -728,7 +728,7 @@ DeviceStorageRequestParent::FreeSpaceFileEvent::CancelableRun()
 
   int64_t freeSpace = 0;
   if (mFile) {
-    mFile->GetDiskFreeSpace(&freeSpace);
+    mFile->GetStorageFreeSpace(&freeSpace);
   }
 
   nsCOMPtr<nsIRunnable> r;
