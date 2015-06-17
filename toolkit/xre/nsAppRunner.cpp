@@ -4535,12 +4535,6 @@ XRE_IsParentProcess()
   return XRE_GetProcessType() == GeckoProcessType_Default;
 }
 
-void
-mozilla::startup::SetSafeMode()
-{
-  gSafeMode = true;
-}
-
 #ifdef E10S_TESTING_ONLY
 static void
 LogE10sBlockedReason(const char *reason) {
