@@ -27,6 +27,9 @@ add_task(function* () {
   let tabState = TabState.collect(tab);
   is(tabState.index, TAB_STATE.index, "correct shistory index");
 
+  // Check we don't collect userTypedValue when we shouldn't.
+  ok(!tabState.userTypedValue, "tab didn't have a userTypedValue");
+
   // Cleanup.
   gBrowser.removeTab(tab);
 });

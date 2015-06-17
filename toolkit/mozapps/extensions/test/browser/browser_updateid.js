@@ -49,16 +49,20 @@ add_test(function() {
     gProvider.installs[0]._addonToInstall = newAddon;
 
     var item = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
-    is(item._version.value, "1.0", "Should still show the old version in the normal list");
     var name = gManagerWindow.document.getAnonymousElementByAttribute(item, "anonid", "name");
     is(name.value, "manually updating addon", "Should show the old name in the list");
-    var update = gManagerWindow.document.getAnonymousElementByAttribute(item, "anonid", "update-btn");
-    is_element_visible(update, "Update button should be visible");
+    get_tooltip_info(item).then(({ name, version }) => {
+      is(name, "manually updating addon", "Should show the old name in the tooltip");
+      is(version, "1.0", "Should still show the old version in the tooltip");
 
-    item = get_addon_element(gManagerWindow, "addon2@tests.mozilla.org");
-    is(item, null, "Should not show the new version in the list");
+      var update = gManagerWindow.document.getAnonymousElementByAttribute(item, "anonid", "update-btn");
+      is_element_visible(update, "Update button should be visible");
 
-    run_next_test();
+      item = get_addon_element(gManagerWindow, "addon2@tests.mozilla.org");
+      is(item, null, "Should not show the new version in the list");
+
+      run_next_test();
+    });
   });
 });
 

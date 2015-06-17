@@ -666,10 +666,15 @@ loop.standaloneRoomViews = (function(mozL10n) {
         hide: !this.state.receivingScreenShare
       });
 
+      // XXX Temporarily showAlways = showRoomName = false for TextChatView
+      // until bug 1168829 is completed.
       return (
         <div className="room-conversation-wrapper">
           <div className="beta-logo" />
-          <sharedViews.TextChatView dispatcher={this.props.dispatcher} />
+          <sharedViews.TextChatView
+            dispatcher={this.props.dispatcher}
+            showAlways={false}
+            showRoomName={false} />
           <StandaloneRoomHeader dispatcher={this.props.dispatcher} />
           <StandaloneRoomInfoArea roomState={this.state.roomState}
                                   failureReason={this.state.failureReason}

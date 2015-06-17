@@ -365,13 +365,12 @@ p.standalone-btn-label {
  */
 .text-chat-view {
   height: 60px;
-  color: white;
+  color: black;
 }
 
 .text-chat-entries {
   /* XXX Should use flex, this is just for the initial implementation. */
   height: calc(100% - 2em);
-  width: 30%;
 }
 
 .text-chat-box {
