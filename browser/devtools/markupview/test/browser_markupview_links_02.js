@@ -29,7 +29,7 @@ add_task(function*() {
   yield nodeMutated;
 
   info("Checking for links in the updated attribute");
-  ({editor}) = yield getContainerForSelector("body", inspector);
+  ({editor} = yield getContainerForSelector("body", inspector));
   linkEls = editor.attrElements.get("contextmenu").querySelectorAll(".link");
   is(linkEls.length, 1, "There is one link in the contextmenu attribute");
   is(linkEls[0].dataset.type, "idref", "The link has the right type");

@@ -926,7 +926,7 @@ class MacroAssembler : public js::jit::Assembler {
     umsubl(rd, rn, rm, ra);
   }
   void Unreachable() {
-#ifdef JS_ARM64_SIMULATOR
+#ifdef JS_SIMULATOR_ARM64
     hlt(kUnreachableOpcode);
 #else
     // Branch to 0 to generate a segfault.

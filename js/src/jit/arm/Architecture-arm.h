@@ -626,7 +626,7 @@ uint32_t GetARMFlags();
 // If the simulator is used then the ABI choice is dynamic. Otherwise the ABI is
 // static and useHardFpABI is inlined so that unused branches can be optimized
 // away.
-#if defined(JS_ARM_SIMULATOR)
+#ifdef JS_SIMULATOR_ARM
 bool UseHardFpABI();
 #else
 static inline bool UseHardFpABI()

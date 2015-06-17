@@ -30,13 +30,16 @@
 #include "nsISupports.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
-#include "nsThreadUtils.h"
 #include "nsWeakReference.h"
 #include "WritingModes.h"
 
 namespace mozilla {
 
 using namespace widget;
+
+/******************************************************************************
+ * mozilla::IMEContentObserver
+ ******************************************************************************/
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IMEContentObserver)
 
@@ -46,7 +49,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IMEContentObserver)
   tmp->NotifyIMEOfBlur();
   tmp->UnregisterObservers();
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWidget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootContent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditableNode)
@@ -89,6 +91,8 @@ IMEContentObserver::IMEContentObserver()
   , mSuppressNotifications(0)
   , mPreCharacterDataChangeLength(-1)
   , mIsObserving(false)
+  , mIMEHasFocus(false)
+  , mIsFocusEventPending(false)
   , mIsSelectionChangeEventPending(false)
   , mSelectionChangeCausedOnlyByComposition(false)
   , mIsPositionChangeEventPending(false)
@@ -176,7 +180,7 @@ IMEContentObserver::Init(nsIWidget* aWidget,
   NS_ENSURE_TRUE_VOID(mRootContent);
 
   if (firstInitialization) {
-    aWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS));
+    MaybeNotifyIMEOfFocusSet();
 
     // While Init() notifies IME of focus, pending layout may be flushed
     // because the notification may cause querying content.  Then, recursive
@@ -197,6 +201,10 @@ IMEContentObserver::Init(nsIWidget* aWidget,
   mDocShell = aPresContext->GetDocShell();
 
   ObserveEditableNode();
+
+  // Some change events may wait to notify IME because this was being
+  // initialized.  It is the time to flush them.
+  FlushMergeableNotifications();
 }
 
 void
@@ -235,16 +243,28 @@ IMEContentObserver::ObserveEditableNode()
 void
 IMEContentObserver::NotifyIMEOfBlur()
 {
-  // If this failed to initialize, mRootContent may be null, then, we
-  // should not call NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR))
-  if (!mRootContent || !mWidget) {
+  // Prevent any notifications to be sent IME.
+  nsCOMPtr<nsIWidget> widget;
+  mWidget.swap(widget);
+
+  // If we hasn't been set focus, we shouldn't send blur notification to IME.
+  if (!mIMEHasFocus) {
     return;
   }
 
-  // A test event handler might destroy the widget.
-  if (mWidget) {
-    mWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
-  }
+  // mWidget must have been non-nullptr if IME has focus.
+  MOZ_RELEASE_ASSERT(widget);
+
+  // For now, we need to send blur notification in any condition because
+  // we don't have any simple ways to send blur notification asynchronously.
+  // After this call, Destroy() or Unlink() will stop observing the content
+  // and forget everything.  Therefore, if it's not safe to send notification
+  // when script blocker is unlocked, we cannot send blur notification after
+  // that and before next focus notification.
+  // Anyway, as far as we know, IME doesn't try to query content when it loses
+  // focus.  So, this may not cause any problem.
+  mIMEHasFocus = false;
+  widget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
 }
 
 void
@@ -291,7 +311,6 @@ IMEContentObserver::Destroy()
   UnregisterObservers();
 
   mEditor = nullptr;
-  // Even if there are some pending notification, it'll never notify the widget.
   mWidget = nullptr;
   mSelection = nullptr;
   mRootContent = nullptr;
@@ -384,61 +403,6 @@ IMEContentObserver::GetSelectionAndRoot(nsISelection** aSelection,
   return NS_OK;
 }
 
-// Helper class, used for selection change notification
-class SelectionChangeEvent : public nsRunnable
-{
-public:
-  SelectionChangeEvent(IMEContentObserver* aDispatcher,
-                       bool aCausedByComposition)
-    : mDispatcher(aDispatcher)
-    , mCausedByComposition(aCausedByComposition)
-  {
-    MOZ_ASSERT(mDispatcher);
-  }
-
-  NS_IMETHOD Run()
-  {
-    nsCOMPtr<nsIWidget> widget = mDispatcher->GetWidget();
-    nsPresContext* presContext = mDispatcher->GetPresContext();
-    if (!widget || !presContext) {
-      return NS_OK;
-    }
-
-    // XXX Cannot we cache some information for reducing the cost to compute
-    //     selection offset and writing mode?
-    WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, widget);
-    ContentEventHandler handler(presContext);
-    handler.OnQuerySelectedText(&selection);
-    if (NS_WARN_IF(!selection.mSucceeded)) {
-      return NS_OK;
-    }
-
-    // The widget might be destroyed during querying the content since it
-    // causes flushing layout.
-    widget = mDispatcher->GetWidget();
-    if (!widget || NS_WARN_IF(widget->Destroyed())) {
-      return NS_OK;
-    }
-
-    IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
-    notification.mSelectionChangeData.mOffset =
-      selection.mReply.mOffset;
-    notification.mSelectionChangeData.mLength =
-      selection.mReply.mString.Length();
-    notification.mSelectionChangeData.SetWritingMode(
-                                        selection.GetWritingMode());
-    notification.mSelectionChangeData.mReversed = selection.mReply.mReversed;
-    notification.mSelectionChangeData.mCausedByComposition =
-      mCausedByComposition;
-    widget->NotifyIME(notification);
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<IMEContentObserver> mDispatcher;
-  bool mCausedByComposition;
-};
-
 nsresult
 IMEContentObserver::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
                                            nsISelection* aSelection,
@@ -458,29 +422,6 @@ IMEContentObserver::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
   }
   return NS_OK;
 }
-
-// Helper class, used for position change notification
-class PositionChangeEvent final : public nsRunnable
-{
-public:
-  explicit PositionChangeEvent(IMEContentObserver* aDispatcher)
-    : mDispatcher(aDispatcher)
-  {
-    MOZ_ASSERT(mDispatcher);
-  }
-
-  NS_IMETHOD Run()
-  {
-    if (mDispatcher->GetWidget()) {
-      mDispatcher->GetWidget()->NotifyIME(
-        IMENotification(NOTIFY_IME_OF_POSITION_CHANGE));
-    }
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<IMEContentObserver> mDispatcher;
-};
 
 void
 IMEContentObserver::ScrollPositionChanged()
@@ -581,40 +522,6 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   aMouseEvent->mFlags.mDefaultPrevented = consumed;
   return consumed;
 }
-
-// Helper class, used for text change notification
-class TextChangeEvent : public nsRunnable
-{
-public:
-  TextChangeEvent(IMEContentObserver* aDispatcher,
-                  IMEContentObserver::TextChangeData& aData)
-    : mDispatcher(aDispatcher)
-    , mData(aData)
-  {
-    MOZ_ASSERT(mDispatcher);
-    MOZ_ASSERT(mData.mStored);
-    // Reset mStored because this now consumes the data.
-    aData.mStored = false;
-  }
-
-  NS_IMETHOD Run()
-  {
-    if (mDispatcher->GetWidget()) {
-      IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
-      notification.mTextChangeData.mStartOffset = mData.mStartOffset;
-      notification.mTextChangeData.mOldEndOffset = mData.mRemovedEndOffset;
-      notification.mTextChangeData.mNewEndOffset = mData.mAddedEndOffset;
-      notification.mTextChangeData.mCausedByComposition =
-        mData.mCausedOnlyByComposition;
-      mDispatcher->GetWidget()->NotifyIME(notification);
-    }
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<IMEContentObserver> mDispatcher;
-  IMEContentObserver::TextChangeData mData;
-};
 
 void
 IMEContentObserver::StoreTextChangeData(const TextChangeData& aTextChangeData)
@@ -1091,16 +998,21 @@ IMEContentObserver::CancelEditAction()
 }
 
 void
-IMEContentObserver::MaybeNotifyIMEOfTextChange(const TextChangeData& aData)
+IMEContentObserver::PostFocusSetNotification()
+{
+  mIsFocusEventPending = true;
+}
+
+void
+IMEContentObserver::PostTextChangeNotification(const TextChangeData& aData)
 {
   StoreTextChangeData(aData);
   MOZ_ASSERT(mTextChangeData.mStored,
              "mTextChangeData must have text change data");
-  FlushMergeableNotifications();
 }
 
 void
-IMEContentObserver::MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition)
+IMEContentObserver::PostSelectionChangeNotification(bool aCausedByComposition)
 {
   if (!mIsSelectionChangeEventPending) {
     mSelectionChangeCausedOnlyByComposition = aCausedByComposition;
@@ -1109,53 +1021,70 @@ IMEContentObserver::MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition)
       mSelectionChangeCausedOnlyByComposition && aCausedByComposition;
   }
   mIsSelectionChangeEventPending = true;
-  FlushMergeableNotifications();
 }
 
 void
-IMEContentObserver::MaybeNotifyIMEOfPositionChange()
+IMEContentObserver::PostPositionChangeNotification()
 {
   mIsPositionChangeEventPending = true;
-  FlushMergeableNotifications();
 }
 
-class AsyncMergeableNotificationsFlusher : public nsRunnable
+bool
+IMEContentObserver::IsReflowLocked() const
 {
-public:
-  explicit AsyncMergeableNotificationsFlusher(IMEContentObserver* aIMEContentObserver)
-    : mIMEContentObserver(aIMEContentObserver)
-  {
-    MOZ_ASSERT(mIMEContentObserver);
+  nsPresContext* presContext = GetPresContext();
+  if (NS_WARN_IF(!presContext)) {
+    return false;
   }
-
-  NS_IMETHOD Run()
-  {
-    mIMEContentObserver->FlushMergeableNotifications();
-    return NS_OK;
+  nsIPresShell* presShell = presContext->GetPresShell();
+  if (NS_WARN_IF(!presShell)) {
+    return false;
   }
+  // During reflow, we shouldn't notify IME because IME may query content
+  // synchronously.  Then, it causes ContentEventHandler will try to flush
+  // pending notifications during reflow.
+  return presShell->IsReflowLocked();
+}
 
-private:
-  nsRefPtr<IMEContentObserver> mIMEContentObserver;
-};
-
-void
-IMEContentObserver::FlushMergeableNotifications()
+bool
+IMEContentObserver::IsSafeToNotifyIME() const
 {
   // If this is already detached from the widget, this doesn't need to notify
   // anything.
   if (!mWidget) {
-    return;
+    return false;
   }
 
   // Don't notify IME of anything if it's not good time to do it.
   if (mSuppressNotifications) {
-    return;
+    return false;
+  }
+
+  if (!mESM || NS_WARN_IF(!GetPresContext())) {
+    return false;
+  }
+
+  // If it's in reflow, we should wait to finish the reflow.
+  // FYI: This should be called again from Reflow() or ReflowInterruptible().
+  if (IsReflowLocked()) {
+    return false;
   }
 
   // If we're in handling an edit action, this method will be called later.
   bool isInEditAction = false;
   if (mEditor && NS_SUCCEEDED(mEditor->GetIsInEditAction(&isInEditAction)) &&
       isInEditAction) {
+    return false;
+  }
+
+  return true;
+}
+
+void
+IMEContentObserver::FlushMergeableNotifications()
+{
+  if (!IsSafeToNotifyIME()) {
+    // So, if this is already called, this should do nothing.
     return;
   }
 
@@ -1174,6 +1103,15 @@ IMEContentObserver::FlushMergeableNotifications()
 
   // NOTE: Reset each pending flag because sending notification may cause
   //       another change.
+
+  if (mIsFocusEventPending) {
+    mIsFocusEventPending = false;
+    nsContentUtils::AddScriptRunner(new FocusSetEvent(this));
+    // This is the first notification to IME. So, we don't need to notify any
+    // more since IME starts to query content after it gets focus.
+    ClearPendingNotifications();
+    return;
+  }
 
   if (mTextChangeData.mStored) {
     nsContentUtils::AddScriptRunner(new TextChangeEvent(this, mTextChangeData));
@@ -1653,5 +1591,183 @@ IMEContentObserver::TestMergingTextChangeData()
   mTextChangeData.mStored = false;
 }
 #endif // #ifdef DEBUG
+
+/******************************************************************************
+ * mozilla::IMEContentObserver::AChangeEvent
+ ******************************************************************************/
+
+bool
+IMEContentObserver::AChangeEvent::CanNotifyIME() const
+{
+  if (NS_WARN_IF(!mIMEContentObserver)) {
+    return false;
+  }
+  State state = mIMEContentObserver->GetState();
+  // If it's not initialized, we should do nothing.
+  if (state == eState_NotObserving) {
+    return false;
+  }
+  // If setting focus, just check the state.
+  if (mChangeEventType == eChangeEventType_Focus) {
+    return !NS_WARN_IF(mIMEContentObserver->mIMEHasFocus);
+  }
+  // If we've not notified IME of focus yet, we shouldn't notify anything.
+  if (!mIMEContentObserver->mIMEHasFocus) {
+    return false;
+  }
+
+  // If IME has focus, IMEContentObserver must hold the widget.
+  MOZ_ASSERT(mIMEContentObserver->mWidget);
+
+  return true;
+}
+
+bool
+IMEContentObserver::AChangeEvent::IsSafeToNotifyIME() const
+{
+  if (NS_WARN_IF(!nsContentUtils::IsSafeToRunScript())) {
+    return false;
+  }
+  State state = mIMEContentObserver->GetState();
+  if (mChangeEventType == eChangeEventType_Focus) {
+    if (NS_WARN_IF(state != eState_Initializing && state != eState_Observing)) {
+      return false;
+    }
+  } else if (state != eState_Observing) {
+    return false;
+  }
+  return mIMEContentObserver->IsSafeToNotifyIME();
+}
+
+/******************************************************************************
+ * mozilla::IMEContentObserver::FocusSetEvent
+ ******************************************************************************/
+
+NS_IMETHODIMP
+IMEContentObserver::FocusSetEvent::Run()
+{
+  if (!CanNotifyIME()) {
+    // If IMEContentObserver has already gone, we don't need to notify IME of
+    // focus.
+    mIMEContentObserver->ClearPendingNotifications();
+    return NS_OK;
+  }
+
+  if (!IsSafeToNotifyIME()) {
+    mIMEContentObserver->PostFocusSetNotification();
+    return NS_OK;
+  }
+
+  mIMEContentObserver->mIMEHasFocus = true;
+  mIMEContentObserver->mWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS));
+  return NS_OK;
+}
+
+/******************************************************************************
+ * mozilla::IMEContentObserver::SelectionChangeEvent
+ ******************************************************************************/
+
+NS_IMETHODIMP
+IMEContentObserver::SelectionChangeEvent::Run()
+{
+  if (!CanNotifyIME()) {
+    return NS_OK;
+  }
+
+  if (!IsSafeToNotifyIME()) {
+    mIMEContentObserver->PostSelectionChangeNotification(mCausedByComposition);
+    return NS_OK;
+  }
+
+  // XXX Cannot we cache some information for reducing the cost to compute
+  //     selection offset and writing mode?
+  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT,
+                                    mIMEContentObserver->mWidget);
+  ContentEventHandler handler(mIMEContentObserver->GetPresContext());
+  handler.OnQuerySelectedText(&selection);
+  if (NS_WARN_IF(!selection.mSucceeded)) {
+    return NS_OK;
+  }
+
+  // The state may be changed since querying content causes flushing layout.
+  if (!CanNotifyIME()) {
+    return NS_OK;
+  }
+
+  IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
+  notification.mSelectionChangeData.mOffset =
+    selection.mReply.mOffset;
+  notification.mSelectionChangeData.mLength =
+    selection.mReply.mString.Length();
+  notification.mSelectionChangeData.SetWritingMode(
+                                      selection.GetWritingMode());
+  notification.mSelectionChangeData.mReversed = selection.mReply.mReversed;
+  notification.mSelectionChangeData.mCausedByComposition =
+    mCausedByComposition;
+  mIMEContentObserver->mWidget->NotifyIME(notification);
+  return NS_OK;
+}
+
+/******************************************************************************
+ * mozilla::IMEContentObserver::TextChangeEvent
+ ******************************************************************************/
+
+NS_IMETHODIMP
+IMEContentObserver::TextChangeEvent::Run()
+{
+  if (!CanNotifyIME()) {
+    return NS_OK;
+  }
+
+  if (!IsSafeToNotifyIME()) {
+    mIMEContentObserver->PostTextChangeNotification(mData);
+    return NS_OK;
+  }
+
+  IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
+  notification.mTextChangeData.mStartOffset = mData.mStartOffset;
+  notification.mTextChangeData.mOldEndOffset = mData.mRemovedEndOffset;
+  notification.mTextChangeData.mNewEndOffset = mData.mAddedEndOffset;
+  notification.mTextChangeData.mCausedByComposition =
+    mData.mCausedOnlyByComposition;
+  mIMEContentObserver->mWidget->NotifyIME(notification);
+  return NS_OK;
+}
+
+/******************************************************************************
+ * mozilla::IMEContentObserver::PositionChangeEvent
+ ******************************************************************************/
+
+NS_IMETHODIMP
+IMEContentObserver::PositionChangeEvent::Run()
+{
+  if (!CanNotifyIME()) {
+    return NS_OK;
+  }
+
+  if (!IsSafeToNotifyIME()) {
+    mIMEContentObserver->PostPositionChangeNotification();
+    return NS_OK;
+  }
+
+  mIMEContentObserver->mWidget->NotifyIME(
+    IMENotification(NOTIFY_IME_OF_POSITION_CHANGE));
+  return NS_OK;
+}
+
+/******************************************************************************
+ * mozilla::IMEContentObserver::AsyncMergeableNotificationsFlusher
+ ******************************************************************************/
+
+NS_IMETHODIMP
+IMEContentObserver::AsyncMergeableNotificationsFlusher::Run()
+{
+  if (!CanNotifyIME()) {
+    return NS_OK;
+  }
+
+  mIMEContentObserver->FlushMergeableNotifications();
+  return NS_OK;
+}
 
 } // namespace mozilla

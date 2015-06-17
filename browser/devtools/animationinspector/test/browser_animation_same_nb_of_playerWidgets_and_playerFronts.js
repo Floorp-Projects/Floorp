@@ -25,7 +25,7 @@ add_task(function*() {
 
   info("Test again with the new UI, making sure the same number of " +
        "animation timelines is created");
-  ({inspector, panel, controller}) = yield closeAnimationInspectorAndRestartWithNewUI();
+  ({inspector, panel, controller} = yield closeAnimationInspectorAndRestartWithNewUI());
   let timeline = panel.animationsTimelineComponent;
 
   info("Selecting the test animated node again");

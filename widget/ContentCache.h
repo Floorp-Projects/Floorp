@@ -229,6 +229,10 @@ private:
     return mSelection.IsValid() && mSelection.EndOffset() <= mText.Length();
   }
 
+  // Stores first char rect because Yosemite's Japanese IME sometimes tries
+  // to query it.  If there is no text, this is caret rect.
+  LayoutDeviceIntRect mFirstCharRect;
+
   struct Caret final
   {
     uint32_t mOffset;
@@ -309,8 +313,22 @@ private:
       }
       return InRange(aOffset) && aOffset + aLength <= EndOffset();
     }
+    bool IsOverlappingWith(uint32_t aOffset, uint32_t aLength) const
+    {
+      if (!IsValid() || aOffset == UINT32_MAX) {
+        return false;
+      }
+      CheckedInt<uint32_t> endOffset =
+        CheckedInt<uint32_t>(aOffset) + aLength;
+      if (NS_WARN_IF(!endOffset.isValid())) {
+        return false;
+      }
+      return aOffset <= EndOffset() && endOffset.value() >= mStart;
+    }
     LayoutDeviceIntRect GetRect(uint32_t aOffset) const;
     LayoutDeviceIntRect GetUnionRect(uint32_t aOffset, uint32_t aLength) const;
+    LayoutDeviceIntRect GetUnionRectAsFarAsPossible(uint32_t aOffset,
+                                                    uint32_t aLength) const;
   } mTextRectArray;
 
   LayoutDeviceIntRect mEditorRect;

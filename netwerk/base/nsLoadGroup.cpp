@@ -249,9 +249,8 @@ nsLoadGroup::GetStatus(nsresult *status)
 static bool
 AppendRequestsToArray(PLDHashTable* aTable, nsTArray<nsIRequest*> *aArray)
 {
-    PLDHashTable::Iterator iter(aTable);
-    while (iter.HasMoreEntries()) {
-        auto e = static_cast<RequestMapEntry*>(iter.NextEntry());
+    for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
+        auto e = static_cast<RequestMapEntry*>(iter.Get());
         nsIRequest *request = e->mKey;
         NS_ASSERTION(request, "What? Null key in pldhash entry?");
 
@@ -710,9 +709,8 @@ nsLoadGroup::GetRequests(nsISimpleEnumerator * *aRequests)
     nsCOMArray<nsIRequest> requests;
     requests.SetCapacity(mRequests.EntryCount());
 
-    PLDHashTable::Iterator iter(&mRequests);
-    while (iter.HasMoreEntries()) {
-      auto e = static_cast<RequestMapEntry*>(iter.NextEntry());
+    for (auto iter = mRequests.Iter(); !iter.Done(); iter.Next()) {
+      auto e = static_cast<RequestMapEntry*>(iter.Get());
       requests.AppendObject(e->mKey);
     }
 
@@ -848,9 +846,8 @@ nsLoadGroup::AdjustPriority(int32_t aDelta)
     // Update the priority for each request that supports nsISupportsPriority
     if (aDelta != 0) {
         mPriority += aDelta;
-        PLDHashTable::Iterator iter(&mRequests);
-        while (iter.HasMoreEntries()) {
-          auto e = static_cast<RequestMapEntry*>(iter.NextEntry());
+        for (auto iter = mRequests.Iter(); !iter.Done(); iter.Next()) {
+          auto e = static_cast<RequestMapEntry*>(iter.Get());
           RescheduleRequest(e->mKey, aDelta);
         }
     }

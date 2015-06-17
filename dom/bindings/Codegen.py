@@ -6928,13 +6928,9 @@ class CGPerSignatureCall(CGThing):
         return wrapCode
 
     def getErrorReport(self):
-        jsImplemented = ""
-        if self.descriptor.interface.isJSImplemented():
-            jsImplemented = ", true"
-        return CGGeneric('return ThrowMethodFailedWithDetails(cx, rv, "%s", "%s"%s);\n'
+        return CGGeneric('return ThrowMethodFailedWithDetails(cx, rv, "%s", "%s");\n'
                          % (self.descriptor.interface.identifier.name,
-                            self.idlNode.identifier.name,
-                            jsImplemented))
+                            self.idlNode.identifier.name))
 
     def define(self):
         return (self.cgRoot.define() + self.wrap_return_value())

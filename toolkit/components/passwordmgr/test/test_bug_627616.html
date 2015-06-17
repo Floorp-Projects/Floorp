@@ -115,7 +115,7 @@
       Cc["@mozilla.org/network/http-auth-manager;1"].getService(SpecialPowers.Ci.nsIHttpAuthManager).clearAll();
       if (pendingTests.length > 0) {
         ({expectedDialogs: gExpectedDialogs,
-          test: gCurrentTest}) = pendingTests.shift();
+          test: gCurrentTest} = pendingTests.shift());
         gCurrentTest.call(this);
       } else {
         cleanup();

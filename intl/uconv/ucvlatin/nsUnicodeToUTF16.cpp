@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsUnicodeToUTF16.h"
+#include "mozilla/CheckedInt.h"
 #include <string.h>
 
 NS_IMETHODIMP nsUnicodeToUTF16BE::Convert(const char16_t * aSrc, int32_t * aSrcLength, 
@@ -17,10 +18,10 @@ NS_IMETHODIMP nsUnicodeToUTF16BE::Convert(const char16_t * aSrc, int32_t * aSrcL
   char16_t *p = (char16_t*)aDest;
  
   // Handle BOM if necessary 
-  if(0!=mBOM)
-  {
-     if(destInLen <2)
+  if (0!=mBOM) {
+     if (destInLen < 2) {
         goto needmoreoutput;
+     }
   
      *p++ = mBOM;
      mBOM = 0;
@@ -29,7 +30,7 @@ NS_IMETHODIMP nsUnicodeToUTF16BE::Convert(const char16_t * aSrc, int32_t * aSrcL
   // find out the length of copy 
 
   copyCharLen = srcInLen;
-  if(copyCharLen > (destInLen - destOutLen) / 2) {
+  if (copyCharLen > (destInLen - destOutLen) / 2) {
      copyCharLen = (destInLen - destOutLen) / 2;
   }
 
@@ -38,8 +39,9 @@ NS_IMETHODIMP nsUnicodeToUTF16BE::Convert(const char16_t * aSrc, int32_t * aSrcL
 
   srcOutLen += copyCharLen;
   destOutLen += copyCharLen * 2;
-  if(copyCharLen < srcInLen)
+  if (copyCharLen < srcInLen) {
       goto needmoreoutput;
+  }
   
   *aSrcLength = srcOutLen;
   *aDestLength = destOutLen;
@@ -54,19 +56,26 @@ needmoreoutput:
 NS_IMETHODIMP nsUnicodeToUTF16BE::GetMaxLength(const char16_t * aSrc, int32_t aSrcLength, 
       int32_t * aDestLength)
 {
-  if(0 != mBOM)
-    *aDestLength = 2*(aSrcLength+1);
-  else 
-    *aDestLength = 2*aSrcLength;
+  mozilla::CheckedInt32 length = aSrcLength;
+
+  if (0 != mBOM) {
+    length += 1;
+  }
+
+  length *= 2;
+
+  if (!length.isValid()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  *aDestLength = length.value();
   return NS_OK_UENC_EXACTLENGTH;
 }
 
 NS_IMETHODIMP nsUnicodeToUTF16BE::Finish(char * aDest, int32_t * aDestLength)
 {
-  if(0 != mBOM)
-  {
-     if(*aDestLength >= 2)
-     {
+  if (0 != mBOM) {
+     if (*aDestLength >= 2) {
         *((char16_t*)aDest)= mBOM;
         mBOM=0;
         *aDestLength = 2;

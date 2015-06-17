@@ -71,11 +71,11 @@ function* isUpdatedAfterScroll(highlighterFront, inspector) {
 
   info("Asking the content window to scroll relative to the current position");
 
-  ({ data }) = yield executeInContent("Test:ScrollWindow", {
+  ({ data } = yield executeInContent("Test:ScrollWindow", {
     x: -50,
     y: -60,
     relative: true
-  });
+  }));
 
   is(data.x, x - 50, "window scrolled properly horizontally");
   is(data.y, y - 60, "window scrolled properly vertically");

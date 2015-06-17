@@ -145,12 +145,12 @@ InstallTrigger.prototype = {
         item = { URL: item };
       }
       if (!item.URL) {
-        throw new this._window.DOMError("Error", "Missing URL property for '" + name + "'");
+        throw new this._window.Error("Missing URL property for '" + name + "'");
       }
 
       let url = this._resolveURL(item.URL);
       if (!this._checkLoadURIFromScript(url)) {
-        throw new this._window.DOMError("SecurityError", "Insufficient permissions to install: " + url.spec);
+        throw new this._window.Error("Insufficient permissions to install: " + url.spec);
       }
 
       let iconUrl = null;

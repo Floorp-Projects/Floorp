@@ -15,7 +15,7 @@ namespace mozilla {
 NS_IMPL_ISUPPORTS0(ProfileGatherer)
 
 ProfileGatherer::ProfileGatherer(TableTicker* aTicker,
-                                 float aSinceTime,
+                                 double aSinceTime,
                                  Promise* aPromise)
   : mPromise(aPromise)
   , mTicker(aTicker)

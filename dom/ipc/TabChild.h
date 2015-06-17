@@ -35,6 +35,7 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "nsIWebBrowserChrome3.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "PuppetWidget.h"
 
 class nsICachedFileDescriptorListener;
 class nsIDOMWindowUtils;
@@ -169,6 +170,9 @@ class TabChildBase : public nsISupports,
                      public nsMessageManagerScriptExecutor,
                      public ipc::MessageManagerCallback
 {
+protected:
+    typedef mozilla::widget::PuppetWidget PuppetWidget;
+
 public:
     TabChildBase();
 
@@ -176,7 +180,7 @@ public:
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TabChildBase)
 
     virtual nsIWebNavigation* WebNavigation() const = 0;
-    virtual nsIWidget* WebWidget() = 0;
+    virtual PuppetWidget* WebWidget() = 0;
     nsIPrincipal* GetPrincipal() { return mPrincipal; }
     // Recalculates the display state, including the CSS
     // viewport. This should be called whenever we believe the
@@ -429,7 +433,7 @@ public:
                                        override;
 
     virtual nsIWebNavigation* WebNavigation() const override { return mWebNav; }
-    virtual nsIWidget* WebWidget() override { return mWidget; }
+    virtual PuppetWidget* WebWidget() override { return mPuppetWidget; }
 
     /** Return the DPI of the widget this TabChild draws to. */
     void GetDPI(float* aDPI);
@@ -614,7 +618,7 @@ private:
 
     TextureFactoryIdentifier mTextureFactoryIdentifier;
     nsCOMPtr<nsIWebNavigation> mWebNav;
-    nsCOMPtr<nsIWidget> mWidget;
+    nsRefPtr<PuppetWidget> mPuppetWidget;
     nsCOMPtr<nsIURI> mLastURI;
     RenderFrameChild* mRemoteFrame;
     nsRefPtr<nsIContentChild> mManager;

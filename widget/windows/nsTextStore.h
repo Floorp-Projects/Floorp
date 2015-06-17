@@ -141,11 +141,11 @@ public:
       sEnabledTextStore->OnTextChangeInternal(aIMENotification) : NS_OK;
   }
 
-  static nsresult OnSelectionChange(void)
+  static nsresult OnSelectionChange(const IMENotification& aIMENotification)
   {
     NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
     return sEnabledTextStore ?
-      sEnabledTextStore->OnSelectionChangeInternal() : NS_OK;
+      sEnabledTextStore->OnSelectionChangeInternal(aIMENotification) : NS_OK;
   }
 
   static nsresult OnLayoutChange()
@@ -153,6 +153,13 @@ public:
     NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
     return sEnabledTextStore ?
       sEnabledTextStore->OnLayoutChangeInternal() : NS_OK;
+  }
+
+  static nsresult OnUpdateComposition()
+  {
+    NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
+    return sEnabledTextStore ?
+      sEnabledTextStore->OnUpdateCompositionInternal() : NS_OK;
   }
 
   static nsresult OnMouseButtonEvent(const IMENotification& aIMENotification)
@@ -258,7 +265,7 @@ protected:
                                          TS_TEXTCHANGE* aTextChange);
   void     CommitCompositionInternal(bool);
   nsresult OnTextChangeInternal(const IMENotification& aIMENotification);
-  nsresult OnSelectionChangeInternal(void);
+  nsresult OnSelectionChangeInternal(const IMENotification& aIMENotification);
   nsresult OnMouseButtonEventInternal(const IMENotification& aIMENotification);
   HRESULT  GetDisplayAttribute(ITfProperty* aProperty,
                                ITfRange* aRange,
@@ -279,11 +286,25 @@ protected:
   HRESULT  RecordCompositionUpdateAction();
   HRESULT  RecordCompositionEndAction();
 
+  // DispatchEvent() dispatches the event and if it may not be handled
+  // synchronously, this makes the instance not notify TSF of pending
+  // notifications until next notification from content.
+  void     DispatchEvent(mozilla::WidgetGUIEvent& aEvent);
+  void     OnLayoutInformationAvaliable();
+
   // FlushPendingActions() performs pending actions recorded in mPendingActions
   // and clear it.
   void     FlushPendingActions();
+  // MaybeFlushPendingNotifications() performs pending notifications to TSF.
+  void     MaybeFlushPendingNotifications();
 
   nsresult OnLayoutChangeInternal();
+  nsresult OnUpdateCompositionInternal();
+
+  void     NotifyTSFOfTextChange(const TS_TEXTCHANGE& aTextChange);
+  void     NotifyTSFOfSelectionChange();
+  bool     NotifyTSFOfLayoutChange(bool aFlush);
+
   HRESULT  HandleRequestAttrs(DWORD aFlags,
                               ULONG aFilterCount,
                               const TS_ATTRID* aFilterAttrs);
@@ -760,6 +781,14 @@ protected:
   bool                         mPendingDestroy;
   // While there is native caret, this is true.  Otherwise, false.
   bool                         mNativeCaretIsCreated;
+  // While the instance is dispatching events, the event may not be handled
+  // synchronously in e10s mode.  So, in such case, in strictly speaking,
+  // we shouldn't query layout information.  However, TS_E_NOLAYOUT bugs of
+  // ITextStoreAPC::GetTextExt() blocks us to behave ideally.
+  // For preventing it to be called, we should put off notifying TSF of
+  // anything until layout information becomes available.
+  bool                         mDeferNotifyingTSF;
+
 
   // TSF thread manager object for the current application
   static mozilla::StaticRefPtr<ITfThreadMgr> sThreadMgr;

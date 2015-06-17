@@ -16,7 +16,7 @@
 
 #define NS_UNICODETOUTF8_CONTRACTID "@mozilla.org/intl/unicode/encoder;1?charset=UTF-8"
 
-//#define NS_ERROR_UCONV_NOUNICODETOUTF8  
+//#define NS_ERROR_UCONV_NOUNICODETOUTF8
 //  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x31)
 
 //----------------------------------------------------------------------
@@ -41,20 +41,21 @@ public:
    */
   nsUnicodeToUTF8() {mHighSurrogate = 0;}
 
-  NS_IMETHOD Convert(const char16_t * aSrc, 
-                     int32_t * aSrcLength, 
-                     char * aDest, 
-                     int32_t * aDestLength) override;
+  NS_IMETHOD Convert(const char16_t*aSrc,
+                     int32_t* aSrcLength,
+                     char* aDest,
+                     int32_t* aDestLength) override;
 
-  NS_IMETHOD Finish(char * aDest, int32_t * aDestLength) override;
+  NS_IMETHOD Finish(char* aDest, int32_t* aDestLength) override;
 
-  NS_IMETHOD GetMaxLength(const char16_t * aSrc, int32_t aSrcLength, 
-      int32_t * aDestLength) override;
+  MOZ_WARN_UNUSED_RESULT NS_IMETHOD GetMaxLength(const char16_t* aSrc,
+                                                 int32_t aSrcLength,
+                                                 int32_t* aDestLength) override;
 
   NS_IMETHOD Reset() override {mHighSurrogate = 0; return NS_OK;}
 
-  NS_IMETHOD SetOutputErrorBehavior(int32_t aBehavior, 
-    nsIUnicharEncoder * aEncoder, char16_t aChar) override {return NS_OK;}
+  NS_IMETHOD SetOutputErrorBehavior(int32_t aBehavior,
+    nsIUnicharEncoder* aEncoder, char16_t aChar) override {return NS_OK;}
 
 protected:
   char16_t mHighSurrogate;

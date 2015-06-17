@@ -3107,39 +3107,53 @@ fi
 AC_SUBST(MOZ_VALGRIND)
 
 dnl ========================================================
-dnl = Use ARM JIT code simulator. Requires an x86 build.
+dnl = Use a JIT code simulator for a foreign architecture.
 dnl ========================================================
-dnl Also define JS_CODEGEN_ARM in this case. If the simulator is not used,
-dnl JS_CODEGEN_foo is defined if JS_CPU_foo is defined.
-MOZ_ARG_ENABLE_BOOL(arm-simulator,
-[  --enable-arm-simulator Enable ARM simulator for JIT code],
-    JS_ARM_SIMULATOR=1,
-    JS_ARM_SIMULATOR= )
-MOZ_ARG_ENABLE_BOOL(mips-simulator,
-[  --enable-mips-simulator Enable MIPS simulator for JIT code],
-    JS_MIPS_SIMULATOR=1,
-    JS_MIPS_SIMULATOR= )
+MOZ_ARG_ENABLE_STRING(simulator,
+[  --enable-simulator=ARCH
+                          Enable a JIT code simulator for the specified arch.
+                          (arm, arm64, mips).],
+    JS_SIMULATOR="$enableval")
 
-if test -n "$JS_ARM_SIMULATOR" && test -n "$JS_MIPS_SIMULATOR"; then
-    AC_MSG_ERROR([Flags --enable-arm-simulator and --enable-mips-simulator cannot be used together.])
+if test -n "$JS_SIMULATOR"; then
+    case "$JS_SIMULATOR" in
+        arm|arm64|mips) ;;
+        no)
+            JS_SIMULATOR=
+            ;;
+        *) AC_MSG_ERROR([Invalid simulator. Valid simulators are: arm, arm64, mips.]) ;;
+    esac
 fi
 
 if test -z "$ENABLE_ION"; then
     AC_DEFINE(JS_CODEGEN_NONE)
     JS_CODEGEN_NONE=1
-elif test -n "$JS_ARM_SIMULATOR"; then
+elif test "$JS_SIMULATOR" = arm; then
     if test "$CPU_ARCH" != "x86"; then
         AC_MSG_ERROR([The ARM simulator only works on x86.])
     fi
-    AC_DEFINE(JS_ARM_SIMULATOR)
+    AC_DEFINE(JS_SIMULATOR)
+    AC_DEFINE(JS_SIMULATOR_ARM)
     AC_DEFINE(JS_CODEGEN_ARM)
+    JS_SIMULATOR_ARM=1
     JS_CODEGEN_ARM=1
-elif test -n "$JS_MIPS_SIMULATOR"; then
+elif test "$JS_SIMULATOR" = arm64; then
+    if test "$CPU_ARCH" != "x86_64"; then
+        AC_MSG_ERROR([The ARM64 simulator only works on x86_64.])
+    fi
+    AC_DEFINE(JS_SIMULATOR)
+    AC_DEFINE(JS_SIMULATOR_ARM64)
+    AC_DEFINE(JS_CODEGEN_ARM64)
+    JS_SIMULATOR_ARM64=1
+    JS_CODEGEN_ARM64=1
+elif test "$JS_SIMULATOR" = mips; then
     if test "$CPU_ARCH" != "x86"; then
         AC_MSG_ERROR([The MIPS simulator only works on x86.])
     fi
-    AC_DEFINE(JS_MIPS_SIMULATOR)
+    AC_DEFINE(JS_SIMULATOR)
+    AC_DEFINE(JS_SIMULATOR_MIPS)
     AC_DEFINE(JS_CODEGEN_MIPS)
+    JS_SIMULATOR_MIPS=1
     JS_CODEGEN_MIPS=1
 elif test "$CPU_ARCH" = "x86"; then
     AC_DEFINE(JS_CODEGEN_X86)
@@ -3160,9 +3174,12 @@ elif test "$CPU_ARCH" = "mips"; then
     JS_CODEGEN_MIPS=1
 fi
 
-AC_SUBST(JS_ARM_SIMULATOR)
-AC_SUBST(JS_MIPS_SIMULATOR)
+AC_SUBST(JS_SIMULATOR)
+AC_SUBST(JS_SIMULATOR_ARM)
+AC_SUBST(JS_SIMULATOR_ARM64)
+AC_SUBST(JS_SIMULATOR_MIPS)
 AC_SUBST(JS_CODEGEN_ARM)
+AC_SUBST(JS_CODEGEN_ARM64)
 AC_SUBST(JS_CODEGEN_MIPS)
 AC_SUBST(JS_CODEGEN_X86)
 AC_SUBST(JS_CODEGEN_X64)

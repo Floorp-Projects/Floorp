@@ -354,9 +354,11 @@ let PopupBlocking = {
 };
 PopupBlocking.init();
 
-// Set up console.* for frame scripts.
-let Console = Components.utils.import("resource://gre/modules/devtools/Console.jsm", {});
-this.console = new Console.ConsoleAPI();
+XPCOMUtils.defineLazyGetter(this, "console", () => {
+  // Set up console.* for frame scripts.
+  let Console = Components.utils.import("resource://gre/modules/devtools/Console.jsm", {});
+  return new Console.ConsoleAPI();
+});
 
 let Printing = {
   // Bug 1088061: nsPrintEngine's DoCommonPrint currently expects the

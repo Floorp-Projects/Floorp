@@ -53,14 +53,9 @@ struct PrintData {
   double paperWidth;
   double paperHeight;
   short paperSizeUnit;
-  nsString plexName;
-  nsString colorspace;
-  nsString resolutionName;
-  bool downloadFonts;
   bool printReversed;
   bool printInColor;
   int32_t orientation;
-  nsString printCommand;
   int32_t numCopies;
   nsString printerName;
   bool printToFile;

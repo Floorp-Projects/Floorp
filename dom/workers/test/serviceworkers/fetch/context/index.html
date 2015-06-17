@@ -303,8 +303,7 @@
       document.documentElement.appendChild(video);
       navigator.serviceWorker.addEventListener("message", function onMessage(e) {
         if (e.data.data == "track") {
-          // FIXME: Bug 1147668: This should be "track".
-          is(e.data.context, "audio", "Expected the audio context on a request coming from a track");
+          is(e.data.context, "track", "Expected the track context on a request coming from a track");
           navigator.serviceWorker.removeEventListener("message", onMessage);
           resolve();
         }

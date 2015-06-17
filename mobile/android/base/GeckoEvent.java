@@ -244,9 +244,9 @@ public class GeckoEvent {
         return GeckoEvent.get(NativeGeckoEvent.NOOP);
     }
 
-    public static GeckoEvent createKeyEvent(KeyEvent k, int metaState) {
+    public static GeckoEvent createKeyEvent(KeyEvent k, int action, int metaState) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.KEY_EVENT);
-        event.initKeyEvent(k, metaState);
+        event.initKeyEvent(k, action, metaState);
         return event;
     }
 
@@ -265,8 +265,11 @@ public class GeckoEvent {
         return GeckoEvent.get(NativeGeckoEvent.COMPOSITOR_RESUME);
     }
 
-    private void initKeyEvent(KeyEvent k, int metaState) {
-        mAction = k.getAction();
+    private void initKeyEvent(KeyEvent k, int action, int metaState) {
+        // Use a separate action argument so we can override the key's original action,
+        // e.g. change ACTION_MULTIPLE to ACTION_DOWN. That way we don't have to allocate
+        // a new key event just to change its action field.
+        mAction = action;
         mTime = k.getEventTime();
         // Normally we expect k.getMetaState() to reflect the current meta-state; however,
         // some software-generated key events may not have k.getMetaState() set, e.g. key
@@ -606,7 +609,7 @@ public class GeckoEvent {
 
     public static GeckoEvent createIMEKeyEvent(KeyEvent k) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.IME_KEY_EVENT);
-        event.initKeyEvent(k, 0);
+        event.initKeyEvent(k, k.getAction(), 0);
         return event;
     }
 

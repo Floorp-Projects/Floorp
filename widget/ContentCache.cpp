@@ -138,6 +138,7 @@ ContentCache::AssignContent(const ContentCache& aOther,
 
   mText = aOther.mText;
   mSelection = aOther.mSelection;
+  mFirstCharRect = aOther.mFirstCharRect;
   mCaret = aOther.mCaret;
   mTextRectArray = aOther.mTextRectArray;
   mEditorRect = aOther.mEditorRect;
@@ -146,15 +147,15 @@ ContentCache::AssignContent(const ContentCache& aOther,
     ("ContentCache: 0x%p (mIsChrome=%s) AssignContent(aNotification=%s), "
      "Succeeded, mText.Length()=%u, mSelection={ mAnchor=%u, mFocus=%u, "
      "mWritingMode=%s, mAnchorCharRect=%s, mFocusCharRect=%s, mRect=%s }, "
-     "mCaret={ mOffset=%u, mRect=%s }, mTextRectArray={ mStart=%u, "
-     "mRects.Length()=%u }, mEditorRect=%s",
+     "mFirstCharRect=%s, mCaret={ mOffset=%u, mRect=%s }, mTextRectArray={ "
+     "mStart=%u, mRects.Length()=%u }, mEditorRect=%s",
      this, GetBoolName(mIsChrome), GetNotificationName(aNotification),
      mText.Length(), mSelection.mAnchor, mSelection.mFocus,
      GetWritingModeName(mSelection.mWritingMode).get(),
      GetRectText(mSelection.mAnchorCharRect).get(),
      GetRectText(mSelection.mFocusCharRect).get(),
-     GetRectText(mSelection.mRect).get(), mCaret.mOffset,
-     GetRectText(mCaret.mRect).get(), mTextRectArray.mStart,
+     GetRectText(mSelection.mRect).get(), GetRectText(mFirstCharRect).get(),
+     mCaret.mOffset, GetRectText(mCaret.mRect).get(), mTextRectArray.mStart,
      mTextRectArray.mRects.Length(), GetRectText(mEditorRect).get()));
 }
 
@@ -171,6 +172,7 @@ ContentCache::Clear()
 
   mText.Truncate();
   mSelection.Clear();
+  mFirstCharRect.SetEmpty();
   mCaret.Clear();
   mTextRectArray.Clear();
   mEditorRect.SetEmpty();
@@ -597,6 +599,7 @@ ContentCache::CacheTextRects(nsIWidget* aWidget,
   mSelection.mAnchorCharRect.SetEmpty();
   mSelection.mFocusCharRect.SetEmpty();
   mSelection.mRect.SetEmpty();
+  mFirstCharRect.SetEmpty();
 
   if (NS_WARN_IF(!mSelection.IsValid())) {
     return false;
@@ -671,16 +674,34 @@ ContentCache::CacheTextRects(nsIWidget* aWidget,
     }
   }
 
+  if (!mSelection.mFocus) {
+    mFirstCharRect = mSelection.mFocusCharRect;
+  } else if (!mSelection.mAnchor) {
+    mFirstCharRect = mSelection.mAnchorCharRect;
+  } else if (mTextRectArray.InRange(0)) {
+    mFirstCharRect = mTextRectArray.GetRect(0);
+  } else {
+    LayoutDeviceIntRect charRect;
+    if (NS_WARN_IF(!QueryCharRect(aWidget, 0, charRect))) {
+      MOZ_LOG(sContentCacheLog, LogLevel::Error,
+        ("ContentCache: 0x%p (mIsChrome=%s) CacheTextRects(), FAILED, "
+         "couldn't retrieve first char rect",
+         this, GetBoolName(mIsChrome)));
+    } else {
+      mFirstCharRect = charRect;
+    }
+  }
+
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("ContentCache: 0x%p (mIsChrome=%s) CacheTextRects(), Succeeded, "
      "mText.Length()=%u, mTextRectArray={ mStart=%u, mRects.Length()=%u }, "
      "mSelection={ mAnchor=%u, mAnchorCharRect=%s, mFocus=%u, "
-     "mFocusCharRect=%s, mRect=%s }",
+     "mFocusCharRect=%s, mRect=%s }, mFirstCharRect=%s",
      this, GetBoolName(mIsChrome), mText.Length(), mTextRectArray.mStart,
      mTextRectArray.mRects.Length(), mSelection.mAnchor,
      GetRectText(mSelection.mAnchorCharRect).get(), mSelection.mFocus,
      GetRectText(mSelection.mFocusCharRect).get(),
-     GetRectText(mSelection.mRect).get()));
+     GetRectText(mSelection.mRect).get(), GetRectText(mFirstCharRect).get()));
   return true;
 }
 
@@ -728,6 +749,11 @@ ContentCache::GetTextRect(uint32_t aOffset,
      this, GetBoolName(mIsChrome), aOffset, mTextRectArray.mStart,
      mTextRectArray.mRects.Length(), mSelection.mAnchor, mSelection.mFocus));
 
+  if (!aOffset) {
+    NS_WARN_IF(mFirstCharRect.IsEmpty());
+    aTextRect = mFirstCharRect;
+    return !aTextRect.IsEmpty();
+  }
   if (aOffset == mSelection.mAnchor) {
     NS_WARN_IF(mSelection.mAnchorCharRect.IsEmpty());
     aTextRect = mSelection.mAnchorCharRect;
@@ -760,6 +786,12 @@ ContentCache::GetUnionTextRects(uint32_t aOffset,
      mTextRectArray.mStart, mTextRectArray.mRects.Length(),
      mSelection.mAnchor, mSelection.mFocus));
 
+  CheckedInt<uint32_t> endOffset =
+    CheckedInt<uint32_t>(aOffset) + aLength;
+  if (!endOffset.isValid()) {
+    return false;
+  }
+
   if (!mSelection.Collapsed() &&
       aOffset == mSelection.StartOffset() && aLength == mSelection.Length()) {
     NS_WARN_IF(mSelection.mRect.IsEmpty());
@@ -768,6 +800,11 @@ ContentCache::GetUnionTextRects(uint32_t aOffset,
   }
 
   if (aLength == 1) {
+    if (!aOffset) {
+      NS_WARN_IF(mFirstCharRect.IsEmpty());
+      aUnionTextRect = mFirstCharRect;
+      return !aUnionTextRect.IsEmpty();
+    }
     if (aOffset == mSelection.mAnchor) {
       NS_WARN_IF(mSelection.mAnchorCharRect.IsEmpty());
       aUnionTextRect = mSelection.mAnchorCharRect;
@@ -780,12 +817,34 @@ ContentCache::GetUnionTextRects(uint32_t aOffset,
     }
   }
 
-  if (!mTextRectArray.InRange(aOffset, aLength)) {
-    aUnionTextRect.SetEmpty();
+  // Even if some text rects are not cached of the queried range,
+  // we should return union rect when the first character's rect is cached
+  // since the first character rect is important and the others are not so
+  // in most cases.
+
+  if (!aOffset && aOffset != mSelection.mAnchor &&
+      aOffset != mSelection.mFocus && !mTextRectArray.InRange(aOffset)) {
+    // The first character rect isn't cached.
     return false;
   }
-  aUnionTextRect = mTextRectArray.GetUnionRect(aOffset, aLength);
-  return true;
+
+  if (mTextRectArray.IsOverlappingWith(aOffset, aLength)) {
+    aUnionTextRect =
+      mTextRectArray.GetUnionRectAsFarAsPossible(aOffset, aLength);
+  } else {
+    aUnionTextRect.SetEmpty();
+  }
+
+  if (!aOffset) {
+    aUnionTextRect = aUnionTextRect.Union(mFirstCharRect);
+  }
+  if (aOffset <= mSelection.mAnchor && mSelection.mAnchor < endOffset.value()) {
+    aUnionTextRect = aUnionTextRect.Union(mSelection.mAnchorCharRect);
+  }
+  if (aOffset <= mSelection.mFocus && mSelection.mFocus < endOffset.value()) {
+    aUnionTextRect = aUnionTextRect.Union(mSelection.mFocusCharRect);
+  }
+  return !aUnionTextRect.IsEmpty();
 }
 
 bool
@@ -796,14 +855,16 @@ ContentCache::GetCaretRect(uint32_t aOffset,
     ("ContentCache: 0x%p (mIsChrome=%s) GetCaretRect(aOffset=%u), "
      "mCaret={ mOffset=%u, mRect=%s, IsValid()=%s }, mTextRectArray={ "
      "mStart=%u, mRects.Length()=%u }, mSelection={ mAnchor=%u, mFocus=%u, "
-     "mWritingMode=%s, mAnchorCharRect=%s, mFocusCharRect=%s }",
+     "mWritingMode=%s, mAnchorCharRect=%s, mFocusCharRect=%s }, "
+     "mFirstCharRect=%s",
      this, GetBoolName(mIsChrome), aOffset, mCaret.mOffset,
      GetRectText(mCaret.mRect).get(), GetBoolName(mCaret.IsValid()),
      mTextRectArray.mStart, mTextRectArray.mRects.Length(),
      mSelection.mAnchor, mSelection.mFocus,
      GetWritingModeName(mSelection.mWritingMode).get(),
      GetRectText(mSelection.mAnchorCharRect).get(),
-     GetRectText(mSelection.mFocusCharRect).get()));
+     GetRectText(mSelection.mFocusCharRect).get(),
+     GetRectText(mFirstCharRect).get()));
 
   if (mCaret.IsValid() && mCaret.mOffset == aOffset) {
     aCaretRect = mCaret.mRect;
@@ -957,6 +1018,23 @@ ContentCache::TextRectArray::GetUnionRect(uint32_t aOffset,
   }
   for (uint32_t i = 0; i < aLength; i++) {
     rect = rect.Union(mRects[aOffset - mStart + i]);
+  }
+  return rect;
+}
+
+LayoutDeviceIntRect
+ContentCache::TextRectArray::GetUnionRectAsFarAsPossible(
+                               uint32_t aOffset,
+                               uint32_t aLength) const
+{
+  LayoutDeviceIntRect rect;
+  if (!IsOverlappingWith(aOffset, aLength)) {
+    return rect;
+  }
+  uint32_t startOffset = std::max(aOffset, mStart);
+  uint32_t endOffset = std::min(aOffset + aLength, EndOffset());
+  for (uint32_t i = 0; i < endOffset - startOffset; i++) {
+    rect = rect.Union(mRects[startOffset - mStart + i]);
   }
   return rect;
 }

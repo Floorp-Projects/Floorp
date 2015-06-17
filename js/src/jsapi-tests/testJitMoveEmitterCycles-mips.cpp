@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if defined(JS_MIPS_SIMULATOR)
+#if defined(JS_SIMULATOR_MIPS)
 #include "jit/Linker.h"
 #include "jit/MacroAssembler.h"
 #include "jit/mips/Assembler-mips.h"

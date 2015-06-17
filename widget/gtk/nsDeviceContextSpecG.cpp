@@ -245,13 +245,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget *aWidget,
   return NS_OK;
 }
 
-/* static !! */
-nsresult nsDeviceContextSpecGTK::GetPrintMethod(const char *aPrinter, PrintMethod &aMethod)
-{
-  aMethod = pmPostScript;
-  return NS_OK;
-}
-
 static void
 #if (MOZ_WIDGET_GTK == 3)
 print_callback(GtkPrintJob *aJob, gpointer aData, const GError *aError) {
@@ -374,66 +367,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
   return NS_OK;
 }
 
-/* Get prefs for printer
- * Search order:
- * - Get prefs per printer name and module name
- * - Get prefs per printer name
- * - Get prefs per module name
- * - Get prefs
- */
-static
-nsresult CopyPrinterCharPref(const char *modulename, const char *printername,
-                             const char *prefname, nsCString &return_buf)
-{
-  DO_PR_DEBUG_LOG(("CopyPrinterCharPref('%s', '%s', '%s')\n", modulename, printername, prefname));
-
-  nsresult rv = NS_ERROR_FAILURE;
- 
-  if (printername && modulename) {
-    /* Get prefs per printer name and module name */
-    nsPrintfCString name("print.%s.printer_%s.%s", modulename, printername, prefname);
-    DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-    rv = Preferences::GetCString(name.get(), &return_buf);
-  }
-  
-  if (NS_FAILED(rv)) { 
-    if (printername) {
-      /* Get prefs per printer name */
-      nsPrintfCString name("print.printer_%s.%s", printername, prefname);
-      DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-      rv = Preferences::GetCString(name.get(), &return_buf);
-    }
-
-    if (NS_FAILED(rv)) {
-      if (modulename) {
-        /* Get prefs per module name */
-        nsPrintfCString name("print.%s.%s", modulename, prefname);
-        DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-        rv = Preferences::GetCString(name.get(), &return_buf);
-      }
-      
-      if (NS_FAILED(rv)) {
-        /* Get prefs */
-        nsPrintfCString name("print.%s", prefname);
-        DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-        rv = Preferences::GetCString(name.get(), &return_buf);
-      }
-    }
-  }
-
-#ifdef PR_LOG  
-  if (NS_SUCCEEDED(rv)) {
-    DO_PR_DEBUG_LOG(("CopyPrinterCharPref returning '%s'.\n", return_buf.get()));
-  }
-  else
-  {
-    DO_PR_DEBUG_LOG(("CopyPrinterCharPref failure.\n"));
-  }
-#endif /* PR_LOG */
-
-  return rv;
-}
-
 //  Printer Enumerator
 nsPrinterEnumeratorGTK::nsPrinterEnumeratorGTK()
 {
@@ -484,118 +417,27 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::GetDefaultPrinterName(char16_t **aDefaultP
 NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const char16_t *aPrinterName, nsIPrintSettings *aPrintSettings)
 {
   DO_PR_DEBUG_LOG(("nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter()"));
-  nsresult rv;
 
-  NS_ENSURE_ARG_POINTER(aPrinterName);
   NS_ENSURE_ARG_POINTER(aPrintSettings);
-  
-  NS_ENSURE_TRUE(*aPrinterName, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(aPrintSettings, NS_ERROR_FAILURE);
 
-  nsXPIDLCString fullPrinterName, /* Full name of printer incl. driver-specific prefix */ 
-                 printerName;     /* "Stripped" name of printer */
-  fullPrinterName.Assign(NS_ConvertUTF16toUTF8(aPrinterName));
-  printerName.Assign(NS_ConvertUTF16toUTF8(aPrinterName));
-  DO_PR_DEBUG_LOG(("printerName='%s'\n", printerName.get()));
-  
-  PrintMethod type = pmInvalid;
-  rv = nsDeviceContextSpecGTK::GetPrintMethod(printerName, type);
-  if (NS_FAILED(rv))
-    return rv;
-
-  /* "Demangle" postscript printer name */
-  if (type == pmPostScript) {
-    /* Strip the printing method name from the printer,
-     * e.g. turn "PostScript/foobar" to "foobar" */
-    int32_t slash = printerName.FindChar('/');
-    if (kNotFound != slash)
-      printerName.Cut(0, slash + 1);
-  }
-  
   /* Set filename */
   nsAutoCString filename;
-  if (NS_FAILED(CopyPrinterCharPref(nullptr, printerName, "filename", filename))) {
-    const char *path;
+  const char *path;
   
-    if (!(path = PR_GetEnv("PWD")))
-      path = PR_GetEnv("HOME");
+  if (!(path = PR_GetEnv("PWD")))
+    path = PR_GetEnv("HOME");
   
-    if (path)
-      filename = nsPrintfCString("%s/mozilla.pdf", path);
-    else
-      filename.AssignLiteral("mozilla.pdf");
-  }  
+  if (path)
+    filename = nsPrintfCString("%s/mozilla.pdf", path);
+  else
+    filename.AssignLiteral("mozilla.pdf");
+
   DO_PR_DEBUG_LOG(("Setting default filename to '%s'\n", filename.get()));
   aPrintSettings->SetToFileName(NS_ConvertUTF8toUTF16(filename).get());
 
   aPrintSettings->SetIsInitializedFromPrinter(true);
 
-  if (type == pmPostScript) {
-    DO_PR_DEBUG_LOG(("InitPrintSettingsFromPrinter() for PostScript printer\n"));
-     
-    nsAutoCString orientation;
-    if (NS_SUCCEEDED(CopyPrinterCharPref("postscript", printerName,
-                                         "orientation", orientation))) {
-      if (orientation.LowerCaseEqualsLiteral("portrait")) {
-        DO_PR_DEBUG_LOG(("setting default orientation to 'portrait'\n"));
-        aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
-      }
-      else if (orientation.LowerCaseEqualsLiteral("landscape")) {
-        DO_PR_DEBUG_LOG(("setting default orientation to 'landscape'\n"));
-        aPrintSettings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);  
-      }
-      else {
-        DO_PR_DEBUG_LOG(("Unknown default orientation '%s'\n", orientation.get()));
-      }
-    }
-
-    /* PostScript module does not support changing the plex mode... */
-    DO_PR_DEBUG_LOG(("setting default plex to '%s'\n", "default"));
-    aPrintSettings->SetPlexName(MOZ_UTF16("default"));
-
-    /* PostScript module does not support changing the resolution mode... */
-    DO_PR_DEBUG_LOG(("setting default resolution to '%s'\n", "default"));
-    aPrintSettings->SetResolutionName(MOZ_UTF16("default"));
-
-    /* PostScript module does not support changing the colorspace... */
-    DO_PR_DEBUG_LOG(("setting default colorspace to '%s'\n", "default"));
-    aPrintSettings->SetColorspace(MOZ_UTF16("default"));
-
-    nsAutoCString papername;
-    if (NS_SUCCEEDED(CopyPrinterCharPref("postscript", printerName,
-                                         "paper_size", papername))) {
-      nsPaperSizePS paper;
-
-      if (paper.Find(papername.get())) {
-        DO_PR_DEBUG_LOG(("setting default paper size to '%s' (%g mm/%g mm)\n",
-              paper.Name(), paper.Width_mm(), paper.Height_mm()));
-	aPrintSettings->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeMillimeters);
-        aPrintSettings->SetPaperWidth(paper.Width_mm());
-        aPrintSettings->SetPaperHeight(paper.Height_mm());
-        aPrintSettings->SetPaperName(NS_ConvertASCIItoUTF16(paper.Name()).get());
-      }
-      else {
-        DO_PR_DEBUG_LOG(("Unknown paper size '%s' given.\n", papername.get()));
-      }
-    }
-
-    bool hasSpoolerCmd = (nsPSPrinterList::kTypePS ==
-        nsPSPrinterList::GetPrinterType(fullPrinterName));
-
-    if (hasSpoolerCmd) {
-      nsAutoCString command;
-      if (NS_SUCCEEDED(CopyPrinterCharPref("postscript",
-            printerName, "print_command", command))) {
-        DO_PR_DEBUG_LOG(("setting default print command to '%s'\n",
-            command.get()));
-        aPrintSettings->SetPrintCommand(NS_ConvertUTF8toUTF16(command).get());
-      }
-    }
-    
-    return NS_OK;    
-  }
-
-  return NS_ERROR_UNEXPECTED;
+  return NS_OK;    
 }
 
 NS_IMETHODIMP nsPrinterEnumeratorGTK::DisplayPropertiesDlg(const char16_t *aPrinter, nsIPrintSettings *aPrintSettings)

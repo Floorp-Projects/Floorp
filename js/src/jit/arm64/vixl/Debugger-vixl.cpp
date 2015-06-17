@@ -26,7 +26,7 @@
 
 #include "js-config.h"
 
-#ifdef JS_ARM64_SIMULATOR
+#ifdef JS_SIMULATOR_ARM64
 
 #include "jit/arm64/vixl/Debugger-vixl.h"
 
@@ -1506,4 +1506,4 @@ bool InvalidCommand::Run(Debugger* debugger) {
 
 }  // namespace vixl
 
-#endif  // JS_ARM64_SIMULATOR
+#endif  // JS_SIMULATOR_ARM64

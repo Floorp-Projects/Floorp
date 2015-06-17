@@ -16,9 +16,10 @@ namespace mozilla {
 // the array.
 typedef void* (*DeferredFinalizeAppendFunction)(void* aPointers, void* aThing);
 
-// Called to finalize a number of objects. Slice is the number of objects
-// to finalize, or if it's UINT32_MAX, all objects should be finalized.
-// Return value indicates whether it finalized all objects in the buffer.
+// Called to finalize a number of objects. Slice is the number of objects to
+// finalize. The return value indicates whether it finalized all objects in the
+// buffer. If it returns true, the function will not be called again, so the
+// function should free aData.
 typedef bool (*DeferredFinalizeFunction)(uint32_t aSlice, void* aData);
 
 void DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,

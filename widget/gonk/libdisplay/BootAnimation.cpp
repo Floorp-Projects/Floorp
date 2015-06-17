@@ -253,8 +253,17 @@ struct AnimationFrame {
 struct AnimationPart {
     int32_t count;
     int32_t pause;
+    // If you alter the size of the path, change ReadFromString() as well.
     char path[256];
     vector<AnimationFrame> frames;
+
+    bool
+    ReadFromString(const char* aLine)
+    {
+        MOZ_ASSERT(aLine);
+        // this 255 value must be in sync with AnimationPart::path.
+        return sscanf(aLine, "p %d %d %255s", &count, &pause, path) == 3;
+    }
 };
 
 struct RawReadState {
@@ -575,8 +584,7 @@ AnimationThread(void *)
         if (headerRead &&
             sscanf(line, "%d %d %d", &width, &height, &fps) == 3) {
             headerRead = false;
-        } else if (sscanf(line, "p %d %d %s",
-                          &part.count, &part.pause, part.path)) {
+        } else if (part.ReadFromString(line)) {
             parts.push_back(part);
         }
     } while (end && *(line = end + 1));

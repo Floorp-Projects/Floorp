@@ -127,7 +127,8 @@ protected:
     nsJSThingHashtable<nsURIHashKey, JSScript*>              mScriptTable;
     nsRefPtrHashtable<nsURIHashKey,nsXBLDocumentInfo>        mXBLDocTable;
 
-    nsTHashtable<nsURIHashKey>                               mCacheURITable;
+    // URIs already written to the startup cache, to prevent double-caching.
+    nsTHashtable<nsURIHashKey>                               mStartupCacheURITable;
 
     nsInterfaceHashtable<nsURIHashKey, nsIStorageStream>     mOutputStreamTable;
     nsInterfaceHashtable<nsURIHashKey, nsIObjectInputStream> mInputStreamTable;

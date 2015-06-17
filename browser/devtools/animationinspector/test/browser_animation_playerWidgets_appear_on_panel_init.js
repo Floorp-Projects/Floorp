@@ -14,7 +14,7 @@ add_task(function*() {
   is(panel.playerWidgets.length, 1,
     "One animation player is displayed after init");
 
-  ({panel}) = yield closeAnimationInspectorAndRestartWithNewUI();
+  ({panel} = yield closeAnimationInspectorAndRestartWithNewUI());
   is(panel.animationsTimelineComponent.animations.length, 1,
     "One animation is handled by the timeline after init");
   is(panel.animationsTimelineComponent.animationsEl.childNodes.length, 1,

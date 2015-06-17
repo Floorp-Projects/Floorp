@@ -81,6 +81,11 @@ SOURCES += [
     'system/core/libutils/VectorImpl.cpp',
 ]
 
+if CONFIG['MOZ_RUST']:
+    SOURCES += [
+        'binding/MP4Metadata.rs',
+    ]
+
 UNIFIED_SOURCES += [
     'binding/Adts.cpp',
     'binding/AnnexB.cpp',

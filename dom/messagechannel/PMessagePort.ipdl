@@ -1,0 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PBlob;
+
+using struct nsID from "nsID.h";
+
+namespace mozilla {
+namespace dom {
+
+struct MessagePortIdentifier
+{
+  nsID uuid;
+  nsID destinationUuid;
+  uint32_t sequenceId;
+  bool neutered;
+};
+
+struct MessagePortMessage
+{
+  MessagePortIdentifier[] transferredPorts;
+  uint8_t[] data;
+  PBlob[] blobs;
+};
+
+// This protocol is used for the MessageChannel/MessagePort API
+protocol PMessagePort
+{
+  manager PBackground;
+
+  /* Many of these methods are used just for the shutdown sequence. The
+     correct sequence for the child actor is:
+     1. SendStopSendingData();
+     2. RecvStopSendingDataConfirmed();
+     3. SendClose();
+     4. Recv__delete__(); */
+
+  /* When the port is transferred the sequence is:
+     1. SendStopSendingData();
+     2. RecvStopSendingDataConfirmed();
+     3. SendDisentangle();
+     4. Recv__delete__(); */
+
+parent:
+  PostMessages(MessagePortMessage[] messages);
+  Disentangle(MessagePortMessage[] messages);
+  StopSendingData();
+  Close();
+
+child:
+  Entangled(MessagePortMessage[] messages);
+  ReceiveData(MessagePortMessage[] messages);
+  StopSendingDataConfirmed();
+
+  __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla
+

@@ -79,8 +79,8 @@ onconnect = function(event) {
     if (!("ports" in event)) {
       throw new Error("'message' event doesn't have a 'ports' property!");
     }
-    if (!(event.ports === null)) {
-      throw new Error("'message' event has a non-null 'ports' property!");
+    if (event.ports === null) {
+      throw new Error("'message' event has a null 'ports' property!");
     }
     event.target.postMessage(event.data);
     throw new Error(event.data);
