@@ -29,31 +29,55 @@ window.Frame = React.createClass({
     head: React.PropTypes.node,
     width: React.PropTypes.number,
     height: React.PropTypes.number,
-    onContentsRendered: React.PropTypes.func
+    onContentsRendered: React.PropTypes.func,
+    className: React.PropTypes.string,
+    /* By default, <link rel="stylesheet> nodes from the containing frame's
+       head will be cloned into this iframe.  However, if the link also has
+       a "class" attribute, we only clone it if that class attribute is the
+       same as cssClass.  This allows us to avoid injecting stylesheets that
+       aren't intended for this rendering of this component. */
+    cssClass: React.PropTypes.string
   },
   render: function() {
     return React.createElement("iframe", {
       style: this.props.style,
       head: this.props.head,
       width: this.props.width,
-      height: this.props.height
+      height: this.props.height,
+      className: this.props.className
     });
   },
   componentDidMount: function() {
     this.renderFrameContents();
   },
   renderFrameContents: function() {
-    var doc = this.getDOMNode().contentDocument;
-    if (doc && doc.readyState === "complete") {
+    function isStyleSheet(node) {
+      return node.tagName.toLowerCase() === "link" &&
+        node.getAttribute("rel") === "stylesheet";
+    }
+
+    var childDoc = this.getDOMNode().contentDocument;
+    if (childDoc && childDoc.readyState === "complete") {
       // Remove this from the queue.
       window.queuedFrames.splice(window.queuedFrames.indexOf(this), 1);
 
-      var iframeHead = doc.querySelector("head");
+      var iframeHead = childDoc.querySelector("head");
       var parentHeadChildren = document.querySelector("head").children;
 
       [].forEach.call(parentHeadChildren, function(parentHeadNode) {
+
+        // if this node is a CSS stylesheet...
+        if (isStyleSheet(parentHeadNode)) {
+          // and it has a class different from the one that this frame does,
+          // return immediately instead of appending it.
+          if (parentHeadNode.hasAttribute("class") && this.props.cssClass &&
+            parentHeadNode.getAttribute("class") !== this.props.cssClass) {
+            return;
+          }
+        }
+
         iframeHead.appendChild(parentHeadNode.cloneNode(true));
-      });
+      }.bind(this));
 
       var contents = React.createElement("div",
         undefined,
@@ -61,14 +85,14 @@ window.Frame = React.createClass({
         this.props.children
       );
 
-      React.render(contents, doc.body, this.fireOnContentsRendered.bind(this));
+      React.render(contents, childDoc.body, this.fireOnContentsRendered);
 
       // Set the RTL mode. We assume for now that rtl is the only query parameter.
       //
       // See also "ShowCase" in ui-showcase.jsx
       if (document.location.search === "?rtl=1") {
-        doc.documentElement.setAttribute("lang", "ar");
-        doc.documentElement.setAttribute("dir", "rtl");
+        childDoc.documentElement.setAttribute("lang", "ar");
+        childDoc.documentElement.setAttribute("dir", "rtl");
       }
     } else {
       // Queue it, only if it isn't already. We do need to set the timeout
@@ -76,7 +100,7 @@ window.Frame = React.createClass({
       if (window.queuedFrames.indexOf(this) === -1) {
         window.queuedFrames.push(this);
       }
-      setTimeout(this.renderFrameContents.bind(this), 0);
+      setTimeout(this.renderFrameContents, 0);
     }
   },
   /**
