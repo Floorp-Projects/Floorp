@@ -69,9 +69,9 @@ add_test(function test_register_twice_same_channel() {
       // Register again for the same channel
       MozLoopPushHandler.register(
         "chan-2",
-        function(err, url, id) {
-          Assert.equal(err, null, "Should return null for success");
-          Assert.equal(id, "chan-2", "Should have channel id = chan-2");
+        function(error, newUrl, newId) {
+          Assert.equal(error, null, "Should return null for success");
+          Assert.equal(newId, "chan-2", "Should have channel id = chan-2");
           run_next_test();
         },
         dummyCallback

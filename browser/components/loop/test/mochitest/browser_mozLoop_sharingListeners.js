@@ -37,10 +37,10 @@ function promiseWindowIdReceivedOnAdd(handler) {
 
 let createdTabs = [];
 
-function promiseWindowIdReceivedNewTab(handlers = []) {
+function promiseWindowIdReceivedNewTab(handlersParam = []) {
   let promiseHandlers = [];
 
-  handlers.forEach(handler => {
+  handlersParam.forEach(handler => {
     promiseHandlers.push(new Promise(resolve => {
       handler.resolve = resolve;
     }));

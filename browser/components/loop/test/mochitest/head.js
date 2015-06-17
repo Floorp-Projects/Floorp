@@ -184,8 +184,8 @@ function promiseDeletedOAuthParams(baseURL) {
 
 function promiseObserverNotified(aTopic, aExpectedData = null) {
   return new Promise((resolve, reject) => {
-    Services.obs.addObserver(function onNotification(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(onNotification, aTopic);
+    Services.obs.addObserver(function onNotification(aSubject, topic, aData) {
+      Services.obs.removeObserver(onNotification, topic);
       is(aData, aExpectedData, "observer data should match expected data");
       resolve({subject: aSubject, data: aData});
     }, aTopic, false);

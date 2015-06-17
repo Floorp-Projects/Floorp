@@ -368,6 +368,7 @@ let {
   Debugger,
   createSandbox,
   dump,
+  rpc,
   loadSubScript,
   reportError,
   setImmediate,
@@ -405,6 +406,8 @@ let {
       });
     };
 
+    let rpc = undefined;
+
     let subScriptLoader = Cc['@mozilla.org/moz/jssubscript-loader;1'].
                  getService(Ci.mozIJSSubScriptLoader);
 
@@ -427,6 +430,7 @@ let {
       Debugger,
       createSandbox,
       dump,
+      rpc,
       loadSubScript,
       reportError,
       setImmediate,
@@ -459,6 +463,7 @@ let {
       Debugger: this.Debugger,
       createSandbox: this.createSandbox,
       dump: this.dump,
+      rpc: this.rpc,
       loadSubScript: this.loadSubScript,
       reportError: this.reportError,
       setImmediate: this.setImmediate,
@@ -477,6 +482,7 @@ this.worker = new WorkerDebuggerLoader({
     "dump": dump,
     "loader": loader,
     "reportError": reportError,
+    "rpc": rpc,
     "setImmediate": setImmediate
   },
   loadSubScript: loadSubScript,

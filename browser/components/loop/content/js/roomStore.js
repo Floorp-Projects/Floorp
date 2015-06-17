@@ -523,9 +523,9 @@ loop.store = loop.store || {};
 
         this.setStoreState({error: null});
         this._mozLoop.rooms.update(actionData.roomToken, roomData,
-          function(err, data) {
-            var action = err ?
-              new sharedActions.UpdateRoomContextError({ error: err }) :
+          function(error, data) {
+            var action = error ?
+              new sharedActions.UpdateRoomContextError({ error: error }) :
               new sharedActions.UpdateRoomContextDone();
             this.dispatchAction(action);
           }.bind(this));

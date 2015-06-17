@@ -615,8 +615,8 @@ describe("loop.standaloneRoomViews", function() {
       });
 
       describe("Join button", function() {
-        function getJoinButton(view) {
-          return view.getDOMNode().querySelector(".btn-join");
+        function getJoinButton(elem) {
+          return elem.getDOMNode().querySelector(".btn-join");
         }
 
         it("should render the Join button when room isn't active", function() {
@@ -738,8 +738,8 @@ describe("loop.standaloneRoomViews", function() {
       });
 
       describe("Leave button", function() {
-        function getLeaveButton(view) {
-          return view.getDOMNode().querySelector(".btn-hangup");
+        function getLeaveButton(elem) {
+          return elem.getDOMNode().querySelector(".btn-hangup");
         }
 
         it("should disable the Leave button when the room state is READY",

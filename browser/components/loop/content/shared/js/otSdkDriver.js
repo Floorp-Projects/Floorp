@@ -680,7 +680,7 @@ loop.OTSdkDriver = (function() {
         this._publisherChannel = channel;
 
         channel.on({
-          close: function(event) {
+          close: function(e) {
             // XXX We probably want to dispatch and handle this somehow.
             console.log("Published data channel closed!");
           }
@@ -697,16 +697,16 @@ loop.OTSdkDriver = (function() {
         }
 
         channel.on({
-          message: function(event) {
+          message: function(ev) {
             try {
               this.dispatcher.dispatch(
-                new sharedActions.ReceivedTextChatMessage(JSON.parse(event.data)));
+                new sharedActions.ReceivedTextChatMessage(JSON.parse(ev.data)));
             } catch (ex) {
               console.error("Failed to process incoming chat message", ex);
             }
           }.bind(this),
 
-          close: function(event) {
+          close: function(e) {
             // XXX We probably want to dispatch and handle this somehow.
             console.log("Subscribed data channel closed!");
           }

@@ -152,14 +152,14 @@ describe("loop.StandaloneMozLoop", function() {
   });
 
   describe("#rooms.refreshMembership", function() {
-    var mozLoop, fakeServerErrorDescription;
+    var standaloneMozLoop, fakeServerErrDescription;
 
     beforeEach(function() {
-      mozLoop = new loop.StandaloneMozLoop({
+      standaloneMozLoop = new loop.StandaloneMozLoop({
         baseServerUrl: fakeBaseServerUrl
       });
 
-      fakeServerErrorDescription = {
+      fakeServerErrDescription = {
         code: 401,
         errno: 101,
         error: "error",
@@ -169,7 +169,8 @@ describe("loop.StandaloneMozLoop", function() {
     });
 
     it("should POST to the server", function() {
-      mozLoop.rooms.refreshMembership("fakeToken", "fakeSessionToken", callback);
+      standaloneMozLoop.rooms.refreshMembership("fakeToken", "fakeSessionToken",
+                                                callback);
 
       expect(requests).to.have.length.of(1);
       expect(requests[0].url).eql(fakeBaseServerUrl + "/rooms/fakeToken");
@@ -183,7 +184,8 @@ describe("loop.StandaloneMozLoop", function() {
     });
 
     it("should call the callback with success parameters", function() {
-      mozLoop.rooms.refreshMembership("fakeToken", "fakeSessionToken", callback);
+      standaloneMozLoop.rooms.refreshMembership("fakeToken", "fakeSessionToken",
+                                                callback);
 
       var responseData = {
         expires: 20
@@ -197,10 +199,11 @@ describe("loop.StandaloneMozLoop", function() {
     });
 
     it("should call the callback with failure parameters", function() {
-      mozLoop.rooms.refreshMembership("fakeToken", "fakeSessionToken", callback);
+      standaloneMozLoop.rooms.refreshMembership("fakeToken", "fakeSessionToken",
+                                                callback);
 
       requests[0].respond(401, {"Content-Type": "application/json"},
-                          JSON.stringify(fakeServerErrorDescription));
+                          JSON.stringify(fakeServerErrDescription));
       sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
         return /HTTP 401 Unauthorized/.test(err.message);
       }));
