@@ -6,6 +6,7 @@
 #include "nsUCSupport.h"
 #include "nsUnicodeDecodeHelper.h"
 #include "nsUnicodeEncodeHelper.h"
+#include "mozilla/CheckedInt.h"
 #include <algorithm>
 
 #define DEFAULT_BUFFER_CAPACITY 16
@@ -185,7 +186,15 @@ NS_IMETHODIMP nsBufferDecoderSupport::GetMaxLength(const char* aSrc,
                                                    int32_t* aDestLength)
 {
   NS_ASSERTION(mMaxLengthFactor != 0, "Must override GetMaxLength!");
-  *aDestLength = aSrcLength * mMaxLengthFactor;
+
+  mozilla::CheckedInt32 length = aSrcLength;
+  length *= mMaxLengthFactor;
+
+  if (!length.isValid()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aDestLength = length.value();
   return NS_OK;
 }
 
@@ -551,7 +560,14 @@ nsEncoderSupport::GetMaxLength(const char16_t * aSrc,
                                int32_t aSrcLength,
                                int32_t * aDestLength)
 {
-  *aDestLength = aSrcLength * mMaxLengthFactor;
+  mozilla::CheckedInt32 length = aSrcLength;
+  length *= mMaxLengthFactor;
+
+  if (!length.isValid()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aDestLength = length.value();
   return NS_OK;
 }
 

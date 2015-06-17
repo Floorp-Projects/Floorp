@@ -716,7 +716,13 @@ void ConvertHTMLtoUCS2(guchar * data, int32_t dataLength,
         }
         decoder = EncodingUtils::DecoderForEncoding(encoding);
         // converting
-        decoder->GetMaxLength((const char *)data, dataLength, &outUnicodeLen);
+        nsresult rv = decoder->GetMaxLength((const char *)data, dataLength,
+                                            &outUnicodeLen);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          outUnicodeLen = 0;
+          return;
+        }
+
         // |outUnicodeLen| is number of chars
         if (outUnicodeLen) {
             *unicodeData = reinterpret_cast<char16_t*>

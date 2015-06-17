@@ -20,12 +20,13 @@ protected:
                                  int32_t * aSrcLength, char16_t * aDest,
                                  int32_t * aDestLength, bool aSwapBytes);
 
-public: 
+public:
   //--------------------------------------------------------------------
   // Subclassing of nsDecoderSupport class [declaration]
 
-  NS_IMETHOD GetMaxLength(const char * aSrc, int32_t aSrcLength, 
-      int32_t * aDestLength);
+  MOZ_WARN_UNUSED_RESULT NS_IMETHOD GetMaxLength(const char * aSrc,
+                                                 int32_t aSrcLength,
+                                                 int32_t * aDestLength) override;
   NS_IMETHOD Reset();
 
 protected:
@@ -44,7 +45,7 @@ class nsUTF16BEToUnicode : public nsUTF16ToUnicodeBase
 public:
 
   NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength,
-      char16_t * aDest, int32_t * aDestLength); 
+      char16_t * aDest, int32_t * aDestLength);
 };
 
 // UTF-16 little endian
@@ -53,7 +54,7 @@ class nsUTF16LEToUnicode : public nsUTF16ToUnicodeBase
 public:
 
   NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength,
-      char16_t * aDest, int32_t * aDestLength); 
+      char16_t * aDest, int32_t * aDestLength);
 };
 
 // UTF-16 with BOM
@@ -63,14 +64,14 @@ public:
 
   nsUTF16ToUnicode() { Reset();}
   NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength,
-      char16_t * aDest, int32_t * aDestLength); 
+      char16_t * aDest, int32_t * aDestLength);
 
   NS_IMETHOD Reset();
 
 private:
 
   enum Endian {kUnknown, kBigEndian, kLittleEndian};
-  Endian  mEndian; 
+  Endian  mEndian;
   bool    mFoundBOM;
 };
 

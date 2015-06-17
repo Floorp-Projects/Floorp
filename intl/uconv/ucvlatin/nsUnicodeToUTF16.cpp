@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsUnicodeToUTF16.h"
+#include "mozilla/CheckedInt.h"
 #include <string.h>
 
 NS_IMETHODIMP nsUnicodeToUTF16BE::Convert(const char16_t * aSrc, int32_t * aSrcLength, 
@@ -54,10 +55,19 @@ needmoreoutput:
 NS_IMETHODIMP nsUnicodeToUTF16BE::GetMaxLength(const char16_t * aSrc, int32_t aSrcLength, 
       int32_t * aDestLength)
 {
-  if(0 != mBOM)
-    *aDestLength = 2*(aSrcLength+1);
-  else 
-    *aDestLength = 2*aSrcLength;
+  mozilla::CheckedInt32 length = 2;
+
+  if(0 != mBOM) {
+    length *= (aSrcLength+1);
+  } else {
+    length *= aSrcLength;
+  }
+
+  if (!length.isValid()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aDestLength = length.value();
   return NS_OK_UENC_EXACTLENGTH;
 }
 
