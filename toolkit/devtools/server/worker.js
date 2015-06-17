@@ -1,7 +1,27 @@
 "use strict"
 
+// This function is used to do remote procedure calls from the worker to the
+// main thread. It is exposed as a built-in global to every module by the
+// worker loader. To make sure the worker loader can access it, it needs to be
+// defined before loading the worker loader script below.
+this.rpc = function (method, ...params) {
+  let id = nextId++;
+
+  postMessage(JSON.stringify({
+    type: "rpc",
+    method: method,
+    params: params,
+    id: id
+  }));
+
+  let deferred = Promise.defer();
+  rpcDeferreds[id] = deferred;
+  return deferred.promise;
+};
+
 loadSubScript("resource://gre/modules/devtools/worker-loader.js");
 
+let Promise = worker.require("promise");
 let { ActorPool } = worker.require("devtools/server/actors/common");
 let { ThreadActor } = worker.require("devtools/server/actors/script");
 let { TabSources } = worker.require("devtools/server/actors/utils/TabSources");
@@ -14,6 +34,8 @@ DebuggerServer.createRootActor = function () {
 };
 
 let connections = Object.create(null);
+let nextId = 0;
+let rpcDeferreds = [];
 
 this.addEventListener("message",  function (event) {
   let packet = JSON.parse(event.data);
@@ -21,7 +43,10 @@ this.addEventListener("message",  function (event) {
   case "connect":
     // Step 3: Create a connection to the parent.
     let connection = DebuggerServer.connectToParent(packet.id, this);
-    connections[packet.id] = connection;
+    connections[packet.id] = {
+      connection : connection,
+      rpcs: []
+    };
 
     // Step 4: Create a thread actor for the connection to the parent.
     let pool = new ActorPool(connection);
@@ -60,7 +85,16 @@ this.addEventListener("message",  function (event) {
     break;
 
   case "disconnect":
-    connections[packet.id].close();
+    connections[packet.id].connection.close();
+    break;
+
+  case "rpc":
+    let deferred = rpcDeferreds[packet.id];
+    delete rpcDeferreds[packet.id];
+    if (packet.error) {
+        deferred.reject(packet.error);
+    }
+    deferred.resolve(packet.result);
     break;
   };
 });

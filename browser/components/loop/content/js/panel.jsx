@@ -720,6 +720,12 @@ loop.panel = (function(_, mozL10n) {
       // even if there's a small delay.
 
       this.props.mozLoop.getSelectedTabMetadata(function callback(metadata) {
+        // Bail out when the component is not mounted (anymore).
+        // This occurs during test runs. See bug 1174611 for more info.
+        if (!this.isMounted()) {
+          return;
+        }
+
         var previewImage = metadata.favicon || "";
         var description = metadata.title || metadata.description;
         var url = metadata.url;

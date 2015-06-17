@@ -23,7 +23,6 @@
     <RelativeLayout android:id="@+id/gecko_layout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_weight="1"
                     android:layout_below="@+id/webapp_titlebar">
 
         <include layout="@layout/shared_ui_components"/>

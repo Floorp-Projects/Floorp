@@ -106,7 +106,12 @@ BottomHost.prototype = {
     }
     this.isMinimized = true;
 
-    let onTransitionEnd = () => {
+    let onTransitionEnd = event => {
+      if (event.propertyName !== "margin-bottom") {
+        // Ignore transitionend on unrelated properties.
+        return;
+      }
+
       this.frame.removeEventListener("transitionend", onTransitionEnd);
       this.emit("minimized");
     };
@@ -125,7 +130,12 @@ BottomHost.prototype = {
     }
     this.isMinimized = false;
 
-    let onTransitionEnd = () => {
+    let onTransitionEnd = event => {
+      if (event.propertyName !== "margin-bottom") {
+        // Ignore transitionend on unrelated properties.
+        return;
+      }
+
       this.frame.removeEventListener("transitionend", onTransitionEnd);
       this.emit("maximized");
     };
