@@ -14,7 +14,9 @@ apt-get install -y \
     curl \
     x11-utils \
     python-virtualenv \
-    valgrind
+    valgrind \
+    uuid-dev \
+    sqlite3
 
 # see https://bugzilla.mozilla.org/show_bug.cgi?id=1161075
 apt-get install -y openjdk-7-jdk
