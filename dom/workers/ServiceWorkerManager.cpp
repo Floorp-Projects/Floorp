@@ -3200,7 +3200,7 @@ public:
     rv = channel->GetLoadInfo(getter_AddRefs(loadInfo));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mContentPolicyType = loadInfo->GetContentPolicyType();
+    mContentPolicyType = loadInfo->InternalContentPolicyType();
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
     if (httpChannel) {
