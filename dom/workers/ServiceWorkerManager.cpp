@@ -2701,6 +2701,7 @@ ServiceWorkerManager::CreateServiceWorkerForWindow(nsPIDOMWindow* aWindow,
                                            NS_ConvertUTF8toUTF16(aInfo->ScriptSpec()),
                                            false,
                                            WorkerPrivate::OverrideLoadGroup,
+                                           WorkerTypeService,
                                            &loadInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
