@@ -16,7 +16,6 @@
 #include "vp8/common/alloccommon.h"
 #include "mcomp.h"
 #include "firstpass.h"
-#include "psnr.h"
 #include "vpx_scale/vpx_scale.h"
 #include "vp8/common/extend.h"
 #include "ratectrl.h"
@@ -99,6 +98,7 @@ void vp8_temporal_filter_apply_c
     unsigned int i, j, k;
     int modifier;
     int byte = 0;
+    const int rounding = strength > 0 ? 1 << (strength - 1) : 0;
 
     for (i = 0,k = 0; i < block_size; i++)
     {
@@ -115,7 +115,7 @@ void vp8_temporal_filter_apply_c
              */
             modifier  *= modifier;
             modifier  *= 3;
-            modifier  += 1 << (strength - 1);
+            modifier  += rounding;
             modifier >>= strength;
 
             if (modifier > 16)
@@ -162,6 +162,8 @@ static int vp8_temporal_filter_find_matching_mb_c
     unsigned char *base_pre = x->e_mbd.pre.y_buffer;
     int pre = d->offset;
     int pre_stride = x->e_mbd.pre.y_stride;
+
+    (void)error_thresh;
 
     best_ref_mv1.as_int = 0;
     best_ref_mv1_full.as_mv.col = best_ref_mv1.as_mv.col >>3;

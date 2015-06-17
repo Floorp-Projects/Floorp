@@ -88,8 +88,7 @@ vpx_codec_err_t vpx_codec_destroy(vpx_codec_ctx_t *ctx) {
   else if (!ctx->iface || !ctx->priv)
     res = VPX_CODEC_ERROR;
   else {
-    if (ctx->priv->alg_priv)
-      ctx->iface->destroy(ctx->priv->alg_priv);
+    ctx->iface->destroy((vpx_codec_alg_priv_t *)ctx->priv);
 
     ctx->iface = NULL;
     ctx->name = NULL;
@@ -125,7 +124,7 @@ vpx_codec_err_t vpx_codec_control_(vpx_codec_ctx_t  *ctx,
         va_list  ap;
 
         va_start(ap, ctrl_id);
-        res = entry->fn(ctx->priv->alg_priv, ctrl_id, ap);
+        res = entry->fn((vpx_codec_alg_priv_t *)ctx->priv, ap);
         va_end(ap);
         break;
       }
@@ -135,50 +134,25 @@ vpx_codec_err_t vpx_codec_control_(vpx_codec_ctx_t  *ctx,
   return SAVE_STATUS(ctx, res);
 }
 
-//------------------------------------------------------------------------------
-// mmap interface
+void vpx_internal_error(struct vpx_internal_error_info *info,
+                        vpx_codec_err_t                 error,
+                        const char                     *fmt,
+                        ...) {
+  va_list ap;
 
-vpx_codec_err_t vpx_mmap_alloc(vpx_codec_mmap_t *mmap) {
-  unsigned int align = mmap->align ? mmap->align - 1 : 0;
+  info->error_code = error;
+  info->has_detail = 0;
 
-  if (mmap->flags & VPX_CODEC_MEM_ZERO)
-    mmap->priv = calloc(1, mmap->sz + align);
-  else
-    mmap->priv = malloc(mmap->sz + align);
+  if (fmt) {
+    size_t  sz = sizeof(info->detail);
 
-  if (mmap->priv == NULL) return VPX_CODEC_MEM_ERROR;
-  mmap->base = (void *)((((uintptr_t)mmap->priv) + align) & ~(uintptr_t)align);
-  mmap->dtor = vpx_mmap_dtor;
-  return VPX_CODEC_OK;
-}
-
-void vpx_mmap_dtor(vpx_codec_mmap_t *mmap) {
-  free(mmap->priv);
-}
-
-vpx_codec_err_t vpx_validate_mmaps(const vpx_codec_stream_info_t *si,
-                                   const vpx_codec_mmap_t *mmaps,
-                                   const mem_req_t *mem_reqs, int nreqs,
-                                   vpx_codec_flags_t init_flags) {
-  int i;
-
-  for (i = 0; i < nreqs - 1; ++i) {
-    /* Ensure the segment has been allocated */
-    if (mmaps[i].base == NULL) {
-      return VPX_CODEC_MEM_ERROR;
-    }
-
-    /* Verify variable size segment is big enough for the current si. */
-    if (mem_reqs[i].calc_sz != NULL) {
-      vpx_codec_dec_cfg_t cfg;
-
-      cfg.w = si->w;
-      cfg.h = si->h;
-
-      if (mmaps[i].sz < mem_reqs[i].calc_sz(&cfg, init_flags)) {
-        return VPX_CODEC_MEM_ERROR;
-      }
-    }
+    info->has_detail = 1;
+    va_start(ap, fmt);
+    vsnprintf(info->detail, sz - 1, fmt, ap);
+    va_end(ap);
+    info->detail[sz - 1] = '\0';
   }
-  return VPX_CODEC_OK;
+
+  if (info->setjmp)
+    longjmp(info->jmp, info->error_code);
 }

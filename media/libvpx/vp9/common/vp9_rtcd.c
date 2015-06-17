@@ -16,5 +16,7 @@ void vpx_scale_rtcd(void);
 
 void vp9_rtcd() {
     vpx_scale_rtcd();
+    // TODO(JBB): Remove this once, by insuring that both the encoder and
+    // decoder setup functions are protected by once();
     once(setup_rtcd_internal);
 }

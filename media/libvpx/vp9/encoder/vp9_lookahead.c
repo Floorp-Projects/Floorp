@@ -14,22 +14,13 @@
 
 #include "vp9/common/vp9_common.h"
 
+#include "vp9/encoder/vp9_encoder.h"
 #include "vp9/encoder/vp9_extend.h"
 #include "vp9/encoder/vp9_lookahead.h"
-#include "vp9/encoder/vp9_onyx_int.h"
-
-struct lookahead_ctx {
-  unsigned int max_sz;         /* Absolute size of the queue */
-  unsigned int sz;             /* Number of buffers currently in the queue */
-  unsigned int read_idx;       /* Read index */
-  unsigned int write_idx;      /* Write index */
-  struct lookahead_entry *buf; /* Buffer list */
-};
-
 
 /* Return the buffer at the given absolute index and increment the index */
-static struct lookahead_entry * pop(struct lookahead_ctx *ctx,
-                                    unsigned int *idx) {
+static struct lookahead_entry *pop(struct lookahead_ctx *ctx,
+                                   unsigned int *idx) {
   unsigned int index = *idx;
   struct lookahead_entry *buf = ctx->buf + index;
 
@@ -55,19 +46,26 @@ void vp9_lookahead_destroy(struct lookahead_ctx *ctx) {
 }
 
 
-struct lookahead_ctx * vp9_lookahead_init(unsigned int width,
-                                          unsigned int height,
-                                          unsigned int subsampling_x,
-                                          unsigned int subsampling_y,
-                                          unsigned int depth) {
+struct lookahead_ctx *vp9_lookahead_init(unsigned int width,
+                                         unsigned int height,
+                                         unsigned int subsampling_x,
+                                         unsigned int subsampling_y,
+#if CONFIG_VP9_HIGHBITDEPTH
+                                         int use_highbitdepth,
+#endif
+                                         unsigned int depth) {
   struct lookahead_ctx *ctx = NULL;
 
   // Clamp the lookahead queue depth
   depth = clamp(depth, 1, MAX_LAG_BUFFERS);
 
+  // Allocate memory to keep previous source frames available.
+  depth += MAX_PRE_FRAMES;
+
   // Allocate the lookahead structures
   ctx = calloc(1, sizeof(*ctx));
   if (ctx) {
+    const int legacy_byte_alignment = 0;
     unsigned int i;
     ctx->max_sz = depth;
     ctx->buf = calloc(depth, sizeof(*ctx->buf));
@@ -76,7 +74,11 @@ struct lookahead_ctx * vp9_lookahead_init(unsigned int width,
     for (i = 0; i < depth; i++)
       if (vp9_alloc_frame_buffer(&ctx->buf[i].img,
                                  width, height, subsampling_x, subsampling_y,
-                                 VP9_ENC_BORDER_IN_PIXELS))
+#if CONFIG_VP9_HIGHBITDEPTH
+                                 use_highbitdepth,
+#endif
+                                 VP9_ENC_BORDER_IN_PIXELS,
+                                 legacy_byte_alignment))
         goto bail;
   }
   return ctx;
@@ -88,19 +90,39 @@ struct lookahead_ctx * vp9_lookahead_init(unsigned int width,
 #define USE_PARTIAL_COPY 0
 
 int vp9_lookahead_push(struct lookahead_ctx *ctx, YV12_BUFFER_CONFIG   *src,
-                       int64_t ts_start, int64_t ts_end, unsigned int flags,
-                       unsigned char *active_map) {
+                       int64_t ts_start, int64_t ts_end,
+#if CONFIG_VP9_HIGHBITDEPTH
+                       int use_highbitdepth,
+#endif
+                       unsigned int flags) {
   struct lookahead_entry *buf;
 #if USE_PARTIAL_COPY
   int row, col, active_end;
   int mb_rows = (src->y_height + 15) >> 4;
   int mb_cols = (src->y_width + 15) >> 4;
 #endif
+  int width = src->y_crop_width;
+  int height = src->y_crop_height;
+  int uv_width = src->uv_crop_width;
+  int uv_height = src->uv_crop_height;
+  int subsampling_x = src->subsampling_x;
+  int subsampling_y = src->subsampling_y;
+  int larger_dimensions, new_dimensions;
 
-  if (ctx->sz + 1 > ctx->max_sz)
+  if (ctx->sz + 1  + MAX_PRE_FRAMES > ctx->max_sz)
     return 1;
   ctx->sz++;
   buf = pop(ctx, &ctx->write_idx);
+
+  new_dimensions = width != buf->img.y_crop_width ||
+                   height != buf->img.y_crop_height ||
+                   uv_width != buf->img.uv_crop_width ||
+                   uv_height != buf->img.uv_crop_height;
+  larger_dimensions = width > buf->img.y_width ||
+                      height > buf->img.y_height ||
+                      uv_width > buf->img.uv_width ||
+                      uv_height > buf->img.uv_height;
+  assert(!larger_dimensions || new_dimensions);
 
 #if USE_PARTIAL_COPY
   // TODO(jkoleszar): This is disabled for now, as
@@ -110,7 +132,7 @@ int vp9_lookahead_push(struct lookahead_ctx *ctx, YV12_BUFFER_CONFIG   *src,
   // 1. Lookahead queue has has size of 1.
   // 2. Active map is provided.
   // 3. This is not a key frame, golden nor altref frame.
-  if (ctx->max_sz == 1 && active_map && !flags) {
+  if (!new_dimensions && ctx->max_sz == 1 && active_map && !flags) {
     for (row = 0; row < mb_rows; ++row) {
       col = 0;
 
@@ -146,11 +168,32 @@ int vp9_lookahead_push(struct lookahead_ctx *ctx, YV12_BUFFER_CONFIG   *src,
       active_map += mb_cols;
     }
   } else {
+#endif
+    if (larger_dimensions) {
+      YV12_BUFFER_CONFIG new_img;
+      memset(&new_img, 0, sizeof(new_img));
+      if (vp9_alloc_frame_buffer(&new_img,
+                                 width, height, subsampling_x, subsampling_y,
+#if CONFIG_VP9_HIGHBITDEPTH
+                                 use_highbitdepth,
+#endif
+                                 VP9_ENC_BORDER_IN_PIXELS,
+                                 0))
+          return 1;
+      vp9_free_frame_buffer(&buf->img);
+      buf->img = new_img;
+    } else if (new_dimensions) {
+      buf->img.y_crop_width = src->y_crop_width;
+      buf->img.y_crop_height = src->y_crop_height;
+      buf->img.uv_crop_width = src->uv_crop_width;
+      buf->img.uv_crop_height = src->uv_crop_height;
+      buf->img.subsampling_x = src->subsampling_x;
+      buf->img.subsampling_y = src->subsampling_y;
+    }
+    // Partial copy not implemented yet
     vp9_copy_and_extend_frame(src, &buf->img);
+#if USE_PARTIAL_COPY
   }
-#else
-  // Partial copy not implemented yet
-  vp9_copy_and_extend_frame(src, &buf->img);
 #endif
 
   buf->ts_start = ts_start;
@@ -160,11 +203,11 @@ int vp9_lookahead_push(struct lookahead_ctx *ctx, YV12_BUFFER_CONFIG   *src,
 }
 
 
-struct lookahead_entry * vp9_lookahead_pop(struct lookahead_ctx *ctx,
-                                           int drain) {
+struct lookahead_entry *vp9_lookahead_pop(struct lookahead_ctx *ctx,
+                                          int drain) {
   struct lookahead_entry *buf = NULL;
 
-  if (ctx->sz && (drain || ctx->sz == ctx->max_sz)) {
+  if (ctx->sz && (drain || ctx->sz == ctx->max_sz - MAX_PRE_FRAMES)) {
     buf = pop(ctx, &ctx->read_idx);
     ctx->sz--;
   }
@@ -172,16 +215,28 @@ struct lookahead_entry * vp9_lookahead_pop(struct lookahead_ctx *ctx,
 }
 
 
-struct lookahead_entry * vp9_lookahead_peek(struct lookahead_ctx *ctx,
-                                            int index) {
+struct lookahead_entry *vp9_lookahead_peek(struct lookahead_ctx *ctx,
+                                           int index) {
   struct lookahead_entry *buf = NULL;
 
-  if (index < (int)ctx->sz) {
-    index += ctx->read_idx;
-    if (index >= (int)ctx->max_sz)
-      index -= ctx->max_sz;
-    buf = ctx->buf + index;
+  if (index >= 0) {
+    // Forward peek
+    if (index < (int)ctx->sz) {
+      index += ctx->read_idx;
+      if (index >= (int)ctx->max_sz)
+        index -= ctx->max_sz;
+      buf = ctx->buf + index;
+    }
+  } else if (index < 0) {
+    // Backward peek
+    if (-index <= MAX_PRE_FRAMES) {
+      index += ctx->read_idx;
+      if (index < 0)
+        index += ctx->max_sz;
+      buf = ctx->buf + index;
+    }
   }
+
   return buf;
 }
 

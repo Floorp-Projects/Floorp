@@ -101,7 +101,7 @@ SECTION .text
   pshufd               m4, m6, 0x1
   movd               [r1], m7           ; store sse
   paddd                m6, m4
-  movd                rax, m6           ; store sum as return value
+  movd               raxd, m6           ; store sum as return value
 %else ; mmsize == 8
   pshufw               m4, m6, 0xe
   pshufw               m3, m7, 0xe
@@ -113,7 +113,7 @@ SECTION .text
   movd               [r1], m7           ; store sse
   pshufw               m4, m6, 0xe
   paddd                m6, m4
-  movd                rax, m6           ; store sum as return value
+  movd               raxd, m6           ; store sum as return value
 %endif
   RET
 %endmacro

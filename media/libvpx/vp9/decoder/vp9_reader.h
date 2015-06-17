@@ -16,6 +16,7 @@
 
 #include "./vpx_config.h"
 #include "vpx_ports/mem.h"
+#include "vpx/vp8dx.h"
 #include "vpx/vpx_integer.h"
 
 #include "vp9/common/vp9_prob.h"
@@ -29,14 +30,22 @@ typedef size_t BD_VALUE;
 #define BD_VALUE_SIZE ((int)sizeof(BD_VALUE) * CHAR_BIT)
 
 typedef struct {
+  // Be careful when reordering this struct, it may impact the cache negatively.
+  BD_VALUE value;
+  unsigned int range;
+  int count;
   const uint8_t *buffer_end;
   const uint8_t *buffer;
-  BD_VALUE value;
-  int count;
-  unsigned int range;
+  vpx_decrypt_cb decrypt_cb;
+  void *decrypt_state;
+  uint8_t clear_buffer[sizeof(BD_VALUE) + 1];
 } vp9_reader;
 
-int vp9_reader_init(vp9_reader *r, const uint8_t *buffer, size_t size);
+int vp9_reader_init(vp9_reader *r,
+                    const uint8_t *buffer,
+                    size_t size,
+                    vpx_decrypt_cb decrypt_cb,
+                    void *decrypt_state);
 
 void vp9_reader_fill(vp9_reader *r);
 
@@ -44,7 +53,7 @@ int vp9_reader_has_error(vp9_reader *r);
 
 const uint8_t *vp9_reader_find_end(vp9_reader *r);
 
-static int vp9_read(vp9_reader *r, int prob) {
+static INLINE int vp9_read(vp9_reader *r, int prob) {
   unsigned int bit = 0;
   BD_VALUE value;
   BD_VALUE bigsplit;
@@ -81,11 +90,11 @@ static int vp9_read(vp9_reader *r, int prob) {
   return bit;
 }
 
-static int vp9_read_bit(vp9_reader *r) {
+static INLINE int vp9_read_bit(vp9_reader *r) {
   return vp9_read(r, 128);  // vp9_prob_half
 }
 
-static int vp9_read_literal(vp9_reader *r, int bits) {
+static INLINE int vp9_read_literal(vp9_reader *r, int bits) {
   int literal = 0, bit;
 
   for (bit = bits - 1; bit >= 0; bit--)
@@ -94,8 +103,8 @@ static int vp9_read_literal(vp9_reader *r, int bits) {
   return literal;
 }
 
-static int vp9_read_tree(vp9_reader *r, const vp9_tree_index *tree,
-                         const vp9_prob *probs) {
+static INLINE int vp9_read_tree(vp9_reader *r, const vp9_tree_index *tree,
+                                const vp9_prob *probs) {
   vp9_tree_index i = 0;
 
   while ((i = tree[i + vp9_read(r, probs[i >> 1])]) > 0)

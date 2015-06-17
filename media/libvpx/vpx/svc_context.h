@@ -23,13 +23,6 @@
 extern "C" {
 #endif
 
-typedef enum SVC_ENCODING_MODE {
-  INTER_LAYER_PREDICTION_I,
-  ALT_INTER_LAYER_PREDICTION_IP,
-  INTER_LAYER_PREDICTION_IP,
-  USE_GOLDEN_FRAME
-} SVC_ENCODING_MODE;
-
 typedef enum SVC_LOG_LEVEL {
   SVC_LOG_ERROR,
   SVC_LOG_INFO,
@@ -38,8 +31,8 @@ typedef enum SVC_LOG_LEVEL {
 
 typedef struct {
   // public interface to svc_command options
-  int spatial_layers;               // number of layers
-  SVC_ENCODING_MODE encoding_mode;  // svc encoding strategy
+  int spatial_layers;               // number of spatial layers
+  int temporal_layers;               // number of temporal layers
   SVC_LOG_LEVEL log_level;  // amount of information to display
   int log_print;  // when set, printf log messages instead of returning the
                   // message with svc_get_message
@@ -47,6 +40,36 @@ typedef struct {
   // private storage for vpx_svc_encode
   void *internal;
 } SvcContext;
+
+#define OPTION_BUFFER_SIZE 1024
+#define COMPONENTS 4  // psnr & sse statistics maintained for total, y, u, v
+
+typedef struct SvcInternal {
+  char options[OPTION_BUFFER_SIZE];        // set by vpx_svc_set_options
+
+  // values extracted from option, quantizers
+  vpx_svc_extra_cfg_t svc_params;
+  int enable_auto_alt_ref[VPX_SS_MAX_LAYERS];
+  int bitrates[VPX_SS_MAX_LAYERS];
+
+  // accumulated statistics
+  double psnr_sum[VPX_SS_MAX_LAYERS][COMPONENTS];   // total/Y/U/V
+  uint64_t sse_sum[VPX_SS_MAX_LAYERS][COMPONENTS];
+  uint32_t bytes_sum[VPX_SS_MAX_LAYERS];
+
+  // codec encoding values
+  int width;    // width of highest layer
+  int height;   // height of highest layer
+  int kf_dist;  // distance between keyframes
+
+  // state variables
+  int psnr_pkt_received;
+  int layer;
+  int use_multiple_frame_contexts;
+
+  char message_buffer[2048];
+  vpx_codec_ctx_t *codec_ctx;
+} SvcInternal_t;
 
 /**
  * Set SVC options
@@ -59,32 +82,19 @@ typedef struct {
 vpx_codec_err_t vpx_svc_set_options(SvcContext *svc_ctx, const char *options);
 
 /**
- * Set SVC quantizer values
- * values comma separated, ordered from lowest resolution to highest
- * e.g., "60,53,39,33,27"
- */
-vpx_codec_err_t vpx_svc_set_quantizers(SvcContext *svc_ctx,
-                                       const char *quantizer_values);
-
-/**
- * Set SVC scale factors
- * values comma separated, ordered from lowest resolution to highest
- * e.g.,  "4/16,5/16,7/16,11/16,16/16"
- */
-vpx_codec_err_t vpx_svc_set_scale_factors(SvcContext *svc_ctx,
-                                          const char *scale_factors);
-
-/**
  * initialize SVC encoding
  */
-vpx_codec_err_t vpx_svc_init(SvcContext *svc_ctx, vpx_codec_ctx_t *codec_ctx,
+vpx_codec_err_t vpx_svc_init(SvcContext *svc_ctx,
+                             vpx_codec_ctx_t *codec_ctx,
                              vpx_codec_iface_t *iface,
                              vpx_codec_enc_cfg_t *cfg);
 /**
  * encode a frame of video with multiple layers
  */
-vpx_codec_err_t vpx_svc_encode(SvcContext *svc_ctx, vpx_codec_ctx_t *codec_ctx,
-                               struct vpx_image *rawimg, vpx_codec_pts_t pts,
+vpx_codec_err_t vpx_svc_encode(SvcContext *svc_ctx,
+                               vpx_codec_ctx_t *codec_ctx,
+                               struct vpx_image *rawimg,
+                               vpx_codec_pts_t pts,
                                int64_t duration, int deadline);
 
 /**
@@ -101,38 +111,6 @@ const char *vpx_svc_dump_statistics(SvcContext *svc_ctx);
  *  get status message from previous encode
  */
 const char *vpx_svc_get_message(const SvcContext *svc_ctx);
-
-/**
- * return size of encoded data to be returned by vpx_svc_get_buffer
- */
-size_t vpx_svc_get_frame_size(const SvcContext *svc_ctx);
-
-/**
- * return buffer with encoded data
- */
-void *vpx_svc_get_buffer(const SvcContext *svc_ctx);
-
-/**
- * return spatial resolution of the specified layer
- */
-vpx_codec_err_t vpx_svc_get_layer_resolution(const SvcContext *svc_ctx,
-                                             int layer,
-                                             unsigned int *width,
-                                             unsigned int *height);
-/**
- * return number of frames that have been encoded
- */
-int vpx_svc_get_encode_frame_count(const SvcContext *svc_ctx);
-
-/**
- * return 1 if last encoded frame was a keyframe
- */
-int vpx_svc_is_keyframe(const SvcContext *svc_ctx);
-
-/**
- * force the next frame to be a keyframe
- */
-void vpx_svc_set_keyframe(SvcContext *svc_ctx);
 
 #ifdef __cplusplus
 }  // extern "C"
