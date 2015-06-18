@@ -12,7 +12,7 @@ class EndMarker:
     pass
 
 
-def _do_work(qTasks, qResults, timeout):
+def _do_work(qTasks, qResults, prefix, timeout):
     while True:
         test = qTasks.get(block=True, timeout=sys.maxint)
         if test is EndMarker:
@@ -61,8 +61,8 @@ def run_all_tests_gen(tests, prefix, results, options):
     assert qResults.empty(), "Result queue not drained"
 
 
-def run_all_tests(tests, results, options):
-    for result in run_all_tests_gen(tests, results, options):
+def run_all_tests(tests, prefix, results, options):
+    for result in run_all_tests_gen(tests, prefix, results, options):
         results.push(result)
     return True
 
