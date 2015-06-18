@@ -176,6 +176,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
           React.createElement("h1", null, mozL10n.get("clientShortname2")), 
           React.createElement("a", {href: loop.config.generalSupportUrl, 
              onClick: this.recordClick, 
+             rel: "noreferrer", 
              target: "_blank"}, 
             React.createElement("i", {className: "icon icon-help"})
           )
@@ -196,12 +197,12 @@ loop.standaloneRoomViews = (function(mozL10n) {
       return mozL10n.get("legal_text_and_links", {
         "clientShortname": mozL10n.get("clientShortname2"),
         "terms_of_use_url": React.renderToStaticMarkup(
-          React.createElement("a", {href: loop.config.legalWebsiteUrl, target: "_blank"}, 
+          React.createElement("a", {href: loop.config.legalWebsiteUrl, rel: "noreferrer", target: "_blank"}, 
             mozL10n.get("terms_of_use_link_text")
           )
         ),
         "privacy_notice_url": React.renderToStaticMarkup(
-          React.createElement("a", {href: loop.config.privacyWebsiteUrl, target: "_blank"}, 
+          React.createElement("a", {href: loop.config.privacyWebsiteUrl, rel: "noreferrer", target: "_blank"}, 
             mozL10n.get("privacy_notice_link_text")
           )
         )
