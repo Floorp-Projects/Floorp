@@ -771,16 +771,16 @@ public:
   }
 
   bool ShouldReflowAllKids() const {
-    // Note that we could make a stronger optimization for mVResize if
+    // Note that we could make a stronger optimization for IsBResize if
     // we use it in a ShouldReflowChild test that replaces the current
     // checks of NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN, if it
-    // were tested there along with NS_FRAME_CONTAINS_RELATIVE_HEIGHT.
+    // were tested there along with NS_FRAME_CONTAINS_RELATIVE_BSIZE.
     // This would need to be combined with a slight change in which
-    // frames NS_FRAME_CONTAINS_RELATIVE_HEIGHT is marked on.
+    // frames NS_FRAME_CONTAINS_RELATIVE_BSIZE is marked on.
     return (frame->GetStateBits() & NS_FRAME_IS_DIRTY) ||
-           IsHResize() ||
-           (IsVResize() && 
-            (frame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT));
+           IsIResize() ||
+           (IsBResize() && 
+            (frame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE));
   }
 
   // This method doesn't apply min/max computed widths to the value passed in.
