@@ -716,7 +716,7 @@ pref("dom.ipc.processPriorityManager.temporaryPriorityLockMS", 5000);
 // processes.  We use these different levels to force the low-memory killer to
 // kill processes in a LRU order.
 pref("dom.ipc.processPriorityManager.BACKGROUND.LRUPoolLevels", 5);
-pref("dom.ipc.processPriorityManager.FOREGROUND.LRUPoolLevels", 3);
+pref("dom.ipc.processPriorityManager.BACKGROUND_PERCEIVABLE.LRUPoolLevels", 4);
 
 // Kernel parameters for process priorities.  These affect how processes are
 // killed on low-memory and their relative CPU priorities.

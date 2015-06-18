@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that when two activity openers are in the background the oldest one's LRU
+value will be increased by one. Also test that the LRU value drops again to
+zero when the youngest iframe becomes visible again.
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../browserElementTestHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
+browserElementTestHelpers.enableProcessPriorityManager();
+SpecialPowers.addPermission("embed-apps", true, document);
+
+function runTest() {
+  var os = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                        .getService(SpecialPowers.Ci.nsIObserverService);
+  var iframe1 = document.createElement("iframe");
+  iframe1.setAttribute("mozbrowser", true);
+  iframe1.src = "file_MultipleFrames.html";
+
+  var iframe2 = null;
+  var childID = null;
+  var childID2 = null;
+
+  // Wait for the first process to be created.
+  Promise.all([
+    expectProcessCreated("FOREGROUND").then(function(chid) {
+      childID = chid;
+    }),
+    expectMozbrowserEvent(iframe1, "openwindow")
+  ]).then(function() {
+    var p = expectPriorityChange(childID, "BACKGROUND_PERCEIVABLE");
+
+    // Simulate opening an activity from the first frame
+    os.notifyObservers(null, "activity-opened", childID);
+    iframe1.setVisible(false);
+    return p;
+  }).then(function() {
+    var p = expectProcessCreated("FOREGROUND");
+
+    iframe2 = document.createElement("iframe");
+    iframe2.setAttribute("mozbrowser", true);
+    iframe2.setAttribute("mozapp", "http://example.org/manifest.webapp");
+    iframe2.src = browserElementTestHelpers.emptyPage1;
+
+    document.body.appendChild(iframe2);
+
+    return p;
+  }).then(function(chid) {
+    childID2 = chid;
+
+    /* Simulate opening an activity from the second frame and send it in the
+     * background, this should cause the first frame LRU value to be increased
+     * by one. */
+    var p = expectPriorityWithLRUSet(childID, "BACKGROUND_PERCEIVABLE", "1");
+    os.notifyObservers(null, "activity-opened", childID2);
+    iframe2.setVisible(false);
+
+    return p;
+  }).then(function() {
+    /* Now make the second frame become visible again, this will cause the
+     * first frame LRU value to be decreased to 0. */
+    var p = expectPriorityWithLRUSet(childID, "BACKGROUND_PERCEIVABLE", "0")
+
+    iframe2.setVisible(true);
+
+    return p;
+  }).then(function() {
+    SimpleTest.finish();
+  });
+
+  document.body.appendChild(iframe1);
+}
+
+addEventListener("testready", runTest);
+
+</script>
+</body>
+</html>
