@@ -35,6 +35,7 @@ function ThreadNode(thread, options = {}) {
     throw new Error("ThreadNode requires both `startTime` and `endTime`.");
   }
   this.samples = 0;
+  this.sampleTimes = [];
   this.youngestFrameSamples = 0;
   this.calls = [];
   this.duration = options.endTime - options.startTime;
@@ -131,11 +132,6 @@ ThreadNode.prototype = {
     let endTime = options.endTime;
     let flattenRecursion = options.flattenRecursion;
 
-    // Take the timestamp of the first sample as prevSampleTime. 0 is
-    // incorrect due to circular buffer wraparound. If wraparound happens,
-    // then the first sample will have an incorrect, large duration.
-    let prevSampleTime = samplesData[0][SAMPLE_TIME_SLOT];
-
     // Reused options object passed to InflatedFrame.prototype.getFrameKey.
     let mutableFrameKeyOptions = {
       contentOnly: options.contentOnly,
@@ -144,9 +140,7 @@ ThreadNode.prototype = {
       isMetaCategoryOut: false
     };
 
-    // Start iteration at the second sample, as we use the first sample to
-    // compute prevSampleTime.
-    for (let i = 1; i < samplesData.length; i++) {
+    for (let i = 0; i < samplesData.length; i++) {
       let sample = samplesData[i];
       let sampleTime = sample[SAMPLE_TIME_SLOT];
 
@@ -156,7 +150,6 @@ ThreadNode.prototype = {
       // Thus, we compare sampleTime <= start instead of < to filter out
       // samples that end exactly at the start time.
       if (!sampleTime || sampleTime <= startTime || sampleTime > endTime) {
-        prevSampleTime = sampleTime;
         continue;
       }
 
@@ -235,7 +228,10 @@ ThreadNode.prototype = {
                                           leafTable);
         if (isLeaf) {
           frameNode.youngestFrameSamples++;
-          frameNode._addOptimizations(inflatedFrame.optimizations, stringTable);
+          if (inflatedFrame.optimizations) {
+            frameNode._addOptimizations(inflatedFrame.optimizations, inflatedFrame.implementation,
+                                        sampleTime, stringTable);
+          }
         }
         frameNode.samples++;
 
@@ -245,6 +241,7 @@ ThreadNode.prototype = {
       }
 
       this.samples++;
+      this.sampleTimes.push(sampleTime);
     }
   },
 
@@ -372,6 +369,7 @@ function FrameNode(frameKey, { location, line, category, allocations, isContent 
   this.calls = [];
   this.isContent = !!isContent;
   this._optimizations = null;
+  this._tierData = null;
   this._stringTable = null;
   this.isMetaCategory = !!isMetaCategory;
   this.category = category;
@@ -384,19 +382,30 @@ FrameNode.prototype = {
    * @param object optimizationSite
    *               Any JIT optimization information attached to the current
    *               sample. Lazily inflated via stringTable.
+   * @param number implementation
+   *               JIT implementation used for this observed frame (interpreter,
+   *               baseline, ion);
+   * @param number time
+   *               The time this optimization occurred.
    * @param object stringTable
    *               The string table used to inflate the optimizationSite.
    */
-  _addOptimizations: function (optimizationSite, stringTable) {
+  _addOptimizations: function (site, implementation, time, stringTable) {
     // Simply accumulate optimization sites for now. Processing is done lazily
     // by JITOptimizations, if optimization information is actually displayed.
-    if (optimizationSite) {
+    if (site) {
       let opts = this._optimizations;
       if (opts === null) {
         opts = this._optimizations = [];
         this._stringTable = stringTable;
       }
-      opts.push(optimizationSite);
+      opts.push(site);
+
+      if (this._tierData === null) {
+        this._tierData = [];
+      }
+      // Record type of implementation used and the sample time
+      this._tierData.push({ implementation, time });
     }
   },
 
@@ -475,6 +484,18 @@ FrameNode.prototype = {
     }
     return new JITOptimizations(this._optimizations, this._stringTable);
   },
+
+  /**
+   * Returns the optimization tiers used overtime.
+   *
+   * @return {?Array<object>}
+   */
+  getOptimizationTierData: function () {
+    if (!this._tierData) {
+      return null;
+    }
+    return this._tierData;
+  }
 };
 
 exports.ThreadNode = ThreadNode;

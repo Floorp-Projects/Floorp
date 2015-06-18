@@ -218,6 +218,15 @@ AppendToString(std::stringstream& aStream, const ScrollableLayerGuid& s,
 }
 
 void
+AppendToString(std::stringstream& aStream, const ZoomConstraints& z,
+               const char* pfx, const char* sfx)
+{
+  aStream << pfx
+          << nsPrintfCString("{ z=%d dt=%d min=%f max=%f }", z.mAllowZoom, z.mAllowDoubleTapZoom, z.mMinZoom.scale, z.mMaxZoom.scale).get()
+          << sfx;
+}
+
+void
 AppendToString(std::stringstream& aStream, const Matrix& m,
                const char* pfx, const char* sfx)
 {

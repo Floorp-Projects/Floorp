@@ -207,7 +207,7 @@ const JITOptimizations = function (rawSites, stringTable) {
     };
   }
 
-  this.optimizationSites = sites.sort((a, b) => b.samples - a.samples);;
+  this.optimizationSites = sites.sort((a, b) => b.samples - a.samples);
 };
 
 /**
@@ -252,5 +252,94 @@ function maybeTypeset(typeset, stringTable) {
   });
 }
 
+// Map of optimization implementation names to an enum.
+const IMPLEMENTATION_MAP = {
+  "interpreter": 0,
+  "baseline": 1,
+  "ion": 2
+};
+const IMPLEMENTATION_NAMES = Object.keys(IMPLEMENTATION_MAP);
+
+/**
+ * Takes data from a FrameNode and computes rendering positions for
+ * a stacked mountain graph, to visualize JIT optimization tiers over time.
+ *
+ * @param {FrameNode} frameNode
+ *                    The FrameNode who's optimizations we're iterating.
+ * @param {Array<number>} sampleTimes
+ *                        An array of every sample time within the range we're counting.
+ *                        From a ThreadNode's `sampleTimes` property.
+ * @param {number} op.startTime
+ *                 The start time of the first sample.
+ * @param {number} op.endTime
+ *                 The end time of the last sample.
+ * @param {number} op.resolution
+ *                 The maximum amount of possible data points returned.
+ *                 Also determines the size in milliseconds of each bucket
+ *                 via `(endTime - startTime) / resolution`
+ * @return {?Array<object>}
+ */
+function createTierGraphDataFromFrameNode (frameNode, sampleTimes, { startTime, endTime, resolution }) {
+  if (!frameNode.hasOptimizations()) {
+    return;
+  }
+
+  let tierData = frameNode.getOptimizationTierData();
+  let duration = endTime - startTime;
+  let stringTable = frameNode._stringTable;
+  let output = [];
+  let implEnum;
+
+  let tierDataIndex = 0;
+  let nextOptSample = tierData[tierDataIndex];
+
+  // Bucket data
+  let samplesInCurrentBucket = 0;
+  let currentBucketStartTime = sampleTimes[0];
+  let bucket = [];
+  // Size of each bucket in milliseconds
+  let bucketSize = Math.ceil(duration / resolution);
+
+  // Iterate one after the samples, so we can finalize the last bucket
+  for (let i = 0; i <= sampleTimes.length; i++) {
+    let sampleTime = sampleTimes[i];
+
+    // If this sample is in the next bucket, or we're done
+    // checking sampleTimes and on the last iteration, finalize previous bucket
+    if (sampleTime >= (currentBucketStartTime + bucketSize) ||
+        i >= sampleTimes.length) {
+
+      let dataPoint = {};
+      dataPoint.ys = [];
+      dataPoint.x = currentBucketStartTime;
+
+      // Map the opt site counts as a normalized percentage (0-1)
+      // of its count in context of total samples this bucket
+      for (let j = 0; j < IMPLEMENTATION_NAMES.length; j++) {
+        dataPoint.ys[j] = (bucket[j] || 0) / (samplesInCurrentBucket || 1);
+      }
+      output.push(dataPoint);
+
+      // Set the new start time of this bucket and reset its count
+      currentBucketStartTime += bucketSize;
+      samplesInCurrentBucket = 0;
+      bucket = [];
+    }
+
+    // If this sample observed an optimization in this frame, record it
+    if (nextOptSample && nextOptSample.time === sampleTime) {
+      // If no implementation defined, it was the "interpreter".
+      implEnum = IMPLEMENTATION_MAP[stringTable[nextOptSample.implementation] || "interpreter"];
+      bucket[implEnum] = (bucket[implEnum] || 0) + 1;
+      nextOptSample = tierData[++tierDataIndex];
+    }
+
+    samplesInCurrentBucket++;
+  }
+
+  return output;
+}
+
+exports.createTierGraphDataFromFrameNode = createTierGraphDataFromFrameNode;
 exports.OptimizationSite = OptimizationSite;
 exports.JITOptimizations = JITOptimizations;

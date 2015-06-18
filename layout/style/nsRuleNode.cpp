@@ -1401,17 +1401,6 @@ nsRuleNode::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
   return aPresContext->PresShell()->AllocateByObjectID(nsPresArena::nsRuleNode_id, sz);
 }
 
-/* static */ PLDHashOperator
-nsRuleNode::EnqueueRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                                    uint32_t number, void *arg)
-{
-  ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(hdr);
-  nsRuleNode ***destroyQueueTail = static_cast<nsRuleNode***>(arg);
-  **destroyQueueTail = entry->mRuleNode;
-  *destroyQueueTail = &entry->mRuleNode->mNextSibling;
-  return PL_DHASH_NEXT;
-}
-
 // Overridden to prevent the global delete from being called, since the memory
 // came out of an nsIArena instead of the global delete operator's heap.
 void
@@ -1427,8 +1416,11 @@ nsRuleNode::DestroyInternal(nsRuleNode ***aDestroyQueueTail)
 
   if (ChildrenAreHashed()) {
     PLDHashTable *children = ChildrenHash();
-    PL_DHashTableEnumerate(children, EnqueueRuleNodeChildren,
-                           &destroyQueueTail);
+    for (auto iter = children->Iter(); !iter.Done(); iter.Next()) {
+      auto entry = static_cast<ChildrenHashEntry*>(iter.Get());
+      *destroyQueueTail = entry->mRuleNode;
+      destroyQueueTail = &entry->mRuleNode->mNextSibling;
+    }
     *destroyQueueTail = nullptr; // ensure null-termination
     delete children;
   } else if (HaveChildren()) {
@@ -9342,25 +9334,6 @@ nsRuleNode::DestroyIfNotMarked()
   return false;
 }
 
-PLDHashOperator
-nsRuleNode::SweepHashEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                           uint32_t number, void *arg)
-{
-  ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(hdr);
-  nsRuleNode* node = entry->mRuleNode;
-  if (node->DestroyIfNotMarked()) {
-    return PL_DHASH_REMOVE; // implies NEXT, unless |ed with STOP
-  }
-  if (node->HaveChildren()) {
-    // When children are hashed mNextSibling is not normally used but we use it
-    // here to build a list of children that needs to be swept.
-    nsRuleNode** headQ = static_cast<nsRuleNode**>(arg);
-    node->mNextSibling = *headQ;
-    *headQ = node;
-  }
-  return PL_DHASH_NEXT;
-}
-
 void
 nsRuleNode::SweepChildren(nsTArray<nsRuleNode*>& aSweepQueue)
 {
@@ -9373,7 +9346,19 @@ nsRuleNode::SweepChildren(nsTArray<nsRuleNode*>& aSweepQueue)
   if (ChildrenAreHashed()) {
     PLDHashTable* children = ChildrenHash();
     uint32_t oldChildCount = children->EntryCount();
-    PL_DHashTableEnumerate(children, SweepHashEntry, &survivorsWithChildren);
+    for (auto iter = children->RemovingIter(); !iter.Done(); iter.Next()) {
+      auto entry = static_cast<ChildrenHashEntry*>(iter.Get());
+      nsRuleNode* node = entry->mRuleNode;
+      if (node->DestroyIfNotMarked()) {
+        iter.Remove();
+      } else if (node->HaveChildren()) {
+        // When children are hashed mNextSibling is not normally used but we
+        // use it here to build a list of children that needs to be swept.
+        nsRuleNode** headQ = &survivorsWithChildren;
+        node->mNextSibling = *headQ;
+        *headQ = node;
+      }
+    }
     childrenDestroyed = oldChildCount - children->EntryCount();
     if (childrenDestroyed == oldChildCount) {
       delete children;

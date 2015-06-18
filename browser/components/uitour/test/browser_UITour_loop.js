@@ -44,6 +44,9 @@ let tests = [
     });
 
     let loopDoc = document.getElementById("loop-notification-panel").children[0].contentDocument;
+    yield waitForConditionPromise(() => {
+      return loopDoc.readyState == 'complete';
+    }, "Loop notification panel document should be fully loaded.");
     let gettingStartedButton = loopDoc.getElementById("fte-button");
     ok(gettingStartedButton, "Getting Started button should be found");
 

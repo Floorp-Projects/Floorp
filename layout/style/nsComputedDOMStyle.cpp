@@ -51,9 +51,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-typedef const nsStyleBackground::Position Position;
-typedef const nsStyleBackground::Position::PositionCoord PositionCoord;
-typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 
 #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
 #define DEBUG_ComputedDOMStyle
@@ -1265,7 +1262,8 @@ nsComputedDOMStyle::DoGetTransform()
    * using the named transforms.  Until a real solution is found, we'll just
    * use this approach.
    */
-  TransformReferenceBox refBox(mInnerFrame, nsSize(0, 0));
+  nsStyleTransformMatrix::TransformReferenceBox refBox(mInnerFrame,
+                                                       nsSize(0, 0));
 
    bool dummy;
    gfx3DMatrix matrix =
@@ -2082,8 +2080,9 @@ nsComputedDOMStyle::DoGetBackgroundOrigin()
 }
 
 void
-nsComputedDOMStyle::SetValueToPositionCoord(const PositionCoord& aCoord,
-                                            nsROCSSPrimitiveValue* aValue)
+nsComputedDOMStyle::SetValueToPositionCoord(
+    const nsStyleBackground::Position::PositionCoord& aCoord,
+    nsROCSSPrimitiveValue* aValue)
 {
   if (!aCoord.mHasPercent) {
     MOZ_ASSERT(aCoord.mPercent == 0.0f,
@@ -2097,8 +2096,9 @@ nsComputedDOMStyle::SetValueToPositionCoord(const PositionCoord& aCoord,
 }
 
 void
-nsComputedDOMStyle::SetValueToPosition(const Position& aPosition,
-                                       nsDOMCSSValueList* aValueList)
+nsComputedDOMStyle::SetValueToPosition(
+    const nsStyleBackground::Position& aPosition,
+    nsDOMCSSValueList* aValueList)
 {
   nsROCSSPrimitiveValue* valX = new nsROCSSPrimitiveValue;
   aValueList->AppendCSSValue(valX);
@@ -4998,7 +4998,7 @@ nsComputedDOMStyle::GetFrameBoundsWidthForTransform(nscoord& aWidth)
 
   AssertFlushedPendingReflows();
 
-  aWidth = TransformReferenceBox(mInnerFrame).Width();
+  aWidth = nsStyleTransformMatrix::TransformReferenceBox(mInnerFrame).Width();
   return true;
 }
 
@@ -5012,7 +5012,7 @@ nsComputedDOMStyle::GetFrameBoundsHeightForTransform(nscoord& aHeight)
 
   AssertFlushedPendingReflows();
 
-  aHeight = TransformReferenceBox(mInnerFrame).Height();
+  aHeight = nsStyleTransformMatrix::TransformReferenceBox(mInnerFrame).Height();
   return true;
 }
 

@@ -51,14 +51,12 @@ public:
 
   void ProcessSingleTap(const CSSPoint& aPoint,
                         Modifiers aModifiers,
-                        const ScrollableLayerGuid& aGuid,
-                        float aPresShellResolution);
+                        const ScrollableLayerGuid& aGuid);
   void ProcessLongTap(const nsCOMPtr<nsIPresShell>& aUtils,
                       const CSSPoint& aPoint,
                       Modifiers aModifiers,
                       const ScrollableLayerGuid& aGuid,
-                      uint64_t aInputBlockId,
-                      float aPresShellResolution);
+                      uint64_t aInputBlockId);
   void ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                          const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId,

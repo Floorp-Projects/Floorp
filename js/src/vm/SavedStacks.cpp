@@ -696,10 +696,13 @@ SavedFrame::sourceProperty(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_SAVEDFRAME(cx, argc, vp, "(get source)", args, frame);
     RootedString source(cx);
-    if (JS::GetSavedFrameSource(cx, frame, &source) == JS::SavedFrameResult::Ok)
+    if (JS::GetSavedFrameSource(cx, frame, &source) == JS::SavedFrameResult::Ok) {
+        if (!cx->compartment()->wrap(cx, &source))
+            return false;
         args.rval().setString(source);
-    else
+    } else {
         args.rval().setNull();
+    }
     return true;
 }
 
@@ -733,10 +736,13 @@ SavedFrame::functionDisplayNameProperty(JSContext* cx, unsigned argc, Value* vp)
     THIS_SAVEDFRAME(cx, argc, vp, "(get functionDisplayName)", args, frame);
     RootedString name(cx);
     JS::SavedFrameResult result = JS::GetSavedFrameFunctionDisplayName(cx, frame, &name);
-    if (result == JS::SavedFrameResult::Ok && name)
+    if (result == JS::SavedFrameResult::Ok && name) {
+        if (!cx->compartment()->wrap(cx, &name))
+            return false;
         args.rval().setString(name);
-    else
+    } else {
         args.rval().setNull();
+    }
     return true;
 }
 
@@ -746,10 +752,13 @@ SavedFrame::asyncCauseProperty(JSContext* cx, unsigned argc, Value* vp)
     THIS_SAVEDFRAME(cx, argc, vp, "(get asyncCause)", args, frame);
     RootedString asyncCause(cx);
     JS::SavedFrameResult result = JS::GetSavedFrameAsyncCause(cx, frame, &asyncCause);
-    if (result == JS::SavedFrameResult::Ok && asyncCause)
+    if (result == JS::SavedFrameResult::Ok && asyncCause) {
+        if (!cx->compartment()->wrap(cx, &asyncCause))
+            return false;
         args.rval().setString(asyncCause);
-    else
+    } else {
         args.rval().setNull();
+    }
     return true;
 }
 
@@ -759,6 +768,8 @@ SavedFrame::asyncParentProperty(JSContext* cx, unsigned argc, Value* vp)
     THIS_SAVEDFRAME(cx, argc, vp, "(get asyncParent)", args, frame);
     RootedObject asyncParent(cx);
     (void) JS::GetSavedFrameAsyncParent(cx, frame, &asyncParent);
+    if (!cx->compartment()->wrap(cx, &asyncParent))
+        return false;
     args.rval().setObjectOrNull(asyncParent);
     return true;
 }
@@ -769,6 +780,8 @@ SavedFrame::parentProperty(JSContext* cx, unsigned argc, Value* vp)
     THIS_SAVEDFRAME(cx, argc, vp, "(get parent)", args, frame);
     RootedObject parent(cx);
     (void) JS::GetSavedFrameParent(cx, frame, &parent);
+    if (!cx->compartment()->wrap(cx, &parent))
+        return false;
     args.rval().setObjectOrNull(parent);
     return true;
 }
@@ -1221,7 +1234,7 @@ SavedStacksMetadataCallback(JSContext* cx, JSObject* target)
     if (!stacks.saveCurrentStack(cx, &frame))
         CrashAtUnhandlableOOM("SavedStacksMetadataCallback");
 
-    if (!Debugger::onLogAllocationSite(cx, obj, frame, PRMJ_Now()))
+    if (!Debugger::onLogAllocationSite(cx, obj, frame, JS_GetCurrentEmbedderTime()))
         CrashAtUnhandlableOOM("SavedStacksMetadataCallback");
 
     MOZ_ASSERT_IF(frame, !frame->is<WrapperObject>());

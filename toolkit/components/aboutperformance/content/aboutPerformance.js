@@ -120,8 +120,7 @@ let State = {
     let newData = new Map();
     let deltas = [];
     for (let componentNew of snapshot.componentsData) {
-      let {name, addonId, isSystem} = componentNew;
-      let key = JSON.stringify({name, addonId, isSystem});
+      let key = componentNew.groupId;
       let componentOld = State._componentsData.get(key);
       deltas.push(componentNew.subtract(componentOld));
       newData.set(key, componentNew);

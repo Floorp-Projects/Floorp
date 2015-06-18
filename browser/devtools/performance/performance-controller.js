@@ -295,6 +295,7 @@ let PerformanceController = {
       withMarkers: true,
       withMemory: this.getOption("enable-memory"),
       withTicks: this.getOption("enable-framerate"),
+      withJITOptimizations: this.getOption("enable-jit-optimizations"),
       withAllocations: this.getOption("enable-allocations"),
       allocationsSampleProbability: this.getPref("memory-sample-probability"),
       allocationsMaxLogLength: this.getPref("memory-max-log-length"),

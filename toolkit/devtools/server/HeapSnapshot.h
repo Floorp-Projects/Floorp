@@ -129,6 +129,41 @@ public:
                                      size_t length);
 };
 
+// A `CoreDumpWriter` is given the data we wish to save in a core dump and
+// serializes it to disk, or memory, or a socket, etc.
+class CoreDumpWriter
+{
+public:
+  virtual ~CoreDumpWriter() { };
+
+  // Write the given bits of metadata we would like to associate with this core
+  // dump.
+  virtual bool writeMetadata(uint64_t timestamp) = 0;
+
+  enum EdgePolicy : bool {
+    INCLUDE_EDGES = true,
+    EXCLUDE_EDGES = false
+  };
+
+  // Write the given `JS::ubi::Node` to the core dump. The given `EdgePolicy`
+  // dictates whether its outgoing edges should also be written to the core
+  // dump, or excluded.
+  virtual bool writeNode(const JS::ubi::Node& node,
+                         EdgePolicy includeEdges) = 0;
+};
+
+// Serialize the heap graph as seen from `node` with the given `CoreDumpWriter`.
+// If `wantNames` is true, capture edge names. If `zones` is non-null, only
+// capture the sub-graph within the zone set, otherwise capture the whole heap
+// graph. Returns false on failure.
+bool
+WriteHeapGraph(JSContext* cx,
+               const JS::ubi::Node& node,
+               CoreDumpWriter& writer,
+               bool wantNames,
+               JS::ZoneSet* zones,
+               JS::AutoCheckCannotGC& noGC);
+
 } // namespace devtools
 } // namespace mozilla
 
