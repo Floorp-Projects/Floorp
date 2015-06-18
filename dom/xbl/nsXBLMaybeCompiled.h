@@ -92,19 +92,19 @@ struct GCMethods<nsXBLMaybeCompiled<UncompiledT> >
 
   static nsXBLMaybeCompiled<UncompiledT> initial() { return nsXBLMaybeCompiled<UncompiledT>(); }
 
-  static bool needsPostBarrier(nsXBLMaybeCompiled<UncompiledT> function)
+  static void postBarrier(nsXBLMaybeCompiled<UncompiledT>* functionp,
+                          nsXBLMaybeCompiled<UncompiledT> prev,
+                          nsXBLMaybeCompiled<UncompiledT> next)
   {
-    return function.IsCompiled() && Base::needsPostBarrier(function.GetJSFunction());
-  }
-
-  static void postBarrier(nsXBLMaybeCompiled<UncompiledT>* functionp)
-  {
-    Base::postBarrier(&functionp->UnsafeGetJSFunction());
-  }
-
-  static void relocate(nsXBLMaybeCompiled<UncompiledT>* functionp)
-  {
-    Base::relocate(&functionp->UnsafeGetJSFunction());
+    if (next.IsCompiled()) {
+      Base::postBarrier(&functionp->UnsafeGetJSFunction(),
+                        prev.IsCompiled() ? prev.UnsafeGetJSFunction() : nullptr,
+                        next.UnsafeGetJSFunction());
+    } else if (prev.IsCompiled()) {
+      Base::postBarrier(&prev.UnsafeGetJSFunction(),
+                        prev.UnsafeGetJSFunction(),
+                        nullptr);
+    }
   }
 };
 
