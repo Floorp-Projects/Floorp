@@ -1957,7 +1957,7 @@ CommandResult NetworkUtils::setDefaultRouteLegacy(NetworkParams& aOptions)
 
   if (!aOptions.mOldIfname.IsEmpty()) {
     // Remove IPv4's default route.
-    RETURN_IF_FAILED(mNetUtils->do_ifc_remove_default_route(GET_CHAR(mOldIfname)));
+    WARN_IF_FAILED(mNetUtils->do_ifc_remove_default_route(GET_CHAR(mOldIfname)));
     // Remove IPv6's default route.
     WARN_IF_FAILED(mNetUtils->do_ifc_remove_route(GET_CHAR(mOldIfname), "::", 0, NULL));
   }

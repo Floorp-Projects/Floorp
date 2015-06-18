@@ -44,13 +44,27 @@ function runTest() {
         is(detail.type, 'changed', 'type matches');
 
         let script =
+          "var meta = content.document.createElement('meta');" +
+          "meta.name = 'theme-group';" +
+          "meta.content = 'theme-productivity';" +
+          "content.document.head.appendChild(meta)";
+        loadFrameScript(script);
+        break;
+      }
+
+      case 2: {
+        is(detail.name, 'theme-group', 'name matches');
+        is(detail.content, 'theme-productivity', 'content matches');
+        is(detail.type, 'added', 'type matches');
+
+        let script =
           "var meta = content.document.head.querySelector('meta');" +
           "meta.parentNode.removeChild(meta);";
         loadFrameScript(script);
         break;
       }
 
-      case 2: {
+      case 3: {
         is(detail.name, 'theme-color', 'name matches');
         is(detail.content, 'green', 'content matches');
         is(detail.type, 'removed', 'type matches');
