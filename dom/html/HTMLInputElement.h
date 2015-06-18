@@ -819,9 +819,14 @@ protected:
                                      uint32_t aLen, uint32_t* aResult);
 
   // Helper method
-  nsresult SetValueInternal(const nsAString& aValue,
-                            bool aUserInput,
-                            bool aSetValueChanged);
+
+  /**
+   * Setting the value.
+   *
+   * @param aValue      String to set.
+   * @param aFlags      See nsTextEditorState::SetValueFlags.
+   */
+  nsresult SetValueInternal(const nsAString& aValue, uint32_t aFlags);
 
   nsresult GetValueInternal(nsAString& aValue) const;
 

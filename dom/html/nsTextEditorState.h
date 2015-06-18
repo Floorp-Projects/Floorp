@@ -143,9 +143,20 @@ public:
   nsresult PrepareEditor(const nsAString *aValue = nullptr);
   void InitializeKeyboardEventListeners();
 
+  enum SetValueFlags
+  {
+    // The call is for internal processing.
+    eSetValue_Internal              = 0,
+    // The value is changed by a call of setUserInput() from chrome.
+    eSetValue_BySetUserInput        = 1 << 0,
+    // The value is changed by changing value attribute of the element or
+    // something like setRangeText().
+    eSetValue_ByContent             = 1 << 1,
+    // Whether the value change should be notified to the frame/contet nor not.
+    eSetValue_Notify                = 1 << 2
+  };
   MOZ_WARN_UNUSED_RESULT bool SetValue(const nsAString& aValue,
-                                       bool aUserInput,
-                                       bool aSetValueAsChanged);
+                                       uint32_t aFlags);
   void GetValue(nsAString& aValue, bool aIgnoreWrap) const;
   void EmptyValue() { if (mValue) mValue->Truncate(); }
   bool IsEmpty() const { return mValue ? mValue->IsEmpty() : true; }
@@ -244,6 +255,8 @@ private:
 
   mozilla::dom::HTMLInputElement* GetParentNumberControl(nsFrame* aFrame) const;
 
+  bool EditorHasComposition();
+
   class InitializationGuard {
   public:
     explicit InitializationGuard(nsTextEditorState& aState) :
@@ -283,14 +296,20 @@ private:
   nsAutoPtr<nsCString> mValue;
   nsRefPtr<nsAnonDivObserver> mMutationObserver;
   mutable nsString mCachedValue; // Caches non-hard-wrapped value on a multiline control.
+  // mValueBeingSet is available only while SetValue() is requesting to commit
+  // composition.  I.e., this is valid only while mIsCommittingComposition is
+  // true.  While active composition is being committed, GetValue() needs
+  // the latest value which is set by SetValue().  So, this is cache for that.
+  nsString mValueBeingSet;
+  SelectionProperties mSelectionProperties;
   bool mEverInited; // Have we ever been initialized?
   bool mEditorInitialized;
   bool mInitializing; // Whether we're in the process of initialization
   bool mValueTransferInProgress; // Whether a value is being transferred to the frame
   bool mSelectionCached; // Whether mSelectionProperties is valid
   mutable bool mSelectionRestoreEagerInit; // Whether we're eager initing because of selection restore
-  SelectionProperties mSelectionProperties;
   bool mPlaceholderVisibility;
+  bool mIsCommittingComposition;
 };
 
 inline void
