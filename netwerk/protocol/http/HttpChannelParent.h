@@ -116,13 +116,7 @@ protected:
                    const bool&                allowSpdy,
                    const bool&                allowAltSvc,
                    const OptionalFileDescriptorSet& aFds,
-                   const ipc::PrincipalInfo&  aRequestingPrincipalInfo,
-                   const ipc::PrincipalInfo&  aTriggeringPrincipalInfo,
-                   const uint32_t&            aSecurityFlags,
-                   const uint32_t&            aContentPolicyType,
-                   const uint64_t&            aInnerWindowID,
-                   const uint64_t&            aOuterWindowID,
-                   const uint64_t&            aParentOuterWindowID,
+                   const LoadInfoArgs&        aLoadInfoArgs,
                    const OptionalHttpResponseHead& aSynthesizedResponseHead,
                    const uint32_t&            aCacheKey);
 
