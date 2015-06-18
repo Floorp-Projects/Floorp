@@ -2645,12 +2645,6 @@ TabParent::TryCacheDPIAndScale()
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
 
-  if (!widget && mFrameElement) {
-    // Even if we don't have a widget (e.g. because we're display:none), there's
-    // probably a widget somewhere in the hierarchy our frame element lives in.
-    widget = nsContentUtils::WidgetForDocument(mFrameElement->OwnerDoc());
-  }
-
   if (widget) {
     mDPI = widget->GetDPI();
     mDefaultScale = widget->GetDefaultScale();
@@ -2660,15 +2654,10 @@ TabParent::TryCacheDPIAndScale()
 already_AddRefed<nsIWidget>
 TabParent::GetWidget() const
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
-  if (!content)
+  if (!mFrameElement) {
     return nullptr;
-
-  nsIFrame *frame = content->GetPrimaryFrame();
-  if (!frame)
-    return nullptr;
-
-  nsCOMPtr<nsIWidget> widget = frame->GetNearestWidget();
+  }
+  nsCOMPtr<nsIWidget> widget = nsContentUtils::WidgetForDocument(mFrameElement->OwnerDoc());
   return widget.forget();
 }
 
@@ -3026,6 +3015,8 @@ TabParent::DeallocPPluginWidgetParent(mozilla::plugins::PPluginWidgetParent* aAc
 nsresult
 TabParent::HandleEvent(nsIDOMEvent* aEvent)
 {
+  MOZ_ASSERT(mFrameElement);
+
   nsAutoString eventType;
   aEvent->GetType(eventType);
 
