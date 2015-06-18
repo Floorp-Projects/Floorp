@@ -69,6 +69,10 @@
   list-style-image: url(performance-icons.svg#details-flamegraph);
 }
 
+#select-optimizations-view {
+  list-style-image: url(profiler-stopwatch.svg);
+}
+
 /* Recording buttons */
 
 #main-record-button {
@@ -657,6 +661,20 @@ menuitem.marker-color-graphs-blue:before,
   background-position: -24px -24px;
 }
 
+ul.frames-list {
+  list-style-type: none;
+  padding: 0px;
+  margin: 0px;
+}
+
+ul.frames-list li {
+  cursor: pointer;
+}
+
+ul.frames-list li.selected {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
 
 /**
  * Configurable Options
