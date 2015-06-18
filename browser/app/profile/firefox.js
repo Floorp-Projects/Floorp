@@ -1829,6 +1829,9 @@ pref("identity.fxaccounts.remote.profile.uri", "https://profile.accounts.firefox
 // The remote URL of the FxA OAuth Server
 pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com/v1");
 
+// Whether we display profile images in the UI or not.
+pref("identity.fxaccounts.profile_image.enabled", true);
+
 // Migrate any existing Firefox Account data from the default profile to the
 // Developer Edition profile.
 #ifdef MOZ_DEV_EDITION
