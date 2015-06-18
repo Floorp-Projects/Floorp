@@ -48,8 +48,6 @@ public:
   // If a failure is encountered, the reference is returned to the caller
   static already_AddRefed<nsTimerImpl> PostTimerEvent(
     already_AddRefed<nsTimerImpl> aTimerRef);
-  void SetDelayInternal(uint32_t aDelay);
-
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMER
 
@@ -66,6 +64,8 @@ public:
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
 private:
+  void SetDelayInternal(uint32_t aDelay);
+
   enum class CallbackType : uint8_t {
     Unknown = 0,
     Interface = 1,
