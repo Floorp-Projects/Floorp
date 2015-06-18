@@ -62,9 +62,9 @@ MediaEngineDefaultVideoSource::GetName(nsAString& aName)
 }
 
 void
-MediaEngineDefaultVideoSource::GetUUID(nsAString& aUUID)
+MediaEngineDefaultVideoSource::GetUUID(nsACString& aUUID)
 {
-  aUUID.AssignLiteral(MOZ_UTF16("1041FCBD-3F12-4F7B-9E9B-1EC556DD5676"));
+  aUUID.AssignLiteral("1041FCBD-3F12-4F7B-9E9B-1EC556DD5676");
   return;
 }
 
@@ -342,9 +342,9 @@ MediaEngineDefaultAudioSource::GetName(nsAString& aName)
 }
 
 void
-MediaEngineDefaultAudioSource::GetUUID(nsAString& aUUID)
+MediaEngineDefaultAudioSource::GetUUID(nsACString& aUUID)
 {
-  aUUID.AssignLiteral(MOZ_UTF16("B7CBD7C1-53EF-42F9-8353-73F61C70C092"));
+  aUUID.AssignLiteral("B7CBD7C1-53EF-42F9-8353-73F61C70C092");
   return;
 }
 
