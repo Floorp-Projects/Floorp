@@ -287,16 +287,8 @@ loop.shared.mixins = (function() {
    * elements and handling updates of the media containers.
    */
   var MediaSetupMixin = {
-
     componentDidMount: function() {
       this.resetDimensionsCache();
-      rootObject.addEventListener("orientationchange", this.updateVideoContainer);
-      rootObject.addEventListener("resize", this.updateVideoContainer);
-    },
-
-    componentWillUnmount: function() {
-      rootObject.removeEventListener("orientationchange", this.updateVideoContainer);
-      rootObject.removeEventListener("resize", this.updateVideoContainer);
     },
 
     /**
