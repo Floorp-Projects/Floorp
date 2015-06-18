@@ -249,7 +249,7 @@ TimelineFrontFacade.prototype = {
 
   /**
    * An aggregate of all events (markers, frames, memory, ticks) and exposes
-   * to PerformanceActorsConnection as a single event.
+   * to PerformanceFront as a single event.
    */
   _onTimelineData: function (type, ...data) {
     this.emit("timeline-data", type, ...data);
