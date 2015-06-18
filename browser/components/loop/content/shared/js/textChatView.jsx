@@ -39,6 +39,22 @@ loop.shared.views.TextChatView = (function(mozL10n) {
     }
   });
 
+  var TextChatRoomName = React.createClass({
+    mixins: [React.addons.PureRenderMixin],
+
+    propTypes: {
+      message: React.PropTypes.string.isRequired
+    },
+
+    render: function() {
+      return (
+        <div className="text-chat-entry special room-name">
+          <p>{mozL10n.get("rooms_welcome_title", {conversationName: this.props.message})}</p>
+        </div>
+      );
+    }
+  });
+
   /**
    * Manages the text entries in the chat entries view. This is split out from
    * TextChatView so that scrolling can be managed more efficiently - this
@@ -81,21 +97,28 @@ loop.shared.views.TextChatView = (function(mozL10n) {
           <div className="text-chat-scroller">
             {
               this.props.messageList.map(function(entry, i) {
-                if (entry.type === CHAT_MESSAGE_TYPES.SPECIAL &&
-                    entry.contentType === CHAT_CONTENT_TYPES.CONTEXT) {
-                  return (
-                    <div className="context-url-view-wrapper">
-                      <sharedViews.ContextUrlView
-                        allowClick={true}
-                        description={entry.message}
-                        dispatcher={this.props.dispatcher}
-                        key={i}
-                        showContextTitle={true}
-                        thumbnail={entry.extraData.thumbnail}
-                        url={entry.extraData.location}
-                        useDesktopPaths={false} />
-                    </div>
-                  );
+                if (entry.type === CHAT_MESSAGE_TYPES.SPECIAL) {
+                  switch (entry.contentType) {
+                    case CHAT_CONTENT_TYPES.ROOM_NAME:
+                      return <TextChatRoomName message={entry.message}/>;
+                    case CHAT_CONTENT_TYPES.CONTEXT:
+                      return (
+                        <div className="context-url-view-wrapper">
+                          <sharedViews.ContextUrlView
+                            allowClick={true}
+                            description={entry.message}
+                            dispatcher={this.props.dispatcher}
+                            key={i}
+                            showContextTitle={true}
+                            thumbnail={entry.extraData.thumbnail}
+                            url={entry.extraData.location}
+                            useDesktopPaths={false} />
+                        </div>
+                      );
+                    default:
+                      console.error("Unsupported contentType", entry.contentType);
+                      return null;
+                  }
                 }
 
                 return (
