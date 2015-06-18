@@ -579,8 +579,10 @@ NonSyntacticVariablesObject::create(JSContext* cx, Handle<GlobalObject*> global)
     if (!obj)
         return nullptr;
 
-    MOZ_ASSERT(obj->isUnqualifiedVarObj());
     if (!obj->setQualifiedVarObj(cx))
+        return nullptr;
+
+    if (!obj->setUnqualifiedVarObj(cx))
         return nullptr;
 
     obj->setEnclosingScope(global);

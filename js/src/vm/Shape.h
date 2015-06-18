@@ -353,10 +353,16 @@ class BaseShape : public gc::TenuredCell
         UNCACHEABLE_PROTO   =  0x800,
         IMMUTABLE_PROTOTYPE = 0x1000,
 
-        // See JSObject::isQualifiedVarObj().
+        // These two flags control which scope a new variables ends up on in the
+        // scope chain. If the variable is "qualified" (i.e., if it was defined
+        // using var, let, or const) then it ends up on the lowest scope in the
+        // chain that has the QUALIFIED_VAROBJ flag set. If it's "unqualified"
+        // (i.e., if it was introduced without any var, let, or const, which
+        // incidentally is an error in strict mode) then it goes on the lowest
+        // scope in the chain with the UNQUALIFIED_VAROBJ flag set (which is
+        // typically the global).
         QUALIFIED_VAROBJ    = 0x2000,
-
-        // 0x4000 is unused.
+        UNQUALIFIED_VAROBJ  = 0x4000,
 
         // For a function used as an interpreted constructor, whether a 'new'
         // type had constructor information cleared.
