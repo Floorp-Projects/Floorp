@@ -768,6 +768,20 @@ let PageStyleActor = protocol.ActorClass({
     }
   },
 
+  /**
+   * Get layout-related information about a node.
+   * This method returns an object with properties giving information about
+   * the node's margin, border, padding and content region sizes, as well
+   * as information about the type of box, its position, z-index, etc...
+   * @param {NodeActor} node
+   * @param {Object} options The only available option is autoMargins.
+   * If set to true, the element's margins will receive an extra check to see
+   * whether they are set to "auto" (knowing that the computed-style in this
+   * case would return "0px").
+   * The returned object will contain an extra property (autoMargins) listing
+   * all margins that are set to auto, e.g. {top: "auto", left: "auto"}.
+   * @return {Object}
+   */
   getLayout: method(function(node, options) {
     this.cssLogic.highlight(node.rawNode);
 
@@ -795,7 +809,10 @@ let PageStyleActor = protocol.ActorClass({
       "border-top-width",
       "border-right-width",
       "border-bottom-width",
-      "border-left-width"
+      "border-left-width",
+      "z-index",
+      "box-sizing",
+      "display"
     ]) {
       layout[prop] = style.getPropertyValue(prop);
     }
@@ -807,10 +824,6 @@ let PageStyleActor = protocol.ActorClass({
     for (let i in this.map) {
       let property = this.map[i].property;
       this.map[i].value = parseFloat(style.getPropertyValue(property));
-    }
-
-    if (options.margins) {
-      layout.margins = this.processMargins(this.cssLogic);
     }
 
     return layout;
