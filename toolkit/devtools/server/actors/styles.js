@@ -892,8 +892,7 @@ let PageStyleActor = protocol.ActorClass({
     if (rawNode.id) {
       selector = "#" + CSS.escape(rawNode.id);
     } else if (rawNode.className) {
-      selector = "." +
-        rawNode.className.split(" ").map(c => CSS.escape(c)).join(".");
+      selector = "." + [...rawNode.classList].map(c => CSS.escape(c)).join(".");
     } else {
       selector = rawNode.tagName.toLowerCase();
     }
