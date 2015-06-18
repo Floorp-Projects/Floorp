@@ -960,7 +960,6 @@ Preferences::WritePrefFile(nsIFile* aFile)
   memset(valueArray, 0, gHashTable->EntryCount() * sizeof(char*));
   pref_saveArgs saveArgs;
   saveArgs.prefArray = valueArray;
-  saveArgs.saveTypes = SAVE_ALL;
 
   // get the lines that we're supposed to be writing to the file
   PL_DHashTableEnumerate(gHashTable, pref_savePref, &saveArgs);

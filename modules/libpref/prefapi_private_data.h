@@ -19,12 +19,9 @@ class PrefSetting;
 }
 }
 
-enum pref_SaveTypes { SAVE_NONSHARED, SAVE_SHARED, SAVE_ALL, SAVE_ALL_AND_DEFAULTS };
-
 // Passed as the arg to pref_savePref
 struct pref_saveArgs {
   char **prefArray;
-  pref_SaveTypes saveTypes;
 };
 
 PLDHashOperator
