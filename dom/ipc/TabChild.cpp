@@ -2539,10 +2539,7 @@ TabChild::RecvKeyEvent(const nsString& aType,
                        const bool& aPreventDefault)
 {
   bool ignored = false;
-  // XXX Why nsContentUtils::SendKeyEvent takes nsCOMPtr<nsIWidget> for the
-  //     first argument? Why not just nsIWidget*?
-  nsCOMPtr<nsIWidget> widget(mPuppetWidget);
-  nsContentUtils::SendKeyEvent(widget, aType, aKeyCode, aCharCode,
+  nsContentUtils::SendKeyEvent(mPuppetWidget, aType, aKeyCode, aCharCode,
                                aModifiers, aPreventDefault, &ignored);
   return true;
 }
