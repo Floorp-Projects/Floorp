@@ -7,6 +7,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/net/NeckoChannelParams.h"
 #include "nsPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIURI.h"
@@ -213,6 +214,67 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
   }
 
   *aPrincipalInfo = ContentPrincipalInfo(appId, isInBrowserElement, spec);
+  return NS_OK;
+}
+
+nsresult
+LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
+                       mozilla::net::LoadInfoArgs* aLoadInfoArgs)
+{
+  nsresult rv = NS_OK;
+
+  if (aLoadInfo) {
+    rv = PrincipalToPrincipalInfo(aLoadInfo->LoadingPrincipal(),
+                                  &aLoadInfoArgs->requestingPrincipalInfo());
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = PrincipalToPrincipalInfo(aLoadInfo->TriggeringPrincipal(),
+                                  &aLoadInfoArgs->triggeringPrincipalInfo());
+    NS_ENSURE_SUCCESS(rv, rv);
+    aLoadInfoArgs->securityFlags() = aLoadInfo->GetSecurityFlags();
+    aLoadInfoArgs->contentPolicyType() = aLoadInfo->GetContentPolicyType();
+    aLoadInfoArgs->innerWindowID() = aLoadInfo->GetInnerWindowID();
+    aLoadInfoArgs->outerWindowID() = aLoadInfo->GetOuterWindowID();
+    aLoadInfoArgs->parentOuterWindowID() = aLoadInfo->GetParentOuterWindowID();
+    return NS_OK;
+  }
+
+  // use default values if no loadInfo is provided
+  rv = PrincipalToPrincipalInfo(nsContentUtils::GetSystemPrincipal(),
+                                &aLoadInfoArgs->requestingPrincipalInfo());
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = PrincipalToPrincipalInfo(nsContentUtils::GetSystemPrincipal(),
+                                &aLoadInfoArgs->triggeringPrincipalInfo());
+  NS_ENSURE_SUCCESS(rv, rv);
+  aLoadInfoArgs->securityFlags() = nsILoadInfo::SEC_NORMAL;
+  aLoadInfoArgs->contentPolicyType() = nsIContentPolicy::TYPE_OTHER;
+  aLoadInfoArgs->innerWindowID() = 0;
+  aLoadInfoArgs->outerWindowID() = 0;
+  aLoadInfoArgs->parentOuterWindowID() = 0;
+  return NS_OK;
+}
+
+nsresult
+LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
+                       nsILoadInfo** outLoadInfo)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrincipal> requestingPrincipal =
+    PrincipalInfoToPrincipal(aLoadInfoArgs.requestingPrincipalInfo(), &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal =
+    PrincipalInfoToPrincipal(aLoadInfoArgs.triggeringPrincipalInfo(), &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILoadInfo> loadInfo =
+    new mozilla::LoadInfo(requestingPrincipal,
+                          triggeringPrincipal,
+                          aLoadInfoArgs.securityFlags(),
+                          aLoadInfoArgs.contentPolicyType(),
+                          aLoadInfoArgs.innerWindowID(),
+                          aLoadInfoArgs.outerWindowID(),
+                          aLoadInfoArgs.parentOuterWindowID());
+
+  loadInfo.forget(outLoadInfo);
   return NS_OK;
 }
 
