@@ -8,7 +8,7 @@ task:
       name: '[TC] Android armv7 API 11+'
       description: 'Android armv7 API 11+'
 
-  workerType: b2g-desktop-opt
+  workerType: android-api-11
 
   routes:
     - 'index.buildbot.branches.{{project}}.android-api-11'
