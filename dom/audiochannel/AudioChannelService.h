@@ -10,11 +10,11 @@
 #include "nsIAudioChannelService.h"
 #include "nsAutoPtr.h"
 #include "nsIObserver.h"
+#include "nsTObserverArray.h"
 #include "nsTArray.h"
 
 #include "AudioChannelAgent.h"
 #include "nsAttrValue.h"
-#include "nsClassHashtable.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 
 class nsIRunnable;
@@ -160,58 +160,45 @@ private:
 
   struct AudioChannelWindow final
   {
+    explicit AudioChannelWindow(uint64_t aWindowID)
+      : mWindowID(aWindowID)
+    {}
+
+    uint64_t mWindowID;
     AudioChannelConfig mChannels[NUMBER_OF_AUDIO_CHANNELS];
-    nsClassHashtable<nsPtrHashKey<AudioChannelAgent>, AudioChannel> mAgents;
+
+    // Raw pointer because the AudioChannelAgent must unregister itself.
+    nsTObserverArray<AudioChannelAgent*> mAgents;
   };
 
-  AudioChannelWindow&
+  AudioChannelWindow*
   GetOrCreateWindowData(nsPIDOMWindow* aWindow);
 
-  static PLDHashOperator
-  TelephonyChannelIsActiveEnumerator(const uint64_t& aWindowID,
-                                     nsAutoPtr<AudioChannelWindow>& aWinData,
-                                     void *aPtr);
+  AudioChannelWindow*
+  GetWindowData(uint64_t aWindowID) const;
 
-  static PLDHashOperator
-  ContentOrNormalChannelIsActiveEnumerator(
-                                        const uint64_t& aWindowID,
-                                        nsAutoPtr<AudioChannelWindow>& aWinData,
-                                        void *aPtr);
-
-  static PLDHashOperator
-  AnyAudioChannelIsActiveEnumerator(const uint64_t& aWindowID,
-                                    nsAutoPtr<AudioChannelWindow>& aWinData,
-                                    void *aPtr);
-
-  static PLDHashOperator
-  RefreshAgentsVolumeEnumerator(AudioChannelAgent* aAgent,
-                                AudioChannel* aUnused,
-                                void *aPtr);
-
-  static PLDHashOperator
-  NotifyEnumerator(AudioChannelAgent* aAgent,
-                   AudioChannel* aAudioChannel,
-                   void* aUnused);
-
-  nsClassHashtable<nsUint64HashKey, AudioChannelWindow> mWindows;
-
-  struct AudioChannelChildStatus final {
-    AudioChannelChildStatus()
-      : mActiveTelephonyChannel(false)
+  struct AudioChannelChildStatus final
+  {
+    explicit AudioChannelChildStatus(uint64_t aChildID)
+      : mChildID(aChildID)
+      , mActiveTelephonyChannel(false)
       , mActiveContentOrNormalChannel(false)
     {}
 
+    uint64_t mChildID;
     bool mActiveTelephonyChannel;
     bool mActiveContentOrNormalChannel;
   };
 
-  static PLDHashOperator
-  TelephonyChannelIsActiveInChildrenEnumerator(
-                                      const uint64_t& aChildID,
-                                      nsAutoPtr<AudioChannelChildStatus>& aData,
-                                      void *aPtr);
+  AudioChannelChildStatus*
+  GetChildStatus(uint64_t aChildID) const;
 
-  nsClassHashtable<nsUint64HashKey, AudioChannelChildStatus> mPlayingChildren;
+  void
+  RemoveChildStatus(uint64_t aChildID);
+
+  nsTObserverArray<nsAutoPtr<AudioChannelWindow>> mWindows;
+
+  nsTObserverArray<nsAutoPtr<AudioChannelChildStatus>> mPlayingChildren;
 
 #ifdef MOZ_WIDGET_GONK
   nsTArray<SpeakerManagerService*>  mSpeakerManager;
