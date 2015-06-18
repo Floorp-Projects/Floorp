@@ -99,6 +99,8 @@ public:
   };
   virtual int      GetSensorOrientation(uint32_t aType = RAW_SENSOR_ORIENTATION);
 
+  virtual bool     IsEmulated();
+
   /**
    * MIN_UNDEQUEUED_BUFFERS has increased to 4 since Android JB. For FFOS, more
    * than 3 gralloc buffers are necessary between ImageHost and GonkBufferQueue
@@ -140,6 +142,7 @@ protected:
 #endif
   int                           mRawSensorOrientation;
   int                           mSensorOrientation;
+  bool                          mEmulated;
 
 private:
   GonkCameraHardware(const GonkCameraHardware&) = delete;
