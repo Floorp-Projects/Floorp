@@ -72,10 +72,10 @@ FRAME_STATE_BIT(Generic, 3, NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT)
 FRAME_STATE_BIT(Generic, 4, NS_FRAME_EXTERNAL_REFERENCE)
 
 // If this bit is set, this frame or one of its descendants has a
-// percentage height that depends on an ancestor of this frame.
+// percentage block-size that depends on an ancestor of this frame.
 // (Or it did at one point in the past, since we don't necessarily clear
 // the bit when it's no longer needed; it's an optimization.)
-FRAME_STATE_BIT(Generic, 5, NS_FRAME_CONTAINS_RELATIVE_HEIGHT)
+FRAME_STATE_BIT(Generic, 5, NS_FRAME_CONTAINS_RELATIVE_BSIZE)
 
 // If this bit is set, then the frame corresponds to generated content
 FRAME_STATE_BIT(Generic, 6, NS_FRAME_GENERATED_CONTENT)
