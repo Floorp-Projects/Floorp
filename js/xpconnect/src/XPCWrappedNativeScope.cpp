@@ -461,17 +461,6 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
     mGlobalJSObject.finalize(rt);
 }
 
-static PLDHashOperator
-WrappedNativeJSGCThingTracer(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                             uint32_t number, void* arg)
-{
-    XPCWrappedNative* wrapper = ((Native2WrappedNativeMap::Entry*)hdr)->value;
-    if (wrapper->HasExternalReference() && !wrapper->IsWrapperExpired())
-        wrapper->TraceSelf((JSTracer*)arg);
-
-    return PL_DHASH_NEXT;
-}
-
 // static
 void
 XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc, XPCJSRuntime* rt)
@@ -479,27 +468,18 @@ XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc, XPCJSRuntim
     // Do JS_CallTracer for all wrapped natives with external references, as
     // well as any DOM expando objects.
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
-        cur->mWrappedNativeMap->Enumerate(WrappedNativeJSGCThingTracer, trc);
+        for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
+            auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
+            XPCWrappedNative* wrapper = entry->value;
+            if (wrapper->HasExternalReference() && !wrapper->IsWrapperExpired())
+                wrapper->TraceSelf(trc);
+        }
+
         if (cur->mDOMExpandoSet) {
             for (DOMExpandoSet::Enum e(*cur->mDOMExpandoSet); !e.empty(); e.popFront())
                 JS_CallHashSetObjectTracer(trc, e, e.front(), "DOM expando object");
         }
     }
-}
-
-static PLDHashOperator
-WrappedNativeSuspecter(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                       uint32_t number, void* arg)
-{
-    XPCWrappedNative* wrapper = ((Native2WrappedNativeMap::Entry*)hdr)->value;
-
-    if (wrapper->HasExternalReference()) {
-        nsCycleCollectionNoteRootCallback* cb =
-            static_cast<nsCycleCollectionNoteRootCallback*>(arg);
-        XPCJSRuntime::SuspectWrappedNative(wrapper, *cb);
-    }
-
-    return PL_DHASH_NEXT;
 }
 
 static void
@@ -516,7 +496,13 @@ XPCWrappedNativeScope::SuspectAllWrappers(XPCJSRuntime* rt,
                                           nsCycleCollectionNoteRootCallback& cb)
 {
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
-        cur->mWrappedNativeMap->Enumerate(WrappedNativeSuspecter, &cb);
+        for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
+            auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
+            XPCWrappedNative* wrapper = entry->value;
+            if (wrapper->HasExternalReference())
+                XPCJSRuntime::SuspectWrappedNative(wrapper, cb);
+        }
+
         if (cur->mDOMExpandoSet) {
             for (DOMExpandoSet::Range r = cur->mDOMExpandoSet->all(); !r.empty(); r.popFront())
                 SuspectDOMExpandos(r.front(), cb);
@@ -571,76 +557,52 @@ XPCWrappedNativeScope::UpdateWeakPointersAfterGC(XPCJSRuntime* rt)
     }
 }
 
-static PLDHashOperator
-WrappedNativeMarker(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                    uint32_t number_t, void* arg)
-{
-    ((Native2WrappedNativeMap::Entry*)hdr)->value->Mark();
-    return PL_DHASH_NEXT;
-}
-
-// We need to explicitly mark all the protos too because some protos may be
-// alive in the hashtable but not currently in use by any wrapper
-static PLDHashOperator
-WrappedNativeProtoMarker(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                         uint32_t number, void* arg)
-{
-    ((ClassInfo2WrappedNativeProtoMap::Entry*)hdr)->value->Mark();
-    return PL_DHASH_NEXT;
-}
-
 // static
 void
 XPCWrappedNativeScope::MarkAllWrappedNativesAndProtos()
 {
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
-        cur->mWrappedNativeMap->Enumerate(WrappedNativeMarker, nullptr);
-        cur->mWrappedNativeProtoMap->Enumerate(WrappedNativeProtoMarker, nullptr);
+        for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
+            auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
+            entry->value->Mark();
+        }
+        // We need to explicitly mark all the protos too because some protos may be
+        // alive in the hashtable but not currently in use by any wrapper
+        for (auto i = cur->mWrappedNativeProtoMap->Iter(); !i.Done(); i.Next()) {
+            auto entry = static_cast<ClassInfo2WrappedNativeProtoMap::Entry*>(i.Get());
+            entry->value->Mark();
+        }
     }
 }
 
 #ifdef DEBUG
-static PLDHashOperator
-ASSERT_WrappedNativeSetNotMarked(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                                 uint32_t number, void* arg)
-{
-    ((Native2WrappedNativeMap::Entry*)hdr)->value->ASSERT_SetsNotMarked();
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-ASSERT_WrappedNativeProtoSetNotMarked(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                                      uint32_t number, void* arg)
-{
-    ((ClassInfo2WrappedNativeProtoMap::Entry*)hdr)->value->ASSERT_SetNotMarked();
-    return PL_DHASH_NEXT;
-}
-
 // static
 void
 XPCWrappedNativeScope::ASSERT_NoInterfaceSetsAreMarked()
 {
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
-        cur->mWrappedNativeMap->Enumerate(ASSERT_WrappedNativeSetNotMarked, nullptr);
-        cur->mWrappedNativeProtoMap->Enumerate(ASSERT_WrappedNativeProtoSetNotMarked, nullptr);
+        for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
+            auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
+            entry->value->ASSERT_SetsNotMarked();
+        }
+        for (auto i = cur->mWrappedNativeProtoMap->Iter(); !i.Done(); i.Next()) {
+            auto entry = static_cast<ClassInfo2WrappedNativeProtoMap::Entry*>(i.Get());
+            entry->value->ASSERT_SetNotMarked();
+        }
     }
 }
 #endif
-
-static PLDHashOperator
-WrappedNativeTearoffSweeper(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                            uint32_t number, void* arg)
-{
-    ((Native2WrappedNativeMap::Entry*)hdr)->value->SweepTearOffs();
-    return PL_DHASH_NEXT;
-}
 
 // static
 void
 XPCWrappedNativeScope::SweepAllWrappedNativeTearOffs()
 {
-    for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext)
-        cur->mWrappedNativeMap->Enumerate(WrappedNativeTearoffSweeper, nullptr);
+    for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
+        for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
+            auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
+            entry->value->SweepTearOffs();
+        }
+    }
 }
 
 // static
@@ -666,31 +628,6 @@ struct ShutdownData
     int wrapperCount;
     int protoCount;
 };
-
-static PLDHashOperator
-WrappedNativeShutdownEnumerator(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                                uint32_t number, void* arg)
-{
-    ShutdownData* data = (ShutdownData*) arg;
-    XPCWrappedNative* wrapper = ((Native2WrappedNativeMap::Entry*)hdr)->value;
-
-    if (wrapper->IsValid()) {
-        wrapper->SystemIsBeingShutDown();
-        data->wrapperCount++;
-    }
-    return PL_DHASH_REMOVE;
-}
-
-static PLDHashOperator
-WrappedNativeProtoShutdownEnumerator(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                                     uint32_t number, void* arg)
-{
-    ShutdownData* data = (ShutdownData*) arg;
-    ((ClassInfo2WrappedNativeProtoMap::Entry*)hdr)->value->
-        SystemIsBeingShutDown();
-    data->protoCount++;
-    return PL_DHASH_REMOVE;
-}
 
 //static
 void
@@ -725,10 +662,21 @@ XPCWrappedNativeScope::SystemIsBeingShutDown()
 
         // Walk the protos first. Wrapper shutdown can leave dangling
         // proto pointers in the proto map.
-        cur->mWrappedNativeProtoMap->
-                Enumerate(WrappedNativeProtoShutdownEnumerator,  &data);
-        cur->mWrappedNativeMap->
-                Enumerate(WrappedNativeShutdownEnumerator,  &data);
+        for (auto i = cur->mWrappedNativeProtoMap->RemovingIter(); !i.Done(); i.Next()) {
+            auto entry = static_cast<ClassInfo2WrappedNativeProtoMap::Entry*>(i.Get());
+            entry->value->SystemIsBeingShutDown();
+            data.protoCount++;
+            i.Remove();
+        }
+        for (auto i = cur->mWrappedNativeMap->RemovingIter(); !i.Done(); i.Next()) {
+            auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
+            XPCWrappedNative* wrapper = entry->value;
+            if (wrapper->IsValid()) {
+                wrapper->SystemIsBeingShutDown();
+                data.wrapperCount++;
+            }
+            i.Remove();
+        }
     }
 
     // Now it is safe to kill all the scopes.
@@ -910,23 +858,6 @@ XPCWrappedNativeScope::DebugDumpAllScopes(int16_t depth)
 #endif
 }
 
-#ifdef DEBUG
-static PLDHashOperator
-WrappedNativeMapDumpEnumerator(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                               uint32_t number, void* arg)
-{
-    ((Native2WrappedNativeMap::Entry*)hdr)->value->DebugDump(*(int16_t*)arg);
-    return PL_DHASH_NEXT;
-}
-static PLDHashOperator
-WrappedNativeProtoMapDumpEnumerator(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                                    uint32_t number, void* arg)
-{
-    ((ClassInfo2WrappedNativeProtoMap::Entry*)hdr)->value->DebugDump(*(int16_t*)arg);
-    return PL_DHASH_NEXT;
-}
-#endif
-
 void
 XPCWrappedNativeScope::DebugDump(int16_t depth)
 {
@@ -943,7 +874,10 @@ XPCWrappedNativeScope::DebugDump(int16_t depth)
         // iterate contexts...
         if (depth && mWrappedNativeMap->Count()) {
             XPC_LOG_INDENT();
-            mWrappedNativeMap->Enumerate(WrappedNativeMapDumpEnumerator, &depth);
+            for (auto i = mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
+                auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
+                entry->value->DebugDump(depth);
+            }
             XPC_LOG_OUTDENT();
         }
 
@@ -953,7 +887,10 @@ XPCWrappedNativeScope::DebugDump(int16_t depth)
         // iterate contexts...
         if (depth && mWrappedNativeProtoMap->Count()) {
             XPC_LOG_INDENT();
-            mWrappedNativeProtoMap->Enumerate(WrappedNativeProtoMapDumpEnumerator, &depth);
+            for (auto i = mWrappedNativeProtoMap->Iter(); !i.Done(); i.Next()) {
+                auto entry = static_cast<ClassInfo2WrappedNativeProtoMap::Entry*>(i.Get());
+                entry->value->DebugDump(depth);
+            }
             XPC_LOG_OUTDENT();
         }
     XPC_LOG_OUTDENT();
