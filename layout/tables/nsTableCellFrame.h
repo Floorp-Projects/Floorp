@@ -143,7 +143,7 @@ public:
   virtual mozilla::WritingMode GetWritingMode() const override
     { return GetTableFrame()->GetWritingMode(); }
 
-  void VerticallyAlignChild(nscoord aMaxAscent);
+  void BlockDirAlignChild(mozilla::WritingMode aWM, nscoord aMaxAscent);
 
   /*
    * Get the value of vertical-align adjusted for CSS 2's rules for a
@@ -156,12 +156,12 @@ public:
     return GetVerticalAlign() == NS_STYLE_VERTICAL_ALIGN_BASELINE;
   }
 
-  bool CellHasVisibleContent(nscoord       height,
-                               nsTableFrame* tableFrame,
-                               nsIFrame*     kidFrame);
+  bool CellHasVisibleContent(nscoord       aBSize,
+                             nsTableFrame* tableFrame,
+                             nsIFrame*     kidFrame);
 
   /**
-   * Get the first-line baseline of the cell relative to its top border
+   * Get the first-line baseline of the cell relative to its block-start border
    * edge, as if the cell were vertically aligned to the top of the row.
    */
   nscoord GetCellBaseline() const;
@@ -200,11 +200,11 @@ public:
   virtual nsresult GetColIndex(int32_t &aColIndex) const override;
   void SetColIndex(int32_t aColIndex);
 
-  /** return the available width given to this frame during its last reflow */
-  inline nscoord GetPriorAvailWidth();
+  /** return the available isize given to this frame during its last reflow */
+  inline nscoord GetPriorAvailISize();
 
-  /** set the available width given to this frame during its last reflow */
-  inline void SetPriorAvailWidth(nscoord aPriorAvailWidth);
+  /** set the available isize given to this frame during its last reflow */
+  inline void SetPriorAvailISize(nscoord aPriorAvailISize);
 
   /** return the desired size returned by this frame during its last reflow */
   inline mozilla::LogicalSize GetDesiredSize();
@@ -215,8 +215,8 @@ public:
   bool GetContentEmpty();
   void SetContentEmpty(bool aContentEmpty);
 
-  bool HasPctOverHeight();
-  void SetHasPctOverHeight(bool aValue);
+  bool HasPctOverBSize();
+  void SetHasPctOverBSize(bool aValue);
 
   nsTableCellFrame* GetNextCell() const;
 
@@ -242,7 +242,8 @@ public:
   virtual void InvalidateFrameForRemoval() override { InvalidateFrameSubtree(); }
 
 protected:
-  virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState= nullptr) const override;
+  virtual LogicalSides
+  GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
 
   /**
    * GetBorderOverflow says how far the cell's own borders extend
@@ -257,15 +258,15 @@ protected:
 
   uint32_t     mColIndex;             // the starting column for this cell
 
-  nscoord      mPriorAvailWidth;      // the avail width during the last reflow
+  nscoord      mPriorAvailISize;      // the avail isize during the last reflow
   mozilla::LogicalSize mDesiredSize;  // the last desired inline and block size
 };
 
-inline nscoord nsTableCellFrame::GetPriorAvailWidth()
-{ return mPriorAvailWidth;}
+inline nscoord nsTableCellFrame::GetPriorAvailISize()
+{ return mPriorAvailISize; }
 
-inline void nsTableCellFrame::SetPriorAvailWidth(nscoord aPriorAvailWidth)
-{ mPriorAvailWidth = aPriorAvailWidth;}
+inline void nsTableCellFrame::SetPriorAvailISize(nscoord aPriorAvailISize)
+{ mPriorAvailISize = aPriorAvailISize; }
 
 inline mozilla::LogicalSize nsTableCellFrame::GetDesiredSize()
 { return mDesiredSize; }
@@ -291,13 +292,13 @@ inline void nsTableCellFrame::SetContentEmpty(bool aContentEmpty)
   }
 }
 
-inline bool nsTableCellFrame::HasPctOverHeight()
+inline bool nsTableCellFrame::HasPctOverBSize()
 {
   return (mState & NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT) ==
          NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
 }
 
-inline void nsTableCellFrame::SetHasPctOverHeight(bool aValue)
+inline void nsTableCellFrame::SetHasPctOverBSize(bool aValue)
 {
   if (aValue) {
     mState |= NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
