@@ -266,16 +266,6 @@ this.WebappManager = {
   autoInstall: function(aData) {
     debug("autoInstall " + aData.manifestURL);
 
-    // If the app is already installed, update the existing installation.
-    // We should be able to use DOMApplicationRegistry.getAppByManifestURL,
-    // but it returns a mozIApplication, while _autoUpdate needs the original
-    // object from DOMApplicationRegistry.webapps in order to modify it.
-    for (let [ , app] in Iterator(DOMApplicationRegistry.webapps)) {
-      if (app.manifestURL == aData.manifestURL) {
-        return this._autoUpdate(aData, app);
-      }
-    }
-
     let mm = {
       sendAsyncMessage: function (aMessageName, aData) {
         // TODO hook this back to Java to report errors.
@@ -310,6 +300,16 @@ this.WebappManager = {
     message.apkInstall = true;
 
     DOMApplicationRegistry.registryReady.then(() => {
+      // If the app is already installed, update the existing installation.
+      // We should be able to use DOMApplicationRegistry.getAppByManifestURL,
+      // but it returns a mozIApplication, while _autoUpdate needs the original
+      // object from DOMApplicationRegistry.webapps in order to modify it.
+      for (let [ , app] in Iterator(DOMApplicationRegistry.webapps)) {
+        if (app.manifestURL == aData.manifestURL) {
+          return this._autoUpdate(aData, app);
+        }
+      }
+
       switch (aData.type) { // can be hosted or packaged.
         case "hosted":
           DOMApplicationRegistry.doInstall(message, mm);
