@@ -229,6 +229,8 @@ public:
   }
 
   void NotifyDataArrived(const unsigned char* aBuffer, uint32_t aLength, int64_t aOffset);
+  void Reset();
+  void UpdateIndex(const nsTArray<MediaByteRange>& aRanges, MediaResource* aResource);
   bool CalculateBufferedForRange(int64_t aStartOffset, int64_t aEndOffset,
                                  uint64_t* aStartTime, uint64_t* aEndTime);
 
@@ -239,6 +241,12 @@ public:
 
   // Returns end offset of init segment or -1 if none found.
   int64_t GetInitEndOffset();
+
+  // Returns start time
+  bool GetStartTime(uint64_t *aTime);
+
+  // Returns keyframe for time
+  bool GetNextKeyframeTime(uint64_t aTime, uint64_t* aKeyframeTime);
 
 private:
   // Private destructor, to discourage deletion outside of Release():
