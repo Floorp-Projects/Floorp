@@ -48,6 +48,7 @@ EXTRA_JS_MODULES.devtools.shared += [
 ]
 
 EXTRA_JS_MODULES.devtools.shared.widgets += [
+    'widgets/BarGraphWidget.js',
     'widgets/CubicBezierPresets.js',
     'widgets/CubicBezierWidget.js',
     'widgets/FastListWidget.js',

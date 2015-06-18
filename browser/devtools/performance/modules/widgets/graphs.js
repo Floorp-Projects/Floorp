@@ -11,7 +11,7 @@ const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Task } = require("resource://gre/modules/Task.jsm");
 const { Heritage } = require("resource:///modules/devtools/ViewHelpers.jsm");
 const LineGraphWidget = require("devtools/shared/widgets/LineGraphWidget");
-const { BarGraphWidget } = require("devtools/shared/widgets/Graphs");
+const BarGraphWidget = require("devtools/shared/widgets/BarGraphWidget");
 const { CanvasGraphUtils } = require("devtools/shared/widgets/Graphs");
 
 loader.lazyRequireGetter(this, "promise");
