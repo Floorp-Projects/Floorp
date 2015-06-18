@@ -277,6 +277,18 @@ loop.standaloneRoomViews = (function(mozL10n) {
           publisherConfig: this.getDefaultPublisherConfig({publishVideo: true})
         }));
       }
+
+      // UX don't want to surface these errors (as they would imply the user
+      // needs to do something to fix them, when if they're having a conversation
+      // they just need to connect). However, we do want there to be somewhere to
+      // find reasonably easily, in case there's issues raised.
+      if (!this.state.roomInfoFailure && nextState.roomInfoFailure) {
+        if (nextState.roomInfoFailure === ROOM_INFO_FAILURES.WEB_CRYPTO_UNSUPPORTED) {
+          console.error(mozL10n.get("room_information_failure_unsupported_browser"));
+        } else {
+          console.error(mozL10n.get("room_information_failure_not_available"));
+        }
+      }
     },
 
     joinRoom: function() {
