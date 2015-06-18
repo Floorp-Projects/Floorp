@@ -14,6 +14,7 @@
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "AudioSampleFormat.h"
+#include "AudioChannelCommon.h"
 #include <algorithm>
 #include "nsComponentManagerUtils.h"
 #include "nsIHttpChannel.h"

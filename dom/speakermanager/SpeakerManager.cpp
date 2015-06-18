@@ -201,8 +201,8 @@ SpeakerManager::HandleEvent(nsIDOMEvent* aEvent)
   // currently playing in the app itself, if application switch to
   // the background, we switch 'speakerforced' to false.
   if (!mVisible && mForcespeaker) {
-    nsRefPtr<AudioChannelService> audioChannelService =
-      AudioChannelService::GetOrCreate();
+    AudioChannelService* audioChannelService =
+      AudioChannelService::GetOrCreateAudioChannelService();
     if (audioChannelService && !audioChannelService->AnyAudioChannelIsActive()) {
       service->ForceSpeaker(false, mVisible);
     }

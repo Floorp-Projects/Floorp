@@ -1007,7 +1007,7 @@ ParticularProcessPriorityManager::ComputePriority()
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }
 
-  nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+  AudioChannelService* service = AudioChannelService::GetOrCreateAudioChannelService();
   if (service->ProcessContentOrNormalChannelIsActive(ChildID())) {
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }

@@ -96,7 +96,7 @@ SpeakerManagerServiceChild::SetAudioChannelActive(bool aIsActive)
 SpeakerManagerServiceChild::SpeakerManagerServiceChild()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsRefPtr<AudioChannelService> audioChannelService = AudioChannelService::GetOrCreate();
+  AudioChannelService* audioChannelService = AudioChannelService::GetOrCreateAudioChannelService();
   if (audioChannelService) {
     audioChannelService->RegisterSpeakerManager(this);
   }
@@ -105,7 +105,7 @@ SpeakerManagerServiceChild::SpeakerManagerServiceChild()
 
 SpeakerManagerServiceChild::~SpeakerManagerServiceChild()
 {
-  nsRefPtr<AudioChannelService> audioChannelService = AudioChannelService::GetOrCreate();
+  AudioChannelService* audioChannelService = AudioChannelService::GetOrCreateAudioChannelService();
   if (audioChannelService) {
     audioChannelService->UnregisterSpeakerManager(this);
   }
