@@ -343,13 +343,8 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg)
          pref->flags & PREF_STICKY_DEFAULT)) {
         sourcePref = &pref->userPref;
     } else {
-        if (argData->saveTypes == SAVE_ALL_AND_DEFAULTS) {
-            prefPrefix.AssignLiteral("pref(\"");
-            sourcePref = &pref->defaultPref;
-        }
-        else
-            // do not save default prefs that haven't changed
-            return PL_DHASH_NEXT;
+        // do not save default prefs that haven't changed
+        return PL_DHASH_NEXT;
     }
 
     // strings are in quotes!
