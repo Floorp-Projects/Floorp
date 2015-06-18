@@ -461,6 +461,9 @@ protected:
                                    const int32_t& aX, const int32_t& aY,
                                    const int32_t& aCx, const int32_t& aCy) override;
 
+    virtual bool RecvAudioChannelActivityNotification(const uint32_t& aAudioChannel,
+                                                      const bool& aActive) override;
+
     bool InitBrowserConfiguration(const nsCString& aURI,
                                   BrowserConfiguration& aConfiguration);
 
