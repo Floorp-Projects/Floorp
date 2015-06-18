@@ -6,6 +6,7 @@
 #include "gfxWindowsSurface.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
+#include "mozilla/gfx/Logging.h"
 
 #include "cairo.h"
 #include "cairo-win32.h"
@@ -29,6 +30,9 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, uint32_t flags) :
     if (flags & FLAG_FOR_PRINTING) {
         Init(cairo_win32_printing_surface_create(mDC));
         mForPrinting = true;
+        if (!mSurfaceValid) {
+            gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Invalid printing surface";
+        }
     } else
 #endif
     InitWithDC(flags);
