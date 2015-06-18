@@ -5,9 +5,12 @@
 
 package org.mozilla.gecko.db;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
@@ -16,6 +19,8 @@ import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
+import org.mozilla.gecko.util.FileUtils;
+
 import static org.mozilla.gecko.db.DBUtils.qualifyColumn;
 
 import android.content.ContentValues;
@@ -34,7 +39,7 @@ import android.util.Log;
 final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     private static final String LOGTAG = "GeckoBrowserDBHelper";
 
-    public static final int DATABASE_VERSION = 23;
+    public static final int DATABASE_VERSION = 24;
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
@@ -44,6 +49,8 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     static final String TABLE_FAVICONS = Favicons.TABLE_NAME;
     static final String TABLE_THUMBNAILS = Thumbnails.TABLE_NAME;
     static final String TABLE_READING_LIST = ReadingListItems.TABLE_NAME;
+    static final String TABLE_TABS = TabsProvider.TABLE_TABS;
+    static final String TABLE_CLIENTS = TabsProvider.TABLE_CLIENTS;
 
     static final String VIEW_COMBINED = Combined.VIEW_NAME;
     static final String VIEW_BOOKMARKS_WITH_FAVICONS = Bookmarks.VIEW_WITH_FAVICONS;
@@ -174,6 +181,54 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 " FROM " + TABLE_HISTORY_JOIN_FAVICONS);
     }
 
+    private void createClientsTable(SQLiteDatabase db) {
+        debug("Creating " + TABLE_CLIENTS + " table");
+
+        // Table for client's name-guid mapping.
+        db.execSQL("CREATE TABLE " + TABLE_CLIENTS + "(" +
+                BrowserContract.Clients.GUID + " TEXT PRIMARY KEY," +
+                BrowserContract.Clients.NAME + " TEXT," +
+                BrowserContract.Clients.LAST_MODIFIED + " INTEGER," +
+                BrowserContract.Clients.DEVICE_TYPE + " TEXT" +
+                ");");
+
+        // Index on GUID.
+        db.execSQL("CREATE INDEX " + TabsProvider.INDEX_CLIENTS_GUID +
+                " ON " + TABLE_CLIENTS + "(" + BrowserContract.Clients.GUID + ")");
+    }
+
+    private void createTabsTable(SQLiteDatabase db) {
+        debug("Creating tabs.db: " + db.getPath());
+        debug("Creating " + TABLE_TABS + " table");
+
+        // Table for each tab on any client.
+        db.execSQL("CREATE TABLE " + TABLE_TABS + "(" +
+                BrowserContract.Tabs._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                BrowserContract.Tabs.CLIENT_GUID + " TEXT," +
+                BrowserContract.Tabs.TITLE + " TEXT," +
+                BrowserContract.Tabs.URL + " TEXT," +
+                BrowserContract.Tabs.HISTORY + " TEXT," +
+                BrowserContract.Tabs.FAVICON + " TEXT," +
+                BrowserContract.Tabs.LAST_USED + " INTEGER," +
+                BrowserContract.Tabs.POSITION + " INTEGER" +
+                ");");
+
+        // Indices on CLIENT_GUID and POSITION.
+        db.execSQL("CREATE INDEX " + TabsProvider.INDEX_TABS_GUID +
+                " ON " + TABLE_TABS + "(" + BrowserContract.Tabs.CLIENT_GUID + ")");
+        db.execSQL("CREATE INDEX " + TabsProvider.INDEX_TABS_POSITION +
+                " ON " + TABLE_TABS + "(" + BrowserContract.Tabs.POSITION + ")");
+    }
+
+    // Insert a client row for our local Fennec client.
+    private void createLocalClient(SQLiteDatabase db) {
+        debug("Inserting local Fennec client into " + TABLE_CLIENTS + " table");
+
+        ContentValues values = new ContentValues();
+        values.put(BrowserContract.Clients.LAST_MODIFIED, System.currentTimeMillis());
+        db.insertOrThrow(TABLE_CLIENTS, null, values);
+    }
+
     private void createCombinedViewOn19(SQLiteDatabase db) {
         /*
         The v19 combined view removes the redundant subquery from the v16
@@ -286,6 +341,9 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createHistoryTable(db);
         createFaviconsTable(db);
         createThumbnailsTable(db);
+        createTabsTable(db);
+        createClientsTable(db);
+        createLocalClient(db);
 
         createBookmarksWithFaviconsView(db);
         createHistoryWithFaviconsView(db);
@@ -299,6 +357,36 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createReadingListTable(db, TABLE_READING_LIST);
         didCreateCurrentReadingListTable = true;      // Mostly correct, in the absence of transactions.
         createReadingListIndices(db, TABLE_READING_LIST);
+    }
+
+    /**
+     * Copies the tabs and clients tables out of the given tabs.db file and into the destinationDB.
+     *
+     * @param tabsDBFile Path to existing tabs.db.
+     * @param destinationDB The destination database.
+     */
+    public void copyTabsDB(File tabsDBFile, SQLiteDatabase destinationDB) {
+        createTabsTable(destinationDB);
+        createClientsTable(destinationDB);
+
+        SQLiteDatabase oldTabsDB = null;
+        try {
+            oldTabsDB = SQLiteDatabase.openDatabase(tabsDBFile.getPath(), null, SQLiteDatabase.OPEN_READONLY);
+
+            if (!DBUtils.copyTable(oldTabsDB, TABLE_CLIENTS, destinationDB, TABLE_CLIENTS)) {
+                Log.e(LOGTAG, "Failed to migrate table clients; ignoring.");
+            }
+            if (!DBUtils.copyTable(oldTabsDB, TABLE_TABS, destinationDB, TABLE_TABS)) {
+                Log.e(LOGTAG, "Failed to migrate table tabs; ignoring.");
+            }
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Exception occurred while trying to copy from " + tabsDBFile.getPath() +
+                    " to " + destinationDB.getPath() + "; ignoring.", e);
+        } finally {
+            if (oldTabsDB != null) {
+                oldTabsDB.close();
+            }
+        }
     }
 
     private void createSearchHistoryTable(SQLiteDatabase db) {
@@ -878,6 +966,26 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createReadingListIndices(db, TABLE_READING_LIST);
     }
 
+    private void upgradeDatabaseFrom23to24(SQLiteDatabase db) {
+        // Version 24 consolidates the tabs and clients table into browser.db.  Before, they lived in tabs.db.
+        // It's easier to copy the existing data than to arrange for Sync to re-populate it.
+        try {
+            final File oldTabsDBFile = new File(GeckoProfile.get(mContext).getDir(), "tabs.db");
+            copyTabsDB(oldTabsDBFile, db);
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Got exception copying tabs and clients data from tabs.db to browser.db; ignoring.", e);
+        }
+
+        // Delete the database, the shared memory, and the log.
+        for (String filename : new String[] { "tabs.db", "tabs.db-shm", "tabs.db-wal" }) {
+            final File file = new File(GeckoProfile.get(mContext).getDir(), filename);
+            try {
+                FileUtils.delete(file);
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Exception occurred while trying to delete " + file.getPath() + "; ignoring.", e);
+            }
+        }
+    }
 
     private void createV19CombinedView(SQLiteDatabase db) {
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED);
@@ -949,6 +1057,10 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
                 case 23:
                     upgradeDatabaseFrom22to23(db);
+                    break;
+
+                case 24:
+                    upgradeDatabaseFrom23to24(db);
                     break;
             }
         }
