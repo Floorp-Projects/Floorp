@@ -41,6 +41,8 @@
 #include "nsIStringBundle.h"
 #define NS_ERROR_GFX_PRINTER_BUNDLE_URL "chrome://global/locale/printing.properties"
 
+#include "mozilla/gfx/Logging.h"
+
 #include "prlog.h"
 PRLogModuleInfo * kWidgetPrintingLogMod = PR_NewLogModule("printing-widget");
 #define PR_PL(_p1)  PR_LOG(kWidgetPrintingLogMod, PR_LOG_DEBUG, _p1)
@@ -281,6 +283,10 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
 
     double width, height;
     mPrintSettings->GetEffectivePageSize(&width, &height);
+    if (width <= 0 || height <= 0) {
+      return NS_ERROR_FAILURE;
+    }
+
     // convert twips to points
     width  /= TWIPS_PER_POINT_FLOAT;
     height /= TWIPS_PER_POINT_FLOAT;
@@ -300,9 +306,17 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
     if (mDevMode) {
       NS_WARN_IF_FALSE(mDriverName, "No driver!");
       HDC dc = ::CreateDCW(mDriverName, mDeviceName, nullptr, mDevMode);
+      if (!dc) {
+        gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Failed to create device context in GetSurfaceForPrinter";
+        return NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
+      }
 
       // have this surface take over ownership of this DC
       newSurface = new gfxWindowsSurface(dc, gfxWindowsSurface::FLAG_TAKE_DC | gfxWindowsSurface::FLAG_FOR_PRINTING);
+      if (newSurface->GetType() == (gfxSurfaceType)-1) {
+        gfxCriticalError() << "Invalid windows surface from " << gfx::hexa(dc);
+        newSurface = nullptr;
+      }
     }
   }
 

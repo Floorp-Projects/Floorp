@@ -12,6 +12,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Logging.h"
 #include "gfx2DGlue.h"
 
 #include "gfxASurface.h"
@@ -217,6 +218,9 @@ gfxASurface::Init(cairo_surface_t* surface, bool existingSurface)
 
     mSurface = surface;
     mSurfaceValid = surface && !cairo_surface_status(surface);
+    if (!mSurfaceValid) {
+        gfxWarning() << "ASurface Init failed with Cairo status " << cairo_surface_status(surface) << " on " << hexa(surface);
+    }
 
     if (existingSurface || !mSurfaceValid) {
         mFloatingRefs = 0;
