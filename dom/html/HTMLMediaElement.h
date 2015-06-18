@@ -13,7 +13,6 @@
 #include "nsIObserver.h"
 #include "mozilla/CORSMode.h"
 #include "DOMMediaStream.h"
-#include "AudioChannelCommon.h"
 #include "DecoderTraits.h"
 #include "nsIAudioChannelAgent.h"
 #include "mozilla/Attributes.h"
@@ -1008,8 +1007,8 @@ protected:
   // Check the permissions for audiochannel.
   bool CheckAudioChannelPermissions(const nsAString& aType);
 
-  // This method does the check for muting/fading/unmuting the audio channel.
-  nsresult UpdateChannelMuteState(mozilla::dom::AudioChannelState aCanPlay);
+  // This method does the check for muting/nmuting the audio channel.
+  nsresult UpdateChannelMuteState(float aVolume, bool aMuted);
 
   // Seeks to aTime seconds. aSeekType can be Exact to seek to exactly the
   // seek target, or PrevSyncPoint if a quicker but less precise seek is
@@ -1363,8 +1362,8 @@ protected:
   // Audio Channel.
   AudioChannel mAudioChannel;
 
-  // The audio channel has been faded.
-  bool mAudioChannelFaded;
+  // The audio channel volume
+  float mAudioChannelVolume;
 
   // Is this media element playing?
   bool mPlayingThroughTheAudioChannel;

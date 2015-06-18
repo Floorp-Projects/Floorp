@@ -15,6 +15,7 @@
 #endif
 
 #include "BrowserElementParent.h"
+#include "BrowserElementAudioChannel.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/ToJSValue.h"

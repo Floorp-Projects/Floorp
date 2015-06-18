@@ -2778,63 +2778,10 @@ ContentParent::RecvFirstIdle()
 }
 
 bool
-ContentParent::RecvAudioChannelGetState(const AudioChannel& aChannel,
-                                        const bool& aElementHidden,
-                                        const bool& aElementWasHidden,
-                                        AudioChannelState* aState)
-{
-    nsRefPtr<AudioChannelService> service =
-        AudioChannelService::GetOrCreateAudioChannelService();
-    *aState = AUDIO_CHANNEL_STATE_NORMAL;
-    MOZ_ASSERT(service);
-    *aState = service->GetStateInternal(aChannel, mChildID,
-                                        aElementHidden, aElementWasHidden);
-
-    return true;
-}
-
-bool
-ContentParent::RecvAudioChannelRegisterType(const AudioChannel& aChannel,
-                                            const bool& aWithVideo)
-{
-    nsRefPtr<AudioChannelService> service =
-        AudioChannelService::GetOrCreateAudioChannelService();
-    MOZ_ASSERT(service);
-    service->RegisterType(aChannel, mChildID, aWithVideo);
-
-    return true;
-}
-
-bool
-ContentParent::RecvAudioChannelUnregisterType(const AudioChannel& aChannel,
-                                              const bool& aElementHidden,
-                                              const bool& aWithVideo)
-{
-    nsRefPtr<AudioChannelService> service =
-        AudioChannelService::GetOrCreateAudioChannelService();
-    MOZ_ASSERT(service);
-    service->UnregisterType(aChannel, aElementHidden, mChildID, aWithVideo);
-
-    return true;
-}
-
-bool
-ContentParent::RecvAudioChannelChangedNotification()
-{
-    nsRefPtr<AudioChannelService> service =
-        AudioChannelService::GetOrCreateAudioChannelService();
-    MOZ_ASSERT(service);
-    service->SendAudioChannelChangedNotification(ChildID());
-
-    return true;
-}
-
-bool
 ContentParent::RecvAudioChannelChangeDefVolChannel(const int32_t& aChannel,
                                                    const bool& aHidden)
 {
-    nsRefPtr<AudioChannelService> service =
-        AudioChannelService::GetOrCreateAudioChannelService();
+    nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
     MOZ_ASSERT(service);
     service->SetDefaultVolumeControlChannelInternal(aChannel,
                                                     aHidden, mChildID);
