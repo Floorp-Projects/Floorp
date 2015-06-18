@@ -93,6 +93,7 @@ class LayerManagerComposite;
 class SpecificLayerAttributes;
 class Compositor;
 class FrameUniformityData;
+class PersistentBufferProvider;
 
 namespace layerscope {
 class LayersPacket;
@@ -480,6 +481,14 @@ public:
   virtual TemporaryRef<mozilla::gfx::DrawTarget>
     CreateDrawTarget(const mozilla::gfx::IntSize &aSize,
                      mozilla::gfx::SurfaceFormat aFormat);
+
+  /**
+   * Creates a PersistentBufferProvider for use with canvas which is optimized for
+   * inter-operating with this layermanager.
+   */
+  virtual TemporaryRef<PersistentBufferProvider>
+    CreatePersistentBufferProvider(const mozilla::gfx::IntSize &aSize,
+                                   mozilla::gfx::SurfaceFormat aFormat);
 
   virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) { return true; }
 
