@@ -5,9 +5,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaChild.h"
+#include "MediaParent.h"
 
-#include "mozilla/ipc/BackgroundChild.h"
-#include "mozilla/ipc/PBackgroundChild.h"
 #include "nsGlobalWindow.h"
 #include "mozilla/MediaManager.h"
 #include "mozilla/Logging.h"
@@ -20,84 +19,52 @@ PRLogModuleInfo *gMediaChildLog;
 namespace mozilla {
 namespace media {
 
-static Child* sChild;
-
-template<typename ValueType> void
-ChildPledge<ValueType>::ActorCreated(PBackgroundChild* aActor)
-{
-  if (!sChild) {
-    // Create PMedia by sending a message to the parent
-    sChild = static_cast<Child*>(aActor->SendPMediaConstructor());
-  }
-  Run(sChild);
-}
-
-template<typename ValueType> void
-ChildPledge<ValueType>::ActorFailed()
-{
-  Pledge<ValueType>::Reject(NS_ERROR_UNEXPECTED);
-}
-
-template<typename ValueType> NS_IMPL_ADDREF(ChildPledge<ValueType>)
-template<typename ValueType> NS_IMPL_RELEASE(ChildPledge<ValueType>)
-template<typename ValueType> NS_INTERFACE_MAP_BEGIN(ChildPledge<ValueType>)
-NS_INTERFACE_MAP_ENTRY(nsIIPCBackgroundChildCreateCallback)
-NS_INTERFACE_MAP_END
-
-already_AddRefed<ChildPledge<nsCString>>
+already_AddRefed<Pledge<nsCString>>
 GetOriginKey(const nsCString& aOrigin, bool aPrivateBrowsing)
 {
-  class Pledge : public ChildPledge<nsCString>
-  {
-  public:
-    explicit Pledge(const nsCString& aOrigin, bool aPrivateBrowsing)
-    : mOrigin(aOrigin), mPrivateBrowsing(aPrivateBrowsing) {}
-  private:
-    ~Pledge() {}
-    void Run(PMediaChild* aChild)
-    {
-      Child* child = static_cast<Child*>(aChild);
+  nsRefPtr<MediaManager> mgr = MediaManager::GetInstance();
+  MOZ_ASSERT(mgr);
 
-      uint32_t id = child->AddRequestPledge(*this);
-      child->SendGetOriginKey(id, mOrigin, mPrivateBrowsing);
-    }
-    const nsCString mOrigin;
-    const bool mPrivateBrowsing;
-  };
+  nsRefPtr<Pledge<nsCString>> p = new Pledge<nsCString>();
+  uint32_t id = mgr->mGetOriginKeyPledges.Append(*p);
 
-  nsRefPtr<ChildPledge<nsCString>> p = new Pledge(aOrigin, aPrivateBrowsing);
-  nsCOMPtr<nsIIPCBackgroundChildCreateCallback> cb = do_QueryObject(p);
-  bool ok = ipc::BackgroundChild::GetOrCreateForCurrentThread(cb);
-  MOZ_RELEASE_ASSERT(ok);
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    mgr->GetNonE10sParent()->RecvGetOriginKey(id, aOrigin, aPrivateBrowsing);
+  } else {
+    Child::Get()->SendGetOriginKey(id, aOrigin, aPrivateBrowsing);
+  }
   return p.forget();
 }
 
-already_AddRefed<ChildPledge<bool>>
+void
 SanitizeOriginKeys(const uint64_t& aSinceWhen)
 {
-  class Pledge : public ChildPledge<bool>
-  {
-  public:
-    explicit Pledge(const uint64_t& aSinceWhen) : mSinceWhen(aSinceWhen) {}
-  private:
-    void Run(PMediaChild* aMedia)
-    {
-      aMedia->SendSanitizeOriginKeys(mSinceWhen);
-      mValue = true;
-      LOG(("SanitizeOriginKeys since %llu", mSinceWhen));
-      Resolve();
-    }
-    const uint64_t mSinceWhen;
-  };
+  LOG(("SanitizeOriginKeys since %llu", aSinceWhen));
 
-  nsRefPtr<ChildPledge<bool>> p = new Pledge(aSinceWhen);
-  nsCOMPtr<nsIIPCBackgroundChildCreateCallback> cb = do_QueryObject(p);
-  bool ok = ipc::BackgroundChild::GetOrCreateForCurrentThread(cb);
-  MOZ_RELEASE_ASSERT(ok);
-  return p.forget();
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    // Avoid opening MediaManager in this case, since this is called by
+    // sanitize.js when cookies are cleared, which can happen on startup.
+    ScopedDeletePtr<Parent<NonE10s>> tmpParent(new Parent<NonE10s>(true));
+    tmpParent->RecvSanitizeOriginKeys(aSinceWhen);
+  } else {
+    Child::Get()->SendSanitizeOriginKeys(aSinceWhen);
+  }
+}
+
+static Child* sChild;
+
+Child* Child::Get()
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Content);
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!sChild) {
+    sChild = static_cast<Child*>(dom::ContentChild::GetSingleton()->SendPMediaConstructor());
+  }
+  return sChild;
 }
 
 Child::Child()
+  : mActorDestroyed(false)
 {
   if (!gMediaChildLog) {
     gMediaChildLog = PR_NewLogModule("MediaChild");
@@ -113,22 +80,19 @@ Child::~Child()
   MOZ_COUNT_DTOR(Child);
 }
 
-uint32_t
-Child::AddRequestPledge(ChildPledge<nsCString>& aPledge)
+void Child::ActorDestroy(ActorDestroyReason aWhy)
 {
-  return mRequestPledges.Append(aPledge);
-}
-
-already_AddRefed<ChildPledge<nsCString>>
-Child::RemoveRequestPledge(uint32_t aRequestId)
-{
-  return mRequestPledges.Remove(aRequestId);
+  mActorDestroyed = true;
 }
 
 bool
 Child::RecvGetOriginKeyResponse(const uint32_t& aRequestId, const nsCString& aKey)
 {
-  nsRefPtr<ChildPledge<nsCString>> pledge = RemoveRequestPledge(aRequestId);
+  nsRefPtr<MediaManager> mgr = MediaManager::GetInstance();
+  if (!mgr) {
+    return false;
+  }
+  nsRefPtr<Pledge<nsCString>> pledge = mgr->mGetOriginKeyPledges.Remove(aRequestId);
   if (pledge) {
     pledge->Resolve(aKey);
   }
@@ -138,15 +102,13 @@ Child::RecvGetOriginKeyResponse(const uint32_t& aRequestId, const nsCString& aKe
 PMediaChild*
 AllocPMediaChild()
 {
-  Child* obj = new Child();
-  obj->AddRef();
-  return obj;
+  return new Child();
 }
 
 bool
 DeallocPMediaChild(media::PMediaChild *aActor)
 {
-  static_cast<Child*>(aActor)->Release();
+  delete static_cast<Child*>(aActor);
   return true;
 }
 

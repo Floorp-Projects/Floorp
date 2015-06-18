@@ -39,7 +39,7 @@ public:
   virtual void Shutdown() override {};
 
   virtual void GetName(nsAString&) override;
-  virtual void GetUUID(nsAString&) override;
+  virtual void GetUUID(nsACString&) override;
 
   virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                             const MediaEnginePrefs &aPrefs) override;
@@ -109,7 +109,7 @@ public:
   virtual void Shutdown() override {};
 
   virtual void GetName(nsAString&) override;
-  virtual void GetUUID(nsAString&) override;
+  virtual void GetUUID(nsACString&) override;
 
   virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                             const MediaEnginePrefs &aPrefs) override;

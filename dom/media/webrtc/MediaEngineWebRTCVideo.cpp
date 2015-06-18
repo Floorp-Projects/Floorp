@@ -151,9 +151,7 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 size_t
 MediaEngineWebRTCVideoSource::NumCapabilities()
 {
-  NS_ConvertUTF16toUTF8 uniqueId(mUniqueId); // TODO: optimize this?
-
-  int num = mViECapture->NumberOfCapabilities(uniqueId.get(), kMaxUniqueIdLength);
+  int num = mViECapture->NumberOfCapabilities(GetUUID().get(), kMaxUniqueIdLength);
   if (num > 0) {
     return num;
   }
@@ -205,8 +203,7 @@ MediaEngineWebRTCVideoSource::GetCapability(size_t aIndex,
   if (!mHardcodedCapabilities.IsEmpty()) {
     MediaEngineCameraVideoSource::GetCapability(aIndex, aOut);
   }
-  NS_ConvertUTF16toUTF8 uniqueId(mUniqueId); // TODO: optimize this?
-  mViECapture->GetCaptureCapability(uniqueId.get(), kMaxUniqueIdLength, aIndex, aOut);
+  mViECapture->GetCaptureCapability(GetUUID().get(), kMaxUniqueIdLength, aIndex, aOut);
 }
 
 nsresult
@@ -221,7 +218,7 @@ MediaEngineWebRTCVideoSource::Allocate(const dom::MediaTrackConstraints &aConstr
     if (!ChooseCapability(aConstraints, aPrefs)) {
       return NS_ERROR_UNEXPECTED;
     }
-    if (mViECapture->AllocateCaptureDevice(NS_ConvertUTF16toUTF8(mUniqueId).get(),
+    if (mViECapture->AllocateCaptureDevice(GetUUID().get(),
                                            kMaxUniqueIdLength, mCaptureIndex)) {
       return NS_ERROR_FAILURE;
     }
@@ -387,9 +384,8 @@ MediaEngineWebRTCVideoSource::Init()
                                     uniqueId, kMaxUniqueIdLength)) {
     return;
   }
-
-  CopyUTF8toUTF16(deviceName, mDeviceName);
-  CopyUTF8toUTF16(uniqueId, mUniqueId);
+  SetName(NS_ConvertUTF8toUTF16(deviceName));
+  SetUUID(uniqueId);
 
   mInitDone = true;
 }
@@ -443,11 +439,9 @@ void MediaEngineWebRTCVideoSource::Refresh(int aIndex) {
     return;
   }
 
-  CopyUTF8toUTF16(deviceName, mDeviceName);
+  SetName(NS_ConvertUTF8toUTF16(deviceName));
 #ifdef DEBUG
-  nsString temp;
-  CopyUTF8toUTF16(uniqueId, temp);
-  MOZ_ASSERT(temp.Equals(mUniqueId));
+  MOZ_ASSERT(GetUUID().Equals(uniqueId));
 #endif
 }
 
