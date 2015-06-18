@@ -323,13 +323,7 @@ struct BindData;
 class CompExprTransplanter;
 
 enum VarContext { HoistVars, DontHoistVars };
-enum PropListType { ObjectLiteral, ClassBody, DerivedClassBody };
-
-inline bool
-IsClassBody(PropListType type)
-{
-    return type == ClassBody || type == DerivedClassBody;
-}
+enum PropListType { ObjectLiteral, ClassBody };
 
 // Specify a value for an ES6 grammar parametrization.  We have no enum for
 // [Return] because its behavior is exactly equivalent to checking whether
