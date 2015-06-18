@@ -42,8 +42,6 @@ const OBJECT_PREVIEW_MAX_ITEMS = 10;
  *              Increment the actor's grip depth
  *          - decrementGripDepth
  *              Decrement the actor's grip depth
- *          - globalDebugObject
- *              The Debuggee Global Object as given by the ThreadActor
  */
 function ObjectActor(obj, {
   createValueGrip,
@@ -51,8 +49,7 @@ function ObjectActor(obj, {
   createEnvironmentActor,
   getGripDepth,
   incrementGripDepth,
-  decrementGripDepth,
-  getGlobalDebugObject
+  decrementGripDepth
 }) {
   dbg_assert(!obj.optimizedOut,
     "Should not create object actors for optimized out values!");
@@ -63,8 +60,7 @@ function ObjectActor(obj, {
     createEnvironmentActor,
     getGripDepth,
     incrementGripDepth,
-    decrementGripDepth,
-    getGlobalDebugObject
+    decrementGripDepth
   };
   this.iterators = new Set();
 }
@@ -806,17 +802,6 @@ DebuggerServer.ObjectActorPreviewers = {
     if (userDisplayName && typeof userDisplayName.value == "string" &&
         userDisplayName.value) {
       grip.userDisplayName = hooks.createValueGrip(userDisplayName.value);
-    }
-
-    let dbgGlobal = hooks.getGlobalDebugObject();
-    if (dbgGlobal) {
-      let script = dbgGlobal.makeDebuggeeValue(obj.unsafeDereference()).script;
-      if (script) {
-        grip.location = {
-          url: script.url,
-          line: script.startLine
-        };
-      }
     }
 
     return true;

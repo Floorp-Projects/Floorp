@@ -107,5 +107,3 @@
 <!ENTITY closeCmd.key         "W">
 <!ENTITY findCmd.key          "F">
 <!ENTITY clearOutputCtrl.key  "L">
-<!ENTITY openInVarViewCmd.label "Open in Variables View">
-<!ENTITY openInVarViewCmd.accesskey "V">
