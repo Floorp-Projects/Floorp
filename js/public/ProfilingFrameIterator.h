@@ -11,6 +11,7 @@
 #include "mozilla/Maybe.h"
 
 #include "jsbytecode.h"
+#include "js/TypeDecls.h"
 #include "js/Utility.h"
 
 struct JSRuntime;

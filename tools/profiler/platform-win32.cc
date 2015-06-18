@@ -122,7 +122,7 @@ class SamplerThread : public Thread {
       sampler_->DeleteExpiredMarkers();
 
       if (!sampler_->IsPaused()) {
-        mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+        ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
         std::vector<ThreadInfo*> threads =
           sampler_->GetRegisteredThreads();
         bool isFirstProfiledThread = true;
@@ -315,7 +315,7 @@ bool Sampler::RegisterCurrentThread(const char* aName,
     return false;
 
 
-  mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+  ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
 
   int id = GetCurrentThreadId();
 
@@ -350,7 +350,7 @@ void Sampler::UnregisterCurrentThread()
 
   tlsStackTop.set(nullptr);
 
-  mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+  ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
 
   int id = GetCurrentThreadId();
 

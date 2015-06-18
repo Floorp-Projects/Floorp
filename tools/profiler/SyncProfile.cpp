@@ -25,8 +25,7 @@ SyncProfile::~SyncProfile()
 bool
 SyncProfile::ShouldDestroy()
 {
-  GetMutex()->AssertNotCurrentThreadOwns();
-  mozilla::MutexAutoLock lock(*GetMutex());
+  ::MutexAutoLock lock(GetMutex());
   if (mOwnerState == OWNED) {
     mOwnerState = OWNER_DESTROYING;
     return true;
@@ -38,8 +37,6 @@ SyncProfile::ShouldDestroy()
 void
 SyncProfile::EndUnwind()
 {
-  // Mutex must be held when this is called
-  GetMutex()->AssertCurrentThreadOwns();
   if (mOwnerState != ORPHANED) {
     mOwnerState = OWNED;
   }

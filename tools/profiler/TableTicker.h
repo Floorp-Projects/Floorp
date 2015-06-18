@@ -8,9 +8,10 @@
 
 #include "platform.h"
 #include "ProfileEntry.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/Vector.h"
+#ifndef SPS_STANDALONE
 #include "IntelPowerGadget.h"
+#endif
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
 #endif
@@ -83,7 +84,7 @@ class TableTicker: public Sampler {
   ThreadProfile* GetPrimaryThreadProfile()
   {
     if (!mPrimaryThreadProfile) {
-      mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
+      ::MutexAutoLock lock(*sRegisteredThreadsMutex);
 
       for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
         ThreadInfo* info = sRegisteredThreads->at(i);
@@ -98,7 +99,9 @@ class TableTicker: public Sampler {
   }
 
   void ToStreamAsJSON(std::ostream& stream, double aSinceTime = 0);
-  virtual JSObject *ToJSObject(JSContext* aCx, double aSinceTime = 0);
+#ifndef SPS_STANDALONE
+  virtual JSObject *ToJSObject(JSContext *aCx, double aSinceTime = 0);
+#endif
   mozilla::UniquePtr<char[]> ToJSON(double aSinceTime = 0);
   virtual void ToJSObjectAsync(double aSinceTime = 0, mozilla::dom::Promise* aPromise = 0);
   void StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter);
@@ -132,7 +135,7 @@ protected:
 
   // This represent the application's main thread (SAMPLER_INIT)
   ThreadProfile* mPrimaryThreadProfile;
-  nsRefPtr<ProfileBuffer> mBuffer;
+  mozilla::RefPtr<ProfileBuffer> mBuffer;
   bool mSaveRequested;
   bool mAddLeafAddresses;
   bool mUseStackWalk;
