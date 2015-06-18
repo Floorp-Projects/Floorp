@@ -357,7 +357,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
         NS_SUBTREE_DIRTY(kidFrame) ||
         (aReflowState.reflowState.mFlags.mSpecialHeightReflow &&
          (isPaginated || (kidFrame->GetStateBits() &
-                          NS_FRAME_CONTAINS_RELATIVE_HEIGHT)))) {
+                          NS_FRAME_CONTAINS_RELATIVE_BSIZE)))) {
       nsRect oldKidRect = kidFrame->GetRect();
       nsRect oldKidVisualOverflow = kidFrame->GetVisualOverflowRect();
 

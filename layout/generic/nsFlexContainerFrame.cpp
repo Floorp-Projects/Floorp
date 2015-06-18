@@ -3550,18 +3550,20 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     return;
   }
 
-  // We (and our children) can only depend on our ancestor's height if we have
-  // a percent-height, or if we're positioned and we have "top" and "bottom"
-  // set and have height:auto.  (There are actually other cases, too -- e.g. if
-  // our parent is itself a vertical flex container and we're flexible -- but
+  // We (and our children) can only depend on our ancestor's bsize if we have
+  // a percent-bsize, or if we're positioned and we have "block-start" and "block-end"
+  // set and have block-size:auto.  (There are actually other cases, too -- e.g. if
+  // our parent is itself a block-dir flex container and we're flexible -- but
   // we'll let our ancestors handle those sorts of cases.)
+  WritingMode wm = aReflowState.GetWritingMode();
   const nsStylePosition* stylePos = StylePosition();
-  if (stylePos->mHeight.HasPercent() ||
+  const nsStyleCoord& bsize = stylePos->BSize(wm);
+  if (bsize.HasPercent() ||
       (StyleDisplay()->IsAbsolutelyPositionedStyle() &&
-       eStyleUnit_Auto == stylePos->mHeight.GetUnit() &&
-       eStyleUnit_Auto != stylePos->mOffset.GetTopUnit() &&
-       eStyleUnit_Auto != stylePos->mOffset.GetBottomUnit())) {
-    AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+       eStyleUnit_Auto == bsize.GetUnit() &&
+       eStyleUnit_Auto != stylePos->mOffset.GetBStartUnit(wm) &&
+       eStyleUnit_Auto != stylePos->mOffset.GetBEndUnit(wm))) {
+    AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
   }
 
 #ifdef DEBUG
@@ -3596,7 +3598,6 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   nscoord availableBSizeForContent = aReflowState.AvailableBSize();
   if (availableBSizeForContent != NS_UNCONSTRAINEDSIZE &&
       !(GetLogicalSkipSides(&aReflowState).BStart())) {
-    WritingMode wm = aReflowState.GetWritingMode();
     availableBSizeForContent -=
       aReflowState.ComputedLogicalBorderPadding().BStart(wm);
     // (Don't let that push availableBSizeForContent below zero, though):
@@ -3858,11 +3859,11 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
             LogicalSize(flexWM,
                         item->Frame()->GetContentRectRelativeToSelf().Size())) {
           // Even if our size hasn't changed, some of our descendants might
-          // care that our height is now considered "definite" (whereas it
+          // care that our bsize is now considered "definite" (whereas it
           // wasn't in our previous "measuring" reflow), if they have a
-          // relative height.
+          // relative bsize.
           if (!(item->Frame()->GetStateBits() &
-                NS_FRAME_CONTAINS_RELATIVE_HEIGHT)) {
+                NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
             // Item has the correct size (and its children don't care that
             // it's now "definite"). Let's just make sure it's at the right
             // position.
@@ -4018,7 +4019,7 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
       didOverrideComputedWidth = true;
     } else {
       // If this item's height is stretched, it's a relative height.
-      aItem.Frame()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+      aItem.Frame()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
       childReflowState.SetComputedHeight(aItem.GetCrossSize());
       didOverrideComputedHeight = true;
     }

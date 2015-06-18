@@ -656,11 +656,11 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
       kidReflowState(aPresContext, aReflowState, kidFrame,
                      aReflowState.AvailableSize(kidFrame->GetWritingMode()));
 
-    if (aReflowState.IsVResize() &&
-        (kidFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT)) {
-      // Tell our kid it's being vertically resized too.  Bit of a
+    if (aReflowState.IsBResize() &&
+        (kidFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
+      // Tell our kid it's being block-dir resized too.  Bit of a
       // hack for framesets.
-      kidReflowState.SetVResize(true);
+      kidReflowState.SetBResize(true);
     }
 
     WritingMode wm = aReflowState.GetWritingMode();

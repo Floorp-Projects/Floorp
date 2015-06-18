@@ -1023,14 +1023,11 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
   // Initialize OUT parameter
   aStatus = NS_FRAME_COMPLETE;
 
-  // Our children depend on our height if we have a fixed height.
-  if (aReflowState.ComputedHeight() != NS_AUTOHEIGHT) {
-    NS_ASSERTION(aReflowState.ComputedHeight() != NS_INTRINSICSIZE,
-                 "Unexpected computed height");
-    AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
-  }
-  else {
-    RemoveStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+  // Our children depend on our block-size if we have a fixed block-size.
+  if (aReflowState.ComputedBSize() != NS_AUTOHEIGHT) {
+    AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
+  } else {
+    RemoveStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
   }
 
 #ifdef DEBUG

@@ -351,17 +351,49 @@ APZCCallbackHelper::AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollI
     }
 }
 
+static nsIPresShell*
+GetRootContentDocumentPresShellForContent(nsIContent* aContent)
+{
+    nsIDocument* doc = aContent->GetComposedDoc();
+    if (!doc) {
+        return nullptr;
+    }
+    nsIPresShell* shell = doc->GetShell();
+    if (!shell) {
+        return nullptr;
+    }
+    nsPresContext* context = shell->GetPresContext();
+    if (!context) {
+        return nullptr;
+    }
+    context = context->GetToplevelContentDocumentPresContext();
+    if (!context) {
+        return nullptr;
+    }
+    return context->PresShell();
+}
+
 CSSPoint
 APZCCallbackHelper::ApplyCallbackTransform(const CSSPoint& aInput,
-                                           const ScrollableLayerGuid& aGuid,
-                                           float aPresShellResolution)
+                                           const ScrollableLayerGuid& aGuid)
 {
-    // First, scale inversely by the pres shell resolution to cancel the
-    // scale-to-resolution transform that the compositor adds to the layer with
-    // the pres shell resolution. The points sent to Gecko by APZ don't have
-    // this transform unapplied (unlike other compositor-side transforms)
-    // because APZ doesn't know about it.
-    CSSPoint input = aInput / aPresShellResolution;
+    CSSPoint input = aInput;
+    if (aGuid.mScrollId == FrameMetrics::NULL_SCROLL_ID) {
+        return input;
+    }
+    nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aGuid.mScrollId);
+    if (!content) {
+        return input;
+    }
+
+    // First, scale inversely by the root content document's pres shell
+    // resolution to cancel the scale-to-resolution transform that the
+    // compositor adds to the layer with the pres shell resolution. The points
+    // sent to Gecko by APZ don't have this transform unapplied (unlike other
+    // compositor-side transforms) because APZ doesn't know about it.
+    if (nsIPresShell* shell = GetRootContentDocumentPresShellForContent(content)) {
+        input = input / shell->GetResolution();
+    }
 
     // Now apply the callback-transform.
     // XXX: technically we need to walk all the way up the layer tree from the layer
@@ -374,16 +406,10 @@ APZCCallbackHelper::ApplyCallbackTransform(const CSSPoint& aInput,
     // some things transformed improperly. In practice we should rarely hit scenarios
     // where any of this matters, so I'm skipping it for now and just doing the single
     // transform for the layer that the input hit.
-
-    if (aGuid.mScrollId != FrameMetrics::NULL_SCROLL_ID) {
-        nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aGuid.mScrollId);
-        if (content) {
-            void* property = content->GetProperty(nsGkAtoms::apzCallbackTransform);
-            if (property) {
-                CSSPoint delta = (*static_cast<CSSPoint*>(property));
-                return input + delta;
-            }
-        }
+    void* property = content->GetProperty(nsGkAtoms::apzCallbackTransform);
+    if (property) {
+        CSSPoint delta = (*static_cast<CSSPoint*>(property));
+        input += delta;
     }
     return input;
 }
@@ -391,23 +417,21 @@ APZCCallbackHelper::ApplyCallbackTransform(const CSSPoint& aInput,
 LayoutDeviceIntPoint
 APZCCallbackHelper::ApplyCallbackTransform(const LayoutDeviceIntPoint& aPoint,
                                            const ScrollableLayerGuid& aGuid,
-                                           const CSSToLayoutDeviceScale& aScale,
-                                           float aPresShellResolution)
+                                           const CSSToLayoutDeviceScale& aScale)
 {
     LayoutDevicePoint point = LayoutDevicePoint(aPoint.x, aPoint.y);
-    point = ApplyCallbackTransform(point / aScale, aGuid, aPresShellResolution) * aScale;
+    point = ApplyCallbackTransform(point / aScale, aGuid) * aScale;
     return gfx::RoundedToInt(point);
 }
 
 void
 APZCCallbackHelper::ApplyCallbackTransform(WidgetTouchEvent& aEvent,
                                            const ScrollableLayerGuid& aGuid,
-                                           const CSSToLayoutDeviceScale& aScale,
-                                           float aPresShellResolution)
+                                           const CSSToLayoutDeviceScale& aScale)
 {
   for (size_t i = 0; i < aEvent.touches.Length(); i++) {
     aEvent.touches[i]->mRefPoint = ApplyCallbackTransform(
-        aEvent.touches[i]->mRefPoint, aGuid, aScale, aPresShellResolution);
+        aEvent.touches[i]->mRefPoint, aGuid, aScale);
   }
 }
 

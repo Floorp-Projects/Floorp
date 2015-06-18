@@ -323,8 +323,10 @@ public:
     PLDHashEntryHdr* Get() const;     // Get the current entry.
     void Next();                      // Advance to the next entry.
 
-  private:
+  protected:
     const PLDHashTable* mTable;       // Main table pointer.
+
+  private:
     char* mCurrent;                   // Pointer to the current entry.
     char* mLimit;                     // One past the last entry.
 
@@ -337,6 +339,35 @@ public:
   };
 
   Iterator Iter() const { return Iterator(this); }
+
+  // This is an iterator that allows elements to be removed during iteration.
+  // If any elements are removed, the table may be resized once iteration ends.
+  // Its usage is similar to that of Iterator, with the addition that Remove()
+  // can be called once per element.
+  class RemovingIterator : public Iterator
+  {
+  public:
+    explicit RemovingIterator(PLDHashTable* aTable);
+    RemovingIterator(RemovingIterator&& aOther);
+    ~RemovingIterator();
+
+    // Remove the current entry. Must only be called once per entry, and Get()
+    // must not be called on that entry afterwards.
+    void Remove();
+
+  private:
+    bool mHaveRemoved;      // Have any elements been removed?
+
+    RemovingIterator() = delete;
+    RemovingIterator(const RemovingIterator&) = delete;
+    RemovingIterator& operator=(const RemovingIterator&) = delete;
+    RemovingIterator& operator=(const RemovingIterator&&) = delete;
+  };
+
+  RemovingIterator RemovingIter() const
+  {
+    return RemovingIterator(const_cast<PLDHashTable*>(this));
+  }
 
 private:
   static bool EntryIsFree(PLDHashEntryHdr* aEntry);
@@ -359,6 +390,8 @@ private:
   PLDHashEntryHdr* PL_DHASH_FASTCALL FindFreeEntry(PLDHashNumber aKeyHash);
 
   bool ChangeTable(int aDeltaLog2);
+
+  void ShrinkIfAppropriate();
 
   PLDHashTable(const PLDHashTable& aOther) = delete;
   PLDHashTable& operator=(const PLDHashTable& aOther) = delete;

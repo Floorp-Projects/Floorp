@@ -62,7 +62,6 @@ private:
   MessageLoop* mUILoop;
 
   void InitializeRoot();
-  float GetPresShellResolution() const;
   nsIPresShell* GetPresShell() const;
   nsIDocument* GetDocument() const;
   already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils() const;

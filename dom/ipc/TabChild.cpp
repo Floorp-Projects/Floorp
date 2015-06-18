@@ -311,19 +311,8 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
   nsViewportInfo viewportInfo = nsContentUtils::GetViewportInfo(document, GetInnerSize());
   uint32_t presShellId = 0;
   mozilla::layers::FrameMetrics::ViewID viewId = FrameMetrics::NULL_SCROLL_ID;
-  bool scrollIdentifiersValid = APZCCallbackHelper::GetOrCreateScrollIdentifiers(
+  APZCCallbackHelper::GetOrCreateScrollIdentifiers(
         document->GetDocumentElement(), &presShellId, &viewId);
-  if (scrollIdentifiersValid) {
-    ZoomConstraints constraints(
-      viewportInfo.IsZoomAllowed(),
-      viewportInfo.IsDoubleTapZoomAllowed(),
-      ConvertScaleForRoot(viewportInfo.GetMinZoom()),
-      ConvertScaleForRoot(viewportInfo.GetMaxZoom()));
-    DoUpdateZoomConstraints(presShellId,
-                            viewId,
-                            /* isRoot = */ true,
-                            constraints);
-  }
 
   float screenW = GetInnerSize().width;
   float screenH = GetInnerSize().height;
@@ -469,25 +458,6 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
   // Force a repaint with these metrics. This, among other things, sets the
   // displayport, so we start with async painting.
   mLastRootMetrics = ProcessUpdateFrame(metrics);
-
-  if (viewportInfo.IsZoomAllowed() && scrollIdentifiersValid) {
-    // If the CSS viewport is narrower than the screen (i.e. width <= device-width)
-    // then we disable double-tap-to-zoom behaviour.
-    bool allowDoubleTapZoom = (viewport.width > screenW / metrics.GetDevPixelsPerCSSPixel().scale);
-    if (allowDoubleTapZoom != viewportInfo.IsDoubleTapZoomAllowed()) {
-      viewportInfo.SetAllowDoubleTapZoom(allowDoubleTapZoom);
-
-      ZoomConstraints constraints(
-        viewportInfo.IsZoomAllowed(),
-        viewportInfo.IsDoubleTapZoomAllowed(),
-        ConvertScaleForRoot(viewportInfo.GetMinZoom()),
-        ConvertScaleForRoot(viewportInfo.GetMaxZoom()));
-      DoUpdateZoomConstraints(presShellId,
-                              viewId,
-                              /* isRoot = */ true,
-                              constraints);
-    }
-  }
 
   return true;
 }
@@ -1077,12 +1047,17 @@ TabChild::OnSecurityChange(nsIWebProgress* aWebProgress,
 bool
 TabChild::DoUpdateZoomConstraints(const uint32_t& aPresShellId,
                                   const ViewID& aViewId,
-                                  const bool& aIsRoot,
-                                  const ZoomConstraints& aConstraints)
+                                  const Maybe<ZoomConstraints>& aConstraints)
 {
+  if (sPreallocatedTab == this) {
+    // If we're the preallocated tab, bail out because doing IPC will crash.
+    // Once we get used for something we'll get another zoom constraints update
+    // and all will be well.
+    return true;
+  }
+
   return SendUpdateZoomConstraints(aPresShellId,
                                    aViewId,
-                                   aIsRoot,
                                    aConstraints);
 }
 
@@ -2133,8 +2108,7 @@ TabChild::RecvHandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifier
 
     // Note: there is nothing to do with the modifiers here, as we are not
     // synthesizing any sort of mouse event.
-    CSSPoint point = APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid,
-        GetPresShellResolution());
+    CSSPoint point = APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid);
     nsString data;
     data.AppendLiteral("{ \"x\" : ");
     data.AppendFloat(point.x);
@@ -2151,7 +2125,7 @@ bool
 TabChild::RecvHandleSingleTap(const CSSPoint& aPoint, const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid)
 {
   if (mGlobal && mTabChildGlobal) {
-    mAPZEventState->ProcessSingleTap(aPoint, aModifiers, aGuid, GetPresShellResolution());
+    mAPZEventState->ProcessSingleTap(aPoint, aModifiers, aGuid);
   }
   return true;
 }
@@ -2161,7 +2135,7 @@ TabChild::RecvHandleLongTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
 {
   if (mGlobal && mTabChildGlobal) {
     mAPZEventState->ProcessLongTap(GetPresShell(), aPoint, aModifiers, aGuid,
-        aInputBlockId, GetPresShellResolution());
+        aInputBlockId);
   }
   return true;
 }
@@ -2406,17 +2380,6 @@ TabChild::CancelTapTracking()
   mTapHoldTimer = nullptr;
 }
 
-float
-TabChild::GetPresShellResolution() const
-{
-  nsCOMPtr<nsIDocument> document(GetDocument());
-  nsIPresShell* shell = document->GetShell();
-  if (!shell) {
-    return 1.0f;
-  }
-  return shell->GetResolution();
-}
-
 bool
 TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
                              const ScrollableLayerGuid& aGuid,
@@ -2429,7 +2392,7 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
   localEvent.widget = mPuppetWidget;
 
   APZCCallbackHelper::ApplyCallbackTransform(localEvent, aGuid,
-      mPuppetWidget->GetDefaultScale(), GetPresShellResolution());
+      mPuppetWidget->GetDefaultScale());
 
   if (localEvent.message == NS_TOUCH_START && AsyncPanZoomEnabled()) {
     if (gfxPrefs::TouchActionEnabled()) {
@@ -2576,10 +2539,7 @@ TabChild::RecvKeyEvent(const nsString& aType,
                        const bool& aPreventDefault)
 {
   bool ignored = false;
-  // XXX Why nsContentUtils::SendKeyEvent takes nsCOMPtr<nsIWidget> for the
-  //     first argument? Why not just nsIWidget*?
-  nsCOMPtr<nsIWidget> widget(mPuppetWidget);
-  nsContentUtils::SendKeyEvent(widget, aType, aKeyCode, aCharCode,
+  nsContentUtils::SendKeyEvent(mPuppetWidget, aType, aKeyCode, aCharCode,
                                aModifiers, aPreventDefault, &ignored);
   return true;
 }

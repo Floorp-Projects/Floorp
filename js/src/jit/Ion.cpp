@@ -1410,7 +1410,50 @@ OptimizeMIR(MIRGenerator* mir)
         if (mir->shouldCancel("Alias analysis"))
             return false;
 
-        if (!mir->compilingAsmJS()) {
+        // We only eliminate dead resume point operands in the first pass
+        // because it is currently unsound to do so after GVN.
+        //
+        // Consider the following example, where def1 dominates, and is
+        // congruent with def4, and use3 dominates, and is congruent with,
+        // use6.
+        //
+        // def1
+        // nop2
+        //   resumepoint def1
+        // use3 def1
+        // def4
+        // nop5
+        //   resumepoint def4
+        // use6 def4
+        // use7 use3 use6
+        //
+        // Assume that use3, use6, and use7 can cause OSI and are
+        // non-effectful. That is, use3 will resume at nop2, and use6 and use7
+        // will resume at nop5.
+        //
+        // After GVN, since def1 =~ def4, we have:
+        //
+        // def4 - replaced with def1 and pruned
+        // use6 - replaced with use3 and pruned
+        // use7 - renumbered to use5
+        //
+        // def1
+        // nop2
+        //   resumepoint def1
+        // use3 def1
+        // nop4
+        //   resumepoint def1
+        // use5 use3 use3
+        //
+        // nop4's resumepoint's operand of def1 is considered dead, because it
+        // is dominated by the last use of def1, use3.
+        //
+        // However, if use5 causes OSI, we will resume at nop4's resume
+        // point. The baseline frame at that point expects the now-pruned def4
+        // to exist. However, since it was replaced with def1 by GVN, and def1
+        // is dead at the point of nop4, the baseline frame incorrectly gets
+        // an optimized out value.
+        if (!mir->compilingAsmJS() && doRepeatOptimizations == 1) {
             // Eliminating dead resume point operands requires basic block
             // instructions to be numbered. Reuse the numbering computed during
             // alias analysis.
@@ -2130,12 +2173,12 @@ CheckScript(JSContext* cx, JSScript* script, bool osr)
         return false;
     }
 
-    if (script->hasPollutedGlobalScope() && !script->functionNonDelazifying()) {
-        // Support functions with a polluted global scope but not other
+    if (script->hasNonSyntacticScope() && !script->functionNonDelazifying()) {
+        // Support functions with a non-syntactic global scope but not other
         // scripts. For global scripts, IonBuilder currently uses the global
         // object as scope chain, this is not valid when the script has a
-        // polluted global scope.
-        TrackAndSpewIonAbort(cx, script, "has polluted global scope");
+        // non-syntactic global scope.
+        TrackAndSpewIonAbort(cx, script, "has non-syntactic global scope");
         return false;
     }
 
