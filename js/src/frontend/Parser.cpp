@@ -8631,10 +8631,13 @@ Parser<ParseHandler>::methodDefinition(YieldHandling yieldHandling, PropListType
                kind == Getter || kind == Setter);
     /* NB: Getter function in { get x(){} } is unnamed. */
     RootedPropertyName funName(context);
-    if ((kind == Method || kind == ClassConstructor) && tokenStream.isCurrentTokenType(TOK_NAME))
+    if ((kind == Method || kind == ClassConstructor || kind == DerivedClassConstructor) &&
+        tokenStream.isCurrentTokenType(TOK_NAME))
+    {
         funName = tokenStream.currentName();
-    else
+    } else {
         funName = nullptr;
+    }
 
     Node fn = functionDef(InAllowed, yieldHandling, funName, kind, generatorKind);
     if (!fn)
