@@ -37,18 +37,30 @@ describe("loop.store.TextChatStore", function () {
   });
 
   describe("#dataChannelsAvailable", function() {
-    it("should set textChatEnabled to true", function() {
-      store.dataChannelsAvailable();
+    it("should set textChatEnabled to the supplied state", function() {
+      store.dataChannelsAvailable(new sharedActions.DataChannelsAvailable({
+        available: true
+      }));
 
       expect(store.getStoreState("textChatEnabled")).eql(true);
     });
 
     it("should dispatch a LoopChatEnabled event", function() {
-      store.dataChannelsAvailable();
+      store.dataChannelsAvailable(new sharedActions.DataChannelsAvailable({
+        available: true
+      }));
 
       sinon.assert.calledOnce(window.dispatchEvent);
       sinon.assert.calledWithExactly(window.dispatchEvent,
         new CustomEvent("LoopChatEnabled"));
+    });
+
+    it("should not dispatch a LoopChatEnabled event if available is false", function() {
+      store.dataChannelsAvailable(new sharedActions.DataChannelsAvailable({
+        available: false
+      }));
+
+      sinon.assert.notCalled(window.dispatchEvent);
     });
   });
 

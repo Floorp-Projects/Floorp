@@ -1276,7 +1276,7 @@ html[dir="rtl"] .room-context-btn-edit {
   }
 }
 
-.standalone > .room-conversation-wrapper > .media-layout > .conversation-toolbar {
+.standalone > #main > .room-conversation-wrapper > .media-layout > .conversation-toolbar {
   border: none;
 }
 
