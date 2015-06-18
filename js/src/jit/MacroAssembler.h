@@ -941,6 +941,15 @@ class MacroAssembler : public MacroAssemblerSpecific
         branchTestClassIsProxy(proxy, scratch, label);
     }
 
+    void branchFunctionKind(Condition cond, JSFunction::FunctionKind kind, Register fun,
+                            Register scratch, Label* label)
+    {
+        Address flags(fun, JSFunction::offsetOfFlags());
+        load32(flags, scratch);
+        and32(Imm32(JSFunction::FUNCTION_KIND_MASK), scratch);
+        branch32(cond, scratch, Imm32(kind << JSFunction::FUNCTION_KIND_SHIFT), label);
+    }
+
   public:
 #ifndef JS_CODEGEN_ARM64
     // StackPointer manipulation functions.

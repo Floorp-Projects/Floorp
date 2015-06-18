@@ -830,7 +830,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
     }
     if (aReflowState.mFlags.mSpecialHeightReflow) {
       if (!isPaginated && !(cellFrame->GetStateBits() &
-                            NS_FRAME_CONTAINS_RELATIVE_HEIGHT)) {
+                            NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
         continue;
       }
     }
@@ -880,7 +880,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
           isPaginated                                               ||
           NS_SUBTREE_DIRTY(cellFrame)                               ||
           // See if it needs a special reflow, or if it had one that we need to undo.
-          (cellFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT) ||
+          (cellFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE) ||
           HasPctHeight()) {
         // Reflow the cell to fit the available width, height
         // XXX The old IR_ChildIsDirty code used availCellWidth here.

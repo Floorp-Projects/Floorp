@@ -86,18 +86,6 @@ SpanningCellSorter::AddCell(int32_t aColSpan, int32_t aRow, int32_t aCol)
     return true;
 }
 
-/* static */ PLDHashOperator
-SpanningCellSorter::FillSortedArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                                    uint32_t number, void *arg)
-{
-    HashTableEntry *entry = static_cast<HashTableEntry*>(hdr);
-    HashTableEntry **sh = static_cast<HashTableEntry**>(arg);
-
-    sh[number] = entry;
-
-    return PL_DHASH_NEXT;
-}
-
 /* static */ int
 SpanningCellSorter::SortArray(const void *a, const void *b, void *closure)
 {
@@ -143,7 +131,10 @@ SpanningCellSorter::GetNext(int32_t *aColSpan)
             if (mHashTable.EntryCount() > 0) {
                 HashTableEntry **sh =
                     new HashTableEntry*[mHashTable.EntryCount()];
-                PL_DHashTableEnumerate(&mHashTable, FillSortedArray, sh);
+                int32_t j = 0;
+                for (auto iter = mHashTable.Iter(); !iter.Done(); iter.Next()) {
+                    sh[j++] = static_cast<HashTableEntry*>(iter.Get());
+                }
                 NS_QuickSort(sh, mHashTable.EntryCount(), sizeof(sh[0]),
                              SortArray, nullptr);
                 mSortedHashTable = sh;
