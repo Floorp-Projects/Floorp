@@ -357,7 +357,8 @@ gbjar.sources += [
     'home/TwoLinePageRow.java',
     'InputMethods.java',
     'IntentHelper.java',
-    'JavaAddonManager.java',
+    'javaaddons/JavaAddonManager.java',
+    'javaaddons/JavaAddonManagerV1.java',
     'LayoutInterceptor.java',
     'LocaleManager.java',
     'Locales.java',
@@ -597,6 +598,7 @@ if CONFIG['MOZ_ANDROID_READING_LIST_SERVICE']:
 
 gbjar.sources += sync_java_files
 gbjar.extra_jars += [
+    OBJDIR + '/../javaaddons/javaaddons-1.0.jar',
     'gecko-R.jar',
     'gecko-mozglue.jar',
     'gecko-thirdparty.jar',
