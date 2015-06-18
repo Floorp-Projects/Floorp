@@ -33,6 +33,9 @@ function* spawnTest() {
   yield stopRecording(panel);
   ok(true, "Recording has ended.");
 
+  info("No need to select everything in the timeline.");
+  info("All the markers should be displayed by default.");
+
   let bars = $$(".waterfall-marker-bar");
   let markers = PerformanceController.getCurrentRecording().getMarkers();
 

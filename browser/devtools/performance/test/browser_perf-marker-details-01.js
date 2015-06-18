@@ -23,18 +23,19 @@ function* spawnTest() {
   ];
 
   yield startRecording(panel);
+  ok(true, "Recording has started.");
+
   yield waitUntil(() => {
-    // Wait until we get 3 different markers.
+    // Wait until we get all the different markers.
     let markers = PerformanceController.getCurrentRecording().getMarkers();
     return MARKER_TYPES.every(type => markers.some(m => m.name === type));
   });
-  yield stopRecording(panel);
 
-  // Select everything
-  let timeline = OverviewView.graphs.get("timeline");
-  let rerendered = WaterfallView.once(EVENTS.WATERFALL_RENDERED);
-  timeline.setSelection({ start: 0, end: timeline.width });
-  yield rerendered;
+  yield stopRecording(panel);
+  ok(true, "Recording has ended.");
+
+  info("No need to select everything in the timeline.");
+  info("All the markers should be displayed by default.");
 
   let bars = $$(".waterfall-marker-bar");
   let markers = PerformanceController.getCurrentRecording().getMarkers();
@@ -44,17 +45,20 @@ function* spawnTest() {
 
   const tests = {
     ConsoleTime: function (marker) {
+      info("Got `ConsoleTime` marker with data: " + JSON.stringify(marker));
       shouldHaveStack($, "startStack", marker);
       shouldHaveStack($, "endStack", marker);
       shouldHaveLabel($, "Timer Name:", "!!!", marker);
       return true;
     },
     TimeStamp: function (marker) {
+      info("Got `TimeStamp` marker with data: " + JSON.stringify(marker));
       shouldHaveLabel($, "Label:", "go", marker);
       shouldHaveStack($, "stack", marker);
       return true;
     },
     Styles: function (marker) {
+      info("Got `Styles` marker with data: " + JSON.stringify(marker));
       if (marker.restyleHint) {
         shouldHaveLabel($, "Restyle Hint:", marker.restyleHint.replace(/eRestyle_/g, ""), marker);
       }
@@ -64,6 +68,7 @@ function* spawnTest() {
       }
     },
     Reflow: function (marker) {
+      info("Got `Reflow` marker with data: " + JSON.stringify(marker));
       if (marker.stack) {
         shouldHaveStack($, "stack", marker);
         return true;
@@ -75,7 +80,6 @@ function* spawnTest() {
   // run through each marker test once, so we don't spam 500 redundant
   // tests.
   let testsDone = [];
-  let TOTAL_TESTS = 4;
 
   for (let i = 0; i < bars.length; i++) {
     let bar = bars[i];
@@ -93,7 +97,7 @@ function* spawnTest() {
       info(`TODO: Need to add marker details tests for ${m.name}`);
     }
 
-    if (testsDone.length === TOTAL_TESTS) {
+    if (testsDone.length === Object.keys(tests).length) {
       break;
     }
   }
