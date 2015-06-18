@@ -171,18 +171,17 @@ static const char16_t kPathSeparatorChar       = '/';
 #error Need to define file path separator for your platform
 #endif
 
-static int32_t
-SplitPath(char16_t* aPath, char16_t** aNodeArray, int32_t aArrayLen)
+static void
+SplitPath(char16_t* aPath, nsTArray<char16_t*>& aNodeArray)
 {
   if (*aPath == 0) {
-    return 0;
+    return;
   }
 
-  char16_t** nodePtr = aNodeArray;
   if (*aPath == kPathSeparatorChar) {
     aPath++;
   }
-  *nodePtr++ = aPath;
+  aNodeArray.AppendElement(aPath);
 
   for (char16_t* cp = aPath; *cp != 0; ++cp) {
     if (*cp == kPathSeparatorChar) {
@@ -190,13 +189,9 @@ SplitPath(char16_t* aPath, char16_t** aNodeArray, int32_t aArrayLen)
       if (*cp == 0) {
         break;
       }
-      if (nodePtr - aNodeArray >= aArrayLen) {
-        return -1;
-      }
-      *nodePtr++ = cp;
+      aNodeArray.AppendElement(cp);
     }
   }
-  return nodePtr - aNodeArray;
 }
 
 
@@ -206,7 +201,6 @@ nsLocalFile::GetRelativeDescriptor(nsIFile* aFromFile, nsACString& aResult)
   if (NS_WARN_IF(!aFromFile)) {
     return NS_ERROR_INVALID_ARG;
   }
-  const int32_t kMaxNodesInPath = 32;
 
   //
   // aResult will be UTF-8 encoded
@@ -216,9 +210,8 @@ nsLocalFile::GetRelativeDescriptor(nsIFile* aFromFile, nsACString& aResult)
   aResult.Truncate(0);
 
   nsAutoString thisPath, fromPath;
-  char16_t* thisNodes[kMaxNodesInPath];
-  char16_t* fromNodes[kMaxNodesInPath];
-  int32_t thisNodeCnt, fromNodeCnt, nodeIndex;
+  nsAutoTArray<char16_t*, 32> thisNodes;
+  nsAutoTArray<char16_t*, 32> fromNodes;
 
   rv = GetPath(thisPath);
   if (NS_FAILED(rv)) {
@@ -235,14 +228,13 @@ nsLocalFile::GetRelativeDescriptor(nsIFile* aFromFile, nsACString& aResult)
   char16_t* fromPathPtr;
   fromPath.BeginWriting(fromPathPtr);
 
-  thisNodeCnt = SplitPath(thisPathPtr, thisNodes, kMaxNodesInPath);
-  fromNodeCnt = SplitPath(fromPathPtr, fromNodes, kMaxNodesInPath);
-  if (thisNodeCnt < 0 || fromNodeCnt < 0) {
-    return NS_ERROR_FAILURE;
-  }
+  SplitPath(thisPathPtr, thisNodes);
+  SplitPath(fromPathPtr, fromNodes);
 
-  for (nodeIndex = 0; nodeIndex < thisNodeCnt &&
-       nodeIndex < fromNodeCnt; ++nodeIndex) {
+  size_t nodeIndex;
+  for (nodeIndex = 0;
+       nodeIndex < thisNodes.Length() && nodeIndex < fromNodes.Length();
+       ++nodeIndex) {
 #ifdef XP_WIN
     if (_wcsicmp(char16ptr_t(thisNodes[nodeIndex]),
                  char16ptr_t(fromNodes[nodeIndex]))) {
@@ -255,14 +247,14 @@ nsLocalFile::GetRelativeDescriptor(nsIFile* aFromFile, nsACString& aResult)
 #endif
   }
 
-  int32_t branchIndex = nodeIndex;
-  for (nodeIndex = branchIndex; nodeIndex < fromNodeCnt; ++nodeIndex) {
+  size_t branchIndex = nodeIndex;
+  for (nodeIndex = branchIndex; nodeIndex < fromNodes.Length(); ++nodeIndex) {
     aResult.AppendLiteral("../");
   }
-  for (nodeIndex = branchIndex; nodeIndex < thisNodeCnt; nodeIndex++) {
+  for (nodeIndex = branchIndex; nodeIndex < thisNodes.Length(); ++nodeIndex) {
     NS_ConvertUTF16toUTF8 nodeStr(thisNodes[nodeIndex]);
     aResult.Append(nodeStr);
-    if (nodeIndex + 1 < thisNodeCnt) {
+    if (nodeIndex + 1 < thisNodes.Length()) {
       aResult.Append('/');
     }
   }
@@ -320,4 +312,17 @@ nsLocalFile::SetRelativeDescriptor(nsIFile* aFromFile,
   }
 
   return InitWithFile(targetFile);
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetRelativePath(nsIFile* aFromFile, nsACString& aResult)
+{
+  return GetRelativeDescriptor(aFromFile, aResult);
+}
+
+NS_IMETHODIMP
+nsLocalFile::SetRelativePath(nsIFile* aFromFile,
+                             const nsACString& aRelativePath)
+{
+  return SetRelativeDescriptor(aFromFile, aRelativePath);
 }

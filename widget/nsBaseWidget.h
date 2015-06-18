@@ -243,6 +243,10 @@ public:
   void SetConfirmedTargetAPZC(uint64_t aInputBlockId,
                               const nsTArray<ScrollableLayerGuid>& aTargets) const override;
 
+  void UpdateZoomConstraints(const uint32_t& aPresShellId,
+                             const FrameMetrics::ViewID& aViewId,
+                             const mozilla::Maybe<ZoomConstraints>& aConstraints) override;
+
   bool AsyncPanZoomEnabled() const override;
 
   void NotifyWindowDestroyed();

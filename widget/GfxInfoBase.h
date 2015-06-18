@@ -54,7 +54,8 @@ public:
   NS_IMETHOD GetFeatureSuggestedDriverVersion(int32_t aFeature, nsAString & _retval) override;
   NS_IMETHOD GetWebGLParameter(const nsAString & aParam, nsAString & _retval) override;
 
-    NS_IMETHOD GetFailures(uint32_t *failureCount, int32_t** indices, char ***failures) override;
+  NS_IMETHOD GetMonitors(JSContext* cx, JS::MutableHandleValue _retval);
+  NS_IMETHOD GetFailures(uint32_t *failureCount, int32_t** indices, char ***failures) override;
   NS_IMETHOD_(void) LogFailure(const nsACString &failure) override;
   NS_IMETHOD GetInfo(JSContext*, JS::MutableHandle<JS::Value>) override;
 
@@ -84,6 +85,10 @@ public:
 
   // Convenience to get the application version
   static const nsCString& GetApplicationVersion();
+
+  virtual nsresult FindMonitors(JSContext* cx, JS::HandleObject array) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
 protected:
 

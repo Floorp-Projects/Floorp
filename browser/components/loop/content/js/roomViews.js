@@ -92,9 +92,10 @@ loop.roomViews = (function(mozL10n) {
       event.preventDefault();
 
       var origin = event.currentTarget.dataset.provider;
-      var provider = this.props.socialShareProviders.filter(function(provider) {
-        return provider.origin == origin;
-      })[0];
+      var provider = this.props.socialShareProviders
+                         .filter(function(socialProvider) {
+                           return socialProvider.origin == origin;
+                         })[0];
 
       this.props.dispatcher.dispatch(new sharedActions.ShareRoomUrl({
         provider: provider,
@@ -304,12 +305,12 @@ loop.roomViews = (function(mozL10n) {
           this.props.mozLoop.getSelectedTabMetadata(function(metadata) {
             var previewImage = metadata.favicon || "";
             var description = metadata.title || metadata.description;
-            var url = metadata.url;
+            var metaUrl = metadata.url;
             this.setState({
               availableContext: {
                 previewImage: previewImage,
                 description: description,
-                url: url
+                url: metaUrl
               }
            });
           }.bind(this));

@@ -861,7 +861,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
   nsIPresShell *shell = aPresContext->PresShell();
   nsStyleSet *styleSet = shell->StyleSet();
 
-  GetParent()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+  GetParent()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
 
   //printf("FramesetFrame2::Reflow %X (%d,%d) \n", this, aReflowState.AvailableWidth(), aReflowState.AvailableHeight());
   // Always get the size so that the caller knows how big we are

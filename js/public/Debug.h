@@ -14,6 +14,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
 
+#include "jsapi.h"
 #include "jspubtd.h"
 
 #include "js/GCAPI.h"

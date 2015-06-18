@@ -35,8 +35,8 @@ let PerformanceFronts = new WeakMap();
  *
  * @param Target target
  *        The target owning this connection.
- * @return PerformanceActorsConnection
- *         The shared connection for the specified target.
+ * @return PerformanceFront
+ *         The pseudofront for all the underlying actors.
  */
 PerformanceFronts.forTarget = function(target) {
   if (this.has(target)) {
@@ -350,7 +350,7 @@ PerformanceFront.prototype = {
    *         Returns the same model, populated with the profiling data.
    */
   stopRecording: Task.async(function*(model) {
-    // If model isn't in the PerformanceActorsConnections internal store,
+    // If model isn't in the PerformanceFront internal store,
     // then do nothing.
     if (this._recordings.indexOf(model) === -1) {
       return;
@@ -460,6 +460,7 @@ function getRecordingModelPrefs () {
     withMemory: Services.prefs.getBoolPref("devtools.performance.ui.enable-memory"),
     withTicks: Services.prefs.getBoolPref("devtools.performance.ui.enable-framerate"),
     withAllocations: Services.prefs.getBoolPref("devtools.performance.ui.enable-allocations"),
+    withJITOptimizations: Services.prefs.getBoolPref("devtools.performance.ui.enable-jit-optimizations"),
     allocationsSampleProbability: +Services.prefs.getCharPref("devtools.performance.memory.sample-probability"),
     allocationsMaxLogLength: Services.prefs.getIntPref("devtools.performance.memory.max-log-length")
   };

@@ -137,9 +137,9 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    for (size_t i = 0; i < mRefreshDrivers.Length(); i++) {
-      aNewTimer->AddRefreshDriver(mRefreshDrivers[i]);
-      mRefreshDrivers[i]->mActiveTimer = aNewTimer;
+    for (nsRefreshDriver* driver : mRefreshDrivers) {
+      aNewTimer->AddRefreshDriver(driver);
+      driver->mActiveTimer = aNewTimer;
     }
     mRefreshDrivers.Clear();
 
@@ -177,13 +177,13 @@ protected:
     nsTArray<nsRefPtr<nsRefreshDriver> > drivers(mRefreshDrivers);
     // RD is short for RefreshDriver
     profiler_tracing("Paint", "RD", TRACING_INTERVAL_START);
-    for (size_t i = 0; i < drivers.Length(); ++i) {
+    for (nsRefreshDriver* driver : drivers) {
       // don't poke this driver if it's in test mode
-      if (drivers[i]->IsTestControllingRefreshesEnabled()) {
+      if (driver->IsTestControllingRefreshesEnabled()) {
         continue;
       }
 
-      TickDriver(drivers[i], jsnow, now);
+      TickDriver(driver, jsnow, now);
     }
     profiler_tracing("Paint", "RD", TRACING_INTERVAL_END);
     LOG("[%p] done.", this);
@@ -1055,8 +1055,8 @@ nsRefreshDriver::~nsRefreshDriver()
     mRootRefresh->RemoveRefreshObserver(this, Flush_Style);
     mRootRefresh = nullptr;
   }
-  for (uint32_t i = 0; i < mPresShellsToInvalidateIfHidden.Length(); i++) {
-    mPresShellsToInvalidateIfHidden[i]->InvalidatePresShellIfHidden();
+  for (nsIPresShell* shell : mPresShellsToInvalidateIfHidden) {
+    shell->InvalidatePresShellIfHidden();
   }
   mPresShellsToInvalidateIfHidden.Clear();
 
@@ -1540,8 +1540,7 @@ nsRefreshDriver::RunFrameRequestCallbacks(int64_t aNowEpoch, TimeStamp aNowTime)
   if (!frameRequestCallbacks.IsEmpty()) {
     profiler_tracing("Paint", "Scripts", TRACING_INTERVAL_START);
     int64_t eventTime = aNowEpoch / PR_USEC_PER_MSEC;
-    for (uint32_t i = 0; i < frameRequestCallbacks.Length(); ++i) {
-      const DocumentFrameCallbacks& docCallbacks = frameRequestCallbacks[i];
+    for (const DocumentFrameCallbacks& docCallbacks : frameRequestCallbacks) {
       // XXXbz Bug 863140: GetInnerWindow can return the outer
       // window in some cases.
       nsPIDOMWindow* innerWindow = docCallbacks.mDocument->GetInnerWindow();
@@ -1553,9 +1552,8 @@ nsRefreshDriver::RunFrameRequestCallbacks(int64_t aNowEpoch, TimeStamp aNowTime)
         }
         // else window is partially torn down already
       }
-      for (uint32_t j = 0; j < docCallbacks.mCallbacks.Length(); ++j) {
-        const nsIDocument::FrameRequestCallbackHolder& holder =
-          docCallbacks.mCallbacks[j];
+      for (const nsIDocument::FrameRequestCallbackHolder& holder :
+           docCallbacks.mCallbacks) {
         nsAutoMicroTask mt;
         if (holder.HasWebIDLCallback()) {
           ErrorResult ignored;
@@ -1783,19 +1781,18 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     }
   }
 
-  for (uint32_t i = 0; i < mPresShellsToInvalidateIfHidden.Length(); i++) {
-    mPresShellsToInvalidateIfHidden[i]->InvalidatePresShellIfHidden();
+  for (nsIPresShell* shell : mPresShellsToInvalidateIfHidden) {
+    shell->InvalidatePresShellIfHidden();
   }
   mPresShellsToInvalidateIfHidden.Clear();
 
   if (mViewManagerFlushIsPending) {
     nsTArray<nsDocShell*> profilingDocShells;
     GetProfileTimelineSubDocShells(GetDocShell(mPresContext), profilingDocShells);
-    for (uint32_t i = 0; i < profilingDocShells.Length(); i ++) {
+    for (nsDocShell* docShell : profilingDocShells) {
       // For the sake of the profile timeline's simplicity, this is flagged as
       // paint even if it includes creating display lists
-      profilingDocShells[i]->AddProfileTimelineMarker("Paint",
-                                                      TRACING_INTERVAL_START);
+      docShell->AddProfileTimelineMarker("Paint", TRACING_INTERVAL_START);
     }
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
@@ -1811,9 +1808,8 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       printf_stderr("Ending ProcessPendingUpdates\n");
     }
 #endif
-    for (uint32_t i = 0; i < profilingDocShells.Length(); i ++) {
-      profilingDocShells[i]->AddProfileTimelineMarker("Paint",
-                                                      TRACING_INTERVAL_END);
+    for (nsDocShell* docShell : profilingDocShells) {
+      docShell->AddProfileTimelineMarker("Paint", TRACING_INTERVAL_END);
     }
 
     if (nsContentUtils::XPConnect()) {
@@ -1826,8 +1822,8 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::REFRESH_DRIVER_TICK, mTickStart);
 #endif
 
-  for (uint32_t i = 0; i < mPostRefreshObservers.Length(); ++i) {
-    mPostRefreshObservers[i]->DidRefresh();
+  for (nsAPostRefreshObserver* postRefreshObserver: mPostRefreshObservers) {
+    postRefreshObserver->DidRefresh();
   }
 
   NS_ASSERTION(mInRefresh, "Still in refresh");

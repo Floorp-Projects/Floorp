@@ -231,6 +231,72 @@ static bool test_pldhash_Iterator()
   return true;
 }
 
+static bool test_pldhash_RemovingIterator()
+{
+  PLDHashTable t(&trivialOps, sizeof(PLDHashEntryStub));
+
+  // Explicitly test the move constructor. We do this because, due to copy
+  // elision, compilers might optimize away move constructor calls for normal
+  // iterator use.
+  {
+    PLDHashTable::Iterator iter1(&t);
+    PLDHashTable::Iterator iter2(mozilla::Move(iter1));
+  }
+
+  // First, we insert 64 items, which results in a capacity of 128, and a load
+  // factor of 50%.
+  for (intptr_t i = 0; i < 64; i++) {
+    PL_DHashTableAdd(&t, (const void*)i);
+  }
+  if (t.EntryCount() != 64 || t.Capacity() != 128) {
+    return false;
+  }
+
+  // The first removing iterator does no removing; capacity and entry count are
+  // unchanged.
+  for (PLDHashTable::RemovingIterator iter(&t); !iter.Done(); iter.Next()) {
+    (void) iter.Get();
+  }
+  if (t.EntryCount() != 64 || t.Capacity() != 128) {
+    return false;
+  }
+
+  // The second removing iterator removes 16 items. This reduces the load
+  // factor to 37.5% (48 / 128), which isn't low enough to shrink the table.
+  for (auto iter = t.RemovingIter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<PLDHashEntryStub*>(iter.Get());
+    if ((intptr_t)(entry->key) % 4 == 0) {
+      iter.Remove();
+    }
+  }
+  if (t.EntryCount() != 48 || t.Capacity() != 128) {
+    return false;
+  }
+
+  // The third removing iterator removes another 16 items. This reduces
+  // the load factor to 25% (32 / 128), so the table is shrunk.
+  for (auto iter = t.RemovingIter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<PLDHashEntryStub*>(iter.Get());
+    if ((intptr_t)(entry->key) % 2 == 0) {
+      iter.Remove();
+    }
+  }
+  if (t.EntryCount() != 32 || t.Capacity() != 64) {
+    return false;
+  }
+
+  // The fourth removing iterator removes all remaining items. This reduces
+  // the capacity to the minimum.
+  for (auto iter = t.RemovingIter(); !iter.Done(); iter.Next()) {
+    iter.Remove();
+  }
+  if (t.EntryCount() != 0 || t.Capacity() != PL_DHASH_MIN_CAPACITY) {
+    return false;
+  }
+
+  return true;
+}
+
 // See bug 931062, we skip this test on Android due to OOM.
 #ifndef MOZ_WIDGET_ANDROID
 static bool test_pldhash_grow_to_max_capacity()
@@ -274,6 +340,7 @@ static const struct Test {
   DECL_TEST(test_pldhash_move_semantics),
   DECL_TEST(test_pldhash_Clear),
   DECL_TEST(test_pldhash_Iterator),
+  DECL_TEST(test_pldhash_RemovingIterator),
 // See bug 931062, we skip this test on Android due to OOM. Also, it's slow,
 // and so should always be last.
 #ifndef MOZ_WIDGET_ANDROID

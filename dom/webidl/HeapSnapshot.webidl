@@ -7,6 +7,6 @@
 /**
  * A HeapSnapshot represents a snapshot of the heap graph
  */
-[ChromeOnly, Exposed=(Window,System)]
+[ChromeOnly, Exposed=(Window,System,Worker)]
 interface HeapSnapshot {
 };

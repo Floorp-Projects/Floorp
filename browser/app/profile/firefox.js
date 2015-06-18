@@ -505,9 +505,16 @@ pref("dom.disable_window_move_resize",            false);
 // prevent JS from monkeying with window focus, etc
 pref("dom.disable_window_flip",                   true);
 
-// Disable touch events on Desktop Firefox by default until they are properly
-// supported (bug 736048)
+// Disable touch events on Desktop Firefox by default
+// until they are properly supported (bug 736048)
 pref("dom.w3c_touch_events.enabled",        0);
+
+#ifdef NIGHTLY_BUILD
+// W3C draft pointer events
+pref("dom.w3c_pointer_events.enabled", true);
+// W3C touch-action css property (related to touch and pointer events)
+pref("layout.css.touch_action.enabled", true);
+#endif
 
 // popups.policy 1=allow,2=reject
 pref("privacy.popups.policy",               1);
@@ -1462,7 +1469,7 @@ pref("devtools.performance.ui.show-idle-blocks", true);
 pref("devtools.performance.ui.enable-memory", false);
 pref("devtools.performance.ui.enable-allocations", false);
 pref("devtools.performance.ui.enable-framerate", true);
-pref("devtools.performance.ui.show-jit-optimizations", false);
+pref("devtools.performance.ui.enable-jit-optimizations", false);
 
 // Enable experimental options in the UI only in Nightly
 #if defined(NIGHTLY_BUILD)

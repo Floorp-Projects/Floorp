@@ -2732,9 +2732,14 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         if needInterfacePrototypeObject:
             protoClass = "&PrototypeClass.mBase"
             protoCache = "&aProtoAndIfaceCache.EntrySlotOrCreate(prototypes::id::%s)" % self.descriptor.name
+            parentProto = "parentProto"
+            getParentProto = CGGeneric(getParentProto)
         else:
             protoClass = "nullptr"
             protoCache = "nullptr"
+            parentProto = "nullptr"
+            getParentProto = None
+
         if needInterfaceObject:
             interfaceClass = "&InterfaceObjectClass.mBase"
             interfaceCache = "&aProtoAndIfaceCache.EntrySlotOrCreate(constructors::id::%s)" % self.descriptor.name
@@ -2762,7 +2767,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             """
             JS::Heap<JSObject*>* protoCache = ${protoCache};
             JS::Heap<JSObject*>* interfaceCache = ${interfaceCache};
-            dom::CreateInterfaceObjects(aCx, aGlobal, parentProto,
+            dom::CreateInterfaceObjects(aCx, aGlobal, ${parentProto},
                                         ${protoClass}, protoCache,
                                         constructorProto, ${interfaceClass}, ${constructHookHolder}, ${constructArgs}, ${namedConstructors},
                                         interfaceCache,
@@ -2771,6 +2776,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                                         ${name}, aDefineOnGlobal);
             """,
             protoClass=protoClass,
+            parentProto=parentProto,
             protoCache=protoCache,
             interfaceClass=interfaceClass,
             constructHookHolder=constructHookHolder,
@@ -2849,7 +2855,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             defineAliases = None
 
         return CGList(
-            [CGGeneric(getParentProto), CGGeneric(getConstructorProto), initIds,
+            [getParentProto, CGGeneric(getConstructorProto), initIds,
              prefCache, CGGeneric(call), defineAliases, createUnforgeableHolder, setUnforgeableHolder],
             "\n").define()
 
