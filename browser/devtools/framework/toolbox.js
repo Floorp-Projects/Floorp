@@ -2068,7 +2068,7 @@ Toolbox.prototype = {
   }),
 
   /**
-   * Disconnects the underlying Performance Actor Connection. If the connection
+   * Disconnects the underlying Performance actor. If the connection
    * has not finished initializing, as opening a toolbox does not wait,
    * the performance connection destroy method will wait for it on its own.
    */

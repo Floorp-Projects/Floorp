@@ -17,7 +17,9 @@ function* spawnTest() {
 
   let profilerData = { threads: [gThread] }
 
-  is(Services.prefs.getBoolPref(JIT_PREF), false, "show JIT Optimizations pref off by default");
+  is(Services.prefs.getBoolPref(JIT_PREF), false, "record JIT Optimizations pref off by default");
+  Services.prefs.setBoolPref(JIT_PREF, true);
+  is(Services.prefs.getBoolPref(JIT_PREF), true, "toggle on record JIT Optimizations");
 
   // Make two recordings, so we have one to switch to later, as the
   // second one will have fake sample data
@@ -56,27 +58,20 @@ function* spawnTest() {
     let recording = PerformanceController.getCurrentRecording();
     recording._profile = profilerData;
 
-    is($("#jit-optimizations-view").hidden, true, "JIT Optimizations panel is hidden when pref off.");
-
     // Force a rerender
     let rendered = once(JsCallTreeView, EVENTS.JS_CALL_TREE_RENDERED);
     JsCallTreeView.render(OverviewView.getTimeInterval());
     yield rendered;
 
-    is($("#jit-optimizations-view").hidden, true, "JIT Optimizations panel still hidden when rerendered");
-    Services.prefs.setBoolPref(JIT_PREF, true);
     is($("#jit-optimizations-view").hidden, false, "JIT Optimizations should be visible when pref is on");
     ok($("#jit-optimizations-view").classList.contains("empty"),
       "JIT Optimizations view has empty message when no frames selected.");
-
-     Services.prefs.setBoolPref(JIT_PREF, false);
   }
 
   function *checkFrame (frameIndex, expectedOpts=[]) {
     // Click the frame
     let rendered = once(JITOptimizationsView, EVENTS.OPTIMIZATIONS_RENDERED);
     mousedown(window, $$(".call-tree-item")[frameIndex]);
-    Services.prefs.setBoolPref(JIT_PREF, true);
     yield rendered;
     ok(true, "JITOptimizationsView rendered when enabling with the current frame node selected");
 

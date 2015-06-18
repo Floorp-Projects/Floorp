@@ -17,6 +17,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AboutHome",
                                   "resource:///modules/AboutHome.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AboutNewTab",
+                                  "resource:///modules/AboutNewTab.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "UITour",
                                   "resource:///modules/UITour.jsm");
 
@@ -690,6 +693,7 @@ BrowserGlue.prototype = {
 #endif
     webrtcUI.init();
     AboutHome.init();
+    AboutNewTab.init();
     SessionStore.init();
     BrowserUITelemetry.init();
     ContentSearch.init();
@@ -1015,6 +1019,7 @@ BrowserGlue.prototype = {
 
     CustomizationTabPreloader.uninit();
     WebappManager.uninit();
+    AboutNewTab.uninit();
 #ifdef NIGHTLY_BUILD
     if (Services.prefs.getBoolPref("dom.identity.enabled")) {
       SignInToWebsiteUX.uninit();

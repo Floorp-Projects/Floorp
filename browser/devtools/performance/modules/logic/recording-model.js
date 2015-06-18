@@ -25,6 +25,7 @@ const RecordingModel = function (options={}) {
     withTicks: options.withTicks || false,
     withMemory: options.withMemory || false,
     withAllocations: options.withAllocations || false,
+    withJITOptimizations: options.withJITOptimizations || false,
     allocationsSampleProbability: options.allocationsSampleProbability || 0,
     allocationsMaxLogLength: options.allocationsMaxLogLength || 0,
     bufferSize: options.bufferSize || 0,
@@ -88,8 +89,8 @@ RecordingModel.prototype = {
   }),
 
   /**
-   * Sets up the instance with data from the SharedPerformanceConnection when
-   * starting a recording. Should only be called by SharedPerformanceConnection.
+   * Sets up the instance with data from the PerformanceFront when
+   * starting a recording. Should only be called by PerformanceFront.
    */
   _populate: function (info) {
     // Times must come from the actor in order to be self-consistent.
@@ -130,8 +131,8 @@ RecordingModel.prototype = {
   },
 
   /**
-   * Sets results available from stopping a recording from SharedPerformanceConnection.
-   * Should only be called by SharedPerformanceConnection.
+   * Sets results available from stopping a recording from PerformanceFront.
+   * Should only be called by PerformanceFront.
    */
   _onStopRecording: Task.async(function *({ profilerEndTime, profile }) {
     // Update the duration with the accurate profilerEndTime, so we don't have
@@ -184,7 +185,8 @@ RecordingModel.prototype = {
 
   /**
    * Returns configuration object of specifying whether the recording
-   * was started withTicks, withMemory and withAllocations.
+   * was started withTicks, withMemory and withAllocations and other
+   * recording options.
    * @return object
    */
   getConfiguration: function () {
