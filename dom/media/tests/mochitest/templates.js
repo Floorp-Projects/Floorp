@@ -405,7 +405,7 @@ var commandsPeerConnectionOfferAnswer = [
   },
 
   function PC_LOCAL_SET_REMOTE_DESCRIPTION(test) {
-    test.setRemoteDescription(test.pcLocal, test._remote_answer, STABLE)
+    return test.setRemoteDescription(test.pcLocal, test._remote_answer, STABLE)
       .then(() => {
         is(test.pcLocal.signalingState, STABLE,
            "signalingState after local setRemoteDescription is 'stable'");
