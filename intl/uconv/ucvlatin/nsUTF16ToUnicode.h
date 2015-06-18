@@ -27,7 +27,7 @@ public:
   MOZ_WARN_UNUSED_RESULT NS_IMETHOD GetMaxLength(const char* aSrc,
                                                  int32_t aSrcLength,
                                                  int32_t* aDestLength) override;
-  NS_IMETHOD Reset();
+  NS_IMETHOD Reset() override;
 
 protected:
   uint8_t mState;
