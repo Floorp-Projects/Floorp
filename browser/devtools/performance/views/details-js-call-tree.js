@@ -22,11 +22,9 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
   initialize: function () {
     DetailsSubview.initialize.call(this);
 
-    this._onPrefChanged = this._onPrefChanged.bind(this);
     this._onLink = this._onLink.bind(this);
 
     this.container = $("#js-calltree-view .call-tree-cells-container");
-    JITOptimizationsView.initialize();
   },
 
   /**
@@ -34,7 +32,6 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
    */
   destroy: function () {
     this.container = null;
-    JITOptimizationsView.destroy();
     DetailsSubview.destroy.call(this);
   },
 
@@ -54,7 +51,6 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
     let profile = recording.getProfile();
     let threadNode = this._prepareCallTree(profile, interval, options);
     this._populateCallTree(threadNode, options);
-    this._toggleJITOptimizationsView(recording);
     this.emit(EVENTS.JS_CALL_TREE_RENDERED);
   },
 
@@ -114,9 +110,8 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
     // Bind events.
     root.on("link", this._onLink);
 
-    // Pipe "focus" events to the view, used by
-    // tests and JITOptimizationsView.
-    root.on("focus", (_, node) => this.emit("focus", node));
+    // Pipe "focus" events to the view, mostly for tests
+    root.on("focus", () => this.emit("focus"));
 
     // Clear out other call trees.
     this.container.innerHTML = "";
@@ -128,21 +123,6 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
 
     // Return the CallView for tests
     return root;
-  },
-
-  /**
-   * Displays or hides the optimizations view based on the recordings
-   * optimizations feature.
-   *
-   * @param {RecordingModel} recording
-   */
-  _toggleJITOptimizationsView: function (recording) {
-    if (recording && recording.getConfiguration().withJITOptimizations) {
-      JITOptimizationsView.show();
-      JITOptimizationsView.render();
-    } else {
-      JITOptimizationsView.hide();
-    }
   },
 
   toString: () => "[object JsCallTreeView]"
