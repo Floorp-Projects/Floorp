@@ -529,14 +529,6 @@ nsMemoryCacheDevice::SetMaxEntrySize(int32_t maxSizeInKilobytes)
 }
 
 #ifdef DEBUG
-static PLDHashOperator
-CountEntry(PLDHashTable * table, PLDHashEntryHdr * hdr, uint32_t number, void * arg)
-{
-    int32_t *entryCount = (int32_t *)arg;
-    ++(*entryCount);
-    return PL_DHASH_NEXT;
-}
-
 void
 nsMemoryCacheDevice::CheckEntryCount()
 {
@@ -553,8 +545,10 @@ nsMemoryCacheDevice::CheckEntryCount()
     NS_ASSERTION(mEntryCount == evictionListCount, "### mem cache badness");
 
     int32_t entryCount = 0;
-    mMemCacheEntries.VisitEntries(CountEntry, &entryCount);
-    NS_ASSERTION(mEntryCount == entryCount, "### mem cache badness");    
+    for (auto iter = mMemCacheEntries.Iter(); !iter.Done(); iter.Next()) {
+        ++entryCount;
+    }
+    NS_ASSERTION(mEntryCount == entryCount, "### mem cache badness");
 }
 #endif
 
