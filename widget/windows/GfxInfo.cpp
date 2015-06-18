@@ -17,6 +17,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/gfx/Logging.h"
 #include "nsPrintfCString.h"
+#include "jsapi.h"
 
 #if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
@@ -1209,6 +1210,49 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
   }
 
   return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);
+}
+
+nsresult
+GfxInfo::FindMonitors(JSContext* aCx, JS::HandleObject aOutArray)
+{
+  int deviceCount = 0;
+  for (int deviceIndex = 0;; deviceIndex++) {
+    DISPLAY_DEVICEA device;
+    device.cb = sizeof(device);
+    if (!::EnumDisplayDevicesA(nullptr, deviceIndex, &device, 0)) {
+      break;
+    }
+
+    if (!(device.StateFlags & DISPLAY_DEVICE_ACTIVE)) {
+      continue;
+    }
+
+    DEVMODEA mode;
+    mode.dmSize = sizeof(mode);
+    mode.dmDriverExtra = 0;
+    if (!::EnumDisplaySettingsA(device.DeviceName, ENUM_CURRENT_SETTINGS, &mode)) {
+      continue;
+    }
+
+    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
+
+    JS::Rooted<JS::Value> screenWidth(aCx, JS::Int32Value(mode.dmPelsWidth));
+    JS_SetProperty(aCx, obj, "screenWidth", screenWidth);
+
+    JS::Rooted<JS::Value> screenHeight(aCx, JS::Int32Value(mode.dmPelsHeight));
+    JS_SetProperty(aCx, obj, "screenHeight", screenHeight);
+
+    JS::Rooted<JS::Value> refreshRate(aCx, JS::Int32Value(mode.dmDisplayFrequency));
+    JS_SetProperty(aCx, obj, "refreshRate", refreshRate);
+
+    JS::Rooted<JS::Value> pseudoDisplay(aCx,
+      JS::BooleanValue(!!(device.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER)));
+    JS_SetProperty(aCx, obj, "pseudoDisplay", pseudoDisplay);
+
+    JS::Rooted<JS::Value> element(aCx, JS::ObjectValue(*obj));
+    JS_SetElement(aCx, aOutArray, deviceCount++, element);
+  }
+  return NS_OK;
 }
 
 #ifdef DEBUG
