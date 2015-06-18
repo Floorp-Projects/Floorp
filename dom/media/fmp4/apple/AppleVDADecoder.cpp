@@ -79,7 +79,7 @@ AppleVDADecoder::~AppleVDADecoder()
 nsresult
 AppleVDADecoder::Init()
 {
-  if (!gfxPlatform::CanUseHardwareVideoDecoding()) {
+  if (!gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding()) {
     // This GPU is blacklisted for hardware decoding.
     return NS_ERROR_FAILURE;
   }
