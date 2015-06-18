@@ -5,7 +5,7 @@
 // gutter/tooltips and lines.
 
 const TEST_DATA = [{ delta: 100, value: 60 }, { delta: 200, value: 1 }];
-let {LineGraphWidget} = devtools.require("devtools/shared/widgets/Graphs");
+let LineGraphWidget = devtools.require("devtools/shared/widgets/LineGraphWidget");
 let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
 
 add_task(function*() {
