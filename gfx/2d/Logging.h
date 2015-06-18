@@ -489,6 +489,15 @@ typedef Log<LOG_CRITICAL, CriticalLogger> CriticalLog;
 #define gfxCriticalError mozilla::gfx::CriticalLog
 #define gfxCriticalErrorOnce static gfxCriticalError GFX_LOGGING_GLUE(sOnceAtLine,__LINE__) = gfxCriticalError
 
+// This is a shortcut for errors we want logged in crash reports/about support
+// but we do not want asserting.  These are available in all builds, so it is
+// not worth trying to do magic to avoid matching the syntax of gfxCriticalError.
+// So, this one is used as
+// gfxCriticalNote << "Something to report and not assert";
+// while the critical error is
+// gfxCriticalError() << "Something to report and assert";
+#define gfxCriticalNote gfxCriticalError(gfxCriticalError::DefaultOptions(false))
+
 // The "once" versions will only trigger the first time through. You can do this:
 // gfxCriticalErrorOnce() << "This message only shows up once;
 // instead of the usual:
