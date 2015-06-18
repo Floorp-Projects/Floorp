@@ -750,6 +750,10 @@ html, .fx-embedded, #main,
   margin: 0 10px;
 }
 
+html[dir="rtl"] .room-conversation-wrapper header {
+  text-align: right;
+}
+
 .room-conversation-wrapper header h1 {
   font-size: 1.5em;
   color: #fff;
@@ -763,8 +767,16 @@ html, .fx-embedded, #main,
   margin: 0 10px;
 }
 
+html[dir="rtl"] .room-conversation-wrapper header h1 {
+  background-position: 100% center;
+}
+
 .room-conversation-wrapper header a {
   float: right;
+}
+
+html[dir="rtl"] .room-conversation-wrapper header a {
+  float: left;
 }
 
 .room-conversation-wrapper header .icon-help {
@@ -1294,6 +1306,11 @@ html[dir="rtl"] .room-context-btn-edit {
   width: 250px;
   color: #fff;
   box-sizing: content-box;
+}
+
+html[dir="rtl"] .standalone .room-conversation-wrapper .room-inner-info-area {
+  right: 25%;
+  left: auto;
 }
 
 .standalone .prompt-media-message {

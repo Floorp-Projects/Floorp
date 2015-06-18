@@ -354,6 +354,11 @@ p.standalone-btn-label {
   right: 35%;
 }
 
+html[dir="rtl"] .standalone .room-conversation-wrapper .ended-conversation .feedback {
+  right: auto;
+  left: 35%;
+}
+
 .standalone .ended-conversation .local-stream {
   /* Hide  local media stream when feedback form is shown. */
   display: none;
