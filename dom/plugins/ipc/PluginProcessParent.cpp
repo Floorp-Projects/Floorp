@@ -96,17 +96,17 @@ AddSandboxAllowedFiles(int32_t aSandboxLevel,
 
     // Level 2 and above is now using low integrity, so we need to give write
     // access to the Flash directories.
+    // This should be made Flash specific (Bug 1171396).
     AddSandboxAllowedFile(aAllowedFilesReadWrite, dirSvc, NS_WIN_APPDATA_DIR,
                           NS_LITERAL_STRING("\\Macromedia\\Flash Player\\*"));
     AddSandboxAllowedFile(aAllowedFilesReadWrite, dirSvc, NS_WIN_APPDATA_DIR,
                           NS_LITERAL_STRING("\\Adobe\\Flash Player\\*"));
 
-#if defined(_X86_)
-    // Write access to the Temp directory should only be needed for 32-bit as
-    // it is used to turn off protected mode, which only applies to x86.
+    // Write access to the Temp directory is used to turn off protected mode
+    // and is needed in some mochitest crash tests.
+    // Bug 1171393 tracks removing this requirement.
     AddSandboxAllowedFile(aAllowedFilesReadWrite, dirSvc, NS_OS_TEMP_DIR,
                           NS_LITERAL_STRING("\\*"));
-#endif
 }
 #endif
 
