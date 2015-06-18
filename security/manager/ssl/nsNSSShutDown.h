@@ -147,13 +147,7 @@ public:
   
 private:
   nsNSSShutDownList();
-  static PLDHashOperator
-  evaporateAllNSSResourcesHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                                                        uint32_t number, void *arg);
 
-  static PLDHashOperator
-  doPK11LogoutHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                                                    uint32_t number, void *arg);
 protected:
   mozilla::Mutex mListLock;
   static nsNSSShutDownList *singleton;
