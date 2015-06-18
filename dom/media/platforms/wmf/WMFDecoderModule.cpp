@@ -49,8 +49,7 @@ WMFDecoderModule::Init()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   sIsWMFEnabled = Preferences::GetBool("media.windows-media-foundation.enabled", false);
-  sDXVAEnabled = !gfxWindowsPlatform::GetPlatform()->IsWARP() &&
-                 gfxPlatform::CanUseHardwareVideoDecoding();
+  sDXVAEnabled = gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
 }
 
 nsresult

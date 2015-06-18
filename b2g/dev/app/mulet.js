@@ -18,3 +18,8 @@ pref("devtools.toolbox.sidebar.width", 800);
 pref("browser.tabs.remote.autostart", false);
 pref("browser.tabs.remote.autostart.1", false);
 pref("browser.tabs.remote.autostart.2", false);
+
+// W3C draft pointer events
+pref("dom.w3c_pointer_events.enabled", false);
+// W3C touch-action css property (related to touch and pointer events)
+pref("layout.css.touch_action.enabled", false);

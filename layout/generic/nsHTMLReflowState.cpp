@@ -507,8 +507,10 @@ IsQuirkContainingBlockHeight(const nsHTMLReflowState* rs, nsIAtom* aFrameType)
 void
 nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameType)
 {
-  bool isHResize = (frame->GetSize().width !=
-                     ComputedWidth() + ComputedPhysicalBorderPadding().LeftRight()) ||
+  const WritingMode wm = mWritingMode; // just a shorthand
+  bool isIResize = (frame->ISize(wm) !=
+                     ComputedISize() +
+                       ComputedLogicalBorderPadding().IStartEnd(wm)) ||
                      aPresContext->PresShell()->IsReflowOnZoomPending();
 
   if ((frame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) &&
@@ -522,7 +524,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
                  // dummy parent reflow state anyway).
                  !mFlags.mDummyParentReflowState;
 
-    if (dirty || (!frame->GetParent() && isHResize)) {
+    if (dirty || (!frame->GetParent() && isIResize)) {
       // When font size inflation is enabled, a change in either:
       //  * the effective width of a font inflation flow root
       //  * the width of the frame
@@ -597,8 +599,8 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
     }
   }
 
-  SetHResize(!(frame->GetStateBits() & NS_FRAME_IS_DIRTY) &&
-             isHResize);
+  SetIResize(!(frame->GetStateBits() & NS_FRAME_IS_DIRTY) &&
+             isIResize);
 
   // XXX Should we really need to null check mCBReflowState?  (We do for
   // at least nsBoxFrame).
@@ -606,39 +608,39 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
       (mFlags.mSpecialHeightReflow ||
        (frame->FirstInFlow()->GetStateBits() &
          NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) &&
-      (frame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT)) {
+      (frame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
     // Need to set the bit on the cell so that
-    // mCBReflowState->IsVResize() is set correctly below when
+    // mCBReflowState->IsBResize() is set correctly below when
     // reflowing descendant.
-    SetVResize(true);
+    SetBResize(true);
   } else if (mCBReflowState && !nsLayoutUtils::IsNonWrapperBlock(frame)) {
     // XXX Is this problematic for relatively positioned inlines acting
     // as containing block for absolutely positioned elements?
     // Possibly; in that case we should at least be checking
     // NS_SUBTREE_DIRTY, I'd think.
-    SetVResize(mCBReflowState->IsVResize());
-  } else if (ComputedHeight() == NS_AUTOHEIGHT) {
+    SetBResize(mCBReflowState->IsBResize());
+  } else if (ComputedBSize() == NS_AUTOHEIGHT) {
     if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode() &&
         mCBReflowState) {
-      SetVResize(mCBReflowState->IsVResize());
+      SetBResize(mCBReflowState->IsBResize());
     } else {
-      SetVResize(IsHResize());
+      SetBResize(IsIResize());
     }
-    SetVResize(IsVResize() || NS_SUBTREE_DIRTY(frame));
+    SetBResize(IsBResize() || NS_SUBTREE_DIRTY(frame));
   } else {
-    // not 'auto' height
-    SetVResize(frame->GetSize().height !=
-               ComputedHeight() + ComputedPhysicalBorderPadding().TopBottom());
+    // not 'auto' block-size
+    SetBResize(frame->BSize(wm) !=
+               ComputedBSize() + ComputedLogicalBorderPadding().BStartEnd(wm));
   }
 
-  bool dependsOnCBHeight =
-    (mStylePosition->HeightDependsOnContainer() &&
+  bool dependsOnCBBSize =
+    (mStylePosition->BSizeDependsOnContainer(wm) &&
      // FIXME: condition this on not-abspos?
-     mStylePosition->mHeight.GetUnit() != eStyleUnit_Auto) ||
-    mStylePosition->MinHeightDependsOnContainer() ||
-    mStylePosition->MaxHeightDependsOnContainer() ||
-    mStylePosition->OffsetHasPercent(NS_SIDE_TOP) ||
-    mStylePosition->mOffset.GetBottomUnit() != eStyleUnit_Auto ||
+     mStylePosition->BSize(wm).GetUnit() != eStyleUnit_Auto) ||
+    mStylePosition->MinBSizeDependsOnContainer(wm) ||
+    mStylePosition->MaxBSizeDependsOnContainer(wm) ||
+    mStylePosition->OffsetHasPercent(wm.PhysicalSide(eLogicalSideBStart)) ||
+    mStylePosition->mOffset.GetBEndUnit(wm) != eStyleUnit_Auto ||
     frame->IsBoxFrame();
 
   if (mStyleText->mLineHeight.GetUnit() == eStyleUnit_Enumerated) {
@@ -646,37 +648,37 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
                  NS_STYLE_LINE_HEIGHT_BLOCK_HEIGHT,
                  "bad line-height value");
 
-    // line-height depends on block height
-    frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+    // line-height depends on block bsize
+    frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
     // but only on containing blocks if this frame is not a suitable block
-    dependsOnCBHeight |= !nsLayoutUtils::IsNonWrapperBlock(frame);
+    dependsOnCBBSize |= !nsLayoutUtils::IsNonWrapperBlock(frame);
   }
 
   // If we're the descendant of a table cell that performs special height
   // reflows and we could be the child that requires them, always set
-  // the vertical resize in case this is the first pass before the
+  // the block-axis resize in case this is the first pass before the
   // special height reflow.  However, don't do this if it actually is
   // the special height reflow, since in that case it will already be
   // set correctly above if we need it set.
-  if (!IsVResize() && mCBReflowState &&
+  if (!IsBResize() && mCBReflowState &&
       (IS_TABLE_CELL(mCBReflowState->frame->GetType()) || 
        mCBReflowState->mFlags.mHeightDependsOnAncestorCell) &&
       !mCBReflowState->mFlags.mSpecialHeightReflow && 
-      dependsOnCBHeight) {
-    SetVResize(true);
+      dependsOnCBBSize) {
+    SetBResize(true);
     mFlags.mHeightDependsOnAncestorCell = true;
   }
 
-  // Set NS_FRAME_CONTAINS_RELATIVE_HEIGHT if it's needed.
+  // Set NS_FRAME_CONTAINS_RELATIVE_BSIZE if it's needed.
 
-  // It would be nice to check that |mComputedHeight != NS_AUTOHEIGHT|
-  // &&ed with the percentage height check.  However, this doesn't get
+  // It would be nice to check that |ComputedBSize != NS_AUTOHEIGHT|
+  // &&ed with the percentage bsize check.  However, this doesn't get
   // along with table special height reflows, since a special height
-  // reflow (a quirk that makes such percentage heights work on children
+  // reflow (a quirk that makes such percentage height work on children
   // of table cells) can cause not just a single percentage height to
-  // become fixed, but an entire descendant chain of percentage heights
+  // become fixed, but an entire descendant chain of percentage height
   // to become fixed.
-  if (dependsOnCBHeight && mCBReflowState) {
+  if (dependsOnCBBSize && mCBReflowState) {
     const nsHTMLReflowState *rs = this;
     bool hitCBReflowState = false;
     do {
@@ -685,9 +687,9 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
         break;
       }
         
-      if (rs->frame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT)
+      if (rs->frame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE)
         break; // no need to go further
-      rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+      rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
       
       // Keep track of whether we've hit the containing block, because
       // we need to go at least that far.
@@ -695,11 +697,14 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
         hitCBReflowState = true;
       }
 
+      // XXX What about orthogonal flows? It doesn't make sense to
+      // keep propagating this bit across an orthogonal boundary,
+      // where the meaning of BSize changes. Bug 1175517.
     } while (!hitCBReflowState ||
              (eCompatibility_NavQuirks == aPresContext->CompatibilityMode() &&
               !IsQuirkContainingBlockHeight(rs, rs->frame->GetType())));
     // Note: We actually don't need to set the
-    // NS_FRAME_CONTAINS_RELATIVE_HEIGHT bit for the cases
+    // NS_FRAME_CONTAINS_RELATIVE_BSIZE bit for the cases
     // where we hit the early break statements in
     // CalcQuirkContainingBlockHeight. But it doesn't hurt
     // us to set the bit in these cases.
@@ -708,7 +713,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
   if (frame->GetStateBits() & NS_FRAME_IS_DIRTY) {
     // If we're reflowing everything, then we'll find out if we need
     // to re-set this.
-    frame->RemoveStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+    frame->RemoveStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
   }
 }
 
