@@ -85,6 +85,12 @@ GetTopWindow(nsIDOMWindow* aWindow)
   return window.forget();
 }
 
+bool
+IsParentProcess()
+{
+  return XRE_GetProcessType() == GeckoProcessType_Default;
+}
+
 } // anonymous namespace
 
 StaticRefPtr<AudioChannelService> gAudioChannelService;
@@ -118,7 +124,7 @@ void
 AudioChannelService::Shutdown()
 {
   if (gAudioChannelService) {
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (IsParentProcess()) {
       nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
       if (obs) {
         obs->RemoveObserver(gAudioChannelService, "ipc:content-shutdown");
@@ -147,8 +153,11 @@ NS_IMPL_RELEASE(AudioChannelService)
 AudioChannelService::AudioChannelService()
   : mDisabled(false)
   , mDefChannelChildID(CONTENT_PROCESS_ID_UNKNOWN)
+  , mTelephonyChannel(false)
+  , mContentOrNormalChannel(false)
+  , mAnyChannel(false)
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (IsParentProcess()) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->AddObserver(this, "ipc:content-shutdown", false);
@@ -199,6 +208,8 @@ AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
                                        NS_LITERAL_STRING("active").get());
     }
   }
+
+  MaybeSendStatusUpdate();
 }
 
 void
@@ -244,6 +255,8 @@ AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
                                        NS_LITERAL_STRING("inactive").get());
     }
   }
+
+  MaybeSendStatusUpdate();
 }
 
 void
@@ -296,33 +309,68 @@ AudioChannelService::TelephonyChannelIsActiveEnumerator(
   bool* isActive = static_cast<bool*>(aPtr);
   *isActive =
     aWinData->mChannels[(uint32_t)AudioChannel::Telephony].mNumberOfAgents != 0 &&
-   !aWinData->mChannels[(uint32_t)AudioChannel::Telephony].mMuted;
+    !aWinData->mChannels[(uint32_t)AudioChannel::Telephony].mMuted;
+  return *isActive ? PL_DHASH_STOP : PL_DHASH_NEXT;
+}
+
+PLDHashOperator
+AudioChannelService::TelephonyChannelIsActiveInChildrenEnumerator(
+                                      const uint64_t& aChildID,
+                                      nsAutoPtr<AudioChannelChildStatus>& aData,
+                                      void* aPtr)
+{
+  bool* isActive = static_cast<bool*>(aPtr);
+  *isActive = aData->mActiveTelephonyChannel;
   return *isActive ? PL_DHASH_STOP : PL_DHASH_NEXT;
 }
 
 bool
 AudioChannelService::TelephonyChannelIsActive()
 {
-  // TODO: no child process check.
-
   bool active = false;
   mWindows.Enumerate(TelephonyChannelIsActiveEnumerator, &active);
+
+  if (!active && IsParentProcess()) {
+    mPlayingChildren.Enumerate(TelephonyChannelIsActiveInChildrenEnumerator,
+                               &active);
+  }
+
+  return active;
+}
+
+PLDHashOperator
+AudioChannelService::ContentOrNormalChannelIsActiveEnumerator(
+                                        const uint64_t& aWindowID,
+                                        nsAutoPtr<AudioChannelWindow>& aWinData,
+                                        void* aPtr)
+{
+  bool* isActive = static_cast<bool*>(aPtr);
+  *isActive =
+    aWinData->mChannels[(uint32_t)AudioChannel::Content].mNumberOfAgents > 0 ||
+    aWinData->mChannels[(uint32_t)AudioChannel::Normal].mNumberOfAgents > 0;
+  return *isActive ? PL_DHASH_STOP : PL_DHASH_NEXT;
+}
+
+bool
+AudioChannelService::ContentOrNormalChannelIsActive()
+{
+  // This method is meant to be used just by the child to send status update.
+  MOZ_ASSERT(!IsParentProcess());
+
+  bool active = false;
+  mWindows.Enumerate(ContentOrNormalChannelIsActiveEnumerator, &active);
   return active;
 }
 
 bool
 AudioChannelService::ProcessContentOrNormalChannelIsActive(uint64_t aChildID)
 {
-/* TODO
-  AudioChannelChildData* data;
-  if (!mData.Get(aChildID, &data)) {
+  AudioChannelChildStatus* status = mPlayingChildren.Get(aChildID);
+  if (!status) {
     return false;
   }
 
-  return data->mChannels[(uint32_t)AudioChannel::Content].mNumberOfAgents != 0 ||
-         data->mChannels[(uint32_t)AudioChannel::Normal].mNumberOfAgents != 0;
-*/
-  return true;
+  return status->mActiveContentOrNormalChannel;
 }
 
 PLDHashOperator
@@ -346,9 +394,13 @@ AudioChannelService::AnyAudioChannelIsActiveEnumerator(
 bool
 AudioChannelService::AnyAudioChannelIsActive()
 {
-  // TODO: no child process check.
   bool active = false;
   mWindows.Enumerate(AnyAudioChannelIsActiveEnumerator, &active);
+
+  if (!active && IsParentProcess()) {
+    active = !!mPlayingChildren.Count();
+  }
+
   return active;
 }
 
@@ -441,6 +493,8 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
       SetDefaultVolumeControlChannelInternal(-1, false, childID);
       mDefChannelChildID = CONTENT_PROCESS_ID_UNKNOWN;
     }
+
+    mPlayingChildren.Remove(childID);
   }
 
   return NS_OK;
@@ -680,7 +734,7 @@ AudioChannelService::SetDefaultVolumeControlChannelInternal(int32_t aChannel,
                                                             bool aVisible,
                                                             uint64_t aChildID)
 {
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!IsParentProcess()) {
     ContentChild* cc = ContentChild::GetSingleton();
     if (cc) {
       cc->SendAudioChannelChangeDefVolChannel(aChannel, aVisible);
@@ -725,6 +779,50 @@ AudioChannelService::SetDefaultVolumeControlChannelInternal(int32_t aChannel,
     obs->NotifyObservers(nullptr, "default-volume-channel-changed",
                          channelName.get());
   }
+}
+
+void
+AudioChannelService::MaybeSendStatusUpdate()
+{
+  if (IsParentProcess()) {
+    return;
+  }
+
+  bool telephonyChannel = TelephonyChannelIsActive();
+  bool contentOrNormalChannel = ContentOrNormalChannelIsActive();
+  bool anyChannel = AnyAudioChannelIsActive();
+
+  if (telephonyChannel == mTelephonyChannel &&
+      contentOrNormalChannel == mContentOrNormalChannel &&
+      anyChannel == mAnyChannel) {
+    return;
+  }
+
+  mTelephonyChannel = telephonyChannel;
+  mContentOrNormalChannel = contentOrNormalChannel;
+  mAnyChannel = anyChannel;
+
+  ContentChild* cc = ContentChild::GetSingleton();
+  if (cc) {
+    cc->SendAudioChannelServiceStatus(telephonyChannel, contentOrNormalChannel,
+                                      anyChannel);
+  }
+}
+
+void
+AudioChannelService::ChildStatusReceived(uint64_t aChildID,
+                                         bool aTelephonyChannel,
+                                         bool aContentOrNormalChannel,
+                                         bool aAnyChannel)
+{
+  if (!aAnyChannel) {
+    mPlayingChildren.Remove(aChildID);
+    return;
+  }
+
+  AudioChannelChildStatus* data = mPlayingChildren.LookupOrAdd(aChildID);
+  data->mActiveTelephonyChannel = aTelephonyChannel;
+  data->mActiveContentOrNormalChannel = aContentOrNormalChannel;
 }
 
 /* static */ PLDHashOperator
