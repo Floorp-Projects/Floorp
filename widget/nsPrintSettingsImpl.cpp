@@ -7,6 +7,7 @@
 #include "nsReadableUtils.h"
 #include "nsIPrintSession.h"
 #include "nsRefPtr.h"
+#include "mozilla/gfx/Logging.h"
 
 #define DEFAULT_MARGIN_WIDTH 0.5
 
@@ -951,6 +952,9 @@ NS_IMETHODIMP nsPrintSettings::GetPaperWidth(double *aPaperWidth)
 NS_IMETHODIMP nsPrintSettings::SetPaperWidth(double aPaperWidth)
 {
   mPaperWidth = aPaperWidth;
+  if (mPaperWidth <= 0) {
+    gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Setting paper width to bad value " << mPaperWidth;
+  }
   return NS_OK;
 }
 
@@ -964,6 +968,9 @@ NS_IMETHODIMP nsPrintSettings::GetPaperHeight(double *aPaperHeight)
 NS_IMETHODIMP nsPrintSettings::SetPaperHeight(double aPaperHeight)
 {
   mPaperHeight = aPaperHeight;
+  if (mPaperHeight <= 0) {
+    gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Setting paper height to bad value " << mPaperHeight;
+  }
   return NS_OK;
 }
 
