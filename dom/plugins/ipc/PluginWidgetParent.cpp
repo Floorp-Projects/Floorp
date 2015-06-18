@@ -210,5 +210,20 @@ PluginWidgetParent::RecvGetNativePluginPort(uintptr_t* value)
   return true;
 }
 
+bool
+PluginWidgetParent::RecvSetNativeChildWindow(const uintptr_t& aChildWindow)
+{
+#if defined(XP_WIN)
+  ENSURE_CHANNEL;
+  PWLOG("PluginWidgetParent::RecvSetNativeChildWindow(%p)\n",
+        static_cast<void*>(aChildWindow));
+  mWidget->SetNativeData(NS_NATIVE_CHILD_WINDOW, aChildWindow);
+  return true;
+#else
+  NS_NOTREACHED("PluginWidgetParent::RecvSetNativeChildWindow not implemented!");
+  return false;
+#endif
+}
+
 } // namespace plugins
 } // namespace mozilla

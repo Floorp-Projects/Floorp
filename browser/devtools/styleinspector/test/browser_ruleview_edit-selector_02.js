@@ -22,7 +22,12 @@ let PAGE_CONTENT = [
   '<div id="testid3">B</div>'
 ].join("\n");
 
+const PSEUDO_PREF = "devtools.inspector.show_pseudo_elements";
+
 add_task(function*() {
+  // Expand the pseudo-elements section by default.
+  Services.prefs.setBoolPref(PSEUDO_PREF, true);
+
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(PAGE_CONTENT));
   let {inspector, view} = yield openRuleView();
 
@@ -41,6 +46,9 @@ add_task(function*() {
   info("Selecting the modified element");
   yield selectNode(".testclass2", inspector);
   yield checkModifiedElement(view, ".testclass2::first-letter");
+
+  // Reset the pseudo-elements section pref to its default value.
+  Services.prefs.clearUserPref(PSEUDO_PREF);
 });
 
 function* testEditSelector(view, name) {

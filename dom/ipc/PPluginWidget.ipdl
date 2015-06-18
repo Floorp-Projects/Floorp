@@ -41,6 +41,12 @@ parent:
    * native HWND of the plugin widget.
    */
   sync GetNativePluginPort() returns (uintptr_t value);
+
+  /**
+   * Sends an NS_NATIVE_CHILD_WINDOW to be adopted by the widget's native window
+   * on the chrome side. This is only currently used on Windows.
+   */
+  sync SetNativeChildWindow(uintptr_t childWindow);
 };
 
 }

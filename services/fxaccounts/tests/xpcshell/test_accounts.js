@@ -960,29 +960,7 @@ add_test(function test_getOAuthToken_unknown_error() {
   });
 });
 
-add_test(function test_accountState_initProfile() {
-  let fxa = new MockFxAccounts();
-  let alice = getTestUser("alice");
-  alice.verified = true;
-
-  fxa.internal.getOAuthToken = function (opts) {
-    return Promise.resolve("token");
-  };
-
-  fxa.setSignedInUser(alice).then(() => {
-    let accountState = fxa.internal.currentAccountState;
-
-    accountState.initProfile(options)
-      .then(result => {
-         do_check_true(!!accountState.profile);
-         run_next_test();
-      });
-  });
-
-});
-
-add_test(function test_accountState_getProfile() {
-  let fxa = new MockFxAccounts();
+add_test(function test_getSignedInUserProfile() {
   let alice = getTestUser("alice");
   alice.verified = true;
 
@@ -991,40 +969,18 @@ add_test(function test_accountState_getProfile() {
       return Promise.resolve({ avatar: "image" });
     }
   };
+  let fxa = new FxAccounts({
+    _profile: mockProfile,
+  });
 
   fxa.setSignedInUser(alice).then(() => {
-    let accountState = fxa.internal.currentAccountState;
-    accountState.profile = mockProfile;
-    accountState.initProfilePromise = new Promise((resolve, reject) => resolve(mockProfile));
-
-    accountState.getProfile()
+    fxa.getSignedInUserProfile()
       .then(result => {
          do_check_true(!!result);
          do_check_eq(result.avatar, "image");
          run_next_test();
       });
   });
-
-});
-
-add_test(function test_getSignedInUserProfile_ok() {
-  let fxa = new MockFxAccounts();
-  let alice = getTestUser("alice");
-  alice.verified = true;
-
-  fxa.setSignedInUser(alice).then(() => {
-    let accountState = fxa.internal.currentAccountState;
-    accountState.getProfile = function () {
-      return Promise.resolve({ avatar: "image" });
-    };
-
-    fxa.getSignedInUserProfile()
-      .then(result => {
-         do_check_eq(result.avatar, "image");
-         run_next_test();
-      });
-  });
-
 });
 
 add_test(function test_getSignedInUserProfile_error_uses_account_data() {
@@ -1036,19 +992,26 @@ add_test(function test_getSignedInUserProfile_error_uses_account_data() {
     return Promise.resolve({ email: "foo@bar.com" });
   };
 
+  let teardownCalled = false;
   fxa.setSignedInUser(alice).then(() => {
-    let accountState = fxa.internal.currentAccountState;
-    accountState.getProfile = function () {
-      return Promise.reject("boom");
+    fxa.internal._profile = {
+      getProfile: function () {
+        return Promise.reject("boom");
+      },
+      tearDown: function() {
+        teardownCalled = true;
+      }
     };
 
     fxa.getSignedInUserProfile()
       .catch(error => {
-         do_check_eq(error.message, "UNKNOWN_ERROR");
-         fxa.signOut().then(run_next_test);
+        do_check_eq(error.message, "UNKNOWN_ERROR");
+        fxa.signOut().then(() => {
+          do_check_true(teardownCalled);
+          run_next_test();
+        });
       });
   });
-
 });
 
 add_test(function test_getSignedInUserProfile_unverified_account() {
@@ -1056,8 +1019,6 @@ add_test(function test_getSignedInUserProfile_unverified_account() {
   let alice = getTestUser("alice");
 
   fxa.setSignedInUser(alice).then(() => {
-    let accountState = fxa.internal.currentAccountState;
-
     fxa.getSignedInUserProfile()
       .catch(error => {
          do_check_eq(error.message, "UNVERIFIED_ACCOUNT");

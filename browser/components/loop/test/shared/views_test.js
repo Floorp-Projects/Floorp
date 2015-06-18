@@ -765,6 +765,26 @@ describe("loop.shared.views", function() {
         expect(node.classList.contains("disabled")).to.eql(true);
         expect(node.hasAttribute("disabled")).to.eql(true);
       });
+
+      it("should render the checkbox as checked when the prop is set", function() {
+        view = mountTestComponent({
+          checked: true
+        });
+
+        var checkbox = view.getDOMNode().querySelector(".checkbox");
+        expect(checkbox.classList.contains("checked")).eql(true);
+      });
+
+      it("should alter the render state when the props are changed", function() {
+        view = mountTestComponent({
+          checked: true
+        });
+
+        view.setProps({checked: false});
+
+        var checkbox = view.getDOMNode().querySelector(".checkbox");
+        expect(checkbox.classList.contains("checked")).eql(false);
+      });
     });
 
     describe("#_handleClick", function() {

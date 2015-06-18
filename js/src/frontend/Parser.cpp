@@ -596,7 +596,7 @@ FunctionBox::FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunct
     bufEnd(0),
     length(0),
     generatorKindBits_(GeneratorKindAsBits(generatorKind)),
-    inWith_(false),                  // initialized below
+    inWith(false),                  // initialized below
     inGenexpLambda(false),
     hasDestructuringArgs(false),
     useAsm(false),
@@ -612,7 +612,7 @@ FunctionBox::FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunct
     MOZ_ASSERT(fun->isTenured());
 
     if (!outerpc) {
-        inWith_ = false;
+        inWith = false;
 
     } else if (outerpc->parsingWith) {
         // This covers cases that don't involve eval().  For example:
@@ -621,7 +621,7 @@ FunctionBox::FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunct
         //
         // In this case, |outerpc| corresponds to global code, and
         // outerpc->parsingWith is true.
-        inWith_ = true;
+        inWith = true;
 
     } else if (outerpc->sc->isFunctionBox()) {
         // This is like the above case, but for more deeply nested functions.
@@ -632,17 +632,8 @@ FunctionBox::FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunct
         // In this case, the inner anonymous function needs to inherit the
         // setting of |inWith| from the outer one.
         FunctionBox* parent = outerpc->sc->asFunctionBox();
-        if (parent && parent->inWith())
-            inWith_ = true;
-    } else {
-        // This is like the above case, but when inside eval.
-        //
-        // For example:
-        //
-        //   with(o) { eval("(function() { g(); })();"); }
-        //
-        // In this case, the static scope chain tells us the presence of with.
-        inWith_ = outerpc->sc->inWith();
+        if (parent && parent->inWith)
+            inWith = true;
     }
 }
 
@@ -828,14 +819,30 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
     if (!FoldConstants(context, &pn, this))
         return null();
 
+    fn->pn_pos.end = pos().end;
+
+    MOZ_ASSERT(fn->pn_body->isKind(PNK_ARGSBODY));
+    fn->pn_body->append(pn);
+
+    /*
+     * Make sure to deoptimize lexical dependencies that are polluted
+     * by eval and function statements (which both flag the function as
+     * having an extensible scope).
+     */
+    if (funbox->hasExtensibleScope() && pc->lexdeps->count()) {
+        for (AtomDefnRange r = pc->lexdeps->all(); !r.empty(); r.popFront()) {
+            Definition* dn = r.front().value().get<FullParseHandler>();
+            MOZ_ASSERT(dn->isPlaceholder());
+
+            handler.deoptimizeUsesWithin(dn, fn->pn_pos);
+        }
+    }
+
     InternalHandle<Bindings*> funboxBindings =
         InternalHandle<Bindings*>::fromMarkedLocation(&funbox->bindings);
     if (!funpc.generateFunctionBindings(context, tokenStream, alloc, funboxBindings))
         return null();
 
-    MOZ_ASSERT(fn->pn_body->isKind(PNK_ARGSBODY));
-    fn->pn_body->append(pn);
-    fn->pn_body->pn_pos = pn->pn_pos;
     return fn;
 }
 
@@ -1219,6 +1226,7 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
       case ClassConstructor:
+      case DerivedClassConstructor:
         flags = JSFunction::INTERPRETED_CLASS_CONSTRUCTOR;
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
@@ -2224,7 +2232,7 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox* funbo
     // while its ParseContext and associated lexdeps and inner functions are
     // still available.
 
-    if (funbox->inWith())
+    if (funbox->inWith)
         return abortIfSyntaxParser();
 
     size_t numFreeVariables = pc->lexdeps->count();
@@ -2252,6 +2260,8 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox* funbo
     lazy->setGeneratorKind(funbox->generatorKind());
     if (funbox->usesArguments && funbox->usesApply && funbox->usesThis)
         lazy->setUsesArgumentsApplyAndThis();
+    if (funbox->isDerivedClassConstructor())
+        lazy->setIsDerivedClassConstructor();
     PropagateTransitiveParseFlags(funbox, lazy);
 
     fun->initLazyScript(lazy);
@@ -2272,6 +2282,9 @@ Parser<FullParseHandler>::functionArgsAndBody(InHandling inHandling, ParseNode* 
     FunctionBox* funbox = newFunctionBox(pn, fun, pc, inheritedDirectives, generatorKind);
     if (!funbox)
         return false;
+
+    if (kind == DerivedClassConstructor)
+        funbox->setDerivedClassConstructor();
 
     YieldHandling yieldHandling = generatorKind != NotGenerator ? YieldIsKeyword : YieldIsName;
 
@@ -2434,6 +2447,9 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
     if (!funbox)
         return null();
     funbox->length = fun->nargs() - fun->hasRest();
+
+    if (fun->lazyScript()->isDerivedClassConstructor())
+        funbox->setDerivedClassConstructor();
 
     Directives newDirectives = directives;
     ParseContext<FullParseHandler> funpc(this, /* parent = */ nullptr, pn, funbox,
@@ -5969,7 +5985,8 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
 
     MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CLASS);
 
-    ParseNode* classMethods = propertyList(yieldHandling, ClassBody);
+    ParseNode* classMethods = propertyList(yieldHandling,
+                                           hasHeritage ? DerivedClassBody : ClassBody);
     if (!classMethods)
         return null();
 
@@ -6545,6 +6562,11 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
         TokenKind ignored;
         if (!tokenStream.peekToken(&ignored))
             return null();
+
+        if (pc->sc->isFunctionBox() && pc->sc->asFunctionBox()->isDerivedClassConstructor()) {
+            report(ParseError, false, null(), JSMSG_DISABLED_DERIVED_CLASS, "arrow functions");
+            return null();
+        }
 
         return functionDef(inHandling, yieldHandling, nullptr, Arrow, NotGenerator);
       }
@@ -8316,7 +8338,7 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::newPropertyListNode(PropListType type)
 {
-    if (type == ClassBody)
+    if (IsClassBody(type))
         return handler.newClassMethodList(pos().begin);
 
     MOZ_ASSERT(type == ObjectLiteral);
@@ -8344,7 +8366,7 @@ Parser<ParseHandler>::propertyList(YieldHandling yieldHandling, PropListType typ
             break;
 
         bool isStatic = false;
-        if (type == ClassBody) {
+        if (IsClassBody(type)) {
             if (ltok == TOK_SEMI)
                 continue;
 
@@ -8484,7 +8506,7 @@ Parser<ParseHandler>::propertyList(YieldHandling yieldHandling, PropListType typ
             }
         }
 
-        if (type == ClassBody) {
+        if (IsClassBody(type)) {
             if (!isStatic && atom == context->names().constructor) {
                 if (isGenerator || op != JSOP_INITPROP) {
                     report(ParseError, false, propname, JSMSG_BAD_METHOD_DEF);
@@ -8508,7 +8530,7 @@ Parser<ParseHandler>::propertyList(YieldHandling yieldHandling, PropListType typ
                 return null();
 
             if (tt == TOK_COLON) {
-                if (type == ClassBody) {
+                if (IsClassBody(type)) {
                     report(ParseError, false, null(), JSMSG_BAD_METHOD_DEF);
                     return null();
                 }
@@ -8550,7 +8572,7 @@ Parser<ParseHandler>::propertyList(YieldHandling yieldHandling, PropListType typ
                  * Support, e.g., |var {x, y} = o| as destructuring shorthand
                  * for |var {x: x, y: y} = o|, per proposed JS2/ES4 for JS1.8.
                  */
-                if (type == ClassBody) {
+                if (IsClassBody(type)) {
                     report(ParseError, false, null(), JSMSG_BAD_METHOD_DEF);
                     return null();
                 }
@@ -8572,7 +8594,9 @@ Parser<ParseHandler>::propertyList(YieldHandling yieldHandling, PropListType typ
             } else if (tt == TOK_LP) {
                 tokenStream.ungetToken();
                 if (!methodDefinition(yieldHandling, type, propList, propname,
-                                      isConstructor ? ClassConstructor : Method,
+                                      isConstructor ? type == DerivedClassBody ? DerivedClassConstructor
+                                                                               : ClassConstructor
+                                                    : Method,
                                       isGenerator ? StarGenerator : NotGenerator, isStatic, op))
                 {
                     return null();
@@ -8604,7 +8628,7 @@ Parser<ParseHandler>::propertyList(YieldHandling yieldHandling, PropListType typ
     }
 
     // Default constructors not yet implemented. See bug 1105463
-    if (type == ClassBody && !seenConstructor) {
+    if (IsClassBody(type) && !seenConstructor) {
         report(ParseError, false, null(), JSMSG_NO_CLASS_CONSTRUCTOR);
         return null();
     }
@@ -8619,19 +8643,23 @@ Parser<ParseHandler>::methodDefinition(YieldHandling yieldHandling, PropListType
                                        Node propList, Node propname, FunctionSyntaxKind kind,
                                        GeneratorKind generatorKind, bool isStatic, JSOp op)
 {
-    MOZ_ASSERT(kind == Method || kind == ClassConstructor || kind == Getter || kind == Setter);
+    MOZ_ASSERT(kind == Method || kind == ClassConstructor || kind == DerivedClassConstructor ||
+               kind == Getter || kind == Setter);
     /* NB: Getter function in { get x(){} } is unnamed. */
     RootedPropertyName funName(context);
-    if ((kind == Method || kind == ClassConstructor) && tokenStream.isCurrentTokenType(TOK_NAME))
+    if ((kind == Method || kind == ClassConstructor || kind == DerivedClassConstructor) &&
+        tokenStream.isCurrentTokenType(TOK_NAME))
+    {
         funName = tokenStream.currentName();
-    else
+    } else {
         funName = nullptr;
+    }
 
     Node fn = functionDef(InAllowed, yieldHandling, funName, kind, generatorKind);
     if (!fn)
         return false;
 
-    if (listType == ClassBody)
+    if (IsClassBody(listType))
         return handler.addClassMethodDefinition(propList, propname, fn, op, isStatic);
 
     MOZ_ASSERT(listType == ObjectLiteral);

@@ -31,6 +31,7 @@ public:
   virtual bool RecvCreate(nsresult* aResult) override;
   virtual bool RecvSetFocus(const bool& aRaise) override;
   virtual bool RecvGetNativePluginPort(uintptr_t* value) override;
+  bool RecvSetNativeChildWindow(const uintptr_t& aChildWindow) override;
 
   // Helper for compositor checks on the channel
   bool ActorDestroyed() { return !mWidget; }

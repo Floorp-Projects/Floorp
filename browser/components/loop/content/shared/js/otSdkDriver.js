@@ -274,6 +274,10 @@ loop.OTSdkDriver = (function() {
     disconnectSession: function() {
       this.endScreenShare();
 
+      this.dispatcher.dispatch(new sharedActions.DataChannelsAvailable({
+        available: false
+      }));
+
       if (this.session) {
         this.session.off("sessionDisconnected streamCreated streamDestroyed connectionCreated connectionDestroyed streamPropertyChanged");
         this.session.disconnect();
@@ -295,6 +299,8 @@ loop.OTSdkDriver = (function() {
       delete this._publishedLocalStream;
       delete this._subscribedRemoteStream;
       delete this._mockPublisherEl;
+      delete this._publisherChannel;
+      delete this._subscriberChannel;
       this.connections = {};
       this._setTwoWayMediaStartTime(this.CONNECTION_START_TIME_UNINITIALIZED);
     },
@@ -723,7 +729,9 @@ loop.OTSdkDriver = (function() {
      */
     _checkDataChannelsAvailable: function() {
       if (this._publisherChannel && this._subscriberChannel) {
-        this.dispatcher.dispatch(new sharedActions.DataChannelsAvailable());
+        this.dispatcher.dispatch(new sharedActions.DataChannelsAvailable({
+          available: true
+        }));
       }
     },
 
@@ -821,6 +829,10 @@ loop.OTSdkDriver = (function() {
       this._notifyMetricsEvent("Session.streamDestroyed");
 
       if (event.stream.videoType !== "screen") {
+        this.dispatcher.dispatch(new sharedActions.DataChannelsAvailable({
+          available: false
+        }));
+        delete this._subscriberChannel;
         delete this._mockSubscribeEl;
         return;
       }
@@ -839,6 +851,10 @@ loop.OTSdkDriver = (function() {
      */
     _onLocalStreamDestroyed: function() {
       this._notifyMetricsEvent("Publisher.streamDestroyed");
+      this.dispatcher.dispatch(new sharedActions.DataChannelsAvailable({
+        available: false
+      }));
+      delete this._publisherChannel;
       delete this._mockPublisherEl;
     },
 

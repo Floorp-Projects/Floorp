@@ -133,6 +133,7 @@ public:
                                      bool aIncludeChildren = false);
   NS_IMETHOD              Invalidate(const nsIntRect & aRect);
   virtual void*           GetNativeData(uint32_t aDataType);
+  void                    SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
   virtual void            FreeNativeData(void * data, uint32_t aDataType);
   NS_IMETHOD              SetTitle(const nsAString& aTitle);
   NS_IMETHOD              SetIcon(const nsAString& aIconSpec);
