@@ -653,7 +653,6 @@ private:
     double mDefaultScale;
     bool mIPCOpen;
     bool mParentIsActive;
-    bool mAudioChannelActive;
     bool mAsyncPanZoomEnabled;
     CSSSize mUnscaledInnerSize;
 
