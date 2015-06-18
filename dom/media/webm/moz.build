@@ -10,6 +10,7 @@ EXPORTS += [
     'SoftwareWebMVideoDecoder.h',
     'WebMBufferedParser.h',
     'WebMDecoder.h',
+    'WebMDemuxer.h',
     'WebMReader.h',
 ]
 
@@ -18,6 +19,7 @@ UNIFIED_SOURCES += [
     'SoftwareWebMVideoDecoder.cpp',
     'WebMBufferedParser.cpp',
     'WebMDecoder.cpp',
+    'WebMDemuxer.cpp',
     'WebMReader.cpp',
 ]
 
