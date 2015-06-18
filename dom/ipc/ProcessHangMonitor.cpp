@@ -156,7 +156,7 @@ public:
 
   NS_IMETHOD IsReportForBrowser(nsIFrameLoader* aFrameLoader, bool* aResult) override;
 
-  // Called on xpcom shutdown
+  // Called when a content process shuts down.
   void Clear() {
     mContentParent = nullptr;
     mActor = nullptr;
@@ -456,11 +456,25 @@ HangMonitorParent::HangMonitorParent(ProcessHangMonitor* aMonitor)
   mReportHangs = mozilla::Preferences::GetBool("dom.ipc.reportProcessHangs", false);
 }
 
+static PLDHashOperator
+DeleteMinidump(const uint32_t& aPluginId, nsString aCrashId, void* aUserData)
+{
+#ifdef MOZ_CRASHREPORTER
+  if (!aCrashId.IsEmpty()) {
+    CrashReporter::DeleteMinidumpFilesForID(aCrashId);
+  }
+#endif
+  return PL_DHASH_NEXT;
+}
+
 HangMonitorParent::~HangMonitorParent()
 {
   // For some reason IPDL doesn't autmatically delete the channel for a
   // bridged protocol (bug 1090570). So we have to do it ourselves.
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new DeleteTask<Transport>(GetTransport()));
+
+  MutexAutoLock lock(mBrowserCrashDumpHashLock);
+  mBrowserCrashDumpIds.EnumerateRead(DeleteMinidump, nullptr);
 }
 
 void
@@ -805,7 +819,9 @@ HangMonitoredProcess::TerminatePlugin()
   uint32_t id = mHangData.get_PluginHangData().pluginId();
   plugins::TerminatePlugin(id, mBrowserDumpId);
 
-  mActor->CleanupPluginHang(id, false);
+  if (mActor) {
+    mActor->CleanupPluginHang(id, false);
+  }
   return NS_OK;
 }
 
@@ -818,7 +834,7 @@ HangMonitoredProcess::TerminateProcess()
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (mHangData.type() == HangData::TPluginHangData) {
+  if (mActor && mHangData.type() == HangData::TPluginHangData) {
     uint32_t id = mHangData.get_PluginHangData().pluginId();
     mActor->CleanupPluginHang(id, true);
   }
@@ -855,8 +871,10 @@ HangMonitoredProcess::UserCanceled()
     return NS_OK;
   }
 
-  uint32_t id = mHangData.get_PluginHangData().pluginId();
-  mActor->CleanupPluginHang(id, true);
+  if (mActor) {
+    uint32_t id = mHangData.get_PluginHangData().pluginId();
+    mActor->CleanupPluginHang(id, true);
+  }
   return NS_OK;
 }
 

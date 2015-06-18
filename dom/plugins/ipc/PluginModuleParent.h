@@ -387,7 +387,7 @@ class PluginModuleChromeParent
      *   generating a multi-process crash report. If not provided a browser
      *   dump will be taken at the time of this call.
      */
-    void TerminateChildProcess(MessageLoop* aMsgLoop, nsAString* aBrowserDumpId);
+    void TerminateChildProcess(MessageLoop* aMsgLoop, const nsAString& aBrowserDumpId);
 
 #ifdef XP_WIN
     /**
