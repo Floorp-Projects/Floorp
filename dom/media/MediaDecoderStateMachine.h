@@ -186,16 +186,6 @@ public:
 
   bool IsRealTime() const;
 
-  // Called from the main thread to get the duration. The decoder monitor
-  // must be obtained before calling this. It is in units of microseconds.
-  int64_t GetDuration();
-
-  // Time of the last frame in the media, in microseconds or INT64_MAX if
-  // media has an infinite duration.
-  // Accessed on state machine, decode, and main threads.
-  // Access controlled by decoder monitor.
-  int64_t GetEndTime();
-
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
   bool OnDecodeTaskQueue() const;
@@ -694,6 +684,7 @@ public:
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnAudioSinkComplete);
     TaskQueue()->Dispatch(runnable.forget());
   }
+private:
 
   // Called by the AudioSink to signal errors.
   void OnAudioSinkError();
@@ -947,19 +938,16 @@ public:
   // buffering.
   TimeStamp mBufferingStart;
 
-  // Time of the last frame in the media, in microseconds. This is the
-  // end time of the last frame in the media. Accessed on state
-  // machine, decode, and main threads. Access controlled by decoder monitor.
-  // It will be set to -1 if the duration is infinite
-  int64_t mEndTime;
+  // Duration of the media. This is guaranteed to be non-null after we finish
+  // decoding the first frame.
+  Canonical<media::NullableTimeUnit> mDuration;
+  media::TimeUnit Duration() const { MOZ_ASSERT(OnTaskQueue()); return mDuration.Ref().ref(); }
+public:
+  AbstractCanonical<media::NullableTimeUnit>* CanonicalDuration() { return &mDuration; }
+protected:
 
   // Recomputes the canonical duration from various sources.
   void RecomputeDuration();
-
-  // Will be set when SetDuration has been called with a value != -1
-  // mDurationSet false doesn't indicate that we do not have a valid duration
-  // as mStartTime and mEndTime could have been set separately.
-  bool mDurationSet;
 
   // The duration according to the demuxer's current estimate, mirrored from the main thread.
   Mirror<media::NullableTimeUnit> mEstimatedDuration;

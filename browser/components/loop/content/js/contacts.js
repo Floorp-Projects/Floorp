@@ -485,9 +485,9 @@ loop.contacts = (function(_, mozL10n) {
             message: mozL10n.get("confirm_delete_contact_alert"),
             okButton: mozL10n.get("confirm_delete_contact_remove_button"),
             cancelButton: mozL10n.get("confirm_delete_contact_cancel_button")
-          }, (err, result) => {
-            if (err) {
-              throw err;
+          }, (error, result) => {
+            if (error) {
+              throw error;
             }
 
             if (!result) {

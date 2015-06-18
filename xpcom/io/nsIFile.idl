@@ -42,7 +42,7 @@ interface nsISimpleEnumerator;
  * be safely passed to javascript via xpconnect.  Therefore, the "native
  * methods" are not scriptable.
  */
-[scriptable, main_process_scriptable_only, uuid(890b802d-3522-4887-a892-3dab31df30d9), builtinclass]
+[scriptable, main_process_scriptable_only, uuid(2fa6884a-ae65-412a-9d4c-ce6e34544ba1), builtinclass]
 interface nsIFile : nsISupports
 {
     /**
@@ -463,7 +463,7 @@ interface nsIFile : nsISupports
      *
      *   @param fromFile
      *       the file from which the descriptor is relative.
-     *       There is no defined result if this param is null.
+     *       Throws if fromFile is null.
      */
     ACString getRelativeDescriptor(in nsIFile fromFile);
 
@@ -479,6 +479,33 @@ interface nsIFile : nsISupports
      *       the relative descriptor obtained from getRelativeDescriptor
      */
     void setRelativeDescriptor(in nsIFile fromFile, in ACString relativeDesc);    
+
+    /**
+     *  getRelativePath
+     *
+     *  Returns a relative file from 'fromFile' to this file as a UTF-8 string.
+     *  Going up the directory tree is represented via "../".  '/' is used as
+     *  the path segment separator.  This is not a native path, since it's UTF-8
+     *  encoded.
+     *
+     *   @param fromFile
+     *       the file from which the path is relative.
+     *       Throws if fromFile is null.
+     */
+    AUTF8String getRelativePath(in nsIFile fromFile);
+
+    /**
+     *  setRelativePath
+     *
+     *  Initializes the file to the location relative to fromFile using
+     *  a string returned by getRelativePath.
+     *
+     *   @param fromFile
+     *       the file from which the path is relative
+     *   @param relative
+     *       the relative path obtained from getRelativePath
+     */
+    void setRelativePath(in nsIFile fromFile, in AUTF8String relativeDesc);
 };
 
 %{C++

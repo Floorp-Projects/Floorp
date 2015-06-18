@@ -144,10 +144,11 @@ MaybeCheckEvalFreeVariables(ExclusiveContext* cxArg, HandleScript evalCaller, Ha
 }
 
 static inline bool
-CanLazilyParse(ExclusiveContext* cx, const ReadOnlyCompileOptions& options)
+CanLazilyParse(ExclusiveContext* cx, HandleObject staticScope,
+               const ReadOnlyCompileOptions& options)
 {
     return options.canLazilyParse &&
-           !options.hasPollutedGlobalScope &&
+           !HasNonSyntacticStaticScopeChain(staticScope) &&
            !cx->compartment()->options().disableLazyParsing() &&
            !cx->compartment()->options().discardSource() &&
            !options.sourceIsLazy;
@@ -210,8 +211,8 @@ frontend::CreateScriptSourceObject(ExclusiveContext* cx, const ReadOnlyCompileOp
 
 JSScript*
 frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject scopeChain,
+                        Handle<ScopeObject*> enclosingStaticScope,
                         HandleScript evalCaller,
-                        Handle<StaticEvalObject*> evalStaticScope,
                         const ReadOnlyCompileOptions& options,
                         SourceBufferHolder& srcBuf,
                         JSString* source_ /* = nullptr */,
@@ -260,7 +261,7 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
             return nullptr;
     }
 
-    bool canLazilyParse = CanLazilyParse(cx, options);
+    bool canLazilyParse = CanLazilyParse(cx, enclosingStaticScope, options);
 
     Maybe<Parser<SyntaxParseHandler> > syntaxParser;
     if (canLazilyParse) {
@@ -284,22 +285,22 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
 
     bool savedCallerFun = evalCaller && evalCaller->functionOrCallerFunction();
     Directives directives(options.strictOption);
-    GlobalSharedContext globalsc(cx, directives, evalStaticScope, options.extraWarningsOption);
+    GlobalSharedContext globalsc(cx, directives, enclosingStaticScope, options.extraWarningsOption);
 
-    Rooted<JSScript*> script(cx, JSScript::Create(cx, evalStaticScope, savedCallerFun,
+    Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingStaticScope, savedCallerFun,
                                                   options, staticLevel, sourceObject, 0,
                                                   srcBuf.length()));
     if (!script)
         return nullptr;
 
     bool insideNonGlobalEval =
-        evalStaticScope && evalStaticScope->enclosingScopeForStaticScopeIter();
+        enclosingStaticScope && enclosingStaticScope->is<StaticEvalObject>() &&
+        enclosingStaticScope->as<StaticEvalObject>().enclosingScopeForStaticScopeIter();
     BytecodeEmitter::EmitterMode emitterMode =
         options.selfHostingMode ? BytecodeEmitter::SelfHosting : BytecodeEmitter::Normal;
     BytecodeEmitter bce(/* parent = */ nullptr, &parser, &globalsc, script,
                         /* lazyScript = */ nullptr, options.forEval,
-                        evalCaller, insideNonGlobalEval,
-                        options.lineno, emitterMode);
+                        evalCaller, insideNonGlobalEval, options.lineno, emitterMode);
     if (!bce.init())
         return nullptr;
 
@@ -561,7 +562,7 @@ CompileFunctionBody(JSContext* cx, MutableHandleFunction fun, const ReadOnlyComp
             return false;
     }
 
-    bool canLazilyParse = CanLazilyParse(cx, options);
+    bool canLazilyParse = CanLazilyParse(cx, enclosingStaticScope, options);
 
     Maybe<Parser<SyntaxParseHandler> > syntaxParser;
     if (canLazilyParse) {

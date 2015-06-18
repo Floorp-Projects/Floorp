@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests if the shared PerformanceActorsConnection is only opened once.
+ * Tests if the shared PerformanceFront is only opened once.
  */
 
 let gProfilerConnectionsOpened = 0;

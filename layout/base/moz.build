@@ -143,6 +143,7 @@ UNIFIED_SOURCES += [
     'StackArena.cpp',
     'TouchCaret.cpp',
     'TouchManager.cpp',
+    'ZoomConstraintsClient.cpp',
 ]
 
 # nsPresArena.cpp needs to be built separately because it uses plarena.h.

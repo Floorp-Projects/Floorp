@@ -108,6 +108,7 @@ namespace JS {
     _(CantInlineNoBaseline)                                             \
     _(CantInlineLazy)                                                   \
     _(CantInlineNotConstructor)                                         \
+    _(CantInlineClassConstructor)                                       \
     _(CantInlineDisabledIon)                                            \
     _(CantInlineTooManyArgs)                                            \
     _(CantInlineRecursive)                                              \

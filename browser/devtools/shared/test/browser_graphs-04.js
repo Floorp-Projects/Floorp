@@ -3,7 +3,7 @@
 
 // Tests that graph widgets can correctly compare selections and cursors.
 
-let {LineGraphWidget} = Cu.import("resource:///modules/devtools/Graphs.jsm", {});
+let {LineGraphWidget} = devtools.require("devtools/shared/widgets/Graphs");
 let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
 
 add_task(function*() {

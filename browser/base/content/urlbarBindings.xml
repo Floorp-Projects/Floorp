@@ -2303,8 +2303,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       </field>
       <property name="isTrackingContentBlocked" readonly="true">
         <getter><![CDATA[
-          return this.notification.options.state &
-            Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT;
+          return !!(this.notification.options.state &
+            Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT);
         ]]></getter>
       </property>
       <constructor><![CDATA[
