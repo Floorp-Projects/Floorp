@@ -1707,7 +1707,7 @@ nsTableFrame::RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
                  nsGkAtoms::tableFrame == frameType,
                  "unexpected frame type");
 
-    rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+    rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
     if (nsGkAtoms::tableFrame == frameType) {
       NS_ASSERTION(rs != &aReflowState,
                    "should not request special height reflow for table");
@@ -1834,7 +1834,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
     }
 
     bool needToInitiateSpecialReflow =
-      !!(GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+      !!(GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE);
     // see if an extra reflow will be necessary in pagination mode when there is a specified table height
     if (isPaginated && !GetPrevInFlow() && (NS_UNCONSTRAINEDSIZE != aReflowState.AvailableHeight())) {
       nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
@@ -1861,7 +1861,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
                 lastChildReflowed, aStatus);
 
     // reevaluate special height reflow conditions
-    if (GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT)
+    if (GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE)
       needToInitiateSpecialReflow = true;
 
     // XXXldb Are all these conditions correct?
@@ -2969,7 +2969,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
         NS_SUBTREE_DIRTY(kidFrame) ||
         (aReflowState.reflowState.mFlags.mSpecialHeightReflow &&
          (isPaginated || (kidFrame->GetStateBits() &
-                          NS_FRAME_CONTAINS_RELATIVE_HEIGHT)))) {
+                          NS_FRAME_CONTAINS_RELATIVE_BSIZE)))) {
       if (pageBreak) {
         if (allowRepeatedFooter) {
           PlaceRepeatedFooter(aReflowState, tfoot, footerHeight);

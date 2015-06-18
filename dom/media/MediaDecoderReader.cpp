@@ -15,6 +15,8 @@
 #include <stdint.h>
 #include <algorithm>
 
+using namespace mozilla::media;
+
 namespace mozilla {
 
 // Un-comment to enable logging of seek bisections.
@@ -67,6 +69,7 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder,
   , mTaskQueue(aBorrowedTaskQueue ? aBorrowedTaskQueue
                                   : new MediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
                                                        /* aSupportsTailDispatch = */ true))
+  , mDuration(mTaskQueue, NullableTimeUnit(), "MediaDecoderReader::mDuration (Mirror)")
   , mIgnoreAudioOutputFormat(false)
   , mStartTime(-1)
   , mHitAudioDecodeError(false)
@@ -76,6 +79,19 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder,
   , mVideoDiscontinuity(false)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Dispatch initialization that needs to happen on that task queue.
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(this, &MediaDecoderReader::InitializationTask);
+  mTaskQueue->Dispatch(r.forget());
+}
+
+void
+MediaDecoderReader::InitializationTask()
+{
+  if (mDecoder->CanonicalDurationOrNull()) {
+    mDuration.Connect(mDecoder->CanonicalDurationOrNull());
+  }
 }
 
 MediaDecoderReader::~MediaDecoderReader()
@@ -157,12 +173,12 @@ MediaDecoderReader::GetBuffered()
 {
   NS_ENSURE_TRUE(mStartTime >= 0, media::TimeIntervals());
   AutoPinned<MediaResource> stream(mDecoder->GetResource());
-  int64_t durationUs = 0;
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    durationUs = mDecoder->GetMediaDuration();
+
+  if (!mDuration.ReadOnWrongThread().isSome()) {
+    return TimeIntervals();
   }
-  return GetEstimatedBufferedTimeRanges(stream, durationUs);
+
+  return GetEstimatedBufferedTimeRanges(stream, mDuration.ReadOnWrongThread().ref().ToMicroseconds());
 }
 
 nsRefPtr<MediaDecoderReader::MetadataPromise>
@@ -341,6 +357,8 @@ MediaDecoderReader::Shutdown()
   mBaseVideoPromise.RejectIfExists(END_OF_STREAM, __func__);
 
   ReleaseMediaResources();
+  mDuration.DisconnectIfConnected();
+
   nsRefPtr<ShutdownPromise> p;
 
   // Spin down the task queue if necessary. We wait until BreakCycles to null

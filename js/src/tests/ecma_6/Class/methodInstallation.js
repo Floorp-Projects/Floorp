@@ -44,7 +44,7 @@ for (let a of [testClass,
     assertEq(aConstDesc.writable, true);
     assertEq(aConstDesc.configurable, true);
     assertEq(aConstDesc.enumerable, false);
-    aConstDesc.value();
+    new aConstDesc.value();
     assertEq(constructorCalled, true);
 
     // __proto__ is just an identifier for classes. No prototype changes are made.

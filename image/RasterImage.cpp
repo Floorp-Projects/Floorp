@@ -686,9 +686,11 @@ RasterImage::CopyFrame(uint32_t aWhichFrame, uint32_t aFlags)
   }
 
   DataSourceSurface::MappedSurface mapping;
-  DebugOnly<bool> success =
-    surf->Map(DataSourceSurface::MapType::WRITE, &mapping);
-  NS_ASSERTION(success, "Failed to map surface");
+  if (!surf->Map(DataSourceSurface::MapType::WRITE, &mapping)) {
+    gfxCriticalError() << "RasterImage::CopyFrame failed to map surface";
+    return nullptr;
+  }
+
   RefPtr<DrawTarget> target =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                      mapping.mData,

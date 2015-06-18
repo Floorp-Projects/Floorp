@@ -139,7 +139,7 @@ nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
       for (const nsHTMLReflowState *rs = aReflowState.parentReflowState;
            rs != cellRS;
            rs = rs->parentReflowState) {
-        rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+        rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
       }
 
       nsTableFrame::RequestSpecialHeightReflow(*cellRS);

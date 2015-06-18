@@ -272,9 +272,7 @@ class JS_PUBLIC_API(AutoGCRooter)
         IONMASM =     -19, /* js::jit::MacroAssembler */
         WRAPVECTOR =  -20, /* js::AutoWrapperVector */
         WRAPPER =     -21, /* js::AutoWrapperRooter */
-        OBJOBJHASHMAP=-22, /* js::AutoObjectObjectHashMap */
         OBJU32HASHMAP=-23, /* js::AutoObjectUnsigned32HashMap */
-        OBJHASHSET =  -24, /* js::AutoObjectHashSet */
         JSONPARSER =  -25, /* js::JSONParser */
         CUSTOM =      -26  /* js::CustomAutoRooter */
     };

@@ -409,15 +409,18 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
   return true;
 }
 
+// XXX Height/BSize mismatch needs to be addressed here; check the caller!
+// Currently this will only behave as expected for horizontal writing modes.
+// (See bug 1175509.)
 bool
 nsHTMLScrollFrame::ScrolledContentDependsOnHeight(ScrollReflowState* aState)
 {
   // Return true if ReflowScrolledFrame is going to do something different
   // based on the presence of a horizontal scrollbar.
-  return (mHelper.mScrolledFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT) ||
-    aState->mReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE ||
-    aState->mReflowState.ComputedMinHeight() > 0 ||
-    aState->mReflowState.ComputedMaxHeight() != NS_UNCONSTRAINEDSIZE;
+  return (mHelper.mScrolledFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE) ||
+    aState->mReflowState.ComputedBSize() != NS_UNCONSTRAINEDSIZE ||
+    aState->mReflowState.ComputedMinBSize() > 0 ||
+    aState->mReflowState.ComputedMaxBSize() != NS_UNCONSTRAINEDSIZE;
 }
 
 void

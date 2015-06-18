@@ -170,7 +170,7 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
           case JSOP_GETGNAME:
           case JSOP_SETGNAME:
           case JSOP_STRICTSETGNAME:
-            if (script_->hasPollutedGlobalScope())
+            if (script_->hasNonSyntacticScope())
                 usesScopeChain_ = true;
             break;
 
