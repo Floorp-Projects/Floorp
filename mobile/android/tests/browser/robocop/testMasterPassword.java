@@ -77,10 +77,10 @@ public class testMasterPassword extends PixelTest {
         if ("phone".equals(mDevice.type)) {
             // Phones don't have headers like tablets, so we need to pop up one more level.
             waitForText("Use master password");
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+            mSolo.goBack();
         }
         waitForText(mStringHelper.SETTINGS_LABEL);
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);// Close the Settings Menu
+        mSolo.goBack();// Close the Settings Menu
     }
 
     public void disableMasterPassword(String password, String badPassword) {
@@ -171,10 +171,10 @@ public class testMasterPassword extends PixelTest {
         if ("phone".equals(mDevice.type)) {
             // Phones don't have headers like tablets, so we need to pop up one more level.
             waitForText("Use master password");
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+            mSolo.goBack();
         }
         waitForText(mStringHelper.SETTINGS_LABEL);
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);// Close the Settings Menu
+        mSolo.goBack();// Close the Settings Menu
         // Make sure the settings menu has been closed.
         mAsserter.ok(mSolo.waitForText("Browser Blank Page 01"), "Waiting for blank browser page after exiting settings", "Blank browser page present");
     }

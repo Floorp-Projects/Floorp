@@ -43,7 +43,7 @@ public class testAddonManager extends PixelTest  {
         verifyUrlBarTitle(aboutAddonsURL);
 
         // Close the Add-on Manager
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        mSolo.goBack();
 
         // Load the about:addons page and verify it was loaded
         loadAndPaint(aboutAddonsURL);

@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.R;
 
 import com.jayway.android.robotium.solo.Condition;
@@ -90,10 +89,10 @@ public class testClearPrivateData extends PixelTest {
     public void checkDevice(final String title, final String url) {
         clearPrivateData();
         if (mDevice.type.equals("phone")) {
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+            mSolo.goBack();
             mAsserter.ok(waitForText(mStringHelper.PRIVACY_SECTION_LABEL), "waiting to perform one back", "one back");
         }
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        mSolo.goBack();
         verifyUrlBarTitle(url);
     }
 
