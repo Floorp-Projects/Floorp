@@ -3437,30 +3437,6 @@ static int CompareWeightData(const void* aArg1, const void* aArg2,
   return arg1->mWeight - arg2->mWeight; // put lower weight first
 }
 
-
-struct FillWeightArrayData {
-  explicit FillWeightArrayData(PerWeightData* aArrayData) :
-    mIndex(0),
-    mWeightArray(aArrayData)
-  {
-  }
-  int32_t mIndex;
-  PerWeightData* mWeightArray;
-};
-
-
-static PLDHashOperator
-FillWeightArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                uint32_t number, void *arg)
-{
-  FillWeightArrayData* data = static_cast<FillWeightArrayData*>(arg);
-  const RuleByWeightEntry *entry = (const RuleByWeightEntry *)hdr;
-
-  data->mWeightArray[data->mIndex++] = entry->data;
-
-  return PL_DHASH_NEXT;
-}
-
 RuleCascadeData*
 nsCSSRuleProcessor::GetRuleCascade(nsPresContext* aPresContext)
 {
@@ -3527,8 +3503,11 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
       // Sort the hash table of per-weight linked lists by weight.
       uint32_t weightCount = data.mRulesByWeight.EntryCount();
       nsAutoArrayPtr<PerWeightData> weightArray(new PerWeightData[weightCount]);
-      FillWeightArrayData fwData(weightArray);
-      PL_DHashTableEnumerate(&data.mRulesByWeight, FillWeightArray, &fwData);
+      int32_t j = 0;
+      for (auto iter = data.mRulesByWeight.Iter(); !iter.Done(); iter.Next()) {
+        auto entry = static_cast<const RuleByWeightEntry*>(iter.Get());
+        weightArray[j++] = entry->data;
+      }
       NS_QuickSort(weightArray, weightCount, sizeof(PerWeightData),
                    CompareWeightData, nullptr);
 

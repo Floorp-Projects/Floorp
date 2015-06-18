@@ -216,16 +216,35 @@ class JSObject : public js::gc::Cell
         return setFlags(cx, js::BaseShape::WATCHED, GENERATE_SHAPE);
     }
 
-    /* See InterpreterFrame::varObj. */
-    inline bool isQualifiedVarObj();
+    // A "qualified" varobj is the object on which "qualified" variable
+    // declarations (i.e., those defined with "var") are kept.
+    //
+    // Conceptually, when a var binding is defined, it is defined on the
+    // innermost qualified varobj on the scope chain.
+    //
+    // Function scopes (CallObjects) are qualified varobjs, and there can be
+    // no other qualified varobj that is more inner for var bindings in that
+    // function. As such, all references to local var bindings in a function
+    // may be statically bound to the function scope. This is subject to
+    // further optimization. Unaliased bindings inside functions reside
+    // entirely on the frame, not in CallObjects.
+    //
+    // Global scopes are also qualified varobjs. It is possible to statically
+    // know, for a given script, that are no more inner qualified varobjs, so
+    // free variable references can be statically bound to the global.
+    //
+    // Finally, there are non-syntactic qualified varobjs used by embedders
+    // (e.g., Gecko and XPConnect), as they often wish to run scripts under a
+    // scope that captures var bindings.
+    inline bool isQualifiedVarObj() const;
     bool setQualifiedVarObj(js::ExclusiveContext* cx) {
         return setFlags(cx, js::BaseShape::QUALIFIED_VAROBJ);
     }
 
-    inline bool isUnqualifiedVarObj();
-    bool setUnqualifiedVarObj(js::ExclusiveContext* cx) {
-        return setFlags(cx, js::BaseShape::UNQUALIFIED_VAROBJ);
-    }
+    // An "unqualified" varobj is the object on which "unqualified"
+    // assignments (i.e., bareword assignments for which the LHS does not
+    // exist on the scope chain) are kept.
+    inline bool isUnqualifiedVarObj() const;
 
     /*
      * Objects with an uncacheable proto can have their prototype mutated
@@ -422,10 +441,10 @@ class JSObject : public js::gc::Cell
      * slot of the object.  For other scope objects, the chain goes directly to
      * the global.
      *
-     * In code which is not marked hasPollutedGlobalScope, scope chains can
+     * In code which is not marked hasNonSyntacticScope, scope chains can
      * contain only syntactic scope objects (see IsSyntacticScope) with a global
      * object at the root as the scope of the outermost non-function script. In
-     * hasPollutedGlobalScope code, the scope of the outermost non-function
+     * hasNonSyntacticScope code, the scope of the outermost non-function
      * script might not be a global object, and can have a mix of other objects
      * above it before the global object is reached.
      */

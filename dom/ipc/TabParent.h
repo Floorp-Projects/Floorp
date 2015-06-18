@@ -222,8 +222,7 @@ public:
                                 const CSSRect& aRect) override;
     virtual bool RecvUpdateZoomConstraints(const uint32_t& aPresShellId,
                                            const ViewID& aViewId,
-                                           const bool& aIsRoot,
-                                           const ZoomConstraints& aConstraints) override;
+                                           const MaybeZoomConstraints& aConstraints) override;
     virtual bool RecvContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
                                                const uint64_t& aInputBlockId,
                                                const bool& aPreventDefault) override;

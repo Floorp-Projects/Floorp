@@ -86,8 +86,7 @@ public:
        pres shell resolution, to cancel out a compositor-side transform (added in
        bug 1076241) that APZ doesn't unapply. */
     static CSSPoint ApplyCallbackTransform(const CSSPoint& aInput,
-                                           const ScrollableLayerGuid& aGuid,
-                                           float aPresShellResolution);
+                                           const ScrollableLayerGuid& aGuid);
 
     /* Same as above, but operates on LayoutDeviceIntPoint.
        Requires an additonal |aScale| parameter to convert between CSS and
@@ -95,15 +94,13 @@ public:
     static mozilla::LayoutDeviceIntPoint
     ApplyCallbackTransform(const LayoutDeviceIntPoint& aPoint,
                            const ScrollableLayerGuid& aGuid,
-                           const CSSToLayoutDeviceScale& aScale,
-                           float aPresShellResolution);
+                           const CSSToLayoutDeviceScale& aScale);
 
     /* Convenience function for applying a callback transform to all touch
      * points of a touch event. */
     static void ApplyCallbackTransform(WidgetTouchEvent& aEvent,
                                        const ScrollableLayerGuid& aGuid,
-                                       const CSSToLayoutDeviceScale& aScale,
-                                       float aPresShellResolution);
+                                       const CSSToLayoutDeviceScale& aScale);
 
     /* Dispatch a widget event via the widget stored in the event, if any.
      * In a child process, allows the TabParent event-capture mechanism to
