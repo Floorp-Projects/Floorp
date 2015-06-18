@@ -8,6 +8,7 @@
 #include "mozilla/net/PNeckoParent.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/OfflineObserver.h"
+#include "nsINetworkPredictor.h"
 
 #ifndef mozilla_net_NeckoParent_h
 #define mozilla_net_NeckoParent_h
@@ -208,11 +209,29 @@ protected:
   virtual bool RecvOnAuthCancelled(const uint64_t& aCallbackId,
                                    const bool& aUserCancel) override;
 
+  /* Predictor Messages */
+  virtual bool RecvPredPredict(const ipc::OptionalURIParams& aTargetURI,
+                               const ipc::OptionalURIParams& aSourceURI,
+                               const PredictorPredictReason& aReason,
+                               const IPC::SerializedLoadContext& aLoadContext,
+                               const bool& hasVerifier) override;
+
+  virtual bool RecvPredLearn(const ipc::URIParams& aTargetURI,
+                             const ipc::OptionalURIParams& aSourceURI,
+                             const PredictorPredictReason& aReason,
+                             const IPC::SerializedLoadContext& aLoadContext) override;
+  virtual bool RecvPredReset() override;
+
 private:
   nsCString mCoreAppsBasePath;
   nsCString mWebAppsBasePath;
   nsRefPtr<OfflineObserver> mObserver;
 };
+
+/**
+ * Reference to the PNecko Parent protocol.
+ */
+extern PNeckoParent *gNeckoParent;
 
 } // namespace net
 } // namespace mozilla
