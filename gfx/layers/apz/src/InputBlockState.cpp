@@ -45,9 +45,7 @@ InputBlockState::SetConfirmedTargetApzc(const nsRefPtr<AsyncPanZoomController>& 
     return true;
   }
 
-  // Log enabled by default for now, we will put it in a TBS_LOG eventually
-  // once this code is more baked
-  printf_stderr("%p replacing unconfirmed target %p with real target %p\n",
+  TBS_LOG("%p replacing unconfirmed target %p with real target %p\n",
       this, mTargetApzc.get(), aTargetApzc.get());
 
   UpdateTargetApzc(aTargetApzc);
