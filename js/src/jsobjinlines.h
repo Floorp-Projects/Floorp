@@ -220,25 +220,24 @@ js::DeleteElement(JSContext* cx, HandleObject obj, uint32_t index, ObjectOpResul
 /* * */
 
 inline bool
-JSObject::isQualifiedVarObj() const
+JSObject::isQualifiedVarObj()
 {
     if (is<js::DebugScopeObject>())
         return as<js::DebugScopeObject>().scope().isQualifiedVarObj();
-    bool rv = hasAllFlags(js::BaseShape::QUALIFIED_VAROBJ);
-    MOZ_ASSERT_IF(rv,
-                  is<js::GlobalObject>() ||
-                  is<js::CallObject>() ||
-                  is<js::NonSyntacticVariablesObject>() ||
-                  (is<js::DynamicWithObject>() && !as<js::DynamicWithObject>().isSyntactic()));
-    return rv;
+    // TODO: We would like to assert that only GlobalObject or
+    // NonSyntacticVariables object is a qualified varobj, but users of
+    // js::Execute still need to be vetted. See bug 1171177.
+    return hasAllFlags(js::BaseShape::QUALIFIED_VAROBJ);
 }
 
 inline bool
-JSObject::isUnqualifiedVarObj() const
+JSObject::isUnqualifiedVarObj()
 {
     if (is<js::DebugScopeObject>())
         return as<js::DebugScopeObject>().scope().isUnqualifiedVarObj();
-    return is<js::GlobalObject>() || is<js::NonSyntacticVariablesObject>();
+    bool rv = hasAllFlags(js::BaseShape::UNQUALIFIED_VAROBJ);
+    MOZ_ASSERT_IF(rv, is<js::GlobalObject>() || is<js::NonSyntacticVariablesObject>());
+    return rv;
 }
 
 namespace js {

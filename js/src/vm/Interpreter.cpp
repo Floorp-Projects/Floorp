@@ -917,6 +917,12 @@ js::Execute(JSContext* cx, HandleScript script, JSObject& scopeChainArg, Value* 
     } while ((s = s->enclosingScope()));
 #endif
 
+    /* The VAROBJFIX option makes varObj == globalObj in global code. */
+    if (!cx->runtime()->options().varObjFix()) {
+        if (!scopeChain->setQualifiedVarObj(cx))
+            return false;
+    }
+
     /* Use the scope chain as 'this', modulo outerization. */
     JSObject* thisObj = GetThisObject(cx, scopeChain);
     if (!thisObj)
