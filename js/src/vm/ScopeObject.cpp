@@ -2521,7 +2521,7 @@ RemoveReferencedNames(JSContext* cx, HandleScript script, PropertyNameSet& remai
           case JSOP_GETGNAME:
           case JSOP_SETGNAME:
           case JSOP_STRICTSETGNAME:
-            if (script->hasPollutedGlobalScope())
+            if (script->hasNonSyntacticScope())
                 name = script->getName(pc);
             else
                 name = nullptr;
