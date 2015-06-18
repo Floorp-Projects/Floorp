@@ -181,6 +181,11 @@ loop.shared.views.TextChatView = (function(mozL10n) {
     handleFormSubmit: function(event) {
       event.preventDefault();
 
+      // Don't send empty messages.
+      if (!this.state.messageDetail) {
+        return;
+      }
+
       this.props.dispatcher.dispatch(new sharedActions.SendTextChatMessage({
         contentType: CHAT_CONTENT_TYPES.TEXT,
         message: this.state.messageDetail

@@ -69,10 +69,15 @@ loop.store.TextChatStore = (function() {
     /**
      * Handles information for when data channels are available - enables
      * text chat.
+     *
+     * @param {sharedActions.DataChannelsAvailable} actionData
      */
-    dataChannelsAvailable: function() {
-      this.setStoreState({ textChatEnabled: true });
-      window.dispatchEvent(new CustomEvent("LoopChatEnabled"));
+    dataChannelsAvailable: function(actionData) {
+      this.setStoreState({ textChatEnabled: actionData.available });
+
+      if (actionData.available) {
+        window.dispatchEvent(new CustomEvent("LoopChatEnabled"));
+      }
     },
 
     /**
@@ -145,7 +150,7 @@ loop.store.TextChatStore = (function() {
       }
 
       // Append the context if we have any.
-      if ("urls" in actionData && actionData.urls.length) {
+      if (("urls" in actionData) && actionData.urls && actionData.urls.length) {
         // We only support the first url at the moment.
         var urlData = actionData.urls[0];
 
