@@ -368,11 +368,12 @@ def main():
         try:
             for t in skip_list:
                 results.push(NullTestOutput(t))
-            ok = run_all_tests(test_list, prefix, results, options)
+            for out in run_all_tests(test_list, prefix, results, options):
+                results.push(out)
+            results.finish(True)
         except KeyboardInterrupt:
-            ok = False
+            results.finish(False)
 
-        results.finish(ok)
         return 0 if results.all_passed() else 1
 
     return 0

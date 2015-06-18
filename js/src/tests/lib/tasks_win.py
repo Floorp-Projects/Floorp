@@ -64,7 +64,7 @@ def _do_watch(qWatch, timeout):
             assert fin is TaskFinishedMarker, "invalid finish marker"
 
 
-def run_all_tests_gen(tests, prefix, results, options):
+def run_all_tests(tests, prefix, results, options):
     """
     Uses scatter-gather to a thread-pool to manage children.
     """
@@ -114,10 +114,3 @@ def run_all_tests_gen(tests, prefix, results, options):
         watcher.join()
     assert qTasks.empty(), "Send queue not drained"
     assert qResults.empty(), "Result queue not drained"
-
-
-def run_all_tests(tests, prefix, results, options):
-    for result in run_all_tests_gen(tests, prefix, results, options):
-        results.push(result)
-    return True
-
