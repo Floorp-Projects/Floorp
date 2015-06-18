@@ -39,7 +39,7 @@ function test()
 
         return deferred.promise;
       });
-    });
+    })
   });
 }
 
@@ -65,15 +65,7 @@ function onExecuteGetName(aResults)
   ok(clickable, "clickable object found");
 
   gJSTerm.once("variablesview-fetched", onGetNameFetch);
-  let contextMenu =
-      gWebConsole.iframeWindow.document.getElementById("output-contextmenu");
-  waitForContextMenu(contextMenu, clickable, () => {
-    let openInVarView = contextMenu.querySelector("#menu_openInVarView");
-    ok(openInVarView.disabled === false,
-       "the \"Open In Variables View\" context menu item should be clickable");
-    // EventUtils.synthesizeMouseAtCenter seems to fail here in Mac OSX
-    openInVarView.click();
-  });
+  EventUtils.synthesizeMouse(clickable, 2, 2, {}, gWebConsole.iframeWindow);
 }
 
 function onGetNameFetch(aEvent, aVar)
