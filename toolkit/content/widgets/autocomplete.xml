@@ -412,6 +412,13 @@
       <method name="onKeyPress">
         <parameter name="aEvent"/>
         <body><![CDATA[
+          return this.handleKeyPress(aEvent);
+        ]]></body>
+      </method>
+
+      <method name="handleKeyPress">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
           if (aEvent.target.localName != "textbox")
             return true; // Let child buttons of autocomplete take input
 
