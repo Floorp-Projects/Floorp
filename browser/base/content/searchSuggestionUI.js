@@ -145,9 +145,8 @@ SearchSuggestionUIController.prototype = {
     this["_on" + event.type[0].toUpperCase() + event.type.substr(1)](event);
   },
 
-  _onInput: function () {
+  _onInput: function (event) {
     if (this._ignoreInputEvent) {
-      this._ignoreInputEvent = false;
       return;
     }
     if (this.input.value) {
@@ -157,7 +156,7 @@ SearchSuggestionUIController.prototype = {
       this._stickyInputValue = "";
       this._hideSuggestions();
     }
-    this.selectAndUpdateInput(-1);
+    this.selectedIndex = -1;
   },
 
   _onKeypress: function (event) {
@@ -242,15 +241,12 @@ SearchSuggestionUIController.prototype = {
     let suggestion = this.suggestionAtIndex(idx);
     this._stickyInputValue = suggestion;
 
-    // Commit composition string forcibly, because setting input value does not
-    // work if input has composition string (see bug 1115616 and bug 632744).
-    // Ignore input event for composition end to avoid getting suggestion again.
+    // Setting value commits composition string forcibly.  While IME commits
+    // composition, this needs to ignore input event at committed composition
+    // string which will be overwritten by the suggestion.
     this._ignoreInputEvent = true;
-    this.input.blur();
-    this.input.focus();
-    this._ignoreInputEvent = false;
-
     this.input.value = suggestion;
+    this._ignoreInputEvent = false;
     this.input.setAttribute("selection-index", idx);
     this.input.setAttribute("selection-kind", "mouse");
     this._hideSuggestions();

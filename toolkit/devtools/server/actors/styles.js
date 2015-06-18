@@ -1,16 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* globals CssLogic, DOMUtils, CSS */
 
 "use strict";
 
 const {Cc, Ci, Cu} = require("chrome");
-const Services = require("Services");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const protocol = require("devtools/server/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 const events = require("sdk/event/core");
-const object = require("sdk/util/object");
 const {Class} = require("sdk/core/heritage");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {PSEUDO_ELEMENT_SET} = require("devtools/styleinspector/css-logic");
@@ -18,8 +17,12 @@ const {PSEUDO_ELEMENT_SET} = require("devtools/styleinspector/css-logic");
 // This will add the "stylesheet" actor type for protocol.js to recognize
 require("devtools/server/actors/stylesheets");
 
-loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-logic").CssLogic);
-loader.lazyGetter(this, "DOMUtils", () => Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils));
+loader.lazyGetter(this, "CssLogic", () => {
+  return require("devtools/styleinspector/css-logic").CssLogic;
+});
+loader.lazyGetter(this, "DOMUtils", () => {
+  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+});
 
 // The PageStyle actor flattens the DOM CSS objects a little bit, merging
 // Rules and their Styles into one actor.  For elements (which have a style
@@ -53,6 +56,8 @@ const FONT_PREVIEW_FONT_SIZE = 40;
 const FONT_PREVIEW_FILLSTYLE = "black";
 const NORMAL_FONT_WEIGHT = 400;
 const BOLD_FONT_WEIGHT = 700;
+// Offset (in px) to avoid cutting off text edges of italic fonts.
+const FONT_PREVIEW_OFFSET = 4;
 
 // Predeclare the domnode actor type for use in requests.
 types.addActorType("domnode");
@@ -120,7 +125,7 @@ types.addDictType("fontface", {
  * The PageStyle actor lets the client look at the styles on a page, as
  * they are applied to a given node.
  */
-var PageStyleActor = protocol.ActorClass({
+let PageStyleActor = protocol.ActorClass({
   typeName: "pagestyle",
 
   /**
@@ -139,10 +144,10 @@ var PageStyleActor = protocol.ActorClass({
                    "creating a PageStyleActor.");
     }
     this.walker = inspector.walker;
-    this.cssLogic = new CssLogic;
+    this.cssLogic = new CssLogic();
 
     // Stores the association of DOM objects -> actors
-    this.refMap = new Map;
+    this.refMap = new Map();
 
     this.onFrameUnload = this.onFrameUnload.bind(this);
     events.on(this.inspector.tabActor, "will-navigate", this.onFrameUnload);
@@ -229,7 +234,6 @@ var PageStyleActor = protocol.ActorClass({
     let computed = this.cssLogic.computedStyle || [];
 
     Array.prototype.forEach.call(computed, name => {
-      let matched = undefined;
       ret[name] = {
         value: computed.getPropertyValue(name),
         priority: computed.getPropertyPriority(name) || undefined
@@ -240,7 +244,7 @@ var PageStyleActor = protocol.ActorClass({
       let matched = this.cssLogic.hasMatchedSelectors(Object.keys(ret));
       for (let key in ret) {
         if (matched[key]) {
-          ret[key].matched = options.markMatched ? true : undefined
+          ret[key].matched = options.markMatched ? true : undefined;
         } else if (options.onlyMatched) {
           delete ret[key];
         }
@@ -274,13 +278,12 @@ var PageStyleActor = protocol.ActorClass({
   getAllUsedFontFaces: method(function(options) {
     let windows = this.inspector.tabActor.windows;
     let fontsList = [];
-    for(let win of windows){
+    for (let win of windows) {
       fontsList = [...fontsList,
                    ...this.getUsedFontFaces(win.document.body, options)];
     }
     return fontsList;
-  },
-  {
+  }, {
     request: {
       includePreviews: Option(0, "boolean"),
       previewText: Option(0, "string"),
@@ -325,7 +328,7 @@ var PageStyleActor = protocol.ActorClass({
         format: font.format,
         localName: font.localName,
         metadata: font.metadata
-      }
+      };
 
       // If this font comes from a @font-face rule
       if (font.rule) {
@@ -354,7 +357,7 @@ var PageStyleActor = protocol.ActorClass({
           previewFontSize: options.previewFontSize,
           fontStyle: weight + " " + style,
           fillStyle: options.previewFillStyle
-        }
+        };
         let { dataURL, size } = getFontPreviewData(font.CSSFamilyName,
                                                    contentDocument, opts);
         fontFace.preview = {
@@ -436,10 +439,8 @@ var PageStyleActor = protocol.ActorClass({
     this.cssLogic.sourceFilter = options.filter || CssLogic.FILTER.UA;
     this.cssLogic.highlight(node.rawNode);
 
-    let walker = node.parent();
-
-    let rules = new Set;
-    let sheets = new Set;
+    let rules = new Set();
+    let sheets = new Set();
 
     let matched = [];
     let propInfo = this.cssLogic.getPropertyInfo(property);
@@ -465,7 +466,7 @@ var PageStyleActor = protocol.ActorClass({
     return {
       matched: matched,
       rules: [...rules],
-      sheets: [...sheets],
+      sheets: [...sheets]
     };
   }, {
     request: {
@@ -491,7 +492,7 @@ var PageStyleActor = protocol.ActorClass({
       } else {
         result = CssLogic.getShortName(source);
       }
-      result += ".style"
+      result += ".style";
     }
     return result;
   },
@@ -557,7 +558,8 @@ var PageStyleActor = protocol.ActorClass({
 
     let elementStyle = this._styleRef(bindingElement);
     let showElementStyles = !inherited && !pseudo;
-    let showInheritedStyles = inherited && this._hasInheritedProps(bindingElement.style);
+    let showInheritedStyles = inherited &&
+                              this._hasInheritedProps(bindingElement.style);
 
     let rule = {
       rule: elementStyle,
@@ -580,7 +582,7 @@ var PageStyleActor = protocol.ActorClass({
     // Add normal rules.  Typically this is passing in the node passed into the
     // function, unless if that node was ::before/::after.  In which case,
     // it will pass in the parentNode along with "::before"/"::after".
-    this._getElementRules(bindingElement, pseudo, inherited, options).forEach((rule) => {
+    this._getElementRules(bindingElement, pseudo, inherited, options).forEach(rule => {
       // The only case when there would be a pseudo here is ::before/::after,
       // and in this case we want to tell the view that it belongs to the
       // element (which is a _moz_generated_content native anonymous element).
@@ -592,7 +594,7 @@ var PageStyleActor = protocol.ActorClass({
     // a 'normal rule' above.
     if (showElementStyles) {
       for (let pseudo of PSEUDO_ELEMENTS_TO_READ) {
-        this._getElementRules(bindingElement, pseudo, inherited, options).forEach((rule) => {
+        this._getElementRules(bindingElement, pseudo, inherited, options).forEach(rule => {
           rules.push(rule);
         });
       }
@@ -611,7 +613,7 @@ var PageStyleActor = protocol.ActorClass({
    *
    * @returns Array
    */
-  _getElementRules: function (node, pseudo, inherited, options) {
+  _getElementRules: function(node, pseudo, inherited, options) {
     let domRules = DOMUtils.getCSSStyleRules(node, pseudo);
     if (!domRules) {
       return [];
@@ -692,7 +694,7 @@ var PageStyleActor = protocol.ActorClass({
         let selectors = CssLogic.getSelectors(domRule);
         let element = entry.inherited ? entry.inherited.rawNode : node.rawNode;
 
-        let {bindingElement,pseudo} = CssLogic.getBindingElementAndPseudo(element);
+        let {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(element);
         entry.matchedSelectors = [];
         for (let i = 0; i < selectors.length; i++) {
           if (DOMUtils.selectorMatchesElement(bindingElement, domRule, i, pseudo)) {
@@ -724,8 +726,8 @@ var PageStyleActor = protocol.ActorClass({
       }
     }
 
-    let rules = new Set;
-    let sheets = new Set;
+    let rules = new Set();
+    let sheets = new Set();
     entries.forEach(entry => rules.add(entry.rule));
     this.expandSets(rules, sheets);
 
@@ -733,7 +735,7 @@ var PageStyleActor = protocol.ActorClass({
       entries: entries,
       rules: [...rules],
       sheets: [...sheets]
-    }
+    };
   },
 
   /**
@@ -807,9 +809,8 @@ var PageStyleActor = protocol.ActorClass({
       this.map[i].value = parseFloat(style.getPropertyValue(property));
     }
 
-
     if (options.margins) {
-      layout.margins = this.processMargins(cssLogic);
+      layout.margins = this.processMargins(this.cssLogic);
     }
 
     return layout;
@@ -852,7 +853,7 @@ var PageStyleActor = protocol.ActorClass({
   get styleElement() {
     if (!this._styleElement) {
       let document = this.inspector.window.document;
-      let style = document.createElementNS("http://www.w3.org/1999/xhtml", "style");
+      let style = document.createElementNS(XHTML_NS, "style");
       style.setAttribute("type", "text/css");
       document.documentElement.appendChild(style);
       this._styleElement = style;
@@ -891,8 +892,7 @@ var PageStyleActor = protocol.ActorClass({
     if (rawNode.id) {
       selector = "#" + CSS.escape(rawNode.id);
     } else if (rawNode.className) {
-      selector = "." +
-        rawNode.className.split(" ").map(c => CSS.escape(c)).join(".");
+      selector = "." + [...rawNode.classList].map(c => CSS.escape(c)).join(".");
     } else {
       selector = rawNode.tagName.toLowerCase();
     }
@@ -916,7 +916,7 @@ exports.PageStyleActor = PageStyleActor;
 /**
  * Front object for the PageStyleActor
  */
-var PageStyleFront = protocol.FrontClass(PageStyleActor, {
+let PageStyleFront = protocol.FrontClass(PageStyleActor, {
   initialize: function(conn, form, ctx, detail) {
     protocol.Front.prototype.initialize.call(this, conn, form, ctx, detail);
     this.inspector = this.parent();
@@ -977,7 +977,7 @@ var PageStyleFront = protocol.FrontClass(PageStyleActor, {
  * (which have a CSSStyle but no CSSRule) we create a StyleRuleActor
  * with a special rule type (100).
  */
-var StyleRuleActor = protocol.ActorClass({
+let StyleRuleActor = protocol.ActorClass({
   typeName: "domstylerule",
   initialize: function(pageStyle, item) {
     protocol.Actor.prototype.initialize.call(this, null);
@@ -999,8 +999,10 @@ var StyleRuleActor = protocol.ActorClass({
       this.rawNode = item;
       this.rawRule = {
         style: item.style,
-        toString: function() { return "[element rule " + this.style + "]"; }
-      }
+        toString: function() {
+          return "[element rule " + this.style + "]";
+        }
+      };
     }
   },
 
@@ -1026,7 +1028,9 @@ var StyleRuleActor = protocol.ActorClass({
     return document;
   },
 
-  toString: function() { return "[StyleRuleActor for " + this.rawRule + "]" },
+  toString: function() {
+    return "[StyleRuleActor for " + this.rawRule + "]"
+  },
 
   form: function(detail) {
     if (detail === "actorid") {
@@ -1112,10 +1116,9 @@ var StyleRuleActor = protocol.ActorClass({
    * @returns the rule with updated properties
    */
   modifyProperties: method(function(modifications) {
-    let validProps = new Map();
-
-    // Use a fresh element for each call to this function to prevent side effects
-    // that pop up based on property values that were already set on the element.
+    // Use a fresh element for each call to this function to prevent side
+    // effects that pop up based on property values that were already set on the
+    // element.
 
     let document;
     if (this.rawNode) {
@@ -1176,7 +1179,10 @@ var StyleRuleActor = protocol.ActorClass({
           parentStyleSheet.insertRule(value + " " + ruleText, i);
           parentStyleSheet.deleteRule(i + 1);
           return cssRules.item(i);
-        } catch(e) {}
+        } catch(e) {
+          // The selector could be invalid, or the rule could fail to insert.
+          // If that happens, the method returns null.
+        }
 
         break;
       }
@@ -1219,9 +1225,8 @@ var StyleRuleActor = protocol.ActorClass({
     if (selectorElement && this.rawRule.selectorText !== value) {
       this._addNewSelector(value);
       return true;
-    } else {
-      return false;
     }
+    return false;
   }, {
     request: { selector: Arg(0, "string") },
     response: { isModified: RetVal("boolean") },
@@ -1263,7 +1268,9 @@ var StyleRuleActor = protocol.ActorClass({
     // Determine if the new selector value matches the current selected element
     try {
       isMatching = node.rawNode.matches(value);
-    } catch(e) {}
+    } catch(e) {
+      // This fails when value is an invalid selector.
+    }
 
     return { ruleProps, isMatching };
   }, {
@@ -1278,7 +1285,7 @@ var StyleRuleActor = protocol.ActorClass({
 /**
  * Front for the StyleRule actor.
  */
-var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
+let StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
   initialize: function(client, form, ctx, detail) {
     protocol.Front.prototype.initialize.call(this, client, form, ctx, detail);
   },
@@ -1370,8 +1377,7 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
     return this._form.traits && this._form.traits.modifySelectorUnmatched;
   },
 
-  get location()
-  {
+  get location() {
     return {
       source: this.parentStyleSheet,
       href: this.href,
@@ -1380,8 +1386,7 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
     };
   },
 
-  getOriginalLocation: function()
-  {
+  getOriginalLocation: function() {
     if (this._originalLocation) {
       return promise.resolve(this._originalLocation);
     }
@@ -1432,7 +1437,7 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
  * Convenience API for building a list of attribute modifications
  * for the `modifyAttributes` request.
  */
-var RuleModificationList = Class({
+let RuleModificationList = Class({
   initialize: function(rule) {
     this.rule = rule;
     this.modifications = [];
@@ -1485,8 +1490,8 @@ function getFontPreviewData(font, doc, options) {
   ctx.font = fontValue;
   ctx.fillStyle = fillStyle;
   let textWidth = ctx.measureText(previewText).width;
-  let offset = 4; // offset to avoid cutting off text edge of italics
-  canvas.width = textWidth * 2 + offset * 2;
+
+  canvas.width = textWidth * 2 + FONT_PREVIEW_OFFSET * 2;
   canvas.height = previewFontSize * 3;
 
   // we have to reset these after changing the canvas size
@@ -1496,13 +1501,15 @@ function getFontPreviewData(font, doc, options) {
   // Oversample the canvas for better text quality
   ctx.textBaseline = "top";
   ctx.scale(2, 2);
-  ctx.fillText(previewText, offset, Math.round(previewFontSize / 3));
+  ctx.fillText(previewText,
+               FONT_PREVIEW_OFFSET,
+               Math.round(previewFontSize / 3));
 
   let dataURL = canvas.toDataURL("image/png");
 
   return {
     dataURL: dataURL,
-    size: textWidth + offset * 2
+    size: textWidth + FONT_PREVIEW_OFFSET * 2
   };
 }
 

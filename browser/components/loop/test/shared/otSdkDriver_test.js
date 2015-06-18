@@ -411,6 +411,16 @@ describe("loop.OTSdkDriver", function () {
       sinon.assert.calledOnce(session.disconnect);
     });
 
+    it("should dispatch a DataChannelsAvailable action with available = false", function() {
+      driver.disconnectSession();
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.DataChannelsAvailable({
+          available: false
+        }));
+    });
+
     it("should destroy the publisher", function() {
       driver.publisher = publisher;
 
@@ -1005,7 +1015,7 @@ describe("loop.OTSdkDriver", function () {
 
         publisher.trigger("streamDestroyed");
 
-        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledTwice(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.ConnectionStatus({
             event: "Publisher.streamDestroyed",
@@ -1013,6 +1023,16 @@ describe("loop.OTSdkDriver", function () {
             connections: 2,
             recvStreams: 1,
             sendStreams: 0
+          }));
+      });
+
+      it("should dispatch a DataChannelsAvailable action", function() {
+        publisher.trigger("streamDestroyed");
+
+        sinon.assert.calledTwice(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.DataChannelsAvailable({
+            available: false
           }));
       });
     });
@@ -1054,13 +1074,32 @@ describe("loop.OTSdkDriver", function () {
           }));
       });
 
-      it("should not dispatch an action if the videoType is camera", function() {
+      it("should not dispatch a ConnectionStatus action if the videoType is camera", function() {
         stream.videoType = "camera";
 
         session.trigger("streamDestroyed", { stream: stream });
 
         sinon.assert.neverCalledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "receivingScreenShare"));
+      });
+
+      it("should dispatch a DataChannelsAvailable action for videoType = camera", function() {
+        stream.videoType = "camera";
+
+        session.trigger("streamDestroyed", { stream: stream });
+
+        sinon.assert.calledTwice(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.DataChannelsAvailable({
+            available: false
+          }));
+      });
+
+      it("should not dispatch a DataChannelsAvailable action for videoType = screen", function() {
+        session.trigger("streamDestroyed", { stream: stream });
+
+        sinon.assert.neverCalledWithMatch(dispatcher.dispatch,
+          sinon.match.hasOwn("name", "dataChannelsAvailable"));
       });
     });
 
@@ -1297,7 +1336,9 @@ describe("loop.OTSdkDriver", function () {
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.DataChannelsAvailable());
+          new sharedActions.DataChannelsAvailable({
+            available: true
+          }));
       });
 
       it("should dispatch `ReceivedTextChatMessage` when a text message is received", function() {

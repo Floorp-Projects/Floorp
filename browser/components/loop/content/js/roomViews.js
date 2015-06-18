@@ -664,14 +664,21 @@ loop.roomViews = (function(mozL10n) {
 
           return true;
 
+        case ROOM_STATES.READY:
+        case ROOM_STATES.INIT:
+        case ROOM_STATES.JOINING:
         case ROOM_STATES.SESSION_CONNECTED:
         case ROOM_STATES.JOINED:
+        case ROOM_STATES.MEDIA_WAIT:
           // this case is so that we don't show an avatar while waiting for
           // the other party to connect
           return true;
 
+        case ROOM_STATES.CLOSING:
+          return true;
+
         default:
-          console.warn("StandaloneRoomView.shouldRenderRemoteVideo:" +
+          console.warn("DesktopRoomConversationView.shouldRenderRemoteVideo:" +
             " unexpected roomState: ", this.state.roomState);
           return true;
       }

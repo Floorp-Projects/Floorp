@@ -37,18 +37,30 @@ describe("loop.store.TextChatStore", function () {
   });
 
   describe("#dataChannelsAvailable", function() {
-    it("should set textChatEnabled to true", function() {
-      store.dataChannelsAvailable();
+    it("should set textChatEnabled to the supplied state", function() {
+      store.dataChannelsAvailable(new sharedActions.DataChannelsAvailable({
+        available: true
+      }));
 
       expect(store.getStoreState("textChatEnabled")).eql(true);
     });
 
     it("should dispatch a LoopChatEnabled event", function() {
-      store.dataChannelsAvailable();
+      store.dataChannelsAvailable(new sharedActions.DataChannelsAvailable({
+        available: true
+      }));
 
       sinon.assert.calledOnce(window.dispatchEvent);
       sinon.assert.calledWithExactly(window.dispatchEvent,
         new CustomEvent("LoopChatEnabled"));
+    });
+
+    it("should not dispatch a LoopChatEnabled event if available is false", function() {
+      store.dataChannelsAvailable(new sharedActions.DataChannelsAvailable({
+        available: false
+      }));
+
+      sinon.assert.notCalled(window.dispatchEvent);
     });
   });
 
@@ -133,8 +145,6 @@ describe("loop.store.TextChatStore", function () {
 
   describe("#updateRoomInfo", function() {
     it("should add the room name to the list", function() {
-      sandbox.stub(navigator.mozL10n, "get").returns("Let's really share!");
-
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomName: "Let's share!",
         roomOwner: "Mark",
@@ -144,14 +154,12 @@ describe("loop.store.TextChatStore", function () {
       expect(store.getStoreState("messageList")).eql([{
         type: CHAT_MESSAGE_TYPES.SPECIAL,
         contentType: CHAT_CONTENT_TYPES.ROOM_NAME,
-        message: "Let's really share!",
+        message: "Let's share!",
         extraData: undefined
       }]);
     });
 
     it("should add the context to the list", function() {
-      sandbox.stub(navigator.mozL10n, "get").returns("Let's really share!");
-
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomName: "Let's share!",
         roomOwner: "Mark",
@@ -167,7 +175,7 @@ describe("loop.store.TextChatStore", function () {
         {
           type: CHAT_MESSAGE_TYPES.SPECIAL,
           contentType: CHAT_CONTENT_TYPES.ROOM_NAME,
-          message: "Let's really share!",
+          message: "Let's share!",
           extraData: undefined
         }, {
           type: CHAT_MESSAGE_TYPES.SPECIAL,
@@ -182,8 +190,6 @@ describe("loop.store.TextChatStore", function () {
     });
 
     it("should not dispatch a LoopChatMessageAppended event", function() {
-      sandbox.stub(navigator.mozL10n, "get").returns("Let's really share!");
-
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomName: "Let's share!",
         roomOwner: "Mark",

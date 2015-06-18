@@ -285,8 +285,8 @@ class GarbageCollectionEvent
     // Represents a single slice of a possibly multi-slice incremental garbage
     // collection.
     struct Collection {
-        int64_t startTimestamp;
-        int64_t endTimestamp;
+        double startTimestamp;
+        double endTimestamp;
     };
 
     // The set of garbage collection slices that made up this GC cycle.

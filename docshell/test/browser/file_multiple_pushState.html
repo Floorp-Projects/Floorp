@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test multiple calls to history.pushState</title>
+  </head>
+  <body>
+    <h1>Ohai</h1>
+  </body>
+  <script type="text/javascript">
+    window.history.pushState({}, "", "/bar/ABC?key=baz");
+    window.history.pushState({}, "", "/bar/ABC/DEF?key=baz");
+  </script>
+</html>

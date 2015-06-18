@@ -141,6 +141,29 @@ PluginWidgetProxy::GetNativeData(uint32_t aDataType)
   return (void*)value;
 }
 
+#if defined(XP_WIN)
+void
+PluginWidgetProxy::SetNativeData(uint32_t aDataType, uintptr_t aVal)
+{
+  if (!mActor) {
+    return;
+  }
+
+  auto tab = static_cast<mozilla::dom::TabChild*>(mActor->Manager());
+  if (tab && tab->IsDestroyed()) {
+    return;
+  }
+
+  switch (aDataType) {
+    case NS_NATIVE_CHILD_WINDOW:
+      mActor->SendSetNativeChildWindow(aVal);
+      break;
+    default:
+      NS_ERROR("SetNativeData called with unsupported data type.");
+  }
+}
+#endif
+
 NS_IMETHODIMP
 PluginWidgetProxy::SetFocus(bool aRaise)
 {
