@@ -203,6 +203,8 @@ public:
                                            const uint8_t* aFontData,
                                            uint32_t aLength);
 
+    virtual bool CanUseHardwareVideoDecoding() override;
+
     /**
      * Check whether format is supported on a platform or not (if unclear, returns true)
      */
@@ -300,6 +302,7 @@ private:
     mozilla::RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
     bool mIsWARP;
     bool mHasDeviceReset;
+    bool mDoesD3D11TextureSharingWork;
     DeviceResetReason mDeviceResetReason;
 
     virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size);

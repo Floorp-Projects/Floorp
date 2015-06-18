@@ -47,8 +47,7 @@ WMFDecoderModule::Init()
   if (NS_FAILED(WMFDecoder::LoadDLLs())) {
     sIsWMFEnabled = false;
   }
-  sDXVAEnabled = !gfxWindowsPlatform::GetPlatform()->IsWARP() &&
-                 gfxPlatform::CanUseHardwareVideoDecoding();
+  sDXVAEnabled = gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
 }
 
 nsresult

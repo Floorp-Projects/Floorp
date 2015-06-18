@@ -383,7 +383,7 @@ AppleVTDecoder::CreateDecoderSpecification()
 
   const void* specKeys[] = { AppleVTLinker::skPropEnableHWAccel };
   const void* specValues[1];
-  if (gfxPlatform::CanUseHardwareVideoDecoding()) {
+  if (gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding()) {
     specValues[0] = kCFBooleanTrue;
   } else {
     // This GPU is blacklisted for hardware decoding.
