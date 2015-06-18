@@ -270,6 +270,7 @@
   }));
 
   loop.store.StoreMixin.register({
+    activeRoomStore: activeRoomStore,
     conversationStore: conversationStore,
     feedbackStore: feedbackStore,
     textChatStore: textChatStore
