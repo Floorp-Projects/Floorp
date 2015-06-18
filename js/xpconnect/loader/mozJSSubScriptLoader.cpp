@@ -146,10 +146,8 @@ PrepareScript(nsIURI* uri,
         }
 
         if (!reuseGlobal) {
-            if (JS_IsGlobalObject(targetObj))
-                JS::Compile(cx, options, srcBuf, script);
-            else
-                JS::CompileForNonSyntacticScope(cx, options, srcBuf, script);
+            options.setHasPollutedScope(!JS_IsGlobalObject(targetObj));
+            JS::Compile(cx, options, srcBuf, script);
         } else {
             AutoObjectVector scopeChain(cx);
             if (!JS_IsGlobalObject(targetObj) &&
@@ -164,11 +162,9 @@ PrepareScript(nsIURI* uri,
         // We only use lazy source when no special encoding is specified because
         // the lazy source loader doesn't know the encoding.
         if (!reuseGlobal) {
-            options.setSourceIsLazy(true);
-            if (JS_IsGlobalObject(targetObj))
-                JS::Compile(cx, options, buf, len, script);
-            else
-                JS::CompileForNonSyntacticScope(cx, options, buf, len, script);
+            options.setSourceIsLazy(true)
+                   .setHasPollutedScope(!JS_IsGlobalObject(targetObj));
+            JS::Compile(cx, options, buf, len, script);
         } else {
             AutoObjectVector scopeChain(cx);
             if (!JS_IsGlobalObject(targetObj) &&

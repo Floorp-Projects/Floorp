@@ -49,7 +49,7 @@ public:
     return NS_OK;
   }
 
-  nsresult GetPluginWidget(nsIWidget **aWidget) {
+  nsresult GetPluginWidget(nsIWidget **aWidget) const {
     NS_IF_ADDREF(*aWidget = mWidget);
     return NS_OK;
   }

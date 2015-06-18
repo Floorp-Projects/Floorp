@@ -22,28 +22,17 @@
    GLIBCXX_3.4.18 is from gcc 4.8.0 (190787)
    GLIBCXX_3.4.19 is from gcc 4.8.1 (199309)
    GLIBCXX_3.4.20 is from gcc 4.9.0 (199307)
-   GLIBCXX_3.4.21 is from gcc 5.0 (210290) */
+   GLIBCXX_3.4.21 is from gcc 5.0 (210290)
+
+This file adds the necessary compatibility tricks to avoid symbols with
+version GLIBCXX_3.4.11 and bigger, keeping binary compatibility with
+libstdc++ 4.3.
+
+*/
 
 #define GLIBCXX_VERSION(a, b, c) (((a) << 16) | ((b) << 8) | (c))
 
 namespace std {
-#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 9)
-    /* Instantiate these templates to avoid GLIBCXX_3.4.9 symbol versions */
-    template ostream& ostream::_M_insert(double);
-    template ostream& ostream::_M_insert(long);
-    template ostream& ostream::_M_insert(unsigned long);
-    template ostream& ostream::_M_insert(long long);
-    template ostream& ostream::_M_insert(unsigned long long);
-    template ostream& ostream::_M_insert(bool);
-    template ostream& ostream::_M_insert(const void*);
-    template ostream& __ostream_insert(ostream&, const char*, streamsize);
-    template istream& istream::_M_extract(double&);
-    template istream& istream::_M_extract(float&);
-    template istream& istream::_M_extract(unsigned int&);
-    template istream& istream::_M_extract(unsigned long&);
-    template istream& istream::_M_extract(unsigned short&);
-    template istream& istream::_M_extract(unsigned long long&);
-#endif
 #if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 14)
     /* Instantiate these templates to avoid GLIBCXX_3.4.14 symbol versions
      * depending on optimization level */

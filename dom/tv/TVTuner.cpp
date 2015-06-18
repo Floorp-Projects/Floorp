@@ -197,8 +197,10 @@ TVTuner::GetStream() const
 nsresult
 TVTuner::InitMediaStream()
 {
-  // TODO Instantiate |mStream| when bug 987498 is done.
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(GetOwner());
+  nsRefPtr<DOMHwMediaStream> stream = DOMHwMediaStream::CreateHwStream(window);
 
+  mStream = stream.forget();
   return NS_OK;
 }
 
@@ -216,6 +218,18 @@ TVTuner::DispatchCurrentSourceChangedEvent(TVSource* aSource)
                                                        &TVTuner::DispatchTVEvent,
                                                        event);
   return NS_DispatchToCurrentThread(runnable);
+}
+
+nsresult
+TVTuner::NotifyImageSizeChanged(uint32_t aWidth, uint32_t aHeight)
+{
+  DOMHwMediaStream* hwMediaStream = mStream->AsDOMHwMediaStream();
+
+  if (hwMediaStream) {
+    hwMediaStream->SetImageSize(aWidth, aHeight);
+  }
+
+  return NS_OK;
 }
 
 } // namespace dom
