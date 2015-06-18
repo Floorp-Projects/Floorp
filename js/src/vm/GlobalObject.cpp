@@ -247,6 +247,7 @@ GlobalObject::createInternal(JSContext* cx, const Class* clasp)
         return nullptr;
 
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+    MOZ_ASSERT(global->isUnqualifiedVarObj());
 
     // Initialize the private slot to null if present, as GC can call class
     // hooks before the caller gets to set this to a non-garbage value.
@@ -256,8 +257,6 @@ GlobalObject::createInternal(JSContext* cx, const Class* clasp)
     cx->compartment()->initGlobal(*global);
 
     if (!global->setQualifiedVarObj(cx))
-        return nullptr;
-    if (!global->setUnqualifiedVarObj(cx))
         return nullptr;
     if (!global->setDelegate(cx))
         return nullptr;
