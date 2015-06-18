@@ -27,6 +27,7 @@
 #include "nsUnicharUtils.h"
 #include "nsIWinTaskbar.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIURLFormatter.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/WindowsVersion.h"
@@ -688,6 +689,36 @@ nsWindowsShellService::LaunchModernSettingsDialogDefaultApps()
 }
 
 nsresult
+nsWindowsShellService::InvokeHTTPOpenAsVerb()
+{
+  nsCOMPtr<nsIURLFormatter> formatter(
+    do_GetService("@mozilla.org/toolkit/URLFormatterService;1"));
+  if (!formatter) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsString urlStr;
+  nsresult rv = formatter->FormatURLPref(
+    NS_LITERAL_STRING("app.support.baseURL"), urlStr);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!StringBeginsWith(urlStr, NS_LITERAL_STRING("https://"))) {
+    return NS_ERROR_FAILURE;
+  }
+  urlStr.AppendLiteral("win10-default-browser");
+
+  SHELLEXECUTEINFOW seinfo = { sizeof(SHELLEXECUTEINFOW) };
+  seinfo.lpVerb = L"openas";
+  seinfo.lpFile = urlStr.get();
+  seinfo.nShow = SW_SHOWNORMAL;
+  if (!ShellExecuteExW(&seinfo)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+nsresult
 nsWindowsShellService::LaunchHTTPHandlerPane()
 {
   OPENASINFO info;
@@ -715,18 +746,26 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
   nsresult rv = LaunchHelper(appHelperPath);
   if (NS_SUCCEEDED(rv) && IsWin8OrLater()) {
     if (aClaimAllTypes) {
-      rv = LaunchControlPanelDefaultPrograms();
+      if (IsWin10OrLater()) {
+        rv = LaunchModernSettingsDialogDefaultApps();
+      } else {
+        rv = LaunchControlPanelDefaultPrograms();
+      }
       // The above call should never really fail, but just in case
       // fall back to showing the HTTP association screen only.
       if (NS_FAILED(rv)) {
-        rv = LaunchHTTPHandlerPane();
+        if (IsWin10OrLater()) {
+          rv = InvokeHTTPOpenAsVerb();
+        } else {
+          rv = LaunchHTTPHandlerPane();
+        }
       }
     } else {
       // Windows 10 blocks attempts to load the HTTP Handler
       // association dialog, so the modern Settings dialog
       // is opened with the Default Apps view loaded.
       if (IsWin10OrLater()) {
-        rv = LaunchModernSettingsDialogDefaultApps();
+        rv = InvokeHTTPOpenAsVerb();
       } else {
         rv = LaunchHTTPHandlerPane();
       }
@@ -734,7 +773,11 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
       // The above call should never really fail, but just in case
       // fall back to showing control panel for all defaults
       if (NS_FAILED(rv)) {
-        rv = LaunchControlPanelDefaultPrograms();
+        if (IsWin10OrLater()) {
+          rv = LaunchModernSettingsDialogDefaultApps();
+        } else {
+          rv = LaunchControlPanelDefaultPrograms();
+        }
       }
     }
   }
