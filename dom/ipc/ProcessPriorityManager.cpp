@@ -101,7 +101,7 @@ public:
   /**
    * Creates a new process LRU pool for the specified priority.
    */
-  ProcessLRUPool(ProcessPriority aPriority);
+  explicit ProcessLRUPool(ProcessPriority aPriority);
 
   /**
    * Used to remove a particular process priority manager from the LRU pool
