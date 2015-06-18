@@ -9,6 +9,7 @@
 
 #include "jsbytecode.h"
 #include "jstypes.h"
+#include "js/TypeDecls.h"
 
 #include "js/Utility.h"
 
