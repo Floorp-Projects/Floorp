@@ -8,7 +8,6 @@
 
 #include "TabParent.h"
 
-#include "AudioChannelService.h"
 #include "AppProcessChecker.h"
 #include "mozIApplication.h"
 #ifdef ACCESSIBILITY
@@ -2604,29 +2603,6 @@ TabParent::RecvGetRenderFrameInfo(PRenderFrameParent* aRenderFrame,
   if (mNeedLayerTreeReadyNotification) {
     RequestNotifyLayerTreeReady();
     mNeedLayerTreeReadyNotification = false;
-  }
-
-  return true;
-}
-
-bool
-TabParent::RecvAudioChannelActivityNotification(const uint32_t& aAudioChannel,
-                                                const bool& aActive)
-{
-  if (aAudioChannel >= NUMBER_OF_AUDIO_CHANNELS) {
-    return false;
-  }
-
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (os) {
-    nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-    nsAutoCString topic;
-    topic.Assign("audiochannel-activity-");
-    topic.Append(AudioChannelService::GetAudioChannelTable()[aAudioChannel].tag);
-
-    os->NotifyObservers(NS_ISUPPORTS_CAST(nsITabParent*, this),
-                        topic.get(),
-                        aActive ? MOZ_UTF16("active") : MOZ_UTF16("inactive"));
   }
 
   return true;

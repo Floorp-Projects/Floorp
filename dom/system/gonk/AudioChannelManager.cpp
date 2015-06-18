@@ -131,7 +131,7 @@ AudioChannelManager::NotifyVolumeControlChannelChanged()
   bool isActive = false;
   docshell->GetIsActive(&isActive);
 
-  nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+  AudioChannelService* service = AudioChannelService::GetOrCreateAudioChannelService();
   if (isActive) {
     service->SetDefaultVolumeControlChannel(mVolumeChannel, isActive);
   } else {
