@@ -23,6 +23,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "GfxInfoCollector.h"
+#include "nsIXULRuntime.h"
 
 #include "mozilla/layers/CompositorTypes.h"
 
@@ -200,6 +201,7 @@ public:
     static void InitLayersIPC();
     static void ShutdownLayersIPC();
 
+    static bool InSafeMode();
     /**
      * Create an offscreen surface of the given dimensions
      * and image format.

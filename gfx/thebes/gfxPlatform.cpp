@@ -1830,6 +1830,22 @@ gfxPlatform::TransformPixel(const Color& in, Color& out, qcms_transform *transfo
         out = in;
 }
 
+bool
+gfxPlatform::InSafeMode()
+{
+  static bool sSafeModeInitialized = false;
+  static bool sInSafeMode = false;
+
+  if (!sSafeModeInitialized) {
+    sSafeModeInitialized = true;
+    nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
+    if (xr) {
+      xr->GetInSafeMode(&sInSafeMode);
+    }
+  }
+  return sInSafeMode;
+}
+
 void
 gfxPlatform::GetPlatformCMSOutputProfile(void *&mem, size_t &size)
 {
