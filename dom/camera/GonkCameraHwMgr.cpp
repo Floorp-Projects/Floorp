@@ -53,6 +53,7 @@ GonkCameraHardware::GonkCameraHardware(mozilla::nsGonkCameraControl* aTarget, ui
   , mTarget(aTarget)
   , mRawSensorOrientation(0)
   , mSensorOrientation(0)
+  , mEmulated(false)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p (aTarget=%p)\n", __func__, __LINE__, (void*)this, (void*)aTarget);
 }
@@ -194,6 +195,11 @@ GonkCameraHardware::Init()
   }
   DOM_CAMERA_LOGI("Sensor orientation: base=%d, offset=%d, final=%d\n", info.orientation, offset, mSensorOrientation);
 
+  if (__system_property_get("ro.kernel.qemu", prop) > 0 && atoi(prop)) {
+    DOM_CAMERA_LOGI("Using emulated camera\n");
+    mEmulated = true;
+  }
+
   // Disable shutter sound in android CameraService because gaia camera app will play it
   mCamera->sendCommand(CAMERA_CMD_ENABLE_SHUTTER_SOUND, 0, 0);
 
@@ -320,6 +326,12 @@ GonkCameraHardware::GetSensorOrientation(uint32_t aType)
       DOM_CAMERA_LOGE("%s:%d : unknown aType=%d\n", __func__, __LINE__, aType);
       return 0;
   }
+}
+
+bool
+GonkCameraHardware::IsEmulated()
+{
+  return mEmulated;
 }
 
 int
