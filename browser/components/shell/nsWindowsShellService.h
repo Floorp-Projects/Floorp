@@ -29,6 +29,7 @@ protected:
   bool IsDefaultBrowserVista(bool aCheckAllTypes, bool* aIsDefaultBrowser);
   nsresult LaunchControlPanelDefaultsSelectionUI();
   nsresult LaunchModernSettingsDialogDefaultApps();
+  nsresult InvokeHTTPOpenAsVerb();
   nsresult LaunchHTTPHandlerPane();
 
 private:
