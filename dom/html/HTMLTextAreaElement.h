@@ -322,8 +322,14 @@ protected:
    */
   void GetValueInternal(nsAString& aValue, bool aIgnoreWrap) const;
 
-  nsresult SetValueInternal(const nsAString& aValue,
-                            bool aUserInput);
+  /**
+   * Setting the value.
+   *
+   * @param aValue      String to set.
+   * @param aFlags      See nsTextEditorState::SetValueFlags.
+   */
+  nsresult SetValueInternal(const nsAString& aValue, uint32_t aFlags);
+
   nsresult GetSelectionRange(int32_t* aSelectionStart, int32_t* aSelectionEnd);
 
   /**

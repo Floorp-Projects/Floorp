@@ -211,10 +211,12 @@ struct Statistics
     static const size_t MAX_NESTING = 20;
 
     struct SliceData {
-        SliceData(SliceBudget budget, JS::gcreason::Reason reason, int64_t start, size_t startFaults)
+        SliceData(SliceBudget budget, JS::gcreason::Reason reason, int64_t start,
+                  double startTimestamp, size_t startFaults)
           : budget(budget), reason(reason),
             resetReason(nullptr),
-            start(start), startFaults(startFaults)
+            start(start), startTimestamp(startTimestamp),
+            startFaults(startFaults)
         {
             for (auto i : mozilla::MakeRange(NumTimingArrays))
                 mozilla::PodArrayZero(phaseTimes[i]);
@@ -224,6 +226,7 @@ struct Statistics
         JS::gcreason::Reason reason;
         const char* resetReason;
         int64_t start, end;
+        double startTimestamp, endTimestamp;
         size_t startFaults, endFaults;
         PhaseTimeTable phaseTimes;
 

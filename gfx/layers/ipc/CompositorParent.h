@@ -424,6 +424,8 @@ public:
    */
   static bool IsInCompositorThread();
 
+  nsIWidget* GetWidget() { return mWidget; }
+
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~CompositorParent();

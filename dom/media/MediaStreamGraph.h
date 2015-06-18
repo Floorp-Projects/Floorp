@@ -802,6 +802,11 @@ public:
   void FinishAddTracks();
 
   /**
+   * Find track by track id.
+   */
+  StreamBuffer::Track* FindTrack(TrackID aID);
+
+  /**
    * Append media data to a track. Ownership of aSegment remains with the caller,
    * but aSegment is emptied.
    * Returns false if the data was not appended because no such track exists

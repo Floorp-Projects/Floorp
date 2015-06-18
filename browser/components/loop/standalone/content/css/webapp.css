@@ -129,7 +129,7 @@ body,
 
 .rooms-footer {
   background: #000;
-  margin: 0 20px;
+  margin: 0 10px;
   text-align: left;
   height: 3em;
   position: relative;
@@ -354,32 +354,14 @@ p.standalone-btn-label {
   right: 35%;
 }
 
+html[dir="rtl"] .standalone .room-conversation-wrapper .ended-conversation .feedback {
+  right: auto;
+  left: 35%;
+}
+
 .standalone .ended-conversation .local-stream {
   /* Hide  local media stream when feedback form is shown. */
   display: none;
-}
-
-/**
- * The .text-chat-* styles are very temporarily whilst we work on text chat
- * (bug 1108892 and dependencies).
- */
-.text-chat-view {
-  height: 60px;
-  color: black;
-}
-
-.text-chat-entries {
-  /* XXX Should use flex, this is just for the initial implementation. */
-  height: calc(100% - 2em);
-}
-
-.text-chat-box {
-  width: 30%;
-  margin: auto;
-}
-
-.text-chat-box > form > input {
-  width: 100%;
 }
 
 @media screen and (max-width:640px) {

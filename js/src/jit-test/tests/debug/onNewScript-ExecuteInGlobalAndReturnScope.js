@@ -4,7 +4,6 @@ var g = newGlobal();
 var g2 = newGlobal();
 var dbg = new Debugger(g, g2);
 var log = '';
-var canary = 42;
 
 dbg.onNewScript = function (evalScript) {
   log += 'e';
@@ -25,8 +24,5 @@ dbg.onDebuggerStatement = function (frame) {
 };
 
 assertEq(log, '');
-var evalScope = g.evalReturningScope("canary = 'dead'; debugger; // nee", g2);
+var evalScope = g.evalReturningScope("debugger; // nee", g2);
 assertEq(log, 'ecbd');
-assertEq(canary, 42);
-assertEq(evalScope.canary, 'dead');
-

@@ -730,6 +730,7 @@ loop.panel = (function(_, mozL10n) {
         var description = metadata.title || metadata.description;
         var url = metadata.url;
         this.setState({
+          checked: false,
           previewImage: previewImage,
           description: description,
           url: url
@@ -775,7 +776,8 @@ loop.panel = (function(_, mozL10n) {
       return (
         React.createElement("div", {className: "new-room-view"}, 
           React.createElement("div", {className: contextClasses}, 
-            React.createElement(Checkbox, {label: mozL10n.get("context_inroom_label"), 
+            React.createElement(Checkbox, {checked: this.state.checked, 
+                      label: mozL10n.get("context_inroom_label"), 
                       onChange: this.onCheckboxChange}), 
             React.createElement(sharedViews.ContextUrlView, {
               allowClick: false, 

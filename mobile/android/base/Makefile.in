@@ -64,6 +64,8 @@ JAVA_BOOTCLASSPATH := \
 
 JAVA_BOOTCLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_BOOTCLASSPATH)))
 
+JAVA_CLASSPATH += $(ANDROID_RECYCLERVIEW_LIB)
+
 # If native devices are enabled, add Google Play Services and some of the v7
 # compat libraries.
 ifdef MOZ_NATIVE_DEVICES
@@ -80,6 +82,7 @@ JAVA_CLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_CLASSPATH)))
 # into classes.dex.
 java_bundled_libs := \
     $(ANDROID_COMPAT_LIB) \
+    $(ANDROID_RECYCLERVIEW_LIB) \
     $(NULL)
 
 ifdef MOZ_NATIVE_DEVICES
@@ -369,6 +372,7 @@ generated/org/mozilla/gecko/R.java: .aapt.deps ;
 # If native devices are enabled, add Google Play Services, build their resources
 generated/android/support/v7/appcompat/R.java: .aapt.deps ;
 generated/android/support/v7/mediarouter/R.java: .aapt.deps ;
+generated/android/support/v7/recyclerview/R.java: .aapt.deps ;
 generated/com/google/android/gms/R.java: .aapt.deps ;
 
 ifdef MOZ_NATIVE_DEVICES
@@ -381,6 +385,9 @@ ifdef MOZ_NATIVE_DEVICES
     extra_packages += com.google.android.gms
     extra_res_dirs += $(GOOGLE_PLAY_SERVICES_RES)
 endif
+
+extra_packages += android.support.v7.recyclerview
+extra_res_dirs += $(ANDROID_RECYCLERVIEW_RES)
 
 gecko.ap_: .aapt.deps ;
 R.txt: .aapt.deps ;
