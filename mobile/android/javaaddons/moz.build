@@ -4,11 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += [
-    'background',
-    'browser',
-    'javaaddons', # Must be built before browser/robocop/roboextender.
-                  # This is enforced in config/recurse.mk.
+jar = add_java_jar('javaaddons-1.0')
+jar.sources = [
+    'java/org/mozilla/javaaddons/JavaAddonInterfaceV1.java',
 ]
-
-ANDROID_INSTRUMENTATION_MANIFESTS += ['browser/robocop/robocop.ini']
+jar.javac_flags += ['-Xlint:all']
