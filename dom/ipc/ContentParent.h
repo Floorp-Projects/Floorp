@@ -751,6 +751,11 @@ private:
 
     virtual bool RecvAudioChannelChangeDefVolChannel(const int32_t& aChannel,
                                                      const bool& aHidden) override;
+
+    virtual bool RecvAudioChannelServiceStatus(const bool& aTelephonyChannel,
+                                               const bool& aContentOrNormalChannel,
+                                               const bool& aAnyChannel) override;
+
     virtual bool RecvGetSystemMemory(const uint64_t& getterId) override;
 
     virtual bool RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache) override;
