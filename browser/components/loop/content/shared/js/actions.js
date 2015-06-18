@@ -169,6 +169,7 @@ loop.shared.actions = (function() {
      * Used to notify that the session has a data channel available.
      */
     DataChannelsAvailable: Action.define("dataChannelsAvailable", {
+      available: Boolean
     }),
 
     /**

@@ -174,5 +174,18 @@ describe("loop.shared.views.TextChatView", function () {
           message: "Hello!"
         }));
     });
+
+    it("should not dispatch SendTextChatMessage when the message is empty", function() {
+      view = mountTestComponent();
+
+      var entryNode = view.getDOMNode().querySelector(".text-chat-box > form > input");
+
+      TestUtils.Simulate.keyDown(entryNode, {
+        key: "Enter",
+        which: 13
+      });
+
+      sinon.assert.notCalled(dispatcher.dispatch);
+    });
   });
 });
