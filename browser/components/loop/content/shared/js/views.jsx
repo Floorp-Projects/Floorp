@@ -633,6 +633,15 @@ loop.shared.views = (function(_, l10n) {
       };
     },
 
+    componentWillReceiveProps: function(nextProps) {
+      // Only change the state if the prop has changed, and if it is also
+      // different from the state.
+      if (this.props.checked !== nextProps.checked &&
+          this.state.checked !== nextProps.checked) {
+        this.setState({ checked: nextProps.checked });
+      }
+    },
+
     getInitialState: function() {
       return {
         checked: this.props.checked,

@@ -850,6 +850,25 @@ describe("loop.panel", function() {
       expect(contextContent).to.not.equal(null);
     });
 
+    it("should cancel the checkbox when a new URL is available", function() {
+      fakeMozLoop.getSelectedTabMetadata = function (callback) {
+        callback({
+          url: "https://www.example.com",
+          description: "fake description",
+          previews: [""]
+        });
+      };
+
+      var view = createTestComponent();
+
+      view.setState({ checked: true });
+
+      // Simulate being visible
+      view.onDocumentVisible();
+
+      expect(view.state.checked).eql(false);
+    });
+
     it("should show a default favicon when none is available", function() {
       fakeMozLoop.getSelectedTabMetadata = function (callback) {
         callback({

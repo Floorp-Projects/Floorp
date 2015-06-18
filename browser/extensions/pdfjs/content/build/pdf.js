@@ -22,8 +22,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.1.165';
-PDFJS.build = '39d2103';
+PDFJS.version = '1.1.215';
+PDFJS.build = 'c9a7498';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -4208,7 +4208,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       }
 
       var name = fontObj.loadedName || 'sans-serif';
-      var bold = fontObj.black ? (fontObj.bold ? 'bolder' : 'bold') :
+      var bold = fontObj.black ? (fontObj.bold ? '900' : 'bold') :
                                  (fontObj.bold ? 'bold' : 'normal');
 
       var italic = fontObj.italic ? 'italic' : 'normal';
@@ -4468,6 +4468,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (isTextInvisible || fontSize === 0) {
         return;
       }
+      this.cachedGetSinglePixelWidth = null;
 
       ctx.save();
       ctx.transform.apply(ctx, current.textMatrix);

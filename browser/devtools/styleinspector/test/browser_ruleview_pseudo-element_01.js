@@ -7,10 +7,13 @@
 // Test that pseudoelements are displayed correctly in the rule view
 
 const TEST_URI = TEST_URL_ROOT + "doc_pseudoelement.html";
+const PSEUDO_PREF = "devtools.inspector.show_pseudo_elements";
 
 add_task(function*() {
+  Services.prefs.setBoolPref(PSEUDO_PREF, true);
+
   yield addTab(TEST_URI);
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
 
   yield testTopLeft(inspector, view);
   yield testTopRight(inspector, view);
@@ -18,15 +21,13 @@ add_task(function*() {
   yield testBottomLeft(inspector, view);
   yield testParagraph(inspector, view);
   yield testBody(inspector, view);
+
+  Services.prefs.clearUserPref(PSEUDO_PREF);
 });
 
 function* testTopLeft(inspector, view) {
   let selector = "#topleft";
-  let {
-    rules,
-    element,
-    elementStyle
-  } = yield assertPseudoElementRulesNumbers(selector, inspector, view, {
+  let {rules} = yield assertPseudoElementRulesNumbers(selector, inspector, view, {
     elementRulesNb: 4,
     firstLineRulesNb: 2,
     firstLetterRulesNb: 1,
@@ -35,83 +36,84 @@ function* testTopLeft(inspector, view) {
 
   let gutters = assertGutters(view);
 
-  // Make sure that clicking on the twisty hides pseudo elements
+  info("Make sure that clicking on the twisty hides pseudo elements");
   let expander = gutters[0].querySelector(".ruleview-expander");
-  ok (view.element.firstChild.classList.contains("show-expandable-container"), "Pseudo Elements are expanded");
-  expander.click();
-  ok (!view.element.firstChild.classList.contains("show-expandable-container"), "Pseudo Elements are collapsed by twisty");
-  expander.click();
-  ok (view.element.firstChild.classList.contains("show-expandable-container"), "Pseudo Elements are expanded again");
+  ok(view.element.firstChild.classList.contains("show-expandable-container"),
+     "Pseudo Elements are expanded");
 
-  // Make sure that dblclicking on the header container also toggles the pseudo elements
-  EventUtils.synthesizeMouseAtCenter(gutters[0], {clickCount: 2}, inspector.sidebar.getWindowForTab("ruleview"));
-  ok (!view.element.firstChild.classList.contains("show-expandable-container"), "Pseudo Elements are collapsed by dblclicking");
+  expander.click();
+  ok(!view.element.firstChild.classList.contains("show-expandable-container"),
+     "Pseudo Elements are collapsed by twisty");
 
-  let defaultView = element.ownerDocument.defaultView;
+  expander.click();
+  ok(view.element.firstChild.classList.contains("show-expandable-container"),
+     "Pseudo Elements are expanded again");
+
+  info("Make sure that dblclicking on the header container also toggles " +
+       "the pseudo elements");
+  EventUtils.synthesizeMouseAtCenter(gutters[0], {clickCount: 2},
+                                     view.doc.defaultView);
+  ok(!view.element.firstChild.classList.contains("show-expandable-container"),
+     "Pseudo Elements are collapsed by dblclicking");
 
   let elementRule = rules.elementRules[0];
   let elementRuleView = getRuleViewRuleEditor(view, 3);
 
   let elementFirstLineRule = rules.firstLineRules[0];
-  let elementFirstLineRuleView = [].filter.call(view.element.children[1].children, (e) => {
+  let elementFirstLineRuleView = [...view.element.children[1].children].filter(e => {
     return e._ruleEditor && e._ruleEditor.rule === elementFirstLineRule;
   })[0]._ruleEditor;
 
-  is
-  (
-    convertTextPropsToString(elementFirstLineRule.textProps),
-    "color: orange",
-    "TopLeft firstLine properties are correct"
-  );
+  is(convertTextPropsToString(elementFirstLineRule.textProps),
+     "color: orange",
+     "TopLeft firstLine properties are correct");
 
   let firstProp = elementFirstLineRuleView.addProperty("background-color", "rgb(0, 255, 0)", "");
   let secondProp = elementFirstLineRuleView.addProperty("font-style", "italic", "");
 
-  is (firstProp, elementFirstLineRule.textProps[elementFirstLineRule.textProps.length - 2],
-      "First added property is on back of array");
-  is (secondProp, elementFirstLineRule.textProps[elementFirstLineRule.textProps.length - 1],
-      "Second added property is on back of array");
+  is(firstProp,
+     elementFirstLineRule.textProps[elementFirstLineRule.textProps.length - 2],
+     "First added property is on back of array");
+  is(secondProp,
+     elementFirstLineRule.textProps[elementFirstLineRule.textProps.length - 1],
+     "Second added property is on back of array");
 
   yield elementFirstLineRule._applyingModifications;
 
   is((yield getComputedStyleProperty(selector, ":first-line", "background-color")),
-    "rgb(0, 255, 0)", "Added property should have been used.");
+     "rgb(0, 255, 0)", "Added property should have been used.");
   is((yield getComputedStyleProperty(selector, ":first-line", "font-style")),
-    "italic", "Added property should have been used.");
+     "italic", "Added property should have been used.");
   is((yield getComputedStyleProperty(selector, null, "text-decoration")),
-    "none", "Added property should not apply to element");
+     "none", "Added property should not apply to element");
 
   firstProp.setEnabled(false);
   yield elementFirstLineRule._applyingModifications;
 
   is((yield getComputedStyleProperty(selector, ":first-line", "background-color")),
-    "rgb(255, 0, 0)", "Disabled property should now have been used.");
+     "rgb(255, 0, 0)", "Disabled property should now have been used.");
   is((yield getComputedStyleProperty(selector, null, "background-color")),
-    "rgb(221, 221, 221)", "Added property should not apply to element");
+     "rgb(221, 221, 221)", "Added property should not apply to element");
 
   firstProp.setEnabled(true);
   yield elementFirstLineRule._applyingModifications;
 
   is((yield getComputedStyleProperty(selector, ":first-line", "background-color")),
-    "rgb(0, 255, 0)", "Added property should have been used.");
+     "rgb(0, 255, 0)", "Added property should have been used.");
   is((yield getComputedStyleProperty(selector, null, "text-decoration")),
-    "none", "Added property should not apply to element");
+     "none", "Added property should not apply to element");
 
   firstProp = elementRuleView.addProperty("background-color", "rgb(0, 0, 255)", "");
   yield elementRule._applyingModifications;
 
   is((yield getComputedStyleProperty(selector, null, "background-color")),
-    "rgb(0, 0, 255)", "Added property should have been used.");
+     "rgb(0, 0, 255)", "Added property should have been used.");
   is((yield getComputedStyleProperty(selector, ":first-line", "background-color")),
-    "rgb(0, 255, 0)", "Added prop does not apply to pseudo");
+     "rgb(0, 255, 0)", "Added prop does not apply to pseudo");
 }
 
 function* testTopRight(inspector, view) {
-  let {
-    rules,
-    element,
-    elementStyle
-  } = yield assertPseudoElementRulesNumbers("#topright", inspector, view, {
+  yield assertPseudoElementRulesNumbers("#topright", inspector, view, {
     elementRulesNb: 4,
     firstLineRulesNb: 1,
     firstLetterRulesNb: 1,
@@ -121,10 +123,13 @@ function* testTopRight(inspector, view) {
   let gutters = assertGutters(view);
 
   let expander = gutters[0].querySelector(".ruleview-expander");
-  ok (!view.element.firstChild.classList.contains("show-expandable-container"), "Pseudo Elements remain collapsed after switching element");
+  ok(!view.element.firstChild.classList.contains("show-expandable-container"),
+     "Pseudo Elements remain collapsed after switching element");
+
   expander.scrollIntoView();
   expander.click();
-  ok (view.element.firstChild.classList.contains("show-expandable-container"), "Pseudo Elements are shown again after clicking twisty");
+  ok(view.element.firstChild.classList.contains("show-expandable-container"),
+     "Pseudo Elements are shown again after clicking twisty");
 }
 
 function* testBottomRight(inspector, view) {
@@ -146,61 +151,36 @@ function* testBottomLeft(inspector, view) {
 }
 
 function* testParagraph(inspector, view) {
-  let {
-    rules,
-    element,
-    elementStyle
-  } = yield assertPseudoElementRulesNumbers("#bottomleft p", inspector, view, {
+  let {rules} = yield assertPseudoElementRulesNumbers("#bottomleft p", inspector, view, {
     elementRulesNb: 3,
     firstLineRulesNb: 1,
     firstLetterRulesNb: 1,
     selectionRulesNb: 1
   });
 
-  let gutters = assertGutters(view);
+  assertGutters(view);
 
   let elementFirstLineRule = rules.firstLineRules[0];
-  let elementFirstLineRuleView = [].filter.call(view.element.children[1].children, (e) => {
-    return e._ruleEditor && e._ruleEditor.rule === elementFirstLineRule;
-  })[0]._ruleEditor;
-
-  is
-  (
-    convertTextPropsToString(elementFirstLineRule.textProps),
-    "background: blue none repeat scroll 0% 0%",
-    "Paragraph first-line properties are correct"
-  );
+  is(convertTextPropsToString(elementFirstLineRule.textProps),
+     "background: blue none repeat scroll 0% 0%",
+     "Paragraph first-line properties are correct");
 
   let elementFirstLetterRule = rules.firstLetterRules[0];
-  let elementFirstLetterRuleView = [].filter.call(view.element.children[1].children, (e) => {
-    return e._ruleEditor && e._ruleEditor.rule === elementFirstLetterRule;
-  })[0]._ruleEditor;
-
-  is
-  (
-    convertTextPropsToString(elementFirstLetterRule.textProps),
-    "color: red; font-size: 130%",
-    "Paragraph first-letter properties are correct"
-  );
+  is(convertTextPropsToString(elementFirstLetterRule.textProps),
+     "color: red; font-size: 130%",
+     "Paragraph first-letter properties are correct");
 
   let elementSelectionRule = rules.selectionRules[0];
-  let elementSelectionRuleView = [].filter.call(view.element.children[1].children, (e) => {
-    return e._ruleEditor && e._ruleEditor.rule === elementSelectionRule;
-  })[0]._ruleEditor;
-
-  is
-  (
-    convertTextPropsToString(elementSelectionRule.textProps),
-    "color: white; background: black none repeat scroll 0% 0%",
-    "Paragraph first-letter properties are correct"
-  );
+  is(convertTextPropsToString(elementSelectionRule.textProps),
+     "color: white; background: black none repeat scroll 0% 0%",
+     "Paragraph first-letter properties are correct");
 }
 
 function* testBody(inspector, view) {
-  let {element, elementStyle} = yield testNode("body", inspector, view);
+  yield testNode("body", inspector, view);
 
-  let gutters = view.element.querySelectorAll(".theme-gutter");
-  is (gutters.length, 0, "There are no gutter headings");
+  let gutters = getGutters(view);
+  is(gutters.length, 0, "There are no gutter headings");
 }
 
 function convertTextPropsToString(textProps) {
@@ -224,24 +204,33 @@ function* assertPseudoElementRulesNumbers(selector, inspector, view, ruleNbs) {
     selectionRules: elementStyle.rules.filter(rule => rule.pseudoElement === ":-moz-selection")
   };
 
-  is(rules.elementRules.length, ruleNbs.elementRulesNb, selector +
-    " has the correct number of non pseudo element rules");
-  is(rules.firstLineRules.length, ruleNbs.firstLineRulesNb, selector +
-    " has the correct number of :first-line rules");
-  is(rules.firstLetterRules.length, ruleNbs.firstLetterRulesNb, selector +
-    " has the correct number of :first-letter rules");
-  is(rules.selectionRules.length, ruleNbs.selectionRulesNb, selector +
-    " has the correct number of :selection rules");
+  is(rules.elementRules.length, ruleNbs.elementRulesNb,
+     selector + " has the correct number of non pseudo element rules");
+  is(rules.firstLineRules.length, ruleNbs.firstLineRulesNb,
+     selector + " has the correct number of :first-line rules");
+  is(rules.firstLetterRules.length, ruleNbs.firstLetterRulesNb,
+     selector + " has the correct number of :first-letter rules");
+  is(rules.selectionRules.length, ruleNbs.selectionRulesNb,
+     selector + " has the correct number of :selection rules");
 
-  return {rules: rules, element: element, elementStyle: elementStyle};
+  return {rules, element, elementStyle};
+}
+
+function getGutters(view) {
+  return view.element.querySelectorAll(".theme-gutter");
 }
 
 function assertGutters(view) {
-  let gutters = view.element.querySelectorAll(".theme-gutter");
-  is (gutters.length, 3, "There are 3 gutter headings");
-  is (gutters[0].textContent, "Pseudo-elements", "Gutter heading is correct");
-  is (gutters[1].textContent, "This Element", "Gutter heading is correct");
-  is (gutters[2].textContent, "Inherited from body", "Gutter heading is correct");
+  let gutters = getGutters(view);
+
+  is(gutters.length, 3,
+     "There are 3 gutter headings");
+  is(gutters[0].textContent, "Pseudo-elements",
+     "Gutter heading is correct");
+  is(gutters[1].textContent, "This Element",
+     "Gutter heading is correct");
+  is(gutters[2].textContent, "Inherited from body",
+     "Gutter heading is correct");
 
   return gutters;
 }

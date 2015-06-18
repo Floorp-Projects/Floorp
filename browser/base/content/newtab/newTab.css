@@ -501,6 +501,16 @@ input[type=button] {
   transform: translate(-30px, -20px) scale(0) translate(30px, 20px);
 }
 
+#newtab-customize-panel:-moz-locale-dir(rtl) {
+  transform-origin: 40px top 20px;
+}
+
+#newtab-customize-panel:-moz-locale-dir(rtl),
+#newtab-customize-panel-anchor:-moz-locale-dir(rtl) {
+  left: 15px;
+  right: auto;
+}
+
 #newtab-customize-panel[open="true"] {
   transform: translate(-30px, -20px) scale(1) translate(30px, 20px);
 }
