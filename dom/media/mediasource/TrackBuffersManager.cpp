@@ -459,7 +459,7 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
     TimeInterval removedInterval;
     Maybe<uint32_t> firstRemovedIndex;
     TrackBuffer& data = track->mBuffers.LastElement();
-    for (uint32_t i = 0; i < data.Length(); i++) {
+    for (uint32_t i = 0; i < data.Length();) {
       const auto& frame = data[i];
       if (frame->mTime >= start.ToMicroseconds() &&
           frame->mTime < removeEndTimestamp.ToMicroseconds()) {
@@ -475,25 +475,33 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
         }
         track->mSizeBuffer -= sizeof(*frame) + frame->mSize;
         data.RemoveElementAt(i);
+      } else {
+        i++;
       }
     }
     // 4. Remove decoding dependencies of the coded frames removed in the previous step:
     // Remove all coded frames between the coded frames removed in the previous step and the next random access point after those removed frames.
     if (firstRemovedIndex.isSome()) {
-      for (uint32_t i = firstRemovedIndex.ref(); i < data.Length(); i++) {
-        const auto& frame = data[i];
-        if (frame->mKeyframe) {
+      uint32_t start = firstRemovedIndex.ref();
+      uint32_t end = start;
+      for (;end < data.Length(); end++) {
+        MediaRawData* sample = data[end].get();
+        if (sample->mKeyframe) {
           break;
         }
         removedInterval = removedInterval.Span(
-          TimeInterval(TimeUnit::FromMicroseconds(frame->mTime),
-                       TimeUnit::FromMicroseconds(frame->mTime + frame->mDuration)));
-        track->mSizeBuffer -= sizeof(*frame) + frame->mSize;
-        data.RemoveElementAt(i);
+          TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
+                       TimeUnit::FromMicroseconds(sample->GetEndTime())));
+        track->mSizeBuffer -= sizeof(*sample) + sample->mSize;
       }
+      data.RemoveElementsAt(start, end - start);
+
+      MSE_DEBUG("Removing undecodable frames from:%u (frames:%d) ([%f, %f))",
+                start, end - start,
+                removedInterval.mStart.ToSeconds(), removedInterval.mEnd.ToSeconds());
+      track->mBufferedRanges -= removedInterval;
       dataRemoved = true;
     }
-    track->mBufferedRanges -= removedInterval;
 
     // 5. If this object is in activeSourceBuffers, the current playback position
     // is greater than or equal to start and less than the remove end timestamp,
