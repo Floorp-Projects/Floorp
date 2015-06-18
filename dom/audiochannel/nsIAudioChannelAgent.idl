@@ -29,7 +29,7 @@ interface nsIAudioChannelAgentCallback : nsISupports
  *   1. Changes to the playable status of this channel.
  */
 
-[uuid(363ff8d3-5bd2-485a-84ac-125062cbdc19)]
+[uuid(11138a74-ee64-4a91-9457-f60a5f4527c1)]
 interface nsIAudioChannelAgent : nsISupports
 {
   const long AUDIO_AGENT_CHANNEL_NORMAL             = 0;
@@ -50,6 +50,13 @@ interface nsIAudioChannelAgent : nsISupports
    * Before init() is called, this returns AUDIO_AGENT_CHANNEL_ERROR.
    */
   readonly attribute long audioChannelType;
+
+  %{C++
+  inline int32_t AudioChannelType() {
+    int32_t channel;
+    return NS_SUCCEEDED(GetAudioChannelType(&channel)) ? channel : AUDIO_AGENT_CHANNEL_ERROR;
+  }
+  %}
 
   /**
    * Initialize the agent with a channel type.
