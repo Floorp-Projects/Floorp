@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/RecursiveASTVisitor.h"
@@ -100,6 +101,11 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class NonMemMovableChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker stackClassChecker;
   ScopeChecker globalClassChecker;
   NonHeapClassChecker nonheapClassChecker;
@@ -110,6 +116,7 @@ private:
   RefCountedInsideLambdaChecker refCountedInsideLambdaChecker;
   ExplicitOperatorBoolChecker explicitOperatorBoolChecker;
   NeedsNoVTableTypeChecker needsNoVTableTypeChecker;
+  NonMemMovableChecker nonMemMovableChecker;
   MatchFinder astMatcher;
 };
 
@@ -483,6 +490,87 @@ bool isClassRefCounted(QualType T) {
   return clazz ? isClassRefCounted(clazz) : false;
 }
 
+/// A cached data of whether classes are memmovable, and if not, what declaration
+/// makes them non-movable
+typedef DenseMap<const CXXRecordDecl *, const CXXRecordDecl *> InferredMovability;
+InferredMovability inferredMovability;
+
+bool isClassNonMemMovable(QualType T);
+const CXXRecordDecl* isClassNonMemMovableWorker(QualType T);
+
+const CXXRecordDecl* isClassNonMemMovableWorker(const CXXRecordDecl *D) {
+  // If we have a definition, then we want to standardize our reference to point
+  // to the definition node. If we don't have a definition, that means that either
+  // we only have a forward declaration of the type in our file, or we are being
+  // passed a template argument which is not used, and thus never instantiated by
+  // clang.
+  // As the argument isn't used, we can't memmove it (as we don't know it's size),
+  // which means not reporting an error is OK.
+  if (!D->hasDefinition()) {
+    return 0;
+  }
+  D = D->getDefinition();
+
+  // Are we explicitly marked as non-memmovable class?
+  if (MozChecker::hasCustomAnnotation(D, "moz_non_memmovable")) {
+    return D;
+  }
+
+  // Look through all base cases to figure out if the parent is a non-memmovable class.
+  for (CXXRecordDecl::base_class_const_iterator base = D->bases_begin();
+       base != D->bases_end(); ++base) {
+    const CXXRecordDecl *result = isClassNonMemMovableWorker(base->getType());
+    if (result) {
+      return result;
+    }
+  }
+
+  // Look through all members to figure out if a member is a non-memmovable class.
+  for (RecordDecl::field_iterator field = D->field_begin(), e = D->field_end();
+       field != e; ++field) {
+    const CXXRecordDecl *result = isClassNonMemMovableWorker(field->getType());
+    if (result) {
+      return result;
+    }
+  }
+
+  return 0;
+}
+
+const CXXRecordDecl* isClassNonMemMovableWorker(QualType T) {
+  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
+    T = arrTy->getElementType();
+  const CXXRecordDecl *clazz = T->getAsCXXRecordDecl();
+  return clazz ? isClassNonMemMovableWorker(clazz) : 0;
+}
+
+bool isClassNonMemMovable(const CXXRecordDecl *D) {
+  InferredMovability::iterator it =
+    inferredMovability.find(D);
+  if (it != inferredMovability.end())
+    return !!it->second;
+  const CXXRecordDecl *result = isClassNonMemMovableWorker(D);
+  inferredMovability.insert(std::make_pair(D, result));
+  return !!result;
+}
+
+bool isClassNonMemMovable(QualType T) {
+  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
+    T = arrTy->getElementType();
+  const CXXRecordDecl *clazz = T->getAsCXXRecordDecl();
+  return clazz ? isClassNonMemMovable(clazz) : false;
+}
+
+const CXXRecordDecl* findWhyClassIsNonMemMovable(QualType T) {
+  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
+    T = arrTy->getElementType();
+  CXXRecordDecl *clazz = T->getAsCXXRecordDecl();
+  InferredMovability::iterator it =
+    inferredMovability.find(clazz);
+  assert(it != inferredMovability.end());
+  return it->second;
+}
+
 template<class T>
 bool IsInSystemHeader(const ASTContext &AC, const T &D) {
   auto &SourceManager = AC.getSourceManager();
@@ -660,6 +748,16 @@ AST_MATCHER(QualType, hasVTable) {
 
 AST_MATCHER(CXXRecordDecl, hasNeedsNoVTableTypeAttr) {
   return MozChecker::hasCustomAnnotation(&Node, "moz_needs_no_vtable_type");
+}
+
+/// This matcher will select classes which are non-memmovable
+AST_MATCHER(QualType, isNonMemMovable) {
+  return isClassNonMemMovable(Node);
+}
+
+/// This matcher will select classes which require a memmovable template arg
+AST_MATCHER(CXXRecordDecl, needsMemMovable) {
+  return MozChecker::hasCustomAnnotation(&Node, "moz_needs_memmovable_type");
 }
 
 }
@@ -886,6 +984,13 @@ DiagnosticsMatcher::DiagnosticsMatcher()
              allOf(hasAnyTemplateArgument(refersToType(hasVTable())),
                    hasNeedsNoVTableTypeAttr())).bind("node"),
      &needsNoVTableTypeChecker);
+
+  // Handle non-mem-movable template specializations
+  astMatcher.addMatcher(classTemplateSpecializationDecl(
+      allOf(needsMemMovable(),
+            hasAnyTemplateArgument(refersToType(isNonMemMovable())))
+      ).bind("specialization"),
+      &nonMemMovableChecker);
 }
 
 void DiagnosticsMatcher::ScopeChecker::run(
@@ -1092,6 +1197,46 @@ void DiagnosticsMatcher::NeedsNoVTableTypeChecker::run(
 
   Diag.Report(specialization->getLocStart(), errorID) << specialization << offender;
   Diag.Report(specialization->getPointOfInstantiation(), noteID) << specialization;
+}
+
+void DiagnosticsMatcher::NonMemMovableChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned errorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "Cannot instantiate %0 with non-memmovable template argument %1");
+  unsigned note1ID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "instantiation of %0 requested here");
+  unsigned note2ID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "%0 is non-memmovable because of the MOZ_NON_MEMMOVABLE annotation on %1");
+  unsigned note3ID = Diag.getDiagnosticIDs()->getCustomDiagID(DiagnosticIDs::Note, "%0");
+
+  // Get the specialization
+  const ClassTemplateSpecializationDecl *specialization =
+    Result.Nodes.getNodeAs<ClassTemplateSpecializationDecl>("specialization");
+  SourceLocation requestLoc = specialization->getPointOfInstantiation();
+  const CXXRecordDecl *templ =
+    specialization->getSpecializedTemplate()->getTemplatedDecl();
+
+  // Report an error for every template argument which is non-memmovable
+  const TemplateArgumentList &args =
+    specialization->getTemplateInstantiationArgs();
+  for (unsigned i = 0; i < args.size(); ++i) {
+    QualType argType = args[i].getAsType();
+    if (isClassNonMemMovable(args[i].getAsType())) {
+      const CXXRecordDecl *reason = findWhyClassIsNonMemMovable(argType);
+      Diag.Report(specialization->getLocation(), errorID)
+        << specialization << argType;
+      // XXX It would be really nice if we could get the instantiation stack information
+      // from Sema such that we could print a full template instantiation stack, however,
+      // it seems as though that information is thrown out by the time we get here so we
+      // can only report one level of template specialization (which in many cases won't
+      // be useful)
+      Diag.Report(requestLoc, note1ID)
+        << specialization;
+      Diag.Report(reason->getLocation(), note2ID)
+        << argType << reason;
+    }
+  }
 }
 
 class MozCheckAction : public PluginASTAction {
