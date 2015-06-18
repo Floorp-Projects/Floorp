@@ -6,6 +6,8 @@
 #ifndef NSDOMMEDIASTREAM_H_
 #define NSDOMMEDIASTREAM_H_
 
+#include "ImageContainer.h"
+
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "StreamBuffer.h"
@@ -29,6 +31,7 @@
 
 namespace mozilla {
 
+class DOMHwMediaStream;
 class DOMLocalMediaStream;
 class MediaStream;
 class MediaEngineSource;
@@ -45,6 +48,11 @@ class VideoTrack;
 class AudioTrackList;
 class VideoTrackList;
 class MediaTrackListListener;
+}
+
+namespace layers {
+class ImageContainer;
+class OverlayImage;
 }
 
 class MediaStreamDirectListener;
@@ -114,6 +122,7 @@ public:
   virtual void StopTrack(TrackID aTrackID);
 
   virtual DOMLocalMediaStream* AsDOMLocalMediaStream() { return nullptr; }
+  virtual DOMHwMediaStream* AsDOMHwMediaStream() { return nullptr; }
 
   bool IsFinished();
   /**
@@ -373,6 +382,40 @@ private:
   // If this object wraps a stream owned by an AudioNode, we need to ensure that
   // the node isn't cycle-collected too early.
   nsRefPtr<AudioNode> mStreamNode;
+};
+
+class DOMHwMediaStream : public DOMLocalMediaStream
+{
+  typedef mozilla::gfx::IntSize IntSize;
+  typedef layers::ImageContainer ImageContainer;
+#ifdef MOZ_WIDGET_GONK
+  typedef layers::OverlayImage OverlayImage;
+  typedef layers::OverlayImage::Data Data;
+#endif
+
+public:
+  DOMHwMediaStream();
+
+  static already_AddRefed<DOMHwMediaStream> CreateHwStream(nsIDOMWindow* aWindow);
+  virtual DOMHwMediaStream* AsDOMHwMediaStream() override { return this; }
+  int32_t RequestOverlayId();
+  void SetOverlayId(int32_t aOverlayId);
+  void SetImageSize(uint32_t width, uint32_t height);
+
+protected:
+  ~DOMHwMediaStream();
+
+private:
+  void Init(MediaStream* aStream);
+
+#ifdef MOZ_WIDGET_GONK
+  nsRefPtr<ImageContainer> mImageContainer;
+  const int DEFAULT_IMAGE_ID = 0x01;
+  const int DEFAULT_IMAGE_WIDTH = 400;
+  const int DEFAULT_IMAGE_HEIGHT = 300;
+  nsRefPtr<OverlayImage> mOverlayImage;
+  Data mImageData;
+#endif
 };
 
 }

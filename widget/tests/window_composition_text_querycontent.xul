@@ -2810,11 +2810,310 @@ function runForceCommitTest()
   is(iframe3.contentDocument.body.innerHTML, iframe3BodyInnerHTML,
      "runForceCommitTest: the other editable document has the committed text? #11");
 
+  input.focus();
+  input.value = "";
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  input.value = "set value";
+
+  is(events.length, 3,
+     "runForceCommitTest: wrong event count #12");
+  is(events[0].type, "text",
+     "runForceCommitTest: the 1st event must be text #12");
+  is(events[1].type, "compositionend",
+     "runForceCommitTest: the 2nd event must be compositionend #12");
+  is(events[2].type, "input",
+     "runForceCommitTest: the 3rd event must be input #12");
+  is(events[1].data, "\u306E",
+     "runForceCommitTest: compositionend has wrong data #12");
+  is(events[0].target, input,
+     "runForceCommitTest: The 1st event was fired on wrong event target #12");
+  is(events[1].target, input,
+     "runForceCommitTest: The 2nd event was fired on wrong event target #12");
+  is(events[2].target, input,
+     "runForceCommitTest: The 3rd event was fired on wrong event target #12");
+  ok(!getEditorIMESupport(input).isComposing,
+     "runForceCommitTest: the input still has composition #12");
+  is(input.value, "set value",
+     "runForceCommitTest: the input doesn't have the set text #12");
+
+  textarea.focus();
+  textarea.value = "";
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  textarea.value = "set value";
+
+  is(events.length, 3,
+     "runForceCommitTest: wrong event count #13");
+  is(events[0].type, "text",
+     "runForceCommitTest: the 1st event must be text #13");
+  is(events[1].type, "compositionend",
+     "runForceCommitTest: the 2nd event must be compositionend #13");
+  is(events[2].type, "input",
+     "runForceCommitTest: the 3rd event must be input #13");
+  is(events[1].data, "\u306E",
+     "runForceCommitTest: compositionend has wrong data #13");
+  is(events[0].target, textarea,
+     "runForceCommitTest: The 1st event was fired on wrong event target #13");
+  is(events[1].target, textarea,
+     "runForceCommitTest: The 2nd event was fired on wrong event target #13");
+  is(events[2].target, textarea,
+     "runForceCommitTest: The 3rd event was fired on wrong event target #13");
+  ok(!getEditorIMESupport(textarea).isComposing,
+     "runForceCommitTest: the textarea still has composition #13");
+  is(textarea.value, "set value",
+     "runForceCommitTest: the textarea doesn't have the set text #13");
+
+  input.focus();
+  input.value = "";
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  input.value += " appended value";
+
+  is(events.length, 3,
+     "runForceCommitTest: wrong event count #14");
+  is(events[0].type, "text",
+     "runForceCommitTest: the 1st event must be text #14");
+  is(events[1].type, "compositionend",
+     "runForceCommitTest: the 2nd event must be compositionend #14");
+  is(events[2].type, "input",
+     "runForceCommitTest: the 3rd event must be input #14");
+  is(events[1].data, "\u306E",
+     "runForceCommitTest: compositionend has wrong data #14");
+  is(events[0].target, input,
+     "runForceCommitTest: The 1st event was fired on wrong event target #14");
+  is(events[1].target, input,
+     "runForceCommitTest: The 2nd event was fired on wrong event target #14");
+  is(events[2].target, input,
+     "runForceCommitTest: The 3rd event was fired on wrong event target #14");
+  ok(!getEditorIMESupport(input).isComposing,
+     "runForceCommitTest: the input still has composition #14");
+  is(input.value, "\u306E appended value",
+     "runForceCommitTest: the input should have both composed text and appended text #14");
+
   window.removeEventListener("compositionstart", eventHandler, true);
   window.removeEventListener("compositionupdate", eventHandler, true);
   window.removeEventListener("compositionend", eventHandler, true);
   window.removeEventListener("input", eventHandler, true);
   window.removeEventListener("text", eventHandler, true);
+}
+
+function runNestedSettingValue()
+{
+  var isTesting = false;
+  var events = [];
+  function eventHandler(aEvent)
+  {
+    events.push(aEvent);
+    if (isTesting) {
+      aEvent.target.value += aEvent.type + ", ";
+    }
+  }
+  window.addEventListener("compositionstart", eventHandler, true);
+  window.addEventListener("compositionupdate", eventHandler, true);
+  window.addEventListener("compositionend", eventHandler, true);
+  window.addEventListener("input", eventHandler, true);
+  window.addEventListener("text", eventHandler, true);
+
+  textarea.focus();
+  textarea.value = "";
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  isTesting = true;
+  textarea.value = "first setting value, ";
+  isTesting = false;
+
+  is(events.length, 3,
+     "runNestedSettingValue: wrong event count #1");
+  is(events[0].type, "text",
+     "runNestedSettingValue: the 1st event must be text #1");
+  is(events[1].type, "compositionend",
+     "runNestedSettingValue: the 2nd event must be compositionend #1");
+  is(events[2].type, "input",
+     "runNestedSettingValue: the 3rd event must be input #1");
+  is(events[1].data, "\u306E",
+     "runNestedSettingValue: compositionend has wrong data #1");
+  is(events[0].target, textarea,
+     "runNestedSettingValue: The 1st event was fired on wrong event target #1");
+  is(events[1].target, textarea,
+     "runNestedSettingValue: The 2nd event was fired on wrong event target #1");
+  is(events[2].target, textarea,
+     "runNestedSettingValue: The 3rd event was fired on wrong event target #1");
+  ok(!getEditorIMESupport(textarea).isComposing,
+     "runNestedSettingValue: the textarea still has composition #1");
+  is(textarea.value, "first setting value, text, compositionend, input, ",
+     "runNestedSettingValue: the textarea should have all string set to value attribute");
+
+  input.focus();
+  input.value = "";
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  isTesting = true;
+  input.value = "first setting value, ";
+  isTesting = false;
+
+  is(events.length, 3,
+     "runNestedSettingValue: wrong event count #2");
+  is(events[0].type, "text",
+     "runNestedSettingValue: the 1st event must be text #2");
+  is(events[1].type, "compositionend",
+     "runNestedSettingValue: the 2nd event must be compositionend #2");
+  is(events[2].type, "input",
+     "runNestedSettingValue: the 3rd event must be input #2");
+  is(events[1].data, "\u306E",
+     "runNestedSettingValue: compositionend has wrong data #2");
+  is(events[0].target, input,
+     "runNestedSettingValue: The 1st event was fired on wrong event target #2");
+  is(events[1].target, input,
+     "runNestedSettingValue: The 2nd event was fired on wrong event target #2");
+  is(events[2].target, input,
+     "runNestedSettingValue: The 3rd event was fired on wrong event target #2");
+  ok(!getEditorIMESupport(input).isComposing,
+     "runNestedSettingValue: the input still has composition #2");
+  is(textarea.value, "first setting value, text, compositionend, input, ",
+     "runNestedSettingValue: the input should have all string set to value attribute #2");
+
+  textarea.focus();
+  textarea.value = "";
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  isTesting = true;
+  textarea.setRangeText("first setting value, ");
+  isTesting = false;
+
+  is(events.length, 3,
+     "runNestedSettingValue: wrong event count #3");
+  is(events[0].type, "text",
+     "runNestedSettingValue: the 1st event must be text #3");
+  is(events[1].type, "compositionend",
+     "runNestedSettingValue: the 2nd event must be compositionend #3");
+  is(events[2].type, "input",
+     "runNestedSettingValue: the 3rd event must be input #3");
+  is(events[1].data, "\u306E",
+     "runNestedSettingValue: compositionend has wrong data #3");
+  is(events[0].target, textarea,
+     "runNestedSettingValue: The 1st event was fired on wrong event target #3");
+  is(events[1].target, textarea,
+     "runNestedSettingValue: The 2nd event was fired on wrong event target #3");
+  is(events[2].target, textarea,
+     "runNestedSettingValue: The 3rd event was fired on wrong event target #3");
+  ok(!getEditorIMESupport(textarea).isComposing,
+     "runNestedSettingValue: the textarea still has composition #3");
+  is(textarea.value, "\u306Efirst setting value, text, compositionend, input, ",
+     "runNestedSettingValue: the textarea should have appended by setRangeText() and all string set to value attribute #3");
+
+  input.focus();
+  input.value = "";
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  isTesting = true;
+  input.setRangeText("first setting value, ");
+  isTesting = false;
+
+  is(events.length, 3,
+     "runNestedSettingValue: wrong event count #4");
+  is(events[0].type, "text",
+     "runNestedSettingValue: the 1st event must be text #4");
+  is(events[1].type, "compositionend",
+     "runNestedSettingValue: the 2nd event must be compositionend #4");
+  is(events[2].type, "input",
+     "runNestedSettingValue: the 3rd event must be input #4");
+  is(events[1].data, "\u306E",
+     "runNestedSettingValue: compositionend has wrong data #4");
+  is(events[0].target, input,
+     "runNestedSettingValue: The 1st event was fired on wrong event target #4");
+  is(events[1].target, input,
+     "runNestedSettingValue: The 2nd event was fired on wrong event target #4");
+  is(events[2].target, input,
+     "runNestedSettingValue: The 3rd event was fired on wrong event target #4");
+  ok(!getEditorIMESupport(input).isComposing,
+     "runNestedSettingValue: the input still has composition #4");
+  is(textarea.value, "\u306Efirst setting value, text, compositionend, input, ",
+     "runNestedSettingValue: the input should have all string appended by setRangeText() and set to value attribute #4");
+
+  window.removeEventListener("compositionstart", eventHandler, true);
+  window.removeEventListener("compositionupdate", eventHandler, true);
+  window.removeEventListener("compositionend", eventHandler, true);
+  window.removeEventListener("input", eventHandler, true);
+  window.removeEventListener("text", eventHandler, true);
+
 }
 
 function runAsyncForceCommitTest(aNextTest)
@@ -4165,6 +4464,7 @@ function runTest()
   runCharAtPointAtOutsideTest();
   runBug722639Test();
   runForceCommitTest();
+  runNestedSettingValue();
   runBug811755Test();
   runIsComposingTest();
   runRedundantChangeTest();

@@ -805,6 +805,9 @@ UploadLastDir::StoreLastUsedDirectory(nsIDocument* aDoc, nsIFile* aDir)
     return NS_ERROR_OUT_OF_MEMORY;
   prefValue->SetAsAString(unicodePath);
 
+  // Use the document's current load context to ensure that the content pref
+  // service doesn't persistently store this directory for this domain if the
+  // user is using private browsing:
   nsCOMPtr<nsILoadContext> loadContext = aDoc->GetLoadContext();
   return contentPrefService->Set(spec, CPS_PREF_NAME, prefValue, loadContext, nullptr);
 }
@@ -982,7 +985,7 @@ HTMLInputElement::Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) co
         nsAutoString value;
         GetValueInternal(value);
         // SetValueInternal handles setting the VALUE_CHANGED bit for us
-        rv = it->SetValueInternal(value, false, true);
+        rv = it->SetValueInternal(value, nsTextEditorState::eSetValue_Notify);
         NS_ENSURE_SUCCESS(rv, rv);
       }
       break;
@@ -1167,7 +1170,8 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         // if @max in the example above were to change from 1 to -1.
         nsAutoString value;
         GetValue(value);
-        nsresult rv = SetValueInternal(value, false, false);
+        nsresult rv =
+          SetValueInternal(value, nsTextEditorState::eSetValue_Internal);
         NS_ENSURE_SUCCESS(rv, rv);
         MOZ_ASSERT(!GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
                    "HTML5 spec does not allow this");
@@ -1180,7 +1184,8 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         // See @max comment
         nsAutoString value;
         GetValue(value);
-        nsresult rv = SetValueInternal(value, false, false);
+        nsresult rv =
+          SetValueInternal(value, nsTextEditorState::eSetValue_Internal);
         NS_ENSURE_SUCCESS(rv, rv);
         MOZ_ASSERT(!GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
                    "HTML5 spec does not allow this");
@@ -1191,7 +1196,8 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         // See @max comment
         nsAutoString value;
         GetValue(value);
-        nsresult rv = SetValueInternal(value, false, false);
+        nsresult rv =
+          SetValueInternal(value, nsTextEditorState::eSetValue_Internal);
         NS_ENSURE_SUCCESS(rv, rv);
         MOZ_ASSERT(!GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
                    "HTML5 spec does not allow this");
@@ -1579,7 +1585,9 @@ HTMLInputElement::SetValue(const nsAString& aValue, ErrorResult& aRv)
       nsAutoString currentValue;
       GetValue(currentValue);
 
-      nsresult rv = SetValueInternal(aValue, false, true);
+      nsresult rv =
+        SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent |
+                                 nsTextEditorState::eSetValue_Notify);
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);
         return;
@@ -1589,7 +1597,9 @@ HTMLInputElement::SetValue(const nsAString& aValue, ErrorResult& aRv)
         GetValue(mFocusedValue);
       }
     } else {
-      nsresult rv = SetValueInternal(aValue, false, true);
+      nsresult rv =
+        SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent |
+                                 nsTextEditorState::eSetValue_Notify);
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);
         return;
@@ -2201,7 +2211,9 @@ HTMLInputElement::SetUserInput(const nsAString& aValue)
     MozSetFileNameArray(list, rv);
     return rv.StealNSResult();
   } else {
-    nsresult rv = SetValueInternal(aValue, true, true);
+    nsresult rv =
+      SetValueInternal(aValue, nsTextEditorState::eSetValue_BySetUserInput |
+                               nsTextEditorState::eSetValue_Notify);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2509,9 +2521,7 @@ HTMLInputElement::UpdateFileList()
 }
 
 nsresult
-HTMLInputElement::SetValueInternal(const nsAString& aValue,
-                                   bool aUserInput,
-                                   bool aSetValueChanged)
+HTMLInputElement::SetValueInternal(const nsAString& aValue, uint32_t aFlags)
 {
   NS_PRECONDITION(GetValueMode() != VALUE_MODE_FILENAME,
                   "Don't call SetValueInternal for file inputs");
@@ -2529,12 +2539,13 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
       }
       // else DoneCreatingElement calls us again once mParserCreating is false
 
-      if (aSetValueChanged) {
+      bool setValueChanged = !!(aFlags & nsTextEditorState::eSetValue_Notify);
+      if (setValueChanged) {
         SetValueChanged(true);
       }
 
       if (IsSingleLineTextControl(false)) {
-        if (!mInputData.mState->SetValue(value, aUserInput, aSetValueChanged)) {
+        if (!mInputData.mState->SetValue(value, aFlags)) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
         if (mType == NS_FORM_INPUT_EMAIL) {
@@ -2543,7 +2554,7 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
       } else {
         free(mInputData.mValue);
         mInputData.mValue = ToNewUnicode(value);
-        if (aSetValueChanged) {
+        if (setValueChanged) {
           SetValueChanged(true);
         }
         if (mType == NS_FORM_INPUT_NUMBER) {
@@ -3151,7 +3162,8 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     if (IsExperimentalMobileType(mType)) {
       nsAutoString aValue;
       GetValueInternal(aValue);
-      nsresult rv = SetValueInternal(aValue, false, false);
+      nsresult rv =
+        SetValueInternal(aValue, nsTextEditorState::eSetValue_Internal);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     FireChangeEventIfNeeded();
@@ -3272,7 +3284,9 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
         numberControlFrame->GetValueOfAnonTextControl(value);
         numberControlFrame->HandlingInputEvent(true);
         nsWeakFrame weakNumberControlFrame(numberControlFrame);
-        rv = SetValueInternal(value, true, true);
+        rv = SetValueInternal(value,
+                              nsTextEditorState::eSetValue_BySetUserInput |
+                              nsTextEditorState::eSetValue_Notify);
         NS_ENSURE_SUCCESS(rv, rv);
         if (weakNumberControlFrame.IsAlive()) {
           numberControlFrame->HandlingInputEvent(false);
@@ -3349,7 +3363,8 @@ HTMLInputElement::CancelRangeThumbDrag(bool aIsForUserEvent)
     ConvertNumberToString(mRangeThumbDragStartValue, val);
     // TODO: What should we do if SetValueInternal fails?  (The allocation
     // is small, so we should be fine here.)
-    SetValueInternal(val, true, true);
+    SetValueInternal(val, nsTextEditorState::eSetValue_BySetUserInput |
+                          nsTextEditorState::eSetValue_Notify);
     nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
     if (frame) {
       frame->UpdateForValueChange();
@@ -3369,7 +3384,8 @@ HTMLInputElement::SetValueOfRangeForUserEvent(Decimal aValue)
   ConvertNumberToString(aValue, val);
   // TODO: What should we do if SetValueInternal fails?  (The allocation
   // is small, so we should be fine here.)
-  SetValueInternal(val, true, true);
+  SetValueInternal(val, nsTextEditorState::eSetValue_BySetUserInput |
+                        nsTextEditorState::eSetValue_Notify);
   nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
   if (frame) {
     frame->UpdateForValueChange();
@@ -3462,7 +3478,8 @@ HTMLInputElement::StepNumberControlForUserEvent(int32_t aDirection)
   ConvertNumberToString(newValue, newVal);
   // TODO: What should we do if SetValueInternal fails?  (The allocation
   // is small, so we should be fine here.)
-  SetValueInternal(newVal, true, true);
+  SetValueInternal(newVal, nsTextEditorState::eSetValue_BySetUserInput |
+                           nsTextEditorState::eSetValue_Notify);
 
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                        static_cast<nsIDOMHTMLInputElement*>(this),
@@ -4276,7 +4293,7 @@ HTMLInputElement::HandleTypeChange(uint8_t aNewType)
         // TODO: What should we do if SetValueInternal fails?  (The allocation
         // may potentially be big, but most likely we've failed to allocate
         // before the type change.)
-        SetValueInternal(value, false, false);
+        SetValueInternal(value, nsTextEditorState::eSetValue_Internal);
       }
       break;
     case VALUE_MODE_FILENAME:
@@ -4959,7 +4976,8 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
 
   if (aStart <= aEnd) {
     value.Replace(aStart, aEnd - aStart, aReplacement);
-    nsresult rv = SetValueInternal(value, false, false);
+    nsresult rv =
+      SetValueInternal(value, nsTextEditorState::eSetValue_ByContent);
     if (NS_FAILED(rv)) {
       aRv.Throw(rv);
       return;
@@ -5284,7 +5302,7 @@ HTMLInputElement::SetDefaultValueAsValue()
   GetDefaultValue(resetVal);
 
   // SetValueInternal is going to sanitize the value.
-  return SetValueInternal(resetVal, false, false);
+  return SetValueInternal(resetVal, nsTextEditorState::eSetValue_Internal);
 }
 
 void
@@ -5525,7 +5543,7 @@ HTMLInputElement::DoneCreatingElement()
     // TODO: What should we do if SetValueInternal fails?  (The allocation
     // may potentially be big, but most likely we've failed to allocate
     // before the type change.)
-    SetValueInternal(aValue, false, false);
+    SetValueInternal(aValue, nsTextEditorState::eSetValue_Internal);
   }
 
   mShouldInitChecked = false;
@@ -5684,7 +5702,8 @@ HTMLInputElement::RestoreState(nsPresState* aState)
         // TODO: What should we do if SetValueInternal fails?  (The allocation
         // may potentially be big, but most likely we've failed to allocate
         // before the type change.)
-        SetValueInternal(inputState->GetValue(), false, true);
+        SetValueInternal(inputState->GetValue(),
+                         nsTextEditorState::eSetValue_Notify);
         break;
     }
   }

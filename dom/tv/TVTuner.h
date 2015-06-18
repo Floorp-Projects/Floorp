@@ -31,6 +31,7 @@ public:
 
   static already_AddRefed<TVTuner> Create(nsPIDOMWindow* aWindow,
                                           nsITVTunerData* aData);
+  nsresult NotifyImageSizeChanged(uint32_t aWidth, uint32_t aHeight);
 
   // WebIDL (internal functions)
 

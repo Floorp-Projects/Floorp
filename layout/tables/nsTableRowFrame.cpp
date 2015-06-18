@@ -343,9 +343,9 @@ nsTableRowFrame::DidResize()
                                            false);
       }
 
-      // realign cell content based on the new height.  We might be able to
-      // skip this if the height didn't change... maybe.  Hard to tell.
-      cellFrame->VerticallyAlignChild(mMaxCellAscent);
+      // realign cell content based on the new bsize.  We might be able to
+      // skip this if the bsize didn't change... maybe.  Hard to tell.
+      cellFrame->BlockDirAlignChild(wm, mMaxCellAscent);
 
       // Always store the overflow, even if the height didn't change, since
       // we'll lose part of our overflow area otherwise.
@@ -668,26 +668,26 @@ nsTableRowFrame::CalculateCellActualHeight(nsTableCellFrame* aCellFrame,
   return NS_OK;
 }
 
-// Calculates the available width for the table cell based on the known
-// column widths taking into account column spans and column spacing
+// Calculates the available isize for the table cell based on the known
+// column isizes taking into account column spans and column spacing
 static nscoord
-CalcAvailWidth(nsTableFrame&     aTableFrame,
+CalcAvailISize(nsTableFrame&     aTableFrame,
                nsTableCellFrame& aCellFrame)
 {
-  nscoord cellAvailWidth = 0;
+  nscoord cellAvailISize = 0;
   int32_t colIndex;
   aCellFrame.GetColIndex(colIndex);
   int32_t colspan = aTableFrame.GetEffectiveColSpan(aCellFrame);
   NS_ASSERTION(colspan > 0, "effective colspan should be positive");
 
   for (int32_t spanX = 0; spanX < colspan; spanX++) {
-    cellAvailWidth += aTableFrame.GetColumnISize(colIndex + spanX);
+    cellAvailISize += aTableFrame.GetColumnISize(colIndex + spanX);
     if (spanX > 0 &&
         aTableFrame.ColumnHasCellSpacingBefore(colIndex + spanX)) {
-      cellAvailWidth += aTableFrame.GetColSpacing(colIndex + spanX - 1);
+      cellAvailISize += aTableFrame.GetColSpacing(colIndex + spanX - 1);
     }
   }
-  return cellAvailWidth;
+  return cellAvailISize;
 }
 
 nscoord
@@ -859,41 +859,42 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       (kidFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
 
     if (doReflowChild) {
-      // Calculate the available width for the table cell using the known column widths
-      nscoord availCellWidth =
-        CalcAvailWidth(aTableFrame, *cellFrame);
+      // Calculate the available isize for the table cell using the known
+      // column isizes
+      nscoord availCellISize =
+        CalcAvailISize(aTableFrame, *cellFrame);
 
       Maybe<nsTableCellReflowState> kidReflowState;
       nsHTMLReflowMetrics desiredSize(aReflowState);
 
-      // If the avail width is not the same as last time we reflowed the cell or
+      // If the avail isize is not the same as last time we reflowed the cell or
       // the cell wants to be bigger than what was available last time or
       // it is a style change reflow or we are printing, then we must reflow the
       // cell. Otherwise we can skip the reflow.
       // XXXldb Why is this condition distinct from doReflowChild above?
-      WritingMode rowWM = aReflowState.GetWritingMode();
-      WritingMode cellWM = cellFrame->GetWritingMode();
+      WritingMode wm = aReflowState.GetWritingMode();
+      NS_ASSERTION(cellFrame->GetWritingMode() == wm,
+                   "expected consistent writing-mode within table");
       LogicalSize cellDesiredSize = cellFrame->GetDesiredSize();
-      if ((availCellWidth != cellFrame->GetPriorAvailWidth())       ||
-          (cellDesiredSize.ISize(cellWM) > cellFrame->GetPriorAvailWidth()) ||
+      if ((availCellISize != cellFrame->GetPriorAvailISize())       ||
+          (cellDesiredSize.ISize(wm) > cellFrame->GetPriorAvailISize()) ||
           (GetStateBits() & NS_FRAME_IS_DIRTY)                      ||
           isPaginated                                               ||
           NS_SUBTREE_DIRTY(cellFrame)                               ||
           // See if it needs a special reflow, or if it had one that we need to undo.
           (cellFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE) ||
           HasPctHeight()) {
-        // Reflow the cell to fit the available width, height
-        // XXX The old IR_ChildIsDirty code used availCellWidth here.
-        nsSize kidAvailSize(availCellWidth, aReflowState.AvailableHeight());
+        // Reflow the cell to fit the available isize, bsize
+        // XXX The old IR_ChildIsDirty code used availCellISize here.
+        LogicalSize kidAvailSize(wm, availCellISize, aReflowState.AvailableBSize());
 
         // Reflow the child
         kidReflowState.emplace(aPresContext, aReflowState, kidFrame,
-                               LogicalSize(kidFrame->GetWritingMode(),
-                                           kidAvailSize),
+                               kidAvailSize,
                                // Cast needed for gcc 4.4.
                                uint32_t(nsHTMLReflowState::CALLER_WILL_INIT));
-        InitChildReflowState(*aPresContext, kidAvailSize, borderCollapse,
-                             *kidReflowState);
+        InitChildReflowState(*aPresContext, kidAvailSize.GetPhysicalSize(wm),
+                             borderCollapse, *kidReflowState);
 
         nsReflowStatus status;
         ReflowChild(kidFrame, aPresContext, desiredSize, *kidReflowState,
@@ -910,7 +911,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
           kidFrame->InvalidateFrameSubtree();
         }
 
-        desiredSize.SetSize(cellWM, cellDesiredSize);
+        desiredSize.SetSize(wm, cellDesiredSize);
         desiredSize.mOverflowAreas = cellFrame->GetOverflowAreas();
 
         // if we are in a floated table, our position is not yet established, so we cannot reposition our views
@@ -932,12 +933,12 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
         // height may have changed, adjust descent to absorb any excess difference
         nscoord ascent;
         if (!kidFrame->GetFirstPrincipalChild()->GetFirstPrincipalChild()) {
-          ascent = desiredSize.BSize(rowWM);
+          ascent = desiredSize.BSize(wm);
         } else {
           ascent = ((nsTableCellFrame *)kidFrame)->GetCellBaseline();
         }
-        nscoord descent = desiredSize.BSize(rowWM) - ascent;
-        UpdateHeight(desiredSize.BSize(rowWM), ascent, descent, &aTableFrame, cellFrame);
+        nscoord descent = desiredSize.BSize(wm) - ascent;
+        UpdateHeight(desiredSize.BSize(wm), ascent, descent, &aTableFrame, cellFrame);
       }
       else {
         cellMaxHeight = std::max(cellMaxHeight, desiredSize.Height());
@@ -948,7 +949,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       }
 
       // Place the child
-      desiredSize.ISize(rowWM) = availCellWidth;
+      desiredSize.ISize(wm) = availCellISize;
 
       if (kidReflowState) {
         // We reflowed. Apply relative positioning in the normal way.
@@ -1093,16 +1094,19 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
                                  nscoord                  aAvailableHeight,
                                  nsReflowStatus&          aStatus)
 {
+  WritingMode wm = aReflowState.GetWritingMode();
+
   // Reflow the cell frame with the specified height. Use the existing width
   nsRect cellRect = aCellFrame->GetRect();
   nsRect cellVisualOverflow = aCellFrame->GetVisualOverflowRect();
 
   nsSize availSize(cellRect.width, aAvailableHeight);
   bool borderCollapse = GetTableFrame()->IsBorderCollapse();
+  NS_ASSERTION(aCellFrame->GetWritingMode() == wm,
+               "expected consistent writing-mode within table");
   nsTableCellReflowState
     cellReflowState(aPresContext, aReflowState, aCellFrame,
-                    LogicalSize(aCellFrame->GetWritingMode(),
-                                availSize),
+                    LogicalSize(wm, availSize),
                     nsHTMLReflowState::CALLER_WILL_INIT);
   InitChildReflowState(*aPresContext, availSize, borderCollapse, cellReflowState);
   cellReflowState.mFlags.mIsTopOfPage = aIsTopOfPage;
@@ -1117,11 +1121,11 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
   }
   aCellFrame->SetSize(nsSize(cellRect.width, desiredSize.Height()));
 
-  // Note: VerticallyAlignChild can affect the overflow rect.
+  // Note: BlockDirAlignChild can affect the overflow rect.
   // XXX What happens if this cell has 'vertical-align: baseline' ?
   // XXX Why is it assumed that the cell's ascent hasn't changed ?
   if (fullyComplete) {
-    aCellFrame->VerticallyAlignChild(mMaxCellAscent);
+    aCellFrame->BlockDirAlignChild(wm, mMaxCellAscent);
   }
 
   nsTableFrame::InvalidateTableFrame(aCellFrame, cellRect,

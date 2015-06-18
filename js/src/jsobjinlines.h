@@ -220,25 +220,19 @@ js::DeleteElement(JSContext* cx, HandleObject obj, uint32_t index, ObjectOpResul
 /* * */
 
 inline bool
-JSObject::isQualifiedVarObj() const
+JSObject::isQualifiedVarObj()
 {
     if (is<js::DebugScopeObject>())
         return as<js::DebugScopeObject>().scope().isQualifiedVarObj();
-    bool rv = hasAllFlags(js::BaseShape::QUALIFIED_VAROBJ);
-    MOZ_ASSERT_IF(rv,
-                  is<js::GlobalObject>() ||
-                  is<js::CallObject>() ||
-                  is<js::NonSyntacticVariablesObject>() ||
-                  (is<js::DynamicWithObject>() && !as<js::DynamicWithObject>().isSyntactic()));
-    return rv;
+    return hasAllFlags(js::BaseShape::QUALIFIED_VAROBJ);
 }
 
 inline bool
-JSObject::isUnqualifiedVarObj() const
+JSObject::isUnqualifiedVarObj()
 {
     if (is<js::DebugScopeObject>())
         return as<js::DebugScopeObject>().scope().isUnqualifiedVarObj();
-    return is<js::GlobalObject>() || is<js::NonSyntacticVariablesObject>();
+    return hasAllFlags(js::BaseShape::UNQUALIFIED_VAROBJ);
 }
 
 namespace js {
@@ -609,36 +603,23 @@ typedef AutoVectorRooter<PropertyDescriptor> AutoPropertyDescriptorVector;
  */
 JSObject*
 NewObjectWithGivenTaggedProto(ExclusiveContext* cx, const Class* clasp, Handle<TaggedProto> proto,
-                              gc::AllocKind allocKind, NewObjectKind newKind,
-                              uint32_t initialShapeFlags = 0);
+                              gc::AllocKind allocKind, NewObjectKind newKind);
 
 inline JSObject*
 NewObjectWithGivenTaggedProto(ExclusiveContext* cx, const Class* clasp, Handle<TaggedProto> proto,
-                              NewObjectKind newKind = GenericObject,
-                              uint32_t initialShapeFlags = 0)
+                              NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
-    return NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind, newKind, initialShapeFlags);
+    return NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind, newKind);
 }
 
 template <typename T>
 inline T*
 NewObjectWithGivenTaggedProto(ExclusiveContext* cx, Handle<TaggedProto> proto,
-                              NewObjectKind newKind = GenericObject,
-                              uint32_t initialShapeFlags = 0)
+                              NewObjectKind newKind = GenericObject)
 {
-    JSObject* obj = NewObjectWithGivenTaggedProto(cx, &T::class_, proto, newKind,
-                                                  initialShapeFlags);
+    JSObject* obj = NewObjectWithGivenTaggedProto(cx, &T::class_, proto, newKind);
     return obj ? &obj->as<T>() : nullptr;
-}
-
-template <typename T>
-inline T*
-NewObjectWithNullTaggedProto(ExclusiveContext* cx, NewObjectKind newKind = GenericObject,
-                             uint32_t initialShapeFlags = 0)
-{
-    Rooted<TaggedProto> nullProto(cx, TaggedProto(nullptr));
-    return NewObjectWithGivenTaggedProto<T>(cx, nullProto, newKind, initialShapeFlags);
 }
 
 inline JSObject*
