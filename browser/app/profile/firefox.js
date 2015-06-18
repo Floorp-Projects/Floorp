@@ -1409,8 +1409,8 @@ pref("devtools.inspector.activeSidebar", "ruleview");
 // Enable the markup preview
 pref("devtools.inspector.markupPreview", false);
 pref("devtools.inspector.remote", false);
-// Expand pseudo-elements by default in the rule-view
-pref("devtools.inspector.show_pseudo_elements", true);
+// Collapse pseudo-elements by default in the rule-view
+pref("devtools.inspector.show_pseudo_elements", false);
 // The default size for image preview tooltips in the rule-view/computed-view/markup-view
 pref("devtools.inspector.imagePreviewTooltipSize", 300);
 // Enable user agent style inspection in rule-view
