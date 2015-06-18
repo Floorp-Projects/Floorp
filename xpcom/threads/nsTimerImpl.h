@@ -43,8 +43,8 @@ public:
 
   friend class TimerThread;
   friend struct TimerAdditionComparator;
+  friend class nsTimerEvent;
 
-  void Fire();
   // If a failure is encountered, the reference is returned to the caller
   static already_AddRefed<nsTimerImpl> PostTimerEvent(
     already_AddRefed<nsTimerImpl> aTimerRef);
@@ -65,6 +65,8 @@ public:
 
 private:
   void SetDelayInternal(uint32_t aDelay);
+
+  void Fire();
 
   enum class CallbackType : uint8_t {
     Unknown = 0,
