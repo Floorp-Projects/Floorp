@@ -742,26 +742,36 @@ function whenSearchInitDone() {
  *        Can be any of("blank"|"classic"|"enhanced")
  */
 function customizeNewTabPage(aTheme) {
-  let document = getContentDocument();
-  let panel = document.getElementById("newtab-customize-panel");
-  let customizeButton = document.getElementById("newtab-customize-button");
+  let promise = ContentTask.spawn(gBrowser.selectedBrowser, aTheme, function*(aTheme) {
 
-  // Attache onShown the listener on panel
-  panel.addEventListener("popupshown", function onShown() {
-    panel.removeEventListener("popupshown", onShown);
+    let document = content.document;
+    let panel = document.getElementById("newtab-customize-panel");
+    let customizeButton = document.getElementById("newtab-customize-button");
 
-    // Get the element for the specific option and click on it,
-    // then trigger an escape to close the panel
-    document.getElementById("newtab-customize-" + aTheme).click();
-    executeSoon(() => { panel.hidePopup(); });
+    function panelOpened(opened) {
+      return new Promise( (resolve) => {
+        let options = {attributes: true, oldValue: true};
+        let observer = new content.MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            document.getElementById("newtab-customize-" + aTheme).click();
+            observer.disconnect();
+            if (opened == panel.hasAttribute("open")) {
+              resolve();
+            }
+          });
+        });
+        observer.observe(panel, options);
+      });
+    }
+
+    let opened = panelOpened(true);
+    customizeButton.click();
+    yield opened;
+
+    let closed = panelOpened(false);
+    customizeButton.click();
+    yield closed;
   });
 
-  // Attache the listener for panel closing, this will resolve the promise
-  panel.addEventListener("popuphidden", function onHidden() {
-    panel.removeEventListener("popuphidden", onHidden);
-    executeSoon(TestRunner.next);
-  });
-
-  // Click on the customize button to display the panel
-  customizeButton.click();
+  promise.then(TestRunner.next);
 }

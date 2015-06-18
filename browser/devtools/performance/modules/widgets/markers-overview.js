@@ -10,8 +10,8 @@
  */
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const { AbstractCanvasGraph } = require("resource:///modules/devtools/Graphs.jsm");
 const { Heritage } = require("resource:///modules/devtools/ViewHelpers.jsm");
+const { AbstractCanvasGraph } = require("devtools/shared/widgets/Graphs");
 
 loader.lazyRequireGetter(this, "colorUtils",
   "devtools/css-color", true);

@@ -22,70 +22,95 @@ let gCustomize = {
       this._nodes[idSuffix] = document.getElementById("newtab-customize-" + idSuffix);
     }
 
-    this._nodes.button.addEventListener("click", e => this.showPanel());
-    this._nodes.blank.addEventListener("click", e => {
-      gAllPages.enabled = false;
-    });
-    this._nodes.classic.addEventListener("click", e => {
-      gAllPages.enabled = true;
-
-      if (this._nodes.enhanced.getAttribute("selected")) {
-        gAllPages.enhanced = true;
-      } else {
-        gAllPages.enhanced = false;
-      }
-    });
-    this._nodes.enhanced.addEventListener("click", e => {
-      if (!gAllPages.enabled) {
-        gAllPages.enabled = true;
-        return;
-      }
-      gAllPages.enhanced = !gAllPages.enhanced;
-    });
-    this._nodes.learn.addEventListener("click", e => {
-      window.open(TILES_INTRO_LINK,'new_window');
-      this._onHidden();
-    });
+    this._nodes.button.addEventListener("click", e => this.showPanel(e));
+    this._nodes.blank.addEventListener("click", this);
+    this._nodes.classic.addEventListener("click", this);
+    this._nodes.enhanced.addEventListener("click", this);
+    this._nodes.learn.addEventListener("click", this);
 
     this.updateSelected();
   },
 
-  _onHidden: function() {
-    let nodes = gCustomize._nodes;
-    nodes.overlay.addEventListener("transitionend", function onTransitionEnd() {
-      nodes.overlay.removeEventListener("transitionend", onTransitionEnd);
-      nodes.overlay.style.display = "none";
+  hidePanel: function() {
+    this._nodes.overlay.addEventListener("transitionend", function onTransitionEnd() {
+      gCustomize._nodes.overlay.removeEventListener("transitionend", onTransitionEnd);
+      gCustomize._nodes.overlay.style.display = "none";
     });
-    nodes.overlay.style.opacity = 0;
-    nodes.panel.removeEventListener("popuphidden", gCustomize._onHidden);
-    nodes.panel.hidden = true;
-    nodes.button.removeAttribute("active");
+    this._nodes.overlay.style.opacity = 0;
+    this._nodes.button.removeAttribute("active");
+    this._nodes.panel.removeAttribute("open");
+    document.removeEventListener("click", this);
+    document.removeEventListener("keydown", this);
   },
 
-  showPanel: function() {
-    this._nodes.overlay.style.display = "block";
-    setTimeout(() => {
-      // Wait for display update to take place, then animate.
-      this._nodes.overlay.style.opacity = 0.8;
-    }, 0);
-
-    let nodes = this._nodes;
-    let {button, panel} = nodes;
-    if (button.hasAttribute("active")) {
-      return Promise.resolve(nodes);
+  showPanel: function(event) {
+    if (this._nodes.panel.getAttribute("open") == "true") {
+      return;
     }
 
-    panel.hidden = false;
-    panel.openPopup(button);
-    button.setAttribute("active", true);
-    panel.addEventListener("popuphidden", this._onHidden);
+    let {panel, button, overlay} = this._nodes;
+    overlay.style.display = "block";
+    panel.setAttribute("open", "true");
+    button.setAttribute("active", "true");
+    setTimeout(() => {
+      // Wait for display update to take place, then animate.
+      overlay.style.opacity = 0.8;
+    }, 0);
 
-    return new Promise(resolve => {
-      panel.addEventListener("popupshown", function onShown() {
-        panel.removeEventListener("popupshown", onShown);
-        resolve(nodes);
-      });
-    });
+    document.addEventListener("click", this);
+    document.addEventListener("keydown", this);
+
+    // Stop the event propogation to prevent panel from immediately closing
+    // via the document click event that we just added.
+    event.stopPropagation();
+  },
+
+  handleEvent: function(event) {
+    switch (event.type) {
+      case "click":
+        this.onClick(event);
+        break;
+      case "keydown":
+        this.onKeyDown(event);
+        break;
+    }
+  },
+
+  onClick: function(event) {
+    if (event.currentTarget == document) {
+      if (!this._nodes.panel.contains(event.target)) {
+        this.hidePanel();
+      }
+    }
+    switch (event.currentTarget.id) {
+      case "newtab-customize-blank":
+        sendAsyncMessage("NewTab:Customize", {enabled: false, enhanced: false});
+        break;
+      case "newtab-customize-classic":
+        if (this._nodes.enhanced.getAttribute("selected")){
+          sendAsyncMessage("NewTab:Customize", {enabled: true, enhanced: true});
+        } else {
+          sendAsyncMessage("NewTab:Customize", {enabled: true, enhanced: false});
+        }
+        break;
+      case "newtab-customize-enhanced":
+        sendAsyncMessage("NewTab:Customize", {enabled: true, enhanced: !gAllPages.enhanced});
+        break;
+      case "newtab-customize-learn":
+        this.showLearn();
+        break;
+    }
+  },
+
+  onKeyDown: function(event) {
+    if (event.keyCode == event.DOM_VK_ESCAPE) {
+      this.hidePanel();
+    }
+  },
+
+  showLearn: function() {
+    window.open(TILES_INTRO_LINK, 'new_window');
+    this.hidePanel();
   },
 
   updateSelected: function() {
