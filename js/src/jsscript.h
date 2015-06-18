@@ -55,6 +55,15 @@ namespace frontend {
     class UpvarCookie;
 }
 
+namespace detail {
+
+// Do not call this directly! It is exposed for the friend declarations in
+// this file.
+bool
+CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScript src, HandleScript dst);
+
+} // namespace detail
+
 }
 
 /*
@@ -130,6 +139,10 @@ struct BlockScopeArray {
 };
 
 class YieldOffsetArray {
+    friend bool
+    detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScript src,
+                       HandleScript dst);
+
     uint32_t*       vector_;   // Array of bytecode offsets.
     uint32_t        length_;    // Count of bytecode offsets.
 
@@ -766,16 +779,6 @@ XDRLazyScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enc
 template<XDRMode mode>
 bool
 XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
-
-
-namespace detail {
-
-// Do not call this directly! It is exposed for the friend declaration in
-// JSScript.
-bool
-CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScript src, HandleScript dst);
-
-} // namespace detail
 
 } /* namespace js */
 
