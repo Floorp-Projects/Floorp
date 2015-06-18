@@ -620,22 +620,11 @@ XPCWrappedNativeScope::KillDyingScopes()
     gDyingScopes = nullptr;
 }
 
-struct ShutdownData
-{
-    ShutdownData()
-        : wrapperCount(0),
-          protoCount(0) {}
-    int wrapperCount;
-    int protoCount;
-};
-
 //static
 void
 XPCWrappedNativeScope::SystemIsBeingShutDown()
 {
     int liveScopeCount = 0;
-
-    ShutdownData data;
 
     XPCWrappedNativeScope* cur;
 
@@ -665,7 +654,6 @@ XPCWrappedNativeScope::SystemIsBeingShutDown()
         for (auto i = cur->mWrappedNativeProtoMap->RemovingIter(); !i.Done(); i.Next()) {
             auto entry = static_cast<ClassInfo2WrappedNativeProtoMap::Entry*>(i.Get());
             entry->value->SystemIsBeingShutDown();
-            data.protoCount++;
             i.Remove();
         }
         for (auto i = cur->mWrappedNativeMap->RemovingIter(); !i.Done(); i.Next()) {
@@ -673,7 +661,6 @@ XPCWrappedNativeScope::SystemIsBeingShutDown()
             XPCWrappedNative* wrapper = entry->value;
             if (wrapper->IsValid()) {
                 wrapper->SystemIsBeingShutDown();
-                data.wrapperCount++;
             }
             i.Remove();
         }
