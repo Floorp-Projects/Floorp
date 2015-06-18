@@ -48,10 +48,8 @@ public:
    */
   virtual bool ReturnAndUseDT(gfx::DrawTarget* aDT) = 0;
 
-protected:
-  friend class CopyableCanvasLayer;
-
   virtual TemporaryRef<gfx::SourceSurface> GetSnapshot() = 0;
+protected:
 };
 
 class PersistentBufferProviderBasic : public PersistentBufferProvider
