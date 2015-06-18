@@ -416,6 +416,20 @@ function checkSystemSection(data) {
   Assert.equal(typeof gfxData.adapters[0].GPUActive, "boolean");
   Assert.ok(gfxData.adapters[0].GPUActive, "The first GFX adapter must be active.");
 
+  Assert.ok(Array.isArray(gfxData.monitors));
+  if (gIsWindows || gIsMac) {
+    Assert.ok(gfxData.monitors.length >= 1, "There is at least one monitor.");
+    Assert.equal(typeof gfxData.monitors[0].screenWidth, "number");
+    Assert.equal(typeof gfxData.monitors[0].screenHeight, "number");
+    if (gIsWindows) {
+      Assert.equal(typeof gfxData.monitors[0].refreshRate, "number");
+      Assert.equal(typeof gfxData.monitors[0].pseudoDisplay, "boolean");
+    }
+    if (gIsMac) {
+      Assert.equal(typeof gfxData.monitors[0].scale, "number");
+    }
+  }
+
   try {
     // If we've not got nsIGfxInfoDebug, then this will throw and stop us doing
     // this test.
