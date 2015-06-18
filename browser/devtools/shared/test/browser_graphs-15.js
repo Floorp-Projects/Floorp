@@ -5,7 +5,6 @@
 
 const FAST_FPS = 60;
 const SLOW_FPS = 10;
-
 // Each element represents a second
 const FRAMES= [FAST_FPS, FAST_FPS, FAST_FPS, SLOW_FPS, FAST_FPS];
 const TEST_DATA = [];
@@ -20,7 +19,7 @@ for (let frameRate of FRAMES) {
   }
 }
 
-let LineGraphWidget = devtools.require("devtools/shared/widgets/LineGraphWidget");
+let {LineGraphWidget} = devtools.require("devtools/shared/widgets/Graphs");
 let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
 
 add_task(function*() {
