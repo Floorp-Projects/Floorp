@@ -46,7 +46,7 @@ class WebSocketChannelParent : public PWebSocketParent,
                      const bool& aClientSetPingInterval,
                      const uint32_t& aPingTimeout,
                      const bool& aClientSetPingTimeout,
-                     const WebSocketLoadInfoArgs& aLoadInfoArgs) override;
+                     const LoadInfoArgs& aLoadInfoArgs) override;
   bool RecvClose(const uint16_t & code, const nsCString & reason) override;
   bool RecvSendMsg(const nsCString& aMsg) override;
   bool RecvSendBinaryMsg(const nsCString& aMsg) override;
