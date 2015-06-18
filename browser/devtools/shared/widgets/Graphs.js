@@ -6,7 +6,6 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-const { ViewHelpers } = require("resource:///modules/devtools/ViewHelpers.jsm");
 const { Heritage, setNamedTimeout, clearNamedTimeout } = require("resource:///modules/devtools/ViewHelpers.jsm");
 
 loader.lazyRequireGetter(this, "promise");
@@ -21,8 +20,6 @@ loader.lazyImporter(this, "LayoutHelpers",
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const GRAPH_SRC = "chrome://browser/content/devtools/graphs-frame.xhtml";
 const WORKER_URL = "resource:///modules/devtools/GraphsWorker.js";
-
-const L10N = new ViewHelpers.L10N();
 
 // Generic constants.
 
@@ -43,30 +40,6 @@ const GRAPH_STRIPE_PATTERN_WIDTH = 16; // px
 const GRAPH_STRIPE_PATTERN_HEIGHT = 16; // px
 const GRAPH_STRIPE_PATTERN_LINE_WIDTH = 2; // px
 const GRAPH_STRIPE_PATTERN_LINE_SPACING = 4; // px
-
-// Line graph constants.
-
-const LINE_GRAPH_DAMPEN_VALUES = 0.85;
-const LINE_GRAPH_TOOLTIP_SAFE_BOUNDS = 8; // px
-const LINE_GRAPH_MIN_MAX_TOOLTIP_DISTANCE = 14; // px
-
-const LINE_GRAPH_BACKGROUND_COLOR = "#0088cc";
-const LINE_GRAPH_STROKE_WIDTH = 1; // px
-const LINE_GRAPH_STROKE_COLOR = "rgba(255,255,255,0.9)";
-const LINE_GRAPH_HELPER_LINES_DASH = [5]; // px
-const LINE_GRAPH_HELPER_LINES_WIDTH = 1; // px
-const LINE_GRAPH_MAXIMUM_LINE_COLOR = "rgba(255,255,255,0.4)";
-const LINE_GRAPH_AVERAGE_LINE_COLOR = "rgba(255,255,255,0.7)";
-const LINE_GRAPH_MINIMUM_LINE_COLOR = "rgba(255,255,255,0.9)";
-const LINE_GRAPH_BACKGROUND_GRADIENT_START = "rgba(255,255,255,0.25)";
-const LINE_GRAPH_BACKGROUND_GRADIENT_END = "rgba(255,255,255,0.0)";
-
-const LINE_GRAPH_CLIPHEAD_LINE_COLOR = "#fff";
-const LINE_GRAPH_SELECTION_LINE_COLOR = "#fff";
-const LINE_GRAPH_SELECTION_BACKGROUND_COLOR = "rgba(44,187,15,0.25)";
-const LINE_GRAPH_SELECTION_STRIPES_COLOR = "rgba(255,255,255,0.1)";
-const LINE_GRAPH_REGION_BACKGROUND_COLOR = "transparent";
-const LINE_GRAPH_REGION_STRIPES_COLOR = "rgba(237,38,85,0.2)";
 
 // Bar graph constants.
 
@@ -1241,357 +1214,6 @@ AbstractCanvasGraph.prototype = {
 };
 
 /**
- * A basic line graph, plotting values on a curve and adding helper lines
- * and tooltips for maximum, average and minimum values.
- *
- * @see AbstractCanvasGraph for emitted events and other options.
- *
- * Example usage:
- *   let graph = new LineGraphWidget(node, "units");
- *   graph.once("ready", () => {
- *     graph.setData(src);
- *   });
- *
- * Data source format:
- *   [
- *     { delta: x1, value: y1 },
- *     { delta: x2, value: y2 },
- *     ...
- *     { delta: xn, value: yn }
- *   ]
- * where each item in the array represents a point in the graph.
- *
- * @param nsIDOMNode parent
- *        The parent node holding the graph.
- * @param object options [optional]
- *        `metric`: The metric displayed in the graph, e.g. "fps" or "bananas".
- *        `min`: Boolean whether to show the min tooltip/gutter/line (default: true)
- *        `max`: Boolean whether to show the max tooltip/gutter/line (default: true)
- *        `avg`: Boolean whether to show the avg tooltip/gutter/line (default: true)
- */
-this.LineGraphWidget = function(parent, options, ...args) {
-  options = options || {};
-  let metric = options.metric;
-
-  this._showMin = options.min !== false;
-  this._showMax = options.max !== false;
-  this._showAvg = options.avg !== false;
-  AbstractCanvasGraph.apply(this, [parent, "line-graph", ...args]);
-
-  this.once("ready", () => {
-    // Create all gutters and tooltips incase the showing of min/max/avg
-    // are changed later
-    this._gutter = this._createGutter();
-
-    this._maxGutterLine = this._createGutterLine("maximum");
-    this._maxTooltip = this._createTooltip("maximum", "start", "max", metric);
-    this._minGutterLine = this._createGutterLine("minimum");
-    this._minTooltip = this._createTooltip("minimum", "start", "min", metric);
-    this._avgGutterLine = this._createGutterLine("average");
-    this._avgTooltip = this._createTooltip("average", "end", "avg", metric);
-  });
-};
-
-LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
-  backgroundColor: LINE_GRAPH_BACKGROUND_COLOR,
-  backgroundGradientStart: LINE_GRAPH_BACKGROUND_GRADIENT_START,
-  backgroundGradientEnd: LINE_GRAPH_BACKGROUND_GRADIENT_END,
-  strokeColor: LINE_GRAPH_STROKE_COLOR,
-  strokeWidth: LINE_GRAPH_STROKE_WIDTH,
-  maximumLineColor: LINE_GRAPH_MAXIMUM_LINE_COLOR,
-  averageLineColor: LINE_GRAPH_AVERAGE_LINE_COLOR,
-  minimumLineColor: LINE_GRAPH_MINIMUM_LINE_COLOR,
-  clipheadLineColor: LINE_GRAPH_CLIPHEAD_LINE_COLOR,
-  selectionLineColor: LINE_GRAPH_SELECTION_LINE_COLOR,
-  selectionBackgroundColor: LINE_GRAPH_SELECTION_BACKGROUND_COLOR,
-  selectionStripesColor: LINE_GRAPH_SELECTION_STRIPES_COLOR,
-  regionBackgroundColor: LINE_GRAPH_REGION_BACKGROUND_COLOR,
-  regionStripesColor: LINE_GRAPH_REGION_STRIPES_COLOR,
-
-  /**
-   * Optionally offsets the `delta` in the data source by this scalar.
-   */
-  dataOffsetX: 0,
-
-  /**
-   * Optionally uses this value instead of the last tick in the data source
-   * to compute the horizontal scaling.
-   */
-  dataDuration: 0,
-
-  /**
-   * The scalar used to multiply the graph values to leave some headroom.
-   */
-  dampenValuesFactor: LINE_GRAPH_DAMPEN_VALUES,
-
-  /**
-   * Specifies if min/max/avg tooltips have arrow handlers on their sides.
-   */
-  withTooltipArrows: true,
-
-  /**
-   * Specifies if min/max/avg tooltips are positioned based on the actual
-   * values, or just placed next to the graph corners.
-   */
-  withFixedTooltipPositions: false,
-
-  /**
-   * Takes a list of numbers and plots them on a line graph representing
-   * the rate of occurences in a specified interval. Useful for drawing
-   * framerate, for example, from a sequence of timestamps.
-   *
-   * @param array timestamps
-   *        A list of numbers representing time, ordered ascending. For example,
-   *        this can be the raw data received from the framerate actor, which
-   *        represents the elapsed time on each refresh driver tick.
-   * @param number interval
-   *        The maximum amount of time to wait between calculations.
-   * @param number duration
-   *        The duration of the recording in milliseconds.
-   */
-  setDataFromTimestamps: Task.async(function*(timestamps, interval, duration) {
-    let {
-      plottedData,
-      plottedMinMaxSum
-    } = yield CanvasGraphUtils._performTaskInWorker("plotTimestampsGraph", {
-      timestamps, interval, duration
-    });
-
-    this._tempMinMaxSum = plottedMinMaxSum;
-    this.setData(plottedData);
-  }),
-
-  /**
-   * Renders the graph's data source.
-   * @see AbstractCanvasGraph.prototype.buildGraphImage
-   */
-  buildGraphImage: function() {
-    let { canvas, ctx } = this._getNamedCanvas("line-graph-data");
-    let width = this._width;
-    let height = this._height;
-
-    let totalTicks = this._data.length;
-    let firstTick = totalTicks ? this._data[0].delta : 0;
-    let lastTick = totalTicks ? this._data[totalTicks - 1].delta : 0;
-    let maxValue = Number.MIN_SAFE_INTEGER;
-    let minValue = Number.MAX_SAFE_INTEGER;
-    let avgValue = 0;
-
-    if (this._tempMinMaxSum) {
-      maxValue = this._tempMinMaxSum.maxValue;
-      minValue = this._tempMinMaxSum.minValue;
-      avgValue = this._tempMinMaxSum.avgValue;
-    } else {
-      let sumValues = 0;
-      for (let { delta, value } of this._data) {
-        maxValue = Math.max(value, maxValue);
-        minValue = Math.min(value, minValue);
-        sumValues += value;
-      }
-      avgValue = sumValues / totalTicks;
-    }
-
-    let duration = this.dataDuration || lastTick;
-    let dataScaleX = this.dataScaleX = width / (duration - this.dataOffsetX);
-    let dataScaleY = this.dataScaleY = height / maxValue * this.dampenValuesFactor;
-
-    // Draw the background.
-
-    ctx.fillStyle = this.backgroundColor;
-    ctx.fillRect(0, 0, width, height);
-
-    // Draw the graph.
-
-    let gradient = ctx.createLinearGradient(0, height / 2, 0, height);
-    gradient.addColorStop(0, this.backgroundGradientStart);
-    gradient.addColorStop(1, this.backgroundGradientEnd);
-    ctx.fillStyle = gradient;
-    ctx.strokeStyle = this.strokeColor;
-    ctx.lineWidth = this.strokeWidth * this._pixelRatio;
-    ctx.beginPath();
-
-    for (let { delta, value } of this._data) {
-      let currX = (delta - this.dataOffsetX) * dataScaleX;
-      let currY = height - value * dataScaleY;
-
-      if (delta == firstTick) {
-        ctx.moveTo(-LINE_GRAPH_STROKE_WIDTH, height);
-        ctx.lineTo(-LINE_GRAPH_STROKE_WIDTH, currY);
-      }
-
-      ctx.lineTo(currX, currY);
-
-      if (delta == lastTick) {
-        ctx.lineTo(width + LINE_GRAPH_STROKE_WIDTH, currY);
-        ctx.lineTo(width + LINE_GRAPH_STROKE_WIDTH, height);
-      }
-    }
-
-    ctx.fill();
-    ctx.stroke();
-
-    this._drawOverlays(ctx, minValue, maxValue, avgValue, dataScaleY);
-
-    return canvas;
-  },
-
-  /**
-   * Draws the min, max and average horizontal lines, along with their
-   * repsective tooltips.
-   *
-   * @param CanvasRenderingContext2D ctx
-   * @param number minValue
-   * @param number maxValue
-   * @param number avgValue
-   * @param number dataScaleY
-   */
-  _drawOverlays: function(ctx, minValue, maxValue, avgValue, dataScaleY) {
-    let width = this._width;
-    let height = this._height;
-    let totalTicks = this._data.length;
-
-    // Draw the maximum value horizontal line.
-    if (this._showMax) {
-      ctx.strokeStyle = this.maximumLineColor;
-      ctx.lineWidth = LINE_GRAPH_HELPER_LINES_WIDTH;
-      ctx.setLineDash(LINE_GRAPH_HELPER_LINES_DASH);
-      ctx.beginPath();
-      let maximumY = height - maxValue * dataScaleY;
-      ctx.moveTo(0, maximumY);
-      ctx.lineTo(width, maximumY);
-      ctx.stroke();
-    }
-
-    // Draw the average value horizontal line.
-    if (this._showAvg) {
-      ctx.strokeStyle = this.averageLineColor;
-      ctx.lineWidth = LINE_GRAPH_HELPER_LINES_WIDTH;
-      ctx.setLineDash(LINE_GRAPH_HELPER_LINES_DASH);
-      ctx.beginPath();
-      let averageY = height - avgValue * dataScaleY;
-      ctx.moveTo(0, averageY);
-      ctx.lineTo(width, averageY);
-      ctx.stroke();
-    }
-
-    // Draw the minimum value horizontal line.
-    if (this._showMin) {
-      ctx.strokeStyle = this.minimumLineColor;
-      ctx.lineWidth = LINE_GRAPH_HELPER_LINES_WIDTH;
-      ctx.setLineDash(LINE_GRAPH_HELPER_LINES_DASH);
-      ctx.beginPath();
-      let minimumY = height - minValue * dataScaleY;
-      ctx.moveTo(0, minimumY);
-      ctx.lineTo(width, minimumY);
-      ctx.stroke();
-    }
-
-    // Update the tooltips text and gutter lines.
-
-    this._maxTooltip.querySelector("[text=value]").textContent =
-      L10N.numberWithDecimals(maxValue, 2);
-    this._avgTooltip.querySelector("[text=value]").textContent =
-      L10N.numberWithDecimals(avgValue, 2);
-    this._minTooltip.querySelector("[text=value]").textContent =
-      L10N.numberWithDecimals(minValue, 2);
-
-    let bottom = height / this._pixelRatio;
-    let maxPosY = map(maxValue * this.dampenValuesFactor, 0, maxValue, bottom, 0);
-    let avgPosY = map(avgValue * this.dampenValuesFactor, 0, maxValue, bottom, 0);
-    let minPosY = map(minValue * this.dampenValuesFactor, 0, maxValue, bottom, 0);
-
-    let safeTop = LINE_GRAPH_TOOLTIP_SAFE_BOUNDS;
-    let safeBottom = bottom - LINE_GRAPH_TOOLTIP_SAFE_BOUNDS;
-
-    let maxTooltipTop = (this.withFixedTooltipPositions
-      ? safeTop : clamp(maxPosY, safeTop, safeBottom));
-    let avgTooltipTop = (this.withFixedTooltipPositions
-      ? safeTop : clamp(avgPosY, safeTop, safeBottom));
-    let minTooltipTop = (this.withFixedTooltipPositions
-      ? safeBottom : clamp(minPosY, safeTop, safeBottom));
-
-    this._maxTooltip.style.top = maxTooltipTop + "px";
-    this._avgTooltip.style.top = avgTooltipTop + "px";
-    this._minTooltip.style.top = minTooltipTop + "px";
-
-    this._maxGutterLine.style.top = maxPosY + "px";
-    this._avgGutterLine.style.top = avgPosY + "px";
-    this._minGutterLine.style.top = minPosY + "px";
-
-    this._maxTooltip.setAttribute("with-arrows", this.withTooltipArrows);
-    this._avgTooltip.setAttribute("with-arrows", this.withTooltipArrows);
-    this._minTooltip.setAttribute("with-arrows", this.withTooltipArrows);
-
-    let distanceMinMax = Math.abs(maxTooltipTop - minTooltipTop);
-    this._maxTooltip.hidden = this._showMax === false || !totalTicks || distanceMinMax < LINE_GRAPH_MIN_MAX_TOOLTIP_DISTANCE;
-    this._avgTooltip.hidden = this._showAvg === false || !totalTicks;
-    this._minTooltip.hidden = this._showMin === false || !totalTicks;
-    this._gutter.hidden = (this._showMin === false && this._showAvg === false && this._showMax === false) || !totalTicks;
-
-    this._maxGutterLine.hidden = this._showMax === false;
-    this._avgGutterLine.hidden = this._showAvg === false;
-    this._minGutterLine.hidden = this._showMin === false;
-  },
-
-  /**
-   * Creates the gutter node when constructing this graph.
-   * @return nsIDOMNode
-   */
-  _createGutter: function() {
-    let gutter = this._document.createElementNS(HTML_NS, "div");
-    gutter.className = "line-graph-widget-gutter";
-    gutter.setAttribute("hidden", true);
-    this._container.appendChild(gutter);
-
-    return gutter;
-  },
-
-  /**
-   * Creates the gutter line nodes when constructing this graph.
-   * @return nsIDOMNode
-   */
-  _createGutterLine: function(type) {
-    let line = this._document.createElementNS(HTML_NS, "div");
-    line.className = "line-graph-widget-gutter-line";
-    line.setAttribute("type", type);
-    this._gutter.appendChild(line);
-
-    return line;
-  },
-
-  /**
-   * Creates the tooltip nodes when constructing this graph.
-   * @return nsIDOMNode
-   */
-  _createTooltip: function(type, arrow, info, metric) {
-    let tooltip = this._document.createElementNS(HTML_NS, "div");
-    tooltip.className = "line-graph-widget-tooltip";
-    tooltip.setAttribute("type", type);
-    tooltip.setAttribute("arrow", arrow);
-    tooltip.setAttribute("hidden", true);
-
-    let infoNode = this._document.createElementNS(HTML_NS, "span");
-    infoNode.textContent = info;
-    infoNode.setAttribute("text", "info");
-
-    let valueNode = this._document.createElementNS(HTML_NS, "span");
-    valueNode.textContent = 0;
-    valueNode.setAttribute("text", "value");
-
-    let metricNode = this._document.createElementNS(HTML_NS, "span");
-    metricNode.textContent = metric;
-    metricNode.setAttribute("text", "metric");
-
-    tooltip.appendChild(infoNode);
-    tooltip.appendChild(valueNode);
-    tooltip.appendChild(metricNode);
-    this._container.appendChild(tooltip);
-
-    return tooltip;
-  }
-});
-
-/**
  * A bar graph, plotting tuples of values as rectangles.
  *
  * @see AbstractCanvasGraph for emitted events and other options.
@@ -2200,15 +1822,6 @@ function clamp(value, min, max) {
 }
 
 /**
- * Calculates the squared distance between two 2D points.
- */
-function distSquared(x0, y0, x1, y1) {
-  let xs = x1 - x0;
-  let ys = y1 - y0;
-  return xs * xs + ys * ys;
-}
-
-/**
  * Finds the first element in an array that validates a predicate.
  * @param array
  * @param function predicate
@@ -2226,9 +1839,10 @@ exports.GraphArea = GraphArea;
 exports.GraphAreaDragger = GraphAreaDragger;
 exports.GraphAreaResizer = GraphAreaResizer;
 exports.AbstractCanvasGraph = AbstractCanvasGraph;
-exports.LineGraphWidget = LineGraphWidget;
 exports.BarGraphWidget = BarGraphWidget;
 exports.CanvasGraphUtils = CanvasGraphUtils;
+exports.CanvasGraphUtils.map = map;
+exports.CanvasGraphUtils.clamp = clamp;
 
 /**
  * Finds the last element in an array that validates a predicate.
