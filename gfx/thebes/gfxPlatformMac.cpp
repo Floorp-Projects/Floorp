@@ -514,7 +514,6 @@ public:
       }
 
       mPreviousTimestamp = TimeStamp::Now();
-      mStartingVsync = true;
       if (CVDisplayLinkStart(mDisplayLink) != kCVReturnSuccess) {
         NS_WARNING("Could not activate the display link");
         CVDisplayLinkRelease(mDisplayLink);
@@ -548,7 +547,6 @@ public:
     // Normalize the timestamps given to the VsyncDispatchers to the vsync
     // that just occured, not the vsync that is upcoming.
     TimeStamp mPreviousTimestamp;
-    bool mStartingVsync;
 
   private:
     // Manages the display link render thread
@@ -574,29 +572,25 @@ static CVReturn VsyncCallback(CVDisplayLinkRef aDisplayLink,
   // Executed on OS X hardware vsync thread
   OSXVsyncSource::OSXDisplay* display = (OSXVsyncSource::OSXDisplay*) aDisplayLinkContext;
   int64_t nextVsyncTimestamp = aOutputTime->hostTime;
+
   mozilla::TimeStamp nextVsync = mozilla::TimeStamp::FromSystemTime(nextVsyncTimestamp);
-
   mozilla::TimeStamp previousVsync = display->mPreviousTimestamp;
-  bool firstVsync = display->mStartingVsync;
-
-  display->mStartingVsync = false;
-  display->mPreviousTimestamp = nextVsync;
   mozilla::TimeStamp now = TimeStamp::Now();
-  if (nextVsync <= previousVsync) {
-    TimeDuration next = nextVsync - now;
-    TimeDuration prev = now - previousVsync;
-    printf_stderr("Next from now: %f, prev from now: %f, first vsync %d\n",
-      next.ToMilliseconds(), prev.ToMilliseconds(), firstVsync);
-    MOZ_ASSERT(false, "Next vsync less than previous vsync\n");
-  }
 
-  // Bug 1158321 - The VsyncCallback can sometimes execute before the reported
-  // vsync time. In those cases, normalize the timestamp to Now() as sending
-  // timestamps in the future has undefined behavior. See the comment above
-  // OSXDisplay::mPreviousTimestamp
-  if (now < previousVsync) {
+  // Snow leopard sometimes sends vsync timestamps very far in the past.
+  // Normalize the vsync timestamps to now.
+  if (nextVsync <= previousVsync) {
+    nextVsync = now;
+    previousVsync = now;
+  } else if (now < previousVsync) {
+    // Bug 1158321 - The VsyncCallback can sometimes execute before the reported
+    // vsync time. In those cases, normalize the timestamp to Now() as sending
+    // timestamps in the future has undefined behavior. See the comment above
+    // OSXDisplay::mPreviousTimestamp
     previousVsync = now;
   }
+
+  display->mPreviousTimestamp = nextVsync;
 
   display->NotifyVsync(previousVsync);
   return kCVReturnSuccess;
