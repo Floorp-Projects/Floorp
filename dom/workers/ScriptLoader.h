@@ -8,7 +8,6 @@
 #define mozilla_dom_workers_scriptloader_h__
 
 #include "Workers.h"
-#include "nsIContentPolicyBase.h"
 
 class nsIPrincipal;
 class nsIURI;
@@ -38,7 +37,6 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
                                nsIDocument* aParentDoc,
                                nsILoadGroup* aLoadGroup,
                                const nsAString& aScriptURL,
-                               nsContentPolicyType aContentPolicyType,
                                nsIChannel** aChannel);
 
 nsresult
