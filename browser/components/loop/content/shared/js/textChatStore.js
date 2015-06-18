@@ -5,7 +5,7 @@
 var loop = loop || {};
 loop.store = loop.store || {};
 
-loop.store.TextChatStore = (function(mozL10n) {
+loop.store.TextChatStore = (function() {
   "use strict";
 
   var sharedActions = loop.shared.actions;
@@ -137,10 +137,12 @@ loop.store.TextChatStore = (function(mozL10n) {
     updateRoomInfo: function(actionData) {
       // XXX When we add special messages to desktop, we'll need to not post
       // multiple changes of room name, only the first. Bug 1171940 should fix this.
-      this._appendTextChatMessage(CHAT_MESSAGE_TYPES.SPECIAL, {
-        contentType: CHAT_CONTENT_TYPES.ROOM_NAME,
-        message: mozL10n.get("rooms_welcome_title", {conversationName: actionData.roomName})
-      });
+      if (actionData.roomName) {
+        this._appendTextChatMessage(CHAT_MESSAGE_TYPES.SPECIAL, {
+          contentType: CHAT_CONTENT_TYPES.ROOM_NAME,
+          message: actionData.roomName
+        });
+      }
 
       // Append the context if we have any.
       if ("urls" in actionData && actionData.urls.length) {
@@ -160,4 +162,4 @@ loop.store.TextChatStore = (function(mozL10n) {
   });
 
   return TextChatStore;
-})(navigator.mozL10n || window.mozL10n);
+})();
