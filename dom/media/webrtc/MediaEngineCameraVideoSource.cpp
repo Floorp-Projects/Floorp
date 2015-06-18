@@ -9,11 +9,7 @@
 namespace mozilla {
 
 using namespace mozilla::gfx;
-using dom::OwningLongOrConstrainLongRange;
-using dom::ConstrainLongRange;
-using dom::OwningDoubleOrConstrainDoubleRange;
-using dom::ConstrainDoubleRange;
-using dom::MediaTrackConstraintSet;
+using namespace mozilla::dom;
 
 extern PRLogModuleInfo* GetMediaManagerLog();
 #define LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)
@@ -62,51 +58,106 @@ MediaEngineCameraVideoSource::GetCapability(size_t aIndex,
 
 template<class ValueType, class ConstrainRange>
 /* static */ uint32_t
-MediaEngineCameraVideoSource::FitnessDistance(ValueType n,
+MediaEngineCameraVideoSource::FitnessDistance(ValueType aN,
                                               const ConstrainRange& aRange)
 {
-  if ((aRange.mExact.WasPassed() && aRange.mExact.Value() != n) ||
-      (aRange.mMin.WasPassed() && aRange.mMin.Value() > n) ||
-      (aRange.mMax.WasPassed() && aRange.mMax.Value() < n)) {
+  if ((aRange.mExact.WasPassed() && aRange.mExact.Value() != aN) ||
+      (aRange.mMin.WasPassed() && aRange.mMin.Value() > aN) ||
+      (aRange.mMax.WasPassed() && aRange.mMax.Value() < aN)) {
     return UINT32_MAX;
   }
-  if (!aRange.mIdeal.WasPassed() || n == aRange.mIdeal.Value()) {
+  if (!aRange.mIdeal.WasPassed() || aN == aRange.mIdeal.Value()) {
     return 0;
   }
-  return uint32_t(ValueType((std::abs(n - aRange.mIdeal.Value()) * 1000) /
-                            std::max(std::abs(n), std::abs(aRange.mIdeal.Value()))));
+  return uint32_t(ValueType((std::abs(aN - aRange.mIdeal.Value()) * 1000) /
+                            std::max(std::abs(aN), std::abs(aRange.mIdeal.Value()))));
 }
 
 // Binding code doesn't templatize well...
 
 /*static*/ uint32_t
-MediaEngineCameraVideoSource::FitnessDistance(int32_t n,
+MediaEngineCameraVideoSource::FitnessDistance(int32_t aN,
     const OwningLongOrConstrainLongRange& aConstraint, bool aAdvanced)
 {
   if (aConstraint.IsLong()) {
     ConstrainLongRange range;
     (aAdvanced ? range.mExact : range.mIdeal).Construct(aConstraint.GetAsLong());
-    return FitnessDistance(n, range);
+    return FitnessDistance(aN, range);
   } else {
-    return FitnessDistance(n, aConstraint.GetAsConstrainLongRange());
+    return FitnessDistance(aN, aConstraint.GetAsConstrainLongRange());
   }
 }
 
 /*static*/ uint32_t
-MediaEngineCameraVideoSource::FitnessDistance(double n,
+MediaEngineCameraVideoSource::FitnessDistance(double aN,
     const OwningDoubleOrConstrainDoubleRange& aConstraint,
     bool aAdvanced)
 {
   if (aConstraint.IsDouble()) {
     ConstrainDoubleRange range;
     (aAdvanced ? range.mExact : range.mIdeal).Construct(aConstraint.GetAsDouble());
-    return FitnessDistance(n, range);
+    return FitnessDistance(aN, range);
   } else {
-    return FitnessDistance(n, aConstraint.GetAsConstrainDoubleRange());
+    return FitnessDistance(aN, aConstraint.GetAsConstrainDoubleRange());
   }
 }
 
-/*static*/ uint32_t
+// Fitness distance returned as integer math * 1000. Infinity = UINT32_MAX
+
+/* static */ uint32_t
+MediaEngineCameraVideoSource::FitnessDistance(nsString aN,
+                             const ConstrainDOMStringParameters& aParams)
+{
+  struct Func
+  {
+    static bool
+    Contains(const OwningStringOrStringSequence& aStrings, nsString aN)
+    {
+      return aStrings.IsString() ? aStrings.GetAsString() == aN
+                                 : aStrings.GetAsStringSequence().Contains(aN);
+    }
+  };
+
+  if (aParams.mExact.WasPassed() && !Func::Contains(aParams.mExact.Value(), aN)) {
+    return UINT32_MAX;
+  }
+  if (aParams.mIdeal.WasPassed() && !Func::Contains(aParams.mIdeal.Value(), aN)) {
+    return 1000;
+  }
+  return 0;
+}
+
+/* static */ uint32_t
+MediaEngineCameraVideoSource::FitnessDistance(nsString aN,
+    const OwningStringOrStringSequenceOrConstrainDOMStringParameters& aConstraint,
+    bool aAdvanced)
+{
+  if (aConstraint.IsString()) {
+    ConstrainDOMStringParameters params;
+    if (aAdvanced) {
+      params.mExact.Construct();
+      params.mExact.Value().SetAsString() = aConstraint.GetAsString();
+    } else {
+      params.mIdeal.Construct();
+      params.mIdeal.Value().SetAsString() = aConstraint.GetAsString();
+    }
+    return FitnessDistance(aN, params);
+  } else if (aConstraint.IsStringSequence()) {
+    ConstrainDOMStringParameters params;
+    if (aAdvanced) {
+      params.mExact.Construct();
+      params.mExact.Value().SetAsStringSequence() = aConstraint.GetAsStringSequence();
+    } else {
+      params.mIdeal.Construct();
+      params.mIdeal.Value().SetAsStringSequence() = aConstraint.GetAsStringSequence();
+    }
+    return FitnessDistance(aN, params);
+  } else {
+    return FitnessDistance(aN, aConstraint.GetAsConstrainDOMStringParameters());
+  }
+}
+
+uint32_t
 MediaEngineCameraVideoSource::GetFitnessDistance(const webrtc::CaptureCapability& aCandidate,
                                                  const MediaTrackConstraintSet &aConstraints,
                                                  bool aAdvanced)
@@ -115,6 +166,7 @@ MediaEngineCameraVideoSource::GetFitnessDistance(const webrtc::CaptureCapability
   // This allows for orthogonal capabilities that are not in discrete steps.
 
   uint64_t distance =
+    uint64_t(FitnessDistance(mFacingMode, aConstraints.mFacingMode, aAdvanced)) +
     uint64_t(aCandidate.width? FitnessDistance(int32_t(aCandidate.width),
                                                aConstraints.mWidth,
                                                aAdvanced) : 0) +
@@ -215,7 +267,7 @@ MediaEngineCameraVideoSource::LogConstraints(
 
 bool
 MediaEngineCameraVideoSource::ChooseCapability(
-    const dom::MediaTrackConstraints &aConstraints,
+    const MediaTrackConstraints &aConstraints,
     const MediaEnginePrefs &aPrefs)
 {
   if (MOZ_LOG_TEST(GetMediaManagerLog(), LogLevel::Debug)) {
@@ -325,16 +377,75 @@ MediaEngineCameraVideoSource::ChooseCapability(
 }
 
 void
+MediaEngineCameraVideoSource::SetName(nsString aName)
+{
+  mDeviceName = aName;
+  bool hasFacingMode = false;
+  VideoFacingModeEnum facingMode = VideoFacingModeEnum::User;
+
+  // Set facing mode based on device name.
+#if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
+  if (aName.EqualsLiteral("back")) {
+    hasFacingMode = true;
+    facingMode = VideoFacingModeEnum::Environment;
+  } else if (aName.EqualsLiteral("front")) {
+    hasFacingMode = true;
+    facingMode = VideoFacingModeEnum::User;
+  }
+#endif // MOZ_B2G_CAMERA
+#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
+  // Names are generated. Example: "Camera 0, Facing back, Orientation 90"
+  //
+  // See media/webrtc/trunk/webrtc/modules/video_capture/android/java/src/org/
+  // webrtc/videoengine/VideoCaptureDeviceInfoAndroid.java
+
+  if (aName.Find(NS_LITERAL_STRING("Facing back")) != kNotFound) {
+    hasFacingMode = true;
+    facingMode = VideoFacingModeEnum::Environment;
+  } else if (aName.Find(NS_LITERAL_STRING("Facing front")) != kNotFound) {
+    hasFacingMode = true;
+    facingMode = VideoFacingModeEnum::User;
+  }
+#endif // ANDROID
+#ifdef XP_MACOSX
+  // Kludge to test user-facing cameras on OSX.
+  if (aName.Find(NS_LITERAL_STRING("Face")) != -1) {
+    hasFacingMode = true;
+    facingMode = VideoFacingModeEnum::User;
+  }
+#endif
+  if (hasFacingMode) {
+    mFacingMode.Assign(NS_ConvertUTF8toUTF16(
+        VideoFacingModeEnumValues::strings[uint32_t(facingMode)].value));
+  } else {
+    mFacingMode.Truncate();
+  }
+}
+
+void
 MediaEngineCameraVideoSource::GetName(nsAString& aName)
 {
   aName = mDeviceName;
 }
 
 void
-MediaEngineCameraVideoSource::GetUUID(nsAString& aUUID)
+MediaEngineCameraVideoSource::SetUUID(const char* aUUID)
+{
+  mUniqueId.Assign(aUUID);
+}
+
+void
+MediaEngineCameraVideoSource::GetUUID(nsACString& aUUID)
 {
   aUUID = mUniqueId;
 }
+
+const nsCString&
+MediaEngineCameraVideoSource::GetUUID()
+{
+  return mUniqueId;
+}
+
 
 void
 MediaEngineCameraVideoSource::SetDirectListeners(bool aHasDirectListeners)
