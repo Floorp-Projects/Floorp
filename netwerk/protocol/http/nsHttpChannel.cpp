@@ -4436,6 +4436,22 @@ nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType)
         return NS_ERROR_CORRUPTED_CONTENT;
     }
 
+    nsAutoCString redirectHost;
+    mRedirectURI->GetHost(redirectHost);
+    nsAutoCString currentHost;
+    mURI->GetHost(currentHost);
+    if (redirectHost != currentHost) {
+        // When redirecting to another domain, the target domain should not be
+        // percent encoded, as the URL parser does not yet support that
+        nsAutoCString unescapedHost;
+        if (NS_UnescapeURL(redirectHost.BeginReading(), redirectHost.Length(),
+                           0, unescapedHost)) {
+            if (IsUTF8(unescapedHost)) {
+                mRedirectURI->SetHost(unescapedHost);
+            }
+        }
+    }
+
     if (mApplicationCache) {
         // if we are redirected to a different origin check if there is a fallback
         // cache entry to fall back to. we don't care about file strict
@@ -4777,7 +4793,10 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     MOZ_ASSERT(NS_IsMainThread());
     if (gHttpHandler->PackagedAppsEnabled()) {
         nsAutoCString path;
-        mURI->GetPath(path);
+        nsCOMPtr<nsIURL> url(do_QueryInterface(mURI));
+        if (url) {
+            url->GetFilePath(path);
+        }
         mIsPackagedAppResource = path.Find(PACKAGED_APP_TOKEN) != kNotFound;
     }
 

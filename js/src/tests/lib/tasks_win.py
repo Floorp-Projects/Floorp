@@ -12,16 +12,16 @@ class EndMarker:
     pass
 
 
-def _do_work(qTasks, qResults, timeout):
+def _do_work(qTasks, qResults, prefix, timeout):
     while True:
         test = qTasks.get(block=True, timeout=sys.maxint)
         if test is EndMarker:
             qResults.put(EndMarker)
             return
-        qResults.put(test.run(test.js_cmd_prefix, timeout))
+        qResults.put(test.run(prefix, timeout))
 
 
-def run_all_tests_gen(tests, results, options):
+def run_all_tests_gen(tests, prefix, results, options):
     """
     Uses scatter-gather to a thread-pool to manage children.
     """
@@ -29,7 +29,8 @@ def run_all_tests_gen(tests, results, options):
 
     workers = []
     for _ in range(options.worker_count):
-        worker = Thread(target=_do_work, args=(qTasks, qResults, options.timeout))
+        worker = Thread(target=_do_work, args=(qTasks, qResults, prefix,
+                                               options.timeout))
         worker.setDaemon(True)
         worker.start()
         workers.append(worker)
@@ -60,8 +61,8 @@ def run_all_tests_gen(tests, results, options):
     assert qResults.empty(), "Result queue not drained"
 
 
-def run_all_tests(tests, results, options):
-    for result in run_all_tests_gen(tests, results, options):
+def run_all_tests(tests, prefix, results, options):
+    for result in run_all_tests_gen(tests, prefix, results, options):
         results.push(result)
     return True
 
