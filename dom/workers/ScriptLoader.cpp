@@ -95,7 +95,6 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                      const nsAString& aScriptURL,
                      bool aIsMainScript,
                      WorkerScriptType aWorkerScriptType,
-                     nsContentPolicyType aContentPolicyType,
                      nsIChannel** aChannel)
 {
   AssertIsOnMainThread();
@@ -112,7 +111,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
   // If we're part of a document then check the content load policy.
   if (parentDoc) {
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(aContentPolicyType, uri,
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT, uri,
                                    principal, parentDoc,
                                    NS_LITERAL_CSTRING("text/javascript"),
                                    nullptr, &shouldLoad,
@@ -167,7 +166,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                        uri,
                        parentDoc,
                        nsILoadInfo::SEC_NORMAL,
-                       aContentPolicyType,
+                       nsIContentPolicy::TYPE_SCRIPT,
                        loadGroup,
                        nullptr, // aCallbacks
                        flags,
@@ -182,7 +181,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                        uri,
                        principal,
                        nsILoadInfo::SEC_NORMAL,
-                       aContentPolicyType,
+                       nsIContentPolicy::TYPE_SCRIPT,
                        loadGroup,
                        nullptr, // aCallbacks
                        flags,
@@ -808,9 +807,7 @@ private:
     if (!channel) {
       rv = ChannelFromScriptURL(principal, baseURI, parentDoc, loadGroup, ios,
                                 secMan, loadInfo.mURL, IsMainWorkerScript(),
-                                mWorkerScriptType,
-                                mWorkerPrivate->ContentPolicyType(),
-                                getter_AddRefs(channel));
+                                mWorkerScriptType, getter_AddRefs(channel));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1522,8 +1519,6 @@ public:
       scriptloader::ChannelFromScriptURLMainThread(principal, baseURI,
                                                    parentDoc, loadGroup,
                                                    mScriptURL,
-                                                   // Nested workers are always dedicated.
-                                                   nsIContentPolicy::TYPE_INTERNAL_WORKER,
                                                    getter_AddRefs(channel));
     if (NS_SUCCEEDED(mResult)) {
       channel.forget(mChannel);
@@ -1735,7 +1730,6 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
                                nsIDocument* aParentDoc,
                                nsILoadGroup* aLoadGroup,
                                const nsAString& aScriptURL,
-                               nsContentPolicyType aContentPolicyType,
                                nsIChannel** aChannel)
 {
   AssertIsOnMainThread();
@@ -1746,8 +1740,7 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
   NS_ASSERTION(secMan, "This should never be null!");
 
   return ChannelFromScriptURL(aPrincipal, aBaseURI, aParentDoc, aLoadGroup,
-                              ios, secMan, aScriptURL, true, WorkerScript,
-                              aContentPolicyType, aChannel);
+                              ios, secMan, aScriptURL, true, WorkerScript, aChannel);
 }
 
 nsresult
