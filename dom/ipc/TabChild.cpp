@@ -867,6 +867,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mDefaultScale(0)
   , mIPCOpen(true)
   , mParentIsActive(false)
+  , mAudioChannelActive(false)
 {
   // In the general case having the TabParent tell us if APZ is enabled or not
   // doesn't really work because the TabParent itself may not have a reference
@@ -978,10 +979,39 @@ TabChild::Observe(nsISupports *aSubject,
     }
   }
 
-  if (audioChannel != -1) {
-    nsAutoString active(aData);
-    unused << SendAudioChannelActivityNotification(audioChannel,
-                                                   active.Equals(NS_LITERAL_STRING("active")));
+  if (audioChannel != -1 && mIPCOpen) {
+    // If the subject is not a wrapper, it is sent by the TabParent and we
+    // should ignore it.
+    nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
+    if (!wrapper) {
+      return NS_OK;
+    }
+
+    // We must have a window in order to compare the windowID contained into the
+    // wrapper.
+    nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(WebNavigation());
+    if (!window) {
+      return NS_OK;
+    }
+
+    uint64_t windowID = 0;
+    nsresult rv = wrapper->GetData(&windowID);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // In theory a tabChild should contain just 1 top window, but let's double
+    // check it comparing the windowID.
+    if (window->WindowID() != windowID) {
+      return NS_OK;
+    }
+
+    nsAutoString activeStr(aData);
+    bool active = activeStr.EqualsLiteral("active");
+    if (active != mAudioChannelActive) {
+      mAudioChannelActive = active;
+      unused << SendAudioChannelActivityNotification(audioChannel, active);
+    }
   }
 
   return NS_OK;
