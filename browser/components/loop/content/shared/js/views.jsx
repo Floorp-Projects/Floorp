@@ -778,6 +778,7 @@ loop.shared.views = (function(_, l10n) {
               <a className="context-url"
                  onClick={this.handleLinkClick}
                  href={this.props.allowClick ? this.props.url : null}
+                 rel="noreferrer"
                  target="_blank">{hostname}</a>
             </span>
           </div>
