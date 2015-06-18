@@ -140,6 +140,9 @@ media::TimeUnit FramesToTimeUnit(int64_t aFrames, uint32_t aRate);
 // overflow while calulating the conversion.
 CheckedInt64 UsecsToFrames(int64_t aUsecs, uint32_t aRate);
 
+// Format TimeUnit as number of frames at given rate.
+CheckedInt64 TimeUnitToFrames(const media::TimeUnit& aTime, uint32_t aRate);
+
 // Converts milliseconds to seconds.
 #define MS_TO_SECONDS(ms) ((double)(ms) / (PR_MSEC_PER_SEC))
 
