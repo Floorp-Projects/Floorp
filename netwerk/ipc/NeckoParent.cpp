@@ -40,6 +40,7 @@
 #include "nsIAuthPromptCallback.h"
 #include "nsPrincipal.h"
 #include "nsIOService.h"
+#include "nsINetworkPredictor.h"
 #include "mozilla/net/OfflineObserver.h"
 #include "nsISpeculativeConnect.h"
 
@@ -56,6 +57,8 @@ using IPC::SerializedLoadContext;
 
 namespace mozilla {
 namespace net {
+
+PNeckoParent *gNeckoParent = nullptr;
 
 // C++ file contents
 NeckoParent::NeckoParent()
@@ -82,6 +85,7 @@ NeckoParent::NeckoParent()
   }
 
   mObserver = new OfflineObserver(this);
+  gNeckoParent = this;
 }
 
 NeckoParent::~NeckoParent()
@@ -850,6 +854,79 @@ NeckoParent::RecvOnAuthCancelled(const uint64_t& aCallbackId,
   }
   CallbackMap().erase(aCallbackId);
   callback->OnAuthCancelled(nullptr, aUserCancel);
+  return true;
+}
+
+/* Predictor Messages */
+bool
+NeckoParent::RecvPredPredict(const ipc::OptionalURIParams& aTargetURI,
+                             const ipc::OptionalURIParams& aSourceURI,
+                             const uint32_t& aReason,
+                             const SerializedLoadContext& aLoadContext,
+                             const bool& hasVerifier)
+{
+  nsCOMPtr<nsIURI> targetURI = DeserializeURI(aTargetURI);
+  nsCOMPtr<nsIURI> sourceURI = DeserializeURI(aSourceURI);
+
+  // We only actually care about the loadContext.mPrivateBrowsing, so we'll just
+  // pass dummy params for nestFrameId, inBrowser and appId
+  uint64_t nestedFrameId = 0;
+  nsCOMPtr<nsILoadContext> loadContext;
+  if (aLoadContext.IsNotNull()) {
+    loadContext = new LoadContext(aLoadContext, nestedFrameId, NECKO_UNKNOWN_APP_ID, false);
+  }
+
+  // Get the current predictor
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsINetworkPredictor> predictor =
+    do_GetService("@mozilla.org/network/predictor;1", &rv);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsCOMPtr<nsINetworkPredictorVerifier> verifier;
+  if (hasVerifier) {
+    verifier = do_QueryInterface(predictor);
+  }
+  predictor->Predict(targetURI, sourceURI, aReason, loadContext, verifier);
+  return true;
+}
+
+bool
+NeckoParent::RecvPredLearn(const ipc::URIParams& aTargetURI,
+                           const ipc::OptionalURIParams& aSourceURI,
+                           const uint32_t& aReason,
+                           const SerializedLoadContext& aLoadContext)
+{
+  nsCOMPtr<nsIURI> targetURI = DeserializeURI(aTargetURI);
+  nsCOMPtr<nsIURI> sourceURI = DeserializeURI(aSourceURI);
+
+  // We only actually care about the loadContext.mPrivateBrowsing, so we'll just
+  // pass dummy params for nestFrameId, inBrowser and appId
+  uint64_t nestedFrameId = 0;
+  nsCOMPtr<nsILoadContext> loadContext;
+  if (aLoadContext.IsNotNull()) {
+    loadContext = new LoadContext(aLoadContext, nestedFrameId, NECKO_UNKNOWN_APP_ID, false);
+  }
+
+  // Get the current predictor
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsINetworkPredictor> predictor =
+    do_GetService("@mozilla.org/network/predictor;1", &rv);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  predictor->Learn(targetURI, sourceURI, aReason, loadContext);
+  return true;
+}
+
+bool
+NeckoParent::RecvPredReset()
+{
+  // Get the current predictor
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsINetworkPredictor> predictor =
+    do_GetService("@mozilla.org/network/predictor;1", &rv);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  predictor->Reset();
   return true;
 }
 
