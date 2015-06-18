@@ -14,12 +14,16 @@
 #endif
               android:targetSdkVersion="@ANDROID_TARGET_SDK@"/>
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
     <instrumentation
         android:name="org.mozilla.gecko.FennecInstrumentationTestRunner"
         android:targetPackage="@ANDROID_PACKAGE_NAME@" />
 
     <application
-        android:label="@string/app_name" >
+        android:label="@string/app_name"
+        android:debuggable="true">
+
         <uses-library android:name="android.test.runner" />
 
         <!-- Fake handlers to ensure that we have some share intents to show in our share handler list -->

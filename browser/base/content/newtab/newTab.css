@@ -481,10 +481,38 @@ input[type=button] {
   transition: opacity .07s linear;
 }
 
+.newtab-customize-panel-container {
+  position: absolute;
+  margin-right: 40px;
+}
+
 #newtab-customize-panel {
-  z-index: 101;
-  margin-top: -5px;
+  z-index: 999;
+  margin-top: 55px;
   min-width: 270px;
+  position: absolute;
+  top: 100%;
+  right: -25px;
+  background-color: white;
+  border-radius: 6px;
+  filter: drop-shadow(0 0 1px rgba(0,0,0,0.4)) drop-shadow(0 3px 4px rgba(0,0,0,0.4));
+  transition: all 200ms ease-in-out;
+  transform-origin: top right;
+  transform: translate(-30px, -20px) scale(0) translate(30px, 20px);
+}
+
+#newtab-customize-panel[open="true"] {
+  transform: translate(-30px, -20px) scale(1) translate(30px, 20px);
+}
+
+#newtab-customize-panel-anchor {
+  width: 18px;
+  height: 18px;
+  background-color: white;
+  transform: rotate(45deg);
+  position: absolute;
+  top: -6px;
+  right: 15px;
 }
 
 #newtab-customize-title {
@@ -499,6 +527,7 @@ input[type=button] {
   max-width: 300px;
   overflow: hidden;
   display: table-cell;
+  border-top: none;
 }
 
 #newtab-customize-title > label {
@@ -518,6 +547,7 @@ input[type=button] {
   -moz-padding-start: 40px;
   font-size: 14px;
   cursor: pointer;
+  max-width: 300px;
 }
 
 .newtab-customize-panel-item:not(:first-child),
@@ -544,10 +574,8 @@ input[type=button] {
 
 .newtab-customize-panel-item,
 .newtab-customize-complex-option {
-  width: 100%;
   display: block;
   text-align: start;
-  max-width: 300px;
   background-color: #F9F9F9;
 }
 
@@ -615,6 +643,7 @@ input[type=button] {
   padding: 0px 15px 15px 15px;
   -moz-padding-start: 40px;
   display: block;
+  max-width: 300px;
 }
 
 .newtab-customize-panel-subitem > label {
@@ -788,7 +817,7 @@ input[type=button] {
 
 .newtab-intro-image-customize {
   box-shadow: 3px 3px 5px #888;
-  margin: 0 !important;
+  margin-top: 0px;
   background-color: #FFF;
   float: left;
   z-index: 101;
@@ -799,7 +828,7 @@ input[type=button] {
 
 .newtab-intro-image-customize #newtab-customize-title {
   display: block;
-  max-height: 72px;
+  max-height: 40px;
 }
 
 .newtab-intro-image-customize .newtab-customize-panel-item:not([selected]):hover {

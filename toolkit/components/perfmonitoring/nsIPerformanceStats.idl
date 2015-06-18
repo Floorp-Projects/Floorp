@@ -22,8 +22,16 @@
  * All values are monotonic and are updated only when
  * `nsIPerformanceStatsService.isStopwatchActive` is `true`.
  */
-[scriptable, uuid(b060d75d-55bc-4c82-a4ff-458fc5ab2a69)]
+[scriptable, uuid(47f8d36d-1d67-43cb-befd-d2f4720ac568)]
 interface nsIPerformanceStats: nsISupports {
+  /**
+   * An identifier unique to the component.
+   *
+   * This identifier is somewhat human-readable to aid with debugging,
+   * but clients should not rely upon the format.
+   */
+  readonly attribute AString groupId;
+
   /**
    * The name of the component:
    * - for the process itself, "<process>";
