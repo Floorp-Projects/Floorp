@@ -259,7 +259,9 @@ private:
     void ComputeClientRectUsingScreen(nsRect *outRect);
     void ComputeFullAreaUsingScreen(nsRect *outRect);
     void FindScreen(nsIScreen **outScreen);
-    void CalcPrintingSize();
+
+    // Return false if the surface is not right
+    bool CalcPrintingSize();
     void UpdateAppUnitsForFullZoom();
 
     nscoord  mWidth;
