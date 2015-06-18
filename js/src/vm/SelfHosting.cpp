@@ -1722,9 +1722,7 @@ CloneObject(JSContext* cx, HandleNativeObject selfHostedObject)
         js::gc::AllocKind kind = hasName
                                  ? gc::AllocKind::FUNCTION_EXTENDED
                                  : selfHostedFunction->getAllocKind();
-        MOZ_ASSERT(!CanReuseScriptForClone(cx->compartment(), selfHostedFunction, cx->global()));
-        clone = CloneFunctionAndScript(cx, selfHostedFunction, cx->global(),
-                                       /* newStaticScope = */ nullptr, kind);
+        clone = CloneFunctionObject(cx, selfHostedFunction, cx->global(), kind, TenuredObject);
         // To be able to re-lazify the cloned function, its name in the
         // self-hosting compartment has to be stored on the clone.
         if (clone && hasName)
@@ -1808,17 +1806,22 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx, HandlePropertyName name,
     // JSFunction::generatorKind can't handle lazy self-hosted functions, so we make sure there
     // aren't any.
     MOZ_ASSERT(!sourceFun->isGenerator());
-    MOZ_ASSERT(sourceFun->nargs() == targetFun->nargs());
-    // The target function might have been relazified after it's flags changed.
-    targetFun->setFlags((targetFun->flags() & ~JSFunction::INTERPRETED_LAZY) |
-                        sourceFun->flags() | JSFunction::EXTENDED);
-    MOZ_ASSERT(targetFun->isExtended());
-
     RootedScript sourceScript(cx, sourceFun->getOrCreateScript(cx));
     if (!sourceScript)
         return false;
     MOZ_ASSERT(!sourceScript->enclosingStaticScope());
-    return !!CloneScriptIntoFunction(cx, /* enclosingScope = */ nullptr, targetFun, sourceScript);
+    JSScript* cscript = CloneScript(cx, nullptr, targetFun, sourceScript);
+    if (!cscript)
+        return false;
+    cscript->setFunction(targetFun);
+
+    MOZ_ASSERT(sourceFun->nargs() == targetFun->nargs());
+    // The target function might have been relazified after it's flags changed.
+    targetFun->setFlags((targetFun->flags() & ~JSFunction::INTERPRETED_LAZY) |
+                        sourceFun->flags() | JSFunction::EXTENDED);
+    targetFun->setScript(cscript);
+    MOZ_ASSERT(targetFun->isExtended());
+    return true;
 }
 
 bool
