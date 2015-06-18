@@ -56,17 +56,17 @@ public:
     return mGeneration;
   }
 
-#ifdef MOZ_TASK_TRACER
-  void GetTLSTraceInfo();
-  mozilla::tasktracer::TracedTaskCommon GetTracedTask();
-#endif
-
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
 private:
   void SetDelayInternal(uint32_t aDelay);
 
   void Fire();
+
+#ifdef MOZ_TASK_TRACER
+  void GetTLSTraceInfo();
+  mozilla::tasktracer::TracedTaskCommon GetTracedTask();
+#endif
 
   enum class CallbackType : uint8_t {
     Unknown = 0,
