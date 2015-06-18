@@ -26,6 +26,7 @@ namespace mozilla {
 static bool sIsWMFEnabled = false;
 static bool sDXVAEnabled = false;
 static int  sNumDecoderThreads = -1;
+static bool sIsIntelDecoderEnabled = false;
 
 WMFDecoderModule::WMFDecoderModule()
   : mWMFInitialized(false)
@@ -44,6 +45,7 @@ void
 WMFDecoderModule::DisableHardwareAcceleration()
 {
   sDXVAEnabled = false;
+  sIsIntelDecoderEnabled = false;
 }
 
 static void
@@ -72,6 +74,7 @@ WMFDecoderModule::Init()
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   sIsWMFEnabled = Preferences::GetBool("media.windows-media-foundation.enabled", false);
   sDXVAEnabled = gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
+  sIsIntelDecoderEnabled = Preferences::GetBool("media.webm.intel_decoder.enabled", false);
   SetNumOfDecoderThreads();
 }
 
@@ -145,7 +148,8 @@ WMFDecoderModule::SupportsSharedDecoders(const VideoInfo& aConfig) const
 {
   // If DXVA is enabled, but we're not going to use it for this specific config, then
   // we can't use the shared decoder.
-  return !sDXVAEnabled || ShouldUseDXVA(aConfig);
+  return !AgnosticMimeType(aConfig.mMimeType) &&
+    (!sDXVAEnabled || ShouldUseDXVA(aConfig));
 }
 
 bool
@@ -153,10 +157,11 @@ WMFDecoderModule::SupportsMimeType(const nsACString& aMimeType)
 {
   return aMimeType.EqualsLiteral("video/mp4") ||
          aMimeType.EqualsLiteral("video/avc") ||
-         aMimeType.EqualsLiteral("video/webm; codecs=vp8") ||
-         aMimeType.EqualsLiteral("video/webm; codecs=vp9") ||
          aMimeType.EqualsLiteral("audio/mp4a-latm") ||
-         aMimeType.EqualsLiteral("audio/mpeg");
+         aMimeType.EqualsLiteral("audio/mpeg") ||
+         (sIsIntelDecoderEnabled &&
+          (aMimeType.EqualsLiteral("video/webm; codecs=vp8") ||
+           aMimeType.EqualsLiteral("video/webm; codecs=vp9")));
 }
 
 PlatformDecoderModule::ConversionRequired

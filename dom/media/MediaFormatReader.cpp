@@ -258,13 +258,15 @@ bool MediaFormatReader::IsWaitingOnCDMResource() {
 bool
 MediaFormatReader::IsSupportedAudioMimeType(const nsACString& aMimeType)
 {
-  return mPlatform && mPlatform->SupportsMimeType(aMimeType);
+  return mPlatform && (mPlatform->SupportsMimeType(aMimeType) ||
+    PlatformDecoderModule::AgnosticMimeType(aMimeType));
 }
 
 bool
 MediaFormatReader::IsSupportedVideoMimeType(const nsACString& aMimeType)
 {
-  return mPlatform && mPlatform->SupportsMimeType(aMimeType);
+  return mPlatform && (mPlatform->SupportsMimeType(aMimeType) ||
+    PlatformDecoderModule::AgnosticMimeType(aMimeType));
 }
 
 nsRefPtr<MediaDecoderReader::MetadataPromise>
