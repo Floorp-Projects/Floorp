@@ -260,8 +260,7 @@
   width: 100%;
 }
 
-.standalone .local-stream,
-.standalone .remote-inset-stream {
+.standalone .local-stream {
   /* required to have it superimposed to the control toolbar */
   z-index: 1001;
 }
@@ -554,7 +553,7 @@
   width: 100%;
 }
 
-.local .avatar {
+.conversation .local .avatar {
   position: absolute;
   z-index: 1;
 }
@@ -647,16 +646,15 @@ html, .fx-embedded, #main,
 }
 
 /* We use 641px rather than 640, as min-width and max-width are inclusive */
-@media screen and (min-width:641px) {
-  .standalone .conversation-toolbar {
+@media screen and (min-width: 641px) {
+  .standalone .conversation .conversation-toolbar {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
   }
 
-  .standalone .local-stream,
-  .standalone .remote-inset-stream {
+  .standalone .conversation .local-stream {
     position: absolute;
     right: 15px;
     bottom: 15px;
@@ -701,11 +699,7 @@ html, .fx-embedded, #main,
     min-height: 500px;
   }
 
-  .standalone .remote-inset-stream {
-    display: none;
-  }
-
-  .standalone .local-stream {
+  .standalone .conversation .local-stream {
     flex: 1;
     min-width: 120px;
     min-height: 150px;
@@ -753,19 +747,20 @@ html, .fx-embedded, #main,
   background: #000;
   height: 50px;
   text-align: left;
-  width: 75%;
+  margin: 0 10px;
 }
 
 .room-conversation-wrapper header h1 {
   font-size: 1.5em;
   color: #fff;
   line-height: 50px;
-  text-indent: 60px;
+  text-indent: 40px;
   background-image: url("../img/firefox-logo.png");
   background-size: 30px;
-  background-position: 20px;
+  background-position: 0 center;
   background-repeat: no-repeat;
   display: inline-block;
+  margin: 0 10px;
 }
 
 .room-conversation-wrapper header a {
@@ -775,7 +770,7 @@ html, .fx-embedded, #main,
 .room-conversation-wrapper header .icon-help {
   display: inline-block;
   background-size: contain;
-  margin-top: 20px;
+  margin-top: 15px;
   width: 20px;
   height: 20px;
   background: transparent url("../img/svg/glyph-help-16x16.svg") no-repeat;
@@ -885,6 +880,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   padding-left: 1em;
   padding-right: 1em;
   padding-bottom: 0.5em;
+  margin-bottom: 0.5em;
   background-color: #E8F6FE;
 }
 
@@ -1080,6 +1076,198 @@ html[dir="rtl"] .room-context-btn-edit {
   left: 20px;
 }
 
+.media-layout {
+  /* 50px is the header, 3em is the footer. */
+  height: calc(100% - 50px - 3em);
+}
+
+.media-layout > .media-wrapper {
+  display: flex;
+  flex-flow: column wrap;
+  /* 64px for .conversation-toolbar */
+  height: calc(100% - 64px);
+  margin: 0 10px;
+}
+
+.media-wrapper > .focus-stream {
+  /* We want this to be the width, minus 200px which is for the right-side text
+     chat and video displays. */
+  width: calc(100% - 200px);
+  /* 100% height to fill up media-layout, thus forcing other elements into the
+     second column that's 200px wide */
+  height: 100%;
+  background-color: #4E4E4E;
+}
+
+.media-wrapper > .remote {
+  /* Works around an issue with object-fit: cover in Google Chrome - it doesn't
+     currently crop but overlaps the surrounding elements.
+     https://code.google.com/p/chromium/issues/detail?id=400829 */
+  overflow: hidden;
+}
+
+.media-wrapper > .remote > .remote-video {
+  object-fit: cover;
+}
+
+/* Note: we can't use flex for the text-chat-view as this lets it overflow
+   the expected column heights, and we ca't fix its height. */
+.media-wrapper > .text-chat-view {
+  flex: 0 0 auto;
+  /* Text chat is a fixed 200px width for normal displays. */
+  width: 200px;
+  height: 100%;
+}
+
+.media-wrapper.showing-local-streams > .text-chat-view {
+  /* When we're displaying the local streams, then we need to make the text
+     chat view a bit shorter to give room. */
+  height: calc(100% - 150px);
+}
+
+.media-wrapper.showing-local-streams.receiving-screen-share > .text-chat-view {
+  /* When we're displaying the local streams, then we need to make the text
+     chat view a bit shorter to give room. */
+  height: calc(100% - 300px);
+}
+
+.media-wrapper > .text-chat-view > .text-chat-entries {
+  /* 40px is the height of .text-chat-box. */
+  height: calc(100% - 40px);
+}
+
+.media-wrapper > .local {
+  flex: 0 1 auto;
+  width: 200px;
+  height: 150px;
+}
+
+.media-wrapper.receiving-screen-share > .screen {
+  order: 1;
+}
+
+.media-wrapper.receiving-screen-share > .text-chat-view {
+  order: 2;
+}
+
+.media-wrapper.receiving-screen-share > .remote {
+  order: 3;
+  flex: 0 1 auto;
+  width: 200px;
+  height: 150px;
+}
+
+.media-wrapper.receiving-screen-share > .local {
+  order: 4;
+}
+
+@media screen and (max-width:640px) {
+  .media-layout {
+    /* 50px is height of header, 25px is height of footer. */
+    height: calc(100% - 50px - 25px);
+  }
+
+  .media-layout > .media-wrapper {
+    flex-direction: row;
+    margin: 0;
+    width: 100%;
+    /* conversation toolbar is 38px in narrow mode */
+    height: calc(100% - 38px);
+  }
+
+  .media-wrapper > .focus-stream {
+    width: 100%;
+    /* A reasonable height */
+    height: 70%;
+  }
+
+  .media-wrapper.receiving-screen-share > .focus-stream {
+    height: 50%;
+  }
+
+  .media-wrapper > .text-chat-view > .text-chat-entries {
+    /* 40px is the height of .text-chat-box. */
+    height: calc(100% - 40px);
+    width: 100%;
+  }
+
+  .media-wrapper > .local {
+    /* Position over the remote video */
+    position: absolute;
+    /* Make sure its on top */
+    z-index: 1001;
+    margin: 3px;
+    right: 0;
+    /* 29px is (30% of 50px high header) + (height toolbar (38px) +
+       height footer (25px) - height header (50px)) */
+    bottom: calc(30% + 29px);
+    width: 120px;
+    height: 120px;
+  }
+
+  html[dir="rtl"] .media-wrapper > .local {
+    right: auto;
+    left: 0;
+  }
+
+  .media-wrapper > .text-chat-view {
+    order: 3;
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .media-wrapper > .text-chat-view,
+  .media-wrapper.showing-local-streams > .text-chat-view,
+  .media-wrapper.showing-local-streams.receiving-screen-share > .text-chat-view {
+    /* The remaining 30% that the .focus-stream doesn't use. */
+    height: 30%;
+  }
+
+  .media-wrapper.receiving-screen-share > .screen {
+    order: 1;
+  }
+
+  .media-wrapper.receiving-screen-share > .remote {
+    /* Screen shares have remote & local video side-by-side on narrow screens */
+    order: 2;
+    flex: 1 1 auto;
+    height: 20%;
+    /* Ensure no previously specified widths take effect, and we take up no more
+       than half the width. */
+    width: auto;
+    max-width: 50%;
+  }
+
+  .media-wrapper.receiving-screen-share > .remote > .remote-video {
+      /* Reset the object-fit for this. */
+    object-fit: contain;
+  }
+
+  .media-wrapper.receiving-screen-share > .local {
+    /* Screen shares have remote & local video side-by-side on narrow screens */
+    order: 3;
+    flex: 1 1 auto;
+    height: 20%;
+    /* Ensure no previously specified widths take effect, and we take up no more
+       than half the width. */
+    width: auto;
+    max-width: 50%;
+    /* This cancels out the absolute positioning when it's just remote video. */
+    position: relative;
+    bottom: auto;
+    right: auto;
+    margin: 0;
+  }
+
+  .media-wrapper.receiving-screen-share > .text-chat-view {
+    order: 4;
+  }
+}
+
+.standalone > .room-conversation-wrapper > .media-layout > .conversation-toolbar {
+  border: none;
+}
+
 /* Standalone rooms */
 
 .standalone .room-conversation-wrapper {
@@ -1151,23 +1339,6 @@ html[dir="rtl"] .room-context-btn-edit {
   border-radius: 3px;
   font-weight: normal;
   max-width: 400px;
-}
-
-.standalone-room-info {
-  position: absolute;
-  display: block;
-  top: 0;
-  right: 10px;
-  /* 20px is 10px for left and right margins. */
-  width: calc(25% - 20px);
-  z-index: 2000000;
-  font-size: 1.2em;
-  padding: .4em;
-  height: 100%;
-}
-
-.standalone-room-info > h2 {
-  color: #fff;
 }
 
 .standalone-context-url {
@@ -1243,7 +1414,7 @@ html[dir="rtl"] .room-context-btn-edit {
   padding: .7em .5em 0;
 }
 
-.fx-embedded .text-chat-box {
+.text-chat-box {
   flex: 0 0 auto;
   max-height: 40px;
   min-height: 40px;
@@ -1309,20 +1480,6 @@ html[dir="rtl"] .room-context-btn-edit {
 }
 
 @media screen and (max-width:640px) {
-  .standalone-room-info {
-    /* This isn't perfect, we just center the heading for now. Bug 1141493
-       should fix this. */
-    position: absolute;
-    width: 100%;
-    right: 0px;
-
-    /* Override the 100% specified in the .standalone-room-info selector
-       block so that this div doesn't take over the _whole_ screen and
-       transparently occlude UI widgetry (like the Join button), making
-       it unusable. */
-    height: auto;
-  }
-
   .standalone-context-url {
     /* XXX We haven't got UX for standalone yet, so temporarily not displaying
        on narrow window widths. See bug 1153827. */
@@ -1333,9 +1490,7 @@ html[dir="rtl"] .room-context-btn-edit {
   .standalone .room-conversation {
     background: #000;
   }
-  .room-conversation-wrapper header {
-    width: 100%;
-  }
+
   .standalone .room-conversation-wrapper .room-inner-info-area {
     right: 0;
     margin: auto;
@@ -1357,7 +1512,7 @@ html[dir="rtl"] .room-context-btn-edit {
     height: 38px;
     padding: 8px;
   }
-  .standalone .focus-stream {
+  .standalone .conversation .focus-stream {
     /* Set at maximum height, minus height of conversation toolbar */
     height: 100%;
   }
@@ -1418,8 +1573,6 @@ html[dir="rtl"] .room-context-btn-edit {
 .remote-video {
   width: 100%;
   height: 100%;
-  display: block;
-  position: absolute;
 }
 
 .screen-share-video {

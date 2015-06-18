@@ -355,34 +355,29 @@ loop.standaloneRoomViews = (function(mozL10n) {
     },
 
     render: function() {
-      var localStreamClasses = React.addons.classSet({
-        local: true,
-        "local-stream": true,
-        "local-stream-audio": this.state.videoMuted
-      });
+      var displayScreenShare = this.state.receivingScreenShare ||
+        this.props.screenSharePosterUrl;
 
       var remoteStreamClasses = React.addons.classSet({
-        "video_inner": true,
         "remote": true,
-        "focus-stream": !this.state.receivingScreenShare,
-        "remote-inset-stream": this.state.receivingScreenShare
+        "focus-stream": !displayScreenShare
       });
 
       var screenShareStreamClasses = React.addons.classSet({
         "screen": true,
-        "focus-stream": this.state.receivingScreenShare,
-        hide: !this.state.receivingScreenShare
+        "focus-stream": displayScreenShare
       });
 
-      // XXX Temporarily showAlways = showRoomName = false for TextChatView
-      // until bug 1168829 is completed.
+      var mediaWrapperClasses = React.addons.classSet({
+        "media-wrapper": true,
+        "receiving-screen-share": displayScreenShare,
+        "showing-local-streams": this.state.localSrcVideoObject ||
+          this.props.localPosterUrl
+      });
+
       return (
         <div className="room-conversation-wrapper">
           <div className="beta-logo" />
-          <sharedViews.TextChatView
-            dispatcher={this.props.dispatcher}
-            showAlways={false}
-            showRoomName={false} />
           <StandaloneRoomHeader dispatcher={this.props.dispatcher} />
           <StandaloneRoomInfoArea roomState={this.state.roomState}
                                   failureReason={this.state.failureReason}
@@ -390,44 +385,44 @@ loop.standaloneRoomViews = (function(mozL10n) {
                                   isFirefox={this.props.isFirefox}
                                   activeRoomStore={this.props.activeRoomStore}
                                   roomUsed={this.state.used} />
-          <div className="video-layout-wrapper">
-            <div className="conversation room-conversation">
-              <div className="media nested">
-                <span className="self-view-hidden-message">
-                  {mozL10n.get("self_view_hidden_message")}
-                </span>
-                <div className="video_wrapper remote_wrapper">
-                  <div className={remoteStreamClasses}>
-                    <sharedViews.MediaView displayAvatar={!this.shouldRenderRemoteVideo()}
-                      posterUrl={this.props.remotePosterUrl}
-                      mediaType="remote"
-                      srcVideoObject={this.state.remoteSrcVideoObject} />
-                  </div>
-                  <div className={screenShareStreamClasses}>
-                    <sharedViews.MediaView displayAvatar={false}
-                      posterUrl={this.props.screenSharePosterUrl}
-                      mediaType="screen-share"
-                      srcVideoObject={this.state.screenShareVideoObject} />
-                  </div>
-                </div>
-                <div className={localStreamClasses}>
-                  <sharedViews.MediaView displayAvatar={this.state.videoMuted}
-                    posterUrl={this.props.localPosterUrl}
-                    mediaType="local"
-                    srcVideoObject={this.state.localSrcVideoObject} />
-                </div>
+          <div className="media-layout">
+            <div className={mediaWrapperClasses}>
+              <span className="self-view-hidden-message">
+                {mozL10n.get("self_view_hidden_message")}
+              </span>
+              <div className={remoteStreamClasses}>
+                <sharedViews.MediaView displayAvatar={!this.shouldRenderRemoteVideo()}
+                  posterUrl={this.props.remotePosterUrl}
+                  mediaType="remote"
+                  srcVideoObject={this.state.remoteSrcVideoObject} />
               </div>
-              <sharedViews.ConversationToolbar
+              <div className={screenShareStreamClasses}>
+                <sharedViews.MediaView displayAvatar={false}
+                  posterUrl={this.props.screenSharePosterUrl}
+                  mediaType="screen-share"
+                  srcVideoObject={this.state.screenShareVideoObject} />
+              </div>
+              <sharedViews.TextChatView
                 dispatcher={this.props.dispatcher}
-                video={{enabled: !this.state.videoMuted,
-                        visible: this._roomIsActive()}}
-                audio={{enabled: !this.state.audioMuted,
-                        visible: this._roomIsActive()}}
-                publishStream={this.publishStream}
-                hangup={this.leaveRoom}
-                hangupButtonLabel={mozL10n.get("rooms_leave_button_label")}
-                enableHangup={this._roomIsActive()} />
+                showAlways={true}
+                showRoomName={true} />
+              <div className="local">
+                <sharedViews.MediaView displayAvatar={this.state.videoMuted}
+                  posterUrl={this.props.localPosterUrl}
+                  mediaType="local"
+                  srcVideoObject={this.state.localSrcVideoObject} />
+              </div>
             </div>
+            <sharedViews.ConversationToolbar
+              dispatcher={this.props.dispatcher}
+              video={{enabled: !this.state.videoMuted,
+                      visible: this._roomIsActive()}}
+              audio={{enabled: !this.state.audioMuted,
+                      visible: this._roomIsActive()}}
+              publishStream={this.publishStream}
+              hangup={this.leaveRoom}
+              hangupButtonLabel={mozL10n.get("rooms_leave_button_label")}
+              enableHangup={this._roomIsActive()} />
           </div>
           <loop.fxOSMarketplaceViews.FxOSHiddenMarketplaceView
             marketplaceSrc={this.state.marketplaceSrc}

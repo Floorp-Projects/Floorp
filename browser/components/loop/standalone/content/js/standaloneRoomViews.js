@@ -355,34 +355,29 @@ loop.standaloneRoomViews = (function(mozL10n) {
     },
 
     render: function() {
-      var localStreamClasses = React.addons.classSet({
-        local: true,
-        "local-stream": true,
-        "local-stream-audio": this.state.videoMuted
-      });
+      var displayScreenShare = this.state.receivingScreenShare ||
+        this.props.screenSharePosterUrl;
 
       var remoteStreamClasses = React.addons.classSet({
-        "video_inner": true,
         "remote": true,
-        "focus-stream": !this.state.receivingScreenShare,
-        "remote-inset-stream": this.state.receivingScreenShare
+        "focus-stream": !displayScreenShare
       });
 
       var screenShareStreamClasses = React.addons.classSet({
         "screen": true,
-        "focus-stream": this.state.receivingScreenShare,
-        hide: !this.state.receivingScreenShare
+        "focus-stream": displayScreenShare
       });
 
-      // XXX Temporarily showAlways = showRoomName = false for TextChatView
-      // until bug 1168829 is completed.
+      var mediaWrapperClasses = React.addons.classSet({
+        "media-wrapper": true,
+        "receiving-screen-share": displayScreenShare,
+        "showing-local-streams": this.state.localSrcVideoObject ||
+          this.props.localPosterUrl
+      });
+
       return (
         React.createElement("div", {className: "room-conversation-wrapper"}, 
           React.createElement("div", {className: "beta-logo"}), 
-          React.createElement(sharedViews.TextChatView, {
-            dispatcher: this.props.dispatcher, 
-            showAlways: false, 
-            showRoomName: false}), 
           React.createElement(StandaloneRoomHeader, {dispatcher: this.props.dispatcher}), 
           React.createElement(StandaloneRoomInfoArea, {roomState: this.state.roomState, 
                                   failureReason: this.state.failureReason, 
@@ -390,44 +385,44 @@ loop.standaloneRoomViews = (function(mozL10n) {
                                   isFirefox: this.props.isFirefox, 
                                   activeRoomStore: this.props.activeRoomStore, 
                                   roomUsed: this.state.used}), 
-          React.createElement("div", {className: "video-layout-wrapper"}, 
-            React.createElement("div", {className: "conversation room-conversation"}, 
-              React.createElement("div", {className: "media nested"}, 
-                React.createElement("span", {className: "self-view-hidden-message"}, 
-                  mozL10n.get("self_view_hidden_message")
-                ), 
-                React.createElement("div", {className: "video_wrapper remote_wrapper"}, 
-                  React.createElement("div", {className: remoteStreamClasses}, 
-                    React.createElement(sharedViews.MediaView, {displayAvatar: !this.shouldRenderRemoteVideo(), 
-                      posterUrl: this.props.remotePosterUrl, 
-                      mediaType: "remote", 
-                      srcVideoObject: this.state.remoteSrcVideoObject})
-                  ), 
-                  React.createElement("div", {className: screenShareStreamClasses}, 
-                    React.createElement(sharedViews.MediaView, {displayAvatar: false, 
-                      posterUrl: this.props.screenSharePosterUrl, 
-                      mediaType: "screen-share", 
-                      srcVideoObject: this.state.screenShareVideoObject})
-                  )
-                ), 
-                React.createElement("div", {className: localStreamClasses}, 
-                  React.createElement(sharedViews.MediaView, {displayAvatar: this.state.videoMuted, 
-                    posterUrl: this.props.localPosterUrl, 
-                    mediaType: "local", 
-                    srcVideoObject: this.state.localSrcVideoObject})
-                )
+          React.createElement("div", {className: "media-layout"}, 
+            React.createElement("div", {className: mediaWrapperClasses}, 
+              React.createElement("span", {className: "self-view-hidden-message"}, 
+                mozL10n.get("self_view_hidden_message")
               ), 
-              React.createElement(sharedViews.ConversationToolbar, {
+              React.createElement("div", {className: remoteStreamClasses}, 
+                React.createElement(sharedViews.MediaView, {displayAvatar: !this.shouldRenderRemoteVideo(), 
+                  posterUrl: this.props.remotePosterUrl, 
+                  mediaType: "remote", 
+                  srcVideoObject: this.state.remoteSrcVideoObject})
+              ), 
+              React.createElement("div", {className: screenShareStreamClasses}, 
+                React.createElement(sharedViews.MediaView, {displayAvatar: false, 
+                  posterUrl: this.props.screenSharePosterUrl, 
+                  mediaType: "screen-share", 
+                  srcVideoObject: this.state.screenShareVideoObject})
+              ), 
+              React.createElement(sharedViews.TextChatView, {
                 dispatcher: this.props.dispatcher, 
-                video: {enabled: !this.state.videoMuted,
-                        visible: this._roomIsActive()}, 
-                audio: {enabled: !this.state.audioMuted,
-                        visible: this._roomIsActive()}, 
-                publishStream: this.publishStream, 
-                hangup: this.leaveRoom, 
-                hangupButtonLabel: mozL10n.get("rooms_leave_button_label"), 
-                enableHangup: this._roomIsActive()})
-            )
+                showAlways: true, 
+                showRoomName: true}), 
+              React.createElement("div", {className: "local"}, 
+                React.createElement(sharedViews.MediaView, {displayAvatar: this.state.videoMuted, 
+                  posterUrl: this.props.localPosterUrl, 
+                  mediaType: "local", 
+                  srcVideoObject: this.state.localSrcVideoObject})
+              )
+            ), 
+            React.createElement(sharedViews.ConversationToolbar, {
+              dispatcher: this.props.dispatcher, 
+              video: {enabled: !this.state.videoMuted,
+                      visible: this._roomIsActive()}, 
+              audio: {enabled: !this.state.audioMuted,
+                      visible: this._roomIsActive()}, 
+              publishStream: this.publishStream, 
+              hangup: this.leaveRoom, 
+              hangupButtonLabel: mozL10n.get("rooms_leave_button_label"), 
+              enableHangup: this._roomIsActive()})
           ), 
           React.createElement(loop.fxOSMarketplaceViews.FxOSHiddenMarketplaceView, {
             marketplaceSrc: this.state.marketplaceSrc, 

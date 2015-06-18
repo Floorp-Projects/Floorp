@@ -425,14 +425,14 @@ describe("loop.standaloneRoomViews", function() {
       });
 
       describe("Mute", function() {
-        it("should render local media as audio-only if video is muted",
+        it("should render a local avatar if video is muted",
           function() {
             activeRoomStore.setStoreState({
               roomState: ROOM_STATES.SESSION_CONNECTED,
               videoMuted: true
             });
 
-            expect(view.getDOMNode().querySelector(".local-stream-audio"))
+            expect(view.getDOMNode().querySelector(".local .avatar"))
               .not.eql(null);
           });
 
