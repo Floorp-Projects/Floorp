@@ -15,7 +15,7 @@
 
 <dialog id="changemp" title="&setPassword.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-        style="width: 35em;" 
+        style="width: 40em;" 
         ondialogaccept="setPassword();" 
         onload="init()">
 
@@ -28,12 +28,12 @@
   <groupbox>
     <grid>
       <columns>
-        <column/>
+        <column flex="1"/>
         <column/> 
       </columns>
       <rows>
         <row>
-          <label control="oldpw" value="&setPassword.oldPassword.label;"/> 
+          <label control="oldpw">&setPassword.oldPassword.label;</label>
           <textbox id="oldpw" type="password"/>
           <!-- This textbox is inserted as a workaround to the fact that making the 'type' 
                 & 'disabled' property of the 'oldpw' textbox toggle between ['password' & 
@@ -45,12 +45,12 @@
           <textbox id="message" disabled="true" />
         </row>
         <row>
-          <label control="pw1" value="&setPassword.newPassword.label;"/> 
+          <label control="pw1">&setPassword.newPassword.label;</label>
           <textbox id="pw1" type="password" 
                    oninput="setPasswordStrength(); checkPasswords();"/> 
         </row>
         <row>
-          <label control="pw2" value="&setPassword.reenterPassword.label;"/> 
+          <label control="pw2">&setPassword.reenterPassword.label;</label>
           <textbox id="pw2" type="password" oninput="checkPasswords();"/>  
         </row>
       </rows>
