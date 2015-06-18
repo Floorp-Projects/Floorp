@@ -891,6 +891,8 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/components/DataStoreImpl.js
 @RESPATH@/components/dom_datastore.xpt
 
+@RESPATH@/components/dom_audiochannel.xpt
+
 ; Shutdown Terminator
 @RESPATH@/components/nsTerminatorTelemetry.js
 @RESPATH@/components/terminator.manifest

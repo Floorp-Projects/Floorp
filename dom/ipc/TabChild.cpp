@@ -880,6 +880,22 @@ TabChild::TabChild(nsIContentChild* aManager,
     MOZ_ASSERT(NestedTabChildMap().find(mUniqueId) == NestedTabChildMap().end());
     NestedTabChildMap()[mUniqueId] = this;
   }
+
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+
+  if (observerService) {
+    const nsAttrValue::EnumTable* table =
+      AudioChannelService::GetAudioChannelTable();
+
+    nsAutoCString topic;
+    for (uint32_t i = 0; table[i].tag; ++i) {
+      topic.Assign("audiochannel-activity-");
+      topic.Append(table[i].tag);
+
+      observerService->AddObserver(this, topic.get(), false);
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -945,6 +961,27 @@ TabChild::Observe(nsISupports *aSubject,
         }
       }
     }
+  }
+
+  const nsAttrValue::EnumTable* table =
+    AudioChannelService::GetAudioChannelTable();
+
+  nsAutoCString topic;
+  int16_t audioChannel = -1;
+  for (uint32_t i = 0; table[i].tag; ++i) {
+    topic.Assign("audiochannel-activity-");
+    topic.Append(table[i].tag);
+
+    if (topic.Equals(aTopic)) {
+      audioChannel = table[i].value;
+      break;
+    }
+  }
+
+  if (audioChannel != -1) {
+    nsAutoString active(aData);
+    unused << SendAudioChannelActivityNotification(audioChannel,
+                                                   active.Equals(NS_LITERAL_STRING("active")));
   }
 
   return NS_OK;
@@ -2771,6 +2808,17 @@ TabChild::RecvDestroy()
 
   observerService->RemoveObserver(this, BROWSER_ZOOM_TO_RECT);
   observerService->RemoveObserver(this, BEFORE_FIRST_PAINT);
+
+  const nsAttrValue::EnumTable* table =
+    AudioChannelService::GetAudioChannelTable();
+
+  nsAutoCString topic;
+  for (uint32_t i = 0; table[i].tag; ++i) {
+    topic.Assign("audiochannel-activity-");
+    topic.Append(table[i].tag);
+
+    observerService->RemoveObserver(this, topic.get());
+  }
 
   // XXX what other code in ~TabChild() should we be running here?
   DestroyWindow();
