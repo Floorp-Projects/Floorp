@@ -3,20 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
-
-import org.mozilla.gecko.util.GeckoEventListener;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+package org.mozilla.gecko.javaaddons;
 
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-
 import dalvik.system.DexClassLoader;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.util.GeckoEventListener;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -47,7 +45,7 @@ import java.util.Map;
  * dispatcher, they can do so by inserting the response string into the bundle
  * under the key "response".
  */
-class JavaAddonManager implements GeckoEventListener {
+public class JavaAddonManager implements GeckoEventListener {
     private static final String LOGTAG = "GeckoJavaAddonManager";
 
     private static JavaAddonManager sInstance;
@@ -69,7 +67,7 @@ class JavaAddonManager implements GeckoEventListener {
         mAddonCallbacks = new HashMap<String, Map<String, GeckoEventListener>>();
     }
 
-    void init(Context applicationContext) {
+    public void init(Context applicationContext) {
         if (mApplicationContext != null) {
             // we've already done this registration. don't do it again
             return;
@@ -78,6 +76,7 @@ class JavaAddonManager implements GeckoEventListener {
         mDispatcher.registerGeckoThreadListener(this,
             "Dex:Load",
             "Dex:Unload");
+        JavaAddonManagerV1.getInstance().init(applicationContext);
     }
 
     @Override
