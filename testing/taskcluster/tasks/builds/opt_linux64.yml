@@ -8,7 +8,7 @@ task:
       name: '[TC] Linux64 Opt'
       description: 'Linux64 Opt'
 
-  workerType: b2g-desktop-opt
+  workerType: opt-linux64
 
   routes:
     - 'index.buildbot.branches.{{project}}.linux64'
