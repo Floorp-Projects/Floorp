@@ -828,14 +828,30 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
     if (!FoldConstants(context, &pn, this))
         return null();
 
+    fn->pn_pos.end = pos().end;
+
+    MOZ_ASSERT(fn->pn_body->isKind(PNK_ARGSBODY));
+    fn->pn_body->append(pn);
+
+    /*
+     * Make sure to deoptimize lexical dependencies that are polluted
+     * by eval and function statements (which both flag the function as
+     * having an extensible scope).
+     */
+    if (funbox->hasExtensibleScope() && pc->lexdeps->count()) {
+        for (AtomDefnRange r = pc->lexdeps->all(); !r.empty(); r.popFront()) {
+            Definition* dn = r.front().value().get<FullParseHandler>();
+            MOZ_ASSERT(dn->isPlaceholder());
+
+            handler.deoptimizeUsesWithin(dn, fn->pn_pos);
+        }
+    }
+
     InternalHandle<Bindings*> funboxBindings =
         InternalHandle<Bindings*>::fromMarkedLocation(&funbox->bindings);
     if (!funpc.generateFunctionBindings(context, tokenStream, alloc, funboxBindings))
         return null();
 
-    MOZ_ASSERT(fn->pn_body->isKind(PNK_ARGSBODY));
-    fn->pn_body->append(pn);
-    fn->pn_body->pn_pos = pn->pn_pos;
     return fn;
 }
 
