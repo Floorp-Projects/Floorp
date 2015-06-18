@@ -13,7 +13,8 @@
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-#include "mozilla/devtools/ChromeUtils.h"
+#include "mozilla/devtools/HeapSnapshot.h"
+#include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
@@ -21,6 +22,7 @@
 
 using namespace mozilla;
 using namespace mozilla::devtools;
+using namespace mozilla::dom;
 using namespace testing;
 
 // GTest fixture class that all of our tests derive from.

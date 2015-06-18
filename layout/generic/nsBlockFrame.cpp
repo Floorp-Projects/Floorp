@@ -2047,7 +2047,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
   bool selfDirty = (GetStateBits() & NS_FRAME_IS_DIRTY) ||
                      (aState.mReflowState.IsBResize() &&
-                      (GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT));
+                      (GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE));
 
   // Reflow our last line if our availableBSize has increased
   // so that we (and our last child) pull up content as necessary
@@ -5359,7 +5359,6 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
         if (line->Contains(child)) {
           *aFoundValidLine = true;
           mLine = line;
-          aFrame->SetLineCursor(line.get());
           return;
         }
         ++line;
@@ -5368,7 +5367,6 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
         if (rline->Contains(child)) {
           *aFoundValidLine = true;
           mLine = rline;
-          aFrame->SetLineCursor(rline.get());
           return;
         }
         ++rline;
@@ -6526,8 +6524,9 @@ void nsBlockFrame::SetupLineCursor()
       || mLines.empty()) {
     return;
   }
-
-  SetLineCursor(mLines.front());
+   
+  Properties().Set(LineCursorProperty(), mLines.front());
+  AddStateBits(NS_BLOCK_HAS_LINE_CURSOR);
 }
 
 nsLineBox* nsBlockFrame::GetFirstLineContaining(nscoord y)
@@ -6555,7 +6554,7 @@ nsLineBox* nsBlockFrame::GetFirstLineContaining(nscoord y)
   }
 
   if (cursor.get() != property) {
-    SetLineCursor(cursor.get());
+    props.Set(LineCursorProperty(), cursor.get());
   }
 
   return cursor.get();

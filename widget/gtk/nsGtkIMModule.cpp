@@ -1210,7 +1210,7 @@ nsGtkIMModule::DispatchCompositionChangeEvent(
 
     compositionChangeEvent.mRanges =
       CreateTextRangeArray(aContext, mDispatchedCompositionString);
-    targetOffset += compositionChangeEvent.mRanges->TargetClauseOffset();
+    targetOffset += compositionChangeEvent.TargetClauseOffset();
 
     mCompositionState = eCompositionState_CompositionChangeEventDispatched;
 
@@ -1220,7 +1220,7 @@ nsGtkIMModule::DispatchCompositionChangeEvent(
     mLayoutChanged = false;
     mCompositionTargetRange.mOffset = targetOffset;
     mCompositionTargetRange.mLength =
-        compositionChangeEvent.mRanges->TargetClauseLength();
+        compositionChangeEvent.TargetClauseLength();
 
     mLastFocusedWindow->DispatchEvent(&compositionChangeEvent, status);
     if (lastFocusedWindow->IsDestroyed() ||

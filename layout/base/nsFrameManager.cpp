@@ -203,19 +203,13 @@ nsFrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame
                       aPlaceholderFrame->GetOutOfFlowFrame());
 }
 
-static PLDHashOperator
-UnregisterPlaceholders(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                       uint32_t number, void* arg)
-{
-  PlaceholderMapEntry* entry = static_cast<PlaceholderMapEntry*>(hdr);
-  entry->placeholderFrame->SetOutOfFlowFrame(nullptr);
-  return PL_DHASH_NEXT;
-}
-
 void
 nsFrameManager::ClearPlaceholderFrameMap()
 {
-  PL_DHashTableEnumerate(&mPlaceholderMap, UnregisterPlaceholders, nullptr);
+  for (auto iter = mPlaceholderMap.Iter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<PlaceholderMapEntry*>(iter.Get());
+    entry->placeholderFrame->SetOutOfFlowFrame(nullptr);
+  }
   mPlaceholderMap.Clear();
 }
 

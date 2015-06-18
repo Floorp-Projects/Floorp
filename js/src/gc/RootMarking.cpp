@@ -211,18 +211,6 @@ AutoGCRooter::trace(JSTracer* trc)
         return;
       }
 
-      case OBJOBJHASHMAP: {
-        AutoObjectObjectHashMap::HashMapImpl& map = static_cast<AutoObjectObjectHashMap*>(this)->map;
-        for (AutoObjectObjectHashMap::Enum e(map); !e.empty(); e.popFront()) {
-            TraceRoot(trc, &e.front().value(), "AutoObjectObjectHashMap value");
-            JSObject* key = e.front().key();
-            TraceRoot(trc, &key, "AutoObjectObjectHashMap key");
-            if (key != e.front().key())
-                e.rekeyFront(key);
-        }
-        return;
-      }
-
       case OBJU32HASHMAP: {
         AutoObjectUnsigned32HashMap* self = static_cast<AutoObjectUnsigned32HashMap*>(this);
         AutoObjectUnsigned32HashMap::HashMapImpl& map = self->map;
@@ -231,18 +219,6 @@ AutoGCRooter::trace(JSTracer* trc)
             TraceRoot(trc, &key, "AutoObjectUnsignedHashMap key");
             if (key != e.front().key())
                 e.rekeyFront(key);
-        }
-        return;
-      }
-
-      case OBJHASHSET: {
-        AutoObjectHashSet* self = static_cast<AutoObjectHashSet*>(this);
-        AutoObjectHashSet::HashSetImpl& set = self->set;
-        for (AutoObjectHashSet::Enum e(set); !e.empty(); e.popFront()) {
-            JSObject* obj = e.front();
-            TraceRoot(trc, &obj, "AutoObjectHashSet value");
-            if (obj != e.front())
-                e.rekeyFront(obj);
         }
         return;
       }

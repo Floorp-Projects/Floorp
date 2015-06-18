@@ -666,38 +666,12 @@ typedef JS::AutoVectorRooter<JSString*> AutoStringVector;
 typedef JS::AutoVectorRooter<PropertyName*> AutoPropertyNameVector;
 typedef JS::AutoVectorRooter<Shape*> AutoShapeVector;
 
-class AutoObjectObjectHashMap : public AutoHashMapRooter<JSObject*, JSObject*>
-{
-  public:
-    explicit AutoObjectObjectHashMap(JSContext* cx
-                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoHashMapRooter<JSObject*, JSObject*>(cx, OBJOBJHASHMAP)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 class AutoObjectUnsigned32HashMap : public AutoHashMapRooter<JSObject*, uint32_t>
 {
   public:
     explicit AutoObjectUnsigned32HashMap(JSContext* cx
                                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : AutoHashMapRooter<JSObject*, uint32_t>(cx, OBJU32HASHMAP)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-class AutoObjectHashSet : public AutoHashSetRooter<JSObject*>
-{
-  public:
-    explicit AutoObjectHashSet(JSContext* cx
-                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoHashSetRooter<JSObject*>(cx, OBJHASHSET)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }

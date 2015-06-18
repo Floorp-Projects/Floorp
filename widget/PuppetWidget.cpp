@@ -485,6 +485,16 @@ PuppetWidget::SetConfirmedTargetAPZC(uint64_t aInputBlockId,
   }
 }
 
+void
+PuppetWidget::UpdateZoomConstraints(const uint32_t& aPresShellId,
+                                    const FrameMetrics::ViewID& aViewId,
+                                    const Maybe<ZoomConstraints>& aConstraints)
+{
+  if (mTabChild) {
+    mTabChild->DoUpdateZoomConstraints(aPresShellId, aViewId, aConstraints);
+  }
+}
+
 bool
 PuppetWidget::AsyncPanZoomEnabled() const
 {

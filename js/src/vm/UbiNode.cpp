@@ -115,6 +115,13 @@ class SimpleEdgeVectorTracer : public JS::CallbackTracer {
         if (!okay)
             return;
 
+        // Don't trace permanent atoms and well-known symbols that are owned by
+        // a parent JSRuntime.
+        if (thing.isString() && thing.toString()->isPermanentAtom())
+            return;
+        if (thing.isSymbol() && thing.toSymbol()->isWellKnownSymbol())
+            return;
+
         char16_t* name16 = nullptr;
         if (wantNames) {
             // Ask the tracer to compute an edge name for us.
@@ -186,7 +193,7 @@ template<typename Referent>
 JS::Zone*
 TracerConcrete<Referent>::zone() const
 {
-    return get().zone();
+    return get().zoneFromAnyThread();
 }
 
 template<typename Referent>

@@ -14,6 +14,7 @@
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/FileBinding.h"
 #include <algorithm>
+#include "nsPIDOMWindow.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

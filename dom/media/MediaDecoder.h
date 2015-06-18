@@ -402,8 +402,7 @@ public:
   // Return the duration of the video in seconds.
   virtual double GetDuration();
 
-  // Return the duration of the video in seconds.
-  int64_t GetMediaDuration() final override;
+  AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() override;
 
   // A media stream is assumed to be infinite if the metadata doesn't
   // contain the duration, and range requests are not supported, and
@@ -510,10 +509,6 @@ public:
 
   // Returns a weak reference to the media decoder owner.
   MediaDecoderOwner* GetMediaOwner() const;
-
-  // Called by the state machine to notify the decoder that the duration
-  // has changed.
-  void DurationChanged(media::TimeUnit aNewDuration);
 
   bool OnStateMachineTaskQueue() const override;
 
@@ -888,6 +883,10 @@ protected:
   // Return true if the decoder has reached the end of playback
   bool IsEnded() const;
 
+  // Called by the state machine to notify the decoder that the duration
+  // has changed.
+  void DurationChanged();
+
   // State-watching manager.
   WatchManager<MediaDecoder> mWatchManager;
 
@@ -943,10 +942,11 @@ public:
   AbstractCanonical<bool>* CanonicalPreservesPitch() { return &mPreservesPitch; }
 protected:
 
-  // Duration of the media resource. Set to -1 if unknown.
-  // Set when the metadata is loaded. Accessed on the main thread
-  // only.
-  int64_t mDuration;
+  // Official duration of the media resource as observed by script.
+  double mDuration;
+
+  // Duration of the media resource according to the state machine.
+  Mirror<media::NullableTimeUnit> mStateMachineDuration;
 
   // True if the media is seekable (i.e. supports random access).
   bool mMediaSeekable;
@@ -996,7 +996,15 @@ protected:
   // for MSE.
   Canonical<Maybe<double>> mExplicitDuration;
   double ExplicitDuration() { return mExplicitDuration.Ref().ref(); }
-  void SetExplicitDuration(double aValue) { mExplicitDuration.Set(Some(aValue)); }
+  void SetExplicitDuration(double aValue)
+  {
+    mExplicitDuration.Set(Some(aValue));
+
+    // We Invoke DurationChanged explicitly, rather than using a watcher, so
+    // that it takes effect immediately, rather than at the end of the current task.
+    DurationChanged();
+  }
+
 public:
   AbstractCanonical<Maybe<double>>* CanonicalExplicitDuration() { return &mExplicitDuration; }
 protected:
@@ -1087,6 +1095,9 @@ protected:
   // True if audio tracks and video tracks are constructed and added into the
   // track list, false if all tracks are removed from the track list.
   bool mMediaTracksConstructed;
+
+  // True if we've already fired metadataloaded.
+  bool mFiredMetadataLoaded;
 
   // Stores media info, including info of audio tracks and video tracks, should
   // only be accessed from main thread.

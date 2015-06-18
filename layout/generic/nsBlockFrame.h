@@ -377,10 +377,6 @@ protected:
     return (GetStateBits() & NS_BLOCK_HAS_LINE_CURSOR) ?
       static_cast<nsLineBox*>(Properties().Get(LineCursorProperty())) : nullptr;
   }
-  void SetLineCursor(nsLineBox* aCursor) {
-    Properties().Set(LineCursorProperty(), aCursor);
-    AddStateBits(NS_BLOCK_HAS_LINE_CURSOR);
-  }
 
   nsLineBox* NewLineBox(nsIFrame* aFrame, bool aIsBlock) {
     return NS_NewLineBox(PresContext()->PresShell(), aFrame, aIsBlock);
