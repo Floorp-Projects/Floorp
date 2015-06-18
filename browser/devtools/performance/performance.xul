@@ -69,12 +69,12 @@
                 data-pref="flatten-tree-recursion"
                 label="&profilerUI.flattenTreeRecursion;"
                 tooltiptext="&profilerUI.flattenTreeRecursion.tooltiptext;"/>
-      <menuitem id="option-show-jit-optimizations"
+      <menuitem id="option-enable-jit-optimizations"
                 class="experimental-option"
                 type="checkbox"
-                data-pref="show-jit-optimizations"
-                label="&profilerUI.showJITOptimizations;"
-                tooltiptext="&profilerUI.showJITOptimizations.tooltiptext;"/>
+                data-pref="enable-jit-optimizations"
+                label="&profilerUI.enableJITOptimizations;"
+                tooltiptext="&profilerUI.enableJITOptimizations.tooltiptext;"/>
     </menupopup>
   </popupset>
 

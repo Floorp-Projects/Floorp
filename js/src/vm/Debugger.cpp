@@ -1652,7 +1652,7 @@ Debugger::slowPathOnNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global)
 
 /* static */ bool
 Debugger::slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
-                                      int64_t when, GlobalObject::DebuggerVector& dbgs)
+                                      double when, GlobalObject::DebuggerVector& dbgs)
 {
     MOZ_ASSERT(!dbgs.empty());
     mozilla::DebugOnly<Debugger**> begin = dbgs.begin();
@@ -1700,7 +1700,7 @@ Debugger::isDebuggee(const JSCompartment* compartment) const
 }
 
 /* static */ Debugger::AllocationSite*
-Debugger::AllocationSite::create(JSContext* cx, HandleObject frame, int64_t when, HandleObject obj)
+Debugger::AllocationSite::create(JSContext* cx, HandleObject frame, double when, HandleObject obj)
 {
     assertSameCompartment(cx, frame);
 
@@ -1723,7 +1723,7 @@ Debugger::AllocationSite::create(JSContext* cx, HandleObject frame, int64_t when
 
 bool
 Debugger::appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
-                               int64_t when)
+                               double when)
 {
     MOZ_ASSERT(trackingAllocationSites);
 

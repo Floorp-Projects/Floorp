@@ -50,6 +50,21 @@ this.PageMetadata = {
       previews: [],
     };
 
+    // if pushState was used to change the url, most likely all meta data is
+    // invalid. This is the case with several major sites that rely on
+    // pushState. In that case, we'll only return uri and title. If document is
+    // via XHR or something, there is no view or history.
+    if (document.defaultView) {
+      let docshell = document.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
+                                         .getInterface(Ci.nsIWebNavigation)
+                                         .QueryInterface(Ci.nsIDocShell);
+      let shentry = {};
+      if (docshell.getCurrentSHEntry(shentry) &&
+          shentry.value && shentry.value.URIWasModified) {
+        return result;
+      }
+    }
+
     this._getMetaData(document, result);
     this._getLinkData(document, result);
     this._getPageData(document, result);

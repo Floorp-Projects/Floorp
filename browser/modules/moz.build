@@ -12,6 +12,7 @@ XPCSHELL_TESTS_MANIFESTS += [
 
 EXTRA_JS_MODULES += [
     'AboutHome.jsm',
+    'AboutNewTab.jsm',
     'BrowserUITelemetry.jsm',
     'CastingApps.jsm',
     'Chat.jsm',
