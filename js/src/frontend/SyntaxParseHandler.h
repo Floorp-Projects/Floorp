@@ -329,7 +329,6 @@ class SyntaxParseHandler
     void setEndPosition(Node pn, Node oth) {}
     void setEndPosition(Node pn, uint32_t end) {}
 
-    void setDerivedClassConstructor(Node pn) {}
 
     void setPosition(Node pn, const TokenPos& pos) {}
     TokenPos getPosition(Node pn) {

@@ -1025,8 +1025,6 @@ class JSScript : public js::gc::TenuredCell
 
     bool needsHomeObject_:1;
 
-    bool isDerivedClassConstructor_:1;
-
     // Add padding so JSScript is gc::Cell aligned. Make padding protected
     // instead of private to suppress -Wunused-private-field compiler warnings.
   protected:
@@ -1299,9 +1297,6 @@ class JSScript : public js::gc::TenuredCell
         return needsHomeObject_;
     }
 
-    bool isDerivedClassConstructor() const {
-        return isDerivedClassConstructor_;
-    }
 
     /*
      * As an optimization, even when argsHasLocalBinding, the function prologue
@@ -1945,7 +1940,7 @@ class LazyScript : public gc::TenuredCell
         uint32_t version : 8;
 
         uint32_t numFreeVariables : 24;
-        uint32_t numInnerFunctions : 21;
+        uint32_t numInnerFunctions : 22;
 
         uint32_t generatorKindBits : 2;
 
@@ -1958,7 +1953,6 @@ class LazyScript : public gc::TenuredCell
         uint32_t usesArgumentsApplyAndThis : 1;
         uint32_t hasBeenCloned : 1;
         uint32_t treatAsRunOnce : 1;
-        uint32_t isDerivedClassConstructor : 1;
     };
 
     union {
@@ -2128,13 +2122,6 @@ class LazyScript : public gc::TenuredCell
     }
     void setTreatAsRunOnce() {
         p_.treatAsRunOnce = true;
-    }
-
-    bool isDerivedClassConstructor() const {
-        return p_.isDerivedClassConstructor;
-    }
-    void setIsDerivedClassConstructor() {
-        p_.isDerivedClassConstructor = true;
     }
 
     const char* filename() const {

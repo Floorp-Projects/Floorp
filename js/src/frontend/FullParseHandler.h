@@ -637,10 +637,6 @@ class FullParseHandler
     void addFunctionArgument(ParseNode* pn, ParseNode* argpn) {
         pn->pn_body->append(argpn);
     }
-    void setDerivedClassConstructor(ParseNode* pn) {
-        MOZ_ASSERT(pn->isKind(PNK_FUNCTION));
-        pn->pn_funbox->setDerivedClassConstructor();
-    }
 
     ParseNode* newLexicalScope(ObjectBox* blockBox) {
         return new_<LexicalScopeNode>(blockBox, pos());
