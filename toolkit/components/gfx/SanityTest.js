@@ -46,21 +46,14 @@ function reportResult(val) {
   Services.prefs.savePrefFile(null);
 }
 
-function takeWindowSnapshot(win) {
+function takeWindowSnapshot(win, ctx) {
   // Take a snapshot of the window contents, and then close the window
-  var canvas = win.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-  canvas.setAttribute("width", PAGE_WIDTH);
-  canvas.setAttribute("height", PAGE_HEIGHT);
-
+  //
   // TODO: drawWindow reads back from the gpu's backbuffer, which won't catch issues with presenting
   // the front buffer via the window manager. Ideally we'd use an OS level API for reading back
   // from the desktop itself to get a more accurate test.
-  var ctx = canvas.getContext("2d");
   var flags = ctx.DRAWWINDOW_DRAW_CARET | ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
   ctx.drawWindow(win.ownerGlobal, 0, 0, PAGE_WIDTH, PAGE_HEIGHT, "rgb(255,255,255)", flags);
-
-  win.ownerGlobal.close();
-  return ctx;
 }
 
 // Verify that all the 4 coloured squares of the video
@@ -82,17 +75,41 @@ function verifyVideoRendering(ctx) {
     testPixel(ctx, 50, 114, 255, 0, 0, 255, 64);
 }
 
-function testGfxFeatures(event) {
-  var win = event.target;
-  var canvas = takeWindowSnapshot(win);
+function testCompositor(win, ctx) {
+  takeWindowSnapshot(win, ctx);
 
-  if (!verifyVideoRendering(canvas)) {
+  if (!verifyVideoRendering(ctx)) {
     reportResult(TEST_FAILED_VIDEO);
     Preferences.set(DISABLE_VIDEO_PREF, true);
-  } else {
-    reportResult(TEST_PASSED);
+    return false;
   }
+
+  reportResult(TEST_PASSED);
+  return true;
 }
+
+let listener = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+  win: null,
+  canvas: null,
+
+  scheduleTest: function(win) {
+    this.win = win;
+    this.win.onload = this.onWindowLoaded.bind(this);
+  },
+
+  onWindowLoaded: function() {
+    this.canvas = this.win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    this.canvas.setAttribute("width", PAGE_WIDTH);
+    this.canvas.setAttribute("height", PAGE_HEIGHT);
+    this.ctx = this.canvas.getContext("2d");
+
+    testCompositor(this.win, this.ctx);
+
+    this.win.ownerGlobal.close();
+  },
+};
 
 function SanityTest() {}
 SanityTest.prototype = {
@@ -143,7 +160,7 @@ SanityTest.prototype = {
         "Test Page",
         "width=" + PAGE_WIDTH + ",height=" + PAGE_HEIGHT + ",chrome,titlebar=0,scrollbars=0",
         null);
-    sanityTest.onload = testGfxFeatures;
+    listener.scheduleTest(sanityTest);
   },
 };
 
