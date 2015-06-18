@@ -93,7 +93,6 @@ var HarAutomation = Class({
     // A page is about to be loaded, start collecting HTTP
     // data from events sent from the backend.
     this.collector = new HarCollector({
-      collector: this,
       webConsoleClient: this.webConsoleClient,
       debuggerClient: this.debuggerClient
     });
@@ -200,43 +199,11 @@ var HarAutomation = Class({
     });
   },
 
-  // Use WebConsoleClient.getString as soon as Bug 1171408 is fixed
-
   /**
-   * Fetches the full text of a LongString.
-   *
-   * @param object | string aStringGrip
-   *        The long string grip containing the corresponding actor.
-   *        If you pass in a plain string (by accident or because you're lazy),
-   *        then a promise of the same string is simply returned.
-   * @return object Promise
-   *         A promise that is resolved when the full string contents
-   *         are available, or rejected if something goes wrong.
+   * Fetches the full text of a string.
    */
   getString: function(aStringGrip) {
-    // Make sure this is a long string.
-    if (typeof aStringGrip != "object" || aStringGrip.type != "longString") {
-      return resolve(aStringGrip); // Go home string, you're drunk.
-    }
-    // Fetch the long string only once.
-    if (aStringGrip._fullText) {
-      return aStringGrip._fullText.promise;
-    }
-
-    let deferred = aStringGrip._fullText = defer();
-    let { actor, initial, length } = aStringGrip;
-    let longStringClient = this.webConsoleClient.longString(aStringGrip);
-
-    longStringClient.substring(initial.length, length, aResponse => {
-      if (aResponse.error) {
-        Cu.reportError(aResponse.error + ": " + aResponse.message);
-        deferred.reject(aResponse);
-        return;
-      }
-      deferred.resolve(initial + aResponse.substring);
-    });
-
-    return deferred.promise;
+    return this.webConsoleClient.getString(aStringGrip);
   },
 
   /**

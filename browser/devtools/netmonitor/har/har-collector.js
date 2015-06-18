@@ -23,7 +23,6 @@ const trace = {
 function HarCollector(options) {
   this.webConsoleClient = options.webConsoleClient;
   this.debuggerClient = options.debuggerClient;
-  this.collector = options.collector;
 
   this.onNetworkEvent = this.onNetworkEvent.bind(this);
   this.onNetworkEventUpdate = this.onNetworkEventUpdate.bind(this);
@@ -413,9 +412,9 @@ HarCollector.prototype = {
   }),
 
   /**
-   * Fetches the full text of a LongString.
+   * Fetches the full text of a string.
    *
-   * @param object | string aStringGrip
+   * @param object | string stringGrip
    *        The long string grip containing the corresponding actor.
    *        If you pass in a plain string (by accident or because you're lazy),
    *        then a promise of the same string is simply returned.
@@ -424,7 +423,7 @@ HarCollector.prototype = {
    *         are available, or rejected if something goes wrong.
    */
   getString: function(stringGrip) {
-    let promise = this.collector.getString(stringGrip);
+    let promise = this.webConsoleClient.getString(stringGrip);
     this.requests.push(promise);
     return promise;
   }
