@@ -38,7 +38,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(26833ec7-4555-4f23-9281-3a12d4b76db1)]
+[scriptable, uuid(c025c35a-dda3-4a1d-9e6c-e02d7149ac79)]
 
 interface nsIHttpChannelInternal : nsISupports
 {
@@ -252,12 +252,6 @@ interface nsIHttpChannelInternal : nsISupports
      * The network interface id that's associated with this channel.
      */
     attribute ACString networkInterfaceId;
-
-    /**
-     * Used only by nsChannelClassifier to resume connecting or abort the
-     * channel after a remote classification verdict.
-     */
-    void continueBeginConnect();
 
     /**
      * Read the proxy URI, which, if non-null, will be used to resolve
