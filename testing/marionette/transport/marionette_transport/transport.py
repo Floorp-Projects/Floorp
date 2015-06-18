@@ -20,7 +20,7 @@ class MarionetteTransport(object):
     max_packet_length = 4096
     connection_lost_msg = "Connection to Marionette server is lost. Check gecko.log (desktop firefox) or logcat (b2g) for errors."
 
-    def __init__(self, addr, port, socket_timeout=360.0):
+    def __init__(self, addr, port, socket_timeout=360.0, instance=None):
         self.addr = addr
         self.port = port
         self.socket_timeout = socket_timeout
@@ -28,6 +28,7 @@ class MarionetteTransport(object):
         self.traits = None
         self.applicationType = None
         self.actor = 'root'
+        self.instance = instance
 
     def _recv_n_bytes(self, n):
         """ Convenience method for receiving exactly n bytes from
@@ -47,17 +48,29 @@ class MarionetteTransport(object):
             len(message) + ':'.
         """
         assert(self.sock)
-        response = self.sock.recv(10)
-        initial_size = len(response)
-        sep = response.find(':')
-        length = response[0:sep]
-        if length != '':
-            response = response[sep + 1:]
-            remaining_size = int(length) + 1 + len(length) - initial_size
-            response += self._recv_n_bytes(remaining_size)
-            return json.loads(response)
-        else:
-            raise IOError(self.connection_lost_msg)
+        now = time.time()
+        response = ''
+        bytes_to_recv = 10
+        while time.time() - now < self.socket_timeout:
+            try:
+                response += self.sock.recv(bytes_to_recv)
+            except socket.timeout:
+                pass
+            if self.instance and not hasattr(self.instance, 'detached'):
+                # If we've launched the binary we've connected to, make
+                # sure it hasn't died.
+                poll = self.instance.runner.process_handler.proc.poll()
+                if poll is not None:
+                    # process isn't alive
+                    raise IOError("process has died with return code %d" % poll)
+            sep = response.find(':')
+            if sep > -1:
+                length = response[0:sep]
+                remaining = response[sep + 1:]
+                if len(remaining) == int(length):
+                    return json.loads(remaining)
+                bytes_to_recv = int(length) - len(remaining)
+        raise IOError(self.connection_lost_msg)
 
     def connect(self):
         """ Connect to the server and process the hello message we expect
@@ -72,6 +85,7 @@ class MarionetteTransport(object):
             # another connection attempt.
             self.sock = None
             raise
+        self.sock.settimeout(2.0)
         hello = self.receive()
         self.traits = hello.get('traits')
         self.applicationType = hello.get('applicationType')
