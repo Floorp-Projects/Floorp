@@ -64,9 +64,6 @@ CopyableCanvasLayer::Initialize(const Data& aData)
     }
   } else if (aData.mBufferProvider) {
     mBufferProvider = aData.mBufferProvider;
-  } else if (aData.mDrawTarget) {
-    mDrawTarget = aData.mDrawTarget;
-    mSurface = mDrawTarget->Snapshot();
   } else {
     MOZ_CRASH("CanvasLayer created without mSurface, mDrawTarget or mGLContext?");
   }
@@ -83,11 +80,6 @@ CopyableCanvasLayer::IsDataValid(const Data& aData)
 void
 CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
 {
-  if (mDrawTarget) {
-    mDrawTarget->Flush();
-    mSurface = mDrawTarget->Snapshot();
-  }
-
   if (mBufferProvider) {
     mSurface = mBufferProvider->GetSnapshot();
   }
@@ -103,7 +95,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
     return;
   }
 
-  if (mDrawTarget || mBufferProvider) {
+  if (mBufferProvider) {
     return;
   }
 
