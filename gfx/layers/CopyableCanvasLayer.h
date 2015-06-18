@@ -53,6 +53,7 @@ protected:
   RefPtr<gfx::SourceSurface> mSurface;
   nsRefPtr<gl::GLContext> mGLContext;
   GLuint mCanvasFrontbufferTexID;
+  RefPtr<PersistentBufferProvider> mBufferProvider;
   mozilla::RefPtr<mozilla::gfx::DrawTarget> mDrawTarget;
 
   UniquePtr<gl::SharedSurface> mGLFrontbuffer;
