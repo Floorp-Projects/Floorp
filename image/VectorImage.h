@@ -100,6 +100,12 @@ private:
   /// Count of locks on this image (roughly correlated to visible instances).
   uint32_t mLockCount;
 
+  // Stored result from the Necko load of the image, which we save in
+  // OnImageDataComplete if the underlying SVG document isn't loaded. If we save
+  // this, we actually notify this progress (and clear this value) in
+  // OnSVGDocumentLoaded or OnSVGDocumentError.
+  Maybe<Progress> mLoadProgress;
+
   bool           mIsInitialized;          // Have we been initialized?
   bool           mDiscardable;            // Are we discardable?
   bool           mIsFullyLoaded;          // Has the SVG document finished
