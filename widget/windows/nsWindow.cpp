@@ -7603,7 +7603,7 @@ bool nsWindow::CaptureWidgetOnScreen(RefPtr<DrawTarget> aDT)
 
   nsRefPtr<gfxASurface> surf = new gfxWindowsSurface(dc, flags);
   IntSize size(surf->GetSize().width, surf->GetSize().height);
-  if (size.width < 0 || size.height < 0) {
+  if (size.width <= 0 || size.height <= 0) {
     ::ReleaseDC(mWnd, dc);
     return false;
   }
