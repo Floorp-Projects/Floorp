@@ -25,7 +25,11 @@ import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
 import org.mozilla.gecko.firstrun.FirstrunPane;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.fxa.login.Engaged;
+import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerMarginsAnimator;
@@ -52,6 +56,7 @@ import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
+import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
@@ -819,6 +824,7 @@ public class BrowserApp extends GeckoApp
 
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
             "Accounts:Create",
+            "Accounts:CreateFirefoxAccountFromJSON",
             "CharEncoding:Data",
             "CharEncoding:State",
             "Favicon:CacheLoad",
@@ -1016,7 +1022,7 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
             "Prompt:ShowTop");
 
         processTabQueue();
@@ -1026,7 +1032,7 @@ public class BrowserApp extends GeckoApp
     public void onPause() {
         super.onPause();
         // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
-        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
+        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
             "Prompt:ShowTop");
     }
 
@@ -1384,7 +1390,7 @@ public class BrowserApp extends GeckoApp
             mZoomedView.destroy();
         }
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
             "Menu:Open",
             "Menu:Update",
             "LightweightTheme:Update",
@@ -1392,8 +1398,9 @@ public class BrowserApp extends GeckoApp
             "Prompt:ShowTop",
             "Accounts:Exist");
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener)this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
             "Accounts:Create",
+            "Accounts:CreateFirefoxAccountFromJSON",
             "CharEncoding:Data",
             "CharEncoding:State",
             "Favicon:CacheLoad",
@@ -1662,7 +1669,36 @@ public class BrowserApp extends GeckoApp
     @Override
     public void handleMessage(final String event, final NativeJSObject message,
                               final EventCallback callback) {
-        if ("Accounts:Create".equals(event)) {
+        if ("Accounts:CreateFirefoxAccountFromJSON".equals(event)) {
+            AndroidFxAccount fxAccount = null;
+            try {
+                final NativeJSObject json = message.getObject("json");
+                final String email = json.getString("email");
+                final String uid = json.getString("uid");
+                final boolean verified = json.optBoolean("verified", false);
+                final byte[] unwrapkB = Utils.hex2Byte(json.getString("unwrapBKey"));
+                final byte[] sessionToken = Utils.hex2Byte(json.getString("sessionToken"));
+                final byte[] keyFetchToken = Utils.hex2Byte(json.getString("keyFetchToken"));
+                // TODO: handle choose what to Sync.
+                State state = new Engaged(email, uid, verified, unwrapkB, sessionToken, keyFetchToken);
+                fxAccount = AndroidFxAccount.addAndroidAccount(this,
+                        email,
+                        getProfile().getName(),
+                        FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT,
+                        FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT,
+                        state,
+                        AndroidFxAccount.DEFAULT_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP);
+            } catch (Exception e) {
+                Log.w(LOGTAG, "Got exception creating Firefox Account from JSON; ignoring.", e);
+                if (callback == null) {
+                    callback.sendError("Could not create Firefox Account from JSON: " + e.toString());
+                }
+            }
+            if (callback != null) {
+                callback.sendSuccess(fxAccount != null);
+            }
+
+        } else if ("Accounts:Create".equals(event)) {
             // Do exactly the same thing as if you tapped 'Sync' in Settings.
             final Intent intent = new Intent(getContext(), FxAccountGetStartedActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

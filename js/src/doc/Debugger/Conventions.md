@@ -138,8 +138,9 @@ described below.
 
 ## Timestamps
 
-Timestamps are expressed in units of microseconds since the epoch (midnight,
-January 1st, 1970).
+Timestamps are expressed in units of milliseconds since an arbitrary,
+but fixed, epoch.  The resolution of timestamps is generally greater
+than milliseconds, though no specific resolution is guaranteed.
 
 
 ## The `Debugger.DebuggeeWouldRun` Exception
