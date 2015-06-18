@@ -409,6 +409,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
   : mD3D11DeviceInitialized(false)
   , mIsWARP(false)
   , mHasDeviceReset(false)
+  , mDoesD3D11TextureSharingWork(false)
 {
     mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
     mUseClearTypeAlways = UNINITIALIZED_VALUE;
@@ -470,6 +471,15 @@ gfxWindowsPlatform::GetDPIScale()
   return WinUtils::LogToPhysFactor();
 }
 
+bool
+gfxWindowsPlatform::CanUseHardwareVideoDecoding()
+{
+    if (!gfxPrefs::LayersPreferD3D9() && !mDoesD3D11TextureSharingWork) {
+        return false;
+    }
+    return !IsWARP() && gfxPlatform::CanUseHardwareVideoDecoding();
+}
+
 void
 gfxWindowsPlatform::UpdateRenderMode()
 {
@@ -495,6 +505,7 @@ gfxWindowsPlatform::UpdateRenderMode()
     }
 
     mRenderMode = RENDER_GDI;
+    mDoesD3D11TextureSharingWork = true;
 
     bool isVistaOrHigher = IsVistaOrLater();
 
@@ -534,8 +545,11 @@ gfxWindowsPlatform::UpdateRenderMode()
     }
 
     ID3D11Device *device = GetD3D11Device();
+    if (device) {
+        mDoesD3D11TextureSharingWork = DoesD3D11TextureSharingWork(device);
+    }
     if (isVistaOrHigher && !InSafeMode() && tryD2D && device &&
-        DoesD3D11TextureSharingWork(device)) {
+        mDoesD3D11TextureSharingWork) {
 
         VerifyD2DDevice(d2dForceEnabled);
         if (mD2DDevice && GetD3D11Device()) {
