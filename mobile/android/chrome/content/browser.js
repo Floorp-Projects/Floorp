@@ -305,8 +305,10 @@ XPCOMUtils.defineLazyModuleGetter(
       // This is called only once when we receive a message for the first time.
       // With this, we trigger the import of Webapps.jsm and forward the message
       // to the real registry.
-      return DOMApplicationRegistry.receiveMessage.apply(
-          DOMApplicationRegistry, arguments);
+      DOMApplicationRegistry.registryReady.then(() => {
+        DOMApplicationRegistry.receiveMessage.apply(
+            DOMApplicationRegistry, arguments);
+      });
     }
   }
 );
