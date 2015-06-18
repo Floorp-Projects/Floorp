@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="61e82f99bb8bc78d52b5717e9a2481ec7267fa33">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="236a9f6adab172942d5c4dd6ec3427d1b9d83d15"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="8b97729eba38818fd5605980ab614f4ab0b812d6"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="3477513bcd385571aa01c0d074849e35bd5e2376"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -156,5 +156,5 @@
   <project name="platform/hardware/qcom/sensors" path="hardware/qcom/sensors" revision="fde83fdf67e9b919f8a49008725bd595221bf33f"/>
   <project name="platform/hardware/qcom/wlan" path="hardware/qcom/wlan" revision="6417804bea95f6e46094a01a06025a86e28c5b0d"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="e00d716e7e3d31729f75399855b6921e90cb0b66"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="476b3e194d8582ec8bc9968190d896c10c7b3be7"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="5f4b68c799927b6e078f987b12722c3a6ccd4a45"/>
 </manifest>
