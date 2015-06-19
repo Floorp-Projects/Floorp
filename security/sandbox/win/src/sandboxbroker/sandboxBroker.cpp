@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "sandboxBroker.h"
+
+#include "base/win/windows_version.h"
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/sandbox_factory.h"
 #include "sandbox/win/src/security_level.h"
@@ -258,9 +260,13 @@ SandboxBroker::SetSecurityLevelForGMPlugin()
 
   auto result = mPolicy->SetJobLevel(sandbox::JOB_LOCKDOWN, 0);
   bool ret = (sandbox::SBOX_ALL_OK == result);
-  result =
-    mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                           sandbox::USER_LOCKDOWN);
+  if (base::win::GetVersion() > base::win::VERSION_WIN8_1) {
+    result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
+                                    sandbox::USER_RESTRICTED);
+  } else {
+    result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
+                                    sandbox::USER_LOCKDOWN);
+  }
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
   result = mPolicy->SetAlternateDesktop(true);
