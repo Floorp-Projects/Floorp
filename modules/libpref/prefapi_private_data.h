@@ -19,17 +19,8 @@ class PrefSetting;
 }
 }
 
-// Passed as the arg to pref_savePref
-struct pref_saveArgs {
-  char **prefArray;
-};
-
-PLDHashOperator
-pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg);
-
-PLDHashOperator
-pref_GetPrefs(PLDHashTable *table,
-              PLDHashEntryHdr *heh, uint32_t i, void *arg);
+void
+pref_savePrefs(PLDHashTable* aTable, char** aPrefArray);
 
 nsresult
 pref_SetPref(const mozilla::dom::PrefSetting& aPref);
