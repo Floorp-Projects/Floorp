@@ -28,6 +28,7 @@
   <script type="text/javascript" src="debugger-controller.js"/>
   <script type="text/javascript" src="debugger-view.js"/>
   <script type="text/javascript" src="debugger/utils.js"/>
+  <script type="text/javascript" src="debugger/workers-view.js"/>
   <script type="text/javascript" src="debugger/sources-view.js"/>
   <script type="text/javascript" src="debugger/variable-bubble-view.js"/>
   <script type="text/javascript" src="debugger/tracer-view.js"/>
@@ -312,61 +313,78 @@
     <vbox id="globalsearch" orient="vertical" hidden="true"/>
     <splitter class="devtools-horizontal-splitter" hidden="true"/>
     <hbox id="debugger-widgets" flex="1">
-      <tabbox id="sources-pane"
-              class="devtools-sidebar-tabs">
-        <tabs>
-          <tab id="sources-tab" label="&debuggerUI.tabs.sources;"/>
-          <tab id="callstack-tab" label="&debuggerUI.tabs.callstack;"/>
-          <tab id="tracer-tab" label="&debuggerUI.tabs.traces;" hidden="true"/>
-        </tabs>
-        <tabpanels flex="1">
-          <tabpanel id="sources-tabpanel">
-            <vbox id="sources" flex="1"/>
-            <toolbar id="sources-toolbar" class="devtools-toolbar">
-              <hbox id="sources-controls"
-                    class="devtools-toolbarbutton-group">
-                <toolbarbutton id="black-box"
+      <vbox id="workers-and-sources-pane">
+        <tabbox id="workers-pane"
+                class="devtools-sidebar-tabs"
+                flex="0"
+                hidden="true">
+          <tabs>
+            <tab id="workers-tab" label="&debuggerUI.tabs.workers;"/>
+          </tabs>
+          <tabpanels flex="1">
+            <tabpanel>
+              <vbox id="workers" flex="1"/>
+            </tabpanel>
+          </tabpanels>
+        </tabbox>
+        <splitter class="devtools-horizontal-splitter"/>
+        <tabbox id="sources-pane"
+                class="devtools-sidebar-tabs"
+                flex="1">
+          <tabs>
+            <tab id="sources-tab" label="&debuggerUI.tabs.sources;"/>
+            <tab id="callstack-tab" label="&debuggerUI.tabs.callstack;"/>
+            <tab id="tracer-tab" label="&debuggerUI.tabs.traces;" hidden="true"/>
+          </tabs>
+          <tabpanels flex="1">
+            <tabpanel id="sources-tabpanel">
+              <vbox id="sources" flex="1"/>
+              <toolbar id="sources-toolbar" class="devtools-toolbar">
+                <hbox id="sources-controls"
+                      class="devtools-toolbarbutton-group">
+                  <toolbarbutton id="black-box"
+                                 class="devtools-toolbarbutton"
+                                 tooltiptext="&debuggerUI.sources.blackBoxTooltip;"
+                                 command="blackBoxCommand"/>
+                  <toolbarbutton id="pretty-print"
+                                 class="devtools-toolbarbutton"
+                                 tooltiptext="&debuggerUI.sources.prettyPrint;"
+                                 command="prettyPrintCommand"
+                                 hidden="true"/>
+                </hbox>
+                <vbox class="devtools-separator"/>
+                <toolbarbutton id="toggle-breakpoints"
                                class="devtools-toolbarbutton"
-                               tooltiptext="&debuggerUI.sources.blackBoxTooltip;"
-                               command="blackBoxCommand"/>
-                <toolbarbutton id="pretty-print"
-                               class="devtools-toolbarbutton"
-                               tooltiptext="&debuggerUI.sources.prettyPrint;"
-                               command="prettyPrintCommand"
-                               hidden="true"/>
+                               tooltiptext="&debuggerUI.sources.toggleBreakpoints;"
+                               command="toggleBreakpointsCommand"/>
+              </toolbar>
+            </tabpanel>
+            <tabpanel id="callstack-tabpanel">
+              <vbox id="callstack-list" flex="1"/>
+            </tabpanel>
+            <tabpanel id="tracer-tabpanel">
+              <vbox id="tracer-traces" flex="1"/>
+              <hbox class="trace-item-template" hidden="true">
+                <hbox class="trace-item" align="center" flex="1" crop="end">
+                  <label class="trace-type plain"/>
+                  <label class="trace-name plain" crop="end"/>
+                </hbox>
               </hbox>
-              <vbox class="devtools-separator"/>
-              <toolbarbutton id="toggle-breakpoints"
-                             class="devtools-toolbarbutton"
-                             tooltiptext="&debuggerUI.sources.toggleBreakpoints;"
-                             command="toggleBreakpointsCommand"/>
-            </toolbar>
-          </tabpanel>
-          <tabpanel id="callstack-tabpanel">
-            <vbox id="callstack-list" flex="1"/>
-          </tabpanel>
-          <tabpanel id="tracer-tabpanel">
-            <vbox id="tracer-traces" flex="1"/>
-            <hbox class="trace-item-template" hidden="true">
-              <hbox class="trace-item" align="center" flex="1" crop="end">
-                <label class="trace-type plain"/>
-                <label class="trace-name plain" crop="end"/>
-              </hbox>
-            </hbox>
-            <toolbar id="tracer-toolbar" class="devtools-toolbar">
-              <toolbarbutton id="clear-tracer"
-                             label="&debuggerUI.clearButton;"
-                             tooltiptext="&debuggerUI.clearButton.tooltip;"
-                             command="clearTraces"
-                             class="devtools-toolbarbutton"/>
-              <textbox id="tracer-search"
-                       class="devtools-searchinput"
-                       flex="1"
-                       type="search"/>
-            </toolbar>
-          </tabpanel>
-        </tabpanels>
-      </tabbox>
+              <toolbar id="tracer-toolbar" class="devtools-toolbar">
+                <toolbarbutton id="clear-tracer"
+                               label="&debuggerUI.clearButton;"
+                               tooltiptext="&debuggerUI.clearButton.tooltip;"
+                               command="clearTraces"
+                               class="devtools-toolbarbutton"/>
+                <textbox id="tracer-search"
+                         class="devtools-searchinput"
+                         flex="1"
+                         type="search"/>
+              </toolbar>
+            </tabpanel>
+          </tabpanels>
+        </tabbox>
+      </vbox>
       <splitter id="sources-and-editor-splitter"
                 class="devtools-side-splitter"/>
       <deck id="editor-deck" flex="1" class="devtools-main-content">

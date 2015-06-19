@@ -105,6 +105,7 @@ ALL_JARS = \
   gecko-thirdparty.jar \
   gecko-util.jar \
   sync-thirdparty.jar \
+  ../javaaddons/javaaddons-1.0.jar \
   $(NULL)
 
 ifdef MOZ_WEBRTC

@@ -6,4 +6,5 @@
 
 TEST_DIRS += [
     'junit3',
+    'robocop/roboextender',
 ]

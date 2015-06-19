@@ -648,6 +648,9 @@ loop.roomViews = (function(mozL10n) {
      * room state and other flags.
      *
      * @return {Boolean} True if remote video should be rended.
+     *
+     * XXX Refactor shouldRenderRemoteVideo & shouldRenderLoading into one fn
+     *     that returns an enum
      */
     shouldRenderRemoteVideo: function() {
       switch(this.state.roomState) {
@@ -682,6 +685,31 @@ loop.roomViews = (function(mozL10n) {
             " unexpected roomState: ", this.state.roomState);
           return true;
       }
+    },
+
+    /**
+     * Should we render a visual cue to the user (e.g. a spinner) that a local
+     * stream is on its way from the camera?
+     *
+     * @returns {boolean}
+     * @private
+     */
+    _shouldRenderLocalLoading: function () {
+      return this.state.roomState === ROOM_STATES.MEDIA_WAIT &&
+             !this.state.localSrcVideoObject;
+    },
+
+    /**
+     * Should we render a visual cue to the user (e.g. a spinner) that a remote
+     * stream is on its way from the other user?
+     *
+     * @returns {boolean}
+     * @private
+     */
+    _shouldRenderRemoteLoading: function() {
+      return this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS &&
+             !this.state.remoteSrcVideoObject &&
+             !this.state.mediaConnected;
     },
 
     render: function() {
@@ -742,6 +770,7 @@ loop.roomViews = (function(mozL10n) {
                       <div className="video_inner remote focus-stream">
                         <sharedViews.MediaView displayAvatar={!this.shouldRenderRemoteVideo()}
                           posterUrl={this.props.remotePosterUrl}
+                          isLoading={this._shouldRenderRemoteLoading()}
                           mediaType="remote"
                           srcVideoObject={this.state.remoteSrcVideoObject} />
                       </div>
@@ -749,6 +778,7 @@ loop.roomViews = (function(mozL10n) {
                     <div className={localStreamClasses}>
                       <sharedViews.MediaView displayAvatar={this.state.videoMuted}
                         posterUrl={this.props.localPosterUrl}
+                        isLoading={this._shouldRenderLocalLoading()}
                         mediaType="local"
                         srcVideoObject={this.state.localSrcVideoObject} />
                     </div>
