@@ -351,6 +351,10 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         canvas.drawRect(0, height - shadowSize, getWidth(), height, shadowPaint);
     }
 
+    public void onParentFocus() {
+        urlEditLayout.onParentFocus();
+    }
+
     public void setProgressBar(ToolbarProgressView progressBar) {
         this.progressBar = progressBar;
     }
