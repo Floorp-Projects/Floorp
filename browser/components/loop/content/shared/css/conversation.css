@@ -553,6 +553,39 @@
   width: 100%;
 }
 
+/*
+ * Used to center the loading spinner
+ */
+.focus-stream, .remote {
+  position: relative;
+}
+
+.loading-stream {
+  /* vertical and horizontal center */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-left: -50px;
+  margin-top: -50px;
+  width: 100px;
+  height: 100px;
+
+  /* place the animation */
+  background-image: url("../img/spinner.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 40%;
+
+  /* 12 is the number of lines in the spinner image */
+  animation: rotate-spinner 1s steps(12, end) infinite;
+}
+
+@keyframes rotate-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .conversation .local .avatar {
   position: absolute;
   z-index: 1;
@@ -1593,6 +1626,14 @@ html[dir="rtl"] .standalone .room-conversation-wrapper .room-inner-info-area {
 }
 
 .screen-share-video {
+  width: 100%;
+  height: 100%;
+}
+
+/* Make sure the loading spinner always gets the same background */
+.loading-background {
+  background: black;
+  position: absolute;
   width: 100%;
   height: 100%;
 }
