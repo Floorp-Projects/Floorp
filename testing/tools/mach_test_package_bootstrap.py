@@ -11,11 +11,28 @@ import time
 
 
 SEARCH_PATHS = [
+    'mochitest',
+    'mozbase/mozcrash',
+    'mozbase/mozdebug',
+    'mozbase/mozdevice',
+    'mozbase/mozfile',
+    'mozbase/mozhttpd',
+    'mozbase/mozlog',
+    'mozbase/moznetwork',
+    'mozbase/mozprocess',
+    'mozbase/mozprofile',
+    'mozbase/mozrunner',
+    'mozbase/mozsystemmonitor',
+    'mozbase/mozinfo',
+    'mozbase/moztest',
+    'mozbase/mozversion',
+    'mozbase/manifestparser',
     'tools/mach',
 ]
 
 # Individual files providing mach commands.
 MACH_MODULES = [
+    'mochitest/mach_test_package_commands.py',
     'tools/mach/mach/commands/commandinfo.py',
 ]
 
@@ -60,6 +77,10 @@ def bootstrap(test_package_root):
         import mach.main
 
     def populate_context(context, key=None):
+        context.package_root = test_package_root
+        context.certs_dir = os.path.join(test_package_root, 'certs')
+        context.bin_dir = os.path.join(test_package_root, 'bin')
+        context.modules_dir = os.path.join(test_package_root, 'modules')
         return context
 
     mach = mach.main.Mach(os.getcwd())

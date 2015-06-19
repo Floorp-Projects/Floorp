@@ -6,10 +6,12 @@
 #include "GeckoProfiler.h"
 #include "ProfilerBacktrace.h"
 #include "ProfilerMarkers.h"
-#include "gfxASurface.h"
 #include "SyncProfile.h"
+#ifndef SPS_STANDALONE
+#include "gfxASurface.h"
 #include "Layers.h"
 #include "prprf.h"
+#endif
 
 ProfilerMarkerPayload::ProfilerMarkerPayload(ProfilerBacktrace* aStack)
   : mStack(aStack)
@@ -87,6 +89,7 @@ ProfilerMarkerTracing::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
+#ifndef SPS_STANDALONE
 GPUMarkerPayload::GPUMarkerPayload(
   const mozilla::TimeStamp& aCpuTimeStart,
   const mozilla::TimeStamp& aCpuTimeEnd,
@@ -204,3 +207,4 @@ VsyncPayload::StreamPayload(SpliceableJSONWriter& aWriter, UniqueStacks& aUnique
   aWriter.DoubleProperty("vsync", profiler_time(mVsyncTimestamp));
   aWriter.StringProperty("category", "VsyncTimestamp");
 }
+#endif

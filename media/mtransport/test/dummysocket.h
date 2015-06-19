@@ -88,6 +88,15 @@ class DummySocket : public NrSocketBase {
     return 0;
   }
 
+  virtual int listen(int backlog) {
+    return 0;
+  }
+
+  virtual int accept(nr_transport_addr *addrp, nr_socket **sockp) {
+    return 0;
+  }
+
+
   virtual int write(const void *msg, size_t len, size_t *written) {
     size_t to_write = std::min(len, writable_);
 

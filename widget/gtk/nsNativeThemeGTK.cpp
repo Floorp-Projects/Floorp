@@ -1400,10 +1400,18 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       MozGtkScrollbarMetrics metrics;
       moz_gtk_get_scrollbar_metrics(&metrics);
 
-      if (aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL)
+      // Require room for the slider in the track if we don't have buttons.
+      bool hasScrollbarButtons = moz_gtk_has_scrollbar_buttons();
+
+      if (aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL) {
         aResult->width = metrics.slider_width + 2 * metrics.trough_border;
-      else
+        if (!hasScrollbarButtons)
+          aResult->height = metrics.min_slider_size + 2 * metrics.trough_border;
+      } else {
         aResult->height = metrics.slider_width + 2 * metrics.trough_border;
+        if (!hasScrollbarButtons)
+          aResult->width = metrics.min_slider_size + 2 * metrics.trough_border;
+      }
 
       *aIsOverridable = false;
     }
@@ -1414,27 +1422,12 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
         MozGtkScrollbarMetrics metrics;
         moz_gtk_get_scrollbar_metrics(&metrics);
 
-        nsRect rect = aFrame->GetParent()->GetRect();
-        int32_t p2a = aFrame->PresContext()->DeviceContext()->
-                        AppUnitsPerDevPixel();
-        nsMargin margin;
-
-        /* Get the available space, if that is smaller then the minimum size,
-         * adjust the mininum size to fit into it.
-         * Setting aIsOverridable to true has no effect for thumbs. */
-        aFrame->GetMargin(margin);
-        rect.Deflate(margin);
-        aFrame->GetParent()->GetBorderAndPadding(margin);
-        rect.Deflate(margin);
-
         if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL) {
           aResult->width = metrics.slider_width;
-          aResult->height = std::min(NSAppUnitsToIntPixels(rect.height, p2a),
-                                   metrics.min_slider_size);
+          aResult->height = metrics.min_slider_size;
         } else {
           aResult->height = metrics.slider_width;
-          aResult->width = std::min(NSAppUnitsToIntPixels(rect.width, p2a),
-                                  metrics.min_slider_size);
+          aResult->width = metrics.min_slider_size;
         }
 
         *aIsOverridable = false;

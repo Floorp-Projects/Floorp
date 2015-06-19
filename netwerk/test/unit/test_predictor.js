@@ -4,11 +4,14 @@ var Cu = Components.utils;
 var Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
+
+var running_single_process = false;
 
 var predictor = null;
-var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-var profile = null;
+
+function is_child_process() {
+  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
+}
 
 function extract_origin(uri) {
   var o = uri.scheme + "://" + uri.asciiHost;
@@ -100,11 +103,15 @@ Verifier.prototype = {
 };
 
 function reset_predictor() {
-  predictor.reset();
+  if (running_single_process || is_child_process()) {
+    predictor.reset();
+  } else {
+    sendCommand("predictor.reset();");
+  }
 }
 
 function newURI(s) {
-  return ios.newURI(s, null, null);
+  return Services.io.newURI(s, null, null);
 }
 
 var prepListener = {
@@ -155,9 +162,7 @@ function open_and_continue(uris, continueCallback) {
     isAnonymous: false
   };
 
-  var css = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-    .getService(Ci.nsICacheStorageService);
-  var ds = css.diskCacheStorage(lci, false);
+  var ds = Services.cache2.diskCacheStorage(lci, false);
 
   prepListener.init(uris.length, continueCallback);
   for (var i = 0; i < uris.length; ++i) {
@@ -167,6 +172,13 @@ function open_and_continue(uris, continueCallback) {
 }
 
 function test_link_hover() {
+  if (!running_single_process && !is_child_process()) {
+    // This one we can just proxy to the child and be done with, no extra setup
+    // is necessary.
+    sendCommand("test_link_hover();");
+    return;
+  }
+
   var uri = newURI("http://localhost:4444/foo/bar");
   var referrer = newURI("http://localhost:4444/foo");
   var preconns = ["http://localhost:4444"];
@@ -175,60 +187,82 @@ function test_link_hover() {
   predictor.predict(uri, referrer, predictor.PREDICT_LINK, load_context, verifier);
 }
 
-function test_pageload() {
-  var toplevel = "http://localhost:4444/index.html";
+const pageload_toplevel = newURI("http://localhost:4444/index.html");
+
+function continue_test_pageload() {
   var subresources = [
     "http://localhost:4444/style.css",
     "http://localhost:4443/jquery.js",
     "http://localhost:4444/image.png"
   ];
 
-  var tluri = newURI(toplevel);
-  open_and_continue([tluri], function () {
-    // This is necessary to learn the origin stuff
-    predictor.learn(tluri, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
-    var preconns = [];
-    for (var i = 0; i < subresources.length; i++) {
-      var sruri = newURI(subresources[i]);
-      predictor.learn(sruri, tluri, predictor.LEARN_LOAD_SUBRESOURCE, load_context);
-      preconns.push(extract_origin(sruri));
-    }
+  // This is necessary to learn the origin stuff
+  predictor.learn(pageload_toplevel, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
+  var preconns = [];
+  for (var i = 0; i < subresources.length; i++) {
+    var sruri = newURI(subresources[i]);
+    predictor.learn(sruri, pageload_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, load_context);
+    preconns.push(extract_origin(sruri));
+  }
 
-    var verifier = new Verifier("pageload", preconns, []);
-    predictor.predict(tluri, null, predictor.PREDICT_LOAD, load_context, verifier);
+  var verifier = new Verifier("pageload", preconns, []);
+  predictor.predict(pageload_toplevel, null, predictor.PREDICT_LOAD, load_context, verifier);
+}
+
+function test_pageload() {
+  open_and_continue([pageload_toplevel], function () {
+    if (running_single_process) {
+      continue_test_pageload();
+    } else {
+      sendCommand("continue_test_pageload();");
+    }
   });
 }
 
-function test_redirect() {
-  var initial = "http://localhost:4443/redirect";
-  var target = "http://localhost:4444/index.html";
+const redirect_inituri = newURI("http://localhost:4443/redirect");
+const redirect_targeturi = newURI("http://localhost:4444/index.html");
+
+function continue_test_redrect() {
   var subresources = [
     "http://localhost:4444/style.css",
     "http://localhost:4443/jquery.js",
     "http://localhost:4444/image.png"
   ];
 
-  var inituri = newURI(initial);
-  var targeturi = newURI(target);
-  open_and_continue([inituri, targeturi], function () {
-    predictor.learn(inituri, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
-    predictor.learn(targeturi, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
-    predictor.learn(targeturi, inituri, predictor.LEARN_LOAD_REDIRECT, load_context);
+  predictor.learn(redirect_inituri, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
+  predictor.learn(redirect_targeturi, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
+  predictor.learn(redirect_targeturi, redirect_inituri, predictor.LEARN_LOAD_REDIRECT, load_context);
 
-    var preconns = [];
-    preconns.push(extract_origin(targeturi));
-    for (var i = 0; i < subresources.length; i++) {
-      var sruri = newURI(subresources[i]);
-      predictor.learn(sruri, targeturi, predictor.LEARN_LOAD_SUBRESOURCE, load_context);
-      preconns.push(extract_origin(sruri));
+  var preconns = [];
+  preconns.push(extract_origin(redirect_targeturi));
+  for (var i = 0; i < subresources.length; i++) {
+    var sruri = newURI(subresources[i]);
+    predictor.learn(sruri, redirect_targeturi, predictor.LEARN_LOAD_SUBRESOURCE, load_context);
+    preconns.push(extract_origin(sruri));
+  }
+
+  var verifier = new Verifier("redirect", preconns, []);
+  predictor.predict(redirect_inituri, null, predictor.PREDICT_LOAD, load_context, verifier);
+}
+
+function test_redirect() {
+  open_and_continue([redirect_inituri, redirect_targeturi], function () {
+    if (running_single_process) {
+      continue_test_redirect();
+    } else {
+      sendCommand("continue_test_redirect();");
     }
-
-    var verifier = new Verifier("redirect", preconns, []);
-    predictor.predict(inituri, null, predictor.PREDICT_LOAD, load_context, verifier);
   });
 }
 
 function test_startup() {
+  if (!running_single_process && !is_child_process()) {
+    // This one we can just proxy to the child and be done with, no extra setup
+    // is necessary.
+    sendCommand("test_startup();");
+    return;
+  }
+
   var uris = [
     "http://localhost:4444/startup",
     "http://localhost:4443/startup"
@@ -244,57 +278,69 @@ function test_startup() {
   predictor.predict(null, null, predictor.PREDICT_STARTUP, load_context, verifier);
 }
 
-function test_dns() {
-  var toplevel = "http://localhost:4444/index.html";
+const dns_toplevel = newURI("http://localhost:4444/index.html");
+
+function continue_test_dns() {
   var subresource = "http://localhost:4443/jquery.js";
 
-  var tluri = newURI(toplevel);
-  open_and_continue([tluri], function () {
-    predictor.learn(tluri, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
-    var sruri = newURI(subresource);
-    predictor.learn(sruri, tluri, predictor.LEARN_LOAD_SUBRESOURCE, load_context);
+  predictor.learn(dns_toplevel, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
+  var sruri = newURI(subresource);
+  predictor.learn(sruri, dns_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, load_context);
 
+  var preresolves = [extract_origin(sruri)];
+  var verifier = new Verifier("dns", [], preresolves);
+  predictor.predict(dns_toplevel, null, predictor.PREDICT_LOAD, load_context, verifier);
+}
+
+function test_dns() {
+  open_and_continue([dns_toplevel], function () {
     // Ensure that this will do preresolves
-    prefs.setIntPref("network.predictor.preconnect-min-confidence", 101);
-
-    var preresolves = [extract_origin(sruri)];
-    var verifier = new Verifier("dns", [], preresolves);
-    predictor.predict(tluri, null, predictor.PREDICT_LOAD, load_context, verifier);
+    Services.prefs.setIntPref("network.predictor.preconnect-min-confidence", 101);
+    if (running_single_process) {
+      continue_test_dns();
+    } else {
+      sendCommand("continue_test_dns();");
+    }
   });
 }
 
-function test_origin() {
-  var toplevel = "http://localhost:4444/index.html";
+const origin_toplevel = newURI("http://localhost:4444/index.html");
+
+function continue_test_origin() {
   var subresources = [
     "http://localhost:4444/style.css",
     "http://localhost:4443/jquery.js",
     "http://localhost:4444/image.png"
   ];
-
-  var tluri = newURI(toplevel);
-  open_and_continue([tluri], function () {
-    predictor.learn(tluri, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
-    var preconns = [];
-    for (var i = 0; i < subresources.length; i++) {
-      var sruri = newURI(subresources[i]);
-      predictor.learn(sruri, tluri, predictor.LEARN_LOAD_SUBRESOURCE, load_context);
-      var origin = extract_origin(sruri);
-      if (preconns.indexOf(origin) === -1) {
-        preconns.push(origin);
-      }
+  predictor.learn(origin_toplevel, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
+  var preconns = [];
+  for (var i = 0; i < subresources.length; i++) {
+    var sruri = newURI(subresources[i]);
+    predictor.learn(sruri, origin_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, load_context);
+    var origin = extract_origin(sruri);
+    if (preconns.indexOf(origin) === -1) {
+      preconns.push(origin);
     }
+  }
 
-    var loaduri = newURI("http://localhost:4444/anotherpage.html");
-    var verifier = new Verifier("origin", preconns, []);
-    predictor.predict(loaduri, null, predictor.PREDICT_LOAD, load_context, verifier);
+  var loaduri = newURI("http://localhost:4444/anotherpage.html");
+  var verifier = new Verifier("origin", preconns, []);
+  predictor.predict(loaduri, null, predictor.PREDICT_LOAD, load_context, verifier);
+}
+
+function test_origin() {
+  open_and_continue([origin_toplevel], function () {
+    if (running_single_process) {
+      continue_test_origin();
+    } else {
+      sendCommand("continue_test_origin();");
+    }
   });
 }
 
-var prefs;
-
 function cleanup() {
   observer.cleaningUp = true;
-  predictor.reset();
+  reset_predictor();
 }
 
 var tests = [
@@ -328,39 +374,47 @@ var observer = {
     if (topic != "predictor-reset-complete") {
       return;
     }
+
     if (this.cleaningUp) {
       unregisterObserver();
     }
+
     run_next_test();
   }
 };
 
 function registerObserver() {
-  var svc = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-  svc.addObserver(observer, "predictor-reset-complete", false);
+  Services.obs.addObserver(observer, "predictor-reset-complete", false);
 }
 
 function unregisterObserver() {
-  var svc = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-  svc.removeObserver(observer, "predictor-reset-complete");
+  Services.obs.removeObserver(observer, "predictor-reset-complete");
+}
+
+function run_test_real() {
+  tests.forEach(add_test);
+  do_get_profile()
+  predictor = Cc["@mozilla.org/network/predictor;1"].getService(Ci.nsINetworkPredictor);
+
+  registerObserver();
+
+  Services.prefs.setBoolPref("network.predictor.enabled", true);
+  Services.prefs.setBoolPref("network.predictor.cleaned-up", true);
+  Services.prefs.setBoolPref("browser.cache.use_new_backend_temp", true);
+  Services.prefs.setIntPref("browser.cache.use_new_backend", 1);
+  do_register_cleanup(() => {
+    Services.prefs.clearUserPref("network.predictor.preconnect-min-confidence");
+    Services.prefs.clearUserPref("network.predictor.enabled");
+    Services.prefs.clearUserPref("network.predictor.cleaned-up");
+    Services.prefs.clearUserPref("browser.cache.use_new_backend_temp");
+    Services.prefs.clearUserPref("browser.cache.use_new_backend");
+  });
+
+  run_next_test();
 }
 
 function run_test() {
-  tests.forEach(add_test);
-  profile = do_get_profile();
-  prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  prefs.setBoolPref("network.predictor.enabled", true);
-  prefs.setBoolPref("network.predictor.cleaned-up", true);
-  prefs.setBoolPref("browser.cache.use_new_backend_temp", true);
-  prefs.setIntPref("browser.cache.use_new_backend", 1);
-  do_register_cleanup(() => {
-      prefs.clearUserPref("network.predictor.preconnect-min-confidence");
-      prefs.clearUserPref("network.predictor.enabled");
-      prefs.clearUserPref("network.predictor.cleaned-up");
-      prefs.clearUserPref("browser.cache.use_new_backend_temp");
-      prefs.clearUserPref("browser.cache.use_new_backend");
-  });
-  predictor = Cc["@mozilla.org/network/predictor;1"].getService(Ci.nsINetworkPredictor);
-  registerObserver();
-  run_next_test();
+  // This indirection is necessary to make e10s tests work as expected
+  running_single_process = true;
+  run_test_real();
 }

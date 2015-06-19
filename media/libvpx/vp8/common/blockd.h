@@ -187,8 +187,12 @@ typedef struct
 {
     FRAME_TYPE frame_type;
     int is_frame_dropped;
+    // The frame rate for the lowest resolution.
+    double low_res_framerate;
     /* The frame number of each reference frames */
     unsigned int low_res_ref_frames[MAX_REF_FRAMES];
+    // The video frame counter value for the key frame, for lowest resolution.
+    unsigned int key_frame_counter_value;
     LOWER_RES_MB_INFO *mb_info;
 } LOWER_RES_FRAME_INFO;
 #endif

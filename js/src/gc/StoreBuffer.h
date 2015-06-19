@@ -33,8 +33,6 @@ class BufferableRef
     bool maybeInRememberedSet(const Nursery&) const { return true; }
 };
 
-typedef HashSet<void*, PointerHasher<void*, 3>, SystemAllocPolicy> EdgeSet;
-
 /* The size of a single block of store buffer storage space. */
 static const size_t LifoAllocBlockSize = 1 << 16; /* 64KiB */
 
@@ -57,22 +55,14 @@ class StoreBuffer
     template<typename T>
     struct MonoTypeBuffer
     {
-        /* The canonical set of stores. */
+        /* The set of stores. */
         typedef HashSet<T, typename T::Hasher, SystemAllocPolicy> StoreSet;
         StoreSet stores_;
-
-        /*
-         * A small, fixed-size buffer in front of the canonical set to simplify
-         * insertion via jit code.
-         */
-        const static size_t NumBufferEntries = 4096 / sizeof(T);
-        T buffer_[NumBufferEntries];
-        T* insert_;
 
         /* Maximum number of entries before we request a minor GC. */
         const static size_t MaxEntries = 48 * 1024 / sizeof(T);
 
-        explicit MonoTypeBuffer() { clearBuffer(); }
+        MonoTypeBuffer() {}
         ~MonoTypeBuffer() { stores_.finish(); }
 
         bool init() {
@@ -82,13 +72,7 @@ class StoreBuffer
             return true;
         }
 
-        void clearBuffer() {
-            JS_POISON(buffer_, JS_EMPTY_STOREBUFFER_PATTERN, NumBufferEntries * sizeof(T));
-            insert_ = buffer_;
-        }
-
         void clear() {
-            clearBuffer();
             if (stores_.initialized())
                 stores_.clear();
         }
@@ -96,28 +80,14 @@ class StoreBuffer
         /* Add one item to the buffer. */
         void put(StoreBuffer* owner, const T& t) {
             MOZ_ASSERT(stores_.initialized());
-            *insert_++ = t;
-            if (MOZ_UNLIKELY(insert_ == buffer_ + NumBufferEntries))
-                sinkStores(owner);
-        }
-
-        /* Move any buffered stores to the canonical store set. */
-        void sinkStores(StoreBuffer* owner) {
-            MOZ_ASSERT(stores_.initialized());
-
-            for (T* p = buffer_; p < insert_; ++p) {
-                if (!stores_.put(*p))
-                    CrashAtUnhandlableOOM("Failed to allocate for MonoTypeBuffer::sinkStores.");
-            }
-            clearBuffer();
-
+            if (MOZ_UNLIKELY(!stores_.put(t)))
+                CrashAtUnhandlableOOM("Failed to allocate for MonoTypeBuffer.");
             if (MOZ_UNLIKELY(stores_.count() > MaxEntries))
                 owner->setAboutToOverflow();
         }
 
         /* Remove an item from the store buffer. */
         void unput(StoreBuffer* owner, const T& v) {
-            sinkStores(owner);
             stores_.remove(v);
         }
 
@@ -381,8 +351,6 @@ class StoreBuffer
     MonoTypeBuffer<CellPtrEdge> bufferCell;
     MonoTypeBuffer<SlotsEdge> bufferSlot;
     MonoTypeBuffer<WholeCellEdges> bufferWholeCell;
-    MonoTypeBuffer<ValueEdge> bufferRelocVal;
-    MonoTypeBuffer<CellPtrEdge> bufferRelocCell;
     GenericBuffer bufferGeneric;
     bool cancelIonCompilations_;
 
@@ -395,10 +363,9 @@ class StoreBuffer
 
   public:
     explicit StoreBuffer(JSRuntime* rt, const Nursery& nursery)
-      : bufferVal(), bufferCell(), bufferSlot(), bufferWholeCell(),
-        bufferRelocVal(), bufferRelocCell(), bufferGeneric(), cancelIonCompilations_(false),
-        runtime_(rt), nursery_(nursery), aboutToOverflow_(false), enabled_(false),
-        mEntered(false)
+      : bufferVal(), bufferCell(), bufferSlot(), bufferWholeCell(), bufferGeneric(),
+        cancelIonCompilations_(false), runtime_(rt), nursery_(nursery), aboutToOverflow_(false),
+        enabled_(false), mEntered(false)
     {
     }
 
@@ -414,28 +381,16 @@ class StoreBuffer
     bool cancelIonCompilations() const { return cancelIonCompilations_; }
 
     /* Insert a single edge into the buffer/remembered set. */
-    void putValueFromAnyThread(JS::Value* valuep) { putFromAnyThread(bufferVal, ValueEdge(valuep)); }
+    void putValueFromAnyThread(JS::Value* vp) { putFromAnyThread(bufferVal, ValueEdge(vp)); }
+    void unputValueFromAnyThread(JS::Value* vp) { unputFromAnyThread(bufferVal, ValueEdge(vp)); }
     void putCellFromAnyThread(Cell** cellp) { putFromAnyThread(bufferCell, CellPtrEdge(cellp)); }
+    void unputCellFromAnyThread(Cell** cellp) { unputFromAnyThread(bufferCell, CellPtrEdge(cellp)); }
     void putSlotFromAnyThread(NativeObject* obj, int kind, int32_t start, int32_t count) {
         putFromAnyThread(bufferSlot, SlotsEdge(obj, kind, start, count));
     }
     void putWholeCellFromMainThread(Cell* cell) {
         MOZ_ASSERT(cell->isTenured());
         putFromMainThread(bufferWholeCell, WholeCellEdges(cell));
-    }
-
-    /* Insert or update a single edge in the Relocatable buffer. */
-    void putRelocatableValueFromAnyThread(JS::Value* valuep) {
-        putFromAnyThread(bufferRelocVal, ValueEdge(valuep));
-    }
-    void removeRelocatableValueFromAnyThread(JS::Value* valuep) {
-        unputFromAnyThread(bufferRelocVal, ValueEdge(valuep));
-    }
-    void putRelocatableCellFromAnyThread(Cell** cellp) {
-        putFromAnyThread(bufferRelocCell, CellPtrEdge(cellp));
-    }
-    void removeRelocatableCellFromAnyThread(Cell** cellp) {
-        unputFromAnyThread(bufferRelocCell, CellPtrEdge(cellp));
     }
 
     /* Insert an entry into the generic buffer. */
@@ -457,19 +412,10 @@ class StoreBuffer
     void traceCells(TenuringTracer& mover)             { bufferCell.trace(this, mover); }
     void traceSlots(TenuringTracer& mover)             { bufferSlot.trace(this, mover); }
     void traceWholeCells(TenuringTracer& mover)        { bufferWholeCell.trace(this, mover); }
-    void traceRelocatableValues(TenuringTracer& mover) { bufferRelocVal.trace(this, mover); }
-    void traceRelocatableCells(TenuringTracer& mover)  { bufferRelocCell.trace(this, mover); }
     void traceGenericEntries(JSTracer *trc)            { bufferGeneric.trace(this, trc); }
 
     /* For use by our owned buffers and for testing. */
     void setAboutToOverflow();
-
-    /* For jit access to the raw buffer. */
-    void oolSinkStoresForWholeCellBuffer() { bufferWholeCell.sinkStores(this); }
-    void* addressOfWholeCellBufferPointer() const { return (void*)&bufferWholeCell.insert_; }
-    void* addressOfWholeCellBufferEnd() const {
-        return (void*)(bufferWholeCell.buffer_ + bufferWholeCell.NumBufferEntries);
-    }
 
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::GCSizes* sizes);
 };

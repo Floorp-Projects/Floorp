@@ -5,6 +5,7 @@
 package org.mozilla.gecko.db;
 
 import android.annotation.TargetApi;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Build;
@@ -111,6 +112,50 @@ public class DBUtils {
         // Failures are indicated by a lower frequency of UNLOCKED than LOCKED.
         if (attempt > 1) {
             Telemetry.addToHistogram(HISTOGRAM_DATABASE_UNLOCKED, attempt - 1);
+        }
+    }
+
+    /**
+     * Copies a table <b>between</b> database files.
+     *
+     * This method assumes that the source table and destination table already exist in the
+     * source and destination databases, respectively.
+     *
+     * The table is copied row-by-row in a single transaction.
+     *
+     * @param source The source database that the table will be copied from.
+     * @param sourceTableName The name of the source table.
+     * @param destination The destination database that the table will be copied to.
+     * @param destinationTableName The name of the destination table.
+     * @return true if all rows were copied; false otherwise.
+     */
+    public static boolean copyTable(SQLiteDatabase source, String sourceTableName,
+                                    SQLiteDatabase destination, String destinationTableName) {
+        Cursor cursor = null;
+        try {
+            destination.beginTransaction();
+
+            cursor = source.query(sourceTableName, null, null, null, null, null, null);
+            Log.d(LOGTAG, "Trying to copy " + cursor.getCount() + " rows from " + sourceTableName + " to " + destinationTableName);
+
+            final ContentValues contentValues = new ContentValues();
+            while (cursor.moveToNext()) {
+                contentValues.clear();
+                DatabaseUtils.cursorRowToContentValues(cursor, contentValues);
+                destination.insert(destinationTableName, null, contentValues);
+            }
+
+            destination.setTransactionSuccessful();
+            Log.d(LOGTAG, "Successfully copied " + cursor.getCount() + " rows from " + sourceTableName + " to " + destinationTableName);
+            return true;
+        } catch (Exception e) {
+            Log.w(LOGTAG, "Got exception copying rows from " + sourceTableName + " to " + destinationTableName + "; ignoring.", e);
+            return false;
+        } finally {
+            destination.endTransaction();
+            if (cursor != null) {
+                cursor.close();
+            }
         }
     }
 

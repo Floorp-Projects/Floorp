@@ -40,8 +40,16 @@ namespace media {
  * See media::CoatCheck below for an example of GetFooAsynchronously().
  */
 
-template<typename ValueType>
-class Pledge
+class PledgeBase
+{
+public:
+  NS_INLINE_DECL_REFCOUNTING(PledgeBase);
+protected:
+  virtual ~PledgeBase() {};
+};
+
+template<typename ValueType, typename ErrorType = nsresult>
+class Pledge : public PledgeBase
 {
   // TODO: Remove workaround once mozilla allows std::function from <functional>
   // wo/std::function support, do template + virtual trick to accept lambdas
@@ -49,49 +57,50 @@ class Pledge
   {
   public:
     FunctorsBase() {}
-    virtual void Succeed(const ValueType& result) = 0;
-    virtual void Fail(nsresult rv) = 0;
+    virtual void Succeed(ValueType& result) = 0;
+    virtual void Fail(ErrorType& error) = 0;
     virtual ~FunctorsBase() {};
   };
 
 public:
-  NS_INLINE_DECL_REFCOUNTING(Pledge);
-  explicit Pledge() : mDone(false), mResult(NS_OK) {}
+  explicit Pledge() : mDone(false), mError(nullptr) {}
+  Pledge(const Pledge& aOther) = delete;
+  Pledge& operator = (const Pledge&) = delete;
 
   template<typename OnSuccessType>
   void Then(OnSuccessType aOnSuccess)
   {
-    Then(aOnSuccess, [](nsresult){});
+    Then(aOnSuccess, [](ErrorType&){});
   }
 
   template<typename OnSuccessType, typename OnFailureType>
   void Then(OnSuccessType aOnSuccess, OnFailureType aOnFailure)
   {
-    class F : public FunctorsBase
+    class Functors : public FunctorsBase
     {
     public:
-      F(OnSuccessType& aOnSuccess, OnFailureType& aOnFailure)
+      Functors(OnSuccessType& aOnSuccess, OnFailureType& aOnFailure)
         : mOnSuccess(aOnSuccess), mOnFailure(aOnFailure) {}
 
-      void Succeed(const ValueType& result)
+      void Succeed(ValueType& result)
       {
         mOnSuccess(result);
       }
-      void Fail(nsresult rv)
+      void Fail(ErrorType& error)
       {
-        mOnFailure(rv);
+        mOnFailure(error);
       };
 
       OnSuccessType mOnSuccess;
       OnFailureType mOnFailure;
     };
-    mFunctors = new F(aOnSuccess, aOnFailure);
+    mFunctors = new Functors(aOnSuccess, aOnFailure);
 
     if (mDone) {
-      if (mResult == NS_OK) {
+      if (!mError) {
         mFunctors->Succeed(mValue);
       } else {
-        mFunctors->Fail(mResult);
+        mFunctors->Fail(*mError);
       }
     }
   }
@@ -106,34 +115,127 @@ protected:
   {
     if (!mDone) {
       mDone = true;
-      MOZ_ASSERT(mResult == NS_OK);
+      MOZ_ASSERT(!mError);
       if (mFunctors) {
         mFunctors->Succeed(mValue);
       }
     }
   }
 
-  void Reject(nsresult rv)
+  void Reject(ErrorType rv)
   {
     if (!mDone) {
       mDone = true;
-      mResult = rv;
+      mError = rv;
       if (mFunctors) {
-        mFunctors->Fail(mResult);
+        mFunctors->Fail(mError);
       }
     }
   }
 
   ValueType mValue;
-protected:
+private:
   ~Pledge() {};
   bool mDone;
-  nsresult mResult;
+  nsRefPtr<ErrorType> mError;
+  ScopedDeletePtr<FunctorsBase> mFunctors;
+};
+
+template<typename ValueType>
+class Pledge<ValueType, nsresult>  : public PledgeBase
+{
+  // TODO: Remove workaround once mozilla allows std::function from <functional>
+  // wo/std::function support, do template + virtual trick to accept lambdas
+  class FunctorsBase
+  {
+  public:
+    FunctorsBase() {}
+    virtual void Succeed(ValueType& result) = 0;
+    virtual void Fail(nsresult error) = 0;
+    virtual ~FunctorsBase() {};
+  };
+
+public:
+  explicit Pledge() : mDone(false), mError(NS_OK) {}
+  Pledge(const Pledge& aOther) = delete;
+  Pledge& operator = (const Pledge&) = delete;
+
+  template<typename OnSuccessType>
+  void Then(OnSuccessType aOnSuccess)
+  {
+    Then(aOnSuccess, [](nsresult){});
+  }
+
+  template<typename OnSuccessType, typename OnFailureType>
+  void Then(OnSuccessType aOnSuccess, OnFailureType aOnFailure)
+  {
+    class Functors : public FunctorsBase
+    {
+    public:
+      Functors(OnSuccessType& aOnSuccess, OnFailureType& aOnFailure)
+        : mOnSuccess(aOnSuccess), mOnFailure(aOnFailure) {}
+
+      void Succeed(ValueType& result)
+      {
+        mOnSuccess(result);
+      }
+      void Fail(nsresult rv)
+      {
+        mOnFailure(rv);
+      };
+
+      OnSuccessType mOnSuccess;
+      OnFailureType mOnFailure;
+    };
+    mFunctors = new Functors(aOnSuccess, aOnFailure);
+
+    if (mDone) {
+      if (mError == NS_OK) {
+        mFunctors->Succeed(mValue);
+      } else {
+        mFunctors->Fail(mError);
+      }
+    }
+  }
+
+  void Resolve(const ValueType& aValue)
+  {
+    mValue = aValue;
+    Resolve();
+  }
+protected:
+  void Resolve()
+  {
+    if (!mDone) {
+      mDone = true;
+      MOZ_ASSERT(mError == NS_OK);
+      if (mFunctors) {
+        mFunctors->Succeed(mValue);
+      }
+    }
+  }
+
+  void Reject(nsresult error)
+  {
+    if (!mDone) {
+      mDone = true;
+      mError = error;
+      if (mFunctors) {
+        mFunctors->Fail(mError);
+      }
+    }
+  }
+
+  ValueType mValue;
 private:
-  nsAutoPtr<FunctorsBase> mFunctors;
+  ~Pledge() {};
+  bool mDone;
+  nsresult mError;
+  ScopedDeletePtr<FunctorsBase> mFunctors;
 };
 
 /* media::NewRunnableFrom() - Create an nsRunnable from a lambda.
+ * media::NewTaskFrom()     - Create a Task from a lambda.
  *
  * Passing variables (closures) to an async function is clunky with nsRunnable:
  *
@@ -192,6 +294,27 @@ NewRunnableFrom(OnRunType aOnRun)
   return new LambdaRunnable<OnRunType>(aOnRun);
 }
 
+template<typename OnRunType>
+class LambdaTask : public Task
+{
+public:
+  explicit LambdaTask(OnRunType& aOnRun) : mOnRun(aOnRun) {}
+private:
+  void
+  Run()
+  {
+    return mOnRun();
+  }
+  OnRunType mOnRun;
+};
+
+template<typename OnRunType>
+LambdaTask<OnRunType>*
+NewTaskFrom(OnRunType aOnRun)
+{
+  return new LambdaTask<OnRunType>(aOnRun);
+}
+
 /* media::CoatCheck - There and back again. Park an object in exchange for an id.
  *
  * A common problem with calling asynchronous functions that do work on other
@@ -213,7 +336,7 @@ NewRunnableFrom(OnRunType aOnRun)
  *     void DoFoo()
  *     {
  *       nsRefPtr<Foo> foo = new Foo();
- *       uint32_t requestId = mOutstandingFoos.Append(foo);
+ *       uint32_t requestId = mOutstandingFoos.Append(*foo);
  *       sChild->SendFoo(requestId);
  *     }
  *
@@ -230,13 +353,13 @@ NewRunnableFrom(OnRunType aOnRun)
  *
  *   class FooGetter
  *   {
- *     CoatCheck<Foo> mOutstandingPledges;
+ *     CoatCheck<Pledge<Foo>> mOutstandingPledges;
  *
  *   public:
  *     already_addRefed<Pledge<Foo>> GetFooAsynchronously()
  *     {
  *       nsRefPtr<Pledge<Foo>> p = new Pledge<Foo>();
- *       uint32_t requestId = mOutstandingPledges.Append(p);
+ *       uint32_t requestId = mOutstandingPledges.Append(*p);
  *       sChild->SendFoo(requestId);
  *       return p.forget();
  *     }

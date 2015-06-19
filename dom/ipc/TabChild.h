@@ -344,6 +344,7 @@ public:
     virtual bool RecvNotifyAPZStateChange(const ViewID& aViewId,
                                           const APZStateChange& aChange,
                                           const int& aArg) override;
+    virtual bool RecvNotifyFlushComplete() override;
     virtual bool RecvActivate() override;
     virtual bool RecvDeactivate() override;
     virtual bool RecvMouseEvent(const nsString& aType,

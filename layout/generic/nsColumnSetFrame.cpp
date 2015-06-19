@@ -1050,8 +1050,14 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
 
   //------------ Handle Incremental Reflow -----------------
 
-  ReflowConfig config = ChooseColumnStrategy(aReflowState);
-  
+  // If inline size is unconstrained, set aForceAuto to true to allow
+  // the columns to expand in the inline direction. (This typically
+  // happens in orthogonal flows where the inline direction is the
+  // container's block direction).
+  ReflowConfig config =
+    ChooseColumnStrategy(aReflowState,
+                         aReflowState.ComputedISize() == NS_UNCONSTRAINEDSIZE);
+
   // If balancing, then we allow the last column to grow to unbounded
   // height during the first reflow. This gives us a way to estimate
   // what the average column height should be, because we can measure

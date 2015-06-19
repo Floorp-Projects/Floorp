@@ -15,8 +15,36 @@
 #include "vpx_mem/vpx_mem.h"
 #include "vpx/vpx_integer.h"
 
+const vp9_prob vp9_cat1_prob[] = { 159 };
+const vp9_prob vp9_cat2_prob[] = { 165, 145 };
+const vp9_prob vp9_cat3_prob[] = { 173, 148, 140 };
+const vp9_prob vp9_cat4_prob[] = { 176, 155, 140, 135 };
+const vp9_prob vp9_cat5_prob[] = { 180, 157, 141, 134, 130 };
+const vp9_prob vp9_cat6_prob[] = {
+    254, 254, 254, 252, 249, 243, 230, 196, 177, 153, 140, 133, 130, 129
+};
+#if CONFIG_VP9_HIGHBITDEPTH
+const vp9_prob vp9_cat1_prob_high10[] = { 159 };
+const vp9_prob vp9_cat2_prob_high10[] = { 165, 145 };
+const vp9_prob vp9_cat3_prob_high10[] = { 173, 148, 140 };
+const vp9_prob vp9_cat4_prob_high10[] = { 176, 155, 140, 135 };
+const vp9_prob vp9_cat5_prob_high10[] = { 180, 157, 141, 134, 130 };
+const vp9_prob vp9_cat6_prob_high10[] = {
+    255, 255, 254, 254, 254, 252, 249, 243,
+    230, 196, 177, 153, 140, 133, 130, 129
+};
+const vp9_prob vp9_cat1_prob_high12[] = { 159 };
+const vp9_prob vp9_cat2_prob_high12[] = { 165, 145 };
+const vp9_prob vp9_cat3_prob_high12[] = { 173, 148, 140 };
+const vp9_prob vp9_cat4_prob_high12[] = { 176, 155, 140, 135 };
+const vp9_prob vp9_cat5_prob_high12[] = { 180, 157, 141, 134, 130 };
+const vp9_prob vp9_cat6_prob_high12[] = {
+    255, 255, 255, 255, 254, 254, 254, 252, 249,
+    243, 230, 196, 177, 153, 140, 133, 130, 129
+};
+#endif
 
-DECLARE_ALIGNED(16, const uint8_t, vp9_coefband_trans_8x8plus[1024]) = {
+const uint8_t vp9_coefband_trans_8x8plus[1024] = {
   0, 1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4,
   4, 4, 4, 4, 4, 5,
   // beyond MAXBAND_INDEX+1 all values are filled as 5
@@ -85,11 +113,11 @@ DECLARE_ALIGNED(16, const uint8_t, vp9_coefband_trans_8x8plus[1024]) = {
   5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
 };
 
-DECLARE_ALIGNED(16, const uint8_t, vp9_coefband_trans_4x4[16]) = {
+const uint8_t vp9_coefband_trans_4x4[16] = {
   0, 1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5,
 };
 
-DECLARE_ALIGNED(16, const uint8_t, vp9_pt_energy_class[ENTROPY_TOKENS]) = {
+const uint8_t vp9_pt_energy_class[ENTROPY_TOKENS] = {
   0, 1, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5
 };
 
@@ -720,10 +748,10 @@ void vp9_model_to_full_probs(const vp9_prob *model, vp9_prob *full) {
 }
 
 void vp9_default_coef_probs(VP9_COMMON *cm) {
-  vp9_copy(cm->fc.coef_probs[TX_4X4], default_coef_probs_4x4);
-  vp9_copy(cm->fc.coef_probs[TX_8X8], default_coef_probs_8x8);
-  vp9_copy(cm->fc.coef_probs[TX_16X16], default_coef_probs_16x16);
-  vp9_copy(cm->fc.coef_probs[TX_32X32], default_coef_probs_32x32);
+  vp9_copy(cm->fc->coef_probs[TX_4X4], default_coef_probs_4x4);
+  vp9_copy(cm->fc->coef_probs[TX_8X8], default_coef_probs_8x8);
+  vp9_copy(cm->fc->coef_probs[TX_16X16], default_coef_probs_16x16);
+  vp9_copy(cm->fc->coef_probs[TX_32X32], default_coef_probs_32x32);
 }
 
 #define COEF_COUNT_SAT 24
@@ -737,7 +765,7 @@ static void adapt_coef_probs(VP9_COMMON *cm, TX_SIZE tx_size,
                              unsigned int count_sat,
                              unsigned int update_factor) {
   const FRAME_CONTEXT *pre_fc = &cm->frame_contexts[cm->frame_context_idx];
-  vp9_coeff_probs_model *const probs = cm->fc.coef_probs[tx_size];
+  vp9_coeff_probs_model *const probs = cm->fc->coef_probs[tx_size];
   const vp9_coeff_probs_model *const pre_probs = pre_fc->coef_probs[tx_size];
   vp9_coeff_count_model *counts = cm->counts.coef[tx_size];
   unsigned int (*eob_counts)[REF_TYPES][COEF_BANDS][COEFF_CONTEXTS] =

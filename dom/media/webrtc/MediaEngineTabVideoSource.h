@@ -20,7 +20,7 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
 
     virtual void Shutdown() override {};
     virtual void GetName(nsAString_internal&) override;
-    virtual void GetUUID(nsAString_internal&) override;
+    virtual void GetUUID(nsACString_internal&) override;
     virtual nsresult Allocate(const dom::MediaTrackConstraints &,
                               const mozilla::MediaEnginePrefs&) override;
     virtual nsresult Deallocate() override;

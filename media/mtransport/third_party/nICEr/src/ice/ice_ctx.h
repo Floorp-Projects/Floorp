@@ -62,11 +62,11 @@ typedef struct nr_ice_stun_server_ {
     } dnsname;
   } u;
   int index;
+  int transport;
 } nr_ice_stun_server;
 
 typedef struct nr_ice_turn_server_ {
     nr_ice_stun_server    turn_server;
-    int                   transport;
     char                 *username;
     Data                 *password;
 } nr_ice_turn_server;

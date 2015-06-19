@@ -727,15 +727,14 @@ nsSliderFrame::CurrentPositionChanged()
 
   // avoid putting the scroll thumb at subpixel positions which cause needless invalidations
   nscoord appUnitsPerPixel = PresContext()->AppUnitsPerDevPixel();
-  nsRect snappedThumbRect = ToAppUnits(newThumbRect.ToNearestPixels(appUnitsPerPixel), appUnitsPerPixel);
+  nsPoint snappedThumbLocation = ToAppUnits(
+      newThumbRect.TopLeft().ToNearestPixels(appUnitsPerPixel),
+      appUnitsPerPixel);
   if (IsHorizontal()) {
-    newThumbRect.x = snappedThumbRect.x;
-    newThumbRect.width = snappedThumbRect.width;
+    newThumbRect.x = snappedThumbLocation.x;
   } else {
-    newThumbRect.y = snappedThumbRect.y;
-    newThumbRect.height = snappedThumbRect.height;
+    newThumbRect.y = snappedThumbLocation.y;
   }
-  newThumbRect = newThumbRect.Intersect(clientRect);
 
   // set the rect
   thumbFrame->SetRect(newThumbRect);

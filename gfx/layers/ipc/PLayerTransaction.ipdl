@@ -94,6 +94,9 @@ parent:
   // Useful for testing rendering of async zooming.
   sync SetAsyncZoom(ViewID id, float zoom);
 
+  // Flush any pending APZ repaints to the main thread.
+  async FlushApzRepaints();
+
   // Drop any front buffers that might be retained on the compositor
   // side.
   async ClearCachedResources();
