@@ -769,7 +769,7 @@ BytecodeEmitter::enclosingStaticScope()
 
         // Top-level eval scripts have a placeholder static scope so that
         // StaticScopeIter may iterate through evals.
-        return sc->asGlobalSharedContext()->evalStaticScope();
+        return sc->asGlobalSharedContext()->topStaticScope();
     }
 
     return sc->asFunctionBox()->function();
