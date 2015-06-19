@@ -445,6 +445,12 @@ this.BrowserUITelemetry = {
   _checkForBuiltinItem: function(aEvent) {
     let item = aEvent.originalTarget;
 
+    // We don't want to count clicks on the private browsing
+    // button for privacy reasons. See bug 1176391.
+    if (item.id == "privatebrowsing-button") {
+      return;
+    }
+
     // We special-case the bookmarks-menu-button, since we want to
     // monitor more than just clicks on it.
     if (item.id == "bookmarks-menu-button" ||
@@ -655,7 +661,9 @@ this.BrowserUITelemetry = {
     "navigation", "back", "forward", "reload", "stop", "bookmarkpage",
     "spell-no-suggestions", "spell-add-to-dictionary",
     "spell-undo-add-to-dictionary", "openlinkincurrent", "openlinkintab",
-    "openlink", "openlinkprivate", "bookmarklink", "sharelink", "savelink",
+    "openlink",
+    // "openlinkprivate" intentionally omitted for privacy reasons. See bug 1176391.
+    "bookmarklink", "sharelink", "savelink",
     "marklinkMenu", "copyemail", "copylink", "media-play", "media-pause",
     "media-mute", "media-unmute", "media-playbackrate",
     "media-playbackrate-050x", "media-playbackrate-100x",
@@ -683,6 +691,13 @@ this.BrowserUITelemetry = {
 
   registerContextMenuInteraction: function(keys, itemID) {
     if (itemID) {
+      if (itemID == "openlinkprivate") {
+        // Don't record anything, not even an other-item count
+        // if the user chose to open in a private window. See
+        // bug 1176391.
+        return;
+      }
+
       if (!this._contextMenuItemWhitelist.has(itemID)) {
         itemID = "other-item";
       }
