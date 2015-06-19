@@ -258,6 +258,7 @@
             accesskey="&locbar.openpage.accesskey;"
             preference="browser.urlbar.suggest.openpage"/>
   <checkbox id="searchesSuggestion" label="&locbar.searches.label;"
+            hidden="true"
             onsyncfrompreference="return gPrivacyPane.writeSuggestionPref();"
             accesskey="&locbar.searches.accesskey;"
             preference="browser.urlbar.suggest.searches"/>
