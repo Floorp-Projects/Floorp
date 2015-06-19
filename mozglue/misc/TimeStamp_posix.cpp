@@ -16,6 +16,7 @@
 #include <sys/syscall.h>
 #include <time.h>
 #include <unistd.h>
+#include <string.h>
 
 #if defined(__DragonFly__) || defined(__FreeBSD__) \
     || defined(__NetBSD__) || defined(__OpenBSD__)
@@ -205,7 +206,7 @@ TimeStamp::Now(bool aHighResolution)
   return TimeStamp(ClockTimeNs());
 }
 
-#if defined(LINUX) || defined(ANDROID)
+#if defined(XP_LINUX) || defined(ANDROID)
 
 // Calculates the amount of jiffies that have elapsed since boot and up to the
 // starttime value of a specific process as found in its /proc/*/stat file.
