@@ -27,7 +27,12 @@
 #include <media/mediaplayer.h>
 #include <media/MediaProfiles.h>
 #include "GrallocImages.h"
+#include "imgIEncoder.h"
+#include "libyuv.h"
+#include "nsNetUtil.h" // for NS_ReadInputStreamToBuffer
 #endif
+#include "nsNetCID.h" // for NS_STREAMTRANSPORTSERVICE_CONTRACTID
+#include "nsAutoPtr.h" // for nsAutoArrayPtr
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "nsThread.h"
@@ -38,7 +43,6 @@
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "nsAlgorithm.h"
 #include "nsPrintfCString.h"
-#include "AutoRwLock.h"
 #include "GonkCameraHwMgr.h"
 #include "GonkRecorderProfiles.h"
 #include "CameraCommon.h"
@@ -46,6 +50,7 @@
 #include "DeviceStorageFileDescriptor.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
 using namespace mozilla::ipc;
@@ -79,6 +84,7 @@ nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId)
 #endif
   , mRecorderMonitor("GonkCameraControl::mRecorder.Monitor")
   , mVideoFile(nullptr)
+  , mCapturePoster(false)
   , mAutoFocusPending(false)
   , mAutoFocusCompleteExpired(0)
   , mReentrantMonitor("GonkCameraControl::OnTakePicture.Monitor")
@@ -1252,6 +1258,7 @@ nsGonkCameraControl::StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescri
 #endif
 
   OnRecorderStateChange(CameraControlListener::kRecorderStarted);
+  mCapturePoster = aOptions->createPoster;
   return NS_OK;
 }
 
@@ -1296,6 +1303,9 @@ nsGonkCameraControl::StopRecordingImpl()
     return NS_OK;
   }
 #endif
+  if (mCapturePoster.exchange(false)) {
+    OnPoster(nullptr, 0);
+  }
   OnRecorderStateChange(CameraControlListener::kRecorderStopped);
 
   {
@@ -2018,11 +2028,13 @@ nsGonkCameraControl::SetupRecording(int aFd, int aRotation,
                       NS_ERROR_INVALID_ARG);
 
   // adjust rotation by camera sensor offset
-  int r = aRotation;
-  r += mCameraHw->GetSensorOrientation();
-  r = RationalizeRotation(r);
-  DOM_CAMERA_LOGI("setting video rotation to %d degrees (mapped from %d)\n", r, aRotation);
-  snprintf(buffer, SIZE, "video-param-rotation-angle-degrees=%d", r);
+  mVideoRotation = aRotation;
+  mVideoRotation += mCameraHw->GetSensorOrientation();
+  mVideoRotation = RationalizeRotation(mVideoRotation);
+  DOM_CAMERA_LOGI("setting video rotation to %d degrees (mapped from %d)\n",
+                  mVideoRotation, aRotation);
+  snprintf(buffer, SIZE, "video-param-rotation-angle-degrees=%d",
+           mVideoRotation);
   CHECK_SETARG_RETURN(mRecorder->setParameters(String8(buffer)),
                       NS_ERROR_INVALID_ARG);
 
@@ -2166,6 +2178,137 @@ nsGonkCameraControl::OnRateLimitPreview(bool aLimit)
 }
 
 void
+nsGonkCameraControl::CreatePoster(Image* aImage, uint32_t aWidth, uint32_t aHeight, int32_t aRotation)
+{
+  class PosterRunnable : public nsRunnable {
+  public:
+    PosterRunnable(nsGonkCameraControl* aTarget, Image* aImage,
+                   uint32_t aWidth, uint32_t aHeight, int32_t aRotation)
+      : mTarget(aTarget)
+      , mImage(aImage)
+      , mWidth(aWidth)
+      , mHeight(aHeight)
+      , mRotation(aRotation)
+      , mDst(nullptr)
+      , mDstLength(0)
+    { }
+
+    virtual ~PosterRunnable()
+    {
+      mTarget->OnPoster(mDst, mDstLength);
+    }
+
+    NS_IMETHODIMP Run() override
+    {
+#ifdef MOZ_WIDGET_GONK
+      // NV21 (yuv420sp) is 12 bits / pixel
+      size_t srcLength = (mWidth * mHeight * 3 + 1) / 2;
+
+      // ARGB is 32 bits / pixel
+      size_t tmpLength = mWidth * mHeight * sizeof(uint32_t);
+      nsAutoArrayPtr<uint8_t> tmp;
+      tmp = new uint8_t[tmpLength];
+
+      GrallocImage* nativeImage = static_cast<GrallocImage*>(mImage.get());
+      android::sp<GraphicBuffer> graphicBuffer = nativeImage->GetGraphicBuffer();
+
+      void* graphicSrc = nullptr;
+      graphicBuffer->lock(GraphicBuffer::USAGE_SW_READ_MASK, &graphicSrc);
+
+      uint32_t stride = mWidth * 4;
+      int err = libyuv::ConvertToARGB(static_cast<uint8_t*>(graphicSrc),
+                                      srcLength, tmp, stride, 0, 0,
+                                      mWidth, mHeight, mWidth, mHeight,
+                                      libyuv::kRotate0, libyuv::FOURCC_NV21);
+
+      graphicBuffer->unlock();
+      graphicSrc = nullptr;
+      graphicBuffer.clear();
+      nativeImage = nullptr;
+      mImage = nullptr;
+
+      if (NS_WARN_IF(err < 0)) {
+        DOM_CAMERA_LOGE("CreatePoster: to ARGB failed (%d)\n", err);
+        return NS_OK;
+      }
+
+      nsCOMPtr<imgIEncoder> encoder =
+        do_CreateInstance("@mozilla.org/image/encoder;2?type=image/jpeg");
+      if (NS_WARN_IF(!encoder)) {
+        DOM_CAMERA_LOGE("CreatePoster: no JPEG encoder\n");
+        return NS_OK;
+      }
+
+      nsString opt;
+      nsresult rv = encoder->InitFromData(tmp, tmpLength, mWidth,
+                                          mHeight, stride,
+                                          imgIEncoder::INPUT_FORMAT_HOSTARGB,
+                                          opt);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        DOM_CAMERA_LOGE("CreatePoster: encoder init failed (0x%x)\n",
+                        rv);
+        return NS_OK;
+      }
+
+      nsCOMPtr<nsIInputStream> stream = do_QueryInterface(encoder);
+      if (NS_WARN_IF(!stream)) {
+        DOM_CAMERA_LOGE("CreatePoster: to input stream failed\n");
+        return NS_OK;
+      }
+
+      uint64_t length = 0;
+      rv = stream->Available(&length);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        DOM_CAMERA_LOGE("CreatePoster: get length failed (0x%x)\n",
+                        rv);
+        return NS_OK;
+      }
+
+      rv = NS_ReadInputStreamToBuffer(stream, &mDst, length);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        DOM_CAMERA_LOGE("CreatePoster: read failed (0x%x)\n", rv);
+        mDst = nullptr;
+        return NS_OK;
+      }
+
+      mDstLength = length;
+#endif
+      return NS_OK;
+    }
+
+  private:
+    nsRefPtr<nsGonkCameraControl> mTarget;
+    nsRefPtr<Image> mImage;
+    int32_t mWidth;
+    int32_t mHeight;
+    int32_t mRotation;
+    void* mDst;
+    size_t mDstLength;
+  };
+
+  nsCOMPtr<nsIRunnable> event = new PosterRunnable(this, aImage,
+                                                   aWidth,
+                                                   aHeight,
+                                                   aRotation);
+
+  nsCOMPtr<nsIEventTarget> target
+    = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  MOZ_ASSERT(target);
+
+  target->Dispatch(event, NS_DISPATCH_NORMAL);
+}
+
+void
+nsGonkCameraControl::OnPoster(void* aData, uint32_t aLength)
+{
+  nsRefPtr<BlobImpl> blobImpl;
+  if (aData) {
+    blobImpl = new BlobImplMemory(aData, aLength, NS_LITERAL_STRING("image/jpeg"));
+  }
+  CameraControlImpl::OnPoster(blobImpl);
+}
+
+void
 nsGonkCameraControl::OnNewPreviewFrame(layers::TextureClient* aBuffer)
 {
 #ifdef MOZ_WIDGET_GONK
@@ -2178,6 +2321,14 @@ nsGonkCameraControl::OnNewPreviewFrame(layers::TextureClient* aBuffer)
   data.mPicSize = IntSize(mCurrentConfiguration.mPreviewSize.width,
                           mCurrentConfiguration.mPreviewSize.height);
   videoImage->SetData(data);
+
+  if (mCapturePoster.exchange(false)) {
+    CreatePoster(frame,
+                 mCurrentConfiguration.mPreviewSize.width,
+                 mCurrentConfiguration.mPreviewSize.height,
+                 mVideoRotation);
+    return;
+  }
 
   OnNewPreviewFrame(frame, mCurrentConfiguration.mPreviewSize.width,
                     mCurrentConfiguration.mPreviewSize.height);

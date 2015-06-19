@@ -178,6 +178,19 @@ CameraControlImpl::OnTakePictureComplete(const uint8_t* aData, uint32_t aLength,
 }
 
 void
+CameraControlImpl::OnPoster(dom::BlobImpl* aBlobImpl)
+{
+  // This callback can run on threads other than the Main Thread and
+  //  the Camera Thread.
+  RwLockAutoEnterRead lock(mListenerLock);
+
+  for (uint32_t i = 0; i < mListeners.Length(); ++i) {
+    CameraControlListener* l = mListeners[i];
+    l->OnPoster(aBlobImpl);
+  }
+}
+
+void
 CameraControlImpl::OnShutter()
 {
   // This callback can run on threads other than the Main Thread and

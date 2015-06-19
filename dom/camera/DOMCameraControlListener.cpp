@@ -410,3 +410,27 @@ DOMCameraControlListener::OnUserError(UserContext aContext, nsresult aError)
 
   NS_DispatchToMainThread(new Callback(mDOMCameraControl, aContext, aError));
 }
+
+void
+DOMCameraControlListener::OnPoster(BlobImpl* aBlobImpl)
+{
+  class Callback : public DOMCallback
+  {
+  public:
+    Callback(nsMainThreadPtrHandle<nsISupports> aDOMCameraControl, BlobImpl* aBlobImpl)
+      : DOMCallback(aDOMCameraControl)
+      , mBlobImpl(aBlobImpl)
+    { }
+
+    void
+    RunCallback(nsDOMCameraControl* aDOMCameraControl) override
+    {
+      aDOMCameraControl->OnPoster(mBlobImpl);
+    }
+
+  protected:
+    nsRefPtr<BlobImpl> mBlobImpl;
+  };
+
+  NS_DispatchToMainThread(new Callback(mDOMCameraControl, aBlobImpl));
+}
