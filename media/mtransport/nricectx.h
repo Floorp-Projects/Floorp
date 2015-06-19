@@ -211,7 +211,8 @@ class NrIceCtx {
   static RefPtr<NrIceCtx> Create(const std::string& name,
                                  bool offerer,
                                  bool set_interface_priorities = true,
-                                 bool allow_loopback = false);
+                                 bool allow_loopback = false,
+                                 bool tcp_enabled = true);
 
   // Deinitialize all ICE global state. Used only for testing.
   static void internal_DeinitializeGlobal();

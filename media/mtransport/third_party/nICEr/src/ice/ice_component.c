@@ -386,6 +386,7 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
     int r,_status;
     int so_sock_ct=0;
     int backlog=10;
+    char ice_tcp_disabled=1;
 
     r_log(LOG_ICE,LOG_DEBUG,"nr_ice_component_initialize_tcp");
 
@@ -396,6 +397,11 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
 
     if(r=NR_reg_get_int4(NR_ICE_REG_ICE_TCP_LISTEN_BACKLOG,&backlog)){
       if(r!=R_NOT_FOUND)
+        ABORT(r);
+    }
+
+    if ((r=NR_reg_get_char(NR_ICE_REG_ICE_TCP_DISABLE, &ice_tcp_disabled))) {
+      if (r != R_NOT_FOUND)
         ABORT(r);
     }
 
@@ -413,44 +419,46 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           continue;
       }
 
-      /* passive host candidate */
-      if ((r=nr_ice_component_create_tcp_host_candidate(ctx, component, &addrs[i].addr,
-        TCP_TYPE_PASSIVE, backlog, 0, lufrag, pwd, &isock_psv)))
-        ABORT(r);
-
-      /* active host candidate */
-      if ((r=nr_ice_component_create_tcp_host_candidate(ctx, component, &addrs[i].addr,
-        TCP_TYPE_ACTIVE, 0, 0, lufrag, pwd, NULL)))
-        ABORT(r);
-
-      /* simultaneous-open host candidate */
-      if (so_sock_ct) {
+      if (!ice_tcp_disabled) {
+        /* passive host candidate */
         if ((r=nr_ice_component_create_tcp_host_candidate(ctx, component, &addrs[i].addr,
-          TCP_TYPE_SO, 0, so_sock_ct, lufrag, pwd, &isock_so)))
+          TCP_TYPE_PASSIVE, backlog, 0, lufrag, pwd, &isock_psv)))
           ABORT(r);
-      }
 
-      /* And srvrflx candidates for each STUN server */
-      for(j=0;j<ctx->stun_server_ct;j++){
-        if (ctx->stun_servers[j].transport!=IPPROTO_TCP)
-          continue;
-
-        if(r=nr_ice_candidate_create(ctx,component,
-          isock_psv,isock_psv->sock,SERVER_REFLEXIVE,TCP_TYPE_PASSIVE,
-          &ctx->stun_servers[j],component->component_id,&cand))
+        /* active host candidate */
+        if ((r=nr_ice_component_create_tcp_host_candidate(ctx, component, &addrs[i].addr,
+          TCP_TYPE_ACTIVE, 0, 0, lufrag, pwd, NULL)))
           ABORT(r);
-        TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
-        component->candidate_ct++;
-        cand=0;
 
+        /* simultaneous-open host candidate */
         if (so_sock_ct) {
+          if ((r=nr_ice_component_create_tcp_host_candidate(ctx, component, &addrs[i].addr,
+            TCP_TYPE_SO, 0, so_sock_ct, lufrag, pwd, &isock_so)))
+            ABORT(r);
+        }
+
+        /* And srvrflx candidates for each STUN server */
+        for(j=0;j<ctx->stun_server_ct;j++){
+          if (ctx->stun_servers[j].transport!=IPPROTO_TCP)
+            continue;
+
           if(r=nr_ice_candidate_create(ctx,component,
-            isock_so,isock_so->sock,SERVER_REFLEXIVE,TCP_TYPE_SO,
+            isock_psv,isock_psv->sock,SERVER_REFLEXIVE,TCP_TYPE_PASSIVE,
             &ctx->stun_servers[j],component->component_id,&cand))
             ABORT(r);
           TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
           component->candidate_ct++;
           cand=0;
+
+          if (so_sock_ct) {
+            if(r=nr_ice_candidate_create(ctx,component,
+              isock_so,isock_so->sock,SERVER_REFLEXIVE,TCP_TYPE_SO,
+              &ctx->stun_servers[j],component->component_id,&cand))
+              ABORT(r);
+            TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
+            component->candidate_ct++;
+            cand=0;
+          }
         }
       }
 
@@ -467,23 +475,25 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         if (ctx->turn_servers[j].turn_server.transport != IPPROTO_TCP)
           continue;
 
-        /* Use TURN server to get srflx candidates */
-        if(r=nr_ice_candidate_create(ctx,component,
-          isock_psv,isock_psv->sock,SERVER_REFLEXIVE,TCP_TYPE_PASSIVE,
-          &ctx->turn_servers[j].turn_server,component->component_id,&cand))
-          ABORT(r);
-        TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
-        component->candidate_ct++;
-        cand=0;
-
-        if (so_sock_ct) {
+        if (!ice_tcp_disabled) {
+          /* Use TURN server to get srflx candidates */
           if(r=nr_ice_candidate_create(ctx,component,
-            isock_so,isock_so->sock,SERVER_REFLEXIVE,TCP_TYPE_SO,
+            isock_psv,isock_psv->sock,SERVER_REFLEXIVE,TCP_TYPE_PASSIVE,
             &ctx->turn_servers[j].turn_server,component->component_id,&cand))
             ABORT(r);
           TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
           component->candidate_ct++;
           cand=0;
+
+          if (so_sock_ct) {
+            if(r=nr_ice_candidate_create(ctx,component,
+              isock_so,isock_so->sock,SERVER_REFLEXIVE,TCP_TYPE_SO,
+              &ctx->turn_servers[j].turn_server,component->component_id,&cand))
+              ABORT(r);
+            TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
+            component->candidate_ct++;
+            cand=0;
+          }
         }
 
         /* Create relay candidate */
@@ -584,10 +594,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
       ABORT(r);
     /* And the TCP candidates */
     if (r=nr_ice_component_initialize_tcp(ctx, component, addrs, addr_ct, lufrag, &pwd))
-      /* TODO: This will fail when NrSocketIpc is used, therefore we ignore this result.
-         Remove this error ignore once there will be pref to turn off TCP */
-      if (r != R_REJECTED)
-        ABORT(r);
+      ABORT(r);
 
     /* count the candidates that will be initialized */
     cand=TAILQ_FIRST(&component->candidates);

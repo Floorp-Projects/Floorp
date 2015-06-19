@@ -504,7 +504,7 @@ int main(int argc, char **argv)
   std::string dummy("dummy");
   RUN_ON_THREAD(test_utils->sts_target(),
                 WrapRunnableNM(&NrIceCtx::Create,
-                               dummy, false, false, false),
+                               dummy, false, false, false, false),
                 NS_DISPATCH_SYNC);
 
   // Start the tests

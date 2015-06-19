@@ -63,6 +63,7 @@ extern "C" {
 #define NR_ICE_REG_TURN_SRV_USERNAME        "username"
 #define NR_ICE_REG_TURN_SRV_PASSWORD        "password"
 
+#define NR_ICE_REG_ICE_TCP_DISABLE          "ice.tcp.disable"
 #define NR_ICE_REG_ICE_TCP_SO_SOCK_COUNT    "ice.tcp.so_sock_count"
 #define NR_ICE_REG_ICE_TCP_LISTEN_BACKLOG   "ice.tcp.listen_backlog"
 
