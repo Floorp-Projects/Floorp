@@ -20,6 +20,7 @@
 #endif
 #include "jit/SharedICHelpers.h"
 #include "jit/VMFunctions.h"
+#include "vm/ScopeObject.h"
 #include "vm/TraceLogging.h"
 
 #include "jsscriptinlines.h"
@@ -128,7 +129,7 @@ BaselineCompiler::compile()
                 return Method_Error;
 
             if (fun->isNamedLambda()) {
-                RootedObject declEnvObject(cx, DeclEnvObject::createTemplateObject(cx, fun, gc::TenuredHeap));
+                RootedObject declEnvObject(cx, DeclEnvObject::createTemplateObject(cx, fun, TenuredObject));
                 if (!declEnvObject)
                     return Method_Error;
                 templateScope->as<ScopeObject>().setEnclosingScope(declEnvObject);
