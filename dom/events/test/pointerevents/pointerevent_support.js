@@ -154,35 +154,17 @@ function objectScroller(target, direction, value) {
 
 function sPointerCapture(e) {
     try {
-        if(target0.setPointerCapture)
-            target0.setPointerCapture(e.pointerId);
-        else
-            test(function() {
-                assert_equals(typeof(target0.setPointerCapture), "function", "target0 should have function setPointerCapture");
-            }, "target0 should have function setPointerCapture");
+        target0.setPointerCapture(e.pointerId);
     }
     catch(e) {
-        console.log("catch exception: " + e);
-        test(function() {
-            assert_true(false, "Exception in function setPointerCapture");
-        }, "Exception in function setPointerCapture");
     }
 }
 
 function rPointerCapture(e) {
     try {
         captureButton.value = 'Set Capture';
-        if(target0.releasePointerCapture)
-            target0.releasePointerCapture(e.pointerId);
-        else
-            test(function() {
-                assert_equals(typeof(target0.releasePointerCapture), "function", "target0 should have function releasePointerCapture");
-            }, "target0 should have function releasePointerCapture");
+        target0.releasePointerCapture(e.pointerId);
     }
     catch(e) {
-        console.log("catch exception: " + e);
-        test(function() {
-            assert_true(false, "Exception in function releasePointerCapture");
-        }, "Exception in function releasePointerCapture");
     }
 }
