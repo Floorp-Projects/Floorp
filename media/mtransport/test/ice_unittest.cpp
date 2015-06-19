@@ -63,9 +63,9 @@ bool stream_added = false;
 
 static unsigned int kDefaultTimeout = 7000;
 
-const std::string kDefaultStunServerAddress((char *)"23.21.150.121");
+const std::string kDefaultStunServerAddress((char *)"107.23.150.92");
 const std::string kDefaultStunServerHostname(
-    (char *)"stun.services.mozilla.com");
+    (char *)"stun.stunprotocol.org");
 const std::string kBogusStunServerHostname(
     (char *)"stun-server-nonexistent.invalid");
 const uint16_t kDefaultStunServerPort=3478;
@@ -1572,6 +1572,16 @@ TEST_F(IceGatherTest, TestGatherFakeStunServerHostnameNoResolver) {
 
   EnsurePeer();
   peer_->SetStunServer(g_stun_server_hostname, kDefaultStunServerPort);
+  Gather();
+}
+
+TEST_F(IceGatherTest, TestGatherFakeStunServerTcpHostnameNoResolver) {
+  if (g_stun_server_hostname.empty()) {
+    return;
+  }
+
+  EnsurePeer();
+  peer_->SetStunServer(g_stun_server_hostname, kDefaultStunServerPort, kNrIceTransportTcp);
   Gather();
 }
 
