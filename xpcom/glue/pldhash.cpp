@@ -728,7 +728,6 @@ PLDHashTable::ShrinkIfAppropriate()
   uint32_t capacity = Capacity();
   if (mRemovedCount >= capacity >> 2 ||
       (capacity > PL_DHASH_MIN_CAPACITY && mEntryCount <= MinLoad(capacity))) {
-
     uint32_t log2;
     BestCapacity(mEntryCount, &capacity, &log2);
 
@@ -737,75 +736,6 @@ PLDHashTable::ShrinkIfAppropriate()
 
     (void) ChangeTable(deltaLog2);
   }
-}
-
-MOZ_ALWAYS_INLINE uint32_t
-PLDHashTable::Enumerate(PLDHashEnumerator aEtor, void* aArg)
-{
-#ifdef DEBUG
-  // Enumerate() can be a read operation or a write operation, depending on
-  // whether PL_DHASH_REMOVE is used. Assume for now it's a read; once the
-  // enumeration is done we'll know if that is false, and if so,
-  // retrospectively check it as a write.
-  bool wasIdleAndWritableAtStart = mChecker.IsIdle() && mChecker.IsWritable();
-  AutoReadOp op(mChecker);
-#endif
-
-  if (!mEntryStore) {
-    return 0;
-  }
-
-  char* entryAddr = mEntryStore;
-  uint32_t capacity = Capacity();
-  uint32_t tableSize = capacity * mEntrySize;
-  char* entryLimit = mEntryStore + tableSize;
-  uint32_t i = 0;
-  bool didRemove = false;
-
-  if (ChaosMode::isActive(ChaosMode::HashTableIteration)) {
-    // Start iterating at a random point in the hashtable. It would be
-    // even more chaotic to iterate in fully random order, but that's a lot
-    // more work.
-    entryAddr += ChaosMode::randomUint32LessThan(capacity) * mEntrySize;
-  }
-
-  for (uint32_t e = 0; e < capacity; ++e) {
-    PLDHashEntryHdr* entry = (PLDHashEntryHdr*)entryAddr;
-    if (ENTRY_IS_LIVE(entry)) {
-      PLDHashOperator op = aEtor(this, entry, i++, aArg);
-      if (op & PL_DHASH_REMOVE) {
-        PL_DHashTableRawRemove(this, entry);
-        didRemove = true;
-      }
-      if (op & PL_DHASH_STOP) {
-        break;
-      }
-    }
-    entryAddr += mEntrySize;
-    if (entryAddr >= entryLimit) {
-      entryAddr -= tableSize;
-    }
-  }
-
-  // This is the retrospective check mentioned above. If we removed anything,
-  // then the table should have been idle and writable before we did so.
-  MOZ_ASSERT_IF(didRemove, wasIdleAndWritableAtStart);
-
-  // Shrink the table if appropriate. Do this only if we removed above, so
-  // non-removing enumerations can count on stable |mEntryStore| until the next
-  // Add, Remove, or removing-Enumerate.
-  if (didRemove) {
-    ShrinkIfAppropriate();
-  }
-
-  return i;
-}
-
-uint32_t
-PL_DHashTableEnumerate(PLDHashTable* aTable, PLDHashEnumerator aEtor,
-                       void* aArg)
-{
-  return aTable->Enumerate(aEtor, aArg);
 }
 
 MOZ_ALWAYS_INLINE size_t
