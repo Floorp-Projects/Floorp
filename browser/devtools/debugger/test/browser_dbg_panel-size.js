@@ -17,63 +17,63 @@ function test() {
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gPrefs = gDebugger.Prefs;
-    gSources = gDebugger.document.getElementById("sources-pane");
+    gSources = gDebugger.document.getElementById("workers-and-sources-pane");
     gInstruments = gDebugger.document.getElementById("instruments-pane");
 
     waitForSourceShown(gPanel, ".html").then(performTest);
   });
 
   function performTest() {
-    let preferredSw = Services.prefs.getIntPref("devtools.debugger.ui.panes-sources-width");
+    let preferredWsw = Services.prefs.getIntPref("devtools.debugger.ui.panes-workers-and-sources-width");
     let preferredIw = Services.prefs.getIntPref("devtools.debugger.ui.panes-instruments-width");
     let someWidth1, someWidth2;
 
     do {
       someWidth1 = parseInt(Math.random() * 200) + 100;
       someWidth2 = parseInt(Math.random() * 300) + 100;
-    } while ((someWidth1 == preferredSw) || (someWidth2 == preferredIw));
+    } while ((someWidth1 == preferredWsw) || (someWidth2 == preferredIw));
 
-    info("Preferred sources width: " + preferredSw);
+    info("Preferred sources width: " + preferredWsw);
     info("Preferred instruments width: " + preferredIw);
     info("Generated sources width: " + someWidth1);
     info("Generated instruments width: " + someWidth2);
 
-    ok(gPrefs.sourcesWidth,
-      "The debugger preferences should have a saved sourcesWidth value.");
+    ok(gPrefs.workersAndSourcesWidth,
+      "The debugger preferences should have a saved workersAndSourcesWidth value.");
     ok(gPrefs.instrumentsWidth,
       "The debugger preferences should have a saved instrumentsWidth value.");
 
-    is(gPrefs.sourcesWidth, preferredSw,
-      "The debugger preferences should have a correct sourcesWidth value.");
+    is(gPrefs.workersAndSourcesWidth, preferredWsw,
+      "The debugger preferences should have a correct workersAndSourcesWidth value.");
     is(gPrefs.instrumentsWidth, preferredIw,
       "The debugger preferences should have a correct instrumentsWidth value.");
 
-    is(gSources.getAttribute("width"), gPrefs.sourcesWidth,
-      "The sources pane width should be the same as the preferred value.");
+    is(gSources.getAttribute("width"), gPrefs.workersAndSourcesWidth,
+      "The workers and sources pane width should be the same as the preferred value.");
     is(gInstruments.getAttribute("width"), gPrefs.instrumentsWidth,
       "The instruments pane width should be the same as the preferred value.");
 
     gSources.setAttribute("width", someWidth1);
     gInstruments.setAttribute("width", someWidth2);
 
-    is(gPrefs.sourcesWidth, preferredSw,
-      "The sources pane width pref should still be the same as the preferred value.");
+    is(gPrefs.workersAndSourcesWidth, preferredWsw,
+      "The workers and sources pane width pref should still be the same as the preferred value.");
     is(gPrefs.instrumentsWidth, preferredIw,
       "The instruments pane width pref should still be the same as the preferred value.");
 
-    isnot(gSources.getAttribute("width"), gPrefs.sourcesWidth,
-      "The sources pane width should not be the preferred value anymore.");
+    isnot(gSources.getAttribute("width"), gPrefs.workersAndSourcesWidth,
+      "The workers and sources pane width should not be the preferred value anymore.");
     isnot(gInstruments.getAttribute("width"), gPrefs.instrumentsWidth,
       "The instruments pane width should not be the preferred value anymore.");
 
     teardown(gPanel).then(() => {
-      is(gPrefs.sourcesWidth, someWidth1,
-        "The sources pane width should have been saved by now.");
+      is(gPrefs.workersAndSourcesWidth, someWidth1,
+        "The workers and sources pane width should have been saved by now.");
       is(gPrefs.instrumentsWidth, someWidth2,
         "The instruments pane width should have been saved by now.");
 
       // Cleanup after ourselves!
-      Services.prefs.setIntPref("devtools.debugger.ui.panes-sources-width", preferredSw);
+      Services.prefs.setIntPref("devtools.debugger.ui.panes-workers-and-sources-width", preferredWsw);
       Services.prefs.setIntPref("devtools.debugger.ui.panes-instruments-width", preferredIw);
 
       finish();

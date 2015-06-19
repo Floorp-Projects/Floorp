@@ -1364,6 +1364,7 @@ function WorkerClient(aClient, aForm) {
   this._actor = aForm.from;
   this._isClosed = false;
   this._isFrozen = aForm.isFrozen;
+  this._url = aForm.url;
 
   this._onClose = this._onClose.bind(this);
   this._onFreeze = this._onFreeze.bind(this);
@@ -1385,6 +1386,10 @@ WorkerClient.prototype = {
 
   get actor() {
     return this._actor;
+  },
+
+  get url() {
+    return this._url;
   },
 
   get isClosed() {
