@@ -300,12 +300,19 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
   }
 #endif // defined(MOZILLA_XPCOMRT_API)
 
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  bool ice_tcp = Preferences::GetBool("media.peerconnection.ice.tcp", false);
+#else
+  bool ice_tcp = false;
+#endif
+
   // TODO(ekr@rtfm.com): need some way to set not offerer later
   // Looks like a bug in the NrIceCtx API.
   mIceCtx = NrIceCtx::Create("PC:" + mParentName,
                              true, // Offerer
                              true, // Explicitly set priorities
-                             mAllowIceLoopback);
+                             mAllowIceLoopback,
+                             ice_tcp);
   if(!mIceCtx) {
     CSFLogError(logTag, "%s: Failed to create Ice Context", __FUNCTION__);
     return NS_ERROR_FAILURE;
