@@ -1465,12 +1465,13 @@ richlistitem[type~="action"][actiontype="searchengine"] > .ac-title-box > .ac-si
   height: 16px;
 }
 
-@media (-moz-os-version: windows-xp),
-       not all and (-moz-windows-default-theme) {
-  .ac-result-type-keyword[selected="true"],
-  .autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage, selected),
-  richlistitem[type~="action"][actiontype="searchengine"][selected="true"] > .ac-title-box > .ac-site-icon {
-    list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon-inverted);
+@media not all and (-moz-os-version: windows-vista) and (-moz-windows-default-theme) {
+  @media not all and (-moz-os-version: windows-win7) and (-moz-windows-default-theme) {
+    .ac-result-type-keyword[selected="true"],
+    .autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage, selected),
+    richlistitem[type~="action"][actiontype="searchengine"][selected="true"] > .ac-title-box > .ac-site-icon {
+      list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon-inverted);
+    }
   }
 }
 
