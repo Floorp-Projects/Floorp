@@ -183,11 +183,7 @@ class LAllocation : public TempObject
         return bits_;
     }
 
-#ifdef DEBUG
     const char* toString() const;
-#else
-    const char* toString() const { return "???"; }
-#endif
     bool aliases(const LAllocation& other) const;
     void dump() const;
 
@@ -580,11 +576,7 @@ class LDefinition
         }
     }
 
-#ifdef DEBUG
     const char* toString() const;
-#else
-    const char* toString() const { return "???"; }
-#endif
 
     void dump() const;
 };
