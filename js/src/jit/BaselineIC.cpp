@@ -6133,7 +6133,7 @@ DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_
         attached = true;
     }
 
-    if (!attached && IsGlobalOp(JSOp(*pc)) && !script->hasNonSyntacticScope()) {
+    if (!attached && IsGlobalOp(JSOp(*pc)) && !script->hasPollutedGlobalScope()) {
         if (!TryAttachGlobalNameAccessorStub(cx, script, pc, stub, scopeChain.as<GlobalObject>(),
             name, &attached, &isTemporarilyUnoptimizable))
         {
@@ -6163,7 +6163,7 @@ DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_
     if (attached)
         return true;
 
-    if (IsGlobalOp(JSOp(*pc)) && !script->hasNonSyntacticScope()) {
+    if (IsGlobalOp(JSOp(*pc)) && !script->hasPollutedGlobalScope()) {
         Handle<GlobalObject*> global = scopeChain.as<GlobalObject>();
         if (!TryAttachGlobalNameValueStub(cx, script, pc, stub, global, name, &attached))
             return false;
