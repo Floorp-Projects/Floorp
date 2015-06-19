@@ -755,11 +755,6 @@ bool
 XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enclosingScript,
           HandleFunction fun, MutableHandleScript scriptp);
 
-JSScript*
-CloneScript(JSContext* cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script,
-            PollutedGlobalScopeOption polluted = HasCleanGlobalScope,
-            NewObjectKind newKind = GenericObject);
-
 template<XDRMode mode>
 bool
 XDRLazyScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enclosingScript,
@@ -772,6 +767,16 @@ template<XDRMode mode>
 bool
 XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 
+
+namespace detail {
+
+// Do not call this directly! It is exposed for the friend declaration in
+// JSScript.
+bool
+CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScript src, HandleScript dst);
+
+} // namespace detail
+
 } /* namespace js */
 
 class JSScript : public js::gc::TenuredCell
@@ -779,13 +784,13 @@ class JSScript : public js::gc::TenuredCell
     template <js::XDRMode mode>
     friend
     bool
-    js::XDRScript(js::XDRState<mode>* xdr, js::HandleObject enclosingScope, js::HandleScript enclosingScript,
+    js::XDRScript(js::XDRState<mode>* xdr, js::HandleObject enclosingScope,
+                  js::HandleScript enclosingScript,
                   js::HandleFunction fun, js::MutableHandleScript scriptp);
 
-    friend JSScript*
-    js::CloneScript(JSContext* cx, js::HandleObject enclosingScope, js::HandleFunction fun,
-                    js::HandleScript src, js::PollutedGlobalScopeOption polluted,
-                    js::NewObjectKind newKind);
+    friend bool
+    js::detail::CopyScript(JSContext* cx, js::HandleObject scriptStaticScope, js::HandleScript src,
+                           js::HandleScript dst);
 
   public:
     //
@@ -2288,9 +2293,12 @@ DescribeScriptedCallerForCompilation(JSContext* cx, MutableHandleScript maybeScr
                                      uint32_t* pcOffset, bool* mutedErrors,
                                      LineOption opt = NOT_CALLED_FROM_JSOP_EVAL);
 
-bool
-CloneFunctionScript(JSContext* cx, HandleFunction original, HandleFunction clone,
-                    PollutedGlobalScopeOption polluted, NewObjectKind newKind);
+JSScript*
+CloneScriptIntoFunction(JSContext* cx, HandleObject enclosingScope, HandleFunction fun,
+                        HandleScript src);
+
+JSScript*
+CloneGlobalScript(JSContext* cx, Handle<ScopeObject*> enclosingScope, HandleScript src);
 
 } /* namespace js */
 
