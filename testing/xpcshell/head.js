@@ -855,7 +855,7 @@ function todo_check_eq(left, right, stack) {
 }
 
 function do_check_true(condition, stack) {
-  Assert.ok(condition);
+  Assert.ok(condition, stack);
 }
 
 function todo_check_true(condition, stack) {
