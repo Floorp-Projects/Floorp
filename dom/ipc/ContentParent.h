@@ -646,6 +646,9 @@ private:
     virtual bool RecvPVoicemailConstructor(PVoicemailParent* aActor) override;
     virtual bool DeallocPVoicemailParent(PVoicemailParent* aActor) override;
 
+    virtual PMediaParent* AllocPMediaParent() override;
+    virtual bool DeallocPMediaParent(PMediaParent* aActor) override;
+
     virtual bool DeallocPStorageParent(PStorageParent* aActor) override;
 
     virtual PBluetoothParent* AllocPBluetoothParent() override;

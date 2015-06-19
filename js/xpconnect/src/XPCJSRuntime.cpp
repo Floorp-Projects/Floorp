@@ -111,96 +111,10 @@ bool xpc::ExtraWarningsForSystemJS() { return sExtraWarningsForSystemJS; }
 bool xpc::ExtraWarningsForSystemJS() { return false; }
 #endif
 
-static void * const UNMARK_ONLY = nullptr;
-static void * const UNMARK_AND_SWEEP = (void*)1;
-
-static PLDHashOperator
-NativeInterfaceSweeper(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                       uint32_t number, void* arg)
-{
-    XPCNativeInterface* iface = ((IID2NativeInterfaceMap::Entry*)hdr)->value;
-    if (iface->IsMarked()) {
-        iface->Unmark();
-        return PL_DHASH_NEXT;
-    }
-
-    if (arg == UNMARK_ONLY)
-        return PL_DHASH_NEXT;
-
-    XPCNativeInterface::DestroyInstance(iface);
-    return PL_DHASH_REMOVE;
-}
-
 // *Some* NativeSets are referenced from mClassInfo2NativeSetMap.
 // *All* NativeSets are referenced from mNativeSetMap.
 // So, in mClassInfo2NativeSetMap we just clear references to the unmarked.
 // In mNativeSetMap we clear the references to the unmarked *and* delete them.
-
-static PLDHashOperator
-NativeUnMarkedSetRemover(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                         uint32_t number, void* arg)
-{
-    XPCNativeSet* set = ((ClassInfo2NativeSetMap::Entry*)hdr)->value;
-    if (set->IsMarked())
-        return PL_DHASH_NEXT;
-    return PL_DHASH_REMOVE;
-}
-
-static PLDHashOperator
-NativeSetSweeper(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                 uint32_t number, void* arg)
-{
-    XPCNativeSet* set = ((NativeSetMap::Entry*)hdr)->key_value;
-    if (set->IsMarked()) {
-        set->Unmark();
-        return PL_DHASH_NEXT;
-    }
-
-    if (arg == UNMARK_ONLY)
-        return PL_DHASH_NEXT;
-
-    XPCNativeSet::DestroyInstance(set);
-    return PL_DHASH_REMOVE;
-}
-
-static PLDHashOperator
-JSClassSweeper(PLDHashTable* table, PLDHashEntryHdr* hdr,
-               uint32_t number, void* arg)
-{
-    XPCNativeScriptableShared* shared =
-        ((XPCNativeScriptableSharedMap::Entry*) hdr)->key;
-    if (shared->IsMarked()) {
-        shared->Unmark();
-        return PL_DHASH_NEXT;
-    }
-
-    if (arg == UNMARK_ONLY)
-        return PL_DHASH_NEXT;
-
-    delete shared;
-    return PL_DHASH_REMOVE;
-}
-
-static PLDHashOperator
-DyingProtoKiller(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                 uint32_t number, void* arg)
-{
-    XPCWrappedNativeProto* proto =
-        (XPCWrappedNativeProto*)((PLDHashEntryStub*)hdr)->key;
-    delete proto;
-    return PL_DHASH_REMOVE;
-}
-
-static PLDHashOperator
-DetachedWrappedNativeProtoMarker(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                                 uint32_t number, void* arg)
-{
-    XPCWrappedNativeProto* proto =
-        (XPCWrappedNativeProto*)((PLDHashEntryStub*)hdr)->key;
-
-    proto->Mark();
-    return PL_DHASH_NEXT;
-}
 
 bool
 XPCJSRuntime::CustomContextCallback(JSContext* cx, unsigned operation)
@@ -843,8 +757,10 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
             // Do the marking...
             XPCWrappedNativeScope::MarkAllWrappedNativesAndProtos();
 
-            self->mDetachedWrappedNativeProtoMap->
-                Enumerate(DetachedWrappedNativeProtoMarker, nullptr);
+            for (auto i = self->mDetachedWrappedNativeProtoMap->Iter(); !i.Done(); i.Next()) {
+                auto entry = static_cast<XPCWrappedNativeProtoMap::Entry*>(i.Get());
+                static_cast<const XPCWrappedNativeProto*>(entry->key)->Mark();
+            }
 
             // Mark the sets used in the call contexts. There is a small
             // chance that a wrapper's set will change *while* a call is
@@ -892,26 +808,53 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
             // kept separate, we could sweep only the ones belonging to
             // compartments being collected. Currently, though, NativeInterfaces
             // are shared between compartments. This ought to be fixed.
-            void* sweepArg = isCompartmentGC ? UNMARK_ONLY : UNMARK_AND_SWEEP;
+            bool doSweep = !isCompartmentGC;
 
             // We don't want to sweep the JSClasses at shutdown time.
             // At this point there may be JSObjects using them that have
             // been removed from the other maps.
             if (!nsXPConnect::XPConnect()->IsShuttingDown()) {
-                self->mNativeScriptableSharedMap->
-                    Enumerate(JSClassSweeper, sweepArg);
+                for (auto i = self->mNativeScriptableSharedMap->RemovingIter(); !i.Done(); i.Next()) {
+                    auto entry = static_cast<XPCNativeScriptableSharedMap::Entry*>(i.Get());
+                    XPCNativeScriptableShared* shared = entry->key;
+                    if (shared->IsMarked()) {
+                        shared->Unmark();
+                    } else if (doSweep) {
+                        delete shared;
+                        i.Remove();
+                    }
+                }
             }
 
             if (!isCompartmentGC) {
-                self->mClassInfo2NativeSetMap->
-                    Enumerate(NativeUnMarkedSetRemover, nullptr);
+                for (auto i = self->mClassInfo2NativeSetMap->RemovingIter(); !i.Done(); i.Next()) {
+                    auto entry = static_cast<ClassInfo2NativeSetMap::Entry*>(i.Get());
+                    if (!entry->value->IsMarked())
+                        i.Remove();
+                }
             }
 
-            self->mNativeSetMap->
-                Enumerate(NativeSetSweeper, sweepArg);
+            for (auto i = self->mNativeSetMap->RemovingIter(); !i.Done(); i.Next()) {
+                auto entry = static_cast<NativeSetMap::Entry*>(i.Get());
+                XPCNativeSet* set = entry->key_value;
+                if (set->IsMarked()) {
+                    set->Unmark();
+                } else if (doSweep) {
+                    XPCNativeSet::DestroyInstance(set);
+                    i.Remove();
+                }
+            }
 
-            self->mIID2NativeInterfaceMap->
-                Enumerate(NativeInterfaceSweeper, sweepArg);
+            for (auto i = self->mIID2NativeInterfaceMap->RemovingIter(); !i.Done(); i.Next()) {
+                auto entry = static_cast<IID2NativeInterfaceMap::Entry*>(i.Get());
+                XPCNativeInterface* iface = entry->value;
+                if (iface->IsMarked()) {
+                    iface->Unmark();
+                } else if (doSweep) {
+                    XPCNativeInterface::DestroyInstance(iface);
+                    i.Remove();
+                }
+            }
 
 #ifdef DEBUG
             XPCWrappedNativeScope::ASSERT_NoInterfaceSetsAreMarked();
@@ -967,8 +910,11 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
             // referencing the protos in the dying list are themselves dead.
             // So, we can safely delete all the protos in the list.
 
-            self->mDyingWrappedNativeProtoMap->
-                Enumerate(DyingProtoKiller, nullptr);
+            for (auto i = self->mDyingWrappedNativeProtoMap->RemovingIter(); !i.Done(); i.Next()) {
+                auto entry = static_cast<XPCWrappedNativeProtoMap::Entry*>(i.Get());
+                delete static_cast<const XPCWrappedNativeProto*>(entry->key);
+                i.Remove();
+            }
 
             MOZ_ASSERT(self->mGCIsRunning, "bad state");
             self->mGCIsRunning = false;
@@ -1541,17 +1487,6 @@ XPCJSRuntime::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
 
 /***************************************************************************/
 
-static PLDHashOperator
-DetachedWrappedNativeProtoShutdownMarker(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                                         uint32_t number, void* arg)
-{
-    XPCWrappedNativeProto* proto =
-        (XPCWrappedNativeProto*)((PLDHashEntryStub*)hdr)->key;
-
-    proto->SystemIsBeingShutDown();
-    return PL_DHASH_NEXT;
-}
-
 void XPCJSRuntime::DestroyJSContextStack()
 {
     delete mJSContextStack;
@@ -1560,8 +1495,11 @@ void XPCJSRuntime::DestroyJSContextStack()
 
 void XPCJSRuntime::SystemIsBeingShutDown()
 {
-    mDetachedWrappedNativeProtoMap->
-        Enumerate(DetachedWrappedNativeProtoShutdownMarker, nullptr);
+    for (auto i = mDetachedWrappedNativeProtoMap->Iter(); !i.Done(); i.Next()) {
+        auto entry = static_cast<XPCWrappedNativeProtoMap::Entry*>(i.Get());
+        auto proto = const_cast<XPCWrappedNativeProto*>(static_cast<const XPCWrappedNativeProto*>(entry->key));
+        proto->SystemIsBeingShutDown();
+    }
 }
 
 #define JS_OPTIONS_DOT_STR "javascript.options."
@@ -3638,23 +3576,6 @@ XPCJSRuntime::NoteCustomGCThingXPCOMChildren(const js::Class* clasp, JSObject* o
 
 /***************************************************************************/
 
-#ifdef DEBUG
-static PLDHashOperator
-WrappedJSClassMapDumpEnumerator(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                                uint32_t number, void* arg)
-{
-    ((IID2WrappedJSClassMap::Entry*)hdr)->value->DebugDump(*(int16_t*)arg);
-    return PL_DHASH_NEXT;
-}
-static PLDHashOperator
-NativeSetDumpEnumerator(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                        uint32_t number, void* arg)
-{
-    ((NativeSetMap::Entry*)hdr)->key_value->DebugDump(*(int16_t*)arg);
-    return PL_DHASH_NEXT;
-}
-#endif
-
 void
 XPCJSRuntime::DebugDump(int16_t depth)
 {
@@ -3687,7 +3608,10 @@ XPCJSRuntime::DebugDump(int16_t depth)
         // iterate wrappersclasses...
         if (depth && mWrappedJSClassMap->Count()) {
             XPC_LOG_INDENT();
-            mWrappedJSClassMap->Enumerate(WrappedJSClassMapDumpEnumerator, &depth);
+            for (auto i = mWrappedJSClassMap->Iter(); !i.Done(); i.Next()) {
+                auto entry = static_cast<IID2WrappedJSClassMap::Entry*>(i.Get());
+                entry->value->DebugDump(depth);
+            }
             XPC_LOG_OUTDENT();
         }
         XPC_LOG_ALWAYS(("mWrappedJSMap @ %x with %d wrappers(s)",
@@ -3716,7 +3640,10 @@ XPCJSRuntime::DebugDump(int16_t depth)
         // iterate sets...
         if (depth && mNativeSetMap->Count()) {
             XPC_LOG_INDENT();
-            mNativeSetMap->Enumerate(NativeSetDumpEnumerator, &depth);
+            for (auto i = mNativeSetMap->RemovingIter(); !i.Done(); i.Next()) {
+                auto entry = static_cast<NativeSetMap::Entry*>(i.Get());
+                entry->key_value->DebugDump(depth);
+            }
             XPC_LOG_OUTDENT();
         }
 

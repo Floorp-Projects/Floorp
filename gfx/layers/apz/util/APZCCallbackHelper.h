@@ -156,6 +156,9 @@ public:
 
     /* Notify content of a mouse scroll testing event. */
     static void NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId, const nsString& aEvent);
+
+    /* Notify content that the repaint flush is complete. */
+    static void NotifyFlushComplete();
 };
 
 }

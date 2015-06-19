@@ -440,6 +440,12 @@ gboolean moz_gtk_images_in_menus(void);
  */
 gboolean moz_gtk_images_in_buttons(void);
 
+/**
+ * Get a boolean which indicates whether the theme draws scrollbar buttons.
+ * If TRUE, draw scrollbar buttons.
+ */
+gboolean moz_gtk_has_scrollbar_buttons(void);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

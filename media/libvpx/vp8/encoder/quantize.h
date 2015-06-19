@@ -18,6 +18,9 @@ extern "C" {
 
 struct VP8_COMP;
 struct macroblock;
+extern void vp8_quantize_mb(struct macroblock *x);
+extern void vp8_quantize_mby(struct macroblock *x);
+extern void vp8_quantize_mbuv(struct macroblock *x);
 extern void vp8_set_quantizer(struct VP8_COMP *cpi, int Q);
 extern void vp8cx_frame_init_quantizer(struct VP8_COMP *cpi);
 extern void vp8_update_zbin_extra(struct VP8_COMP *cpi, struct macroblock *x);

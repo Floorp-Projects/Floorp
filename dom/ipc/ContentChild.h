@@ -262,6 +262,9 @@ public:
     PVoicemailChild* SendPVoicemailConstructor(PVoicemailChild* aActor);
     virtual bool DeallocPVoicemailChild(PVoicemailChild*) override;
 
+    virtual PMediaChild* AllocPMediaChild() override;
+    virtual bool DeallocPMediaChild(PMediaChild* aActor) override;
+
     virtual PStorageChild* AllocPStorageChild() override;
     virtual bool DeallocPStorageChild(PStorageChild* aActor) override;
 

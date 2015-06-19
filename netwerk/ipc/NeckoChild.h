@@ -80,6 +80,10 @@ protected:
                                                  const nsString& aRealm,
                                                  const uint64_t& aCallbackId) override;
   virtual bool RecvAppOfflineStatus(const uint32_t& aId, const bool& aOffline) override;
+
+  /* Predictor Messsages */
+  virtual bool RecvPredOnPredictPreconnect(const URIParams& aURI) override;
+  virtual bool RecvPredOnPredictDNS(const URIParams& aURI) override;
 };
 
 /**

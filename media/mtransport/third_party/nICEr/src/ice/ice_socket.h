@@ -60,11 +60,11 @@ typedef struct nr_ice_stun_ctx_ {
 } nr_ice_stun_ctx;
 
 
-
 typedef struct nr_ice_socket_ {
   int type;
-#define NR_ICE_SOCKET_TYPE_DGRAM  1
-#define NR_ICE_SOCKET_TYPE_STREAM 2
+#define NR_ICE_SOCKET_TYPE_DGRAM       1
+#define NR_ICE_SOCKET_TYPE_STREAM_TURN 2
+#define NR_ICE_SOCKET_TYPE_STREAM_TCP  3
 
   nr_socket *sock;
   nr_ice_ctx *ctx;
@@ -82,7 +82,7 @@ typedef struct nr_ice_socket_ {
 
 typedef STAILQ_HEAD(nr_ice_socket_head_,nr_ice_socket_) nr_ice_socket_head;
 
-int nr_ice_socket_create(struct nr_ice_ctx_ *ctx, struct nr_ice_component_ *comp, nr_socket *nsock, nr_ice_socket **sockp);
+int nr_ice_socket_create(struct nr_ice_ctx_ *ctx, struct nr_ice_component_ *comp, nr_socket *nsock, int type, nr_ice_socket **sockp);
 int nr_ice_socket_destroy(nr_ice_socket **isock);
 int nr_ice_socket_close(nr_ice_socket *isock);
 int nr_ice_socket_register_stun_client(nr_ice_socket *sock, nr_stun_client_ctx *srv,void **handle);

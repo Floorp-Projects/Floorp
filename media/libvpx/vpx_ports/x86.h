@@ -13,6 +13,7 @@
 #define VPX_PORTS_X86_H_
 #include <stdlib.h>
 #include "vpx_config.h"
+#include "vpx/vpx_integer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -104,6 +105,37 @@ void __cpuid(int CPUInfo[4], int info_type);
 #endif
 #endif /* end others */
 
+// NaCl has no support for xgetbv or the raw opcode.
+#if !defined(__native_client__) && (defined(__i386__) || defined(__x86_64__))
+static INLINE uint64_t xgetbv(void) {
+  const uint32_t ecx = 0;
+  uint32_t eax, edx;
+  // Use the raw opcode for xgetbv for compatibility with older toolchains.
+  __asm__ volatile (
+    ".byte 0x0f, 0x01, 0xd0\n"
+    : "=a"(eax), "=d"(edx) : "c" (ecx));
+  return ((uint64_t)edx << 32) | eax;
+}
+#elif (defined(_M_X64) || defined(_M_IX86)) && \
+      defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 160040219  // >= VS2010 SP1
+#include <immintrin.h>
+#define xgetbv() _xgetbv(0)
+#elif defined(_MSC_VER) && defined(_M_IX86)
+static INLINE uint64_t xgetbv(void) {
+  uint32_t eax_, edx_;
+  __asm {
+    xor ecx, ecx  // ecx = 0
+    // Use the raw opcode for xgetbv for compatibility with older toolchains.
+    __asm _emit 0x0f __asm _emit 0x01 __asm _emit 0xd0
+    mov eax_, eax
+    mov edx_, edx
+  }
+  return ((uint64_t)edx_ << 32) | eax_;
+}
+#else
+#define xgetbv() 0U  // no AVX for older x64 or unrecognized toolchains.
+#endif
+
 #define HAS_MMX     0x01
 #define HAS_SSE     0x02
 #define HAS_SSE2    0x04
@@ -116,7 +148,7 @@ void __cpuid(int CPUInfo[4], int info_type);
 #define BIT(n) (1<<n)
 #endif
 
-static int
+static INLINE int
 x86_simd_caps(void) {
   unsigned int flags = 0;
   unsigned int mask = ~0;
@@ -156,14 +188,17 @@ x86_simd_caps(void) {
 
   if (reg_ecx & BIT(19)) flags |= HAS_SSE4_1;
 
-  if (reg_ecx & BIT(28)) flags |= HAS_AVX;
+  // bits 27 (OSXSAVE) & 28 (256-bit AVX)
+  if ((reg_ecx & (BIT(27) | BIT(28))) == (BIT(27) | BIT(28))) {
+    if ((xgetbv() & 0x6) == 0x6) {
+      flags |= HAS_AVX;
 
-  /* Get the leaf 7 feature flags. Needed to check for AVX2 support */
-  reg_eax = 7;
-  reg_ecx = 0;
-  cpuid(7, 0, reg_eax, reg_ebx, reg_ecx, reg_edx);
+      /* Get the leaf 7 feature flags. Needed to check for AVX2 support */
+      cpuid(7, 0, reg_eax, reg_ebx, reg_ecx, reg_edx);
 
-  if (reg_ebx & BIT(5)) flags |= HAS_AVX2;
+      if (reg_ebx & BIT(5)) flags |= HAS_AVX2;
+    }
+  }
 
   return flags & mask;
 }
@@ -172,7 +207,7 @@ x86_simd_caps(void) {
 unsigned __int64 __rdtsc(void);
 #pragma intrinsic(__rdtsc)
 #endif
-static unsigned int
+static INLINE unsigned int
 x86_readtsc(void) {
 #if defined(__GNUC__) && __GNUC__
   unsigned int tsc;
@@ -249,9 +284,9 @@ x87_get_control_word(void) {
 }
 #endif
 
-static unsigned short
+static INLINE unsigned int
 x87_set_double_precision(void) {
-  unsigned short mode = x87_get_control_word();
+  unsigned int mode = x87_get_control_word();
   x87_set_control_word((mode&~0x300) | 0x200);
   return mode;
 }

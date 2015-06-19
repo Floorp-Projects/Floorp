@@ -36,6 +36,7 @@ public:
                                    const TimeStamp& aTime) { return true; }
     virtual void LeaveTestMode(LayerTransactionParent* aLayerTree) { }
     virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree) = 0;
+    virtual void FlushApzRepaints(const LayerTransactionParent* aLayerTree) = 0;
     virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
                                 APZTestData* aOutData) { }
     virtual void SetConfirmedTargetAPZC(const LayerTransactionParent* aLayerTree,

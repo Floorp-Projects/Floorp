@@ -148,6 +148,11 @@ public:
   virtual void NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId, const nsString& aEvent)
   {}
 
+  /**
+   * Notify content that the repaint requests have been flushed.
+   */
+  virtual void NotifyFlushComplete() = 0;
+
   GeckoContentController() {}
   virtual void Destroy() {}
 

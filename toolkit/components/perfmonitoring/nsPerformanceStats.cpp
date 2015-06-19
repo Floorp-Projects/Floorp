@@ -23,7 +23,7 @@
 #include "nsGlobalWindow.h"
 
 #if defined(XP_WIN)
-#include "Windows.h"
+#include "windows.h"
 #else
 #include <unistd.h>
 #endif

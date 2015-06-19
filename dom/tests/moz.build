@@ -25,6 +25,7 @@ MOCHITEST_MANIFESTS += [
     'mochitest/localstorage/mochitest.ini',
     'mochitest/notification/mochitest.ini',
     'mochitest/orientation/mochitest.ini',
+    'mochitest/pointerlock/mochitest.ini',
     'mochitest/sessionstorage/mochitest.ini',
     'mochitest/storageevent/mochitest.ini',
     'mochitest/webapps/mochitest.ini',
@@ -41,12 +42,6 @@ MOCHITEST_CHROME_MANIFESTS += [
     'mochitest/webapps/chrome.ini',
     'mochitest/whatwg/chrome.ini',
 ]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('gtk2', 'gtk3'):
-    # Bug 788164.
-    MOCHITEST_MANIFESTS += [
-        'mochitest/pointerlock/mochitest.ini',
-    ]
 
 if CONFIG['MOZ_GAMEPAD']:
     MOCHITEST_MANIFESTS += [

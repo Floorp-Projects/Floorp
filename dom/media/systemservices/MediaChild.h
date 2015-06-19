@@ -10,7 +10,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/media/PMediaChild.h"
 #include "mozilla/media/PMediaParent.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "MediaUtils.h"
 
 namespace mozilla {
@@ -25,42 +24,26 @@ namespace media {
 // GetOriginKey and SanitizeOriginKeys are asynchronous APIs that return pledges
 // (promise-like objects) with the future value. Use pledge.Then(func) to access.
 
-class Child;
-
-template<typename ValueType>
-class ChildPledge : public Pledge<ValueType>,
-                    public nsIIPCBackgroundChildCreateCallback
-{
-  friend Child;
-  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
-  NS_DECL_ISUPPORTS
-public:
-  explicit ChildPledge() {};
-protected:
-  virtual ~ChildPledge() {}
-  virtual void Run(PMediaChild* aMedia) = 0;
-};
-
-already_AddRefed<ChildPledge<nsCString>>
+already_AddRefed<Pledge<nsCString>>
 GetOriginKey(const nsCString& aOrigin, bool aPrivateBrowsing);
 
-already_AddRefed<ChildPledge<bool>>
+void
 SanitizeOriginKeys(const uint64_t& aSinceWhen);
 
 class Child : public PMediaChild
 {
-  NS_INLINE_DECL_REFCOUNTING(Child)
 public:
+  static Child* Get();
+
   Child();
 
-  bool RecvGetOriginKeyResponse(const uint32_t& aRequestId, const nsCString& aKey);
+  bool RecvGetOriginKeyResponse(const uint32_t& aRequestId, const nsCString& aKey) override;
 
-  uint32_t AddRequestPledge(ChildPledge<nsCString>& aPledge);
-  already_AddRefed<ChildPledge<nsCString>> RemoveRequestPledge(uint32_t aRequestId);
-private:
+  void ActorDestroy(ActorDestroyReason aWhy) override;
   virtual ~Child();
+private:
 
-  CoatCheck<ChildPledge<nsCString>> mRequestPledges;
+  bool mActorDestroyed;
 };
 
 PMediaChild* AllocPMediaChild();
