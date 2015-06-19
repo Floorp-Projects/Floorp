@@ -95,6 +95,11 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class NeedsNoVTableTypeChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker stackClassChecker;
   ScopeChecker globalClassChecker;
   NonHeapClassChecker nonheapClassChecker;
@@ -104,6 +109,7 @@ private:
   NoAddRefReleaseOnReturnChecker noAddRefReleaseOnReturnChecker;
   RefCountedInsideLambdaChecker refCountedInsideLambdaChecker;
   ExplicitOperatorBoolChecker explicitOperatorBoolChecker;
+  NeedsNoVTableTypeChecker needsNoVTableTypeChecker;
   MatchFinder astMatcher;
 };
 
@@ -487,6 +493,13 @@ bool IsInSystemHeader(const ASTContext &AC, const T &D) {
   return SourceManager.isInSystemHeader(ExpansionLoc);
 }
 
+bool typeHasVTable(QualType T) {
+  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
+    T = arrTy->getElementType();
+  CXXRecordDecl* offender = T->getAsCXXRecordDecl();
+  return offender && offender->hasDefinition() && offender->isDynamicClass();
+}
+
 }
 
 namespace clang {
@@ -640,6 +653,14 @@ AST_POLYMORPHIC_MATCHER_P(equalsBoundNode,
 }
 
 #endif
+
+AST_MATCHER(QualType, hasVTable) {
+  return typeHasVTable(Node);
+}
+
+AST_MATCHER(CXXRecordDecl, hasNeedsNoVTableTypeAttr) {
+  return MozChecker::hasCustomAnnotation(&Node, "moz_needs_no_vtable_type");
+}
 
 }
 }
@@ -860,6 +881,11 @@ DiagnosticsMatcher::DiagnosticsMatcher()
   astMatcher.addMatcher(methodDecl(anyOf(hasName("operator bool"),
                                          hasName("operator _Bool"))).bind("node"),
     &explicitOperatorBoolChecker);
+
+  astMatcher.addMatcher(classTemplateSpecializationDecl(
+             allOf(hasAnyTemplateArgument(refersToType(hasVTable())),
+                   hasNeedsNoVTableTypeAttr())).bind("node"),
+     &needsNoVTableTypeChecker);
 }
 
 void DiagnosticsMatcher::ScopeChecker::run(
@@ -1040,6 +1066,32 @@ void DiagnosticsMatcher::ExplicitOperatorBoolChecker::run(
     Diag.Report(method->getLocStart(), errorID) << clazz;
     Diag.Report(method->getLocStart(), noteID) << "'operator bool'";
   }
+}
+
+void DiagnosticsMatcher::NeedsNoVTableTypeChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned errorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "%0 cannot be instantiated because %1 has a VTable");
+  unsigned noteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "bad instantiation of %0 requested here");
+
+  const ClassTemplateSpecializationDecl *specialization =
+    Result.Nodes.getNodeAs<ClassTemplateSpecializationDecl>("node");
+
+  // Get the offending template argument
+  QualType offender;
+  const TemplateArgumentList &args =
+    specialization->getTemplateInstantiationArgs();
+  for (unsigned i = 0; i < args.size(); ++i) {
+    offender = args[i].getAsType();
+    if (typeHasVTable(offender)) {
+      break;
+    }
+  }
+
+  Diag.Report(specialization->getLocStart(), errorID) << specialization << offender;
+  Diag.Report(specialization->getPointOfInstantiation(), noteID) << specialization;
 }
 
 class MozCheckAction : public PluginASTAction {
