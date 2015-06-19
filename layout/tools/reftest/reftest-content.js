@@ -14,6 +14,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const DEBUG_CONTRACTID = "@mozilla.org/xpcom/debug;1";
 const PRINTSETTINGS_CONTRACTID = "@mozilla.org/gfx/printsettings-service;1";
 const ENVIRONMENT_CONTRACTID = "@mozilla.org/process/environment;1";
+const NS_OBSERVER_SERVICE_CONTRACTID = "@mozilla.org/observer-service;1";
 
 // "<!--CLEAR-->"
 const BLANK_URL_FOR_CLEARING = "data:text/html;charset=UTF-8,%3C%21%2D%2DCLEAR%2D%2D%3E";
@@ -385,10 +386,13 @@ const STATE_WAITING_FOR_REFTEST_WAIT_REMOVAL = 1;
 // When spell checking is done on all spell-checked elements, we can move to the
 // next state.
 const STATE_WAITING_FOR_SPELL_CHECKS = 2;
+// When any pending compositor-side repaint requests have been flushed, we can
+// move to the next state.
+const STATE_WAITING_FOR_APZ_FLUSH = 3;
 // When all MozAfterPaint events and all explicit paint waits are flushed, we're
 // done and can move to the COMPLETED state.
-const STATE_WAITING_TO_FINISH = 3;
-const STATE_COMPLETED = 4;
+const STATE_WAITING_TO_FINISH = 4;
+const STATE_COMPLETED = 5;
 
 function FlushRendering() {
     var anyPendingPaintsGeneratedInDescendants = false;
@@ -554,9 +558,31 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
                 return;
             }
 
-            state = STATE_WAITING_TO_FINISH;
-            // Try next state
-            MakeProgress();
+            state = STATE_WAITING_FOR_APZ_FLUSH;
+            LogInfo("MakeProgress: STATE_WAITING_FOR_APZ_FLUSH");
+            gFailureReason = "timed out waiting for APZ flush to complete";
+
+            var os = CC[NS_OBSERVER_SERVICE_CONTRACTID].getService(CI.nsIObserverService);
+            var flushWaiter = function(aSubject, aTopic, aData) {
+                if (aTopic) LogInfo("MakeProgress: apz-repaints-flushed fired");
+                os.removeObserver(flushWaiter, "apz-repaints-flushed");
+                state = STATE_WAITING_TO_FINISH;
+                MakeProgress();
+            };
+            os.addObserver(flushWaiter, "apz-repaints-flushed", false);
+
+            if (windowUtils().flushApzRepaints()) {
+                LogInfo("MakeProgress: done requesting APZ flush");
+            } else {
+                LogInfo("MakeProgress: APZ flush not required");
+                flushWaiter(null, null, null);
+            }
+            return;
+
+        case STATE_WAITING_FOR_APZ_FLUSH:
+            LogInfo("MakeProgress: STATE_WAITING_FOR_APZ_FLUSH");
+            // Nothing to do here; once we get the apz-repaints-flushed event
+            // we will go to STATE_WAITING_TO_FINISH
             return;
 
         case STATE_WAITING_TO_FINISH:
