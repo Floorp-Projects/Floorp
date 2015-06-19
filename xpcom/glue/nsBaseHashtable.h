@@ -167,10 +167,17 @@ public:
    */
   uint32_t EnumerateRead(EnumReadFunction aEnumFunc, void* aUserArg) const
   {
-    s_EnumReadArgs enumData = { aEnumFunc, aUserArg };
-    return PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&this->mTable),
-                                  s_EnumReadStub,
-                                  &enumData);
+    uint32_t n = 0;
+    for (auto iter = this->mTable.Iter(); !iter.Done(); iter.Next()) {
+      auto entry = static_cast<EntryType*>(iter.Get());
+      PLDHashOperator op = aEnumFunc(entry->GetKey(), entry->mData, aUserArg);
+      n++;
+      MOZ_ASSERT(!(op & PL_DHASH_REMOVE));
+      if (op & PL_DHASH_STOP) {
+        break;
+      }
+    }
+    return n;
   }
 
   /**
@@ -196,10 +203,19 @@ public:
    */
   uint32_t Enumerate(EnumFunction aEnumFunc, void* aUserArg)
   {
-    s_EnumArgs enumData = { aEnumFunc, aUserArg };
-    return PL_DHashTableEnumerate(&this->mTable,
-                                  s_EnumStub,
-                                  &enumData);
+    uint32_t n = 0;
+    for (auto iter = this->mTable.RemovingIter(); !iter.Done(); iter.Next()) {
+      auto entry = static_cast<EntryType*>(iter.Get());
+      PLDHashOperator op = aEnumFunc(entry->GetKey(), entry->mData, aUserArg);
+      n++;
+      if (op & PL_DHASH_REMOVE) {
+        iter.Remove();
+      }
+      if (op & PL_DHASH_STOP) {
+        break;
+      }
+    }
+    return n;
   }
 
   /**
@@ -273,33 +289,6 @@ public:
 #endif
 
 protected:
-  /**
-   * used internally during EnumerateRead.  Allocated on the stack.
-   * @param func the enumerator passed to EnumerateRead
-   * @param userArg the userArg passed to EnumerateRead
-   */
-  struct s_EnumReadArgs
-  {
-    EnumReadFunction func;
-    void* userArg;
-  };
-
-  static PLDHashOperator s_EnumReadStub(PLDHashTable* aTable,
-                                        PLDHashEntryHdr* aHdr,
-                                        uint32_t aNumber,
-                                        void* aArg);
-
-  struct s_EnumArgs
-  {
-    EnumFunction func;
-    void* userArg;
-  };
-
-  static PLDHashOperator s_EnumStub(PLDHashTable* aTable,
-                                    PLDHashEntryHdr* aHdr,
-                                    uint32_t aNumber,
-                                    void* aArg);
-
   struct s_SizeOfArgs
   {
     SizeOfEntryExcludingThisFun func;
@@ -374,37 +363,6 @@ nsBaseHashtableET<KeyClass, DataType>::~nsBaseHashtableET()
 //
 // nsBaseHashtable definitions
 //
-
-template<class KeyClass, class DataType, class UserDataType>
-PLDHashOperator
-nsBaseHashtable<KeyClass, DataType, UserDataType>::s_EnumReadStub(
-    PLDHashTable* aTable, PLDHashEntryHdr* aHdr, uint32_t aNumber, void* aArg)
-{
-  EntryType* ent = static_cast<EntryType*>(aHdr);
-  s_EnumReadArgs* eargs = (s_EnumReadArgs*)aArg;
-
-  PLDHashOperator res = (eargs->func)(ent->GetKey(), ent->mData, eargs->userArg);
-
-  NS_ASSERTION(!(res & PL_DHASH_REMOVE),
-               "PL_DHASH_REMOVE return during const enumeration; ignoring.");
-
-  if (res & PL_DHASH_STOP) {
-    return PL_DHASH_STOP;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-template<class KeyClass, class DataType, class UserDataType>
-PLDHashOperator
-nsBaseHashtable<KeyClass, DataType, UserDataType>::s_EnumStub(
-    PLDHashTable* aTable, PLDHashEntryHdr* aHdr, uint32_t aNumber, void* aArg)
-{
-  EntryType* ent = static_cast<EntryType*>(aHdr);
-  s_EnumArgs* eargs = (s_EnumArgs*)aArg;
-
-  return (eargs->func)(ent->GetKey(), ent->mData, eargs->userArg);
-}
 
 template<class KeyClass, class DataType, class UserDataType>
 size_t
