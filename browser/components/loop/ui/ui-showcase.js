@@ -179,6 +179,12 @@
     remoteVideoEnabled: false
   });
 
+  var loadingRemoteVideoRoomStore = makeActiveRoomStore({
+    mediaConnected: false,
+    roomState: ROOM_STATES.HAS_PARTICIPANTS,
+    remoteSrcVideoObject: false
+  });
+
   var readyRoomStore = makeActiveRoomStore({
     mediaConnected: false,
     roomState: ROOM_STATES.READY
@@ -204,6 +210,25 @@
     receivingScreenShare: true
   });
 
+  var loadingRemoteLoadingScreenStore = makeActiveRoomStore({
+    mediaConnected: false,
+    roomState: ROOM_STATES.HAS_PARTICIPANTS,
+    remoteSrcVideoObject: false
+  });
+  var loadingScreenSharingRoomStore = makeActiveRoomStore({
+    roomState: ROOM_STATES.HAS_PARTICIPANTS
+  });
+
+  /* Set up the stores for pending screen sharing */
+  loadingScreenSharingRoomStore.receivingScreenShare({
+    receiving: true,
+    srcVideoObject: false
+  });
+  loadingRemoteLoadingScreenStore.receivingScreenShare({
+    receiving: true,
+    srcVideoObject: false
+  });
+
   var fullActiveRoomStore = makeActiveRoomStore({
     roomState: ROOM_STATES.FULL
   });
@@ -217,8 +242,24 @@
     roomUsed: true
   });
 
-  var roomStore = new loop.store.RoomStore(dispatcher, {
+  var invitationRoomStore = new loop.store.RoomStore(dispatcher, {
     mozLoop: navigator.mozLoop
+  });
+
+  var roomStore = new loop.store.RoomStore(dispatcher, {
+    mozLoop: navigator.mozLoop,
+    activeRoomStore: makeActiveRoomStore({
+      roomState: ROOM_STATES.HAS_PARTICIPANTS
+    })
+  });
+
+  var desktopRoomStoreLoading = new loop.store.RoomStore(dispatcher, {
+    mozLoop: navigator.mozLoop,
+    activeRoomStore: makeActiveRoomStore({
+      roomState: ROOM_STATES.HAS_PARTICIPANTS,
+      mediaConnected: false,
+      remoteSrcVideoObject: false
+    })
   });
 
   var desktopLocalFaceMuteActiveRoomStore = makeActiveRoomStore({
@@ -783,11 +824,26 @@
               summary: "Desktop room conversation (invitation)"}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopRoomConversationView, {
-                  roomStore: roomStore, 
+                  roomStore: invitationRoomStore, 
                   dispatcher: dispatcher, 
                   mozLoop: navigator.mozLoop, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   roomState: ROOM_STATES.INIT})
+              )
+            ), 
+
+            React.createElement(FramedExample, {width: 298, height: 254, 
+              summary: "Desktop room conversation (loading)"}, 
+              /* Hide scrollbars here. Rotating loading div overflows and causes
+               scrollbars to appear */
+              React.createElement("div", {className: "fx-embedded overflow-hidden"}, 
+                React.createElement(DesktopRoomConversationView, {
+                  roomStore: desktopRoomStoreLoading, 
+                  dispatcher: dispatcher, 
+                  mozLoop: navigator.mozLoop, 
+                  localPosterUrl: "sample-img/video-screen-local.png", 
+                  remotePosterUrl: "sample-img/video-screen-remote.png", 
+                  roomState: ROOM_STATES.HAS_PARTICIPANTS})
               )
             ), 
 
@@ -854,6 +910,19 @@
             ), 
 
             React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
+              summary: "Standalone room conversation (loading remote)", 
+              cssClass: "standalone", 
+              onContentsRendered: loadingRemoteVideoRoomStore.forcedUpdate}, 
+              React.createElement("div", {className: "standalone"}, 
+                React.createElement(StandaloneRoomView, {
+                  dispatcher: dispatcher, 
+                  activeRoomStore: loadingRemoteVideoRoomStore, 
+                  localPosterUrl: "sample-img/video-screen-local.png", 
+                  isFirefox: true})
+              )
+            ), 
+
+            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
                            cssClass: "standalone", 
                            onContentsRendered: updatingActiveRoomStore.forcedUpdate, 
                            summary: "Standalone room conversation (has-participants, 644x483)"}, 
@@ -894,6 +963,44 @@
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   remotePosterUrl: "sample-img/video-screen-remote.png"})
               )
+            ), 
+
+            React.createElement(FramedExample, {width: 800, height: 660, dashed: true, 
+                           cssClass: "standalone", 
+                           onContentsRendered: loadingRemoteLoadingScreenStore.forcedUpdate, 
+              summary: "Standalone room convo (has-participants, loading screen share, loading remote video, 800x660)"}, 
+              /* Hide scrollbars here. Rotating loading div overflows and causes
+               scrollbars to appear */
+               React.createElement("div", {className: "standalone overflow-hidden"}, 
+                  React.createElement(StandaloneRoomView, {
+                    dispatcher: dispatcher, 
+                    activeRoomStore: loadingRemoteLoadingScreenStore, 
+                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
+                    isFirefox: true, 
+                    localPosterUrl: "sample-img/video-screen-local.png", 
+                    remotePosterUrl: "sample-img/video-screen-remote.png", 
+                    screenSharePosterUrl: "sample-img/video-screen-baz.png"}
+                  )
+                )
+            ), 
+
+            React.createElement(FramedExample, {width: 800, height: 660, dashed: true, 
+                           cssClass: "standalone", 
+                           onContentsRendered: loadingScreenSharingRoomStore.forcedUpdate, 
+              summary: "Standalone room convo (has-participants, loading screen share, 800x660)"}, 
+              /* Hide scrollbars here. Rotating loading div overflows and causes
+               scrollbars to appear */
+               React.createElement("div", {className: "standalone overflow-hidden"}, 
+                  React.createElement(StandaloneRoomView, {
+                    dispatcher: dispatcher, 
+                    activeRoomStore: loadingScreenSharingRoomStore, 
+                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
+                    isFirefox: true, 
+                    localPosterUrl: "sample-img/video-screen-local.png", 
+                    remotePosterUrl: "sample-img/video-screen-remote.png", 
+                    screenSharePosterUrl: "sample-img/video-screen-baz.png"}
+                  )
+                )
             ), 
 
             React.createElement(FramedExample, {width: 800, height: 660, dashed: true, 

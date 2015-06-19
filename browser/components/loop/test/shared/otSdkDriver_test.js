@@ -992,9 +992,7 @@ describe("loop.OTSdkDriver", function () {
             new sharedActions.ReceivingScreenShare({receiving: true}));
         });
 
-      // XXX See bug 1171933 and the comment in
-      // OtSdkDriver#_handleRemoteScreenShareCreated
-      it.skip("should dispatch a ReceivingScreenShare action for screen" +
+      it("should dispatch a ReceivingScreenShare action for screen" +
         " sharing streams", function() {
           fakeStream.videoType = "screen";
 

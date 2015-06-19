@@ -1091,6 +1091,7 @@ TabActor.prototype = {
   onListWorkers: function BTA_onListWorkers(aRequest) {
     if (this._workerActorList === null) {
       this._workerActorList = new WorkerActorList({
+        type: Ci.nsIWorkerDebugger.TYPE_DEDICATED,
         window: this.window
       });
     }

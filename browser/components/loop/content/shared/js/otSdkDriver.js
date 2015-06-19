@@ -512,16 +512,9 @@ loop.OTSdkDriver = (function() {
      */
     _handleRemoteScreenShareCreated: function(stream) {
       // Let the stores know first so they can update the display.
-      // XXX We do want to do this - we want them to start re-arranging the
-      // display so that we can a) indicate connecting, b) be ready for
-      // when we get the stream. However, we're currently limited by the fact
-      // the view calculations require the remote (aka screen share) element to
-      // be present and laid out. Hence, we need to drop this for the time being,
-      // and let the client know via _onScreenShareSubscribeCompleted.
-      // Bug 1171933 is going to look at fixing this.
-      // this.dispatcher.dispatch(new sharedActions.ReceivingScreenShare({
-      //  receiving: true
-      // }));
+      this.dispatcher.dispatch(new sharedActions.ReceivingScreenShare({
+        receiving: true
+      }));
 
       // There's no audio for screen shares so we don't need to worry about mute.
       this._mockScreenShareEl = document.createElement("div");

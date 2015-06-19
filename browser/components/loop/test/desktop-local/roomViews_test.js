@@ -528,6 +528,58 @@ describe("loop.roomViews", function () {
             loop.shared.views.FeedbackView);
         });
 
+      it("should display loading spinner when localSrcVideoObject is null",
+         function() {
+           activeRoomStore.setStoreState({
+             roomState: ROOM_STATES.MEDIA_WAIT,
+             localSrcVideoObject: null
+           });
+
+           view = mountTestComponent();
+
+           expect(view.getDOMNode().querySelector(".local .loading-stream"))
+               .not.eql(null);
+         });
+
+      it("should not display a loading spinner when local stream available",
+         function() {
+           activeRoomStore.setStoreState({
+             roomState: ROOM_STATES.MEDIA_WAIT,
+             localSrcVideoObject: { fake: "video" }
+           });
+
+           view = mountTestComponent();
+
+           expect(view.getDOMNode().querySelector(".local .loading-stream"))
+               .eql(null);
+         });
+
+      it("should display loading spinner when remote stream is not available",
+         function() {
+           activeRoomStore.setStoreState({
+             roomState: ROOM_STATES.HAS_PARTICIPANTS,
+             remoteSrcVideoObject: null
+           });
+
+           view = mountTestComponent();
+
+           expect(view.getDOMNode().querySelector(".remote .loading-stream"))
+               .not.eql(null);
+         });
+
+      it("should not display a loading spinner when remote stream available",
+         function() {
+           activeRoomStore.setStoreState({
+             roomState: ROOM_STATES.HAS_PARTICIPANTS,
+             remoteSrcVideoObject: { fake: "video" }
+           });
+
+           view = mountTestComponent();
+
+           expect(view.getDOMNode().querySelector(".remote .loading-stream"))
+               .eql(null);
+         });
+
       it("should display an avatar for remote video when the room has participants but video is not enabled",
         function() {
           activeRoomStore.setStoreState({

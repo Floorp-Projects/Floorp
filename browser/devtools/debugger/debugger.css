@@ -6,6 +6,7 @@
 
 /* Side pane views */
 
+#workers-pane > tabpanels > tabpanel,
 #sources-pane > tabpanels > tabpanel,
 #instruments-pane > tabpanels > tabpanel {
   -moz-box-orient: vertical;
@@ -23,7 +24,7 @@
   -moz-box-orient: vertical;
 }
 
-#body[layout=vertical] #sources-pane {
+#body[layout=vertical] #workers-and-sources-pane {
   -moz-box-flex: 1;
 }
 

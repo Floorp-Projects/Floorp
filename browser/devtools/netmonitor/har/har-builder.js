@@ -7,21 +7,16 @@ const { Cu, Ci, Cc } = require("chrome");
 const { defer, all, resolve } = require("sdk/core/promise");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
-XPCOMUtils.defineLazyGetter(this, "appInfo", function() {
+loader.lazyImporter(this, "ViewHelpers", "resource:///modules/devtools/ViewHelpers.jsm");
+loader.lazyRequireGetter(this, "NetworkHelper", "devtools/toolkit/webconsole/network-helper");
+
+loader.lazyGetter(this, "appInfo", () => {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
 });
 
-XPCOMUtils.defineLazyModuleGetter(this, "ViewHelpers",
-  "resource:///modules/devtools/ViewHelpers.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "L10N", function() {
+loader.lazyGetter(this, "L10N", () => {
   return new ViewHelpers.L10N("chrome://browser/locale/devtools/har.properties");
-});
-
-XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function() {
-  return devtools.require("devtools/toolkit/webconsole/network-helper");
 });
 
 const HAR_VERSION = "1.1";

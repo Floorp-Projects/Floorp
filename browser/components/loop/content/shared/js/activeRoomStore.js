@@ -612,8 +612,7 @@ loop.store.ActiveRoomStore = (function() {
     /**
      * Used to note the current state of receiving screenshare data.
      *
-     * XXX this is going to need to be split into two actions so when
-     * can display a spinner when the screen share is pending (bug 1171933)
+     * XXX this should be split into multiple actions to make the code clearer.
      */
     receivingScreenShare: function(actionData) {
       if (!actionData.receiving &&

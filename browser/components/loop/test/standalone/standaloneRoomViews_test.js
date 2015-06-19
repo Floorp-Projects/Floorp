@@ -240,6 +240,43 @@ describe("loop.standaloneRoomViews", function() {
         });
       });
 
+      describe("screenShare", function() {
+        it("should show a loading screen if receivingScreenShare is true " +
+           "but no screenShareVideoObject is present", function() {
+          view.setState({
+            "receivingScreenShare": true,
+            "screenShareVideoObject": null
+          });
+
+          expect(view.getDOMNode().querySelector(".screen .loading-stream"))
+              .not.eql(null);
+        });
+
+        it("should not show loading screen if receivingScreenShare is false " +
+           "and screenShareVideoObject is null", function() {
+             view.setState({
+               "receivingScreenShare": false,
+               "screenShareVideoObject": null
+             });
+
+             expect(view.getDOMNode().querySelector(".screen .loading-stream"))
+                 .eql(null);
+        });
+
+        it("should not show a loading screen if screenShareVideoObject is set",
+           function() {
+             var videoElement = document.createElement("video");
+
+             view.setState({
+               "receivingScreenShare": true,
+               "screenShareVideoObject": videoElement
+             });
+
+             expect(view.getDOMNode().querySelector(".screen .loading-stream"))
+                 .eql(null);
+        });
+      });
+
       describe("Participants", function() {
         var videoElement;
 
@@ -264,6 +301,50 @@ describe("loop.standaloneRoomViews", function() {
           });
 
           expect(view.getDOMNode().querySelector(".local .avatar")).eql(null);
+        });
+
+        it("should render local loading screen when no srcVideoObject",
+           function() {
+             activeRoomStore.setStoreState({
+               roomState: ROOM_STATES.MEDIA_WAIT,
+               remoteSrcVideoObject: null
+             });
+
+             expect(view.getDOMNode().querySelector(".local .loading-stream"))
+                 .not.eql(null);
+        });
+
+        it("should not render local loading screen when srcVideoObject is set",
+           function() {
+             activeRoomStore.setStoreState({
+               roomState: ROOM_STATES.MEDIA_WAIT,
+               localSrcVideoObject: videoElement
+             });
+
+             expect(view.getDOMNode().querySelector(".local .loading-stream"))
+                  .eql(null);
+        });
+
+        it("should not render remote loading screen when srcVideoObject is set",
+           function() {
+             activeRoomStore.setStoreState({
+               roomState: ROOM_STATES.HAS_PARTICIPANTS,
+               remoteSrcVideoObject: videoElement
+             });
+
+             expect(view.getDOMNode().querySelector(".remote .loading-stream"))
+                  .eql(null);
+        });
+
+        it("should render remote video when the room HAS_PARTICIPANTS and" +
+          " remoteVideoEnabled is true", function() {
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.HAS_PARTICIPANTS,
+            remoteSrcVideoObject: videoElement,
+            remoteVideoEnabled: true
+          });
+
+          expect(view.getDOMNode().querySelector(".remote video")).not.eql(null);
         });
 
         it("should render remote video when the room HAS_PARTICIPANTS and" +
@@ -327,6 +408,18 @@ describe("loop.standaloneRoomViews", function() {
           activeRoomStore.setStoreState({
             roomState: ROOM_STATES.HAS_PARTICIPANTS,
             remoteSrcVideoObject: videoElement,
+            remoteVideoEnabled: false,
+            mediaConnected: true
+          });
+
+          expect(view.getDOMNode().querySelector(".remote .avatar")).not.eql(null);
+        });
+
+        it("should render a remote avatar when the room HAS_PARTICIPANTS, " +
+          "remoteSrcVideoObject is false, mediaConnected is true", function() {
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.HAS_PARTICIPANTS,
+            remoteSrcVideoObject: false,
             remoteVideoEnabled: false,
             mediaConnected: true
           });

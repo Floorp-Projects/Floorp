@@ -126,6 +126,7 @@ class MachCommands(MachCommandBase):
         srcdir('app/src/robocop/org/mozilla/gecko/tests', 'mobile/android/tests/browser/robocop')
         srcdir('app/src/background/org/mozilla/gecko', 'mobile/android/tests/background/junit3/src')
         srcdir('app/src/browser', 'mobile/android/tests/browser/junit3/src')
+        srcdir('app/src/javaaddons', 'mobile/android/tests/javaaddons/src')
         # Test libraries.
         srcdir('app/libs', 'build/mobile/robocop')
 
@@ -135,6 +136,7 @@ class MachCommands(MachCommandBase):
         srcdir('base/src/main/java/org/mozilla/gecko', 'mobile/android/base')
         srcdir('base/src/main/java/org/mozilla/mozstumbler', 'mobile/android/stumbler/java/org/mozilla/mozstumbler')
         srcdir('base/src/main/java/org/mozilla/search', 'mobile/android/search/java/org/mozilla/search')
+        srcdir('base/src/main/java/org/mozilla/javaaddons', 'mobile/android/javaaddons/java/org/mozilla/javaaddons')
         srcdir('base/src/main/res', 'mobile/android/base/resources')
         srcdir('base/src/crashreporter/res', 'mobile/android/base/crashreporter/res')
 
