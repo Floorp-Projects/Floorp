@@ -2561,6 +2561,36 @@ js::HasNonSyntacticStaticScopeChain(JSObject* staticScope)
 
 #ifdef DEBUG
 
+void
+js::DumpStaticScopeChain(JSScript* script)
+{
+    JSObject* enclosingScope = script->enclosingStaticScope();
+    for (StaticScopeIter<NoGC> ssi(enclosingScope); !ssi.done(); ssi++) {
+        switch (ssi.type()) {
+          case StaticScopeIter<NoGC>::Function:
+            fprintf(stdout, "function");
+            break;
+          case StaticScopeIter<NoGC>::Block:
+            fprintf(stdout, "block");
+            break;
+          case StaticScopeIter<NoGC>::With:
+            fprintf(stdout, "with");
+            break;
+          case StaticScopeIter<NoGC>::NamedLambda:
+            fprintf(stdout, "named lambda");
+            break;
+          case StaticScopeIter<NoGC>::Eval:
+            fprintf(stdout, "eval");
+            break;
+          case StaticScopeIter<NoGC>::NonSyntactic:
+            fprintf(stdout, "non-syntactic");
+            break;
+        }
+        fprintf(stdout, " -> ");
+    }
+    fprintf(stdout, "global\n");
+}
+
 typedef HashSet<PropertyName*> PropertyNameSet;
 
 static bool
