@@ -55,6 +55,7 @@ let DebuggerView = {
     this.Filtering.initialize();
     this.StackFrames.initialize();
     this.StackFramesClassicList.initialize();
+    this.Workers.initialize();
     this.Sources.initialize();
     this.VariableBubble.initialize();
     this.Tracer.initialize();
@@ -108,7 +109,7 @@ let DebuggerView = {
 
     this._body = document.getElementById("body");
     this._editorDeck = document.getElementById("editor-deck");
-    this._sourcesPane = document.getElementById("sources-pane");
+    this._workersAndSourcesPane = document.getElementById("workers-and-sources-pane");
     this._instrumentsPane = document.getElementById("instruments-pane");
     this._instrumentsPaneToggleButton = document.getElementById("instruments-pane-toggle");
 
@@ -123,7 +124,7 @@ let DebuggerView = {
     this._collapsePaneString = L10N.getStr("collapsePanes");
     this._expandPaneString = L10N.getStr("expandPanes");
 
-    this._sourcesPane.setAttribute("width", Prefs.sourcesWidth);
+    this._workersAndSourcesPane.setAttribute("width", Prefs.workersAndSourcesWidth);
     this._instrumentsPane.setAttribute("width", Prefs.instrumentsWidth);
     this.toggleInstrumentsPane({ visible: Prefs.panesVisibleOnStartup });
 
@@ -140,11 +141,11 @@ let DebuggerView = {
     dumpn("Destroying the DebuggerView panes");
 
     if (gHostType != "side") {
-      Prefs.sourcesWidth = this._sourcesPane.getAttribute("width");
+      Prefs.workersAndSourcesWidth = this._workersAndSourcesPane.getAttribute("width");
       Prefs.instrumentsWidth = this._instrumentsPane.getAttribute("width");
     }
 
-    this._sourcesPane = null;
+    this._workersAndSourcesPane = null;
     this._instrumentsPane = null;
     this._instrumentsPaneToggleButton = null;
   },
@@ -613,7 +614,7 @@ let DebuggerView = {
 
     // Move the soruces and instruments panes in a different container.
     let splitter = document.getElementById("sources-and-instruments-splitter");
-    vertContainer.insertBefore(this._sourcesPane, splitter);
+    vertContainer.insertBefore(this._workersAndSourcesPane, splitter);
     vertContainer.appendChild(this._instrumentsPane);
 
     // Make sure the vertical layout container's height doesn't repeatedly
@@ -632,12 +633,12 @@ let DebuggerView = {
     // The sources and instruments pane need to be inserted at their
     // previous locations in their normal container.
     let splitter = document.getElementById("sources-and-editor-splitter");
-    normContainer.insertBefore(this._sourcesPane, splitter);
+    normContainer.insertBefore(this._workersAndSourcesPane, splitter);
     normContainer.appendChild(this._instrumentsPane);
 
     // Revert to the preferred sources and instruments widths, because
     // they flexed in the vertical layout.
-    this._sourcesPane.setAttribute("width", Prefs.sourcesWidth);
+    this._workersAndSourcesPane.setAttribute("width", Prefs.workersAndSourcesWidth);
     this._instrumentsPane.setAttribute("width", Prefs.instrumentsWidth);
   },
 
@@ -682,7 +683,7 @@ let DebuggerView = {
   _loadingText: "",
   _body: null,
   _editorDeck: null,
-  _sourcesPane: null,
+  _workersAndSourcesPane: null,
   _instrumentsPane: null,
   _instrumentsPaneToggleButton: null,
   _collapsePaneString: "",

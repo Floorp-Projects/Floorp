@@ -12,6 +12,9 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 function matchWorkerDebugger(dbg, options) {
+  if ("type" in options && dbg.type !== options.type) {
+    return false;
+  }
   if ("window" in options) {
     let window = dbg.window;
     while (window !== null && window.parent !== window) {
@@ -55,7 +58,8 @@ WorkerActor.prototype = {
 
     return {
       type: "attached",
-      isFrozen: this._dbg.isFrozen
+      isFrozen: this._dbg.isFrozen,
+      url: this._dbg.url
     };
   },
 
