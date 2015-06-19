@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(a01d5bb4-3e81-4529-b139-2f4ebb78f717)]
+[scriptable, uuid(42c529d8-54cf-4158-8b09-13ca89d7a88c)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1444,6 +1444,16 @@ interface nsIDOMWindowUtils : nsISupports {
    * removed. Only call this while test-controlled refreshes is enabled.
    */
   void setAsyncZoom(in nsIDOMNode aRootElement, in float aValue);
+
+  /**
+   * Do a round-trip to the compositor to ensure any pending APZ repaint requests
+   * get flushed to the main thread. If the function returns true, the flush was
+   * triggered and an "apz-repaints-flushed" notification will be dispatched via
+   * the observer service once the flush is complete. If the function returns
+   * false, an error occurred or a flush is not needed, and the notification
+   * will not fire. This is intended to be used by test code only!
+   */
+  bool flushApzRepaints();
 
   /**
    * Method for testing StyleAnimationValue::ComputeDistance.

@@ -554,6 +554,20 @@ APZCTreeManager::UpdateHitTestingTree(TreeBuildingState& aState,
   return node;
 }
 
+void
+APZCTreeManager::FlushApzRepaints(uint64_t aLayersId)
+{
+  APZCTM_LOG("Flushing repaints for layers id %" PRIu64, aLayersId);
+  { // scope lock
+    MonitorAutoLock lock(mTreeLock);
+    FlushPendingRepaintRecursively(mRootNode, aLayersId);
+  }
+  const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aLayersId);
+  MOZ_ASSERT(state && state->mController);
+  NS_DispatchToMainThread(NS_NewRunnableMethod(
+    state->mController.get(), &GeckoContentController::NotifyFlushComplete));
+}
+
 nsEventStatus
 APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
                                    ScrollableLayerGuid* aOutTargetGuid,
@@ -1107,6 +1121,23 @@ APZCTreeManager::FlushRepaintsRecursively(HitTestingTreeNode* aNode)
       node->GetApzc()->FlushRepaintForNewInputBlock();
     }
     FlushRepaintsRecursively(node->GetLastChild());
+  }
+}
+
+void
+APZCTreeManager::FlushPendingRepaintRecursively(HitTestingTreeNode* aNode, uint64_t aLayersId)
+{
+  mTreeLock.AssertCurrentThreadOwns();
+
+  for (HitTestingTreeNode* node = aNode; node; node = node->GetPrevSibling()) {
+    if (node->IsPrimaryHolder()) {
+      AsyncPanZoomController* apzc = node->GetApzc();
+      MOZ_ASSERT(apzc);
+      if (apzc->GetGuid().mLayersId == aLayersId) {
+        apzc->FlushRepaintIfPending();
+      }
+    }
+    FlushPendingRepaintRecursively(node->GetLastChild(), aLayersId);
   }
 }
 

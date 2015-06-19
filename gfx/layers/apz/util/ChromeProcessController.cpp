@@ -202,3 +202,10 @@ ChromeProcessController::NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& a
 
   APZCCallbackHelper::NotifyMozMouseScrollEvent(aScrollId, aEvent);
 }
+
+void
+ChromeProcessController::NotifyFlushComplete()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  APZCCallbackHelper::NotifyFlushComplete();
+}
