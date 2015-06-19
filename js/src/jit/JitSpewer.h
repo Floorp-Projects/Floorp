@@ -217,12 +217,17 @@ class JitSpewIndent
     ~JitSpewIndent() {}
 };
 
-static inline void JitSpew(JitSpewChannel, const char* fmt, ...)
+// The computation of some of the argument of the spewing functions might be
+// costly, thus we use variaidic macros to ignore any argument of these
+// functions.
+static inline void JitSpewCheckArguments(JitSpewChannel channel, const char* fmt)
 { }
-static inline void JitSpewStart(JitSpewChannel channel, const char* fmt, ...)
-{ }
-static inline void JitSpewCont(JitSpewChannel channel, const char* fmt, ...)
-{ }
+
+#define JitSpewCheckExpandedArgs(channel, fmt, ...) JitSpewCheckArguments(channel, fmt)
+#define JitSpew(...) JitSpewCheckExpandedArgs(__VA_ARGS__)
+#define JitSpewStart(...) JitSpewCheckExpandedArgs(__VA_ARGS__)
+#define JitSpewCont(...) JitSpewCheckExpandedArgs(__VA_ARGS__)
+
 static inline void JitSpewFin(JitSpewChannel channel)
 { }
 
