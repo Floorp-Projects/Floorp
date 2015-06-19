@@ -159,6 +159,11 @@
                       tooltiptext="&options.enableRemote.tooltip;"
                       data-pref="devtools.debugger.remote-enabled"/>
           </hbox>
+          <hbox class="hidden-labels-box">
+            <checkbox label="&options.enableWorkers.label;"
+                      tooltiptext="&options.enableWorkers.tooltip;"
+                      data-pref="devtools.debugger.workers"/>
+          </hbox>
           <label class="options-citation-label theme-comment"
           >&options.context.triggersPageRefresh;</label>
         </vbox>
