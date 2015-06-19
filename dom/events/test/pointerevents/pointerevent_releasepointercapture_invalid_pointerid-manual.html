@@ -10,10 +10,9 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <!-- /resources/testharness.js -->
         <script src="/resources/testharness.js"></script>
-        <!--script src="/resources/testharnessreport.js"></script-->
+        <script src="/resources/testharnessreport.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
-        <script type="text/javascript" src="mochitest_support_internal.js"></script>
         <script type="text/javascript">
             var detected_pointertypes = {};
             var test_pointerEvent = async_test("releasePointerCapture: DOMException InvalidPointerId"); // set up test harness
@@ -58,14 +57,12 @@
     <body onload="run()">
         <div id="listener"></div>
         <h1> Pointer Event: releasePointerCapture() DOMException - InvalidPointerId</h1>
-        <!--
         <h4>
             Test Description:
             Upon invocation of the releasePointerCapture method, if the provided pointerId value does not match any of the
             active pointers, a DOMException with the name InvalidPointerId must be thrown.
         </h4>
         <br />
-        -->
         <div id="target0">
             Use the mouse, touch or pen to move over or contact this box.
         </div>
