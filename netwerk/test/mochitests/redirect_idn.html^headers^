@@ -1,0 +1,3 @@
+HTTP 301 Moved Permanently
+Location: http://exÃ¤mple.test/tests/netwerk/test/mochitests/empty.html
+X-Comment: Bug 1142083 - This is a redirect to http://exämple.test
