@@ -1898,34 +1898,6 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
 ////////////////////////////////////////////////////////////////////////
 // rdfIDataSource methods
 
-class VisitorClosure
-{
-public:
-    explicit VisitorClosure(rdfITripleVisitor* aVisitor) :
-        mVisitor(aVisitor),
-        mRv(NS_OK)
-    {}
-    rdfITripleVisitor* mVisitor;
-    nsresult mRv;
-};
-
-PLDHashOperator
-SubjectEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                  uint32_t aNumber, void* aArg) {
-    Entry* entry = static_cast<Entry*>(aHdr);
-    VisitorClosure* closure = static_cast<VisitorClosure*>(aArg);
-
-    nsresult rv;
-    nsCOMPtr<nsIRDFNode> subject = do_QueryInterface(entry->mNode, &rv);
-    NS_ENSURE_SUCCESS(rv, PL_DHASH_NEXT);
-
-    closure->mRv = closure->mVisitor->Visit(subject, nullptr, nullptr, true);
-    if (NS_FAILED(closure->mRv) || closure->mRv == NS_RDF_STOP_VISIT)
-        return PL_DHASH_STOP;
-
-    return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 InMemoryDataSource::VisitAllSubjects(rdfITripleVisitor *aVisitor)
 {
@@ -1933,78 +1905,27 @@ InMemoryDataSource::VisitAllSubjects(rdfITripleVisitor *aVisitor)
     ++mReadCount;
 
     // Enumerate all of our entries into an nsISupportsArray.
-    VisitorClosure cls(aVisitor);
-    PL_DHashTableEnumerate(&mForwardArcs, SubjectEnumerator, &cls);
+    nsresult rv = NS_OK;
+    for (auto iter = mForwardArcs.Iter(); !iter.Done(); iter.Next()) {
+        auto entry = static_cast<Entry*>(iter.Get());
+        nsresult rv2;
+        nsCOMPtr<nsIRDFNode> subject = do_QueryInterface(entry->mNode, &rv2);
+        if (NS_FAILED(rv2)) {
+            NS_WARNING("QI to nsIRDFNode failed");
+            continue;
+        }
+        rv = aVisitor->Visit(subject, nullptr, nullptr, true);
+        if (NS_FAILED(rv) || rv == NS_RDF_STOP_VISIT) {
+            break;
+        }
+    }
 
     // Unlock datasource
     --mReadCount;
 
-    return cls.mRv;
-} 
-
-class TriplesInnerClosure
-{
-public:
-    TriplesInnerClosure(nsIRDFNode* aSubject, VisitorClosure* aClosure) :
-        mSubject(aSubject), mOuter(aClosure) {}
-    nsIRDFNode* mSubject;
-    VisitorClosure* mOuter;
-};
-
-PLDHashOperator
-TriplesInnerEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                  uint32_t aNumber, void* aArg) {
-    Entry* entry = static_cast<Entry*>(aHdr);
-    Assertion* assertion = entry->mAssertions;
-    TriplesInnerClosure* closure = 
-        static_cast<TriplesInnerClosure*>(aArg);
-    while (assertion) {
-        NS_ASSERTION(!assertion->mHashEntry, "shouldn't have to hashes");
-        VisitorClosure* cls = closure->mOuter;
-        cls->mRv = cls->mVisitor->Visit(closure->mSubject,
-                                        assertion->u.as.mProperty,
-                                        assertion->u.as.mTarget,
-                                        assertion->u.as.mTruthValue);
-        if (NS_FAILED(cls->mRv) || cls->mRv == NS_RDF_STOP_VISIT) {
-            return PL_DHASH_STOP;
-        }
-        assertion = assertion->mNext;
-    }
-    return PL_DHASH_NEXT;
+    return rv;
 }
-PLDHashOperator
-TriplesEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                  uint32_t aNumber, void* aArg) {
-    Entry* entry = static_cast<Entry*>(aHdr);
-    VisitorClosure* closure = static_cast<VisitorClosure*>(aArg);
 
-    nsresult rv;
-    nsCOMPtr<nsIRDFNode> subject = do_QueryInterface(entry->mNode, &rv);
-    NS_ENSURE_SUCCESS(rv, PL_DHASH_NEXT);
-
-    if (entry->mAssertions->mHashEntry) {
-        TriplesInnerClosure cls(subject, closure);
-        PL_DHashTableEnumerate(entry->mAssertions->u.hash.mPropertyHash,
-                               TriplesInnerEnumerator, &cls);
-        if (NS_FAILED(closure->mRv)) {
-            return PL_DHASH_STOP;
-        }
-        return PL_DHASH_NEXT;
-    }
-    Assertion* assertion = entry->mAssertions;
-    while (assertion) {
-        NS_ASSERTION(!assertion->mHashEntry, "shouldn't have to hashes");
-        closure->mRv = closure->mVisitor->Visit(subject,
-                                                assertion->u.as.mProperty,
-                                                assertion->u.as.mTarget,
-                                                assertion->u.as.mTruthValue);
-        if (NS_FAILED(closure->mRv) || closure->mRv == NS_RDF_STOP_VISIT) {
-            return PL_DHASH_STOP;
-        }
-        assertion = assertion->mNext;
-    }
-    return PL_DHASH_NEXT;
-}
 NS_IMETHODIMP
 InMemoryDataSource::VisitAllTriples(rdfITripleVisitor *aVisitor)
 {
@@ -2012,13 +1933,59 @@ InMemoryDataSource::VisitAllTriples(rdfITripleVisitor *aVisitor)
     ++mReadCount;
 
     // Enumerate all of our entries into an nsISupportsArray.
-    VisitorClosure cls(aVisitor);
-    PL_DHashTableEnumerate(&mForwardArcs, TriplesEnumerator, &cls);
+    nsresult rv = NS_OK;
+    for (auto iter = mForwardArcs.Iter(); !iter.Done(); iter.Next()) {
+        auto entry = static_cast<Entry*>(iter.Get());
 
+        nsresult rv2;
+        nsCOMPtr<nsIRDFNode> subject = do_QueryInterface(entry->mNode, &rv2);
+        if (NS_FAILED(rv2)) {
+            NS_WARNING("QI to nsIRDFNode failed");
+
+        } else if (entry->mAssertions->mHashEntry) {
+            for (auto iter = entry->mAssertions->u.hash.mPropertyHash->Iter();
+                 !iter.Done();
+                 iter.Next()) {
+                auto entry = static_cast<Entry*>(iter.Get());
+                Assertion* assertion = entry->mAssertions;
+                while (assertion) {
+                    NS_ASSERTION(!assertion->mHashEntry, "shouldn't have to hashes");
+                    rv = aVisitor->Visit(subject, assertion->u.as.mProperty,
+                                                  assertion->u.as.mTarget,
+                                                  assertion->u.as.mTruthValue);
+                    if (NS_FAILED(rv)) {
+                        goto end;
+                    }
+                    if (rv == NS_RDF_STOP_VISIT) {
+                        goto inner_end;
+                    }
+                    assertion = assertion->mNext;
+                }
+            }
+
+        } else {
+            Assertion* assertion = entry->mAssertions;
+            while (assertion) {
+                NS_ASSERTION(!assertion->mHashEntry, "shouldn't have to hashes");
+                rv = aVisitor->Visit(subject, assertion->u.as.mProperty,
+                                              assertion->u.as.mTarget,
+                                              assertion->u.as.mTruthValue);
+                if (NS_FAILED(rv) || rv == NS_RDF_STOP_VISIT) {
+                    goto end;
+                }
+                assertion = assertion->mNext;
+            }
+        }
+
+      inner_end:
+        (void) 0;
+    }
+
+  end:
     // Unlock datasource
     --mReadCount;
 
-    return cls.mRv;
+    return rv;
 } 
 
 ////////////////////////////////////////////////////////////////////////
