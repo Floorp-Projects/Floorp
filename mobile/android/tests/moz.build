@@ -7,6 +7,8 @@
 TEST_DIRS += [
     'background',
     'browser',
+    'javaaddons', # Must be built before browser/robocop/roboextender.
+                  # This is enforced in config/recurse.mk.
 ]
 
 ANDROID_INSTRUMENTATION_MANIFESTS += ['browser/robocop/robocop.ini']

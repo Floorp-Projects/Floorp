@@ -35,6 +35,9 @@ browser.jar:
   content/browser/loop/shared/img/sad.png                       (content/shared/img/sad.png)
   content/browser/loop/shared/img/icon_32.png                   (content/shared/img/icon_32.png)
   content/browser/loop/shared/img/icon_64.png                   (content/shared/img/icon_64.png)
+  content/browser/loop/shared/img/spinner.svg                   (content/shared/img/spinner.svg)
+  # XXX could get rid of the png spinner usages and replace them with the svg
+  # one?
   content/browser/loop/shared/img/spinner.png                   (content/shared/img/spinner.png)
   content/browser/loop/shared/img/spinner@2x.png                (content/shared/img/spinner@2x.png)
   content/browser/loop/shared/img/audio-inverse-14x14.png       (content/shared/img/audio-inverse-14x14.png)

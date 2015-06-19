@@ -426,6 +426,14 @@ exports.defineLazyGetter(this, "NetUtil", () => {
   return Cu.import("resource://gre/modules/NetUtil.jsm", {}).NetUtil;
 });
 
+exports.defineLazyGetter(this, "OS", () => {
+  return Cu.import("resource://gre/modules/osfile.jsm", {}).OS;
+});
+
+exports.defineLazyGetter(this, "TextDecoder", () => {
+  return Cu.import("resource://gre/modules/osfile.jsm", {}).TextDecoder;
+});
+
 /**
  * Performs a request to load the desired URL and returns a promise.
  *
@@ -438,170 +446,136 @@ exports.defineLazyGetter(this, "NetUtil", () => {
  *        - policy: the nsIContentPolicy type to apply when fetching the URL
  *        - window: the window to get the loadGroup from
  *        - charset: the charset to use if the channel doesn't provide one
- * @returns Promise
- *        A promise of the document at that URL, as a string.
+ * @returns Promise that resolves with an object with the following members on
+ *          success:
+ *           - content: the document at that URL, as a string,
+ *           - contentType: the content type of the document
+ *
+ *          If an error occurs, the promise is rejected with that error.
  *
  * XXX: It may be better to use nsITraceableChannel to get to the sources
  * without relying on caching when we can (not for eval, etc.):
  * http://www.softwareishard.com/blog/firebug/nsitraceablechannel-intercept-http-traffic/
  */
+function mainThreadFetch(aURL, aOptions={ loadFromCache: true,
+                                          policy: Ci.nsIContentPolicy.TYPE_OTHER,
+                                          window: null,
+                                          charset: null }) {
+  // Create a channel.
+  let url = aURL.split(" -> ").pop();
+  let channel;
+  try {
+    channel = newChannelForURL(url, aOptions);
+  } catch (ex) {
+    return promise.reject(ex);
+  }
+
+  // Set the channel options.
+  channel.loadFlags = aOptions.loadFromCache
+    ? channel.LOAD_FROM_CACHE
+    : channel.LOAD_BYPASS_CACHE;
+
+  if (aOptions.window) {
+    // Respect private browsing.
+    channel.loadGroup = aOptions.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIWebNavigation)
+                          .QueryInterface(Ci.nsIDocumentLoader)
+                          .loadGroup;
+  }
+
+  let deferred = promise.defer();
+  let onResponse = (stream, status, request) => {
+    if (!components.isSuccessCode(status)) {
+      deferred.reject(new Error(`Failed to fetch ${url}. Code ${status}.`));
+      return;
+    }
+
+    try {
+      let charset = channel.contentCharset || aOptions.charset || "UTF-8";
+
+      // NetUtil handles charset conversion.
+      let available = stream.available();
+      let source = NetUtil.readInputStreamToString(stream, available, {charset});
+      stream.close();
+
+      deferred.resolve({
+        content: source,
+        contentType: request.contentType
+      });
+    } catch (ex) {
+      let uri = request.originalURI;
+      if (ex.name === "NS_BASE_STREAM_CLOSED" && uri instanceof Ci.nsIFileURL) {
+        // Empty files cause NS_BASE_STREAM_CLOSED exception. Use OS.File to
+        // differentiate between empty files and other errors (bug 1170864).
+        // This can be removed when bug 982654 is fixed.
+
+        uri.QueryInterface(Ci.nsIFileURL);
+        let result = OS.File.read(uri.file.path).then(bytes => {
+          // Convert the bytearray to a String.
+          let decoder = new TextDecoder();
+          let content = decoder.decode(bytes);
+
+          // We can't detect the contentType without opening a channel
+          // and that failed already. This is the best we can do here.
+          return {
+            content,
+            contentType: "text/plain"
+          };
+        });
+
+        deferred.resolve(result);
+      } else {
+        deferred.reject(ex);
+      }
+    }
+  };
+
+  // Open the channel
+  try {
+    NetUtil.asyncFetch(channel, onResponse);
+  } catch (ex) {
+    return promise.reject(ex);
+  }
+
+  return deferred.promise;
+}
+
+/**
+ * Opens a channel for given URL. Tries a bit harder than NetUtil.newChannel.
+ *
+ * @param {String} url - The URL to open a channel for.
+ * @param {Object} options - The options object passed to @method fetch.
+ * @return {nsIChannel} - The newly created channel. Throws on failure.
+ */
+function newChannelForURL(url, { policy }) {
+  let channelOptions = {
+    contentPolicyType: policy,
+    loadUsingSystemPrincipal: true,
+    uri: url
+  };
+
+  try {
+    return NetUtil.newChannel(channelOptions);
+  } catch (e) {
+    // In the xpcshell tests, the script url is the absolute path of the test
+    // file, which will make a malformed URI error be thrown. Add the file
+    // scheme to see if it helps.
+    channelOptions.uri = "file://" + url;
+
+    return NetUtil.newChannel(channelOptions);
+  }
+}
 
 // Fetch is defined differently depending on whether we are on the main thread
 // or a worker thread.
 if (!this.isWorker) {
-  exports.fetch = function (aURL, aOptions={ loadFromCache: true,
-                                             policy: Ci.nsIContentPolicy.TYPE_OTHER,
-                                             window: null,
-                                             charset: null }) {
-    let deferred = promise.defer();
-    let scheme;
-    let url = aURL.split(" -> ").pop();
-    let charset;
-    let contentType;
-
-    try {
-      scheme = Services.io.extractScheme(url);
-    } catch (e) {
-      // In the xpcshell tests, the script url is the absolute path of the test
-      // file, which will make a malformed URI error be thrown. Add the file
-      // scheme prefix ourselves.
-      url = "file://" + url;
-      scheme = Services.io.extractScheme(url);
-    }
-
-    switch (scheme) {
-      case "file":
-      case "chrome":
-      case "resource":
-        try {
-          NetUtil.asyncFetch({
-            uri: url,
-            loadUsingSystemPrincipal: true
-          }, function onFetch(aStream, aStatus, aRequest) {
-              if (!components.isSuccessCode(aStatus)) {
-                deferred.reject(new Error("Request failed with status code = "
-                                          + aStatus
-                                          + " after NetUtil.asyncFetch for url = "
-                                          + url));
-                return;
-              }
-
-              let source = NetUtil.readInputStreamToString(aStream, aStream.available());
-              contentType = aRequest.contentType;
-              deferred.resolve(source);
-              aStream.close();
-            });
-        } catch (ex) {
-          deferred.reject(ex);
-        }
-        break;
-
-      default:
-        let channel;
-        try {
-          channel = Services.io.newChannel2(url,
-                                            null,
-                                            null,
-                                            null,      // aLoadingNode
-                                            Services.scriptSecurityManager.getSystemPrincipal(),
-                                            null,      // aTriggeringPrincipal
-                                            Ci.nsILoadInfo.SEC_NORMAL,
-                                            aOptions.policy);
-        } catch (e if e.name == "NS_ERROR_UNKNOWN_PROTOCOL") {
-          // On Windows xpcshell tests, c:/foo/bar can pass as a valid URL, but
-          // newChannel won't be able to handle it.
-          url = "file:///" + url;
-          channel = Services.io.newChannel2(url,
-                                            null,
-                                            null,
-                                            null,      // aLoadingNode
-                                            Services.scriptSecurityManager.getSystemPrincipal(),
-                                            null,      // aTriggeringPrincipal
-                                            Ci.nsILoadInfo.SEC_NORMAL,
-                                            aOptions.policy);
-        }
-        let chunks = [];
-        let streamListener = {
-          onStartRequest: function(aRequest, aContext, aStatusCode) {
-            if (!components.isSuccessCode(aStatusCode)) {
-              deferred.reject(new Error("Request failed with status code = "
-                                        + aStatusCode
-                                        + " in onStartRequest handler for url = "
-                                        + url));
-            }
-          },
-          onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
-            chunks.push(NetUtil.readInputStreamToString(aStream, aCount));
-          },
-          onStopRequest: function(aRequest, aContext, aStatusCode) {
-            if (!components.isSuccessCode(aStatusCode)) {
-              deferred.reject(new Error("Request failed with status code = "
-                                        + aStatusCode
-                                        + " in onStopRequest handler for url = "
-                                        + url));
-              return;
-            }
-
-            charset = channel.contentCharset || aOptions.charset;
-            contentType = channel.contentType;
-            deferred.resolve(chunks.join(""));
-          }
-        };
-
-        if (aOptions.window) {
-          // Respect private browsing.
-          channel.loadGroup = aOptions.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIWebNavigation)
-                                .QueryInterface(Ci.nsIDocumentLoader)
-                                .loadGroup;
-        }
-        channel.loadFlags = aOptions.loadFromCache
-          ? channel.LOAD_FROM_CACHE
-          : channel.LOAD_BYPASS_CACHE;
-        try {
-          channel.asyncOpen(streamListener, null);
-        } catch(e) {
-          deferred.reject(new Error("Request failed for '"
-                                    + url
-                                    + "': "
-                                    + e.message));
-        }
-        break;
-    }
-
-    return deferred.promise.then(source => {
-      return {
-        content: convertToUnicode(source, charset),
-        contentType: contentType
-      };
-    });
-  }
+  exports.fetch = mainThreadFetch;
 } else {
   // Services is not available in worker threads, nor is there any other way
   // to fetch a URL. We need to enlist the help from the main thread here, by
   // issuing an rpc request, to fetch the URL on our behalf.
   exports.fetch = function (url, options) {
     return rpc("fetch", url, options);
-  }
-}
-
-/**
- * Convert a given string, encoded in a given character set, to unicode.
- *
- * @param string aString
- *        A string.
- * @param string aCharset
- *        A character set.
- */
-function convertToUnicode(aString, aCharset=null) {
-  // Decoding primitives.
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-    .createInstance(Ci.nsIScriptableUnicodeConverter);
-  try {
-    converter.charset = aCharset || "UTF-8";
-    return converter.ConvertToUnicode(aString);
-  } catch(e) {
-    return aString;
   }
 }
 

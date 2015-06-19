@@ -176,6 +176,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
           <h1>{mozL10n.get("clientShortname2")}</h1>
           <a href={loop.config.generalSupportUrl}
              onClick={this.recordClick}
+             rel="noreferrer"
              target="_blank">
             <i className="icon icon-help"></i>
           </a>
@@ -196,12 +197,12 @@ loop.standaloneRoomViews = (function(mozL10n) {
       return mozL10n.get("legal_text_and_links", {
         "clientShortname": mozL10n.get("clientShortname2"),
         "terms_of_use_url": React.renderToStaticMarkup(
-          <a href={loop.config.legalWebsiteUrl} target="_blank">
+          <a href={loop.config.legalWebsiteUrl} rel="noreferrer" target="_blank">
             {mozL10n.get("terms_of_use_link_text")}
           </a>
         ),
         "privacy_notice_url": React.renderToStaticMarkup(
-          <a href={loop.config.privacyWebsiteUrl} target="_blank">
+          <a href={loop.config.privacyWebsiteUrl} rel="noreferrer" target="_blank">
             {mozL10n.get("privacy_notice_link_text")}
           </a>
         )
@@ -328,6 +329,9 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * room state and other flags.
      *
      * @return {Boolean} True if remote video should be rended.
+     *
+     * XXX Refactor shouldRenderRemoteVideo & shouldRenderLoading to remove
+     *     overlapping cases.
      */
     shouldRenderRemoteVideo: function() {
       switch(this.state.roomState) {
@@ -364,6 +368,43 @@ loop.standaloneRoomViews = (function(mozL10n) {
           return true;
 
       }
+    },
+
+    /**
+     * Should we render a visual cue to the user (e.g. a spinner) that a local
+     * stream is on its way from the camera?
+     *
+     * @returns {boolean}
+     * @private
+     */
+    _shouldRenderLocalLoading: function () {
+      return this.state.roomState === ROOM_STATES.MEDIA_WAIT &&
+             !this.state.localSrcVideoObject;
+    },
+
+    /**
+     * Should we render a visual cue to the user (e.g. a spinner) that a remote
+     * stream is on its way from the other user?
+     *
+     * @returns {boolean}
+     * @private
+     */
+    _shouldRenderRemoteLoading: function() {
+      return this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS &&
+             !this.state.remoteSrcVideoObject &&
+             !this.state.mediaConnected;
+    },
+
+    /**
+     * Should we render a visual cue to the user (e.g. a spinner) that a remote
+     * screen-share is on its way from the other user?
+     *
+     * @returns {boolean}
+     * @private
+     */
+    _shouldRenderScreenShareLoading: function() {
+      return this.state.receivingScreenShare &&
+             !this.state.screenShareVideoObject;
     },
 
     render: function() {
@@ -405,12 +446,14 @@ loop.standaloneRoomViews = (function(mozL10n) {
               <div className={remoteStreamClasses}>
                 <sharedViews.MediaView displayAvatar={!this.shouldRenderRemoteVideo()}
                   posterUrl={this.props.remotePosterUrl}
+                  isLoading={this._shouldRenderRemoteLoading()}
                   mediaType="remote"
                   srcVideoObject={this.state.remoteSrcVideoObject} />
               </div>
               <div className={screenShareStreamClasses}>
                 <sharedViews.MediaView displayAvatar={false}
                   posterUrl={this.props.screenSharePosterUrl}
+                  isLoading={this._shouldRenderScreenShareLoading()}
                   mediaType="screen-share"
                   srcVideoObject={this.state.screenShareVideoObject} />
               </div>
@@ -421,6 +464,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
               <div className="local">
                 <sharedViews.MediaView displayAvatar={this.state.videoMuted}
                   posterUrl={this.props.localPosterUrl}
+                  isLoading={this._shouldRenderLocalLoading()}
                   mediaType="local"
                   srcVideoObject={this.state.localSrcVideoObject} />
               </div>

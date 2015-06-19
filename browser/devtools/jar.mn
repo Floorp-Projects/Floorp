@@ -68,6 +68,7 @@ browser.jar:
     content/browser/devtools/debugger.css                              (debugger/debugger.css)
     content/browser/devtools/debugger-controller.js                    (debugger/debugger-controller.js)
     content/browser/devtools/debugger-view.js                          (debugger/debugger-view.js)
+    content/browser/devtools/debugger/workers-view.js                  (debugger/views/workers-view.js)
     content/browser/devtools/debugger/sources-view.js                  (debugger/views/sources-view.js)
     content/browser/devtools/debugger/variable-bubble-view.js          (debugger/views/variable-bubble-view.js)
     content/browser/devtools/debugger/tracer-view.js                   (debugger/views/tracer-view.js)

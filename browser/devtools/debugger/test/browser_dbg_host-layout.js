@@ -71,13 +71,13 @@ function testHost(aTab, aPanel, aHostType, aLayoutType) {
     "The default host type is present as an attribute on the panel's body.");
 
   if (aLayoutType == "horizontal") {
-    is(gView._sourcesPane.parentNode.id, "debugger-widgets",
-      "The sources pane's parent is correct for the horizontal layout.");
+    is(gView._workersAndSourcesPane.parentNode.id, "debugger-widgets",
+      "The workers and sources pane's parent is correct for the horizontal layout.");
     is(gView._instrumentsPane.parentNode.id, "debugger-widgets",
       "The instruments pane's parent is correct for the horizontal layout.");
   } else {
-    is(gView._sourcesPane.parentNode.id, "vertical-layout-panes-container",
-      "The sources pane's parent is correct for the vertical layout.");
+    is(gView._workersAndSourcesPane.parentNode.id, "vertical-layout-panes-container",
+      "The workers and sources pane's parent is correct for the vertical layout.");
     is(gView._instrumentsPane.parentNode.id, "vertical-layout-panes-container",
       "The instruments pane's parent is correct for the vertical layout.");
   }
