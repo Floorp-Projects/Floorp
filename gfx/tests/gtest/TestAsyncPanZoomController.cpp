@@ -70,6 +70,7 @@ public:
   MOCK_METHOD3(SendAsyncScrollDOMEvent, void(bool aIsRoot, const CSSRect &aContentRect, const CSSSize &aScrollableSize));
   MOCK_METHOD2(PostDelayedTask, void(Task* aTask, int aDelayMs));
   MOCK_METHOD3(NotifyAPZStateChange, void(const ScrollableLayerGuid& aGuid, APZStateChange aChange, int aArg));
+  MOCK_METHOD0(NotifyFlushComplete, void());
 };
 
 class MockContentControllerDelayed : public MockContentController {

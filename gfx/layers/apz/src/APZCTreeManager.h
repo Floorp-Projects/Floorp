@@ -131,6 +131,13 @@ public:
                             uint32_t aPaintSequenceNumber);
 
   /**
+   * Walk the tree of APZCs and flushes the repaint requests for all the APZCS
+   * corresponding to the given layers id. Finally, sends a flush complete
+   * notification to the GeckoContentController for the layers id.
+   */
+  void FlushApzRepaints(uint64_t aLayersId);
+
+  /**
    * General handler for incoming input events. Manipulates the frame metrics
    * based on what type of input it is. For example, a PinchGestureEvent will
    * cause scaling. This should only be called externally to this class, and
@@ -434,6 +441,7 @@ private:
                                         const ZoomConstraints& aConstraints);
   void FlushRepaintsToClearScreenToGeckoTransform();
   void FlushRepaintsRecursively(HitTestingTreeNode* aNode);
+  void FlushPendingRepaintRecursively(HitTestingTreeNode* aNode, uint64_t aLayersId);
 
   already_AddRefed<HitTestingTreeNode> RecycleOrCreateNode(TreeBuildingState& aState,
                                                            AsyncPanZoomController* aApzc,
