@@ -282,6 +282,14 @@ class GlobalSharedContext : public SharedContext
         }
         return false;
     }
+
+    bool inWith() const {
+        for (StaticScopeIter<CanGC> it(context, topStaticScope_); !it.done(); it++) {
+            if (it.type() == StaticScopeIter<CanGC>::With)
+                return true;
+        }
+        return false;
+    }
 };
 
 class FunctionBox : public ObjectBox, public SharedContext
