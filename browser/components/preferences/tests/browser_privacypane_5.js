@@ -12,15 +12,19 @@ function test() {
   }
   loader.loadSubScript(rootDir + "privacypane_tests_perwindow.js", this);
 
-  run_test_subset([
+  let tests = [
     test_locbar_suggestion_retention("history", true),
     test_locbar_suggestion_retention("bookmark", true),
-    test_locbar_suggestion_retention("searches", true),
     test_locbar_suggestion_retention("openpage", false),
     test_locbar_suggestion_retention("history", true),
     test_locbar_suggestion_retention("history", false),
+  ];
 
-    // reset all preferences to their default values once we're done
-    reset_preferences
-  ]);
+  if (AppConstants.NIGHTLY_BUILD)
+    tests.push(test_locbar_suggestion_retention("searches", true)),
+
+  // reset all preferences to their default values once we're done
+  tests.push(reset_preferences);
+
+  run_test_subset(tests);
 }
