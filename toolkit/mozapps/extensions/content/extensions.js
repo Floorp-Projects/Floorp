@@ -460,6 +460,31 @@ var gEventManager = {
       menuSep.hidden = (countMenuItemsBeforeSep == 0);
 
     }, false);
+
+    let addonTooltip = document.getElementById("addonitem-tooltip");
+    addonTooltip.addEventListener("popupshowing", function() {
+      let addonItem = addonTooltip.triggerNode;
+      // The way the test triggers the tooltip the richlistitem is the
+      // tooltipNode but in normal use it is the anonymous node. This allows
+      // any case
+      if (addonItem.localName != "richlistitem")
+        addonItem = document.getBindingParent(addonItem);
+
+      let tiptext = addonItem.getAttribute("name");
+
+      if (addonItem.mAddon) {
+        if (shouldShowVersionNumber(addonItem.mAddon)) {
+          tiptext += " " + (addonItem.hasAttribute("upgrade") ? addonItem.mManualUpdate.version
+                                                              : addonItem.mAddon.version);
+        }
+      }
+      else {
+        if (shouldShowVersionNumber(addonItem.mInstall))
+          tiptext += " " + addonItem.mInstall.version;
+      }
+
+      addonTooltip.label = tiptext;
+    }, false);
   },
 
   shutdown: function gEM_shutdown() {
@@ -1446,6 +1471,10 @@ function isInState(aInstall, aState) {
 
 function shouldShowVersionNumber(aAddon) {
   if (!aAddon.version)
+    return false;
+
+  // The version number is hidden for experiments.
+  if (aAddon.type == "experiment")
     return false;
 
   // The version number is hidden for lightweight themes.

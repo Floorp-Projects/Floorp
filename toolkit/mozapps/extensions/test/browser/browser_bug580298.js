@@ -9,9 +9,7 @@ var gManagerWindow;
 var gCategoryUtilities;
 var gProvider;
 
-function test() {
-  waitForExplicitFinish();
-
+add_task(function test() {
   gProvider = new MockProvider();
 
   gProvider.createAddons([{
@@ -31,16 +29,9 @@ function test() {
     version: "789"
   }]);
 
-  open_manager(null, function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-    run_next_test();
-  });
-}
-
-function end_test() {
-  close_manager(gManagerWindow, finish);
-}
+  gManagerWindow = yield open_manager();
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+});
 
 function get(aId) {
   return gManagerWindow.document.getElementById(aId);
@@ -54,58 +45,54 @@ function open_details(aList, aItem, aCallback) {
   aList.ensureElementIsVisible(aItem);
   EventUtils.synthesizeMouseAtCenter(aItem, { clickCount: 1 }, gManagerWindow);
   EventUtils.synthesizeMouseAtCenter(aItem, { clickCount: 2 }, gManagerWindow);
-  wait_for_view_load(gManagerWindow, aCallback);
+  return new Promise(resolve => wait_for_view_load(gManagerWindow, resolve));
 }
 
-function check_addon_has_version(aList, aName, aVersion) {
+let check_addon_has_version = Task.async(function*(aList, aName, aVersion) {
   for (let i = 0; i < aList.itemCount; i++) {
     let item = aList.getItemAtIndex(i);
     if (get_node(item, "name").value === aName) {
       ok(true, "Item with correct name found");
-      is(get_node(item, "version").value, aVersion, "Item has correct version");
+      let { version } = yield get_tooltip_info(item);
+      is(version, aVersion, "Item has correct version");
       return item;
     }
   }
   ok(false, "Item with correct name was not found");
   return null;
-}
-
-add_test(function() {
-  gCategoryUtilities.openType("extension", function() {
-    info("Extension");
-    let list = gManagerWindow.document.getElementById("addon-list");
-    let item = check_addon_has_version(list, "Extension 1", "123");
-    open_details(list, item, function() {
-      is_element_visible(get("detail-version"), "Details view has version visible");
-      is(get("detail-version").value, "123", "Details view has correct version");
-      run_next_test();
-    });
-  });
 });
 
-add_test(function() {
-  gCategoryUtilities.openType("theme", function() {
-    info("Normal theme");
-    let list = gManagerWindow.document.getElementById("addon-list");
-    let item = check_addon_has_version(list, "Theme 2", "456");
-    open_details(list, item, function() {
-      is_element_visible(get("detail-version"), "Details view has version visible");
-      is(get("detail-version").value, "456", "Details view has correct version");
-      run_next_test();
-    });
-  });
+add_task(function*() {
+  yield gCategoryUtilities.openType("extension");
+  info("Extension");
+  let list = gManagerWindow.document.getElementById("addon-list");
+  let item = yield check_addon_has_version(list, "Extension 1", "123");
+  yield open_details(list, item);
+  is_element_visible(get("detail-version"), "Details view has version visible");
+  is(get("detail-version").value, "123", "Details view has correct version");
 });
 
-add_test(function() {
-  gCategoryUtilities.openType("theme", function() {
-    info("Lightweight theme");
-    let list = gManagerWindow.document.getElementById("addon-list");
-    // See that the version isn't displayed
-    let item = check_addon_has_version(list, "Persona 3", "");
-    open_details(list, item, function() {
-      is_element_hidden(get("detail-version"), "Details view has version hidden");
-      // If the version element is hidden then we don't care about its value
-      run_next_test();
-    });
-  });
+add_task(function*() {
+  yield gCategoryUtilities.openType("theme");
+  info("Normal theme");
+  let list = gManagerWindow.document.getElementById("addon-list");
+  let item = yield check_addon_has_version(list, "Theme 2", "456");
+  yield open_details(list, item);
+  is_element_visible(get("detail-version"), "Details view has version visible");
+  is(get("detail-version").value, "456", "Details view has correct version");
+});
+
+add_task(function*() {
+  yield gCategoryUtilities.openType("theme");
+  info("Lightweight theme");
+  let list = gManagerWindow.document.getElementById("addon-list");
+  // See that the version isn't displayed
+  let item = yield check_addon_has_version(list, "Persona 3", undefined);
+  yield open_details(list, item);
+  is_element_hidden(get("detail-version"), "Details view has version hidden");
+  // If the version element is hidden then we don't care about its value
+});
+
+add_task(function end_test() {
+  close_manager(gManagerWindow, finish);
 });
