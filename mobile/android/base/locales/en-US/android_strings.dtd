@@ -81,6 +81,7 @@
 
 <!ENTITY settings "Settings">
 <!ENTITY settings_title "Settings">
+<!ENTITY pref_category_input_options "Input options">
 <!ENTITY pref_category_advanced "Advanced">
 <!ENTITY pref_category_customize "Customize">
 <!ENTITY pref_category_customize_summary "Home, search, tabs, import">
@@ -252,6 +253,8 @@ size. -->
 <!ENTITY pref_zoom_force_enabled_summary "Force override so you can zoom any page">
 <!ENTITY pref_voice_input "Voice input">
 <!ENTITY pref_voice_input_summary "Allow voice dictation in the title bar">
+<!ENTITY pref_qrcode_enabled "QR code reader">
+<!ENTITY pref_qrcode_enabled_summary "Allow QR scanner in the title bar">
 
 <!ENTITY pref_use_master_password "Use master password">
 <!ENTITY pref_sync "Sync">

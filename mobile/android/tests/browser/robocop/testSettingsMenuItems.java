@@ -7,9 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.gecko.util.VoiceRecognizerUtils;
+import org.mozilla.gecko.util.InputOptionsUtils;
 
 /** This patch tests the Sections present in the Settings Menu and the
  *  default values for them
@@ -228,7 +230,7 @@ public class testSettingsMenuItems extends PixelTest {
         }
 
         // Voice input
-        if (AppConstants.NIGHTLY_BUILD && VoiceRecognizerUtils.supportsVoiceRecognizer(this.getActivity().getApplicationContext(), this.getActivity().getResources())) {
+        if (AppConstants.NIGHTLY_BUILD && InputOptionsUtils.supportsVoiceRecognizer(this.getActivity().getApplicationContext(), this.getActivity().getResources().getString(R.string.voicesearch_prompt))) {
             String[] voiceInputUi = { mStringHelper.VOICE_INPUT_TITLE_LABEL, mStringHelper.VOICE_INPUT_SUMMARY_LABEL };
             settingsMap.get(PATH_DISPLAY).add(voiceInputUi);
         }

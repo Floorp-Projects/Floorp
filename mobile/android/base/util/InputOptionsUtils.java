@@ -9,7 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.speech.RecognizerIntent;
 
-public class VoiceRecognizerUtils {
+public class InputOptionsUtils {
     public static boolean supportsVoiceRecognizer(Context context, String prompt) {
         final Intent intent = createVoiceRecognizerIntent(prompt);
         return intent.resolveActivity(context.getPackageManager()) != null;
@@ -20,6 +20,23 @@ public class VoiceRecognizerUtils {
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
         intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, prompt);
+        return intent;
+    }
+
+    public static boolean supportsIntent(Intent intent, Context context) {
+        return intent.resolveActivity(context.getPackageManager()) != null;
+    }
+
+    public static boolean supportsQrCodeReader(Context context) {
+        final Intent intent = createQRCodeReaderIntent();
+        return supportsIntent(intent, context);
+    }
+
+    public static Intent createQRCodeReaderIntent() {
+        // Bug 602818 enables QR code input if you have the particular app below installed in your device
+        Intent intent = new Intent("com.google.zxing.client.android.SCAN");
+        intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         return intent;
     }
 }
