@@ -152,20 +152,8 @@ function someTabLoaded(aWindow) {
  * @resolves With the new window once it's open and loaded.
  */
 function newWindowOpened() {
-  return new Promise(function(resolve) {
-    Services.wm.addListener({
-      onOpenWindow: function(aXULWindow) {
-        Services.wm.removeListener(this);
-        var newWindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIDOMWindow);
-        delayedStartupFinished(newWindow).then(function() {
-          resolve(newWindow);
-        });
-      },
-      onCloseWindow: function(aXULWindow) { },
-      onWindowTitleChange: function(aXULWindow, aNewTitle) { }
-    });
-  });
+  return TestUtils.topicObserved("browser-delayed-startup-finished")
+                  .then(([win]) => win);
 }
 
 /**
