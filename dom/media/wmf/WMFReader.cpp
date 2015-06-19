@@ -84,8 +84,7 @@ WMFReader::~WMFReader()
 bool
 WMFReader::InitializeDXVA()
 {
-  if (gfxWindowsPlatform::GetPlatform()->IsWARP() ||
-      !gfxPlatform::CanUseHardwareVideoDecoding()) {
+  if (!gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding()) {
     return false;
   }
 
