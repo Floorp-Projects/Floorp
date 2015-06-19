@@ -27,6 +27,8 @@
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/MediaStreamError.h"
+#include "mozilla/media/MediaChild.h"
+#include "mozilla/media/MediaParent.h"
 #include "mozilla/Logging.h"
 #include "DOMMediaStream.h"
 
@@ -468,8 +470,6 @@ protected:
   explicit MediaDevice(MediaEngineSource* aSource);
   nsString mName;
   nsString mID;
-  bool mHasFacingMode;
-  dom::VideoFacingModeEnum mFacingMode;
   dom::MediaSourceEnum mMediaSource;
   nsRefPtr<MediaEngineSource> mSource;
 };
@@ -534,6 +534,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIMEDIAMANAGERSERVICE
 
+  media::Parent<media::NonE10s>* GetNonE10sParent();
   MediaEngine* GetBackend(uint64_t aWindowId = 0);
   StreamListeners *GetWindowListeners(uint64_t aWindowId) {
     NS_ASSERTION(NS_IsMainThread(), "Only access windowlist on main thread");
@@ -555,11 +556,10 @@ public:
     nsIDOMGetUserMediaErrorCallback* onError);
 
   nsresult GetUserMediaDevices(nsPIDOMWindow* aWindow,
-    const dom::MediaStreamConstraints& aConstraints,
-    nsIGetUserMediaDevicesSuccessCallback* onSuccess,
-    nsIDOMGetUserMediaErrorCallback* onError,
-    uint64_t aInnerWindowID = 0,
-    bool aPrivileged = true);
+                               const dom::MediaStreamConstraints& aConstraints,
+                               nsIGetUserMediaDevicesSuccessCallback* onSuccess,
+                               nsIDOMGetUserMediaErrorCallback* onError,
+                               uint64_t aInnerWindowID = 0);
 
   nsresult EnumerateDevices(nsPIDOMWindow* aWindow,
                             nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
@@ -572,6 +572,21 @@ public:
   MediaEnginePrefs mPrefs;
 
 private:
+  typedef nsTArray<nsRefPtr<MediaDevice>> SourceSet;
+  typedef media::Pledge<SourceSet*, dom::MediaStreamError> PledgeSourceSet;
+
+  static nsresult AnonymizeId(nsAString& aId, const nsACString& aOriginKey);
+public: // TODO: make private once we upgrade to GCC 4.8+ on linux.
+  static void AnonymizeDevices(SourceSet& aDevices, const nsACString& aOriginKey);
+  static already_AddRefed<nsIWritableVariant> ToJSArray(SourceSet& aDevices);
+private:
+  already_AddRefed<PledgeSourceSet>
+  EnumerateRawDevices(uint64_t aWindowId,
+                      const dom::MediaStreamConstraints& aConstraints);
+  already_AddRefed<PledgeSourceSet>
+  EnumerateDevicesImpl(uint64_t aWindowId,
+                       const dom::MediaStreamConstraints& aConstraints);
+
   StreamListeners* AddWindowID(uint64_t aWindowId);
   WindowTable *GetActiveWindows() {
     NS_ASSERTION(NS_IsMainThread(), "Only access windowlist on main thread");
@@ -610,9 +625,13 @@ private:
 
   static StaticRefPtr<MediaManager> sSingleton;
 
+  media::CoatCheck<PledgeSourceSet> mOutstandingPledges;
 #if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
   nsRefPtr<nsDOMCameraManager> mCameraManager;
 #endif
+public:
+  media::CoatCheck<media::Pledge<nsCString>> mGetOriginKeyPledges;
+  ScopedDeletePtr<media::Parent<media::NonE10s>> mNonE10sParent;
 };
 
 } // namespace mozilla

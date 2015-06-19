@@ -270,6 +270,7 @@ public:
   virtual void LeaveTestMode(LayerTransactionParent* aLayerTree) override;
   virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
                override;
+  virtual void FlushApzRepaints(const LayerTransactionParent* aLayerTree) override;
   virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
                               APZTestData* aOutData) override;
   virtual void SetConfirmedTargetAPZC(const LayerTransactionParent* aLayerTree,

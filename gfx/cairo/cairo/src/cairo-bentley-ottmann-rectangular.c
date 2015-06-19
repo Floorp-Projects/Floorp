@@ -674,10 +674,19 @@ _cairo_bentley_ottmann_tessellate_rectangular_traps (cairo_traps_t *traps,
     cairo_status_t status;
     int i;
 
-    if (unlikely (traps->num_traps <= 1))
-	return CAIRO_STATUS_SUCCESS;
-
     assert (traps->is_rectangular);
+
+    if (unlikely (traps->num_traps <= 1)) {
+        if (traps->num_traps == 1) {
+            cairo_trapezoid_t *trap = traps->traps;
+            if (trap->left.p1.x > trap->right.p1.x) {
+                cairo_line_t tmp = trap->left;
+                trap->left = trap->right;
+                trap->right = tmp;
+          }
+        }
+        return CAIRO_STATUS_SUCCESS;
+    }
 
     dump_traps (traps, "bo-rects-traps-in.txt");
 
@@ -746,8 +755,35 @@ _cairo_bentley_ottmann_tessellate_boxes (const cairo_boxes_t *in,
     cairo_status_t status;
     int i, j;
 
-    if (unlikely (in->num_boxes <= 1))
+    if (unlikely (in->num_boxes == 0)) {
+	_cairo_boxes_clear (out);
 	return CAIRO_STATUS_SUCCESS;
+    }
+
+    if (in->num_boxes == 1) {
+	if (in == out) {
+	    cairo_box_t *box = &in->chunks.base[0];
+
+	    if (box->p1.x > box->p2.x) {
+		cairo_fixed_t tmp = box->p1.x;
+		box->p1.x = box->p2.x;
+		box->p2.x = tmp;
+	    }
+	} else {
+	    cairo_box_t box = in->chunks.base[0];
+
+	    if (box.p1.x > box.p2.x) {
+		cairo_fixed_t tmp = box.p1.x;
+		box.p1.x = box.p2.x;
+		box.p2.x = tmp;
+	    }
+
+	    _cairo_boxes_clear (out);
+	    status = _cairo_boxes_add (out, &box);
+	    assert (status == CAIRO_STATUS_SUCCESS);
+	}
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     rectangles = stack_rectangles;
     rectangles_ptrs = stack_rectangles_ptrs;

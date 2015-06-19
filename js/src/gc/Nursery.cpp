@@ -445,14 +445,6 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     sb.traceWholeCells(mover);
     TIME_END(traceWholeCells);
 
-    TIME_START(traceRelocatableValues);
-    sb.traceRelocatableValues(mover);
-    TIME_END(traceRelocatableValues);
-
-    TIME_START(traceRelocatableCells);
-    sb.traceRelocatableCells(mover);
-    TIME_END(traceRelocatableCells);
-
     TIME_START(traceGenericEntries);
     sb.traceGenericEntries(&mover);
     TIME_END(traceGenericEntries);
@@ -557,13 +549,13 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
         static bool printedHeader = false;
         if (!printedHeader) {
             fprintf(stderr,
-                    "MinorGC: Reason               PRate  Size Time   mkVals mkClls mkSlts mkWCll mkRVal mkRCll mkGnrc ckTbls mkRntm mkDbgr clrNOC collct swpABO updtIn runFin frSlts clrSB  sweep resize pretnr\n");
+                    "MinorGC: Reason               PRate  Size Time   mkVals mkClls mkSlts mkWCll mkGnrc ckTbls mkRntm mkDbgr clrNOC collct swpABO updtIn runFin frSlts clrSB  sweep resize pretnr\n");
             printedHeader = true;
         }
 
 #define FMT " %6" PRIu64
         fprintf(stderr,
-                "MinorGC: %20s %5.1f%% %4d" FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT "\n",
+                "MinorGC: %20s %5.1f%% %4d" FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT "\n",
                 js::gcstats::ExplainReason(reason),
                 promotionRate * 100,
                 numActiveChunks_,
@@ -573,8 +565,6 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
                 TIME_TOTAL(traceCells),
                 TIME_TOTAL(traceSlots),
                 TIME_TOTAL(traceWholeCells),
-                TIME_TOTAL(traceRelocatableValues),
-                TIME_TOTAL(traceRelocatableCells),
                 TIME_TOTAL(traceGenericEntries),
                 TIME_TOTAL(checkHashTables),
                 TIME_TOTAL(markRuntime),

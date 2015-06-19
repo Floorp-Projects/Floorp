@@ -18,9 +18,14 @@ class nsINode;
 namespace mozilla {
 
 namespace net {
-class HttpChannelParent;
-class FTPChannelParent;
-class WebSocketChannelParent;
+class LoadInfoArgs;
+}
+
+namespace ipc {
+// we have to forward declare that function so we can use it as a friend.
+nsresult
+LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
+                       nsILoadInfo** outLoadInfo);
 }
 
 /**
@@ -57,9 +62,9 @@ private:
            uint64_t aOuterWindowID,
            uint64_t aParentOuterWindowID);
 
-  friend class net::HttpChannelParent;
-  friend class net::FTPChannelParent;
-  friend class net::WebSocketChannelParent;
+  friend nsresult
+  mozilla::ipc::LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
+                                       nsILoadInfo** outLoadInfo);
 
   ~LoadInfo();
 

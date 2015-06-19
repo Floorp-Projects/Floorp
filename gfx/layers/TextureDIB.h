@@ -139,6 +139,8 @@ public:
 
   virtual void Unlock() override;
 
+  virtual bool HasInternalBuffer() const { return true; }
+
   virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
 
 protected:

@@ -10,7 +10,10 @@ if CONFIG['MOZ_LINKER']:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     DIRS += ['android']
 
-DIRS += ['build']
+DIRS += [
+  'build',
+  'misc',
+]
 
 if CONFIG['MOZ_CRT']:
     DIRS += ['crt']

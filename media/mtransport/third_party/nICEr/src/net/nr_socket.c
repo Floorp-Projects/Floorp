@@ -48,8 +48,8 @@ int nr_socket_create_int(void *obj, nr_socket_vtbl *vtbl, nr_socket **sockp)
     if(!(sock=RCALLOC(sizeof(nr_socket))))
       ABORT(R_NO_MEMORY);
 
-    assert(vtbl->version == 1);
-    if (vtbl->version != 1)
+    assert(vtbl->version >= 1 && vtbl->version <= 2);
+    if (vtbl->version < 1 || vtbl->version > 2)
        ABORT(R_INTERNAL);
 
     sock->obj=obj;
@@ -135,6 +135,20 @@ int nr_socket_read(nr_socket *sock,void * restrict buf, size_t maxlen,
     CHECK_DEFINED(sread);
     return sock->vtbl->sread(sock->obj, buf, maxlen, len);
   }
+
+int nr_socket_listen(nr_socket *sock, int backlog)
+  {
+    assert(sock->vtbl->version >=2 );
+    CHECK_DEFINED(listen);
+    return sock->vtbl->listen(sock->obj, backlog);
+  }
+
+int nr_socket_accept(nr_socket *sock, nr_transport_addr *addrp, nr_socket **sockp)
+{
+  assert(sock->vtbl->version >= 2);
+  CHECK_DEFINED(accept);
+  return sock->vtbl->accept(sock->obj, addrp, sockp);
+}
 
 
 int nr_socket_factory_create_int(void *obj,

@@ -10,27 +10,50 @@
 
 #include <emmintrin.h>  // SSE2
 #include "vp9/common/vp9_idct.h"  // for cospi constants
+#include "vp9/encoder/x86/vp9_dct_sse2.h"
+#include "vp9/encoder/vp9_dct.h"
 #include "vpx_ports/mem.h"
 
+#if DCT_HIGH_BIT_DEPTH
+#define ADD_EPI16 _mm_adds_epi16
+#define SUB_EPI16 _mm_subs_epi16
 #if FDCT32x32_HIGH_PRECISION
-static INLINE __m128i k_madd_epi32(__m128i a, __m128i b) {
-  __m128i buf0, buf1;
-  buf0 = _mm_mul_epu32(a, b);
-  a = _mm_srli_epi64(a, 32);
-  b = _mm_srli_epi64(b, 32);
-  buf1 = _mm_mul_epu32(a, b);
-  return _mm_add_epi64(buf0, buf1);
+void vp9_fdct32x32_rows_c(const int16_t *intermediate, tran_low_t *out) {
+    int i, j;
+    for (i = 0; i < 32; ++i) {
+      tran_high_t temp_in[32], temp_out[32];
+      for (j = 0; j < 32; ++j)
+        temp_in[j] = intermediate[j * 32 + i];
+      vp9_fdct32(temp_in, temp_out, 0);
+      for (j = 0; j < 32; ++j)
+        out[j + i * 32] = (temp_out[j] + 1 + (temp_out[j] < 0)) >> 2;
+    }
 }
+  #define HIGH_FDCT32x32_2D_C vp9_highbd_fdct32x32_c
+  #define HIGH_FDCT32x32_2D_ROWS_C vp9_fdct32x32_rows_c
+#else
+void vp9_fdct32x32_rd_rows_c(const int16_t *intermediate, tran_low_t *out) {
+    int i, j;
+    for (i = 0; i < 32; ++i) {
+      tran_high_t temp_in[32], temp_out[32];
+      for (j = 0; j < 32; ++j)
+        temp_in[j] = intermediate[j * 32 + i];
+      vp9_fdct32(temp_in, temp_out, 1);
+      for (j = 0; j < 32; ++j)
+        out[j + i * 32] = temp_out[j];
+    }
+}
+  #define HIGH_FDCT32x32_2D_C vp9_highbd_fdct32x32_rd_c
+  #define HIGH_FDCT32x32_2D_ROWS_C vp9_fdct32x32_rd_rows_c
+#endif  // FDCT32x32_HIGH_PRECISION
+#else
+#define ADD_EPI16 _mm_add_epi16
+#define SUB_EPI16 _mm_sub_epi16
+#endif  // DCT_HIGH_BIT_DEPTH
 
-static INLINE __m128i k_packs_epi64(__m128i a, __m128i b) {
-  __m128i buf0 = _mm_shuffle_epi32(a, _MM_SHUFFLE(0, 0, 2, 0));
-  __m128i buf1 = _mm_shuffle_epi32(b, _MM_SHUFFLE(0, 0, 2, 0));
-  return _mm_unpacklo_epi64(buf0, buf1);
-}
-#endif
 
 void FDCT32x32_2D(const int16_t *input,
-                  int16_t *output_org, int stride) {
+                  tran_low_t *output_org, int stride) {
   // Calculate pre-multiplied strides
   const int str1 = stride;
   const int str2 = 2 * stride;
@@ -41,7 +64,7 @@ void FDCT32x32_2D(const int16_t *input,
   //    When we use them, in one case, they are all the same. In all others
   //    it's a pair of them that we need to repeat four times. This is done
   //    by constructing the 32 bit constant corresponding to that pair.
-  const __m128i k__cospi_p16_p16 = _mm_set1_epi16(+cospi_16_64);
+  const __m128i k__cospi_p16_p16 = _mm_set1_epi16((int16_t)cospi_16_64);
   const __m128i k__cospi_p16_m16 = pair_set_epi16(+cospi_16_64, -cospi_16_64);
   const __m128i k__cospi_m08_p24 = pair_set_epi16(-cospi_8_64,   cospi_24_64);
   const __m128i k__cospi_m24_m08 = pair_set_epi16(-cospi_24_64, -cospi_8_64);
@@ -81,6 +104,9 @@ void FDCT32x32_2D(const int16_t *input,
   const __m128i kOne  = _mm_set1_epi16(1);
   // Do the two transform/transpose passes
   int pass;
+#if DCT_HIGH_BIT_DEPTH
+  int overflow;
+#endif
   for (pass = 0; pass < 2; ++pass) {
     // We process eight columns (transposed rows in second pass) at a time.
     int column_start;
@@ -234,14 +260,23 @@ void FDCT32x32_2D(const int16_t *input,
           __m128i in29  = _mm_loadu_si128((const __m128i *)(in + 29 * 32));
           __m128i in30  = _mm_loadu_si128((const __m128i *)(in + 30 * 32));
           __m128i in31  = _mm_loadu_si128((const __m128i *)(in + 31 * 32));
-          step1[ 0] = _mm_add_epi16(in00, in31);
-          step1[ 1] = _mm_add_epi16(in01, in30);
-          step1[ 2] = _mm_add_epi16(in02, in29);
-          step1[ 3] = _mm_add_epi16(in03, in28);
-          step1[28] = _mm_sub_epi16(in03, in28);
-          step1[29] = _mm_sub_epi16(in02, in29);
-          step1[30] = _mm_sub_epi16(in01, in30);
-          step1[31] = _mm_sub_epi16(in00, in31);
+          step1[0] = ADD_EPI16(in00, in31);
+          step1[1] = ADD_EPI16(in01, in30);
+          step1[2] = ADD_EPI16(in02, in29);
+          step1[3] = ADD_EPI16(in03, in28);
+          step1[28] = SUB_EPI16(in03, in28);
+          step1[29] = SUB_EPI16(in02, in29);
+          step1[30] = SUB_EPI16(in01, in30);
+          step1[31] = SUB_EPI16(in00, in31);
+#if DCT_HIGH_BIT_DEPTH
+          overflow = check_epi16_overflow_x8(&step1[0], &step1[1], &step1[2],
+                                             &step1[3], &step1[28], &step1[29],
+                                             &step1[30], &step1[31]);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
         }
         {
           __m128i in04  = _mm_loadu_si128((const __m128i *)(in +  4 * 32));
@@ -252,14 +287,23 @@ void FDCT32x32_2D(const int16_t *input,
           __m128i in25  = _mm_loadu_si128((const __m128i *)(in + 25 * 32));
           __m128i in26  = _mm_loadu_si128((const __m128i *)(in + 26 * 32));
           __m128i in27  = _mm_loadu_si128((const __m128i *)(in + 27 * 32));
-          step1[ 4] = _mm_add_epi16(in04, in27);
-          step1[ 5] = _mm_add_epi16(in05, in26);
-          step1[ 6] = _mm_add_epi16(in06, in25);
-          step1[ 7] = _mm_add_epi16(in07, in24);
-          step1[24] = _mm_sub_epi16(in07, in24);
-          step1[25] = _mm_sub_epi16(in06, in25);
-          step1[26] = _mm_sub_epi16(in05, in26);
-          step1[27] = _mm_sub_epi16(in04, in27);
+          step1[4] = ADD_EPI16(in04, in27);
+          step1[5] = ADD_EPI16(in05, in26);
+          step1[6] = ADD_EPI16(in06, in25);
+          step1[7] = ADD_EPI16(in07, in24);
+          step1[24] = SUB_EPI16(in07, in24);
+          step1[25] = SUB_EPI16(in06, in25);
+          step1[26] = SUB_EPI16(in05, in26);
+          step1[27] = SUB_EPI16(in04, in27);
+#if DCT_HIGH_BIT_DEPTH
+          overflow = check_epi16_overflow_x8(&step1[4], &step1[5], &step1[6],
+                                             &step1[7], &step1[24], &step1[25],
+                                             &step1[26], &step1[27]);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
         }
         {
           __m128i in08  = _mm_loadu_si128((const __m128i *)(in +  8 * 32));
@@ -270,14 +314,23 @@ void FDCT32x32_2D(const int16_t *input,
           __m128i in21  = _mm_loadu_si128((const __m128i *)(in + 21 * 32));
           __m128i in22  = _mm_loadu_si128((const __m128i *)(in + 22 * 32));
           __m128i in23  = _mm_loadu_si128((const __m128i *)(in + 23 * 32));
-          step1[ 8] = _mm_add_epi16(in08, in23);
-          step1[ 9] = _mm_add_epi16(in09, in22);
-          step1[10] = _mm_add_epi16(in10, in21);
-          step1[11] = _mm_add_epi16(in11, in20);
-          step1[20] = _mm_sub_epi16(in11, in20);
-          step1[21] = _mm_sub_epi16(in10, in21);
-          step1[22] = _mm_sub_epi16(in09, in22);
-          step1[23] = _mm_sub_epi16(in08, in23);
+          step1[8] = ADD_EPI16(in08, in23);
+          step1[9] = ADD_EPI16(in09, in22);
+          step1[10] = ADD_EPI16(in10, in21);
+          step1[11] = ADD_EPI16(in11, in20);
+          step1[20] = SUB_EPI16(in11, in20);
+          step1[21] = SUB_EPI16(in10, in21);
+          step1[22] = SUB_EPI16(in09, in22);
+          step1[23] = SUB_EPI16(in08, in23);
+#if DCT_HIGH_BIT_DEPTH
+          overflow = check_epi16_overflow_x8(&step1[8], &step1[9], &step1[10],
+                                             &step1[11], &step1[20], &step1[21],
+                                             &step1[22], &step1[23]);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
         }
         {
           __m128i in12  = _mm_loadu_si128((const __m128i *)(in + 12 * 32));
@@ -288,34 +341,57 @@ void FDCT32x32_2D(const int16_t *input,
           __m128i in17  = _mm_loadu_si128((const __m128i *)(in + 17 * 32));
           __m128i in18  = _mm_loadu_si128((const __m128i *)(in + 18 * 32));
           __m128i in19  = _mm_loadu_si128((const __m128i *)(in + 19 * 32));
-          step1[12] = _mm_add_epi16(in12, in19);
-          step1[13] = _mm_add_epi16(in13, in18);
-          step1[14] = _mm_add_epi16(in14, in17);
-          step1[15] = _mm_add_epi16(in15, in16);
-          step1[16] = _mm_sub_epi16(in15, in16);
-          step1[17] = _mm_sub_epi16(in14, in17);
-          step1[18] = _mm_sub_epi16(in13, in18);
-          step1[19] = _mm_sub_epi16(in12, in19);
+          step1[12] = ADD_EPI16(in12, in19);
+          step1[13] = ADD_EPI16(in13, in18);
+          step1[14] = ADD_EPI16(in14, in17);
+          step1[15] = ADD_EPI16(in15, in16);
+          step1[16] = SUB_EPI16(in15, in16);
+          step1[17] = SUB_EPI16(in14, in17);
+          step1[18] = SUB_EPI16(in13, in18);
+          step1[19] = SUB_EPI16(in12, in19);
+#if DCT_HIGH_BIT_DEPTH
+          overflow = check_epi16_overflow_x8(&step1[12], &step1[13], &step1[14],
+                                             &step1[15], &step1[16], &step1[17],
+                                             &step1[18], &step1[19]);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
         }
       }
       // Stage 2
       {
-        step2[ 0] = _mm_add_epi16(step1[0], step1[15]);
-        step2[ 1] = _mm_add_epi16(step1[1], step1[14]);
-        step2[ 2] = _mm_add_epi16(step1[2], step1[13]);
-        step2[ 3] = _mm_add_epi16(step1[3], step1[12]);
-        step2[ 4] = _mm_add_epi16(step1[4], step1[11]);
-        step2[ 5] = _mm_add_epi16(step1[5], step1[10]);
-        step2[ 6] = _mm_add_epi16(step1[6], step1[ 9]);
-        step2[ 7] = _mm_add_epi16(step1[7], step1[ 8]);
-        step2[ 8] = _mm_sub_epi16(step1[7], step1[ 8]);
-        step2[ 9] = _mm_sub_epi16(step1[6], step1[ 9]);
-        step2[10] = _mm_sub_epi16(step1[5], step1[10]);
-        step2[11] = _mm_sub_epi16(step1[4], step1[11]);
-        step2[12] = _mm_sub_epi16(step1[3], step1[12]);
-        step2[13] = _mm_sub_epi16(step1[2], step1[13]);
-        step2[14] = _mm_sub_epi16(step1[1], step1[14]);
-        step2[15] = _mm_sub_epi16(step1[0], step1[15]);
+        step2[0] = ADD_EPI16(step1[0], step1[15]);
+        step2[1] = ADD_EPI16(step1[1], step1[14]);
+        step2[2] = ADD_EPI16(step1[2], step1[13]);
+        step2[3] = ADD_EPI16(step1[3], step1[12]);
+        step2[4] = ADD_EPI16(step1[4], step1[11]);
+        step2[5] = ADD_EPI16(step1[5], step1[10]);
+        step2[6] = ADD_EPI16(step1[6], step1[ 9]);
+        step2[7] = ADD_EPI16(step1[7], step1[ 8]);
+        step2[8] = SUB_EPI16(step1[7], step1[ 8]);
+        step2[9] = SUB_EPI16(step1[6], step1[ 9]);
+        step2[10] = SUB_EPI16(step1[5], step1[10]);
+        step2[11] = SUB_EPI16(step1[4], step1[11]);
+        step2[12] = SUB_EPI16(step1[3], step1[12]);
+        step2[13] = SUB_EPI16(step1[2], step1[13]);
+        step2[14] = SUB_EPI16(step1[1], step1[14]);
+        step2[15] = SUB_EPI16(step1[0], step1[15]);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x16(
+            &step2[0], &step2[1], &step2[2], &step2[3],
+            &step2[4], &step2[5], &step2[6], &step2[7],
+            &step2[8], &step2[9], &step2[10], &step2[11],
+            &step2[12], &step2[13], &step2[14], &step2[15]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       {
         const __m128i s2_20_0 = _mm_unpacklo_epi16(step1[27], step1[20]);
@@ -384,6 +460,18 @@ void FDCT32x32_2D(const int16_t *input,
         step2[25] = _mm_packs_epi32(s2_25_6, s2_25_7);
         step2[26] = _mm_packs_epi32(s2_26_6, s2_26_7);
         step2[27] = _mm_packs_epi32(s2_27_6, s2_27_7);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x8(&step2[20], &step2[21], &step2[22],
+                                           &step2[23], &step2[24], &step2[25],
+                                           &step2[26], &step2[27]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
 
 #if !FDCT32x32_HIGH_PRECISION
@@ -423,49 +511,63 @@ void FDCT32x32_2D(const int16_t *input,
         __m128i s3_30_0 = _mm_cmplt_epi16(step1[30], kZero);
         __m128i s3_31_0 = _mm_cmplt_epi16(step1[31], kZero);
 
-        step2[ 0] = _mm_sub_epi16(step2[ 0], s3_00_0);
-        step2[ 1] = _mm_sub_epi16(step2[ 1], s3_01_0);
-        step2[ 2] = _mm_sub_epi16(step2[ 2], s3_02_0);
-        step2[ 3] = _mm_sub_epi16(step2[ 3], s3_03_0);
-        step2[ 4] = _mm_sub_epi16(step2[ 4], s3_04_0);
-        step2[ 5] = _mm_sub_epi16(step2[ 5], s3_05_0);
-        step2[ 6] = _mm_sub_epi16(step2[ 6], s3_06_0);
-        step2[ 7] = _mm_sub_epi16(step2[ 7], s3_07_0);
-        step2[ 8] = _mm_sub_epi16(step2[ 8], s2_08_0);
-        step2[ 9] = _mm_sub_epi16(step2[ 9], s2_09_0);
-        step2[10] = _mm_sub_epi16(step2[10], s3_10_0);
-        step2[11] = _mm_sub_epi16(step2[11], s3_11_0);
-        step2[12] = _mm_sub_epi16(step2[12], s3_12_0);
-        step2[13] = _mm_sub_epi16(step2[13], s3_13_0);
-        step2[14] = _mm_sub_epi16(step2[14], s2_14_0);
-        step2[15] = _mm_sub_epi16(step2[15], s2_15_0);
-        step1[16] = _mm_sub_epi16(step1[16], s3_16_0);
-        step1[17] = _mm_sub_epi16(step1[17], s3_17_0);
-        step1[18] = _mm_sub_epi16(step1[18], s3_18_0);
-        step1[19] = _mm_sub_epi16(step1[19], s3_19_0);
-        step2[20] = _mm_sub_epi16(step2[20], s3_20_0);
-        step2[21] = _mm_sub_epi16(step2[21], s3_21_0);
-        step2[22] = _mm_sub_epi16(step2[22], s3_22_0);
-        step2[23] = _mm_sub_epi16(step2[23], s3_23_0);
-        step2[24] = _mm_sub_epi16(step2[24], s3_24_0);
-        step2[25] = _mm_sub_epi16(step2[25], s3_25_0);
-        step2[26] = _mm_sub_epi16(step2[26], s3_26_0);
-        step2[27] = _mm_sub_epi16(step2[27], s3_27_0);
-        step1[28] = _mm_sub_epi16(step1[28], s3_28_0);
-        step1[29] = _mm_sub_epi16(step1[29], s3_29_0);
-        step1[30] = _mm_sub_epi16(step1[30], s3_30_0);
-        step1[31] = _mm_sub_epi16(step1[31], s3_31_0);
-
-        step2[ 0] = _mm_add_epi16(step2[ 0], kOne);
-        step2[ 1] = _mm_add_epi16(step2[ 1], kOne);
-        step2[ 2] = _mm_add_epi16(step2[ 2], kOne);
-        step2[ 3] = _mm_add_epi16(step2[ 3], kOne);
-        step2[ 4] = _mm_add_epi16(step2[ 4], kOne);
-        step2[ 5] = _mm_add_epi16(step2[ 5], kOne);
-        step2[ 6] = _mm_add_epi16(step2[ 6], kOne);
-        step2[ 7] = _mm_add_epi16(step2[ 7], kOne);
-        step2[ 8] = _mm_add_epi16(step2[ 8], kOne);
-        step2[ 9] = _mm_add_epi16(step2[ 9], kOne);
+        step2[0] = SUB_EPI16(step2[ 0], s3_00_0);
+        step2[1] = SUB_EPI16(step2[ 1], s3_01_0);
+        step2[2] = SUB_EPI16(step2[ 2], s3_02_0);
+        step2[3] = SUB_EPI16(step2[ 3], s3_03_0);
+        step2[4] = SUB_EPI16(step2[ 4], s3_04_0);
+        step2[5] = SUB_EPI16(step2[ 5], s3_05_0);
+        step2[6] = SUB_EPI16(step2[ 6], s3_06_0);
+        step2[7] = SUB_EPI16(step2[ 7], s3_07_0);
+        step2[8] = SUB_EPI16(step2[ 8], s2_08_0);
+        step2[9] = SUB_EPI16(step2[ 9], s2_09_0);
+        step2[10] = SUB_EPI16(step2[10], s3_10_0);
+        step2[11] = SUB_EPI16(step2[11], s3_11_0);
+        step2[12] = SUB_EPI16(step2[12], s3_12_0);
+        step2[13] = SUB_EPI16(step2[13], s3_13_0);
+        step2[14] = SUB_EPI16(step2[14], s2_14_0);
+        step2[15] = SUB_EPI16(step2[15], s2_15_0);
+        step1[16] = SUB_EPI16(step1[16], s3_16_0);
+        step1[17] = SUB_EPI16(step1[17], s3_17_0);
+        step1[18] = SUB_EPI16(step1[18], s3_18_0);
+        step1[19] = SUB_EPI16(step1[19], s3_19_0);
+        step2[20] = SUB_EPI16(step2[20], s3_20_0);
+        step2[21] = SUB_EPI16(step2[21], s3_21_0);
+        step2[22] = SUB_EPI16(step2[22], s3_22_0);
+        step2[23] = SUB_EPI16(step2[23], s3_23_0);
+        step2[24] = SUB_EPI16(step2[24], s3_24_0);
+        step2[25] = SUB_EPI16(step2[25], s3_25_0);
+        step2[26] = SUB_EPI16(step2[26], s3_26_0);
+        step2[27] = SUB_EPI16(step2[27], s3_27_0);
+        step1[28] = SUB_EPI16(step1[28], s3_28_0);
+        step1[29] = SUB_EPI16(step1[29], s3_29_0);
+        step1[30] = SUB_EPI16(step1[30], s3_30_0);
+        step1[31] = SUB_EPI16(step1[31], s3_31_0);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x32(
+            &step2[0], &step2[1], &step2[2], &step2[3],
+            &step2[4], &step2[5], &step2[6], &step2[7],
+            &step2[8], &step2[9], &step2[10], &step2[11],
+            &step2[12], &step2[13], &step2[14], &step2[15],
+            &step1[16], &step1[17], &step1[18], &step1[19],
+            &step2[20], &step2[21], &step2[22], &step2[23],
+            &step2[24], &step2[25], &step2[26], &step2[27],
+            &step1[28], &step1[29], &step1[30], &step1[31]);
+        if (overflow) {
+          HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
+        step2[0] = _mm_add_epi16(step2[ 0], kOne);
+        step2[1] = _mm_add_epi16(step2[ 1], kOne);
+        step2[2] = _mm_add_epi16(step2[ 2], kOne);
+        step2[3] = _mm_add_epi16(step2[ 3], kOne);
+        step2[4] = _mm_add_epi16(step2[ 4], kOne);
+        step2[5] = _mm_add_epi16(step2[ 5], kOne);
+        step2[6] = _mm_add_epi16(step2[ 6], kOne);
+        step2[7] = _mm_add_epi16(step2[ 7], kOne);
+        step2[8] = _mm_add_epi16(step2[ 8], kOne);
+        step2[9] = _mm_add_epi16(step2[ 9], kOne);
         step2[10] = _mm_add_epi16(step2[10], kOne);
         step2[11] = _mm_add_epi16(step2[11], kOne);
         step2[12] = _mm_add_epi16(step2[12], kOne);
@@ -489,16 +591,16 @@ void FDCT32x32_2D(const int16_t *input,
         step1[30] = _mm_add_epi16(step1[30], kOne);
         step1[31] = _mm_add_epi16(step1[31], kOne);
 
-        step2[ 0] = _mm_srai_epi16(step2[ 0], 2);
-        step2[ 1] = _mm_srai_epi16(step2[ 1], 2);
-        step2[ 2] = _mm_srai_epi16(step2[ 2], 2);
-        step2[ 3] = _mm_srai_epi16(step2[ 3], 2);
-        step2[ 4] = _mm_srai_epi16(step2[ 4], 2);
-        step2[ 5] = _mm_srai_epi16(step2[ 5], 2);
-        step2[ 6] = _mm_srai_epi16(step2[ 6], 2);
-        step2[ 7] = _mm_srai_epi16(step2[ 7], 2);
-        step2[ 8] = _mm_srai_epi16(step2[ 8], 2);
-        step2[ 9] = _mm_srai_epi16(step2[ 9], 2);
+        step2[0] = _mm_srai_epi16(step2[ 0], 2);
+        step2[1] = _mm_srai_epi16(step2[ 1], 2);
+        step2[2] = _mm_srai_epi16(step2[ 2], 2);
+        step2[3] = _mm_srai_epi16(step2[ 3], 2);
+        step2[4] = _mm_srai_epi16(step2[ 4], 2);
+        step2[5] = _mm_srai_epi16(step2[ 5], 2);
+        step2[6] = _mm_srai_epi16(step2[ 6], 2);
+        step2[7] = _mm_srai_epi16(step2[ 7], 2);
+        step2[8] = _mm_srai_epi16(step2[ 8], 2);
+        step2[9] = _mm_srai_epi16(step2[ 9], 2);
         step2[10] = _mm_srai_epi16(step2[10], 2);
         step2[11] = _mm_srai_epi16(step2[11], 2);
         step2[12] = _mm_srai_epi16(step2[12], 2);
@@ -522,21 +624,33 @@ void FDCT32x32_2D(const int16_t *input,
         step1[30] = _mm_srai_epi16(step1[30], 2);
         step1[31] = _mm_srai_epi16(step1[31], 2);
       }
-#endif
+#endif  // !FDCT32x32_HIGH_PRECISION
 
 #if FDCT32x32_HIGH_PRECISION
       if (pass == 0) {
 #endif
       // Stage 3
       {
-        step3[0] = _mm_add_epi16(step2[(8 - 1)], step2[0]);
-        step3[1] = _mm_add_epi16(step2[(8 - 2)], step2[1]);
-        step3[2] = _mm_add_epi16(step2[(8 - 3)], step2[2]);
-        step3[3] = _mm_add_epi16(step2[(8 - 4)], step2[3]);
-        step3[4] = _mm_sub_epi16(step2[(8 - 5)], step2[4]);
-        step3[5] = _mm_sub_epi16(step2[(8 - 6)], step2[5]);
-        step3[6] = _mm_sub_epi16(step2[(8 - 7)], step2[6]);
-        step3[7] = _mm_sub_epi16(step2[(8 - 8)], step2[7]);
+        step3[0] = ADD_EPI16(step2[(8 - 1)], step2[0]);
+        step3[1] = ADD_EPI16(step2[(8 - 2)], step2[1]);
+        step3[2] = ADD_EPI16(step2[(8 - 3)], step2[2]);
+        step3[3] = ADD_EPI16(step2[(8 - 4)], step2[3]);
+        step3[4] = SUB_EPI16(step2[(8 - 5)], step2[4]);
+        step3[5] = SUB_EPI16(step2[(8 - 6)], step2[5]);
+        step3[6] = SUB_EPI16(step2[(8 - 7)], step2[6]);
+        step3[7] = SUB_EPI16(step2[(8 - 8)], step2[7]);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x8(&step3[0], &step3[1], &step3[2],
+                                           &step3[3], &step3[4], &step3[5],
+                                           &step3[6], &step3[7]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       {
         const __m128i s3_10_0 = _mm_unpacklo_epi16(step2[13], step2[10]);
@@ -573,40 +687,79 @@ void FDCT32x32_2D(const int16_t *input,
         step3[11] = _mm_packs_epi32(s3_11_6, s3_11_7);
         step3[12] = _mm_packs_epi32(s3_12_6, s3_12_7);
         step3[13] = _mm_packs_epi32(s3_13_6, s3_13_7);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x4(&step3[10], &step3[11],
+                                           &step3[12], &step3[13]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       {
-        step3[16] = _mm_add_epi16(step2[23], step1[16]);
-        step3[17] = _mm_add_epi16(step2[22], step1[17]);
-        step3[18] = _mm_add_epi16(step2[21], step1[18]);
-        step3[19] = _mm_add_epi16(step2[20], step1[19]);
-        step3[20] = _mm_sub_epi16(step1[19], step2[20]);
-        step3[21] = _mm_sub_epi16(step1[18], step2[21]);
-        step3[22] = _mm_sub_epi16(step1[17], step2[22]);
-        step3[23] = _mm_sub_epi16(step1[16], step2[23]);
-        step3[24] = _mm_sub_epi16(step1[31], step2[24]);
-        step3[25] = _mm_sub_epi16(step1[30], step2[25]);
-        step3[26] = _mm_sub_epi16(step1[29], step2[26]);
-        step3[27] = _mm_sub_epi16(step1[28], step2[27]);
-        step3[28] = _mm_add_epi16(step2[27], step1[28]);
-        step3[29] = _mm_add_epi16(step2[26], step1[29]);
-        step3[30] = _mm_add_epi16(step2[25], step1[30]);
-        step3[31] = _mm_add_epi16(step2[24], step1[31]);
+        step3[16] = ADD_EPI16(step2[23], step1[16]);
+        step3[17] = ADD_EPI16(step2[22], step1[17]);
+        step3[18] = ADD_EPI16(step2[21], step1[18]);
+        step3[19] = ADD_EPI16(step2[20], step1[19]);
+        step3[20] = SUB_EPI16(step1[19], step2[20]);
+        step3[21] = SUB_EPI16(step1[18], step2[21]);
+        step3[22] = SUB_EPI16(step1[17], step2[22]);
+        step3[23] = SUB_EPI16(step1[16], step2[23]);
+        step3[24] = SUB_EPI16(step1[31], step2[24]);
+        step3[25] = SUB_EPI16(step1[30], step2[25]);
+        step3[26] = SUB_EPI16(step1[29], step2[26]);
+        step3[27] = SUB_EPI16(step1[28], step2[27]);
+        step3[28] = ADD_EPI16(step2[27], step1[28]);
+        step3[29] = ADD_EPI16(step2[26], step1[29]);
+        step3[30] = ADD_EPI16(step2[25], step1[30]);
+        step3[31] = ADD_EPI16(step2[24], step1[31]);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x16(
+            &step3[16], &step3[17], &step3[18], &step3[19],
+            &step3[20], &step3[21], &step3[22], &step3[23],
+            &step3[24], &step3[25], &step3[26], &step3[27],
+            &step3[28], &step3[29], &step3[30], &step3[31]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
 
       // Stage 4
       {
-        step1[ 0] = _mm_add_epi16(step3[ 3], step3[ 0]);
-        step1[ 1] = _mm_add_epi16(step3[ 2], step3[ 1]);
-        step1[ 2] = _mm_sub_epi16(step3[ 1], step3[ 2]);
-        step1[ 3] = _mm_sub_epi16(step3[ 0], step3[ 3]);
-        step1[ 8] = _mm_add_epi16(step3[11], step2[ 8]);
-        step1[ 9] = _mm_add_epi16(step3[10], step2[ 9]);
-        step1[10] = _mm_sub_epi16(step2[ 9], step3[10]);
-        step1[11] = _mm_sub_epi16(step2[ 8], step3[11]);
-        step1[12] = _mm_sub_epi16(step2[15], step3[12]);
-        step1[13] = _mm_sub_epi16(step2[14], step3[13]);
-        step1[14] = _mm_add_epi16(step3[13], step2[14]);
-        step1[15] = _mm_add_epi16(step3[12], step2[15]);
+        step1[0] = ADD_EPI16(step3[ 3], step3[ 0]);
+        step1[1] = ADD_EPI16(step3[ 2], step3[ 1]);
+        step1[2] = SUB_EPI16(step3[ 1], step3[ 2]);
+        step1[3] = SUB_EPI16(step3[ 0], step3[ 3]);
+        step1[8] = ADD_EPI16(step3[11], step2[ 8]);
+        step1[9] = ADD_EPI16(step3[10], step2[ 9]);
+        step1[10] = SUB_EPI16(step2[ 9], step3[10]);
+        step1[11] = SUB_EPI16(step2[ 8], step3[11]);
+        step1[12] = SUB_EPI16(step2[15], step3[12]);
+        step1[13] = SUB_EPI16(step2[14], step3[13]);
+        step1[14] = ADD_EPI16(step3[13], step2[14]);
+        step1[15] = ADD_EPI16(step3[12], step2[15]);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x16(
+            &step1[0], &step1[1], &step1[2], &step1[3],
+            &step1[4], &step1[5], &step1[6], &step1[7],
+            &step1[8], &step1[9], &step1[10], &step1[11],
+            &step1[12], &step1[13], &step1[14], &step1[15]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       {
         const __m128i s1_05_0 = _mm_unpacklo_epi16(step3[6], step3[5]);
@@ -627,6 +780,16 @@ void FDCT32x32_2D(const int16_t *input,
         // Combine
         step1[5] = _mm_packs_epi32(s1_05_6, s1_05_7);
         step1[6] = _mm_packs_epi32(s1_06_6, s1_06_7);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x2(&step1[5], &step1[6]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       {
         const __m128i s1_18_0 = _mm_unpacklo_epi16(step3[18], step3[29]);
@@ -695,13 +858,36 @@ void FDCT32x32_2D(const int16_t *input,
         step1[27] = _mm_packs_epi32(s1_27_6, s1_27_7);
         step1[28] = _mm_packs_epi32(s1_28_6, s1_28_7);
         step1[29] = _mm_packs_epi32(s1_29_6, s1_29_7);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x8(&step1[18], &step1[19], &step1[20],
+                                           &step1[21], &step1[26], &step1[27],
+                                           &step1[28], &step1[29]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       // Stage 5
       {
-        step2[4] = _mm_add_epi16(step1[5], step3[4]);
-        step2[5] = _mm_sub_epi16(step3[4], step1[5]);
-        step2[6] = _mm_sub_epi16(step3[7], step1[6]);
-        step2[7] = _mm_add_epi16(step1[6], step3[7]);
+        step2[4] = ADD_EPI16(step1[5], step3[4]);
+        step2[5] = SUB_EPI16(step3[4], step1[5]);
+        step2[6] = SUB_EPI16(step3[7], step1[6]);
+        step2[7] = ADD_EPI16(step1[6], step3[7]);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x4(&step2[4], &step2[5],
+                                           &step2[6], &step2[7]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       {
         const __m128i out_00_0 = _mm_unpacklo_epi16(step1[0], step1[1]);
@@ -738,6 +924,17 @@ void FDCT32x32_2D(const int16_t *input,
         out[16] = _mm_packs_epi32(out_16_6, out_16_7);
         out[ 8] = _mm_packs_epi32(out_08_6, out_08_7);
         out[24] = _mm_packs_epi32(out_24_6, out_24_7);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x4(&out[0], &out[16],
+                                           &out[8], &out[24]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       {
         const __m128i s2_09_0 = _mm_unpacklo_epi16(step1[ 9], step1[14]);
@@ -774,24 +971,49 @@ void FDCT32x32_2D(const int16_t *input,
         step2[10] = _mm_packs_epi32(s2_10_6, s2_10_7);
         step2[13] = _mm_packs_epi32(s2_13_6, s2_13_7);
         step2[14] = _mm_packs_epi32(s2_14_6, s2_14_7);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x4(&step2[9], &step2[10],
+                                           &step2[13], &step2[14]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       {
-        step2[16] = _mm_add_epi16(step1[19], step3[16]);
-        step2[17] = _mm_add_epi16(step1[18], step3[17]);
-        step2[18] = _mm_sub_epi16(step3[17], step1[18]);
-        step2[19] = _mm_sub_epi16(step3[16], step1[19]);
-        step2[20] = _mm_sub_epi16(step3[23], step1[20]);
-        step2[21] = _mm_sub_epi16(step3[22], step1[21]);
-        step2[22] = _mm_add_epi16(step1[21], step3[22]);
-        step2[23] = _mm_add_epi16(step1[20], step3[23]);
-        step2[24] = _mm_add_epi16(step1[27], step3[24]);
-        step2[25] = _mm_add_epi16(step1[26], step3[25]);
-        step2[26] = _mm_sub_epi16(step3[25], step1[26]);
-        step2[27] = _mm_sub_epi16(step3[24], step1[27]);
-        step2[28] = _mm_sub_epi16(step3[31], step1[28]);
-        step2[29] = _mm_sub_epi16(step3[30], step1[29]);
-        step2[30] = _mm_add_epi16(step1[29], step3[30]);
-        step2[31] = _mm_add_epi16(step1[28], step3[31]);
+        step2[16] = ADD_EPI16(step1[19], step3[16]);
+        step2[17] = ADD_EPI16(step1[18], step3[17]);
+        step2[18] = SUB_EPI16(step3[17], step1[18]);
+        step2[19] = SUB_EPI16(step3[16], step1[19]);
+        step2[20] = SUB_EPI16(step3[23], step1[20]);
+        step2[21] = SUB_EPI16(step3[22], step1[21]);
+        step2[22] = ADD_EPI16(step1[21], step3[22]);
+        step2[23] = ADD_EPI16(step1[20], step3[23]);
+        step2[24] = ADD_EPI16(step1[27], step3[24]);
+        step2[25] = ADD_EPI16(step1[26], step3[25]);
+        step2[26] = SUB_EPI16(step3[25], step1[26]);
+        step2[27] = SUB_EPI16(step3[24], step1[27]);
+        step2[28] = SUB_EPI16(step3[31], step1[28]);
+        step2[29] = SUB_EPI16(step3[30], step1[29]);
+        step2[30] = ADD_EPI16(step1[29], step3[30]);
+        step2[31] = ADD_EPI16(step1[28], step3[31]);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x16(
+            &step2[16], &step2[17], &step2[18], &step2[19],
+            &step2[20], &step2[21], &step2[22], &step2[23],
+            &step2[24], &step2[25], &step2[26], &step2[27],
+            &step2[28], &step2[29], &step2[30], &step2[31]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       // Stage 6
       {
@@ -829,20 +1051,43 @@ void FDCT32x32_2D(const int16_t *input,
         const __m128i out_28_6 = _mm_srai_epi32(out_28_4, DCT_CONST_BITS);
         const __m128i out_28_7 = _mm_srai_epi32(out_28_5, DCT_CONST_BITS);
         // Combine
-        out[ 4] = _mm_packs_epi32(out_04_6, out_04_7);
+        out[4] = _mm_packs_epi32(out_04_6, out_04_7);
         out[20] = _mm_packs_epi32(out_20_6, out_20_7);
         out[12] = _mm_packs_epi32(out_12_6, out_12_7);
         out[28] = _mm_packs_epi32(out_28_6, out_28_7);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x4(&out[4], &out[20],
+                                           &out[12], &out[28]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       {
-        step3[ 8] = _mm_add_epi16(step2[ 9], step1[ 8]);
-        step3[ 9] = _mm_sub_epi16(step1[ 8], step2[ 9]);
-        step3[10] = _mm_sub_epi16(step1[11], step2[10]);
-        step3[11] = _mm_add_epi16(step2[10], step1[11]);
-        step3[12] = _mm_add_epi16(step2[13], step1[12]);
-        step3[13] = _mm_sub_epi16(step1[12], step2[13]);
-        step3[14] = _mm_sub_epi16(step1[15], step2[14]);
-        step3[15] = _mm_add_epi16(step2[14], step1[15]);
+        step3[8] = ADD_EPI16(step2[ 9], step1[ 8]);
+        step3[9] = SUB_EPI16(step1[ 8], step2[ 9]);
+        step3[10] = SUB_EPI16(step1[11], step2[10]);
+        step3[11] = ADD_EPI16(step2[10], step1[11]);
+        step3[12] = ADD_EPI16(step2[13], step1[12]);
+        step3[13] = SUB_EPI16(step1[12], step2[13]);
+        step3[14] = SUB_EPI16(step1[15], step2[14]);
+        step3[15] = ADD_EPI16(step2[14], step1[15]);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x8(&step3[8], &step3[9], &step3[10],
+                                           &step3[11], &step3[12], &step3[13],
+                                           &step3[14], &step3[15]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       {
         const __m128i s3_17_0 = _mm_unpacklo_epi16(step2[17], step2[30]);
@@ -912,6 +1157,18 @@ void FDCT32x32_2D(const int16_t *input,
         step3[26] = _mm_packs_epi32(s3_26_6, s3_26_7);
         step3[29] = _mm_packs_epi32(s3_29_6, s3_29_7);
         step3[30] = _mm_packs_epi32(s3_30_6, s3_30_7);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x8(&step3[17], &step3[18], &step3[21],
+                                           &step3[22], &step3[25], &step3[26],
+                                           &step3[29], &step3[30]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       // Stage 7
       {
@@ -981,24 +1238,50 @@ void FDCT32x32_2D(const int16_t *input,
         out[22] = _mm_packs_epi32(out_22_6, out_22_7);
         out[14] = _mm_packs_epi32(out_14_6, out_14_7);
         out[30] = _mm_packs_epi32(out_30_6, out_30_7);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x8(&out[2], &out[18], &out[10],
+                                           &out[26], &out[6], &out[22],
+                                           &out[14], &out[30]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       {
-        step1[16] = _mm_add_epi16(step3[17], step2[16]);
-        step1[17] = _mm_sub_epi16(step2[16], step3[17]);
-        step1[18] = _mm_sub_epi16(step2[19], step3[18]);
-        step1[19] = _mm_add_epi16(step3[18], step2[19]);
-        step1[20] = _mm_add_epi16(step3[21], step2[20]);
-        step1[21] = _mm_sub_epi16(step2[20], step3[21]);
-        step1[22] = _mm_sub_epi16(step2[23], step3[22]);
-        step1[23] = _mm_add_epi16(step3[22], step2[23]);
-        step1[24] = _mm_add_epi16(step3[25], step2[24]);
-        step1[25] = _mm_sub_epi16(step2[24], step3[25]);
-        step1[26] = _mm_sub_epi16(step2[27], step3[26]);
-        step1[27] = _mm_add_epi16(step3[26], step2[27]);
-        step1[28] = _mm_add_epi16(step3[29], step2[28]);
-        step1[29] = _mm_sub_epi16(step2[28], step3[29]);
-        step1[30] = _mm_sub_epi16(step2[31], step3[30]);
-        step1[31] = _mm_add_epi16(step3[30], step2[31]);
+        step1[16] = ADD_EPI16(step3[17], step2[16]);
+        step1[17] = SUB_EPI16(step2[16], step3[17]);
+        step1[18] = SUB_EPI16(step2[19], step3[18]);
+        step1[19] = ADD_EPI16(step3[18], step2[19]);
+        step1[20] = ADD_EPI16(step3[21], step2[20]);
+        step1[21] = SUB_EPI16(step2[20], step3[21]);
+        step1[22] = SUB_EPI16(step2[23], step3[22]);
+        step1[23] = ADD_EPI16(step3[22], step2[23]);
+        step1[24] = ADD_EPI16(step3[25], step2[24]);
+        step1[25] = SUB_EPI16(step2[24], step3[25]);
+        step1[26] = SUB_EPI16(step2[27], step3[26]);
+        step1[27] = ADD_EPI16(step3[26], step2[27]);
+        step1[28] = ADD_EPI16(step3[29], step2[28]);
+        step1[29] = SUB_EPI16(step2[28], step3[29]);
+        step1[30] = SUB_EPI16(step2[31], step3[30]);
+        step1[31] = ADD_EPI16(step3[30], step2[31]);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x16(
+            &step1[16], &step1[17], &step1[18], &step1[19],
+            &step1[20], &step1[21], &step1[22], &step1[23],
+            &step1[24], &step1[25], &step1[26], &step1[27],
+            &step1[28], &step1[29], &step1[30], &step1[31]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+             HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       // Final stage --- outputs indices are bit-reversed.
       {
@@ -1068,6 +1351,18 @@ void FDCT32x32_2D(const int16_t *input,
         out[23] = _mm_packs_epi32(out_23_6, out_23_7);
         out[15] = _mm_packs_epi32(out_15_6, out_15_7);
         out[31] = _mm_packs_epi32(out_31_6, out_31_7);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x8(&out[1], &out[17], &out[9],
+                                           &out[25], &out[7], &out[23],
+                                           &out[15], &out[31]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
       {
         const __m128i out_05_0 = _mm_unpacklo_epi16(step1[20], step1[27]);
@@ -1136,6 +1431,18 @@ void FDCT32x32_2D(const int16_t *input,
         out[19] = _mm_packs_epi32(out_19_6, out_19_7);
         out[11] = _mm_packs_epi32(out_11_6, out_11_7);
         out[27] = _mm_packs_epi32(out_27_6, out_27_7);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = check_epi16_overflow_x8(&out[5], &out[21], &out[13],
+                                           &out[29], &out[3], &out[19],
+                                           &out[11], &out[27]);
+        if (overflow) {
+          if (pass == 0)
+            HIGH_FDCT32x32_2D_C(input, output_org, stride);
+          else
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
       }
 #if FDCT32x32_HIGH_PRECISION
       } else {
@@ -1387,15 +1694,22 @@ void FDCT32x32_2D(const int16_t *input,
 
         // TODO(jingning): manually inline k_madd_epi32_ to further hide
         // instruction latency.
-        v[ 0] = k_madd_epi32(u[0], k32_p16_m16);
-        v[ 1] = k_madd_epi32(u[1], k32_p16_m16);
-        v[ 2] = k_madd_epi32(u[2], k32_p16_m16);
-        v[ 3] = k_madd_epi32(u[3], k32_p16_m16);
-        v[ 4] = k_madd_epi32(u[0], k32_p16_p16);
-        v[ 5] = k_madd_epi32(u[1], k32_p16_p16);
-        v[ 6] = k_madd_epi32(u[2], k32_p16_p16);
-        v[ 7] = k_madd_epi32(u[3], k32_p16_p16);
-
+        v[0] = k_madd_epi32(u[0], k32_p16_m16);
+        v[1] = k_madd_epi32(u[1], k32_p16_m16);
+        v[2] = k_madd_epi32(u[2], k32_p16_m16);
+        v[3] = k_madd_epi32(u[3], k32_p16_m16);
+        v[4] = k_madd_epi32(u[0], k32_p16_p16);
+        v[5] = k_madd_epi32(u[1], k32_p16_p16);
+        v[6] = k_madd_epi32(u[2], k32_p16_p16);
+        v[7] = k_madd_epi32(u[3], k32_p16_p16);
+#if DCT_HIGH_BIT_DEPTH
+        overflow = k_check_epi32_overflow_8(&v[0], &v[1], &v[2], &v[3],
+                                            &v[4], &v[5], &v[6], &v[7], &kZero);
+        if (overflow) {
+          HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+          return;
+        }
+#endif  // DCT_HIGH_BIT_DEPTH
         u[0] = k_packs_epi64(v[0], v[1]);
         u[1] = k_packs_epi64(v[2], v[3]);
         u[2] = k_packs_epi64(v[4], v[5]);
@@ -1466,6 +1780,18 @@ void FDCT32x32_2D(const int16_t *input,
           v[30] = k_madd_epi32(u[ 2], k32_p24_p08);
           v[31] = k_madd_epi32(u[ 3], k32_p24_p08);
 
+#if DCT_HIGH_BIT_DEPTH
+          overflow = k_check_epi32_overflow_32(
+              &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &v[6], &v[7],
+              &v[8], &v[9], &v[10], &v[11], &v[12], &v[13], &v[14], &v[15],
+              &v[16], &v[17], &v[18], &v[19], &v[20], &v[21], &v[22], &v[23],
+              &v[24], &v[25], &v[26], &v[27], &v[28], &v[29], &v[30], &v[31],
+              &kZero);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
           u[ 0] = k_packs_epi64(v[ 0], v[ 1]);
           u[ 1] = k_packs_epi64(v[ 2], v[ 3]);
           u[ 2] = k_packs_epi64(v[ 4], v[ 5]);
@@ -1562,6 +1888,16 @@ void FDCT32x32_2D(const int16_t *input,
           v[14] = k_madd_epi32(u[6], k32_m08_p24);
           v[15] = k_madd_epi32(u[7], k32_m08_p24);
 
+#if DCT_HIGH_BIT_DEPTH
+          overflow = k_check_epi32_overflow_16(
+              &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &v[6], &v[7],
+              &v[8], &v[9], &v[10], &v[11], &v[12], &v[13], &v[14], &v[15],
+              &kZero);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
           u[0] = k_packs_epi64(v[0], v[1]);
           u[1] = k_packs_epi64(v[2], v[3]);
           u[2] = k_packs_epi64(v[4], v[5]);
@@ -1630,6 +1966,14 @@ void FDCT32x32_2D(const int16_t *input,
           out[16] = _mm_packs_epi32(u[2], u[3]);
           out[ 8] = _mm_packs_epi32(u[4], u[5]);
           out[24] = _mm_packs_epi32(u[6], u[7]);
+#if DCT_HIGH_BIT_DEPTH
+          overflow = check_epi16_overflow_x4(&out[0], &out[16],
+                                             &out[8], &out[24]);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
         }
         {
           const __m128i k32_m08_p24 = pair_set_epi32(-cospi_8_64, cospi_24_64);
@@ -1662,6 +2006,16 @@ void FDCT32x32_2D(const int16_t *input,
           v[14] = k_madd_epi32(u[2], k32_p24_p08);
           v[15] = k_madd_epi32(u[3], k32_p24_p08);
 
+#if DCT_HIGH_BIT_DEPTH
+          overflow = k_check_epi32_overflow_16(
+              &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &v[6], &v[7],
+              &v[8], &v[9], &v[10], &v[11], &v[12], &v[13], &v[14], &v[15],
+              &kZero);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
           u[0] = k_packs_epi64(v[0], v[1]);
           u[1] = k_packs_epi64(v[2], v[3]);
           u[2] = k_packs_epi64(v[4], v[5]);
@@ -1764,6 +2118,16 @@ void FDCT32x32_2D(const int16_t *input,
           v[14] = k_madd_epi32(u[14], k32_m04_p28);
           v[15] = k_madd_epi32(u[15], k32_m04_p28);
 
+#if DCT_HIGH_BIT_DEPTH
+          overflow = k_check_epi32_overflow_16(
+              &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &v[6], &v[7],
+              &v[8], &v[9], &v[10], &v[11], &v[12], &v[13], &v[14], &v[15],
+              &kZero);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
           u[0] = k_packs_epi64(v[0], v[1]);
           u[1] = k_packs_epi64(v[2], v[3]);
           u[2] = k_packs_epi64(v[4], v[5]);
@@ -1831,6 +2195,14 @@ void FDCT32x32_2D(const int16_t *input,
           out[20] = _mm_packs_epi32(u[2], u[3]);
           out[12] = _mm_packs_epi32(u[4], u[5]);
           out[28] = _mm_packs_epi32(u[6], u[7]);
+#if DCT_HIGH_BIT_DEPTH
+          overflow = check_epi16_overflow_x4(&out[4], &out[20],
+                                             &out[12], &out[28]);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
         }
         {
           lstep3[16] = _mm_add_epi32(lstep2[18], lstep1[16]);
@@ -1909,6 +2281,18 @@ void FDCT32x32_2D(const int16_t *input,
           v[30] = k_madd_epi32(u[ 2], k32_p28_p04);
           v[31] = k_madd_epi32(u[ 3], k32_p28_p04);
 
+#if DCT_HIGH_BIT_DEPTH
+          overflow = k_check_epi32_overflow_32(
+              &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &v[6], &v[7],
+              &v[8], &v[9], &v[10], &v[11], &v[12], &v[13], &v[14], &v[15],
+              &v[16], &v[17], &v[18], &v[19], &v[20], &v[21], &v[22], &v[23],
+              &v[24], &v[25], &v[26], &v[27], &v[28], &v[29], &v[30], &v[31],
+              &kZero);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
           u[ 0] = k_packs_epi64(v[ 0], v[ 1]);
           u[ 1] = k_packs_epi64(v[ 2], v[ 3]);
           u[ 2] = k_packs_epi64(v[ 4], v[ 5]);
@@ -2021,6 +2405,18 @@ void FDCT32x32_2D(const int16_t *input,
           v[30] = k_madd_epi32(u[ 2], k32_m02_p30);
           v[31] = k_madd_epi32(u[ 3], k32_m02_p30);
 
+#if DCT_HIGH_BIT_DEPTH
+          overflow = k_check_epi32_overflow_32(
+              &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &v[6], &v[7],
+              &v[8], &v[9], &v[10], &v[11], &v[12], &v[13], &v[14], &v[15],
+              &v[16], &v[17], &v[18], &v[19], &v[20], &v[21], &v[22], &v[23],
+              &v[24], &v[25], &v[26], &v[27], &v[28], &v[29], &v[30], &v[31],
+              &kZero);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
           u[ 0] = k_packs_epi64(v[ 0], v[ 1]);
           u[ 1] = k_packs_epi64(v[ 2], v[ 3]);
           u[ 2] = k_packs_epi64(v[ 4], v[ 5]);
@@ -2148,6 +2544,15 @@ void FDCT32x32_2D(const int16_t *input,
           out[22] = _mm_packs_epi32(u[10], u[11]);
           out[14] = _mm_packs_epi32(u[12], u[13]);
           out[30] = _mm_packs_epi32(u[14], u[15]);
+#if DCT_HIGH_BIT_DEPTH
+          overflow = check_epi16_overflow_x8(&out[2], &out[18], &out[10],
+                                             &out[26], &out[6], &out[22],
+                                             &out[14], &out[30]);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
         }
         {
           lstep1[32] = _mm_add_epi32(lstep3[34], lstep2[32]);
@@ -2244,6 +2649,18 @@ void FDCT32x32_2D(const int16_t *input,
           v[30] = k_madd_epi32(u[ 2], k32_m01_p31);
           v[31] = k_madd_epi32(u[ 3], k32_m01_p31);
 
+#if DCT_HIGH_BIT_DEPTH
+          overflow = k_check_epi32_overflow_32(
+              &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &v[6], &v[7],
+              &v[8], &v[9], &v[10], &v[11], &v[12], &v[13], &v[14], &v[15],
+              &v[16], &v[17], &v[18], &v[19], &v[20], &v[21], &v[22], &v[23],
+              &v[24], &v[25], &v[26], &v[27], &v[28], &v[29], &v[30], &v[31],
+              &kZero);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
           u[ 0] = k_packs_epi64(v[ 0], v[ 1]);
           u[ 1] = k_packs_epi64(v[ 2], v[ 3]);
           u[ 2] = k_packs_epi64(v[ 4], v[ 5]);
@@ -2371,6 +2788,15 @@ void FDCT32x32_2D(const int16_t *input,
           out[23] = _mm_packs_epi32(u[10], u[11]);
           out[15] = _mm_packs_epi32(u[12], u[13]);
           out[31] = _mm_packs_epi32(u[14], u[15]);
+#if DCT_HIGH_BIT_DEPTH
+          overflow = check_epi16_overflow_x8(&out[1], &out[17], &out[9],
+                                             &out[25], &out[7], &out[23],
+                                             &out[15], &out[31]);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
         }
         {
           const __m128i k32_p27_p05 = pair_set_epi32(cospi_27_64, cospi_5_64);
@@ -2432,6 +2858,18 @@ void FDCT32x32_2D(const int16_t *input,
           v[30] = k_madd_epi32(u[ 2], k32_m05_p27);
           v[31] = k_madd_epi32(u[ 3], k32_m05_p27);
 
+#if DCT_HIGH_BIT_DEPTH
+          overflow = k_check_epi32_overflow_32(
+              &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &v[6], &v[7],
+              &v[8], &v[9], &v[10], &v[11], &v[12], &v[13], &v[14], &v[15],
+              &v[16], &v[17], &v[18], &v[19], &v[20], &v[21], &v[22], &v[23],
+              &v[24], &v[25], &v[26], &v[27], &v[28], &v[29], &v[30], &v[31],
+              &kZero);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
           u[ 0] = k_packs_epi64(v[ 0], v[ 1]);
           u[ 1] = k_packs_epi64(v[ 2], v[ 3]);
           u[ 2] = k_packs_epi64(v[ 4], v[ 5]);
@@ -2559,18 +2997,23 @@ void FDCT32x32_2D(const int16_t *input,
           out[19] = _mm_packs_epi32(u[10], u[11]);
           out[11] = _mm_packs_epi32(u[12], u[13]);
           out[27] = _mm_packs_epi32(u[14], u[15]);
+#if DCT_HIGH_BIT_DEPTH
+          overflow = check_epi16_overflow_x8(&out[5], &out[21], &out[13],
+                                             &out[29], &out[3], &out[19],
+                                             &out[11], &out[27]);
+          if (overflow) {
+            HIGH_FDCT32x32_2D_ROWS_C(intermediate, output_org);
+            return;
+          }
+#endif  // DCT_HIGH_BIT_DEPTH
         }
       }
-#endif
+#endif  // FDCT32x32_HIGH_PRECISION
       // Transpose the results, do it as four 8x8 transposes.
       {
         int transpose_block;
-        int16_t *output;
-        if (0 == pass) {
-          output = &intermediate[column_start * 32];
-        } else {
-          output = &output_org[column_start * 32];
-        }
+        int16_t *output0 = &intermediate[column_start * 32];
+        tran_low_t *output1 = &output_org[column_start * 32];
         for (transpose_block = 0; transpose_block < 4; ++transpose_block) {
           __m128i *this_out = &out[8 * transpose_block];
           // 00 01 02 03 04 05 06 07
@@ -2671,18 +3114,36 @@ void FDCT32x32_2D(const int16_t *input,
           }
           // Note: even though all these stores are aligned, using the aligned
           //       intrinsic make the code slightly slower.
-          _mm_storeu_si128((__m128i *)(output + 0 * 32), tr2_0);
-          _mm_storeu_si128((__m128i *)(output + 1 * 32), tr2_1);
-          _mm_storeu_si128((__m128i *)(output + 2 * 32), tr2_2);
-          _mm_storeu_si128((__m128i *)(output + 3 * 32), tr2_3);
-          _mm_storeu_si128((__m128i *)(output + 4 * 32), tr2_4);
-          _mm_storeu_si128((__m128i *)(output + 5 * 32), tr2_5);
-          _mm_storeu_si128((__m128i *)(output + 6 * 32), tr2_6);
-          _mm_storeu_si128((__m128i *)(output + 7 * 32), tr2_7);
-          // Process next 8x8
-          output += 8;
+          if (pass == 0) {
+            _mm_storeu_si128((__m128i *)(output0 + 0 * 32), tr2_0);
+            _mm_storeu_si128((__m128i *)(output0 + 1 * 32), tr2_1);
+            _mm_storeu_si128((__m128i *)(output0 + 2 * 32), tr2_2);
+            _mm_storeu_si128((__m128i *)(output0 + 3 * 32), tr2_3);
+            _mm_storeu_si128((__m128i *)(output0 + 4 * 32), tr2_4);
+            _mm_storeu_si128((__m128i *)(output0 + 5 * 32), tr2_5);
+            _mm_storeu_si128((__m128i *)(output0 + 6 * 32), tr2_6);
+            _mm_storeu_si128((__m128i *)(output0 + 7 * 32), tr2_7);
+            // Process next 8x8
+            output0 += 8;
+          } else {
+            storeu_output(&tr2_0, (output1 + 0 * 32));
+            storeu_output(&tr2_1, (output1 + 1 * 32));
+            storeu_output(&tr2_2, (output1 + 2 * 32));
+            storeu_output(&tr2_3, (output1 + 3 * 32));
+            storeu_output(&tr2_4, (output1 + 4 * 32));
+            storeu_output(&tr2_5, (output1 + 5 * 32));
+            storeu_output(&tr2_6, (output1 + 6 * 32));
+            storeu_output(&tr2_7, (output1 + 7 * 32));
+            // Process next 8x8
+            output1 += 8;
+          }
         }
       }
     }
   }
 }  // NOLINT
+
+#undef ADD_EPI16
+#undef SUB_EPI16
+#undef HIGH_FDCT32x32_2D_C
+#undef HIGH_FDCT32x32_2D_ROWS_C

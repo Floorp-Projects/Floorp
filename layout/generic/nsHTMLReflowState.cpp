@@ -440,11 +440,19 @@ nsHTMLReflowState::Init(nsPresContext*     aPresContext,
     }
   }
 
-  if (AvailableBSize() != NS_UNCONSTRAINEDSIZE && parentReflowState &&
+  if (parentReflowState &&
       parentReflowState->GetWritingMode().IsOrthogonalTo(mWritingMode)) {
-    // Orthogonal frames are always reflowed with unconstrained block-size,
-    // to avoid incomplete reflow across an orthogonal boundary.
-    AvailableBSize() = NS_UNCONSTRAINEDSIZE;
+    // Orthogonal frames are always reflowed with an unconstrained
+    // dimension to avoid incomplete reflow across an orthogonal
+    // boundary. Normally this is the block-size, but for column sets
+    // with auto-height it's the inline-size, so that they can add
+    // columns in the container's block direction
+    if (type == nsGkAtoms::columnSetFrame &&
+        eStyleUnit_Auto == mStylePosition->ISize(mWritingMode).GetUnit()) {
+      ComputedISize() = NS_UNCONSTRAINEDSIZE;
+    } else {
+      AvailableBSize() = NS_UNCONSTRAINEDSIZE;
+    }
   }
 
   LAYOUT_WARN_IF_FALSE((mFrameType == NS_CSS_FRAME_TYPE_INLINE &&

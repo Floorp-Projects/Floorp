@@ -24,6 +24,7 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsFrame.h"
 #include "mozilla/layers/ShadowLayers.h"
+#include "mozilla/layers/APZCCallbackHelper.h"
 #include "ClientLayerManager.h"
 #include "nsQueryObject.h"
 #ifdef MOZ_FMP4
@@ -2489,6 +2490,34 @@ nsDOMWindowUtils::SetAsyncZoom(nsIDOMNode* aRootElement, float aValue)
     return NS_ERROR_UNEXPECTED;
   }
   forwarder->GetShadowManager()->SendSetAsyncZoom(viewId, aValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::FlushApzRepaints(bool* aOutResult)
+{
+  nsIWidget* widget = GetWidget();
+  if (!widget) {
+    *aOutResult = false;
+    return NS_OK;
+  }
+  // If APZ is not enabled, this function is a no-op.
+  if (!widget->AsyncPanZoomEnabled()) {
+    *aOutResult = false;
+    return NS_OK;
+  }
+  LayerManager* manager = widget->GetLayerManager();
+  if (!manager) {
+    *aOutResult = false;
+    return NS_OK;
+  }
+  ShadowLayerForwarder* forwarder = manager->AsShadowForwarder();
+  if (!forwarder || !forwarder->HasShadowManager()) {
+    *aOutResult = false;
+    return NS_OK;
+  }
+  forwarder->GetShadowManager()->SendFlushApzRepaints();
+  *aOutResult = true;
   return NS_OK;
 }
 

@@ -337,8 +337,8 @@ MediaEngineGonkVideoSource::Init()
 {
   nsAutoCString deviceName;
   ICameraControl::GetCameraName(mCaptureIndex, deviceName);
-  CopyUTF8toUTF16(deviceName, mDeviceName);
-  CopyUTF8toUTF16(deviceName, mUniqueId);
+  SetName(NS_ConvertUTF8toUTF16(deviceName));
+  SetUUID(deviceName.get());
 
   mInitDone = true;
 }

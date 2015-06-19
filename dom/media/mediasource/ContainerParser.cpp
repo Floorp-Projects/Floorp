@@ -14,6 +14,8 @@
 #include "MediaData.h"
 #ifdef MOZ_FMP4
 #include "MP4Stream.h"
+#include "mp4_demuxer/AtomType.h"
+#include "mp4_demuxer/ByteReader.h"
 #endif
 #include "SourceBufferResource.h"
 
@@ -27,6 +29,7 @@ extern PRLogModuleInfo* GetMediaSourceLog();
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 #define MSE_DEBUG(name, arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Debug, (TOSTRING(name) "(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
+#define MSE_DEBUGV(name, arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Verbose, (TOSTRING(name) "(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
 
 namespace mozilla {
 
@@ -258,44 +261,53 @@ public:
     , mMonitor("MP4ContainerParser Index Monitor")
   {}
 
+  bool HasAtom(const mp4_demuxer::AtomType& aAtom, const MediaByteBuffer* aData) {
+    mp4_demuxer::ByteReader reader(aData);
+
+    while (reader.Remaining() >= 8) {
+      uint64_t size = reader.ReadU32();
+      const uint8_t* typec = reader.Peek(4);
+      uint32_t type = reader.ReadU32();
+      MSE_DEBUGV(MP4ContainerParser ,"Checking atom:'%c%c%c%c'",
+                typec[0], typec[1], typec[2], typec[3]);
+      if (mp4_demuxer::AtomType(type) == aAtom) {
+        reader.DiscardRemaining();
+        return true;
+      }
+      if (size == 1) {
+        // 64 bits size.
+        if (!reader.CanReadType<uint64_t>()) {
+          break;
+        }
+        size = reader.ReadU64();
+      } else if (size == 0) {
+        // Atom extends to the end of the buffer, it can't have what we're
+        // looking for.
+        break;
+      }
+      if (reader.Remaining() < size - 8) {
+        // Incomplete atom.
+        break;
+      }
+      reader.Read(size - 8);
+    }
+    reader.DiscardRemaining();
+    return false;
+  }
+
   bool IsInitSegmentPresent(MediaByteBuffer* aData) override
   {
     ContainerParser::IsInitSegmentPresent(aData);
     // Each MP4 atom has a chunk size and chunk type. The root chunk in an MP4
     // file is the 'ftyp' atom followed by a file type. We just check for a
     // vaguely valid 'ftyp' atom.
-
-    if (aData->Length() < 8) {
-      return false;
-    }
-
-    uint32_t chunk_size = BigEndian::readUint32(aData->Elements());
-    if (chunk_size < 8) {
-      return false;
-    }
-
-    return (*aData)[4] == 'f' && (*aData)[5] == 't' && (*aData)[6] == 'y' &&
-           (*aData)[7] == 'p';
+    return HasAtom(mp4_demuxer::AtomType("ftyp"), aData);
   }
 
   bool IsMediaSegmentPresent(MediaByteBuffer* aData) override
   {
     ContainerParser::IsMediaSegmentPresent(aData);
-    if (aData->Length() < 8) {
-      return false;
-    }
-
-    uint32_t chunk_size = BigEndian::readUint32(aData->Elements());
-    if (chunk_size < 8) {
-      return false;
-    }
-
-    return ((*aData)[4] == 'm' && (*aData)[5] == 'o' && (*aData)[6] == 'o' &&
-            (*aData)[7] == 'f') ||
-           ((*aData)[4] == 's' && (*aData)[5] == 't' && (*aData)[6] == 'y' &&
-            (*aData)[7] == 'p') ||
-           ((*aData)[4] == 's' && (*aData)[5] == 'i' && (*aData)[6] == 'd' &&
-            (*aData)[7] == 'x');
+    return HasAtom(mp4_demuxer::AtomType("moof"), aData);
   }
 
   bool ParseStartAndEndTimestamps(MediaByteBuffer* aData,
@@ -348,7 +360,9 @@ public:
     mCompleteMediaHeaderRange = mParser->FirstCompleteMediaHeader();
     mCompleteMediaSegmentRange = mParser->FirstCompleteMediaSegment();
     ErrorResult rv;
-    mResource->EvictData(mParser->mOffset, mParser->mOffset, rv);
+    if (HasCompleteInitData()) {
+      mResource->EvictData(mParser->mOffset, mParser->mOffset, rv);
+    }
     if (NS_WARN_IF(rv.Failed())) {
       rv.SuppressException();
       return false;
@@ -394,5 +408,6 @@ ContainerParser::CreateForMIMEType(const nsACString& aType)
 }
 
 #undef MSE_DEBUG
+#undef MSE_DEBUGV
 
 } // namespace mozilla

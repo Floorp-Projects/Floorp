@@ -800,6 +800,13 @@ LayerTransactionParent::RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollID,
 }
 
 bool
+LayerTransactionParent::RecvFlushApzRepaints()
+{
+  mShadowLayersManager->FlushApzRepaints(this);
+  return true;
+}
+
+bool
 LayerTransactionParent::RecvGetAPZTestData(APZTestData* aOutData)
 {
   mShadowLayersManager->GetAPZTestData(this, aOutData);

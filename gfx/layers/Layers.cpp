@@ -30,6 +30,7 @@
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite
 #include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "mozilla/layers/LayersMessages.h"  // for TransformFunction, etc
+#include "mozilla/layers/PersistentBufferProvider.h"
 #include "nsAString.h"
 #include "nsCSSValue.h"                 // for nsCSSValue::Array, etc
 #include "nsPrintfCString.h"            // for nsPrintfCString
@@ -157,6 +158,27 @@ LayerManager::CreateDrawTarget(const IntSize &aSize,
 {
   return gfxPlatform::GetPlatform()->
     CreateOffscreenCanvasDrawTarget(aSize, aFormat);
+}
+
+TemporaryRef<PersistentBufferProvider>
+LayerManager::CreatePersistentBufferProvider(const mozilla::gfx::IntSize &aSize,
+                                             mozilla::gfx::SurfaceFormat aFormat)
+{
+  RefPtr<PersistentBufferProviderBasic> bufferProvider =
+    new PersistentBufferProviderBasic(this, aSize, aFormat,
+                                      gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
+
+  if (!bufferProvider->IsValid()) {
+    bufferProvider =
+      new PersistentBufferProviderBasic(this, aSize, aFormat,
+                                        gfxPlatform::GetPlatform()->GetFallbackCanvasBackend());
+  }
+
+  if (!bufferProvider->IsValid()) {
+    return nullptr;
+  }
+
+  return bufferProvider.forget();
 }
 
 #ifdef DEBUG

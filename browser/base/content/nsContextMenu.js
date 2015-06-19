@@ -1288,16 +1288,20 @@ nsContextMenu.prototype = {
     }
 
     // setting up a new channel for 'right click - save link as ...'
-    // which should be treated the same way as a toplevel load, hence
-    // we use TYPE_DOCUMENT, see also bug: 1136055
+    // ideally we should use:
+    // * doc            - as the loadingNode, and/or
+    // * this.principal - as the loadingPrincipal
+    // for now lets use systemPrincipal to bypass mixedContentBlocker
+    // checks after redirects, see bug: 1136055
     var ioService = Cc["@mozilla.org/network/io-service;1"].
                     getService(Ci.nsIIOService);
+    var principal = Services.scriptSecurityManager.getSystemPrincipal();
     var channel = ioService.newChannelFromURI2(makeURI(linkURL),
                                                null, // aLoadingNode
-                                               this.principal, // aLoadingPrincipal
+                                               principal, // aLoadingPrincipal
                                                null, // aTriggeringPrincipal
                                                Ci.nsILoadInfo.SEC_NORMAL,
-                                               Ci.nsIContentPolicy.TYPE_DOCUMENT);
+                                               Ci.nsIContentPolicy.TYPE_OTHER);
     if (linkDownload)
       channel.contentDispositionFilename = linkDownload;
     if (channel instanceof Ci.nsIPrivateBrowsingChannel) {

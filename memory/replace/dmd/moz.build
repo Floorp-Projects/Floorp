@@ -13,7 +13,7 @@ EXPORTS += [
 SOURCES += [
     '../../../mfbt/HashFunctions.cpp',
     '../../../mfbt/JSONWriter.cpp',
-    '../../../xpcom/base/nsStackWalk.cpp',
+    '../../../mozglue/misc/StackWalk.cpp',
     'DMD.cpp',
 ]
 

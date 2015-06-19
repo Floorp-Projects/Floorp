@@ -21,7 +21,7 @@
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
-#include "nsStackWalk.h"
+#include "mozilla/StackWalk.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
@@ -77,10 +77,10 @@ static void SandboxPrintStackFrame(uint32_t aFrameNumber, void *aPC, void *aSP,
                                    void *aClosure)
 {
   char buf[1024];
-  nsCodeAddressDetails details;
+  MozCodeAddressDetails details;
 
-  NS_DescribeCodeAddress(aPC, &details);
-  NS_FormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
+  MozDescribeCodeAddress(aPC, &details);
+  MozFormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
   SANDBOX_LOG_ERROR("frame %s", buf);
 }
 
@@ -90,11 +90,11 @@ SandboxLogCStack()
   // Skip 3 frames: one for this module, one for the signal handler in
   // libmozsandbox, and one for the signal trampoline.
   //
-  // Warning: this might not print any stack frames.  NS_StackWalk
+  // Warning: this might not print any stack frames.  MozStackWalk
   // can't walk past the signal trampoline on ARM (bug 968531), and
   // x86 frame pointer walking may or may not work (bug 1082276).
 
-  NS_StackWalk(SandboxPrintStackFrame, /* skip */ 3, /* max */ 0,
+  MozStackWalk(SandboxPrintStackFrame, /* skip */ 3, /* max */ 0,
                nullptr, 0, nullptr);
   SANDBOX_LOG_ERROR("end of stack.");
 }
