@@ -379,7 +379,8 @@ void NrIceCtx::trickle_cb(void *arg, nr_ice_ctx *ice_ctx,
 RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
                                   bool offerer,
                                   bool set_interface_priorities,
-                                  bool allow_loopback) {
+                                  bool allow_loopback,
+                                  bool tcp_enabled) {
 
   RefPtr<NrIceCtx> ctx = new NrIceCtx(name, offerer);
 
@@ -465,6 +466,8 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
                      ice_tcp_so_sock_count);
     NR_reg_set_int4((char *)NR_ICE_REG_ICE_TCP_LISTEN_BACKLOG,
                      ice_tcp_listen_backlog);
+
+    NR_reg_set_char((char *)NR_ICE_REG_ICE_TCP_DISABLE, !tcp_enabled);
 
     if (allow_loopback) {
       NR_reg_set_char((char *)NR_STUN_REG_PREF_ALLOW_LOOPBACK_ADDRS, 1);
