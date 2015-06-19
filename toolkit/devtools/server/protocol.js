@@ -33,8 +33,8 @@ exports.emit = events.emit;
 let types = Object.create(null);
 exports.types = types;
 
-let registeredTypes = new Map();
-let registeredLifetimes = new Map();
+let registeredTypes = types.registeredTypes = new Map();
+let registeredLifetimes = types.registeredLifetimes = new Map();
 
 /**
  * Return the type object associated with a given typestring.
