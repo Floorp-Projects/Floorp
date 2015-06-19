@@ -2487,8 +2487,7 @@ js::GetObjectEnvironmentObjectForFunction(JSFunction* fun)
 bool
 js::CreateScopeObjectsForScopeChain(JSContext* cx, AutoObjectVector& scopeChain,
                                     HandleObject dynamicTerminatingScope,
-                                    MutableHandleObject dynamicScopeObj,
-                                    MutableHandleObject staticScopeObj)
+                                    MutableHandleObject dynamicScopeObj)
 {
 #ifdef DEBUG
     for (size_t i = 0; i < scopeChain.length(); ++i) {
@@ -2518,8 +2517,21 @@ js::CreateScopeObjectsForScopeChain(JSContext* cx, AutoObjectVector& scopeChain,
     }
 
     dynamicScopeObj.set(dynamicEnclosingScope);
-    staticScopeObj.set(staticEnclosingScope);
     return true;
+}
+
+bool
+js::HasNonSyntacticStaticScopeChain(JSObject* staticScope)
+{
+    for (StaticScopeIter<NoGC> ssi(staticScope); !ssi.done(); ssi++) {
+        // If we hit a function scope, we can short circuit the logic, as
+        // scripts cache whether they are under a non-syntactic scope.
+        if (ssi.type() == StaticScopeIter<NoGC>::Function)
+            return ssi.funScript()->hasNonSyntacticScope();
+        if (ssi.type() == StaticScopeIter<NoGC>::NonSyntactic)
+            return true;
+    }
+    return false;
 }
 
 #ifdef DEBUG
