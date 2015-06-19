@@ -5,31 +5,17 @@
 
 package org.mozilla.gecko.toolbar;
 
-import org.mozilla.gecko.ActivityHandlerHelper;
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.CustomEditText;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.InputMethods;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.GeckoSharedPrefs;
-import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnCommitListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnDismissListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnFilterListener;
-import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.GamepadUtils;
-import org.mozilla.gecko.util.VoiceRecognizerUtils;
 import org.mozilla.gecko.util.StringUtils;
 
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
-import android.speech.RecognizerIntent;
 import android.text.Editable;
 import android.text.NoCopySpan;
 import android.text.Selection;
@@ -40,7 +26,6 @@ import android.text.style.BackgroundColorSpan;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
@@ -49,8 +34,6 @@ import android.view.inputmethod.InputConnectionWrapper;
 import android.view.inputmethod.InputMethodManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.TextView;
-
-import java.util.List;
 
 /**
 * {@code ToolbarEditText} is the text entry used when the toolbar
@@ -68,7 +51,6 @@ public class ToolbarEditText extends CustomEditText
     private OnCommitListener mCommitListener;
     private OnDismissListener mDismissListener;
     private OnFilterListener mFilterListener;
-    private VoiceSearchOnTouchListener mVoiceOnTouchListener;
 
     private ToolbarPrefs mPrefs;
 
@@ -114,7 +96,6 @@ public class ToolbarEditText extends CustomEditText
 
         if (gainFocus) {
             resetAutocompleteState();
-            configureCompoundDrawables();
             return;
         }
 
@@ -473,105 +454,6 @@ public class ToolbarEditText extends CustomEditText
         };
     }
 
-    /**
-     * Detect if we are able to enable the 'buttons' made from compound drawables.
-     *
-     * Currently, only voice input.
-     */
-    private void configureCompoundDrawables() {
-        if (AppConstants.NIGHTLY_BUILD && voiceIsEnabled()) {
-            final Drawable micImg = getContext().getResources().getDrawable(R.drawable.ab_mic);
-            setCompoundDrawablesWithIntrinsicBounds(null, null, micImg, null);
-
-            if (mVoiceOnTouchListener == null) {
-                mVoiceOnTouchListener = new VoiceSearchOnTouchListener();
-            }
-            setOnTouchListener(mVoiceOnTouchListener);
-        } else {
-            // Remove the mic button
-            setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
-            setOnTouchListener(null);
-        }
-    }
-
-    private boolean voiceIsEnabled() {
-        final boolean voiceIsSupported = VoiceRecognizerUtils.supportsVoiceRecognizer(getContext(), getResources().getString(R.string.voicesearch_prompt));
-        if (!voiceIsSupported) {
-            return false;
-        }
-        return GeckoSharedPrefs.forApp(getContext())
-                .getBoolean(GeckoPreferences.PREFS_VOICE_INPUT_ENABLED, true);
-    }
-
-    private void launchVoiceRecognizer() {
-        final Intent intent = VoiceRecognizerUtils.createVoiceRecognizerIntent(getResources().getString(R.string.voicesearch_prompt));
-
-        Activity activity = GeckoAppShell.getGeckoInterface().getActivity();
-        ActivityHandlerHelper.startIntentForActivity(activity, intent, new ActivityResultHandler() {
-            @Override
-            public void onActivityResult(int resultCode, Intent data) {
-                switch (resultCode) {
-                    case RecognizerIntent.RESULT_CLIENT_ERROR:
-                    case RecognizerIntent.RESULT_NETWORK_ERROR:
-                    case RecognizerIntent.RESULT_SERVER_ERROR:
-                        // We have an temporarily unrecoverable error.
-                        handleVoiceSearchError(false);
-                        break;
-                    case RecognizerIntent.RESULT_AUDIO_ERROR:
-                    case RecognizerIntent.RESULT_NO_MATCH:
-                        // Maybe the user can say it differently?
-                        handleVoiceSearchError(true);
-                        break;
-                    case Activity.RESULT_CANCELED:
-                        break;
-                }
-
-                if (resultCode != Activity.RESULT_OK) {
-                    return;
-                }
-
-                // We have RESULT_OK, not RESULT_NO_MATCH so it should be safe to assume that
-                // we have at least one match. We only need one: this will be
-                // used for showing the user search engines with this search term in it.
-                List<String> voiceStrings = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                String text = voiceStrings.get(0);
-                setText(text);
-                setSelection(0, text.length());
-
-                final InputMethodManager imm =
-                        (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.showSoftInput(ToolbarEditText.this, InputMethodManager.SHOW_IMPLICIT);
-            }
-        });
-    }
-
-    private void handleVoiceSearchError(boolean offerRetry) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
-                .setTitle(R.string.voicesearch_failed_title)
-                .setIcon(R.drawable.icon).setNeutralButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-
-        if (offerRetry) {
-            builder.setMessage(R.string.voicesearch_failed_message_recoverable)
-                   .setNegativeButton(R.string.voicesearch_failed_retry, new DialogInterface.OnClickListener() {
-                       @Override
-                       public void onClick(DialogInterface dialog, int which) {
-                           launchVoiceRecognizer();
-                       }
-                   });
-        } else {
-            builder.setMessage(R.string.voicesearch_failed_message);
-        }
-
-        AlertDialog dialog = builder.create();
-
-        dialog.show();
-    }
-
     private class SelectionChangeListener implements OnSelectionChangedListener {
         @Override
         public void onSelectionChanged(final int selStart, final int selEnd) {
@@ -713,42 +595,6 @@ public class ToolbarEditText extends CustomEditText
             }
 
             return false;
-        }
-    }
-
-    private class VoiceSearchOnTouchListener implements View.OnTouchListener {
-        private int mVoiceSearchIconIndex = -1;
-        private Drawable mVoiceSearchIcon;
-
-        public VoiceSearchOnTouchListener() {
-            Drawable[] drawables = getCompoundDrawables();
-            for (int i = 0; i < drawables.length; i++) {
-                if (drawables[i] != null) {
-                    mVoiceSearchIcon = drawables[i];
-                    mVoiceSearchIconIndex = i;
-                }
-            }
-        }
-
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            boolean tapped;
-            final int action = event.getActionMasked();
-
-            switch (mVoiceSearchIconIndex) {
-                case 0:
-                    tapped = event.getX() < (getPaddingLeft() + mVoiceSearchIcon.getIntrinsicWidth());
-                    break;
-                case 2:
-                    tapped = event.getX() > (getWidth() - getPaddingRight() - mVoiceSearchIcon.getIntrinsicWidth());
-                    break;
-                default:
-                    tapped = false;
-            }
-            if (tapped && (action == MotionEvent.ACTION_DOWN)) {
-                launchVoiceRecognizer();
-            }
-            return tapped;
         }
     }
 }

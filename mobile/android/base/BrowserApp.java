@@ -1085,6 +1085,12 @@ public class BrowserApp extends GeckoApp
                 }
             });
         }
+
+        // Sending a message to the toolbar when the browser window gains focus
+        // This is needed for qr code input
+        if (hasFocus) {
+            mBrowserToolbar.onParentFocus();
+        }
     }
 
     private void setBrowserToolbarListeners() {

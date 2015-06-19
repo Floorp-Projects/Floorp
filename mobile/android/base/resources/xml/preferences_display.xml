@@ -33,10 +33,20 @@
                         android:title="@string/pref_zoom_force_enabled"
                         android:summary="@string/pref_zoom_force_enabled_summary" />
 
-    <CheckBoxPreference android:key="android.not_a_preference.voice_search_enabled"
-                        android:title="@string/pref_voice_input"
-                        android:summary="@string/pref_voice_input_summary"
-                        android:defaultValue="true"/>
+    <PreferenceCategory android:title="@string/pref_category_input_options"
+                        android:key="@string/pref_category_input_options">
+
+        <CheckBoxPreference android:key="android.not_a_preference.voice_input_enabled"
+                            android:title="@string/pref_voice_input"
+                            android:summary="@string/pref_voice_input_summary"
+                            android:defaultValue="true"/>
+
+        <CheckBoxPreference android:key="android.not_a_preference.qrcode_enabled"
+                            android:title="@string/pref_qrcode_enabled"
+                            android:summary="@string/pref_qrcode_enabled_summary"
+                            android:defaultValue="true"/>
+
+    </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_advanced">
 
