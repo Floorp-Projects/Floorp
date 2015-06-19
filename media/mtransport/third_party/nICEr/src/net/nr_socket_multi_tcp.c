@@ -161,11 +161,11 @@ static int nr_socket_multi_tcp_create_stun_server_socket(
   nr_transport_addr *addr, int max_pending)
   {
     int r, _status;
-    nr_tcp_socket_ctx *tcp_socket_ctx;
+    nr_tcp_socket_ctx *tcp_socket_ctx=0;
     nr_socket * nrsock;
 
     if (stun_server->transport!=IPPROTO_TCP)
-      return(0);
+      ABORT(R_BAD_ARGS);
 
     if ((r=nr_socket_factory_create_socket(sock->ctx->socket_factory,addr, &nrsock)))
       ABORT(r);
@@ -174,25 +174,28 @@ static int nr_socket_multi_tcp_create_stun_server_socket(
     if ((r=nr_tcp_socket_ctx_create(nrsock, 0, max_pending, &tcp_socket_ctx)))
       ABORT(r);
 
-    TAILQ_INSERT_TAIL(&sock->sockets, tcp_socket_ctx, entry);
-
     if (stun_server->type == NR_ICE_STUN_SERVER_TYPE_ADDR) {
       nr_transport_addr stun_server_addr;
 
       nr_transport_addr_copy(&stun_server_addr, &stun_server->u.addr);
       r=nr_socket_connect(tcp_socket_ctx->inner, &stun_server_addr);
       if (r && r!=R_WOULDBLOCK) {
-        r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s connect to STUN server(addr:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,stun_server_addr.as_string,_status);
+        r_log(LOG_ICE,LOG_WARNING,"%s:%d function %s connect to STUN server(addr:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,stun_server_addr.as_string,r);
         ABORT(r);
       }
 
       if ((r=nr_tcp_socket_ctx_initialize(tcp_socket_ctx, &stun_server_addr, sock)))
         ABORT(r);
     }
+
+    TAILQ_INSERT_TAIL(&sock->sockets, tcp_socket_ctx, entry);
+
     _status=0;
   abort:
-    if (_status)
+    if (_status) {
+      nr_tcp_socket_ctx_destroy(&tcp_socket_ctx);
       r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s(addr:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,addr->as_string,_status);
+    }
     return(_status);
   }
 
@@ -226,15 +229,21 @@ int nr_socket_multi_tcp_create(struct nr_ice_ctx_ *ctx,
       if (sock->ctx && sock->ctx->stun_servers) {
         for (i=0; i<sock->ctx->stun_server_ct; ++i) {
           if ((r=nr_socket_multi_tcp_create_stun_server_socket(sock,
-              sock->ctx->stun_servers+i, addr, max_pending)))
-            ABORT(r);
+              sock->ctx->stun_servers+i, addr, max_pending))) {
+            if (r!=R_BAD_ARGS) {
+              r_log(LOG_ICE,LOG_WARNING,"%s:%d function %s failed to connect STUN server from addr:%s with error %d",__FILE__,__LINE__,__FUNCTION__,addr->as_string,r);
+            }
+          }
         }
       }
       if (sock->ctx && sock->ctx->turn_servers) {
         for (i=0; i<sock->ctx->turn_server_ct; ++i) {
           if ((r=nr_socket_multi_tcp_create_stun_server_socket(sock,
-              &(sock->ctx->turn_servers[i]).turn_server, addr, max_pending)))
-            ABORT(r);
+              &(sock->ctx->turn_servers[i]).turn_server, addr, max_pending))) {
+            if (r!=R_BAD_ARGS) {
+              r_log(LOG_ICE,LOG_WARNING,"%s:%d function %s failed to connect TURN server from addr:%s with error %d",__FILE__,__LINE__,__FUNCTION__,addr->as_string,r);
+            }
+          }
         }
       }
     }
