@@ -1211,9 +1211,11 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus,
     // to draw. (We may have already sent some of these notifications from
     // NotifyForDecodeOnlyOnDraw(), but ProgressTracker will ensure no duplicate
     // notifications get sent.)
-    loadProgress |= FLAG_DECODE_STARTED |
+    loadProgress |= FLAG_ONLOAD_BLOCKED |
+                    FLAG_DECODE_STARTED |
                     FLAG_FRAME_COMPLETE |
-                    FLAG_DECODE_COMPLETE;
+                    FLAG_DECODE_COMPLETE |
+                    FLAG_ONLOAD_UNBLOCKED;
   }
 
   // Notify our listeners, which will fire this image's load event.
@@ -1232,7 +1234,7 @@ RasterImage::NotifyForDecodeOnlyOnDraw()
     return;
   }
 
-  NotifyProgress(FLAG_DECODE_STARTED);
+  NotifyProgress(FLAG_DECODE_STARTED | FLAG_ONLOAD_BLOCKED);
 }
 
 nsresult
