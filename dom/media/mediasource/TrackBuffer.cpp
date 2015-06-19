@@ -294,8 +294,7 @@ nsRefPtr<TrackBuffer::BufferedRangesUpdatedPromise>
 TrackBuffer::UpdateBufferedRanges(Interval<int64_t> aByteRange, bool aNotifyParent)
 {
   if (aByteRange.Length()) {
-    mCurrentDecoder->GetReader()->NotifyDataArrived(uint32_t(aByteRange.Length()),
-                                                    aByteRange.mStart);
+    mCurrentDecoder->GetReader()->NotifyDataArrived(aByteRange);
   }
 
   // Recalculate and cache our new buffered range.
@@ -325,7 +324,7 @@ TrackBuffer::UpdateBufferedRanges(Interval<int64_t> aByteRange, bool aNotifyPare
         // specific SourceBufferDecoder's data stream.  Pass bogus values here to
         // force parent decoder's state machine to recompute end time for
         // infinite length media.
-        parent->NotifyDataArrived(0, 0);
+        parent->NotifyDataArrived(0, 0, /* aThrottleUpdates = */ false);
         parent->NotifyBytesDownloaded();
       });
     AbstractThread::MainThread()->Dispatch(task.forget());
@@ -762,8 +761,7 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
   MSE_DEBUG("Initializing subdecoder %p reader %p",
             aDecoder, reader);
 
-  reader->NotifyDataArrived(uint32_t(mLastAppendRange.Length()),
-                            mLastAppendRange.mStart);
+  reader->NotifyDataArrived(mLastAppendRange);
 
   // HACK WARNING:
   // We only reach this point once we know that we have a complete init segment.

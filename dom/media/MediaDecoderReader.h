@@ -11,7 +11,9 @@
 #include "MediaData.h"
 #include "MediaPromise.h"
 #include "MediaQueue.h"
+#include "MediaTimer.h"
 #include "AudioCompactor.h"
+#include "Intervals.h"
 #include "TimeUnits.h"
 
 namespace mozilla {
@@ -247,19 +249,32 @@ public:
 protected:
   friend class TrackBuffer;
   virtual void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) { }
-  void NotifyDataArrived(uint32_t aLength, int64_t aOffset)
+
+  void NotifyDataArrived(const media::Interval<int64_t>& aInfo)
   {
     MOZ_ASSERT(OnTaskQueue());
     NS_ENSURE_TRUE_VOID(!mShutdown);
-    NotifyDataArrivedInternal(aLength, aOffset);
+    NotifyDataArrivedInternal(aInfo.Length(), aInfo.mStart);
     UpdateBuffered();
   }
 
+  // Invokes NotifyDataArrived while throttling the calls to occur at most every mThrottleDuration ms.
+  void ThrottledNotifyDataArrived(const media::Interval<int64_t>& aInterval);
+  void DoThrottledNotify();
+
 public:
-  void DispatchNotifyDataArrived(uint32_t aLength, int64_t aOffset)
+  // In situations where these notifications come from stochastic network
+  // activity, we can save significant recomputation by throttling the delivery
+  // of these updates to the reader implementation. We don't want to do this
+  // throttling when the update comes from MSE code, since that code needs the
+  // updates to be observable immediately, and is generally less
+  // trigger-happy with notifications anyway.
+  void DispatchNotifyDataArrived(uint32_t aLength, int64_t aOffset, bool aThrottleUpdates)
   {
     RefPtr<nsRunnable> r =
-      NS_NewRunnableMethodWithArgs<uint32_t, int64_t>(this, &MediaDecoderReader::NotifyDataArrived, aLength, aOffset);
+      NS_NewRunnableMethodWithArg<media::Interval<int64_t>>(this, aThrottleUpdates ? &MediaDecoderReader::ThrottledNotifyDataArrived
+                                                                                   : &MediaDecoderReader::NotifyDataArrived,
+                                                            media::Interval<int64_t>(aOffset, aOffset + aLength));
     TaskQueue()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
   }
 
@@ -358,6 +373,9 @@ protected:
   // State-watching manager.
   WatchManager<MediaDecoderReader> mWatchManager;
 
+  // MediaTimer.
+  nsRefPtr<MediaTimer> mTimer;
+
   // Buffered range.
   Canonical<media::TimeIntervals> mBuffered;
 public:
@@ -369,6 +387,12 @@ protected:
 
   // Duration, mirrored from the state machine task queue.
   Mirror<media::NullableTimeUnit> mDuration;
+
+  // State for ThrottledNotifyDataArrived.
+  MediaPromiseRequestHolder<MediaTimerPromise> mThrottledNotify;
+  const TimeDuration mThrottleDuration;
+  TimeStamp mLastThrottledNotify;
+  Maybe<media::Interval<int64_t>> mThrottledInterval;
 
   // Whether we should accept media that we know we can't play
   // directly, because they have a number of channel higher than
