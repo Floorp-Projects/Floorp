@@ -414,8 +414,7 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         if(r!=R_NOT_FOUND)
           ABORT(r);
       }
-      else{
-        if(suppress)
+      else if(suppress) {
           continue;
       }
 

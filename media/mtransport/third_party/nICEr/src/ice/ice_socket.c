@@ -282,9 +282,9 @@ int nr_ice_socket_close(nr_ice_socket *isock)
     if (!isock||!isock->sock)
       return(0);
 
-    assert(isock->sock!=0);
     if (isock->type != NR_ICE_SOCKET_TYPE_STREAM_TCP){
       nr_socket_getfd(isock->sock,&fd);
+      assert(isock->sock!=0);
       if(fd != no_socket){
         NR_ASYNC_CANCEL(fd,NR_ASYNC_WAIT_READ);
         NR_ASYNC_CANCEL(fd,NR_ASYNC_WAIT_WRITE);

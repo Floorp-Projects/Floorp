@@ -162,12 +162,12 @@ int nr_ice_candidate_create(nr_ice_ctx *ctx,nr_ice_component *comp,nr_ice_socket
         break;
 
       case SERVER_REFLEXIVE:
-        if(r=nr_ice_candidate_format_stun_label(label, sizeof(label),cand))
+        if(r=nr_ice_candidate_format_stun_label(label, sizeof(label), cand))
           ABORT(r);
         break;
 
       case RELAYED:
-        if(r=nr_ice_candidate_format_stun_label(label, sizeof(label),cand))
+        if(r=nr_ice_candidate_format_stun_label(label, sizeof(label), cand))
           ABORT(r);
         break;
 
@@ -181,11 +181,12 @@ int nr_ice_candidate_create(nr_ice_ctx *ctx,nr_ice_component *comp,nr_ice_socket
     }
 
     if (tcp_type) {
-      size_t slen=strlen(label)+1; /* plus space going to be added*/
-      if (slen<sizeof(label)) {
-        label[slen-1]=' ';
-        strncpy(label+slen, nr_tcp_type_name(tcp_type), sizeof(label)-slen-1);
-        label[sizeof(label)-1]=0;
+      const char* ttype = nr_tcp_type_name(tcp_type);
+      const int tlen = strlen(ttype)+1; /* plus space */
+      const size_t llen=strlen(label);
+      if (snprintf(label+llen, sizeof(label)-llen, " %s", ttype) != tlen) {
+        r_log(LOG_ICE,LOG_ERR,"ICE(%s): truncated tcp type added to buffer",
+          ctx->label);
       }
     }
 
@@ -386,8 +387,7 @@ int nr_ice_candidate_compute_priority(nr_ice_candidate *cand)
         } else if(cand->base.protocol == IPPROTO_TCP) {
           if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_HOST_TCP,&type_preference))
             ABORT(r);
-        } else
-          ABORT(R_INTERNAL);
+        }
         stun_priority=0;
         break;
       case RELAYED:
@@ -397,8 +397,7 @@ int nr_ice_candidate_compute_priority(nr_ice_candidate *cand)
         } else if(cand->base.protocol == IPPROTO_TCP) {
           if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_RELAYED_TCP,&type_preference))
             ABORT(r);
-        } else
-          ABORT(R_INTERNAL);
+        }
         stun_priority=31-cand->stun_server->index;
         break;
       case SERVER_REFLEXIVE:
@@ -408,8 +407,7 @@ int nr_ice_candidate_compute_priority(nr_ice_candidate *cand)
         } else if(cand->base.protocol == IPPROTO_TCP) {
           if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_SRV_RFLX_TCP,&type_preference))
             ABORT(r);
-        } else
-          ABORT(R_INTERNAL);
+        }
         stun_priority=31-cand->stun_server->index;
         break;
       case PEER_REFLEXIVE:
@@ -419,8 +417,7 @@ int nr_ice_candidate_compute_priority(nr_ice_candidate *cand)
         } else if(cand->base.protocol == IPPROTO_TCP) {
           if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_PEER_RFLX_TCP,&type_preference))
             ABORT(r);
-        } else
-          ABORT(R_INTERNAL);
+        }
         stun_priority=0;
         break;
       default:
@@ -947,7 +944,9 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
     }
 
     if (cand->base.protocol==IPPROTO_TCP && cand->tcp_type){
-      len=strlen(attr); attr+=len; maxlen-=len;
+      len=strlen(attr);
+      attr+=len;
+      maxlen-=len;
       snprintf(attr,maxlen," tcptype %s",nr_tcp_type_name(cand->tcp_type));
     }
 

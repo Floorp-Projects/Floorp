@@ -121,7 +121,7 @@ class MultiTcpSocketTest : public ::testing::Test {
     }
 
     ASSERT_EQ(0, r);
-    printf("Created socket on %s\n", local.as_string);
+    printf("Creating socket on %s\n", local.as_string);
     r = nr_socket_multi_tcp_set_readable_cb(*sock,
         &MultiTcpSocketTest::SockReadable, this);
     ASSERT_EQ(0, r);
@@ -143,7 +143,7 @@ class MultiTcpSocketTest : public ::testing::Test {
     nr_transport_addr addr;
     int r=nr_socket_getaddr(sock, &addr);
     ASSERT_EQ(0, r);
-    printf("Listen on %s\n", addr.as_string);
+    printf("Listening on %s\n", addr.as_string);
     r = nr_socket_listen(sock, 5);
     ASSERT_EQ(0, r);
   }
@@ -162,7 +162,7 @@ class MultiTcpSocketTest : public ::testing::Test {
     ASSERT_EQ(0, r);
     r=nr_socket_getaddr(from, &addr_from);
     ASSERT_EQ(0, r);
-    printf("Connect from %s to %s\n", addr_from.as_string, addr_to.as_string);
+    printf("Connecting from %s to %s\n", addr_from.as_string, addr_to.as_string);
     r=nr_socket_connect(from, &addr_to);
     ASSERT_EQ(0, r);
   }
@@ -181,7 +181,7 @@ class MultiTcpSocketTest : public ::testing::Test {
     ASSERT_EQ(0, r);
     r=nr_socket_getaddr(so2, &addr_so2);
     ASSERT_EQ(0, r);
-    printf("Connect SO %s <-> %s\n", addr_so1.as_string, addr_so2.as_string);
+    printf("Connecting SO %s <-> %s\n", addr_so1.as_string, addr_so2.as_string);
     r=nr_socket_connect(so1, &addr_so2);
     ASSERT_EQ(0, r);
     r=nr_socket_connect(so2, &addr_so1);
@@ -203,7 +203,8 @@ class MultiTcpSocketTest : public ::testing::Test {
     ASSERT_EQ(0, r);
     r=nr_socket_getaddr(from, &addr_from);
     ASSERT_EQ(0, r);
-    printf("Send %s -> %s\n", addr_from.as_string, addr_to.as_string);
+    printf("Sending %lu bytes %s -> %s\n", (unsigned long)len,
+      addr_from.as_string, addr_to.as_string);
     r=nr_socket_sendto(from, data, len, 0, &addr_to);
     ASSERT_EQ(0, r);
   }
@@ -227,7 +228,8 @@ class MultiTcpSocketTest : public ::testing::Test {
     ASSERT_EQ(0, r);
     r=nr_socket_getaddr(expected_from, &addr_from);
     ASSERT_EQ(0, r);
-    printf("Receive %s <- %s\n", addr_to.as_string, addr_from.as_string);
+    printf("Receiving %lu bytes %s <- %s\n", (unsigned long)expected_len,
+      addr_to.as_string, addr_from.as_string);
     r=nr_socket_recvfrom(sent_to, received_data, expected_len+1,
                          &retlen, 0, &retaddr);
     ASSERT_EQ(0, r);
@@ -304,12 +306,15 @@ TEST_F(MultiTcpSocketTest, TestTwoSendsBeforeReceives) {
   SendData(socks[0], socks[1], data1, sizeof(data1));
   SendData(socks[0], socks[1], data2, sizeof(data2));
   RecvData(socks[0], socks[1], data1, sizeof(data1));
+  /* ICE TCP framing turns TCP effectively into datagram mode */
   RecvData(socks[0], socks[1], data2, sizeof(data2));
 }
 
-
-TEST_F(MultiTcpSocketTest,  TestTwoActiveBidirectionalTransmit) {
-  const char data[] = "TestTwoActiveBidirectionalTransmit";
+TEST_F(MultiTcpSocketTest, TestTwoActiveBidirectionalTransmit) {
+  const char data1[] = "TestTwoActiveBidirectionalTransmit";
+  const char data2[] = "ReplyToTheFirstSocket";
+  const char data3[] = "TestMessageFromTheSecondSocket";
+  const char data4[] = "ThisIsAReplyToTheSecondSocket";
   socks[0] = Create(TCP_TYPE_PASSIVE);
   socks[1] = Create(TCP_TYPE_ACTIVE);
   socks[2] = Create(TCP_TYPE_ACTIVE);
@@ -317,14 +322,17 @@ TEST_F(MultiTcpSocketTest,  TestTwoActiveBidirectionalTransmit) {
   Connect(socks[1], socks[0]);
   Connect(socks[2], socks[0]);
 
-  TransferData(socks[1], socks[0], data, sizeof(data));
-  TransferData(socks[0], socks[1], data, sizeof(data));
-  TransferData(socks[2], socks[0], data, sizeof(data));
-  TransferData(socks[0], socks[2], data, sizeof(data));
+  TransferData(socks[1], socks[0], data1, sizeof(data1));
+  TransferData(socks[0], socks[1], data2, sizeof(data2));
+  TransferData(socks[2], socks[0], data3, sizeof(data3));
+  TransferData(socks[0], socks[2], data4, sizeof(data4));
 }
 
-TEST_F(MultiTcpSocketTest,  TestTwoPassiveBidirectionalTransmit) {
-  const char data[] = "TestTwoPassiveBidirectionalTransmit";
+TEST_F(MultiTcpSocketTest, TestTwoPassiveBidirectionalTransmit) {
+  const char data1[] = "TestTwoPassiveBidirectionalTransmit";
+  const char data2[] = "FirstReply";
+  const char data3[] = "TestTwoPassiveBidirectionalTransmitToTheSecondSock";
+  const char data4[] = "SecondReply";
   socks[0] = Create(TCP_TYPE_PASSIVE);
   socks[1] = Create(TCP_TYPE_PASSIVE);
   socks[2] = Create(TCP_TYPE_ACTIVE);
@@ -333,13 +341,13 @@ TEST_F(MultiTcpSocketTest,  TestTwoPassiveBidirectionalTransmit) {
   Connect(socks[2], socks[0]);
   Connect(socks[2], socks[1]);
 
-  TransferData(socks[2], socks[0], data, sizeof(data));
-  TransferData(socks[0], socks[2], data, sizeof(data));
-  TransferData(socks[2], socks[1], data, sizeof(data));
-  TransferData(socks[1], socks[2], data, sizeof(data));
+  TransferData(socks[2], socks[0], data1, sizeof(data1));
+  TransferData(socks[0], socks[2], data2, sizeof(data2));
+  TransferData(socks[2], socks[1], data3, sizeof(data3));
+  TransferData(socks[1], socks[2], data4, sizeof(data4));
 }
 
-TEST_F(MultiTcpSocketTest,  TestActivePassiveWithStunServerMockup) {
+TEST_F(MultiTcpSocketTest, TestActivePassiveWithStunServerMockup) {
   /* Fake STUN message able to pass the nr_is_stun_msg check
      used in nr_socket_buffered_stun */
   const char stunMessage[] = {
@@ -371,7 +379,7 @@ TEST_F(MultiTcpSocketTest,  TestConnectTwoSo) {
 
 // test works on localhost only with delay applied:
 //   tc qdisc add dev lo root netem delay 5ms
-TEST_F(MultiTcpSocketTest,  DISABLED_TestTwoSoBidirectionalTransmit) {
+TEST_F(MultiTcpSocketTest, DISABLED_TestTwoSoBidirectionalTransmit) {
   const char data[] = "TestTwoSoBidirectionalTransmit";
   socks[0] = Create(TCP_TYPE_SO);
   socks[1] = Create(TCP_TYPE_SO);
