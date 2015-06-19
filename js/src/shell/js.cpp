@@ -4318,36 +4318,6 @@ ReflectTrackedOptimizations(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#ifdef DEBUG
-static bool
-DumpStaticScopeChain(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject callee(cx, &args.callee());
-
-    if (args.length() != 1) {
-        ReportUsageError(cx, callee, "Wrong number of arguments");
-        return false;
-    }
-
-    if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
-        ReportUsageError(cx, callee, "Argument must be an interpreted function");
-        return false;
-    }
-
-    RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
-    if (!fun->isInterpreted()) {
-        ReportUsageError(cx, callee, "Argument must be an interpreted function");
-        return false;
-    }
-
-    js::DumpStaticScopeChain(fun->getOrCreateScript(cx));
-
-    args.rval().setUndefined();
-    return true;
-}
-#endif
-
 namespace js {
 namespace shell {
 
@@ -4995,12 +4965,6 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
 "  Returns an object describing the tracked optimizations of |fun|, if\n"
 "  any. If |fun| is not a scripted function or has not been compiled by\n"
 "  Ion, null is returned."),
-
-#ifdef DEBUG
-    JS_FN_HELP("dumpStaticScopeChain", DumpStaticScopeChain, 1, 0,
-"dumpStaticScopeChain(fun)",
-"  Prints the static scope chain of an interpreted function fun."),
-#endif
 
     JS_FS_HELP_END
 };
