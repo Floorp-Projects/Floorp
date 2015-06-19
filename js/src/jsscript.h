@@ -55,15 +55,6 @@ namespace frontend {
     class UpvarCookie;
 }
 
-namespace detail {
-
-// Do not call this directly! It is exposed for the friend declarations in
-// this file.
-bool
-CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScript src, HandleScript dst);
-
-} // namespace detail
-
 }
 
 /*
@@ -139,10 +130,6 @@ struct BlockScopeArray {
 };
 
 class YieldOffsetArray {
-    friend bool
-    detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScript src,
-                       HandleScript dst);
-
     uint32_t*       vector_;   // Array of bytecode offsets.
     uint32_t        length_;    // Count of bytecode offsets.
 
@@ -768,6 +755,16 @@ bool
 XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enclosingScript,
           HandleFunction fun, MutableHandleScript scriptp);
 
+enum PollutedGlobalScopeOption {
+    HasPollutedGlobalScope,
+    HasCleanGlobalScope
+};
+
+JSScript*
+CloneScript(JSContext* cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script,
+            PollutedGlobalScopeOption polluted = HasCleanGlobalScope,
+            NewObjectKind newKind = GenericObject);
+
 template<XDRMode mode>
 bool
 XDRLazyScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enclosingScript,
@@ -787,13 +784,13 @@ class JSScript : public js::gc::TenuredCell
     template <js::XDRMode mode>
     friend
     bool
-    js::XDRScript(js::XDRState<mode>* xdr, js::HandleObject enclosingScope,
-                  js::HandleScript enclosingScript,
+    js::XDRScript(js::XDRState<mode>* xdr, js::HandleObject enclosingScope, js::HandleScript enclosingScript,
                   js::HandleFunction fun, js::MutableHandleScript scriptp);
 
-    friend bool
-    js::detail::CopyScript(JSContext* cx, js::HandleObject scriptStaticScope, js::HandleScript src,
-                           js::HandleScript dst);
+    friend JSScript*
+    js::CloneScript(JSContext* cx, js::HandleObject enclosingScope, js::HandleFunction fun,
+                    js::HandleScript src, js::PollutedGlobalScopeOption polluted,
+                    js::NewObjectKind newKind);
 
   public:
     //
@@ -939,7 +936,7 @@ class JSScript : public js::gc::TenuredCell
     // True if the script has a non-syntactic scope on its dynamic scope chain.
     // That is, there are objects about which we know nothing between the
     // outermost syntactic scope and the global.
-    bool hasNonSyntacticScope_:1;
+    bool hasPollutedGlobalScope_:1;
 
     // see Parser::selfHostingMode.
     bool selfHosted_:1;
@@ -1181,8 +1178,8 @@ class JSScript : public js::gc::TenuredCell
 
     bool explicitUseStrict() const { return explicitUseStrict_; }
 
-    bool hasNonSyntacticScope() const {
-        return hasNonSyntacticScope_;
+    bool hasPollutedGlobalScope() const {
+        return hasPollutedGlobalScope_;
     }
 
     bool selfHosted() const { return selfHosted_; }
@@ -2296,12 +2293,9 @@ DescribeScriptedCallerForCompilation(JSContext* cx, MutableHandleScript maybeScr
                                      uint32_t* pcOffset, bool* mutedErrors,
                                      LineOption opt = NOT_CALLED_FROM_JSOP_EVAL);
 
-JSScript*
-CloneScriptIntoFunction(JSContext* cx, HandleObject enclosingScope, HandleFunction fun,
-                        HandleScript src);
-
-JSScript*
-CloneGlobalScript(JSContext* cx, Handle<ScopeObject*> enclosingScope, HandleScript src);
+bool
+CloneFunctionScript(JSContext* cx, HandleFunction original, HandleFunction clone,
+                    PollutedGlobalScopeOption polluted, NewObjectKind newKind);
 
 } /* namespace js */
 

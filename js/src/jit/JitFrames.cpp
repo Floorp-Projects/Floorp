@@ -2553,7 +2553,7 @@ InlineFrameIterator::computeScopeChain(Value scopeChainValue, MaybeReadFallback&
     // Ion does not handle non-function scripts that have anything other than
     // the global on their scope chain.
     MOZ_ASSERT(!script()->isForEval());
-    MOZ_ASSERT(!script()->hasNonSyntacticScope());
+    MOZ_ASSERT(!script()->hasPollutedGlobalScope());
     return &script()->global();
 }
 
