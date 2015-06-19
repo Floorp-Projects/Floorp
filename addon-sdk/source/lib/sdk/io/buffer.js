@@ -247,11 +247,11 @@ Object.defineProperties(Buffer.prototype, {
     value: function(string, offset, length, encoding = 'utf8') {
       // write(string, encoding);
       if (typeof(offset) === 'string' && Number.isNaN(parseInt(offset))) {
-        ([offset, length, encoding]) = [0, null, offset];
+        [offset, length, encoding] = [0, null, offset];
       }
       // write(string, offset, encoding);
       else if (typeof(length) === 'string')
-        ([length, encoding]) = [null, length];
+        [length, encoding] = [null, length];
 
       if (offset < 0 || offset > this.length)
         throw new RangeError('offset is outside of valid range');

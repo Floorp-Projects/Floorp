@@ -245,7 +245,7 @@ const map = (f, ...sequences) => seq(function* () {
       let index = 0;
       let value = void(0);
       while (index < count && !done) {
-        ({ done, value }) = inputs[index].next();
+        ({ done, value } = inputs[index].next());
 
         // If input is not exhausted yet store value in args.
         if (!done) {
@@ -273,10 +273,10 @@ const reductions = (...params) => {
   let hasInitial = false;
   let f, initial, source;
   if (count === 2) {
-    ([f, source]) = params;
+    [f, source] = params;
   }
   else if (count === 3) {
-    ([f, initial, source]) = params;
+    [f, initial, source] = params;
     hasInitial = true;
   }
   else {
