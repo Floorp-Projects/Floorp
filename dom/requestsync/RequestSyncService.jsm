@@ -81,7 +81,7 @@ this.RequestSyncService = {
     }).bind(this));
 
     Services.obs.addObserver(this, 'xpcom-shutdown', false);
-    Services.obs.addObserver(this, 'webapps-clear-data', false);
+    Services.obs.addObserver(this, 'clear-cookiejar-data', false);
     Services.obs.addObserver(this, 'wifi-state-changed', false);
 
     this.initDBHelper("requestSync", RSYNCDB_VERSION, [RSYNCDB_NAME]);
@@ -117,7 +117,7 @@ this.RequestSyncService = {
     }).bind(this));
 
     Services.obs.removeObserver(this, 'xpcom-shutdown');
-    Services.obs.removeObserver(this, 'webapps-clear-data');
+    Services.obs.removeObserver(this, 'clear-cookiejar-data');
     Services.obs.removeObserver(this, 'wifi-state-changed');
 
     this.close();
@@ -138,8 +138,8 @@ this.RequestSyncService = {
         this.shutdown();
         break;
 
-      case 'webapps-clear-data':
-        this.clearData(aSubject);
+      case 'clear-cookiejar-data':
+        this.clearData(aData);
         break;
 
       case 'wifi-state-changed':
@@ -160,15 +160,7 @@ this.RequestSyncService = {
       return;
     }
 
-    let params =
-      aData.QueryInterface(Ci.mozIApplicationClearPrivateDataParams);
-    if (!params) {
-      return;
-    }
-
-    // At this point we don't have the origin, so we cannot create the full
-    // key. Using the partial one is enough to detect the uninstalled app.
-    let partialKey = params.appId + '|' + params.browserOnly + '|';
+    let partialKey = aData;
     let dbKeys = [];
 
     for (let key  in this._registrations) {
@@ -207,9 +199,7 @@ this.RequestSyncService = {
 
   // This method generates the key for the indexedDB object storage.
   principalToKey: function(aPrincipal) {
-    return aPrincipal.appId + '|' +
-           aPrincipal.isInBrowserElement + '|' +
-           aPrincipal.originNoSuffix;
+    return aPrincipal.cookieJar + '|' + aPrincipal.origin;
   },
 
   // Add a task to the _registrations map and create the timer if it's needed.
@@ -382,10 +372,7 @@ this.RequestSyncService = {
 
     aData.params.overwrittenMinInterval = 0;
 
-    let dbKey = aData.task + "|" +
-                aPrincipal.appId + '|' +
-                aPrincipal.isInBrowserElement + '|' +
-                aPrincipal.originNoSuffix;
+    let dbKey = aData.task + "|" + key;
 
     let data = { principal: aPrincipal,
                  dbKey: dbKey,

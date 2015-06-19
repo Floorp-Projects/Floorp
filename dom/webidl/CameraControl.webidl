@@ -109,6 +109,12 @@ dictionary CameraStartRecordingOptions
      will be left as-is on stopRecording(). If the camera does not
      support this setting, it will be ignored. */
   boolean autoEnableLowLightTorch = false;
+
+  /* If given, a poster JPG will be created from the recording and saved
+     at the given path. PosterCreated or PosterFailed recording state
+     changes will indicate whether or not it was created. */
+  DOMString posterFilepath = "";
+  DeviceStorage? posterStorageArea = null;
 };
 
 /*
