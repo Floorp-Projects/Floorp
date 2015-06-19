@@ -16,6 +16,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/fallible.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Attributes.h"
 
 #include <new>
 
@@ -82,7 +83,7 @@ enum PLDHashOperator
 };
 
 template<class EntryType>
-class nsTHashtable
+class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable
 {
   typedef mozilla::fallible_t fallible_t;
 
