@@ -143,11 +143,9 @@ this.GeckoDriver = function(appName, device, emulator) {
     "platformVersion": Services.appinfo.platformVersion,
 
     // Supported features
-    "handlesAlerts": false,
-    "nativeEvents": false,
     "raisesAccessibilityExceptions": false,
     "rotatable": this.appName == "B2G",
-    "secureSsl": false,
+    "acceptSslCerts": false,
     "takesElementScreenshot": true,
     "takesScreenshot": true,
 
