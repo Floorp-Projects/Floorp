@@ -5,9 +5,8 @@
         <meta name="viewport" content="width=device-width">
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
-        <!--script src="/resources/testharnessreport.js"></script-->
+        <script src="/resources/testharnessreport.js"></script>
         <script src="pointerevent_support.js"></script>
-        <script src="mochitest_support_internal.js"></script>
         <style>
             #target0 {
             background: black;
@@ -22,12 +21,10 @@
     </head>
     <body onload="run()">
         <h1>Pointer Events touch-action attribute support</h1>
-        <!--
         <h4>Test Description: Press and hold your touch. Try to scroll text in any direction.
             Then release your touch and try to scroll again. Expected: no panning.
         </h4>
         <p>Note: this test is for touch-devices only</p>
-        -->
         <div id="target0" style="touch-action: auto;">
             <p>
                 Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diem
