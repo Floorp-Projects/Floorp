@@ -71,6 +71,16 @@
  * @author "Benjamin Smedberg <bsmedberg@covad.net>"
  */
 
+// These are the codes returned by |Enumerator| functions, which control
+// EnumerateEntry()'s behavior. The PLD/PL_D prefix is because they originated
+// in PLDHashTable, but that class no longer uses them.
+enum PLDHashOperator
+{
+  PL_DHASH_NEXT = 0,          // enumerator says continue
+  PL_DHASH_STOP = 1,          // enumerator says stop
+  PL_DHASH_REMOVE = 2         // enumerator says remove
+};
+
 template<class EntryType>
 class nsTHashtable
 {
@@ -191,7 +201,10 @@ public:
   typedef PLDHashOperator (*Enumerator)(EntryType* aEntry, void* userArg);
 
   /**
-   * Enumerate all the entries of the function.
+   * Enumerate all the entries of the function. If any entries are removed via
+   * a PL_DHASH_REMOVE return value from |aEnumFunc|, the table may be shrunk
+   * at the end. Use RawRemoveEntry() instead if you wish to remove an entry
+   * without possibly shrinking the table.
    * @param     enumFunc the <code>Enumerator</code> function to call
    * @param     userArg a pointer to pass to the
    *            <code>Enumerator</code> function

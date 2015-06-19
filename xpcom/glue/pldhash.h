@@ -83,60 +83,6 @@ private:
   PLDHashNumber mKeyHash;
 };
 
-/*
- * These are the codes returned by PLDHashEnumerator functions, which control
- * PL_DHashTableEnumerate's behavior.
- */
-enum PLDHashOperator
-{
-  PL_DHASH_NEXT = 0,          /* enumerator says continue */
-  PL_DHASH_STOP = 1,          /* enumerator says stop */
-  PL_DHASH_REMOVE = 2         /* enumerator says remove */
-};
-
-/*
- * Enumerate entries in table using etor:
- *
- *   count = PL_DHashTableEnumerate(table, etor, arg);
- *
- * PL_DHashTableEnumerate calls etor like so:
- *
- *   op = etor(table, entry, number, arg);
- *
- * where number is a zero-based ordinal assigned to live entries according to
- * their order in aTable->mEntryStore.
- *
- * The return value, op, is treated as a set of flags.  If op is PL_DHASH_NEXT,
- * then continue enumerating.  If op contains PL_DHASH_REMOVE, then clear (via
- * aTable->mOps->clearEntry) and free entry.  Then we check whether op contains
- * PL_DHASH_STOP; if so, stop enumerating and return the number of live entries
- * that were enumerated so far.  Return the total number of live entries when
- * enumeration completes normally.
- *
- * If etor calls PL_DHashTableAdd or PL_DHashTableRemove on table, it must
- * return PL_DHASH_STOP; otherwise undefined behavior results.
- *
- * If any enumerator returns PL_DHASH_REMOVE, aTable->mEntryStore may be shrunk
- * or compressed after enumeration, but before PL_DHashTableEnumerate returns.
- * Such an enumerator therefore can't safely set aside entry pointers, but an
- * enumerator that never returns PL_DHASH_REMOVE can set pointers to entries
- * aside, e.g., to avoid copying live entries into an array of the entry type.
- * Copying entry pointers is cheaper, and safe so long as the caller of such a
- * "stable" Enumerate doesn't use the set-aside pointers after any call either
- * to PL_DHashTableAdd or PL_DHashTableRemove, or to an "unstable" form of
- * Enumerate, which might grow or shrink mEntryStore.
- *
- * If your enumerator wants to remove certain entries, but set aside pointers
- * to other entries that it retains, it can use PL_DHashTableRawRemove on the
- * entries to be removed, returning PL_DHASH_NEXT to skip them.  Likewise, if
- * you want to remove entries, but for some reason you do not want mEntryStore
- * to be shrunk or compressed, you can call PL_DHashTableRawRemove safely on
- * the entry being enumerated, rather than returning PL_DHASH_REMOVE.
- */
-typedef PLDHashOperator (*PLDHashEnumerator)(PLDHashTable* aTable,
-                                             PLDHashEntryHdr* aHdr,
-                                             uint32_t aNumber, void* aArg);
-
 typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
   PLDHashEntryHdr* aHdr, mozilla::MallocSizeOf aMallocSizeOf, void* aArg);
 
@@ -371,8 +317,6 @@ public:
   void Remove(const void* aKey);
 
   void RawRemove(PLDHashEntryHdr* aEntry);
-
-  uint32_t Enumerate(PLDHashEnumerator aEtor, void* aArg);
 
   // This function is equivalent to
   // ClearAndPrepareForLength(PL_DHASH_DEFAULT_INITIAL_LENGTH).
@@ -675,10 +619,6 @@ PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey);
  * shrink the table if it is underloaded.
  */
 void PL_DHashTableRawRemove(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
-
-uint32_t
-PL_DHashTableEnumerate(PLDHashTable* aTable, PLDHashEnumerator aEtor,
-                       void* aArg);
 
 /**
  * Measure the size of the table's entry storage, and if
