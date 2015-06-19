@@ -57,6 +57,7 @@ EXTRA_JS_MODULES.devtools.shared.widgets += [
     'widgets/Graphs.js',
     'widgets/LineGraphWidget.js',
     'widgets/MdnDocsWidget.js',
+    'widgets/MountainGraphWidget.js',
     'widgets/Spectrum.js',
     'widgets/TableWidget.js',
     'widgets/Tooltip.js',
