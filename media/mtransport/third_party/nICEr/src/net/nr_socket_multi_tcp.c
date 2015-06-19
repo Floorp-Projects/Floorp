@@ -56,16 +56,22 @@ static void nr_tcp_socket_readable_cb(NR_SOCKET s, int how, void *arg);
 
 static int nr_tcp_socket_ctx_destroy(nr_tcp_socket_ctx **objp)
   {
+    nr_tcp_socket_ctx *sock;
+
     if (!objp || !*objp)
       return(0);
 
-    nr_socket_destroy(&(*objp)->inner);
-    RFREE(*objp);
-    *objp=NULL;
+    sock=*objp;
+    *objp=0;
+
+    nr_socket_destroy(&sock->inner);
+
+    RFREE(sock);
 
     return(0);
   }
 
+/* This takes ownership of nrsock whether it fails or not. */
 static int nr_tcp_socket_ctx_create(nr_socket *nrsock, int is_framed,
   int max_pending, nr_tcp_socket_ctx **sockp)
   {
@@ -409,8 +415,8 @@ static int nr_socket_multi_tcp_destroy(void **objp)
     if (!objp || !*objp)
       return 0;
 
-    sock = (nr_socket_multi_tcp *)*objp;
-    *objp = 0;
+    sock=(nr_socket_multi_tcp *)*objp;
+    *objp=0;
 
     /* Cancel waiting on the socket */
     if (sock->listen_socket && !nr_socket_getfd(sock->listen_socket, &fd)) {
@@ -436,14 +442,15 @@ static int nr_socket_multi_tcp_destroy(void **objp)
     return 0;
   }
 
-static int nr_socket_multi_tcp_sendto(void *obj,const void *msg, size_t len,
+static int nr_socket_multi_tcp_sendto(void *obj, const void *msg, size_t len,
   int flags, nr_transport_addr *to)
   {
     int r, _status;
-    nr_socket_multi_tcp *sock = (nr_socket_multi_tcp *)obj;
+    nr_socket_multi_tcp *sock=(nr_socket_multi_tcp *)obj;
     nr_socket *nrsock;
 
-    if ((r=nr_socket_multi_tcp_get_sock_connected_to(sock, to, PREALLOC_DONT_CONNECT_UNLESS_SO, &nrsock)))
+    if ((r=nr_socket_multi_tcp_get_sock_connected_to(sock, to,
+      PREALLOC_DONT_CONNECT_UNLESS_SO, &nrsock)))
       ABORT(r);
 
     if((r=nr_socket_sendto(nrsock, msg, len, flags, to)))
@@ -460,9 +467,12 @@ static int nr_socket_multi_tcp_sendto(void *obj,const void *msg, size_t len,
 static int nr_socket_multi_tcp_recvfrom(void *obj,void * restrict buf,
   size_t maxlen, size_t *len, int flags, nr_transport_addr *from)
   {
-    int r, _status;
-    nr_socket_multi_tcp *sock = (nr_socket_multi_tcp *)obj;
+    int r, _status = 0;
+    nr_socket_multi_tcp *sock=(nr_socket_multi_tcp *)obj;
     nr_tcp_socket_ctx *tcpsock;
+
+    if (TAILQ_EMPTY(&sock->sockets))
+      ABORT(R_FAILED);
 
     TAILQ_FOREACH(tcpsock, &sock->sockets, entry) {
       if (nr_transport_addr_is_wildcard(&tcpsock->remote_addr))
@@ -481,11 +491,12 @@ static int nr_socket_multi_tcp_recvfrom(void *obj,void * restrict buf,
 
         TAILQ_REMOVE(&sock->sockets, tcpsock, entry);
         nr_tcp_socket_ctx_destroy(&tcpsock);
-        r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s(from:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,from->as_string,_status);
+        r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s(from:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,from->as_string,r);
         ABORT(r);
       }
     }
 
+    /* this also gets returned if all tcpsocks have wildcard remote_addr */
     _status=R_WOULDBLOCK;
   abort:
 
@@ -494,14 +505,14 @@ static int nr_socket_multi_tcp_recvfrom(void *obj,void * restrict buf,
 
 static int nr_socket_multi_tcp_getaddr(void *obj, nr_transport_addr *addrp)
   {
-    nr_socket_multi_tcp *sock = (nr_socket_multi_tcp *)obj;
+    nr_socket_multi_tcp *sock=(nr_socket_multi_tcp *)obj;
 
     return nr_transport_addr_copy(addrp,&sock->addr);
   }
 
 static int nr_socket_multi_tcp_close(void *obj)
   {
-    nr_socket_multi_tcp *sock = (nr_socket_multi_tcp *)obj;
+    nr_socket_multi_tcp *sock=(nr_socket_multi_tcp *)obj;
     nr_tcp_socket_ctx *tcpsock;
 
     if(sock->listen_socket)
@@ -516,18 +527,19 @@ static int nr_socket_multi_tcp_close(void *obj)
 
 static void nr_tcp_socket_readable_cb(NR_SOCKET s, int how, void *arg)
   {
-    nr_socket_multi_tcp *sock = (nr_socket_multi_tcp *)arg;
+    nr_socket_multi_tcp *sock=(nr_socket_multi_tcp *)arg;
+
+    // rearm
+    NR_ASYNC_WAIT(s, NR_ASYNC_WAIT_READ, nr_tcp_socket_readable_cb, arg);
 
     if (sock->readable_cb)
       sock->readable_cb(s, how, sock->readable_cb_arg);
-
-    NR_ASYNC_WAIT(s, NR_ASYNC_WAIT_READ, nr_tcp_socket_readable_cb, arg);
   }
 
 static int nr_socket_multi_tcp_connect(void *obj, nr_transport_addr *addr)
   {
     int r, _status;
-    nr_socket_multi_tcp *sock = (nr_socket_multi_tcp *)obj;
+    nr_socket_multi_tcp *sock=(nr_socket_multi_tcp *)obj;
     nr_socket *nrsock;
 
     if ((r=nr_socket_multi_tcp_get_sock_connected_to(sock,addr,PREALLOC_CONNECT_FRAMED,&nrsock)))
@@ -543,16 +555,16 @@ abort:
 
 static void nr_tcp_multi_lsocket_readable_cb(NR_SOCKET s, int how, void *arg)
   {
-    nr_socket_multi_tcp *sock = (nr_socket_multi_tcp *)arg;
+    nr_socket_multi_tcp *sock=(nr_socket_multi_tcp *)arg;
     nr_socket *newsock;
     nr_transport_addr remote_addr;
     nr_tcp_socket_ctx *tcp_sock_ctx;
     int r;
 
-    //rearm
-    NR_ASYNC_WAIT(s, NR_ASYNC_WAIT_READ, nr_tcp_multi_lsocket_readable_cb, sock);
+    // rearm
+    NR_ASYNC_WAIT(s, NR_ASYNC_WAIT_READ, nr_tcp_multi_lsocket_readable_cb, arg);
 
-    /* accept and add to socket_list */
+    /* accept */
     if (nr_socket_accept(sock->listen_socket, &remote_addr, &newsock))
       return;
 
@@ -573,7 +585,7 @@ static void nr_tcp_multi_lsocket_readable_cb(NR_SOCKET s, int how, void *arg)
 static int nr_socket_multi_tcp_listen(void *obj, int backlog)
   {
     int r, _status;
-    nr_socket_multi_tcp *sock = (nr_socket_multi_tcp *)obj;
+    nr_socket_multi_tcp *sock=(nr_socket_multi_tcp *)obj;
     NR_SOCKET fd;
 
     if(!sock->listen_socket)

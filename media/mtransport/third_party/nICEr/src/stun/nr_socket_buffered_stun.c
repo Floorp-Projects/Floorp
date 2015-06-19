@@ -224,7 +224,9 @@ static int nr_socket_buffered_stun_sendto(void *obj,const void *msg, size_t len,
     if (len > NR_MAX_FRAME_SIZE)
       ABORT(R_FAILED);
 
-    frame = RMALLOC(len + sizeof(nr_frame_header));
+    if (!(frame = RMALLOC(len + sizeof(nr_frame_header))))
+      ABORT(R_NO_MEMORY);
+
     frame->frame_length = htons(len);
     memcpy(frame->data, msg, len);
     len += sizeof(nr_frame_header);
@@ -280,11 +282,13 @@ reread:
 
   /* No more bytes expected */
   if (sock->read_state == NR_ICE_SOCKET_READ_NONE) {
+    size_t remaining_length;
     if (sock->framing_type == ICE_TCP_FRAMING) {
-      sock->bytes_needed = ntohs(frame->frame_length);
+      if (sock->bytes_read < sizeof(nr_frame_header))
+        ABORT(R_BAD_DATA);
+      remaining_length = ntohs(frame->frame_length);
     } else {
       int tmp_length;
-      size_t remaining_length;
 
       /* Parse the header */
       if (r = nr_stun_message_length(sock->buffer, sock->bytes_read, &tmp_length))
@@ -294,18 +298,21 @@ reread:
         ABORT(R_BAD_DATA);
       remaining_length = tmp_length;
 
-      /* Check to see if we have enough room */
-      if ((sock->buffer_size - sock->bytes_read) < remaining_length)
-        ABORT(R_BAD_DATA);
-
-      /* Set ourselves up to read the rest of the data */
-      sock->bytes_needed = remaining_length;
     }
+    /* Check to see if we have enough room */
+    if ((sock->buffer_size - sock->bytes_read) < remaining_length)
+      ABORT(R_BAD_DATA);
+
+    /* Set ourselves up to read the rest of the data */
+    sock->bytes_needed = remaining_length;
+
     sock->read_state = NR_ICE_SOCKET_READ_HDR;
     goto reread;
   }
 
   assert(skip_hdr_size <= sock->bytes_read);
+  if (skip_hdr_size > sock->bytes_read)
+    ABORT(R_BAD_DATA);
   sock->bytes_read -= skip_hdr_size;
 
   if (maxlen < sock->bytes_read)

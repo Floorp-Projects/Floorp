@@ -533,7 +533,8 @@ int NrSocket::create(nr_transport_addr *addr) {
       opt_reuseaddr.value.reuse_addr = PR_TRUE;
       status = PR_SetSocketOption(fd_, &opt_reuseaddr);
       if (status != PR_SUCCESS) {
-        r_log(LOG_GENERIC, LOG_CRIT, "Couldn't set reuse addr socket option");
+        r_log(LOG_GENERIC, LOG_CRIT,
+          "Couldn't set reuse addr socket option: %d", status);
         ABORT(R_INTERNAL);
       }
       // And also set ReusePort for platforms supporting this socket option
@@ -543,9 +544,19 @@ int NrSocket::create(nr_transport_addr *addr) {
       status = PR_SetSocketOption(fd_, &opt_reuseport);
       if (status != PR_SUCCESS) {
         if (PR_GetError() != PR_OPERATION_NOT_SUPPORTED_ERROR) {
-          r_log(LOG_GENERIC, LOG_CRIT, "Couldn't set reuse port socket option");
+          r_log(LOG_GENERIC, LOG_CRIT,
+            "Couldn't set reuse port socket option: %d", status);
           ABORT(R_INTERNAL);
         }
+      }
+      // Try to speedup packet delivery by disabling TCP Nagle
+      PRSocketOptionData opt_nodelay;
+      opt_nodelay.option = PR_SockOpt_NoDelay;
+      opt_nodelay.value.no_delay = PR_TRUE;
+      status = PR_SetSocketOption(fd_, &opt_nodelay);
+      if (status != PR_SUCCESS) {
+        r_log(LOG_GENERIC, LOG_WARNING,
+          "Couldn't set Nodelay socket option: %d", status);
       }
       break;
     default:
@@ -820,45 +831,59 @@ int NrSocket::accept(nr_transport_addr *addrp, nr_socket **sockp) {
   ASSERT_ON_THREAD(ststhread_);
   int _status, r;
   PRStatus status;
-  PRFileDesc *ret;
+  PRFileDesc *prfd;
   PRNetAddr nfrom;
   NrSocket *sock=nullptr;
   nsresult rv;
+  PRSocketOptionData opt_nonblock, opt_nodelay;
   nsCOMPtr<nsISocketTransportService> stservice =
       do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
-  PRSocketOptionData option;
-
 
   if (NS_FAILED(rv)) {
     ABORT(R_INTERNAL);
   }
 
-  assert(fd_);
-  ret = PR_Accept(fd_, &nfrom, PR_INTERVAL_NO_WAIT);
+  if(!fd_)
+    ABORT(R_EOD);
 
-  if (!ret) {
+  prfd = PR_Accept(fd_, &nfrom, PR_INTERVAL_NO_WAIT);
+
+  if (!prfd) {
     if (PR_GetError() == PR_WOULD_BLOCK_ERROR)
       ABORT(R_WOULDBLOCK);
 
     ABORT(R_IO_ERROR);
   }
 
-  if((r=nr_praddr_to_transport_addr(&nfrom,addrp,my_addr_.protocol,0)))
-    ABORT(r);
-
   sock = new NrSocket();
 
-  sock->fd_=ret;
+  sock->fd_=prfd;
   nr_transport_addr_copy(&sock->my_addr_, &my_addr_);
 
+  if((r=nr_praddr_to_transport_addr(&nfrom, addrp, my_addr_.protocol, 0)))
+    ABORT(r);
+
   // Set nonblocking
-  option.option = PR_SockOpt_Nonblocking;
-  option.value.non_blocking = PR_TRUE;
-  status = PR_SetSocketOption(ret, &option);
+  opt_nonblock.option = PR_SockOpt_Nonblocking;
+  opt_nonblock.value.non_blocking = PR_TRUE;
+  status = PR_SetSocketOption(prfd, &opt_nonblock);
   if (status != PR_SUCCESS) {
-    r_log(LOG_GENERIC, LOG_CRIT, "Couldn't make socket nonblocking");
+    r_log(LOG_GENERIC, LOG_CRIT,
+      "Failed to make accepted socket nonblocking: %d", status);
     ABORT(R_INTERNAL);
   }
+  // Disable TCP Nagle
+  opt_nodelay.option = PR_SockOpt_NoDelay;
+  opt_nodelay.value.no_delay = PR_TRUE;
+  status = PR_SetSocketOption(prfd, &opt_nodelay);
+  if (status != PR_SUCCESS) {
+    r_log(LOG_GENERIC, LOG_WARNING,
+      "Failed to set Nodelay on accepted socket: %d", status);
+  }
+
+  // Should fail only with OOM
+  if ((r=nr_socket_create_int(static_cast<void *>(sock), sock->vtbl(), sockp)))
+    ABORT(r);
 
   // Remember our thread.
   sock->ststhread_ = do_QueryInterface(stservice, &rv);
@@ -866,17 +891,12 @@ int NrSocket::accept(nr_transport_addr *addrp, nr_socket **sockp) {
     ABORT(R_INTERNAL);
 
   // Finally, register with the STS
-  rv = stservice->AttachSocket(ret, sock);
+  rv = stservice->AttachSocket(prfd, sock);
   if (NS_FAILED(rv)) {
     ABORT(R_INTERNAL);
   }
 
   sock->connect_invoked_ = true;
-
-  r = nr_socket_create_int(static_cast<void *>(sock),
-                           sock->vtbl(), sockp);
-  if (r)
-    ABORT(r);
 
   // Add a reference so that we can delete it in destroy()
   sock->AddRef();
