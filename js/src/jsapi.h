@@ -3722,16 +3722,32 @@ Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
         const char16_t* chars, size_t length, JS::MutableHandleScript script);
 
 extern JS_PUBLIC_API(bool)
-Compile(JSContext* cx, const ReadOnlyCompileOptions& options, FILE* file,
-        JS::MutableHandleScript script);
+Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
+        FILE* file, JS::MutableHandleScript script);
 
 extern JS_PUBLIC_API(bool)
-Compile(JSContext* cx, const ReadOnlyCompileOptions& options, const char* filename,
-        JS::MutableHandleScript script);
+Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
+        const char* filename, JS::MutableHandleScript script);
 
 extern JS_PUBLIC_API(bool)
 CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
                             SourceBufferHolder& srcBuf, JS::MutableHandleScript script);
+
+extern JS_PUBLIC_API(bool)
+CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
+                            const char* bytes, size_t length, JS::MutableHandleScript script);
+
+extern JS_PUBLIC_API(bool)
+CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
+                            const char16_t* chars, size_t length, JS::MutableHandleScript script);
+
+extern JS_PUBLIC_API(bool)
+CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
+                            FILE* file, JS::MutableHandleScript script);
+
+extern JS_PUBLIC_API(bool)
+CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
+                            const char* filename, JS::MutableHandleScript script);
 
 extern JS_PUBLIC_API(bool)
 CanCompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
