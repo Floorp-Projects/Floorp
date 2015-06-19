@@ -591,9 +591,6 @@ GeckoDriver.prototype.getSessionCapabilities = function(cmd, resp) {
  * Update the sessionCapabilities object with the keys that have been
  * passed in when a new session is created.
  *
- * This part of the WebDriver spec is currently in flux, see
- * http://lists.w3.org/Archives/Public/public-browser-tools-testing/2014OctDec/0000.html
- *
  * This is not a public API, only available when a new session is
  * created.
  *
@@ -622,17 +619,21 @@ GeckoDriver.prototype.setSessionCapabilities = function(newCaps) {
     }
 
     for (let key in from) {
-      if (key === "desiredCapabilities") {
-        to = copy(from[key], to);
-      } else if (key === "requiredCapabilities") {
-        for (let caps in from[key]) {
-          if (from[key][caps] !== this.sessionCapabilities[caps]) {
-            errors.push(from[key][caps] + " does not equal " +
-                this.sessionCapabilities[caps])   ;
+      switch (key) {
+        case "desiredCapabilities":
+          to = copy(from[key], to);
+          break;
+        case "requiredCapabilities":
+          for (let caps in from[key]) {
+            if (from[key][caps] !== this.sessionCapabilities[caps]) {
+              errors.push(from[key][caps] + " does not equal " +
+                  this.sessionCapabilities[caps])   ;
+            }
           }
-        }
+          break;
+        default:
+          to[key] = from[key];
       }
-      to[key] = from[key];
     }
 
     if (Object.keys(errors).length === 0) {
