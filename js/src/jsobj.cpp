@@ -1076,7 +1076,7 @@ NewObjectGCKind(const js::Class* clasp)
 
 static inline JSObject*
 NewObject(ExclusiveContext* cx, HandleObjectGroup group, gc::AllocKind kind,
-          NewObjectKind newKind)
+          NewObjectKind newKind, uint32_t initialShapeFlags = 0)
 {
     const Class* clasp = group->clasp();
 
@@ -1091,7 +1091,8 @@ NewObject(ExclusiveContext* cx, HandleObjectGroup group, gc::AllocKind kind,
                     ? GetGCKindSlots(gc::GetGCObjectKind(clasp), clasp)
                     : GetGCKindSlots(kind, clasp);
 
-    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, group->proto(), nfixed));
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, group->proto(), nfixed,
+                                                      initialShapeFlags));
     if (!shape)
         return nullptr;
 
@@ -1139,7 +1140,8 @@ NewObjectWithTaggedProtoIsCachable(ExclusiveContext* cxArg, Handle<TaggedProto> 
 JSObject*
 js::NewObjectWithGivenTaggedProto(ExclusiveContext* cxArg, const Class* clasp,
                                   Handle<TaggedProto> proto,
-                                  gc::AllocKind allocKind, NewObjectKind newKind)
+                                  gc::AllocKind allocKind, NewObjectKind newKind,
+                                  uint32_t initialShapeFlags)
 {
     if (CanBeFinalizedInBackground(allocKind, clasp))
         allocKind = GetBackgroundAllocKind(allocKind);
@@ -1161,7 +1163,7 @@ js::NewObjectWithGivenTaggedProto(ExclusiveContext* cxArg, const Class* clasp,
     if (!group)
         return nullptr;
 
-    RootedObject obj(cxArg, NewObject(cxArg, group, allocKind, newKind));
+    RootedObject obj(cxArg, NewObject(cxArg, group, allocKind, newKind, initialShapeFlags));
     if (!obj)
         return nullptr;
 
