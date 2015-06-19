@@ -14,7 +14,6 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://browser/content/devtools/theme-switching.js"/>
-  <script type="application/javascript" src="performance/system.js"/>
   <script type="application/javascript" src="performance/performance-controller.js"/>
   <script type="application/javascript" src="performance/performance-view.js"/>
   <script type="application/javascript" src="performance/views/overview.js"/>
