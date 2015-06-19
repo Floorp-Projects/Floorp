@@ -103,8 +103,14 @@ struct FullscreenRequest : public LinkedListElement<FullscreenRequest>
   explicit FullscreenRequest(Element* aElement);
   ~FullscreenRequest();
 
-  nsRefPtr<Element> mElement;
+  Element* GetElement() const { return mElement; }
+  nsDocument* GetDocument() const { return mDocument; }
 
+private:
+  nsRefPtr<Element> mElement;
+  nsRefPtr<nsDocument> mDocument;
+
+public:
   nsRefPtr<gfx::VRHMDInfo> mVRHMDDevice;
   // This value should be true if the fullscreen request is
   // originated from chrome code.
