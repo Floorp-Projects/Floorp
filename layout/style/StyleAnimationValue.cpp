@@ -3564,6 +3564,10 @@ StyleAnimationValue::StyleAnimationValue(nscolor aColor, ColorConstructorType)
 StyleAnimationValue&
 StyleAnimationValue::operator=(const StyleAnimationValue& aOther)
 {
+  if (this == &aOther) {
+    return *this;
+  }
+
   FreeValue();
 
   mUnit = aOther.mUnit;
