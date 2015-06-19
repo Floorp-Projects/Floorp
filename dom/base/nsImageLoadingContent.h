@@ -410,7 +410,6 @@ private:
   bool mBroken : 1;
   bool mUserDisabled : 1;
   bool mSuppressed : 1;
-  bool mFireEventsOnDecode : 1;
 
 protected:
   /**
