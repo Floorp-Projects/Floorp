@@ -165,6 +165,7 @@ EXPORTS.mozilla.layers += [
     'opengl/MacIOSurfaceTextureHostOGL.h',
     'opengl/TextureClientOGL.h',
     'opengl/TextureHostOGL.h',
+    'PersistentBufferProvider.h',
     'RenderTrace.h',
     'TransactionIdAllocator.h',
     'YCbCrImageDataSerializer.h',
@@ -334,6 +335,7 @@ SOURCES += [
     'ImageContainer.cpp',
     'Layers.cpp',
     'LayerTreeInvalidation.cpp',
+    'PersistentBufferProvider.cpp',
 ]
 
 # Disable RTTI in google protocol buffer

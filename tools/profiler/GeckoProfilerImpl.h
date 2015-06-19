@@ -14,10 +14,12 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/UniquePtr.h"
+#ifndef SPS_STANDALONE
 #include "nscore.h"
+#include "nsISupports.h"
+#endif
 #include "GeckoProfilerFunc.h"
 #include "PseudoStack.h"
-#include "nsISupports.h"
 #include "ProfilerBacktrace.h"
 
 #ifdef MOZ_TASK_TRACER
@@ -149,6 +151,7 @@ mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0)
   return mozilla_sampler_get_profile(aSinceTime);
 }
 
+#ifndef SPS_STANDALONE
 static inline
 JSObject* profiler_get_profile_jsobject(JSContext* aCx, double aSinceTime = 0)
 {
@@ -161,6 +164,7 @@ void profiler_get_profile_jsobject_async(double aSinceTime = 0,
 {
   mozilla_sampler_get_profile_data_async(aSinceTime, aPromise);
 }
+#endif
 
 static inline
 void profiler_save_profile_to_file(const char* aFilename)
@@ -217,6 +221,7 @@ void profiler_sleep_end()
   mozilla_sampler_sleep_end();
 }
 
+#ifndef SPS_STANDALONE
 static inline
 void profiler_js_operation_callback()
 {
@@ -227,6 +232,7 @@ void profiler_js_operation_callback()
 
   stack->jsOperationCallback();
 }
+#endif
 
 static inline
 double profiler_time()

@@ -8,12 +8,6 @@
               android:layout_height="wrap_content"
               android:orientation="vertical">
 
-    <TextView android:id="@+id/doorhanger_title"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:layout_marginBottom="@dimen/doorhanger_section_padding_small"
-              android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Light"/>
-
     <TextView android:id="@+id/doorhanger_message"
               android:focusable="true"
               android:layout_width="match_parent"

@@ -138,6 +138,7 @@ public:
     uint64_t  maxFileSizeBytes;
     uint64_t  maxVideoLengthMs;
     bool      autoEnableLowLightTorch;
+    bool      createPoster;
   };
 
   struct Configuration {

@@ -121,6 +121,8 @@ class B2GMochitest(MochitestUtilsMixin):
     def run_tests(self, options):
         """ Prepare, configure, run tests and cleanup """
 
+        self.setTestRoot(options)
+
         manifest = self.build_profile(options)
         self.logPreamble(self.getActiveTests(options))
 

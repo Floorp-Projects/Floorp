@@ -342,8 +342,8 @@ sym(vp8_get4x4var_mmx):
         movsxd      rdx, dword ptr arg(3) ;[recon_stride]
 
         ; Row 1
-        movq        mm0, [rax]                  ; Copy eight bytes to mm0
-        movq        mm1, [rbx]                  ; Copy eight bytes to mm1
+        movd        mm0, [rax]                  ; Copy four bytes to mm0
+        movd        mm1, [rbx]                  ; Copy four bytes to mm1
         punpcklbw   mm0, mm6                    ; unpack to higher prrcision
         punpcklbw   mm1, mm6
         psubsw      mm0, mm1                    ; A-B (low order) to MM0
@@ -351,12 +351,12 @@ sym(vp8_get4x4var_mmx):
         pmaddwd     mm0, mm0                    ; square and accumulate
         add         rbx,rdx                     ; Inc pointer into ref data
         add         rax,rcx                     ; Inc pointer into the new data
-        movq        mm1, [rbx]                  ; Copy eight bytes to mm1
+        movd        mm1, [rbx]                  ; Copy four bytes to mm1
         paddd       mm7, mm0                    ; accumulate in mm7
 
 
         ; Row 2
-        movq        mm0, [rax]                  ; Copy eight bytes to mm0
+        movd        mm0, [rax]                  ; Copy four bytes to mm0
         punpcklbw   mm0, mm6                    ; unpack to higher prrcision
         punpcklbw   mm1, mm6
         psubsw      mm0, mm1                    ; A-B (low order) to MM0
@@ -365,12 +365,12 @@ sym(vp8_get4x4var_mmx):
         pmaddwd     mm0, mm0                    ; square and accumulate
         add         rbx,rdx                     ; Inc pointer into ref data
         add         rax,rcx                     ; Inc pointer into the new data
-        movq        mm1, [rbx]                  ; Copy eight bytes to mm1
+        movd        mm1, [rbx]                  ; Copy four bytes to mm1
         paddd       mm7, mm0                    ; accumulate in mm7
 
         ; Row 3
-        movq        mm0, [rax]                  ; Copy eight bytes to mm0
-        punpcklbw   mm0, mm6                    ; unpack to higher prrcision
+        movd        mm0, [rax]                  ; Copy four bytes to mm0
+        punpcklbw   mm0, mm6                    ; unpack to higher precision
         punpcklbw   mm1, mm6
         psubsw      mm0, mm1                    ; A-B (low order) to MM0
         paddw       mm5, mm0                    ; accumulate differences in mm5
@@ -378,11 +378,11 @@ sym(vp8_get4x4var_mmx):
         pmaddwd     mm0, mm0                    ; square and accumulate
         add         rbx,rdx                     ; Inc pointer into ref data
         add         rax,rcx                     ; Inc pointer into the new data
-        movq        mm1, [rbx]                  ; Copy eight bytes to mm1
+        movd        mm1, [rbx]                  ; Copy four bytes to mm1
         paddd       mm7, mm0                    ; accumulate in mm7
 
         ; Row 4
-        movq        mm0, [rax]                  ; Copy eight bytes to mm0
+        movd        mm0, [rax]                  ; Copy four bytes to mm0
 
         punpcklbw   mm0, mm6                    ; unpack to higher prrcision
         punpcklbw   mm1, mm6

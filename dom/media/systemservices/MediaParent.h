@@ -16,25 +16,48 @@ namespace mozilla {
 namespace media {
 
 // media::Parent implements the chrome-process side of ipc for media::Child APIs
+// A "SameProcess" version may also be created to service non-e10s calls.
 
-class ParentSingleton;
+class OriginKeyStore;
 
-class Parent : public PMediaParent
+class NonE10s
 {
-  NS_INLINE_DECL_REFCOUNTING(Parent)
+  typedef mozilla::ipc::IProtocolManager<mozilla::ipc::IProtocol>::ActorDestroyReason
+      ActorDestroyReason;
+protected:
+  virtual bool RecvGetOriginKey(const uint32_t& aRequestId,
+                                const nsCString& aOrigin,
+                                const bool& aPrivateBrowsing) = 0;
+  virtual bool RecvSanitizeOriginKeys(const uint64_t& aSinceWhen) = 0;
+  virtual void
+  ActorDestroy(ActorDestroyReason aWhy) = 0;
+};
+
+// Super = PMediaParent or NonE10s
+
+template<class Super>
+class Parent : public Super
+{
+  typedef mozilla::ipc::IProtocolManager<mozilla::ipc::IProtocol>::ActorDestroyReason
+      ActorDestroyReason;
 public:
+  static Parent* GetSingleton();
+
   virtual bool RecvGetOriginKey(const uint32_t& aRequestId,
                                 const nsCString& aOrigin,
                                 const bool& aPrivateBrowsing) override;
   virtual bool RecvSanitizeOriginKeys(const uint64_t& aSinceWhen) override;
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  Parent();
-private:
+  explicit Parent(bool aSameProcess = false);
   virtual ~Parent();
+private:
 
-  nsRefPtr<ParentSingleton> mSingleton;
+  nsRefPtr<OriginKeyStore> mOriginKeyStore;
   bool mDestroyed;
+  bool mSameProcess;
+
+  CoatCheck<Pledge<nsCString>> mOutstandingPledges;
 };
 
 PMediaParent* AllocPMediaParent();

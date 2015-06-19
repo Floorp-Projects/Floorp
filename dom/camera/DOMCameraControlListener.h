@@ -31,6 +31,7 @@ public:
   virtual void OnRateLimitPreview(bool aLimit) override;
   virtual bool OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight) override;
   virtual void OnUserError(UserContext aContext, nsresult aError) override;
+  virtual void OnPoster(dom::BlobImpl* aBlobImpl) override;
 
 protected:
   virtual ~DOMCameraControlListener();

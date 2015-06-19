@@ -10,8 +10,6 @@ class Bisect(object):
         super(Bisect, self).__init__()
         self.summary = []
         self.contents = {}
-        self.testRoot = harness.testRoot
-        self.testRootAbs = harness.testRootAbs
         self.repeat = 10
         self.failcount = 0
         self.max_failures = 3

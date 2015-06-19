@@ -17,6 +17,11 @@ typedef TrackInfo::TrackType TrackType;
 using media::TimeUnit;
 using media::TimeIntervals;
 
+// Gap allowed between frames. Due to inaccuracies in determining buffer end
+// frames (Bug 1065207). This value is based on the end of frame
+// default value used in Blink, kDefaultBufferDurationInMs.
+#define EOS_FUZZ_US 125000
+
 MediaSourceDemuxer::MediaSourceDemuxer()
   : mTaskQueue(new MediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
                                   /* aSupportsTailDispatch = */ true))
@@ -225,9 +230,15 @@ MediaSourceTrackDemuxer::MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
   : mParent(aParent)
   , mManager(aManager)
   , mType(aType)
-  , mNextSampleIndex(0)
   , mMonitor("MediaSourceTrackDemuxer")
 {
+  // Force refresh of our buffered ranges.
+  nsRefPtr<MediaSourceTrackDemuxer> self = this;
+  nsCOMPtr<nsIRunnable> task =
+    NS_NewRunnableFunction([self] () {
+      self->NotifyTimeRangesChanged();
+    });
+  mParent->GetTaskQueue()->Dispatch(task.forget());
 }
 
 UniquePtr<TrackInfo>
@@ -259,11 +270,11 @@ MediaSourceTrackDemuxer::Reset()
   nsRefPtr<MediaSourceTrackDemuxer> self = this;
   nsCOMPtr<nsIRunnable> task =
     NS_NewRunnableFunction([self] () {
-      self->mNextSampleTime = TimeUnit();
-      self->mNextSampleIndex = 0;
+      self->mManager->Seek(self->mType, TimeUnit());
       {
         MonitorAutoLock mon(self->mMonitor);
-        self->mNextRandomAccessPoint = self->GetNextRandomAccessPoint();
+        self->mNextRandomAccessPoint =
+          self->mManager->GetNextRandomAccessPoint(self->mType);
       }
     });
   mParent->GetTaskQueue()->Dispatch(task.forget());
@@ -310,47 +321,39 @@ MediaSourceTrackDemuxer::BreakCycles()
 nsRefPtr<MediaSourceTrackDemuxer::SeekPromise>
 MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
 {
-  if (aTime.ToMicroseconds() && !mManager->Buffered(mType).Contains(aTime)) {
+  if (aTime.ToMicroseconds() && !mBufferedRanges.Contains(aTime)) {
     // We don't have the data to seek to.
     return SeekPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
                                         __func__);
   }
-  const TrackBuffersManager::TrackBuffer& track =
-    mManager->GetTrackBuffer(mType);
-  TimeUnit lastKeyFrameTime;
-  uint32_t lastKeyFrameIndex = 0;
-  for (uint32_t i = 0; i < track.Length(); i++) {
-    const nsRefPtr<MediaRawData>& sample = track[i];
-    if (sample->mKeyframe) {
-      lastKeyFrameTime = TimeUnit::FromMicroseconds(sample->mTime);
-      lastKeyFrameIndex = i;
-    }
-    if (sample->mTime >= aTime.ToMicroseconds()) {
-      break;
-    }
-  }
-  mNextSampleIndex = lastKeyFrameIndex;
-  mNextSampleTime = lastKeyFrameTime;
+  TimeUnit seekTime = mManager->Seek(mType, aTime);
   {
     MonitorAutoLock mon(mMonitor);
-    mNextRandomAccessPoint = GetNextRandomAccessPoint();
+    mNextRandomAccessPoint = mManager->GetNextRandomAccessPoint(mType);
   }
-  return SeekPromise::CreateAndResolve(mNextSampleTime, __func__);
+  return SeekPromise::CreateAndResolve(seekTime, __func__);
 }
 
 nsRefPtr<MediaSourceTrackDemuxer::SamplesPromise>
 MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
 {
-  DemuxerFailureReason failure;
-  nsRefPtr<MediaRawData> sample = GetSample(failure);
+  bool error;
+  nsRefPtr<MediaRawData> sample = mManager->GetSample(mType,
+                                                      TimeUnit::FromMicroseconds(EOS_FUZZ_US),
+                                                      error);
   if (!sample) {
-    return SamplesPromise::CreateAndReject(failure, __func__);
+    if (error) {
+      return SamplesPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
+    }
+    return SamplesPromise::CreateAndReject(
+      mManager->IsEnded() ? DemuxerFailureReason::END_OF_STREAM :
+                            DemuxerFailureReason::WAITING_FOR_DATA, __func__);
   }
   nsRefPtr<SamplesHolder> samples = new SamplesHolder;
   samples->mSamples.AppendElement(sample);
   if (mNextRandomAccessPoint.ToMicroseconds() <= sample->mTime) {
     MonitorAutoLock mon(mMonitor);
-    mNextRandomAccessPoint = GetNextRandomAccessPoint();
+    mNextRandomAccessPoint = mManager->GetNextRandomAccessPoint(mType);
   }
   return SamplesPromise::CreateAndResolve(samples, __func__);
 }
@@ -358,21 +361,9 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
 nsRefPtr<MediaSourceTrackDemuxer::SkipAccessPointPromise>
 MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(media::TimeUnit aTimeThreadshold)
 {
-  bool found = false;
-  int32_t parsed = 0;
-  const TrackBuffersManager::TrackBuffer& track =
-    mManager->GetTrackBuffer(mType);
-  for (uint32_t i = mNextSampleIndex; i < track.Length(); i++) {
-    const nsRefPtr<MediaRawData>& sample = track[i];
-    if (sample->mKeyframe &&
-        sample->mTime >= aTimeThreadshold.ToMicroseconds()) {
-      mNextSampleTime = TimeUnit::FromMicroseconds(sample->GetEndTime());
-      found = true;
-      break;
-    }
-    parsed++;
-  }
-
+  bool found;
+  uint32_t parsed =
+    mManager->SkipToNextRandomAccessPoint(mType, aTimeThreadshold, found);
   if (found) {
     return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
   }
@@ -382,70 +373,6 @@ MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(media::TimeUnit aTimeThre
   return SkipAccessPointPromise::CreateAndReject(holder, __func__);
 }
 
-already_AddRefed<MediaRawData>
-MediaSourceTrackDemuxer::GetSample(DemuxerFailureReason& aFailure)
-{
-  const TrackBuffersManager::TrackBuffer& track =
-    mManager->GetTrackBuffer(mType);
-  const TimeIntervals& ranges = mManager->Buffered(mType);
-  if (mNextSampleTime >= ranges.GetEnd()) {
-    if (mManager->IsEnded()) {
-      aFailure = DemuxerFailureReason::END_OF_STREAM;
-    } else {
-      aFailure = DemuxerFailureReason::WAITING_FOR_DATA;
-    }
-    return nullptr;
-  }
-  if (mNextSampleTime == TimeUnit()) {
-    // First demux, get first sample time.
-    mNextSampleTime = ranges.GetStart();
-  }
-  if (!ranges.ContainsWithStrictEnd(mNextSampleTime)) {
-    aFailure = DemuxerFailureReason::WAITING_FOR_DATA;
-    return nullptr;
-  }
-
-  if (mNextSampleIndex) {
-    const nsRefPtr<MediaRawData>& sample = track[mNextSampleIndex];
-    nsRefPtr<MediaRawData> p = sample->Clone();
-    if (!p) {
-      aFailure = DemuxerFailureReason::DEMUXER_ERROR;
-      return nullptr;
-    }
-    mNextSampleTime = TimeUnit::FromMicroseconds(sample->GetEndTime());
-    mNextSampleIndex++;
-    return p.forget();
-  }
-  for (uint32_t i = 0; i < track.Length(); i++) {
-    const nsRefPtr<MediaRawData>& sample = track[i];
-    if (sample->mTime >= mNextSampleTime.ToMicroseconds()) {
-      nsRefPtr<MediaRawData> p = sample->Clone();
-      mNextSampleTime = TimeUnit::FromMicroseconds(sample->GetEndTime());
-      mNextSampleIndex = i+1;
-      if (!p) {
-        // OOM
-        break;
-      }
-      return p.forget();
-    }
-  }
-  aFailure = DemuxerFailureReason::DEMUXER_ERROR;
-  return nullptr;
-}
-
-TimeUnit
-MediaSourceTrackDemuxer::GetNextRandomAccessPoint()
-{
-  const TrackBuffersManager::TrackBuffer& track = mManager->GetTrackBuffer(mType);
-  for (uint32_t i = mNextSampleIndex; i < track.Length(); i++) {
-    const nsRefPtr<MediaRawData>& sample = track[i];
-    if (sample->mKeyframe) {
-      return TimeUnit::FromMicroseconds(sample->mTime);
-    }
-  }
-  return media::TimeUnit::FromInfinity();
-}
-
 void
 MediaSourceTrackDemuxer::NotifyTimeRangesChanged()
 {
@@ -453,7 +380,8 @@ MediaSourceTrackDemuxer::NotifyTimeRangesChanged()
     return;
   }
   MOZ_ASSERT(mParent->OnTaskQueue());
-  mNextSampleIndex = 0;
+  mBufferedRanges = mManager->Buffered(mType);
+  mBufferedRanges.SetFuzz(TimeUnit::FromMicroseconds(EOS_FUZZ_US));
 }
 
 } // namespace mozilla

@@ -441,7 +441,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
 
   StartUpdating();
 
-  MOZ_ASSERT(mAppendMode == SourceBufferAppendMode::Segments,
+  MOZ_ASSERT(mIsUsingFormatReader || mAppendMode == SourceBufferAppendMode::Segments,
              "We don't handle timestampOffset for sequence mode yet");
   nsCOMPtr<nsIRunnable> task = new BufferAppendRunnable(this, mUpdateID);
   NS_DispatchToMainThread(task);
@@ -487,6 +487,8 @@ SourceBuffer::AppendDataCompletedWithSuccess(bool aHasActiveTracks)
         mMediaSource->GetDecoder()->NotifyWaitingForResourcesStatusChanged();
       }
     }
+  }
+  if (mActive) {
     // Tell our parent decoder that we have received new data.
     // The information provided do not matter much so long as it is monotonically
     // increasing.
@@ -578,7 +580,8 @@ SourceBuffer::PrepareAppend(const uint8_t* aData, uint32_t aLength, ErrorResult&
   // As we can only evict once we have playable data, we must give a chance
   // to the DASH player to provide a complete media segment.
   if (aLength > mEvictionThreshold ||
-      ((mContentManager->GetSize() > mEvictionThreshold - aLength) &&
+      ((!mIsUsingFormatReader &&
+        mContentManager->GetSize() > mEvictionThreshold - aLength) &&
        evicted != Result::CANT_EVICT)) {
     aRv.Throw(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
     return nullptr;

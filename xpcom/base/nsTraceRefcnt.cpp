@@ -18,8 +18,7 @@
 #include "nsCRT.h"
 #include <math.h>
 #include "nsHashKeys.h"
-#include "nsStackWalkPrivate.h"
-#include "nsStackWalk.h"
+#include "mozilla/StackWalk.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "CodeAddressService.h"
@@ -238,7 +237,7 @@ struct CodeAddressServiceStringAlloc final
   static void free(char* aPtr) { ::free(aPtr); }
 };
 
-// WalkTheStack does not hold any locks needed by NS_DescribeCodeAddress, so
+// WalkTheStack does not hold any locks needed by MozDescribeCodeAddress, so
 // this class does not need to do anything.
 struct CodeAddressServiceLock final
 {
@@ -837,11 +836,11 @@ static void
 PrintStackFrame(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
 {
   FILE* stream = (FILE*)aClosure;
-  nsCodeAddressDetails details;
+  MozCodeAddressDetails details;
   char buf[1024];
 
-  NS_DescribeCodeAddress(aPC, &details);
-  NS_FormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
+  MozDescribeCodeAddress(aPC, &details);
+  MozFormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
   fprintf(stream, "%s\n", buf);
   fflush(stream);
 }
@@ -865,7 +864,7 @@ void
 nsTraceRefcnt::WalkTheStack(FILE* aStream)
 {
 #ifdef MOZ_STACKWALKING
-  NS_StackWalk(PrintStackFrame, /* skipFrames */ 2, /* maxFrames */ 0, aStream,
+  MozStackWalk(PrintStackFrame, /* skipFrames */ 2, /* maxFrames */ 0, aStream,
                0, nullptr);
 #endif
 }
@@ -877,7 +876,7 @@ nsTraceRefcnt::WalkTheStackCached(FILE* aStream)
   if (!gCodeAddressService) {
     gCodeAddressService = new WalkTheStackCodeAddressService();
   }
-  NS_StackWalk(PrintStackFrameCached, /* skipFrames */ 2, /* maxFrames */ 0,
+  MozStackWalk(PrintStackFrameCached, /* skipFrames */ 2, /* maxFrames */ 0,
                aStream, 0, nullptr);
 #endif
 }

@@ -72,7 +72,7 @@ private:
   gfx::Filter GetEffectFilter();
 
 private:
-  RefPtr<CompositableHost> mImageHost;
+  RefPtr<CompositableHost> mCompositableHost;
 };
 
 } /* layers */

@@ -267,6 +267,7 @@ private:
 
   // Temporary seek information while we wait for the data
   // to be added to the track buffer.
+  int64_t mOriginalSeekTime;
   int64_t mPendingSeekTime;
   bool mWaitingForSeekData;
   bool mSeekToEnd;

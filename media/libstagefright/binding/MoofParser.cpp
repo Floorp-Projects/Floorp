@@ -46,7 +46,7 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
   bool foundMdat = false;
 
   for (Box box(&aContext, mOffset); box.IsAvailable(); box = box.Next()) {
-    if (box.IsType("moov")) {
+    if (box.IsType("moov") && mInitRange.IsNull()) {
       mInitRange = MediaByteRange(0, box.Range().mEnd);
       ParseMoov(box);
     } else if (box.IsType("moof")) {
