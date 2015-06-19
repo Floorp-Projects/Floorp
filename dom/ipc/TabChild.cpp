@@ -2150,6 +2150,13 @@ TabChild::RecvNotifyAPZStateChange(const ViewID& aViewId,
 }
 
 bool
+TabChild::RecvNotifyFlushComplete()
+{
+  APZCCallbackHelper::NotifyFlushComplete();
+  return true;
+}
+
+bool
 TabChild::RecvActivate()
 {
   nsCOMPtr<nsIWebBrowserFocus> browser = do_QueryInterface(WebNavigation());

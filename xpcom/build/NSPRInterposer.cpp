@@ -9,6 +9,8 @@
 
 #include "prio.h"
 #include "private/pprio.h"
+#include "nsDebug.h"
+#include "nscore.h"
 
 namespace {
 

@@ -609,6 +609,27 @@ public:
     return NoIndex;
   }
 
+  // Methods for range-based for loops.
+  typename ContainerType::iterator begin()
+  {
+    return mIntervals.begin();
+  }
+
+  typename ContainerType::const_iterator begin() const
+  {
+    return mIntervals.begin();
+  }
+
+  typename ContainerType::iterator end()
+  {
+    return mIntervals.end();
+  }
+
+  typename ContainerType::const_iterator end() const
+  {
+    return mIntervals.end();
+  }
+
 protected:
   ContainerType mIntervals;
 

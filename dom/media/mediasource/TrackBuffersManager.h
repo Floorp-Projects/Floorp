@@ -8,6 +8,7 @@
 #define MOZILLA_TRACKBUFFERSMANAGER_H_
 
 #include "SourceBufferContentManager.h"
+#include "MediaDataDemuxer.h"
 #include "MediaSourceDecoder.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
@@ -79,6 +80,14 @@ public:
   {
     return mEnded;
   }
+  TimeUnit Seek(TrackInfo::TrackType aTrack, const TimeUnit& aTime);
+  uint32_t SkipToNextRandomAccessPoint(TrackInfo::TrackType aTrack,
+                                       const TimeUnit& aTimeThreadshold,
+                                       bool& aFound);
+  already_AddRefed<MediaRawData> GetSample(TrackInfo::TrackType aTrack,
+                                           const TimeUnit& aFuzz,
+                                           bool& aError);
+  TimeUnit GetNextRandomAccessPoint(TrackInfo::TrackType aTrack);
 
 #if defined(DEBUG)
   void Dump(const char* aPath) override;
@@ -144,6 +153,7 @@ private:
   nsAutoPtr<ContainerParser> mParser;
 
   // Demuxer objects and methods.
+  nsRefPtr<MediaByteBuffer> mInitData;
   nsRefPtr<SourceBufferResource> mCurrentInputBuffer;
   nsRefPtr<MediaDataDemuxer> mInputDemuxer;
   // Length already processed in current media segment.
@@ -207,6 +217,10 @@ private:
     bool mNeedRandomAccessPoint;
     nsRefPtr<MediaTrackDemuxer> mDemuxer;
     MediaPromiseRequestHolder<MediaTrackDemuxer::SamplesPromise> mDemuxRequest;
+    // If set, position where the next contiguous frame will be inserted.
+    // If a discontinuity is detected, it will be unset and recalculated upon
+    // the next insertion.
+    Maybe<size_t> mNextInsertionIndex;
     // Samples just demuxed, but not yet parsed.
     TrackBuffer mQueuedSamples;
     // We only manage a single track of each type at this time.
@@ -217,7 +231,27 @@ private:
     // Byte size of all samples contained in this track buffer.
     uint32_t mSizeBuffer;
     // TrackInfo of the first metadata received.
-    UniquePtr<TrackInfo> mInfo;
+    nsRefPtr<SharedTrackInfo> mInfo;
+    // TrackInfo of the last metadata parsed (updated with each init segment.
+    nsRefPtr<SharedTrackInfo> mLastInfo;
+
+    // If set, position of the next sample to be retrieved by GetSample().
+    Maybe<uint32_t> mNextGetSampleIndex;
+    // Approximation of the next sample's decode timestamp.
+    TimeUnit mNextSampleTimecode;
+    // Approximation of the next sample's presentation timestamp.
+    TimeUnit mNextSampleTime;
+
+    void ResetAppendState()
+    {
+      mLastDecodeTimestamp.reset();
+      mLastFrameDuration.reset();
+      mHighestEndTimestamp.reset();
+      mNeedRandomAccessPoint = true;
+
+      mLongestFrameDuration.reset();
+      mNextInsertionIndex.reset();
+    }
   };
 
   bool ProcessFrame(MediaRawData* aSample, TrackData& aTrackData);

@@ -27,7 +27,7 @@
 #endif
 
 #include "nscore.h"
-#include "nsStackWalk.h"
+#include "mozilla/StackWalk.h"
 
 #include "js/HashTable.h"
 #include "js/Vector.h"
@@ -123,7 +123,7 @@ static bool gIsDMDInitialized = false;
 // - Indirect allocations in js::{Vector,HashSet,HashMap} -- this class serves
 //   as their AllocPolicy.
 //
-// - Other indirect allocations (e.g. NS_StackWalk) -- see the comments on
+// - Other indirect allocations (e.g. MozStackWalk) -- see the comments on
 //   Thread::mBlockIntercepts and in replace_malloc for how these work.
 //
 // It would be nice if we could use the InfallibleAllocPolicy from mozalloc,
@@ -512,7 +512,7 @@ class Thread
   // When true, this blocks intercepts, which allows malloc interception
   // functions to themselves call malloc.  (Nb: for direct calls to malloc we
   // can just use InfallibleAllocPolicy::{malloc_,new_}, but we sometimes
-  // indirectly call vanilla malloc via functions like NS_StackWalk.)
+  // indirectly call vanilla malloc via functions like MozStackWalk.)
   bool mBlockIntercepts;
 
   Thread()
@@ -735,40 +735,23 @@ StackTrace::Get(Thread* aT)
   MOZ_ASSERT(gStateLock->IsLocked());
   MOZ_ASSERT(aT->InterceptsAreBlocked());
 
-  // On Windows, NS_StackWalk can acquire a lock from the shared library
+  // On Windows, MozStackWalk can acquire a lock from the shared library
   // loader.  Another thread might call malloc while holding that lock (when
   // loading a shared library).  So we can't be in gStateLock during the call
-  // to NS_StackWalk.  For details, see
+  // to MozStackWalk.  For details, see
   // https://bugzilla.mozilla.org/show_bug.cgi?id=374829#c8
   // On Linux, something similar can happen;  see bug 824340.
   // So let's just release it on all platforms.
-  nsresult rv;
   StackTrace tmp;
   {
     AutoUnlockState unlock;
     uint32_t skipFrames = 2;
-    rv = NS_StackWalk(StackWalkCallback, skipFrames,
-                      gOptions->MaxFrames(), &tmp, 0, nullptr);
-  }
-
-  if (rv == NS_OK) {
-    // Handle the common case first.  All is ok.  Nothing to do.
-  } else if (rv == NS_ERROR_NOT_IMPLEMENTED || rv == NS_ERROR_FAILURE) {
-    tmp.mLength = 0;
-  } else if (rv == NS_ERROR_UNEXPECTED) {
-    // XXX: This |rv| only happens on Mac, and it indicates that we're handling
-    // a call to malloc that happened inside a mutex-handling function.  Any
-    // attempt to create a semaphore (which can happen in printf) could
-    // deadlock.
-    //
-    // However, the most complex thing DMD does after Get() returns is to put
-    // something in a hash table, which might call
-    // InfallibleAllocPolicy::malloc_.  I'm not yet sure if this needs special
-    // handling, hence the forced abort.  Sorry.  If you hit this, please file
-    // a bug and CC nnethercote.
-    MOZ_CRASH("unexpected case in StackTrace::Get()");
-  } else {
-    MOZ_CRASH("impossible case in StackTrace::Get()");
+    if (MozStackWalk(StackWalkCallback, skipFrames,
+                      gOptions->MaxFrames(), &tmp, 0, nullptr)) {
+      // Handle the common case first.  All is ok.  Nothing to do.
+    } else {
+      tmp.mLength = 0;
+    }
   }
 
   StackTraceTable::AddPtr p = gStackTraceTable->lookupForAdd(&tmp);
@@ -1232,7 +1215,7 @@ replace_malloc(size_t aSize)
   Thread* t = Thread::Fetch();
   if (t->InterceptsAreBlocked()) {
     // Intercepts are blocked, which means this must be a call to malloc
-    // triggered indirectly by DMD (e.g. via NS_StackWalk).  Be infallible.
+    // triggered indirectly by DMD (e.g. via MozStackWalk).  Be infallible.
     return InfallibleAllocPolicy::malloc_(aSize);
   }
 
@@ -1555,9 +1538,9 @@ Init(const malloc_table_t* aMallocTable)
   // (prior to the creation of any mutexes, apparently) otherwise we can get
   // hangs when getting stack traces (bug 821577).  But
   // StackWalkInitCriticalAddress() isn't exported from xpcom/, so instead we
-  // just call NS_StackWalk, because that calls StackWalkInitCriticalAddress().
+  // just call MozStackWalk, because that calls StackWalkInitCriticalAddress().
   // See the comment above StackWalkInitCriticalAddress() for more details.
-  (void)NS_StackWalk(NopStackWalkCallback, /* skipFrames */ 0,
+  (void)MozStackWalk(NopStackWalkCallback, /* skipFrames */ 0,
                      /* maxFrames */ 1, nullptr, 0, nullptr);
 #endif
 

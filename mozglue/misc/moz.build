@@ -1,0 +1,47 @@
+FINAL_LIBRARY = 'mozglue'
+
+EXPORTS.mozilla += [
+    'StackWalk.h',
+    'TimeStamp.h',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    EXPORTS.mozilla += [
+        'TimeStamp_windows.h',
+    ]
+
+SOURCES += [
+    'TimeStamp.cpp',
+]
+
+OS_LIBS += CONFIG['REALTIME_LIBS']
+
+DEFINES['IMPL_MFBT'] = True
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    SOURCES += [
+        'TimeStamp_windows.cpp',
+    ]
+    OS_LIBS += ['dbghelp']
+elif CONFIG['HAVE_CLOCK_MONOTONIC']:
+    SOURCES += [
+        'TimeStamp_posix.cpp',
+    ]
+elif CONFIG['OS_ARCH'] == 'Darwin':
+    SOURCES += [
+        'TimeStamp_darwin.cpp',
+    ]
+elif CONFIG['COMPILE_ENVIRONMENT']:
+    error('No TimeStamp implementation on this platform.  Build will not succeed')
+
+# MOZ_STACKWALKING is defined in configure.in when the build configuration meets
+# the conditions for GeckoStackWalk to work correctly.
+# We exclude this file from other build configurations so that if somebody adds a
+# new usage of NS_StackWalk it will cause a link error, which is better than having
+# GeckoStackWalk silently return garbage at runtime.
+if CONFIG['MOZ_STACKWALKING']:
+    SOURCES += [
+        'StackWalk.cpp',
+    ]
+
+FAIL_ON_WARNINGS = True

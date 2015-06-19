@@ -18,7 +18,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include <limits.h>
-#include "vp8/common/pragmas.h"
 #include "vpx/vpx_encoder.h"
 #include "vpx_mem/vpx_mem.h"
 #include "bitstream.h"
@@ -160,7 +159,7 @@ static void write_split(vp8_writer *bc, int x)
     );
 }
 
-void vp8_pack_tokens_c(vp8_writer *w, const TOKENEXTRA *p, int xcount)
+void vp8_pack_tokens(vp8_writer *w, const TOKENEXTRA *p, int xcount)
 {
     const TOKENEXTRA *stop = p + xcount;
     unsigned int split;
@@ -375,7 +374,7 @@ static void write_partition_size(unsigned char *cx_data, int size)
 
 }
 
-static void pack_tokens_into_partitions_c(VP8_COMP *cpi, unsigned char *cx_data,
+static void pack_tokens_into_partitions(VP8_COMP *cpi, unsigned char *cx_data,
                                           unsigned char * cx_data_end,
                                           int num_part)
 {
@@ -399,7 +398,7 @@ static void pack_tokens_into_partitions_c(VP8_COMP *cpi, unsigned char *cx_data,
             const TOKENEXTRA *stop = cpi->tplist[mb_row].stop;
             int tokens = (int)(stop - p);
 
-            vp8_pack_tokens_c(w, p, tokens);
+            vp8_pack_tokens(w, p, tokens);
         }
 
         vp8_stop_encode(w);
@@ -408,7 +407,7 @@ static void pack_tokens_into_partitions_c(VP8_COMP *cpi, unsigned char *cx_data,
 }
 
 
-static void pack_mb_row_tokens_c(VP8_COMP *cpi, vp8_writer *w)
+static void pack_mb_row_tokens(VP8_COMP *cpi, vp8_writer *w)
 {
     int mb_row;
 
@@ -418,7 +417,7 @@ static void pack_mb_row_tokens_c(VP8_COMP *cpi, vp8_writer *w)
         const TOKENEXTRA *stop = cpi->tplist[mb_row].stop;
         int tokens = (int)(stop - p);
 
-        vp8_pack_tokens_c(w, p, tokens);
+        vp8_pack_tokens(w, p, tokens);
     }
 
 }
@@ -1677,7 +1676,7 @@ void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned char * dest
             pack_mb_row_tokens(cpi, &cpi->bc[1]);
         else
 #endif
-            pack_tokens(&cpi->bc[1], cpi->tok, cpi->tok_count);
+            vp8_pack_tokens(&cpi->bc[1], cpi->tok, cpi->tok_count);
 
         vp8_stop_encode(&cpi->bc[1]);
 

@@ -305,8 +305,10 @@ XPCOMUtils.defineLazyModuleGetter(
       // This is called only once when we receive a message for the first time.
       // With this, we trigger the import of Webapps.jsm and forward the message
       // to the real registry.
-      return DOMApplicationRegistry.receiveMessage.apply(
-          DOMApplicationRegistry, arguments);
+      DOMApplicationRegistry.registryReady.then(() => {
+        DOMApplicationRegistry.receiveMessage.apply(
+            DOMApplicationRegistry, arguments);
+      });
     }
   }
 );
@@ -2328,14 +2330,7 @@ var NativeWindow = {
    *
    *        checkbox:    A string to appear next to a checkbox under the notification
    *                     message. The button callback functions will be called with
-   *                     the checked state as an argument.                   
-   *
-   *        title:       An object that specifies text to display as the title, and
-   *                     optionally a resource, such as a favicon cache url that can be
-   *                     used to fetch a favicon from the FaviconCache. (This can be
-   *                     generalized to other resources if the situation arises.)
-   *                     { text: <title>,
-   *                       resource: <resource_url> }
+   *                     the checked state as an argument.
    *
    *        actionText:  An object that specifies a clickable string, a type of action,
    *                     and a bundle blob for the consumer to create a click action.

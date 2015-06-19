@@ -601,7 +601,7 @@ SharedMemoryBasic::Unmap()
     return;
   }
   vm_address_t address = toVMAddress(mMemory);
-  kern_return_t kr = vm_deallocate(mach_task_self(), address, vm_page_size);
+  kern_return_t kr = vm_deallocate(mach_task_self(), address, round_page(mMappedSize));
   if (kr != KERN_SUCCESS) {
     LOG_ERROR("Failed to deallocate shared memory. %s (%x)\n",  mach_error_string(kr), kr);
     return;

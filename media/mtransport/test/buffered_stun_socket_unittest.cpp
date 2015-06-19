@@ -59,6 +59,7 @@ class BufferedStunSocketTest : public ::testing::Test {
     int r = nr_socket_buffered_stun_create(
         dummy->get_nr_socket(),
         kStunMessageLen,
+        TURN_TCP_FRAMING,
         &test_socket_);
     ASSERT_EQ(0, r);
     dummy_ = dummy.forget();  // Now owned by test_socket_.
