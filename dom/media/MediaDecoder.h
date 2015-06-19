@@ -434,7 +434,8 @@ public:
 
   // Called as data arrives on the stream and is read into the cache.  Called
   // on the main thread only.
-  virtual void NotifyDataArrived(uint32_t aLength, int64_t aOffset) override;
+  virtual void NotifyDataArrived(uint32_t aLength, int64_t aOffset,
+                                 bool aThrottleUpdates) override;
 
   // Called by MediaResource when the principal of the resource has
   // changed. Called on main thread only.

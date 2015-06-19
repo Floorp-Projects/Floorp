@@ -266,9 +266,9 @@ public:
     return 0;
   }
 
-  void DispatchNotifyDataArrived(uint32_t aLength, int64_t aOffset)
+  void DispatchNotifyDataArrived(uint32_t aLength, int64_t aOffset, bool aThrottleUpdates)
   {
-    mReader->DispatchNotifyDataArrived(aLength, aOffset);
+    mReader->DispatchNotifyDataArrived(aLength, aOffset, aThrottleUpdates);
   }
 
   AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() { return mReader->CanonicalBuffered(); }
