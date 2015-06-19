@@ -229,7 +229,7 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
 #define MAX_HANDSHAKE_MSG_LEN 0x1ffff   /* 128k - 1 */
         if (message_length > MAX_HANDSHAKE_MSG_LEN) {
             (void)ssl3_DecodeError(ss);
-            PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
+            PORT_SetError(SSL_ERROR_RX_MALFORMED_HANDSHAKE);
             return SECFailure;
         }
 #undef MAX_HANDSHAKE_MSG_LEN

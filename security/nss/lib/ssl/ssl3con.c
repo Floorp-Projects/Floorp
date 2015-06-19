@@ -6743,7 +6743,7 @@ ssl3_HandleServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	    goto loser;		/* malformed. */
 	}
         dh_p_bits = SECKEY_BigIntegerBitLength(&dh_p);
-        if (dh_p_bits < DH_MIN_P_BITS) {
+        if (dh_p_bits < SSL_DH_MIN_P_BITS) {
 	    errCode = SSL_ERROR_WEAK_SERVER_EPHEMERAL_DH_KEY;
 	    goto alert_loser;
 	}
@@ -10050,15 +10050,15 @@ ssl3_AuthCertificate(sslSocket *ss)
 		SECKEY_PublicKeyStrengthInBits(pubKey);
             pubKeyType = SECKEY_GetPublicKeyType(pubKey);
             /* Too small: not good enough. Send a fatal alert. */
-            /* TODO: Use 1023 for RSA because a higher RSA_MIN_MODULUS_BITS
-             * breaks export cipher suites, not 1024 to be conservative; when
-             * export removed, increase RSA_MIN_MODULUS_BITS and use that. */
             /* We aren't checking EC here on the understanding that we only
              * support curves we like, a decision that might need revisiting. */
             if (((pubKeyType == rsaKey || pubKeyType == rsaPssKey ||
-                  pubKeyType == rsaOaepKey) && ss->sec.authKeyBits < 1023) ||
-                (pubKeyType == dsaKey && ss->sec.authKeyBits < DSA_MIN_P_BITS) ||
-                (pubKeyType == dhKey && ss->sec.authKeyBits < DH_MIN_P_BITS)) {
+                  pubKeyType == rsaOaepKey) &&
+                  ss->sec.authKeyBits < SSL_RSA_MIN_MODULUS_BITS) ||
+                (pubKeyType == dsaKey &&
+                 ss->sec.authKeyBits < SSL_DSA_MIN_P_BITS) ||
+                (pubKeyType == dhKey &&
+                 ss->sec.authKeyBits < SSL_DH_MIN_P_BITS)) {
                 PORT_SetError(SSL_ERROR_WEAK_SERVER_CERT_KEY);
                 (void)SSL3_SendAlert(ss, alert_fatal,
                                      ss->version >= SSL_LIBRARY_VERSION_TLS_1_0
@@ -10998,7 +10998,7 @@ ssl3_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
 #define MAX_HANDSHAKE_MSG_LEN 0x1ffff	/* 128k - 1 */
 	    if (ss->ssl3.hs.msg_len > MAX_HANDSHAKE_MSG_LEN) {
 		(void)ssl3_DecodeError(ss);
-		PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
+		PORT_SetError(SSL_ERROR_RX_MALFORMED_HANDSHAKE);
 		return SECFailure;
 	    }
 #undef MAX_HANDSHAKE_MSG_LEN
