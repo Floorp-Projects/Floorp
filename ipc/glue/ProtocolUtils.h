@@ -38,10 +38,11 @@ namespace {
 // protocol 0.  Oops!  We can get away with this until protocol 0
 // starts approaching its 65,536th message.
 enum {
-    CHANNEL_OPENED_MESSAGE_TYPE = kuint16max - 5,
-    SHMEM_DESTROYED_MESSAGE_TYPE = kuint16max - 4,
-    SHMEM_CREATED_MESSAGE_TYPE = kuint16max - 3,
-    GOODBYE_MESSAGE_TYPE       = kuint16max - 2
+    CHANNEL_OPENED_MESSAGE_TYPE = kuint16max - 6,
+    SHMEM_DESTROYED_MESSAGE_TYPE = kuint16max - 5,
+    SHMEM_CREATED_MESSAGE_TYPE = kuint16max - 4,
+    GOODBYE_MESSAGE_TYPE       = kuint16max - 3,
+    CANCEL_MESSAGE_TYPE        = kuint16max - 2,
 
     // kuint16max - 1 is used by ipc_channel.h.
 };

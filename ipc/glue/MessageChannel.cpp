@@ -558,17 +558,21 @@ MessageChannel::MaybeInterceptSpecialIOMessage(const Message& aMsg)
     AssertLinkThread();
     mMonitor->AssertCurrentThreadOwns();
 
-    if (MSG_ROUTING_NONE == aMsg.routing_id() &&
-        GOODBYE_MESSAGE_TYPE == aMsg.type())
-    {
-        // :TODO: Sort out Close() on this side racing with Close() on the
-        // other side
-        mChannelState = ChannelClosing;
-        if (LoggingEnabled()) {
-            printf("NOTE: %s process received `Goodbye', closing down\n",
-                   (mSide == ChildSide) ? "child" : "parent");
+    if (MSG_ROUTING_NONE == aMsg.routing_id()) {
+        if (GOODBYE_MESSAGE_TYPE == aMsg.type()) {
+            // :TODO: Sort out Close() on this side racing with Close() on the
+            // other side
+            mChannelState = ChannelClosing;
+            if (LoggingEnabled()) {
+                printf("NOTE: %s process received `Goodbye', closing down\n",
+                       (mSide == ChildSide) ? "child" : "parent");
+            }
+            return true;
+        } else if (CANCEL_MESSAGE_TYPE == aMsg.type()) {
+            CancelCurrentTransactionInternal();
+            NotifyWorkerThread();
+            return true;
         }
-        return true;
     }
     return false;
 }
@@ -643,6 +647,7 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
             return;
         }
 
+        MOZ_ASSERT(aMsg.transaction_id() == mCurrentTransaction);
         MOZ_ASSERT(AwaitingSyncReply());
         MOZ_ASSERT(!mRecvd);
 
@@ -806,7 +811,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     IPC_ASSERT(aMsg->is_sync(), "can only Send() sync messages here");
     IPC_ASSERT(aMsg->priority() >= DispatchingSyncMessagePriority(),
                "can't send sync message of a lesser priority than what's being dispatched");
-    IPC_ASSERT(mAwaitingSyncReplyPriority <= aMsg->priority(),
+    IPC_ASSERT(AwaitingSyncReplyPriority() <= aMsg->priority(),
                "nested sync message sends must be of increasing priority");
 
     IPC_ASSERT(DispatchingSyncMessagePriority() != IPC::Message::PRIORITY_URGENT,
@@ -835,11 +840,19 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     msg->set_transaction_id(transaction);
 
     ProcessPendingRequests();
+    if (mCurrentTransaction != transaction) {
+        // Transaction was canceled when dispatching.
+        return false;
+    }
 
     mLink->SendMessage(msg.forget());
 
     while (true) {
         ProcessPendingRequests();
+        if (mCurrentTransaction != transaction) {
+            // Transaction was canceled when dispatching.
+            return false;
+        }
 
         // See if we've received a reply.
         if (mRecvdErrors) {
@@ -857,6 +870,11 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 
         if (!Connected()) {
             ReportConnectionError("MessageChannel::SendAndWait");
+            return false;
+        }
+
+        if (mCurrentTransaction != transaction) {
+            // Transaction was canceled by other side.
             return false;
         }
 
@@ -1185,15 +1203,26 @@ MessageChannel::DispatchMessage(const Message &aMsg)
 
     {
         AutoEnterTransaction transaction(this, aMsg);
-        MonitorAutoUnlock unlock(*mMonitor);
-        CxxStackFrame frame(*this, IN_MESSAGE, &aMsg);
 
-        if (aMsg.is_sync())
-            DispatchSyncMessage(aMsg, *getter_Transfers(reply));
-        else if (aMsg.is_interrupt())
-            DispatchInterruptMessage(aMsg, 0);
-        else
-            DispatchAsyncMessage(aMsg);
+        int id = aMsg.transaction_id();
+        MOZ_ASSERT_IF(aMsg.is_sync(), id == mCurrentTransaction);
+
+        {
+            MonitorAutoUnlock unlock(*mMonitor);
+            CxxStackFrame frame(*this, IN_MESSAGE, &aMsg);
+
+            if (aMsg.is_sync())
+                DispatchSyncMessage(aMsg, *getter_Transfers(reply));
+            else if (aMsg.is_interrupt())
+                DispatchInterruptMessage(aMsg, 0);
+            else
+                DispatchAsyncMessage(aMsg);
+        }
+
+        if (mCurrentTransaction != id) {
+            // The transaction has been canceled. Don't send a reply.
+            reply = nullptr;
+        }
     }
 
     if (reply && ChannelConnected == mChannelState) {
@@ -1215,7 +1244,7 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
     MOZ_ASSERT_IF(prio > IPC::Message::PRIORITY_NORMAL, NS_IsMainThread());
     MaybeScriptBlocker scriptBlocker(this, prio > IPC::Message::PRIORITY_NORMAL);
 
-    IPC_ASSERT(prio >= mDispatchingSyncMessagePriority,
+    IPC_ASSERT(prio >= DispatchingSyncMessagePriority(),
                "priority inversion while dispatching sync message");
     IPC_ASSERT(prio >= mAwaitingSyncReplyPriority,
                "dispatching a message of lower priority while waiting for a response");
@@ -1906,6 +1935,46 @@ MessageChannel::GetTopmostMessageRoutingId() const
     }
     const InterruptFrame& frame = mCxxStackFrames.back();
     return frame.GetRoutingId();
+}
+
+class CancelMessage : public IPC::Message
+{
+public:
+    CancelMessage() :
+        IPC::Message(MSG_ROUTING_NONE, CANCEL_MESSAGE_TYPE, PRIORITY_NORMAL)
+    {
+    }
+    static bool Read(const Message* msg) {
+        return true;
+    }
+    void Log(const std::string& aPrefix, FILE* aOutf) const {
+        fputs("(special `Cancel' message)", aOutf);
+    }
+};
+
+void
+MessageChannel::CancelCurrentTransactionInternal()
+{
+    // When we cancel a transaction, we need to behave as if there's no longer
+    // any IPC on the stack. Anything we were dispatching or sending will get
+    // canceled. Consequently, we have to update the state variables below.
+    //
+    // We also need to ensure that when any IPC functions on the stack return,
+    // they don't reset these values using an RAII class like AutoSetValue. To
+    // avoid that, these RAII classes check if the variable they set has been
+    // tampered with (by us). If so, they don't reset the variable to the old
+    // value.
+
+    MOZ_ASSERT(!mCurrentTransaction);
+    mCurrentTransaction = 0;
+}
+
+void
+MessageChannel::CancelCurrentTransaction()
+{
+    MonitorAutoLock lock(*mMonitor);
+    CancelCurrentTransactionInternal();
+    mLink->SendMessage(new CancelMessage());
 }
 
 bool
