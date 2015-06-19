@@ -81,10 +81,6 @@ using mozilla::LogLevel;
 class Assertion
 {
 public:
-    static PLDHashOperator
-    DeletePropertyHashEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                           uint32_t aNumber, void* aArg);
-
     Assertion(nsIRDFResource* aSource,      // normal assertion
               nsIRDFResource* aProperty,
               nsIRDFNode* aTarget,
@@ -194,8 +190,18 @@ Assertion::Assertion(nsIRDFResource* aSource,
 Assertion::~Assertion()
 {
     if (mHashEntry && u.hash.mPropertyHash) {
-        PL_DHashTableEnumerate(u.hash.mPropertyHash, DeletePropertyHashEntry,
-                               nullptr);
+        for (auto i = u.hash.mPropertyHash->Iter(); !i.Done(); i.Next()) {
+            auto entry = static_cast<Entry*>(i.Get());
+            Assertion* as = entry->mAssertions;
+            while (as) {
+                Assertion* doomed = as;
+                as = as->mNext;
+
+                // Unlink, and release the datasource's reference.
+                doomed->mNext = doomed->u.as.mInvNext = nullptr;
+                doomed->Release();
+            }
+        }
         delete u.hash.mPropertyHash;
         u.hash.mPropertyHash = nullptr;
     }
@@ -213,26 +219,6 @@ Assertion::~Assertion()
         NS_RELEASE(u.as.mTarget);
     }
 }
-
-PLDHashOperator
-Assertion::DeletePropertyHashEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                                           uint32_t aNumber, void* aArg)
-{
-    Entry* entry = static_cast<Entry*>(aHdr);
-
-    Assertion* as = entry->mAssertions;
-    while (as) {
-        Assertion* doomed = as;
-        as = as->mNext;
-
-        // Unlink, and release the datasource's reference.
-        doomed->mNext = doomed->u.as.mInvNext = nullptr;
-        doomed->Release();
-    }
-    return PL_DHASH_NEXT;
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////
 // InMemoryDataSource
@@ -261,14 +247,6 @@ protected:
     // VisitFoo needs to block writes, [Un]Assert only allowed
     // during mReadCount == 0
     uint32_t mReadCount;
-
-    static PLDHashOperator
-    DeleteForwardArcsEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                           uint32_t aNumber, void* aArg);
-
-    static PLDHashOperator
-    ResourceEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                       uint32_t aNumber, void* aArg);
 
     friend class InMemoryArcsEnumeratorImpl;
     friend class InMemoryAssertionEnumeratorImpl;
@@ -563,10 +541,6 @@ private:
     Assertion*          mAssertion;
     nsCOMPtr<nsISupportsArray> mHashArcs;
 
-    static PLDHashOperator
-    ArcEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                       uint32_t aNumber, void* aArg);
-
     virtual ~InMemoryArcsEnumeratorImpl();
 
 public:
@@ -580,19 +554,6 @@ public:
     // nsISimpleEnumerator interface
     NS_DECL_NSISIMPLEENUMERATOR
 };
-
-
-PLDHashOperator
-InMemoryArcsEnumeratorImpl::ArcEnumerator(PLDHashTable* aTable,
-                                       PLDHashEntryHdr* aHdr,
-                                       uint32_t aNumber, void* aArg)
-{
-    Entry* entry = static_cast<Entry*>(aHdr);
-    nsISupportsArray* resources = static_cast<nsISupportsArray*>(aArg);
-
-    resources->AppendElement(entry->mNode);
-    return PL_DHASH_NEXT;
-}
 
 
 InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aDataSource,
@@ -615,8 +576,13 @@ InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aData
             // its our magical HASH_ENTRY forward hash for assertions
             nsresult rv = NS_NewISupportsArray(getter_AddRefs(mHashArcs));
             if (NS_SUCCEEDED(rv)) {
-                PL_DHashTableEnumerate(mAssertion->u.hash.mPropertyHash,
-                    ArcEnumerator, mHashArcs.get());
+                nsISupportsArray* resources = mHashArcs.get();
+                for (auto i = mAssertion->u.hash.mPropertyHash->Iter();
+                     !i.Done();
+                     i.Next()) {
+                    auto entry = static_cast<Entry*>(i.Get());
+                    resources->AppendElement(entry->mNode);
+                }
             }
             mAssertion = nullptr;
         }
@@ -792,31 +758,24 @@ InMemoryDataSource::~InMemoryDataSource()
         // associated with this data source. We only need to do this
         // for the forward arcs, because the reverse arcs table
         // indexes the exact same set of resources.
-        PL_DHashTableEnumerate(&mForwardArcs, DeleteForwardArcsEntry, nullptr);
+        for (auto iter = mForwardArcs.Iter(); !iter.Done(); iter.Next()) {
+            auto entry = static_cast<Entry*>(iter.Get());
+            Assertion* as = entry->mAssertions;
+            while (as) {
+                Assertion* doomed = as;
+                as = as->mNext;
+
+                // Unlink, and release the datasource's reference.
+                doomed->mNext = doomed->u.as.mInvNext = nullptr;
+                doomed->Release();
+            }
+        }
     }
 
     MOZ_LOG(gLog, LogLevel::Debug,
            ("InMemoryDataSource(%p): destroyed.", this));
 
     MOZ_COUNT_DTOR(InMemoryDataSource);
-}
-
-PLDHashOperator
-InMemoryDataSource::DeleteForwardArcsEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                                           uint32_t aNumber, void* aArg)
-{
-    Entry* entry = static_cast<Entry*>(aHdr);
-
-    Assertion* as = entry->mAssertions;
-    while (as) {
-        Assertion* doomed = as;
-        as = as->mNext;
-
-        // Unlink, and release the datasource's reference.
-        doomed->mNext = doomed->u.as.mInvNext = nullptr;
-        doomed->Release();
-    }
-    return PL_DHASH_NEXT;
 }
 
 
@@ -1609,16 +1568,6 @@ InMemoryDataSource::ArcLabelsOut(nsIRDFResource* aSource, nsISimpleEnumerator** 
     return NS_OK;
 }
 
-PLDHashOperator
-InMemoryDataSource::ResourceEnumerator(PLDHashTable* aTable,
-                                       PLDHashEntryHdr* aHdr,
-                                       uint32_t aNumber, void* aArg)
-{
-    Entry* entry = static_cast<Entry*>(aHdr);
-    static_cast<nsCOMArray<nsIRDFNode>*>(aArg)->AppendObject(entry->mNode);
-    return PL_DHASH_NEXT;
-}
-
 
 NS_IMETHODIMP
 InMemoryDataSource::GetAllResources(nsISimpleEnumerator** aResult)
@@ -1626,9 +1575,11 @@ InMemoryDataSource::GetAllResources(nsISimpleEnumerator** aResult)
     nsCOMArray<nsIRDFNode> nodes;
     nodes.SetCapacity(mForwardArcs.EntryCount());
 
-    // Enumerate all of our entries into an nsCOMArray
-    PL_DHashTableEnumerate(&mForwardArcs, ResourceEnumerator, &nodes);
-
+    // Get all of our entries into an nsCOMArray
+    for (auto iter = mForwardArcs.Iter(); !iter.Done(); iter.Next()) {
+        auto entry = static_cast<Entry*>(iter.Get());
+        nodes.AppendObject(entry->mNode);
+    }
     return NS_NewArrayEnumerator(aResult, nodes);
 }
 
