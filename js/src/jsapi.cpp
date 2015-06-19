@@ -3299,12 +3299,22 @@ JS::GetSelfHostedFunction(JSContext* cx, const char* selfHostedName, HandleId id
 }
 
 static bool
-CreateScopeObjectsForScopeChain(JSContext* cx, AutoObjectVector& scopeChain,
-                                MutableHandleObject dynamicScopeObj,
-                                MutableHandleObject staticScopeObj)
+CreateNonSyntacticScopeChain(JSContext* cx, AutoObjectVector& scopeChain,
+                             MutableHandleObject dynamicScopeObj,
+                             MutableHandle<ScopeObject*> staticScopeObj)
 {
-    return js::CreateScopeObjectsForScopeChain(cx, scopeChain, cx->global(),
-                                               dynamicScopeObj, staticScopeObj);
+    if (!js::CreateScopeObjectsForScopeChain(cx, scopeChain, cx->global(), dynamicScopeObj))
+        return false;
+
+    if (scopeChain.empty()) {
+        staticScopeObj.set(nullptr);
+    } else {
+        staticScopeObj.set(StaticNonSyntacticScopeObjects::create(cx, nullptr));
+        if (!staticScopeObj)
+            return false;
+    }
+
+    return true;
 }
 
 static bool
@@ -3853,9 +3863,10 @@ JS::CompileOptions::CompileOptions(JSContext* cx, JSVersion version)
     asmJSOption = cx->runtime()->options().asmJS();
 }
 
-bool
-JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-            SourceBufferHolder& srcBuf, MutableHandleScript script)
+static bool
+Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
+        SourceBufferHolder& srcBuf, Handle<ScopeObject*> topStaticScope,
+        MutableHandleScript script)
 {
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
@@ -3863,8 +3874,25 @@ JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
     AutoLastFrameCheck lfc(cx);
 
     script.set(frontend::CompileScript(cx, &cx->tempLifoAlloc(), cx->global(),
-                                       nullptr, nullptr, options, srcBuf));
+                                       topStaticScope, nullptr, options, srcBuf));
     return !!script;
+}
+
+bool
+JS::CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
+                                SourceBufferHolder& srcBuf, MutableHandleScript script)
+{
+    Rooted<ScopeObject*> staticScope(cx, StaticNonSyntacticScopeObjects::create(cx, nullptr));
+    if (!staticScope)
+        return false;
+    return ::Compile(cx, options, srcBuf, staticScope, script);
+}
+
+bool
+JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
+            SourceBufferHolder& srcBuf, MutableHandleScript script)
+{
+    return ::Compile(cx, options, srcBuf, nullptr, script);
 }
 
 bool
@@ -4093,14 +4121,17 @@ CompileFunction(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
     if (!fun)
         return false;
 
-    // Make sure to handle cases when we have a polluted scopechain.
-    CompileOptions options(cx, optionsArg);
-    if (!enclosingDynamicScope->is<GlobalObject>())
-        options.setHasPollutedScope(true);
+    // Make sure the static scope chain matches up when we have a
+    // non-syntactic scope.
+    MOZ_ASSERT_IF(!enclosingDynamicScope->is<GlobalObject>(),
+                  HasNonSyntacticStaticScopeChain(enclosingStaticScope));
 
+    CompileOptions options(cx, optionsArg);
     if (!frontend::CompileFunctionBody(cx, fun, options, formals, srcBuf,
                                        enclosingStaticScope))
+    {
         return false;
+    }
 
     return true;
 }
@@ -4112,8 +4143,8 @@ JS::CompileFunction(JSContext* cx, AutoObjectVector& scopeChain,
                     SourceBufferHolder& srcBuf, MutableHandleFunction fun)
 {
     RootedObject dynamicScopeObj(cx);
-    RootedObject staticScopeObj(cx);
-    if (!CreateScopeObjectsForScopeChain(cx, scopeChain, &dynamicScopeObj, &staticScopeObj))
+    Rooted<ScopeObject*> staticScopeObj(cx);
+    if (!CreateNonSyntacticScopeChain(cx, scopeChain, &dynamicScopeObj, &staticScopeObj))
         return false;
 
     return CompileFunction(cx, options, name, nargs, argnames,
@@ -4187,33 +4218,34 @@ JS_DecompileFunctionBody(JSContext* cx, HandleFunction fun, unsigned indent)
 }
 
 MOZ_NEVER_INLINE static bool
-ExecuteScript(JSContext* cx, HandleObject obj, HandleScript scriptArg, jsval* rval)
+ExecuteScript(JSContext* cx, HandleObject scope, HandleScript script, jsval* rval)
 {
-    RootedScript script(cx, scriptArg);
-
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, scriptArg);
-
-    if (!script->hasNonSyntacticScope() && !obj->is<GlobalObject>()) {
-        script = CloneScript(cx, nullptr, nullptr, script, HasPollutedGlobalScope);
-        if (!script)
-            return false;
-        js::Debugger::onNewScript(cx, script);
-    }
+    assertSameCompartment(cx, scope, script);
+    MOZ_ASSERT_IF(!scope->is<GlobalObject>(), script->hasNonSyntacticScope());
     AutoLastFrameCheck lfc(cx);
-    return Execute(cx, script, *obj, rval);
+    return Execute(cx, script, *scope, rval);
 }
 
 static bool
 ExecuteScript(JSContext* cx, AutoObjectVector& scopeChain, HandleScript scriptArg, jsval* rval)
 {
     RootedObject dynamicScope(cx);
-    RootedObject unusedStaticScope(cx);
-    if (!CreateScopeObjectsForScopeChain(cx, scopeChain, &dynamicScope, &unusedStaticScope))
+    Rooted<ScopeObject*> staticScope(cx);
+    if (!CreateNonSyntacticScopeChain(cx, scopeChain, &dynamicScope, &staticScope))
         return false;
-    return ExecuteScript(cx, dynamicScope, scriptArg, rval);
+
+    RootedScript script(cx, scriptArg);
+    if (!script->hasNonSyntacticScope()) {
+        script = CloneGlobalScript(cx, staticScope, script);
+        if (!script)
+            return false;
+        js::Debugger::onNewScript(cx, script);
+    }
+
+    return ExecuteScript(cx, dynamicScope, script, rval);
 }
 
 MOZ_NEVER_INLINE JS_PUBLIC_API(bool)
@@ -4259,7 +4291,8 @@ JS::CloneAndExecuteScript(JSContext* cx, HandleScript scriptArg)
 static const unsigned LARGE_SCRIPT_LENGTH = 500*1024;
 
 static bool
-Evaluate(JSContext* cx, HandleObject scope, const ReadOnlyCompileOptions& optionsArg,
+Evaluate(JSContext* cx, HandleObject scope, Handle<ScopeObject*> staticScope,
+         const ReadOnlyCompileOptions& optionsArg,
          SourceBufferHolder& srcBuf, MutableHandleValue rval)
 {
     CompileOptions options(cx, optionsArg);
@@ -4270,12 +4303,14 @@ Evaluate(JSContext* cx, HandleObject scope, const ReadOnlyCompileOptions& option
 
     AutoLastFrameCheck lfc(cx);
 
-    options.setHasPollutedScope(!scope->is<GlobalObject>());
+    MOZ_ASSERT_IF(!scope->is<GlobalObject>(), HasNonSyntacticStaticScopeChain(staticScope));
+
     options.setIsRunOnce(true);
     SourceCompressionTask sct(cx);
     RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(),
-                                                    scope, nullptr, nullptr, options,
-                                                    srcBuf, nullptr, 0, &sct));
+                                                    scope, staticScope,
+                                                    /* evalCaller = */ nullptr, options,
+                                                    srcBuf, /* source = */ nullptr, 0, &sct));
     if (!script)
         return false;
 
@@ -4305,10 +4340,10 @@ Evaluate(JSContext* cx, AutoObjectVector& scopeChain, const ReadOnlyCompileOptio
          SourceBufferHolder& srcBuf, MutableHandleValue rval)
 {
     RootedObject dynamicScope(cx);
-    RootedObject unusedStaticScope(cx);
-    if (!CreateScopeObjectsForScopeChain(cx, scopeChain, &dynamicScope, &unusedStaticScope))
+    Rooted<ScopeObject*> staticScope(cx);
+    if (!CreateNonSyntacticScopeChain(cx, scopeChain, &dynamicScope, &staticScope))
         return false;
-    return ::Evaluate(cx, dynamicScope, optionsArg, srcBuf, rval);
+    return ::Evaluate(cx, dynamicScope, staticScope, optionsArg, srcBuf, rval);
 }
 
 static bool
@@ -4316,7 +4351,7 @@ Evaluate(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
          const char16_t* chars, size_t length, MutableHandleValue rval)
 {
   SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-  return ::Evaluate(cx, cx->global(), optionsArg, srcBuf, rval);
+  return ::Evaluate(cx, cx->global(), nullptr, optionsArg, srcBuf, rval);
 }
 
 extern JS_PUBLIC_API(bool)
@@ -4332,7 +4367,7 @@ JS::Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
         return false;
 
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::GiveOwnership);
-    bool ok = ::Evaluate(cx, cx->global(), options, srcBuf, rval);
+    bool ok = ::Evaluate(cx, cx->global(), nullptr, options, srcBuf, rval);
     return ok;
 }
 
@@ -4356,7 +4391,7 @@ JS_PUBLIC_API(bool)
 JS::Evaluate(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
              SourceBufferHolder& srcBuf, MutableHandleValue rval)
 {
-    return ::Evaluate(cx, cx->global(), optionsArg, srcBuf, rval);
+    return ::Evaluate(cx, cx->global(), nullptr, optionsArg, srcBuf, rval);
 }
 
 JS_PUBLIC_API(bool)
