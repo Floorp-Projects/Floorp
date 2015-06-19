@@ -1287,9 +1287,7 @@ nsContextMenu.prototype = {
       }
     }
 
-    // setting up a new channel for 'right click - save link as ...'
-    // which should be treated the same way as a toplevel load, hence
-    // we use TYPE_DOCUMENT, see also bug: 1136055
+    // set up a channel to do the saving
     var ioService = Cc["@mozilla.org/network/io-service;1"].
                     getService(Ci.nsIIOService);
     var channel = ioService.newChannelFromURI2(makeURI(linkURL),
@@ -1297,7 +1295,7 @@ nsContextMenu.prototype = {
                                                this.principal, // aLoadingPrincipal
                                                null, // aTriggeringPrincipal
                                                Ci.nsILoadInfo.SEC_NORMAL,
-                                               Ci.nsIContentPolicy.TYPE_DOCUMENT);
+                                               Ci.nsIContentPolicy.TYPE_OTHER);
     if (linkDownload)
       channel.contentDispositionFilename = linkDownload;
     if (channel instanceof Ci.nsIPrivateBrowsingChannel) {
