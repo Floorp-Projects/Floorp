@@ -41,23 +41,6 @@ function forceDecodeImg() {
   ctx.drawImage(img, 0, 0);
 }
 
-function runAfterAsyncEvents(aCallback) {
-  function handlePostMessage(aEvent) {
-    if (aEvent.data == 'next') {
-      window.removeEventListener('message', handlePostMessage, false);
-      aCallback();
-    }
-  }
-
-  window.addEventListener('message', handlePostMessage, false);
-
-  // We'll receive the 'message' event after everything else that's currently in
-  // the event queue (which is a stronger guarantee than setTimeout, because
-  // setTimeout events may be coalesced). This lets us ensure that we run
-  // aCallback *after* any asynchronous events are delivered.
-  window.postMessage('next', '*');
-}
-
 function test() {
   // Enable the discarding pref.
   oldDiscardingPref = prefBranch.getBoolPref('discardable');
@@ -89,13 +72,6 @@ function step2() {
 
   // Check that the image is decoded.
   forceDecodeImg();
-
-  // The FRAME_COMPLETE notification is delivered asynchronously, so continue
-  // after we're sure it has been delivered.
-  runAfterAsyncEvents(() => step3(result, scriptedObserver, clonedRequest));
-}
-
-function step3(result, scriptedObserver, clonedRequest) {
   ok(isImgDecoded(), 'Image should initially be decoded.');
 
   // Focus the old tab, then fire a memory-pressure notification.  This should
@@ -105,12 +81,18 @@ function step3(result, scriptedObserver, clonedRequest) {
              .getService(Ci.nsIObserverService);
   os.notifyObservers(null, 'memory-pressure', 'heap-minimize');
 
-  // The DISCARD notification is delivered asynchronously, so continue after
-  // we're sure it has been delivered.
-  runAfterAsyncEvents(() => step4(result, scriptedObserver, clonedRequest));
+  // The discard notification is delivered asynchronously, so pump the event
+  // loop before checking.
+  window.addEventListener('message', function (event) {
+    if (event.data == 'step3') {
+      step3(result, scriptedObserver, clonedRequest);
+    }
+  }, false);
+
+  window.postMessage('step3', '*');
 }
 
-function step4(result, scriptedObserver, clonedRequest) {
+function step3(result, scriptedObserver, clonedRequest) {
   ok(result.wasDiscarded, 'Image should be discarded.');
 
   // And we're done.
