@@ -602,18 +602,33 @@ GeckoDriver.prototype.getSessionCapabilities = function(cmd, resp) {
  */
 GeckoDriver.prototype.setSessionCapabilities = function(newCaps) {
   const copy = (from, to={}) => {
-    let errors = {};
+    let errors = [];
+
+    // Remove any duplicates between required and desired in favour of the
+    // required capabilities
+    if (from !== null && from.desiredCapabilities) {
+      for (let cap in from.requiredCapabilities) {
+        if (from.desiredCapabilities[cap]) {
+          delete from.desiredCapabilities[cap];
+        }
+      }
+
+      // Let's remove the sessionCapabilities from desired capabilities
+      for (let cap in this.sessionCapabilities) {
+        if (from.desiredCapabilities && from.desiredCapabilities[cap]) {
+          delete from.desiredCapabilities[cap];
+        }
+      }
+    }
 
     for (let key in from) {
       if (key === "desiredCapabilities") {
-        // Keeping desired capabilities separate for now so that we can keep
-        // backwards compatibility
         to = copy(from[key], to);
       } else if (key === "requiredCapabilities") {
         for (let caps in from[key]) {
           if (from[key][caps] !== this.sessionCapabilities[caps]) {
-            errors[caps] = from[key][caps] + " does not equal " +
-                this.sessionCapabilities[caps];
+            errors.push(from[key][caps] + " does not equal " +
+                this.sessionCapabilities[caps])   ;
           }
         }
       }

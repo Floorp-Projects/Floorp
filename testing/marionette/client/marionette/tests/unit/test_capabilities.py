@@ -57,6 +57,14 @@ class TestCapabilities(MarionetteTestCase):
         caps = self.marionette.session_capabilities
         self.assertIn("somethingAwesome", caps)
 
+    def test_we_dont_overwrite_server_capabilities(self):
+        self.marionette.delete_session()
+        capabilities = { "desiredCapabilities": {"browserName": "ChocolateCake"}}
+        self.marionette.start_session(capabilities)
+        caps = self.marionette.session_capabilities
+        self.assertEqual(caps["browserName"], self.appinfo["name"],
+                         "This should have appname not ChocolateCake")
+
     def test_we_can_pass_in_required_capabilities_on_session_start(self):
         self.marionette.delete_session()
         capabilities = { "requiredCapabilities": {"browserName": self.appinfo["name"]}}
