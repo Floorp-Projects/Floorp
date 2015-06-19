@@ -3,14 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-# Shortcut for mochitest* and xpcshell-tests targets,
-# replaces 'EXTRA_TEST_ARGS=--test-path=...'.
+# Shortcut for mochitest* and xpcshell-tests targets
 ifdef TEST_PATH
-TEST_PATH_ARG := --test-path='$(TEST_PATH)'
-IPCPLUGINS_PATH_ARG := --test-path='$(TEST_PATH)'
+TEST_PATH_ARG := '$(TEST_PATH)'
+IPCPLUGINS_PATH_ARG := '$(TEST_PATH)'
 else
 TEST_PATH_ARG :=
-IPCPLUGINS_PATH_ARG := --test-path=dom/plugins/test
+IPCPLUGINS_PATH_ARG := dom/plugins/test
 endif
 
 # include automation-build.mk to get the path to the binary
@@ -33,7 +32,7 @@ RUN_MOCHITEST_B2G_DESKTOP = \
     --log-tbpl=./$@.log \
     --desktop --profile ${GAIA_PROFILE_DIR} \
     --failure-file=$(abspath _tests/testing/mochitest/makefailures.json) \
-    $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+    $(EXTRA_TEST_ARGS) $(TEST_PATH_ARG)
 
 RUN_MOCHITEST = \
   rm -f ./$@.log && \
@@ -41,7 +40,7 @@ RUN_MOCHITEST = \
     --log-tbpl=./$@.log \
     --failure-file=$(abspath _tests/testing/mochitest/makefailures.json) \
     --testing-modules-dir=$(abspath _tests/modules) \
-    $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+    $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(TEST_PATH_ARG)
 
 RERUN_MOCHITEST = \
   rm -f ./$@.log && \
@@ -49,7 +48,7 @@ RERUN_MOCHITEST = \
     --log-tbpl=./$@.log \
     --run-only-tests=makefailures.json \
     --testing-modules-dir=$(abspath _tests/modules) \
-    $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+    $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(TEST_PATH_ARG)
 
 RUN_MOCHITEST_REMOTE = \
   rm -f ./$@.log && \
@@ -57,7 +56,7 @@ RUN_MOCHITEST_REMOTE = \
     --log-tbpl=./$@.log $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
     --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
     --testing-modules-dir=$(abspath _tests/modules) \
-    $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+    $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(TEST_PATH_ARG)
 
 RUN_MOCHITEST_ROBOCOP = \
   rm -f ./$@.log && \
@@ -67,7 +66,7 @@ RUN_MOCHITEST_ROBOCOP = \
     --robocop-ini=_tests/testing/mochitest/robocop.ini \
     --log-tbpl=./$@.log $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
     --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
-    $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+    $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(TEST_PATH_ARG)
 
 ifndef NO_FAIL_ON_TEST_ERRORS
 define check_test_error_internal
@@ -162,7 +161,7 @@ ifeq (powerpc,$(TARGET_CPU))
 	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.ppc.test.plugin=false $(IPCPLUGINS_PATH_ARG)
 endif
 else
-	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled=false --test-path=dom/plugins/test
+	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled=false dom/plugins/test
 endif
 	$(CHECK_TEST_ERROR)
 

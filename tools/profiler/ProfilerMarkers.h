@@ -8,8 +8,6 @@
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
-#include "nsAutoPtr.h"
-#include "Units.h"    // For ScreenIntPoint
 
 namespace mozilla {
 namespace layers {
@@ -89,6 +87,7 @@ private:
 };
 
 
+#ifndef SPS_STANDALONE
 #include "gfxASurface.h"
 class ProfilerMarkerImagePayload : public ProfilerMarkerPayload
 {
@@ -135,6 +134,8 @@ private:
   mozilla::layers::Layer* mLayer;
   mozilla::gfx::Point mPoint;
 };
+
+#include "Units.h"    // For ScreenIntPoint
 
 /**
  * Tracks when touch events are processed by gecko, not when
@@ -187,5 +188,6 @@ private:
   uint64_t mGpuTimeStart;
   uint64_t mGpuTimeEnd;
 };
+#endif
 
 #endif // PROFILER_MARKERS_H

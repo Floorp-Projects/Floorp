@@ -360,6 +360,57 @@ public:
   EncryptionInfo mCrypto;
 };
 
+class SharedTrackInfo {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedTrackInfo)
+public:
+  SharedTrackInfo(const TrackInfo& aOriginal, uint32_t aStreamID)
+    : mInfo(aOriginal.Clone())
+    , mStreamSourceID(aStreamID)
+    , mMimeType(mInfo->mMimeType)
+  {
+  }
+
+  uint32_t GetID() const
+  {
+    return mStreamSourceID;
+  }
+
+  const TrackInfo* operator*() const
+  {
+    return mInfo.get();
+  }
+
+  const TrackInfo* operator->() const
+  {
+    MOZ_ASSERT(mInfo.get(), "dereferencing a UniquePtr containing nullptr");
+    return mInfo.get();
+  }
+
+  const AudioInfo* GetAsAudioInfo() const
+  {
+    return mInfo ? mInfo->GetAsAudioInfo() : nullptr;
+  }
+
+  const VideoInfo* GetAsVideoInfo() const
+  {
+    return mInfo ? mInfo->GetAsVideoInfo() : nullptr;
+  }
+
+  const TextInfo* GetAsTextInfo() const
+  {
+    return mInfo ? mInfo->GetAsTextInfo() : nullptr;
+  }
+
+private:
+  ~SharedTrackInfo() {};
+  UniquePtr<TrackInfo> mInfo;
+  // A unique ID, guaranteed to change when changing streams.
+  uint32_t mStreamSourceID;
+
+public:
+  const nsAutoCString& mMimeType;
+};
+
 } // namespace mozilla
 
 #endif // MediaInfo_h

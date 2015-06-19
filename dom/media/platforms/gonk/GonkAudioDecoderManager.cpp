@@ -9,7 +9,6 @@
 #include <ICrypto.h>
 #include "GonkAudioDecoderManager.h"
 #include "MediaDecoderReader.h"
-#include "mp4_demuxer/Adts.h"
 #include "VideoUtils.h"
 #include "nsTArray.h"
 #include "mozilla/Logging.h"
@@ -38,7 +37,6 @@ GonkAudioDecoderManager::GonkAudioDecoderManager(const AudioInfo& aConfig)
   : mAudioChannels(aConfig.mChannels)
   , mAudioRate(aConfig.mRate)
   , mAudioProfile(aConfig.mProfile)
-  , mUseAdts(true)
   , mAudioBuffer(nullptr)
   , mMonitor("GonkAudioDecoderManager")
 {
@@ -47,10 +45,6 @@ GonkAudioDecoderManager::GonkAudioDecoderManager(const AudioInfo& aConfig)
   mCodecSpecificData = aConfig.mCodecSpecificConfig;
   mMimeType = aConfig.mMimeType;
 
-  // Pass through mp3 without applying an ADTS header.
-  if (!aConfig.mMimeType.EqualsLiteral("audio/mp4a-latm")) {
-      mUseAdts = false;
-  }
 }
 
 GonkAudioDecoderManager::~GonkAudioDecoderManager()
@@ -81,12 +75,12 @@ GonkAudioDecoderManager::Init(MediaDataDecoderCallback* aCallback)
   }
   sp<AMessage> format = new AMessage;
   // Fixed values
-  GADM_LOG("Configure audio mime type:%s, chan no:%d, sample-rate:%d", mMimeType.get(), mAudioChannels, mAudioRate);
+  GADM_LOG("Configure audio mime type:%s, chan no:%d, sample-rate:%d, profile:%d",
+           mMimeType.get(), mAudioChannels, mAudioRate, mAudioProfile);
   format->setString("mime", mMimeType.get());
   format->setInt32("channel-count", mAudioChannels);
   format->setInt32("sample-rate", mAudioRate);
   format->setInt32("aac-profile", mAudioProfile);
-  format->setInt32("is-adts", true);
   status_t err = mDecoder->configure(format, nullptr, nullptr, 0);
   if (err != OK || !mDecoder->Prepare()) {
     return nullptr;
@@ -120,9 +114,6 @@ GonkAudioDecoderManager::Input(MediaRawData* aSample)
 
   if (aSample) {
     sample = aSample;
-    if (!PerformFormatSpecificProcess(sample)) {
-      return NS_ERROR_FAILURE;
-    }
   } else {
     // It means EOS with empty sample.
     sample = new MediaRawData();
@@ -152,25 +143,6 @@ GonkAudioDecoderManager::Input(MediaRawData* aSample)
   }
 
   return NS_OK;
-}
-
-bool
-GonkAudioDecoderManager::PerformFormatSpecificProcess(MediaRawData* aSample)
-{
-  if (aSample && mUseAdts) {
-    int8_t frequency_index =
-        mp4_demuxer::Adts::GetFrequencyIndex(mAudioRate);
-    bool rv = mp4_demuxer::Adts::ConvertSample(mAudioChannels,
-                                               frequency_index,
-                                               mAudioProfile,
-                                               aSample);
-    if (!rv) {
-      GADM_LOG("Failed to apply ADTS header");
-      return false;
-    }
-  }
-
-  return true;
 }
 
 nsresult

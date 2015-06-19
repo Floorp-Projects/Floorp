@@ -23,6 +23,7 @@ class ImageContainer;
 }
 
 class MediaByteBuffer;
+class SharedTrackInfo;
 
 // Container that holds media samples.
 class MediaData {
@@ -394,6 +395,8 @@ public:
 
   const CryptoSample& mCrypto;
   nsRefPtr<MediaByteBuffer> mExtraData;
+
+  nsRefPtr<SharedTrackInfo> mTrackInfo;
 
   // Return a deep copy or nullptr if out of memory.
   virtual already_AddRefed<MediaRawData> Clone() const;

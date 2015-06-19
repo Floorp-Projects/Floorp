@@ -18,6 +18,7 @@
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/Point.h"          // for IntSize
+#include "mozilla/layers/PersistentBufferProvider.h"
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
 #include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
 #include "nsRect.h"                     // for mozilla::gfx::IntRect
@@ -61,9 +62,8 @@ CopyableCanvasLayer::Initialize(const Data& aData)
       mGLFrontbuffer = SharedSurface_Basic::Wrap(aData.mGLContext, size, aData.mHasAlpha,
                                                  aData.mFrontbufferGLTex);
     }
-  } else if (aData.mDrawTarget) {
-    mDrawTarget = aData.mDrawTarget;
-    mSurface = mDrawTarget->Snapshot();
+  } else if (aData.mBufferProvider) {
+    mBufferProvider = aData.mBufferProvider;
   } else {
     MOZ_CRASH("CanvasLayer created without mSurface, mDrawTarget or mGLContext?");
   }
@@ -80,9 +80,8 @@ CopyableCanvasLayer::IsDataValid(const Data& aData)
 void
 CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
 {
-  if (mDrawTarget) {
-    mDrawTarget->Flush();
-    mSurface = mDrawTarget->Snapshot();
+  if (mBufferProvider) {
+    mSurface = mBufferProvider->GetSnapshot();
   }
 
   if (!mGLContext && aDestTarget) {
@@ -96,7 +95,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
     return;
   }
 
-  if (mDrawTarget) {
+  if (mBufferProvider) {
     return;
   }
 

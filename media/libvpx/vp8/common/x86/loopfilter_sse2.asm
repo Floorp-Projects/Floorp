@@ -958,7 +958,7 @@ sym(vp8_loop_filter_vertical_edge_sse2):
         ; start work on filters
         B_FILTER 2
 
-        ; tranpose and write back - only work on q1, q0, p0, p1
+        ; transpose and write back - only work on q1, q0, p0, p1
         BV_TRANSPOSE
         ; store 16-line result
 
@@ -1023,7 +1023,7 @@ sym(vp8_loop_filter_vertical_edge_uv_sse2):
         ; start work on filters
         B_FILTER 2
 
-        ; tranpose and write back - only work on q1, q0, p0, p1
+        ; transpose and write back - only work on q1, q0, p0, p1
         BV_TRANSPOSE
 
         lea         rdi,        [rsi + rax]             ; rdi points to row +1 for indirect addressing

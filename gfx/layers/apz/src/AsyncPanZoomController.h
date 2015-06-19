@@ -184,6 +184,11 @@ public:
   void NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint);
 
   /**
+   * Flush any pending repaint request.
+   */
+  void FlushRepaintIfPending();
+
+  /**
    * The platform implementation must set the compositor parent so that we can
    * request composites.
    */

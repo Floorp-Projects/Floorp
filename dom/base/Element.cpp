@@ -3148,8 +3148,8 @@ Element::MozRequestFullScreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
     return;
   }
 
-  FullScreenOptions opts;
-  opts.mIsCallerChrome = nsContentUtils::IsCallerChrome();
+  auto request = MakeUnique<FullscreenRequest>(this);
+  request->mIsCallerChrome = nsContentUtils::IsCallerChrome();
 
   RequestFullscreenOptions fsOptions;
   // We need to check if options is convertible to a dict first before
@@ -3162,11 +3162,11 @@ Element::MozRequestFullScreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
     }
 
     if (fsOptions.mVrDisplay) {
-      opts.mVRHMDDevice = fsOptions.mVrDisplay->GetHMD();
+      request->mVRHMDDevice = fsOptions.mVrDisplay->GetHMD();
     }
   }
 
-  OwnerDoc()->AsyncRequestFullScreen(this, opts);
+  OwnerDoc()->AsyncRequestFullScreen(Move(request));
 }
 
 void

@@ -88,9 +88,7 @@ FTPChannelParent::Init(const FTPChannelCreationArgs& aArgs)
   {
     const FTPChannelOpenArgs& a = aArgs.get_FTPChannelOpenArgs();
     return DoAsyncOpen(a.uri(), a.startPos(), a.entityID(), a.uploadStream(),
-                       a.requestingPrincipalInfo(), a.triggeringPrincipalInfo(),
-                       a.securityFlags(), a.contentPolicyType(),
-                       a.innerWindowID(), a.outerWindowID(), a.parentOuterWindowID());
+                       a.loadInfo());
   }
   case FTPChannelCreationArgs::TFTPChannelConnectArgs:
   {
@@ -108,13 +106,7 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
                               const uint64_t& aStartPos,
                               const nsCString& aEntityID,
                               const OptionalInputStreamParams& aUploadStream,
-                              const ipc::PrincipalInfo& aRequestingPrincipalInfo,
-                              const ipc::PrincipalInfo& aTriggeringPrincipalInfo,
-                              const uint32_t& aSecurityFlags,
-                              const uint32_t& aContentPolicyType,
-                              const uint64_t& aInnerWindowID,
-                              const uint64_t& aOuterWindowID,
-                              const uint64_t& aParentOuterWindowID)
+                              const LoadInfoArgs& aLoadInfoArgs)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri)
@@ -143,21 +135,12 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
-  nsCOMPtr<nsIPrincipal> requestingPrincipal =
-    mozilla::ipc::PrincipalInfoToPrincipal(aRequestingPrincipalInfo, &rv);
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  rv = mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfoArgs,
+                                            getter_AddRefs(loadInfo));
   if (NS_FAILED(rv)) {
     return SendFailedAsyncOpen(rv);
   }
-  nsCOMPtr<nsIPrincipal> triggeringPrincipal =
-    mozilla::ipc::PrincipalInfoToPrincipal(aTriggeringPrincipalInfo, &rv);
-  if (NS_FAILED(rv)) {
-    return SendFailedAsyncOpen(rv);
-  }
-
-  nsCOMPtr<nsILoadInfo> loadInfo =
-    new mozilla::LoadInfo(requestingPrincipal, triggeringPrincipal,
-                          aSecurityFlags, aContentPolicyType,
-                          aInnerWindowID, aOuterWindowID, aParentOuterWindowID);
 
   nsCOMPtr<nsIChannel> chan;
   rv = NS_NewChannelInternal(getter_AddRefs(chan), uri, loadInfo,

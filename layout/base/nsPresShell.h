@@ -881,6 +881,9 @@ protected:
   // Whether the last chrome-only escape key event is consumed.
   bool                      mIsLastChromeOnlyEscapeKeyConsumed : 1;
 
+  // Whether the widget has received a paint message yet.
+  bool                      mHasReceivedPaintMessage : 1;
+
   static bool               sDisableNonTestMouseEvents;
 };
 

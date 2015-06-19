@@ -18,7 +18,7 @@
 #include "nsContentUtils.h"
 
 #ifdef MOZ_STACKWALKING
-#include "nsStackWalk.h"
+#include "mozilla/StackWalk.h"
 #endif
 
 #define TARGET_SANDBOX_EXPORT __declspec(dllexport)
@@ -63,10 +63,10 @@ StackFrameToOStringStream(uint32_t aFrameNumber, void* aPC, void* aSP,
                           void* aClosure)
 {
   std::ostringstream* stream = static_cast<std::ostringstream*>(aClosure);
-  nsCodeAddressDetails details;
+  MozCodeAddressDetails details;
   char buf[1024];
-  NS_DescribeCodeAddress(aPC, &details);
-  NS_FormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
+  MozDescribeCodeAddress(aPC, &details);
+  MozFormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
   *stream << std::endl << "--" << buf;
   stream->flush();
 }
@@ -90,7 +90,7 @@ Log(const char* aMessageType,
   if (aShouldLogStackTrace) {
     if (sStackTraceDepth) {
       msgStream << std::endl << "Stack Trace:";
-      NS_StackWalk(StackFrameToOStringStream, aFramesToSkip, sStackTraceDepth,
+      MozStackWalk(StackFrameToOStringStream, aFramesToSkip, sStackTraceDepth,
                    &msgStream, 0, nullptr);
     }
   }
