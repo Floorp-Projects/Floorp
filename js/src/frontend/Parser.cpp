@@ -634,6 +634,15 @@ FunctionBox::FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunct
         FunctionBox* parent = outerpc->sc->asFunctionBox();
         if (parent && parent->inWith)
             inWith = true;
+    } else {
+        // This is like the above case, but when inside eval.
+        //
+        // For example:
+        //
+        //   with(o) { eval("(function() { g(); })();"); }
+        //
+        // In this case, the static scope chain tells us the presence of with.
+        inWith = outerpc->sc->asGlobalSharedContext()->inWith();
     }
 }
 
