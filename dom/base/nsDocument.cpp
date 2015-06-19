@@ -11976,6 +11976,8 @@ DispatchPointerLockError(nsIDocument* aTarget)
   asyncDispatcher->PostDOMEvent();
 }
 
+static const uint8_t kPointerLockRequestLimit = 2;
+
 mozilla::StaticRefPtr<nsPointerLockPermissionRequest> gPendingPointerLockRequest;
 
 class nsPointerLockPermissionRequest : public nsRunnable,
@@ -12023,7 +12025,7 @@ public:
     // In non-fullscreen mode user input (or chrome caller) is required!
     // Also, don't let the page to try to get the permission too many times.
     if (!mUserInputOrChromeCaller ||
-        doc->mCancelledPointerLockRequests > 2) {
+        doc->mCancelledPointerLockRequests > kPointerLockRequestLimit) {
       Handled();
       DispatchPointerLockError(d);
       return NS_OK;
@@ -12102,7 +12104,10 @@ nsPointerLockPermissionRequest::Cancel()
   nsCOMPtr<nsIDocument> d = do_QueryReferent(mDocument);
   Handled();
   if (d) {
-    static_cast<nsDocument*>(d.get())->mCancelledPointerLockRequests++;
+    auto doc = static_cast<nsDocument*>(d.get());
+    if (doc->mCancelledPointerLockRequests <= kPointerLockRequestLimit) {
+      doc->mCancelledPointerLockRequests++;
+    }
     DispatchPointerLockError(d);
   }
   return NS_OK;

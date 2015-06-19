@@ -1675,7 +1675,9 @@ public:
   // 'style-sheet-applicable-state-changed' notification.
   bool mSSApplicableStateNotificationPending:1;
 
-  uint32_t mCancelledPointerLockRequests;
+  // The number of pointer lock requests which are cancelled by the user.
+  // The value is saturated to kPointerLockRequestLimit+1 = 3.
+  uint8_t mCancelledPointerLockRequests:2;
 
   uint8_t mXMLDeclarationBits;
 
