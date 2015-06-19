@@ -70,8 +70,11 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder,
                                   : new MediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
                                                        /* aSupportsTailDispatch = */ true))
   , mWatchManager(this, mTaskQueue)
+  , mTimer(new MediaTimer())
   , mBuffered(mTaskQueue, TimeIntervals(), "MediaDecoderReader::mBuffered (Canonical)")
   , mDuration(mTaskQueue, NullableTimeUnit(), "MediaDecoderReader::mDuration (Mirror)")
+  , mThrottleDuration(TimeDuration::FromMilliseconds(500))
+  , mLastThrottledNotify(TimeStamp::Now() - mThrottleDuration)
   , mIgnoreAudioOutputFormat(false)
   , mStartTime(-1)
   , mHitAudioDecodeError(false)
@@ -171,6 +174,54 @@ MediaDecoderReader::UpdateBuffered()
   MOZ_ASSERT(OnTaskQueue());
   NS_ENSURE_TRUE_VOID(!mShutdown);
   mBuffered = GetBuffered();
+}
+
+void
+MediaDecoderReader::ThrottledNotifyDataArrived(const Interval<int64_t>& aInterval)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  NS_ENSURE_TRUE_VOID(!mShutdown);
+
+  if (mThrottledInterval.isNothing()) {
+    mThrottledInterval.emplace(aInterval);
+  } else if (!mThrottledInterval.ref().Contiguous(aInterval)) {
+    DoThrottledNotify();
+    mThrottledInterval.emplace(aInterval);
+  } else {
+    mThrottledInterval = Some(mThrottledInterval.ref().Span(aInterval));
+  }
+
+  // If it's been long enough since our last update, do it.
+  if (TimeStamp::Now() - mLastThrottledNotify > mThrottleDuration) {
+    DoThrottledNotify();
+  } else if (!mThrottledNotify.Exists()) {
+    // Otherwise, schedule an update if one isn't scheduled already.
+    nsRefPtr<MediaDecoderReader> self = this;
+    mThrottledNotify.Begin(
+      mTimer->WaitUntil(mLastThrottledNotify + mThrottleDuration, __func__)
+      ->Then(TaskQueue(), __func__,
+             [self] () -> void {
+               self->mThrottledNotify.Complete();
+               NS_ENSURE_TRUE_VOID(!self->mShutdown);
+               self->DoThrottledNotify();
+             },
+             [self] () -> void {
+               self->mThrottledNotify.Complete();
+               NS_WARNING("throttle callback rejected");
+             })
+    );
+  }
+}
+
+void
+MediaDecoderReader::DoThrottledNotify()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  mLastThrottledNotify = TimeStamp::Now();
+  mThrottledNotify.DisconnectIfExists();
+  Interval<int64_t> interval = mThrottledInterval.ref();
+  mThrottledInterval.reset();
+  NotifyDataArrived(interval);
 }
 
 media::TimeIntervals
@@ -362,6 +413,8 @@ MediaDecoderReader::Shutdown()
   mBaseAudioPromise.RejectIfExists(END_OF_STREAM, __func__);
   mBaseVideoPromise.RejectIfExists(END_OF_STREAM, __func__);
 
+  mThrottledNotify.DisconnectIfExists();
+
   ReleaseMediaResources();
   mDuration.DisconnectIfConnected();
   mBuffered.DisconnectAll();
@@ -383,6 +436,7 @@ MediaDecoderReader::Shutdown()
     p = ShutdownPromise::CreateAndResolve(true, __func__);
   }
 
+  mTimer = nullptr;
   mDecoder = nullptr;
 
   return p;

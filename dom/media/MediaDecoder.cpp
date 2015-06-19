@@ -1319,11 +1319,11 @@ size_t MediaDecoder::SizeOfAudioQueue() {
   return 0;
 }
 
-void MediaDecoder::NotifyDataArrived(uint32_t aLength, int64_t aOffset) {
+void MediaDecoder::NotifyDataArrived(uint32_t aLength, int64_t aOffset, bool aThrottleUpdates) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mDecoderStateMachine) {
-    mDecoderStateMachine->DispatchNotifyDataArrived(aLength, aOffset);
+    mDecoderStateMachine->DispatchNotifyDataArrived(aLength, aOffset, aThrottleUpdates);
   }
 
   // ReadyState computation depends on MediaDecoder::CanPlayThrough, which
