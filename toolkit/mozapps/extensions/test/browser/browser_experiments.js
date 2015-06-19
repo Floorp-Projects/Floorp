@@ -426,8 +426,8 @@ add_task(function testActivateRealExperiments() {
   is_element_hidden(el, "warning-container should be hidden.");
   el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "pending-container");
   is_element_hidden(el, "pending-container should be hidden.");
-  el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "version");
-  is_element_hidden(el, "version should be hidden.");
+  let { version } = yield get_tooltip_info(item);
+  Assert.equal(version, undefined, "version should be hidden.");
   el = item.ownerDocument.getAnonymousElementByAttribute(item, "class", "disabled-postfix");
   is_element_hidden(el, "disabled-postfix should be hidden.");
   el = item.ownerDocument.getAnonymousElementByAttribute(item, "class", "update-postfix");
@@ -459,8 +459,8 @@ add_task(function testActivateRealExperiments() {
   is_element_hidden(el, "warning-container should be hidden.");
   el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "pending-container");
   is_element_hidden(el, "pending-container should be hidden.");
-  el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "version");
-  is_element_hidden(el, "version should be hidden.");
+  ({ version }) = yield get_tooltip_info(item);
+  Assert.equal(version, undefined, "version should be hidden.");
   el = item.ownerDocument.getAnonymousElementByAttribute(item, "class", "disabled-postfix");
   is_element_hidden(el, "disabled-postfix should be hidden.");
   el = item.ownerDocument.getAnonymousElementByAttribute(item, "class", "update-postfix");
