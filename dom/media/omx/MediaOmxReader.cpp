@@ -96,7 +96,7 @@ private:
 
     while (mLength) {
       uint32_t length = std::min<uint64_t>(mLength, UINT32_MAX);
-      mOmxReader->NotifyDataArrived(length, mOffset);
+      mOmxReader->NotifyDataArrived(Interval<int64_t>(mOffset, mOffset + length));
       mLength -= length;
       mOffset += length;
     }
