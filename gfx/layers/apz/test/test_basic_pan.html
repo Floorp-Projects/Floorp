@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sanity panning test</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.testInChaosMode();
+
+// this page just serially loads each one of the following test helper pages in
+// a new window and waits for it to call testDone()
+var tests = [
+  'helper_basic_pan.html',
+  'helper_div_pan.html',
+  'helper_iframe_pan.html',
+];
+
+var testIndex = -1;
+var w = null;
+
+function testDone() {
+  if (w) {
+    w.close();
+  }
+  testIndex++;
+  if (testIndex < tests.length) {
+    w = window.open(tests[testIndex], "_blank");
+  } else {
+    SimpleTest.finish();
+  }
+}
+
+window.onload = function() {
+  SpecialPowers.pushPrefEnv(
+    { "set":
+      [
+        // Dropping the touch slop to 0 makes the tests easier to write because
+        // we can just do a one-pixel drag to get over the pan threshold rather
+        // than having to hard-code some larger value.
+        ["apz.touch_start_tolerance", "0.0"],
+
+        // The B2G emulator is hella slow, and needs more than 300ms to run the
+        // main-thread code that deals with layerizing subframes and running
+        // touch listeners. In my local runs this needs to be at least 1000.
+        ["apz.content_response_timeout", "5000"]
+      ]
+    }, testDone);
+};
+
+  </script>
+</head>
+<body>
+</body>
+</html>
