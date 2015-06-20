@@ -321,6 +321,11 @@
     " http://example.com/DNA/pizza/menu/lots-of-different-kinds-of-pizza/" +
     "%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%"
   }));
+  dispatcher.dispatch(new sharedActions.SendTextChatMessage({
+    contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
+    message: "Nowforareallylongwordwithoutspacesorpunctuationwhichshouldcause" +
+    "linewrappingissuesifthecssiswrong"
+  }));
   dispatcher.dispatch(new sharedActions.ReceivedTextChatMessage({
     contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
     message: "That avocado monkey-brains pie sounds tasty!"
