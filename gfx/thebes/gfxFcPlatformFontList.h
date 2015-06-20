@@ -263,7 +263,6 @@ protected:
     nsCountedRef<FcConfig> mLastConfig;
 
     static FT_Library sCairoFTLibrary;
-    static FcChar8* sSentinelFirstFamily;
 };
 
 #endif /* GFXPLATFORMFONTLIST_H_ */

@@ -58,7 +58,6 @@ ToCharPtr(const FcChar8 *aStr)
 }
 
 FT_Library gfxFcPlatformFontList::sCairoFTLibrary = nullptr;
-FcChar8* gfxFcPlatformFontList::sSentinelFirstFamily = nullptr;
 
 static cairo_user_data_key_t sFcFontlistUserFontDataKey;
 
@@ -1040,7 +1039,6 @@ gfxFcPlatformFontList::InitFontList()
     mLocalNames.Clear();
     mGenericMappings.Clear();
     mFcSubstituteCache.Clear();
-    sSentinelFirstFamily = nullptr;
 
     // iterate over available fonts
     FcFontSet* systemFonts = FcConfigGetFonts(nullptr, FcSetSystem);
@@ -1253,16 +1251,16 @@ gfxFcPlatformFontList::FindFamily(const nsAString& aFamily,
     }
 
     const FcChar8* kSentinelName = ToFcChar8Ptr("-moz-sentinel");
-    if (!sSentinelFirstFamily) {
-        nsAutoRef<FcPattern> sentinelSubst(FcPatternCreate());
-        FcPatternAddString(sentinelSubst, FC_FAMILY, kSentinelName);
-        FcConfigSubstitute(nullptr, sentinelSubst, FcMatchPattern);
-        FcPatternGetString(sentinelSubst, FC_FAMILY, 0, &sSentinelFirstFamily);
-    }
+    FcChar8* sentinelFirstFamily = nullptr;
+    nsAutoRef<FcPattern> sentinelSubst(FcPatternCreate());
+    FcPatternAddString(sentinelSubst, FC_FAMILY, kSentinelName);
+    FcConfigSubstitute(nullptr, sentinelSubst, FcMatchPattern);
+    FcPatternGetString(sentinelSubst, FC_FAMILY, 0, &sentinelFirstFamily);
 
     // substitutions for font, -moz-sentinel pattern
     nsAutoRef<FcPattern> fontWithSentinel(FcPatternCreate());
-    FcPatternAddString(fontWithSentinel, FC_FAMILY, ToFcChar8Ptr(familyToFind.get()));
+    FcPatternAddString(fontWithSentinel, FC_FAMILY,
+                       ToFcChar8Ptr(familyToFind.get()));
     FcPatternAddString(fontWithSentinel, FC_FAMILY, kSentinelName);
     FcConfigSubstitute(nullptr, fontWithSentinel, FcMatchPattern);
 
@@ -1274,8 +1272,8 @@ gfxFcPlatformFontList::FindFamily(const nsAString& aFamily,
          i++)
     {
         NS_ConvertUTF8toUTF16 subst(ToCharPtr(substName));
-        if (sSentinelFirstFamily &&
-            FcStrCmp(substName, sSentinelFirstFamily) == 0) {
+        if (sentinelFirstFamily &&
+            FcStrCmp(substName, sentinelFirstFamily) == 0) {
             break;
         }
         gfxFontFamily* foundFamily = gfxPlatformFontList::FindFamily(subst);
