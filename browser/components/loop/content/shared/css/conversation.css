@@ -1505,6 +1505,10 @@ html[dir="rtl"] .standalone .room-conversation-wrapper .room-inner-info-area {
   margin: 0;
   /* inline-block stops the elements taking 100% of the text-chat-view width */
   display: inline-block;
+  /* Split really long strings with no spaces appropriately, whilst limiting the
+     width to 100%. */
+  max-width: 100%;
+  word-wrap: break-word;
 }
 
 .text-chat-entry.received {
