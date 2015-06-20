@@ -64,7 +64,7 @@
          "getOwnPropertyDescriptor.value works");
       let obj = new data.ctor();
       ok(obj.a === 3, "constructor call");
-      ok(document.title === "Hello, Kitty", "document node");
+      is(document.title, "Hello, Kitty", "document node");
       is(typeof document.cookie, "string", "can get document.cookie");
       is(typeof document.defaultView.navigator.userAgent, "string", "can get navigator.userAgent");
 
@@ -141,6 +141,7 @@
 
     function recvAsyncMessage(message) {
       testCpowMessage(message);
+      savedMM.sendAsyncMessage("cpows:async_done");
     }
 
     function recvSyncMessage(message) {
