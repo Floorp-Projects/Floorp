@@ -106,7 +106,7 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
       // Call trees should only auto-expand when not inverted. Passing undefined
       // will default to the CALL_TREE_AUTO_EXPAND depth.
       autoExpandDepth: inverted ? 0 : undefined,
-      enableOptimizations: options.enableOptimizations
+      showOptimizationHint: options.showOptimizationHint
     });
 
     // Bind events.
