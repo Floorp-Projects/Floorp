@@ -2423,6 +2423,9 @@ private:
     static void CleanupPointerTypeObject(const nsXPTType& type,
                                          void** pp);
 
+    void CleanupOutparams(JSContext* cx, uint16_t methodIndex, const nsXPTMethodInfo* info,
+                          nsXPTCMiniVariant* nativeParams, bool inOutOnly, uint8_t n) const;
+
 private:
     XPCJSRuntime* mRuntime;
     nsCOMPtr<nsIInterfaceInfo> mInfo;
