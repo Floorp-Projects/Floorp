@@ -2146,6 +2146,13 @@ TabChild::RecvNotifyAPZStateChange(const ViewID& aViewId,
                                    const int& aArg)
 {
   mAPZEventState->ProcessAPZStateChange(GetDocument(), aViewId, aChange, aArg);
+  if (aChange == APZStateChange::TransformEnd) {
+    // This is used by tests to determine when the APZ is done doing whatever
+    // it's doing. XXX generify this as needed when writing additional tests.
+    DispatchMessageManagerMessage(
+      NS_LITERAL_STRING("APZ:TransformEnd"),
+      NS_LITERAL_STRING("{}"));
+  }
   return true;
 }
 
