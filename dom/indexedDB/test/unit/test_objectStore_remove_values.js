@@ -42,9 +42,13 @@ function testSteps()
     let request = indexedDB.open(name, i+1);
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = grabEventAndContinueHandler;
     let event = yield undefined;
 
     let db = event.target.result;
+    db.onversionchange = function(event) {
+      event.target.close();
+    };
 
     let objectStore = db.createObjectStore(test.name,
                                            { keyPath: test.keyName,
@@ -77,7 +81,9 @@ function testSteps()
     event = yield undefined;
 
     ok(event.target.result === undefined, "Object was deleted");
-    db.close();
+
+    // Wait for success
+    yield undefined;
   }
 
   finishTest();

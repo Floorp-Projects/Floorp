@@ -27,6 +27,9 @@ function testSteps()
     let event = yield undefined;
 
     let db = event.target.result;
+    db.onversionchange = function(event) {
+      event.target.close();
+    };
 
     let objectStore =
       db.createObjectStore(objectStores[i].name,
@@ -48,7 +51,6 @@ function testSteps()
     event = yield undefined;
 
     ok(event.target.result == 1 || event.target.result == 2, "Good id");
-    db.close();
   }
 
   executeSoon(function() { testGenerator.next(); });

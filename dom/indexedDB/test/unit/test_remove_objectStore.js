@@ -13,7 +13,11 @@ function testSteps()
   let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
+  request.onsuccess = unexpectedSuccessHandler;
   let event = yield undefined;
+
+  request.onupgradeneeded = unexpectedSuccessHandler;
+  request.onsuccess = grabEventAndContinueHandler;
 
   let db = event.target.result;
   is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
@@ -40,12 +44,19 @@ function testSteps()
   event.target.transaction.oncomplete = grabEventAndContinueHandler;
   event = yield undefined;
 
+  // Wait for success.
+  event = yield undefined;
+
   db.close();
 
   request = indexedDB.open(name, 2);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
+  request.onsuccess = unexpectedSuccessHandler;
   event = yield undefined;
+
+  request.onupgradeneeded = unexpectedSuccessHandler;
+  request.onsuccess = grabEventAndContinueHandler;
 
   db = event.target.result;
   let trans = event.target.transaction;
@@ -85,6 +96,9 @@ function testSteps()
   yield undefined;
 
   trans.oncomplete = grabEventAndContinueHandler;
+  event = yield undefined;
+
+  // Wait for success.
   event = yield undefined;
 
   db.close();

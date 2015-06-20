@@ -1262,14 +1262,26 @@ BackgroundFactoryRequestChild::HandleResponse(
     static_cast<BackgroundDatabaseChild*>(aResponse.databaseChild());
   MOZ_ASSERT(databaseActor);
 
-  databaseActor->EnsureDOMObject();
-
   IDBDatabase* database = databaseActor->GetDOMObject();
-  MOZ_ASSERT(database);
+  if (!database) {
+    databaseActor->EnsureDOMObject();
 
-  ResultHelper helper(mRequest, nullptr, database);
+    database = databaseActor->GetDOMObject();
+    MOZ_ASSERT(database);
 
-  DispatchSuccessEvent(&helper);
+    MOZ_ASSERT(!database->IsClosed());
+  }
+
+  if (database->IsClosed()) {
+    // If the database was closed already, which is only possible if we fired an
+    // "upgradeneeded" event, then we shouldn't fire a "success" event here.
+    // Instead we fire an error event with AbortErr.
+    DispatchErrorEvent(mRequest, NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
+  } else {
+    ResultHelper helper(mRequest, nullptr, database);
+
+    DispatchSuccessEvent(&helper);
+  }
 
   databaseActor->ReleaseDOMObject();
 
