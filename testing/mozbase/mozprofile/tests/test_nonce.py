@@ -8,6 +8,7 @@ see https://bugzilla.mozilla.org/show_bug.cgi?id=722804
 import os
 import tempfile
 import unittest
+import mozfile
 from mozprofile.prefs import Preferences
 from mozprofile.profile import Profile
 
@@ -17,6 +18,7 @@ class PreferencesNonceTest(unittest.TestCase):
 
         # make a profile with one preference
         path = tempfile.mktemp()
+        self.addCleanup(mozfile.remove, path)
         profile = Profile(path,
                           preferences={'foo': 'bar'},
                           restore=False)

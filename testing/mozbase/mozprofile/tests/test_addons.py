@@ -34,17 +34,7 @@ class TestAddonsManager(unittest.TestCase):
 
         self.profile_path = self.profile.profile
         self.tmpdir = tempfile.mkdtemp()
-
-    def tearDown(self):
-        mozfile.rmtree(self.tmpdir)
-
-        self.am = None
-        self.profile = None
-
-        # Bug 934484
-        # Sometimes the profile folder gets recreated at the end and will be left
-        # behind. So we should ensure that we clean it up correctly.
-        mozfile.rmtree(self.profile_path)
+        self.addCleanup(mozfile.remove, self.tmpdir)
 
     def test_install_addons_multiple_same_source(self):
         # Generate installer stubs for all possible types of addons
