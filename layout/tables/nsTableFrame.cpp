@@ -3326,13 +3326,13 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
     nscoord amountUsedByRG = 0;
     nscoord yOriginRow = 0;
     nsRect rgNormalRect = rgFrame->GetNormalRect();
-    if (!rgFrame->HasStyleHeight()) {
+    if (!rgFrame->HasStyleBSize()) {
       nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
       while (rowFrame) {
         nsRect rowNormalRect = rowFrame->GetNormalRect();
         nscoord cellSpacingY = GetRowSpacing(rowFrame->GetRowIndex());
-        if ((amountUsed < aAmount) && rowFrame->HasPctHeight()) {
-          nscoord pctHeight = rowFrame->GetHeight(pctBasis);
+        if ((amountUsed < aAmount) && rowFrame->HasPctBSize()) {
+          nscoord pctHeight = rowFrame->GetBSize(pctBasis);
           nscoord amountForRow = std::min(aAmount - amountUsed,
                                           pctHeight - rowNormalRect.height);
           if (amountForRow > 0) {
@@ -3401,10 +3401,10 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
   nsTableRowFrame*      firstUnStyledRow = nullptr;
   for (rgX = 0; rgX < rowGroups.Length() && !firstUnStyledRG; rgX++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
-    if (!rgFrame->HasStyleHeight()) {
+    if (!rgFrame->HasStyleBSize()) {
       nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
       while (rowFrame) {
-        if (!rowFrame->HasStyleHeight()) {
+        if (!rowFrame->HasStyleBSize()) {
           firstUnStyledRG = rgFrame;
           firstUnStyledRow = rowFrame;
           break;
@@ -3430,10 +3430,10 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
   else {
     for (rgX = 0; rgX < rowGroups.Length(); rgX++) {
       nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
-      if (!firstUnStyledRG || !rgFrame->HasStyleHeight()) {
+      if (!firstUnStyledRG || !rgFrame->HasStyleBSize()) {
         nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
         while (rowFrame) {
-          if (!firstUnStyledRG || !rowFrame->HasStyleHeight()) {
+          if (!firstUnStyledRG || !rowFrame->HasStyleBSize()) {
             NS_ASSERTION(rowFrame->GetSize().height >= 0,
                          "negative row frame height");
             divisor += rowFrame->GetSize().height;
@@ -3465,14 +3465,14 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
     nsRect rgNormalRect = rgFrame->GetNormalRect();
     nsRect rgVisualOverflow = rgFrame->GetVisualOverflowRect();
     // see if there is an eligible row group or we distribute to all rows
-    if (!firstUnStyledRG || !rgFrame->HasStyleHeight() || !eligibleRows) {
+    if (!firstUnStyledRG || !rgFrame->HasStyleBSize() || !eligibleRows) {
       nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
       while (rowFrame) {
         nscoord cellSpacingY = GetRowSpacing(rowFrame->GetRowIndex());
         nsRect rowNormalRect = rowFrame->GetNormalRect();
         nsRect rowVisualOverflow = rowFrame->GetVisualOverflowRect();
         // see if there is an eligible row or we distribute to all rows
-        if (!firstUnStyledRow || !rowFrame->HasStyleHeight() || !eligibleRows) {
+        if (!firstUnStyledRow || !rowFrame->HasStyleBSize() || !eligibleRows) {
           float ratio;
           if (eligibleRows) {
             if (!expandEmptyRows) {
@@ -3913,26 +3913,7 @@ nsTableIterator::Init(nsIFrame* aFirstChild)
   mFirstListChild = aFirstChild;
   mFirstChild     = aFirstChild;
   mCurrentChild   = nullptr;
-  mLeftToRight    = true;
   mCount          = -1;
-
-  if (!mFirstChild) {
-    return;
-  }
-
-  nsTableFrame* table = nsTableFrame::GetTableFrame(mFirstChild);
-  mLeftToRight = (NS_STYLE_DIRECTION_LTR ==
-                  table->StyleVisibility()->mDirection);
-
-  if (!mLeftToRight) {
-    mCount = 0;
-    nsIFrame* nextChild = mFirstChild->GetNextSibling();
-    while (nullptr != nextChild) {
-      mCount++;
-      mFirstChild = nextChild;
-      nextChild = nextChild->GetNextSibling();
-    }
-  }
 }
 
 nsIFrame*
@@ -3949,26 +3930,8 @@ nsTableIterator::Next()
     return nullptr;
   }
 
-  if (mLeftToRight) {
-    mCurrentChild = mCurrentChild->GetNextSibling();
-    return mCurrentChild;
-  }
-  else {
-    nsIFrame* targetChild = mCurrentChild;
-    mCurrentChild = nullptr;
-    nsIFrame* child = mFirstListChild;
-    while (child && (child != targetChild)) {
-      mCurrentChild = child;
-      child = child->GetNextSibling();
-    }
-    return mCurrentChild;
-  }
-}
-
-bool
-nsTableIterator::IsLeftToRight()
-{
-  return mLeftToRight;
+  mCurrentChild = mCurrentChild->GetNextSibling();
+  return mCurrentChild;
 }
 
 int32_t
@@ -5410,7 +5373,7 @@ BCMapCellInfo::SetRowGroupBEndContBCBorder()
     currentBorder = CompareBorders(mTableFrame, nullptr, nullptr, mRowGroup,
                                    mEndRow, nullptr, mTableWM,
                                    eLogicalSideBEnd, ADJACENT);
-    mRowGroup->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, currentBorder.width);
+    mRowGroup->SetContinuousBCBorderWidth(eLogicalSideBEnd, currentBorder.width);
   }
 }
 
@@ -5434,7 +5397,7 @@ BCMapCellInfo::SetInnerRowGroupBEndContBCBorder(const nsIFrame* aNextRowGroup,
                                          currentBorder.width);
   }
   if (mRgAtEnd && mRowGroup) {
-    mRowGroup->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, currentBorder.width);
+    mRowGroup->SetContinuousBCBorderWidth(eLogicalSideBEnd, currentBorder.width);
   }
 }
 
