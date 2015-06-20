@@ -810,7 +810,8 @@ protected:
   void ExpandBCDamageArea(mozilla::TableArea& aRect) const;
 
   void SetColumnDimensions(nscoord aHeight, WritingMode aWM,
-                           const LogicalMargin& aBorderPadding);
+                           const LogicalMargin& aBorderPadding,
+                           nscoord aContainerWidth);
 
   int32_t CollectRows(nsIFrame*                   aFrame,
                       nsTArray<nsTableRowFrame*>& aCollection);
