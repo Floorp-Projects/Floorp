@@ -32,7 +32,7 @@ import java.util.zip.ZipFile;
 
 import javax.net.ssl.SSLException;
 
-import org.apache.http.protocol.HTTP;
+import ch.boye.httpclientandroidlib.protocol.HTTP;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
