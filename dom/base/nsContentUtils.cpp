@@ -6313,10 +6313,7 @@ nsContentUtils::FlushLayoutForTree(nsIDOMWindow* aWindow)
     // is O(N^2) in docshell tree depth.  However, the docshell tree is
     // usually pretty shallow.
 
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    aWindow->GetDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-    if (doc) {
+    if (nsCOMPtr<nsIDocument> doc = piWin->GetDoc()) {
         doc->FlushPendingNotifications(Flush_Layout);
     }
 
