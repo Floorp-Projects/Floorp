@@ -261,8 +261,13 @@ loop.shared.views.TextChatView = (function(mozL10n) {
         return null;
       }
 
+      var textChatViewClasses = React.addons.classSet({
+        "text-chat-view": true,
+        "text-chat-disabled": !this.state.textChatEnabled
+      });
+
       return (
-        <div className="text-chat-view">
+        <div className={textChatViewClasses}>
           <TextChatEntriesView
             dispatcher={this.props.dispatcher}
             messageList={messageList} />
