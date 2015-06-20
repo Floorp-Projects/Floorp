@@ -13060,12 +13060,12 @@ TransactionBase::GetMetadataForObjectStoreId(int64_t aObjectStoreId) const
 
   nsRefPtr<FullObjectStoreMetadata> metadata;
   if (!mDatabase->Metadata()->mObjectStores.Get(aObjectStoreId,
-                                                getter_AddRefs(metadata))) {
+                                                getter_AddRefs(metadata)) ||
+      metadata->mDeleted) {
     return nullptr;
   }
 
   MOZ_ASSERT(metadata->mCommonMetadata.id() == aObjectStoreId);
-  MOZ_ASSERT(!metadata->mDeleted);
 
   return metadata.forget();
 }
@@ -13083,12 +13083,12 @@ TransactionBase::GetMetadataForIndexId(
   }
 
   nsRefPtr<FullIndexMetadata> metadata;
-  if (!aObjectStoreMetadata->mIndexes.Get(aIndexId, getter_AddRefs(metadata))) {
+  if (!aObjectStoreMetadata->mIndexes.Get(aIndexId, getter_AddRefs(metadata)) ||
+      metadata->mDeleted) {
     return nullptr;
   }
 
   MOZ_ASSERT(metadata->mCommonMetadata.id() == aIndexId);
-  MOZ_ASSERT(!metadata->mDeleted);
 
   return metadata.forget();
 }
