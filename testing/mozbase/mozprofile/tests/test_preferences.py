@@ -264,12 +264,12 @@ user_pref("webgl.force-enabled", true);
         json = '{"browser.startup.homepage": "http://planet.mozilla.org/"}'
 
         # just repr it...could use the json module but we don't need it here
-        fd, name = tempfile.mkstemp(suffix='.json')
-        os.write(fd, json)
-        os.close(fd)
+        with mozfile.NamedTemporaryFile(suffix='.json') as f:
+            f.write(json)
+            f.flush()
 
-        commandline = ["--preferences", name]
-        self.compare_generated(_prefs, commandline)
+            commandline = ["--preferences", f.name]
+            self.compare_generated(_prefs, commandline)
 
     def test_prefs_write(self):
         """test that the Preferences.write() method correctly serializes preferences"""
