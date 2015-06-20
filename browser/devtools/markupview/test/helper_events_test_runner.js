@@ -15,8 +15,6 @@ function* runEventPopupTests() {
     yield checkEventsForNode(selector, expected, inspector);
   }
 
-  gBrowser.removeCurrentTab();
-
   // Wait for promises to avoid leaks when running this as a single test.
   // We need to do this because we have opened a bunch of popups and don't them
   // to affect other test runs when they are GCd.
