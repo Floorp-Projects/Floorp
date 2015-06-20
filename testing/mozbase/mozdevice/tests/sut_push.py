@@ -1,4 +1,5 @@
 from sut import MockAgent
+import mozfile
 import mozdevice
 import mozlog
 import unittest
@@ -38,6 +39,7 @@ class PushTest(unittest.TestCase):
         expectedFileResponse = mdsum.hexdigest()
 
         tempdir = tempfile.mkdtemp()
+        self.addCleanup(mozfile.remove, tempdir)
         complex_path = os.path.join(tempdir, "baz")
         os.mkdir(complex_path)
         f = tempfile.NamedTemporaryFile(dir=complex_path)
