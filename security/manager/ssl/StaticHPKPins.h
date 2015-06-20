@@ -1027,6 +1027,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "include-subdomains.pinning.example.com", true, false, false, -1, &kPinset_mozilla_test },
   { "login.corp.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "m.facebook.com", true, false, false, -1, &kPinset_facebook },
+  { "mail-settings.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "mail.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "market.android.com", true, false, false, -1, &kPinset_google_root_pems },
   { "mbasic.facebook.com", true, false, false, -1, &kPinset_facebook },
@@ -1091,8 +1092,8 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "ytimg.com", true, false, false, -1, &kPinset_google_root_pems },
 };
 
-// Pinning Preload List Length = 352;
+// Pinning Preload List Length = 353;
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1442053104631000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1443263062798000);
