@@ -489,7 +489,7 @@ class IonTrackedOptimizationsTypeInfo
     bool empty() const { return start_ == end_; }
 
     // Unlike IonTrackedOptimizationAttempts,
-    // JS::ForEachTrackedOptimizaitonTypeInfoOp cannot be used directly. The
+    // JS::ForEachTrackedOptimizationTypeInfoOp cannot be used directly. The
     // internal API needs to deal with engine-internal data structures (e.g.,
     // TypeSet::Type) directly.
     //
