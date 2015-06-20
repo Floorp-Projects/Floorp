@@ -384,6 +384,10 @@ class jit::UniqueTrackedTypes
 bool
 UniqueTrackedTypes::getIndexOf(TypeSet::Type ty, uint8_t* indexp)
 {
+    // For now, tracking of nursery singleton objects is not supported.
+    if (ty.isSingletonUnchecked() && IsInsideNursery(ty.singleton()))
+        ty = TypeSet::UnknownType();
+
     TypesMap::AddPtr p = map_.lookupForAdd(ty);
     if (p) {
         *indexp = p->value();
