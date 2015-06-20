@@ -1155,7 +1155,9 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<SourceSurface> surface =
-    container->GetFrame(imgIContainer::FRAME_FIRST, 0);
+    container->GetFrame(imgIContainer::FRAME_FIRST,
+                        imgIContainer::FLAG_SYNC_DECODE |
+                        imgIContainer::FLAG_ASYNC_NOTIFY);
   NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
 
   RefPtr<DataSourceSurface> dataSurface;
