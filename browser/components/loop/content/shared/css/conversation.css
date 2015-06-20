@@ -1472,7 +1472,7 @@ html[dir="rtl"] .standalone .room-conversation-wrapper .room-inner-info-area {
 }
 
 .text-chat-entries {
-  overflow: scroll;
+  overflow: auto;
 }
 
 .text-chat-entry {
