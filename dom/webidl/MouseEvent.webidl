@@ -15,7 +15,9 @@ interface MouseEvent : UIEvent {
   readonly attribute long           screenY;
   readonly attribute long           clientX;
   readonly attribute long           clientY;
+[Pref="dom.mouseEvent.offsetXY.enabled"]
   readonly attribute long           offsetX;
+[Pref="dom.mouseEvent.offsetXY.enabled"]
   readonly attribute long           offsetY;
   readonly attribute boolean        ctrlKey;
   readonly attribute boolean        shiftKey;
