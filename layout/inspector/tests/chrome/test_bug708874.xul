@@ -258,16 +258,15 @@ function testInvalid() {
 }
 
 function testNotElement() {
-  var values = [null, undefined, {}];
-  try {
-    for each (value in values); {
-      DOMUtils.hasPseudoClassLock(value, ":hover");
-      DOMUtils.addPseudoClassLock(value, ":hover");
-      DOMUtils.removePseudoClassLock(value, ":hover");
-      DOMUtils.clearPseudoClassLocks(value);
-    }
-  } catch(e) {
-    // just make sure we don't crash on non-elements
+  for (var value of [null, undefined, {}]) {
+    SimpleTest.doesThrow(() => DOMUtils.hasPseudoClassLock(value, ":hover"),
+                         "hasPseudoClassLock should throw for " + value);
+    SimpleTest.doesThrow(() => DOMUtils.addPseudoClassLock(value, ":hover"),
+                         "addPseudoClassLock should throw for " + value);
+    SimpleTest.doesThrow(() => DOMUtils.removePseudoClassLock(value, ":hover"),
+                         "removePseudoClassLock should throw for " + value);
+    SimpleTest.doesThrow(() => DOMUtils.clearPseudoClassLocks(value),
+                         "clearPseudoClassLocks should throw for " + value);
   }
 }
   ]]>
