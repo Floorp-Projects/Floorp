@@ -141,12 +141,14 @@ AsyncCompositionManager::ComputeRotation()
   }
 }
 
-static bool
-GetBaseTransform2D(Layer* aLayer, Matrix* aTransform)
+static void
+GetBaseTransform(Layer* aLayer, Matrix4x4* aTransform)
 {
   // Start with the animated transform if there is one
-  return (aLayer->AsLayerComposite()->GetShadowTransformSetByAnimation() ?
-          aLayer->GetLocalTransform() : aLayer->GetTransform()).Is2D(aTransform);
+  *aTransform =
+    (aLayer->AsLayerComposite()->GetShadowTransformSetByAnimation()
+        ? aLayer->GetLocalTransform()
+        : aLayer->GetTransform());
 }
 
 static void
@@ -183,9 +185,9 @@ SetShadowTransform(Layer* aLayer, Matrix4x4 aTransform)
 }
 
 static void
-TranslateShadowLayer2D(Layer* aLayer,
-                       const gfxPoint& aTranslation,
-                       bool aAdjustClipRect)
+TranslateShadowLayer(Layer* aLayer,
+                     const gfxPoint& aTranslation,
+                     bool aAdjustClipRect)
 {
   // This layer might also be a scrollable layer and have an async transform.
   // To make sure we don't clobber that, we start with the shadow transform.
@@ -193,16 +195,12 @@ TranslateShadowLayer2D(Layer* aLayer,
   // Note that the shadow transform is reset on every frame of composition so
   // we don't have to worry about the adjustments compounding over successive
   // frames.
-  Matrix layerTransform;
-  if (!aLayer->GetLocalTransform().Is2D(&layerTransform)) {
-    return;
-  }
+  Matrix4x4 layerTransform = aLayer->GetLocalTransform();
 
-  // Apply the 2D translation to the layer transform.
-  layerTransform._31 += aTranslation.x;
-  layerTransform._32 += aTranslation.y;
+  // Apply the translation to the layer transform.
+  layerTransform.PostTranslate(aTranslation.x, aTranslation.y, 0);
 
-  SetShadowTransform(aLayer, Matrix4x4::From2D(layerTransform));
+  SetShadowTransform(aLayer, layerTransform);
   aLayer->AsLayerComposite()->SetShadowTransformSetByAnimation(false);
 
   if (aAdjustClipRect) {
@@ -212,25 +210,21 @@ TranslateShadowLayer2D(Layer* aLayer,
   // If a fixed- or sticky-position layer has a mask layer, that mask should
   // move along with the layer, so apply the translation to the mask layer too.
   if (Layer* maskLayer = aLayer->GetMaskLayer()) {
-    TranslateShadowLayer2D(maskLayer, aTranslation, false);
+    TranslateShadowLayer(maskLayer, aTranslation, false);
   }
 }
 
-static bool
-AccumulateLayerTransforms2D(Layer* aLayer,
-                            Layer* aAncestor,
-                            Matrix& aMatrix)
+static void
+AccumulateLayerTransforms(Layer* aLayer,
+                          Layer* aAncestor,
+                          Matrix4x4& aMatrix)
 {
   // Accumulate the transforms between this layer and the subtree root layer.
   for (Layer* l = aLayer; l && l != aAncestor; l = l->GetParent()) {
-    Matrix l2D;
-    if (!GetBaseTransform2D(l, &l2D)) {
-      return false;
-    }
-    aMatrix *= l2D;
+    Matrix4x4 transform;
+    GetBaseTransform(l, &transform);
+    aMatrix *= transform;
   }
-
-  return true;
 }
 
 static LayerPoint
@@ -312,37 +306,25 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
 
   // Insert a translation so that the position of the anchor point is the same
   // before and after the change to the transform of aTransformedSubtreeRoot.
-  // This currently only works for fixed layers with 2D transforms.
 
   // Accumulate the transforms between this layer and the subtree root layer.
-  Matrix ancestorTransform;
-  if (!AccumulateLayerTransforms2D(aLayer->GetParent(), aTransformedSubtreeRoot,
-                                   ancestorTransform)) {
-    return;
-  }
-
-  Matrix oldRootTransform;
-  Matrix newRootTransform;
-  if (!aPreviousTransformForRoot.Is2D(&oldRootTransform) ||
-      !aCurrentTransformForRoot.Is2D(&newRootTransform)) {
-    return;
-  }
+  Matrix4x4 ancestorTransform;
+  AccumulateLayerTransforms(aLayer->GetParent(), aTransformedSubtreeRoot,
+                            ancestorTransform);
 
   // Calculate the cumulative transforms between the subtree root with the
   // old transform and the current transform.
-  Matrix oldCumulativeTransform = ancestorTransform * oldRootTransform;
-  Matrix newCumulativeTransform = ancestorTransform * newRootTransform;
+  Matrix4x4 oldCumulativeTransform = ancestorTransform * aPreviousTransformForRoot;
+  Matrix4x4 newCumulativeTransform = ancestorTransform * aCurrentTransformForRoot;
   if (newCumulativeTransform.IsSingular()) {
     return;
   }
-  Matrix newCumulativeTransformInverse = newCumulativeTransform.Inverse();
+  Matrix4x4 newCumulativeTransformInverse = newCumulativeTransform.Inverse();
 
   // Now work out the translation necessary to make sure the layer doesn't
   // move given the new sub-tree root transform.
-  Matrix layerTransform;
-  if (!GetBaseTransform2D(aLayer, &layerTransform)) {
-    return;
-  }
+  Matrix4x4 layerTransform;
+  GetBaseTransform(aLayer, &layerTransform);
 
   // Calculate any offset necessary, in previous transform sub-tree root
   // space. This is used to make sure fixed position content respects
@@ -387,7 +369,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                     IntervalOverlap(translation.x, stickyInner.x, stickyInner.XMost());
   }
 
-  // Finally, apply the 2D translation to the layer transform. Note that in
+  // Finally, apply the translation to the layer transform. Note that in
   // general we need to apply the same translation to the layer's clip rect, so
   // that the effective transform on the clip rect takes it back to where it was
   // originally, had there been no async scroll. In the case where the
@@ -395,7 +377,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   // rect is not affected by the scroll-induced async scroll transform anyway
   // (since the clip is applied post-transform) so we don't need to make the
   // adjustment.
-  TranslateShadowLayer2D(aLayer, ThebesPoint(translation), aLayer != aTransformedSubtreeRoot);
+  TranslateShadowLayer(aLayer, ThebesPoint(translation), aLayer != aTransformedSubtreeRoot);
 }
 
 static void
