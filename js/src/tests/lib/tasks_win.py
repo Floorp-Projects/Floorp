@@ -7,7 +7,7 @@ import subprocess
 import sys
 from datetime import datetime, timedelta
 from progressbar import ProgressBar
-from results import TestOutput
+from results import NullTestOutput, TestOutput
 from threading import Thread
 from Queue import Queue, Empty
 
@@ -20,13 +20,17 @@ class TaskFinishedMarker:
     pass
 
 
-def _do_work(qTasks, qResults, qWatch, prefix, timeout):
+def _do_work(qTasks, qResults, qWatch, prefix, run_skipped, timeout):
     while True:
         test = qTasks.get(block=True, timeout=sys.maxint)
         if test is EndMarker:
             qWatch.put(EndMarker)
             qResults.put(EndMarker)
             return
+
+        if not test.enable and not run_skipped:
+            qResults.put(NullTestOutput(test))
+            continue
 
         # Spawn the test task.
         cmd = test.get_command(prefix)
@@ -79,7 +83,8 @@ def run_all_tests(tests, prefix, results, options):
         watcher.start()
         watchdogs.append(watcher)
         worker = Thread(target=_do_work, args=(qTasks, qResults, qWatch,
-                                               prefix, options.timeout))
+                                               prefix, options.run_skipped,
+                                               options.timeout))
         worker.setDaemon(True)
         worker.start()
         workers.append(worker)

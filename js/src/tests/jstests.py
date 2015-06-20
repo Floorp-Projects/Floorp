@@ -13,7 +13,6 @@ from contextlib import contextmanager
 from copy import copy
 from subprocess import list2cmdline, call
 
-from lib.results import NullTestOutput
 from lib.tests import TestCase, get_jitflags
 from lib.results import ResultsSink
 from lib.progressbar import ProgressBar
@@ -323,11 +322,7 @@ def load_tests(options, requested_paths, excluded_paths):
     if not options.run_slow_tests:
         test_list = [_ for _ in test_list if not _.slow]
 
-    if not options.run_skipped:
-        skip_list = [_ for _ in test_list if not _.enable]
-        test_list = [_ for _ in test_list if _.enable]
-
-    return skip_list, test_list
+    return test_list
 
 
 def main():
@@ -335,7 +330,7 @@ def main():
     if options.js_shell is not None and not isfile(options.js_shell):
         print('Could not find shell at given path.')
         return 1
-    skip_list, test_list = load_tests(options, requested_paths, excluded_paths)
+    test_list = load_tests(options, requested_paths, excluded_paths)
 
     if not test_list:
         print('no tests selected')
@@ -364,10 +359,8 @@ def main():
         # Force date strings to English.
         os.environ['LC_TIME'] = 'en_US.UTF-8'
 
-        results = ResultsSink(options, len(skip_list) + len(test_list))
+        results = ResultsSink(options, len(test_list))
         try:
-            for t in skip_list:
-                results.push(NullTestOutput(t))
             for out in run_all_tests(test_list, prefix, results, options):
                 results.push(out)
             results.finish(True)
