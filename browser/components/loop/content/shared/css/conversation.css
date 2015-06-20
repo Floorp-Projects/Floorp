@@ -1155,8 +1155,9 @@ html[dir="rtl"] .room-context-btn-edit {
   object-fit: cover;
 }
 
-/* Note: we can't use flex for the text-chat-view as this lets it overflow
-   the expected column heights, and we ca't fix its height. */
+/* Note: we can't use "display: flex;" for the text-chat-view itself,
+   as this lets it overflow the expected column heights, and we can't
+   fix its height. */
 .media-wrapper > .text-chat-view {
   flex: 0 0 auto;
   /* Text chat is a fixed 200px width for normal displays. */
@@ -1462,7 +1463,7 @@ html[dir="rtl"] .standalone .room-conversation-wrapper .room-inner-info-area {
 }
 
 .text-chat-view {
-  background: #fff;
+  background: white;
 }
 
 .fx-embedded .text-chat-view {
@@ -1536,11 +1537,13 @@ html[dir="rtl"] .standalone .room-conversation-wrapper .room-inner-info-area {
   height: 40px;
   padding: 0 .5em .5em;
   font-size: 1.1em;
-}
-
-.fx-embedded .text-chat-box > form > input {
   border: 0;
   border-top: 1px solid #999;
+}
+
+/* turn the visible border blue as a visual indicator of focus */
+.text-chat-box > form > input:focus {
+  border-top: 1px solid #66c9f2;
 }
 
 @media screen and (max-width:640px) {
