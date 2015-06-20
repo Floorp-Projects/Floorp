@@ -124,23 +124,3 @@ function synthesizeNativeMouseMoveAndWaitForMoveEvent(aElement, aX, aY, aCallbac
   });
   return synthesizeNativeMouseMove(aElement, aX, aY);
 }
-
-// Scroll the mouse wheel (in the vertical direction) by |aWheelDelta| over |aElement|,
-// calling |aCallback| when the first resulting scroll event is received.
-function scrollWheelOver(aElement, aWheelDelta, aCallback) {
-  var scale = window.devicePixelRatio;
-  var rect = aElement.getBoundingClientRect();
-  var x = (rect.left + 10) * scale;
-  var y = (rect.top + 10) * scale;
-  // Move the mouse to the desired wheel location.
-  // Not doing so can result in the wheel events from two consecutive
-  // scrollWheelOver() calls on different elements being incorrectly considered
-  // as part of the same wheel transaction.
-  // We also wait for the mouse move event to be processed before sending the
-  // wheel event, otherwise there is a chance they might get reordered, and
-  // we have the transaction problem again.
-  synthesizeNativeMouseMoveAndWaitForMoveEvent(aElement, x, y, function() {
-    synthesizeNativeWheelAndWaitForScrollEvent(aElement, x, y, 0, aWheelDelta, aCallback);
-  });
-}
-
