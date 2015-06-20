@@ -293,11 +293,6 @@
     sdkDriver: mockSDK
   });
 
-  textChatStore.setStoreState({
-    // XXX Disabled until we start sorting out some of the layouts.
-    textChatEnabled: false
-  });
-
   // Update the text chat store with the room info.
   textChatStore.updateRoomInfo(new sharedActions.UpdateRoomInfo({
     roomName: "A Very Long Conversation Name",
@@ -308,6 +303,31 @@
       location: "http://wonderful.invalid"
       // use the fallback thumbnail
     }]
+  }));
+
+  textChatStore.setStoreState({textChatEnabled: true});
+
+  dispatcher.dispatch(new sharedActions.SendTextChatMessage({
+    contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
+    message: "Rheet!"
+  }));
+  dispatcher.dispatch(new sharedActions.ReceivedTextChatMessage({
+    contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
+    message: "Hi there"
+  }));
+  dispatcher.dispatch(new sharedActions.SendTextChatMessage({
+    contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
+    message: "Check out this menu from DNA Pizza:" +
+    " http://example.com/DNA/pizza/menu/lots-of-different-kinds-of-pizza/" +
+    "%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%"
+  }));
+  dispatcher.dispatch(new sharedActions.ReceivedTextChatMessage({
+    contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
+    message: "That avocado monkey-brains pie sounds tasty!"
+  }));
+  dispatcher.dispatch(new sharedActions.SendTextChatMessage({
+    contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
+    message: "What time should we meet?"
   }));
 
   loop.store.StoreMixin.register({
@@ -821,7 +841,7 @@
 
           React.createElement(Section, {name: "DesktopRoomConversationView"}, 
             React.createElement(FramedExample, {width: 298, height: 254, 
-              summary: "Desktop room conversation (invitation)"}, 
+              summary: "Desktop room conversation (invitation, text-chat inclusion/scrollbars don't happen in real client)"}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopRoomConversationView, {
                   roomStore: invitationRoomStore, 
@@ -832,7 +852,7 @@
               )
             ), 
 
-            React.createElement(FramedExample, {width: 298, height: 254, 
+            React.createElement(FramedExample, {width: 298, height: 394, dashed: true, 
               summary: "Desktop room conversation (loading)"}, 
               /* Hide scrollbars here. Rotating loading div overflows and causes
                scrollbars to appear */
@@ -860,7 +880,7 @@
               )
             ), 
 
-            React.createElement(FramedExample, {width: 298, height: 254, 
+            React.createElement(FramedExample, {width: 298, height: 394, dashed: true, 
                            summary: "Desktop room conversation local face-mute"}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopRoomConversationView, {
@@ -871,7 +891,7 @@
               )
             ), 
 
-            React.createElement(FramedExample, {width: 298, height: 254, 
+            React.createElement(FramedExample, {width: 298, height: 394, dashed: true, 
                            summary: "Desktop room conversation remote face-mute"}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopRoomConversationView, {
@@ -1068,6 +1088,7 @@
 
           React.createElement(Section, {name: "StandaloneRoomView (Mobile)"}, 
             React.createElement(FramedExample, {width: 600, height: 480, cssClass: "standalone", 
+                           dashed: true, 
                            onContentsRendered: updatingActiveRoomStore.forcedUpdate, 
                            summary: "Standalone room conversation (has-participants, 600x480)"}, 
                 React.createElement("div", {className: "standalone"}, 
@@ -1097,14 +1118,26 @@
             )
           ), 
 
-          React.createElement(Section, {name: "TextChatView (standalone)"}, 
-            React.createElement(FramedExample, {width: 200, height: 400, cssClass: "standalone", 
-                          summary: "Standalone Text Chat conversation (200 x 400)"}, 
+          React.createElement(Section, {name: "TextChatView"}, 
+            React.createElement(FramedExample, {width: 298, height: 160, dashed: true, 
+                           summary: "TextChatView: desktop embedded"}, 
+              React.createElement("div", {className: "fx-embedded"}, 
+                React.createElement(TextChatView, {dispatcher: dispatcher, 
+                              showAlways: false, 
+                              showRoomName: false})
+              )
+            ), 
+
+            React.createElement(FramedExample, {width: 200, height: 400, dashed: true, 
+                           cssClass: "standalone", 
+                           summary: "Standalone Text Chat conversation (200x400)"}, 
               React.createElement("div", {className: "standalone text-chat-example"}, 
-                React.createElement(TextChatView, {
-                  dispatcher: dispatcher, 
-                  showAlways: true, 
-                  showRoomName: true})
+                React.createElement("div", {className: "media-wrapper"}, 
+                  React.createElement(TextChatView, {
+                    dispatcher: dispatcher, 
+                    showAlways: true, 
+                    showRoomName: true})
+                )
               )
             )
           ), 
