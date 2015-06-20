@@ -133,15 +133,13 @@
  * the init naming idiom in many places to signify that a field is being
  * assigned for the first time.
  *
- * This file implements four classes, illustrated here:
+ * This file implements three classes, illustrated here:
  *
- * BarrieredBase          abstract base class which provides common operations
- *  |  |  |
- *  |  | PreBarriered     provides pre-barriers only
- *  |  |
- *  | HeapPtr             provides pre- and post-barriers
- *  |
- * RelocatablePtr         provides pre- and post-barriers and is relocatable
+ * BarrieredBase         abstract base class which provides common operations
+ *    |  |
+ *    | PreBarriered     provides pre-barriers only
+ *    |
+ *   HeapPtr             provides pre- and post-barriers
  *
  * The implementation of the barrier logic is implemented on T::writeBarrier.*,
  * via:
@@ -154,7 +152,7 @@
  *      -> InternalGCMethods<T*>::preBarrier
  *          -> T::writeBarrierPre
  *
- * HeapPtr<T>::post and RelocatablePtr<T>::post
+ * HeapPtr<T>::post
  *  -> InternalGCMethods<T*>::postBarrier
  *      -> T::writeBarrierPost
  *  -> InternalGCMethods<Value>::postBarrier
@@ -348,10 +346,10 @@ class BarrieredBaseMixins<JS::Value> : public ValueOperations<BarrieredBase<JS::
 };
 
 /*
- * PreBarriered only automatically handles pre-barriers. Post-barriers must
- * be manually implemented when using this class. HeapPtr and RelocatablePtr
- * should be used in all cases that do not require explicit low-level control
- * of moving behavior, e.g. for HashMap keys.
+ * PreBarriered only automatically handles pre-barriers. Post-barriers must be
+ * manually implemented when using this class. HeapPtr should be used in all
+ * cases that do not require explicit low-level control of moving behavior,
+ * e.g. for HashMap keys.
  */
 template <class T>
 class PreBarriered : public BarrieredBase<T>
@@ -450,21 +448,14 @@ class HeapPtr : public BarrieredBase<T>
 };
 
 /*
- * This name is kept so that complete conversion to HeapPtr can be done
- * incrementally.
- */
-template <typename T>
-using RelocatablePtr = HeapPtr<T>;
-
-/*
  * This is a hack for RegExpStatics::updateFromMatch. It allows us to do two
  * barriers with only one branch to check if we're in an incremental GC.
  */
 template <class T1, class T2>
 static inline void
 BarrieredSetPair(Zone* zone,
-                 RelocatablePtr<T1*>& v1, T1* val1,
-                 RelocatablePtr<T2*>& v2, T2* val2)
+                 HeapPtr<T1*>& v1, T1* val1,
+                 HeapPtr<T2*>& v2, T2* val2)
 {
     if (T1::needWriteBarrierPre(zone)) {
         v1.pre();
@@ -615,20 +606,6 @@ typedef PreBarriered<jit::JitCode*> PreBarrieredJitCode;
 typedef PreBarriered<JSString*> PreBarrieredString;
 typedef PreBarriered<JSAtom*> PreBarrieredAtom;
 
-typedef RelocatablePtr<JSObject*> RelocatablePtrObject;
-typedef RelocatablePtr<JSFunction*> RelocatablePtrFunction;
-typedef RelocatablePtr<PlainObject*> RelocatablePtrPlainObject;
-typedef RelocatablePtr<JSScript*> RelocatablePtrScript;
-typedef RelocatablePtr<NativeObject*> RelocatablePtrNativeObject;
-typedef RelocatablePtr<NestedScopeObject*> RelocatablePtrNestedScopeObject;
-typedef RelocatablePtr<Shape*> RelocatablePtrShape;
-typedef RelocatablePtr<ObjectGroup*> RelocatablePtrObjectGroup;
-typedef RelocatablePtr<jit::JitCode*> RelocatablePtrJitCode;
-typedef RelocatablePtr<JSLinearString*> RelocatablePtrLinearString;
-typedef RelocatablePtr<JSString*> RelocatablePtrString;
-typedef RelocatablePtr<JSAtom*> RelocatablePtrAtom;
-typedef RelocatablePtr<ArrayBufferObjectMaybeShared*> RelocatablePtrArrayBufferObjectMaybeShared;
-
 typedef HeapPtr<NativeObject*> HeapPtrNativeObject;
 typedef HeapPtr<ArrayObject*> HeapPtrArrayObject;
 typedef HeapPtr<ArrayBufferObjectMaybeShared*> HeapPtrArrayBufferObjectMaybeShared;
@@ -649,11 +626,9 @@ typedef HeapPtr<jit::JitCode*> HeapPtrJitCode;
 typedef HeapPtr<ObjectGroup*> HeapPtrObjectGroup;
 
 typedef PreBarriered<Value> PreBarrieredValue;
-typedef RelocatablePtr<Value> RelocatableValue;
 typedef HeapPtr<Value> HeapValue;
 
 typedef PreBarriered<jsid> PreBarrieredId;
-typedef RelocatablePtr<jsid> RelocatableId;
 typedef HeapPtr<jsid> HeapId;
 
 typedef ImmutableTenuredPtr<PropertyName*> ImmutablePropertyNamePtr;
@@ -676,7 +651,7 @@ typedef ReadBarriered<Value> ReadBarrieredValue;
 
 // A pre- and post-barriered Value that is specialized to be aware that it
 // resides in a slots or elements vector. This allows it to be relocated in
-// memory, but with substantially less overhead than a RelocatablePtr.
+// memory, but with substantially less overhead than a HeapPtr.
 class HeapSlot : public BarrieredBase<Value>
 {
   public:
