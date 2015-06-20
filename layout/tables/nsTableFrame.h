@@ -1009,12 +1009,10 @@ public:
   explicit nsTableIterator(nsFrameList& aSource);
   nsIFrame* First();
   nsIFrame* Next();
-  bool      IsLeftToRight();
   int32_t   Count();
 
 protected:
   void Init(nsIFrame* aFirstChild);
-  bool      mLeftToRight;
   nsIFrame* mFirstListChild;
   nsIFrame* mFirstChild;
   nsIFrame* mCurrentChild;
