@@ -1420,49 +1420,63 @@ nsTableFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 }
 
 void
-nsTableFrame::SetColumnDimensions(nscoord aHeight, WritingMode aWM,
-                                  const LogicalMargin& aBorderPadding)
+nsTableFrame::SetColumnDimensions(nscoord aBSize, WritingMode aWM,
+                                  const LogicalMargin& aBorderPadding,
+                                  nscoord aContainerWidth)
 {
-  nscoord colHeight = aHeight -= aBorderPadding.BStartEnd(aWM) +
-                                 GetRowSpacing(-1) +
-                                 GetRowSpacing(GetRowCount());
+  const nscoord colBSize = aBSize - (aBorderPadding.BStartEnd(aWM) +
+                           GetRowSpacing(-1) + GetRowSpacing(GetRowCount()));
 
+  int32_t colIdx = 0;
+  LogicalPoint colGroupOrigin(aWM,
+                              aBorderPadding.IStart(aWM) + GetColSpacing(-1),
+                              aBorderPadding.BStart(aWM) + GetRowSpacing(-1));
   nsTableIterator iter(mColGroups);
-  nsIFrame* colGroupFrame = iter.First();
-  bool tableIsLTR = StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
-  int32_t colX =tableIsLTR ? 0 : std::max(0, GetColCount() - 1);
-  nscoord cellSpacingX = GetColSpacing(colX);
-  int32_t tableColIncr = tableIsLTR ? 1 : -1;
-  nsPoint colGroupOrigin(aBorderPadding.IStart(aWM) + GetColSpacing(-1),
-                         aBorderPadding.BStart(aWM) + GetRowSpacing(-1));
-  while (colGroupFrame) {
+  for (nsIFrame* colGroupFrame = iter.First(); colGroupFrame;
+       colGroupFrame = iter.Next()) {
     MOZ_ASSERT(colGroupFrame->GetType() == nsGkAtoms::tableColGroupFrame);
-    nscoord colGroupWidth = 0;
+    // first we need to figure out the size of the colgroup
+    int32_t groupFirstCol = colIdx;
+    nscoord colGroupISize = 0;
+    nscoord cellSpacingI = 0;
     nsTableIterator iterCol(*colGroupFrame);
-    nsIFrame* colFrame = iterCol.First();
-    nsPoint colOrigin(0,0);
-    while (colFrame) {
+    for (nsIFrame* colFrame = iterCol.First(); colFrame;
+         colFrame = iterCol.Next()) {
       if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
           colFrame->StyleDisplay()->mDisplay) {
-        NS_ASSERTION(colX < GetColCount(), "invalid number of columns");
-        nscoord colWidth = GetColumnISize(colX);
-        nsRect colRect(colOrigin.x, colOrigin.y, colWidth, colHeight);
-        colFrame->SetRect(colRect);
-        cellSpacingX = GetColSpacing(colX);
-        colOrigin.x += colWidth + cellSpacingX;
-        colGroupWidth += colWidth + cellSpacingX;
-        colX += tableColIncr;
+        NS_ASSERTION(colIdx < GetColCount(), "invalid number of columns");
+        cellSpacingI = GetColSpacing(colIdx);
+        colGroupISize += GetColumnISize(colIdx) + cellSpacingI;
+        ++colIdx;
       }
-      colFrame = iterCol.Next();
     }
-    if (colGroupWidth) {
-      colGroupWidth -= cellSpacingX;
+    if (colGroupISize) {
+      colGroupISize -= cellSpacingI;
     }
 
-    nsRect colGroupRect(colGroupOrigin.x, colGroupOrigin.y, colGroupWidth, colHeight);
-    colGroupFrame->SetRect(colGroupRect);
-    colGroupFrame = iter.Next();
-    colGroupOrigin.x += colGroupWidth + cellSpacingX;
+    LogicalRect colGroupRect(aWM, colGroupOrigin.I(aWM), colGroupOrigin.B(aWM),
+                             colGroupISize, colBSize);
+    colGroupFrame->SetRect(aWM, colGroupRect, aContainerWidth);
+    nscoord colGroupWidth = colGroupFrame->GetSize().width;
+
+    // then we can place the columns correctly within the group
+    colIdx = groupFirstCol;
+    LogicalPoint colOrigin(aWM);
+    for (nsIFrame* colFrame = iterCol.First(); colFrame;
+         colFrame = iterCol.Next()) {
+      if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
+          colFrame->StyleDisplay()->mDisplay) {
+        nscoord colISize = GetColumnISize(colIdx);
+        LogicalRect colRect(aWM, colOrigin.I(aWM), colOrigin.B(aWM),
+                            colISize, colBSize);
+        colFrame->SetRect(aWM, colRect, colGroupWidth);
+        cellSpacingI = GetColSpacing(colIdx);
+        colOrigin.I(aWM) += colISize + cellSpacingI;
+        ++colIdx;
+      }
+    }
+
+    colGroupOrigin.I(aWM) += colGroupISize + cellSpacingI;
   }
 }
 
@@ -1906,7 +1920,8 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   LogicalMargin borderPadding = GetChildAreaOffset(wm, &aReflowState);
-  SetColumnDimensions(aDesiredSize.Height(), wm, borderPadding);
+  SetColumnDimensions(aDesiredSize.Height(), wm, borderPadding,
+                      aDesiredSize.Width());
   if (NeedToCollapse() &&
       (NS_UNCONSTRAINEDSIZE != aReflowState.AvailableWidth())) {
     AdjustForCollapsingRowsCols(aDesiredSize, wm, borderPadding);
