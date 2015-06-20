@@ -5,7 +5,7 @@
 import errno, os, select
 from datetime import datetime, timedelta
 from progressbar import ProgressBar
-from results import TestOutput
+from results import NullTestOutput, TestOutput
 
 class Task(object):
     def __init__(self, test, prefix, pid, stdout, stderr):
@@ -192,7 +192,11 @@ def run_all_tests(tests, prefix, results, options):
 
     while len(tests) or len(tasks):
         while len(tests) and len(tasks) < options.worker_count:
-            tasks.append(spawn_test(tests.pop(), prefix, options.passthrough))
+            test = tests.pop()
+            if not test.enable and not options.run_skipped:
+                yield NullTestOutput(test)
+            else:
+                tasks.append(spawn_test(test, prefix, options.passthrough))
 
         timeout = get_max_wait(tasks, options.timeout)
         read_input(tasks, timeout)
