@@ -607,7 +607,7 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
                                            uint16_t methodIndex,
                                            uint8_t paramIndex,
                                            nsXPTCMiniVariant* nativeParams,
-                                           uint32_t* result)
+                                           uint32_t* result) const
 {
     uint8_t argnum;
     nsresult rv;
@@ -638,7 +638,7 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
                                                uint16_t methodIndex,
                                                const nsXPTType& type,
                                                nsXPTCMiniVariant* nativeParams,
-                                               nsID* result)
+                                               nsID* result) const
 {
     uint8_t type_tag = type.TagPart();
 
@@ -676,7 +676,7 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
     return false;
 }
 
-void
+/* static */ void
 nsXPCWrappedJSClass::CleanupPointerArray(const nsXPTType& datum_type,
                                          uint32_t array_count,
                                          void** arrayp)
@@ -696,7 +696,7 @@ nsXPCWrappedJSClass::CleanupPointerArray(const nsXPTType& datum_type,
     }
 }
 
-void
+/* static */ void
 nsXPCWrappedJSClass::CleanupPointerTypeObject(const nsXPTType& type,
                                               void** pp)
 {
