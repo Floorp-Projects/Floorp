@@ -16,6 +16,7 @@ function testSteps()
   let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
+  request.onsuccess = grabEventAndContinueHandler;
   let event = yield undefined;
 
   let db = event.target.result;
@@ -42,9 +43,12 @@ function testSteps()
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       is(event.target.result, testInt.value, "Got the right value");
-      finishTest();
     };
   }
 
+  // Wait for success
+  yield undefined;
+
+  finishTest();
   yield undefined;
 }

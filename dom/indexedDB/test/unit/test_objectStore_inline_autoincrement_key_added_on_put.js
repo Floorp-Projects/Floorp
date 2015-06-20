@@ -12,6 +12,7 @@ function testSteps()
   var request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
+  request.onsuccess = grabEventAndContinueHandler;
   var event = yield undefined;
 
   var db = event.target.result;
@@ -44,6 +45,9 @@ function testSteps()
 
   // Ensure that the id was also stored on the object.
   is(event.target.result.id, id, "The object had the id stored on it.");
+
+  // Wait for success
+  yield undefined;
 
   finishTest();
   yield undefined;
