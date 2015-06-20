@@ -50,6 +50,18 @@ class GeckoInstance(object):
         self.app_args = app_args or []
         self.runner = None
         self.symbols_path = symbols_path
+
+        if gecko_log != '-':
+            if gecko_log is None:
+                gecko_log = 'gecko.log'
+            elif os.path.isdir(gecko_log):
+                fname = 'gecko-%d.log' % time.time()
+                gecko_log = os.path.join(gecko_log, fname)
+
+            gecko_log = os.path.realpath(gecko_log)
+            if os.access(gecko_log, os.F_OK):
+                os.remove(gecko_log)
+
         self.gecko_log = gecko_log
 
     def start(self):
@@ -80,36 +92,6 @@ class GeckoInstance(object):
         if self.gecko_log == '-':
             process_args['stream'] = sys.stdout
         else:
-            if self.gecko_log is None:
-                self.gecko_log = 'gecko.log'
-            elif os.path.isdir(self.gecko_log):
-                fname = "gecko-%d.log" % time.time()
-                self.gecko_log = os.path.join(self.gecko_log, fname)
-
-            self.gecko_log = os.path.realpath(self.gecko_log)
-            if os.access(self.gecko_log, os.F_OK):
-                if platform.system() is 'Windows':
-                    # NOTE: windows has a weird filesystem where it happily 'closes'
-                    # the file, but complains if you try to delete it. You get a
-                    # 'file still in use' error. Sometimes you can wait a bit and
-                    # a retry will succeed.
-                    # If all retries fail, we'll just continue without removing
-                    # the file. In this case, if we are restarting the instance,
-                    # then the new logs just get appended to the old file.
-                    tries = 0
-                    while tries < 10:
-                        try:
-                            os.remove(self.gecko_log)
-                            break
-                        except WindowsError as e:
-                            if e.errno == errno.EACCES:
-                                tries += 1
-                                time.sleep(0.5)
-                            else:
-                                raise e
-                else:
-                    os.remove(self.gecko_log)
-
             process_args['logfile'] = self.gecko_log
 
         env = os.environ.copy()
