@@ -2429,10 +2429,15 @@ JSScript::Create(ExclusiveContext* cx, HandleObject enclosingScope, bool savedCa
     script->savedCallerFun_ = savedCallerFun;
     script->initCompartment(cx);
 
-    script->hasNonSyntacticScope_ = options.hasPollutedGlobalScope;
     script->selfHosted_ = options.selfHostingMode;
     script->noScriptRval_ = options.noScriptRval;
     script->treatAsRunOnce_ = options.isRunOnce;
+
+    // Compute whether this script is under a non-syntactic scope. We don't
+    // need to walk the entire static scope chain if the script is nested in a
+    // function. In that case, we can propagate the cached value from the
+    // outer script.
+    script->hasNonSyntacticScope_ = HasNonSyntacticStaticScopeChain(enclosingScope);
 
     script->version = options.version;
     MOZ_ASSERT(script->getVersion() == options.version);     // assert that no overflow occurred
@@ -2669,10 +2674,13 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
 
     RootedFunction fun(cx, nullptr);
     if (funbox) {
+        // The function should have already been earlier to enable
+        // StaticScopeIter to walk the static scope chain of
+        // currently compiling scripts.
+        MOZ_ASSERT(script->functionNonDelazifying() == funbox->function());
         MOZ_ASSERT(!bce->script->noScriptRval());
         script->isGeneratorExp_ = funbox->inGenexpLambda;
         script->setGeneratorKind(funbox->generatorKind());
-        script->setFunction(funbox->function());
         if (bce->yieldOffsetList.length() != 0)
             bce->yieldOffsetList.finish(script->yieldOffsets(), prologueLength);
     }

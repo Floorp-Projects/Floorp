@@ -755,11 +755,6 @@ bool
 XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enclosingScript,
           HandleFunction fun, MutableHandleScript scriptp);
 
-enum PollutedGlobalScopeOption {
-    HasPollutedGlobalScope,
-    HasCleanGlobalScope
-};
-
 JSScript*
 CloneScript(JSContext* cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script,
             PollutedGlobalScopeOption polluted = HasCleanGlobalScope,

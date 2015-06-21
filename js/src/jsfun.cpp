@@ -1450,8 +1450,15 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
         const char16_t* lazyStart = chars + lazy->begin();
         size_t lazyLength = lazy->end() - lazy->begin();
 
-        if (!frontend::CompileLazyFunction(cx, lazy, lazyStart, lazyLength))
+        if (!frontend::CompileLazyFunction(cx, lazy, lazyStart, lazyLength)) {
+            // The frontend may have linked the function and the non-lazy
+            // script together during bytecode compilation. Reset it now on
+            // error.
+            fun->initLazyScript(lazy);
+            if (lazy->maybeScriptUnbarriered())
+                lazy->resetScript();
             return false;
+        }
 
         script = fun->nonLazyScript();
 

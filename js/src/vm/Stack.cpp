@@ -168,7 +168,7 @@ AssertDynamicScopeMatchesStaticScope(JSContext* cx, JSScript* script, JSObject* 
 
     // The scope chain is always ended by one or more non-syntactic
     // ScopeObjects (viz. GlobalObject or an unqualified varobj).
-    MOZ_ASSERT(!scope->is<ScopeObject>());
+    MOZ_ASSERT(!IsSyntacticScope(scope));
 #endif
 }
 
@@ -234,8 +234,7 @@ InterpreterFrame::epilogue(JSContext* cx)
             if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
                 DebugScopes::onPopStrictEvalScope(this);
         } else if (isDirectEvalFrame()) {
-            if (isDebuggerEvalFrame())
-                MOZ_ASSERT(!scopeChain()->is<ScopeObject>());
+            MOZ_ASSERT_IF(isDebuggerEvalFrame(), !IsSyntacticScope(scopeChain()));
         } else {
             /*
              * Debugger.Object.prototype.evalInGlobal creates indirect eval
