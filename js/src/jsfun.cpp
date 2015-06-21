@@ -35,6 +35,7 @@
 #include "jit/JitFrameIterator.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Proxy.h"
+#include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"
@@ -524,7 +525,7 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleObject enclosingScope, Han
         HasSingletonType    = 0x8
     };
 
-    /* NB: Keep this in sync with CloneFunctionAndScript. */
+    /* NB: Keep this in sync with CloneInnerInterpretedFunction. */
     RootedAtom atom(xdr->cx());
     uint32_t firstword = 0;        /* bitmask of FirstWordFlag */
     uint32_t flagsword = 0;        /* word for argument count and fun->flags */
@@ -615,10 +616,9 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleObject enclosingScope, Han
         fun->setFlags(uint16_t(flagsword));
         fun->initAtom(atom);
         if (firstword & IsLazy) {
-            fun->initLazyScript(lazy);
+            MOZ_ASSERT(fun->lazyScript() == lazy);
         } else {
-            fun->initScript(script);
-            script->setFunction(fun);
+            MOZ_ASSERT(fun->nonLazyScript() == script);
             MOZ_ASSERT(fun->nargs() == script->bindings.numArgs());
         }
 
@@ -636,44 +636,6 @@ js::XDRInterpretedFunction(XDRState<XDR_ENCODE>*, HandleObject, HandleScript, Mu
 
 template bool
 js::XDRInterpretedFunction(XDRState<XDR_DECODE>*, HandleObject, HandleScript, MutableHandleFunction);
-
-JSObject*
-js::CloneFunctionAndScript(JSContext* cx, HandleObject enclosingScope, HandleFunction srcFun,
-                           PollutedGlobalScopeOption polluted)
-{
-    /* NB: Keep this in sync with XDRInterpretedFunction. */
-    RootedObject cloneProto(cx);
-    if (srcFun->isStarGenerator()) {
-        cloneProto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, cx->global());
-        if (!cloneProto)
-            return nullptr;
-    }
-
-    gc::AllocKind allocKind = srcFun->getAllocKind();
-    RootedFunction clone(cx, NewFunctionWithProto(cx, nullptr, 0,
-                                                  JSFunction::INTERPRETED, nullptr, nullptr,
-                                                  cloneProto, allocKind, TenuredObject));
-    if (!clone)
-        return nullptr;
-
-    JSScript::AutoDelazify srcScript(cx, srcFun);
-    if (!srcScript)
-        return nullptr;
-    RootedScript clonedScript(cx, CloneScript(cx, enclosingScope, clone, srcScript, polluted));
-    if (!clonedScript)
-        return nullptr;
-
-    clone->setArgCount(srcFun->nargs());
-    clone->setFlags(srcFun->flags());
-    clone->initAtom(srcFun->displayAtom());
-    clone->initScript(clonedScript);
-    clonedScript->setFunction(clone);
-    if (!JSFunction::setTypeForScriptedFunction(cx, clone))
-        return nullptr;
-
-    RootedScript cloneScript(cx, clone->nonLazyScript());
-    return clone;
-}
 
 /*
  * [[HasInstance]] internal method for Function objects: fetch the .prototype
@@ -828,7 +790,7 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
     /*
      * The default 'new' group of Function.prototype is required by type
      * inference to have unknown properties, to simplify handling of e.g.
-     * CloneFunctionObject.
+     * NewFunctionClone.
      */
     if (!JSObject::setNewGroupUnknown(cx, &JSFunction::class_, functionProto))
         return nullptr;
@@ -1423,16 +1385,13 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
 
         if (script) {
             RootedObject enclosingScope(cx, lazy->enclosingScope());
-            RootedScript clonedScript(cx, CloneScript(cx, enclosingScope, fun, script));
+            RootedScript clonedScript(cx, CloneScriptIntoFunction(cx, enclosingScope, fun, script));
             if (!clonedScript)
                 return false;
 
             clonedScript->setSourceObject(lazy->sourceObject());
 
             fun->initAtom(script->functionNonDelazifying()->displayAtom());
-            clonedScript->setFunction(fun);
-
-            fun->setUnlazifiedScript(clonedScript);
 
             if (!lazy->maybeScript())
                 lazy->initScript(clonedScript);
@@ -2086,8 +2045,8 @@ js::NewFunctionWithProto(ExclusiveContext* cx, Native native,
 }
 
 bool
-js::CloneFunctionObjectUseSameScript(JSCompartment* compartment, HandleFunction fun,
-                                     HandleObject newParent)
+js::CanReuseScriptForClone(JSCompartment* compartment, HandleFunction fun,
+                           HandleObject newParent)
 {
     if (compartment != fun->compartment() ||
         fun->isSingleton() ||
@@ -2108,56 +2067,45 @@ js::CloneFunctionObjectUseSameScript(JSCompartment* compartment, HandleFunction 
         return true;
 
     // We need to clone the script if we're interpreted and not already marked
-    // as having a non-syntactic scope.  If we're lazy, go ahead and clone the
+    // as having a non-syntactic scope. If we're lazy, go ahead and clone the
     // script; see the big comment at the end of CopyScriptInternal for the
     // explanation of what's going on there.
     return !fun->isInterpreted() ||
            (fun->hasScript() && fun->nonLazyScript()->hasNonSyntacticScope());
 }
 
-JSFunction*
-js::CloneFunctionObject(JSContext* cx, HandleFunction fun, HandleObject parent,
-                        gc::AllocKind allocKind,
-                        NewObjectKind newKindArg /* = GenericObject */,
-                        HandleObject proto)
+static bool
+FunctionCloneScopeIsWellFormed(JSContext* cx, HandleObject parent)
 {
     MOZ_ASSERT(parent);
-    MOZ_ASSERT(!fun->isBoundFunction());
-
-    bool useSameScript = CloneFunctionObjectUseSameScript(cx->compartment(), fun, parent);
-
-    NewObjectKind newKind = useSameScript ? newKindArg : SingletonObject;
-    RootedObject cloneProto(cx, proto);
-    if (!cloneProto && fun->isStarGenerator()) {
-        cloneProto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, cx->global());
-        if (!cloneProto)
-            return nullptr;
-    }
-#ifdef DEBUG
     RootedObject realParent(cx, SkipScopeParent(parent));
     // We'd like to assert that realParent is null-or-global, but
     // js::ExecuteInGlobalAndReturnScope and debugger eval bits mess that up.
     // Assert that it's one of those or a debug scope proxy or the unqualified
     // var obj, since it should still be ok to parent to the global in that
     // case.
-    MOZ_ASSERT(!realParent || realParent == cx->global() ||
-               realParent->is<DebugScopeObject>() ||
-               realParent->isUnqualifiedVarObj());
-#endif
+    return !realParent || realParent == cx->global() ||
+           realParent->is<DebugScopeObject>() ||
+           realParent->isUnqualifiedVarObj();
+}
+
+
+static inline JSFunction*
+NewFunctionClone(JSContext* cx, HandleFunction fun, NewObjectKind newKind,
+                 gc::AllocKind allocKind, HandleObject proto)
+{
+    RootedObject cloneProto(cx, proto);
+    if (!proto && fun->isStarGenerator()) {
+        cloneProto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, cx->global());
+        if (!cloneProto)
+            return nullptr;
+    }
+
     JSObject* cloneobj = NewObjectWithClassProto(cx, &JSFunction::class_, cloneProto,
                                                  allocKind, newKind);
     if (!cloneobj)
         return nullptr;
     RootedFunction clone(cx, &cloneobj->as<JSFunction>());
-
-    JSScript::AutoDelazify funScript(cx);
-    if (!useSameScript && fun->isInterpretedLazy()) {
-        funScript = fun;
-        if (!funScript)
-            return nullptr;
-    }
-
-    MOZ_ASSERT(useSameScript || !fun->isInterpretedLazy());
 
     uint16_t flags = fun->flags() & ~JSFunction::EXTENDED;
     if (allocKind == AllocKind::FUNCTION_EXTENDED)
@@ -2165,18 +2113,6 @@ js::CloneFunctionObject(JSContext* cx, HandleFunction fun, HandleObject parent,
 
     clone->setArgCount(fun->nargs());
     clone->setFlags(flags);
-    if (fun->hasScript()) {
-        clone->initScript(fun->nonLazyScript());
-        clone->initEnvironment(parent);
-    } else if (fun->isInterpretedLazy()) {
-        MOZ_ASSERT(fun->compartment() == clone->compartment());
-        MOZ_ASSERT(useSameScript);
-        LazyScript* lazy = fun->lazyScriptOrNull();
-        clone->initLazyScript(lazy);
-        clone->initEnvironment(parent);
-    } else {
-        clone->initNative(fun->native(), fun->jitInfo());
-    }
     clone->initAtom(fun->displayAtom());
 
     if (allocKind == AllocKind::FUNCTION_EXTENDED) {
@@ -2188,34 +2124,103 @@ js::CloneFunctionObject(JSContext* cx, HandleFunction fun, HandleObject parent,
         }
     }
 
-    if (useSameScript) {
-        /*
-         * Clone the function, reusing its script. We can use the same group as
-         * the original function provided that its prototype is correct.
-         */
-        if (fun->getProto() == clone->getProto())
-            clone->setGroup(fun->group());
-        return clone;
-    }
+    return clone;
+}
 
-    RootedFunction cloneRoot(cx, clone);
+JSFunction*
+js::CloneFunctionReuseScript(JSContext* cx, HandleFunction fun, HandleObject parent,
+                             gc::AllocKind allocKind /* = FUNCTION */ ,
+                             NewObjectKind newKind /* = GenericObject */,
+                             HandleObject proto /* = nullptr */)
+{
+    MOZ_ASSERT(FunctionCloneScopeIsWellFormed(cx, parent));
+    MOZ_ASSERT(!fun->isBoundFunction());
+    MOZ_ASSERT(CanReuseScriptForClone(cx->compartment(), fun, parent));
+
+    RootedFunction clone(cx, NewFunctionClone(cx, fun, newKind, allocKind, proto));
+    if (!clone)
+        return nullptr;
+
+    if (fun->hasScript()) {
+        clone->initScript(fun->nonLazyScript());
+        clone->initEnvironment(parent);
+    } else if (fun->isInterpretedLazy()) {
+        MOZ_ASSERT(fun->compartment() == clone->compartment());
+        LazyScript* lazy = fun->lazyScriptOrNull();
+        clone->initLazyScript(lazy);
+        clone->initEnvironment(parent);
+    } else {
+        clone->initNative(fun->native(), fun->jitInfo());
+    }
 
     /*
-     * Across compartments or if we have to introduce a polluted scope we have
-     * to clone the script for interpreted functions. Cross-compartment cloning
-     * only happens via JSAPI (JS::CloneFunctionObject) which dynamically
-     * ensures that 'script' has no enclosing lexical scope (only the global
-     * scope or other non-lexical scope).
+     * Clone the function, reusing its script. We can use the same group as
+     * the original function provided that its prototype is correct.
      */
-    PollutedGlobalScopeOption globalScopeOption = parent->is<GlobalObject>() ?
-        HasCleanGlobalScope : HasPollutedGlobalScope;
-    if (cloneRoot->isInterpreted() &&
-        !CloneFunctionScript(cx, fun, cloneRoot, globalScopeOption, newKindArg))
-    {
+    if (fun->getProto() == clone->getProto())
+        clone->setGroup(fun->group());
+    return clone;
+}
+
+JSFunction*
+js::CloneFunctionAndScript(JSContext* cx, HandleFunction fun, HandleObject parent,
+                           HandleObject newStaticScope,
+                           gc::AllocKind allocKind /* = FUNCTION */,
+                           HandleObject proto /* = nullptr */)
+{
+    MOZ_ASSERT(FunctionCloneScopeIsWellFormed(cx, parent));
+    MOZ_ASSERT(!fun->isBoundFunction());
+
+    RootedFunction clone(cx, NewFunctionClone(cx, fun, SingletonObject, allocKind, proto));
+    if (!clone)
         return nullptr;
+
+    if (fun->hasScript()) {
+        clone->initScript(nullptr);
+        clone->initEnvironment(parent);
+    } else {
+        clone->initNative(fun->native(), fun->jitInfo());
     }
 
-    return cloneRoot;
+    /*
+     * Across compartments or if we have to introduce a non-syntactic scope we
+     * have to clone the script for interpreted functions. Cross-compartment
+     * cloning only happens via JSAPI (JS::CloneFunctionObject) which
+     * dynamically ensures that 'script' has no enclosing lexical scope (only
+     * the global scope or other non-lexical scope).
+     */
+#ifdef DEBUG
+    RootedObject terminatingScope(cx, parent);
+    while (IsSyntacticScope(terminatingScope))
+        terminatingScope = terminatingScope->enclosingScope();
+    MOZ_ASSERT_IF(!terminatingScope->is<GlobalObject>(),
+                  HasNonSyntacticStaticScopeChain(newStaticScope));
+#endif
+
+    if (clone->isInterpreted()) {
+        // The self-hosting compartment is shared across processes, and
+        // AutoDelazify enters fun->compartment(). We would get races if the
+        // self-hosting compartment has lazy interpreted functions.
+        MOZ_ASSERT_IF(fun->compartment()->isSelfHosting, !fun->isInterpretedLazy());
+        JSScript::AutoDelazify funScript(cx);
+        if (fun->isInterpretedLazy()) {
+            funScript = fun;
+            if (!funScript)
+                return nullptr;
+        }
+
+        RootedScript script(cx, fun->nonLazyScript());
+        MOZ_ASSERT(script->compartment() == fun->compartment());
+        MOZ_ASSERT(cx->compartment() == clone->compartment(),
+                   "Otherwise we could relazify clone below!");
+
+        RootedScript clonedScript(cx, CloneScriptIntoFunction(cx, newStaticScope, clone, script));
+        if (!clonedScript)
+            return nullptr;
+        Debugger::onNewScript(cx, clonedScript);
+    }
+
+    return clone;
 }
 
 /*
