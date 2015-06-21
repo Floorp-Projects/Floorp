@@ -4004,6 +4004,9 @@ JSObject::sizeOfIncludingThisInNursery() const
             if (!elements.isCopyOnWrite() || elements.ownerObject() == this)
                 size += elements.capacity * sizeof(HeapSlot);
         }
+
+        if (is<ArgumentsObject>())
+            size += as<ArgumentsObject>().sizeOfData();
     }
 
     return size;
