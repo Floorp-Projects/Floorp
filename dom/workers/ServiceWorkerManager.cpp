@@ -734,7 +734,7 @@ public:
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     MOZ_ASSERT(swm);
 
-    swm->PropagateSoftUpdate(mOriginAttributes,mScope);
+    swm->PropagateSoftUpdate(mOriginAttributes, mScope);
     return NS_OK;
   }
 
@@ -781,6 +781,28 @@ private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIServiceWorkerUnregisterCallback> mCallback;
   const nsString mScope;
+};
+
+class PropagateRemoveAllRunnable final : public nsRunnable
+{
+public:
+  PropagateRemoveAllRunnable()
+  {}
+
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    MOZ_ASSERT(swm);
+
+    swm->PropagateRemoveAll();
+    return NS_OK;
+  }
+
+private:
+  ~PropagateRemoveAllRunnable()
+  {}
 };
 
 } // anonymous namespace
@@ -4339,12 +4361,26 @@ ServiceWorkerManager::Remove(const nsACString& aHost)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 ServiceWorkerManager::RemoveAll()
 {
   AssertIsOnMainThread();
   mRegistrationInfos.EnumerateRead(UnregisterIfMatchesHostPerPrincipal, nullptr);
-  return NS_OK;
+}
+
+void
+ServiceWorkerManager::PropagateRemoveAll()
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
+  if (!mActor) {
+    nsRefPtr<nsIRunnable> runnable = new PropagateRemoveAllRunnable();
+    AppendPendingOperation(runnable);
+    return;
+  }
+
+  mActor->SendPropagateRemoveAll();
 }
 
 static PLDHashOperator
@@ -4394,16 +4430,16 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 
+  if (strcmp(aTopic, PURGE_SESSION_HISTORY) == 0) {
+    RemoveAll();
+    PropagateRemoveAll();
+    return NS_OK;
+  }
+
   nsAutoTArray<ContentParent*,1> children;
   ContentParent::GetAll(children);
 
-  if (strcmp(aTopic, PURGE_SESSION_HISTORY) == 0) {
-    for (uint32_t i = 0; i < children.Length(); i++) {
-      unused << children[i]->SendRemoveServiceWorkerRegistrations();
-    }
-
-    RemoveAll();
-  } else if (strcmp(aTopic, PURGE_DOMAIN_DATA) == 0) {
+  if (strcmp(aTopic, PURGE_DOMAIN_DATA) == 0) {
     nsAutoString domain(aData);
     for (uint32_t i = 0; i < children.Length(); i++) {
       unused << children[i]->SendRemoveServiceWorkerRegistrationsForDomain(domain);

@@ -308,6 +308,12 @@ public:
   PropagateSoftUpdate(const OriginAttributes& aOriginAttributes,
                       const nsAString& aScope);
 
+  void
+  PropagateRemoveAll();
+
+  void
+  RemoveAll();
+
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetRegistration(nsIPrincipal* aPrincipal, const nsACString& aScope) const;
 

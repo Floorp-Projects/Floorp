@@ -33,7 +33,7 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, builtinclass, uuid(5e112a42-df4c-4ae9-bc71-e6e681ab5f38)]
+[scriptable, builtinclass, uuid(d72bd950-967c-4642-bd34-7f688d9b624a)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -106,11 +106,6 @@ interface nsIServiceWorkerManager : nsISupports
    *   This eventually results in the registration being deleted from disk too.
    */
   void remove(in AUTF8String aHost);
-
-  /*
-   * Clear all registrations for all hosts. See remove().
-   */
-  void removeAll();
 
   // Testing
   DOMString getScopeForUrl(in nsIPrincipal aPrincipal, in DOMString aPath);
