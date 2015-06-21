@@ -104,6 +104,7 @@ public:
            mPageScrollAmount == aOther.mPageScrollAmount &&
            mAllowVerticalScrollWithWheel == aOther.mAllowVerticalScrollWithWheel &&
            mClipRect == aOther.mClipRect &&
+           mMaskLayerIndex == aOther.mMaskLayerIndex &&
            mIsLayersIdRoot == aOther.mIsLayersIdRoot &&
 		   mUsesContainerScrolling == aOther.mUsesContainerScrolling;
   }
@@ -525,6 +526,13 @@ public:
     return mClipRect.ref();
   }
 
+  void SetMaskLayerIndex(const Maybe<size_t>& aIndex) {
+    mMaskLayerIndex = aIndex;
+  }
+  const Maybe<size_t>& GetMaskLayerIndex() const {
+    return mMaskLayerIndex;
+  }
+
   void SetIsLayersIdRoot(bool aValue) {
     mIsLayersIdRoot = aValue;
   }
@@ -713,6 +721,11 @@ private:
 
   // The clip rect to use when compositing a layer with this FrameMetrics.
   Maybe<ParentLayerIntRect> mClipRect;
+
+  // An extra clip mask layer to use when compositing a layer with this
+  // FrameMetrics. This is an index into the MetricsMaskLayers array on
+  // the Layer.
+  Maybe<size_t> mMaskLayerIndex;
 
   // Whether these framemetrics are for the root scroll frame (root element if
   // we don't have a root scroll frame) for its layers id.
