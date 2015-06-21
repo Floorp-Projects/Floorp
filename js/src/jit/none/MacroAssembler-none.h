@@ -143,6 +143,11 @@ class Operand
 {
   public:
     Operand (const Address&) { MOZ_CRASH();}
+    Operand (const Register) { MOZ_CRASH();}
+    Operand (const FloatRegister) { MOZ_CRASH();}
+    Operand (Register, Imm32 ) { MOZ_CRASH(); }
+    Operand (Register, int32_t ) { MOZ_CRASH(); }
+
 
 };
 
