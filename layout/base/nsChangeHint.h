@@ -167,7 +167,14 @@ enum nsChangeHint {
   /**
    * This will cause rendering observers to be invalidated.
    */
-  nsChangeHint_InvalidateRenderingObservers = 0x400000
+  nsChangeHint_InvalidateRenderingObservers = 0x400000,
+
+  /**
+   * Indicates that the reflow changes the size or position of the
+   * element, and thus the reflow must start from at least the frame's
+   * parent.
+   */
+  nsChangeHint_ReflowChangesSizeOrPosition = 0x800000,
 
   // IMPORTANT NOTE: When adding new hints, consider whether you need to
   // add them to NS_HintsNotHandledForDescendantsIn() below.  Please also
@@ -275,6 +282,7 @@ inline nsChangeHint operator^=(nsChangeHint& aLeft, nsChangeHint aRight)
           nsChangeHint_AddOrRemoveTransform | \
           nsChangeHint_BorderStyleNoneChange | \
           nsChangeHint_NeedReflow | \
+          nsChangeHint_ReflowChangesSizeOrPosition | \
           nsChangeHint_ClearAncestorIntrinsics)
 
 inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint) {
@@ -291,11 +299,19 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
     nsChangeHint_AddOrRemoveTransform |
     nsChangeHint_BorderStyleNoneChange));
 
-  if (!NS_IsHintSubset(nsChangeHint_NeedDirtyReflow, aChangeHint) &&
-      NS_IsHintSubset(nsChangeHint_NeedReflow, aChangeHint)) {
-    // If NeedDirtyReflow is *not* set, then NeedReflow is a
-    // non-inherited hint.
-    NS_UpdateHint(result, nsChangeHint_NeedReflow);
+  if (!NS_IsHintSubset(nsChangeHint_NeedDirtyReflow, aChangeHint)) {
+    if (NS_IsHintSubset(nsChangeHint_NeedReflow, aChangeHint)) {
+      // If NeedDirtyReflow is *not* set, then NeedReflow is a
+      // non-inherited hint.
+      NS_UpdateHint(result, nsChangeHint_NeedReflow);
+    }
+
+    if (NS_IsHintSubset(nsChangeHint_ReflowChangesSizeOrPosition,
+                        aChangeHint)) {
+      // If NeedDirtyReflow is *not* set, then ReflowChangesSizeOrPosition is a
+      // non-inherited hint.
+      NS_UpdateHint(result, nsChangeHint_ReflowChangesSizeOrPosition);
+    }
   }
 
   if (!NS_IsHintSubset(nsChangeHint_ClearDescendantIntrinsics, aChangeHint) &&
@@ -320,6 +336,7 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
                nsChangeHint_SchedulePaint)
 #define nsChangeHint_AllReflowHints                     \
   nsChangeHint(nsChangeHint_NeedReflow |                \
+               nsChangeHint_ReflowChangesSizeOrPosition|\
                nsChangeHint_ClearAncestorIntrinsics |   \
                nsChangeHint_ClearDescendantIntrinsics | \
                nsChangeHint_NeedDirtyReflow)
