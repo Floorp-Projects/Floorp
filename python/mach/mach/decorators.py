@@ -18,6 +18,45 @@ from .config import ConfigProvider
 from .registrar import Registrar
 
 
+class _MachCommand(object):
+    """Container for mach command metadata.
+
+    Mach commands contain lots of attributes. This class exists to capture them
+    in a sane way so tuples, etc aren't used instead.
+    """
+    __slots__ = (
+        'name',
+        'subcommand',
+        'category',
+        'description',
+        'conditions',
+        'parser',
+        'arguments',
+        'argument_group_names',
+    )
+
+    def __init__(self, name=None, subcommand=None, category=None,
+                 description=None, conditions=None, parser=None):
+        self.name = name
+        self.subcommand = subcommand
+        self.category = category
+        self.description = description
+        self.conditions = conditions or []
+        self.parser = parser
+        self.arguments = []
+        self.argument_group_names = []
+
+    def __ior__(self, other):
+        if not isinstance(other, _MachCommand):
+            raise ValueError('can only operate on _MachCommand instances')
+
+        for a in self.__slots__:
+            if not getattr(self, a):
+                setattr(self, a, getattr(other, a))
+
+        return self
+
+
 def CommandProvider(cls):
     """Class decorator to denote that it provides subcommands for Mach.
 
@@ -59,40 +98,42 @@ def CommandProvider(cls):
         if not isinstance(value, types.FunctionType):
             continue
 
-        command_name, category, description, conditions, parser = getattr(
-            value, '_mach_command', (None, None, None, None, None))
-
-        if command_name is None:
+        command = getattr(value, '_mach_command', None)
+        if not command:
             continue
 
-        seen_commands.add(command_name)
+        # Ignore subcommands for now: we handle them later.
+        if command.subcommand:
+            continue
 
-        if conditions is None and Registrar.require_conditions:
+        seen_commands.add(command.name)
+
+        if command.conditions is None and Registrar.require_conditions:
             continue
 
         msg = 'Mach command \'%s\' implemented incorrectly. ' + \
               'Conditions argument must take a list ' + \
               'of functions. Found %s instead.'
 
-        conditions = conditions or []
-        if not isinstance(conditions, collections.Iterable):
-            msg = msg % (command_name, type(conditions))
+        if not isinstance(command.conditions, collections.Iterable):
+            msg = msg % (command.name, type(command.conditions))
             raise MachError(msg)
 
-        for c in conditions:
+        for c in command.conditions:
             if not hasattr(c, '__call__'):
-                msg = msg % (command_name, type(c))
+                msg = msg % (command.name, type(c))
                 raise MachError(msg)
 
-        arguments = getattr(value, '_mach_command_args', None)
-
-        argument_group_names = getattr(value, '_mach_command_arg_group_names', None)
-
-        handler = MethodHandler(cls, attr, command_name, category=category,
-            description=description, docstring=value.__doc__,
-            conditions=conditions, parser=parser,
-            arguments=arguments, argument_group_names=argument_group_names,
-            pass_context=pass_context)
+        handler = MethodHandler(cls, attr,
+                                command.name,
+                                category=command.category,
+                                description=command.description,
+                                docstring=value.__doc__,
+                                conditions=command.conditions,
+                                parser=command.parser,
+                                arguments=command.arguments,
+                                argument_group_names=command.argument_group_names,
+                                pass_context=pass_context)
 
         Registrar.register_command_handler(handler)
 
@@ -105,35 +146,36 @@ def CommandProvider(cls):
         if not isinstance(value, types.FunctionType):
             continue
 
-        command, subcommand, description = getattr(value, '_mach_subcommand',
-            (None, None, None))
-
+        command = getattr(value, '_mach_command', None)
         if not command:
             continue
 
-        if command not in seen_commands:
-            raise MachError('Command referenced by sub-command does not '
-                'exist: %s' % command)
-
-        if command not in Registrar.command_handlers:
+        # It is a regular command.
+        if not command.subcommand:
             continue
 
-        arguments = getattr(value, '_mach_command_args', None)
-        argument_group_names = getattr(value, '_mach_command_arg_group_names', None)
+        if command.name not in seen_commands:
+            raise MachError('Command referenced by sub-command does not '
+                'exist: %s' % command.name)
 
-        handler = MethodHandler(cls, attr, subcommand, description=description,
-            docstring=value.__doc__,
-            arguments=arguments, argument_group_names=argument_group_names,
-            pass_context=pass_context)
-        parent = Registrar.command_handlers[command]
+        if command.name not in Registrar.command_handlers:
+            continue
+
+        handler = MethodHandler(cls, attr, command.subcommand,
+                                description=command.description,
+                                docstring=value.__doc__,
+                                arguments=command.arguments,
+                                argument_group_names=command.argument_group_names,
+                                pass_context=pass_context)
+        parent = Registrar.command_handlers[command.name]
 
         if parent.parser:
             raise MachError('cannot declare sub commands against a command '
                 'that has a parser installed: %s' % command)
-        if subcommand in parent.subcommand_handlers:
-            raise MachError('sub-command already defined: %s' % subcommand)
+        if command.subcommand in parent.subcommand_handlers:
+            raise MachError('sub-command already defined: %s' % command.subcommand)
 
-        parent.subcommand_handlers[subcommand] = handler
+        parent.subcommand_handlers[command.subcommand] = handler
 
     return cls
 
@@ -159,17 +201,14 @@ class Command(object):
         def foo(self):
             pass
     """
-    def __init__(self, name, category=None, description=None, conditions=None,
-                 parser=None):
-        self._name = name
-        self._category = category
-        self._description = description
-        self._conditions = conditions
-        self._parser = parser
+    def __init__(self, name, **kwargs):
+        self._mach_command = _MachCommand(name=name, **kwargs)
 
     def __call__(self, func):
-        func._mach_command = (self._name, self._category, self._description,
-                              self._conditions, self._parser)
+        if not hasattr(func, '_mach_command'):
+            func._mach_command = _MachCommand()
+
+        func._mach_command |= self._mach_command
 
         return func
 
@@ -191,13 +230,14 @@ class SubCommand(object):
         description -- A textual description for this sub command.
     """
     def __init__(self, command, subcommand, description=None):
-        self._command = command
-        self._subcommand = subcommand
-        self._description = description
+        self._mach_command = _MachCommand(name=command, subcommand=subcommand,
+                                          description=description)
 
     def __call__(self, func):
-        func._mach_subcommand = (self._command, self._subcommand,
-            self._description)
+        if not hasattr(func, '_mach_command'):
+            func._mach_command = _MachCommand()
+
+        func._mach_command |= self._mach_command
 
         return func
 
@@ -224,11 +264,10 @@ class CommandArgument(object):
         self._command_args = (args, kwargs)
 
     def __call__(self, func):
-        command_args = getattr(func, '_mach_command_args', [])
+        if not hasattr(func, '_mach_command'):
+            func._mach_command = _MachCommand()
 
-        command_args.insert(0, self._command_args)
-
-        func._mach_command_args = command_args
+        func._mach_command.arguments.insert(0, self._command_args)
 
         return func
 
@@ -257,11 +296,10 @@ class CommandArgumentGroup(object):
         self._group_name = group_name
 
     def __call__(self, func):
-        command_arg_group_names = getattr(func, '_mach_command_arg_group_names', [])
+        if not hasattr(func, '_mach_command'):
+            func._mach_command = _MachCommand()
 
-        command_arg_group_names.insert(0, self._group_name)
-
-        func._mach_command_arg_group_names = command_arg_group_names
+        func._mach_command.argument_group_names.insert(0, self._group_name)
 
         return func
 
