@@ -33,7 +33,7 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, builtinclass, uuid(d72bd950-967c-4642-bd34-7f688d9b624a)]
+[scriptable, builtinclass, uuid(aee94712-9adb-4c0b-80a7-a8df34dfa2e8)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -105,7 +105,7 @@ interface nsIServiceWorkerManager : nsISupports
    * - Unregister jobs will be queued for all registrations.
    *   This eventually results in the registration being deleted from disk too.
    */
-  void remove(in AUTF8String aHost);
+  void removeAndPropagate(in AUTF8String aHost);
 
   // Testing
   DOMString getScopeForUrl(in nsIPrincipal aPrincipal, in DOMString aPath);

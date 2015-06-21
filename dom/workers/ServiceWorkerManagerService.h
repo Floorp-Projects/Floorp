@@ -49,6 +49,8 @@ public:
                            const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                            const nsAString& aScope);
 
+  void PropagateRemove(uint64_t aParentID, const nsACString& aHost);
+
   void PropagateRemoveAll(uint64_t aParentID);
 
 private:

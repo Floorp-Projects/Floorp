@@ -309,6 +309,12 @@ public:
                       const nsAString& aScope);
 
   void
+  PropagateRemove(const nsACString& aHost);
+
+  void
+  Remove(const nsACString& aHost);
+
+  void
   PropagateRemoveAll();
 
   void
