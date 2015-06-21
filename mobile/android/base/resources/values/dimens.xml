@@ -159,8 +159,11 @@
     <dimen name="icongrid_columnwidth">128dp</dimen>
     <dimen name="icongrid_padding">16dp</dimen>
 
-    <!-- PanelGridView dimensions -->
+    <!-- PanelRecyclerView dimensions -->
     <dimen name="panel_grid_view_column_width">150dp</dimen>
+    <dimen name="panel_grid_view_horizontal_spacing">3dp</dimen>
+    <dimen name="panel_grid_view_vertical_spacing">3dp</dimen>
+    <dimen name="panel_grid_view_outer_spacing">3dp</dimen>
 
     <!-- PanelItemView dimensions -->
     <dimen name="panel_article_item_height">95dp</dimen>
