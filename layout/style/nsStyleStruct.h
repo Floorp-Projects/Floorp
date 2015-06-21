@@ -609,12 +609,13 @@ struct nsStyleMargin {
   void RecalcData();
   nsChangeHint CalcDifference(const nsStyleMargin& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_CombineHint(nsChangeHint_NeedReflow,
-                          nsChangeHint_ClearAncestorIntrinsics);
+    return nsChangeHint_NeedReflow |
+           nsChangeHint_ReflowChangesSizeOrPosition |
+           nsChangeHint_ClearAncestorIntrinsics;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
-    // CalcDifference can return both nsChangeHint_ClearAncestorIntrinsics and
-    // nsChangeHint_NeedReflow as hints not handled for descendants.
+    // CalcDifference can return all of the reflow hints sometimes not
+    // handled for descendants as hints not handled for descendants.
     return nsChangeHint(0);
   }
 
