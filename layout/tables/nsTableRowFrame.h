@@ -115,21 +115,21 @@ public:
   virtual mozilla::WritingMode GetWritingMode() const override
     { return GetTableFrame()->GetWritingMode(); }
  
-  void UpdateBSize(nscoord           aBSize,
-                   nscoord           aAscent,
-                   nscoord           aDescent,
-                   nsTableFrame*     aTableFrame = nullptr,
-                   nsTableCellFrame* aCellFrame  = nullptr);
+  void UpdateHeight(nscoord           aHeight,
+                    nscoord           aAscent,
+                    nscoord           aDescent,
+                    nsTableFrame*     aTableFrame = nullptr,
+                    nsTableCellFrame* aCellFrame  = nullptr);
 
-  void ResetBSize(nscoord aRowStyleBSize);
+  void ResetHeight(nscoord aRowStyleHeight);
 
-  // calculate the bsize, considering content bsize of the 
-  // cells and the style bsize of the row and cells, excluding pct bsizes
-  nscoord CalcBSize(const nsHTMLReflowState& aReflowState);
+  // calculate the height, considering content height of the 
+  // cells and the style height of the row and cells, excluding pct heights
+  nscoord CalcHeight(const nsHTMLReflowState& aReflowState);
 
   // Support for cells with 'vertical-align: baseline'.
 
-  /**
+  /** 
    * returns the max-ascent amongst all the cells that have 
    * 'vertical-align: baseline', *including* cells with rowspans.
    * returns 0 if we don't have any cell with 'vertical-align: baseline'
@@ -147,26 +147,26 @@ public:
   void SetRowIndex (int aRowIndex);
 
   /** used by row group frame code */
-  nscoord ReflowCellFrame(nsPresContext*           aPresContext,
+  nscoord ReflowCellFrame(nsPresContext*          aPresContext,
                           const nsHTMLReflowState& aReflowState,
                           bool                     aIsTopOfPage,
                           nsTableCellFrame*        aCellFrame,
-                          nscoord                  aAvailableBSize,
+                          nscoord                  aAvailableHeight,
                           nsReflowStatus&          aStatus);
   /**
     * Collapse the row if required, apply col and colgroup visibility: collapse
     * info to the cells in the row.
-    * @return the amount to shift bstart-wards all following rows
-    * @param aRowOffset     - shift the row bstart-wards by this amount
-    * @param aISize         - new isize of the row
+    * @return he amount to shift up all following rows
+    * @param aRowOffset     - shift the row up by this amount
+    * @param aWidth         - new width of the row
     * @param aCollapseGroup - parent rowgroup is collapsed so this row needs
     *                         to be collapsed
     * @param aDidCollapse   - the row has been collapsed
     */
   nscoord CollapseRowIfNecessary(nscoord aRowOffset,
-                                 nscoord aISize,
+                                 nscoord aWidth,
                                  bool    aCollapseGroup,
-                                 bool&   aDidCollapse);
+                                 bool& aDidCollapse);
 
   /**
    * Insert a cell frame after the last cell frame that has a col index
@@ -178,39 +178,38 @@ public:
   void InsertCellFrame(nsTableCellFrame* aFrame,
                        int32_t           aColIndex);
 
-  nsresult CalculateCellActualBSize(nsTableCellFrame*    aCellFrame,
-                                    nscoord&             aDesiredBSize,
-                                    mozilla::WritingMode aWM);
+  nsresult CalculateCellActualHeight(nsTableCellFrame* aCellFrame,
+                                     nscoord&          aDesiredHeight);
 
   bool IsFirstInserted() const;
   void   SetFirstInserted(bool aValue);
 
-  nscoord GetContentBSize() const;
-  void    SetContentBSize(nscoord aTwipValue);
+  nscoord GetContentHeight() const;
+  void    SetContentHeight(nscoord aTwipValue);
 
-  bool HasStyleBSize() const;
+  bool HasStyleHeight() const;
 
-  bool HasFixedBSize() const;
-  void   SetHasFixedBSize(bool aValue);
+  bool HasFixedHeight() const;
+  void   SetHasFixedHeight(bool aValue);
 
-  bool HasPctBSize() const;
-  void   SetHasPctBSize(bool aValue);
+  bool HasPctHeight() const;
+  void   SetHasPctHeight(bool aValue);
 
-  nscoord GetFixedBSize() const;
-  void    SetFixedBSize(nscoord aValue);
+  nscoord GetFixedHeight() const;
+  void    SetFixedHeight(nscoord aValue);
 
-  float   GetPctBSize() const;
-  void    SetPctBSize(float  aPctValue,
+  float   GetPctHeight() const;
+  void    SetPctHeight(float  aPctValue,
                        bool aForce = false);
 
-  nscoord GetBSize(nscoord aBasis = 0) const;
+  nscoord GetHeight(nscoord aBasis = 0) const;
 
   nsTableRowFrame* GetNextRow() const;
 
-  bool    HasUnpaginatedBSize();
-  void    SetHasUnpaginatedBSize(bool aValue);
-  nscoord GetUnpaginatedBSize(nsPresContext* aPresContext);
-  void    SetUnpaginatedBSize(nsPresContext* aPresContext, nscoord aValue);
+  bool    HasUnpaginatedHeight();
+  void    SetHasUnpaginatedHeight(bool aValue);
+  nscoord GetUnpaginatedHeight(nsPresContext* aPresContext);
+  void    SetUnpaginatedHeight(nsPresContext* aPresContext, nscoord aValue);
 
   nscoord GetBStartBCBorderWidth() const { return mBStartBorderWidth; }
   nscoord GetBEndBCBorderWidth() const { return mBEndBorderWidth; }
@@ -224,9 +223,7 @@ public:
    * GetContinuousBCBorderWidth will not overwrite that border
    * see nsTablePainter about continuous borders
    */
-  void GetContinuousBCBorderWidth(mozilla::WritingMode aWM,
-                                  mozilla::LogicalMargin& aBorder);
-
+  void GetContinuousBCBorderWidth(nsMargin& aBorder);
   /**
    * @returns outer block-start bc border == prev row's block-end inner
    */
@@ -258,10 +255,10 @@ protected:
     */
   explicit nsTableRowFrame(nsStyleContext *aContext);
 
-  void InitChildReflowState(nsPresContext&              aPresContext,
-                            const mozilla::LogicalSize& aAvailSize,
-                            bool                        aBorderCollapse,
-                            nsTableCellReflowState&     aReflowState);
+  void InitChildReflowState(nsPresContext&         aPresContext,
+                            const nsSize&           aAvailSize,
+                            bool                    aBorderCollapse,
+                            nsTableCellReflowState& aReflowState);
   
   virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
 
@@ -283,19 +280,19 @@ protected:
 private:
   struct RowBits {
     unsigned mRowIndex:29;
-    unsigned mHasFixedBSize:1; // set if the dominating style bsize on the row or any cell is pixel based
-    unsigned mHasPctBSize:1;   // set if the dominating style bsize on the row or any cell is pct based
-    unsigned mFirstInserted:1; // if true, then it was the bstart-most newly inserted row 
+    unsigned mHasFixedHeight:1; // set if the dominating style height on the row or any cell is pixel based
+    unsigned mHasPctHeight:1;   // set if the dominating style height on the row or any cell is pct based
+    unsigned mFirstInserted:1;  // if true, then it was the top most newly inserted row 
   } mBits;
 
-  // the desired bsize based on the content of the tallest cell in the row
-  nscoord mContentBSize;
-  // the bsize based on a style percentage bsize on either the row or any cell
-  // if mHasPctBSize is set
-  nscoord mStylePctBSize;
-  // the bsize based on a style pixel bsize on the row or any
-  // cell if mHasFixedBSize is set
-  nscoord mStyleFixedBSize;
+  // the desired height based on the content of the tallest cell in the row
+  nscoord mContentHeight;
+  // the height based on a style percentage height on either the row or any cell
+  // if mHasPctHeight is set
+  nscoord mStylePctHeight;
+  // the height based on a style pixel height on the row or any
+  // cell if mHasFixedHeight is set
+  nscoord mStyleFixedHeight;
 
   // max-ascent and max-descent amongst all cells that have 'vertical-align: baseline'
   nscoord mMaxCellAscent;  // does include cells with rowspan > 1
@@ -314,7 +311,7 @@ private:
    * this row has any cells that have non-auto-height.  (Row-spanning
    * cells are ignored.)
    */
-  void InitHasCellWithStyleBSize(nsTableFrame* aTableFrame);
+  void InitHasCellWithStyleHeight(nsTableFrame* aTableFrame);
 
 };
 
@@ -338,64 +335,64 @@ inline void nsTableRowFrame::SetFirstInserted(bool aValue)
   mBits.mFirstInserted = aValue;
 }
 
-inline bool nsTableRowFrame::HasStyleBSize() const
+inline bool nsTableRowFrame::HasStyleHeight() const
 {
-  return (bool)mBits.mHasFixedBSize || (bool)mBits.mHasPctBSize;
+  return (bool)mBits.mHasFixedHeight || (bool)mBits.mHasPctHeight;
 }
 
-inline bool nsTableRowFrame::HasFixedBSize() const
+inline bool nsTableRowFrame::HasFixedHeight() const
 {
-  return (bool)mBits.mHasFixedBSize;
+  return (bool)mBits.mHasFixedHeight;
 }
 
-inline void nsTableRowFrame::SetHasFixedBSize(bool aValue)
+inline void nsTableRowFrame::SetHasFixedHeight(bool aValue)
 {
-  mBits.mHasFixedBSize = aValue;
+  mBits.mHasFixedHeight = aValue;
 }
 
-inline bool nsTableRowFrame::HasPctBSize() const
+inline bool nsTableRowFrame::HasPctHeight() const
 {
-  return (bool)mBits.mHasPctBSize;
+  return (bool)mBits.mHasPctHeight;
 }
 
-inline void nsTableRowFrame::SetHasPctBSize(bool aValue)
+inline void nsTableRowFrame::SetHasPctHeight(bool aValue)
 {
-  mBits.mHasPctBSize = aValue;
+  mBits.mHasPctHeight = aValue;
 }
 
-inline nscoord nsTableRowFrame::GetContentBSize() const
+inline nscoord nsTableRowFrame::GetContentHeight() const
 {
-  return mContentBSize;
+  return mContentHeight;
 }
 
-inline void nsTableRowFrame::SetContentBSize(nscoord aValue)
+inline void nsTableRowFrame::SetContentHeight(nscoord aValue)
 {
-  mContentBSize = aValue;
+  mContentHeight = aValue;
 }
 
-inline nscoord nsTableRowFrame::GetFixedBSize() const
+inline nscoord nsTableRowFrame::GetFixedHeight() const
 {
-  if (mBits.mHasFixedBSize) {
-    return mStyleFixedBSize;
-  }
-  return 0;
+  if (mBits.mHasFixedHeight)
+    return mStyleFixedHeight;
+  else
+    return 0;
 }
 
-inline float nsTableRowFrame::GetPctBSize() const
+inline float nsTableRowFrame::GetPctHeight() const
 {
-  if (mBits.mHasPctBSize) {
-    return (float)mStylePctBSize / 100.0f;
-  }
-  return 0.0f;
+  if (mBits.mHasPctHeight) 
+    return (float)mStylePctHeight / 100.0f;
+  else
+    return 0.0f;
 }
 
-inline bool nsTableRowFrame::HasUnpaginatedBSize()
+inline bool nsTableRowFrame::HasUnpaginatedHeight()
 {
   return (mState & NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT) ==
          NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT;
 }
 
-inline void nsTableRowFrame::SetHasUnpaginatedBSize(bool aValue)
+inline void nsTableRowFrame::SetHasUnpaginatedHeight(bool aValue)
 {
   if (aValue) {
     mState |= NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT;
@@ -413,16 +410,18 @@ nsTableRowFrame::GetBCBorderWidth(mozilla::WritingMode aWM)
 }
 
 inline void
-nsTableRowFrame::GetContinuousBCBorderWidth(mozilla::WritingMode aWM,
-                                            mozilla::LogicalMargin& aBorder)
+nsTableRowFrame::GetContinuousBCBorderWidth(nsMargin& aBorder)
 {
   int32_t aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
-  aBorder.IEnd(aWM) = BC_BORDER_START_HALF_COORD(aPixelsToTwips,
-                                                 mIStartContBorderWidth);
-  aBorder.BStart(aWM) = BC_BORDER_END_HALF_COORD(aPixelsToTwips,
-                                                 mBStartContBorderWidth);
-  aBorder.IStart(aWM) = BC_BORDER_END_HALF_COORD(aPixelsToTwips,
-                                                 mIEndContBorderWidth);
+  mozilla::WritingMode wm = GetWritingMode();
+  mozilla::LogicalMargin border(wm, aBorder);
+  border.IEnd(wm) = BC_BORDER_START_HALF_COORD(aPixelsToTwips,
+                                               mIStartContBorderWidth);
+  border.BStart(wm) = BC_BORDER_END_HALF_COORD(aPixelsToTwips,
+                                               mBStartContBorderWidth);
+  border.IStart(wm) = BC_BORDER_END_HALF_COORD(aPixelsToTwips,
+                                               mIEndContBorderWidth);
+  aBorder = border.GetPhysicalMargin(wm);
 }
 
 inline nscoord nsTableRowFrame::GetOuterBStartContBCBorderWidth()

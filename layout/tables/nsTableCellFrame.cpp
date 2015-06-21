@@ -848,7 +848,7 @@ CalcUnpaginatedBSize(nsPresContext*     aPresContext,
       break;
     }
     else if (rowX >= rowIndex) {
-      computedBSize += row->GetUnpaginatedBSize(aPresContext);
+      computedBSize += row->GetUnpaginatedHeight(aPresContext);
     }
   }
   return computedBSize;
