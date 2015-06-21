@@ -4196,7 +4196,7 @@ ExecuteScript(JSContext* cx, HandleObject obj, HandleScript scriptArg, jsval* rv
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, scriptArg);
 
-    if (!script->hasPollutedGlobalScope() && !obj->is<GlobalObject>()) {
+    if (!script->hasNonSyntacticScope() && !obj->is<GlobalObject>()) {
         script = CloneScript(cx, nullptr, nullptr, script, HasPollutedGlobalScope);
         if (!script)
             return false;
