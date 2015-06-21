@@ -656,8 +656,14 @@ struct nsStylePadding {
                            nsChangeHint_ClearDescendantIntrinsics);
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
-    // CalcDifference can return nsChangeHint_ClearAncestorIntrinsics as an
-    // hint not handled for descendants.
+    // CalcDifference can return nsChangeHint_ClearAncestorIntrinsics as
+    // a hint not handled for descendants.  We could (and perhaps
+    // should) return nsChangeHint_NeedReflow and
+    // nsChangeHint_ReflowChangesSizeOrPosition as always handled for
+    // descendants, but since they're always returned in conjunction
+    // with nsChangeHint_ClearAncestorIntrinsics (which is not), it
+    // won't ever lead to any optimization in
+    // nsStyleContext::CalcStyleDifference.
     return nsChangeHint(0);
   }
 
