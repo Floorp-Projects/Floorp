@@ -1190,7 +1190,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
   mEffectiveTransform = SnapTransformTranslation(idealTransform, &residual);
 
   bool useIntermediateSurface;
-  if (GetMaskLayer() ||
+  if (HasMaskLayers() ||
       GetForceIsolatedGroup()) {
     useIntermediateSurface = true;
 #ifdef MOZ_DUMP_PAINTING
@@ -1219,7 +1219,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
            * Nor for a child with a mask layer.
            */
           if ((clipRect && !clipRect->IsEmpty() && !child->GetVisibleRegion().IsEmpty()) ||
-              child->GetMaskLayer()) {
+              child->HasMaskLayers()) {
             useIntermediateSurface = true;
             break;
           }
@@ -1519,6 +1519,13 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
     nsAutoCString pfx(aPrefix);
     pfx += "    ";
     mask->Dump(aStream, pfx.get(), aDumpHtml);
+  }
+
+  for (size_t i = 0; i < GetAncestorMaskLayerCount(); i++) {
+    aStream << nsPrintfCString("%s  Ancestor mask layer %d:\n", aPrefix, uint32_t(i)).get();
+    nsAutoCString pfx(aPrefix);
+    pfx += "    ";
+    GetAncestorMaskLayerAt(i)->Dump(aStream, pfx.get(), aDumpHtml);
   }
 
 #ifdef MOZ_DUMP_PAINTING

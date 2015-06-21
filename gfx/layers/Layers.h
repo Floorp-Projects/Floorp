@@ -1060,6 +1060,18 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
+   * Add a FrameMetrics-associated mask layer.
+   */
+  void SetAncestorMaskLayers(const nsTArray<nsRefPtr<Layer>>& aLayers) {
+    if (aLayers != mAncestorMaskLayers) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) AncestorMaskLayers", this));
+      mAncestorMaskLayers = aLayers;
+      Mutated();
+    }
+  }
+
+  /**
+   * CONSTRUCTION PHASE ONLY
    * Tell this layer what its transform should be. The transformation
    * is applied when compositing the layer into its parent container.
    */
@@ -1270,6 +1282,19 @@ public:
   float GetScrollbarThumbRatio() { return mScrollbarThumbRatio; }
   bool IsScrollbarContainer() { return mIsScrollbarContainer; }
   Layer* GetMaskLayer() const { return mMaskLayer; }
+
+  // Ancestor mask layers are associated with FrameMetrics, but for simplicity
+  // in maintaining the layer tree structure we attach them to the layer.
+  size_t GetAncestorMaskLayerCount() const {
+    return mAncestorMaskLayers.Length();
+  }
+  Layer* GetAncestorMaskLayerAt(size_t aIndex) const {
+    return mAncestorMaskLayers.ElementAt(aIndex);
+  }
+
+  bool HasMaskLayers() const {
+    return GetMaskLayer() || mAncestorMaskLayers.Length() > 0;
+  }
 
   /*
    * Get the combined clip rect of the Layer clip and all clips on FrameMetrics.
@@ -1695,6 +1720,7 @@ protected:
   Layer* mPrevSibling;
   void* mImplData;
   nsRefPtr<Layer> mMaskLayer;
+  nsTArray<nsRefPtr<Layer>> mAncestorMaskLayers;
   gfx::UserData mUserData;
   gfx::IntRect mLayerBounds;
   nsIntRegion mVisibleRegion;
