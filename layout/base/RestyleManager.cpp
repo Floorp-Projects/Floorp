@@ -575,8 +575,16 @@ RestyleManager::StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint)
   if (dirtyType == nsIPresShell::eResize && !dirtyBits)
     return;
 
+  nsIPresShell::ReflowRootHandling rootHandling;
+  if (aHint & nsChangeHint_ReflowChangesSizeOrPosition) {
+    rootHandling = nsIPresShell::ePositionOrSizeChange;
+  } else {
+    rootHandling = nsIPresShell::eNoPositionOrSizeChange;
+  }
+
   do {
-    mPresContext->PresShell()->FrameNeedsReflow(aFrame, dirtyType, dirtyBits);
+    mPresContext->PresShell()->FrameNeedsReflow(aFrame, dirtyType, dirtyBits,
+                                                rootHandling);
     aFrame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame);
   } while (aFrame);
 }
