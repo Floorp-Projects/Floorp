@@ -4364,8 +4364,15 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
   nsAutoTArray<FrameMetrics,2> metricsArray;
   if (aEntry->mBaseFrameMetrics) {
     metricsArray.AppendElement(*aEntry->mBaseFrameMetrics);
+
+    // The base FrameMetrics was not computed by the nsIScrollableframe, so it
+    // should not have a mask layer.
+    MOZ_ASSERT(!aEntry->mBaseFrameMetrics->GetMaskLayerIndex());
   }
   uint32_t baseLength = metricsArray.Length();
+
+  // Any extra mask layers we need to attach to FrameMetrics.
+  nsTArray<nsRefPtr<Layer>> maskLayers;
 
   nsIFrame* fParent;
   for (const nsIFrame* f = aEntry->mAnimatedGeometryRoot;
@@ -4391,11 +4398,38 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
       continue;
     }
 
-    scrollFrame->ComputeFrameMetrics(aEntry->mLayer, mContainerReferenceFrame,
-                                     mParameters, &metricsArray);
+    Maybe<FrameMetricsAndClip> info =
+      scrollFrame->ComputeFrameMetrics(aEntry->mLayer, mContainerReferenceFrame, mParameters);
+    if (!info) {
+      continue;
+    }
+
+    FrameMetrics& metrics = info->metrics;
+    const DisplayItemClip* clip = info->clip;
+
+    if (clip &&
+        clip->HasClip() &&
+        clip->GetRoundedRectCount() > 0)
+    {
+      // The clip in between this scrollframe and its ancestor scrollframe
+      // requires a mask layer. Since this mask layer should not move with
+      // the APZC associated with this FrameMetrics, we attach the mask
+      // layer as an additional, separate clip.
+      Maybe<size_t> nextIndex = Some(maskLayers.Length());
+      nsRefPtr<Layer> maskLayer =
+        CreateMaskLayer(aEntry->mLayer, *clip, aEntry->mVisibleRegion, nextIndex, clip->GetRoundedRectCount());
+      if (maskLayer) {
+        metrics.SetMaskLayerIndex(nextIndex);
+        maskLayers.AppendElement(maskLayer);
+      }
+    }
+
+    metricsArray.AppendElement(metrics);
   }
+
   // Watch out for FrameMetrics copies in profiles
   aEntry->mLayer->SetFrameMetrics(metricsArray);
+  aEntry->mLayer->SetAncestorMaskLayers(maskLayers);
 }
 
 static void

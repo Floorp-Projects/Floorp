@@ -117,9 +117,7 @@ ClientPaintedLayer::PaintThebes()
 void
 ClientPaintedLayer::RenderLayerWithReadback(ReadbackProcessor *aReadback)
 {
-  if (GetMaskLayer()) {
-    ToClientLayer(GetMaskLayer())->RenderLayer();
-  }
+  RenderMaskLayers(this);
   
   if (!mContentClient) {
     mContentClient = ContentClient::CreateContentClient(ClientManager()->AsShadowForwarder());
