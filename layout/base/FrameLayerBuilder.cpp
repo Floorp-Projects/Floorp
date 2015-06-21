@@ -1088,8 +1088,14 @@ protected:
    * Grab a recyclable ImageLayer for use as a mask layer for aLayer (that is a
    * mask layer which has been used for aLayer before), or create one if such
    * a layer doesn't exist.
+   *
+   * Since mask layers can exist either on the layer directly, or as a side-
+   * attachment to FrameMetrics (for ancestor scrollframe clips), we key the
+   * recycle operation on both the originating layer and the mask layer's
+   * index in the layer, if any.
    */
-  already_AddRefed<ImageLayer> CreateOrRecycleMaskImageLayerFor(Layer* aLayer, const Maybe<size_t>& aForAncestorMaskLayer);
+  struct MaskLayerKey;
+  already_AddRefed<ImageLayer> CreateOrRecycleMaskImageLayerFor(const MaskLayerKey& aKey);
   /**
    * Grabs all PaintedLayers and ColorLayers from the ContainerLayer and makes them
    * available for recycling.
@@ -1229,11 +1235,33 @@ protected:
   typedef nsAutoTArray<NewLayerEntry,1> AutoLayersArray;
   AutoLayersArray                  mNewChildLayers;
   nsTHashtable<nsRefPtrHashKey<PaintedLayer>> mPaintedLayersAvailableForRecycling;
-  nsDataHashtable<nsPtrHashKey<Layer>, nsRefPtr<ImageLayer> >
-    mRecycledMaskImageLayers;
   nscoord                          mAppUnitsPerDevPixel;
   bool                             mSnappingEnabled;
   bool                             mFlattenToSingleLayer;
+
+  struct MaskLayerKey {
+    MaskLayerKey() : mLayer(nullptr) {}
+    MaskLayerKey(Layer* aLayer, const Maybe<size_t>& aAncestorIndex)
+      : mLayer(aLayer),
+        mAncestorIndex(aAncestorIndex)
+    {}
+
+    PLDHashNumber Hash() const {
+      // Hash the layer and add the layer index to the hash.
+      return (NS_PTR_TO_UINT32(mLayer) >> 2)
+             + (mAncestorIndex ? (*mAncestorIndex + 1) : 0);
+    }
+    bool operator ==(const MaskLayerKey& aOther) const {
+      return mLayer == aOther.mLayer &&
+             mAncestorIndex == aOther.mAncestorIndex;
+    }
+
+    Layer* mLayer;
+    Maybe<size_t> mAncestorIndex;
+  };
+
+  nsDataHashtable<nsGenericHashKey<MaskLayerKey>, nsRefPtr<ImageLayer>>
+    mRecycledMaskImageLayers;
 };
 
 class PaintedDisplayItemLayerUserData : public LayerUserData
@@ -1933,12 +1961,12 @@ ContainerState::CreateOrRecycleImageLayer(PaintedLayer *aPainted)
 }
 
 already_AddRefed<ImageLayer>
-ContainerState::CreateOrRecycleMaskImageLayerFor(Layer* aLayer, const Maybe<size_t>& aForAncestorMaskLayer)
+ContainerState::CreateOrRecycleMaskImageLayerFor(const MaskLayerKey& aKey)
 {
-  nsRefPtr<ImageLayer> result = mRecycledMaskImageLayers.Get(aLayer);
-  if (result && !aForAncestorMaskLayer) {
-    mRecycledMaskImageLayers.Remove(aLayer);
-    aLayer->ClearExtraDumpInfo();
+  nsRefPtr<ImageLayer> result = mRecycledMaskImageLayers.Get(aKey);
+  if (result) {
+    mRecycledMaskImageLayers.Remove(aKey);
+    aKey.mLayer->ClearExtraDumpInfo();
     // XXX if we use clip on mask layers, null it out here
   } else {
     // Create a new layer
@@ -4326,7 +4354,14 @@ ContainerState::CollectOldLayers()
     if (Layer* maskLayer = layer->GetMaskLayer()) {
       NS_ASSERTION(maskLayer->GetType() == Layer::TYPE_IMAGE,
                    "Could not recycle mask layer, unsupported layer type.");
-      mRecycledMaskImageLayers.Put(layer, static_cast<ImageLayer*>(maskLayer));
+      mRecycledMaskImageLayers.Put(MaskLayerKey(layer, Nothing()), static_cast<ImageLayer*>(maskLayer));
+    }
+    for (size_t i = 0; i < layer->GetAncestorMaskLayerCount(); i++) {
+      Layer* maskLayer = layer->GetAncestorMaskLayerAt(i);
+
+      NS_ASSERTION(maskLayer->GetType() == Layer::TYPE_IMAGE,
+                   "Could not recycle mask layer, unsupported layer type.");
+      mRecycledMaskImageLayers.Put(MaskLayerKey(layer, Some(i)), static_cast<ImageLayer*>(maskLayer));
     }
   }
 }
@@ -5697,7 +5732,8 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
                                uint32_t aRoundedRectClipCount)
 {
   // check if we can re-use the mask layer
-  nsRefPtr<ImageLayer> maskLayer = CreateOrRecycleMaskImageLayerFor(aLayer, aForAncestorMaskLayer);
+  MaskLayerKey recycleKey(aLayer, aForAncestorMaskLayer);
+  nsRefPtr<ImageLayer> maskLayer = CreateOrRecycleMaskImageLayerFor(recycleKey);
   MaskLayerUserData* userData = GetMaskLayerUserData(maskLayer);
 
   MaskLayerUserData newData;
