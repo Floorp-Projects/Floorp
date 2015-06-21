@@ -33,10 +33,7 @@ struct ArgumentsData
      * numArgs = Max(numFormalArgs, numActualArgs)
      * The array 'args' has numArgs elements.
      */
-    uint32_t    numArgs;
-
-    /* Size of ArgumentsData and data allocated after it. */
-    uint32_t    dataBytes;
+    unsigned    numArgs;
 
     /*
      * arguments.callee, or MagicValue(JS_OVERWRITTEN_CALLEE) if
@@ -267,13 +264,9 @@ class ArgumentsObject : public NativeObject
     size_t sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf) const {
         return mallocSizeOf(data());
     }
-    size_t sizeOfData() const {
-        return data()->dataBytes;
-    }
 
     static void finalize(FreeOp* fop, JSObject* obj);
     static void trace(JSTracer* trc, JSObject* obj);
-    static size_t objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObject* src);
 
     /* For jit use: */
     static size_t getDataSlotOffset() {
