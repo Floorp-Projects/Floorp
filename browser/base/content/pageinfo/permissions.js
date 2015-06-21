@@ -206,6 +206,10 @@ function onIndexedDBClear()
             .getService(nsIQuotaManager)
             .clearStoragesForURI(gPermURI);
 
+  Components.classes["@mozilla.org/serviceworkers/manager;1"]
+            .getService(Components.interfaces.nsIServiceWorkerManager)
+            .removeAndPropagate(gPermURI.host);
+
   SitePermissions.remove(gPermURI, "indexedDB");
   initIndexedDBRow();
 }
