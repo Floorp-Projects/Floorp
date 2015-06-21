@@ -23,20 +23,18 @@ struct nsRowGroupReflowState {
   nsTableFrame* tableFrame;
 
   // The available size (computed from the parent)
-  mozilla::LogicalSize availSize;
+  nsSize availSize;
 
-  // Running block-offset
-  nscoord bCoord;
+  // Running y-offset
+  nscoord y;
 
   nsRowGroupReflowState(const nsHTMLReflowState& aReflowState,
                         nsTableFrame*            aTableFrame)
-      : reflowState(aReflowState)
-      , tableFrame(aTableFrame)
-      , availSize(aReflowState.GetWritingMode(),
-                  aReflowState.AvailableISize(),
-                  aReflowState.AvailableBSize())
-      , bCoord(0)
+      :reflowState(aReflowState), tableFrame(aTableFrame)
   {
+    availSize.width  = reflowState.AvailableWidth();
+    availSize.height = reflowState.AvailableHeight();
+    y = 0;
   }
 
   ~nsRowGroupReflowState() {}
@@ -100,11 +98,11 @@ public:
                                 const nsDisplayListSet& aLists) override;
 
    /** calls Reflow for all of its child rows.
-    * Rows are all set to the same isize and stacked in the block direction.
+    * Rows are all set to the same width and stacked vertically.
     * <P> rows are not split unless absolutely necessary.
     *
-    * @param aDesiredSize isize set to isize of rows, bsize set to
-    *                     sum of bsize of rows that fit in AvailableBSize.
+    * @param aDesiredSize width set to width of rows, height set to
+    *                     sum of height of rows that fit in aMaxSize.height.
     *
     * @see nsIFrame::Reflow
     */
@@ -160,38 +158,36 @@ public:
 
 
   /**
-   * Get the total bsize of all the row rects
+   * Get the total height of all the row rects
    */
-  nscoord GetBSizeBasis(const nsHTMLReflowState& aReflowState);
+  nscoord GetHeightBasis(const nsHTMLReflowState& aReflowState);
 
   mozilla::LogicalMargin GetBCBorderWidth(mozilla::WritingMode aWM);
 
   /**
    * Gets inner border widths before collapsing with cell borders
-   * Caller must get bstart border from previous row group or from table
-   * GetContinuousBCBorderWidth will not overwrite aBorder.BStart()
+   * Caller must get top border from previous row group or from table
+   * GetContinuousBCBorderWidth will not overwrite aBorder.top
    * see nsTablePainter about continuous borders
    */
-  void GetContinuousBCBorderWidth(mozilla::WritingMode aWM,
-                                  mozilla::LogicalMargin& aBorder);
-
+  void GetContinuousBCBorderWidth(nsMargin& aBorder);
   /**
    * Sets full border widths before collapsing with cell borders
-   * @param aForSide - side to set; only IEnd, IStart, BEnd are valid
+   * @param aForSide - side to set; only right, left, and bottom valid
    */
-  void SetContinuousBCBorderWidth(mozilla::LogicalSide aForSide,
+  void SetContinuousBCBorderWidth(uint8_t     aForSide,
                                   BCPixelSize aPixelValue);
   /**
     * Adjust to the effect of visibibility:collapse on the row group and
     * its children
-    * @return              additional shift bstart-wards that should be applied
-    *                      to subsequent rowgroups due to rows and this
-    *                      rowgroup being collapsed
-    * @param aBTotalOffset the total amount that the rowgroup is shifted
-    * @param aISize        new isize of the rowgroup
+    * @return              additional shift upward that should be applied to
+    *                      subsequent rowgroups due to rows and this rowgroup
+    *                      being collapsed
+    * @param aYTotalOffset the total amount that the rowgroup is shifted up
+    * @param aWidth        new width of the rowgroup
     */
-  nscoord CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
-                                      nscoord aISize);
+  nscoord CollapseRowGroupIfNecessary(nscoord aYTotalOffset,
+                                      nscoord aWidth);
 
 // nsILineIterator methods
 public:
@@ -351,16 +347,14 @@ protected:
   void PlaceChild(nsPresContext*         aPresContext,
                   nsRowGroupReflowState& aReflowState,
                   nsIFrame*              aKidFrame,
-                  mozilla::WritingMode   aWM,
-                  const mozilla::LogicalPoint& aKidPosition,
-                  nscoord                aContainerWidth,
+                  nsPoint                aKidPosition,
                   nsHTMLReflowMetrics&   aDesiredSize,
                   const nsRect&          aOriginalKidRect,
                   const nsRect&          aOriginalKidVisualOverflow);
 
-  void CalculateRowBSizes(nsPresContext*           aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState);
+  void CalculateRowHeights(nsPresContext*           aPresContext,
+                           nsHTMLReflowMetrics&     aDesiredSize,
+                           const nsHTMLReflowState& aReflowState);
 
   void DidResizeRows(nsHTMLReflowMetrics& aDesiredSize);
 
@@ -411,15 +405,15 @@ protected:
 
 private:
   // border widths in pixels in the collapsing border model
-  BCPixelSize mIEndContBorderWidth;
-  BCPixelSize mBEndContBorderWidth;
-  BCPixelSize mIStartContBorderWidth;
+  BCPixelSize mRightContBorderWidth;
+  BCPixelSize mBottomContBorderWidth;
+  BCPixelSize mLeftContBorderWidth;
 
 public:
   bool IsRepeatable() const;
-  void SetRepeatable(bool aRepeatable);
-  bool HasStyleBSize() const;
-  void SetHasStyleBSize(bool aValue);
+  void   SetRepeatable(bool aRepeatable);
+  bool HasStyleHeight() const;
+  void   SetHasStyleHeight(bool aValue);
   bool HasInternalBreakBefore() const;
   bool HasInternalBreakAfter() const;
 };
@@ -439,12 +433,12 @@ inline void nsTableRowGroupFrame::SetRepeatable(bool aRepeatable)
   }
 }
 
-inline bool nsTableRowGroupFrame::HasStyleBSize() const
+inline bool nsTableRowGroupFrame::HasStyleHeight() const
 {
   return (mState & NS_ROWGROUP_HAS_STYLE_HEIGHT) == NS_ROWGROUP_HAS_STYLE_HEIGHT;
 }
 
-inline void nsTableRowGroupFrame::SetHasStyleBSize(bool aValue)
+inline void nsTableRowGroupFrame::SetHasStyleHeight(bool aValue)
 {
   if (aValue) {
     mState |= NS_ROWGROUP_HAS_STYLE_HEIGHT;
@@ -454,15 +448,15 @@ inline void nsTableRowGroupFrame::SetHasStyleBSize(bool aValue)
 }
 
 inline void
-nsTableRowGroupFrame::GetContinuousBCBorderWidth(mozilla::WritingMode aWM,
-                                                 mozilla::LogicalMargin& aBorder)
+nsTableRowGroupFrame::GetContinuousBCBorderWidth(nsMargin& aBorder)
 {
   int32_t aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
-  aBorder.IEnd(aWM) = BC_BORDER_START_HALF_COORD(aPixelsToTwips,
-                                                 mIEndContBorderWidth);
-  aBorder.BEnd(aWM) = BC_BORDER_START_HALF_COORD(aPixelsToTwips,
-                                                 mBEndContBorderWidth);
-  aBorder.IStart(aWM) = BC_BORDER_END_HALF_COORD(aPixelsToTwips,
-                                                 mIStartContBorderWidth);
+  aBorder.right = BC_BORDER_START_HALF_COORD(aPixelsToTwips,
+                                             mRightContBorderWidth);
+  aBorder.bottom = BC_BORDER_START_HALF_COORD(aPixelsToTwips,
+                                              mBottomContBorderWidth);
+  aBorder.left = BC_BORDER_END_HALF_COORD(aPixelsToTwips,
+                                          mLeftContBorderWidth);
+  return;
 }
 #endif
