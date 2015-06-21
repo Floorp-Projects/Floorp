@@ -101,23 +101,19 @@ class MethodHandler(object):
         'subcommand_handlers',
     )
 
-    def __init__(self, cls, method, name, category=None, description=None,
-        docstring=None, conditions=None, parser=None, arguments=None,
-        argument_group_names=None, pass_context=False,
-        subcommand_handlers=None):
-
+    def __init__(self, cls, method, command, pass_context=False):
         self.cls = cls
         self.method = method
-        self.name = name
-        self.category = category
-        self.description = description
-        self.docstring = docstring
-        self.conditions = conditions or []
-        self.arguments = arguments or []
-        self.argument_group_names = argument_group_names or []
+        self.name = command.subcommand if command.subcommand else command.name
+        self.category = command.category
+        self.description = command.description
+        self.conditions = command.conditions
+        self.arguments = command.arguments
+        self.argument_group_names = command.argument_group_names
+        self._parser = command.parser
+        self.docstring = cls.__dict__[method].__doc__
         self.pass_context = pass_context
-        self.subcommand_handlers = subcommand_handlers or {}
-        self._parser = parser
+        self.subcommand_handlers = {}
 
     @property
     def parser(self):
