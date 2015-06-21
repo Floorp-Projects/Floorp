@@ -3312,6 +3312,16 @@ CreateNonSyntacticScopeChain(JSContext* cx, AutoObjectVector& scopeChain,
         staticScopeObj.set(StaticNonSyntacticScopeObjects::create(cx, nullptr));
         if (!staticScopeObj)
             return false;
+
+        // The XPConnect subscript loader, which may pass in its own dynamic
+        // scopes to load scripts in, expects the dynamic scope chain to be
+        // the holder of "var" declarations. In SpiderMonkey, such objects are
+        // called "qualified varobjs", the "qualified" part meaning the
+        // declaration was qualified by "var". There is only sadness.
+        //
+        // See JSObject::isQualifiedVarObj.
+        if (!dynamicScopeObj->setQualifiedVarObj(cx))
+            return false;
     }
 
     return true;
