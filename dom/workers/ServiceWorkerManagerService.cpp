@@ -227,6 +227,48 @@ UnregisterEnumerator(nsPtrHashKey<ServiceWorkerManagerParent>* aKey, void* aPtr)
   return PL_DHASH_NEXT;
 }
 
+struct MOZ_STACK_CLASS RemoveAllData final
+{
+  RemoveAllData(uint64_t aParentID)
+    : mParentID(aParentID)
+#ifdef DEBUG
+    , mParentFound(false)
+#endif
+  {
+    MOZ_COUNT_CTOR(RemoveAllData);
+  }
+
+  ~RemoveAllData()
+  {
+    MOZ_COUNT_DTOR(RemoveAllData);
+  }
+
+  const uint64_t mParentID;
+#ifdef DEBUG
+  bool mParentFound;
+#endif
+};
+
+PLDHashOperator
+RemoveAllEnumerator(nsPtrHashKey<ServiceWorkerManagerParent>* aKey, void* aPtr)
+{
+  AssertIsOnBackgroundThread();
+
+  auto* data = static_cast<RemoveAllData*>(aPtr);
+  ServiceWorkerManagerParent* parent = aKey->GetKey();
+  MOZ_ASSERT(parent);
+
+  if (parent->ID() != data->mParentID) {
+    unused << parent->SendNotifyRemoveAll();
+#ifdef DEBUG
+  } else {
+    data->mParentFound = true;
+#endif
+  }
+
+  return PL_DHASH_NEXT;
+}
+
 } // anonymous namespce
 
 void
@@ -279,6 +321,25 @@ ServiceWorkerManagerService::PropagateUnregister(
 
   UnregisterData data(aPrincipalInfo, aScope, aParentID);
   mAgents.EnumerateEntries(UnregisterEnumerator, &data);
+
+#ifdef DEBUG
+  MOZ_ASSERT(data.mParentFound);
+#endif
+}
+
+void
+ServiceWorkerManagerService::PropagateRemoveAll(uint64_t aParentID)
+{
+  AssertIsOnBackgroundThread();
+
+  nsRefPtr<dom::ServiceWorkerRegistrar> service =
+    dom::ServiceWorkerRegistrar::Get();
+  MOZ_ASSERT(service);
+
+  service->RemoveAll();
+
+  RemoveAllData data(aParentID);
+  mAgents.EnumerateEntries(RemoveAllEnumerator, &data);
 
 #ifdef DEBUG
   MOZ_ASSERT(data.mParentFound);

@@ -508,8 +508,6 @@ child:
 
     async RemoveServiceWorkerRegistrationsForDomain(nsString aDomain);
 
-    async RemoveServiceWorkerRegistrations();
-
     async DataStoreNotify(uint32_t aAppId, nsString aName,
                           nsString aManifestURL);
 
