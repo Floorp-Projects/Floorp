@@ -148,7 +148,8 @@ SyncViewsAndInvalidateDescendants(nsIFrame* aFrame,
 {
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
                   "should only be called within ApplyRenderingChangeToTree");
-  NS_ASSERTION(aChange == (aChange & (nsChangeHint_RepaintFrame |
+  NS_ASSERTION(nsChangeHint_size_t(aChange) ==
+                          (aChange & (nsChangeHint_RepaintFrame |
                                       nsChangeHint_SyncFrameView |
                                       nsChangeHint_UpdateOpacityLayer |
                                       nsChangeHint_SchedulePaint)),
