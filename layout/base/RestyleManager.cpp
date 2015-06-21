@@ -4233,7 +4233,8 @@ RestyleManager::ChangeHintToString(nsChangeHint aHint)
     "UpdateParentOverflow",
     "ChildrenOnlyTransform", "RecomputePosition", "AddOrRemoveTransform",
     "BorderStyleNoneChange", "UpdateTextPath", "SchedulePaint",
-    "NeutralChange", "InvalidateRenderingObservers"
+    "NeutralChange", "InvalidateRenderingObservers",
+    "ReflowChangesSizeOrPosition"
   };
   uint32_t hint = aHint & ((1 << ArrayLength(names)) - 1);
   uint32_t rest = aHint & ~((1 << ArrayLength(names)) - 1);
