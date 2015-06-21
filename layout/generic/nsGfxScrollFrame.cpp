@@ -3052,14 +3052,13 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   scrolledContent.MoveTo(aLists);
 }
 
-void
+Maybe<FrameMetricsAndClip>
 ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
                                        nsIFrame* aContainerReferenceFrame,
-                                       const ContainerLayerParameters& aParameters,
-                                       nsTArray<FrameMetrics>* aOutput) const
+                                       const ContainerLayerParameters& aParameters) const
 {
   if (!mShouldBuildScrollableLayer || mIsScrollableLayerInRootContainer) {
-    return;
+    return Nothing();
   }
 
   bool needsParentLayerClip = true;
@@ -3117,17 +3116,21 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
     }
 
     // Return early, since if we don't use APZ we don't need FrameMetrics.
-    return;
+    return Nothing();
   }
 
   MOZ_ASSERT(mScrolledFrame->GetContent());
 
+  FrameMetricsAndClip result;
+
   nsRect scrollport = mScrollPort + toReferenceFrame;
-  *aOutput->AppendElement() =
-      nsLayoutUtils::ComputeFrameMetrics(
-        mScrolledFrame, mOuter, mOuter->GetContent(),
-        aContainerReferenceFrame, aLayer, mScrollParentID,
-        scrollport, parentLayerClip, isRootContent, aParameters);
+  result.metrics = nsLayoutUtils::ComputeFrameMetrics(
+    mScrolledFrame, mOuter, mOuter->GetContent(),
+    aContainerReferenceFrame, aLayer, mScrollParentID,
+    scrollport, parentLayerClip, isRootContent, aParameters);
+  result.clip = mAncestorClip;
+
+  return Some(result);
 }
 
 bool
