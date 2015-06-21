@@ -678,18 +678,13 @@ nsXMLHttpRequest::AppendToResponseText(const char * aSrcBuffer,
                                        &destBufferLen);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  uint32_t size = mResponseText.Length() + destBufferLen;
-  if (size < destBufferLen) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (!mResponseText.SetCapacity(size, fallible)) {
+  if (!mResponseText.SetCapacity(mResponseText.Length() + destBufferLen, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   char16_t* destBuffer = mResponseText.BeginWriting() + mResponseText.Length();
 
-  CheckedInt32 totalChars = mResponseText.Length();
+  int32_t totalChars = mResponseText.Length();
 
   // This code here is basically a copy of a similar thing in
   // nsScanner::Append(const char* aBuffer, uint32_t aLen).
@@ -702,11 +697,9 @@ nsXMLHttpRequest::AppendToResponseText(const char * aSrcBuffer,
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   totalChars += destlen;
-  if (!totalChars.isValid()) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
-  mResponseText.SetLength(totalChars.value());
+  mResponseText.SetLength(totalChars);
+
   return NS_OK;
 }
 
