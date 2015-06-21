@@ -47,9 +47,7 @@ protected:
 public:
   virtual void RenderLayer() override
   {
-    if (GetMaskLayer()) {
-      ToClientLayer(GetMaskLayer())->RenderLayer();
-    }
+    RenderMaskLayers(this);
     
     DefaultComputeSupportsComponentAlphaChildren();
 
