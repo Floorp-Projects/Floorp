@@ -1548,14 +1548,14 @@ BytecodeEmitter::tryConvertFreeName(ParseNode* pn)
                     // Use generic ops if a catch block is encountered.
                     return false;
                 }
-                if (ssi.hasDynamicScopeObject())
+                if (ssi.hasSyntacticDynamicScopeObject())
                     hops++;
                 continue;
             }
             RootedScript script(cx, ssi.funScript());
             if (script->functionNonDelazifying()->atom() == pn->pn_atom)
                 return false;
-            if (ssi.hasDynamicScopeObject()) {
+            if (ssi.hasSyntacticDynamicScopeObject()) {
                 uint32_t slot;
                 if (lookupAliasedName(script, pn->pn_atom->asPropertyName(), &slot, pn)) {
                     JSOp op;
