@@ -229,7 +229,7 @@ UnregisterEnumerator(nsPtrHashKey<ServiceWorkerManagerParent>* aKey, void* aPtr)
 
 struct MOZ_STACK_CLASS RemoveAllData final
 {
-  RemoveAllData(uint64_t aParentID)
+  explicit RemoveAllData(uint64_t aParentID)
     : mParentID(aParentID)
 #ifdef DEBUG
     , mParentFound(false)
@@ -260,6 +260,51 @@ RemoveAllEnumerator(nsPtrHashKey<ServiceWorkerManagerParent>* aKey, void* aPtr)
 
   if (parent->ID() != data->mParentID) {
     unused << parent->SendNotifyRemoveAll();
+#ifdef DEBUG
+  } else {
+    data->mParentFound = true;
+#endif
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+struct MOZ_STACK_CLASS RemoveData final
+{
+  RemoveData(const nsACString& aHost,
+             uint64_t aParentID)
+    : mHost(aHost)
+    , mParentID(aParentID)
+#ifdef DEBUG
+    , mParentFound(false)
+#endif
+  {
+    MOZ_COUNT_CTOR(RemoveData);
+  }
+
+  ~RemoveData()
+  {
+    MOZ_COUNT_DTOR(RemoveData);
+  }
+
+  const nsCString mHost;
+  const uint64_t mParentID;
+#ifdef DEBUG
+  bool mParentFound;
+#endif
+};
+
+PLDHashOperator
+RemoveEnumerator(nsPtrHashKey<ServiceWorkerManagerParent>* aKey, void* aPtr)
+{
+  AssertIsOnBackgroundThread();
+
+  auto* data = static_cast<RemoveData*>(aPtr);
+  ServiceWorkerManagerParent* parent = aKey->GetKey();
+  MOZ_ASSERT(parent);
+
+  if (parent->ID() != data->mParentID) {
+    unused << parent->SendNotifyRemove(data->mHost);
 #ifdef DEBUG
   } else {
     data->mParentFound = true;
@@ -321,6 +366,20 @@ ServiceWorkerManagerService::PropagateUnregister(
 
   UnregisterData data(aPrincipalInfo, aScope, aParentID);
   mAgents.EnumerateEntries(UnregisterEnumerator, &data);
+
+#ifdef DEBUG
+  MOZ_ASSERT(data.mParentFound);
+#endif
+}
+
+void
+ServiceWorkerManagerService::PropagateRemove(uint64_t aParentID,
+                                             const nsACString& aHost)
+{
+  AssertIsOnBackgroundThread();
+
+  RemoveData data(aHost, aParentID);
+  mAgents.EnumerateEntries(RemoveEnumerator, &data);
 
 #ifdef DEBUG
   MOZ_ASSERT(data.mParentFound);
