@@ -30,7 +30,6 @@ class DeviceManagerSUT(DeviceManager):
     _prompt_sep = '\x00'
     _prompt_regex = '.*(' + _base_prompt_re + _prompt_sep + ')'
     _agentErrorRE = re.compile('^##AGENT-WARNING##\ ?(.*)')
-    default_timeout = 300
 
     reboot_timeout = 600
     reboot_settling_time = 60
