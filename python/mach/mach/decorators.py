@@ -124,15 +124,7 @@ def CommandProvider(cls):
                 msg = msg % (command.name, type(c))
                 raise MachError(msg)
 
-        handler = MethodHandler(cls, attr,
-                                command.name,
-                                category=command.category,
-                                description=command.description,
-                                docstring=value.__doc__,
-                                conditions=command.conditions,
-                                parser=command.parser,
-                                arguments=command.arguments,
-                                argument_group_names=command.argument_group_names,
+        handler = MethodHandler(cls, attr, command,
                                 pass_context=pass_context)
 
         Registrar.register_command_handler(handler)
@@ -161,11 +153,7 @@ def CommandProvider(cls):
         if command.name not in Registrar.command_handlers:
             continue
 
-        handler = MethodHandler(cls, attr, command.subcommand,
-                                description=command.description,
-                                docstring=value.__doc__,
-                                arguments=command.arguments,
-                                argument_group_names=command.argument_group_names,
+        handler = MethodHandler(cls, attr, command,
                                 pass_context=pass_context)
         parent = Registrar.command_handlers[command.name]
 
