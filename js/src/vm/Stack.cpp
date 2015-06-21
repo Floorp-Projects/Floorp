@@ -135,9 +135,9 @@ AssertDynamicScopeMatchesStaticScope(JSContext* cx, JSScript* script, JSObject* 
     RootedObject enclosingScope(cx, script->enclosingStaticScope());
     for (StaticScopeIter<NoGC> i(enclosingScope); !i.done(); i++) {
         if (i.type() == StaticScopeIter<NoGC>::NonSyntactic) {
-            while (scope->is<DynamicWithObject>()) {
-                MOZ_ASSERT(!scope->as<DynamicWithObject>().isSyntactic());
-                scope = &scope->as<DynamicWithObject>().enclosingScope();
+            while (scope->is<DynamicWithObject>() || scope->is<NonSyntacticVariablesObject>()) {
+                MOZ_ASSERT(!IsSyntacticScope(scope));
+                scope = &scope->as<ScopeObject>().enclosingScope();
             }
         } else if (i.hasSyntacticDynamicScopeObject()) {
             switch (i.type()) {
@@ -166,9 +166,7 @@ AssertDynamicScopeMatchesStaticScope(JSContext* cx, JSScript* script, JSObject* 
         }
     }
 
-    // The scope chain is always ended by one or more non-syntactic
-    // ScopeObjects (viz. GlobalObject or an unqualified varobj).
-    MOZ_ASSERT(!IsSyntacticScope(scope));
+    MOZ_ASSERT(scope->is<GlobalObject>() || scope->is<DebugScopeObject>());
 #endif
 }
 
