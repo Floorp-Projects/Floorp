@@ -2101,11 +2101,11 @@ js::CloneFunctionObjectUseSameScript(JSCompartment* compartment, HandleFunction 
         return true;
 
     // We need to clone the script if we're interpreted and not already marked
-    // as having a polluted scope.  If we're lazy, go ahead and clone the
-    // script; see the big comment at the end of CloneScript for the explanation
-    // of what's going on there.
+    // as having a non-syntactic scope.  If we're lazy, go ahead and clone the
+    // script; see the big comment at the end of CopyScriptInternal for the
+    // explanation of what's going on there.
     return !fun->isInterpreted() ||
-           (fun->hasScript() && fun->nonLazyScript()->hasPollutedGlobalScope());
+           (fun->hasScript() && fun->nonLazyScript()->hasNonSyntacticScope());
 }
 
 JSFunction*
