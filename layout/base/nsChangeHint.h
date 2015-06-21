@@ -210,6 +210,49 @@ inline bool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
   return (aSubset & aSuperSet) == aSubset;
 }
 
+// The functions below need an integral type to cast to to avoid
+// infinite recursion.
+typedef decltype(nsChangeHint(0) + nsChangeHint(0)) nsChangeHint_size_t;
+
+inline nsChangeHint MOZ_CONSTEXPR
+operator|(nsChangeHint aLeft, nsChangeHint aRight)
+{
+  return nsChangeHint(nsChangeHint_size_t(aLeft) | nsChangeHint_size_t(aRight));
+}
+
+inline nsChangeHint MOZ_CONSTEXPR
+operator&(nsChangeHint aLeft, nsChangeHint aRight)
+{
+  return nsChangeHint(nsChangeHint_size_t(aLeft) & nsChangeHint_size_t(aRight));
+}
+
+inline nsChangeHint& operator|=(nsChangeHint& aLeft, nsChangeHint aRight)
+{
+  return aLeft = aLeft | aRight;
+}
+
+inline nsChangeHint& operator&=(nsChangeHint& aLeft, nsChangeHint aRight)
+{
+  return aLeft = aLeft & aRight;
+}
+
+inline nsChangeHint MOZ_CONSTEXPR
+operator~(nsChangeHint aArg)
+{
+  return nsChangeHint(~nsChangeHint_size_t(aArg));
+}
+
+inline nsChangeHint MOZ_CONSTEXPR
+operator^(nsChangeHint aLeft, nsChangeHint aRight)
+{
+  return nsChangeHint(nsChangeHint_size_t(aLeft) ^ nsChangeHint_size_t(aRight));
+}
+
+inline nsChangeHint operator^=(nsChangeHint& aLeft, nsChangeHint aRight)
+{
+  return aLeft = aLeft ^ aRight;
+}
+
 /**
  * We have an optimization when processing change hints which prevents
  * us from visiting the descendants of a node when a hint on that node
