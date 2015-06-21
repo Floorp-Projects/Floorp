@@ -48,6 +48,8 @@ private:
   virtual bool RecvPropagateUnregister(const PrincipalInfo& aPrincipalInfo,
                                        const nsString& aScope) override;
 
+  virtual bool RecvPropagateRemoveAll() override;
+
   virtual bool RecvShutdown() override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;

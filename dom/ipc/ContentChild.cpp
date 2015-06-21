@@ -1254,16 +1254,6 @@ ContentChild::RecvRemoveServiceWorkerRegistrationsForDomain(const nsString& aDom
     return true;
 }
 
-bool
-ContentChild::RecvRemoveServiceWorkerRegistrations()
-{
-    nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
-    if (swm) {
-        swm->RemoveAll();
-    }
-    return true;
-}
-
 static CancelableTask* sFirstIdleTask;
 
 static void FirstIdle(void)

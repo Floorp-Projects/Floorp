@@ -49,6 +49,8 @@ public:
                            const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                            const nsAString& aScope);
 
+  void PropagateRemoveAll(uint64_t aParentID);
+
 private:
   ServiceWorkerManagerService();
   ~ServiceWorkerManagerService();
