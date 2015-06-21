@@ -9,11 +9,7 @@ import collections
 import inspect
 import types
 
-from .base import (
-    MachError,
-    MethodHandler
-)
-
+from .base import MachError
 from .config import ConfigProvider
 from .registrar import Registrar
 
@@ -25,14 +21,36 @@ class _MachCommand(object):
     in a sane way so tuples, etc aren't used instead.
     """
     __slots__ = (
+        # Content from decorator arguments to define the command.
         'name',
         'subcommand',
         'category',
         'description',
         'conditions',
-        'parser',
+        '_parser',
         'arguments',
         'argument_group_names',
+
+        # Describes how dispatch is performed.
+
+        # The Python class providing the command. This is the class type not
+        # an instance of the class. Mach will instantiate a new instance of
+        # the class if the command is executed.
+        'cls',
+
+        # Whether the __init__ method of the class should receive a mach
+        # context instance. This should only affect the mach driver and how
+        # it instantiates classes.
+        'pass_context',
+
+        # The name of the method providing the command. In other words, this
+        # is the str name of the attribute on the class type corresponding to
+        # the name of the function.
+        'method',
+
+        # Dict of string to _MachCommand defining sub-commands for this
+        # command.
+        'subcommand_handlers',
     )
 
     def __init__(self, name=None, subcommand=None, category=None,
@@ -42,9 +60,27 @@ class _MachCommand(object):
         self.category = category
         self.description = description
         self.conditions = conditions or []
-        self.parser = parser
+        self._parser = parser
         self.arguments = []
         self.argument_group_names = []
+
+        self.cls = None
+        self.pass_context = None
+        self.method = None
+        self.subcommand_handlers = {}
+
+    @property
+    def parser(self):
+        # Creating CLI parsers at command dispatch time can be expensive. Make
+        # it possible to lazy load them by using functions.
+        if callable(self._parser):
+            self._parser = self._parser()
+
+        return self._parser
+
+    @property
+    def docstring(self):
+        return self.cls.__dict__[self.method].__doc__
 
     def __ior__(self, other):
         if not isinstance(other, _MachCommand):
@@ -124,10 +160,11 @@ def CommandProvider(cls):
                 msg = msg % (command.name, type(c))
                 raise MachError(msg)
 
-        handler = MethodHandler(cls, attr, command,
-                                pass_context=pass_context)
+        command.cls = cls
+        command.method = attr
+        command.pass_context = pass_context
 
-        Registrar.register_command_handler(handler)
+        Registrar.register_command_handler(command)
 
     # Now do another pass to get sub-commands. We do this in two passes so
     # we can check the parent command existence without having to hold
@@ -153,17 +190,18 @@ def CommandProvider(cls):
         if command.name not in Registrar.command_handlers:
             continue
 
-        handler = MethodHandler(cls, attr, command,
-                                pass_context=pass_context)
+        command.cls = cls
+        command.method = attr
+        command.pass_context = pass_context
         parent = Registrar.command_handlers[command.name]
 
-        if parent.parser:
+        if parent._parser:
             raise MachError('cannot declare sub commands against a command '
                 'that has a parser installed: %s' % command)
         if command.subcommand in parent.subcommand_handlers:
             raise MachError('sub-command already defined: %s' % command.subcommand)
 
-        parent.subcommand_handlers[command.subcommand] = handler
+        parent.subcommand_handlers[command.subcommand] = command
 
     return cls
 
