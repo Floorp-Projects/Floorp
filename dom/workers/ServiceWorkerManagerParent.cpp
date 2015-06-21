@@ -257,6 +257,19 @@ ServiceWorkerManagerParent::RecvPropagateUnregister(const PrincipalInfo& aPrinci
 }
 
 bool
+ServiceWorkerManagerParent::RecvPropagateRemove(const nsCString& aHost)
+{
+  AssertIsOnBackgroundThread();
+
+  if (NS_WARN_IF(!mService)) {
+    return false;
+  }
+
+  mService->PropagateRemove(mID, aHost);
+  return true;
+}
+
+bool
 ServiceWorkerManagerParent::RecvPropagateRemoveAll()
 {
   AssertIsOnBackgroundThread();
