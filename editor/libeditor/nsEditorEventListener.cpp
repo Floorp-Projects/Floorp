@@ -59,6 +59,8 @@
 #include "nsIBidiKeyboard.h"            // for nsIBidiKeyboard
 #endif
 
+#include "mozilla/dom/TabParent.h"
+
 class nsPresContext;
 
 using namespace mozilla;
@@ -982,6 +984,14 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
 
   // If the source and the dest are not same document, allow to drop it always.
   if (domdoc != sourceDoc) {
+    return true;
+  }
+
+  // If the source node is a remote browser, treat this as coming from a
+  // different document and allow the drop.
+  nsCOMPtr<nsIContent> sourceContent = do_QueryInterface(sourceNode);
+  TabParent* tp = TabParent::GetFrom(sourceContent);
+  if (tp) {
     return true;
   }
 
