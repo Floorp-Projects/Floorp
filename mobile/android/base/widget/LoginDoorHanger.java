@@ -35,7 +35,6 @@ public class LoginDoorHanger extends DoorHanger {
     private static final String LOGTAG = "LoginDoorHanger";
     private enum ActionType { EDIT, SELECT }
 
-    private final TextView mTitle;
     private final TextView mMessage;
     private final TextView mLink;
     private final DoorhangerConfig.ButtonConfig mButtonConfig;
@@ -43,7 +42,6 @@ public class LoginDoorHanger extends DoorHanger {
     public LoginDoorHanger(Context context, DoorhangerConfig config) {
         super(context, config, Type.LOGIN);
 
-        mTitle = (TextView) findViewById(R.id.doorhanger_title);
         mMessage = (TextView) findViewById(R.id.doorhanger_message);
         mLink = (TextView) findViewById(R.id.doorhanger_link);
         mIcon.setImageResource(R.drawable.icon_key);
@@ -75,30 +73,6 @@ public class LoginDoorHanger extends DoorHanger {
     @Override
     protected void setOptions(final JSONObject options) {
         super.setOptions(options);
-
-        final JSONObject titleObj = options.optJSONObject("title");
-        if (titleObj != null) {
-
-            try {
-                final String text = titleObj.getString("text");
-                mTitle.setText(text);
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Error loading title from options JSON", e);
-            }
-
-            final String resource = titleObj.optString("resource");
-            if (resource != null) {
-                Favicons.getSizedFaviconForPageFromLocal(mContext, resource, 32, new OnFaviconLoadedListener() {
-                    @Override
-                    public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
-                        if (favicon != null) {
-                            mTitle.setCompoundDrawablesWithIntrinsicBounds(new BitmapDrawable(mResources, favicon), null, null, null);
-                            mTitle.setCompoundDrawablePadding((int) mResources.getDimension(R.dimen.doorhanger_drawable_padding));
-                        }
-                    }
-                });
-            }
-        }
 
         final JSONObject actionText = options.optJSONObject("actionText");
         addActionText(actionText);

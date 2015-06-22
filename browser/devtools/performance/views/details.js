@@ -39,6 +39,11 @@ let DetailsView = {
       view: MemoryFlameGraphView,
       actors: ["memory", "timeline"],
       features: ["withAllocations"]
+    },
+    "optimizations": {
+      id: "optimizations-view",
+      view: OptimizationsView,
+      features: ["withJITOptimizations"],
     }
   },
 

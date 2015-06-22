@@ -361,10 +361,10 @@ pref("layout.css.touch_action.enabled", false);
 
 #ifdef MOZ_SAFE_BROWSING
 // Safe browsing does nothing unless this pref is set
-pref("browser.safebrowsing.enabled", false);
+pref("browser.safebrowsing.enabled", true);
 
 // Prevent loading of pages identified as malware
-pref("browser.safebrowsing.malware.enabled", false);
+pref("browser.safebrowsing.malware.enabled", true);
 
 pref("browser.safebrowsing.debug", false);
 pref("browser.safebrowsing.updateURL", "https://safebrowsing.google.com/safebrowsing/downloads?client=SAFEBROWSING_ID&appver=%VERSION%&pver=2.2&key=%GOOGLE_API_KEY%");
@@ -411,6 +411,11 @@ pref("urlclassifier.max-complete-age", 2700);
 
 // URL for checking the reason for a malware warning.
 pref("browser.safebrowsing.malware.reportURL", "https://safebrowsing.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
+
+// Tracking protection
+pref("privacy.trackingprotection.enabled", true);
+pref("privacy.trackingprotection.pbmode.enabled", false);
+
 #endif
 
 // True if this is the first time we are showing about:firstrun

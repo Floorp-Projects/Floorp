@@ -6,7 +6,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:padding="@dimen/doorhanger_padding"
+              android:padding="@dimen/doorhanger_section_padding_small"
               android:orientation="vertical">
 
     <EditText android:id="@+id/username_edit"
@@ -25,6 +25,6 @@
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:text="@string/doorhanger_login_edit_toggle"
-              android:layout_marginTop="@dimen/doorhanger_padding"/>
+              android:layout_marginTop="@dimen/doorhanger_subsection_padding"/>
 
 </LinearLayout>

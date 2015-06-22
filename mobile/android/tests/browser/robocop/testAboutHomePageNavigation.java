@@ -114,6 +114,6 @@ public class testAboutHomePageNavigation extends UITest {
         mSolo.scrollToSide(Solo.RIGHT);
         mAsserter.is(pager.getCurrentItem(), 0, "Dragging right is not allowed when searching");
 
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        mSolo.goBack();
     */
 }

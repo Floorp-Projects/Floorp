@@ -1,6 +1,5 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.util.HardwareUtils;
 
 /**
@@ -45,13 +44,13 @@ public class testTitleBar extends PixelTest {
         mSolo.clickOnText(option);
         mAsserter.ok(waitForText(mStringHelper.CHARACTER_ENCODING_LABEL), "Waiting to press the option", "The pop-up is dismissed once clicked");
         if (mDevice.type.equals("phone")) {
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+            mSolo.goBack();
             mAsserter.ok(waitForText(mStringHelper.CUSTOMIZE_SECTION_LABEL), "Waiting to perform one back", "One back performed");
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+            mSolo.goBack();
             mAsserter.ok(waitForText(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL), "Waiting to exit settings", "Exit settings done");
         }
         else {
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+            mSolo.goBack();
             mAsserter.ok(waitForText(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL), "Waiting to exit settings", "Exit settings done");
         }
     }

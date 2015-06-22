@@ -56,7 +56,7 @@ public class testShareLink extends AboutHomeTest {
         }
 
         // Test share from the urlbar context menu
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Close the share menu
+        mSolo.goBack(); // Close the share menu
         mSolo.clickLongOnText(urlTitle);
         verifySharePopup(shareOptions,"urlbar");
 
@@ -145,7 +145,7 @@ public class testShareLink extends AboutHomeTest {
              // Verify if the option is present in the list of displayed share options
              mAsserter.ok(optionDisplayed(option, displayedOptions), "Share option for " + openedFrom + (openedFrom.equals("urlbar") ? "" : " item") + " found", option);
         }
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        mSolo.goBack();
         /**
          * Adding a wait for the page title to make sure the Awesomebar will be dismissed
          * Because of Bug 712370 the Awesomescreen will be dismissed when the Share Menu is closed

@@ -8,6 +8,8 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.widget.ImageView;
 import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONArray;
@@ -23,8 +25,6 @@ import org.mozilla.gecko.SiteIdentity.MixedMode;
 import org.mozilla.gecko.SiteIdentity.TrackingMode;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.AnchoredPopup;
@@ -174,10 +174,9 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     }
 
     private void addLoginsToTab(JSONObject data) throws JSONException {
-        final JSONObject titleObj = data.getJSONObject("title");
         final JSONArray logins = data.getJSONArray("logins");
 
-        final SiteLogins siteLogins = new SiteLogins(titleObj, logins);
+        final SiteLogins siteLogins = new SiteLogins(logins);
         Tabs.getInstance().getSelectedTab().setSiteLogins(siteLogins);
     }
 
@@ -241,8 +240,6 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
         // Set options.
         final JSONObject options = new JSONObject();
-        final JSONObject titleObj = siteLogins.getTitle();
-        options.put("title", titleObj);
 
         // Add action text only if there are other logins to select.
         if (logins.length() > 1) {
@@ -293,23 +290,6 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     }
 
     private void updateIdentityInformation(final SiteIdentity siteIdentity) {
-        final String host = siteIdentity.getHost();
-        mTitle.setText(host);
-
-        final String hostUrl = siteIdentity.getOrigin();
-        Favicons.getSizedFaviconForPageFromLocal(mContext, hostUrl, 32, new OnFaviconLoadedListener() {
-            @Override
-            public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
-                if (favicon == null) {
-                    // If there is no favicon, clear the compound drawable.
-                    mTitle.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
-                } else {
-                    mTitle.setCompoundDrawablesWithIntrinsicBounds(new BitmapDrawable(mContext.getResources(), favicon), null, null, null);
-                    mTitle.setCompoundDrawablePadding((int) mContext.getResources().getDimension(R.dimen.doorhanger_drawable_padding));
-                }
-            }
-        });
-
         mEncrypted.setVisibility(siteIdentity.getEncrypted() ? View.VISIBLE : View.GONE);
 
         mHost.setText(siteIdentity.getHost());
@@ -451,6 +431,13 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
             Log.e(LOGTAG, "Error adding selectLogin doorhanger", e);
         }
 
+        mTitle.setText(selectedTab.getBaseDomain());
+        final Bitmap favicon = selectedTab.getFavicon();
+        if (favicon != null) {
+            mTitle.setCompoundDrawablesWithIntrinsicBounds(new BitmapDrawable(mContext.getResources(), favicon), null, null, null);
+            mTitle.setCompoundDrawablePadding((int) mContext.getResources().getDimension(R.dimen.doorhanger_drawable_padding));
+        }
+
         showDividers();
 
         super.show();
@@ -491,6 +478,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         removeMixedContentNotification();
         removeTrackingContentNotification();
         removeSelectLoginDoorhanger();
+        mTitle.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
         mDivider.setVisibility(View.GONE);
     }
 
