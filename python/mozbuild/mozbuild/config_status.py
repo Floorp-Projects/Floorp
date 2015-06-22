@@ -6,7 +6,7 @@
 # drop-in replacement for autoconf 2.13's config.status, with features
 # borrowed from autoconf > 2.5, and additional features.
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 import logging
 import os

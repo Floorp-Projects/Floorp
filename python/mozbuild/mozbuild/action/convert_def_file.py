@@ -5,6 +5,8 @@
 # Convert Windows-style export files into a single Unix-style linker
 # script, applying any necessary preprocessing.
 
+from __future__ import absolute_import
+
 import itertools
 import re
 import sys
