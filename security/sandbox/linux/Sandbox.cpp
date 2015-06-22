@@ -394,8 +394,8 @@ BroadcastSetThreadSandbox(UniquePtr<sock_filter[]> aProgram, size_t aProgLen)
         }
         struct timespec now;
         clock_gettime(CLOCK_MONOTONIC, &now);
-        if (now.tv_sec > timeLimit.tv_nsec ||
-            (now.tv_sec == timeLimit.tv_nsec &&
+        if (now.tv_sec > timeLimit.tv_sec ||
+            (now.tv_sec == timeLimit.tv_sec &&
              now.tv_nsec > timeLimit.tv_nsec)) {
           SANDBOX_LOG_ERROR("Thread %d unresponsive for %d seconds."
                             "  Killing process.",

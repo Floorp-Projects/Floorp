@@ -1745,7 +1745,7 @@ RInstructionResults::frame() const
     return fp_;
 }
 
-RelocatableValue&
+HeapValue&
 RInstructionResults::operator [](size_t index)
 {
     return (*results_)[index];
@@ -2553,7 +2553,7 @@ InlineFrameIterator::computeScopeChain(Value scopeChainValue, MaybeReadFallback&
     // Ion does not handle non-function scripts that have anything other than
     // the global on their scope chain.
     MOZ_ASSERT(!script()->isForEval());
-    MOZ_ASSERT(!script()->hasPollutedGlobalScope());
+    MOZ_ASSERT(!script()->hasNonSyntacticScope());
     return &script()->global();
 }
 

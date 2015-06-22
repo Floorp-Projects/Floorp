@@ -222,6 +222,10 @@ pref("dom.max_script_run_time", 0);
 pref("dom.max_chrome_script_run_time", 0);
 pref("dom.max_child_script_run_time", 0);
 
+// Temporarily disable support for offsetX/Y to work around Google Maps bug
+// (bug 1150284)
+pref("dom.mouseEvent.offsetXY.enabled", false);
+
 // plugins
 pref("plugin.disable", true);
 pref("dom.ipc.plugins.enabled", true);
@@ -357,10 +361,10 @@ pref("layout.css.touch_action.enabled", false);
 
 #ifdef MOZ_SAFE_BROWSING
 // Safe browsing does nothing unless this pref is set
-pref("browser.safebrowsing.enabled", false);
+pref("browser.safebrowsing.enabled", true);
 
 // Prevent loading of pages identified as malware
-pref("browser.safebrowsing.malware.enabled", false);
+pref("browser.safebrowsing.malware.enabled", true);
 
 pref("browser.safebrowsing.debug", false);
 pref("browser.safebrowsing.updateURL", "https://safebrowsing.google.com/safebrowsing/downloads?client=SAFEBROWSING_ID&appver=%VERSION%&pver=2.2&key=%GOOGLE_API_KEY%");
@@ -407,6 +411,11 @@ pref("urlclassifier.max-complete-age", 2700);
 
 // URL for checking the reason for a malware warning.
 pref("browser.safebrowsing.malware.reportURL", "https://safebrowsing.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
+
+// Tracking protection
+pref("privacy.trackingprotection.enabled", true);
+pref("privacy.trackingprotection.pbmode.enabled", false);
+
 #endif
 
 // True if this is the first time we are showing about:firstrun

@@ -148,7 +148,8 @@ private:
   nsresult OnNetworkChanged();
   nsresult StartPinging();
 
-  void     BeginOpen();
+  void     BeginOpen(bool aCalledFromAdmissionManager);
+  void     BeginOpenInternal();
   nsresult HandleExtensions();
   nsresult SetupRequest();
   nsresult ApplyForAdmission();

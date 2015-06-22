@@ -3,6 +3,7 @@
 const { interfaces: Ci, classes: Cc, utils: Cu, results: Cr } = Components;
 
 let {WebRequest} = Cu.import("resource://gre/modules/WebRequest.jsm", {});
+let {MatchPattern} = Cu.import("resource://gre/modules/MatchPattern.jsm", {});
 
 const BASE = "http://example.com/browser/toolkit/modules/tests/browser";
 const URL = BASE + "/file_WebRequest_page2.html";
@@ -64,7 +65,7 @@ function compareLists(list1, list2, kind)
 }
 
 add_task(function* filter_urls() {
-  let filter = {urls: [/.*_style_.*/]};
+  let filter = {urls: new MatchPattern("*://*/*_style_*")};
 
   WebRequest.onBeforeRequest.addListener(onBeforeRequest, filter, ["blocking"]);
   WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, filter, ["blocking"]);

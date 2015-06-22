@@ -972,12 +972,16 @@ CodeGeneratorShared::verifyCompactTrackedOptimizationsMap(JitCode* code, uint32_
             MOZ_ASSERT(index == unique.indexOf(entry.optimizations));
 
             // Assert that the type info and attempts vectors are correctly
-            // decoded.
-            IonTrackedOptimizationsTypeInfo typeInfo = typesTable->entry(index);
-            TempOptimizationTypeInfoVector tvec(alloc());
-            ReadTempTypeInfoVectorOp top(alloc(), &tvec);
-            typeInfo.forEach(top, allTypes);
-            MOZ_ASSERT(entry.optimizations->matchTypes(tvec));
+            // decoded. This is disabled for now if the types table might
+            // contain nursery pointers, in which case the types might not
+            // match, see bug 1175761.
+            if (!code->runtimeFromMainThread()->gc.storeBuffer.cancelIonCompilations()) {
+                IonTrackedOptimizationsTypeInfo typeInfo = typesTable->entry(index);
+                TempOptimizationTypeInfoVector tvec(alloc());
+                ReadTempTypeInfoVectorOp top(alloc(), &tvec);
+                typeInfo.forEach(top, allTypes);
+                MOZ_ASSERT(entry.optimizations->matchTypes(tvec));
+            }
 
             IonTrackedOptimizationsAttempts attempts = attemptsTable->entry(index);
             TempOptimizationAttemptsVector avec(alloc());

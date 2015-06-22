@@ -120,7 +120,7 @@ class RegExpShared
 
     struct RegExpCompilation
     {
-        RelocatablePtrJitCode jitCode;
+        HeapPtrJitCode jitCode;
         uint8_t* byteCode;
 
         RegExpCompilation() : byteCode(nullptr) {}
@@ -132,7 +132,7 @@ class RegExpShared
     };
 
     /* Source to the RegExp, for lazy compilation. */
-    RelocatablePtrAtom source;
+    HeapPtrAtom        source;
 
     RegExpFlag         flags;
     size_t             parenCount;
