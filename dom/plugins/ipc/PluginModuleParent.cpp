@@ -359,10 +359,9 @@ mozilla::plugins::TerminatePlugin(uint32_t aPluginId, const nsString& aBrowserDu
     if (!pluginTag || !pluginTag->mPlugin) {
         return;
     }
-    nsAutoString dumpId(aBrowserDumpId);
     nsRefPtr<nsNPAPIPlugin> plugin = pluginTag->mPlugin;
     PluginModuleChromeParent* chromeParent = static_cast<PluginModuleChromeParent*>(plugin->GetLibrary());
-    chromeParent->TerminateChildProcess(MessageLoop::current(), &dumpId);
+    chromeParent->TerminateChildProcess(MessageLoop::current(), aBrowserDumpId);
 }
 
 /* static */ PluginLibrary*
@@ -622,6 +621,7 @@ PluginModuleChromeParent::WaitForIPCConnection()
 PluginModuleParent::PluginModuleParent(bool aIsChrome)
     : mIsChrome(aIsChrome)
     , mShutdown(false)
+    , mHadLocalInstance(false)
     , mClearSiteDataSupported(false)
     , mGetSitesWithDataSupported(false)
     , mNPNIface(nullptr)
@@ -1154,8 +1154,7 @@ PluginModuleChromeParent::ShouldContinueFromReplyTimeout()
     // original plugin hang behaviour and kill the plugin container.
     FinishHangUI();
 #endif // XP_WIN
-    nsString dummy;
-    TerminateChildProcess(MessageLoop::current(), &dummy);
+    TerminateChildProcess(MessageLoop::current(), EmptyString());
     GetIPCChannel()->CloseWithTimeout();
     return false;
 }
@@ -1179,7 +1178,7 @@ PluginModuleContentParent::OnExitedSyncSend()
 
 void
 PluginModuleChromeParent::TerminateChildProcess(MessageLoop* aMsgLoop,
-                                                nsAString* aBrowserDumpId)
+                                                const nsAString& aBrowserDumpId)
 {
 #ifdef MOZ_CRASHREPORTER
 #ifdef XP_WIN
@@ -1215,8 +1214,8 @@ PluginModuleChromeParent::TerminateChildProcess(MessageLoop* aMsgLoop,
     // since the posted message will trash our browser stack state.
     bool exists;
     nsCOMPtr<nsIFile> browserDumpFile;
-    if (aBrowserDumpId && !aBrowserDumpId->IsEmpty() &&
-        CrashReporter::GetMinidumpForID(*aBrowserDumpId, getter_AddRefs(browserDumpFile)) &&
+    if (!aBrowserDumpId.IsEmpty() &&
+        CrashReporter::GetMinidumpForID(aBrowserDumpId, getter_AddRefs(browserDumpFile)) &&
         browserDumpFile &&
         NS_SUCCEEDED(browserDumpFile->Exists(&exists)) && exists)
     {
@@ -1226,7 +1225,7 @@ PluginModuleChromeParent::TerminateChildProcess(MessageLoop* aMsgLoop,
                                                               NS_LITERAL_CSTRING("browser"));
         if (!reportsReady) {
           browserDumpFile = nullptr;
-          CrashReporter::DeleteMinidumpFilesForID(*aBrowserDumpId);
+          CrashReporter::DeleteMinidumpFilesForID(aBrowserDumpId);
         }
     }
 
@@ -2387,7 +2386,12 @@ bool
 PluginModuleParent::DoShutdown(NPError* error)
 {
     bool ok = true;
-    if (IsChrome()) {
+    if (IsChrome() && mHadLocalInstance) {
+        // We synchronously call NP_Shutdown if the chrome process was using
+        // plugins itself. That way we can service any requests the plugin
+        // makes. If we're in e10s, though, the content processes will have
+        // already shut down and there's no one to talk to. So we shut down
+        // asynchronously in PluginModuleChild::ActorDestroy.
         ok = CallNP_Shutdown(error);
     }
 

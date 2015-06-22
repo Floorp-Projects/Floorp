@@ -169,6 +169,8 @@ pref("dom.undo_manager.enabled", false);
 // Whether URL,nsLocation,Link::GetHash should be percent encoded
 // in setter and percent decoded in getter (old behaviour = true)
 pref("dom.url.encode_decode_hash", true);
+// Whether ::GetHash should do percent decoding (old behaviour = true)
+pref("dom.url.getters_decode_hash", false);
 
 // Whether to run add-on code in different compartments from browser code. This
 // causes a separate compartment for each (addon, global) combination, which may
@@ -2327,6 +2329,9 @@ pref("layout.css.font-loading-api.enabled", false);
 #else
 pref("layout.css.font-loading-api.enabled", true);
 #endif
+
+// Are the MouseEvent.offsetX/Y properties enabled?
+pref("dom.mouseEvent.offsetXY.enabled", true);
 
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction

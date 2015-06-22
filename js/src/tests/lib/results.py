@@ -151,7 +151,7 @@ class ResultsSink:
                 self.pb.beginline()
 
                 if show_output:
-                    print('## {}: rc = {:d}, run time = {:f}'.format(
+                    print('## {}: rc = {:d}, run time = {}'.format(
                         output.test.path, output.rc, output.dt), file=self.fp)
 
                 if show_cmd:

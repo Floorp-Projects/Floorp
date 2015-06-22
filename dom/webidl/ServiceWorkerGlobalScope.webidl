@@ -21,6 +21,8 @@ interface ServiceWorkerGlobalScope : WorkerGlobalScope {
 
   attribute EventHandler oninstall;
   attribute EventHandler onactivate;
+
+  [Func="mozilla::dom::workers::ServiceWorkerGlobalScope::InterceptionEnabled"]
   attribute EventHandler onfetch;
   attribute EventHandler onbeforeevicted;
   attribute EventHandler onevicted;

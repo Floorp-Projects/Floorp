@@ -148,7 +148,8 @@ SyncViewsAndInvalidateDescendants(nsIFrame* aFrame,
 {
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
                   "should only be called within ApplyRenderingChangeToTree");
-  NS_ASSERTION(aChange == (aChange & (nsChangeHint_RepaintFrame |
+  NS_ASSERTION(nsChangeHint_size_t(aChange) ==
+                          (aChange & (nsChangeHint_RepaintFrame |
                                       nsChangeHint_SyncFrameView |
                                       nsChangeHint_UpdateOpacityLayer |
                                       nsChangeHint_SchedulePaint)),
@@ -574,8 +575,16 @@ RestyleManager::StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint)
   if (dirtyType == nsIPresShell::eResize && !dirtyBits)
     return;
 
+  nsIPresShell::ReflowRootHandling rootHandling;
+  if (aHint & nsChangeHint_ReflowChangesSizeOrPosition) {
+    rootHandling = nsIPresShell::ePositionOrSizeChange;
+  } else {
+    rootHandling = nsIPresShell::eNoPositionOrSizeChange;
+  }
+
   do {
-    mPresContext->PresShell()->FrameNeedsReflow(aFrame, dirtyType, dirtyBits);
+    mPresContext->PresShell()->FrameNeedsReflow(aFrame, dirtyType, dirtyBits,
+                                                rootHandling);
     aFrame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame);
   } while (aFrame);
 }
@@ -4232,7 +4241,8 @@ RestyleManager::ChangeHintToString(nsChangeHint aHint)
     "UpdateParentOverflow",
     "ChildrenOnlyTransform", "RecomputePosition", "AddOrRemoveTransform",
     "BorderStyleNoneChange", "UpdateTextPath", "SchedulePaint",
-    "NeutralChange", "InvalidateRenderingObservers"
+    "NeutralChange", "InvalidateRenderingObservers",
+    "ReflowChangesSizeOrPosition"
   };
   uint32_t hint = aHint & ((1 << ArrayLength(names)) - 1);
   uint32_t rest = aHint & ~((1 << ArrayLength(names)) - 1);
