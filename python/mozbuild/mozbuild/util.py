@@ -5,7 +5,7 @@
 # This file contains miscellaneous utility functions that don't belong anywhere
 # in particular.
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 import collections
 import difflib

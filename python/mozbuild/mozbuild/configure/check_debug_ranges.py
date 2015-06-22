@@ -6,6 +6,8 @@
 # to a given compilation unit. This is used as a helper to find a bug in some
 # versions of GNU ld.
 
+from __future__ import absolute_import
+
 import subprocess
 import sys
 import re

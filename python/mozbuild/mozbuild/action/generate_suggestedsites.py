@@ -25,7 +25,7 @@ write the result to suggestedsites.json on the locale-specific raw resource
 directory e.g. raw/suggestedsites.json, raw-pt-rBR/suggestedsites.json.
 '''
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 import argparse
 import json
