@@ -161,7 +161,7 @@ public class testAddSearchEngine extends AboutHomeTest {
         }, MAX_WAIT_TEST_MS);
 
         // Exit about:home
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        mSolo.goBack();
         waitForText(mStringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
         mAsserter.ok(correctNumSearchEnginesDisplayed, expectedCount + " Search Engines should be displayed" , "The correct number of Search Engines has been displayed");
     }

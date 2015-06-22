@@ -10,12 +10,12 @@ const JIT_EMPTY_TEXT = L10N.getStr("jit.empty");
 const PROPNAME_MAX_LENGTH = 4;
 
 /**
- * View for rendering JIT Optimization data. The terminology and types
- * used here can be referenced:
+ * View for rendering a list of all optmizations found in a frame.
+ * The terminology and types used here can be referenced:
  * @see browser/devtools/performance/modules/logic/jit.js
  */
 
-let JITOptimizationsView = {
+let OptimizationsListView = {
 
   _currentFrame: null,
 
@@ -24,7 +24,6 @@ let JITOptimizationsView = {
    */
   initialize: function () {
     this.reset = this.reset.bind(this);
-    this._onFocusFrame = this._onFocusFrame.bind(this);
 
     this.el = $("#jit-optimizations-view");
     this.$headerName = $("#jit-optimizations-header .header-function-name");
@@ -38,9 +37,6 @@ let JITOptimizationsView = {
 
     // Start the tree by resetting.
     this.reset();
-
-    PerformanceController.on(EVENTS.RECORDING_SELECTED, this.reset);
-    JsCallTreeView.on("focus", this._onFocusFrame);
   },
 
   /**
@@ -49,8 +45,6 @@ let JITOptimizationsView = {
   destroy: function () {
     this.tree = null;
     this.$headerName = this.$headerFile = this.$headerLine = this.el = null;
-    PerformanceController.off(EVENTS.RECORDING_SELECTED, this.reset);
-    JsCallTreeView.off("focus", this._onFocusFrame);
   },
 
   /**
@@ -93,32 +87,12 @@ let JITOptimizationsView = {
     this.tree.clear();
   },
 
-  show: function () {
-    this.el.hidden = false;
-  },
-
-  hide: function () {
-    this.el.hidden = true;
-  },
-
-  /**
-   * Helper to determine whether or not this view should be enabled.
-   */
-  isEnabled: function () {
-    let recording = PerformanceController.getCurrentRecording();
-    return !!(recording && recording.getConfiguration().withJITOptimizations);
-  },
-
   /**
    * Takes a JITOptimizations object and builds a view containing all attempted
    * optimizations for this frame. This view is very verbose and meant for those
    * who understand JIT compilers.
    */
   render: function () {
-    if (!this.isEnabled()) {
-      return;
-    }
-
     let frameNode = this.getCurrentFrame();
 
     if (!frameNode) {
@@ -385,31 +359,8 @@ let JITOptimizationsView = {
         url.indexOf("file://") === 0);
   },
 
-  /**
-   * Called when the JSCallTreeView focuses on a frame.
-   */
-
-  _onFocusFrame: function (_, view) {
-    if (!view.frame) {
-      return;
-    }
-
-    // Only attempt to rerender if this is new -- focus is called even
-    // when the window removes focus and comes back, so this prevents
-    // repeating rendering of the same frame
-    let shouldRender = this.getCurrentFrame() !== view.frame;
-
-    // Save the frame even if the view is disabled, so we can
-    // render it if it becomes enabled
-    this.setCurrentFrame(view.frame);
-
-    if (shouldRender) {
-      this.render();
-    }
-  },
-
-  toString: () => "[object JITOptimizationsView]"
+  toString: () => "[object OptimizationsListView]"
 
 };
 
-EventEmitter.decorate(JITOptimizationsView);
+EventEmitter.decorate(OptimizationsListView);

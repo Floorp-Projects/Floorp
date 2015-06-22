@@ -69,9 +69,13 @@ window.Frame = React.createClass({
         // if this node is a CSS stylesheet...
         if (isStyleSheet(parentHeadNode)) {
           // and it has a class different from the one that this frame does,
-          // return immediately instead of appending it.
-          if (parentHeadNode.hasAttribute("class") && this.props.cssClass &&
-            parentHeadNode.getAttribute("class") !== this.props.cssClass) {
+          // return immediately instead of appending it.  Note that this
+          // explicitly does not check for cssClass existence, because
+          // non-existence of cssClass will be different from a style
+          // element that does have a class on it, and we want it to return
+          // in that case.
+          if (parentHeadNode.hasAttribute("class") &&
+              parentHeadNode.getAttribute("class") !== this.props.cssClass) {
             return;
           }
         }
