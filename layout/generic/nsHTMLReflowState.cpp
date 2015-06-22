@@ -179,16 +179,16 @@ nsHTMLReflowState::nsHTMLReflowState(
   MOZ_ASSERT(aPresContext, "no pres context");
   MOZ_ASSERT(aFrame, "no frame");
   MOZ_ASSERT(aPresContext == aFrame->PresContext(), "wrong pres context");
-  NS_PRECONDITION(!mFlags.mSpecialHeightReflow ||
+  NS_PRECONDITION(!mFlags.mSpecialBSizeReflow ||
                   !NS_SUBTREE_DIRTY(aFrame),
-                  "frame should be clean when getting special height reflow");
+                  "frame should be clean when getting special bsize reflow");
 
   parentReflowState = &aParentReflowState;
 
   // If the parent is dirty, then the child is as well.
   // XXX Are the other cases where the parent reflows a child a second
   // time, as a resize?
-  if (!mFlags.mSpecialHeightReflow)
+  if (!mFlags.mSpecialBSizeReflow)
     frame->AddStateBits(parentReflowState->frame->GetStateBits() &
                         NS_FRAME_IS_DIRTY);
 
@@ -613,7 +613,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
   // XXX Should we really need to null check mCBReflowState?  (We do for
   // at least nsBoxFrame).
   if (IS_TABLE_CELL(aFrameType) &&
-      (mFlags.mSpecialHeightReflow ||
+      (mFlags.mSpecialBSizeReflow ||
        (frame->FirstInFlow()->GetStateBits() &
          NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) &&
       (frame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
@@ -662,16 +662,16 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
     dependsOnCBBSize |= !nsLayoutUtils::IsNonWrapperBlock(frame);
   }
 
-  // If we're the descendant of a table cell that performs special height
+  // If we're the descendant of a table cell that performs special bsize
   // reflows and we could be the child that requires them, always set
   // the block-axis resize in case this is the first pass before the
-  // special height reflow.  However, don't do this if it actually is
-  // the special height reflow, since in that case it will already be
+  // special bsize reflow.  However, don't do this if it actually is
+  // the special bsize reflow, since in that case it will already be
   // set correctly above if we need it set.
   if (!IsBResize() && mCBReflowState &&
       (IS_TABLE_CELL(mCBReflowState->frame->GetType()) || 
        mCBReflowState->mFlags.mHeightDependsOnAncestorCell) &&
-      !mCBReflowState->mFlags.mSpecialHeightReflow && 
+      !mCBReflowState->mFlags.mSpecialBSizeReflow && 
       dependsOnCBBSize) {
     SetBResize(true);
     mFlags.mHeightDependsOnAncestorCell = true;
@@ -681,7 +681,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
 
   // It would be nice to check that |ComputedBSize != NS_AUTOHEIGHT|
   // &&ed with the percentage bsize check.  However, this doesn't get
-  // along with table special height reflows, since a special height
+  // along with table special bsize reflows, since a special bsize
   // reflow (a quirk that makes such percentage height work on children
   // of table cells) can cause not just a single percentage height to
   // become fixed, but an entire descendant chain of percentage height
