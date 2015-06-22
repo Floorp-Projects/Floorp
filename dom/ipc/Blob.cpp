@@ -2242,8 +2242,7 @@ RemoteBlobImpl::RemoteBlobImpl(BlobChild* aActor,
 
 BlobChild::
 RemoteBlobImpl::RemoteBlobImpl(BlobChild* aActor)
-  : BlobImplBase(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX,
-                 BlobDirState::eUnknownIfDir)
+  : BlobImplBase(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX)
   , mIsSlice(false)
 {
   CommonInit(aActor);
