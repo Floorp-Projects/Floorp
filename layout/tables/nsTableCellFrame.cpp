@@ -105,10 +105,10 @@ nsTableCellFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
-// nsIPercentHeightObserver methods
+// nsIPercentBSizeObserver methods
 
 void
-nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
+nsTableCellFrame::NotifyPercentBSize(const nsHTMLReflowState& aReflowState)
 {
   // nsHTMLReflowState ensures the mCBReflowState of blocks inside a
   // cell is the cell frame, not the inner-cell block, and that the
@@ -121,17 +121,17 @@ nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
   const nsHTMLReflowState *cellRS = aReflowState.mCBReflowState;
 
   if (cellRS && cellRS->frame == this &&
-      (cellRS->ComputedHeight() == NS_UNCONSTRAINEDSIZE ||
-       cellRS->ComputedHeight() == 0)) { // XXXldb Why 0?
-    // This is a percentage height on a frame whose percentage heights
-    // are based on the height of the cell, since its containing block
+      (cellRS->ComputedBSize() == NS_UNCONSTRAINEDSIZE ||
+       cellRS->ComputedBSize() == 0)) { // XXXldb Why 0?
+    // This is a percentage bsize on a frame whose percentage bsizes
+    // are based on the bsize of the cell, since its containing block
     // is the inner cell frame.
 
-    // We'll only honor the percent height if sibling-cells/ancestors
-    // have specified/pct height. (Also, siblings only count for this if
+    // We'll only honor the percent bsize if sibling-cells/ancestors
+    // have specified/pct bsize. (Also, siblings only count for this if
     // both this cell and the sibling cell span exactly 1 row.)
 
-    if (nsTableFrame::AncestorsHaveStyleHeight(*cellRS) ||
+    if (nsTableFrame::AncestorsHaveStyleBSize(*cellRS) ||
         (GetTableFrame()->GetEffectiveRowSpan(*this) == 1 &&
          (cellRS->parentReflowState->frame->GetStateBits() &
           NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT))) {
@@ -142,7 +142,7 @@ nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
         rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
       }
 
-      nsTableFrame::RequestSpecialHeightReflow(*cellRS);
+      nsTableFrame::RequestSpecialBSizeReflow(*cellRS);
     }
   }
 }
@@ -165,7 +165,7 @@ nsTableCellFrame::NeedsToObserve(const nsHTMLReflowState& aReflowState)
     return false;
   }
 
-  // We always need to let the percent height observer be propagated
+  // We always need to let the percent bsize observer be propagated
   // from an outer table frame to an inner table frame.
   nsIAtom *fType = aReflowState.frame->GetType();
   if (fType == nsGkAtoms::tableFrame) {
@@ -175,6 +175,9 @@ nsTableCellFrame::NeedsToObserve(const nsHTMLReflowState& aReflowState)
   // We need the observer to be propagated to all children of the cell
   // (i.e., children of the child block) in quirks mode, but only to
   // tables in standards mode.
+  // XXX This may not be true in the case of orthogonal flows within
+  // the cell (bug 1174711 comment 8); we may need to observe isizes
+  // instead of bsizes for orthogonal children.
   return rs->frame == this &&
          (PresContext()->CompatibilityMode() == eCompatibility_NavQuirks ||
           fType == nsGkAtoms::tableOuterFrame);
@@ -869,7 +872,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // see if a special height reflow needs to occur due to having a pct height
-  nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
+  nsTableFrame::CheckRequestSpecialBSizeReflow(aReflowState);
 
   aStatus = NS_FRAME_COMPLETE;
   WritingMode wm = aReflowState.GetWritingMode();
@@ -922,13 +925,13 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
                                    availSize.ConvertTo(kidWM, wm));
 
   // Don't be a percent height observer if we're in the middle of
-  // special-height reflow, in case we get an accidental NotifyPercentHeight()
+  // special-height reflow, in case we get an accidental NotifyPercentBSize()
   // call (which we shouldn't honor during special-height reflow)
   if (!aReflowState.mFlags.mSpecialHeightReflow) {
-    // mPercentHeightObserver is for children of cells in quirks mode,
+    // mPercentBSizeObserver is for children of cells in quirks mode,
     // but only those than are tables in standards mode.  NeedsToObserve
     // will determine how far this is propagated to descendants.
-    kidReflowState.mPercentHeightObserver = this;
+    kidReflowState.mPercentBSizeObserver = this;
   }
   // Don't propagate special height reflow state to our kids
   kidReflowState.mFlags.mSpecialHeightReflow = false;
@@ -1047,7 +1050,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
 NS_QUERYFRAME_HEAD(nsTableCellFrame)
   NS_QUERYFRAME_ENTRY(nsTableCellFrame)
   NS_QUERYFRAME_ENTRY(nsITableCellLayout)
-  NS_QUERYFRAME_ENTRY(nsIPercentHeightObserver)
+  NS_QUERYFRAME_ENTRY(nsIPercentBSizeObserver)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef ACCESSIBILITY
