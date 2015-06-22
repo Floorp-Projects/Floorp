@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* globals gDevTools, DOMHelpers, toolboxStrings, InspectorFront, Selection,
-   CommandUtils, DevToolsUtils, screenManager, oscpu, Hosts, is64Bit,
-   osString, showDoorhanger, getHighlighterUtils, getPerformanceFront */
+   CommandUtils, DevToolsUtils, Hosts, osString, showDoorhanger,
+   getHighlighterUtils, getPerformanceFront */
 
 "use strict";
 
@@ -61,18 +61,10 @@ loader.lazyRequireGetter(this, "showDoorhanger",
   "devtools/shared/doorhanger", true);
 loader.lazyRequireGetter(this, "getPerformanceFront",
   "devtools/performance/front", true);
+loader.lazyRequireGetter(this, "system",
+  "devtools/toolkit/shared/system");
 loader.lazyGetter(this, "osString", () => {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
-});
-loader.lazyGetter(this, "screenManager", () => {
-  return Cc["@mozilla.org/gfx/screenmanager;1"].getService(Ci.nsIScreenManager);
-});
-loader.lazyGetter(this, "oscpu", () => {
-  return Cc["@mozilla.org/network/protocol;1?name=http"]
-           .getService(Ci.nsIHttpProtocolHandler).oscpu;
-});
-loader.lazyGetter(this, "is64Bit", () => {
-  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).is64Bit;
 });
 loader.lazyGetter(this, "registerHarOverlay", () => {
   return require("devtools/netmonitor/har/toolbox-overlay.js").register;
@@ -437,11 +429,9 @@ Toolbox.prototype = {
   _pingTelemetry: function() {
     this._telemetry.toolOpened("toolbox");
 
-    this._telemetry.logOncePerBrowserVersion(OS_HISTOGRAM,
-                                             this._getOsCpu());
-    this._telemetry.logOncePerBrowserVersion(OS_IS_64_BITS, is64Bit ? 1 : 0);
-    this._telemetry.logOncePerBrowserVersion(SCREENSIZE_HISTOGRAM,
-                                             this._getScreenDimensions());
+    this._telemetry.logOncePerBrowserVersion(OS_HISTOGRAM, system.getOSCPU());
+    this._telemetry.logOncePerBrowserVersion(OS_IS_64_BITS, system.is64Bit ? 1 : 0);
+    this._telemetry.logOncePerBrowserVersion(SCREENSIZE_HISTOGRAM, system.getScreenDimensions());
   },
 
   /**
@@ -1799,81 +1789,6 @@ Toolbox.prototype = {
    */
   getNotificationBox: function() {
     return this.doc.getElementById("toolbox-notificationbox");
-  },
-
-  _getScreenDimensions: function() {
-    let width = {};
-    let height = {};
-
-    screenManager.primaryScreen.GetRect({}, {}, width, height);
-    let dims = width.value + "x" + height.value;
-
-    if (width.value < 800 || height.value < 600) {
-      return 0;
-    }
-    if (dims === "800x600") {
-      return 1;
-    }
-    if (dims === "1024x768") {
-      return 2;
-    }
-    if (dims === "1280x800") {
-      return 3;
-    }
-    if (dims === "1280x1024") {
-      return 4;
-    }
-    if (dims === "1366x768") {
-      return 5;
-    }
-    if (dims === "1440x900") {
-      return 6;
-    }
-    if (dims === "1920x1080") {
-      return 7;
-    }
-    if (dims === "2560×1440") {
-      return 8;
-    }
-    if (dims === "2560×1600") {
-      return 9;
-    }
-    if (dims === "2880x1800") {
-      return 10;
-    }
-    if (width.value > 2880 || height.value > 1800) {
-      return 12;
-    }
-
-    // Other dimension such as a VM.
-    return 11;
-  },
-
-  _getOsCpu: function() {
-    if (oscpu.includes("NT 5.1") || oscpu.includes("NT 5.2")) {
-      return 0;
-    }
-    if (oscpu.includes("NT 6.0")) {
-      return 1;
-    }
-    if (oscpu.includes("NT 6.1")) {
-      return 2;
-    }
-    if (oscpu.includes("NT 6.2")) {
-      return 3;
-    }
-    if (oscpu.includes("NT 6.3")) {
-      return 4;
-    }
-    if (oscpu.includes("OS X")) {
-      return 5;
-    }
-    if (oscpu.includes("Linux")) {
-      return 6;
-    }
-
-    // Other OS.
-    return 12;
   },
 
   /**

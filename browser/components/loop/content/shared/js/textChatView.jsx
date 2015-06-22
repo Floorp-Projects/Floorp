@@ -81,8 +81,12 @@ loop.shared.views.TextChatView = (function(mozL10n) {
       if (this.shouldScroll) {
         // This ensures the paint is complete.
         window.requestAnimationFrame(function() {
-          var node = this.getDOMNode();
-          node.scrollTop = node.scrollHeight - node.clientHeight;
+          try {
+            var node = this.getDOMNode();
+            node.scrollTop = node.scrollHeight - node.clientHeight;
+          } catch (ex) {
+            console.error("TextChatEntriesView.componentDidUpdate exception", ex);
+          }
         }.bind(this));
       }
     },
@@ -100,15 +104,14 @@ loop.shared.views.TextChatView = (function(mozL10n) {
                 if (entry.type === CHAT_MESSAGE_TYPES.SPECIAL) {
                   switch (entry.contentType) {
                     case CHAT_CONTENT_TYPES.ROOM_NAME:
-                      return <TextChatRoomName message={entry.message}/>;
+                      return <TextChatRoomName key={i} message={entry.message}/>;
                     case CHAT_CONTENT_TYPES.CONTEXT:
                       return (
-                        <div className="context-url-view-wrapper">
+                        <div key={i} className="context-url-view-wrapper">
                           <sharedViews.ContextUrlView
                             allowClick={true}
                             description={entry.message}
                             dispatcher={this.props.dispatcher}
-                            key={i}
                             showContextTitle={true}
                             thumbnail={entry.extraData.thumbnail}
                             url={entry.extraData.location}
@@ -261,8 +264,13 @@ loop.shared.views.TextChatView = (function(mozL10n) {
         return null;
       }
 
+      var textChatViewClasses = React.addons.classSet({
+        "text-chat-view": true,
+        "text-chat-disabled": !this.state.textChatEnabled
+      });
+
       return (
-        <div className="text-chat-view">
+        <div className={textChatViewClasses}>
           <TextChatEntriesView
             dispatcher={this.props.dispatcher}
             messageList={messageList} />

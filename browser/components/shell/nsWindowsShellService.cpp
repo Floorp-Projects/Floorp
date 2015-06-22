@@ -744,6 +744,7 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
   }
 
   nsresult rv = LaunchHelper(appHelperPath);
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (NS_SUCCEEDED(rv) && IsWin8OrLater()) {
     if (aClaimAllTypes) {
       if (IsWin10OrLater()) {
@@ -761,11 +762,18 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
         }
       }
     } else {
-      // Windows 10 blocks attempts to load the HTTP Handler
-      // association dialog, so the modern Settings dialog
-      // is opened with the Default Apps view loaded.
+      // Windows 10 blocks attempts to load the
+      // HTTP Handler association dialog.
       if (IsWin10OrLater()) {
-        rv = InvokeHTTPOpenAsVerb();
+        if (prefs) {
+          int32_t abTest;
+          rv = prefs->GetIntPref("browser.shell.windows10DefaultBrowserABTest", &abTest);
+          if (NS_SUCCEEDED(rv) && abTest == 0) {
+            rv = InvokeHTTPOpenAsVerb();
+          } else {
+            rv = LaunchModernSettingsDialogDefaultApps();
+          }
+        }
       } else {
         rv = LaunchHTTPHandlerPane();
       }
@@ -782,7 +790,6 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
     }
   }
 
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefs) {
     (void) prefs->SetBoolPref(PREF_CHECKDEFAULTBROWSER, true);
   }
