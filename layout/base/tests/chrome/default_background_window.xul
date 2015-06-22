@@ -16,7 +16,7 @@
     SimpleTest.waitForExplicitFinish();
 
     var imports = [ "SimpleTest", "is", "isnot", "ok" ];
-    for each (var name in imports) {
+    for (var name of imports) {
       window[name] = window.opener.wrappedJSObject[name];
     }
     

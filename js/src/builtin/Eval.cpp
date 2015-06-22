@@ -212,18 +212,6 @@ TryEvalJSON(JSContext* cx, JSLinearString* str, MutableHandleValue rval)
            : ParseEvalStringAsJSON(cx, linearChars.twoByteRange(), rval);
 }
 
-static bool
-HasPollutedScopeChain(JSObject* scopeChain)
-{
-    while (scopeChain) {
-        if (scopeChain->is<DynamicWithObject>())
-            return true;
-        scopeChain = scopeChain->enclosingScope();
-    }
-
-    return false;
-}
-
 // Define subset of ExecuteType so that casting performs the injection.
 enum EvalType { DIRECT_EVAL = EXECUTE_DIRECT_EVAL, INDIRECT_EVAL = EXECUTE_INDIRECT_EVAL };
 
@@ -332,13 +320,8 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
         if (!staticScope)
             return false;
 
-        bool hasPollutedGlobalScope =
-            HasPollutedScopeChain(scopeobj) ||
-            (evalType == DIRECT_EVAL && callerScript->hasPollutedGlobalScope());
-
         CompileOptions options(cx);
         options.setFileAndLine(filename, 1)
-               .setHasPollutedScope(hasPollutedGlobalScope)
                .setIsRunOnce(true)
                .setForEval(true)
                .setNoScriptRval(false)
@@ -356,7 +339,7 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
                                                   : SourceBufferHolder::NoOwnership;
         SourceBufferHolder srcBuf(chars, linearStr->length(), ownership);
         JSScript* compiled = frontend::CompileScript(cx, &cx->tempLifoAlloc(),
-                                                     scopeobj, callerScript, staticScope,
+                                                     scopeobj, staticScope, callerScript,
                                                      options, srcBuf, linearStr, staticLevel);
         if (!compiled)
             return false;
@@ -410,7 +393,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
         bool mutedErrors;
         uint32_t pcOffset;
         DescribeScriptedCallerForCompilation(cx, &maybeScript, &filename, &lineno, &pcOffset,
-                                              &mutedErrors, CALLED_FROM_JSOP_EVAL);
+                                             &mutedErrors, CALLED_FROM_JSOP_EVAL);
 
         const char* introducerFilename = filename;
         if (maybeScript && maybeScript->scriptSource()->introducerFilename())
@@ -423,8 +406,6 @@ js::DirectEvalStringFromIon(JSContext* cx,
 
         CompileOptions options(cx);
         options.setFileAndLine(filename, 1)
-               .setHasPollutedScope(HasPollutedScopeChain(scopeobj) ||
-                                    callerScript->hasPollutedGlobalScope())
                .setIsRunOnce(true)
                .setForEval(true)
                .setNoScriptRval(false)
@@ -442,7 +423,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
                                                   : SourceBufferHolder::NoOwnership;
         SourceBufferHolder srcBuf(chars, linearStr->length(), ownership);
         JSScript* compiled = frontend::CompileScript(cx, &cx->tempLifoAlloc(),
-                                                     scopeobj, callerScript, staticScope,
+                                                     scopeobj, staticScope, callerScript,
                                                      options, srcBuf, linearStr, staticLevel);
         if (!compiled)
             return false;
@@ -513,25 +494,23 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, global);
     MOZ_ASSERT(global->is<GlobalObject>());
-    MOZ_RELEASE_ASSERT(scriptArg->hasPollutedGlobalScope());
+    MOZ_RELEASE_ASSERT(scriptArg->hasNonSyntacticScope());
 
     RootedScript script(cx, scriptArg);
     if (script->compartment() != cx->compartment()) {
-        script = CloneScript(cx, nullptr, nullptr, script);
+        Rooted<ScopeObject*> staticScope(cx, StaticNonSyntacticScopeObjects::create(cx, nullptr));
+        if (!staticScope)
+            return false;
+        script = CloneGlobalScript(cx, staticScope, script);
         if (!script)
             return false;
 
         Debugger::onNewScript(cx, script);
     }
 
-    RootedObject scope(cx, JS_NewPlainObject(cx));
+    Rooted<GlobalObject*> globalRoot(cx, &global->as<GlobalObject>());
+    Rooted<ScopeObject*> scope(cx, NonSyntacticVariablesObject::create(cx, globalRoot));
     if (!scope)
-        return false;
-
-    if (!scope->setQualifiedVarObj(cx))
-        return false;
-
-    if (!scope->setUnqualifiedVarObj(cx))
         return false;
 
     JSObject* thisobj = GetThisObject(cx, global);
@@ -540,8 +519,6 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
 
     RootedValue thisv(cx, ObjectValue(*thisobj));
     RootedValue rval(cx);
-    // XXXbz when this is fixed to pass in an actual ScopeObject, fix
-    // up the assert in js::CloneFunctionObject accordingly.
     if (!ExecuteKernel(cx, script, *scope, thisv, UndefinedValue(), EXECUTE_GLOBAL,
                        NullFramePtr() /* evalInFrame */, rval.address()))
     {

@@ -124,3 +124,30 @@ function synthesizeNativeMouseMoveAndWaitForMoveEvent(aElement, aX, aY, aCallbac
   });
   return synthesizeNativeMouseMove(aElement, aX, aY);
 }
+
+// Synthesizes a native touch event and dispatches it. aX and aY in CSS pixels
+// relative to the top-left of |aElement|'s bounding rect.
+function synthesizeNativeTouch(aElement, aX, aY, aType, aObserver = null, aTouchId = 0) {
+  var targetWindow = aElement.ownerDocument.defaultView;
+
+  var scale = targetWindow.devicePixelRatio;
+  var rect = aElement.getBoundingClientRect();
+  var x = targetWindow.mozInnerScreenX + ((rect.left + aX) * scale);
+  var y = targetWindow.mozInnerScreenY + ((rect.top + aY) * scale);
+
+  var utils = SpecialPowers.getDOMWindowUtils(targetWindow);
+  utils.sendNativeTouchPoint(aTouchId, aType, x, y, 1, 90, aObserver);
+  return true;
+}
+
+function synthesizeNativeDrag(aElement, aX, aY, aDeltaX, aDeltaY, aObserver = null, aTouchId = 0) {
+  synthesizeNativeTouch(aElement, aX, aY, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, aTouchId);
+  var steps = Math.max(Math.abs(aDeltaX), Math.abs(aDeltaY));
+  for (var i = 1; i < steps; i++) {
+    var dx = i * (aDeltaX / steps);
+    var dy = i * (aDeltaY / steps);
+    synthesizeNativeTouch(aElement, aX + dx, aY + dy, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, aTouchId);
+  }
+  synthesizeNativeTouch(aElement, aX + aDeltaX, aY + aDeltaY, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, aTouchId);
+  return synthesizeNativeTouch(aElement, aX + aDeltaX, aY + aDeltaY, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, aObserver, aTouchId);
+}

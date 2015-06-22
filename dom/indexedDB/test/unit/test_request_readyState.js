@@ -14,6 +14,7 @@ function testSteps()
 
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
+  request.onsuccess = grabEventAndContinueHandler;
   let event = yield undefined;
 
   is(request.readyState, "done", "Correct readyState");
@@ -41,6 +42,9 @@ function testSteps()
 
   ok(event.target.result, "Got something");
   is(request.readyState, "done", "Correct readyState");
+
+  // Wait for success
+  yield undefined;
 
   finishTest();
   yield undefined;

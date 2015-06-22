@@ -223,6 +223,11 @@ IDBIndex::GetInternal(bool aKeyOnly,
 {
   AssertIsOnOwningThread();
 
+  if (mDeletedMetadata) {
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
+    return nullptr;
+  }
+
   IDBTransaction* transaction = mObjectStore->Transaction();
   if (!transaction->IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
@@ -306,6 +311,11 @@ IDBIndex::GetAllInternal(bool aKeysOnly,
 {
   AssertIsOnOwningThread();
 
+  if (mDeletedMetadata) {
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
+    return nullptr;
+  }
+
   IDBTransaction* transaction = mObjectStore->Transaction();
   if (!transaction->IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
@@ -386,6 +396,11 @@ IDBIndex::OpenCursorInternal(bool aKeysOnly,
                              ErrorResult& aRv)
 {
   AssertIsOnOwningThread();
+
+  if (mDeletedMetadata) {
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
+    return nullptr;
+  }
 
   IDBTransaction* transaction = mObjectStore->Transaction();
   if (!transaction->IsOpen()) {
@@ -482,6 +497,11 @@ IDBIndex::Count(JSContext* aCx,
                 ErrorResult& aRv)
 {
   AssertIsOnOwningThread();
+
+  if (mDeletedMetadata) {
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
+    return nullptr;
+  }
 
   IDBTransaction* transaction = mObjectStore->Transaction();
   if (!transaction->IsOpen()) {

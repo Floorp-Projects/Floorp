@@ -133,6 +133,9 @@ public:
     }
 
     virtual nsresult GetRunID(uint32_t* aRunID) override;
+    virtual void SetHasLocalInstance() override {
+        mHadLocalInstance = true;
+    }
 
 protected:
     virtual mozilla::ipc::RacyInterruptPolicy
@@ -284,6 +287,7 @@ protected:
 
     bool mIsChrome;
     bool mShutdown;
+    bool mHadLocalInstance;
     bool mClearSiteDataSupported;
     bool mGetSitesWithDataSupported;
     NPNetscapeFuncs* mNPNIface;
@@ -387,7 +391,7 @@ class PluginModuleChromeParent
      *   generating a multi-process crash report. If not provided a browser
      *   dump will be taken at the time of this call.
      */
-    void TerminateChildProcess(MessageLoop* aMsgLoop, nsAString* aBrowserDumpId);
+    void TerminateChildProcess(MessageLoop* aMsgLoop, const nsAString& aBrowserDumpId);
 
 #ifdef XP_WIN
     /**
