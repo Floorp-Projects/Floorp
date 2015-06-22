@@ -294,16 +294,16 @@ inline void nsTableCellFrame::SetContentEmpty(bool aContentEmpty)
 
 inline bool nsTableCellFrame::HasPctOverBSize()
 {
-  return (mState & NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT) ==
-         NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
+  return (mState & NS_TABLE_CELL_HAS_PCT_OVER_BSIZE) ==
+         NS_TABLE_CELL_HAS_PCT_OVER_BSIZE;
 }
 
 inline void nsTableCellFrame::SetHasPctOverBSize(bool aValue)
 {
   if (aValue) {
-    mState |= NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
+    mState |= NS_TABLE_CELL_HAS_PCT_OVER_BSIZE;
   } else {
-    mState &= ~NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
+    mState &= ~NS_TABLE_CELL_HAS_PCT_OVER_BSIZE;
   }
 }
 

@@ -1449,8 +1449,8 @@ nsTableRowFrame::AccessibleType()
 }
 #endif
 /**
- * Sets the NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT bit to indicate whether
- * this row has any cells that have non-auto-height.  (Row-spanning
+ * Sets the NS_ROW_HAS_CELL_WITH_STYLE_BSIZE bit to indicate whether
+ * this row has any cells that have non-auto-bsize.  (Row-spanning
  * cells are ignored.)
  */
 void nsTableRowFrame::InitHasCellWithStyleBSize(nsTableFrame* aTableFrame)
@@ -1470,11 +1470,11 @@ void nsTableRowFrame::InitHasCellWithStyleBSize(nsTableFrame* aTableFrame)
         cellBSize.GetUnit() != eStyleUnit_Auto &&
          /* calc() with percentages treated like 'auto' */
         (!cellBSize.IsCalcUnit() || !cellBSize.HasPercent())) {
-      AddStateBits(NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT);
+      AddStateBits(NS_ROW_HAS_CELL_WITH_STYLE_BSIZE);
       return;
     }
   }
-  RemoveStateBits(NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT);
+  RemoveStateBits(NS_ROW_HAS_CELL_WITH_STYLE_BSIZE);
 }
 
 void
