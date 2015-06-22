@@ -25,7 +25,7 @@ function run_test()
 
 function test_simple_new_source()
 {
-  gClient.addOneTimeListener("newSource", function (aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("newSource", function (aEvent, aPacket) {
     do_check_eq(aEvent, "newSource");
     do_check_eq(aPacket.type, "newSource");
     do_check_true(!!aPacket.source);
