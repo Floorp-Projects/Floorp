@@ -30,8 +30,7 @@ BlobImplSnapshot::BlobImplSnapshot(const nsAString& aName,
   : BlobImplBase(aName,
                  aContentType,
                  aMetadataParams->Size(),
-                 aMetadataParams->LastModified(),
-                 BlobDirState::eUnknownIfDir)
+                 aMetadataParams->LastModified())
   , mFile(aFile)
   , mWholeFile(true)
 {
