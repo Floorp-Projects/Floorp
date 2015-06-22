@@ -161,7 +161,7 @@ public:
   // the containing table have non-auto bsize. (e.g. pct or fixed bsize)
   static bool AncestorsHaveStyleBSize(const nsHTMLReflowState& aParentReflowState);
 
-  // See if a special height reflow will occur due to having a pct bsize when
+  // See if a special bsize reflow will occur due to having a pct bsize when
   // the pct bsize basis may not yet be valid.
   static void CheckRequestSpecialBSizeReflow(const nsHTMLReflowState& aReflowState);
 

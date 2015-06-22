@@ -369,7 +369,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
     // Reflow the row frame
     if (reflowAllKids ||
         NS_SUBTREE_DIRTY(kidFrame) ||
-        (aReflowState.reflowState.mFlags.mSpecialHeightReflow &&
+        (aReflowState.reflowState.mFlags.mSpecialBSizeReflow &&
          (isPaginated || (kidFrame->GetStateBits() &
                           NS_FRAME_CONTAINS_RELATIVE_BSIZE)))) {
       LogicalRect oldKidRect = kidFrame->GetLogicalRect(wm, containerWidth);
@@ -466,7 +466,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
   aDesiredSize.ISize(wm) = aReflowState.reflowState.AvailableISize();
   aDesiredSize.BSize(wm) = aReflowState.bCoord;
 
-  if (aReflowState.reflowState.mFlags.mSpecialHeightReflow) {
+  if (aReflowState.reflowState.mFlags.mSpecialBSizeReflow) {
     DidResizeRows(aDesiredSize);
     if (isPaginated) {
       CacheRowBSizesForPrinting(aPresContext, GetFirstRow(), wm);
@@ -1356,13 +1356,13 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
       (NS_FRAME_NOT_COMPLETE == aStatus || splitDueToPageBreak ||
        aDesiredSize.Height() > aReflowState.AvailableHeight())) {
     // Nope, find a place to split the row group
-    bool specialReflow = (bool)aReflowState.mFlags.mSpecialHeightReflow;
-    ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = false;
+    bool specialReflow = (bool)aReflowState.mFlags.mSpecialBSizeReflow;
+    ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialBSizeReflow = false;
 
     SplitRowGroup(aPresContext, aDesiredSize, aReflowState, tableFrame, aStatus,
                   splitDueToPageBreak);
 
-    ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = specialReflow;
+    ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialBSizeReflow = specialReflow;
   }
 
   // XXXmats The following is just bogus.  We leave it here for now because
