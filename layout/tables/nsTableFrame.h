@@ -158,16 +158,16 @@ public:
   static float GetTwipsToPixels(nsPresContext* aPresContext);
 
   // Return true if aParentReflowState.frame or any of its ancestors within
-  // the containing table have non-auto height. (e.g. pct or fixed height)
-  static bool AncestorsHaveStyleHeight(const nsHTMLReflowState& aParentReflowState);
+  // the containing table have non-auto bsize. (e.g. pct or fixed bsize)
+  static bool AncestorsHaveStyleBSize(const nsHTMLReflowState& aParentReflowState);
 
-  // See if a special height reflow will occur due to having a pct height when
-  // the pct height basis may not yet be valid.
-  static void CheckRequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState);
+  // See if a special height reflow will occur due to having a pct bsize when
+  // the pct bsize basis may not yet be valid.
+  static void CheckRequestSpecialBSizeReflow(const nsHTMLReflowState& aReflowState);
 
   // Notify the frame and its ancestors (up to the containing table) that a special
   // height reflow will occur.
-  static void RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState);
+  static void RequestSpecialBSizeReflow(const nsHTMLReflowState& aReflowState);
 
   static void RePositionViews(nsIFrame* aFrame);
 

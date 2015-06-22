@@ -53,7 +53,7 @@
 #include "nsRange.h"
 #include "nsITextControlFrame.h"
 #include "nsNameSpaceManager.h"
-#include "nsIPercentHeightObserver.h"
+#include "nsIPercentBSizeObserver.h"
 #include "nsStyleStructInlines.h"
 #include "FrameLayerBuilder.h"
 
@@ -4449,15 +4449,16 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
                 NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 
-  // Notify the percent height observer if there is a percent height.
+  // Notify the percent bsize observer if there is a percent bsize.
   // The observer may be able to initiate another reflow with a computed
-  // height. This happens in the case where a table cell has no computed
-  // height but can fabricate one when the cell height is known.
-  if (aReflowState && aReflowState->mPercentHeightObserver &&
+  // bsize. This happens in the case where a table cell has no computed
+  // bsize but can fabricate one when the cell bsize is known.
+  if (aReflowState && aReflowState->mPercentBSizeObserver &&
       !GetPrevInFlow()) {
-    const nsStyleCoord &height = aReflowState->mStylePosition->mHeight;
-    if (height.HasPercent()) {
-      aReflowState->mPercentHeightObserver->NotifyPercentHeight(*aReflowState);
+    const nsStyleCoord &bsize =
+      aReflowState->mStylePosition->BSize(aReflowState->GetWritingMode());
+    if (bsize.HasPercent()) {
+      aReflowState->mPercentBSizeObserver->NotifyPercentBSize(*aReflowState);
     }
   }
 

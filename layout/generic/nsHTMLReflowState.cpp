@@ -22,7 +22,7 @@
 #include "nsImageFrame.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
-#include "nsIPercentHeightObserver.h"
+#include "nsIPercentBSizeObserver.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsFontInflationData.h"
@@ -75,7 +75,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   mLineLayout = nullptr;
   memset(&mFlags, 0, sizeof(mFlags));
   mDiscoveredClearance = nullptr;
-  mPercentHeightObserver = nullptr;
+  mPercentBSizeObserver = nullptr;
 
   if (aFlags & DUMMY_PARENT_REFLOW_STATE) {
     mFlags.mDummyParentReflowState = true;
@@ -223,9 +223,9 @@ nsHTMLReflowState::nsHTMLReflowState(
   mFlags.mDummyParentReflowState = false;
 
   mDiscoveredClearance = nullptr;
-  mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver &&
-                            aParentReflowState.mPercentHeightObserver->NeedsToObserve(*this))
-                           ? aParentReflowState.mPercentHeightObserver : nullptr;
+  mPercentBSizeObserver = (aParentReflowState.mPercentBSizeObserver &&
+                            aParentReflowState.mPercentBSizeObserver->NeedsToObserve(*this))
+                           ? aParentReflowState.mPercentBSizeObserver : nullptr;
 
   if ((aFlags & DUMMY_PARENT_REFLOW_STATE) ||
       (parentReflowState->mFlags.mDummyParentReflowState &&

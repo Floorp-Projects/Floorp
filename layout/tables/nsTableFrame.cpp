@@ -1661,46 +1661,49 @@ nsTableFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 }
 
 // Return true if aParentReflowState.frame or any of its ancestors within
-// the containing table have non-auto height. (e.g. pct or fixed height)
+// the containing table have non-auto bsize. (e.g. pct or fixed bsize)
 bool
-nsTableFrame::AncestorsHaveStyleHeight(const nsHTMLReflowState& aParentReflowState)
+nsTableFrame::AncestorsHaveStyleBSize(const nsHTMLReflowState& aParentReflowState)
 {
+  WritingMode wm = aParentReflowState.GetWritingMode();
   for (const nsHTMLReflowState* rs = &aParentReflowState;
        rs && rs->frame; rs = rs->parentReflowState) {
     nsIAtom* frameType = rs->frame->GetType();
     if (IS_TABLE_CELL(frameType)                     ||
         (nsGkAtoms::tableRowFrame      == frameType) ||
         (nsGkAtoms::tableRowGroupFrame == frameType)) {
-      const nsStyleCoord &height = rs->mStylePosition->mHeight;
+      const nsStyleCoord &bsize = rs->mStylePosition->BSize(wm);
       // calc() with percentages treated like 'auto' on internal table elements
-      if (height.GetUnit() != eStyleUnit_Auto &&
-          (!height.IsCalcUnit() || !height.HasPercent())) {
+      if (bsize.GetUnit() != eStyleUnit_Auto &&
+          (!bsize.IsCalcUnit() || !bsize.HasPercent())) {
         return true;
       }
     }
     else if (nsGkAtoms::tableFrame == frameType) {
       // we reached the containing table, so always return
-      return rs->mStylePosition->mHeight.GetUnit() != eStyleUnit_Auto;
+      return rs->mStylePosition->BSize(wm).GetUnit() != eStyleUnit_Auto;
     }
   }
   return false;
 }
 
-// See if a special height reflow needs to occur and if so, call RequestSpecialHeightReflow
+// See if a special block-size reflow needs to occur and if so,
+// call RequestSpecialBSizeReflow
 void
-nsTableFrame::CheckRequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
+nsTableFrame::CheckRequestSpecialBSizeReflow(const nsHTMLReflowState& aReflowState)
 {
   NS_ASSERTION(IS_TABLE_CELL(aReflowState.frame->GetType()) ||
                aReflowState.frame->GetType() == nsGkAtoms::tableRowFrame ||
                aReflowState.frame->GetType() == nsGkAtoms::tableRowGroupFrame ||
                aReflowState.frame->GetType() == nsGkAtoms::tableFrame,
                "unexpected frame type");
+  WritingMode wm = aReflowState.GetWritingMode();
   if (!aReflowState.frame->GetPrevInFlow() &&  // 1st in flow
-      (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedHeight() ||  // no computed height
-       0                    == aReflowState.ComputedHeight()) &&
-      eStyleUnit_Percent == aReflowState.mStylePosition->mHeight.GetUnit() && // pct height
-      nsTableFrame::AncestorsHaveStyleHeight(*aReflowState.parentReflowState)) {
-    nsTableFrame::RequestSpecialHeightReflow(aReflowState);
+      (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedBSize() ||  // no computed bsize
+       0                    == aReflowState.ComputedBSize()) &&
+      eStyleUnit_Percent == aReflowState.mStylePosition->BSize(wm).GetUnit() && // pct bsize
+      nsTableFrame::AncestorsHaveStyleBSize(*aReflowState.parentReflowState)) {
+    nsTableFrame::RequestSpecialBSizeReflow(aReflowState);
   }
 }
 
@@ -1710,7 +1713,7 @@ nsTableFrame::CheckRequestSpecialHeightReflow(const nsHTMLReflowState& aReflowSt
 // change the height of row groups, rows, cells in DistributeHeightToRows after.
 // And the row group can change the height of rows, cells in CalculateRowHeights.
 void
-nsTableFrame::RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
+nsTableFrame::RequestSpecialBSizeReflow(const nsHTMLReflowState& aReflowState)
 {
   // notify the frame and its ancestors of the special reflow, stopping at the containing table
   for (const nsHTMLReflowState* rs = &aReflowState; rs && rs->frame; rs = rs->parentReflowState) {
@@ -1749,12 +1752,12 @@ nsTableFrame::RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
  *
  * 1) Each table related frame (table, row group, row, cell) implements NeedsSpecialReflow()
  *    to indicate that it should get the reflow. It does this when it has a percent height but
- *    no computed height by calling CheckRequestSpecialHeightReflow(). This method calls
- *    RequestSpecialHeightReflow() which calls SetNeedSpecialReflow() on its ancestors until
+ *    no computed height by calling CheckRequestSpecialBSizeReflow(). This method calls
+ *    RequestSpecialBSizeReflow() which calls SetNeedSpecialReflow() on its ancestors until
  *    it reaches the containing table and calls SetNeedToInitiateSpecialReflow() on it. For
- *    percent height frames inside cells, during DidReflow(), the cell's NotifyPercentHeight()
- *    is called (the cell is the reflow state's mPercentHeightObserver in this case).
- *    NotifyPercentHeight() calls RequestSpecialHeightReflow().
+ *    percent height frames inside cells, during DidReflow(), the cell's NotifyPercentBSize()
+ *    is called (the cell is the reflow state's mPercentBSizeObserver in this case).
+ *    NotifyPercentBSize() calls RequestSpecialBSizeReflow().
  *
  * 2) After the pass 2 reflow, if the table's NeedToInitiateSpecialReflow(true) was called, it
  *    will do the special height reflow, setting the reflow state's mFlags.mSpecialHeightReflow
@@ -1814,12 +1817,12 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
     CalcBCBorders();
   }
 
-  aDesiredSize.Width() = aReflowState.AvailableWidth();
+  aDesiredSize.ISize(wm) = aReflowState.AvailableISize();
 
   // Check for an overflow list, and append any row group frames being pushed
   MoveOverflowToChildList();
 
-  bool haveDesiredHeight = false;
+  bool haveDesiredBSize = false;
   SetHaveReflowedColGroups(false);
 
   // Reflow the entire table (pass 2 and possibly pass 3). This phase is necessary during a
@@ -1829,14 +1832,14 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
   if (NS_SUBTREE_DIRTY(this) ||
       aReflowState.ShouldReflowAllKids() ||
       IsGeometryDirty() ||
-      aReflowState.IsVResize()) {
+      aReflowState.IsBResize()) {
 
-    if (aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE ||
-        // Also check mVResize, to handle the first Reflow preceding a
-        // special height Reflow, when we've already had a special height
-        // Reflow (where mComputedHeight would not be
+    if (aReflowState.ComputedBSize() != NS_UNCONSTRAINEDSIZE ||
+        // Also check IsBResize, to handle the first Reflow preceding a
+        // special height Reflow, when we've already had a special bsize
+        // Reflow (where ComputedBSize would not be
         // NS_UNCONSTRAINEDSIZE, but without a style change in between).
-        aReflowState.IsVResize()) {
+        aReflowState.IsBResize()) {
       // XXX Eventually, we should modify DistributeHeightToRows to use
       // nsTableRowFrame::GetHeight instead of nsIFrame::GetSize().height.
       // That way, it will make its calculations based on internal table
@@ -1849,11 +1852,12 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
 
     bool needToInitiateSpecialReflow =
       !!(GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE);
-    // see if an extra reflow will be necessary in pagination mode when there is a specified table height
-    if (isPaginated && !GetPrevInFlow() && (NS_UNCONSTRAINEDSIZE != aReflowState.AvailableHeight())) {
-      nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
-      if ((tableSpecifiedHeight > 0) &&
-          (tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE)) {
+    // see if an extra reflow will be necessary in pagination mode
+    // when there is a specified table bsize
+    if (isPaginated && !GetPrevInFlow() && (NS_UNCONSTRAINEDSIZE != aReflowState.AvailableBSize())) {
+      nscoord tableSpecifiedBSize = CalcBorderBoxHeight(aReflowState);
+      if ((tableSpecifiedBSize > 0) &&
+          (tableSpecifiedBSize != NS_UNCONSTRAINEDSIZE)) {
         needToInitiateSpecialReflow = true;
       }
     }
@@ -1868,15 +1872,16 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
 
     // if we need to initiate a special height reflow, then don't constrain the
     // height of the reflow before that
-    nscoord availHeight = needToInitiateSpecialReflow
-                          ? NS_UNCONSTRAINEDSIZE : aReflowState.AvailableHeight();
+    nscoord availBSize = needToInitiateSpecialReflow
+                          ? NS_UNCONSTRAINEDSIZE : aReflowState.AvailableBSize();
 
-    ReflowTable(aDesiredSize, aReflowState, availHeight,
+    ReflowTable(aDesiredSize, aReflowState, availBSize,
                 lastChildReflowed, aStatus);
 
-    // reevaluate special height reflow conditions
-    if (GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE)
+    // reevaluate special bsize reflow conditions
+    if (GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE) {
       needToInitiateSpecialReflow = true;
+    }
 
     // XXXldb Are all these conditions correct?
     if (needToInitiateSpecialReflow && NS_FRAME_IS_COMPLETE(aStatus)) {
@@ -1889,16 +1894,18 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
       CalcDesiredHeight(aReflowState, aDesiredSize);
       mutable_rs.mFlags.mSpecialHeightReflow = true;
 
-      ReflowTable(aDesiredSize, aReflowState, aReflowState.AvailableHeight(),
+      ReflowTable(aDesiredSize, aReflowState, aReflowState.AvailableBSize(),
                   lastChildReflowed, aStatus);
 
       if (lastChildReflowed && NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-        // if there is an incomplete child, then set the desired height to include it but not the next one
+        // if there is an incomplete child, then set the desired bsize
+        // to include it but not the next one
         LogicalMargin borderPadding = GetChildAreaOffset(wm, &aReflowState);
-        aDesiredSize.Height() = borderPadding.BEnd(wm) + GetRowSpacing(GetRowCount()) +
-                              lastChildReflowed->GetNormalRect().YMost();
+        aDesiredSize.BSize(wm) =
+          borderPadding.BEnd(wm) + GetRowSpacing(GetRowCount()) +
+          lastChildReflowed->GetNormalRect().YMost(); // XXX YMost should be B-flavored
       }
-      haveDesiredHeight = true;
+      haveDesiredBSize = true;
 
       mutable_rs.mFlags.mSpecialHeightReflow = false;
     }
@@ -1910,20 +1917,20 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
     }
   }
 
-  aDesiredSize.Width() = aReflowState.ComputedWidth() +
-                       aReflowState.ComputedPhysicalBorderPadding().LeftRight();
-  if (!haveDesiredHeight) {
+  aDesiredSize.ISize(wm) = aReflowState.ComputedISize() +
+    aReflowState.ComputedLogicalBorderPadding().IStartEnd(wm);
+  if (!haveDesiredBSize) {
     CalcDesiredHeight(aReflowState, aDesiredSize);
   }
   if (IsRowInserted()) {
-    ProcessRowInserted(aDesiredSize.Height());
+    ProcessRowInserted(aDesiredSize.BSize(wm));
   }
 
   LogicalMargin borderPadding = GetChildAreaOffset(wm, &aReflowState);
-  SetColumnDimensions(aDesiredSize.Height(), wm, borderPadding,
+  SetColumnDimensions(aDesiredSize.BSize(wm), wm, borderPadding,
                       aDesiredSize.Width());
   if (NeedToCollapse() &&
-      (NS_UNCONSTRAINEDSIZE != aReflowState.AvailableWidth())) {
+      (NS_UNCONSTRAINEDSIZE != aReflowState.AvailableISize())) {
     AdjustForCollapsingRowsCols(aDesiredSize, wm, borderPadding);
   }
 

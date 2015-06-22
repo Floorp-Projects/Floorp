@@ -18,7 +18,7 @@ class nsPresContext;
 class nsRenderingContext;
 class nsFloatManager;
 class nsLineLayout;
-class nsIPercentHeightObserver;
+class nsIPercentBSizeObserver;
 struct nsHypotheticalBox;
 
 /**
@@ -514,8 +514,8 @@ public:
   uint8_t GetDisplay() const;
 
   // a frame (e.g. nsTableCellFrame) which may need to generate a special 
-  // reflow for percent height calculations 
-  nsIPercentHeightObserver* mPercentHeightObserver;
+  // reflow for percent bsize calculations
+  nsIPercentBSizeObserver* mPercentBSizeObserver;
 
   // CSS margin collapsing sometimes requires us to reflow
   // optimistically assuming that margins collapse to see if clearance
