@@ -4095,7 +4095,7 @@ WorkerPrivateParent<Derived>::SetBaseURI(nsIURI* aBaseURI)
   if (NS_SUCCEEDED(aBaseURI->GetRef(temp)) && !temp.IsEmpty()) {
     nsCOMPtr<nsITextToSubURI> converter =
       do_GetService(NS_ITEXTTOSUBURI_CONTRACTID);
-    if (converter && nsContentUtils::EncodeDecodeURLHash()) {
+    if (converter && nsContentUtils::GettersDecodeURLHash()) {
       nsCString charset;
       nsAutoString unicodeRef;
       if (NS_SUCCEEDED(aBaseURI->GetOriginCharset(charset)) &&

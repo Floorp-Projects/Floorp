@@ -58,6 +58,9 @@
       let event = yield undefined;
 
       let db = event.target.result;
+      db.onversionchange = function(event) {
+        event.target.close();
+      };
 
       is(db.version, 1, "Correct version");
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
@@ -104,6 +107,9 @@
       event = yield undefined;
 
       db = event.target.result;
+      db.onversionchange = function(event) {
+        event.target.close();
+      };
 
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
       event.target.transaction.onabort = unexpectedSuccessHandler;
@@ -153,14 +159,15 @@
       ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");
       ok(db.objectStoreNames.contains("bar"), "Has correct objectStore");
 
-      db.close();
-
       request = indexedDB.open(window.location.pathname, 2);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
       event = yield undefined;
 
       db = event.target.result;
+      db.onversionchange = function(event) {
+        event.target.close();
+      };
 
       trans = event.target.transaction;
       trans.oncomplete = unexpectedSuccessHandler;

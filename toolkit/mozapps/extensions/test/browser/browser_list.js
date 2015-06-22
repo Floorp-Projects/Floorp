@@ -180,7 +180,7 @@ add_task(function*() {
   info("Addon 2");
   addon = items["Test add-on 2"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version }) = yield get_tooltip_info(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 2", "Name should be correct");
   is(name, "Test add-on 2", "Tooltip name should be correct");
   is(version, "2.0", "Tooltip version should be correct");
@@ -217,7 +217,7 @@ add_task(function*() {
   info("Addon 3");
   addon = items["Test add-on 3"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version }) = yield get_tooltip_info(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 3", "Name should be correct");
   is(name, "Test add-on 3", "Tooltip name should be correct");
   is(version, undefined, "Tooltip version should be hidden");
@@ -237,7 +237,7 @@ add_task(function*() {
   info("Addon 4");
   addon = items["Test add-on 4"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version }) = yield get_tooltip_info(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 4", "Name should be correct");
   is(name, "Test add-on 4", "Tooltip name should be correct");
 
@@ -272,7 +272,7 @@ add_task(function*() {
   info("Addon 5");
   addon = items["Test add-on 5"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version }) = yield get_tooltip_info(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 5", "Name should be correct");
   is(name, "Test add-on 5", "Tooltip name should be correct");
 
@@ -293,7 +293,7 @@ add_task(function*() {
   info("Addon 6");
   addon = items["Test add-on 6"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version }) = yield get_tooltip_info(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 6", "Name should be correct");
   is(name, "Test add-on 6", "Tooltip name should be correct");
   is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
@@ -327,7 +327,7 @@ add_task(function*() {
   info("Addon 7");
   addon = items["Test add-on 7"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version }) = yield get_tooltip_info(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 7", "Name should be correct");
   is(name, "Test add-on 7", "Tooltip name should be correct");
 
@@ -362,7 +362,7 @@ add_task(function*() {
   info("Addon 8");
   addon = items["Test add-on 8"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version }) = yield get_tooltip_info(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 8", "Name should be correct");
   is(name, "Test add-on 8", "Tooltip name should be correct");
 
@@ -383,7 +383,7 @@ add_task(function*() {
   info("Addon 9");
   addon = items["Test add-on 9"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version }) = yield get_tooltip_info(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 9", "Name should be correct");
   is(name, "Test add-on 9", "Tooltip name should be correct");
 
@@ -404,7 +404,7 @@ add_task(function*() {
   info("Addon 10");
   addon = items["Test add-on 10"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version }) = yield get_tooltip_info(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 10", "Name should be correct");
   is(name, "Test add-on 10", "Tooltip name should be correct");
 
@@ -425,7 +425,7 @@ add_task(function*() {
   info("Addon 11");
   addon = items["Test add-on 11"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version }) = yield get_tooltip_info(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 11", "Name should be correct");
   is(name, "Test add-on 11", "Tooltip name should be correct");
 
@@ -536,7 +536,7 @@ add_task(function*() {
   info("Addon 2");
   addon = items["Test add-on 2"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version }) = yield get_tooltip_info(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 2", "Name should be correct");
   is(name, "Test add-on 2", "Tooltip name should be correct");
   is(version, "2.0", "Tooltip version should be correct");
@@ -573,7 +573,7 @@ add_task(function*() {
   info("Addon 4");
   addon = items["Test add-on 4"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version }) = yield get_tooltip_info(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 4", "Name should be correct");
   is(name, "Test add-on 4", "Tooltip name should be correct");
 
@@ -608,7 +608,7 @@ add_task(function*() {
   info("Addon 6");
   addon = items["Test add-on 6"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version }) = yield get_tooltip_info(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 6", "Name should be correct");
   is(name, "Test add-on 6", "Tooltip name should be correct");
   is_element_visible(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be visible");
@@ -642,7 +642,7 @@ add_task(function*() {
   info("Addon 7");
   addon = items["Test add-on 7"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version }) = yield get_tooltip_info(addon);
+  ({ name, version } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 7", "Name should be correct");
   is(name, "Test add-on 7", "Tooltip name should be correct");
 

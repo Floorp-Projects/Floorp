@@ -25,7 +25,7 @@ class GCParallelTask;
 
 namespace gcstats {
 
-enum Phase {
+enum Phase : uint8_t {
     PHASE_MUTATOR,
     PHASE_GC_BEGIN,
     PHASE_WAIT_BACKGROUND_THREAD,

@@ -810,7 +810,8 @@ protected:
   void ExpandBCDamageArea(mozilla::TableArea& aRect) const;
 
   void SetColumnDimensions(nscoord aHeight, WritingMode aWM,
-                           const LogicalMargin& aBorderPadding);
+                           const LogicalMargin& aBorderPadding,
+                           nscoord aContainerWidth);
 
   int32_t CollectRows(nsIFrame*                   aFrame,
                       nsTArray<nsTableRowFrame*>& aCollection);
@@ -1009,12 +1010,10 @@ public:
   explicit nsTableIterator(nsFrameList& aSource);
   nsIFrame* First();
   nsIFrame* Next();
-  bool      IsLeftToRight();
   int32_t   Count();
 
 protected:
   void Init(nsIFrame* aFirstChild);
-  bool      mLeftToRight;
   nsIFrame* mFirstListChild;
   nsIFrame* mFirstChild;
   nsIFrame* mCurrentChild;

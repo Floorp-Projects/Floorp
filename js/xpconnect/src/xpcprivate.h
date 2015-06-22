@@ -2406,7 +2406,7 @@ private:
                                uint16_t methodIndex,
                                uint8_t paramIndex,
                                nsXPTCMiniVariant* params,
-                               uint32_t* result);
+                               uint32_t* result) const;
 
     bool GetInterfaceTypeFromParam(JSContext* cx,
                                    const XPTMethodDescriptor* method,
@@ -2414,14 +2414,17 @@ private:
                                    uint16_t methodIndex,
                                    const nsXPTType& type,
                                    nsXPTCMiniVariant* params,
-                                   nsID* result);
+                                   nsID* result) const;
 
-    void CleanupPointerArray(const nsXPTType& datum_type,
-                             uint32_t array_count,
-                             void** arrayp);
+    static void CleanupPointerArray(const nsXPTType& datum_type,
+                                    uint32_t array_count,
+                                    void** arrayp);
 
-    void CleanupPointerTypeObject(const nsXPTType& type,
-                                  void** pp);
+    static void CleanupPointerTypeObject(const nsXPTType& type,
+                                         void** pp);
+
+    void CleanupOutparams(JSContext* cx, uint16_t methodIndex, const nsXPTMethodInfo* info,
+                          nsXPTCMiniVariant* nativeParams, bool inOutOnly, uint8_t n) const;
 
 private:
     XPCJSRuntime* mRuntime;
