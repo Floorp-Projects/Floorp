@@ -253,7 +253,7 @@ public:
   static nsIFrame* GetFrameAtOrBefore(nsIFrame*       aParentFrame,
                                       nsIFrame*       aPriorChildFrame,
                                       nsIAtom*        aChildType);
-  bool IsAutoHeight();
+  bool IsAutoBSize(mozilla::WritingMode aWM);
 
   /** @return true if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
@@ -345,7 +345,7 @@ public:
    * A copy of nsFrame::ShrinkWidthToFit that calls a different
    * GetPrefISize, since tables have two different ones.
    */
-  nscoord TableShrinkWidthToFit(nsRenderingContext *aRenderingContext,
+  nscoord TableShrinkISizeToFit(nsRenderingContext *aRenderingContext,
                                 nscoord aWidthInCB);
 
   // XXXldb REWRITE THIS COMMENT!
@@ -370,7 +370,7 @@ public:
 
   void ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
                    const nsHTMLReflowState& aReflowState,
-                   nscoord                  aAvailHeight,
+                   nscoord                  aAvailBSize,
                    nsIFrame*&               aLastChildReflowed,
                    nsReflowStatus&          aStatus);
 
@@ -634,11 +634,11 @@ protected:
   //  (2) notify the table about colgroups or columns with hidden visibility
   void ReflowColGroups(nsRenderingContext* aRenderingContext);
 
-  /** return the width of the table taking into account visibility collapse
+  /** return the isize of the table taking into account visibility collapse
     * on columns and colgroups
     * @param aBorderPadding  the border and padding of the table
     */
-  nscoord GetCollapsedWidth(const WritingMode aWM,
+  nscoord GetCollapsedISize(const WritingMode aWM,
                             const LogicalMargin& aBorderPadding);
 
 
@@ -681,21 +681,22 @@ private:
 
 public:
 
-  // calculate the computed height of aFrame including its border and padding given
-  // its reflow state.
-  nscoord CalcBorderBoxHeight(const nsHTMLReflowState& aReflowState);
+  // calculate the computed block-size of aFrame including its border and
+  // padding given its reflow state.
+  nscoord CalcBorderBoxBSize(const nsHTMLReflowState& aReflowState);
 
 protected:
 
-  // update the  desired height of this table taking into account the current
-  // reflow state, the table attributes and the content driven rowgroup heights
+  // update the  desired block-size of this table taking into account the current
+  // reflow state, the table attributes and the content driven rowgroup bsizes
   // this function can change the overflow area
-  void CalcDesiredHeight(const nsHTMLReflowState& aReflowState, nsHTMLReflowMetrics& aDesiredSize);
+  void CalcDesiredBSize(const nsHTMLReflowState& aReflowState,
+                        nsHTMLReflowMetrics& aDesiredSize);
 
-  // The following is a helper for CalcDesiredHeight
+  // The following is a helper for CalcDesiredBSize
 
-  void DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
-                              nscoord                  aAmount);
+  void DistributeBSizeToRows(const nsHTMLReflowState& aReflowState,
+                             nscoord                  aAmount);
 
   void PlaceChild(nsTableReflowState&  aReflowState,
                   nsIFrame*            aKidFrame,
