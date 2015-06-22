@@ -15,6 +15,7 @@ function testSteps()
   let event = yield undefined;
 
   let db = event.target.result;
+  db.close();
 
   // Check default state.
   is(db.version, 1, "Correct default version for a new database.");
@@ -24,14 +25,13 @@ function testSteps()
     42,
   ];
 
-  db.close();
-
   for (let i = 0; i < versions.length; i++) {
     let version = versions[i];
 
     let request = indexedDB.open(name, version);
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = grabEventAndContinueHandler;
     let event = yield undefined;
 
     let db = event.target.result;
@@ -39,8 +39,9 @@ function testSteps()
     is(db.version, version, "Database version number updated correctly");
     is(event.target.transaction.mode, "versionchange", "Correct mode");
 
-    executeSoon(function() { testGenerator.next(); });
+    // Wait for success
     yield undefined;
+
     db.close();
   }
 

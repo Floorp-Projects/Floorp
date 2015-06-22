@@ -99,3 +99,20 @@ function buildApzcTree(paint) {
   }
   return root;
 }
+
+function flushApzRepaints(aCallback, aWindow = window) {
+  if (!aCallback) {
+    throw "A callback must be provided!";
+  }
+  var repaintDone = function() {
+    SpecialPowers.Services.obs.removeObserver(repaintDone, "apz-repaints-flushed", false);
+    setTimeout(aCallback, 0);
+  };
+  SpecialPowers.Services.obs.addObserver(repaintDone, "apz-repaints-flushed", false);
+  if (SpecialPowers.getDOMWindowUtils(aWindow).flushApzRepaints()) {
+    dump("Flushed APZ repaints, waiting for callback...\n");
+  } else {
+    dump("Flushing APZ repaints was a no-op, triggering callback directly...\n");
+    repaintDone();
+  }
+}

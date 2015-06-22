@@ -353,8 +353,7 @@ PluginHangUIParent::RecvUserResponse(const unsigned int& aResponse)
   int responseCode;
   if (aResponse & HANGUI_USER_RESPONSE_STOP) {
     // User clicked Stop
-    nsString dummy;
-    mModule->TerminateChildProcess(mMainThreadMessageLoop, &dummy);
+    mModule->TerminateChildProcess(mMainThreadMessageLoop, EmptyString());
     responseCode = 1;
   } else if(aResponse & HANGUI_USER_RESPONSE_CONTINUE) {
     mModule->OnHangUIContinue();

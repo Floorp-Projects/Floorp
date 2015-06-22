@@ -271,6 +271,7 @@ pref("general.autoScroll", true);
 pref("browser.shell.checkDefaultBrowser", true);
 pref("browser.shell.shortcutFavicons",true);
 pref("browser.shell.mostRecentDateSetAsDefault", "");
+pref("browser.shell.windows10DefaultBrowserABTest", -1);
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last visited page, 3 = resume previous browser session
 // The behavior of option 3 is detailed at: http://wiki.mozilla.org/Session_Restore
@@ -296,7 +297,7 @@ pref("browser.warnOnQuit", true);
 // might still show the window closing dialog with showQuitWarning == false.
 pref("browser.showQuitWarning", false);
 pref("browser.fullscreen.autohide", true);
-pref("browser.fullscreen.animateUp", 1);
+pref("browser.fullscreen.animate", true);
 pref("browser.overlink-delay", 80);
 
 #ifdef UNIX_BUT_NOT_MAC
@@ -628,7 +629,7 @@ pref("browser.xul.error_pages.enabled", true);
 pref("browser.xul.error_pages.expert_bad_cert", false);
 
 // If true, network link events will change the value of navigator.onLine
-pref("network.manage-offline-status", false);
+pref("network.manage-offline-status", true);
 
 // We want to make sure mail URLs are handled externally...
 pref("network.protocol-handler.external.mailto", true); // for mail
@@ -1951,4 +1952,5 @@ pref("view_source.tab", true);
 // Enable Service Workers for desktop on non-release builds
 #ifndef RELEASE_BUILD
 pref("dom.serviceWorkers.enabled", true);
+pref("dom.serviceWorkers.interception.enabled", true);
 #endif

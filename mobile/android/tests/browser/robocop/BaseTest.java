@@ -801,7 +801,7 @@ abstract class BaseTest extends BaseRobocopTest {
                 Element backBtn = mDriver.findElement(getActivity(), R.id.back);
                 backBtn.click();
             } else {
-                mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+                mSolo.goBack();
             }
 
             pageShowExpecter.blockForEvent();
@@ -869,7 +869,7 @@ abstract class BaseTest extends BaseRobocopTest {
         // item. Close it here.
         private void ensureMenuClosed() {
             if (mSolo.searchText("^New Tab$")) {
-                mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+                mSolo.goBack();
             }
          }
     }

@@ -48,13 +48,16 @@ EXTRA_JS_MODULES.devtools.shared += [
 ]
 
 EXTRA_JS_MODULES.devtools.shared.widgets += [
+    'widgets/BarGraphWidget.js',
     'widgets/CubicBezierPresets.js',
     'widgets/CubicBezierWidget.js',
     'widgets/FastListWidget.js',
     'widgets/FilterWidget.js',
     'widgets/FlameGraph.js',
     'widgets/Graphs.js',
+    'widgets/LineGraphWidget.js',
     'widgets/MdnDocsWidget.js',
+    'widgets/MountainGraphWidget.js',
     'widgets/Spectrum.js',
     'widgets/TableWidget.js',
     'widgets/Tooltip.js',

@@ -1949,6 +1949,14 @@ public:
   }
 
   /*
+   * Returns true if URL getters should percent decode the value of the segment
+   */
+  static bool GettersDecodeURLHash()
+  {
+    return sGettersDecodeURLHash && sEncodeDecodeURLHash;
+  }
+
+  /*
    * Returns true if the browser should attempt to prevent content scripts
    * from collecting distinctive information about the browser that could
    * be used to "fingerprint" and track the user across websites.
@@ -2499,6 +2507,7 @@ private:
   static bool sIsUserTimingLoggingEnabled;
   static bool sIsExperimentalAutocompleteEnabled;
   static bool sEncodeDecodeURLHash;
+  static bool sGettersDecodeURLHash;
   static bool sPrivacyResistFingerprinting;
 
   static nsHtml5StringParser* sHTMLFragmentParser;

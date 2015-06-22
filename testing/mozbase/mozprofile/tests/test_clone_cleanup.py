@@ -8,6 +8,7 @@
 import os
 import tempfile
 import unittest
+import mozfile
 
 from mozprofile.profile import Profile
 
@@ -21,6 +22,7 @@ class CloneCleanupTest(unittest.TestCase):
     def setUp(self):
         # make a profile with one preference
         path = tempfile.mktemp()
+        self.addCleanup(mozfile.remove, path)
         self.profile = Profile(path,
                           preferences={'foo': 'bar'},
                           restore=False)
@@ -30,6 +32,7 @@ class CloneCleanupTest(unittest.TestCase):
     def test_restore_true(self):
         # make a clone of this profile with restore=True
         clone = Profile.clone(self.profile.profile, restore=True)
+        self.addCleanup(mozfile.remove, clone.profile)
 
         clone.cleanup()
 
@@ -39,6 +42,7 @@ class CloneCleanupTest(unittest.TestCase):
     def test_restore_false(self):
         # make a clone of this profile with restore=False
         clone = Profile.clone(self.profile.profile, restore=False)
+        self.addCleanup(mozfile.remove, clone.profile)
 
         clone.cleanup()
 
@@ -47,6 +51,7 @@ class CloneCleanupTest(unittest.TestCase):
 
     def test_cleanup_on_garbage_collected(self):
         clone = Profile.clone(self.profile.profile)
+        self.addCleanup(mozfile.remove, clone.profile)
         profile_dir = clone.profile
         self.assertTrue(os.path.exists(profile_dir))
         del clone

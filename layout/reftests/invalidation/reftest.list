@@ -67,3 +67,6 @@ pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == t
 fuzzy-if(gtkWidget,2,4) == image-scrolling-zoom-1.html image-scrolling-zoom-1-ref.html
 != image-scrolling-zoom-1-ref.html image-scrolling-zoom-1-notref.html
 != fast-scrolling.html about:blank
+!= fractional-transform-1.html about:blank
+!= fractional-transform-2.html about:blank
+!= fractional-transform-3.html about:blank

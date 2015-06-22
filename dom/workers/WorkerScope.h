@@ -215,6 +215,9 @@ public:
   WrapGlobalObject(JSContext* aCx,
                    JS::MutableHandle<JSObject*> aReflector) override;
 
+  static bool
+  InterceptionEnabled(JSContext* aCx, JSObject* aObj);
+
   void
   GetScope(nsString& aScope) const
   {

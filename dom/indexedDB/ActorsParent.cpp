@@ -5343,11 +5343,10 @@ protected:
                     const Key& aObjectStoreKey,
                     const FallibleTArray<IndexDataValue>& aIndexValues);
 
-#ifdef DEBUG
-  static bool
+  static nsresult
   ObjectStoreHasIndexes(DatabaseConnection* aConnection,
-                        const int64_t aObjectStoreId);
-#endif
+                        const int64_t aObjectStoreId,
+                        bool* aHasIndexes);
 
 private:
   template <typename T>
@@ -6941,7 +6940,6 @@ class DeleteObjectStoreOp final
 
   const nsRefPtr<FullObjectStoreMetadata> mMetadata;
   const bool mIsLastObjectStore;
-  const bool mObjectStoreHasIndexes;
 
 private:
   // Only created by VersionChangeTransaction.
@@ -6951,7 +6949,6 @@ private:
     : VersionChangeTransactionOp(aTransaction)
     , mMetadata(aMetadata)
     , mIsLastObjectStore(aIsLastObjectStore)
-    , mObjectStoreHasIndexes(aMetadata->HasLiveIndexes())
   {
     MOZ_ASSERT(aMetadata->mCommonMetadata.id());
   }
@@ -7138,6 +7135,15 @@ protected:
   ~NormalTransactionOp()
   { }
 
+  // An overload of DatabaseOperationBase's function that can avoid doing extra
+  // work on non-versionchange transactions.
+  static nsresult
+  ObjectStoreHasIndexes(NormalTransactionOp* aOp,
+                        DatabaseConnection* aConnection,
+                        const int64_t aObjectStoreId,
+                        const bool aMayHaveIndexes,
+                        bool* aHasIndexes);
+
   // Subclasses use this override to set the IPDL response value.
   virtual void
   GetResponse(RequestResponse& aResponse) = 0;
@@ -7179,7 +7185,7 @@ class ObjectStoreAddOrPutRequestOp final
   const nsCString mOrigin;
   const PersistenceType mPersistenceType;
   const bool mOverwrite;
-  const bool mObjectStoreHasIndexes;
+  const bool mObjectStoreMayHaveIndexes;
 
 private:
   // Only created by TransactionBase.
@@ -7297,7 +7303,7 @@ class ObjectStoreDeleteRequestOp final
 
   const ObjectStoreDeleteParams mParams;
   ObjectStoreDeleteResponse mResponse;
-  const bool mObjectStoreHasIndexes;
+  const bool mObjectStoreMayHaveIndexes;
 
 private:
   ObjectStoreDeleteRequestOp(TransactionBase* aTransaction,
@@ -7323,7 +7329,7 @@ class ObjectStoreClearRequestOp final
 
   const ObjectStoreClearParams mParams;
   ObjectStoreClearResponse mResponse;
-  const bool mObjectStoreHasIndexes;
+  const bool mObjectStoreMayHaveIndexes;
 
 private:
   ObjectStoreClearRequestOp(TransactionBase* aTransaction,
@@ -13060,12 +13066,12 @@ TransactionBase::GetMetadataForObjectStoreId(int64_t aObjectStoreId) const
 
   nsRefPtr<FullObjectStoreMetadata> metadata;
   if (!mDatabase->Metadata()->mObjectStores.Get(aObjectStoreId,
-                                                getter_AddRefs(metadata))) {
+                                                getter_AddRefs(metadata)) ||
+      metadata->mDeleted) {
     return nullptr;
   }
 
   MOZ_ASSERT(metadata->mCommonMetadata.id() == aObjectStoreId);
-  MOZ_ASSERT(!metadata->mDeleted);
 
   return metadata.forget();
 }
@@ -13083,12 +13089,12 @@ TransactionBase::GetMetadataForIndexId(
   }
 
   nsRefPtr<FullIndexMetadata> metadata;
-  if (!aObjectStoreMetadata->mIndexes.Get(aIndexId, getter_AddRefs(metadata))) {
+  if (!aObjectStoreMetadata->mIndexes.Get(aIndexId, getter_AddRefs(metadata)) ||
+      metadata->mDeleted) {
     return nullptr;
   }
 
   MOZ_ASSERT(metadata->mCommonMetadata.id() == aIndexId);
-  MOZ_ASSERT(!metadata->mDeleted);
 
   return metadata.forget();
 }
@@ -18063,8 +18069,16 @@ DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(aObjectStoreId);
-  MOZ_ASSERT(ObjectStoreHasIndexes(aConnection, aObjectStoreId),
-             "Don't use this slow method if there are no indexes!");
+
+#ifdef DEBUG
+  {
+    bool hasIndexes = false;
+    MOZ_ASSERT(NS_SUCCEEDED(
+      ObjectStoreHasIndexes(aConnection, aObjectStoreId, &hasIndexes)));
+    MOZ_ASSERT(hasIndexes,
+               "Don't use this slow method if there are no indexes!");
+  }
+#endif
 
   PROFILER_LABEL("IndexedDB",
                  "DatabaseOperationBase::"
@@ -18272,37 +18286,44 @@ DatabaseOperationBase::UpdateIndexValues(
   return NS_OK;
 }
 
-#ifdef DEBUG
-
 // static
-bool
+nsresult
 DatabaseOperationBase::ObjectStoreHasIndexes(DatabaseConnection* aConnection,
-                                             const int64_t aObjectStoreId)
+                                             const int64_t aObjectStoreId,
+                                             bool* aHasIndexes)
 {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(aObjectStoreId);
+  MOZ_ASSERT(aHasIndexes);
 
   DatabaseConnection::CachedStatement stmt;
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-      "SELECT id "
-        "FROM object_store_index "
-        "WHERE object_store_id = :object_store_id;"),
-      &stmt)));
+  nsresult rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "SELECT id "
+      "FROM object_store_index "
+      "WHERE object_store_id = :object_store_id "
+      "LIMIT 1;"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
-                          aObjectStoreId)));
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
+                             aObjectStoreId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   bool hasResult;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  return hasResult;
+  *aHasIndexes = hasResult;
+  return NS_OK;
 }
-
-#endif // DEBUG
 
 NS_IMPL_ISUPPORTS_INHERITED(DatabaseOperationBase,
                             nsRunnable,
@@ -19669,7 +19690,18 @@ void
 OpenDatabaseOp::NoteDatabaseClosed(Database* aDatabase)
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State_WaitingForOtherDatabasesToClose);
+  MOZ_ASSERT(aDatabase);
+  MOZ_ASSERT(mState == State_WaitingForOtherDatabasesToClose ||
+             mState == State_DatabaseWorkVersionChange);
+
+  if (mState == State_DatabaseWorkVersionChange) {
+    MOZ_ASSERT(mMaybeBlockedDatabases.IsEmpty());
+    MOZ_ASSERT(mRequestedVersion >
+                 aDatabase->Metadata()->mCommonMetadata.version(),
+               "Must only be closing databases for a previous version!");
+    return;
+  }
+
   MOZ_ASSERT(!mMaybeBlockedDatabases.IsEmpty());
 
   bool actorDestroyed = IsActorDestroyed() || mDatabase->IsActorDestroyed();
@@ -21635,11 +21667,6 @@ DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
                   foundThisObjectStore && !foundOtherObjectStore);
     MOZ_ASSERT_IF(!mIsLastObjectStore,
                   foundThisObjectStore && foundOtherObjectStore);
-
-    // Make sure |hasIndexes| is telling the truth.
-    MOZ_ASSERT(mObjectStoreHasIndexes ==
-                 ObjectStoreHasIndexes(aConnection,
-                                       mMetadata->mCommonMetadata.id()));
   }
 #endif
 
@@ -21712,7 +21739,15 @@ DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
       return rv;
     }
   } else {
-    if (mObjectStoreHasIndexes) {
+    bool hasIndexes;
+    rv = ObjectStoreHasIndexes(aConnection,
+                               mMetadata->mCommonMetadata.id(),
+                               &hasIndexes);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (hasIndexes) {
       rv = DeleteObjectStoreDataTableRowsWithIndexes(
         aConnection,
         mMetadata->mCommonMetadata.id(),
@@ -22790,6 +22825,48 @@ DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
   return NS_OK;
 }
 
+// static
+nsresult
+NormalTransactionOp::ObjectStoreHasIndexes(NormalTransactionOp* aOp,
+                                           DatabaseConnection* aConnection,
+                                           const int64_t aObjectStoreId,
+                                           const bool aMayHaveIndexes,
+                                           bool* aHasIndexes)
+{
+  MOZ_ASSERT(aOp);
+  MOZ_ASSERT(aConnection);
+  aConnection->AssertIsOnConnectionThread();
+  MOZ_ASSERT(aObjectStoreId);
+  MOZ_ASSERT(aHasIndexes);
+
+  bool hasIndexes;
+  if (aOp->Transaction()->GetMode() == IDBTransaction::VERSION_CHANGE &&
+      aMayHaveIndexes) {
+    // If this is a version change transaction then mObjectStoreMayHaveIndexes
+    // could be wrong (e.g. if a unique index failed to be created due to a
+    // constraint error). We have to check on this thread by asking the database
+    // directly.
+    nsresult rv =
+      DatabaseOperationBase::ObjectStoreHasIndexes(aConnection,
+                                                   aObjectStoreId,
+                                                   &hasIndexes);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    MOZ_ASSERT(NS_SUCCEEDED(
+      DatabaseOperationBase::ObjectStoreHasIndexes(aConnection,
+                                                   aObjectStoreId,
+                                                   &hasIndexes)));
+    MOZ_ASSERT(aMayHaveIndexes == hasIndexes);
+
+    hasIndexes = aMayHaveIndexes;
+  }
+
+  *aHasIndexes = hasIndexes;
+  return NS_OK;
+}
+
 nsresult
 NormalTransactionOp::SendSuccessResult()
 {
@@ -22866,7 +22943,7 @@ ObjectStoreAddOrPutRequestOp::ObjectStoreAddOrPutRequestOp(
   , mOrigin(aTransaction->GetDatabase()->Origin())
   , mPersistenceType(aTransaction->GetDatabase()->Type())
   , mOverwrite(aParams.type() == RequestParams::TObjectStorePutParams)
-  , mObjectStoreHasIndexes(false)
+  , mObjectStoreMayHaveIndexes(false)
 {
   MOZ_ASSERT(aParams.type() == RequestParams::TObjectStoreAddParams ||
              aParams.type() == RequestParams::TObjectStorePutParams);
@@ -22875,7 +22952,7 @@ ObjectStoreAddOrPutRequestOp::ObjectStoreAddOrPutRequestOp(
     aTransaction->GetMetadataForObjectStoreId(mParams.objectStoreId());
   MOZ_ASSERT(mMetadata);
 
-  const_cast<bool&>(mObjectStoreHasIndexes) = mMetadata->HasLiveIndexes();
+  const_cast<bool&>(mObjectStoreMayHaveIndexes) = mMetadata->HasLiveIndexes();
 }
 
 nsresult
@@ -22886,7 +22963,18 @@ ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
   MOZ_ASSERT(aConnection);
   MOZ_ASSERT(mOverwrite);
   MOZ_ASSERT(!mResponse.IsUnset());
-  MOZ_ASSERT(mObjectStoreHasIndexes);
+
+#ifdef DEBUG
+  {
+    bool hasIndexes = false;
+    MOZ_ASSERT(NS_SUCCEEDED(
+      DatabaseOperationBase::ObjectStoreHasIndexes(aConnection,
+                                                   mParams.objectStoreId(),
+                                                   &hasIndexes)));
+    MOZ_ASSERT(hasIndexes,
+               "Don't use this slow method if there are no indexes!");
+  }
+#endif
 
   DatabaseConnection::CachedStatement indexValuesStmt;
   nsresult rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
@@ -23098,8 +23186,6 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   aConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection->GetStorageConnection());
   MOZ_ASSERT_IF(mFileManager, !mStoredFileInfos.IsEmpty());
-  MOZ_ASSERT(mObjectStoreHasIndexes ==
-               ObjectStoreHasIndexes(aConnection, mParams.objectStoreId()));
 
   PROFILER_LABEL("IndexedDB",
                  "ObjectStoreAddOrPutRequestOp::DoDatabaseWork",
@@ -23115,6 +23201,16 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
+  bool objectStoreHasIndexes;
+  rv = ObjectStoreHasIndexes(this,
+                             aConnection,
+                             mParams.objectStoreId(),
+                             mObjectStoreMayHaveIndexes,
+                             &objectStoreHasIndexes);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   // This will be the final key we use.
   Key& key = mResponse;
   key = mParams.key();
@@ -23125,7 +23221,7 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 
   // First delete old index_data_values if we're overwriting something and we
   // have indexes.
-  if (mOverwrite && !keyUnset && mObjectStoreHasIndexes) {
+  if (mOverwrite && !keyUnset && objectStoreHasIndexes) {
     rv = RemoveOldIndexDataValues(aConnection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -23779,7 +23875,7 @@ ObjectStoreDeleteRequestOp::ObjectStoreDeleteRequestOp(
                                          const ObjectStoreDeleteParams& aParams)
   : NormalTransactionOp(aTransaction)
   , mParams(aParams)
-  , mObjectStoreHasIndexes(false)
+  , mObjectStoreMayHaveIndexes(false)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aTransaction);
@@ -23788,7 +23884,7 @@ ObjectStoreDeleteRequestOp::ObjectStoreDeleteRequestOp(
     aTransaction->GetMetadataForObjectStoreId(mParams.objectStoreId());
   MOZ_ASSERT(metadata);
 
-  const_cast<bool&>(mObjectStoreHasIndexes) = metadata->HasLiveIndexes();
+  const_cast<bool&>(mObjectStoreMayHaveIndexes) = metadata->HasLiveIndexes();
 }
 
 nsresult
@@ -23796,9 +23892,6 @@ ObjectStoreDeleteRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
-  MOZ_ASSERT(mObjectStoreHasIndexes ==
-               ObjectStoreHasIndexes(aConnection, mParams.objectStoreId()));
-
   PROFILER_LABEL("IndexedDB",
                  "ObjectStoreDeleteRequestOp::DoDatabaseWork",
                  js::ProfileEntry::Category::STORAGE);
@@ -23809,7 +23902,17 @@ ObjectStoreDeleteRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
-  if (mObjectStoreHasIndexes) {
+  bool objectStoreHasIndexes;
+  rv = ObjectStoreHasIndexes(this,
+                             aConnection,
+                             mParams.objectStoreId(),
+                             mObjectStoreMayHaveIndexes,
+                             &objectStoreHasIndexes);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (objectStoreHasIndexes) {
     rv = DeleteObjectStoreDataTableRowsWithIndexes(aConnection,
                                                    mParams.objectStoreId(),
                                                    mParams.keyRange());
@@ -23864,7 +23967,7 @@ ObjectStoreClearRequestOp::ObjectStoreClearRequestOp(
                                           const ObjectStoreClearParams& aParams)
   : NormalTransactionOp(aTransaction)
   , mParams(aParams)
-  , mObjectStoreHasIndexes(false)
+  , mObjectStoreMayHaveIndexes(false)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aTransaction);
@@ -23873,7 +23976,7 @@ ObjectStoreClearRequestOp::ObjectStoreClearRequestOp(
     aTransaction->GetMetadataForObjectStoreId(mParams.objectStoreId());
   MOZ_ASSERT(metadata);
 
-  const_cast<bool&>(mObjectStoreHasIndexes) = metadata->HasLiveIndexes();
+  const_cast<bool&>(mObjectStoreMayHaveIndexes) = metadata->HasLiveIndexes();
 }
 
 nsresult
@@ -23881,8 +23984,6 @@ ObjectStoreClearRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
-  MOZ_ASSERT(mObjectStoreHasIndexes ==
-               ObjectStoreHasIndexes(aConnection, mParams.objectStoreId()));
 
   PROFILER_LABEL("IndexedDB",
                  "ObjectStoreClearRequestOp::DoDatabaseWork",
@@ -23894,7 +23995,17 @@ ObjectStoreClearRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
-  if (mObjectStoreHasIndexes) {
+  bool objectStoreHasIndexes;
+  rv = ObjectStoreHasIndexes(this,
+                             aConnection,
+                             mParams.objectStoreId(),
+                             mObjectStoreMayHaveIndexes,
+                             &objectStoreHasIndexes);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (objectStoreHasIndexes) {
     rv = DeleteObjectStoreDataTableRowsWithIndexes(aConnection,
                                                    mParams.objectStoreId(),
                                                    void_t());

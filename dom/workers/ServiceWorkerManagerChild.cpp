@@ -67,6 +67,34 @@ ServiceWorkerManagerChild::RecvNotifyUnregister(const PrincipalInfo& aPrincipalI
   return true;
 }
 
+bool
+ServiceWorkerManagerChild::RecvNotifyRemove(const nsCString& aHost)
+{
+  if (mShuttingDown) {
+    return true;
+  }
+
+  nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  MOZ_ASSERT(swm);
+
+  swm->Remove(aHost);
+  return true;
+}
+
+bool
+ServiceWorkerManagerChild::RecvNotifyRemoveAll()
+{
+  if (mShuttingDown) {
+    return true;
+  }
+
+  nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  MOZ_ASSERT(swm);
+
+  swm->RemoveAll();
+  return true;
+}
+
 } // workers namespace
 } // dom namespace
 } // mozilla namespace

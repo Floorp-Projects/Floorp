@@ -12,6 +12,9 @@ MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 SPHINX_TREES['toolkit_modules'] = 'docs'
 
 EXTRA_JS_MODULES += [
+    'addons/MatchPattern.jsm',
+    'addons/WebNavigation.jsm',
+    'addons/WebNavigationContent.js',
     'addons/WebRequest.jsm',
     'addons/WebRequestCommon.jsm',
     'addons/WebRequestContent.js',

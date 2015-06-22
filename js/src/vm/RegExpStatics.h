@@ -21,19 +21,19 @@ class RegExpStatics
 {
     /* The latest RegExp output, set after execution. */
     VectorMatchPairs        matches;
-    RelocatablePtrLinearString matchesInput;
+    HeapPtrLinearString     matchesInput;
 
     /*
      * The previous RegExp input, used to resolve lazy state.
      * A raw RegExpShared cannot be stored because it may be in
      * a different compartment via evalcx().
      */
-    RelocatablePtrAtom      lazySource;
+    HeapPtrAtom             lazySource;
     RegExpFlag              lazyFlags;
     size_t                  lazyIndex;
 
     /* The latest RegExp input, set before execution. */
-    RelocatablePtrString    pendingInput;
+    HeapPtrString           pendingInput;
     RegExpFlag              flags;
 
     /*

@@ -194,6 +194,7 @@ MSG_DEF(JSMSG_BAD_CONST_ASSIGN,        1, JSEXN_SYNTAXERR, "invalid assignment t
 MSG_DEF(JSMSG_BAD_CONTINUE,            0, JSEXN_SYNTAXERR, "continue must be inside loop")
 MSG_DEF(JSMSG_BAD_DESTRUCT_ASS,        0, JSEXN_REFERENCEERR, "invalid destructuring assignment operator")
 MSG_DEF(JSMSG_BAD_DESTRUCT_TARGET,     0, JSEXN_SYNTAXERR, "invalid destructuring target")
+MSG_DEF(JSMSG_BAD_DESTRUCT_PARENS,     0, JSEXN_SYNTAXERR, "destructuring patterns in assignments can't be parenthesized")
 MSG_DEF(JSMSG_BAD_DESTRUCT_DECL,       0, JSEXN_SYNTAXERR, "missing = in destructuring declaration")
 MSG_DEF(JSMSG_BAD_DUP_ARGS,            0, JSEXN_SYNTAXERR, "duplicate argument names not allowed in this context")
 MSG_DEF(JSMSG_BAD_FOR_EACH_LOOP,       0, JSEXN_SYNTAXERR, "invalid for each loop")

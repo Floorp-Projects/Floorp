@@ -83,9 +83,8 @@ Decoder::Init()
   // No re-initializing
   MOZ_ASSERT(!mInitialized, "Can't re-initialize a decoder!");
 
-  // Fire OnStartDecode at init time to support bug 512435.
   if (!IsSizeDecode()) {
-      mProgress |= FLAG_DECODE_STARTED | FLAG_ONLOAD_BLOCKED;
+      mProgress |= FLAG_DECODE_STARTED;
   }
 
   // Implementation-specific initialization
@@ -273,7 +272,7 @@ Decoder::CompleteDecode()
     } else {
       // We're not usable. Record some final progress indicating the error.
       if (!IsSizeDecode()) {
-        mProgress |= FLAG_DECODE_COMPLETE | FLAG_ONLOAD_UNBLOCKED;
+        mProgress |= FLAG_DECODE_COMPLETE;
       }
       mProgress |= FLAG_HAS_ERROR;
     }
@@ -624,7 +623,7 @@ Decoder::PostFrameStop(Opacity aFrameOpacity    /* = Opacity::TRANSPARENT */,
 
   mCurrentFrame->Finish(aFrameOpacity, aDisposalMethod, aTimeout, aBlendMethod);
 
-  mProgress |= FLAG_FRAME_COMPLETE | FLAG_ONLOAD_UNBLOCKED;
+  mProgress |= FLAG_FRAME_COMPLETE;
 
   // If we're not sending partial invalidations, then we send an invalidation
   // here when the first frame is complete.

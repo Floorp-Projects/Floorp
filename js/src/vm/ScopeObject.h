@@ -22,6 +22,7 @@ namespace frontend { struct Definition; }
 
 class StaticWithObject;
 class StaticEvalObject;
+class StaticNonSyntacticScopeObjects;
 
 /*****************************************************************************/
 
@@ -62,6 +63,7 @@ class StaticScopeIter
                       obj->is<StaticBlockObject>() ||
                       obj->is<StaticWithObject>() ||
                       obj->is<StaticEvalObject>() ||
+                      obj->is<StaticNonSyntacticScopeObjects>() ||
                       obj->is<JSFunction>());
     }
 
@@ -81,6 +83,7 @@ class StaticScopeIter
                       obj->is<StaticBlockObject>() ||
                       obj->is<StaticWithObject>() ||
                       obj->is<StaticEvalObject>() ||
+                      obj->is<StaticNonSyntacticScopeObjects>() ||
                       obj->is<JSFunction>());
     }
 
@@ -95,16 +98,19 @@ class StaticScopeIter
     bool done() const;
     void operator++(int);
 
-    /* Return whether this static scope will be on the dynamic scope chain. */
-    bool hasDynamicScopeObject() const;
+    // Return whether this static scope will have a syntactic scope (i.e. a
+    // ScopeObject that isn't a non-syntactic With or
+    // NonSyntacticVariablesObject) on the dynamic scope chain.
+    bool hasSyntacticDynamicScopeObject() const;
     Shape* scopeShape() const;
 
-    enum Type { Function, Block, With, NamedLambda, Eval };
+    enum Type { Function, Block, With, NamedLambda, Eval, NonSyntactic };
     Type type() const;
 
     StaticBlockObject& block() const;
     StaticWithObject& staticWith() const;
     StaticEvalObject& eval() const;
+    StaticNonSyntacticScopeObjects& nonSyntactic() const;
     JSScript* funScript() const;
     JSFunction& fun() const;
 };
@@ -175,26 +181,28 @@ ScopeCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
  * scope objects is:
  *
  *   JSObject                      Generic object
- *     \
- *   ScopeObject                   Engine-internal scope
- *   \   \   \   \
- *    \   \   \  StaticEvalObject  Placeholder so eval scopes may be iterated through
- *     \   \   \
- *      \   \  DeclEnvObject       Holds name of recursive/heavyweight named lambda
- *       \   \
- *        \  CallObject            Scope of entire function or strict eval
- *         \
- *   NestedScopeObject             Scope created for a statement
- *     \   \  \
- *      \   \ StaticWithObject     Template for "with" object in static scope chain
- *       \   \
- *        \  DynamicWithObject     Run-time "with" object on scope chain
- *         \
- *   BlockObject                   Shared interface of cloned/static block objects
- *     \   \
- *      \  ClonedBlockObject       let, switch, catch, for
- *       \
- *       StaticBlockObject         See NB
+ *     |
+ *   ScopeObject---+---+           Engine-internal scope
+ *     |   |   |   |   |
+ *     |   |   |   |  StaticNonSyntacticScopeObjects  See NB2
+ *     |   |   |   |
+ *     |   |   |  StaticEvalObject  Placeholder so eval scopes may be iterated through
+ *     |   |   |
+ *     |   |  DeclEnvObject         Holds name of recursive/heavyweight named lambda
+ *     |   |
+ *     |  CallObject                Scope of entire function or strict eval
+ *     |
+ *   NestedScopeObject              Scope created for a statement
+ *     |   |   |
+ *     |   |  StaticWithObject      Template for "with" object in static scope chain
+ *     |   |
+ *     |  DynamicWithObject         Run-time "with" object on scope chain
+ *     |
+ *   BlockObject                    Shared interface of cloned/static block objects
+ *     |   |
+ *     |  ClonedBlockObject         let, switch, catch, for
+ *     |
+ *   StaticBlockObject              See NB
  *
  * This hierarchy represents more than just the interface hierarchy: reserved
  * slots in base classes are fixed for all derived classes. Thus, for example,
@@ -205,6 +213,9 @@ ScopeCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
  * compile time to hold the shape/binding information from which block objects
  * are cloned at runtime. These objects should never escape into the wild and
  * support a restricted set of ScopeObject operations.
+ *
+ * NB2: StaticNonSyntacticScopeObjects notify either of 0+ non-syntactic
+ * DynamicWithObjects on the dynamic scope chain or a NonSyntacticScopeObject.
  *
  * See also "Debug scope objects" below.
  */
@@ -340,12 +351,10 @@ class DeclEnvObject : public ScopeObject
 
   public:
     static const uint32_t RESERVED_SLOTS = 2;
-    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKGROUND;
-
     static const Class class_;
 
     static DeclEnvObject*
-    createTemplateObject(JSContext* cx, HandleFunction fun, gc::InitialHeap heap);
+    createTemplateObject(JSContext* cx, HandleFunction fun, NewObjectKind newKind);
 
     static DeclEnvObject* create(JSContext* cx, HandleObject enclosing, HandleFunction callee);
 
@@ -354,16 +363,15 @@ class DeclEnvObject : public ScopeObject
     }
 };
 
-// Static eval scope template objects on the static scope. Created at the
-// time of compiling the eval script, and set as its static enclosing scope.
+// Static eval scope placeholder objects on the static scope chain. Created at
+// the time of compiling the eval script, and set as its static enclosing
+// scope.
 class StaticEvalObject : public ScopeObject
 {
     static const uint32_t STRICT_SLOT = 1;
 
   public:
     static const unsigned RESERVED_SLOTS = 2;
-    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKGROUND;
-
     static const Class class_;
 
     static StaticEvalObject* create(JSContext* cx, HandleObject enclosing);
@@ -385,6 +393,42 @@ class StaticEvalObject : public ScopeObject
     bool isDirect() const {
         return getReservedSlot(SCOPE_CHAIN_SLOT).isObject();
     }
+};
+
+// Static scope objects that stand in for one or more "polluting global"
+// scopes on the dynamic scope chain.
+//
+// There are two flavors of polluting global scopes on the dynamic scope
+// chain: either 0+ non-syntactic DynamicWithObjects, or 1
+// NonSyntacticVariablesObject, created exclusively in
+// js::ExecuteInGlobalAndReturnScope.
+class StaticNonSyntacticScopeObjects : public ScopeObject
+{
+  public:
+    static const unsigned RESERVED_SLOTS = 1;
+    static const Class class_;
+
+    static StaticNonSyntacticScopeObjects* create(JSContext* cx, HandleObject enclosing);
+
+    JSObject* enclosingScopeForStaticScopeIter() {
+        return getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
+    }
+};
+
+// A non-syntactic dynamic scope object that captures non-lexical
+// bindings. That is, a scope object that captures both qualified var
+// assignments and unqualified bareword assignments. Its parent is always the
+// real global.
+//
+// This is used in ExecuteInGlobalAndReturnScope and sits in front of the
+// global scope to capture 'var' and bareword asignments.
+class NonSyntacticVariablesObject : public ScopeObject
+{
+  public:
+    static const unsigned RESERVED_SLOTS = 1;
+    static const Class class_;
+
+    static NonSyntacticVariablesObject* create(JSContext* cx, Handle<GlobalObject*> global);
 };
 
 class NestedScopeObject : public ScopeObject
@@ -436,8 +480,6 @@ class StaticWithObject : public NestedScopeObject
 {
   public:
     static const unsigned RESERVED_SLOTS = 1;
-    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKGROUND;
-
     static const Class class_;
 
     static StaticWithObject* create(ExclusiveContext* cx);
@@ -452,8 +494,6 @@ class DynamicWithObject : public NestedScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 4;
-    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT4_BACKGROUND;
-
     static const Class class_;
 
     enum WithKind {
@@ -505,8 +545,6 @@ class BlockObject : public NestedScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 2;
-    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT4_BACKGROUND;
-
     static const Class class_;
 
     /* Return the abstract stack depth right before entering this nested scope. */
@@ -593,7 +631,7 @@ class StaticBlockObject : public BlockObject
      * variable of the block isAliased.
      */
     bool needsClone() {
-        return !getFixedSlot(RESERVED_SLOTS).isFalse();
+        return numVariables() > 0 && !getSlot(RESERVED_SLOTS).isFalse();
     }
 
     /* Frontend-only functions ***********************************************/
@@ -697,8 +735,6 @@ class UninitializedLexicalObject : public ScopeObject
 {
   public:
     static const unsigned RESERVED_SLOTS = 1;
-    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKGROUND;
-
     static const Class class_;
 
     static UninitializedLexicalObject* create(JSContext* cx, HandleObject enclosing);
@@ -759,17 +795,20 @@ class ScopeIter
     inline JSObject& enclosingScope() const;
 
     // If !done():
-    enum Type { Call, Block, With, Eval };
+    enum Type { Call, Block, With, Eval, NonSyntactic };
     Type type() const;
 
-    inline bool hasScopeObject() const;
-    inline bool canHaveScopeObject() const;
+    inline bool hasNonSyntacticScopeObject() const;
+    inline bool hasSyntacticScopeObject() const;
+    inline bool hasAnyScopeObject() const;
+    inline bool canHaveSyntacticScopeObject() const;
     ScopeObject& scope() const;
 
     JSObject* maybeStaticScope() const;
     StaticBlockObject& staticBlock() const { return ssi_.block(); }
     StaticWithObject& staticWith() const { return ssi_.staticWith(); }
     StaticEvalObject& staticEval() const { return ssi_.eval(); }
+    StaticNonSyntacticScopeObjects& staticNonSyntactic() const { return ssi_.nonSyntactic(); }
     JSFunction& fun() const { return ssi_.fun(); }
 
     bool withinInitialFrame() const { return !!frame_; }
@@ -829,7 +868,7 @@ class LiveScopeVal
     friend class MissingScopeKey;
 
     AbstractFramePtr frame_;
-    RelocatablePtrObject staticScope_;
+    HeapPtrObject staticScope_;
 
     void sweep();
     static void staticAsserts();
@@ -1009,7 +1048,8 @@ JSObject::is<js::ScopeObject>() const
     return is<js::CallObject>() ||
            is<js::DeclEnvObject>() ||
            is<js::NestedScopeObject>() ||
-           is<js::UninitializedLexicalObject>();
+           is<js::UninitializedLexicalObject>() ||
+           is<js::NonSyntacticVariablesObject>();
 }
 
 template<>
@@ -1041,8 +1081,8 @@ inline bool
 IsSyntacticScope(JSObject* scope)
 {
     return scope->is<ScopeObject>() &&
-           (!scope->is<DynamicWithObject>() ||
-            scope->as<DynamicWithObject>().isSyntactic());
+           (!scope->is<DynamicWithObject>() || scope->as<DynamicWithObject>().isSyntactic()) &&
+           !scope->is<NonSyntacticVariablesObject>();
 }
 
 inline const Value&
@@ -1066,16 +1106,54 @@ ScopeIter::done() const
 }
 
 inline bool
-ScopeIter::hasScopeObject() const
+ScopeIter::hasSyntacticScopeObject() const
 {
-    return ssi_.hasDynamicScopeObject();
+    return ssi_.hasSyntacticDynamicScopeObject();
 }
 
 inline bool
-ScopeIter::canHaveScopeObject() const
+ScopeIter::hasNonSyntacticScopeObject() const
 {
-    // Non-strict eval scopes cannot have dynamic scope objects.
-    return !ssi_.done() && (type() != Eval || staticEval().isStrict());
+    // The case we're worrying about here is a NonSyntactic static scope which
+    // has 0+ corresponding non-syntactic DynamicWithObject scopes or a
+    // NonSyntacticVariablesObject.
+    if (ssi_.type() == StaticScopeIter<CanGC>::NonSyntactic) {
+        MOZ_ASSERT_IF(scope_->is<DynamicWithObject>(),
+                      !scope_->as<DynamicWithObject>().isSyntactic());
+        return scope_->is<DynamicWithObject>() ||
+               scope_->is<NonSyntacticVariablesObject>();
+    }
+    return false;
+}
+
+inline bool
+ScopeIter::hasAnyScopeObject() const
+{
+    return hasSyntacticScopeObject() || hasNonSyntacticScopeObject();
+}
+
+inline bool
+ScopeIter::canHaveSyntacticScopeObject() const
+{
+    if (ssi_.done())
+        return false;
+
+    switch (type()) {
+      case Call:
+        return true;
+      case Block:
+        return true;
+      case With:
+        return true;
+      case Eval:
+        // Only strict eval scopes can have dynamic scope objects.
+        return staticEval().isStrict();
+      case NonSyntactic:
+        return false;
+    }
+
+    // Silence warnings.
+    return false;
 }
 
 inline JSObject&
@@ -1093,10 +1171,12 @@ ScopeIter::enclosingScope() const
 extern bool
 CreateScopeObjectsForScopeChain(JSContext* cx, AutoObjectVector& scopeChain,
                                 HandleObject dynamicTerminatingScope,
-                                MutableHandleObject dynamicScopeObj,
-                                MutableHandleObject staticScopeObj);
+                                MutableHandleObject dynamicScopeObj);
+
+bool HasNonSyntacticStaticScopeChain(JSObject* staticScope);
 
 #ifdef DEBUG
+void DumpStaticScopeChain(JSScript* script);
 bool
 AnalyzeEntrainedVariables(JSContext* cx, HandleScript script);
 #endif

@@ -216,16 +216,35 @@ class JSObject : public js::gc::Cell
         return setFlags(cx, js::BaseShape::WATCHED, GENERATE_SHAPE);
     }
 
-    /* See InterpreterFrame::varObj. */
-    inline bool isQualifiedVarObj();
+    // A "qualified" varobj is the object on which "qualified" variable
+    // declarations (i.e., those defined with "var") are kept.
+    //
+    // Conceptually, when a var binding is defined, it is defined on the
+    // innermost qualified varobj on the scope chain.
+    //
+    // Function scopes (CallObjects) are qualified varobjs, and there can be
+    // no other qualified varobj that is more inner for var bindings in that
+    // function. As such, all references to local var bindings in a function
+    // may be statically bound to the function scope. This is subject to
+    // further optimization. Unaliased bindings inside functions reside
+    // entirely on the frame, not in CallObjects.
+    //
+    // Global scopes are also qualified varobjs. It is possible to statically
+    // know, for a given script, that are no more inner qualified varobjs, so
+    // free variable references can be statically bound to the global.
+    //
+    // Finally, there are non-syntactic qualified varobjs used by embedders
+    // (e.g., Gecko and XPConnect), as they often wish to run scripts under a
+    // scope that captures var bindings.
+    inline bool isQualifiedVarObj() const;
     bool setQualifiedVarObj(js::ExclusiveContext* cx) {
         return setFlags(cx, js::BaseShape::QUALIFIED_VAROBJ);
     }
 
-    inline bool isUnqualifiedVarObj();
-    bool setUnqualifiedVarObj(js::ExclusiveContext* cx) {
-        return setFlags(cx, js::BaseShape::UNQUALIFIED_VAROBJ);
-    }
+    // An "unqualified" varobj is the object on which "unqualified"
+    // assignments (i.e., bareword assignments for which the LHS does not
+    // exist on the scope chain) are kept.
+    inline bool isUnqualifiedVarObj() const;
 
     /*
      * Objects with an uncacheable proto can have their prototype mutated
@@ -291,9 +310,7 @@ class JSObject : public js::gc::Cell
     }
     static MOZ_ALWAYS_INLINE void readBarrier(JSObject* obj);
     static MOZ_ALWAYS_INLINE void writeBarrierPre(JSObject* obj);
-    static MOZ_ALWAYS_INLINE void writeBarrierPost(JSObject* obj, void* cellp);
-    static MOZ_ALWAYS_INLINE void writeBarrierPostRelocate(JSObject* obj, void* cellp);
-    static MOZ_ALWAYS_INLINE void writeBarrierPostRemove(JSObject* obj, void* cellp);
+    static MOZ_ALWAYS_INLINE void writeBarrierPost(void* cellp, JSObject* prev, JSObject* next);
 
     /* Return the allocKind we would use if we were to tenure this object. */
     js::gc::AllocKind allocKindForTenure(const js::Nursery& nursery) const;
@@ -422,10 +439,10 @@ class JSObject : public js::gc::Cell
      * slot of the object.  For other scope objects, the chain goes directly to
      * the global.
      *
-     * In code which is not marked hasPollutedGlobalScope, scope chains can
+     * In code which is not marked hasNonSyntacticScope, scope chains can
      * contain only syntactic scope objects (see IsSyntacticScope) with a global
      * object at the root as the scope of the outermost non-function script. In
-     * hasPollutedGlobalScope code, the scope of the outermost non-function
+     * hasNonSyntacticScope code, the scope of the outermost non-function
      * script might not be a global object, and can have a mix of other objects
      * above it before the global object is reached.
      */
@@ -611,36 +628,26 @@ JSObject::writeBarrierPre(JSObject* obj)
 }
 
 /* static */ MOZ_ALWAYS_INLINE void
-JSObject::writeBarrierPost(JSObject* obj, void* cellp)
+JSObject::writeBarrierPost(void* cellp, JSObject* prev, JSObject* next)
 {
     MOZ_ASSERT(cellp);
-    if (IsNullTaggedPointer(obj))
+
+    // If the target needs an entry, add it.
+    js::gc::StoreBuffer* buffer;
+    if (!IsNullTaggedPointer(next) && (buffer = next->storeBuffer())) {
+        // If we know that the prev has already inserted an entry, we can skip
+        // doing the lookup to add the new entry.
+        if (!IsNullTaggedPointer(prev) && prev->storeBuffer()) {
+            buffer->assertHasCellEdge(static_cast<js::gc::Cell**>(cellp));
+            return;
+        }
+        buffer->putCellFromAnyThread(static_cast<js::gc::Cell**>(cellp));
         return;
-    MOZ_ASSERT(obj == *static_cast<JSObject**>(cellp));
-    js::gc::StoreBuffer* storeBuffer = obj->storeBuffer();
-    if (storeBuffer)
-        storeBuffer->putCellFromAnyThread(static_cast<js::gc::Cell**>(cellp));
-}
+    }
 
-/* static */ MOZ_ALWAYS_INLINE void
-JSObject::writeBarrierPostRelocate(JSObject* obj, void* cellp)
-{
-    MOZ_ASSERT(cellp);
-    MOZ_ASSERT(obj);
-    MOZ_ASSERT(obj == *static_cast<JSObject**>(cellp));
-    js::gc::StoreBuffer* storeBuffer = obj->storeBuffer();
-    if (storeBuffer)
-        storeBuffer->putCellFromAnyThread(static_cast<js::gc::Cell**>(cellp));
-}
-
-/* static */ MOZ_ALWAYS_INLINE void
-JSObject::writeBarrierPostRemove(JSObject* obj, void* cellp)
-{
-    MOZ_ASSERT(cellp);
-    MOZ_ASSERT(obj);
-    MOZ_ASSERT(obj == *static_cast<JSObject**>(cellp));
-    obj->shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->unputCellFromAnyThread(
-        static_cast<js::gc::Cell**>(cellp));
+    // Remove the prev entry if the new value does not need it.
+    if (!IsNullTaggedPointer(prev) && (buffer = prev->storeBuffer()))
+        buffer->unputCellFromAnyThread(static_cast<js::gc::Cell**>(cellp));
 }
 
 namespace js {
