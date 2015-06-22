@@ -1085,7 +1085,7 @@ nsTableRowFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // see if a special height reflow needs to occur due to having a pct height
-  nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
+  nsTableFrame::CheckRequestSpecialBSizeReflow(aReflowState);
 
   // See if we have a cell with specified/pct bsize
   InitHasCellWithStyleBSize(tableFrame);

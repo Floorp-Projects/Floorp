@@ -783,9 +783,9 @@ nsTableOuterFrame::UpdateReflowMetrics(uint8_t              aCaptionSide,
 
 void
 nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
-                                    nsHTMLReflowMetrics&     aDesiredSize,
-                                    const nsHTMLReflowState& aOuterRS,
-                                    nsReflowStatus&          aStatus)
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aOuterRS,
+                          nsReflowStatus&          aStatus)
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsTableOuterFrame");

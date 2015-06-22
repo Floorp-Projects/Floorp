@@ -12,7 +12,7 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 #include "nsStyleContext.h"
-#include "nsIPercentHeightObserver.h"
+#include "nsIPercentBSizeObserver.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsTArray.h"
@@ -32,7 +32,7 @@
  */
 class nsTableCellFrame : public nsContainerFrame,
                          public nsITableCellLayout,
-                         public nsIPercentHeightObserver
+                         public nsIPercentBSizeObserver
 {
   typedef mozilla::image::DrawResult DrawResult;
 
@@ -98,7 +98,7 @@ public:
 
   virtual nsMargin GetUsedMargin() const override;
 
-  virtual void NotifyPercentHeight(const nsHTMLReflowState& aReflowState) override;
+  virtual void NotifyPercentBSize(const nsHTMLReflowState& aReflowState) override;
 
   virtual bool NeedsToObserve(const nsHTMLReflowState& aReflowState) override;
 

@@ -1331,7 +1331,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   ClearRowCursor();
 
   // see if a special height reflow needs to occur due to having a pct height
-  nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
+  nsTableFrame::CheckRequestSpecialBSizeReflow(aReflowState);
 
   nsTableFrame* tableFrame = GetTableFrame();
   nsRowGroupReflowState state(aReflowState, tableFrame);
