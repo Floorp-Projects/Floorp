@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Sanity panning test for scrollable div</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript">
+
+function scrollOuter() {
+  var outer = document.getElementById('outer');
+  SpecialPowers._addMessageListener("APZ:TransformEnd", function() {
+    dump("Transform complete; flushing repaints...\n");
+    flushApzRepaints(checkScroll, outer.contentWindow);
+  });
+
+  const TOUCH_SLOP = 1;
+  synthesizeNativeDrag(outer.contentDocument.body, 10, 100, 0, -(50 + TOUCH_SLOP));
+  dump("Finished native drag, waiting for transform-end observer...\n");
+}
+
+function checkScroll() {
+  var outerScroll = document.getElementById('outer').contentWindow.scrollY;
+  window.opener.is(outerScroll, 50, "check that the iframe scrolled");
+  window.opener.testDone();
+}
+
+window.onload = function() {
+  setTimeout(scrollOuter, 0);
+}
+
+  </script>
+</head>
+<body>
+ <iframe id="outer" style="height: 250px; border: solid 1px black" src="data:text/html,<body style='height:5000px'>"></iframe>
+ <div style="height: 5000px; background-color: lightgreen;">
+  This div makes the top-level page scrollable.
+ </div>
+</body>
+</html>

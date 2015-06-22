@@ -629,7 +629,7 @@ pref("browser.xul.error_pages.enabled", true);
 pref("browser.xul.error_pages.expert_bad_cert", false);
 
 // If true, network link events will change the value of navigator.onLine
-pref("network.manage-offline-status", false);
+pref("network.manage-offline-status", true);
 
 // We want to make sure mail URLs are handled externally...
 pref("network.protocol-handler.external.mailto", true); // for mail
@@ -1952,4 +1952,5 @@ pref("view_source.tab", true);
 // Enable Service Workers for desktop on non-release builds
 #ifndef RELEASE_BUILD
 pref("dom.serviceWorkers.enabled", true);
+pref("dom.serviceWorkers.interception.enabled", true);
 #endif

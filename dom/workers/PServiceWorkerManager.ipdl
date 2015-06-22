@@ -25,12 +25,18 @@ parent:
                       nsString scope);
   PropagateUnregister(PrincipalInfo principalInfo, nsString scope);
 
+  PropagateRemove(nsCString host);
+
+  PropagateRemoveAll();
+
   Shutdown();
 
 child:
   NotifyRegister(ServiceWorkerRegistrationData data);
   NotifySoftUpdate(OriginAttributes originAttributes, nsString scope);
   NotifyUnregister(PrincipalInfo principalInfo, nsString scope);
+  NotifyRemove(nsCString host);
+  NotifyRemoveAll();
 
   __delete__();
 };

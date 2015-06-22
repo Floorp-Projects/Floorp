@@ -740,7 +740,7 @@ public:
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     MOZ_ASSERT(swm);
 
-    swm->PropagateSoftUpdate(mOriginAttributes,mScope);
+    swm->PropagateSoftUpdate(mOriginAttributes, mScope);
     return NS_OK;
   }
 
@@ -787,6 +787,76 @@ private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIServiceWorkerUnregisterCallback> mCallback;
   const nsString mScope;
+};
+
+class RemoveRunnable final : public nsRunnable
+{
+public:
+  explicit RemoveRunnable(const nsACString& aHost)
+  {}
+
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    MOZ_ASSERT(swm);
+
+    swm->Remove(mHost);
+    return NS_OK;
+  }
+
+private:
+  ~RemoveRunnable()
+  {}
+
+  const nsCString mHost;
+};
+
+class PropagateRemoveRunnable final : public nsRunnable
+{
+public:
+  explicit PropagateRemoveRunnable(const nsACString& aHost)
+  {}
+
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    MOZ_ASSERT(swm);
+
+    swm->PropagateRemove(mHost);
+    return NS_OK;
+  }
+
+private:
+  ~PropagateRemoveRunnable()
+  {}
+
+  const nsCString mHost;
+};
+
+class PropagateRemoveAllRunnable final : public nsRunnable
+{
+public:
+  PropagateRemoveAllRunnable()
+  {}
+
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    MOZ_ASSERT(swm);
+
+    swm->PropagateRemoveAll();
+    return NS_OK;
+  }
+
+private:
+  ~PropagateRemoveAllRunnable()
+  {}
 };
 
 } // anonymous namespace
@@ -2313,6 +2383,9 @@ private:
 
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
+    MOZ_ASSERT(swm->mActor);
+    swm->mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(mScope));
+
     nsAutoCString scopeKey;
     nsresult rv = swm->PrincipalToScopeKey(mPrincipal, scopeKey);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2354,9 +2427,6 @@ private:
       registration->Clear();
       swm->RemoveRegistration(registration);
     }
-
-    MOZ_ASSERT(swm->mActor);
-    swm->mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(mScope));
 
     return NS_OK;
   }
@@ -4322,20 +4392,64 @@ ServiceWorkerManager::ForceUnregister(RegistrationDataPerPrincipal* aRegistratio
 }
 
 NS_IMETHODIMP
-ServiceWorkerManager::Remove(const nsACString& aHost)
+ServiceWorkerManager::RemoveAndPropagate(const nsACString& aHost)
 {
-  AssertIsOnMainThread();
-  mRegistrationInfos.EnumerateRead(UnregisterIfMatchesHostPerPrincipal,
-                                   &const_cast<nsACString&>(aHost));
+  Remove(aHost);
+  PropagateRemove(aHost);
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
+ServiceWorkerManager::Remove(const nsACString& aHost)
+{
+  AssertIsOnMainThread();
+
+  // We need to postpone this operation in case we don't have an actor because
+  // this is needed by the ForceUnregister.
+  if (!mActor) {
+    nsRefPtr<nsIRunnable> runnable = new RemoveRunnable(aHost);
+    AppendPendingOperation(runnable);
+    return;
+  }
+
+  mRegistrationInfos.EnumerateRead(UnregisterIfMatchesHostPerPrincipal,
+                                   &const_cast<nsACString&>(aHost));
+}
+
+void
+ServiceWorkerManager::PropagateRemove(const nsACString& aHost)
+{
+  AssertIsOnMainThread();
+
+  if (!mActor) {
+    nsRefPtr<nsIRunnable> runnable = new PropagateRemoveRunnable(aHost);
+    AppendPendingOperation(runnable);
+    return;
+  }
+
+  mActor->SendPropagateRemove(nsCString(aHost));
+}
+
+void
 ServiceWorkerManager::RemoveAll()
 {
   AssertIsOnMainThread();
   mRegistrationInfos.EnumerateRead(UnregisterIfMatchesHostPerPrincipal, nullptr);
-  return NS_OK;
+}
+
+void
+ServiceWorkerManager::PropagateRemoveAll()
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
+  if (!mActor) {
+    nsRefPtr<nsIRunnable> runnable = new PropagateRemoveAllRunnable();
+    AppendPendingOperation(runnable);
+    return;
+  }
+
+  mActor->SendPropagateRemoveAll();
 }
 
 static PLDHashOperator
@@ -4385,23 +4499,19 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 
-  nsAutoTArray<ContentParent*,1> children;
-  ContentParent::GetAll(children);
-
   if (strcmp(aTopic, PURGE_SESSION_HISTORY) == 0) {
-    for (uint32_t i = 0; i < children.Length(); i++) {
-      unused << children[i]->SendRemoveServiceWorkerRegistrations();
-    }
-
     RemoveAll();
-  } else if (strcmp(aTopic, PURGE_DOMAIN_DATA) == 0) {
-    nsAutoString domain(aData);
-    for (uint32_t i = 0; i < children.Length(); i++) {
-      unused << children[i]->SendRemoveServiceWorkerRegistrationsForDomain(domain);
-    }
+    PropagateRemoveAll();
+    return NS_OK;
+  }
 
-    Remove(NS_ConvertUTF16toUTF8(domain));
-  } else if (strcmp(aTopic, WEBAPPS_CLEAR_DATA) == 0) {
+  if (strcmp(aTopic, PURGE_DOMAIN_DATA) == 0) {
+    nsAutoString domain(aData);
+    RemoveAndPropagate(NS_ConvertUTF16toUTF8(domain));
+    return NS_OK;
+  }
+
+  if (strcmp(aTopic, WEBAPPS_CLEAR_DATA) == 0) {
     nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
       do_QueryInterface(aSubject);
     if (NS_WARN_IF(!params)) {

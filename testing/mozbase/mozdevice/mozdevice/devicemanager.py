@@ -45,6 +45,8 @@ class DeviceManager(object):
     """
 
     _logcatNeedsRoot = True
+    default_timeout = 300
+    short_timeout = 30
 
     def __init__(self, logLevel=None, deviceRoot=None):
         try:
@@ -133,7 +135,8 @@ class DeviceManager(object):
         """
         for interface in interfaces:
             match = re.match(r"%s: ip (\S+)" % interface,
-                             self.shellCheckOutput(['ifconfig', interface]))
+                             self.shellCheckOutput(['ifconfig', interface],
+                             timeout=self.short_timeout))
             if match:
                 return match.group(1)
 
@@ -144,7 +147,8 @@ class DeviceManager(object):
         #TODO: spawn this off in a separate thread/process so we can collect all the logcat information
 
         # Right now this is just clearing the logcat so we can only see what happens after this call.
-        self.shellCheckOutput(['/system/bin/logcat', '-c'], root=self._logcatNeedsRoot)
+        self.shellCheckOutput(['/system/bin/logcat', '-c'], root=self._logcatNeedsRoot,
+                              timeout=self.short_timeout)
 
     def getLogcat(self, filterSpecs=["dalvikvm:I", "ConnectivityService:S",
                                       "WifiMonitor:S", "WifiStateTracker:S",
@@ -157,7 +161,8 @@ class DeviceManager(object):
         """
         cmdline = ["/system/bin/logcat", "-v", format, "-d"] + filterSpecs
         output = self.shellCheckOutput(cmdline,
-                                      root=self._logcatNeedsRoot)
+                                      root=self._logcatNeedsRoot,
+                                      timeout=self.short_timeout)
         lines = output.replace('\r\n', '\n').splitlines(True)
 
         for regex in filterOutRegexps:
