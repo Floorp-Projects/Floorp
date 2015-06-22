@@ -727,6 +727,11 @@ IDBFactory::OpenInternal(nsIPrincipal* aPrincipal,
     JS::Rooted<JSObject*> scriptOwner(autoJS.cx(), mOwningObject);
 
     request = IDBOpenDBRequest::CreateForJS(this, scriptOwner);
+    if (!request) {
+      MOZ_ASSERT(!NS_IsMainThread());
+      aRv.ThrowUncatchableException();
+      return nullptr;
+    }
   }
 
   MOZ_ASSERT(request);
