@@ -25,6 +25,7 @@ function* spawnTest() {
   });
 
   yield stopRecording(panel);
+  ok(true, "Recording has ended.");
 
   // Push some fake markers of a type we do not have a blueprint for
   let markers = PerformanceController.getCurrentRecording().getMarkers();
