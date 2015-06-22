@@ -214,6 +214,31 @@ ServiceWorkerRegistrar::UnregisterServiceWorker(
 }
 
 void
+ServiceWorkerRegistrar::RemoveAll()
+{
+  AssertIsOnBackgroundThread();
+
+  if (mShuttingDown) {
+    NS_WARNING("Failed to remove all the serviceWorkers during shutting down.");
+    return;
+  }
+
+  bool deleted = false;
+
+  {
+    MonitorAutoLock lock(mMonitor);
+    MOZ_ASSERT(mDataLoaded);
+
+    deleted = !mData.IsEmpty();
+    mData.Clear();
+  }
+
+  if (deleted) {
+    ScheduleSaveData();
+  }
+}
+
+void
 ServiceWorkerRegistrar::LoadData()
 {
   MOZ_ASSERT(!NS_IsMainThread());

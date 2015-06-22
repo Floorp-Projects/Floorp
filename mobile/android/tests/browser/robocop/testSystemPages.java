@@ -35,7 +35,7 @@ public class testSystemPages extends PixelTest {
         loadAndPaint(mStringHelper.ABOUT_ABOUT_URL);
 
         // Press back to verify if the keyboard is dismissed or the previous about: page loads
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        mSolo.goBack();
         // may not get a paint on Back...pause briefly to make sure it completes
         mSolo.sleep(AFTER_BACK_SLEEP_MS);
 

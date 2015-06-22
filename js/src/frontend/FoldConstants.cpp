@@ -1087,6 +1087,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
             ParseNode* expr = handler.newPropertyAccess(pn->pn_left, name, pn->pn_pos.end);
             if (!expr)
                 return false;
+            expr->setInParens(pn->isInParens());
             ReplaceNode(pnp, expr);
 
             // Supposing we're replacing |obj["prop"]| with |obj.prop|, we now

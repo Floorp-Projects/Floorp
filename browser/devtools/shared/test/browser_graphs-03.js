@@ -4,7 +4,7 @@
 // Tests that graph widgets can handle clients getting/setting the
 // selection or cursor.
 
-let {LineGraphWidget} = devtools.require("devtools/shared/widgets/Graphs");
+let LineGraphWidget = devtools.require("devtools/shared/widgets/LineGraphWidget");
 let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
 
 add_task(function*() {

@@ -11,6 +11,10 @@
 #include "nsISupports.idl"
 #include "nsIConsoleMessage.idl"
 
+%{C++
+#include "nsString.h" // for nsDependentCString
+%}
+
 [scriptable, uuid(248b2c94-2736-4d29-bfdf-bc64a2e60d35)]
 interface nsIScriptError : nsIConsoleMessage
 {

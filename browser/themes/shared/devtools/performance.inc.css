@@ -69,6 +69,10 @@
   list-style-image: url(performance-icons.svg#details-flamegraph);
 }
 
+#select-optimizations-view {
+  list-style-image: url(profiler-stopwatch.svg);
+}
+
 /* Recording buttons */
 
 #main-record-button {
@@ -637,26 +641,53 @@ menuitem.marker-color-graphs-blue:before,
   cursor: pointer;
 }
 
-#jit-optimizations-view .opt-icon::before {
+.opt-icon::before {
   content: "";
   background-image: url(chrome://browser/skin/devtools/webconsole.svg);
   background-repeat: no-repeat;
   background-size: 72px 60px;
+  /* show grey "i" bubble by default */
+  background-position: -36px -36px;
   width: 12px;
   height: 12px;
   display: inline-block;
 
-  margin: 5px 6px 0 0;
   max-height: 12px;
 }
-.theme-light #jit-optimizations-view .opt-icon::before {
+
+#jit-optimizations-view .opt-icon::before {
+  margin: 5px 6px 0 0;
+}
+description.opt-icon {
+  margin: 0px 0px 0px 0px;
+}
+description.opt-icon::before {
+  margin: 1px 4px 0px 0px;
+}
+.theme-light .opt-icon::before {
   background-image: url(chrome://browser/skin/devtools/webconsole.svg#light-icons);
 }
-
-#jit-optimizations-view .opt-icon[severity=warning]::before {
+.opt-icon[severity=warning]::before {
   background-position: -24px -24px;
 }
+.opt-icon[type=linkable]::before {
+  cursor: pointer;
+}
 
+ul.frames-list {
+  list-style-type: none;
+  padding: 0px;
+  margin: 0px;
+}
+
+ul.frames-list li {
+  cursor: pointer;
+}
+
+ul.frames-list li.selected {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
 
 /**
  * Configurable Options

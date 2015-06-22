@@ -804,7 +804,7 @@ class PreliminaryObjectArray
 
 class PreliminaryObjectArrayWithTemplate : public PreliminaryObjectArray
 {
-    RelocatablePtrShape shape_;
+    HeapPtrShape shape_;
 
   public:
     explicit PreliminaryObjectArrayWithTemplate(Shape* shape)
@@ -881,7 +881,7 @@ class TypeNewScript
 
   private:
     // Scripted function which this information was computed for.
-    RelocatablePtrFunction function_;
+    HeapPtrFunction function_;
 
     // Any preliminary objects with the type. The analyses are not performed
     // until this array is cleared.
@@ -893,7 +893,7 @@ class TypeNewScript
     // allocation kind to use. This is null if the new objects have an unboxed
     // layout, in which case the UnboxedLayout provides the initial structure
     // of the object.
-    RelocatablePtrPlainObject templateObject_;
+    HeapPtrPlainObject templateObject_;
 
     // Order in which definite properties become initialized. We need this in
     // case the definite properties are invalidated (such as by adding a setter
@@ -910,11 +910,11 @@ class TypeNewScript
     // shape contains all such additional properties (plus the definite
     // properties). When an object of this group acquires this shape, it is
     // fully initialized and its group can be changed to initializedGroup.
-    RelocatablePtrShape initializedShape_;
+    HeapPtrShape initializedShape_;
 
     // Group with definite properties set for all properties found by
     // both the definite and acquired properties analyses.
-    RelocatablePtrObjectGroup initializedGroup_;
+    HeapPtrObjectGroup initializedGroup_;
 
   public:
     TypeNewScript() { mozilla::PodZero(this); }
