@@ -2942,6 +2942,18 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
             ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
             : aBuilder->GetCurrentScrollParentId());
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+    if (!mIsRoot || !usingDisplayport) {
+      nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+      nscoord radii[8];
+      bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
+      // Our override of GetBorderRadii ensures we never have a radius at
+      // the corners where we have a scrollbar.
+      if (mClipAllDescendants) {
+        clipState.ClipContentDescendants(clip, haveRadii ? radii : nullptr);
+      } else {
+        clipState.ClipContainingBlockDescendants(clip, haveRadii ? radii : nullptr);
+      }
+    }
 
     if (usingDisplayport) {
       // Capture the clip state of the parent scroll frame. This will be saved
@@ -2962,17 +2974,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       //     the entire displayport, but it lets the compositor know to
       //     clip to the scroll port after compositing.
       clipState.Clear();
-    } else {
-      nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
-      nscoord radii[8];
-      bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
-      // Our override of GetBorderRadii ensures we never have a radius at
-      // the corners where we have a scrollbar.
-      if (mClipAllDescendants) {
-        clipState.ClipContentDescendants(clip, haveRadii ? radii : nullptr);
-      } else {
-        clipState.ClipContainingBlockDescendants(clip, haveRadii ? radii : nullptr);
-      }
     }
 
     aBuilder->StoreDirtyRectForScrolledContents(mOuter, dirtyRect);
