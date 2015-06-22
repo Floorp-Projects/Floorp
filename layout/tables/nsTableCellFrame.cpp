@@ -134,7 +134,7 @@ nsTableCellFrame::NotifyPercentBSize(const nsHTMLReflowState& aReflowState)
     if (nsTableFrame::AncestorsHaveStyleBSize(*cellRS) ||
         (GetTableFrame()->GetEffectiveRowSpan(*this) == 1 &&
          (cellRS->parentReflowState->frame->GetStateBits() &
-          NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT))) {
+          NS_ROW_HAS_CELL_WITH_STYLE_BSIZE))) {
 
       for (const nsHTMLReflowState *rs = aReflowState.parentReflowState;
            rs != cellRS;

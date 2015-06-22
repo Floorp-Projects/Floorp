@@ -443,15 +443,15 @@ inline void nsTableRowGroupFrame::SetRepeatable(bool aRepeatable)
 
 inline bool nsTableRowGroupFrame::HasStyleBSize() const
 {
-  return (mState & NS_ROWGROUP_HAS_STYLE_HEIGHT) == NS_ROWGROUP_HAS_STYLE_HEIGHT;
+  return (mState & NS_ROWGROUP_HAS_STYLE_BSIZE) == NS_ROWGROUP_HAS_STYLE_BSIZE;
 }
 
 inline void nsTableRowGroupFrame::SetHasStyleBSize(bool aValue)
 {
   if (aValue) {
-    mState |= NS_ROWGROUP_HAS_STYLE_HEIGHT;
+    mState |= NS_ROWGROUP_HAS_STYLE_BSIZE;
   } else {
-    mState &= ~NS_ROWGROUP_HAS_STYLE_HEIGHT;
+    mState &= ~NS_ROWGROUP_HAS_STYLE_BSIZE;
   }
 }
 

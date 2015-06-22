@@ -310,8 +310,8 @@ private:
   BCPixelSize mIStartContBorderWidth;
 
   /**
-   * Sets the NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT bit to indicate whether
-   * this row has any cells that have non-auto-height.  (Row-spanning
+   * Sets the NS_ROW_HAS_CELL_WITH_STYLE_BSIZE bit to indicate whether
+   * this row has any cells that have non-auto-bsize.  (Row-spanning
    * cells are ignored.)
    */
   void InitHasCellWithStyleBSize(nsTableFrame* aTableFrame);
@@ -391,16 +391,16 @@ inline float nsTableRowFrame::GetPctBSize() const
 
 inline bool nsTableRowFrame::HasUnpaginatedBSize()
 {
-  return (mState & NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT) ==
-         NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT;
+  return (mState & NS_TABLE_ROW_HAS_UNPAGINATED_BSIZE) ==
+         NS_TABLE_ROW_HAS_UNPAGINATED_BSIZE;
 }
 
 inline void nsTableRowFrame::SetHasUnpaginatedBSize(bool aValue)
 {
   if (aValue) {
-    mState |= NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT;
+    mState |= NS_TABLE_ROW_HAS_UNPAGINATED_BSIZE;
   } else {
-    mState &= ~NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT;
+    mState &= ~NS_TABLE_ROW_HAS_UNPAGINATED_BSIZE;
   }
 }
 
