@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.util.HardwareUtils;
 
@@ -144,7 +143,7 @@ public class testSettingsMenuItems extends PixelTest {
                 "The Settings menu did not load", mStringHelper.SETTINGS_LABEL);
 
         // Dismiss the Settings screen and verify that the view is returned to about:home page
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        mSolo.goBack();
 
         // Waiting for page title to appear to be sure that is fully loaded before opening the menu
         mAsserter.ok(mSolo.waitForText(mStringHelper.TITLE_PLACE_HOLDER), "about:home did not load",
@@ -281,7 +280,7 @@ public class testSettingsMenuItems extends PixelTest {
                         mSolo.clickOnText("^Cancel$");
                     } else {
                         // Some submenus aren't dialogs, but are nested screens; exit using "back".
-                        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+                        mSolo.goBack();
                     }
                 }
             }
@@ -290,7 +289,7 @@ public class testSettingsMenuItems extends PixelTest {
             if (mDevice.type.equals("phone")) {
                 int menuDepth = menuPath.length;
                 while (menuDepth > 0) {
-                    mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+                    mSolo.goBack();
                     menuDepth--;
                     // Sleep so subsequent back actions aren't lost.
                     mSolo.sleep(150);

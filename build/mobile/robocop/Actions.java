@@ -9,7 +9,17 @@ public interface Actions {
 
     /** Special keys supported by sendSpecialKey() */
     public enum SpecialKey {
-        DOWN, UP, LEFT, RIGHT, ENTER, MENU, BACK
+        DOWN,
+        UP,
+        LEFT,
+        RIGHT,
+        ENTER,
+        MENU,
+        /**
+         * @deprecated Use Solo.goBack() in Robocop instead.
+         */
+        @Deprecated
+        BACK
     }
 
     public interface EventExpecter {
@@ -40,7 +50,7 @@ public interface Actions {
 
     /**
      * Sends an event to Gecko.
-     * 
+     *
      * @param geckoEvent The geckoEvent JSONObject's type
      */
     void sendGeckoEvent(String geckoEvent, String data);
@@ -72,7 +82,7 @@ public interface Actions {
      * Listens for a gecko event to be sent from the Gecko instance.
      * The returned object can be used to test if the event has been
      * received. Note that only one event is listened for.
-     * 
+     *
      * @param geckoEvent The geckoEvent JSONObject's type
      */
     RepeatedEventExpecter expectGeckoEvent(String geckoEvent);
@@ -85,9 +95,9 @@ public interface Actions {
      */
     RepeatedEventExpecter expectPaint();
 
-    /** 
-     * Send a string to the application 
-     * 
+    /**
+     * Send a string to the application
+     *
      * @param keysToSend The string to send
      */
     void sendKeys(String keysToSend);

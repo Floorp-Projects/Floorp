@@ -18,6 +18,11 @@ function performChecks(target) {
     for (let index = 0; index < toolIds.length; index++) {
       let toolId = toolIds[index];
 
+      // FIXME Bug 1175850 - Enable storage inspector tests after upgrading for E10S
+      if (toolId === "storage") {
+        continue;
+      }
+
       info("About to open " + index + "/" + toolId);
       toolbox = yield gDevTools.showToolbox(target, toolId);
       ok(toolbox, "toolbox exists for " + toolId);

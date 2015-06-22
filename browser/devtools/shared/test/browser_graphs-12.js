@@ -3,7 +3,9 @@
 
 // Tests that canvas graphs can have their selection linked.
 
-let {LineGraphWidget,BarGraphWidget,CanvasGraphUtils} = devtools.require("devtools/shared/widgets/Graphs");
+let LineGraphWidget = devtools.require("devtools/shared/widgets/LineGraphWidget");
+let BarGraphWidget = devtools.require("devtools/shared/widgets/BarGraphWidget");
+let {CanvasGraphUtils} = devtools.require("devtools/shared/widgets/Graphs");
 let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
 
 add_task(function*() {
