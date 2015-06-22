@@ -31,6 +31,7 @@
 #include <aio.h>
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #ifdef MOZ_REPLACE_MALLOC
 #include "replace_malloc_bridge.h"

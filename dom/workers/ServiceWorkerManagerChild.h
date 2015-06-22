@@ -42,6 +42,10 @@ public:
   virtual bool RecvNotifyUnregister(const PrincipalInfo& aPrincipalInfo,
                                     const nsString& aScope) override;
 
+  virtual bool RecvNotifyRemove(const nsCString& aHost) override;
+
+  virtual bool RecvNotifyRemoveAll() override;
+
 private:
   ServiceWorkerManagerChild()
     : mShuttingDown(false)

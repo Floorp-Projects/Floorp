@@ -548,6 +548,10 @@ pref("layers.low-precision-opacity", "1.0");
 // work harder keep scrolling smooth and memory low.
 pref("layers.max-active", 20);
 
+// Temporarily disable support for offsetX/Y to work around Google Maps bug
+// (bug 1150284)
+pref("dom.mouseEvent.offsetXY.enabled", false);
+
 pref("notification.feature.enabled", true);
 pref("dom.webnotifications.enabled", true);
 
@@ -918,4 +922,5 @@ pref("consoleservice.logcat", true);
 // Enable Service Workers for Android on non-release builds
 #ifndef RELEASE_BUILD
 pref("dom.serviceWorkers.enabled", true);
+pref("dom.serviceWorkers.interception.enabled", true);
 #endif

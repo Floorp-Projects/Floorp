@@ -12,11 +12,11 @@
 
 namespace js {
 
-class ObjectValueMap : public WeakMap<PreBarrieredObject, RelocatableValue>
+class ObjectValueMap : public WeakMap<PreBarrieredObject, HeapValue>
 {
   public:
     ObjectValueMap(JSContext* cx, JSObject* obj)
-      : WeakMap<PreBarrieredObject, RelocatableValue>(cx, obj) {}
+      : WeakMap<PreBarrieredObject, HeapValue>(cx, obj) {}
 
     virtual bool findZoneEdges();
 };

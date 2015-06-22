@@ -100,6 +100,9 @@ let ContentPolicyManager = {
   addListener(callback, opts) {
     let id = this.nextId++;
     opts.id = id;
+    if (opts.filter.urls) {
+      opts.filter.urls = opts.filter.urls.serialize();
+    }
     Services.ppmm.broadcastAsyncMessage("WebRequest:AddContentPolicy", opts);
 
     this.policyData.set(id, opts);

@@ -158,7 +158,7 @@ class DroidADB(DeviceManagerADB, DroidMixin):
         package = None
         data = None
         try:
-            data = self.shellCheckOutput(["dumpsys", "window", "windows"])
+            data = self.shellCheckOutput(["dumpsys", "window", "windows"], timeout=self.short_timeout)
         except:
             # dumpsys seems to intermittently fail (seen on 4.3 emulator), producing
             # no output.
