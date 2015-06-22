@@ -9,6 +9,7 @@
 #include "CreateDirectoryTask.h"
 #include "CreateFileTask.h"
 #include "FileSystemPermissionRequest.h"
+#include "GetDirectoryListingTask.h"
 #include "GetFileOrDirectoryTask.h"
 #include "RemoveTask.h"
 
@@ -215,6 +216,34 @@ Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
   nsRefPtr<RemoveTask> task = new RemoveTask(mFileSystem, mPath, blob, realPath,
     aRecursive, aRv);
   if (aRv.Failed()) {
+    return nullptr;
+  }
+  task->SetError(error);
+  FileSystemPermissionRequest::RequestForTask(task);
+  return task->GetPromise();
+}
+
+void
+Directory::GetPath(nsAString& aRetval) const
+{
+  if (mPath.IsEmpty()) {
+    // The Directory ctor removes any trailing '/'; this is the root directory.
+    aRetval.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR);
+  } else {
+    aRetval = Substring(mPath, 0,
+                        mPath.RFindChar(FileSystemUtils::kSeparatorChar) + 1);
+  }
+}
+
+already_AddRefed<Promise>
+Directory::GetFilesAndDirectories()
+{
+  nsresult error = NS_OK;
+  nsString realPath;
+  ErrorResult rv;
+  nsRefPtr<GetDirectoryListingTask> task =
+    new GetDirectoryListingTask(mFileSystem, mPath, rv);
+  if (NS_WARN_IF(rv.Failed())) {
     return nullptr;
   }
   task->SetError(error);
