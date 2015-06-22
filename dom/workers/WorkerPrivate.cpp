@@ -5869,11 +5869,13 @@ WorkerPrivate::AddFeature(JSContext* aCx, WorkerFeature* aFeature)
   }
 
   MOZ_ASSERT(!mFeatures.Contains(aFeature), "Already know about this one!");
-  mFeatures.AppendElement(aFeature);
 
-  return mFeatures.Length() == 1 ?
-         ModifyBusyCountFromWorker(aCx, true) :
-         true;
+  if (mFeatures.IsEmpty() && !ModifyBusyCountFromWorker(aCx, true)) {
+    return false;
+  }
+
+  mFeatures.AppendElement(aFeature);
+  return true;
 }
 
 void

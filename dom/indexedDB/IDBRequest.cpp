@@ -435,11 +435,19 @@ class IDBOpenDBRequest::WorkerFeature final
   : public mozilla::dom::workers::WorkerFeature
 {
   WorkerPrivate* mWorkerPrivate;
+#ifdef DEBUG
+  // This is only here so that assertions work in the destructor even if
+  // NoteAddFeatureFailed was called.
+  WorkerPrivate* mWorkerPrivateDEBUG;
+#endif
 
 public:
   explicit
   WorkerFeature(WorkerPrivate* aWorkerPrivate)
     : mWorkerPrivate(aWorkerPrivate)
+#ifdef DEBUG
+    , mWorkerPrivateDEBUG(aWorkerPrivate)
+#endif
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -449,11 +457,24 @@ public:
 
   ~WorkerFeature()
   {
-    mWorkerPrivate->AssertIsOnWorkerThread();
+#ifdef DEBUG
+    mWorkerPrivateDEBUG->AssertIsOnWorkerThread();
+#endif
 
     MOZ_COUNT_DTOR(IDBOpenDBRequest::WorkerFeature);
 
-    mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), this);
+    if (mWorkerPrivate) {
+      mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), this);
+    }
+  }
+
+  void
+  NoteAddFeatureFailed()
+  {
+    MOZ_ASSERT(mWorkerPrivate);
+    mWorkerPrivate->AssertIsOnWorkerThread();
+
+    mWorkerPrivate = nullptr;
   }
 
 private:
@@ -520,6 +541,7 @@ IDBOpenDBRequest::CreateForJS(IDBFactory* aFactory,
 
     nsAutoPtr<WorkerFeature> feature(new WorkerFeature(workerPrivate));
     if (NS_WARN_IF(!workerPrivate->AddFeature(cx, feature))) {
+      feature->NoteAddFeatureFailed();
       return nullptr;
     }
 
