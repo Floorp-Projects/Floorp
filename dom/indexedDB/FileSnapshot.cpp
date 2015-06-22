@@ -9,6 +9,7 @@
 #include "IDBFileHandle.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/MetadataHelper.h"
 
 #ifdef DEBUG
@@ -29,7 +30,8 @@ BlobImplSnapshot::BlobImplSnapshot(const nsAString& aName,
   : BlobImplBase(aName,
                  aContentType,
                  aMetadataParams->Size(),
-                 aMetadataParams->LastModified())
+                 aMetadataParams->LastModified(),
+                 BlobDirState::eUnknownIfDir)
   , mFile(aFile)
   , mWholeFile(true)
 {
