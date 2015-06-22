@@ -424,7 +424,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
           // the overflow area may have changed inflate the overflow area
           const nsStylePosition *stylePos = StylePosition();
           nsStyleUnit unit = stylePos->BSize(wm).GetUnit();
-          if (aReflowState.tableFrame->IsAutoHeight() &&
+          if (aReflowState.tableFrame->IsAutoBSize(wm) &&
               unit != eStyleUnit_Coord) {
             // Because other cells in the row may need to be aligned
             // differently, repaint the entire row
@@ -837,9 +837,9 @@ nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext*           aPresContext,
 
 nscoord
 nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
-                                                  nscoord aISize)
+                                                  nscoord aISize,
+                                                  WritingMode aWM)
 {
-  WritingMode wm = GetWritingMode(); // XXX pass from caller
   nsTableFrame* tableFrame = GetTableFrame();
   nscoord containerWidth = tableFrame->GetRect().width;
   const nsStyleVisibility* groupVis = StyleVisibility();
@@ -861,28 +861,28 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
     rowFrame = rowFrame->GetNextRow();
   }
 
-  LogicalRect groupRect = GetLogicalRect(wm, containerWidth);
+  LogicalRect groupRect = GetLogicalRect(aWM, containerWidth);
   nsRect oldGroupRect = GetRect();
   nsRect oldGroupVisualOverflow = GetVisualOverflowRect();
 
-  groupRect.BSize(wm) -= bGroupOffset;
+  groupRect.BSize(aWM) -= bGroupOffset;
   if (didCollapse) {
     // add back the cellspacing between rowgroups
-    groupRect.BSize(wm) += tableFrame->GetRowSpacing(GetStartRowIndex() +
-                                                     GetRowCount());
+    groupRect.BSize(aWM) += tableFrame->GetRowSpacing(GetStartRowIndex() +
+                                                      GetRowCount());
   }
 
-  groupRect.BStart(wm) -= aBTotalOffset;
-  groupRect.ISize(wm) = aISize;
+  groupRect.BStart(aWM) -= aBTotalOffset;
+  groupRect.ISize(aWM) = aISize;
 
   if (aBTotalOffset != 0) {
     InvalidateFrameSubtree();
   }
 
-  SetRect(wm, groupRect, containerWidth);
-  overflow.UnionAllWith(nsRect(0, 0, groupRect.Width(wm),
-                               groupRect.Height(wm)));
-  FinishAndStoreOverflow(overflow, groupRect.Size(wm).GetPhysicalSize(wm));
+  SetRect(aWM, groupRect, containerWidth);
+  overflow.UnionAllWith(nsRect(0, 0, groupRect.Width(aWM),
+                               groupRect.Height(aWM)));
+  FinishAndStoreOverflow(overflow, groupRect.Size(aWM).GetPhysicalSize(aWM));
   nsTableFrame::RePositionViews(this);
   nsTableFrame::InvalidateTableFrame(this, oldGroupRect, oldGroupVisualOverflow,
                                      false);
@@ -1330,7 +1330,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   // Row geometry may be going to change so we need to invalidate any row cursor.
   ClearRowCursor();
 
-  // see if a special height reflow needs to occur due to having a pct height
+  // see if a special bsize reflow needs to occur due to having a pct bsize
   nsTableFrame::CheckRequestSpecialBSizeReflow(aReflowState);
 
   nsTableFrame* tableFrame = GetTableFrame();
