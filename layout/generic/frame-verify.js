@@ -13,7 +13,7 @@ function inheritsFrom(t, baseName)
   if (name == baseName)
     return true;
   
-  for each (let base in t.bases)
+  for (let base of t.bases)
     if (inheritsFrom(base.type, baseName))
       return true;
     
@@ -33,7 +33,7 @@ function process_type(t)
       
       output.push('CLASS-DEF: %s'.format(t.name));
 
-      for each (let base in t.bases) {
+      for (let base of t.bases) {
         if (inheritsFrom(base.type, 'nsIFrame')) {
           output.push('%s -> %s;'.format(base.type.name, t.name));
         }
@@ -43,7 +43,7 @@ function process_type(t)
       }
       
       output.push('%s [label="%s%s"];'.format(t.name, t.name,
-                                              ["\\n(%s)".format(b) for each (b in nonFrameBases)].join('')));
+                                              nonFrameBases.map(b => "\\n(%s)".format(b)).join('')));
     }
   }
 }
@@ -83,7 +83,7 @@ function process_cp_pre_genericize(d)
 
 function input_end()
 {
-  for each (let [name, loc] in needIDs) {
+  for (let [name, loc] of needIDs) {
     if (!haveIDs.hasOwnProperty(name)) {
       error("nsQueryFrame<%s> found, but %s::kFrameIID is not declared".format(name, name), loc);
     }

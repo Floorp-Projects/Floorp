@@ -16,6 +16,7 @@ function testSteps()
   let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
+  request.onsuccess = grabEventAndContinueHandler;
   let event = yield undefined;
 
   let db = event.target.result;
@@ -371,6 +372,11 @@ function testSteps()
   yield undefined;
 
   is(keyIndex, -1, "Saw all added items");
+
+  // Wait for success
+  yield undefined;
+
+  db.close();
 
   finishTest();
   yield undefined;

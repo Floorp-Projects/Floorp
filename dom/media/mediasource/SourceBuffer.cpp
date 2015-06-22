@@ -488,11 +488,13 @@ SourceBuffer::AppendDataCompletedWithSuccess(bool aHasActiveTracks)
       }
     }
   }
-  if (mActive) {
+  if (mActive && mIsUsingFormatReader) {
     // Tell our parent decoder that we have received new data.
     // The information provided do not matter much so long as it is monotonically
     // increasing.
     mMediaSource->GetDecoder()->NotifyDataArrived(nullptr, 1, mReportedOffset++);
+    // Send progress event.
+    mMediaSource->GetDecoder()->NotifyBytesDownloaded();
   }
 
   CheckEndTime();

@@ -12,6 +12,8 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
+                                  "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebRequestCommon",
                                   "resource://gre/modules/WebRequestCommon.jsm");
 
@@ -42,6 +44,9 @@ let ContentPolicy = {
   addContentPolicy({id, blocking, filter}) {
     if (this.contentPolicies.size == 0) {
       this.register();
+    }
+    if (filter.urls) {
+      filter.urls = new MatchPattern(filter.urls);
     }
     this.contentPolicies.set(id, {blocking, filter});
   },

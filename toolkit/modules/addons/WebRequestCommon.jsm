@@ -32,16 +32,11 @@ let WebRequestCommon = {
     return filterTypes.indexOf(this.typeForPolicyType(policyType)) != -1;
   },
 
-  urlMatches(uri, urlFilters) {
-    if (urlFilters === null) {
+  urlMatches(uri, urlFilter) {
+    if (urlFilter === null) {
       return true;
     }
 
-    for (let urlRegexp of urlFilters) {
-      if (urlRegexp.test(uri.spec)) {
-        return true;
-      }
-    }
-    return false;
+    return urlFilter.matches(uri);
   }
 };

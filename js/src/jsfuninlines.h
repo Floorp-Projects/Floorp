@@ -85,7 +85,12 @@ CloneFunctionObjectIfNotSingleton(JSContext* cx, HandleFunction fun, HandleObjec
     gc::AllocKind kind = fun->isExtended()
                          ? extendedFinalizeKind
                          : finalizeKind;
-    return CloneFunctionObject(cx, fun, parent, kind, newKind, proto);
+
+    if (CanReuseScriptForClone(cx->compartment(), fun, parent))
+        return CloneFunctionReuseScript(cx, fun, parent, kind, newKind, proto);
+
+    RootedObject staticScope(cx, fun->getOrCreateScript(cx)->enclosingStaticScope());
+    return CloneFunctionAndScript(cx, fun, parent, staticScope, kind, proto);
 }
 
 } /* namespace js */
