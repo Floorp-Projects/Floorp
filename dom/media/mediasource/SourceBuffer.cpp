@@ -316,7 +316,7 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aMediaSource);
   mEvictionThreshold = Preferences::GetUint("media.mediasource.eviction_threshold",
-                                            75 * (1 << 20));
+                                            100 * (1 << 20));
   mContentManager =
     SourceBufferContentManager::CreateManager(this,
                                               aMediaSource->GetDecoder(),
