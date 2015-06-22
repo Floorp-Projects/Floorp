@@ -17,8 +17,7 @@ function goUpdateGlobalEditMenuItems()
 
   goUpdateCommand("cmd_undo");
   goUpdateCommand("cmd_redo");
-  goUpdateCommand("cmd_cut");
-  goUpdateCommand("cmd_copy");
+  // don't update the cmd_cut or cmd_copy items - as we want them to always be enabled
   goUpdateCommand("cmd_paste");
   goUpdateCommand("cmd_selectAll");
   goUpdateCommand("cmd_delete");
