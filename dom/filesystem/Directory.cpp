@@ -100,7 +100,7 @@ Directory::CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions,
                       ErrorResult& aRv)
 {
   nsresult error = NS_OK;
-  nsString realPath;
+  nsAutoString realPath;
   nsRefPtr<Blob> blobData;
   InfallibleTArray<uint8_t> arrayData;
   bool replace = (aOptions.mIfExists == CreateIfExistsMode::Replace);
@@ -143,7 +143,7 @@ already_AddRefed<Promise>
 Directory::CreateDirectory(const nsAString& aPath, ErrorResult& aRv)
 {
   nsresult error = NS_OK;
-  nsString realPath;
+  nsAutoString realPath;
   if (!DOMPathToRealPath(aPath, realPath)) {
     error = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
   }
@@ -161,7 +161,7 @@ already_AddRefed<Promise>
 Directory::Get(const nsAString& aPath, ErrorResult& aRv)
 {
   nsresult error = NS_OK;
-  nsString realPath;
+  nsAutoString realPath;
   if (!DOMPathToRealPath(aPath, realPath)) {
     error = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
   }
@@ -192,7 +192,7 @@ Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
                           ErrorResult& aRv)
 {
   nsresult error = NS_OK;
-  nsString realPath;
+  nsAutoString realPath;
   nsRefPtr<BlobImpl> blob;
 
   // Check and get the target path.
