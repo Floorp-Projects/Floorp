@@ -33,7 +33,7 @@ function test_simple_source_map()
                                  "http://example.com/www/js/b.js",
                                  "http://example.com/www/js/c.js"]);
 
-  gClient.addListener("newSource", function _onNewSource(aEvent, aPacket) {
+  gThreadClient.addListener("newSource", function _onNewSource(aEvent, aPacket) {
     do_check_eq(aEvent, "newSource");
     do_check_eq(aPacket.type, "newSource");
     do_check_true(!!aPacket.source);
