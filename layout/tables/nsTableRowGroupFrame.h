@@ -182,16 +182,18 @@ public:
   void SetContinuousBCBorderWidth(mozilla::LogicalSide aForSide,
                                   BCPixelSize aPixelValue);
   /**
-    * Adjust to the effect of visibibility:collapse on the row group and
+    * Adjust to the effect of visibility:collapse on the row group and
     * its children
     * @return              additional shift bstart-wards that should be applied
     *                      to subsequent rowgroups due to rows and this
     *                      rowgroup being collapsed
     * @param aBTotalOffset the total amount that the rowgroup is shifted
     * @param aISize        new isize of the rowgroup
+    * @param aWM           the table's writing mode
     */
   nscoord CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
-                                      nscoord aISize);
+                                      nscoord aISize,
+                                      mozilla::WritingMode aWM);
 
 // nsILineIterator methods
 public:
