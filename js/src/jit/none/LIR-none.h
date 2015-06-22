@@ -46,6 +46,7 @@ class LTableSwitchV : public LInstruction
 class LGuardShape : public LInstruction {};
 class LGuardObjectGroup : public LInstruction {};
 class LMulI : public LInstruction {};
+class LRandom : public LInstructionHelper<1, 0, 5> {};
 
 } // namespace jit
 } // namespace js
