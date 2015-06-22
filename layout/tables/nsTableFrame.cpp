@@ -1761,7 +1761,7 @@ nsTableFrame::RequestSpecialBSizeReflow(const nsHTMLReflowState& aReflowState)
  * XXX (jfkthame) This comment appears to be out of date; it refers to methods/flags
  *                that are no longer present in the code.
  * 2) After the pass 2 reflow, if the table's NeedToInitiateSpecialReflow(true) was called, it
- *    will do the special bsize reflow, setting the reflow state's mFlags.mSpecialHeightReflow
+ *    will do the special bsize reflow, setting the reflow state's mFlags.mSpecialBSizeReflow
  *    to true and mSpecialHeightInitiator to itself. It won't do this if IsPrematureSpecialHeightReflow()
  *    returns true because in that case another special bsize reflow will be coming along with the
  *    containing table as the mSpecialHeightInitiator. It is only relevant to do the reflow when
@@ -1864,7 +1864,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
     }
     nsIFrame* lastChildReflowed = nullptr;
 
-    NS_ASSERTION(!aReflowState.mFlags.mSpecialHeightReflow,
+    NS_ASSERTION(!aReflowState.mFlags.mSpecialBSizeReflow,
                  "Shouldn't be in special bsize reflow here!");
 
     // do the pass 2 reflow unless this is a special bsize reflow and we will be
@@ -1894,7 +1894,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
 
       // distribute extra block-direction space to rows
       CalcDesiredBSize(aReflowState, aDesiredSize);
-      mutable_rs.mFlags.mSpecialHeightReflow = true;
+      mutable_rs.mFlags.mSpecialBSizeReflow = true;
 
       ReflowTable(aDesiredSize, aReflowState, aReflowState.AvailableBSize(),
                   lastChildReflowed, aStatus);
@@ -1909,7 +1909,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
       }
       haveDesiredBSize = true;
 
-      mutable_rs.mFlags.mSpecialHeightReflow = false;
+      mutable_rs.mFlags.mSpecialBSizeReflow = false;
     }
   }
   else {
@@ -2715,7 +2715,7 @@ nsTableFrame::InitChildReflowState(nsHTMLReflowState& aReflowState)
   aReflowState.Init(presContext, nullptr, pCollapseBorder, &padding);
 
   NS_ASSERTION(!mBits.mResizedColumns ||
-               !aReflowState.parentReflowState->mFlags.mSpecialHeightReflow,
+               !aReflowState.parentReflowState->mFlags.mSpecialBSizeReflow,
                "should not resize columns on special bsize reflow");
   if (mBits.mResizedColumns) {
     aReflowState.SetHResize(true);
@@ -3026,7 +3026,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
     // See if we should only reflow the dirty child frames
     if (reflowAllKids ||
         NS_SUBTREE_DIRTY(kidFrame) ||
-        (aReflowState.reflowState.mFlags.mSpecialHeightReflow &&
+        (aReflowState.reflowState.mFlags.mSpecialBSizeReflow &&
          (isPaginated || (kidFrame->GetStateBits() &
                           NS_FRAME_CONTAINS_RELATIVE_BSIZE)))) {
       if (pageBreak) {

@@ -867,11 +867,11 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsTableCellFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  if (aReflowState.mFlags.mSpecialHeightReflow) {
+  if (aReflowState.mFlags.mSpecialBSizeReflow) {
     FirstInFlow()->AddStateBits(NS_TABLE_CELL_HAD_SPECIAL_REFLOW);
   }
 
-  // see if a special height reflow needs to occur due to having a pct height
+  // see if a special bsize reflow needs to occur due to having a pct height
   nsTableFrame::CheckRequestSpecialBSizeReflow(aReflowState);
 
   aStatus = NS_FRAME_COMPLETE;
@@ -902,7 +902,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   NS_ASSERTION(firstKid, "Frame construction error, a table cell always has an inner cell frame");
   nsTableFrame* tableFrame = GetTableFrame();
 
-  if (aReflowState.mFlags.mSpecialHeightReflow) {
+  if (aReflowState.mFlags.mSpecialBSizeReflow) {
     const_cast<nsHTMLReflowState&>(aReflowState).
       SetComputedBSize(BSize(wm) - borderPadding.BStartEnd(wm));
     DISPLAY_REFLOW_CHANGE();
@@ -925,22 +925,22 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
                                    availSize.ConvertTo(kidWM, wm));
 
   // Don't be a percent height observer if we're in the middle of
-  // special-height reflow, in case we get an accidental NotifyPercentBSize()
-  // call (which we shouldn't honor during special-height reflow)
-  if (!aReflowState.mFlags.mSpecialHeightReflow) {
+  // special-bsize reflow, in case we get an accidental NotifyPercentBSize()
+  // call (which we shouldn't honor during special-bsize reflow)
+  if (!aReflowState.mFlags.mSpecialBSizeReflow) {
     // mPercentBSizeObserver is for children of cells in quirks mode,
     // but only those than are tables in standards mode.  NeedsToObserve
     // will determine how far this is propagated to descendants.
     kidReflowState.mPercentBSizeObserver = this;
   }
-  // Don't propagate special height reflow state to our kids
-  kidReflowState.mFlags.mSpecialHeightReflow = false;
+  // Don't propagate special bsize reflow state to our kids
+  kidReflowState.mFlags.mSpecialBSizeReflow = false;
 
-  if (aReflowState.mFlags.mSpecialHeightReflow ||
+  if (aReflowState.mFlags.mSpecialBSizeReflow ||
       (FirstInFlow()->GetStateBits() & NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) {
     // We need to force the kid to have mBResize set if we've had a
     // special reflow in the past, since the non-special reflow needs to
-    // resize back to what it was without the special height reflow.
+    // resize back to what it was without the special bsize reflow.
     kidReflowState.SetBResize(true);
   }
 
@@ -1016,7 +1016,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
 
   // the overflow area will be computed when BlockDirAlignChild() gets called
 
-  if (aReflowState.mFlags.mSpecialHeightReflow) {
+  if (aReflowState.mFlags.mSpecialBSizeReflow) {
     if (aDesiredSize.BSize(wm) > BSize(wm)) {
       // set a bit indicating that the pct bsize contents exceeded
       // the height that they could honor in the pass 2 reflow
