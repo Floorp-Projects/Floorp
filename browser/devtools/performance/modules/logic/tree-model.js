@@ -459,6 +459,7 @@ FrameNode.prototype = {
     parsedData.categoryData = categoryData;
     parsedData.isContent = this.isContent;
     parsedData.isMetaCategory = this.isMetaCategory;
+    parsedData.hasOptimizations = this.hasOptimizations();
 
     return this._data = parsedData;
   },
@@ -469,7 +470,7 @@ FrameNode.prototype = {
    * @return {Boolean}
    */
   hasOptimizations: function () {
-    return !!this._optimizations;
+    return !this.isMetaCategory && !!this._optimizations;
   },
 
   /**

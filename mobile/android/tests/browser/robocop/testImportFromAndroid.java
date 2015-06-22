@@ -6,7 +6,6 @@ package org.mozilla.gecko.tests;
 
 import java.util.ArrayList;
 
-import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoProfile;
 
@@ -55,7 +54,7 @@ public class testImportFromAndroid extends AboutHomeTest {
         firefoxBookmarks = mDatabaseHelper.getBrowserDBUrls(DatabaseHelper.BrowserDataType.BOOKMARKS);
 
         /**
-         * Add a delay to make sure the imported items are added to the array lists 
+         * Add a delay to make sure the imported items are added to the array lists
          * if there are a lot of history items in the Android Browser database
          */
         boolean success = waitForCondition(new Condition() {
@@ -157,10 +156,10 @@ public class testImportFromAndroid extends AboutHomeTest {
         if ("phone".equals(mDevice.type)) {
             // Phones don't have headers like tablets, so we need to pop up one more level.
             waitForText(mStringHelper.IMPORT_FROM_ANDROID_LABEL);
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+            mSolo.goBack();
         }
         waitForText(mStringHelper.PRIVACY_SECTION_LABEL); // Settings is a header for the settings menu page. Waiting for Privacy ensures we are back in the top Settings view
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Exit Settings
+        mSolo.goBack(); // Exit Settings
         // Make sure the settings menu has been closed.
         mAsserter.ok(mSolo.waitForText(mStringHelper.TITLE_PLACE_HOLDER), "Waiting for search bar", "Search bar found");
 

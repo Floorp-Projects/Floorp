@@ -4,8 +4,6 @@
 
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.Actions;
-
 public class testPromptGridInput extends BaseTest {
     protected int index = 1;
     public void testPromptGridInput() {
@@ -29,7 +27,7 @@ public class testPromptGridInput extends BaseTest {
         mSolo.clickOnText("OK");
 
         mAsserter.ok(waitForText("PASS"), "test passed", "PASS");
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        mSolo.goBack();
     }
 
     public void testGridItem(String title) {

@@ -185,8 +185,7 @@ RecordingModel.prototype = {
 
   /**
    * Returns configuration object of specifying whether the recording
-   * was started withTicks, withMemory and withAllocations and other
-   * recording options.
+   * was started withTicks, withMemory and withAllocations, and other configurations.
    * @return object
    */
   getConfiguration: function () {

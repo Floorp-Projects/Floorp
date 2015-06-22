@@ -463,7 +463,7 @@ var gEventManager = {
 
     let addonTooltip = document.getElementById("addonitem-tooltip");
     addonTooltip.addEventListener("popupshowing", function() {
-      let addonItem = document.tooltipNode;
+      let addonItem = addonTooltip.triggerNode;
       // The way the test triggers the tooltip the richlistitem is the
       // tooltipNode but in normal use it is the anonymous node. This allows
       // any case

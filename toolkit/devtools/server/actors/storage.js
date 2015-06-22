@@ -8,43 +8,41 @@ const {Cu, Cc, Ci} = require("chrome");
 const events = require("sdk/event/core");
 const protocol = require("devtools/server/protocol");
 try {
-    const { indexedDB } = require("sdk/indexed-db");
+  const { indexedDB } = require("sdk/indexed-db");
 } catch (e) {
-    // In xpcshell tests, we can't actually have indexedDB, which is OK:
-    // we don't use it there anyway.
+  // In xpcshell tests, we can't actually have indexedDB, which is OK:
+  // we don't use it there anyway.
 }
 const {async} = require("devtools/async-utils");
 const {Arg, Option, method, RetVal, types} = protocol;
-const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
+const {LongStringActor} = require("devtools/server/actors/string");
+const {DebuggerServer} = require("devtools/server/main");
+const Services = require("Services");
+const promise = require("promise");
 
-Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
+loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
+loader.lazyImporter(this, "Sqlite", "resource://gre/modules/Sqlite.jsm");
+loader.lazyImporter(this, "LayoutHelpers",
+                    "resource://gre/modules/devtools/LayoutHelpers.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
-  "resource://gre/modules/Sqlite.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-  "resource://gre/modules/osfile.jsm");
-
-// Global required for window less Indexed DB instantiation.
-let global = this;
+let gTrackedMessageManager = new Map();
 
 // Maximum number of cookies/local storage key-value-pairs that can be sent
 // over the wire to the client in one request.
 const MAX_STORE_OBJECT_COUNT = 50;
 // Interval for the batch job that sends the accumilated update packets to the
-// client.
-const UPDATE_INTERVAL = 500; // ms
+// client (ms).
+const UPDATE_INTERVAL = 500;
 
 // A RegExp for characters that cannot appear in a file/directory name. This is
 // used to sanitize the host name for indexed db to lookup whether the file is
 // present in <profileDir>/storage/default/ location
 let illegalFileNameCharacters = [
   "[",
-  "\\x00-\\x25",     // Control characters \001 to \037
-  "/:*?\\\"<>|\\\\", // Special characters
+  // Control characters \001 to \037
+  "\\x00-\\x25",
+  // Special characters
+  "/:*?\\\"<>|\\\\",
   "]"
 ].join("");
 let ILLEGAL_CHAR_REGEX = new RegExp(illegalFileNameCharacters, "g");
@@ -71,7 +69,7 @@ function getRegisteredTypes() {
  *        The wait Ttme in milliseconds.
  */
 function sleep(time) {
-  let wait = Promise.defer();
+  let wait = promise.defer();
   let updateTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   updateTimer.initWithCallback({
     notify: function() {
@@ -79,7 +77,7 @@ function sleep(time) {
       updateTimer = null;
       wait.resolve(null);
     }
-  } , time, Ci.nsITimer.TYPE_ONE_SHOT);
+  }, time, Ci.nsITimer.TYPE_ONE_SHOT);
   return wait.promise;
 }
 
@@ -322,7 +320,8 @@ StorageActors.defaults = function(typeName, observationTopic, storeObjectType) {
      *        Array containing the names of required store objects. Empty if all
      *        items are required.
      * @param {object} options
-     *        Additional options for the request containing following properties:
+     *        Additional options for the request containing following
+     *        properties:
      *         - offset {number} : The begin index of the returned array amongst
      *                  the total values
      *         - size {number} : The number of values required.
@@ -353,33 +352,49 @@ StorageActors.defaults = function(typeName, observationTopic, storeObjectType) {
 
       if (names) {
         for (let name of names) {
-          toReturn.data.push(
-            // yield because getValuesForHost is async for Indexed DB
-            ...(yield this.getValuesForHost(host, name, options))
-          );
+          let values =
+            yield this.getValuesForHost(host, name, options, this.hostVsStores);
+
+          let {result, objectStores} = values;
+
+          if (result && typeof result.objectsSize !== "undefined") {
+            for (let {key, count} of result.objectsSize) {
+              this.objectsSize[key] = count;
+            }
+          }
+
+          if (result) {
+            toReturn.data.push(...result.data);
+          } else if (objectStores) {
+            toReturn.data.push(...objectStores);
+          } else {
+            toReturn.data.push(...values);
+          }
         }
         toReturn.total = this.getObjectsSize(host, names, options);
         if (offset > toReturn.total) {
           // In this case, toReturn.data is an empty array.
           toReturn.offset = toReturn.total;
           toReturn.data = [];
-        }
-        else {
-          toReturn.data = toReturn.data.sort((a,b) => {
+        } else {
+          toReturn.data = toReturn.data.sort((a, b) => {
             return a[sortOn] - b[sortOn];
           }).slice(offset, offset + size).map(a => this.toStoreObject(a));
         }
-      }
-      else {
-        let total = yield this.getValuesForHost(host);
-        toReturn.total = total.length;
+      } else {
+        let obj = yield this.getValuesForHost(host, undefined, undefined,
+                                              this.hostVsStores);
+        if (obj.dbs) {
+          obj = obj.dbs;
+        }
+
+        toReturn.total = obj.length;
         if (offset > toReturn.total) {
           // In this case, toReturn.data is an empty array.
           toReturn.offset = offset = toReturn.total;
           toReturn.data = [];
-        }
-        else {
-          toReturn.data = total.sort((a,b) => {
+        } else {
+          toReturn.data = obj.sort((a, b) => {
             return a[sortOn] - b[sortOn];
           }).slice(offset, offset + size)
             .map(object => this.toStoreObject(object));
@@ -395,7 +410,7 @@ StorageActors.defaults = function(typeName, observationTopic, storeObjectType) {
       },
       response: RetVal(storeObjectType)
     })
-  }
+  };
 };
 
 /**
@@ -441,7 +456,7 @@ StorageActors.createActor = function(options = {}, overrides = {}) {
     }
   });
   storageTypePool.set(actorObject.typeName, actor);
-}
+};
 
 /**
  * The Cookies actor and front.
@@ -455,9 +470,10 @@ StorageActors.createActor({
 
     this.storageActor = storageActor;
 
+    this.maybeSetupChildProcess();
     this.populateStoresForHosts();
-    Services.obs.addObserver(this, "cookie-changed", false);
-    Services.obs.addObserver(this, "http-on-response-set-cookie", false);
+    this.addCookieObservers();
+
     this.onWindowReady = this.onWindowReady.bind(this);
     this.onWindowDestroyed = this.onWindowDestroyed.bind(this);
     events.on(this.storageActor, "window-ready", this.onWindowReady);
@@ -466,8 +482,18 @@ StorageActors.createActor({
 
   destroy: function() {
     this.hostVsStores = null;
-    Services.obs.removeObserver(this, "cookie-changed", false);
-    Services.obs.removeObserver(this, "http-on-response-set-cookie", false);
+
+    this.removeCookieObservers();
+
+    // prevents multiple subscriptions on the same messagemanager
+    let oldMM = gTrackedMessageManager.get("cookies");
+
+    if (oldMM) {
+      gTrackedMessageManager.delete("cookies");
+      oldMM.removeMessageListener("storage:storage-cookie-request-parent",
+                                  cookieHelpers.handleChildRequest);
+    }
+
     events.off(this.storageActor, "window-ready", this.onWindowReady);
     events.off(this.storageActor, "window-destroyed", this.onWindowDestroyed);
   },
@@ -496,21 +522,13 @@ StorageActors.createActor({
    * that host.
    */
   isCookieAtHost: function(cookie, host) {
-    try {
-      cookie = cookie.QueryInterface(Ci.nsICookie)
-                     .QueryInterface(Ci.nsICookie2);
-    } catch(ex) {
-      return false;
-    }
     if (cookie.host == null) {
       return host == null;
     }
     if (cookie.host.startsWith(".")) {
       return host.endsWith(cookie.host);
     }
-    else {
-      return cookie.host == host;
-    }
+    return cookie.host == host;
   },
 
   toStoreObject: function(cookie) {
@@ -522,22 +540,28 @@ StorageActors.createActor({
       name: cookie.name,
       path: cookie.path || "",
       host: cookie.host || "",
-      expires: (cookie.expires || 0) * 1000, // because expires is in seconds
-      creationTime: cookie.creationTime / 1000, // because it is in micro seconds
-      lastAccessed: cookie.lastAccessed / 1000, // - do -
+
+      // because expires is in seconds
+      expires: (cookie.expires || 0) * 1000,
+
+      // because it is in micro seconds
+      creationTime: cookie.creationTime / 1000,
+
+      // - do -
+      lastAccessed: cookie.lastAccessed / 1000,
       value: new LongStringActor(this.conn, cookie.value || ""),
       isDomain: cookie.isDomain,
       isSecure: cookie.isSecure,
       isHttpOnly: cookie.isHttpOnly
-    }
+    };
   },
 
   populateStoresForHost: function(host) {
     this.hostVsStores.set(host, new Map());
-    let cookies = Services.cookies.getCookiesFromHost(host);
-    while (cookies.hasMoreElements()) {
-      let cookie = cookies.getNext().QueryInterface(Ci.nsICookie)
-                          .QueryInterface(Ci.nsICookie2);
+
+    let cookies = this.getCookiesFromHost(host);
+
+    for (let cookie of cookies) {
       if (this.isCookieAtHost(cookie, host)) {
         this.hostVsStores.get(host).set(cookie.name, cookie);
       }
@@ -545,69 +569,9 @@ StorageActors.createActor({
   },
 
   /**
-   * Converts the raw cookie string returned in http request's response header
-   * to a nsICookie compatible object.
-   *
-   * @param {string} cookieString
-   *        The raw cookie string coming from response header.
-   * @param {string} domain
-   *        The domain of the url of the nsiChannel the cookie corresponds to.
-   *        This will be used when the cookie string does not have a domain.
-   *
-   * @returns {[object]}
-   *          An array of nsICookie like objects representing the cookies.
-   */
-  parseCookieString: function(cookieString, domain) {
-    /**
-     * Takes a date string present in raw cookie string coming from http
-     * request's response headers and returns the number of milliseconds elapsed
-     * since epoch. If the date string is undefined, its probably a session
-     * cookie so return 0.
-     */
-    let parseDateString = dateString => {
-      return dateString ? new Date(dateString.replace(/-/g, " ")).getTime(): 0;
-    };
-
-    let cookies = [];
-    for (let string of cookieString.split("\n")) {
-      let keyVals = {}, name = null;
-      for (let keyVal of string.split(/;\s*/)) {
-        let tokens = keyVal.split(/\s*=\s*/);
-        if (!name) {
-          name = tokens[0];
-        }
-        else {
-          tokens[0] = tokens[0].toLowerCase();
-        }
-        keyVals[tokens.splice(0, 1)[0]] = tokens.join("=");
-      }
-      let expiresTime = parseDateString(keyVals.expires);
-      keyVals.domain = keyVals.domain || domain;
-      cookies.push({
-        name: name,
-        value: keyVals[name] || "",
-        path: keyVals.path,
-        host: keyVals.domain,
-        expires: expiresTime/1000, // seconds, to match with nsiCookie.expires
-        lastAccessed: expiresTime * 1000,
-        // microseconds, to match with nsiCookie.lastAccessed
-        creationTime: expiresTime * 1000,
-        // microseconds, to match with nsiCookie.creationTime
-        isHttpOnly: true,
-        isSecure: keyVals.secure != null,
-        isDomain: keyVals.domain.startsWith("."),
-      });
-    }
-    return cookies;
-  },
-
-  /**
-   * Notification observer for topics "http-on-response-set-cookie" and
-   * "cookie-change".
+   * Notification observer for "cookie-change".
    *
    * @param subject
-   *        {nsiChannel} The channel associated to the SET-COOKIE response
-   *        header in case of "http-on-response-set-cookie" topic.
    *        {nsiCookie|[nsiCookie]} A single nsiCookie object or a list of it
    *        depending on the action. Array is only in case of "batch-deleted"
    *        action.
@@ -615,54 +579,20 @@ StorageActors.createActor({
    *        The topic of the notification.
    * @param {string} action
    *        Additional data associated with the notification. Its the type of
-   *        cookie change in case of "cookie-change" topic and the cookie string
-   *        in case of "http-on-response-set-cookie" topic.
+   *        cookie change in the "cookie-change" topic.
    */
-  observe: function(subject, topic, action) {
-    if (topic == "http-on-response-set-cookie") {
-      // Some cookies got created as a result of http response header SET-COOKIE
-      // subject here is an nsIChannel object referring to the http request.
-      // We get the requestor of this channel and thus the content window.
-      let channel = subject.QueryInterface(Ci.nsIChannel);
-      let requestor = channel.notificationCallbacks ||
-                      channel.loadGroup.notificationCallbacks;
-      // requester can be null sometimes.
-      let window = requestor ? requestor.getInterface(Ci.nsIDOMWindow): null;
-      // Proceed only if this window is present on the currently targetted tab
-      if (window && this.storageActor.isIncludedInTopLevelWindow(window)) {
-        let host = this.getHostName(window.location);
-        if (this.hostVsStores.has(host)) {
-          let cookies = this.parseCookieString(action, channel.URI.host);
-          let data = {};
-          data[host] =  [];
-          for (let cookie of cookies) {
-            if (this.hostVsStores.get(host).has(cookie.name)) {
-              continue;
-            }
-            this.hostVsStores.get(host).set(cookie.name, cookie);
-            data[host].push(cookie.name);
-          }
-          if (data[host]) {
-            this.storageActor.update("added", "cookies", data);
-          }
-        }
-      }
-      return null;
-    }
-
-    if (topic != "cookie-changed") {
+  onCookieChanged: function(subject, topic, action) {
+    if (topic != "cookie-changed" || !this.storageActor.windows) {
       return null;
     }
 
     let hosts = this.getMatchingHosts(subject);
     let data = {};
 
-    switch(action) {
+    switch (action) {
       case "added":
       case "changed":
         if (hosts.length) {
-          subject = subject.QueryInterface(Ci.nsICookie)
-                           .QueryInterface(Ci.nsICookie2);
           for (let host of hosts) {
             this.hostVsStores.get(host).set(subject.name, subject);
             data[host] = [subject.name];
@@ -673,8 +603,6 @@ StorageActors.createActor({
 
       case "deleted":
         if (hosts.length) {
-          subject = subject.QueryInterface(Ci.nsICookie)
-                           .QueryInterface(Ci.nsICookie2);
           for (let host of hosts) {
             this.hostVsStores.get(host).delete(subject.name);
             data[host] = [subject.name];
@@ -688,8 +616,6 @@ StorageActors.createActor({
           for (let host of hosts) {
             let stores = [];
             for (let cookie of subject) {
-              cookie = cookie.QueryInterface(Ci.nsICookie)
-                             .QueryInterface(Ci.nsICookie2);
               this.hostVsStores.get(host).delete(cookie.name);
               stores.push(cookie.name);
             }
@@ -709,8 +635,162 @@ StorageActors.createActor({
     }
     return null;
   },
+
+  maybeSetupChildProcess: function() {
+    cookieHelpers.onCookieChanged = this.onCookieChanged.bind(this);
+
+    if (!DebuggerServer.isInChildProcess) {
+      this.getCookiesFromHost = cookieHelpers.getCookiesFromHost;
+      this.addCookieObservers = cookieHelpers.addCookieObservers;
+      this.removeCookieObservers = cookieHelpers.removeCookieObservers;
+      return;
+    }
+
+    const { sendSyncMessage, addMessageListener } =
+      DebuggerServer.parentMessageManager;
+
+    DebuggerServer.setupInParent({
+      module: "devtools/server/actors/storage",
+      setupParent: "setupParentProcessForCookies"
+    });
+
+    this.getCookiesFromHost =
+      callParentProcess.bind(null, "getCookiesFromHost");
+    this.addCookieObservers =
+      callParentProcess.bind(null, "addCookieObservers");
+    this.removeCookieObservers =
+      callParentProcess.bind(null, "removeCookieObservers");
+
+    addMessageListener("storage:storage-cookie-request-child",
+                       cookieHelpers.handleParentRequest);
+
+    function callParentProcess(methodName, ...args) {
+      let reply = sendSyncMessage("storage:storage-cookie-request-parent", {
+        method: methodName,
+        args: args
+      });
+
+      if (reply.length === 0) {
+        console.error("ERR_DIRECTOR_CHILD_NO_REPLY from " + methodName);
+        throw Error("ERR_DIRECTOR_CHILD_NO_REPLY from " + methodName);
+      } else if (reply.length > 1) {
+        console.error("ERR_DIRECTOR_CHILD_MULTIPLE_REPLIES from " + methodName);
+        throw Error("ERR_DIRECTOR_CHILD_MULTIPLE_REPLIES from " + methodName);
+      }
+
+      let result = reply[0];
+
+      if (methodName === "getCookiesFromHost") {
+        return JSON.parse(result);
+      }
+
+      return result;
+    }
+  },
 });
 
+let cookieHelpers = {
+  getCookiesFromHost: function(host) {
+    let cookies = Services.cookies.getCookiesFromHost(host);
+    let store = [];
+
+    while (cookies.hasMoreElements()) {
+      let cookie = cookies.getNext().QueryInterface(Ci.nsICookie2);
+      store.push(cookie);
+    }
+
+    return store;
+  },
+
+  addCookieObservers: function() {
+    Services.obs.addObserver(cookieHelpers, "cookie-changed", false);
+    return null;
+  },
+
+  removeCookieObservers: function() {
+    Services.obs.removeObserver(cookieHelpers, "cookie-changed", false);
+    return null;
+  },
+
+  observe: function(subject, topic, data) {
+    switch (topic) {
+      case "cookie-changed":
+        let cookie = subject.QueryInterface(Ci.nsICookie2);
+        cookieHelpers.onCookieChanged(cookie, topic, data);
+      break;
+    }
+  },
+
+  handleParentRequest: function(msg) {
+    switch (msg.json.method) {
+      case "onCookieChanged":
+        let [cookie, topic, data] = msg.data.args;
+        cookie = JSON.parse(cookie);
+        cookieHelpers.onCookieChanged(cookie, topic, data);
+      break;
+    }
+  },
+
+  handleChildRequest: function(msg) {
+    switch (msg.json.method) {
+      case "getCookiesFromHost":
+        let host = msg.data.args[0];
+        let cookies = cookieHelpers.getCookiesFromHost(host);
+        return JSON.stringify(cookies);
+      case "addCookieObservers":
+        return cookieHelpers.addCookieObservers();
+        break;
+      case "removeCookieObservers":
+        return cookieHelpers.removeCookieObservers();
+        return null;
+      default:
+        console.error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD", msg.json.method);
+        throw new Error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD");
+    }
+  },
+};
+
+/**
+ * E10S parent/child setup helpers
+ */
+
+exports.setupParentProcessForCookies = function({mm, childID}) {
+  cookieHelpers.onCookieChanged =
+    callChildProcess.bind(null, "onCookieChanged");
+
+  // listen for director-script requests from the child process
+  mm.addMessageListener("storage:storage-cookie-request-parent",
+                        cookieHelpers.handleChildRequest);
+
+  DebuggerServer.once("disconnected-from-child:" + childID,
+                      handleMessageManagerDisconnected);
+
+  gTrackedMessageManager.set("cookies", mm);
+
+  function handleMessageManagerDisconnected(evt, { mm: disconnected_mm }) {
+    // filter out not subscribed message managers
+    if (disconnected_mm !== mm || !gTrackedMessageManager.has(mm)) {
+      return;
+    }
+
+    gTrackedMessageManager.delete("cookies");
+
+    // unregister for director-script requests handlers from the parent process
+    // (if any)
+    mm.removeMessageListener("storage:storage-cookie-request-parent",
+                             cookieHelpers.handleChildRequest);
+  }
+
+  function callChildProcess(methodName, ...args) {
+    if (methodName === "onCookieChanged") {
+      args[0] = JSON.stringify(args[0]);
+    }
+    let reply = mm.sendAsyncMessage("storage:storage-cookie-request-child", {
+      method: methodName,
+      args: args
+    });
+  }
+};
 
 /**
  * Helper method to create the overriden object required in
@@ -730,10 +810,10 @@ function getObjectForLocalOrSessionStorage(type) {
       if (name) {
         return [{name: name, value: storage.getItem(name)}];
       }
-      return Object.keys(storage).map(name => {
+      return Object.keys(storage).map(key => {
         return {
-          name: name,
-          value: storage.getItem(name)
+          name: key,
+          value: storage.getItem(key)
         };
       });
     },
@@ -758,7 +838,8 @@ function getObjectForLocalOrSessionStorage(type) {
       this.hostVsStores = new Map();
       try {
         for (let window of this.windows) {
-          this.hostVsStores.set(this.getHostName(window.location), window[type]);
+          this.hostVsStores.set(this.getHostName(window.location),
+                                window[type]);
         }
       } catch(ex) {
         // Exceptions happen when local or session storage is inaccessible
@@ -780,11 +861,9 @@ function getObjectForLocalOrSessionStorage(type) {
       let action = "changed";
       if (subject.key == null) {
         return this.storageActor.update("cleared", type, [host]);
-      }
-      else if (subject.oldValue == null) {
+      } else if (subject.oldValue == null) {
         action = "added";
-      }
-      else if (subject.newValue == null) {
+      } else if (subject.newValue == null) {
         action = "deleted";
       }
       let updateData = {};
@@ -797,6 +876,9 @@ function getObjectForLocalOrSessionStorage(type) {
      */
     getSchemaAndHost: function(url) {
       let uri = Services.io.newURI(url, null, null);
+      if (!uri.host) {
+        return uri.spec;
+      }
       return uri.scheme + "://" + uri.hostPort;
     },
 
@@ -810,8 +892,8 @@ function getObjectForLocalOrSessionStorage(type) {
         value: new LongStringActor(this.conn, item.value || "")
       };
     },
-  }
-};
+  };
+}
 
 /**
  * The Local Storage actor and front.
@@ -830,7 +912,6 @@ StorageActors.createActor({
   observationTopic: "dom-storage2-changed",
   storeObjectType: "storagestoreobject"
 }, getObjectForLocalOrSessionStorage("sessionStorage"));
-
 
 /**
  * Code related to the Indexed DB actor and front
@@ -871,11 +952,24 @@ function ObjectStoreMetadata(objectStore) {
   this._name = objectStore.name;
   this._keyPath = objectStore.keyPath;
   this._autoIncrement = objectStore.autoIncrement;
-  this._indexes = new Map();
+  this._indexes = [];
 
   for (let i = 0; i < objectStore.indexNames.length; i++) {
     let index = objectStore.index(objectStore.indexNames[i]);
-    this._indexes.set(index, new IndexMetadata(index));
+
+    let newIndex = {
+      keypath: index.keyPath,
+      multiEntry: index.multiEntry,
+      name: index.name,
+      objectStore: {
+        autoIncrement: index.objectStore.autoIncrement,
+        indexNames: [...index.objectStore.indexNames],
+        keyPath: index.objectStore.keyPath,
+        name: index.objectStore.name,
+      }
+    };
+
+    this._indexes.push([newIndex, new IndexMetadata(index)]);
   }
 }
 ObjectStoreMetadata.prototype = {
@@ -903,7 +997,7 @@ function DatabaseMetadata(origin, db) {
   this._origin = origin;
   this._name = db.name;
   this._version = db.version;
-  this._objectStores = new Map();
+  this._objectStores = [];
 
   if (db.objectStoreNames.length) {
     let transaction = db.transaction(db.objectStoreNames, "readonly");
@@ -911,11 +1005,11 @@ function DatabaseMetadata(origin, db) {
     for (let i = 0; i < transaction.objectStoreNames.length; i++) {
       let objectStore =
         transaction.objectStore(transaction.objectStoreNames[i]);
-      this._objectStores.set(transaction.objectStoreNames[i],
-                             new ObjectStoreMetadata(objectStore));
+      this._objectStores.push([transaction.objectStoreNames[i],
+                              new ObjectStoreMetadata(objectStore)]);
     }
   }
-};
+}
 DatabaseMetadata.prototype = {
   get objectStores() {
     return this._objectStores;
@@ -937,10 +1031,13 @@ StorageActors.createActor({
 }, {
   initialize: function(storageActor) {
     protocol.Actor.prototype.initialize.call(this, null);
+    this.maybeSetupChildProcess();
+
     this.objectsSize = {};
     this.storageActor = storageActor;
     this.onWindowReady = this.onWindowReady.bind(this);
     this.onWindowDestroyed = this.onWindowDestroyed.bind(this);
+
     events.on(this.storageActor, "window-ready", this.onWindowReady);
     events.on(this.storageActor, "window-destroyed", this.onWindowDestroyed);
   },
@@ -948,6 +1045,16 @@ StorageActors.createActor({
   destroy: function() {
     this.hostVsStores = null;
     this.objectsSize = null;
+
+    // prevents multiple subscriptions on the same messagemanager
+    let oldMM = gTrackedMessageManager.get("indexedDB");
+
+    if (oldMM) {
+      gTrackedMessageManager.delete("indexedDB");
+      oldMM.removeMessageListener("storage:storage-cookie-request-parent",
+                                  indexedDBHelpers.handleChildRequest);
+    }
+
     events.off(this.storageActor, "window-ready", this.onWindowReady);
     events.off(this.storageActor, "window-destroyed", this.onWindowDestroyed);
   },
@@ -964,99 +1071,17 @@ StorageActors.createActor({
    * cannot be performed synchronously. Thus, the preListStores method exists to
    * do the same task asynchronously.
    */
-  populateStoresForHosts: function() {
-  },
+  populateStoresForHosts: function() {},
 
   getNamesForHost: function(host) {
     let names = [];
+
     for (let [dbName, metaData] of this.hostVsStores.get(host)) {
       for (let objectStore of metaData.objectStores.keys()) {
         names.push(JSON.stringify([dbName, objectStore]));
       }
     }
     return names;
-  },
-
-  /**
-   * Returns all or requested entries from a particular objectStore from the db
-   * in the given host.
-   *
-   * @param {string} host
-   *        The given host.
-   * @param {string} dbName
-   *        The name of the indexed db from the above host.
-   * @param {string} objectStore
-   *        The name of the object store from the above db.
-   * @param {string} id
-   *        id of the requested entry from the above object store.
-   *        null if all entries from the above object store are requested.
-   * @param {string} index
-   *        name of the IDBIndex to be iterated on while fetching entries.
-   *        null or "name" if no index is to be iterated.
-   * @param {number} offset
-   *        ofsset of the entries to be fetched.
-   * @param {number} size
-   *        The intended size of the entries to be fetched.
-   */
-  getObjectStoreData:
-  function(host, dbName, objectStore, id, index, offset, size) {
-    let request = this.openWithOrigin(host, dbName);
-    let success = Promise.defer();
-    let data = [];
-    if (!size || size > MAX_STORE_OBJECT_COUNT) {
-      size = MAX_STORE_OBJECT_COUNT;
-    }
-
-    request.onsuccess = event => {
-      let db = event.target.result;
-
-      let transaction = db.transaction(objectStore, "readonly");
-      let source = transaction.objectStore(objectStore);
-      if (index && index != "name") {
-        source = source.index(index);
-      }
-
-      source.count().onsuccess = event => {
-        let count = event.target.result;
-        this.objectsSize[host + dbName + objectStore + index] = count;
-
-        if (!offset) {
-          offset = 0;
-        }
-        else if (offset > count) {
-          db.close();
-          success.resolve([]);
-          return;
-        }
-
-        if (id) {
-          source.get(id).onsuccess = event => {
-            db.close();
-            success.resolve([{name: id, value: event.target.result}]);
-          };
-        }
-        else {
-          source.openCursor().onsuccess = event => {
-            let cursor = event.target.result;
-
-            if (!cursor || data.length >= size) {
-              db.close();
-              success.resolve(data);
-              return;
-            }
-            if (offset-- <= 0) {
-              data.push({name: cursor.key, value: cursor.value});
-            }
-            cursor.continue();
-          };
-        }
-      };
-    };
-    request.onerror = () => {
-      db.close();
-      success.resolve([]);
-    };
-    return success.promise;
   },
 
   /**
@@ -1086,24 +1111,21 @@ StorageActors.createActor({
       // This is the case where specific entries from an object store were
       // requested
       return names.length;
-    }
-    else if (parsedName.length == 2) {
+    } else if (parsedName.length == 2) {
       // This is the case where all entries from an object store are requested.
       let index = options.index;
       let [db, objectStore] = parsedName;
       if (this.objectsSize[host + db + objectStore + index]) {
         return this.objectsSize[host + db + objectStore + index];
       }
-    }
-    else if (parsedName.length == 1) {
+    } else if (parsedName.length == 1) {
       // This is the case where details of all object stores in a db are
       // requested.
       if (this.hostVsStores.has(host) &&
           this.hostVsStores.get(host).has(parsedName[0])) {
         return this.hostVsStores.get(host).get(parsedName[0]).objectStores.size;
       }
-    }
-    else if (!parsedName || !parsedName.length) {
+    } else if (!parsedName || !parsedName.length) {
       // This is the case were details of all dbs in a host are requested.
       if (this.hostVsStores.has(host)) {
         return this.hostVsStores.get(host).size;
@@ -1111,36 +1133,6 @@ StorageActors.createActor({
     }
     return 0;
   },
-
-  getValuesForHost: async(function*(host, name = "null", options) {
-    name = JSON.parse(name);
-    if (!name || !name.length) {
-      // This means that details about the db in this particular host are
-      // requested.
-      let dbs = [];
-      if (this.hostVsStores.has(host)) {
-        for (let [dbName, db] of this.hostVsStores.get(host)) {
-          dbs.push(db.toObject());
-        }
-      }
-      return dbs;
-    }
-    let [db, objectStore, id] = name;
-    if (!objectStore) {
-      // This means that details about all the object stores in this db are
-      // requested.
-      let objectStores = [];
-      if (this.hostVsStores.has(host) && this.hostVsStores.get(host).has(db)) {
-        for (let objectStore of this.hostVsStores.get(host).get(db).objectStores) {
-          objectStores.push(objectStore[1].toObject());
-        }
-      }
-      return objectStores;
-    }
-    // Get either all entries from the object store, or a particular id
-    return yield this.getObjectStoreData(host, db, objectStore, id,
-                                         options.index, options.size);
-  }),
 
   /**
    * Purpose of this method is same as populateStoresForHosts but this is async.
@@ -1150,6 +1142,7 @@ StorageActors.createActor({
    */
   preListStores: async(function*() {
     this.hostVsStores = new Map();
+
     for (let host of this.hosts) {
       yield this.populateStoresForHost(host);
     }
@@ -1157,143 +1150,16 @@ StorageActors.createActor({
 
   populateStoresForHost: async(function*(host) {
     let storeMap = new Map();
-    for (let name of (yield this.getDBNamesForHost(host))) {
-      storeMap.set(name, yield this.getDBMetaData(host, name));
+    let {names} = yield this.getDBNamesForHost(host);
+
+    for (let name of names) {
+      let metadata = yield this.getDBMetaData(host, name);
+
+      indexedDBHelpers.patchMetadataMapsAndProtos(metadata);
+      storeMap.set(name, metadata);
     }
+
     this.hostVsStores.set(host, storeMap);
-  }),
-
-  /**
-   * Removes any illegal characters from the host name to make it a valid file
-   * name.
-   */
-  getSanitizedHost: function(host) {
-    return host.replace(ILLEGAL_CHAR_REGEX, "+");
-  },
-
-  /**
-   * Opens an indexed db connection for the given `host` and database `name`.
-   */
-  openWithOrigin: function(host, name) {
-    let principal;
-
-    if (/^(about:|chrome:)/.test(host)) {
-      principal = Services.scriptSecurityManager.getSystemPrincipal();
-    }
-    else {
-      let uri = Services.io.newURI(host, null, null);
-      principal = Services.scriptSecurityManager.getCodebasePrincipal(uri);
-    }
-
-    return require("indexedDB").openForPrincipal(principal, name);
-  },
-
-  /**
-   * Fetches and stores all the metadata information for the given database
-   * `name` for the given `host`. The stored metadata information is of
-   * `DatabaseMetadata` type.
-   */
-  getDBMetaData: function(host, name) {
-    let request = this.openWithOrigin(host, name);
-    let success = Promise.defer();
-    request.onsuccess = event => {
-      let db = event.target.result;
-
-      let dbData = new DatabaseMetadata(host, db);
-      db.close();
-      success.resolve(dbData);
-    };
-    request.onerror = event => {
-      console.error("Error opening indexeddb database " + name + " for host " +
-                    host);
-      success.resolve(null);
-    };
-    return success.promise;
-  },
-
-  /**
-   * Retrives the proper indexed db database name from the provided .sqlite file
-   * location.
-   */
-  getNameFromDatabaseFile: async(function*(path) {
-    let connection = null;
-    let retryCount = 0;
-
-    // Content pages might be having an open transaction for the same indexed db
-    // which this sqlite file belongs to. In that case, sqlite.openConnection
-    // will throw. Thus we retey for some time to see if lock is removed.
-    while (!connection && retryCount++ < 25) {
-      try {
-        connection = yield Sqlite.openConnection({ path: path });
-      }
-      catch (ex) {
-        // Continuously retrying is overkill. Waiting for 100ms before next try
-        yield sleep(100);
-      }
-    }
-
-    if (!connection) {
-      return null;
-    }
-
-    let rows = yield connection.execute("SELECT name FROM database");
-    if (rows.length != 1) {
-      return null;
-    }
-
-    let name = rows[0].getResultByName("name");
-
-    yield connection.close();
-
-    return name;
-  }),
-
-  /**
-   * Fetches all the databases and their metadata for the given `host`.
-   */
-  getDBNamesForHost: async(function*(host) {
-    let sanitizedHost = this.getSanitizedHost(host);
-    let directory = OS.Path.join(OS.Constants.Path.profileDir, "storage",
-                                 "default", sanitizedHost, "idb");
-
-    let exists = yield OS.File.exists(directory);
-    if (!exists && host.startsWith("about:")) {
-      // try for moz-safe-about directory
-      sanitizedHost = this.getSanitizedHost("moz-safe-" + host);
-      directory = OS.Path.join(OS.Constants.Path.profileDir, "storage",
-                               "permanent", sanitizedHost, "idb");
-      exists = yield OS.File.exists(directory);
-    }
-    if (!exists) {
-      return [];
-    }
-
-    let names = [];
-    let dirIterator = new OS.File.DirectoryIterator(directory);
-    try {
-      yield dirIterator.forEach(file => {
-        // Skip directories.
-        if (file.isDir) {
-          return null;
-        }
-
-        // Skip any non-sqlite files.
-        if (!file.name.endsWith(".sqlite")) {
-          return null;
-        }
-
-        return this.getNameFromDatabaseFile(file.path).then(name => {
-          if (name) {
-            names.push(name);
-          }
-          return null;
-        });
-      });
-    }
-    finally {
-      dirIterator.close();
-    }
-    return names;
   }),
 
   /**
@@ -1344,7 +1210,415 @@ StorageActors.createActor({
       hosts: hosts
     };
   },
+
+  maybeSetupChildProcess: function() {
+    if (!DebuggerServer.isInChildProcess) {
+      this.backToChild = function(...args) {
+        return args[1];
+      };
+      this.getDBMetaData = indexedDBHelpers.getDBMetaData;
+      this.openWithOrigin = indexedDBHelpers.openWithOrigin;
+      this.getDBNamesForHost = indexedDBHelpers.getDBNamesForHost;
+      this.getSanitizedHost = indexedDBHelpers.getSanitizedHost;
+      this.getNameFromDatabaseFile = indexedDBHelpers.getNameFromDatabaseFile;
+      this.getValuesForHost = indexedDBHelpers.getValuesForHost;
+      this.getObjectStoreData = indexedDBHelpers.getObjectStoreData;
+      this.patchMetadataMapsAndProtos =
+        indexedDBHelpers.patchMetadataMapsAndProtos;
+      return;
+    }
+
+    const { sendSyncMessage, addMessageListener } =
+      DebuggerServer.parentMessageManager;
+
+    DebuggerServer.setupInParent({
+      module: "devtools/server/actors/storage",
+      setupParent: "setupParentProcessForIndexedDB"
+    });
+
+    this.getDBMetaData =
+      callParentProcessAsync.bind(null, "getDBMetaData");
+    this.getDBNamesForHost =
+      callParentProcessAsync.bind(null, "getDBNamesForHost");
+    this.getValuesForHost =
+      callParentProcessAsync.bind(null, "getValuesForHost");
+
+    addMessageListener("storage:storage-indexedDB-request-child", msg => {
+      switch (msg.json.method) {
+        case "backToChild":
+          let func = msg.json.args.shift();
+          let deferred = unresolvedPromises.get(func);
+
+          if (deferred) {
+            unresolvedPromises.delete(func);
+            deferred.resolve(msg.json.args[0]);
+          }
+        break;
+      }
+    });
+
+    let unresolvedPromises = new Map();
+    function callParentProcessAsync(methodName, ...args) {
+      let deferred = promise.defer();
+
+      unresolvedPromises.set(methodName, deferred);
+
+      let reply = sendSyncMessage("storage:storage-indexedDB-request-parent", {
+        method: methodName,
+        args: args
+      });
+
+      return deferred.promise;
+    }
+  },
 });
+
+let indexedDBHelpers = {
+  backToChild: function(...args) {
+    let mm = Cc["@mozilla.org/globalmessagemanager;1"]
+               .getService(Ci.nsIMessageListenerManager);
+
+    mm.broadcastAsyncMessage("storage:storage-indexedDB-request-child", {
+      method: "backToChild",
+      args: args
+    });
+  },
+
+  /**
+   * Fetches and stores all the metadata information for the given database
+   * `name` for the given `host`. The stored metadata information is of
+   * `DatabaseMetadata` type.
+   */
+  getDBMetaData: async(function*(host, name) {
+    let request = this.openWithOrigin(host, name);
+    let success = promise.defer();
+
+    request.onsuccess = event => {
+      let db = event.target.result;
+
+      let dbData = new DatabaseMetadata(host, db);
+      db.close();
+
+      this.backToChild("getDBMetaData", dbData);
+      success.resolve(dbData);
+    };
+    request.onerror = () => {
+      console.error("Error opening indexeddb database " + name + " for host " +
+                    host);
+      this.backToChild("getDBMetaData", null);
+      success.resolve(null);
+    };
+    return success.promise;
+  }),
+
+  /**
+   * Opens an indexed db connection for the given `host` and database `name`.
+   */
+  openWithOrigin: function(host, name) {
+    let principal;
+
+    if (/^(about:|chrome:)/.test(host)) {
+      principal = Services.scriptSecurityManager.getSystemPrincipal();
+    } else {
+      let uri = Services.io.newURI(host, null, null);
+      principal = Services.scriptSecurityManager.getCodebasePrincipal(uri);
+    }
+
+    return require("indexedDB").openForPrincipal(principal, name);
+  },
+
+    /**
+   * Fetches all the databases and their metadata for the given `host`.
+   */
+  getDBNamesForHost: async(function*(host) {
+    let sanitizedHost = this.getSanitizedHost(host);
+    let directory = OS.Path.join(OS.Constants.Path.profileDir, "storage",
+                                 "default", sanitizedHost, "idb");
+
+    let exists = yield OS.File.exists(directory);
+    if (!exists && host.startsWith("about:")) {
+      // try for moz-safe-about directory
+      sanitizedHost = this.getSanitizedHost("moz-safe-" + host);
+      directory = OS.Path.join(OS.Constants.Path.profileDir, "storage",
+                               "permanent", sanitizedHost, "idb");
+      exists = yield OS.File.exists(directory);
+    }
+    if (!exists) {
+      return this.backToChild("getDBNamesForHost", {names: []});
+    }
+
+    let names = [];
+    let dirIterator = new OS.File.DirectoryIterator(directory);
+    try {
+      yield dirIterator.forEach(file => {
+        // Skip directories.
+        if (file.isDir) {
+          return null;
+        }
+
+        // Skip any non-sqlite files.
+        if (!file.name.endsWith(".sqlite")) {
+          return null;
+        }
+
+        return this.getNameFromDatabaseFile(file.path).then(name => {
+          if (name) {
+            names.push(name);
+          }
+          return null;
+        });
+      });
+    } finally {
+      dirIterator.close();
+    }
+    return this.backToChild("getDBNamesForHost", {names: names});
+  }),
+
+  /**
+   * Removes any illegal characters from the host name to make it a valid file
+   * name.
+   */
+  getSanitizedHost: function(host) {
+    return host.replace(ILLEGAL_CHAR_REGEX, "+");
+  },
+
+  /**
+   * Retrieves the proper indexed db database name from the provided .sqlite
+   * file location.
+   */
+  getNameFromDatabaseFile: async(function*(path) {
+    let connection = null;
+    let retryCount = 0;
+
+    // Content pages might be having an open transaction for the same indexed db
+    // which this sqlite file belongs to. In that case, sqlite.openConnection
+    // will throw. Thus we retey for some time to see if lock is removed.
+    while (!connection && retryCount++ < 25) {
+      try {
+        connection = yield Sqlite.openConnection({ path: path });
+      } catch (ex) {
+        // Continuously retrying is overkill. Waiting for 100ms before next try
+        yield sleep(100);
+      }
+    }
+
+    if (!connection) {
+      return null;
+    }
+
+    let rows = yield connection.execute("SELECT name FROM database");
+    if (rows.length != 1) {
+      return null;
+    }
+
+    let name = rows[0].getResultByName("name");
+
+    yield connection.close();
+
+    return name;
+  }),
+
+  getValuesForHost:
+  async(function*(host, name = "null", options, hostVsStores) {
+    name = JSON.parse(name);
+    if (!name || !name.length) {
+      // This means that details about the db in this particular host are
+      // requested.
+      let dbs = [];
+      if (hostVsStores.has(host)) {
+        for (let [, db] of hostVsStores.get(host)) {
+          indexedDBHelpers.patchMetadataMapsAndProtos(db);
+          dbs.push(db.toObject());
+        }
+      }
+      return this.backToChild("getValuesForHost", {dbs: dbs});
+    }
+
+    let [db2, objectStore, id] = name;
+    if (!objectStore) {
+      // This means that details about all the object stores in this db are
+      // requested.
+      let objectStores = [];
+      if (hostVsStores.has(host) && hostVsStores.get(host).has(db2)) {
+        let db = hostVsStores.get(host).get(db2);
+
+        indexedDBHelpers.patchMetadataMapsAndProtos(db);
+
+        let objectStores2 = db.objectStores;
+
+        for (let objectStore2 of objectStores2) {
+          objectStores.push(objectStore2[1].toObject());
+        }
+      }
+      return this.backToChild("getValuesForHost", {objectStores: objectStores});
+    }
+    // Get either all entries from the object store, or a particular id
+    let result = yield this.getObjectStoreData(host, db2, objectStore, id,
+                                               options.index, options.size);
+    return this.backToChild("getValuesForHost", {result: result});
+  }),
+
+  /**
+   * Returns all or requested entries from a particular objectStore from the db
+   * in the given host.
+   *
+   * @param {string} host
+   *        The given host.
+   * @param {string} dbName
+   *        The name of the indexed db from the above host.
+   * @param {string} objectStore
+   *        The name of the object store from the above db.
+   * @param {string} id
+   *        id of the requested entry from the above object store.
+   *        null if all entries from the above object store are requested.
+   * @param {string} index
+   *        name of the IDBIndex to be iterated on while fetching entries.
+   *        null or "name" if no index is to be iterated.
+   * @param {number} offset
+   *        ofsset of the entries to be fetched.
+   * @param {number} size
+   *        The intended size of the entries to be fetched.
+   */
+  getObjectStoreData:
+  function(host, dbName, objectStore, id, index, offset, size) {
+    let request = this.openWithOrigin(host, dbName);
+    let success = promise.defer();
+    let data = [];
+    let db;
+
+    if (!size || size > MAX_STORE_OBJECT_COUNT) {
+      size = MAX_STORE_OBJECT_COUNT;
+    }
+
+    request.onsuccess = event => {
+      db = event.target.result;
+
+      let transaction = db.transaction(objectStore, "readonly");
+      let source = transaction.objectStore(objectStore);
+      if (index && index != "name") {
+        source = source.index(index);
+      }
+
+      source.count().onsuccess = event2 => {
+        let objectsSize = [];
+        let count = event2.target.result;
+        objectsSize.push({
+          key: host + dbName + objectStore + index,
+          count: count
+        });
+
+        if (!offset) {
+          offset = 0;
+        } else if (offset > count) {
+          db.close();
+          success.resolve([]);
+          return;
+        }
+
+        if (id) {
+          source.get(id).onsuccess = event3 => {
+            db.close();
+            success.resolve([{name: id, value: event3.target.result}]);
+          };
+        } else {
+          source.openCursor().onsuccess = event4 => {
+            let cursor = event4.target.result;
+
+            if (!cursor || data.length >= size) {
+              db.close();
+              success.resolve({
+                data: data,
+                objectsSize: objectsSize
+              });
+              return;
+            }
+            if (offset-- <= 0) {
+              data.push({name: cursor.key, value: cursor.value});
+            }
+            cursor.continue();
+          };
+        }
+      };
+    };
+    request.onerror = () => {
+      db.close();
+      success.resolve([]);
+    };
+    return success.promise;
+  },
+
+  patchMetadataMapsAndProtos: function(metadata) {
+    for (let [, store] of metadata._objectStores) {
+      store.__proto__ = ObjectStoreMetadata.prototype;
+
+      if (typeof store._indexes.length !== "undefined") {
+        store._indexes = new Map(store._indexes);
+      }
+
+      for (let [, value] of store._indexes) {
+        value.__proto__ = IndexMetadata.prototype;
+      }
+    }
+
+    metadata._objectStores = new Map(metadata._objectStores);
+    metadata.__proto__ = DatabaseMetadata.prototype;
+  },
+
+  handleChildRequest: function(msg) {
+    let host;
+    let name;
+    let args = msg.data.args;
+
+    switch (msg.json.method) {
+      case "getDBMetaData":
+        host = args[0];
+        name = args[1];
+        return indexedDBHelpers.getDBMetaData(host, name);
+      case "getDBNamesForHost":
+        host = args[0];
+        return indexedDBHelpers.getDBNamesForHost(host);
+      case "getValuesForHost":
+        host = args[0];
+        name = args[1];
+        let options = args[2];
+        let hostVsStores = args[3];
+        return indexedDBHelpers.getValuesForHost(host, name, options,
+                                                 hostVsStores);
+      default:
+        console.error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD", msg.json.method);
+        throw new Error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD");
+    }
+  }
+};
+
+/**
+ * E10S parent/child setup helpers
+ */
+
+exports.setupParentProcessForIndexedDB = function({mm, childID}) {
+  // listen for director-script requests from the child process
+  mm.addMessageListener("storage:storage-indexedDB-request-parent",
+                        indexedDBHelpers.handleChildRequest);
+
+  DebuggerServer.once("disconnected-from-child:" + childID,
+                      handleMessageManagerDisconnected);
+
+  gTrackedMessageManager.set("indexedDB", mm);
+
+  function handleMessageManagerDisconnected(evt, { mm: disconnected_mm }) {
+    // filter out not subscribed message managers
+    if (disconnected_mm !== mm || !gTrackedMessageManager.has(mm)) {
+      return;
+    }
+
+    gTrackedMessageManager.delete("indexedDB");
+
+    // unregister for director-script requests handlers from the parent process
+    // (if any)
+    mm.removeMessageListener("storage:storage-indexedDB-request-parent",
+                             indexedDBHelpers.handleChildRequest);
+  }
+};
 
 /**
  * The main Storage Actor.
@@ -1387,7 +1661,7 @@ let StorageActor = exports.StorageActor = protocol.ActorClass({
     }
   },
 
-  initialize: function (conn, tabActor) {
+  initialize: function(conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, null);
 
     this.conn = conn;
@@ -1409,15 +1683,17 @@ let StorageActor = exports.StorageActor = protocol.ActorClass({
     Services.obs.addObserver(this, "content-document-global-created", false);
     Services.obs.addObserver(this, "inner-window-destroyed", false);
     this.onPageChange = this.onPageChange.bind(this);
-    tabActor.browser.addEventListener("pageshow", this.onPageChange, true);
-    tabActor.browser.addEventListener("pagehide", this.onPageChange, true);
+
+    let handler = tabActor.chromeEventHandler;
+    handler.addEventListener("pageshow", this.onPageChange, true);
+    handler.addEventListener("pagehide", this.onPageChange, true);
 
     this.destroyed = false;
     this.boundUpdate = {};
     // The time which periodically flushes and transfers the updated store
     // objects.
     this.updateTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this.updateTimer.initWithCallback(this , UPDATE_INTERVAL,
+    this.updateTimer.initWithCallback(this, UPDATE_INTERVAL,
       Ci.nsITimer.TYPE_REPEATING_PRECISE_CAN_SKIP);
 
     // Layout helper for window.parent and window.top helper methods that work
@@ -1449,7 +1725,7 @@ let StorageActor = exports.StorageActor = protocol.ActorClass({
   },
 
   /**
-   * Given a docshell, recursively find otu all the child windows from it.
+   * Given a docshell, recursively find out all the child windows from it.
    *
    * @param {nsIDocShell} item
    *        The docshell from which all inner windows need to be extracted.
@@ -1495,17 +1771,17 @@ let StorageActor = exports.StorageActor = protocol.ActorClass({
    * Event handler for any docshell update. This lets us figure out whenever
    * any new window is added, or an existing window is removed.
    */
-  observe: function(subject, topic, data) {
+  observe: function(subject, topic) {
     if (subject.location &&
         (!subject.location.href || subject.location.href == "about:blank")) {
       return null;
     }
+
     if (topic == "content-document-global-created" &&
         this.isIncludedInTopLevelWindow(subject)) {
       this.childWindowPool.add(subject);
       events.emit(this, "window-ready", subject);
-    }
-    else if (topic == "inner-window-destroyed") {
+    } else if (topic == "inner-window-destroyed") {
       let window = this.getWindowFromInnerWindowID(subject);
       if (window) {
         this.childWindowPool.delete(window);
@@ -1531,13 +1807,14 @@ let StorageActor = exports.StorageActor = protocol.ActorClass({
     if (this.destroyed) {
       return;
     }
+
     let window = target.defaultView;
+
     if (type == "pagehide" && this.childWindowPool.delete(window)) {
-      events.emit(this, "window-destroyed", window)
-    }
-    else if (type == "pageshow" && persisted  && window.location.href &&
-             window.location.href != "about:blank" &&
-             this.isIncludedInTopLevelWindow(window)) {
+      events.emit(this, "window-destroyed", window);
+    } else if (type == "pageshow" && persisted && window.location.href &&
+               window.location.href != "about:blank" &&
+               this.isIncludedInTopLevelWindow(window)) {
       this.childWindowPool.add(window);
       events.emit(this, "window-ready", window);
     }
@@ -1554,12 +1831,14 @@ let StorageActor = exports.StorageActor = protocol.ActorClass({
    */
   listStores: method(async(function*() {
     let toReturn = {};
+
     for (let [name, value] of this.childActorPool) {
       if (value.preListStores) {
         yield value.preListStores();
       }
       toReturn[name] = value;
     }
+
     return toReturn;
   }), {
     response: RetVal(types.addDictType("storelist", getRegisteredTypes()))
@@ -1572,6 +1851,7 @@ let StorageActor = exports.StorageActor = protocol.ActorClass({
     if (!this.updatePending || this.updatingUpdateObject) {
       return null;
     }
+
     events.emit(this, "stores-update", this.boundUpdate);
     this.boundUpdate = {};
     this.updatePending = false;
@@ -1603,7 +1883,7 @@ let StorageActor = exports.StorageActor = protocol.ActorClass({
   update: function(action, storeType, data) {
     if (action == "cleared" || action == "reloaded") {
       let toSend = {};
-      toSend[storeType] = data
+      toSend[storeType] = data;
       events.emit(this, "stores-" + action, toSend);
       return null;
     }
@@ -1619,8 +1899,7 @@ let StorageActor = exports.StorageActor = protocol.ActorClass({
     for (let host in data) {
       if (!this.boundUpdate[action][storeType][host] || action == "deleted") {
         this.boundUpdate[action][storeType][host] = data[host];
-      }
-      else {
+      } else {
         this.boundUpdate[action][storeType][host] =
         this.boundUpdate[action][storeType][host].concat(data[host]);
       }
@@ -1630,15 +1909,13 @@ let StorageActor = exports.StorageActor = protocol.ActorClass({
       // added somehow, dont send the deleted or changed update.
       this.removeNamesFromUpdateList("deleted", storeType, data);
       this.removeNamesFromUpdateList("changed", storeType, data);
-    }
-    else if (action == "changed" && this.boundUpdate.added &&
+    } else if (action == "changed" && this.boundUpdate.added &&
              this.boundUpdate.added[storeType]) {
       // If something got added and changed at the same time, then remove those
       // items from changed instead.
       this.removeNamesFromUpdateList("changed", storeType,
                                      this.boundUpdate.added[storeType]);
-    }
-    else if (action == "deleted") {
+    } else if (action == "deleted") {
       // If any item got delete, or a host got delete, no point in sending
       // added or changed update
       this.removeNamesFromUpdateList("added", storeType, data);

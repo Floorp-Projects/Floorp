@@ -7,14 +7,19 @@ package org.mozilla.gecko.widget;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewStub;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import org.json.JSONObject;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tabs;
 
 public abstract class DoorHanger extends LinearLayout {
 
@@ -54,6 +59,7 @@ public abstract class DoorHanger extends LinearLayout {
     protected final Type mType;
 
     protected final ImageView mIcon;
+    protected final TextView mDoorhangerTitle;
 
     protected final Context mContext;
     protected final Resources mResources;
@@ -78,6 +84,7 @@ public abstract class DoorHanger extends LinearLayout {
 
         mDivider = findViewById(R.id.divider_doorhanger);
         mIcon = (ImageView) findViewById(R.id.doorhanger_icon);
+        mDoorhangerTitle = (TextView) findViewById(R.id.doorhanger_title);
 
         mNegativeButton = (Button) findViewById(R.id.doorhanger_button_negative);
         mPositiveButton = (Button) findViewById(R.id.doorhanger_button_positive);
@@ -174,5 +181,18 @@ public abstract class DoorHanger extends LinearLayout {
         }
 
         return true;
+    }
+
+    public void showTitle(Bitmap favicon, String title) {
+        mDoorhangerTitle.setText(title);
+        mDoorhangerTitle.setCompoundDrawablesWithIntrinsicBounds(new BitmapDrawable(getResources(), favicon), null, null, null);
+        if (favicon != null) {
+            mDoorhangerTitle.setCompoundDrawablePadding((int) mContext.getResources().getDimension(R.dimen.doorhanger_drawable_padding));
+        }
+        mDoorhangerTitle.setVisibility(VISIBLE);
+    }
+
+    public void hideTitle() {
+        mDoorhangerTitle.setVisibility(GONE);
     }
 }

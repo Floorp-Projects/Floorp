@@ -10,7 +10,7 @@ const { Cu, Ci } = require("chrome");
 const { GeneratedLocation } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main")
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-const { dbg_assert } = DevToolsUtils;
+const { dbg_assert, dumpn } = DevToolsUtils;
 const PromiseDebugging = require("PromiseDebugging");
 
 const TYPED_ARRAY_CLASSES = ["Uint8Array", "Uint8ClampedArray", "Uint16Array",
