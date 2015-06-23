@@ -495,7 +495,6 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
   }
   // Common code for units that depend on the element's font data and
   // thus can't be stored in the rule tree:
-  aConditions.SetUncacheable();
   const nsStyleFont *styleFont =
     aStyleFont ? aStyleFont : aStyleContext->StyleFont();
   if (aFontSize == -1) {
@@ -507,6 +506,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     case eCSSUnit_EM: {
       // CSS2.1 specifies that this unit scales to the computed font
       // size, not the em-width in the font metrics, despite the name.
+      aConditions.SetFontSizeDependency(aFontSize);
       return ScaleCoordRound(aValue, float(aFontSize));
     }
     case eCSSUnit_XHeight: {
@@ -514,6 +514,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       nsRefPtr<nsFontMetrics> fm =
         GetMetricsFor(aPresContext, aStyleContext, styleFont,
                       aFontSize, aUseUserFontSet);
+      aConditions.SetUncacheable();
       return ScaleCoordRound(aValue, float(fm->XHeight()));
     }
     case eCSSUnit_Char: {
@@ -525,6 +526,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
         fm->GetThebesFontGroup()->GetFirstValidFont()->
           GetMetrics(fm->Orientation()).zeroOrAveCharWidth;
 
+      aConditions.SetUncacheable();
       return ScaleCoordRound(aValue, ceil(aPresContext->AppUnitsPerDevPixel() *
                                           zeroWidth));
     }
