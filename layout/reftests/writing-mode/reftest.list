@@ -152,6 +152,3 @@ fails == 1147834-relative-overconstrained-vertical-rl-rtl.html 1147834-top-left-
 
 # Suite of tests from Gérard Talbot in bug 1079151
 include abspos/reftest.list
-
-# Tests for tables with vertical writing modes
-include tables/reftest.list
