@@ -522,12 +522,10 @@ MediaCodecReader::HasVideo()
 }
 
 void
-MediaCodecReader::NotifyDataArrivedInternal(uint32_t aLength,
-                                            int64_t aOffset)
+MediaCodecReader::NotifyDataArrived(const char* aBuffer,
+                                    uint32_t aLength,
+                                    int64_t aOffset)
 {
-  nsRefPtr<MediaByteBuffer> bytes = mDecoder->GetResource()->SilentReadAt(aOffset, aLength);
-  NS_ENSURE_TRUE_VOID(bytes);
-
   MonitorAutoLock monLock(mParserMonitor);
   if (mNextParserPosition == mParsedDataLength &&
       mNextParserPosition >= aOffset &&
@@ -535,7 +533,7 @@ MediaCodecReader::NotifyDataArrivedInternal(uint32_t aLength,
     // No pending parsing runnable currently. And available data are adjacent to
     // parsed data.
     int64_t shift = mNextParserPosition - aOffset;
-    const char* buffer = reinterpret_cast<const char*>(bytes->Elements()) + shift;
+    const char* buffer = aBuffer + shift;
     uint32_t length = aLength - shift;
     int64_t offset = mNextParserPosition;
     if (length > 0) {
@@ -632,7 +630,7 @@ MediaCodecReader::ParseDataSegment(const char* aBuffer,
       return true; // NO-OP
     }
 
-    mMP3FrameParser->Parse(reinterpret_cast<const uint8_t*>(aBuffer), aLength, aOffset);
+    mMP3FrameParser->Parse(aBuffer, aLength, aOffset);
 
     duration = mMP3FrameParser->GetDuration();
   }
@@ -654,7 +652,8 @@ MediaCodecReader::ParseDataSegment(const char* aBuffer,
 
   if (durationUpdateRequired) {
     MOZ_ASSERT(mDecoder);
-    mDecoder->DispatchUpdateEstimatedMediaDuration(duration);
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    mDecoder->UpdateEstimatedMediaDuration(duration);
   }
 
   return true;

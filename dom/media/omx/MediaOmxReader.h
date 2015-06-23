@@ -69,9 +69,7 @@ public:
 
   virtual nsresult Init(MediaDecoderReader* aCloneDonor);
 
-protected:
-  virtual void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) override;
-public:
+  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
 
   virtual bool DecodeAudioData();
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
@@ -116,7 +114,7 @@ private:
     return mIsShutdown;
   }
 
-  int64_t ProcessCachedData(int64_t aOffset);
+  int64_t ProcessCachedData(int64_t aOffset, bool aWaitForCompletion);
 
   already_AddRefed<AbstractMediaDecoder> SafeGetDecoder();
 };

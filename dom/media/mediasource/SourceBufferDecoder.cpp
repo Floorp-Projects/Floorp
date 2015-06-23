@@ -179,6 +179,12 @@ SourceBufferDecoder::Trim(int64_t aDuration)
 }
 
 void
+SourceBufferDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
+{
+  MSE_DEBUG("UNIMPLEMENTED");
+}
+
+void
 SourceBufferDecoder::SetMediaSeekable(bool aMediaSeekable)
 {
   MSE_DEBUG("UNIMPLEMENTED");
@@ -197,8 +203,15 @@ SourceBufferDecoder::GetOwner()
 }
 
 void
-SourceBufferDecoder::NotifyDataArrived(uint32_t aLength, int64_t aOffset, bool aThrottleUpdates)
+SourceBufferDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
 {
+  mReader->NotifyDataArrived(aBuffer, aLength, aOffset);
+
+  // XXX: Params make no sense to parent decoder as it relates to a
+  // specific SourceBufferDecoder's data stream.  Pass bogus values here to
+  // force parent decoder's state machine to recompute end time for
+  // infinite length media.
+  mParentDecoder->NotifyDataArrived(nullptr, 0, 0);
 }
 
 media::TimeIntervals

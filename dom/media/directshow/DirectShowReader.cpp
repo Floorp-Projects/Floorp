@@ -84,7 +84,7 @@ ParseMP3Headers(MP3FrameParser *aParser, MediaResource *aResource)
       return NS_ERROR_FAILURE;
     }
 
-    aParser->Parse(reinterpret_cast<uint8_t*>(buffer), bytesRead, offset);
+    aParser->Parse(buffer, bytesRead, offset);
     offset += bytesRead;
   }
 
@@ -401,16 +401,14 @@ DirectShowReader::SeekInternal(int64_t aTargetUs)
 }
 
 void
-DirectShowReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
+DirectShowReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
 {
-  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mMP3FrameParser.NeedsData()) {
     return;
   }
 
-  nsRefPtr<MediaByteBuffer> bytes = mDecoder->GetResource()->SilentReadAt(aOffset, aLength);
-  NS_ENSURE_TRUE_VOID(bytes);
-  mMP3FrameParser.Parse(bytes->Elements(), aLength, aOffset);
+  mMP3FrameParser.Parse(aBuffer, aLength, aOffset);
   if (!mMP3FrameParser.IsMP3()) {
     return;
   }
@@ -418,8 +416,9 @@ DirectShowReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
   int64_t duration = mMP3FrameParser.GetDuration();
   if (duration != mDuration) {
     MOZ_ASSERT(mDecoder);
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mDuration = duration;
-    mDecoder->DispatchUpdateEstimatedMediaDuration(mDuration);
+    mDecoder->UpdateEstimatedMediaDuration(mDuration);
   }
 }
 

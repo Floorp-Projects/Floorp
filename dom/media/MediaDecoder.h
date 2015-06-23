@@ -434,8 +434,7 @@ public:
 
   // Called as data arrives on the stream and is read into the cache.  Called
   // on the main thread only.
-  virtual void NotifyDataArrived(uint32_t aLength, int64_t aOffset,
-                                 bool aThrottleUpdates) override;
+  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) override;
 
   // Called by MediaResource when the principal of the resource has
   // changed. Called on main thread only.
@@ -455,7 +454,6 @@ public:
   // Call on the main thread only.
   virtual bool IsEndedOrShutdown() const;
 
-protected:
   // Updates the media duration. This is called while the media is being
   // played, calls before the media has reached loaded metadata are ignored.
   // The duration is assumed to be an estimate, and so a degree of
@@ -465,7 +463,6 @@ protected:
   // changed, this causes a durationchanged event to fire to the media
   // element.
   void UpdateEstimatedMediaDuration(int64_t aDuration) override;
-public:
 
   // Set a flag indicating whether seeking is supported
   virtual void SetMediaSeekable(bool aMediaSeekable) override;
@@ -892,9 +889,6 @@ protected:
 
   // State-watching manager.
   WatchManager<MediaDecoder> mWatchManager;
-
-  // Buffered range, mirrored from the reader.
-  Mirror<media::TimeIntervals> mBuffered;
 
   // NextFrameStatus, mirrored from the state machine.
   Mirror<MediaDecoderOwner::NextFrameStatus> mNextFrameStatus;
