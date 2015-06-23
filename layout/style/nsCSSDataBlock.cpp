@@ -254,7 +254,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                 // We can't cache anything on the rule tree if we use any data from
                 // the style context, since data cached in the rule tree could be
                 // used with a style context with a different value.
-                aRuleData->mCanStoreInRuleTree = false;
+                aRuleData->mConditions.SetUncacheable();
             }
             nsCSSValue* target = aRuleData->ValueFor(iProp);
             if (target->GetUnit() == eCSSUnit_Null) {
@@ -693,7 +693,7 @@ nsCSSExpandedDataBlock::MapRuleInfoInto(nsCSSProperty aPropID,
   nsCSSProperty physicalProp = aPropID;
   if (nsCSSProps::PropHasFlags(aPropID, CSS_PROPERTY_LOGICAL)) {
     EnsurePhysicalProperty(physicalProp, aRuleData);
-    aRuleData->mCanStoreInRuleTree = false;
+    aRuleData->mConditions.SetUncacheable();
   }
 
   nsCSSValue* dest = aRuleData->ValueFor(physicalProp);
