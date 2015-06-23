@@ -394,8 +394,8 @@ nsTableFrame::GetEffectiveColCount() const
       return 0;
     }
     // don't count cols at the end that don't have originating cells
-    for (int32_t colX = colCount - 1; colX >= 0; colX--) {
-      if (cellMap->GetNumCellsOriginatingInCol(colX) > 0) {
+    for (int32_t colIdx = colCount - 1; colIdx >= 0; colIdx--) {
+      if (cellMap->GetNumCellsOriginatingInCol(colIdx) > 0) {
         break;
       }
       colCount--;
@@ -409,11 +409,11 @@ nsTableFrame::GetIndexOfLastRealCol()
 {
   int32_t numCols = mColFrames.Length();
   if (numCols > 0) {
-    for (int32_t colX = numCols - 1; colX >= 0; colX--) {
-      nsTableColFrame* colFrame = GetColFrame(colX);
+    for (int32_t colIdx = numCols - 1; colIdx >= 0; colIdx--) {
+      nsTableColFrame* colFrame = GetColFrame(colIdx);
       if (colFrame) {
         if (eColAnonymousCell != colFrame->GetColType()) {
-          return colX;
+          return colIdx;
         }
       }
     }
@@ -827,15 +827,15 @@ nsTableFrame::DestroyAnonymousColFrames(int32_t aNumFrames)
   int32_t endIndex   = mColFrames.Length() - 1;
   int32_t startIndex = (endIndex - aNumFrames) + 1;
   int32_t numColsRemoved = 0;
-  for (int32_t colX = endIndex; colX >= startIndex; colX--) {
-    nsTableColFrame* colFrame = GetColFrame(colX);
+  for (int32_t colIdx = endIndex; colIdx >= startIndex; colIdx--) {
+    nsTableColFrame* colFrame = GetColFrame(colIdx);
     if (colFrame && (eColAnonymousCell == colFrame->GetColType())) {
       nsTableColGroupFrame* cgFrame =
         static_cast<nsTableColGroupFrame*>(colFrame->GetParent());
       // remove the frame from the colgroup
       cgFrame->RemoveChild(*colFrame, false);
       // remove the frame from the cache, but not the cell map
-      RemoveCol(nullptr, colX, true, false);
+      RemoveCol(nullptr, colIdx, true, false);
       numColsRemoved++;
     }
     else {
@@ -2205,15 +2205,16 @@ nsTableFrame::GetCollapsedISize(const WritingMode aWM,
     for (nsTableColFrame* colFrame = cgFrame->GetFirstColumn(); colFrame;
          colFrame = colFrame->GetNextCol()) {
       const nsStyleDisplay* colDisplay = colFrame->StyleDisplay();
-      int32_t colX = colFrame->GetColIndex();
+      nscoord colIdx = colFrame->GetColIndex();
       if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay) {
         const nsStyleVisibility* colVis = colFrame->StyleVisibility();
         bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
-        nscoord colISize = fif->GetColumnISizeFromFirstInFlow(colX);
+        nscoord colISize = fif->GetColumnISizeFromFirstInFlow(colIdx);
         if (!collapseGroup && !collapseCol) {
           iSize += colISize;
-          if (ColumnHasCellSpacingBefore(colX))
-            iSize += GetColSpacing(colX-1);
+          if (ColumnHasCellSpacingBefore(colIdx)) {
+            iSize += GetColSpacing(colIdx - 1);
+          }
         }
         else {
           SetNeedToCollapse(true);
@@ -2503,11 +2504,11 @@ nsTableFrame::DoRemoveFrame(ChildListID     aListID,
     mColGroups.DestroyFrame(aOldFrame);
     nsTableColGroupFrame::ResetColIndices(nextColGroupFrame, firstColIndex);
     // remove the cols from the table
-    int32_t colX;
-    for (colX = lastColIndex; colX >= firstColIndex; colX--) {
-      nsTableColFrame* colFrame = mColFrames.SafeElementAt(colX);
+    int32_t colIdx;
+    for (colIdx = lastColIndex; colIdx >= firstColIndex; colIdx--) {
+      nsTableColFrame* colFrame = mColFrames.SafeElementAt(colIdx);
       if (colFrame) {
-        RemoveCol(colGroup, colX, true, false);
+        RemoveCol(colGroup, colIdx, true, false);
       }
     }
 
@@ -3912,10 +3913,10 @@ nsTableFrame::Dump(bool            aDumpRows,
   // dump the columns widths array
   printf("mColWidths=");
   int32_t numCols = GetColCount();
-  int32_t colX;
+  int32_t colIdx;
   nsTableFrame* fif = static_cast<nsTableFrame*>(FirstInFlow());
-  for (colX = 0; colX < numCols; colX++) {
-    printf("%d ", fif->GetColumnISizeFromFirstInFlow(colX));
+  for (colIdx = 0; colIdx < numCols; colIdx++) {
+    printf("%d ", fif->GetColumnISizeFromFirstInFlow(colIdx));
   }
   printf("\n");
 
@@ -3930,12 +3931,12 @@ nsTableFrame::Dump(bool            aDumpRows,
   if (aDumpCols) {
 	  // output col frame cache
     printf("\n col frame cache ->");
-	   for (colX = 0; colX < numCols; colX++) {
-      nsTableColFrame* colFrame = mColFrames.ElementAt(colX);
-      if (0 == (colX % 8)) {
+	   for (colIdx = 0; colIdx < numCols; colIdx++) {
+      nsTableColFrame* colFrame = mColFrames.ElementAt(colIdx);
+      if (0 == (colIdx % 8)) {
         printf("\n");
       }
-      printf ("%d=%p ", colX, static_cast<void*>(colFrame));
+      printf ("%d=%p ", colIdx, static_cast<void*>(colFrame));
       nsTableColType colType = colFrame->GetColType();
       switch (colType) {
       case eColContent:
@@ -3959,9 +3960,9 @@ nsTableFrame::Dump(bool            aDumpRows,
         colGroupFrame->Dump(1);
       }
     }
-    for (colX = 0; colX < numCols; colX++) {
+    for (colIdx = 0; colIdx < numCols; colIdx++) {
       printf("\n");
-      nsTableColFrame* colFrame = GetColFrame(colX);
+      nsTableColFrame* colFrame = GetColFrame(colIdx);
       colFrame->Dump(1);
     }
   }
@@ -5809,28 +5810,28 @@ nsTableFrame::CalcBCBorders()
         propData->mTopBorderWidth = 0;
         tableBorderReset[NS_SIDE_TOP] = true;
       }
-      for (int32_t colX = info.mColIndex; colX <= info.GetCellEndColIndex();
-           colX++) {
-        info.SetColumn(colX);
+      for (int32_t colIdx = info.mColIndex;
+           colIdx <= info.GetCellEndColIndex(); colIdx++) {
+        info.SetColumn(colIdx);
         currentBorder = info.GetBStartEdgeBorder();
         // update/store the top left & top right corners of the seg
-        BCCornerInfo& tlCorner = topCorners[colX]; // top left
-        if (0 == colX) {
+        BCCornerInfo& tlCorner = topCorners[colIdx]; // top left
+        if (0 == colIdx) {
           // we are on right hand side of the corner
           tlCorner.Set(NS_SIDE_RIGHT, currentBorder);
         }
         else {
           tlCorner.Update(NS_SIDE_RIGHT, currentBorder);
-          tableCellMap->SetBCBorderCorner(eTopLeft, *iter.mCellMap, 0, 0, colX,
+          tableCellMap->SetBCBorderCorner(eTopLeft, *iter.mCellMap, 0, 0, colIdx,
                                           mozilla::css::Side(tlCorner.ownerSide),
                                           tlCorner.subWidth,
                                           tlCorner.bevel);
         }
-        topCorners[colX + 1].Set(NS_SIDE_LEFT, currentBorder); // top right
+        topCorners[colIdx + 1].Set(NS_SIDE_LEFT, currentBorder); // top right
         // update lastTopBorder and see if a new segment starts
         startSeg = SetHorBorder(currentBorder, tlCorner, lastTopBorder);
         // store the border segment in the cell map
-        tableCellMap->SetBCBorderEdge(NS_SIDE_TOP, *iter.mCellMap, 0, 0, colX,
+        tableCellMap->SetBCBorderEdge(NS_SIDE_TOP, *iter.mCellMap, 0, 0, colIdx,
                                       1, currentBorder.owner,
                                       currentBorder.width, startSeg);
 
@@ -6013,9 +6014,9 @@ nsTableFrame::CalcBCBorders()
         priorAjaInfo = ajaInfo;
       }
     }
-    for (int32_t colX = info.mColIndex + 1; colX <= info.GetCellEndColIndex();
-         colX++) {
-      lastVerBorders[colX].Reset(0,1);
+    for (int32_t colIdx = info.mColIndex + 1;
+         colIdx <= info.GetCellEndColIndex(); colIdx++) {
+      lastVerBorders[colIdx].Reset(0,1);
     }
 
     // find the dominant border considering the cell's bottom border, adjacent
@@ -6026,25 +6027,25 @@ nsTableFrame::CalcBCBorders()
         propData->mBottomBorderWidth = 0;
         tableBorderReset[NS_SIDE_BOTTOM] = true;
       }
-      for (int32_t colX = info.mColIndex; colX <= info.GetCellEndColIndex();
-           colX++) {
-        info.SetColumn(colX);
+      for (int32_t colIdx = info.mColIndex;
+           colIdx <= info.GetCellEndColIndex(); colIdx++) {
+        info.SetColumn(colIdx);
         currentBorder = info.GetBEndEdgeBorder();
         // update/store the bottom left & bottom right corners
-        BCCornerInfo& blCorner = bottomCorners[colX]; // bottom left
+        BCCornerInfo& blCorner = bottomCorners[colIdx]; // bottom left
         blCorner.Update(NS_SIDE_RIGHT, currentBorder);
         tableCellMap->SetBCBorderCorner(eBottomLeft, *iter.mCellMap,
                                         iter.mRowGroupStart,
                                         info.GetCellEndRowIndex(),
-                                        colX,
+                                        colIdx,
                                         mozilla::css::Side(blCorner.ownerSide),
                                         blCorner.subWidth, blCorner.bevel);
-        BCCornerInfo& brCorner = bottomCorners[colX + 1]; // bottom right
+        BCCornerInfo& brCorner = bottomCorners[colIdx + 1]; // bottom right
         brCorner.Update(NS_SIDE_LEFT, currentBorder);
-        if (info.mNumTableCols == colX + 1) { // lower right corner of the table
+        if (info.mNumTableCols == colIdx + 1) { // lower right corner of the table
           tableCellMap->SetBCBorderCorner(eBottomRight, *iter.mCellMap,
                                           iter.mRowGroupStart,
-                                          info.GetCellEndRowIndex(),colX,
+                                          info.GetCellEndRowIndex(), colIdx,
                                           mozilla::css::Side(brCorner.ownerSide),
                                           brCorner.subWidth,
                                           brCorner.bevel, true);
@@ -6063,12 +6064,12 @@ nsTableFrame::CalcBCBorders()
         tableCellMap->SetBCBorderEdge(NS_SIDE_BOTTOM, *iter.mCellMap,
                                       iter.mRowGroupStart,
                                       info.GetCellEndRowIndex(),
-                                      colX, 1, currentBorder.owner,
+                                      colIdx, 1, currentBorder.owner,
                                       currentBorder.width, startSeg);
         // update lastBottomBorders
         lastBottomBorder.rowIndex = info.GetCellEndRowIndex() + 1;
         lastBottomBorder.rowSpan = info.mRowSpan;
-        lastBottomBorders[colX] = lastBottomBorder;
+        lastBottomBorders[colIdx] = lastBottomBorder;
 
         info.SetBEndBorderWidths(currentBorder.width);
         info.SetTableBEndBorderWidth(currentBorder.width);
@@ -6079,23 +6080,23 @@ nsTableFrame::CalcBCBorders()
     }
     else {
       int32_t segLength = 0;
-      for (int32_t colX = info.mColIndex; colX <= info.GetCellEndColIndex();
-           colX += segLength) {
-        iter.PeekBottom(info, colX, ajaInfo);
+      for (int32_t colIdx = info.mColIndex;
+           colIdx <= info.GetCellEndColIndex(); colIdx += segLength) {
+        iter.PeekBottom(info, colIdx, ajaInfo);
         currentBorder = info.GetBEndInternalBorder();
         adjacentBorder = ajaInfo.GetBStartInternalBorder();
         currentBorder = CompareBorders(!CELL_CORNER, currentBorder,
                                         adjacentBorder, HORIZONTAL);
-        segLength = std::max(1, ajaInfo.mColIndex + ajaInfo.mColSpan - colX);
-        segLength = std::min(segLength, info.mColIndex + info.mColSpan - colX);
+        segLength = std::max(1, ajaInfo.mColIndex + ajaInfo.mColSpan - colIdx);
+        segLength = std::min(segLength, info.mColIndex + info.mColSpan - colIdx);
 
         // update, store the bottom left corner
-        BCCornerInfo& blCorner = bottomCorners[colX]; // bottom left
-        bool hitsSpanBelow = (colX > ajaInfo.mColIndex) &&
-                               (colX < ajaInfo.mColIndex + ajaInfo.mColSpan);
+        BCCornerInfo& blCorner = bottomCorners[colIdx]; // bottom left
+        bool hitsSpanBelow = (colIdx > ajaInfo.mColIndex) &&
+                               (colIdx < ajaInfo.mColIndex + ajaInfo.mColSpan);
         bool update = true;
-        if (colX == info.mColIndex && colX > damageArea.StartCol()) {
-          int32_t prevRowIndex = lastBottomBorders[colX - 1].rowIndex;
+        if (colIdx == info.mColIndex && colIdx > damageArea.StartCol()) {
+          int32_t prevRowIndex = lastBottomBorders[colIdx - 1].rowIndex;
           if (prevRowIndex > info.GetCellEndRowIndex() + 1) {
             // hits a rowspan on the right
             update = false;
@@ -6103,7 +6104,7 @@ nsTableFrame::CalcBCBorders()
           }
           else if (prevRowIndex < info.GetCellEndRowIndex() + 1) {
             // spans below the cell to the left
-            topCorners[colX] = blCorner;
+            topCorners[colIdx] = blCorner;
             blCorner.Set(NS_SIDE_RIGHT, currentBorder);
             update = false;
           }
@@ -6112,21 +6113,21 @@ nsTableFrame::CalcBCBorders()
           blCorner.Update(NS_SIDE_RIGHT, currentBorder);
         }
         if (info.GetCellEndRowIndex() < damageArea.EndRow() &&
-            colX >= damageArea.StartCol()) {
+            colIdx >= damageArea.StartCol()) {
           if (hitsSpanBelow) {
             tableCellMap->SetBCBorderCorner(eBottomLeft, *iter.mCellMap,
                                             iter.mRowGroupStart,
-                                            info.GetCellEndRowIndex(), colX,
+                                            info.GetCellEndRowIndex(), colIdx,
                                             mozilla::css::Side(blCorner.ownerSide),
                                             blCorner.subWidth, blCorner.bevel);
           }
           // store any corners this cell spans together with the aja cell
-          for (int32_t cX = colX + 1; cX < colX + segLength; cX++) {
-            BCCornerInfo& corner = bottomCorners[cX];
+          for (int32_t c = colIdx + 1; c < colIdx + segLength; c++) {
+            BCCornerInfo& corner = bottomCorners[c];
             corner.Set(NS_SIDE_RIGHT, currentBorder);
             tableCellMap->SetBCBorderCorner(eBottomLeft, *iter.mCellMap,
                                             iter.mRowGroupStart,
-                                            info.GetCellEndRowIndex(), cX,
+                                            info.GetCellEndRowIndex(), c,
                                             mozilla::css::Side(corner.ownerSide),
                                             corner.subWidth,
                                             false);
@@ -6144,23 +6145,23 @@ nsTableFrame::CalcBCBorders()
         }
         lastBottomBorder.rowIndex = info.GetCellEndRowIndex() + 1;
         lastBottomBorder.rowSpan = info.mRowSpan;
-        for (int32_t cX = colX; cX < colX + segLength; cX++) {
-          lastBottomBorders[cX] = lastBottomBorder;
+        for (int32_t c = colIdx; c < colIdx + segLength; c++) {
+          lastBottomBorders[c] = lastBottomBorder;
         }
 
         // store the border segment the cell map and update cellBorders
         if (info.GetCellEndRowIndex() < damageArea.EndRow() &&
-            colX >= damageArea.StartCol() && colX < damageArea.EndCol()) {
+            colIdx >= damageArea.StartCol() && colIdx < damageArea.EndCol()) {
           tableCellMap->SetBCBorderEdge(NS_SIDE_BOTTOM, *iter.mCellMap,
                                         iter.mRowGroupStart,
                                         info.GetCellEndRowIndex(),
-                                        colX, segLength, currentBorder.owner,
+                                        colIdx, segLength, currentBorder.owner,
                                         currentBorder.width, startSeg);
           info.SetBEndBorderWidths(currentBorder.width);
           ajaInfo.SetBStartBorderWidths(currentBorder.width);
         }
         // update bottom right corner
-        BCCornerInfo& brCorner = bottomCorners[colX + segLength];
+        BCCornerInfo& brCorner = bottomCorners[colIdx + segLength];
         brCorner.Update(NS_SIDE_LEFT, currentBorder);
       }
       if (!gotRowBorder && 1 == info.mRowSpan &&
