@@ -1591,11 +1591,11 @@ TrackBuffersManager::RestoreCachedVariables()
 {
   MOZ_ASSERT(OnTaskQueue());
   if (mTimestampOffset != mLastTimestampOffset) {
+    nsRefPtr<TrackBuffersManager> self = this;
     nsCOMPtr<nsIRunnable> task =
-      NS_NewRunnableMethodWithArg<TimeUnit>(
-        mParent.get(),
-        static_cast<void (dom::SourceBuffer::*)(const TimeUnit&)>(&dom::SourceBuffer::SetTimestampOffset), /* beauty uh? :) */
-        mTimestampOffset);
+      NS_NewRunnableFunction([self] {
+        self->mParent->SetTimestampOffset(self->mTimestampOffset);
+      });
     AbstractThread::MainThread()->Dispatch(task.forget());
   }
 }
