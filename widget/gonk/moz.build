@@ -45,6 +45,16 @@ SOURCES += ['libui/' + src for src in [
     'VirtualKeyMap.cpp',
 ]]
 
+# HwcHAL files
+if CONFIG['ANDROID_VERSION'] >= '17':
+    SOURCES += [
+        'hwchal/HwcHAL.cpp',
+    ]
+elif CONFIG['ANDROID_VERSION'] == '15':
+    SOURCES += [
+        'hwchal/HwcICS.cpp',
+    ]
+
 SOURCES += [
     'GeckoTouchDispatcher.cpp',
     'GfxInfo.cpp',
