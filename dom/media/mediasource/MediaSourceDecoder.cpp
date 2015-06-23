@@ -87,7 +87,7 @@ MediaSourceDecoder::GetSeekable()
   if (IsNaN(duration)) {
     // Return empty range.
   } else if (duration > 0 && mozilla::IsInfinite(duration)) {
-    media::TimeIntervals buffered = GetBuffered();
+    media::TimeIntervals buffered = mReader->GetBuffered();
     if (buffered.Length()) {
       seekable += media::TimeInterval(buffered.GetStart(), buffered.GetEnd());
     }
@@ -97,44 +97,6 @@ MediaSourceDecoder::GetSeekable()
   }
   MSE_DEBUG("ranges=%s", DumpTimeRanges(seekable).get());
   return seekable;
-}
-
-media::TimeIntervals
-MediaSourceDecoder::GetBuffered()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  dom::SourceBufferList* sourceBuffers = mMediaSource->ActiveSourceBuffers();
-  media::TimeUnit highestEndTime;
-  nsTArray<media::TimeIntervals> activeRanges;
-  media::TimeIntervals buffered;
-
-  for (uint32_t i = 0; i < sourceBuffers->Length(); i++) {
-    bool found;
-    dom::SourceBuffer* sb = sourceBuffers->IndexedGetter(i, found);
-    MOZ_ASSERT(found);
-
-    activeRanges.AppendElement(sb->GetTimeIntervals());
-    highestEndTime =
-      std::max(highestEndTime, activeRanges.LastElement().GetEnd());
-  }
-
-  buffered +=
-    media::TimeInterval(media::TimeUnit::FromMicroseconds(0), highestEndTime);
-
-  for (auto& range : activeRanges) {
-    if (mEnded && range.Length()) {
-      // Set the end time on the last range to highestEndTime by adding a
-      // new range spanning the current end time to highestEndTime, which
-      // Normalize() will then merge with the old last range.
-      range +=
-        media::TimeInterval(range.GetEnd(), highestEndTime);
-    }
-    buffered.Intersection(range);
-  }
-
-  MSE_DEBUG("ranges=%s", DumpTimeRanges(buffered).get());
-  return buffered;
 }
 
 void
@@ -334,6 +296,37 @@ MediaSourceDecoder::GetDuration()
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   return ExplicitDuration();
+}
+
+already_AddRefed<SourceBufferDecoder>
+MediaSourceDecoder::SelectDecoder(int64_t aTarget,
+                                  int64_t aTolerance,
+                                  const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders)
+{
+  MOZ_ASSERT(!mIsUsingFormatReader);
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+
+  media::TimeUnit target{media::TimeUnit::FromMicroseconds(aTarget)};
+  media::TimeUnit tolerance{media::TimeUnit::FromMicroseconds(aTolerance + aTarget)};
+
+  // aTolerance gives a slight bias toward the start of a range only.
+  // Consider decoders in order of newest to oldest, as a newer decoder
+  // providing a given buffered range is expected to replace an older one.
+  for (int32_t i = aTrackDecoders.Length() - 1; i >= 0; --i) {
+    nsRefPtr<SourceBufferDecoder> newDecoder = aTrackDecoders[i];
+
+    media::TimeIntervals ranges = newDecoder->GetBuffered();
+    for (uint32_t j = 0; j < ranges.Length(); j++) {
+      if (target < ranges.End(j) && tolerance >= ranges.Start(j)) {
+        return newDecoder.forget();
+      }
+    }
+    MSE_DEBUGV("SelectDecoder(%lld fuzz:%lld) newDecoder=%p (%d/%d) target not in ranges=%s",
+               aTarget, aTolerance, newDecoder.get(), i+1,
+               aTrackDecoders.Length(), DumpTimeRanges(ranges).get());
+  }
+
+  return nullptr;
 }
 
 #undef MSE_DEBUG

@@ -147,12 +147,6 @@ SourceBuffer::GetBuffered(ErrorResult& aRv)
   return tr.forget();
 }
 
-media::TimeIntervals
-SourceBuffer::GetTimeIntervals()
-{
-  return mContentManager->Buffered();
-}
-
 void
 SourceBuffer::SetAppendWindowStart(double aAppendWindowStart, ErrorResult& aRv)
 {
@@ -303,7 +297,7 @@ SourceBuffer::Ended()
   mContentManager->Ended();
   // We want the MediaSourceReader to refresh its buffered range as it may
   // have been modified (end lined up).
-  mMediaSource->GetDecoder()->NotifyDataArrived(1, mReportedOffset++, /* aThrottleUpdates = */ false);
+  mMediaSource->GetDecoder()->NotifyDataArrived(nullptr, 1, mReportedOffset++);
 }
 
 SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
@@ -498,7 +492,7 @@ SourceBuffer::AppendDataCompletedWithSuccess(bool aHasActiveTracks)
     // Tell our parent decoder that we have received new data.
     // The information provided do not matter much so long as it is monotonically
     // increasing.
-    mMediaSource->GetDecoder()->NotifyDataArrived(1, mReportedOffset++, /* aThrottleUpdates = */ false);
+    mMediaSource->GetDecoder()->NotifyDataArrived(nullptr, 1, mReportedOffset++);
     // Send progress event.
     mMediaSource->GetDecoder()->NotifyBytesDownloaded();
   }

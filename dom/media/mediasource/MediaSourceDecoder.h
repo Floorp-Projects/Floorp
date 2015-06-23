@@ -41,7 +41,6 @@ public:
   virtual MediaDecoderStateMachine* CreateStateMachine() override;
   virtual nsresult Load(nsIStreamListener**, MediaDecoder*) override;
   virtual media::TimeIntervals GetSeekable() override;
-  media::TimeIntervals GetBuffered() override;
 
   virtual void Shutdown() override;
 
@@ -91,6 +90,12 @@ public:
   // Returns true if aReader is a currently active audio or video
   // reader in this decoders MediaSourceReader.
   bool IsActiveReader(MediaDecoderReader* aReader);
+
+  // Return a decoder from the set available in aTrackDecoders that has data
+  // available in the range requested by aTarget.
+  already_AddRefed<SourceBufferDecoder> SelectDecoder(int64_t aTarget /* microseconds */,
+                                                      int64_t aTolerance /* microseconds */,
+                                                      const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders);
 
   // Returns a string describing the state of the MediaSource internal
   // buffered data. Used for debugging purposes.

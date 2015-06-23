@@ -463,8 +463,7 @@ ChannelMediaResource::CopySegmentToCache(nsIInputStream *aInStream,
 {
   CopySegmentClosure* closure = static_cast<CopySegmentClosure*>(aClosure);
 
-  closure->mResource->mDecoder->NotifyDataArrived(aCount, closure->mResource->mOffset,
-                                                  /* aThrottleUpdates = */ true);
+  closure->mResource->mDecoder->NotifyDataArrived(aFromSegment, aCount, closure->mResource->mOffset);
 
   // Keep track of where we're up to.
   RESOURCE_LOG("%p [ChannelMediaResource]: CopySegmentToCache at mOffset [%lld] add "
@@ -756,28 +755,6 @@ nsresult ChannelMediaResource::ReadAt(int64_t aOffset,
     DispatchBytesConsumed(*aBytes, aOffset);
   }
   return rv;
-}
-
-already_AddRefed<MediaByteBuffer>
-ChannelMediaResource::SilentReadAt(int64_t aOffset, uint32_t aCount)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-
-  nsRefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
-  bool ok = bytes->SetCapacity(aCount, fallible);
-  NS_ENSURE_TRUE(ok, nullptr);
-  int64_t pos = mCacheStream.Tell();
-  char* curr = reinterpret_cast<char*>(bytes->Elements());
-  while (aCount > 0) {
-    uint32_t bytesRead;
-    nsresult rv = mCacheStream.ReadAt(aOffset, curr, aCount, &bytesRead);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-    NS_ENSURE_TRUE(bytesRead > 0, nullptr);
-    aCount -= bytesRead;
-    curr += bytesRead;
-  }
-  mCacheStream.Seek(nsISeekableStream::NS_SEEK_SET, pos);
-  return bytes.forget();
 }
 
 nsresult ChannelMediaResource::Seek(int32_t aWhence, int64_t aOffset)
@@ -1216,7 +1193,6 @@ public:
   virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) override;
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer,
                           uint32_t aCount, uint32_t* aBytes) override;
-  virtual already_AddRefed<MediaByteBuffer> SilentReadAt(int64_t aOffset, uint32_t aCount) override;
   virtual nsresult Seek(int32_t aWhence, int64_t aOffset) override;
   virtual int64_t  Tell() override;
 
@@ -1538,34 +1514,6 @@ nsresult FileMediaResource::ReadAt(int64_t aOffset, char* aBuffer,
     DispatchBytesConsumed(*aBytes, aOffset);
   }
   return rv;
-}
-
-already_AddRefed<MediaByteBuffer>
-FileMediaResource::SilentReadAt(int64_t aOffset, uint32_t aCount)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-
-  MutexAutoLock lock(mLock);
-  nsRefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
-  bool ok = bytes->SetCapacity(aCount, fallible);
-  NS_ENSURE_TRUE(ok, nullptr);
-  int64_t pos = 0;
-  NS_ENSURE_TRUE(mSeekable, nullptr);
-  nsresult rv = mSeekable->Tell(&pos);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  rv = UnsafeSeek(nsISeekableStream::NS_SEEK_SET, aOffset);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  char* curr = reinterpret_cast<char*>(bytes->Elements());
-  while (aCount > 0) {
-    uint32_t bytesRead;
-    rv = UnsafeRead(curr, aCount, &bytesRead);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-    NS_ENSURE_TRUE(bytesRead > 0, nullptr);
-    aCount -= bytesRead;
-    curr += bytesRead;
-  }
-  UnsafeSeek(nsISeekableStream::NS_SEEK_SET, pos);
-  return bytes.forget();
 }
 
 nsresult FileMediaResource::Seek(int32_t aWhence, int64_t aOffset)

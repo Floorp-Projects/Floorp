@@ -45,6 +45,8 @@ public:
   virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
                                    uint32_t aDropped) final override;
 
+  virtual void UpdateEstimatedMediaDuration(int64_t aDuration) final override;
+
   virtual void SetMediaSeekable(bool aMediaSeekable) final override;
 
   virtual VideoFrameContainer* GetVideoFrameContainer() final override;
@@ -69,7 +71,7 @@ public:
 
   virtual void NotifyWaitingForResourcesStatusChanged() final override;
 
-  virtual void NotifyDataArrived(uint32_t, int64_t, bool) final override {};
+  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) final override;
 
 private:
   virtual ~BufferDecoder();

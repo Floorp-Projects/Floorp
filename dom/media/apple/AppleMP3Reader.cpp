@@ -387,7 +387,7 @@ AppleMP3Reader::ReadMetadata(MediaInfo* aInfo,
                                    bytes,
                                    0 /* flags */);
 
-    mMP3FrameParser.Parse(reinterpret_cast<uint8_t*>(bytes), numBytes, offset);
+    mMP3FrameParser.Parse(bytes, numBytes, offset);
 
     offset += numBytes;
 
@@ -525,16 +525,16 @@ AppleMP3Reader::Seek(int64_t aTime, int64_t aEndTime)
 }
 
 void
-AppleMP3Reader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
+AppleMP3Reader::NotifyDataArrived(const char* aBuffer,
+                                  uint32_t aLength,
+                                  int64_t aOffset)
 {
-  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mMP3FrameParser.NeedsData()) {
     return;
   }
 
-  nsRefPtr<MediaByteBuffer> bytes = mDecoder->GetResource()->SilentReadAt(aOffset, aLength);
-  NS_ENSURE_TRUE_VOID(bytes);
-  mMP3FrameParser.Parse(bytes->Elements(), aLength, aOffset);
+  mMP3FrameParser.Parse(aBuffer, aLength, aOffset);
   if (!mMP3FrameParser.IsMP3()) {
     return;
   }
@@ -543,8 +543,9 @@ AppleMP3Reader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
   if (duration != mDuration) {
     LOGD("Updating media duration to %lluus\n", duration);
     MOZ_ASSERT(mDecoder);
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mDuration = duration;
-    mDecoder->DispatchUpdateEstimatedMediaDuration(duration);
+    mDecoder->UpdateEstimatedMediaDuration(duration);
   }
 }
 
