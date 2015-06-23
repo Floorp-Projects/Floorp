@@ -8,9 +8,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://services-sync/healthreport.jsm", this);
-Cu.import("resource://testing-common/services/healthreport/utils.jsm", this);
-Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 Cu.import("resource://testing-common/AddonManagerTesting.jsm");
 
 const PREF_EXPERIMENTS_ENABLED  = "experiments.enabled";
@@ -19,7 +16,6 @@ const PREF_LOGGING_DUMP         = "experiments.logging.dump";
 const PREF_MANIFEST_URI         = "experiments.manifest.uri";
 const PREF_FETCHINTERVAL        = "experiments.manifest.fetchIntervalSeconds";
 const PREF_TELEMETRY_ENABLED    = "toolkit.telemetry.enabled";
-const PREF_HEALTHREPORT_ENABLED = "datareporting.healthreport.service.enabled";
 
 function getExperimentPath(base) {
   let p = do_get_cwd();
@@ -102,18 +98,6 @@ const FAKE_EXPERIMENTS_2 = [
 ];
 
 let gAppInfo = null;
-
-function getReporter(name, uri, inspected) {
-  return Task.spawn(function init() {
-    let reporter = getHealthReporter(name, uri, inspected);
-    yield reporter.init();
-
-    yield reporter._providerManager.registerProviderFromType(
-      HealthReportProvider);
-
-    throw new Task.Result(reporter);
-  });
-}
 
 function removeCacheFile() {
   let path = OS.Path.join(OS.Constants.Path.profileDir, "experiments.json");
