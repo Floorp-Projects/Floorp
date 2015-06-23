@@ -12,7 +12,7 @@
 #include "nsIConsoleMessage.idl"
 
 %{C++
-#include "nsString.h" // for nsDependentCString
+#include "nsStringGlue.h" // for nsDependentCString
 %}
 
 [scriptable, uuid(248b2c94-2736-4d29-bfdf-bc64a2e60d35)]
