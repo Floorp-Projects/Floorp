@@ -770,6 +770,18 @@ let DirectoryLinksProvider = {
     return allowed.has(scheme);
   },
 
+  _escapeChars(text) {
+    let charMap = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+
+    return text.replace(/[&<>"']/g, (character) => charMap[character]);
+  },
+
   /**
    * Gets the current set of directory links.
    * @param aCallback The function that the array of links is passed to.
@@ -800,8 +812,8 @@ let DirectoryLinksProvider = {
           ParserUtils.SanitizerDropForms |
           ParserUtils.SanitizerDropNonCSSPresentation;
 
-        link.explanation = link.explanation ? ParserUtils.convertToPlainText(link.explanation, sanitizeFlags, 0) : "";
-        link.targetedName = ParserUtils.convertToPlainText(link.adgroup_name, sanitizeFlags, 0) || name;
+        link.explanation = this._escapeChars(link.explanation ? ParserUtils.convertToPlainText(link.explanation, sanitizeFlags, 0) : "");
+        link.targetedName = this._escapeChars(ParserUtils.convertToPlainText(link.adgroup_name, sanitizeFlags, 0) || name);
         link.lastVisitDate = rawLinks.suggested.length - position;
         // check if link wants to avoid inadjacent sites
         if (link.check_inadjacency) {
