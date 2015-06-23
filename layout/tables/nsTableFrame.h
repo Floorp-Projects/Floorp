@@ -1006,23 +1006,6 @@ inline void nsTableFrame::SetContinuousLeftBCBorderWidth(nscoord aValue)
   mBits.mLeftContBCBorder = (unsigned) aValue;
 }
 
-class nsTableIterator
-{
-public:
-  explicit nsTableIterator(nsIFrame& aSource);
-  explicit nsTableIterator(nsFrameList& aSource);
-  nsIFrame* First();
-  nsIFrame* Next();
-  int32_t   Count();
-
-protected:
-  void Init(nsIFrame* aFirstChild);
-  nsIFrame* mFirstListChild;
-  nsIFrame* mFirstChild;
-  nsIFrame* mCurrentChild;
-  int32_t   mCount;
-};
-
 #define ABORT0() \
 {NS_ASSERTION(false, "CellIterator program error"); \
 return;}

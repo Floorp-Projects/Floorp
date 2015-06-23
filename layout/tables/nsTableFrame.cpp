@@ -1429,18 +1429,15 @@ nsTableFrame::SetColumnDimensions(nscoord aBSize, WritingMode aWM,
   LogicalPoint colGroupOrigin(aWM,
                               aBorderPadding.IStart(aWM) + GetColSpacing(-1),
                               aBorderPadding.BStart(aWM) + GetRowSpacing(-1));
-  nsTableIterator iter(mColGroups);
   nsTableFrame* fif = static_cast<nsTableFrame*>(FirstInFlow());
-  for (nsIFrame* colGroupFrame = iter.First(); colGroupFrame;
-       colGroupFrame = iter.Next()) {
+  for (nsIFrame* colGroupFrame : mColGroups) {
     MOZ_ASSERT(colGroupFrame->GetType() == nsGkAtoms::tableColGroupFrame);
     // first we need to figure out the size of the colgroup
     int32_t groupFirstCol = colIdx;
     nscoord colGroupISize = 0;
     nscoord cellSpacingI = 0;
-    nsTableIterator iterCol(*colGroupFrame);
-    for (nsIFrame* colFrame = iterCol.First(); colFrame;
-         colFrame = iterCol.Next()) {
+    const nsFrameList& columnList = colGroupFrame->PrincipalChildList();
+    for (nsIFrame* colFrame : columnList) {
       if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
           colFrame->StyleDisplay()->mDisplay) {
         NS_ASSERTION(colIdx < GetColCount(), "invalid number of columns");
@@ -1462,8 +1459,7 @@ nsTableFrame::SetColumnDimensions(nscoord aBSize, WritingMode aWM,
     // then we can place the columns correctly within the group
     colIdx = groupFirstCol;
     LogicalPoint colOrigin(aWM);
-    for (nsIFrame* colFrame = iterCol.First(); colFrame;
-         colFrame = iterCol.Next()) {
+    for (nsIFrame* colFrame : columnList) {
       if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
           colFrame->StyleDisplay()->mDisplay) {
         nscoord colISize = fif->GetColumnISizeFromFirstInFlow(colIdx);
@@ -3973,60 +3969,6 @@ nsTableFrame::Dump(bool            aDumpRows,
   printf(" ***END TABLE DUMP*** \n");
 }
 #endif
-
-// nsTableIterator
-nsTableIterator::nsTableIterator(nsIFrame& aSource)
-{
-  nsIFrame* firstChild = aSource.GetFirstPrincipalChild();
-  Init(firstChild);
-}
-
-nsTableIterator::nsTableIterator(nsFrameList& aSource)
-{
-  nsIFrame* firstChild = aSource.FirstChild();
-  Init(firstChild);
-}
-
-void
-nsTableIterator::Init(nsIFrame* aFirstChild)
-{
-  mFirstListChild = aFirstChild;
-  mFirstChild     = aFirstChild;
-  mCurrentChild   = nullptr;
-  mCount          = -1;
-}
-
-nsIFrame*
-nsTableIterator::First()
-{
-  mCurrentChild = mFirstChild;
-  return mCurrentChild;
-}
-
-nsIFrame*
-nsTableIterator::Next()
-{
-  if (!mCurrentChild) {
-    return nullptr;
-  }
-
-  mCurrentChild = mCurrentChild->GetNextSibling();
-  return mCurrentChild;
-}
-
-int32_t
-nsTableIterator::Count()
-{
-  if (-1 == mCount) {
-    mCount = 0;
-    nsIFrame* child = mFirstListChild;
-    while (nullptr != child) {
-      mCount++;
-      child = child->GetNextSibling();
-    }
-  }
-  return mCount;
-}
 
 bool
 nsTableFrame::ColumnHasCellSpacingBefore(int32_t aColIndex) const
