@@ -723,16 +723,16 @@ GetSpaceBetween(int32_t       aPrevColIndex,
                 bool          aCheckVisibility)
 {
   nscoord space = 0;
-  int32_t colX;
+  int32_t colIdx;
   nsTableFrame* fifTable =
     static_cast<nsTableFrame*>(aTableFrame.FirstInFlow());
-  for (colX = aPrevColIndex + 1; aColIndex > colX; colX++) {
+  for (colIdx = aPrevColIndex + 1; aColIndex > colIdx; colIdx++) {
     bool isCollapsed = false;
     if (!aCheckVisibility) {
-      space += fifTable->GetColumnISizeFromFirstInFlow(colX);
+      space += fifTable->GetColumnISizeFromFirstInFlow(colIdx);
     }
     else {
-      nsTableColFrame* colFrame = aTableFrame.GetColFrame(colX);
+      nsTableColFrame* colFrame = aTableFrame.GetColFrame(colIdx);
       const nsStyleVisibility* colVis = colFrame->StyleVisibility();
       bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
       nsIFrame* cgFrame = colFrame->GetParent();
@@ -741,10 +741,10 @@ GetSpaceBetween(int32_t       aPrevColIndex,
                               groupVis->mVisible);
       isCollapsed = collapseCol || collapseGroup;
       if (!isCollapsed)
-        space += fifTable->GetColumnISizeFromFirstInFlow(colX);
+        space += fifTable->GetColumnISizeFromFirstInFlow(colIdx);
     }
-    if (!isCollapsed && aTableFrame.ColumnHasCellSpacingBefore(colX)) {
-      space += aTableFrame.GetColSpacing(colX - 1);
+    if (!isCollapsed && aTableFrame.ColumnHasCellSpacingBefore(colIdx)) {
+      space += aTableFrame.GetColSpacing(colIdx - 1);
     }
   }
   return space;
@@ -786,8 +786,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
 
   nsTableIterator iter(*this);
   // remember the col index of the previous cell to handle rowspans into this row
-  int32_t firstPrevColIndex = -1;
-  int32_t prevColIndex  = firstPrevColIndex;
+  int32_t prevColIndex = -1;
   nscoord iCoord = 0; // running total of children inline-coord offset
 
   // This computes the max of all cell bsizes
@@ -1245,13 +1244,10 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
     nsTableIterator iter(*this);
     // remember the col index of the previous cell to handle rowspans into this
     // row
-    int32_t firstPrevColIndex = -1;
-    int32_t prevColIndex  = firstPrevColIndex;
+    int32_t prevColIndex = -1;
     nscoord iPos = 0; // running total of children inline-axis offset
     nsTableFrame* fifTable =
       static_cast<nsTableFrame*>(tableFrame->FirstInFlow());
-
-    int32_t colIncrement = 1;
 
     nsIFrame* kidFrame = iter.First();
     while (kidFrame) {
@@ -1271,13 +1267,12 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
 
         // remember the last (iend-wards-most) column this cell spans into
         prevColIndex = cellColIndex + cellColSpan - 1;
-        int32_t startIndex = cellColIndex;
         int32_t actualColSpan = cellColSpan;
         bool isVisible = false;
-        for (int32_t colX = startIndex; actualColSpan > 0;
-             colX += colIncrement, actualColSpan--) {
+        for (int32_t colIdx = cellColIndex; actualColSpan > 0;
+             colIdx++, actualColSpan--) {
 
-          nsTableColFrame* colFrame = tableFrame->GetColFrame(colX);
+          nsTableColFrame* colFrame = tableFrame->GetColFrame(colIdx);
           const nsStyleVisibility* colVis = colFrame->StyleVisibility();
           bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE ==
                                 colVis->mVisible);
@@ -1287,15 +1282,15 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
                                   groupVis->mVisible);
           bool isCollapsed = collapseCol || collapseGroup;
           if (!isCollapsed) {
-            cRect.ISize(wm) += fifTable->GetColumnISizeFromFirstInFlow(colX);
+            cRect.ISize(wm) += fifTable->GetColumnISizeFromFirstInFlow(colIdx);
             isVisible = true;
             if ((actualColSpan > 1)) {
               nsTableColFrame* nextColFrame =
-                tableFrame->GetColFrame(colX + colIncrement);
+                tableFrame->GetColFrame(colIdx + 1);
               const nsStyleVisibility* nextColVis =
               nextColFrame->StyleVisibility();
               if ( (NS_STYLE_VISIBILITY_COLLAPSE != nextColVis->mVisible) &&
-                  tableFrame->ColumnHasCellSpacingBefore(colX + colIncrement)) {
+                  tableFrame->ColumnHasCellSpacingBefore(colIdx + 1)) {
                 cRect.ISize(wm) += tableFrame->GetColSpacing(cellColIndex);
               }
             }
