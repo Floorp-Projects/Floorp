@@ -7,7 +7,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
-
+#include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "nsStyleTransformMatrix.h"
 #include "nsCOMArray.h"
@@ -2868,11 +2868,11 @@ SubstitutePixelValues(nsStyleContext* aStyleContext,
                       const nsCSSValue& aInput, nsCSSValue& aOutput)
 {
   if (aInput.IsCalcUnit()) {
-    bool canStoreInRuleTree = true;
+    RuleNodeCacheConditions conditions;
     nsRuleNode::ComputedCalc c =
       nsRuleNode::SpecifiedCalcToComputedCalc(aInput, aStyleContext,
                                               aStyleContext->PresContext(),
-                                              canStoreInRuleTree);
+                                              conditions);
     nsStyleCoord::CalcValue c2;
     c2.mLength = c.mLength;
     c2.mPercent = c.mPercent;
@@ -2889,10 +2889,10 @@ SubstitutePixelValues(nsStyleContext* aStyleContext,
     aOutput.SetArrayValue(outputArray, aInput.GetUnit());
   } else if (aInput.IsLengthUnit() &&
              aInput.GetUnit() != eCSSUnit_Pixel) {
-    bool canStoreInRuleTree = true;
+    RuleNodeCacheConditions conditions;
     nscoord len = nsRuleNode::CalcLength(aInput, aStyleContext,
                                          aStyleContext->PresContext(),
-                                         canStoreInRuleTree);
+                                         conditions);
     aOutput.SetFloatValue(nsPresContext::AppUnitsToFloatCSSPixels(len),
                           eCSSUnit_Pixel);
   } else {
