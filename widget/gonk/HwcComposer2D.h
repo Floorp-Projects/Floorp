@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et: */
 /*
  * Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
@@ -18,16 +20,17 @@
 #define mozilla_HwcComposer2D
 
 #include "Composer2D.h"
+#include "hwchal/HwcHALBase.h"              // for HwcHAL
+#include "HwcUtils.h"                       // for RectVector
 #include "Layers.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/layers/FenceUtils.h"  // for FenceHandle
+#include "mozilla/layers/FenceUtils.h"      // for FenceHandle
+#include "mozilla/UniquePtr.h"              // for HwcHAL
 
 #include <vector>
 #include <list>
 
-#include <hardware/hwcomposer.h>
 #if ANDROID_VERSION >= 17
-#include <ui/Fence.h>
 #include <utils/Timers.h>
 #endif
 
@@ -43,19 +46,6 @@ namespace layers {
 class CompositorParent;
 class Layer;
 }
-
-//Holds a dynamically allocated vector of rectangles
-//used to decribe the complex visible region of a layer
-typedef std::vector<hwc_rect_t> RectVector;
-#if ANDROID_VERSION >= 17
-typedef hwc_composer_device_1_t HwcDevice;
-typedef hwc_display_contents_1_t HwcList;
-typedef hwc_layer_1_t HwcLayer;
-#else
-typedef hwc_composer_device_t HwcDevice;
-typedef hwc_layer_list_t HwcList;
-typedef hwc_layer_t HwcLayer;
-#endif
 
 /*
  * HwcComposer2D provides a way for gecko to render frames
@@ -90,7 +80,7 @@ public:
 
     virtual bool Render(nsIWidget* aWidget) override;
 
-    virtual bool HasHwc() override { return mHwc; }
+    virtual bool HasHwc() override { return mHal->HasHwc(); }
 
     bool EnableVsync(bool aEnable);
 #if ANDROID_VERSION >= 17
@@ -109,11 +99,9 @@ private:
     bool ReallocLayerList();
     bool PrepareLayerList(layers::Layer* aContainer, const nsIntRect& aClip,
           const gfx::Matrix& aParentTransform);
-    void setCrop(HwcLayer* layer, hwc_rect_t srcCrop);
-    void setHwcGeometry(bool aGeometryChanged);
     void SendtoLayerScope();
 
-    HwcDevice*              mHwc;
+    UniquePtr<HwcHALBase>   mHal;
     HwcList*                mList;
     nsIntRect               mScreenRect;
     int                     mMaxLayerCount;
@@ -121,7 +109,7 @@ private:
     bool                    mRBSwapSupport;
     //Holds all the dynamically allocated RectVectors needed
     //to render the current frame
-    std::list<RectVector>   mVisibleRegions;
+    std::list<HwcUtils::RectVector>   mVisibleRegions;
     layers::FenceHandle mPrevRetireFence;
     layers::FenceHandle mPrevDisplayFence;
     nsTArray<layers::LayerComposite*> mHwcLayerMap;
