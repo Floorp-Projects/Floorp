@@ -11,6 +11,7 @@
 #ifndef nsRuleNode_h___
 #define nsRuleNode_h___
 
+#include "mozilla/PodOperations.h"
 #include "mozilla/RangedArray.h"
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "nsPresContext.h"
@@ -102,10 +103,146 @@ struct nsResetStyleData
   }
 };
 
+struct nsConditionalResetStyleData
+{
+  static uint32_t GetBitForSID(const nsStyleStructID aSID) {
+    return 1 << aSID;
+  }
+
+  struct Entry
+  {
+    Entry(const mozilla::RuleNodeCacheConditions& aConditions,
+          void* aStyleStruct,
+          Entry* aNext)
+      : mConditions(aConditions), mStyleStruct(aStyleStruct), mNext(aNext) {}
+
+    void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
+      return aContext->PresShell()->
+        AllocateByObjectID(nsPresArena::nsConditionalResetStyleDataEntry_id, sz);
+    }
+
+    const mozilla::RuleNodeCacheConditions mConditions;
+    void* const mStyleStruct;
+    Entry* const mNext;
+  };
+
+  // Each entry is either a pointer to a style struct or a
+  // pointer to an Entry object.  A bit in mConditionalBits
+  // means that it is an Entry.
+  mozilla::RangedArray<void*,
+                       nsStyleStructID_Reset_Start,
+                       nsStyleStructID_Reset_Count> mEntries;
+
+  uint32_t mConditionalBits;
+
+  nsConditionalResetStyleData()
+  {
+    for (nsStyleStructID i = nsStyleStructID_Reset_Start;
+         i < nsStyleStructID_Reset_Start + nsStyleStructID_Reset_Count;
+         i = nsStyleStructID(i + 1)) {
+      mEntries[i] = nullptr;
+    }
+    mConditionalBits = 0;
+  }
+
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
+    return aContext->PresShell()->
+      AllocateByObjectID(nsPresArena::nsConditionalResetStyleData_id, sz);
+  }
+
+  void* GetStyleData(nsStyleStructID aSID) const {
+    if (mConditionalBits & GetBitForSID(aSID)) {
+      return nullptr;
+    }
+    return mEntries[aSID];
+  }
+
+  void* GetStyleData(nsStyleStructID aSID,
+                     nsStyleContext* aStyleContext) const {
+    if (!(mConditionalBits & GetBitForSID(aSID))) {
+      return mEntries[aSID];
+    }
+    Entry* e = static_cast<Entry*>(mEntries[aSID]);
+    MOZ_ASSERT(e, "if mConditionalBits bit is set, we must have at least one "
+                  "conditional style struct");
+    do {
+      if (e->mConditions.Matches(aStyleContext)) {
+        return e->mStyleStruct;
+      }
+      e = e->mNext;
+    } while (e);
+    return nullptr;
+  }
+
+  void SetStyleData(nsStyleStructID aSID, void* aStyleStruct) {
+    MOZ_ASSERT(!(mConditionalBits & GetBitForSID(aSID)),
+               "rule node should not have unconditional and conditional style "
+               "data for a given struct");
+    mEntries[aSID] = aStyleStruct;
+  }
+
+  void SetStyleData(nsStyleStructID aSID,
+                    nsPresContext* aPresContext,
+                    void* aStyleStruct,
+                    const mozilla::RuleNodeCacheConditions& aConditions) {
+    MOZ_ASSERT((mConditionalBits & GetBitForSID(aSID)) ||
+               !mEntries[aSID],
+               "rule node should not have unconditional and conditional style "
+               "data for a given struct");
+    MOZ_ASSERT(aConditions.CacheableWithDependencies(),
+               "don't call SetStyleData with a cache key that has no "
+               "conditions or is uncacheable");
+#ifdef DEBUG
+    for (Entry* e = static_cast<Entry*>(mEntries[aSID]); e; e = e->mNext) {
+      NS_WARN_IF_FALSE(e->mConditions != aConditions,
+                       "wasteful to have duplicate conditional style data");
+    }
+#endif
+
+    mConditionalBits |= GetBitForSID(aSID);
+    mEntries[aSID] =
+      new (aPresContext) Entry(aConditions, aStyleStruct,
+                               static_cast<Entry*>(mEntries[aSID]));
+  }
+
+  void Destroy(uint64_t aBits, nsPresContext* aContext) {
+#define STYLE_STRUCT_RESET(name, checkdata_cb)                                 \
+    void* name##Ptr = mEntries[eStyleStruct_##name];                           \
+    if (name##Ptr) {                                                           \
+      if (!(mConditionalBits & NS_STYLE_INHERIT_BIT(name))) {                  \
+        if (!(aBits & NS_STYLE_INHERIT_BIT(name))) {                           \
+          static_cast<nsStyle##name*>(name##Ptr)->Destroy(aContext);           \
+        }                                                                      \
+      } else {                                                                 \
+        Entry* e = static_cast<Entry*>(name##Ptr);                             \
+        MOZ_ASSERT(e, "if mConditionalBits bit is set, we must have at least " \
+                      "one conditional style struct");                         \
+        do {                                                                   \
+          static_cast<nsStyle##name*>(e->mStyleStruct)->Destroy(aContext);     \
+          Entry* next = e->mNext;                                              \
+          aContext->PresShell()->FreeByObjectID(                               \
+              nsPresArena::nsConditionalResetStyleDataEntry_id, e);            \
+          e = next;                                                            \
+        } while (e);                                                           \
+      }                                                                        \
+    }
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb)
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_RESET
+#undef STYLE_STRUCT_INHERITED
+
+    aContext->PresShell()->
+      FreeByObjectID(nsPresArena::nsConditionalResetStyleData_id, this);
+  }
+
+};
+
 struct nsCachedStyleData
 {
   nsInheritedStyleData* mInheritedData;
-  nsResetStyleData* mResetData;
+  nsConditionalResetStyleData* mResetData;
 
   static bool IsReset(const nsStyleStructID aSID) {
     MOZ_ASSERT(0 <= aSID && aSID < nsStyleStructID_Length,
@@ -118,13 +255,27 @@ struct nsCachedStyleData
   }
 
   static uint32_t GetBitForSID(const nsStyleStructID aSID) {
-    return 1 << aSID;
+    return nsConditionalResetStyleData::GetBitForSID(aSID);
   }
 
   void* NS_FASTCALL GetStyleData(const nsStyleStructID aSID) {
     if (IsReset(aSID)) {
       if (mResetData) {
-        return mResetData->mStyleStructs[aSID];
+        return mResetData->GetStyleData(aSID);
+      }
+    } else {
+      if (mInheritedData) {
+        return mInheritedData->mStyleStructs[aSID];
+      }
+    }
+    return nullptr;
+  }
+
+  void* NS_FASTCALL GetStyleData(const nsStyleStructID aSID,
+                                 nsStyleContext* aStyleContext) {
+    if (IsReset(aSID)) {
+      if (mResetData) {
+        return mResetData->GetStyleData(aSID, aStyleContext);
       }
     } else {
       if (mInheritedData) {
@@ -138,9 +289,9 @@ struct nsCachedStyleData
                                 nsPresContext *aPresContext, void *aData) {
     if (IsReset(aSID)) {
       if (!mResetData) {
-        mResetData = new (aPresContext) nsResetStyleData;
+        mResetData = new (aPresContext) nsConditionalResetStyleData;
       }
-      mResetData->mStyleStructs[aSID] = aData;
+      mResetData->SetStyleData(aSID, aData);
     } else {
       if (!mInheritedData) {
         mInheritedData = new (aPresContext) nsInheritedStyleData;
@@ -150,15 +301,15 @@ struct nsCachedStyleData
   }
 
   // Typesafe and faster versions of the above
-  #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                   \
-    nsStyle##name_ * NS_FASTCALL GetStyle##name_ () {                    \
-      return mInheritedData ? static_cast<nsStyle##name_*>(              \
-        mInheritedData->mStyleStructs[eStyleStruct_##name_]) : nullptr;  \
+  #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                         \
+    nsStyle##name_ * NS_FASTCALL GetStyle##name_ () {                          \
+      return mInheritedData ? static_cast<nsStyle##name_*>(                    \
+        mInheritedData->mStyleStructs[eStyleStruct_##name_]) : nullptr;        \
     }
-  #define STYLE_STRUCT_RESET(name_, checkdata_cb_)                       \
-    nsStyle##name_ * NS_FASTCALL GetStyle##name_ () {                    \
-      return mResetData ? static_cast<nsStyle##name_*>(                  \
-        mResetData->mStyleStructs[eStyleStruct_##name_]) : nullptr;      \
+  #define STYLE_STRUCT_RESET(name_, checkdata_cb_)                             \
+    nsStyle##name_ * NS_FASTCALL GetStyle##name_ (nsStyleContext* aContext) {  \
+      return mResetData ? static_cast<nsStyle##name_*>(                        \
+        mResetData->GetStyleData(eStyleStruct_##name_, aContext)) : nullptr;   \
     }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT_RESET
@@ -704,7 +855,7 @@ public:
 
   // See comments in GetStyleData for an explanation of what the
   // code below does.
-  #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
+  #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                        \
   template<bool aComputeData>                                                 \
   const nsStyle##name_*                                                       \
   GetStyle##name_(nsStyleContext* aContext)                                   \
@@ -728,8 +879,36 @@ public:
     MOZ_ASSERT(data, "should have aborted on out-of-memory");                 \
     return data;                                                              \
   }
+
+  #define STYLE_STRUCT_RESET(name_, checkdata_cb_)                            \
+  template<bool aComputeData>                                                 \
+  const nsStyle##name_*                                                       \
+  GetStyle##name_(nsStyleContext* aContext)                                   \
+  {                                                                           \
+    NS_ASSERTION(IsUsedDirectly(),                                            \
+                 "if we ever call this on rule nodes that aren't used "       \
+                 "directly, we should adjust handling of mDependentBits "     \
+                 "in some way.");                                             \
+                                                                              \
+    const nsStyle##name_ *data;                                               \
+    data = mStyleData.GetStyle##name_(aContext);                              \
+    if (MOZ_LIKELY(data != nullptr))                                          \
+      return data;                                                            \
+                                                                              \
+    if (!aComputeData)                                                        \
+      return nullptr;                                                         \
+                                                                              \
+    data = static_cast<const nsStyle##name_ *>                                \
+             (WalkRuleTree(eStyleStruct_##name_, aContext));                  \
+                                                                              \
+    MOZ_ASSERT(data, "should have aborted on out-of-memory");                 \
+    return data;                                                              \
+  }
+
   #include "nsStyleStructList.h"
-  #undef STYLE_STRUCT
+
+  #undef STYLE_STRUCT_RESET
+  #undef STYLE_STRUCT_INHERITED
 
   /*
    * Garbage collection.  Mark walks up the tree, marking any unmarked
@@ -800,7 +979,9 @@ public:
     return HaveChildren() || mStyleData.mInheritedData || mStyleData.mResetData;
   }
 
-  bool NodeHasCachedData(const nsStyleStructID aSID) {
+  // Note that this will return false if we have cached conditional
+  // style structs.
+  bool NodeHasCachedUnconditionalData(const nsStyleStructID aSID) {
     return !!mStyleData.GetStyleData(aSID);
   }
 
