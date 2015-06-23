@@ -60,6 +60,8 @@ parent:
 
   PMessagePort(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
 
+  MessagePortForceClose(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
+
 child:
   PCache();
   PCacheStreamControl();
