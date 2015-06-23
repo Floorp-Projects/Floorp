@@ -279,31 +279,29 @@ inline void nsTableCellFrame::SetDesiredSize(const nsHTMLReflowMetrics & aDesire
 
 inline bool nsTableCellFrame::GetContentEmpty()
 {
-  return (mState & NS_TABLE_CELL_CONTENT_EMPTY) ==
-         NS_TABLE_CELL_CONTENT_EMPTY;
+  return HasAnyStateBits(NS_TABLE_CELL_CONTENT_EMPTY);
 }
 
 inline void nsTableCellFrame::SetContentEmpty(bool aContentEmpty)
 {
   if (aContentEmpty) {
-    mState |= NS_TABLE_CELL_CONTENT_EMPTY;
+    AddStateBits(NS_TABLE_CELL_CONTENT_EMPTY);
   } else {
-    mState &= ~NS_TABLE_CELL_CONTENT_EMPTY;
+    RemoveStateBits(NS_TABLE_CELL_CONTENT_EMPTY);
   }
 }
 
 inline bool nsTableCellFrame::HasPctOverBSize()
 {
-  return (mState & NS_TABLE_CELL_HAS_PCT_OVER_BSIZE) ==
-         NS_TABLE_CELL_HAS_PCT_OVER_BSIZE;
+  return HasAnyStateBits(NS_TABLE_CELL_HAS_PCT_OVER_BSIZE);
 }
 
 inline void nsTableCellFrame::SetHasPctOverBSize(bool aValue)
 {
   if (aValue) {
-    mState |= NS_TABLE_CELL_HAS_PCT_OVER_BSIZE;
+    AddStateBits(NS_TABLE_CELL_HAS_PCT_OVER_BSIZE);
   } else {
-    mState &= ~NS_TABLE_CELL_HAS_PCT_OVER_BSIZE;
+    RemoveStateBits(NS_TABLE_CELL_HAS_PCT_OVER_BSIZE);
   }
 }
 
