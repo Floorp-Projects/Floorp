@@ -904,8 +904,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
         // Reflow the child
         kidReflowState.emplace(aPresContext, aReflowState, kidFrame,
                                kidAvailSize,
-                               // Cast needed for gcc 4.4.
-                               uint32_t(nsHTMLReflowState::CALLER_WILL_INIT));
+                               nsHTMLReflowState::CALLER_WILL_INIT);
         InitChildReflowState(*aPresContext, kidAvailSize, borderCollapse,
                              *kidReflowState);
 
