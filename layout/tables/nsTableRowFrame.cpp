@@ -701,9 +701,12 @@ CalcAvailISize(nsTableFrame&     aTableFrame,
   aCellFrame.GetColIndex(colIndex);
   int32_t colspan = aTableFrame.GetEffectiveColSpan(aCellFrame);
   NS_ASSERTION(colspan > 0, "effective colspan should be positive");
+  nsTableFrame* fifTable =
+    static_cast<nsTableFrame*>(aTableFrame.FirstInFlow());
 
   for (int32_t spanX = 0; spanX < colspan; spanX++) {
-    cellAvailISize += aTableFrame.GetColumnISize(colIndex + spanX);
+    cellAvailISize +=
+      fifTable->GetColumnISizeFromFirstInFlow(colIndex + spanX);
     if (spanX > 0 &&
         aTableFrame.ColumnHasCellSpacingBefore(colIndex + spanX)) {
       cellAvailISize += aTableFrame.GetColSpacing(colIndex + spanX - 1);
@@ -721,10 +724,12 @@ GetSpaceBetween(int32_t       aPrevColIndex,
 {
   nscoord space = 0;
   int32_t colX;
+  nsTableFrame* fifTable =
+    static_cast<nsTableFrame*>(aTableFrame.FirstInFlow());
   for (colX = aPrevColIndex + 1; aColIndex > colX; colX++) {
     bool isCollapsed = false;
     if (!aCheckVisibility) {
-      space += aTableFrame.GetColumnISize(colX);
+      space += fifTable->GetColumnISizeFromFirstInFlow(colX);
     }
     else {
       nsTableColFrame* colFrame = aTableFrame.GetColFrame(colX);
@@ -736,7 +741,7 @@ GetSpaceBetween(int32_t       aPrevColIndex,
                               groupVis->mVisible);
       isCollapsed = collapseCol || collapseGroup;
       if (!isCollapsed)
-        space += aTableFrame.GetColumnISize(colX);
+        space += fifTable->GetColumnISizeFromFirstInFlow(colX);
     }
     if (!isCollapsed && aTableFrame.ColumnHasCellSpacingBefore(colX)) {
       space += aTableFrame.GetColSpacing(colX - 1);
@@ -1244,6 +1249,8 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
     int32_t firstPrevColIndex = -1;
     int32_t prevColIndex  = firstPrevColIndex;
     nscoord iPos = 0; // running total of children inline-axis offset
+    nsTableFrame* fifTable =
+      static_cast<nsTableFrame*>(tableFrame->FirstInFlow());
 
     int32_t colIncrement = 1;
 
@@ -1281,7 +1288,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
                                   groupVis->mVisible);
           bool isCollapsed = collapseCol || collapseGroup;
           if (!isCollapsed) {
-            cRect.ISize(wm) += tableFrame->GetColumnISize(colX);
+            cRect.ISize(wm) += fifTable->GetColumnISizeFromFirstInFlow(colX);
             isVisible = true;
             if ((actualColSpan > 1)) {
               nsTableColFrame* nextColFrame =

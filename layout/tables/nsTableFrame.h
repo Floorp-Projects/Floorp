@@ -399,8 +399,10 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  /** return the isize of the column at aColIndex    */
-  int32_t GetColumnISize(int32_t aColIndex);
+  /** Return the isize of the column at aColIndex.
+   *  This may only be called on the table's first-in-flow.
+   */
+  nscoord GetColumnISizeFromFirstInFlow(int32_t aColIndex);
 
   /** Helper to get the column spacing style value.
    *  The argument refers to the space between column aColIndex and column
