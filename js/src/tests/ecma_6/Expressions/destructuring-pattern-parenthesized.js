@@ -65,10 +65,16 @@ checkError("var a, b; ({a, b}) = { a: 1, b: 2 };", ReferenceError, ReferenceErro
 // *Nested* parenthesized destructuring patterns, on the other hand, do trigger
 // grammar refinement.  But subtargets in a destructuring pattern must be
 // either object/array literals that match the destructuring pattern refinement
-// *or* valid simple assignment targets.  Parenthesized object/array patterns
-// are neither.  And so 12.14.5.1 third bullet requires an early SyntaxError.
+// *or* valid simple assignment targets (or such things with a default, with the
+// entire subtarget unparenthesized: |a = 3| is fine, |(a) = 3| is fine for
+// destructuring in an expression, |(a = 3)| is forbidden).  Parenthesized
+// object/array patterns are neither.  And so 12.14.5.1 third bullet requires an
+// early SyntaxError.
 checkError("var a, b; ({ a: ({ b: b }) } = { a: { b: 42 } });", SyntaxError, SyntaxError);
+checkError("var a, b; ({ a: { b: (b = 7) } } = { a: {} });", SyntaxError, SyntaxError);
 checkError("var a, b; ({ a: ([b]) } = { a: [42] });", SyntaxError, SyntaxError);
+checkError("var a, b; [(a = 5)] = [1];", SyntaxError, SyntaxError);
+checkError("var a, b; ({ a: (b = 7)} = { b: 1 });", SyntaxError, SyntaxError);
 
 Function("var a, b; [(a), b] = [1, 2];")();
 Function("var a, b; [(a) = 5, b] = [1, 2];")();
@@ -101,6 +107,18 @@ if (classesEnabled())
   Function("var a, b; var obj = { x() { [(super.man), b] = [1, 2]; } };")();
   Function("var a, b; var obj = { x() { [(super[8]) = 'motel', b] = [1, 2]; } };")();
   Function("var a, b; var obj = { x() { [(super[8 + {}]) = 'motel', b] = [1, 2]; } };")(); // evade constant-folding
+}
+
+// As noted above, when the assignment element has an initializer, the
+// assignment element must not be parenthesized.
+checkError("var a, b; [(repair.man = 17)] = [1];", SyntaxError, SyntaxError);
+checkError("var a, b; [(demolition['man'] = 'motel')] = [1, 2];", SyntaxError, SyntaxError);
+checkError("var a, b; [(demolition['man' + {}] = 'motel')] = [1];", SyntaxError, SyntaxError); // evade constant-folding
+if (classesEnabled())
+{
+  checkError("var a, b; var obj = { x() { [(super.man = 5)] = [1]; } };", SyntaxError, SyntaxError);
+  checkError("var a, b; var obj = { x() { [(super[8] = 'motel')] = [1]; } };", SyntaxError, SyntaxError);
+  checkError("var a, b; var obj = { x() { [(super[8 + {}] = 'motel')] = [1]; } };", SyntaxError, SyntaxError); // evade constant-folding
 }
 
 // In strict mode, assignment to funcall *immediately* triggers ReferenceError
