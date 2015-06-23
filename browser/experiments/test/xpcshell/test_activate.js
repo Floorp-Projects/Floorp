@@ -13,7 +13,6 @@ const MS_IN_ONE_DAY   = SEC_IN_ONE_DAY * 1000;
 let gProfileDir = null;
 let gHttpServer = null;
 let gHttpRoot   = null;
-let gReporter   = null;
 let gPolicy     = null;
 
 function ManifestEntry(data) {
@@ -43,14 +42,8 @@ add_task(function* test_setup() {
   gHttpServer.registerDirectory("/", do_get_cwd());
   do_register_cleanup(() => gHttpServer.stop(() => {}));
 
-  gReporter = yield getReporter("json_payload_simple");
-  yield gReporter.collectMeasurements();
-  let payload = yield gReporter.getJSONPayload(false);
-  do_register_cleanup(() => gReporter._shutdown());
-
   patchPolicy(gPolicy, {
     updatechannel: () => "nightly",
-    healthReportPayload: () => Promise.resolve(payload),
   });
 
   Services.prefs.setBoolPref(PREF_EXPERIMENTS_ENABLED, true);
