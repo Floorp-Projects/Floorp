@@ -1425,12 +1425,12 @@ nsTableFrame::SetColumnDimensions(nscoord aBSize, WritingMode aWM,
 {
   const nscoord colBSize = aBSize - (aBorderPadding.BStartEnd(aWM) +
                            GetRowSpacing(-1) + GetRowSpacing(GetRowCount()));
-
   int32_t colIdx = 0;
   LogicalPoint colGroupOrigin(aWM,
                               aBorderPadding.IStart(aWM) + GetColSpacing(-1),
                               aBorderPadding.BStart(aWM) + GetRowSpacing(-1));
   nsTableIterator iter(mColGroups);
+  nsTableFrame* fif = static_cast<nsTableFrame*>(FirstInFlow());
   for (nsIFrame* colGroupFrame = iter.First(); colGroupFrame;
        colGroupFrame = iter.Next()) {
     MOZ_ASSERT(colGroupFrame->GetType() == nsGkAtoms::tableColGroupFrame);
@@ -1445,7 +1445,8 @@ nsTableFrame::SetColumnDimensions(nscoord aBSize, WritingMode aWM,
           colFrame->StyleDisplay()->mDisplay) {
         NS_ASSERTION(colIdx < GetColCount(), "invalid number of columns");
         cellSpacingI = GetColSpacing(colIdx);
-        colGroupISize += GetColumnISize(colIdx) + cellSpacingI;
+        colGroupISize += fif->GetColumnISizeFromFirstInFlow(colIdx) +
+                         cellSpacingI;
         ++colIdx;
       }
     }
@@ -1465,7 +1466,7 @@ nsTableFrame::SetColumnDimensions(nscoord aBSize, WritingMode aWM,
          colFrame = iterCol.Next()) {
       if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
           colFrame->StyleDisplay()->mDisplay) {
-        nscoord colISize = GetColumnISize(colIdx);
+        nscoord colISize = fif->GetColumnISizeFromFirstInFlow(colIdx);
         LogicalRect colRect(aWM, colOrigin.I(aWM), colOrigin.B(aWM),
                             colISize, colBSize);
         colFrame->SetRect(aWM, colRect, colGroupWidth);
@@ -2196,6 +2197,7 @@ nsTableFrame::GetCollapsedISize(const WritingMode aWM,
   NS_ASSERTION(!GetPrevInFlow(), "GetCollapsedISize called on next in flow");
   nscoord iSize = GetColSpacing(GetColCount());
   iSize += aBorderPadding.IStartEnd(aWM);
+  nsTableFrame* fif = static_cast<nsTableFrame*>(FirstInFlow());
   for (nsIFrame* groupFrame : mColGroups) {
     const nsStyleVisibility* groupVis = groupFrame->StyleVisibility();
     bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
@@ -2207,7 +2209,7 @@ nsTableFrame::GetCollapsedISize(const WritingMode aWM,
       if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay) {
         const nsStyleVisibility* colVis = colFrame->StyleVisibility();
         bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
-        int32_t colISize = GetColumnISize(colX);
+        nscoord colISize = fif->GetColumnISizeFromFirstInFlow(colX);
         if (!collapseGroup && !collapseCol) {
           iSize += colISize;
           if (ColumnHasCellSpacingBefore(colX))
@@ -3635,15 +3637,12 @@ nsTableFrame::DistributeBSizeToRows(const nsHTMLReflowState& aReflowState,
   ResizeCells(*this);
 }
 
-int32_t
-nsTableFrame::GetColumnISize(int32_t aColIndex)
+nscoord
+nsTableFrame::GetColumnISizeFromFirstInFlow(int32_t aColIndex)
 {
-  nsTableFrame* firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
-  if (this == firstInFlow) {
-    nsTableColFrame* colFrame = GetColFrame(aColIndex);
-    return colFrame ? colFrame->GetFinalISize() : 0;
-  }
-  return firstInFlow->GetColumnISize(aColIndex);
+  MOZ_ASSERT(this == FirstInFlow());
+  nsTableColFrame* colFrame = GetColFrame(aColIndex);
+  return colFrame ? colFrame->GetFinalISize() : 0;
 }
 
 nscoord
@@ -3914,8 +3913,9 @@ nsTableFrame::Dump(bool            aDumpRows,
   printf("mColWidths=");
   int32_t numCols = GetColCount();
   int32_t colX;
+  nsTableFrame* fif = static_cast<nsTableFrame*>(FirstInFlow());
   for (colX = 0; colX < numCols; colX++) {
-    printf("%d ", GetColumnISize(colX));
+    printf("%d ", fif->GetColumnISizeFromFirstInFlow(colX));
   }
   printf("\n");
 
