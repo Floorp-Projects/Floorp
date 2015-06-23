@@ -189,4 +189,30 @@ function runTests() {
   ({type, enhanced, title, suggested} = getData(0));
   Cu.reportError("SUGGEST " + suggested);
   ok(suggested.indexOf("Suggested for <strong> webdev education </strong> enthusiasts who visit sites like <strong> classroom.google.com </strong>") > -1, "Suggested for 'webdev education' enthusiasts");
+
+
+
+  // Test with xml entities in category name
+  suggestedLink.url = "http://example1.com/3";
+  suggestedLink.adgroup_name = ">angles< & \"quotes\'";
+  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE,
+    "data:application/json," + encodeURIComponent(JSON.stringify({"suggested": [suggestedLink]})));
+  yield watchLinksChangeOnce().then(TestRunner.next);
+
+  yield addNewTabPageTab();
+  ({type, enhanced, title, suggested} = getData(0));
+  Cu.reportError("SUGGEST " + suggested);
+  ok(suggested.indexOf("Suggested for <strong> &gt;angles&lt; &amp; \"quotes\' </strong> enthusiasts who visit sites like <strong> classroom.google.com </strong>") > -1, "Suggested for 'xml entities' enthusiasts");
+
+
+  // Test with xml entities in explanation.
+  suggestedLink.explanation = "Testing junk explanation &<>\"'";
+  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE,
+    "data:application/json," + encodeURIComponent(JSON.stringify({"suggested": [suggestedLink]})));
+  yield watchLinksChangeOnce().then(TestRunner.next);
+
+  yield addNewTabPageTab();
+  ({type, enhanced, title, suggested} = getData(0));
+  Cu.reportError("SUGGEST " + suggested);
+  ok(suggested.indexOf("Testing junk explanation &amp;&lt;&gt;\"'") > -1, "Junk test");
 }
