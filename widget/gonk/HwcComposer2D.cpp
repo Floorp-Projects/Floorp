@@ -715,6 +715,7 @@ HwcComposer2D::Render(nsIWidget* aWidget)
     if (!mHal->HasHwc() || !mList) {
         return GetGonkDisplay()->SwapBuffers(screen->GetDpy(), screen->GetSur());
     } else if (!mList && !ReallocLayerList()) {
+        LOGE("Cannot realloc layer list");
         return false;
     }
 
@@ -811,15 +812,21 @@ bool
 HwcComposer2D::TryHwComposition(nsScreenGonk* aScreen)
 {
     mHal->SetEGLInfo(aScreen->GetDpy(), aScreen->GetSur());
-    return !mHal->Set(mList, GonkDisplay::DISPLAY_PRIMARY);
+    return !mHal->Set(mList, aScreen->GetDisplayType());
 }
 
 bool
 HwcComposer2D::Render(nsIWidget* aWidget)
 {
     nsScreenGonk* screen = static_cast<nsWindow*>(aWidget)->GetScreen();
+    GetGonkDisplay()->SwapBuffers(screen->GetDpy(), screen->GetSur());
 
-    return GetGonkDisplay()->SwapBuffers(screen->GetDpy(), screen->GetSur());
+    if (!mHal->HasHwc()) {
+        return true;
+    }
+
+    mHal->Prepare(nullptr, screen->GetDisplayType(), nullptr, -1);
+    return !mHal->Set(nullptr, screen->GetDisplayType());
 }
 #endif
 
