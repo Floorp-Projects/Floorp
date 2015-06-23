@@ -556,6 +556,8 @@ def apply_patches():
     os.system("patch -p1 < msvc2015.patch")
     # Patch to fix a crash caused by MSVC 2013
     os.system("patch -p3 < bug1137614.patch")
+    # Bug 1176730 - Don't use pthread for libvpx in mingw builds.
+    os.system("patch -p3 < disable_pthread_on_mingw.patch")
 
 def update_readme(commit):
     with open('README_MOZILLA') as f:
