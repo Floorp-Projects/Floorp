@@ -12,18 +12,19 @@
 #define nsRuleNode_h___
 
 #include "mozilla/RangedArray.h"
+#include "mozilla/RuleNodeCacheConditions.h"
 #include "nsPresContext.h"
 #include "nsStyleStruct.h"
 
-class nsStyleContext;
-struct nsRuleData;
-class nsIStyleRule;
-struct nsCSSValueList;
 class nsCSSPropertySet;
 class nsCSSValue;
-
+class nsIStyleRule;
+class nsStyleContext;
 class nsStyleCoord;
+struct nsCSSRect;
+struct nsCSSValueList;
 struct nsCSSValuePairList;
+struct nsRuleData;
 
 struct nsInheritedStyleData
 {
@@ -435,119 +436,119 @@ protected:
                        const nsRuleData* aRuleData,
                        nsStyleContext* aContext, nsRuleNode* aHighestNode,
                        RuleDetail aRuleDetail,
-                       const bool aCanStoreInRuleTree);
+                       const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeVisibilityData(void* aStartStruct,
                           const nsRuleData* aRuleData,
                           nsStyleContext* aContext, nsRuleNode* aHighestNode,
                           RuleDetail aRuleDetail,
-                          const bool aCanStoreInRuleTree);
+                          const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeFontData(void* aStartStruct,
                     const nsRuleData* aRuleData,
                     nsStyleContext* aContext, nsRuleNode* aHighestNode,
                     RuleDetail aRuleDetail,
-                    const bool aCanStoreInRuleTree);
+                    const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeColorData(void* aStartStruct,
                      const nsRuleData* aRuleData,
                      nsStyleContext* aContext, nsRuleNode* aHighestNode,
                      RuleDetail aRuleDetail,
-                     const bool aCanStoreInRuleTree);
+                     const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeBackgroundData(void* aStartStruct,
                           const nsRuleData* aRuleData,
                           nsStyleContext* aContext, nsRuleNode* aHighestNode,
                           RuleDetail aRuleDetail,
-                          const bool aCanStoreInRuleTree);
+                          const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeMarginData(void* aStartStruct,
                       const nsRuleData* aRuleData,
                       nsStyleContext* aContext, nsRuleNode* aHighestNode,
                       RuleDetail aRuleDetail,
-                      const bool aCanStoreInRuleTree);
+                      const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeBorderData(void* aStartStruct,
                       const nsRuleData* aRuleData,
                       nsStyleContext* aContext, nsRuleNode* aHighestNode,
                       RuleDetail aRuleDetail,
-                      const bool aCanStoreInRuleTree);
+                      const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputePaddingData(void* aStartStruct,
                        const nsRuleData* aRuleData,
                        nsStyleContext* aContext, nsRuleNode* aHighestNode,
                        RuleDetail aRuleDetail,
-                       const bool aCanStoreInRuleTree);
+                       const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeOutlineData(void* aStartStruct,
                        const nsRuleData* aRuleData,
                        nsStyleContext* aContext, nsRuleNode* aHighestNode,
                        RuleDetail aRuleDetail,
-                       const bool aCanStoreInRuleTree);
+                       const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeListData(void* aStartStruct,
                     const nsRuleData* aRuleData,
                     nsStyleContext* aContext, nsRuleNode* aHighestNode,
                     RuleDetail aRuleDetail,
-                    const bool aCanStoreInRuleTree);
+                    const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputePositionData(void* aStartStruct,
                         const nsRuleData* aRuleData,
                         nsStyleContext* aContext, nsRuleNode* aHighestNode,
                         RuleDetail aRuleDetail,
-                        const bool aCanStoreInRuleTree);
+                        const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeTableData(void* aStartStruct,
                      const nsRuleData* aRuleData,
                      nsStyleContext* aContext, nsRuleNode* aHighestNode,
                      RuleDetail aRuleDetail,
-                     const bool aCanStoreInRuleTree);
+                     const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeTableBorderData(void* aStartStruct,
                            const nsRuleData* aRuleData,
                            nsStyleContext* aContext, nsRuleNode* aHighestNode,
                            RuleDetail aRuleDetail,
-                           const bool aCanStoreInRuleTree);
+                           const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeContentData(void* aStartStruct,
                        const nsRuleData* aRuleData,
                        nsStyleContext* aContext, nsRuleNode* aHighestNode,
                        RuleDetail aRuleDetail,
-                       const bool aCanStoreInRuleTree);
+                       const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeQuotesData(void* aStartStruct,
                       const nsRuleData* aRuleData,
                       nsStyleContext* aContext, nsRuleNode* aHighestNode,
                       RuleDetail aRuleDetail,
-                      const bool aCanStoreInRuleTree);
+                      const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeTextData(void* aStartStruct,
                     const nsRuleData* aRuleData,
                     nsStyleContext* aContext, nsRuleNode* aHighestNode,
                     RuleDetail aRuleDetail,
-                    const bool aCanStoreInRuleTree);
+                    const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeTextResetData(void* aStartStruct,
                          const nsRuleData* aRuleData,
                          nsStyleContext* aContext, nsRuleNode* aHighestNode,
                          RuleDetail aRuleDetail,
-                         const bool aCanStoreInRuleTree);
+                         const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeUserInterfaceData(void* aStartStruct,
@@ -555,49 +556,49 @@ protected:
                              nsStyleContext* aContext,
                              nsRuleNode* aHighestNode,
                              RuleDetail aRuleDetail,
-                             const bool aCanStoreInRuleTree);
+                             const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeUIResetData(void* aStartStruct,
                        const nsRuleData* aRuleData,
                        nsStyleContext* aContext, nsRuleNode* aHighestNode,
                        RuleDetail aRuleDetail,
-                       const bool aCanStoreInRuleTree);
+                       const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeXULData(void* aStartStruct,
                    const nsRuleData* aRuleData,
                    nsStyleContext* aContext, nsRuleNode* aHighestNode,
                    RuleDetail aRuleDetail,
-                   const bool aCanStoreInRuleTree);
+                   const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeColumnData(void* aStartStruct,
                       const nsRuleData* aRuleData,
                       nsStyleContext* aContext, nsRuleNode* aHighestNode,
                       RuleDetail aRuleDetail,
-                      const bool aCanStoreInRuleTree);
+                      const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeSVGData(void* aStartStruct,
                    const nsRuleData* aRuleData,
                    nsStyleContext* aContext, nsRuleNode* aHighestNode,
                    RuleDetail aRuleDetail,
-                   const bool aCanStoreInRuleTree);
+                   const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeSVGResetData(void* aStartStruct,
                         const nsRuleData* aRuleData,
                         nsStyleContext* aContext, nsRuleNode* aHighestNode,
                         RuleDetail aRuleDetail,
-                        const bool aCanStoreInRuleTree);
+                        const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
     ComputeVariablesData(void* aStartStruct,
                          const nsRuleData* aRuleData,
                          nsStyleContext* aContext, nsRuleNode* aHighestNode,
                          RuleDetail aRuleDetail,
-                         const bool aCanStoreInRuleTree);
+                         const mozilla::RuleNodeCacheConditions aConditions);
 
   // helpers for |ComputeFontData| that need access to |mNoneBits|:
   static void SetFontSize(nsPresContext* aPresContext,
@@ -610,7 +611,7 @@ protected:
                           nscoord aScriptLevelAdjustedParentSize,
                           bool aUsedStartStruct,
                           bool aAtRoot,
-                          bool& aCanStoreInRuleTree);
+                          mozilla::RuleNodeCacheConditions& aConditions);
 
   static void SetFont(nsPresContext* aPresContext,
                       nsStyleContext* aContext,
@@ -619,7 +620,7 @@ protected:
                       const nsStyleFont* aParentFont,
                       nsStyleFont* aFont,
                       bool aStartStruct,
-                      bool& aCanStoreInRuleTree);
+                      mozilla::RuleNodeCacheConditions& aConditions);
 
   static void SetGenericFont(nsPresContext* aPresContext,
                              nsStyleContext* aContext,
@@ -633,17 +634,17 @@ protected:
               GetShadowData(const nsCSSValueList* aList,
                             nsStyleContext* aContext,
                             bool aIsBoxShadow,
-                            bool& aCanStoreInRuleTree);
+                            mozilla::RuleNodeCacheConditions& aConditions);
   bool SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
                                 const nsCSSValue& aValue,
                                 nsStyleContext* aStyleContext,
                                 nsPresContext* aPresContext,
-                                bool& aCanStoreInRuleTree);
+                                mozilla::RuleNodeCacheConditions& aConditions);
   void SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
                                   const nsCSSValue* aValue,
                                   nsStyleContext* aStyleContext,
                                   nsPresContext* aPresContext,
-                                  bool& aCanStoreInRuleTree);
+                                  mozilla::RuleNodeCacheConditions& aConditions);
 
 private:
   nsRuleNode(nsPresContext* aPresContext, nsRuleNode* aParent,
@@ -764,7 +765,7 @@ public:
   static nscoord CalcLength(const nsCSSValue& aValue,
                             nsStyleContext* aStyleContext,
                             nsPresContext* aPresContext,
-                            bool& aCanStoreInRuleTree);
+                            mozilla::RuleNodeCacheConditions& aConditions);
 
   struct ComputedCalc {
     nscoord mLength;
@@ -777,7 +778,7 @@ public:
   SpecifiedCalcToComputedCalc(const nsCSSValue& aValue,
                               nsStyleContext* aStyleContext,
                               nsPresContext* aPresContext,
-                              bool& aCanStoreInRuleTree);
+                              mozilla::RuleNodeCacheConditions& aConditions);
 
   // Compute the value of an nsStyleCoord that IsCalcUnit().
   // (Values that don't require aPercentageBasis should be handled

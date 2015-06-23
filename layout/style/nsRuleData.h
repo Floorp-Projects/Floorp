@@ -12,6 +12,7 @@
 #define nsRuleData_h_
 
 #include "mozilla/CSSVariableDeclarations.h"
+#include "mozilla/RuleNodeCacheConditions.h"
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsStyleStructFwd.h"
@@ -25,7 +26,7 @@ typedef void (*nsPostResolveFunc)(void* aStyleStruct, nsRuleData* aData);
 struct nsRuleData
 {
   const uint32_t mSIDs;
-  bool mCanStoreInRuleTree;
+  mozilla::RuleNodeCacheConditions mConditions;
   bool mIsImportantRule;
   uint16_t mLevel; // an nsStyleSet::sheetType
   nsPresContext* const mPresContext;
