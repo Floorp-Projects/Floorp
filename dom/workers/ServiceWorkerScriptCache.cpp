@@ -77,7 +77,7 @@ public:
   }
 
   nsresult
-  Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL)
+  Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL, nsILoadGroup* aLoadGroup)
   {
     MOZ_ASSERT(aPrincipal);
     AssertIsOnMainThread();
@@ -91,7 +91,8 @@ public:
     rv = NS_NewChannel(getter_AddRefs(mChannel),
                        uri, aPrincipal,
                        nsILoadInfo::SEC_NORMAL,
-                       nsIContentPolicy::TYPE_SCRIPT); // FIXME(nsm): TYPE_SERVICEWORKER
+                       nsIContentPolicy::TYPE_SCRIPT, // FIXME(nsm): TYPE_SERVICEWORKER
+                       aLoadGroup);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -280,7 +281,7 @@ public:
 
   nsresult
   Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL,
-             const nsAString& aCacheName)
+             const nsAString& aCacheName, nsILoadGroup* aLoadGroup)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aPrincipal);
@@ -297,7 +298,7 @@ public:
     }
 
     mCN = new CompareNetwork(this);
-    nsresult rv = mCN->Initialize(aPrincipal, aURL);
+    nsresult rv = mCN->Initialize(aPrincipal, aURL, aLoadGroup);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -936,7 +937,8 @@ GenerateCacheName(nsAString& aName)
 
 nsresult
 Compare(nsIPrincipal* aPrincipal, const nsAString& aCacheName,
-        const nsAString& aURL, CompareCallback* aCallback)
+        const nsAString& aURL, CompareCallback* aCallback,
+        nsILoadGroup* aLoadGroup)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aPrincipal);
@@ -945,7 +947,7 @@ Compare(nsIPrincipal* aPrincipal, const nsAString& aCacheName,
 
   nsRefPtr<CompareManager> cm = new CompareManager(aCallback);
 
-  nsresult rv = cm->Initialize(aPrincipal, aURL, aCacheName);
+  nsresult rv = cm->Initialize(aPrincipal, aURL, aCacheName, aLoadGroup);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

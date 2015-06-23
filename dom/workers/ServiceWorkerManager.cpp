@@ -870,6 +870,7 @@ class ServiceWorkerRegisterJob final : public ServiceWorkerJob,
   nsRefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsRefPtr<ServiceWorkerInfo> mUpdateAndInstallInfo;
+  nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   ~ServiceWorkerRegisterJob()
   { }
@@ -890,15 +891,19 @@ public:
                            const nsCString& aScope,
                            const nsCString& aScriptSpec,
                            ServiceWorkerUpdateFinishCallback* aCallback,
-                           nsIPrincipal* aPrincipal)
+                           nsIPrincipal* aPrincipal,
+                           nsILoadGroup* aLoadGroup)
     : ServiceWorkerJob(aQueue)
     , mScope(aScope)
     , mScriptSpec(aScriptSpec)
     , mCallback(aCallback)
     , mPrincipal(aPrincipal)
+    , mLoadGroup(aLoadGroup)
     , mJobType(REGISTER_JOB)
     , mCanceled(false)
-  { }
+  {
+    MOZ_ASSERT(mLoadGroup);
+  }
 
   // [[Update]]
   ServiceWorkerRegisterJob(ServiceWorkerJobQueue* aQueue,
@@ -1228,7 +1233,7 @@ private:
     nsresult rv =
       serviceWorkerScriptCache::Compare(mRegistration->mPrincipal, cacheName,
                                         NS_ConvertUTF8toUTF16(mRegistration->mScriptSpec),
-                                        this);
+                                        this, mLoadGroup);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Fail(rv);
     }
@@ -1532,8 +1537,20 @@ ServiceWorkerManager::Register(nsIDOMWindow* aWindow,
   nsRefPtr<ServiceWorkerResolveWindowPromiseOnUpdateCallback> cb =
     new ServiceWorkerResolveWindowPromiseOnUpdateCallback(window, promise);
 
+  nsCOMPtr<nsILoadGroup> docLoadGroup = doc->GetDocumentLoadGroup();
+  nsRefPtr<WorkerLoadInfo::InterfaceRequestor> ir =
+    new WorkerLoadInfo::InterfaceRequestor(documentPrincipal, docLoadGroup);
+  ir->MaybeAddTabChild(docLoadGroup);
+
+  // Create a load group that is separate from, yet related to, the document's load group.
+  // This allows checks for interfaces like nsILoadContext to yield the values used by the
+  // the document, yet will not cancel the update job if the document's load group is cancelled.
+  nsCOMPtr<nsILoadGroup> loadGroup = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
+  rv = loadGroup->SetNotificationCallbacks(ir);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+
   nsRefPtr<ServiceWorkerRegisterJob> job =
-    new ServiceWorkerRegisterJob(queue, cleanedScope, spec, cb, documentPrincipal);
+    new ServiceWorkerRegisterJob(queue, cleanedScope, spec, cb, documentPrincipal, loadGroup);
   queue->Append(job);
 
   AssertIsOnMainThread();
