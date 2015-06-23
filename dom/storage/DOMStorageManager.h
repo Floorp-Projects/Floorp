@@ -126,6 +126,9 @@ public:
   // Global getter of localStorage manager service
   static DOMLocalStorageManager* Self() { return sSelf; }
 
+  // Like Self, but creates an instance if we're not yet initialized.
+  static DOMLocalStorageManager* Ensure();
+
 private:
   static DOMLocalStorageManager* sSelf;
 };
