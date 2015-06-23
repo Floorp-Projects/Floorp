@@ -82,7 +82,7 @@ nsTableCellFrame::Init(nsIContent*       aContent,
   // Let the base class do its initialization
   nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  if (GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER) {
+  if (HasAnyStateBits(NS_FRAME_FONT_INFLATION_CONTAINER)) {
     AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
   }
 
@@ -98,7 +98,7 @@ nsTableCellFrame::Init(nsIContent*       aContent,
 void
 nsTableCellFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  if (GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
+  if (HasAnyStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)) {
     nsTableFrame::UnregisterPositionedTablePart(this, aDestructRoot);
   }
 
@@ -133,8 +133,8 @@ nsTableCellFrame::NotifyPercentBSize(const nsHTMLReflowState& aReflowState)
 
     if (nsTableFrame::AncestorsHaveStyleBSize(*cellRS) ||
         (GetTableFrame()->GetEffectiveRowSpan(*this) == 1 &&
-         (cellRS->parentReflowState->frame->GetStateBits() &
-          NS_ROW_HAS_CELL_WITH_STYLE_BSIZE))) {
+         cellRS->parentReflowState->frame->
+           HasAnyStateBits(NS_ROW_HAS_CELL_WITH_STYLE_BSIZE))) {
 
       for (const nsHTMLReflowState *rs = aReflowState.parentReflowState;
            rs != cellRS;
@@ -937,7 +937,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   kidReflowState.mFlags.mSpecialBSizeReflow = false;
 
   if (aReflowState.mFlags.mSpecialBSizeReflow ||
-      (FirstInFlow()->GetStateBits() & NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) {
+      FirstInFlow()->HasAnyStateBits(NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) {
     // We need to force the kid to have mBResize set if we've had a
     // special reflow in the past, since the non-special reflow needs to
     // resize back to what it was without the special bsize reflow.
@@ -956,7 +956,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
                          borderPadding.BStart(wm));
   nsRect origRect = firstKid->GetRect();
   nsRect origVisualOverflow = firstKid->GetVisualOverflowRect();
-  bool firstReflow = (firstKid->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+  bool firstReflow = firstKid->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
 
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState,
               wm, kidOrigin, containerWidth, 0, aStatus);
@@ -968,7 +968,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // XXXbz is this invalidate actually needed, really?
-  if (GetStateBits() & NS_FRAME_IS_DIRTY) {
+  if (HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
     InvalidateFrameSubtree();
   }
 
@@ -1029,7 +1029,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
 
   // If our parent is in initial reflow, it'll handle invalidating our
   // entire overflow rect.
-  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
+  if (!GetParent()->HasAnyStateBits(NS_FRAME_FIRST_REFLOW) &&
       nsSize(aDesiredSize.Width(), aDesiredSize.Height()) != mRect.Size()) {
     InvalidateFrame();
   }

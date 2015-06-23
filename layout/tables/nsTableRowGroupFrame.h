@@ -429,29 +429,29 @@ public:
 
 inline bool nsTableRowGroupFrame::IsRepeatable() const
 {
-  return (mState & NS_ROWGROUP_REPEATABLE) == NS_ROWGROUP_REPEATABLE;
+  return HasAnyStateBits(NS_ROWGROUP_REPEATABLE);
 }
 
 inline void nsTableRowGroupFrame::SetRepeatable(bool aRepeatable)
 {
   if (aRepeatable) {
-    mState |= NS_ROWGROUP_REPEATABLE;
+    AddStateBits(NS_ROWGROUP_REPEATABLE);
   } else {
-    mState &= ~NS_ROWGROUP_REPEATABLE;
+    RemoveStateBits(NS_ROWGROUP_REPEATABLE);
   }
 }
 
 inline bool nsTableRowGroupFrame::HasStyleBSize() const
 {
-  return (mState & NS_ROWGROUP_HAS_STYLE_BSIZE) == NS_ROWGROUP_HAS_STYLE_BSIZE;
+  return HasAnyStateBits(NS_ROWGROUP_HAS_STYLE_BSIZE);
 }
 
 inline void nsTableRowGroupFrame::SetHasStyleBSize(bool aValue)
 {
   if (aValue) {
-    mState |= NS_ROWGROUP_HAS_STYLE_BSIZE;
+    AddStateBits(NS_ROWGROUP_HAS_STYLE_BSIZE);
   } else {
-    mState &= ~NS_ROWGROUP_HAS_STYLE_BSIZE;
+    RemoveStateBits(NS_ROWGROUP_HAS_STYLE_BSIZE);
   }
 }
 

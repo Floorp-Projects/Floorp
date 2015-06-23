@@ -797,7 +797,7 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   aDesiredSize.ClearSize();
   aStatus = NS_FRAME_COMPLETE;
 
-  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+  if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     // Set up our kids.  They're already present, on an overflow list, 
     // or there are none so we'll create them now
     MoveOverflowToChildList();
@@ -809,7 +809,7 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   nsRect origInnerRect = InnerTableFrame()->GetRect();
   nsRect origInnerVisualOverflow = InnerTableFrame()->GetVisualOverflowRect();
   bool innerFirstReflow =
-    (InnerTableFrame()->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+    InnerTableFrame()->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
   nsRect origCaptionRect;
   nsRect origCaptionVisualOverflow;
   bool captionFirstReflow;
@@ -818,7 +818,7 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     origCaptionVisualOverflow =
       mCaptionFrames.FirstChild()->GetVisualOverflowRect();
     captionFirstReflow =
-      (mCaptionFrames.FirstChild()->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+      mCaptionFrames.FirstChild()->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
   }
   
   // ComputeAutoSize has to match this logic.

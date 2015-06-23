@@ -158,7 +158,7 @@ nsTableRowFrame::Init(nsIContent*       aContent,
 void
 nsTableRowFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  if (GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
+  if (HasAnyStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)) {
     nsTableFrame::UnregisterPositionedTablePart(this, aDestructRoot);
   }
 
@@ -828,8 +828,8 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
       }
     }
     if (aReflowState.mFlags.mSpecialBSizeReflow) {
-      if (!isPaginated && !(cellFrame->GetStateBits() &
-                            NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
+      if (!isPaginated &&
+          !cellFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
         continue;
       }
     }
@@ -859,8 +859,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
     MOZ_ASSERT(origKidNormalPosition.B(wm) == 0 || wm.IsVerticalRL());
     nsRect kidVisualOverflow = kidFrame->GetVisualOverflowRect();
     LogicalPoint kidPosition(wm, iCoord, 0);
-    bool firstReflow =
-      (kidFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+    bool firstReflow = kidFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
 
     if (doReflowChild) {
       // Calculate the available isize for the table cell using the known
@@ -879,13 +878,13 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
       NS_ASSERTION(cellFrame->GetWritingMode() == wm,
                    "expected consistent writing-mode within table");
       LogicalSize cellDesiredSize = cellFrame->GetDesiredSize();
-      if ((availCellISize != cellFrame->GetPriorAvailISize())       ||
+      if ((availCellISize != cellFrame->GetPriorAvailISize())           ||
           (cellDesiredSize.ISize(wm) > cellFrame->GetPriorAvailISize()) ||
-          (GetStateBits() & NS_FRAME_IS_DIRTY)                      ||
-          isPaginated                                               ||
-          NS_SUBTREE_DIRTY(cellFrame)                               ||
+          HasAnyStateBits(NS_FRAME_IS_DIRTY)                            ||
+          isPaginated                                                   ||
+          NS_SUBTREE_DIRTY(cellFrame)                                   ||
           // See if it needs a special reflow, or if it had one that we need to undo.
-          (cellFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE) ||
+          cellFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)  ||
           HasPctBSize()) {
         // Reflow the cell to fit the available isize, bsize
         // XXX The old IR_ChildIsDirty code used availCellISize here.
@@ -1100,7 +1099,7 @@ nsTableRowFrame::Reflow(nsPresContext*           aPresContext,
 
   // If our parent is in initial reflow, it'll handle invalidating our
   // entire overflow rect.
-  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
+  if (!GetParent()->HasAnyStateBits(NS_FRAME_FIRST_REFLOW) &&
       nsSize(aDesiredSize.Width(), aDesiredSize.Height()) != mRect.Size()) {
     InvalidateFrame();
   }
@@ -1165,8 +1164,8 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*           aPresContext,
   nsTableFrame::InvalidateTableFrame(aCellFrame,
                                      cellRect.GetPhysicalRect(wm, containerWidth),
                                      cellVisualOverflow,
-                                     (aCellFrame->GetStateBits() &
-                                      NS_FRAME_FIRST_REFLOW) != 0);
+                                     aCellFrame->
+                                       HasAnyStateBits(NS_FRAME_FIRST_REFLOW));
 
   aCellFrame->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
 
