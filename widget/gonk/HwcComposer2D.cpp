@@ -19,6 +19,7 @@
 #include <android/log.h>
 #include <string.h>
 
+#include "gfxPrefs.h"
 #include "ImageLayers.h"
 #include "libdisplay/GonkDisplay.h"
 #include "HwcComposer2D.h"
@@ -30,6 +31,7 @@
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/StaticPtr.h"
+#include "nsThreadUtils.h"
 #include "cutils/properties.h"
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"
@@ -39,8 +41,6 @@
 
 #if ANDROID_VERSION >= 17
 #include "libdisplay/DisplaySurface.h"
-#include "gfxPrefs.h"
-#include "nsThreadUtils.h"
 #endif
 
 #ifdef LOG_TAG
@@ -71,7 +71,6 @@ using namespace mozilla::layers;
 
 namespace mozilla {
 
-#if ANDROID_VERSION >= 17
 static void
 HookInvalidate(const struct hwc_procs* aProcs)
 {
@@ -92,13 +91,6 @@ HookHotplug(const struct hwc_procs* aProcs, int aDisplay,
     HwcComposer2D::GetInstance()->Hotplug(aDisplay, aConnected);
 }
 
-static const hwc_procs_t sHWCProcs = {
-    &HookInvalidate, // 1st: void (*invalidate)(...)
-    &HookVsync,      // 2nd: void (*vsync)(...)
-    &HookHotplug     // 3rd: void (*hotplug)(...)
-};
-#endif
-
 static StaticRefPtr<HwcComposer2D> sInstance;
 
 HwcComposer2D::HwcComposer2D()
@@ -110,15 +102,13 @@ HwcComposer2D::HwcComposer2D()
     , mHasHWVsync(false)
     , mLock("mozilla.HwcComposer2D.mLock")
 {
-#if ANDROID_VERSION >= 17
-    RegisterHwcEventCallback();
-#endif
-
     mHal = HwcHALBase::CreateHwcHAL();
     if (!mHal->HasHwc()) {
         LOGD("no hwc support");
         return;
     }
+
+    RegisterHwcEventCallback();
 
     nsIntSize screenSize;
 
@@ -149,46 +139,23 @@ HwcComposer2D::GetInstance()
 bool
 HwcComposer2D::EnableVsync(bool aEnable)
 {
-    // Only support hardware vsync on kitkat, L and up due to inaccurate timings
-    // with JellyBean.
-#if (ANDROID_VERSION == 19 || ANDROID_VERSION >= 21)
     MOZ_ASSERT(NS_IsMainThread());
     if (!mHasHWVsync) {
-      return false;
+        return false;
     }
-
-    HwcDevice* device = (HwcDevice*)GetGonkDisplay()->GetHWCDevice();
-    if (!device) {
-      return false;
-    }
-
-    return !device->eventControl(device, HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, aEnable) && aEnable;
-#else
-    return false;
-#endif
+    return mHal->EnableVsync(aEnable) && aEnable;
 }
 
-#if ANDROID_VERSION >= 17
 bool
 HwcComposer2D::RegisterHwcEventCallback()
 {
-    HwcDevice* device = (HwcDevice*)GetGonkDisplay()->GetHWCDevice();
-    if (!device || !device->registerProcs) {
-        LOGE("Failed to get hwc");
-        return false;
-    }
-
-    // Disable Vsync first, and then register callback functions.
-    device->eventControl(device, HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, false);
-    device->registerProcs(device, &sHWCProcs);
-
-    // Only support hardware vsync on kitkat, L and up due to inaccurate timings
-    // with JellyBean.
-#if (ANDROID_VERSION == 19 || ANDROID_VERSION >= 21)
-    mHasHWVsync = gfxPrefs::HardwareVsyncEnabled();
-#else
-    mHasHWVsync = false;
-#endif
+    const HwcHALProcs_t cHWCProcs = {
+        &HookInvalidate,    // 1st: void (*invalidate)(...)
+        &HookVsync,         // 2nd: void (*vsync)(...)
+        &HookHotplug        // 3rd: void (*hotplug)(...)
+    };
+    mHasHWVsync = mHal->RegisterHwcEventCallback(cHWCProcs) &&
+                  gfxPrefs::HardwareVsyncEnabled();
     return mHasHWVsync;
 }
 
