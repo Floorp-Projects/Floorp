@@ -124,6 +124,9 @@ static const uintptr_t IS_PROXY = 1;
 - (void)valueDidChange;
 - (void)selectedTextDidChange;
 
+// internal method to retrieve a child at a given index.
+- (id)childAt:(uint32_t)i;
+
 #pragma mark -
 
 // invalidates and removes all our children from our cached array.
