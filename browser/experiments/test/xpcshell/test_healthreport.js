@@ -10,6 +10,8 @@ Cu.import("resource://testing-common/AddonManagerTesting.jsm");
 Cu.import("resource://testing-common/services/healthreport/utils.jsm");
 Cu.import("resource://testing-common/services/common/logging.js");
 
+const PREF_HEALTHREPORT_ENABLED = "datareporting.healthreport.service.enabled";
+
 const kMeasurementVersion = 2;
 
 function getStorageAndProvider(name) {
