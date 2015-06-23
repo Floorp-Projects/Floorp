@@ -137,6 +137,11 @@ protected:
 
   virtual bool
   DeallocPMessagePortParent(PMessagePortParent* aActor) override;
+
+  virtual bool
+  RecvMessagePortForceClose(const nsID& aUUID,
+                            const nsID& aDestinationUUID,
+                            const uint32_t& aSequenceID) override;
 };
 
 } // namespace ipc
