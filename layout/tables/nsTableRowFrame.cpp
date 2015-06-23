@@ -322,15 +322,13 @@ nsTableRowFrame::DidResize()
 {
   // Resize and re-align the cell frames based on our row bsize
   nsTableFrame* tableFrame = GetTableFrame();
-  nsTableIterator iter(*this);
-  nsIFrame* childFrame = iter.First();
 
   WritingMode wm = GetWritingMode();
   nsHTMLReflowMetrics desiredSize(wm);
   desiredSize.SetSize(wm, GetLogicalSize(wm));
   desiredSize.SetOverflowAreasToDesiredBounds();
 
-  while (childFrame) {
+  for (nsIFrame* childFrame : mFrames) {
     nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
     if (cellFrame) {
       nscoord cellBSize = BSize(wm) +
@@ -359,8 +357,6 @@ nsTableRowFrame::DidResize()
       // Note that if the cell's *content* needs to change in response
       // to this height, it will get a special bsize reflow.
     }
-    // Get the next child
-    childFrame = iter.Next();
   }
   FinishAndStoreOverflow(&desiredSize);
   if (HasView()) {
@@ -402,19 +398,15 @@ nscoord nsTableRowFrame::GetRowBaseline(WritingMode aWM)
   // bppppppppppppppppb
   // bbbbbbbbbbbbbbbbbb
 
-  nsTableIterator iter(*this);
-  nsIFrame* childFrame = iter.First();
   nscoord ascent = 0;
   nscoord containerWidth = GetRect().width;
-   while (childFrame) {
+  for (nsIFrame* childFrame : mFrames) {
     if (IS_TABLE_CELL(childFrame->GetType())) {
       nsIFrame* firstKid = childFrame->GetFirstPrincipalChild();
       ascent = std::max(ascent,
                         LogicalRect(aWM, firstKid->GetNormalRect(),
                                     containerWidth).BEnd(aWM));
     }
-    // Get the next child
-    childFrame = iter.Next();
   }
   return ascent;
 }
@@ -784,7 +776,6 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
 
   int32_t cellColSpan = 1;  // must be defined here so it's set properly for non-cell kids
 
-  nsTableIterator iter(*this);
   // remember the col index of the previous cell to handle rowspans into this row
   int32_t prevColIndex = -1;
   nscoord iCoord = 0; // running total of children inline-coord offset
@@ -801,7 +792,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
     containerWidth += aReflowState.ComputedPhysicalBorderPadding().LeftRight();
   }
 
-  for (nsIFrame* kidFrame = iter.First(); kidFrame; kidFrame = iter.Next()) {
+  for (nsIFrame* kidFrame : mFrames) {
     nsTableCellFrame *cellFrame = do_QueryFrame(kidFrame);
     if (!cellFrame) {
       // XXXldb nsCSSFrameConstructor needs to enforce this!
@@ -1050,7 +1041,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
     // Any children whose width was not the same as our final
     // aDesiredSize.BSize will have been misplaced earlier at the
     // FinishReflowChild stage. So fix them up now.
-    for (nsIFrame* kidFrame = iter.First(); kidFrame; kidFrame = iter.Next()) {
+    for (nsIFrame* kidFrame : mFrames) {
       nsTableCellFrame *cellFrame = do_QueryFrame(kidFrame);
       if (!cellFrame) {
         continue;
@@ -1241,7 +1232,6 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
     rowRect.BSize(wm) = 0;
   }
   else { // row is not collapsed
-    nsTableIterator iter(*this);
     // remember the col index of the previous cell to handle rowspans into this
     // row
     int32_t prevColIndex = -1;
@@ -1249,8 +1239,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
     nsTableFrame* fifTable =
       static_cast<nsTableFrame*>(tableFrame->FirstInFlow());
 
-    nsIFrame* kidFrame = iter.First();
-    while (kidFrame) {
+    for (nsIFrame* kidFrame : mFrames) {
       nsTableCellFrame *cellFrame = do_QueryFrame(kidFrame);
       if (cellFrame) {
         int32_t cellColIndex;
@@ -1346,7 +1335,6 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
                                              oldCellVisualOverflow, false);
         }
       }
-      kidFrame = iter.Next(); // Get the next child
     }
   }
 
@@ -1456,10 +1444,9 @@ nsTableRowFrame::AccessibleType()
  */
 void nsTableRowFrame::InitHasCellWithStyleBSize(nsTableFrame* aTableFrame)
 {
-  nsTableIterator iter(*this);
   WritingMode wm = GetWritingMode();
 
-  for (nsIFrame* kidFrame = iter.First(); kidFrame; kidFrame = iter.Next()) {
+  for (nsIFrame* kidFrame : mFrames) {
     nsTableCellFrame *cellFrame = do_QueryFrame(kidFrame);
     if (!cellFrame) {
       NS_NOTREACHED("Table row has a non-cell child.");
