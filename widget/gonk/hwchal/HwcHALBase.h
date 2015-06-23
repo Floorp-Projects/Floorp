@@ -48,6 +48,18 @@ using HwcList   = hwc_layer_list_t;
 using HwcLayer  = hwc_layer_t;
 #endif
 
+// HwcHAL definition for HwcEvent callback types
+// Note: hwc_procs is different between ICS and later,
+//       and the signature of invalidate is also different.
+//       Use this wrap struct to hide the detail. BTW,
+//       we don't have to register callback functions on ICS, so
+//       there is no callbacks for ICS in HwcHALProcs.
+typedef struct HwcHALProcs {
+    void (*invalidate)(const struct hwc_procs* procs);
+    void (*vsync)(const struct hwc_procs* procs, int disp, int64_t timestamp);
+    void (*hotplug)(const struct hwc_procs* procs, int disp, int connected);
+} HwcHALProcs_t;
+
 // HwcHAL class
 // This class handle all the HAL related work
 // The purpose of HwcHAL is to make HwcComposer2D simpler.
@@ -105,6 +117,12 @@ public:
     // Set crop help
     virtual void SetCrop(HwcLayer &aLayer,
                          const hwc_rect_t &aSrcCrop) const = 0;
+
+    // Enable HW Vsync
+    virtual bool EnableVsync(bool aEnable) = 0;
+
+    // Register HW event callback functions
+    virtual bool RegisterHwcEventCallback(const HwcHALProcs_t &aProcs) = 0;
 
 protected:
     MOZ_CONSTEXPR static uint32_t HwcAPIVersion(uint32_t aMaj, uint32_t aMin) {

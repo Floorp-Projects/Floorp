@@ -150,6 +150,51 @@ HwcHAL::SetCrop(HwcLayer &aLayer,
     }
 }
 
+bool
+HwcHAL::EnableVsync(bool aEnable)
+{
+    // Only support hardware vsync on kitkat, L and up due to inaccurate timings
+    // with JellyBean.
+#if (ANDROID_VERSION == 19 || ANDROID_VERSION >= 21)
+    if (!mHwc) {
+        return false;
+    }
+    return !mHwc->eventControl(mHwc,
+                               HWC_DISPLAY_PRIMARY,
+                               HWC_EVENT_VSYNC,
+                               aEnable);
+#else
+    return false;
+#endif
+}
+
+bool
+HwcHAL::RegisterHwcEventCallback(const HwcHALProcs_t &aProcs)
+{
+    if (!mHwc || !mHwc->registerProcs) {
+        printf_stderr("Failed to get hwc\n");
+        return false;
+    }
+
+    // Disable Vsync first, and then register callback functions.
+    mHwc->eventControl(mHwc,
+                       HWC_DISPLAY_PRIMARY,
+                       HWC_EVENT_VSYNC,
+                       false);
+    static const hwc_procs_t sHwcJBProcs = {aProcs.invalidate,
+                                            aProcs.vsync,
+                                            aProcs.hotplug};
+    mHwc->registerProcs(mHwc, &sHwcJBProcs);
+
+    // Only support hardware vsync on kitkat, L and up due to inaccurate timings
+    // with JellyBean.
+#if (ANDROID_VERSION == 19 || ANDROID_VERSION >= 21)
+    return true;
+#else
+    return false;
+#endif
+}
+
 void
 HwcHAL::GetHwcAttributes()
 {

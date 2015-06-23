@@ -55,6 +55,10 @@ public:
     virtual void SetCrop(HwcLayer &aLayer,
                          const hwc_rect_t &aSrcCrop) const override;
 
+    virtual bool EnableVsync(bool aEnable) override;
+
+    virtual bool RegisterHwcEventCallback(const HwcHALProcs_t &aProcs) override;
+
 private:
     HwcDevice      *mHwc = nullptr;
     hwc_display_t   mDpy = nullptr;
