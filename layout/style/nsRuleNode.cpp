@@ -2727,15 +2727,25 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     /* rule node. */                                                          \
     if (!aHighestNode->mStyleData.mResetData) {                               \
       aHighestNode->mStyleData.mResetData =                                   \
-        new (mPresContext) nsResetStyleData;                                  \
+        new (mPresContext) nsConditionalResetStyleData;                       \
     }                                                                         \
     NS_ASSERTION(!aHighestNode->mStyleData.mResetData->                       \
-                   mStyleStructs[eStyleStruct_##type_],                       \
+                   GetStyleData(eStyleStruct_##type_),                        \
                  "Going to leak style data");                                 \
     aHighestNode->mStyleData.mResetData->                                     \
-      mStyleStructs[eStyleStruct_##type_] = data_;                            \
+      SetStyleData(eStyleStruct_##type_, data_);                              \
     /* Propagate the bit down. */                                             \
     PropagateDependentBit(eStyleStruct_##type_, aHighestNode, data_);         \
+  } else if (conditions.Cacheable()) {                                        \
+    if (!mStyleData.mResetData) {                                             \
+      mStyleData.mResetData = new (mPresContext) nsConditionalResetStyleData; \
+    }                                                                         \
+    mStyleData.mResetData->                                                   \
+      SetStyleData(eStyleStruct_##type_, mPresContext, data_, conditions);    \
+    /* Tell the style context that it doesn't own the data */                 \
+    aContext->                                                                \
+      AddStyleBit(nsCachedStyleData::GetBitForSID(eStyleStruct_##type_));     \
+    aContext->SetStyle(eStyleStruct_##type_, data_);                          \
   } else {                                                                    \
     /* We can't be cached in the rule node.  We have to be put right */       \
     /* on the style context. */                                               \
@@ -9296,7 +9306,7 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
                "in some way.");
 
   const void *data;
-  data = mStyleData.GetStyleData(aSID);
+  data = mStyleData.GetStyleData(aSID, aContext);
   if (MOZ_LIKELY(data != nullptr))
     return data; // We have a fully specified struct. Just return it.
 
