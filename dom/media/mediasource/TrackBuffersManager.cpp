@@ -1387,78 +1387,84 @@ TrackBuffersManager::ProcessFrame(MediaRawData* aSample,
   Maybe<uint32_t> firstRemovedIndex;
   TimeInterval removedInterval;
   TrackBuffer& data = trackBuffer.mBuffers.LastElement();
-  if (trackBuffer.mBufferedRanges.ContainsStrict(presentationTimestamp)) {
+  bool removeCodedFrames =
+    trackBuffer.mHighestEndTimestamp.isSome()
+      ? trackBuffer.mHighestEndTimestamp.ref() <= presentationTimestamp
+      : true;
+  if (removeCodedFrames) {
     TimeUnit lowerBound =
       trackBuffer.mHighestEndTimestamp.valueOr(presentationTimestamp);
-    for (uint32_t i = 0; i < data.Length();) {
-      MediaRawData* sample = data[i].get();
-      if (sample->mTime >= lowerBound.ToMicroseconds() &&
-          sample->mTime < frameEndTimestamp.ToMicroseconds()) {
-        if (firstRemovedIndex.isNothing()) {
-          removedInterval =
-            TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
-                         TimeUnit::FromMicroseconds(sample->GetEndTime()));
-          firstRemovedIndex = Some(i);
-        } else {
-          removedInterval = removedInterval.Span(
-            TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
-                         TimeUnit::FromMicroseconds(sample->GetEndTime())));
-        }
-        trackBuffer.mSizeBuffer -= sizeof(*sample) + sample->mSize;
-        MSE_DEBUGV("Overlapping frame:%u ([%f, %f))",
-                  i,
-                  TimeUnit::FromMicroseconds(sample->mTime).ToSeconds(),
-                  TimeUnit::FromMicroseconds(sample->GetEndTime()).ToSeconds());
-        data.RemoveElementAt(i);
-
-        if (trackBuffer.mNextGetSampleIndex.isSome()) {
-          if (trackBuffer.mNextGetSampleIndex.ref() == i) {
-            MSE_DEBUG("Next sample to be played got evicted");
-            trackBuffer.mNextGetSampleIndex.reset();
-          } else if (trackBuffer.mNextGetSampleIndex.ref() > i) {
-            trackBuffer.mNextGetSampleIndex.ref()--;
+    if (trackBuffer.mBufferedRanges.ContainsStrict(lowerBound)) {
+      for (uint32_t i = 0; i < data.Length();) {
+        MediaRawData* sample = data[i].get();
+        if (sample->mTime >= lowerBound.ToMicroseconds() &&
+            sample->mTime < frameEndTimestamp.ToMicroseconds()) {
+          if (firstRemovedIndex.isNothing()) {
+            removedInterval =
+              TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
+                           TimeUnit::FromMicroseconds(sample->GetEndTime()));
+            firstRemovedIndex = Some(i);
+          } else {
+            removedInterval = removedInterval.Span(
+              TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
+                           TimeUnit::FromMicroseconds(sample->GetEndTime())));
           }
+          trackBuffer.mSizeBuffer -= sizeof(*sample) + sample->mSize;
+          MSE_DEBUGV("Overlapping frame:%u ([%f, %f))",
+                    i,
+                    TimeUnit::FromMicroseconds(sample->mTime).ToSeconds(),
+                    TimeUnit::FromMicroseconds(sample->GetEndTime()).ToSeconds());
+          data.RemoveElementAt(i);
+
+          if (trackBuffer.mNextGetSampleIndex.isSome()) {
+            if (trackBuffer.mNextGetSampleIndex.ref() == i) {
+              MSE_DEBUG("Next sample to be played got evicted");
+              trackBuffer.mNextGetSampleIndex.reset();
+            } else if (trackBuffer.mNextGetSampleIndex.ref() > i) {
+              trackBuffer.mNextGetSampleIndex.ref()--;
+            }
+          }
+        } else {
+          i++;
         }
-      } else {
-        i++;
       }
     }
-  }
-  // 15. Remove decoding dependencies of the coded frames removed in the previous step:
-  // Remove all coded frames between the coded frames removed in the previous step and the next random access point after those removed frames.
-  if (firstRemovedIndex.isSome()) {
-    uint32_t start = firstRemovedIndex.ref();
-    uint32_t end = start;
-    for (;end < data.Length(); end++) {
-      MediaRawData* sample = data[end].get();
-      if (sample->mKeyframe) {
-        break;
+    // 15. Remove decoding dependencies of the coded frames removed in the previous step:
+    // Remove all coded frames between the coded frames removed in the previous step and the next random access point after those removed frames.
+    if (firstRemovedIndex.isSome()) {
+      uint32_t start = firstRemovedIndex.ref();
+      uint32_t end = start;
+      for (;end < data.Length(); end++) {
+        MediaRawData* sample = data[end].get();
+        if (sample->mKeyframe) {
+          break;
+        }
+        removedInterval = removedInterval.Span(
+          TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
+                       TimeUnit::FromMicroseconds(sample->GetEndTime())));
+        trackBuffer.mSizeBuffer -= sizeof(*sample) + sample->mSize;
       }
-      removedInterval = removedInterval.Span(
-        TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
-                     TimeUnit::FromMicroseconds(sample->GetEndTime())));
-      trackBuffer.mSizeBuffer -= sizeof(*sample) + sample->mSize;
-    }
-    data.RemoveElementsAt(start, end - start);
+      data.RemoveElementsAt(start, end - start);
 
-    MSE_DEBUG("Removing undecodable frames from:%u (frames:%u) ([%f, %f))",
-              start, end - start,
-              removedInterval.mStart.ToSeconds(), removedInterval.mEnd.ToSeconds());
+      MSE_DEBUG("Removing undecodable frames from:%u (frames:%u) ([%f, %f))",
+                start, end - start,
+                removedInterval.mStart.ToSeconds(), removedInterval.mEnd.ToSeconds());
 
-    if (trackBuffer.mNextGetSampleIndex.isSome()) {
-      if (trackBuffer.mNextGetSampleIndex.ref() >= start &&
-          trackBuffer.mNextGetSampleIndex.ref() < end) {
-        MSE_DEBUG("Next sample to be played got evicted");
-        trackBuffer.mNextGetSampleIndex.reset();
-      } else if (trackBuffer.mNextGetSampleIndex.ref() >= end) {
-        trackBuffer.mNextGetSampleIndex.ref() -= end - start;
+      if (trackBuffer.mNextGetSampleIndex.isSome()) {
+        if (trackBuffer.mNextGetSampleIndex.ref() >= start &&
+            trackBuffer.mNextGetSampleIndex.ref() < end) {
+          MSE_DEBUG("Next sample to be played got evicted");
+          trackBuffer.mNextGetSampleIndex.reset();
+        } else if (trackBuffer.mNextGetSampleIndex.ref() >= end) {
+          trackBuffer.mNextGetSampleIndex.ref() -= end - start;
+        }
       }
-    }
 
-    // Update our buffered range to exclude the range just removed.
-    trackBuffer.mBufferedRanges -= removedInterval;
-    MOZ_ASSERT(trackBuffer.mNextInsertionIndex.isNothing() ||
-               trackBuffer.mNextInsertionIndex.ref() <= start);
+      // Update our buffered range to exclude the range just removed.
+      trackBuffer.mBufferedRanges -= removedInterval;
+      MOZ_ASSERT(trackBuffer.mNextInsertionIndex.isNothing() ||
+                 trackBuffer.mNextInsertionIndex.ref() <= start);
+    }
   }
 
   // 16. Add the coded frame with the presentation timestamp, decode timestamp, and frame duration to the track buffer.
