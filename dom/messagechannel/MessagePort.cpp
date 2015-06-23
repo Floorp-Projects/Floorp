@@ -21,6 +21,7 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/unused.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsPresContext.h"
@@ -248,6 +249,50 @@ private:
     MOZ_COUNT_DTOR(MessagePortFeature);
   }
 };
+
+class ForceCloseHelper final : public nsIIPCBackgroundChildCreateCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  static void ForceClose(const MessagePortIdentifier& aIdentifier)
+  {
+    PBackgroundChild* actor =
+      mozilla::ipc::BackgroundChild::GetForCurrentThread();
+    if (actor) {
+      unused << actor->SendMessagePortForceClose(aIdentifier.uuid(),
+                                                 aIdentifier.destinationUuid(),
+                                                 aIdentifier.sequenceId());
+      return;
+    }
+
+    nsRefPtr<ForceCloseHelper> helper = new ForceCloseHelper(aIdentifier);
+    if (NS_WARN_IF(!mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread(helper))) {
+      MOZ_CRASH();
+    }
+  }
+
+private:
+  explicit ForceCloseHelper(const MessagePortIdentifier& aIdentifier)
+    : mIdentifier(aIdentifier)
+  {}
+
+  ~ForceCloseHelper() {}
+
+  void ActorFailed() override
+  {
+    MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+  }
+
+  void ActorCreated(mozilla::ipc::PBackgroundChild* aActor) override
+  {
+    ForceClose(mIdentifier);
+  }
+
+  const MessagePortIdentifier mIdentifier;
+};
+
+NS_IMPL_ISUPPORTS(ForceCloseHelper, nsIIPCBackgroundChildCreateCallback)
 
 } // anonymous namespace
 
@@ -861,6 +906,12 @@ MessagePort::RemoveDocFromBFCache()
   }
 
   bfCacheEntry->RemoveFromBFCacheSync();
+}
+
+/* static */ void
+MessagePort::ForceClose(const MessagePortIdentifier& aIdentifier)
+{
+  ForceCloseHelper::ForceClose(aIdentifier);
 }
 
 } // namespace dom
