@@ -412,7 +412,7 @@ nscoord nsTableRowFrame::GetRowBaseline(WritingMode aWM)
 }
 
 nscoord
-nsTableRowFrame::GetBSize(nscoord aPctBasis) const
+nsTableRowFrame::GetInitialBSize(nscoord aPctBasis) const
 {
   nscoord bsize = 0;
   if ((aPctBasis > 0) && HasPctBSize()) {
@@ -455,7 +455,7 @@ nsTableRowFrame::UpdateBSize(nscoord           aBSize,
 
   if (aBSize != NS_UNCONSTRAINEDSIZE) {
     if (!(aCellFrame->HasVerticalAlignBaseline())) { // only the cell's height matters
-      if (GetBSize() < aBSize) {
+      if (GetInitialBSize() < aBSize) {
         int32_t rowSpan = aTableFrame->GetEffectiveRowSpan(*aCellFrame);
         if (rowSpan == 1) {
           SetContentBSize(aBSize);
@@ -477,7 +477,7 @@ nsTableRowFrame::UpdateBSize(nscoord           aBSize,
         }
       }
       // keep the tallest bsize in sync
-      if (GetBSize() < mMaxCellAscent + mMaxCellDescent) {
+      if (GetInitialBSize() < mMaxCellAscent + mMaxCellDescent) {
         SetContentBSize(mMaxCellAscent + mMaxCellDescent);
       }
     }
@@ -522,7 +522,7 @@ nsTableRowFrame::CalcBSize(const nsHTMLReflowState& aReflowState)
        UpdateBSize(desSize.BSize(wm), ascent, descent, tableFrame, cellFrame);
     }
   }
-  return GetBSize();
+  return GetInitialBSize();
 }
 
 /**

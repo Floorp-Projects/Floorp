@@ -203,7 +203,7 @@ public:
   void    SetPctBSize(float  aPctValue,
                        bool aForce = false);
 
-  nscoord GetBSize(nscoord aBasis = 0) const;
+  nscoord GetInitialBSize(nscoord aBasis = 0) const;
 
   nsTableRowFrame* GetNextRow() const;
 
