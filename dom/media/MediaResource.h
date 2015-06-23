@@ -9,13 +9,11 @@
 #include "mozilla/Mutex.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
-#include "nsISeekableStream.h"
 #include "nsIStreamingProtocolController.h"
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "MediaCache.h"
-#include "MediaData.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
 #include "nsThreadUtils.h"
@@ -289,33 +287,6 @@ public:
   // results and requirements are the same as per the Read method.
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer,
                           uint32_t aCount, uint32_t* aBytes) = 0;
-
-  // ReadAt without side-effects. Given that our MediaResource infrastructure
-  // is very side-effecty, this accomplishes its job by checking the initial
-  // position and seeking back to it. If the seek were to fail, a side-effect
-  // might be observable.
-  //
-  // This method returns null if anything fails, including the failure to read
-  // aCount bytes. Otherwise, it returns an owned buffer.
-  virtual already_AddRefed<MediaByteBuffer> SilentReadAt(int64_t aOffset, uint32_t aCount)
-  {
-    nsRefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
-    bool ok = bytes->SetCapacity(aCount, fallible);
-    NS_ENSURE_TRUE(ok, nullptr);
-    int64_t pos = Tell();
-    char* curr = reinterpret_cast<char*>(bytes->Elements());
-    while (aCount > 0) {
-      uint32_t bytesRead;
-      nsresult rv = ReadAt(aOffset, curr, aCount, &bytesRead);
-      NS_ENSURE_SUCCESS(rv, nullptr);
-      NS_ENSURE_TRUE(bytesRead > 0, nullptr);
-      aCount -= bytesRead;
-      curr += bytesRead;
-    }
-    Seek(nsISeekableStream::NS_SEEK_SET, pos);
-    return bytes.forget();
-  }
-
   // Seek to the given bytes offset in the stream. aWhence can be
   // one of:
   //   NS_SEEK_SET
@@ -639,7 +610,6 @@ public:
   virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) override;
   virtual nsresult ReadAt(int64_t offset, char* aBuffer,
                           uint32_t aCount, uint32_t* aBytes) override;
-  virtual already_AddRefed<MediaByteBuffer> SilentReadAt(int64_t aOffset, uint32_t aCount) override;
   virtual nsresult Seek(int32_t aWhence, int64_t aOffset) override;
   virtual int64_t  Tell() override;
 

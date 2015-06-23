@@ -17,7 +17,6 @@
 #include "nsString.h"
 #include "nscore.h"
 #include "TimeUnits.h"
-#include <map>
 
 namespace mozilla {
 
@@ -98,9 +97,6 @@ public:
   // currently not playable.
   bool HasOnlyIncompleteMedia();
 
-  // Return the buffered ranges for given decoder.
-  media::TimeIntervals GetBuffered(SourceBufferDecoder* aDecoder);
-
 #ifdef MOZ_EME
   nsresult SetCDMProxy(CDMProxy* aProxy);
 #endif
@@ -108,8 +104,6 @@ public:
 #if defined(DEBUG)
   void Dump(const char* aPath) override;
 #endif
-
-  typedef std::map<SourceBufferDecoder*, media::TimeIntervals> DecoderBufferedMap;
 
 private:
   friend class DecodersToInitialize;
@@ -121,19 +115,14 @@ private:
   // for initialization.
   // The decoder is not considered initialized until it is added to
   // mInitializedDecoders.
-  already_AddRefed<SourceBufferDecoder> NewDecoder(media::TimeUnit aTimestampOffset);
+  already_AddRefed<SourceBufferDecoder> NewDecoder(TimeUnit aTimestampOffset);
 
   // Helper for AppendData, ensures NotifyDataArrived is called whenever
   // data is appended to the current decoder's SourceBufferResource.
-  int64_t AppendDataToCurrentResource(MediaByteBuffer* aData,
+  bool AppendDataToCurrentResource(MediaByteBuffer* aData,
                                    uint32_t aDuration /* microseconds */);
   // Queue on the parent's decoder task queue a call to NotifyTimeRangesChanged.
   void NotifyTimeRangesChanged();
-  // Queue on the parent's decoder task queue a call to NotifyDataRemoved.
-  void NotifyReaderDataRemoved(MediaDecoderReader* aReader);
-
-  typedef MediaPromise<bool, nsresult, /* IsExclusive = */ true> BufferedRangesUpdatedPromise;
-  nsRefPtr<BufferedRangesUpdatedPromise> UpdateBufferedRanges(Interval<int64_t> aByteRange, bool aNotifyParent);
 
   // Queue execution of InitializeDecoder on mTaskQueue.
   bool QueueInitializeDecoder(SourceBufferDecoder* aDecoder);
@@ -164,7 +153,7 @@ private:
   void RemoveDecoder(SourceBufferDecoder* aDecoder);
 
   // Remove all empty decoders from the provided list;
-  void RemoveEmptyDecoders(const nsTArray<nsRefPtr<SourceBufferDecoder>>& aDecoders);
+  void RemoveEmptyDecoders(nsTArray<SourceBufferDecoder*>& aDecoders);
 
   void OnMetadataRead(MetadataHolder* aMetadata,
                       SourceBufferDecoder* aDecoder,
@@ -208,9 +197,9 @@ private:
   void AdjustDecodersTimestampOffset(TimeUnit aOffset);
 
   // The timestamp offset used by our current decoder.
-  media::TimeUnit mLastTimestampOffset;
-  media::TimeUnit mTimestampOffset;
-  media::TimeUnit mAdjustedTimestamp;
+  TimeUnit mLastTimestampOffset;
+  TimeUnit mTimestampOffset;
+  TimeUnit mAdjustedTimestamp;
 
   // True if at least one of our decoders has encrypted content.
   bool mIsWaitingOnCDM;
@@ -227,15 +216,6 @@ private:
   MediaPromiseHolder<AppendPromise> mInitializationPromise;
   // Track our request for metadata from the reader.
   MediaPromiseRequestHolder<MediaDecoderReader::MetadataPromise> mMetadataRequest;
-
-  MediaPromiseHolder<RangeRemovalPromise> mRangeRemovalPromise;
-
-  Interval<int64_t> mLastAppendRange;
-
-  // Protected by Parent's decoder Monitor.
-  media::TimeIntervals mBufferedRanges;
-
-  DecoderBufferedMap mReadersBuffered;
 };
 
 } // namespace mozilla

@@ -43,7 +43,7 @@ public:
   {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(mOmxReader.get());
-    mOmxReader->ProcessCachedData(mOffset);
+    mOmxReader->ProcessCachedData(mOffset, false);
   }
 
 private:
@@ -70,20 +70,24 @@ class MediaOmxReader::NotifyDataArrivedRunnable : public nsRunnable
 {
 public:
   NotifyDataArrivedRunnable(MediaOmxReader* aOmxReader,
-                            uint64_t aLength,
-                            int64_t aOffset, uint64_t aFullLength)
+                                     const char* aBuffer, uint64_t aLength,
+                                     int64_t aOffset, uint64_t aFullLength)
   : mOmxReader(aOmxReader),
+    mBuffer(aBuffer),
     mLength(aLength),
     mOffset(aOffset),
     mFullLength(aFullLength)
   {
     MOZ_ASSERT(mOmxReader.get());
+    MOZ_ASSERT(mBuffer.get() || !mLength);
   }
 
   NS_IMETHOD Run()
   {
-    MOZ_ASSERT(mOmxReader->OnTaskQueue());
+    NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+
     NotifyDataArrived();
+
     return NS_OK;
   }
 
@@ -93,10 +97,13 @@ private:
     if (mOmxReader->IsShutdown()) {
       return;
     }
+    const char* buffer = mBuffer.get();
 
     while (mLength) {
       uint32_t length = std::min<uint64_t>(mLength, UINT32_MAX);
-      mOmxReader->NotifyDataArrived(Interval<int64_t>(mOffset, mOffset + length));
+      mOmxReader->NotifyDataArrived(buffer, length,
+                                    mOffset);
+      buffer  += length;
       mLength -= length;
       mOffset += length;
     }
@@ -111,6 +118,7 @@ private:
   }
 
   nsRefPtr<MediaOmxReader>         mOmxReader;
+  nsAutoArrayPtr<const char>       mBuffer;
   uint64_t                         mLength;
   int64_t                          mOffset;
   uint64_t                         mFullLength;
@@ -237,7 +245,7 @@ MediaOmxReader::AsyncReadMetadata()
     // the mDecoder->GetResource()->GetLength() would return -1.
     // Delay set the total duration on this function.
     mMP3FrameParser.SetLength(mDecoder->GetResource()->GetLength());
-    ProcessCachedData(0);
+    ProcessCachedData(0, true);
   }
 
   nsRefPtr<MediaDecoderReader::MetadataPromise> p = mMetadataPromise.Ensure(__func__);
@@ -460,9 +468,9 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
   return true;
 }
 
-void MediaOmxReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
+void MediaOmxReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
 {
-  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(NS_IsMainThread());
   nsRefPtr<AbstractMediaDecoder> decoder = SafeGetDecoder();
   if (!decoder) { // reader has shut down
     return;
@@ -474,17 +482,16 @@ void MediaOmxReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset
     return;
   }
 
-  nsRefPtr<MediaByteBuffer> bytes = mDecoder->GetResource()->SilentReadAt(aOffset, aLength);
-  NS_ENSURE_TRUE_VOID(bytes);
-  mMP3FrameParser.Parse(bytes->Elements(), aLength, aOffset);
+  mMP3FrameParser.Parse(aBuffer, aLength, aOffset);
   if (!mMP3FrameParser.IsMP3()) {
     return;
   }
 
   int64_t duration = mMP3FrameParser.GetDuration();
   if (duration != mLastParserDuration) {
+    ReentrantMonitorAutoEnter mon(decoder->GetReentrantMonitor());
     mLastParserDuration = duration;
-    decoder->DispatchUpdateEstimatedMediaDuration(mLastParserDuration);
+    decoder->UpdateEstimatedMediaDuration(mLastParserDuration);
   }
 }
 
@@ -567,7 +574,7 @@ void MediaOmxReader::EnsureActive() {
   NS_ASSERTION(result == NS_OK, "OmxDecoder should be in play state to continue decoding");
 }
 
-int64_t MediaOmxReader::ProcessCachedData(int64_t aOffset)
+int64_t MediaOmxReader::ProcessCachedData(int64_t aOffset, bool aWaitForCompletion)
 {
   // Could run on decoder thread or IO thread.
   nsRefPtr<AbstractMediaDecoder> decoder = SafeGetDecoder();
@@ -591,14 +598,22 @@ int64_t MediaOmxReader::ProcessCachedData(int64_t aOffset)
   }
 
   int64_t bufferLength = std::min<int64_t>(resourceLength-aOffset, sReadSize);
-  nsRefPtr<NotifyDataArrivedRunnable> runnable(
-    new NotifyDataArrivedRunnable(this, bufferLength, aOffset, resourceLength));
 
-  if (OnTaskQueue()) {
-    runnable->Run();
+  nsAutoArrayPtr<char> buffer(new char[bufferLength]);
+
+  nsresult rv = decoder->GetResource()->ReadFromCache(buffer.get(),
+                                                       aOffset, bufferLength);
+  NS_ENSURE_SUCCESS(rv, -1);
+
+  nsRefPtr<NotifyDataArrivedRunnable> runnable(
+    new NotifyDataArrivedRunnable(this, buffer.forget(), bufferLength,
+                                  aOffset, resourceLength));
+  if (aWaitForCompletion) {
+    rv = NS_DispatchToMainThread(runnable.get(), NS_DISPATCH_SYNC);
   } else {
-    TaskQueue()->Dispatch(runnable.forget());
+    rv = NS_DispatchToMainThread(runnable.get());
   }
+  NS_ENSURE_SUCCESS(rv, -1);
 
   return resourceLength - aOffset - bufferLength;
 }

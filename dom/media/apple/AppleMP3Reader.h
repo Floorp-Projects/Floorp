@@ -45,10 +45,9 @@ public:
                              AudioFileStreamPropertyID aPropertyID,
                              UInt32 *aFlags);
 
-protected:
-  virtual void NotifyDataArrivedInternal(uint32_t aLength,
-                                         int64_t aOffset) override;
-public:
+  virtual void NotifyDataArrived(const char* aBuffer,
+                                 uint32_t aLength,
+                                 int64_t aOffset) override;
 
   virtual bool IsMediaSeekable() override;
 

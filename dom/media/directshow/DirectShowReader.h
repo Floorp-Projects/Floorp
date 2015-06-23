@@ -58,10 +58,9 @@ public:
   nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
 
-protected:
-  void NotifyDataArrivedInternal(uint32_t aLength,
-                                 int64_t aOffset) override;
-public:
+  void NotifyDataArrived(const char* aBuffer,
+                         uint32_t aLength,
+                         int64_t aOffset) override;
 
   bool IsMediaSeekable() override;
 
