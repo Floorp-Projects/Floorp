@@ -1839,7 +1839,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
         // NS_UNCONSTRAINEDSIZE, but without a style change in between).
         aReflowState.IsBResize()) {
       // XXX Eventually, we should modify DistributeBSizeToRows to use
-      // nsTableRowFrame::GetBSize instead of nsIFrame::BSize().
+      // nsTableRowFrame::GetInitialBSize instead of nsIFrame::BSize().
       // That way, it will make its calculations based on internal table
       // frame bsizes as they are before they ever had any extra bsize
       // distributed to them.  In the meantime, this reflows all the
@@ -3399,7 +3399,7 @@ nsTableFrame::DistributeBSizeToRows(const nsHTMLReflowState& aReflowState,
         LogicalRect rowNormalRect(wm, rowFrame->GetNormalRect(), 0);
         nscoord cellSpacingB = GetRowSpacing(rowFrame->GetRowIndex());
         if ((amountUsed < aAmount) && rowFrame->HasPctBSize()) {
-          nscoord pctBSize = rowFrame->GetBSize(pctBasis);
+          nscoord pctBSize = rowFrame->GetInitialBSize(pctBasis);
           nscoord amountForRow = std::min(aAmount - amountUsed,
                                           pctBSize - rowNormalRect.BSize(wm));
           if (amountForRow > 0) {

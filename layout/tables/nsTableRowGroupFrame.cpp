@@ -589,7 +589,7 @@ nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext*           aPresContext,
     if (!rowFrame->GetPrevInFlow()) {
       if (rowFrame->HasPctBSize()) {
         rowInfo[rowIndex].hasPctBSize = true;
-        rowInfo[rowIndex].pctBSize = rowFrame->GetBSize(pctBSizeBasis);
+        rowInfo[rowIndex].pctBSize = rowFrame->GetInitialBSize(pctBSizeBasis);
       }
       rowInfo[rowIndex].hasStyleBSize = rowFrame->HasStyleBSize();
       nonPctBSize = std::max(nonPctBSize, rowFrame->GetFixedBSize());
