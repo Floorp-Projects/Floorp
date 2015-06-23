@@ -735,7 +735,7 @@ parent:
 
     sync GetLookAndFeelCache(LookAndFeelInt[] lookAndFeelIntCache);
 
-    PHal();
+    prio(urgent) async PHal();
 
     PIcc(uint32_t serviceId);
 
