@@ -231,11 +231,11 @@ MediaDecoderReader::GetBuffered()
   NS_ENSURE_TRUE(mStartTime >= 0, media::TimeIntervals());
   AutoPinned<MediaResource> stream(mDecoder->GetResource());
 
-  if (!mDuration.ReadOnWrongThread().isSome()) {
+  if (!mDuration.Ref().isSome()) {
     return TimeIntervals();
   }
 
-  return GetEstimatedBufferedTimeRanges(stream, mDuration.ReadOnWrongThread().ref().ToMicroseconds());
+  return GetEstimatedBufferedTimeRanges(stream, mDuration.Ref().ref().ToMicroseconds());
 }
 
 nsRefPtr<MediaDecoderReader::MetadataPromise>
