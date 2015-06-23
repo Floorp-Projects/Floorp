@@ -30,9 +30,7 @@
 #include <vector>
 #include <list>
 
-#if ANDROID_VERSION >= 17
 #include <utils/Timers.h>
-#endif
 
 class nsScreenGonk;
 
@@ -83,12 +81,10 @@ public:
     virtual bool HasHwc() override { return mHal->HasHwc(); }
 
     bool EnableVsync(bool aEnable);
-#if ANDROID_VERSION >= 17
     bool RegisterHwcEventCallback();
     void Vsync(int aDisplay, int64_t aTimestamp);
     void Invalidate();
     void Hotplug(int aDisplay, int aConnected);
-#endif
     void SetCompositorParent(layers::CompositorParent* aCompositorParent);
 
 private:
