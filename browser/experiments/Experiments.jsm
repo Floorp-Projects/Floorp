@@ -26,8 +26,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
                                   "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySession",
-                                  "resource://gre/modules/TelemetrySession.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
+                                  "resource://gre/modules/TelemetryEnvironment.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
                                   "resource://gre/modules/TelemetryLog.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
@@ -55,8 +55,6 @@ const PREF_LOGGING_LEVEL        = PREF_LOGGING + ".level"; // experiments.loggin
 const PREF_LOGGING_DUMP         = PREF_LOGGING + ".dump"; // experiments.logging.dump
 const PREF_MANIFEST_URI         = "manifest.uri"; // experiments.logging.manifest.uri
 const PREF_FORCE_SAMPLE         = "force-sample-value"; // experiments.force-sample-value
-
-const PREF_HEALTHREPORT_ENABLED = "datareporting.healthreport.service.enabled";
 
 const PREF_BRANCH_TELEMETRY     = "toolkit.telemetry.";
 const PREF_TELEMETRY_ENABLED    = "enabled";
@@ -283,25 +281,6 @@ Experiments.Policy.prototype = {
   locale: function () {
     let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
     return chrome.getSelectedLocale("global");
-  },
-
-  /*
-   * @return Promise<> Resolved with the payload data.
-   */
-  healthReportPayload: function () {
-    return Task.spawn(function*() {
-      let reporter = Cc["@mozilla.org/datareporting/service;1"]
-            .getService(Ci.nsISupports)
-            .wrappedJSObject
-            .healthReporter;
-      yield reporter.onInit();
-      let payload = yield reporter.collectAndObtainJSONPayload();
-      return payload;
-    });
-  },
-
-  telemetryPayload: function () {
-    return TelemetrySession.getPayload();
   },
 
   /**
@@ -1706,50 +1685,47 @@ Experiments.ExperimentEntry.prototype = {
    * Run the jsfilter function from the manifest in a sandbox and return the
    * result (forced to boolean).
    */
-  _runFilterFunction: function (jsfilter) {
+  _runFilterFunction: Task.async(function* (jsfilter) {
     this._log.trace("runFilterFunction() - filter: " + jsfilter);
 
-    return Task.spawn(function ExperimentEntry_runFilterFunction_task() {
-      const nullprincipal = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);
-      let options = {
-        sandboxName: "telemetry experiments jsfilter sandbox",
-        wantComponents: false,
-      };
+    const nullprincipal = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);
+    let options = {
+      sandboxName: "telemetry experiments jsfilter sandbox",
+      wantComponents: false,
+    };
 
-      let sandbox = Cu.Sandbox(nullprincipal, options);
-      try {
-        Cu.evalInSandbox(jsfilter, sandbox);
-      } catch (e) {
-        this._log.error("runFilterFunction() - failed to eval jsfilter: " + e.message);
-        throw ["jsfilter-evalfailed"];
-      }
+    let sandbox = Cu.Sandbox(nullprincipal, options);
+    try {
+      Cu.evalInSandbox(jsfilter, sandbox);
+    } catch (e) {
+      this._log.error("runFilterFunction() - failed to eval jsfilter: " + e.message);
+      throw ["jsfilter-evalfailed"];
+    }
 
-      // You can't insert arbitrarily complex objects into a sandbox, so
-      // we serialize everything through JSON.
-      sandbox._hr = yield this._policy.healthReportPayload();
-      Object.defineProperty(sandbox, "_t",
-        { get: () => JSON.stringify(this._policy.telemetryPayload()) });
+    let currentEnvironment = yield TelemetryEnvironment.onInitialized();
 
-      let result = false;
-      try {
-        result = !!Cu.evalInSandbox("filter({healthReportPayload: JSON.parse(_hr), telemetryPayload: JSON.parse(_t)})", sandbox);
-      }
-      catch (e) {
-        this._log.debug("runFilterFunction() - filter function failed: "
+    Object.defineProperty(sandbox, "_e",
+      { get: () => Cu.cloneInto(currentEnvironment, sandbox) });
+
+    let result = false;
+    try {
+      result = !!Cu.evalInSandbox("filter({get telemetryEnvironment() { return _e; } })", sandbox);
+    }
+    catch (e) {
+      this._log.debug("runFilterFunction() - filter function failed: "
                       + e.message + ", " + e.stack);
-        throw ["jsfilter-threw", e.message];
-      }
-      finally {
-        Cu.nukeSandbox(sandbox);
-      }
+      throw ["jsfilter-threw", e.message];
+    }
+    finally {
+      Cu.nukeSandbox(sandbox);
+    }
 
-      if (!result) {
-        throw ["jsfilter-false"];
-      }
+    if (!result) {
+      throw ["jsfilter-false"];
+    }
 
-      throw new Task.Result(true);
-    }.bind(this));
-  },
+    return true;
+  }),
 
   /*
    * Start running the experiment.

@@ -20,7 +20,6 @@ const MS_IN_ONE_DAY  = SEC_IN_ONE_DAY * 1000;
 let gProfileDir = null;
 let gHttpServer = null;
 let gHttpRoot   = null;
-let gReporter   = null;
 let gPolicy     = null;
 
 
@@ -73,15 +72,9 @@ add_task(function* test_setup() {
   yield initialiseTelemetry();
   gPolicy = new Experiments.Policy();
 
-  gReporter = yield getReporter("json_payload_simple");
-  yield gReporter.collectMeasurements();
-  let payload = yield gReporter.getJSONPayload(false);
-  do_register_cleanup(() => gReporter._shutdown());
-
   patchPolicy(gPolicy, {
     updatechannel: () => "nightly",
     locale: () => "en-US",
-    healthReportPayload: () => Promise.resolve(payload),
     random: () => 0.5,
   });
 
@@ -106,17 +99,11 @@ function arraysEqual(a, b) {
 
 // This function exists solely to be .toSource()d
 const sanityFilter = function filter(c) {
-  if (c.telemetryPayload === undefined) {
-    throw Error("No .telemetryPayload");
+  if (c.telemetryEnvironment === undefined) {
+    throw Error("No .telemetryEnvironment");
   }
-  if (c.telemetryPayload.simpleMeasurements === undefined) {
-    throw Error("No .simpleMeasurements");
-  }
-  if (c.healthReportPayload === undefined) {
-    throw Error("No .healthReportPayload");
-  }
-  if (c.healthReportPayload.geckoAppInfo == undefined) {
-    throw Error("No .geckoAppInfo");
+  if (c.telemetryEnvironment.build == undefined) {
+    throw Error("No .telemetryEnvironment.build");
   }
   return true;
 }
