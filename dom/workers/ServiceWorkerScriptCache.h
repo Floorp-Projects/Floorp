@@ -44,7 +44,7 @@ public:
 
 nsresult
 Compare(nsIPrincipal* aPrincipal, const nsAString& aCacheName,
-        const nsAString& aURL, CompareCallback* aCallback);
+        const nsAString& aURL, CompareCallback* aCallback, nsILoadGroup* aLoadGroup);
 
 } // serviceWorkerScriptCache namespace
 
