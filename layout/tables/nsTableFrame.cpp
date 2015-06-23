@@ -214,7 +214,7 @@ IsRepeatedFrame(nsIFrame* kidFrame)
 {
   return (kidFrame->GetType() == nsGkAtoms::tableRowFrame ||
           kidFrame->GetType() == nsGkAtoms::tableRowGroupFrame) &&
-         (kidFrame->GetStateBits() & NS_REPEATED_ROW_OR_ROWGROUP);
+          kidFrame->HasAnyStateBits(NS_REPEATED_ROW_OR_ROWGROUP);
 }
 
 bool
@@ -1849,7 +1849,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
     }
 
     bool needToInitiateSpecialReflow =
-      !!(GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE);
+      HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
     // see if an extra reflow will be necessary in pagination mode
     // when there is a specified table bsize
     if (isPaginated && !GetPrevInFlow() && (NS_UNCONSTRAINEDSIZE != aReflowState.AvailableBSize())) {
@@ -1878,7 +1878,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
                 lastChildReflowed, aStatus);
 
     // reevaluate special bsize reflow conditions
-    if (GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE) {
+    if (HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
       needToInitiateSpecialReflow = true;
     }
 
@@ -1947,7 +1947,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
   }
   aDesiredSize.mOverflowAreas.UnionAllWith(tableRect);
 
-  if ((GetStateBits() & NS_FRAME_FIRST_REFLOW) ||
+  if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW) ||
       nsSize(aDesiredSize.Width(), aDesiredSize.Height()) != mRect.Size()) {
       nsIFrame::InvalidateFrame();
   }
@@ -2733,7 +2733,7 @@ nsTableFrame::PlaceChild(nsTableReflowState&  aReflowState,
 {
   WritingMode wm = aReflowState.reflowState.GetWritingMode();
   bool isFirstReflow =
-    (aKidFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+    aKidFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
 
   // Place and size the child
   FinishReflowChild(aKidFrame, PresContext(), aKidDesiredSize, nullptr,
@@ -3026,7 +3026,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
     if (reflowAllKids ||
         NS_SUBTREE_DIRTY(kidFrame) ||
         (aReflowState.reflowState.mFlags.mSpecialBSizeReflow &&
-         (isPaginated || (kidFrame->GetStateBits() &
+         (isPaginated || kidFrame->HasAnyStateBits(
                           NS_FRAME_CONTAINS_RELATIVE_BSIZE)))) {
       if (pageBreak) {
         if (allowRepeatedFooter) {
@@ -3421,7 +3421,7 @@ nsTableFrame::DistributeBSizeToRows(const nsHTMLReflowState& aReflowState,
         }
         else {
           if (amountUsed > 0 && bOriginRow != rowNormalRect.BStart(wm) &&
-              !(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+              !HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
             rowFrame->InvalidateFrameSubtree();
             rowFrame->MovePositionBy(wm, LogicalPoint(wm, 0, bOriginRow -
                                                     rowNormalRect.BStart(wm)));
@@ -7444,7 +7444,7 @@ nsTableFrame::InvalidateTableFrame(nsIFrame* aFrame,
   nsIFrame* parent = aFrame->GetParent();
   NS_ASSERTION(parent, "What happened here?");
 
-  if (parent->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+  if (parent->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     // Don't bother; we'll invalidate the parent's overflow rect when
     // we finish reflowing it.
     return;

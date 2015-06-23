@@ -37,7 +37,7 @@ nsTableRowGroupFrame::~nsTableRowGroupFrame()
 void
 nsTableRowGroupFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  if (GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
+  if (HasAnyStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)) {
     nsTableFrame::UnregisterPositionedTablePart(this, aDestructRoot);
   }
 
@@ -267,8 +267,7 @@ nsTableRowGroupFrame::PlaceChild(nsPresContext*         aPresContext,
                                  const nsRect&          aOriginalKidRect,
                                  const nsRect&          aOriginalKidVisualOverflow)
 {
-  bool isFirstReflow =
-    (aKidFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+  bool isFirstReflow = aKidFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
 
   // Place and size the child
   FinishReflowChild(aKidFrame, aPresContext, aDesiredSize, nullptr,
@@ -370,8 +369,8 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
     if (reflowAllKids ||
         NS_SUBTREE_DIRTY(kidFrame) ||
         (aReflowState.reflowState.mFlags.mSpecialBSizeReflow &&
-         (isPaginated || (kidFrame->GetStateBits() &
-                          NS_FRAME_CONTAINS_RELATIVE_BSIZE)))) {
+         (isPaginated ||
+          kidFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)))) {
       LogicalRect oldKidRect = kidFrame->GetLogicalRect(wm, containerWidth);
       nsRect oldKidVisualOverflow = kidFrame->GetVisualOverflowRect();
 
@@ -1384,7 +1383,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
 
   // If our parent is in initial reflow, it'll handle invalidating our
   // entire overflow rect.
-  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
+  if (!GetParent()->HasAnyStateBits(NS_FRAME_FIRST_REFLOW) &&
       nsSize(aDesiredSize.Width(), aDesiredSize.Height()) != mRect.Size()) {
     InvalidateFrame();
   }
@@ -1867,8 +1866,9 @@ NS_DECLARE_FRAME_PROPERTY(RowCursorProperty,
 void
 nsTableRowGroupFrame::ClearRowCursor()
 {
-  if (!(GetStateBits() & NS_ROWGROUP_HAS_ROW_CURSOR))
+  if (!HasAnyStateBits(NS_ROWGROUP_HAS_ROW_CURSOR)) {
     return;
+  }
 
   RemoveStateBits(NS_ROWGROUP_HAS_ROW_CURSOR);
   Properties().Delete(RowCursorProperty());
@@ -1877,7 +1877,7 @@ nsTableRowGroupFrame::ClearRowCursor()
 nsTableRowGroupFrame::FrameCursorData*
 nsTableRowGroupFrame::SetupRowCursor()
 {
-  if (GetStateBits() & NS_ROWGROUP_HAS_ROW_CURSOR) {
+  if (HasAnyStateBits(NS_ROWGROUP_HAS_ROW_CURSOR)) {
     // We already have a valid row cursor. Don't waste time rebuilding it.
     return nullptr;
   }
@@ -1903,8 +1903,9 @@ nsTableRowGroupFrame::SetupRowCursor()
 nsIFrame*
 nsTableRowGroupFrame::GetFirstRowContaining(nscoord aY, nscoord* aOverflowAbove)
 {
-  if (!(GetStateBits() & NS_ROWGROUP_HAS_ROW_CURSOR))
+  if (!HasAnyStateBits(NS_ROWGROUP_HAS_ROW_CURSOR)) {
     return nullptr;
+  }
 
   FrameCursorData* property = static_cast<FrameCursorData*>
     (Properties().Get(RowCursorProperty()));
