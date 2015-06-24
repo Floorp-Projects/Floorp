@@ -72,7 +72,7 @@ nsresult nsPluginNativeWindowGtk::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> 
 {
   if (aPluginInstance) {
     if (type == NPWindowTypeWindow &&
-        XRE_GetProcessType() == GeckoProcessType_Content) {
+        XRE_IsContentProcess()) {
       // In this case, most of the initialization code here has already happened
       // in the chrome process. The window we have in content is the XID of the
       // socket widget we need to hand to plugins.

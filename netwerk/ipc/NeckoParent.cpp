@@ -799,7 +799,7 @@ NeckoParent::NestedFrameAuthPrompt::AsyncPromptAuth(
   nsIAuthInformation* aInfo, nsICancelable**)
 {
   static uint64_t callbackId = 0;
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
   nsCOMPtr<nsIURI> uri;
   nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);

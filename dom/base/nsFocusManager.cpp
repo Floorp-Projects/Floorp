@@ -697,7 +697,7 @@ nsFocusManager::WindowRaised(nsIDOMWindow* aWindow)
   // If this is a parent or single process window, send the activate event.
   // Events for child process windows will be sent when ParentActivated
   // is called.
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (XRE_IsParentProcess()) {
     ActivateOrDeactivate(window, true);
   }
 
@@ -760,7 +760,7 @@ nsFocusManager::WindowLowered(nsIDOMWindow* aWindow)
   // If this is a parent or single process window, send the deactivate event.
   // Events for child process windows will be sent when ParentActivated
   // is called.
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (XRE_IsParentProcess()) {
     ActivateOrDeactivate(window, false);
   }
 

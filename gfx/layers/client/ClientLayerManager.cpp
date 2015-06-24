@@ -221,7 +221,7 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 
   // If we have a non-default target, we need to let our shadow manager draw
   // to it. This will happen at the end of the transaction.
-  if (aTarget && XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (aTarget && XRE_IsParentProcess()) {
     mShadowTarget = aTarget;
   } else {
     NS_ASSERTION(!aTarget,
@@ -370,7 +370,7 @@ ClientLayerManager::GetRemoteRenderer()
 CompositorChild*
 ClientLayerManager::GetCompositorChild()
 {
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     return CompositorChild::Get();
   }
   return GetRemoteRenderer();

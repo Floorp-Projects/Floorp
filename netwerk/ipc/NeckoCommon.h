@@ -94,7 +94,7 @@ IsNeckoChild()
     // TODO: Remove eventually when no longer supported (bug 571126)
     const char * e = PR_GetEnv("NECKO_SEPARATE_STACKS");
     if (!e) 
-      amChild = (XRE_GetProcessType() == GeckoProcessType_Content);
+      amChild = XRE_IsContentProcess();
     didCheck = true;
   }
   return amChild;

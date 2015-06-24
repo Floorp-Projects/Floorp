@@ -87,7 +87,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
     nsresult rv = NS_OK;
 
     if (!mInitializedSystemColors) {
-        if (XRE_GetProcessType() == GeckoProcessType_Default)
+        if (XRE_IsParentProcess())
             rv = GetSystemColors();
         else
             rv = CallRemoteGetSystemColors();
@@ -469,7 +469,7 @@ bool
 nsLookAndFeel::GetEchoPasswordImpl()
 {
     if (!mInitializedShowPassword) {
-        if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        if (XRE_IsParentProcess()) {
             mShowPassword = widget::GeckoAppShell::GetShowPasswordSetting();
         } else {
             ContentChild::GetSingleton()->SendGetShowPasswordSetting(&mShowPassword);

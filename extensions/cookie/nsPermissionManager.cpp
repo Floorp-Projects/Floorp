@@ -48,7 +48,7 @@ using mozilla::unused; // ha!
 static bool
 IsChildProcess()
 {
-  return XRE_GetProcessType() == GeckoProcessType_Content;
+  return XRE_IsContentProcess();
 }
 
 /**
