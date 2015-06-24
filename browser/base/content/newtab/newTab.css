@@ -841,6 +841,10 @@ input[type=button] {
   max-height: 40px;
 }
 
+.newtab-intro-image-customize #newtab-customize-panel-anchor {
+  display: none;
+}
+
 .newtab-intro-image-customize .newtab-customize-panel-item:not([selected]):hover {
   background-color: inherit;
   color: #7A7A7A;

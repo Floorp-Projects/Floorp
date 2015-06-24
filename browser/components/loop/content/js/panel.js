@@ -20,9 +20,9 @@ loop.panel = (function(_, mozL10n) {
   var TabView = React.createClass({displayName: "TabView",
     propTypes: {
       buttonsHidden: React.PropTypes.array,
+      mozLoop: React.PropTypes.object,
       // The selectedTab prop is used by the UI showcase.
-      selectedTab: React.PropTypes.string,
-      mozLoop: React.PropTypes.object
+      selectedTab: React.PropTypes.string
     },
 
     getDefaultProps: function() {
@@ -82,14 +82,14 @@ loop.panel = (function(_, mozL10n) {
         if (!tab.props.hidden) {
           tabButtons.push(
             React.createElement("li", {className: cx({selected: isSelected}), 
-                key: i, 
                 "data-tab-name": tabName, 
-                title: mozL10n.get(tabName + "_tab_button_tooltip"), 
-                onClick: this.handleSelectTab})
+                key: i, 
+                onClick: this.handleSelectTab, 
+                title: mozL10n.get(tabName + "_tab_button_tooltip")})
           );
         }
         tabs.push(
-          React.createElement("div", {key: i, className: cx({tab: true, selected: isSelected})}, 
+          React.createElement("div", {className: cx({tab: true, selected: isSelected}), key: i}, 
             tab.props.children
           )
         );
@@ -164,13 +164,13 @@ loop.panel = (function(_, mozL10n) {
             React.createElement("i", {className: availabilityStatus})
           ), 
           React.createElement("ul", {className: availabilityDropdown}, 
-            React.createElement("li", {onClick: this.changeAvailability("available"), 
-                className: "dropdown-menu-item dnd-make-available"}, 
+            React.createElement("li", {className: "dropdown-menu-item dnd-make-available", 
+                onClick: this.changeAvailability("available")}, 
               React.createElement("i", {className: "status status-available"}), 
               React.createElement("span", null, mozL10n.get("display_name_available_status"))
             ), 
-            React.createElement("li", {onClick: this.changeAvailability("do-not-disturb"), 
-                className: "dropdown-menu-item dnd-make-unavailable"}, 
+            React.createElement("li", {className: "dropdown-menu-item dnd-make-unavailable", 
+                onClick: this.changeAvailability("do-not-disturb")}, 
               React.createElement("i", {className: "status status-dnd"}), 
               React.createElement("span", null, mozL10n.get("display_name_dnd_status"))
             )
@@ -202,9 +202,9 @@ loop.panel = (function(_, mozL10n) {
               "clientShortname": mozL10n.get("clientShortname2")
             })
           ), 
-          React.createElement(Button, {htmlId: "fte-button", 
-                  onClick: this.handleButtonClick, 
-                  caption: mozL10n.get("first_time_experience_button_label")})
+          React.createElement(Button, {caption: mozL10n.get("first_time_experience_button_label"), 
+                  htmlId: "fte-button", 
+                  onClick: this.handleButtonClick})
         )
       );
     }
@@ -291,9 +291,9 @@ loop.panel = (function(_, mozL10n) {
       var locale = mozL10n.getLanguage();
       navigator.mozLoop.setLoopPref("showPartnerLogo", false);
       return (
-        React.createElement("p", {id: "powered-by", className: "powered-by"}, 
+        React.createElement("p", {className: "powered-by", id: "powered-by"}, 
           mozL10n.get("powered_by_beforeLogo"), 
-          React.createElement("img", {id: "powered-by-logo", className: locale}), 
+          React.createElement("img", {className: locale, id: "powered-by-logo"}), 
           mozL10n.get("powered_by_afterLogo")
         )
       );
@@ -335,10 +335,10 @@ loop.panel = (function(_, mozL10n) {
    */
   var SettingsDropdownEntry = React.createClass({displayName: "SettingsDropdownEntry",
     propTypes: {
-      onClick: React.PropTypes.func.isRequired,
-      label: React.PropTypes.string.isRequired,
+      displayed: React.PropTypes.bool,
       icon: React.PropTypes.string,
-      displayed: React.PropTypes.bool
+      label: React.PropTypes.string.isRequired,
+      onClick: React.PropTypes.func.isRequired
     },
 
     getDefaultProps: function() {
@@ -350,7 +350,7 @@ loop.panel = (function(_, mozL10n) {
         return null;
       }
       return (
-        React.createElement("li", {onClick: this.props.onClick, className: "dropdown-menu-item"}, 
+        React.createElement("li", {className: "dropdown-menu-item", onClick: this.props.onClick}, 
           this.props.icon ?
             React.createElement("i", {className: "icon icon-" + this.props.icon}) :
             null, 
@@ -410,29 +410,29 @@ loop.panel = (function(_, mozL10n) {
         React.createElement("div", {className: "settings-menu dropdown"}, 
           React.createElement("a", {className: "button-settings", 
              onClick: this.toggleDropdownMenu, 
-             title: mozL10n.get("settings_menu_button_tooltip"), 
-             ref: "menu-button"}), 
+             ref: "menu-button", 
+             title: mozL10n.get("settings_menu_button_tooltip")}), 
           React.createElement("ul", {className: cx({"dropdown-menu": true, hide: !this.state.showMenu})}, 
-            React.createElement(SettingsDropdownEntry, {label: mozL10n.get("settings_menu_item_settings"), 
-                                   onClick: this.handleClickSettingsEntry, 
-                                   displayed: false, 
-                                   icon: "settings"}), 
-            React.createElement(SettingsDropdownEntry, {label: mozL10n.get("settings_menu_item_account"), 
-                                   onClick: this.handleClickAccountEntry, 
+            React.createElement(SettingsDropdownEntry, {displayed: false, 
+                                   icon: "settings", 
+                                   label: mozL10n.get("settings_menu_item_settings"), 
+                                   onClick: this.handleClickSettingsEntry}), 
+            React.createElement(SettingsDropdownEntry, {displayed: this._isSignedIn() && this.props.mozLoop.fxAEnabled, 
                                    icon: "account", 
-                                   displayed: this._isSignedIn() && this.props.mozLoop.fxAEnabled}), 
+                                   label: mozL10n.get("settings_menu_item_account"), 
+                                   onClick: this.handleClickAccountEntry}), 
             React.createElement(SettingsDropdownEntry, {icon: "tour", 
                                    label: mozL10n.get("tour_label"), 
                                    onClick: this.openGettingStartedTour}), 
-            React.createElement(SettingsDropdownEntry, {label: this._isSignedIn() ?
+            React.createElement(SettingsDropdownEntry, {displayed: this.props.mozLoop.fxAEnabled, 
+                                   icon: this._isSignedIn() ? "signout" : "signin", 
+                                   label: this._isSignedIn() ?
                                           mozL10n.get("settings_menu_item_signout") :
                                           mozL10n.get("settings_menu_item_signin"), 
-                                   onClick: this.handleClickAuthEntry, 
-                                   displayed: this.props.mozLoop.fxAEnabled, 
-                                   icon: this._isSignedIn() ? "signout" : "signin"}), 
-            React.createElement(SettingsDropdownEntry, {label: mozL10n.get("help_label"), 
-                                   onClick: this.handleHelpEntry, 
-                                   icon: "help"})
+                                   onClick: this.handleClickAuthEntry}), 
+            React.createElement(SettingsDropdownEntry, {icon: "help", 
+                                   label: mozL10n.get("help_label"), 
+                                   onClick: this.handleHelpEntry})
           )
         )
       );
@@ -500,7 +500,7 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         React.createElement("div", {className: "room-entry-context-item"}, 
-          React.createElement("a", {href: roomUrl.location, title: roomUrl.description, onClick: this.handleClick}, 
+          React.createElement("a", {href: roomUrl.location, onClick: this.handleClick, title: roomUrl.description}, 
             React.createElement("img", {src: roomUrl.thumbnail || "loop/shared/img/icons-16x16.svg#globe"})
           )
         )
@@ -587,17 +587,17 @@ loop.panel = (function(_, mozL10n) {
       });
 
       return (
-        React.createElement("div", {className: roomClasses, onMouseLeave: this.handleMouseLeave, 
-             onClick: this.handleClickEntry}, 
+        React.createElement("div", {className: roomClasses, onClick: this.handleClickEntry, 
+             onMouseLeave: this.handleMouseLeave}, 
           React.createElement("h2", null, 
             React.createElement("span", {className: "room-notification"}), 
             this.props.room.decryptedContext.roomName, 
             React.createElement("button", {className: copyButtonClasses, 
-              title: mozL10n.get("rooms_list_copy_url_tooltip"), 
-              onClick: this.handleCopyButtonClick}), 
+              onClick: this.handleCopyButtonClick, 
+              title: mozL10n.get("rooms_list_copy_url_tooltip")}), 
             React.createElement("button", {className: "delete-link", 
-              title: mozL10n.get("rooms_list_delete_tooltip"), 
-              onClick: this.handleDeleteButtonClick})
+              onClick: this.handleDeleteButtonClick, 
+              title: mozL10n.get("rooms_list_delete_tooltip")})
           ), 
           React.createElement(RoomEntryContextItem, {mozLoop: this.props.mozLoop, 
                                 roomUrls: this.props.room.decryptedContext.urls})
@@ -613,9 +613,9 @@ loop.panel = (function(_, mozL10n) {
     mixins: [Backbone.Events, sharedMixins.WindowCloseMixin],
 
     propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       mozLoop: React.PropTypes.object.isRequired,
       store: React.PropTypes.instanceOf(loop.store.RoomStore).isRequired,
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       userDisplayName: React.PropTypes.string.isRequired  // for room creation
     },
 
@@ -670,11 +670,10 @@ loop.panel = (function(_, mozL10n) {
             this.state.rooms.map(function(room, i) {
               return (
                 React.createElement(RoomEntry, {
-                  key: room.roomToken, 
                   dispatcher: this.props.dispatcher, 
+                  key: room.roomToken, 
                   mozLoop: this.props.mozLoop, 
-                  room: room}
-                )
+                  room: room})
               );
             }, this)
           ), 
@@ -788,8 +787,8 @@ loop.panel = (function(_, mozL10n) {
               useDesktopPaths: true})
           ), 
           React.createElement("button", {className: "btn btn-info new-room-button", 
-                  onClick: this.handleCreateButtonClick, 
-                  disabled: this.props.pendingOperation}, 
+                  disabled: this.props.pendingOperation, 
+                  onClick: this.handleCreateButtonClick}, 
             mozL10n.get("rooms_new_room_button_label")
           )
         )
@@ -802,16 +801,16 @@ loop.panel = (function(_, mozL10n) {
    */
   var PanelView = React.createClass({displayName: "PanelView",
     propTypes: {
-      notifications: React.PropTypes.object.isRequired,
-      // Mostly used for UI components showcase and unit tests
-      userProfile: React.PropTypes.object,
-      // Used only for unit tests.
-      showTabButtons: React.PropTypes.bool,
-      selectedTab: React.PropTypes.string,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       mozLoop: React.PropTypes.object.isRequired,
+      notifications: React.PropTypes.object.isRequired,
       roomStore:
-        React.PropTypes.instanceOf(loop.store.RoomStore).isRequired
+        React.PropTypes.instanceOf(loop.store.RoomStore).isRequired,
+      selectedTab: React.PropTypes.string,
+      // Used only for unit tests.
+      showTabButtons: React.PropTypes.bool,
+      // Mostly used for UI components showcase and unit tests
+      userProfile: React.PropTypes.object
     },
 
     getInitialState: function() {
@@ -923,8 +922,9 @@ loop.panel = (function(_, mozL10n) {
       if (!this.state.gettingStartedSeen) {
         return (
           React.createElement("div", null, 
-            React.createElement(NotificationListView, {notifications: this.props.notifications, 
-                                  clearOnDocumentHidden: true}), 
+            React.createElement(NotificationListView, {
+              clearOnDocumentHidden: true, 
+              notifications: this.props.notifications}), 
             React.createElement(GettingStartedView, null), 
             React.createElement(ToSView, null)
           )
@@ -943,33 +943,44 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         React.createElement("div", null, 
-          React.createElement(NotificationListView, {notifications: this.props.notifications, 
-                                clearOnDocumentHidden: true}), 
-          React.createElement(TabView, {ref: "tabView", selectedTab: this.props.selectedTab, 
-            buttonsHidden: hideButtons, mozLoop: this.props.mozLoop}, 
+          React.createElement(NotificationListView, {
+            clearOnDocumentHidden: true, 
+            notifications: this.props.notifications}), 
+          React.createElement(TabView, {
+            buttonsHidden: hideButtons, 
+            mozLoop: this.props.mozLoop, 
+            ref: "tabView", 
+            selectedTab: this.props.selectedTab}, 
             React.createElement(Tab, {name: "rooms"}, 
               React.createElement(RoomList, {dispatcher: this.props.dispatcher, 
+                        mozLoop: this.props.mozLoop, 
                         store: this.props.roomStore, 
-                        userDisplayName: this._getUserDisplayName(), 
-                        mozLoop: this.props.mozLoop}), 
+                        userDisplayName: this._getUserDisplayName()}), 
               React.createElement(ToSView, null)
             ), 
             React.createElement(Tab, {name: "contacts"}, 
-              React.createElement(ContactsList, {selectTab: this.selectTab, 
-                            startForm: this.startForm, 
-                            notifications: this.props.notifications})
+              React.createElement(ContactsList, {
+                notifications: this.props.notifications, 
+                selectTab: this.selectTab, 
+                startForm: this.startForm})
             ), 
-            React.createElement(Tab, {name: "contacts_add", hidden: true}, 
-              React.createElement(ContactDetailsForm, {ref: "contacts_add", mode: "add", 
-                                  selectTab: this.selectTab})
+            React.createElement(Tab, {hidden: true, name: "contacts_add"}, 
+              React.createElement(ContactDetailsForm, {
+                mode: "add", 
+                ref: "contacts_add", 
+                selectTab: this.selectTab})
             ), 
-            React.createElement(Tab, {name: "contacts_edit", hidden: true}, 
-              React.createElement(ContactDetailsForm, {ref: "contacts_edit", mode: "edit", 
-                                  selectTab: this.selectTab})
+            React.createElement(Tab, {hidden: true, name: "contacts_edit"}, 
+              React.createElement(ContactDetailsForm, {
+                mode: "edit", 
+                ref: "contacts_edit", 
+                selectTab: this.selectTab})
             ), 
-            React.createElement(Tab, {name: "contacts_import", hidden: true}, 
-              React.createElement(ContactDetailsForm, {ref: "contacts_import", mode: "import", 
-                                  selectTab: this.selectTab})
+            React.createElement(Tab, {hidden: true, name: "contacts_import"}, 
+              React.createElement(ContactDetailsForm, {
+                mode: "import", 
+                ref: "contacts_import", 
+                selectTab: this.selectTab})
             )
           ), 
           React.createElement("div", {className: "footer"}, 
@@ -1004,10 +1015,10 @@ loop.panel = (function(_, mozL10n) {
     });
 
     React.render(React.createElement(PanelView, {
-      notifications: notifications, 
-      roomStore: roomStore, 
+      dispatcher: dispatcher, 
       mozLoop: navigator.mozLoop, 
-      dispatcher: dispatcher}), document.querySelector("#main"));
+      notifications: notifications, 
+      roomStore: roomStore}), document.querySelector("#main"));
 
     document.documentElement.setAttribute("lang", mozL10n.getLanguage());
     document.documentElement.setAttribute("dir", mozL10n.getDirection());

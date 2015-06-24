@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Bug 1175789 - underline and overline in various language</title>
+  <style type="text/css">
+    body {
+      font-family: "Arial", "Helvetica", "sans-serif";
+    }
+    div {
+      padding: .5em 1em;
+      line-height: 2em;
+    }
+    .underline {
+      text-decoration: underline;
+    }
+    .overline {
+      text-decoration: overline;
+    }
+  </style>
+ </head>
+ <body>
+   <dl>
+     <dt>lang="en-US"</dt>
+     <dd lang="en-US">
+       <div style="writing-mode: vertical-rl;">
+         <span class="underline">underline</span><br>
+         <span class="overline">overline</span>
+       </div>
+       <div style="writing-mode: vertical-lr;">
+         <span class="underline">underline</span><br>
+         <span class="overline">overline</span>
+       </div>
+     </dd>
+     <dt>lang="ja"</dt>
+     <dd lang="en-US">
+       <div style="writing-mode: vertical-rl;">
+         <span class="overline">underline</span><br>
+         <span class="underline">overline</span>
+       </div>
+       <div style="writing-mode: vertical-lr;">
+         <span class="overline">underline</span><br>
+         <span class="underline">overline</span>
+       </div>
+     </dd>
+     <dt>lang="ko"</dt>
+     <dd lang="en-US">
+       <div style="writing-mode: vertical-rl;">
+         <span class="overline">underline</span><br>
+         <span class="underline">overline</span>
+       </div>
+       <div style="writing-mode: vertical-lr;">
+         <span class="overline">underline</span><br>
+         <span class="underline">overline</span>
+       </div>
+     </dd>
+     <dt>lang="ja-JP"</dt>
+     <dd lang="en-US">
+       <div style="writing-mode: vertical-rl;">
+         <span class="overline">underline</span><br>
+         <span class="underline">overline</span>
+       </div>
+       <div style="writing-mode: vertical-lr;">
+         <span class="overline">underline</span><br>
+         <span class="underline">overline</span>
+       </div>
+     </dd>
+     <dt>lang="ko-KR"</dt>
+     <dd lang="en-US">
+       <div style="writing-mode: vertical-rl;">
+         <span class="overline">underline</span><br>
+         <span class="underline">overline</span>
+       </div>
+       <div style="writing-mode: vertical-lr;">
+         <span class="overline">underline</span><br>
+         <span class="underline">overline</span>
+       </div>
+     </dd>
+     <dt>lang="zh"</dt>
+     <dd lang="en-US">
+       <div style="writing-mode: vertical-rl;">
+         <span class="underline">underline</span><br>
+         <span class="overline">overline</span>
+       </div>
+       <div style="writing-mode: vertical-lr;">
+         <span class="underline">underline</span><br>
+         <span class="overline">overline</span>
+       </div>
+     </dd>
+    </dl>
+ </body>
+</html>

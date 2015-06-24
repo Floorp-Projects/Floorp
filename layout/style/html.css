@@ -256,7 +256,6 @@ xmp, pre, plaintext {
 /* tables */
 
 table {
-  writing-mode: horizontal-tb !important; /* XXX remove when bug 1077521 is fixed */
   display: table;
   border-spacing: 2px;
   border-collapse: separate;

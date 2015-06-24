@@ -305,7 +305,6 @@
 @RESPATH@/components/plugin.xpt
 @RESPATH@/components/pref.xpt
 @RESPATH@/components/prefetch.xpt
-@RESPATH@/components/profile.xpt
 #ifdef MOZ_ENABLE_PROFILER_SPS
 @RESPATH@/components/profiler.xpt
 #endif

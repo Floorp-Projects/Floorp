@@ -58,9 +58,6 @@ public:
     return mArgs;
   }
 
-  nsresult Init(nsGlobalWindow *aWindow, bool *aIsInterval,
-                int32_t *aInterval, bool* aAllowEval);
-
   void ReleaseJSObjects();
 
 private:
@@ -248,159 +245,11 @@ nsJSScriptTimeoutHandler::ReleaseJSObjects()
   }
 }
 
-nsresult
-nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
-                               int32_t *aInterval, bool *aAllowEval)
-{
-  if (!aWindow->GetContextInternal() || !aWindow->FastGetGlobalJSObject()) {
-    // This window was already closed, or never properly initialized,
-    // don't let a timer be scheduled on such a window.
-
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  nsAXPCNativeCallContext *ncc = nullptr;
-  nsresult rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!ncc)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  JSContext *cx = nullptr;
-
-  rv = ncc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint32_t argc;
-  JS::Value *argv = nullptr;
-
-  ncc->GetArgc(&argc);
-  ncc->GetArgvPtr(&argv);
-
-  JS::Rooted<JSFlatString*> expr(cx);
-  JS::Rooted<JSObject*> funobj(cx);
-
-  if (argc < 1) {
-    ::JS_ReportError(cx, "Function %s requires at least 2 parameter",
-                     *aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-    return NS_ERROR_DOM_TYPE_ERR;
-  }
-
-  int32_t interval = 0;
-  if (argc > 1) {
-    JS::Rooted<JS::Value> arg(cx, argv[1]);
-
-    if (!JS::ToInt32(cx, arg, &interval)) {
-      ::JS_ReportError(cx,
-                       "Second argument to %s must be a millisecond interval",
-                       aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-      return NS_ERROR_DOM_TYPE_ERR;
-    }
-  }
-
-  if (argc == 1) {
-    // If no interval was specified, treat this like a timeout, to avoid
-    // setting an interval of 0 milliseconds.
-    *aIsInterval = false;
-  }
-
-  JS::Rooted<JS::Value> arg(cx, argv[0]);
-  switch (::JS_TypeOfValue(cx, arg)) {
-  case JSTYPE_FUNCTION:
-    funobj = &arg.toObject();
-    break;
-
-  case JSTYPE_STRING:
-  case JSTYPE_OBJECT:
-    {
-      JSString *str = JS::ToString(cx, arg);
-      if (!str)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      expr = ::JS_FlattenString(cx, str);
-      if (!expr)
-          return NS_ERROR_OUT_OF_MEMORY;
-
-      argv[0] = JS::StringValue(str);
-    }
-    break;
-
-  default:
-    ::JS_ReportError(cx, "useless %s call (missing quotes around argument?)",
-                     *aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-
-    // Return an error that nsGlobalWindow can recognize and turn into NS_OK.
-    return NS_ERROR_DOM_TYPE_ERR;
-  }
-
-  if (expr) {
-    // if CSP is enabled, and setTimeout/setInterval was called with a string,
-    // disable the registration and log an error
-    ErrorResult error;
-    *aAllowEval = CheckCSPForEval(cx, aWindow, error);
-    if (error.Failed() || !*aAllowEval) {
-      return error.StealNSResult();
-    }
-
-    MOZ_ASSERT(mExpr.IsEmpty());
-    AssignJSFlatString(mExpr, expr);
-
-    // Get the calling location.
-    nsJSUtils::GetCallingLocation(cx, mFileName, &mLineNo);
-  } else if (funobj) {
-    *aAllowEval = true;
-
-    mozilla::HoldJSObjects(this);
-
-    mFunction = new Function(funobj, GetIncumbentGlobal());
-
-    // Create our arg array.  argc is the number of arguments passed
-    // to setTimeout or setInterval; the first two are our callback
-    // and the delay, so only arguments after that need to go in our
-    // array.
-    // std::max(argc - 2, 0) wouldn't work right because argc is unsigned.
-    uint32_t argCount = std::max(argc, 2u) - 2;
-
-    FallibleTArray<JS::Heap<JS::Value> > args;
-    if (!args.SetCapacity(argCount, fallible)) {
-      // No need to drop here, since we already have a non-null mFunction
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    for (uint32_t idx = 0; idx < argCount; ++idx) {
-      *args.AppendElement(fallible) = argv[idx + 2];
-    }
-    args.SwapElements(mArgs);
-  } else {
-    NS_WARNING("No func and no expr - why are we here?");
-  }
-  *aInterval = interval;
-  return NS_OK;
-}
-
 const char16_t *
 nsJSScriptTimeoutHandler::GetHandlerText()
 {
   NS_ASSERTION(!mFunction, "No expression, so no handler text!");
   return mExpr.get();
-}
-
-nsresult NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
-                                   bool *aIsInterval,
-                                   int32_t *aInterval,
-                                   nsIScriptTimeoutHandler **aRet)
-{
-  *aRet = nullptr;
-  nsRefPtr<nsJSScriptTimeoutHandler> handler = new nsJSScriptTimeoutHandler();
-  bool allowEval;
-  nsresult rv = handler->Init(aWindow, aIsInterval, aInterval, &allowEval);
-  if (NS_FAILED(rv) || !allowEval) {
-    return rv;
-  }
-
-  handler.forget(aRet);
-
-  return NS_OK;
 }
 
 already_AddRefed<nsIScriptTimeoutHandler>
