@@ -385,9 +385,9 @@
       var sizeUnit = this.props.size.split("x");
       return (
         React.createElement("img", {className: "svg-icon", 
+             height: sizeUnit[1], 
              src: "../content/shared/img/icons-" + this.props.size + ".svg#" + this.props.shapeId, 
-             width: sizeUnit[0], 
-             height: sizeUnit[1]})
+             width: sizeUnit[0]})
       );
     }
   });
@@ -421,7 +421,7 @@
     render: function() {
       var icons = this.shapes[this.props.size].map(function(shapeId, i) {
         return (
-          React.createElement("li", {key: this.props.size + "-" + i, className: "svg-icon-entry"}, 
+          React.createElement("li", {className: "svg-icon-entry", key: this.props.size + "-" + i}, 
             React.createElement("p", null, React.createElement(SVGIcon, {shapeId: shapeId, size: this.props.size})), 
             React.createElement("p", null, shapeId)
           )
@@ -464,10 +464,11 @@
             React.createElement("a", {href: this.makeId("#")}, " ¶")
           ), 
           React.createElement("div", {className: "comp"}, 
-            React.createElement(Frame, {width: width, height: height, 
+            React.createElement(Frame, {className: cx({dashed: this.props.dashed}), 
+                   cssClass: this.props.cssClass, 
+                   height: height, 
                    onContentsRendered: this.props.onContentsRendered, 
-                   className: cx({dashed: this.props.dashed}), 
-                   cssClass: this.props.cssClass}, 
+                   width: width}, 
               this.props.children
             )
           )
@@ -501,7 +502,7 @@
   var Section = React.createClass({displayName: "Section",
     render: function() {
       return (
-        React.createElement("section", {id: this.props.name, className: this.props.className}, 
+        React.createElement("section", {className: this.props.className, id: this.props.name}, 
           React.createElement("h1", null, this.props.name), 
           this.props.children
         )
@@ -544,7 +545,7 @@
         React.createElement("div", {className: "showcase"}, 
           React.createElement("header", null, 
             React.createElement("h1", null, "Loop UI Components Showcase"), 
-            React.createElement(Checkbox, {label: "RTL mode?", checked: this.state.rtlMode, 
+            React.createElement(Checkbox, {checked: this.state.rtlMode, label: "RTL mode?", 
               onChange: this._handleCheckboxChange}), 
             React.createElement("nav", {className: "showcase-menu"}, 
               React.Children.map(this.props.children, function(section) {
@@ -571,58 +572,63 @@
             React.createElement("p", {className: "note"}, 
               React.createElement("strong", null, "Note:"), " 332px wide."
             ), 
-            React.createElement(Example, {summary: "Re-sign-in view", dashed: "true", style: {width: "332px"}}, 
+            React.createElement(Example, {dashed: "true", style: {width: "332px"}, summary: "Re-sign-in view"}, 
               React.createElement(SignInRequestView, {mozLoop: mockMozLoopRooms})
             ), 
-            React.createElement(Example, {summary: "Room list tab", dashed: "true", style: {width: "332px"}}, 
-              React.createElement(PanelView, {client: mockClient, notifications: notifications, 
-                         userProfile: {email: "test@example.com"}, 
-                         mozLoop: mockMozLoopRooms, 
+            React.createElement(Example, {dashed: "true", style: {width: "332px"}, summary: "Room list tab"}, 
+              React.createElement(PanelView, {client: mockClient, 
                          dispatcher: dispatcher, 
-                         roomStore: roomStore, 
-                         selectedTab: "rooms"})
-            ), 
-            React.createElement(Example, {summary: "Contact list tab", dashed: "true", style: {width: "332px"}}, 
-              React.createElement(PanelView, {client: mockClient, notifications: notifications, 
-                         userProfile: {email: "test@example.com"}, 
                          mozLoop: mockMozLoopRooms, 
-                         dispatcher: dispatcher, 
+                         notifications: notifications, 
                          roomStore: roomStore, 
-                         selectedTab: "contacts"})
+                         selectedTab: "rooms", 
+                         userProfile: {email: "test@example.com"}})
             ), 
-            React.createElement(Example, {summary: "Error Notification", dashed: "true", style: {width: "332px"}}, 
-              React.createElement(PanelView, {client: mockClient, notifications: errNotifications, 
+            React.createElement(Example, {dashed: "true", style: {width: "332px"}, summary: "Contact list tab"}, 
+              React.createElement(PanelView, {client: mockClient, 
+                         dispatcher: dispatcher, 
+                         mozLoop: mockMozLoopRooms, 
+                         notifications: notifications, 
+                         roomStore: roomStore, 
+                         selectedTab: "contacts", 
+                         userProfile: {email: "test@example.com"}})
+            ), 
+            React.createElement(Example, {dashed: "true", style: {width: "332px"}, summary: "Error Notification"}, 
+              React.createElement(PanelView, {client: mockClient, 
+                         dispatcher: dispatcher, 
                          mozLoop: navigator.mozLoop, 
-                         dispatcher: dispatcher, 
+                         notifications: errNotifications, 
                          roomStore: roomStore})
             ), 
-            React.createElement(Example, {summary: "Error Notification - authenticated", dashed: "true", style: {width: "332px"}}, 
-              React.createElement(PanelView, {client: mockClient, notifications: errNotifications, 
-                         userProfile: {email: "test@example.com"}, 
+            React.createElement(Example, {dashed: "true", style: {width: "332px"}, summary: "Error Notification - authenticated"}, 
+              React.createElement(PanelView, {client: mockClient, 
+                         dispatcher: dispatcher, 
                          mozLoop: navigator.mozLoop, 
-                         dispatcher: dispatcher, 
-                         roomStore: roomStore})
-            ), 
-            React.createElement(Example, {summary: "Contact import success", dashed: "true", style: {width: "332px"}}, 
-              React.createElement(PanelView, {notifications: new loop.shared.models.NotificationCollection([{level: "success", message: "Import success"}]), 
-                         userProfile: {email: "test@example.com"}, 
-                         mozLoop: mockMozLoopRooms, 
-                         dispatcher: dispatcher, 
+                         notifications: errNotifications, 
                          roomStore: roomStore, 
-                         selectedTab: "contacts"})
+                         userProfile: {email: "test@example.com"}})
             ), 
-            React.createElement(Example, {summary: "Contact import error", dashed: "true", style: {width: "332px"}}, 
-              React.createElement(PanelView, {notifications: new loop.shared.models.NotificationCollection([{level: "error", message: "Import error"}]), 
-                         userProfile: {email: "test@example.com"}, 
+            React.createElement(Example, {dashed: "true", style: {width: "332px"}, summary: "Contact import success"}, 
+              React.createElement(PanelView, {dispatcher: dispatcher, 
                          mozLoop: mockMozLoopRooms, 
-                         dispatcher: dispatcher, 
+                         notifications: new loop.shared.models.NotificationCollection([{level: "success", message: "Import success"}]), 
                          roomStore: roomStore, 
-                         selectedTab: "contacts"})
+                         selectedTab: "contacts", 
+                         userProfile: {email: "test@example.com"}})
+            ), 
+            React.createElement(Example, {dashed: "true", style: {width: "332px"}, summary: "Contact import error"}, 
+              React.createElement(PanelView, {dispatcher: dispatcher, 
+                         mozLoop: mockMozLoopRooms, 
+                         notifications: new loop.shared.models.NotificationCollection([{level: "error", message: "Import error"}]), 
+                         roomStore: roomStore, 
+                         selectedTab: "contacts", 
+                         userProfile: {email: "test@example.com"}})
             )
           ), 
 
           React.createElement(Section, {name: "AcceptCallView"}, 
-            React.createElement(Example, {summary: "Default / incoming video call", dashed: "true", style: {width: "300px", height: "272px"}}, 
+            React.createElement(Example, {dashed: "true", style: {width: "300px", height: "272px"}, 
+                     summary: "Default / incoming video call"}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(AcceptCallView, {callType: CALL_TYPES.AUDIO_VIDEO, 
                                 callerId: "Mr Smith", 
@@ -631,7 +637,8 @@
               )
             ), 
 
-            React.createElement(Example, {summary: "Default / incoming audio only call", dashed: "true", style: {width: "300px", height: "272px"}}, 
+            React.createElement(Example, {dashed: "true", style: {width: "300px", height: "272px"}, 
+                     summary: "Default / incoming audio only call"}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(AcceptCallView, {callType: CALL_TYPES.AUDIO_ONLY, 
                                 callerId: "Mr Smith", 
@@ -642,7 +649,8 @@
           ), 
 
           React.createElement(Section, {name: "AcceptCallView-ActiveState"}, 
-            React.createElement(Example, {summary: "Default", dashed: "true", style: {width: "300px", height: "272px"}}, 
+            React.createElement(Example, {dashed: "true", style: {width: "300px", height: "272px"}, 
+                     summary: "Default"}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(AcceptCallView, {callType: CALL_TYPES.AUDIO_VIDEO, 
                                 callerId: "Mr Smith", 
@@ -656,52 +664,53 @@
           React.createElement(Section, {name: "ConversationToolbar"}, 
             React.createElement("h2", null, "Desktop Conversation Window"), 
             React.createElement("div", {className: "fx-embedded override-position"}, 
-              React.createElement(Example, {summary: "Default", style: {width: "300px", height: "26px"}}, 
-                React.createElement(ConversationToolbar, {video: {enabled: true}, 
-                                     audio: {enabled: true}, 
+              React.createElement(Example, {style: {width: "300px", height: "26px"}, summary: "Default"}, 
+                React.createElement(ConversationToolbar, {audio: {enabled: true}, 
                                      hangup: noop, 
-                                     publishStream: noop})
+                                     publishStream: noop, 
+                                     video: {enabled: true}})
               ), 
-              React.createElement(Example, {summary: "Video muted", style: {width: "300px", height: "26px"}}, 
-                React.createElement(ConversationToolbar, {video: {enabled: false}, 
-                                     audio: {enabled: true}, 
+              React.createElement(Example, {style: {width: "300px", height: "26px"}, summary: "Video muted"}, 
+                React.createElement(ConversationToolbar, {audio: {enabled: true}, 
                                      hangup: noop, 
-                                     publishStream: noop})
+                                     publishStream: noop, 
+                                     video: {enabled: false}})
               ), 
-              React.createElement(Example, {summary: "Audio muted", style: {width: "300px", height: "26px"}}, 
-                React.createElement(ConversationToolbar, {video: {enabled: true}, 
-                                     audio: {enabled: false}, 
+              React.createElement(Example, {style: {width: "300px", height: "26px"}, summary: "Audio muted"}, 
+                React.createElement(ConversationToolbar, {audio: {enabled: false}, 
                                      hangup: noop, 
-                                     publishStream: noop})
+                                     publishStream: noop, 
+                                     video: {enabled: true}})
               )
             ), 
 
             React.createElement("h2", null, "Standalone"), 
             React.createElement("div", {className: "standalone override-position"}, 
               React.createElement(Example, {summary: "Default"}, 
-                React.createElement(ConversationToolbar, {video: {enabled: true}, 
-                                     audio: {enabled: true}, 
+                React.createElement(ConversationToolbar, {audio: {enabled: true}, 
                                      hangup: noop, 
-                                     publishStream: noop})
+                                     publishStream: noop, 
+                                     video: {enabled: true}})
               ), 
               React.createElement(Example, {summary: "Video muted"}, 
-                React.createElement(ConversationToolbar, {video: {enabled: false}, 
-                                     audio: {enabled: true}, 
+                React.createElement(ConversationToolbar, {audio: {enabled: true}, 
                                      hangup: noop, 
-                                     publishStream: noop})
+                                     publishStream: noop, 
+                                     video: {enabled: false}})
               ), 
               React.createElement(Example, {summary: "Audio muted"}, 
-                React.createElement(ConversationToolbar, {video: {enabled: true}, 
-                                     audio: {enabled: false}, 
+                React.createElement(ConversationToolbar, {audio: {enabled: false}, 
                                      hangup: noop, 
-                                     publishStream: noop})
+                                     publishStream: noop, 
+                                     video: {enabled: true}})
               )
             )
           ), 
 
           React.createElement(Section, {name: "PendingConversationView (Desktop)"}, 
-            React.createElement(Example, {summary: "Connecting", dashed: "true", 
-                     style: {width: "300px", height: "272px"}}, 
+            React.createElement(Example, {dashed: "true", 
+                     style: {width: "300px", height: "272px"}, 
+                     summary: "Connecting"}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopPendingConversationView, {callState: "gather", 
                                                 contact: mockContact, 
@@ -711,24 +720,27 @@
           ), 
 
           React.createElement(Section, {name: "CallFailedView"}, 
-            React.createElement(Example, {summary: "Call Failed - Incoming", dashed: "true", 
-                     style: {width: "300px", height: "272px"}}, 
+            React.createElement(Example, {dashed: "true", 
+                     style: {width: "300px", height: "272px"}, 
+                     summary: "Call Failed - Incoming"}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(CallFailedView, {dispatcher: dispatcher, 
                                 outgoing: false, 
                                 store: conversationStore})
               )
             ), 
-            React.createElement(Example, {summary: "Call Failed - Outgoing", dashed: "true", 
-                     style: {width: "300px", height: "272px"}}, 
+            React.createElement(Example, {dashed: "true", 
+                     style: {width: "300px", height: "272px"}, 
+                     summary: "Call Failed - Outgoing"}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(CallFailedView, {dispatcher: dispatcher, 
                                 outgoing: true, 
                                 store: conversationStore})
               )
             ), 
-            React.createElement(Example, {summary: "Call Failed — with call URL error", dashed: "true", 
-                     style: {width: "300px", height: "272px"}}, 
+            React.createElement(Example, {dashed: "true", 
+                     style: {width: "300px", height: "272px"}, 
+                     summary: "Call Failed — with call URL error"}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(CallFailedView, {dispatcher: dispatcher, emailLinkError: true, 
                                 outgoing: true, 
@@ -738,57 +750,61 @@
           ), 
 
           React.createElement(Section, {name: "OngoingConversationView"}, 
-            React.createElement(FramedExample, {width: 298, height: 254, 
-                           summary: "Desktop ongoing conversation window"}, 
+            React.createElement(FramedExample, {height: 254, 
+                           summary: "Desktop ongoing conversation window", 
+                           width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
-                  dispatcher: dispatcher, 
-                  video: {enabled: true}, 
                   audio: {enabled: true}, 
+                  dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
+                  mediaConnected: true, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   remoteVideoEnabled: true, 
-                  mediaConnected: true})
+                  video: {enabled: true}})
               )
             ), 
 
-            React.createElement(FramedExample, {width: 800, height: 600, 
-                           summary: "Desktop ongoing conversation window large"}, 
+            React.createElement(FramedExample, {height: 600, 
+                           summary: "Desktop ongoing conversation window large", 
+                           width: 800}, 
                 React.createElement("div", {className: "fx-embedded"}, 
                   React.createElement(OngoingConversationView, {
-                    dispatcher: dispatcher, 
-                    video: {enabled: true}, 
                     audio: {enabled: true}, 
+                    dispatcher: dispatcher, 
                     localPosterUrl: "sample-img/video-screen-local.png", 
+                    mediaConnected: true, 
                     remotePosterUrl: "sample-img/video-screen-remote.png", 
                     remoteVideoEnabled: true, 
-                    mediaConnected: true})
+                    video: {enabled: true}})
                 )
             ), 
 
-            React.createElement(FramedExample, {width: 298, height: 254, 
-              summary: "Desktop ongoing conversation window - local face mute"}, 
+            React.createElement(FramedExample, {height: 254, 
+              summary: "Desktop ongoing conversation window - local face mute", 
+              width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
-                  dispatcher: dispatcher, 
-                  video: {enabled: false}, 
                   audio: {enabled: true}, 
-                  remoteVideoEnabled: true, 
+                  dispatcher: dispatcher, 
+                  mediaConnected: true, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
-                  mediaConnected: true})
+                  remoteVideoEnabled: true, 
+                  video: {enabled: false}})
               )
             ), 
 
-            React.createElement(FramedExample, {width: 298, height: 254, 
-              summary: "Desktop ongoing conversation window - remote face mute"}, 
+            React.createElement(FramedExample, {height: 254, 
+              summary: "Desktop ongoing conversation window - remote face mute", 
+              width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
-                  dispatcher: dispatcher, 
-                  video: {enabled: true}, 
                   audio: {enabled: true}, 
-                  remoteVideoEnabled: false, 
+                  dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
-                  mediaConnected: true})
+                  mediaConnected: true, 
+                  remoteVideoEnabled: false, 
+                  video: {enabled: true}})
               )
             )
 
@@ -799,14 +815,20 @@
               React.createElement("strong", null, "Note:"), " For the useable demo, you can access submitted data at ", 
               React.createElement("a", {href: "https://input.allizom.org/"}, "input.allizom.org"), "."
             ), 
-            React.createElement(Example, {summary: "Default (useable demo)", dashed: "true", style: {width: "300px", height: "272px"}}, 
+            React.createElement(Example, {dashed: "true", 
+                     style: {width: "300px", height: "272px"}, 
+                     summary: "Default (useable demo)"}, 
               React.createElement(FeedbackView, {feedbackStore: feedbackStore})
             ), 
-            React.createElement(Example, {summary: "Detailed form", dashed: "true", style: {width: "300px", height: "272px"}}, 
-              React.createElement(FeedbackView, {feedbackStore: feedbackStore, feedbackState: FEEDBACK_STATES.DETAILS})
+            React.createElement(Example, {dashed: "true", 
+                     style: {width: "300px", height: "272px"}, 
+                     summary: "Detailed form"}, 
+              React.createElement(FeedbackView, {feedbackState: FEEDBACK_STATES.DETAILS, feedbackStore: feedbackStore})
             ), 
-            React.createElement(Example, {summary: "Thank you!", dashed: "true", style: {width: "300px", height: "272px"}}, 
-              React.createElement(FeedbackView, {feedbackStore: feedbackStore, feedbackState: FEEDBACK_STATES.SENT})
+            React.createElement(Example, {dashed: "true", 
+                     style: {width: "300px", height: "272px"}, 
+                     summary: "Thank you!"}, 
+              React.createElement(FeedbackView, {feedbackState: FEEDBACK_STATES.SENT, feedbackStore: feedbackStore})
             )
           ), 
 
@@ -845,287 +867,330 @@
           ), 
 
           React.createElement(Section, {name: "DesktopRoomConversationView"}, 
-            React.createElement(FramedExample, {width: 298, height: 254, 
-              summary: "Desktop room conversation (invitation, text-chat inclusion/scrollbars don't happen in real client)"}, 
+            React.createElement(FramedExample, {
+              height: 254, 
+              summary: "Desktop room conversation (invitation, text-chat inclusion/scrollbars don't happen in real client)", 
+              width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopRoomConversationView, {
-                  roomStore: invitationRoomStore, 
                   dispatcher: dispatcher, 
-                  mozLoop: navigator.mozLoop, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
-                  roomState: ROOM_STATES.INIT})
+                  mozLoop: navigator.mozLoop, 
+                  roomState: ROOM_STATES.INIT, 
+                  roomStore: invitationRoomStore})
               )
             ), 
 
-            React.createElement(FramedExample, {width: 298, height: 394, dashed: true, 
-              summary: "Desktop room conversation (loading)"}, 
+            React.createElement(FramedExample, {
+              dashed: true, 
+              height: 394, 
+              summary: "Desktop room conversation (loading)", 
+              width: 298}, 
               /* Hide scrollbars here. Rotating loading div overflows and causes
                scrollbars to appear */
               React.createElement("div", {className: "fx-embedded overflow-hidden"}, 
                 React.createElement(DesktopRoomConversationView, {
-                  roomStore: desktopRoomStoreLoading, 
                   dispatcher: dispatcher, 
-                  mozLoop: navigator.mozLoop, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
+                  mozLoop: navigator.mozLoop, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
-                  roomState: ROOM_STATES.HAS_PARTICIPANTS})
+                  roomState: ROOM_STATES.HAS_PARTICIPANTS, 
+                  roomStore: desktopRoomStoreLoading})
               )
             ), 
 
-            React.createElement(FramedExample, {width: 298, height: 254, 
-              summary: "Desktop room conversation"}, 
+            React.createElement(FramedExample, {height: 254, 
+                           summary: "Desktop room conversation"}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopRoomConversationView, {
-                  roomStore: roomStore, 
                   dispatcher: dispatcher, 
-                  mozLoop: navigator.mozLoop, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
+                  mozLoop: navigator.mozLoop, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
-                  roomState: ROOM_STATES.HAS_PARTICIPANTS})
+                  roomState: ROOM_STATES.HAS_PARTICIPANTS, 
+                  roomStore: roomStore})
               )
             ), 
 
-            React.createElement(FramedExample, {width: 298, height: 394, dashed: true, 
-                           summary: "Desktop room conversation local face-mute"}, 
+            React.createElement(FramedExample, {dashed: true, 
+                           height: 394, 
+                           summary: "Desktop room conversation local face-mute", 
+                           width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopRoomConversationView, {
-                  roomStore: desktopLocalFaceMuteRoomStore, 
                   dispatcher: dispatcher, 
                   mozLoop: navigator.mozLoop, 
-                  remotePosterUrl: "sample-img/video-screen-remote.png"})
+                  remotePosterUrl: "sample-img/video-screen-remote.png", 
+                  roomStore: desktopLocalFaceMuteRoomStore})
               )
             ), 
 
-            React.createElement(FramedExample, {width: 298, height: 394, dashed: true, 
-                           summary: "Desktop room conversation remote face-mute"}, 
+            React.createElement(FramedExample, {dashed: true, height: 394, 
+                           summary: "Desktop room conversation remote face-mute", 
+                           width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopRoomConversationView, {
-                  roomStore: desktopRemoteFaceMuteRoomStore, 
                   dispatcher: dispatcher, 
+                  localPosterUrl: "sample-img/video-screen-local.png", 
                   mozLoop: navigator.mozLoop, 
-                  localPosterUrl: "sample-img/video-screen-local.png"})
+                  roomStore: desktopRemoteFaceMuteRoomStore})
               )
             )
           ), 
 
           React.createElement(Section, {name: "StandaloneRoomView"}, 
-            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
-                           cssClass: "standalone", 
-                           summary: "Standalone room conversation (ready)"}, 
+            React.createElement(FramedExample, {cssClass: "standalone", 
+                           dashed: true, 
+                           height: 483, 
+                           summary: "Standalone room conversation (ready)", 
+                           width: 644}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
-                  dispatcher: dispatcher, 
                   activeRoomStore: readyRoomStore, 
-                  roomState: ROOM_STATES.READY, 
-                  isFirefox: true})
+                  dispatcher: dispatcher, 
+                  isFirefox: true, 
+                  roomState: ROOM_STATES.READY})
               )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
-              summary: "Standalone room conversation (joined)", 
-              cssClass: "standalone", 
-              onContentsRendered: joinedRoomStore.forcedUpdate}, 
+            React.createElement(FramedExample, {cssClass: "standalone", 
+                           dashed: true, 
+                           height: 483, 
+                           onContentsRendered: joinedRoomStore.forcedUpdate, 
+                           summary: "Standalone room conversation (joined)", 
+                           width: 644}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
-                  dispatcher: dispatcher, 
                   activeRoomStore: joinedRoomStore, 
-                  localPosterUrl: "sample-img/video-screen-local.png", 
-                  isFirefox: true})
+                  dispatcher: dispatcher, 
+                  isFirefox: true, 
+                  localPosterUrl: "sample-img/video-screen-local.png"})
               )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
-              summary: "Standalone room conversation (loading remote)", 
-              cssClass: "standalone", 
-              onContentsRendered: loadingRemoteVideoRoomStore.forcedUpdate}, 
+            React.createElement(FramedExample, {cssClass: "standalone", 
+                           dashed: true, 
+                           height: 483, 
+                           onContentsRendered: loadingRemoteVideoRoomStore.forcedUpdate, 
+                           summary: "Standalone room conversation (loading remote)", 
+                           width: 644}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
-                  dispatcher: dispatcher, 
                   activeRoomStore: loadingRemoteVideoRoomStore, 
-                  localPosterUrl: "sample-img/video-screen-local.png", 
-                  isFirefox: true})
+                  dispatcher: dispatcher, 
+                  isFirefox: true, 
+                  localPosterUrl: "sample-img/video-screen-local.png"})
               )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
-                           cssClass: "standalone", 
+            React.createElement(FramedExample, {cssClass: "standalone", 
+                           dashed: true, 
+                           height: 483, 
                            onContentsRendered: updatingActiveRoomStore.forcedUpdate, 
-                           summary: "Standalone room conversation (has-participants, 644x483)"}, 
+                           summary: "Standalone room conversation (has-participants, 644x483)", 
+                           width: 644}, 
                 React.createElement("div", {className: "standalone"}, 
                   React.createElement(StandaloneRoomView, {
-                    dispatcher: dispatcher, 
                     activeRoomStore: updatingActiveRoomStore, 
-                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
+                    dispatcher: dispatcher, 
                     isFirefox: true, 
                     localPosterUrl: "sample-img/video-screen-local.png", 
-                    remotePosterUrl: "sample-img/video-screen-remote.png"})
+                    remotePosterUrl: "sample-img/video-screen-remote.png", 
+                    roomState: ROOM_STATES.HAS_PARTICIPANTS})
                 )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
-                           cssClass: "standalone", 
-                           onContentsRendered: localFaceMuteRoomStore.forcedUpdate, 
-                           summary: "Standalone room conversation (local face mute, has-participants, 644x483)"}, 
+            React.createElement(FramedExample, {
+              cssClass: "standalone", 
+              dashed: true, 
+              height: 483, 
+              onContentsRendered: localFaceMuteRoomStore.forcedUpdate, 
+              summary: "Standalone room conversation (local face mute, has-participants, 644x483)", 
+              width: 644}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
-                  dispatcher: dispatcher, 
                   activeRoomStore: localFaceMuteRoomStore, 
+                  dispatcher: dispatcher, 
                   isFirefox: true, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   remotePosterUrl: "sample-img/video-screen-remote.png"})
               )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
-                           cssClass: "standalone", 
-                           onContentsRendered: remoteFaceMuteRoomStore.forcedUpdate, 
-                           summary: "Standalone room conversation (remote face mute, has-participants, 644x483)"}, 
+            React.createElement(FramedExample, {
+              cssClass: "standalone", 
+              dashed: true, 
+              height: 483, 
+              onContentsRendered: remoteFaceMuteRoomStore.forcedUpdate, 
+              summary: "Standalone room conversation (remote face mute, has-participants, 644x483)", 
+              width: 644}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
-                  dispatcher: dispatcher, 
                   activeRoomStore: remoteFaceMuteRoomStore, 
+                  dispatcher: dispatcher, 
                   isFirefox: true, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   remotePosterUrl: "sample-img/video-screen-remote.png"})
               )
             ), 
 
-            React.createElement(FramedExample, {width: 800, height: 660, dashed: true, 
-                           cssClass: "standalone", 
-                           onContentsRendered: loadingRemoteLoadingScreenStore.forcedUpdate, 
-              summary: "Standalone room convo (has-participants, loading screen share, loading remote video, 800x660)"}, 
+            React.createElement(FramedExample, {
+              cssClass: "standalone", 
+              dashed: true, 
+              height: 660, 
+              onContentsRendered: loadingRemoteLoadingScreenStore.forcedUpdate, 
+              summary: "Standalone room convo (has-participants, loading screen share, loading remote video, 800x660)", 
+              width: 800}, 
               /* Hide scrollbars here. Rotating loading div overflows and causes
                scrollbars to appear */
                React.createElement("div", {className: "standalone overflow-hidden"}, 
                   React.createElement(StandaloneRoomView, {
-                    dispatcher: dispatcher, 
                     activeRoomStore: loadingRemoteLoadingScreenStore, 
-                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
+                    dispatcher: dispatcher, 
                     isFirefox: true, 
                     localPosterUrl: "sample-img/video-screen-local.png", 
                     remotePosterUrl: "sample-img/video-screen-remote.png", 
-                    screenSharePosterUrl: "sample-img/video-screen-baz.png"}
-                  )
+                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
+                    screenSharePosterUrl: "sample-img/video-screen-baz.png"})
                 )
             ), 
 
-            React.createElement(FramedExample, {width: 800, height: 660, dashed: true, 
-                           cssClass: "standalone", 
-                           onContentsRendered: loadingScreenSharingRoomStore.forcedUpdate, 
-              summary: "Standalone room convo (has-participants, loading screen share, 800x660)"}, 
+            React.createElement(FramedExample, {
+              cssClass: "standalone", 
+              dashed: true, 
+              height: 660, 
+              onContentsRendered: loadingScreenSharingRoomStore.forcedUpdate, 
+              summary: "Standalone room convo (has-participants, loading screen share, 800x660)", 
+              width: 800}, 
               /* Hide scrollbars here. Rotating loading div overflows and causes
                scrollbars to appear */
                React.createElement("div", {className: "standalone overflow-hidden"}, 
                   React.createElement(StandaloneRoomView, {
-                    dispatcher: dispatcher, 
                     activeRoomStore: loadingScreenSharingRoomStore, 
-                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
+                    dispatcher: dispatcher, 
                     isFirefox: true, 
                     localPosterUrl: "sample-img/video-screen-local.png", 
                     remotePosterUrl: "sample-img/video-screen-remote.png", 
-                    screenSharePosterUrl: "sample-img/video-screen-baz.png"}
-                  )
+                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
+                    screenSharePosterUrl: "sample-img/video-screen-baz.png"})
                 )
             ), 
 
-            React.createElement(FramedExample, {width: 800, height: 660, dashed: true, 
-                           cssClass: "standalone", 
-                           onContentsRendered: updatingSharingRoomStore.forcedUpdate, 
-              summary: "Standalone room convo (has-participants, receivingScreenShare, 800x660)"}, 
+            React.createElement(FramedExample, {
+              cssClass: "standalone", 
+              dashed: true, 
+              height: 660, 
+              onContentsRendered: updatingSharingRoomStore.forcedUpdate, 
+              summary: "Standalone room convo (has-participants, receivingScreenShare, 800x660)", 
+              width: 800}, 
                 React.createElement("div", {className: "standalone"}, 
                   React.createElement(StandaloneRoomView, {
-                    dispatcher: dispatcher, 
                     activeRoomStore: updatingSharingRoomStore, 
-                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
+                    dispatcher: dispatcher, 
                     isFirefox: true, 
                     localPosterUrl: "sample-img/video-screen-local.png", 
                     remotePosterUrl: "sample-img/video-screen-remote.png", 
-                    screenSharePosterUrl: "sample-img/video-screen-terminal.png"}
-                  )
+                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
+                    screenSharePosterUrl: "sample-img/video-screen-terminal.png"})
                 )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
-                           cssClass: "standalone", 
-                           summary: "Standalone room conversation (full - FFx user)"}, 
+            React.createElement(FramedExample, {cssClass: "standalone", 
+                           dashed: true, 
+                           height: 483, 
+                           summary: "Standalone room conversation (full - FFx user)", 
+                           width: 644}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
-                  dispatcher: dispatcher, 
                   activeRoomStore: fullActiveRoomStore, 
+                  dispatcher: dispatcher, 
                   isFirefox: true})
               )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
-                           cssClass: "standalone", 
-                           summary: "Standalone room conversation (full - non FFx user)"}, 
+            React.createElement(FramedExample, {cssClass: "standalone", 
+                           dashed: true, 
+                           height: 483, 
+                           summary: "Standalone room conversation (full - non FFx user)", 
+                           width: 644}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
-                  dispatcher: dispatcher, 
                   activeRoomStore: fullActiveRoomStore, 
+                  dispatcher: dispatcher, 
                   isFirefox: false})
               )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
-                           cssClass: "standalone", 
-                           summary: "Standalone room conversation (feedback)"}, 
+            React.createElement(FramedExample, {cssClass: "standalone", 
+                           dashed: true, 
+                           height: 483, 
+                           summary: "Standalone room conversation (feedback)", 
+                           width: 644}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
-                  dispatcher: dispatcher, 
                   activeRoomStore: endedRoomStore, 
+                  dispatcher: dispatcher, 
                   feedbackStore: feedbackStore, 
                   isFirefox: false})
               )
             ), 
 
-            React.createElement(FramedExample, {width: 644, height: 483, dashed: true, 
-                           cssClass: "standalone", 
-                           summary: "Standalone room conversation (failed)"}, 
+            React.createElement(FramedExample, {cssClass: "standalone", 
+                           dashed: true, 
+                           height: 483, 
+                           summary: "Standalone room conversation (failed)", 
+                           width: 644}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(StandaloneRoomView, {
-                  dispatcher: dispatcher, 
                   activeRoomStore: failedRoomStore, 
+                  dispatcher: dispatcher, 
                   isFirefox: false})
               )
             )
           ), 
 
           React.createElement(Section, {name: "StandaloneRoomView (Mobile)"}, 
-            React.createElement(FramedExample, {width: 600, height: 480, cssClass: "standalone", 
-                           dashed: true, 
-                           onContentsRendered: updatingActiveRoomStore.forcedUpdate, 
-                           summary: "Standalone room conversation (has-participants, 600x480)"}, 
+            React.createElement(FramedExample, {
+              cssClass: "standalone", 
+              dashed: true, 
+              height: 480, 
+              onContentsRendered: updatingActiveRoomStore.forcedUpdate, 
+              summary: "Standalone room conversation (has-participants, 600x480)", 
+              width: 600}, 
                 React.createElement("div", {className: "standalone"}, 
                   React.createElement(StandaloneRoomView, {
-                    dispatcher: dispatcher, 
                     activeRoomStore: updatingActiveRoomStore, 
-                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
-                    isFirefox: true, 
-                    localPosterUrl: "sample-img/video-screen-local.png", 
-                    remotePosterUrl: "sample-img/video-screen-remote.png"})
-                )
-            ), 
-
-            React.createElement(FramedExample, {width: 600, height: 480, 
-                           onContentsRendered: updatingSharingRoomStore.forcedUpdate, 
-              summary: "Standalone room convo (has-participants, receivingScreenShare, 600x480)"}, 
-                React.createElement("div", {className: "standalone", cssClass: "standalone"}, 
-                  React.createElement(StandaloneRoomView, {
                     dispatcher: dispatcher, 
-                    activeRoomStore: updatingSharingRoomStore, 
-                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
                     isFirefox: true, 
                     localPosterUrl: "sample-img/video-screen-local.png", 
                     remotePosterUrl: "sample-img/video-screen-remote.png", 
+                    roomState: ROOM_STATES.HAS_PARTICIPANTS})
+                )
+            ), 
+
+            React.createElement(FramedExample, {
+              height: 480, 
+              onContentsRendered: updatingSharingRoomStore.forcedUpdate, 
+              summary: "Standalone room convo (has-participants, receivingScreenShare, 600x480)", 
+              width: 600}, 
+                React.createElement("div", {className: "standalone", cssClass: "standalone"}, 
+                  React.createElement(StandaloneRoomView, {
+                    activeRoomStore: updatingSharingRoomStore, 
+                    dispatcher: dispatcher, 
+                    isFirefox: true, 
+                    localPosterUrl: "sample-img/video-screen-local.png", 
+                    remotePosterUrl: "sample-img/video-screen-remote.png", 
+                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
                     screenSharePosterUrl: "sample-img/video-screen-terminal.png"})
                 )
             )
           ), 
 
           React.createElement(Section, {name: "TextChatView"}, 
-            React.createElement(FramedExample, {width: 298, height: 160, dashed: true, 
-                           summary: "TextChatView: desktop embedded"}, 
+            React.createElement(FramedExample, {dashed: true, 
+                           height: 160, 
+                           summary: "TextChatView: desktop embedded", 
+                           width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(TextChatView, {dispatcher: dispatcher, 
                               showAlways: false, 
@@ -1133,9 +1198,11 @@
               )
             ), 
 
-            React.createElement(FramedExample, {width: 200, height: 400, dashed: true, 
-                           cssClass: "standalone", 
-                           summary: "Standalone Text Chat conversation (200x400)"}, 
+            React.createElement(FramedExample, {cssClass: "standalone", 
+                           dashed: true, 
+                           height: 400, 
+                           summary: "Standalone Text Chat conversation (200x400)", 
+                           width: 200}, 
               React.createElement("div", {className: "standalone text-chat-example"}, 
                 React.createElement("div", {className: "media-wrapper"}, 
                   React.createElement(TextChatView, {
@@ -1147,7 +1214,7 @@
             )
           ), 
 
-          React.createElement(Section, {name: "SVG icons preview", className: "svg-icons"}, 
+          React.createElement(Section, {className: "svg-icons", name: "SVG icons preview"}, 
             React.createElement(Example, {summary: "10x10"}, 
               React.createElement(SVGIcons, {size: "10x10"})
             ), 

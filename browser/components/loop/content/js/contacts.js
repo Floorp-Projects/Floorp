@@ -135,8 +135,8 @@ loop.contacts = (function(_, mozL10n) {
           React.createElement(ButtonGroup, null, 
             React.createElement(Button, {caption: mozL10n.get("gravatars_promo_button_nothanks"), 
                     onClick: this.handleCloseButtonClick}), 
-            React.createElement(Button, {caption: mozL10n.get("gravatars_promo_button_use"), 
-                    additionalClass: "button-accept", 
+            React.createElement(Button, {additionalClass: "button-accept", 
+                    caption: mozL10n.get("gravatars_promo_button_use"), 
                     onClick: this.handleUseButtonClick})
           )
         )
@@ -191,31 +191,35 @@ loop.contacts = (function(_, mozL10n) {
                             "dropdown-menu-up": this.state.openDirUp })}, 
           React.createElement("li", {className: cx({ "dropdown-menu-item": true,
                               "disabled": this.props.blocked }), 
-              onClick: this.onItemClick, 
-              "data-action": "video-call"}, 
+              "data-action": "video-call", 
+              onClick: this.onItemClick}, 
             React.createElement("i", {className: "icon icon-video-call"}), 
             mozL10n.get("video_call_menu_button")
           ), 
           React.createElement("li", {className: cx({ "dropdown-menu-item": true,
                               "disabled": this.props.blocked }), 
-              onClick: this.onItemClick, "data-action": "audio-call"}, 
+              "data-action": "audio-call", 
+              onClick: this.onItemClick}, 
             React.createElement("i", {className: "icon icon-audio-call"}), 
             mozL10n.get("audio_call_menu_button")
           ), 
           React.createElement("li", {className: cx({ "dropdown-menu-item": true,
                               "disabled": !this.props.canEdit }), 
-              onClick: this.onItemClick, "data-action": "edit"}, 
+              "data-action": "edit", 
+              onClick: this.onItemClick}, 
             React.createElement("i", {className: "icon icon-edit"}), 
             mozL10n.get("edit_contact_menu_button")
           ), 
           React.createElement("li", {className: "dropdown-menu-item", 
-              onClick: this.onItemClick, "data-action": blockAction}, 
+              "data-action": blockAction, 
+              onClick: this.onItemClick}, 
             React.createElement("i", {className: "icon icon-" + blockAction}), 
             mozL10n.get(blockLabel)
           ), 
           React.createElement("li", {className: cx({ "dropdown-menu-item": true,
                               "disabled": !this.props.canEdit }), 
-              onClick: this.onItemClick, "data-action": "remove"}, 
+               "data-action": "remove", 
+               onClick: this.onItemClick}, 
             React.createElement("i", {className: "icon icon-remove"}), 
             mozL10n.get("remove_contact_menu_button2")
           )
@@ -312,9 +316,9 @@ loop.contacts = (function(_, mozL10n) {
                onClick: this.showDropdownMenu})
           ), 
           this.state.showMenu
-            ? React.createElement(ContactDropdown, {handleAction: this.handleAction, 
+            ? React.createElement(ContactDropdown, {blocked: this.props.contact.blocked, 
                                canEdit: this.canEdit(), 
-                               blocked: this.props.contact.blocked})
+                               handleAction: this.handleAction})
             : null
           
         )
@@ -549,8 +553,9 @@ loop.contacts = (function(_, mozL10n) {
 
       let viewForItem = item => {
         return (
-          React.createElement(ContactDetail, {key: item._guid, contact: item, 
-                         handleContactAction: this.handleContactAction})
+          React.createElement(ContactDetail, {contact: item, 
+                         handleContactAction: this.handleContactAction, 
+                         key: item._guid})
         );
       };
 
@@ -717,16 +722,23 @@ loop.contacts = (function(_, mozL10n) {
                    ? mozL10n.get("add_contact_button")
                    : mozL10n.get("edit_contact_title")), 
           React.createElement("label", null, mozL10n.get("edit_contact_name_label")), 
-          React.createElement("input", {ref: "name", required: true, pattern: "\\s*\\S.*", type: "text", 
-                 className: cx({pristine: this.state.pristine}), 
+          React.createElement("input", {className: cx({pristine: this.state.pristine}), 
+                 pattern: "\\s*\\S.*", 
+                 ref: "name", 
+                 required: true, 
+                 type: "text", 
                  valueLink: this.linkState("name")}), 
           React.createElement("label", null, mozL10n.get("edit_contact_email_label")), 
-          React.createElement("input", {ref: "email", type: "email", required: phoneOrEmailRequired, 
-                 className: cx({pristine: this.state.pristine}), 
+          React.createElement("input", {className: cx({pristine: this.state.pristine}), 
+                 ref: "email", 
+                 required: phoneOrEmailRequired, 
+                 type: "email", 
                  valueLink: this.linkState("email")}), 
           React.createElement("label", null, mozL10n.get("new_contact_fxos_phone_placeholder")), 
-          React.createElement("input", {ref: "tel", type: "tel", required: phoneOrEmailRequired, 
-                 className: cx({pristine: this.state.pristine}), 
+          React.createElement("input", {className: cx({pristine: this.state.pristine}), 
+                 ref: "tel", 
+                 required: phoneOrEmailRequired, 
+                 type: "tel", 
                  valueLink: this.linkState("tel")}), 
           React.createElement(ButtonGroup, null, 
             React.createElement(Button, {additionalClass: "button-cancel", 
