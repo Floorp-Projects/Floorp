@@ -28,7 +28,7 @@ function run_test()
 
 function test_source_maps()
 {
-  gClient.addOneTimeListener("newSource", function (aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("newSource", function (aEvent, aPacket) {
     let sourceClient = gThreadClient.source(aPacket.source);
     sourceClient.source(function ({error, source}) {
       do_check_true(!error, "should be able to grab the source");

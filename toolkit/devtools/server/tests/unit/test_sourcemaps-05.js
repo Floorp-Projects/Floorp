@@ -27,7 +27,7 @@ function run_test()
 
 function test_relative_source_map()
 {
-  gClient.addOneTimeListener("newSource", function _onNewSource(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("newSource", function _onNewSource(aEvent, aPacket) {
     do_check_eq(aEvent, "newSource");
     do_check_eq(aPacket.type, "newSource");
     do_check_true(!!aPacket.source);

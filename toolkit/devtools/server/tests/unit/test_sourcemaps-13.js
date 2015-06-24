@@ -77,7 +77,7 @@ function setup_new_code() {
   code += "\n//# sourceMappingURL=" + getFileUrl(MAP_FILE_NAME, true);
   writeFile(MAP_FILE_NAME, map.toString());
 
-  gClient.addOneTimeListener("newSource", test_new_sources);
+  gThreadClient.addOneTimeListener("newSource", test_new_sources);
   Cu.evalInSandbox(code,
                    gDebuggee,
                    "1.8",
