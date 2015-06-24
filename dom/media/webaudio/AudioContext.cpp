@@ -110,11 +110,6 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
   // call them after mDestination has been set up.
   mDestination->CreateAudioChannelAgent();
   mDestination->SetIsOnlyNodeForContext(true);
-  // We don't use the cubeb context yet, but need to ensure it is created on
-  // the main thread.
-  if (!aIsOffline && !CubebUtils::GetCubebContext()) {
-    NS_WARNING("Audio backend initialization failed.");
-  }
 }
 
 AudioContext::~AudioContext()
