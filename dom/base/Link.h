@@ -64,7 +64,6 @@ public:
   void SetHostname(const nsAString &aHostname, ErrorResult& aError);
   void SetPathname(const nsAString &aPathname, ErrorResult& aError);
   void SetSearch(const nsAString &aSearch, ErrorResult& aError);
-  void SetSearchParams(mozilla::dom::URLSearchParams& aSearchParams);
   void SetPort(const nsAString &aPort, ErrorResult& aError);
   void SetHash(const nsAString &aHash, ErrorResult& aError);
   void GetOrigin(nsAString &aOrigin, ErrorResult& aError);
