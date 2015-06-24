@@ -129,12 +129,6 @@ class VRHMDInfo;
 } // namespace gfx
 } // namespace mozilla
 
-extern nsresult
-NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
-                          bool *aIsInterval,
-                          int32_t *aInterval,
-                          nsIScriptTimeoutHandler **aRet);
-
 extern already_AddRefed<nsIScriptTimeoutHandler>
 NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
                           mozilla::dom::Function& aFunction,
@@ -1335,7 +1329,6 @@ public:
   }
 
   // JS specific timeout functions (JS args grabbed from context).
-  nsresult SetTimeoutOrInterval(bool aIsInterval, int32_t* aReturn);
   nsresult ResetTimersForNonBackgroundWindow();
 
   // The timeout implementation functions.

@@ -104,13 +104,12 @@ void InitPreferredSampleRate()
 cubeb* GetCubebContextUnlocked()
 {
   sMutex.AssertCurrentThreadOwns();
-  if (!sCubebContext) {
-    MOZ_ASSERT(NS_IsMainThread());
-    if (cubeb_init(&sCubebContext, "CubebUtils") != CUBEB_OK) {
-      NS_WARNING("cubeb_init failed");
-    }
+  if (sCubebContext ||
+      cubeb_init(&sCubebContext, "CubebUtils") == CUBEB_OK) {
+    return sCubebContext;
   }
-  return sCubebContext;
+  NS_WARNING("cubeb_init failed");
+  return nullptr;
 }
 
 uint32_t GetCubebLatency()

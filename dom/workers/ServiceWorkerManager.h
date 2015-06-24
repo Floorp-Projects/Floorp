@@ -552,6 +552,8 @@ private:
 
   struct PendingOperation;
   nsTArray<PendingOperation> mPendingOperations;
+
+  bool mShuttingDown;
 };
 
 } // namespace workers
