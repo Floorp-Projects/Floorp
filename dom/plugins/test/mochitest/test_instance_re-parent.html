@@ -12,7 +12,7 @@
   SimpleTest.waitForExplicitFinish();
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
-  const MAX_CHECK_PLUGIN_STOPPED_ATTEMPTS = 5;
+  const MAX_CHECK_PLUGIN_STOPPED_ATTEMPTS = 50;
   var numCheckPluginStoppedAttempts = 0;
   var exceptionThrown = false;
   var p = null;
