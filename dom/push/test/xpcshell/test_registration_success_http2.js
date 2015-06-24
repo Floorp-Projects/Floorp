@@ -41,20 +41,17 @@ add_task(function* test_pushNotifications() {
     subscriptionUri: serverURL + '/subscriptionA',
     pushEndpoint: serverURL + '/pushEndpointA',
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpointA',
-    scope: 'https://example.net/a',
-    originAttributes: ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
+    scope: 'https://example.net/a'
   }, {
     subscriptionUri: serverURL + '/subscriptionB',
     pushEndpoint: serverURL + '/pushEndpointB',
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpointB',
-    scope: 'https://example.net/b',
-    originAttributes: ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
+    scope: 'https://example.net/b'
   }, {
     subscriptionUri: serverURL + '/subscriptionC',
     pushEndpoint: serverURL + '/pushEndpointC',
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpointC',
-    scope: 'https://example.net/c',
-    originAttributes: ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
+    scope: 'https://example.net/c'
   }];
 
   for (let record of records) {
@@ -67,8 +64,7 @@ add_task(function* test_pushNotifications() {
   });
 
   let registration = yield PushNotificationService.registration(
-    'https://example.net/a',
-    ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }));
+    'https://example.net/a');
   equal(
     registration.pushEndpoint,
     serverURL + '/pushEndpointA',

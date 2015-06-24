@@ -57,20 +57,17 @@ add_task(function* test_pushNotifications() {
     subscriptionUri: serverURL + '/pushNotifications/subscription1',
     pushEndpoint: serverURL + '/pushEndpoint1',
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpoint1',
-    scope: 'https://example.com/page/1',
-    originAttributes: ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
+    scope: 'https://example.com/page/1'
   }, {
     subscriptionUri: serverURL + '/pushNotifications/subscription2',
     pushEndpoint: serverURL + '/pushEndpoint2',
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpoint2',
-    scope: 'https://example.com/page/2',
-    originAttributes: ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
+    scope: 'https://example.com/page/2'
   }, {
     subscriptionUri: serverURL + '/pushNotifications/subscription3',
     pushEndpoint: serverURL + '/pushEndpoint3',
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpoint3',
-    scope: 'https://example.com/page/3',
-    originAttributes: ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
+    scope: 'https://example.com/page/3'
   }];
 
   for (let record of records) {
