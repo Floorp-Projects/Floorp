@@ -46,7 +46,7 @@
       </hbox>
 
       <!-- More Information Button -->
-      <hbox id="identity-popup-button-container" flex="1" align="center">
+      <hbox id="identity-popup-button-container" align="center">
         <button id="identity-popup-more-info-button" flex="1"
                 label="&identity.moreInfoLinkText2;"
                 oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
