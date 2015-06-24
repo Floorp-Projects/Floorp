@@ -277,7 +277,7 @@ struct InternalGCMethods<Value>
         if (vp->isObject()) {
             gc::StoreBuffer* sb = reinterpret_cast<gc::Cell*>(&vp->toObject())->storeBuffer();
             if (sb)
-                sb->putValueFromAnyThread(vp);
+                sb->putRelocatableValueFromAnyThread(vp);
         }
     }
 
@@ -287,7 +287,7 @@ struct InternalGCMethods<Value>
         MOZ_ASSERT(!CurrentThreadIsIonCompiling());
         JSRuntime* rt = static_cast<js::gc::Cell*>(vp->toGCThing())->runtimeFromAnyThread();
         JS::shadow::Runtime* shadowRuntime = JS::shadow::Runtime::asShadowRuntime(rt);
-        shadowRuntime->gcStoreBufferPtr()->unputValueFromAnyThread(vp);
+        shadowRuntime->gcStoreBufferPtr()->removeRelocatableValueFromAnyThread(vp);
     }
 
     static void readBarrier(const Value& v) {
