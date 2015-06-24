@@ -212,6 +212,10 @@ loop.webapp = (function($, _, OT, mozL10n) {
   });
 
   var ConversationHeader = React.createClass({
+    propTypes: {
+      urlCreationDateString: React.PropTypes.string.isRequired
+    },
+
     render: function() {
       var cx = React.addons.classSet;
       var conversationUrl = location.href;

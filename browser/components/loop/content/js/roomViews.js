@@ -278,6 +278,8 @@ loop.roomViews = (function(mozL10n) {
     mixins: [React.addons.LinkedStateMixin],
 
     propTypes: {
+      // Only used for tests.
+      availableContext: React.PropTypes.object,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       editMode: React.PropTypes.bool,
       error: React.PropTypes.object,
