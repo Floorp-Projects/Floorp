@@ -379,6 +379,7 @@ NS_INTERFACE_MAP_END
 
 ServiceWorkerManager::ServiceWorkerManager()
   : mActor(nullptr)
+  , mShuttingDown(false)
 {
   // Register this component to PBackground.
   MOZ_ALWAYS_TRUE(BackgroundChild::GetOrCreateForCurrentThread(this));
@@ -388,19 +389,19 @@ ServiceWorkerManager::~ServiceWorkerManager()
 {
   // The map will assert if it is not empty when destroyed.
   mRegistrationInfos.Clear();
-
-  if (mActor) {
-    mActor->ManagerShuttingDown();
-
-    nsRefPtr<TeardownRunnable> runnable = new TeardownRunnable(mActor);
-    nsresult rv = NS_DispatchToMainThread(runnable);
-    unused << NS_WARN_IF(NS_FAILED(rv));
-  }
+  MOZ_ASSERT(!mActor);
 }
 
 void
 ServiceWorkerManager::Init()
 {
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    DebugOnly<nsresult> rv;
+    rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false /* ownsWeak */);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
+
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
     nsRefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
     MOZ_ASSERT(swr);
@@ -409,11 +410,8 @@ ServiceWorkerManager::Init()
     swr->GetRegistrations(data);
     LoadRegistrations(data);
 
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       DebugOnly<nsresult> rv;
-      rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false /* ownsWeak */);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
       rv = obs->AddObserver(this, PURGE_SESSION_HISTORY, false /* ownsWeak */);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       rv = obs->AddObserver(this, PURGE_DOMAIN_DATA, false /* ownsWeak */);
@@ -872,6 +870,7 @@ class ServiceWorkerRegisterJob final : public ServiceWorkerJob,
   nsRefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsRefPtr<ServiceWorkerInfo> mUpdateAndInstallInfo;
+  nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   ~ServiceWorkerRegisterJob()
   { }
@@ -892,15 +891,19 @@ public:
                            const nsCString& aScope,
                            const nsCString& aScriptSpec,
                            ServiceWorkerUpdateFinishCallback* aCallback,
-                           nsIPrincipal* aPrincipal)
+                           nsIPrincipal* aPrincipal,
+                           nsILoadGroup* aLoadGroup)
     : ServiceWorkerJob(aQueue)
     , mScope(aScope)
     , mScriptSpec(aScriptSpec)
     , mCallback(aCallback)
     , mPrincipal(aPrincipal)
+    , mLoadGroup(aLoadGroup)
     , mJobType(REGISTER_JOB)
     , mCanceled(false)
-  { }
+  {
+    MOZ_ASSERT(mLoadGroup);
+  }
 
   // [[Update]]
   ServiceWorkerRegisterJob(ServiceWorkerJobQueue* aQueue,
@@ -1230,7 +1233,7 @@ private:
     nsresult rv =
       serviceWorkerScriptCache::Compare(mRegistration->mPrincipal, cacheName,
                                         NS_ConvertUTF8toUTF16(mRegistration->mScriptSpec),
-                                        this);
+                                        this, mLoadGroup);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Fail(rv);
     }
@@ -1534,8 +1537,20 @@ ServiceWorkerManager::Register(nsIDOMWindow* aWindow,
   nsRefPtr<ServiceWorkerResolveWindowPromiseOnUpdateCallback> cb =
     new ServiceWorkerResolveWindowPromiseOnUpdateCallback(window, promise);
 
+  nsCOMPtr<nsILoadGroup> docLoadGroup = doc->GetDocumentLoadGroup();
+  nsRefPtr<WorkerLoadInfo::InterfaceRequestor> ir =
+    new WorkerLoadInfo::InterfaceRequestor(documentPrincipal, docLoadGroup);
+  ir->MaybeAddTabChild(docLoadGroup);
+
+  // Create a load group that is separate from, yet related to, the document's load group.
+  // This allows checks for interfaces like nsILoadContext to yield the values used by the
+  // the document, yet will not cancel the update job if the document's load group is cancelled.
+  nsCOMPtr<nsILoadGroup> loadGroup = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
+  rv = loadGroup->SetNotificationCallbacks(ir);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+
   nsRefPtr<ServiceWorkerRegisterJob> job =
-    new ServiceWorkerRegisterJob(queue, cleanedScope, spec, cb, documentPrincipal);
+    new ServiceWorkerRegisterJob(queue, cleanedScope, spec, cb, documentPrincipal, loadGroup);
   queue->Append(job);
 
   AssertIsOnMainThread();
@@ -1553,9 +1568,11 @@ ServiceWorkerManager::AppendPendingOperation(ServiceWorkerJobQueue* aQueue,
   MOZ_ASSERT(aQueue);
   MOZ_ASSERT(aJob);
 
-  PendingOperation* opt = mPendingOperations.AppendElement();
-  opt->mQueue = aQueue;
-  opt->mJob = aJob;
+  if (!mShuttingDown) {
+    PendingOperation* opt = mPendingOperations.AppendElement();
+    opt->mQueue = aQueue;
+    opt->mJob = aJob;
+  }
 }
 
 void
@@ -1564,8 +1581,10 @@ ServiceWorkerManager::AppendPendingOperation(nsIRunnable* aRunnable)
   MOZ_ASSERT(!mActor);
   MOZ_ASSERT(aRunnable);
 
-  PendingOperation* opt = mPendingOperations.AppendElement();
-  opt->mRunnable = aRunnable;
+  if (!mShuttingDown) {
+    PendingOperation* opt = mPendingOperations.AppendElement();
+    opt->mRunnable = aRunnable;
+  }
 }
 
 /*
@@ -2383,8 +2402,10 @@ private:
 
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
-    MOZ_ASSERT(swm->mActor);
-    swm->mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(mScope));
+    // Could it be that we are shutting down.
+    if (swm->mActor) {
+      swm->mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(mScope));
+    }
 
     nsAutoCString scopeKey;
     nsresult rv = swm->PrincipalToScopeKey(mPrincipal, scopeKey);
@@ -2735,9 +2756,14 @@ ServiceWorkerManager::StoreRegistration(
                                    nsIPrincipal* aPrincipal,
                                    ServiceWorkerRegistrationInfo* aRegistration)
 {
-  MOZ_ASSERT(mActor);
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aRegistration);
+
+  if (mShuttingDown) {
+    return;
+  }
+
+  MOZ_ASSERT(mActor);
 
   ServiceWorkerRegistrationData data;
   nsresult rv = PopulateRegistrationData(aPrincipal, aRegistration, data);
@@ -4064,6 +4090,10 @@ ServiceWorkerManager::RemoveRegistrationInternal(ServiceWorkerRegistrationInfo* 
   MOZ_ASSERT(aRegistration);
   MOZ_ASSERT(!aRegistration->IsControllingDocuments());
 
+  if (mShuttingDown) {
+    return;
+  }
+
   // All callers should be either from a job in which case the actor is
   // available, or from MaybeStopControlling(), in which case, this will only be
   // called if a valid registration is found. If a valid registration exists,
@@ -4497,21 +4527,22 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
                               const char* aTopic,
                               const char16_t* aData)
 {
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
-
   if (strcmp(aTopic, PURGE_SESSION_HISTORY) == 0) {
+    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
     RemoveAll();
     PropagateRemoveAll();
     return NS_OK;
   }
 
   if (strcmp(aTopic, PURGE_DOMAIN_DATA) == 0) {
+    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
     nsAutoString domain(aData);
     RemoveAndPropagate(NS_ConvertUTF16toUTF8(domain));
     return NS_OK;
   }
 
   if (strcmp(aTopic, WEBAPPS_CLEAR_DATA) == 0) {
+    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
     nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
       do_QueryInterface(aSubject);
     if (NS_WARN_IF(!params)) {
@@ -4541,18 +4572,35 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
     }
 
     RemoveAllRegistrations(principal);
-  } else if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    return NS_OK;
+  }
+
+  if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    mShuttingDown = true;
+
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-      obs->RemoveObserver(this, PURGE_SESSION_HISTORY);
-      obs->RemoveObserver(this, PURGE_DOMAIN_DATA);
-      obs->RemoveObserver(this, WEBAPPS_CLEAR_DATA);
+
+      if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        obs->RemoveObserver(this, PURGE_SESSION_HISTORY);
+        obs->RemoveObserver(this, PURGE_DOMAIN_DATA);
+        obs->RemoveObserver(this, WEBAPPS_CLEAR_DATA);
+      }
     }
-  } else {
-    MOZ_CRASH("Received message we aren't supposed to be registered for!");
+
+    if (mActor) {
+      mActor->ManagerShuttingDown();
+
+      nsRefPtr<TeardownRunnable> runnable = new TeardownRunnable(mActor);
+      nsresult rv = NS_DispatchToMainThread(runnable);
+      unused << NS_WARN_IF(NS_FAILED(rv));
+      mActor = nullptr;
+    }
+    return NS_OK;
   }
 
+  MOZ_CRASH("Received message we aren't supposed to be registered for!");
   return NS_OK;
 }
 

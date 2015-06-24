@@ -33,7 +33,10 @@
 
 class ThreadProfile;
 
+// NB: Packing this structure has been shown to cause SIGBUS issues on ARM.
+#ifndef __arm__
 #pragma pack(push, 1)
+#endif
 
 class ProfileEntry
 {
@@ -81,7 +84,9 @@ private:
   char mTagName;
 };
 
+#ifndef __arm__
 #pragma pack(pop)
+#endif
 
 class UniqueJSONStrings
 {

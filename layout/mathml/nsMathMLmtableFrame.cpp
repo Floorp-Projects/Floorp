@@ -772,9 +772,7 @@ nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
     nsIFrame* rgFrame = tableFrame->GetFirstPrincipalChild();
     if (!rgFrame || rgFrame->GetType() != nsGkAtoms::tableRowGroupFrame)
       return nullptr;
-    nsTableIterator rowIter(*rgFrame);
-    nsIFrame* rowFrame = rowIter.First();
-    for ( ; rowFrame; rowFrame = rowIter.Next()) {
+    for (nsIFrame* rowFrame : rgFrame->PrincipalChildList()) {
       if (aRowIndex == 0) {
         DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
         if (rowFrame->GetType() != nsGkAtoms::tableRowFrame)
