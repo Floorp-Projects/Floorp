@@ -62,6 +62,7 @@ public:
 
   virtual void InvalidateChildren() override;
   virtual bool RemoveChild(Accessible* aAccessible) override;
+  virtual Relation RelationByType(RelationType aType) override;
 
   // HyperTextAccessible (static helper method)
 
