@@ -95,7 +95,7 @@ TestTabActor.prototype = {
   actorPrefix: "TestTabActor",
 
   get window() {
-    return { wrappedJSObject: this._global };
+    return this._global;
   },
 
   get url() {

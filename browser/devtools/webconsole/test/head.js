@@ -226,6 +226,8 @@ let closeConsole = Task.async(function* (aTab) {
  */
 function waitForContextMenu(aPopup, aButton, aOnShown, aOnHidden)
 {
+  let deferred = promise.defer();
+
   function onPopupShown() {
     info("onPopupShown");
     aPopup.removeEventListener("popupshown", onPopupShown);
@@ -245,11 +247,10 @@ function waitForContextMenu(aPopup, aButton, aOnShown, aOnHidden)
     deferred.resolve(aPopup);
   }
 
-  let deferred = promise.defer();
   aPopup.addEventListener("popupshown", onPopupShown);
 
   info("wait for the context menu to open");
-  let eventDetails = { type: "contextmenu", button: 2};
+  let eventDetails = {type: "contextmenu", button: 2};
   EventUtils.synthesizeMouse(aButton, 2, 2, eventDetails,
                              aButton.ownerDocument.defaultView);
   return deferred.promise;
@@ -825,7 +826,7 @@ function openDebugger(aOptions = {})
 
   let target = TargetFactory.forTab(aOptions.tab);
   let toolbox = gDevTools.getToolbox(target);
-  let dbgPanelAlreadyOpen = toolbox.getPanel("jsdebugger");
+  let dbgPanelAlreadyOpen = toolbox && toolbox.getPanel("jsdebugger");
 
   gDevTools.showToolbox(target, "jsdebugger").then(function onSuccess(aToolbox) {
     let panel = aToolbox.getCurrentPanel();
@@ -854,6 +855,24 @@ function openDebugger(aOptions = {})
   });
 
   return deferred.promise;
+}
+
+/**
+ * Returns true if the caret in the debugger editor is placed at the specified
+ * position.
+ * @param  aPanel The debugger panel.
+ * @param {number} aLine The line number.
+ * @param {number} [aCol] The column number.
+ * @returns {boolean}
+ */
+function isDebuggerCaretPos(aPanel, aLine, aCol = 1) {
+  let editor = aPanel.panelWin.DebuggerView.editor;
+  let cursor = editor.getCursor();
+
+  // Source editor starts counting line and column numbers from 0.
+  info("Current editor caret position: " + (cursor.line + 1) + ", " +
+    (cursor.ch + 1));
+  return cursor.line == (aLine - 1) && cursor.ch == (aCol - 1);
 }
 
 /**
