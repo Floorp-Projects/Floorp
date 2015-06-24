@@ -33,7 +33,7 @@ function debug(s) {
 }
 
 const kPUSHHTTP2DB_DB_NAME = "pushHttp2";
-const kPUSHHTTP2DB_DB_VERSION = 1; // Change this if the IndexedDB format changes
+const kPUSHHTTP2DB_DB_VERSION = 3; // Change this if the IndexedDB format changes
 const kPUSHHTTP2DB_STORE_NAME = "pushHttp2";
 
 /**
@@ -291,6 +291,7 @@ SubscriptionListener.prototype = {
       pushReceiptEndpoint: linkParserResult.pushReceiptEndpoint,
       pageURL: this._subInfo.record.pageURL,
       scope: this._subInfo.record.scope,
+      originAttributes: this._subInfo.record.originAttributes,
       pushCount: 0,
       lastPush: 0
     };
@@ -385,15 +386,33 @@ this.PushServiceHttp2 = {
                           aDbInstance) {
     debug("upgradeSchemaHttp2()");
 
+    //XXXnsm We haven't shipped Push during this upgrade, so I'm just going to throw old
+    //registrations away without even informing the app.
+    if (aNewVersion != aOldVersion) {
+      try {
+        aDb.deleteObjectStore(aDbInstance._dbStoreName);
+      } catch (e) {
+        if (e.name === "NotFoundError") {
+          debug("No existing object store found");
+        } else {
+          throw e;
+        }
+      }
+    }
+
     let objectStore = aDb.createObjectStore(aDbInstance._dbStoreName,
                                             { keyPath: "subscriptionUri" });
 
     // index to fetch records based on endpoints. used by unregister
     objectStore.createIndex("pushEndpoint", "pushEndpoint", { unique: true });
 
-    // index to fetch records per scope, so we can identify endpoints
-    // associated with an app.
-    objectStore.createIndex("scope", "scope", { unique: true });
+    // index to fetch records by identifiers.
+    // In the current security model, the originAttributes distinguish between
+    // different 'apps' on the same origin. Since ServiceWorkers are
+    // same-origin to the scope they are registered for, the attributes and
+    // scope are enough to reconstruct a valid principal.
+    objectStore.createIndex("identifiers", ["scope", "originAttributes"], { unique: true });
+    objectStore.createIndex("originAttributes", "originAttributes", { unique: false });
   },
 
   getKeyFromRecord: function(aRecord) {
