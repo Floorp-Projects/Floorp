@@ -40,6 +40,11 @@ function promiseTab(aURL) {
     addTab(aURL, resolve));
 }
 
+function promiseWaitForFocus() {
+  return new Promise(resolve =>
+    waitForFocus(resolve));
+}
+
 function setup(cb, additionalOpts = {}) {
   cb = cb || function() {};
   let def = promise.defer();
