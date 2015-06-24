@@ -39,7 +39,7 @@ CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
   MOZ_ASSERT(aFileSystem);
   GetOutputBufferSize();
   if (aBlobData) {
-    if (FileSystemUtils::IsParentProcess()) {
+    if (XRE_IsParentProcess()) {
       aBlobData->GetInternalStream(getter_AddRefs(mBlobStream), aRv);
       NS_WARN_IF(aRv.Failed());
     } else {
@@ -61,7 +61,7 @@ CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
   : FileSystemTaskBase(aFileSystem, aParam, aParent)
   , mReplace(false)
 {
-  MOZ_ASSERT(FileSystemUtils::IsParentProcess(),
+  MOZ_ASSERT(XRE_IsParentProcess(),
              "Only call from parent process!");
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
@@ -168,7 +168,7 @@ CreateFileTask::Work()
     nsCOMPtr<nsIOutputStream> mStream;
   };
 
-  MOZ_ASSERT(FileSystemUtils::IsParentProcess(),
+  MOZ_ASSERT(XRE_IsParentProcess(),
              "Only call from parent process!");
   MOZ_ASSERT(!NS_IsMainThread(), "Only call on worker thread!");
 
@@ -324,7 +324,7 @@ CreateFileTask::GetPermissionAccessType(nsCString& aAccess) const
 void
 CreateFileTask::GetOutputBufferSize() const
 {
-  if (sOutputBufferSize || !FileSystemUtils::IsParentProcess()) {
+  if (sOutputBufferSize || !XRE_IsParentProcess()) {
     return;
   }
   sOutputBufferSize =

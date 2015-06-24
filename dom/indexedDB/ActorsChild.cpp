@@ -818,7 +818,7 @@ public:
     : PermissionRequestBase(aElement, aPrincipal)
     , mChallenge(aChallenge)
   {
-    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+    MOZ_ASSERT(XRE_IsParentProcess());
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aChallenge);
   }
@@ -844,7 +844,7 @@ public:
                                           WorkerPermissionChallenge* aChallenge)
     : mChallenge(aChallenge)
   {
-    MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Default);
+    MOZ_ASSERT(!XRE_IsParentProcess());
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aChallenge);
   }
@@ -950,7 +950,7 @@ private:
       return true;
     }
 
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (XRE_IsParentProcess()) {
       nsCOMPtr<Element> ownerElement =
         do_QueryInterface(window->GetChromeEventHandler());
       if (NS_WARN_IF(!ownerElement)) {
@@ -1399,7 +1399,7 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
     return false;
   }
 
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (XRE_IsParentProcess()) {
     nsCOMPtr<nsPIDOMWindow> window = mFactory->GetParentObject();
     MOZ_ASSERT(window);
 
