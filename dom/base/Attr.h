@@ -98,6 +98,8 @@ public:
 
   Element* GetOwnerElement(ErrorResult& aRv);
 
+  bool IsNSAware() const { return mNsAware; }
+
 protected:
   virtual Element* GetNameSpaceElement() override
   {
