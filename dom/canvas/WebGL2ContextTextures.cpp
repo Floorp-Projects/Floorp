@@ -224,7 +224,7 @@ WebGL2Context::TexImage3D(GLenum target, GLint level, GLenum internalformat,
 
         data = view.Data();
         dataLength = view.Length();
-        jsArrayType = JS_GetArrayBufferViewType(view.Obj());
+        jsArrayType = view.Type();
     }
 
     const WebGLTexImageFunc func = WebGLTexImageFunc::TexImage;
@@ -367,7 +367,7 @@ WebGL2Context::TexSubImage3D(GLenum rawTarget, GLint level,
         return ErrorInvalidOperation("texSubImage3D: type differs from that of the existing image");
     }
 
-    js::Scalar::Type jsArrayType = JS_GetArrayBufferViewType(view.Obj());
+    js::Scalar::Type jsArrayType = view.Type();
     void* data = view.Data();
     size_t dataLength = view.Length();
 
