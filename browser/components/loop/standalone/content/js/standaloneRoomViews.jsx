@@ -461,7 +461,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
                   posterUrl={this.props.screenSharePosterUrl}
                   srcVideoObject={this.state.screenShareVideoObject} />
               </div>
-              <sharedViews.TextChatView
+              <sharedViews.chat.TextChatView
                 dispatcher={this.props.dispatcher}
                 showAlways={true}
                 showRoomName={true} />
