@@ -232,9 +232,10 @@ loop.conversationViews = (function(mozL10n) {
 
       return (
         React.createElement("div", {className: "call-window"}, 
-          React.createElement(CallIdentifierView, {video: this.props.callType === CALL_TYPES.AUDIO_VIDEO, 
+          React.createElement(CallIdentifierView, {
             peerIdentifier: this.props.callerId, 
-            showIcons: true}), 
+            showIcons: true, 
+            video: this.props.callType === CALL_TYPES.AUDIO_VIDEO}), 
 
           React.createElement("div", {className: "btn-group call-action-group"}, 
 
@@ -361,9 +362,9 @@ loop.conversationViews = (function(mozL10n) {
     mixins: [sharedMixins.AudioMixin],
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       callState: React.PropTypes.string,
       contact: React.PropTypes.object,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       enableCancelButton: React.PropTypes.bool
     },
 
@@ -425,8 +426,8 @@ loop.conversationViews = (function(mozL10n) {
     ],
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       contact: React.PropTypes.object.isRequired,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       // This is used by the UI showcase.
       emailLinkError: React.PropTypes.bool,
       outgoing: React.PropTypes.bool.isRequired
@@ -553,8 +554,8 @@ loop.conversationViews = (function(mozL10n) {
               mozL10n.get("retry_call_button")
             ), 
             React.createElement("button", {className: emailClasses, 
-                    onClick: this.emailLink, 
-                    disabled: this.state.emailLinkButtonDisabled}, 
+                    disabled: this.state.emailLinkButtonDisabled, 
+                    onClick: this.emailLink}, 
               mozL10n.get("share_button3")
             )
           )
@@ -570,18 +571,18 @@ loop.conversationViews = (function(mozL10n) {
     ],
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      // local
-      video: React.PropTypes.object,
       // local
       audio: React.PropTypes.object,
-      remoteVideoEnabled: React.PropTypes.bool,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      // The poster URLs are for UI-showcase testing and development.
+      localPosterUrl: React.PropTypes.string,
       // This is used from the props rather than the state to make it easier for
       // the ui-showcase.
       mediaConnected: React.PropTypes.bool,
-      // The poster URLs are for UI-showcase testing and development.
-      localPosterUrl: React.PropTypes.string,
-      remotePosterUrl: React.PropTypes.string
+      remotePosterUrl: React.PropTypes.string,
+      remoteVideoEnabled: React.PropTypes.bool,
+      // local
+      video: React.PropTypes.object
     },
 
     getDefaultProps: function() {
@@ -654,24 +655,24 @@ loop.conversationViews = (function(mozL10n) {
               React.createElement("div", {className: "video_wrapper remote_wrapper"}, 
                 React.createElement("div", {className: "video_inner remote focus-stream"}, 
                   React.createElement(sharedViews.MediaView, {displayAvatar: !this.shouldRenderRemoteVideo(), 
-                    posterUrl: this.props.remotePosterUrl, 
                     mediaType: "remote", 
+                    posterUrl: this.props.remotePosterUrl, 
                     srcVideoObject: this.state.remoteSrcVideoObject})
                 )
               ), 
               React.createElement("div", {className: localStreamClasses}, 
                 React.createElement(sharedViews.MediaView, {displayAvatar: !this.props.video.enabled, 
-                  posterUrl: this.props.localPosterUrl, 
                   mediaType: "local", 
+                  posterUrl: this.props.localPosterUrl, 
                   srcVideoObject: this.state.localSrcVideoObject})
               )
             ), 
             React.createElement(loop.shared.views.ConversationToolbar, {
-              dispatcher: this.props.dispatcher, 
-              video: this.props.video, 
               audio: this.props.audio, 
+              dispatcher: this.props.dispatcher, 
+              hangup: this.hangup, 
               publishStream: this.publishStream, 
-              hangup: this.hangup})
+              video: this.props.video})
           )
         )
       );
@@ -729,11 +730,10 @@ loop.conversationViews = (function(mozL10n) {
       // for any state that render() doesn't manage.
       if (this.state.outgoing) {
         return (React.createElement(PendingConversationView, {
-          dispatcher: this.props.dispatcher, 
           callState: this.state.callState, 
           contact: this.state.contact, 
-          enableCancelButton: this._isCancellable()}
-        ));
+          dispatcher: this.props.dispatcher, 
+          enableCancelButton: this._isCancellable()}));
       }
 
       // For incoming calls that are in accepting state, display the
@@ -768,20 +768,18 @@ loop.conversationViews = (function(mozL10n) {
         }
         case CALL_STATES.TERMINATED: {
           return (React.createElement(CallFailedView, {
-            dispatcher: this.props.dispatcher, 
             contact: this.state.contact, 
-            outgoing: this.state.outgoing}
-          ));
+            dispatcher: this.props.dispatcher, 
+            outgoing: this.state.outgoing}));
         }
         case CALL_STATES.ONGOING: {
           return (React.createElement(OngoingConversationView, {
-            dispatcher: this.props.dispatcher, 
-            video: {enabled: !this.state.videoMuted}, 
             audio: {enabled: !this.state.audioMuted}, 
-            remoteVideoEnabled: this.state.remoteVideoEnabled, 
+            dispatcher: this.props.dispatcher, 
             mediaConnected: this.state.mediaConnected, 
-            remoteSrcVideoObject: this.state.remoteSrcVideoObject}
-            )
+            remoteSrcVideoObject: this.state.remoteSrcVideoObject, 
+            remoteVideoEnabled: this.state.remoteVideoEnabled, 
+            video: {enabled: !this.state.videoMuted}})
           );
         }
         case CALL_STATES.FINISHED: {

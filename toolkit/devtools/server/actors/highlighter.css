@@ -35,6 +35,12 @@
   opacity: 0.6;
 }
 
+/* Box model regions can be faded (see the onlyRegionArea option in
+   highlighter.js) in order to only display certain regions. */
+:-moz-native-anonymous .box-model-regions [faded] {
+  display: none;
+}
+
 :-moz-native-anonymous .box-model-content {
   fill: #87ceeb;
 }

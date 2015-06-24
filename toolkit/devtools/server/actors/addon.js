@@ -25,7 +25,7 @@ function BrowserAddonActor(aConnection, aAddon) {
   this._addon = aAddon;
   this._contextPool = new ActorPool(this.conn);
   this.conn.addActorPool(this._contextPool);
-  this._threadActor = null;
+  this.threadActor = null;
   this._global = null;
 
   this._shouldAddNewGlobalAsDebuggee = this._shouldAddNewGlobalAsDebuggee.bind(this);
@@ -55,7 +55,7 @@ BrowserAddonActor.prototype = {
   },
 
   get attached() {
-    return this._threadActor;
+    return this.threadActor;
   },
 
   get global() {
@@ -65,7 +65,7 @@ BrowserAddonActor.prototype = {
   get sources() {
     if (!this._sources) {
       dbg_assert(this.threadActor, "threadActor should exist when creating sources.");
-      this._sources = new TabSources(this._threadActor, this._allowSource);
+      this._sources = new TabSources(this.threadActor, this._allowSource);
     }
     return this._sources;
   },
@@ -135,11 +135,11 @@ BrowserAddonActor.prototype = {
     }
 
     if (!this.attached) {
-      this._threadActor = new AddonThreadActor(this.conn, this);
-      this._contextPool.addActor(this._threadActor);
+      this.threadActor = new AddonThreadActor(this.conn, this);
+      this._contextPool.addActor(this.threadActor);
     }
 
-    return { type: "tabAttached", threadActor: this._threadActor.actorID };
+    return { type: "tabAttached", threadActor: this.threadActor.actorID };
   },
 
   onDetach: function BAA_onDetach() {
@@ -147,9 +147,9 @@ BrowserAddonActor.prototype = {
       return { error: "wrongState" };
     }
 
-    this._contextPool.removeActor(this._threadActor);
+    this._contextPool.removeActor(this.threadActor);
 
-    this._threadActor = null;
+    this.threadActor = null;
     this._sources = null;
 
     return { type: "detached" };

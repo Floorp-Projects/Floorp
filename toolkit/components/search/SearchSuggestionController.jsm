@@ -128,7 +128,7 @@ this.SearchSuggestionController.prototype = {
     if (!this.maxLocalResults && !this.maxRemoteResults) {
       throw new Error("Zero results expected, what are you trying to do?");
     }
-    if (this.maxLocalResults < 0 || this.remoteResult < 0) {
+    if (this.maxLocalResults < 0 || this.maxRemoteResults < 0) {
       throw new Error("Number of requested results must be positive");
     }
 

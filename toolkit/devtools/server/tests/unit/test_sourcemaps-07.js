@@ -29,7 +29,7 @@ function test_cached_original_sources()
 {
   writeFile("temp.js", "initial content");
 
-  gClient.addOneTimeListener("newSource", onNewSource);
+  gThreadClient.addOneTimeListener("newSource", onNewSource);
 
   let node = new SourceNode(1, 0,
                             getFileUrl("temp.js"),
