@@ -347,8 +347,11 @@ CacheFileMetadata::SyncReadMetadata(nsIFile *aFile)
     return NS_ERROR_FAILURE;
   }
 
+  mBuf = static_cast<char *>(malloc(fileSize - metaOffset));
+  if (!mBuf) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   mBufSize = fileSize - metaOffset;
-  mBuf = static_cast<char *>(moz_xmalloc(mBufSize));
 
   DoMemoryReport(MemoryUsage());
 
@@ -629,7 +632,7 @@ CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
 
   MOZ_ASSERT(mListener);
 
-  nsresult rv, retval;
+  nsresult rv;
   nsCOMPtr<CacheFileMetadataListener> listener;
 
   if (NS_FAILED(aResult)) {
@@ -637,10 +640,9 @@ CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
          ", creating empty metadata. [this=%p, rv=0x%08x]", this, aResult));
 
     InitEmptyMetadata();
-    retval = NS_OK;
 
     mListener.swap(listener);
-    listener->OnMetadataRead(retval);
+    listener->OnMetadataRead(NS_OK);
     return NS_OK;
   }
 
@@ -667,10 +669,9 @@ CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
          realOffset, size));
 
     InitEmptyMetadata();
-    retval = NS_OK;
 
     mListener.swap(listener);
-    listener->OnMetadataRead(retval);
+    listener->OnMetadataRead(NS_OK);
     return NS_OK;
   }
 
@@ -679,7 +680,20 @@ CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
   if (realOffset < usedOffset) {
     uint32_t missing = usedOffset - realOffset;
     // we need to read more data
-    mBuf = static_cast<char *>(moz_xrealloc(mBuf, mBufSize + missing));
+    char *newBuf = static_cast<char *>(realloc(mBuf, mBufSize + missing));
+    if (!newBuf) {
+      LOG(("CacheFileMetadata::OnDataRead() - Error allocating %d more bytes "
+           "for the missing part of the metadata, creating empty metadata. "
+           "[this=%p]", missing, this));
+
+      InitEmptyMetadata();
+
+      mListener.swap(listener);
+      listener->OnMetadataRead(NS_OK);
+      return NS_OK;
+    }
+
+    mBuf = newBuf;
     memmove(mBuf + missing, mBuf, mBufSize);
     mBufSize += missing;
 
@@ -697,10 +711,9 @@ CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
            "rv=0x%08x]", this, rv));
 
       InitEmptyMetadata();
-      retval = NS_OK;
 
       mListener.swap(listener);
-      listener->OnMetadataRead(retval);
+      listener->OnMetadataRead(NS_OK);
       return NS_OK;
     }
 
@@ -717,10 +730,7 @@ CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
     LOG(("CacheFileMetadata::OnDataRead() - Error parsing metadata, creating "
          "empty metadata. [this=%p]", this));
     InitEmptyMetadata();
-    retval = NS_OK;
   } else {
-    retval = NS_OK;
-
     // Shrink elements buffer.
     mBuf = static_cast<char *>(moz_xrealloc(mBuf, mElementsSize));
     mBufSize = mElementsSize;
@@ -732,7 +742,7 @@ CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
   }
 
   mListener.swap(listener);
-  listener->OnMetadataRead(retval);
+  listener->OnMetadataRead(NS_OK);
 
   return NS_OK;
 }
