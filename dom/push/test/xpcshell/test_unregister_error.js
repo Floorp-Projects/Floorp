@@ -20,7 +20,6 @@ add_task(function* test_unregister_error() {
     channelID: channelID,
     pushEndpoint: 'https://example.org/update/failure',
     scope: 'https://example.net/page/failure',
-    originAttributes: '',
     version: 1
   });
 
@@ -55,7 +54,7 @@ add_task(function* test_unregister_error() {
   });
 
   yield PushNotificationService.unregister(
-    'https://example.net/page/failure', '');
+    'https://example.net/page/failure');
 
   let result = yield db.getByKeyID(channelID);
   ok(!result, 'Deleted push record exists');

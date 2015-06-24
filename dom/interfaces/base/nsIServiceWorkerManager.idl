@@ -20,7 +20,7 @@ interface nsIServiceWorkerUnregisterCallback : nsISupports
   void unregisterFailed();
 };
 
-[scriptable, builtinclass, uuid(e633b73b-a734-4d04-a09c-b7779a439f3f)]
+[scriptable, builtinclass, uuid(103763c8-53ba-42e4-8b26-e601d5bc4afe)]
 interface nsIServiceWorkerInfo : nsISupports
 {
   readonly attribute nsIPrincipal principal;
@@ -33,7 +33,7 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, builtinclass, uuid(e9abb123-0099-4d9e-85db-c8cd0aff19e6)]
+[scriptable, builtinclass, uuid(aee94712-9adb-4c0b-80a7-a8df34dfa2e8)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -126,11 +126,11 @@ interface nsIServiceWorkerManager : nsISupports
                            in nsIServiceWorkerUnregisterCallback aCallback,
                            in DOMString aScope);
 
-  void sendPushEvent(in ACString aOriginAttributes,
-                     in ACString aScope,
-                     in DOMString aData);
-  void sendPushSubscriptionChangeEvent(in ACString aOriginAttributes,
-                                       in ACString scope);
+  [implicit_jscontext] void sendPushEvent(in jsval aOriginAttributes,
+                                          in ACString aScope,
+                                          in DOMString aData);
+  [implicit_jscontext] void sendPushSubscriptionChangeEvent(in jsval aOriginAttributes,
+                                                            in ACString scope);
 
   void updateAllRegistrations();
 };

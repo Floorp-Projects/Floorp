@@ -19,14 +19,5 @@ ChromeUtils::OriginAttributesToCookieJar(GlobalObject& aGlobal,
   attrs.CookieJar(aCookieJar);
 }
 
-/* static */ void
-ChromeUtils::OriginAttributesToSuffix(dom::GlobalObject& aGlobal,
-                                      const dom::OriginAttributesDictionary& aAttrs,
-                                      nsCString& aSuffix)
-
-{
-  OriginAttributes attrs(aAttrs);
-  attrs.CreateSuffix(aSuffix);
-}
 } // namespace dom
 } // namespace mozilla

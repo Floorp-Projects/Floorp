@@ -21,7 +21,7 @@ add_task(function* test_registrations_error() {
     serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
     db: makeStub(db, {
-      getByIdentifiers(prev, scope) {
+      getByScope(prev, scope) {
         return Promise.reject('Database error');
       }
     }),
@@ -31,8 +31,7 @@ add_task(function* test_registrations_error() {
   });
 
   yield rejects(
-    PushNotificationService.registration('https://example.net/1',
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    PushNotificationService.registration('https://example.net/1'),
     function(error) {
       return error == 'Database error';
     },
