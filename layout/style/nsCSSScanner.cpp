@@ -165,7 +165,7 @@ static inline bool
 StartsIdent(int32_t aFirstChar, int32_t aSecondChar)
 {
   return IsIdentStart(aFirstChar) ||
-    (aFirstChar == '-' && IsIdentStart(aSecondChar));
+    (aFirstChar == '-' && (aSecondChar == '-' || IsIdentStart(aSecondChar)));
 }
 
 /**
