@@ -105,33 +105,27 @@ NS_IMETHODIMP_(MozExternalRefCountType) SharedThreadPool::AddRef(void)
 NS_IMETHODIMP_(MozExternalRefCountType) SharedThreadPool::Release(void)
 {
   MOZ_ASSERT(sMonitor);
-  {
-    ReentrantMonitorAutoEnter mon(*sMonitor);
-    nsrefcnt count = --mRefCnt;
-    NS_LOG_RELEASE(this, count, "SharedThreadPool");
-    if (count) {
-      return count;
-    }
-
-    // Zero refcount. Must shutdown and then delete the thread pool.
-
-    // First, dispatch an event to the main thread to call Shutdown() on
-    // the nsIThreadPool. The Runnable here  will add a refcount to the pool,
-    // and when the Runnable releases the nsIThreadPool it will be deleted.
-    RefPtr<nsIRunnable> r = NS_NewRunnableMethod(mPool, &nsIThreadPool::Shutdown);
-    NS_DispatchToMainThread(r);
-
-    // Remove SharedThreadPool from table of pools.
-    sPools->Remove(mName);
-    MOZ_ASSERT(!sPools->Get(mName));
-
-    // Stabilize refcount, so that if something in the dtor QIs,
-    // it won't explode.
-    mRefCnt = 1;
-
-    delete this;
-    return 0;
+  ReentrantMonitorAutoEnter mon(*sMonitor);
+  nsrefcnt count = --mRefCnt;
+  NS_LOG_RELEASE(this, count, "SharedThreadPool");
+  if (count) {
+    return count;
   }
+
+  // Remove SharedThreadPool from table of pools.
+  sPools->Remove(mName);
+  MOZ_ASSERT(!sPools->Get(mName));
+
+  // Dispatch an event to the main thread to call Shutdown() on
+  // the nsIThreadPool. The Runnable here  will add a refcount to the pool,
+  // and when the Runnable releases the nsIThreadPool it will be deleted.
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(mPool, &nsIThreadPool::Shutdown);
+  AbstractThread::MainThread()->Dispatch(r.forget());
+
+  // Stabilize refcount, so that if something in the dtor QIs, it won't explode.
+  mRefCnt = 1;
+  delete this;
+  return 0;
 }
 
 NS_IMPL_QUERY_INTERFACE(SharedThreadPool, nsIThreadPool, nsIEventTarget)
