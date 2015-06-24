@@ -150,12 +150,12 @@ let handleContentContextMenu = function (event) {
 
     let customMenuItems = PageMenuChild.build(event.target);
     let principal = doc.nodePrincipal;
-    sendSyncMessage("contextmenu",
-                    { editFlags, spellInfo, customMenuItems, addonInfo,
-                      principal, docLocation, charSet, baseURI, referrer,
-                      referrerPolicy, contentType, contentDisposition,
-                      frameOuterWindowID, selectionInfo, disableSetDesktopBg },
-                    { event, popupNode: event.target });
+    sendRpcMessage("contextmenu",
+                   { editFlags, spellInfo, customMenuItems, addonInfo,
+                     principal, docLocation, charSet, baseURI, referrer,
+                     referrerPolicy, contentType, contentDisposition,
+                     frameOuterWindowID, selectionInfo, disableSetDesktopBg },
+                   { event, popupNode: event.target });
   }
   else {
     // Break out to the parent window and pass the add-on info along
