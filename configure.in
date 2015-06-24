@@ -161,7 +161,7 @@ fi
 AC_SUBST(L10NBASEDIR)
 
 dnl Check for Perl first -- needed for win32 SDK checks
-MOZ_PATH_PROGS(PERL, perl5 perl )
+MOZ_PATH_PROGS(PERL, $PERL perl5 perl )
 if test -z "$PERL" -o "$PERL" = ":"; then
     AC_MSG_ERROR([perl not found in \$PATH])
 fi
@@ -377,7 +377,7 @@ else
     esac
     AC_PROG_CXX
     AC_PROG_RANLIB
-    MOZ_PATH_PROGS(AS, as, $CC)
+    MOZ_PATH_PROGS(AS, $AS as, $CC)
     AC_CHECK_PROGS(AR, ar, :)
     AC_CHECK_PROGS(LD, ld, :)
     AC_CHECK_PROGS(STRIP, strip, :)
@@ -973,10 +973,10 @@ fi
 
 case "$host_os" in
 mingw*)
-    MOZ_PATH_PROGS(GMAKE, $NOT_PYMAKE make gmake, :)
+    MOZ_PATH_PROGS(GMAKE, $GMAKE $NOT_PYMAKE make gmake, :)
     ;;
 *)
-    MOZ_PATH_PROGS(GMAKE, $NOT_PYMAKE gmake make, :)
+    MOZ_PATH_PROGS(GMAKE, $GMAKE $NOT_PYMAKE gmake make, :)
     ;;
 esac
 if test "$GMAKE" = ":"; then
@@ -6361,7 +6361,7 @@ dnl is not yet sufficient).
 if test "$OS_ARCH" = "WINNT"; then
     MIN_NSIS_MAJOR_VER=2
     MIN_NSIS_MINOR_VER=46
-    MOZ_PATH_PROGS(MAKENSISU, makensis-3.0b1.exe makensisu-3.0a2.exe makensisu-2.46.exe makensis)
+    MOZ_PATH_PROGS(MAKENSISU, $MAKENSISU makensis-3.0b1.exe makensisu-3.0a2.exe makensisu-2.46.exe makensis)
     if test -n "$MAKENSISU" -a "$MAKENSISU" != ":"; then
       AC_MSG_RESULT([yes])
       MAKENSISU_VER=`"$MAKENSISU" -version 2>/dev/null`
