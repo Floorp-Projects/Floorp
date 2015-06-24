@@ -15,6 +15,11 @@ loop.fxOSMarketplaceViews = (function() {
    * client.
    */
   var FxOSHiddenMarketplaceView = React.createClass({displayName: "FxOSHiddenMarketplaceView",
+    propTypes: {
+      marketplaceSrc: React.PropTypes.string,
+      onMarketplaceMessage: React.PropTypes.func
+    },
+
     render: function() {
       return React.createElement("iframe", {hidden: true, id: "marketplace", src: this.props.marketplaceSrc});
     },

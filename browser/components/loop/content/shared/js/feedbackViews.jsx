@@ -23,7 +23,7 @@ loop.shared.views.FeedbackView = (function(l10n) {
    */
   var FeedbackLayout = React.createClass({
     propTypes: {
-      children: React.PropTypes.component.isRequired,
+      children: React.PropTypes.element,
       reset: React.PropTypes.func, // if not specified, no Back btn is shown
       title: React.PropTypes.string.isRequired
     },

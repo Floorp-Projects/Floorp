@@ -262,6 +262,7 @@ loop.shared.views = (function(_, l10n) {
       audio: React.PropTypes.object,
       initiate: React.PropTypes.bool,
       isDesktop: React.PropTypes.bool,
+      model: React.PropTypes.object.isRequired,
       sdk: React.PropTypes.object.isRequired,
       video: React.PropTypes.object
     },
@@ -557,6 +558,7 @@ loop.shared.views = (function(_, l10n) {
     propTypes: {
       additionalClass: React.PropTypes.string,
       caption: React.PropTypes.string.isRequired,
+      children: React.PropTypes.element,
       disabled: React.PropTypes.bool,
       htmlId: React.PropTypes.string,
       onClick: React.PropTypes.func.isRequired
@@ -589,8 +591,12 @@ loop.shared.views = (function(_, l10n) {
   });
 
   var ButtonGroup = React.createClass({displayName: "ButtonGroup",
-    PropTypes: {
-      additionalClass: React.PropTypes.string
+    propTypes: {
+      additionalClass: React.PropTypes.string,
+      children: React.PropTypes.oneOfType([
+        React.PropTypes.element,
+        React.PropTypes.arrayOf(React.PropTypes.element)
+      ])
     },
 
     getDefaultProps: function() {
@@ -614,7 +620,7 @@ loop.shared.views = (function(_, l10n) {
   });
 
   var Checkbox = React.createClass({displayName: "Checkbox",
-    PropTypes: {
+    propTypes: {
       additionalClass: React.PropTypes.string,
       checked: React.PropTypes.bool,
       disabled: React.PropTypes.bool,
@@ -734,7 +740,7 @@ loop.shared.views = (function(_, l10n) {
   var ContextUrlView = React.createClass({displayName: "ContextUrlView",
     mixins: [React.addons.PureRenderMixin],
 
-    PropTypes: {
+    propTypes: {
       allowClick: React.PropTypes.bool.isRequired,
       description: React.PropTypes.string.isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher),
@@ -813,12 +819,12 @@ loop.shared.views = (function(_, l10n) {
     // to use the pure render mixin here.
     mixins: [React.addons.PureRenderMixin],
 
-    PropTypes: {
+    propTypes: {
       displayAvatar: React.PropTypes.bool.isRequired,
       isLoading: React.PropTypes.bool.isRequired,
+      mediaType: React.PropTypes.string.isRequired,
       posterUrl: React.PropTypes.string,
       // Expecting "local" or "remote".
-      mediaType: React.PropTypes.string.isRequired,
       srcVideoObject: React.PropTypes.object
     },
 
