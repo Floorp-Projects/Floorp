@@ -20,7 +20,6 @@ class MessagePortService final
 public:
   NS_INLINE_DECL_REFCOUNTING(MessagePortService)
 
-  static MessagePortService* Get();
   static MessagePortService* GetOrCreate();
 
   bool RequestEntangling(MessagePortParent* aParent,
@@ -38,10 +37,6 @@ public:
                  FallibleTArray<nsRefPtr<SharedMessagePortMessage>>& aMessages);
 
   void ParentDestroy(MessagePortParent* aParent);
-
-  bool ForceClose(const nsID& aUUID,
-                  const nsID& aDestinationUUID,
-                  const uint32_t& aSequenceID);
 
 private:
   ~MessagePortService() {}

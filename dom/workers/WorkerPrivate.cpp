@@ -763,14 +763,7 @@ struct WorkerStructuredCloneCallbacks
   FreeTransfer(uint32_t aTag, JS::TransferableOwnership aOwnership,
                void *aContent, uint64_t aExtraData, void* aClosure)
   {
-    if (aTag == SCTAG_DOM_MAP_MESSAGEPORT) {
-      MOZ_ASSERT(aClosure);
-      MOZ_ASSERT(!aContent);
-      auto* closure = static_cast<WorkerStructuredCloneClosure*>(aClosure);
-
-      MOZ_ASSERT(aExtraData < closure->mMessagePortIdentifiers.Length());
-      dom::MessagePort::ForceClose(closure->mMessagePortIdentifiers[aExtraData]);
-    }
+    // Nothing to do.
   }
 };
 
