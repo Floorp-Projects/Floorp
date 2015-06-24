@@ -100,7 +100,7 @@ struct RunnableMethodTraits<mozilla::ipc::MessageChannel>
             DebugAbort(__FILE__, __LINE__, #_cond,## __VA_ARGS__);  \
     } while (0)
 
-static bool gParentIsBlocked;
+static MessageChannel* gParentProcessBlocker;
 
 namespace mozilla {
 namespace ipc {
@@ -398,6 +398,10 @@ MessageChannel::Clear()
     // In practice, mListener owns the channel, so the channel gets deleted
     // before mListener.  But just to be safe, mListener is a weak pointer.
 
+    if (gParentProcessBlocker == this) {
+        gParentProcessBlocker = nullptr;
+    }
+
     mDequeueOneTask->Cancel();
 
     mWorkerLoop = nullptr;
@@ -551,6 +555,21 @@ MessageChannel::Send(Message* aMsg)
     mLink->SendMessage(msg.forget());
     return true;
 }
+
+class CancelMessage : public IPC::Message
+{
+public:
+    CancelMessage() :
+        IPC::Message(MSG_ROUTING_NONE, CANCEL_MESSAGE_TYPE, PRIORITY_NORMAL)
+    {
+    }
+    static bool Read(const Message* msg) {
+        return true;
+    }
+    void Log(const std::string& aPrefix, FILE* aOutf) const {
+        fputs("(special `Cancel' message)", aOutf);
+    }
+};
 
 bool
 MessageChannel::MaybeInterceptSpecialIOMessage(const Message& aMsg)
@@ -806,6 +825,16 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         // Don't allow sending CPOWs while we're dispatching a sync message.
         // If you want to do that, use sendRpcMessage instead.
         return false;
+    }
+
+    if (mCurrentTransaction &&
+        (aMsg->priority() < DispatchingSyncMessagePriority() ||
+         mAwaitingSyncReplyPriority > aMsg->priority() ||
+         DispatchingSyncMessagePriority() == IPC::Message::PRIORITY_URGENT ||
+         DispatchingAsyncMessagePriority() == IPC::Message::PRIORITY_URGENT))
+    {
+        CancelCurrentTransactionInternal();
+        mLink->SendMessage(new CancelMessage());
     }
 
     IPC_ASSERT(aMsg->is_sync(), "can only Send() sync messages here");
@@ -1249,8 +1278,8 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
     IPC_ASSERT(prio >= mAwaitingSyncReplyPriority,
                "dispatching a message of lower priority while waiting for a response");
 
-    bool dummy;
-    bool& blockingVar = ShouldBlockScripts() ? gParentIsBlocked : dummy;
+    MessageChannel* dummy;
+    MessageChannel*& blockingVar = ShouldBlockScripts() ? gParentProcessBlocker : dummy;
 
     Result rv;
     if (mTimedOutMessageSeqno && mTimedOutMessagePriority >= prio) {
@@ -1269,7 +1298,7 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
         // for a response to its urgent message).
         rv = MsgNotAllowed;
     } else {
-        AutoSetValue<bool> blocked(blockingVar, true);
+        AutoSetValue<MessageChannel*> blocked(blockingVar, this);
         AutoSetValue<bool> sync(mDispatchingSyncMessage, true);
         AutoSetValue<int> prioSet(mDispatchingSyncMessagePriority, prio);
         rv = mListener->OnMessageReceived(aMsg, aReply);
@@ -1937,21 +1966,6 @@ MessageChannel::GetTopmostMessageRoutingId() const
     return frame.GetRoutingId();
 }
 
-class CancelMessage : public IPC::Message
-{
-public:
-    CancelMessage() :
-        IPC::Message(MSG_ROUTING_NONE, CANCEL_MESSAGE_TYPE, PRIORITY_NORMAL)
-    {
-    }
-    static bool Read(const Message* msg) {
-        return true;
-    }
-    void Log(const std::string& aPrefix, FILE* aOutf) const {
-        fputs("(special `Cancel' message)", aOutf);
-    }
-};
-
 void
 MessageChannel::CancelCurrentTransactionInternal()
 {
@@ -1977,10 +1991,12 @@ MessageChannel::CancelCurrentTransaction()
     mLink->SendMessage(new CancelMessage());
 }
 
-bool
-ParentProcessIsBlocked()
+void
+CancelCPOWs()
 {
-    return gParentIsBlocked;
+    if (gParentProcessBlocker) {
+        gParentProcessBlocker->CancelCurrentTransaction();
+    }
 }
 
 } // ipc
