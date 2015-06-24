@@ -4,19 +4,16 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- (lint: UselessParent) The second-outermost layout doesn't have a parent to position itself
-     against and would take up the whole screen without the outermost layout. -->
-<FrameLayout
+<merge
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/tab_queue_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipChildren="false"
-    android:clipToPadding="false"
-    tools:ignore="UselessParent">
+    android:clipToPadding="false">
 
     <LinearLayout
+        android:id="@+id/tab_queue_container"
         android:layout_width="@dimen/tab_queue_container_width"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center"
@@ -119,5 +116,4 @@
         </FrameLayout>
 
     </LinearLayout>
-
-</FrameLayout>
+</merge>
