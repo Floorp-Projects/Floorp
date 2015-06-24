@@ -91,10 +91,6 @@ class StoreBuffer
             stores_.remove(v);
         }
 
-        bool has(const T& v) const {
-            return stores_.has(v);
-        }
-
         /* Trace the source of all edges in the store buffer. */
         void trace(StoreBuffer* owner, TenuringTracer& mover);
 
@@ -406,9 +402,6 @@ class StoreBuffer
     void putCallback(void (*callback)(JSTracer* trc, Key* key, void* data), Key* key, void* data) {
         putFromAnyThread(bufferGeneric, CallbackRef<Key>(callback, key, data));
     }
-
-    void assertHasCellEdge(Cell** cellp) const { MOZ_ASSERT(bufferCell.has(CellPtrEdge(cellp))); }
-    void assertHasValueEdge(Value* vp) const { MOZ_ASSERT(bufferVal.has(ValueEdge(vp))); }
 
     void setShouldCancelIonCompilations() {
         cancelIonCompilations_ = true;
