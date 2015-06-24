@@ -218,9 +218,9 @@ DebuggerMemory::drainAllocationsLog(JSContext* cx, unsigned argc, Value* vp)
 
         result->setDenseElement(i, ObjectValue(*obj));
 
-        // Pop the front queue entry, and delete it immediately, so that the GC
-        // sees the AllocationSite's HeapPtr barriers run atomically with the
-        // change to the graph (the queue link).
+        // Pop the front queue entry, and delete it immediately, so that
+        // the GC sees the AllocationSite's RelocatablePtr barriers run
+        // atomically with the change to the graph (the queue link).
         MOZ_ALWAYS_TRUE(dbg->allocationsLog.popFirst() == allocSite);
         js_delete(allocSite);
     }
