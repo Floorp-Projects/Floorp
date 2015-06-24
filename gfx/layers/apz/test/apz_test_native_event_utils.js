@@ -79,7 +79,8 @@ function synthesizeNativeWheel(aElement, aX, aY, aDeltaX, aDeltaY, aObserver) {
   aDeltaX = nativeScrollUnits(aElement, aDeltaX);
   aDeltaY = nativeScrollUnits(aElement, aDeltaY);
   var msg = aDeltaX ? nativeHorizontalWheelEventMsg() : nativeVerticalWheelEventMsg();
-  _getDOMWindowUtils().sendNativeMouseScrollEvent(pt.x, pt.y, msg, aDeltaX, aDeltaY, 0, 0, 0, aElement, aObserver);
+  var utils = SpecialPowers.getDOMWindowUtils(aElement.ownerDocument.defaultView);
+  utils.sendNativeMouseScrollEvent(pt.x, pt.y, msg, aDeltaX, aDeltaY, 0, 0, 0, aElement, aObserver);
   return true;
 }
 
@@ -130,7 +131,8 @@ function synthesizeNativeWheelAndWaitForScrollEvent(aElement, aX, aY, aDeltaX, a
 // aX and aY are relative to the top-left of |aElement|'s containing window.
 function synthesizeNativeMouseMove(aElement, aX, aY) {
   var pt = coordinatesRelativeToWindow(aX, aY, aElement);
-  _getDOMWindowUtils().sendNativeMouseEvent(pt.x, pt.y, nativeMouseMoveEventMsg(), 0, aElement);
+  var utils = SpecialPowers.getDOMWindowUtils(aElement.ownerDocument.defaultView);
+  utils.sendNativeMouseEvent(pt.x, pt.y, nativeMouseMoveEventMsg(), 0, aElement);
   return true;
 }
 
