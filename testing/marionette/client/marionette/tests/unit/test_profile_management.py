@@ -60,4 +60,7 @@ class TestLog(MarionetteTestCase):
 
         # A "hard" restart is still possible (i.e., our instance is still able
         # to kill the browser).
-        self.marionette.restart()
+        # Note we need to clean the profile at this point so the old browser
+        # process doesn't interfere with the new one on Windows when it attempts
+        # to access the profile on startup.
+        self.marionette.restart(clean=True)
