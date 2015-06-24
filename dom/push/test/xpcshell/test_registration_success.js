@@ -20,19 +20,16 @@ add_task(function* test_registration_success() {
     channelID: 'bf001fe0-2684-42f2-bc4d-a3e14b11dd5b',
     pushEndpoint: 'https://example.com/update/same-manifest/1',
     scope: 'https://example.net/a',
-    originAttributes: '',
     version: 5
   }, {
     channelID: 'f6edfbcd-79d6-49b8-9766-48b9dcfeff0f',
     pushEndpoint: 'https://example.com/update/same-manifest/2',
     scope: 'https://example.net/b',
-    originAttributes: ChromeUtils.originAttributesToSuffix({ appId: 42 }),
     version: 10
   }, {
     channelID: 'b1cf38c9-6836-4d29-8a30-a3e98d59b728',
     pushEndpoint: 'https://example.org/update/different-manifest',
     scope: 'https://example.org/c',
-    originAttributes: ChromeUtils.originAttributesToSuffix({ appId: 42, inBrowser: true }),
     version: 15
   }];
   for (let record of records) {
@@ -62,7 +59,7 @@ add_task(function* test_registration_success() {
   });
 
   let registration = yield PushNotificationService.registration(
-    'https://example.net/a', '');
+    'https://example.net/a');
   equal(
     registration.pushEndpoint,
     'https://example.com/update/same-manifest/1',

@@ -21,7 +21,6 @@ add_task(function* test_notification_version_string() {
     channelID: '6ff97d56-d0c0-43bc-8f5b-61b855e1d93b',
     pushEndpoint: 'https://example.org/updates/1',
     scope: 'https://example.com/page/1',
-    originAttributes: '',
     version: 2
   });
 
