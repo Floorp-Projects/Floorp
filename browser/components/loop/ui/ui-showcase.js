@@ -34,7 +34,7 @@
   var ConversationToolbar = loop.shared.views.ConversationToolbar;
   var FeedbackView = loop.shared.views.FeedbackView;
   var Checkbox = loop.shared.views.Checkbox;
-  var TextChatView = loop.shared.views.TextChatView;
+  var TextChatView = loop.shared.views.chat.TextChatView;
 
   // Store constants
   var ROOM_STATES = loop.store.ROOM_STATES;

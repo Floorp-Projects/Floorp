@@ -804,7 +804,7 @@ loop.roomViews = (function(mozL10n) {
                 roomData={roomData}
                 savingContext={this.state.savingContext}
                 show={!shouldRenderInvitationOverlay && shouldRenderContextView} />
-              <sharedViews.TextChatView
+              <sharedViews.chat.TextChatView
                 dispatcher={this.props.dispatcher}
                 showAlways={false}
                 showRoomName={false} />
