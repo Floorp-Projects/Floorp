@@ -472,6 +472,8 @@ public:
     return IsVertical() != aOther.IsVertical();
   }
 
+  uint8_t GetBits() const { return mWritingMode; }
+
 private:
   friend class LogicalPoint;
   friend class LogicalSize;

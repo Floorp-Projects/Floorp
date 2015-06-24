@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et: */
 /*
  * Copyright (c) 2012, 2013 The Linux Foundation. All rights reserved.
  *
@@ -17,10 +19,10 @@
 #include <android/log.h>
 #include <string.h>
 
+#include "gfxPrefs.h"
 #include "ImageLayers.h"
 #include "libdisplay/GonkDisplay.h"
 #include "HwcComposer2D.h"
-#include "HwcUtils.h"
 #include "LayerScope.h"
 #include "Units.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -29,6 +31,7 @@
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/StaticPtr.h"
+#include "nsThreadUtils.h"
 #include "cutils/properties.h"
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"
@@ -38,18 +41,6 @@
 
 #if ANDROID_VERSION >= 17
 #include "libdisplay/DisplaySurface.h"
-#include "gfxPrefs.h"
-#include "nsThreadUtils.h"
-#endif
-
-#if ANDROID_VERSION >= 21
-#ifndef HWC_BLIT
-#define HWC_BLIT 0xFF
-#endif
-#elif ANDROID_VERSION >= 17
-#ifndef HWC_BLIT
-#define HWC_BLIT (HWC_FRAMEBUFFER_TARGET + 1)
-#endif
 #endif
 
 #ifdef LOG_TAG
@@ -80,7 +71,6 @@ using namespace mozilla::layers;
 
 namespace mozilla {
 
-#if ANDROID_VERSION >= 17
 static void
 HookInvalidate(const struct hwc_procs* aProcs)
 {
@@ -101,18 +91,10 @@ HookHotplug(const struct hwc_procs* aProcs, int aDisplay,
     HwcComposer2D::GetInstance()->Hotplug(aDisplay, aConnected);
 }
 
-static const hwc_procs_t sHWCProcs = {
-    &HookInvalidate, // 1st: void (*invalidate)(...)
-    &HookVsync,      // 2nd: void (*vsync)(...)
-    &HookHotplug     // 3rd: void (*hotplug)(...)
-};
-#endif
-
 static StaticRefPtr<HwcComposer2D> sInstance;
 
 HwcComposer2D::HwcComposer2D()
-    : mHwc(nullptr)
-    , mList(nullptr)
+    : mList(nullptr)
     , mMaxLayerCount(0)
     , mColorFill(false)
     , mRBSwapSupport(false)
@@ -120,15 +102,13 @@ HwcComposer2D::HwcComposer2D()
     , mHasHWVsync(false)
     , mLock("mozilla.HwcComposer2D.mLock")
 {
-#if ANDROID_VERSION >= 17
-    RegisterHwcEventCallback();
-#endif
-
-    mHwc = (HwcDevice*)GetGonkDisplay()->GetHWCDevice();
-    if (!mHwc) {
+    mHal = HwcHALBase::CreateHwcHAL();
+    if (!mHal->HasHwc()) {
         LOGD("no hwc support");
         return;
     }
+
+    RegisterHwcEventCallback();
 
     nsIntSize screenSize;
 
@@ -138,26 +118,8 @@ HwcComposer2D::HwcComposer2D()
     win->query(win, NATIVE_WINDOW_HEIGHT, &screenSize.height);
     mScreenRect = gfx::IntRect(gfx::IntPoint(0, 0), screenSize);
 
-#if ANDROID_VERSION >= 17
-    int supported = 0;
-
-    if (mHwc->query) {
-        if (mHwc->query(mHwc, HwcUtils::HWC_COLOR_FILL, &supported) == NO_ERROR) {
-            mColorFill = !!supported;
-        }
-        if (mHwc->query(mHwc, HwcUtils::HWC_FORMAT_RB_SWAP, &supported) == NO_ERROR) {
-            mRBSwapSupport = !!supported;
-        }
-    } else {
-        mColorFill = false;
-        mRBSwapSupport = false;
-    }
-#else
-    char propValue[PROPERTY_VALUE_MAX];
-    property_get("ro.display.colorfill", propValue, "0");
-    mColorFill = (atoi(propValue) == 1) ? true : false;
-    mRBSwapSupport = true;
-#endif
+    mColorFill = mHal->Query(HwcHALBase::QueryType::COLOR_FILL);
+    mRBSwapSupport = mHal->Query(HwcHALBase::QueryType::RB_SWAP);
 }
 
 HwcComposer2D::~HwcComposer2D() {
@@ -177,46 +139,23 @@ HwcComposer2D::GetInstance()
 bool
 HwcComposer2D::EnableVsync(bool aEnable)
 {
-    // Only support hardware vsync on kitkat, L and up due to inaccurate timings
-    // with JellyBean.
-#if (ANDROID_VERSION == 19 || ANDROID_VERSION >= 21)
     MOZ_ASSERT(NS_IsMainThread());
     if (!mHasHWVsync) {
-      return false;
+        return false;
     }
-
-    HwcDevice* device = (HwcDevice*)GetGonkDisplay()->GetHWCDevice();
-    if (!device) {
-      return false;
-    }
-
-    return !device->eventControl(device, HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, aEnable) && aEnable;
-#else
-    return false;
-#endif
+    return mHal->EnableVsync(aEnable) && aEnable;
 }
 
-#if ANDROID_VERSION >= 17
 bool
 HwcComposer2D::RegisterHwcEventCallback()
 {
-    HwcDevice* device = (HwcDevice*)GetGonkDisplay()->GetHWCDevice();
-    if (!device || !device->registerProcs) {
-        LOGE("Failed to get hwc");
-        return false;
-    }
-
-    // Disable Vsync first, and then register callback functions.
-    device->eventControl(device, HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, false);
-    device->registerProcs(device, &sHWCProcs);
-
-    // Only support hardware vsync on kitkat, L and up due to inaccurate timings
-    // with JellyBean.
-#if (ANDROID_VERSION == 19 || ANDROID_VERSION >= 21)
-    mHasHWVsync = gfxPrefs::HardwareVsyncEnabled();
-#else
-    mHasHWVsync = false;
-#endif
+    const HwcHALProcs_t cHWCProcs = {
+        &HookInvalidate,    // 1st: void (*invalidate)(...)
+        &HookVsync,         // 2nd: void (*vsync)(...)
+        &HookHotplug        // 3rd: void (*hotplug)(...)
+    };
+    mHasHWVsync = mHal->RegisterHwcEventCallback(cHWCProcs) &&
+                  gfxPrefs::HardwareVsyncEnabled();
     return mHasHWVsync;
 }
 
@@ -238,7 +177,7 @@ HwcComposer2D::Vsync(int aDisplay, nsecs_t aVsyncTimestamp)
 void
 HwcComposer2D::Invalidate()
 {
-    if (!mHwc) {
+    if (!mHal->HasHwc()) {
         LOGE("HwcComposer2D::Invalidate failed!");
         return;
     }
@@ -280,7 +219,6 @@ HwcComposer2D::Hotplug(int aDisplay, int aConnected)
     NS_DispatchToMainThread(new HotplugEvent(GonkDisplay::DISPLAY_EXTERNAL,
                                              aConnected));
 }
-#endif
 
 void
 HwcComposer2D::SetCompositorParent(CompositorParent* aCompositorParent)
@@ -312,33 +250,6 @@ HwcComposer2D::ReallocLayerList()
     return true;
 }
 
-void
-HwcComposer2D::setCrop(HwcLayer* layer, hwc_rect_t srcCrop)
-{
-#if ANDROID_VERSION >= 19
-    if (mHwc->common.version >= HWC_DEVICE_API_VERSION_1_3) {
-        layer->sourceCropf.left = srcCrop.left;
-        layer->sourceCropf.top = srcCrop.top;
-        layer->sourceCropf.right = srcCrop.right;
-        layer->sourceCropf.bottom = srcCrop.bottom;
-    } else {
-        layer->sourceCrop = srcCrop;
-    }
-#else
-    layer->sourceCrop = srcCrop;
-#endif
-}
-
-void
-HwcComposer2D::setHwcGeometry(bool aGeometryChanged)
-{
-#if ANDROID_VERSION >= 19
-    mList->flags = aGeometryChanged ? HWC_GEOMETRY_CHANGED : 0;
-#else
-    mList->flags = HWC_GEOMETRY_CHANGED;
-#endif
-}
-
 bool
 HwcComposer2D::PrepareLayerList(Layer* aLayer,
                                 const nsIntRect& aClip,
@@ -360,16 +271,15 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         LOGD("%s Layer has zero opacity; skipping", aLayer->Name());
         return true;
     }
-#if ANDROID_VERSION < 18
-    if (opacity < 0xFF) {
+
+    if (!mHal->SupportTransparency() && opacity < 0xFF) {
         LOGD("%s Layer has planar semitransparency which is unsupported by hwcomposer", aLayer->Name());
         return false;
     }
-#endif
 
     if (aLayer->GetMaskLayer()) {
-      LOGD("%s Layer has MaskLayer which is unsupported by hwcomposer", aLayer->Name());
-      return false;
+        LOGD("%s Layer has MaskLayer which is unsupported by hwcomposer", aLayer->Name());
+        return false;
     }
 
     nsIntRect clip;
@@ -427,12 +337,12 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     LayerRenderState state = aLayer->GetRenderState();
 
     if (!state.mSurface.get()) {
-      if (aLayer->AsColorLayer() && mColorFill) {
-        fillColor = true;
-      } else {
-          LOGD("%s Layer doesn't have a gralloc buffer", aLayer->Name());
-          return false;
-      }
+        if (aLayer->AsColorLayer() && mColorFill) {
+            fillColor = true;
+        } else {
+            LOGD("%s Layer doesn't have a gralloc buffer", aLayer->Name());
+            return false;
+        }
     }
 
     nsIntRect visibleRect = visibleRegion.GetBounds();
@@ -517,7 +427,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     HwcLayer& hwcLayer = mList->hwLayers[current];
     hwcLayer.displayFrame = displayFrame;
-    setCrop(&hwcLayer, sourceCrop);
+    mHal->SetCrop(hwcLayer, sourceCrop);
     buffer_handle_t handle = fillColor ? nullptr : state.mSurface->getNativeBuffer()->handle;
     hwcLayer.handle = handle;
 
@@ -793,12 +703,7 @@ HwcComposer2D::TryHwComposition(nsScreenGonk* aScreen)
     }
 
     // BLIT or full OVERLAY Composition
-    Commit(aScreen);
-
-    DisplaySurface* displaySurface = aScreen->GetDisplaySurface();
-    displaySurface->setReleaseFenceFd(mList->hwLayers[idx].releaseFenceFd);
-    mList->hwLayers[idx].releaseFenceFd = -1;
-    return true;
+    return Commit(aScreen);
 }
 
 bool
@@ -807,8 +712,11 @@ HwcComposer2D::Render(nsIWidget* aWidget)
     nsScreenGonk* screen = static_cast<nsWindow*>(aWidget)->GetScreen();
 
     // HWC module does not exist or mList is not created yet.
-    if (!mHwc || !mList) {
+    if (!mHal->HasHwc() || !mList) {
         return GetGonkDisplay()->SwapBuffers(screen->GetDpy(), screen->GetSur());
+    } else if (!mList && !ReallocLayerList()) {
+        LOGE("Cannot realloc layer list");
+        return false;
     }
 
     DisplaySurface* dispSurface = screen->GetDisplaySurface();
@@ -835,56 +743,22 @@ HwcComposer2D::Render(nsIWidget* aWidget)
     }
 
     // GPU or partial HWC Composition
-    Commit(screen);
-
-    dispSurface->setReleaseFenceFd(mList->hwLayers[mList->numHwLayers - 1].releaseFenceFd);
-    mList->hwLayers[mList->numHwLayers - 1].releaseFenceFd = -1;
-    return true;
+    return Commit(screen);
 }
 
 void
 HwcComposer2D::Prepare(buffer_handle_t dispHandle, int fence, nsScreenGonk* screen)
 {
-    int idx = mList->numHwLayers - 1;
-    const hwc_rect_t r = {0, 0, mScreenRect.width, mScreenRect.height};
-    hwc_display_contents_1_t *displays[HWC_NUM_DISPLAY_TYPES] = { nullptr };
-
-    uint32_t displaytype = screen->GetDisplayType();
-    displays[displaytype] = mList;
-    mList->outbufAcquireFenceFd = -1;
-    mList->outbuf = nullptr;
-    mList->retireFenceFd = -1;
-
-    mList->hwLayers[idx].hints = 0;
-    mList->hwLayers[idx].flags = 0;
-    mList->hwLayers[idx].transform = 0;
-    mList->hwLayers[idx].handle = dispHandle;
-    mList->hwLayers[idx].blending = HWC_BLENDING_PREMULT;
-    mList->hwLayers[idx].compositionType = HWC_FRAMEBUFFER_TARGET;
-    setCrop(&mList->hwLayers[idx], r);
-    mList->hwLayers[idx].displayFrame = r;
-    mList->hwLayers[idx].visibleRegionScreen.numRects = 1;
-    mList->hwLayers[idx].visibleRegionScreen.rects = &mList->hwLayers[idx].displayFrame;
-    mList->hwLayers[idx].acquireFenceFd = fence;
-    mList->hwLayers[idx].releaseFenceFd = -1;
-#if ANDROID_VERSION >= 18
-    mList->hwLayers[idx].planeAlpha = 0xFF;
-#endif
     if (mPrepared) {
         LOGE("Multiple hwc prepare calls!");
     }
-
-    mHwc->prepare(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
+    mHal->Prepare(mList, screen->GetDisplayType(), dispHandle, fence);
     mPrepared = true;
 }
 
 bool
 HwcComposer2D::Commit(nsScreenGonk* aScreen)
 {
-    hwc_display_contents_1_t *displays[HWC_NUM_DISPLAY_TYPES] = { nullptr };
-    uint32_t displaytype = aScreen->GetDisplayType();
-    displays[displaytype] = mList;
-
     for (uint32_t j=0; j < (mList->numHwLayers - 1); j++) {
         mList->hwLayers[j].acquireFenceFd = -1;
         if (mHwcLayerMap.IsEmpty() ||
@@ -902,7 +776,7 @@ HwcComposer2D::Commit(nsScreenGonk* aScreen)
         }
     }
 
-    int err = mHwc->set(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
+    int err = mHal->Set(mList, aScreen->GetDisplayType());
 
     mPrevRetireFence.TransferToAnotherFenceHandle(mPrevDisplayFence);
 
@@ -925,38 +799,34 @@ HwcComposer2D::Commit(nsScreenGonk* aScreen)
         mPrevRetireFence = FenceHandle(new FenceHandle::FdObj(mList->retireFenceFd));
     }
 
+    // Set DisplaySurface layer fence
+    DisplaySurface* displaySurface = aScreen->GetDisplaySurface();
+    displaySurface->setReleaseFenceFd(mList->hwLayers[mList->numHwLayers - 1].releaseFenceFd);
+    mList->hwLayers[mList->numHwLayers - 1].releaseFenceFd = -1;
+
     mPrepared = false;
     return !err;
-}
-
-void
-HwcComposer2D::Reset()
-{
-    LOGD("hwcomposer is already prepared, reset with null set");
-    hwc_display_contents_1_t *displays[HWC_NUM_DISPLAY_TYPES] = { nullptr };
-    displays[HWC_DISPLAY_PRIMARY] = nullptr;
-    mHwc->set(mHwc, HWC_DISPLAY_PRIMARY, displays);
-    mPrepared = false;
 }
 #else
 bool
 HwcComposer2D::TryHwComposition(nsScreenGonk* aScreen)
 {
-    return !mHwc->set(mHwc, aScreen->GetDpy(), aScreen->GetSur(), mList);
+    mHal->SetEGLInfo(aScreen->GetDpy(), aScreen->GetSur());
+    return !mHal->Set(mList, aScreen->GetDisplayType());
 }
 
 bool
 HwcComposer2D::Render(nsIWidget* aWidget)
 {
     nsScreenGonk* screen = static_cast<nsWindow*>(aWidget)->GetScreen();
+    GetGonkDisplay()->SwapBuffers(screen->GetDpy(), screen->GetSur());
 
-    return GetGonkDisplay()->SwapBuffers(screen->GetDpy(), screen->GetSur());
-}
+    if (!mHal->HasHwc()) {
+        return true;
+    }
 
-void
-HwcComposer2D::Reset()
-{
-    mPrepared = false;
+    mHal->Prepare(nullptr, screen->GetDisplayType(), nullptr, -1);
+    return !mHal->Set(nullptr, screen->GetDisplayType());
 }
 #endif
 
@@ -965,20 +835,21 @@ HwcComposer2D::TryRenderWithHwc(Layer* aRoot,
                                 nsIWidget* aWidget,
                                 bool aGeometryChanged)
 {
-    if (!mHwc) {
+    if (!mHal->HasHwc()) {
         return false;
     }
 
     nsScreenGonk* screen = static_cast<nsWindow*>(aWidget)->GetScreen();
 
     if (mList) {
-        setHwcGeometry(aGeometryChanged);
+        mList->flags = mHal->GetGeometryChangedFlag(aGeometryChanged);
         mList->numHwLayers = 0;
         mHwcLayerMap.Clear();
     }
 
     if (mPrepared) {
-        Reset();
+        mHal->ResetHwc();
+        mPrepared = false;
     }
 
     // XXX: The clear() below means all rect vectors will be have to be

@@ -605,12 +605,14 @@ static struct lutmABType *read_tag_lutmABType(struct mem_source *src, struct tag
 	memset(lut, 0, sizeof(struct lutmABType));
 	lut->clut_table   = &lut->clut_table_data[0];
 
-	for (i = 0; i < num_in_channels; i++) {
-		lut->num_grid_points[i] = read_u8(src, clut_offset + i);
-		if (lut->num_grid_points[i] == 0) {
-			invalid_source(src, "bad grid_points");
+        if (clut_offset) {
+		for (i = 0; i < num_in_channels; i++) {
+			lut->num_grid_points[i] = read_u8(src, clut_offset + i);
+			if (lut->num_grid_points[i] == 0) {
+				invalid_source(src, "bad grid_points");
+			}
 		}
-	}
+        }
 
 	// Reverse the processing of transformation elements for mBA type.
 	lut->reversed = (type == LUT_MBA_TYPE);

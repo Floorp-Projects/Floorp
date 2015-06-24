@@ -182,16 +182,18 @@ public:
   void SetContinuousBCBorderWidth(mozilla::LogicalSide aForSide,
                                   BCPixelSize aPixelValue);
   /**
-    * Adjust to the effect of visibibility:collapse on the row group and
+    * Adjust to the effect of visibility:collapse on the row group and
     * its children
     * @return              additional shift bstart-wards that should be applied
     *                      to subsequent rowgroups due to rows and this
     *                      rowgroup being collapsed
     * @param aBTotalOffset the total amount that the rowgroup is shifted
     * @param aISize        new isize of the rowgroup
+    * @param aWM           the table's writing mode
     */
   nscoord CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
-                                      nscoord aISize);
+                                      nscoord aISize,
+                                      mozilla::WritingMode aWM);
 
 // nsILineIterator methods
 public:
@@ -427,29 +429,29 @@ public:
 
 inline bool nsTableRowGroupFrame::IsRepeatable() const
 {
-  return (mState & NS_ROWGROUP_REPEATABLE) == NS_ROWGROUP_REPEATABLE;
+  return HasAnyStateBits(NS_ROWGROUP_REPEATABLE);
 }
 
 inline void nsTableRowGroupFrame::SetRepeatable(bool aRepeatable)
 {
   if (aRepeatable) {
-    mState |= NS_ROWGROUP_REPEATABLE;
+    AddStateBits(NS_ROWGROUP_REPEATABLE);
   } else {
-    mState &= ~NS_ROWGROUP_REPEATABLE;
+    RemoveStateBits(NS_ROWGROUP_REPEATABLE);
   }
 }
 
 inline bool nsTableRowGroupFrame::HasStyleBSize() const
 {
-  return (mState & NS_ROWGROUP_HAS_STYLE_HEIGHT) == NS_ROWGROUP_HAS_STYLE_HEIGHT;
+  return HasAnyStateBits(NS_ROWGROUP_HAS_STYLE_BSIZE);
 }
 
 inline void nsTableRowGroupFrame::SetHasStyleBSize(bool aValue)
 {
   if (aValue) {
-    mState |= NS_ROWGROUP_HAS_STYLE_HEIGHT;
+    AddStateBits(NS_ROWGROUP_HAS_STYLE_BSIZE);
   } else {
-    mState &= ~NS_ROWGROUP_HAS_STYLE_HEIGHT;
+    RemoveStateBits(NS_ROWGROUP_HAS_STYLE_BSIZE);
   }
 }
 

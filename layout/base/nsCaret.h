@@ -158,6 +158,7 @@ class nsCaret final : public nsISelectionListener
 protected:
     static void   CaretBlinkCallback(nsITimer *aTimer, void *aClosure);
 
+    bool          IsBidiUI();
     void          CheckSelectionLanguageChange();
 
     void          ResetBlinking();

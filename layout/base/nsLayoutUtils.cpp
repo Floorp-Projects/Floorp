@@ -99,6 +99,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/RuleNodeCacheConditions.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -464,7 +465,7 @@ GetScaleForValue(const StyleAnimationValue& aValue, nsIFrame* aFrame)
     return gfxSize();
   }
 
-  bool dontCare;
+  RuleNodeCacheConditions dontCare;
   TransformReferenceBox refBox(aFrame);
   gfx3DMatrix transform = nsStyleTransformMatrix::ReadTransforms(
                             list->mHead,

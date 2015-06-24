@@ -25,18 +25,18 @@ window.queuedFrames = [];
  */
 window.Frame = React.createClass({
   propTypes: {
-    style: React.PropTypes.object,
-    head: React.PropTypes.node,
-    width: React.PropTypes.number,
-    height: React.PropTypes.number,
-    onContentsRendered: React.PropTypes.func,
     className: React.PropTypes.string,
     /* By default, <link rel="stylesheet> nodes from the containing frame's
        head will be cloned into this iframe.  However, if the link also has
        a "class" attribute, we only clone it if that class attribute is the
        same as cssClass.  This allows us to avoid injecting stylesheets that
        aren't intended for this rendering of this component. */
-    cssClass: React.PropTypes.string
+    cssClass: React.PropTypes.string,
+    head: React.PropTypes.node,
+    height: React.PropTypes.number,
+    onContentsRendered: React.PropTypes.func,
+    style: React.PropTypes.object,
+    width: React.PropTypes.number
   },
   render: function() {
     return React.createElement("iframe", {

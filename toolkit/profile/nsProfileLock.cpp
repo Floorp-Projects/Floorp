@@ -9,7 +9,7 @@
 #include "nsQueryObject.h"
 
 #if defined(XP_WIN)
-#include "mozilla/ProfileUnlockerWin.h"
+#include "ProfileUnlockerWin.h"
 #include "nsAutoPtr.h"
 #endif
 

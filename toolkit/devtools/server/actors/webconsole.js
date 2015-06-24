@@ -305,6 +305,10 @@ WebConsoleActor.prototype =
 
   actorPrefix: "console",
 
+  get globalDebugObject() {
+    return this.parentActor.threadActor.globalDebugObject;
+  },
+
   grip: function WCA_grip()
   {
     return { actor: this.actorID };
@@ -450,7 +454,8 @@ WebConsoleActor.prototype =
       createValueGrip: v => this.createValueGrip(v),
       sources: () => DevToolsUtils.reportException("WebConsoleActor",
         Error("sources not yet implemented")),
-      createEnvironmentActor: (env) => this.createEnvironmentActor(env)
+      createEnvironmentActor: (env) => this.createEnvironmentActor(env),
+      getGlobalDebugObject: () => this.globalDebugObject
     });
     aPool.addActor(actor);
     return actor.grip();

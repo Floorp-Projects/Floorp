@@ -107,7 +107,7 @@ loop.shared.views.TextChatView = (function(mozL10n) {
                       return <TextChatRoomName key={i} message={entry.message}/>;
                     case CHAT_CONTENT_TYPES.CONTEXT:
                       return (
-                        <div key={i} className="context-url-view-wrapper">
+                        <div className="context-url-view-wrapper" key={i}>
                           <sharedViews.ContextUrlView
                             allowClick={true}
                             description={entry.message}
@@ -125,10 +125,11 @@ loop.shared.views.TextChatView = (function(mozL10n) {
                 }
 
                 return (
-                  <TextChatEntry key={i}
-                                 contentType={entry.contentType}
-                                 message={entry.message}
-                                 type={entry.type} />
+                  <TextChatEntry
+                    contentType={entry.contentType}
+                    key={i}
+                    message={entry.message}
+                    type={entry.type} />
                 );
               }, this)
             }
@@ -206,10 +207,11 @@ loop.shared.views.TextChatView = (function(mozL10n) {
       return (
         <div className="text-chat-box">
           <form onSubmit={this.handleFormSubmit}>
-            <input type="text"
-                   placeholder={this.props.showPlaceholder ? mozL10n.get("chat_textbox_placeholder") : ""}
-                   onKeyDown={this.handleKeyDown}
-                   valueLink={this.linkState("messageDetail")} />
+            <input
+              onKeyDown={this.handleKeyDown}
+              placeholder={this.props.showPlaceholder ? mozL10n.get("chat_textbox_placeholder") : ""}
+              type="text"
+              valueLink={this.linkState("messageDetail")} />
           </form>
         </div>
       );

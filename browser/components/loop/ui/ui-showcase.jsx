@@ -385,9 +385,9 @@
       var sizeUnit = this.props.size.split("x");
       return (
         <img className="svg-icon"
+             height={sizeUnit[1]}
              src={"../content/shared/img/icons-" + this.props.size + ".svg#" + this.props.shapeId}
-             width={sizeUnit[0]}
-             height={sizeUnit[1]} />
+             width={sizeUnit[0]} />
       );
     }
   });
@@ -421,7 +421,7 @@
     render: function() {
       var icons = this.shapes[this.props.size].map(function(shapeId, i) {
         return (
-          <li key={this.props.size + "-" + i} className="svg-icon-entry">
+          <li className="svg-icon-entry" key={this.props.size + "-" + i}>
             <p><SVGIcon shapeId={shapeId} size={this.props.size} /></p>
             <p>{shapeId}</p>
           </li>
@@ -435,11 +435,11 @@
 
   var FramedExample = React.createClass({
     propTypes: {
-      width: React.PropTypes.number,
+      cssClass: React.PropTypes.string,
+      dashed: React.PropTypes.bool,
       height: React.PropTypes.number,
       onContentsRendered: React.PropTypes.func,
-      dashed: React.PropTypes.bool,
-      cssClass: React.PropTypes.string
+      width: React.PropTypes.number
     },
 
     makeId: function(prefix) {
@@ -464,10 +464,11 @@
             <a href={this.makeId("#")}>&nbsp;¶</a>
           </h3>
           <div className="comp">
-            <Frame width={width} height={height}
+            <Frame className={cx({dashed: this.props.dashed})}
+                   cssClass={this.props.cssClass}
+                   height={height}
                    onContentsRendered={this.props.onContentsRendered}
-                   className={cx({dashed: this.props.dashed})}
-                   cssClass={this.props.cssClass}>
+                   width={width}>
               {this.props.children}
             </Frame>
           </div>
@@ -501,7 +502,7 @@
   var Section = React.createClass({
     render: function() {
       return (
-        <section id={this.props.name} className={this.props.className}>
+        <section className={this.props.className} id={this.props.name}>
           <h1>{this.props.name}</h1>
           {this.props.children}
         </section>
@@ -544,7 +545,7 @@
         <div className="showcase">
           <header>
             <h1>Loop UI Components Showcase</h1>
-            <Checkbox label="RTL mode?" checked={this.state.rtlMode}
+            <Checkbox checked={this.state.rtlMode} label="RTL mode?"
               onChange={this._handleCheckboxChange} />
             <nav className="showcase-menu">{
               React.Children.map(this.props.children, function(section) {
@@ -571,58 +572,63 @@
             <p className="note">
               <strong>Note:</strong> 332px wide.
             </p>
-            <Example summary="Re-sign-in view" dashed="true" style={{width: "332px"}}>
+            <Example dashed="true" style={{width: "332px"}} summary="Re-sign-in view">
               <SignInRequestView mozLoop={mockMozLoopRooms} />
             </Example>
-            <Example summary="Room list tab" dashed="true" style={{width: "332px"}}>
-              <PanelView client={mockClient} notifications={notifications}
-                         userProfile={{email: "test@example.com"}}
-                         mozLoop={mockMozLoopRooms}
+            <Example dashed="true" style={{width: "332px"}} summary="Room list tab">
+              <PanelView client={mockClient}
                          dispatcher={dispatcher}
-                         roomStore={roomStore}
-                         selectedTab="rooms" />
-            </Example>
-            <Example summary="Contact list tab" dashed="true" style={{width: "332px"}}>
-              <PanelView client={mockClient} notifications={notifications}
-                         userProfile={{email: "test@example.com"}}
                          mozLoop={mockMozLoopRooms}
-                         dispatcher={dispatcher}
+                         notifications={notifications}
                          roomStore={roomStore}
-                         selectedTab="contacts" />
+                         selectedTab="rooms"
+                         userProfile={{email: "test@example.com"}} />
             </Example>
-            <Example summary="Error Notification" dashed="true" style={{width: "332px"}}>
-              <PanelView client={mockClient} notifications={errNotifications}
+            <Example dashed="true" style={{width: "332px"}} summary="Contact list tab">
+              <PanelView client={mockClient}
+                         dispatcher={dispatcher}
+                         mozLoop={mockMozLoopRooms}
+                         notifications={notifications}
+                         roomStore={roomStore}
+                         selectedTab="contacts"
+                         userProfile={{email: "test@example.com"}} />
+            </Example>
+            <Example dashed="true" style={{width: "332px"}} summary="Error Notification">
+              <PanelView client={mockClient}
+                         dispatcher={dispatcher}
                          mozLoop={navigator.mozLoop}
-                         dispatcher={dispatcher}
+                         notifications={errNotifications}
                          roomStore={roomStore} />
             </Example>
-            <Example summary="Error Notification - authenticated" dashed="true" style={{width: "332px"}}>
-              <PanelView client={mockClient} notifications={errNotifications}
-                         userProfile={{email: "test@example.com"}}
+            <Example dashed="true" style={{width: "332px"}} summary="Error Notification - authenticated">
+              <PanelView client={mockClient}
+                         dispatcher={dispatcher}
                          mozLoop={navigator.mozLoop}
-                         dispatcher={dispatcher}
-                         roomStore={roomStore} />
-            </Example>
-            <Example summary="Contact import success" dashed="true" style={{width: "332px"}}>
-              <PanelView notifications={new loop.shared.models.NotificationCollection([{level: "success", message: "Import success"}])}
-                         userProfile={{email: "test@example.com"}}
-                         mozLoop={mockMozLoopRooms}
-                         dispatcher={dispatcher}
+                         notifications={errNotifications}
                          roomStore={roomStore}
-                         selectedTab="contacts" />
+                         userProfile={{email: "test@example.com"}} />
             </Example>
-            <Example summary="Contact import error" dashed="true" style={{width: "332px"}}>
-              <PanelView notifications={new loop.shared.models.NotificationCollection([{level: "error", message: "Import error"}])}
-                         userProfile={{email: "test@example.com"}}
+            <Example dashed="true" style={{width: "332px"}} summary="Contact import success">
+              <PanelView dispatcher={dispatcher}
                          mozLoop={mockMozLoopRooms}
-                         dispatcher={dispatcher}
+                         notifications={new loop.shared.models.NotificationCollection([{level: "success", message: "Import success"}])}
                          roomStore={roomStore}
-                         selectedTab="contacts" />
+                         selectedTab="contacts"
+                         userProfile={{email: "test@example.com"}} />
+            </Example>
+            <Example dashed="true" style={{width: "332px"}} summary="Contact import error">
+              <PanelView dispatcher={dispatcher}
+                         mozLoop={mockMozLoopRooms}
+                         notifications={new loop.shared.models.NotificationCollection([{level: "error", message: "Import error"}])}
+                         roomStore={roomStore}
+                         selectedTab="contacts"
+                         userProfile={{email: "test@example.com"}} />
             </Example>
           </Section>
 
           <Section name="AcceptCallView">
-            <Example summary="Default / incoming video call" dashed="true" style={{width: "300px", height: "272px"}}>
+            <Example dashed="true" style={{width: "300px", height: "272px"}}
+                     summary="Default / incoming video call">
               <div className="fx-embedded">
                 <AcceptCallView callType={CALL_TYPES.AUDIO_VIDEO}
                                 callerId="Mr Smith"
@@ -631,7 +637,8 @@
               </div>
             </Example>
 
-            <Example summary="Default / incoming audio only call" dashed="true" style={{width: "300px", height: "272px"}}>
+            <Example dashed="true" style={{width: "300px", height: "272px"}}
+                     summary="Default / incoming audio only call">
               <div className="fx-embedded">
                 <AcceptCallView callType={CALL_TYPES.AUDIO_ONLY}
                                 callerId="Mr Smith"
@@ -642,7 +649,8 @@
           </Section>
 
           <Section name="AcceptCallView-ActiveState">
-            <Example summary="Default" dashed="true" style={{width: "300px", height: "272px"}}>
+            <Example dashed="true" style={{width: "300px", height: "272px"}}
+                     summary="Default">
               <div className="fx-embedded" >
                 <AcceptCallView callType={CALL_TYPES.AUDIO_VIDEO}
                                 callerId="Mr Smith"
@@ -656,52 +664,53 @@
           <Section name="ConversationToolbar">
             <h2>Desktop Conversation Window</h2>
             <div className="fx-embedded override-position">
-              <Example summary="Default" style={{width: "300px", height: "26px"}}>
-                <ConversationToolbar video={{enabled: true}}
-                                     audio={{enabled: true}}
+              <Example style={{width: "300px", height: "26px"}} summary="Default">
+                <ConversationToolbar audio={{enabled: true}}
                                      hangup={noop}
-                                     publishStream={noop} />
+                                     publishStream={noop}
+                                     video={{enabled: true}} />
               </Example>
-              <Example summary="Video muted" style={{width: "300px", height: "26px"}}>
-                <ConversationToolbar video={{enabled: false}}
-                                     audio={{enabled: true}}
+              <Example style={{width: "300px", height: "26px"}} summary="Video muted">
+                <ConversationToolbar audio={{enabled: true}}
                                      hangup={noop}
-                                     publishStream={noop} />
+                                     publishStream={noop}
+                                     video={{enabled: false}} />
               </Example>
-              <Example summary="Audio muted" style={{width: "300px", height: "26px"}}>
-                <ConversationToolbar video={{enabled: true}}
-                                     audio={{enabled: false}}
+              <Example style={{width: "300px", height: "26px"}} summary="Audio muted">
+                <ConversationToolbar audio={{enabled: false}}
                                      hangup={noop}
-                                     publishStream={noop} />
+                                     publishStream={noop}
+                                     video={{enabled: true}} />
               </Example>
             </div>
 
             <h2>Standalone</h2>
             <div className="standalone override-position">
               <Example summary="Default">
-                <ConversationToolbar video={{enabled: true}}
-                                     audio={{enabled: true}}
+                <ConversationToolbar audio={{enabled: true}}
                                      hangup={noop}
-                                     publishStream={noop} />
+                                     publishStream={noop}
+                                     video={{enabled: true}} />
               </Example>
               <Example summary="Video muted">
-                <ConversationToolbar video={{enabled: false}}
-                                     audio={{enabled: true}}
+                <ConversationToolbar audio={{enabled: true}}
                                      hangup={noop}
-                                     publishStream={noop} />
+                                     publishStream={noop}
+                                     video={{enabled: false}} />
               </Example>
               <Example summary="Audio muted">
-                <ConversationToolbar video={{enabled: true}}
-                                     audio={{enabled: false}}
+                <ConversationToolbar audio={{enabled: false}}
                                      hangup={noop}
-                                     publishStream={noop} />
+                                     publishStream={noop}
+                                     video={{enabled: true}} />
               </Example>
             </div>
           </Section>
 
           <Section name="PendingConversationView (Desktop)">
-            <Example summary="Connecting" dashed="true"
-                     style={{width: "300px", height: "272px"}}>
+            <Example dashed="true"
+                     style={{width: "300px", height: "272px"}}
+                     summary="Connecting">
               <div className="fx-embedded">
                 <DesktopPendingConversationView callState={"gather"}
                                                 contact={mockContact}
@@ -711,24 +720,27 @@
           </Section>
 
           <Section name="CallFailedView">
-            <Example summary="Call Failed - Incoming" dashed="true"
-                     style={{width: "300px", height: "272px"}}>
+            <Example dashed="true"
+                     style={{width: "300px", height: "272px"}}
+                     summary="Call Failed - Incoming">
               <div className="fx-embedded">
                 <CallFailedView dispatcher={dispatcher}
                                 outgoing={false}
                                 store={conversationStore} />
               </div>
             </Example>
-            <Example summary="Call Failed - Outgoing" dashed="true"
-                     style={{width: "300px", height: "272px"}}>
+            <Example dashed="true"
+                     style={{width: "300px", height: "272px"}}
+                     summary="Call Failed - Outgoing">
               <div className="fx-embedded">
                 <CallFailedView dispatcher={dispatcher}
                                 outgoing={true}
                                 store={conversationStore} />
               </div>
             </Example>
-            <Example summary="Call Failed — with call URL error" dashed="true"
-                     style={{width: "300px", height: "272px"}}>
+            <Example dashed="true"
+                     style={{width: "300px", height: "272px"}}
+                     summary="Call Failed — with call URL error">
               <div className="fx-embedded">
                 <CallFailedView dispatcher={dispatcher} emailLinkError={true}
                                 outgoing={true}
@@ -738,57 +750,61 @@
           </Section>
 
           <Section name="OngoingConversationView">
-            <FramedExample width={298} height={254}
-                           summary="Desktop ongoing conversation window">
+            <FramedExample height={254}
+                           summary="Desktop ongoing conversation window"
+                           width={298}>
               <div className="fx-embedded">
                 <OngoingConversationView
-                  dispatcher={dispatcher}
-                  video={{enabled: true}}
                   audio={{enabled: true}}
+                  dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
+                  mediaConnected={true}
                   remotePosterUrl="sample-img/video-screen-remote.png"
                   remoteVideoEnabled={true}
-                  mediaConnected={true} />
+                  video={{enabled: true}} />
               </div>
             </FramedExample>
 
-            <FramedExample width={800} height={600}
-                           summary="Desktop ongoing conversation window large">
+            <FramedExample height={600}
+                           summary="Desktop ongoing conversation window large"
+                           width={800}>
                 <div className="fx-embedded">
                   <OngoingConversationView
-                    dispatcher={dispatcher}
-                    video={{enabled: true}}
                     audio={{enabled: true}}
+                    dispatcher={dispatcher}
                     localPosterUrl="sample-img/video-screen-local.png"
+                    mediaConnected={true}
                     remotePosterUrl="sample-img/video-screen-remote.png"
                     remoteVideoEnabled={true}
-                    mediaConnected={true} />
+                    video={{enabled: true}} />
                 </div>
             </FramedExample>
 
-            <FramedExample width={298} height={254}
-              summary="Desktop ongoing conversation window - local face mute">
+            <FramedExample height={254}
+              summary="Desktop ongoing conversation window - local face mute"
+              width={298} >
               <div className="fx-embedded">
                 <OngoingConversationView
-                  dispatcher={dispatcher}
-                  video={{enabled: false}}
                   audio={{enabled: true}}
-                  remoteVideoEnabled={true}
+                  dispatcher={dispatcher}
+                  mediaConnected={true}
                   remotePosterUrl="sample-img/video-screen-remote.png"
-                  mediaConnected={true} />
+                  remoteVideoEnabled={true}
+                  video={{enabled: false}} />
               </div>
             </FramedExample>
 
-            <FramedExample width={298} height={254}
-              summary="Desktop ongoing conversation window - remote face mute">
+            <FramedExample height={254}
+              summary="Desktop ongoing conversation window - remote face mute"
+              width={298} >
               <div className="fx-embedded">
                 <OngoingConversationView
-                  dispatcher={dispatcher}
-                  video={{enabled: true}}
                   audio={{enabled: true}}
-                  remoteVideoEnabled={false}
+                  dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
-                  mediaConnected={true} />
+                  mediaConnected={true}
+                  remoteVideoEnabled={false}
+                  video={{enabled: true}} />
               </div>
             </FramedExample>
 
@@ -799,14 +815,20 @@
               <strong>Note:</strong> For the useable demo, you can access submitted data at&nbsp;
               <a href="https://input.allizom.org/">input.allizom.org</a>.
             </p>
-            <Example summary="Default (useable demo)" dashed="true" style={{width: "300px", height: "272px"}}>
+            <Example dashed="true"
+                     style={{width: "300px", height: "272px"}}
+                     summary="Default (useable demo)">
               <FeedbackView feedbackStore={feedbackStore} />
             </Example>
-            <Example summary="Detailed form" dashed="true" style={{width: "300px", height: "272px"}}>
-              <FeedbackView feedbackStore={feedbackStore} feedbackState={FEEDBACK_STATES.DETAILS} />
+            <Example dashed="true"
+                     style={{width: "300px", height: "272px"}}
+                     summary="Detailed form">
+              <FeedbackView feedbackState={FEEDBACK_STATES.DETAILS} feedbackStore={feedbackStore} />
             </Example>
-            <Example summary="Thank you!" dashed="true" style={{width: "300px", height: "272px"}}>
-              <FeedbackView feedbackStore={feedbackStore} feedbackState={FEEDBACK_STATES.SENT} />
+            <Example dashed="true"
+                     style={{width: "300px", height: "272px"}}
+                     summary="Thank you!">
+              <FeedbackView feedbackState={FEEDBACK_STATES.SENT} feedbackStore={feedbackStore}/>
             </Example>
           </Section>
 
@@ -845,287 +867,330 @@
           </Section>
 
           <Section name="DesktopRoomConversationView">
-            <FramedExample width={298} height={254}
-              summary="Desktop room conversation (invitation, text-chat inclusion/scrollbars don't happen in real client)">
+            <FramedExample
+              height={254}
+              summary="Desktop room conversation (invitation, text-chat inclusion/scrollbars don't happen in real client)"
+              width={298}>
               <div className="fx-embedded">
                 <DesktopRoomConversationView
-                  roomStore={invitationRoomStore}
                   dispatcher={dispatcher}
-                  mozLoop={navigator.mozLoop}
                   localPosterUrl="sample-img/video-screen-local.png"
-                  roomState={ROOM_STATES.INIT} />
+                  mozLoop={navigator.mozLoop}
+                  roomState={ROOM_STATES.INIT}
+                  roomStore={invitationRoomStore} />
               </div>
             </FramedExample>
 
-            <FramedExample width={298} height={394} dashed={true}
-              summary="Desktop room conversation (loading)">
+            <FramedExample
+              dashed={true}
+              height={394}
+              summary="Desktop room conversation (loading)"
+              width={298}>
               {/* Hide scrollbars here. Rotating loading div overflows and causes
                scrollbars to appear */}
               <div className="fx-embedded overflow-hidden">
                 <DesktopRoomConversationView
-                  roomStore={desktopRoomStoreLoading}
                   dispatcher={dispatcher}
-                  mozLoop={navigator.mozLoop}
                   localPosterUrl="sample-img/video-screen-local.png"
+                  mozLoop={navigator.mozLoop}
                   remotePosterUrl="sample-img/video-screen-remote.png"
-                  roomState={ROOM_STATES.HAS_PARTICIPANTS} />
+                  roomState={ROOM_STATES.HAS_PARTICIPANTS}
+                  roomStore={desktopRoomStoreLoading} />
               </div>
             </FramedExample>
 
-            <FramedExample width={298} height={254}
-              summary="Desktop room conversation">
+            <FramedExample height={254}
+                           summary="Desktop room conversation">
               <div className="fx-embedded">
                 <DesktopRoomConversationView
-                  roomStore={roomStore}
                   dispatcher={dispatcher}
-                  mozLoop={navigator.mozLoop}
                   localPosterUrl="sample-img/video-screen-local.png"
+                  mozLoop={navigator.mozLoop}
                   remotePosterUrl="sample-img/video-screen-remote.png"
-                  roomState={ROOM_STATES.HAS_PARTICIPANTS} />
+                  roomState={ROOM_STATES.HAS_PARTICIPANTS}
+                  roomStore={roomStore} />
               </div>
             </FramedExample>
 
-            <FramedExample width={298} height={394} dashed={true}
-                           summary="Desktop room conversation local face-mute">
+            <FramedExample dashed={true}
+                           height={394}
+                           summary="Desktop room conversation local face-mute"
+                           width={298}>
               <div className="fx-embedded">
                 <DesktopRoomConversationView
-                  roomStore={desktopLocalFaceMuteRoomStore}
                   dispatcher={dispatcher}
                   mozLoop={navigator.mozLoop}
-                  remotePosterUrl="sample-img/video-screen-remote.png" />
+                  remotePosterUrl="sample-img/video-screen-remote.png"
+                  roomStore={desktopLocalFaceMuteRoomStore} />
               </div>
             </FramedExample>
 
-            <FramedExample width={298} height={394} dashed={true}
-                           summary="Desktop room conversation remote face-mute">
+            <FramedExample dashed={true} height={394}
+                           summary="Desktop room conversation remote face-mute"
+                           width={298} >
               <div className="fx-embedded">
                 <DesktopRoomConversationView
-                  roomStore={desktopRemoteFaceMuteRoomStore}
                   dispatcher={dispatcher}
+                  localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
-                  localPosterUrl="sample-img/video-screen-local.png" />
+                  roomStore={desktopRemoteFaceMuteRoomStore} />
               </div>
             </FramedExample>
           </Section>
 
           <Section name="StandaloneRoomView">
-            <FramedExample width={644} height={483} dashed={true}
-                           cssClass="standalone"
-                           summary="Standalone room conversation (ready)">
+            <FramedExample cssClass="standalone"
+                           dashed={true}
+                           height={483}
+                           summary="Standalone room conversation (ready)"
+                           width={644} >
               <div className="standalone">
                 <StandaloneRoomView
-                  dispatcher={dispatcher}
                   activeRoomStore={readyRoomStore}
-                  roomState={ROOM_STATES.READY}
-                  isFirefox={true} />
+                  dispatcher={dispatcher}
+                  isFirefox={true}
+                  roomState={ROOM_STATES.READY} />
               </div>
             </FramedExample>
 
-            <FramedExample width={644} height={483} dashed={true}
-              summary="Standalone room conversation (joined)"
-              cssClass="standalone"
-              onContentsRendered={joinedRoomStore.forcedUpdate}>
+            <FramedExample cssClass="standalone"
+                           dashed={true}
+                           height={483}
+                           onContentsRendered={joinedRoomStore.forcedUpdate}
+                           summary="Standalone room conversation (joined)"
+                           width={644}>
               <div className="standalone">
                 <StandaloneRoomView
-                  dispatcher={dispatcher}
                   activeRoomStore={joinedRoomStore}
-                  localPosterUrl="sample-img/video-screen-local.png"
-                  isFirefox={true} />
+                  dispatcher={dispatcher}
+                  isFirefox={true}
+                  localPosterUrl="sample-img/video-screen-local.png" />
               </div>
             </FramedExample>
 
-            <FramedExample width={644} height={483} dashed={true}
-              summary="Standalone room conversation (loading remote)"
-              cssClass="standalone"
-              onContentsRendered={loadingRemoteVideoRoomStore.forcedUpdate}>
+            <FramedExample cssClass="standalone"
+                           dashed={true}
+                           height={483}
+                           onContentsRendered={loadingRemoteVideoRoomStore.forcedUpdate}
+                           summary="Standalone room conversation (loading remote)"
+                           width={644}>
               <div className="standalone">
                 <StandaloneRoomView
-                  dispatcher={dispatcher}
                   activeRoomStore={loadingRemoteVideoRoomStore}
-                  localPosterUrl="sample-img/video-screen-local.png"
-                  isFirefox={true} />
+                  dispatcher={dispatcher}
+                  isFirefox={true}
+                  localPosterUrl="sample-img/video-screen-local.png" />
               </div>
             </FramedExample>
 
-            <FramedExample width={644} height={483} dashed={true}
-                           cssClass="standalone"
+            <FramedExample cssClass="standalone"
+                           dashed={true}
+                           height={483}
                            onContentsRendered={updatingActiveRoomStore.forcedUpdate}
-                           summary="Standalone room conversation (has-participants, 644x483)">
+                           summary="Standalone room conversation (has-participants, 644x483)"
+                           width={644} >
                 <div className="standalone">
                   <StandaloneRoomView
-                    dispatcher={dispatcher}
                     activeRoomStore={updatingActiveRoomStore}
-                    roomState={ROOM_STATES.HAS_PARTICIPANTS}
+                    dispatcher={dispatcher}
                     isFirefox={true}
                     localPosterUrl="sample-img/video-screen-local.png"
-                    remotePosterUrl="sample-img/video-screen-remote.png" />
+                    remotePosterUrl="sample-img/video-screen-remote.png"
+                    roomState={ROOM_STATES.HAS_PARTICIPANTS} />
                 </div>
             </FramedExample>
 
-            <FramedExample width={644} height={483} dashed={true}
-                           cssClass="standalone"
-                           onContentsRendered={localFaceMuteRoomStore.forcedUpdate}
-                           summary="Standalone room conversation (local face mute, has-participants, 644x483)">
+            <FramedExample
+              cssClass="standalone"
+              dashed={true}
+              height={483}
+              onContentsRendered={localFaceMuteRoomStore.forcedUpdate}
+              summary="Standalone room conversation (local face mute, has-participants, 644x483)"
+              width={644}>
               <div className="standalone">
                 <StandaloneRoomView
-                  dispatcher={dispatcher}
                   activeRoomStore={localFaceMuteRoomStore}
+                  dispatcher={dispatcher}
                   isFirefox={true}
                   localPosterUrl="sample-img/video-screen-local.png"
                   remotePosterUrl="sample-img/video-screen-remote.png" />
               </div>
             </FramedExample>
 
-            <FramedExample width={644} height={483} dashed={true}
-                           cssClass="standalone"
-                           onContentsRendered={remoteFaceMuteRoomStore.forcedUpdate}
-                           summary="Standalone room conversation (remote face mute, has-participants, 644x483)">
+            <FramedExample
+              cssClass="standalone"
+              dashed={true}
+              height={483}
+              onContentsRendered={remoteFaceMuteRoomStore.forcedUpdate}
+              summary="Standalone room conversation (remote face mute, has-participants, 644x483)"
+              width={644}>
               <div className="standalone">
                 <StandaloneRoomView
-                  dispatcher={dispatcher}
                   activeRoomStore={remoteFaceMuteRoomStore}
+                  dispatcher={dispatcher}
                   isFirefox={true}
                   localPosterUrl="sample-img/video-screen-local.png"
                   remotePosterUrl="sample-img/video-screen-remote.png" />
               </div>
             </FramedExample>
 
-            <FramedExample width={800} height={660} dashed={true}
-                           cssClass="standalone"
-                           onContentsRendered={loadingRemoteLoadingScreenStore.forcedUpdate}
-              summary="Standalone room convo (has-participants, loading screen share, loading remote video, 800x660)">
+            <FramedExample
+              cssClass="standalone"
+              dashed={true}
+              height={660}
+              onContentsRendered={loadingRemoteLoadingScreenStore.forcedUpdate}
+              summary="Standalone room convo (has-participants, loading screen share, loading remote video, 800x660)"
+              width={800}>
               {/* Hide scrollbars here. Rotating loading div overflows and causes
                scrollbars to appear */}
                <div className="standalone overflow-hidden">
                   <StandaloneRoomView
-                    dispatcher={dispatcher}
                     activeRoomStore={loadingRemoteLoadingScreenStore}
-                    roomState={ROOM_STATES.HAS_PARTICIPANTS}
+                    dispatcher={dispatcher}
                     isFirefox={true}
                     localPosterUrl="sample-img/video-screen-local.png"
                     remotePosterUrl="sample-img/video-screen-remote.png"
-                    screenSharePosterUrl="sample-img/video-screen-baz.png"
-                  />
+                    roomState={ROOM_STATES.HAS_PARTICIPANTS}
+                    screenSharePosterUrl="sample-img/video-screen-baz.png" />
                 </div>
             </FramedExample>
 
-            <FramedExample width={800} height={660} dashed={true}
-                           cssClass="standalone"
-                           onContentsRendered={loadingScreenSharingRoomStore.forcedUpdate}
-              summary="Standalone room convo (has-participants, loading screen share, 800x660)">
+            <FramedExample
+              cssClass="standalone"
+              dashed={true}
+              height={660}
+              onContentsRendered={loadingScreenSharingRoomStore.forcedUpdate}
+              summary="Standalone room convo (has-participants, loading screen share, 800x660)"
+              width={800}>
               {/* Hide scrollbars here. Rotating loading div overflows and causes
                scrollbars to appear */}
                <div className="standalone overflow-hidden">
                   <StandaloneRoomView
-                    dispatcher={dispatcher}
                     activeRoomStore={loadingScreenSharingRoomStore}
-                    roomState={ROOM_STATES.HAS_PARTICIPANTS}
+                    dispatcher={dispatcher}
                     isFirefox={true}
                     localPosterUrl="sample-img/video-screen-local.png"
                     remotePosterUrl="sample-img/video-screen-remote.png"
-                    screenSharePosterUrl="sample-img/video-screen-baz.png"
-                  />
+                    roomState={ROOM_STATES.HAS_PARTICIPANTS}
+                    screenSharePosterUrl="sample-img/video-screen-baz.png" />
                 </div>
             </FramedExample>
 
-            <FramedExample width={800} height={660} dashed={true}
-                           cssClass="standalone"
-                           onContentsRendered={updatingSharingRoomStore.forcedUpdate}
-              summary="Standalone room convo (has-participants, receivingScreenShare, 800x660)">
+            <FramedExample
+              cssClass="standalone"
+              dashed={true}
+              height={660}
+              onContentsRendered={updatingSharingRoomStore.forcedUpdate}
+              summary="Standalone room convo (has-participants, receivingScreenShare, 800x660)"
+              width={800}>
                 <div className="standalone">
                   <StandaloneRoomView
-                    dispatcher={dispatcher}
                     activeRoomStore={updatingSharingRoomStore}
-                    roomState={ROOM_STATES.HAS_PARTICIPANTS}
+                    dispatcher={dispatcher}
                     isFirefox={true}
                     localPosterUrl="sample-img/video-screen-local.png"
                     remotePosterUrl="sample-img/video-screen-remote.png"
-                    screenSharePosterUrl="sample-img/video-screen-terminal.png"
-                  />
+                    roomState={ROOM_STATES.HAS_PARTICIPANTS}
+                    screenSharePosterUrl="sample-img/video-screen-terminal.png" />
                 </div>
             </FramedExample>
 
-            <FramedExample width={644} height={483} dashed={true}
-                           cssClass="standalone"
-                           summary="Standalone room conversation (full - FFx user)">
+            <FramedExample cssClass="standalone"
+                           dashed={true}
+                           height={483}
+                           summary="Standalone room conversation (full - FFx user)"
+                           width={644} >
               <div className="standalone">
                 <StandaloneRoomView
-                  dispatcher={dispatcher}
                   activeRoomStore={fullActiveRoomStore}
+                  dispatcher={dispatcher}
                   isFirefox={true} />
               </div>
             </FramedExample>
 
-            <FramedExample width={644} height={483} dashed={true}
-                           cssClass="standalone"
-                           summary="Standalone room conversation (full - non FFx user)">
+            <FramedExample cssClass="standalone"
+                           dashed={true}
+                           height={483}
+                           summary="Standalone room conversation (full - non FFx user)"
+                           width={644} >
               <div className="standalone">
                 <StandaloneRoomView
-                  dispatcher={dispatcher}
                   activeRoomStore={fullActiveRoomStore}
+                  dispatcher={dispatcher}
                   isFirefox={false} />
               </div>
             </FramedExample>
 
-            <FramedExample width={644} height={483} dashed={true}
-                           cssClass="standalone"
-                           summary="Standalone room conversation (feedback)">
+            <FramedExample cssClass="standalone"
+                           dashed={true}
+                           height={483}
+                           summary="Standalone room conversation (feedback)"
+                           width={644}>
               <div className="standalone">
                 <StandaloneRoomView
-                  dispatcher={dispatcher}
                   activeRoomStore={endedRoomStore}
+                  dispatcher={dispatcher}
                   feedbackStore={feedbackStore}
                   isFirefox={false} />
               </div>
             </FramedExample>
 
-            <FramedExample width={644} height={483} dashed={true}
-                           cssClass="standalone"
-                           summary="Standalone room conversation (failed)">
+            <FramedExample cssClass="standalone"
+                           dashed={true}
+                           height={483}
+                           summary="Standalone room conversation (failed)"
+                           width={644} >
               <div className="standalone">
                 <StandaloneRoomView
-                  dispatcher={dispatcher}
                   activeRoomStore={failedRoomStore}
+                  dispatcher={dispatcher}
                   isFirefox={false} />
               </div>
             </FramedExample>
           </Section>
 
           <Section name="StandaloneRoomView (Mobile)">
-            <FramedExample width={600} height={480} cssClass="standalone"
-                           dashed={true}
-                           onContentsRendered={updatingActiveRoomStore.forcedUpdate}
-                           summary="Standalone room conversation (has-participants, 600x480)">
+            <FramedExample
+              cssClass="standalone"
+              dashed={true}
+              height={480}
+              onContentsRendered={updatingActiveRoomStore.forcedUpdate}
+              summary="Standalone room conversation (has-participants, 600x480)"
+              width={600}>
                 <div className="standalone">
                   <StandaloneRoomView
-                    dispatcher={dispatcher}
                     activeRoomStore={updatingActiveRoomStore}
-                    roomState={ROOM_STATES.HAS_PARTICIPANTS}
-                    isFirefox={true}
-                    localPosterUrl="sample-img/video-screen-local.png"
-                    remotePosterUrl="sample-img/video-screen-remote.png" />
-                </div>
-            </FramedExample>
-
-            <FramedExample width={600} height={480}
-                           onContentsRendered={updatingSharingRoomStore.forcedUpdate}
-              summary="Standalone room convo (has-participants, receivingScreenShare, 600x480)">
-                <div className="standalone" cssClass="standalone">
-                  <StandaloneRoomView
                     dispatcher={dispatcher}
-                    activeRoomStore={updatingSharingRoomStore}
-                    roomState={ROOM_STATES.HAS_PARTICIPANTS}
                     isFirefox={true}
                     localPosterUrl="sample-img/video-screen-local.png"
                     remotePosterUrl="sample-img/video-screen-remote.png"
+                    roomState={ROOM_STATES.HAS_PARTICIPANTS} />
+                </div>
+            </FramedExample>
+
+            <FramedExample
+              height={480}
+              onContentsRendered={updatingSharingRoomStore.forcedUpdate}
+              summary="Standalone room convo (has-participants, receivingScreenShare, 600x480)"
+              width={600} >
+                <div className="standalone" cssClass="standalone">
+                  <StandaloneRoomView
+                    activeRoomStore={updatingSharingRoomStore}
+                    dispatcher={dispatcher}
+                    isFirefox={true}
+                    localPosterUrl="sample-img/video-screen-local.png"
+                    remotePosterUrl="sample-img/video-screen-remote.png"
+                    roomState={ROOM_STATES.HAS_PARTICIPANTS}
                     screenSharePosterUrl="sample-img/video-screen-terminal.png" />
                 </div>
             </FramedExample>
           </Section>
 
           <Section name="TextChatView">
-            <FramedExample width={298} height={160} dashed={true}
-                           summary="TextChatView: desktop embedded">
+            <FramedExample dashed={true}
+                           height={160}
+                           summary="TextChatView: desktop embedded"
+                           width={298}>
               <div className="fx-embedded">
                 <TextChatView dispatcher={dispatcher}
                               showAlways={false}
@@ -1133,9 +1198,11 @@
               </div>
             </FramedExample>
 
-            <FramedExample width={200} height={400} dashed={true}
-                           cssClass="standalone"
-                           summary="Standalone Text Chat conversation (200x400)">
+            <FramedExample cssClass="standalone"
+                           dashed={true}
+                           height={400}
+                           summary="Standalone Text Chat conversation (200x400)"
+                           width={200}>
               <div className="standalone text-chat-example">
                 <div className="media-wrapper">
                   <TextChatView
@@ -1147,7 +1214,7 @@
             </FramedExample>
           </Section>
 
-          <Section name="SVG icons preview" className="svg-icons">
+          <Section className="svg-icons" name="SVG icons preview">
             <Example summary="10x10">
               <SVGIcons size="10x10"/>
             </Example>

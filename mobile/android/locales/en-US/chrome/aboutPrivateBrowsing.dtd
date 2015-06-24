@@ -10,7 +10,7 @@
 
 <!ENTITY privatebrowsingpage.description2 "Bookmarks you add and files you download will still be saved on your device.">
 <!ENTITY privatebrowsingpage.description.normal "&privatebrowsingpage.issueDesc.normal2; &privatebrowsingpage.description2;">
-<!ENTITY privatebrowsingpage.description.private "&privatebrowsingpage.issueDesc.private2; &privatebrowsingpage.description2;">
+<!ENTITY privatebrowsingpage.description.private2 "&privatebrowsingpage.issueDesc.private2; &privatebrowsingpage.description2;">
 
 <!ENTITY privatebrowsingpage.link.private "Want to learn more?">
 <!ENTITY privatebrowsingpage.link.normal "Open a new private tab">
