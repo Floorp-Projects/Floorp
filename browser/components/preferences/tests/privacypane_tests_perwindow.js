@@ -321,11 +321,18 @@ function test_locbar_suggestion_retention(suggestion, autocomplete) {
   };
 }
 
+const gPrefCache = new Map();
+
+function cache_preferences(win) {
+  let prefs = win.document.querySelectorAll("#privacyPreferences > preference");
+  for (let pref of prefs)
+    gPrefCache.set(pref.name, pref.value);
+}
+
 function reset_preferences(win) {
-  let prefs = win.document.getElementsByTagName("preference");
-  for (let i = 0; i < prefs.length; ++i)
-    if (prefs[i].hasUserValue)
-      prefs[i].reset();
+  let prefs = win.document.querySelectorAll("#privacyPreferences > preference");
+  for (let pref of prefs)
+    pref.value = gPrefCache.get(pref.name);
 }
 
 let testRunner;
@@ -336,7 +343,7 @@ function run_test_subset(subset) {
   waitForExplicitFinish();
 
   testRunner = {
-    tests: subset,
+    tests: [cache_preferences, ...subset, reset_preferences],
     counter: 0,
     runNext: function() {
       if (this.counter == this.tests.length) {
