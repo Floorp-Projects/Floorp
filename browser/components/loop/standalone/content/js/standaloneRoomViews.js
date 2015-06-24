@@ -20,7 +20,11 @@ loop.standaloneRoomViews = (function(mozL10n) {
         React.PropTypes.instanceOf(loop.store.ActiveRoomStore),
         React.PropTypes.instanceOf(loop.store.FxOSActiveRoomStore)
       ]).isRequired,
-      isFirefox: React.PropTypes.bool.isRequired
+      failureReason: React.PropTypes.string,
+      isFirefox: React.PropTypes.bool.isRequired,
+      joinRoom: React.PropTypes.func.isRequired,
+      roomState: React.PropTypes.string.isRequired,
+      roomUsed: React.PropTypes.bool.isRequired
     },
 
     onFeedbackSent: function() {
@@ -247,6 +251,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       // The poster URLs are for UI-showcase testing and development
       localPosterUrl: React.PropTypes.string,
       remotePosterUrl: React.PropTypes.string,
+      roomState: React.PropTypes.string,
       screenSharePosterUrl: React.PropTypes.string
     },
 
