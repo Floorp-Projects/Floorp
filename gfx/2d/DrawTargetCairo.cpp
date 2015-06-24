@@ -457,6 +457,17 @@ private:
   double mY;
 };
 
+static inline void
+CairoPatternAddGradientStop(cairo_pattern_t* aPattern,
+                            const GradientStop &aStop,
+                            Float aNudge = 0)
+{
+  cairo_pattern_add_color_stop_rgba(aPattern, aStop.offset + aNudge,
+                                    aStop.color.r, aStop.color.g, aStop.color.b,
+                                    aStop.color.a);
+
+}
+
 // Never returns nullptr. As such, you must always pass in Cairo-compatible
 // patterns, most notably gradients with a GradientStopCairo.
 // The pattern returned must have cairo_pattern_destroy() called on it by the
@@ -465,7 +476,9 @@ private:
 // lifetime of the cairo_pattern_t returned must not exceed the lifetime of the
 // Pattern passed in.
 static cairo_pattern_t*
-GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
+GfxPatternToCairoPattern(const Pattern& aPattern,
+                         Float aAlpha,
+                         const Matrix& aTransform)
 {
   cairo_pattern_t* pat;
   const Matrix* matrix = nullptr;
@@ -512,11 +525,25 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
       matrix = &pattern.mMatrix;
 
       const std::vector<GradientStop>& stops = cairoStops->GetStops();
+      if (stops.size() >= 2 && stops.front().offset == stops.back().offset) {
+        // Certain Cairo backends that use pixman to implement gradients can have jagged
+        // edges occur with hard stops. Such hard stops are used for implementing certain
+        // types of CSS borders. Work around this by turning these hard-stops into half-pixel
+        // gradients to anti-alias them. See bug 1033375
+        Matrix patternToDevice = aTransform * pattern.mMatrix;
+        Float gradLength = (patternToDevice * pattern.mEnd - patternToDevice * pattern.mBegin).Length();
+        if (gradLength > 0) {
+          Float aaOffset = 0.25 / gradLength;
+          CairoPatternAddGradientStop(pat, stops.front(), -aaOffset);
+          for (size_t i = 1; i < stops.size()-1; ++i) {
+            CairoPatternAddGradientStop(pat, stops[i]);
+          }
+          CairoPatternAddGradientStop(pat, stops.back(), aaOffset);
+          break;
+        }
+      }
       for (size_t i = 0; i < stops.size(); ++i) {
-        const GradientStop& stop = stops[i];
-        cairo_pattern_add_color_stop_rgba(pat, stop.offset, stop.color.r,
-                                          stop.color.g, stop.color.b,
-                                          stop.color.a);
+        CairoPatternAddGradientStop(pat, stops[i]);
       }
 
       break;
@@ -536,10 +563,7 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
 
       const std::vector<GradientStop>& stops = cairoStops->GetStops();
       for (size_t i = 0; i < stops.size(); ++i) {
-        const GradientStop& stop = stops[i];
-        cairo_pattern_add_color_stop_rgba(pat, stop.offset, stop.color.r,
-                                          stop.color.g, stop.color.b,
-                                          stop.color.a);
+        CairoPatternAddGradientStop(pat, stops[i]);
       }
 
       break;
@@ -892,7 +916,7 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
 
   AutoClearDeviceOffset clear(aPattern);
 
-  cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha);
+  cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha, GetTransform());
   if (!pat) {
     return;
   }
@@ -1174,7 +1198,7 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
   ScaledFontBase* scaledFont = static_cast<ScaledFontBase*>(aFont);
   cairo_set_scaled_font(mContext, scaledFont->GetCairoScaledFont());
 
-  cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha);
+  cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha, GetTransform());
   if (!pat)
     return;
 
@@ -1213,12 +1237,12 @@ DrawTargetCairo::Mask(const Pattern &aSource,
 
   cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
-  cairo_pattern_t* source = GfxPatternToCairoPattern(aSource, aOptions.mAlpha);
+  cairo_pattern_t* source = GfxPatternToCairoPattern(aSource, aOptions.mAlpha, GetTransform());
   if (!source) {
     return;
   }
 
-  cairo_pattern_t* mask = GfxPatternToCairoPattern(aMask, aOptions.mAlpha);
+  cairo_pattern_t* mask = GfxPatternToCairoPattern(aMask, aOptions.mAlpha, GetTransform());
   if (!mask) {
     cairo_pattern_destroy(source);
     return;
@@ -1254,7 +1278,7 @@ DrawTargetCairo::MaskSurface(const Pattern &aSource,
 
   cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
-  cairo_pattern_t* pat = GfxPatternToCairoPattern(aSource, aOptions.mAlpha);
+  cairo_pattern_t* pat = GfxPatternToCairoPattern(aSource, aOptions.mAlpha, GetTransform());
   if (!pat) {
     return;
   }
