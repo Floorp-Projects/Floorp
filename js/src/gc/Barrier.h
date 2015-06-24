@@ -384,53 +384,134 @@ class PreBarriered : public BarrieredBase<T>
 /*
  * A pre- and post-barriered heap pointer, for use inside the JS engine.
  *
- * Use of this class makes a heap-stored pointer safe for both incremental and
- * generational GC. Note, however, that this class does *not* create a new
- * root: HeapPtr references must still be traced like any other pointer in the
- * system.
+ * It must only be stored in memory that has GC lifetime. HeapPtr must not be
+ * used in contexts where it may be implicitly moved or deleted, e.g. most
+ * containers.
  *
- * This class should not to be confused with JS::Heap<T>. This is a different
- * class from the external interface and implements substantially different
- * semantics. Specifically, it implements pre-barriers, which the external
- * interface does not.
+ * Not to be confused with JS::Heap<T>. This is a different class from the
+ * external interface and implements substantially different semantics.
+ *
+ * The post-barriers implemented by this class are faster than those
+ * implemented by RelocatablePtr<T> or JS::Heap<T> at the cost of not
+ * automatically handling deletion or movement.
  */
 template <class T>
 class HeapPtr : public BarrieredBase<T>
 {
   public:
     HeapPtr() : BarrieredBase<T>(GCMethods<T>::initial()) {}
-    explicit HeapPtr(T v) : BarrieredBase<T>(v) {
+    explicit HeapPtr(T v) : BarrieredBase<T>(v) { post(GCMethods<T>::initial(), v); }
+    explicit HeapPtr(const HeapPtr<T>& v) : BarrieredBase<T>(v) { post(GCMethods<T>::initial(), v); }
+#ifdef DEBUG
+    ~HeapPtr() {
+        // No prebarrier necessary as this only happens when we are sweeping or
+        // before the containing obect becomes part of the GC graph.
+        MOZ_ASSERT(CurrentThreadIsGCSweeping() || CurrentThreadIsHandlingInitFailure());
+    }
+#endif
+
+    void init(T v) {
+        this->value = v;
+        post(GCMethods<T>::initial(), v);
+    }
+
+    DECLARE_POINTER_ASSIGN_OPS(HeapPtr, T);
+
+  protected:
+    void post(T prev, T next) { InternalGCMethods<T>::postBarrier(&this->value, prev, next); }
+
+  private:
+    void set(const T& v) {
+        this->pre();
+        T tmp = this->value;
+        this->value = v;
+        post(tmp, this->value);
+    }
+
+    /*
+     * Unlike RelocatablePtr<T>, HeapPtr<T> must be managed with GC lifetimes.
+     * Specifically, the memory used by the pointer itself must be live until
+     * at least the next minor GC. For that reason, move semantics are invalid
+     * and are deleted here. Please note that not all containers support move
+     * semantics, so this does not completely prevent invalid uses.
+     */
+    HeapPtr(HeapPtr<T>&&) = delete;
+    HeapPtr<T>& operator=(HeapPtr<T>&&) = delete;
+};
+
+/*
+ * ImmutableTenuredPtr is designed for one very narrow case: replacing
+ * immutable raw pointers to GC-managed things, implicitly converting to a
+ * handle type for ease of use. Pointers encapsulated by this type must:
+ *
+ *   be immutable (no incremental write barriers),
+ *   never point into the nursery (no generational write barriers), and
+ *   be traced via MarkRuntime (we use fromMarkedLocation).
+ *
+ * In short: you *really* need to know what you're doing before you use this
+ * class!
+ */
+template <typename T>
+class ImmutableTenuredPtr
+{
+    T value;
+
+  public:
+    operator T() const { return value; }
+    T operator->() const { return value; }
+
+    operator Handle<T>() const {
+        return Handle<T>::fromMarkedLocation(&value);
+    }
+
+    void init(T ptr) {
+        MOZ_ASSERT(ptr->isTenured());
+        value = ptr;
+    }
+
+    T get() const { return value; }
+    const T* address() { return &value; }
+};
+
+/*
+ * A pre- and post-barriered heap pointer, for use inside the JS engine.
+ *
+ * Unlike HeapPtr<T>, it can be used in memory that is not managed by the GC,
+ * i.e. in C++ containers.  It is, however, somewhat slower, so should only be
+ * used in contexts where this ability is necessary.
+ */
+template <class T>
+class RelocatablePtr : public BarrieredBase<T>
+{
+  public:
+    RelocatablePtr() : BarrieredBase<T>(GCMethods<T>::initial()) {}
+    explicit RelocatablePtr(T v) : BarrieredBase<T>(v) {
         post(GCMethods<T>::initial(), this->value);
     }
 
     /*
-     * For HeapPtr, move semantics are equivalent to copy semantics. In
+     * For RelocatablePtr, move semantics are equivalent to copy semantics. In
      * C++, a copy constructor taking const-ref is the way to get a single
      * function that will be used for both lvalue and rvalue copies, so we can
      * simply omit the rvalue variant.
      */
-    HeapPtr(const HeapPtr<T>& v) : BarrieredBase<T>(v) {
+    RelocatablePtr(const RelocatablePtr<T>& v) : BarrieredBase<T>(v) {
         post(GCMethods<T>::initial(), this->value);
     }
 
-    ~HeapPtr() {
+    ~RelocatablePtr() {
         this->pre();
         post(this->value, GCMethods<T>::initial());
     }
 
-    void init(T v) {
-        this->value = v;
-        post(GCMethods<T>::initial(), this->value);
-    }
-
-    DECLARE_POINTER_ASSIGN_OPS(HeapPtr, T);
+    DECLARE_POINTER_ASSIGN_OPS(RelocatablePtr, T);
 
     /* Make this friend so it can access pre() and post(). */
     template <class T1, class T2>
     friend inline void
     BarrieredSetPair(Zone* zone,
-                     HeapPtr<T1*>& v1, T1* val1,
-                     HeapPtr<T2*>& v2, T2* val2);
+                     RelocatablePtr<T1*>& v1, T1* val1,
+                     RelocatablePtr<T2*>& v2, T2* val2);
 
   protected:
     void set(const T& v) {
@@ -448,13 +529,6 @@ class HeapPtr : public BarrieredBase<T>
         InternalGCMethods<T>::postBarrier(&this->value, prev, next);
     }
 };
-
-/*
- * This name is kept so that complete conversion to HeapPtr can be done
- * incrementally.
- */
-template <typename T>
-using RelocatablePtr = HeapPtr<T>;
 
 /*
  * This is a hack for RegExpStatics::updateFromMatch. It allows us to do two
@@ -561,40 +635,6 @@ struct ReadBarrieredHasher
 /* Specialized hashing policy for ReadBarriereds. */
 template <class T>
 struct DefaultHasher<ReadBarriered<T>> : ReadBarrieredHasher<T> { };
-
-/*
- * ImmutableTenuredPtr is designed for one very narrow case: replacing
- * immutable raw pointers to GC-managed things, implicitly converting to a
- * handle type for ease of use. Pointers encapsulated by this type must:
- *
- *   be immutable (no incremental write barriers),
- *   never point into the nursery (no generational write barriers), and
- *   be traced via MarkRuntime (we use fromMarkedLocation).
- *
- * In short: you *really* need to know what you're doing before you use this
- * class!
- */
-template <typename T>
-class ImmutableTenuredPtr
-{
-    T value;
-
-  public:
-    operator T() const { return value; }
-    T operator->() const { return value; }
-
-    operator Handle<T>() const {
-        return Handle<T>::fromMarkedLocation(&value);
-    }
-
-    void init(T ptr) {
-        MOZ_ASSERT(ptr->isTenured());
-        value = ptr;
-    }
-
-    T get() const { return value; }
-    const T* address() { return &value; }
-};
 
 class ArrayObject;
 class ArrayBufferObject;
