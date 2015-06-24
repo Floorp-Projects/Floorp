@@ -12,7 +12,7 @@
   SimpleTest.waitForExplicitFinish();
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
-  const MAX_ATTEMPTS = 5;
+  const MAX_ATTEMPTS = 50;
   var attempts = 0;
   var destroyed = false;
   function onDestroy() {
