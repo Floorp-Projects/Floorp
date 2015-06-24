@@ -1,4 +1,3 @@
-marionette-transport >= 0.4
 marionette-driver >= 0.8
 browsermob-proxy >= 0.6.0
 manifestparser >= 1.1
