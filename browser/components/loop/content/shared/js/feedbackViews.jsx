@@ -32,8 +32,9 @@ loop.shared.views.FeedbackView = (function(l10n) {
       var backButton = <div />;
       if (this.props.reset) {
         backButton = (
-          <button className="fx-embedded-btn-back" type="button"
-                  onClick={this.props.reset}>
+          <button className="fx-embedded-btn-back"
+            onClick={this.props.reset}
+            type="button" >
             &laquo;&nbsp;{l10n.get("feedback_back_button")}
           </button>
         );
@@ -80,12 +81,15 @@ loop.shared.views.FeedbackView = (function(l10n) {
       var categories = this._getCategories();
       return Object.keys(categories).map(function(category, key) {
         return (
-          <label key={key} className="feedback-category-label">
-            <input type="radio" ref="category" name="category"
-                   className="feedback-category-radio"
-                   value={category}
-                   onChange={this.handleCategoryChange}
-                   checked={this.state.category === category} />
+          <label className="feedback-category-label" key={key}>
+            <input
+              checked={this.state.category === category}
+              className="feedback-category-radio"
+              name="category"
+              onChange={this.handleCategoryChange}
+              ref="category"
+              type="radio"
+              value={category} />
             {categories[category]}
           </label>
         );
@@ -138,20 +142,24 @@ loop.shared.views.FeedbackView = (function(l10n) {
 
     render: function() {
       return (
-        <FeedbackLayout title={l10n.get("feedback_category_list_heading")}
-                        reset={this.props.reset}>
+        <FeedbackLayout
+          reset={this.props.reset}
+          title={l10n.get("feedback_category_list_heading")}>
           <form onSubmit={this.handleFormSubmit}>
             {this._getCategoryFields()}
             <p>
-              <input type="text" ref="description" name="description"
-                className="feedback-description"
+              <input className="feedback-description"
+                name="description"
                 onChange={this.handleDescriptionFieldChange}
-                value={this.state.description}
                 placeholder={
-                  l10n.get("feedback_custom_category_text_placeholder")} />
+                  l10n.get("feedback_custom_category_text_placeholder")}
+                ref="description"
+                type="text"
+                value={this.state.description} />
             </p>
-            <button type="submit" className="btn btn-success"
-                    disabled={!this._isFormReady()}>
+            <button className="btn btn-success"
+              disabled={!this._isFormReady()}
+              type="submit">
               {l10n.get("feedback_submit_button")}
             </button>
           </form>
@@ -289,8 +297,8 @@ loop.shared.views.FeedbackView = (function(l10n) {
           return (
             <FeedbackForm
               feedbackStore={this.getStore()}
-              reset={this.reset}
-              pending={this.state.feedbackState === FEEDBACK_STATES.PENDING} />
+              pending={this.state.feedbackState === FEEDBACK_STATES.PENDING}
+              reset={this.reset} />
             );
         }
         case FEEDBACK_STATES.PENDING:

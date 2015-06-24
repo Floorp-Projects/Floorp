@@ -232,9 +232,10 @@ loop.conversationViews = (function(mozL10n) {
 
       return (
         <div className="call-window">
-          <CallIdentifierView video={this.props.callType === CALL_TYPES.AUDIO_VIDEO}
+          <CallIdentifierView
             peerIdentifier={this.props.callerId}
-            showIcons={true} />
+            showIcons={true}
+            video={this.props.callType === CALL_TYPES.AUDIO_VIDEO} />
 
           <div className="btn-group call-action-group">
 
@@ -553,8 +554,8 @@ loop.conversationViews = (function(mozL10n) {
               {mozL10n.get("retry_call_button")}
             </button>
             <button className={emailClasses}
-                    onClick={this.emailLink}
-                    disabled={this.state.emailLinkButtonDisabled}>
+                    disabled={this.state.emailLinkButtonDisabled}
+                    onClick={this.emailLink}>
               {mozL10n.get("share_button3")}
             </button>
           </div>
@@ -654,24 +655,24 @@ loop.conversationViews = (function(mozL10n) {
               <div className="video_wrapper remote_wrapper">
                 <div className="video_inner remote focus-stream">
                   <sharedViews.MediaView displayAvatar={!this.shouldRenderRemoteVideo()}
-                    posterUrl={this.props.remotePosterUrl}
                     mediaType="remote"
+                    posterUrl={this.props.remotePosterUrl}
                     srcVideoObject={this.state.remoteSrcVideoObject} />
                 </div>
               </div>
               <div className={localStreamClasses}>
                 <sharedViews.MediaView displayAvatar={!this.props.video.enabled}
-                  posterUrl={this.props.localPosterUrl}
                   mediaType="local"
+                  posterUrl={this.props.localPosterUrl}
                   srcVideoObject={this.state.localSrcVideoObject} />
               </div>
             </div>
             <loop.shared.views.ConversationToolbar
-              dispatcher={this.props.dispatcher}
-              video={this.props.video}
               audio={this.props.audio}
+              dispatcher={this.props.dispatcher}
+              hangup={this.hangup}
               publishStream={this.publishStream}
-              hangup={this.hangup} />
+              video={this.props.video} />
           </div>
         </div>
       );
@@ -729,11 +730,10 @@ loop.conversationViews = (function(mozL10n) {
       // for any state that render() doesn't manage.
       if (this.state.outgoing) {
         return (<PendingConversationView
-          dispatcher={this.props.dispatcher}
           callState={this.state.callState}
           contact={this.state.contact}
-          enableCancelButton={this._isCancellable()}
-        />);
+          dispatcher={this.props.dispatcher}
+          enableCancelButton={this._isCancellable()} />);
       }
 
       // For incoming calls that are in accepting state, display the
@@ -768,20 +768,18 @@ loop.conversationViews = (function(mozL10n) {
         }
         case CALL_STATES.TERMINATED: {
           return (<CallFailedView
-            dispatcher={this.props.dispatcher}
             contact={this.state.contact}
-            outgoing={this.state.outgoing}
-          />);
+            dispatcher={this.props.dispatcher}
+            outgoing={this.state.outgoing} />);
         }
         case CALL_STATES.ONGOING: {
           return (<OngoingConversationView
-            dispatcher={this.props.dispatcher}
-            video={{enabled: !this.state.videoMuted}}
             audio={{enabled: !this.state.audioMuted}}
-            remoteVideoEnabled={this.state.remoteVideoEnabled}
+            dispatcher={this.props.dispatcher}
             mediaConnected={this.state.mediaConnected}
             remoteSrcVideoObject={this.state.remoteSrcVideoObject}
-            />
+            remoteVideoEnabled={this.state.remoteVideoEnabled}
+            video={{enabled: !this.state.videoMuted}} />
           );
         }
         case CALL_STATES.FINISHED: {

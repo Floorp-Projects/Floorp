@@ -248,11 +248,11 @@ loop.webapp = (function($, _, OT, mozL10n) {
     render: function() {
       return (
         <div className="standalone-footer container-box">
-          <div title={mozL10n.get("vendor_alttext",
-                                  {vendorShortname: mozL10n.get("vendorShortname")})}
-               className="footer-logo"></div>
+          <div className="footer-logo"
+               title={mozL10n.get("vendor_alttext",
+                                  {vendorShortname: mozL10n.get("vendorShortname")})} />
           <div className="footer-external-links">
-            <a target="_blank" href={loop.config.generalSupportUrl}>
+            <a href={loop.config.generalSupportUrl} target="_blank">
               {mozL10n.get("support_link")}
             </a>
           </div>
@@ -374,8 +374,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       return (
         <PendingConversationView
           callState={callState}
-          cancelCallback={this._cancelOutgoingCall}
-        />
+          cancelCallback={this._cancelOutgoingCall} />
       );
     }
   });
@@ -408,8 +407,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
           <div className="btn-group-chevron">
             <div className="btn-group">
               <button className="btn btn-constrained btn-large btn-accept"
-                      onClick={this.props.startCall("audio-video")}
                       disabled={this.props.disabled}
+                      onClick={this.props.startCall("audio-video")}
                       title={mozL10n.get("initiate_audio_video_call_tooltip2")}>
                 <span className="standalone-call-btn-text">
                   {this.props.caption}
@@ -423,8 +422,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
             <ul className={dropdownMenuClasses}>
               <li>
                 <button className="start-audio-only-call"
-                        onClick={this.props.startCall("audio")}
-                        disabled={this.props.disabled}>
+                        disabled={this.props.disabled}
+                        onClick={this.props.startCall("audio")}>
                   {mozL10n.get("initiate_audio_call_button2")}
                 </button>
               </li>
@@ -588,15 +587,13 @@ loop.webapp = (function($, _, OT, mozL10n) {
       return (
         <div className="ended-conversation">
           <sharedViews.FeedbackView
-            onAfterFeedbackReceived={this.props.onAfterFeedbackReceived}
-          />
+            onAfterFeedbackReceived={this.props.onAfterFeedbackReceived} />
           <sharedViews.ConversationView
-            initiate={false}
-            sdk={this.props.sdk}
-            model={this.props.conversation}
             audio={{enabled: false, visible: false}}
-            video={{enabled: false, visible: false}}
-          />
+            initiate={false}
+            model={this.props.conversation}
+            sdk={this.props.sdk}
+            video={{enabled: false, visible: false}} />
         </div>
       );
     }
@@ -608,8 +605,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
       return (
         <InitiateConversationView
           {...this.props}
-          title={mozL10n.get("initiate_call_button_label2")}
-          callButtonLabel={mozL10n.get("initiate_audio_video_call_button2")}/>
+          callButtonLabel={mozL10n.get("initiate_audio_video_call_button2")}
+          title={mozL10n.get("initiate_call_button_label2")} />
       );
     }
   });
@@ -628,8 +625,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
       return (
         <InitiateConversationView
           {...this.props}
-          title={mozL10n.get("call_failed_title")}
-          callButtonLabel={mozL10n.get("retry_call_button")} />
+          callButtonLabel={mozL10n.get("retry_call_button")}
+          title={mozL10n.get("call_failed_title")} />
       );
     }
   });
@@ -695,19 +692,17 @@ loop.webapp = (function($, _, OT, mozL10n) {
         case "start": {
           return (
             <StartConversationView
-              conversation={this.props.conversation}
-              notifications={this.props.notifications}
               client={this.props.client}
-            />
+              conversation={this.props.conversation}
+              notifications={this.props.notifications} />
           );
         }
         case "failure": {
           return (
             <FailedConversationView
-              conversation={this.props.conversation}
-              notifications={this.props.notifications}
               client={this.props.client}
-            />
+              conversation={this.props.conversation}
+              notifications={this.props.notifications} />
           );
         }
         case "gumPrompt": {
@@ -723,19 +718,17 @@ loop.webapp = (function($, _, OT, mozL10n) {
           return (
             <sharedViews.ConversationView
               initiate={true}
-              sdk={this.props.sdk}
               model={this.props.conversation}
-              video={{enabled: this.props.conversation.hasVideoStream("outgoing")}}
-            />
+              sdk={this.props.sdk}
+              video={{enabled: this.props.conversation.hasVideoStream("outgoing")}} />
           );
         }
         case "end": {
           return (
             <EndedConversationView
-              sdk={this.props.sdk}
               conversation={this.props.conversation}
               onAfterFeedbackReceived={this.resetCallStatus()}
-            />
+              sdk={this.props.sdk} />
           );
         }
         case "expired": {
@@ -988,11 +981,10 @@ loop.webapp = (function($, _, OT, mozL10n) {
           return (
             <OutgoingConversationView
                client={this.props.client}
-               dispatcher={this.props.dispatcher}
                conversation={this.props.conversation}
+               dispatcher={this.props.dispatcher}
                notifications={this.props.notifications}
-               sdk={this.props.sdk}
-            />
+               sdk={this.props.sdk} />
           );
         }
         case "room": {
@@ -1000,8 +992,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
             <loop.standaloneRoomViews.StandaloneRoomView
               activeRoomStore={this.props.activeRoomStore}
               dispatcher={this.props.dispatcher}
-              isFirefox={this.state.isFirefox}
-            />
+              isFirefox={this.state.isFirefox} />
           );
         }
         case "home": {
@@ -1107,14 +1098,13 @@ loop.webapp = (function($, _, OT, mozL10n) {
     });
 
     React.render(<WebappRootView
+      activeRoomStore={activeRoomStore}
       client={client}
       conversation={conversation}
+      dispatcher={dispatcher}
       notifications={notifications}
       sdk={OT}
-      standaloneAppStore={standaloneAppStore}
-      activeRoomStore={activeRoomStore}
-      dispatcher={dispatcher}
-    />, document.querySelector("#main"));
+      standaloneAppStore={standaloneAppStore} />, document.querySelector("#main"));
 
     // Set the 'lang' and 'dir' attributes to <html> when the page is translated
     document.documentElement.lang = mozL10n.language.code;

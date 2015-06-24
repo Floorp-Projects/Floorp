@@ -129,8 +129,8 @@ loop.roomViews = (function(mozL10n) {
             this.props.socialShareProviders.map(function(provider, idx) {
               return (
                 <li className="dropdown-menu-item"
-                    key={"provider-" + idx}
                     data-provider={provider.origin}
+                    key={"provider-" + idx}
                     onClick={this.handleProviderClick}>
                   <img className="icon" src={provider.iconURL}/>
                   <span>{provider.name}</span>
@@ -249,25 +249,25 @@ loop.roomViews = (function(mozL10n) {
                                       mozL10n.get("copy_url_button2")}
             </button>
             <button className="btn btn-info btn-share"
-                    ref="anchor"
-                    onClick={this.handleShareButtonClick}>
+                    onClick={this.handleShareButtonClick}
+                    ref="anchor">
               {mozL10n.get("share_button3")}
             </button>
           </div>
           <SocialShareDropdown
             dispatcher={this.props.dispatcher}
+            ref="menu"
             roomUrl={this.props.roomData.roomUrl}
             show={this.state.showMenu}
-            socialShareProviders={this.props.socialShareProviders}
-            ref="menu" />
+            socialShareProviders={this.props.socialShareProviders} />
           <DesktopRoomContextView
             dispatcher={this.props.dispatcher}
             editMode={this.state.editMode}
             error={this.props.error}
-            savingContext={this.props.savingContext}
             mozLoop={this.props.mozLoop}
             onEditModeChange={this.handleEditModeChange}
             roomData={this.props.roomData}
+            savingContext={this.props.savingContext}
             show={this.props.showContext || this.state.editMode} />
         </div>
       );
@@ -519,18 +519,21 @@ loop.roomViews = (function(mozL10n) {
               onChange={this.handleCheckboxChange}
               value={location} />
             <form onSubmit={this.handleFormSubmit}>
-              <input type="text" className="room-context-name"
+              <input className="room-context-name"
                 onKeyDown={this.handleTextareaKeyDown}
                 placeholder={mozL10n.get("context_edit_name_placeholder")}
+                type="text"
                 valueLink={this.linkState("newRoomName")} />
-              <input type="text" className="room-context-url"
+              <input className="room-context-url"
+                disabled={availableContext && availableContext.url === this.state.newRoomURL}
                 onKeyDown={this.handleTextareaKeyDown}
                 placeholder="https://"
-                disabled={availableContext && availableContext.url === this.state.newRoomURL}
+                type="text"
                 valueLink={this.linkState("newRoomURL")} />
-              <textarea rows="3" type="text" className="room-context-comments"
+              <textarea className="room-context-comments"
                 onKeyDown={this.handleTextareaKeyDown}
                 placeholder={mozL10n.get("context_edit_comments_placeholder")}
+                rows="3" type="text"
                 valueLink={this.linkState("newRoomDescription")} />
             </form>
             <button className="btn btn-info"
@@ -769,35 +772,35 @@ loop.roomViews = (function(mozL10n) {
                     <div className="video_wrapper remote_wrapper">
                       <div className="video_inner remote focus-stream">
                         <sharedViews.MediaView displayAvatar={!this.shouldRenderRemoteVideo()}
-                          posterUrl={this.props.remotePosterUrl}
                           isLoading={this._shouldRenderRemoteLoading()}
                           mediaType="remote"
+                          posterUrl={this.props.remotePosterUrl}
                           srcVideoObject={this.state.remoteSrcVideoObject} />
                       </div>
                     </div>
                     <div className={localStreamClasses}>
                       <sharedViews.MediaView displayAvatar={this.state.videoMuted}
-                        posterUrl={this.props.localPosterUrl}
                         isLoading={this._shouldRenderLocalLoading()}
                         mediaType="local"
+                        posterUrl={this.props.localPosterUrl}
                         srcVideoObject={this.state.localSrcVideoObject} />
                     </div>
                   </div>
                   <sharedViews.ConversationToolbar
-                    dispatcher={this.props.dispatcher}
-                    video={{enabled: !this.state.videoMuted, visible: true}}
                     audio={{enabled: !this.state.audioMuted, visible: true}}
-                    publishStream={this.publishStream}
+                    dispatcher={this.props.dispatcher}
                     hangup={this.leaveRoom}
-                    screenShare={screenShareData} />
+                    publishStream={this.publishStream}
+                    screenShare={screenShareData}
+                    video={{enabled: !this.state.videoMuted, visible: true}} />
                 </div>
               </div>
               <DesktopRoomContextView
                 dispatcher={this.props.dispatcher}
                 error={this.state.error}
-                savingContext={this.state.savingContext}
                 mozLoop={this.props.mozLoop}
                 roomData={roomData}
+                savingContext={this.state.savingContext}
                 show={!shouldRenderInvitationOverlay && shouldRenderContextView} />
               <sharedViews.TextChatView
                 dispatcher={this.props.dispatcher}
