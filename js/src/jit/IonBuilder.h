@@ -616,6 +616,7 @@ class IonBuilder
     MDefinition* addLexicalCheck(MDefinition* input);
 
     bool tryFoldInstanceOf(MDefinition* lhs, JSObject* protoObject);
+    bool hasOnProtoChain(TypeSet::ObjectKey* key, JSObject* protoObject, bool* hasOnProto);
 
     bool jsop_add(MDefinition* left, MDefinition* right);
     bool jsop_bitnot();
