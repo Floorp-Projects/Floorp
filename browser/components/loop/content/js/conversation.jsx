@@ -158,10 +158,11 @@ loop.conversation = (function(mozL10n) {
       dispatcher.dispatch(new sharedActions.WindowUnload());
     });
 
-    React.render(<AppControllerView
-      roomStore={roomStore}
-      dispatcher={dispatcher}
-      mozLoop={navigator.mozLoop} />, document.querySelector("#main"));
+    React.render(
+      <AppControllerView
+        dispatcher={dispatcher}
+        mozLoop={navigator.mozLoop}
+        roomStore={roomStore} />, document.querySelector("#main"));
 
     document.documentElement.setAttribute("lang", mozL10n.getLanguage());
     document.documentElement.setAttribute("dir", mozL10n.getDirection());
