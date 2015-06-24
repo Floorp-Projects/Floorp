@@ -124,6 +124,7 @@ void
 MediaDecoder::InitStatics()
 {
   AbstractThread::InitStatics();
+  SharedThreadPool::InitStatics();
 
   // Log modules.
   gMediaDecoderLog = PR_NewLogModule("MediaDecoder");
