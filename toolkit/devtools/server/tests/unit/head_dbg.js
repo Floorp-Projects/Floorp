@@ -75,9 +75,9 @@ function attachTab(client, tab) {
   return rdpRequest(client, client.attachTab, tab.actor);
 }
 
-function waitForNewSource(client, url) {
+function waitForNewSource(threadClient, url) {
   dump("Waiting for new source with url '" + url + "'.\n");
-  return waitForEvent(client, "newSource", function (packet) {
+  return waitForEvent(threadClient, "newSource", function (packet) {
     return packet.source.url === url;
   });
 }
