@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
+
 var gPrivacyPane = {
 
   /**
@@ -103,6 +105,8 @@ var gPrivacyPane = {
                      gPrivacyPane.showCookies);
     setEventListener("clearDataSettings", "command",
                      gPrivacyPane.showClearPrivateDataSettings);
+
+    document.getElementById("searchesSuggestion").hidden = !AppConstants.NIGHTLY_BUILD;
   },
 
   // HISTORY MODE
