@@ -5,19 +5,10 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(4237c376-d637-4b6e-9f8a-1da57e867834)]
+[scriptable, uuid(e0f739e3-47e2-4007-af30-181939e97a51)]
 interface nsIDOMJSWindow : nsISupports
 {
   void                      dump(in DOMString str);
-
-  /**
-   * These methods take typeless arguments and optional arguments, the
-   * first argument is either a function or a string, the second
-   * argument must be a number (ms) and the rest of the arguments (2
-   * ... n) are passed to the callback function
-   */
-  long                      setTimeout();
-  long                      setInterval();
 
   /**
    * These methods take one optional argument that's the timer ID to

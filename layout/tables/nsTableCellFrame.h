@@ -12,7 +12,7 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 #include "nsStyleContext.h"
-#include "nsIPercentHeightObserver.h"
+#include "nsIPercentBSizeObserver.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsTArray.h"
@@ -32,7 +32,7 @@
  */
 class nsTableCellFrame : public nsContainerFrame,
                          public nsITableCellLayout,
-                         public nsIPercentHeightObserver
+                         public nsIPercentBSizeObserver
 {
   typedef mozilla::image::DrawResult DrawResult;
 
@@ -98,7 +98,7 @@ public:
 
   virtual nsMargin GetUsedMargin() const override;
 
-  virtual void NotifyPercentHeight(const nsHTMLReflowState& aReflowState) override;
+  virtual void NotifyPercentBSize(const nsHTMLReflowState& aReflowState) override;
 
   virtual bool NeedsToObserve(const nsHTMLReflowState& aReflowState) override;
 
@@ -279,31 +279,29 @@ inline void nsTableCellFrame::SetDesiredSize(const nsHTMLReflowMetrics & aDesire
 
 inline bool nsTableCellFrame::GetContentEmpty()
 {
-  return (mState & NS_TABLE_CELL_CONTENT_EMPTY) ==
-         NS_TABLE_CELL_CONTENT_EMPTY;
+  return HasAnyStateBits(NS_TABLE_CELL_CONTENT_EMPTY);
 }
 
 inline void nsTableCellFrame::SetContentEmpty(bool aContentEmpty)
 {
   if (aContentEmpty) {
-    mState |= NS_TABLE_CELL_CONTENT_EMPTY;
+    AddStateBits(NS_TABLE_CELL_CONTENT_EMPTY);
   } else {
-    mState &= ~NS_TABLE_CELL_CONTENT_EMPTY;
+    RemoveStateBits(NS_TABLE_CELL_CONTENT_EMPTY);
   }
 }
 
 inline bool nsTableCellFrame::HasPctOverBSize()
 {
-  return (mState & NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT) ==
-         NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
+  return HasAnyStateBits(NS_TABLE_CELL_HAS_PCT_OVER_BSIZE);
 }
 
 inline void nsTableCellFrame::SetHasPctOverBSize(bool aValue)
 {
   if (aValue) {
-    mState |= NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
+    AddStateBits(NS_TABLE_CELL_HAS_PCT_OVER_BSIZE);
   } else {
-    mState &= ~NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
+    RemoveStateBits(NS_TABLE_CELL_HAS_PCT_OVER_BSIZE);
   }
 }
 

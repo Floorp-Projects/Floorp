@@ -17,6 +17,9 @@ class nsIFrame;
 class nsStyleContext;
 class nsPresContext;
 struct nsRect;
+namespace mozilla {
+class RuleNodeCacheConditions;
+}
 
 /**
  * A helper to generate gfxMatrixes from css transform functions.
@@ -128,7 +131,7 @@ namespace nsStyleTransformMatrix {
   float ProcessTranslatePart(const nsCSSValue& aValue,
                              nsStyleContext* aContext,
                              nsPresContext* aPresContext,
-                             bool& aCanStoreInRuleTree,
+                             mozilla::RuleNodeCacheConditions& aConditions,
                              TransformReferenceBox* aRefBox,
                              TransformReferenceBox::DimensionGetter aDimensionGetter = nullptr);
 
@@ -137,7 +140,7 @@ namespace nsStyleTransformMatrix {
                             const nsCSSValue::Array* aData,
                             nsStyleContext* aContext,
                             nsPresContext* aPresContext,
-                            bool& aCanStoreInRuleTree,
+                            mozilla::RuleNodeCacheConditions& aConditions,
                             TransformReferenceBox& aBounds);
 
   /**
@@ -147,8 +150,8 @@ namespace nsStyleTransformMatrix {
    * @param aData The nsCSSValueList containing the transform functions
    * @param aContext The style context, used for unit conversion.
    * @param aPresContext The presentation context, used for unit conversion.
-   * @param aCanStoreInRuleTree Set to false if the result cannot be cached
-   *                            in the rule tree, otherwise untouched.
+   * @param aConditions Set to uncachable (by calling SetUncacheable()) if the
+   *   result cannot be cached in the rule tree, otherwise untouched.
    * @param aBounds The frame's bounding rectangle.
    * @param aAppUnitsPerMatrixUnit The number of app units per device pixel.
    *
@@ -159,7 +162,7 @@ namespace nsStyleTransformMatrix {
   gfx3DMatrix ReadTransforms(const nsCSSValueList* aList,
                              nsStyleContext* aContext,
                              nsPresContext* aPresContext,
-                             bool &aCanStoreInRuleTree,
+                             mozilla::RuleNodeCacheConditions& aConditions,
                              TransformReferenceBox& aBounds,
                              float aAppUnitsPerMatrixUnit);
 

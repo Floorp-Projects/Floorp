@@ -503,6 +503,66 @@ GetClosestInterestingAccessible(id anObject)
     case roles::DEFINITION:
       return @"AXDefinition";
 
+    case roles::MATHML_MATH:
+      return @"AXDocumentMath";
+
+    case roles::MATHML_FRACTION:
+      return @"AXMathFraction";
+
+    case roles::MATHML_FENCED:
+      // XXX This should be AXMathFence, but doing so without implementing the
+      // whole fence interface seems to make VoiceOver crash, so we present it
+      // as a row for now.
+      return @"AXMathRow";
+
+    case roles::MATHML_SUB:
+    case roles::MATHML_SUP:
+    case roles::MATHML_SUB_SUP:
+      return @"AXMathSubscriptSuperscript";
+
+    case roles::MATHML_ROW:
+      return @"AXMathRow";
+
+    case roles::MATHML_UNDER:
+    case roles::MATHML_OVER:
+    case roles::MATHML_UNDER_OVER:
+      return @"AXMathUnderOver";
+
+    case roles::MATHML_SQUARE_ROOT:
+      return @"AXMathSquareRoot";
+
+    case roles::MATHML_ROOT:
+      return @"AXMathRoot";
+
+    case roles::MATHML_TEXT:
+      return @"AXMathText";
+
+    case roles::MATHML_NUMBER:
+      return @"AXMathNumber";
+
+    case roles::MATHML_IDENTIFIER:
+      return @"AXMathIdentifier";
+
+    case roles::MATHML_TABLE:
+      return @"AXMathTable";
+
+    case roles::MATHML_TABLE_ROW:
+      return @"AXMathTableRow";
+
+    case roles::MATHML_CELL:
+      return @"AXMathTableCell";
+
+    // XXX: NSAccessibility also uses subroles AXMathSeparatorOperator and
+    // AXMathFenceOperator. We should use the NS_MATHML_OPERATOR_FENCE and
+    // NS_MATHML_OPERATOR_SEPARATOR bits of nsOperatorFlags, but currently they
+    // are only available from the MathML layout code. Hence we just fallback
+    // to subrole AXMathOperator for now.
+    case roles::MATHML_OPERATOR:
+      return @"AXMathOperator";
+
+    case roles::MATHML_MULTISCRIPTS:
+      return @"AXMathMultiscript";
+
     case roles::SWITCH:
       return @"AXSwitch";
 

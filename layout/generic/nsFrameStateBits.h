@@ -550,7 +550,7 @@ FRAME_STATE_BIT(Placeholder, 23, PLACEHOLDER_FOR_POPUP)
 
 FRAME_STATE_GROUP(TableCell, nsTableCellFrame)
 
-FRAME_STATE_BIT(TableCell, 28, NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT)
+FRAME_STATE_BIT(TableCell, 28, NS_TABLE_CELL_HAS_PCT_OVER_BSIZE)
 FRAME_STATE_BIT(TableCell, 29, NS_TABLE_CELL_HAD_SPECIAL_REFLOW)
 FRAME_STATE_BIT(TableCell, 31, NS_TABLE_CELL_CONTENT_EMPTY)
 
@@ -579,10 +579,10 @@ FRAME_STATE_BIT(TableRowAndRowGroup, 28, NS_REPEATED_ROW_OR_ROWGROUP)
 FRAME_STATE_GROUP(TableRow, nsTableRowFrame)
 
 // Indicates whether this row has any cells that have
-// non-auto-height and rowspan=1
-FRAME_STATE_BIT(TableRow, 29, NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT)
+// non-auto-bsize and rowspan=1
+FRAME_STATE_BIT(TableRow, 29, NS_ROW_HAS_CELL_WITH_STYLE_BSIZE)
 
-FRAME_STATE_BIT(TableRow, 30, NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT)
+FRAME_STATE_BIT(TableRow, 30, NS_TABLE_ROW_HAS_UNPAGINATED_BSIZE)
 
 
 // == Frame state bits that apply to table row group frames ===================
@@ -590,7 +590,7 @@ FRAME_STATE_BIT(TableRow, 30, NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT)
 FRAME_STATE_GROUP(TableRowGroup, nsTableRowGroupFrame)
 
 FRAME_STATE_BIT(TableRowGroup, 27, NS_ROWGROUP_HAS_ROW_CURSOR)
-FRAME_STATE_BIT(TableRowGroup, 30, NS_ROWGROUP_HAS_STYLE_HEIGHT)
+FRAME_STATE_BIT(TableRowGroup, 30, NS_ROWGROUP_HAS_STYLE_BSIZE)
 
 // thead or tfoot should be repeated on every printed page
 FRAME_STATE_BIT(TableRowGroup, 31, NS_ROWGROUP_REPEATABLE)

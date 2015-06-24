@@ -4,6 +4,7 @@
 
 from marionette import MarionetteTestCase
 from marionette_driver.keys import Keys
+from marionette_driver.by import By
 
 class TestAboutPages(MarionetteTestCase):
 
@@ -18,27 +19,8 @@ class TestAboutPages(MarionetteTestCase):
         self.remote_uri = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(self.remote_uri)
 
-    def purge_history(self):
-        with self.marionette.using_context("chrome"):
-            self.marionette.execute_script("""
-              let sh = gBrowser.webNavigation.sessionHistory;
-              if (sh.count) {
-                sh.PurgeHistory(sh.count - 1);
-              }
-            """)
-            self.wait_for_condition(
-                lambda mn: mn.execute_script("""
-                  return gBrowser.webNavigation.sessionHistory.count === 1;
-                """))
-
     def test_back_forward(self):
         self.marionette.navigate("about:blank")
-
-        # Something about this sequence goes wrong when run in a tab with a lot
-        # of history (you have to "go_back" twice to get back to the remote
-        # uri). Running in a tab with less history effectively works around
-        # this. This is reproducible without marionette, filed as bug 1134518.
-        self.purge_history()
         self.marionette.navigate(self.remote_uri)
 
         self.marionette.navigate("about:preferences")
@@ -90,3 +72,20 @@ class TestAboutPages(MarionetteTestCase):
             urlbar.send_keys(self.remote_uri + Keys.ENTER)
 
         self.wait_for_condition(lambda mn: mn.get_url() == self.remote_uri)
+
+    def test_hang(self):
+        self.marionette.set_context('chrome')
+        initial_tab = self.marionette.window_handles[0]
+
+        # Open a new tab and close the first one
+        new_tab = self.marionette.find_element(By.ID, 'menu_newNavigatorTab')
+        new_tab.click()
+
+        new_tab = [handle for handle in self.marionette.window_handles if
+                   handle != initial_tab][0]
+
+        self.marionette.close()
+        self.marionette.switch_to_window(new_tab)
+
+        with self.marionette.using_context('content'):
+            self.marionette.navigate(self.remote_uri)

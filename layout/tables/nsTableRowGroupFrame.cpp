@@ -37,7 +37,7 @@ nsTableRowGroupFrame::~nsTableRowGroupFrame()
 void
 nsTableRowGroupFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  if (GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
+  if (HasAnyStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)) {
     nsTableFrame::UnregisterPositionedTablePart(this, aDestructRoot);
   }
 
@@ -267,8 +267,7 @@ nsTableRowGroupFrame::PlaceChild(nsPresContext*         aPresContext,
                                  const nsRect&          aOriginalKidRect,
                                  const nsRect&          aOriginalKidVisualOverflow)
 {
-  bool isFirstReflow =
-    (aKidFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+  bool isFirstReflow = aKidFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
 
   // Place and size the child
   FinishReflowChild(aKidFrame, aPresContext, aDesiredSize, nullptr,
@@ -369,9 +368,9 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
     // Reflow the row frame
     if (reflowAllKids ||
         NS_SUBTREE_DIRTY(kidFrame) ||
-        (aReflowState.reflowState.mFlags.mSpecialHeightReflow &&
-         (isPaginated || (kidFrame->GetStateBits() &
-                          NS_FRAME_CONTAINS_RELATIVE_BSIZE)))) {
+        (aReflowState.reflowState.mFlags.mSpecialBSizeReflow &&
+         (isPaginated ||
+          kidFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)))) {
       LogicalRect oldKidRect = kidFrame->GetLogicalRect(wm, containerWidth);
       nsRect oldKidVisualOverflow = kidFrame->GetVisualOverflowRect();
 
@@ -424,7 +423,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
           // the overflow area may have changed inflate the overflow area
           const nsStylePosition *stylePos = StylePosition();
           nsStyleUnit unit = stylePos->BSize(wm).GetUnit();
-          if (aReflowState.tableFrame->IsAutoHeight() &&
+          if (aReflowState.tableFrame->IsAutoBSize(wm) &&
               unit != eStyleUnit_Coord) {
             // Because other cells in the row may need to be aligned
             // differently, repaint the entire row
@@ -466,7 +465,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
   aDesiredSize.ISize(wm) = aReflowState.reflowState.AvailableISize();
   aDesiredSize.BSize(wm) = aReflowState.bCoord;
 
-  if (aReflowState.reflowState.mFlags.mSpecialHeightReflow) {
+  if (aReflowState.reflowState.mFlags.mSpecialBSizeReflow) {
     DidResizeRows(aDesiredSize);
     if (isPaginated) {
       CacheRowBSizesForPrinting(aPresContext, GetFirstRow(), wm);
@@ -590,7 +589,7 @@ nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext*           aPresContext,
     if (!rowFrame->GetPrevInFlow()) {
       if (rowFrame->HasPctBSize()) {
         rowInfo[rowIndex].hasPctBSize = true;
-        rowInfo[rowIndex].pctBSize = rowFrame->GetBSize(pctBSizeBasis);
+        rowInfo[rowIndex].pctBSize = rowFrame->GetInitialBSize(pctBSizeBasis);
       }
       rowInfo[rowIndex].hasStyleBSize = rowFrame->HasStyleBSize();
       nonPctBSize = std::max(nonPctBSize, rowFrame->GetFixedBSize());
@@ -837,9 +836,9 @@ nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext*           aPresContext,
 
 nscoord
 nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
-                                                  nscoord aISize)
+                                                  nscoord aISize,
+                                                  WritingMode aWM)
 {
-  WritingMode wm = GetWritingMode(); // XXX pass from caller
   nsTableFrame* tableFrame = GetTableFrame();
   nscoord containerWidth = tableFrame->GetRect().width;
   const nsStyleVisibility* groupVis = StyleVisibility();
@@ -861,28 +860,28 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
     rowFrame = rowFrame->GetNextRow();
   }
 
-  LogicalRect groupRect = GetLogicalRect(wm, containerWidth);
+  LogicalRect groupRect = GetLogicalRect(aWM, containerWidth);
   nsRect oldGroupRect = GetRect();
   nsRect oldGroupVisualOverflow = GetVisualOverflowRect();
 
-  groupRect.BSize(wm) -= bGroupOffset;
+  groupRect.BSize(aWM) -= bGroupOffset;
   if (didCollapse) {
     // add back the cellspacing between rowgroups
-    groupRect.BSize(wm) += tableFrame->GetRowSpacing(GetStartRowIndex() +
-                                                     GetRowCount());
+    groupRect.BSize(aWM) += tableFrame->GetRowSpacing(GetStartRowIndex() +
+                                                      GetRowCount());
   }
 
-  groupRect.BStart(wm) -= aBTotalOffset;
-  groupRect.ISize(wm) = aISize;
+  groupRect.BStart(aWM) -= aBTotalOffset;
+  groupRect.ISize(aWM) = aISize;
 
   if (aBTotalOffset != 0) {
     InvalidateFrameSubtree();
   }
 
-  SetRect(wm, groupRect, containerWidth);
-  overflow.UnionAllWith(nsRect(0, 0, groupRect.Width(wm),
-                               groupRect.Height(wm)));
-  FinishAndStoreOverflow(overflow, groupRect.Size(wm).GetPhysicalSize(wm));
+  SetRect(aWM, groupRect, containerWidth);
+  overflow.UnionAllWith(nsRect(0, 0, groupRect.Width(aWM),
+                               groupRect.Height(aWM)));
+  FinishAndStoreOverflow(overflow, groupRect.Size(aWM).GetPhysicalSize(aWM));
   nsTableFrame::RePositionViews(this);
   nsTableFrame::InvalidateTableFrame(this, oldGroupRect, oldGroupVisualOverflow,
                                      false);
@@ -1330,8 +1329,8 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   // Row geometry may be going to change so we need to invalidate any row cursor.
   ClearRowCursor();
 
-  // see if a special height reflow needs to occur due to having a pct height
-  nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
+  // see if a special bsize reflow needs to occur due to having a pct bsize
+  nsTableFrame::CheckRequestSpecialBSizeReflow(aReflowState);
 
   nsTableFrame* tableFrame = GetTableFrame();
   nsRowGroupReflowState state(aReflowState, tableFrame);
@@ -1356,13 +1355,13 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
       (NS_FRAME_NOT_COMPLETE == aStatus || splitDueToPageBreak ||
        aDesiredSize.Height() > aReflowState.AvailableHeight())) {
     // Nope, find a place to split the row group
-    bool specialReflow = (bool)aReflowState.mFlags.mSpecialHeightReflow;
-    ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = false;
+    bool specialReflow = (bool)aReflowState.mFlags.mSpecialBSizeReflow;
+    ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialBSizeReflow = false;
 
     SplitRowGroup(aPresContext, aDesiredSize, aReflowState, tableFrame, aStatus,
                   splitDueToPageBreak);
 
-    ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = specialReflow;
+    ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialBSizeReflow = specialReflow;
   }
 
   // XXXmats The following is just bogus.  We leave it here for now because
@@ -1384,7 +1383,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
 
   // If our parent is in initial reflow, it'll handle invalidating our
   // entire overflow rect.
-  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
+  if (!GetParent()->HasAnyStateBits(NS_FRAME_FIRST_REFLOW) &&
       nsSize(aDesiredSize.Width(), aDesiredSize.Height()) != mRect.Size()) {
     InvalidateFrame();
   }
@@ -1867,8 +1866,9 @@ NS_DECLARE_FRAME_PROPERTY(RowCursorProperty,
 void
 nsTableRowGroupFrame::ClearRowCursor()
 {
-  if (!(GetStateBits() & NS_ROWGROUP_HAS_ROW_CURSOR))
+  if (!HasAnyStateBits(NS_ROWGROUP_HAS_ROW_CURSOR)) {
     return;
+  }
 
   RemoveStateBits(NS_ROWGROUP_HAS_ROW_CURSOR);
   Properties().Delete(RowCursorProperty());
@@ -1877,7 +1877,7 @@ nsTableRowGroupFrame::ClearRowCursor()
 nsTableRowGroupFrame::FrameCursorData*
 nsTableRowGroupFrame::SetupRowCursor()
 {
-  if (GetStateBits() & NS_ROWGROUP_HAS_ROW_CURSOR) {
+  if (HasAnyStateBits(NS_ROWGROUP_HAS_ROW_CURSOR)) {
     // We already have a valid row cursor. Don't waste time rebuilding it.
     return nullptr;
   }
@@ -1903,8 +1903,9 @@ nsTableRowGroupFrame::SetupRowCursor()
 nsIFrame*
 nsTableRowGroupFrame::GetFirstRowContaining(nscoord aY, nscoord* aOverflowAbove)
 {
-  if (!(GetStateBits() & NS_ROWGROUP_HAS_ROW_CURSOR))
+  if (!HasAnyStateBits(NS_ROWGROUP_HAS_ROW_CURSOR)) {
     return nullptr;
+  }
 
   FrameCursorData* property = static_cast<FrameCursorData*>
     (Properties().Get(RowCursorProperty()));

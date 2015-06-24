@@ -18,7 +18,7 @@ class nsPresContext;
 class nsRenderingContext;
 class nsFloatManager;
 class nsLineLayout;
-class nsIPercentHeightObserver;
+class nsIPercentBSizeObserver;
 struct nsHypotheticalBox;
 
 /**
@@ -514,8 +514,8 @@ public:
   uint8_t GetDisplay() const;
 
   // a frame (e.g. nsTableCellFrame) which may need to generate a special 
-  // reflow for percent height calculations 
-  nsIPercentHeightObserver* mPercentHeightObserver;
+  // reflow for percent bsize calculations
+  nsIPercentBSizeObserver* mPercentBSizeObserver;
 
   // CSS margin collapsing sometimes requires us to reflow
   // optimistically assuming that margins collapse to see if clearance
@@ -529,8 +529,8 @@ public:
   int16_t mReflowDepth;
 
   struct ReflowStateFlags {
-    uint16_t mSpecialHeightReflow:1; // used by tables to communicate special reflow (in process) to handle
-                                     // percent height frames inside cells which may not have computed heights
+    uint16_t mSpecialBSizeReflow:1;  // used by tables to communicate special reflow (in process) to handle
+                                     // percent bsize frames inside cells which may not have computed bsizes
     uint16_t mNextInFlowUntouched:1; // nothing in the frame's next-in-flow (or its descendants)
                                      // is changing
     uint16_t mIsTopOfPage:1;         // Is the current context at the top of a
