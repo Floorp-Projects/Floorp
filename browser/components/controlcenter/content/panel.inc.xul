@@ -17,7 +17,7 @@
 
   <panelmultiview id="identity-popup-multiView"
                   mainViewId="identity-popup-mainView">
-    <panelview id="identity-popup-mainView">
+    <panelview id="identity-popup-mainView" flex="1">
 
       <!-- Security Section -->
       <hbox class="identity-popup-section">
@@ -44,6 +44,8 @@
           <vbox id="identity-popup-permission-list"/>
         </vbox>
       </hbox>
+
+      <spacer flex="1"/>
 
       <!-- More Information Button -->
       <hbox id="identity-popup-button-container" align="center">
