@@ -25,6 +25,7 @@
 #include "HwcComposer2D.h"
 #include "LayerScope.h"
 #include "Units.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/PLayerTransaction.h"
@@ -130,8 +131,24 @@ HwcComposer2D*
 HwcComposer2D::GetInstance()
 {
     if (!sInstance) {
+#ifdef HWC_DEBUG
+        // Make sure only create once
+        static int timesCreated = 0;
+        ++timesCreated;
+        MOZ_ASSERT(timesCreated == 1);
+#endif
         LOGI("Creating new instance");
         sInstance = new HwcComposer2D();
+
+        // If anyone uses the compositor thread to create HwcComposer2D,
+        // we just skip this function.
+        // If ClearOnShutdown() can handle objects in other threads
+        // in the future, we can remove this check.
+        if (NS_IsMainThread()) {
+            // If we create HwcComposer2D by the main thread, we can use
+            // ClearOnShutdown() to make sure it will be nullified properly.
+            ClearOnShutdown(&sInstance);
+        }
     }
     return sInstance;
 }
@@ -206,6 +223,7 @@ public:
         } else {
             screenManager->RemoveScreen(mType);
         }
+        return NS_OK;
     }
 private:
     GonkDisplay::DisplayType mType;

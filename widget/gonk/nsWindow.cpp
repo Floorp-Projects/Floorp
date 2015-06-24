@@ -87,7 +87,7 @@ nsWindow::nsWindow()
 nsWindow::~nsWindow()
 {
     if (mScreen->IsPrimaryScreen()) {
-        HwcComposer2D::GetInstance()->SetCompositorParent(nullptr);
+        mComposer2D->SetCompositorParent(nullptr);
     }
 }
 
@@ -355,6 +355,8 @@ nsWindow::Create(nsIWidget *aParent,
     if (!aParent) {
         mBounds = mScreen->GetRect();
     }
+
+    mComposer2D = HwcComposer2D::GetInstance();
 
     if (!IS_TOPLEVEL()) {
         return NS_OK;
@@ -754,7 +756,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
 
     CreateCompositor();
     if (mCompositorParent && mScreen->IsPrimaryScreen()) {
-        HwcComposer2D::GetInstance()->SetCompositorParent(mCompositorParent);
+        mComposer2D->SetCompositorParent(mCompositorParent);
     }
     MOZ_ASSERT(mLayerManager);
     return mLayerManager;
@@ -831,5 +833,5 @@ nsWindow::GetComposer2D()
         return nullptr;
     }
 
-    return HwcComposer2D::GetInstance();
+    return mComposer2D;
 }
