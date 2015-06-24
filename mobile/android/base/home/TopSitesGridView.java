@@ -46,6 +46,9 @@ public class TopSitesGridView extends GridView {
     // Measured height of this view.
     private int mMeasuredHeight;
 
+    // A dummy View used to measure the required size of the child Views.
+    private final TopSitesGridItemView dummyChildView;
+
     // Context menu info.
     private TopSitesGridContextMenuInfo mContextMenuInfo;
 
@@ -72,6 +75,15 @@ public class TopSitesGridView extends GridView {
         mHorizontalSpacing = a.getDimensionPixelOffset(R.styleable.TopSitesGridView_android_horizontalSpacing, 0x00);
         mVerticalSpacing = a.getDimensionPixelOffset(R.styleable.TopSitesGridView_android_verticalSpacing, 0x00);
         a.recycle();
+
+        dummyChildView = new TopSitesGridItemView(context);
+        // Set a default LayoutParams on the child, if it doesn't have one on its own.
+        AbsListView.LayoutParams params = (AbsListView.LayoutParams) dummyChildView.getLayoutParams();
+        if (params == null) {
+            params = new AbsListView.LayoutParams(AbsListView.LayoutParams.WRAP_CONTENT,
+                    AbsListView.LayoutParams.WRAP_CONTENT);
+            dummyChildView.setLayoutParams(params);
+        }
     }
 
     @Override
@@ -110,27 +122,16 @@ public class TopSitesGridView extends GridView {
 
         final int columnWidth = getColumnWidth();
 
-        // Get the first child from the adapter.
-        final TopSitesGridItemView child = new TopSitesGridItemView(getContext());
-
-        // Set a default LayoutParams on the child, if it doesn't have one on its own.
-        AbsListView.LayoutParams params = (AbsListView.LayoutParams) child.getLayoutParams();
-        if (params == null) {
-            params = new AbsListView.LayoutParams(AbsListView.LayoutParams.WRAP_CONTENT,
-                                                  AbsListView.LayoutParams.WRAP_CONTENT);
-            child.setLayoutParams(params);
-        }
-
         // Measure the exact width of the child, and the height based on the width.
         // Note: the child (and TopSitesThumbnailView) takes care of calculating its height.
         int childWidthSpec = MeasureSpec.makeMeasureSpec(columnWidth, MeasureSpec.EXACTLY);
         int childHeightSpec = MeasureSpec.makeMeasureSpec(0,  MeasureSpec.UNSPECIFIED);
-        child.measure(childWidthSpec, childHeightSpec);
-        final int childHeight = child.getMeasuredHeight();
+        dummyChildView.measure(childWidthSpec, childHeightSpec);
+        final int childHeight = dummyChildView.getMeasuredHeight();
 
         // This is the maximum width of the contents of each child in the grid.
         // Use this as the target width for thumbnails.
-        final int thumbnailWidth = child.getMeasuredWidth() - child.getPaddingLeft() - child.getPaddingRight();
+        final int thumbnailWidth = dummyChildView.getMeasuredWidth() - dummyChildView.getPaddingLeft() - dummyChildView.getPaddingRight();
         ThumbnailHelper.getInstance().setThumbnailWidth(thumbnailWidth);
 
         // Number of rows required to show these top sites.
