@@ -32,54 +32,54 @@ BEGIN_TEST(testGCStoreBufferRemoval)
     // Hide the horrors herein from the static rooting analysis.
     AutoIgnoreRootingHazards ignore;
 
-    // Test removal of store buffer entries added by HeapPtr<T>.
+    // Test removal of store buffer entries added by RelocatablePtr<T>.
     {
         JSObject* badObject = reinterpret_cast<JSObject*>(1);
         JSObject* punnedPtr = nullptr;
-        HeapPtrObject* relocPtr =
-            reinterpret_cast<HeapPtrObject*>(&punnedPtr);
-        new (relocPtr) HeapPtrObject;
+        RelocatablePtrObject* relocPtr =
+            reinterpret_cast<RelocatablePtrObject*>(&punnedPtr);
+        new (relocPtr) RelocatablePtrObject;
         *relocPtr = NurseryObject();
-        relocPtr->~HeapPtrObject();
+        relocPtr->~RelocatablePtrObject();
         punnedPtr = badObject;
         JS_GC(cx->runtime());
 
-        new (relocPtr) HeapPtrObject;
+        new (relocPtr) RelocatablePtrObject;
         *relocPtr = NurseryObject();
         *relocPtr = tenuredObject;
-        relocPtr->~HeapPtrObject();
+        relocPtr->~RelocatablePtrObject();
         punnedPtr = badObject;
         JS_GC(cx->runtime());
 
-        new (relocPtr) HeapPtrObject;
+        new (relocPtr) RelocatablePtrObject;
         *relocPtr = NurseryObject();
         *relocPtr = nullptr;
-        relocPtr->~HeapPtrObject();
+        relocPtr->~RelocatablePtrObject();
         punnedPtr = badObject;
         JS_GC(cx->runtime());
     }
 
-    // Test removal of store buffer entries added by HeapValue.
+    // Test removal of store buffer entries added by RelocatableValue.
     {
         Value punnedValue;
-        HeapValue* relocValue = reinterpret_cast<HeapValue*>(&punnedValue);
-        new (relocValue) HeapValue;
+        RelocatableValue* relocValue = reinterpret_cast<RelocatableValue*>(&punnedValue);
+        new (relocValue) RelocatableValue;
         *relocValue = ObjectValue(*NurseryObject());
-        relocValue->~HeapValue();
+        relocValue->~RelocatableValue();
         punnedValue = ObjectValueCrashOnTouch();
         JS_GC(cx->runtime());
 
-        new (relocValue) HeapValue;
+        new (relocValue) RelocatableValue;
         *relocValue = ObjectValue(*NurseryObject());
         *relocValue = ObjectValue(*tenuredObject);
-        relocValue->~HeapValue();
+        relocValue->~RelocatableValue();
         punnedValue = ObjectValueCrashOnTouch();
         JS_GC(cx->runtime());
 
-        new (relocValue) HeapValue;
+        new (relocValue) RelocatableValue;
         *relocValue = ObjectValue(*NurseryObject());
         *relocValue = NullValue();
-        relocValue->~HeapValue();
+        relocValue->~RelocatableValue();
         punnedValue = ObjectValueCrashOnTouch();
         JS_GC(cx->runtime());
     }
