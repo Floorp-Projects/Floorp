@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=459470
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <base href="http://example.org/">
 </head>
-<body>
+<body onload="startTest();">
 <a target="_blank"
    href="https://bugzilla.mozilla.org/show_bug.cgi?id=459470">Mozilla Bug 459470</a><br />
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=859095">Mozilla Bug 859095</a>
@@ -24,9 +24,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=459470
 <script class="testbody" type="application/javascript;version=1.8">
 
 SimpleTest.waitForExplicitFinish();
+var gen;
 
-gen = runTest();
-gen.next();
+function startTest() {
+  // The test uses history API, so don't do anything before load event has been
+  // handled.
+  SimpleTest.executeSoon(function() {
+    gen = runTest();
+    gen.next();
+  });
+}
 
 function testXMLDocURI(aDoc, aExpects) {
   is(aDoc.documentURI, aExpects.documentURI, "wrong url");
