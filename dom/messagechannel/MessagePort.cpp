@@ -284,7 +284,7 @@ private:
     MOZ_CRASH("Failed to create a PBackgroundChild actor!");
   }
 
-  void ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
+  void ActorCreated(mozilla::ipc::PBackgroundChild* aActor) override
   {
     ForceClose(mIdentifier);
   }
