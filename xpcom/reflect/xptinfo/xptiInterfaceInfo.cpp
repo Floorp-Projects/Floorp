@@ -190,6 +190,9 @@ xptiInterfaceEntry::GetConstantCount(uint16_t* count)
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
+    if(!count)
+        return NS_ERROR_UNEXPECTED;
+
     *count = mConstantBaseIndex + 
              mDescriptor->num_constants;
     return NS_OK;
