@@ -146,8 +146,8 @@ loop.contacts = (function(_, mozL10n) {
 
   const ContactDropdown = React.createClass({
     propTypes: {
-      handleAction: React.PropTypes.func.isRequired,
-      canEdit: React.PropTypes.bool
+      canEdit: React.PropTypes.bool,
+      handleAction: React.PropTypes.func.isRequired
     },
 
     getInitialState: function () {
@@ -236,8 +236,8 @@ loop.contacts = (function(_, mozL10n) {
     },
 
     propTypes: {
-      handleContactAction: React.PropTypes.func,
-      contact: React.PropTypes.object.isRequired
+      contact: React.PropTypes.object.isRequired,
+      handleContactAction: React.PropTypes.func
     },
 
     _onBodyClick: function() {

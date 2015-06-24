@@ -435,11 +435,11 @@
 
   var FramedExample = React.createClass({
     propTypes: {
-      width: React.PropTypes.number,
+      cssClass: React.PropTypes.string,
+      dashed: React.PropTypes.bool,
       height: React.PropTypes.number,
       onContentsRendered: React.PropTypes.func,
-      dashed: React.PropTypes.bool,
-      cssClass: React.PropTypes.string
+      width: React.PropTypes.number
     },
 
     makeId: function(prefix) {

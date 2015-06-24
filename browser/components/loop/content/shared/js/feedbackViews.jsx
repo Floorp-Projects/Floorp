@@ -24,8 +24,8 @@ loop.shared.views.FeedbackView = (function(l10n) {
   var FeedbackLayout = React.createClass({
     propTypes: {
       children: React.PropTypes.component.isRequired,
-      title: React.PropTypes.string.isRequired,
-      reset: React.PropTypes.func // if not specified, no Back btn is shown
+      reset: React.PropTypes.func, // if not specified, no Back btn is shown
+      title: React.PropTypes.string.isRequired
     },
 
     render: function() {
@@ -237,10 +237,10 @@ loop.shared.views.FeedbackView = (function(l10n) {
     ],
 
     propTypes: {
-      onAfterFeedbackReceived: React.PropTypes.func,
       // Used by the UI showcase.
       feedbackState: React.PropTypes.string,
-      noCloseText: React.PropTypes.bool
+      noCloseText: React.PropTypes.bool,
+      onAfterFeedbackReceived: React.PropTypes.func
     },
 
     getInitialState: function() {
