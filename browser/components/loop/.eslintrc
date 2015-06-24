@@ -64,7 +64,7 @@
     "react/jsx-no-undef": 2,
     // Need to fix instances where this is failing.
     "react/jsx-sort-props": 2,
-    "react/jsx-sort-prop-types": 0,
+    "react/jsx-sort-prop-types": 2,
     "react/jsx-uses-vars": 2,
     // Need to fix the couple of instances which don't
     // currently pass this rule.

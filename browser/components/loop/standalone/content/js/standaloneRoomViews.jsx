@@ -16,11 +16,11 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
   var StandaloneRoomInfoArea = React.createClass({
     propTypes: {
-      isFirefox: React.PropTypes.bool.isRequired,
       activeRoomStore: React.PropTypes.oneOfType([
         React.PropTypes.instanceOf(loop.store.ActiveRoomStore),
         React.PropTypes.instanceOf(loop.store.FxOSActiveRoomStore)
-      ]).isRequired
+      ]).isRequired,
+      isFirefox: React.PropTypes.bool.isRequired
     },
 
     onFeedbackSent: function() {

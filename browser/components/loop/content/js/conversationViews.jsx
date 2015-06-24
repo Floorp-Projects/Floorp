@@ -362,9 +362,9 @@ loop.conversationViews = (function(mozL10n) {
     mixins: [sharedMixins.AudioMixin],
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       callState: React.PropTypes.string,
       contact: React.PropTypes.object,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       enableCancelButton: React.PropTypes.bool
     },
 
@@ -426,8 +426,8 @@ loop.conversationViews = (function(mozL10n) {
     ],
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       contact: React.PropTypes.object.isRequired,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       // This is used by the UI showcase.
       emailLinkError: React.PropTypes.bool,
       outgoing: React.PropTypes.bool.isRequired
@@ -571,18 +571,18 @@ loop.conversationViews = (function(mozL10n) {
     ],
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      // local
-      video: React.PropTypes.object,
       // local
       audio: React.PropTypes.object,
-      remoteVideoEnabled: React.PropTypes.bool,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      // The poster URLs are for UI-showcase testing and development.
+      localPosterUrl: React.PropTypes.string,
       // This is used from the props rather than the state to make it easier for
       // the ui-showcase.
       mediaConnected: React.PropTypes.bool,
-      // The poster URLs are for UI-showcase testing and development.
-      localPosterUrl: React.PropTypes.string,
-      remotePosterUrl: React.PropTypes.string
+      remotePosterUrl: React.PropTypes.string,
+      remoteVideoEnabled: React.PropTypes.bool,
+      // local
+      video: React.PropTypes.object
     },
 
     getDefaultProps: function() {

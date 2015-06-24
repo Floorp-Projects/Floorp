@@ -590,9 +590,9 @@ loop.roomViews = (function(mozL10n) {
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      mozLoop: React.PropTypes.object.isRequired,
       // The poster URLs are for UI-showcase testing and development.
       localPosterUrl: React.PropTypes.string,
+      mozLoop: React.PropTypes.object.isRequired,
       remotePosterUrl: React.PropTypes.string
     },
 
