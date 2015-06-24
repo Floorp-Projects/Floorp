@@ -12375,17 +12375,16 @@ IonBuilder::jsop_in_dense(JSValueType unboxedType)
     return true;
 }
 
-static bool
-HasOnProtoChain(CompilerConstraintList* constraints, TypeSet::ObjectKey* key,
-                JSObject* protoObject, bool* hasOnProto)
+bool
+IonBuilder::hasOnProtoChain(TypeSet::ObjectKey* key, JSObject* protoObject, bool* hasOnProto)
 {
     MOZ_ASSERT(protoObject);
 
     while (true) {
-        if (!key->hasStableClassAndProto(constraints) || !key->clasp()->isNative())
+        if (!key->hasStableClassAndProto(constraints()) || !key->clasp()->isNative())
             return false;
 
-        JSObject* proto = key->proto().toObjectOrNull();
+        JSObject* proto = checkNurseryObject(key->proto().toObjectOrNull());
         if (!proto) {
             *hasOnProto = false;
             return true;
@@ -12429,7 +12428,7 @@ IonBuilder::tryFoldInstanceOf(MDefinition* lhs, JSObject* protoObject)
             continue;
 
         bool isInstance;
-        if (!HasOnProtoChain(constraints(), key, protoObject, &isInstance))
+        if (!hasOnProtoChain(key, protoObject, &isInstance))
             return false;
 
         if (isFirst) {
