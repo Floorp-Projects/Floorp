@@ -31,7 +31,7 @@ function run_test() {
 }
 
 function test_executable_lines() {
-  gClient.addOneTimeListener("newSource", function _onNewSource(evt, packet) {
+  gThreadClient.addOneTimeListener("newSource", function _onNewSource(evt, packet) {
     do_check_eq(evt, "newSource");
 
     gThreadClient.getSources(function ({error, sources}) {

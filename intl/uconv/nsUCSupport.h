@@ -150,43 +150,6 @@ public:
 };
 
 //----------------------------------------------------------------------
-// Class nsTableDecoderSupport [declaration]
-
-/**
- * Support class for a single-table-driven Unicode decoder.
- * 
- * @created         15/Mar/1999
- * @author  Catalin Rotaru [CATA]
- */
-class nsTableDecoderSupport : public nsBufferDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsTableDecoderSupport(uScanClassID aScanClass, uShiftInTable * aShiftInTable,
-      uMappingTable * aMappingTable, uint32_t aMaxLengthFactor);
-
-  /**
-   * Class destructor.
-   */
-  virtual ~nsTableDecoderSupport();
-
-protected:
-
-  uScanClassID              mScanClass;
-  uShiftInTable             * mShiftInTable;
-  uMappingTable             * mMappingTable;
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsBufferDecoderSupport class [declaration]
-
-  NS_IMETHOD ConvertNoBuff(const char * aSrc, int32_t * aSrcLength, 
-      char16_t * aDest, int32_t * aDestLength);
-};
-
-//----------------------------------------------------------------------
 // Class nsMultiTableDecoderSupport [declaration]
 
 /**

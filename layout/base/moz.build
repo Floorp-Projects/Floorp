@@ -77,7 +77,7 @@ EXPORTS += [
     'nsIFrameTraversal.h',
     'nsILayoutDebugger.h',
     'nsILayoutHistoryState.h',
-    'nsIPercentHeightObserver.h',
+    'nsIPercentBSizeObserver.h',
     'nsIPresShell.h',
     'nsIReflowCallback.h',
     'nsLayoutUtils.h',

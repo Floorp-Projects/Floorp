@@ -1431,12 +1431,13 @@ void nsFrameSelection::BidiLevelFromMove(nsIPresShell*      aPresShell,
  * @param aContentOffset is the new caret position, as an offset into aNode
  */
 void nsFrameSelection::BidiLevelFromClick(nsIContent *aNode,
-                                          uint32_t    aContentOffset)
+                                          uint32_t    aContentOffset,
+                                          CaretAssociateHint aHint)
 {
   nsIFrame* clickInFrame=nullptr;
   int32_t OffsetNotUsed;
 
-  clickInFrame = GetFrameForNodeOffset(aNode, aContentOffset, mHint, &OffsetNotUsed);
+  clickInFrame = GetFrameForNodeOffset(aNode, aContentOffset, aHint, &OffsetNotUsed);
   if (!clickInFrame)
     return;
 
@@ -1515,7 +1516,7 @@ nsFrameSelection::HandleClick(nsIContent*        aNewFocus,
   // Don't take focus when dragging off of a table
   if (!mDragSelectingCells)
   {
-    BidiLevelFromClick(aNewFocus, aContentOffset);
+    BidiLevelFromClick(aNewFocus, aContentOffset, aHint);
     PostReason(nsISelectionListener::MOUSEDOWN_REASON + nsISelectionListener::DRAG_REASON);
     if (aContinueSelection &&
         AdjustForMaintainedSelection(aNewFocus, aContentOffset))

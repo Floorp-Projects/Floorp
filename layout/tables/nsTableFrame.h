@@ -158,16 +158,16 @@ public:
   static float GetTwipsToPixels(nsPresContext* aPresContext);
 
   // Return true if aParentReflowState.frame or any of its ancestors within
-  // the containing table have non-auto height. (e.g. pct or fixed height)
-  static bool AncestorsHaveStyleHeight(const nsHTMLReflowState& aParentReflowState);
+  // the containing table have non-auto bsize. (e.g. pct or fixed bsize)
+  static bool AncestorsHaveStyleBSize(const nsHTMLReflowState& aParentReflowState);
 
-  // See if a special height reflow will occur due to having a pct height when
-  // the pct height basis may not yet be valid.
-  static void CheckRequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState);
+  // See if a special bsize reflow will occur due to having a pct bsize when
+  // the pct bsize basis may not yet be valid.
+  static void CheckRequestSpecialBSizeReflow(const nsHTMLReflowState& aReflowState);
 
   // Notify the frame and its ancestors (up to the containing table) that a special
   // height reflow will occur.
-  static void RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState);
+  static void RequestSpecialBSizeReflow(const nsHTMLReflowState& aReflowState);
 
   static void RePositionViews(nsIFrame* aFrame);
 
@@ -253,7 +253,7 @@ public:
   static nsIFrame* GetFrameAtOrBefore(nsIFrame*       aParentFrame,
                                       nsIFrame*       aPriorChildFrame,
                                       nsIAtom*        aChildType);
-  bool IsAutoHeight();
+  bool IsAutoBSize(mozilla::WritingMode aWM);
 
   /** @return true if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
@@ -345,7 +345,7 @@ public:
    * A copy of nsFrame::ShrinkWidthToFit that calls a different
    * GetPrefISize, since tables have two different ones.
    */
-  nscoord TableShrinkWidthToFit(nsRenderingContext *aRenderingContext,
+  nscoord TableShrinkISizeToFit(nsRenderingContext *aRenderingContext,
                                 nscoord aWidthInCB);
 
   // XXXldb REWRITE THIS COMMENT!
@@ -370,7 +370,7 @@ public:
 
   void ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
                    const nsHTMLReflowState& aReflowState,
-                   nscoord                  aAvailHeight,
+                   nscoord                  aAvailBSize,
                    nsIFrame*&               aLastChildReflowed,
                    nsReflowStatus&          aStatus);
 
@@ -399,8 +399,10 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  /** return the isize of the column at aColIndex    */
-  int32_t GetColumnISize(int32_t aColIndex);
+  /** Return the isize of the column at aColIndex.
+   *  This may only be called on the table's first-in-flow.
+   */
+  nscoord GetColumnISizeFromFirstInFlow(int32_t aColIndex);
 
   /** Helper to get the column spacing style value.
    *  The argument refers to the space between column aColIndex and column
@@ -634,11 +636,11 @@ protected:
   //  (2) notify the table about colgroups or columns with hidden visibility
   void ReflowColGroups(nsRenderingContext* aRenderingContext);
 
-  /** return the width of the table taking into account visibility collapse
+  /** return the isize of the table taking into account visibility collapse
     * on columns and colgroups
     * @param aBorderPadding  the border and padding of the table
     */
-  nscoord GetCollapsedWidth(const WritingMode aWM,
+  nscoord GetCollapsedISize(const WritingMode aWM,
                             const LogicalMargin& aBorderPadding);
 
 
@@ -681,21 +683,22 @@ private:
 
 public:
 
-  // calculate the computed height of aFrame including its border and padding given
-  // its reflow state.
-  nscoord CalcBorderBoxHeight(const nsHTMLReflowState& aReflowState);
+  // calculate the computed block-size of aFrame including its border and
+  // padding given its reflow state.
+  nscoord CalcBorderBoxBSize(const nsHTMLReflowState& aReflowState);
 
 protected:
 
-  // update the  desired height of this table taking into account the current
-  // reflow state, the table attributes and the content driven rowgroup heights
+  // update the  desired block-size of this table taking into account the current
+  // reflow state, the table attributes and the content driven rowgroup bsizes
   // this function can change the overflow area
-  void CalcDesiredHeight(const nsHTMLReflowState& aReflowState, nsHTMLReflowMetrics& aDesiredSize);
+  void CalcDesiredBSize(const nsHTMLReflowState& aReflowState,
+                        nsHTMLReflowMetrics& aDesiredSize);
 
-  // The following is a helper for CalcDesiredHeight
+  // The following is a helper for CalcDesiredBSize
 
-  void DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
-                              nscoord                  aAmount);
+  void DistributeBSizeToRows(const nsHTMLReflowState& aReflowState,
+                             nscoord                  aAmount);
 
   void PlaceChild(nsTableReflowState&  aReflowState,
                   nsIFrame*            aKidFrame,
@@ -1002,23 +1005,6 @@ inline void nsTableFrame::SetContinuousLeftBCBorderWidth(nscoord aValue)
 {
   mBits.mLeftContBCBorder = (unsigned) aValue;
 }
-
-class nsTableIterator
-{
-public:
-  explicit nsTableIterator(nsIFrame& aSource);
-  explicit nsTableIterator(nsFrameList& aSource);
-  nsIFrame* First();
-  nsIFrame* Next();
-  int32_t   Count();
-
-protected:
-  void Init(nsIFrame* aFirstChild);
-  nsIFrame* mFirstListChild;
-  nsIFrame* mFirstChild;
-  nsIFrame* mCurrentChild;
-  int32_t   mCount;
-};
 
 #define ABORT0() \
 {NS_ASSERTION(false, "CellIterator program error"); \
