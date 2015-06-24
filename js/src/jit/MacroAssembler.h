@@ -955,10 +955,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     void branchFunctionKind(Condition cond, JSFunction::FunctionKind kind, Register fun,
                             Register scratch, Label* label)
     {
-        Address flags(fun, JSFunction::offsetOfFlags());
-        load32(flags, scratch);
-        and32(Imm32(JSFunction::FUNCTION_KIND_MASK), scratch);
-        branch32(cond, scratch, Imm32(kind << JSFunction::FUNCTION_KIND_SHIFT), label);
+        // 16-bit loads are slow and unaligned 32-bit loads may be too so
+        // perform an aligned 32-bit load and adjust the bitmask accordingly.
+        MOZ_ASSERT(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0);
+        MOZ_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
+        Address address(fun, JSFunction::offsetOfNargs());
+        int32_t mask = IMM32_16ADJ(JSFunction::FUNCTION_KIND_MASK);
+        int32_t bit = IMM32_16ADJ(kind << JSFunction::FUNCTION_KIND_SHIFT);
+        load32(address, scratch);
+        and32(Imm32(mask), scratch);
+        branch32(cond, scratch, Imm32(bit), label);
     }
 
   public:
