@@ -86,9 +86,6 @@ public:
   Create(nsPIDOMWindow* aWindow, const MessagePortIdentifier& aIdentifier,
          ErrorResult& aRv);
 
-  static void
-  ForceClose(const MessagePortIdentifier& aIdentifier);
-
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 

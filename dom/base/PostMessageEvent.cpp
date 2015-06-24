@@ -238,13 +238,7 @@ PostMessageEvent::FreeTransferStructuredClone(uint32_t aTag,
                                               uint64_t aExtraData,
                                               void* aClosure)
 {
-  if (aTag == SCTAG_DOM_MAP_MESSAGEPORT) {
-    MOZ_ASSERT(aClosure);
-    MOZ_ASSERT(!aContent);
-
-    StructuredCloneInfo* scInfo = static_cast<StructuredCloneInfo*>(aClosure);
-    MessagePort::ForceClose(scInfo->event->GetPortIdentifier(aExtraData));
-  }
+  // Nothing to do.
 }
 
 PostMessageEvent::PostMessageEvent(nsGlobalWindow* aSource,
