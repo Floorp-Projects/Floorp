@@ -33,6 +33,8 @@ class BufferableRef
     bool maybeInRememberedSet(const Nursery&) const { return true; }
 };
 
+typedef HashSet<void*, PointerHasher<void*, 3>, SystemAllocPolicy> EdgeSet;
+
 /* The size of a single block of store buffer storage space. */
 static const size_t LifoAllocBlockSize = 1 << 16; /* 64KiB */
 
@@ -55,14 +57,22 @@ class StoreBuffer
     template<typename T>
     struct MonoTypeBuffer
     {
-        /* The set of stores. */
+        /* The canonical set of stores. */
         typedef HashSet<T, typename T::Hasher, SystemAllocPolicy> StoreSet;
         StoreSet stores_;
+
+        /*
+         * A small, fixed-size buffer in front of the canonical set to simplify
+         * insertion via jit code.
+         */
+        const static size_t NumBufferEntries = 4096 / sizeof(T);
+        T buffer_[NumBufferEntries];
+        T* insert_;
 
         /* Maximum number of entries before we request a minor GC. */
         const static size_t MaxEntries = 48 * 1024 / sizeof(T);
 
-        MonoTypeBuffer() {}
+        explicit MonoTypeBuffer() { clearBuffer(); }
         ~MonoTypeBuffer() { stores_.finish(); }
 
         bool init() {
@@ -72,7 +82,13 @@ class StoreBuffer
             return true;
         }
 
+        void clearBuffer() {
+            JS_POISON(buffer_, JS_EMPTY_STOREBUFFER_PATTERN, NumBufferEntries * sizeof(T));
+            insert_ = buffer_;
+        }
+
         void clear() {
+            clearBuffer();
             if (stores_.initialized())
                 stores_.clear();
         }
@@ -80,14 +96,28 @@ class StoreBuffer
         /* Add one item to the buffer. */
         void put(StoreBuffer* owner, const T& t) {
             MOZ_ASSERT(stores_.initialized());
-            if (MOZ_UNLIKELY(!stores_.put(t)))
-                CrashAtUnhandlableOOM("Failed to allocate for MonoTypeBuffer.");
+            *insert_++ = t;
+            if (MOZ_UNLIKELY(insert_ == buffer_ + NumBufferEntries))
+                sinkStores(owner);
+        }
+
+        /* Move any buffered stores to the canonical store set. */
+        void sinkStores(StoreBuffer* owner) {
+            MOZ_ASSERT(stores_.initialized());
+
+            for (T* p = buffer_; p < insert_; ++p) {
+                if (!stores_.put(*p))
+                    CrashAtUnhandlableOOM("Failed to allocate for MonoTypeBuffer::sinkStores.");
+            }
+            clearBuffer();
+
             if (MOZ_UNLIKELY(stores_.count() > MaxEntries))
                 owner->setAboutToOverflow();
         }
 
         /* Remove an item from the store buffer. */
         void unput(StoreBuffer* owner, const T& v) {
+            sinkStores(owner);
             stores_.remove(v);
         }
 
@@ -433,6 +463,13 @@ class StoreBuffer
 
     /* For use by our owned buffers and for testing. */
     void setAboutToOverflow();
+
+    /* For jit access to the raw buffer. */
+    void oolSinkStoresForWholeCellBuffer() { bufferWholeCell.sinkStores(this); }
+    void* addressOfWholeCellBufferPointer() const { return (void*)&bufferWholeCell.insert_; }
+    void* addressOfWholeCellBufferEnd() const {
+        return (void*)(bufferWholeCell.buffer_ + bufferWholeCell.NumBufferEntries);
+    }
 
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::GCSizes* sizes);
 };
