@@ -18,7 +18,7 @@ add_task(function* test_registrations_error() {
     serverURI: "https://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
     db: makeStub(db, {
-      getByScope(prev, scope) {
+      getByIdentifiers() {
         return Promise.reject('Database error');
       }
     }),

@@ -53,7 +53,8 @@ add_task(function* test_register_no_id() {
   });
 
   yield rejects(
-    PushNotificationService.register('https://example.com/incomplete'),
+    PushNotificationService.register('https://example.com/incomplete',
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
     function(error) {
       return error == 'TimeoutError';
     },
