@@ -731,8 +731,8 @@ class MessageChannel : HasResultCodes
     int32_t mPeerPid;
 };
 
-bool
-ParentProcessIsBlocked();
+void
+CancelCPOWs();
 
 } // namespace ipc
 } // namespace mozilla
