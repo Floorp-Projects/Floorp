@@ -42,13 +42,9 @@
     <dimen name="new_tablet_browser_toolbar_menu_item_inset_horizontal">3dp</dimen>
     <dimen name="new_tablet_browser_toolbar_menu_item_corner_radius">5dp</dimen>
     <dimen name="new_tablet_tab_strip_button_inset">5dp</dimen>
-    <dimen name="forward_default_offset">-13dip</dimen>
 
     <!-- Dimensions used by Favicons and FaviconView -->
-    <dimen name="favicon_size_small">16dp</dimen>
-    <dimen name="favicon_size_large">32dp</dimen>
     <dimen name="favicon_bg">32dp</dimen>
-    <dimen name="favicon_bg_radius">1dp</dimen>
     <!-- Set the upper limit on the size of favicon that will be processed. Favicons larger than
          this will be downscaled to this value. If you need to use larger Favicons (Due to a UI
          redesign sometime after this is written) you should increase this value to the largest
@@ -96,12 +92,8 @@
     <!-- Search Engine Row height -->
     <dimen name="search_row_height">48dp</dimen>
 
-    <!-- Padding at the top of the site identity popup, when no identity data is available. -->
-    <dimen name="identity_padding_top">5dp</dimen>
-
     <dimen name="doorhanger_width">300dp</dimen>
     <dimen name="doorhanger_input_width">250dp</dimen>
-    <dimen name="doorhanger_spinner_textsize">9sp</dimen>
     <dimen name="doorhanger_offsetX">12dp</dimen>
     <dimen name="doorhanger_offsetY">67dp</dimen>
     <dimen name="doorhanger_GB_offsetY">7dp</dimen>
@@ -122,7 +114,6 @@
          http://androidxref.com/4.2.2_r1/xref/frameworks/base/core/res/res/values/themes.xml#123 -->
     <dimen name="menu_item_row_height">64dip</dimen>
     <dimen name="menu_item_row_width">240dp</dimen>
-    <dimen name="menu_item_more_offset">5dp</dimen>
     <dimen name="menu_popup_offset">12dp</dimen>
     <dimen name="menu_popup_width">256dp</dimen>
     <dimen name="nav_button_border_width">1dp</dimen>
@@ -132,15 +123,9 @@
     <dimen name="prompt_service_inputs_padding">16dp</dimen>
     <dimen name="prompt_service_left_right_text_with_icon_padding">10dp</dimen>
     <dimen name="prompt_service_top_bottom_text_with_icon_padding">8dp</dimen>
-    <dimen name="remote_tab_child_row_height">64dp</dimen>
-    <dimen name="remote_tab_group_row_height">26dp</dimen>
-    <dimen name="searchpreferences_icon_size">32dp</dimen>
     <dimen name="tab_thumbnail_height">90dp</dimen>
     <dimen name="tab_thumbnail_width">160dp</dimen>
-    <dimen name="tabs_counter_size">22sp</dimen>
     <dimen name="tabs_panel_indicator_width">60dp</dimen>
-    <dimen name="tabs_panel_list_padding">16dip</dimen>
-    <dimen name="tabs_list_divider_height">2dp</dimen>
     <dimen name="tabs_strip_height">40dp</dimen>
     <dimen name="tabs_strip_button_width">100dp</dimen>
     <dimen name="tabs_strip_button_padding">18dp</dimen>
@@ -151,9 +136,6 @@
     <dimen name="text_selection_handle_shadow">11dp</dimen>
     <dimen name="validation_message_height">50dp</dimen>
     <dimen name="validation_message_margin_top">6dp</dimen>
-    <dimen name="url_bar_offset_left">32dp</dimen>
-    <dimen name="history_tab_indicator_height">50dp</dimen>
-
 
     <dimen name="new_tablet_tab_thumbnail_width">168dp</dimen>
     <dimen name="new_tablet_tab_thumbnail_height">140dp</dimen>
@@ -200,8 +182,6 @@
     <dimen name="tab_history_title_text_size">14sp</dimen>
     <dimen name="tab_history_bg_width">2dp</dimen>
     <dimen name="tab_history_border_padding">2dp</dimen>
-
-    <dimen name="horizontal_drag_area">256dp</dimen>
 
     <!-- ZoomedView dimensions. -->
     <dimen name="zoomed_view_toolbar_height">44dp</dimen>
