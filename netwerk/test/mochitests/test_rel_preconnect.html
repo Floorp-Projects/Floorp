@@ -11,7 +11,7 @@
 SimpleTest.waitForExplicitFinish();
 
 const Cc = SpecialPowers.Cc, Ci = SpecialPowers.Ci, Cr = SpecialPowers.Cr;
-var srv1, srv2;
+var srv;
 
 function TestServer1(nextTest) {
     this.listener= Cc["@mozilla.org/network/server-socket;1"]
@@ -22,8 +22,6 @@ function TestServer1(nextTest) {
 }
 
 TestServer1.prototype = {
-    remainder : 2,
-
     QueryInterface: function(iid) {
       iid = SpecialPowers.wrap(iid);
         if (iid.equals(Ci.nsIServerSocketListener) ||
@@ -34,88 +32,54 @@ TestServer1.prototype = {
     onSocketAccepted: function(socket, trans) {
         try { socket.close(); } catch(e) {}
         try { trans.close(); } catch(e) {}
-        this.remainder--;
-        ok(true, "received connect remainder = " + this.remainder);
-        if (!this.remainder) {
-          srv1.listener.close();
-          setTimeout(srv1.nextTest, 0);
-        }
     },
     onStopListening: function(socket) {}
 };
 
-function TestServer2(nextTest) {
-    this.listener= Cc["@mozilla.org/network/server-socket;1"]
-                   .createInstance(Ci.nsIServerSocket);
-    this.listener.init(-1, true, -1);
-    this.listener.asyncListen(SpecialPowers.wrapCallbackObject(this));
-    this.nextTest = nextTest;
-}
+var remainder = 4;
+var observer;
 
-TestServer2.prototype = {
-    remainder : 2,
-
-    QueryInterface: function(iid) {
-      iid = SpecialPowers.wrap(iid);
-        if (iid.equals(Ci.nsIServerSocketListener) ||
-            iid.equals(Ci.nsISupports))
-            return this;
-        throw Cr.NS_ERROR_NO_INTERFACE;
-    },
-    onSocketAccepted: function(socket, trans) {
-        try { socket.close(); } catch(e) {}
-        try { trans.close(); } catch(e) {}
-        this.remainder--;
-        ok(true, "received connect srv2 remainder = " + this.remainder);
-        if (!this.remainder) {
-          srv2.listener.close();
-          setTimeout(srv2.nextTest, 0);
-        }
-    },
-    onStopListening: function(socket) {}
-};
-
-var originalLimit = SpecialPowers.getIntPref("network.http.speculative-parallel-limit");
-
-function testElement()
+function doTest()
 {
+  srv = new TestServer1();
+  SpecialPowers.setBoolPref("network.http.debug-observations", true);
+  
+  observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
+    remainder--;
+    ok(true, "observed remainder = " + remainder);
+    if (!remainder) {
+      srv.listener.close();
+      SpecialPowers.removeObserver(observer, "speculative-connect-request");
+      SpecialPowers.setBoolPref("network.http.debug-observations", false);
+      SimpleTest.finish();
+    }
+  });
+  SpecialPowers.addObserver(observer, "speculative-connect-request", false);
+
   // test the link rel=preconnect element in the head for both normal
   // and crossOrigin=anonymous
-  srv1 = new TestServer1(testHeader);
-  SpecialPowers.setIntPref("network.http.speculative-parallel-limit", 2);
   var link = document.createElement("link");
   link.rel = "preconnect";
-  link.href = "//localhost:" +  srv1.listener.port;
+  link.href = "//localhost:" +  srv.listener.port;
   document.head.appendChild(link);
   link = document.createElement("link");
   link.rel = "preconnect";
-  link.href = "//localhost:" +  srv1.listener.port;
+  link.href = "//localhost:" +  srv.listener.port;
   link.crossOrigin = "anonymous";
   document.head.appendChild(link);
-}
 
-function testHeader()
-{
   // test the http link response header - the test contains both a
   // normal and anonymous preconnect link header
-  srv2 = new TestServer2(testDone);
   var xhr = new XMLHttpRequest();
   xhr.open("GET", 'rel_preconnect.sjs', false);
-  xhr.setRequestHeader("X-Link", "//localhost:" + srv2.listener.port);
+  xhr.setRequestHeader("X-Link", "//localhost:" + srv.listener.port);
   xhr.send();
   is(xhr.status, 200, 'xhr cool');
 }
 
-function testDone()
-{
-  SpecialPowers.setIntPref("network.http.speculative-parallel-limit",
-                            originalLimit);
-  SimpleTest.finish();
-}
-
 </script>
 </head>
-<body onload="testElement();">
+<body onload="doTest();">
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test">
