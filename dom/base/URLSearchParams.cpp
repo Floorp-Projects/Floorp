@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(URLSearchParams, mObservers)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(URLSearchParams, mObserver)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(URLSearchParams)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(URLSearchParams)
 
@@ -21,7 +21,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(URLSearchParams)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-URLSearchParams::URLSearchParams()
+URLSearchParams::URLSearchParams(URLSearchParamsObserver* aObserver)
+  : mObserver(aObserver)
 {
 }
 
@@ -41,8 +42,8 @@ URLSearchParams::Constructor(const GlobalObject& aGlobal,
                              const nsAString& aInit,
                              ErrorResult& aRv)
 {
-  nsRefPtr<URLSearchParams> sp = new URLSearchParams();
-  sp->ParseInput(NS_ConvertUTF16toUTF8(aInit), nullptr);
+  nsRefPtr<URLSearchParams> sp = new URLSearchParams(nullptr);
+  sp->ParseInput(NS_ConvertUTF16toUTF8(aInit));
   return sp.forget();
 }
 
@@ -51,14 +52,13 @@ URLSearchParams::Constructor(const GlobalObject& aGlobal,
                              URLSearchParams& aInit,
                              ErrorResult& aRv)
 {
-  nsRefPtr<URLSearchParams> sp = new URLSearchParams();
+  nsRefPtr<URLSearchParams> sp = new URLSearchParams(nullptr);
   sp->mSearchParams = aInit.mSearchParams;
   return sp.forget();
 }
 
 void
-URLSearchParams::ParseInput(const nsACString& aInput,
-                            URLSearchParamsObserver* aObserver)
+URLSearchParams::ParseInput(const nsACString& aInput)
 {
   // Remove all the existing data before parsing a new input.
   DeleteAll();
@@ -108,8 +108,6 @@ URLSearchParams::ParseInput(const nsACString& aInput,
 
     AppendInternal(decodedName, decodedValue);
   }
-
-  NotifyObservers(aObserver);
 }
 
 void
@@ -209,27 +207,6 @@ URLSearchParams::ConvertString(const nsACString& aInput, nsAString& aOutput)
 }
 
 void
-URLSearchParams::AddObserver(URLSearchParamsObserver* aObserver)
-{
-  MOZ_ASSERT(aObserver);
-  MOZ_ASSERT(!mObservers.Contains(aObserver));
-  mObservers.AppendElement(aObserver);
-}
-
-void
-URLSearchParams::RemoveObserver(URLSearchParamsObserver* aObserver)
-{
-  MOZ_ASSERT(aObserver);
-  mObservers.RemoveElement(aObserver);
-}
-
-void
-URLSearchParams::RemoveObservers()
-{
-  mObservers.Clear();
-}
-
-void
 URLSearchParams::Get(const nsAString& aName, nsString& aRetval)
 {
   SetDOMStringToNull(aRetval);
@@ -280,14 +257,14 @@ URLSearchParams::Set(const nsAString& aName, const nsAString& aValue)
 
   param->mValue = aValue;
 
-  NotifyObservers(nullptr);
+  NotifyObserver();
 }
 
 void
 URLSearchParams::Append(const nsAString& aName, const nsAString& aValue)
 {
   AppendInternal(aName, aValue);
-  NotifyObservers(nullptr);
+  NotifyObserver();
 }
 
 void
@@ -324,7 +301,7 @@ URLSearchParams::Delete(const nsAString& aName)
   }
 
   if (found) {
-    NotifyObservers(nullptr);
+    NotifyObserver();
   }
 }
 
@@ -380,12 +357,10 @@ URLSearchParams::Serialize(nsAString& aValue) const
 }
 
 void
-URLSearchParams::NotifyObservers(URLSearchParamsObserver* aExceptObserver)
+URLSearchParams::NotifyObserver()
 {
-  for (uint32_t i = 0; i < mObservers.Length(); ++i) {
-    if (mObservers[i] != aExceptObserver) {
-      mObservers[i]->URLSearchParamsUpdated(this);
-    }
+  if (mObserver) {
+    mObserver->URLSearchParamsUpdated(this);
   }
 }
 
