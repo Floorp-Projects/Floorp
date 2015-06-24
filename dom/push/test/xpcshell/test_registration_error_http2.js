@@ -25,7 +25,8 @@ add_task(function* test_registrations_error() {
   });
 
   yield rejects(
-    PushNotificationService.registration('https://example.net/1'),
+    PushNotificationService.registration('https://example.net/1',
+      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
     function(error) {
       return error == 'Database error';
     },
