@@ -13,14 +13,14 @@ import android.graphics.drawable.ColorDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
+import android.widget.FrameLayout;
 import android.widget.PopupWindow;
 
 /**
  * A popup to show the inflated MenuPanel.
  */
 public class MenuPopup extends PopupWindow {
-    private final LinearLayout mPanel;
+    private final FrameLayout mPanel;
 
     private final int mYOffset;
     private final int mPopupWidth;
@@ -41,7 +41,7 @@ public class MenuPopup extends PopupWindow {
                             ViewGroup.LayoutParams.WRAP_CONTENT);
 
         LayoutInflater inflater = LayoutInflater.from(context);
-        mPanel = (LinearLayout) inflater.inflate(R.layout.menu_popup, null);
+        mPanel = (FrameLayout) inflater.inflate(R.layout.menu_popup, null);
         setContentView(mPanel);
 
         setAnimationStyle(R.style.PopupAnimation);
@@ -53,8 +53,8 @@ public class MenuPopup extends PopupWindow {
      * @param view The panel view with the menu to be shown.
      */
     public void setPanelView(View view) {
-        view.setLayoutParams(new LinearLayout.LayoutParams(mPopupWidth,
-                                                           LinearLayout.LayoutParams.WRAP_CONTENT));
+        view.setLayoutParams(new FrameLayout.LayoutParams(mPopupWidth,
+                                                          FrameLayout.LayoutParams.WRAP_CONTENT));
 
         mPanel.removeAllViews();
         mPanel.addView(view);
