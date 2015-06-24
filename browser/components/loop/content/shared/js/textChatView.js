@@ -107,7 +107,7 @@ loop.shared.views.TextChatView = (function(mozL10n) {
                       return React.createElement(TextChatRoomName, {key: i, message: entry.message});
                     case CHAT_CONTENT_TYPES.CONTEXT:
                       return (
-                        React.createElement("div", {key: i, className: "context-url-view-wrapper"}, 
+                        React.createElement("div", {className: "context-url-view-wrapper", key: i}, 
                           React.createElement(sharedViews.ContextUrlView, {
                             allowClick: true, 
                             description: entry.message, 
@@ -125,10 +125,11 @@ loop.shared.views.TextChatView = (function(mozL10n) {
                 }
 
                 return (
-                  React.createElement(TextChatEntry, {key: i, 
-                                 contentType: entry.contentType, 
-                                 message: entry.message, 
-                                 type: entry.type})
+                  React.createElement(TextChatEntry, {
+                    contentType: entry.contentType, 
+                    key: i, 
+                    message: entry.message, 
+                    type: entry.type})
                 );
               }, this)
             
@@ -206,10 +207,11 @@ loop.shared.views.TextChatView = (function(mozL10n) {
       return (
         React.createElement("div", {className: "text-chat-box"}, 
           React.createElement("form", {onSubmit: this.handleFormSubmit}, 
-            React.createElement("input", {type: "text", 
-                   placeholder: this.props.showPlaceholder ? mozL10n.get("chat_textbox_placeholder") : "", 
-                   onKeyDown: this.handleKeyDown, 
-                   valueLink: this.linkState("messageDetail")})
+            React.createElement("input", {
+              onKeyDown: this.handleKeyDown, 
+              placeholder: this.props.showPlaceholder ? mozL10n.get("chat_textbox_placeholder") : "", 
+              type: "text", 
+              valueLink: this.linkState("messageDetail")})
           )
         )
       );

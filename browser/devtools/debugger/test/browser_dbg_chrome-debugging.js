@@ -45,12 +45,12 @@ function test() {
 function testChromeActor() {
   gClient.getProcess().then(aResponse => {
     gClient.addListener("newGlobal", onNewGlobal);
-    gClient.addListener("newSource", onNewSource);
 
     let actor = aResponse.form.actor;
     gClient.attachTab(actor, (response, tabClient) => {
       tabClient.attachThread(null, (aResponse, aThreadClient) => {
         gThreadClient = aThreadClient;
+        gThreadClient.addListener("newSource", onNewSource);
 
         if (aResponse.error) {
           ok(false, "Couldn't attach to the chrome debugger.");
@@ -78,7 +78,7 @@ function onNewSource(aEvent, aPacket) {
   if (aPacket.source.url.startsWith("chrome:")) {
     ok(true, "Received a new chrome source: " + aPacket.source.url);
 
-    gClient.removeListener("newSource", onNewSource);
+    gThreadClient.removeListener("newSource", onNewSource);
     gNewChromeSource.resolve();
   }
 }

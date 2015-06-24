@@ -234,7 +234,8 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
       region: Option(1),
       hideInfoBar: Option(1),
       hideGuides: Option(1),
-      showOnly: Option(1)
+      showOnly: Option(1),
+      onlyRegionArea: Option(1)
     }
   }),
 
@@ -1045,7 +1046,12 @@ AutoRefreshHighlighter.prototype = {
  *   Defaults to false
  * - showOnly {String}
  *   "content", "padding", "border" or "margin"
- *    If set, only this region will be highlighted
+ *   If set, only this region will be highlighted. Use with onlyRegionArea to
+ *   only highlight the area of the region.
+ * - onlyRegionArea {Boolean}
+ *   This can be set to true to make each region's box only highlight the area
+ *   of the corresponding region rather than the area of nested regions too.
+ *   This is useful when used with showOnly.
  *
  * Structure:
  * <div class="highlighter-container">
@@ -1427,49 +1433,90 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
    *         True if the current node has a box model to be highlighted
    */
   _updateBoxModel: function() {
-    this.options.region = this.options.region || "content";
+    let options = this.options;
+    options.region = options.region || "content";
 
-    if (this._nodeNeedsHighlighting()) {
-      for (let boxType of BOX_MODEL_REGIONS) {
-        let box = this.getElement(boxType);
+    if (!this._nodeNeedsHighlighting()) {
+      this._hideBoxModel();
+      return false;
+    }
 
-        if (this.regionFill[boxType]) {
-          box.setAttribute("style", "fill:" + this.regionFill[boxType]);
-        } else {
-          box.setAttribute("style", "");
-        }
+    for (let i = 0; i < BOX_MODEL_REGIONS.length; i++) {
+      let boxType = BOX_MODEL_REGIONS[i];
+      let nextBoxType = BOX_MODEL_REGIONS[i + 1];
+      let box = this.getElement(boxType);
 
-        if (!this.options.showOnly || this.options.showOnly === boxType) {
-          // Highlighting all quads.
-          let path = [];
-          for (let {p1, p2, p3, p4} of this.currentQuads[boxType]) {
-            path.push("M" + p1.x + "," + p1.y + " " +
-                      "L" + p2.x + "," + p2.y + " " +
-                      "L" + p3.x + "," + p3.y + " " +
-                      "L" + p4.x + "," + p4.y);
-          }
+      if (this.regionFill[boxType]) {
+        box.setAttribute("style", "fill:" + this.regionFill[boxType]);
+      } else {
+        box.setAttribute("style", "");
+      }
 
-          box.setAttribute("d", path.join(" "));
+      // Highlight all quads for this region by setting the "d" attribute of the
+      // corresponding <path>.
+      let path = [];
+      for (let j = 0; j < this.currentQuads[boxType].length; j++) {
+        let boxQuad = this.currentQuads[boxType][j];
+        let nextBoxQuad = this.currentQuads[nextBoxType]
+                          ? this.currentQuads[nextBoxType][j]
+                          : null;
+        path.push(this._getBoxPathCoordinates(boxQuad, nextBoxQuad));
+      }
+
+      box.setAttribute("d", path.join(" "));
+      box.removeAttribute("faded");
+
+      // If showOnly is defined, either hide the other regions, or fade them out
+      // if onlyRegionArea is set too.
+      if (options.showOnly && options.showOnly !== boxType) {
+        if (options.onlyRegionArea) {
+          box.setAttribute("faded", "true");
         } else {
           box.removeAttribute("d");
         }
-
-        if (boxType === this.options.region && !this.options.hideGuides) {
-          this._showGuides(boxType);
-        } else if (this.options.hideGuides) {
-          this._hideGuides();
-        }
       }
 
-      // Un-zoom the root wrapper if the page was zoomed.
-      let rootId = this.ID_CLASS_PREFIX + "root";
-      this.markup.scaleRootElement(this.currentNode, rootId);
-
-      return true;
+      if (boxType === options.region && !options.hideGuides) {
+        this._showGuides(boxType);
+      } else if (options.hideGuides) {
+        this._hideGuides();
+      }
     }
 
-    this._hideBoxModel();
-    return false;
+    // Un-zoom the root wrapper if the page was zoomed.
+    let rootId = this.ID_CLASS_PREFIX + "root";
+    this.markup.scaleRootElement(this.currentNode, rootId);
+
+    return true;
+  },
+
+  _getBoxPathCoordinates: function(boxQuad, nextBoxQuad) {
+    let {p1, p2, p3, p4} = boxQuad;
+
+    let path;
+    if (!nextBoxQuad || !this.options.onlyRegionArea) {
+      // If this is the content box (inner-most box) or if we're not being asked
+      // to highlight only region areas, then draw a simple rectangle.
+      path = "M" + p1.x + "," + p1.y + " " +
+             "L" + p2.x + "," + p2.y + " " +
+             "L" + p3.x + "," + p3.y + " " +
+             "L" + p4.x + "," + p4.y;
+    } else {
+      // Otherwise, just draw the region itself, not a filled rectangle.
+      let {p1: np1, p2: np2, p3: np3, p4: np4} = nextBoxQuad;
+      path = "M" + p1.x + "," + p1.y + " " +
+             "L" + p2.x + "," + p2.y + " " +
+             "L" + p3.x + "," + p3.y + " " +
+             "L" + p4.x + "," + p4.y + " " +
+             "L" + p1.x + "," + p1.y + " " +
+             "L" + np1.x + "," + np1.y + " " +
+             "L" + np4.x + "," + np4.y + " " +
+             "L" + np3.x + "," + np3.y + " " +
+             "L" + np2.x + "," + np2.y + " " +
+             "L" + np1.x + "," + np1.y;
+    }
+
+    return path;
   },
 
   _nodeNeedsHighlighting: function() {

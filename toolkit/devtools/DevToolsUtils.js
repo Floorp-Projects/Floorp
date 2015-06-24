@@ -50,7 +50,7 @@ exports.reportException = function reportException(aWho, aException) {
 
   dump(msg + "\n");
 
-  if (Cu.reportError) {
+  if (Cu && Cu.reportError) {
     /*
      * Note that the xpcshell test harness registers an observer for
      * console messages, so when we're running tests, this will cause
