@@ -1228,6 +1228,8 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
       MSE_DEBUG("video new buffered range = %s",
                 DumpTimeRanges(mVideoBufferedRanges).get());
     }
+
+    mOfficialGroupEndTimestamp = mGroupEndTimestamp;
   }
 
   // Update our reported total size.
@@ -1671,6 +1673,13 @@ TrackBuffersManager::RestartGroupStartTimestamp()
   }
   MOZ_ASSERT(OnTaskQueue());
   mGroupStartTimestamp = Some(mGroupEndTimestamp);
+}
+
+TimeUnit
+TrackBuffersManager::GroupEndTimestamp()
+{
+  MonitorAutoLock mon(mMonitor);
+  return mOfficialGroupEndTimestamp;
 }
 
 MediaInfo
