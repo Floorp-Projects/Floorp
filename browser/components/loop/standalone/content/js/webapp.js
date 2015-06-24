@@ -384,8 +384,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
     propTypes: {
       caption: React.PropTypes.string.isRequired,
-      startCall: React.PropTypes.func.isRequired,
-      disabled: React.PropTypes.bool
+      disabled: React.PropTypes.bool,
+      startCall: React.PropTypes.func.isRequired
     },
 
     getDefaultProps: function() {
@@ -441,15 +441,15 @@ loop.webapp = (function($, _, OT, mozL10n) {
     mixins: [Backbone.Events],
 
     propTypes: {
+      callButtonLabel: React.PropTypes.string.isRequired,
+      client: React.PropTypes.object.isRequired,
       conversation: React.PropTypes.oneOfType([
                       React.PropTypes.instanceOf(sharedModels.ConversationModel),
                       React.PropTypes.instanceOf(FxOSConversationModel)
                     ]).isRequired,
       // XXX Check more tightly here when we start injecting window.loop.*
       notifications: React.PropTypes.object.isRequired,
-      client: React.PropTypes.object.isRequired,
-      title: React.PropTypes.string.isRequired,
-      callButtonLabel: React.PropTypes.string.isRequired
+      title: React.PropTypes.string.isRequired
     },
 
     getInitialState: function() {
@@ -576,8 +576,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
     propTypes: {
       conversation: React.PropTypes.instanceOf(sharedModels.ConversationModel)
                          .isRequired,
-      sdk: React.PropTypes.object.isRequired,
-      onAfterFeedbackReceived: React.PropTypes.func.isRequired
+      onAfterFeedbackReceived: React.PropTypes.func.isRequired,
+      sdk: React.PropTypes.object.isRequired
     },
 
     render: function() {
@@ -932,23 +932,21 @@ loop.webapp = (function($, _, OT, mozL10n) {
              Backbone.Events],
 
     propTypes: {
+      activeRoomStore: React.PropTypes.oneOfType([
+        React.PropTypes.instanceOf(loop.store.ActiveRoomStore),
+        React.PropTypes.instanceOf(loop.store.FxOSActiveRoomStore)
+      ]).isRequired,
       client: React.PropTypes.instanceOf(loop.StandaloneClient).isRequired,
       conversation: React.PropTypes.oneOfType([
         React.PropTypes.instanceOf(sharedModels.ConversationModel),
         React.PropTypes.instanceOf(FxOSConversationModel)
       ]).isRequired,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       notifications: React.PropTypes.instanceOf(sharedModels.NotificationCollection)
                           .isRequired,
       sdk: React.PropTypes.object.isRequired,
-
-      // XXX New types for flux style
       standaloneAppStore: React.PropTypes.instanceOf(
-        loop.store.StandaloneAppStore).isRequired,
-      activeRoomStore: React.PropTypes.oneOfType([
-        React.PropTypes.instanceOf(loop.store.ActiveRoomStore),
-        React.PropTypes.instanceOf(loop.store.FxOSActiveRoomStore)
-      ]).isRequired,
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+        loop.store.StandaloneAppStore).isRequired
     },
 
     getInitialState: function() {

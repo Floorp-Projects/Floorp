@@ -23,10 +23,10 @@ loop.shared.views = (function(_, l10n) {
    */
   var MediaControlButton = React.createClass({displayName: "MediaControlButton",
     propTypes: {
-      scope: React.PropTypes.string.isRequired,
-      type: React.PropTypes.string.isRequired,
       action: React.PropTypes.func.isRequired,
       enabled: React.PropTypes.bool.isRequired,
+      scope: React.PropTypes.string.isRequired,
+      type: React.PropTypes.string.isRequired,
       visible: React.PropTypes.bool.isRequired
     },
 
@@ -83,8 +83,8 @@ loop.shared.views = (function(_, l10n) {
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      visible: React.PropTypes.bool.isRequired,
-      state: React.PropTypes.string.isRequired
+      state: React.PropTypes.string.isRequired,
+      visible: React.PropTypes.bool.isRequired
     },
 
     getInitialState: function() {
@@ -189,14 +189,14 @@ loop.shared.views = (function(_, l10n) {
     },
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      video: React.PropTypes.object.isRequired,
       audio: React.PropTypes.object.isRequired,
-      screenShare: React.PropTypes.object,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      enableHangup: React.PropTypes.bool,
       hangup: React.PropTypes.func.isRequired,
-      publishStream: React.PropTypes.func.isRequired,
       hangupButtonLabel: React.PropTypes.string,
-      enableHangup: React.PropTypes.bool
+      publishStream: React.PropTypes.func.isRequired,
+      screenShare: React.PropTypes.object,
+      video: React.PropTypes.object.isRequired
     },
 
     handleClickHangup: function() {
@@ -259,11 +259,11 @@ loop.shared.views = (function(_, l10n) {
     ],
 
     propTypes: {
-      sdk: React.PropTypes.object.isRequired,
-      video: React.PropTypes.object,
       audio: React.PropTypes.object,
       initiate: React.PropTypes.bool,
-      isDesktop: React.PropTypes.bool
+      isDesktop: React.PropTypes.bool,
+      sdk: React.PropTypes.object.isRequired,
+      video: React.PropTypes.object
     },
 
     getDefaultProps: function() {
@@ -474,8 +474,8 @@ loop.shared.views = (function(_, l10n) {
     mixins: [Backbone.Events],
 
     propTypes: {
-      notification: React.PropTypes.object.isRequired,
-      key: React.PropTypes.number.isRequired
+      key: React.PropTypes.number.isRequired,
+      notification: React.PropTypes.object.isRequired
     },
 
     render: function() {
@@ -507,8 +507,8 @@ loop.shared.views = (function(_, l10n) {
     mixins: [Backbone.Events, sharedMixins.DocumentVisibilityMixin],
 
     propTypes: {
-      notifications: React.PropTypes.object.isRequired,
-      clearOnDocumentHidden: React.PropTypes.bool
+      clearOnDocumentHidden: React.PropTypes.bool,
+      notifications: React.PropTypes.object.isRequired
     },
 
     getDefaultProps: function() {
@@ -555,11 +555,11 @@ loop.shared.views = (function(_, l10n) {
 
   var Button = React.createClass({displayName: "Button",
     propTypes: {
-      caption: React.PropTypes.string.isRequired,
-      onClick: React.PropTypes.func.isRequired,
-      disabled: React.PropTypes.bool,
       additionalClass: React.PropTypes.string,
-      htmlId: React.PropTypes.string
+      caption: React.PropTypes.string.isRequired,
+      disabled: React.PropTypes.bool,
+      htmlId: React.PropTypes.string,
+      onClick: React.PropTypes.func.isRequired
     },
 
     getDefaultProps: function() {

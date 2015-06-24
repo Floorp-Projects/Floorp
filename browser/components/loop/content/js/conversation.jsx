@@ -29,8 +29,8 @@ loop.conversation = (function(mozL10n) {
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      roomStore: React.PropTypes.instanceOf(loop.store.RoomStore),
-      mozLoop: React.PropTypes.object.isRequired
+      mozLoop: React.PropTypes.object.isRequired,
+      roomStore: React.PropTypes.instanceOf(loop.store.RoomStore)
     },
 
     getInitialState: function() {
