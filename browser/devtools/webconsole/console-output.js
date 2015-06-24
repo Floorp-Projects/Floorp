@@ -342,6 +342,10 @@ ConsoleOutput.prototype = {
     this.owner.owner.openLink.apply(this.owner.owner, arguments);
   },
 
+  openLocationInDebugger: function ({url, line}) {
+    return this.owner.owner.viewSourceInDebugger(url, line);
+  },
+
   /**
    * Open the variables view to inspect an object actor.
    * @see JSTerm.openVariablesView() in webconsole.js
@@ -2496,6 +2500,8 @@ Widgets.JSObject.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
       options.onClick = options.href ? this._onClickAnchor : this._onClick;
     }
 
+    options.onContextMenu = options.onContextMenu || this._onContextMenu;
+
     let anchor = this.el("a", {
       class: options.className,
       draggable: false,
@@ -2503,6 +2509,8 @@ Widgets.JSObject.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
     }, text);
 
     this.message._addLinkCallback(anchor, options.onClick);
+
+    anchor.addEventListener("contextmenu", options.onContextMenu.bind(this));
 
     if (options.appendTo) {
       options.appendTo.appendChild(anchor);
@@ -2513,16 +2521,38 @@ Widgets.JSObject.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
     return anchor;
   },
 
+  openObjectInVariablesView: function()
+  {
+    this.output.openVariablesView({
+      label: VariablesView.getString(this.objectActor, { concise: true }),
+      objectActor: this.objectActor,
+      autofocus: true,
+    });
+  },
+
   /**
    * The click event handler for objects shown inline.
    * @private
    */
   _onClick: function()
   {
-    this.output.openVariablesView({
-      label: VariablesView.getString(this.objectActor, { concise: true }),
-      objectActor: this.objectActor,
-      autofocus: true,
+    this.openObjectInVariablesView();
+  },
+
+  _onContextMenu: function(ev) {
+    // TODO offer a nice API for the context menu.
+    // Probably worth to take a look at Firebug's way
+    // https://github.com/firebug/firebug/blob/master/extension/content/firebug/chrome/menu.js
+    let doc = ev.target.ownerDocument;
+    let cmPopup = doc.getElementById("output-contextmenu");
+    let openInVarViewCmd = doc.getElementById("menu_openInVarView");
+    let openVarView = this.openObjectInVariablesView.bind(this);
+    openInVarViewCmd.addEventListener("command", openVarView);
+    openInVarViewCmd.removeAttribute("disabled");
+    cmPopup.addEventListener("popuphiding", function onPopupHiding() {
+      cmPopup.removeEventListener("popuphiding", onPopupHiding);
+      openInVarViewCmd.removeEventListener("command", openVarView);
+      openInVarViewCmd.setAttribute("disabled", "true");
     });
   },
 
@@ -2690,6 +2720,16 @@ Widgets.ObjectRenderers.add({
 
     this._text(")");
   },
+
+  _onClick: function () {
+    let location = this.objectActor.location;
+    if (location) {
+      this.output.openLocationInDebugger(location);
+    }
+    else {
+      this.openObjectInVariablesView();
+    }
+  }
 }); // Widgets.ObjectRenderers.byClass.Function
 
 /**

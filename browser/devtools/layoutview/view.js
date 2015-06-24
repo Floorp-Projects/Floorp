@@ -553,7 +553,11 @@ let onmouseover = function(e) {
     return false;
   }
 
-  this.layoutview.showBoxModel({region});
+  this.layoutview.showBoxModel({
+    region,
+    showOnly: region,
+    onlyRegionArea: true
+  });
 
   return false;
 }.bind(window);

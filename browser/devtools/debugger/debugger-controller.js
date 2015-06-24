@@ -1208,7 +1208,7 @@ SourceScripts.prototype = {
   connect: function() {
     dumpn("SourceScripts is connecting...");
     this.debuggerClient.addListener("newGlobal", this._onNewGlobal);
-    this.debuggerClient.addListener("newSource", this._onNewSource);
+    this.activeThread.addListener("newSource", this._onNewSource);
     this.activeThread.addListener("blackboxchange", this._onBlackBoxChange);
     this.activeThread.addListener("prettyprintchange", this._onPrettyPrintChange);
     this.handleTabNavigation();
@@ -1223,7 +1223,7 @@ SourceScripts.prototype = {
     }
     dumpn("SourceScripts is disconnecting...");
     this.debuggerClient.removeListener("newGlobal", this._onNewGlobal);
-    this.debuggerClient.removeListener("newSource", this._onNewSource);
+    this.activeThread.removeListener("newSource", this._onNewSource);
     this.activeThread.removeListener("blackboxchange", this._onBlackBoxChange);
     this.activeThread.addListener("prettyprintchange", this._onPrettyPrintChange);
   },
