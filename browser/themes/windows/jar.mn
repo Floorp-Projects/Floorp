@@ -47,8 +47,6 @@ browser.jar:
         skin/classic/browser/heartbeat-star-off.svg                  (../shared/heartbeat-star-off.svg)
         skin/classic/browser/Info.png
         skin/classic/browser/Info-XP.png
-        skin/classic/browser/identity.png
-        skin/classic/browser/identity-XP.png
         skin/classic/browser/identity-icons-generic.png
         skin/classic/browser/identity-icons-generic@2x.png
         skin/classic/browser/identity-icons-https.png
@@ -596,7 +594,6 @@ browser.jar:
 % override chrome://browser/skin/aboutSessionRestore-window-icon.png  chrome://browser/skin/preferences/application.png                 os=WINNT osversion<6
 
 % override chrome://browser/skin/Info.png                             chrome://browser/skin/Info-XP.png                                 os=WINNT osversion<6
-% override chrome://browser/skin/identity.png                         chrome://browser/skin/identity-XP.png                             os=WINNT osversion<6
 % override chrome://browser/skin/livemark-folder.png                  chrome://browser/skin/livemark-folder-XP.png                      os=WINNT osversion<6
 % override chrome://browser/skin/menu-back.png                        chrome://browser/skin/menu-back-XP.png                            os=WINNT osversion<6
 % override chrome://browser/skin/menu-forward.png                     chrome://browser/skin/menu-forward-XP.png                         os=WINNT osversion<6
