@@ -29,7 +29,6 @@ add_task(function* test_register_flush() {
     channelID: '9bcc7efb-86c7-4457-93ea-e24e6eb59b74',
     pushEndpoint: 'https://example.org/update/1',
     scope: 'https://example.com/page/1',
-    originAttributes: '',
     version: 2
   };
   yield db.put(record);
@@ -76,7 +75,8 @@ add_task(function* test_register_flush() {
   });
 
   let newRecord = yield PushNotificationService.register(
-    'https://example.com/page/2', '');
+    'https://example.com/page/2'
+  );
   equal(newRecord.pushEndpoint, 'https://example.org/update/2',
     'Wrong push endpoint in record');
   equal(newRecord.scope, 'https://example.com/page/2',

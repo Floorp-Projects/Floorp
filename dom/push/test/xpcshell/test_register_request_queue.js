@@ -45,12 +45,10 @@ add_task(function* test_register_request_queue() {
   });
 
   let firstRegister = PushNotificationService.register(
-    'https://example.com/page/1',
-    { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }
+    'https://example.com/page/1'
   );
   let secondRegister = PushNotificationService.register(
-    'https://example.com/page/1',
-    { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }
+    'https://example.com/page/1'
   );
 
   yield waitForPromise(Promise.all([

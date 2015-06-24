@@ -44,11 +44,6 @@ public:
   OriginAttributesToCookieJar(dom::GlobalObject& aGlobal,
                               const dom::OriginAttributesDictionary& aAttrs,
                               nsCString& aCookieJar);
-
-  static void
-  OriginAttributesToSuffix(dom::GlobalObject& aGlobal,
-                           const dom::OriginAttributesDictionary& aAttrs,
-                           nsCString& aSuffix);
 };
 
 } // namespace dom

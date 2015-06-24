@@ -11,7 +11,7 @@
  * uses service workers to notify applications. This interface exists to allow
  * privileged code to receive messages without migrating to service workers.
  */
-[scriptable, uuid(abde228b-7d14-4cab-b1f9-9f87750ede0f)]
+[scriptable, uuid(3da6a16c-69f8-4843-9149-1e89d58a53e2)]
 interface nsIPushNotificationService : nsISupports
 {
   /**
@@ -32,20 +32,20 @@ interface nsIPushNotificationService : nsISupports
    * Servers may drop subscriptions at any time, so callers should recreate
    * subscriptions if desired.
    */
-  jsval register(in string scope, in jsval originAttributes);
+  jsval register(in string scope, [optional] in string pageURL);
 
   /**
    * Revokes a push subscription for the given |scope|. Returns a promise
    * for the revoked subscription record, or `null` if the |scope| is not
    * subscribed to receive notifications.
    */
-  jsval unregister(in string scope, in jsval originAttributes);
+  jsval unregister(in string scope);
 
   /**
    * Returns a promise for the subscription record associated with the
    * given |scope|, or `null` if the |scope| does not have a subscription.
    */
-  jsval registration(in string scope, in jsval originAttributes);
+  jsval registration(in string scope);
 
   /**
    * Clear all subscriptions

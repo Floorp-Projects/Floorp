@@ -18,14 +18,6 @@ interface ChromeUtils : ThreadSafeChromeUtils {
    */
   static ByteString
   originAttributesToCookieJar(optional OriginAttributesDictionary originAttrs);
-
-  /**
-   * A helper that converts OriginAttributesDictionary to a opaque suffix string.
-   *
-   * @param originAttrs       The originAttributes from the caller.
-   */
-  static ByteString
-  originAttributesToSuffix(optional OriginAttributesDictionary originAttrs);
 };
 
 /**

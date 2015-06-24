@@ -83,8 +83,7 @@ add_task(function* test_register_timeout() {
   });
 
   yield rejects(
-    PushNotificationService.register('https://example.net/page/timeout',
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    PushNotificationService.register('https://example.net/page/timeout'),
     function(error) {
       return error == 'TimeoutError';
     },

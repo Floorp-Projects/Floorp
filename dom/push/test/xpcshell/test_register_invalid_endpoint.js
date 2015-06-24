@@ -50,8 +50,7 @@ add_task(function* test_register_invalid_endpoint() {
 
   yield rejects(
     PushNotificationService.register(
-      'https://example.net/page/invalid-endpoint',
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+      'https://example.net/page/invalid-endpoint'),
     function(error) {
       return error && error.includes('Invalid pushEndpoint');
     },

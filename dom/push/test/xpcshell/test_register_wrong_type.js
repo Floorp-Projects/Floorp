@@ -55,8 +55,7 @@ add_task(function* test_register_wrong_type() {
   let promise =
 
   yield rejects(
-    PushNotificationService.register('https://example.com/mistyped',
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    PushNotificationService.register('https://example.com/mistyped'),
     function(error) {
       return error == 'TimeoutError';
     },
