@@ -108,8 +108,6 @@ public:
 
   URLSearchParams* SearchParams();
 
-  void SetSearchParams(URLSearchParams& aSearchParams);
-
   void GetHash(nsAString& aHost, ErrorResult& aRv) const;
 
   void SetHash(const nsAString& aHash, ErrorResult& aRv);

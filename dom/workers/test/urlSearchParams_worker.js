@@ -116,28 +116,6 @@ onmessage = function() {
     url.searchParams.set('e', 'f');
     ok(url.href.indexOf('e=f') != 1, 'URL right');
 
-    var u = new URLSearchParams();
-    u.append('foo', 'bar');
-    url.searchParams = u;
-    is(url.searchParams, u, "URL.searchParams is the same object");
-    is(url.searchParams.get('foo'), 'bar', "URL.searchParams.get('foo')");
-    is(url.href, 'http://www.example.net/?foo=bar', 'URL right');
-
-    try {
-      url.searchParams = null;
-      ok(false, "URLSearchParams is not nullable");
-    } catch(e) {
-      ok(true, "URLSearchParams is not nullable");
-    }
-
-    var url2 = new URL('http://www.example.net?e=f');
-    url.searchParams = url2.searchParams;
-    is(url.searchParams, url2.searchParams, "URL.searchParams is not the same object");
-    is(url.searchParams.get('e'), 'f', "URL.searchParams.get('e')");
-
-    url.href = "http://www.example.net?bar=foo";
-    is(url.searchParams.get('bar'), 'foo', "URL.searchParams.get('bar')");
-
     runTest();
   }
 
@@ -148,11 +126,8 @@ onmessage = function() {
                      [ '\u0541', '%D5%81'] ];
 
     for (var i = 0; i < encoding.length; ++i) {
-      var a = new URLSearchParams();
-      a.set('a', encoding[i][0]);
-
       var url = new URL('http://www.example.net');
-      url.searchParams = a;
+      url.searchParams.set('a', encoding[i][0]);
       is(url.href, 'http://www.example.net/?a=' + encoding[i][1]);
 
       var url2 = new URL(url.href);
@@ -162,39 +137,12 @@ onmessage = function() {
     runTest();
   }
 
-  function testMultiURL() {
-    var a = new URL('http://www.example.net?a=b&c=d');
-    var b = new URL('http://www.example.net?e=f');
-    ok(a.searchParams.has('a'), "a.searchParams.has('a')");
-    ok(a.searchParams.has('c'), "a.searchParams.has('c')");
-    ok(b.searchParams.has('e'), "b.searchParams.has('e')");
-
-    var u = new URLSearchParams();
-    a.searchParams = b.searchParams = u;
-    is(a.searchParams, u, "a.searchParams === u");
-    is(b.searchParams, u, "b.searchParams === u");
-    ok(!a.searchParams.has('a'), "!a.searchParams.has('a')");
-    ok(!a.searchParams.has('c'), "!a.searchParams.has('c')");
-    ok(!b.searchParams.has('e'), "!b.searchParams.has('e')");
-
-    u.append('foo', 'bar');
-    is(a.searchParams.get('foo'), 'bar', "a has foo=bar");
-    is(b.searchParams.get('foo'), 'bar', "b has foo=bar");
-    is(a + "", b + "", "stringify a == b");
-
-    a.search = "?bar=foo";
-    is(a.searchParams.get('bar'), 'foo', "a has bar=foo");
-    is(b.searchParams.get('bar'), 'foo', "b has bar=foo");
-
-    runTest();
-  }
   var tests = [
     testSimpleURLSearchParams,
     testCopyURLSearchParams,
     testParserURLSearchParams,
     testURL,
     testEncoding,
-    testMultiURL
   ];
 
   function runTest() {
