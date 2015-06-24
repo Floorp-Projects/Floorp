@@ -477,7 +477,6 @@ var FullScreen = {
     }
 
     // Track whether mouse is near the toolbox
-    this._isChromeCollapsed = false;
     if (trackMouse && !this.useLionFullScreen) {
       let rect = gBrowser.mPanelContainer.getBoundingClientRect();
       this._mouseTargetRect = {
@@ -488,6 +487,8 @@ var FullScreen = {
       };
       MousePosTracker.addListener(this);
     }
+
+    this._isChromeCollapsed = false;
   },
 
   hideNavToolbox: function (aAnimate = false) {
