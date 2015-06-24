@@ -535,7 +535,7 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
     sMessageLoop->set_hang_timeouts(128, 8192);
   }
 
-  if (XRE_GetProcessType() == GeckoProcessType_Default &&
+  if (XRE_IsParentProcess() &&
       !BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO)) {
     UniquePtr<BrowserProcessSubThread> ioThread = MakeUnique<BrowserProcessSubThread>(BrowserProcessSubThread::IO);
 
@@ -733,7 +733,7 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   // We only want the SystemMemoryReporter running in one process, because it
   // profiles the entire system.  The main process is the obvious place for
   // it.
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (XRE_IsParentProcess()) {
     mozilla::SystemMemoryReporter::Init();
   }
 
@@ -964,7 +964,7 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   // On Windows XP debug, there are intermittent failures in
   // dom/media/tests/mochitest/test_peerConnection_basicH264Video.html
   // if we don't exit early in a child process. See bug 1073310.
-  if (XRE_GetProcessType() == GeckoProcessType_Content && !IsVistaOrLater()) {
+  if (XRE_IsContentProcess() && !IsVistaOrLater()) {
       NS_WARNING("Exiting child process early!");
       exit(0);
   }
@@ -1048,7 +1048,7 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   // checking working on Linux.
   // On debug B2G, the child process crashes very late.  Instead, just
   // give up so at least we exit cleanly. See bug 1071866.
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
       NS_WARNING("Exiting child process early!");
       exit(0);
   }

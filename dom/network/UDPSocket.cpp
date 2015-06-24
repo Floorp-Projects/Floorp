@@ -558,7 +558,7 @@ UDPSocket::Init(const nsString& aLocalAddress,
       }
 
       nsresult rv;
-      if (XRE_GetProcessType() != GeckoProcessType_Default) {
+      if (!XRE_IsParentProcess()) {
         rv = mSocket->InitRemote(mSocket->mLocalAddress, localPort);
       } else {
         rv = mSocket->InitLocal(mSocket->mLocalAddress, localPort);

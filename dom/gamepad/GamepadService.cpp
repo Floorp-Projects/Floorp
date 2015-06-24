@@ -85,7 +85,7 @@ GamepadService::BeginShutdown()
     mTimer->Cancel();
   }
   if (mStarted) {
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (XRE_IsParentProcess()) {
       MaybeStopGamepadMonitoring();
     } else {
       ContentChild::GetSingleton()->SendGamepadListenerRemoved();
@@ -115,7 +115,7 @@ GamepadService::AddListener(nsGlobalWindow* aWindow)
   }
 
   if (!mStarted && mEnabled) {
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (XRE_IsParentProcess()) {
       StartGamepadMonitoring();
     } else {
       ContentChild::GetSingleton()->SendGamepadListenerAdded();
@@ -500,7 +500,7 @@ GamepadService::TimeoutHandler(nsITimer* aTimer, void* aClosure)
   }
 
   if (self->mListeners.Length() == 0) {
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (XRE_IsParentProcess()) {
       MaybeStopGamepadMonitoring();
     } else {
       ContentChild::GetSingleton()->SendGamepadListenerRemoved();

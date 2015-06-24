@@ -64,7 +64,7 @@ nsWinUtils::MaybeStartWindowEmulation()
 
   if (Compatibility::IsJAWS() || Compatibility::IsWE() ||
       Compatibility::IsDolphin() ||
-      XRE_GetProcessType() == GeckoProcessType_Content) {
+      XRE_IsContentProcess()) {
     RegisterNativeWindow(kClassNameTabContent);
     sHWNDCache = new nsRefPtrHashtable<nsPtrHashKey<void>, DocAccessible>(2);
     return true;

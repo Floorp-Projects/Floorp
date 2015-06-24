@@ -49,7 +49,7 @@ mozSpellChecker::~mozSpellChecker()
   mPersonalDictionary = nullptr;
 
   if (mEngine) {
-    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Content);
+    MOZ_ASSERT(XRE_IsContentProcess());
     mEngine->Send__delete__(mEngine);
     MOZ_ASSERT(!mEngine);
   }
@@ -59,7 +59,7 @@ nsresult
 mozSpellChecker::Init()
 {
   mSpellCheckingEngine = nullptr;
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     mozilla::dom::ContentChild* contentChild = mozilla::dom::ContentChild::GetSingleton();
     MOZ_ASSERT(contentChild);
     mEngine = new RemoteSpellcheckEngineChild(this);
@@ -130,7 +130,7 @@ mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled, nsTArray
   nsresult result;
   bool correct;
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     nsString wordwrapped = nsString(aWord);
     bool rv;
     if (aSuggestions) {
@@ -309,7 +309,7 @@ mozSpellChecker::GetPersonalDictionary(nsTArray<nsString> *aWordList)
 NS_IMETHODIMP
 mozSpellChecker::GetDictionaryList(nsTArray<nsString> *aDictionaryList)
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     ContentChild *child = ContentChild::GetSingleton();
     child->GetAvailableDictionaries(*aDictionaryList);
     return NS_OK;
@@ -357,7 +357,7 @@ mozSpellChecker::GetDictionaryList(nsTArray<nsString> *aDictionaryList)
 NS_IMETHODIMP
 mozSpellChecker::GetCurrentDictionary(nsAString &aDictionary)
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     aDictionary = mCurrentDictionary;
     return NS_OK;
   }
@@ -376,7 +376,7 @@ mozSpellChecker::GetCurrentDictionary(nsAString &aDictionary)
 NS_IMETHODIMP
 mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary)
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     nsString wrappedDict = nsString(aDictionary);
     bool isSuccess;
     mEngine->SendSetDictionary(wrappedDict, &isSuccess);
@@ -536,7 +536,7 @@ mozSpellChecker::GetCurrentBlockIndex(nsITextServicesDocument *aDoc, int32_t *ou
 nsresult
 mozSpellChecker::GetEngineList(nsCOMArray<mozISpellCheckingEngine>* aSpellCheckingEngines)
 {
-  MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Content);
+  MOZ_ASSERT(!XRE_IsContentProcess());
 
   nsresult rv;
   bool hasMoreEngines;

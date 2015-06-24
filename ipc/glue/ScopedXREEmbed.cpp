@@ -67,7 +67,7 @@ ScopedXREEmbed::Start()
   NS_ENSURE_TRUE_VOID(localFile);
 
 #ifdef OS_MACOSX
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     // We're an XPCOM-using subprocess.  Walk out of
     // [subprocess].app/Contents/MacOS to the real GRE dir.
     rv = localFile->GetParent(getter_AddRefs(parent));

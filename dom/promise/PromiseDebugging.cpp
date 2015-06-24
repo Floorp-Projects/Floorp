@@ -96,7 +96,7 @@ PromiseDebugging::Init()
 
   // Generate a prefix for identifiers: "PromiseDebugging.$processid."
   sIDPrefix = NS_LITERAL_STRING("PromiseDebugging.");
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     sIDPrefix.AppendInt(ContentChild::GetSingleton()->GetID());
     sIDPrefix.Append('.');
   } else {

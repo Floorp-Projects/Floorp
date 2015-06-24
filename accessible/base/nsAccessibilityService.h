@@ -282,7 +282,7 @@ IPCAccessibilityActive()
 #ifdef MOZ_B2G
   return false;
 #else
-  return XRE_GetProcessType() == GeckoProcessType_Content &&
+  return XRE_IsContentProcess() &&
     mozilla::Preferences::GetBool("accessibility.ipc_architecture.enabled", true);
 #endif
 }

@@ -398,7 +398,7 @@ nsIdleService::nsIdleService() : mCurrentlySetToTimeoutAt(TimeStamp()),
     sLog = PR_NewLogModule("idleService");
   MOZ_ASSERT(!gIdleService);
   gIdleService = this;
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (XRE_IsParentProcess()) {
     mDailyIdle = new nsIdleServiceDaily(this);
     mDailyIdle->Init();
   }
@@ -425,7 +425,7 @@ nsIdleService::AddIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS)
   // high either - no more than ~136 years.
   NS_ENSURE_ARG_RANGE(aIdleTimeInS, 1, (UINT32_MAX / 10) - 1);
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     dom::ContentChild* cpc = dom::ContentChild::GetSingleton();
     cpc->AddIdleObserver(aObserver, aIdleTimeInS);
     return NS_OK;
@@ -484,7 +484,7 @@ nsIdleService::RemoveIdleObserver(nsIObserver* aObserver, uint32_t aTimeInS)
   NS_ENSURE_ARG_POINTER(aObserver);
   NS_ENSURE_ARG(aTimeInS);
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     dom::ContentChild* cpc = dom::ContentChild::GetSingleton();
     cpc->RemoveIdleObserver(aObserver, aTimeInS);
     return NS_OK;

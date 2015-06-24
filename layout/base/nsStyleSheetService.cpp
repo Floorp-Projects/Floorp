@@ -101,7 +101,7 @@ nsStyleSheetService::Init()
   // SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded should be updated too.
 
   // Child processes get their style sheets from the ContentParent.
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     return NS_OK;
   }
 
@@ -156,7 +156,7 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI *aSheetURI,
       serv->NotifyObservers(sheets[sheets.Count() - 1], message, nullptr);
     }
 
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (XRE_IsParentProcess()) {
       nsTArray<dom::ContentParent*> children;
       dom::ContentParent::GetAll(children);
 
@@ -265,7 +265,7 @@ nsStyleSheetService::UnregisterSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   if (serv)
     serv->NotifyObservers(sheet, message, nullptr);
 
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (XRE_IsParentProcess()) {
     nsTArray<dom::ContentParent*> children;
     dom::ContentParent::GetAll(children);
 

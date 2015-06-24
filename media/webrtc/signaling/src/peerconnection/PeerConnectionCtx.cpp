@@ -326,7 +326,7 @@ nsresult PeerConnectionCtx::Initialize() {
   mTelemetryTimer->InitWithFuncCallback(EverySecondTelemetryCallback_m, this, 1000,
                                         nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP);
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     WebrtcGlobalChild::Create();
   }
 #endif // MOZILLA_INTERNAL_API
