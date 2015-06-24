@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 var gPrivacyPane = {
 
@@ -70,8 +69,6 @@ var gPrivacyPane = {
     this._initTrackingProtection();
 #endif
     this._initAutocomplete();
-
-    document.getElementById("searchesSuggestion").hidden = !AppConstants.NIGHTLY_BUILD;
   },
 
   // HISTORY MODE
