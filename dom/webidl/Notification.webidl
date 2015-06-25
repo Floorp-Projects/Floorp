@@ -11,18 +11,17 @@
  * related or neighboring rights to this work.
  */
 
-[Constructor(DOMString title, optional NotificationOptions options),
- Exposed=(Window,Worker),
- Func="mozilla::dom::Notification::PrefEnabled",
+[Pref="dom.webnotifications.enabled",
+ Constructor(DOMString title, optional NotificationOptions options),
  UnsafeInPrerendering]
 interface Notification : EventTarget {
   [GetterThrows]
   static readonly attribute NotificationPermission permission;
 
-  [Throws, Func="mozilla::dom::Notification::RequestPermissionEnabledForScope"]
+  [Throws]
   static void requestPermission(optional NotificationPermissionCallback permissionCallback);
 
-  [Throws, Func="mozilla::dom::Notification::IsGetEnabled"]
+  [Throws]
   static Promise<sequence<Notification>> get(optional GetNotificationOptions filter);
 
   attribute EventHandler onclick;
@@ -68,7 +67,7 @@ dictionary NotificationOptions {
 };
 
 dictionary GetNotificationOptions {
-  DOMString tag = "";
+  DOMString tag;
 };
 
 dictionary NotificationBehavior {
@@ -93,9 +92,3 @@ enum NotificationDirection {
   "rtl"
 };
 
-partial interface ServiceWorkerRegistration {
-  [Throws]
-  Promise<void> showNotification(DOMString title, optional NotificationOptions options);
-  [Throws]
-  Promise<sequence<Notification>> getNotifications(optional GetNotificationOptions filter);
-};
