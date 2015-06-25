@@ -73,7 +73,7 @@ def get_pids(name):
 
     if mozinfo.isWin:
         # use the windows-specific implementation
-        import wpk
+        from . import wpk
         return wpk.get_pids(name)
     else:
         return [pid for pid,_ in running_processes(name)]
