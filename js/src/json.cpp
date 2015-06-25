@@ -719,7 +719,7 @@ Walk(JSContext* cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
                     /* Step 2a(iii)(3). The spec deliberately ignores strict failure. */
                     Rooted<PropertyDescriptor> desc(cx);
                     desc.setDataDescriptor(newElement, JSPROP_ENUMERATE);
-                    if (!StandardDefineProperty(cx, obj, id, desc, ignored))
+                    if (!DefineProperty(cx, obj, id, desc, ignored))
                         return false;
                 }
             }
@@ -747,7 +747,7 @@ Walk(JSContext* cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
                     /* Step 2b(ii)(3). The spec deliberately ignores strict failure. */
                     Rooted<PropertyDescriptor> desc(cx);
                     desc.setDataDescriptor(newElement, JSPROP_ENUMERATE);
-                    if (!StandardDefineProperty(cx, obj, id, desc, ignored))
+                    if (!DefineProperty(cx, obj, id, desc, ignored))
                         return false;
                 }
             }

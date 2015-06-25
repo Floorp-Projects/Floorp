@@ -1600,8 +1600,8 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
         }
 
         if (isValidUrlEncodedMimeType) {
-          nsRefPtr<URLSearchParams> params = new URLSearchParams();
-          params->ParseInput(data, /* aObserver */ nullptr);
+          nsRefPtr<URLSearchParams> params = new URLSearchParams(nullptr);
+          params->ParseInput(data);
 
           nsRefPtr<nsFormData> fd = new nsFormData(DerivedClass()->GetParentObject());
           FillFormIterator iterator(fd);

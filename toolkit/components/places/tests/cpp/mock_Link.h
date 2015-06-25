@@ -145,7 +145,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(URLSearchParams)
 NS_INTERFACE_MAP_END
 
 
-URLSearchParams::URLSearchParams()
+URLSearchParams::URLSearchParams(URLSearchParamsObserver* aObserver)
 {
 }
 
@@ -160,22 +160,9 @@ URLSearchParams::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 void
-URLSearchParams::ParseInput(const nsACString& aInput,
-                            URLSearchParamsObserver* aObserver)
+URLSearchParams::ParseInput(const nsACString& aInput)
 {
   NS_NOTREACHED("Unexpected call to URLSearchParams::ParseInput");
-}
-
-void
-URLSearchParams::AddObserver(URLSearchParamsObserver* aObserver)
-{
-  NS_NOTREACHED("Unexpected call to URLSearchParams::SetObserver");
-}
-
-void
-URLSearchParams::RemoveObserver(URLSearchParamsObserver* aObserver)
-{
-  NS_NOTREACHED("Unexpected call to URLSearchParams::SetObserver");
 }
 
 void
@@ -234,9 +221,9 @@ URLSearchParams::DeleteAll()
 }
 
 void
-URLSearchParams::NotifyObservers(URLSearchParamsObserver* aExceptObserver)
+URLSearchParams::NotifyObserver()
 {
-  NS_NOTREACHED("Unexpected call to URLSearchParams::NotifyObservers");
+  NS_NOTREACHED("Unexpected call to URLSearchParams::NotifyObserver");
 }
 
 } // namespace dom

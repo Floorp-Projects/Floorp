@@ -1201,23 +1201,6 @@ js::GetObjectMetadata(JSObject* obj)
 }
 
 JS_FRIEND_API(bool)
-js::DefineOwnProperty(JSContext* cx, JSObject* objArg, jsid idArg,
-                      JS::Handle<js::PropertyDescriptor> descriptor, ObjectOpResult& result)
-{
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, idArg);
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id, descriptor.value());
-    if (descriptor.hasGetterObject())
-        assertSameCompartment(cx, descriptor.getterObject());
-    if (descriptor.hasSetterObject())
-        assertSameCompartment(cx, descriptor.setterObject());
-
-    return StandardDefineProperty(cx, obj, id, descriptor, result);
-}
-
-JS_FRIEND_API(bool)
 js::ReportIsNotFunction(JSContext* cx, HandleValue v)
 {
     return ReportIsNotFunction(cx, v, -1);

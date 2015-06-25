@@ -579,21 +579,6 @@ Link::SearchParams()
 }
 
 void
-Link::SetSearchParams(URLSearchParams& aSearchParams)
-{
-  if (mSearchParams) {
-    mSearchParams->RemoveObserver(this);
-  }
-
-  mSearchParams = &aSearchParams;
-  mSearchParams->AddObserver(this);
-
-  nsAutoString search;
-  mSearchParams->Serialize(search);
-  SetSearchInternal(search);
-}
-
-void
 Link::URLSearchParamsUpdated(URLSearchParams* aSearchParams)
 {
   MOZ_ASSERT(mSearchParams);
@@ -621,15 +606,14 @@ Link::UpdateURLSearchParams()
     }
   }
 
-  mSearchParams->ParseInput(search, this);
+  mSearchParams->ParseInput(search);
 }
 
 void
 Link::CreateSearchParamsIfNeeded()
 {
   if (!mSearchParams) {
-    mSearchParams = new URLSearchParams();
-    mSearchParams->AddObserver(this);
+    mSearchParams = new URLSearchParams(this);
     UpdateURLSearchParams();
   }
 }
@@ -638,7 +622,6 @@ void
 Link::Unlink()
 {
   if (mSearchParams) {
-    mSearchParams->RemoveObserver(this);
     mSearchParams = nullptr;
   }
 }
