@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=916893
+-->
+<head>
+  <title>Bug 916893 - Test Notifications in child workers.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/tests/mochitest/notification/MockServices.js"></script>
+  <script type="text/javascript" src="/tests/dom/tests/mochitest/notification/NotificationTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=916893">Bug 916893</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+<script type="text/javascript">
+  SimpleTest.requestFlakyTimeout("Mock alert service dispatches show event.");
+  function runTest() {
+    MockServices.register();
+    var w = new Worker("notification_worker_child-parent.js");
+    w.onmessage = function(e) {
+      if (e.data.type === 'finish') {
+        MockServices.unregister();
+        SimpleTest.finish();
+      } else if (e.data.type === 'ok') {
+        ok(e.data.test, e.data.message);
+      } else if (e.data.type === 'is') {
+        is(e.data.test1, e.data.test2, e.data.message);
+      }
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    // turn on testing pref (used by notification.cpp, and mock the alerts
+    SpecialPowers.setBoolPref("notification.prompt.testing", true);
+    w.postMessage('start')
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv(
+    {"set": [["dom.webnotifications.workers.enabled", true]]},
+    runTest
+  );
+</script>
+</body>
+</html>
