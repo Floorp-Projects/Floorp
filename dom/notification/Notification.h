@@ -8,7 +8,9 @@
 #define mozilla_dom_notification_h__
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/NotificationBinding.h"
+#include "mozilla/dom/workers/bindings/WorkerFeature.h"
 
 #include "nsIObserver.h"
 
@@ -21,16 +23,92 @@ class nsIVariant;
 namespace mozilla {
 namespace dom {
 
-
-class NotificationObserver;
+class NotificationRef;
+class WorkerNotificationObserver;
 class Promise;
 
+namespace workers {
+  class WorkerPrivate;
+} // namespace workers
+
+class Notification;
+class NotificationFeature final : public workers::WorkerFeature
+{
+  // Held alive by Notification itself before feature is added, and only
+  // released after feature is removed.
+  Notification* mNotification;
+
+public:
+  explicit NotificationFeature(Notification* aNotification);
+
+  bool
+  Notify(JSContext* aCx, workers::Status aStatus) override;
+};
+
+
+/*
+ * Notifications on workers introduce some liveness issues. The property we
+ * are trying to satisfy is:
+ *   Whenever a task is dispatched to the main thread to operate on
+ *   a Notification, the Notification should be addrefed on the worker thread
+ *   and a feature should be added to observe the worker lifetime. This main
+ *   thread owner should ensure it properly releases the reference to the
+ *   Notification, additionally removing the feature if necessary.
+ *
+ * To enforce the correct addref and release, along with managing the feature,
+ * we introduce a NotificationRef. Only one object may ever own
+ * a NotificationRef, so UniquePtr<> is used throughout.  The NotificationRef
+ * constructor calls AddRefObject(). When it is destroyed (on any thread) it
+ * releases the Notification on the correct thread.
+ *
+ * Code should only access the underlying Notification object when it can
+ * guarantee that it retains ownership of the NotificationRef while doing so.
+ *
+ * The one kink in this mechanism is that the worker feature may be Notify()ed
+ * if the worker stops running script, even if the Notification's corresponding
+ * UI is still visible to the user. We handle this case with the following
+ * steps:
+ *   a) Close the notification. This is done by blocking the worker on the main
+ *   thread.
+ *   b) Ask the observer to let go of its NotificationRef's underlying
+ *   Notification without proper cleanup since the feature will handle the
+ *   release. This is only OK because every notification has only one
+ *   associated observer. The NotificationRef itself is still owned by the
+ *   observer and deleted by the UniquePtr, but it doesn't do anything since
+ *   the underlying Notification is null.
+ *
+ * To unify code-paths, we use the same NotificationRef in the main
+ * thread implementation too.
+ *
+ * Note that the Notification's JS wrapper does it's standard
+ * AddRef()/Release() and is not affected by any of this.
+ *
+ * There is one case related to the WorkerNotificationObserver having to
+ * dispatch WorkerRunnables to the worker thread which will use the
+ * Notification object. We can end up in a situation where an event runnable is
+ * dispatched to the worker, gets queued in the worker's event queue, but then,
+ * the worker yields to the main thread. Here the main thread observer is
+ * destroyed, which frees its NotificationRef. The NotificationRef dispatches
+ * a ControlRunnable to the worker, which runs before the event runnable,
+ * leading to the event runnable possibly not having a valid Notification
+ * reference.
+ * We solve this problem by having WorkerNotificationObserver's dtor
+ * dispatching a standard WorkerRunnable to do the release (this guarantees the
+ * ordering of the release is after the event runnables). All WorkerRunnables
+ * that get dispatched successfully are guaranteed to run on the worker before
+ * it shuts down. If that dispatch fails, the standard ControlRunnable based
+ * shutdown is acceptable since the already dispatched event runnables have
+ * already run or canceled (the worker is already past Running).
+ *
+ */
 class Notification : public DOMEventTargetHelper
 {
+  friend class CloseNotificationRunnable;
   friend class NotificationTask;
   friend class NotificationPermissionRequest;
   friend class NotificationObserver;
   friend class NotificationStorageCallback;
+  friend class WorkerNotificationObserver;
 
 public:
   IMPL_EVENT_HANDLER(click)
@@ -40,6 +118,10 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Notification, DOMEventTargetHelper)
+
+  static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
+  // Returns if Notification.get() is allowed for the current global.
+  static bool IsGetEnabled(JSContext* aCx, JSObject* aObj);
 
   static already_AddRefed<Notification> Constructor(const GlobalObject& aGlobal,
                                                     const nsAString& aTitle,
@@ -91,6 +173,8 @@ public:
 
   nsIStructuredCloneContainer* GetDataCloneContainer();
 
+  static bool RequestPermissionEnabledForScope(JSContext* aCx, JSObject* /* unused */);
+
   static void RequestPermission(const GlobalObject& aGlobal,
                                 const Optional<OwningNonNull<NotificationPermissionCallback> >& aCallback,
                                 ErrorResult& aRv);
@@ -117,13 +201,36 @@ public:
 
   void InitFromBase64(JSContext* aCx, const nsAString& aData, ErrorResult& aRv);
 
+  void AssertIsOnTargetThread() const
+  {
+    MOZ_ASSERT(IsTargetThread());
+  }
+
+  workers::WorkerPrivate* mWorkerPrivate;
+  // Main thread only.
+  WorkerNotificationObserver* mObserver;
+
+  // The NotificationTask calls ShowInternal()/CloseInternal() on the
+  // Notification. At this point the task has ownership of the Notification. It
+  // passes this on to the Notification itself via mTempRef so that
+  // ShowInternal()/CloseInternal() may pass it along appropriately (or release
+  // it).
+  UniquePtr<NotificationRef> mTempRef;
+
+  void AddRefObject();
+  void ReleaseObject();
+
+  static NotificationPermission GetPermissionInternal(nsIPrincipal* aPrincipal,
+                                                      ErrorResult& rv);
+
+  bool DispatchClickEvent();
 protected:
   Notification(const nsAString& aID, const nsAString& aTitle, const nsAString& aBody,
                NotificationDirection aDir, const nsAString& aLang,
                const nsAString& aTag, const nsAString& aIconUrl,
-               const NotificationBehavior& aBehavior, nsPIDOMWindow* aWindow);
+               const NotificationBehavior& aBehavior, nsIGlobalObject* aGlobal);
 
-  static already_AddRefed<Notification> CreateInternal(nsPIDOMWindow* aWindow,
+  static already_AddRefed<Notification> CreateInternal(nsIGlobalObject* aGlobal,
                                                        const nsAString& aID,
                                                        const nsAString& aTitle,
                                                        const NotificationOptions& aOptions);
@@ -158,27 +265,29 @@ protected:
   }
 
   static nsresult GetOrigin(nsPIDOMWindow* aWindow, nsString& aOrigin);
+  nsresult GetOriginWorker(nsString& aOrigin);
 
   void GetAlertName(nsAString& aRetval)
   {
     aRetval = mAlertName;
   }
 
-  nsString mID;
-  nsString mTitle;
-  nsString mBody;
-  NotificationDirection mDir;
-  nsString mLang;
-  nsString mTag;
-  nsString mIconUrl;
+  const nsString mID;
+  const nsString mTitle;
+  const nsString mBody;
+  const NotificationDirection mDir;
+  const nsString mLang;
+  const nsString mTag;
+  const nsString mIconUrl;
   nsCOMPtr<nsIStructuredCloneContainer> mDataObjectContainer;
-  NotificationBehavior mBehavior;
+  const NotificationBehavior mBehavior;
 
   // It's null until GetData is first called
   nsCOMPtr<nsIVariant> mData;
 
   nsString mAlertName;
 
+  // Main thread only.
   bool mIsClosed;
 
   // We need to make a distinction between the notification being closed i.e.
@@ -193,6 +302,22 @@ private:
   virtual ~Notification();
 
   nsIPrincipal* GetPrincipal();
+
+  nsresult PersistNotification();
+  void UnpersistNotification();
+
+  bool IsTargetThread() const
+  {
+    return NS_IsMainThread() == !mWorkerPrivate;
+  }
+
+  void RegisterFeature();
+  void UnregisterFeature();
+
+  nsresult ResolveIconAndSoundURL(nsString&, nsString&);
+
+  UniquePtr<NotificationFeature> mFeature;
+  uint32_t mTaskCount;
 };
 
 } // namespace dom
