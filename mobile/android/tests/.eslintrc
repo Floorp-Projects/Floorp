@@ -1,0 +1,18 @@
+globals:
+    # TODO: Verify that these are correct.
+    Point: false
+    SpecialPowers: false
+    XPCNativeWrapper: false
+    add_task: false
+    add_test: false
+    do_check_eq: false
+    do_check_false: false
+    do_check_neq: false
+    do_check_true: false
+    do_print: false
+    do_register_cleanup: false
+    do_report_result: false
+    do_test_finished: false
+    do_test_pending: false
+    do_throw: false
+    run_next_test: false
