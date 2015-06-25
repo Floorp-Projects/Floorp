@@ -7,3 +7,6 @@ app/mobile.js
 # Not much JS to lint and non-standard at that
 installer/
 locales/
+
+# Pretty sure we're disabling this one anyway
+modules/ContactService.jsm
