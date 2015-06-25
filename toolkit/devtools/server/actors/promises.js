@@ -7,9 +7,12 @@
 const protocol = require("devtools/server/protocol");
 const { method, RetVal, Arg, types } = protocol;
 const { expectState, ActorPool } = require("devtools/server/actors/common");
-const { ObjectActor, createValueGrip } = require("devtools/server/actors/object");
+const { ObjectActor,
+        createValueGrip } = require("devtools/server/actors/object");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
+
+/* global events */
 
 // Teach protocol.js how to deal with legacy actor types
 types.addType("ObjectActor", {
@@ -207,7 +210,7 @@ let PromisesActor = protocol.ActorClass({
    */
   _makePromiseEventHandler: function(array, eventName) {
     return promise => {
-      let actor = this._createObjectActorForPromise(promise)
+      let actor = this._createObjectActorForPromise(promise);
       let needsScheduling = array.length == 0;
 
       array.push(actor);
@@ -217,7 +220,7 @@ let PromisesActor = protocol.ActorClass({
           events.emit(this, eventName, array.splice(0, array.length));
         });
       }
-    }
+    };
   },
 
   _onWindowReady: expectState("attached", function({ isTopLevel }) {
