@@ -10,8 +10,6 @@ import sys
 import subprocess
 import which
 
-from mozbuild.backend.cpp_eclipse import CppEclipseBackend
-
 from mozbuild.base import (
     MachCommandBase,
 )
@@ -101,6 +99,7 @@ class MachCommands(MachCommandBase):
             process = subprocess.check_call(studio + [gradle_dir])
 
     def get_eclipse_workspace_path(self):
+        from mozbuild.backend.cpp_eclipse import CppEclipseBackend
         return CppEclipseBackend.get_workspace_path(self.topsrcdir, self.topobjdir)
 
     def get_visualstudio_workspace_path(self):
