@@ -25,16 +25,19 @@ add_task(function* test_notification_ack() {
     channelID: '21668e05-6da8-42c9-b8ab-9cc3f4d5630c',
     pushEndpoint: 'https://example.com/update/1',
     scope: 'https://example.org/1',
+    originAttributes: '',
     version: 1
   }, {
     channelID: '9a5ff87f-47c9-4215-b2b8-0bdd38b4b305',
     pushEndpoint: 'https://example.com/update/2',
     scope: 'https://example.org/2',
+    originAttributes: '',
     version: 2
   }, {
     channelID: '5477bfda-22db-45d4-9614-fee369630260',
     pushEndpoint: 'https://example.com/update/3',
     scope: 'https://example.org/3',
+    originAttributes: '',
     version: 3
   }];
   for (let record of records) {

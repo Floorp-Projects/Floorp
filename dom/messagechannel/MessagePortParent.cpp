@@ -159,5 +159,19 @@ MessagePortParent::Close()
   mEntangled = false;
 }
 
+/* static */ bool
+MessagePortParent::ForceClose(const nsID& aUUID,
+                              const nsID& aDestinationUUID,
+                              const uint32_t& aSequenceID)
+{
+  MessagePortService* service =  MessagePortService::Get();
+  if (!service) {
+    NS_WARNING("The service must exist if we want to close an existing MessagePort.");
+    return false;
+  }
+
+  return service->ForceClose(aUUID, aDestinationUUID, aSequenceID);
+}
+
 } // dom namespace
 } // mozilla namespace

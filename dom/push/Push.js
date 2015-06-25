@@ -23,11 +23,11 @@ Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 const PUSH_SUBSCRIPTION_CID = Components.ID("{CA86B665-BEDA-4212-8D0F-5C9F65270B58}");
 
-function PushSubscription(pushEndpoint, scope, pageURL) {
+function PushSubscription(pushEndpoint, scope, principal) {
   debug("PushSubscription Constructor");
   this._pushEndpoint = pushEndpoint;
   this._scope = scope;
-  this._pageURL = pageURL;
+  this._principal = principal;
 }
 
 PushSubscription.prototype = {
@@ -53,10 +53,10 @@ PushSubscription.prototype = {
                    .getService(Ci.nsISyncMessageSender);
   },
 
-  __init: function(endpoint, scope, pageURL) {
+  __init: function(endpoint, scope, principal) {
     this._pushEndpoint = endpoint;
     this._scope = scope;
-    this._pageURL = pageURL;
+    this._principal = principal;
   },
 
   get endpoint() {
@@ -71,11 +71,10 @@ PushSubscription.prototype = {
                                                   reject: reject });
 
       this._cpmm.sendAsyncMessage("Push:Unregister", {
-                                  pageURL: this._pageURL,
                                   scope: this._scope,
                                   pushEndpoint: this._pushEndpoint,
                                   requestID: resolverId
-                                });
+                                }, null, this._principal);
     }.bind(this);
 
     return this.createPromise(promiseInit);
@@ -92,10 +91,10 @@ PushSubscription.prototype = {
 
     switch (aMessage.name) {
       case "PushService:Unregister:OK":
-        resolver.resolve(false);
+        resolver.resolve(true);
         break;
       case "PushService:Unregister:KO":
-        resolver.reject(true);
+        resolver.resolve(false);
         break;
       default:
         debug("NOT IMPLEMENTED! receiveMessage for " + aMessage.name);
@@ -133,7 +132,6 @@ Push.prototype = {
     gDebuggingEnabled = Services.prefs.getBoolPref("dom.push.debug");
     debug("init()");
 
-    this._pageURL = aWindow.document.nodePrincipal.URI;
     this._window = aWindow;
 
     this.initDOMRequestHelper(aWindow, [
@@ -145,6 +143,7 @@ Push.prototype = {
 
     this._cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
                    .getService(Ci.nsISyncMessageSender);
+    this._principal = aWindow.document.nodePrincipal;
   },
 
   setScope: function(scope){
@@ -159,8 +158,6 @@ Push.prototype = {
     let type = "push";
     let permValue =
       Services.perms.testExactPermissionFromPrincipal(principal, type);
-
-    debug("Existing permission " + permValue);
 
     if (permValue == Ci.nsIPermissionManager.ALLOW_ACTION) {
         aAllowCallback();
@@ -219,9 +216,9 @@ Push.prototype = {
     switch (aMessage.name) {
       case "PushService:Register:OK":
       {
-        let subscription = new this._window.PushSubscription(json.pushEndpoint,
-                                                             this._scope,
-                                                             this._pageURL.spec);
+        let subscription =
+          new this._window.PushSubscription(json.pushEndpoint, this._scope,
+                                            this._principal);
         resolver.resolve(subscription);
         break;
       }
@@ -232,8 +229,9 @@ Push.prototype = {
       {
         let subscription = null;
         try {
-          subscription = new this._window.PushSubscription(json.registration.pushEndpoint,
-                                                          this._scope, this._pageURL.spec);
+          subscription =
+            new this._window.PushSubscription(json.registration.pushEndpoint,
+                                              this._scope, this._principal);
         } catch(error) {
         }
         resolver.resolve(subscription);
@@ -255,10 +253,9 @@ Push.prototype = {
       this.askPermission(
         function() {
           this._cpmm.sendAsyncMessage("Push:Register", {
-                                      pageURL: this._pageURL.spec,
                                       scope: this._scope,
                                       requestID: resolverId
-                                    });
+                                    }, null, this._principal);
         }.bind(this),
 
         function() {
@@ -279,10 +276,9 @@ Push.prototype = {
       this.askPermission(
         function() {
           this._cpmm.sendAsyncMessage("Push:Registration", {
-                                      pageURL: this._pageURL.spec,
                                       scope: this._scope,
                                       requestID: resolverId
-                                    });
+                                    }, null, this._principal);
         }.bind(this),
 
         function() {
@@ -294,11 +290,14 @@ Push.prototype = {
   },
 
   hasPermission: function() {
-    debug("getSubscription()" + this._scope);
+    debug("hasPermission()" + this._scope);
 
     let p = this.createPromise(function(resolve, reject) {
-      let permissionManager = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
-      let permission = permissionManager.testExactPermission(this._pageURL, "push");
+      let permissionManager = Cc["@mozilla.org/permissionmanager;1"]
+                              .getService(Ci.nsIPermissionManager);
+      let permission =
+        permissionManager.testExactPermissionFromPrincipal(this._principal,
+                                                           "push");
 
       let pushPermissionStatus = "default";
       if (permission == Ci.nsIPermissionManager.ALLOW_ACTION) {

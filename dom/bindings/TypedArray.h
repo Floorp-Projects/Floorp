@@ -190,6 +190,48 @@ private:
   TypedArray(const TypedArray&) = delete;
 };
 
+template<JSObject* UnwrapArray(JSObject*),
+         void GetLengthAndData(JSObject*, uint32_t*, uint8_t**),
+         js::Scalar::Type GetViewType(JSObject*)>
+struct ArrayBufferView_base : public TypedArray_base<uint8_t, UnwrapArray,
+                                                     GetLengthAndData> {
+private:
+  typedef TypedArray_base<uint8_t, UnwrapArray, GetLengthAndData> Base;
+
+public:
+  ArrayBufferView_base()
+    : Base()
+  {
+  }
+
+  explicit ArrayBufferView_base(ArrayBufferView_base&& aOther)
+    : Base(Move(aOther)),
+      mType(aOther.mType)
+  {
+    aOther.mType = js::Scalar::MaxTypedArrayViewType;
+  }
+
+private:
+  js::Scalar::Type mType;
+
+public:
+  inline bool Init(JSObject* obj)
+  {
+    if (!Base::Init(obj)) {
+      return false;
+    }
+
+    mType = GetViewType(this->Obj());
+    return true;
+  }
+
+  inline js::Scalar::Type Type() const
+  {
+    MOZ_ASSERT(this->inited());
+    return mType;
+  }
+};
+
 typedef TypedArray<int8_t, js::UnwrapInt8Array, JS_GetInt8ArrayData,
                    js::GetInt8ArrayLengthAndData, JS_NewInt8Array>
         Int8Array;
@@ -217,7 +259,9 @@ typedef TypedArray<float, js::UnwrapFloat32Array, JS_GetFloat32ArrayData,
 typedef TypedArray<double, js::UnwrapFloat64Array, JS_GetFloat64ArrayData,
                    js::GetFloat64ArrayLengthAndData, JS_NewFloat64Array>
         Float64Array;
-typedef TypedArray_base<uint8_t, js::UnwrapArrayBufferView, js::GetArrayBufferViewLengthAndData>
+typedef ArrayBufferView_base<js::UnwrapArrayBufferView,
+                             js::GetArrayBufferViewLengthAndData,
+                             JS_GetArrayBufferViewType>
         ArrayBufferView;
 typedef TypedArray<uint8_t, js::UnwrapArrayBuffer, JS_GetArrayBufferData,
                    js::GetArrayBufferLengthAndData, JS_NewArrayBuffer>
@@ -250,7 +294,9 @@ typedef TypedArray<float, js::UnwrapSharedFloat32Array, JS_GetSharedFloat32Array
 typedef TypedArray<double, js::UnwrapSharedFloat64Array, JS_GetSharedFloat64ArrayData,
                    js::GetSharedFloat64ArrayLengthAndData, JS_NewSharedFloat64Array>
         SharedFloat64Array;
-typedef TypedArray_base<uint8_t, js::UnwrapSharedArrayBufferView, js::GetSharedArrayBufferViewLengthAndData>
+typedef ArrayBufferView_base<js::UnwrapSharedArrayBufferView,
+                             js::GetSharedArrayBufferViewLengthAndData,
+                             JS_GetSharedArrayBufferViewType>
         SharedArrayBufferView;
 typedef TypedArray<uint8_t, js::UnwrapSharedArrayBuffer, JS_GetSharedArrayBufferData,
                    js::GetSharedArrayBufferLengthAndData, JS_NewSharedArrayBuffer>

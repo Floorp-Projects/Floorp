@@ -310,7 +310,9 @@ class JSObject : public js::gc::Cell
     }
     static MOZ_ALWAYS_INLINE void readBarrier(JSObject* obj);
     static MOZ_ALWAYS_INLINE void writeBarrierPre(JSObject* obj);
-    static MOZ_ALWAYS_INLINE void writeBarrierPost(void* cellp, JSObject* prev, JSObject* next);
+    static MOZ_ALWAYS_INLINE void writeBarrierPost(JSObject* obj, void* cellp);
+    static MOZ_ALWAYS_INLINE void writeBarrierPostRelocate(JSObject* obj, void* cellp);
+    static MOZ_ALWAYS_INLINE void writeBarrierPostRemove(JSObject* obj, void* cellp);
 
     /* Return the allocKind we would use if we were to tenure this object. */
     js::gc::AllocKind allocKindForTenure(const js::Nursery& nursery) const;
@@ -628,26 +630,36 @@ JSObject::writeBarrierPre(JSObject* obj)
 }
 
 /* static */ MOZ_ALWAYS_INLINE void
-JSObject::writeBarrierPost(void* cellp, JSObject* prev, JSObject* next)
+JSObject::writeBarrierPost(JSObject* obj, void* cellp)
 {
     MOZ_ASSERT(cellp);
-
-    // If the target needs an entry, add it.
-    js::gc::StoreBuffer* buffer;
-    if (!IsNullTaggedPointer(next) && (buffer = next->storeBuffer())) {
-        // If we know that the prev has already inserted an entry, we can skip
-        // doing the lookup to add the new entry.
-        if (!IsNullTaggedPointer(prev) && prev->storeBuffer()) {
-            buffer->assertHasCellEdge(static_cast<js::gc::Cell**>(cellp));
-            return;
-        }
-        buffer->putCellFromAnyThread(static_cast<js::gc::Cell**>(cellp));
+    if (IsNullTaggedPointer(obj))
         return;
-    }
+    MOZ_ASSERT(obj == *static_cast<JSObject**>(cellp));
+    js::gc::StoreBuffer* storeBuffer = obj->storeBuffer();
+    if (storeBuffer)
+        storeBuffer->putCellFromAnyThread(static_cast<js::gc::Cell**>(cellp));
+}
 
-    // Remove the prev entry if the new value does not need it.
-    if (!IsNullTaggedPointer(prev) && (buffer = prev->storeBuffer()))
-        buffer->unputCellFromAnyThread(static_cast<js::gc::Cell**>(cellp));
+/* static */ MOZ_ALWAYS_INLINE void
+JSObject::writeBarrierPostRelocate(JSObject* obj, void* cellp)
+{
+    MOZ_ASSERT(cellp);
+    MOZ_ASSERT(obj);
+    MOZ_ASSERT(obj == *static_cast<JSObject**>(cellp));
+    js::gc::StoreBuffer* storeBuffer = obj->storeBuffer();
+    if (storeBuffer)
+        storeBuffer->putRelocatableCellFromAnyThread(static_cast<js::gc::Cell**>(cellp));
+}
+
+/* static */ MOZ_ALWAYS_INLINE void
+JSObject::writeBarrierPostRemove(JSObject* obj, void* cellp)
+{
+    MOZ_ASSERT(cellp);
+    MOZ_ASSERT(obj);
+    MOZ_ASSERT(obj == *static_cast<JSObject**>(cellp));
+    obj->shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->removeRelocatableCellFromAnyThread(
+        static_cast<js::gc::Cell**>(cellp));
 }
 
 namespace js {
@@ -756,29 +768,7 @@ extern bool
 GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
                          MutableHandle<PropertyDescriptor> desc);
 
-/*
- * ES6 [[DefineOwnProperty]]. Define a property on obj.
- *
- * If obj is an array, this follows ES5 15.4.5.1.
- * If obj is any other native object, this follows ES5 8.12.9.
- * If obj is a proxy, this calls the proxy handler's defineProperty method.
- * Otherwise, this reports an error and returns false.
- *
- * Both StandardDefineProperty functions hew close to the ES5 spec. Note that
- * the DefineProperty functions do not enforce some invariants mandated by ES6.
- */
-extern bool
-StandardDefineProperty(JSContext* cx, HandleObject obj, HandleId id,
-                       Handle<PropertyDescriptor> descriptor, ObjectOpResult& result);
-
-/*
- * Same as above except without the ObjectOpResult out-parameter. Throws a
- * TypeError on failure.
- */
-extern bool
-StandardDefineProperty(JSContext* cx, HandleObject obj, HandleId id,
-                       Handle<PropertyDescriptor> desc);
-
+/* ES6 [[DefineOwnProperty]]. Define a property on obj. */
 extern bool
 DefineProperty(JSContext* cx, HandleObject obj, HandleId id,
                Handle<PropertyDescriptor> desc, ObjectOpResult& result);
@@ -799,6 +789,9 @@ DefineElement(ExclusiveContext* cx, HandleObject obj, uint32_t index, HandleValu
  * When the 'result' out-param is omitted, the behavior is the same as above, except
  * that any failure results in a TypeError.
  */
+extern bool
+DefineProperty(JSContext* cx, HandleObject obj, HandleId id, Handle<PropertyDescriptor> desc);
+
 extern bool
 DefineProperty(ExclusiveContext* cx, HandleObject obj, HandleId id, HandleValue value,
                JSGetterOp getter = nullptr,

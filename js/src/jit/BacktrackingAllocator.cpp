@@ -1401,13 +1401,13 @@ BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r, LiveBundle* bund
 
         if (JitSpewEnabled(JitSpew_RegAlloc)) {
             if (aliasedConflicting.length() == 1) {
-                LiveBundle* existing = aliasedConflicting[0];
+                mozilla::DebugOnly<LiveBundle*> existing = aliasedConflicting[0];
                 JitSpew(JitSpew_RegAlloc, "  %s collides with %s [weight %lu]",
                         r.reg.name(), existing->toString(), computeSpillWeight(existing));
             } else {
                 JitSpew(JitSpew_RegAlloc, "  %s collides with the following", r.reg.name());
                 for (size_t i = 0; i < aliasedConflicting.length(); i++) {
-                    LiveBundle* existing = aliasedConflicting[i];
+                    mozilla::DebugOnly<LiveBundle*> existing = aliasedConflicting[i];
                     JitSpew(JitSpew_RegAlloc, "      %s [weight %lu]",
                             existing->toString(), computeSpillWeight(existing));
                 }

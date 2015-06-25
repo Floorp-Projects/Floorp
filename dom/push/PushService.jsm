@@ -116,6 +116,26 @@ this.PushService = {
     }
   },
 
+  _makePendingKey: function(aPageRecord) {
+    return aPageRecord.scope + "|" + aPageRecord.originAttributes;
+  },
+
+  _lookupOrPutPendingRequest: function(aPageRecord) {
+    let key = this._makePendingKey(aPageRecord);
+    if (this._pendingRegisterRequest[key]) {
+      return this._pendingRegisterRequest[key];
+    }
+
+    return this._pendingRegisterRequest[key] = this._registerWithServer(aPageRecord);
+  },
+
+  _deletePendingRequest: function(aPageRecord) {
+    let key = this._makePendingKey(aPageRecord);
+    if (this._pendingRegisterRequest[key]) {
+      delete this._pendingRegisterRequest[key];
+    }
+  },
+
   _setState: function(aNewState) {
     debug("new state: " + aNewState + " old state: " + this._state);
 
@@ -233,24 +253,41 @@ this.PushService = {
           return;
         }
 
-        // TODO 1149274.  We should support site permissions as well as a way to
-        // go from manifest url to 'all scopes registered for push in this app'
-        let appsService = Cc["@mozilla.org/AppsService;1"]
-                            .getService(Ci.nsIAppsService);
-        let scope = appsService.getScopeByLocalId(data.appId);
-        if (!scope) {
-          debug("webapps-clear-data: No scope found for " + data.appId);
-          return;
-        }
+        var originAttributes =
+          ChromeUtils.originAttributesToSuffix({ appId: data.appId,
+                                                 inBrowser: data.browserOnly });
+        this._db.getAllByOriginAttributes(originAttributes)
+          .then(records => {
+            records.forEach(record => {
+              this._db.delete(this._service.getKeyFromRecord(record))
+                .then(_ => {
+                  // courtesy, but don't establish a connection
+                  // just for it
+                  if (this._ws) {
+                    debug("Had a connection, so telling the server");
+                    this._sendRequest("unregister", {channelID: records.channelID})
+                        .catch(function(e) {
+                          debug("Unregister errored " + e);
+                        });
+                  }
+                }, err => {
+                  debug("webapps-clear-data: " + scope +
+                        " Could not delete entry " + records.channelID);
 
-        this._db.getByScope(scope)
-          .then(record =>
-            Promise.all([
-              this._db.delete(this._service.getKeyFromRecord(record)),
-              this._sendRequest("unregister", record)
-            ])
-          ).catch(_ => {
-            debug("webapps-clear-data: Error in getByScope(" + scope + ")");
+                  // courtesy, but don't establish a connection
+                  // just for it
+                  if (this._ws) {
+                    debug("Had a connection, so telling the server");
+                    this._sendRequest("unregister", {channelID: records.channelID})
+                        .catch(function(e) {
+                          debug("Unregister errored " + e);
+                        });
+                  }
+                  throw "Database error";
+                });
+            });
+          }, _ => {
+            debug("webapps-clear-data: Error in getAllByOriginAttributes(" + originAttributes + ")");
           });
 
         break;
@@ -623,13 +660,9 @@ this.PushService = {
     // records are objects describing the registration as stored in IndexedDB.
     return this._db.getAllKeyIDs()
       .then(records => {
-        let scopes = new Set();
-        for (let record of records) {
-          scopes.add(record.scope);
-        }
         let globalMM = Cc['@mozilla.org/globalmessagemanager;1']
                          .getService(Ci.nsIMessageListenerManager);
-        for (let scope of scopes) {
+        for (let record of records) {
           // Notify XPCOM observers.
           Services.obs.notifyObservers(
             null,
@@ -638,8 +671,8 @@ this.PushService = {
           );
 
           let data = {
-            originAttributes: {}, // TODO bug 1166350
-            scope: scope
+            originAttributes: record.originAttributes,
+            scope: record.scope
           };
 
           globalMM.broadcastAsyncMessage('pushsubscriptionchange', data);
@@ -659,7 +692,7 @@ this.PushService = {
         );
 
         let data = {
-          originAttributes: {}, // TODO bug 1166350
+          originAttributes: record.originAttributes,
           scope: record.scope
         };
 
@@ -681,7 +714,7 @@ this.PushService = {
           );
 
           let data = {
-            originAttributes: {}, // TODO bug 1166350
+            originAttributes: record.originAttributes,
             scope: record.scope
           };
 
@@ -695,7 +728,8 @@ this.PushService = {
   },
 
   _notifyApp: function(aPushRecord, message) {
-    if (!aPushRecord || !aPushRecord.scope) {
+    if (!aPushRecord || !aPushRecord.scope ||
+        aPushRecord.originAttributes === undefined) {
       debug("notifyApp() something is undefined.  Dropping notification: " +
         JSON.stringify(aPushRecord) );
       return;
@@ -728,7 +762,7 @@ this.PushService = {
     // TODO data.
     let data = {
       payload: message,
-      originAttributes: {}, // TODO bug 1166350
+      originAttributes: aPushRecord.originAttributes,
       scope: aPushRecord.scope
     };
 
@@ -745,7 +779,7 @@ this.PushService = {
     return this._db.getAllKeyIDs();
   },
 
-  _sendRequest(action, aRecord) {
+  _sendRequest: function(action, aRecord) {
     if (this._state == PUSH_SERVICE_CONNECTION_DISABLE) {
       return Promise.reject({state: 0, error: "Service not active"});
     } else if (this._state == PUSH_SERVICE_ACTIVE_OFFLINE) {
@@ -759,37 +793,35 @@ this.PushService = {
    * navigator.push, identifying the sending page and other fields.
    */
   _registerWithServer: function(aPageRecord) {
-    debug("registerWithServer()");
+    debug("registerWithServer()" + JSON.stringify(aPageRecord));
 
     return this._sendRequest("register", aPageRecord)
       .then(pushRecord => this._onRegisterSuccess(pushRecord),
             err => this._onRegisterError(err))
       .then(pushRecord => {
-        if (this._pendingRegisterRequest[aPageRecord.scope]) {
-          delete this._pendingRegisterRequest[aPageRecord.scope];
-        }
+        this._deletePendingRequest(aPageRecord);
         return pushRecord;
       }, err => {
-        if (this._pendingRegisterRequest[aPageRecord.scope]) {
-          delete this._pendingRegisterRequest[aPageRecord.scope];
-        }
+        this._deletePendingRequest(aPageRecord);
         throw err;
      });
   },
 
   _register: function(aPageRecord) {
+    debug("_register()");
+    if (!aPageRecord.scope || aPageRecord.originAttributes === undefined) {
+      return Promise.reject({state: 0, error: "NotFoundError"});
+    }
+
     return this._checkActivated()
-      .then(_ => this._db.getByScope(aPageRecord.scope))
+      .then(_ => this._db.getByIdentifiers(aPageRecord))
       .then(pushRecord => {
         if (pushRecord === undefined) {
-          if (this._pendingRegisterRequest[aPageRecord.scope]) {
-            return this._pendingRegisterRequest[aPageRecord.scope];
-          }
-          return this._pendingRegisterRequest[aPageRecord.scope] = this._registerWithServer(aPageRecord);
+          return this._lookupOrPutPendingRequest(aPageRecord);
         }
         return pushRecord;
       }, error => {
-        debug("getByScope failed");
+        debug("getByIdentifiers failed");
         throw error;
       });
   },
@@ -833,10 +865,39 @@ this.PushService = {
       return;
     }
 
-    let mm = aMessage.target.QueryInterface(Ci.nsIMessageSender);
-    let json = aMessage.data;
+    if (!aMessage.target.assertPermission("push")) {
+      debug("Got message from a child process that does not have 'push' permission.");
+      return null;
+    }
 
-    this[aMessage.name.slice("Push:".length).toLowerCase()](json, mm);
+    let mm = aMessage.target.QueryInterface(Ci.nsIMessageSender);
+    let pageRecord = aMessage.data;
+
+    let principal = aMessage.principal;
+    if (!principal) {
+      debug("No principal passed!");
+      let message = {
+        requestID: aPageRecord.requestID,
+        error: "SecurityError"
+      };
+      mm.sendAsyncMessage("PushService:Register:KO", message);
+      return;
+    }
+
+    pageRecord.originAttributes =
+      ChromeUtils.originAttributesToSuffix(principal.originAttributes);
+
+    if (!pageRecord.scope || pageRecord.originAttributes === undefined) {
+      debug("Incorrect identifier values set! " + JSON.stringify(pageRecord));
+      let message = {
+        requestID: aPageRecord.requestID,
+        error: "SecurityError"
+      };
+      mm.sendAsyncMessage("PushService:Register:KO", message);
+      return;
+    }
+
+    this[aMessage.name.slice("Push:".length).toLowerCase()](pageRecord, mm);
   },
 
   register: function(aPageRecord, aMessageManager) {
@@ -883,13 +944,12 @@ this.PushService = {
    */
   _unregister: function(aPageRecord) {
     debug("_unregister()");
-
-    if (!aPageRecord.scope) {
+    if (!aPageRecord.scope || aPageRecord.originAttributes === undefined) {
       return Promise.reject({state: 0, error: "NotFoundError"});
     }
 
     return this._checkActivated()
-      .then(_ => this._db.getByScope(aPageRecord.scope))
+      .then(_ => this._db.getByIdentifiers(aPageRecord))
       .then(record => {
         // If the endpoint didn't exist, let's just fail.
         if (record === undefined) {
@@ -932,12 +992,12 @@ this.PushService = {
    */
   _registration: function(aPageRecord) {
     debug("_registration()");
-    if (!aPageRecord.scope) {
-      return Promise.reject({state: 0, error: "Database error"});
+    if (!aPageRecord.scope || aPageRecord.originAttributes === undefined) {
+      return Promise.reject({state: 0, error: "NotFoundError"});
     }
 
     return this._checkActivated()
-      .then(_ => this._db.getByScope(aPageRecord.scope))
+      .then(_ => this._db.getByIdentifiers(aPageRecord))
       .then(pushRecord => {
         if (!pushRecord) {
           return null;

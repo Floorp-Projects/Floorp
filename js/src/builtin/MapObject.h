@@ -77,7 +77,7 @@ template <class T, class OrderedHashPolicy, class AllocPolicy>
 class OrderedHashSet;
 
 typedef OrderedHashMap<HashableValue,
-                       HeapValue,
+                       RelocatableValue,
                        HashableValue::Hasher,
                        RuntimeAllocPolicy> ValueMap;
 

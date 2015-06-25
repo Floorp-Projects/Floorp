@@ -182,9 +182,10 @@ nsTableFrame::Init(nsIContent*       aContent,
       mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
     }
   } else {
-    // set my width, because all frames in a table flow are the same width and
-    // code in nsTableOuterFrame depends on this being set
-    mRect.width = aPrevInFlow->GetSize().width;
+    // Set my isize, because all frames in a table flow are the same isize and
+    // code in nsTableOuterFrame depends on this being set.
+    WritingMode wm = GetWritingMode();
+    SetSize(LogicalSize(wm, aPrevInFlow->ISize(wm), BSize(wm)));
   }
 }
 
@@ -5383,7 +5384,7 @@ BCMapCellInfo::SetColGroupBEndContBCBorder()
     currentBorder = CompareBorders(mTableFrame, mColGroup, nullptr, mRowGroup,
                                    mEndRow, nullptr, mTableWM,
                                    eLogicalSideBEnd, ADJACENT);
-    mColGroup->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, currentBorder.width);
+    mColGroup->SetContinuousBCBorderWidth(eLogicalSideBEnd, currentBorder.width);
   }
 }
 

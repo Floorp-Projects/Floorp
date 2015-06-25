@@ -47,7 +47,8 @@ add_task(function* test_pushSubscriptionNoConnection() {
 
   yield rejects(
     PushNotificationService.register(
-      'https://example.net/page/invalid-response'),
+      'https://example.net/page/invalid-response',
+      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
     function(error) {
       return error && error.includes("Error");
     },
@@ -87,7 +88,8 @@ add_task(function* test_pushSubscriptionMissingLocation() {
 
   yield rejects(
     PushNotificationService.register(
-      'https://example.net/page/invalid-response'),
+      'https://example.net/page/invalid-response',
+      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
     function(error) {
       return error && error.includes("Return code 201, but the answer is bogus");
     },
@@ -113,7 +115,8 @@ add_task(function* test_pushSubscriptionMissingLink() {
 
   yield rejects(
     PushNotificationService.register(
-      'https://example.net/page/invalid-response'),
+      'https://example.net/page/invalid-response',
+      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
     function(error) {
       return error && error.includes("Return code 201, but the answer is bogus");
     },
@@ -139,7 +142,8 @@ add_task(function* test_pushSubscriptionMissingLink1() {
 
   yield rejects(
     PushNotificationService.register(
-      'https://example.net/page/invalid-response'),
+      'https://example.net/page/invalid-response',
+      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
     function(error) {
       return error && error.includes("Return code 201, but the answer is bogus");
     },
@@ -165,7 +169,8 @@ add_task(function* test_pushSubscriptionLocationBogus() {
 
   yield rejects(
     PushNotificationService.register(
-      'https://example.net/page/invalid-response'),
+      'https://example.net/page/invalid-response',
+      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
     function(error) {
       return error && error.includes("Return code 201, but URI is bogus.");
     },
@@ -191,7 +196,8 @@ add_task(function* test_pushSubscriptionNot2xxCode() {
 
   yield rejects(
     PushNotificationService.register(
-      'https://example.net/page/invalid-response'),
+      'https://example.net/page/invalid-response',
+      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
     function(error) {
       return error && error.includes("Error");
     },

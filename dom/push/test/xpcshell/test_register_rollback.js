@@ -74,7 +74,8 @@ add_task(function* test_register_rollback() {
 
   // Should return a rejected promise if storage fails.
   yield rejects(
-    PushNotificationService.register('https://example.com/storage-error'),
+    PushNotificationService.register('https://example.com/storage-error',
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
     function(error) {
       return error == 'universe has imploded';
     },

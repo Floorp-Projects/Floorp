@@ -141,7 +141,7 @@ ReadTransfer(JSContext* aCx, JSStructuredCloneReader* aReader,
   ErrorResult rv;
   nsRefPtr<MessagePort> port =
     MessagePort::Create(closure->mWindow,
-                        closure->mClosure.mMessagePortIdentifiers[(uint32_t)aExtraData],
+                        closure->mClosure.mMessagePortIdentifiers[aExtraData],
                         rv);
   if (NS_WARN_IF(rv.Failed())) {
     return false;
@@ -195,13 +195,27 @@ WriteTransfer(JSContext* aCx, JS::Handle<JSObject*> aObj, void* aClosure,
   return true;
 }
 
+void
+FreeTransfer(uint32_t aTag, JS::TransferableOwnership aOwnership,
+             void* aContent, uint64_t aExtraData, void* aClosure)
+{
+  MOZ_ASSERT(aClosure);
+  auto* closure = static_cast<StructuredCloneClosureInternal*>(aClosure);
+
+  if (aTag == SCTAG_DOM_MAP_MESSAGEPORT) {
+    MOZ_ASSERT(!aContent);
+    MOZ_ASSERT(aExtraData < closure->mClosure.mMessagePortIdentifiers.Length());
+    MessagePort::ForceClose(closure->mClosure.mMessagePortIdentifiers[(uint32_t)aExtraData]);
+  }
+}
+
 const JSStructuredCloneCallbacks gCallbacks = {
   Read,
   Write,
   Error,
   ReadTransfer,
   WriteTransfer,
-  nullptr
+  FreeTransfer,
 };
 
 } // anonymous namespace

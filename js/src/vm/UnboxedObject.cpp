@@ -609,7 +609,7 @@ UnboxedPlainObject::convertToNative(JSContext* cx, JSObject* obj)
             if (!GetOwnPropertyDescriptor(cx, nexpando, id, &desc))
                 return false;
             ObjectOpResult result;
-            if (!StandardDefineProperty(cx, nobj, id, desc, result))
+            if (!DefineProperty(cx, nobj, id, desc, result))
                 return false;
             MOZ_ASSERT(result.ok());
         }

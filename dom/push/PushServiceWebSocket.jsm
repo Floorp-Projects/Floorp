@@ -32,7 +32,7 @@ var threadManager = Cc["@mozilla.org/thread-manager;1"]
                       .getService(Ci.nsIThreadManager);
 
 const kPUSHWSDB_DB_NAME = "pushapi";
-const kPUSHWSDB_DB_VERSION = 1; // Change this if the IndexedDB format changes
+const kPUSHWSDB_DB_VERSION = 3; // Change this if the IndexedDB format changes
 const kPUSHWSDB_STORE_NAME = "pushapi";
 
 const kUDP_WAKEUP_WS_STATUS_CODE = 4774;  // WebSocket Close status code sent
@@ -132,15 +132,33 @@ this.PushServiceWebSocket = {
                           aDbInstance) {
     debug("upgradeSchemaWS()");
 
+    //XXXnsm We haven't shipped Push during this upgrade, so I'm just going to throw old
+    //registrations away without even informing the app.
+    if (aNewVersion != aOldVersion) {
+      try {
+        aDb.deleteObjectStore(aDbInstance._dbStoreName);
+      } catch (e) {
+        if (e.name === "NotFoundError") {
+          debug("No existing object store found");
+        } else {
+          throw e;
+        }
+      }
+    }
+
     let objectStore = aDb.createObjectStore(aDbInstance._dbStoreName,
                                             { keyPath: "channelID" });
 
     // index to fetch records based on endpoints. used by unregister
     objectStore.createIndex("pushEndpoint", "pushEndpoint", { unique: true });
 
-    // index to fetch records per scope, so we can identify endpoints
-    // associated with an app.
-    objectStore.createIndex("scope", "scope", { unique: true });
+    // index to fetch records by identifiers.
+    // In the current security model, the originAttributes distinguish between
+    // different 'apps' on the same origin. Since ServiceWorkers are
+    // same-origin to the scope they are registered for, the attributes and
+    // scope are enough to reconstruct a valid principal.
+    objectStore.createIndex("identifiers", ["scope", "originAttributes"], { unique: true });
+    objectStore.createIndex("originAttributes", "originAttributes", { unique: false });
   },
 
   getKeyFromRecord: function(aRecord) {
@@ -870,10 +888,12 @@ this.PushServiceWebSocket = {
         pushEndpoint: reply.pushEndpoint,
         pageURL: tmp.record.pageURL,
         scope: tmp.record.scope,
+        originAttributes: tmp.record.originAttributes,
         pushCount: 0,
         lastPush: 0,
         version: null
       };
+      dump("PushWebSocket " +  JSON.stringify(record));
       tmp.resolve(record);
     } else {
       tmp.reject(reply);

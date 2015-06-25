@@ -588,6 +588,17 @@ BackgroundParentImpl::DeallocPMessagePortParent(PMessagePortParent* aActor)
   return true;
 }
 
+bool
+BackgroundParentImpl::RecvMessagePortForceClose(const nsID& aUUID,
+                                                const nsID& aDestinationUUID,
+                                                const uint32_t& aSequenceID)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return MessagePortParent::ForceClose(aUUID, aDestinationUUID, aSequenceID);
+}
+
 } // namespace ipc
 } // namespace mozilla
 

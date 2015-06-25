@@ -285,8 +285,9 @@ class TenuredCell : public Cell
     static MOZ_ALWAYS_INLINE void readBarrier(TenuredCell* thing);
     static MOZ_ALWAYS_INLINE void writeBarrierPre(TenuredCell* thing);
 
-    static MOZ_ALWAYS_INLINE void writeBarrierPost(void* cellp, TenuredCell* prior,
-                                                   TenuredCell* next);
+    static MOZ_ALWAYS_INLINE void writeBarrierPost(TenuredCell* thing, void* cellp);
+    static MOZ_ALWAYS_INLINE void writeBarrierPostRelocate(TenuredCell* thing, void* cellp);
+    static MOZ_ALWAYS_INLINE void writeBarrierPostRemove(TenuredCell* thing, void* cellp);
 
 #ifdef DEBUG
     inline bool isAligned() const;
@@ -1469,9 +1470,21 @@ AssertValidToSkipBarrier(TenuredCell* thing)
 }
 
 /* static */ MOZ_ALWAYS_INLINE void
-TenuredCell::writeBarrierPost(void* cellp, TenuredCell* prior, TenuredCell* next)
+TenuredCell::writeBarrierPost(TenuredCell* thing, void* cellp)
 {
-    AssertValidToSkipBarrier(next);
+    AssertValidToSkipBarrier(thing);
+}
+
+/* static */ MOZ_ALWAYS_INLINE void
+TenuredCell::writeBarrierPostRelocate(TenuredCell* thing, void* cellp)
+{
+    AssertValidToSkipBarrier(thing);
+}
+
+/* static */ MOZ_ALWAYS_INLINE void
+TenuredCell::writeBarrierPostRemove(TenuredCell* thing, void* cellp)
+{
+    AssertValidToSkipBarrier(thing);
 }
 
 #ifdef DEBUG
