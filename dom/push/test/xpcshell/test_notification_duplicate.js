@@ -24,13 +24,15 @@ add_task(function* test_notification_duplicate() {
     pushEndpoint: 'https://example.org/update/1',
     scope: 'https://example.com/1',
     originAttributes: "",
-    version: 2
+    version: 2,
+    quota: Infinity,
   }, {
     channelID: '27d1e393-03ef-4c72-a5e6-9e890dfccad0',
     pushEndpoint: 'https://example.org/update/2',
     scope: 'https://example.com/2',
     originAttributes: "",
-    version: 2
+    version: 2,
+    quota: Infinity,
   }];
   for (let record of records) {
     yield db.put(record);

@@ -7,8 +7,7 @@ function handlePush(event) {
 
   self.clients.matchAll().then(function(result) {
     if (event instanceof PushEvent &&
-      event.data instanceof PushMessageData &&
-      event.data.text().length > 0) {
+      event.data instanceof PushMessageData) {
 
       result[0].postMessage({type: "finished", okay: "yes"});
       return;

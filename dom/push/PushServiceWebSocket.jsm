@@ -11,6 +11,7 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 const {PushDB} = Cu.import("resource://gre/modules/PushDB.jsm");
+const {PushRecord} = Cu.import("resource://gre/modules/PushRecord.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -32,7 +33,7 @@ var threadManager = Cc["@mozilla.org/thread-manager;1"]
                       .getService(Ci.nsIThreadManager);
 
 const kPUSHWSDB_DB_NAME = "pushapi";
-const kPUSHWSDB_DB_VERSION = 3; // Change this if the IndexedDB format changes
+const kPUSHWSDB_DB_VERSION = 4; // Change this if the IndexedDB format changes
 const kPUSHWSDB_STORE_NAME = "pushapi";
 
 const kUDP_WAKEUP_WS_STATUS_CODE = 4774;  // WebSocket Close status code sent
@@ -125,51 +126,12 @@ this.PushServiceWebSocket = {
   _mainPushService: null,
   _serverURI: null,
 
-  upgradeSchema: function(aTransaction,
-                          aDb,
-                          aOldVersion,
-                          aNewVersion,
-                          aDbInstance) {
-    debug("upgradeSchemaWS()");
-
-    //XXXnsm We haven't shipped Push during this upgrade, so I'm just going to throw old
-    //registrations away without even informing the app.
-    if (aNewVersion != aOldVersion) {
-      try {
-        aDb.deleteObjectStore(aDbInstance._dbStoreName);
-      } catch (e) {
-        if (e.name === "NotFoundError") {
-          debug("No existing object store found");
-        } else {
-          throw e;
-        }
-      }
-    }
-
-    let objectStore = aDb.createObjectStore(aDbInstance._dbStoreName,
-                                            { keyPath: "channelID" });
-
-    // index to fetch records based on endpoints. used by unregister
-    objectStore.createIndex("pushEndpoint", "pushEndpoint", { unique: true });
-
-    // index to fetch records by identifiers.
-    // In the current security model, the originAttributes distinguish between
-    // different 'apps' on the same origin. Since ServiceWorkers are
-    // same-origin to the scope they are registered for, the attributes and
-    // scope are enough to reconstruct a valid principal.
-    objectStore.createIndex("identifiers", ["scope", "originAttributes"], { unique: true });
-    objectStore.createIndex("originAttributes", "originAttributes", { unique: false });
-  },
-
-  getKeyFromRecord: function(aRecord) {
-    return aRecord.channelID;
-  },
-
   newPushDB: function() {
     return new PushDB(kPUSHWSDB_DB_NAME,
                       kPUSHWSDB_DB_VERSION,
                       kPUSHWSDB_STORE_NAME,
-                      this.upgradeSchema);
+                      "channelID",
+                      PushRecordWebSocket);
   },
 
   disconnect: function() {
@@ -682,10 +644,10 @@ this.PushServiceWebSocket = {
     }
   },
 
-  connect: function(channelIDs) {
+  connect: function(records) {
     debug("connect");
     // Check to see if we need to do anything.
-    if (channelIDs.length > 0) {
+    if (records.length > 0) {
       this._beginWSSetup();
     }
   },
@@ -883,16 +845,14 @@ this.PushServiceWebSocket = {
         return;
       }
 
-      let record = {
+      let record = new PushRecordWebSocket({
         channelID: reply.channelID,
         pushEndpoint: reply.pushEndpoint,
-        pageURL: tmp.record.pageURL,
         scope: tmp.record.scope,
         originAttributes: tmp.record.originAttributes,
-        pushCount: 0,
-        lastPush: 0,
-        version: null
-      };
+        version: null,
+        quota: tmp.record.maxQuota,
+      });
       dump("PushWebSocket " +  JSON.stringify(record));
       tmp.resolve(record);
     } else {
@@ -1016,11 +976,10 @@ this.PushServiceWebSocket = {
   _queueRequest(data) {
     if (this._currentState != STATE_READY) {
       if (!this._notifyRequestQueue) {
-        this._enqueue(_ => {
-          return new Promise((resolve, reject) => {
-                               this._notifyRequestQueue = resolve;
-                             });
+        let promise = new Promise((resolve, reject) => {
+          this._notifyRequestQueue = resolve;
         });
+        this._enqueue(_ => promise);
       }
 
     }
@@ -1041,36 +1000,17 @@ this.PushServiceWebSocket = {
   _receivedUpdate: function(aChannelID, aLatestVersion) {
     debug("Updating: " + aChannelID + " -> " + aLatestVersion);
 
-    let compareRecordVersionAndNotify = function(aPushRecord) {
-      debug("compareRecordVersionAndNotify()");
-      if (!aPushRecord) {
-        debug("No record for channel ID " + aChannelID);
-        return;
+    this._mainPushService.receivedPushMessage(aChannelID, "", record => {
+      if (record.version === null ||
+          record.version < aLatestVersion) {
+        debug("Version changed for " + aChannelID + ": " + aLatestVersion);
+        record.version = aLatestVersion;
+        return record;
       }
-
-      if (aPushRecord.version === null ||
-          aPushRecord.version < aLatestVersion) {
-        debug("Version changed, notifying app and updating DB");
-        aPushRecord.version = aLatestVersion;
-        aPushRecord.pushCount = aPushRecord.pushCount + 1;
-        aPushRecord.lastPush = new Date().getTime();
-        this._mainPushService.receivedPushMessage(aPushRecord,
-                                                  "Short as life is, we make " +
-                                                  "it still shorter by the " +
-                                                  "careless waste of time.");
-      }
-      else {
-        debug("No significant version change: " + aLatestVersion);
-      }
-    };
-
-    let recoverNoSuchChannelID = function(aChannelIDFromServer) {
-      debug("Could not get channelID " + aChannelIDFromServer + " from DB");
-    };
-
-    this._mainPushService.getByKeyID(aChannelID)
-      .then(compareRecordVersionAndNotify.bind(this),
-            err => recoverNoSuchChannelID(err));
+      debug("No significant version change for " + aChannelID + ": " +
+            aLatestVersion);
+      return null;
+    });
   },
 
   // begin Push protocol handshake
@@ -1121,7 +1061,7 @@ this.PushServiceWebSocket = {
         };
       }
 
-      this._mainPushService.getAllKeyIDs()
+      this._mainPushService.getAllUnexpired()
         .then(sendHelloMessage.bind(this),
               sendHelloMessage.bind(this));
     });
@@ -1299,21 +1239,6 @@ this.PushServiceWebSocket = {
     this._udpServer = undefined;
     this._beginWSSetup();
   },
-
-  prepareRegistration: function(aPushRecord) {
-    return {
-      pushEndpoint: aPushRecord.pushEndpoint,
-      version: aPushRecord.version,
-      lastPush: aPushRecord.lastPush,
-      pushCount: aPushRecord.pushCount
-    };
-  },
-
-  prepareRegister: function(aPushRecord) {
-    return {
-      pushEndpoint: aPushRecord.pushEndpoint
-    };
-  }
 };
 
 let PushNetworkInfo = {
@@ -1438,4 +1363,24 @@ let PushNetworkInfo = {
       ".mcc" + ("00" + networkInfo.mcc).slice(-3) + ".3gppnetwork.org";
     queryDNSForDomain(netidAddress, callback);
   }
+};
+
+function PushRecordWebSocket(record) {
+  PushRecord.call(this, record);
+  this.channelID = record.channelID;
+  this.version = record.version;
+}
+
+PushRecordWebSocket.prototype = Object.create(PushRecord.prototype, {
+  keyID: {
+    get() {
+      return this.channelID;
+    },
+  },
+});
+
+PushRecordWebSocket.prototype.toRegistration = function() {
+  let registration = PushRecord.prototype.toRegistration.call(this);
+  registration.version = this.version;
+  return registration;
 };

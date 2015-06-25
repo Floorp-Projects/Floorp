@@ -20,7 +20,9 @@ add_task(function* test_unregister_success() {
     channelID,
     pushEndpoint: 'https://example.org/update/unregister-success',
     scope: 'https://example.com/page/unregister-success',
-    version: 1
+    version: 1,
+    originAttributes: '',
+    quota: Infinity,
   });
 
   let unregisterDefer = Promise.defer();

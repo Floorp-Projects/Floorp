@@ -15,6 +15,7 @@ EXTRA_PP_JS_MODULES += [
 
 EXTRA_JS_MODULES += [
     'PushDB.jsm',
+    'PushRecord.jsm',
     'PushService.jsm',
     'PushServiceHttp2.jsm',
 ]
