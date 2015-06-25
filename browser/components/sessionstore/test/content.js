@@ -84,11 +84,6 @@ addMessageListener("ss-test:purgeDomainData", function ({data: domain}) {
   content.setTimeout(() => sendAsyncMessage("ss-test:purgeDomainData"));
 });
 
-addMessageListener("ss-test:purgeSessionHistory", function () {
-  Services.obs.notifyObservers(null, "browser:purge-session-history", "");
-  content.setTimeout(() => sendAsyncMessage("ss-test:purgeSessionHistory"));
-});
-
 addMessageListener("ss-test:getStyleSheets", function (msg) {
   let sheets = content.document.styleSheets;
   let titles = Array.map(sheets, ss => [ss.title, ss.disabled]);

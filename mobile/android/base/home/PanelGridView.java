@@ -5,13 +5,8 @@
 
 package org.mozilla.gecko.home;
 
-import java.util.EnumSet;
-
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.db.BrowserContract.HomeItems;
-import org.mozilla.gecko.home.HomeConfig.ItemHandler;
 import org.mozilla.gecko.home.HomeConfig.ViewConfig;
-import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PanelLayout.DatasetBacked;
 import org.mozilla.gecko.home.PanelLayout.FilterManager;
 import org.mozilla.gecko.home.PanelLayout.OnItemOpenListener;
@@ -36,7 +31,8 @@ public class PanelGridView extends GridView
     private HomeContextMenuInfo.Factory mContextMenuInfoFactory;
 
     public PanelGridView(Context context, ViewConfig viewConfig) {
-        super(context, null, R.attr.panelGridViewStyle);
+        super(context, null, (viewConfig.getItemType() == HomeConfig.ItemType.ICON) ?
+                R.attr.panelIconGridViewStyle : R.attr.panelGridViewStyle);
 
         this.viewConfig = viewConfig;
         itemHandler = new PanelViewItemHandler(viewConfig);

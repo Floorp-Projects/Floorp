@@ -92,14 +92,6 @@ this.SessionSaver = Object.freeze({
   },
 
   /**
-   * Sets the last save time to zero. This will cause us to
-   * immediately save the next time runDelayed() is called.
-   */
-  clearLastSaveTime: function () {
-    SessionSaverInternal.clearLastSaveTime();
-  },
-
-  /**
    * Cancels all pending session saves.
    */
   cancel: function () {
@@ -159,14 +151,6 @@ let SessionSaverInternal = {
    */
   updateLastSaveTime: function () {
     this._lastSaveTime = Date.now();
-  },
-
-  /**
-   * Sets the last save time to zero. This will cause us to
-   * immediately save the next time runDelayed() is called.
-   */
-  clearLastSaveTime: function () {
-    this._lastSaveTime = 0;
   },
 
   /**

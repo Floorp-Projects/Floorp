@@ -2778,6 +2778,9 @@ public class BrowserApp extends GeckoApp
         // We do this here because there are glitches when unlocking a device with
         // BrowserSearch in the foreground if we use BrowserSearch.onStart/Stop.
         getActivity().getWindow().setBackgroundDrawableResource(android.R.color.white);
+
+        // Hide potentially visible "find in page" bar (bug 1175434).
+        mFindInPageBar.hide();
     }
 
     private void hideBrowserSearch() {

@@ -163,13 +163,7 @@
 
             this._subViewObserver.disconnect();
 
-            this._transitioning = true;
-
-            this._viewContainer.addEventListener("transitionend", function trans() {
-              this._viewContainer.removeEventListener("transitionend", trans);
-              this._transitioning = false;
-            }.bind(this));
-            this._viewContainer.style.height = this._mainViewHeight + "px";
+            this._setViewContainerHeight(this._mainViewHeight);
 
             this.setAttribute("viewtype", "main");
           }
@@ -211,14 +205,8 @@
 
           this._mainViewHeight = this._viewStack.clientHeight;
 
-          this._transitioning = true;
-          this._viewContainer.addEventListener("transitionend", function trans() {
-            this._viewContainer.removeEventListener("transitionend", trans);
-            this._transitioning = false;
-          }.bind(this));
-
           let newHeight = this._heightOfSubview(viewNode, this._subViews);
-          this._viewContainer.style.height = newHeight + "px";
+          this._setViewContainerHeight(newHeight);
 
           this._subViewObserver.observe(viewNode, {
             attributes: true,
@@ -226,6 +214,22 @@
             childList: true,
             subtree: true
           });
+        ]]></body>
+      </method>
+
+      <method name="_setViewContainerHeight">
+        <parameter name="aHeight"/>
+        <body><![CDATA[
+          let container = this._viewContainer;
+          this._transitioning = true;
+
+          let onTransitionEnd = () => {
+            container.removeEventListener("transitionend", onTransitionEnd);
+            this._transitioning = false;
+          };
+
+          container.addEventListener("transitionend", onTransitionEnd);
+          container.style.height = `${aHeight}px`;
         ]]></body>
       </method>
 
@@ -240,15 +244,24 @@
             let mainViewRect = this._mainViewContainer.getBoundingClientRect();
             let center = aAnchor.clientWidth / 2;
             let direction = aAnchor.ownerDocument.defaultView.getComputedStyle(aAnchor, null).direction;
-            let edge, target;
+            let edge;
             if (direction == "ltr") {
               edge = anchorRect.left - mainViewRect.left;
-              target = "-" + (edge + center);
             } else {
               edge = mainViewRect.right - anchorRect.right;
-              target = edge + center;
             }
-            this._mainViewContainer.style.transform = "translateX(" + target + "px)";
+
+            // If the anchor is an element on the far end of the mainView we
+            // don't want to shift the mainView too far, we would reveal empty
+            // space otherwise.
+            let cstyle = window.getComputedStyle(document.documentElement, null);
+            let exitSubViewGutterWidth =
+              cstyle.getPropertyValue("--panel-ui-exit-subview-gutter-width");
+            let maxShift = mainViewRect.width - parseInt(exitSubViewGutterWidth);
+            let target = Math.min(maxShift, edge + center);
+
+            let neg = direction == "ltr" ? "-" : "";
+            this._mainViewContainer.style.transform = `translateX(${neg}${target}px)`;
             aAnchor.setAttribute("panel-multiview-anchor", true);
           } else {
             this._mainViewContainer.style.transform = "";

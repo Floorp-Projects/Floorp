@@ -184,6 +184,22 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
+      <method name="onKeyPress">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          switch (aEvent.keyCode) {
+            case KeyEvent.DOM_VK_LEFT:
+            case KeyEvent.DOM_VK_RIGHT:
+            case KeyEvent.DOM_VK_HOME:
+              this.popup.hidePopup();
+              return;
+              break;
+          }
+
+          return this.handleKeyPress(aEvent);
+        ]]></body>
+      </method>
+
       <field name="_mayTrimURLs">true</field>
       <method name="trimValue">
         <parameter name="aURL"/>

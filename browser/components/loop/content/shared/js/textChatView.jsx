@@ -5,8 +5,9 @@
 var loop = loop || {};
 loop.shared = loop.shared || {};
 loop.shared.views = loop.shared.views || {};
-loop.shared.views.TextChatView = (function(mozL10n) {
+loop.shared.views.chat = (function(mozL10n) {
   var sharedActions = loop.shared.actions;
+  var sharedMixins = loop.shared.mixins;
   var sharedViews = loop.shared.views;
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES;
   var CHAT_CONTENT_TYPES = loop.store.CHAT_CONTENT_TYPES;
@@ -61,11 +62,20 @@ loop.shared.views.TextChatView = (function(mozL10n) {
    * component only updates when the message list is changed.
    */
   var TextChatEntriesView = React.createClass({
-    mixins: [React.addons.PureRenderMixin],
+    mixins: [
+      React.addons.PureRenderMixin,
+      sharedMixins.AudioMixin
+    ],
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       messageList: React.PropTypes.array.isRequired
+    },
+
+    getInitialState: function() {
+      return {
+        receivedMessageCount: 0
+      };
     },
 
     componentWillUpdate: function() {
@@ -75,6 +85,18 @@ loop.shared.views.TextChatView = (function(mozL10n) {
       }
       // Scroll only if we're right at the bottom of the display.
       this.shouldScroll = node.scrollHeight === node.scrollTop + node.clientHeight;
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+      var receivedMessageCount = nextProps.messageList.filter(function(message) {
+        return message.type === CHAT_MESSAGE_TYPES.RECEIVED;
+      }).length;
+
+      // If the number of received messages has increased, we play a sound.
+      if (receivedMessageCount > this.state.receivedMessageCount) {
+        this.play("message");
+        this.setState({receivedMessageCount: receivedMessageCount});
+      }
     },
 
     componentDidUpdate: function() {
@@ -285,5 +307,8 @@ loop.shared.views.TextChatView = (function(mozL10n) {
     }
   });
 
-  return TextChatView;
+  return {
+    TextChatEntriesView: TextChatEntriesView,
+    TextChatView: TextChatView
+  };
 })(navigator.mozL10n || document.mozL10n);
