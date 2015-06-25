@@ -86,6 +86,14 @@ let PromisesActor = protocol.ActorClass({
     this._newPromises = [];
     this._promisesSettled = [];
 
+    this.dbg.findScripts().forEach(s => {
+      this.parent.sources.createSourceActors(s.source);
+    });
+
+    this.dbg.onNewScript = s => {
+      this.parent.sources.createSourceActors(s.source);
+    };
+
     events.on(this.parent, "window-ready", this._onWindowReady);
 
     this.state = "attached";
@@ -142,8 +150,7 @@ let PromisesActor = protocol.ActorClass({
       decrementGripDepth: () => this._gripDepth--,
       createValueGrip: v =>
         createValueGrip(v, this._navigationLifetimePool, this.objectGrip),
-      sources: () => DevToolsUtils.reportException("PromisesActor",
-        Error("sources not yet implemented")),
+      sources: () => this.parent.sources,
       createEnvironmentActor: () => DevToolsUtils.reportException(
         "PromisesActor", Error("createEnvironmentActor not yet implemented")),
       getGlobalDebugObject: () => DevToolsUtils.reportException(
