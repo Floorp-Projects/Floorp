@@ -18,27 +18,29 @@ this.EXPORTED_SYMBOLS = ["TabStateCache"];
  */
 this.TabStateCache = Object.freeze({
   /**
-   * Retrieves cached data for a given |browser|.
+   * Retrieves cached data for a given |tab| or associated |browser|.
    *
-   * @param browser (xul:browser)
-   *        The browser to retrieve cached data for.
+   * @param browserOrTab (xul:tab or xul:browser)
+   *        The tab or browser to retrieve cached data for.
    * @return (object)
-   *         The cached data stored for the given |browser|.
+   *         The cached data stored for the given |tab|
+   *         or associated |browser|.
    */
-  get: function (browser) {
-    return TabStateCacheInternal.get(browser);
+  get: function (browserOrTab) {
+    return TabStateCacheInternal.get(browserOrTab);
   },
 
   /**
-   * Updates cached data for a given |browser|.
+   * Updates cached data for a given |tab| or associated |browser|.
    *
-   * @param browser (xul:browser)
-   *        The browser belonging to the given tab data.
+   * @param browserOrTab (xul:tab or xul:browser)
+   *        The tab or browser belonging to the given tab data.
    * @param newData (object)
-   *        The new data to be stored for the given |browser|.
+   *        The new data to be stored for the given |tab|
+   *        or associated |browser|.
    */
-  update: function (browser, newData) {
-    TabStateCacheInternal.update(browser, newData);
+  update: function (browserOrTab, newData) {
+    TabStateCacheInternal.update(browserOrTab, newData);
   }
 });
 
@@ -46,27 +48,29 @@ let TabStateCacheInternal = {
   _data: new WeakMap(),
 
   /**
-   * Retrieves cached data for a given |browser|.
+   * Retrieves cached data for a given |tab| or associated |browser|.
    *
-   * @param browser (xul:browser)
-   *        The browser to retrieve cached data for.
+   * @param browserOrTab (xul:tab or xul:browser)
+   *        The tab or browser to retrieve cached data for.
    * @return (object)
-   *         The cached data stored for the given |browser|.
+   *         The cached data stored for the given |tab|
+   *         or associated |browser|.
    */
-  get: function (browser) {
-    return this._data.get(browser.permanentKey);
+  get: function (browserOrTab) {
+    return this._data.get(browserOrTab.permanentKey);
   },
 
   /**
-   * Updates cached data for a given |browser|.
+   * Updates cached data for a given |tab| or associated |browser|.
    *
-   * @param browser (xul:browser)
-   *        The browser belonging to the given tab data.
+   * @param browserOrTab (xul:tab or xul:browser)
+   *        The tab or browser belonging to the given tab data.
    * @param newData (object)
-   *        The new data to be stored for the given |browser|.
+   *        The new data to be stored for the given |tab|
+   *        or associated |browser|.
    */
-  update: function (browser, newData) {
-    let data = this._data.get(browser.permanentKey) || {};
+  update: function (browserOrTab, newData) {
+    let data = this._data.get(browserOrTab.permanentKey) || {};
 
     for (let key of Object.keys(newData)) {
       let value = newData[key];
@@ -77,6 +81,6 @@ let TabStateCacheInternal = {
       }
     }
 
-    this._data.set(browser.permanentKey, data);
+    this._data.set(browserOrTab.permanentKey, data);
   }
 };

@@ -87,7 +87,7 @@
   </style>
 
   <!-- Bottom bar: a horizontal linear layout with buttons in it. -->
-  <style name="SyncBottom">
+  <style name="SyncBottomBase">
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:layout_gravity">center</item>
@@ -95,9 +95,7 @@
     <item name="android:background">@android:drawable/bottom_bar</item>
   </style>
 
-  <style name="SyncBottomContainer">
-    <item name="android:layout_width">match_parent</item>
-    <item name="android:layout_height">wrap_content</item>
+  <style name="SyncBottom" parent="SyncBottomBase">
     <item name="android:divider">@android:drawable/divider_horizontal_bright</item>
     <item name="android:showDividers">beginning</item>
     <item name="android:orientation">vertical</item>

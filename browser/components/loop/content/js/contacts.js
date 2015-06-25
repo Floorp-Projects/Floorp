@@ -146,6 +146,8 @@ loop.contacts = (function(_, mozL10n) {
 
   const ContactDropdown = React.createClass({displayName: "ContactDropdown",
     propTypes: {
+      // If the contact is blocked or not.
+      blocked: React.PropTypes.bool.isRequired,
       canEdit: React.PropTypes.bool,
       handleAction: React.PropTypes.func.isRequired
     },
@@ -334,7 +336,9 @@ loop.contacts = (function(_, mozL10n) {
 
     propTypes: {
       notifications: React.PropTypes.instanceOf(
-        loop.shared.models.NotificationCollection).isRequired
+        loop.shared.models.NotificationCollection).isRequired,
+        // Callback to handle entry to the add/edit contact form.
+        startForm: React.PropTypes.func.isRequired
     },
 
     /**
@@ -624,7 +628,9 @@ loop.contacts = (function(_, mozL10n) {
     mixins: [React.addons.LinkedStateMixin],
 
     propTypes: {
-      mode: React.PropTypes.string
+      mode: React.PropTypes.string,
+      // Callback used to change the selected tab - it is passed the tab name.
+      selectTab: React.PropTypes.func.isRequired
     },
 
     getInitialState: function() {

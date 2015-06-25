@@ -3,20 +3,3 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %include ../../shared/controlcenter/panel.inc.css
-
-/* Identity popup icons */
-#identity-popup-icon {
-  height: 64px;
-  width: 64px;
-  padding: 0;
-  list-style-image: url("chrome://browser/skin/identity.png");
-  -moz-image-region: rect(0px, 64px, 64px, 0px);
-}
-
-#identity-popup.verifiedDomain > #identity-popup-container > #identity-popup-icon {
-  -moz-image-region: rect(64px, 64px, 128px, 0px);
-}
-
-#identity-popup.verifiedIdentity > #identity-popup-container > #identity-popup-icon {
-  -moz-image-region: rect(128px, 64px, 192px, 0px);
-}

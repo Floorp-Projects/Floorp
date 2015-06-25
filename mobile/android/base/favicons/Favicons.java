@@ -481,7 +481,7 @@ public class Favicons {
         putFaviconsInMemCache(BUILT_IN_FAVICON_URL, toInsert.iterator(), true);
 
         pageURLMappings.putWithoutEviction(AboutPages.HOME, BUILT_IN_SEARCH_URL);
-        List<Bitmap> searchIcons = Collections.singletonList(BitmapFactory.decodeResource(res, R.drawable.favicon_search));
+        List<Bitmap> searchIcons = Collections.singletonList(BitmapFactory.decodeResource(res, R.drawable.search_icon_inactive));
         putFaviconsInMemCache(BUILT_IN_SEARCH_URL, searchIcons.iterator(), true);
     }
 

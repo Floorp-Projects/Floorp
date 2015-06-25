@@ -909,10 +909,13 @@ let SessionStoreInternal = {
     // perform additional initialization when the first window is loading
     if (RunState.isStopped) {
       RunState.setRunning();
-      SessionSaver.updateLastSaveTime();
 
       // restore a crashed session resp. resume the last session if requested
       if (aInitialState) {
+        // Don't write to disk right after startup. Set the last time we wrote
+        // to disk to NOW() to enforce a full interval before the next write.
+        SessionSaver.updateLastSaveTime();
+
         if (isPrivateWindow) {
           // We're starting with a single private window. Save the state we
           // actually wanted to restore so that we can do it later in case
@@ -937,9 +940,6 @@ let SessionStoreInternal = {
       else {
         // Nothing to restore, notify observers things are complete.
         Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
-
-        // The next delayed save request should execute immediately.
-        SessionSaver.clearLastSaveTime();
       }
     }
     // this window was opened by _openWindowWithState
@@ -1281,15 +1281,11 @@ let SessionStoreInternal = {
     if (RunState.isQuitting)
       return;
     LastSession.clear();
+
     let openWindows = {};
-    this._forEachBrowserWindow(function(aWindow) {
-      Array.forEach(aWindow.gBrowser.tabs, function(aTab) {
-        delete aTab.linkedBrowser.__SS_data;
-        if (aTab.linkedBrowser.__SS_restoreState)
-          this._resetTabRestoringState(aTab);
-      }, this);
-      openWindows[aWindow.__SSi] = true;
-    });
+    // Collect open windows.
+    this._forEachBrowserWindow(({__SSi: id}) => openWindows[id] = true);
+
     // also clear all data about closed tabs and windows
     for (let ix in this._windows) {
       if (ix in openWindows) {

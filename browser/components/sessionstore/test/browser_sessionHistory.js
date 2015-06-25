@@ -32,36 +32,6 @@ add_task(function test_load_start() {
 });
 
 /**
- * Ensure that purging shistory invalidates.
- */
-add_task(function test_purge() {
-  // Create a new tab.
-  let tab = gBrowser.addTab("about:mozilla");
-  let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
-
-  // Create a second shistory entry.
-  browser.loadURI("about:robots");
-  yield promiseBrowserLoaded(browser);
-
-  // Check that we now have two shistory entries.
-  yield TabStateFlusher.flush(browser);
-  let {entries} = JSON.parse(ss.getTabState(tab));
-  is(entries.length, 2, "there are two shistory entries");
-
-  // Purge session history.
-  yield sendMessage(browser, "ss-test:purgeSessionHistory");
-
-  // Check that we are left with a single shistory entry.
-  yield TabStateFlusher.flush(browser);
-  ({entries} = JSON.parse(ss.getTabState(tab)));
-  is(entries.length, 1, "there is one shistory entry");
-
-  // Cleanup.
-  gBrowser.removeTab(tab);
-});
-
-/**
  * Ensure that anchor navigation invalidates shistory.
  */
 add_task(function test_hashchange() {

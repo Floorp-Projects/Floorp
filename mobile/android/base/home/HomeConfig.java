@@ -524,7 +524,8 @@ public final class HomeConfig {
 
     public static enum ItemType implements Parcelable {
         ARTICLE("article"),
-        IMAGE("image");
+        IMAGE("image"),
+        ICON("icon");
 
         private final String mId;
 
