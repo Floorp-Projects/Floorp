@@ -48,8 +48,9 @@ uint32_t
 filters::GetCell(Accessible* aAccessible)
 {
   a11y::role role = aAccessible->Role();
-  return role == roles::GRID_CELL || role == roles::ROWHEADER ||
-    role == roles::COLUMNHEADER ? eMatch : eSkipSubtree;
+  return role == roles::CELL || role == roles::GRID_CELL ||
+         role == roles::ROWHEADER || role == roles::COLUMNHEADER ?
+    eMatch : eSkipSubtree;
 }
 
 uint32_t
