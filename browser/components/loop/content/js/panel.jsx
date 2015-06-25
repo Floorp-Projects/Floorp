@@ -20,6 +20,7 @@ loop.panel = (function(_, mozL10n) {
   var TabView = React.createClass({
     propTypes: {
       buttonsHidden: React.PropTypes.array,
+      children: React.PropTypes.arrayOf(React.PropTypes.element),
       mozLoop: React.PropTypes.object,
       // The selectedTab prop is used by the UI showcase.
       selectedTab: React.PropTypes.string
@@ -468,6 +469,10 @@ loop.panel = (function(_, mozL10n) {
    * FxA user identity (guest/authenticated) component.
    */
   var UserIdentity = React.createClass({
+    propTypes: {
+      displayName: React.PropTypes.string.isRequired
+    },
+
     render: function() {
       return (
         <p className="user-identity">

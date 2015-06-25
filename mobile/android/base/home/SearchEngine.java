@@ -50,7 +50,7 @@ public class SearchEngine {
     }
 
     private Bitmap getDefaultFavicon(final Context context) {
-        return BitmapFactory.decodeResource(context.getResources(), R.drawable.favicon_search);
+        return BitmapFactory.decodeResource(context.getResources(), R.drawable.search_icon_inactive);
     }
 
     private static String getString(JSONObject data, String key) throws JSONException {

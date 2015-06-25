@@ -344,6 +344,15 @@ HistoryListener.prototype = {
   // This will be called for a pending tab when loadURI(uri) is called where
   // the given |uri| only differs in the fragment.
   OnHistoryNewEntry(newURI) {
+    let currentURI = this.webNavigation.currentURI;
+
+    // Ignore new SHistory entries with the same URI as those do not indicate
+    // a navigation inside a document by changing the #hash part of the URL.
+    // We usually hit this when purging session history for browsers.
+    if (currentURI && (currentURI.spec == newURI.spec)) {
+      return;
+    }
+
     // Reset the tab's URL to what it's actually showing. Without this loadURI()
     // would use the current document and change the displayed URL only.
     this.webNavigation.setCurrentURI(Utils.makeURI("about:blank"));

@@ -197,7 +197,7 @@ public class RecentTabsPanel extends HomeFragment
             mEmptyView = emptyViewStub.inflate();
 
             final ImageView emptyIcon = (ImageView) mEmptyView.findViewById(R.id.home_empty_image);
-            emptyIcon.setImageResource(R.drawable.icon_last_tabs_empty);
+            emptyIcon.setImageResource(R.drawable.icon_remote_tabs_empty);
 
             final TextView emptyText = (TextView) mEmptyView.findViewById(R.id.home_empty_text);
             emptyText.setText(R.string.home_last_tabs_empty);

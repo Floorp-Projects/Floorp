@@ -112,6 +112,7 @@ browser.jar:
   content/browser/loop/shared/sounds/room-joined-in.ogg (content/shared/sounds/room-joined-in.ogg)
   content/browser/loop/shared/sounds/room-left.ogg      (content/shared/sounds/room-left.ogg)
   content/browser/loop/shared/sounds/failure.ogg        (content/shared/sounds/failure.ogg)
+  content/browser/loop/shared/sounds/message.ogg        (content/shared/sounds/message.ogg)
 
   # Partner SDK assets
   content/browser/loop/libs/sdk.js                                                    (content/shared/libs/sdk.js)

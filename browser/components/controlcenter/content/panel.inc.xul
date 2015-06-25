@@ -10,35 +10,74 @@
                        gIdentityHandler.onPopupShown(event);"
        orient="vertical"
        level="top">
-  <hbox id="identity-popup-container" align="top">
-    <image id="identity-popup-icon"/>
-    <vbox id="identity-popup-content-box">
-      <label id="identity-popup-content-host"
-             class="identity-popup-description"
-             crop="end"/>
-      <label id="identity-popup-connection-secure"
-             class="identity-popup-label"
-             value="&identity.connectionSecure;"/>
-      <label id="identity-popup-connection-not-secure"
-             class="identity-popup-label"
-             value="&identity.connectionNotSecure;"/>
-      <description id="identity-popup-content-owner"
-                   class="identity-popup-description"/>
-      <description id="identity-popup-content-supplemental"
-                   class="identity-popup-description"/>
-      <description id="identity-popup-content-verifier"
-                   class="identity-popup-description"/>
-      <vbox id="identity-popup-permissions">
-        <label class="identity-popup-label header"
-               value="&identity.permissions;"/>
-        <vbox id="identity-popup-permission-list" class="indent"/>
+
+  <broadcasterset>
+    <broadcaster id="identity-popup-content-host" value=""/>
+  </broadcasterset>
+
+  <panelmultiview id="identity-popup-multiView"
+                  mainViewId="identity-popup-mainView">
+    <panelview id="identity-popup-mainView" flex="1">
+
+      <!-- Security Section -->
+      <hbox class="identity-popup-section">
+        <vbox id="identity-popup-security-content" flex="1">
+          <label class="identity-popup-headline" crop="end">
+            <observes element="identity-popup-content-host" attribute="value"/>
+          </label>
+          <label class="identity-popup-connection-secure identity-popup-text"
+                 value="&identity.connectionSecure;"/>
+          <label class="identity-popup-connection-not-secure identity-popup-text"
+                 value="&identity.connectionNotSecure;"/>
+          <label class="identity-popup-connection-internal identity-popup-text"
+                 value="&identity.connectionInternal;"/>
+        </vbox>
+        <button class="identity-popup-expander"
+                oncommand="gIdentityHandler.showSubView('security', this)"/>
+      </hbox>
+
+      <!-- Permissions Section -->
+      <hbox id="identity-popup-permissions" class="identity-popup-section">
+        <vbox id="identity-popup-permissions-content" flex="1">
+          <label class="identity-popup-text identity-popup-headline"
+                 value="&identity.permissions;"/>
+          <vbox id="identity-popup-permission-list"/>
+        </vbox>
+      </hbox>
+
+      <spacer flex="1"/>
+
+      <!-- More Information Button -->
+      <hbox id="identity-popup-button-container" align="center">
+        <button id="identity-popup-more-info-button" flex="1"
+                label="&identity.moreInfoLinkText2;"
+                oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
+      </hbox>
+    </panelview>
+
+    <!-- Security SubView -->
+    <panelview id="identity-popup-securityView" flex="1">
+      <vbox id="identity-popup-securityView-header">
+        <label class="identity-popup-headline" crop="end">
+          <observes element="identity-popup-content-host" attribute="value"/>
+        </label>
+        <label class="identity-popup-connection-secure identity-popup-text"
+               value="&identity.connectionSecure;"/>
+        <label class="identity-popup-connection-not-secure identity-popup-text"
+               value="&identity.connectionNotSecure;"/>
+        <label class="identity-popup-connection-internal identity-popup-text"
+               value="&identity.connectionInternal;"/>
       </vbox>
-    </vbox>
-  </hbox>
-  <!-- Footer button to open security page info -->
-  <hbox id="identity-popup-button-container" align="center">
-    <button id="identity-popup-more-info-button" flex="1"
-            label="&identity.moreInfoLinkText2;"
-            oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
-  </hbox>
+
+      <description id="identity-popup-securityView-connection"
+                   class="identity-popup-text">&identity.connectionVerified;</description>
+
+      <description id="identity-popup-content-owner"
+                   class="identity-popup-text"/>
+      <description id="identity-popup-content-supplemental"
+                   class="identity-popup-text"/>
+      <description id="identity-popup-content-verifier"
+                   class="identity-popup-text"/>
+    </panelview>
+  </panelmultiview>
 </panel>

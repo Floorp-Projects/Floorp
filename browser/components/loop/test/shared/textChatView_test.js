@@ -37,6 +37,89 @@ describe("loop.shared.views.TextChatView", function () {
     sandbox.restore();
   });
 
+  describe("TextChatEntriesView", function() {
+    var view;
+
+    function mountTestComponent(extraProps) {
+      var basicProps = {
+        dispatcher: dispatcher,
+        messageList: []
+      };
+
+      return TestUtils.renderIntoDocument(
+        React.createElement(loop.shared.views.chat.TextChatEntriesView,
+          _.extend(basicProps, extraProps)));
+    }
+
+    it("should render message entries when message were sent/ received", function() {
+      view = mountTestComponent({
+        messageList: [{
+          type: CHAT_MESSAGE_TYPES.RECEIVED,
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Hello!"
+        }, {
+          type: CHAT_MESSAGE_TYPES.SENT,
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Is it me you're looking for?"
+        }]
+      });
+
+      var node = view.getDOMNode();
+      expect(node).to.not.eql(null);
+
+      var entries = node.querySelectorAll(".text-chat-entry");
+      expect(entries.length).to.eql(2);
+      expect(entries[0].classList.contains("received")).to.eql(true);
+      expect(entries[1].classList.contains("received")).to.not.eql(true);
+    });
+
+    it("should play a sound when a message is received", function() {
+      view = mountTestComponent();
+      sandbox.stub(view, "play");
+
+      view.setProps({
+        messageList: [{
+          type: CHAT_MESSAGE_TYPES.RECEIVED,
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Hello!"
+        }]
+      });
+
+      sinon.assert.calledOnce(view.play);
+      sinon.assert.calledWithExactly(view.play, "message");
+    });
+
+    it("should not play a sound when a special message is displayed", function() {
+      view = mountTestComponent();
+      sandbox.stub(view, "play");
+
+      view.setProps({
+        messageList: [{
+          type: CHAT_MESSAGE_TYPES.SPECIAL,
+          contentType: CHAT_CONTENT_TYPES.ROOM_NAME,
+          message: "Hello!"
+        }]
+      });
+
+      sinon.assert.notCalled(view.play);
+    });
+
+    it("should not play a sound when a message is sent", function() {
+      view = mountTestComponent();
+      sandbox.stub(view, "play");
+
+      view.setProps({
+        messageList: [{
+          type: CHAT_MESSAGE_TYPES.SENT,
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Hello!"
+        }]
+      });
+
+      sinon.assert.notCalled(view.play);
+    });
+  });
+
   describe("TextChatView", function() {
     var view;
 
@@ -45,7 +128,7 @@ describe("loop.shared.views.TextChatView", function () {
         dispatcher: dispatcher
       }, extraProps);
       return TestUtils.renderIntoDocument(
-        React.createElement(loop.shared.views.TextChatView, props));
+        React.createElement(loop.shared.views.chat.TextChatView, props));
     }
 
     beforeEach(function() {
@@ -87,27 +170,6 @@ describe("loop.shared.views.TextChatView", function () {
 
       expect(node.querySelector(".text-chat-box")).not.eql(null);
       expect(node.querySelector(".text-chat-entries")).eql(null);
-    });
-
-    it("should render message entries when message were sent/ received", function() {
-      view = mountTestComponent();
-
-      store.receivedTextChatMessage({
-        contentType: CHAT_CONTENT_TYPES.TEXT,
-        message: "Hello!"
-      });
-      store.sendTextChatMessage({
-        contentType: CHAT_CONTENT_TYPES.TEXT,
-        message: "Is it me you're looking for?"
-      });
-
-      var node = view.getDOMNode();
-      expect(node.querySelector(".text-chat-entries")).to.not.eql(null);
-
-      var entries = node.querySelectorAll(".text-chat-entry");
-      expect(entries.length).to.eql(2);
-      expect(entries[0].classList.contains("received")).to.eql(true);
-      expect(entries[1].classList.contains("received")).to.not.eql(true);
     });
 
     it("should render a room name special entry", function() {
