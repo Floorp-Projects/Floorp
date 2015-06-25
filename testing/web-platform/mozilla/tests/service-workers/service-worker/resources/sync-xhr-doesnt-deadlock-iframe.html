@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<title>Service Worker: SyncXHR doesn't deadlock iframe</title>
+<script>
+function performSyncXHR() {
+  var url = 'sync-xhr-doesnt-deadlock.data?bustcache=' + Date.now();
+  var syncXhr = new XMLHttpRequest();
+  syncXhr.open("GET", url, false);
+  syncXhr.send();
+  if (syncXhr.responseText != 'hello')
+    throw 'FAIL';
+}
+</script>

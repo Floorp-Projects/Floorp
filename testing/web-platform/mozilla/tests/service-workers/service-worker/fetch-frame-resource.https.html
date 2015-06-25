@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<title>Service Worker: Fetch for the frame loading.</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="resources/get-host-info.sub.js"></script>
+<script src="resources/test-helpers.sub.js"></script>
+<body>
+<script>
+var worker = 'resources/fetch-rewrite-worker.js';
+var path = base_path() + 'resources/fetch-access-control.py';
+var host_info = get_host_info();
+
+if (window.testRunner) {
+  testRunner.setCanOpenWindows();
+}
+
+async_test(function(t) {
+    var scope = 'resources/fetch-frame-resource/frame-basic';
+    service_worker_unregister_and_register(t, worker, scope)
+      .then(function(reg) {
+          return wait_for_state(t, reg.installing, 'activated');
+        })
+      .then(function() {
+          return with_iframe(
+            scope + '?url=' +
+            encodeURIComponent(host_info['HTTP_ORIGIN'] + path));
+        })
+      .then(function(frame) {
+          assert_not_equals(
+            frame.contentDocument.body.textContent,
+            '',
+            'Basic type response could be loaded in the iframe.');
+          frame.remove();
+          return service_worker_unregister_and_done(t, scope);
+        })
+      .catch(unreached_rejection(t));
+  }, 'Basic type response could be loaded in the iframe.');
+
+async_test(function(t) {
+    var scope = 'resources/fetch-frame-resource/frame-cors';
+    service_worker_unregister_and_register(t, worker, scope)
+      .then(function(reg) {
+          return wait_for_state(t, reg.installing, 'activated');
+        })
+      .then(function() {
+          var frame = document.createElement('iframe');
+          frame.src =
+            scope + '?mode=cors&url=' +
+            encodeURIComponent(host_info['HTTP_REMOTE_ORIGIN'] + path +
+                               '?ACAOrigin=' + host_info['HTTP_ORIGIN']);
+          document.body.appendChild(frame);
+          // We can't catch the network error on iframe. So we use the timer.
+          return new Promise(function(resolve) {
+              setTimeout(function() { resolve(frame); }, 1000);
+            });
+        })
+      .then(function(frame) {
+          assert_equals(
+            frame.contentDocument.body.textContent,
+            '',
+            'CORS type response could not be loaded in the iframe.');
+          frame.remove();
+          return service_worker_unregister_and_done(t, scope);
+        })
+      .catch(unreached_rejection(t));
+  }, 'CORS type response could not be loaded in the iframe.');
+
+async_test(function(t) {
+    var scope = 'resources/fetch-frame-resource/frame-opaque';
+    service_worker_unregister_and_register(t, worker, scope)
+      .then(function(reg) {
+          return wait_for_state(t, reg.installing, 'activated');
+        })
+      .then(function() {
+          var frame = document.createElement('iframe');
+          frame.src =
+            scope + '?mode=no-cors&url=' +
+            encodeURIComponent(host_info['HTTP_REMOTE_ORIGIN'] + path);
+          document.body.appendChild(frame);
+          // We can't catch the network error on iframe. So we use the timer.
+          return new Promise(function(resolve) {
+              setTimeout(function() { resolve(frame); }, 1000);
+            });
+        })
+      .then(function(frame) {
+          assert_equals(
+            frame.contentDocument.body.textContent,
+            '',
+            'Opaque type response could not be loaded in the iframe.');
+          frame.remove();
+          return service_worker_unregister_and_done(t, scope);
+        })
+      .catch(unreached_rejection(t));
+  }, 'Opaque type response could not be loaded in the iframe.');
+
+async_test(function(t) {
+    var scope = 'resources/fetch-frame-resource/window-basic';
+    service_worker_unregister_and_register(t, worker, scope)
+      .then(function(reg) {
+          return wait_for_state(t, reg.installing, 'activated');
+        })
+      .then(function() {
+          return new Promise(function(resolve) {
+              var win = window.open(
+                scope + '?url=' +
+                encodeURIComponent(host_info['HTTP_ORIGIN'] + path));
+              win.onload = function() { resolve(win); };
+            });
+        })
+      .then(function(win) {
+          assert_not_equals(
+            win.document.body.textContent,
+            '',
+            'Basic type response could be loaded in the new window.');
+          win.close();
+          return service_worker_unregister_and_done(t, scope);
+        })
+      .catch(unreached_rejection(t));
+  }, 'Basic type response could be loaded in the new window.');
+
+async_test(function(t) {
+    var scope = 'resources/fetch-frame-resource/window-cors';
+    service_worker_unregister_and_register(t, worker, scope)
+      .then(function(reg) {
+          return wait_for_state(t, reg.installing, 'activated');
+        })
+      .then(function() {
+          var win = window.open(
+            scope + '?mode=cors&url=' +
+            encodeURIComponent(host_info['HTTP_REMOTE_ORIGIN'] + path +
+                               '?ACAOrigin=' + host_info['HTTP_ORIGIN']));
+          // We can't catch the network error on window. So we use the timer.
+          return new Promise(function(resolve) {
+              setTimeout(function() { resolve(win); }, 1000);
+            });
+        })
+      .then(function(win) {
+          assert_equals(
+            win.document.body.textContent,
+            '',
+            'CORS type response could not be loaded in the new window.');
+          win.close();
+          return service_worker_unregister_and_done(t, scope);
+        })
+      .catch(unreached_rejection(t));
+  }, 'CORS type response could not be loaded in the new window.');
+
+async_test(function(t) {
+    var scope = 'resources/fetch-frame-resource/window-opaque';
+    service_worker_unregister_and_register(t, worker, scope)
+      .then(function(reg) {
+          return wait_for_state(t, reg.installing, 'activated');
+        })
+      .then(function() {
+          var win = window.open(
+            scope + '?mode=no-cors&url=' +
+            encodeURIComponent(host_info['HTTP_REMOTE_ORIGIN'] + path));
+          // We can't catch the network error on window. So we use the timer.
+          return new Promise(function(resolve) {
+              setTimeout(function() { resolve(win); }, 1000);
+            });
+        })
+      .then(function(win) {
+          assert_equals(
+            win.document.body.textContent,
+            '',
+            'Opaque type response could not be loaded in the new window.');
+          win.close();
+          return service_worker_unregister_and_done(t, scope);
+        })
+      .catch(unreached_rejection(t));
+  }, 'Opaque type response could not be loaded in the new window.');
+</script>
+</body>
