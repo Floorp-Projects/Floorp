@@ -240,9 +240,6 @@ enum GMPSessionType {
 
 #define GMP_API_DECRYPTOR "eme-decrypt-v7"
 
-// XXX remove in bug 1147692
-#define GMP_API_DECRYPTOR_COMPAT "eme-decrypt-v6"
-
 // API exposed by plugin library to manage decryption sessions.
 // When the Host requests this by calling GMPGetAPIFunc().
 //
