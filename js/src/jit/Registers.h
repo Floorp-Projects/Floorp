@@ -14,8 +14,6 @@
 # include "jit/x86-shared/Architecture-x86-shared.h"
 #elif defined(JS_CODEGEN_ARM)
 # include "jit/arm/Architecture-arm.h"
-#elif defined(JS_CODEGEN_ARM64)
-# include "jit/arm64/Architecture-arm64.h"
 #elif defined(JS_CODEGEN_MIPS)
 # include "jit/mips/Architecture-mips.h"
 #elif defined(JS_CODEGEN_NONE)
@@ -44,7 +42,8 @@ struct Register {
         Register r = { Encoding(code) };
         return r;
     }
-    MOZ_CONSTEXPR Code code() const {
+    Code code() const {
+        MOZ_ASSERT(Code(reg_) < Registers::Total);
         return Code(reg_);
     }
     Encoding encoding() const {

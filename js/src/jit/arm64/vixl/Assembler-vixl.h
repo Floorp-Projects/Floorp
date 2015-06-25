@@ -215,12 +215,6 @@ class Register : public CPURegister {
     return IsValidRegister();
   }
 
-  js::jit::Register asUnsized() const {
-    if (code_ == kSPRegInternalCode)
-      return js::jit::Register::FromCode((js::jit::Register::Code)kZeroRegCode);
-    return js::jit::Register::FromCode((js::jit::Register::Code)code_);
-  }
-
   static const Register& WRegFromCode(unsigned code);
   static const Register& XRegFromCode(unsigned code);
 
@@ -503,19 +497,6 @@ class Operand {
   //       <shift_amount> is uint2_t.
   explicit Operand(Register reg, Extend extend, unsigned shift_amount = 0);
 
-  // FIXME: Temporary constructors for compilation.
-  // FIXME: These should be removed -- Operand should not leak into shared code.
-  // FIXME: Something like an LAllocationUnion for {gpreg, fpreg, Address} is wanted.
-  explicit Operand(js::jit::Register) {
-    MOZ_CRASH("Operand with Register");
-  }
-  explicit Operand(js::jit::FloatRegister) {
-    MOZ_CRASH("Operand with FloatRegister");
-  }
-  explicit Operand(js::jit::Register, int32_t) {
-    MOZ_CRASH("Operand with implicit Address");
-  }
-
   bool IsImmediate() const;
   bool IsShiftedRegister() const;
   bool IsExtendedRegister() const;
@@ -584,10 +565,8 @@ class MemOperand {
                       AddrMode addrmode = Offset);
 
   // Adapter constructors using C++11 delegating.
-  // TODO: If sp == kSPRegInternalCode, the xzr check isn't necessary.
   explicit MemOperand(js::jit::Address addr)
-    : MemOperand(addr.base.code() == 31 ? sp : Register(addr.base, 64),
-		 (ptrdiff_t)addr.offset) {
+    : MemOperand(Register(addr.base, 64), (ptrdiff_t)addr.offset) {
   }
 
   const Register& base() const {
@@ -693,29 +672,6 @@ class Assembler : public MozBaseAssembler {
   // Finalize a code buffer of generated instructions. This function must be
   // called before executing or copying code from the buffer.
   void FinalizeCode();
-
-#define COPYENUM(v) static const Condition v = vixl::v
-#define COPYENUM_(v) static const Condition v = vixl::v##_
-  COPYENUM(Equal);
-  COPYENUM(Zero);
-  COPYENUM(NotEqual);
-  COPYENUM(NonZero);
-  COPYENUM(AboveOrEqual);
-  COPYENUM(Below);
-  COPYENUM(Signed);
-  COPYENUM(NotSigned);
-  COPYENUM(Overflow);
-  COPYENUM(NoOverflow);
-  COPYENUM(Above);
-  COPYENUM(BelowOrEqual);
-  COPYENUM_(GreaterThanOrEqual);
-  COPYENUM_(LessThan);
-  COPYENUM_(GreaterThan);
-  COPYENUM_(LessThanOrEqual);
-  COPYENUM(Always);
-  COPYENUM(Never);
-#undef COPYENUM
-#undef COPYENUM_
 
   // Bit set when a DoubleCondition does not map to a single ARM condition.
   // The MacroAssembler must special-case these conditions, or else
