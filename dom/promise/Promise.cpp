@@ -1611,9 +1611,9 @@ PromiseWorkerProxy::RunCallback(JSContext* aCx,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  MutexAutoLock lock(GetCleanUpLock());
+  MutexAutoLock lock(mCleanUpLock);
   // If the worker thread's been cancelled we don't need to resolve the Promise.
-  if (IsClean()) {
+  if (mCleanedUp) {
     return;
   }
 
