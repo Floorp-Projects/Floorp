@@ -20,9 +20,9 @@ add_task(function* test_registration_missing_scope() {
     }
   });
   yield rejects(
-    PushNotificationService.registration(''),
+    PushNotificationService.registration('', ''),
     function(error) {
-      return error.error == 'Database error';
+      return error.error == 'NotFoundError';
     },
     'Record missing page and manifest URLs'
   );
