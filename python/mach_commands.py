@@ -9,7 +9,6 @@ import glob
 import logging
 import mozpack.path as mozpath
 import os
-import sys
 
 from mozbuild.base import (
     MachCommandBase,
