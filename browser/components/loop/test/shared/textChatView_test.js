@@ -11,11 +11,11 @@ describe("loop.shared.views.TextChatView", function () {
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES;
   var CHAT_CONTENT_TYPES = loop.store.CHAT_CONTENT_TYPES;
 
-  var dispatcher, fakeSdkDriver, sandbox, store;
+  var dispatcher, fakeSdkDriver, sandbox, store, fakeClock;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
-    sandbox.useFakeTimers();
+    fakeClock = sandbox.useFakeTimers();
 
     dispatcher = new loop.Dispatcher();
     sandbox.stub(dispatcher, "dispatch");
@@ -120,6 +120,130 @@ describe("loop.shared.views.TextChatView", function () {
     });
   });
 
+  describe("TextChatEntry", function() {
+    var view;
+
+    function mountTestComponent(extraProps) {
+      var props = _.extend({
+        dispatcher: dispatcher
+      }, extraProps);
+      return TestUtils.renderIntoDocument(
+        React.createElement(loop.shared.views.chat.TextChatEntry, props));
+    }
+
+    it("should not render a timestamp", function() {
+      view = mountTestComponent({
+        showTimestamp: false,
+        timestamp: "2015-06-23T22:48:39.738Z"
+      });
+      var node = view.getDOMNode();
+
+      expect(node.querySelector(".text-chat-entry-timestamp")).to.eql(null);
+    });
+
+    it("should render a timestamp", function() {
+      view = mountTestComponent({
+        showTimestamp: true,
+        timestamp: "2015-06-23T22:48:39.738Z"
+      });
+      var node = view.getDOMNode();
+
+      expect(node.querySelector(".text-chat-entry-timestamp")).to.not.eql(null);
+    });
+  });
+
+  describe("TextChatEntriesView", function() {
+    var view, node;
+
+    function mountTestComponent(extraProps) {
+      var props = _.extend({
+        dispatcher: dispatcher
+      }, extraProps);
+      return TestUtils.renderIntoDocument(
+        React.createElement(loop.shared.views.chat.TextChatEntriesView, props));
+    }
+
+    beforeEach(function() {
+      store.setStoreState({ textChatEnabled: true });
+    });
+
+    it("should show timestamps if there are different senders", function() {
+      view = mountTestComponent({
+        messageList: [{
+          type: CHAT_MESSAGE_TYPES.RECEIVED,
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Hello!"
+        }, {
+          type: CHAT_MESSAGE_TYPES.SENT,
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Is it me you're looking for?"
+        }]
+      });
+      node = view.getDOMNode();
+
+      expect(node.querySelectorAll(".text-chat-entry-timestamp").length)
+          .to.eql(2);
+    });
+
+    it("should show timestamps if they are 1 minute apart (SENT)", function() {
+      view = mountTestComponent({
+        messageList: [{
+          type: CHAT_MESSAGE_TYPES.SENT,
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Hello!",
+          sentTimestamp: "2015-06-25T17:53:55.357Z"
+        }, {
+          type: CHAT_MESSAGE_TYPES.SENT,
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Is it me you're looking for?",
+          sentTimestamp: "2015-06-25T17:54:55.357Z"
+        }]
+      });
+      node = view.getDOMNode();
+
+      expect(node.querySelectorAll(".text-chat-entry-timestamp").length)
+          .to.eql(2);
+    });
+
+    it("should show timestamps if they are 1 minute apart (RECV)", function() {
+      view = mountTestComponent({
+        messageList: [{
+          type: CHAT_MESSAGE_TYPES.RECEIVED,
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Hello!",
+          receivedTimestamp: "2015-06-25T17:53:55.357Z"
+        }, {
+          type: CHAT_MESSAGE_TYPES.RECEIVED,
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Is it me you're looking for?",
+          receivedTimestamp: "2015-06-25T17:54:55.357Z"
+        }]
+      });
+      node = view.getDOMNode();
+
+      expect(node.querySelectorAll(".text-chat-entry-timestamp").length)
+          .to.eql(2);
+    });
+
+    it("should not show timestamps from msgs sent in the same minute", function() {
+      view = mountTestComponent({
+        messageList: [{
+          type: CHAT_MESSAGE_TYPES.RECEIVED,
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Hello!"
+        }, {
+          type: CHAT_MESSAGE_TYPES.RECEIVED,
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Is it me you're looking for?"
+        }]
+      });
+      node = view.getDOMNode();
+
+      expect(node.querySelectorAll(".text-chat-entry-timestamp").length)
+          .to.eql(1);
+    });
+  });
+
   describe("TextChatView", function() {
     var view;
 
@@ -133,6 +257,35 @@ describe("loop.shared.views.TextChatView", function () {
 
     beforeEach(function() {
       store.setStoreState({ textChatEnabled: true });
+    });
+
+    it("should show timestamps from msgs sent more than 1 min apart", function() {
+      view = mountTestComponent();
+
+      store.sendTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Hello!",
+        sentTimestamp: "1970-01-01T00:02:00.000Z",
+        receivedTimestamp: "1970-01-01T00:02:00.000Z"
+      });
+
+      store.sendTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Is it me you're looking for?",
+        sentTimestamp: "1970-01-01T00:03:00.000Z",
+        receivedTimestamp: "1970-01-01T00:03:00.000Z"
+      });
+      store.sendTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Is it me you're looking for?",
+        sentTimestamp: "1970-01-01T00:02:00.000Z",
+        receivedTimestamp: "1970-01-01T00:02:00.000Z"
+      });
+
+      var node = view.getDOMNode();
+
+      expect(node.querySelectorAll(".text-chat-entry-timestamp").length)
+          .to.eql(2);
     });
 
     it("should not display anything if no messages and text chat not enabled and showAlways is false", function() {
@@ -171,6 +324,52 @@ describe("loop.shared.views.TextChatView", function () {
       expect(node.querySelector(".text-chat-box")).not.eql(null);
       expect(node.querySelector(".text-chat-entries")).eql(null);
     });
+
+    it("should render message entries when message were sent/ received", function() {
+      view = mountTestComponent();
+
+      store.receivedTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Hello!"
+      });
+      store.sendTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Is it me you're looking for?"
+      });
+
+      var node = view.getDOMNode();
+      expect(node.querySelector(".text-chat-entries")).to.not.eql(null);
+
+      var entries = node.querySelectorAll(".text-chat-entry");
+      expect(entries.length).to.eql(2);
+      expect(entries[0].classList.contains("received")).to.eql(true);
+      expect(entries[1].classList.contains("received")).to.not.eql(true);
+    });
+
+    it("should add `sent` CSS class selector to msg of type SENT", function() {
+      var node = mountTestComponent().getDOMNode();
+
+      store.sendTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Foo",
+        timestamp: 0
+      });
+
+      expect(node.querySelector(".sent")).to.not.eql(null);
+    });
+
+    it("should add `received` CSS class selector to msg of type RECEIVED",
+       function() {
+         var node = mountTestComponent().getDOMNode();
+
+         store.receivedTextChatMessage({
+           contentType: CHAT_CONTENT_TYPES.TEXT,
+           message: "Foo",
+           timestamp: 0
+         });
+
+         expect(node.querySelector(".received")).to.not.eql(null);
+     });
 
     it("should render a room name special entry", function() {
       view = mountTestComponent({
@@ -233,7 +432,8 @@ describe("loop.shared.views.TextChatView", function () {
       sinon.assert.calledWithExactly(dispatcher.dispatch,
         new sharedActions.SendTextChatMessage({
           contentType: CHAT_CONTENT_TYPES.TEXT,
-          message: "Hello!"
+          message: "Hello!",
+          sentTimestamp: "1970-01-01T00:00:00.000Z"
         }));
     });
 

@@ -177,7 +177,8 @@ loop.shared.actions = (function() {
      */
     SendTextChatMessage: Action.define("sendTextChatMessage", {
       contentType: String,
-      message: String
+      message: String,
+      sentTimestamp: String
     }),
 
     /**
@@ -185,7 +186,9 @@ loop.shared.actions = (function() {
      */
     ReceivedTextChatMessage: Action.define("receivedTextChatMessage", {
       contentType: String,
-      message: String
+      message: String,
+      receivedTimestamp: String
+      // sentTimestamp: String (optional)
     }),
 
     /**
