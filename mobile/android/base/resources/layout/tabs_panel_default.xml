@@ -45,7 +45,7 @@
             <ImageButton android:id="@+id/menu"
                          style="@style/UrlBar.ImageButton"
                          android:padding="@dimen/browser_toolbar_button_padding"
-                         android:src="@drawable/menu_tabs"
+                         android:src="@drawable/menu"
                          android:contentDescription="@string/menu"
                          android:background="@drawable/action_bar_button_inverse"
                          android:visibility="gone"/>
