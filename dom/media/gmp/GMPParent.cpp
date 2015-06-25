@@ -818,7 +818,8 @@ GMPParent::ReadGMPMetaData()
       }
     }
 
-    if (cap->mAPIName.EqualsLiteral(GMP_API_DECRYPTOR)) {
+    if (cap->mAPIName.EqualsLiteral(GMP_API_DECRYPTOR) ||
+        cap->mAPIName.EqualsLiteral(GMP_API_DECRYPTOR_COMPAT)) {
       mCanDecrypt = true;
 
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
