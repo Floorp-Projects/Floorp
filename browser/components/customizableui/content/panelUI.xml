@@ -14,7 +14,7 @@
     </resources>
     <content>
       <xul:box anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen,viewtype,transitioning">
-        <xul:stack anonid="viewStack" xbl:inherits="viewtype" viewtype="main" class="panel-viewstack">
+        <xul:stack anonid="viewStack" xbl:inherits="viewtype,transitioning" viewtype="main" class="panel-viewstack">
           <xul:vbox anonid="mainViewContainer" class="panel-mainview"/>
 
           <!-- Used to capture click events over the PanelUI-mainView if we're in
