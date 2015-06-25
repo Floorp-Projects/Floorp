@@ -196,8 +196,6 @@ protected:
 };
 
 class AudioDataDecoder : public MediaCodecDataDecoder {
-private:
-  uint8_t csd0[2];
 
 public:
   AudioDataDecoder(const AudioInfo& aConfig, MediaFormat::Param aFormat, MediaDataDecoderCallback* aCallback)
@@ -209,10 +207,8 @@ public:
     NS_ENSURE_SUCCESS_VOID(aFormat->GetByteBuffer(NS_LITERAL_STRING("csd-0"), &buffer));
 
     if (!buffer && aConfig.mCodecSpecificConfig->Length() >= 2) {
-      csd0[0] = (*aConfig.mCodecSpecificConfig)[0];
-      csd0[1] = (*aConfig.mCodecSpecificConfig)[1];
-
-      buffer = jni::Object::LocalRef::Adopt(env, env->NewDirectByteBuffer(csd0, 2));
+      buffer = jni::Object::LocalRef::Adopt(env, env->NewDirectByteBuffer(aConfig.mCodecSpecificConfig->Elements(),
+                                                                          aConfig.mCodecSpecificConfig->Length()));
       NS_ENSURE_SUCCESS_VOID(aFormat->SetByteBuffer(NS_LITERAL_STRING("csd-0"), buffer));
     }
   }
