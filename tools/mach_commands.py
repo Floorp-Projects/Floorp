@@ -8,7 +8,6 @@ import sys
 import os
 import stat
 import platform
-import urllib2
 import errno
 
 from mach.decorators import (
@@ -219,8 +218,8 @@ class PastebinProvider(object):
                      help='Specify the file to upload to pastebin.mozilla.org')
 
     def pastebin(self, language, poster, duration, file):
-        import sys
         import urllib
+        import urllib2
 
         URL = 'https://pastebin.mozilla.org/'
 
@@ -299,6 +298,8 @@ class FormatProvider(MachCommandBase):
     @CommandArgument('--show', '-s', action = 'store_true',
         help = 'Show diff output on instead of applying changes')
     def clang_format(self, show=False):
+        import urllib2
+
         plat = platform.system()
         fmt = plat.lower() + "/clang-format-3.5"
         fmt_diff = "clang-format-diff-3.5"
