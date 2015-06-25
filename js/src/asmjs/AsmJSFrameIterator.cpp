@@ -131,6 +131,11 @@ static const unsigned PushedRetAddr = 4;
 static const unsigned PushedFP = 16;
 static const unsigned StoredFP = 20;
 static const unsigned PostStorePrePopFP = 4;
+#elif defined(JS_CODEGEN_ARM64)
+static const unsigned PushedRetAddr = 0;
+static const unsigned PushedFP = 0;
+static const unsigned StoredFP = 0;
+static const unsigned PostStorePrePopFP = 0;
 #elif defined(JS_CODEGEN_MIPS)
 static const unsigned PushedRetAddr = 8;
 static const unsigned PushedFP = 24;
@@ -216,7 +221,7 @@ GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, AsmJSExit:
                           Label* profilingReturn)
 {
     Register scratch = ABIArgGenerator::NonReturn_VolatileReg0;
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS)
     Register scratch2 = ABIArgGenerator::NonReturn_VolatileReg1;
 #endif
 
@@ -240,11 +245,11 @@ GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, AsmJSExit:
         // and the async interrupt exit. Since activation.fp can be read at any
         // time and still points to the current frame, be careful to only update
         // sp after activation.fp has been repointed to the caller's frame.
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS)
         masm.loadPtr(Address(masm.getStackPointer(), 0), scratch2);
         masm.storePtr(scratch2, Address(scratch, AsmJSActivation::offsetOfFP()));
         DebugOnly<uint32_t> prePop = masm.currentOffset();
-        masm.add32(Imm32(4), masm.getStackPointer());
+        masm.addToStackPtr(Imm32(sizeof(void *)));
         MOZ_ASSERT(PostStorePrePopFP == masm.currentOffset() - prePop);
 #else
         masm.pop(Address(scratch, AsmJSActivation::offsetOfFP()));

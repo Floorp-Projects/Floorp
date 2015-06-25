@@ -61,16 +61,16 @@ ptrdiff_t Assembler::LinkAndGetOffsetTo(BufferOffset branch, Label* label) {
   if (armbuffer_.oom())
     return js::jit::LabelBase::INVALID_OFFSET;
 
-  // The label is bound: all uses are already linked.
   if (label->bound()) {
+    // The label is bound: all uses are already linked.
     ptrdiff_t branch_offset = ptrdiff_t(branch.getOffset() / element_size);
     ptrdiff_t label_offset = ptrdiff_t(label->offset() / element_size);
     return label_offset - branch_offset;
   }
 
-  // The label is unbound and unused: store the offset in the label itself
-  // for patching by bind().
   if (!label->used()) {
+    // The label is unbound and unused: store the offset in the label itself
+    // for patching by bind().
     label->use(branch.getOffset());
     return js::jit::LabelBase::INVALID_OFFSET;
   }
@@ -120,7 +120,7 @@ void Assembler::b(Instruction* at, int imm19, Condition cond) {
 
 
 BufferOffset Assembler::b(Label* label) {
-  // Flush the instruction buffer before calculating relative offset.
+  // Flush the instruction buffer if necessary before getting an offset.
   BufferOffset branch = b(0);
   Instruction* ins = getInstructionAt(branch);
   VIXL_ASSERT(ins->IsUncondBranchImm());
@@ -132,7 +132,7 @@ BufferOffset Assembler::b(Label* label) {
 
 
 BufferOffset Assembler::b(Label* label, Condition cond) {
-  // Flush the instruction buffer before calculating relative offset.
+  // Flush the instruction buffer if necessary before getting an offset.
   BufferOffset branch = b(0, Always);
   Instruction* ins = getInstructionAt(branch);
   VIXL_ASSERT(ins->IsCondBranchImm());
@@ -154,7 +154,7 @@ void Assembler::bl(Instruction* at, int imm26) {
 
 
 void Assembler::bl(Label* label) {
-  // Flush the instruction buffer before calculating relative offset.
+  // Flush the instruction buffer if necessary before getting an offset.
   BufferOffset branch = b(0);
   Instruction* ins = getInstructionAt(branch);
 
@@ -174,7 +174,7 @@ void Assembler::cbz(Instruction* at, const Register& rt, int imm19) {
 
 
 void Assembler::cbz(const Register& rt, Label* label) {
-  // Flush the instruction buffer before calculating relative offset.
+  // Flush the instruction buffer if necessary before getting an offset.
   BufferOffset branch = b(0);
   Instruction* ins = getInstructionAt(branch);
 
@@ -194,7 +194,7 @@ void Assembler::cbnz(Instruction* at, const Register& rt, int imm19) {
 
 
 void Assembler::cbnz(const Register& rt, Label* label) {
-  // Flush the instruction buffer before calculating relative offset.
+  // Flush the instruction buffer if necessary before getting an offset.
   BufferOffset branch = b(0);
   Instruction* ins = getInstructionAt(branch);
 
@@ -216,7 +216,7 @@ void Assembler::tbz(Instruction* at, const Register& rt, unsigned bit_pos, int i
 
 
 void Assembler::tbz(const Register& rt, unsigned bit_pos, Label* label) {
-  // Flush the instruction buffer before calculating relative offset.
+  // Flush the instruction buffer if necessary before getting an offset.
   BufferOffset branch = b(0);
   Instruction* ins = getInstructionAt(branch);
 
@@ -238,7 +238,7 @@ void Assembler::tbnz(Instruction* at, const Register& rt, unsigned bit_pos, int 
 
 
 void Assembler::tbnz(const Register& rt, unsigned bit_pos, Label* label) {
-  // Flush the instruction buffer before calculating relative offset.
+  // Flush the instruction buffer if necessary before getting an offset.
   BufferOffset branch = b(0);
   Instruction* ins = getInstructionAt(branch);
 
@@ -260,8 +260,8 @@ void Assembler::adr(Instruction* at, const Register& rd, int imm21) {
 
 
 void Assembler::adr(const Register& rd, Label* label) {
-  // Flush the instruction buffer before calculating relative offset.
-  // ADR is not a branch.
+  // Flush the instruction buffer if necessary before getting an offset.
+  // Note that ADR is not a branch, but it encodes an offset like a branch.
   BufferOffset offset = Emit(0);
   Instruction* ins = getInstructionAt(offset);
 
@@ -285,6 +285,7 @@ void Assembler::adrp(Instruction* at, const Register& rd, int imm21) {
 void Assembler::adrp(const Register& rd, Label* label) {
   VIXL_ASSERT(AllowPageOffsetDependentCode());
 
+  // Flush the instruction buffer if necessary before getting an offset.
   BufferOffset offset = Emit(0);
   Instruction* ins = getInstructionAt(offset);
 
@@ -401,7 +402,8 @@ bool MozBaseAssembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr
   // as written by InsertIndexIntoTag().
   uint32_t index = load->ImmLLiteral();
 
-  // Each entry in the literal pool is uint32_t-sized.
+  // Each entry in the literal pool is uint32_t-sized,
+  // but literals may use multiple entries.
   uint32_t* constPool = reinterpret_cast<uint32_t*>(constPoolAddr);
   Instruction* source = reinterpret_cast<Instruction*>(&constPool[index]);
 
@@ -424,6 +426,10 @@ struct PoolHeader {
     union {
       struct {
         uint32_t size : 15;
+
+	// "Natural" guards are part of the normal instruction stream,
+	// while "non-natural" guards are inserted for the sole purpose
+	// of skipping around a pool.
         bool isNatural : 1;
         uint32_t ONES : 16;
       };
@@ -469,14 +475,13 @@ void MozBaseAssembler::WritePoolHeader(uint8_t* start, js::jit::Pool* p, bool is
   JS_STATIC_ASSERT(sizeof(PoolHeader) == 4);
 
   // Get the total size of the pool.
-  uint8_t* pool = start + sizeof(PoolHeader) + p->getPoolSize();
+  const uintptr_t totalPoolSize = sizeof(PoolHeader) + p->getPoolSize();
+  const uintptr_t totalPoolInstructions = totalPoolSize / sizeof(Instruction);
 
-  uintptr_t size = pool - start;
-  VIXL_ASSERT((size & 3) == 0);
-  size = size >> 2;
-  VIXL_ASSERT(size < (1 << 15));
+  VIXL_ASSERT((totalPoolSize & 0x3) == 0);
+  VIXL_ASSERT(totalPoolInstructions < (1 << 15));
 
-  PoolHeader header(size, isNatural);
+  PoolHeader header(totalPoolInstructions, isNatural);
   *(PoolHeader*)start = header;
 }
 

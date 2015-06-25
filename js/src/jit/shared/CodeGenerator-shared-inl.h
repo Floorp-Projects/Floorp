@@ -221,7 +221,7 @@ CodeGeneratorShared::ToOperand(const LAllocation& a)
         return Operand(a.toGeneralReg()->reg());
     if (a.isFloatReg())
         return Operand(a.toFloatReg()->reg());
-    return Operand(StackPointer, ToStackOffset(&a));
+    return Operand(masm.getStackPointer(), ToStackOffset(&a));
 }
 
 Operand
