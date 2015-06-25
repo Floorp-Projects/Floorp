@@ -1164,8 +1164,8 @@ RedirectJitCodeToInterruptCheck(JSRuntime* rt, CONTEXT* context)
         const AsmJSModule& module = activation->module();
 
 #ifdef JS_SIMULATOR
-        if (module.containsFunctionPC((void*)rt->simulator()->get_pc()))
-            rt->simulator()->set_resume_pc(int32_t(module.interruptExit()));
+        if (module.containsFunctionPC(rt->simulator()->get_pc_as<void*>()))
+            rt->simulator()->set_resume_pc(module.interruptExit());
 #endif
 
         uint8_t** ppc = ContextToPC(context);

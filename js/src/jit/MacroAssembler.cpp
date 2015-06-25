@@ -1594,8 +1594,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         regs.take(bailoutInfo);
 
         // Reset SP to the point where clobbering starts.
-        loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, incomingStack)),
-                BaselineStackReg);
+        loadStackPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, incomingStack)));
 
         Register copyCur = regs.takeAny();
         Register copyEnd = regs.takeAny();
@@ -1610,7 +1609,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             bind(&copyLoop);
             branchPtr(Assembler::BelowOrEqual, copyCur, copyEnd, &endOfCopy);
             subPtr(Imm32(4), copyCur);
-            subPtr(Imm32(4), BaselineStackReg);
+            subFromStackPtr(Imm32(4));
             load32(Address(copyCur, 0), temp);
             store32(temp, Address(BaselineStackReg, 0));
             jump(&copyLoop);
@@ -2510,9 +2509,12 @@ MacroAssembler::MacroAssembler(JSContext* cx, IonScript* ion,
     jitContext_.emplace(cx, (js::jit::TempAllocator*)nullptr);
     alloc_.emplace(cx);
     moveResolver_.setAllocator(*jitContext_->temp);
-#ifdef JS_CODEGEN_ARM
+#if defined(JS_CODEGEN_ARM)
     initWithAllocator();
     m_buffer.id = GetJitContext()->getNextAssemblerId();
+#elif defined(JS_CODEGEN_ARM64)
+    initWithAllocator();
+    armbuffer_.id = GetJitContext()->getNextAssemblerId();
 #endif
     if (ion) {
         setFramePushed(ion->frameSize());
@@ -2707,12 +2709,12 @@ MacroAssembler::freeStack(uint32_t amount)
 {
     MOZ_ASSERT(amount <= framePushed_);
     if (amount)
-        addPtr(Imm32(amount), StackPointer);
+        addToStackPtr(Imm32(amount));
     framePushed_ -= amount;
 }
 
 void
 MacroAssembler::freeStack(Register amount)
 {
-    addPtr(amount, StackPointer);
+    addToStackPtr(amount);
 }
