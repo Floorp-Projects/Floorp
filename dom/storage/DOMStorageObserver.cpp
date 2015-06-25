@@ -75,7 +75,7 @@ DOMStorageObserver::Init()
 #ifdef DOM_STORAGE_TESTS
   // Testing
   obs->AddObserver(sSelf, "domstorage-test-flush-force", true);
-  if (XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
     // Only to forward to child process.
     obs->AddObserver(sSelf, "domstorage-test-flushed", true);
   }

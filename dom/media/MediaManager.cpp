@@ -1449,7 +1449,7 @@ MediaManager::NotifyRecordingStatusChange(nsPIDOMWindow* aWindow,
 
   // Forward recording events to parent process.
   // The events are gathered in chrome process and used for recording indicator
-  if (!XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
     unused <<
       dom::ContentChild::GetSingleton()->SendRecordingDeviceEvents(aMsg,
                                                                    requestURL,

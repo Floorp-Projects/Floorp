@@ -589,7 +589,7 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
   }
 #endif
 
-  if (XRE_IsContentProcess()) {
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
     process = kContent;
   } else {
     process = kMain;

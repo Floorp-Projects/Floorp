@@ -443,7 +443,7 @@ WifiCertService::~WifiCertService()
 already_AddRefed<WifiCertService>
 WifiCertService::FactoryCreate()
 {
-  if (!XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
     return nullptr;
   }
 

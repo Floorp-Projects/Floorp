@@ -1645,7 +1645,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   // updates, so calculate that now before we call EndTransaction.
   if (rootPresContext &&
       aBuilder->WillComputePluginGeometry() &&
-      XRE_IsContentProcess()) {
+      XRE_GetProcessType() == GeckoProcessType_Content) {
     rootPresContext->ComputePluginGeometryUpdates(aBuilder->RootReferenceFrame(), aBuilder, this);
     rootPresContext->CollectPluginGeometryUpdates(layerManager);
   }

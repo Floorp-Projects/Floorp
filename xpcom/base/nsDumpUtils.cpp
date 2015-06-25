@@ -262,7 +262,7 @@ FifoWatcher::MaybeCreate()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
     // We want this to be main-process only, since two processes can't listen
     // to the same fifo.
     return false;
