@@ -18,11 +18,13 @@ EXTRA_JS_MODULES += [
 EXPORTS.mozilla.dom += [
     'DesktopNotification.h',
     'Notification.h',
+    'NotificationEvent.h',
 ]
 
 UNIFIED_SOURCES += [
     'DesktopNotification.cpp',
     'Notification.cpp',
+    'NotificationEvent.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
