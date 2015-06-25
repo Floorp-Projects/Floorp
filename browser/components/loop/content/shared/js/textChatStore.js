@@ -96,7 +96,9 @@ loop.store.TextChatStore = (function() {
         type: type,
         contentType: messageData.contentType,
         message: messageData.message,
-        extraData: messageData.extraData
+        extraData: messageData.extraData,
+        sentTimestamp: messageData.sentTimestamp,
+        receivedTimestamp: messageData.receivedTimestamp
       };
       var newList = this._storeState.messageList.concat(message);
       this.setStoreState({ messageList: newList });
