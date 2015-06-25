@@ -65,12 +65,6 @@ extern mozilla::ThreadLocal<PerThreadData*> TlsPerThreadData;
 
 struct DtoaState;
 
-#ifdef JS_SIMULATOR_ARM64
-namespace vixl {
-class Simulator;
-}
-#endif
-
 namespace js {
 
 extern MOZ_COLD void
@@ -92,14 +86,9 @@ namespace jit {
 class JitRuntime;
 class JitActivation;
 struct PcScriptCache;
+class Simulator;
 struct AutoFlushICache;
 class CompileRuntime;
-
-#ifdef JS_SIMULATOR_ARM64
-typedef vixl::Simulator Simulator;
-#elif defined(JS_SIMULATOR)
-class Simulator;
-#endif
 }
 
 /*

@@ -9080,8 +9080,7 @@ GenerateAsyncInterruptExit(ModuleCompiler& m, Label* throwLabel)
     masm.transferReg(lr);
     masm.finishDataTransfer();
     masm.ret();
-#elif defined(JS_CODEGEN_ARM64)
-    MOZ_CRASH();
+
 #elif defined (JS_CODEGEN_NONE)
     MOZ_CRASH();
 #else
