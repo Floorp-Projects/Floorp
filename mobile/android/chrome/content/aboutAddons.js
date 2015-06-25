@@ -4,6 +4,8 @@
 
 "use strict";
 
+/*globals gChromeWin */
+
 let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm")
@@ -14,14 +16,14 @@ const AMO_ICON = "chrome://browser/skin/images/amo-logo.png";
 
 let gStringBundle = Services.strings.createBundle("chrome://browser/locale/aboutAddons.properties");
 
-XPCOMUtils.defineLazyGetter(window, "gChromeWin", function()
+XPCOMUtils.defineLazyGetter(window, "gChromeWin", function() {
   window.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIWebNavigation)
     .QueryInterface(Ci.nsIDocShellTreeItem)
     .rootTreeItem
     .QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIDOMWindow)
-    .QueryInterface(Ci.nsIDOMChromeWindow));
+    .QueryInterface(Ci.nsIDOMChromeWindow)});
 
 var ContextMenus = {
   target: null,

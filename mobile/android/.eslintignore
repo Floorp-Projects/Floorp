@@ -3,6 +3,10 @@ tests/
 
 # Uses `#filter substitution`
 app/mobile.js
+chrome/content/healthreport-prefs.js
+
+# Uses `#expand`
+chrome/content/about.js
 
 # Not much JS to lint and non-standard at that
 installer/
