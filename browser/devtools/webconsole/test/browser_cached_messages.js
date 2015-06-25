@@ -3,12 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Test to see if the cached messages are displayed when the console UI is opened.
+// Test to see if the cached messages are displayed when the console UI is
+// opened.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-webconsole-error-observer.html";
+"use strict";
 
-function test()
-{
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-webconsole-error-observer.html";
+
+function test() {
   waitForExplicitFinish();
 
   expectUncaughtException();
@@ -16,8 +19,7 @@ function test()
   loadTab(TEST_URI).then(testOpenUI);
 }
 
-function testOpenUI(aTestReopen)
-{
+function testOpenUI(aTestReopen) {
   openConsole().then((hud) => {
     waitForMessages({
       webconsole: hud,

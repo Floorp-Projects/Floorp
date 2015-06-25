@@ -11,8 +11,8 @@ function test() {
   let outputNode;
   let contextMenu;
 
-  const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
-  const TEST_FILE = TEST_URI.substr(TEST_URI.lastIndexOf("/"));
+  const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                   "test/test-console.html";
 
   Task.spawn(runner).then(finishTest);
 
@@ -42,20 +42,24 @@ function test() {
     let message = [...results.matched][0];
     message.scrollIntoView();
 
-    yield waitForContextMenu(contextMenu, message, copyFromPopup, testContextMenuCopy);
+    yield waitForContextMenu(contextMenu, message, copyFromPopup,
+                             testContextMenuCopy);
 
     function copyFromPopup() {
       let copyItem = contextMenu.querySelector("#cMenu_copy");
       copyItem.doCommand();
 
-      let controller = top.document.commandDispatcher.getControllerForCommand("cmd_copy");
+      let controller = top.document.commandDispatcher
+                                   .getControllerForCommand("cmd_copy");
       is(controller.isCommandEnabled("cmd_copy"), true, "cmd_copy is enabled");
     }
 
     function testContextMenuCopy() {
-      waitForClipboard((str) => { return message.textContent.trim() == str.trim(); },
-        () => { goDoCommand("cmd_copy") },
-        () => {}, () => {}
+      waitForClipboard((str) => {
+        return message.textContent.trim() == str.trim();
+      }, () => {
+        goDoCommand("cmd_copy");
+      }, () => {}, () => {}
       );
     }
 
