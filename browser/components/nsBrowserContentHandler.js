@@ -393,14 +393,26 @@ nsBrowserContentHandler.prototype = {
         openPreferences();
         cmdLine.preventDefault = true;
       } else try {
-        // only load URIs which do not inherit chrome privs
-        var features = "chrome,dialog=no,all" + this.getFeatures(cmdLine);
         var uri = resolveURIInternal(cmdLine, chromeParam);
-        var netutil = Components.classes["@mozilla.org/network/util;1"]
-                                .getService(nsINetUtil);
-        if (!netutil.URIChainHasFlags(uri, URI_INHERITS_SECURITY_CONTEXT)) {
-          openWindow(null, uri.spec, "_blank", features);
-          cmdLine.preventDefault = true;
+        let isLocal = (uri) => {
+          let localSchemes = new Set("chrome", "file", "resource");
+          if (uri instanceof Components.interfaces.nsINestedURI) {
+            uri = uri.QueryInterface(Components.interfaces.nsINestedURI).innerMostURI;
+          }
+          return localSchemes.has(uri.scheme);
+        };
+        if (isLocal(uri)) {
+          // only load URIs which do not inherit chrome privs
+          var features = "chrome,dialog=no,all" + this.getFeatures(cmdLine);
+          var netutil = Components.classes["@mozilla.org/network/util;1"]
+                                  .getService(nsINetUtil);
+          if (!netutil.URIChainHasFlags(uri, URI_INHERITS_SECURITY_CONTEXT)) {
+            openWindow(null, uri.spec, "_blank", features);
+            cmdLine.preventDefault = true;
+          }
+        } else {
+          dump("*** Preventing load of web URI as chrome\n");
+          dump("    If you're trying to load a webpage, do not pass --chrome.\n");
         }
       }
       catch (e) {
