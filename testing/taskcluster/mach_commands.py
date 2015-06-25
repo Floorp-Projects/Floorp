@@ -10,7 +10,6 @@ import os
 import json
 import copy
 import sys
-import urllib2
 
 from mach.decorators import (
     CommandArgument,
@@ -58,6 +57,7 @@ def docker_image(name):
     return '{}/{}:{}'.format(repository, name, version)
 
 def get_task(task_id):
+    import urllib2
     return json.load(urllib2.urlopen("https://queue.taskcluster.net/v1/task/" + task_id))
 
 
