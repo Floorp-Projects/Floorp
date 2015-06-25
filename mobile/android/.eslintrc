@@ -23,6 +23,7 @@ globals:
     Services: false
     SharedPreferences: false
     strings: false
+    Strings: false
     Task: false
     TelemetryStopwatch: false
     UITelemetry: false
