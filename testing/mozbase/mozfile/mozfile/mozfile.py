@@ -6,6 +6,8 @@
 
 # We don't import all modules at the top for performance reasons. See Bug 1008943
 
+from __future__ import absolute_import
+
 from contextlib import contextmanager
 import errno
 import os
