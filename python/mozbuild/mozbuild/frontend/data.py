@@ -17,9 +17,6 @@ structures.
 
 from __future__ import unicode_literals
 
-import os
-
-from collections import OrderedDict
 from mozbuild.util import (
     shell_quote,
     StrictOrderingOnAppendList,

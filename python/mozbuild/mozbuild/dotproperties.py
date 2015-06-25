@@ -10,7 +10,6 @@ from __future__ import unicode_literals
 
 import codecs
 import re
-import os
 import sys
 
 if sys.version_info[0] == 3:

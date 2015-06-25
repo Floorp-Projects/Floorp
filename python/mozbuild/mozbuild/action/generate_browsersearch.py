@@ -38,7 +38,6 @@ from __future__ import (
 import argparse
 import codecs
 import json
-import re
 import sys
 import os
 

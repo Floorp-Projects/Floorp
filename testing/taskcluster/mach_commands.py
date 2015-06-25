@@ -5,10 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import os.path
 import json
 import copy
-import datetime
 import sys
 import urllib2
 
