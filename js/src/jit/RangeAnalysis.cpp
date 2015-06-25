@@ -2902,10 +2902,13 @@ ComputeTruncateKind(MDefinition* candidate, bool* shouldClone)
     const Range* r = candidate->range();
     bool canHaveRoundingErrors = !r || r->canHaveRoundingErrors();
 
-    // Special case integer division: the result of a/b can be infinite
-    // but cannot actually have rounding errors induced by truncation.
-    if (candidate->isDiv() && candidate->toDiv()->specialization() == MIRType_Int32)
+    // Special case integer division and modulo: a/b can be infinite, and a%b
+    // can be NaN but cannot actually have rounding errors induced by truncation.
+    if ((candidate->isDiv() || candidate->isMod()) &&
+        static_cast<const MBinaryArithInstruction *>(candidate)->specialization() == MIRType_Int32)
+    {
         canHaveRoundingErrors = false;
+    }
 
     if (canHaveRoundingErrors)
         return MDefinition::NoTruncate;
