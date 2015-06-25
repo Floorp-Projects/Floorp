@@ -4264,8 +4264,8 @@ nsComputedDOMStyle::DoGetHeight()
                           &nsComputedDOMStyle::GetCBContentHeight,
                           nscoord_MAX, true);
 
-    SetValueToCoord(val, positionData->mHeight, true, nullptr, nullptr,
-                    minHeight, maxHeight);
+    SetValueToCoord(val, positionData->mHeight, true, nullptr,
+                    nsCSSProps::kWidthKTable, minHeight, maxHeight);
   }
 
   return val;
@@ -4320,7 +4320,8 @@ nsComputedDOMStyle::DoGetMaxHeight()
 {
   nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
   SetValueToCoord(val, StylePosition()->mMaxHeight, true,
-                  &nsComputedDOMStyle::GetCBContentHeight);
+                  &nsComputedDOMStyle::GetCBContentHeight,
+                  nsCSSProps::kWidthKTable);
   return val;
 }
 
@@ -4349,7 +4350,8 @@ nsComputedDOMStyle::DoGetMinHeight()
   }
 
   SetValueToCoord(val, minHeight, true,
-                  &nsComputedDOMStyle::GetCBContentHeight);
+                  &nsComputedDOMStyle::GetCBContentHeight,
+                  nsCSSProps::kWidthKTable);
   return val;
 }
 

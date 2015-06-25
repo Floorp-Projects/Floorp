@@ -158,7 +158,6 @@ public:
   using Link::SetHash;
 
   // The Link::GetSearchParams is OK for us
-  // The Link::SetSearchParams is OK for us
 
   bool NoHref() const
   {

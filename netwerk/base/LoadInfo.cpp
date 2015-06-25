@@ -14,6 +14,7 @@
 #include "nsIFrameLoader.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsUtils.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 
@@ -172,8 +173,14 @@ LoadInfo::GetLoadingSandboxed(bool* aLoadingSandboxed)
 NS_IMETHODIMP
 LoadInfo::GetContentPolicyType(nsContentPolicyType* aResult)
 {
-  *aResult = mContentPolicyType;
+  *aResult = nsContentUtils::InternalContentPolicyTypeToExternal(mContentPolicyType);
   return NS_OK;
+}
+
+nsContentPolicyType
+LoadInfo::InternalContentPolicyType()
+{
+  return mContentPolicyType;
 }
 
 NS_IMETHODIMP
