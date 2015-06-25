@@ -38,7 +38,7 @@ AndroidCameraInputStream::~AndroidCameraInputStream() {
 NS_IMETHODIMP
 AndroidCameraInputStream::Init(nsACString& aContentType, nsCaptureParams* aParams)
 {
-  if (!XRE_IsParentProcess())
+  if (XRE_GetProcessType() != GeckoProcessType_Default)
     return NS_ERROR_NOT_IMPLEMENTED;
 
   mContentType = aContentType;

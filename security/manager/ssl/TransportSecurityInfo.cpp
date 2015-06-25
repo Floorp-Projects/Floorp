@@ -239,7 +239,7 @@ TransportSecurityInfo::formatErrorMessage(MutexAutoLock const & proofOfLock,
     return NS_OK;
   }
 
-  if (!XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
     return NS_ERROR_UNEXPECTED;
   }
 

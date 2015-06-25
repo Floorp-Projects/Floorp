@@ -739,7 +739,7 @@ void nsFormFillController::RevalidateDataList()
     return;
   }
 
-  if (XRE_IsContentProcess()) {
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
     nsCOMPtr<nsIAutoCompleteController> controller(do_QueryInterface(mLastListener));
     if (!controller) {
       return;

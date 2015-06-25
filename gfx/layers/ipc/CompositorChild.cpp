@@ -162,7 +162,7 @@ CompositorChild::OpenSameProcess(CompositorParent* aParent)
 CompositorChild::Get()
 {
   // This is only expected to be used in child processes.
-  MOZ_ASSERT(!XRE_IsParentProcess());
+  MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Default);
   return sCompositor;
 }
 

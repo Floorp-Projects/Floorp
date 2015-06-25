@@ -101,7 +101,7 @@ NS_CreateMobileConnectionService()
 {
   nsCOMPtr<nsIMobileConnectionService> service;
 
-  if (XRE_IsContentProcess()) {
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
     service = new mozilla::dom::mobileconnection::MobileConnectionIPCService();
   } else {
 #if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)

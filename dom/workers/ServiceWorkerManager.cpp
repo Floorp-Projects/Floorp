@@ -403,7 +403,7 @@ ServiceWorkerManager::Init()
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  if (XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
     nsRefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
     MOZ_ASSERT(swr);
 
@@ -4671,7 +4671,7 @@ void
 ServiceWorkerManager::PropagateRemoveAll()
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 
   if (!mActor) {
     nsRefPtr<nsIRunnable> runnable = new PropagateRemoveAllRunnable();
@@ -4728,21 +4728,21 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
                               const char16_t* aData)
 {
   if (strcmp(aTopic, PURGE_SESSION_HISTORY) == 0) {
-    MOZ_ASSERT(XRE_IsParentProcess());
+    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
     RemoveAll();
     PropagateRemoveAll();
     return NS_OK;
   }
 
   if (strcmp(aTopic, PURGE_DOMAIN_DATA) == 0) {
-    MOZ_ASSERT(XRE_IsParentProcess());
+    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
     nsAutoString domain(aData);
     RemoveAndPropagate(NS_ConvertUTF16toUTF8(domain));
     return NS_OK;
   }
 
   if (strcmp(aTopic, WEBAPPS_CLEAR_DATA) == 0) {
-    MOZ_ASSERT(XRE_IsParentProcess());
+    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
     nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
       do_QueryInterface(aSubject);
     if (NS_WARN_IF(!params)) {
@@ -4782,7 +4782,7 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
     if (obs) {
       obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 
-      if (XRE_IsParentProcess()) {
+      if (XRE_GetProcessType() == GeckoProcessType_Default) {
         obs->RemoveObserver(this, PURGE_SESSION_HISTORY);
         obs->RemoveObserver(this, PURGE_DOMAIN_DATA);
         obs->RemoveObserver(this, WEBAPPS_CLEAR_DATA);
