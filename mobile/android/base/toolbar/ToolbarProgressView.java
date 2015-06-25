@@ -17,9 +17,13 @@
 package org.mozilla.gecko.toolbar;
 
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.widget.ThemedImageView;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
@@ -27,7 +31,6 @@ import android.os.Message;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.animation.Animation;
-import android.widget.ImageView;
 
 /**
  * Progress view used for page loads.
@@ -36,7 +39,7 @@ import android.widget.ImageView;
  * bar also includes incremental animation between each step to improve
  * perceived performance.
  */
-public class ToolbarProgressView extends ImageView {
+public class ToolbarProgressView extends ThemedImageView {
     private static final int MAX_PROGRESS = 10000;
     private static final int MSG_UPDATE = 0;
     private static final int MSG_HIDE = 1;
@@ -49,6 +52,8 @@ public class ToolbarProgressView extends ImageView {
     private Handler mHandler;
     private int mCurrentProgress;
 
+    private PorterDuffColorFilter mPrivateBrowsingColorFilter;
+
     public ToolbarProgressView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init(context);
@@ -59,14 +64,12 @@ public class ToolbarProgressView extends ImageView {
         init(context);
     }
 
-    public ToolbarProgressView(Context context) {
-        super(context);
-        init(context);
-    }
-
     private void init(Context ctx) {
         mBounds = new Rect(0,0,0,0);
         mTargetProgress = 0;
+
+        mPrivateBrowsingColorFilter =
+                new PorterDuffColorFilter(R.color.private_browsing_purple, PorterDuff.Mode.SRC_IN);
 
         mHandler = new Handler() {
             @Override
@@ -185,5 +188,17 @@ public class ToolbarProgressView extends ImageView {
     private void updateBounds() {
         mBounds.right = getWidth() * mCurrentProgress / MAX_PROGRESS;
         invalidate();
+    }
+
+    @Override
+    public void setPrivateMode(final boolean isPrivate) {
+        super.setPrivateMode(isPrivate);
+
+        // Note: android:tint is better but ColorStateLists are not supported until API 21.
+        if (isPrivate) {
+            setColorFilter(mPrivateBrowsingColorFilter);
+        } else {
+            clearColorFilter();
+        }
     }
 }
