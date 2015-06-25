@@ -1,0 +1,9 @@
+chrome/content
+tests/
+
+# Uses `#filter substitution`
+app/mobile.js
+
+# Not much JS to lint and non-standard at that
+installer/
+locales/
