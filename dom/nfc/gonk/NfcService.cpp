@@ -453,7 +453,7 @@ NfcService::OnConnectSuccess(int aIndex)
 
   switch (aIndex) {
     case LISTEN_SOCKET: {
-        nsCString value("nfcd:-a ");
+        nsCString value("nfcd:-S -a ");
         value.Append(mListenSocketName);
         if (NS_WARN_IF(property_set("ctl.start", value.get()) < 0)) {
           OnConnectError(STREAM_SOCKET);
