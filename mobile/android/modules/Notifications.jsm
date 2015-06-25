@@ -19,7 +19,7 @@ let _handlersMap = {};
 
 function Notification(aId, aOptions) {
   this._id = aId;
-  this._when = (new Date).getTime();
+  this._when = (new Date()).getTime();
   this.fillWithOptions(aOptions);
 }
 
