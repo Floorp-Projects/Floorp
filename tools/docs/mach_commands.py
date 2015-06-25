@@ -13,7 +13,6 @@ from mach.decorators import (
 )
 
 from mozbuild.base import MachCommandBase
-from mozbuild.frontend.reader import BuildReader
 
 
 @CommandProvider

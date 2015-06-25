@@ -5,10 +5,6 @@
 # Integrates luciddream test runner with mach.
 
 import os
-import re
-import sys
-
-import mozpack.path as mozpath
 
 from mozbuild.base import (
     MachCommandBase,

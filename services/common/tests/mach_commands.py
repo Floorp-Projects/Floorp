@@ -4,12 +4,7 @@
 
 from __future__ import unicode_literals
 
-import logging
 import mozpack.path as mozpath
-import os
-import sys
-import warnings
-import which
 
 from mozbuild.base import (
     MachCommandBase,
