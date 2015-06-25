@@ -18,17 +18,15 @@
 #include "jit/RegisterSets.h"
 #include "vm/HelperThreads.h"
 
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
-// Push return addresses callee-side.
-# define JS_USE_LINK_REGISTER
+#if defined(JS_CODEGEN_ARM)
+#define JS_USE_LINK_REGISTER
 #endif
 
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
 // JS_SMALL_BRANCH means the range on a branch instruction
 // is smaller than the whole address space
-# define JS_SMALL_BRANCH
+#    define JS_SMALL_BRANCH
 #endif
-
 namespace js {
 namespace jit {
 
@@ -708,13 +706,9 @@ static const uint32_t AsmJSFrameBytesAfterReturnAddress = sizeof(void*);
 // everywhere. Values are asserted in AsmJSModule.h.
 static const unsigned AsmJSActivationGlobalDataOffset = 0;
 static const unsigned AsmJSHeapGlobalDataOffset = sizeof(void*);
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64)
-static const unsigned AsmJSNaN64GlobalDataOffset = 3 * sizeof(void*);
-static const unsigned AsmJSNaN32GlobalDataOffset = 3 * sizeof(void*) + sizeof(double);
-#else
-static const unsigned AsmJSNaN64GlobalDataOffset = 4 * sizeof(void*);
-static const unsigned AsmJSNaN32GlobalDataOffset = 4 * sizeof(void*) + sizeof(double);
-#endif
+static const unsigned AsmJSNaN64GlobalDataOffset = 2 * sizeof(void*);
+static const unsigned AsmJSNaN32GlobalDataOffset = 2 * sizeof(void*) + sizeof(double);
+
 // Summarizes a heap access made by asm.js code that needs to be patched later
 // and/or looked up by the asm.js signal handlers. Different architectures need
 // to know different things (x64: offset and length, ARM: where to patch in
@@ -775,7 +769,7 @@ class AsmJSHeapAccess
         cmpDelta_ = cmp == NoLengthCheck ? 0 : insnOffset - cmp;
         MOZ_ASSERT(offsetWithinWholeSimdVector_ == offsetWithinWholeSimdVector);
     }
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS)
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     explicit AsmJSHeapAccess(uint32_t insnOffset)
     {
         mozilla::PodZero(this);  // zero padding for Valgrind
