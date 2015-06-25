@@ -83,22 +83,6 @@ TestRPCParent::RecvTest2_OutOfOrder()
   return true;
 }
 
-bool
-TestRPCParent::RecvTest3_Start(uint32_t* aResult)
-{
-  if (!SendTest3_WakeUp(aResult))
-    fail("SendTest3_WakeUp");
-
-  return true;
-}
-
-bool
-TestRPCParent::RecvTest3_InnerEvent(uint32_t* aResult)
-{
-  *aResult = 200;
-  return true;
-}
-
 //-----------------------------------------------------------------------------
 // child
 
@@ -127,12 +111,6 @@ TestRPCChild::RecvStart()
 
   if (!SendTest2_OutOfOrder())
     fail("SendTest2_OutOfOrder");
-
-  result = 0;
-  if (!SendTest3_Start(&result))
-    fail("SendTest3_Start");
-  if (result != 200)
-    fail("Wrong result (expected 200)");
 
   Close();
   return true;
@@ -167,15 +145,6 @@ TestRPCChild::RecvTest2_FirstUrgent()
 bool
 TestRPCChild::RecvTest2_SecondUrgent()
 {
-  return true;
-}
-
-bool
-TestRPCChild::RecvTest3_WakeUp(uint32_t* aResult)
-{
-  if (!SendTest3_InnerEvent(aResult))
-    fail("SendTest3_InnerEvent");
-
   return true;
 }
 
