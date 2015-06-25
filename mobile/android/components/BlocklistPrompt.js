@@ -48,7 +48,7 @@ BlocklistPrompt.prototype = {
     // Disable softblocked items automatically
     for (let i = 0; i < aAddons.length; i++) {
       if (aAddons[i].item instanceof Ci.nsIPluginTag)
-        addonList[i].item.disabled = true;
+        aAddons[i].item.disabled = true;
       else
         aAddons[i].item.userDisabled = true;
     }
