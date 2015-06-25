@@ -764,6 +764,22 @@ class MachCommandConditions(object):
             return cls.substs.get('MOZ_WIDGET_TOOLKIT') == 'android'
         return False
 
+    @staticmethod
+    def is_hg(cls):
+        """Must have a mercurial source checkout."""
+        if hasattr(cls, 'substs'):
+            top_srcdir = cls.substs.get('top_srcdir')
+            return top_srcdir and os.path.isdir(os.path.join(top_srcdir, '.hg'))
+        return False
+
+    @staticmethod
+    def is_git(cls):
+        """Must have a git source checkout."""
+        if hasattr(cls, 'substs'):
+            top_srcdir = cls.substs.get('top_srcdir')
+            return top_srcdir and os.path.isdir(os.path.join(top_srcdir, '.git'))
+        return False
+
 
 class PathArgument(object):
     """Parse a filesystem path argument and transform it in various ways."""
