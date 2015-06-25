@@ -303,12 +303,12 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(URLSearchParams)
 NS_INTERFACE_MAP_END
 
 URLSearchParams::URLSearchParams(URLSearchParamsObserver* aObserver)
-  : mParams(new URLParams())
+  : mParams(new URLParams()), mObserver(aObserver)
 {
 }
 
 URLSearchParams::URLSearchParams(const URLSearchParams& aOther)
-  : mParams(new URLParams(*aOther.mParams.get()))
+  : mParams(new URLParams(*aOther.mParams.get())), mObserver(aOther.mObserver)
 {
 }
 
