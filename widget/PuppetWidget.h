@@ -313,7 +313,7 @@ private:
   mozilla::RefPtr<DrawTarget> mDrawTarget;
   // IME
   nsIMEUpdatePreference mIMEPreferenceOfParent;
-  ContentCache mContentCache;
+  ContentCacheInChild mContentCache;
   bool mNeedIMEStateInit;
 
   // The DPI of the screen corresponding to this widget
