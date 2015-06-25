@@ -791,6 +791,46 @@ MessageChannel::ProcessPendingRequests()
 }
 
 bool
+MessageChannel::WasTransactionCanceled(int transaction, int prio)
+{
+    if (transaction == mCurrentTransaction) {
+        return false;
+    }
+
+    // This isn't an assert so much as an intentional crash because we're in a
+    // situation that we don't know how to recover from: The child is awaiting
+    // a reply to a normal-priority sync message. The transaction that this
+    // message initiated has now been canceled. That could only happen if a CPOW
+    // raced with the sync message and was dispatched by the child while the
+    // child was awaiting the sync reply; at some point while dispatching the
+    // CPOW, the transaction was canceled.
+    //
+    // Notes:
+    //
+    // 1. We don't want to cancel the normal-priority sync message along with
+    // the CPOWs because the browser relies on these messages working
+    // reliably.
+    //
+    // 2. Ideally we would like to avoid dispatching CPOWs while awaiting a sync
+    // response. This isn't possible though. To avoid deadlock, the parent would
+    // have to dispatch the sync message while waiting for the CPOW
+    // response. However, it wouldn't have dispatched async messages at that
+    // time, so we would have a message ordering bug. Dispatching the async
+    // messages first causes other hard-to-handle situations (what if they send
+    // CPOWs?).
+    //
+    // 3. We would like to be able to cancel the CPOWs but not the sync
+    // message. However, that would leave both the parent and the child running
+    // code at the same time, all while the sync message is still
+    // outstanding. That can cause a problem where message replies are received
+    // out of order.
+    IPC_ASSERT(prio != IPC::Message::PRIORITY_NORMAL,
+               "Intentional crash: We canceled a CPOW that was racing with a sync message.");
+
+    return true;
+}
+
+bool
 MessageChannel::Send(Message* aMsg, Message* aReply)
 {
     // See comment in DispatchSyncMessage.
@@ -869,8 +909,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     msg->set_transaction_id(transaction);
 
     ProcessPendingRequests();
-    if (mCurrentTransaction != transaction) {
-        // Transaction was canceled when dispatching.
+    if (WasTransactionCanceled(transaction, prio)) {
         return false;
     }
 
@@ -878,8 +917,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 
     while (true) {
         ProcessPendingRequests();
-        if (mCurrentTransaction != transaction) {
-            // Transaction was canceled when dispatching.
+        if (WasTransactionCanceled(transaction, prio)) {
             return false;
         }
 
@@ -902,8 +940,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
             return false;
         }
 
-        if (mCurrentTransaction != transaction) {
-            // Transaction was canceled by other side.
+        if (WasTransactionCanceled(transaction, prio)) {
             return false;
         }
 
