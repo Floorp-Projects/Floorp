@@ -104,6 +104,9 @@ void md4sum(const uint8_t *input, uint32_t inputLen, uint8_t *result)
 {
   uint8_t final[128];
   uint32_t i, n, m, state[4];
+  uint64_t inputLenBits;
+  uint32_t inputLenBitsLow;
+  uint32_t inputLenBitsHigh;
 
   /* magic initial states */
   state[0] = 0x67452301;
@@ -124,8 +127,14 @@ void md4sum(const uint8_t *input, uint32_t inputLen, uint8_t *result)
   final[n] = 0x80;
   memset(final + n + 1, 0, 120 - (n + 1));
 
-  inputLen = inputLen << 3;
-  w2b(final + (n >= 56 ? 120 : 56), &inputLen, 4);
+  /* Append the original input length in bits as a 64-bit number. This is done
+   * in two 32-bit chunks, with the least-significant 32 bits first.
+   * w2b will handle endianness. */
+  inputLenBits = inputLen << 3;
+  inputLenBitsLow = (uint32_t)(inputLenBits & 0xFFFFFFFF);
+  w2b(final + (n >= 56 ? 120 : 56), &inputLenBitsLow, 4);
+  inputLenBitsHigh = (uint32_t)((inputLenBits >> 32) & 0xFFFFFFFF);
+  w2b(final + (n >= 56 ? 124 : 60), &inputLenBitsHigh, 4);
 
   md4step(state, final);
   if (n >= 56)
