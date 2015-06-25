@@ -2860,7 +2860,7 @@ nsPresContext::IsCrossProcessRootContentDocument()
     return false;
   }
 
-  if (XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
     return true;
   }
 
@@ -2996,7 +2996,7 @@ nsRootPresContext::ComputePluginGeometryUpdates(nsIFrame* aFrame,
   // This is not happening during a paint event.
   ApplyPluginGeometryUpdates();
 #else
-  if (XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
     InitApplyPluginGeometryTimer();
   }
 #endif

@@ -3402,7 +3402,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     // except requesting composition. Geometry updates were calculated and
     // shipped to the chrome process in nsDisplayList when the layer
     // transaction completed.
-    if (XRE_IsParentProcess()) {
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
       rootPresContext->ComputePluginGeometryUpdates(aFrame, &builder, &list);
       // We're not going to get a WillPaintWindow event here if we didn't do
       // widget invalidation, so just apply the plugin geometry update here

@@ -70,7 +70,7 @@ bool nsPSMInitPanic::isPanic = false;
 bool EnsureNSSInitializedChromeOrContent()
 {
   nsresult rv;
-  if (XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
     nsCOMPtr<nsISupports> nss = do_GetService(PSM_COMPONENT_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
       return false;

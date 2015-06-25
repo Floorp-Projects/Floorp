@@ -447,7 +447,7 @@ TabParent::Destroy()
   }
   mIsDestroyed = true;
 
-  if (XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
     Manager()->AsContentParent()->NotifyTabDestroying(this);
   }
 
@@ -465,7 +465,7 @@ TabParent::Destroy()
 bool
 TabParent::Recv__delete__()
 {
-  if (XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
     Manager()->AsContentParent()->NotifyTabDestroyed(this, mMarkedDestroying);
     ContentParent::DeallocateTabId(mTabId,
                                    Manager()->AsContentParent()->ChildID());

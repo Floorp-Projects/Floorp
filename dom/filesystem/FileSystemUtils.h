@@ -41,6 +41,9 @@ public:
   static bool
   IsDescendantPath(const nsAString& aPath, const nsAString& aDescendantPath);
 
+  static bool
+  IsParentProcess();
+
   static const char16_t kSeparatorChar = char16_t('/');
 };
 
