@@ -45,7 +45,8 @@
                  type="search" placeholder="&filterStylesPlaceholder;"/>
           <button id="ruleview-searchinput-clear" class="devtools-searchinput-clear"></button>
         </div>
-        <button id="ruleview-add-rule-button" title="&addRuleButtonTooltip;" class="devtools-button"></button>
+        <!-- TODO : Bug 1165122 : Show this button by default -->
+        <button hidden="true" id="ruleview-add-rule-button" title="&addRuleButtonTooltip;" class="devtools-button"></button>
         <button id="pseudo-class-panel-toggle" title="&togglePseudoClassPanel;" class="devtools-button"></button>
       </div>
       <div id="pseudo-class-panel" class="devtools-toolbar" hidden="true">
