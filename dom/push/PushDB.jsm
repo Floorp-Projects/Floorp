@@ -23,10 +23,11 @@ const prefs = new Preferences("dom.push.");
 
 this.EXPORTED_SYMBOLS = ["PushDB"];
 
-this.PushDB = function PushDB(dbName, dbVersion, dbStoreName, schemaFunction) {
+this.PushDB = function PushDB(dbName, dbVersion, dbStoreName, keyPath, model) {
   debug("PushDB()");
   this._dbStoreName = dbStoreName;
-  this._schemaFunction = schemaFunction;
+  this._keyPath = keyPath;
+  this._model = model;
 
   // set the indexeddb database
   this.initDBHelper(dbName, dbVersion,
@@ -38,9 +39,48 @@ this.PushDB = function PushDB(dbName, dbVersion, dbStoreName, schemaFunction) {
 this.PushDB.prototype = {
   __proto__: IndexedDBHelper.prototype,
 
+  toPushRecord: function(record) {
+    if (!record) {
+      return;
+    }
+    return new this._model(record);
+  },
+
+  isValidRecord: function(record) {
+    return record && typeof record.scope == "string" &&
+           typeof record.originAttributes == "string" &&
+           record.quota >= 0 &&
+           typeof record[this._keyPath] == "string";
+  },
+
   upgradeSchema: function(aTransaction, aDb, aOldVersion, aNewVersion) {
-    if (this._schemaFunction) {
-      this._schemaFunction(aTransaction, aDb, aOldVersion, aNewVersion, this);
+    if (aOldVersion <= 3) {
+      //XXXnsm We haven't shipped Push during this upgrade, so I'm just going to throw old
+      //registrations away without even informing the app.
+      if (aDb.objectStoreNames.contains(this._dbStoreName)) {
+        aDb.deleteObjectStore(this._dbStoreName);
+      }
+
+      let objectStore = aDb.createObjectStore(this._dbStoreName,
+                                              { keyPath: this._keyPath });
+
+      // index to fetch records based on endpoints. used by unregister
+      objectStore.createIndex("pushEndpoint", "pushEndpoint", { unique: true });
+
+      // index to fetch records by identifiers.
+      // In the current security model, the originAttributes distinguish between
+      // different 'apps' on the same origin. Since ServiceWorkers are
+      // same-origin to the scope they are registered for, the attributes and
+      // scope are enough to reconstruct a valid principal.
+      objectStore.createIndex("identifiers", ["scope", "originAttributes"], { unique: true });
+      objectStore.createIndex("originAttributes", "originAttributes", { unique: false });
+    }
+
+    if (aOldVersion < 4) {
+      let objectStore = aTransaction.objectStore(this._dbStoreName);
+
+      // index to fetch active and expired registrations.
+      objectStore.createIndex("quota", "quota", { unique: false });
     }
   },
 
@@ -51,15 +91,25 @@ this.PushDB.prototype = {
 
   put: function(aRecord) {
     debug("put()" + JSON.stringify(aRecord));
+    if (!this.isValidRecord(aRecord)) {
+      return Promise.reject(new TypeError(
+        "Scope, originAttributes, and quota are required! " +
+          JSON.stringify(aRecord)
+        )
+      );
+    }
 
     return new Promise((resolve, reject) =>
       this.newTxn(
         "readwrite",
         this._dbStoreName,
-        function txnCb(aTxn, aStore) {
-          aStore.put(aRecord).onsuccess = function setTxnResult(aEvent) {
+        (aTxn, aStore) => {
+          aTxn.result = undefined;
+
+          aStore.put(aRecord).onsuccess = aEvent => {
             debug("Request successful. Updated record ID: " +
                   aEvent.target.result);
+            aTxn.result = this.toPushRecord(aRecord);
           };
         },
         resolve,
@@ -111,12 +161,12 @@ this.PushDB.prototype = {
       this.newTxn(
         "readonly",
         this._dbStoreName,
-        function txnCb(aTxn, aStore) {
+        (aTxn, aStore) => {
           aTxn.result = undefined;
 
           let index = aStore.index("pushEndpoint");
-          index.get(aPushEndpoint).onsuccess = function setTxnResult(aEvent) {
-            aTxn.result = aEvent.target.result;
+          index.get(aPushEndpoint).onsuccess = aEvent => {
+            aTxn.result = this.toPushRecord(aEvent.target.result);
             debug("Fetch successful " + aEvent.target.result);
           };
         },
@@ -133,11 +183,11 @@ this.PushDB.prototype = {
       this.newTxn(
         "readonly",
         this._dbStoreName,
-        function txnCb(aTxn, aStore) {
+        (aTxn, aStore) => {
           aTxn.result = undefined;
 
-          aStore.get(aKeyID).onsuccess = function setTxnResult(aEvent) {
-            aTxn.result = aEvent.target.result;
+          aStore.get(aKeyID).onsuccess = aEvent => {
+            aTxn.result = this.toPushRecord(aEvent.target.result);
             debug("Fetch successful " + aEvent.target.result);
           };
         },
@@ -161,14 +211,14 @@ this.PushDB.prototype = {
       this.newTxn(
         "readonly",
         this._dbStoreName,
-        function txnCb(aTxn, aStore) {
+        (aTxn, aStore) => {
           aTxn.result = undefined;
 
           let index = aStore.index("identifiers");
           let request = index.get(IDBKeyRange.only([aPageRecord.scope, aPageRecord.originAttributes]));
-          request.onsuccess = function setTxnResult(aEvent) {
-            aTxn.result = aEvent.target.result;
-          }
+          request.onsuccess = aEvent => {
+            aTxn.result = this.toPushRecord(aEvent.target.result);
+          };
         },
         resolve,
         reject
@@ -181,7 +231,7 @@ this.PushDB.prototype = {
       this.newTxn(
         "readonly",
         this._dbStoreName,
-        function txnCb(aTxn, aStore) {
+        (aTxn, aStore) => {
           aTxn.result = undefined;
 
           let index = aStore.index(aKeyName);
@@ -189,9 +239,10 @@ this.PushDB.prototype = {
           // high storage APIs, we don't expect more than a handful of
           // registrations per domain, and usually only one.
           let getAllReq = index.mozGetAll(aKeyValue);
-          getAllReq.onsuccess = function setTxnResult(aEvent) {
-            aTxn.result = aEvent.target.result;
-          }
+          getAllReq.onsuccess = aEvent => {
+            aTxn.result = aEvent.target.result.map(
+              record => this.toPushRecord(record));
+          };
         },
         resolve,
         reject
@@ -214,10 +265,88 @@ this.PushDB.prototype = {
       this.newTxn(
         "readonly",
         this._dbStoreName,
-        function txnCb(aTxn, aStore) {
+        (aTxn, aStore) => {
           aTxn.result = undefined;
-          aStore.mozGetAll().onsuccess = function(event) {
-            aTxn.result = event.target.result;
+          aStore.mozGetAll().onsuccess = event => {
+            aTxn.result = event.target.result.map(
+              record => this.toPushRecord(record));
+          };
+        },
+        resolve,
+        reject
+      )
+    );
+  },
+
+  _getAllByPushQuota: function(range) {
+    debug("getAllByPushQuota()");
+
+    return new Promise((resolve, reject) =>
+      this.newTxn(
+        "readonly",
+        this._dbStoreName,
+        (aTxn, aStore) => {
+          aTxn.result = [];
+
+          let index = aStore.index("quota");
+          index.openCursor(range).onsuccess = event => {
+            let cursor = event.target.result;
+            if (cursor) {
+              aTxn.result.push(this.toPushRecord(cursor.value));
+              cursor.continue();
+            }
+          };
+        },
+        resolve,
+        reject
+      )
+    );
+  },
+
+  getAllUnexpired: function() {
+    debug("getAllUnexpired()");
+    return this._getAllByPushQuota(IDBKeyRange.lowerBound(1));
+  },
+
+  getAllExpired: function() {
+    debug("getAllExpired()");
+    return this._getAllByPushQuota(IDBKeyRange.only(0));
+  },
+
+  /**
+   * Updates an existing push registration.
+   *
+   * @param {String} aKeyID The registration ID.
+   * @param {Function} aUpdateFunc A function that receives the existing
+   *  registration record as its argument, and returns a new record. If the
+   *  function returns `null` or `undefined`, the record will not be updated.
+   *  If the record does not exist, the function will not be called.
+   * @returns {Promise} A promise resolved with either the updated record, or
+   *  `undefined` if the record was not updated.
+   */
+  update: function(aKeyID, aUpdateFunc) {
+    return new Promise((resolve, reject) =>
+      this.newTxn(
+        "readwrite",
+        this._dbStoreName,
+        (aTxn, aStore) => {
+          aStore.get(aKeyID).onsuccess = aEvent => {
+            aTxn.result = undefined;
+
+            let record = aEvent.target.result;
+            if (!record) {
+              debug("update: Key ID " + aKeyID + " does not exist");
+              return;
+            }
+            let newRecord = aUpdateFunc(this.toPushRecord(record));
+            if (!this.isValidRecord(newRecord)) {
+              debug("update: Ignoring invalid update for key ID " + aKeyID);
+              return;
+            }
+            aStore.put(newRecord).onsuccess = aEvent => {
+              debug("update: Update successful for key ID " + aKeyID);
+              aTxn.result = newRecord;
+            };
           };
         },
         resolve,

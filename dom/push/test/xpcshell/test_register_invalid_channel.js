@@ -49,7 +49,7 @@ add_task(function* test_register_invalid_channel() {
 
   yield rejects(
     PushNotificationService.register('https://example.com/invalid-channel',
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
     function(error) {
       return error == 'Invalid channel ID';
     },
