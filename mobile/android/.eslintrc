@@ -11,22 +11,31 @@ globals:
     Downloads: false
     File: false
     FileUtils: false
-    HelperApps: false
-    JNI: false
+    HelperApps: true # TODO: Can be more specific here.
+    JNI: true # TODO: Can be more specific here.
+    LightweightThemeManager: false
     Messaging: false
+    Notifications: false
     OS: false
+    ParentalControls: false
     PrivateBrowsingUtils: false
     Prompt: false
     Services: false
+    SharedPreferences: false
+    strings: false
     Task: false
     TelemetryStopwatch: false
+    UITelemetry: false
     UserAgentOverrides: 0
     WebappManager: false
     XPCOMUtils: false
+    ctypes: false
     dump: false
     exports: false
     importScripts: false
+    module: false
     require: false
+    uuidgen: false
 
     Iterator: false # TODO: Remove - deprecated!
 
@@ -38,26 +47,27 @@ rules:
     # We'll re-enable one by one.
     camelcase: 0
     comma-dangle: 0
+    comma-spacing: 0
     consistent-return: 0
     curly: 0
     dot-notation: 0
     eqeqeq: 0
     key-spacing: 0
     new-cap: 0
-    no-constant-condition: 0
-    no-extra-semi: 0
     no-caller: 0
-    no-return-assign: 0
-    no-extra-bind: 0
+    no-constant-condition: 0
     no-empty: 0
-    no-multi-spaces: 0
+    no-extra-bind: 0
+    no-extra-semi: 0
     no-loop-func: 0
+    no-multi-spaces: 0
     no-new-object: 0
     no-octal: 0
+    no-return-assign: 0
     no-shadow: 0
     no-trailing-spaces: 0
-    no-use-before-define: 0
     no-unused-vars: 0
+    no-use-before-define: 0
     quotes: 0 # [2, "double"]
     semi: 0
     space-infix-ops: 0
