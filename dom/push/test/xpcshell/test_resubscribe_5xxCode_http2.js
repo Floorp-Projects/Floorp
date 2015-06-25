@@ -82,7 +82,9 @@ add_task(function* test1() {
     subscriptionUri: serverURL + '/subscription5xxCode',
     pushEndpoint: serverURL + '/pushEndpoint',
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpoint',
-    scope: 'https://example.com/page'
+    scope: 'https://example.com/page',
+    originAttributes: '',
+    quota: Infinity,
   }];
 
   for (let record of records) {

@@ -24,25 +24,33 @@ add_task(function* test_notification_incomplete() {
     channelID: '123',
     pushEndpoint: 'https://example.org/update/1',
     scope: 'https://example.com/page/1',
-    version: 1
+    version: 1,
+    originAttributes: '',
+    quota: Infinity,
   }, {
     channelID: '3ad1ed95-d37a-4d88-950f-22cbe2e240d7',
     pushEndpoint: 'https://example.org/update/2',
     scope: 'https://example.com/page/2',
-    version: 1
+    version: 1,
+    originAttributes: '',
+    quota: Infinity,
   }, {
     channelID: 'd239498b-1c85-4486-b99b-205866e82d1f',
     pushEndpoint: 'https://example.org/update/3',
     scope: 'https://example.com/page/3',
-    version: 3
+    version: 3,
+    originAttributes: '',
+    quota: Infinity,
   }, {
     channelID: 'a50de97d-b496-43ce-8b53-05522feb78db',
     pushEndpoint: 'https://example.org/update/4',
     scope: 'https://example.com/page/4',
-    version: 10
+    version: 10,
+    originAttributes: '',
+    quota: Infinity,
   }];
   for (let record of records) {
-    db.put(record);
+    yield db.put(record);
   }
 
   Services.obs.addObserver(function observe(subject, topic, data) {
@@ -51,7 +59,7 @@ add_task(function* test_notification_incomplete() {
 
   let notificationDefer = Promise.defer();
   let notificationDone = after(2, notificationDefer.resolve);
-  let prevHandler = PushService._handleNotificationReply;
+  let prevHandler = PushServiceWebSocket._handleNotificationReply;
   PushServiceWebSocket._handleNotificationReply = function _handleNotificationReply() {
     notificationDone();
     return prevHandler.apply(this, arguments);
