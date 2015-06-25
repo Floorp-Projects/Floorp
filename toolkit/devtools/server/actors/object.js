@@ -544,6 +544,71 @@ ObjectActor.prototype = {
       this.hooks.createValueGrip(this.obj.makeDebuggeeValue(p)));
 
     return { promises };
+  },
+
+  /**
+   * Handle a protocol request to get the allocation stack of a promise.
+   */
+  onAllocationStack: function() {
+    if (this.obj.class != "Promise") {
+      return { error: "objectNotPromise",
+               message: "'allocationStack' request is only valid for " +
+                        "object grips with a 'Promise' class." };
+    }
+
+    let rawPromise = this.obj.unsafeDereference();
+    let stack = PromiseDebugging.getAllocationStack(rawPromise);
+    let allocationStacks = [];
+
+    while (stack) {
+      if (stack.source) {
+        let source = this._getSourceOriginalLocation(stack);
+
+        if (source) {
+          allocationStacks.push(source);
+        }
+      }
+      stack = stack.parent;
+    }
+
+    return Promise.all(allocationStacks).then(stacks => {
+      return { allocationStack: stacks };
+    });
+  },
+
+  /**
+   * Helper function for onAllocationStack which fetches the source location
+   * for a SavedFrame stack.
+   * @param SavedFrame stack
+   *        The promise allocation stack frame
+   * @return object
+   *         Returns an object containing the source location of the SavedFrame
+   *         stack.
+   */
+  _getSourceOriginalLocation: function(stack) {
+    let source;
+
+    // Catch any errors if the source actor cannot be found
+    try {
+      source = this.hooks.sources().getSourceActorByURL(stack.source);
+    } catch(e) {}
+
+    if (!source) {
+      return null;
+    }
+
+    return this.hooks.sources().getOriginalLocation(new GeneratedLocation(
+      source,
+      stack.line,
+      stack.column
+    )).then((originalLocation) => {
+      return {
+        source: originalLocation.originalSourceActor.form(),
+        line: originalLocation.originalLine,
+        column: originalLocation.originalColumn,
+        functionDisplayName: stack.functionDisplayName
+      };
+    });
   }
 };
 
@@ -559,7 +624,8 @@ ObjectActor.prototype.requestTypes = {
   "decompile": ObjectActor.prototype.onDecompile,
   "release": ObjectActor.prototype.onRelease,
   "scope": ObjectActor.prototype.onScope,
-  "dependentPromises": ObjectActor.prototype.onDependentPromises
+  "dependentPromises": ObjectActor.prototype.onDependentPromises,
+  "allocationStack": ObjectActor.prototype.onAllocationStack
 };
 
 /**
