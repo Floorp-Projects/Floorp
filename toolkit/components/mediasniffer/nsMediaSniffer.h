@@ -22,23 +22,24 @@
 
 #define NS_MEDIA_SNIFFER_CONTRACTID "@mozilla.org/media/sniffer;1"
 
+#define PATTERN_ENTRY(mask, pattern, contentType) \
+    {(const uint8_t*)mask, (const uint8_t*)pattern, sizeof(mask) - 1, contentType}
+
+struct nsMediaSnifferEntry {
+  const uint8_t* mMask;
+  const uint8_t* mPattern;
+  const uint32_t mLength;
+  const char* mContentType;
+};
+
 class nsMediaSniffer final : public nsIContentSniffer
 {
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONTENTSNIFFER
-  protected:
+
+  private:
     ~nsMediaSniffer() {}
-
-#define PATTERN_ENTRY(mask, pattern, contentType) \
-    {(const uint8_t*)mask, (const uint8_t*)pattern, sizeof(mask) - 1, contentType}
-
-  struct nsMediaSnifferEntry {
-    const uint8_t* mMask;
-    const uint8_t* mPattern;
-    const uint32_t mLength;
-    const char* mContentType;
-  };
 
   static nsMediaSnifferEntry sSnifferEntries[];
 };
