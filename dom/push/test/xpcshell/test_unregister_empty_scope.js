@@ -29,7 +29,8 @@ add_task(function* test_unregister_empty_scope() {
   });
 
   yield rejects(
-    PushNotificationService.unregister(''),
+    PushNotificationService.unregister('',
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
     function(error) {
       return error.error == 'NotFoundError';
     },

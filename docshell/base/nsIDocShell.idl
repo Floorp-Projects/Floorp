@@ -11,13 +11,6 @@
 #include "js/TypeDecls.h"
 class nsPresContext;
 class nsIPresShell;
-
-namespace mozilla {
-namespace dom {
-class URLSearchParams;
-}
-}
-
 %}
 
 /**
@@ -26,7 +19,6 @@ class URLSearchParams;
 
 [ptr] native nsPresContext(nsPresContext);
 [ptr] native nsIPresShell(nsIPresShell);
-[ptr] native URLSearchParams(mozilla::dom::URLSearchParams);
 
 interface nsIURI;
 interface nsIChannel;
@@ -54,7 +46,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(696b32a1-3cf1-4909-b501-474b25fc7954)]
+[scriptable, builtinclass, uuid(b3137b7c-d589-48aa-b89b-e02aa451d42c)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -1030,9 +1022,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [noscript,notxpcom,nostdcall] void setOpener(in nsITabParent aOpener);
   [noscript,notxpcom,nostdcall] nsITabParent getOpener();
-
-  // URLSearchParams for the window.location is owned by the docShell.
-  [noscript,notxpcom] URLSearchParams getURLSearchParams();
 
   /**
    * Notify DocShell when the browser is about to start executing JS, and after

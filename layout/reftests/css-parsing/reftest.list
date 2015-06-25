@@ -5,3 +5,4 @@
 == at-rule-error-handling-import-1.html at-rule-error-handling-ref.html
 == at-rule-error-handling-media-1.html at-rule-error-handling-ref.html
 == invalid-font-face-descriptor-1.html invalid-font-face-descriptor-1-ref.html
+== two-dash-identifiers.html two-dash-identifiers-ref.html

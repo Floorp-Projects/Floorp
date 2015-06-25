@@ -51,5 +51,5 @@ interface URLUtils {
 [NoInterfaceObject,
  Exposed=(Window, Worker)]
 interface URLUtilsSearchParams {
-           attribute URLSearchParams searchParams;
+ readonly attribute URLSearchParams searchParams;
 };

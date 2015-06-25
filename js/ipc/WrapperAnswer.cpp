@@ -189,7 +189,7 @@ WrapperAnswer::RecvDefineProperty(const ObjectId& objId, const JSIDVariant& idVa
         return fail(jsapi, rs);
 
     ObjectOpResult success;
-    if (!js::DefineOwnProperty(cx, obj, id, desc, success))
+    if (!JS_DefinePropertyById(cx, obj, id, desc, success))
         return fail(jsapi, rs);
     return ok(rs, success);
 }

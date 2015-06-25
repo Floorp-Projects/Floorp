@@ -868,7 +868,7 @@ class LiveScopeVal
     friend class MissingScopeKey;
 
     AbstractFramePtr frame_;
-    HeapPtrObject staticScope_;
+    RelocatablePtrObject staticScope_;
 
     void sweep();
     static void staticAsserts();

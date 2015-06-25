@@ -10,10 +10,6 @@
 #include "GLContext.h"
 #include "GLLibraryEGL.h"
 
-#ifdef MOZ_WIDGET_GONK
-#include "HwcComposer2D.h"
-#endif
-
 class nsIWidget;
 
 namespace mozilla {
@@ -128,9 +124,6 @@ protected:
     bool mIsDoubleBuffered;
     bool mCanBindToTexture;
     bool mShareWithEGLImage;
-#ifdef MOZ_WIDGET_GONK
-    nsRefPtr<HwcComposer2D> mHwc;
-#endif
     bool mOwnsContext;
 
     static EGLSurface CreatePBufferSurfaceTryingPowerOfTwo(EGLConfig config,

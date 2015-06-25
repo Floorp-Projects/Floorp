@@ -17,7 +17,6 @@
 #define GET_NATIVE_WINDOW(aWidget) (EGLNativeWindowType)(aWidget->GetNativeData(NS_NATIVE_SHAREABLE_WINDOW))
 #elif defined(MOZ_WIDGET_GONK)
 #define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
-#include "HwcComposer2D.h"
 #include "libdisplay/GonkDisplay.h"
 #include "nsWindow.h"
 #include "nsScreenManagerGonk.h"
