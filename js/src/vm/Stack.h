@@ -381,6 +381,8 @@ class InterpreterFrame
         JS_STATIC_ASSERT(sizeof(InterpreterFrame) % sizeof(Value) == 0);
     }
 
+    void writeBarrierPost();
+
     /*
      * The utilities are private since they are not able to assert that only
      * unaliased vars/formals are accessed. Normal code should prefer the

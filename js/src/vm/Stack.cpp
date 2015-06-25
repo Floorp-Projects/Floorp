@@ -107,6 +107,25 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
 #endif
 }
 
+void
+InterpreterFrame::writeBarrierPost()
+{
+    /* This needs to follow the same rules as in InterpreterFrame::mark. */
+    if (scopeChain_)
+        JSObject::writeBarrierPost(scopeChain_, &scopeChain_);
+    if (flags_ & HAS_ARGS_OBJ)
+        JSObject::writeBarrierPost(argsObj_, &argsObj_);
+    if (isFunctionFrame()) {
+        JSFunction::writeBarrierPost(exec.fun, &exec.fun);
+        if (isEvalFrame())
+            JSScript::writeBarrierPost(u.evalScript, &u.evalScript);
+    } else {
+        JSScript::writeBarrierPost(exec.script, &exec.script);
+    }
+    if (hasReturnValue())
+        HeapValue::writeBarrierPost(rval_, &rval_);
+}
+
 bool
 InterpreterFrame::copyRawFrameSlots(AutoValueVector* vec)
 {

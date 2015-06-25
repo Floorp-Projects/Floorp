@@ -6,16 +6,27 @@
 #include "MessagePortService.h"
 #include "MessagePortParent.h"
 #include "SharedMessagePortMessage.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/unused.h"
 #include "nsDataHashtable.h"
 #include "nsTArray.h"
 
+using mozilla::ipc::AssertIsOnBackgroundThread;
+
 namespace mozilla {
 namespace dom {
 
 namespace {
+
 StaticRefPtr<MessagePortService> gInstance;
+
+void
+AssertIsInMainProcess()
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+}
+
 } // anonymous namespace
 
 class MessagePortService::MessagePortServiceData final
@@ -54,8 +65,20 @@ public:
 };
 
 /* static */ MessagePortService*
+MessagePortService::Get()
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return gInstance;
+}
+
+/* static */ MessagePortService*
 MessagePortService::GetOrCreate()
 {
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
   if (!gInstance) {
     gInstance = new MessagePortService();
   }
@@ -248,6 +271,12 @@ MessagePortService::CloseAll(const nsID& aUUID)
 
   CloseAll(destinationUUID);
 
+  // CloseAll calls itself recursively and it can happen that it deletes
+  // itself. Before continuing we must check if we are still alive.
+  if (!gInstance) {
+    return;
+  }
+
 #ifdef DEBUG
   mPorts.EnumerateRead(CloseAllDebugCheck, const_cast<nsID*>(&aUUID));
 #endif
@@ -322,6 +351,27 @@ MessagePortService::ParentDestroy(MessagePortParent* aParent)
   }
 
   CloseAll(aParent->ID());
+}
+
+bool
+MessagePortService::ForceClose(const nsID& aUUID,
+                               const nsID& aDestinationUUID,
+                               const uint32_t& aSequenceID)
+{
+  MessagePortServiceData* data;
+  if (!mPorts.Get(aUUID, &data)) {
+    NS_WARNING("Unknown MessagePort in ForceClose()");
+    return true;
+  }
+
+  if (!data->mDestinationUUID.Equals(aDestinationUUID) ||
+      data->mSequenceID != aSequenceID) {
+    NS_WARNING("DestinationUUID and/or sequenceID do not match.");
+    return false;
+  }
+
+  CloseAll(aUUID);
+  return true;
 }
 
 } // dom namespace

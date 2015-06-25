@@ -64,11 +64,11 @@ typedef HashSet<ReadBarrieredGlobalObject,
  * created.
  */
 template <class UnbarrieredKey, bool InvisibleKeysOk=false>
-class DebuggerWeakMap : private WeakMap<PreBarriered<UnbarrieredKey>, HeapPtrObject>
+class DebuggerWeakMap : private WeakMap<PreBarriered<UnbarrieredKey>, RelocatablePtrObject>
 {
   private:
     typedef PreBarriered<UnbarrieredKey> Key;
-    typedef HeapPtrObject Value;
+    typedef RelocatablePtrObject Value;
 
     typedef HashMap<JS::Zone*,
                     uintptr_t,
@@ -286,10 +286,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
         static AllocationSite* create(JSContext* cx, HandleObject frame, double when,
                                       HandleObject obj);
 
-        HeapPtrObject frame;
+        RelocatablePtrObject frame;
         double when;
         const char* className;
-        HeapPtrAtom ctorName;
+        RelocatablePtrAtom ctorName;
     };
     typedef mozilla::LinkedList<AllocationSite> AllocationSiteList;
 
@@ -362,7 +362,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * has to be different.
      */
     typedef HashMap<AbstractFramePtr,
-                    HeapPtrNativeObject,
+                    RelocatablePtrNativeObject,
                     DefaultHasher<AbstractFramePtr>,
                     RuntimeAllocPolicy> FrameMap;
     FrameMap frames;

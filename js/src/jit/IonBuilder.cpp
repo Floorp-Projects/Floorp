@@ -5474,7 +5474,7 @@ IonBuilder::inlineCalls(CallInfo& callInfo, const ObjectVector& targets, BoolVec
         // hoisting scope chain gets above the dispatch instruction.
         MInstruction* funcDef;
         if (target->isSingleton())
-            funcDef = MConstant::New(alloc(), ObjectValue(*target), constraints(), this);
+            funcDef = MConstant::New(alloc(), ObjectValue(*target), constraints());
         else
             funcDef = MPolyInlineGuard::New(alloc(), callInfo.fun());
 
@@ -5789,7 +5789,7 @@ IonBuilder::createThisScriptedSingleton(JSFunction* target, MDefinition* callee)
 
     // Generate an inline path to create a new |this| object with
     // the given singleton prototype.
-    MConstant* templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject, this);
+    MConstant* templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
     MCreateThisWithTemplate* createThis =
         MCreateThisWithTemplate::New(alloc(), constraints(), templateConst,
                                      templateObject->group()->initialHeap(constraints()));
@@ -5848,7 +5848,7 @@ IonBuilder::createThisScriptedBaseline(MDefinition* callee)
 
     // Generate an inline path to create a new |this| object with
     // the given prototype.
-    MConstant* templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject, this);
+    MConstant* templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
     MCreateThisWithTemplate* createThis =
         MCreateThisWithTemplate::New(alloc(), constraints(), templateConst,
                                      templateObject->group()->initialHeap(constraints()));
@@ -6150,9 +6150,6 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
 bool
 IonBuilder::testShouldDOMCall(TypeSet* inTypes, JSFunction* func, JSJitInfo::OpType opType)
 {
-    if (IsInsideNursery(func))
-        return false;
-
     if (!func->isNative() || !func->jitInfo())
         return false;
 
@@ -6468,7 +6465,7 @@ IonBuilder::jsop_newarray(uint32_t count)
 
     if (templateObject) {
         heap = templateObject->group()->initialHeap(constraints());
-        templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject, this);
+        templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
     } else {
         heap = gc::DefaultHeap;
         templateConst = MConstant::New(alloc(), NullValue());
@@ -6519,7 +6516,7 @@ IonBuilder::jsop_newobject()
 
     if (templateObject) {
         heap = templateObject->group()->initialHeap(constraints());
-        templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject, this);
+        templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
     } else {
         heap = gc::DefaultHeap;
         templateConst = MConstant::New(alloc(), NullValue());
@@ -9014,7 +9011,7 @@ IonBuilder::setElemTryDense(bool* emitted, MDefinition* object,
         }
     }
 
-    if (PropertyWriteNeedsTypeBarrier(this, constraints(), current,
+    if (PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current,
                                       &object, nullptr, &value, /* canModify = */ true))
     {
         trackOptimizationOutcome(TrackedOutcome::NeedsTypeBarrier);
@@ -9094,7 +9091,7 @@ IonBuilder::setElemTryCache(bool* emitted, MDefinition* object,
         return true;
     }
 
-    if (PropertyWriteNeedsTypeBarrier(this, constraints(), current,
+    if (PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current,
                                       &object, nullptr, &value, /* canModify = */ true))
     {
         trackOptimizationOutcome(TrackedOutcome::NeedsTypeBarrier);
@@ -9432,7 +9429,7 @@ IonBuilder::jsop_rest()
     unsigned numFormals = info().nargs() - 1;
     unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
 
-    MConstant* templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject, this);
+    MConstant* templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
     current->add(templateConst);
 
     MNewArray* array = MNewArray::New(alloc(), constraints(), numRest, templateConst,
@@ -10812,8 +10809,7 @@ IonBuilder::getPropTryCommonGetter(bool* emitted, MDefinition* obj, PropertyName
         }
     }
 
-    JSFunction* tenuredCommonGetter = IsInsideNursery(commonGetter) ? nullptr : commonGetter;
-    if (!makeCall(tenuredCommonGetter, callInfo))
+    if (!makeCall(commonGetter, callInfo))
         return false;
 
     // If the getter could have been inlined, don't track success. The call to
@@ -11183,7 +11179,7 @@ IonBuilder::jsop_setprop(PropertyName* name)
     }
 
     TemporaryTypeSet* objTypes = obj->resultTypeSet();
-    bool barrier = PropertyWriteNeedsTypeBarrier(this, constraints(), current, &obj, name, &value,
+    bool barrier = PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current, &obj, name, &value,
                                                  /* canModify = */ true);
 
     if (!forceInlineCaches()) {
@@ -11307,8 +11303,7 @@ IonBuilder::setPropTryCommonSetter(bool* emitted, MDefinition* obj,
         }
     }
 
-    JSFunction* tenuredCommonSetter = IsInsideNursery(commonSetter) ? nullptr : commonSetter;
-    MCall* call = makeCallHelper(tenuredCommonSetter, callInfo);
+    MCall* call = makeCallHelper(commonSetter, callInfo);
     if (!call)
         return false;
 
@@ -11825,7 +11820,7 @@ IonBuilder::jsop_lambda(JSFunction* fun)
     if (fun->isNative() && IsAsmJSModuleNative(fun->native()))
         return abort("asm.js module function");
 
-    MConstant* cst = MConstant::NewConstraintlessObject(alloc(), fun, this);
+    MConstant* cst = MConstant::NewConstraintlessObject(alloc(), fun);
     current->add(cst);
     MLambda* ins = MLambda::New(alloc(), constraints(), current->scopeChain(), cst);
     current->add(ins);
@@ -12375,17 +12370,16 @@ IonBuilder::jsop_in_dense(JSValueType unboxedType)
     return true;
 }
 
-static bool
-HasOnProtoChain(CompilerConstraintList* constraints, TypeSet::ObjectKey* key,
-                JSObject* protoObject, bool* hasOnProto)
+bool
+IonBuilder::hasOnProtoChain(TypeSet::ObjectKey* key, JSObject* protoObject, bool* hasOnProto)
 {
     MOZ_ASSERT(protoObject);
 
     while (true) {
-        if (!key->hasStableClassAndProto(constraints) || !key->clasp()->isNative())
+        if (!key->hasStableClassAndProto(constraints()) || !key->clasp()->isNative())
             return false;
 
-        JSObject* proto = key->proto().toObjectOrNull();
+        JSObject* proto = checkNurseryObject(key->proto().toObjectOrNull());
         if (!proto) {
             *hasOnProto = false;
             return true;
@@ -12429,7 +12423,7 @@ IonBuilder::tryFoldInstanceOf(MDefinition* lhs, JSObject* protoObject)
             continue;
 
         bool isInstance;
-        if (!HasOnProtoChain(constraints(), key, protoObject, &isInstance))
+        if (!hasOnProtoChain(key, protoObject, &isInstance))
             return false;
 
         if (isFirst) {
@@ -12511,7 +12505,7 @@ IonBuilder::jsop_instanceof()
         current->add(slots);
         MLoadSlot* prototype = MLoadSlot::New(alloc(), slots, slot);
         current->add(prototype);
-        MConstant* protoConst = MConstant::NewConstraintlessObject(alloc(), protoObject, this);
+        MConstant* protoConst = MConstant::NewConstraintlessObject(alloc(), protoObject);
         current->add(protoConst);
         MGuardObjectIdentity* guard = MGuardObjectIdentity::New(alloc(), prototype, protoConst,
                                                                 /* bailOnEquality = */ false);
@@ -12922,7 +12916,7 @@ IonBuilder::storeReferenceTypedObjectValue(MDefinition* typedObj,
         MIRType implicitType =
             (type == ReferenceTypeDescr::TYPE_ANY) ? MIRType_Undefined : MIRType_Null;
 
-        if (PropertyWriteNeedsTypeBarrier(this, constraints(), current, &typedObj, name, &value,
+        if (PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current, &typedObj, name, &value,
                                           /* canModify = */ true, implicitType))
         {
             trackOptimizationOutcome(TrackedOutcome::NeedsTypeBarrier);
@@ -12991,7 +12985,7 @@ IonBuilder::constant(const Value& v)
     if (v.isObject())
         checkNurseryObject(&v.toObject());
 
-    MConstant* c = MConstant::New(alloc(), v, constraints(), this);
+    MConstant* c = MConstant::New(alloc(), v, constraints());
     current->add(c);
     return c;
 }

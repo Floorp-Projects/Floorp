@@ -38,16 +38,16 @@ PushNotificationService.prototype = {
                                          Ci.nsISupportsWeakReference,
                                          Ci.nsIPushNotificationService]),
 
-  register: function register(scope, pageURL) {
-    return PushService._register({scope, pageURL});
+  register: function register(scope, originAttributes) {
+    return PushService._register({scope, originAttributes});
   },
 
-  unregister: function unregister(scope) {
-    return PushService._unregister({scope});
+  unregister: function unregister(scope, originAttributes) {
+    return PushService._unregister({scope, originAttributes});
   },
 
-  registration: function registration(scope) {
-    return PushService._registration({scope});
+  registration: function registration(scope, originAttributes) {
+    return PushService._registration({scope, originAttributes});
   },
 
   clearAll: function clearAll() {

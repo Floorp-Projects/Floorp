@@ -40,7 +40,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(URLSearchParams)
 
-  URLSearchParams();
+  explicit URLSearchParams(URLSearchParamsObserver* aObserver);
 
   // WebIDL methods
   nsISupports* GetParentObject() const
@@ -59,12 +59,7 @@ public:
   Constructor(const GlobalObject& aGlobal, URLSearchParams& aInit,
               ErrorResult& aRv);
 
-  void ParseInput(const nsACString& aInput,
-                  URLSearchParamsObserver* aObserver);
-
-  void AddObserver(URLSearchParamsObserver* aObserver);
-  void RemoveObserver(URLSearchParamsObserver* aObserver);
-  void RemoveObservers();
+  void ParseInput(const nsACString& aInput);
 
   void Serialize(nsAString& aValue) const;
 
@@ -113,7 +108,7 @@ private:
   void DecodeString(const nsACString& aInput, nsAString& aOutput);
   void ConvertString(const nsACString& aInput, nsAString& aOutput);
 
-  void NotifyObservers(URLSearchParamsObserver* aExceptObserver);
+  void NotifyObserver();
 
   struct Param
   {
@@ -123,7 +118,7 @@ private:
 
   nsTArray<Param> mSearchParams;
 
-  nsTArray<nsRefPtr<URLSearchParamsObserver>> mObservers;
+  nsRefPtr<URLSearchParamsObserver> mObserver;
   nsCOMPtr<nsIUnicodeDecoder> mDecoder;
 };
 

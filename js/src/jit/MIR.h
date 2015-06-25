@@ -1309,20 +1309,17 @@ class MConstant : public MNullaryInstruction
     Value value_;
 
   protected:
-    MConstant(const Value& v, CompilerConstraintList* constraints, MIRGenerator* gen);
-    explicit MConstant(JSObject* obj, MIRGenerator* gen);
+    MConstant(const Value& v, CompilerConstraintList* constraints);
+    explicit MConstant(JSObject* obj);
 
   public:
     INSTRUCTION_HEADER(Constant)
     static MConstant* New(TempAllocator& alloc, const Value& v,
-                          CompilerConstraintList* constraints = nullptr,
-                          MIRGenerator* gen = nullptr);
+                          CompilerConstraintList* constraints = nullptr);
     static MConstant* NewTypedValue(TempAllocator& alloc, const Value& v, MIRType type,
-                                    CompilerConstraintList* constraints = nullptr,
-                                    MIRGenerator* gen = nullptr);
+                                    CompilerConstraintList* constraints = nullptr);
     static MConstant* NewAsmJS(TempAllocator& alloc, const Value& v, MIRType type);
-    static MConstant* NewConstraintlessObject(TempAllocator& alloc, JSObject* v,
-                                              MIRGenerator* gen);
+    static MConstant* NewConstraintlessObject(TempAllocator& alloc, JSObject* v);
 
     const js::Value& value() const {
         return value_;
@@ -2844,22 +2841,28 @@ bool
 EqualTypes(MIRType type1, TemporaryTypeSet* typeset1,
            MIRType type2, TemporaryTypeSet* typeset2);
 
-// Helper class to assert all GC pointers embedded in MIR instructions are
-// tenured. Off-thread Ion compilation and nursery GCs can happen in parallel,
-// so it's invalid to store pointers to nursery things. There's no need to root
-// these pointers, as GC is suppressed during compilation and off-thread
-// compilations are canceled on every major GC.
+#ifdef DEBUG
+bool
+IonCompilationCanUseNurseryPointers();
+#endif
+
+// Helper class to check that GC pointers embedded in MIR instructions are in
+// in the nursery only when the store buffer has been marked as needing to
+// cancel all ion compilations. Otherwise, off-thread Ion compilation and
+// nursery GCs can happen in parallel, so it's invalid to store pointers to
+// nursery things. There's no need to root these pointers, as GC is suppressed
+// during compilation and off-thread compilations are canceled on major GCs.
 template <typename T>
-class AlwaysTenured
+class CompilerGCPointer
 {
     js::gc::Cell* ptr_;
 
   public:
-    explicit AlwaysTenured(T ptr)
+    explicit CompilerGCPointer(T ptr)
       : ptr_(ptr)
     {
+        MOZ_ASSERT_IF(IsInsideNursery(ptr), IonCompilationCanUseNurseryPointers());
 #ifdef DEBUG
-        MOZ_ASSERT(!IsInsideNursery(ptr_));
         PerThreadData* pt = TlsPerThreadData.get();
         MOZ_ASSERT_IF(pt->runtimeIfOnOwnerThread(), pt->suppressGC);
 #endif
@@ -2869,17 +2872,18 @@ class AlwaysTenured
     T operator->() const { return static_cast<T>(ptr_); }
 
   private:
-    AlwaysTenured() = delete;
-    AlwaysTenured(const AlwaysTenured<T>&) = delete;
-    AlwaysTenured<T>& operator=(const AlwaysTenured<T>&) = delete;
+    CompilerGCPointer() = delete;
+    CompilerGCPointer(const CompilerGCPointer<T>&) = delete;
+    CompilerGCPointer<T>& operator=(const CompilerGCPointer<T>&) = delete;
 };
 
-typedef AlwaysTenured<JSObject*> AlwaysTenuredObject;
-typedef AlwaysTenured<NativeObject*> AlwaysTenuredNativeObject;
-typedef AlwaysTenured<JSFunction*> AlwaysTenuredFunction;
-typedef AlwaysTenured<JSScript*> AlwaysTenuredScript;
-typedef AlwaysTenured<PropertyName*> AlwaysTenuredPropertyName;
-typedef AlwaysTenured<Shape*> AlwaysTenuredShape;
+typedef CompilerGCPointer<JSObject*> CompilerObject;
+typedef CompilerGCPointer<NativeObject*> CompilerNativeObject;
+typedef CompilerGCPointer<JSFunction*> CompilerFunction;
+typedef CompilerGCPointer<JSScript*> CompilerScript;
+typedef CompilerGCPointer<PropertyName*> CompilerPropertyName;
+typedef CompilerGCPointer<Shape*> CompilerShape;
+typedef CompilerGCPointer<ObjectGroup*> CompilerObjectGroup;
 
 class MNewArray
   : public MUnaryInstruction,
@@ -2954,7 +2958,7 @@ class MNewArray
 
 class MNewArrayCopyOnWrite : public MNullaryInstruction
 {
-    AlwaysTenured<ArrayObject*> templateObject_;
+    CompilerGCPointer<ArrayObject*> templateObject_;
     gc::InitialHeap initialHeap_;
 
     MNewArrayCopyOnWrite(CompilerConstraintList* constraints, ArrayObject* templateObject,
@@ -2995,7 +2999,7 @@ class MNewArrayDynamicLength
   : public MUnaryInstruction,
     public IntPolicy<0>::Data
 {
-    AlwaysTenuredObject templateObject_;
+    CompilerObject templateObject_;
     gc::InitialHeap initialHeap_;
 
     MNewArrayDynamicLength(CompilerConstraintList* constraints, JSObject* templateObject,
@@ -3103,7 +3107,7 @@ class MNewObject
 
 class MNewTypedObject : public MNullaryInstruction
 {
-    AlwaysTenured<InlineTypedObject*> templateObject_;
+    CompilerGCPointer<InlineTypedObject*> templateObject_;
     gc::InitialHeap initialHeap_;
 
     MNewTypedObject(CompilerConstraintList* constraints,
@@ -3178,7 +3182,7 @@ class MSimdBox
     public NoTypePolicy::Data
 {
   protected:
-    AlwaysTenured<InlineTypedObject*> templateObject_;
+    CompilerGCPointer<InlineTypedObject*> templateObject_;
     gc::InitialHeap initialHeap_;
 
     MSimdBox(CompilerConstraintList* constraints,
@@ -3531,7 +3535,7 @@ class MInitProp
   : public MAryInstruction<2>,
     public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >::Data
 {
-    AlwaysTenuredPropertyName name_;
+    CompilerPropertyName name_;
 
   protected:
     MInitProp(MDefinition* obj, PropertyName* name, MDefinition* value)
@@ -3571,7 +3575,7 @@ class MInitPropGetterSetter
   : public MBinaryInstruction,
     public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >::Data
 {
-    AlwaysTenuredPropertyName name_;
+    CompilerPropertyName name_;
 
     MInitPropGetterSetter(MDefinition* obj, PropertyName* name, MDefinition* value)
       : MBinaryInstruction(obj, value),
@@ -3673,7 +3677,7 @@ class MCall
 
   protected:
     // Monomorphic cache of single target from TI, or nullptr.
-    AlwaysTenuredFunction target_;
+    CompilerFunction target_;
 
     // Original value of argc from the bytecode.
     uint32_t numActualArgs_;
@@ -3848,7 +3852,7 @@ class MApplyArgs
 {
   protected:
     // Monomorphic cache of single target from TI, or nullptr.
-    AlwaysTenuredFunction target_;
+    CompilerFunction target_;
 
     MApplyArgs(JSFunction* target, MDefinition* fun, MDefinition* argc, MDefinition* self)
       : target_(target)
@@ -7191,7 +7195,7 @@ class MDefVar
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    AlwaysTenuredPropertyName name_; // Target name to be defined.
+    CompilerPropertyName name_; // Target name to be defined.
     unsigned attrs_; // Attributes to be set.
 
   private:
@@ -7229,7 +7233,7 @@ class MDefFun
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    AlwaysTenuredFunction fun_;
+    CompilerFunction fun_;
 
   private:
     MDefFun(JSFunction* fun, MDefinition* scopeChain)
@@ -7257,7 +7261,7 @@ class MDefFun
 
 class MRegExp : public MNullaryInstruction
 {
-    AlwaysTenured<RegExpObject*> source_;
+    CompilerGCPointer<RegExpObject*> source_;
     bool mustClone_;
 
     MRegExp(CompilerConstraintList* constraints, RegExpObject* source, bool mustClone)
@@ -7513,7 +7517,7 @@ struct LambdaFunctionInfo
     // The functions used in lambdas are the canonical original function in
     // the script, and are immutable except for delazification. Record this
     // information while still on the main thread to avoid races.
-    AlwaysTenuredFunction fun;
+    CompilerFunction fun;
     uint16_t flags;
     uint16_t nargs;
     gc::Cell* scriptOrLazyScript;
@@ -9030,7 +9034,7 @@ class MConvertUnboxedObjectToNative
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
 {
-    AlwaysTenured<ObjectGroup*> group_;
+    CompilerObjectGroup group_;
 
     explicit MConvertUnboxedObjectToNative(MDefinition* obj, ObjectGroup* group)
       : MUnaryInstruction(obj),
@@ -9177,7 +9181,7 @@ class MArrayConcat
   : public MBinaryInstruction,
     public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >::Data
 {
-    AlwaysTenuredObject templateObj_;
+    CompilerObject templateObj_;
     gc::InitialHeap initialHeap_;
     JSValueType unboxedType_;
 
@@ -9230,7 +9234,7 @@ class MArraySlice
   : public MTernaryInstruction,
     public Mix3Policy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2>>::Data
 {
-    AlwaysTenuredObject templateObj_;
+    CompilerObject templateObj_;
     gc::InitialHeap initialHeap_;
     JSValueType unboxedType_;
 
@@ -9524,7 +9528,8 @@ class MLoadTypedArrayElementStatic
             setResultType(MIRType_Int32);
     }
 
-    AlwaysTenured<JSObject*> someTypedArray_;
+    CompilerObject someTypedArray_;
+
     // An offset to be encoded in the load instruction - taking advantage of the
     // addressing modes. This is only non-zero when the access is proven to be
     // within bounds.
@@ -9770,7 +9775,7 @@ class MStoreTypedArrayElementStatic :
           offset_(offset), needsBoundsCheck_(needsBoundsCheck)
     {}
 
-    AlwaysTenured<JSObject*> someTypedArray_;
+    CompilerObject someTypedArray_;
 
     // An offset to be encoded in the store instruction - taking advantage of the
     // addressing modes. This is only non-zero when the access is proven to be
@@ -9990,8 +9995,8 @@ typedef Vector<bool, 4, JitAllocPolicy> BoolVector;
 class InlinePropertyTable : public TempObject
 {
     struct Entry : public TempObject {
-        AlwaysTenured<ObjectGroup*> group;
-        AlwaysTenuredFunction func;
+        CompilerObjectGroup group;
+        CompilerFunction func;
 
         Entry(ObjectGroup* group, JSFunction* func)
           : group(group), func(func)
@@ -10067,7 +10072,7 @@ class MGetPropertyCache
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
 {
-    AlwaysTenuredPropertyName name_;
+    CompilerPropertyName name_;
     bool idempotent_;
     bool monitoredResult_;
 
@@ -10171,7 +10176,7 @@ class MGetPropertyPolymorphic
     };
 
     Vector<Entry, 4, JitAllocPolicy> receivers_;
-    AlwaysTenuredPropertyName name_;
+    CompilerPropertyName name_;
 
     MGetPropertyPolymorphic(TempAllocator& alloc, MDefinition* obj, PropertyName* name)
       : MUnaryInstruction(obj),
@@ -10251,7 +10256,7 @@ class MSetPropertyPolymorphic
     };
 
     Vector<Entry, 4, JitAllocPolicy> receivers_;
-    AlwaysTenuredPropertyName name_;
+    CompilerPropertyName name_;
     bool needsBarrier_;
 
     MSetPropertyPolymorphic(TempAllocator& alloc, MDefinition* obj, MDefinition* value,
@@ -10514,8 +10519,8 @@ class MBindNameCache
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
 {
-    AlwaysTenuredPropertyName name_;
-    AlwaysTenuredScript script_;
+    CompilerPropertyName name_;
+    CompilerScript script_;
     jsbytecode* pc_;
 
     MBindNameCache(MDefinition* scopeChain, PropertyName* name, JSScript* script, jsbytecode* pc)
@@ -10552,7 +10557,7 @@ class MGuardShape
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
 {
-    AlwaysTenuredShape shape_;
+    CompilerShape shape_;
     BailoutKind bailoutKind_;
 
     MGuardShape(MDefinition* obj, Shape* shape, BailoutKind bailoutKind)
@@ -10653,7 +10658,7 @@ class MGuardObjectGroup
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
 {
-    AlwaysTenured<ObjectGroup*> group_;
+    CompilerObjectGroup group_;
     bool bailOnEquality_;
     BailoutKind bailoutKind_;
 
@@ -11028,7 +11033,7 @@ class MGetNameCache
     };
 
   private:
-    AlwaysTenuredPropertyName name_;
+    CompilerPropertyName name_;
     AccessKind kind_;
 
     MGetNameCache(MDefinition* obj, PropertyName* name, AccessKind kind)
@@ -11060,7 +11065,7 @@ class MGetNameCache
 
 class MCallGetIntrinsicValue : public MNullaryInstruction
 {
-    AlwaysTenuredPropertyName name_;
+    CompilerPropertyName name_;
 
     explicit MCallGetIntrinsicValue(PropertyName* name)
       : name_(name)
@@ -11087,7 +11092,7 @@ class MCallGetIntrinsicValue : public MNullaryInstruction
 
 class MSetPropertyInstruction : public MBinaryInstruction
 {
-    AlwaysTenuredPropertyName name_;
+    CompilerPropertyName name_;
     bool strict_;
     bool needsBarrier_;
 
@@ -11149,7 +11154,7 @@ class MDeleteProperty
   : public MUnaryInstruction,
     public BoxInputsPolicy::Data
 {
-    AlwaysTenuredPropertyName name_;
+    CompilerPropertyName name_;
     bool strict_;
 
   protected:
@@ -11297,7 +11302,7 @@ class MCallGetProperty
   : public MUnaryInstruction,
     public BoxInputsPolicy::Data
 {
-    AlwaysTenuredPropertyName name_;
+    CompilerPropertyName name_;
     bool idempotent_;
     bool callprop_;
 
@@ -11996,7 +12001,7 @@ class MInstanceOf
   : public MUnaryInstruction,
     public InstanceOfPolicy::Data
 {
-    AlwaysTenuredObject protoObj_;
+    CompilerObject protoObj_;
 
     MInstanceOf(MDefinition* obj, JSObject* proto)
       : MUnaryInstruction(obj),
@@ -12169,7 +12174,7 @@ class MSetFrameArgument
 class MRestCommon
 {
     unsigned numFormals_;
-    AlwaysTenured<ArrayObject*> templateObject_;
+    CompilerGCPointer<ArrayObject*> templateObject_;
 
   protected:
     MRestCommon(unsigned numFormals, ArrayObject* templateObject)
@@ -12393,7 +12398,7 @@ class MPostWriteBarrier : public MBinaryInstruction, public ObjectPolicy<0>::Dat
 
 class MNewDeclEnvObject : public MNullaryInstruction
 {
-    AlwaysTenured<DeclEnvObject*> templateObj_;
+    CompilerGCPointer<DeclEnvObject*> templateObj_;
 
     explicit MNewDeclEnvObject(DeclEnvObject* templateObj)
       : MNullaryInstruction(),
@@ -12419,7 +12424,7 @@ class MNewDeclEnvObject : public MNullaryInstruction
 
 class MNewCallObjectBase : public MNullaryInstruction
 {
-    AlwaysTenured<CallObject*> templateObj_;
+    CompilerGCPointer<CallObject*> templateObj_;
 
   protected:
     explicit MNewCallObjectBase(CallObject* templateObj)
@@ -12474,7 +12479,7 @@ class MNewStringObject :
   public MUnaryInstruction,
   public ConvertToStringPolicy<0>::Data
 {
-    AlwaysTenuredObject templateObj_;
+    CompilerObject templateObj_;
 
     MNewStringObject(MDefinition* input, JSObject* templateObj)
       : MUnaryInstruction(input),
@@ -13610,7 +13615,7 @@ void AddObjectsForPropertyRead(MDefinition* obj, PropertyName* name,
 bool CanWriteProperty(TempAllocator& alloc, CompilerConstraintList* constraints,
                       HeapTypeSetKey property, MDefinition* value,
                       MIRType implicitType = MIRType_None);
-bool PropertyWriteNeedsTypeBarrier(MIRGenerator* gen, CompilerConstraintList* constraints,
+bool PropertyWriteNeedsTypeBarrier(TempAllocator& alloc, CompilerConstraintList* constraints,
                                    MBasicBlock* current, MDefinition** pobj,
                                    PropertyName* name, MDefinition** pvalue,
                                    bool canModify, MIRType implicitType = MIRType_None);

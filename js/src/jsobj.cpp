@@ -274,415 +274,7 @@ js::Throw(JSContext* cx, JSObject* obj, unsigned errorNumber)
 }
 
 
-/*** Standard-compliant property definition (used by Object.defineProperty) **********************/
-
-static bool
-DefinePropertyOnObject(JSContext* cx, HandleNativeObject obj, HandleId id,
-                       Handle<PropertyDescriptor> desc, ObjectOpResult& result)
-{
-    /* 8.12.9 step 1. */
-    RootedShape shape(cx);
-    MOZ_ASSERT(!obj->getOps()->lookupProperty);
-    if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &shape))
-        return false;
-
-    MOZ_ASSERT(!obj->getOps()->defineProperty);
-
-    /* 8.12.9 steps 2-4. */
-    if (!shape) {
-        bool extensible;
-        if (!IsExtensible(cx, obj, &extensible))
-            return false;
-        if (!extensible)
-            return result.fail(JSMSG_OBJECT_NOT_EXTENSIBLE);
-
-        if (desc.isGenericDescriptor() || desc.isDataDescriptor()) {
-            MOZ_ASSERT(!obj->getOps()->defineProperty);
-            RootedValue v(cx, desc.hasValue() ? desc.value() : UndefinedValue());
-            unsigned attrs = desc.attributes() & (JSPROP_PERMANENT | JSPROP_ENUMERATE | JSPROP_READONLY);
-
-            if (!desc.hasConfigurable())
-                attrs |= JSPROP_PERMANENT;
-            if (!desc.hasWritable())
-                attrs |= JSPROP_READONLY;
-            return NativeDefineProperty(cx, obj, id, v, nullptr, nullptr, attrs, result);
-        }
-
-        MOZ_ASSERT(desc.isAccessorDescriptor());
-
-        unsigned attrs = desc.attributes() & (JSPROP_PERMANENT | JSPROP_ENUMERATE |
-                                              JSPROP_SHARED | JSPROP_GETTER | JSPROP_SETTER);
-        if (!desc.hasConfigurable())
-            attrs |= JSPROP_PERMANENT;
-        return NativeDefineProperty(cx, obj, id, UndefinedHandleValue,
-                                    desc.getter(), desc.setter(), attrs, result);
-    }
-
-    /* 8.12.9 steps 5-6 (note 5 is merely a special case of 6). */
-    RootedValue v(cx);
-
-    bool shapeDataDescriptor = true,
-         shapeAccessorDescriptor = false,
-         shapeWritable = true,
-         shapeConfigurable = true,
-         shapeEnumerable = true,
-         shapeHasDefaultGetter = true,
-         shapeHasDefaultSetter = true,
-         shapeHasGetterValue = false,
-         shapeHasSetterValue = false;
-    uint8_t shapeAttributes = GetShapeAttributes(obj, shape);
-    if (!IsImplicitDenseOrTypedArrayElement(shape)) {
-        shapeDataDescriptor = shape->isDataDescriptor();
-        shapeAccessorDescriptor = shape->isAccessorDescriptor();
-        shapeWritable = shape->writable();
-        shapeConfigurable = shape->configurable();
-        shapeEnumerable = shape->enumerable();
-        shapeHasDefaultGetter = shape->hasDefaultGetter();
-        shapeHasDefaultSetter = shape->hasDefaultSetter();
-        shapeHasGetterValue = shape->hasGetterValue();
-        shapeHasSetterValue = shape->hasSetterValue();
-        shapeAttributes = shape->attributes();
-    }
-
-    do {
-        if (desc.isAccessorDescriptor()) {
-            if (!shapeAccessorDescriptor)
-                break;
-
-            if (desc.hasGetterObject()) {
-                if (!shape->hasGetterValue() || desc.getterObject() != shape->getterObject())
-                    break;
-            }
-
-            if (desc.hasSetterObject()) {
-                if (!shape->hasSetterValue() || desc.setterObject() != shape->setterObject())
-                    break;
-            }
-        } else {
-            /*
-             * Determine the current value of the property once, if the current
-             * value might actually need to be used or preserved later.  NB: we
-             * guard on whether the current property is a data descriptor to
-             * avoid calling a getter; we won't need the value if it's not a
-             * data descriptor.
-             */
-            if (IsImplicitDenseOrTypedArrayElement(shape)) {
-                v = obj->getDenseOrTypedArrayElement(JSID_TO_INT(id));
-            } else if (shape->isDataDescriptor()) {
-                /*
-                 * We must rule out a non-configurable js::SetterOp-guarded
-                 * property becoming a writable unguarded data property, since
-                 * such a property can have its value changed to one the getter
-                 * and setter preclude.
-                 *
-                 * A desc lacking writable but with value is a data descriptor
-                 * and we must reject it as if it had writable: true if current
-                 * is writable.
-                 */
-                if (!shape->configurable() &&
-                    (!shape->hasDefaultGetter() || !shape->hasDefaultSetter()) &&
-                    desc.isDataDescriptor() &&
-                    (desc.hasWritable() ? desc.writable() : shape->writable()))
-                {
-                    return result.fail(JSMSG_CANT_REDEFINE_PROP);
-                }
-
-                if (!NativeGetExistingProperty(cx, obj, obj, shape, &v))
-                    return false;
-            }
-
-            if (desc.isDataDescriptor()) {
-                if (!shapeDataDescriptor)
-                    break;
-
-                bool same;
-                if (desc.hasValue()) {
-                    if (!SameValue(cx, desc.value(), v, &same))
-                        return false;
-                    if (!same) {
-                        /*
-                         * Insist that a non-configurable js::GetterOp data
-                         * property is frozen at exactly the last-got value.
-                         *
-                         * Duplicate the first part of the big conjunction that
-                         * we tested above, rather than add a local bool flag.
-                         * Likewise, don't try to keep shape->writable() in a
-                         * flag we veto from true to false for non-configurable
-                         * GetterOp-based data properties and test before the
-                         * SameValue check later on in order to re-use that "if
-                         * (!SameValue) return false" logic.
-                         *
-                         * This function is large and complex enough that it
-                         * seems best to repeat a small bit of code and return
-                         * result.fail() ASAP, instead of being clever.
-                         */
-                        if (!shapeConfigurable &&
-                            (!shape->hasDefaultGetter() || !shape->hasDefaultSetter()))
-                        {
-                            return result.fail(JSMSG_CANT_REDEFINE_PROP);
-                        }
-                        break;
-                    }
-                }
-                if (desc.hasWritable() && desc.writable() != shapeWritable)
-                    break;
-            } else {
-                /* The only fields in desc will be handled below. */
-                MOZ_ASSERT(desc.isGenericDescriptor());
-            }
-        }
-
-        if (desc.hasConfigurable() && desc.configurable() != shapeConfigurable)
-            break;
-        if (desc.hasEnumerable() && desc.enumerable() != shapeEnumerable)
-            break;
-
-        /* The conditions imposed by step 5 or step 6 apply. */
-        return result.succeed();
-    } while (0);
-
-    /* 8.12.9 step 7. */
-    if (!shapeConfigurable) {
-        if ((desc.hasConfigurable() && desc.configurable()) ||
-            (desc.hasEnumerable() && desc.enumerable() != shape->enumerable())) {
-            return result.fail(JSMSG_CANT_REDEFINE_PROP);
-        }
-    }
-
-    bool callDelProperty = false;
-
-    if (desc.isGenericDescriptor()) {
-        /* 8.12.9 step 8, no validation required */
-    } else if (desc.isDataDescriptor() != shapeDataDescriptor) {
-        /* 8.12.9 step 9. */
-        if (!shapeConfigurable)
-            return result.fail(JSMSG_CANT_REDEFINE_PROP);
-    } else if (desc.isDataDescriptor()) {
-        /* 8.12.9 step 10. */
-        MOZ_ASSERT(shapeDataDescriptor);
-        if (!shapeConfigurable && !shape->writable()) {
-            if (desc.hasWritable() && desc.writable())
-                return result.fail(JSMSG_CANT_REDEFINE_PROP);
-            if (desc.hasValue()) {
-                bool same;
-                if (!SameValue(cx, desc.value(), v, &same))
-                    return false;
-                if (!same)
-                    return result.fail(JSMSG_CANT_REDEFINE_PROP);
-            }
-        }
-
-        callDelProperty = !shapeHasDefaultGetter || !shapeHasDefaultSetter;
-    } else {
-        /* 8.12.9 step 11. */
-        MOZ_ASSERT(desc.isAccessorDescriptor() && shape->isAccessorDescriptor());
-        if (!shape->configurable()) {
-            // The hasSetterValue() and hasGetterValue() calls below ought to
-            // be redundant here, because accessor shapes should always have
-            // both JSPROP_GETTER and JSPROP_SETTER. But this is not the case
-            // currently; in particular Object.defineProperty(obj, key, {get: fn})
-            // creates a property without JSPROP_SETTER (bug 1133315).
-            if (desc.hasSetterObject() &&
-                desc.setterObject() != (shape->hasSetterValue() ? shape->setterObject() : nullptr))
-            {
-                return result.fail(JSMSG_CANT_REDEFINE_PROP);
-            }
-
-            if (desc.hasGetterObject() &&
-                desc.getterObject() != (shape->hasGetterValue() ? shape->getterObject() : nullptr))
-            {
-                return result.fail(JSMSG_CANT_REDEFINE_PROP);
-            }
-        }
-    }
-
-    /* 8.12.9 step 12. */
-    unsigned attrs;
-    GetterOp getter;
-    SetterOp setter;
-    if (desc.isGenericDescriptor()) {
-        unsigned changed = 0;
-        if (desc.hasConfigurable())
-            changed |= JSPROP_PERMANENT;
-        if (desc.hasEnumerable())
-            changed |= JSPROP_ENUMERATE;
-
-        attrs = (shapeAttributes & ~changed) | (desc.attributes() & changed);
-        getter = IsImplicitDenseOrTypedArrayElement(shape) ? nullptr : shape->getter();
-        setter = IsImplicitDenseOrTypedArrayElement(shape) ? nullptr : shape->setter();
-    } else if (desc.isDataDescriptor()) {
-        /* Watch out for accessor -> data transformations here. */
-        unsigned changed = JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
-        unsigned descAttrs = desc.attributes();
-        if (desc.hasConfigurable())
-            changed |= JSPROP_PERMANENT;
-        if (desc.hasEnumerable())
-            changed |= JSPROP_ENUMERATE;
-
-        if (desc.hasWritable()) {
-            changed |= JSPROP_READONLY;
-        } else if (!shapeDataDescriptor) {
-            changed |= JSPROP_READONLY;
-            descAttrs |= JSPROP_READONLY;
-        }
-
-        if (desc.hasValue())
-            v = desc.value();
-        attrs = (descAttrs & changed) | (shapeAttributes & ~changed);
-        getter = nullptr;
-        setter = nullptr;
-    } else {
-        MOZ_ASSERT(desc.isAccessorDescriptor());
-
-        /* 8.12.9 step 12. */
-        unsigned changed = 0;
-        if (desc.hasConfigurable())
-            changed |= JSPROP_PERMANENT;
-        if (desc.hasEnumerable())
-            changed |= JSPROP_ENUMERATE;
-        if (desc.hasGetterObject())
-            changed |= JSPROP_GETTER | JSPROP_SHARED | JSPROP_READONLY | JSPROP_SHADOWABLE;
-        if (desc.hasSetterObject())
-            changed |= JSPROP_SETTER | JSPROP_SHARED | JSPROP_READONLY | JSPROP_SHADOWABLE;
-
-        attrs = (desc.attributes() & changed) | (shapeAttributes & ~changed);
-        if (desc.hasGetterObject())
-            getter = desc.getter();
-        else
-            getter = shapeHasGetterValue ? shape->getter() : nullptr;
-        if (desc.hasSetterObject())
-            setter = desc.setter();
-        else
-            setter = shapeHasSetterValue ? shape->setter() : nullptr;
-    }
-
-    /*
-     * Since "data" properties implemented using native C functions may rely on
-     * side effects during setting, we must make them aware that they have been
-     * "assigned"; deleting the property before redefining it does the trick.
-     * See bug 539766, where we ran into problems when we redefined
-     * arguments.length without making the property aware that its value had
-     * been changed (which would have happened if we had deleted it before
-     * redefining it or we had invoked its setter to change its value).
-     */
-    if (callDelProperty) {
-        ObjectOpResult ignored;
-        if (!CallJSDeletePropertyOp(cx, obj->getClass()->delProperty, obj, id, ignored))
-            return false;
-    }
-
-    return NativeDefineProperty(cx, obj, id, v, getter, setter, attrs, result);
-}
-
-/* ES6 20130308 draft 8.4.2.1 [[DefineOwnProperty]] */
-static bool
-DefinePropertyOnArray(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
-                      Handle<PropertyDescriptor> desc, ObjectOpResult& result)
-{
-    /* Step 2. */
-    if (id == NameToId(cx->names().length)) {
-        // Canonicalize value, if necessary, before proceeding any further.  It
-        // would be better if this were always/only done by ArraySetLength.
-        // But canonicalization may throw a RangeError (or other exception, if
-        // the value is an object with user-defined conversion semantics)
-        // before other attributes are checked.  So as long as our internal
-        // defineProperty hook doesn't match the ECMA one, this duplicate
-        // checking can't be helped.
-        RootedValue v(cx);
-        if (desc.hasValue()) {
-            uint32_t newLen;
-            if (!CanonicalizeArrayLengthValue(cx, desc.value(), &newLen))
-                return false;
-            v.setNumber(newLen);
-        } else {
-            v.setNumber(arr->length());
-        }
-
-        if (desc.hasConfigurable() && desc.configurable())
-            return result.fail(JSMSG_CANT_REDEFINE_PROP);
-        if (desc.hasEnumerable() && desc.enumerable())
-            return result.fail(JSMSG_CANT_REDEFINE_PROP);
-
-        if (desc.isAccessorDescriptor())
-            return result.fail(JSMSG_CANT_REDEFINE_PROP);
-
-        unsigned attrs = arr->lookup(cx, id)->attributes();
-        if (!arr->lengthIsWritable()) {
-            if (desc.hasWritable() && desc.writable())
-                return result.fail(JSMSG_CANT_REDEFINE_PROP);
-        } else {
-            if (desc.hasWritable() && !desc.writable())
-                attrs = attrs | JSPROP_READONLY;
-        }
-
-        return ArraySetLength(cx, arr, id, attrs, v, result);
-    }
-
-    /* Step 3. */
-    uint32_t index;
-    if (IdIsIndex(id, &index)) {
-        /* Step 3b. */
-        uint32_t oldLen = arr->length();
-
-        /* Steps 3a, 3e. */
-        if (index >= oldLen && !arr->lengthIsWritable())
-            return result.fail(JSMSG_CANT_APPEND_TO_ARRAY);
-
-        /* Steps 3f-j. */
-        return DefinePropertyOnObject(cx, arr, id, desc, result);
-    }
-
-    /* Step 4. */
-    return DefinePropertyOnObject(cx, arr, id, desc, result);
-}
-
-// ES6 draft rev31 9.4.5.3 [[DefineOwnProperty]]
-static bool
-DefinePropertyOnTypedArray(JSContext* cx, HandleObject obj, HandleId id,
-                           Handle<PropertyDescriptor> desc, ObjectOpResult& result)
-{
-    MOZ_ASSERT(IsAnyTypedArray(obj));
-    // Steps 3.a-c.
-    uint64_t index;
-    if (IsTypedArrayIndex(id, &index))
-        return DefineTypedArrayElement(cx, obj, index, desc, result);
-
-    // Step 4.
-    return DefinePropertyOnObject(cx, obj.as<NativeObject>(), id, desc, result);
-}
-
-bool
-js::StandardDefineProperty(JSContext* cx, HandleObject obj, HandleId id,
-                           Handle<PropertyDescriptor> desc, ObjectOpResult& result)
-{
-    if (obj->is<ArrayObject>()) {
-        Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
-        return DefinePropertyOnArray(cx, arr, id, desc, result);
-    }
-
-    if (IsAnyTypedArray(obj))
-        return DefinePropertyOnTypedArray(cx, obj, id, desc, result);
-
-    if (obj->is<ProxyObject>()) {
-        Rooted<PropertyDescriptor> pd(cx, desc);
-        pd.object().set(obj);
-        return Proxy::defineProperty(cx, obj, id, pd, result);
-    }
-
-    if (obj->getOps()->defineProperty)
-        return obj->getOps()->defineProperty(cx, obj, id, desc, result);
-
-    return DefinePropertyOnObject(cx, obj.as<NativeObject>(), id, desc, result);
-}
-
-bool
-js::StandardDefineProperty(JSContext* cx, HandleObject obj, HandleId id,
-                           Handle<PropertyDescriptor> desc)
-{
-    ObjectOpResult success;
-    return StandardDefineProperty(cx, obj, id, desc, success) &&
-           success.checkStrict(cx, obj, id);
-}
+/*** PropertyDescriptor operations and DefineProperties ******************************************/
 
 bool
 CheckCallable(JSContext* cx, JSObject* obj, const char* fieldName)
@@ -879,12 +471,13 @@ js::DefineProperties(JSContext* cx, HandleObject obj, HandleObject props)
         return false;
 
     for (size_t i = 0, len = ids.length(); i < len; i++) {
-        if (!StandardDefineProperty(cx, obj, ids[i], descs[i]))
+        if (!DefineProperty(cx, obj, ids[i], descs[i]))
             return false;
     }
 
     return true;
 }
+
 
 /*** Seal and freeze *****************************************************************************/
 
@@ -988,15 +581,15 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
             }
 
             // 8.a.i-ii. / 9.a.iii.3-4
-            if (!StandardDefineProperty(cx, obj, id, desc))
+            if (!DefineProperty(cx, obj, id, desc))
                 return false;
         }
     }
 
     // Ordinarily ArraySetLength handles this, but we're going behind its back
     // right now, so we must do this manually.  Neither the custom property
-    // tree mutations nor the StandardDefineProperty call in the above code will
-    // do this for us.
+    // tree mutations nor the DefineProperty call in the above code will do
+    // this for us.
     //
     // ArraySetLength also implements the capacity <= length invariant for
     // arrays with non-writable length.  We don't need to do anything special
@@ -1504,7 +1097,7 @@ JS_CopyPropertyFrom(JSContext* cx, HandleId id, HandleObject target,
     if (!cx->compartment()->wrap(cx, &desc))
         return false;
 
-    return StandardDefineProperty(cx, target, wrappedId, desc);
+    return DefineProperty(cx, target, wrappedId, desc);
 }
 
 JS_FRIEND_API(bool)
@@ -3005,6 +2598,14 @@ js::GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
     desc.object().set(nobj);
     desc.assertComplete();
     return true;
+}
+
+bool
+js::DefineProperty(JSContext* cx, HandleObject obj, HandleId id, Handle<PropertyDescriptor> desc)
+{
+    ObjectOpResult result;
+    return DefineProperty(cx, obj, id, desc, result) &&
+           result.checkStrict(cx, obj, id);
 }
 
 bool

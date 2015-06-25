@@ -1072,10 +1072,6 @@ nsCSSBorderRenderer::CreateCornerGradient(mozilla::css::Corner aCorner,
 
   nsTArray<gfx::GradientStop> rawStops(2);
   rawStops.SetLength(2);
-  // This is only guaranteed to give correct (and in some cases more correct)
-  // rendering with the Direct2D Azure and Quartz Cairo backends. For other
-  // cairo backends it could create un-antialiased border corner transitions
-  // since that at least used to be pixman's behaviour for hard stops.
   rawStops[0].color = firstColor;
   rawStops[0].offset = 0.5;
   rawStops[1].color = secondColor;

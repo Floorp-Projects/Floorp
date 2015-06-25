@@ -28,7 +28,7 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
 {
   MOZ_RELEASE_ASSERT(mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
 
-  nsRefPtr<URLSearchParams> usp = new URLSearchParams();
+  nsRefPtr<URLSearchParams> usp = new URLSearchParams(nullptr);
   nsAutoString value;
 
   if (mAppId != nsIScriptSecurityManager::NO_APP_ID) {
@@ -108,8 +108,8 @@ OriginAttributes::PopulateFromSuffix(const nsACString& aStr)
     return false;
   }
 
-  nsRefPtr<URLSearchParams> usp = new URLSearchParams();
-  usp->ParseInput(Substring(aStr, 1, aStr.Length() - 1), nullptr);
+  nsRefPtr<URLSearchParams> usp = new URLSearchParams(nullptr);
+  usp->ParseInput(Substring(aStr, 1, aStr.Length() - 1));
 
   PopulateFromSuffixIterator iterator(this);
   return usp->ForEach(iterator);

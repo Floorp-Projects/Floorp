@@ -7632,42 +7632,73 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
     }
   }
 
-  SetCoord(*aRuleData->ValueForWidth(), pos->mWidth, parentPos->mWidth,
+  // We allow the enumerated box size property values -moz-min-content, etc. to
+  // be specified on both the {,min-,max-}width properties and the
+  // {,min-,max-}height properties, regardless of the writing mode.  This is
+  // because the writing mode is not determined until here, at computed value
+  // time.  Since we do not support layout behavior of these keywords on the
+  // block-axis properties, we turn them into unset if we find them in
+  // that case.
+
+  bool vertical;
+  switch (aContext->StyleVisibility()->mWritingMode) {
+    default:
+      MOZ_ASSERT(false, "unexpected writing-mode value");
+      // fall through
+    case NS_STYLE_WRITING_MODE_HORIZONTAL_TB:
+      vertical = false;
+      break;
+    case NS_STYLE_WRITING_MODE_VERTICAL_RL:
+    case NS_STYLE_WRITING_MODE_VERTICAL_LR:
+      vertical = true;
+      break;
+  }
+
+  const nsCSSValue* width = aRuleData->ValueForWidth();
+  SetCoord(width->GetUnit() == eCSSUnit_Enumerated && vertical ?
+             nsCSSValue(eCSSUnit_Unset) : *width,
+           pos->mWidth, parentPos->mWidth,
            SETCOORD_LPAEH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC |
              SETCOORD_UNSET_INITIAL,
            aContext, mPresContext, conditions);
-  SetCoord(*aRuleData->ValueForMinWidth(), pos->mMinWidth, parentPos->mMinWidth,
+
+  const nsCSSValue* minWidth = aRuleData->ValueForMinWidth();
+  SetCoord(minWidth->GetUnit() == eCSSUnit_Enumerated && vertical ?
+             nsCSSValue(eCSSUnit_Unset) : *minWidth,
+           pos->mMinWidth, parentPos->mMinWidth,
            SETCOORD_LPAEH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC |
              SETCOORD_UNSET_INITIAL,
            aContext, mPresContext, conditions);
-  SetCoord(*aRuleData->ValueForMaxWidth(), pos->mMaxWidth, parentPos->mMaxWidth,
+
+  const nsCSSValue* maxWidth = aRuleData->ValueForMaxWidth();
+  SetCoord(maxWidth->GetUnit() == eCSSUnit_Enumerated && vertical ?
+             nsCSSValue(eCSSUnit_Unset) : *maxWidth,
+           pos->mMaxWidth, parentPos->mMaxWidth,
            SETCOORD_LPOEH | SETCOORD_INITIAL_NONE | SETCOORD_STORE_CALC |
              SETCOORD_UNSET_INITIAL,
            aContext, mPresContext, conditions);
 
-  // We can get enumerated values for {,min-,max-}height (-moz-min-content,
-  // -moz-max-content, etc.) since we parse the logical properties with all the
-  // values that width accepts.  If we get a value we don't support on these
-  // properties, turn them into unset.
   const nsCSSValue* height = aRuleData->ValueForHeight();
-  SetCoord(height->GetUnit() == eCSSUnit_Enumerated ?
+  SetCoord(height->GetUnit() == eCSSUnit_Enumerated && !vertical ?
              nsCSSValue(eCSSUnit_Unset) : *height,
            pos->mHeight, parentPos->mHeight,
-           SETCOORD_LPAH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC |
+           SETCOORD_LPAEH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC |
              SETCOORD_UNSET_INITIAL,
            aContext, mPresContext, conditions);
+
   const nsCSSValue* minHeight = aRuleData->ValueForMinHeight();
-  SetCoord(minHeight->GetUnit() == eCSSUnit_Enumerated ?
+  SetCoord(minHeight->GetUnit() == eCSSUnit_Enumerated && !vertical ?
              nsCSSValue(eCSSUnit_Unset) : *minHeight,
            pos->mMinHeight, parentPos->mMinHeight,
-           SETCOORD_LPAH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC |
+           SETCOORD_LPAEH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC |
              SETCOORD_UNSET_INITIAL,
            aContext, mPresContext, conditions);
+
   const nsCSSValue* maxHeight = aRuleData->ValueForMaxHeight();
-  SetCoord(maxHeight->GetUnit() == eCSSUnit_Enumerated ?
+  SetCoord(maxHeight->GetUnit() == eCSSUnit_Enumerated && !vertical ?
              nsCSSValue(eCSSUnit_Unset) : *maxHeight,
            pos->mMaxHeight, parentPos->mMaxHeight,
-           SETCOORD_LPOH | SETCOORD_INITIAL_NONE | SETCOORD_STORE_CALC |
+           SETCOORD_LPOEH | SETCOORD_INITIAL_NONE | SETCOORD_STORE_CALC |
              SETCOORD_UNSET_INITIAL,
            aContext, mPresContext, conditions);
 
