@@ -45,6 +45,9 @@ IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId)
  , mProtocolId(aProtoId)
  , mTrans(nullptr)
 {
+#ifdef DEBUG
+  StaticMutexAutoLock al(gProtocolMutex);
+#endif
 }
 
 IToplevelProtocol::~IToplevelProtocol()
