@@ -280,4 +280,27 @@
 }
 #pseudo-class-panel-toggle[checked]::before {
   background-image: url("chrome://browser/skin/devtools/pseudo-class.svg#pseudo-class-checked");
+  filter: none !important;
+}
+
+/**
+ * These buttons are using opacity instead of background color to indicate
+ * the state
+ */
+#ruleview-add-rule-button,
+#pseudo-class-panel-toggle {
+  opacity: 0.8;
+}
+
+#ruleview-add-rule-button:hover,
+#pseudo-class-panel-toggle:hover,
+#pseudo-class-panel-toggle[checked] {
+  opacity: 1;
+}
+
+#ruleview-add-rule-button,
+#pseudo-class-panel-toggle,
+#pseudo-class-panel-toggle:hover,
+#pseudo-class-panel-toggle[checked]::before {
+  background-color: transparent !important;
 }
