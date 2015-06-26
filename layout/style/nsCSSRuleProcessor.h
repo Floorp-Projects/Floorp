@@ -18,6 +18,7 @@
 #include "nsIStyleRuleProcessor.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsExpirationTracker.h"
 #include "nsRuleWalker.h"
 #include "mozilla/UniquePtr.h"
 
@@ -59,7 +60,8 @@ public:
   nsCSSRuleProcessor(const sheet_array_type& aSheets,
                      uint8_t aSheetType,
                      mozilla::dom::Element* aScopeElement,
-                     nsCSSRuleProcessor* aPreviousCSSRuleProcessor);
+                     nsCSSRuleProcessor* aPreviousCSSRuleProcessor,
+                     bool aIsShared = false);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsCSSRuleProcessor)
@@ -161,6 +163,16 @@ public:
    */
   mozilla::dom::Element* GetScopeElement() const { return mScopeElement; }
 
+  bool IsShared() const { return mIsShared; }
+
+  nsExpirationState* GetExpirationState() { return &mExpirationState; }
+  void SetInRuleProcessorCache(bool aVal) {
+    MOZ_ASSERT(mIsShared);
+    printf("%p SetInRuleProcessorCache %d\n", this, aVal);
+    mInRuleProcessorCache = aVal;
+  }
+  bool IsInRuleProcessorCache() const { return mInRuleProcessorCache; }
+
 #ifdef XP_WIN
   // Cached theme identifier for the moz-windows-theme media query.
   static uint8_t GetWindowsThemeIdentifier();
@@ -214,8 +226,13 @@ private:
   // Only used if mSheetType == nsStyleSet::eScopedDocSheet.
   nsRefPtr<mozilla::dom::Element> mScopeElement;
 
+  nsExpirationState mExpirationState;
+
   // type of stylesheet using this processor
   uint8_t mSheetType;  // == nsStyleSet::sheetType
+
+  const bool mIsShared;
+  bool mInRuleProcessorCache;
 
 #ifdef XP_WIN
   static uint8_t sWinThemeId;

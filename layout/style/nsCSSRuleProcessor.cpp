@@ -54,6 +54,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Likely.h"
 #include "mozilla/TypedEnumBits.h"
+#include "RuleProcessorCache.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1005,7 +1006,8 @@ nsCSSRuleProcessor::nsCSSRuleProcessor(const sheet_array_type& aSheets,
                                        uint8_t aSheetType,
                                        Element* aScopeElement,
                                        nsCSSRuleProcessor*
-                                         aPreviousCSSRuleProcessor)
+                                         aPreviousCSSRuleProcessor,
+                                       bool aIsShared)
   : mSheets(aSheets)
   , mRuleCascades(nullptr)
   , mPreviousCacheKey(aPreviousCSSRuleProcessor
@@ -1014,6 +1016,8 @@ nsCSSRuleProcessor::nsCSSRuleProcessor(const sheet_array_type& aSheets,
   , mLastPresContext(nullptr)
   , mScopeElement(aScopeElement)
   , mSheetType(aSheetType)
+  , mIsShared(aIsShared)
+  , mInRuleProcessorCache(false)
 {
   NS_ASSERTION(!!mScopeElement == (aSheetType == nsStyleSet::eScopedDocSheet),
                "aScopeElement must be specified iff aSheetType is "
@@ -1025,6 +1029,10 @@ nsCSSRuleProcessor::nsCSSRuleProcessor(const sheet_array_type& aSheets,
 
 nsCSSRuleProcessor::~nsCSSRuleProcessor()
 {
+  if (mInRuleProcessorCache) {
+    RuleProcessorCache::RemoveRuleProcessor(this);
+  }
+  MOZ_ASSERT(!mExpirationState.IsTracked());
   ClearSheets();
   ClearRuleCascades();
 }
@@ -2989,6 +2997,13 @@ nsCSSRuleProcessor::ClearRuleCascades()
   if (!mPreviousCacheKey) {
     mPreviousCacheKey = CloneMQCacheKey();
   }
+
+  // No need to remove the rule processor from the RuleProcessorCache here,
+  // since CSSStyleSheet::ClearRuleCascades will have called
+  // RuleProcessorCache::RemoveSheet() passing itself, which will catch
+  // this rule processor (and any others for different @-moz-document
+  // cache key results).
+  MOZ_ASSERT(!RuleProcessorCache::HasRuleProcessor(this));
 
   // We rely on our caller (perhaps indirectly) to do something that
   // will rebuild style data and the user font set (either
