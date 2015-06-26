@@ -141,8 +141,7 @@ AdobePluginVoucherExists(const nsACString& aVersionStr)
 static MediaKeySystemStatus
 EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
                     const nsAString& aKeySystem,
-                    int32_t aMinCdmVersion,
-                    bool aCheckForV6=false)
+                    int32_t aMinCdmVersion)
 {
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_ConvertUTF16toUTF8(aKeySystem));
@@ -151,13 +150,7 @@ EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
   if (NS_FAILED(aGMPService->GetPluginVersionForAPI(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
                                                     &tags,
                                                     &hasPlugin,
-                                                    versionStr)) ||
-      // XXX to be removed later in bug 1147692
-      (aCheckForV6 && !hasPlugin &&
-       NS_FAILED(aGMPService->GetPluginVersionForAPI(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR_COMPAT),
-                                                     &tags,
-                                                     &hasPlugin,
-                                                     versionStr)))) {
+                                                    versionStr))) {
     return MediaKeySystemStatus::Error;
   }
 
@@ -232,7 +225,7 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
       // Adobe EME isn't going to work, so don't advertise that it will.
       return MediaKeySystemStatus::Cdm_not_supported;
     }
-    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, true);
+    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion);
   }
 #endif
 
@@ -274,25 +267,15 @@ IsPlayableWithGMP(mozIGeckoMediaPluginService* aGMPS,
     return false;
   }
   return (!hasAAC ||
-          !(HaveGMPFor(aGMPS,
-                       NS_ConvertUTF16toUTF8(aKeySystem),
-                       NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
-                       NS_LITERAL_CSTRING("aac")) ||
-            // XXX remove later in bug 1147692
-            HaveGMPFor(aGMPS,
-                       NS_ConvertUTF16toUTF8(aKeySystem),
-                       NS_LITERAL_CSTRING(GMP_API_DECRYPTOR_COMPAT),
-                       NS_LITERAL_CSTRING("aac")))) &&
+          !HaveGMPFor(aGMPS,
+                      NS_ConvertUTF16toUTF8(aKeySystem),
+                      NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
+                      NS_LITERAL_CSTRING("aac"))) &&
          (!hasH264 ||
-          !(HaveGMPFor(aGMPS,
-                       NS_ConvertUTF16toUTF8(aKeySystem),
-                       NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
-                       NS_LITERAL_CSTRING("h264")) ||
-            // XXX remove later in bug 1147692
-            HaveGMPFor(aGMPS,
-                       NS_ConvertUTF16toUTF8(aKeySystem),
-                       NS_LITERAL_CSTRING(GMP_API_DECRYPTOR_COMPAT),
-                       NS_LITERAL_CSTRING("h264"))));
+          !HaveGMPFor(aGMPS,
+                     NS_ConvertUTF16toUTF8(aKeySystem),
+                     NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
+                     NS_LITERAL_CSTRING("h264")));
 #else
   return false;
 #endif
