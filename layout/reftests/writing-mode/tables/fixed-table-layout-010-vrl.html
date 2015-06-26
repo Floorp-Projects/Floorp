@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>CSS Test: Subsequent rows in fixed table layout</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
+        <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#fixed-table-layout">
+        <meta name="flags" content="">
+        <meta name="assert" content="Cells in subsequent rows after the first do not affect column heights in fixed table layout.">
+        <style type="text/css">
+            div.test {
+                writing-mode: vertical-rl;
+                text-orientation: sideways-right;
+            }
+            table
+            {
+                border-spacing: 0;
+                table-layout: fixed;
+            }
+            td
+            {
+                background: blue;
+                color: blue;
+                padding: 0;
+                width: 20px;
+            }
+            #overflow
+            {
+                color: black;
+                overflow: visible;
+                white-space: pre;
+            }
+            #div1
+            {
+                background: black;
+                width: 20px;
+            }
+            table, .row1
+            {
+                height: 100px;
+            }
+            .row2, #div1
+            {
+                height: 200px;
+            }
+        </style>
+    </head>
+    <body>
+      <p>Test passes if the boxes below are the same height and the
+blue box has the words "Filler Text" in the middle,
+overflowing below the box.</p>
+      <div class="test">
+        <div id="div1"></div>
+        <table>
+            <tr>
+                <td class="row1"></td>
+                <td class="row1"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td id="overflow">Filler Text Filler Text Filler Text</td>
+            </tr>
+            <tr>
+                <td class="row2"></td>
+                <td class="row2"></td>
+            </tr>
+        </table>
+      </div>
+    </body>
+</html>
