@@ -180,7 +180,6 @@ public:
   void ReleaseStyleSetRef();
   void SetInRuleProcessorCache(bool aVal) {
     MOZ_ASSERT(mIsShared);
-    printf("%p SetInRuleProcessorCache %d\n", this, aVal);
     mInRuleProcessorCache = aVal;
   }
   bool IsInRuleProcessorCache() const { return mInRuleProcessorCache; }
