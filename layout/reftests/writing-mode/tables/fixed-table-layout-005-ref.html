@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>CSS Test: Leftover table height is divided evenly among auto-sized columns</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
+        <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#fixed-table-layout">
+        <meta name="flags" content="">
+        <meta name="assert" content="Any remaining vertical table space is divided evenly among columns which do not have specified heights.">
+        <style type="text/css">
+            div.test { writing-mode: vertical-lr; }
+            #div1
+            {
+                width: 100px;
+                height: 300px;
+            }
+            #div1 > div
+            {
+                float: left;
+            }
+            .px50
+            {
+                height: 50px;
+            }
+            #px100
+            {
+                height: 100px;
+            }
+        </style>
+    </head>
+    <body>
+      <div class="test">
+        <div id="div1">
+            <div class="px50">1</div>
+            <div class="px50">2</div>
+            <div id="px100">3</div>
+            <div class="px50">4</div>
+            <div class="px50">5</div>
+        </div>
+      </div>
+    </body>
+</html>
