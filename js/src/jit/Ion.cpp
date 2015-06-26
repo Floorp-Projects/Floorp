@@ -1352,14 +1352,16 @@ OptimizeMIR(MIRGenerator* mir)
             return false;
     }
 
-    ValueNumberer gvn(mir, graph);
-    if (!gvn.init())
-        return false;
+    if (mir->optimizationInfo().scalarReplacementEnabled()) {
+        AutoTraceLog log(logger, TraceLogger_ScalarReplacement);
+        if (!ScalarReplacement(mir, graph))
+            return false;
+        gs.spewPass("Scalar Replacement");
+        AssertGraphCoherency(graph);
 
-    size_t doRepeatOptimizations = 0;
-  repeatOptimizations:
-    doRepeatOptimizations++;
-    MOZ_ASSERT(doRepeatOptimizations <= 2);
+        if (mir->shouldCancel("Scalar Replacement"))
+            return false;
+    }
 
     if (!mir->compilingAsmJS()) {
         AutoTraceLog log(logger, TraceLogger_ApplyTypes);
@@ -1395,6 +1397,10 @@ OptimizeMIR(MIRGenerator* mir)
             return false;
     }
 
+    ValueNumberer gvn(mir, graph);
+    if (!gvn.init())
+        return false;
+
     // Alias analysis is required for LICM and GVN so that we don't move
     // loads across stores.
     if (mir->optimizationInfo().licmEnabled() ||
@@ -1410,50 +1416,7 @@ OptimizeMIR(MIRGenerator* mir)
         if (mir->shouldCancel("Alias analysis"))
             return false;
 
-        // We only eliminate dead resume point operands in the first pass
-        // because it is currently unsound to do so after GVN.
-        //
-        // Consider the following example, where def1 dominates, and is
-        // congruent with def4, and use3 dominates, and is congruent with,
-        // use6.
-        //
-        // def1
-        // nop2
-        //   resumepoint def1
-        // use3 def1
-        // def4
-        // nop5
-        //   resumepoint def4
-        // use6 def4
-        // use7 use3 use6
-        //
-        // Assume that use3, use6, and use7 can cause OSI and are
-        // non-effectful. That is, use3 will resume at nop2, and use6 and use7
-        // will resume at nop5.
-        //
-        // After GVN, since def1 =~ def4, we have:
-        //
-        // def4 - replaced with def1 and pruned
-        // use6 - replaced with use3 and pruned
-        // use7 - renumbered to use5
-        //
-        // def1
-        // nop2
-        //   resumepoint def1
-        // use3 def1
-        // nop4
-        //   resumepoint def1
-        // use5 use3 use3
-        //
-        // nop4's resumepoint's operand of def1 is considered dead, because it
-        // is dominated by the last use of def1, use3.
-        //
-        // However, if use5 causes OSI, we will resume at nop4's resume
-        // point. The baseline frame at that point expects the now-pruned def4
-        // to exist. However, since it was replaced with def1 by GVN, and def1
-        // is dead at the point of nop4, the baseline frame incorrectly gets
-        // an optimized out value.
-        if (!mir->compilingAsmJS() && doRepeatOptimizations == 1) {
+        if (!mir->compilingAsmJS()) {
             // Eliminating dead resume point operands requires basic block
             // instructions to be numbered. Reuse the numbering computed during
             // alias analysis.
@@ -1491,26 +1454,6 @@ OptimizeMIR(MIRGenerator* mir)
             if (mir->shouldCancel("LICM"))
                 return false;
         }
-    }
-
-    if (mir->optimizationInfo().scalarReplacementEnabled() && doRepeatOptimizations <= 1) {
-        AutoTraceLog log(logger, TraceLogger_ScalarReplacement);
-        bool success = false;
-        if (!ScalarReplacement(mir, graph, &success))
-            return false;
-        gs.spewPass("Scalar Replacement");
-        AssertGraphCoherency(graph);
-
-        if (mir->shouldCancel("Scalar Replacement"))
-            return false;
-
-        // We got some success at removing objects allocation and removing the
-        // loads and stores, unfortunately, this phase is terrible at keeping
-        // the type consistency, so we re-run the Apply Type phase.  As this
-        // optimization folds loads and stores, it might also introduce new
-        // opportunities for GVN and LICM, so re-run them as well.
-        if (success)
-            goto repeatOptimizations;
     }
 
     if (mir->optimizationInfo().rangeAnalysisEnabled()) {
