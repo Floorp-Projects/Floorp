@@ -47,6 +47,8 @@ body {
 #pseudo-class-panel > label {
   -moz-user-select: none;
   flex-grow: 1;
+  display: flex;
+  align-items: center;
 }
 
 .ruleview {
