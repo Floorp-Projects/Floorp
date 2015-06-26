@@ -2101,6 +2101,9 @@ public class BrowserApp extends GeckoApp
                 mDoorHangerPopup.disable();
             }
             mTabsPanel.show(panel);
+
+            // Hide potentially visible "find in page" bar (Bug 1177338)
+            mFindInPageBar.hide();
         }
     }
 
