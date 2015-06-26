@@ -33,6 +33,8 @@ public:
   IMPL_EVENT_HANDLER(error)
   IMPL_EVENT_HANDLER(message)
 
+  static bool IsEnabled(JSContext* aCx, JSObject* aGlobal);
+
   explicit ServiceWorkerContainer(nsPIDOMWindow* aWindow);
 
   virtual JSObject*

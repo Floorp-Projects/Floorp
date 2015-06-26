@@ -8,7 +8,7 @@
  *
  */
 
-[Pref="dom.serviceWorkers.enabled",
+[Func="ServiceWorkerContainer::IsEnabled",
  Exposed=Window]
 interface ServiceWorkerContainer : EventTarget {
   // FIXME(nsm):
