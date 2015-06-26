@@ -41,7 +41,7 @@ interface nsINotificationStorageCallback : nsISupports
 /**
  * Interface for notification persistence layer.
  */
-[scriptable, uuid(cac01fb0-c2eb-4252-b2f4-5b1fac933bd4)]
+[scriptable, uuid(2f8f84b7-70b5-4673-98d8-fd3f9f8e0e5c)]
 interface nsINotificationStorage : nsISupports
 {
 
@@ -85,6 +85,20 @@ interface nsINotificationStorage : nsISupports
   void get(in DOMString origin,
            in DOMString tag,
            in nsINotificationStorageCallback aCallback);
+
+  /**
+   * Retrieve a notification by ID.
+   *
+   * @param origin: the origin/app for which to fetch notifications.
+   * @param id: the id of the notification.
+   * @param callback: nsINotificationStorageCallback whose Handle method will
+   * be called *at most once* if the notification with that ID is found. Not
+   * called if that ID is not found. Done() will be called right after
+   * Handle().
+   */
+  void getByID(in DOMString origin,
+               in DOMString id,
+               in nsINotificationStorageCallback aCallback);
 
   /**
    * Remove a notification from storage.
