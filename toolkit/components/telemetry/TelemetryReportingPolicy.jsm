@@ -62,6 +62,17 @@ const NOTIFICATION_DELAY_FIRST_RUN_MSEC = 60 * 1000; // 60s
 const NOTIFICATION_DELAY_NEXT_RUNS_MSEC = 10 * 1000; // 10s
 
 /**
+ * This is a policy object used to override behavior within this module.
+ * Tests override properties on this object to allow for control of behavior
+ * that would otherwise be very hard to cover.
+ */
+let Policy = {
+  now: () => new Date(),
+  setShowInfobarTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
+  clearShowInfobarTimeout: (id) => clearTimeout(id),
+};
+
+/**
  * Represents a request to display data policy.
  *
  * Receivers of these instances are expected to call one or more of the on*
@@ -129,6 +140,27 @@ this.TelemetryReportingPolicy = {
    */
   canUpload: function() {
     return TelemetryReportingPolicyImpl.canUpload();
+  },
+
+  /**
+   * Test only method, restarts the policy.
+   */
+  reset: function() {
+    return TelemetryReportingPolicyImpl.reset();
+  },
+
+  /**
+   * Test only method, used to check if user is notified of the policy in tests.
+   */
+  testIsUserNotified: function() {
+    return TelemetryReportingPolicyImpl.isUserNotifiedOfCurrentPolicy;
+  },
+
+  /**
+   * Test only method, used to simulate the infobar being shown in xpcshell tests.
+   */
+  testInfobarShown: function() {
+    return TelemetryReportingPolicyImpl._infobarShownCallback();
   },
 };
 
@@ -252,6 +284,14 @@ let TelemetryReportingPolicyImpl = {
   },
 
   /**
+   * Test only method, restarts the policy.
+   */
+  reset: function() {
+    this.shutdown();
+    return this.setup();
+  },
+
+  /**
    * Setup the policy.
    */
   setup: function() {
@@ -272,7 +312,7 @@ let TelemetryReportingPolicyImpl = {
 
     this._detachObservers();
 
-    clearTimeout(this._startupNotificationTimerId);
+    Policy.clearShowInfobarTimeout(this._startupNotificationTimerId);
   },
 
   /**
@@ -354,7 +394,7 @@ let TelemetryReportingPolicyImpl = {
    */
   _recordNotificationData: function() {
     this._log.trace("_recordNotificationData");
-    this.dataSubmissionPolicyNotifiedDate = new Date();
+    this.dataSubmissionPolicyNotifiedDate = Policy.now();
     this.dataSubmissionPolicyAcceptedVersion = this.currentPolicyVersion;
     // The user was notified and the notification data saved: the notification
     // is no longer in progress.
@@ -370,7 +410,7 @@ let TelemetryReportingPolicyImpl = {
     const delay =
       isFirstRun ? NOTIFICATION_DELAY_FIRST_RUN_MSEC: NOTIFICATION_DELAY_NEXT_RUNS_MSEC;
 
-    this._startupNotificationTimerId = setTimeout(
+    this._startupNotificationTimerId = Policy.setShowInfobarTimeout(
         // Calling |canUpload| eventually shows the infobar, if needed.
         () => this.canUpload(), delay);
     // We performed at least a run, flip the firstRun preference.
