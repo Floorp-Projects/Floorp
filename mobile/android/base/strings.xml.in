@@ -218,6 +218,8 @@
   <string name="pref_media_autoplay_enabled_summary">&pref_media_autoplay_enabled_summary;</string>
   <string name="pref_zoom_force_enabled">&pref_zoom_force_enabled;</string>
   <string name="pref_zoom_force_enabled_summary">&pref_zoom_force_enabled_summary;</string>
+  <string name="pref_voice_input">&pref_voice_input;</string>
+  <string name="pref_voice_input_summary">&pref_voice_input_summary;</string>
   <string name="pref_reflow_on_zoom">&pref_reflow_on_zoom4;</string>
   <string name="pref_restore">&pref_restore;</string>
   <string name="pref_restore_always">&pref_restore_always;</string>
