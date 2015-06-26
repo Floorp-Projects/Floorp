@@ -12,11 +12,14 @@ import org.mozilla.gecko.CustomEditText;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnCommitListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnDismissListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnFilterListener;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.GamepadUtils;
+import org.mozilla.gecko.util.VoiceRecognizerUtils;
 import org.mozilla.gecko.util.StringUtils;
 
 import android.app.Activity;
@@ -44,7 +47,6 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputConnectionWrapper;
 import android.view.inputmethod.InputMethodManager;
-import android.view.ViewParent;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.TextView;
 
@@ -66,6 +68,7 @@ public class ToolbarEditText extends CustomEditText
     private OnCommitListener mCommitListener;
     private OnDismissListener mDismissListener;
     private OnFilterListener mFilterListener;
+    private VoiceSearchOnTouchListener mVoiceOnTouchListener;
 
     private ToolbarPrefs mPrefs;
 
@@ -103,7 +106,6 @@ public class ToolbarEditText extends CustomEditText
         setOnKeyPreImeListener(new KeyPreImeListener());
         setOnSelectionChangedListener(new SelectionChangeListener());
         addTextChangedListener(new TextChangeListener());
-        configureCompoundDrawables();
     }
 
     @Override
@@ -112,6 +114,7 @@ public class ToolbarEditText extends CustomEditText
 
         if (gainFocus) {
             resetAutocompleteState();
+            configureCompoundDrawables();
             return;
         }
 
@@ -476,29 +479,32 @@ public class ToolbarEditText extends CustomEditText
      * Currently, only voice input.
      */
     private void configureCompoundDrawables() {
-        if (!AppConstants.NIGHTLY_BUILD || !supportsVoiceRecognizer()) {
-            // Remove the mic button if we can't support the voice recognizer.
+        if (AppConstants.NIGHTLY_BUILD && voiceIsEnabled()) {
+            final Drawable micImg = getContext().getResources().getDrawable(R.drawable.ab_mic);
+            setCompoundDrawablesWithIntrinsicBounds(null, null, micImg, null);
+
+            if (mVoiceOnTouchListener == null) {
+                mVoiceOnTouchListener = new VoiceSearchOnTouchListener();
+            }
+            setOnTouchListener(mVoiceOnTouchListener);
+        } else {
+            // Remove the mic button
             setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
-            return;
+            setOnTouchListener(null);
         }
-        setOnTouchListener(new VoiceSearchOnTouchListener());
     }
 
-    private boolean supportsVoiceRecognizer() {
-        final Intent intent = createVoiceRecognizerIntent();
-        return intent.resolveActivity(getContext().getPackageManager()) != null;
-    }
-
-    private Intent createVoiceRecognizerIntent() {
-        final Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
-        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getResources().getString(R.string.voicesearch_prompt));
-        return intent;
+    private boolean voiceIsEnabled() {
+        final boolean voiceIsSupported = VoiceRecognizerUtils.supportsVoiceRecognizer(getContext(), getResources().getString(R.string.voicesearch_prompt));
+        if (!voiceIsSupported) {
+            return false;
+        }
+        return GeckoSharedPrefs.forApp(getContext())
+                .getBoolean(GeckoPreferences.PREFS_VOICE_INPUT_ENABLED, true);
     }
 
     private void launchVoiceRecognizer() {
-        final Intent intent = createVoiceRecognizerIntent();
+        final Intent intent = VoiceRecognizerUtils.createVoiceRecognizerIntent(getResources().getString(R.string.voicesearch_prompt));
 
         Activity activity = GeckoAppShell.getGeckoInterface().getActivity();
         ActivityHandlerHelper.startIntentForActivity(activity, intent, new ActivityResultHandler() {
