@@ -94,6 +94,8 @@ enum NotificationDirection {
 };
 
 partial interface ServiceWorkerRegistration {
+  [Throws]
   Promise<void> showNotification(DOMString title, optional NotificationOptions options);
+  [Throws]
   Promise<sequence<Notification>> getNotifications(optional GetNotificationOptions filter);
 };

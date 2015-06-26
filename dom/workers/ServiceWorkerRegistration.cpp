@@ -6,6 +6,7 @@
 
 #include "ServiceWorkerRegistration.h"
 
+#include "mozilla/dom/Notification.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
@@ -599,14 +600,42 @@ ServiceWorkerRegistrationMainThread::Unregister(ErrorResult& aRv)
 already_AddRefed<Promise>
 ServiceWorkerRegistrationMainThread::ShowNotification(JSContext* aCx,
                                                       const nsAString& aTitle,
-                                                      const NotificationOptions& aOptions)
+                                                      const NotificationOptions& aOptions,
+                                                      ErrorResult& aRv)
 {
-  MOZ_ASSERT(false);
-  return nullptr;
+  AssertIsOnMainThread();
+  MOZ_ASSERT(GetOwner());
+  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+  if (NS_WARN_IF(!window)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<workers::ServiceWorker> worker = GetActive();
+  if (!worker) {
+    aRv.ThrowTypeError(MSG_NO_ACTIVE_WORKER);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
+  nsRefPtr<Promise> p =
+    Notification::ShowPersistentNotification(global,
+                                             mScope, aTitle, aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return p.forget();
 }
 
 already_AddRefed<Promise>
-ServiceWorkerRegistrationMainThread::GetNotifications(const GetNotificationOptions& aOptions)
+ServiceWorkerRegistrationMainThread::GetNotifications(const GetNotificationOptions& aOptions, ErrorResult& aRv)
 {
   MOZ_ASSERT(false);
   return nullptr;
@@ -1022,14 +1051,25 @@ WorkerListener::UpdateFound()
 already_AddRefed<Promise>
 ServiceWorkerRegistrationWorkerThread::ShowNotification(JSContext* aCx,
                                                         const nsAString& aTitle,
-                                                        const NotificationOptions& aOptions)
+                                                        const NotificationOptions& aOptions,
+                                                        ErrorResult& aRv)
 {
-  MOZ_ASSERT(false);
-  return nullptr;
+  // Until Bug 1131324 exposes ServiceWorkerContainer on workers,
+  // ShowPersistentNotification() checks for valid active worker while it is
+  // also verifying scope so that we block the worker on the main thread only
+  // once.
+  nsRefPtr<Promise> p =
+    Notification::ShowPersistentNotification(mWorkerPrivate->GlobalScope(),
+                                             mScope, aTitle, aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return p.forget();
 }
 
 already_AddRefed<Promise>
-ServiceWorkerRegistrationWorkerThread::GetNotifications(const GetNotificationOptions& aOptions)
+ServiceWorkerRegistrationWorkerThread::GetNotifications(const GetNotificationOptions& aOptions, ErrorResult& aRv)
 {
   MOZ_ASSERT(false);
   return nullptr;
