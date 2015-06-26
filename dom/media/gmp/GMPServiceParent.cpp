@@ -668,13 +668,6 @@ GeckoMediaPluginServiceParent::SelectPluginForAPI(const nsACString& aNodeId,
     return clone;
   }
 
-  if (aAPI.EqualsLiteral(GMP_API_DECRYPTOR)) {
-    // XXX to remove in bug 1147692
-    return SelectPluginForAPI(aNodeId,
-                              NS_LITERAL_CSTRING(GMP_API_DECRYPTOR_COMPAT),
-                              aTags);
-  }
-
   return nullptr;
 }
 
