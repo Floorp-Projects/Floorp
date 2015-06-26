@@ -454,10 +454,6 @@ class MochiRemote(Mochitest):
         if 'profileDir' not in kwargs and 'profile' in kwargs:
             kwargs['profileDir'] = kwargs.pop('profile').profile
 
-        # We're handling ssltunnel, so we should lie to automation.py to avoid
-        # it trying to set up ssltunnel as well
-        kwargs['runSSLTunnel'] = False
-
         if 'quiet' in kwargs:
             kwargs.pop('quiet')
 
