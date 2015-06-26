@@ -19,6 +19,7 @@
 #include "nsIDocument.h"
 #include "nsINotificationStorage.h"
 #include "nsIPermissionManager.h"
+#include "nsIServiceWorkerManager.h"
 #include "nsIUUIDGenerator.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStructuredCloneContainer.h"
@@ -29,8 +30,9 @@
 #include "nsNetUtil.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
-#include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
+#include "mozilla/dom/NotificationEvent.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/Services.h"
 #include "nsContentPermissionHelper.h"
 #include "nsILoadContext.h"
@@ -41,6 +43,7 @@
 #include "ServiceWorkerManager.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
+#include "WorkerScope.h"
 
 namespace mozilla {
 namespace dom {
@@ -735,6 +738,48 @@ Notification::Constructor(const GlobalObject& aGlobal,
   return notification.forget();
 }
 
+// static
+already_AddRefed<Notification>
+Notification::ConstructFromFields(
+    nsIGlobalObject* aGlobal,
+    const nsAString& aID,
+    const nsAString& aTitle,
+    const nsAString& aDir,
+    const nsAString& aLang,
+    const nsAString& aBody,
+    const nsAString& aTag,
+    const nsAString& aIcon,
+    const nsAString& aData,
+    ErrorResult& aRv)
+{
+  MOZ_ASSERT(aGlobal);
+
+  AutoJSAPI jsapi;
+  DebugOnly<bool> ok = jsapi.Init(aGlobal);
+  MOZ_ASSERT(ok);
+
+  RootedDictionary<NotificationOptions> options(jsapi.cx());
+  options.mDir = Notification::StringToDirection(nsString(aDir));
+  options.mLang = aLang;
+  options.mBody = aBody;
+  options.mTag = aTag;
+  options.mIcon = aIcon;
+  nsRefPtr<Notification> notification;
+  notification = Notification::CreateInternal(aID,
+                                              aTitle,
+                                              options);
+
+  if (NS_IsMainThread()) {
+    notification->BindToOwner(aGlobal);
+  }
+
+  notification->InitFromBase64(jsapi.cx(), aData, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return notification.forget();
+}
 
 nsresult
 Notification::PersistNotification()
@@ -946,6 +991,63 @@ protected:
 
 NS_IMPL_ISUPPORTS_INHERITED0(WorkerNotificationObserver, NotificationObserver)
 
+class ServiceWorkerNotificationObserver final : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  ServiceWorkerNotificationObserver(const nsAString& aScope,
+                                    nsIPrincipal* aPrincipal,
+                                    const nsAString& aID)
+    : mScope(aScope), mID(aID), mPrincipal(aPrincipal)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(aPrincipal);
+  }
+
+private:
+  ~ServiceWorkerNotificationObserver()
+  {}
+
+  const nsString mScope;
+  const nsString mID;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+};
+
+NS_IMPL_ISUPPORTS(ServiceWorkerNotificationObserver, nsIObserver)
+
+// For ServiceWorkers.
+bool
+Notification::DispatchNotificationClickEvent()
+{
+  MOZ_ASSERT(mWorkerPrivate);
+  MOZ_ASSERT(mWorkerPrivate->IsServiceWorker());
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  NotificationEventInit options;
+  options.mNotification = this;
+
+  ErrorResult result;
+  nsRefPtr<EventTarget> target = mWorkerPrivate->GlobalScope();
+  nsRefPtr<NotificationEvent> event =
+    NotificationEvent::Constructor(target,
+                                   NS_LITERAL_STRING("notificationclick"),
+                                   options,
+                                   result);
+  if (NS_WARN_IF(result.Failed())) {
+    return false;
+  }
+
+  event->SetTrusted(true);
+  WantsPopupControlCheck popupControlCheck(event);
+  target->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+  // We always return false since in case of dispatching on the serviceworker,
+  // there is no well defined window to focus. The script may use the
+  // Client.focus() API if it wishes.
+  return false;
+}
+
 bool
 Notification::DispatchClickEvent()
 {
@@ -975,12 +1077,15 @@ public:
     : NotificationWorkerRunnable(aNotification->mWorkerPrivate)
     , mNotification(aNotification)
     , mWindow(aWindow)
-  {}
+  {
+    MOZ_ASSERT_IF(mWorkerPrivate->IsServiceWorker(), !mWindow);
+  }
 
   void
   WorkerRunInternal() override
   {
     bool doDefaultAction = mNotification->DispatchClickEvent();
+    MOZ_ASSERT_IF(mWorkerPrivate->IsServiceWorker(), !doDefaultAction);
     if (doDefaultAction) {
       nsRefPtr<FocusWindowRunnable> r = new FocusWindowRunnable(mWindow);
       NS_DispatchToMainThread(r);
@@ -1042,15 +1147,18 @@ WorkerNotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
 
   nsRefPtr<WorkerRunnable> r;
   if (!strcmp("alertclickcallback", aTopic)) {
-    WorkerPrivate* top = notification->mWorkerPrivate;
-    while (top->GetParent()) {
-      top = top->GetParent();
-    }
+    nsPIDOMWindow* window = nullptr;
+    if (!notification->mWorkerPrivate->IsServiceWorker()) {
+      WorkerPrivate* top = notification->mWorkerPrivate;
+      while (top->GetParent()) {
+        top = top->GetParent();
+      }
 
-    nsPIDOMWindow* window = top->GetWindow();
-    if (NS_WARN_IF(!window || !window->IsCurrentInnerWindow())) {
-      // Window has been closed, this observer is not valid anymore
-      return NS_ERROR_FAILURE;
+      window = top->GetWindow();
+      if (NS_WARN_IF(!window || !window->IsCurrentInnerWindow())) {
+        // Window has been closed, this observer is not valid anymore
+        return NS_ERROR_FAILURE;
+      }
     }
 
     // Instead of bothering with adding features and other worker lifecycle
@@ -1074,6 +1182,107 @@ WorkerNotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
   if (!r->Dispatch(cx)) {
     NS_WARNING("Could not dispatch event to worker notification");
   }
+  return NS_OK;
+}
+
+class NotificationClickEventCallback final : public nsINotificationStorageCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NotificationClickEventCallback(nsIPrincipal* aPrincipal,
+                                 const nsAString& aScope)
+  : mPrincipal(aPrincipal), mScope(aScope)
+  {
+    MOZ_ASSERT(aPrincipal);
+  }
+
+  NS_IMETHOD Handle(const nsAString& aID,
+                    const nsAString& aTitle,
+                    const nsAString& aDir,
+                    const nsAString& aLang,
+                    const nsAString& aBody,
+                    const nsAString& aTag,
+                    const nsAString& aIcon,
+                    const nsAString& aData,
+                    const nsAString& aBehavior,
+                    JSContext* aCx) override
+  {
+    MOZ_ASSERT(!aID.IsEmpty());
+
+    AssertIsOnMainThread();
+
+    nsAutoCString originSuffix;
+    nsresult rv = mPrincipal->GetOriginSuffix(originSuffix);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCOMPtr<nsIServiceWorkerManager> swm =
+      mozilla::services::GetServiceWorkerManager();
+
+    if (swm) {
+      swm->SendNotificationClickEvent(originSuffix,
+                                      NS_ConvertUTF16toUTF8(mScope),
+                                      aID,
+                                      aTitle,
+                                      aDir,
+                                      aLang,
+                                      aBody,
+                                      aTag,
+                                      aIcon,
+                                      aData,
+                                      aBehavior);
+    }
+    return NS_OK;
+  }
+
+  NS_IMETHOD Done(JSContext* aCx) override
+  {
+    return NS_OK;
+  }
+
+private:
+  ~NotificationClickEventCallback()
+  {
+  }
+
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsString mScope;
+};
+
+NS_IMPL_ISUPPORTS(NotificationClickEventCallback, nsINotificationStorageCallback)
+
+NS_IMETHODIMP
+ServiceWorkerNotificationObserver::Observe(nsISupports* aSubject,
+                                           const char* aTopic,
+                                           const char16_t* aData)
+{
+  AssertIsOnMainThread();
+  // Persistent notifications only care about the click event.
+  if (!strcmp("alertclickcallback", aTopic)) {
+    nsresult rv;
+    nsCOMPtr<nsINotificationStorage> notificationStorage =
+      do_GetService(NS_NOTIFICATION_STORAGE_CONTRACTID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCOMPtr<nsINotificationStorageCallback> callback =
+      new NotificationClickEventCallback(mPrincipal, mScope);
+
+    nsAutoString origin;
+    rv = Notification::GetOrigin(mPrincipal, origin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = notificationStorage->GetByID(origin, mID, callback);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -1126,16 +1335,27 @@ Notification::ShowInternal()
   nsAutoString soundUrl;
   ResolveIconAndSoundURL(iconUrl, soundUrl);
 
-  // Ownership passed to observer.
   nsCOMPtr<nsIObserver> observer;
-  if (mWorkerPrivate) {
-    // Keep a pointer so that the feature can tell the observer not to release
-    // the notification.
-    mObserver = new WorkerNotificationObserver(Move(ownership));
-    observer = mObserver;
+  if (mScope.IsEmpty()) {
+    // Ownership passed to observer.
+    if (mWorkerPrivate) {
+      // Scope better be set on ServiceWorker initiated requests.
+      MOZ_ASSERT(!mWorkerPrivate->IsServiceWorker());
+      // Keep a pointer so that the feature can tell the observer not to release
+      // the notification.
+      mObserver = new WorkerNotificationObserver(Move(ownership));
+      observer = mObserver;
+    } else {
+      observer = new NotificationObserver(Move(ownership));
+    }
   } else {
-    observer = new NotificationObserver(Move(ownership));
+    // This observer does not care about the Notification. It will be released
+    // at the end of this function.
+    //
+    // The observer is wholly owned by the alerts service.
+    observer = new ServiceWorkerNotificationObserver(mScope, GetPrincipal(), mID);
   }
+  MOZ_ASSERT(observer);
 
   // mDataObjectContainer might be uninitialized here because the notification
   // was constructed with an undefined data property.
@@ -1804,6 +2024,8 @@ Notification::ShowPersistentNotification(nsIGlobalObject *aGlobal,
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
+
+  notification->SetScope(aScope);
 
   return p.forget();
 }
