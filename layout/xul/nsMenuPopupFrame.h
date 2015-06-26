@@ -171,7 +171,9 @@ public:
   virtual nsMenuFrame* GetCurrentMenuItem() override;
   NS_IMETHOD SetCurrentMenuItem(nsMenuFrame* aMenuItem) override;
   virtual void CurrentMenuIsBeingDestroyed() override;
-  NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem, bool aSelectFirstItem) override;
+  NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem,
+                            bool aSelectFirstItem,
+                            bool aFromKey) override;
 
   // as popups are opened asynchronously, the popup pending state is used to
   // prevent multiple requests from attempting to open the same popup twice

@@ -193,6 +193,7 @@ function test_menulist_open(element, scroller)
   element.appendItem("Scroll Item 1", "scrollitem1");
   element.appendItem("Scroll Item 2", "scrollitem2");
   element.focus();
+  element.selectedIndex = 0;
 
 /*
   // bug 530504, mousewheel while menulist is open should not scroll menulist
@@ -207,13 +208,14 @@ function test_menulist_open(element, scroller)
   window.removeEventListener("DOMMouseScroll", mouseScrolled, false);
 */
 
-  // bug 543065, hovering the mouse over an item should highlight it and not
-  // scroll the parent
+  // bug 543065, hovering the mouse over an item should highlight it, not
+  // scroll the parent, and not change the selected index.
   var item = element.menupopup.childNodes[1];
 
   synthesizeMouse(element.menupopup.childNodes[1], 2, 2, { type: "mousemove" });
   synthesizeMouse(element.menupopup.childNodes[1], 6, 6, { type: "mousemove" });
   is(element.menuBoxObject.activeChild, item, "activeChild after menu highlight " + element.id);
+  is(element.selectedIndex, 0, "selectedIndex after menu highlight " + element.id);
   is(scroller.scrollTop, 0, "scroll position after menu highlight " + element.id);
 
   element.open = false;
