@@ -99,10 +99,10 @@ public class testSettingsMenuItems extends PixelTest {
                 TRACKING_PROTECTION_LABEL_ARR,
                 { mStringHelper.DNT_LABEL },
                 { mStringHelper.COOKIES_LABEL, "Enabled", "Enabled, excluding 3rd party", "Disabled" },
-                { mStringHelper.REMEMBER_PASSWORDS_LABEL },
+                { mStringHelper.REMEMBER_LOGINS_LABEL },
                 MANAGE_LOGINS_ARR,
                 { mStringHelper.MASTER_PASSWORD_LABEL },
-                { mStringHelper.CLEAR_PRIVATE_DATA_LABEL, "", "Browsing history", "Search history", "Downloads", "Form history", "Cookies & active logins", "Saved passwords", "Cache", "Offline website data", "Site settings", "Clear data" },
+                { mStringHelper.CLEAR_PRIVATE_DATA_LABEL, "", "Browsing history", "Search history", "Downloads", "Form history", "Cookies & active logins", mStringHelper.CLEAR_PRIVATE_DATA_LABEL, "Cache", "Offline website data", "Site settings", "Clear data" },
         };
 
         PATH_MOZILLA = new String[] { mStringHelper.MOZILLA_SECTION_LABEL };
