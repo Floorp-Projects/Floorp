@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import logging
@@ -277,7 +277,7 @@ class MozbuildObject(ProcessExecutionMixin):
 
     @property
     def bindir(self):
-        import mozinfo
+        from . import mozinfo
         if mozinfo.os == "mac":
             return os.path.join(self.topobjdir, 'dist', self.substs['MOZ_MACBUNDLE_NAME'], 'Contents', 'Resources')
         return os.path.join(self.topobjdir, 'dist', 'bin')
@@ -762,6 +762,22 @@ class MachCommandConditions(object):
         """Must have an Android build."""
         if hasattr(cls, 'substs'):
             return cls.substs.get('MOZ_WIDGET_TOOLKIT') == 'android'
+        return False
+
+    @staticmethod
+    def is_hg(cls):
+        """Must have a mercurial source checkout."""
+        if hasattr(cls, 'substs'):
+            top_srcdir = cls.substs.get('top_srcdir')
+            return top_srcdir and os.path.isdir(os.path.join(top_srcdir, '.hg'))
+        return False
+
+    @staticmethod
+    def is_git(cls):
+        """Must have a git source checkout."""
+        if hasattr(cls, 'substs'):
+            top_srcdir = cls.substs.get('top_srcdir')
+            return top_srcdir and os.path.isdir(os.path.join(top_srcdir, '.git'))
         return False
 
 

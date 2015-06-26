@@ -13,6 +13,8 @@
 # will be used from shell, we just print the two assignments and evaluate
 # them from shell.
 
+from __future__ import absolute_import
+
 import os
 import subprocess
 import re

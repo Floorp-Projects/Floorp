@@ -23,7 +23,7 @@ NfcConnector::~NfcConnector()
 nsresult
 NfcConnector::CreateSocket(int& aFd) const
 {
-  aFd = socket(AF_LOCAL, SOCK_STREAM, 0);
+  aFd = socket(AF_LOCAL, SOCK_SEQPACKET, 0);
   if (aFd < 0) {
     NS_WARNING("Could not open NFC socket!");
     return NS_ERROR_FAILURE;

@@ -8,10 +8,10 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-eval-in-stackframe.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-eval-in-stackframe.html";
 
-function test()
-{
+function test() {
   let hud;
 
   Task.spawn(runner).then(finishTest);

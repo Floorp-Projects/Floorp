@@ -31,6 +31,7 @@ e.g. raw/browsersearch.json, raw-pt-rBR/browsersearch.json.
 '''
 
 from __future__ import (
+    absolute_import,
     print_function,
     unicode_literals,
 )
@@ -38,7 +39,6 @@ from __future__ import (
 import argparse
 import codecs
 import json
-import re
 import sys
 import os
 

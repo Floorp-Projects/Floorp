@@ -7,7 +7,8 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console.html";
 
 let test = asyncTest(function*() {
   yield loadTab(TEST_URI);
@@ -32,7 +33,7 @@ let test = asyncTest(function*() {
   let lostFocus = () => {
     inputNode.removeEventListener("blur", lostFocus);
     info("input node lost focus");
-  }
+  };
 
   inputNode.addEventListener("blur", lostFocus);
 
@@ -42,7 +43,7 @@ let test = asyncTest(function*() {
 
   EventUtils.sendMouseEvent({type: "click"}, hud.outputNode);
 
-  ok(inputNode.getAttribute("focused"), "input node is focused, second time")
+  ok(inputNode.getAttribute("focused"), "input node is focused, second time");
 
   // test click-drags are not focusing the input element.
   EventUtils.sendMouseEvent({type: "mousedown", clientX: 3, clientY: 4},

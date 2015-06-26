@@ -15,11 +15,8 @@ contains the code for converting executed mozbuild files into these data
 structures.
 """
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
-import os
-
-from collections import OrderedDict
 from mozbuild.util import (
     shell_quote,
     StrictOrderingOnAppendList,

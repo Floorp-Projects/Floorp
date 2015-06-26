@@ -10,8 +10,10 @@
 "use strict";
 
 let test = asyncTest(function* () {
-  const TEST_URI1 = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
-  const TEST_URI2 = "http://example.org/browser/browser/devtools/webconsole/test/test-console.html";
+  const TEST_URI1 = "http://example.com/browser/browser/devtools/webconsole/" +
+                    "test/test-console.html";
+  const TEST_URI2 = "http://example.org/browser/browser/devtools/webconsole/" +
+                    "test/test-console.html";
 
   yield loadTab(TEST_URI1);
   let hud = yield openConsole();

@@ -27,8 +27,5 @@ function test() {
 
     // history mode should now be remember
     test_historymode_retention("remember", "remember"),
-
-    // reset all preferences to their default values once we're done
-    reset_preferences
   ]);
 }
