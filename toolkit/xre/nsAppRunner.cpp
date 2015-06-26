@@ -4176,6 +4176,18 @@ XREMain::XRE_mainRun()
     }
   }
 
+#ifdef XP_WIN
+  // Hack to sync up the various environment storages. XUL_APP_FILE is special
+  // in that it comes from a different CRT (firefox.exe's static-linked copy).
+  // Ugly details in http://bugzil.la/1175039#c27
+  char appFile[MAX_PATH];
+  if (GetEnvironmentVariableA("XUL_APP_FILE", appFile, sizeof(appFile))) {
+    char* saved = PR_smprintf("XUL_APP_FILE=%s", appFile);
+    PR_SetEnv(saved);
+    PR_smprintf_free(saved);
+  }
+#endif
+
   SaveStateForAppInitiatedRestart();
 
   // clear out any environment variables which may have been set 
