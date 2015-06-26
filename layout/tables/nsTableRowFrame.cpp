@@ -328,18 +328,53 @@ nsTableRowFrame::DidResize()
   desiredSize.SetSize(wm, GetLogicalSize(wm));
   desiredSize.SetOverflowAreasToDesiredBounds();
 
+  nscoord containerWidth = mRect.width;
+
   for (nsIFrame* childFrame : mFrames) {
     nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
     if (cellFrame) {
       nscoord cellBSize = BSize(wm) +
         GetBSizeOfRowsSpannedBelowFirst(*cellFrame, *tableFrame, wm);
 
-      // resize the cell's bsize
+      // If the bsize for the cell has changed, we need to reset it;
+      // and in vertical-rl mode, we need to update the cell's block position
+      // to account for the containerWidth, which may not have been known
+      // earlier, so we always apply it here.
       LogicalSize cellSize = cellFrame->GetLogicalSize(wm);
-      nsRect cellVisualOverflow = cellFrame->GetVisualOverflowRect();
-      if (cellSize.BSize(wm) != cellBSize) {
-        cellSize.BSize(wm) = cellBSize;
+      if (cellSize.BSize(wm) != cellBSize || wm.IsVerticalRL()) {
         nsRect cellOldRect = cellFrame->GetRect();
+        nsRect cellVisualOverflow = cellFrame->GetVisualOverflowRect();
+
+        if (wm.IsVerticalRL()) {
+          // Get the old position of the cell, as we want to preserve its
+          // inline coordinate.
+          LogicalPoint oldPos =
+            cellFrame->GetLogicalPosition(wm, containerWidth);
+
+          // The cell should normally be aligned with the row's block-start,
+          // so set the B component of the position to zero:
+          LogicalPoint newPos(wm, oldPos.I(wm), 0);
+
+          // ...unless relative positioning is in effect, in which case the
+          // cell may have been moved away from the row's block-start
+          if (cellFrame->IsRelativelyPositioned()) {
+            // Find out where the cell would have been without relative
+            // positioning.
+            LogicalPoint oldNormalPos =
+              cellFrame->GetLogicalNormalPosition(wm, containerWidth);
+            // The difference (if any) between oldPos and oldNormalPos reflects
+            // relative positioning that was applied to the cell, and which we
+            // need to incorporate when resetting the position.
+            newPos.B(wm) = oldPos.B(wm) - oldNormalPos.B(wm);
+          }
+
+          if (oldPos != newPos) {
+            cellFrame->SetPosition(wm, newPos, containerWidth);
+            nsTableFrame::RePositionViews(cellFrame);
+          }
+        }
+
+        cellSize.BSize(wm) = cellBSize;
         cellFrame->SetSize(wm, cellSize);
         nsTableFrame::InvalidateTableFrame(cellFrame, cellOldRect,
                                            cellVisualOverflow,
@@ -853,10 +888,12 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
       kidFrame->GetLogicalNormalPosition(wm, containerWidth);
     // All cells' no-relative-positioning position should be snapped to the
     // row's bstart edge.
-    // XXX This currently doesn't hold in vertical-rl mode, which is probably
-    // a bug, but to enable progress with testing I'm temporarily neutering
-    // the assertion in that case (bug 1174711).
-    MOZ_ASSERT(origKidNormalPosition.B(wm) == 0 || wm.IsVerticalRL());
+    // This doesn't hold in vertical-rl mode, where we don't yet know the
+    // correct containerWidth for the row frame. In that case, we'll have to
+    // fix up child positions later, after determining our desiredSize.
+    NS_ASSERTION(origKidNormalPosition.B(wm) == 0 || wm.IsVerticalRL(),
+                 "unexpected kid position");
+
     nsRect kidVisualOverflow = kidFrame->GetVisualOverflowRect();
     LogicalPoint kidPosition(wm, iCoord, 0);
     bool firstReflow = kidFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);

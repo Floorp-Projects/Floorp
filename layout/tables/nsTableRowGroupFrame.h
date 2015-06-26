@@ -404,7 +404,7 @@ protected:
                                 nsIFrame**     aContRowFrame);
 
   bool IsSimpleRowFrame(nsTableFrame* aTableFrame,
-                          nsIFrame*     aFrame);
+                        nsTableRowFrame* aRowFrame);
 
   void GetNextRowSibling(nsIFrame** aRowFrame);
 
