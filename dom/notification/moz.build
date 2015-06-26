@@ -33,6 +33,7 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/ipc',
+    '/dom/workers',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
