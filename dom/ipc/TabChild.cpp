@@ -248,7 +248,16 @@ TabChildBase::InitializeRootMetrics()
   // This is the root layer, so the cumulative resolution is the same
   // as the resolution.
   mLastRootMetrics.SetPresShellResolution(mLastRootMetrics.GetCumulativeResolution().ToScaleFactor().scale);
-  mLastRootMetrics.SetScrollOffset(CSSPoint(0, 0));
+
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  if (shell && shell->GetRootScrollFrameAsScrollable()) {
+    // The session history code might restore a scroll position when navigating
+    // back or forward, and we don't want to clobber that.
+    nsPoint pos = shell->GetRootScrollFrameAsScrollable()->GetScrollPosition();
+    mLastRootMetrics.SetScrollOffset(CSSPoint::FromAppUnits(pos));
+  } else {
+    mLastRootMetrics.SetScrollOffset(CSSPoint(0, 0));
+  }
 
   TABC_LOG("After InitializeRootMetrics, mLastRootMetrics is %s\n",
     Stringify(mLastRootMetrics).c_str());
