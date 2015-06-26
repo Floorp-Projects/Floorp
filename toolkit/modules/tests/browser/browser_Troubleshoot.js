@@ -131,6 +131,9 @@ const SNAPSHOT_SCHEMA = {
         numRemoteWindows: {
           type: "number",
         },
+        safeMode: {
+          type: "boolean",
+        },
       },
     },
     crashes: {
