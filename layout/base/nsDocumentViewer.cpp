@@ -2298,22 +2298,6 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
       styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
     }
 
-    // Make sure to clone the quirk sheet so that it can be usefully
-    // enabled/disabled as needed.
-    nsRefPtr<CSSStyleSheet> quirkClone;
-    CSSStyleSheet* quirkSheet;
-    if (!nsLayoutStylesheetCache::UASheet() ||
-        !(quirkSheet = nsLayoutStylesheetCache::QuirkSheet()) ||
-        !(quirkClone = quirkSheet->Clone(nullptr, nullptr, nullptr, nullptr)) ||
-        !sheet) {
-      delete styleSet;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    // quirk.css needs to come after the regular UA sheet (or more precisely,
-    // after the html.css and so forth that the UA sheet imports).
-    styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, quirkClone);
-    styleSet->SetQuirkStyleSheet(quirkClone);
-
     if (aDocument->LoadsFullXULStyleSheetUpFront()) {
       // nsXULElement::BindToTree loads xul.css on-demand if we don't load it
       // up-front here.
@@ -2348,6 +2332,9 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
         styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
       }
     }
+
+    // We don't add quirk.css here; nsPresContext::CompatibilityModeChanged will
+    // append it if needed.
 
     sheet = nsLayoutStylesheetCache::HTMLSheet();
     if (sheet) {
