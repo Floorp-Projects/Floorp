@@ -260,12 +260,12 @@ SandboxBroker::SetSecurityLevelForGMPlugin()
 
   auto result = mPolicy->SetJobLevel(sandbox::JOB_LOCKDOWN, 0);
   bool ret = (sandbox::SBOX_ALL_OK == result);
-  if (base::win::GetVersion() > base::win::VERSION_WIN8_1) {
-    result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                                    sandbox::USER_RESTRICTED);
-  } else {
+  if (base::win::GetVersion() < base::win::VERSION_VISTA) {
     result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
                                     sandbox::USER_LOCKDOWN);
+  } else {
+    result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
+                                    sandbox::USER_RESTRICTED);
   }
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
