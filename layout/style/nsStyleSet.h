@@ -94,9 +94,6 @@ class nsStyleSet
 
   nsRuleNode* GetRuleTree() { return mRuleTree; }
 
-  // enable / disable the Quirk style sheet
-  void EnableQuirkStyleSheet(bool aEnable);
-
   // get a style context for a non-pseudo frame.
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(mozilla::dom::Element* aElement,
@@ -363,11 +360,6 @@ class nsStyleSet
     return mInReconstruct;
   }
 
-  // Let the style set know that a particular sheet is the quirks sheet.  This
-  // sheet must already have been added to the UA sheets.  The pointer must not
-  // be null.  This should only be called once for a given style set.
-  void SetQuirkStyleSheet(nsIStyleSheet* aQuirkStyleSheet);
-
   // Return whether the rule tree has cached data such that we need to
   // do dynamic change handling for changes that change the results of
   // media queries or require rebuilding all style data.
@@ -477,9 +469,6 @@ class nsStyleSet
 
   // Rule processors for HTML5 scoped style sheets, one per scope.
   nsTArray<nsCOMPtr<nsIStyleRuleProcessor> > mScopedDocSheetRuleProcessors;
-
-  // cached instance for enabling/disabling
-  nsCOMPtr<nsIStyleSheet> mQuirkStyleSheet;
 
   nsRefPtr<nsBindingManager> mBindingManager;
 
