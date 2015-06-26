@@ -17,6 +17,7 @@
 #include "mozilla/css/NameSpaceRule.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/css/ImportRule.h"
+#include "nsCSSRules.h"
 #include "nsIMediaList.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
@@ -330,6 +331,96 @@ nsMediaQueryResultCacheKey::Matches(nsPresContext* aPresContext) const
   }
 
   return true;
+}
+
+bool
+nsDocumentRuleResultCacheKey::AddMatchingRule(css::DocumentRule* aRule)
+{
+  MOZ_ASSERT(!mFinalized);
+  return mMatchingRules.AppendElement(aRule);
+}
+
+void
+nsDocumentRuleResultCacheKey::Finalize()
+{
+  mMatchingRules.Sort();
+#ifdef DEBUG
+  mFinalized = true;
+#endif
+}
+
+bool
+nsDocumentRuleResultCacheKey::Matches(
+                       nsPresContext* aPresContext,
+                       const nsTArray<css::DocumentRule*>& aRules) const
+{
+  MOZ_ASSERT(mFinalized);
+
+  // First check that aPresContext matches all the rules listed in
+  // mMatchingRules.
+  for (css::DocumentRule* rule : mMatchingRules) {
+    if (!rule->UseForPresentation(aPresContext)) {
+      return false;
+    }
+  }
+
+  // Then check that all the rules in aRules that aren't also in
+  // mMatchingRules do not match.
+
+  // pointer to matching rules
+  auto pm     = mMatchingRules.begin();
+  auto pm_end = mMatchingRules.end();
+
+  // pointer to all rules
+  auto pr     = aRules.begin();
+  auto pr_end = aRules.end();
+
+  // mMatchingRules and aRules are both sorted by their pointer values,
+  // so we can iterate over the two lists simultaneously.
+  while (pr < pr_end) {
+    while (pm < pm_end && *pm < *pr) {
+      ++pm;
+      MOZ_ASSERT(pm >= pm_end || *pm == *pr,
+                 "shouldn't find rule in mMatchingRules that is not in aRules");
+    }
+    if (pm >= pm_end || *pm != *pr) {
+      if ((*pr)->UseForPresentation(aPresContext)) {
+        return false;
+      }
+    }
+    ++pr;
+  }
+  return true;
+}
+
+#ifdef DEBUG
+void
+nsDocumentRuleResultCacheKey::List(FILE* aOut, int32_t aIndent) const
+{
+  for (css::DocumentRule* rule : mMatchingRules) {
+    nsCString str;
+
+    for (int32_t i = 0; i < aIndent; i++) {
+      str.AppendLiteral("  ");
+    }
+    str.AppendLiteral("{ ");
+
+    nsString condition;
+    rule->GetConditionText(condition);
+    AppendUTF16toUTF8(condition, str);
+
+    str.AppendLiteral(" }\n");
+    fprintf_stderr(aOut, "%s", str.get());
+  }
+}
+#endif
+
+size_t
+nsDocumentRuleResultCacheKey::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  n += mMatchingRules.SizeOfExcludingThis(aMallocSizeOf);
+  return n;
 }
 
 void
