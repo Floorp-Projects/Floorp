@@ -43,11 +43,11 @@ CheckProgressConsistency(Progress aProgress)
     // No preconditions.
   }
   if (aProgress & FLAG_ONLOAD_BLOCKED) {
-    MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
+    // No preconditions.
   }
   if (aProgress & FLAG_ONLOAD_UNBLOCKED) {
     MOZ_ASSERT(aProgress & FLAG_ONLOAD_BLOCKED);
-    MOZ_ASSERT(aProgress & (FLAG_FRAME_COMPLETE | FLAG_HAS_ERROR));
+    MOZ_ASSERT(aProgress & (FLAG_SIZE_AVAILABLE | FLAG_HAS_ERROR));
   }
   if (aProgress & FLAG_IS_ANIMATED) {
     MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
