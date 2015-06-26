@@ -145,7 +145,7 @@ public class StringHelper {
     public final String TRACKING_PROTECTION_LABEL;
     public final String DNT_LABEL;
     public final String COOKIES_LABEL;
-    public final String REMEMBER_PASSWORDS_LABEL;
+    public final String REMEMBER_LOGINS_LABEL;
     public final String MANAGE_LOGINS_LABEL;
     public final String MASTER_PASSWORD_LABEL;
     public final String CLEAR_PRIVATE_DATA_LABEL;
@@ -326,7 +326,7 @@ public class StringHelper {
         TRACKING_PROTECTION_LABEL = res.getString(R.string.pref_tracking_protection_title);
         DNT_LABEL = res.getString(R.string.pref_donottrack_title);
         COOKIES_LABEL = res.getString(R.string.pref_cookies_menu);
-        REMEMBER_PASSWORDS_LABEL = res.getString(R.string.pref_remember_signons);
+        REMEMBER_LOGINS_LABEL = res.getString(R.string.pref_remember_signons);
         MANAGE_LOGINS_LABEL = res.getString(R.string.pref_manage_logins);
         MASTER_PASSWORD_LABEL = res.getString(R.string.pref_use_master_password);
         CLEAR_PRIVATE_DATA_LABEL = res.getString(R.string.pref_clear_private_data);

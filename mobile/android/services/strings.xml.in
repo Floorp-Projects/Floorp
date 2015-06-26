@@ -55,7 +55,7 @@
   <string name="sync_configure_engines_title">&sync.configure.engines.title.label;</string>
   <string name="sync_configure_engines_sync_my_title">&sync.configure.engines.sync.my.title.label;</string>
   <string name="sync_configure_engines_title_bookmarks">&sync.configure.engines.title.bookmarks;</string>
-  <string name="sync_configure_engines_title_passwords">&sync.configure.engines.title.passwords;</string>
+  <string name="sync_configure_engines_title_passwords">&sync.configure.engines.title.passwords2;</string>
   <string name="sync_configure_engines_title_history">&sync.configure.engines.title.history;</string>
   <string name="sync_configure_engines_title_tabs">&sync.configure.engines.title.tabs;</string>
 
@@ -132,7 +132,7 @@
 <string name="fxaccount_policy_linkprivacy">&fxaccount_policy_linkprivacy;</string>
 
 <string name="fxaccount_getting_started_welcome_to_sync">&fxaccount_getting_started_welcome_to_sync;</string>
-<string name="fxaccount_getting_started_description">&fxaccount_getting_started_description;</string>
+<string name="fxaccount_getting_started_description">&fxaccount_getting_started_description2;</string>
 <string name="fxaccount_getting_started_get_started">&fxaccount_getting_started_get_started;</string>
 <string name="fxaccount_getting_started_old_firefox">&fxaccount_getting_started_old_firefox;</string>
 
@@ -203,7 +203,7 @@
 <string name="fxaccount_status_needs_finish_migrating">&fxaccount_status_needs_finish_migrating;</string>
 <string name="fxaccount_status_bookmarks">&fxaccount_status_bookmarks;</string>
 <string name="fxaccount_status_history">&fxaccount_status_history;</string>
-<string name="fxaccount_status_passwords">&fxaccount_status_passwords;</string>
+<string name="fxaccount_status_passwords">&fxaccount_status_passwords2;</string>
 <string name="fxaccount_status_tabs">&fxaccount_status_tabs;</string>
 <string name="fxaccount_status_reading_list">&reading_list_title;</string>
 <string name="fxaccount_status_legal">&fxaccount_status_legal;</string>
