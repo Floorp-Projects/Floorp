@@ -1311,6 +1311,14 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         ContentValues values = new ContentValues();
         values.put(Bookmarks.IS_DELETED, 1);
+        values.put(Bookmarks.POSITION, 0);
+        values.putNull(Bookmarks.PARENT);
+        values.putNull(Bookmarks.URL);
+        values.putNull(Bookmarks.TITLE);
+        values.putNull(Bookmarks.DESCRIPTION);
+        values.putNull(Bookmarks.KEYWORD);
+        values.putNull(Bookmarks.TAGS);
+        values.putNull(Bookmarks.FAVICON_ID);
 
         // Doing this UPDATE (or the DELETE above) first ensures that the
         // first operation within this transaction is a write.

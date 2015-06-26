@@ -6,12 +6,15 @@
 
 #include "vm/ArgumentsObject-inl.h"
 
+#include "mozilla/PodOperations.h"
+
 #include "jit/JitFrames.h"
 #include "vm/GlobalObject.h"
 #include "vm/Stack.h"
 
 #include "jsobjinlines.h"
 
+#include "gc/Nursery-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -182,31 +185,33 @@ ArgumentsObject::create(JSContext* cx, HandleScript script, HandleFunction calle
                         numDeletedWords * sizeof(size_t) +
                         numArgs * sizeof(Value);
 
-    // Allocate zeroed memory to make the object GC-safe for early attachment.
-    ArgumentsData* data = reinterpret_cast<ArgumentsData*>(
-            cx->zone()->pod_calloc<uint8_t>(numBytes));
-    if (!data)
-        return nullptr;
-
     Rooted<ArgumentsObject*> obj(cx);
     JSObject* base = JSObject::create(cx, FINALIZE_KIND,
                                       GetInitialHeap(GenericObject, clasp),
                                       shape, group);
-    if (!base) {
-        js_free(data);
+    if (!base)
         return nullptr;
-    }
     obj = &base->as<ArgumentsObject>();
 
+    ArgumentsData* data =
+        reinterpret_cast<ArgumentsData*>(AllocateObjectBuffer<uint8_t>(cx, obj, numBytes));
+    if (!data) {
+        // Make the object safe for GC.
+        obj->initFixedSlot(DATA_SLOT, PrivateValue(nullptr));
+        return nullptr;
+    }
+
     data->numArgs = numArgs;
+    data->dataBytes = numBytes;
     data->callee.init(ObjectValue(*callee.get()));
     data->script = script;
 
-    // Attach the argument object.
-    // Because the argument object was zeroed by pod_calloc(), each Value in
-    // ArgumentsData is DoubleValue(0) and therefore safe for GC tracing.
+    // Zero the argument Values. This sets each value to DoubleValue(0), which
+    // is safe for GC tracing.
+    memset(data->args, 0, numArgs * sizeof(Value));
     MOZ_ASSERT(DoubleValue(0).asRawBits() == 0x0);
     MOZ_ASSERT_IF(numArgs > 0, data->args[0].asRawBits() == 0x0);
+
     obj->initFixedSlot(DATA_SLOT, PrivateValue(data));
 
     /* Copy [0, numArgs) into data->slots. */
@@ -531,6 +536,7 @@ strictargs_enumerate(JSContext* cx, HandleObject obj)
 void
 ArgumentsObject::finalize(FreeOp* fop, JSObject* obj)
 {
+    MOZ_ASSERT(!IsInsideNursery(obj));
     fop->free_(reinterpret_cast<void*>(obj->as<ArgumentsObject>().data()));
 }
 
@@ -544,6 +550,34 @@ ArgumentsObject::trace(JSTracer* trc, JSObject* obj)
     TraceManuallyBarrieredEdge(trc, &data->script, "script");
 }
 
+/* static */ size_t
+ArgumentsObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObject* src)
+{
+    ArgumentsObject* ndst = &dst->as<ArgumentsObject>();
+    ArgumentsObject* nsrc = &src->as<ArgumentsObject>();
+    MOZ_ASSERT(ndst->data() == nsrc->data());
+
+    Nursery& nursery = trc->runtime()->gc.nursery;
+
+    if (!nursery.isInside(nsrc->data())) {
+        nursery.removeMallocedBuffer(nsrc->data());
+        return 0;
+    }
+
+    uint32_t nbytes = nsrc->data()->dataBytes;
+    uint8_t* data = nsrc->zone()->pod_malloc<uint8_t>(nbytes);
+    if (!data)
+        CrashAtUnhandlableOOM("Failed to allocate ArgumentsObject data while tenuring.");
+    ndst->initFixedSlot(DATA_SLOT, PrivateValue(data));
+
+    mozilla::PodCopy(data, reinterpret_cast<uint8_t*>(nsrc->data()), nbytes);
+
+    ArgumentsData* dstData = ndst->data();
+    dstData->deletedBits = reinterpret_cast<size_t*>(dstData->args + dstData->numArgs);
+
+    return nbytes;
+}
+
 /*
  * The classes below collaborate to lazily reflect and synchronize actual
  * argument values, argument count, and callee function object stored in a
@@ -554,7 +588,9 @@ const Class NormalArgumentsObject::class_ = {
     "Arguments",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(NormalArgumentsObject::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Object) | JSCLASS_BACKGROUND_FINALIZE,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
+    JSCLASS_SKIP_NURSERY_FINALIZE |
+    JSCLASS_BACKGROUND_FINALIZE,
     nullptr,                 /* addProperty */
     args_delProperty,
     nullptr,                 /* getProperty */
@@ -579,7 +615,9 @@ const Class StrictArgumentsObject::class_ = {
     "Arguments",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(StrictArgumentsObject::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Object) | JSCLASS_BACKGROUND_FINALIZE,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
+    JSCLASS_SKIP_NURSERY_FINALIZE |
+    JSCLASS_BACKGROUND_FINALIZE,
     nullptr,                 /* addProperty */
     args_delProperty,
     nullptr,                 /* getProperty */

@@ -301,7 +301,8 @@ let HomePanels = (function () {
   // Valid item types for a panel view.
   let Item = Object.freeze({
     ARTICLE: "article",
-    IMAGE: "image"
+    IMAGE: "image",
+    ICON: "icon"
   });
 
   // Valid item handlers for a panel view.

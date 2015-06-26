@@ -15,6 +15,11 @@
             android:name="org.mozilla.gecko.fxa.receivers.FxAccountDeletedService" >
         </service>
 
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.sync.FxAccountProfileService" >
+        </service>
+
         <!-- Firefox Sync. -->
         <service
             android:exported="false"

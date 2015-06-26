@@ -2,14 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
-import glob
 import logging
 import mozpack.path as mozpath
 import os
-import sys
 
 from mozbuild.base import (
     MachCommandBase,
@@ -54,6 +52,7 @@ class MachCommands(MachCommandBase):
         help='Tests to run. Each test can be a single file or a directory.')
     def python_test(self, tests, verbose=False, stop=False):
         self._activate_virtualenv()
+        import glob
 
         # Python's unittest, and in particular discover, has problems with
         # clashing namespaces when importing multiple test modules. What follows

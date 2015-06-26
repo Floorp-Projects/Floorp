@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <title>Table header information cells for ARIA table</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../table.js"></script>
+
+  <script type="application/javascript">
+
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // column and row headers from markup
+
+      headerInfoMap = [
+        {
+          cell: "table_dc_1",
+          rowHeaderCells: [ "table_rh_1" ],
+          columnHeaderCells: [ "table_ch_2" ]
+        },
+        {
+          cell: "table_dc_2",
+          rowHeaderCells: [ "table_rh_1" ],
+          columnHeaderCells: [ "table_ch_3" ]
+        },
+        {
+          cell: "table_dc_3",
+          rowHeaderCells: [ "table_rh_2" ],
+          columnHeaderCells: [ "table_ch_2" ]
+        },
+        {
+          cell: "table_dc_4",
+          rowHeaderCells: [ "table_rh_2" ],
+          columnHeaderCells: [ "table_ch_3" ]
+        },
+        {
+          cell: "table_rh_1",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table_ch_1" ]
+        },
+        {
+          cell: "table_rh_2",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table_ch_1" ]
+        }
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     title="support ARIA table and cell roles"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1173364">Bug 1173364</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div role="table">
+    <div role="row">
+      <span id="table_ch_1" role="columnheader">col_1</span>
+      <span id="table_ch_2" role="columnheader">col_2</span>
+      <span id="table_ch_3" role="columnheader">col_3</span>
+    </div>
+    <div role="row">
+      <span id="table_rh_1" role="rowheader">row_1</span>
+      <span id="table_dc_1" role="cell">cell1</span>
+      <span id="table_dc_2" role="cell">cell2</span>
+    </div>
+    <div role="row">
+      <span id="table_rh_2" role="rowheader">row_2</span>
+      <span id="table_dc_3" role="cell">cell3</span>
+      <span id="table_dc_4" role="cell">cell4</span>
+    </div>
+  </div>
+
+</body>
+</html>

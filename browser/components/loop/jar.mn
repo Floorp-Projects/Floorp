@@ -40,6 +40,8 @@ browser.jar:
   # one?
   content/browser/loop/shared/img/spinner.png                   (content/shared/img/spinner.png)
   content/browser/loop/shared/img/spinner@2x.png                (content/shared/img/spinner@2x.png)
+  content/browser/loop/shared/img/chatbubble-arrow-left.svg     (content/shared/img/chatbubble-arrow-left.svg)
+  content/browser/loop/shared/img/chatbubble-arrow-right.svg    (content/shared/img/chatbubble-arrow-right.svg)
   content/browser/loop/shared/img/audio-inverse-14x14.png       (content/shared/img/audio-inverse-14x14.png)
   content/browser/loop/shared/img/audio-inverse-14x14@2x.png    (content/shared/img/audio-inverse-14x14@2x.png)
   content/browser/loop/shared/img/facemute-14x14.png            (content/shared/img/facemute-14x14.png)
@@ -112,6 +114,7 @@ browser.jar:
   content/browser/loop/shared/sounds/room-joined-in.ogg (content/shared/sounds/room-joined-in.ogg)
   content/browser/loop/shared/sounds/room-left.ogg      (content/shared/sounds/room-left.ogg)
   content/browser/loop/shared/sounds/failure.ogg        (content/shared/sounds/failure.ogg)
+  content/browser/loop/shared/sounds/message.ogg        (content/shared/sounds/message.ogg)
 
   # Partner SDK assets
   content/browser/loop/libs/sdk.js                                                    (content/shared/libs/sdk.js)

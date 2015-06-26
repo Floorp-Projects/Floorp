@@ -985,6 +985,9 @@ HyperTextAccessible::NativeAttributes()
 nsIAtom*
 HyperTextAccessible::LandmarkRole() const
 {
+  if (!HasOwnContent())
+    return nullptr;
+
   // For the html landmark elements we expose them like we do ARIA landmarks to
   // make AT navigation schemes "just work".
   if (mContent->IsHTMLElement(nsGkAtoms::nav)) {
@@ -1750,6 +1753,42 @@ HyperTextAccessible::RemoveChild(Accessible* aAccessible)
     mOffsets.RemoveElementsAt(childIndex, count);
 
   return Accessible::RemoveChild(aAccessible);
+}
+
+Relation
+HyperTextAccessible::RelationByType(RelationType aType)
+{
+  Relation rel = Accessible::RelationByType(aType);
+
+  switch (aType) {
+    case RelationType::NODE_CHILD_OF:
+      if (mContent->IsMathMLElement()) {
+        Accessible* parent = Parent();
+        if (parent) {
+          nsIContent* parentContent = parent->GetContent();
+          if (parentContent->IsMathMLElement(nsGkAtoms::mroot_)) {
+            // Add a relation pointing to the parent <mroot>.
+            rel.AppendTarget(parent);
+          }
+        }
+      }
+      break;
+    case RelationType::NODE_PARENT_OF:
+      if (mContent->IsMathMLElement(nsGkAtoms::mroot_)) {
+        Accessible* base = GetChildAt(0);
+        Accessible* index = GetChildAt(1);
+        if (base && index) {
+          // Append the <mroot> children in the order index, base.
+          rel.AppendTarget(index);
+          rel.AppendTarget(base);
+        }
+      }
+      break;
+    default:
+      break;
+  }
+
+  return rel;
 }
 
 void

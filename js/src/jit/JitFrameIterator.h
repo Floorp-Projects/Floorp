@@ -316,7 +316,7 @@ class JitProfilingFrameIterator
 class RInstructionResults
 {
     // Vector of results of recover instructions.
-    typedef mozilla::Vector<HeapValue, 1, SystemAllocPolicy> Values;
+    typedef mozilla::Vector<RelocatableValue, 1, SystemAllocPolicy> Values;
     mozilla::UniquePtr<Values, JS::DeletePolicy<Values> > results_;
 
     // The frame pointer is used as a key to check if the current frame already
@@ -341,7 +341,7 @@ class RInstructionResults
 
     JitFrameLayout* frame() const;
 
-    HeapValue& operator[](size_t index);
+    RelocatableValue& operator[](size_t index);
 
     void trace(JSTracer* trc);
 };

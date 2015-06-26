@@ -7,8 +7,10 @@
 * https://w3c.github.io/push-api/
 */
 
+interface Principal;
+
 [JSImplementation="@mozilla.org/push/PushSubscription;1",
- Constructor(DOMString pushEndpoint, DOMString scope, DOMString pageURL), ChromeOnly]
+ Constructor(DOMString pushEndpoint, DOMString scope, Principal principal), ChromeOnly]
 interface PushSubscription
 {
     readonly attribute USVString endpoint;

@@ -26,6 +26,9 @@ struct nsMediaFeature;
 
 namespace mozilla {
 class CSSStyleSheet;
+namespace css {
+class DocumentRule;
+} // namespace css
 } // namespace mozilla
 
 struct nsMediaExpression {
@@ -127,6 +130,64 @@ private:
   };
   nsCOMPtr<nsIAtom> mMedium;
   nsTArray<FeatureEntry> mFeatureCache;
+};
+
+/**
+ * nsDocumentRuleResultCacheKey is analagous to nsMediaQueryResultCacheKey
+ * and stores the result of matching the @-moz-document rules from a set
+ * of style sheets.  nsCSSRuleProcessor builds up an
+ * nsDocumentRuleResultCacheKey as it visits the @-moz-document rules
+ * while building its RuleCascadeData.
+ *
+ * Rather than represent the result using a list of both the matching and
+ * non-matching rules, we just store the matched rules.  The assumption is
+ * that in situations where we have a large number of rules -- such as the
+ * thousands added by AdBlock Plus -- that only a small number will be
+ * matched.  Thus to check if the nsDocumentRuleResultCacheKey matches a
+ * given nsPresContext, we also need the entire list of @-moz-document
+ * rules to know which rules must not match.
+ */
+class nsDocumentRuleResultCacheKey
+{
+public:
+#ifdef DEBUG
+  nsDocumentRuleResultCacheKey()
+    : mFinalized(false) {}
+#endif
+
+  bool AddMatchingRule(mozilla::css::DocumentRule* aRule);
+  bool Matches(nsPresContext* aPresContext,
+               const nsTArray<mozilla::css::DocumentRule*>& aRules) const;
+
+  bool operator==(const nsDocumentRuleResultCacheKey& aOther) const {
+    MOZ_ASSERT(mFinalized);
+    MOZ_ASSERT(aOther.mFinalized);
+    return mMatchingRules == aOther.mMatchingRules;
+  }
+  bool operator!=(const nsDocumentRuleResultCacheKey& aOther) const {
+    return !(*this == aOther);
+  }
+
+  void Swap(nsDocumentRuleResultCacheKey& aOther) {
+    mMatchingRules.SwapElements(aOther.mMatchingRules);
+#ifdef DEBUG
+    std::swap(mFinalized, aOther.mFinalized);
+#endif
+  }
+
+  void Finalize();
+
+#ifdef DEBUG
+  void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
+#endif
+
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+private:
+  nsTArray<mozilla::css::DocumentRule*> mMatchingRules;
+#ifdef DEBUG
+  bool mFinalized;
+#endif
 };
 
 class nsMediaQuery {

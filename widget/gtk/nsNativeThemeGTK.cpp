@@ -725,7 +725,7 @@ ThemeRenderer::DrawWithGDK(GdkDrawable * drawable, gint offsetX,
 #else
 class SystemCairoClipper : public ClipExporter {
 public:
-  SystemCairoClipper(cairo_t* aContext) : mContext(aContext)
+  explicit SystemCairoClipper(cairo_t* aContext) : mContext(aContext)
   {
   }
 

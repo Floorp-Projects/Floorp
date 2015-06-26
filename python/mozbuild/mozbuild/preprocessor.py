@@ -24,7 +24,6 @@ value :
 
 import sys
 import os
-import os.path
 import re
 from optparse import OptionParser
 import errno

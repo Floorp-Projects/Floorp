@@ -44,6 +44,8 @@ StoreBuffer::enable()
         !bufferCell.init() ||
         !bufferSlot.init() ||
         !bufferWholeCell.init() ||
+        !bufferRelocVal.init() ||
+        !bufferRelocCell.init() ||
         !bufferGeneric.init())
     {
         return false;
@@ -77,6 +79,8 @@ StoreBuffer::clear()
     bufferCell.clear();
     bufferSlot.clear();
     bufferWholeCell.clear();
+    bufferRelocVal.clear();
+    bufferRelocCell.clear();
     bufferGeneric.clear();
 
     return true;
@@ -100,6 +104,8 @@ StoreBuffer::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::GCSi
     sizes->storeBufferCells      += bufferCell.sizeOfExcludingThis(mallocSizeOf);
     sizes->storeBufferSlots      += bufferSlot.sizeOfExcludingThis(mallocSizeOf);
     sizes->storeBufferWholeCells += bufferWholeCell.sizeOfExcludingThis(mallocSizeOf);
+    sizes->storeBufferRelocVals  += bufferRelocVal.sizeOfExcludingThis(mallocSizeOf);
+    sizes->storeBufferRelocCells += bufferRelocCell.sizeOfExcludingThis(mallocSizeOf);
     sizes->storeBufferGenerics   += bufferGeneric.sizeOfExcludingThis(mallocSizeOf);
 }
 

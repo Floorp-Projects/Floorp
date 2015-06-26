@@ -47,8 +47,6 @@ browser.jar:
         skin/classic/browser/heartbeat-star-off.svg                  (../shared/heartbeat-star-off.svg)
         skin/classic/browser/Info.png
         skin/classic/browser/Info-XP.png
-        skin/classic/browser/identity.png
-        skin/classic/browser/identity-XP.png
         skin/classic/browser/identity-icons-generic.png
         skin/classic/browser/identity-icons-generic@2x.png
         skin/classic/browser/identity-icons-https.png
@@ -192,6 +190,11 @@ browser.jar:
         skin/classic/browser/loop/toolbar-lunaSilver.png             (loop/toolbar-lunaSilver.png)
         skin/classic/browser/loop/toolbar-lunaSilver@2x.png          (loop/toolbar-lunaSilver@2x.png)
 *       skin/classic/browser/controlcenter/panel.css                 (controlcenter/panel.css)
+        skin/classic/browser/controlcenter/arrow-subview.svg  (../shared/controlcenter/arrow-subview.svg)
+        skin/classic/browser/controlcenter/conn-not-secure.svg  (../shared/controlcenter/conn-not-secure.svg)
+        skin/classic/browser/controlcenter/conn-secure-dv.svg  (../shared/controlcenter/conn-secure-dv.svg)
+        skin/classic/browser/controlcenter/conn-secure-ev.svg  (../shared/controlcenter/conn-secure-ev.svg)
+        skin/classic/browser/controlcenter/permissions.svg  (../shared/controlcenter/permissions.svg)
         skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
         skin/classic/browser/customizableui/customizeFavicon.ico  (../shared/customizableui/customizeFavicon.ico)
         skin/classic/browser/customizableui/customize-illustration.png  (../shared/customizableui/customize-illustration.png)
@@ -591,7 +594,6 @@ browser.jar:
 % override chrome://browser/skin/aboutSessionRestore-window-icon.png  chrome://browser/skin/preferences/application.png                 os=WINNT osversion<6
 
 % override chrome://browser/skin/Info.png                             chrome://browser/skin/Info-XP.png                                 os=WINNT osversion<6
-% override chrome://browser/skin/identity.png                         chrome://browser/skin/identity-XP.png                             os=WINNT osversion<6
 % override chrome://browser/skin/livemark-folder.png                  chrome://browser/skin/livemark-folder-XP.png                      os=WINNT osversion<6
 % override chrome://browser/skin/menu-back.png                        chrome://browser/skin/menu-back-XP.png                            os=WINNT osversion<6
 % override chrome://browser/skin/menu-forward.png                     chrome://browser/skin/menu-forward-XP.png                         os=WINNT osversion<6

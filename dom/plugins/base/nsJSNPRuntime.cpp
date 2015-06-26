@@ -360,10 +360,11 @@ UnregisterGCCallbacks()
   JS_RemoveExtraGCRootsTracer(jsRuntime, TraceJSObjWrappers, nullptr);
 
   // Remove delayed destruction callback.
-  sCallbackRuntime->UnregisterGCCallback(DelayedReleaseGCCallback);
-
-  // Unset runtime pointer to indicate callbacks are no longer registered.
-  sCallbackRuntime = nullptr;
+  if (sCallbackRuntime) {
+    sCallbackRuntime->UnregisterGCCallback(DelayedReleaseGCCallback);
+    // Unset runtime pointer to indicate callbacks are no longer registered.
+    sCallbackRuntime = nullptr;
+  }
 }
 
 static bool

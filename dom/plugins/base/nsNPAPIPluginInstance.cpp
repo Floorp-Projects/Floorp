@@ -1606,15 +1606,6 @@ nsNPAPIPluginInstance::SetOwner(nsPluginInstanceOwner *aOwner)
 }
 
 nsresult
-nsNPAPIPluginInstance::ShowStatus(const char* message)
-{
-  if (mOwner)
-    return mOwner->ShowStatus(message);
-
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
 nsNPAPIPluginInstance::AsyncSetWindow(NPWindow& window)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
