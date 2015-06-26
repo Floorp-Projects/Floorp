@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gServiceWorkerManager",
                                   "nsIServiceWorkerManager");
 
 function debug(aMsg) {
-  //dump("AboutServiceWorkers - " + aMsg + "\n");
+  // dump("AboutServiceWorkers - " + aMsg + "\n");
 }
 
 function serializeServiceWorkerInfo(aServiceWorkerInfo) {
@@ -36,8 +36,7 @@ function serializeServiceWorkerInfo(aServiceWorkerInfo) {
     if (property === "principal") {
       result.principal = {
         origin: aServiceWorkerInfo.principal.origin,
-        appId: aServiceWorkerInfo.principal.appId,
-        isInBrowser: aServiceWorkerInfo.principal.isInBrowser
+        originAttributes: aServiceWorkerInfo.principal.originAttributes
       };
       return;
     }
@@ -133,32 +132,36 @@ this.AboutServiceWorkers = {
 
         if (!message.principal ||
             !message.principal.originAttributes) {
-          // XXX This will always error until bug 1171915 is fixed.
           self.sendError(message.id, "MissingOriginAttributes");
           return;
         }
 
-        gServiceWorkerManager.propagateSoftUpdate({},
-                                                  message.scope);
+        gServiceWorkerManager.propagateSoftUpdate(
+          message.principal.originAttributes,
+          message.scope
+        );
+
         self.sendResult(message.id, true);
         break;
 
       case "unregister":
         if (!message.principal ||
             !message.principal.origin ||
-            !message.principal.appId) {
-          self.sendError("MissingPrincipal");
+            !message.principal.originAttributes ||
+            !message.principal.originAttributes.appId ||
+            !message.principal.originAttributes.isInBrowser) {
+          self.sendError(message.id, "MissingPrincipal");
           return;
         }
 
         let principal = Services.scriptSecurityManager.getAppCodebasePrincipal(
           Services.io.newURI(message.principal.origin, null, null),
-          message.principal.appId,
-          message.principal.isInBrowser
+          message.principal.originAttributes.appId,
+          message.principal.originAttributes.isInBrowser
         );
 
         if (!message.scope) {
-          self.sendError("MissingScope");
+          self.sendError(message.id, "MissingScope");
           return;
         }
 
