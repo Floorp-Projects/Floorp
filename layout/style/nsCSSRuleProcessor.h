@@ -161,13 +161,6 @@ public:
    */
   mozilla::dom::Element* GetScopeElement() const { return mScopeElement; }
 
-#ifdef DEBUG
-  void AssertQuirksChangeOK() {
-    NS_ASSERTION(!mRuleCascades, "can't toggle quirks style sheet without "
-                                 "clearing rule cascades");
-  }
-#endif
-
 #ifdef XP_WIN
   // Cached theme identifier for the moz-windows-theme media query.
   static uint8_t GetWindowsThemeIdentifier();

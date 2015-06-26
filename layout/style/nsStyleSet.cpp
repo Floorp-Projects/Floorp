@@ -260,16 +260,6 @@ nsStyleSet::EndReconstruct()
   GCRuleTrees();
 }
 
-void
-nsStyleSet::SetQuirkStyleSheet(nsIStyleSheet* aQuirkStyleSheet)
-{
-  NS_ASSERTION(aQuirkStyleSheet, "Must have quirk sheet if this is called");
-  NS_ASSERTION(!mQuirkStyleSheet, "Multiple calls to SetQuirkStyleSheet?");
-  NS_ASSERTION(mSheets[eAgentSheet].IndexOf(aQuirkStyleSheet) != -1,
-               "Quirk style sheet not one of our agent sheets?");
-  mQuirkStyleSheet = aQuirkStyleSheet;
-}
-
 typedef nsDataHashtable<nsPtrHashKey<nsINode>, uint32_t> ScopeDepthCache;
 
 // Returns the depth of a style scope element, with 1 being the depth of
@@ -678,35 +668,6 @@ nsStyleSet::EndUpdate()
 
   mDirty = 0;
   return NS_OK;
-}
-
-void
-nsStyleSet::EnableQuirkStyleSheet(bool aEnable)
-{
-  if (!mQuirkStyleSheet) {
-    // SVG-as-an-image doesn't load this sheet
-    return;
-  }
-#ifdef DEBUG
-  bool oldEnabled;
-  {
-    nsCOMPtr<nsIDOMCSSStyleSheet> domSheet =
-      do_QueryInterface(mQuirkStyleSheet);
-    domSheet->GetDisabled(&oldEnabled);
-    oldEnabled = !oldEnabled;
-  }
-#endif
-  mQuirkStyleSheet->SetEnabled(aEnable);
-#ifdef DEBUG
-  // This should always be OK, since SetEnabled should call
-  // ClearRuleCascades.
-  // Note that we can hit this codepath multiple times when document.open()
-  // (potentially implied) happens multiple times.
-  if (mRuleProcessors[eAgentSheet] && aEnable != oldEnabled) {
-    static_cast<nsCSSRuleProcessor*>(static_cast<nsIStyleRuleProcessor*>(
-      mRuleProcessors[eAgentSheet]))->AssertQuirksChangeOK();
-  }
-#endif
 }
 
 template<class T>
