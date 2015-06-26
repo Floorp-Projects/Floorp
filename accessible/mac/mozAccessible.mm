@@ -514,10 +514,12 @@ struct RoleDescrComparator
 
   NSString* subrole = [self subrole];
 
-  size_t idx = 0;
-  if (BinarySearchIf(sRoleDescrMap, 0, ArrayLength(sRoleDescrMap),
-                     RoleDescrComparator(subrole), &idx)) {
-    return utils::LocalizedString(sRoleDescrMap[idx].description);
+  if (subrole) {
+    size_t idx = 0;
+    if (BinarySearchIf(sRoleDescrMap, 0, ArrayLength(sRoleDescrMap),
+                       RoleDescrComparator(subrole), &idx)) {
+      return utils::LocalizedString(sRoleDescrMap[idx].description);
+    }
   }
 
   return NSAccessibilityRoleDescription([self role], subrole);
