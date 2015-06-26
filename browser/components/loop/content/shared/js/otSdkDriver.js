@@ -698,8 +698,12 @@ loop.OTSdkDriver = (function() {
         channel.on({
           message: function(ev) {
             try {
+              var message = JSON.parse(ev.data);
+              /* Append the timestamp. This is the time that gets shown. */
+              message.receivedTimestamp = (new Date()).toISOString();
+
               this.dispatcher.dispatch(
-                new sharedActions.ReceivedTextChatMessage(JSON.parse(ev.data)));
+                new sharedActions.ReceivedTextChatMessage(message));
             } catch (ex) {
               console.error("Failed to process incoming chat message", ex);
             }

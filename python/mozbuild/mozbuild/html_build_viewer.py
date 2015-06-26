@@ -4,7 +4,7 @@
 
 # This module contains code for running an HTTP server to view build info.
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 import BaseHTTPServer
 import json

@@ -5,9 +5,11 @@
 
 // Tests that the `copy` console helper works as intended.
 
+"use strict";
+
 let gWebConsole, gJSTerm;
 
-let TEXT =  "Lorem ipsum dolor sit amet, consectetur adipisicing " +
+let TEXT = "Lorem ipsum dolor sit amet, consectetur adipisicing " +
     "elit, sed do eiusmod tempor incididunt ut labore et dolore magna " +
     "aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco " +
     "laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure " +
@@ -24,7 +26,7 @@ add_task(function* init() {
                 "  <div>" +
                 "    <h1>Testing copy command</h1>" +
                 "    <p>This is some example text</p>" +
-                "    <p id='select-me'>"+TEXT+"</p>" +
+                "    <p id='select-me'>" + TEXT + "</p>" +
                 "  </div>" +
                 "  <div><p></p></div>" +
                 "</body>");
@@ -33,15 +35,19 @@ add_task(function* init() {
   gJSTerm = gWebConsole.jsterm;
 });
 
-add_task(function* test_copy() {
+add_task(function* testCopy() {
   let RANDOM = Math.random();
   let string = "Text: " + RANDOM;
   let obj = {a: 1, b: "foo", c: RANDOM};
 
-  let samples = [[RANDOM, RANDOM],
-                 [JSON.stringify(string), string],
-                 [obj.toSource(),  JSON.stringify(obj, null, "  ")],
-                 ["$('#" + ID + "')", content.document.getElementById(ID).outerHTML]
+  let samples = [
+                  [RANDOM, RANDOM],
+                  [JSON.stringify(string), string],
+                  [obj.toSource(), JSON.stringify(obj, null, "  ")],
+                  [
+                    "$('#" + ID + "')",
+                    content.document.getElementById(ID).outerHTML
+                  ]
                 ];
   for (let [source, reference] of samples) {
     let deferredResult = promise.defer();
