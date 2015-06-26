@@ -1,5 +1,0 @@
-# Options to enable rust in automation builds.
-
-RUSTC="$topsrcdir/rustc/bin/rustc"
-mk_add_options "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$topsrcdir/rustc/lib"
-ac_add_options --enable-rust

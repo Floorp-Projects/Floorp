@@ -16,6 +16,4 @@ ac_add_options --with-branding=browser/branding/nightly
 # Use ccache
 . "$topsrcdir/build/mozconfig.cache"
 
-. "$topsrcdir/build/unix/mozconfig.rust.linux"
-
 . "$topsrcdir/build/mozconfig.common.override"
