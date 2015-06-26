@@ -3858,14 +3858,14 @@ nsTableFrame::IsAutoLayout()
 {
   if (StyleTable()->mLayoutStrategy == NS_STYLE_TABLE_LAYOUT_AUTO)
     return true;
-  // a fixed-layout inline-table must have a width
-  // and tables with 'width: -moz-max-content' must be auto-layout
-  // (at least as long as FixedTableLayoutStrategy::GetPrefISize returns
-  // nscoord_MAX)
-  const nsStyleCoord &width = StylePosition()->mWidth;
-  return (width.GetUnit() == eStyleUnit_Auto) ||
-         (width.GetUnit() == eStyleUnit_Enumerated &&
-          width.GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT);
+  // a fixed-layout inline-table must have a inline size
+  // and tables with inline size set to '-moz-max-content' must be
+  // auto-layout (at least as long as
+  // FixedTableLayoutStrategy::GetPrefISize returns nscoord_MAX)
+  const nsStyleCoord &iSize = StylePosition()->ISize(GetWritingMode());
+  return (iSize.GetUnit() == eStyleUnit_Auto) ||
+         (iSize.GetUnit() == eStyleUnit_Enumerated &&
+          iSize.GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT);
 }
 
 #ifdef DEBUG_FRAME_DUMP

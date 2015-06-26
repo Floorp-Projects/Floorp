@@ -32,8 +32,8 @@ public:
 
 private:
     nsTableFrame *mTableFrame;
-    nscoord mMinWidth;
-    nscoord mLastCalcWidth;
+    nscoord mMinISize;
+    nscoord mLastCalcISize;
 };
 
 #endif /* !defined(FixedTableLayoutStrategy_h_) */
