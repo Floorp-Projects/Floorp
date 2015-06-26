@@ -9,6 +9,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/cache/Action.h"
+#include "mozilla/dom/cache/FileUtils.h"
 #include "mozilla/dom/cache/Manager.h"
 #include "mozilla/dom/cache/ManagerId.h"
 #include "mozilla/dom/cache/OfflineStorage.h"
@@ -155,6 +156,7 @@ public:
     MOZ_ASSERT(mData);
     MOZ_ASSERT(mTarget);
     MOZ_ASSERT(mInitiatingThread);
+    MOZ_ASSERT(mInitAction);
   }
 
   nsresult Dispatch()
@@ -402,11 +404,6 @@ Context::QuotaInitRunnable::Run()
         break;
       }
 
-      if (!mInitAction) {
-        resolver->Resolve(NS_OK);
-        break;
-      }
-
       mState = STATE_RUN_ON_TARGET;
 
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
@@ -427,15 +424,20 @@ Context::QuotaInitRunnable::Run()
 
       mData = nullptr;
 
+      // If the database was opened, then we should always succeed when creating
+      // the marker file.  If it wasn't opened successfully, then no need to
+      // create a marker file anyway.
+      if (NS_SUCCEEDED(resolver->Result())) {
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(CreateMarkerFile(mQuotaInfo)));
+      }
+
       break;
     }
     // -------------------
     case STATE_COMPLETING:
     {
       NS_ASSERT_OWNINGTHREAD(QuotaInitRunnable);
-      if (mInitAction) {
-        mInitAction->CompleteOnInitiatingThread(mResult);
-      }
+      mInitAction->CompleteOnInitiatingThread(mResult);
       mContext->OnQuotaInit(mResult, mQuotaInfo, mOfflineStorage);
       mState = STATE_COMPLETE;
 
@@ -819,6 +821,7 @@ Context::Context(Manager* aManager, nsIThread* aTarget)
   , mTarget(aTarget)
   , mData(new Data(aTarget))
   , mState(STATE_CONTEXT_PREINIT)
+  , mOrphanedData(false)
 {
   MOZ_ASSERT(mManager);
 }
@@ -927,7 +930,12 @@ Context::~Context()
     mThreadsafeHandle->ContextDestroyed(this);
   }
 
+  // Note, this may set the mOrphanedData flag.
   mManager->RemoveContext(this);
+
+  if (mQuotaInfo.mDir && !mOrphanedData) {
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(DeleteMarkerFile(mQuotaInfo)));
+  }
 
   if (mNextContext) {
     mNextContext->Start();
@@ -1048,6 +1056,14 @@ Context::RemoveActivity(Activity* aActivity)
   MOZ_ASSERT(aActivity);
   MOZ_ALWAYS_TRUE(mActivityList.RemoveElement(aActivity));
   MOZ_ASSERT(!mActivityList.Contains(aActivity));
+}
+
+void
+Context::NoteOrphanedData()
+{
+  NS_ASSERT_OWNINGTHREAD(Context);
+  // This may be called more than once
+  mOrphanedData = true;
 }
 
 already_AddRefed<Context::ThreadsafeHandle>

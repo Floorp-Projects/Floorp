@@ -1326,8 +1326,9 @@ public:
         // no outstanding references, delete immediately
         nsRefPtr<Context> context = mManager->mContext;
 
-        // TODO: note that we need to check this cache for staleness on startup (bug 1110446)
-        if (!context->IsCanceled()) {
+        if (context->IsCanceled()) {
+          context->NoteOrphanedData();
+        } else {
           context->CancelForCacheId(mCacheId);
           nsRefPtr<Action> action =
             new DeleteOrphanedCacheAction(mManager, mCacheId);
@@ -1480,8 +1481,25 @@ Manager::RemoveContext(Context* aContext)
 
   // Whether the Context destruction was triggered from the Manager going
   // idle or the underlying storage being invalidated, we should know we
-  // are closing before the Conext is destroyed.
+  // are closing before the Context is destroyed.
   MOZ_ASSERT(mState == Closing);
+
+  // Before forgetting the Context, check to see if we have any outstanding
+  // cache or body objects waiting for deletion.  If so, note that we've
+  // orphaned data so it will be cleaned up on the next open.
+  for (uint32_t i = 0; i < mCacheIdRefs.Length(); ++i) {
+    if (mCacheIdRefs[i].mOrphaned) {
+      aContext->NoteOrphanedData();
+      break;
+    }
+  }
+
+  for (uint32_t i = 0; i < mBodyIdRefs.Length(); ++i) {
+    if (mBodyIdRefs[i].mOrphaned) {
+      aContext->NoteOrphanedData();
+      break;
+    }
+  }
 
   mContext = nullptr;
 
@@ -1534,13 +1552,18 @@ Manager::ReleaseCacheId(CacheId aCacheId)
       if (mCacheIdRefs[i].mCount == 0) {
         bool orphaned = mCacheIdRefs[i].mOrphaned;
         mCacheIdRefs.RemoveElementAt(i);
-        // TODO: note that we need to check this cache for staleness on startup (bug 1110446)
         nsRefPtr<Context> context = mContext;
-        if (orphaned && context && !context->IsCanceled()) {
-          context->CancelForCacheId(aCacheId);
-          nsRefPtr<Action> action = new DeleteOrphanedCacheAction(this,
-                                                                  aCacheId);
-          context->Dispatch(action);
+        // If the context is already gone, then orphan flag should have been
+        // set in RemoveContext().
+        if (orphaned && context) {
+          if (context->IsCanceled()) {
+            context->NoteOrphanedData();
+          } else {
+            context->CancelForCacheId(aCacheId);
+            nsRefPtr<Action> action = new DeleteOrphanedCacheAction(this,
+                                                                    aCacheId);
+            context->Dispatch(action);
+          }
         }
       }
       MaybeAllowContextToClose();
@@ -1578,11 +1601,16 @@ Manager::ReleaseBodyId(const nsID& aBodyId)
       if (mBodyIdRefs[i].mCount < 1) {
         bool orphaned = mBodyIdRefs[i].mOrphaned;
         mBodyIdRefs.RemoveElementAt(i);
-        // TODO: note that we need to check this body for staleness on startup (bug 1110446)
         nsRefPtr<Context> context = mContext;
-        if (orphaned && context && !context->IsCanceled()) {
-          nsRefPtr<Action> action = new DeleteOrphanedBodyAction(aBodyId);
-          context->Dispatch(action);
+        // If the context is already gone, then orphan flag should have been
+        // set in RemoveContext().
+        if (orphaned && context) {
+          if (context->IsCanceled()) {
+            context->NoteOrphanedData();
+          } else {
+            nsRefPtr<Action> action = new DeleteOrphanedBodyAction(aBodyId);
+            context->Dispatch(action);
+          }
         }
       }
       MaybeAllowContextToClose();
