@@ -22,5 +22,10 @@ navigator.mozL10n = document.mozL10n = {
     }).replace(/_/g, " ");  // and convert _ chars to spaces
 
     return "" + readableStringId + (vars ? ";" + JSON.stringify(vars) : "");
+  },
+
+  /* For timestamp formatting reasons. */
+  language: {
+    code: "en-US"
   }
 };

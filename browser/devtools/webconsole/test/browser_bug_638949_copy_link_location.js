@@ -55,7 +55,8 @@ let test = asyncTest(function* () {
   });
 
   hud.jsterm.clearOutput();
-  content.location.reload(); // Reloading will produce network logging
+  // Reloading will produce network logging
+  content.location.reload();
 
   // Test that the "Copy Link Location" command is enabled and works
   // as expected for any network-related message.
@@ -80,10 +81,15 @@ let test = asyncTest(function* () {
 
   let deferred = promise.defer();
 
-  waitForClipboard((aData) => { return aData.trim() == message.url; },
-    () => { goDoCommand(COMMAND_NAME); },
-    () => { deferred.resolve(null); },
-    () => { deferred.reject(null); });
+  waitForClipboard((aData) => {
+    return aData.trim() == message.url;
+  }, () => {
+    goDoCommand(COMMAND_NAME);
+  }, () => {
+    deferred.resolve(null);
+  }, () => {
+    deferred.reject(null);
+  });
 
   yield deferred.promise;
 

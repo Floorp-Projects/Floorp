@@ -7,6 +7,8 @@
 # input IDL file(s). It's purpose is to directly support the build
 # system. The API will change to meet the needs of the build system.
 
+from __future__ import absolute_import
+
 import argparse
 import os
 import sys

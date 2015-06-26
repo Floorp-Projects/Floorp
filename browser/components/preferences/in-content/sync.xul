@@ -314,14 +314,30 @@
         <spacer/>
       </hbox>
     </groupbox>
-    <hbox align="center">
-      <label accesskey="&syncDeviceName.accesskey;"
-             control="syncComputerName">
-        &syncDeviceName.label;
-      </label>
-      <textbox id="fxaSyncComputerName"
-                flex="1"/>
-    </hbox>
+    <vbox>
+      <caption>
+        <label accesskey="&syncDeviceName.accesskey;"
+               control="fxaSyncComputerName">
+          &fxaSyncDeviceName.label;
+        </label>
+      </caption>
+      <hbox id="fxaDeviceName">
+        <hbox flex="1">
+          <textbox id="fxaSyncComputerName" class="plain"
+                   disabled="true" flex="1"/>
+        </hbox>
+        <hbox>
+          <button id="fxaChangeDeviceName"
+                  label="&changeSyncDeviceName.label;"/>
+          <button id="fxaCancelChangeDeviceName"
+                  label="&cancelChangeSyncDeviceName.label;"
+                  hidden="true"/>
+          <button id="fxaSaveChangeDeviceName"
+                  label="&saveChangeSyncDeviceName.label;"
+                  hidden="true"/>
+        </hbox>
+      </hbox>
+    </vbox>
     <spacer flex="1"/>
     <vbox id="tosPP-small">
       <label id="tosPP-small-ToS" class="text-link">

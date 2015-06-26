@@ -2,10 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
-import pprint
 import sys
 
 from mach.decorators import (
@@ -14,7 +13,6 @@ from mach.decorators import (
     Command,
 )
 
-from autotry import AutoTry
 from mozbuild.base import MachCommandBase
 
 
@@ -455,6 +453,8 @@ class PushToTry(MachCommandBase):
 
         from mozbuild.testing import TestResolver
         from mozbuild.controller.building import BuildDriver
+        from autotry import AutoTry
+        import pprint
 
         print("mach try is under development, please file bugs blocking 1149670.")
 

@@ -10,13 +10,18 @@
  * the according message is displayed in the web console.
  */
 
-const EXPECTED_RESULT = "Not supporting directive 'reflected-xss'. Directive and values will be ignored.";
-const TEST_FILE = "http://example.com/browser/browser/devtools/webconsole/test/" +
-                  "test_bug1045902_console_csp_ignore_reflected_xss_message.html";
+"use strict";
+
+const EXPECTED_RESULT = "Not supporting directive 'reflected-xss'. Directive " +
+                        "and values will be ignored.";
+const TEST_FILE = "http://example.com/browser/browser/devtools/webconsole/" +
+                  "test/test_bug1045902_console_csp_ignore_reflected_xss_" +
+                  "message.html";
 
 let hud = undefined;
 
-let TEST_URI = "data:text/html;charset=utf8,Web Console CSP ignoring reflected XSS (bug 1045902)";
+let TEST_URI = "data:text/html;charset=utf8,Web Console CSP ignoring " +
+               "reflected XSS (bug 1045902)";
 
 let test = asyncTest(function* () {
   let { browser } = yield loadTab(TEST_URI);
@@ -29,11 +34,10 @@ let test = asyncTest(function* () {
   hud = null;
 });
 
-
 function loadDocument(browser) {
   let deferred = promise.defer();
 
-  hud.jsterm.clearOutput()
+  hud.jsterm.clearOutput();
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
     deferred.resolve();
@@ -44,15 +48,15 @@ function loadDocument(browser) {
 }
 
 function testViolationMessage() {
-  let deferred = promise.defer();
   let aOutputNode = hud.outputNode;
 
   return waitForSuccess({
-      name: "Confirming that CSP logs messages to the console when 'reflected-xss' directive is used!",
+      name: "Confirming that CSP logs messages to the console when " +
+            "'reflected-xss' directive is used!",
       validator: function() {
-        console.log(hud.outputNode.textContent);
+        console.log(aOutputNode.textContent);
         let success = false;
-        success = hud.outputNode.textContent.indexOf(EXPECTED_RESULT) > -1;
+        success = aOutputNode.textContent.indexOf(EXPECTED_RESULT) > -1;
         return success;
       }
     });

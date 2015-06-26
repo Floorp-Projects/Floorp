@@ -16,8 +16,7 @@
 
 const TEST_URI = "data:text/html;charset=utf8,<p>dead objects!";
 
-function test()
-{
+function test() {
   let hud = null;
 
   registerCleanupFunction(() => {
@@ -28,7 +27,7 @@ function test()
 
   function* runner() {
     Services.prefs.setBoolPref("devtools.chrome.enabled", true);
-    let {tab} = yield loadTab(TEST_URI);
+    yield loadTab(TEST_URI);
 
     info("open the browser console");
 
@@ -42,7 +41,8 @@ function test()
     // Add the reference to the content document.
     yield jsterm.execute("Cu = Components.utils;" +
                   "Cu.import('resource://gre/modules/Services.jsm');" +
-                  "chromeWindow = Services.wm.getMostRecentWindow('navigator:browser');" +
+                  "chromeWindow = Services.wm.getMostRecentWindow('" +
+                  "navigator:browser');" +
                   "foobarzTezt = chromeWindow.content.document;" +
                   "delete chromeWindow");
 
