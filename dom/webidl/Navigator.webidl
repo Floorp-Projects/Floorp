@@ -405,7 +405,7 @@ partial interface Navigator {
 
 // Service Workers/Navigation Controllers
 partial interface Navigator {
-  [Pref="dom.serviceWorkers.enabled"]
+  [Func="ServiceWorkerContainer::IsEnabled"]
   readonly attribute ServiceWorkerContainer serviceWorker;
 };
 

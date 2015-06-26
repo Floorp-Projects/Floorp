@@ -2336,6 +2336,7 @@ WorkerLoadInfo::WorkerLoadInfo()
   , mIsInPrivilegedApp(false)
   , mIsInCertifiedApp(false)
   , mIndexedDBAllowed(false)
+  , mPrivateBrowsing(true)
 {
   MOZ_COUNT_CTOR(WorkerLoadInfo);
 }
@@ -2390,6 +2391,7 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   mIsInPrivilegedApp = aOther.mIsInPrivilegedApp;
   mIsInCertifiedApp = aOther.mIsInCertifiedApp;
   mIndexedDBAllowed = aOther.mIndexedDBAllowed;
+  mPrivateBrowsing = aOther.mPrivateBrowsing;
 }
 
 template <class Derived>
@@ -4163,6 +4165,7 @@ WorkerPrivateParent<Derived>::SetPrincipal(nsIPrincipal* aPrincipal,
   mLoadInfo.mLoadGroup = aLoadGroup;
 
   mLoadInfo.mPrincipalInfo = new PrincipalInfo();
+  mLoadInfo.mPrivateBrowsing = nsContentUtils::IsInPrivateBrowsing(aLoadGroup);
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
     PrincipalToPrincipalInfo(aPrincipal, mLoadInfo.mPrincipalInfo)));
@@ -4964,6 +4967,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
     loadInfo.mFromWindow = aParent->IsFromWindow();
     loadInfo.mWindowID = aParent->WindowID();
     loadInfo.mIndexedDBAllowed = aParent->IsIndexedDBAllowed();
+    loadInfo.mPrivateBrowsing = aParent->IsInPrivateBrowsing();
   } else {
     AssertIsOnMainThread();
 
@@ -5083,6 +5087,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
       loadInfo.mFromWindow = true;
       loadInfo.mWindowID = globalWindow->WindowID();
       loadInfo.mIndexedDBAllowed = IDBFactory::AllowedForWindow(globalWindow);
+      loadInfo.mPrivateBrowsing = nsContentUtils::IsInPrivateBrowsing(document);
     } else {
       // Not a window
       MOZ_ASSERT(isChrome);
@@ -5124,6 +5129,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
       loadInfo.mFromWindow = false;
       loadInfo.mWindowID = UINT64_MAX;
       loadInfo.mIndexedDBAllowed = true;
+      loadInfo.mPrivateBrowsing = false;
     }
 
     MOZ_ASSERT(loadInfo.mPrincipal);

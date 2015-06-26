@@ -753,6 +753,12 @@ public:
     return mLoadInfo.mIndexedDBAllowed;
   }
 
+  bool
+  IsInPrivateBrowsing() const
+  {
+    return mLoadInfo.mPrivateBrowsing;
+  }
+
   void
   GetAllSharedWorkers(nsTArray<nsRefPtr<SharedWorker>>& aSharedWorkers);
 
