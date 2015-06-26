@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=916893
+-->
+<head>
+  <title>Bug 1114554 - Test ServiceWorkerGlobalScope.notificationclick event.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/tests/mochitest/notification/MockServices.js"></script>
+  <script type="text/javascript" src="/tests/dom/tests/mochitest/notification/NotificationTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1114554">Bug 1114554</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+<script type="text/javascript">
+  SimpleTest.requestFlakyTimeout("Mock alert service dispatches show and click events.");
+
+  function testFrame(src) {
+    var iframe = document.createElement("iframe");
+    iframe.src = src;
+    window.callback = function() {
+      window.callback = null;
+      document.body.removeChild(iframe);
+      iframe = null;
+      ok(true, "Got notificationclick event.");
+      MockServices.unregister();
+      SimpleTest.finish();
+    };
+    document.body.appendChild(iframe);
+  }
+
+  function runTest() {
+    MockServices.register();
+    testFrame('notificationclick.html');
+    navigator.serviceWorker.register("notificationclick.js", { scope: "notificationclick.html" }).then(function(reg) {
+    }, function(e) {
+      ok(false, "registration should have passed!");
+    });
+  };
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["dom.webnotifications.workers.enabled", true],
+    ["notification.prompt.testing", true],
+  ]}, runTest);
+</script>
+</body>
+</html>
