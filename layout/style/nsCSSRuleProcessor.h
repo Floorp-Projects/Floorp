@@ -21,6 +21,7 @@
 #include "nsAutoPtr.h"
 #include "nsExpirationTracker.h"
 #include "nsRuleWalker.h"
+#include "mozilla/RefCountType.h"
 #include "mozilla/UniquePtr.h"
 
 struct CascadeEnumData;
@@ -175,6 +176,8 @@ public:
   bool IsShared() const { return mIsShared; }
 
   nsExpirationState* GetExpirationState() { return &mExpirationState; }
+  void AddStyleSetRef();
+  void ReleaseStyleSetRef();
   void SetInRuleProcessorCache(bool aVal) {
     MOZ_ASSERT(mIsShared);
     printf("%p SetInRuleProcessorCache %d\n", this, aVal);
@@ -239,6 +242,7 @@ private:
   nsDocumentRuleResultCacheKey mDocumentCacheKey;
 
   nsExpirationState mExpirationState;
+  MozRefCountType mStyleSetRefCnt;
 
   // type of stylesheet using this processor
   uint8_t mSheetType;  // == nsStyleSet::sheetType
