@@ -13,3 +13,10 @@ task:
   payload:
     env:
       MH_CUSTOM_BUILD_VARIANT_CFG: 'debug'
+  extra:
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      symbol: B
+      collection:
+        debug: true

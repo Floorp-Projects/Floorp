@@ -57,7 +57,8 @@ add_task(function* test_pushSubscriptionSuccess() {
   });
 
   let newRecord = yield PushNotificationService.register(
-    'https://example.org/1'
+    'https://example.org/1',
+    ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
   );
 
   var subscriptionUri = serverURL + '/pushSubscriptionSuccesss';
@@ -99,7 +100,8 @@ add_task(function* test_pushSubscriptionMissingLink2() {
   });
 
   let newRecord = yield PushNotificationService.register(
-    'https://example.org/no_receiptEndpoint'
+    'https://example.org/no_receiptEndpoint',
+    ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
   );
 
   var subscriptionUri = serverURL + '/subscriptionMissingLink2';

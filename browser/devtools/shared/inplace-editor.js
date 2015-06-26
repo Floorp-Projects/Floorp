@@ -234,10 +234,11 @@ function InplaceEditor(aOptions, aEvent)
   this.elt.style.display = "none";
   this.elt.parentNode.insertBefore(this.input, this.elt);
 
+  this.input.focus();
+
   if (typeof(aOptions.selectAll) == "undefined" || aOptions.selectAll) {
     this.input.select();
   }
-  this.input.focus();
 
   if (this.contentType == CONTENT_TYPES.CSS_VALUE && this.input.value == "") {
     this._maybeSuggestCompletion(true);
@@ -959,7 +960,8 @@ InplaceEditor.prototype = {
       }
       if ((this.stopOnReturn &&
            aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_RETURN) ||
-          (this.stopOnTab && aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_TAB)) {
+          (this.stopOnTab && aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_TAB &&
+           !aEvent.shiftKey)) {
         direction = null;
       }
 

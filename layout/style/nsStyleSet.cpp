@@ -15,6 +15,7 @@
 #include "mozilla/CSSStyleSheet.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/RuleProcessorCache.h"
 #include "nsIDocumentInlines.h"
 #include "nsRuleWalker.h"
 #include "nsStyleContext.h"
@@ -151,6 +152,16 @@ static const nsStyleSet::sheetType gCSSSheetTypes[] = {
   nsStyleSet::eOverrideSheet
 };
 
+static bool IsCSSSheetType(nsStyleSet::sheetType aSheetType)
+{
+  for (nsStyleSet::sheetType type : gCSSSheetTypes) {
+    if (type == aSheetType) {
+      return true;
+    }
+  }
+  return false;
+}
+
 nsStyleSet::nsStyleSet()
   : mRuleTree(nullptr),
     mBatching(0),
@@ -158,9 +169,32 @@ nsStyleSet::nsStyleSet()
     mAuthorStyleDisabled(false),
     mInReconstruct(false),
     mInitFontFeatureValuesLookup(true),
+    mNeedsRestyleAfterEnsureUniqueInner(false),
     mDirty(0),
     mUnusedRuleNodeCount(0)
 {
+}
+
+nsStyleSet::~nsStyleSet()
+{
+  for (sheetType type : gCSSSheetTypes) {
+    for (uint32_t i = 0, n = mSheets[type].Length(); i < n; i++) {
+      static_cast<CSSStyleSheet*>(mSheets[type][i])->DropStyleSet(this);
+    }
+  }
+
+  // drop reference to cached rule processors
+  nsCSSRuleProcessor* rp;
+  rp = static_cast<nsCSSRuleProcessor*>(mRuleProcessors[eAgentSheet].get());
+  if (rp) {
+    MOZ_ASSERT(rp->IsShared());
+    rp->ReleaseStyleSetRef();
+  }
+  rp = static_cast<nsCSSRuleProcessor*>(mRuleProcessors[eUserSheet].get());
+  if (rp) {
+    MOZ_ASSERT(rp->IsShared());
+    rp->ReleaseStyleSetRef();
+  }
 }
 
 size_t
@@ -170,7 +204,16 @@ nsStyleSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
   for (int i = 0; i < eSheetTypeCount; i++) {
     if (mRuleProcessors[i]) {
-      n += mRuleProcessors[i]->SizeOfIncludingThis(aMallocSizeOf);
+      bool shared = false;
+      if (i == eAgentSheet || i == eUserSheet) {
+        // The only two origins we consider caching rule processors for.
+        nsCSSRuleProcessor* rp =
+          static_cast<nsCSSRuleProcessor*>(mRuleProcessors[i].get());
+        shared = rp->IsShared();
+      }
+      if (!shared) {
+        n += mRuleProcessors[i]->SizeOfIncludingThis(aMallocSizeOf);
+      }
     }
     // mSheets is a C-style array of nsCOMArrays.  We do not own the sheets in
     // the nsCOMArrays (either the nsLayoutStyleSheetCache singleton or our
@@ -260,16 +303,6 @@ nsStyleSet::EndReconstruct()
   GCRuleTrees();
 }
 
-void
-nsStyleSet::SetQuirkStyleSheet(nsIStyleSheet* aQuirkStyleSheet)
-{
-  NS_ASSERTION(aQuirkStyleSheet, "Must have quirk sheet if this is called");
-  NS_ASSERTION(!mQuirkStyleSheet, "Multiple calls to SetQuirkStyleSheet?");
-  NS_ASSERTION(mSheets[eAgentSheet].IndexOf(aQuirkStyleSheet) != -1,
-               "Quirk style sheet not one of our agent sheets?");
-  mQuirkStyleSheet = aQuirkStyleSheet;
-}
-
 typedef nsDataHashtable<nsPtrHashKey<nsINode>, uint32_t> ScopeDepthCache;
 
 // Returns the depth of a style scope element, with 1 being the depth of
@@ -354,7 +387,15 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
 {
   nsCOMPtr<nsIStyleRuleProcessor> oldRuleProcessor(mRuleProcessors[aType]);
   nsTArray<nsCOMPtr<nsIStyleRuleProcessor>> oldScopedDocRuleProcessors;
-
+  if (aType == eAgentSheet || aType == eUserSheet) {
+    // drop reference to cached rule processor
+    nsCSSRuleProcessor* rp =
+      static_cast<nsCSSRuleProcessor*>(mRuleProcessors[aType].get());
+    if (rp) {
+      MOZ_ASSERT(rp->IsShared());
+      rp->ReleaseStyleSetRef();
+    }
+  }
   mRuleProcessors[aType] = nullptr;
   if (aType == eScopedDocSheet) {
     for (uint32_t i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++) {
@@ -467,10 +508,43 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
   if (mSheets[aType].Count()) {
     switch (aType) {
       case eAgentSheet:
-      case eUserSheet:
+      case eUserSheet: {
+        // levels containing non-scoped CSS style sheets whose rule processors
+        // we want to re-use
+        nsCOMArray<nsIStyleSheet>& sheets = mSheets[aType];
+        nsTArray<nsRefPtr<CSSStyleSheet>> cssSheets(sheets.Count());
+        for (int32_t i = 0, i_end = sheets.Count(); i < i_end; ++i) {
+          nsRefPtr<CSSStyleSheet> cssSheet = do_QueryObject(sheets[i]);
+          NS_ASSERTION(cssSheet, "not a CSS sheet");
+          cssSheets.AppendElement(cssSheet);
+        }
+        nsTArray<CSSStyleSheet*> cssSheetsRaw(cssSheets.Length());
+        for (int32_t i = 0, i_end = cssSheets.Length(); i < i_end; ++i) {
+          cssSheetsRaw.AppendElement(cssSheets[i]);
+        }
+        nsCSSRuleProcessor* rp =
+          RuleProcessorCache::GetRuleProcessor(cssSheetsRaw, PresContext());
+        if (!rp) {
+          rp = new nsCSSRuleProcessor(cssSheets, uint8_t(aType), nullptr,
+                                      static_cast<nsCSSRuleProcessor*>(
+                                       oldRuleProcessor.get()),
+                                      true /* aIsShared */);
+          nsTArray<css::DocumentRule*> documentRules;
+          nsDocumentRuleResultCacheKey cacheKey;
+          rp->TakeDocumentRulesAndCacheKey(PresContext(),
+                                           documentRules, cacheKey);
+          RuleProcessorCache::PutRuleProcessor(cssSheetsRaw,
+                                               Move(documentRules),
+                                               cacheKey, rp);
+        }
+        mRuleProcessors[aType] = rp;
+        rp->AddStyleSetRef();
+        break;
+      }
       case eDocSheet:
       case eOverrideSheet: {
-        // levels containing CSS stylesheets (apart from eScopedDocSheet)
+        // levels containing non-scoped CSS stylesheets whose rule processors
+        // we don't want to re-use
         nsCOMArray<nsIStyleSheet>& sheets = mSheets[aType];
         nsTArray<nsRefPtr<CSSStyleSheet>> cssSheets(sheets.Count());
         for (int32_t i = 0, i_end = sheets.Count(); i < i_end; ++i) {
@@ -510,9 +584,13 @@ nsStyleSet::AppendStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
   NS_PRECONDITION(aSheet, "null arg");
   NS_ASSERTION(aSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
-  mSheets[aType].RemoveObject(aSheet);
+  bool present = mSheets[aType].RemoveObject(aSheet);
   if (!mSheets[aType].AppendObject(aSheet))
     return NS_ERROR_OUT_OF_MEMORY;
+
+  if (!present && IsCSSSheetType(aType)) {
+    static_cast<CSSStyleSheet*>(aSheet)->AddStyleSet(this);
+  }
 
   return DirtyRuleProcessors(aType);
 }
@@ -523,9 +601,13 @@ nsStyleSet::PrependStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
   NS_PRECONDITION(aSheet, "null arg");
   NS_ASSERTION(aSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
-  mSheets[aType].RemoveObject(aSheet);
+  bool present = mSheets[aType].RemoveObject(aSheet);
   if (!mSheets[aType].InsertObjectAt(aSheet, 0))
     return NS_ERROR_OUT_OF_MEMORY;
+
+  if (!present && IsCSSSheetType(aType)) {
+    static_cast<CSSStyleSheet*>(aSheet)->AddStyleSet(this);
+  }
 
   return DirtyRuleProcessors(aType);
 }
@@ -536,7 +618,11 @@ nsStyleSet::RemoveStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
   NS_PRECONDITION(aSheet, "null arg");
   NS_ASSERTION(aSheet->IsComplete(),
                "Incomplete sheet being removed from style set");
-  mSheets[aType].RemoveObject(aSheet);
+  if (mSheets[aType].RemoveObject(aSheet)) {
+    if (IsCSSSheetType(aType)) {
+      static_cast<CSSStyleSheet*>(aSheet)->DropStyleSet(this);
+    }
+  }
 
   return DirtyRuleProcessors(aType);
 }
@@ -545,9 +631,22 @@ nsresult
 nsStyleSet::ReplaceSheets(sheetType aType,
                           const nsCOMArray<nsIStyleSheet> &aNewSheets)
 {
+  bool cssSheetType = IsCSSSheetType(aType);
+  if (cssSheetType) {
+    for (uint32_t i = 0, n = mSheets[aType].Length(); i < n; i++) {
+      static_cast<CSSStyleSheet*>(mSheets[aType][i])->DropStyleSet(this);
+    }
+  }
+
   mSheets[aType].Clear();
   if (!mSheets[aType].AppendObjects(aNewSheets))
     return NS_ERROR_OUT_OF_MEMORY;
+
+  if (cssSheetType) {
+    for (uint32_t i = 0, n = mSheets[aType].Length(); i < n; i++) {
+      static_cast<CSSStyleSheet*>(mSheets[aType][i])->AddStyleSet(this);
+    }
+  }
 
   return DirtyRuleProcessors(aType);
 }
@@ -560,13 +659,17 @@ nsStyleSet::InsertStyleSheetBefore(sheetType aType, nsIStyleSheet *aNewSheet,
   NS_ASSERTION(aNewSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
 
-  mSheets[aType].RemoveObject(aNewSheet);
+  bool present = mSheets[aType].RemoveObject(aNewSheet);
   int32_t idx = mSheets[aType].IndexOf(aReferenceSheet);
   if (idx < 0)
     return NS_ERROR_INVALID_ARG;
 
   if (!mSheets[aType].InsertObjectAt(aNewSheet, idx))
     return NS_ERROR_OUT_OF_MEMORY;
+
+  if (!present && IsCSSSheetType(aType)) {
+    static_cast<CSSStyleSheet*>(aNewSheet)->AddStyleSet(this);
+  }
 
   return DirtyRuleProcessors(aType);
 }
@@ -615,7 +718,7 @@ nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
                      eDocSheet;
   nsCOMArray<nsIStyleSheet>& sheets = mSheets[type];
 
-  sheets.RemoveObject(aSheet);
+  bool present = sheets.RemoveObject(aSheet);
   nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
 
   // lowest index first
@@ -641,6 +744,10 @@ nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
   }
   if (!sheets.InsertObjectAt(aSheet, index))
     return NS_ERROR_OUT_OF_MEMORY;
+
+  if (!present) {
+    static_cast<CSSStyleSheet*>(aSheet)->AddStyleSet(this);
+  }
 
   return DirtyRuleProcessors(type);
 }
@@ -678,35 +785,6 @@ nsStyleSet::EndUpdate()
 
   mDirty = 0;
   return NS_OK;
-}
-
-void
-nsStyleSet::EnableQuirkStyleSheet(bool aEnable)
-{
-  if (!mQuirkStyleSheet) {
-    // SVG-as-an-image doesn't load this sheet
-    return;
-  }
-#ifdef DEBUG
-  bool oldEnabled;
-  {
-    nsCOMPtr<nsIDOMCSSStyleSheet> domSheet =
-      do_QueryInterface(mQuirkStyleSheet);
-    domSheet->GetDisabled(&oldEnabled);
-    oldEnabled = !oldEnabled;
-  }
-#endif
-  mQuirkStyleSheet->SetEnabled(aEnable);
-#ifdef DEBUG
-  // This should always be OK, since SetEnabled should call
-  // ClearRuleCascades.
-  // Note that we can hit this codepath multiple times when document.open()
-  // (potentially implied) happens multiple times.
-  if (mRuleProcessors[eAgentSheet] && aEnable != oldEnabled) {
-    static_cast<nsCSSRuleProcessor*>(static_cast<nsIStyleRuleProcessor*>(
-      mRuleProcessors[eAgentSheet]))->AssertQuirksChangeOK();
-  }
-#endif
 }
 
 template<class T>
@@ -2349,7 +2427,7 @@ nsStyleSet::MediumFeaturesChanged()
   return stylesChanged;
 }
 
-CSSStyleSheet::EnsureUniqueInnerResult
+bool
 nsStyleSet::EnsureUniqueInnerOnCSSSheets()
 {
   nsAutoTArray<CSSStyleSheet*, 32> queue;
@@ -2365,22 +2443,19 @@ nsStyleSet::EnsureUniqueInnerOnCSSSheets()
     mBindingManager->AppendAllSheets(queue);
   }
 
-  CSSStyleSheet::EnsureUniqueInnerResult res =
-    CSSStyleSheet::eUniqueInner_AlreadyUnique;
   while (!queue.IsEmpty()) {
     uint32_t idx = queue.Length() - 1;
     CSSStyleSheet* sheet = queue[idx];
     queue.RemoveElementAt(idx);
 
-    CSSStyleSheet::EnsureUniqueInnerResult sheetRes =
-      sheet->EnsureUniqueInner();
-    if (sheetRes == CSSStyleSheet::eUniqueInner_ClonedInner) {
-      res = sheetRes;
-    }
+    sheet->EnsureUniqueInner();
 
     // Enqueue all the sheet's children.
     sheet->AppendAllChildSheets(queue);
   }
+
+  bool res = mNeedsRestyleAfterEnsureUniqueInner;
+  mNeedsRestyleAfterEnsureUniqueInner = false;
   return res;
 }
 

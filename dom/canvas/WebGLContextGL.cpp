@@ -2033,7 +2033,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
     }
 
     const ArrayBufferView& pixbuf = pixels.Value();
-    int dataType = JS_GetArrayBufferViewType(pixbuf.Obj());
+    int dataType = pixbuf.Type();
 
     // Check the pixels param type
     if (dataType != requiredDataType)
@@ -3411,7 +3411,7 @@ WebGLContext::TexImage2D(GLenum rawTarget, GLint level,
 
         data = view.Data();
         length = view.Length();
-        jsArrayType = JS_GetArrayBufferViewType(view.Obj());
+        jsArrayType = view.Type();
     }
 
     if (!ValidateTexImageTarget(rawTarget, WebGLTexImageFunc::TexImage, WebGLTexDimensions::Tex2D))
@@ -3610,8 +3610,7 @@ WebGLContext::TexSubImage2D(GLenum rawTarget, GLint level,
 
     return TexSubImage2D_base(rawTarget, level, xoffset, yoffset,
                               width, height, 0, format, type,
-                              view.Data(), view.Length(),
-                              JS_GetArrayBufferViewType(view.Obj()),
+                              view.Data(), view.Length(), view.Type(),
                               WebGLTexelFormat::Auto, false);
 }
 

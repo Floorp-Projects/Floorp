@@ -30,15 +30,12 @@
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
 
-namespace {
 
-using mozilla::unused;
-using mozilla::dom::cache::Action;
-using mozilla::dom::cache::BodyCreateDir;
-using mozilla::dom::cache::BodyDeleteFiles;
-using mozilla::dom::cache::QuotaInfo;
-using mozilla::dom::cache::SyncDBAction;
-using mozilla::dom::cache::db::CreateSchema;
+namespace mozilla {
+namespace dom {
+namespace cache {
+
+namespace {
 
 // An Action that is executed when a Context is first created.  It ensures that
 // the directory and database are setup properly.  This lets other actions
@@ -54,23 +51,56 @@ public:
   RunSyncWithDBOnTarget(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
                         mozIStorageConnection* aConn) override
   {
-    // TODO: init maintainance marker (bug 1110446)
-    // TODO: perform maintainance if necessary (bug 1110446)
-    // TODO: find orphaned caches in database (bug 1110446)
-    // TODO: have Context create/delete marker files in constructor/destructor
-    //       and only do expensive maintenance if that marker is present (bug 1110446)
-
     nsresult rv = BodyCreateDir(aDBDir);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    mozStorageTransaction trans(aConn, false,
-                                mozIStorageConnection::TRANSACTION_IMMEDIATE);
+    {
+      mozStorageTransaction trans(aConn, false,
+                                  mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    rv = CreateSchema(aConn);
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+      rv = db::CreateSchema(aConn);
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    rv = trans.Commit();
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+      rv = trans.Commit();
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    }
+
+    // If the Context marker file exists, then the last session was
+    // not cleanly shutdown.  In these cases sqlite will ensure that
+    // the database is valid, but we might still orphan data.  Both
+    // Cache objects and body files can be referenced by DOM objects
+    // after they are "removed" from their parent.  So we need to
+    // look and see if any of these late access objects have been
+    // orphaned.
+    //
+    // Note, this must be done after any schema version updates to
+    // ensure our DBSchema methods work correctly.
+    if (MarkerFileExists(aQuotaInfo)) {
+      NS_WARNING("Cache not shutdown cleanly! Cleaning up stale data...");
+      mozStorageTransaction trans(aConn, false,
+                                  mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+      // Clean up orphaned Cache objects
+      nsAutoTArray<CacheId, 8> orphanedCacheIdList;
+      nsresult rv = db::FindOrphanedCacheIds(aConn, orphanedCacheIdList);
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+      for (uint32_t i = 0; i < orphanedCacheIdList.Length(); ++i) {
+        nsAutoTArray<nsID, 16> deletedBodyIdList;
+        rv = db::DeleteCacheId(aConn, orphanedCacheIdList[i], deletedBodyIdList);
+        if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+        rv = BodyDeleteFiles(aDBDir, deletedBodyIdList);
+        if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+      }
+
+      // Clean up orphaned body objects
+      nsAutoTArray<nsID, 64> knownBodyIdList;
+      rv = db::GetKnownBodyIds(aConn, knownBodyIdList);
+
+      rv = BodyDeleteOrphanedFiles(aDBDir, knownBodyIdList);
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    }
 
     return rv;
   }
@@ -123,14 +153,6 @@ public:
 private:
   nsTArray<nsID> mDeletedBodyIdList;
 };
-
-} // anonymous namespace
-
-namespace mozilla {
-namespace dom {
-namespace cache {
-
-namespace {
 
 bool IsHeadRequest(CacheRequest aRequest, CacheQueryParams aParams)
 {
@@ -1326,8 +1348,9 @@ public:
         // no outstanding references, delete immediately
         nsRefPtr<Context> context = mManager->mContext;
 
-        // TODO: note that we need to check this cache for staleness on startup (bug 1110446)
-        if (!context->IsCanceled()) {
+        if (context->IsCanceled()) {
+          context->NoteOrphanedData();
+        } else {
           context->CancelForCacheId(mCacheId);
           nsRefPtr<Action> action =
             new DeleteOrphanedCacheAction(mManager, mCacheId);
@@ -1480,8 +1503,25 @@ Manager::RemoveContext(Context* aContext)
 
   // Whether the Context destruction was triggered from the Manager going
   // idle or the underlying storage being invalidated, we should know we
-  // are closing before the Conext is destroyed.
+  // are closing before the Context is destroyed.
   MOZ_ASSERT(mState == Closing);
+
+  // Before forgetting the Context, check to see if we have any outstanding
+  // cache or body objects waiting for deletion.  If so, note that we've
+  // orphaned data so it will be cleaned up on the next open.
+  for (uint32_t i = 0; i < mCacheIdRefs.Length(); ++i) {
+    if (mCacheIdRefs[i].mOrphaned) {
+      aContext->NoteOrphanedData();
+      break;
+    }
+  }
+
+  for (uint32_t i = 0; i < mBodyIdRefs.Length(); ++i) {
+    if (mBodyIdRefs[i].mOrphaned) {
+      aContext->NoteOrphanedData();
+      break;
+    }
+  }
 
   mContext = nullptr;
 
@@ -1534,13 +1574,18 @@ Manager::ReleaseCacheId(CacheId aCacheId)
       if (mCacheIdRefs[i].mCount == 0) {
         bool orphaned = mCacheIdRefs[i].mOrphaned;
         mCacheIdRefs.RemoveElementAt(i);
-        // TODO: note that we need to check this cache for staleness on startup (bug 1110446)
         nsRefPtr<Context> context = mContext;
-        if (orphaned && context && !context->IsCanceled()) {
-          context->CancelForCacheId(aCacheId);
-          nsRefPtr<Action> action = new DeleteOrphanedCacheAction(this,
-                                                                  aCacheId);
-          context->Dispatch(action);
+        // If the context is already gone, then orphan flag should have been
+        // set in RemoveContext().
+        if (orphaned && context) {
+          if (context->IsCanceled()) {
+            context->NoteOrphanedData();
+          } else {
+            context->CancelForCacheId(aCacheId);
+            nsRefPtr<Action> action = new DeleteOrphanedCacheAction(this,
+                                                                    aCacheId);
+            context->Dispatch(action);
+          }
         }
       }
       MaybeAllowContextToClose();
@@ -1578,11 +1623,16 @@ Manager::ReleaseBodyId(const nsID& aBodyId)
       if (mBodyIdRefs[i].mCount < 1) {
         bool orphaned = mBodyIdRefs[i].mOrphaned;
         mBodyIdRefs.RemoveElementAt(i);
-        // TODO: note that we need to check this body for staleness on startup (bug 1110446)
         nsRefPtr<Context> context = mContext;
-        if (orphaned && context && !context->IsCanceled()) {
-          nsRefPtr<Action> action = new DeleteOrphanedBodyAction(aBodyId);
-          context->Dispatch(action);
+        // If the context is already gone, then orphan flag should have been
+        // set in RemoveContext().
+        if (orphaned && context) {
+          if (context->IsCanceled()) {
+            context->NoteOrphanedData();
+          } else {
+            nsRefPtr<Action> action = new DeleteOrphanedBodyAction(aBodyId);
+            context->Dispatch(action);
+          }
         }
       }
       MaybeAllowContextToClose();

@@ -1,0 +1,178 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Cache with QuotaManager Restart</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="large_url_list.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+function setupTestIframe() {
+  return new Promise(function(resolve) {
+    var iframe = document.createElement("iframe");
+    iframe.src = "empty.html";
+    iframe.onload = function() {
+      window.caches = iframe.contentWindow.caches;
+      resolve();
+    };
+    document.body.appendChild(iframe);
+  });
+}
+
+function clearStorage() {
+  return new Promise(function(resolve, reject) {
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var appId, inBrowser;
+    var nsIPrincipal = SpecialPowers.Components.interfaces.nsIPrincipal;
+    if (principal.appId != nsIPrincipal.UNKNOWN_APP_ID &&
+        principal.appId != nsIPrincipal.NO_APP_ID) {
+      appId = principal.appId;
+      inBrowser = principal.isInBrowserElement;
+    }
+    SpecialPowers.clearStorageForURI(document.documentURI, resolve, appId,
+                                     inBrowser);
+  });
+}
+
+function storageUsage() {
+  return new Promise(function(resolve, reject) {
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var appId, inBrowser;
+    var nsIPrincipal = SpecialPowers.Components.interfaces.nsIPrincipal;
+    if (principal.appId != nsIPrincipal.UNKNOWN_APP_ID &&
+        principal.appId != nsIPrincipal.NO_APP_ID) {
+      appId = principal.appId;
+      inBrowser = principal.isInBrowserElement;
+    }
+    SpecialPowers.getStorageUsageForURI(document.documentURI, resolve, appId,
+                                        inBrowser);
+  });
+}
+
+function resetStorage() {
+  return new Promise(function(resolve, reject) {
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var appId, inBrowser;
+    var nsIPrincipal = SpecialPowers.Components.interfaces.nsIPrincipal;
+    if (principal.appId != nsIPrincipal.UNKNOWN_APP_ID &&
+        principal.appId != nsIPrincipal.NO_APP_ID) {
+      appId = principal.appId;
+      inBrowser = principal.isInBrowserElement;
+    }
+    SpecialPowers.resetStorageForURI(document.documentURI, resolve, appId,
+                                     inBrowser);
+  });
+}
+
+function gc() {
+  return new Promise(function(resolve, reject) {
+    SpecialPowers.exactGC(window, resolve);
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set": [["dom.caches.enabled", true],
+          ["dom.quotaManager.testing", true]],
+}, function() {
+  var name = 'orphanedBodyOwner';
+  var cache = null;
+  var response = null;
+  var initialUsage = 0;
+  var fullUsage = 0;
+  var resetUsage = 0;
+  var endUsage = 0;
+  var url = 'cache_add.js';
+
+  // start from a fresh origin directory so other tests do not influence our
+  // results
+  setupTestIframe().then(function() {
+    return clearStorage();
+  }).then(function() {
+    return storageUsage();
+  }).then(function(usage) {
+    is(0, usage, 'disk usage should be zero to start');
+  })
+
+  // Initialize and populate an initial cache to get the base sqlite pages
+  // and directory structure allocated.
+  .then(function() {
+    return caches.open(name);
+  }).then(function(c) {
+    return c.add(url);
+  }).then(function() {
+    return gc();
+  }).then(function() {
+    return caches.delete(name);
+  }).then(function(deleted) {
+    ok(deleted, 'cache should be deleted');
+  })
+
+  // Now measure initial disk usage
+  .then(function() {
+    return resetStorage();
+  }).then(function() {
+    return storageUsage();
+  }).then(function(usage) {
+    initialUsage = usage;
+  })
+
+  // Now re-populate the Cache object
+  .then(function() {
+    return caches.open(name);
+  }).then(function(c) {
+    cache = c;
+    return cache.add(url);
+  })
+
+  // Get a reference to the body we've stored in the Cache.
+  .then(function() {
+    return cache.match(url);
+  }).then(function(r) {
+    response = r;
+    return cache.delete(url);
+  }).then(function(result) {
+    ok(result, "Cache entry should be deleted");
+  })
+
+  // Reset the quota dir while the cache entry is deleted, but still referenced
+  // from the DOM.  This forces the body to be orphaned.
+  .then(function() {
+    return resetStorage();
+  }).then(function() {
+    return storageUsage();
+  }).then(function(usage) {
+    fullUsage = usage;
+    ok(fullUsage > initialUsage, 'disk usage should have grown');
+  })
+
+  // Now perform a new Cache operation that will reopen the origin.  This
+  // should clean up the orphaned body.
+  .then(function() {
+    return caches.match(url);
+  }).then(function(r) {
+    ok(!r, 'response should not exist in storage');
+  })
+
+  // Finally, verify orphaned data was cleaned up by re-checking the disk
+  // usage.  Reset the storage first to ensure any WAL transaction files
+  // are flushed before measuring the usage.
+  .then(function() {
+    return resetStorage();
+  }).then(function() {
+    return storageUsage();
+  }).then(function(usage) {
+    endUsage = usage;
+    dump("### ### initial:" + initialUsage + ", full:" + fullUsage +
+         ", end:" + endUsage + "\n");
+    ok(endUsage < fullUsage, 'disk usage should have shrank');
+    is(endUsage, initialUsage, 'disk usage should return to original');
+    SimpleTest.finish();
+  });
+});
+</script>
+</body>
+</html>

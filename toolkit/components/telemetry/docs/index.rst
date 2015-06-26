@@ -20,4 +20,5 @@ Client-side, this consists of:
    environment
    main-ping
    deletion-ping
+   crash-ping
    preferences

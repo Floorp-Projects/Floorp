@@ -50,6 +50,18 @@ BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir, const nsID& aId,
 nsresult
 BodyDeleteFiles(nsIFile* aBaseDir, const nsTArray<nsID>& aIdList);
 
+nsresult
+BodyDeleteOrphanedFiles(nsIFile* aBaseDir, nsTArray<nsID>& aKnownBodyIdList);
+
+nsresult
+CreateMarkerFile(const QuotaInfo& aQuotaInfo);
+
+nsresult
+DeleteMarkerFile(const QuotaInfo& aQuotaInfo);
+
+bool
+MarkerFileExists(const QuotaInfo& aQuotaInfo);
+
 } // namespace cache
 } // namespace dom
 } // namespace mozilla

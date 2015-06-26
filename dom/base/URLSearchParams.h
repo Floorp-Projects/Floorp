@@ -31,6 +31,80 @@ public:
 // attributes are kept in the correct order. If this changes, please, update
 // BasePrincipal code.
 
+class URLParams final
+{
+public:
+  URLParams() {}
+
+  ~URLParams()
+  {
+    DeleteAll();
+  }
+
+  explicit URLParams(const URLParams& aOther)
+    : mParams(aOther.mParams)
+  {}
+
+  explicit URLParams(const URLParams&& aOther)
+    : mParams(Move(aOther.mParams))
+  {}
+
+  class ForEachIterator
+  {
+  public:
+    virtual bool
+    URLParamsIterator(const nsString& aName, const nsString& aValue) = 0;
+  };
+
+  void
+  ParseInput(const nsACString& aInput);
+
+  bool
+  ForEach(ForEachIterator& aIterator) const
+  {
+    for (uint32_t i = 0; i < mParams.Length(); ++i) {
+      if (!aIterator.URLParamsIterator(mParams[i].mKey, mParams[i].mValue)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  void Serialize(nsAString& aValue) const;
+
+  void Get(const nsAString& aName, nsString& aRetval);
+
+  void GetAll(const nsAString& aName, nsTArray<nsString >& aRetval);
+
+  void Set(const nsAString& aName, const nsAString& aValue);
+
+  void Append(const nsAString& aName, const nsAString& aValue);
+
+  bool Has(const nsAString& aName);
+
+  // Returns true if aName was found and deleted, false otherwise.
+  bool Delete(const nsAString& aName);
+
+  void DeleteAll()
+  {
+    mParams.Clear();
+  }
+
+private:
+  void DecodeString(const nsACString& aInput, nsAString& aOutput);
+  void ConvertString(const nsACString& aInput, nsAString& aOutput);
+
+  struct Param
+  {
+    nsString mKey;
+    nsString mValue;
+  };
+
+  nsTArray<Param> mParams;
+  nsCOMPtr<nsIUnicodeDecoder> mDecoder;
+};
+
 class URLSearchParams final : public nsISupports,
                               public nsWrapperCache
 {
@@ -40,7 +114,9 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(URLSearchParams)
 
-  URLSearchParams();
+  explicit URLSearchParams(URLSearchParamsObserver* aObserver);
+
+  explicit URLSearchParams(const URLSearchParams& aOther);
 
   // WebIDL methods
   nsISupports* GetParentObject() const
@@ -59,18 +135,13 @@ public:
   Constructor(const GlobalObject& aGlobal, URLSearchParams& aInit,
               ErrorResult& aRv);
 
-  void ParseInput(const nsACString& aInput,
-                  URLSearchParamsObserver* aObserver);
-
-  void AddObserver(URLSearchParamsObserver* aObserver);
-  void RemoveObserver(URLSearchParamsObserver* aObserver);
-  void RemoveObservers();
+  void ParseInput(const nsACString& aInput);
 
   void Serialize(nsAString& aValue) const;
 
   void Get(const nsAString& aName, nsString& aRetval);
 
-  void GetAll(const nsAString& aName, nsTArray<nsString >& aRetval);
+  void GetAll(const nsAString& aName, nsTArray<nsString>& aRetval);
 
   void Set(const nsAString& aName, const nsAString& aValue);
 
@@ -85,22 +156,12 @@ public:
     Serialize(aRetval);
   }
 
-  class ForEachIterator
-  {
-  public:
-    virtual bool
-    URLSearchParamsIterator(const nsString& aName, const nsString& aValue) = 0;
-  };
+  typedef URLParams::ForEachIterator ForEachIterator;
 
   bool
-  ForEach(ForEachIterator& aIterator)
+  ForEach(ForEachIterator& aIterator) const
   {
-    for (uint32_t i = 0; i < mSearchParams.Length(); ++i) {
-      if (!aIterator.URLSearchParamsIterator(mSearchParams[i].mKey,
-                                             mSearchParams[i].mValue)) {
-        return false;
-      }
-    }
+    return mParams->ForEach(aIterator);
 
     return true;
   }
@@ -110,21 +171,10 @@ private:
 
   void DeleteAll();
 
-  void DecodeString(const nsACString& aInput, nsAString& aOutput);
-  void ConvertString(const nsACString& aInput, nsAString& aOutput);
+  void NotifyObserver();
 
-  void NotifyObservers(URLSearchParamsObserver* aExceptObserver);
-
-  struct Param
-  {
-    nsString mKey;
-    nsString mValue;
-  };
-
-  nsTArray<Param> mSearchParams;
-
-  nsTArray<nsRefPtr<URLSearchParamsObserver>> mObservers;
-  nsCOMPtr<nsIUnicodeDecoder> mDecoder;
+  UniquePtr<URLParams> mParams;
+  nsRefPtr<URLSearchParamsObserver> mObserver;
 };
 
 } // namespace dom

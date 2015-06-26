@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 #include "mp4_demuxer/MP4Metadata.h"
 
-#include <cstdint>
+#include <stdint.h>
 #include <fstream>
 #include <vector>
 

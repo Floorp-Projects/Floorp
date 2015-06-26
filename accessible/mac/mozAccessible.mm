@@ -27,6 +27,23 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
+#define NSAccessibilityMathRootRadicandAttribute @"AXMathRootRadicand"
+#define NSAccessibilityMathRootIndexAttribute @"AXMathRootIndex"
+#define NSAccessibilityMathFractionNumeratorAttribute @"AXMathFractionNumerator"
+#define NSAccessibilityMathFractionDenominatorAttribute @"AXMathFractionDenominator"
+#define NSAccessibilityMathBaseAttribute @"AXMathBase"
+#define NSAccessibilityMathSubscriptAttribute @"AXMathSubscript"
+#define NSAccessibilityMathSuperscriptAttribute @"AXMathSuperscript"
+#define NSAccessibilityMathUnderAttribute @"AXMathUnder"
+#define NSAccessibilityMathOverAttribute @"AXMathOver"
+// XXX WebKit also defines the following attributes.
+// See bugs 1176970, 1176973 and 1176983.
+// - NSAccessibilityMathFencedOpenAttribute @"AXMathFencedOpen"
+// - NSAccessibilityMathFencedCloseAttribute @"AXMathFencedClose"
+// - NSAccessibilityMathLineThicknessAttribute @"AXMathLineThickness"
+// - NSAccessibilityMathPrescriptsAttribute @"AXMathPrescripts"
+// - NSAccessibilityMathPostscriptsAttribute @"AXMathPostscripts"
+
 // returns the passed in object if it is not ignored. if it's ignored, will return
 // the first unignored ancestor.
 static inline id
@@ -121,6 +138,52 @@ GetClosestInterestingAccessible(id anObject)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
+- (NSArray*)additionalAccessibilityAttributeNames
+{
+  NSMutableArray* additional = [NSMutableArray array];
+  switch (mRole) {
+    case roles::MATHML_ROOT:
+      [additional addObject:NSAccessibilityMathRootIndexAttribute];
+      [additional addObject:NSAccessibilityMathRootRadicandAttribute];
+      break;
+    case roles::MATHML_SQUARE_ROOT:
+      [additional addObject:NSAccessibilityMathRootRadicandAttribute];
+      break;
+    case roles::MATHML_FRACTION:
+      [additional addObject:NSAccessibilityMathFractionNumeratorAttribute];
+      [additional addObject:NSAccessibilityMathFractionDenominatorAttribute];
+      // XXX bug 1176973
+      // WebKit also defines NSAccessibilityMathLineThicknessAttribute
+      break;
+    case roles::MATHML_SUB:
+    case roles::MATHML_SUP:
+    case roles::MATHML_SUB_SUP:
+      [additional addObject:NSAccessibilityMathBaseAttribute];
+      [additional addObject:NSAccessibilityMathSubscriptAttribute];
+      [additional addObject:NSAccessibilityMathSuperscriptAttribute];
+      break;
+    case roles::MATHML_UNDER:
+    case roles::MATHML_OVER:
+    case roles::MATHML_UNDER_OVER:
+      [additional addObject:NSAccessibilityMathBaseAttribute];
+      [additional addObject:NSAccessibilityMathUnderAttribute];
+      [additional addObject:NSAccessibilityMathOverAttribute];
+      break;
+    // XXX bug 1176983
+    // roles::MATHML_MULTISCRIPTS should also have the following attributes:
+    // - NSAccessibilityMathPrescriptsAttribute
+    // - NSAccessibilityMathPostscriptsAttribute
+    // XXX bug 1176970
+    // roles::MATHML_FENCED should also have the following attributes:
+    // - NSAccessibilityMathFencedOpenAttribute
+    // - NSAccessibilityMathFencedCloseAttribute
+    default:
+      break;
+  }
+
+  return additional;
+}
+
 - (NSArray*)accessibilityAttributeNames
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
@@ -155,7 +218,27 @@ GetClosestInterestingAccessible(id anObject)
                                                            nil];
   }
 
-  return generalAttributes;
+  NSArray* objectAttributes = generalAttributes;
+  NSArray* additionalAttributes = [self additionalAccessibilityAttributeNames];
+  if ([additionalAttributes count])
+    objectAttributes = [objectAttributes arrayByAddingObjectsFromArray:additionalAttributes];
+
+  return objectAttributes;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+- (id)childAt:(uint32_t)i
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  AccessibleWrap* accWrap = [self getGeckoAccessible];
+  if (accWrap) {
+    Accessible* acc = accWrap->GetChildAt(i);
+    return acc ? GetNativeFromGeckoAccessible(acc) : nil;
+  }
+
+  return nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
@@ -213,6 +296,93 @@ GetClosestInterestingAccessible(id anObject)
   }
   if ([attribute isEqualToString:NSAccessibilityHelpAttribute])
     return [self help];
+
+  switch (mRole) {
+  case roles::MATHML_ROOT:
+    if ([attribute isEqualToString:NSAccessibilityMathRootRadicandAttribute])
+      return [self childAt:0];
+    if ([attribute isEqualToString:NSAccessibilityMathRootIndexAttribute])
+      return [self childAt:1];
+    break;
+  case roles::MATHML_SQUARE_ROOT:
+    if ([attribute isEqualToString:NSAccessibilityMathRootRadicandAttribute])
+      return [self childAt:0];
+    break;
+  case roles::MATHML_FRACTION:
+    if ([attribute isEqualToString:NSAccessibilityMathFractionNumeratorAttribute])
+      return [self childAt:0];
+    if ([attribute isEqualToString:NSAccessibilityMathFractionDenominatorAttribute])
+      return [self childAt:1];
+    // XXX bug 1176973
+    // WebKit also defines NSAccessibilityMathLineThicknessAttribute
+    break;
+  case roles::MATHML_SUB:
+    if ([attribute isEqualToString:NSAccessibilityMathBaseAttribute])
+      return [self childAt:0];
+    if ([attribute isEqualToString:NSAccessibilityMathSubscriptAttribute])
+      return [self childAt:1];
+#ifdef DEBUG
+    if ([attribute isEqualToString:NSAccessibilityMathSuperscriptAttribute])
+      return nil;
+#endif
+    break;
+  case roles::MATHML_SUP:
+    if ([attribute isEqualToString:NSAccessibilityMathBaseAttribute])
+      return [self childAt:0];
+#ifdef DEBUG
+    if ([attribute isEqualToString:NSAccessibilityMathSubscriptAttribute])
+      return nil;
+#endif
+    if ([attribute isEqualToString:NSAccessibilityMathSuperscriptAttribute])
+      return [self childAt:1];
+    break;
+  case roles::MATHML_SUB_SUP:
+    if ([attribute isEqualToString:NSAccessibilityMathBaseAttribute])
+      return [self childAt:0];
+    if ([attribute isEqualToString:NSAccessibilityMathSubscriptAttribute])
+      return [self childAt:1];
+    if ([attribute isEqualToString:NSAccessibilityMathSuperscriptAttribute])
+      return [self childAt:2];
+    break;
+  case roles::MATHML_UNDER:
+    if ([attribute isEqualToString:NSAccessibilityMathBaseAttribute])
+      return [self childAt:0];
+    if ([attribute isEqualToString:NSAccessibilityMathUnderAttribute])
+      return [self childAt:1];
+#ifdef DEBUG
+    if ([attribute isEqualToString:NSAccessibilityMathOverAttribute])
+      return nil;
+#endif
+    break;
+  case roles::MATHML_OVER:
+    if ([attribute isEqualToString:NSAccessibilityMathBaseAttribute])
+      return [self childAt:0];
+#ifdef DEBUG
+    if ([attribute isEqualToString:NSAccessibilityMathUnderAttribute])
+      return nil;
+#endif
+    if ([attribute isEqualToString:NSAccessibilityMathOverAttribute])
+      return [self childAt:1];
+    break;
+  case roles::MATHML_UNDER_OVER:
+    if ([attribute isEqualToString:NSAccessibilityMathBaseAttribute])
+      return [self childAt:0];
+    if ([attribute isEqualToString:NSAccessibilityMathUnderAttribute])
+      return [self childAt:1];
+    if ([attribute isEqualToString:NSAccessibilityMathOverAttribute])
+      return [self childAt:2];
+    break;
+  // XXX bug 1176983
+  // roles::MATHML_MULTISCRIPTS should also have the following attributes:
+  // - NSAccessibilityMathPrescriptsAttribute
+  // - NSAccessibilityMathPostscriptsAttribute
+  // XXX bug 1176970
+  // roles::MATHML_FENCED should also have the following attributes:
+  // - NSAccessibilityMathFencedOpenAttribute
+  // - NSAccessibilityMathFencedCloseAttribute
+  default:
+    break;
+  }
 
 #ifdef DEBUG
  NSLog (@"!!! %@ can't respond to attribute %@", self, attribute);
@@ -510,7 +680,8 @@ GetClosestInterestingAccessible(id anObject)
       return @"AXMathFraction";
 
     case roles::MATHML_FENCED:
-      // XXX This should be AXMathFence, but doing so without implementing the
+      // XXX bug 1176970
+      // This should be AXMathFence, but doing so without implementing the
       // whole fence interface seems to make VoiceOver crash, so we present it
       // as a row for now.
       return @"AXMathRow";
@@ -557,6 +728,8 @@ GetClosestInterestingAccessible(id anObject)
     // NS_MATHML_OPERATOR_SEPARATOR bits of nsOperatorFlags, but currently they
     // are only available from the MathML layout code. Hence we just fallback
     // to subrole AXMathOperator for now.
+    // XXX bug 1175747 WebKit also creates anonymous operators for <mfenced>
+    // which have subroles AXMathSeparatorOperator and AXMathFenceOperator.
     case roles::MATHML_OPERATOR:
       return @"AXMathOperator";
 
@@ -607,10 +780,12 @@ struct RoleDescrComparator
 
   NSString* subrole = [self subrole];
 
-  size_t idx = 0;
-  if (BinarySearchIf(sRoleDescrMap, 0, ArrayLength(sRoleDescrMap),
-                     RoleDescrComparator(subrole), &idx)) {
-    return utils::LocalizedString(sRoleDescrMap[idx].description);
+  if (subrole) {
+    size_t idx = 0;
+    if (BinarySearchIf(sRoleDescrMap, 0, ArrayLength(sRoleDescrMap),
+                       RoleDescrComparator(subrole), &idx)) {
+      return utils::LocalizedString(sRoleDescrMap[idx].description);
+    }
   }
 
   return NSAccessibilityRoleDescription([self role], subrole);

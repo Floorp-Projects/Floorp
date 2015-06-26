@@ -1069,6 +1069,11 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
 
   // Spell check a textarea the first time that it is focused.
   SpellCheckIfNeeded();
+  if (!mEditor) {
+    // In e10s, this can cause us to flush notifications, which can destroy
+    // the node we're about to focus.
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIDOMEventTarget> target;
   aEvent->GetTarget(getter_AddRefs(target));

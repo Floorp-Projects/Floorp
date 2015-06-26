@@ -57,7 +57,8 @@ add_task(function* test_register_success() {
   });
 
   let newRecord = yield PushNotificationService.register(
-    'https://example.org/1'
+    'https://example.org/1',
+    { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }
   );
   equal(newRecord.channelID, channelID,
     'Wrong channel ID in registration record');

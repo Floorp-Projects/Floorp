@@ -200,7 +200,7 @@ IntelWebMVideoDecoder::Demux(nsRefPtr<VP8Sample>& aSample, bool* aEOS)
   }
 
   vpx_codec_stream_info_t si;
-  memset(&si, 0, sizeof(si));
+  PodZero(&si);
   si.sz = sizeof(si);
   if (mReader->GetVideoCodec() == NESTEGG_CODEC_VP8) {
     vpx_codec_peek_stream_info(vpx_codec_vp8_dx(), data, length, &si);

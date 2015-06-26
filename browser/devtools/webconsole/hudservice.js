@@ -440,7 +440,7 @@ WebConsole.prototype = {
     // Attempt to access view source via a browser first, which may display it in
     // a tab, if enabled.
     let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
-    if (browserWin) {
+    if (browserWin && browserWin.BrowserViewSourceOfDocument) {
       return browserWin.BrowserViewSourceOfDocument({
         URL: aSourceURL,
         lineNumber: aSourceLine

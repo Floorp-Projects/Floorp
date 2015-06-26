@@ -8,7 +8,7 @@ Gecko library binaries.  The AAR file is intended for use by local
 developers using Gradle.
 '''
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 import argparse
 import hashlib

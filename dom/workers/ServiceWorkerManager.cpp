@@ -284,7 +284,7 @@ private:
   nsRefPtr<ServiceWorkerManagerChild> mActor;
 };
 
-} // Anonymous namespace
+} // anonymous namespace
 
 NS_IMPL_ISUPPORTS0(ServiceWorkerJob)
 NS_IMPL_ISUPPORTS0(ServiceWorkerRegistrationInfo)
@@ -1587,6 +1587,74 @@ ServiceWorkerManager::AppendPendingOperation(nsIRunnable* aRunnable)
   }
 }
 
+namespace {
+// Just holds a ref to a ServiceWorker until the Promise is fulfilled.
+class KeepAliveHandler final : public PromiseNativeHandler
+{
+  nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
+
+  virtual ~KeepAliveHandler()
+  {}
+
+public:
+  explicit KeepAliveHandler(const nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker)
+    : mServiceWorker(aServiceWorker)
+  {}
+
+  void
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+#ifdef DEBUG
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
+    workerPrivate->AssertIsOnWorkerThread();
+#endif
+  }
+
+  void
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+#ifdef DEBUG
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
+    workerPrivate->AssertIsOnWorkerThread();
+#endif
+  }
+};
+
+// Returns a Promise if the event was successfully dispatched and no exceptions
+// were raised, otherwise returns null.
+already_AddRefed<Promise>
+DispatchExtendableEventOnWorkerScope(JSContext* aCx,
+                                     WorkerGlobalScope* aWorkerScope,
+                                     ExtendableEvent* aEvent)
+{
+  MOZ_ASSERT(aWorkerScope);
+  MOZ_ASSERT(aEvent);
+  nsCOMPtr<nsIGlobalObject> sgo = aWorkerScope;
+  WidgetEvent* internalEvent = aEvent->GetInternalNSEvent();
+
+  ErrorResult result;
+  result = aWorkerScope->DispatchDOMEvent(nullptr, aEvent, nullptr, nullptr);
+  if (result.Failed() || internalEvent->mFlags.mExceptionHasBeenRisen) {
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> waitUntilPromise = aEvent->GetPromise();
+  if (!waitUntilPromise) {
+    ErrorResult result;
+    waitUntilPromise =
+      Promise::Resolve(sgo, aCx, JS::UndefinedHandleValue, result);
+    if (NS_WARN_IF(result.Failed())) {
+      return nullptr;
+    }
+  }
+
+  MOZ_ASSERT(waitUntilPromise);
+  return waitUntilPromise.forget();
+}
+}; // anonymous namespace
+
 /*
  * Used to handle ExtendableEvent::waitUntil() and proceed with
  * installation/activation.
@@ -1674,23 +1742,12 @@ LifecycleEventWorkerRunnable::DispatchLifecycleEvent(JSContext* aCx, WorkerPriva
 
   event->SetTrusted(true);
 
-  nsRefPtr<Promise> waitUntilPromise;
-
-  ErrorResult result;
-  result = target->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
-
-  nsCOMPtr<nsIGlobalObject> sgo = aWorkerPrivate->GlobalScope();
-  WidgetEvent* internalEvent = event->GetInternalNSEvent();
-  if (!result.Failed() && !internalEvent->mFlags.mExceptionHasBeenRisen) {
-    waitUntilPromise = event->GetPromise();
-    if (!waitUntilPromise) {
-      ErrorResult result;
-      waitUntilPromise =
-        Promise::Resolve(sgo, aCx, JS::UndefinedHandleValue, result);
-      if (NS_WARN_IF(result.Failed())) {
-        return true;
-      }
-    }
+  nsRefPtr<Promise> waitUntilPromise =
+    DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(), event);
+  if (waitUntilPromise) {
+    nsRefPtr<LifecycleEventPromiseHandler> handler =
+      new LifecycleEventPromiseHandler(mTask, mServiceWorker, false /* activateImmediately */);
+    waitUntilPromise->AppendNativeHandler(handler);
   } else {
     // Continue with a canceled install.
     // Although the spec has different routines to deal with popping stuff
@@ -1699,12 +1756,8 @@ LifecycleEventWorkerRunnable::DispatchLifecycleEvent(JSContext* aCx, WorkerPriva
     nsRefPtr<ContinueLifecycleRunnable> r =
       new ContinueLifecycleRunnable(mTask, false /* success */, false /* activate immediately */);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
-    return true;
   }
 
-  nsRefPtr<LifecycleEventPromiseHandler> handler =
-    new LifecycleEventPromiseHandler(mTask, mServiceWorker, false /* activateImmediately */);
-  waitUntilPromise->AppendNativeHandler(handler);
   return true;
 }
 
@@ -2091,8 +2144,13 @@ public:
     event->SetTrusted(true);
     event->PostInit(mServiceWorker);
 
-    nsRefPtr<EventTarget> target = do_QueryObject(aWorkerPrivate->GlobalScope());
-    target->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+    nsRefPtr<Promise> waitUntilPromise =
+      DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(), event);
+    if (waitUntilPromise) {
+      nsRefPtr<KeepAliveHandler> handler = new KeepAliveHandler(mServiceWorker);
+      waitUntilPromise->AppendNativeHandler(handler);
+    }
+
     return true;
   }
 };
@@ -2142,16 +2200,15 @@ public:
 #endif /* ! MOZ_SIMPLEPUSH */
 
 NS_IMETHODIMP
-ServiceWorkerManager::SendPushEvent(JS::Handle<JS::Value> aOriginAttributes,
+ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
                                     const nsACString& aScope,
-                                    const nsAString& aData,
-                                    JSContext* aCx)
+                                    const nsAString& aData)
 {
 #ifdef MOZ_SIMPLEPUSH
   return NS_ERROR_NOT_AVAILABLE;
 #else
   OriginAttributes attrs;
-  if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
+  if (!attrs.PopulateFromSuffix(aOriginAttributes)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -2168,7 +2225,9 @@ ServiceWorkerManager::SendPushEvent(JS::Handle<JS::Value> aOriginAttributes,
     new SendPushEventRunnable(serviceWorker->GetWorkerPrivate(), aData,
                               serviceWorkerHandle);
 
-  if (NS_WARN_IF(!r->Dispatch(aCx))) {
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  if (NS_WARN_IF(!r->Dispatch(jsapi.cx()))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2177,15 +2236,14 @@ ServiceWorkerManager::SendPushEvent(JS::Handle<JS::Value> aOriginAttributes,
 }
 
 NS_IMETHODIMP
-ServiceWorkerManager::SendPushSubscriptionChangeEvent(JS::Handle<JS::Value> aOriginAttributes,
-                                                      const nsACString& aScope,
-                                                      JSContext* aCx)
+ServiceWorkerManager::SendPushSubscriptionChangeEvent(const nsACString& aOriginAttributes,
+                                                      const nsACString& aScope)
 {
 #ifdef MOZ_SIMPLEPUSH
   return NS_ERROR_NOT_AVAILABLE;
 #else
   OriginAttributes attrs;
-  if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
+  if (!attrs.PopulateFromSuffix(aOriginAttributes)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -2201,7 +2259,9 @@ ServiceWorkerManager::SendPushSubscriptionChangeEvent(JS::Handle<JS::Value> aOri
     new SendPushSubscriptionChangeEventRunnable(
       serviceWorker->GetWorkerPrivate(), serviceWorkerHandle);
 
-  if (NS_WARN_IF(!r->Dispatch(aCx))) {
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  if (NS_WARN_IF(!r->Dispatch(jsapi.cx()))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -3243,6 +3303,7 @@ class FetchEventRunnable : public WorkerRunnable
   RequestCredentials mRequestCredentials;
   nsContentPolicyType mContentPolicyType;
   nsCOMPtr<nsIInputStream> mUploadStream;
+  nsCString mReferrer;
 public:
   FetchEventRunnable(WorkerPrivate* aWorkerPrivate,
                      nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
@@ -3259,6 +3320,7 @@ public:
     // send credentials to same-origin websites unless explicitly forbidden.
     , mRequestCredentials(RequestCredentials::Same_origin)
     , mContentPolicyType(nsIContentPolicy::TYPE_INVALID)
+    , mReferrer(kFETCH_CLIENT_REFERRER_STR)
   {
     MOZ_ASSERT(aWorkerPrivate);
   }
@@ -3296,7 +3358,16 @@ public:
     rv = channel->GetLoadInfo(getter_AddRefs(loadInfo));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mContentPolicyType = loadInfo->GetContentPolicyType();
+    mContentPolicyType = loadInfo->InternalContentPolicyType();
+
+    nsCOMPtr<nsIURI> referrerURI;
+    rv = NS_GetReferrerFromChannel(channel, getter_AddRefs(referrerURI));
+    // We can't bail on failure since certain non-http channels like JAR
+    // channels are intercepted but don't have referrers.
+    if (NS_SUCCEEDED(rv) && referrerURI) {
+      rv = referrerURI->GetSpec(mReferrer);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
     if (httpChannel) {
@@ -3427,6 +3498,7 @@ private:
     internalReq->SetCreatedByFetchEvent();
 
     internalReq->SetBody(mUploadStream);
+    internalReq->SetReferrer(NS_ConvertUTF8toUTF16(mReferrer));
 
     request->SetContentPolicyType(mContentPolicyType);
 

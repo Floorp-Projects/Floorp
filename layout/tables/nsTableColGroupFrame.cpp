@@ -416,31 +416,32 @@ int32_t nsTableColGroupFrame::GetSpan()
   return StyleTable()->mSpan;
 }
 
-void nsTableColGroupFrame::SetContinuousBCBorderWidth(uint8_t     aForSide,
+void nsTableColGroupFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
                                                       BCPixelSize aPixelValue)
 {
   switch (aForSide) {
-    case NS_SIDE_TOP:
-      mTopContBorderWidth = aPixelValue;
+    case eLogicalSideBStart:
+      mBStartContBorderWidth = aPixelValue;
       return;
-    case NS_SIDE_BOTTOM:
-      mBottomContBorderWidth = aPixelValue;
+    case eLogicalSideBEnd:
+      mBEndContBorderWidth = aPixelValue;
       return;
     default:
       NS_ERROR("invalid side arg");
   }
 }
 
-void nsTableColGroupFrame::GetContinuousBCBorderWidth(nsMargin& aBorder)
+void nsTableColGroupFrame::GetContinuousBCBorderWidth(WritingMode aWM,
+                                                      LogicalMargin& aBorder)
 {
   int32_t aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
   nsTableColFrame* col = GetTableFrame()->
     GetColFrame(mStartColIndex + mColCount - 1);
-  col->GetContinuousBCBorderWidth(aBorder);
-  aBorder.top = BC_BORDER_END_HALF_COORD(aPixelsToTwips,
-                                         mTopContBorderWidth);
-  aBorder.bottom = BC_BORDER_START_HALF_COORD(aPixelsToTwips,
-                                              mBottomContBorderWidth);
+  col->GetContinuousBCBorderWidth(aWM, aBorder);
+  aBorder.BStart(aWM) = BC_BORDER_END_HALF_COORD(aPixelsToTwips,
+                                                 mBStartContBorderWidth);
+  aBorder.BEnd(aWM) = BC_BORDER_START_HALF_COORD(aPixelsToTwips,
+                                                 mBEndContBorderWidth);
 }
 
 /* ----- global methods ----- */

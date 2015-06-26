@@ -115,6 +115,10 @@ loop.conversationViews = (function(mozL10n) {
    */
   var ConversationDetailView = React.createClass({displayName: "ConversationDetailView",
     propTypes: {
+      children: React.PropTypes.oneOfType([
+        React.PropTypes.element,
+        React.PropTypes.arrayOf(React.PropTypes.element)
+      ]).isRequired,
       contact: React.PropTypes.object
     },
 
