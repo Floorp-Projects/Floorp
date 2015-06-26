@@ -49,6 +49,7 @@
 #include "CounterStyleManager.h"
 #include "nsCSSPropertySet.h"
 #include "mozilla/RuleNodeCacheConditions.h"
+#include "nsDeviceContext.h"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
