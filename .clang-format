@@ -1,1 +1,4 @@
 BasedOnStyle: Mozilla
+
+# Ignore all comments because they aren't reflowed properly.
+CommentPragmas: "^"
