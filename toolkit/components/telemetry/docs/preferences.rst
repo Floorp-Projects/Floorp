@@ -44,3 +44,38 @@ Sending only happens on official builds with ``MOZ_TELEMETRY_REPORTING`` defined
 ``toolkit.telemetry.log.dump``
 
   Sets whether to dump Telemetry log messages to ``stdout`` too.
+
+Data-choices notification
+-------------------------
+
+``toolkit.telemetry.reportingpolicy.firstRun``
+
+  This preference is not present until the first run. After, its value is set to false. This is used to show the infobar with a more aggressive timeout if it wasn't shown yet.
+
+``datareporting.policy.dataSubmissionEnabled``
+
+  This is the data submission master kill switch. If disabled, no policy is shown or upload takes place, ever.
+
+``datareporting.policy.dataSubmissionPolicyNotifiedTime``
+
+  Records the date user was shown the policy. This preference is also used on Android.
+
+``datareporting.policy.dataSubmissionPolicyAcceptedVersion``
+
+  Records the version of the policy notified to the user. This preference is also used on Android.
+
+``datareporting.policy.dataSubmissionPolicyBypassNotification``
+
+  Used in tests, it allows to skip the notification check.
+
+``datareporting.policy.currentPolicyVersion``
+
+  Stores the current policy version, overrides the default value defined in TelemetryReportingPolicy.jsm.
+
+``datareporting.policy.minimumPolicyVersion``
+
+  The minimum policy version that is accepted for the current policy. This can be set per channel.
+
+``datareporting.policy.minimumPolicyVersion.channel-NAME``
+
+  This is the only channel-specific version that we currently use for the minimum policy version.
