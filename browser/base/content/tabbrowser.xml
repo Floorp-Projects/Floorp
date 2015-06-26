@@ -3487,16 +3487,18 @@
 
               let b = tab.linkedBrowser;
 
-              if (!b.isRemoteBrowser) {
-                // non-remote browsers are not the problem.
-                return true;
-              }
-
               if (!b._alive) {
                 // The browser binding has been removed. Dump a bunch of
                 // diagnostic information to the browser console.
-                err("The tabbrowser-remote-browser binding has been removed " +
-                    "from the tab being switched to.");
+                let utils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+                let results = utils.getBindingURLs(b);
+                let urls = [];
+
+                for (let i = 0; i < results.length; ++i) {
+                  urls.push(results.queryElementAt(i, Ci.nsIURI).spec);
+                }
+                err("The browser has the following bindings:");
+                err(urls);
                 err("MozBinding is currently: " +
                     window.getComputedStyle(b).MozBinding);
                 if (!b.parentNode) {
@@ -6161,8 +6163,6 @@
   <binding id="tabbrowser-remote-browser"
            extends="chrome://global/content/bindings/remote-browser.xml#remote-browser">
     <implementation>
-      <!-- This will go away if the binding has been removed for some reason. -->
-      <field name="_alive">true</field>
       <!-- throws exception for unknown schemes -->
       <method name="loadURIWithFlags">
         <parameter name="aURI"/>
