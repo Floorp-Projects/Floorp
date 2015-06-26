@@ -3387,6 +3387,13 @@ nsTableFrame::DistributeBSizeToRows(const nsHTMLReflowState& aReflowState,
   WritingMode wm = aReflowState.GetWritingMode();
   LogicalMargin borderPadding = GetChildAreaOffset(wm, &aReflowState);
 
+  nscoord containerWidth = aReflowState.ComputedWidth();
+  if (containerWidth == NS_UNCONSTRAINEDSIZE) {
+    containerWidth = 0;
+  } else {
+    containerWidth += aReflowState.ComputedPhysicalBorderPadding().LeftRight();
+  }
+
   RowGroupArray rowGroups;
   OrderRowGroups(rowGroups);
 
@@ -3402,13 +3409,13 @@ nsTableFrame::DistributeBSizeToRows(const nsHTMLReflowState& aReflowState,
     nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
     nscoord amountUsedByRG = 0;
     nscoord bOriginRow = 0;
-    // We pass containerWidth of zero when constructing the LogicalRect here,
-    // and similarly below. This is OK because these rects will be used to make
-    // relative adjustments, not for actual conversion to physical coords.
-    LogicalRect rgNormalRect(wm, rgFrame->GetNormalRect(), 0);
+    LogicalRect rgNormalRect(wm, rgFrame->GetNormalRect(), containerWidth);
     if (!rgFrame->HasStyleBSize()) {
       nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
       while (rowFrame) {
+        // We don't know the final width of the rowGroupFrame yet, so use zero
+        // as a "fake" containerWidth here; we'll adjust the row positions at
+        // the end, after the rowGroup size is finalized.
         LogicalRect rowNormalRect(wm, rowFrame->GetNormalRect(), 0);
         nscoord cellSpacingB = GetRowSpacing(rowFrame->GetRowIndex());
         if ((amountUsed < aAmount) && rowFrame->HasPctBSize()) {
@@ -3546,12 +3553,12 @@ nsTableFrame::DistributeBSizeToRows(const nsHTMLReflowState& aReflowState,
     nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
     nscoord amountUsedByRG = 0;
     nscoord bOriginRow = 0;
-    LogicalRect rgNormalRect(wm, rgFrame->GetNormalRect(), 0);
+    LogicalRect rgNormalRect(wm, rgFrame->GetNormalRect(), containerWidth);
     nsRect rgVisualOverflow = rgFrame->GetVisualOverflowRect();
     // see if there is an eligible row group or we distribute to all rows
     if (!firstUnStyledRG || !rgFrame->HasStyleBSize() || !eligibleRows) {
-      nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
-      while (rowFrame) {
+      for (nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
+           rowFrame; rowFrame = rowFrame->GetNextRow()) {
         nscoord cellSpacingB = GetRowSpacing(rowFrame->GetRowIndex());
         LogicalRect rowNormalRect(wm, rowFrame->GetNormalRect(), 0);
         nsRect rowVisualOverflow = rowFrame->GetVisualOverflowRect();
@@ -3615,8 +3622,8 @@ nsTableFrame::DistributeBSizeToRows(const nsHTMLReflowState& aReflowState,
           bOriginRow += rowNormalRect.BSize(wm) + cellSpacingB;
           bEndRG += rowNormalRect.BSize(wm) + cellSpacingB;
         }
-        rowFrame = rowFrame->GetNextRow();
       }
+
       if (amountUsed > 0) {
         if (rgNormalRect.BStart(wm) != bOriginRG) {
           rgFrame->InvalidateFrameSubtree();
@@ -3631,7 +3638,23 @@ nsTableFrame::DistributeBSizeToRows(const nsHTMLReflowState& aReflowState,
         nsTableFrame::InvalidateTableFrame(rgFrame, origRgNormalRect,
                                            rgVisualOverflow, false);
       }
-      // Make sure child views are properly positioned
+
+      // For vertical-rl mode, we needed to position the rows relative to the
+      // right-hand (block-start) side of the group; but we couldn't do that
+      // above, as we didn't know the rowGroupFrame's final block size yet.
+      // So we used a containerWidth of zero earlier, placing the rows to the
+      // left of the rowGroupFrame's (physical) origin. Now we move them all
+      // rightwards by its final width.
+      if (wm.IsVerticalRL()) {
+        nscoord rgWidth = rgFrame->GetRect().width;
+        for (nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
+             rowFrame; rowFrame = rowFrame->GetNextRow()) {
+          rowFrame->InvalidateFrameSubtree();
+          rowFrame->MovePositionBy(nsPoint(rgWidth, 0));
+          nsTableFrame::RePositionViews(rowFrame);
+          rowFrame->InvalidateFrameSubtree();
+        }
+      }
     }
     else if (amountUsed > 0 && bOriginRG != rgNormalRect.BStart(wm)) {
       rgFrame->InvalidateFrameSubtree();
