@@ -7,9 +7,12 @@
 const protocol = require("devtools/server/protocol");
 const { method, RetVal, Arg, types } = protocol;
 const { expectState, ActorPool } = require("devtools/server/actors/common");
-const { ObjectActor, createValueGrip } = require("devtools/server/actors/object");
+const { ObjectActor,
+        createValueGrip } = require("devtools/server/actors/object");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
+
+/* global events */
 
 // Teach protocol.js how to deal with legacy actor types
 types.addType("ObjectActor", {
@@ -86,6 +89,14 @@ let PromisesActor = protocol.ActorClass({
     this._newPromises = [];
     this._promisesSettled = [];
 
+    this.dbg.findScripts().forEach(s => {
+      this.parent.sources.createSourceActors(s.source);
+    });
+
+    this.dbg.onNewScript = s => {
+      this.parent.sources.createSourceActors(s.source);
+    };
+
     events.on(this.parent, "window-ready", this._onWindowReady);
 
     this.state = "attached";
@@ -142,8 +153,7 @@ let PromisesActor = protocol.ActorClass({
       decrementGripDepth: () => this._gripDepth--,
       createValueGrip: v =>
         createValueGrip(v, this._navigationLifetimePool, this.objectGrip),
-      sources: () => DevToolsUtils.reportException("PromisesActor",
-        Error("sources not yet implemented")),
+      sources: () => this.parent.sources,
       createEnvironmentActor: () => DevToolsUtils.reportException(
         "PromisesActor", Error("createEnvironmentActor not yet implemented")),
       getGlobalDebugObject: () => DevToolsUtils.reportException(
@@ -200,7 +210,7 @@ let PromisesActor = protocol.ActorClass({
    */
   _makePromiseEventHandler: function(array, eventName) {
     return promise => {
-      let actor = this._createObjectActorForPromise(promise)
+      let actor = this._createObjectActorForPromise(promise);
       let needsScheduling = array.length == 0;
 
       array.push(actor);
@@ -210,7 +220,7 @@ let PromisesActor = protocol.ActorClass({
           events.emit(this, eventName, array.splice(0, array.length));
         });
       }
-    }
+    };
   },
 
   _onWindowReady: expectState("attached", function({ isTopLevel }) {

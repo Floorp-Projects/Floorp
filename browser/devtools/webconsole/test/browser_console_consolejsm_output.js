@@ -14,10 +14,11 @@ function onNewMessage(aEvent, aNewMessages) {
       ok(false, "Message shouldn't have been output: " + msg.node.textContent);
     }
   }
-};
+}
 
 add_task(function*() {
-  let storage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(Ci.nsIConsoleAPIStorage);
+  let consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
+  let storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
   storage.clearEvents();
 
   let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
@@ -147,8 +148,9 @@ add_task(function*() {
   yield HUDService.toggleBrowserConsole();
 });
 
-add_task(function* test_prefix() {
-  let storage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(Ci.nsIConsoleAPIStorage);
+add_task(function* testPrefix() {
+  let consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
+  let storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
   storage.clearEvents();
 
   let {ConsoleAPI} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
@@ -177,8 +179,9 @@ add_task(function* test_prefix() {
   yield HUDService.toggleBrowserConsole();
 });
 
-add_task(function* test_maxLogLevelPref_missing() {
-  let storage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(Ci.nsIConsoleAPIStorage);
+add_task(function* testMaxLogLevelPrefMissing() {
+  let consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
+  let storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
   storage.clearEvents();
 
   let {ConsoleAPI} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
@@ -215,8 +218,9 @@ add_task(function* test_maxLogLevelPref_missing() {
   yield HUDService.toggleBrowserConsole();
 });
 
-add_task(function* test_maxLogLevelPref() {
-  let storage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(Ci.nsIConsoleAPIStorage);
+add_task(function* testMaxLogLevelPref() {
+  let consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
+  let storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
   storage.clearEvents();
 
   let {ConsoleAPI} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});

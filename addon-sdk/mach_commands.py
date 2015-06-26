@@ -4,9 +4,9 @@
 
 # Integrates the xpcshell test runner with mach.
 
+from __future__ import absolute_import
+
 import os
-import re
-import sys
 
 import mozpack.path as mozpath
 
