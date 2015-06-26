@@ -283,6 +283,7 @@ searchbar:not([oneoffui]) .search-go-button {
 .tabbrowser-tab:not([visuallyselected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
 #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([visuallyselected]):not([beforehovered]):not(:hover)::after {
   background: var(--tab-separator-color);
+  opacity: 1;
   width: 1px;
   -moz-margin-start: 0;
   -moz-margin-end: -1px;

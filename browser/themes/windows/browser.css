@@ -1936,12 +1936,23 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   }
 }
 
+/* Use solid tab separators for Windows 8+ */
+@media not all and (-moz-os-version: windows-xp) {
+  @media not all and (-moz-os-version: windows-vista) {
+    @media not all and (-moz-os-version: windows-win7) {
+      #TabsToolbar:not([brighttext]) {
+        --tab-separator-image: linear-gradient(transparent 0%, transparent 15%, currentColor 15%, currentColor 90%, transparent 90%);
+        --tab-separator-size: 1px 100%;
+        --tab-separator-opacity: 0.2;
+      }
+    }
+  }
+}
+
 /* Use lighter colors of buttons and text in the titlebar on luna-blue */
 @media (-moz-windows-theme: luna-blue) {
-  #tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
-  .tabbrowser-tab:not([visuallyselected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
-  #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([visuallyselected]):not([beforehovered]):not(:hover)::after {
-    background-image: url("chrome://browser/skin/tabbrowser/tab-separator-luna-blue.png");
+  #TabsToolbar:not([brighttext]) {
+    --tab-separator-image: url("chrome://browser/skin/tabbrowser/tab-separator-luna-blue.png");
   }
 }
 
