@@ -319,6 +319,60 @@ BodyIdToFile(nsIFile* aBaseDir, const nsID& aId, BodyFileType aType,
 
 } // anonymous namespace
 
+nsresult
+CreateMarkerFile(const QuotaInfo& aQuotaInfo)
+{
+  nsCOMPtr<nsIFile> marker;
+  nsresult rv = aQuotaInfo.mDir->Clone(getter_AddRefs(marker));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = marker->Append(NS_LITERAL_STRING("cache"));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = marker->Append(NS_LITERAL_STRING("context_open.marker"));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = marker->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+  if (rv == NS_ERROR_FILE_ALREADY_EXISTS) {
+    rv = NS_OK;
+  }
+
+  // Note, we don't need to fsync here.  We only care about actually
+  // writing the marker if later modifications to the Cache are
+  // actually flushed to the disk.  If the OS crashes before the marker
+  // is written then we are ensured no other changes to the Cache were
+  // flushed either.
+
+  return rv;
+}
+
+nsresult
+DeleteMarkerFile(const QuotaInfo& aQuotaInfo)
+{
+  nsCOMPtr<nsIFile> marker;
+  nsresult rv = aQuotaInfo.mDir->Clone(getter_AddRefs(marker));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = marker->Append(NS_LITERAL_STRING("cache"));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = marker->Append(NS_LITERAL_STRING("context_open.marker"));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = marker->Remove(/* recursive = */ false);
+  if (rv == NS_ERROR_FILE_NOT_FOUND ||
+      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    rv = NS_OK;
+  }
+
+  // Again, no fsync is necessary.  If the OS crashes before the file
+  // removal is flushed, then the Cache will search for stale data on
+  // startup.  This will cause the next Cache access to be a bit slow, but
+  // it seems appropriate after an OS crash.
+
+  return NS_OK;
+}
+
 } // namespace cache
 } // namespace dom
 } // namespace mozilla
