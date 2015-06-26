@@ -14,3 +14,7 @@ locales/
 
 # Pretty sure we're disabling this one anyway
 modules/ContactService.jsm
+
+# Non-standard `(catch ex if ...)`
+components/Snippets.js
+modules/MatchstickApp.jsm
