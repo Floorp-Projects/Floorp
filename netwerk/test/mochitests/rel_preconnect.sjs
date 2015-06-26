@@ -6,7 +6,10 @@ function handleRequest(request, response)
     response.setHeader("Cache-Control", "no-cache", false);
     response.setHeader("Link", "<" + 
                        request.getHeader('X-Link') +
-                       ">; rel=preconnect");
+                       ">; rel=preconnect" + ", " +
+                        "<" + 
+                       request.getHeader('X-Link') +
+                       ">; rel=preconnect; crossOrigin=anonymous");
     response.write("check that header");
 }
 

@@ -2201,7 +2201,11 @@ HTMLMediaElement::Play(ErrorResult& aRv)
 {
   // Prevent media element from being auto-started by a script when
   // media.autoplay.enabled=false
-  if (!IsAutoplayEnabled() && !EventStateManager::IsHandlingUserInput() && !nsContentUtils::IsCallerChrome()) {
+  nsRefPtr<TimeRanges> played(Played());
+  if (played->Length() == 0
+      && !IsAutoplayEnabled()
+      && !EventStateManager::IsHandlingUserInput()
+      && !nsContentUtils::IsCallerChrome()) {
     LOG(LogLevel::Debug, ("%p Blocked attempt to autoplay media.", this));
     return;
   }

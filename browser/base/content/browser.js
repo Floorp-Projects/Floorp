@@ -3132,9 +3132,12 @@ var PrintPreviewListener = {
 
   getPrintPreviewBrowser: function () {
     if (!this._printPreviewTab) {
+      let browser = gBrowser.selectedTab.linkedBrowser;
+      let forceNotRemote = gMultiProcessBrowser && !browser.isRemoteBrowser;
       this._tabBeforePrintPreview = gBrowser.selectedTab;
       this._printPreviewTab = gBrowser.loadOneTab("about:blank",
-                                                  { inBackground: false });
+                                                  { inBackground: false,
+                                                    forceNotRemote });
       gBrowser.selectedTab = this._printPreviewTab;
     }
     return gBrowser.getBrowserForTab(this._printPreviewTab);

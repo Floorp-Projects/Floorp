@@ -10,7 +10,6 @@
 #include "SoftwareWebMVideoDecoder.h"
 #include "WebMReader.h"
 #include "WebMBufferedParser.h"
-#include "VorbisUtils.h"
 #include "gfx2DGlue.h"
 #include "Layers.h"
 #include "mozilla/Preferences.h"
@@ -21,8 +20,6 @@
 #define VPX_DONT_DEFINE_STDINT_TYPES
 #include "vpx/vp8dx.h"
 #include "vpx/vpx_decoder.h"
-
-#include "OggReader.h"
 
 // IntelWebMVideoDecoder uses the WMF backend, which is Windows Vista+ only.
 #if defined(MOZ_PDM_VPX)
@@ -143,20 +140,6 @@ static void webm_log(nestegg * context,
   va_end(args);
 }
 
-ogg_packet InitOggPacket(const unsigned char* aData, size_t aLength,
-                         bool aBOS, bool aEOS,
-                         int64_t aGranulepos, int64_t aPacketNo)
-{
-  ogg_packet packet;
-  packet.packet = const_cast<unsigned char*>(aData);
-  packet.bytes = aLength;
-  packet.b_o_s = aBOS;
-  packet.e_o_s = aEOS;
-  packet.granulepos = aGranulepos;
-  packet.packetno = aPacketNo;
-  return packet;
-}
-
 #if defined(MOZ_PDM_VPX)
 static bool sIsIntelDecoderEnabled = false;
 #endif
@@ -164,32 +147,22 @@ static bool sIsIntelDecoderEnabled = false;
 WebMReader::WebMReader(AbstractMediaDecoder* aDecoder, MediaTaskQueue* aBorrowedTaskQueue)
   : MediaDecoderReader(aDecoder, aBorrowedTaskQueue)
   , mContext(nullptr)
-  , mPacketCount(0)
-  , mOpusDecoder(nullptr)
-  , mSkip(0)
-  , mSeekPreroll(0)
   , mVideoTrack(0)
   , mAudioTrack(0)
   , mAudioStartUsec(-1)
   , mAudioFrames(0)
+  , mSeekPreroll(0)
   , mLastVideoFrameTime(0)
   , mAudioCodec(-1)
   , mVideoCodec(-1)
   , mLayersBackendType(layers::LayersBackend::LAYERS_NONE)
   , mHasVideo(false)
   , mHasAudio(false)
-  , mPaddingDiscarded(false)
 {
   MOZ_COUNT_CTOR(WebMReader);
   if (!gNesteggLog) {
     gNesteggLog = PR_NewLogModule("Nestegg");
   }
-  // Zero these member vars to avoid crashes in VP8 destroy and Vorbis clear
-  // functions when destructor is called before |Init|.
-  memset(&mVorbisBlock, 0, sizeof(vorbis_block));
-  memset(&mVorbisDsp, 0, sizeof(vorbis_dsp_state));
-  memset(&mVorbisInfo, 0, sizeof(vorbis_info));
-  memset(&mVorbisComment, 0, sizeof(vorbis_comment));
 
 #if defined(MOZ_PDM_VPX)
   sIsIntelDecoderEnabled = Preferences::GetBool("media.webm.intel_decoder.enabled", false);
@@ -201,14 +174,7 @@ WebMReader::~WebMReader()
   Cleanup();
   mVideoPackets.Reset();
   mAudioPackets.Reset();
-  vorbis_block_clear(&mVorbisBlock);
-  vorbis_dsp_clear(&mVorbisDsp);
-  vorbis_info_clear(&mVorbisInfo);
-  vorbis_comment_clear(&mVorbisComment);
-  if (mOpusDecoder) {
-    opus_multistream_decoder_destroy(mOpusDecoder);
-    mOpusDecoder = nullptr;
-  }
+  MOZ_ASSERT(!mAudioDecoder);
   MOZ_ASSERT(!mVideoDecoder);
   MOZ_COUNT_DTOR(WebMReader);
 }
@@ -222,6 +188,10 @@ WebMReader::Shutdown()
     mVideoTaskQueue->AwaitShutdownAndIdle();
   }
 #endif
+  if (mAudioDecoder) {
+    mAudioDecoder->Shutdown();
+    mAudioDecoder = nullptr;
+  }
 
   if (mVideoDecoder) {
     mVideoDecoder->Shutdown();
@@ -233,11 +203,6 @@ WebMReader::Shutdown()
 
 nsresult WebMReader::Init(MediaDecoderReader* aCloneDonor)
 {
-  vorbis_info_init(&mVorbisInfo);
-  vorbis_comment_init(&mVorbisComment);
-  memset(&mVorbisDsp, 0, sizeof(vorbis_dsp_state));
-  memset(&mVorbisBlock, 0, sizeof(vorbis_block));
-
 #if defined(MOZ_PDM_VPX)
   if (sIsIntelDecoderEnabled) {
     PlatformDecoderModule::Init();
@@ -293,18 +258,8 @@ nsresult WebMReader::ResetDecode()
     res = NS_ERROR_FAILURE;
   }
 
-  if (mAudioCodec == NESTEGG_CODEC_VORBIS) {
-    // Ignore failed results from vorbis_synthesis_restart. They
-    // aren't fatal and it fails when ResetDecode is called at a
-    // time when no vorbis data has been read.
-    vorbis_synthesis_restart(&mVorbisDsp);
-  } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
-    if (mOpusDecoder) {
-      // Reset the decoder.
-      opus_multistream_decoder_ctl(mOpusDecoder, OPUS_RESET_STATE);
-      mSkip = mOpusParser->mPreSkip;
-      mPaddingDiscarded = false;
-    }
+  if (mAudioDecoder) {
+    mAudioDecoder->ResetDecode();
   }
 
   mVideoPackets.Reset();
@@ -461,84 +416,42 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
       mHasAudio = true;
       mAudioCodec = nestegg_track_codec_id(mContext, track);
       mCodecDelay = params.codec_delay / NS_PER_USEC;
+      mSeekPreroll = params.seek_preroll;
 
       if (mAudioCodec == NESTEGG_CODEC_VORBIS) {
-        // Get the Vorbis header data
-        unsigned int nheaders = 0;
-        r = nestegg_track_codec_data_count(mContext, track, &nheaders);
-        if (r == -1 || nheaders != 3) {
-          Cleanup();
-          return NS_ERROR_FAILURE;
-        }
-
-        for (uint32_t header = 0; header < nheaders; ++header) {
-          unsigned char* data = 0;
-          size_t length = 0;
-
-          r = nestegg_track_codec_data(mContext, track, header, &data, &length);
-          if (r == -1) {
-            Cleanup();
-            return NS_ERROR_FAILURE;
-          }
-          ogg_packet opacket = InitOggPacket(data, length, header == 0, false,
-                                             0, mPacketCount++);
-
-          r = vorbis_synthesis_headerin(&mVorbisInfo,
-                                        &mVorbisComment,
-                                        &opacket);
-          if (r != 0) {
-            Cleanup();
-            return NS_ERROR_FAILURE;
-          }
-        }
-
-        r = vorbis_synthesis_init(&mVorbisDsp, &mVorbisInfo);
-        if (r != 0) {
-          Cleanup();
-          return NS_ERROR_FAILURE;
-        }
-
-        r = vorbis_block_init(&mVorbisDsp, &mVorbisBlock);
-        if (r != 0) {
-          Cleanup();
-          return NS_ERROR_FAILURE;
-        }
-
-        mInfo.mAudio.mRate = mVorbisDsp.vi->rate;
-        mInfo.mAudio.mChannels = mVorbisDsp.vi->channels;
+        mAudioDecoder = new VorbisDecoder(this);
       } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
+        mAudioDecoder = new OpusDecoder(this);
+      } else {
+        Cleanup();
+        return NS_ERROR_FAILURE;
+      }
+      if (NS_FAILED(mAudioDecoder->Init())) {
+        Cleanup();
+        return NS_ERROR_FAILURE;
+      }
+
+      unsigned int nheaders = 0;
+      r = nestegg_track_codec_data_count(mContext, track, &nheaders);
+      if (r == -1) {
+        Cleanup();
+        return NS_ERROR_FAILURE;
+      }
+
+      for (uint32_t header = 0; header < nheaders; ++header) {
         unsigned char* data = 0;
         size_t length = 0;
-        r = nestegg_track_codec_data(mContext, track, 0, &data, &length);
+        r = nestegg_track_codec_data(mContext, track, header, &data, &length);
         if (r == -1) {
           Cleanup();
           return NS_ERROR_FAILURE;
         }
-
-        mOpusParser = new OpusParser;
-        if (!mOpusParser->DecodeHeader(data, length)) {
+        if (NS_FAILED(mAudioDecoder->DecodeHeader(data, length))) {
           Cleanup();
           return NS_ERROR_FAILURE;
         }
-
-        if (!InitOpusDecoder()) {
-          Cleanup();
-          return NS_ERROR_FAILURE;
-        }
-
-        if (int64_t(mCodecDelay) != FramesToUsecs(mOpusParser->mPreSkip,
-                                                  mOpusParser->mRate).value()) {
-          LOG(LogLevel::Warning,
-              ("Invalid Opus header: CodecDelay and pre-skip do not match!"));
-          Cleanup();
-          return NS_ERROR_FAILURE;
-        }
-
-        mInfo.mAudio.mRate = mOpusParser->mRate;
-
-        mInfo.mAudio.mChannels = mOpusParser->mChannels;
-        mSeekPreroll = params.seek_preroll;
-      } else {
+      }
+      if (NS_FAILED(mAudioDecoder->FinishInit(mInfo.mAudio))) {
         Cleanup();
         return NS_ERROR_FAILURE;
       }
@@ -556,24 +469,6 @@ bool
 WebMReader::IsMediaSeekable()
 {
   return mContext && nestegg_has_cues(mContext);
-}
-
-bool WebMReader::InitOpusDecoder()
-{
-  int r;
-
-  NS_ASSERTION(mOpusDecoder == nullptr, "leaking OpusDecoder");
-
-  mOpusDecoder = opus_multistream_decoder_create(mOpusParser->mRate,
-                                                 mOpusParser->mChannels,
-                                                 mOpusParser->mStreams,
-                                                 mOpusParser->mCoupledStreams,
-                                                 mOpusParser->mMappingTable,
-                                                 &r);
-  mSkip = mOpusParser->mPreSkip;
-  mPaddingDiscarded = false;
-
-  return r == OPUS_OK;
 }
 
 bool WebMReader::DecodeAudioPacket(NesteggPacketHolder* aHolder)
@@ -617,7 +512,6 @@ bool WebMReader::DecodeAudioPacket(NesteggPacketHolder* aHolder)
                        usecs.isValid() ? usecs.value() : -1,
                        gap_frames));
 #endif
-    mPacketCount++;
     mAudioStartUsec = tstamp;
     mAudioFrames = 0;
   }
@@ -630,227 +524,16 @@ bool WebMReader::DecodeAudioPacket(NesteggPacketHolder* aHolder)
     if (r == -1) {
       return false;
     }
-    if (mAudioCodec == NESTEGG_CODEC_VORBIS) {
-      if (!DecodeVorbis(data, length, aHolder->Offset(), tstamp, &total_frames)) {
-        return false;
-      }
-    } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
-      if (!DecodeOpus(data, length, aHolder->Offset(), tstamp, aHolder->Packet())) {
-        return false;
-      }
-    }
-  }
+    int64_t discardPadding = 0;
+    (void) nestegg_packet_discard_padding(aHolder->Packet(), &discardPadding);
 
-  return true;
-}
-
-bool WebMReader::DecodeVorbis(const unsigned char* aData, size_t aLength,
-                              int64_t aOffset, uint64_t aTstampUsecs,
-                              int32_t* aTotalFrames)
-{
-  ogg_packet opacket = InitOggPacket(aData, aLength, false, false, -1,
-                                     mPacketCount++);
-
-  if (vorbis_synthesis(&mVorbisBlock, &opacket) != 0) {
-    return false;
-  }
-
-  if (vorbis_synthesis_blockin(&mVorbisDsp,
-                               &mVorbisBlock) != 0) {
-    return false;
-  }
-
-  VorbisPCMValue** pcm = 0;
-  int32_t frames = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm);
-  // If the first packet of audio in the media produces no data, we
-  // still need to produce an AudioData for it so that the correct media
-  // start time is calculated.  Otherwise we'd end up with a media start
-  // time derived from the timecode of the first packet that produced
-  // data.
-  if (frames == 0 && mAudioFrames == 0) {
-    AudioQueue().Push(new AudioData(aOffset, aTstampUsecs, 0, 0, nullptr,
-                                    mInfo.mAudio.mChannels,
-                                    mInfo.mAudio.mRate));
-  }
-  while (frames > 0) {
-    uint32_t channels = mInfo.mAudio.mChannels;
-    nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frames*channels]);
-    for (uint32_t j = 0; j < channels; ++j) {
-      VorbisPCMValue* channel = pcm[j];
-      for (uint32_t i = 0; i < uint32_t(frames); ++i) {
-        buffer[i*channels + j] = MOZ_CONVERT_VORBIS_SAMPLE(channel[i]);
-      }
-    }
-
-    CheckedInt64 duration = FramesToUsecs(frames, mInfo.mAudio.mRate);
-    if (!duration.isValid()) {
-      NS_WARNING("Int overflow converting WebM audio duration");
-      return false;
-    }
-    CheckedInt64 total_duration = FramesToUsecs(*aTotalFrames,
-                                                mInfo.mAudio.mRate);
-    if (!total_duration.isValid()) {
-      NS_WARNING("Int overflow converting WebM audio total_duration");
-      return false;
-    }
-
-    CheckedInt64 time = total_duration + aTstampUsecs;
-    if (!time.isValid()) {
-      NS_WARNING("Int overflow adding total_duration and aTstampUsecs");
-      return false;
-    };
-
-    *aTotalFrames += frames;
-    AudioQueue().Push(new AudioData(aOffset,
-                                    time.value(),
-                                    duration.value(),
-                                    frames,
-                                    buffer.forget(),
-                                    mInfo.mAudio.mChannels,
-                                    mInfo.mAudio.mRate));
-    mAudioFrames += frames;
-    if (vorbis_synthesis_read(&mVorbisDsp, frames) != 0) {
-      return false;
-    }
-
-    frames = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm);
-  }
-
-  return true;
-}
-
-bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
-                            int64_t aOffset, uint64_t aTstampUsecs,
-                            nestegg_packet* aPacket)
-{
-  uint32_t channels = mOpusParser->mChannels;
-  // No channel mapping for more than 8 channels.
-  if (channels > 8) {
-    return false;
-  }
-
-  if (mPaddingDiscarded) {
-    // Discard padding should be used only on the final packet, so
-    // decoding after a padding discard is invalid.
-    LOG(LogLevel::Debug, ("Opus error, discard padding on interstitial packet"));
-    mHitAudioDecodeError = true;
-    return false;
-  }
-
-  // Maximum value is 63*2880, so there's no chance of overflow.
-  int32_t frames_number = opus_packet_get_nb_frames(aData, aLength);
-  if (frames_number <= 0) {
-    return false; // Invalid packet header.
-  }
-
-  int32_t samples =
-    opus_packet_get_samples_per_frame(aData, opus_int32(mInfo.mAudio.mRate));
-
-  // A valid Opus packet must be between 2.5 and 120 ms long (48kHz).
-  int32_t frames = frames_number*samples;
-  if (frames < 120 || frames > 5760)
-    return false;
-
-  nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frames * channels]);
-
-  // Decode to the appropriate sample type.
-#ifdef MOZ_SAMPLE_TYPE_FLOAT32
-  int ret = opus_multistream_decode_float(mOpusDecoder,
-                                          aData, aLength,
-                                          buffer, frames, false);
-#else
-  int ret = opus_multistream_decode(mOpusDecoder,
-                                    aData, aLength,
-                                    buffer, frames, false);
-#endif
-  if (ret < 0)
-    return false;
-  NS_ASSERTION(ret == frames, "Opus decoded too few audio samples");
-  CheckedInt64 startTime = aTstampUsecs;
-
-  // Trim the initial frames while the decoder is settling.
-  if (mSkip > 0) {
-    int32_t skipFrames = std::min<int32_t>(mSkip, frames);
-    int32_t keepFrames = frames - skipFrames;
-    LOG(LogLevel::Debug, ("Opus decoder skipping %d of %d frames",
-                       skipFrames, frames));
-    PodMove(buffer.get(),
-            buffer.get() + skipFrames * channels,
-            keepFrames * channels);
-    startTime = startTime + FramesToUsecs(skipFrames, mInfo.mAudio.mRate);
-    frames = keepFrames;
-    mSkip -= skipFrames;
-  }
-
-  int64_t discardPadding = 0;
-  (void) nestegg_packet_discard_padding(aPacket, &discardPadding);
-  if (discardPadding < 0) {
-    // Negative discard padding is invalid.
-    LOG(LogLevel::Debug, ("Opus error, negative discard padding"));
-    mHitAudioDecodeError = true;
-  }
-  if (discardPadding > 0) {
-    CheckedInt64 discardFrames = UsecsToFrames(discardPadding / NS_PER_USEC,
-                                               mInfo.mAudio.mRate);
-    if (!discardFrames.isValid()) {
-      NS_WARNING("Int overflow in DiscardPadding");
-      return false;
-    }
-    if (discardFrames.value() > frames) {
-      // Discarding more than the entire packet is invalid.
-      LOG(LogLevel::Debug, ("Opus error, discard padding larger than packet"));
+    if (!mAudioDecoder->Decode(data, length, aHolder->Offset(), tstamp, discardPadding, &total_frames)) {
       mHitAudioDecodeError = true;
       return false;
     }
-    LOG(LogLevel::Debug, ("Opus decoder discarding %d of %d frames",
-                       int32_t(discardFrames.value()), frames));
-    // Padding discard is only supposed to happen on the final packet.
-    // Record the discard so we can return an error if another packet is
-    // decoded.
-    mPaddingDiscarded = true;
-    int32_t keepFrames = frames - discardFrames.value();
-    frames = keepFrames;
   }
 
-  // Apply the header gain if one was specified.
-#ifdef MOZ_SAMPLE_TYPE_FLOAT32
-  if (mOpusParser->mGain != 1.0f) {
-    float gain = mOpusParser->mGain;
-    int samples = frames * channels;
-    for (int i = 0; i < samples; i++) {
-      buffer[i] *= gain;
-    }
-  }
-#else
-  if (mOpusParser->mGain_Q16 != 65536) {
-    int64_t gain_Q16 = mOpusParser->mGain_Q16;
-    int samples = frames * channels;
-    for (int i = 0; i < samples; i++) {
-      int32_t val = static_cast<int32_t>((gain_Q16*buffer[i] + 32768)>>16);
-      buffer[i] = static_cast<AudioDataValue>(MOZ_CLIP_TO_15(val));
-    }
-  }
-#endif
-
-  CheckedInt64 duration = FramesToUsecs(frames, mInfo.mAudio.mRate);
-  if (!duration.isValid()) {
-    NS_WARNING("Int overflow converting WebM audio duration");
-    return false;
-  }
-  CheckedInt64 time = startTime - mCodecDelay;
-  if (!time.isValid()) {
-    NS_WARNING("Int overflow shifting tstamp by codec delay");
-    return false;
-  };
-  AudioQueue().Push(new AudioData(aOffset,
-                                  time.value(),
-                                  duration.value(),
-                                  frames,
-                                  buffer.forget(),
-                                  mInfo.mAudio.mChannels,
-                                  mInfo.mAudio.mRate));
-
-  mAudioFrames += frames;
+  mAudioFrames += total_frames;
 
   return true;
 }

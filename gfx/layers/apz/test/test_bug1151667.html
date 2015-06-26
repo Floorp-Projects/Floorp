@@ -44,11 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151667
 
 function startTest() {
   var subframe = document.getElementById('subframe');
-  var scale = window.devicePixelRatio;
-  var rect = subframe.getBoundingClientRect();
-  var x = (rect.left + 100) * scale;
-  var y = (rect.top + 150) * scale;
-  synthesizeNativeWheelAndWaitForScrollEvent(subframe, x, y, 0, -10, continueTest);
+  synthesizeNativeWheelAndWaitForScrollEvent(subframe, 100, 150, 0, -10, continueTest);
 }
 
 function continueTest() {

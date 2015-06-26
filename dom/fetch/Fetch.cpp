@@ -217,11 +217,6 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
 
   nsRefPtr<InternalRequest> r = request->GetInternalRequest();
 
-  aRv = UpdateRequestReferrer(aGlobal, r);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
     nsCOMPtr<nsIDocument> doc;
@@ -398,58 +393,6 @@ WorkerFetchResolver::OnResponseEnd()
   }
 }
 
-// This method sets the request's referrerURL, as specified by the "determine
-// request's referrer" steps from Referrer Policy [1].
-// The actual referrer policy and stripping is dealt with by HttpBaseChannel,
-// this always sets the full API referrer URL of the relevant global if it is
-// not already a url or no-referrer.
-// [1]: https://w3c.github.io/webappsec/specs/referrer-policy/#determine-requests-referrer
-nsresult
-UpdateRequestReferrer(nsIGlobalObject* aGlobal, InternalRequest* aRequest)
-{
-  nsAutoString originalReferrer;
-  aRequest->GetReferrer(originalReferrer);
-  // If it is no-referrer ("") or a URL, don't modify.
-  if (!originalReferrer.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR)) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
-  if (window) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-    if (doc) {
-      nsAutoString referrer;
-      doc->GetReferrer(referrer);
-      aRequest->SetReferrer(referrer);
-    }
-  } else if (NS_IsMainThread()) {
-    // Pull the principal from the global for non-worker scripts.
-    nsIPrincipal *principal = aGlobal->PrincipalOrNull();
-    bool isNull;
-    // Only set the referrer if the principal is present,
-    // and the principal is not null or the system principal.
-    if (principal &&
-        NS_SUCCEEDED(principal->GetIsNullPrincipal(&isNull)) && !isNull &&
-        !nsContentUtils::IsSystemPrincipal(principal)) {
-      nsCOMPtr<nsIURI> uri;
-      if (NS_SUCCEEDED(principal->GetURI(getter_AddRefs(uri))) && uri) {
-        nsAutoCString referrer;
-        if (NS_SUCCEEDED(uri->GetSpec(referrer))) {
-          aRequest->SetReferrer(NS_ConvertUTF8toUTF16(referrer));
-        }
-      }
-    }
-  } else {
-    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(worker);
-    worker->AssertIsOnWorkerThread();
-    WorkerPrivate::LocationInfo& info = worker->GetLocationInfo();
-    aRequest->SetReferrer(NS_ConvertUTF8toUTF16(info.mHref));
-  }
-
-  return NS_OK;
-}
-
 namespace {
 nsresult
 ExtractFromArrayBuffer(const ArrayBuffer& aBuffer,
@@ -558,8 +501,8 @@ public:
     MOZ_ASSERT(aFormData);
   }
 
-  bool URLSearchParamsIterator(const nsString& aName,
-                               const nsString& aValue) override
+  bool URLParamsIterator(const nsString& aName,
+                         const nsString& aValue) override
   {
     mFormData->Append(aName, aValue);
     return true;

@@ -1240,12 +1240,11 @@ ArrayMemoryView::visitArrayLength(MArrayLength* ins)
 }
 
 bool
-ScalarReplacement(MIRGenerator* mir, MIRGraph& graph, bool* success)
+ScalarReplacement(MIRGenerator* mir, MIRGraph& graph)
 {
     EmulateStateOf<ObjectMemoryView> replaceObject(mir, graph);
     EmulateStateOf<ArrayMemoryView> replaceArray(mir, graph);
     bool addedPhi = false;
-    *success = false;
 
     for (ReversePostorderIterator block = graph.rpoBegin(); block != graph.rpoEnd(); block++) {
         if (mir->shouldCancel("Scalar Replacement (main loop)"))
@@ -1259,7 +1258,6 @@ ScalarReplacement(MIRGenerator* mir, MIRGraph& graph, bool* success)
                 if (!replaceObject.run(view))
                     return false;
                 view.assertSuccess();
-                *success = true;
                 addedPhi = true;
                 continue;
             }
@@ -1269,7 +1267,6 @@ ScalarReplacement(MIRGenerator* mir, MIRGraph& graph, bool* success)
                 if (!replaceArray.run(view))
                     return false;
                 view.assertSuccess();
-                *success = true;
                 addedPhi = true;
                 continue;
             }

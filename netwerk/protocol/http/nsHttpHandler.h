@@ -477,6 +477,9 @@ private:
     // The value of network.allow-experiments
     uint32_t           mAllowExperiments : 1;
 
+    // The value of 'hidden' network.http.debug-observations : 1;
+    uint32_t           mDebugObservations : 1;
+
     // true in between init and shutdown states
     uint32_t           mHandlerActive : 1;
 
