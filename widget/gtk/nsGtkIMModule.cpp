@@ -116,6 +116,7 @@ nsGtkIMModule::nsGtkIMModule(nsWindow* aOwnerWindow)
     , mIsIMFocused(false)
     , mIsDeletingSurrounding(false)
     , mLayoutChanged(false)
+    , mSetCursorPositionOnKeyEvent(true)
 {
     if (!gGtkIMLog) {
         gGtkIMLog = PR_NewLogModule("nsGtkIMModuleWidgets");
@@ -383,6 +384,11 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
         return false;
     }
 
+    if (mSetCursorPositionOnKeyEvent) {
+        SetCursorPosition(currentContext);
+        mSetCursorPositionOnKeyEvent = false;
+    }
+
     mKeyDownEventWasSent = aKeyDownEventWasSent;
     mFilterKeyEvent = true;
     mProcessingKeyEvent = aEvent;
@@ -536,7 +542,13 @@ nsGtkIMModule::OnLayoutChange()
         return;
     }
 
-    SetCursorPosition(GetActiveContext());
+    if (IsComposing()) {
+        SetCursorPosition(GetActiveContext());
+    } else {
+        // If not composing, candidate window position is updated before key
+        // down
+        mSetCursorPositionOnKeyEvent = true;
+    }
     mLayoutChanged = true;
 }
 
@@ -549,10 +561,10 @@ nsGtkIMModule::OnUpdateComposition()
 
     if (!IsComposing()) {
         // Composition has been committed.  So we need update selection for
-        // caret
+        // caret later
         mSelection.Clear();
         EnsureToCacheSelection();
-        mLayoutChanged = false;
+        mSetCursorPositionOnKeyEvent = true;
     }
 
     // If we've already set candidate window position, we don't need to update
@@ -730,6 +742,7 @@ nsGtkIMModule::Focus()
 
     gtk_im_context_focus_in(currentContext);
     mIsIMFocused = true;
+    mSetCursorPositionOnKeyEvent = true;
 
     if (!IsEnabled()) {
         // We should release IME focus for uim and scim.
@@ -787,7 +800,7 @@ nsGtkIMModule::OnSelectionChange(nsWindow* aCaller,
     if (!IsComposing()) {
         // Now we have no composition (mostly situation on calling this method)
         // If we have it, it will set by NOTIFY_IME_OF_COMPOSITION_UPDATE.
-        SetCursorPosition(GetActiveContext());
+        mSetCursorPositionOnKeyEvent = true;
     }
 
     // The focused editor might have placeholder text with normal text node.
