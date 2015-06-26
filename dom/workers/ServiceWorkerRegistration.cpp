@@ -637,8 +637,9 @@ ServiceWorkerRegistrationMainThread::ShowNotification(JSContext* aCx,
 already_AddRefed<Promise>
 ServiceWorkerRegistrationMainThread::GetNotifications(const GetNotificationOptions& aOptions, ErrorResult& aRv)
 {
-  MOZ_ASSERT(false);
-  return nullptr;
+  AssertIsOnMainThread();
+  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+  return Notification::Get(window, aOptions, mScope, aRv);
 }
 
 already_AddRefed<PushManager>

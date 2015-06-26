@@ -84,7 +84,7 @@ NotificationStorage.prototype = {
   },
 
   put: function(origin, id, title, dir, lang, body, tag, icon, alertName,
-                data, behavior) {
+                data, behavior, serviceWorkerRegistrationID) {
     if (DEBUG) { debug("PUT: " + origin + " " + id + ": " + title); }
     var notification = {
       id: id,
@@ -98,7 +98,8 @@ NotificationStorage.prototype = {
       timestamp: new Date().getTime(),
       origin: origin,
       data: data,
-      mozbehavior: behavior
+      mozbehavior: behavior,
+      serviceWorkerRegistrationID: serviceWorkerRegistrationID,
     };
 
     this._notifications[id] = notification;
@@ -140,9 +141,9 @@ NotificationStorage.prototype = {
       this.searchID = id;
       this.originalCallback = originalCallback;
       var self = this;
-      this.handle = function(id, title, dir, lang, body, tag, icon, data, behavior) {
+      this.handle = function(id, title, dir, lang, body, tag, icon, data, behavior, serviceWorkerRegistrationID) {
         if (id == this.searchID) {
-          self.originalCallback.handle(id, title, dir, lang, body, tag, icon, data, behavior);
+          self.originalCallback.handle(id, title, dir, lang, body, tag, icon, data, behavior, serviceWorkerRegistrationID);
         }
       };
       this.done = function() {
@@ -244,7 +245,8 @@ NotificationStorage.prototype = {
                                notification.tag,
                                notification.icon,
                                notification.data,
-                               notification.mozbehavior),
+                               notification.mozbehavior,
+                               notification.serviceWorkerRegistrationID),
           Ci.nsIThread.DISPATCH_NORMAL);
       } catch (e) {
         if (DEBUG) { debug("Error calling callback handle: " + e); }

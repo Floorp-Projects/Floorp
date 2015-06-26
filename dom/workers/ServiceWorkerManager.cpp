@@ -2295,6 +2295,7 @@ class SendNotificationClickEventRunnable final : public WorkerRunnable
   const nsString mIcon;
   const nsString mData;
   const nsString mBehavior;
+  const nsString mScope;
 
 public:
   SendNotificationClickEventRunnable(
@@ -2308,7 +2309,8 @@ public:
     const nsAString& aTag,
     const nsAString& aIcon,
     const nsAString& aData,
-    const nsAString& aBehavior)
+    const nsAString& aBehavior,
+    const nsAString& aScope)
       : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
       , mServiceWorker(aServiceWorker)
       , mID(aID)
@@ -2320,6 +2322,7 @@ public:
       , mIcon(aIcon)
       , mData(aData)
       , mBehavior(aBehavior)
+      , mScope(aScope)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aWorkerPrivate);
@@ -2335,7 +2338,9 @@ public:
 
     ErrorResult result;
     nsRefPtr<Notification> notification =
-      Notification::ConstructFromFields(aWorkerPrivate->GlobalScope(), mID, mTitle, mDir, mLang, mBody, mTag, mIcon, mData, result);
+      Notification::ConstructFromFields(aWorkerPrivate->GlobalScope(), mID,
+                                        mTitle, mDir, mLang, mBody, mTag, mIcon,
+                                        mData, mScope, result);
     if (NS_WARN_IF(result.Failed())) {
       return false;
     }
@@ -2383,7 +2388,11 @@ ServiceWorkerManager::SendNotificationClickEvent(const nsACString& aOriginSuffix
     new nsMainThreadPtrHolder<ServiceWorker>(serviceWorker));
 
   nsRefPtr<SendNotificationClickEventRunnable> r =
-    new SendNotificationClickEventRunnable(serviceWorker->GetWorkerPrivate(), serviceWorkerHandle, aID, aTitle, aDir, aLang, aBody, aTag, aIcon, aData, aBehavior);
+    new SendNotificationClickEventRunnable(serviceWorker->GetWorkerPrivate(),
+                                           serviceWorkerHandle, aID, aTitle,
+                                           aDir, aLang, aBody, aTag, aIcon,
+                                           aData, aBehavior,
+                                           NS_ConvertUTF8toUTF16(aScope));
 
   AutoJSAPI jsapi;
   jsapi.Init();

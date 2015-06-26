@@ -157,6 +157,7 @@ public:
     const nsAString& aTag,
     const nsAString& aIcon,
     const nsAString& aData,
+    const nsAString& aScope,
     ErrorResult& aRv);
 
   void GetID(nsAString& aRetval) {
@@ -213,6 +214,12 @@ public:
 
   static NotificationPermission GetPermission(const GlobalObject& aGlobal,
                                               ErrorResult& aRv);
+
+  static already_AddRefed<Promise>
+  Get(nsPIDOMWindow* aWindow,
+      const GetNotificationOptions& aFilter,
+      const nsAString& aScope,
+      ErrorResult& aRv);
 
   static already_AddRefed<Promise> Get(const GlobalObject& aGlobal,
                                        const GetNotificationOptions& aFilter,
