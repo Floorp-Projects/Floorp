@@ -134,7 +134,7 @@
   <string name="pref_category_display">&pref_category_display;</string>
   <string name="pref_category_display_summary">&pref_category_display_summary;</string>
   <string name="pref_category_privacy_short">&pref_category_privacy_short;</string>
-  <string name="pref_category_privacy_summary">&pref_category_privacy_summary;</string>
+  <string name="pref_category_privacy_summary">&pref_category_privacy_summary2;</string>
   <string name="pref_category_vendor">&pref_category_vendor;</string>
   <string name="pref_category_vendor_summary">&pref_category_vendor_summary;</string>
   <string name="pref_category_datareporting">&pref_category_datareporting;</string>
@@ -176,7 +176,7 @@
   <string name="pref_learn_more">&pref_learn_more;</string>
 
   <string name="pref_category_logins">&pref_category_logins;</string>
-  <string name="pref_remember_signons">&pref_remember_signons;</string>
+  <string name="pref_remember_signons">&pref_remember_signons2;</string>
 
   <string name="pref_open_external_urls_privately_title">&pref_open_external_urls_privately_title;</string>
   <string name="pref_open_external_urls_privately_summary">&pref_open_external_urls_privately_summary;</string>
@@ -223,13 +223,13 @@
   <string name="pref_restore_always">&pref_restore_always;</string>
   <string name="pref_restore_quit">&pref_restore_quit;</string>
   <string name="pref_sync">&pref_sync;</string>
-  <string name="pref_sync_summary">&pref_sync_summary;</string>
+  <string name="pref_sync_summary">&pref_sync_summary2;</string>
   <string name="pref_search_suggestions">&pref_search_suggestions;</string>
   <string name="pref_private_data_history2">&pref_private_data_history2;</string>
   <string name="pref_private_data_searchHistory">&pref_private_data_searchHistory;</string>
   <string name="pref_private_data_formdata2">&pref_private_data_formdata2;</string>
   <string name="pref_private_data_cookies2">&pref_private_data_cookies2;</string>
-  <string name="pref_private_data_passwords">&pref_private_data_passwords;</string>
+  <string name="pref_private_data_passwords">&pref_private_data_passwords2;</string>
   <string name="pref_private_data_cache">&pref_private_data_cache;</string>
   <string name="pref_private_data_offlineApps">&pref_private_data_offlineApps;</string>
   <string name="pref_private_data_siteSettings">&pref_private_data_siteSettings2;</string>
@@ -513,7 +513,7 @@
   <string name="guest_session_dialog_continue">&guest_session_dialog_continue;</string>
   <string name="guest_session_dialog_cancel">&guest_session_dialog_cancel;</string>
   <string name="new_guest_session_title">&new_guest_session_title;</string>
-  <string name="new_guest_session_text">&new_guest_session_text;</string>
+  <string name="new_guest_session_text">&new_guest_session_text2;</string>
   <string name="guest_browsing_notification_title">&guest_browsing_notification_title;</string>
   <string name="guest_browsing_notification_text">&guest_browsing_notification_text;</string>
 
