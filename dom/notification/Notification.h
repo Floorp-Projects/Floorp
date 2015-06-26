@@ -116,6 +116,7 @@ class Notification : public DOMEventTargetHelper
   friend class NotificationObserver;
   friend class NotificationStorageCallback;
   friend class ServiceWorkerNotificationObserver;
+  friend class WorkerGetRunnable;
   friend class WorkerNotificationObserver;
 
 public:
@@ -157,7 +158,7 @@ public:
     const nsAString& aTag,
     const nsAString& aIcon,
     const nsAString& aData,
-    const nsAString& aScope,
+    const nsAString& aServiceWorkerRegistrationID,
     ErrorResult& aRv);
 
   void GetID(nsAString& aRetval) {
@@ -224,6 +225,11 @@ public:
   static already_AddRefed<Promise> Get(const GlobalObject& aGlobal,
                                        const GetNotificationOptions& aFilter,
                                        ErrorResult& aRv);
+
+  static already_AddRefed<Promise> WorkerGet(workers::WorkerPrivate* aWorkerPrivate,
+                                             const GetNotificationOptions& aFilter,
+                                             const nsAString& aScope,
+                                             ErrorResult& aRv);
 
   // Notification implementation of
   // ServiceWorkerRegistration.showNotification.
@@ -384,6 +390,7 @@ private:
   CreateAndShow(nsIGlobalObject* aGlobal,
                 const nsAString& aTitle,
                 const NotificationOptions& aOptions,
+                const nsAString& aScope,
                 ErrorResult& aRv);
 
   nsIPrincipal* GetPrincipal();
