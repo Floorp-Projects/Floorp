@@ -255,13 +255,13 @@ add_task(function* testRLLoginErrorRemains() {
 
 function checkButtonsStatus(shouldBeActive) {
   let button = document.getElementById("sync-button");
-  let fxaContainer = document.getElementById("PanelUI-footer-fxa");
+  let panelbutton = document.getElementById("PanelUI-fxa-status");
   if (shouldBeActive) {
     Assert.equal(button.getAttribute("status"), "active");
-    Assert.equal(fxaContainer.getAttribute("syncstatus"), "active");
+    Assert.equal(panelbutton.getAttribute("syncstatus"), "active");
   } else {
     Assert.ok(!button.hasAttribute("status"));
-    Assert.ok(!fxaContainer.hasAttribute("syncstatus"));
+    Assert.ok(!panelbutton.hasAttribute("syncstatus"));
   }
 }
 
