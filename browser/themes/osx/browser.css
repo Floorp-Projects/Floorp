@@ -2610,10 +2610,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 
   /* Background tab separators */
-  #tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
-  .tabbrowser-tab:not([visuallyselected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
-  #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([visuallyselected]):not([beforehovered]):not(:hover)::after {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-separator@2x.png);
+  #TabsToolbar:not([brighttext]) {
+    --tab-separator-image: url(chrome://browser/skin/tabbrowser/tab-separator@2x.png);
   }
 }
 

@@ -8,6 +8,11 @@
   --tab-toolbar-navbar-overlap: 1px;
   --tab-min-height: 31px;
 }
+#TabsToolbar {
+  --tab-separator-image: url(chrome://browser/skin/tabbrowser/tab-separator.png);
+  --tab-separator-size: 3px 100%;
+  --tab-separator-opacity: 1;
+}
 
 %define tabCurveWidth 30px
 %define tabCurveHalfWidth 15px
@@ -321,13 +326,20 @@
 #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([visuallyselected]):not([beforehovered]):not(:hover)::after {
   -moz-margin-start: -1.5px;
   -moz-margin-end: -1.5px;
-  background-image: url(chrome://browser/skin/tabbrowser/tab-separator.png);
+  background-image: var(--tab-separator-image);
   background-position: left bottom var(--tab-toolbar-navbar-overlap);
   background-repeat: no-repeat;
-  background-size: 3px 100%;
+  background-size: var(--tab-separator-size);
+  opacity: var(--tab-separator-opacity);
   content: "";
   display: -moz-box;
   width: 3px;
+}
+
+#TabsToolbar[brighttext] {
+  --tab-separator-image: linear-gradient(transparent 0%, transparent 15%, currentColor 15%, currentColor 90%, transparent 90%);
+  --tab-separator-size: 1px 100%;
+  --tab-separator-opacity: 0.4;
 }
 
 /* New tab button */
