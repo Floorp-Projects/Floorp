@@ -1828,6 +1828,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
   // constrained initial reflow and other reflows which require either a strategy init or balance.
   // This isn't done during an unconstrained reflow, because it will occur later when the parent
   // reflows with a constrained isize.
+  bool fixupKidPositions = false;
   if (NS_SUBTREE_DIRTY(this) ||
       aReflowState.ShouldReflowAllKids() ||
       IsGeometryDirty() ||
@@ -1877,6 +1878,11 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
 
     ReflowTable(aDesiredSize, aReflowState, availBSize,
                 lastChildReflowed, aStatus);
+    // If ComputedWidth is unconstrained, we may need to fix child positions
+    // later (in vertical-rl mode) due to use of 0 as a fake containerWidth
+    // during ReflowChildren.
+    fixupKidPositions = wm.IsVerticalRL() &&
+      aReflowState.ComputedWidth() == NS_UNCONSTRAINEDSIZE;
 
     // reevaluate special bsize reflow conditions
     if (HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
@@ -1924,6 +1930,15 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
   }
   if (IsRowInserted()) {
     ProcessRowInserted(aDesiredSize.BSize(wm));
+  }
+
+  if (fixupKidPositions) {
+    // If we didn't already know the containerWidth (and so used zero during
+    // ReflowChildren), then we need to update the block-position of our kids.
+    for (nsIFrame* kid : mFrames) {
+      kid->MovePositionBy(nsPoint(aDesiredSize.Width(), 0));
+      RePositionViews(kid);
+    }
   }
 
   LogicalMargin borderPadding = GetChildAreaOffset(wm, &aReflowState);
@@ -2960,14 +2975,11 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
   if (containerWidth == NS_UNCONSTRAINEDSIZE) {
     NS_WARN_IF_FALSE(wm.IsVertical(),
                      "shouldn't have unconstrained width in horizontal mode");
-    if (wm.IsVerticalRL()) {
-      nsHTMLReflowMetrics desiredSize(wm);
-      CalcDesiredBSize(aReflowState.reflowState, desiredSize);
-      containerWidth = desiredSize.Width();
-    } else {
-      // in vertical-lr mode, containerWidth won't actually be used
-      containerWidth = 0;
-    }
+    // We won't know the containerWidth until we've reflowed our contents,
+    // so use zero for now; in vertical-rl mode, this will mean the children
+    // are misplaced in the block-direction, and will need to be moved
+    // rightwards by the true containerWidth once we know it.
+    containerWidth = 0;
   } else {
     containerWidth +=
       aReflowState.reflowState.ComputedPhysicalBorderPadding().LeftRight();
