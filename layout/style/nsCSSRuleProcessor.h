@@ -16,6 +16,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsIStyleRuleProcessor.h"
+#include "nsIMediaList.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsExpirationTracker.h"
@@ -36,6 +37,9 @@ class nsCSSCounterStyleRule;
 
 namespace mozilla {
 class CSSStyleSheet;
+namespace css {
+class DocumentRule;
+} // namespace css
 } // namespace mozilla
 
 /**
@@ -163,6 +167,11 @@ public:
    */
   mozilla::dom::Element* GetScopeElement() const { return mScopeElement; }
 
+  void TakeDocumentRulesAndCacheKey(
+      nsPresContext* aPresContext,
+      nsTArray<mozilla::css::DocumentRule*>& aDocumentRules,
+      nsDocumentRuleResultCacheKey& aDocumentRuleResultCacheKey);
+
   bool IsShared() const { return mIsShared; }
 
   nsExpirationState* GetExpirationState() { return &mExpirationState; }
@@ -226,13 +235,27 @@ private:
   // Only used if mSheetType == nsStyleSet::eScopedDocSheet.
   nsRefPtr<mozilla::dom::Element> mScopeElement;
 
+  nsTArray<mozilla::css::DocumentRule*> mDocumentRules;
+  nsDocumentRuleResultCacheKey mDocumentCacheKey;
+
   nsExpirationState mExpirationState;
 
   // type of stylesheet using this processor
   uint8_t mSheetType;  // == nsStyleSet::sheetType
 
   const bool mIsShared;
+
+  // Whether we need to build up mDocumentCacheKey and mDocumentRules as
+  // we build a RuleCascadeData.  Is true only for shared rule processors
+  // and only before we build the first RuleCascadeData.  See comment in
+  // RefreshRuleCascade for why.
+  bool mMustGatherDocumentRules;
+
   bool mInRuleProcessorCache;
+
+#ifdef DEBUG
+  bool mDocumentRulesAndCacheKeyValid;
+#endif
 
 #ifdef XP_WIN
   static uint8_t sWinThemeId;
