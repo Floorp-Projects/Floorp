@@ -388,7 +388,7 @@ let DirectoryLinksProvider = {
    */
   _setDefaultEnhanced: function DirectoryLinksProvider_setDefaultEnhanced() {
     if (!Services.prefs.prefHasUserValue(PREF_NEWTAB_ENHANCED)) {
-      let enhanced = true;
+      let enhanced = Services.prefs.getBoolPref(PREF_NEWTAB_ENHANCED);
       try {
         // Default to not enhanced if DNT is set to tell websites to not track
         if (Services.prefs.getBoolPref("privacy.donottrackheader.enabled")) {
