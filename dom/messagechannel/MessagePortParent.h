@@ -36,6 +36,10 @@ public:
     return mUUID;
   }
 
+  static bool ForceClose(const nsID& aUUID,
+                         const nsID& aDestinationUUID,
+                         const uint32_t& aSequenceID);
+
 private:
   virtual bool RecvPostMessages(nsTArray<MessagePortMessage>&& aMessages)
                                                                        override;

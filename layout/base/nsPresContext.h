@@ -1399,6 +1399,9 @@ protected:
 
   unsigned mHasWarnedAboutPositionedTableParts : 1;
 
+  // Have we added quirk.css to the style set?
+  unsigned              mQuirkSheetAdded : 1;
+
 #ifdef RESTYLE_LOGGING
   // Should we output debug information about restyling for this document?
   bool                  mRestyleLoggingEnabled;

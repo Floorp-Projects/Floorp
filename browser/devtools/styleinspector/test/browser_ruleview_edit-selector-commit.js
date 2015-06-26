@@ -7,49 +7,57 @@
 // Test selector value is correctly displayed when committing the inplace editor
 // with ENTER, ESC, SHIFT+TAB and TAB
 
-let PAGE_CONTENT = [
-  '<style type="text/css">',
-  '  #testid {',
-  '    text-align: center;',
-  '  }',
-  '</style>',
-  '<div id="testid" class="testclass">Styled Node</div>',
+let TEST_URI = [
+  "<style type='text/css'>",
+  "  #testid1 {",
+  "    text-align: center;",
+  "  }",
+  "  #testid2 {",
+  "    text-align: center;",
+  "  }",
+  "  #testid3 {",
+  "  }",
+  "</style>",
+  "<div id='testid1'>Styled Node</div>",
+  "<div id='testid2'>Styled Node</div>",
+  "<div id='testid3'>Styled Node</div>",
 ].join("\n");
 
 const TEST_DATA = [
   {
-    node: "#testid",
+    node: "#testid1",
     value: ".testclass",
     commitKey: "VK_ESCAPE",
     modifiers: {},
-    expected: "#testid"
+    expected: "#testid1",
+
   },
   {
-    node: "#testid",
-    value: ".testclass",
+    node: "#testid1",
+    value: ".testclass1",
     commitKey: "VK_RETURN",
     modifiers: {},
-    expected: ".testclass"
+    expected: ".testclass1"
   },
   {
-    node: "#testid",
-    value: ".testclass",
+    node: "#testid2",
+    value: ".testclass2",
     commitKey: "VK_TAB",
     modifiers: {},
-    expected: ".testclass"
+    expected: ".testclass2"
   },
   {
-    node: "#testid",
-    value: ".testclass",
+    node: "#testid3",
+    value: ".testclass3",
     commitKey: "VK_TAB",
     modifiers: {shiftKey: true},
-    expected: ".testclass"
+    expected: ".testclass3"
   }
 ];
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(PAGE_CONTENT));
-  let {toolbox, inspector, view} = yield openRuleView();
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let { inspector, view } = yield openRuleView();
 
   info("Iterating over the test data");
   for (let data of TEST_DATA) {
@@ -60,7 +68,8 @@ add_task(function*() {
 function* runTestData(inspector, view, data) {
   let {node, value, commitKey, modifiers, expected} = data;
 
-  info("Updating " + node + " to " + value + " and committing with " + commitKey + ". Expecting: " + expected);
+  info("Updating " + node + " to " + value + " and committing with " +
+       commitKey + ". Expecting: " + expected);
 
   info("Selecting the test element");
   yield selectNode(node, inspector);
@@ -78,16 +87,32 @@ function* runTestData(inspector, view, data) {
   info("Entering the commit key " + commitKey + " " + modifiers);
   EventUtils.synthesizeKey(commitKey, modifiers);
 
+  let activeElement = view.doc.activeElement;
+
   if (commitKey === "VK_ESCAPE") {
     is(idRuleEditor.rule.selectorText, expected,
         "Value is as expected: " + expected);
-    is(idRuleEditor.isEditing, false, "Selector is not being edited.")
-  } else {
-    yield once(view, "ruleview-changed");
-    ok(getRuleViewRule(view, expected),
-        "Rule with " + name + " selector exists.");
+    is(idRuleEditor.isEditing, false, "Selector is not being edited.");
+    is(idRuleEditor.selectorText, activeElement,
+       "Focus is on selector span.");
+    return;
   }
 
-  info("Resetting page content");
-  content.document.body.innerHTML = PAGE_CONTENT;
+  yield once(view, "ruleview-changed");
+
+  ok(getRuleViewRule(view, expected),
+     "Rule with " + expected + " selector exists.");
+
+  if (modifiers.shiftKey) {
+    idRuleEditor = getRuleViewRuleEditor(view, 0);
+  }
+
+  let rule = idRuleEditor.rule;
+  if (rule.textProps.length > 0) {
+    is(inplaceEditor(rule.textProps[0].editor.nameSpan).input, activeElement,
+       "Focus is on the first property name span.");
+  } else {
+    is(inplaceEditor(idRuleEditor.newPropSpan).input, activeElement,
+       "Focus is on the new property span.");
+  }
 }

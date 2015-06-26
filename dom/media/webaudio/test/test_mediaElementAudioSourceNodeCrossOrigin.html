@@ -35,16 +35,13 @@ var testsRemaining = tests.length;
 tests.forEach(function(e) {
   e.ac = new AudioContext();
   var a = new Audio();
-  a.loop = true;
   if (e.cors) {
     a.crossOrigin = e.cors;
   }
   a.src = e.url;
-  a.controls = true;
   var measn = e.ac.createMediaElementSource(a);
   var sp = e.ac.createScriptProcessor(2048, 1);
   // Set a couple expandos to track the status of the test
-  sp.iterationsLeft = 300;
   sp.seenSound = false;
 
   measn.connect(sp);
@@ -52,9 +49,8 @@ tests.forEach(function(e) {
   document.body.appendChild(a);
 
   function checkFinished(sp) {
-    if (--sp.iterationsLeft == 0) {
+    if (a.ended) {
       sp.onaudioprocess = null;
-      a.pause();
       var not = e.expectSilence ? "" : "not";
       is(e.expectSilence, !sp.seenSound,
          "Buffer is " + not + " silent as expected, for " +
@@ -82,9 +78,7 @@ tests.forEach(function(e) {
     return silent;
   }
 
-  a.onplaying = function () {
-    sp.onaudioprocess = checkBufferSilent;
-  }
+  sp.onaudioprocess = checkBufferSilent;
 });
 </script>
 </pre>

@@ -34,7 +34,7 @@
   var ConversationToolbar = loop.shared.views.ConversationToolbar;
   var FeedbackView = loop.shared.views.FeedbackView;
   var Checkbox = loop.shared.views.Checkbox;
-  var TextChatView = loop.shared.views.TextChatView;
+  var TextChatView = loop.shared.views.chat.TextChatView;
 
   // Store constants
   var ROOM_STATES = loop.store.ROOM_STATES;
@@ -87,7 +87,7 @@
   var mockSDK = _.extend({
     sendTextChatMessage: function(message) {
       dispatcher.dispatch(new loop.shared.actions.ReceivedTextChatMessage({
-        message: message
+        message: message.message
       }));
     }
   }, Backbone.Events);
@@ -309,30 +309,46 @@
 
   dispatcher.dispatch(new sharedActions.SendTextChatMessage({
     contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
-    message: "Rheet!"
+    message: "Rheet!",
+    sentTimestamp: "2015-06-23T22:21:45.590Z"
   }));
   dispatcher.dispatch(new sharedActions.ReceivedTextChatMessage({
     contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
-    message: "Hi there"
+    message: "Hi there",
+    receivedTimestamp: "2015-06-23T22:21:45.590Z"
+  }));
+  dispatcher.dispatch(new sharedActions.ReceivedTextChatMessage({
+    contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
+    message: "Hello",
+    receivedTimestamp: "2015-06-23T23:24:45.590Z"
   }));
   dispatcher.dispatch(new sharedActions.SendTextChatMessage({
     contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
     message: "Check out this menu from DNA Pizza:" +
     " http://example.com/DNA/pizza/menu/lots-of-different-kinds-of-pizza/" +
-    "%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%"
+    "%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%",
+    sentTimestamp: "2015-06-23T22:23:45.590Z"
   }));
   dispatcher.dispatch(new sharedActions.SendTextChatMessage({
     contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
     message: "Nowforareallylongwordwithoutspacesorpunctuationwhichshouldcause" +
-    "linewrappingissuesifthecssiswrong"
+    "linewrappingissuesifthecssiswrong",
+    sentTimestamp: "2015-06-23T22:23:45.590Z"
   }));
   dispatcher.dispatch(new sharedActions.ReceivedTextChatMessage({
     contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
-    message: "That avocado monkey-brains pie sounds tasty!"
+    message: "That avocado monkey-brains pie sounds tasty!",
+    receivedTimestamp: "2015-06-23T22:25:45.590Z"
   }));
   dispatcher.dispatch(new sharedActions.SendTextChatMessage({
     contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
-    message: "What time should we meet?"
+    message: "What time should we meet?",
+    sentTimestamp: "2015-06-23T22:27:45.590Z"
+  }));
+  dispatcher.dispatch(new sharedActions.SendTextChatMessage({
+    contentType: loop.store.CHAT_CONTENT_TYPES.TEXT,
+    message: "Cool",
+    sentTimestamp: "2015-06-23T22:27:45.590Z"
   }));
 
   loop.store.StoreMixin.register({
@@ -381,6 +397,11 @@
   });
 
   var SVGIcon = React.createClass({
+    propTypes: {
+      shapeId: React.PropTypes.string.isRequired,
+      size: React.PropTypes.string.isRequired
+    },
+
     render: function() {
       var sizeUnit = this.props.size.split("x");
       return (
@@ -393,6 +414,10 @@
   });
 
   var SVGIcons = React.createClass({
+    propTypes: {
+      size: React.PropTypes.string.isRequired
+    },
+
     shapes: {
       "10x10": ["close", "close-active", "close-disabled", "dropdown",
         "dropdown-white", "dropdown-active", "dropdown-disabled", "edit",
@@ -435,10 +460,12 @@
 
   var FramedExample = React.createClass({
     propTypes: {
+      children: React.PropTypes.element,
       cssClass: React.PropTypes.string,
       dashed: React.PropTypes.bool,
       height: React.PropTypes.number,
       onContentsRendered: React.PropTypes.func,
+      summary: React.PropTypes.string.isRequired,
       width: React.PropTypes.number
     },
 
@@ -478,6 +505,16 @@
   });
 
   var Example = React.createClass({
+    propTypes: {
+      children: React.PropTypes.oneOfType([
+        React.PropTypes.element,
+        React.PropTypes.arrayOf(React.PropTypes.element)
+      ]).isRequired,
+      dashed: React.PropTypes.bool,
+      style: React.PropTypes.object,
+      summary: React.PropTypes.string.isRequired
+    },
+
     makeId: function(prefix) {
       return (prefix || "") + this.props.summary.toLowerCase().replace(/\s/g, "-");
     },
@@ -500,6 +537,15 @@
   });
 
   var Section = React.createClass({
+    propTypes: {
+      children: React.PropTypes.oneOfType([
+        React.PropTypes.arrayOf(React.PropTypes.element),
+        React.PropTypes.element
+      ]).isRequired,
+      className: React.PropTypes.string,
+      name: React.PropTypes.string.isRequired
+    },
+
     render: function() {
       return (
         <section className={this.props.className} id={this.props.name}>
@@ -511,6 +557,10 @@
   });
 
   var ShowCase = React.createClass({
+    propTypes: {
+      children: React.PropTypes.arrayOf(React.PropTypes.element).isRequired
+    },
+
     getInitialState: function() {
       // We assume for now that rtl is the only query parameter.
       //
@@ -572,10 +622,10 @@
             <p className="note">
               <strong>Note:</strong> 332px wide.
             </p>
-            <Example dashed="true" style={{width: "332px"}} summary="Re-sign-in view">
+            <Example dashed={true} style={{width: "332px"}} summary="Re-sign-in view">
               <SignInRequestView mozLoop={mockMozLoopRooms} />
             </Example>
-            <Example dashed="true" style={{width: "332px"}} summary="Room list tab">
+            <Example dashed={true} style={{width: "332px"}} summary="Room list tab">
               <PanelView client={mockClient}
                          dispatcher={dispatcher}
                          mozLoop={mockMozLoopRooms}
@@ -584,7 +634,7 @@
                          selectedTab="rooms"
                          userProfile={{email: "test@example.com"}} />
             </Example>
-            <Example dashed="true" style={{width: "332px"}} summary="Contact list tab">
+            <Example dashed={true} style={{width: "332px"}} summary="Contact list tab">
               <PanelView client={mockClient}
                          dispatcher={dispatcher}
                          mozLoop={mockMozLoopRooms}
@@ -593,14 +643,14 @@
                          selectedTab="contacts"
                          userProfile={{email: "test@example.com"}} />
             </Example>
-            <Example dashed="true" style={{width: "332px"}} summary="Error Notification">
+            <Example dashed={true} style={{width: "332px"}} summary="Error Notification">
               <PanelView client={mockClient}
                          dispatcher={dispatcher}
                          mozLoop={navigator.mozLoop}
                          notifications={errNotifications}
                          roomStore={roomStore} />
             </Example>
-            <Example dashed="true" style={{width: "332px"}} summary="Error Notification - authenticated">
+            <Example dashed={true} style={{width: "332px"}} summary="Error Notification - authenticated">
               <PanelView client={mockClient}
                          dispatcher={dispatcher}
                          mozLoop={navigator.mozLoop}
@@ -608,7 +658,7 @@
                          roomStore={roomStore}
                          userProfile={{email: "test@example.com"}} />
             </Example>
-            <Example dashed="true" style={{width: "332px"}} summary="Contact import success">
+            <Example dashed={true} style={{width: "332px"}} summary="Contact import success">
               <PanelView dispatcher={dispatcher}
                          mozLoop={mockMozLoopRooms}
                          notifications={new loop.shared.models.NotificationCollection([{level: "success", message: "Import success"}])}
@@ -616,7 +666,7 @@
                          selectedTab="contacts"
                          userProfile={{email: "test@example.com"}} />
             </Example>
-            <Example dashed="true" style={{width: "332px"}} summary="Contact import error">
+            <Example dashed={true} style={{width: "332px"}} summary="Contact import error">
               <PanelView dispatcher={dispatcher}
                          mozLoop={mockMozLoopRooms}
                          notifications={new loop.shared.models.NotificationCollection([{level: "error", message: "Import error"}])}
@@ -627,7 +677,7 @@
           </Section>
 
           <Section name="AcceptCallView">
-            <Example dashed="true" style={{width: "300px", height: "272px"}}
+            <Example dashed={true} style={{width: "300px", height: "272px"}}
                      summary="Default / incoming video call">
               <div className="fx-embedded">
                 <AcceptCallView callType={CALL_TYPES.AUDIO_VIDEO}
@@ -637,7 +687,7 @@
               </div>
             </Example>
 
-            <Example dashed="true" style={{width: "300px", height: "272px"}}
+            <Example dashed={true} style={{width: "300px", height: "272px"}}
                      summary="Default / incoming audio only call">
               <div className="fx-embedded">
                 <AcceptCallView callType={CALL_TYPES.AUDIO_ONLY}
@@ -649,7 +699,7 @@
           </Section>
 
           <Section name="AcceptCallView-ActiveState">
-            <Example dashed="true" style={{width: "300px", height: "272px"}}
+            <Example dashed={true} style={{width: "300px", height: "272px"}}
                      summary="Default">
               <div className="fx-embedded" >
                 <AcceptCallView callType={CALL_TYPES.AUDIO_VIDEO}
@@ -708,7 +758,7 @@
           </Section>
 
           <Section name="PendingConversationView (Desktop)">
-            <Example dashed="true"
+            <Example dashed={true}
                      style={{width: "300px", height: "272px"}}
                      summary="Connecting">
               <div className="fx-embedded">
@@ -720,7 +770,7 @@
           </Section>
 
           <Section name="CallFailedView">
-            <Example dashed="true"
+            <Example dashed={true}
                      style={{width: "300px", height: "272px"}}
                      summary="Call Failed - Incoming">
               <div className="fx-embedded">
@@ -729,7 +779,7 @@
                                 store={conversationStore} />
               </div>
             </Example>
-            <Example dashed="true"
+            <Example dashed={true}
                      style={{width: "300px", height: "272px"}}
                      summary="Call Failed - Outgoing">
               <div className="fx-embedded">
@@ -738,7 +788,7 @@
                                 store={conversationStore} />
               </div>
             </Example>
-            <Example dashed="true"
+            <Example dashed={true}
                      style={{width: "300px", height: "272px"}}
                      summary="Call Failed — with call URL error">
               <div className="fx-embedded">
@@ -815,17 +865,17 @@
               <strong>Note:</strong> For the useable demo, you can access submitted data at&nbsp;
               <a href="https://input.allizom.org/">input.allizom.org</a>.
             </p>
-            <Example dashed="true"
+            <Example dashed={true}
                      style={{width: "300px", height: "272px"}}
                      summary="Default (useable demo)">
               <FeedbackView feedbackStore={feedbackStore} />
             </Example>
-            <Example dashed="true"
+            <Example dashed={true}
                      style={{width: "300px", height: "272px"}}
                      summary="Detailed form">
               <FeedbackView feedbackState={FEEDBACK_STATES.DETAILS} feedbackStore={feedbackStore} />
             </Example>
-            <Example dashed="true"
+            <Example dashed={true}
                      style={{width: "300px", height: "272px"}}
                      summary="Thank you!">
               <FeedbackView feedbackState={FEEDBACK_STATES.SENT} feedbackStore={feedbackStore}/>

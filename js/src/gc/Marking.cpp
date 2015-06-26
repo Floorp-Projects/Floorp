@@ -1749,6 +1749,7 @@ js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(StoreBuffer* owner, TenuringTracer
     mozilla::ReentrancyGuard g(*owner);
     MOZ_ASSERT(owner->isEnabled());
     MOZ_ASSERT(stores_.initialized());
+    sinkStores(owner);
     for (typename StoreSet::Range r = stores_.all(); !r.empty(); r.popFront())
         r.front().trace(mover);
 }
@@ -1972,14 +1973,18 @@ js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind 
         }
     }
 
-    if (src->is<InlineTypedObject>()) {
-        InlineTypedObject::objectMovedDuringMinorGC(this, dst, src);
-    } else if (src->is<UnboxedArrayObject>()) {
-        tenuredSize += UnboxedArrayObject::objectMovedDuringMinorGC(this, dst, src, dstKind);
-    } else {
-        // Objects with JSCLASS_SKIP_NURSERY_FINALIZE need to be handled above
-        // to ensure any additional nursery buffers they hold are moved.
-        MOZ_ASSERT(!(src->getClass()->flags & JSCLASS_SKIP_NURSERY_FINALIZE));
+    if (src->getClass()->flags & JSCLASS_SKIP_NURSERY_FINALIZE) {
+        if (src->is<InlineTypedObject>()) {
+            InlineTypedObject::objectMovedDuringMinorGC(this, dst, src);
+        } else if (src->is<UnboxedArrayObject>()) {
+            tenuredSize += UnboxedArrayObject::objectMovedDuringMinorGC(this, dst, src, dstKind);
+        } else if (src->is<ArgumentsObject>()) {
+            tenuredSize += ArgumentsObject::objectMovedDuringMinorGC(this, dst, src);
+        } else {
+            // Objects with JSCLASS_SKIP_NURSERY_FINALIZE need to be handled above
+            // to ensure any additional nursery buffers they hold are moved.
+            MOZ_CRASH("Unhandled JSCLASS_SKIP_NURSERY_FINALIZE Class");
+        }
     }
 
     return tenuredSize;

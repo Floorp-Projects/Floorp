@@ -72,7 +72,21 @@ runNetworkTest(() => {
        "mozRTCPeerConnection() constructor has readable exceptions");
   }
 
-  networkTestFinished();
+  // Below tests are setting the about:config User preferences for default
+  // ice servers and checking the outputs when mozRTCPeerConnection() is
+  // invoked. See Bug 1167922 for more information.
+  // Note - We use promises here since the SpecialPowers API will be
+  // performed asynchronously.
+  var push = prefs => new Promise(resolve =>
+      SpecialPowers.pushPrefEnv(prefs, resolve));
+
+  push({ set: [['media.peerconnection.default_iceservers', ""]] })
+      .then(() => makePC())
+      .then(() => push({ set: [['media.peerconnection.default_iceservers', "k"]] }))
+      .then(() => makePC())
+      .then(() => push({ set: [['media.peerconnection.default_iceservers', "[{\"urls\": [\"stun:stun.services.mozilla.com\"]}]"]] }))
+      .then(() => makePC())
+      .then(networkTestFinished);
 });
 </script>
 </pre>

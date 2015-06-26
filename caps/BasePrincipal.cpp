@@ -21,28 +21,28 @@
 
 namespace mozilla {
 
-using dom::URLSearchParams;
+using dom::URLParams;
 
 void
 OriginAttributes::CreateSuffix(nsACString& aStr) const
 {
   MOZ_RELEASE_ASSERT(mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
 
-  nsRefPtr<URLSearchParams> usp = new URLSearchParams();
+  UniquePtr<URLParams> params(new URLParams());
   nsAutoString value;
 
   if (mAppId != nsIScriptSecurityManager::NO_APP_ID) {
     value.AppendInt(mAppId);
-    usp->Set(NS_LITERAL_STRING("appId"), value);
+    params->Set(NS_LITERAL_STRING("appId"), value);
   }
 
   if (mInBrowser) {
-    usp->Set(NS_LITERAL_STRING("inBrowser"), NS_LITERAL_STRING("1"));
+    params->Set(NS_LITERAL_STRING("inBrowser"), NS_LITERAL_STRING("1"));
   }
 
   aStr.Truncate();
 
-  usp->Serialize(value);
+  params->Serialize(value);
   if (!value.IsEmpty()) {
     aStr.AppendLiteral("!");
     aStr.Append(NS_ConvertUTF16toUTF8(value));
@@ -52,7 +52,7 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
 namespace {
 
 class MOZ_STACK_CLASS PopulateFromSuffixIterator final
-  : public URLSearchParams::ForEachIterator
+  : public URLParams::ForEachIterator
 {
 public:
   explicit PopulateFromSuffixIterator(OriginAttributes* aOriginAttributes)
@@ -61,8 +61,8 @@ public:
     MOZ_ASSERT(aOriginAttributes);
   }
 
-  bool URLSearchParamsIterator(const nsString& aName,
-                               const nsString& aValue) override
+  bool URLParamsIterator(const nsString& aName,
+                         const nsString& aValue) override
   {
     if (aName.EqualsLiteral("appId")) {
       nsresult rv;
@@ -108,11 +108,28 @@ OriginAttributes::PopulateFromSuffix(const nsACString& aStr)
     return false;
   }
 
-  nsRefPtr<URLSearchParams> usp = new URLSearchParams();
-  usp->ParseInput(Substring(aStr, 1, aStr.Length() - 1), nullptr);
+  UniquePtr<URLParams> params(new URLParams());
+  params->ParseInput(Substring(aStr, 1, aStr.Length() - 1));
 
   PopulateFromSuffixIterator iterator(this);
-  return usp->ForEach(iterator);
+  return params->ForEach(iterator);
+}
+
+bool
+OriginAttributes::PopulateFromOrigin(const nsACString& aOrigin,
+                                     nsACString& aOriginNoSuffix)
+{
+  // RFindChar is only available on nsCString.
+  nsCString origin(aOrigin);
+  int32_t pos = origin.RFindChar('!');
+
+  if (pos == kNotFound) {
+    aOriginNoSuffix = origin;
+    return true;
+  }
+
+  aOriginNoSuffix = Substring(origin, 0, pos);
+  return PopulateFromSuffix(Substring(origin, pos));
 }
 
 void

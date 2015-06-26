@@ -192,6 +192,13 @@ struct RectCornerRadii {
     return radii[aCorner];
   }
 
+  bool operator==(const RectCornerRadii& aOther) const {
+    for (size_t i = 0; i < RectCorner::Count; i++) {
+      if (radii[i] != aOther.radii[i]) return false;
+    }
+    return true;
+  }
+
   void Scale(Float aXScale, Float aYScale) {
     for (int i = 0; i < RectCorner::Count; i++) {
       radii[i].Scale(aXScale, aYScale);

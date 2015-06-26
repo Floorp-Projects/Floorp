@@ -684,8 +684,8 @@ CSS_PROP_LOGICAL(
         CSS_PROPERTY_LOGICAL_AXIS |
         CSS_PROPERTY_LOGICAL_BLOCK_AXIS,
     "layout.css.vertical-text.enabled",
-    VARIANT_AHKLP | VARIANT_CALC,
-    kWidthKTable,
+    VARIANT_AHLP | VARIANT_CALC,
+    nullptr,
     Size,
     Position,
     CSS_PROP_NO_OFFSET,
@@ -2124,8 +2124,8 @@ CSS_PROP_POSITION(
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "",
-    VARIANT_AHLP | VARIANT_CALC,
-    nullptr,
+    VARIANT_AHKLP | VARIANT_CALC,
+    kWidthKTable,
     offsetof(nsStylePosition, mHeight),
     eStyleAnimType_Coord)
 CSS_PROP_VISIBILITY(
@@ -2427,8 +2427,8 @@ CSS_PROP_LOGICAL(
         CSS_PROPERTY_LOGICAL_AXIS |
         CSS_PROPERTY_LOGICAL_BLOCK_AXIS,
     "layout.css.vertical-text.enabled",
-    VARIANT_HKLPO | VARIANT_CALC,
-    kWidthKTable,
+    VARIANT_HLPO | VARIANT_CALC,
+    nullptr,
     MaxSize,
     Position,
     CSS_PROP_NO_OFFSET,
@@ -2443,8 +2443,8 @@ CSS_PROP_POSITION(
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "",
-    VARIANT_HLPO | VARIANT_CALC,
-    nullptr,
+    VARIANT_HKLPO | VARIANT_CALC,
+    kWidthKTable,
     offsetof(nsStylePosition, mMaxHeight),
     eStyleAnimType_Coord)
 CSS_PROP_LOGICAL(
@@ -2489,8 +2489,8 @@ CSS_PROP_POSITION(
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "",
-    VARIANT_AHLP | VARIANT_CALC,
-    nullptr,
+    VARIANT_AHKLP | VARIANT_CALC,
+    kWidthKTable,
     offsetof(nsStylePosition, mMinHeight),
     eStyleAnimType_Coord)
 CSS_PROP_LOGICAL(
@@ -2506,8 +2506,8 @@ CSS_PROP_LOGICAL(
         CSS_PROPERTY_LOGICAL_AXIS |
         CSS_PROPERTY_LOGICAL_BLOCK_AXIS,
     "layout.css.vertical-text.enabled",
-    VARIANT_AHKLP | VARIANT_CALC,
-    kWidthKTable,
+    VARIANT_AHLP | VARIANT_CALC,
+    nullptr,
     MinSize,
     Position,
     CSS_PROP_NO_OFFSET,

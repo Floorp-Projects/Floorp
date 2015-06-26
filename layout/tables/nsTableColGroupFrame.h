@@ -186,16 +186,17 @@ public:
 
   /**
    * Gets inner border widths before collapsing with cell borders
-   * Caller must get left border from previous column
-   * GetContinuousBCBorderWidth will not overwrite aBorder.left
+   * Caller must get istart border from previous column
+   * GetContinuousBCBorderWidth will not overwrite aBorder.IStart
    * see nsTablePainter about continuous borders
    */
-  void GetContinuousBCBorderWidth(nsMargin& aBorder);
+  void GetContinuousBCBorderWidth(mozilla::WritingMode aWM,
+                                  mozilla::LogicalMargin& aBorder);
   /**
    * Set full border widths before collapsing with cell borders
-   * @param aForSide - side to set; only accepts top and bottom
+   * @param aForSide - side to set; only accepts bstart and bend
    */
-  void SetContinuousBCBorderWidth(uint8_t     aForSide,
+  void SetContinuousBCBorderWidth(mozilla::LogicalSide aForSide,
                                   BCPixelSize aPixelValue);
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
@@ -221,8 +222,8 @@ protected:
   int32_t mStartColIndex;
 
   // border width in pixels
-  BCPixelSize mTopContBorderWidth;
-  BCPixelSize mBottomContBorderWidth;
+  BCPixelSize mBStartContBorderWidth;
+  BCPixelSize mBEndContBorderWidth;
 };
 
 inline nsTableColGroupFrame::nsTableColGroupFrame(nsStyleContext *aContext)

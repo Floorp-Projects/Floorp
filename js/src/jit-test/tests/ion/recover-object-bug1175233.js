@@ -28,8 +28,8 @@ function f(j) {
       i: i,
       v: i + i
     };
-    assertRecoveredOnBailout(obj, true);
-    assertRecoveredOnBailout(obj.v, true);
+    assertRecoveredOnBailout(obj, false); // :TODO: Fixed by Bug 1165348
+    assertRecoveredOnBailout(obj.v, false); // :TODO: Fixed by Bug 1165348
     if (uceFault(j) || uceFault(j)) {
         // MObjectState::recover should neither fail,
         // nor coerce its result to an int32.

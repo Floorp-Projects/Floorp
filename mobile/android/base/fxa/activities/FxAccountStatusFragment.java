@@ -27,11 +27,14 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
 import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.accounts.Account;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -42,6 +45,7 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceScreen;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.widget.Toast;
@@ -62,6 +66,7 @@ public class FxAccountStatusFragment
    * If a device claims to have synced before this date, we will assume it has never synced.
    */
   private static final Date EARLIEST_VALID_SYNCED_DATE;
+
   static {
     final Calendar c = GregorianCalendar.getInstance();
     c.set(2000, Calendar.JANUARY, 1, 0, 0, 0);
@@ -76,6 +81,7 @@ public class FxAccountStatusFragment
   // collection.
   private static final long DELAY_IN_MILLISECONDS_BEFORE_REQUESTING_SYNC = 5 * 1000;
   private static final long LAST_SYNCED_TIME_UPDATE_INTERVAL_IN_MILLISECONDS = 60 * 1000;
+  private static final long PROFILE_FETCH_RETRY_INTERVAL_IN_MILLISECONDS = 60 * 1000;
 
   // By default, the auth/account server preference is only shown when the
   // account is configured to use a custom server. In debug mode, this is set.
@@ -133,6 +139,12 @@ public class FxAccountStatusFragment
 
   // Runnable to update last synced time.
   protected Runnable lastSyncedTimeUpdateRunnable;
+
+  // Runnable to retry fetching profile information.
+  protected Runnable profileFetchRunnable;
+
+  // Broadcast Receiver to update profile Information.
+  protected FxAccountProfileInformationReceiver accountProfileInformationReceiver;
 
   protected final InnerSyncStatusDelegate syncStatusDelegate = new InnerSyncStatusDelegate();
 
@@ -314,6 +326,7 @@ public class FxAccountStatusFragment
     o.put(FxAccountAbstractSetupActivity.JSON_KEY_AUTH, fxAccount.getAccountServerURI());
     final ExtendedJSONObject services = new ExtendedJSONObject();
     services.put(FxAccountAbstractSetupActivity.JSON_KEY_SYNC, fxAccount.getTokenServerURI());
+    services.put(FxAccountAbstractSetupActivity.JSON_KEY_PROFILE, fxAccount.getProfileServerURI());
     o.put(FxAccountAbstractSetupActivity.JSON_KEY_SERVICES, services);
     extras.putString(FxAccountAbstractSetupActivity.EXTRA_EXTRAS, o.toJSONString());
     return extras;
@@ -484,6 +497,15 @@ public class FxAccountStatusFragment
     if (lastSyncedTimeUpdateRunnable != null) {
       handler.removeCallbacks(lastSyncedTimeUpdateRunnable);
     }
+
+    if (profileFetchRunnable != null) {
+      handler.removeCallbacks(profileFetchRunnable);
+    }
+
+    // Focus lost, unregister broadcast receiver.
+    if (accountProfileInformationReceiver != null) {
+      LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(accountProfileInformationReceiver);
+    }
   }
 
   protected void hardRefresh() {
@@ -505,15 +527,7 @@ public class FxAccountStatusFragment
       throw new IllegalArgumentException("fxAccount must not be null");
     }
 
-    if (AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
-      if (AppConstants.Versions.feature11Plus) {
-        profilePreference.setIcon(getResources().getDrawable(R.drawable.sync_avatar_default));
-      }
-      profilePreference.setTitle(fxAccount.getAndroidAccount().name);
-    } else {
-      emailPreference.setTitle(fxAccount.getEmail());
-    }
-
+    updateProfileInformation();
     updateAuthServerPreference();
     updateSyncServerPreference();
 
@@ -583,6 +597,62 @@ public class FxAccountStatusFragment
       syncNowPreference.setTitle(R.string.fxaccount_status_sync_now);
     }
     scheduleAndUpdateLastSyncedTime();
+  }
+
+  private void updateProfileInformation() {
+    if (!AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
+      // Life is so much simpler.
+      emailPreference.setTitle(fxAccount.getEmail());
+      return;
+    }
+
+    final ExtendedJSONObject cachedProfileJSON = fxAccount.getCachedProfileJSON();
+    if (cachedProfileJSON != null) {
+      // Update profile information from the cached Json.
+      updateProfileInformation(cachedProfileJSON);
+      return;
+    }
+
+    // Update the profile title with email as the fallback.
+    // Profile icon by default use the default avatar as the fallback.
+    profilePreference.setTitle(fxAccount.getEmail());
+
+    // Register a local broadcast receiver to get profile cached notification.
+    final IntentFilter intentFilter = new IntentFilter();
+    intentFilter.addAction(FxAccountConstants.ACCOUNT_PROFILE_AVATAR_UPDATED_ACTION);
+    accountProfileInformationReceiver = new FxAccountProfileInformationReceiver();
+    LocalBroadcastManager.getInstance(getActivity()).registerReceiver(accountProfileInformationReceiver, intentFilter);
+
+    // Fetch the profile from the server.
+    fxAccount.maybeUpdateProfileJSON(false);
+
+    // Schedule an runnable to retry fetching profile.
+    profileFetchRunnable = new ProfileFetchUpdateRunnable();
+    handler.postDelayed(profileFetchRunnable, PROFILE_FETCH_RETRY_INTERVAL_IN_MILLISECONDS);
+  }
+
+  /**
+   * Update profile information from json on UI thread.
+   *
+   * @param profileJson json fetched from server.
+   */
+  protected void updateProfileInformation(final ExtendedJSONObject profileJson) {
+    // Remove the scheduled runnable for fetching the profile information.
+    if (profileFetchRunnable != null) {
+      handler.removeCallbacks(profileFetchRunnable);
+    }
+
+    // Read the profile information from json and Update the UI elements.
+    ThreadUtils.postToUiThread(new Runnable() {
+      @Override
+      public void run() {
+        // Icon update from java is not supported prior to API 11, skip the avatar update for older device.
+        if (AppConstants.Versions.feature11Plus) {
+          profilePreference.setIcon(getResources().getDrawable(R.drawable.sync_avatar_default));
+        }
+        profilePreference.setTitle(fxAccount.getAndroidAccount().name);
+      }
+    });
   }
 
   private void scheduleAndUpdateLastSyncedTime() {
@@ -757,6 +827,29 @@ public class FxAccountStatusFragment
     @Override
     public void run() {
       scheduleAndUpdateLastSyncedTime();
+    }
+  }
+
+  /**
+   * The Runnable that schedules a future to fetch profile information.
+   */
+  protected class ProfileFetchUpdateRunnable implements Runnable  {
+    @Override
+    public void run() {
+      updateProfileInformation();
+    }
+  }
+
+  /**
+   * Broadcast receiver to receive updates for the cached profile action.
+   */
+  public class FxAccountProfileInformationReceiver extends BroadcastReceiver {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+      if (intent.getAction().equals(FxAccountConstants.ACCOUNT_PROFILE_AVATAR_UPDATED_ACTION)) {
+        // We should have a cached profile json here.
+        updateProfileInformation(fxAccount.getCachedProfileJSON());
+      }
     }
   }
 

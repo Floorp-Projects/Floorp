@@ -11,6 +11,7 @@ import org.mozilla.gecko.home.HomeConfig.ItemType;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,22 +19,22 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.squareup.picasso.Picasso;
-
 class PanelItemView extends LinearLayout {
-    private final TextView title;
-    private final TextView description;
-    private final ImageView image;
-    private final LinearLayout titleDescContainer;
+    private final TextView titleView;
+    private final TextView descriptionView;
+    private final ImageView imageView;
+    private final LinearLayout titleDescContainerView;
+    private final ImageView backgroundView;
 
     private PanelItemView(Context context, int layoutId) {
         super(context);
 
         LayoutInflater.from(context).inflate(layoutId, this);
-        title = (TextView) findViewById(R.id.title);
-        description = (TextView) findViewById(R.id.description);
-        image = (ImageView) findViewById(R.id.image);
-        titleDescContainer = (LinearLayout) findViewById(R.id.title_desc_container);
+        titleView = (TextView) findViewById(R.id.title);
+        descriptionView = (TextView) findViewById(R.id.description);
+        imageView = (ImageView) findViewById(R.id.image);
+        backgroundView = (ImageView) findViewById(R.id.background);
+        titleDescContainerView = (LinearLayout) findViewById(R.id.title_desc_container);
     }
 
     public void updateFromCursor(Cursor cursor) {
@@ -42,35 +43,58 @@ class PanelItemView extends LinearLayout {
 
         // Only show title if the item has one
         final boolean hasTitle = !TextUtils.isEmpty(titleText);
-        title.setVisibility(hasTitle ? View.VISIBLE : View.GONE);
-        titleDescContainer.setVisibility(hasTitle ? View.VISIBLE : View.GONE);
+        titleView.setVisibility(hasTitle ? View.VISIBLE : View.GONE);
         if (hasTitle) {
-            title.setText(titleText);
+            titleView.setText(titleText);
         }
 
         int descriptionIndex = cursor.getColumnIndexOrThrow(HomeItems.DESCRIPTION);
         final String descriptionText = cursor.getString(descriptionIndex);
 
         // Only show description if the item has one
+        // Descriptions are not supported for IconItemView objects (Bug 1157539)
         final boolean hasDescription = !TextUtils.isEmpty(descriptionText);
-        description.setVisibility(hasDescription ? View.VISIBLE : View.GONE);
-        if (hasDescription) {
-            description.setText(descriptionText);
+        if (descriptionView != null) {
+            descriptionView.setVisibility(hasDescription ? View.VISIBLE : View.GONE);
+            if (hasDescription) {
+                descriptionView.setText(descriptionText);
+            }
         }
-
-        titleDescContainer.setVisibility(hasTitle || hasDescription ? View.VISIBLE : View.GONE);
+        if (titleDescContainerView != null) {
+            titleDescContainerView.setVisibility(hasTitle || hasDescription ? View.VISIBLE : View.GONE);
+        }
 
         int imageIndex = cursor.getColumnIndexOrThrow(HomeItems.IMAGE_URL);
         final String imageUrl = cursor.getString(imageIndex);
 
         // Only try to load the image if the item has define image URL
         final boolean hasImageUrl = !TextUtils.isEmpty(imageUrl);
-        image.setVisibility(hasImageUrl ? View.VISIBLE : View.GONE);
+        imageView.setVisibility(hasImageUrl ? View.VISIBLE : View.GONE);
 
         if (hasImageUrl) {
             ImageLoader.with(getContext())
                        .load(imageUrl)
-                       .into(image);
+                       .into(imageView);
+        }
+
+        final int columnIndexBackgroundColor = cursor.getColumnIndex(HomeItems.BACKGROUND_COLOR);
+        if (columnIndexBackgroundColor != -1) {
+            final String color = cursor.getString(columnIndexBackgroundColor);
+            if (!TextUtils.isEmpty(color)) {
+                setBackgroundColor(Color.parseColor(color));
+            }
+        }
+
+        // Backgrounds are only supported for IconItemView objects (Bug 1157539)
+        final int columnIndexBackgroundUrl = cursor.getColumnIndex(HomeItems.BACKGROUND_URL);
+        if (columnIndexBackgroundUrl != -1) {
+            final String backgroundUrl = cursor.getString(columnIndexBackgroundUrl);
+            if (backgroundView != null && !TextUtils.isEmpty(backgroundUrl)) {
+                ImageLoader.with(getContext())
+                        .load(backgroundUrl)
+                        .fit()
+                        .into(backgroundView);
+            }
         }
     }
 
@@ -88,6 +112,12 @@ class PanelItemView extends LinearLayout {
         }
     }
 
+    private static class IconItemView extends PanelItemView {
+        private IconItemView(Context context) {
+            super(context, R.layout.panel_icon_item);
+        }
+    }
+
     public static PanelItemView create(Context context, ItemType itemType) {
         switch(itemType) {
             case ARTICLE:
@@ -95,6 +125,9 @@ class PanelItemView extends LinearLayout {
 
             case IMAGE:
                 return new ImageItemView(context);
+
+            case ICON:
+                return new IconItemView(context);
 
             default:
                 throw new IllegalArgumentException("Could not create panel item view from " + itemType);

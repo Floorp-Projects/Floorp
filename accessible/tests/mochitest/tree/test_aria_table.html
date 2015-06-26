@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ARIA table tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // table having rowgroups
+
+      var accTree =
+        { TABLE: [
+          { GROUPING: [
+            { ROW: [
+              { CELL: [
+                { TEXT_LEAF: [ ] }
+              ] }
+            ] }
+          ] },
+        ] };
+
+      testAccessibleTree("table", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="support ARIA table and cell roles"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1173364">
+    Bug 1173364
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="table" role="table">
+    <div role="rowgroup">
+      <div role="row">
+        <div role="cell">cell</div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
