@@ -2332,14 +2332,11 @@ nsPresContext::NotifyMissingFonts()
 void
 nsPresContext::EnsureSafeToHandOutCSSRules()
 {
-  CSSStyleSheet::EnsureUniqueInnerResult res =
-    mShell->StyleSet()->EnsureUniqueInnerOnCSSSheets();
-  if (res == CSSStyleSheet::eUniqueInner_AlreadyUnique) {
+  if (!mShell->StyleSet()->EnsureUniqueInnerOnCSSSheets()) {
     // Nothing to do.
     return;
   }
 
-  MOZ_ASSERT(res == CSSStyleSheet::eUniqueInner_ClonedInner);
   RebuildAllStyleData(nsChangeHint(0), eRestyle_Subtree);
 }
 
