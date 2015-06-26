@@ -33,6 +33,11 @@
                         android:title="@string/pref_zoom_force_enabled"
                         android:summary="@string/pref_zoom_force_enabled_summary" />
 
+    <CheckBoxPreference android:key="android.not_a_preference.voice_search_enabled"
+                        android:title="@string/pref_voice_input"
+                        android:summary="@string/pref_voice_input_summary"
+                        android:defaultValue="true"/>
+
     <PreferenceCategory android:title="@string/pref_category_advanced">
 
         <CheckBoxPreference

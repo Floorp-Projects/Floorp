@@ -43,6 +43,7 @@ import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.VoiceRecognizerUtils;
 import org.mozilla.gecko.widget.FloatingHintEditText;
 
 import android.app.ActionBar;
@@ -128,6 +129,7 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_TRACKING_PROTECTION = "privacy.trackingprotection.enabled";
     private static final String PREFS_TRACKING_PROTECTION_LEARN_MORE = NON_PREF_PREFIX + "trackingprotection.learn_more";
     public static final String PREFS_OPEN_URLS_IN_PRIVATE = NON_PREF_PREFIX + "openExternalURLsPrivately";
+    public static final String PREFS_VOICE_INPUT_ENABLED = NON_PREF_PREFIX + "voice_input_enabled";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
 
@@ -784,6 +786,12 @@ OnSharedPreferenceChangeListener
                     }
                 } else if (!(AppConstants.MOZ_ANDROID_TAB_QUEUE && AppConstants.NIGHTLY_BUILD) && PREFS_TAB_QUEUE.equals(key)) {
                     // Only show tab queue pref on nightly builds with the tab queue build flag.
+                    preferences.removePreference(pref);
+                    i--;
+                    continue;
+                } else if (PREFS_VOICE_INPUT_ENABLED.equals(key) &&
+                           (!AppConstants.NIGHTLY_BUILD || !VoiceRecognizerUtils.supportsVoiceRecognizer(getApplicationContext(), getResources().getString(R.string.voicesearch_prompt)))) {
+                    // Remove UI for voice input on non nightly builds.
                     preferences.removePreference(pref);
                     i--;
                     continue;
