@@ -96,12 +96,12 @@ this.UITour = {
   targets: new Map([
     ["accountStatus", {
       query: (aDocument) => {
-        let statusButton = aDocument.getElementById("PanelUI-fxa-label");
+        let statusButton = aDocument.getElementById("PanelUI-fxa-status");
         return aDocument.getAnonymousElementByAttribute(statusButton,
                                                         "class",
                                                         "toolbarbutton-icon");
       },
-      widgetName: "PanelUI-fxa-label",
+      widgetName: "PanelUI-fxa-status",
     }],
     ["addons",      {query: "#add-ons-button"}],
     ["appMenu",     {
