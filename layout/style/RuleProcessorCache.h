@@ -70,7 +70,7 @@ private:
   class ExpirationTracker : public nsExpirationTracker<nsCSSRuleProcessor,3>
   {
   public:
-    ExpirationTracker(RuleProcessorCache* aCache)
+    explicit ExpirationTracker(RuleProcessorCache* aCache)
       : nsExpirationTracker<nsCSSRuleProcessor,3>(10000)
       , mCache(aCache) {}
 
