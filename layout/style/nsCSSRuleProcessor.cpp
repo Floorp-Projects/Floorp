@@ -54,6 +54,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Likely.h"
 #include "mozilla/TypedEnumBits.h"
+#include "RuleProcessorCache.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1005,7 +1006,8 @@ nsCSSRuleProcessor::nsCSSRuleProcessor(const sheet_array_type& aSheets,
                                        uint8_t aSheetType,
                                        Element* aScopeElement,
                                        nsCSSRuleProcessor*
-                                         aPreviousCSSRuleProcessor)
+                                         aPreviousCSSRuleProcessor,
+                                       bool aIsShared)
   : mSheets(aSheets)
   , mRuleCascades(nullptr)
   , mPreviousCacheKey(aPreviousCSSRuleProcessor
@@ -1013,7 +1015,14 @@ nsCSSRuleProcessor::nsCSSRuleProcessor(const sheet_array_type& aSheets,
                        : UniquePtr<nsMediaQueryResultCacheKey>())
   , mLastPresContext(nullptr)
   , mScopeElement(aScopeElement)
+  , mStyleSetRefCnt(0)
   , mSheetType(aSheetType)
+  , mIsShared(aIsShared)
+  , mMustGatherDocumentRules(aIsShared)
+  , mInRuleProcessorCache(false)
+#ifdef DEBUG
+  , mDocumentRulesAndCacheKeyValid(false)
+#endif
 {
   NS_ASSERTION(!!mScopeElement == (aSheetType == nsStyleSet::eScopedDocSheet),
                "aScopeElement must be specified iff aSheetType is "
@@ -1025,6 +1034,11 @@ nsCSSRuleProcessor::nsCSSRuleProcessor(const sheet_array_type& aSheets,
 
 nsCSSRuleProcessor::~nsCSSRuleProcessor()
 {
+  if (mInRuleProcessorCache) {
+    RuleProcessorCache::RemoveRuleProcessor(this);
+  }
+  MOZ_ASSERT(!mExpirationState.IsTracked());
+  MOZ_ASSERT(mStyleSetRefCnt == 0);
   ClearSheets();
   ClearRuleCascades();
 }
@@ -2990,6 +3004,23 @@ nsCSSRuleProcessor::ClearRuleCascades()
     mPreviousCacheKey = CloneMQCacheKey();
   }
 
+  // No need to remove the rule processor from the RuleProcessorCache here,
+  // since CSSStyleSheet::ClearRuleCascades will have called
+  // RuleProcessorCache::RemoveSheet() passing itself, which will catch
+  // this rule processor (and any others for different @-moz-document
+  // cache key results).
+  MOZ_ASSERT(!RuleProcessorCache::HasRuleProcessor(this));
+
+#ifdef DEBUG
+  // For shared rule processors, if we've already gathered document
+  // rules, then they will now be out of date.  We don't actually need
+  // them to be up-to-date (see the comment in RefreshRuleCascade), so
+  // record their invalidity so we can assert if we try to use them.
+  if (!mMustGatherDocumentRules) {
+    mDocumentRulesAndCacheKeyValid = false;
+  }
+#endif
+
   // We rely on our caller (perhaps indirectly) to do something that
   // will rebuild style data and the user font set (either
   // nsIPresShell::ReconstructStyleData or
@@ -3287,17 +3318,23 @@ struct CascadeEnumData {
                   nsTArray<nsCSSFontFeatureValuesRule*>& aFontFeatureValuesRules,
                   nsTArray<nsCSSPageRule*>& aPageRules,
                   nsTArray<nsCSSCounterStyleRule*>& aCounterStyleRules,
+                  nsTArray<css::DocumentRule*>& aDocumentRules,
                   nsMediaQueryResultCacheKey& aKey,
-                  uint8_t aSheetType)
+                  nsDocumentRuleResultCacheKey& aDocumentKey,
+                  uint8_t aSheetType,
+                  bool aMustGatherDocumentRules)
     : mPresContext(aPresContext),
       mFontFaceRules(aFontFaceRules),
       mKeyframesRules(aKeyframesRules),
       mFontFeatureValuesRules(aFontFeatureValuesRules),
       mPageRules(aPageRules),
       mCounterStyleRules(aCounterStyleRules),
+      mDocumentRules(aDocumentRules),
       mCacheKey(aKey),
+      mDocumentCacheKey(aDocumentKey),
       mRulesByWeight(&gRulesByWeightOps, sizeof(RuleByWeightEntry), 32),
-      mSheetType(aSheetType)
+      mSheetType(aSheetType),
+      mMustGatherDocumentRules(aMustGatherDocumentRules)
   {
     // Initialize our arena
     PL_INIT_ARENA_POOL(&mArena, "CascadeEnumDataArena",
@@ -3315,13 +3352,60 @@ struct CascadeEnumData {
   nsTArray<nsCSSFontFeatureValuesRule*>& mFontFeatureValuesRules;
   nsTArray<nsCSSPageRule*>& mPageRules;
   nsTArray<nsCSSCounterStyleRule*>& mCounterStyleRules;
+  nsTArray<css::DocumentRule*>& mDocumentRules;
   nsMediaQueryResultCacheKey& mCacheKey;
+  nsDocumentRuleResultCacheKey& mDocumentCacheKey;
   PLArenaPool mArena;
   // Hooray, a manual PLDHashTable since nsClassHashtable doesn't
   // provide a getter that gives me a *reference* to the value.
   PLDHashTable mRulesByWeight; // of PerWeightDataListItem linked lists
   uint8_t mSheetType;
+  bool mMustGatherDocumentRules;
 };
+
+/**
+ * Recursively traverses rules in order to:
+ *  (1) add any @-moz-document rules into data->mDocumentRules.
+ *  (2) record any @-moz-document rules whose conditions evaluate to true
+ *      on data->mDocumentCacheKey.
+ *
+ * See also CascadeRuleEnumFunc below, which calls us via
+ * EnumerateRulesForwards.  If modifying this function you may need to
+ * update CascadeRuleEnumFunc too.
+ */
+static bool
+GatherDocRuleEnumFunc(css::Rule* aRule, void* aData)
+{
+  CascadeEnumData* data = (CascadeEnumData*)aData;
+  int32_t type = aRule->GetType();
+
+  MOZ_ASSERT(data->mMustGatherDocumentRules,
+             "should only call GatherDocRuleEnumFunc if "
+             "mMustGatherDocumentRules is true");
+
+  if (css::Rule::MEDIA_RULE == type ||
+      css::Rule::SUPPORTS_RULE == type) {
+    css::GroupRule* groupRule = static_cast<css::GroupRule*>(aRule);
+    if (!groupRule->EnumerateRulesForwards(GatherDocRuleEnumFunc, aData)) {
+      return false;
+    }
+  }
+  else if (css::Rule::DOCUMENT_RULE == type) {
+    css::DocumentRule* docRule = static_cast<css::DocumentRule*>(aRule);
+    if (!data->mDocumentRules.AppendElement(docRule)) {
+      return false;
+    }
+    if (docRule->UseForPresentation(data->mPresContext)) {
+      if (!data->mDocumentCacheKey.AddMatchingRule(docRule)) {
+        return false;
+      }
+    }
+    if (!docRule->EnumerateRulesForwards(GatherDocRuleEnumFunc, aData)) {
+      return false;
+    }
+  }
+  return true;
+}
 
 /*
  * This enumerates style rules in a sheet (and recursively into any
@@ -3335,6 +3419,21 @@ struct CascadeEnumData {
  *      into data->mFontFeatureValuesRules.
  *  (5) add any @page rules, in order, into data->mPageRules.
  *  (6) add any @counter-style rules, in order, into data->mCounterStyleRules.
+ *  (7) add any @-moz-document rules into data->mDocumentRules.
+ *  (8) record any @-moz-document rules whose conditions evaluate to true
+ *      on data->mDocumentCacheKey.
+ *
+ * See also GatherDocRuleEnumFunc above, which we call to traverse into
+ * @-moz-document rules even if their (or an ancestor's) condition
+ * fails.  This means we might look at the result of some @-moz-document
+ * rules that don't actually affect whether a RuleProcessorCache lookup
+ * is a hit or a miss.  The presence of @-moz-document rules inside
+ * @media etc. rules should be rare, and looking at all of them in the
+ * sheets lets us avoid the complication of having different document
+ * cache key results for different media.
+ *
+ * If modifying this function you may need to update
+ * GatherDocRuleEnumFunc too.
  */
 static bool
 CascadeRuleEnumFunc(css::Rule* aRule, void* aData)
@@ -3365,12 +3464,38 @@ CascadeRuleEnumFunc(css::Rule* aRule, void* aData)
     }
   }
   else if (css::Rule::MEDIA_RULE == type ||
-           css::Rule::DOCUMENT_RULE == type ||
            css::Rule::SUPPORTS_RULE == type) {
     css::GroupRule* groupRule = static_cast<css::GroupRule*>(aRule);
-    if (groupRule->UseForPresentation(data->mPresContext, data->mCacheKey))
-      if (!groupRule->EnumerateRulesForwards(CascadeRuleEnumFunc, aData))
+    const bool use =
+      groupRule->UseForPresentation(data->mPresContext, data->mCacheKey);
+    if (use || data->mMustGatherDocumentRules) {
+      if (!groupRule->EnumerateRulesForwards(use ? CascadeRuleEnumFunc :
+                                                   GatherDocRuleEnumFunc,
+                                             aData)) {
         return false;
+      }
+    }
+  }
+  else if (css::Rule::DOCUMENT_RULE == type) {
+    css::DocumentRule* docRule = static_cast<css::DocumentRule*>(aRule);
+    if (data->mMustGatherDocumentRules) {
+      if (!data->mDocumentRules.AppendElement(docRule)) {
+        return false;
+      }
+    }
+    const bool use = docRule->UseForPresentation(data->mPresContext);
+    if (use && data->mMustGatherDocumentRules) {
+      if (!data->mDocumentCacheKey.AddMatchingRule(docRule)) {
+        return false;
+      }
+    }
+    if (use || data->mMustGatherDocumentRules) {
+      if (!docRule->EnumerateRulesForwards(use ? CascadeRuleEnumFunc
+                                               : GatherDocRuleEnumFunc,
+                                           aData)) {
+        return false;
+      }
+    }
   }
   else if (css::Rule::FONT_FACE_RULE == type) {
     nsCSSFontFaceRule *fontFaceRule = static_cast<nsCSSFontFaceRule*>(aRule);
@@ -3493,8 +3618,12 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
                            newCascade->mFontFeatureValuesRules,
                            newCascade->mPageRules,
                            newCascade->mCounterStyleRules,
+                           mDocumentRules,
                            newCascade->mCacheKey,
-                           mSheetType);
+                           mDocumentCacheKey,
+                           mSheetType,
+                           mMustGatherDocumentRules);
+
       for (uint32_t i = 0; i < mSheets.Length(); ++i) {
         if (!CascadeSheet(mSheets.ElementAt(i), &data))
           return; /* out of memory */
@@ -3538,6 +3667,40 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
         newCascade->mCounterStyleRuleTable.Put(rule->GetName(), rule);
       }
 
+      // mMustGatherDocumentRules controls whether we build mDocumentRules
+      // and mDocumentCacheKey so that they can be used as keys by the
+      // RuleProcessorCache, as obtained by TakeDocumentRulesAndCacheKey
+      // later.  We set it to false just below so that we only do this
+      // the first time we build a RuleProcessorCache for a shared rule
+      // processor.
+      //
+      // An up-to-date mDocumentCacheKey is only needed if we
+      // are still in the RuleProcessorCache (as we store a copy of the
+      // cache key in the RuleProcessorCache), and an up-to-date
+      // mDocumentRules is only needed at the time TakeDocumentRulesAndCacheKey
+      // is called, which is immediately after the rule processor is created
+      // (by nsStyleSet).
+      //
+      // Note that when nsCSSRuleProcessor::ClearRuleCascades is called,
+      // by CSSStyleSheet::ClearRuleCascades, we will have called
+      // RuleProcessorCache::RemoveSheet, which will remove the rule
+      // processor from the cache.  (This is because the list of document
+      // rules now may not match the one used as they key in the
+      // RuleProcessorCache.)
+      //
+      // Thus, as we'll no longer be in the RuleProcessorCache, and we won't
+      // have TakeDocumentRulesAndCacheKey called on us, we don't need to ensure
+      // mDocumentCacheKey and mDocumentRules are up-to-date after the
+      // first time GetRuleCascade is called.
+      if (mMustGatherDocumentRules) {
+        mDocumentRules.Sort();
+        mDocumentCacheKey.Finalize();
+        mMustGatherDocumentRules = false;
+#ifdef DEBUG
+        mDocumentRulesAndCacheKeyValid = true;
+#endif
+      }
+
       // Ensure that the current one is always mRuleCascades.
       newCascade->mNext = mRuleCascades;
       mRuleCascades = newCascade.forget();
@@ -3573,6 +3736,45 @@ nsCSSRuleProcessor::SelectorListMatches(Element* aElement,
   }
 
   return false;
+}
+
+void
+nsCSSRuleProcessor::TakeDocumentRulesAndCacheKey(
+    nsPresContext* aPresContext,
+    nsTArray<css::DocumentRule*>& aDocumentRules,
+    nsDocumentRuleResultCacheKey& aCacheKey)
+{
+  MOZ_ASSERT(mIsShared);
+
+  GetRuleCascade(aPresContext);
+  MOZ_ASSERT(mDocumentRulesAndCacheKeyValid);
+
+  aDocumentRules.Clear();
+  aDocumentRules.SwapElements(mDocumentRules);
+  aCacheKey.Swap(mDocumentCacheKey);
+
+#ifdef DEBUG
+  mDocumentRulesAndCacheKeyValid = false;
+#endif
+}
+
+void
+nsCSSRuleProcessor::AddStyleSetRef()
+{
+  MOZ_ASSERT(mIsShared);
+  if (++mStyleSetRefCnt == 1) {
+    RuleProcessorCache::StopTracking(this);
+  }
+}
+
+void
+nsCSSRuleProcessor::ReleaseStyleSetRef()
+{
+  MOZ_ASSERT(mIsShared);
+  MOZ_ASSERT(mStyleSetRefCnt > 0);
+  if (--mStyleSetRefCnt == 0 && mInRuleProcessorCache) {
+    RuleProcessorCache::StartTracking(this);
+  }
 }
 
 // TreeMatchContext and AncestorFilter out of line methods

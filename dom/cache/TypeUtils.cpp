@@ -223,6 +223,11 @@ TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
   ToHeadersEntryList(aOut.headers(), headers);
   aOut.headersGuard() = headers->Guard();
   aOut.channelInfo() = aIn.GetChannelInfo().AsIPCChannelInfo();
+  if (aIn.GetPrincipalInfo()) {
+    aOut.principalInfo() = *aIn.GetPrincipalInfo();
+  } else {
+    aOut.principalInfo() = void_t();
+  }
 }
 
 void
@@ -289,6 +294,10 @@ TypeUtils::ToResponse(const CacheResponse& aIn)
   MOZ_ASSERT(!result.Failed());
 
   ir->InitChannelInfo(aIn.channelInfo());
+  if (aIn.principalInfo().type() == mozilla::ipc::OptionalPrincipalInfo::TPrincipalInfo) {
+    UniquePtr<mozilla::ipc::PrincipalInfo> info(new mozilla::ipc::PrincipalInfo(aIn.principalInfo().get_PrincipalInfo()));
+    ir->SetPrincipalInfo(Move(info));
+  }
 
   nsCOMPtr<nsIInputStream> stream = ReadStream::Create(aIn.body());
   ir->SetBody(stream);

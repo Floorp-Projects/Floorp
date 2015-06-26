@@ -13404,7 +13404,7 @@ class CGExampleClass(CGBindingImplClass):
             ccImpl = dedent("""
 
                 // Only needed for refcounted objects.
-                NS_IMPL_CYCLE_COLLECTION_INHERITED_0(${nativeType}, ${parentType})
+                #error "If you don't have members that need cycle collection, then remove all the cycle collection bits from this implementation and the corresponding header.  If you do, you want NS_IMPL_CYCLE_COLLECTION_INHERITED(${nativeType}, ${parentType}, your, members, here)"
                 NS_IMPL_ADDREF_INHERITED(${nativeType}, ${parentType})
                 NS_IMPL_RELEASE_INHERITED(${nativeType}, ${parentType})
                 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${nativeType})

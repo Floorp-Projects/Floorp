@@ -49,6 +49,13 @@ IsCacheOrphaned(mozIStorageConnection* aConn, CacheId aCacheId,
                 bool* aOrphanedOut);
 
 nsresult
+FindOrphanedCacheIds(mozIStorageConnection* aConn,
+                     nsTArray<CacheId>& aOrphanedListOut);
+
+nsresult
+GetKnownBodyIds(mozIStorageConnection* aConn, nsTArray<nsID>& aBodyIdListOut);
+
+nsresult
 CacheMatch(mozIStorageConnection* aConn, CacheId aCacheId,
            const CacheRequest& aRequest, const CacheQueryParams& aParams,
            bool* aFoundResponseOut, SavedResponse* aSavedResponseOut);

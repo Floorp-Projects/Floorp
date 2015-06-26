@@ -64,7 +64,7 @@ Event::ConstructorInit(EventTarget* aOwner,
                        WidgetEvent* aEvent)
 {
   SetOwner(aOwner);
-  mIsMainThreadEvent = mOwner || NS_IsMainThread();
+  mIsMainThreadEvent = NS_IsMainThread();
 
   if (mIsMainThreadEvent && !sReturnHighResTimeStampIsSet) {
     Preferences::AddBoolVarCache(&sReturnHighResTimeStamp,

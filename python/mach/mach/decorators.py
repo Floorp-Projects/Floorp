@@ -144,7 +144,7 @@ def CommandProvider(cls):
 
         seen_commands.add(command.name)
 
-        if command.conditions is None and Registrar.require_conditions:
+        if not command.conditions and Registrar.require_conditions:
             continue
 
         msg = 'Mach command \'%s\' implemented incorrectly. ' + \

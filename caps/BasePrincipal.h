@@ -48,6 +48,11 @@ public:
   bool PopulateFromSuffix(const nsACString& aStr);
 
   void CookieJar(nsACString& aStr);
+
+  // Populates the attributes from a string like
+  // |uri!key1=value1&key2=value2| and returns the uri without the suffix.
+  bool PopulateFromOrigin(const nsACString& aOrigin,
+                          nsACString& aOriginNoSuffix);
 };
 
 /*
