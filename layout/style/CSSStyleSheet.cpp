@@ -1186,6 +1186,20 @@ CSSStyleSheet::DropRuleProcessor(nsCSSRuleProcessor* aProcessor)
            : NS_ERROR_FAILURE;
 }
 
+void
+CSSStyleSheet::AddStyleSet(nsStyleSet* aStyleSet)
+{
+  NS_ASSERTION(!mStyleSets.Contains(aStyleSet),
+               "style set already registered");
+  mStyleSets.AppendElement(aStyleSet);
+}
+
+void
+CSSStyleSheet::DropStyleSet(nsStyleSet* aStyleSet)
+{
+  DebugOnly<bool> found = mStyleSets.RemoveElement(aStyleSet);
+  NS_ASSERTION(found, "didn't find style set");
+}
 
 void
 CSSStyleSheet::SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI,
@@ -1487,7 +1501,7 @@ CSSStyleSheet::StyleSheetCount() const
   return count;
 }
 
-CSSStyleSheet::EnsureUniqueInnerResult
+void
 CSSStyleSheet::EnsureUniqueInner()
 {
   mDirty = true;
@@ -1495,7 +1509,8 @@ CSSStyleSheet::EnsureUniqueInner()
   MOZ_ASSERT(mInner->mSheets.Length() != 0,
              "unexpected number of outers");
   if (mInner->mSheets.Length() == 1) {
-    return eUniqueInner_AlreadyUnique;
+    // already unique
+    return;
   }
   CSSStyleSheetInner* clone = mInner->CloneFor(this);
   MOZ_ASSERT(clone);
@@ -1505,7 +1520,12 @@ CSSStyleSheet::EnsureUniqueInner()
   // otherwise the rule processor has pointers to the old rules
   ClearRuleCascades();
 
-  return eUniqueInner_ClonedInner;
+  // let our containing style sets know that if we call
+  // nsPresContext::EnsureSafeToHandOutCSSRules we will need to restyle the
+  // document
+  for (nsStyleSet* styleSet : mStyleSets) {
+    styleSet->SetNeedsRestyleAfterEnsureUniqueInner();
+  }
 }
 
 void

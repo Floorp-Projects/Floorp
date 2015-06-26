@@ -212,6 +212,9 @@ public:
   nsresult AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
   nsresult DropRuleProcessor(nsCSSRuleProcessor* aProcessor);
 
+  void AddStyleSet(nsStyleSet* aStyleSet);
+  void DropStyleSet(nsStyleSet* aStyleSet);
+
   /**
    * Like the DOM insertRule() method, but doesn't do any security checks
    */
@@ -226,14 +229,7 @@ public:
   NS_IMETHOD StyleSheetLoaded(CSSStyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus) override;
 
-  enum EnsureUniqueInnerResult {
-    // No work was needed to ensure a unique inner.
-    eUniqueInner_AlreadyUnique,
-    // A clone was done to ensure a unique inner (which means the style
-    // rules in this sheet have changed).
-    eUniqueInner_ClonedInner
-  };
-  EnsureUniqueInnerResult EnsureUniqueInner();
+  void EnsureUniqueInner();
 
   // Append all of this sheet's child sheets to aArray.
   void AppendAllChildSheets(nsTArray<CSSStyleSheet*>& aArray);
@@ -366,6 +362,7 @@ protected:
   CSSStyleSheetInner*   mInner;
 
   nsAutoTArray<nsCSSRuleProcessor*, 8>* mRuleProcessors;
+  nsTArray<nsStyleSet*> mStyleSets;
 
   friend class ::nsMediaList;
   friend class ::nsCSSRuleProcessor;

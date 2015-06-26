@@ -151,6 +151,16 @@ static const nsStyleSet::sheetType gCSSSheetTypes[] = {
   nsStyleSet::eOverrideSheet
 };
 
+static bool IsCSSSheetType(nsStyleSet::sheetType aSheetType)
+{
+  for (nsStyleSet::sheetType type : gCSSSheetTypes) {
+    if (type == aSheetType) {
+      return true;
+    }
+  }
+  return false;
+}
+
 nsStyleSet::nsStyleSet()
   : mRuleTree(nullptr),
     mBatching(0),
@@ -158,9 +168,19 @@ nsStyleSet::nsStyleSet()
     mAuthorStyleDisabled(false),
     mInReconstruct(false),
     mInitFontFeatureValuesLookup(true),
+    mNeedsRestyleAfterEnsureUniqueInner(false),
     mDirty(0),
     mUnusedRuleNodeCount(0)
 {
+}
+
+nsStyleSet::~nsStyleSet()
+{
+  for (sheetType type : gCSSSheetTypes) {
+    for (uint32_t i = 0, n = mSheets[type].Length(); i < n; i++) {
+      static_cast<CSSStyleSheet*>(mSheets[type][i])->DropStyleSet(this);
+    }
+  }
 }
 
 size_t
@@ -500,9 +520,13 @@ nsStyleSet::AppendStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
   NS_PRECONDITION(aSheet, "null arg");
   NS_ASSERTION(aSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
-  mSheets[aType].RemoveObject(aSheet);
+  bool present = mSheets[aType].RemoveObject(aSheet);
   if (!mSheets[aType].AppendObject(aSheet))
     return NS_ERROR_OUT_OF_MEMORY;
+
+  if (!present && IsCSSSheetType(aType)) {
+    static_cast<CSSStyleSheet*>(aSheet)->AddStyleSet(this);
+  }
 
   return DirtyRuleProcessors(aType);
 }
@@ -513,9 +537,13 @@ nsStyleSet::PrependStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
   NS_PRECONDITION(aSheet, "null arg");
   NS_ASSERTION(aSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
-  mSheets[aType].RemoveObject(aSheet);
+  bool present = mSheets[aType].RemoveObject(aSheet);
   if (!mSheets[aType].InsertObjectAt(aSheet, 0))
     return NS_ERROR_OUT_OF_MEMORY;
+
+  if (!present && IsCSSSheetType(aType)) {
+    static_cast<CSSStyleSheet*>(aSheet)->AddStyleSet(this);
+  }
 
   return DirtyRuleProcessors(aType);
 }
@@ -526,7 +554,11 @@ nsStyleSet::RemoveStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
   NS_PRECONDITION(aSheet, "null arg");
   NS_ASSERTION(aSheet->IsComplete(),
                "Incomplete sheet being removed from style set");
-  mSheets[aType].RemoveObject(aSheet);
+  if (mSheets[aType].RemoveObject(aSheet)) {
+    if (IsCSSSheetType(aType)) {
+      static_cast<CSSStyleSheet*>(aSheet)->DropStyleSet(this);
+    }
+  }
 
   return DirtyRuleProcessors(aType);
 }
@@ -535,9 +567,22 @@ nsresult
 nsStyleSet::ReplaceSheets(sheetType aType,
                           const nsCOMArray<nsIStyleSheet> &aNewSheets)
 {
+  bool cssSheetType = IsCSSSheetType(aType);
+  if (cssSheetType) {
+    for (uint32_t i = 0, n = mSheets[aType].Length(); i < n; i++) {
+      static_cast<CSSStyleSheet*>(mSheets[aType][i])->DropStyleSet(this);
+    }
+  }
+
   mSheets[aType].Clear();
   if (!mSheets[aType].AppendObjects(aNewSheets))
     return NS_ERROR_OUT_OF_MEMORY;
+
+  if (cssSheetType) {
+    for (uint32_t i = 0, n = mSheets[aType].Length(); i < n; i++) {
+      static_cast<CSSStyleSheet*>(mSheets[aType][i])->AddStyleSet(this);
+    }
+  }
 
   return DirtyRuleProcessors(aType);
 }
@@ -550,13 +595,17 @@ nsStyleSet::InsertStyleSheetBefore(sheetType aType, nsIStyleSheet *aNewSheet,
   NS_ASSERTION(aNewSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
 
-  mSheets[aType].RemoveObject(aNewSheet);
+  bool present = mSheets[aType].RemoveObject(aNewSheet);
   int32_t idx = mSheets[aType].IndexOf(aReferenceSheet);
   if (idx < 0)
     return NS_ERROR_INVALID_ARG;
 
   if (!mSheets[aType].InsertObjectAt(aNewSheet, idx))
     return NS_ERROR_OUT_OF_MEMORY;
+
+  if (!present && IsCSSSheetType(aType)) {
+    static_cast<CSSStyleSheet*>(aNewSheet)->AddStyleSet(this);
+  }
 
   return DirtyRuleProcessors(aType);
 }
@@ -605,7 +654,7 @@ nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
                      eDocSheet;
   nsCOMArray<nsIStyleSheet>& sheets = mSheets[type];
 
-  sheets.RemoveObject(aSheet);
+  bool present = sheets.RemoveObject(aSheet);
   nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
 
   // lowest index first
@@ -631,6 +680,10 @@ nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
   }
   if (!sheets.InsertObjectAt(aSheet, index))
     return NS_ERROR_OUT_OF_MEMORY;
+
+  if (!present) {
+    static_cast<CSSStyleSheet*>(aSheet)->AddStyleSet(this);
+  }
 
   return DirtyRuleProcessors(type);
 }
@@ -2310,7 +2363,7 @@ nsStyleSet::MediumFeaturesChanged()
   return stylesChanged;
 }
 
-CSSStyleSheet::EnsureUniqueInnerResult
+bool
 nsStyleSet::EnsureUniqueInnerOnCSSSheets()
 {
   nsAutoTArray<CSSStyleSheet*, 32> queue;
@@ -2326,22 +2379,19 @@ nsStyleSet::EnsureUniqueInnerOnCSSSheets()
     mBindingManager->AppendAllSheets(queue);
   }
 
-  CSSStyleSheet::EnsureUniqueInnerResult res =
-    CSSStyleSheet::eUniqueInner_AlreadyUnique;
   while (!queue.IsEmpty()) {
     uint32_t idx = queue.Length() - 1;
     CSSStyleSheet* sheet = queue[idx];
     queue.RemoveElementAt(idx);
 
-    CSSStyleSheet::EnsureUniqueInnerResult sheetRes =
-      sheet->EnsureUniqueInner();
-    if (sheetRes == CSSStyleSheet::eUniqueInner_ClonedInner) {
-      res = sheetRes;
-    }
+    sheet->EnsureUniqueInner();
 
     // Enqueue all the sheet's children.
     sheet->AppendAllChildSheets(queue);
   }
+
+  bool res = mNeedsRestyleAfterEnsureUniqueInner;
+  mNeedsRestyleAfterEnsureUniqueInner = false;
   return res;
 }
 

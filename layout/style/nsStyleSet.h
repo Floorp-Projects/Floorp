@@ -83,10 +83,11 @@ public:
 // then handed off to the PresShell.  Only the PresShell should delete a
 // style set.
 
-class nsStyleSet
+class nsStyleSet final
 {
  public:
   nsStyleSet();
+  ~nsStyleSet();
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -381,7 +382,15 @@ class nsStyleSet
     --mUnusedRuleNodeCount;
   }
 
-  mozilla::CSSStyleSheet::EnsureUniqueInnerResult EnsureUniqueInnerOnCSSSheets();
+  // Returns true if a restyle of the document is needed due to cloning
+  // sheet inners.
+  bool EnsureUniqueInnerOnCSSSheets();
+
+  // Called by CSSStyleSheet::EnsureUniqueInner to let us know it cloned
+  // its inner.
+  void SetNeedsRestyleAfterEnsureUniqueInner() {
+    mNeedsRestyleAfterEnsureUniqueInner = true;
+  }
 
   nsIStyleRule* InitialStyleRule();
 
@@ -459,8 +468,8 @@ class nsStyleSet
   // The sheets in each array in mSheets are stored with the most significant
   // sheet last.
   // The arrays for ePresHintSheet, eStyleAttrSheet, eTransitionSheet,
-  // and eAnimationSheet are always empty.  (FIXME:  We should reduce
-  // the storage needed for them.)
+  // eAnimationSheet and eSVGAttrAnimationSheet are always empty.
+  // (FIXME:  We should reduce the storage needed for them.)
   nsCOMArray<nsIStyleSheet> mSheets[eSheetTypeCount];
 
   // mRuleProcessors[eScopedDocSheet] is always null; rule processors
@@ -482,6 +491,7 @@ class nsStyleSet
   unsigned mAuthorStyleDisabled: 1;
   unsigned mInReconstruct : 1;
   unsigned mInitFontFeatureValuesLookup : 1;
+  unsigned mNeedsRestyleAfterEnsureUniqueInner : 1;
   unsigned mDirty : 10;  // one dirty bit is used per sheet type
 
   uint32_t mUnusedRuleNodeCount; // used to batch rule node GC
