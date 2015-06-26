@@ -5,6 +5,8 @@
 
 "use strict";
 
+/*globals gSyncCheckIntervalSecs, gUpdateTimerManager, Sqlite, DB_PATH */
+
 this.EXPORTED_SYMBOLS = [ "HomeProvider" ];
 
 const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
@@ -125,18 +127,18 @@ function syncTimerCallback(timer) {
   }
 }
 
-this.HomeStorage = function(datasetId) {
+let HomeStorage = function(datasetId) {
   this.datasetId = datasetId;
 };
 
-this.ValidationError = function(message) {
+let ValidationError = function(message) {
   this.name = "ValidationError";
   this.message = message;
 };
 ValidationError.prototype = new Error();
 ValidationError.prototype.constructor = ValidationError;
 
-this.HomeProvider = Object.freeze({
+let HomeProvider = Object.freeze({
   ValidationError: ValidationError,
 
   /**
