@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>CSS Test: Remaining table height is divided evenly among non auto-sized columns (minus borders and cell spacing)</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
+        <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#fixed-table-layout">
+        <meta name="flags" content="">
+        <meta name="assert" content="Any remaining horizontal table space is divided evenly among columns which do not have specified heights (minus borders and cell spacing).">
+        <style type="text/css">
+            table
+            {
+	        writing-mode: vertical-lr;
+                background: blue;
+                border-collapse: separate;
+                border-spacing: 10px 0;
+                table-layout: fixed;
+                height: 130px;
+            }
+            td
+            {
+                background: blue;
+                border-top: 10px solid orange;
+                border-bottom: 10px solid orange;
+                width: 100px;
+                padding: 0;
+            }
+            #specified
+            {
+                height: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <p>Test passes if all of the blue lines below appear to have the same height.</p>
+            <table>
+                <tr>
+                    <td id="specified"></td>
+                    <td></td>
+                    <td></td>
+               </tr>
+            </table>
+    </body>
+</html>
