@@ -469,7 +469,7 @@ protected:
 
     // IME
     static TabParent *mIMETabParent;
-    ContentCache mContentCache;
+    ContentCacheInParent mContentCache;
 
     nsIntRect mRect;
     ScreenIntSize mDimensions;

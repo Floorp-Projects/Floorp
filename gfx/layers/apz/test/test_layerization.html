@@ -52,10 +52,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1173580
 
 // Scroll the mouse wheel over |element|.
 function scrollWheelOver(element) {
-  var scale = window.devicePixelRatio;
-  var rect = element.getBoundingClientRect();
-  var x = (rect.left + 10) * scale;
-  var y = (rect.top + 10) * scale;
+  var x = 10;
+  var y = 10;
   // Move the mouse to the desired wheel location.
   // Not doing so can result in the wheel events from two consecutive
   // scrollWheelOver() calls on different elements being incorrectly considered

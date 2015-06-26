@@ -166,10 +166,19 @@ public:
   IsOpen() const;
 
   bool
-  IsFinished() const
+  IsCommittingOrDone() const
   {
     AssertIsOnOwningThread();
-    return mReadyState > LOADING;
+
+    return mReadyState == COMMITTING || mReadyState == DONE;
+  }
+
+  bool
+  IsDone() const
+  {
+    AssertIsOnOwningThread();
+
+    return mReadyState == DONE;
   }
 
   bool

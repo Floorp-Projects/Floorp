@@ -19,6 +19,7 @@
 #include "nsCRT.h"
 #include "nsHttp.h"
 #include "nsICryptoHash.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/ResponseBinding.h"
@@ -282,6 +283,7 @@ CreateSchema(mozIStorageConnection* aConn)
         "response_headers_guard INTEGER NOT NULL, "
         "response_body_id TEXT NULL, "
         "response_security_info_id INTEGER NULL REFERENCES security_info(id), "
+        "response_principal_info TEXT NOT NULL, "
         "response_redirected INTEGER NOT NULL, "
         // Note that response_redirected_url is either going to be empty, or
         // it's going to be a URL different than response_url.
@@ -531,6 +533,62 @@ IsCacheOrphaned(mozIStorageConnection* aConn, CacheId aCacheId,
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   *aOrphanedOut = refCount == 0;
+
+  return rv;
+}
+
+nsresult
+FindOrphanedCacheIds(mozIStorageConnection* aConn,
+                     nsTArray<CacheId>& aOrphanedListOut)
+{
+  nsCOMPtr<mozIStorageStatement> state;
+  nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id FROM caches "
+    "WHERE id NOT IN (SELECT cache_id from storage);"
+  ), getter_AddRefs(state));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  bool hasMoreData = false;
+  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
+    CacheId cacheId = INVALID_CACHE_ID;
+    rv = state->GetInt64(0, &cacheId);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    aOrphanedListOut.AppendElement(cacheId);
+  }
+
+  return rv;
+}
+
+nsresult
+GetKnownBodyIds(mozIStorageConnection* aConn, nsTArray<nsID>& aBodyIdListOut)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aConn);
+
+  nsCOMPtr<mozIStorageStatement> state;
+  nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT request_body_id, response_body_id FROM entries;"
+  ), getter_AddRefs(state));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  bool hasMoreData = false;
+  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
+    // extract 0 to 2 nsID structs per row
+    for (uint32_t i = 0; i < 2; ++i) {
+      bool isNull = false;
+
+      rv = state->GetIsNull(i, &isNull);
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+      if (!isNull) {
+        nsID id;
+        rv = ExtractId(state, i, &id);
+        if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+        aBodyIdListOut.AppendElement(id);
+      }
+    }
+  }
 
   return rv;
 }
@@ -1477,6 +1535,7 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       "response_headers_guard, "
       "response_body_id, "
       "response_security_info_id, "
+      "response_principal_info, "
       "response_redirected, "
       "response_redirected_url, "
       "cache_id "
@@ -1500,6 +1559,7 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       ":response_headers_guard, "
       ":response_body_id, "
       ":response_security_info_id, "
+      ":response_principal_info, "
       ":response_redirected, "
       ":response_redirected_url, "
       ":cache_id "
@@ -1591,6 +1651,28 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
     rv = state->BindInt32ByName(NS_LITERAL_CSTRING("response_security_info_id"),
                                 securityId);
   }
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  nsAutoCString serializedInfo;
+  // We only allow content serviceworkers right now.
+  if (aResponse.principalInfo().type() == mozilla::ipc::OptionalPrincipalInfo::TPrincipalInfo) {
+    const mozilla::ipc::PrincipalInfo& principalInfo =
+      aResponse.principalInfo().get_PrincipalInfo();
+    MOZ_ASSERT(principalInfo.type() == mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
+    const mozilla::ipc::ContentPrincipalInfo& cInfo =
+      principalInfo.get_ContentPrincipalInfo();
+
+    serializedInfo.Append(cInfo.spec());
+
+    MOZ_ASSERT(cInfo.appId() != nsIScriptSecurityManager::UNKNOWN_APP_ID);
+    OriginAttributes attrs(cInfo.appId(), cInfo.isInBrowserElement());
+    nsAutoCString suffix;
+    attrs.CreateSuffix(suffix);
+    serializedInfo.Append(suffix);
+  }
+
+  rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("response_principal_info"),
+                                   serializedInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->BindInt32ByName(NS_LITERAL_CSTRING("response_redirected"),
@@ -1692,6 +1774,7 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
       "entries.response_status_text, "
       "entries.response_headers_guard, "
       "entries.response_body_id, "
+      "entries.response_principal_info, "
       "entries.response_redirected, "
       "entries.response_redirected_url, "
       "security_info.data "
@@ -1741,15 +1824,32 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   }
 
-  int32_t redirected;
-  rv = state->GetInt32(6, &redirected);
+  nsAutoCString serializedInfo;
+  rv = state->GetUTF8String(6, serializedInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  aSavedResponseOut->mValue.principalInfo() = void_t();
+  if (!serializedInfo.IsEmpty()) {
+    nsAutoCString originNoSuffix;
+    OriginAttributes attrs;
+    fprintf(stderr, "\n%s\n", serializedInfo.get());
+    if (!attrs.PopulateFromOrigin(serializedInfo, originNoSuffix)) {
+      NS_WARNING("Something went wrong parsing a serialized principal!");
+      return NS_ERROR_FAILURE;
+    }
+
+    aSavedResponseOut->mValue.principalInfo() =
+      mozilla::ipc::ContentPrincipalInfo(attrs.mAppId, attrs.mInBrowser, originNoSuffix);
+  }
+
+  int32_t redirected;
+  rv = state->GetInt32(7, &redirected);
   aSavedResponseOut->mValue.channelInfo().redirected() = !!redirected;
 
-  rv = state->GetUTF8String(7, aSavedResponseOut->mValue.channelInfo().redirectedURI());
+  rv = state->GetUTF8String(8, aSavedResponseOut->mValue.channelInfo().redirectedURI());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->GetBlobAsUTF8String(8, aSavedResponseOut->mValue.channelInfo().securityInfo());
+  rv = state->GetBlobAsUTF8String(9, aSavedResponseOut->mValue.channelInfo().securityInfo());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = aConn->CreateStatement(NS_LITERAL_CSTRING(

@@ -446,6 +446,9 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
   nsAutoString type;
   nsAutoString media;
   nsAutoString anchor;
+  nsAutoString crossOrigin;
+
+  crossOrigin.SetIsVoid(true);
 
   // copy to work buffer
   nsAutoString stringList(aLinkData);
@@ -620,6 +623,12 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
               anchor = value;
               anchor.StripWhitespace();
             }
+          } else if (attr.LowerCaseEqualsLiteral("crossorigin")) {
+            if (crossOrigin.IsVoid()) {
+              crossOrigin.SetIsVoid(false);
+              crossOrigin = value;
+              crossOrigin.StripWhitespace();
+            }
           }
         }
       }
@@ -633,7 +642,7 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
         rv = ProcessLink(anchor, href, rel,
                          // prefer RFC 5987 variant over non-I18zed version
                          titleStar.IsEmpty() ? title : titleStar,
-                         type, media);
+                         type, media, crossOrigin);
       }
 
       href.Truncate();
@@ -642,6 +651,7 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
       type.Truncate();
       media.Truncate();
       anchor.Truncate();
+      crossOrigin.SetIsVoid(true);
       
       seenParameters = false;
     }
@@ -654,7 +664,7 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
     rv = ProcessLink(anchor, href, rel,
                      // prefer RFC 5987 variant over non-I18zed version
                      titleStar.IsEmpty() ? title : titleStar,
-                     type, media);
+                     type, media, crossOrigin);
   }
 
   return rv;
@@ -664,7 +674,8 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
 nsresult
 nsContentSink::ProcessLink(const nsSubstring& aAnchor, const nsSubstring& aHref,
                            const nsSubstring& aRel, const nsSubstring& aTitle,
-                           const nsSubstring& aType, const nsSubstring& aMedia)
+                           const nsSubstring& aType, const nsSubstring& aMedia,
+                           const nsSubstring& aCrossOrigin)
 {
   uint32_t linkTypes =
     nsStyleLinkElement::ParseLinkTypes(aRel, mDocument->NodePrincipal());
@@ -688,7 +699,7 @@ nsContentSink::ProcessLink(const nsSubstring& aAnchor, const nsSubstring& aHref,
   }
 
   if (!aHref.IsEmpty() && (linkTypes & nsStyleLinkElement::ePRECONNECT)) {
-    Preconnect(aHref);
+    Preconnect(aHref, aCrossOrigin);
   }
 
   // is it a stylesheet link?
@@ -875,7 +886,7 @@ nsContentSink::PrefetchDNS(const nsAString &aHref)
 }
 
 void
-nsContentSink::Preconnect(const nsAString &aHref)
+nsContentSink::Preconnect(const nsAString& aHref, const nsAString& aCrossOrigin)
 {
   // construct URI using document charset
   const nsACString& charset = mDocument->GetDocumentCharacterSet();
@@ -885,7 +896,7 @@ nsContentSink::Preconnect(const nsAString &aHref)
             mDocument->GetDocBaseURI());
 
   if (uri && mDocument) {
-    mDocument->MaybePreconnect(uri);
+    mDocument->MaybePreconnect(uri, dom::Element::StringToCORSMode(aCrossOrigin));
   }
 }
 

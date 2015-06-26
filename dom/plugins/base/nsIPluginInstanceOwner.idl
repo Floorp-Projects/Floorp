@@ -26,7 +26,7 @@ enum nsPluginTagType {
 
 // Do not make this interface scriptable, because the virtual functions in C++
 // blocks will make script call the wrong functions.
-[uuid(c4e26e5d-7a9b-4900-b567-e128c4be6e31)]
+[uuid(8ff5f46e-96fa-4905-a75c-35aac30bdcee)]
 interface nsIPluginInstanceOwner : nsISupports
 {
   /**
@@ -70,15 +70,6 @@ interface nsIPluginInstanceOwner : nsISupports
 %}
 
   /**
-   * Show a status message in the host environment.
-   */
-  void showStatus(in string aStatusMsg);
-
-%{C++
-  NS_IMETHOD ShowStatus(const char16_t *aStatusMsg) = 0;
-%}
-
-  /**
    * Get the associated document.
    */
   readonly attribute nsIDocument document;
@@ -104,10 +95,9 @@ interface nsIPluginInstanceOwner : nsISupports
   void getNetscapeWindow(in voidPtr aValue);
 
   /**
-   * Show native context menu
+   * Convert between plugin, window, and screen coordinate spaces.
    */
 %{C++
-  virtual NPError ShowNativeContextMenu(NPMenu* menu, void* event) = 0;
   virtual NPBool  ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
                                double *destX, double *destY, NPCoordinateSpace destSpace) = 0;
 %}

@@ -447,9 +447,12 @@ TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlag
     return false;
   }
 
-  ID3D11Device* d3d11device = gfxWindowsPlatform::GetPlatform()->GetD3D11ContentDevice();
+  gfxWindowsPlatform* windowsPlatform = gfxWindowsPlatform::GetPlatform();
+  ID3D11Device* d3d11device = windowsPlatform->GetD3D11ContentDevice();
+  bool haveD3d11Backend = windowsPlatform->GetContentBackend() == BackendType::DIRECT2D1_1;
 
-  if (gfxPrefs::Direct2DUse1_1() && d3d11device) {
+  if (haveD3d11Backend) {
+    MOZ_ASSERT(d3d11device != nullptr);
 
     CD3D11_TEXTURE2D_DESC newDesc(mFormat == SurfaceFormat::A8 ? DXGI_FORMAT_R8_UNORM : DXGI_FORMAT_B8G8R8A8_UNORM,
                                   aSize.width, aSize.height, 1, 1,
