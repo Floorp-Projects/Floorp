@@ -193,6 +193,15 @@ public:
                                        const GetNotificationOptions& aFilter,
                                        ErrorResult& aRv);
 
+  // Notification implementation of
+  // ServiceWorkerRegistration.showNotification.
+  static already_AddRefed<Promise>
+  ShowPersistentNotification(nsIGlobalObject* aGlobal,
+                             const nsAString& aScope,
+                             const nsAString& aTitle,
+                             const NotificationOptions& aOptions,
+                             ErrorResult& aRv);
+
   void Close();
 
   nsPIDOMWindow* GetParentObject()
@@ -233,18 +242,22 @@ public:
   bool AddRefObject();
   void ReleaseObject();
 
+  static NotificationPermission GetPermission(nsIGlobalObject* aGlobal,
+                                              ErrorResult& aRv);
+
   static NotificationPermission GetPermissionInternal(nsIPrincipal* aPrincipal,
                                                       ErrorResult& rv);
 
   bool DispatchClickEvent();
 protected:
+  // Callers MUST bind the Notification to the correct DOMEventTargetHelper parent using
+  // BindToOwner().
   Notification(const nsAString& aID, const nsAString& aTitle, const nsAString& aBody,
                NotificationDirection aDir, const nsAString& aLang,
                const nsAString& aTag, const nsAString& aIconUrl,
-               const NotificationBehavior& aBehavior, nsIGlobalObject* aGlobal);
+               const NotificationBehavior& aBehavior);
 
-  static already_AddRefed<Notification> CreateInternal(nsIGlobalObject* aGlobal,
-                                                       const nsAString& aID,
+  static already_AddRefed<Notification> CreateInternal(const nsAString& aID,
                                                        const nsAString& aTitle,
                                                        const NotificationOptions& aOptions);
 
@@ -277,11 +290,14 @@ protected:
     return NotificationDirection::Auto;
   }
 
-  static nsresult GetOrigin(nsPIDOMWindow* aWindow, nsString& aOrigin);
-  nsresult GetOriginWorker(nsString& aOrigin);
+  static nsresult GetOrigin(nsIPrincipal* aPrincipal, nsString& aOrigin);
 
   void GetAlertName(nsAString& aRetval)
   {
+    workers::AssertIsOnMainThread();
+    if (mAlertName.IsEmpty()) {
+      SetAlertName();
+    }
     aRetval = mAlertName;
   }
 
@@ -314,10 +330,23 @@ protected:
 private:
   virtual ~Notification();
 
+  // Creates a Notification and shows it. Returns a reference to the
+  // Notification if result is NS_OK. The lifetime of this Notification is tied
+  // to an underlying NotificationRef. Do not hold a non-stack raw pointer to
+  // it. Be careful about thread safety if acquiring a strong reference.
+  static already_AddRefed<Notification>
+  CreateAndShow(nsIGlobalObject* aGlobal,
+                const nsAString& aTitle,
+                const NotificationOptions& aOptions,
+                ErrorResult& aRv);
+
   nsIPrincipal* GetPrincipal();
 
   nsresult PersistNotification();
   void UnpersistNotification();
+
+  void
+  SetAlertName();
 
   bool IsTargetThread() const
   {
