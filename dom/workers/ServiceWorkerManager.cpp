@@ -2357,7 +2357,14 @@ public:
     }
 
     event->SetTrusted(true);
-    target->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+    nsRefPtr<Promise> waitUntilPromise =
+      DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(), event);
+
+    if (waitUntilPromise) {
+      nsRefPtr<KeepAliveHandler> handler = new KeepAliveHandler(mServiceWorker);
+      waitUntilPromise->AppendNativeHandler(handler);
+    }
+
     return true;
   }
 };
