@@ -53,7 +53,15 @@ let testAppInfo = new TestAppInfo(app);
 function runProcess() {
     let deferred = Promise.defer();
 
-    testAppInfo.appProcess.runAsync([], 0, (aSubject, aTopic) => {
+    let args = [];
+
+    if (MAC) {
+      // Set the -runtime flag to the test app's install path, which we're using
+      // as the "fake runtime" from which the test app updates its executable.
+      args.push("-runtime", testAppInfo.installPath);
+    }
+
+    testAppInfo.appProcess.runAsync(args, args.length, (aSubject, aTopic) => {
       if (aTopic == "process-finished") {
         deferred.resolve(aSubject.exitValue);
       } else if (aTopic == "process-failed") {
@@ -133,10 +141,6 @@ let runTest = Task.async(function*() {
 
   let stubExeFile = getFile(getTestFilePath(stubExeName));
   stubExeFile.copyTo(fakeInstallDir, exeName);
-
-  if (MAC) {
-    stubExeFile.copyTo(getFile(testAppInfo.installPath, "Contents", "MacOS"), "firefox-bin");
-  }
 
   testAppInfo.appProcess.init(exeFile);
 
