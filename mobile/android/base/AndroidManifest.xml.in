@@ -208,10 +208,6 @@
                 <data android:scheme="https" />
             </intent-filter>
 
-            <intent-filter>
-                <action android:name="android.intent.action.SEARCH" />
-            </intent-filter>
-
             <!-- For XPI installs from websites and the download manager. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -239,9 +235,6 @@
                 <data android:scheme="https" />
             </intent-filter>
 #endif
-
-            <meta-data android:name="android.app.searchable"
-                       android:resource="@xml/searchable" />
 
             <!-- For debugging -->
             <intent-filter>
