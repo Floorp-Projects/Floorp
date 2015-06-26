@@ -718,11 +718,7 @@ nsWindow::GetDPI()
 double
 nsWindow::GetDefaultScaleInternal()
 {
-#if (MOZ_WIDGET_GTK == 3)
-    return GdkScaleFactor();
-#else
-    return gfxPlatformGtk::GetDPIScale();
-#endif
+    return GdkScaleFactor() * gfxPlatformGtk::GetDPIScale();
 }
 
 NS_IMETHODIMP
