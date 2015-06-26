@@ -239,6 +239,8 @@ public:
 
   nsresult ParseSheet(const nsAString& aInput);
 
+  void SetInRuleProcessorCache() { mInRuleProcessorCache = true; }
+
   // nsIDOMStyleSheet interface
   NS_DECL_NSIDOMSTYLESHEET
 
@@ -357,6 +359,7 @@ protected:
   nsINode*              mOwningNode; // weak ref
   bool                  mDisabled;
   bool                  mDirty; // has been modified 
+  bool                  mInRuleProcessorCache;
   nsRefPtr<dom::Element> mScopeElement;
 
   CSSStyleSheetInner*   mInner;

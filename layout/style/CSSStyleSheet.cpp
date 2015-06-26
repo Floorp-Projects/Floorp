@@ -46,6 +46,7 @@
 #include "mozilla/dom/CSSStyleSheetBinding.h"
 #include "nsComponentManagerUtils.h"
 #include "nsNullPrincipal.h"
+#include "mozilla/RuleProcessorCache.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1075,6 +1076,7 @@ CSSStyleSheet::CSSStyleSheet(CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy)
     mOwningNode(nullptr),
     mDisabled(false),
     mDirty(false),
+    mInRuleProcessorCache(false),
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
@@ -1093,6 +1095,7 @@ CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
     mOwningNode(aOwningNodeToUse),
     mDisabled(aCopy.mDisabled),
     mDirty(aCopy.mDirty),
+    mInRuleProcessorCache(false),
     mScopeElement(nullptr),
     mInner(aCopy.mInner),
     mRuleProcessors(nullptr)
@@ -1134,6 +1137,9 @@ CSSStyleSheet::~CSSStyleSheet()
   if (mRuleProcessors) {
     NS_ASSERTION(mRuleProcessors->Length() == 0, "destructing sheet with rule processor reference");
     delete mRuleProcessors; // weak refs, should be empty here anyway
+  }
+  if (mInRuleProcessorCache) {
+    RuleProcessorCache::RemoveSheet(this);
   }
 }
 
@@ -1703,10 +1709,18 @@ CSSStyleSheet::List(FILE* out, int32_t aIndent) const
 void 
 CSSStyleSheet::ClearRuleCascades()
 {
+  bool removedSheetFromRuleProcessorCache = false;
   if (mRuleProcessors) {
     nsCSSRuleProcessor **iter = mRuleProcessors->Elements(),
                        **end = iter + mRuleProcessors->Length();
     for(; iter != end; ++iter) {
+      if (!removedSheetFromRuleProcessorCache && (*iter)->IsShared()) {
+        // Since the sheet has been modified, we need to remove all
+        // RuleProcessorCache entries that contain this sheet, as the
+        // list of @-moz-document rules might have changed.
+        RuleProcessorCache::RemoveSheet(this);
+        removedSheetFromRuleProcessorCache = true;
+      }
       (*iter)->ClearRuleCascades();
     }
   }
