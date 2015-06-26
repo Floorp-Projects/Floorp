@@ -30,6 +30,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStorage",
                                   "resource://gre/modules/TelemetryStorage.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryReportingPolicy",
+                                  "resource://gre/modules/TelemetryReportingPolicy.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
                                    "@mozilla.org/base/telemetry;1",
                                    "nsITelemetry");
@@ -227,6 +229,13 @@ this.TelemetrySend = {
   },
 
   /**
+   * Notify that we can start submitting data to the servers.
+   */
+  notifyCanUpload: function() {
+    return TelemetrySendImpl.notifyCanUpload();
+  },
+
+  /**
    * Only used in tests. Used to reset the module data to emulate a restart.
    */
   reset: function() {
@@ -410,8 +419,8 @@ let SendScheduler = {
       let pending = TelemetryStorage.getPendingPingList();
       let current = TelemetrySendImpl.getUnpersistedPings();
       this._log.trace("_doSendTask - pending: " + pending.length + ", current: " + current.length);
-      pending = pending.filter(p => TelemetrySendImpl.canSend(p));
-      current = current.filter(p => TelemetrySendImpl.canSend(p));
+      pending = pending.filter(p => TelemetrySendImpl.sendingEnabled(p));
+      current = current.filter(p => TelemetrySendImpl.sendingEnabled(p));
       this._log.trace("_doSendTask - can send - pending: " + pending.length + ", current: " + current.length);
 
       // Bail out if there is nothing to send.
@@ -692,6 +701,15 @@ let TelemetrySendImpl = {
     return SendScheduler.reset();
   },
 
+  /**
+   * Notify that we can start submitting data to the servers.
+   */
+  notifyCanUpload: function() {
+    // Let the scheduler trigger sending pings if possible.
+    SendScheduler.triggerSendingPings(true);
+    return this.promisePendingPingActivity();
+  },
+
   observe: function(subject, topic, data) {
     switch(topic) {
     case TOPIC_IDLE_DAILY:
@@ -703,15 +721,15 @@ let TelemetrySendImpl = {
   submitPing: function(ping) {
     this._log.trace("submitPing - ping id: " + ping.id);
 
-    if (!this.canSend(ping)) {
+    if (!this.sendingEnabled(ping)) {
       this._log.trace("submitPing - Telemetry is not allowed to send pings.");
       return Promise.resolve();
     }
 
-    if (!this._sendingEnabled) {
+    if (!this.canSendNow) {
       // Sending is disabled or throttled, add this to the persisted pending pings.
       this._log.trace("submitPing - can't send ping now, persisting to disk - " +
-                      "sendingEnabled: " + this._sendingEnabled);
+                      "canSendNow: " + this.canSendNow);
       return TelemetryStorage.savePendingPing(ping);
     }
 
@@ -866,7 +884,7 @@ let TelemetrySendImpl = {
   },
 
   _doPing: function(ping, id, isPersisted) {
-    if (!this.canSend(ping)) {
+    if (!this.sendingEnabled(ping)) {
       // We can't send the pings to the server, so don't try to.
       this._log.trace("_doPing - Can't send ping " + ping.id);
       return Promise.resolve();
@@ -970,7 +988,21 @@ let TelemetrySendImpl = {
   },
 
   /**
-   * Check if pings can be sent to the server. If FHR is not allowed to upload,
+   * Check if sending is temporarily disabled.
+   * @return {Boolean} True if we can send pings to the server right now, false if
+   *         sending is temporarily disabled.
+   */
+  get canSendNow() {
+    // If the reporting policy was not accepted yet, don't send pings.
+    if (!TelemetryReportingPolicy.canUpload()) {
+      return false;
+    }
+
+    return this._sendingEnabled;
+  },
+
+  /**
+   * Check if sending is disabled. If FHR is not allowed to upload,
    * pings are not sent to the server (Telemetry is a sub-feature of FHR). If trying
    * to send a deletion ping, don't block it.
    * If unified telemetry is off, don't send pings if Telemetry is disabled.
@@ -978,7 +1010,7 @@ let TelemetrySendImpl = {
    * @param {Object} [ping=null] A ping to be checked.
    * @return {Boolean} True if pings can be send to the servers, false otherwise.
    */
-  canSend: function(ping = null) {
+  sendingEnabled: function(ping = null) {
     // We only send pings from official builds, but allow overriding this for tests.
     if (!Telemetry.isOfficialTelemetry && !this._testMode) {
       return false;
