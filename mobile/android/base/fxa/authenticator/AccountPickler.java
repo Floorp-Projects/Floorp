@@ -69,6 +69,7 @@ public class AccountPickler {
   public static final String KEY_PROFILE = "profile";
   public static final String KEY_IDP_SERVER_URI = "idpServerURI";
   public static final String KEY_TOKEN_SERVER_URI = "tokenServerURI";
+  public static final String KEY_PROFILE_SERVER_URI = "profileServerURI";
 
   public static final String KEY_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP = "authoritiesToSyncAutomaticallyMap";
 
@@ -99,6 +100,7 @@ public class AccountPickler {
     o.put(KEY_PROFILE, account.getProfile());
     o.put(KEY_IDP_SERVER_URI, account.getAccountServerURI());
     o.put(KEY_TOKEN_SERVER_URI, account.getTokenServerURI());
+    o.put(KEY_PROFILE_SERVER_URI, account.getProfileServerURI());
 
     final ExtendedJSONObject p = new ExtendedJSONObject();
     for (Entry<String, Boolean> pair : account.getAuthoritiesToSyncAutomaticallyMap().entrySet()) {
@@ -186,7 +188,7 @@ public class AccountPickler {
     final AndroidFxAccount account;
     try {
       account = AndroidFxAccount.addAndroidAccount(context, params.email, params.profile,
-          params.authServerURI, params.tokenServerURI, params.state,
+          params.authServerURI, params.tokenServerURI, params.profileServerURI, params.state,
           params.authoritiesToSyncAutomaticallyMap,
           params.accountVersion,
           true, params.bundle);
@@ -220,6 +222,7 @@ public class AccountPickler {
     private String profile;
     private String authServerURI;
     private String tokenServerURI;
+    private String profileServerURI;
     private final Map<String, Boolean> authoritiesToSyncAutomaticallyMap = new HashMap<>();
 
     private ExtendedJSONObject bundle;
@@ -295,6 +298,14 @@ public class AccountPickler {
       this.profile = json.getString(KEY_PROFILE);
       this.authServerURI = json.getString(KEY_IDP_SERVER_URI);
       this.tokenServerURI = json.getString(KEY_TOKEN_SERVER_URI);
+      this.profileServerURI = json.getString(KEY_PROFILE_SERVER_URI);
+
+      // Fallback to default value when profile server URI was not pickled.
+      if (this.profileServerURI == null) {
+        this.profileServerURI = FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT.equals(this.authServerURI)
+            ? FxAccountConstants.DEFAULT_PROFILE_SERVER_ENDPOINT
+            : FxAccountConstants.STAGE_PROFILE_SERVER_ENDPOINT;
+      }
 
       // We get the default value for everything except syncing browser data.
       this.authoritiesToSyncAutomaticallyMap.put(BrowserContract.AUTHORITY, json.getBoolean(KEY_IS_SYNCING_ENABLED));

@@ -1341,6 +1341,9 @@ describe("loop.OTSdkDriver", function () {
 
       it("should dispatch `ReceivedTextChatMessage` when a text message is received", function() {
         var fakeChannel = _.extend({}, Backbone.Events);
+        var data = '{"contentType":"' + CHAT_CONTENT_TYPES.TEXT +
+                   '","message":"Are you there?","receivedTimestamp": "2015-06-25T00:29:14.197Z"}';
+        var clock = sinon.useFakeTimers();
 
         subscriber._.getDataChannel.callsArgWith(2, null, fakeChannel);
 
@@ -1348,15 +1351,19 @@ describe("loop.OTSdkDriver", function () {
 
         // Now send the message.
         fakeChannel.trigger("message", {
-          data: '{"contentType":"' + CHAT_CONTENT_TYPES.TEXT + '","message":"Are you there?"}'
+          data: data
         });
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.ReceivedTextChatMessage({
             contentType: CHAT_CONTENT_TYPES.TEXT,
-            message: "Are you there?"
+            message: "Are you there?",
+            receivedTimestamp: "1970-01-01T00:00:00.000Z"
           }));
+
+        /* Restore the time. */
+        clock.restore();
       });
     });
 

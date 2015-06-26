@@ -620,6 +620,26 @@ public class testBrowserProvider extends ContentProviderTest {
 
             Cursor c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), id);
             mAsserter.is(c.moveToFirst(), true, "Deleted bookmark was only marked as deleted");
+            mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.TITLE)), null,
+                    "Deleted bookmark title is null");
+            mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.URL)), null,
+                    "Deleted bookmark URL is null");
+            mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.TAGS)), null,
+                    "Deleted bookmark tags is null");
+            mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.KEYWORD)), null,
+                    "Deleted bookmark keyword is null");
+            mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.DESCRIPTION)), null,
+                    "Deleted bookmark description is null");
+            mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.POSITION)), String.valueOf(0),
+                    "Deleted bookmark has correct position");
+            mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.PARENT)), null,
+                    "Deleted bookmark parent ID is null");
+            mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.IS_DELETED)), String.valueOf(1),
+                    "Deleted bookmark has correct is-deleted state");
+            mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.FAVICON_ID)), null,
+                    "Deleted bookmark Favicon ID is null");
+            mAsserter.isnot(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.GUID)), null,
+                    "Deleted bookmark GUID is not null");
             c.close();
 
             deleted = mProvider.delete(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1"),

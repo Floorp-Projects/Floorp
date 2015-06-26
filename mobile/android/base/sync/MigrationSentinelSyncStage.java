@@ -49,6 +49,7 @@ public class MigrationSentinelSyncStage extends AbstractNonRepositorySyncStage {
 
     private static final String PREFS_KEY_AUTH_SERVER_ENDPOINT = "identity.fxaccounts.auth.uri";
     private static final String PREFS_KEY_TOKEN_SERVER_ENDPOINT = "services.sync.tokenServerURI";
+    private static final String PREFS_KEY_PROFILE_SERVER_ENDPOINT = "services.fxaccounts.profile.uri";
 
     private final GlobalSession session;
     private long fetchTimestamp = -1L;
@@ -70,7 +71,8 @@ public class MigrationSentinelSyncStage extends AbstractNonRepositorySyncStage {
                             boolean verified,
                             String password,
                             String authServerURI,
-                            String tokenServerURI) throws Exception {
+                            String tokenServerURI,
+                            String profileServerURI) throws Exception {
       final String profile = "default";
 
       final State state = new MigratedFromSync11(email, uid, verified, password);
@@ -80,6 +82,7 @@ public class MigrationSentinelSyncStage extends AbstractNonRepositorySyncStage {
           profile,
           authServerURI,
           tokenServerURI,
+          profileServerURI,
           state,
           AndroidFxAccount.DEFAULT_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP);
 
@@ -123,15 +126,20 @@ public class MigrationSentinelSyncStage extends AbstractNonRepositorySyncStage {
       final ExtendedJSONObject prefs = payload.getObject(SENTINEL_KEY_PREFS);
       String authServerURI = null;
       String tokenServerURI = null;
+      String profileServerURI = null;
       if (prefs != null) {
         authServerURI = prefs.getString(PREFS_KEY_AUTH_SERVER_ENDPOINT);
         tokenServerURI = prefs.getString(PREFS_KEY_TOKEN_SERVER_ENDPOINT);
+        profileServerURI = prefs.getString(PREFS_KEY_PROFILE_SERVER_ENDPOINT);
       }
       if (authServerURI == null) {
         authServerURI = FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT;
       }
       if (tokenServerURI == null) {
         tokenServerURI = FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT;
+      }
+      if (profileServerURI == null) {
+        profileServerURI = FxAccountConstants.DEFAULT_PROFILE_SERVER_ENDPOINT;
       }
 
       Logger.info(LOG_TAG, "Migration sentinel contained valid credentials.");
@@ -143,9 +151,10 @@ public class MigrationSentinelSyncStage extends AbstractNonRepositorySyncStage {
         FxAccountUtils.pii(LOG_TAG, "password: " + password);
         FxAccountUtils.pii(LOG_TAG, "authServer: " + authServerURI);
         FxAccountUtils.pii(LOG_TAG, "tokenServerURI: " + tokenServerURI);
+        FxAccountUtils.pii(LOG_TAG, "profileServerURI: " + profileServerURI);
       }
 
-      if (migrate(email, uid, verified, password, authServerURI, tokenServerURI)) {
+      if (migrate(email, uid, verified, password, authServerURI, tokenServerURI, profileServerURI)) {
         session.callback.informMigrated(session);
         onMigrated();
       } else {

@@ -2458,7 +2458,21 @@ ObjectClient.prototype = {
       }
       return aPacket;
     }
-  })
+  }),
+
+  /**
+   * Request the stack to the promise's allocation point.
+   */
+  getPromiseAllocationStack: DebuggerClient.requester({
+    type: "allocationStack"
+  }, {
+    before: function(aPacket) {
+      if (this._grip.class !== "Promise") {
+        throw new Error("getAllocationStack is only valid for promise grips.");
+      }
+      return aPacket;
+    }
+  }),
 };
 
 /**

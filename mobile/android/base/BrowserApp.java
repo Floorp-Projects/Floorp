@@ -1687,6 +1687,7 @@ public class BrowserApp extends GeckoApp
                         getProfile().getName(),
                         FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT,
                         FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT,
+                        FxAccountConstants.DEFAULT_PROFILE_SERVER_ENDPOINT,
                         state,
                         AndroidFxAccount.DEFAULT_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP);
             } catch (Exception e) {

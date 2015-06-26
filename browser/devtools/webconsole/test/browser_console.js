@@ -5,7 +5,10 @@
 
 // Test the basic features of the Browser Console, bug 587757.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html?" + Date.now();
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console.html?" + Date.now();
 
 const TEST_XHR_ERROR_URI = `http://example.com/404.html?${Date.now()}`;
 
@@ -27,8 +30,7 @@ let test = asyncTest(function*() {
   yield consoleOpened(hud);
 });
 
-function consoleOpened(hud)
-{
+function consoleOpened(hud) {
   hud.jsterm.clearOutput(true);
 
   expectUncaughtException();
@@ -53,7 +55,9 @@ function consoleOpened(hud)
 
   // Check for xhr error.
   let xhrErr = new XMLHttpRequest();
-  xhrErr.onload = () => console.log("xhr error loaded, status is: " + xhrErr.status);
+  xhrErr.onload = () => {
+    console.log("xhr error loaded, status is: " + xhrErr.status);
+  };
   xhrErr.open("get", TEST_XHR_ERROR_URI, true);
   xhrErr.send();
 

@@ -129,6 +129,25 @@ let gSyncPane = {
     this._initProfileImageUI();
   },
 
+  _toggleComputerNameControls: function(editMode) {
+    let textbox = document.getElementById("fxaSyncComputerName");
+    textbox.className = editMode ? "" : "plain";
+    textbox.disabled = !editMode;
+    document.getElementById("fxaChangeDeviceName").hidden = editMode;
+    document.getElementById("fxaCancelChangeDeviceName").hidden = !editMode;
+    document.getElementById("fxaSaveChangeDeviceName").hidden = !editMode;
+  },
+
+  _updateComputerNameValue: function(save) {
+    let textbox = document.getElementById("fxaSyncComputerName");
+    if (save) {
+      Weave.Service.clientsEngine.localName = textbox.value;
+    }
+    else {
+      textbox.value = Weave.Service.clientsEngine.localName;
+    }
+  },
+
   _setupEventListeners: function() {
     function setEventListener(aId, aEventType, aCallback)
     {
@@ -160,6 +179,17 @@ let gSyncPane = {
     });
     setEventListener("syncComputerName", "change", function (e) {
       gSyncUtils.changeName(e.target);
+    });
+    setEventListener("fxaChangeDeviceName", "click", function () {
+      this._toggleComputerNameControls(true);
+    });
+    setEventListener("fxaCancelChangeDeviceName", "click", function () {
+      this._toggleComputerNameControls(false);
+      this._updateComputerNameValue(false);
+    });
+    setEventListener("fxaSaveChangeDeviceName", "click", function () {
+      this._toggleComputerNameControls(false);
+      this._updateComputerNameValue(true);
     });
     setEventListener("unlinkDevice", "click", function () {
       gSyncPane.startOver(true);

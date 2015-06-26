@@ -4,7 +4,7 @@
 
 # This modules provides functionality for dealing with compiler warnings.
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 import errno
 import json

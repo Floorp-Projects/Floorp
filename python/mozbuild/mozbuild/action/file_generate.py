@@ -6,7 +6,8 @@
 # the arguments that can be used to generate the output file, call the
 # script's |main| method with appropriate arguments.
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 import argparse
 import imp
 import os
