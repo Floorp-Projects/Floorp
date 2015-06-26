@@ -538,6 +538,62 @@ IsCacheOrphaned(mozIStorageConnection* aConn, CacheId aCacheId,
 }
 
 nsresult
+FindOrphanedCacheIds(mozIStorageConnection* aConn,
+                     nsTArray<CacheId>& aOrphanedListOut)
+{
+  nsCOMPtr<mozIStorageStatement> state;
+  nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id FROM caches "
+    "WHERE id NOT IN (SELECT cache_id from storage);"
+  ), getter_AddRefs(state));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  bool hasMoreData = false;
+  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
+    CacheId cacheId = INVALID_CACHE_ID;
+    rv = state->GetInt64(0, &cacheId);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    aOrphanedListOut.AppendElement(cacheId);
+  }
+
+  return rv;
+}
+
+nsresult
+GetKnownBodyIds(mozIStorageConnection* aConn, nsTArray<nsID>& aBodyIdListOut)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aConn);
+
+  nsCOMPtr<mozIStorageStatement> state;
+  nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT request_body_id, response_body_id FROM entries;"
+  ), getter_AddRefs(state));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  bool hasMoreData = false;
+  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
+    // extract 0 to 2 nsID structs per row
+    for (uint32_t i = 0; i < 2; ++i) {
+      bool isNull = false;
+
+      rv = state->GetIsNull(i, &isNull);
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+      if (!isNull) {
+        nsID id;
+        rv = ExtractId(state, i, &id);
+        if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+        aBodyIdListOut.AppendElement(id);
+      }
+    }
+  }
+
+  return rv;
+}
+
+nsresult
 CacheMatch(mozIStorageConnection* aConn, CacheId aCacheId,
            const CacheRequest& aRequest,
            const CacheQueryParams& aParams,
