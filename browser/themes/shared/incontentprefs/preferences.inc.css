@@ -387,3 +387,16 @@ description > html|a {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
+/**
+ * Sync
+ */
+
+#fxaDeviceName {
+  margin: 14px 0px;
+}
+
+#fxaSyncComputerName.plain {
+  background-color: transparent;
+  opacity: 1;
+}

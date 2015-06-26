@@ -4,7 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
+from __future__ import absolute_import
+
 import mozinfo
 import shlex
 import subprocess
@@ -72,7 +73,7 @@ def get_pids(name):
 
     if mozinfo.isWin:
         # use the windows-specific implementation
-        import wpk
+        from . import wpk
         return wpk.get_pids(name)
     else:
         return [pid for pid,_ in running_processes(name)]

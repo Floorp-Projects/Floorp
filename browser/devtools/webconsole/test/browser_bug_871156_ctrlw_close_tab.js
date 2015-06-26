@@ -54,7 +54,6 @@ let test = asyncTest(function* () {
     EventUtils.synthesizeKey("w", { accelKey: true });
   });
 
-
   yield promise.all([tabClosed.promise, toolboxDestroyed.promise,
                      tabSelected.promise]);
   info("promise.all resolved. start testing the Browser Console");

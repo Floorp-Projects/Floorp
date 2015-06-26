@@ -2,11 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-'''A generic script to verify all test files are in the 
+'''A generic script to verify all test files are in the
 corresponding .ini file.
 
 Usage: xpccheck.py <directory> [<directory> ...]
 '''
+
+from __future__ import absolute_import
 
 import sys
 import os

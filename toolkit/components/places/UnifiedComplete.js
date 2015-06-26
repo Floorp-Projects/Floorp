@@ -28,6 +28,7 @@ const PREF_RESTRICT_BOOKMARKS =     [ "restrict.bookmark",      "*" ];
 const PREF_RESTRICT_TYPED =         [ "restrict.typed",         "~" ];
 const PREF_RESTRICT_TAG =           [ "restrict.tag",           "+" ];
 const PREF_RESTRICT_SWITCHTAB =     [ "restrict.openpage",      "%" ];
+const PREF_RESTRICT_SEARCHES =      [ "restrict.searces",       "$" ];
 const PREF_MATCH_TITLE =            [ "match.title",            "#" ];
 const PREF_MATCH_URL =              [ "match.url",              "@" ];
 
@@ -403,6 +404,7 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     store.restrictTypedToken = prefs.get(...PREF_RESTRICT_TYPED);
     store.restrictTagToken = prefs.get(...PREF_RESTRICT_TAG);
     store.restrictOpenPageToken = prefs.get(...PREF_RESTRICT_SWITCHTAB);
+    store.restrictSearchesToken = prefs.get(...PREF_RESTRICT_SEARCHES);
     store.matchTitleToken = prefs.get(...PREF_MATCH_TITLE);
     store.matchURLToken = prefs.get(...PREF_MATCH_URL);
     store.suggestHistory = prefs.get(...PREF_SUGGEST_HISTORY);
@@ -449,7 +451,8 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
       [ store.restrictOpenPageToken, "openpage" ],
       [ store.matchTitleToken, "title" ],
       [ store.matchURLToken, "url" ],
-      [ store.restrictTypedToken, "typed" ]
+      [ store.restrictTypedToken, "typed" ],
+      [ store.restrictSearchesToken, "searches" ],
     ]);
 
     // Synchronize suggest.* prefs with autocomplete.enabled every time
@@ -837,10 +840,15 @@ Search.prototype = {
     if (this.hasBehavior("searches")) {
       this._searchSuggestionController =
         PlacesSearchAutocompleteProvider.getSuggestionController(
-          this._originalSearchString,
+          this._searchTokens.join(" "),
           this._inPrivateWindow,
           Prefs.maxRichResults
         );
+      if (this.hasBehavior("restrict")) {
+        // We're done if we're restricting to search suggestions.
+        yield this._consumeAllSearchSuggestions();
+        return;
+      }
     }
 
     yield this._sleep(Math.round(Prefs.delay / 2));
@@ -877,6 +885,10 @@ Search.prototype = {
 
     // If we still don't have enough results, fill the remaining space with
     // search suggestions.
+    yield this._consumeAllSearchSuggestions();
+  }),
+
+  _consumeAllSearchSuggestions: Task.async(function* () {
     if (this._searchSuggestionController && this.pending) {
       yield this._searchSuggestionController.fetchCompletePromise;
       while (this.pending && this._maybeAddSearchSuggestionMatch());
