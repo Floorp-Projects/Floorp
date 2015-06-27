@@ -592,7 +592,7 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
     nsCSSFontFaceRule* rule = aRules[i].mRule;
     nsRefPtr<FontFace> f = ruleFaceMap.Get(rule);
     if (!f.get()) {
-      f = FontFace::CreateForRule(GetParentObject(), mPresContext, rule);
+      f = FontFace::CreateForRule(GetParentObject(), this, rule);
     }
     InsertRuleFontFace(f, aRules[i].mSheetType, oldRecords, modified);
     handledRules.PutEntry(aRules[i].mRule);
