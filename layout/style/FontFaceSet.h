@@ -93,7 +93,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FontFaceSet, DOMEventTargetHelper)
   NS_DECL_NSIDOMEVENTLISTENER
 
-  FontFaceSet(nsPIDOMWindow* aWindow, nsPresContext* aPresContext);
+  FontFaceSet(nsPIDOMWindow* aWindow, nsIDocument* aDocument);
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -108,7 +108,7 @@ public:
 
   bool UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules);
 
-  nsPresContext* GetPresContext() { return mPresContext; }
+  nsPresContext* GetPresContext();
 
   // search for @font-face rule that matches a platform font entry
   nsCSSFontFaceRule* FindRuleForEntry(gfxFontEntry* aFontEntry);
@@ -158,6 +158,8 @@ public:
                               nsresult aStatus) override;
 
   FontFace* GetFontFaceAt(uint32_t aIndex);
+
+  void FlushUserFontSet();
 
   // -- Web IDL --------------------------------------------------------------
 
@@ -265,7 +267,7 @@ private:
                       const char* aMessage,
                       uint32_t aFlags,
                       nsresult aStatus);
-  void DoRebuildUserFontSet();
+  void RebuildUserFontSet();
 
   void InsertRuleFontFace(FontFace* aFontFace, uint8_t aSheetType,
                           nsTArray<FontFaceRecord>& aOldRecords,
@@ -285,7 +287,6 @@ private:
   void UpdateHasLoadingFontFaces();
 
   nsRefPtr<UserFontSet> mUserFontSet;
-  nsPresContext* mPresContext;
 
   // The document this is a FontFaceSet for.
   nsCOMPtr<nsIDocument> mDocument;
