@@ -13,6 +13,6 @@
 [NoInterfaceObject]
 interface FontFaceSource {
 
-  [Throws, Pref="layout.css.font-loading-api.enabled"]
+  [Pref="layout.css.font-loading-api.enabled"]
   readonly attribute FontFaceSet fonts;
 };
