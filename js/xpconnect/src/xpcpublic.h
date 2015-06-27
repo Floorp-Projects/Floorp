@@ -30,6 +30,8 @@ class nsIPrincipal;
 class nsScriptNameSpaceManager;
 class nsIMemoryReporterCallback;
 
+typedef void (* xpcGCCallback)(JSGCStatus status);
+
 namespace xpc {
 
 class Scriptability {
@@ -537,6 +539,9 @@ GetCurrentCompartmentName(JSContext*, nsCString& name);
 
 JSRuntime*
 GetJSRuntime();
+
+void AddGCCallback(xpcGCCallback cb);
+void RemoveGCCallback(xpcGCCallback cb);
 
 } // namespace xpc
 
