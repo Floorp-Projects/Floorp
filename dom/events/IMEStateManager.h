@@ -8,6 +8,7 @@
 #define mozilla_IMEStateManager_h_
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/StaticPtr.h"
 #include "nsIWidget.h"
 
 class nsIContent;
@@ -175,9 +176,11 @@ protected:
 
   static nsIContent*    sContent;
   static nsPresContext* sPresContext;
+  static StaticRefPtr<nsIWidget> sFocusedIMEWidget;
   static bool           sInstalledMenuKeyboardListener;
   static bool           sIsGettingNewIMEState;
   static bool           sCheckForIMEUnawareWebApps;
+  static bool           sRemoteHasFocus;
 
   class MOZ_STACK_CLASS GettingNewIMEStateBlocker final
   {
