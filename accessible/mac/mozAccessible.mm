@@ -778,6 +778,8 @@ ConvertToNSArray(nsTArray<Accessible*>& aArray)
       return @"AXDocumentRegion";
     if (roleMap->Is(nsGkAtoms::status))
       return @"AXApplicationStatus";
+    if (roleMap->Is(nsGkAtoms::tabpanel))
+      return @"AXTabPanel";
     if (roleMap->Is(nsGkAtoms::timer))
       return @"AXApplicationTimer";
     if (roleMap->Is(nsGkAtoms::tooltip))
@@ -868,6 +870,15 @@ ConvertToNSArray(nsTArray<Accessible*>& aArray)
     case roles::SWITCH:
       return @"AXSwitch";
 
+    case roles::ALERT:
+      return @"AXApplicationAlert";
+
+    case roles::SEPARATOR:
+      return @"AXContentSeparator";
+
+    case roles::PROPERTYPAGE:
+      return @"AXTabPanel";
+
     default:
       break;
   }
@@ -888,6 +899,7 @@ static const RoleDescrMap sRoleDescrMap[] = {
   { @"AXApplicationMarquee", NS_LITERAL_STRING("marquee") },
   { @"AXApplicationStatus", NS_LITERAL_STRING("status") },
   { @"AXApplicationTimer", NS_LITERAL_STRING("timer") },
+  { @"AXContentSeparator", NS_LITERAL_STRING("separator") },
   { @"AXDefinition", NS_LITERAL_STRING("definition") },
   { @"AXDocument", NS_LITERAL_STRING("document") },
   { @"AXDocumentArticle", NS_LITERAL_STRING("article") },
@@ -902,6 +914,7 @@ static const RoleDescrMap sRoleDescrMap[] = {
   { @"AXLandmarkNavigation", NS_LITERAL_STRING("navigation") },
   { @"AXLandmarkSearch", NS_LITERAL_STRING("search") },
   { @"AXSearchField", NS_LITERAL_STRING("searchTextField") },
+  { @"AXTabPanel", NS_LITERAL_STRING("tabPanel") },
   { @"AXTerm", NS_LITERAL_STRING("term") },
   { @"AXUserInterfaceTooltip", NS_LITERAL_STRING("tooltip") }
 };
