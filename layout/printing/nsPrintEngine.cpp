@@ -361,7 +361,7 @@ nsPrintEngine::GetSeqFrameAndCountPagesInternal(nsPrintObject*  aPO,
   }
 
   // count the total number of pages
-  aCount = aSeqFrame->PrincipalChildList()->GetLength();
+  aCount = aSeqFrame->PrincipalChildList().GetLength();
 
   return NS_OK;
 }
