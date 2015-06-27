@@ -127,13 +127,6 @@ XPCJSRuntime::CustomContextCallback(JSContext* cx, unsigned operation)
         delete XPCContext::GetXPCContext(cx);
     }
 
-    nsTArray<xpcContextCallback> callbacks(extraContextCallbacks);
-    for (uint32_t i = 0; i < callbacks.Length(); ++i) {
-        if (!callbacks[i](cx, operation)) {
-            return false;
-        }
-    }
-
     return true;
 }
 
@@ -3700,23 +3693,6 @@ XPCJSRuntime::RemoveGCCallback(xpcGCCallback cb)
 {
     MOZ_ASSERT(cb, "null callback");
     bool found = extraGCCallbacks.RemoveElement(cb);
-    if (!found) {
-        NS_ERROR("Removing a callback which was never added.");
-    }
-}
-
-void
-XPCJSRuntime::AddContextCallback(xpcContextCallback cb)
-{
-    MOZ_ASSERT(cb, "null callback");
-    extraContextCallbacks.AppendElement(cb);
-}
-
-void
-XPCJSRuntime::RemoveContextCallback(xpcContextCallback cb)
-{
-    MOZ_ASSERT(cb, "null callback");
-    bool found = extraContextCallbacks.RemoveElement(cb);
     if (!found) {
         NS_ERROR("Removing a callback which was never added.");
     }
