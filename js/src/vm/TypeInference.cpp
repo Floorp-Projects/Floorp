@@ -2824,24 +2824,6 @@ ObjectGroup::markPropertyNonWritable(ExclusiveContext* cx, JSObject* obj, jsid i
         types->setNonWritableProperty(cx);
 }
 
-bool
-ObjectGroup::isPropertyNonData(jsid id)
-{
-    TypeSet* types = maybeGetProperty(id);
-    if (types)
-        return types->nonDataProperty();
-    return false;
-}
-
-bool
-ObjectGroup::isPropertyNonWritable(jsid id)
-{
-    TypeSet* types = maybeGetProperty(id);
-    if (types)
-        return types->nonWritableProperty();
-    return false;
-}
-
 void
 ObjectGroup::markStateChange(ExclusiveContext* cxArg)
 {

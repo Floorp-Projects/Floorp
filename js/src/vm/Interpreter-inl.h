@@ -160,37 +160,6 @@ CheckUninitializedLexical(JSContext* cx, HandleScript script, jsbytecode* pc, Ha
     return true;
 }
 
-/*
- * Return an object on which we should look for the properties of |value|.
- * This helps us implement the custom [[Get]] method that ES5's GetValue
- * algorithm uses for primitive values, without actually constructing the
- * temporary object that the specification does.
- *
- * For objects, return the object itself. For string, boolean, and number
- * primitive values, return the appropriate constructor's prototype. For
- * undefined and null, throw an error and return nullptr, attributing the
- * problem to the value at |spindex| on the stack.
- */
-MOZ_ALWAYS_INLINE JSObject*
-ValuePropertyBearer(JSContext* cx, InterpreterFrame* fp, HandleValue v, int spindex)
-{
-    if (v.isObject())
-        return &v.toObject();
-
-    Rooted<GlobalObject*> global(cx, &fp->global());
-
-    if (v.isString())
-        return GlobalObject::getOrCreateStringPrototype(cx, global);
-    if (v.isNumber())
-        return GlobalObject::getOrCreateNumberPrototype(cx, global);
-    if (v.isBoolean())
-        return GlobalObject::getOrCreateBooleanPrototype(cx, global);
-
-    MOZ_ASSERT(v.isNull() || v.isUndefined());
-    ReportIsNullOrUndefined(cx, spindex, v, nullptr);
-    return nullptr;
-}
-
 inline bool
 GetLengthProperty(const Value& lval, MutableHandleValue vp)
 {

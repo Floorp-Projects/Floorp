@@ -193,9 +193,6 @@ SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id);
 extern bool
 SuppressDeletedElement(JSContext* cx, HandleObject obj, uint32_t index);
 
-extern bool
-SuppressDeletedElements(JSContext* cx, HandleObject obj, uint32_t begin, uint32_t end);
-
 /*
  * IteratorMore() returns the next iteration value. If no value is available,
  * MagicValue(JS_NO_ITER_VALUE) is returned.

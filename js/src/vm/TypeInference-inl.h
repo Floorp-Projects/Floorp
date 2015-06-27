@@ -452,18 +452,6 @@ MarkTypePropertyNonWritable(ExclusiveContext* cx, JSObject* obj, jsid id)
         obj->group()->markPropertyNonWritable(cx, obj, id);
 }
 
-inline bool
-IsTypePropertyIdMarkedNonData(JSObject* obj, jsid id)
-{
-    return obj->group()->isPropertyNonData(id);
-}
-
-inline bool
-IsTypePropertyIdMarkedNonWritable(JSObject* obj, jsid id)
-{
-    return obj->group()->isPropertyNonWritable(id);
-}
-
 /* Mark a state change on a particular object. */
 inline void
 MarkObjectStateChange(ExclusiveContext* cx, JSObject* obj)
