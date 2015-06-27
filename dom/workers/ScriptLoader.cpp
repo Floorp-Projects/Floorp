@@ -322,6 +322,7 @@ class CacheCreator final : public PromiseNativeHandler
 public:
   explicit CacheCreator(WorkerPrivate* aWorkerPrivate)
     : mCacheName(aWorkerPrivate->ServiceWorkerCacheName())
+    , mPrivateBrowsing(aWorkerPrivate->IsInPrivateBrowsing())
   {
     MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
     MOZ_ASSERT(aWorkerPrivate->LoadScriptAsPartOfLoadingServiceWorkerScript());
@@ -382,6 +383,7 @@ private:
   nsTArray<nsRefPtr<CacheScriptLoader>> mLoaders;
 
   nsString mCacheName;
+  bool mPrivateBrowsing;
 };
 
 class CacheScriptLoader final : public PromiseNativeHandler
@@ -1241,11 +1243,19 @@ CacheCreator::CreateCacheStorage(nsIPrincipal* aPrincipal)
     return NS_ERROR_FAILURE;
   }
 
+  // If we're in private browsing mode, don't even try to create the
+  // CacheStorage.  Instead, just fail immediately to terminate the
+  // ServiceWorker load.
+  if (NS_WARN_IF(mPrivateBrowsing)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   ErrorResult error;
   mCacheStorage =
     CacheStorage::CreateOnMainThread(cache::CHROME_ONLY_NAMESPACE,
                                      mSandboxGlobalObject,
-                                     aPrincipal, error);
+                                     aPrincipal, mPrivateBrowsing,
+                                     error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
