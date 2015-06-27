@@ -118,13 +118,19 @@ FontFaceSet::FontFaceSet(nsPIDOMWindow* aWindow, nsIDocument* aDocument)
   mUserFontSet = new UserFontSet(this);
 }
 
+static PLDHashOperator DestroyIterator(nsPtrHashKey<nsFontFaceLoader>* aKey,
+                                       void* aUserArg)
+{
+  aKey->GetKey()->Cancel();
+  return PL_DHASH_REMOVE;
+}
+
 FontFaceSet::~FontFaceSet()
 {
   MOZ_COUNT_DTOR(FontFaceSet);
 
-  NS_ASSERTION(mLoaders.Count() == 0, "mLoaders should have been emptied");
-
   Disconnect();
+  mLoaders.EnumerateEntries(DestroyIterator, nullptr);
 }
 
 JSObject*
@@ -385,39 +391,6 @@ FontFaceSet::ForEach(JSContext* aCx,
       return;
     }
   }
-}
-
-static PLDHashOperator DestroyIterator(nsPtrHashKey<nsFontFaceLoader>* aKey,
-                                       void* aUserArg)
-{
-  aKey->GetKey()->Cancel();
-  return PL_DHASH_REMOVE;
-}
-
-void
-FontFaceSet::DestroyUserFontSet()
-{
-  Disconnect();
-  mDocument = nullptr;
-  mLoaders.EnumerateEntries(DestroyIterator, nullptr);
-  for (size_t i = 0; i < mRuleFaces.Length(); i++) {
-    mRuleFaces[i].mFontFace->DisconnectFromRule();
-    mRuleFaces[i].mFontFace->SetUserFontEntry(nullptr);
-  }
-  for (size_t i = 0; i < mNonRuleFaces.Length(); i++) {
-    mNonRuleFaces[i].mFontFace->SetUserFontEntry(nullptr);
-  }
-  for (size_t i = 0; i < mUnavailableFaces.Length(); i++) {
-    mUnavailableFaces[i]->SetUserFontEntry(nullptr);
-  }
-  mRuleFaces.Clear();
-  mNonRuleFaces.Clear();
-  mUnavailableFaces.Clear();
-  mReady = nullptr;
-  if (mUserFontSet) {
-    mUserFontSet->mFontFaceSet = nullptr;
-  }
-  mUserFontSet = nullptr;
 }
 
 void
