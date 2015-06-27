@@ -18,7 +18,7 @@ add_task(function() {
 
   let cutButton = document.getElementById("cut-button");
   ok(cutButton, "Cut button exists in Panel Menu");
-  ok(cutButton.hasAttribute("disabled"), "Cut button is disabled");
+  ok(!cutButton.hasAttribute("disabled"), "Cut button is enabled");
 
   // cut text from URL bar
   gURLBar.value = testText;

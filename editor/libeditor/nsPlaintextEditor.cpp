@@ -1155,12 +1155,6 @@ nsPlaintextEditor::Redo(uint32_t aCount)
 bool
 nsPlaintextEditor::CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed)
 {
-  nsCOMPtr<nsIDocument> doc = GetDocument();
-  if (doc && doc->IsHTMLOrXHTML()) {
-    // In HTML and XHTML documents, we always want cut and copy commands to be enabled.
-    return true;
-  }
-
   nsRefPtr<Selection> selection = GetSelection();
   if (!selection) {
     return false;
