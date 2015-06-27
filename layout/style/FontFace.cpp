@@ -77,9 +77,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(FontFace)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FontFace)
-  if (!tmp->IsInFontFaceSet()) {
-    tmp->mFontFaceSet->RemoveUnavailableFontFace(tmp);
-  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoaded)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRule)
@@ -126,10 +123,6 @@ FontFace::~FontFace()
   MOZ_COUNT_DTOR(FontFace);
 
   SetUserFontEntry(nullptr);
-
-  if (mFontFaceSet && !IsInFontFaceSet()) {
-    mFontFaceSet->RemoveUnavailableFontFace(this);
-  }
 
   if (mSourceBuffer) {
     free(mSourceBuffer);
@@ -189,7 +182,6 @@ FontFace::Constructor(const GlobalObject& aGlobal,
   }
 
   nsRefPtr<FontFace> obj = new FontFace(global, doc->Fonts());
-  obj->mFontFaceSet->AddUnavailableFontFace(obj);
   if (!obj->SetDescriptors(aFamily, aDescriptors)) {
     return obj.forget();
   }
