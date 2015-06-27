@@ -182,9 +182,11 @@ GetNotifyIMEMessageName(IMEMessage aMessage)
 
 nsIContent* IMEStateManager::sContent = nullptr;
 nsPresContext* IMEStateManager::sPresContext = nullptr;
+StaticRefPtr<nsIWidget> IMEStateManager::sFocusedIMEWidget;
 bool IMEStateManager::sInstalledMenuKeyboardListener = false;
 bool IMEStateManager::sIsGettingNewIMEState = false;
 bool IMEStateManager::sCheckForIMEUnawareWebApps = false;
+bool IMEStateManager::sRemoteHasFocus = false;
 
 // sActiveIMEContentObserver points to the currently active IMEContentObserver.
 // sActiveIMEContentObserver is null if there is no focused editor.
@@ -1109,9 +1111,11 @@ IMEStateManager::NotifyIME(const IMENotification& aNotification,
 {
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::NotifyIME(aNotification={ mMessage=%s }, "
-     "aWidget=0x%p, aOriginIsRemote=%s)",
+     "aWidget=0x%p, aOriginIsRemote=%s), sFocusedIMEWidget=0x%p, "
+     "sRemoteHasFocus=%s",
      GetNotifyIMEMessageName(aNotification.mMessage), aWidget,
-     GetBoolName(aOriginIsRemote)));
+     GetBoolName(aOriginIsRemote), sFocusedIMEWidget.get(),
+     GetBoolName(sRemoteHasFocus)));
 
   if (NS_WARN_IF(!aWidget)) {
     MOZ_LOG(sISMLog, LogLevel::Error,
@@ -1121,11 +1125,91 @@ IMEStateManager::NotifyIME(const IMENotification& aNotification,
 
   switch (aNotification.mMessage) {
     case NOTIFY_IME_OF_FOCUS:
-    case NOTIFY_IME_OF_BLUR:
+      if (sFocusedIMEWidget) {
+        if (NS_WARN_IF(!sRemoteHasFocus && !aOriginIsRemote)) {
+          MOZ_LOG(sISMLog, LogLevel::Error,
+            ("ISM:   IMEStateManager::NotifyIME(), although, this process is "
+             "getting IME focus but there was focused IME widget"));
+        } else {
+          MOZ_LOG(sISMLog, LogLevel::Info,
+            ("ISM:   IMEStateManager::NotifyIME(), tries to notify IME of "
+             "blur first because remote process's blur notification hasn't "
+             "been received yet..."));
+        }
+        nsCOMPtr<nsIWidget> focusedIMEWidget(sFocusedIMEWidget);
+        sFocusedIMEWidget = nullptr;
+        sRemoteHasFocus = false;
+        focusedIMEWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
+      }
+      sRemoteHasFocus = aOriginIsRemote;
+      sFocusedIMEWidget = aWidget;
+      return aWidget->NotifyIME(aNotification);
+    case NOTIFY_IME_OF_BLUR: {
+      if (!sRemoteHasFocus && aOriginIsRemote) {
+        MOZ_LOG(sISMLog, LogLevel::Info,
+          ("ISM:   IMEStateManager::NotifyIME(), received blur notification "
+           "after another one has focus, nothing to do..."));
+        return NS_OK;
+      }
+      if (NS_WARN_IF(sRemoteHasFocus && !aOriginIsRemote)) {
+        MOZ_LOG(sISMLog, LogLevel::Error,
+          ("ISM:   IMEStateManager::NotifyIME(), FAILED, received blur "
+           "notification from this process but the remote has focus"));
+        return NS_OK;
+      }
+      if (!sFocusedIMEWidget && aOriginIsRemote) {
+        MOZ_LOG(sISMLog, LogLevel::Info,
+          ("ISM:   IMEStateManager::NotifyIME(), received blur notification "
+           "but the remote has already lost focus"));
+        return NS_OK;
+      }
+      if (NS_WARN_IF(!sFocusedIMEWidget)) {
+        MOZ_LOG(sISMLog, LogLevel::Error,
+          ("ISM:   IMEStateManager::NotifyIME(), FAILED, received blur "
+           "notification but there is no focused IME widget"));
+        return NS_OK;
+      }
+      if (NS_WARN_IF(sFocusedIMEWidget != aWidget)) {
+        MOZ_LOG(sISMLog, LogLevel::Error,
+          ("ISM:   IMEStateManager::NotifyIME(), FAILED, received blur "
+           "notification but there is no focused IME widget"));
+        return NS_OK;
+      }
+      nsCOMPtr<nsIWidget> focusedIMEWidget(sFocusedIMEWidget);
+      sFocusedIMEWidget = nullptr;
+      sRemoteHasFocus = false;
+      return focusedIMEWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
+    }
     case NOTIFY_IME_OF_SELECTION_CHANGE:
     case NOTIFY_IME_OF_TEXT_CHANGE:
     case NOTIFY_IME_OF_POSITION_CHANGE:
     case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+      if (!sRemoteHasFocus && aOriginIsRemote) {
+        MOZ_LOG(sISMLog, LogLevel::Info,
+          ("ISM:   IMEStateManager::NotifyIME(), received content change "
+           "notification from the remote but it's already lost focus"));
+        return NS_OK;
+      }
+      if (NS_WARN_IF(sRemoteHasFocus && !aOriginIsRemote)) {
+        MOZ_LOG(sISMLog, LogLevel::Error,
+          ("ISM:   IMEStateManager::NotifyIME(), FAILED, received content "
+           "change notification from this process but the remote has already "
+           "gotten focus"));
+        return NS_OK;
+      }
+      if (!sFocusedIMEWidget) {
+        MOZ_LOG(sISMLog, LogLevel::Info,
+          ("ISM:   IMEStateManager::NotifyIME(), received content change "
+           "notification but there is no focused IME widget"));
+        return NS_OK;
+      }
+      if (NS_WARN_IF(sFocusedIMEWidget != aWidget)) {
+        MOZ_LOG(sISMLog, LogLevel::Error,
+          ("ISM:   IMEStateManager::NotifyIME(), FAILED, received content "
+           "change notification for IME which has already lost focus, so, "
+           "nothing to do..."));
+        return NS_OK;
+      }
       return aWidget->NotifyIME(aNotification);
     default:
       // Other notifications should be sent only when there is composition.
