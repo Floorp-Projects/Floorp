@@ -99,9 +99,6 @@ public:
 
   UserFontSet* GetUserFontSet() { return mUserFontSet; }
 
-  // Called when this font set is no longer associated with a presentation.
-  void DestroyUserFontSet();
-
   // Called by nsFontFaceLoader when the loader has completed normally.
   // It's removed from the mLoaders set.
   void RemoveLoader(nsFontFaceLoader* aLoader);
