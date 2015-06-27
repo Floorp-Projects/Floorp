@@ -188,12 +188,7 @@ FontFace::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  FontFaceSet* set = doc->GetFonts(aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  nsRefPtr<FontFace> obj = new FontFace(global, set);
+  nsRefPtr<FontFace> obj = new FontFace(global, doc->Fonts());
   obj->mFontFaceSet->AddUnavailableFontFace(obj);
   if (!obj->SetDescriptors(aFamily, aDescriptors)) {
     return obj.forget();
