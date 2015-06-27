@@ -70,6 +70,7 @@ CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(NS_IsMainThread());
 
+
   bool nullPrincipal;
   nsresult rv = aPrincipal->GetIsNullPrincipal(&nullPrincipal);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -79,8 +80,8 @@ CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
 
   if (nullPrincipal) {
     NS_WARNING("CacheStorage not supported on null principal.");
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
+    nsRefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
+    return ref.forget();
   }
 
   // An unknown appId means that this principal was created for the codebase
@@ -91,8 +92,8 @@ CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
   aPrincipal->GetUnknownAppId(&unknownAppId);
   if (unknownAppId) {
     NS_WARNING("CacheStorage not supported on principal with unknown appId.");
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
+    nsRefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
+    return ref.forget();
   }
 
   PrincipalInfo principalInfo;
@@ -126,16 +127,16 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
   const PrincipalInfo& principalInfo = aWorkerPrivate->GetPrincipalInfo();
   if (principalInfo.type() == PrincipalInfo::TNullPrincipalInfo) {
     NS_WARNING("CacheStorage not supported on null principal.");
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
+    nsRefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
+    return ref.forget();
   }
 
   if (principalInfo.type() == PrincipalInfo::TContentPrincipalInfo &&
       principalInfo.get_ContentPrincipalInfo().appId() ==
       nsIScriptSecurityManager::UNKNOWN_APP_ID) {
     NS_WARNING("CacheStorage not supported on principal with unknown appId.");
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
+    nsRefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
+    return ref.forget();
   }
 
   nsRefPtr<CacheStorage> ref = new CacheStorage(aNamespace, aGlobal,
@@ -150,7 +151,7 @@ CacheStorage::CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
   , mPrincipalInfo(MakeUnique<PrincipalInfo>(aPrincipalInfo))
   , mFeature(aFeature)
   , mActor(nullptr)
-  , mFailedActor(false)
+  , mStatus(NS_OK)
 {
   MOZ_ASSERT(mGlobal);
 
@@ -171,14 +172,22 @@ CacheStorage::CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
   }
 }
 
+CacheStorage::CacheStorage(nsresult aFailureResult)
+  : mNamespace(INVALID_NAMESPACE)
+  , mActor(nullptr)
+  , mStatus(aFailureResult)
+{
+  MOZ_ASSERT(NS_FAILED(mStatus));
+}
+
 already_AddRefed<Promise>
 CacheStorage::Match(const RequestOrUSVString& aRequest,
                     const CacheQueryOptions& aOptions, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (NS_WARN_IF(mFailedActor)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  if (NS_WARN_IF(NS_FAILED(mStatus))) {
+    aRv.Throw(mStatus);
     return nullptr;
   }
 
@@ -212,8 +221,8 @@ CacheStorage::Has(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (NS_WARN_IF(mFailedActor)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  if (NS_WARN_IF(NS_FAILED(mStatus))) {
+    aRv.Throw(mStatus);
     return nullptr;
   }
 
@@ -237,8 +246,8 @@ CacheStorage::Open(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (NS_WARN_IF(mFailedActor)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  if (NS_WARN_IF(NS_FAILED(mStatus))) {
+    aRv.Throw(mStatus);
     return nullptr;
   }
 
@@ -262,8 +271,8 @@ CacheStorage::Delete(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (NS_WARN_IF(mFailedActor)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  if (NS_WARN_IF(NS_FAILED(mStatus))) {
+    aRv.Throw(mStatus);
     return nullptr;
   }
 
@@ -287,8 +296,8 @@ CacheStorage::Keys(ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (NS_WARN_IF(mFailedActor)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  if (NS_WARN_IF(NS_FAILED(mStatus))) {
+    aRv.Throw(mStatus);
     return nullptr;
   }
 
@@ -386,9 +395,9 @@ void
 CacheStorage::ActorFailed()
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
-  MOZ_ASSERT(!mFailedActor);
+  MOZ_ASSERT(!NS_FAILED(mStatus));
 
-  mFailedActor = true;
+  mStatus = NS_ERROR_UNEXPECTED;
   mFeature = nullptr;
 
   for (uint32_t i = 0; i < mPendingRequests.Length(); ++i) {
