@@ -10285,9 +10285,11 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
       return nullptr;
     }
 
+    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+
     nsCOMPtr<nsIDOMStorage> storage;
     aError = storageManager->CreateStorage(this, principal, documentURI,
-                                           IsPrivateBrowsing(),
+                                           loadContext && loadContext->UsePrivateBrowsing(),
                                            getter_AddRefs(storage));
     if (aError.Failed()) {
       return nullptr;
@@ -10363,9 +10365,12 @@ nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
       mDoc->GetDocumentURI(documentURI);
     }
 
+    nsIDocShell* docShell = GetDocShell();
+    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+
     nsCOMPtr<nsIDOMStorage> storage;
     aError = storageManager->CreateStorage(this, principal, documentURI,
-                                           IsPrivateBrowsing(),
+                                           loadContext && loadContext->UsePrivateBrowsing(),
                                            getter_AddRefs(storage));
     if (aError.Failed()) {
       return nullptr;
@@ -10496,8 +10501,7 @@ nsGlobalWindow::GetCaches(ErrorResult& aRv)
 {
   if (!mCacheStorage) {
     mCacheStorage = CacheStorage::CreateOnMainThread(cache::DEFAULT_NAMESPACE,
-                                                     this, GetPrincipal(),
-                                                     IsPrivateBrowsing(), aRv);
+                                                     this, GetPrincipal(), aRv);
   }
 
   nsRefPtr<CacheStorage> ref = mCacheStorage;
@@ -11196,7 +11200,9 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
-    if (changingStorage->IsPrivate() != IsPrivateBrowsing()) {
+    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(GetDocShell());
+    bool isPrivate = loadContext && loadContext->UsePrivateBrowsing();
+    if (changingStorage->IsPrivate() != isPrivate) {
       return NS_OK;
     }
 
@@ -12626,13 +12632,6 @@ nsGlobalWindow::SecurityCheckURL(const char *aURL)
   }
 
   return NS_OK;
-}
-
-bool
-nsGlobalWindow::IsPrivateBrowsing()
-{
-  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(GetDocShell());
-  return loadContext && loadContext->UsePrivateBrowsing();
 }
 
 void

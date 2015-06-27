@@ -22,7 +22,6 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
-#include "nsIDocument.h"
 #include "nsIGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "WorkerPrivate.h"
@@ -65,18 +64,11 @@ struct CacheStorage::Entry final
 // static
 already_AddRefed<CacheStorage>
 CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
-                                 nsIPrincipal* aPrincipal, bool aPrivateBrowsing,
-                                 ErrorResult& aRv)
+                                 nsIPrincipal* aPrincipal, ErrorResult& aRv)
 {
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (aPrivateBrowsing) {
-    NS_WARNING("CacheStorage not supported during private browsing.");
-    nsRefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
-    return ref.forget();
-  }
 
   bool nullPrincipal;
   nsresult rv = aPrincipal->GetIsNullPrincipal(&nullPrincipal);
@@ -87,8 +79,8 @@ CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
 
   if (nullPrincipal) {
     NS_WARNING("CacheStorage not supported on null principal.");
-    nsRefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
-    return ref.forget();
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
   }
 
   // An unknown appId means that this principal was created for the codebase
@@ -99,8 +91,8 @@ CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
   aPrincipal->GetUnknownAppId(&unknownAppId);
   if (unknownAppId) {
     NS_WARNING("CacheStorage not supported on principal with unknown appId.");
-    nsRefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
-    return ref.forget();
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
   }
 
   PrincipalInfo principalInfo;
@@ -124,12 +116,6 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
-  if (aWorkerPrivate->IsInPrivateBrowsing()) {
-    NS_WARNING("CacheStorage not supported during private browsing.");
-    nsRefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
-    return ref.forget();
-  }
-
   nsRefPtr<Feature> feature = Feature::Create(aWorkerPrivate);
   if (!feature) {
     NS_WARNING("Worker thread is shutting down.");
@@ -140,16 +126,16 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
   const PrincipalInfo& principalInfo = aWorkerPrivate->GetPrincipalInfo();
   if (principalInfo.type() == PrincipalInfo::TNullPrincipalInfo) {
     NS_WARNING("CacheStorage not supported on null principal.");
-    nsRefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
-    return ref.forget();
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
   }
 
   if (principalInfo.type() == PrincipalInfo::TContentPrincipalInfo &&
       principalInfo.get_ContentPrincipalInfo().appId() ==
       nsIScriptSecurityManager::UNKNOWN_APP_ID) {
     NS_WARNING("CacheStorage not supported on principal with unknown appId.");
-    nsRefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
-    return ref.forget();
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
   }
 
   nsRefPtr<CacheStorage> ref = new CacheStorage(aNamespace, aGlobal,
@@ -164,7 +150,7 @@ CacheStorage::CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
   , mPrincipalInfo(MakeUnique<PrincipalInfo>(aPrincipalInfo))
   , mFeature(aFeature)
   , mActor(nullptr)
-  , mStatus(NS_OK)
+  , mFailedActor(false)
 {
   MOZ_ASSERT(mGlobal);
 
@@ -185,22 +171,14 @@ CacheStorage::CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
   }
 }
 
-CacheStorage::CacheStorage(nsresult aFailureResult)
-  : mNamespace(INVALID_NAMESPACE)
-  , mActor(nullptr)
-  , mStatus(aFailureResult)
-{
-  MOZ_ASSERT(NS_FAILED(mStatus));
-}
-
 already_AddRefed<Promise>
 CacheStorage::Match(const RequestOrUSVString& aRequest,
                     const CacheQueryOptions& aOptions, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (NS_WARN_IF(NS_FAILED(mStatus))) {
-    aRv.Throw(mStatus);
+  if (NS_WARN_IF(mFailedActor)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
@@ -234,8 +212,8 @@ CacheStorage::Has(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (NS_WARN_IF(NS_FAILED(mStatus))) {
-    aRv.Throw(mStatus);
+  if (NS_WARN_IF(mFailedActor)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
@@ -259,8 +237,8 @@ CacheStorage::Open(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (NS_WARN_IF(NS_FAILED(mStatus))) {
-    aRv.Throw(mStatus);
+  if (NS_WARN_IF(mFailedActor)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
@@ -284,8 +262,8 @@ CacheStorage::Delete(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (NS_WARN_IF(NS_FAILED(mStatus))) {
-    aRv.Throw(mStatus);
+  if (NS_WARN_IF(mFailedActor)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
@@ -309,8 +287,8 @@ CacheStorage::Keys(ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (NS_WARN_IF(NS_FAILED(mStatus))) {
-    aRv.Throw(mStatus);
+  if (NS_WARN_IF(mFailedActor)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
@@ -357,18 +335,7 @@ CacheStorage::Constructor(const GlobalObject& aGlobal,
 
   Namespace ns = static_cast<Namespace>(aNamespace);
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-
-  bool privateBrowsing = false;
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global);
-  if (window) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-    if (doc) {
-      nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();
-      privateBrowsing = loadContext && loadContext->UsePrivateBrowsing();
-    }
-  }
-
-  return CreateOnMainThread(ns, global, aPrincipal, privateBrowsing, aRv);
+  return CreateOnMainThread(ns, global, aPrincipal, aRv);
 }
 
 nsISupports*
@@ -419,9 +386,9 @@ void
 CacheStorage::ActorFailed()
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
-  MOZ_ASSERT(!NS_FAILED(mStatus));
+  MOZ_ASSERT(!mFailedActor);
 
-  mStatus = NS_ERROR_UNEXPECTED;
+  mFailedActor = true;
   mFeature = nullptr;
 
   for (uint32_t i = 0; i < mPendingRequests.Length(); ++i) {
