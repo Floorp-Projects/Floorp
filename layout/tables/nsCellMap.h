@@ -38,17 +38,17 @@ struct nsColInfo
 
 enum Corner
 {
-  eTopLeft     = 0,
-  eTopRight    = 1,
-  eBottomRight = 2,
-  eBottomLeft  = 3
+  eBStartIStart = 0,
+  eBStartIEnd   = 1,
+  eBEndIEnd     = 2,
+  eBEndIStart   = 3
 };
 
 struct BCInfo
 {
-  nsTArray<BCData> mRightBorders;
-  nsTArray<BCData> mBottomBorders;
-  BCData           mLowerRightCorner;
+  nsTArray<BCData> mIEndBorders;
+  nsTArray<BCData> mBEndBorders;
+  BCData           mBEndIEndCorner;
 };
 
 class nsTableCellMap
