@@ -1024,20 +1024,6 @@ nsXPConnect::UnregisterGCCallback(xpcGCCallback func)
     mRuntime->RemoveGCCallback(func);
 }
 
-/* [noscript, notxpcom] void registerContextCallback(in xpcContextCallback func); */
-NS_IMETHODIMP_(void)
-nsXPConnect::RegisterContextCallback(xpcContextCallback func)
-{
-    mRuntime->AddContextCallback(func);
-}
-
-/* [noscript, notxpcom] void unregisterContextCallback(in xpcContextCallback func); */
-NS_IMETHODIMP_(void)
-nsXPConnect::UnregisterContextCallback(xpcContextCallback func)
-{
-    mRuntime->RemoveContextCallback(func);
-}
-
 /* virtual */
 JSContext*
 nsXPConnect::GetCurrentJSContext()
