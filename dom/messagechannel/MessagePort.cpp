@@ -866,6 +866,14 @@ MessagePort::UpdateMustKeepAlive()
       mWorkerFeature = nullptr;
     }
 
+    if (NS_IsMainThread()) {
+      nsCOMPtr<nsIObserverService> obs =
+        do_GetService("@mozilla.org/observer-service;1");
+      if (obs) {
+        obs->RemoveObserver(this, "inner-window-destroyed");
+      }
+    }
+
     Release();
     return;
   }
@@ -900,12 +908,6 @@ MessagePort::Observe(nsISupports* aSubject, const char* aTopic,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (innerID == mInnerID) {
-    nsCOMPtr<nsIObserverService> obs =
-      do_GetService("@mozilla.org/observer-service;1");
-    if (obs) {
-      obs->RemoveObserver(this, "inner-window-destroyed");
-    }
-
     Close();
   }
 
