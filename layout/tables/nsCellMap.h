@@ -200,11 +200,11 @@ protected:
 public:
   void ExpandZeroColSpans();
 
-  void ResetTopStart(mozilla::LogicalSide    aSide,
-                     nsCellMap& aCellMap,
-                     uint32_t   aYPos,
-                     uint32_t   aXPos,
-                     bool       aIsLowerRight = false);
+  void ResetBStartStart(mozilla::LogicalSide aSide,
+                        nsCellMap& aCellMap,
+                        uint32_t   aYPos,
+                        uint32_t   aXPos,
+                        bool       aIsBEndIEnd = false);
 
   void SetBCBorderEdge(mozilla::LogicalSide aEdge,
                        nsCellMap&    aCellMap,
@@ -232,8 +232,8 @@ public:
 #endif
 
 protected:
-  BCData* GetRightMostBorder(int32_t aRowIndex);
-  BCData* GetBottomMostBorder(int32_t aColIndex);
+  BCData* GetIEndMostBorder(int32_t aRowIndex);
+  BCData* GetBEndMostBorder(int32_t aColIndex);
 
   friend class nsCellMap;
   friend class BCMapCellIterator;
@@ -246,7 +246,7 @@ protected:
   */
   void InsertGroupCellMap(nsCellMap* aPrevMap,
                           nsCellMap& aNewMap);
-  void DeleteRightBottomBorders();
+  void DeleteIEndBEndBorders();
 
   nsTableFrame&               mTableFrame;
   nsAutoTArray<nsColInfo, 8>  mCols;

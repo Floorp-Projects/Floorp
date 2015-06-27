@@ -4106,16 +4106,16 @@ nsTableFrame::SetFullBCDamageArea()
 }
 
 
-/* BCCellBorder represents a border segment which can be either a horizontal
- * or a vertical segment. For each segment we need to know the color, width,
+/* BCCellBorder represents a border segment which can be either an inline-dir
+ * or a block-dir segment. For each segment we need to know the color, width,
  * style, who owns it and how long it is in cellmap coordinates.
  * Ownership of these segments is important to calculate which corners should
  * be bevelled. This structure has dual use, its used first to compute the
- * dominant border for horizontal and vertical segments and to store the
+ * dominant border for inline-dir and block-dir segments and to store the
  * preliminary computed border results in the BCCellBorders structure.
- * This temporary storage is not symmetric with respect to horizontal and
- * vertical border segments, its always column oriented. For each column in
- * the cellmap there is a temporary stored vertical and horizontal segment.
+ * This temporary storage is not symmetric with respect to inline-dir and
+ * block-dir border segments, its always column oriented. For each column in
+ * the cellmap there is a temporary stored block-dir and inline-dir segment.
  * XXX_Bernd this asymmetry is the root of those rowspan bc border errors
  */
 struct BCCellBorder
@@ -4826,7 +4826,7 @@ nsTableFrame::BCRecalcNeeded(nsStyleContext* aOldStyleContext,
 
 
 // Compare two border segments, this comparison depends whether the two
-// segments meet at a corner and whether the second segment is horizontal.
+// segments meet at a corner and whether the second segment is inline-dir.
 // The return value is whichever of aBorder1 or aBorder2 dominates.
 static const BCCellBorder&
 CompareBorders(bool                aIsCorner, // Pass true for corner calculations
@@ -5156,8 +5156,8 @@ SetBorder(const BCCellBorder&   aNewBorder,
   return changed;
 }
 
-// this function will set the horizontal border. It will return true if the
-// existing segment will not be continued. Having a vertical owner of a corner
+// this function will set the inline-dir border. It will return true if the
+// existing segment will not be continued. Having a block-dir owner of a corner
 // should also start a new segment.
 static bool
 SetInlineDirBorder(const BCCellBorder& aNewBorder,
@@ -5486,7 +5486,7 @@ BCMapCellInfo::SetTableBStartBorderWidth(BCPixelSize aWidth)
 void
 BCMapCellInfo::SetTableIStartBorderWidth(int32_t aRowB, BCPixelSize aWidth)
 {
-  // update the left/right first cell border
+  // update the iStart first cell border
   if (aRowB == 0) {
     mTableBCData->mIStartCellBorderWidth = aWidth;
   }
@@ -5497,7 +5497,7 @@ BCMapCellInfo::SetTableIStartBorderWidth(int32_t aRowB, BCPixelSize aWidth)
 void
 BCMapCellInfo::SetTableIEndBorderWidth(int32_t aRowB, BCPixelSize aWidth)
 {
-  // update the left/right first cell border
+  // update the iEnd first cell border
   if (aRowB == 0) {
     mTableBCData->mIEndCellBorderWidth = aWidth;
   }
@@ -5984,7 +5984,7 @@ nsTableFrame::CalcBCBorders()
     // find the dominant border considering the cell's bEnd border, adjacent
     // cells and the table, row group, row
     if (info.mNumTableRows == info.GetCellEndRowIndex() + 1) {
-      // touches bottom edge of table
+      // touches bEnd edge of table
       if (!tableBorderReset[eLogicalSideBEnd]) {
         propData->mBEndBorderWidth = 0;
         tableBorderReset[eLogicalSideBEnd] = true;
@@ -6155,9 +6155,9 @@ nsTableFrame::CalcBCBorders()
           // set the flag on the next border indicating it is not the start of a
           // new segment
           if (iter.mCellMap) {
-            tableCellMap->ResetTopStart(eLogicalSideBEnd, *iter.mCellMap,
-                                        info.GetCellEndRowIndex(),
-                                        info.GetCellEndColIndex() + 1);
+            tableCellMap->ResetBStartStart(eLogicalSideBEnd, *iter.mCellMap,
+                                           info.GetCellEndRowIndex(),
+                                           info.GetCellEndColIndex() + 1);
           }
         }
       }
@@ -6232,11 +6232,11 @@ struct BCInlineDirSeg
 
   void Start(BCPaintBorderIterator& aIter,
              BCBorderOwner          aBorderOwner,
-             BCPixelSize            aBEndBlockSegWidth,
+             BCPixelSize            aBEndBlockSegISize,
              BCPixelSize            aInlineSegBSize);
    void GetIEndCorner(BCPaintBorderIterator& aIter,
-                      BCPixelSize            aIStartSegWidth);
-   void AdvanceOffsetI(int32_t aIncrement);
+                      BCPixelSize            aIStartSegISize);
+   void AdvanceOffsetI();
    void IncludeCurrentBorder(BCPaintBorderIterator& aIter);
    void Paint(BCPaintBorderIterator& aIter,
               nsRenderingContext&    aRenderingContext);
@@ -6269,8 +6269,8 @@ class BCPaintBorderIterator
 {
 public:
   explicit BCPaintBorderIterator(nsTableFrame* aTable);
-  ~BCPaintBorderIterator() { if (mVerInfo) {
-                              delete [] mVerInfo;
+  ~BCPaintBorderIterator() { if (mBlockDirInfo) {
+                              delete [] mBlockDirInfo;
                            }}
   void Reset();
 
@@ -6336,10 +6336,10 @@ public:
   BCCellData*           mCellData;
   BCData*               mBCData;
 
-  bool                  IsTableTopMost()    {return (mRowIndex == 0) && !mTable->GetPrevInFlow();}
-  bool                  IsTableRightMost()  {return (mColIndex >= mNumTableCols);}
-  bool                  IsTableBottomMost() {return (mRowIndex >= mNumTableRows) && !mTable->GetNextInFlow();}
-  bool                  IsTableLeftMost()   {return (mColIndex == 0);}
+  bool                  IsTableBStartMost() {return (mRowIndex == 0) && !mTable->GetPrevInFlow();}
+  bool                  IsTableIEndMost()   {return (mColIndex >= mNumTableCols);}
+  bool                  IsTableBEndMost()   {return (mRowIndex >= mNumTableRows) && !mTable->GetNextInFlow();}
+  bool                  IsTableIStartMost() {return (mColIndex == 0);}
   bool IsDamageAreaBStartMost() const
     { return mRowIndex == mDamageArea.StartRow(); }
   bool IsDamageAreaIEndMost() const
@@ -6352,7 +6352,8 @@ public:
     { return mColIndex - mDamageArea.StartCol(); }
 
   TableArea             mDamageArea;        // damageArea in cellmap coordinates
-  bool                  IsAfterRepeatedHeader() { return !mIsRepeatedHeader && (mRowIndex == (mRepeatedHeaderRowIndex + 1));}
+  bool IsAfterRepeatedHeader()
+    { return !mIsRepeatedHeader && (mRowIndex == (mRepeatedHeaderRowIndex + 1)); }
   bool StartRepeatedFooter() const
   {
     return mIsRepeatedFooter && mRowIndex == mRgFirstRowIndex &&
@@ -6364,7 +6365,7 @@ public:
   nscoord               mInitialOffsetB;    // offsetB of the first border with
                                             // respect to the table
   nscoord               mNextOffsetB;       // offsetB of the next segment
-  BCBlockDirSeg*        mVerInfo; // this array is used differently when
+  BCBlockDirSeg*        mBlockDirInfo; // this array is used differently when
                                   // inline-dir and block-dir borders are drawn
                                   // When inline-dir border are drawn we cache
                                   // the column widths and the width of the
@@ -6396,7 +6397,7 @@ BCPaintBorderIterator::BCPaintBorderIterator(nsTableFrame* aTable)
   , mTableCellMap(aTable->GetCellMap())
   , mTableWM(aTable->StyleContext())
 {
-  mVerInfo    = nullptr;
+  mBlockDirInfo    = nullptr;
   LogicalMargin childAreaOffset = mTable->GetChildAreaOffset(mTableWM, nullptr);
   // y position of first row in damage area
   mInitialOffsetB =
@@ -6474,19 +6475,16 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
   haveIntersect = false;
   if (0 == mNumTableCols)
     return false;
-  int32_t leftCol, rightCol; // columns are in the range [leftCol, rightCol)
 
   LogicalMargin childAreaOffset = mTable->GetChildAreaOffset(mTableWM, nullptr);
 
-  // x position of first col in damage area
+  // inline position of first col in damage area
   mInitialOffsetI = childAreaOffset.IStart(mTableWM);
-  leftCol = 0;
-  rightCol = mNumTableCols;
 
   nscoord x = 0;
-  int32_t colX;
-  for (colX = leftCol; colX != rightCol; colX++) {
-    nsTableColFrame* colFrame = mTableFirstInFlow->GetColFrame(colX);
+  int32_t colIdx;
+  for (colIdx = 0; colIdx != mNumTableCols; colIdx++) {
+    nsTableColFrame* colFrame = mTableFirstInFlow->GetColFrame(colIdx);
     if (!colFrame) ABORT1(false);
     // get the col rect relative to the table rather than the col group
     nscoord colISize = colFrame->ISize(mTableWM);
@@ -6495,7 +6493,7 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
       nscoord iStartBorderHalf = nsPresContext::
         CSSPixelsToAppUnits(colFrame->GetIStartBorderWidth() + 1);
       if (dirtyRect.IEnd(mTableWM) >= x - iStartBorderHalf) {
-        endColIndex = colX;
+        endColIndex = colIdx;
       }
       else break;
     }
@@ -6504,7 +6502,7 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
       nscoord iEndBorderHalf = nsPresContext::
         CSSPixelsToAppUnits(colFrame->GetIEndBorderWidth() + 1);
       if (x + colISize + iEndBorderHalf >= dirtyRect.IStart(mTableWM)) {
-        startColIndex = endColIndex = colX;
+        startColIndex = endColIndex = colIdx;
         haveIntersect = true;
       }
       else {
@@ -6520,8 +6518,8 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
                           1 + endRowIndex - startRowIndex);
 
   Reset();
-  mVerInfo = new BCBlockDirSeg[mDamageArea.ColCount() + 1];
-  if (!mVerInfo)
+  mBlockDirInfo = new BCBlockDirSeg[mDamageArea.ColCount() + 1];
+  if (!mBlockDirInfo)
     return false;
   return true;
 }
@@ -6558,15 +6556,15 @@ BCPaintBorderIterator::SetNewData(int32_t aY,
   mColIndex    = aX;
   mRowIndex    = aY;
   mPrevCellData = mCellData;
-  if (IsTableRightMost() && IsTableBottomMost()) {
+  if (IsTableIEndMost() && IsTableBEndMost()) {
    mCell = nullptr;
    mBCData = &mTableCellMap->mBCInfo->mBEndIEndCorner;
   }
-  else if (IsTableRightMost()) {
+  else if (IsTableIEndMost()) {
     mCellData = nullptr;
     mBCData = &mTableCellMap->mBCInfo->mIEndBorders.ElementAt(aY);
   }
-  else if (IsTableBottomMost()) {
+  else if (IsTableBEndMost()) {
     mCellData = nullptr;
     mBCData = &mTableCellMap->mBCInfo->mBEndBorders.ElementAt(aX);
   }
@@ -6840,13 +6838,13 @@ BCBlockDirSeg::Start(BCPaintBorderIterator& aIter,
   nscoord cornerSubWidth  = (aIter.mBCData) ?
                                aIter.mBCData->GetCorner(ownerSide, bevel) : 0;
 
-  bool    topBevel        = (aBlockSegISize > 0) ? bevel : false;
+  bool    bStartBevel     = (aBlockSegISize > 0) ? bevel : false;
   BCPixelSize maxInlineSegBSize = std::max(aIter.mPrevInlineSegBSize, aInlineSegBSize);
   nscoord offset          = CalcVerCornerOffset(ownerSide, cornerSubWidth,
                                                 maxInlineSegBSize, true,
-                                                topBevel);
+                                                bStartBevel);
 
-  mBStartBevelOffset = topBevel ?
+  mBStartBevelOffset = bStartBevel ?
     nsPresContext::CSSPixelsToAppUnits(maxInlineSegBSize): 0;
   // XXX this assumes that only corners where 2 segments join can be beveled
   mBStartBevelSide     = (aInlineSegBSize > 0) ? eLogicalSideIEnd : eLogicalSideIStart;
@@ -6858,28 +6856,28 @@ BCBlockDirSeg::Start(BCPaintBorderIterator& aIter,
   mFirstRowGroup = aIter.mRg;
   mFirstRow      = aIter.mRow;
   if (aIter.GetRelativeColIndex() > 0) {
-    mAjaCell = aIter.mVerInfo[aIter.GetRelativeColIndex() - 1].mLastCell;
+    mAjaCell = aIter.mBlockDirInfo[aIter.GetRelativeColIndex() - 1].mLastCell;
   }
 }
 
 /**
- * Initialize the vertical segments with information that will persist for any
- * vertical segment in this column
+ * Initialize the block-dir segments with information that will persist for any
+ * block-dir segment in this column
  * @param aIter - iterator containing the structural information
  */
 void
 BCBlockDirSeg::Initialize(BCPaintBorderIterator& aIter)
 {
   int32_t relColIndex = aIter.GetRelativeColIndex();
-  mCol = aIter.IsTableRightMost() ? aIter.mVerInfo[relColIndex - 1].mCol :
+  mCol = aIter.IsTableIEndMost() ? aIter.mBlockDirInfo[relColIndex - 1].mCol :
            aIter.mTableFirstInFlow->GetColFrame(aIter.mColIndex);
   if (!mCol) ABORT0();
   if (0 == relColIndex) {
     mOffsetI = aIter.mInitialOffsetI;
   }
-  // set colX for the next column
+  // set mOffsetI for the next column
   if (!aIter.IsDamageAreaIEndMost()) {
-    aIter.mVerInfo[relColIndex + 1].mOffsetI =
+    aIter.mBlockDirInfo[relColIndex + 1].mOffsetI =
       mOffsetI + mCol->ISize(aIter.mTableWM);
   }
   mOffsetB = aIter.mInitialOffsetB;
@@ -6887,10 +6885,10 @@ BCBlockDirSeg::Initialize(BCPaintBorderIterator& aIter)
 }
 
 /**
- * Compute the offsets for the bottom corner of a vertical segment
- * @param aIter         - iterator containing the structural information
- * @param aInlineSegBSize - the width of the horizontal segment joining the corner
- *                        at the start
+ * Compute the offsets for the bEnd corner of a block-dir segment
+ * @param aIter           - iterator containing the structural information
+ * @param aInlineSegBSize - the width of the inline-dir segment joining the corner
+ *                          at the start
  */
 void
 BCBlockDirSeg::GetBEndCorner(BCPaintBorderIterator& aIter,
@@ -6911,11 +6909,11 @@ BCBlockDirSeg::GetBEndCorner(BCPaintBorderIterator& aIter,
 }
 
 /**
- * Paint the vertical segment
- * @param aIter         - iterator containing the structural information
+ * Paint the block-dir segment
+ * @param aIter             - iterator containing the structural information
  * @param aRenderingContext - the rendering context
- * @param aInlineSegBSize - the width of the horizontal segment joining the corner
- *                        at the start
+ * @param aInlineSegBSize   - the width of the inline-dir segment joining the corner
+ *                            at the start
  */
 void
 BCBlockDirSeg::Paint(BCPaintBorderIterator& aIter,
@@ -6942,8 +6940,8 @@ BCBlockDirSeg::Paint(BCPaintBorderIterator& aIter,
       break;
     case eAjaColGroupOwner:
       side = eLogicalSideIEnd;
-      if (!aIter.IsTableRightMost() && (relColIndex > 0)) {
-        col = aIter.mVerInfo[relColIndex - 1].mCol;
+      if (!aIter.IsTableIEndMost() && (relColIndex > 0)) {
+        col = aIter.mBlockDirInfo[relColIndex - 1].mCol;
       } // and fall through
     case eColGroupOwner:
       if (col) {
@@ -6952,8 +6950,8 @@ BCBlockDirSeg::Paint(BCPaintBorderIterator& aIter,
       break;
     case eAjaColOwner:
       side = eLogicalSideIEnd;
-      if (!aIter.IsTableRightMost() && (relColIndex > 0)) {
-        col = aIter.mVerInfo[relColIndex - 1].mCol;
+      if (!aIter.IsTableIEndMost() && (relColIndex > 0)) {
+        col = aIter.mBlockDirInfo[relColIndex - 1].mCol;
       } // and fall through
     case eColOwner:
       owner = col;
@@ -6962,14 +6960,14 @@ BCBlockDirSeg::Paint(BCPaintBorderIterator& aIter,
       NS_ERROR("a neighboring rowgroup can never own a vertical border");
       // and fall through
     case eRowGroupOwner:
-      NS_ASSERTION(aIter.IsTableLeftMost() || aIter.IsTableRightMost(),
+      NS_ASSERTION(aIter.IsTableIStartMost() || aIter.IsTableIEndMost(),
                   "row group can own border only at table edge");
       owner = mFirstRowGroup;
       break;
     case eAjaRowOwner:
       NS_ERROR("program error"); // and fall through
     case eRowOwner:
-      NS_ASSERTION(aIter.IsTableLeftMost() || aIter.IsTableRightMost(),
+      NS_ASSERTION(aIter.IsTableIStartMost() || aIter.IsTableIEndMost(),
                    "row can own border only at table edge");
       owner = mFirstRow;
       break;
@@ -7034,13 +7032,13 @@ BCInlineDirSeg::BCInlineDirSeg()
 /** Initialize an inline-dir border segment for painting
   * @param aIter              - iterator storing the current and adjacent frames
   * @param aBorderOwner       - which frame owns the border
-  * @param aBEndBlockSegWidth - block-dir segment width coming from up
+  * @param aBEndBlockSegISize - block-dir segment width coming from up
   * @param aInlineSegBSize    - the thickness of the segment
   +  */
 void
 BCInlineDirSeg::Start(BCPaintBorderIterator& aIter,
                       BCBorderOwner          aBorderOwner,
-                      BCPixelSize            aBEndBlockSegWidth,
+                      BCPixelSize            aBEndBlockSegISize,
                       BCPixelSize            aInlineSegBSize)
 {
   LogicalSide cornerOwnerSide = eLogicalSideBStart;
@@ -7051,32 +7049,32 @@ BCInlineDirSeg::Start(BCPaintBorderIterator& aIter,
                              aIter.mBCData->GetCorner(cornerOwnerSide,
                                                        bevel) : 0;
 
-  bool    leftBevel = (aInlineSegBSize > 0) ? bevel : false;
+  bool    iStartBevel = (aInlineSegBSize > 0) ? bevel : false;
   int32_t relColIndex = aIter.GetRelativeColIndex();
-  nscoord maxBlockSegISize = std::max(aIter.mVerInfo[relColIndex].mWidth,
-                                  aBEndBlockSegWidth);
+  nscoord maxBlockSegISize = std::max(aIter.mBlockDirInfo[relColIndex].mWidth,
+                                      aBEndBlockSegISize);
   nscoord offset = CalcHorCornerOffset(cornerOwnerSide, cornerSubWidth,
-                                       maxBlockSegISize, true, leftBevel);
-  mIStartBevelOffset = (leftBevel && (aInlineSegBSize > 0)) ? maxBlockSegISize : 0;
+                                       maxBlockSegISize, true, iStartBevel);
+  mIStartBevelOffset = (iStartBevel && (aInlineSegBSize > 0)) ? maxBlockSegISize : 0;
   // XXX this assumes that only corners where 2 segments join can be beveled
-  mIStartBevelSide   = (aBEndBlockSegWidth > 0) ? eLogicalSideBEnd : eLogicalSideBStart;
+  mIStartBevelSide   = (aBEndBlockSegISize > 0) ? eLogicalSideBEnd : eLogicalSideBStart;
   mOffsetI += offset;
   mLength          = -offset;
   mWidth           = aInlineSegBSize;
   mFirstCell       = aIter.mCell;
   mAjaCell         = (aIter.IsDamageAreaBStartMost()) ? nullptr :
-                     aIter.mVerInfo[relColIndex].mLastCell;
+                     aIter.mBlockDirInfo[relColIndex].mLastCell;
 }
 
 /**
- * Compute the offsets for the right corner of a horizontal segment
+ * Compute the offsets for the iEnd corner of an inline-dir segment
  * @param aIter         - iterator containing the structural information
- * @param aIStartSegWidth - the width of the vertical segment joining the corner
+ * @param aIStartSegISize - the iSize of the block-dir segment joining the corner
  *                        at the start
  */
 void
 BCInlineDirSeg::GetIEndCorner(BCPaintBorderIterator& aIter,
-                              BCPixelSize            aIStartSegWidth)
+                              BCPixelSize            aIStartSegISize)
 {
   LogicalSide ownerSide = eLogicalSideBStart;
   nscoord cornerSubWidth = 0;
@@ -7087,23 +7085,24 @@ BCInlineDirSeg::GetIEndCorner(BCPaintBorderIterator& aIter,
 
   mIsIEndBevel = (mWidth > 0) ? bevel : 0;
   int32_t relColIndex = aIter.GetRelativeColIndex();
-  nscoord verWidth = std::max(aIter.mVerInfo[relColIndex].mWidth, aIStartSegWidth);
+  nscoord verWidth = std::max(aIter.mBlockDirInfo[relColIndex].mWidth,
+                              aIStartSegISize);
   mEndOffset = CalcHorCornerOffset(ownerSide, cornerSubWidth, verWidth,
                                    false, mIsIEndBevel);
   mLength += mEndOffset;
   mIEndBevelOffset = (mIsIEndBevel) ?
                        nsPresContext::CSSPixelsToAppUnits(verWidth) : 0;
-  mIEndBevelSide = (aIStartSegWidth > 0) ? eLogicalSideBEnd : eLogicalSideBStart;
+  mIEndBevelSide = (aIStartSegISize > 0) ? eLogicalSideBEnd : eLogicalSideBStart;
 }
 
 /**
  * Paint the inline-dir segment
- * @param aIter         - iterator containing the structural information
+ * @param aIter             - iterator containing the structural information
  * @param aRenderingContext - the rendering context
  */
 void
 BCInlineDirSeg::Paint(BCPaintBorderIterator& aIter,
-                       nsRenderingContext&   aRenderingContext)
+                      nsRenderingContext&    aRenderingContext)
 {
   // get the border style, color and paint the segment
   LogicalSide side =
@@ -7121,39 +7120,38 @@ BCInlineDirSeg::Paint(BCPaintBorderIterator& aIter,
   uint8_t style = NS_STYLE_BORDER_STYLE_SOLID;
   nscolor color = 0xFFFFFFFF;
 
-
   switch (mOwner) {
     case eTableOwner:
       owner = aIter.mTable;
       break;
     case eAjaColGroupOwner:
-      NS_ERROR("neighboring colgroups can never own a horizontal border");
+      NS_ERROR("neighboring colgroups can never own an inline-dir border");
       // and fall through
     case eColGroupOwner:
-      NS_ASSERTION(aIter.IsTableTopMost() || aIter.IsTableBottomMost(),
+      NS_ASSERTION(aIter.IsTableBStartMost() || aIter.IsTableBEndMost(),
                    "col group can own border only at the table edge");
       col = aIter.mTableFirstInFlow->GetColFrame(aIter.mColIndex - 1);
       if (!col) ABORT0();
       owner = col->GetParent();
       break;
     case eAjaColOwner:
-      NS_ERROR("neighboring column can never own a horizontal border");
+      NS_ERROR("neighboring column can never own an inline-dir border");
       // and fall through
     case eColOwner:
-      NS_ASSERTION(aIter.IsTableTopMost() || aIter.IsTableBottomMost(),
+      NS_ASSERTION(aIter.IsTableBStartMost() || aIter.IsTableBEndMost(),
                    "col can own border only at the table edge");
       owner = aIter.mTableFirstInFlow->GetColFrame(aIter.mColIndex - 1);
       break;
     case eAjaRowGroupOwner:
       side = eLogicalSideBEnd;
-      rg = (aIter.IsTableBottomMost()) ? aIter.mRg : aIter.mPrevRg;
+      rg = (aIter.IsTableBEndMost()) ? aIter.mRg : aIter.mPrevRg;
       // and fall through
     case eRowGroupOwner:
       owner = rg;
       break;
     case eAjaRowOwner:
       side = eLogicalSideBEnd;
-      row = (aIter.IsTableBottomMost()) ? aIter.mRow : aIter.mPrevRow;
+      row = (aIter.IsTableBEndMost()) ? aIter.mRow : aIter.mPrevRow;
       // and fall through
     case eRowOwner:
       owner = row;
@@ -7206,9 +7204,9 @@ BCInlineDirSeg::Paint(BCPaintBorderIterator& aIter,
  * Advance the start point of a segment
  */
 void
-BCInlineDirSeg::AdvanceOffsetI(int32_t aIncrement)
+BCInlineDirSeg::AdvanceOffsetI()
 {
-  mOffsetI += aIncrement * (mLength - mEndOffset);
+  mOffsetI += (mLength - mEndOffset);
 }
 
 /**
@@ -7217,26 +7215,26 @@ BCInlineDirSeg::AdvanceOffsetI(int32_t aIncrement)
 void
 BCInlineDirSeg::IncludeCurrentBorder(BCPaintBorderIterator& aIter)
 {
-  mLength += aIter.mVerInfo[aIter.GetRelativeColIndex()].mColWidth;
+  mLength += aIter.mBlockDirInfo[aIter.GetRelativeColIndex()].mColWidth;
 }
 
 /**
- * store the column width information while painting horizontal segment
+ * store the column width information while painting inline-dir segment
  */
 void
 BCPaintBorderIterator::StoreColumnWidth(int32_t aIndex)
 {
-  if (IsTableRightMost()) {
-      mVerInfo[aIndex].mColWidth = mVerInfo[aIndex - 1].mColWidth;
+  if (IsTableIEndMost()) {
+    mBlockDirInfo[aIndex].mColWidth = mBlockDirInfo[aIndex - 1].mColWidth;
   }
   else {
     nsTableColFrame* col = mTableFirstInFlow->GetColFrame(mColIndex);
     if (!col) ABORT0();
-    mVerInfo[aIndex].mColWidth = col->ISize(mTableWM);
+    mBlockDirInfo[aIndex].mColWidth = col->ISize(mTableWM);
   }
 }
 /**
- * Determine if a vertical segment owns the corder
+ * Determine if a block-dir segment owns the corner
  */
 bool
 BCPaintBorderIterator::BlockDirSegmentOwnsCorner()
@@ -7261,7 +7259,7 @@ BCPaintBorderIterator::AccumulateOrPaintInlineDirSegment(nsRenderingContext& aRe
 
   int32_t relColIndex = GetRelativeColIndex();
   // store the current col width if it hasn't been already
-  if (mVerInfo[relColIndex].mColWidth < 0) {
+  if (mBlockDirInfo[relColIndex].mColWidth < 0) {
     StoreColumnWidth(relColIndex);
   }
 
@@ -7284,23 +7282,23 @@ BCPaintBorderIterator::AccumulateOrPaintInlineDirSegment(nsRenderingContext& aRe
   }
 
   if (!IsDamageAreaIStartMost() && (isSegStart || IsDamageAreaIEndMost() ||
-                                  BlockDirSegmentOwnsCorner())) {
+                                    BlockDirSegmentOwnsCorner())) {
     // paint the previous seg or the current one if IsDamageAreaIEndMost()
     if (mInlineSeg.mLength > 0) {
       mInlineSeg.GetIEndCorner(*this, iStartSegISize);
       if (mInlineSeg.mWidth > 0) {
         mInlineSeg.Paint(*this, aRenderingContext);
       }
-      mInlineSeg.AdvanceOffsetI(1);
+      mInlineSeg.AdvanceOffsetI();
     }
     mInlineSeg.Start(*this, borderOwner, iStartSegISize, bStartSegBSize);
   }
   mInlineSeg.IncludeCurrentBorder(*this);
-  mVerInfo[relColIndex].mWidth = iStartSegISize;
-  mVerInfo[relColIndex].mLastCell = mCell;
+  mBlockDirInfo[relColIndex].mWidth = iStartSegISize;
+  mBlockDirInfo[relColIndex].mLastCell = mCell;
 }
 /**
- * Paint if necessary a block-dir segment, otherwise  it
+ * Paint if necessary a block-dir segment, otherwise accumulate it
  * @param aRenderingContext - the rendering context
  */
 void
@@ -7317,27 +7315,27 @@ BCPaintBorderIterator::AccumulateOrPaintBlockDirSegment(nsRenderingContext& aRen
     mBCData ? mBCData->GetBStartEdge(ignoreBorderOwner, ignoreSegStart) : 0;
 
   int32_t relColIndex = GetRelativeColIndex();
-  BCBlockDirSeg& verSeg = mVerInfo[relColIndex];
-  if (!verSeg.mCol) { // on the first damaged row and the first segment in the
-                      // col
-    verSeg.Initialize(*this);
-    verSeg.Start(*this, borderOwner, blockSegISize, inlineSegBSize);
+  BCBlockDirSeg& blockDirSeg = mBlockDirInfo[relColIndex];
+  if (!blockDirSeg.mCol) { // on the first damaged row and the first segment in the
+                           // col
+    blockDirSeg.Initialize(*this);
+    blockDirSeg.Start(*this, borderOwner, blockSegISize, inlineSegBSize);
   }
 
   if (!IsDamageAreaBStartMost() && (isSegStart || IsDamageAreaBEndMost() ||
-                                 IsAfterRepeatedHeader() ||
-                                 StartRepeatedFooter())) {
+                                    IsAfterRepeatedHeader() ||
+                                    StartRepeatedFooter())) {
     // paint the previous seg or the current one if IsDamageAreaBEndMost()
-    if (verSeg.mLength > 0) {
-      verSeg.GetBEndCorner(*this, inlineSegBSize);
-      if (verSeg.mWidth > 0) {
-        verSeg.Paint(*this, aRenderingContext, inlineSegBSize);
+    if (blockDirSeg.mLength > 0) {
+      blockDirSeg.GetBEndCorner(*this, inlineSegBSize);
+      if (blockDirSeg.mWidth > 0) {
+        blockDirSeg.Paint(*this, aRenderingContext, inlineSegBSize);
       }
-      verSeg.AdvanceOffsetB();
+      blockDirSeg.AdvanceOffsetB();
     }
-    verSeg.Start(*this, borderOwner, blockSegISize, inlineSegBSize);
+    blockDirSeg.Start(*this, borderOwner, blockSegISize, inlineSegBSize);
   }
-  verSeg.IncludeCurrentBorder(*this);
+  blockDirSeg.IncludeCurrentBorder(*this);
   mPrevInlineSegBSize = inlineSegBSize;
 }
 
@@ -7347,11 +7345,11 @@ BCPaintBorderIterator::AccumulateOrPaintBlockDirSegment(nsRenderingContext& aRen
 void
 BCPaintBorderIterator::ResetVerInfo()
 {
-  if (mVerInfo) {
-    memset(mVerInfo, 0, mDamageArea.ColCount() * sizeof(BCBlockDirSeg));
+  if (mBlockDirInfo) {
+    memset(mBlockDirInfo, 0, mDamageArea.ColCount() * sizeof(BCBlockDirSeg));
     // XXX reinitialize properly
     for (auto xIndex : MakeRange(mDamageArea.ColCount())) {
-      mVerInfo[xIndex].mColWidth = -1;
+      mBlockDirInfo[xIndex].mColWidth = -1;
     }
   }
 }
@@ -7381,13 +7379,13 @@ nsTableFrame::PaintBCBorders(nsRenderingContext& aRenderingContext,
   // we look up if the current border would start a new segment, if so we paint
   // the previously stored vertical segment and start a new segment. After
   // this we  the now active segment with the current border. These
-  // segments are stored in mVerInfo to be used on the next row
+  // segments are stored in mBlockDirInfo to be used on the next row
   for (iter.First(); !iter.mAtEnd; iter.Next()) {
     iter.AccumulateOrPaintBlockDirSegment(aRenderingContext);
   }
 
   // Next, paint all of the inline-dir border segments from bStart to bEnd reuse
-  // the mVerInfo array to keep track of col widths and block-dir segments for
+  // the mBlockDirInfo array to keep track of col widths and block-dir segments for
   // corner calculations
   iter.Reset();
   for (iter.First(); !iter.mAtEnd; iter.Next()) {
