@@ -14,6 +14,7 @@
 #include "pratom.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
+#include "nsIStandardURL.h"
 #include "nsIURIWithPrincipal.h"
 #include "nsJSPrincipals.h"
 #include "nsIEffectiveTLDService.h"
@@ -127,6 +128,31 @@ nsPrincipal::GetOriginForURI(nsIURI* aURI, nsACString& aOrigin)
     }
   }
 
+  // We want the invariant that prinA.origin == prinB.origin i.f.f.
+  // prinA.equals(prinB). However, this requires that we impose certain constraints
+  // on the behavior and origin semantics of principals, and in particular, forbid
+  // creating origin strings for principals whose equality constraints are not
+  // expressible as strings (i.e. object equality). Moreover, we want to forbid URIs
+  // containing the magic "^" we use as a separating character for origin
+  // attributes.
+  //
+  // These constraints can generally be achieved by restricting .origin to
+  // nsIStandardURL-based URIs, but there are a few other URI schemes that we need
+  // to handle.
+  bool isBehaved;
+  if ((NS_SUCCEEDED(origin->SchemeIs("about", &isBehaved)) && isBehaved) ||
+      (NS_SUCCEEDED(origin->SchemeIs("moz-safe-about", &isBehaved)) && isBehaved) ||
+      (NS_SUCCEEDED(origin->SchemeIs("indexeddb", &isBehaved)) && isBehaved)) {
+    rv = origin->GetAsciiSpec(aOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // These URIs could technically contain a '^', but they never should.
+    if (NS_WARN_IF(aOrigin.FindChar('^', 0) != -1)) {
+      aOrigin.Truncate();
+      return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+  }
+
   int32_t port;
   if (NS_SUCCEEDED(rv) && !isChrome) {
     rv = origin->GetPort(&port);
@@ -144,6 +170,14 @@ nsPrincipal::GetOriginForURI(nsIURI* aURI, nsACString& aOrigin)
     aOrigin.Append(hostPort);
   }
   else {
+    // If we reached this branch, we can only create an origin if we have a nsIStandardURL.
+    // So, we query to a nsIStandardURL, and fail if we aren't an instance of an nsIStandardURL
+    // nsIStandardURLs have the good property of escaping the '^' character in their specs,
+    // which means that we can be sure that the caret character (which is reserved for delimiting
+    // the end of the spec, and the beginning of the origin attributes) is not present in the
+    // origin string
+    nsCOMPtr<nsIStandardURL> standardURL = do_QueryInterface(origin);
+    NS_ENSURE_TRUE(standardURL, NS_ERROR_FAILURE);
     rv = origin->GetAsciiSpec(aOrigin);
     NS_ENSURE_SUCCESS(rv, rv);
   }
