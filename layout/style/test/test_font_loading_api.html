@@ -59,6 +59,10 @@ var invalidFontFamilyNames = [
   "", "\"\"", "sans-serif", "A, B", "inherit", "a 1"
 ];
 
+// Font family list where at least one is likely to be available on
+// platforms we care about.
+var likelyPlatformFonts = "Helvetica Neue, Bitstream Vera Sans, Bitstream Vera Sans Roman, FreeSans, Free Sans, SwissA, DejaVu Sans, Arial";
+
 // Will hold an ArrayBuffer containing a valid font.
 var fontData;
 
@@ -1347,6 +1351,322 @@ function runTest() {
 
       doc.fonts.clear();
     });
+
+  }).then(function() {
+
+    // (TEST 43) Test the check method with platform fonts and some
+    // degenerate cases.
+
+    [window, fwindow].forEach(function(win) {
+      var doc = win.document;
+
+      // Invalid font shorthands should throw a SyntaxError.
+      try {
+        doc.fonts.check("Helvetica");
+        ok(false, "check should throw when a syntactically invalid font shorthand is given (TEST 43) (" + win + ")");
+      } catch (ex) {
+        is(ex.name, "SyntaxError", "exception name when check is called with a syntactically invalid font shorthand (TEST 43) (" + win + ")");
+      }
+
+      // System fonts should throw a SyntaxError.
+      try {
+        doc.fonts.check("caption");
+        ok(false, "check should throw when a system font value is given (TEST 43) (" + win + ")");
+      } catch (ex) {
+        is(ex.name, "SyntaxError", "exception name when check is called with a system font value (TEST 43) (" + win + ")");
+      }
+
+      // CSS-wide keywords should throw a SyntaxError.
+      try {
+        doc.fonts.check("inherit");
+        ok(false, "check should throw when a CSS-wide keyword is given (TEST 43) (" + win + ")");
+      } catch (ex) {
+        is(ex.name, "SyntaxError", "exception name when check is called with a CSS-wide keyword (TEST 43) (" + win + ")");
+      }
+
+      // CSS variables should throw a SyntaxError.
+      try {
+        doc.fonts.check("16px var(--family)");
+        ok(false, "check should throw when CSS variables are used (TEST 43) (" + win + ")");
+      } catch (ex) {
+        is(ex.name, "SyntaxError", "exception name when check is called with CSS variables (TEST 43) (" + win + ")");
+      }
+
+      // No matching font family names => return true.
+      is(doc.fonts.check("16px NonExistentFont1, NonExistentFont2"), true, "check return value when no matching font family names are used (TEST 43) (" + win + ")");
+
+      // Matching platform font family name => return true.
+      is(doc.fonts.check("16px NonExistentFont, " + likelyPlatformFonts), true, "check return value when a matching platform font family name is used (TEST 43) (" + win + ")");
+
+      // Matching platform font family name, but using a different test
+      // strings.  (Platform fonts always return true from check, regardless
+      // of the actual glyphs present.)
+      [
+        { test: "\0",  desc: "a single non-matching glyph" },
+        { test: "A\0", desc: "a matching and a non-matching glyph" },
+        { test: "A",   desc: "a matching glyph" },
+        { test: "AB",  desc: "multiple matching glyphs" }
+      ].forEach(function({ test, desc }) {
+        is(doc.fonts.check("16px " + likelyPlatformFonts, test), true, "check return value when a matching platform font family name is used but with " + desc + " (TEST 43) (" + win + ")");
+      });
+
+      // No matching font family name, but an empty test string.
+      is(doc.fonts.check("16px NonExistentFont", ""), true, "check return value with a non-matching font family name and an empty test string (TEST 43) (" + win + ")");
+
+      // Matching platform font family name, but empty test string.
+      is(doc.fonts.check("16px " + likelyPlatformFonts, ""), true, "check return value with an empty test string (TEST 43) (" + win + ")");
+    });
+
+  }).then(function() {
+
+    // (TEST 44) Test the check method with script-created FontFaces.
+
+    var tests = [
+      // at least one matching FontFace is not loaded ==> false
+      { result: false, font: "16px Test", faces: [{ family: "Test", status: "unloaded" }] },
+      { result: false, font: "16px Test", faces: [{ family: "SecondTest", status: "loaded" }, { family: "Test", status: "unloaded" }] },
+      { result: false, font: "16px Test", faces: [{ family: "Test", status: "unloaded" }, { family: "Test", status: "loaded" }] },
+      { result: false, font: "16px Test", faces: [{ family: "Test", status: "loading" }] },
+      { result: false, font: "16px Test", faces: [{ family: "Test", status: "error" }] },
+      { result: false, font: "16px Test", faces: [{ family: "Test", status: "unloaded", style: "italic" }] },
+      { result: false, font: "bold 16px Test", faces: [{ family: "Test", status: "loaded", weight: "600" }, { family: "Test", status: "unloaded", weight: "bold" }] },
+      { result: false, font: "16px Test, SecondTest", faces: [{ family: "Test", status: "loaded" }, { family: "SecondTest", status: "unloaded" }] },
+      { result: false, font: "16px Test, " + likelyPlatformFonts + ", SecondTest, sans-serif", faces: [{ family: "Test", status: "loaded" }, { family: "SecondTest", status: "unloaded" }] },
+
+      // all matching FontFaces are loaded ==> true
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded" }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded" }, { family: "Test", status: "loaded" }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded" }, { family: "Test", status: "unloaded", unicodeRange: "U+4E0A" }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded" }, { family: "Test", status: "error", unicodeRange: "U+4E0A" }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded" }, { family: "Irrelevant", status: "unloaded" }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded", style: "italic" }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded", weight: "bold" }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded", stretch: "condensed" }] },
+      { result: true,  font: "bold 16px Test", faces: [{ family: "Test", status: "loaded", weight: "bold" }, { family: "Test", status: "unloaded", weight: "600" }] },
+      { result: true,  font: "16px Test, " + likelyPlatformFonts + ", SecondTest, sans-serif", faces: [{ family: "Test", status: "loaded" }, { family: "SecondTest", status: "loaded" }] },
+
+      // no matching FontFaces at all ==> true
+      { result: true,  font: "16px Test", faces: [] },
+      { result: true,  font: "16px Test", faces: [{ family: "Irrelevant", status: "unloaded" }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "unloaded", unicodeRange: "U+4E0A" }] },
+      { result: true,  font: "16px Test, " + likelyPlatformFonts + ", SecondTest, sans-serif", faces: [{ family: "ThirdTest", status: "loaded" }] },
+
+      // matching FontFace for one sample text character is loaded but
+      // not the other ==> false
+      { result: false, font: "16px Test", faces: [{ family: "Test", status: "loaded", unicodeRange: "U+61" }, { family: "Test", status: "unloaded", unicodeRange: "U+62" }] },
+
+      // matching FontFaces for separate sample text characters are all
+      // loaded ==> true
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded", unicodeRange: "U+61" }, { family: "Test", status: "loaded", unicodeRange: "U+62" }] },
+    ];
+
+    [window, fwindow].forEach(function(win, i) {
+      var doc = win.document;
+
+      tests.forEach(function({ result, font, faces }, j) {
+        faces.forEach(function(f, k) {
+          var fontFace;
+          if (f.status == "loaded") {
+            fontFace = new win.FontFace(f.family, fontData, f);
+          } else if (f.status == "error") {
+            fontFace = new win.FontFace(f.family, new ArrayBuffer(0), f);
+          } else {
+            fontFace = new win.FontFace(f.family, "url(BitPattern.woff?test44." + [i, j, k] + ")", f);
+            if (f.status == "loading") {
+              fontFace.load();
+            }
+          }
+          is(fontFace.status, f.status, "status of newly created FontFace " + [j, k] + " (TEST 44) (" + win + ")");
+          doc.fonts.add(fontFace);
+        });
+        is(doc.fonts.check(font, "ab"), result, "check return value for subtest " + j + " (TEST 44) (" + win + ")");
+        doc.fonts.clear();
+      });
+    });
+
+  }).then(function() {
+
+    // (TEST 45) Test the load method with platform fonts and some
+    // degenerate cases.
+
+    var p = Promise.resolve();
+    [window, fwindow].forEach(function(win, i) {
+      var doc = win.document;
+
+      p = p.then(function() {
+        // Invalid font shorthands should reject the promise with a SyntaxError.
+        return doc.fonts.load("Helvetica").then(function() {
+          ok(false, "load should reject when a syntactically invalid font shorthand is given (TEST 45) (" + win + ")");
+        }, function(ex) {
+          is(ex.name, "SyntaxError", "exception name when load is called with a syntactically invalid font shorthand (TEST 45) (" + win + ")");
+        });
+      });
+
+      p = p.then(function() {
+        // System fonts should reject with a SyntaxError.
+        return doc.fonts.load("caption").then(function() {
+          ok(false, "load should throw when a system font value is given (TEST 45) (" + win + ")");
+        }, function(ex) {
+          is(ex.name, "SyntaxError", "exception name when load is called with a system font value (TEST 45) (" + win + ")");
+        });
+      });
+
+      p = p.then(function() {
+        // CSS-wide keywords should reject with a SyntaxError.
+        return doc.fonts.load("inherit").then(function() {
+          ok(false, "load should throw when a CSS-wide keyword is given (TEST 45) (" + win + ")");
+        }, function(ex) {
+          is(ex.name, "SyntaxError", "exception name when load is called with a CSS-wide keyword (TEST 45) (" + win + ")");
+        });
+      });
+
+      p = p.then(function() {
+        // CSS variables should throw a SyntaxError.
+        return doc.fonts.load("16px var(--family)").then(function() {
+          ok(false, "load should throw when CSS variables are used (TEST 45) (" + win + ")");
+        }, function(ex) {
+          is(ex.name, "SyntaxError", "exception name when load is called with CSS variables (TEST 45) (" + win + ")");
+        });
+      });
+
+      p = p.then(function() {
+        // No matching font family names => return true.
+        return doc.fonts.load("16px NonExistentFont1, NonExistentFont2").then(function(result) {
+          is(result.length, 0, "load resolves with an emtpy array when no matching font family names are used (TEST 45) (" + win + ")");
+        });
+      });
+
+      p = p.then(function() {
+        // Matching platform font family name => return true.
+        return doc.fonts.load("16px NonExistentFont1, " + likelyPlatformFonts).then(function(result) {
+          is(result.length, 0, "load resolves with an emtpy array when no matching font family names are used (TEST 45) (" + win + ")");
+        });
+      });
+
+      // Matching platform font family name, but using a different test
+      // strings.  (Platform fonts always return true from load, regardless
+      // of the actual glyphs present.)
+      [
+        { sample: "\0",  desc: "a single non-matching glyph" },
+        { sample: "A\0", desc: "a matching and a non-matching glyph" },
+        { sample: "A",   desc: "a matching glyph" },
+        { sample: "AB",  desc: "multiple matching glyphs" }
+      ].forEach(function({ sample, desc }) {
+        p = p.then(function() {
+          return doc.fonts.load("16px " + likelyPlatformFonts, sample).then(function(result) {
+            is(result.length, 0, "load resolves with an empty array when a matching platform font family name is used but with " + desc + " (TEST 45) (" + win + ")");
+          });
+        });
+      });
+
+      p = p.then(function() {
+        // No matching font family name, but an empty test string.
+        return doc.fonts.load("16px NonExistentFont", "").then(function(result) {
+          is(result.length, 0, "load resolves with an empty array when a non-matching platform font family name and an empty test string is used (TEST 45) (" + win + ")");
+        });
+      });
+
+      p = p.then(function() {
+        // Matching font family name, but an empty test string.
+        return doc.fonts.load("16px " + likelyPlatformFonts, "").then(function(result) {
+          is(result.length, 0, "load resolves with an empty array when a matching platform font family name and an empty test string is used (TEST 45) (" + win + ")");
+        });
+      });
+    });
+    return p;
+
+  }).then(function() {
+
+    // (TEST 46) Test the load method with script-created FontFaces.
+
+    var tests = [
+      // at least one matching FontFace is not yet loaded, but will load ==> resolve
+      { result: true, font: "16px Test", faces: [{ family: "Test", status: "unloaded", included: true }] },
+      { result: true, font: "16px Test", faces: [{ family: "SecondTest", status: "loaded" }, { family: "Test", status: "unloaded", included: true }] },
+      { result: true, font: "16px Test", faces: [{ family: "Test", status: "unloaded", included: true }, { family: "Test", status: "loaded", included: true }] },
+      { result: true, font: "16px Test", faces: [{ family: "Test", status: "loading", included: true }] },
+      { result: true, font: "16px Test", faces: [{ family: "Test", status: "unloaded", style: "italic", included: true }] },
+      { result: true, font: "bold 16px Test", faces: [{ family: "Test", status: "unloaded", weight: "600", included: true }] },
+      { result: true, font: "bold 16px Test", faces: [{ family: "Test", status: "unloaded", weight: "600" }, { family: "Test", status: "unloaded", weight: "bold", included: true }] },
+      { result: true, font: "16px Test, SecondTest", faces: [{ family: "Test", status: "loaded", included: true }, { family: "SecondTest", status: "unloaded", included: true }] },
+      { result: true, font: "16px Test, " + likelyPlatformFonts + ", SecondTest, sans-serif", faces: [{ family: "Test", status: "loaded", included: true }, { family: "SecondTest", status: "unloaded", included: true }] },
+
+      // at least one matching FontFace is in an error state ==> reject
+      { result: false, font: "16px Test", faces: [{ family: "Test", status: "unloaded" }, { family: "Test", status: "error" }] },
+
+      // all matching FontFaces are already loaded ==> resolve
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded", included: true }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded", included: true }, { family: "Test", status: "loaded", included: true }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded", included: true }, { family: "Test", status: "unloaded", unicodeRange: "U+4E0A" }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded", included: true }, { family: "Test", status: "error", unicodeRange: "U+4E0A" }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded", included: true }, { family: "Irrelevant", status: "unloaded" }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded", style: "italic", included: true }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded", weight: "bold", included: true }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded", stretch: "condensed", included: true }] },
+      { result: true,  font: "bold 16px Test", faces: [{ family: "Test", status: "loaded", weight: "bold", included: true }, { family: "Test", status: "loaded", weight: "600" }] },
+      { result: true,  font: "bold 16px Test", faces: [{ family: "Test", status: "loaded", weight: "600" }, { family: "Test", status: "loaded", weight: "bold", included: true }] },
+      { result: true,  font: "16px Test, " + likelyPlatformFonts + ", SecondTest, sans-serif", faces: [{ family: "Test", status: "loaded", included: true }, { family: "SecondTest", status: "loaded", included: true }] },
+
+      // no matching FontFaces at all ==> resolve
+      { result: true,  font: "16px Test", faces: [] },
+      { result: true,  font: "16px Test", faces: [{ family: "Irrelevant", status: "unloaded" }] },
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "unloaded", unicodeRange: "U+4E0A" }] },
+      { result: true,  font: "16px Test, " + likelyPlatformFonts + ", SecondTest, sans-serif", faces: [{ family: "ThirdTest", status: "loaded" }] },
+
+      // matching FontFace for one sample text character is already loaded but
+      // the other is not (but will) ==> resolve
+      { result: true, font: "16px Test", faces: [{ family: "Test", status: "loaded", unicodeRange: "U+61", included: true }, { family: "Test", status: "unloaded", unicodeRange: "U+62", included: true }] },
+
+      // matching FontFaces for separate sample text characters are all
+      // loaded ==> resolve
+      { result: true,  font: "16px Test", faces: [{ family: "Test", status: "loaded", unicodeRange: "U+61", included: true }, { family: "Test", status: "loaded", unicodeRange: "U+62", included: true }] },
+    ];
+
+    var p = Promise.resolve();
+    [window, fwindow].forEach(function(win, i) {
+      var doc = win.document;
+
+      tests.forEach(function({ result, font, faces }, j) {
+        p = p.then(function() {
+          var fontFaces = [];
+          faces.forEach(function(f, k) {
+            var fontFace;
+            if (f.status == "loaded") {
+              fontFace = new win.FontFace(f.family, fontData, f);
+            } else if (f.status == "error") {
+              fontFace = new win.FontFace(f.family, new ArrayBuffer(0), f);
+            } else {
+              fontFace = new win.FontFace(f.family, "url(BitPattern.woff?test46." + [i, j, k] + ")", f);
+              if (f.status == "loading") {
+                fontFace.load();
+              }
+            }
+            is(fontFace.status, f.status, "status of newly created FontFace " + [j, k] + " (TEST 46) (" + win + ")");
+            doc.fonts.add(fontFace);
+            fontFaces.push(fontFace);
+          });
+          return doc.fonts.load(font, "ab").then(function(array) {
+            ok(result, "load should resolve for subtest " + j + " (TEST 46) (" + win + ")");
+            var expected = [];
+            for (var k = 0; k < faces.length; k++) {
+              if (faces[k].included) {
+                expected.push(fontFaces[k]);
+              }
+            }
+            is(array.length, expected.length, "length of array load resolves with for subtest " + j + " (TEST 46) (" + win + ")");
+            for (var k = 0; k < array.length; k++) {
+              is(array[k], expected[k], "value in array[" + k + "] load resolves with for subtest " + j + " (TEST 46) (" + win + ")");
+            }
+          }, function(ex) {
+            ok(!result, "load should not resolve for subtest " + j + " (TEST 46) (" + win + ")");
+            is(ex.name, "SyntaxError", "exception load's return value is rejected with for subtest " + j + " (TEST 46) (" + win + ")");
+          }).then(function() {
+            doc.fonts.clear();
+          });
+        });
+      });
+    });
+    return p;
 
   }).then(function() {
 
