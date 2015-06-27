@@ -54,9 +54,14 @@ CreateCacheStorage(nsIPrincipal* aPrincipal, ErrorResult& aRv,
     sandbox.forget(aHolder);
   }
 
+  // We assume private browsing is not enabled here.  The ScriptLoader
+  // explicitly fails for private browsing so there should never be
+  // a service worker running in private browsing mode.  Therefore if
+  // we are purging scripts or running a comparison algorithm we cannot
+  // be in private browing.
   return CacheStorage::CreateOnMainThread(cache::CHROME_ONLY_NAMESPACE,
-                                          sandboxGlobalObject,
-                                          aPrincipal, aRv);
+                                          sandboxGlobalObject, aPrincipal,
+                                          false /* private browsing */, aRv);
 }
 
 class CompareManager;
