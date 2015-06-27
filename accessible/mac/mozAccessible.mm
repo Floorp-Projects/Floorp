@@ -730,6 +730,7 @@ ConvertToNSArray(nsTArray<Accessible*>& aArray)
   if (!accWrap)
     return nil;
 
+  // Deal with landmarks first
   nsIAtom* landmark = accWrap->LandmarkRole();
   if (landmark) {
     if (landmark == nsGkAtoms::application)
@@ -750,6 +751,37 @@ ConvertToNSArray(nsTArray<Accessible*>& aArray)
       return @"AXLandmarkSearch";
     if (landmark == nsGkAtoms::searchbox)
       return @"AXSearchField";
+  }
+
+  // Now, deal with widget roles
+  if (accWrap->HasARIARole()) {
+    nsRoleMapEntry* roleMap = accWrap->ARIARoleMap();
+    if (roleMap->Is(nsGkAtoms::alert))
+      return @"AXApplicationAlert";
+    if (roleMap->Is(nsGkAtoms::alertdialog))
+      return @"AXApplicationAlertDialog";
+    if (roleMap->Is(nsGkAtoms::article))
+      return @"AXDocumentArticle";
+    if (roleMap->Is(nsGkAtoms::dialog))
+      return @"AXApplicationDialog";
+    if (roleMap->Is(nsGkAtoms::document))
+      return @"AXDocument";
+    if (roleMap->Is(nsGkAtoms::log_))
+      return @"AXApplicationLog";
+    if (roleMap->Is(nsGkAtoms::marquee))
+      return @"AXApplicationMarquee";
+    if (roleMap->Is(nsGkAtoms::math))
+      return @"AXDocumentMath";
+    if (roleMap->Is(nsGkAtoms::note_))
+      return @"AXDocumentNote";
+    if (roleMap->Is(nsGkAtoms::region))
+      return @"AXDocumentRegion";
+    if (roleMap->Is(nsGkAtoms::status))
+      return @"AXApplicationStatus";
+    if (roleMap->Is(nsGkAtoms::timer))
+      return @"AXApplicationTimer";
+    if (roleMap->Is(nsGkAtoms::tooltip))
+      return @"AXUserInterfaceTooltip";
   }
 
   switch (mRole) {
@@ -850,7 +882,19 @@ struct RoleDescrMap
 };
 
 static const RoleDescrMap sRoleDescrMap[] = {
+  { @"AXApplicationAlert", NS_LITERAL_STRING("alert") },
+  { @"AXApplicationAlertDialog", NS_LITERAL_STRING("alertDialog") },
+  { @"AXApplicationLog", NS_LITERAL_STRING("log") },
+  { @"AXApplicationMarquee", NS_LITERAL_STRING("marquee") },
+  { @"AXApplicationStatus", NS_LITERAL_STRING("status") },
+  { @"AXApplicationTimer", NS_LITERAL_STRING("timer") },
   { @"AXDefinition", NS_LITERAL_STRING("definition") },
+  { @"AXDocument", NS_LITERAL_STRING("document") },
+  { @"AXDocumentArticle", NS_LITERAL_STRING("article") },
+  { @"AXDocumentMath", NS_LITERAL_STRING("math") },
+  { @"AXDocumentNote", NS_LITERAL_STRING("note") },
+  { @"AXDocumentRegion", NS_LITERAL_STRING("region") },
+  { @"AXLandmarkApplication", NS_LITERAL_STRING("application") },
   { @"AXLandmarkBanner", NS_LITERAL_STRING("banner") },
   { @"AXLandmarkComplementary", NS_LITERAL_STRING("complementary") },
   { @"AXLandmarkContentInfo", NS_LITERAL_STRING("content") },
@@ -858,7 +902,8 @@ static const RoleDescrMap sRoleDescrMap[] = {
   { @"AXLandmarkNavigation", NS_LITERAL_STRING("navigation") },
   { @"AXLandmarkSearch", NS_LITERAL_STRING("search") },
   { @"AXSearchField", NS_LITERAL_STRING("searchTextField") },
-  { @"AXTerm", NS_LITERAL_STRING("term") }
+  { @"AXTerm", NS_LITERAL_STRING("term") },
+  { @"AXUserInterfaceTooltip", NS_LITERAL_STRING("tooltip") }
 };
 
 struct RoleDescrComparator
