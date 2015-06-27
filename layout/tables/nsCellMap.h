@@ -200,13 +200,13 @@ protected:
 public:
   void ExpandZeroColSpans();
 
-  void ResetTopStart(uint8_t    aSide,
+  void ResetTopStart(mozilla::LogicalSide    aSide,
                      nsCellMap& aCellMap,
                      uint32_t   aYPos,
                      uint32_t   aXPos,
                      bool       aIsLowerRight = false);
 
-  void SetBCBorderEdge(mozilla::Side aEdge,
+  void SetBCBorderEdge(mozilla::LogicalSide aEdge,
                        nsCellMap&    aCellMap,
                        uint32_t      aCellMapStart,
                        uint32_t      aYPos,
@@ -221,7 +221,7 @@ public:
                          uint32_t    aCellMapStart,
                          uint32_t    aYPos,
                          uint32_t    aXPos,
-                         mozilla::Side aOwner,
+                         mozilla::LogicalSide aOwner,
                          nscoord     aSubSize,
                          bool        aBevel,
                          bool        aIsBottomRight = false);
