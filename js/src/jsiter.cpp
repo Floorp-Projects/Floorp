@@ -1296,30 +1296,6 @@ js::SuppressDeletedElement(JSContext* cx, HandleObject obj, uint32_t index)
     return SuppressDeletedProperty(cx, obj, id);
 }
 
-namespace {
-
-class IndexRangePredicate {
-    uint32_t begin, end;
-
-  public:
-    IndexRangePredicate(uint32_t begin, uint32_t end) : begin(begin), end(end) {}
-
-    bool operator()(JSFlatString* str) {
-        uint32_t index;
-        return str->isIndex(&index) && begin <= index && index < end;
-    }
-
-    bool matchesAtMostOne() { return false; }
-};
-
-} /* anonymous namespace */
-
-bool
-js::SuppressDeletedElements(JSContext* cx, HandleObject obj, uint32_t begin, uint32_t end)
-{
-    return SuppressDeletedPropertyHelper(cx, obj, IndexRangePredicate(begin, end));
-}
-
 bool
 js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
 {

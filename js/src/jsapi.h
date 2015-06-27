@@ -5229,13 +5229,6 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(ForOfIterator) {
               NonIterableBehavior nonIterableBehavior = ThrowOnNonIterable);
 
     /*
-     * This method assumes that |iterator| is already an iterator.  It will not
-     * check for, and call @@iterator.  Callers should make sure that the passed
-     * in value is in fact an iterator.
-     */
-    bool initWithIterator(JS::HandleValue aIterator);
-
-    /*
      * Get the next value from the iterator.  If false *done is true
      * after this call, do not examine val.
      */
