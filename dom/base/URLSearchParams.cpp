@@ -293,7 +293,7 @@ URLParams::Serialize(nsAString& aValue) const
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(URLSearchParams, mParent, mObserver)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(URLSearchParams, mObserver)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(URLSearchParams)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(URLSearchParams)
 
@@ -302,19 +302,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(URLSearchParams)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-URLSearchParams::URLSearchParams(nsISupports* aParent,
-                                 URLSearchParamsObserver* aObserver)
-  : mParams(new URLParams())
-  , mParent(aParent)
-  , mObserver(aObserver)
+URLSearchParams::URLSearchParams(URLSearchParamsObserver* aObserver)
+  : mParams(new URLParams()), mObserver(aObserver)
 {
 }
 
-URLSearchParams::URLSearchParams(nsISupports* aParent,
-                                 const URLSearchParams& aOther)
-  : mParams(new URLParams(*aOther.mParams.get()))
-  , mParent(aParent)
-  , mObserver(aOther.mObserver)
+URLSearchParams::URLSearchParams(const URLSearchParams& aOther)
+  : mParams(new URLParams(*aOther.mParams.get())), mObserver(aOther.mObserver)
 {
 }
 
@@ -334,10 +328,8 @@ URLSearchParams::Constructor(const GlobalObject& aGlobal,
                              const nsAString& aInit,
                              ErrorResult& aRv)
 {
-  nsRefPtr<URLSearchParams> sp =
-    new URLSearchParams(aGlobal.GetAsSupports(), nullptr);
+  nsRefPtr<URLSearchParams> sp = new URLSearchParams(nullptr);
   sp->ParseInput(NS_ConvertUTF16toUTF8(aInit));
-
   return sp.forget();
 }
 
@@ -346,9 +338,7 @@ URLSearchParams::Constructor(const GlobalObject& aGlobal,
                              URLSearchParams& aInit,
                              ErrorResult& aRv)
 {
-  nsRefPtr<URLSearchParams> sp =
-    new URLSearchParams(aGlobal.GetAsSupports(), aInit);
-
+  nsRefPtr<URLSearchParams> sp = new URLSearchParams(aInit);
   return sp.forget();
 }
 
