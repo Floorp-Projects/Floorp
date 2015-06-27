@@ -33,6 +33,7 @@ class TextComposition;
 class IMEStateManager
 {
   typedef widget::IMEMessage IMEMessage;
+  typedef widget::IMENotification IMENotification;
   typedef widget::IMEState IMEState;
   typedef widget::InputContext InputContext;
   typedef widget::InputContextAction InputContextAction;
@@ -140,8 +141,15 @@ public:
    * Send a notification to IME.  It depends on the IME or platform spec what
    * will occur (or not occur).
    */
-  static nsresult NotifyIME(IMEMessage aMessage, nsIWidget* aWidget);
-  static nsresult NotifyIME(IMEMessage aMessage, nsPresContext* aPresContext);
+  static nsresult NotifyIME(const IMENotification& aNotification,
+                            nsIWidget* aWidget,
+                            bool aOriginIsRemote = false);
+  static nsresult NotifyIME(IMEMessage aMessage,
+                            nsIWidget* aWidget,
+                            bool aOriginIsRemote = false);
+  static nsresult NotifyIME(IMEMessage aMessage,
+                            nsPresContext* aPresContext,
+                            bool aOriginIsRemote = false);
 
   static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
                                       nsIContent* aContent);
