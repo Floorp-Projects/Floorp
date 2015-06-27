@@ -247,42 +247,193 @@ Function Properties of the `Debugger.Memory.prototype` Object
     When `trackingAllocationSites` is `false`, `drainAllocationsLog()` throws an
     `Error`.
 
-<code id='take-census'>takeCensus()</code>
+<code id='take-census'>takeCensus(<i>options</i>)</code>
 :   Carry out a census of the debuggee compartments' contents. A *census* is a
     complete traversal of the graph of all reachable memory items belonging to a
     particular `Debugger`'s debuggees. The census produces a count of those
     items, broken down by various criteria.
 
-    The `takeCensus` method returns an object of the form:
+    The <i>options</i> argument is an object whose properties specify how the
+    census should be carried out.
+
+    If <i>options</i> has a `breakdown` property, that determines how the census
+    categorizes the items it finds, and what data it collects about them. For
+    example, if `dbg` is a `Debugger` instance, the following performs a simple
+    count of debuggee items:
+
+        dbg.memory.takeCensus({ breakdown: { by: 'count' } })
+
+    That might produce a result like:
+
+        { "count": 1616, "bytes": 93240 }
+
+    Here is a breakdown that groups JavaScript objects by their class name, and
+    non-string, non-script items by their C++ type name:
+
+        {
+          by: "coarseType",
+          objects: { by: "objectClass" },
+          other:   { by: "internalType" }
+        }
+
+    which produces a result like this:
+
+        {
+          "objects": {
+            "Function":         { "count": 404, "bytes": 37328 },
+            "Object":           { "count": 11,  "bytes": 1264 },
+            "Debugger":         { "count": 1,   "bytes": 416 },
+            "ScriptSource":     { "count": 1,   "bytes": 64 },
+            // ... omitted for brevity...
+          },
+          "scripts":            { "count": 1,   "bytes": 0 },
+          "strings":            { "count": 701, "bytes": 49080 },
+          "other": {
+            "js::Shape":        { "count": 450, "bytes": 0 },
+            "js::BaseShape":    { "count": 21,  "bytes": 0 },
+            "js::ObjectGroup":  { "count": 17,  "bytes": 0 }
+          }
+        }
+
+    In general, a `breakdown` value has one of the following forms:
+
+    <code>{ by: "count", count:<i>count<i>, bytes:<i>bytes</i> }</code>
+    :   The trivial categorization: none whatsoever. Simply tally up the items
+        visited. If <i>count</i> is true, count the number of items visited; if
+        <i>bytes</i> is true, total the number of bytes the items use directly.
+        Both <i>count</i> and <i>bytes</i> are optional; if omitted, they
+        default to `true`. In the result of the census, this breakdown produces
+        a value of the form:
+
+            { "count":<i>n</b>, "bytes":<i>b</i> }
+
+        where the `count` and `bytes` properties are present as directed by the
+        <i>count</i> and <i>bytes</i> properties on the breakdown.
+
+        Note that the census can produce byte sizes only for the most common
+        types. When the census cannot find the byte size for a given type, it
+        returns zero.
+
+    <code>{ by: "allocationStack", then:<i>breakdown</i>, noStack:<i>noStackBreakdown</i> }</code>
+    :   Group items by the full JavaScript stack trace at which they were
+        allocated.
+
+        Further categorize all the items allocated at each distinct stack using
+        <i>breakdown</i>.
+
+        In the result of the census, this breakdown produces a JavaScript `Map`
+        value whose keys are `SavedFrame` values, and whose values are whatever
+        sort of result <i>breakdown</i> produces. Objects allocated on an empty
+        JavaScript stack appear under the key `null`.
+
+        SpiderMonkey only tracks allocation sites for items if requested via the
+        [`trackingAllocationSites`][tracking-allocs] flag; even then, it does
+        not record allocation sites for every kind of item that appears in the
+        heap. Items that lack allocation site information are counted using
+        <i>noStackBreakdown</i>. These appear in the result `Map` under the key
+        string `"noStack"`.
+
+    <code>{ by: "objectClass", then:<i>breakdown</i>, other:<i>otherBreakdown</i> }</code>
+    :   Group JavaScript objects by their ECMAScript `[[Class]]` internal property values.
+
+        Further categorize JavaScript objects in each class using
+        <i>breakdown</i>. Further categorize items that are not JavaScript
+        objects using <i>otherBreakdown</i>.
+
+        In the result of the census, this breakdown produces a JavaScript object
+        with no prototype whose own property names are strings naming classes,
+        and whose values are whatever sort of result <i>breakdown</i> produces.
+        The results for non-object items appear as the value of the property
+        named `"other"`.
+
+    <code>{ by: "coarseType", objects:<i>objects</i>, scripts:<i>scripts</i>, strings:<i>strings</i>, other:<i>other</i> }</code>
+    :   Group items by their coarse type.
+
+        Use the breakdown value <i>objects</i> for items that are JavaScript
+        objects.
+
+        Use the breakdown value <i>scripts</i> for items that are
+        representations of JavaScript code. This includes bytecode, compiled
+        machine code, and saved source code.
+
+        Use the breakdown value <i>strings</i> for JavaScript strings.
+
+        Use the breakdown value <i>other</i> for items that don't fit into any of
+        the above categories.
+
+        In the result of the census, this breakdown produces a JavaScript object
+        of the form:
+
+        <pre class='language-js'><code>
+        {
+          "objects": <i>result</i>,
+          "scripts": <i>result</i>,
+          "strings": <i>result</i>,
+          "other": <i>result</i>
+        }
+        </code></pre>
+
+        where each <i>result</i> is a value of whatever sort the corresponding
+        breakdown value produces. All breakdown values are optional, and default
+        to `{ type: "count" }`.
+
+    <code>{ by: "internalType", then:<i>breakdown</i> }</code>
+    :   Group items by the names given their types internally by SpiderMonkey.
+        These names are not meaningful to web developers, but this type of
+        breakdown does serve as a catch-all that can be useful to Firefox tool
+        developers.
+
+        For example, a census of a pristine debuggee global broken down by
+        internal type name typically looks like this:
+
+            {
+              "JSString":        { "count": 701, "bytes": 49080 },
+              "js::Shape":       { "count": 450, "bytes": 0 },
+              "JSObject":        { "count": 426, "bytes": 44160 },
+              "js::BaseShape":   { "count": 21,  "bytes": 0 },
+              "js::ObjectGroup": { "count": 17,  "bytes": 0 },
+              "JSScript":        { "count": 1,   "bytes": 0 }
+            }
+
+        In the result of the census, this breakdown produces a JavaScript object
+        with no prototype whose own property names are strings naming types,
+        and whose values are whatever sort of result <i>breakdown</i> produces.
+
+    <code>[ <i>breakdown</i>, ... ]</code>
+    :   Group each item using all the given breakdown values. In the result of
+        the census, this breakdown produces an array of values of the sort
+        produced by each listed breakdown.
+
+    To simplify breakdown values, all `then` and `other` properties are optional.
+    If omitted, they are treated as if they were `{ type: "count" }`.
+
+    If the `options` argument has no `breakdown` property, `takeCensus` defaults
+    to the following:
 
     <pre class='language-js'><code>
     {
-      "objects": { <i>class</i>: <i>tally</i>, ... },
-      "scripts": <i>tally</i>,
-      "strings": <i>tally</i>,
-      "other": { <i>type name</i>: <i>tally</i>, ... }
+      by: "coarseType",
+      objects: { by: "objectClass" },
+      other:   { by: "internalType" }
     }
     </code></pre>
 
-    Each <i>tally</i> has the form:
+    which produces results of the form:
 
     <pre class='language-js'><code>
-    { "count": <i>count</i> }
+    {
+      objects: { <i>class</i>: <i>count</i>, ... },
+      scripts: <i>count</i>,
+      strings: <i>count</i>,
+      other:   { <i>type name</i>: <i>count</i>, ... }
+    }
     </code></pre>
 
-    where <i>count</i> is the number of items in the category.
+    where each <i>count</i> has the form:
 
-    The `"objects"` property's value contains the tallies of JavaScript objects,
-    broken down by their ECMAScript `[[Class]]` internal property values. Each
-    <i>class</i> is a string.
-
-    The `"scripts"` property's value tallies the in-memory representation of
-    JavaScript code.
-
-    The `"strings"` property's value tallies the debuggee's strings.
-
-    The `"other"` property's value contains the tallies of other items used
-    internally by SpiderMonkey, broken down by their C++ type name.
+    <pre class='language-js'><code>
+    { "count": <i>count</i>, bytes:<i>bytes</i> }
+    </code></pre>
 
     Because performing a census requires traversing the entire graph of objects
     in debuggee compartments, it is an expensive operation. On developer
@@ -342,7 +493,7 @@ simpler ones when it pleases. Such conversions usually increase memory
 consumption.
 
 SpiderMonkey shares some strings amongst all web pages and browser JS. These
-shared strings, called *atoms*, are not included in censuses' string tallies.
+shared strings, called *atoms*, are not included in censuses' string counts.
 
 
 ### Scripts
