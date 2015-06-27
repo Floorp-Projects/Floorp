@@ -300,7 +300,7 @@ public:
   nsMargin GetDeflationForBackground(nsPresContext* aPresContext) const;
 
   /** Get width of table + colgroup + col collapse: elements that
-   *  continue along the length of the whole left side.
+   *  continue along the length of the whole iStart side.
    *  see nsTablePainter about continuous borders
    */
   nscoord GetContinuousIStartBCBorderWidth() const;
