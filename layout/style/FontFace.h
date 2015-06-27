@@ -14,7 +14,6 @@
 
 class gfxFontFaceBufferSource;
 class nsCSSFontFaceRule;
-class nsPresContext;
 
 namespace mozilla {
 struct CSSFontFaceDescriptors;
@@ -70,7 +69,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<FontFace>
-  CreateForRule(nsISupports* aGlobal, nsPresContext* aPresContext,
+  CreateForRule(nsISupports* aGlobal, FontFaceSet* aFontFaceSet,
                 nsCSSFontFaceRule* aRule);
 
   nsCSSFontFaceRule* GetRule() { return mRule; }
@@ -161,7 +160,7 @@ public:
   mozilla::dom::Promise* GetLoaded(mozilla::ErrorResult& aRv);
 
 private:
-  FontFace(nsISupports* aParent, nsPresContext* aPresContext);
+  FontFace(nsISupports* aParent, FontFaceSet* aFontFaceSet);
   ~FontFace();
 
   void InitializeSource(const StringOrArrayBufferOrArrayBufferView& aSource);
@@ -203,7 +202,6 @@ private:
   void TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength);
 
   nsCOMPtr<nsISupports> mParent;
-  nsPresContext* mPresContext;
 
   // A Promise that is fulfilled once the font represented by this FontFace
   // is loaded, and is rejected if the load fails.
