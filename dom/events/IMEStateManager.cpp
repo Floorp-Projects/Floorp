@@ -169,6 +169,8 @@ GetNotifyIMEMessageName(IMEMessage aMessage)
       return "NOTIFY_IME_OF_COMPOSITION_UPDATE";
     case NOTIFY_IME_OF_POSITION_CHANGE:
       return "NOTIFY_IME_OF_POSITION_CHANGE";
+    case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+      return "NOTIFY_IME_OF_MOUSE_BUTTON_EVENT";
     case REQUEST_TO_COMMIT_COMPOSITION:
       return "REQUEST_TO_COMMIT_COMPOSITION";
     case REQUEST_TO_CANCEL_COMPOSITION:
@@ -1092,21 +1094,24 @@ IMEStateManager::OnCompositionEventDiscarded(
 // static
 nsresult
 IMEStateManager::NotifyIME(IMEMessage aMessage,
-                           nsIWidget* aWidget)
+                           nsIWidget* aWidget,
+                           bool aOriginIsRemote)
 {
-  nsRefPtr<TextComposition> composition;
-  if (aWidget && sTextCompositions) {
-    composition = sTextCompositions->GetCompositionFor(aWidget);
-  }
+  return IMEStateManager::NotifyIME(IMENotification(aMessage), aWidget,
+                                    aOriginIsRemote);
+}
 
-  bool isSynthesizedForTests =
-    composition && composition->IsSynthesizedForTests();
-
+// static
+nsresult
+IMEStateManager::NotifyIME(const IMENotification& aNotification,
+                           nsIWidget* aWidget,
+                           bool aOriginIsRemote)
+{
   MOZ_LOG(sISMLog, LogLevel::Info,
-    ("ISM: IMEStateManager::NotifyIME(aMessage=%s, aWidget=0x%p), "
-     "composition=0x%p, composition->IsSynthesizedForTests()=%s",
-     GetNotifyIMEMessageName(aMessage), aWidget, composition.get(),
-     GetBoolName(isSynthesizedForTests)));
+    ("ISM: IMEStateManager::NotifyIME(aNotification={ mMessage=%s }, "
+     "aWidget=0x%p, aOriginIsRemote=%s)",
+     GetNotifyIMEMessageName(aNotification.mMessage), aWidget,
+     GetBoolName(aOriginIsRemote)));
 
   if (NS_WARN_IF(!aWidget)) {
     MOZ_LOG(sISMLog, LogLevel::Error,
@@ -1114,7 +1119,34 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
     return NS_ERROR_INVALID_ARG;
   }
 
-  switch (aMessage) {
+  switch (aNotification.mMessage) {
+    case NOTIFY_IME_OF_FOCUS:
+    case NOTIFY_IME_OF_BLUR:
+    case NOTIFY_IME_OF_SELECTION_CHANGE:
+    case NOTIFY_IME_OF_TEXT_CHANGE:
+    case NOTIFY_IME_OF_POSITION_CHANGE:
+    case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+      return aWidget->NotifyIME(aNotification);
+    default:
+      // Other notifications should be sent only when there is composition.
+      // So, we need to handle the others below.
+      break;
+  }
+
+  nsRefPtr<TextComposition> composition;
+  if (sTextCompositions) {
+    composition = sTextCompositions->GetCompositionFor(aWidget);
+  }
+
+  bool isSynthesizedForTests =
+    composition && composition->IsSynthesizedForTests();
+
+  MOZ_LOG(sISMLog, LogLevel::Info,
+    ("ISM:   IMEStateManager::NotifyIME(), composition=0x%p, "
+     "composition->IsSynthesizedForTests()=%s",
+     composition.get(), GetBoolName(isSynthesizedForTests)));
+
+  switch (aNotification.mMessage) {
     case REQUEST_TO_COMMIT_COMPOSITION:
       return composition ?
         composition->RequestToCommit(aWidget, false) : NS_OK;
@@ -1123,7 +1155,7 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
         composition->RequestToCommit(aWidget, true) : NS_OK;
     case NOTIFY_IME_OF_COMPOSITION_UPDATE:
       return composition && !isSynthesizedForTests ?
-        aWidget->NotifyIME(IMENotification(aMessage)) : NS_OK;
+        aWidget->NotifyIME(aNotification) : NS_OK;
     default:
       MOZ_CRASH("Unsupported notification");
   }
@@ -1135,11 +1167,14 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
 // static
 nsresult
 IMEStateManager::NotifyIME(IMEMessage aMessage,
-                           nsPresContext* aPresContext)
+                           nsPresContext* aPresContext,
+                           bool aOriginIsRemote)
 {
   MOZ_LOG(sISMLog, LogLevel::Info,
-    ("ISM: IMEStateManager::NotifyIME(aMessage=%s, aPresContext=0x%p)",
-     GetNotifyIMEMessageName(aMessage), aPresContext));
+    ("ISM: IMEStateManager::NotifyIME(aMessage=%s, aPresContext=0x%p, "
+     "aOriginIsRemote=%s)",
+     GetNotifyIMEMessageName(aMessage), aPresContext,
+     GetBoolName(aOriginIsRemote)));
 
   NS_ENSURE_TRUE(aPresContext, NS_ERROR_INVALID_ARG);
 
@@ -1150,7 +1185,7 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
        "nsPresContext"));
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return NotifyIME(aMessage, widget);
+  return NotifyIME(aMessage, widget, aOriginIsRemote);
 }
 
 // static
