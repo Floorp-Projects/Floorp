@@ -94,6 +94,7 @@ public:
 private:
   CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
                const mozilla::ipc::PrincipalInfo& aPrincipalInfo, Feature* aFeature);
+  explicit CacheStorage(nsresult aFailureResult);
   ~CacheStorage();
 
   void MaybeRunPendingRequests();
@@ -109,7 +110,7 @@ private:
   struct Entry;
   nsTArray<nsAutoPtr<Entry>> mPendingRequests;
 
-  bool mFailedActor;
+  nsresult mStatus;
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
