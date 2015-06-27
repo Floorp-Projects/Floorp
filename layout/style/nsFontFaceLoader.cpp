@@ -118,7 +118,6 @@ nsFontFaceLoader::LoadTimerCallback(nsITimer* aTimer, void* aClosure)
   if (updateUserFontSet) {
     ufe->mFontDataLoadingState = gfxUserFontEntry::LOADING_SLOWLY;
     nsPresContext* ctx = loader->mFontFaceSet->GetPresContext();
-    NS_ASSERTION(ctx, "userfontset doesn't have a presContext?");
     if (ctx) {
       loader->mFontFaceSet->IncrementGeneration();
       ctx->UserFontSetUpdated(loader->GetUserFontEntry());
@@ -155,10 +154,6 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     }
   }
 
-  nsPresContext* ctx = mFontFaceSet->GetPresContext();
-  NS_ASSERTION(ctx && !ctx->PresShell()->IsDestroying(),
-               "We should have been canceled already");
-
   if (NS_SUCCEEDED(aStatus)) {
     // for HTTP requests, check whether the request _actually_ succeeded;
     // the "request status" in aStatus does not necessarily indicate this,
@@ -184,11 +179,12 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   // This is called even in the case of a failed download (HTTP 404, etc),
   // as there may still be data to be freed (e.g. an error page),
   // and we need to load the next source.
+  nsPresContext* ctx = mFontFaceSet->GetPresContext();
   bool fontUpdate =
     mUserFontEntry->FontDataDownloadComplete(aString, aStringLen, aStatus);
 
   // when new font loaded, need to reflow
-  if (fontUpdate) {
+  if (fontUpdate && ctx) {
     // Update layout for the presence of the new font.  Since this is
     // asynchronous, reflows will coalesce.
     ctx->UserFontSetUpdated(mUserFontEntry);
