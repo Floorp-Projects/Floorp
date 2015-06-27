@@ -230,7 +230,7 @@ TableBackgroundPainter::PaintTableFrame(nsTableFrame*         aTableFrame,
         border.BStart(wm) = tempBorder.BStart(wm);
       }
 
-      border.IStart(wm) = aTableFrame->GetContinuousLeftBCBorderWidth();
+      border.IStart(wm) = aTableFrame->GetContinuousIStartBCBorderWidth();
 
       tableData.SetBCBorder(border.GetPhysicalMargin(wm));
     }
@@ -322,7 +322,7 @@ TableBackgroundPainter::PaintTable(nsTableFrame*   aTableFrame,
     /* BC left borders aren't stored on cols, but the previous column's
        right border is the next one's left border.*/
     //Start with table's left border.
-    nscoord lastLeftBorder = aTableFrame->GetContinuousLeftBCBorderWidth();
+    nscoord lastLeftBorder = aTableFrame->GetContinuousIStartBCBorderWidth();
 
     for (nsTableColGroupFrame* cgFrame : colGroupFrames) {
       /*Create data struct for column group*/
@@ -495,14 +495,14 @@ TableBackgroundPainter::PaintRow(nsTableRowFrame* aFrame,
     if (mIsBorderCollapse && aRowBGData.ShouldSetBCBorder()) {
       LogicalMargin border(wm);
       nsTableRowFrame* nextRow = aFrame->GetNextRow();
-      if (nextRow) { //outer top below us is inner bottom for us
+      if (nextRow) { //outer bStart after us is inner bEnd for us
         border.BEnd(wm) = nextRow->GetOuterBStartContBCBorderWidth();
       }
-      else { //acquire rg's bottom border
+      else { //acquire rg's bEnd border
         nsTableRowGroupFrame* rowGroup = static_cast<nsTableRowGroupFrame*>(aFrame->GetParent());
         rowGroup->GetContinuousBCBorderWidth(wm, border);
       }
-      //get the rest of the borders; will overwrite all but bottom
+      //get the rest of the borders; will overwrite all but bEnd
       aFrame->GetContinuousBCBorderWidth(wm, border);
 
       aRowBGData.SetBCBorder(border.GetPhysicalMargin(wm));
