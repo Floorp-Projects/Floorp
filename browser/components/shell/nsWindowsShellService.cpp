@@ -635,34 +635,19 @@ DynSHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
 }
 
 nsresult
-nsWindowsShellService::LaunchControlPanelDefaultPrograms()
+nsWindowsShellService::LaunchControlPanelDefaultsSelectionUI()
 {
-  // Build the path control.exe path safely
-  WCHAR controlEXEPath[MAX_PATH + 1] = { '\0' };
-  if (!GetSystemDirectoryW(controlEXEPath, MAX_PATH)) {
-    return NS_ERROR_FAILURE;
+  IApplicationAssociationRegistrationUI* pAARUI;
+  HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistrationUI,
+                                NULL,
+                                CLSCTX_INPROC,
+                                IID_IApplicationAssociationRegistrationUI,
+                                (void**)&pAARUI);
+  if (SUCCEEDED(hr)) {
+    hr = pAARUI->LaunchAdvancedAssociationUI(APP_REG_NAME);
+    pAARUI->Release();
   }
-  LPCWSTR controlEXE = L"control.exe";
-  if (wcslen(controlEXEPath) + wcslen(controlEXE) >= MAX_PATH) {
-    return NS_ERROR_FAILURE;
-  }
-  if (!PathAppendW(controlEXEPath, controlEXE)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  WCHAR params[] = L"control.exe /name Microsoft.DefaultPrograms /page pageDefaultProgram";
-  STARTUPINFOW si = {sizeof(si), 0};
-  si.dwFlags = STARTF_USESHOWWINDOW;
-  si.wShowWindow = SW_SHOWDEFAULT;
-  PROCESS_INFORMATION pi = {0};
-  if (!CreateProcessW(controlEXEPath, params, nullptr, nullptr, FALSE,
-                      0, nullptr, nullptr, &si, &pi)) {
-    return NS_ERROR_FAILURE;
-  }
-  CloseHandle(pi.hProcess);
-  CloseHandle(pi.hThread);
-
-  return NS_OK;
+  return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -715,7 +700,7 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
   nsresult rv = LaunchHelper(appHelperPath);
   if (NS_SUCCEEDED(rv) && IsWin8OrLater()) {
     if (aClaimAllTypes) {
-      rv = LaunchControlPanelDefaultPrograms();
+      rv = LaunchControlPanelDefaultsSelectionUI();
       // The above call should never really fail, but just in case
       // fall back to showing the HTTP association screen only.
       if (NS_FAILED(rv)) {
@@ -734,7 +719,7 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
       // The above call should never really fail, but just in case
       // fall back to showing control panel for all defaults
       if (NS_FAILED(rv)) {
-        rv = LaunchControlPanelDefaultPrograms();
+        rv = LaunchControlPanelDefaultsSelectionUI();
       }
     }
   }
