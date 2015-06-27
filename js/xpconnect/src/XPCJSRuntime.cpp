@@ -1714,6 +1714,18 @@ xpc::GetJSRuntime()
     return XPCJSRuntime::Get()->Runtime();
 }
 
+void
+xpc::AddGCCallback(xpcGCCallback cb)
+{
+    XPCJSRuntime::Get()->AddGCCallback(cb);
+}
+
+void
+xpc::RemoveGCCallback(xpcGCCallback cb)
+{
+    XPCJSRuntime::Get()->RemoveGCCallback(cb);
+}
+
 static int64_t
 JSMainRuntimeGCHeapDistinguishedAmount()
 {
