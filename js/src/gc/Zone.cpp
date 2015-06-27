@@ -279,15 +279,6 @@ Zone::notifyObservingDebuggers()
     }
 }
 
-JS::Zone*
-js::ZoneOfValue(const JS::Value& value)
-{
-    MOZ_ASSERT(value.isMarkable());
-    if (value.isObject())
-        return value.toObject().zone();
-    return js::gc::TenuredCell::fromPointer(value.toGCThing())->zone();
-}
-
 bool
 js::ZonesIter::atAtomsZone(JSRuntime* rt)
 {
