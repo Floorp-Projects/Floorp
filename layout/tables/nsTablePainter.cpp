@@ -319,16 +319,16 @@ TableBackgroundPainter::PaintTable(nsTableFrame*   aTableFrame,
     mColGroups.SetCapacity(colGroupFrames.Length());
 
     LogicalMargin border(wm);
-    /* BC left borders aren't stored on cols, but the previous column's
-       right border is the next one's left border.*/
-    //Start with table's left border.
-    nscoord lastLeftBorder = aTableFrame->GetContinuousIStartBCBorderWidth();
+    /* BC iStart borders aren't stored on cols, but the previous column's
+       iEnd border is the next one's iStart border.*/
+    //Start with table's iStart border.
+    nscoord lastIStartBorder = aTableFrame->GetContinuousIStartBCBorderWidth();
 
     for (nsTableColGroupFrame* cgFrame : colGroupFrames) {
       /*Create data struct for column group*/
       TableBackgroundData& cgData = *mColGroups.AppendElement(TableBackgroundData(cgFrame));
       if (mIsBorderCollapse && cgData.ShouldSetBCBorder()) {
-        border.IStart(wm) = lastLeftBorder;
+        border.IStart(wm) = lastIStartBorder;
         cgFrame->GetContinuousBCBorderWidth(wm, border);
         cgData.SetBCBorder(border.GetPhysicalMargin(wm));
       }
@@ -342,8 +342,8 @@ TableBackgroundPainter::PaintTable(nsTableFrame*   aTableFrame,
         //Bring column mRect into table's coord system
         colData.mCol.mRect.MoveBy(cgData.mRect.x, cgData.mRect.y);
         if (mIsBorderCollapse) {
-          border.IStart(wm) = lastLeftBorder;
-          lastLeftBorder = col->GetContinuousBCBorderWidth(wm, border);
+          border.IStart(wm) = lastIStartBorder;
+          lastIStartBorder = col->GetContinuousBCBorderWidth(wm, border);
           if (colData.mCol.ShouldSetBCBorder()) {
             colData.mCol.SetBCBorder(border.GetPhysicalMargin(wm));
           }

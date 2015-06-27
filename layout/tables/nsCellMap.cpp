@@ -93,14 +93,14 @@ nsTableCellMap::~nsTableCellMap()
   }
 
   if (mBCInfo) {
-    DeleteRightBottomBorders();
+    DeleteIEndBEndBorders();
     delete mBCInfo;
   }
 }
 
-// Get the bcData holding the border segments of the right edge of the table
+// Get the bcData holding the border segments of the iEnd edge of the table
 BCData*
-nsTableCellMap::GetRightMostBorder(int32_t aRowIndex)
+nsTableCellMap::GetIEndMostBorder(int32_t aRowIndex)
 {
   if (!mBCInfo) ABORT1(nullptr);
 
@@ -113,9 +113,9 @@ nsTableCellMap::GetRightMostBorder(int32_t aRowIndex)
   return &mBCInfo->mIEndBorders.ElementAt(aRowIndex);
 }
 
-// Get the bcData holding the border segments of the bottom edge of the table
+// Get the bcData holding the border segments of the bEnd edge of the table
 BCData*
-nsTableCellMap::GetBottomMostBorder(int32_t aColIndex)
+nsTableCellMap::GetBEndMostBorder(int32_t aColIndex)
 {
   if (!mBCInfo) ABORT1(nullptr);
 
@@ -128,9 +128,9 @@ nsTableCellMap::GetBottomMostBorder(int32_t aColIndex)
   return &mBCInfo->mBEndBorders.ElementAt(aColIndex);
 }
 
-// delete the borders corresponding to the right and bottom edges of the table
+// delete the borders corresponding to the iEnd and bEnd edges of the table
 void
-nsTableCellMap::DeleteRightBottomBorders()
+nsTableCellMap::DeleteIEndBEndBorders()
 {
   if (mBCInfo) {
     mBCInfo->mBEndBorders.Clear();
@@ -491,7 +491,7 @@ nsTableCellMap::InsertRows(nsTableRowGroupFrame*       aParent,
           }
         }
         else {
-          GetRightMostBorder(aFirstRowIndex); // this will create missing entries
+          GetIEndMostBorder(aFirstRowIndex); // this will create missing entries
           for (int32_t rowX = aFirstRowIndex + 1; rowX < aFirstRowIndex + numNewRows; rowX++) {
             mBCInfo->mIEndBorders.AppendElement();
           }
@@ -726,7 +726,7 @@ nsTableCellMap::Dump(char* aString) const
     cellMap = cellMap->GetNextSibling();
   }
   if (nullptr != mBCInfo) {
-    printf("***** bottom borders *****\n");
+    printf("***** block-end borders *****\n");
     nscoord       size;
     BCBorderOwner owner;
     LogicalSide side;
@@ -912,13 +912,13 @@ void nsTableCellMap::ExpandZeroColSpans()
 }
 
 void
-nsTableCellMap::ResetTopStart(LogicalSide    aSide,
-                              nsCellMap& aCellMap,
-                              uint32_t   aRowIndex,
-                              uint32_t   aColIndex,
-                              bool       aIsLowerRight)
+nsTableCellMap::ResetBStartStart(LogicalSide aSide,
+                                 nsCellMap&  aCellMap,
+                                 uint32_t    aRowIndex,
+                                 uint32_t    aColIndex,
+                                 bool        aIsBEndIEnd)
 {
-  if (!mBCInfo || aIsLowerRight) ABORT0();
+  if (!mBCInfo || aIsBEndIEnd) ABORT0();
 
   BCCellData* cellData;
   BCData* bcData = nullptr;
@@ -942,7 +942,7 @@ nsTableCellMap::ResetTopStart(LogicalSide    aSide,
           bcData = &cellData->mData;
         }
         else {
-          bcData = GetBottomMostBorder(aColIndex);
+          bcData = GetBEndMostBorder(aColIndex);
         }
       }
     }
@@ -957,7 +957,7 @@ nsTableCellMap::ResetTopStart(LogicalSide    aSide,
     }
     else {
       NS_ASSERTION(aSide == eLogicalSideIEnd, "program error");
-      bcData = GetRightMostBorder(aRowIndex);
+      bcData = GetIEndMostBorder(aRowIndex);
     }
     break;
   }
@@ -966,10 +966,10 @@ nsTableCellMap::ResetTopStart(LogicalSide    aSide,
   }
 }
 
-// store the aSide border segment at coord = (aRowIndex, aColIndex). For top/left, store
-// the info at coord. For bottom/left store it at the adjacent location so that it is
-// top/left at that location. If the new location is at the right or bottom edge of the
-// table, then store it one of the special arrays (right most borders, bottom most borders).
+// store the aSide border segment at coord = (aRowIndex, aColIndex). For bStart/iStart, store
+// the info at coord. For bEnd/iStart store it at the adjacent location so that it is
+// bStart/iStart at that location. If the new location is at the iEnd or bEnd edge of the
+// table, then store it one of the special arrays (iEnd-most borders, bEnd-most borders).
 void
 nsTableCellMap::SetBCBorderEdge(LogicalSide aSide,
                                 nsCellMap&    aCellMap,
@@ -1025,7 +1025,7 @@ nsTableCellMap::SetBCBorderEdge(LogicalSide aSide,
             }
           }
           else { // must be at the end of the table
-            bcData = GetBottomMostBorder(xIndex);
+            bcData = GetBEndMostBorder(xIndex);
           }
         }
       }
@@ -1035,13 +1035,13 @@ nsTableCellMap::SetBCBorderEdge(LogicalSide aSide,
       if (bcData) {
         bcData->SetBStartEdge(aOwner, aSize, changed);
       }
-      else NS_ERROR("Cellmap: Top edge not found");
+      else NS_ERROR("Cellmap: BStart edge not found");
     }
     break;
   case eLogicalSideIEnd:
     xPos++;
   case eLogicalSideIStart:
-    // since top, bottom borders were set, there should already be a cellData entry
+    // since bStart, bEnd borders were set, there should already be a cellData entry
     lastIndex = rgYPos + aLength - 1;
     for (yIndex = rgYPos; yIndex <= lastIndex; yIndex++) {
       changed = aChanged && (yIndex == rgYPos);
@@ -1051,20 +1051,20 @@ nsTableCellMap::SetBCBorderEdge(LogicalSide aSide,
       }
       else {
         NS_ASSERTION(aSide == eLogicalSideIEnd, "program error");
-        BCData* bcData = GetRightMostBorder(yIndex + aCellMapStart);
+        BCData* bcData = GetIEndMostBorder(yIndex + aCellMapStart);
         if (bcData) {
           bcData->SetIStartEdge(aOwner, aSize, changed);
         }
-        else NS_ERROR("Cellmap: Left edge not found");
+        else NS_ERROR("Cellmap: IStart edge not found");
       }
     }
     break;
   }
 }
 
-// store corner info (aOwner, aSubSize, aBevel). For aCorner = eTopLeft, store the info at
-// (aRowIndex, aColIndex). For eTopRight, store it in the entry to the right where
-// it would be top left. For eBottomRight, store it in the entry to the bottom. etc.
+// store corner info (aOwner, aSubSize, aBevel). For aCorner = eBStartIStart, store the info at
+// (aRowIndex, aColIndex). For eBStartIEnd, store it in the entry to the iEnd-wards where
+// it would be BStartIStart. For eBEndIEnd, store it in the entry to the bEnd-wards. etc.
 void
 nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
                                   nsCellMap&  aCellMap,
@@ -1104,9 +1104,9 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
   BCData*     bcData   = nullptr;
   if (GetColCount() <= xPos) {
     NS_ASSERTION(xPos == GetColCount(), "program error");
-    // at the right edge of the table as we checked the corner before
+    // at the iEnd edge of the table as we checked the corner before
     NS_ASSERTION(!aIsBEndIEnd, "should be handled before");
-    bcData = GetRightMostBorder(yPos);
+    bcData = GetIEndMostBorder(yPos);
   }
   else {
     cellData = (BCCellData*)aCellMap.GetDataAt(rgYPos, xPos);
@@ -1131,8 +1131,8 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
                                                          false, 0, damageArea);
           }
         }
-        else { // must be at the bottom of the table
-          bcData = GetBottomMostBorder(xPos);
+        else { // must be at the bEnd of the table
+          bcData = GetBEndMostBorder(xPos);
         }
       }
     }
