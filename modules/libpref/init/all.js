@@ -2324,11 +2324,7 @@ pref("layout.css.scroll-behavior.damping-ratio", "1.0");
 pref("layout.css.scroll-snap.enabled", true);
 
 // Is support for document.fonts enabled?
-#ifdef RELEASE_BUILD
-pref("layout.css.font-loading-api.enabled", false);
-#else
 pref("layout.css.font-loading-api.enabled", true);
-#endif
 
 // Are the MouseEvent.offsetX/Y properties enabled?
 pref("dom.mouseEvent.offsetXY.enabled", true);
