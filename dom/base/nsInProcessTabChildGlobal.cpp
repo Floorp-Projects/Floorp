@@ -10,7 +10,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIJSRuntimeService.h"
 #include "nsComponentManagerUtils.h"
 #include "nsNetUtil.h"
 #include "nsScriptLoader.h"
