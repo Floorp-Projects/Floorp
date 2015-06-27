@@ -61,7 +61,6 @@ SharedThreadPool::SpinUntilEmpty()
 TemporaryRef<SharedThreadPool>
 SharedThreadPool::Get(const nsCString& aName, uint32_t aThreadLimit)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sMonitor && sPools);
   ReentrantMonitorAutoEnter mon(*sMonitor);
   SharedThreadPool* pool = nullptr;
@@ -178,8 +177,6 @@ SharedThreadPool::EnsureThreadLimitIsAtLeast(uint32_t aLimit)
 static already_AddRefed<nsIThreadPool>
 CreateThreadPool(const nsCString& aName)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsresult rv;
   nsCOMPtr<nsIThreadPool> pool = do_CreateInstance(NS_THREADPOOL_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, nullptr);
