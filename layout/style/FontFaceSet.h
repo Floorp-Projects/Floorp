@@ -113,18 +113,6 @@ public:
   void IncrementGeneration(bool aIsRebuild = false);
 
   /**
-   * Adds the specified FontFace to the mUnavailableFaces array.  This is called
-   * when a new FontFace object has just been created in JS by the author.
-   */
-  void AddUnavailableFontFace(FontFace* aFontFace);
-
-  /**
-   * Removes the specified FontFace from the mUnavailableFaces array.  This
-   * is called when a FontFace object is about be destroyed.
-   */
-  void RemoveUnavailableFontFace(FontFace* aFontFace);
-
-  /**
    * Finds an existing entry in the user font cache or creates a new user
    * font entry for the given FontFace object.
    */
@@ -307,10 +295,6 @@ private:
   // The non rule backed FontFace objects that have been added to this
   // FontFaceSet.
   nsTArray<FontFaceRecord> mNonRuleFaces;
-
-  // The non rule backed FontFace objects that have not been added to
-  // this FontFaceSet.
-  nsTArray<FontFace*> mUnavailableFaces;
 
   // The overall status of the loading or loaded fonts in the FontFaceSet.
   mozilla::dom::FontFaceSetLoadStatus mStatus;

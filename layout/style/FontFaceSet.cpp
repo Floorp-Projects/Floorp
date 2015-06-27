@@ -232,12 +232,6 @@ FontFaceSet::Add(FontFace& aFontFace, ErrorResult& aRv)
   MOZ_ASSERT(!aFontFace.HasRule(),
              "rule-backed FontFaces should always be in the FontFaceSet");
 
-  bool removed = mUnavailableFaces.RemoveElement(&aFontFace);
-  if (!removed) {
-    MOZ_ASSERT(false, "should have found aFontFace in mUnavailableFaces");
-    return this;
-  }
-
   aFontFace.SetIsInFontFaceSet(true);
 
 #ifdef DEBUG
@@ -273,11 +267,6 @@ FontFaceSet::Clear()
   for (size_t i = 0; i < mNonRuleFaces.Length(); i++) {
     FontFace* f = mNonRuleFaces[i].mFontFace;
     f->SetIsInFontFaceSet(false);
-
-    MOZ_ASSERT(!mUnavailableFaces.Contains(f),
-               "FontFace should not occur in mUnavailableFaces twice");
-
-    mUnavailableFaces.AppendElement(f);
   }
 
   mNonRuleFaces.Clear();
@@ -309,11 +298,6 @@ FontFaceSet::Delete(FontFace& aFontFace)
   }
 
   aFontFace.SetIsInFontFaceSet(false);
-
-  MOZ_ASSERT(!mUnavailableFaces.Contains(&aFontFace),
-             "FontFace should not occur in mUnavailableFaces twice");
-
-  mUnavailableFaces.AppendElement(&aFontFace);
 
   mNonRuleFacesDirty = true;
   RebuildUserFontSet();
@@ -607,10 +591,6 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
       }
 
       // Any left over FontFace objects should also cease being rule backed.
-      MOZ_ASSERT(!mUnavailableFaces.Contains(f),
-                 "FontFace should not occur in mUnavailableFaces twice");
-
-      mUnavailableFaces.AppendElement(f);
       f->DisconnectFromRule();
     }
   }
@@ -1258,30 +1238,6 @@ FontFaceSet::GetPrivateBrowsing()
 {
   nsCOMPtr<nsILoadContext> loadContext = mDocument->GetLoadContext();
   return loadContext && loadContext->UsePrivateBrowsing();
-}
-
-void
-FontFaceSet::AddUnavailableFontFace(FontFace* aFontFace)
-{
-  MOZ_ASSERT(!aFontFace->HasRule());
-  MOZ_ASSERT(!aFontFace->IsInFontFaceSet());
-  MOZ_ASSERT(!mUnavailableFaces.Contains(aFontFace));
-
-  mUnavailableFaces.AppendElement(aFontFace);
-}
-
-void
-FontFaceSet::RemoveUnavailableFontFace(FontFace* aFontFace)
-{
-  MOZ_ASSERT(!aFontFace->HasRule());
-  MOZ_ASSERT(!aFontFace->IsInFontFaceSet());
-
-  // We might not actually find the FontFace in mUnavailableFaces, since we
-  // might be shutting down the document and had DestroyUserFontSet called
-  // on us, which clears out mUnavailableFaces.
-  mUnavailableFaces.RemoveElement(aFontFace);
-
-  MOZ_ASSERT(!mUnavailableFaces.Contains(aFontFace));
 }
 
 void
