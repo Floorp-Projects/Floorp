@@ -1568,24 +1568,17 @@ FontFaceSet::StyleSheetLoaded(mozilla::CSSStyleSheet* aSheet,
 void
 FontFaceSet::FlushUserFontSet()
 {
-  nsPresContext* presContext = GetPresContext();
-  if (presContext) {
-    presContext->FlushUserFontSet();
+  if (mDocument) {
+    mDocument->FlushUserFontSet();
   }
 }
 
 void
 FontFaceSet::RebuildUserFontSet()
 {
-  nsPresContext* presContext = GetPresContext();
-  if (!presContext) {
-    // AFAICS, this can only happen if someone has already called Destroy() on
-    // this font-set, which means it is in the process of being torn down --
-    // so there's no point trying to update its rules.
-    return;
+  if (mDocument) {
+    mDocument->RebuildUserFontSet();
   }
-
-  presContext->RebuildUserFontSet();
 }
 
 nsPresContext*
