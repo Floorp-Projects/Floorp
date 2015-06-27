@@ -22,6 +22,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "nsIDocument.h"
 #include "nsIGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "WorkerPrivate.h"
@@ -64,12 +65,18 @@ struct CacheStorage::Entry final
 // static
 already_AddRefed<CacheStorage>
 CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
-                                 nsIPrincipal* aPrincipal, ErrorResult& aRv)
+                                 nsIPrincipal* aPrincipal, bool aPrivateBrowsing,
+                                 ErrorResult& aRv)
 {
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (aPrivateBrowsing) {
+    NS_WARNING("CacheStorage not supported during private browsing.");
+    nsRefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
+    return ref.forget();
+  }
 
   bool nullPrincipal;
   nsresult rv = aPrincipal->GetIsNullPrincipal(&nullPrincipal);
@@ -116,6 +123,12 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
+
+  if (aWorkerPrivate->IsInPrivateBrowsing()) {
+    NS_WARNING("CacheStorage not supported during private browsing.");
+    nsRefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
+    return ref.forget();
+  }
 
   nsRefPtr<Feature> feature = Feature::Create(aWorkerPrivate);
   if (!feature) {
@@ -344,7 +357,18 @@ CacheStorage::Constructor(const GlobalObject& aGlobal,
 
   Namespace ns = static_cast<Namespace>(aNamespace);
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  return CreateOnMainThread(ns, global, aPrincipal, aRv);
+
+  bool privateBrowsing = false;
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global);
+  if (window) {
+    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    if (doc) {
+      nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();
+      privateBrowsing = loadContext && loadContext->UsePrivateBrowsing();
+    }
+  }
+
+  return CreateOnMainThread(ns, global, aPrincipal, privateBrowsing, aRv);
 }
 
 nsISupports*
