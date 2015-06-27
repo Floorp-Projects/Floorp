@@ -104,13 +104,13 @@ nsTableCellMap::GetRightMostBorder(int32_t aRowIndex)
 {
   if (!mBCInfo) ABORT1(nullptr);
 
-  int32_t numRows = mBCInfo->mRightBorders.Length();
+  int32_t numRows = mBCInfo->mIEndBorders.Length();
   if (aRowIndex < numRows) {
-    return &mBCInfo->mRightBorders.ElementAt(aRowIndex);
+    return &mBCInfo->mIEndBorders.ElementAt(aRowIndex);
   }
 
-  mBCInfo->mRightBorders.SetLength(aRowIndex+1);
-  return &mBCInfo->mRightBorders.ElementAt(aRowIndex);
+  mBCInfo->mIEndBorders.SetLength(aRowIndex+1);
+  return &mBCInfo->mIEndBorders.ElementAt(aRowIndex);
 }
 
 // Get the bcData holding the border segments of the bottom edge of the table
@@ -119,13 +119,13 @@ nsTableCellMap::GetBottomMostBorder(int32_t aColIndex)
 {
   if (!mBCInfo) ABORT1(nullptr);
 
-  int32_t numCols = mBCInfo->mBottomBorders.Length();
+  int32_t numCols = mBCInfo->mBEndBorders.Length();
   if (aColIndex < numCols) {
-    return &mBCInfo->mBottomBorders.ElementAt(aColIndex);
+    return &mBCInfo->mBEndBorders.ElementAt(aColIndex);
   }
 
-  mBCInfo->mBottomBorders.SetLength(aColIndex+1);
-  return &mBCInfo->mBottomBorders.ElementAt(aColIndex);
+  mBCInfo->mBEndBorders.SetLength(aColIndex+1);
+  return &mBCInfo->mBEndBorders.ElementAt(aColIndex);
 }
 
 // delete the borders corresponding to the right and bottom edges of the table
@@ -133,8 +133,8 @@ void
 nsTableCellMap::DeleteRightBottomBorders()
 {
   if (mBCInfo) {
-    mBCInfo->mBottomBorders.Clear();
-    mBCInfo->mRightBorders.Clear();
+    mBCInfo->mBEndBorders.Clear();
+    mBCInfo->mIEndBorders.Clear();
   }
 }
 
@@ -426,7 +426,7 @@ nsTableCellMap::AddColsAtEnd(uint32_t aNumCols)
     NS_WARNING("Could not AppendElement");
   }
   if (mBCInfo) {
-    if (!mBCInfo->mBottomBorders.AppendElements(aNumCols)) {
+    if (!mBCInfo->mBEndBorders.AppendElements(aNumCols)) {
       NS_WARNING("Could not AppendElement");
     }
   }
@@ -445,9 +445,9 @@ nsTableCellMap::RemoveColsAtEnd()
       mCols.RemoveElementAt(colX);
 
       if (mBCInfo) {
-        int32_t count = mBCInfo->mBottomBorders.Length();
+        int32_t count = mBCInfo->mBEndBorders.Length();
         if (colX < count) {
-          mBCInfo->mBottomBorders.RemoveElementAt(colX);
+          mBCInfo->mBEndBorders.RemoveElementAt(colX);
         }
       }
     }
@@ -460,7 +460,7 @@ nsTableCellMap::ClearCols()
 {
   mCols.Clear();
   if (mBCInfo)
-    mBCInfo->mBottomBorders.Clear();
+    mBCInfo->mBEndBorders.Clear();
 }
 void
 nsTableCellMap::InsertRows(nsTableRowGroupFrame*       aParent,
@@ -484,16 +484,16 @@ nsTableCellMap::InsertRows(nsTableRowGroupFrame*       aParent,
       Dump("after InsertRows");
 #endif
       if (mBCInfo) {
-        int32_t count = mBCInfo->mRightBorders.Length();
+        int32_t count = mBCInfo->mIEndBorders.Length();
         if (aFirstRowIndex < count) {
           for (int32_t rowX = aFirstRowIndex; rowX < aFirstRowIndex + numNewRows; rowX++) {
-            mBCInfo->mRightBorders.InsertElementAt(rowX);
+            mBCInfo->mIEndBorders.InsertElementAt(rowX);
           }
         }
         else {
           GetRightMostBorder(aFirstRowIndex); // this will create missing entries
           for (int32_t rowX = aFirstRowIndex + 1; rowX < aFirstRowIndex + numNewRows; rowX++) {
-            mBCInfo->mRightBorders.AppendElement();
+            mBCInfo->mIEndBorders.AppendElement();
           }
         }
       }
@@ -524,8 +524,8 @@ nsTableCellMap::RemoveRows(int32_t         aFirstRowIndex,
                           rgStartRowIndex, aDamageArea);
       if (mBCInfo) {
         for (int32_t rowX = aFirstRowIndex + aNumRowsToRemove - 1; rowX >= aFirstRowIndex; rowX--) {
-          if (uint32_t(rowX) < mBCInfo->mRightBorders.Length()) {
-            mBCInfo->mRightBorders.RemoveElementAt(rowX);
+          if (uint32_t(rowX) < mBCInfo->mIEndBorders.Length()) {
+            mBCInfo->mIEndBorders.RemoveElementAt(rowX);
           }
         }
       }
@@ -733,12 +733,12 @@ nsTableCellMap::Dump(char* aString) const
     bool          segStart;
     bool          bevel;
     int32_t       colIndex;
-    int32_t numCols = mBCInfo->mBottomBorders.Length();
+    int32_t numCols = mBCInfo->mBEndBorders.Length();
     for (int32_t i = 0; i <= 2; i++) {
 
       printf("\n          ");
       for (colIndex = 0; colIndex < numCols; colIndex++) {
-        BCData& cd = mBCInfo->mBottomBorders.ElementAt(colIndex);
+        BCData& cd = mBCInfo->mBEndBorders.ElementAt(colIndex);
         if (0 == i) {
           size = cd.GetBStartEdge(owner, segStart);
           printf("t=%d%X%d ", int32_t(size), owner, segStart);
@@ -752,7 +752,7 @@ nsTableCellMap::Dump(char* aString) const
           printf("c=%d%X%d ", int32_t(size), side, bevel);
         }
       }
-      BCData& cd = mBCInfo->mLowerRightCorner;
+      BCData& cd = mBCInfo->mBEndIEndCorner;
       if (0 == i) {
          size = cd.GetBStartEdge(owner, segStart);
          printf("t=%d%X%d ", int32_t(size), owner, segStart);
@@ -1074,12 +1074,12 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
                                   LogicalSide aOwner,
                                   nscoord     aSubSize,
                                   bool        aBevel,
-                                  bool        aIsBottomRight)
+                                  bool        aIsBEndIEnd)
 {
   if (!mBCInfo) ABORT0();
 
-  if (aIsBottomRight) {
-    mBCInfo->mLowerRightCorner.SetCorner(aSubSize, aOwner, aBevel);
+  if (aIsBEndIEnd) {
+    mBCInfo->mBEndIEndCorner.SetCorner(aSubSize, aOwner, aBevel);
     return;
   }
 
@@ -1087,15 +1087,15 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
   int32_t yPos = aRowIndex;
   int32_t rgYPos = aRowIndex - aCellMapStart;
 
-  if (eTopRight == aCorner) {
+  if (eBStartIEnd == aCorner) {
     xPos++;
   }
-  else if (eBottomRight == aCorner) {
+  else if (eBEndIEnd == aCorner) {
     xPos++;
     rgYPos++;
     yPos++;
   }
-  else if (eBottomLeft == aCorner) {
+  else if (eBEndIStart == aCorner) {
     rgYPos++;
     yPos++;
   }
@@ -1105,7 +1105,7 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
   if (GetColCount() <= xPos) {
     NS_ASSERTION(xPos == GetColCount(), "program error");
     // at the right edge of the table as we checked the corner before
-    NS_ASSERTION(!aIsBottomRight, "should be handled before");
+    NS_ASSERTION(!aIsBEndIEnd, "should be handled before");
     bcData = GetRightMostBorder(yPos);
   }
   else {
