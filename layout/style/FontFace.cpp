@@ -386,8 +386,8 @@ FontFace::Load(ErrorResult& aRv)
   return mLoaded;
 }
 
-void
-FontFace::DoLoad()
+gfxUserFontEntry*
+FontFace::CreateUserFontEntry()
 {
   if (!mUserFontEntry) {
     MOZ_ASSERT(!HasRule(),
@@ -396,13 +396,20 @@ FontFace::DoLoad()
 
     nsRefPtr<gfxUserFontEntry> newEntry =
       mFontFaceSet->FindOrCreateUserFontEntryFromFontFace(this);
-    if (!newEntry) {
-      return;
+    if (newEntry) {
+      SetUserFontEntry(newEntry);
     }
-
-    SetUserFontEntry(newEntry);
   }
 
+  return mUserFontEntry;
+}
+
+void
+FontFace::DoLoad()
+{
+  if (!CreateUserFontEntry()) {
+    return;
+  }
   mUserFontEntry->Load();
 }
 

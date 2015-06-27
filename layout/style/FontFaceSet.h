@@ -21,6 +21,9 @@ class nsIPrincipal;
 class nsPIDOMWindow;
 
 namespace mozilla {
+namespace css {
+class FontFamilyListRefCnt;
+}
 namespace dom {
 class FontFace;
 class Promise;
@@ -151,7 +154,8 @@ public:
   IMPL_EVENT_HANDLER(loading)
   IMPL_EVENT_HANDLER(loadingdone)
   IMPL_EVENT_HANDLER(loadingerror)
-  already_AddRefed<mozilla::dom::Promise> Load(const nsAString& aFont,
+  already_AddRefed<mozilla::dom::Promise> Load(JSContext* aCx,
+                                               const nsAString& aFont,
                                                const nsAString& aText,
                                                mozilla::ErrorResult& aRv);
   bool Check(const nsAString& aFont,
@@ -270,6 +274,18 @@ private:
 
   // Helper function for HasLoadingFontFaces.
   void UpdateHasLoadingFontFaces();
+
+  void ParseFontShorthandForMatching(
+              const nsAString& aFont,
+              nsRefPtr<mozilla::css::FontFamilyListRefCnt>& aFamilyList,
+              uint32_t& aWeight,
+              int32_t& aStretch,
+              uint32_t& aItalicStyle,
+              ErrorResult& aRv);
+  void FindMatchingFontFaces(const nsAString& aFont,
+                             const nsAString& aText,
+                             nsTArray<FontFace*>& aFontFaces,
+                             mozilla::ErrorResult& aRv);
 
   nsRefPtr<UserFontSet> mUserFontSet;
 
