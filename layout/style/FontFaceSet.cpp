@@ -6,8 +6,8 @@
 
 #include "FontFaceSet.h"
 
-#include "mozilla/Logging.h"
-
+#include "gfxFontConstants.h"
+#include "mozilla/css/Declaration.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/CSSFontFaceLoadEvent.h"
 #include "mozilla/dom/CSSFontFaceLoadEventBinding.h"
@@ -15,9 +15,12 @@
 #include "mozilla/dom/FontFaceSetIterator.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Snprintf.h"
 #include "nsCORSListenerProxy.h"
+#include "nsCSSParser.h"
+#include "nsDeviceContext.h"
 #include "nsFontFaceLoader.h"
 #include "nsIConsoleService.h"
 #include "nsIContentPolicy.h"
@@ -33,8 +36,10 @@
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
 #include "nsStyleSet.h"
+#include "nsUTF8Utils.h"
 
 using namespace mozilla;
+using namespace mozilla::css;
 using namespace mozilla::dom;
 
 #define LOG(args) MOZ_LOG(gfxUserFontSet::GetUserFontsLog(), mozilla::LogLevel::Debug, args)
@@ -161,13 +166,181 @@ FontFaceSet::RemoveDOMContentLoadedListener()
   }
 }
 
+void
+FontFaceSet::ParseFontShorthandForMatching(
+                            const nsAString& aFont,
+                            nsRefPtr<FontFamilyListRefCnt>& aFamilyList,
+                            uint32_t& aWeight,
+                            int32_t& aStretch,
+                            uint32_t& aItalicStyle,
+                            ErrorResult& aRv)
+{
+  // Parse aFont as a 'font' property value.
+  Declaration declaration;
+  declaration.InitializeEmpty();
+
+  bool changed = false;
+  nsCSSParser parser;
+  parser.ParseProperty(eCSSProperty_font,
+                       aFont,
+                       mDocument->GetDocumentURI(),
+                       mDocument->GetDocumentURI(),
+                       mDocument->NodePrincipal(),
+                       &declaration,
+                       &changed,
+                       /* aIsImportant */ false);
+
+  // All of the properties we are interested in should have been set at once.
+  MOZ_ASSERT(changed == (declaration.HasProperty(eCSSProperty_font_family) &&
+                         declaration.HasProperty(eCSSProperty_font_style) &&
+                         declaration.HasProperty(eCSSProperty_font_weight) &&
+                         declaration.HasProperty(eCSSProperty_font_stretch)));
+
+  if (!changed) {
+    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    return;
+  }
+
+  nsCSSCompressedDataBlock* data = declaration.GetNormalBlock();
+  MOZ_ASSERT(!declaration.GetImportantBlock());
+
+  const nsCSSValue* family = data->ValueFor(eCSSProperty_font_family);
+  if (family->GetUnit() != eCSSUnit_FontFamilyList) {
+    // We got inherit, initial, unset, a system font, or a token stream.
+    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    return;
+  }
+
+  aFamilyList =
+    static_cast<FontFamilyListRefCnt*>(family->GetFontFamilyListValue());
+
+  int32_t weight = data->ValueFor(eCSSProperty_font_weight)->GetIntValue();
+
+  // Resolve relative font weights against the initial of font-weight
+  // (normal, which is equivalent to 400).
+  if (weight == NS_STYLE_FONT_WEIGHT_BOLDER) {
+    weight = NS_FONT_WEIGHT_BOLD;
+  } else if (weight == NS_STYLE_FONT_WEIGHT_LIGHTER) {
+    weight = NS_FONT_WEIGHT_THIN;
+  }
+
+  aWeight = weight;
+
+  aStretch = data->ValueFor(eCSSProperty_font_stretch)->GetIntValue();
+  aItalicStyle = data->ValueFor(eCSSProperty_font_style)->GetIntValue();
+}
+
+static bool
+HasAnyCharacterInUnicodeRange(gfxUserFontEntry* aEntry,
+                              const nsAString& aInput)
+{
+  const char16_t* p = aInput.Data();
+  const char16_t* end = p + aInput.Length();
+
+  while (p < end) {
+    uint32_t c = UTF16CharEnumerator::NextChar(&p, end);
+    if (aEntry->CharacterInUnicodeRange(c)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void
+FontFaceSet::FindMatchingFontFaces(const nsAString& aFont,
+                                   const nsAString& aText,
+                                   nsTArray<FontFace*>& aFontFaces,
+                                   ErrorResult& aRv)
+{
+  nsRefPtr<FontFamilyListRefCnt> familyList;
+  uint32_t weight;
+  int32_t stretch;
+  uint32_t italicStyle;
+  ParseFontShorthandForMatching(aFont, familyList, weight, stretch, italicStyle,
+                                aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  gfxFontStyle style;
+  style.style = italicStyle;
+  style.weight = weight;
+  style.stretch = stretch;
+
+  nsTArray<FontFaceRecord>* arrays[2];
+  arrays[0] = &mNonRuleFaces;
+  arrays[1] = &mRuleFaces;
+
+  // Set of FontFaces that we want to return.
+  nsTHashtable<nsPtrHashKey<FontFace>> matchingFaces;
+
+  for (const FontFamilyName& fontFamilyName : familyList->GetFontlist()) {
+    nsRefPtr<gfxFontFamily> family =
+      mUserFontSet->LookupFamily(fontFamilyName.mName);
+
+    if (!family) {
+      continue;
+    }
+
+    nsAutoTArray<gfxFontEntry*,4> entries;
+    bool needsBold;
+    family->FindAllFontsForStyle(style, entries, needsBold);
+
+    for (gfxFontEntry* e : entries) {
+      FontFace::Entry* entry = static_cast<FontFace::Entry*>(e);
+      if (HasAnyCharacterInUnicodeRange(entry, aText)) {
+        for (FontFace* f : entry->GetFontFaces()) {
+          matchingFaces.PutEntry(f);
+        }
+      }
+    }
+  }
+
+  // Add all FontFaces in matchingFaces to aFontFaces, in the order
+  // they appear in the FontFaceSet.
+  for (nsTArray<FontFaceRecord>* array : arrays) {
+    for (FontFaceRecord& record : *array) {
+      FontFace* f = record.mFontFace;
+      if (matchingFaces.Contains(f)) {
+        aFontFaces.AppendElement(f);
+      }
+    }
+  }
+}
+
 already_AddRefed<Promise>
-FontFaceSet::Load(const nsAString& aFont,
+FontFaceSet::Load(JSContext* aCx,
+                  const nsAString& aFont,
                   const nsAString& aText,
                   ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  FlushUserFontSet();
+
+  nsTArray<nsRefPtr<Promise>> promises;
+
+  nsTArray<FontFace*> faces;
+  FindMatchingFontFaces(aFont, aText, faces, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  for (FontFace* f : faces) {
+    nsRefPtr<Promise> promise = f->Load(aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+    if (!promises.AppendElement(promise, fallible)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+  }
+
+  nsIGlobalObject* globalObject = GetParentObject();
+  JS::Rooted<JSObject*> jsGlobal(aCx, globalObject->GetGlobalJSObject());
+  GlobalObject global(aCx, jsGlobal);
+
+  nsRefPtr<Promise> result = Promise::All(global, promises, aRv);
+  return result.forget();
 }
 
 bool
@@ -175,8 +348,21 @@ FontFaceSet::Check(const nsAString& aFont,
                    const nsAString& aText,
                    ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return false;
+  FlushUserFontSet();
+
+  nsTArray<FontFace*> faces;
+  FindMatchingFontFaces(aFont, aText, faces, aRv);
+  if (aRv.Failed()) {
+    return false;
+  }
+
+  for (FontFace* f : faces) {
+    if (f->Status() != FontFaceLoadStatus::Loaded) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 Promise*

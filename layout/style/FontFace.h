@@ -53,6 +53,7 @@ public:
                          aUnicodeRanges) {}
 
     virtual void SetLoadState(UserFontLoadState aLoadState) override;
+    const nsAutoTArray<FontFace*,1>& GetFontFaces() { return mFontFaces; }
 
   protected:
     // The FontFace objects that use this user font entry.  We need to store
@@ -76,6 +77,7 @@ public:
 
   void GetDesc(nsCSSFontDesc aDescID, nsCSSValue& aResult) const;
 
+  gfxUserFontEntry* CreateUserFontEntry();
   gfxUserFontEntry* GetUserFontEntry() const { return mUserFontEntry; }
   void SetUserFontEntry(gfxUserFontEntry* aEntry);
 
