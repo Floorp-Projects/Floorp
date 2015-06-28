@@ -163,6 +163,7 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #define PREF_WORKERS_LATEST_JS_VERSION "dom.workers.latestJSVersion"
 #define PREF_INTL_ACCEPT_LANGUAGES     "intl.accept_languages"
 #define PREF_SERVICEWORKERS_ENABLED    "dom.serviceWorkers.enabled"
+#define PREF_SERVICEWORKERS_TESTING_ENABLED "dom.serviceWorkers.testing.enabled"
 #define PREF_INTERCEPTION_ENABLED      "dom.serviceWorkers.interception.enabled"
 
 namespace {
@@ -1924,6 +1925,10 @@ RuntimeService::Init()
                                   WorkerPrefChanged,
                                   PREF_DOM_CACHES_TESTING_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_DOM_CACHES_TESTING))) ||
+      NS_FAILED(Preferences::RegisterCallbackAndCall(
+                                  WorkerPrefChanged,
+                                  PREF_SERVICEWORKERS_TESTING_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_SERVICEWORKERS_TESTING))) ||
       NS_FAILED(Preferences::RegisterCallback(LoadRuntimeOptions,
                                               PREF_JS_OPTIONS_PREFIX,
                                               nullptr)) ||
@@ -2119,6 +2124,10 @@ RuntimeService::Cleanup()
         NS_FAILED(Preferences::UnregisterCallback(LoadRuntimeOptions,
                                                   PREF_WORKERS_OPTIONS_PREFIX,
                                                   nullptr)) ||
+        NS_FAILED(Preferences::UnregisterCallback(
+                                  WorkerPrefChanged,
+                                  PREF_SERVICEWORKERS_TESTING_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_SERVICEWORKERS_TESTING))) ||
         NS_FAILED(Preferences::UnregisterCallback(
                                   WorkerPrefChanged,
                                   PREF_DOM_CACHES_TESTING_ENABLED,
@@ -2697,6 +2706,10 @@ RuntimeService::WorkerPrefChanged(const char* aPrefName, void* aClosure)
     key = WORKERPREF_DOM_CACHES_TESTING;
     sDefaultPreferences[WORKERPREF_DOM_CACHES_TESTING] =
       Preferences::GetBool(PREF_DOM_CACHES_TESTING_ENABLED, false);
+  } else if (key == WORKERPREF_SERVICEWORKERS_TESTING) {
+    key = WORKERPREF_SERVICEWORKERS_TESTING;
+    sDefaultPreferences[WORKERPREF_SERVICEWORKERS_TESTING] =
+      Preferences::GetBool(PREF_SERVICEWORKERS_TESTING_ENABLED, false);
   }
 
   RuntimeService* rts = RuntimeService::GetService();
