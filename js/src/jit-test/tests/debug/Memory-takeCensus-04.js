@@ -5,22 +5,22 @@ var g = newGlobal();
 var dbg = new Debugger(g);
 
 g.eval(`
-  function withTypedArrayOnStack(f) {
+  function withAllocationMarkerOnStack(f) {
     (function () {
-      var onStack = new Int8Array();
+      var onStack = allocationMarker();
       f();
     }())
   }
 `);
 
-assertEq("Int8Array" in dbg.memory.takeCensus().objects, false,
-         "There shouldn't exist any typed arrays in the census.");
+assertEq("AllocationMarker" in dbg.memory.takeCensus().objects, false,
+         "There shouldn't exist any allocation markers in the census.");
 
-var typedArrayCount;
-g.withTypedArrayOnStack(() => {
-  typedArrayCount = dbg.memory.takeCensus().objects.Int8Array.count;
+var allocationMarkerCount;
+g.withAllocationMarkerOnStack(() => {
+  allocationMarkerCount = dbg.memory.takeCensus().objects.AllocationMarker.count;
 });
 
-assertEq(typedArrayCount, 1,
-         "Should have one typed array in the census, because there " +
+assertEq(allocationMarkerCount, 1,
+         "Should have one allocation marker in the census, because there " +
          "was one on the stack.");
