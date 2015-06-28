@@ -188,6 +188,9 @@ public:
   friend TimeUnit operator* (const TimeUnit& aUnit, int aVal) {
     return TimeUnit(aUnit.mValue * aVal);
   }
+  friend TimeUnit operator/ (const TimeUnit& aUnit, int aVal) {
+    return TimeUnit(aUnit.mValue / aVal);
+  }
 
   bool IsValid() const
   {
