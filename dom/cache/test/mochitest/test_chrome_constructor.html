@@ -14,7 +14,8 @@
   SimpleTest.waitForExplicitFinish();
 
   SpecialPowers.pushPrefEnv({
-    "set": [["dom.caches.enabled", true]],
+    "set": [["dom.caches.enabled", true],
+            ["dom.caches.testing.enabled", true]],
   }, function() {
     // attach to a different origin's CacheStorage
     var url = 'http://example.com/';
