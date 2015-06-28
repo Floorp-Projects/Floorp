@@ -1250,11 +1250,15 @@ CacheCreator::CreateCacheStorage(nsIPrincipal* aPrincipal)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
+  // Create a CacheStorage bypassing its trusted origin checks.  The
+  // ServiceWorker has already performed its own checks before getting
+  // to this point.
   ErrorResult error;
   mCacheStorage =
     CacheStorage::CreateOnMainThread(cache::CHROME_ONLY_NAMESPACE,
                                      mSandboxGlobalObject,
                                      aPrincipal, mPrivateBrowsing,
+                                     true /* force trusted origin */,
                                      error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
