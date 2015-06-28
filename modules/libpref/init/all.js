@@ -4766,11 +4766,7 @@ pref("camera.control.face_detection.enabled", true);
 
 
 // SW Cache API
-#ifdef RELEASE_BUILD
-pref("dom.caches.enabled", false);
-#else
 pref("dom.caches.enabled", true);
-#endif // RELEASE_BUILD
 
 #ifdef MOZ_WIDGET_GONK
 // Empirically, this is the value returned by hal::GetTotalSystemMemory()
