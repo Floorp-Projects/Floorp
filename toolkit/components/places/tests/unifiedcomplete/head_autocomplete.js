@@ -40,6 +40,7 @@ function* cleanup() {
   for (let type of suggestPrefs) {
     Services.prefs.clearUserPref("browser.urlbar.suggest." + type);
   }
+  Services.prefs.clearUserPref("browser.search.suggest.enabled");
   yield PlacesUtils.bookmarks.eraseEverything();
   yield PlacesTestUtils.clearHistory();
 }
