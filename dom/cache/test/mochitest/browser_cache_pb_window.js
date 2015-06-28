@@ -63,7 +63,8 @@ function testKeys(win) {
 function test() {
   waitForExplicitFinish();
   SpecialPowers.pushPrefEnv({'set': [['browser.privatebrowing.autostart', true],
-                                     ['dom.caches.enabled', true]]},
+                                     ['dom.caches.enabled', true],
+                                     ['dom.caches.testing.enabled', true]]},
                             function() {
     var privateWin = OpenBrowserWindow({private: true});
     privateWin.addEventListener('load', function() {
