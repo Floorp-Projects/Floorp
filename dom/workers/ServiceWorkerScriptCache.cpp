@@ -59,9 +59,15 @@ CreateCacheStorage(nsIPrincipal* aPrincipal, ErrorResult& aRv,
   // a service worker running in private browsing mode.  Therefore if
   // we are purging scripts or running a comparison algorithm we cannot
   // be in private browing.
+  //
+  // Also, bypass the CacheStorage trusted origin checks.  The ServiceWorker
+  // has validated the origin prior to this point.  All the information
+  // to revalidate is not available now.
   return CacheStorage::CreateOnMainThread(cache::CHROME_ONLY_NAMESPACE,
                                           sandboxGlobalObject, aPrincipal,
-                                          false /* private browsing */, aRv);
+                                          false /* private browsing */,
+                                          true /* force trusted origin */,
+                                          aRv);
 }
 
 class CompareManager;

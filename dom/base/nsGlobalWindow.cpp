@@ -10495,9 +10495,17 @@ already_AddRefed<CacheStorage>
 nsGlobalWindow::GetCaches(ErrorResult& aRv)
 {
   if (!mCacheStorage) {
+    bool forceTrustedOrigin = false;
+    if (IsOuterWindow()) {
+      forceTrustedOrigin = GetServiceWorkersTestingEnabled();
+    } else {
+      nsRefPtr<nsGlobalWindow> outer = GetOuterWindowInternal();
+      forceTrustedOrigin = outer->GetServiceWorkersTestingEnabled();
+    }
     mCacheStorage = CacheStorage::CreateOnMainThread(cache::DEFAULT_NAMESPACE,
                                                      this, GetPrincipal(),
-                                                     IsPrivateBrowsing(), aRv);
+                                                     IsPrivateBrowsing(),
+                                                     forceTrustedOrigin, aRv);
   }
 
   nsRefPtr<CacheStorage> ref = mCacheStorage;
