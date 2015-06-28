@@ -1291,13 +1291,18 @@
 
   <svg:svg height="0">
 #include tab-shape.inc.svg
-    <svg:clipPath id="urlbar-back-button-clip-path" clipPathUnits="userSpaceOnUse">
+    <svg:clipPath id="urlbar-back-button-clip-path">
 #ifndef XP_MACOSX
-      <svg:path d="m 1,-5 l 0,7.8 c 2.5,3.2 4,6.2 4,10.2 c 0,4 -1.5,7 -4,10 l 0,22l10000,0 l 0,-50 l -10000,0 z"/>
+      <svg:path d="M -9,-4 l 0,1 a 15 15 0 0,1 0,30 l 0,1 l 10000,0 l 0,-32 l -10000,0 z" />
 #else
       <svg:path d="M -11,-5 a 16 16 0 0 1 0,34 l 10000,0 l 0,-34 l -10000,0 z"/>
 #endif
     </svg:clipPath>
+#ifdef XP_WIN
+    <svg:clipPath id="urlbar-back-button-clip-path-win10">
+      <svg:path d="M -6,-2 l 0,1 a 15 15 0 0,1 0,30 l 0,1 l 10000,0 l 0,-32 l -10000,0 z" />
+    </svg:clipPath>
+#endif
   </svg:svg>
 
 </vbox>
