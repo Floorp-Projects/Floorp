@@ -15,7 +15,7 @@
 
 PRLogModuleInfo* GetSourceBufferResourceLog()
 {
-  static PRLogModuleInfo* sLogModule;
+  static PRLogModuleInfo* sLogModule = nullptr;
   if (!sLogModule) {
     sLogModule = PR_NewLogModule("SourceBufferResource");
   }

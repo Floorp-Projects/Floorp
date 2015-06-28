@@ -41,7 +41,7 @@ class JSObject;
 
 PRLogModuleInfo* GetMediaSourceLog()
 {
-  static PRLogModuleInfo* sLogModule;
+  static PRLogModuleInfo* sLogModule = nullptr;
   if (!sLogModule) {
     sLogModule = PR_NewLogModule("MediaSource");
   }
@@ -50,7 +50,7 @@ PRLogModuleInfo* GetMediaSourceLog()
 
 PRLogModuleInfo* GetMediaSourceAPILog()
 {
-  static PRLogModuleInfo* sLogModule;
+  static PRLogModuleInfo* sLogModule = nullptr;
   if (!sLogModule) {
     sLogModule = PR_NewLogModule("MediaSource");
   }
