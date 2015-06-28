@@ -158,6 +158,7 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #endif
 
 #define PREF_DOM_CACHES_ENABLED        "dom.caches.enabled"
+#define PREF_DOM_CACHES_TESTING_ENABLED "dom.caches.testing.enabled"
 #define PREF_DOM_WORKERNOTIFICATION_ENABLED  "dom.webnotifications.enabled"
 #define PREF_WORKERS_LATEST_JS_VERSION "dom.workers.latestJSVersion"
 #define PREF_INTL_ACCEPT_LANGUAGES     "intl.accept_languages"
@@ -1919,6 +1920,10 @@ RuntimeService::Init()
                                   WorkerPrefChanged,
                                   PREF_INTERCEPTION_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_INTERCEPTION_ENABLED))) ||
+      NS_FAILED(Preferences::RegisterCallbackAndCall(
+                                  WorkerPrefChanged,
+                                  PREF_DOM_CACHES_TESTING_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_DOM_CACHES_TESTING))) ||
       NS_FAILED(Preferences::RegisterCallback(LoadRuntimeOptions,
                                               PREF_JS_OPTIONS_PREFIX,
                                               nullptr)) ||
@@ -2114,6 +2119,10 @@ RuntimeService::Cleanup()
         NS_FAILED(Preferences::UnregisterCallback(LoadRuntimeOptions,
                                                   PREF_WORKERS_OPTIONS_PREFIX,
                                                   nullptr)) ||
+        NS_FAILED(Preferences::UnregisterCallback(
+                                  WorkerPrefChanged,
+                                  PREF_DOM_CACHES_TESTING_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_DOM_CACHES_TESTING))) ||
         NS_FAILED(Preferences::UnregisterCallback(
                                   WorkerPrefChanged,
                                   PREF_INTERCEPTION_ENABLED,
@@ -2684,6 +2693,10 @@ RuntimeService::WorkerPrefChanged(const char* aPrefName, void* aClosure)
     key = WORKERPREF_INTERCEPTION_ENABLED;
     sDefaultPreferences[key] =
       Preferences::GetBool(PREF_INTERCEPTION_ENABLED, false);
+  } else if (key == WORKERPREF_DOM_CACHES_TESTING) {
+    key = WORKERPREF_DOM_CACHES_TESTING;
+    sDefaultPreferences[WORKERPREF_DOM_CACHES_TESTING] =
+      Preferences::GetBool(PREF_DOM_CACHES_TESTING_ENABLED, false);
   }
 
   RuntimeService* rts = RuntimeService::GetService();
