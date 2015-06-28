@@ -2337,6 +2337,7 @@ WorkerLoadInfo::WorkerLoadInfo()
   , mIsInCertifiedApp(false)
   , mIndexedDBAllowed(false)
   , mPrivateBrowsing(true)
+  , mServiceWorkersTestingInWindow(false)
 {
   MOZ_COUNT_CTOR(WorkerLoadInfo);
 }
@@ -2392,6 +2393,7 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   mIsInCertifiedApp = aOther.mIsInCertifiedApp;
   mIndexedDBAllowed = aOther.mIndexedDBAllowed;
   mPrivateBrowsing = aOther.mPrivateBrowsing;
+  mServiceWorkersTestingInWindow = aOther.mServiceWorkersTestingInWindow;
 }
 
 template <class Derived>
@@ -4968,6 +4970,8 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
     loadInfo.mWindowID = aParent->WindowID();
     loadInfo.mIndexedDBAllowed = aParent->IsIndexedDBAllowed();
     loadInfo.mPrivateBrowsing = aParent->IsInPrivateBrowsing();
+    loadInfo.mServiceWorkersTestingInWindow =
+      aParent->ServiceWorkersTestingInWindow();
   } else {
     AssertIsOnMainThread();
 
@@ -5012,6 +5016,9 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
       nsPIDOMWindow* outerWindow = globalWindow->GetOuterWindow();
       if (outerWindow) {
         loadInfo.mWindow = outerWindow->GetCurrentInnerWindow();
+        // TODO: fix this for SharedWorkers with multiple documents (bug 1177935)
+        loadInfo.mServiceWorkersTestingInWindow =
+          outerWindow->GetServiceWorkersTestingEnabled();
       }
 
       if (!loadInfo.mWindow ||
