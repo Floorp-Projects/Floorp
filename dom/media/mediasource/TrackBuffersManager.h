@@ -255,7 +255,17 @@ private:
     }
   };
 
-  bool ProcessFrame(MediaRawData* aSample, TrackData& aTrackData);
+  void CheckSequenceDiscontinuity();
+  void ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData);
+  void CheckNextInsertionIndex(TrackData& aTrackData,
+                               const TimeUnit& aSampleTime);
+  void InsertFrames(TrackBuffer& aSamples,
+                    const TimeIntervals& aIntervals,
+                    TrackData& aTrackData);
+  void RemoveFrames(const TimeIntervals& aIntervals,
+                    TrackData& aTrackData,
+                    uint32_t aStartIndex);
+  void UpdateBufferedRanges();
   void RejectProcessing(nsresult aRejectValue, const char* aName);
   void ResolveProcessing(bool aResolveValue, const char* aName);
   MediaPromiseRequestHolder<CodedFrameProcessingPromise> mProcessingRequest;
@@ -292,6 +302,7 @@ private:
   }
   RefPtr<MediaTaskQueue> mTaskQueue;
 
+  TimeInterval mAppendWindow;
   TimeUnit mTimestampOffset;
   TimeUnit mLastTimestampOffset;
   void RestoreCachedVariables();
