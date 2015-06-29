@@ -285,4 +285,12 @@ if (this.addMessageListener) {
   globalMM.addMessageListener("RemoteLogins:onFormSubmit", function onFormSubmit(message) {
     sendAsyncMessage("formSubmissionProcessed", message.data, message.objects);
   });
+} else {
+  // Code to only run in the mochitest pages (not in the chrome script).
+  SimpleTest.registerCleanupFunction(() => {
+    var { LoginManagerParent } = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerParent.jsm", {});
+    return LoginManagerParent.recipeParentPromise.then((recipeParent) => {
+      SpecialPowers.wrap(recipeParent).reset();
+    });
+  });
 }
