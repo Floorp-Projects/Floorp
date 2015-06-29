@@ -62,3 +62,8 @@ fuzzy-if(B2G,5,1) == fixed-table-layout-012-vrl.html fixed-table-layout-012-ref.
 == fixed-table-layout-029-vrl.html fixed-table-layout-025-ref.html
 == fixed-table-layout-030-vrl.html fixed-table-layout-025-ref.html
 == fixed-table-layout-031-vrl.html fixed-table-layout-025-ref.html
+
+HTTP(../..) == s72-border-spacing-002.xht s72-border-spacing-002-ref.xht
+HTTP(../..) == s72-border-spacing-003.xht s72-border-spacing-002-ref.xht
+HTTP(../..) == s72-border-spacing-004.xht s72-border-spacing-002-ref.xht
+HTTP(../..) == s72-border-spacing-005.xht s72-border-spacing-002-ref.xht
