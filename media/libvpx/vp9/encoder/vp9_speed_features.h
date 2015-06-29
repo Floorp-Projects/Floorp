@@ -101,8 +101,7 @@ typedef enum {
 typedef enum {
   NOT_IN_USE = 0,
   RELAXED_NEIGHBORING_MIN_MAX = 1,
-  CONSTRAIN_NEIGHBORING_MIN_MAX = 2,
-  STRICT_NEIGHBORING_MIN_MAX = 3
+  STRICT_NEIGHBORING_MIN_MAX = 2
 } AUTO_MIN_MAX_MODE;
 
 typedef enum {
@@ -272,6 +271,9 @@ typedef struct SPEED_FEATURES {
   // Sets min and max partition sizes for this 64x64 region based on the
   // same 64x64 in last encoded frame, and the left and above neighbor.
   AUTO_MIN_MAX_MODE auto_min_max_partition_size;
+  // Ensures the rd based auto partition search will always
+  // go down at least to the specified level.
+  BLOCK_SIZE rd_auto_partition_min_limit;
 
   // Min and max partition size we enable (block_size) as per auto
   // min max, but also used by adjust partitioning, and pick_partitioning.
@@ -339,6 +341,10 @@ typedef struct SPEED_FEATURES {
   // transform size separately.
   int intra_y_mode_mask[TX_SIZES];
   int intra_uv_mode_mask[TX_SIZES];
+
+  // These bit masks allow you to enable or disable intra modes for each
+  // prediction block size separately.
+  int intra_y_mode_bsize_mask[BLOCK_SIZES];
 
   // This variable enables an early break out of mode testing if the model for
   // rd built from the prediction signal indicates a value that's much

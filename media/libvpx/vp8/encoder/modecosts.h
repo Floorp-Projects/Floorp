@@ -16,7 +16,9 @@
 extern "C" {
 #endif
 
-void vp8_init_mode_costs(VP8_COMP *x);
+struct VP8_COMP;
+
+void vp8_init_mode_costs(struct VP8_COMP *x);
 
 #ifdef __cplusplus
 }  // extern "C"

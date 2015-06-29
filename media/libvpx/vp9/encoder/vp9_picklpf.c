@@ -14,6 +14,7 @@
 #include "./vpx_scale_rtcd.h"
 
 #include "vpx_mem/vpx_mem.h"
+#include "vpx_ports/mem.h"
 
 #include "vp9/common/vp9_loopfilter.h"
 #include "vp9/common/vp9_onyxc_int.h"
@@ -81,7 +82,7 @@ static int search_filter_level(const YV12_BUFFER_CONFIG *sd, VP9_COMP *cpi,
   int64_t ss_err[MAX_LOOP_FILTER + 1];
 
   // Set each entry to -1
-  vpx_memset(ss_err, 0xFF, sizeof(ss_err));
+  memset(ss_err, 0xFF, sizeof(ss_err));
 
   //  Make a copy of the unfiltered / processed recon buffer
   vpx_yv12_copy_y(cm->frame_to_show, &cpi->last_frame_uf);
