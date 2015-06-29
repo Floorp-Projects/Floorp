@@ -150,8 +150,14 @@ function startTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(startTest, window);
 
+// Disable smooth scrolling, because it results in long-running scroll
+// animations that can result in a 'scroll' event triggered by an earlier
+// wheel event as corresponding to a later wheel event.
+SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]},
+                          function() {
+                            SimpleTest.waitForFocus(startTest, window);
+                          });
 </script>
 </pre>
 </body>
