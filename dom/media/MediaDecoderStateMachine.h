@@ -179,7 +179,8 @@ public:
 
   void FinishShutdown();
 
-  bool IsRealTime() const;
+  // Immutable after construction - may be called on any thread.
+  bool IsRealTime() const { return mRealTime; }
 
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
@@ -725,7 +726,7 @@ private:
   WatchManager<MediaDecoderStateMachine> mWatchManager;
 
   // True is we are decoding a realtime stream, like a camera stream.
-  bool mRealTime;
+  const bool mRealTime;
 
   // True if we've dispatched a task to run the state machine but the task has
   // yet to run.
