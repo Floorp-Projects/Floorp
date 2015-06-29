@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test policies for Bug 1101288</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<!--
+This checks if the right policies are applied from a given string when the policy is changed after the document has been loaded.
+https://bugzilla.mozilla.org/show_bug.cgi?id=1101288
+-->
+<script type="application/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+var advance = function() { tests.next(); };
+
+/**
+ * Listen for notifications from the child.
+ * These are sent in case of error, or when the loads we await have completed.
+ */
+window.addEventListener("message", function(event) {
+  if (event.data == "childLoadComplete") {
+    // all loads happen, continue the test.
+    advance();
+  }
+});
+
+/**
+ * helper to perform an XHR.
+ */
+function doXHR(aUrl, onSuccess, onFail) {
+  var xhr = new XMLHttpRequest();
+  xhr.responseType = "json";
+  xhr.onload = function () {
+    onSuccess(xhr);
+  };
+  xhr.onerror = function () {
+    onFail(xhr);
+  };
+  xhr.open('GET', aUrl, true);
+  xhr.send(null);
+}
+
+/**
+ * Grabs the results via XHR and passes to checker.
+ */
+function checkIndividualResults(aTestname, aExpectedReferrer, aName) {
+  doXHR('/tests/dom/base/test/referrer_change_server.sjs?action=get-test-results',
+        function(xhr) {
+          var results = xhr.response;
+          info(JSON.stringify(xhr.response));
+
+          for (i in aName) {
+            ok(aName[i] in results.tests, aName[i] + " tests have to be performed.");
+            is(results.tests[aName[i]].policy, aExpectedReferrer[i], aTestname + ' --- ' + results.tests[aName[i]].policy + ' (' + results.tests[aName[i]].referrer + ')');
+          }
+          advance();
+        },
+        function(xhr) {
+          ok(false, "Can't get results from the counter server.");
+          SimpleTest.finish();
+        });
+}
+
+function resetState() {
+  doXHR('/tests/dom/base/test/referrer_change_server.sjs?action=resetState',
+    advance,
+    function(xhr) {
+      ok(false, "error in reset state");
+      SimpleTest.finish();
+    });
+}
+
+
+/**
+ * This is the main test routine -- serialized by use of a generator.
+ * It resets the counter, then performs two tests in sequence using
+ * the same iframe.
+ */
+var tests = (function() {
+  var iframe = document.getElementById("testframe");
+  var sjs = "/tests/dom/base/test/referrer_change_server.sjs?action=generate-policy-test";
+
+  yield resetState();
+  var name = "no-referrer-unsafe-url";
+  yield iframe.src = sjs + "&policy=" + escape('no-referrer') + "&name=" + name + "&newPolicy=" + escape('unsafe-url');
+  yield checkIndividualResults("unsafe-url (changed) with no-referrer first", ["full"], [name+'unsafe-url']);
+
+  yield resetState();
+  var name = "origin-no-referrer";
+  yield iframe.src = sjs + "&policy=" + escape('origin') + "&name=" + name + "&newPolicy=" + escape('no-referrer');
+  yield checkIndividualResults("no-referrer (changed) with origin first", ["none"], [name+'no-referrer']);
+
+  yield resetState();
+  var name = "unsafe-url-no-referrer";
+  yield iframe.src = sjs + "&policy=" + escape('unsafe-url') + "&name=" + name + "&newPolicy=" + escape('no-referrer');
+  yield checkIndividualResults("no-referrer (changed) with unsafe-url first", ["none"], [name+'no-referrer']);
+
+  sjs = "/tests/dom/base/test/referrer_change_server.sjs?action=generate-policy-test2";
+
+  yield resetState();
+  var name = "no-referrer-unsafe-url";
+  yield iframe.src = sjs + "&policy=" + escape('no-referrer') + "&name=" + name + "&newPolicy=" + escape('unsafe-url');
+  yield checkIndividualResults("unsafe-url (changed) with no-referrer first", ["full"], [name+'unsafe-url']);
+
+  yield resetState();
+  var name = "origin-no-referrer";
+  yield iframe.src = sjs + "&policy=" + escape('origin') + "&name=" + name + "&newPolicy=" + escape('no-referrer');
+  yield checkIndividualResults("no-referrer (changed) with origin first", ["none"], [name+'no-referrer']);
+
+  yield resetState();
+  var name = "unsafe-url-no-referrer";
+  yield iframe.src = sjs + "&policy=" + escape('unsafe-url') + "&name=" + name + "&newPolicy=" + escape('no-referrer');
+  yield checkIndividualResults("no-referrer (changed) with unsafe-url first", ["none"], [name+'no-referrer']);
+
+  // complete.  Be sure to yield so we don't call this twice.
+  yield SimpleTest.finish();
+})();
+
+</script>
+</head>
+
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+
+</body>
+</html>
+
