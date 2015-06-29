@@ -5,16 +5,12 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!-- Serves to position the content on the screen (bottom, centered) and provide the drop-shadow -->
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:gecko="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/sharedialog"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:clipChildren="false"
-    android:clipToPadding="false">
 
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:gecko="http://schemas.android.com/apk/res-auto">
     <LinearLayout
+        android:id="@+id/sharedialog"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center"
@@ -79,5 +75,4 @@
             gecko:disabledText="@string/overlay_share_bookmark_btn_label_already"/>
 
     </LinearLayout>
-
-</FrameLayout>
+</merge>

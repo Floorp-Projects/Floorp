@@ -27,6 +27,13 @@ DOMCursor::DOMCursor(nsPIDOMWindow* aWindow, nsICursorContinueCallback* aCallbac
 {
 }
 
+DOMCursor::DOMCursor(nsIGlobalObject* aGlobal, nsICursorContinueCallback* aCallback)
+  : DOMRequest(aGlobal)
+  , mCallback(aCallback)
+  , mFinished(false)
+{
+}
+
 void
 DOMCursor::Reset()
 {

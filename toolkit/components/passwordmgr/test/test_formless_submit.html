@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Test capturing of fields outside of a form</title>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="pwmgr_common.js"></script>
   <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -14,8 +15,6 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Task.jsm");
 const LMCBackstagePass = Cu.import("resource://gre/modules/LoginManagerContent.jsm");
 const { LoginManagerContent, FormLikeFactory } = LMCBackstagePass;
-
-SpecialPowers.Services.prefs.setBoolPref("signon.debug", true);
 
 let parentScriptURL = SimpleTest.getTestFileURL("pwmgr_common.js");
 let mm = SpecialPowers.loadChromeScript(parentScriptURL);
@@ -31,21 +30,20 @@ document.addEventListener("DOMContentLoaded", () => {
 mm.addMessageListener("doneSetup", function doneSetup() {
   mm.sendAsyncMessage("loadRecipes", {
     siteRecipes: [{
-      hosts: ["mochi.test:8888"],
-      usernameSelector: "input[name='uname1']",
-      passwordSelector: "input[name='pword2']",
+      hosts: ["test1.mochi.test:8888"],
+      usernameSelector: "input[name='recipeuname']",
+      passwordSelector: "input[name='recipepword']",
     }],
   });
 });
 
 mm.addMessageListener("loadedRecipes", () => runTest());
 
-const DEFAULT_ORIGIN = "http://mochi.test:8888";
+const DEFAULT_ORIGIN = "http://test1.mochi.test:8888";
 const TESTCASES = [
   {
     // Inputs
     document: `<input type=password value="pass1">`,
-    //documentURL: DEFAULT_ORIGIN,
     inputIndexForFormLike: 0,
 
     // Expected outputs similar to RemoteLogins:onFormSubmit
@@ -101,6 +99,19 @@ const TESTCASES = [
     formSubmitURL: DEFAULT_ORIGIN,
     usernameFieldValue: "user1",
     newPasswordFieldValue: "pass1",
+    oldPasswordFieldValue: null,
+  },
+  {
+    document: `<!-- recipe field override -->
+      <input name="recipeuname" value="username from recipe">
+      <input value="default field username">
+      <input type=password value="pass1">
+      <input name="recipepword" type=password value="pass2">`,
+    inputIndexForFormLike: 2,
+    hostname: DEFAULT_ORIGIN,
+    formSubmitURL: DEFAULT_ORIGIN,
+    usernameFieldValue: "username from recipe",
+    newPasswordFieldValue: "pass2",
     oldPasswordFieldValue: null,
   },
 ];
@@ -160,7 +171,7 @@ let runTest = Task.async(function*() {
 <p id="display"></p>
 
 <div id="content">
-  <iframe id="loginFrame" src="http://mochi.test:8888/tests/toolkit/components/passwordmgr/test/blank.html"></iframe>
+  <iframe id="loginFrame" src="http://test1.mochi.test:8888/tests/toolkit/components/passwordmgr/test/blank.html"></iframe>
 </div>
 <pre id="test"></pre>
 </body>

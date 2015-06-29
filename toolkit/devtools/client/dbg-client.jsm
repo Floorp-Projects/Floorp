@@ -739,6 +739,7 @@ DebuggerClient.prototype = {
 
     let request = new Request(aRequest);
     request.format = "json";
+    request.stack = Components.stack;
     if (aOnResponse) {
       request.on("json-reply", aOnResponse);
     }
@@ -1032,7 +1033,13 @@ DebuggerClient.prototype = {
     }
 
     if (activeRequest) {
-      activeRequest.emit("json-reply", aPacket);
+      let emitReply = () => activeRequest.emit("json-reply", aPacket);
+      if (activeRequest.stack) {
+        Cu.callFunctionWithAsyncStack(emitReply, activeRequest.stack,
+                                      "DevTools RDP");
+      } else {
+        emitReply();
+      }
     }
   },
 

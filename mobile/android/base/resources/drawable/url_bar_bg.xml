@@ -7,7 +7,7 @@
           xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
     <!-- private browsing mode -->
-    <item gecko:state_private="true" android:drawable="@color/private_toolbar_grey"/>
+    <item gecko:state_private="true" android:drawable="@color/tabs_tray_grey_pressed"/>
 
     <!-- normal mode -->
     <item android:drawable="@color/toolbar_grey"/>

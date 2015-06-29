@@ -5,6 +5,8 @@
 
 "use strict";
 
+/*globals gSyncCheckIntervalSecs, gUpdateTimerManager, Sqlite, DB_PATH */
+
 this.EXPORTED_SYMBOLS = [ "HomeProvider" ];
 
 const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
@@ -125,18 +127,18 @@ function syncTimerCallback(timer) {
   }
 }
 
-this.HomeStorage = function(datasetId) {
+let HomeStorage = function(datasetId) {
   this.datasetId = datasetId;
 };
 
-this.ValidationError = function(message) {
+let ValidationError = function(message) {
   this.name = "ValidationError";
   this.message = message;
 };
 ValidationError.prototype = new Error();
 ValidationError.prototype.constructor = ValidationError;
 
-this.HomeProvider = Object.freeze({
+let HomeProvider = Object.freeze({
   ValidationError: ValidationError,
 
   /**
@@ -213,7 +215,7 @@ var gDatabaseEnsured = false;
  * Creates the database schema.
  */
 function createDatabase(db) {
-  return Task.spawn(function create_database_task() {
+  return Task.spawn(function* create_database_task() {
     yield db.execute(SQL.createItemsTable);
   });
 }
@@ -222,7 +224,7 @@ function createDatabase(db) {
  * Migrates the database schema to a new version.
  */
 function upgradeDatabase(db, oldVersion, newVersion) {
-  return Task.spawn(function upgrade_database_task() {
+  return Task.spawn(function* upgrade_database_task() {
     switch (oldVersion) {
       case 1:
         // Migration from v1 to latest:
@@ -251,7 +253,7 @@ function upgradeDatabase(db, oldVersion, newVersion) {
  * @resolves Handle on an opened SQLite database.
  */
 function getDatabaseConnection() {
-  return Task.spawn(function get_database_connection_task() {
+  return Task.spawn(function* get_database_connection_task() {
     let db = yield Sqlite.openConnection({ path: DB_PATH });
     if (gDatabaseEnsured) {
       throw new Task.Result(db);
@@ -350,10 +352,10 @@ HomeStorage.prototype = {
         ": you cannot save more than " + MAX_SAVE_COUNT + " items at once";
     }
 
-    return Task.spawn(function save_task() {
+    return Task.spawn(function* save_task() {
       let db = yield getDatabaseConnection();
       try {
-        yield db.executeTransaction(function save_transaction() {
+        yield db.executeTransaction(function* save_transaction() {
           if (options && options.replace) {
             yield db.executeCached(SQL.deleteFromDataset, { dataset_id: this.datasetId });
           }
@@ -392,7 +394,7 @@ HomeStorage.prototype = {
    * @resolves When the operation has completed.
    */
   deleteAll: function() {
-    return Task.spawn(function delete_all_task() {
+    return Task.spawn(function* delete_all_task() {
       let db = yield getDatabaseConnection();
       try {
         let params = { dataset_id: this.datasetId };

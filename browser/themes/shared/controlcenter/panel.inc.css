@@ -191,8 +191,12 @@
   font-weight: 700;
 }
 
+#identity-popup-content-verifier {
+  color: #636363;
+}
+
 #identity-popup-content-owner,
-#identity-popup-securityView:not(.verifiedDomain) > #identity-popup-content-verifier {
+#identity-popup-securityView > #identity-popup-securityView-connection.identity-popup-text {
   margin-top: 1em;
 }
 

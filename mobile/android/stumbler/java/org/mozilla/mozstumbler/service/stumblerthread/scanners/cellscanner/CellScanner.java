@@ -17,6 +17,7 @@ import android.util.Log;
 import org.mozilla.mozstumbler.service.AppGlobals;
 import org.mozilla.mozstumbler.service.AppGlobals.ActiveOrPassiveStumbling;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -72,13 +73,7 @@ public class CellScanner {
                 new IntentFilter(Reporter.ACTION_NEW_BUNDLE));
 
         // This is to ensure the broadcast happens from the same thread the CellScanner start() is on
-        mBroadcastScannedHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                Intent intent = (Intent) msg.obj;
-                LocalBroadcastManager.getInstance(mContext).sendBroadcastSync(intent);
-            }
-        };
+        mBroadcastScannedHandler = new BroadcastScannedHandler(this);
 
         mCellScannerImplementation.start();
 
@@ -159,4 +154,25 @@ public class CellScanner {
             mReportWasFlushed.set(true);
         }
     }
+
+    // Note: this reimplements org.mozilla.gecko.util.WeakReferenceHandler because it's not available here.
+    private static class BroadcastScannedHandler extends Handler {
+        private WeakReference<CellScanner> mTarget;
+
+        public BroadcastScannedHandler(final CellScanner that) {
+            super();
+            mTarget = new WeakReference<>(that);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            final CellScanner that = mTarget.get();
+            if (that == null) {
+                return;
+            }
+
+            final Intent intent = (Intent) msg.obj;
+            LocalBroadcastManager.getInstance(that.mContext).sendBroadcastSync(intent);
+        }
+    };
 }

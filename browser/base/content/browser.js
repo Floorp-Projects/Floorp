@@ -54,6 +54,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Pocket",
                                   "resource:///modules/Pocket.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabURL",
+                                  "resource:///modules/NewTabURL.jsm");
 
 // Can't use XPCOMUtils for these because the scripts try to define the variables
 // on window, and so the defineProperty inside defineLazyGetter fails.
@@ -4091,6 +4093,10 @@ var XULBrowserWindow = {
     return true;
   },
 
+  shouldAddToSessionHistory: function(aDocShell, aURI) {
+    return aURI.spec != NewTabURL.get();
+  },
+
   onProgressChange: function (aWebProgress, aRequest,
                               aCurSelfProgress, aMaxSelfProgress,
                               aCurTotalProgress, aMaxTotalProgress) {
@@ -6958,6 +6964,10 @@ var gIdentityHandler = {
       host = this.getEffectiveHost();
     } catch (e) {
       // Some URIs might have no hosts.
+    }
+
+    if (!host) {
+      // Fallback for special protocols.
       host = this._lastUri.specIgnoringRef;
     }
 
