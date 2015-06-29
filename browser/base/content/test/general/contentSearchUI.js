@@ -5,14 +5,9 @@
 
 (function () {
 
-const TEST_MSG = "SearchSuggestionUIControllerTest";
+const TEST_MSG = "ContentSearchUIControllerTest";
 const ENGINE_NAME = "browser_searchSuggestionEngine searchSuggestionEngine.xml";
-
-let input = content.document.querySelector("input");
-let gController =
-  new content.SearchSuggestionUIController(input, input.parentNode);
-gController.engineName = ENGINE_NAME;
-gController.remoteTimeout = 5000;
+var gController;
 
 addMessageListener(TEST_MSG, msg => {
   messageHandlers[msg.data.type](msg.data.data);
@@ -20,16 +15,31 @@ addMessageListener(TEST_MSG, msg => {
 
 let messageHandlers = {
 
+  init: function() {
+    Services.search.currentEngine = Services.search.getEngineByName(ENGINE_NAME);
+    let input = content.document.querySelector("input");
+    gController =
+      new content.ContentSearchUIController(input, input.parentNode, "test", "test");
+    content.addEventListener("ContentSearchService", function listener(aEvent) {
+      if (aEvent.detail.type == "State" &&
+          gController.defaultEngine.name == ENGINE_NAME) {
+        content.removeEventListener("ContentSearchService", listener);
+        ack("init");
+      }
+    });
+    gController.remoteTimeout = 5000;
+  },
+
   key: function (arg) {
     let keyName = typeof(arg) == "string" ? arg : arg.key;
-    content.synthesizeKey(keyName, {});
+    content.synthesizeKey(keyName, arg.modifiers || {});
     let wait = arg.waitForSuggestions ? waitForSuggestions : cb => cb();
-    wait(ack);
+    wait(ack.bind(null, "key"));
   },
 
   startComposition: function (arg) {
     content.synthesizeComposition({ type: "compositionstart", data: "" });
-    ack();
+    ack("startComposition");
   },
 
   changeComposition: function (arg) {
@@ -44,23 +54,46 @@ let messageHandlers = {
       caret: { start: data.length, length: 0 }
     });
     let wait = arg.waitForSuggestions ? waitForSuggestions : cb => cb();
-    wait(ack);
+    wait(ack.bind(null, "changeComposition"));
+  },
+
+  commitComposition: function () {
+    content.synthesizeComposition({ type: "compositioncommitasis" });
+    ack("commitComposition");
   },
 
   focus: function () {
     gController.input.focus();
-    ack();
+    ack("focus");
   },
 
   blur: function () {
     gController.input.blur();
-    ack();
+    ack("blur");
   },
 
-  mousemove: function (suggestionIdx) {
+  waitForSearch: function () {
+    waitForContentSearchEvent("Search", aData => ack("waitForSearch", aData));
+  },
+
+  waitForSearchSettings: function () {
+    waitForContentSearchEvent("ManageEngines",
+                              aData => ack("waitForSearchSettings", aData));
+  },
+
+  mousemove: function (itemIndex) {
+    let row;
+    if (itemIndex == -1) {
+      row = gController._table.firstChild;
+    }
+    else {
+      let allElts = [...gController._suggestionsList.children,
+                     ...gController._oneOffButtons,
+                     content.document.getElementById("contentSearchSettingsButton")];
+      row = allElts[itemIndex];
+    }
     // Copied from widget/tests/test_panel_mouse_coords.xul and
     // browser/base/content/test/newtab/head.js
-    let row = gController._table.children[suggestionIdx];
     let rect = row.getBoundingClientRect();
     let left = content.mozInnerScreenX + rect.left;
     let x = left + rect.width / 2;
@@ -79,23 +112,31 @@ let messageHandlers = {
 
     row.addEventListener("mousemove", function onMove() {
       row.removeEventListener("mousemove", onMove);
-      ack();
+      ack("mousemove");
     });
     utils.sendNativeMouseEvent(x * scale, y * scale, nativeMsg, 0, null);
   },
 
-  mousedown: function (suggestionIdx) {
-    gController.onClick = () => {
-      gController.onClick = null;
-      ack();
-    };
-    let row = gController._table.children[suggestionIdx];
-    content.sendMouseEvent({ type: "mousedown" }, row);
+  click: function (arg) {
+    let eltIdx = typeof(arg) == "object" ? arg.eltIdx : arg;
+    let row;
+    if (eltIdx == -1) {
+      row = gController._table.firstChild;
+    }
+    else {
+      let allElts = [...gController._suggestionsList.children,
+                     ...gController._oneOffButtons,
+                     content.document.getElementById("contentSearchSettingsButton")];
+      row = allElts[eltIdx];
+    }
+    let event = arg.modifiers || {};
+    content.synthesizeMouse(row, 1, 1, event);
+    ack("click");
   },
 
   addInputValueToFormHistory: function () {
     gController.addInputValueToFormHistory();
-    ack();
+    ack("addInputValueToFormHistory");
   },
 
   reset: function () {
@@ -103,12 +144,12 @@ let messageHandlers = {
     gController.input.focus();
     content.synthesizeKey("a", { accelKey: true });
     content.synthesizeKey("VK_DELETE", {});
-    ack();
+    ack("reset");
   },
 };
 
-function ack() {
-  sendAsyncMessage(TEST_MSG, currentState());
+function ack(aType, aData) {
+  sendAsyncMessage(TEST_MSG, { type: aType, data: aData || currentState() });
 }
 
 function waitForSuggestions(cb) {
@@ -124,32 +165,37 @@ function waitForSuggestions(cb) {
   });
 }
 
+function waitForContentSearchEvent(messageType, cb) {
+  let mm = content.SpecialPowers.Cc["@mozilla.org/globalmessagemanager;1"].
+    getService(content.SpecialPowers.Ci.nsIMessageListenerManager);
+  mm.addMessageListener("ContentSearch", function listener(aMsg) {
+    if (aMsg.data.type != messageType) {
+      return;
+    }
+    mm.removeMessageListener("ContentSearch", listener);
+    cb(aMsg.data.data);
+  });
+}
+
 function currentState() {
   let state = {
     selectedIndex: gController.selectedIndex,
-    numSuggestions: gController.numSuggestions,
+    numSuggestions: gController._table.hidden ? 0 : gController.numSuggestions,
     suggestionAtIndex: [],
     isFormHistorySuggestionAtIndex: [],
 
     tableHidden: gController._table.hidden,
-    tableChildrenLength: gController._table.children.length,
-    tableChildren: [],
 
     inputValue: gController.input.value,
     ariaExpanded: gController.input.getAttribute("aria-expanded"),
   };
 
-  for (let i = 0; i < gController.numSuggestions; i++) {
-    state.suggestionAtIndex.push(gController.suggestionAtIndex(i));
-    state.isFormHistorySuggestionAtIndex.push(
-      gController.isFormHistorySuggestionAtIndex(i));
-  }
-
-  for (let child of gController._table.children) {
-    state.tableChildren.push({
-      textContent: child.textContent,
-      classes: new Set(child.className.split(/\s+/)),
-    });
+  if (state.numSuggestions) {
+    for (let i = 0; i < gController.numSuggestions; i++) {
+      state.suggestionAtIndex.push(gController.suggestionAtIndex(i));
+      state.isFormHistorySuggestionAtIndex.push(
+        gController.isFormHistorySuggestionAtIndex(i));
+    }
   }
 
   return state;
