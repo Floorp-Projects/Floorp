@@ -14,6 +14,7 @@
 #include "./vpx_config.h"
 #include "./vp9_rtcd.h"
 
+#include "vpx_ports/mem.h"
 #include "vp9/common/vp9_blockd.h"
 #include "vp9/common/vp9_idct.h"
 #include "vp9/common/vp9_systemdependent.h"
@@ -417,8 +418,8 @@ void vp9_fdct8x8_quant_c(const int16_t *input, int stride,
   (void)quant_shift_ptr;
   (void)iscan;
 
-  vpx_memset(qcoeff_ptr, 0, n_coeffs * sizeof(*qcoeff_ptr));
-  vpx_memset(dqcoeff_ptr, 0, n_coeffs * sizeof(*dqcoeff_ptr));
+  memset(qcoeff_ptr, 0, n_coeffs * sizeof(*qcoeff_ptr));
+  memset(dqcoeff_ptr, 0, n_coeffs * sizeof(*dqcoeff_ptr));
 
   if (!skip_block) {
     // Quantization pass: All coefficients with index >= zero_flag are

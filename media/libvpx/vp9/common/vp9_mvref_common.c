@@ -28,7 +28,7 @@ static void find_mv_refs_idx(const VP9_COMMON *cm, const MACROBLOCKD *xd,
       cm->prev_frame->mvs + mi_row * cm->mi_cols + mi_col : NULL;
 
   // Blank the reference vector list
-  vpx_memset(mv_ref_list, 0, sizeof(*mv_ref_list) * MAX_MV_REF_CANDIDATES);
+  memset(mv_ref_list, 0, sizeof(*mv_ref_list) * MAX_MV_REF_CANDIDATES);
 
   // The nearest 2 blocks are treated differently
   // if the size < 8x8 we get the mv from the bmi substructure,
@@ -37,7 +37,7 @@ static void find_mv_refs_idx(const VP9_COMMON *cm, const MACROBLOCKD *xd,
     const POSITION *const mv_ref = &mv_ref_search[i];
     if (is_inside(tile, mi_col, mi_row, cm->mi_rows, mv_ref)) {
       const MODE_INFO *const candidate_mi = xd->mi[mv_ref->col + mv_ref->row *
-                                                   xd->mi_stride].src_mi;
+                                                   xd->mi_stride];
       const MB_MODE_INFO *const candidate = &candidate_mi->mbmi;
       // Keep counts for entropy encoding.
       context_counter += mode_2_counter[candidate->mode];
@@ -59,7 +59,7 @@ static void find_mv_refs_idx(const VP9_COMMON *cm, const MACROBLOCKD *xd,
     const POSITION *const mv_ref = &mv_ref_search[i];
     if (is_inside(tile, mi_col, mi_row, cm->mi_rows, mv_ref)) {
       const MB_MODE_INFO *const candidate = &xd->mi[mv_ref->col + mv_ref->row *
-                                                    xd->mi_stride].src_mi->mbmi;
+                                                    xd->mi_stride]->mbmi;
       different_ref_found = 1;
 
       if (candidate->ref_frame[0] == ref_frame)
@@ -101,7 +101,7 @@ static void find_mv_refs_idx(const VP9_COMMON *cm, const MACROBLOCKD *xd,
       const POSITION *mv_ref = &mv_ref_search[i];
       if (is_inside(tile, mi_col, mi_row, cm->mi_rows, mv_ref)) {
         const MB_MODE_INFO *const candidate = &xd->mi[mv_ref->col + mv_ref->row
-                                              * xd->mi_stride].src_mi->mbmi;
+                                              * xd->mi_stride]->mbmi;
 
         // If the candidate is INTRA we don't want to consider its mv.
         IF_DIFF_REF_FRAME_ADD_MV(candidate, ref_frame, ref_sign_bias,
@@ -183,7 +183,7 @@ void vp9_append_sub8x8_mvs_for_idx(VP9_COMMON *cm, MACROBLOCKD *xd,
                                    int block, int ref, int mi_row, int mi_col,
                                    int_mv *nearest_mv, int_mv *near_mv) {
   int_mv mv_list[MAX_MV_REF_CANDIDATES];
-  MODE_INFO *const mi = xd->mi[0].src_mi;
+  MODE_INFO *const mi = xd->mi[0];
   b_mode_info *bmi = mi->bmi;
   int n;
 
@@ -223,6 +223,6 @@ void vp9_append_sub8x8_mvs_for_idx(VP9_COMMON *cm, MACROBLOCKD *xd,
       break;
     }
     default:
-      assert("Invalid block index.");
+      assert(0 && "Invalid block index.");
   }
 }

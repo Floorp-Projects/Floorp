@@ -104,6 +104,44 @@ typedef enum {
   VP9_ALT_FLAG = 1 << 2,
 } VP9_REFFRAME;
 
+typedef enum {
+  PLANE_TYPE_Y  = 0,
+  PLANE_TYPE_UV = 1,
+  PLANE_TYPES
+} PLANE_TYPE;
+
+typedef enum {
+  DC_PRED,         // Average of above and left pixels
+  V_PRED,          // Vertical
+  H_PRED,          // Horizontal
+  D45_PRED,        // Directional 45  deg = round(arctan(1/1) * 180/pi)
+  D135_PRED,       // Directional 135 deg = 180 - 45
+  D117_PRED,       // Directional 117 deg = 180 - 63
+  D153_PRED,       // Directional 153 deg = 180 - 27
+  D207_PRED,       // Directional 207 deg = 180 + 27
+  D63_PRED,        // Directional 63  deg = round(arctan(2/1) * 180/pi)
+  TM_PRED,         // True-motion
+  NEARESTMV,
+  NEARMV,
+  ZEROMV,
+  NEWMV,
+  MB_MODE_COUNT
+} PREDICTION_MODE;
+
+#define INTRA_MODES (TM_PRED + 1)
+
+#define INTER_MODES (1 + NEWMV - NEARESTMV)
+
+#define SKIP_CONTEXTS 3
+#define INTER_MODE_CONTEXTS 7
+
+/* Segment Feature Masks */
+#define MAX_MV_REF_CANDIDATES 2
+
+#define INTRA_INTER_CONTEXTS 4
+#define COMP_INTER_CONTEXTS 5
+#define REF_CONTEXTS 5
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

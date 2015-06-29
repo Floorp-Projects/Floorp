@@ -15,6 +15,7 @@
 #include "./vp9_rtcd.h"
 
 #include "vpx_mem/vpx_mem.h"
+#include "vpx_ports/mem.h"
 
 #include "vp9/common/vp9_common.h"
 #include "vp9/common/vp9_entropy.h"
@@ -128,7 +129,7 @@ static void init_me_luts_bd(int *bit16lut, int *bit4lut, int range,
   }
 }
 
-void vp9_init_me_luts() {
+void vp9_init_me_luts(void) {
   init_me_luts_bd(sad_per_bit16lut_8, sad_per_bit4lut_8, QINDEX_RANGE,
                   VPX_BITS_8);
 #if CONFIG_VP9_HIGHBITDEPTH
@@ -419,8 +420,8 @@ void vp9_get_entropy_contexts(BLOCK_SIZE bsize, TX_SIZE tx_size,
   int i;
   switch (tx_size) {
     case TX_4X4:
-      vpx_memcpy(t_above, above, sizeof(ENTROPY_CONTEXT) * num_4x4_w);
-      vpx_memcpy(t_left, left, sizeof(ENTROPY_CONTEXT) * num_4x4_h);
+      memcpy(t_above, above, sizeof(ENTROPY_CONTEXT) * num_4x4_w);
+      memcpy(t_left, left, sizeof(ENTROPY_CONTEXT) * num_4x4_h);
       break;
     case TX_8X8:
       for (i = 0; i < num_4x4_w; i += 2)
@@ -450,13 +451,14 @@ void vp9_mv_pred(VP9_COMP *cpi, MACROBLOCK *x,
                  uint8_t *ref_y_buffer, int ref_y_stride,
                  int ref_frame, BLOCK_SIZE block_size) {
   MACROBLOCKD *xd = &x->e_mbd;
-  MB_MODE_INFO *mbmi = &xd->mi[0].src_mi->mbmi;
+  MB_MODE_INFO *mbmi = &xd->mi[0]->mbmi;
   int i;
   int zero_seen = 0;
   int best_index = 0;
   int best_sad = INT_MAX;
   int this_sad = INT_MAX;
   int max_mv = 0;
+  int near_same_nearest;
   uint8_t *src_y_ptr = x->plane[0].src.buf;
   uint8_t *ref_y_ptr;
   const int num_mv_refs = MAX_MV_REF_CANDIDATES +
@@ -469,23 +471,27 @@ void vp9_mv_pred(VP9_COMP *cpi, MACROBLOCK *x,
   pred_mv[2] = x->pred_mv[ref_frame];
   assert(num_mv_refs <= (int)(sizeof(pred_mv) / sizeof(pred_mv[0])));
 
+  near_same_nearest =
+      mbmi->ref_mvs[ref_frame][0].as_int == mbmi->ref_mvs[ref_frame][1].as_int;
   // Get the sad for each candidate reference mv.
   for (i = 0; i < num_mv_refs; ++i) {
     const MV *this_mv = &pred_mv[i];
+    int fp_row, fp_col;
 
-    max_mv = MAX(max_mv, MAX(abs(this_mv->row), abs(this_mv->col)) >> 3);
-    if (is_zero_mv(this_mv) && zero_seen)
+    if (i == 1 && near_same_nearest)
       continue;
+    fp_row = (this_mv->row + 3 + (this_mv->row >= 0)) >> 3;
+    fp_col = (this_mv->col + 3 + (this_mv->col >= 0)) >> 3;
+    max_mv = MAX(max_mv, MAX(abs(this_mv->row), abs(this_mv->col)) >> 3);
 
-    zero_seen |= is_zero_mv(this_mv);
+    if (fp_row ==0 && fp_col == 0 && zero_seen)
+      continue;
+    zero_seen |= (fp_row ==0 && fp_col == 0);
 
-    ref_y_ptr =
-        &ref_y_buffer[ref_y_stride * (this_mv->row >> 3) + (this_mv->col >> 3)];
-
+    ref_y_ptr =&ref_y_buffer[ref_y_stride * fp_row + fp_col];
     // Find sad for current vector.
     this_sad = cpi->fn_ptr[block_size].sdf(src_y_ptr, x->plane[0].src.stride,
                                            ref_y_ptr, ref_y_stride);
-
     // Note if it is the best so far.
     if (this_sad < best_sad) {
       best_sad = this_sad;
@@ -545,7 +551,7 @@ YV12_BUFFER_CONFIG *vp9_get_scaled_ref_frame(const VP9_COMP *cpi,
 }
 
 int vp9_get_switchable_rate(const VP9_COMP *cpi, const MACROBLOCKD *const xd) {
-  const MB_MODE_INFO *const mbmi = &xd->mi[0].src_mi->mbmi;
+  const MB_MODE_INFO *const mbmi = &xd->mi[0]->mbmi;
   const int ctx = vp9_get_pred_context_switchable_interp(xd);
   return SWITCHABLE_INTERP_RATE_FACTOR *
              cpi->switchable_interp_costs[ctx][mbmi->interp_filter];
@@ -611,8 +617,7 @@ void vp9_set_rd_speed_thresholds_sub8x8(VP9_COMP *cpi) {
        {2000, 2000, 2000, 4000, 4000, 2000}};
   RD_OPT *const rd = &cpi->rd;
   const int idx = cpi->oxcf.mode == BEST;
-  vpx_memcpy(rd->thresh_mult_sub8x8, thresh_mult[idx],
-             sizeof(thresh_mult[idx]));
+  memcpy(rd->thresh_mult_sub8x8, thresh_mult[idx], sizeof(thresh_mult[idx]));
 }
 
 void vp9_update_rd_thresh_fact(int (*factor_buf)[MAX_MODES], int rd_thresh,

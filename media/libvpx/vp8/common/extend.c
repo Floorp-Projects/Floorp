@@ -40,9 +40,9 @@ static void copy_and_extend_plane
 
     for (i = 0; i < h; i++)
     {
-        vpx_memset(dest_ptr1, src_ptr1[0], el);
-        vpx_memcpy(dest_ptr1 + el, src_ptr1, w);
-        vpx_memset(dest_ptr2, src_ptr2[0], er);
+        memset(dest_ptr1, src_ptr1[0], el);
+        memcpy(dest_ptr1 + el, src_ptr1, w);
+        memset(dest_ptr2, src_ptr2[0], er);
         src_ptr1  += sp;
         src_ptr2  += sp;
         dest_ptr1 += dp;
@@ -60,13 +60,13 @@ static void copy_and_extend_plane
 
     for (i = 0; i < et; i++)
     {
-        vpx_memcpy(dest_ptr1, src_ptr1, linesize);
+        memcpy(dest_ptr1, src_ptr1, linesize);
         dest_ptr1 += dp;
     }
 
     for (i = 0; i < eb; i++)
     {
-        vpx_memcpy(dest_ptr2, src_ptr2, linesize);
+        memcpy(dest_ptr2, src_ptr2, linesize);
         dest_ptr2 += dp;
     }
 }
