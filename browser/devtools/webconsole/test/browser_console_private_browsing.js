@@ -6,8 +6,9 @@
 // Bug 874061: test for how the browser and web consoles display messages coming
 // from private windows. See bug for description of expected behavior.
 
-function test()
-{
+"use strict";
+
+function test() {
   const TEST_URI = "data:text/html;charset=utf8,<p>hello world! bug 874061" +
                    "<button onclick='console.log(\"foobar bug 874061\");" +
                    "fooBazBaz.yummy()'>click</button>";
@@ -22,15 +23,13 @@ function test()
   requestLongerTimeout(2);
   start();
 
-  function start()
-  {
+  function start() {
     gBrowser.selectedTab = gBrowser.addTab("data:text/html;charset=utf8," +
                                            "<p>hello world! I am not private!");
     gBrowser.selectedBrowser.addEventListener("load", onLoadTab, true);
   }
 
-  function onLoadTab()
-  {
+  function onLoadTab() {
     gBrowser.selectedBrowser.removeEventListener("load", onLoadTab, true);
     info("onLoadTab()");
 
@@ -55,8 +54,7 @@ function test()
     whenDelayedStartupFinished(privateWindow, onPrivateWindowReady);
   }
 
-  function onPrivateWindowReady()
-  {
+  function onPrivateWindowReady() {
     info("private browser window opened");
     privateBrowser = privateWindow.gBrowser;
 
@@ -65,20 +63,19 @@ function test()
       info("private tab opened");
       privateBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
       privateContent = privateBrowser.selectedBrowser.contentWindow;
-      ok(PrivateBrowsingUtils.isBrowserPrivate(privateBrowser.selectedBrowser), "tab window is private");
+      ok(PrivateBrowsingUtils.isBrowserPrivate(privateBrowser.selectedBrowser),
+         "tab window is private");
       openConsole(privateTab).then(consoleOpened);
     }, true);
   }
 
-  function addMessages()
-  {
+  function addMessages() {
     let button = privateContent.document.querySelector("button");
     ok(button, "button in page");
     EventUtils.synthesizeMouse(button, 2, 2, {}, privateContent);
   }
 
-  function consoleOpened(aHud)
-  {
+  function consoleOpened(aHud) {
     hud = aHud;
     ok(hud, "web console opened");
 
@@ -106,8 +103,7 @@ function test()
     }).then(testCachedMessages);
   }
 
-  function testCachedMessages()
-  {
+  function testCachedMessages() {
     info("testCachedMessages()");
     closeConsole(privateTab).then(() => {
       info("web console closed");
@@ -115,8 +111,7 @@ function test()
     });
   }
 
-  function consoleReopened(aHud)
-  {
+  function consoleReopened(aHud) {
     hud = aHud;
     ok(hud, "web console reopened");
 
@@ -128,8 +123,7 @@ function test()
     }).then(testBrowserConsole);
   }
 
-  function testBrowserConsole()
-  {
+  function testBrowserConsole() {
     info("testBrowserConsole()");
     closeConsole(privateTab).then(() => {
       info("web console closed");
@@ -139,15 +133,13 @@ function test()
 
   // Make sure that the cached messages from private tabs are not displayed in
   // the browser console.
-  function checkNoPrivateMessages()
-  {
+  function checkNoPrivateMessages() {
     let text = hud.outputNode.textContent;
     is(text.indexOf("fooBazBaz"), -1, "no exception displayed");
     is(text.indexOf("bug 874061"), -1, "no console message displayed");
   }
 
-  function onBrowserConsoleOpen(aHud)
-  {
+  function onBrowserConsoleOpen(aHud) {
     hud = aHud;
     ok(hud, "browser console opened");
 
@@ -163,8 +155,7 @@ function test()
     }).then(testPrivateWindowClose);
   }
 
-  function testPrivateWindowClose()
-  {
+  function testPrivateWindowClose() {
     info("close the private window and check if the private messages are removed");
     hud.jsterm.once("private-messages-cleared", () => {
       isnot(hud.outputNode.textContent.indexOf("bug874061-not-private"), -1,
@@ -181,8 +172,7 @@ function test()
     privateWindow.BrowserTryToCloseWindow();
   }
 
-  function onBrowserConsoleReopen(aHud)
-  {
+  function onBrowserConsoleReopen(aHud) {
     hud = aHud;
     ok(hud, "browser console reopened");
 
@@ -191,8 +181,8 @@ function test()
       webconsole: hud,
       messages: [nonPrivateMessage],
     }).then(() => {
-      // Make sure that no private message is displayed after closing the private
-      // window and reopening the Browser Console.
+      // Make sure that no private message is displayed after closing the
+      // private window and reopening the Browser Console.
       checkNoPrivateMessages();
       executeSoon(finishTest);
     });

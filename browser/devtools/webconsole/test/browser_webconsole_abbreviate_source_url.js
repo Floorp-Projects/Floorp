@@ -4,6 +4,8 @@
 // Tests that source URLs are abbreviated properly for display on the right-
 // hand side of the Web Console.
 
+"use strict";
+
 function test() {
   testAbbreviation("http://example.com/x.js", "x.js");
   testAbbreviation("http://example.com/foo/bar/baz/boo.js", "boo.js");

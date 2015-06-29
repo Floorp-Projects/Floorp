@@ -5,8 +5,11 @@
 
 // Check that the navigation marker shows on page reload - bug 793996.
 
+"use strict";
+
 const PREF = "devtools.webconsole.persistlog";
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console.html";
 
 let hud;
 
@@ -32,8 +35,7 @@ let test = asyncTest(function* () {
   hud = null;
 });
 
-function consoleOpened()
-{
+function consoleOpened() {
   ok(hud, "Web Console opened");
 
   hud.jsterm.clearOutput();
@@ -48,8 +50,7 @@ function consoleOpened()
   });
 }
 
-function onReload()
-{
+function onReload() {
   content.console.log("foobarz2");
 
   return waitForMessages({
@@ -72,4 +73,3 @@ function onReload()
     }],
   });
 }
-

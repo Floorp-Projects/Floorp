@@ -5,7 +5,10 @@
 
 // Test that the autocomplete popup closes on switching tabs. See bug 900448.
 
-const TEST_URI = "data:text/html;charset=utf-8,<p>bug 900448 - autocomplete popup closes on tab switch";
+"use strict";
+
+const TEST_URI = "data:text/html;charset=utf-8,<p>bug 900448 - autocomplete " +
+                 "popup closes on tab switch";
 
 let test = asyncTest(function*() {
   yield loadTab(TEST_URI);
@@ -26,7 +29,8 @@ function onPopupShown(panel) {
 
   panel.addEventListener("popupshown", function popupOpened() {
     panel.removeEventListener("popupshown", popupOpened, false);
-    loadTab("data:text/html;charset=utf-8,<p>testing autocomplete closes").then(finished.resolve);
+    loadTab("data:text/html;charset=utf-8,<p>testing autocomplete closes")
+      .then(finished.resolve);
   }, false);
 
   return finished.promise;
