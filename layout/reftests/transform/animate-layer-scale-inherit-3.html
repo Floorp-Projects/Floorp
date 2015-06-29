@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<title>Testcase, bug 1122526</title>
+<style>
+
+#outer, #inner {
+  display: inline-block;
+  background: white;
+  color: black;
+}
+#inner { animation: HoldTransform linear 100s }
+#inner {
+  vertical-align: top;
+  height: 100px;
+  width: 100px;
+  background: repeating-linear-gradient(to top left, yellow, blue 10px);
+}
+@keyframes HoldTransform {
+  /* need to initially rasterize at non-identity transform to hit the
+     bug at all */
+  0% { transform: scale(0.2) }
+  0.01%, 100% { transform: none }
+}
+
+</style>
+
+<div id="outer">
+  <div id="inner">
+  </div>
+</div>
+
+<script>
+
+document.getElementById("inner").addEventListener("animationstart", StartListener, false);
+
+function StartListener(event) {
+  // Animation should be zoomed to transform:none after 10ms; give it
+  // longer.
+  setTimeout(RemoveReftestWait, 100);
+}
+
+function RemoveReftestWait() {
+  document.documentElement.classList.remove("reftest-wait");
+}
+
+</script>
