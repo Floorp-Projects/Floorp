@@ -460,11 +460,6 @@ GetScaleForValue(const StyleAnimationValue& aValue, nsIFrame* aFrame)
   nsCSSValueSharedList* list = aValue.GetCSSValueSharedListValue();
   MOZ_ASSERT(list->mHead);
 
-  if (list->mHead->mValue.GetUnit() == eCSSUnit_None) {
-    // There is an animation, but no actual transform yet.
-    return gfxSize();
-  }
-
   RuleNodeCacheConditions dontCare;
   TransformReferenceBox refBox(aFrame);
   gfx3DMatrix transform = nsStyleTransformMatrix::ReadTransforms(
