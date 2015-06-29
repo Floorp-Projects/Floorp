@@ -48,9 +48,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(DOMEventTargetHelper)
-  if (tmp->IsBlack()) {
+  if (tmp->IsBlack() || tmp->IsCertainlyAliveForCC()) {
     if (tmp->mListenerManager) {
       tmp->mListenerManager->MarkForCC();
+    }
+    if (!tmp->IsBlack() && tmp->PreservingWrapper()) {
+      // This marks the wrapper black.
+      tmp->GetWrapper();
     }
     return true;
   }
