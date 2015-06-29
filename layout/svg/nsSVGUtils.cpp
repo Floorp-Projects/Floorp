@@ -1197,8 +1197,7 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                                           const gfxMatrix& aMatrix)
 {
   bool strokeMayHaveCorners =
-    !aFrame->GetContent()->IsAnyOfSVGElements(nsGkAtoms::circle,
-                                              nsGkAtoms::ellipse);
+    !SVGContentUtils::ShapeTypeHasNoCorners(aFrame->GetContent());
 
   // For a shape without corners the stroke can only extend half the stroke
   // width from the path in the x/y-axis directions. For shapes with corners
