@@ -48,11 +48,6 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMER
 
-  int32_t GetGeneration()
-  {
-    return mGeneration;
-  }
-
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
 private:
@@ -68,6 +63,11 @@ private:
   // If a failure is encountered, the reference is returned to the caller
   static already_AddRefed<nsTimerImpl> PostTimerEvent(
     already_AddRefed<nsTimerImpl> aTimerRef);
+
+  int32_t GetGeneration()
+  {
+    return mGeneration;
+  }
 
   enum class CallbackType : uint8_t {
     Unknown = 0,
