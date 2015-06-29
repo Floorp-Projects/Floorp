@@ -1389,11 +1389,6 @@ void MediaDecoderStateMachine::VolumeChanged()
   }
 }
 
-bool MediaDecoderStateMachine::IsRealTime() const
-{
-  return mRealTime;
-}
-
 void MediaDecoderStateMachine::RecomputeDuration()
 {
   MOZ_ASSERT(OnTaskQueue());
