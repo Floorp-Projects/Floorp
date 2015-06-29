@@ -125,6 +125,8 @@ browser.jar:
         skin/classic/browser/Toolbar-inverted.png
         skin/classic/browser/Toolbar-inverted@2x.png
         skin/classic/browser/Toolbar-lunaSilver.png
+        skin/classic/browser/Toolbar-win8.png
+        skin/classic/browser/Toolbar-win8@2x.png
         skin/classic/browser/Toolbar-XP.png
         skin/classic/browser/toolbarbutton-dropdown-arrow.png
         skin/classic/browser/toolbarbutton-dropdown-arrow-XPVista7.png
@@ -635,20 +637,24 @@ browser.jar:
 % override chrome://browser/skin/menuPanel-small@2x.png               chrome://browser/skin/menuPanel-small-aero@2x.png                 os=WINNT osversion=6.1
 % override chrome://browser/skin/Toolbar@2x.png                       chrome://browser/skin/Toolbar-aero@2x.png                         os=WINNT osversion=6
 % override chrome://browser/skin/Toolbar@2x.png                       chrome://browser/skin/Toolbar-aero@2x.png                         os=WINNT osversion=6.1
+% override chrome://browser/skin/Toolbar@2x.png                       chrome://browser/skin/Toolbar-win8@2x.png                         os=WINNT osversion=6.2
+% override chrome://browser/skin/Toolbar@2x.png                       chrome://browser/skin/Toolbar-win8@2x.png                         os=WINNT osversion=6.3
 % override chrome://browser/skin/loop/menuPanel.png                   chrome://browser/skin/loop/menuPanel-aero.png                     os=WINNT osversion=6
 % override chrome://browser/skin/loop/menuPanel.png                   chrome://browser/skin/loop/menuPanel-aero.png                     os=WINNT osversion=6.1
 % override chrome://browser/skin/loop/menuPanel@2x.png                chrome://browser/skin/loop/menuPanel-aero@2x.png                  os=WINNT osversion=6
 % override chrome://browser/skin/loop/menuPanel@2x.png                chrome://browser/skin/loop/menuPanel-aero@2x.png                  os=WINNT osversion=6.1
 
+% override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-XP.png                              os=WINNT osversion<6
 % override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-aero.png                            os=WINNT osversion=6
 % override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-aero.png                            os=WINNT osversion=6.1
-% override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-XP.png                              os=WINNT osversion<6
+% override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-win8.png                            os=WINNT osversion=6.2
+% override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-win8.png                            os=WINNT osversion=6.3
+% override chrome://browser/skin/loop/toolbar.png                     chrome://browser/skin/loop/toolbar-XP.png                         os=WINNT osversion<6
 % override chrome://browser/skin/loop/toolbar.png                     chrome://browser/skin/loop/toolbar-aero.png                       os=WINNT osversion=6
 % override chrome://browser/skin/loop/toolbar.png                     chrome://browser/skin/loop/toolbar-aero.png                       os=WINNT osversion=6.1
-% override chrome://browser/skin/loop/toolbar.png                     chrome://browser/skin/loop/toolbar-XP.png                         os=WINNT osversion<6
+% override chrome://browser/skin/loop/toolbar@2x.png                  chrome://browser/skin/loop/toolbar-XP@2x.png                      os=WINNT osversion<6
 % override chrome://browser/skin/loop/toolbar@2x.png                  chrome://browser/skin/loop/toolbar-aero@2x.png                    os=WINNT osversion=6
 % override chrome://browser/skin/loop/toolbar@2x.png                  chrome://browser/skin/loop/toolbar-aero@2x.png                    os=WINNT osversion=6.1
-% override chrome://browser/skin/loop/toolbar@2x.png                  chrome://browser/skin/loop/toolbar-XP@2x.png                      os=WINNT osversion<6
 % override chrome://browser/skin/preferences/checkbox.png             chrome://browser/skin/preferences/checkbox-aero.png               os=WINNT osversion=6
 % override chrome://browser/skin/preferences/checkbox.png             chrome://browser/skin/preferences/checkbox-aero.png               os=WINNT osversion=6.1
 % override chrome://browser/skin/preferences/checkbox.png             chrome://browser/skin/preferences/checkbox-xp.png                 os=WINNT osversion<6
