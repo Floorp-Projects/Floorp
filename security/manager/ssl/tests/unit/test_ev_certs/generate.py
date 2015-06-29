@@ -26,6 +26,7 @@ anypolicy_policy = ("certificatePolicies = @v3_ca_ev_cp\n\n" +
                     "2.5.29.32.0\n\n" +
                     "CPS.1 = \"http://mytestdomain.local/cps\"")
 
+validity_days = 3 * 365 + 3 * 31 # 39 months
 
 def import_untrusted_cert(certfile, nickname):
     os.system('certutil -A -d sql:%s -n %s -i %s -t ",,"' %
@@ -53,7 +54,8 @@ def generate_certs():
                                              prefix,
                                              int_ext_text,
                                              ee_ext_text,
-                                             key_type)
+                                             key_type,
+                                             ee_validity_in_days = validity_days)
     pk12file = CertUtils.generate_pkcs12(db, db, int_cert, int_key,
                                          "int-" + prefix)
     CertUtils.import_cert_and_pkcs12(srcdir, int_cert, pk12file,
@@ -70,7 +72,8 @@ def generate_certs():
                                       'no-ocsp-url-cert',
                                       no_ocsp_url_ext_aia + endentity_crl +
                                       CertUtils.mozilla_testing_ev_policy,
-                                      int_key, int_cert);
+                                      int_key, int_cert,
+                                      validity_in_days = validity_days);
     import_untrusted_cert(no_ocsp_cert, 'no-ocsp-url-cert');
 
     # add an ev cert whose intermediate has a anypolicy oid
@@ -87,7 +90,8 @@ def generate_certs():
                                              prefix,
                                              int_ext_text,
                                              ee_ext_text,
-                                             key_type)
+                                             key_type,
+                                             ee_validity_in_days = validity_days)
     pk12file = CertUtils.generate_pkcs12(db, db, int_cert, int_key,
                                          "int-" + prefix)
     CertUtils.import_cert_and_pkcs12(srcdir, int_cert, pk12file,
@@ -118,7 +122,8 @@ def generate_certs():
                                       prefix,
                                       int_ext_text,
                                       ee_ext_text,
-                                      key_type)
+                                      key_type,
+                                      ee_validity_in_days = validity_days)
     pk12file =  CertUtils.generate_pkcs12(db, db, int_cert, int_key,
                                           "int-" + prefix)
     CertUtils.import_cert_and_pkcs12(srcdir, int_cert, pk12file,

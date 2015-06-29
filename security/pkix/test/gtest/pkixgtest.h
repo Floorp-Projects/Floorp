@@ -160,6 +160,14 @@ public:
     return NotReached("VerifyRSAPKCS1SignedDigest should not be called",
                       Result::FATAL_ERROR_LIBRARY_FAILURE);
   }
+
+  Result CheckValidityIsAcceptable(Time, Time, EndEntityOrCA, KeyPurposeId)
+                                   override
+  {
+    ADD_FAILURE();
+    return NotReached("CheckValidityIsAcceptable should not be called",
+                      Result::FATAL_ERROR_LIBRARY_FAILURE);
+  }
 };
 
 class DefaultCryptoTrustDomain : public EverythingFailsByDefaultTrustDomain
@@ -196,6 +204,12 @@ class DefaultCryptoTrustDomain : public EverythingFailsByDefaultTrustDomain
                                     Input subjectPublicKeyInfo) override
   {
     return TestVerifyRSAPKCS1SignedDigest(signedDigest, subjectPublicKeyInfo);
+  }
+
+  Result CheckValidityIsAcceptable(Time, Time, EndEntityOrCA, KeyPurposeId)
+                                   override
+  {
+    return Success;
   }
 };
 

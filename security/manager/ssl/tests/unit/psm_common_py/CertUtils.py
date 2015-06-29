@@ -19,11 +19,14 @@ mozilla_testing_ev_policy = ('certificatePolicies = @v3_ca_ev_cp\n\n' +
                              '1.3.6.1.4.1.13769.666.666.666.1.500.9.1\n\n' +
                              'CPS.1 = "http://mytestdomain.local/cps"')
 
+default_validity_in_days = 10 * 365
+
 def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
                           ext_text, signer_key_filename = "",
                           signer_cert_filename = "",
                           subject_string = "",
-                          key_size = '2048'):
+                          key_size = '2048',
+                          validity_in_days = default_validity_in_days):
     """
     Generate an x509 certificate with a sha256 signature
 
@@ -44,6 +47,7 @@ def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
       signer_cert_filename -- the certificate that will sign the certificate
                     (used to extract signer info) it must be in DER format.
       key_size   -- public key size for RSA certs
+      validity_in_days -- the number of days the cert will be valid for
 
     output:
       key_name   -- the filename of the key file (PEM format)
@@ -72,15 +76,17 @@ def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
     cert_name =  dest_dir + "/"+ name + ".der"
     if not signer_key_filename:
         signer_key_filename = key_name;
-        os.system ("openssl x509 -req -sha256 -days 3650 -in " + csr_name +
+        os.system ("openssl x509 -req -sha256 -in " + csr_name +
+                   " -days " + str(validity_in_days) +
                    " -signkey " + signer_key_filename +
                    " -set_serial " + str(serial_num) +
                    " -extfile " + extensions_filename +
                    " -outform DER -out "+ cert_name)
     else:
-        os.system ("openssl x509 -req -sha256 -days 3650 -in " + csr_name +
+        os.system ("openssl x509 -req -sha256 -in " + csr_name +
                    " -CAkey " + signer_key_filename +
                    " -CA " + signer_cert_filename + " -CAform DER " +
+                   " -days " + str(validity_in_days) +
                    " -set_serial " + str(serial_num) + " -out " + cert_name +
                    " -outform DER  -extfile " + extensions_filename)
     return key_name, cert_name
@@ -88,7 +94,8 @@ def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
 
 
 def generate_int_and_ee(db_dir, dest_dir, ca_key, ca_cert, name, int_ext_text,
-                        ee_ext_text, key_type = 'rsa'):
+                        ee_ext_text, key_type = 'rsa',
+                        ee_validity_in_days = default_validity_in_days):
     """
     Generate an intermediate and ee signed by the generated intermediate. The
     name of the intermediate files will be the name '.der' or '.key'. The name
@@ -113,6 +120,8 @@ def generate_int_and_ee(db_dir, dest_dir, ca_key, ca_cert, name, int_ext_text,
                     end entity certificate
       key_type   -- the type of key generated: potential values: 'rsa' or any
 	                of the curves found by 'openssl ecparam -list_curves'
+      ee_validity_in_days -- the number of days the end-entity cert will be
+                             valid for
 
     output:
       int_key   -- the filename of the intermeidate key file (PEM format)
@@ -126,10 +135,16 @@ def generate_int_and_ee(db_dir, dest_dir, ca_key, ca_cert, name, int_ext_text,
                                                 key_type, "int-" + name,
                                                 int_ext_text,
                                                 ca_key, ca_cert)
-    [ee_key, ee_cert] = generate_cert_generic(db_dir, dest_dir,
-                                              random.randint(100,40000000),
-                                              key_type,  name,
-                                              ee_ext_text, int_key, int_cert)
+    [ee_key, ee_cert] = generate_cert_generic(
+        db_dir,
+        dest_dir,
+        random.randint(100,40000000),
+        key_type,
+        name,
+        ee_ext_text,
+        int_key,
+        int_cert,
+        validity_in_days = ee_validity_in_days)
 
     return int_key, int_cert, ee_key, ee_cert
 
