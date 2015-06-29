@@ -1,4 +1,4 @@
-FROM          quay.io/mrrrgn/ubuntu32-build:0.0.1
+FROM          quay.io/mrrrgn/ubuntu32-build:0.0.2
 MAINTAINER    Morgan Reece Phillips <winter2718@gmail.com>
 
 # Add build scripts; these are the entry points from the taskcluster worker, and
