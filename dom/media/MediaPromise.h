@@ -701,6 +701,9 @@ public:
   }
 };
 
+// A generic promise type that does the trick for simple use cases.
+typedef MediaPromise<bool, nsresult, /* IsExclusive = */ false> GenericPromise;
+
 /*
  * Class to encapsulate a promise for a particular role. Use this as the member
  * variable for a class whose method returns a promise.
