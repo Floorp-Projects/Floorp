@@ -10,6 +10,8 @@
 
 #include <math.h>
 
+#include "vpx_ports/mem.h"
+
 #include "vp9/encoder/vp9_aq_variance.h"
 
 #include "vp9/common/vp9_seg_common.h"
@@ -80,6 +82,61 @@ void vp9_vaq_frame_setup(VP9_COMP *cpi) {
   }
 }
 
+/* TODO(agrange, paulwilkins): The block_variance calls the unoptimized versions
+ * of variance() and highbd_8_variance(). It should not.
+ */
+static void aq_variance(const uint8_t *a, int  a_stride,
+                        const uint8_t *b, int  b_stride,
+                        int  w, int  h, unsigned int *sse, int *sum) {
+  int i, j;
+
+  *sum = 0;
+  *sse = 0;
+
+  for (i = 0; i < h; i++) {
+    for (j = 0; j < w; j++) {
+      const int diff = a[j] - b[j];
+      *sum += diff;
+      *sse += diff * diff;
+    }
+
+    a += a_stride;
+    b += b_stride;
+  }
+}
+
+#if CONFIG_VP9_HIGHBITDEPTH
+static void aq_highbd_variance64(const uint8_t *a8, int  a_stride,
+                                 const uint8_t *b8, int  b_stride,
+                                 int w, int h, uint64_t *sse, uint64_t *sum) {
+  int i, j;
+
+  uint16_t *a = CONVERT_TO_SHORTPTR(a8);
+  uint16_t *b = CONVERT_TO_SHORTPTR(b8);
+  *sum = 0;
+  *sse = 0;
+
+  for (i = 0; i < h; i++) {
+    for (j = 0; j < w; j++) {
+      const int diff = a[j] - b[j];
+      *sum += diff;
+      *sse += diff * diff;
+    }
+    a += a_stride;
+    b += b_stride;
+  }
+}
+
+static void aq_highbd_8_variance(const uint8_t *a8, int  a_stride,
+                                 const uint8_t *b8, int  b_stride,
+                                 int w, int h, unsigned int *sse, int *sum) {
+  uint64_t sse_long = 0;
+  uint64_t sum_long = 0;
+  aq_highbd_variance64(a8, a_stride, b8, b_stride, w, h, &sse_long, &sum_long);
+  *sse = (unsigned int)sse_long;
+  *sum = (int)sum_long;
+}
+#endif  // CONFIG_VP9_HIGHBITDEPTH
 
 static unsigned int block_variance(VP9_COMP *cpi, MACROBLOCK *x,
                                    BLOCK_SIZE bs) {
@@ -96,18 +153,18 @@ static unsigned int block_variance(VP9_COMP *cpi, MACROBLOCK *x,
     int avg;
 #if CONFIG_VP9_HIGHBITDEPTH
     if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
-      highbd_variance(x->plane[0].src.buf, x->plane[0].src.stride,
-                      CONVERT_TO_BYTEPTR(vp9_highbd_64_zeros), 0, bw, bh,
-                      &sse, &avg);
+      aq_highbd_8_variance(x->plane[0].src.buf, x->plane[0].src.stride,
+                           CONVERT_TO_BYTEPTR(vp9_highbd_64_zeros), 0, bw, bh,
+                           &sse, &avg);
       sse >>= 2 * (xd->bd - 8);
       avg >>= (xd->bd - 8);
     } else {
-      variance(x->plane[0].src.buf, x->plane[0].src.stride,
-               vp9_64_zeros, 0, bw, bh, &sse, &avg);
+      aq_variance(x->plane[0].src.buf, x->plane[0].src.stride,
+                  vp9_64_zeros, 0, bw, bh, &sse, &avg);
     }
 #else
-    variance(x->plane[0].src.buf, x->plane[0].src.stride,
-             vp9_64_zeros, 0, bw, bh, &sse, &avg);
+    aq_variance(x->plane[0].src.buf, x->plane[0].src.stride,
+                vp9_64_zeros, 0, bw, bh, &sse, &avg);
 #endif  // CONFIG_VP9_HIGHBITDEPTH
     var = sse - (((int64_t)avg * avg) / (bw * bh));
     return (256 * var) / (bw * bh);

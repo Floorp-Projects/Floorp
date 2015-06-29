@@ -58,7 +58,7 @@ static struct VP8D_COMP * create_decompressor(VP8D_CONFIG *oxcf)
     if (!pbi)
         return NULL;
 
-    vpx_memset(pbi, 0, sizeof(VP8D_COMP));
+    memset(pbi, 0, sizeof(VP8D_COMP));
 
     if (setjmp(pbi->common.error.jmp))
     {
@@ -259,7 +259,7 @@ static int swap_frame_buffers (VP8_COMMON *cm)
     return err;
 }
 
-int check_fragments_for_errors(VP8D_COMP *pbi)
+static int check_fragments_for_errors(VP8D_COMP *pbi)
 {
     if (!pbi->ec_active &&
         pbi->fragments.count <= 1 && pbi->fragments.sizes[0] == 0)

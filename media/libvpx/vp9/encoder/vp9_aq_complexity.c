@@ -11,6 +11,7 @@
 #include <limits.h>
 #include <math.h>
 
+#include "vp9/encoder/vp9_aq_complexity.h"
 #include "vp9/encoder/vp9_aq_variance.h"
 #include "vp9/encoder/vp9_encodeframe.h"
 #include "vp9/common/vp9_seg_common.h"
@@ -55,8 +56,7 @@ void vp9_setup_in_frame_q_adj(VP9_COMP *cpi) {
     const int aq_strength = get_aq_c_strength(cm->base_qindex, cm->bit_depth);
 
     // Clear down the segment map.
-    vpx_memset(cpi->segmentation_map, DEFAULT_AQ2_SEG,
-               cm->mi_rows * cm->mi_cols);
+    memset(cpi->segmentation_map, DEFAULT_AQ2_SEG, cm->mi_rows * cm->mi_cols);
 
     vp9_clearall_segfeatures(seg);
 
