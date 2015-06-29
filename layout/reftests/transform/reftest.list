@@ -135,3 +135,4 @@ pref(svg.transform-origin.enabled,true) == transform-origin-svg-2b.svg transform
 # Bug 1122526
 == animate-layer-scale-inherit-1.html animate-layer-scale-inherit-1-ref.html
 == animate-layer-scale-inherit-2.html animate-layer-scale-inherit-2-ref.html
+== animate-layer-scale-inherit-3.html animate-layer-scale-inherit-1-ref.html
