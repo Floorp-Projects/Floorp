@@ -12,9 +12,7 @@
 
 #include "vpx_scale/yv12config.h"
 #include "vpx_mem/vpx_mem.h"
-#if CONFIG_VP9 && CONFIG_VP9_HIGHBITDEPTH
-#include "vp9/common/vp9_common.h"
-#endif
+#include "vpx_ports/mem.h"
 
 /****************************************************************************
 *  Exports
@@ -38,7 +36,7 @@ vp8_yv12_de_alloc_frame_buffer(YV12_BUFFER_CONFIG *ybf) {
     /* buffer_alloc isn't accessed by most functions.  Rather y_buffer,
       u_buffer and v_buffer point to buffer_alloc and are used.  Clear out
       all of this so that a freed pointer isn't inadvertently used */
-    vpx_memset(ybf, 0, sizeof(YV12_BUFFER_CONFIG));
+    memset(ybf, 0, sizeof(YV12_BUFFER_CONFIG));
   } else {
     return -1;
   }
@@ -128,7 +126,7 @@ int vp9_free_frame_buffer(YV12_BUFFER_CONFIG *ybf) {
     /* buffer_alloc isn't accessed by most functions.  Rather y_buffer,
       u_buffer and v_buffer point to buffer_alloc and are used.  Clear out
       all of this so that a freed pointer isn't inadvertently used */
-    vpx_memset(ybf, 0, sizeof(YV12_BUFFER_CONFIG));
+    memset(ybf, 0, sizeof(YV12_BUFFER_CONFIG));
   } else {
     return -1;
   }
@@ -222,7 +220,7 @@ int vp9_realloc_frame_buffer(YV12_BUFFER_CONFIG *ybf,
       // This memset is needed for fixing valgrind error from C loop filter
       // due to access uninitialized memory in frame border. It could be
       // removed if border is totally removed.
-      vpx_memset(ybf->buffer_alloc, 0, ybf->buffer_alloc_sz);
+      memset(ybf->buffer_alloc, 0, ybf->buffer_alloc_sz);
     }
 
     /* Only support allocating buffers that have a border that's a multiple

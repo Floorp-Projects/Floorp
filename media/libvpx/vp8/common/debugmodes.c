@@ -81,7 +81,6 @@ void vp8_print_modes_and_motion_vectors(MODE_INFO *mi, int rows, int cols, int f
     fprintf(mvs, "\n");
 
     /* print out the block modes */
-    mb_index = 0;
     fprintf(mvs, "Mbs for Frame %d\n", frame);
     {
         int b_row;
@@ -129,7 +128,6 @@ void vp8_print_modes_and_motion_vectors(MODE_INFO *mi, int rows, int cols, int f
 
 
     /* print out the block modes */
-    mb_index = 0;
     fprintf(mvs, "MVs for Frame %d\n", frame);
     {
         int b_row;

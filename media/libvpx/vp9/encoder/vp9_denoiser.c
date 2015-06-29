@@ -203,7 +203,7 @@ static VP9_DENOISER_DECISION perform_motion_compensation(VP9_DENOISER *denoiser,
   int sse_diff = ctx->zeromv_sse - ctx->newmv_sse;
   MV_REFERENCE_FRAME frame;
   MACROBLOCKD *filter_mbd = &mb->e_mbd;
-  MB_MODE_INFO *mbmi = &filter_mbd->mi[0].src_mi->mbmi;
+  MB_MODE_INFO *mbmi = &filter_mbd->mi[0]->mbmi;
   MB_MODE_INFO saved_mbmi;
   int i, j;
   struct buf_2d saved_dst[MAX_MB_PLANE];
@@ -357,7 +357,7 @@ static void copy_frame(YV12_BUFFER_CONFIG dest, const YV12_BUFFER_CONFIG src) {
   assert(dest.y_height == src.y_height);
 
   for (r = 0; r < dest.y_height; ++r) {
-    vpx_memcpy(destbuf, srcbuf, dest.y_width);
+    memcpy(destbuf, srcbuf, dest.y_width);
     destbuf += dest.y_stride;
     srcbuf += src.y_stride;
   }

@@ -10,6 +10,8 @@
 #ifndef VP9_VP9_IFACE_COMMON_H_
 #define VP9_VP9_IFACE_COMMON_H_
 
+#include "vpx_ports/mem.h"
+
 static void yuvconfig2image(vpx_image_t *img, const YV12_BUFFER_CONFIG  *yv12,
                             void *user_priv) {
   /** vpx_img_wrap() doesn't allow specifying independent strides for

@@ -11,6 +11,7 @@
 #include "./vpx_config.h"
 #include "vpx_mem/vpx_mem.h"
 
+#include "vp9/common/vp9_alloccommon.h"
 #include "vp9/common/vp9_blockd.h"
 #include "vp9/common/vp9_entropymode.h"
 #include "vp9/common/vp9_entropymv.h"
@@ -56,6 +57,7 @@ static int alloc_seg_map(VP9_COMMON *cm, int seg_map_size) {
     if (cm->seg_map_array[i] == NULL)
       return 1;
   }
+  cm->seg_map_alloc_size = seg_map_size;
 
   // Init the index.
   cm->seg_map_idx = 0;
@@ -83,8 +85,7 @@ static void free_seg_map(VP9_COMMON *cm) {
   }
 }
 
-void vp9_free_ref_frame_buffers(VP9_COMMON *cm) {
-  BufferPool *const pool = cm->buffer_pool;
+void vp9_free_ref_frame_buffers(BufferPool *pool) {
   int i;
 
   for (i = 0; i < FRAME_BUFFERS; ++i) {
@@ -97,10 +98,14 @@ void vp9_free_ref_frame_buffers(VP9_COMMON *cm) {
     pool->frame_bufs[i].mvs = NULL;
     vp9_free_frame_buffer(&pool->frame_bufs[i].buf);
   }
+}
 
+void vp9_free_postproc_buffers(VP9_COMMON *cm) {
 #if CONFIG_VP9_POSTPROC
   vp9_free_frame_buffer(&cm->post_proc_buffer);
   vp9_free_frame_buffer(&cm->post_proc_buffer_int);
+#else
+  (void)cm;
 #endif
 }
 
@@ -114,25 +119,36 @@ void vp9_free_context_buffers(VP9_COMMON *cm) {
 }
 
 int vp9_alloc_context_buffers(VP9_COMMON *cm, int width, int height) {
-  vp9_free_context_buffers(cm);
+  int new_mi_size;
 
   vp9_set_mb_mi(cm, width, height);
-  if (cm->alloc_mi(cm, cm->mi_stride * calc_mi_size(cm->mi_rows)))
-    goto fail;
+  new_mi_size = cm->mi_stride * calc_mi_size(cm->mi_rows);
+  if (cm->mi_alloc_size < new_mi_size) {
+    cm->free_mi(cm);
+    if (cm->alloc_mi(cm, new_mi_size))
+      goto fail;
+  }
 
-  // Create the segmentation map structure and set to 0.
-  free_seg_map(cm);
-  if (alloc_seg_map(cm, cm->mi_rows * cm->mi_cols))
-    goto fail;
+  if (cm->seg_map_alloc_size < cm->mi_rows * cm->mi_cols) {
+    // Create the segmentation map structure and set to 0.
+    free_seg_map(cm);
+    if (alloc_seg_map(cm, cm->mi_rows * cm->mi_cols))
+      goto fail;
+  }
 
-  cm->above_context = (ENTROPY_CONTEXT *)vpx_calloc(
-      2 * mi_cols_aligned_to_sb(cm->mi_cols) * MAX_MB_PLANE,
-      sizeof(*cm->above_context));
-  if (!cm->above_context) goto fail;
+  if (cm->above_context_alloc_cols < cm->mi_cols) {
+    vpx_free(cm->above_context);
+    cm->above_context = (ENTROPY_CONTEXT *)vpx_calloc(
+        2 * mi_cols_aligned_to_sb(cm->mi_cols) * MAX_MB_PLANE,
+        sizeof(*cm->above_context));
+    if (!cm->above_context) goto fail;
 
-  cm->above_seg_context = (PARTITION_CONTEXT *)vpx_calloc(
-      mi_cols_aligned_to_sb(cm->mi_cols), sizeof(*cm->above_seg_context));
-  if (!cm->above_seg_context) goto fail;
+    vpx_free(cm->above_seg_context);
+    cm->above_seg_context = (PARTITION_CONTEXT *)vpx_calloc(
+        mi_cols_aligned_to_sb(cm->mi_cols), sizeof(*cm->above_seg_context));
+    if (!cm->above_seg_context) goto fail;
+    cm->above_context_alloc_cols = cm->mi_cols;
+  }
 
   return 0;
 
@@ -142,7 +158,6 @@ int vp9_alloc_context_buffers(VP9_COMMON *cm, int width, int height) {
 }
 
 void vp9_remove_common(VP9_COMMON *cm) {
-  vp9_free_ref_frame_buffers(cm);
   vp9_free_context_buffers(cm);
 
   vpx_free(cm->fc);
@@ -154,7 +169,7 @@ void vp9_remove_common(VP9_COMMON *cm) {
 void vp9_init_context_buffers(VP9_COMMON *cm) {
   cm->setup_mi(cm);
   if (cm->last_frame_seg_map && !cm->frame_parallel_decode)
-    vpx_memset(cm->last_frame_seg_map, 0, cm->mi_rows * cm->mi_cols);
+    memset(cm->last_frame_seg_map, 0, cm->mi_rows * cm->mi_cols);
 }
 
 void vp9_swap_current_and_last_seg_map(VP9_COMMON *cm) {

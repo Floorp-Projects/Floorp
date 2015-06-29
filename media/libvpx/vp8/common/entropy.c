@@ -183,7 +183,6 @@ const vp8_extra_bit_struct vp8_extra_bits[12] =
 
 void vp8_default_coef_probs(VP8_COMMON *pc)
 {
-    vpx_memcpy(pc->fc.coef_probs, default_coef_probs,
-                   sizeof(default_coef_probs));
+    memcpy(pc->fc.coef_probs, default_coef_probs, sizeof(default_coef_probs));
 }
 

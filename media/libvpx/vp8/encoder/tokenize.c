@@ -421,7 +421,7 @@ void vp8_tokenize_mb(VP8_COMP *cpi, MACROBLOCK *x, TOKENEXTRA **t)
 
 void init_context_counters(void)
 {
-    vpx_memset(context_counters, 0, sizeof(context_counters));
+    memset(context_counters, 0, sizeof(context_counters));
 }
 
 void print_context_counters()
@@ -596,13 +596,13 @@ void vp8_fix_contexts(MACROBLOCKD *x)
     /* Clear entropy contexts for Y2 blocks */
     if (x->mode_info_context->mbmi.mode != B_PRED && x->mode_info_context->mbmi.mode != SPLITMV)
     {
-        vpx_memset(x->above_context, 0, sizeof(ENTROPY_CONTEXT_PLANES));
-        vpx_memset(x->left_context, 0, sizeof(ENTROPY_CONTEXT_PLANES));
+        memset(x->above_context, 0, sizeof(ENTROPY_CONTEXT_PLANES));
+        memset(x->left_context, 0, sizeof(ENTROPY_CONTEXT_PLANES));
     }
     else
     {
-        vpx_memset(x->above_context, 0, sizeof(ENTROPY_CONTEXT_PLANES)-1);
-        vpx_memset(x->left_context, 0, sizeof(ENTROPY_CONTEXT_PLANES)-1);
+        memset(x->above_context, 0, sizeof(ENTROPY_CONTEXT_PLANES)-1);
+        memset(x->left_context, 0, sizeof(ENTROPY_CONTEXT_PLANES)-1);
     }
 
 }

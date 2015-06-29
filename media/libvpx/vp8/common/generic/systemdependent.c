@@ -17,6 +17,7 @@
 #include "vpx_ports/x86.h"
 #endif
 #include "vp8/common/onyxc_int.h"
+#include "vp8/common/systemdependent.h"
 
 #if CONFIG_MULTITHREAD
 #if HAVE_UNISTD_H && !defined(__OS2__)
