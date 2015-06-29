@@ -1045,7 +1045,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "content-box" ],
-    other_values: [ "border-box" ],
+    other_values: [ "border-box", "padding-box" ],
     invalid_values: [ "margin-box", "content", "padding", "border", "margin" ]
   },
   "-moz-box-sizing": {
@@ -1055,7 +1055,7 @@ var gCSSProperties = {
     alias_for: "box-sizing",
     subproperties: [ "box-sizing" ],
     initial_values: [ "content-box" ],
-    other_values: [ "border-box" ],
+    other_values: [ "border-box", "padding-box" ],
     invalid_values: [ "margin-box", "content", "padding", "border", "margin" ]
   },
   "-moz-columns": {
