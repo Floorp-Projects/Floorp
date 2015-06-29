@@ -303,13 +303,11 @@ GetBSizeOfRowsSpannedBelowFirst(nsTableCellFrame& aTableCellFrame,
 nsTableCellFrame*
 nsTableRowFrame::GetFirstCell()
 {
-  nsIFrame* childFrame = mFrames.FirstChild();
-  while (childFrame) {
+  for (nsIFrame* childFrame : mFrames) {
     nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
     if (cellFrame) {
       return cellFrame;
     }
-    childFrame = childFrame->GetNextSibling();
   }
   return nullptr;
 }
@@ -538,8 +536,7 @@ nsTableRowFrame::CalcBSize(const nsHTMLReflowState& aReflowState)
   }
   // calc() with percentages is treated like 'auto' on table rows.
 
-  for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame;
-       kidFrame = kidFrame->GetNextSibling()) {
+  for (nsIFrame* kidFrame : mFrames) {
     nsTableCellFrame *cellFrame = do_QueryFrame(kidFrame);
     if (cellFrame) {
       MOZ_ASSERT(cellFrame->GetWritingMode() == wm);
@@ -1394,8 +1391,7 @@ nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
 {
   // Find the cell frame where col index < aColIndex
   nsTableCellFrame* priorCell = nullptr;
-  for (nsIFrame* child = mFrames.FirstChild(); child;
-       child = child->GetNextSibling()) {
+  for (nsIFrame* child : mFrames) {
     nsTableCellFrame *cellFrame = do_QueryFrame(child);
     if (cellFrame) {
       int32_t colIndex;

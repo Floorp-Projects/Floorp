@@ -331,9 +331,7 @@ nsAbsoluteContainingBlock::MarkAllFramesDirty()
 void
 nsAbsoluteContainingBlock::DoMarkFramesDirty(bool aMarkAllDirty)
 {
-  for (nsIFrame* kidFrame = mAbsoluteFrames.FirstChild();
-       kidFrame;
-       kidFrame = kidFrame->GetNextSibling()) {
+  for (nsIFrame* kidFrame : mAbsoluteFrames) {
     if (aMarkAllDirty) {
       kidFrame->AddStateBits(NS_FRAME_IS_DIRTY);
     } else if (FrameDependsOnContainer(kidFrame, true, true)) {
