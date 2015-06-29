@@ -1,7 +1,7 @@
 . "$topsrcdir/browser/config/mozconfigs/linux64/common-opt"
 
 ac_add_options --enable-signmar
-ac_add_options --enable-profiling
+
 
 # Nightlies only since this has a cost in performance
 ac_add_options --enable-js-diagnostics
@@ -11,7 +11,7 @@ ac_add_options --enable-js-diagnostics
 # by 2 MBs.
 STRIP_FLAGS="--strip-debug"
 
-ac_add_options --with-branding=browser/branding/nightly
+ac_add_options --with-branding=browser/branding/aurora
 
 # Use ccache
 . "$topsrcdir/build/mozconfig.cache"
