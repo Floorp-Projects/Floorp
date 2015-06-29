@@ -6964,6 +6964,10 @@ var gIdentityHandler = {
       host = this.getEffectiveHost();
     } catch (e) {
       // Some URIs might have no hosts.
+    }
+
+    if (!host) {
+      // Fallback for special protocols.
       host = this._lastUri.specIgnoringRef;
     }
 
