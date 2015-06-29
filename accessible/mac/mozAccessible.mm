@@ -16,6 +16,8 @@
 #include "Relation.h"
 #include "Role.h"
 #include "RootAccessible.h"
+#include "TableAccessible.h"
+#include "TableCellAccessible.h"
 
 #include "mozilla/Services.h"
 #include "nsRect.h"
@@ -71,6 +73,24 @@ GetClosestInterestingAccessible(id anObject)
   return unignoredObject;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+// convert an array of Gecko accessibles to an NSArray of native accessibles
+static inline NSMutableArray*
+ConvertToNSArray(nsTArray<Accessible*>& aArray)
+{
+  NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
+
+  // iterate through the list, and get each native accessible.
+  uint32_t totalCount = aArray.Length();
+  for (uint32_t i = 0; i < totalCount; i++) {
+    Accessible* curAccessible = aArray.ElementAt(i);
+    mozAccessible* curNative = GetNativeFromGeckoAccessible(curAccessible);
+    if (curNative)
+      [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+  }
+
+  return nativeArray;
 }
 
 #pragma mark -
@@ -189,10 +209,15 @@ GetClosestInterestingAccessible(id anObject)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   // if we're expired, we don't support any attributes.
-  if (![self getGeckoAccessible])
+  AccessibleWrap* accWrap = [self getGeckoAccessible];
+  if (!accWrap)
     return [NSArray array];
 
-  static NSArray *generalAttributes = nil;
+  static NSArray* generalAttributes = nil;
+  static NSArray* tableAttrs = nil;
+  static NSArray* tableRowAttrs = nil;
+  static NSArray* tableCellAttrs = nil;
+  NSMutableArray* tempArray = nil;
 
   if (!generalAttributes) {
     // standard attributes that are shared and supported by all generic elements.
@@ -218,7 +243,39 @@ GetClosestInterestingAccessible(id anObject)
                                                            nil];
   }
 
+  if (!tableAttrs) {
+    tempArray = [[NSMutableArray alloc] initWithArray:generalAttributes];
+    [tempArray addObject:NSAccessibilityRowCountAttribute];
+    [tempArray addObject:NSAccessibilityColumnCountAttribute];
+    [tempArray addObject:NSAccessibilityRowsAttribute];
+    tableAttrs = [[NSArray alloc] initWithArray:tempArray];
+    [tempArray release];
+  }
+  if (!tableRowAttrs) {
+    tempArray = [[NSMutableArray alloc] initWithArray:generalAttributes];
+    [tempArray addObject:NSAccessibilityIndexAttribute];
+    tableRowAttrs = [[NSArray alloc] initWithArray:tempArray];
+    [tempArray release];
+  }
+  if (!tableCellAttrs) {
+    tempArray = [[NSMutableArray alloc] initWithArray:generalAttributes];
+    [tempArray addObject:NSAccessibilityRowIndexRangeAttribute];
+    [tempArray addObject:NSAccessibilityColumnIndexRangeAttribute];
+    [tempArray addObject:NSAccessibilityRowHeaderUIElementsAttribute];
+    [tempArray addObject:NSAccessibilityColumnHeaderUIElementsAttribute];
+    tableCellAttrs = [[NSArray alloc] initWithArray:tempArray];
+    [tempArray release];
+  }
+
   NSArray* objectAttributes = generalAttributes;
+
+  if (accWrap->IsTable())
+    objectAttributes = tableAttrs;
+  else if (accWrap->IsTableRow())
+    objectAttributes = tableRowAttrs;
+  else if (accWrap->IsTableCell())
+    objectAttributes = tableCellAttrs;
+
   NSArray* additionalAttributes = [self additionalAccessibilityAttributeNames];
   if ([additionalAttributes count])
     objectAttributes = [objectAttributes arrayByAddingObjectsFromArray:additionalAttributes];
@@ -247,7 +304,8 @@ GetClosestInterestingAccessible(id anObject)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  if (![self getGeckoAccessible])
+  AccessibleWrap* accWrap = [self getGeckoAccessible];
+  if (!accWrap)
     return nil;
 
 #if DEBUG
@@ -290,12 +348,63 @@ GetClosestInterestingAccessible(id anObject)
     return [self title];
   if ([attribute isEqualToString:NSAccessibilityTitleUIElementAttribute]) {
     Relation rel =
-      [self getGeckoAccessible]->RelationByType(RelationType::LABELLED_BY);
+      accWrap->RelationByType(RelationType::LABELLED_BY);
     Accessible* tempAcc = rel.Next();
     return tempAcc ? GetNativeFromGeckoAccessible(tempAcc) : nil;
   }
   if ([attribute isEqualToString:NSAccessibilityHelpAttribute])
     return [self help];
+
+  if (accWrap->IsTable()) {
+    TableAccessible* table = accWrap->AsTable();
+    if ([attribute isEqualToString:NSAccessibilityRowCountAttribute])
+      return @(table->RowCount());
+    if ([attribute isEqualToString:NSAccessibilityColumnCountAttribute])
+      return @(table->ColCount());
+    if ([attribute isEqualToString:NSAccessibilityRowsAttribute]) {
+      // Create a new array with the list of table rows.
+      NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
+      uint32_t totalCount = accWrap->ChildCount();
+      for (uint32_t i = 0; i < totalCount; i++) {
+        if (accWrap->GetChildAt(i)->IsTableRow()) {
+          mozAccessible* curNative =
+            GetNativeFromGeckoAccessible(accWrap->GetChildAt(i));
+          if (curNative)
+            [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+        }
+      }
+      return nativeArray;
+    }
+  } else if (accWrap->IsTableRow()) {
+    if ([attribute isEqualToString:NSAccessibilityIndexAttribute]) {
+      // Count the number of rows before that one to obtain the row index.
+      uint32_t index = 0;
+      for (int32_t i = accWrap->IndexInParent() - 1; i >= 0; i--) {
+        if (accWrap->GetChildAt(i)->IsTableRow()) {
+          index++;
+        }
+      }
+      return [NSNumber numberWithUnsignedInteger:index];
+    }
+  } else if (accWrap->IsTableCell()) {
+    TableCellAccessible* cell = accWrap->AsTableCell();
+    if ([attribute isEqualToString:NSAccessibilityRowIndexRangeAttribute])
+      return [NSValue valueWithRange:NSMakeRange(cell->RowIdx(),
+                                                 cell->RowExtent())];
+    if ([attribute isEqualToString:NSAccessibilityColumnIndexRangeAttribute])
+      return [NSValue valueWithRange:NSMakeRange(cell->ColIdx(),
+                                                 cell->ColExtent())];
+    if ([attribute isEqualToString:NSAccessibilityRowHeaderUIElementsAttribute]) {
+      nsAutoTArray<Accessible*, 10> headerCells;
+      cell->RowHeaderCells(&headerCells);
+      return ConvertToNSArray(headerCells);
+    }
+    if ([attribute isEqualToString:NSAccessibilityColumnHeaderUIElementsAttribute]) {
+      nsAutoTArray<Accessible*, 10> headerCells;
+      cell->ColHeaderCells(&headerCells);
+      return ConvertToNSArray(headerCells);
+    }
+  }
 
   switch (mRole) {
   case roles::MATHML_ROOT:
@@ -534,22 +643,10 @@ GetClosestInterestingAccessible(id anObject)
   if (mChildren || !accWrap->AreChildrenCached())
     return mChildren;
 
-  mChildren = [[NSMutableArray alloc] init];
-
   // get the array of children.
   nsAutoTArray<Accessible*, 10> childrenArray;
   accWrap->GetUnignoredChildren(&childrenArray);
-
-  // now iterate through the children array, and get each native accessible.
-  uint32_t totalCount = childrenArray.Length();
-  for (uint32_t idx = 0; idx < totalCount; idx++) {
-    Accessible* curAccessible = childrenArray.ElementAt(idx);
-    if (curAccessible) {
-      mozAccessible *curNative = GetNativeFromGeckoAccessible(curAccessible);
-      if (curNative)
-        [mChildren addObject:GetObjectOrRepresentedView(curNative)];
-    }
-  }
+  mChildren = ConvertToNSArray(childrenArray);
 
 #ifdef DEBUG_hakan
   // make sure we're not returning any ignored accessibles.
@@ -633,6 +730,7 @@ GetClosestInterestingAccessible(id anObject)
   if (!accWrap)
     return nil;
 
+  // Deal with landmarks first
   nsIAtom* landmark = accWrap->LandmarkRole();
   if (landmark) {
     if (landmark == nsGkAtoms::application)
@@ -653,6 +751,37 @@ GetClosestInterestingAccessible(id anObject)
       return @"AXLandmarkSearch";
     if (landmark == nsGkAtoms::searchbox)
       return @"AXSearchField";
+  }
+
+  // Now, deal with widget roles
+  if (accWrap->HasARIARole()) {
+    nsRoleMapEntry* roleMap = accWrap->ARIARoleMap();
+    if (roleMap->Is(nsGkAtoms::alert))
+      return @"AXApplicationAlert";
+    if (roleMap->Is(nsGkAtoms::alertdialog))
+      return @"AXApplicationAlertDialog";
+    if (roleMap->Is(nsGkAtoms::article))
+      return @"AXDocumentArticle";
+    if (roleMap->Is(nsGkAtoms::dialog))
+      return @"AXApplicationDialog";
+    if (roleMap->Is(nsGkAtoms::document))
+      return @"AXDocument";
+    if (roleMap->Is(nsGkAtoms::log_))
+      return @"AXApplicationLog";
+    if (roleMap->Is(nsGkAtoms::marquee))
+      return @"AXApplicationMarquee";
+    if (roleMap->Is(nsGkAtoms::math))
+      return @"AXDocumentMath";
+    if (roleMap->Is(nsGkAtoms::note_))
+      return @"AXDocumentNote";
+    if (roleMap->Is(nsGkAtoms::region))
+      return @"AXDocumentRegion";
+    if (roleMap->Is(nsGkAtoms::status))
+      return @"AXApplicationStatus";
+    if (roleMap->Is(nsGkAtoms::timer))
+      return @"AXApplicationTimer";
+    if (roleMap->Is(nsGkAtoms::tooltip))
+      return @"AXUserInterfaceTooltip";
   }
 
   switch (mRole) {
@@ -753,7 +882,19 @@ struct RoleDescrMap
 };
 
 static const RoleDescrMap sRoleDescrMap[] = {
+  { @"AXApplicationAlert", NS_LITERAL_STRING("alert") },
+  { @"AXApplicationAlertDialog", NS_LITERAL_STRING("alertDialog") },
+  { @"AXApplicationLog", NS_LITERAL_STRING("log") },
+  { @"AXApplicationMarquee", NS_LITERAL_STRING("marquee") },
+  { @"AXApplicationStatus", NS_LITERAL_STRING("status") },
+  { @"AXApplicationTimer", NS_LITERAL_STRING("timer") },
   { @"AXDefinition", NS_LITERAL_STRING("definition") },
+  { @"AXDocument", NS_LITERAL_STRING("document") },
+  { @"AXDocumentArticle", NS_LITERAL_STRING("article") },
+  { @"AXDocumentMath", NS_LITERAL_STRING("math") },
+  { @"AXDocumentNote", NS_LITERAL_STRING("note") },
+  { @"AXDocumentRegion", NS_LITERAL_STRING("region") },
+  { @"AXLandmarkApplication", NS_LITERAL_STRING("application") },
   { @"AXLandmarkBanner", NS_LITERAL_STRING("banner") },
   { @"AXLandmarkComplementary", NS_LITERAL_STRING("complementary") },
   { @"AXLandmarkContentInfo", NS_LITERAL_STRING("content") },
@@ -761,7 +902,8 @@ static const RoleDescrMap sRoleDescrMap[] = {
   { @"AXLandmarkNavigation", NS_LITERAL_STRING("navigation") },
   { @"AXLandmarkSearch", NS_LITERAL_STRING("search") },
   { @"AXSearchField", NS_LITERAL_STRING("searchTextField") },
-  { @"AXTerm", NS_LITERAL_STRING("term") }
+  { @"AXTerm", NS_LITERAL_STRING("term") },
+  { @"AXUserInterfaceTooltip", NS_LITERAL_STRING("tooltip") }
 };
 
 struct RoleDescrComparator

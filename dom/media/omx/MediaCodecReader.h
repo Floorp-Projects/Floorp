@@ -73,10 +73,12 @@ public:
   // irreversible, whereas ReleaseMediaResources() is reversible.
   virtual nsRefPtr<ShutdownPromise> Shutdown();
 
+protected:
   // Used to retrieve some special information that can only be retrieved after
   // all contents have been continuously parsed. (ex. total duration of some
   // variable-bit-rate MP3 files.)
-  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
+  virtual void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) override;
+public:
 
   // Flush the MediaTaskQueue, flush MediaCodec and raise the mDiscontinuity.
   virtual nsresult ResetDecode() override;

@@ -71,13 +71,6 @@ JS_SetGrayGCRootsTracer(JSRuntime* rt, JSTraceDataOp traceOp, void* data)
     rt->gc.setGrayRootsTracer(traceOp, data);
 }
 
-JS_FRIEND_API(JSString*)
-JS_GetAnonymousString(JSRuntime* rt)
-{
-    MOZ_ASSERT(rt->hasContexts());
-    return rt->commonNames->anonymous;
-}
-
 JS_FRIEND_API(JSObject*)
 JS_FindCompilationScope(JSContext* cx, HandleObject objArg)
 {
@@ -314,24 +307,6 @@ js::IsFunctionObject(JSObject* obj)
     return obj->is<JSFunction>();
 }
 
-JS_FRIEND_API(bool)
-js::IsScopeObject(JSObject* obj)
-{
-    return obj->is<ScopeObject>();
-}
-
-JS_FRIEND_API(bool)
-js::IsCallObject(JSObject* obj)
-{
-    return obj->is<CallObject>();
-}
-
-JS_FRIEND_API(bool)
-js::CanAccessObjectShape(JSObject* obj)
-{
-    return obj->maybeShape() != nullptr;
-}
-
 JS_FRIEND_API(JSObject*)
 js::GetGlobalForObjectCrossCompartment(JSObject* obj)
 {
@@ -344,12 +319,6 @@ js::GetPrototypeNoProxy(JSObject* obj)
     MOZ_ASSERT(!obj->is<js::ProxyObject>());
     MOZ_ASSERT(!obj->getTaggedProto().isLazy());
     return obj->getTaggedProto().toObjectOrNull();
-}
-
-JS_FRIEND_API(void)
-js::SetPendingExceptionCrossContext(JSContext* cx, JS::HandleValue v)
-{
-    cx->setPendingException(v);
 }
 
 JS_FRIEND_API(void)
@@ -508,19 +477,6 @@ js::SetReservedOrProxyPrivateSlotWithBarrier(JSObject* obj, size_t slot, const j
     } else {
         obj->as<NativeObject>().setSlot(slot, value);
     }
-}
-
-JS_FRIEND_API(bool)
-js::GetGeneric(JSContext* cx, JSObject* objArg, JSObject* receiverArg, jsid idArg,
-               Value* vp)
-{
-    RootedObject obj(cx, objArg), receiver(cx, receiverArg);
-    RootedId id(cx, idArg);
-    RootedValue value(cx);
-    if (!GetProperty(cx, obj, receiver, id, &value))
-        return false;
-    *vp = value;
-    return true;
 }
 
 void
@@ -1016,18 +972,6 @@ JS_FRIEND_API(bool)
 js::IsContextRunningJS(JSContext* cx)
 {
     return cx->currentlyRunning();
-}
-
-JS_FRIEND_API(int64_t)
-GetMaxGCPauseSinceClear(JSRuntime* rt)
-{
-    return rt->gc.stats.getMaxGCPauseSinceClear();
-}
-
-JS_FRIEND_API(int64_t)
-ClearMaxGCPauseAccumulator(JSRuntime* rt)
-{
-    return rt->gc.stats.clearMaxGCPauseAccumulator();
 }
 
 JS_FRIEND_API(void)

@@ -1872,54 +1872,54 @@ fuzzy-if(d2d,36,304) HTTP(..) == 1116480-1-fakeitalic-overflow.html 1116480-1-fa
 == 1128354-1.html 1128354-1-ref.html
 == 1130231-1-button-padding-rtl.html 1130231-1-button-padding-rtl-ref.html
 == 1130231-2-button-padding-rtl.html 1130231-2-button-padding-rtl-ref.html
-skip-if(!asyncPanZoom) == 1133905-1.html 1133905-ref.html
-skip-if(!asyncPanZoom) == 1133905-2.html 1133905-ref.html
-skip-if(!asyncPanZoom) == 1133905-3.html 1133905-ref.html
-skip-if(!asyncPanZoom) == 1133905-4.html 1133905-ref.html
-skip-if(!asyncPanZoom) == 1133905-5.html 1133905-ref.html
-skip-if(!asyncPanZoom) == 1133905-6.html 1133905-ref.html
-skip-if(!asyncPanZoom) == 1133905-1-v.html 1133905-ref-v.html
-skip-if(!asyncPanZoom) == 1133905-2-v.html 1133905-ref-v.html
-skip-if(!asyncPanZoom) == 1133905-3-v.html 1133905-ref-v.html
-skip-if(!asyncPanZoom) == 1133905-4-v.html 1133905-ref-v.html
-skip-if(!asyncPanZoom) fuzzy-if(B2G,61,336) == 1133905-5-v.html 1133905-ref-v.html
-skip-if(!asyncPanZoom) fuzzy-if(B2G,61,480) == 1133905-6-v.html 1133905-ref-v.html
-skip-if(!asyncPanZoom) == 1133905-1-h.html 1133905-ref-h.html
-skip-if(!asyncPanZoom) == 1133905-2-h.html 1133905-ref-h.html
-skip-if(!asyncPanZoom) == 1133905-3-h.html 1133905-ref-h.html
-skip-if(!asyncPanZoom) == 1133905-4-h.html 1133905-ref-h.html
-skip-if(!asyncPanZoom) == 1133905-5-h.html 1133905-ref-h.html
-skip-if(!asyncPanZoom) == 1133905-6-h.html 1133905-ref-h.html
-skip-if(!asyncPanZoom) == 1133905-1-vh.html 1133905-ref-vh.html
-skip-if(!asyncPanZoom) == 1133905-2-vh.html 1133905-ref-vh.html
-skip-if(!asyncPanZoom) == 1133905-3-vh.html 1133905-ref-vh.html
-skip-if(!asyncPanZoom) == 1133905-4-vh.html 1133905-ref-vh.html
-skip-if(!asyncPanZoom) fuzzy-if(B2G,102,720) == 1133905-5-vh.html 1133905-ref-vh.html
-skip-if(!asyncPanZoom) fuzzy-if(B2G,101,1138) == 1133905-6-vh.html 1133905-ref-vh.html
-skip-if(!asyncPanZoom) == 1133905-1-rtl.html 1133905-ref-rtl.html
-skip-if(!asyncPanZoom) == 1133905-2-rtl.html 1133905-ref-rtl.html
-skip-if(!asyncPanZoom) == 1133905-3-rtl.html 1133905-ref-rtl.html
-skip-if(!asyncPanZoom) == 1133905-4-rtl.html 1133905-ref-rtl.html
-skip-if(!asyncPanZoom) == 1133905-5-rtl.html 1133905-ref-rtl.html
-skip-if(!asyncPanZoom) == 1133905-6-rtl.html 1133905-ref-rtl.html
-skip-if(!asyncPanZoom) fuzzy-if(B2G,23,175) == 1133905-1-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!asyncPanZoom) fuzzy-if(B2G,18,175) == 1133905-2-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!asyncPanZoom) fuzzy-if(B2G,64,181) == 1133905-3-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!asyncPanZoom) == 1133905-4-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!asyncPanZoom) fuzzy-if(B2G,33,180) == 1133905-5-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!asyncPanZoom) fuzzy-if(B2G,62,222) == 1133905-6-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!asyncPanZoom) == 1133905-1-h-rtl.html 1133905-ref-h-rtl.html
-skip-if(!asyncPanZoom) == 1133905-2-h-rtl.html 1133905-ref-h-rtl.html
-skip-if(!asyncPanZoom) == 1133905-3-h-rtl.html 1133905-ref-h-rtl.html
-skip-if(!asyncPanZoom) == 1133905-4-h-rtl.html 1133905-ref-h-rtl.html
-skip-if(!asyncPanZoom) == 1133905-5-h-rtl.html 1133905-ref-h-rtl.html
-skip-if(!asyncPanZoom) == 1133905-6-h-rtl.html 1133905-ref-h-rtl.html
-skip-if(!asyncPanZoom) fuzzy-if(B2G,23,175) == 1133905-1-vh-rtl.html 1133905-ref-vh-rtl.html
-skip-if(!asyncPanZoom) fuzzy-if(B2G,62,175) == 1133905-2-vh-rtl.html 1133905-ref-vh-rtl.html
-skip-if(!asyncPanZoom) fuzzy-if(B2G,23,176) == 1133905-3-vh-rtl.html 1133905-ref-vh-rtl.html
-skip-if(!asyncPanZoom) == 1133905-4-vh-rtl.html 1133905-ref-vh-rtl.html
-skip-if(!asyncPanZoom) fuzzy-if(B2G,102,577) == 1133905-5-vh-rtl.html 1133905-ref-vh-rtl.html
-skip-if(!asyncPanZoom) fuzzy-if(B2G,101,887) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!B2G) == 1133905-1.html 1133905-ref.html
+skip-if(!B2G) == 1133905-2.html 1133905-ref.html
+skip-if(!B2G) == 1133905-3.html 1133905-ref.html
+skip-if(!B2G) == 1133905-4.html 1133905-ref.html
+skip-if(!B2G) == 1133905-5.html 1133905-ref.html
+skip-if(!B2G) == 1133905-6.html 1133905-ref.html
+skip-if(!B2G) == 1133905-1-v.html 1133905-ref-v.html
+skip-if(!B2G) == 1133905-2-v.html 1133905-ref-v.html
+skip-if(!B2G) == 1133905-3-v.html 1133905-ref-v.html
+skip-if(!B2G) == 1133905-4-v.html 1133905-ref-v.html
+skip-if(!B2G) fuzzy-if(B2G,61,336) == 1133905-5-v.html 1133905-ref-v.html
+skip-if(!B2G) fuzzy-if(B2G,61,480) == 1133905-6-v.html 1133905-ref-v.html
+skip-if(!B2G) == 1133905-1-h.html 1133905-ref-h.html
+skip-if(!B2G) == 1133905-2-h.html 1133905-ref-h.html
+skip-if(!B2G) == 1133905-3-h.html 1133905-ref-h.html
+skip-if(!B2G) == 1133905-4-h.html 1133905-ref-h.html
+skip-if(!B2G) == 1133905-5-h.html 1133905-ref-h.html
+skip-if(!B2G) == 1133905-6-h.html 1133905-ref-h.html
+skip-if(!B2G) == 1133905-1-vh.html 1133905-ref-vh.html
+skip-if(!B2G) == 1133905-2-vh.html 1133905-ref-vh.html
+skip-if(!B2G) == 1133905-3-vh.html 1133905-ref-vh.html
+skip-if(!B2G) == 1133905-4-vh.html 1133905-ref-vh.html
+skip-if(!B2G) fuzzy-if(B2G,102,720) == 1133905-5-vh.html 1133905-ref-vh.html
+skip-if(!B2G) fuzzy-if(B2G,101,1138) == 1133905-6-vh.html 1133905-ref-vh.html
+skip-if(!B2G) == 1133905-1-rtl.html 1133905-ref-rtl.html
+skip-if(!B2G) == 1133905-2-rtl.html 1133905-ref-rtl.html
+skip-if(!B2G) == 1133905-3-rtl.html 1133905-ref-rtl.html
+skip-if(!B2G) == 1133905-4-rtl.html 1133905-ref-rtl.html
+skip-if(!B2G) == 1133905-5-rtl.html 1133905-ref-rtl.html
+skip-if(!B2G) == 1133905-6-rtl.html 1133905-ref-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,23,175) == 1133905-1-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,18,175) == 1133905-2-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,64,181) == 1133905-3-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!B2G) == 1133905-4-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,33,180) == 1133905-5-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,62,222) == 1133905-6-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!B2G) == 1133905-1-h-rtl.html 1133905-ref-h-rtl.html
+skip-if(!B2G) == 1133905-2-h-rtl.html 1133905-ref-h-rtl.html
+skip-if(!B2G) == 1133905-3-h-rtl.html 1133905-ref-h-rtl.html
+skip-if(!B2G) == 1133905-4-h-rtl.html 1133905-ref-h-rtl.html
+skip-if(!B2G) == 1133905-5-h-rtl.html 1133905-ref-h-rtl.html
+skip-if(!B2G) == 1133905-6-h-rtl.html 1133905-ref-h-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,23,175) == 1133905-1-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,62,175) == 1133905-2-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,23,176) == 1133905-3-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!B2G) == 1133905-4-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,102,577) == 1133905-5-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,101,887) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.html
 skip-if(B2G||Mulet) == 1150021-1.xul 1150021-1-ref.xul
 == 1151145-1.html 1151145-1-ref.html
 == 1151306-1.html 1151306-1-ref.html

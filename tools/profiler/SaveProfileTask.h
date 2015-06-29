@@ -12,7 +12,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsXULAppAPI.h"
-#include "nsIJSRuntimeService.h"
 #include "nsIProfileSaveEvent.h"
 
 #ifdef XP_WIN
