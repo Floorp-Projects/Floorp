@@ -165,7 +165,8 @@ nsSVGPathGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     nsSVGPathGeometryElement* element =
       static_cast<nsSVGPathGeometryElement*>(mContent);
 
-    if (aOldStyleContext->PeekStyleSVG()) {
+    if (aOldStyleContext->PeekStyleSVG() &&
+        !SVGContentUtils::ShapeTypeHasNoCorners(mContent)) {
       if ((StyleSVG()->mStrokeLinecap !=
              aOldStyleContext->PeekStyleSVG()->mStrokeLinecap) &&
           element->IsSVGElement(nsGkAtoms::path)) {

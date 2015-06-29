@@ -1,0 +1,14 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title>Reference to test that stroke-linecap:"square" is ignored on circles and ellipses</title>
+  <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1178159 -->
+
+  <circle cx="300" cy="300" r="200" stroke="black" fill="none"
+          stroke-width="80"/>
+
+  <ellipse cx="300" cy="750" rx="150" ry="100" fill="none"
+           stroke="blue" stroke-width="80"/>
+</svg>
