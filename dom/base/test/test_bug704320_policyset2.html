@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+This checks if the right policies are applied from a given string (including whitespace, invalid policy strings, etc).  It doesn't do a complete check for all load types; that's done in another test.
+https://bugzilla.mozilla.org/show_bug.cgi?id=704320
+-->
+
+<head>
+  <meta charset="utf-8">
+  <title>Test policies for Bug 704320</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script type="application/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+var advance = function() { tests.next(); };
+
+/**
+ * This is the main test routine -- serialized by use of a generator.
+ * It resets the counter, then performs two tests in sequence using
+ * the same iframe.
+ */
+var tests = (function() {
+  var iframe = document.getElementById("testframe");
+  const sjs = "/tests/dom/base/test/bug704320.sjs?action=generate-policy-test";
+
+  yield resetCounter();
+  yield iframe.src = sjs + "&policy=" + escape(' \f\r\n\t  ');
+  yield checkResults("whitespace only policy", ["full"]);
+
+  // complete.  Be sure to yield so we don't call this twice.
+  yield SimpleTest.finish();
+})();
+
+// Helper functions below.
+
+
+/**
+ * helper to perform an XHR.
+ * Used by resetCounter() and checkResults().
+ */
+function doXHR(url, onSuccess, onFail) {
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function () {
+    if (xhr.status == 200) {
+      onSuccess(xhr);
+    } else {
+      onFail(xhr);
+    }
+  };
+  xhr.open('GET', url, true);
+  xhr.send(null);
+}
+
+/**
+ * This triggers state-resetting on the counter server.
+ */
+function resetCounter() {
+  doXHR('/tests/dom/base/test/bug704320_counter.sjs?reset',
+        advance,
+        function(xhr) {
+          ok(false, "Need to be able to reset the request counter");
+          SimpleTest.finish();
+        });
+}
+
+/**
+ * Grabs the results via XHR and passes to checker.
+ */
+function checkResults(testname, expected) {
+  doXHR('/tests/dom/base/test/bug704320_counter.sjs?results',
+        function(xhr) {
+          var results = JSON.parse(xhr.responseText);
+          info(xhr.responseText);
+
+          ok('img' in results,
+              testname + " test: some image loads required in results object.");
+          is(results['img'].count, 2,
+            testname + " Test: Expected 2 loads for image requests.");
+
+          expected.forEach(function (ref) {
+            ok(results['img'].referrers.indexOf(ref) >= 0,
+                testname + " Test: Expected " + ref + " referrer policy in test, results were " + 
+                JSON.stringify(results['img'].referrers) +".");
+            });
+          advance();
+        },
+        function(xhr) {
+          ok(false, "Can't get results from the counter server.");
+          SimpleTest.finish();
+        });
+}
+
+</script>
+</head>
+
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+
+</body>
+</html>
+
