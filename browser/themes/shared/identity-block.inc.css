@@ -145,3 +145,11 @@
     -moz-image-region: rect(0, 96px, 32px, 64px);
   }
 }
+
+#urlbar[actiontype="searchengine"] > #identity-box > #page-proxy-favicon {
+  -moz-image-region: inherit;
+  list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon);
+  width: 16px;
+  height: 16px;
+  opacity: 1;
+}

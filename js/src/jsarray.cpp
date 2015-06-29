@@ -3439,25 +3439,6 @@ js::NewDenseUnallocatedArray(ExclusiveContext* cx, uint32_t length,
     return NewArray<0>(cx, length, proto, newKind);
 }
 
-ArrayObject*
-js::NewDenseCopiedArray(ExclusiveContext* cx, uint32_t length, HandleArrayObject src,
-                        uint32_t elementOffset, HandleObject proto /* = nullptr */)
-{
-    MOZ_ASSERT(!src->isIndexed());
-
-    ArrayObject* arr = NewArray<UINT32_MAX>(cx, length, proto);
-    if (!arr)
-        return nullptr;
-
-    MOZ_ASSERT(arr->getDenseCapacity() >= length);
-
-    const Value* vp = src->getDenseElements() + elementOffset;
-    arr->setDenseInitializedLength(length);
-    arr->initDenseElements(0, vp, length);
-
-    return arr;
-}
-
 // values must point at already-rooted Value objects
 ArrayObject*
 js::NewDenseCopiedArray(ExclusiveContext* cx, uint32_t length, const Value* values,

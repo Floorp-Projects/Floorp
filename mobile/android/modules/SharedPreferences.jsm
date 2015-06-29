@@ -61,7 +61,7 @@ let SharedPreferences = {
  */
 function SharedPreferencesImpl(options = {}) {
   if (!(this instanceof SharedPreferencesImpl)) {
-    return new SharedPreferencesImpl(level);
+    return new SharedPreferencesImpl(options);
   }
 
   if (options.scope == null || options.scope == undefined) {

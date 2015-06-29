@@ -86,12 +86,6 @@ BufferDecoder::NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
 }
 
 void
-BufferDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
-{
-  // ignore
-}
-
-void
 BufferDecoder::SetMediaSeekable(bool aMediaSeekable)
 {
   // ignore
@@ -155,12 +149,6 @@ BufferDecoder::OnReadMetadataCompleted()
 
 void
 BufferDecoder::NotifyWaitingForResourcesStatusChanged()
-{
-  // ignore
-}
-
-void
-BufferDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
 {
   // ignore
 }

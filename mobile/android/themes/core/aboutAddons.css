@@ -5,6 +5,15 @@
 %filter substitution
 %include defines.inc
 
+a {
+  text-decoration: none;
+  color: #0096DD;
+}
+
+a:active {
+  color: #0082C6;
+}
+
 .details {
   width: 100%;
 }
@@ -23,6 +32,21 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.warn-unsigned {
+  border-top: 1px solid @color_about_item_border@;
+  padding: 1em;
+  -moz-padding-start: calc(var(--icon-size) + var(--icon-margin) * 2);
+  background-image: url("chrome://browser/skin/images/grey-caution.svg");
+  background-size: var(--icon-size);
+  background-position: var(--icon-margin);
+  background-repeat: no-repeat;
+  display: none;
+}
+
+.addon-item[isUnsigned] .warn-unsigned {
+  display: block;
 }
 
 .status {

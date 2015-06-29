@@ -48,7 +48,7 @@ fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,
 == conditions-02.svg pass.svg
 == conditions-03.svg pass.svg
 == conditions-04.svg pass.svg
-== conditions-05.svg about:blank
+random-if(Mulet) == conditions-05.svg about:blank # bug 1178062
 == conditions-06.svg pass.svg
 == conditions-07.svg pass.svg
 == conditions-08.svg conditions-08-ref.svg
@@ -66,18 +66,18 @@ fuzzy-if(Android,4,87) == dynamic-clipPath-01.svg pass.svg
 == dynamic-clipPath-02.svg pass.svg
 == dynamic-clipPath-clip-rule-01.svg pass.svg
 == dynamic-conditions-01.svg pass.svg
-== dynamic-conditions-02.svg about:blank
+random-if(Mulet) == dynamic-conditions-02.svg about:blank # bug 1178062
 == dynamic-conditions-03.svg pass.svg
-== dynamic-conditions-04.svg about:blank
+random-if(Mulet) == dynamic-conditions-04.svg about:blank # bug 1178062
 == dynamic-conditions-05.svg pass.svg
-== dynamic-conditions-06.svg about:blank
+random-if(Mulet) == dynamic-conditions-06.svg about:blank # bug 1178062
 == dynamic-conditions-07.svg pass.svg
 == dynamic-conditions-08.svg pass.svg
-== dynamic-conditions-09.svg about:blank
-== dynamic-conditions-10.svg about:blank
+random-if(Mulet) == dynamic-conditions-09.svg about:blank # bug 1178062
+random-if(Mulet) == dynamic-conditions-10.svg about:blank # bug 1178062
 == dynamic-conditions-11.svg pass.svg
 == dynamic-conditions-12.svg pass.svg
-== dynamic-conditions-13.svg about:blank
+random-if(Mulet) == dynamic-conditions-13.svg about:blank # bug 1178062
 == dynamic-feFlood-01.svg pass.svg
 asserts(0-1) == dynamic-feImage-01.svg pass.svg # intermittent assertions (bug 886080)
 == dynamic-fill-01.svg dynamic-fill-01-ref.svg

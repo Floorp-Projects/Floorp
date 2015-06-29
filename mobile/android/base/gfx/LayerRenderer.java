@@ -687,7 +687,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         if (msg == Tabs.TabEvents.SELECTED) {
             if (mView != null) {
                 final int overscrollColor =
-                        (tab.isPrivate() ? R.color.private_toolbar_grey : R.color.toolbar_grey);
+                        (tab.isPrivate() ? R.color.tabs_tray_grey_pressed : R.color.toolbar_grey);
                 setOverscrollColor(overscrollColor);
 
                 if (mView.getChildAt(0) != null) {

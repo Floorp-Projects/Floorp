@@ -30,6 +30,8 @@ class nsIPrincipal;
 class nsScriptNameSpaceManager;
 class nsIMemoryReporterCallback;
 
+typedef void (* xpcGCCallback)(JSGCStatus status);
+
 namespace xpc {
 
 class Scriptability {
@@ -534,6 +536,12 @@ DispatchScriptErrorEvent(nsPIDOMWindow* win, JSRuntime* rt, xpc::ErrorReport* xp
 // and unique. However, there are no guarantees of either property.
 extern void
 GetCurrentCompartmentName(JSContext*, nsCString& name);
+
+JSRuntime*
+GetJSRuntime();
+
+void AddGCCallback(xpcGCCallback cb);
+void RemoveGCCallback(xpcGCCallback cb);
 
 } // namespace xpc
 

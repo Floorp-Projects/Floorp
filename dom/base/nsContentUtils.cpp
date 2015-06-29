@@ -130,7 +130,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIIOService.h"
-#include "nsIJSRuntimeService.h"
 #include "nsILineBreaker.h"
 #include "nsILoadContext.h"
 #include "nsILoadGroup.h"
@@ -2989,18 +2988,29 @@ nsContentUtils::IsInPrivateBrowsing(nsIDocument* aDoc)
   if (!aDoc) {
     return false;
   }
-  bool isPrivate = false;
+
   nsCOMPtr<nsILoadGroup> loadGroup = aDoc->GetDocumentLoadGroup();
-  nsCOMPtr<nsIInterfaceRequestor> callbacks;
   if (loadGroup) {
-    loadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
-    if (callbacks) {
-      nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(callbacks);
-      isPrivate = loadContext && loadContext->UsePrivateBrowsing();
-    }
-  } else {
-    nsCOMPtr<nsIChannel> channel = aDoc->GetChannel();
-    isPrivate = channel && NS_UsePrivateBrowsing(channel);
+    return IsInPrivateBrowsing(loadGroup);
+  }
+
+  nsCOMPtr<nsIChannel> channel = aDoc->GetChannel();
+  return channel && NS_UsePrivateBrowsing(channel);
+}
+
+// static
+bool
+nsContentUtils::IsInPrivateBrowsing(nsILoadGroup* aLoadGroup)
+{
+  if (!aLoadGroup) {
+    return false;
+  }
+  bool isPrivate = false;
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  aLoadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
+  if (callbacks) {
+    nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(callbacks);
+    isPrivate = loadContext && loadContext->UsePrivateBrowsing();
   }
   return isPrivate;
 }

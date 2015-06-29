@@ -91,25 +91,6 @@ ArrayObject::createArray(ExclusiveContext* cx, gc::AllocKind kind, gc::InitialHe
 }
 
 /* static */ inline ArrayObject*
-ArrayObject::createArray(ExclusiveContext* cx, gc::InitialHeap heap,
-                         HandleShape shape, HandleObjectGroup group,
-                         HeapSlot* elements)
-{
-    // Use the smallest allocation kind for the array, as it can't have any
-    // fixed slots (see the assert in createArrayInternal) and will not be using
-    // its fixed elements.
-    gc::AllocKind kind = gc::AllocKind::OBJECT0_BACKGROUND;
-
-    ArrayObject* obj = createArrayInternal(cx, kind, heap, shape, group);
-    if (!obj)
-        return nullptr;
-
-    obj->elements_ = elements;
-
-    return finishCreateArray(obj, shape);
-}
-
-/* static */ inline ArrayObject*
 ArrayObject::createCopyOnWriteArray(ExclusiveContext* cx, gc::InitialHeap heap,
                                     HandleArrayObject sharedElementsOwner)
 {

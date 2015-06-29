@@ -477,6 +477,8 @@ public class BrowserApp extends GeckoApp
                 }
 
                 mHideDynamicToolbarOnActionModeEnd = false;
+
+                mProgressView.setPrivateMode(tab.isPrivate());
                 break;
             case START:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
@@ -1082,6 +1084,12 @@ public class BrowserApp extends GeckoApp
                     mLayerView.showSurface();
                 }
             });
+        }
+
+        // Sending a message to the toolbar when the browser window gains focus
+        // This is needed for qr code input
+        if (hasFocus) {
+            mBrowserToolbar.onParentFocus();
         }
     }
 

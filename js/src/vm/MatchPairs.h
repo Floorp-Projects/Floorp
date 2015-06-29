@@ -76,7 +76,6 @@ class MatchPairs
     /* MatchPair buffer allocator: set pairs_ and pairCount_. */
     virtual bool allocOrExpandArray(size_t pairCount) = 0;
 
-    bool initArray(size_t pairCount);
     bool initArrayFrom(MatchPairs& copyFrom);
     void forgetArray() { pairs_ = nullptr; }
 
