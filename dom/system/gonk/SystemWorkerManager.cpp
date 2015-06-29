@@ -72,7 +72,7 @@ SystemWorkerManager::~SystemWorkerManager()
 nsresult
 SystemWorkerManager::Init()
 {
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 

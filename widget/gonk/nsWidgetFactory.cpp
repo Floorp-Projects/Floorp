@@ -72,7 +72,7 @@ NS_DEFINE_NAMED_CID(NS_CLIPBOARDHELPER_CID);
 static nsresult
 ScreenManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    return (XRE_GetProcessType() == GeckoProcessType_Default) ?
+    return (XRE_IsParentProcess()) ?
         nsScreenManagerGonkConstructor(aOuter, aIID, aResult) :
         PuppetScreenManagerConstructor(aOuter, aIID, aResult);
 }

@@ -261,7 +261,7 @@ OnStatsReport_m(WebrtcGlobalChild* aThisChild,
   }
 
   // This is the last stats report to be collected. (Must be the gecko process).
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   StatsRequest* request = StatsRequest::Get(aRequestId);
 
@@ -332,7 +332,7 @@ static void OnGetLogging_m(WebrtcGlobalChild* aThisChild,
   }
 
   // This is the last log to be collected. (Must be the gecko process).
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   LogRequest* request = LogRequest::Get(aRequestId);
 
@@ -443,7 +443,7 @@ WebrtcGlobalInformation::GetAllStats(
     return;
   }
 
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   // CallbackObject does not support threadsafe refcounting, and must be
   // destroyed on main.
@@ -534,7 +534,7 @@ WebrtcGlobalInformation::GetLogging(
     return;
   }
 
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   // CallbackObject does not support threadsafe refcounting, and must be
   // destroyed on main.

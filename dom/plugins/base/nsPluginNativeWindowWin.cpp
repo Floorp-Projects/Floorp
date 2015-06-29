@@ -617,7 +617,7 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> 
   // With e10s we execute in the content process and as such we don't
   // have access to native widgets. CallSetWindow and skip native widget
   // subclassing.
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     nsPluginNativeWindow::CallSetWindow(aPluginInstance);
     return NS_OK;
   }

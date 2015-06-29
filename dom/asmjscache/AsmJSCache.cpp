@@ -59,12 +59,6 @@ namespace asmjscache {
 
 namespace {
 
-bool
-IsMainProcess()
-{
-  return XRE_GetProcessType() == GeckoProcessType_Default;
-}
-
 // Anything smaller should compile fast enough that caching will just add
 // overhead.
 static const size_t sMinCachedModuleLength = 10000;
@@ -503,7 +497,7 @@ public:
     mIsApp(false),
     mEnforcingQuota(true)
   {
-    MOZ_ASSERT(IsMainProcess());
+    MOZ_ASSERT(XRE_IsParentProcess());
   }
 
   virtual ~MainProcessRunnable()
@@ -1133,7 +1127,7 @@ public:
   : MainProcessRunnable(aPrincipal, aOpenMode, aWriteParams),
     mReadParams(aReadParams)
   {
-    MOZ_ASSERT(IsMainProcess());
+    MOZ_ASSERT(XRE_IsParentProcess());
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_COUNT_CTOR(SingleProcessRunnable);
   }
@@ -1211,7 +1205,7 @@ public:
     mOpened(false),
     mFinished(false)
   {
-    MOZ_ASSERT(IsMainProcess());
+    MOZ_ASSERT(XRE_IsParentProcess());
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_COUNT_CTOR(ParentProcessRunnable);
   }
@@ -1388,7 +1382,7 @@ public:
     mActorDestroyed(false),
     mState(eInitial)
   {
-    MOZ_ASSERT(!IsMainProcess());
+    MOZ_ASSERT(!XRE_IsParentProcess());
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_COUNT_CTOR(ChildProcessRunnable);
   }
@@ -1584,7 +1578,7 @@ OpenFile(nsIPrincipal* aPrincipal,
   // parent process to open the file and interact with the QuotaManager. The
   // child can then map the file into its address space to perform I/O.
   nsRefPtr<File> file;
-  if (IsMainProcess()) {
+  if (XRE_IsParentProcess()) {
     file = new SingleProcessRunnable(aPrincipal, aOpenMode, aWriteParams,
                                      aReadParams);
   } else {

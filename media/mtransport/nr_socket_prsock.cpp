@@ -1461,7 +1461,7 @@ int nr_socket_local_create(void *obj, nr_transport_addr *addr, nr_socket **sockp
   RefPtr<NrSocketBase> sock;
 
   // create IPC bridge for content process
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (XRE_IsParentProcess()) {
     sock = new NrSocket();
   } else {
     sock = new NrSocketIpc();
