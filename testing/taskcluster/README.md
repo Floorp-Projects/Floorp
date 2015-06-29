@@ -87,7 +87,7 @@ task:
     # need to provide an easy way to lookup the correct aritfact path.
     locations:
       build: 'public/name_i_made_up.tar.gz'
-      tests: 'public/some_tests.zip'
+      tests: 'public/some_tests.zip' or test_packages: 'public/test_packages.json'
 ```
 
 #### Templates properties
