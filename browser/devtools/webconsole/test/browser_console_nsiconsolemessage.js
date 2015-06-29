@@ -6,11 +6,12 @@
 // Check that nsIConsoleMessages are displayed in the Browser Console.
 // See bug 859756.
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf8,<title>bug859756</title>\n" +
                  "<p>hello world\n<p>nsIConsoleMessages ftw!";
 
-function test()
-{
+function test() {
   const FILTER_PREF = "devtools.browserconsole.filter.jslog";
   Services.prefs.setBoolPref(FILTER_PREF, true);
 
@@ -70,7 +71,8 @@ function test()
 
     let msg = [...results[2].matched][0];
     ok(msg, "message element for do-not-show-me (nsIConsoleMessage)");
-    isnot(msg.textContent.indexOf("do-not-show"), -1, "element content is correct");
+    isnot(msg.textContent.indexOf("do-not-show"), -1,
+          "element content is correct");
     ok(!msg.classList.contains("filtered-by-type"), "element is not filtered");
 
     hud.setFilterState("jslog", false);
