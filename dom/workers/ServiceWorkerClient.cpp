@@ -107,7 +107,9 @@ public:
 
     nsRefPtr<ServiceWorkerContainer> container = navigator->ServiceWorker();
     AutoJSAPI jsapi;
-    jsapi.Init(window);
+    if (NS_WARN_IF(!jsapi.Init(window))) {
+      return NS_ERROR_FAILURE;
+    }
     JSContext* cx = jsapi.cx();
 
     return DispatchDOMEvent(cx, container);
