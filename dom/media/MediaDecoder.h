@@ -895,6 +895,12 @@ protected:
   // Buffered range, mirrored from the reader.
   Mirror<media::TimeIntervals> mBuffered;
 
+  // Whether the state machine is shut down.
+  Mirror<bool> mStateMachineIsShutdown;
+
+  // Used by the ogg decoder to watch mStateMachineIsShutdown.
+  virtual void ShutdownBitChanged() {}
+
   // NextFrameStatus, mirrored from the state machine.
   Mirror<MediaDecoderOwner::NextFrameStatus> mNextFrameStatus;
 
