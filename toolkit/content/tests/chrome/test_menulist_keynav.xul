@@ -118,13 +118,14 @@ function differentPressed()
     list.selectedItem = $("i1");
 
     gShowPopup = true;
-    list.open = true;
     gOpenPhase = true;
 
     list.addEventListener("popupshown", function popupShownListener() {
       list.removeEventListener("popupshown", popupShownListener, false);
       pressLetter();
     }, false);
+
+    list.open = true;
   }
 }
 
