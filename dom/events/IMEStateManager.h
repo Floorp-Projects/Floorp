@@ -8,6 +8,7 @@
 #define mozilla_IMEStateManager_h_
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/StaticPtr.h"
 #include "nsIWidget.h"
 
 class nsIContent;
@@ -33,6 +34,7 @@ class TextComposition;
 class IMEStateManager
 {
   typedef widget::IMEMessage IMEMessage;
+  typedef widget::IMENotification IMENotification;
   typedef widget::IMEState IMEState;
   typedef widget::InputContext InputContext;
   typedef widget::InputContextAction InputContextAction;
@@ -140,8 +142,15 @@ public:
    * Send a notification to IME.  It depends on the IME or platform spec what
    * will occur (or not occur).
    */
-  static nsresult NotifyIME(IMEMessage aMessage, nsIWidget* aWidget);
-  static nsresult NotifyIME(IMEMessage aMessage, nsPresContext* aPresContext);
+  static nsresult NotifyIME(const IMENotification& aNotification,
+                            nsIWidget* aWidget,
+                            bool aOriginIsRemote = false);
+  static nsresult NotifyIME(IMEMessage aMessage,
+                            nsIWidget* aWidget,
+                            bool aOriginIsRemote = false);
+  static nsresult NotifyIME(IMEMessage aMessage,
+                            nsPresContext* aPresContext,
+                            bool aOriginIsRemote = false);
 
   static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
                                       nsIContent* aContent);
@@ -167,9 +176,11 @@ protected:
 
   static nsIContent*    sContent;
   static nsPresContext* sPresContext;
+  static StaticRefPtr<nsIWidget> sFocusedIMEWidget;
   static bool           sInstalledMenuKeyboardListener;
   static bool           sIsGettingNewIMEState;
   static bool           sCheckForIMEUnawareWebApps;
+  static bool           sRemoteHasFocus;
 
   class MOZ_STACK_CLASS GettingNewIMEStateBlocker final
   {

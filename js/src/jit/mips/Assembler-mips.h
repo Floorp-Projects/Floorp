@@ -641,6 +641,20 @@ PatchBackedge(CodeLocationJump& jump_, CodeLocationLabel label, JitRuntime::Back
 class Assembler;
 typedef js::jit::AssemblerBuffer<1024, Instruction> MIPSBuffer;
 
+class MIPSBufferWithExecutableCopy : public MIPSBuffer
+{
+  public:
+    void executableCopy(uint8_t* buffer) {
+        if (this->oom())
+            return;
+
+        for (Slice* cur = head; cur != nullptr; cur = cur->getNext()) {
+            memcpy(buffer, &cur->instructions, cur->length());
+            buffer += cur->length();
+        }
+    }
+};
+
 class Assembler : public AssemblerShared
 {
   public:
@@ -751,7 +765,7 @@ class Assembler : public AssemblerShared
     CompactBufferWriter dataRelocations_;
     CompactBufferWriter preBarriers_;
 
-    MIPSBuffer m_buffer;
+    MIPSBufferWithExecutableCopy m_buffer;
 
   public:
     Assembler()

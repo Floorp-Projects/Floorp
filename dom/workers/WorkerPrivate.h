@@ -753,6 +753,19 @@ public:
     return mLoadInfo.mIndexedDBAllowed;
   }
 
+  bool
+  IsInPrivateBrowsing() const
+  {
+    return mLoadInfo.mPrivateBrowsing;
+  }
+
+  // Determine if the SW testing per-window flag is set by devtools
+  bool
+  ServiceWorkersTestingInWindow() const
+  {
+    return mLoadInfo.mServiceWorkersTestingInWindow;
+  }
+
   void
   GetAllSharedWorkers(nsTArray<nsRefPtr<SharedWorker>>& aSharedWorkers);
 
@@ -1239,11 +1252,33 @@ public:
     return mPreferences[WORKERPREF_SERVICEWORKERS];
   }
 
+  // Determine if the SW testing browser-wide pref is set
+  bool
+  ServiceWorkersTestingEnabled() const
+  {
+    AssertIsOnWorkerThread();
+    return mPreferences[WORKERPREF_SERVICEWORKERS_TESTING];
+  }
+
   bool
   InterceptionEnabled() const
   {
     AssertIsOnWorkerThread();
     return mPreferences[WORKERPREF_INTERCEPTION_ENABLED];
+  }
+
+  bool
+  DOMWorkerNotificationEnabled() const
+  {
+    AssertIsOnWorkerThread();
+    return mPreferences[WORKERPREF_DOM_WORKERNOTIFICATION];
+  }
+
+  bool
+  DOMCachesTestingEnabled() const
+  {
+    AssertIsOnWorkerThread();
+    return mPreferences[WORKERPREF_DOM_CACHES_TESTING];
   }
 
   bool

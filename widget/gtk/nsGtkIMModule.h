@@ -259,6 +259,10 @@ protected:
     // mLayoutChanged is true after OnLayoutChange() is called.  This is reset
     // when NS_COMPOSITION_CHANGE is being dispatched.
     bool mLayoutChanged;
+    // mSetCursorPositionOnKeyEvent true when caret rect or position is updated
+    // with no composition.  If true, we update candidate window position
+    // before key down
+    bool mSetCursorPositionOnKeyEvent;
 
     // sLastFocusedModule is a pointer to the last focused instance of this
     // class.  When a instance is destroyed and sLastFocusedModule refers it,

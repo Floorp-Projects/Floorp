@@ -11,7 +11,6 @@
 #include "plstr.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
-#include "nsIJSRuntimeService.h"
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
 #include "nsStringBuffer.h"

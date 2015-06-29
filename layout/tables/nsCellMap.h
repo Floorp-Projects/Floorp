@@ -38,17 +38,17 @@ struct nsColInfo
 
 enum Corner
 {
-  eTopLeft     = 0,
-  eTopRight    = 1,
-  eBottomRight = 2,
-  eBottomLeft  = 3
+  eBStartIStart = 0,
+  eBStartIEnd   = 1,
+  eBEndIEnd     = 2,
+  eBEndIStart   = 3
 };
 
 struct BCInfo
 {
-  nsTArray<BCData> mRightBorders;
-  nsTArray<BCData> mBottomBorders;
-  BCData           mLowerRightCorner;
+  nsTArray<BCData> mIEndBorders;
+  nsTArray<BCData> mBEndBorders;
+  BCData           mBEndIEndCorner;
 };
 
 class nsTableCellMap
@@ -200,13 +200,13 @@ protected:
 public:
   void ExpandZeroColSpans();
 
-  void ResetTopStart(uint8_t    aSide,
-                     nsCellMap& aCellMap,
-                     uint32_t   aYPos,
-                     uint32_t   aXPos,
-                     bool       aIsLowerRight = false);
+  void ResetBStartStart(mozilla::LogicalSide aSide,
+                        nsCellMap& aCellMap,
+                        uint32_t   aYPos,
+                        uint32_t   aXPos,
+                        bool       aIsBEndIEnd = false);
 
-  void SetBCBorderEdge(mozilla::Side aEdge,
+  void SetBCBorderEdge(mozilla::LogicalSide aEdge,
                        nsCellMap&    aCellMap,
                        uint32_t      aCellMapStart,
                        uint32_t      aYPos,
@@ -221,7 +221,7 @@ public:
                          uint32_t    aCellMapStart,
                          uint32_t    aYPos,
                          uint32_t    aXPos,
-                         mozilla::Side aOwner,
+                         mozilla::LogicalSide aOwner,
                          nscoord     aSubSize,
                          bool        aBevel,
                          bool        aIsBottomRight = false);
@@ -232,8 +232,8 @@ public:
 #endif
 
 protected:
-  BCData* GetRightMostBorder(int32_t aRowIndex);
-  BCData* GetBottomMostBorder(int32_t aColIndex);
+  BCData* GetIEndMostBorder(int32_t aRowIndex);
+  BCData* GetBEndMostBorder(int32_t aColIndex);
 
   friend class nsCellMap;
   friend class BCMapCellIterator;
@@ -246,7 +246,7 @@ protected:
   */
   void InsertGroupCellMap(nsCellMap* aPrevMap,
                           nsCellMap& aNewMap);
-  void DeleteRightBottomBorders();
+  void DeleteIEndBEndBorders();
 
   nsTableFrame&               mTableFrame;
   nsAutoTArray<nsColInfo, 8>  mCols;

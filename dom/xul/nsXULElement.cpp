@@ -40,7 +40,6 @@
 #include "mozilla/EventStates.h"
 #include "nsFocusManager.h"
 #include "nsHTMLStyleSheet.h"
-#include "nsIJSRuntimeService.h"
 #include "nsNameSpaceManager.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
@@ -2767,9 +2766,6 @@ NotifyOffThreadScriptCompletedRunnable::Run()
     // Note: this unroots mScript so that it is available to be collected by the
     // JS GC. The receiver needs to root the script before performing a call that
     // could GC.
-    nsCOMPtr<nsIJSRuntimeService> svc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
-    NS_ENSURE_TRUE(svc, NS_ERROR_FAILURE);
-
     JSScript *script;
     {
         AutoSafeJSContext cx;

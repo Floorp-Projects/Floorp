@@ -73,6 +73,18 @@ rdtsc(void)
 
     return result;
 }
+#elif defined(__arm__)
+#include <sys/time.h>
+static __inline__ uint64_t
+rdtsc(void)
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    uint64_t ret = tv.tv_sec;
+    ret *= 1000000;
+    ret += tv.tv_usec;
+    return ret;
+}
 #else
 static __inline__ uint64_t
 rdtsc(void)

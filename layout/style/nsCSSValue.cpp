@@ -1486,7 +1486,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                                                 aResult, aSerialization);
         aResult.Append(' ');
       }
-      if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None) {
+      if (gradient->mBgPos.mYValue.GetUnit() != eCSSUnit_None) {
         gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position,
                                                 aResult, aSerialization);
         aResult.Append(' ');
