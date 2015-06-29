@@ -673,7 +673,7 @@ let DirectoryLinksProvider = {
     let pastImpressions;
     // Check if the suggested tile was shown
     if (action == "view") {
-      sites.slice(0, triggeringSiteIndex + 1).forEach(site => {
+      sites.slice(0, triggeringSiteIndex + 1).filter(s => s).forEach(site => {
         let {targetedSite, url} = site.link;
         if (targetedSite) {
           this._addFrequencyCapView(url);
