@@ -19,7 +19,7 @@ task:
         --config-file ./mozharness_configs/remove_executables.py
         --no-pull
         --installer-url {{build_url}}
-        --test-url {{tests_url}}
+        --test-packages-url {{test_packages_url}}
         --download-symbols ondemand
         --test-suite reftest
         --test-manifest tests/layout/reftests/reftest.list

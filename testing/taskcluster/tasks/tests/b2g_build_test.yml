@@ -18,7 +18,7 @@ task:
         --config-file ./mozharness_configs/remove_executables.py
         --installer-url {{build_url}}
         --no-pull
-        --test-url {{tests_url}}
+        --test-packages-url {{test_packages_url}}
         --download-symbols ondemand
         --gaia-repo https://hg.mozilla.org/integration/gaia-central
         --gaia-dir /home/worker
