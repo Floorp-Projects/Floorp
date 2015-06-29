@@ -82,9 +82,26 @@ var repair = {}, demolition = {};
 Function("var a, b; [(repair.man), b] = [1, 2];")();
 Function("var a, b; [(demolition['man']) = 'motel', b] = [1, 2];")();
 Function("var a, b; [(demolition['man' + {}]) = 'motel', b] = [1, 2];")(); // evade constant-folding
-Function("var a, b; var obj = { x() { [(super.man), b] = [1, 2]; } };")();
-Function("var a, b; var obj = { x() { [(super[8]) = 'motel', b] = [1, 2]; } };")();
-Function("var a, b; var obj = { x() { [(super[8 + {}]) = 'motel', b] = [1, 2]; } };")(); // evade constant-folding
+
+function classesEnabled()
+{
+  try
+  {
+    new Function("class B { constructor() { } }; class D extends B { constructor() { super(); } }");
+    return true;
+  }
+  catch (e if e instanceof SyntaxError)
+  {
+    return false;
+  }
+}
+
+if (classesEnabled())
+{
+  Function("var a, b; var obj = { x() { [(super.man), b] = [1, 2]; } };")();
+  Function("var a, b; var obj = { x() { [(super[8]) = 'motel', b] = [1, 2]; } };")();
+  Function("var a, b; var obj = { x() { [(super[8 + {}]) = 'motel', b] = [1, 2]; } };")(); // evade constant-folding
+}
 
 // In strict mode, assignment to funcall *immediately* triggers ReferenceError
 // before we can recognize this doesn't even match the destructuring grammar to
