@@ -18,7 +18,7 @@ fuzzy-if(B2G,5,1) == fixed-table-layout-003-vlr.html fixed-table-layout-002-ref.
 == fixed-table-layout-006-vlr.html fixed-table-layout-006-ref.html
 fuzzy-if(B2G,5,1) == fixed-table-layout-007-vlr.html fixed-table-layout-007-ref.html
 == fixed-table-layout-009-vlr.html fixed-table-layout-009-ref.html
-random == fixed-table-layout-010-vlr.html fixed-table-layout-010-ref.html # bug 1178059
+fuzzy-if(Android,255,400) == fixed-table-layout-010-vlr.html fixed-table-layout-010-ref.html
 fuzzy-if(B2G,5,1) == fixed-table-layout-012-vlr.html fixed-table-layout-012-ref.html
 == fixed-table-layout-013-vlr.html fixed-table-layout-002-ref.html
 == fixed-table-layout-014-vlr.html fixed-table-layout-002-ref.html
@@ -44,7 +44,7 @@ fuzzy-if(B2G,5,1) == fixed-table-layout-003-vrl.html fixed-table-layout-002-ref.
 == fixed-table-layout-006-vrl.html fixed-table-layout-006-ref.html
 fuzzy-if(B2G,5,1) == fixed-table-layout-007-vrl.html fixed-table-layout-007-ref.html
 == fixed-table-layout-009-vrl.html fixed-table-layout-009-ref.html
-random == fixed-table-layout-010-vrl.html fixed-table-layout-010-ref.html # bug 1178059
+fuzzy-if(Android,255,400) == fixed-table-layout-010-vrl.html fixed-table-layout-010-ref.html
 fuzzy-if(B2G,5,1) == fixed-table-layout-012-vrl.html fixed-table-layout-012-ref.html
 == fixed-table-layout-013-vrl.html fixed-table-layout-002-ref.html
 == fixed-table-layout-014-vrl.html fixed-table-layout-002-ref.html
