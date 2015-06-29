@@ -302,4 +302,12 @@ AppTrustDomain::VerifyECDSASignedDigest(const SignedDigest& signedDigest,
                                     mPinArg);
 }
 
+Result
+AppTrustDomain::CheckValidityIsAcceptable(Time /*notBefore*/, Time /*notAfter*/,
+                                          EndEntityOrCA /*endEntityOrCA*/,
+                                          KeyPurposeId /*keyPurpose*/)
+{
+  return Success;
+}
+
 } } // namespace mozilla::psm

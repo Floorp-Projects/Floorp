@@ -14,6 +14,11 @@
 
 namespace mozilla { namespace psm {
 
+enum class ValidityCheckingMode {
+  CheckingOff = 0,
+  CheckForEV = 1,
+};
+
 SECStatus InitializeNSS(const char* dir, bool readOnly);
 
 void DisableMD5();
@@ -56,6 +61,7 @@ public:
                        uint32_t certShortLifetimeInDays,
                        CertVerifier::PinningMode pinningMode,
                        unsigned int minRSABits,
+                       ValidityCheckingMode validityCheckingMode,
           /*optional*/ const char* hostname = nullptr,
       /*optional out*/ ScopedCERTCertList* builtChain = nullptr);
 
@@ -92,6 +98,11 @@ public:
                            mozilla::pkix::DigestAlgorithm digestAlg,
                            /*out*/ uint8_t* digestBuf,
                            size_t digestBufLen) override;
+
+  virtual Result CheckValidityIsAcceptable(
+                   mozilla::pkix::Time notBefore, mozilla::pkix::Time notAfter,
+                   mozilla::pkix::EndEntityOrCA endEntityOrCA,
+                   mozilla::pkix::KeyPurposeId keyPurpose) override;
 
   virtual Result CheckRevocation(
                    mozilla::pkix::EndEntityOrCA endEntityOrCA,
@@ -132,6 +143,7 @@ private:
   const uint32_t mCertShortLifetimeInDays;
   CertVerifier::PinningMode mPinningMode;
   const unsigned int mMinRSABits;
+  ValidityCheckingMode mValidityCheckingMode;
   const char* mHostname; // non-owning - only used for pinning checks
   ScopedCERTCertList* mBuiltChain; // non-owning
   nsCOMPtr<nsICertBlocklist> mCertBlocklist;

@@ -97,7 +97,8 @@ def generate_and_maybe_import_cert(key_type, cert_name_prefix, cert_name_suffix,
         signer_key_filename,
         signer_cert_filename,
         subject_string,
-        key_size)
+        key_size,
+        3 * 365 + 3 * 31) # 39 months
     generated_certs.append([cert_name, key_filename, cert_filename])
 
     if generate_ev:
