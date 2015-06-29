@@ -300,9 +300,8 @@ bool WebMBufferedState::GetOffsetForTime(uint64_t aTime, int64_t* aOffset)
   return true;
 }
 
-void WebMBufferedState::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
+void WebMBufferedState::NotifyDataArrived(const unsigned char* aBuffer, uint32_t aLength, int64_t aOffset)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   uint32_t idx = mRangeParsers.IndexOfFirstElementGt(aOffset - 1);
   if (idx == 0 || !(mRangeParsers[idx-1] == aOffset)) {
     // If the incoming data overlaps an already parsed range, adjust the
@@ -329,7 +328,7 @@ void WebMBufferedState::NotifyDataArrived(const char* aBuffer, uint32_t aLength,
     }
   }
 
-  mRangeParsers[idx].Append(reinterpret_cast<const unsigned char*>(aBuffer),
+  mRangeParsers[idx].Append(aBuffer,
                             aLength,
                             mTimeMapping,
                             mReentrantMonitor);

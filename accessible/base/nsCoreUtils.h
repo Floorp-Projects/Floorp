@@ -223,7 +223,7 @@ public:
    * attribute or wrong value then false is returned.
    */
   static bool GetUIntAttr(nsIContent *aContent, nsIAtom *aAttr,
-                            int32_t *aUInt);
+                          int32_t* aUInt);
 
   /**
    * Returns language for the given node.

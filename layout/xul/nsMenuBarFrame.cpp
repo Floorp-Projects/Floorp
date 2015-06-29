@@ -317,7 +317,8 @@ private:
 
 NS_IMETHODIMP
 nsMenuBarFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
-                               bool aSelectFirstItem)
+                               bool aSelectFirstItem,
+                               bool aFromKey)
 {
   if (mCurrentMenu == aMenuItem)
     return NS_OK;

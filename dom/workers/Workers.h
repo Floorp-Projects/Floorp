@@ -199,6 +199,9 @@ enum WorkerPreference
   WORKERPREF_DOM_CACHES, // dom.caches.enabled
   WORKERPREF_SERVICEWORKERS, // dom.serviceWorkers.enabled
   WORKERPREF_INTERCEPTION_ENABLED, // dom.serviceWorkers.interception.enabled
+  WORKERPREF_DOM_WORKERNOTIFICATION, // dom.webnotifications.workers.enabled
+  WORKERPREF_DOM_CACHES_TESTING, // dom.caches.testing.enabled
+  WORKERPREF_SERVICEWORKERS_TESTING, // dom.serviceWorkers.testing.enabled
   WORKERPREF_COUNT
 };
 
@@ -259,6 +262,8 @@ struct WorkerLoadInfo
   bool mIsInPrivilegedApp;
   bool mIsInCertifiedApp;
   bool mIndexedDBAllowed;
+  bool mPrivateBrowsing;
+  bool mServiceWorkersTestingInWindow;
 
   WorkerLoadInfo();
   ~WorkerLoadInfo();

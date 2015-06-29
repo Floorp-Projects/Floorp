@@ -39,7 +39,11 @@ void
 MediaTimer::DispatchDestroy()
 {
   nsCOMPtr<nsIRunnable> task = NS_NewNonOwningRunnableMethod(this, &MediaTimer::Destroy);
-  nsresult rv = mThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  // Hold a strong reference to the thread so that it doesn't get deleted in
+  // Destroy(), which may run completely before the stack if Dispatch() begins
+  // to unwind.
+  nsCOMPtr<nsIEventTarget> thread = mThread;
+  nsresult rv = thread->Dispatch(task, NS_DISPATCH_NORMAL);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   (void) rv;
 }

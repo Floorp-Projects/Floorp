@@ -264,7 +264,7 @@ IMEContentObserver::NotifyIMEOfBlur()
   // Anyway, as far as we know, IME doesn't try to query content when it loses
   // focus.  So, this may not cause any problem.
   mIMEHasFocus = false;
-  widget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
+  IMEStateManager::NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR), widget);
 }
 
 void
@@ -513,7 +513,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   notification.mMouseButtonEventData.mButtons = aMouseEvent->buttons;
   notification.mMouseButtonEventData.mModifiers = aMouseEvent->modifiers;
 
-  nsresult rv = mWidget->NotifyIME(notification);
+  nsresult rv = IMEStateManager::NotifyIME(notification, mWidget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
@@ -1659,7 +1659,8 @@ IMEContentObserver::FocusSetEvent::Run()
   }
 
   mIMEContentObserver->mIMEHasFocus = true;
-  mIMEContentObserver->mWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS));
+  IMEStateManager::NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS),
+                             mIMEContentObserver->mWidget);
   return NS_OK;
 }
 
@@ -1704,7 +1705,7 @@ IMEContentObserver::SelectionChangeEvent::Run()
   notification.mSelectionChangeData.mReversed = selection.mReply.mReversed;
   notification.mSelectionChangeData.mCausedByComposition =
     mCausedByComposition;
-  mIMEContentObserver->mWidget->NotifyIME(notification);
+  IMEStateManager::NotifyIME(notification, mIMEContentObserver->mWidget);
   return NS_OK;
 }
 
@@ -1730,7 +1731,7 @@ IMEContentObserver::TextChangeEvent::Run()
   notification.mTextChangeData.mNewEndOffset = mData.mAddedEndOffset;
   notification.mTextChangeData.mCausedByComposition =
     mData.mCausedOnlyByComposition;
-  mIMEContentObserver->mWidget->NotifyIME(notification);
+  IMEStateManager::NotifyIME(notification, mIMEContentObserver->mWidget);
   return NS_OK;
 }
 
@@ -1750,8 +1751,8 @@ IMEContentObserver::PositionChangeEvent::Run()
     return NS_OK;
   }
 
-  mIMEContentObserver->mWidget->NotifyIME(
-    IMENotification(NOTIFY_IME_OF_POSITION_CHANGE));
+  IMEStateManager::NotifyIME(IMENotification(NOTIFY_IME_OF_POSITION_CHANGE),
+                             mIMEContentObserver->mWidget);
   return NS_OK;
 }
 

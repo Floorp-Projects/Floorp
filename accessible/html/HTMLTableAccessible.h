@@ -33,6 +33,7 @@ public:
   virtual uint64_t NativeState() override;
   virtual uint64_t NativeInteractiveState() const override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
+  virtual mozilla::a11y::GroupPos GroupPosition() override;
 
   // TableCellAccessible
   virtual TableAccessible* Table() const override;
@@ -89,6 +90,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() override;
+  virtual mozilla::a11y::GroupPos GroupPosition() override;
 
 protected:
   virtual ~HTMLTableRowAccessible() { }

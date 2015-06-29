@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<style>
+table {
+  margin: 10px;
+  border: 8px solid silver;
+  border-right-color: #666;
+  border-bottom-color: #333;
+  border-spacing: 5px;
+  border-collapse: collapse;
+}
+td {
+  border: 4px solid black;
+  height: 50px;
+  width: 20px;
+  text-align: center;
+}
+tr:nth-child(2) > td {
+  height: 80px;
+}
+tr:nth-child(4) > td {
+  height: 120px;
+}
+col:nth-child(even) {
+  background: #ffc;
+}
+col:nth-child(odd) {
+  background: #cff;
+}
+col:nth-child(5) {
+  background: #fcf;
+  width: 50px;
+}
+</style>
+</head>
+<body>
+
+<table>
+<col/><col/><col/><col/><col/>
+<tr> <td> </td> <td colspan=3> </td> <td rowspan=3> </td> </tr>
+<tr>   <td> </td> <td> </td> <td> </td> <td> </td> </tr>
+<tr>   <td> </td> <td> </td> <td> </td> <td> </td> </tr>
+<tr> <td> </td> <td colspan=2 style="background:#cff"> </td> <td> </td> <td> </td> </tr>
+</table>
+
+</body>
+</html>

@@ -105,7 +105,8 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
     return;
   }
 
-  MediaKeySystemStatus status = MediaKeySystemAccess::GetKeySystemStatus(keySystem, minCdmVersion);
+  nsAutoCString message;
+  MediaKeySystemStatus status = MediaKeySystemAccess::GetKeySystemStatus(keySystem, minCdmVersion, message);
   if ((status == MediaKeySystemStatus::Cdm_not_installed ||
        status == MediaKeySystemStatus::Cdm_insufficient_version) &&
       keySystem.EqualsLiteral("com.adobe.primetime")) {

@@ -17,6 +17,7 @@
 #include "nsTObserverArray.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
+#include "nsTObserverArray.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "mozilla/Attributes.h"
@@ -408,7 +409,7 @@ private:
   // nsTArray on purpose, because we want to be able to swap.
   nsTArray<nsIDocument*> mFrameRequestCallbackDocs;
   nsTArray<nsIDocument*> mThrottledFrameRequestCallbackDocs;
-  nsTArray<nsAPostRefreshObserver*> mPostRefreshObservers;
+  nsTObserverArray<nsAPostRefreshObserver*> mPostRefreshObservers;
 
   // Helper struct for processing image requests
   struct ImageRequestParameters {
