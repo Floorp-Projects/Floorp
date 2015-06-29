@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "vpx_ports/mem.h"
 #include "vp9/common/vp9_common.h"
 #include "vp9/encoder/vp9_resize.h"
 
@@ -427,7 +428,7 @@ static int get_down2_length(int length, int steps) {
   return length;
 }
 
-int get_down2_steps(int in_length, int out_length) {
+static int get_down2_steps(int in_length, int out_length) {
   int steps = 0;
   int proj_in_length;
   while ((proj_in_length = get_down2_length(in_length, 1)) >= out_length) {

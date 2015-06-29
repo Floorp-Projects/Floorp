@@ -38,6 +38,18 @@ static INLINE int get_coef_context(const int16_t *neighbors,
           token_cache[neighbors[MAX_NEIGHBORS * c + 1]]) >> 1;
 }
 
+static INLINE const scan_order *get_scan(const MACROBLOCKD *xd, TX_SIZE tx_size,
+                                         PLANE_TYPE type, int block_idx) {
+  const MODE_INFO *const mi = xd->mi[0];
+
+  if (is_inter_block(&mi->mbmi) || type != PLANE_TYPE_Y || xd->lossless) {
+    return &vp9_default_scan_orders[tx_size];
+  } else {
+    const PREDICTION_MODE mode = get_y_mode(mi, block_idx);
+    return &vp9_scan_orders[tx_size][intra_mode_to_tx_type_lookup[mode]];
+  }
+}
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

@@ -18,39 +18,17 @@
 #include "vpx_scale/yv12config.h"
 
 #include "vp9/common/vp9_common_data.h"
-#include "vp9/common/vp9_filter.h"
+#include "vp9/common/vp9_entropy.h"
+#include "vp9/common/vp9_entropymode.h"
 #include "vp9/common/vp9_mv.h"
 #include "vp9/common/vp9_scale.h"
+#include "vp9/common/vp9_seg_common.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define BLOCK_SIZE_GROUPS 4
-#define SKIP_CONTEXTS 3
-#define INTER_MODE_CONTEXTS 7
-
-/* Segment Feature Masks */
-#define MAX_MV_REF_CANDIDATES 2
-
-#define INTRA_INTER_CONTEXTS 4
-#define COMP_INTER_CONTEXTS 5
-#define REF_CONTEXTS 5
-
-typedef enum {
-  PLANE_TYPE_Y  = 0,
-  PLANE_TYPE_UV = 1,
-  PLANE_TYPES
-} PLANE_TYPE;
-
 #define MAX_MB_PLANE 3
-
-typedef char ENTROPY_CONTEXT;
-
-static INLINE int combine_entropy_contexts(ENTROPY_CONTEXT a,
-                                           ENTROPY_CONTEXT b) {
-  return (a != 0) + (b != 0);
-}
 
 typedef enum {
   KEY_FRAME = 0,
@@ -58,33 +36,9 @@ typedef enum {
   FRAME_TYPES,
 } FRAME_TYPE;
 
-typedef enum {
-  DC_PRED,         // Average of above and left pixels
-  V_PRED,          // Vertical
-  H_PRED,          // Horizontal
-  D45_PRED,        // Directional 45  deg = round(arctan(1/1) * 180/pi)
-  D135_PRED,       // Directional 135 deg = 180 - 45
-  D117_PRED,       // Directional 117 deg = 180 - 63
-  D153_PRED,       // Directional 153 deg = 180 - 27
-  D207_PRED,       // Directional 207 deg = 180 + 27
-  D63_PRED,        // Directional 63  deg = round(arctan(2/1) * 180/pi)
-  TM_PRED,         // True-motion
-  NEARESTMV,
-  NEARMV,
-  ZEROMV,
-  NEWMV,
-  MB_MODE_COUNT
-} PREDICTION_MODE;
-
 static INLINE int is_inter_mode(PREDICTION_MODE mode) {
   return mode >= NEARESTMV && mode <= NEWMV;
 }
-
-#define INTRA_MODES (TM_PRED + 1)
-
-#define INTER_MODES (1 + NEWMV - NEARESTMV)
-
-#define INTER_OFFSET(mode) ((mode) - NEARESTMV)
 
 /* For keyframes, intra block modes are predicted by the (already decoded)
    modes for the Y blocks to the left and above us; for interframes, there
@@ -130,7 +84,6 @@ typedef struct {
 } MB_MODE_INFO;
 
 typedef struct MODE_INFO {
-  struct MODE_INFO *src_mi;
   MB_MODE_INFO mbmi;
   b_mode_info bmi[4];
 } MODE_INFO;
@@ -171,9 +124,12 @@ struct macroblockd_plane {
   int subsampling_y;
   struct buf_2d dst;
   struct buf_2d pre[2];
-  const int16_t *dequant;
   ENTROPY_CONTEXT *above_context;
   ENTROPY_CONTEXT *left_context;
+  int16_t seg_dequant[MAX_SEGMENTS][2];
+
+  // encoder
+  const int16_t *dequant;
 };
 
 #define BLOCK_OFFSET(x, i) ((x) + (i) * 16)
@@ -188,10 +144,10 @@ typedef struct RefBuffer {
 
 typedef struct macroblockd {
   struct macroblockd_plane plane[MAX_MB_PLANE];
-
+  FRAME_COUNTS *counts;
   int mi_stride;
 
-  MODE_INFO *mi;
+  MODE_INFO **mi;
   MODE_INFO *left_mi;
   MODE_INFO *above_mi;
   MB_MODE_INFO *left_mbmi;
@@ -206,6 +162,9 @@ typedef struct macroblockd {
   int mb_to_top_edge;
   int mb_to_bottom_edge;
 
+  FRAME_CONTEXT *fc;
+  int frame_parallel_decoding_mode;
+
   /* pointers to reference frames */
   RefBuffer *block_refs[2];
 
@@ -218,13 +177,9 @@ typedef struct macroblockd {
   PARTITION_CONTEXT *above_seg_context;
   PARTITION_CONTEXT left_seg_context[8];
 
-  /* mc buffer */
-  DECLARE_ALIGNED(16, uint8_t, mc_buf[80 * 2 * 80 * 2]);
-
 #if CONFIG_VP9_HIGHBITDEPTH
   /* Bit depth: 8, 10, 12 */
   int bd;
-  DECLARE_ALIGNED(16, uint16_t, mc_buf_high[80 * 2 * 80 * 2]);
 #endif
 
   /* dqcoeff are shared by all the planes. So planes must be decoded serially */
@@ -245,7 +200,7 @@ extern const TX_TYPE intra_mode_to_tx_type_lookup[INTRA_MODES];
 
 static INLINE TX_TYPE get_tx_type(PLANE_TYPE plane_type,
                                   const MACROBLOCKD *xd) {
-  const MB_MODE_INFO *const mbmi = &xd->mi[0].src_mi->mbmi;
+  const MB_MODE_INFO *const mbmi = &xd->mi[0]->mbmi;
 
   if (plane_type != PLANE_TYPE_Y || xd->lossless || is_inter_block(mbmi))
     return DCT_DCT;
@@ -255,7 +210,7 @@ static INLINE TX_TYPE get_tx_type(PLANE_TYPE plane_type,
 
 static INLINE TX_TYPE get_tx_type_4x4(PLANE_TYPE plane_type,
                                       const MACROBLOCKD *xd, int ib) {
-  const MODE_INFO *const mi = xd->mi[0].src_mi;
+  const MODE_INFO *const mi = xd->mi[0];
 
   if (plane_type != PLANE_TYPE_Y || xd->lossless || is_inter_block(&mi->mbmi))
     return DCT_DCT;
@@ -284,6 +239,27 @@ static INLINE TX_SIZE get_uv_tx_size(const MB_MODE_INFO *mbmi,
 static INLINE BLOCK_SIZE get_plane_block_size(BLOCK_SIZE bsize,
     const struct macroblockd_plane *pd) {
   return ss_size_lookup[bsize][pd->subsampling_x][pd->subsampling_y];
+}
+
+static INLINE void reset_skip_context(MACROBLOCKD *xd, BLOCK_SIZE bsize) {
+  int i;
+  for (i = 0; i < MAX_MB_PLANE; i++) {
+    struct macroblockd_plane *const pd = &xd->plane[i];
+    const BLOCK_SIZE plane_bsize = get_plane_block_size(bsize, pd);
+    memset(pd->above_context, 0,
+           sizeof(ENTROPY_CONTEXT) * num_4x4_blocks_wide_lookup[plane_bsize]);
+    memset(pd->left_context, 0,
+           sizeof(ENTROPY_CONTEXT) * num_4x4_blocks_high_lookup[plane_bsize]);
+  }
+}
+
+static INLINE const vp9_prob *get_y_mode_probs(const MODE_INFO *mi,
+                                               const MODE_INFO *above_mi,
+                                               const MODE_INFO *left_mi,
+                                               int block) {
+  const PREDICTION_MODE above = vp9_above_block_mode(mi, above_mi, block);
+  const PREDICTION_MODE left = vp9_left_block_mode(mi, left_mi, block);
+  return vp9_kf_y_mode_prob[above][left];
 }
 
 typedef void (*foreach_transformed_block_visitor)(int plane, int block,

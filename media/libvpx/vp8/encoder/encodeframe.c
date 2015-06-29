@@ -11,6 +11,7 @@
 
 #include "vpx_config.h"
 #include "vp8_rtcd.h"
+#include "./vpx_dsp_rtcd.h"
 #include "encodemb.h"
 #include "encodemv.h"
 #include "vp8/common/common.h"
@@ -90,7 +91,7 @@ static unsigned int tt_activity_measure( VP8_COMP *cpi, MACROBLOCK *x )
      *  lambda using a non-linear combination (e.g., the smallest, or second
      *  smallest, etc.).
      */
-    act =  vp8_variance16x16(x->src.y_buffer,
+    act =  vpx_variance16x16(x->src.y_buffer,
                     x->src.y_stride, VP8_VAR_OFFS, 0, &sse);
     act = act<<4;
 
@@ -155,8 +156,8 @@ static void calc_av_activity( VP8_COMP *cpi, int64_t activity_sum )
                         cpi->common.MBs));
 
         /* Copy map to sort list */
-        vpx_memcpy( sortlist, cpi->mb_activity_map,
-                    sizeof(unsigned int) * cpi->common.MBs );
+        memcpy( sortlist, cpi->mb_activity_map,
+                sizeof(unsigned int) * cpi->common.MBs );
 
 
         /* Ripple each value down to its correct position */
@@ -665,8 +666,7 @@ static void init_encode_frame_mb_context(VP8_COMP *cpi)
 
     x->mvc = cm->fc.mvc;
 
-    vpx_memset(cm->above_context, 0,
-               sizeof(ENTROPY_CONTEXT_PLANES) * cm->mb_cols);
+    memset(cm->above_context, 0, sizeof(ENTROPY_CONTEXT_PLANES) * cm->mb_cols);
 
     /* Special case treatment when GF and ARF are not sensible options
      * for reference
@@ -744,7 +744,7 @@ void vp8_encode_frame(VP8_COMP *cpi)
     const int num_part = (1 << cm->multi_token_partition);
 #endif
 
-    vpx_memset(segment_counts, 0, sizeof(segment_counts));
+    memset(segment_counts, 0, sizeof(segment_counts));
     totalrate = 0;
 
     if (cpi->compressor_speed == 2)
@@ -974,7 +974,7 @@ void vp8_encode_frame(VP8_COMP *cpi)
         int i;
 
         /* Set to defaults */
-        vpx_memset(xd->mb_segment_tree_probs, 255 , sizeof(xd->mb_segment_tree_probs));
+        memset(xd->mb_segment_tree_probs, 255 , sizeof(xd->mb_segment_tree_probs));
 
         tot_count = segment_counts[0] + segment_counts[1] + segment_counts[2] + segment_counts[3];
 

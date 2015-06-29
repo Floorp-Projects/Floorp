@@ -22,7 +22,7 @@ static struct vp9_token mv_class_encodings[MV_CLASSES];
 static struct vp9_token mv_fp_encodings[MV_FP_SIZE];
 static struct vp9_token mv_class0_encodings[CLASS0_SIZE];
 
-void vp9_entropy_mv_init() {
+void vp9_entropy_mv_init(void) {
   vp9_tokens_from_tree(mv_joint_encodings, vp9_mv_joint_tree);
   vp9_tokens_from_tree(mv_class_encodings, vp9_mv_class_tree);
   vp9_tokens_from_tree(mv_class0_encodings, vp9_mv_class0_tree);
@@ -243,7 +243,7 @@ static void inc_mvs(const MB_MODE_INFO *mbmi, const int_mv mvs[2],
 
 void vp9_update_mv_count(ThreadData *td) {
   const MACROBLOCKD *xd = &td->mb.e_mbd;
-  const MODE_INFO *mi = xd->mi[0].src_mi;
+  const MODE_INFO *mi = xd->mi[0];
   const MB_MODE_INFO *const mbmi = &mi->mbmi;
 
   if (mbmi->sb_type < BLOCK_8X8) {
