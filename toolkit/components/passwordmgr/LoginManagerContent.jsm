@@ -8,12 +8,14 @@ this.EXPORTED_SYMBOLS = [ "LoginManagerContent",
                           "UserAutoCompleteResult" ];
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginRecipesContent",
                                   "resource://gre/modules/LoginRecipes.jsm");
 
@@ -92,6 +94,30 @@ var LoginManagerContent = {
 
   _messages: [ "RemoteLogins:loginsFound",
                "RemoteLogins:loginsAutoCompleted" ],
+
+  /**
+   * WeakMap of the root element of a FormLike to the FormLike representing its fields.
+   *
+   * This is used to be able to lookup an existing FormLike for a given root element since multiple
+   * calls to FormLikeFactory won't give the exact same object. When batching fills we don't always
+   * want to use the most recent list of elements for a FormLike since we may end up doing multiple
+   * fills for the same set of elements when a field gets added between arming and running the
+   * DeferredTask.
+   *
+   * @type {WeakMap}
+   */
+  _formLikeByRootElement: new WeakMap(),
+
+  /**
+   * WeakMap of the root element of a WeakMap to the DeferredTask to fill its fields.
+   *
+   * This is used to be able to throttle fills for a FormLike since onDOMInputPasswordAdded gets
+   * dispatched for each password field added to a document but we only want to fill once per
+   * FormLike when multiple fields are added at once.
+   *
+   * @type {WeakMap}
+   */
+  _deferredPasswordAddedTasksByRootElement: new WeakMap(),
 
   // Map from form login requests to information about that request.
   _requests: new Map(),
@@ -219,6 +245,11 @@ var LoginManagerContent = {
     let form = aElement.form;
     let win = doc.defaultView;
 
+    if (!form) {
+      return Promise.reject("Bug 1173583: _autoCompleteSearchAsync needs to be " +
+                            "updated to work outside of <form>");
+    }
+
     let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
     let actionOrigin = LoginUtils._getActionOrigin(form);
 
@@ -246,7 +277,69 @@ var LoginManagerContent = {
     }
 
     let form = event.target;
+    let formLike = FormLikeFactory.createFromForm(form);
+    log("onDOMFormHasPassword:", form, formLike);
+    this._fetchLoginsFromParentAndFillForm(formLike, window);
+  },
 
+  onDOMInputPasswordAdded(event, window) {
+    if (!event.isTrusted) {
+      return;
+    }
+
+    let pwField = event.target;
+    if (pwField.form) {
+      // Handled by onDOMFormHasPassword which is already throttled.
+      return;
+    }
+
+    let formLike = FormLikeFactory.createFromPasswordField(pwField);
+    log("onDOMInputPasswordAdded:", pwField, formLike);
+
+    let deferredTask = this._deferredPasswordAddedTasksByRootElement.get(formLike.rootElement);
+    if (!deferredTask) {
+      log("Creating a DeferredTask to call _fetchLoginsFromParentAndFillForm soon");
+      this._formLikeByRootElement.set(formLike.rootElement, formLike);
+
+      deferredTask = new DeferredTask(function* deferredInputProcessing() {
+        // Get the updated formLike instead of the one at the time of creating the DeferredTask via
+        // a closure since it could be stale since FormLike.elements isn't live.
+        let formLike2 = this._formLikeByRootElement.get(formLike.rootElement);
+        log("Running deferred processing of onDOMInputPasswordAdded", formLike2);
+        this._deferredPasswordAddedTasksByRootElement.delete(formLike2.rootElement);
+        this._fetchLoginsFromParentAndFillForm(formLike2, window);
+        this._formLikeByRootElement.delete(formLike.rootElement);
+      }.bind(this), PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS);
+
+      this._deferredPasswordAddedTasksByRootElement.set(formLike.rootElement, deferredTask);
+    }
+
+    if (deferredTask.isArmed) {
+      log("DeferredTask is already armed so just updating the FormLike");
+      // We update the FormLike so it (most important .elements) is fresh when the task eventually
+      // runs since changes to the elements could affect our field heuristics.
+      this._formLikeByRootElement.set(formLike.rootElement, formLike);
+    } else {
+      if (window.document.readyState == "complete") {
+        log("Arming the DeferredTask we just created since document.readyState == 'complete'");
+        deferredTask.arm();
+      } else {
+        window.addEventListener("DOMContentLoaded", function armPasswordAddedTask() {
+          window.removeEventListener("DOMContentLoaded", armPasswordAddedTask);
+          log("Arming the onDOMInputPasswordAdded DeferredTask due to DOMContentLoaded");
+          deferredTask.arm();
+        });
+      }
+    }
+  },
+
+  /**
+   * Fetch logins from the parent for a given form and then attempt to fill it.
+   *
+   * @param {FormLike} form to fetch the logins for then try autofill.
+   * @param {Window} window
+   */
+  _fetchLoginsFromParentAndFillForm(form, window) {
     // Always record the most recently added form with a password field.
     this.stateForDocument(form.ownerDocument).loginForm = form;
 
@@ -259,7 +352,6 @@ var LoginManagerContent = {
       return;
     }
 
-    log("onDOMFormHasPassword for", form.ownerDocument.documentURI);
     this._getLoginDataFromParent(form, { showMasterPassword: true })
         .then(this.loginsFound.bind(this))
         .then(null, Cu.reportError);
@@ -402,7 +494,7 @@ var LoginManagerContent = {
     if (!this._isUsernameFieldType(acInputField))
       return;
 
-    var acForm = acInputField.form;
+    var acForm = acInputField.form; // XXX: Bug 1173583 - This doesn't work outside of <form>.
     if (!acForm)
       return;
 
@@ -515,8 +607,10 @@ var LoginManagerContent = {
         fieldOverrideRecipe.passwordSelector
       );
       if (pwOverrideField) {
+        // The field from the password override may be in a different FormLike.
+        let formLike = FormLikeFactory.createFromPasswordField(pwOverrideField);
         pwFields = [{
-          index   : [...pwOverrideField.form.elements].indexOf(pwOverrideField),
+          index   : [...formLike.elements].indexOf(pwOverrideField),
           element : pwOverrideField,
         }];
       }
@@ -914,7 +1008,7 @@ var LoginManagerContent = {
       let messageManager = messageManagerFromWindow(win);
       messageManager.sendAsyncMessage("LoginStats:LoginFillSuccessful");
     } finally {
-      Services.obs.notifyObservers(form, "passwordmgr-processed-form", null);
+      Services.obs.notifyObservers(form.rootElement, "passwordmgr-processed-form", null);
     }
   },
 
