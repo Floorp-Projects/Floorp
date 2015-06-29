@@ -54,6 +54,10 @@ public:
   // Returns true if the decoder is shut down.
   virtual bool IsShutdown() const = 0;
 
+  // A special version of the above for the ogg decoder that is allowed to be
+  // called cross-thread.
+  virtual bool IsOggDecoderShutdown() { return false; }
+
   virtual bool OnStateMachineTaskQueue() const = 0;
 
   virtual bool OnDecodeTaskQueue() const = 0;
