@@ -323,6 +323,45 @@ def _apply_external_manifests(filename, testcase, entries, xul_tester):
             testcase.comment = entry["comment"]
             _parse_one(testcase, xul_tester)
 
+def _is_test_file(path_from_root, basename, filename, requested_paths,
+                  excluded_paths):
+    # Any file whose basename matches something in this set is ignored.
+    EXCLUDED = set(('browser.js', 'shell.js', 'jsref.js', 'template.js',
+                    'user.js', 'sta.js',
+                    'test262-browser.js', 'test262-shell.js',
+                    'test402-browser.js', 'test402-shell.js',
+                    'testBuiltInObject.js', 'testIntl.js',
+                    'js-test-driver-begin.js', 'js-test-driver-end.js'))
+
+    # Skip js files in the root test directory.
+    if not path_from_root:
+        return False
+
+    # Skip files that we know are not tests.
+    if basename in EXCLUDED:
+        return False
+
+    # If any tests are requested by name, skip tests that do not match.
+    if requested_paths \
+        and not any(req in filename for req in requested_paths):
+        return False
+
+    # Skip excluded tests.
+    if filename in excluded_paths:
+        return False
+
+    return True
+
+
+def count_tests(location, requested_paths, excluded_paths):
+    count = 0
+    for root, basename in _find_all_js_files(location, location):
+        filename = os.path.join(root, basename)
+        if _is_test_file(root, basename, filename, requested_paths, excluded_paths):
+            count += 1
+    return count
+
+
 def load(location, requested_paths, excluded_paths, xul_tester, reldir=''):
     """
     Locates all tests by walking the filesystem starting at |location|.
@@ -332,50 +371,21 @@ def load(location, requested_paths, excluded_paths, xul_tester, reldir=''):
     - an external manifest entry for a containing directory,
     - most commonly: the header of the test case itself.
     """
-    # The list of tests that we are collecting.
-    tests = []
-
-    # Any file whose basename matches something in this set is ignored.
-    EXCLUDED = set(('browser.js', 'shell.js', 'jsref.js', 'template.js',
-                    'user.js', 'sta.js',
-                    'test262-browser.js', 'test262-shell.js',
-                    'test402-browser.js', 'test402-shell.js',
-                    'testBuiltInObject.js', 'testIntl.js',
-                    'js-test-driver-begin.js', 'js-test-driver-end.js'))
-
     manifestFile = os.path.join(location, 'jstests.list')
     externalManifestEntries = _parse_external_manifest(manifestFile, '')
 
     for root, basename in _find_all_js_files(location, location):
-        # Skip js files in the root test directory.
-        if not root:
-            continue
-
-        # Skip files that we know are not tests.
-        if basename in EXCLUDED:
-            continue
-
         # Get the full path and relative location of the file.
         filename = os.path.join(root, basename)
-        fullpath = os.path.join(location, filename)
-
-        # If any tests are requested by name, skip tests that do not match.
-        if requested_paths \
-           and not any(req in filename for req in requested_paths):
+        if not _is_test_file(root, basename, filename, requested_paths, excluded_paths):
             continue
-
-        # Skip excluded tests.
-        if filename in excluded_paths:
-            continue
-
+        
         # Skip empty files.
+        fullpath = os.path.join(location, filename)
         statbuf = os.stat(fullpath)
-        if statbuf.st_size == 0:
-            continue
 
         testcase = TestCase(os.path.join(reldir, filename))
         _apply_external_manifests(filename, testcase, externalManifestEntries,
                                   xul_tester)
         _parse_test_header(fullpath, testcase, xul_tester)
-        tests.append(testcase)
-    return tests
+        yield testcase

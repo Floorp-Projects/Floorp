@@ -5,7 +5,6 @@
 
 #include "jsapi.h"
 #include "nsIXPConnect.h"
-#include "nsIJSRuntimeService.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"

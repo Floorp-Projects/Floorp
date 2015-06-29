@@ -84,6 +84,7 @@ public:
   void FireDetailedError(DOMError* aError);
 
   explicit DOMRequest(nsPIDOMWindow* aWindow);
+  explicit DOMRequest(nsIGlobalObject* aGlobal);
 
 protected:
   virtual ~DOMRequest();

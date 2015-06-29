@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+ <head>
+  <title>CSS Test: percentage height set on table-cell in 'table-layout: fixed' table</title>
+  <link rel="author" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/">
+  <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+  <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#fixed-table-layout" title="17.5.2.1 Fixed table layout">
+  <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#separated-borders" title="17.6.1 The separated borders model">
+  <link rel="bookmark" href="http://lists.w3.org/Archives/Public/www-style/2012Oct/0121.html" title="[CSS21] tables, percentages, and border-spacing">
+  <link rel="match" href="fixed-table-layout-025-ref.html">
+  <meta name="flags" content="">
+  <meta name="assert" content="A cell in the first row with a value other than 'auto' for the 'height' property determines the height for that column in the fixed table layout algorithm. The determination of the height of such column must nevertheless still take into account the vertical padding and vertical borders of such cell.">
+  <style type="text/css">
+  table
+  {
+   writing-mode: vertical-rl;
+   border-spacing: 0px;
+   table-layout: fixed;
+   height: 100px;
+  }
+  td#middle-green-cell
+  {
+   background-color: green;
+   border-top: green solid 15px;
+   border-bottom: green solid 15px;
+   height: 50%;
+  }
+  td#top-red-cell, td#bottom-red-cell {background-color: red;}
+  td {padding: 10px 50px;}
+  </style>
+ </head>
+ <body>
+   <p>Test passes if there is a filled green square and <strong>no red</strong>.</p>
+   <table>
+     <tr>
+       <td id="top-red-cell"></td>
+       <td id="middle-green-cell"></td>
+       <td id="bottom-red-cell"></td>
+     </tr>
+   </table>
+ </body>
+</html>

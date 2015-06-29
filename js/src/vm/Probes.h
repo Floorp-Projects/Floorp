@@ -59,12 +59,6 @@ extern const char anonymousName[];
  */
 bool CallTrackingActive(JSContext*);
 
-/*
- * Test whether anything is looking for JIT native code registration events.
- * This information will not be collected otherwise.
- */
-bool WantNativeAddressInfo(JSContext*);
-
 /* Entering a JS function */
 bool EnterScript(JSContext*, JSScript*, JSFunction*, InterpreterFrame*);
 
@@ -87,28 +81,6 @@ bool CreateObject(ExclusiveContext* cx, JSObject* obj);
  * read)
  */
 bool FinalizeObject(JSObject* obj);
-
-/* JIT code observation */
-
-enum JITReportGranularity {
-    JITREPORT_GRANULARITY_NONE = 0,
-    JITREPORT_GRANULARITY_FUNCTION = 1,
-    JITREPORT_GRANULARITY_LINE = 2,
-    JITREPORT_GRANULARITY_OP = 3
-};
-
-/*
- * Finest granularity of JIT information desired by all watchers.
- */
-JITReportGranularity
-JITGranularityRequested(JSContext* cx);
-
-/*
- * A whole region of code has been deallocated, containing any number of ICs.
- * (ICs are unregistered in a batch, so individual ICs are not registered.)
- */
-void
-DiscardExecutableRegion(void* start, size_t size);
 
 /*
  * Internal: DTrace-specific functions to be called during probes::EnterScript

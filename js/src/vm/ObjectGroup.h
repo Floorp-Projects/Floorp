@@ -491,8 +491,6 @@ class ObjectGroup : public gc::TenuredCell
     void markUnknown(ExclusiveContext* cx);
     void maybeClearNewScriptOnOOM();
     void clearNewScript(ExclusiveContext* cx, ObjectGroup* replacement = nullptr);
-    bool isPropertyNonData(jsid id);
-    bool isPropertyNonWritable(jsid id);
 
     void print();
 

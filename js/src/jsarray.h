@@ -65,11 +65,6 @@ extern ArrayObject * JS_FASTCALL
 NewDenseFullyAllocatedArray(ExclusiveContext* cx, uint32_t length, HandleObject proto = nullptr,
                             NewObjectKind newKind = GenericObject);
 
-/* Create a dense array with a copy of the dense array elements in src. */
-extern ArrayObject*
-NewDenseCopiedArray(ExclusiveContext* cx, uint32_t length, HandleArrayObject src,
-                    uint32_t elementOffset, HandleObject proto = nullptr);
-
 /* Create a dense array from the given array values, which must be rooted */
 extern ArrayObject*
 NewDenseCopiedArray(ExclusiveContext* cx, uint32_t length, const Value* values,

@@ -19,6 +19,7 @@ this.EXPORTED_SYMBOLS = [
 
 this.SelectContentHelper = function (aElement, aGlobal) {
   this.element = aElement;
+  this.initialSelection = aElement[aElement.selectedIndex] || null;
   this.global = aGlobal;
   this.init();
   this.showDropDown();
@@ -60,16 +61,16 @@ this.SelectContentHelper.prototype = {
   receiveMessage: function(message) {
     switch (message.name) {
       case "Forms:SelectDropDownItem":
-        if (this.element.selectedIndex != message.data.value) {
-          this.element.selectedIndex = message.data.value;
+        this.element.selectedIndex = message.data.value;
+        break;
 
+      case "Forms:DismissedDropDown":
+        if (this.initialSelection != this.element.item[this.element.selectedIndex]) {
           let event = this.element.ownerDocument.createEvent("Events");
           event.initEvent("change", true, true);
           this.element.dispatchEvent(event);
         }
 
-        //intentional fall-through
-      case "Forms:DismissedDropDown":
         this.uninit();
         break;
     }
