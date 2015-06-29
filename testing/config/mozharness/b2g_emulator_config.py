@@ -72,6 +72,7 @@ config = {
                 "--quiet",
                 "--log-raw=%(raw_log_file)s",
                 "--certificate-path=%(certificate_path)s",
+                "--screenshot-on-fail",
                 "%(test_path)s"
             ],
             "run_filename": "runtestsb2g.py",
@@ -93,6 +94,7 @@ config = {
                 "--chrome",
                 "--log-raw=%(raw_log_file)s",
                 "--certificate-path=%(certificate_path)s",
+                "--screenshot-on-fail",
                 "%(test_path)s"
             ],
             "run_filename": "runtestsb2g.py",
