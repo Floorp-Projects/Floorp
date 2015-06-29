@@ -1,13 +1,12 @@
 #identity-popup-securityView:not(.verifiedIdentity) > #identity-popup-content-owner,
 #identity-popup-securityView:not(.verifiedIdentity):not(.verifiedDomain) > #identity-popup-content-verifier,
-#identity-popup-securityView:not(.verifiedIdentity):not(.mixedContent) > #identity-popup-content-supplemental,
+#identity-popup-securityView:not(.unknownIdentity):not(.verifiedIdentity):not(.mixedContent) > #identity-popup-content-supplemental,
 #identity-popup-security-content:not(.verifiedIdentity):not(.verifiedDomain) > .identity-popup-connection-secure,
 #identity-popup-securityView:not(.verifiedIdentity):not(.verifiedDomain) > #identity-popup-securityView-header > .identity-popup-connection-secure,
 #identity-popup-securityView:not(.unknownIdentity) > #identity-popup-securityView-header > .identity-popup-connection-not-secure,
 #identity-popup-securityView:not(.chromeUI) > #identity-popup-securityView-header > .identity-popup-connection-internal,
 #identity-popup-security-content:not(.unknownIdentity) > .identity-popup-connection-not-secure,
 #identity-popup-securityView:not(.verifiedIdentity) > #identity-popup-securityView-connection,
-#identity-popup-security-content.unknownIdentity:not(.mixedContent) + .identity-popup-expander,
 #identity-popup-security-content:not(.chromeUI) > .identity-popup-connection-internal,
 #identity-popup-security-content.chromeUI + .identity-popup-expander {
   display: none;
