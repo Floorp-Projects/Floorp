@@ -79,10 +79,6 @@ var tests = (function() {
   yield iframe.src = sjs + "&policy=" + escape(' \t  ');
   yield checkIndividualResults("basic whitespace only policy", ["full"]);
 
-  yield resetCounter();
-  yield iframe.src = sjs + "&policy=" + escape(' \f\r\n\t  ');
-  yield checkIndividualResults("whitespace only policy", ["full"]);
-
   // and double-check that no-referrer works.
   yield resetCounter();
   yield iframe.src = sjs + "&policy=" + escape('no-referrer');
