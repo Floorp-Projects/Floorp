@@ -1,0 +1,40 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Cache with QuotaManager Restart</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="large_url_list.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+function setupTestIframe() {
+  return new Promise(function(resolve) {
+    var iframe = document.createElement("iframe");
+    iframe.src = "empty.html";
+    iframe.onload = function() {
+      window.caches = iframe.contentWindow.caches;
+      resolve();
+    };
+    document.body.appendChild(iframe);
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set": [["dom.caches.enabled", true]],
+}, function() {
+  setupTestIframe().then(function() {
+    return caches.open('foo');
+  }).then(function(usage) {
+    ok(false, 'caches should not be usable in untrusted http origin');
+  }).catch(function(err) {
+    is(err.name, 'SecurityError', 'caches should reject with SecurityError');
+    SimpleTest.finish();
+  });
+});
+</script>
+</body>
+</html>

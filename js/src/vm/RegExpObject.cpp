@@ -135,24 +135,6 @@ RegExpObjectBuilder::clone(Handle<RegExpObject*> other)
 /* MatchPairs */
 
 bool
-MatchPairs::initArray(size_t pairCount)
-{
-    MOZ_ASSERT(pairCount > 0);
-
-    /* Guarantee adequate space in buffer. */
-    if (!allocOrExpandArray(pairCount))
-        return false;
-
-    /* Initialize all MatchPair objects to invalid locations. */
-    for (size_t i = 0; i < pairCount; i++) {
-        pairs_[i].start = -1;
-        pairs_[i].limit = -1;
-    }
-
-    return true;
-}
-
-bool
 MatchPairs::initArrayFrom(MatchPairs& copyFrom)
 {
     MOZ_ASSERT(copyFrom.pairCount() > 0);

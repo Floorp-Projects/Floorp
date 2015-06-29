@@ -17,7 +17,6 @@
 #include "nsJSUtils.h"
 #include "xpcpublic.h"
 #include "jspubtd.h"
-#include "nsIJSRuntimeService.h"
 
 #include "nsIDOMWindow.h"
 #include "nsGlobalWindow.h"

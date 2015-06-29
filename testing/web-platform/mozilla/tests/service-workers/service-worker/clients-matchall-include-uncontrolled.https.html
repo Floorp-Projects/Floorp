@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<title>Service Worker: Clients.matchAll with includeUncontrolled</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="resources/test-helpers.sub.js"></script>
+<script>
+var base_url = 'resources/blank.html'; // This is out-of-scope.
+var scope = base_url + '?clients-matchAll-includeUncontrolled';
+
+// Creates 3 iframes, 2 for in-scope and 1 for out-of-scope.
+// The frame opened for scope + '#2' is returned via a promise.
+// FIXME: remove iframes when the test finishes.
+function create_iframes(scope) {
+  return with_iframe(base_url)
+    .then(function(frame0) {
+        return with_iframe(scope + '#1');
+      })
+    .then(function(frame1) {
+        return with_iframe(scope + '#2');
+      });
+}
+
+var expected_without_include_uncontrolled = [
+    /* visibilityState, focused, url, frameType */
+    ['visible', false, new URL(scope + '#1', location).toString(), 'nested'],
+    ['visible', true, new URL(scope + '#2', location).toString(), 'nested']
+];
+
+var expected_with_include_uncontrolled = [
+    /* visibilityState, focused, url, frameType */
+    ['visible', false, new URL(scope + '#1', location).toString(), 'nested'],
+    ['visible', true, new URL(scope + '#2', location).toString(), 'nested'],
+    ['visible', false, new URL(base_url, location).toString(), 'nested'],
+    ['visible', true, location.href, 'top-level']
+];
+
+function test_matchall(frame, expected, query_options) {
+  // Make sure we have focus for '#2' frame and its parent window.
+  frame.focus();
+  frame.contentWindow.focus();
+  expected.sort(function(a, b) { return a[2] > b[2] ? 1 : -1; });
+  return new Promise(function(resolve, reject) {
+    var channel = new MessageChannel();
+    channel.port1.onmessage = function(e) {
+      assert_equals(e.data.length, expected.length);
+      for (var i = 0; i < e.data.length; i++)
+        assert_array_equals(e.data[i], expected[i]);
+      resolve(frame);
+    };
+    frame.contentWindow.navigator.serviceWorker.controller.postMessage(
+        {port:channel.port2, options:query_options},
+        [channel.port2]);
+  });
+}
+
+// Run clients.matchAll without and with includeUncontrolled=true.
+// (We want to run the two tests sequentially in the same async_test
+// so that we can use the same set of iframes without intefering each other.
+async_test(function(t) {
+    service_worker_unregister_and_register(
+        t, 'resources/clients-matchall-worker.js', scope)
+      .then(function(registration) {
+          return wait_for_state(t, registration.installing, 'activated');
+        })
+      .then(function() { return create_iframes(scope); })
+      .then(function(frame) {
+          return test_matchall(frame, expected_without_include_uncontrolled);
+        })
+      .then(function(frame) {
+          return test_matchall(frame, expected_with_include_uncontrolled,
+                               {includeUncontrolled:true});
+        })
+      .then(function() {
+          service_worker_unregister_and_done(t, scope);
+        })
+      .catch(unreached_rejection(t));
+  }, 'Verify matchAll() respect includeUncontrolled');
+
+</script>

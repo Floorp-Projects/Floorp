@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>CSS Test: Cell that overflows a fixed-height table</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
+        <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#fixed-table-layout">
+        <meta name="flags" content="">
+        <meta name="assert" content="A cell that overflows the fixed table height uses its 'overflow' property to determine whether to clip the overflow content.">
+        <style type="text/css">
+            div.test {
+                writing-mode: vertical-lr;
+            }
+            div.prose {
+                writing-mode: horizontal-tb;
+                width: 180px;
+                padding: 1em;
+            }
+            div.textContainer
+            {
+                height: 100px;
+                border: 1px solid blue;
+                margin: 2px;
+            }
+            #hidden
+            {
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+      <div class="test">
+        <div class="textContainer">FillerTextFillerTextFillerTextFiller</div>
+        <div class="prose">Test passes if the text in the blue rectangle to the left
+	of this line spills outside of its bottom border and the text
+	in the blue rectangle to the right of this line is contained
+	within the rectangle's border (and appears to be cut off on
+	its bottom edge).</div>
+      <div class="textContainer" id="hidden">FillerTextFillerTextFillerTextFiller</div>
+     </div>
+    </body>
+</html>

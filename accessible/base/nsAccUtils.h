@@ -134,6 +134,8 @@ public:
    */
   static HyperTextAccessible* GetTextContainer(nsINode* aNode);
 
+  static Accessible* TableFor(Accessible* aRow);
+
   /**
    * Return true if the DOM node of given accessible has aria-selected="true"
    * attribute.

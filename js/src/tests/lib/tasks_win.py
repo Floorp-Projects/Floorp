@@ -94,10 +94,14 @@ def run_all_tests(tests, prefix, results, options):
     # queue, only on waiting for more items in the generator. The
     # workers are already started, however, so this will process as
     # fast as we can produce tests from the filesystem.
-    for test in tests:
-        qTasks.put(test)
-    for _ in workers:
-        qTasks.put(EndMarker)
+    def _do_push(num_workers, qTasks):
+        for test in tests:
+            qTasks.put(test)
+        for _ in range(num_workers):
+            qTasks.put(EndMarker)
+    pusher = Thread(target=_do_push, args=(len(workers), qTasks))
+    pusher.setDaemon(True)
+    pusher.start()
 
     # Read from the results.
     ended = 0
@@ -113,6 +117,7 @@ def run_all_tests(tests, prefix, results, options):
             results.pb.poke()
 
     # Cleanup and exit.
+    pusher.join()
     for worker in workers:
         worker.join()
     for watcher in watchdogs:

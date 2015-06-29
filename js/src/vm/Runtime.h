@@ -1359,11 +1359,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     void reportAllocationOverflow() { js::ReportAllocationOverflow(nullptr); }
 
     /*
-     * The function must be called outside the GC lock.
-     */
-    JS_FRIEND_API(void) onTooMuchMalloc();
-
-    /*
      * This should be called after system malloc/calloc/realloc returns nullptr
      * to try to recove some memory or to report an error.  For realloc, the
      * original pointer must be passed as reallocPtr.
