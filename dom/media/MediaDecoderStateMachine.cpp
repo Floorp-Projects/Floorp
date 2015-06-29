@@ -1421,11 +1421,6 @@ void MediaDecoderStateMachine::RecomputeDuration()
   mDuration = Some(duration);
 }
 
-bool MediaDecoderStateMachine::IsDormantNeeded()
-{
-  return mReader->IsDormantNeeded();
-}
-
 void MediaDecoderStateMachine::SetDormant(bool aDormant)
 {
   MOZ_ASSERT(OnTaskQueue());

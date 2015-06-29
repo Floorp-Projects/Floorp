@@ -14,6 +14,7 @@ namespace mozilla {
 class MP4Decoder : public MediaDecoder
 {
 public:
+  MP4Decoder();
 
   virtual MediaDecoder* Clone() override {
     if (!IsEnabled()) {
