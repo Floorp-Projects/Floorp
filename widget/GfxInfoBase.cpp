@@ -682,7 +682,7 @@ GfxInfoBase::GetFeatureStatus(int32_t aFeature, int32_t* aStatus)
   if (GetPrefValueForFeature(aFeature, *aStatus))
     return NS_OK;
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
       // Delegate to the parent process.
       mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
       bool success;

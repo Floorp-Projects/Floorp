@@ -26,7 +26,7 @@ StartService()
   property_set("ctl.start", "mdnsd");
 }
 
-void
+inline void
 StopService()
 {
   char value[PROPERTY_VALUE_MAX] = { '\0' };

@@ -303,7 +303,7 @@ CreateAnonTempFileRemover()
   // is a shutdown observer. We only create the temp file remover if we're running
   // in the main process; there's no point in doing the temp file removal multiple
   // times per startup.
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     return NS_OK;
   }
   nsRefPtr<nsAnonTempFileRemover> tempRemover = new nsAnonTempFileRemover();
