@@ -10,6 +10,7 @@
 
 #include <emmintrin.h>
 
+#include "vpx_ports/mem.h"
 #include "vp9/common/vp9_common.h"
 
 #if CONFIG_VP9_HIGHBITDEPTH
@@ -44,8 +45,8 @@ void vp9_highbd_quantize_b_sse2(const tran_low_t *coeff_ptr,
 
   (void)scan;
 
-  vpx_memset(qcoeff_ptr, 0, count * sizeof(*qcoeff_ptr));
-  vpx_memset(dqcoeff_ptr, 0, count * sizeof(*dqcoeff_ptr));
+  memset(qcoeff_ptr, 0, count * sizeof(*qcoeff_ptr));
+  memset(dqcoeff_ptr, 0, count * sizeof(*dqcoeff_ptr));
 
   if (!skip_block) {
     // Pre-scan pass
@@ -132,8 +133,8 @@ void vp9_highbd_quantize_b_32x32_sse2(const tran_low_t *coeff_ptr,
   nzbins[0] = _mm_sub_epi32(nzbins[0], zbins[0]);
   nzbins[1] = _mm_sub_epi32(nzbins[1], zbins[1]);
 
-  vpx_memset(qcoeff_ptr, 0, n_coeffs * sizeof(*qcoeff_ptr));
-  vpx_memset(dqcoeff_ptr, 0, n_coeffs * sizeof(*dqcoeff_ptr));
+  memset(qcoeff_ptr, 0, n_coeffs * sizeof(*qcoeff_ptr));
+  memset(dqcoeff_ptr, 0, n_coeffs * sizeof(*dqcoeff_ptr));
 
   if (!skip_block) {
     // Pre-scan pass

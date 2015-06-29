@@ -127,7 +127,7 @@ void vp8_sixtap_predict4x4_mmx
     int dst_pitch
 )
 {
-    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 16*16);  /* Temp data bufffer used in filtering */
+    DECLARE_ALIGNED(16, unsigned short, FData2[16*16]);  /* Temp data bufffer used in filtering */
     const short *HFilter, *VFilter;
     HFilter = vp8_six_tap_mmx[xoffset];
     vp8_filter_block1d_h6_mmx(src_ptr - (2 * src_pixels_per_line), FData2, src_pixels_per_line, 1, 9, 8, HFilter);
@@ -148,7 +148,7 @@ void vp8_sixtap_predict16x16_mmx
 )
 {
 
-    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 24*24);  /* Temp data bufffer used in filtering */
+    DECLARE_ALIGNED(16, unsigned short, FData2[24*24]);  /* Temp data bufffer used in filtering */
 
     const short *HFilter, *VFilter;
 
@@ -180,7 +180,7 @@ void vp8_sixtap_predict8x8_mmx
 )
 {
 
-    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 256);    /* Temp data bufffer used in filtering */
+    DECLARE_ALIGNED(16, unsigned short, FData2[256]);    /* Temp data bufffer used in filtering */
 
     const short *HFilter, *VFilter;
 
@@ -206,7 +206,7 @@ void vp8_sixtap_predict8x4_mmx
 )
 {
 
-    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 256);    /* Temp data bufffer used in filtering */
+    DECLARE_ALIGNED(16, unsigned short, FData2[256]);    /* Temp data bufffer used in filtering */
 
     const short *HFilter, *VFilter;
 
@@ -252,7 +252,7 @@ void vp8_sixtap_predict16x16_sse2
 
 )
 {
-    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 24*24);    /* Temp data bufffer used in filtering */
+    DECLARE_ALIGNED(16, unsigned short, FData2[24*24]);    /* Temp data bufffer used in filtering */
 
     const short *HFilter, *VFilter;
 
@@ -292,7 +292,7 @@ void vp8_sixtap_predict8x8_sse2
     int dst_pitch
 )
 {
-    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 256);  /* Temp data bufffer used in filtering */
+    DECLARE_ALIGNED(16, unsigned short, FData2[256]);  /* Temp data bufffer used in filtering */
     const short *HFilter, *VFilter;
 
     if (xoffset)
@@ -330,7 +330,7 @@ void vp8_sixtap_predict8x4_sse2
     int dst_pitch
 )
 {
-    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 256);  /* Temp data bufffer used in filtering */
+    DECLARE_ALIGNED(16, unsigned short, FData2[256]);  /* Temp data bufffer used in filtering */
     const short *HFilter, *VFilter;
 
     if (xoffset)
@@ -432,7 +432,7 @@ void vp8_sixtap_predict16x16_ssse3
 
 )
 {
-    DECLARE_ALIGNED_ARRAY(16, unsigned char, FData2, 24*24);
+    DECLARE_ALIGNED(16, unsigned char, FData2[24*24]);
 
     if (xoffset)
     {
@@ -480,7 +480,7 @@ void vp8_sixtap_predict8x8_ssse3
     int dst_pitch
 )
 {
-    DECLARE_ALIGNED_ARRAY(16, unsigned char, FData2, 256);
+    DECLARE_ALIGNED(16, unsigned char, FData2[256]);
 
     if (xoffset)
     {
@@ -528,7 +528,7 @@ void vp8_sixtap_predict8x4_ssse3
     int dst_pitch
 )
 {
-    DECLARE_ALIGNED_ARRAY(16, unsigned char, FData2, 256);
+    DECLARE_ALIGNED(16, unsigned char, FData2[256]);
 
     if (xoffset)
     {
@@ -576,7 +576,7 @@ void vp8_sixtap_predict4x4_ssse3
     int dst_pitch
 )
 {
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, FData2, 4*9);
+  DECLARE_ALIGNED(16, unsigned char, FData2[4*9]);
 
   if (xoffset)
   {

@@ -106,6 +106,13 @@ enum vp8_dec_control_id {
    */
   VP9_INVERT_TILE_DECODE_ORDER,
 
+  /** control function to set the skip loop filter flag. Valid values are
+   * integers. The decoder will skip the loop filter when its value is set to
+   * nonzero. If the loop filter is skipped the decoder may accumulate decode
+   * artifacts. The default value is 0.
+   */
+  VP9_SET_SKIP_LOOP_FILTER,
+
   VP8_DECODER_CTRL_ID_MAX
 };
 

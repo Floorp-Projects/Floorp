@@ -34,6 +34,9 @@
 #include "vp9/encoder/vp9_quantize.h"
 #include "vp9/encoder/vp9_ratectrl.h"
 #include "vp9/encoder/vp9_rd.h"
+#if CONFIG_INTERNAL_STATS
+#include "vp9/encoder/vp9_ssim.h"
+#endif
 #include "vp9/encoder/vp9_speed_features.h"
 #include "vp9/encoder/vp9_svc_layercontext.h"
 #include "vp9/encoder/vp9_tokenize.h"
@@ -191,10 +194,10 @@ typedef struct VP9EncoderConfig {
   int ss_number_layers;  // Number of spatial layers.
   int ts_number_layers;  // Number of temporal layers.
   // Bitrate allocation for spatial layers.
+  int layer_target_bitrate[VPX_MAX_LAYERS];
   int ss_target_bitrate[VPX_SS_MAX_LAYERS];
   int ss_enable_auto_arf[VPX_SS_MAX_LAYERS];
   // Bitrate allocation (CBR mode) and framerate factor, for temporal layers.
-  int ts_target_bitrate[VPX_TS_MAX_LAYERS];
   int ts_rate_decimator[VPX_TS_MAX_LAYERS];
 
   int enable_auto_arf;
@@ -234,6 +237,7 @@ typedef struct VP9EncoderConfig {
   int use_highbitdepth;
 #endif
   vpx_color_space_t color_space;
+  VP9E_TEMPORAL_LAYERING_MODE temporal_layering_mode;
 } VP9EncoderConfig;
 
 static INLINE int is_lossless_requested(const VP9EncoderConfig *cfg) {
@@ -271,6 +275,18 @@ typedef struct ActiveMap {
   int update;
   unsigned char *map;
 } ActiveMap;
+
+typedef enum {
+  Y,
+  U,
+  V,
+  ALL
+} STAT_TYPE;
+
+typedef struct IMAGE_STAT {
+  double stat[ALL+1];
+  double worst;
+} ImageStat;
 
 typedef struct VP9_COMP {
   QUANTS quants;
@@ -388,19 +404,16 @@ typedef struct VP9_COMP {
   unsigned int mode_chosen_counts[MAX_MODES];
 
   int    count;
-  double total_y;
-  double total_u;
-  double total_v;
-  double total;
   uint64_t total_sq_error;
   uint64_t total_samples;
+  ImageStat psnr;
 
-  double totalp_y;
-  double totalp_u;
-  double totalp_v;
-  double totalp;
   uint64_t totalp_sq_error;
   uint64_t totalp_samples;
+  ImageStat psnrp;
+
+  double total_blockiness;
+  double worst_blockiness;
 
   int    bytes;
   double summed_quality;
@@ -408,14 +421,21 @@ typedef struct VP9_COMP {
   double summedp_quality;
   double summedp_weights;
   unsigned int tot_recode_hits;
+  double worst_ssim;
 
-
-  double total_ssimg_y;
-  double total_ssimg_u;
-  double total_ssimg_v;
-  double total_ssimg_all;
+  ImageStat ssimg;
+  ImageStat fastssim;
+  ImageStat psnrhvs;
 
   int b_calculate_ssimg;
+  int b_calculate_blockiness;
+
+  int b_calculate_consistency;
+
+  double total_inconsistency;
+  double worst_consistency;
+  Ssimv *ssim_vars;
+  Metrics metrics;
 #endif
   int b_calculate_psnr;
 
@@ -460,10 +480,11 @@ typedef struct VP9_COMP {
   int resize_pending;
 
   // VAR_BASED_PARTITION thresholds
-  int64_t vbp_threshold;
-  int64_t vbp_threshold_bsize_min;
-  int64_t vbp_threshold_bsize_max;
-  int64_t vbp_threshold_16x16;
+  // 0 - threshold_64x64; 1 - threshold_32x32;
+  // 2 - threshold_16x16; 3 - vbp_threshold_8x8;
+  int64_t vbp_thresholds[4];
+  int64_t vbp_threshold_minmax;
+  int64_t vbp_threshold_sad;
   BLOCK_SIZE vbp_bsize_min;
 
   // Multi-threading
@@ -507,6 +528,8 @@ int vp9_set_reference_enc(VP9_COMP *cpi, VP9_REFFRAME ref_frame_flag,
 int vp9_update_entropy(VP9_COMP *cpi, int update);
 
 int vp9_set_active_map(VP9_COMP *cpi, unsigned char *map, int rows, int cols);
+
+int vp9_get_active_map(VP9_COMP *cpi, unsigned char *map, int rows, int cols);
 
 int vp9_set_internal_size(VP9_COMP *cpi,
                           VPX_SCALING horiz_mode, VPX_SCALING vert_mode);
@@ -589,9 +612,11 @@ YV12_BUFFER_CONFIG *vp9_scale_if_required(VP9_COMMON *cm,
 void vp9_apply_encoding_flags(VP9_COMP *cpi, vpx_enc_frame_flags_t flags);
 
 static INLINE int is_two_pass_svc(const struct VP9_COMP *const cpi) {
-  return cpi->use_svc &&
-         ((cpi->svc.number_spatial_layers > 1) ||
-         (cpi->svc.number_temporal_layers > 1 && cpi->oxcf.pass != 0));
+  return cpi->use_svc && cpi->oxcf.pass != 0;
+}
+
+static INLINE int is_one_pass_cbr_svc(const struct VP9_COMP *const cpi) {
+  return (cpi->use_svc && cpi->oxcf.pass == 0);
 }
 
 static INLINE int is_altref_enabled(const VP9_COMP *const cpi) {
@@ -619,6 +644,8 @@ static INLINE int *cond_cost_list(const struct VP9_COMP *cpi, int *cost_list) {
 }
 
 void vp9_new_framerate(VP9_COMP *cpi, double framerate);
+
+#define LAYER_IDS_TO_IDX(sl, tl, num_tl) ((sl) * (num_tl) + (tl))
 
 #ifdef __cplusplus
 }  // extern "C"

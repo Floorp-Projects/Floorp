@@ -425,10 +425,18 @@ struct vpx_internal_error_info {
   jmp_buf          jmp;
 };
 
+#define CLANG_ANALYZER_NORETURN
+#if defined(__has_feature)
+#if __has_feature(attribute_analyzer_noreturn)
+#undef CLANG_ANALYZER_NORETURN
+#define CLANG_ANALYZER_NORETURN __attribute__((analyzer_noreturn))
+#endif
+#endif
+
 void vpx_internal_error(struct vpx_internal_error_info *info,
                         vpx_codec_err_t                 error,
                         const char                     *fmt,
-                        ...);
+                        ...) CLANG_ANALYZER_NORETURN;
 
 #ifdef __cplusplus
 }  // extern "C"
