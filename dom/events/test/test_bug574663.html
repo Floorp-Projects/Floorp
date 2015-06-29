@@ -35,6 +35,9 @@ function waitForPaint(win, utils, callback) {
       callback();
       return;
     }
+    if (utils.isTestControllingRefreshes) {
+      utils.advanceTimeAndRefresh(0);
+    }
   }
   win.addEventListener("MozAfterPaint", onpaint);
   if (utils.isTestControllingRefreshes) {
