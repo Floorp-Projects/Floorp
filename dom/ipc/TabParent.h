@@ -143,6 +143,7 @@ public:
                                   const nsString& aName,
                                   const nsString& aFeatures,
                                   const nsString& aBaseURI,
+                                  nsresult* aResult,
                                   bool* aWindowIsNew,
                                   InfallibleTArray<FrameScriptInfo>* aFrameScripts,
                                   nsCString* aURLToLoad) override;
