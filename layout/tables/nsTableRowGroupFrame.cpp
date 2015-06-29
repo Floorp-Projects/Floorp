@@ -83,8 +83,7 @@ int32_t nsTableRowGroupFrame::GetStartRowIndex()
 void  nsTableRowGroupFrame::AdjustRowIndices(int32_t aRowIndex,
                                              int32_t anAdjustment)
 {
-  nsIFrame* rowFrame = GetFirstPrincipalChild();
-  for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
+  for (nsIFrame* rowFrame : mFrames) {
     if (NS_STYLE_DISPLAY_TABLE_ROW==rowFrame->StyleDisplay()->mDisplay) {
       int32_t index = ((nsTableRowFrame*)rowFrame)->GetRowIndex();
       if (index >= aRowIndex)
@@ -485,8 +484,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
 nsTableRowFrame*
 nsTableRowGroupFrame::GetFirstRow()
 {
-  for (nsIFrame* childFrame = mFrames.FirstChild(); childFrame;
-       childFrame = childFrame->GetNextSibling()) {
+  for (nsIFrame* childFrame : mFrames) {
     nsTableRowFrame *rowFrame = do_QueryFrame(childFrame);
     if (rowFrame) {
       return rowFrame;

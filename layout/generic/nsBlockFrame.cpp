@@ -1279,15 +1279,14 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
            line != end; line++) {
         UpdateLineContainerWidth(line, containerWidth);
       }
-      for (nsIFrame* f = mFloats.FirstChild(); f; f = f->GetNextSibling()) {
+      for (nsIFrame* f : mFloats) {
         nsPoint physicalDelta(deltaX, 0);
         f->MovePositionBy(physicalDelta);
       }
       nsFrameList* bulletList = GetOutsideBulletList();
       if (bulletList) {
         nsPoint physicalDelta(deltaX, 0);
-        for (nsIFrame* f = bulletList->FirstChild(); f;
-             f = f->GetNextSibling()) {
+        for (nsIFrame* f : *bulletList) {
           f->MovePositionBy(physicalDelta);
         }
       }
@@ -2001,7 +2000,7 @@ nsBlockFrame::ReparentFloats(nsIFrame* aFirstFrame, nsBlockFrame* aOldParent,
   nsFrameList list;
   aOldParent->CollectFloats(aFirstFrame, list, aReparentSiblings);
   if (list.NotEmpty()) {
-    for (nsIFrame* f = list.FirstChild(); f; f = f->GetNextSibling()) {
+    for (nsIFrame* f : list) {
       ReparentFrame(f, aOldParent, this);
     }
     mFloats.AppendFrames(nullptr, list);
@@ -6361,7 +6360,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if (GetPrevInFlow()) {
     DisplayOverflowContainers(aBuilder, aDirtyRect, aLists);
-    for (nsIFrame* f = mFloats.FirstChild(); f; f = f->GetNextSibling()) {
+    for (nsIFrame* f : mFloats) {
       if (f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT)
          BuildDisplayListForChild(aBuilder, f, aDirtyRect, aLists);
     }
@@ -7119,7 +7118,7 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
   nsAutoTArray<nsIFrame*, 8> storedFloats;
   bool equal = true;
   uint32_t i = 0;
-  for (nsIFrame* f = mFloats.FirstChild(); f; f = f->GetNextSibling()) {
+  for (nsIFrame* f : mFloats) {
     if (f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT)
       continue;
     storedFloats.AppendElement(f);
