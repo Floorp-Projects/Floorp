@@ -33,7 +33,8 @@ config = {
                 "--setpref=webgl.force-enabled=true",
                 "--quiet",
                 "--log-raw=%(raw_log_file)s",
-                "--use-test-media-devices"
+                "--use-test-media-devices",
+                "--screenshot-on-fail",
             ],
             "run_filename": "runtests.py",
             "testsdir": "mochitest"
