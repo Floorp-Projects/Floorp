@@ -37,6 +37,9 @@ def parse_args():
     parser.add_argument("--jsshell", required=True,
                         action="store", dest="jsshell",
                         help="Name of the jsshell zip.")
+    parser.add_argument("--use-short-names", action="store_true",
+                        help="Use short names for packages (target.$name.tests.zip "
+                             "instead of $(PACKAGE_BASENAME).$name.tests.zip)")
     for harness in PACKAGE_SPECIFIED_HARNESSES:
         parser.add_argument("--%s" % harness, required=True,
                             action="store", dest=harness,
@@ -54,12 +57,18 @@ def generate_package_data(args):
     # which will be an optimization once parts of the main zip are split to harness
     # specific zips.
     tests_common = args.tests_common
+    if args.use_short_names:
+        tests_common = 'target.common.tests.zip'
+
     jsshell = args.jsshell
 
     harness_requirements = dict([(k, [tests_common]) for k in ALL_HARNESSES])
     harness_requirements['jittest'].append(jsshell)
     for harness in PACKAGE_SPECIFIED_HARNESSES:
-        harness_requirements[harness].append(getattr(args, harness))
+        pkg_name = getattr(args, harness)
+        if args.use_short_names:
+            pkg_name = 'target.%s.tests.zip' % harness
+        harness_requirements[harness].append(pkg_name)
     return harness_requirements
 
 if __name__ == '__main__':
