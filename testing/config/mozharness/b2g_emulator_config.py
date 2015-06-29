@@ -16,7 +16,7 @@ config = {
                 "."
             ],
             "run_filename": "remotecppunittests.py",
-            "testsdir": "cppunittest"
+            "testsdir": "cppunittests"
         },
         "crashtest": {
             "options": [
