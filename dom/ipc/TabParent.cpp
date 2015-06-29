@@ -22,6 +22,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Hal.h"
+#include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -1937,7 +1938,7 @@ TabParent::RecvNotifyIMEFocus(const bool& aFocus,
   IMENotification notification(aFocus ? NOTIFY_IME_OF_FOCUS :
                                         NOTIFY_IME_OF_BLUR);
   mContentCache.AssignContent(aContentCache, &notification);
-  widget->NotifyIME(notification);
+  IMEStateManager::NotifyIME(notification, widget, true);
 
   if (aFocus) {
     *aPreference = widget->GetIMEUpdatePreference();
@@ -1972,7 +1973,7 @@ TabParent::RecvNotifyIMETextChange(const ContentCache& aContentCache,
   notification.mTextChangeData.mCausedByComposition = aCausedByComposition;
 
   mContentCache.AssignContent(aContentCache, &notification);
-  widget->NotifyIME(notification);
+  IMEStateManager::NotifyIME(notification, widget, true);
   return true;
 }
 
@@ -1988,7 +1989,7 @@ TabParent::RecvNotifyIMESelectedCompositionRect(
   IMENotification notification(NOTIFY_IME_OF_COMPOSITION_UPDATE);
   mContentCache.AssignContent(aContentCache, &notification);
 
-  widget->NotifyIME(notification);
+  IMEStateManager::NotifyIME(notification, widget, true);
   return true;
 }
 
@@ -2011,7 +2012,7 @@ TabParent::RecvNotifyIMESelection(const ContentCache& aContentCache,
     mContentCache.InitNotification(notification);
     notification.mSelectionChangeData.mCausedByComposition =
       aCausedByComposition;
-    widget->NotifyIME(notification);
+    IMEStateManager::NotifyIME(notification, widget, true);
   }
   return true;
 }
@@ -2039,7 +2040,7 @@ TabParent::RecvNotifyIMEMouseButtonEvent(
     *aConsumedByIME = false;
     return true;
   }
-  nsresult rv = widget->NotifyIME(aIMENotification);
+  nsresult rv = IMEStateManager::NotifyIME(aIMENotification, widget, true);
   *aConsumedByIME = rv == NS_SUCCESS_EVENT_CONSUMED;
   return true;
 }
@@ -2058,7 +2059,7 @@ TabParent::RecvNotifyIMEPositionChange(const ContentCache& aContentCache)
   const nsIMEUpdatePreference updatePreference =
     widget->GetIMEUpdatePreference();
   if (updatePreference.WantPositionChanged()) {
-    widget->NotifyIME(notification);
+    IMEStateManager::NotifyIME(notification, widget, true);
   }
   return true;
 }

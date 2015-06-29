@@ -169,6 +169,8 @@ GetNotifyIMEMessageName(IMEMessage aMessage)
       return "NOTIFY_IME_OF_COMPOSITION_UPDATE";
     case NOTIFY_IME_OF_POSITION_CHANGE:
       return "NOTIFY_IME_OF_POSITION_CHANGE";
+    case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+      return "NOTIFY_IME_OF_MOUSE_BUTTON_EVENT";
     case REQUEST_TO_COMMIT_COMPOSITION:
       return "REQUEST_TO_COMMIT_COMPOSITION";
     case REQUEST_TO_CANCEL_COMPOSITION:
@@ -180,9 +182,11 @@ GetNotifyIMEMessageName(IMEMessage aMessage)
 
 nsIContent* IMEStateManager::sContent = nullptr;
 nsPresContext* IMEStateManager::sPresContext = nullptr;
+StaticRefPtr<nsIWidget> IMEStateManager::sFocusedIMEWidget;
 bool IMEStateManager::sInstalledMenuKeyboardListener = false;
 bool IMEStateManager::sIsGettingNewIMEState = false;
 bool IMEStateManager::sCheckForIMEUnawareWebApps = false;
+bool IMEStateManager::sRemoteHasFocus = false;
 
 // sActiveIMEContentObserver points to the currently active IMEContentObserver.
 // sActiveIMEContentObserver is null if there is no focused editor.
@@ -1092,21 +1096,26 @@ IMEStateManager::OnCompositionEventDiscarded(
 // static
 nsresult
 IMEStateManager::NotifyIME(IMEMessage aMessage,
-                           nsIWidget* aWidget)
+                           nsIWidget* aWidget,
+                           bool aOriginIsRemote)
 {
-  nsRefPtr<TextComposition> composition;
-  if (aWidget && sTextCompositions) {
-    composition = sTextCompositions->GetCompositionFor(aWidget);
-  }
+  return IMEStateManager::NotifyIME(IMENotification(aMessage), aWidget,
+                                    aOriginIsRemote);
+}
 
-  bool isSynthesizedForTests =
-    composition && composition->IsSynthesizedForTests();
-
+// static
+nsresult
+IMEStateManager::NotifyIME(const IMENotification& aNotification,
+                           nsIWidget* aWidget,
+                           bool aOriginIsRemote)
+{
   MOZ_LOG(sISMLog, LogLevel::Info,
-    ("ISM: IMEStateManager::NotifyIME(aMessage=%s, aWidget=0x%p), "
-     "composition=0x%p, composition->IsSynthesizedForTests()=%s",
-     GetNotifyIMEMessageName(aMessage), aWidget, composition.get(),
-     GetBoolName(isSynthesizedForTests)));
+    ("ISM: IMEStateManager::NotifyIME(aNotification={ mMessage=%s }, "
+     "aWidget=0x%p, aOriginIsRemote=%s), sFocusedIMEWidget=0x%p, "
+     "sRemoteHasFocus=%s",
+     GetNotifyIMEMessageName(aNotification.mMessage), aWidget,
+     GetBoolName(aOriginIsRemote), sFocusedIMEWidget.get(),
+     GetBoolName(sRemoteHasFocus)));
 
   if (NS_WARN_IF(!aWidget)) {
     MOZ_LOG(sISMLog, LogLevel::Error,
@@ -1114,7 +1123,114 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
     return NS_ERROR_INVALID_ARG;
   }
 
-  switch (aMessage) {
+  switch (aNotification.mMessage) {
+    case NOTIFY_IME_OF_FOCUS:
+      if (sFocusedIMEWidget) {
+        if (NS_WARN_IF(!sRemoteHasFocus && !aOriginIsRemote)) {
+          MOZ_LOG(sISMLog, LogLevel::Error,
+            ("ISM:   IMEStateManager::NotifyIME(), although, this process is "
+             "getting IME focus but there was focused IME widget"));
+        } else {
+          MOZ_LOG(sISMLog, LogLevel::Info,
+            ("ISM:   IMEStateManager::NotifyIME(), tries to notify IME of "
+             "blur first because remote process's blur notification hasn't "
+             "been received yet..."));
+        }
+        nsCOMPtr<nsIWidget> focusedIMEWidget(sFocusedIMEWidget);
+        sFocusedIMEWidget = nullptr;
+        sRemoteHasFocus = false;
+        focusedIMEWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
+      }
+      sRemoteHasFocus = aOriginIsRemote;
+      sFocusedIMEWidget = aWidget;
+      return aWidget->NotifyIME(aNotification);
+    case NOTIFY_IME_OF_BLUR: {
+      if (!sRemoteHasFocus && aOriginIsRemote) {
+        MOZ_LOG(sISMLog, LogLevel::Info,
+          ("ISM:   IMEStateManager::NotifyIME(), received blur notification "
+           "after another one has focus, nothing to do..."));
+        return NS_OK;
+      }
+      if (NS_WARN_IF(sRemoteHasFocus && !aOriginIsRemote)) {
+        MOZ_LOG(sISMLog, LogLevel::Error,
+          ("ISM:   IMEStateManager::NotifyIME(), FAILED, received blur "
+           "notification from this process but the remote has focus"));
+        return NS_OK;
+      }
+      if (!sFocusedIMEWidget && aOriginIsRemote) {
+        MOZ_LOG(sISMLog, LogLevel::Info,
+          ("ISM:   IMEStateManager::NotifyIME(), received blur notification "
+           "but the remote has already lost focus"));
+        return NS_OK;
+      }
+      if (NS_WARN_IF(!sFocusedIMEWidget)) {
+        MOZ_LOG(sISMLog, LogLevel::Error,
+          ("ISM:   IMEStateManager::NotifyIME(), FAILED, received blur "
+           "notification but there is no focused IME widget"));
+        return NS_OK;
+      }
+      if (NS_WARN_IF(sFocusedIMEWidget != aWidget)) {
+        MOZ_LOG(sISMLog, LogLevel::Error,
+          ("ISM:   IMEStateManager::NotifyIME(), FAILED, received blur "
+           "notification but there is no focused IME widget"));
+        return NS_OK;
+      }
+      nsCOMPtr<nsIWidget> focusedIMEWidget(sFocusedIMEWidget);
+      sFocusedIMEWidget = nullptr;
+      sRemoteHasFocus = false;
+      return focusedIMEWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
+    }
+    case NOTIFY_IME_OF_SELECTION_CHANGE:
+    case NOTIFY_IME_OF_TEXT_CHANGE:
+    case NOTIFY_IME_OF_POSITION_CHANGE:
+    case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+      if (!sRemoteHasFocus && aOriginIsRemote) {
+        MOZ_LOG(sISMLog, LogLevel::Info,
+          ("ISM:   IMEStateManager::NotifyIME(), received content change "
+           "notification from the remote but it's already lost focus"));
+        return NS_OK;
+      }
+      if (NS_WARN_IF(sRemoteHasFocus && !aOriginIsRemote)) {
+        MOZ_LOG(sISMLog, LogLevel::Error,
+          ("ISM:   IMEStateManager::NotifyIME(), FAILED, received content "
+           "change notification from this process but the remote has already "
+           "gotten focus"));
+        return NS_OK;
+      }
+      if (!sFocusedIMEWidget) {
+        MOZ_LOG(sISMLog, LogLevel::Info,
+          ("ISM:   IMEStateManager::NotifyIME(), received content change "
+           "notification but there is no focused IME widget"));
+        return NS_OK;
+      }
+      if (NS_WARN_IF(sFocusedIMEWidget != aWidget)) {
+        MOZ_LOG(sISMLog, LogLevel::Error,
+          ("ISM:   IMEStateManager::NotifyIME(), FAILED, received content "
+           "change notification for IME which has already lost focus, so, "
+           "nothing to do..."));
+        return NS_OK;
+      }
+      return aWidget->NotifyIME(aNotification);
+    default:
+      // Other notifications should be sent only when there is composition.
+      // So, we need to handle the others below.
+      break;
+  }
+
+  nsRefPtr<TextComposition> composition;
+  if (sTextCompositions) {
+    composition = sTextCompositions->GetCompositionFor(aWidget);
+  }
+
+  bool isSynthesizedForTests =
+    composition && composition->IsSynthesizedForTests();
+
+  MOZ_LOG(sISMLog, LogLevel::Info,
+    ("ISM:   IMEStateManager::NotifyIME(), composition=0x%p, "
+     "composition->IsSynthesizedForTests()=%s",
+     composition.get(), GetBoolName(isSynthesizedForTests)));
+
+  switch (aNotification.mMessage) {
     case REQUEST_TO_COMMIT_COMPOSITION:
       return composition ?
         composition->RequestToCommit(aWidget, false) : NS_OK;
@@ -1123,7 +1239,7 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
         composition->RequestToCommit(aWidget, true) : NS_OK;
     case NOTIFY_IME_OF_COMPOSITION_UPDATE:
       return composition && !isSynthesizedForTests ?
-        aWidget->NotifyIME(IMENotification(aMessage)) : NS_OK;
+        aWidget->NotifyIME(aNotification) : NS_OK;
     default:
       MOZ_CRASH("Unsupported notification");
   }
@@ -1135,11 +1251,14 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
 // static
 nsresult
 IMEStateManager::NotifyIME(IMEMessage aMessage,
-                           nsPresContext* aPresContext)
+                           nsPresContext* aPresContext,
+                           bool aOriginIsRemote)
 {
   MOZ_LOG(sISMLog, LogLevel::Info,
-    ("ISM: IMEStateManager::NotifyIME(aMessage=%s, aPresContext=0x%p)",
-     GetNotifyIMEMessageName(aMessage), aPresContext));
+    ("ISM: IMEStateManager::NotifyIME(aMessage=%s, aPresContext=0x%p, "
+     "aOriginIsRemote=%s)",
+     GetNotifyIMEMessageName(aMessage), aPresContext,
+     GetBoolName(aOriginIsRemote)));
 
   NS_ENSURE_TRUE(aPresContext, NS_ERROR_INVALID_ARG);
 
@@ -1150,7 +1269,7 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
        "nsPresContext"));
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return NotifyIME(aMessage, widget);
+  return NotifyIME(aMessage, widget, aOriginIsRemote);
 }
 
 // static

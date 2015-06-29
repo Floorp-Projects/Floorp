@@ -3,6 +3,7 @@ Cu.import("resource://gre/modules/FormHistory.jsm");
 const ENGINE_NAME = "engine-suggestions.xml";
 const SERVER_PORT = 9000;
 const SUGGEST_PREF = "browser.urlbar.suggest.searches";
+const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
 const SUGGEST_RESTRICT_TOKEN = "$";
 
 let suggestionsFn;
@@ -57,6 +58,7 @@ add_task(function* disabled() {
 
 add_task(function* singleWordQuery() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
 
   yield check_autocomplete({
     search: "hello",
@@ -88,6 +90,7 @@ add_task(function* singleWordQuery() {
 
 add_task(function* multiWordQuery() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
 
   yield check_autocomplete({
     search: "hello world",
@@ -119,6 +122,7 @@ add_task(function* multiWordQuery() {
 
 add_task(function* suffixMatch() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
 
   setSuggestionsFn(searchStr => {
     let prefixes = ["baz", "quux"];
@@ -190,6 +194,7 @@ add_task(function* queryIsNotASubstring() {
 
 add_task(function* restrictToken() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
 
   // Add a visit and a bookmark.  Actually, make the bookmark visited too so
   // that it's guaranteed, with its higher frecency, to appear above the search

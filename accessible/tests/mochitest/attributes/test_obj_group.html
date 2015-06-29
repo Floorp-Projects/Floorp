@@ -186,6 +186,11 @@
       testGroupAttrs("combo1_opt3", 3, 4);
       testGroupAttrs("combo1_opt4", 4, 4);
 
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA table
+      testGroupAttrs("table_cell", 3, 4);
+      testGroupAttrs("table_row", 2, 2);
+
       // Test that group position information updates after deleting node.
       testGroupAttrs("tree4_ti1", 1, 2, 1);
       testGroupAttrs("tree4_ti2", 2, 2, 1);
@@ -442,5 +447,11 @@
     <input type="radio" style="display: none;" name="group3">
     <input type="radio" id="radio5" name="group3">
   </form>
+
+  <div role="table" aria-colcount="4" aria-rowcount="2">
+    <div role="row" id="table_row" aria-rowindex="2">
+      <div role="cell" id="table_cell" aria-colindex="3">cell</div>
+    </div>
+  </div>
 </body>
 </html>

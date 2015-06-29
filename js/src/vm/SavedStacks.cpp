@@ -1241,14 +1241,6 @@ SavedStacksMetadataCallback(JSContext* cx, JSObject* target)
     return frame;
 }
 
-JS_FRIEND_API(JSPrincipals*)
-GetSavedFramePrincipals(HandleObject savedFrame)
-{
-    MOZ_ASSERT(savedFrame);
-    MOZ_ASSERT(savedFrame->is<SavedFrame>());
-    return savedFrame->as<SavedFrame>().getPrincipals();
-}
-
 #ifdef JS_CRASH_DIAGNOSTICS
 void
 CompartmentChecker::check(SavedStacks* stacks)

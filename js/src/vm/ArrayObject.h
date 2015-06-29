@@ -47,14 +47,6 @@ class ArrayObject : public NativeObject
                 HandleObjectGroup group,
                 uint32_t length);
 
-    // Make an array object with the specified initial state and elements.
-    static inline ArrayObject*
-    createArray(ExclusiveContext* cx,
-                gc::InitialHeap heap,
-                HandleShape shape,
-                HandleObjectGroup group,
-                HeapSlot* elements);
-
     // Make a copy-on-write array object which shares the elements of an
     // existing object.
     static inline ArrayObject*

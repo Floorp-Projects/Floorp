@@ -734,12 +734,6 @@ JSRuntime::updateMallocCounter(JS::Zone* zone, size_t nbytes)
     gc.updateMallocCounter(zone, nbytes);
 }
 
-JS_FRIEND_API(void)
-JSRuntime::onTooMuchMalloc()
-{
-    gc.onTooMuchMalloc();
-}
-
 JS_FRIEND_API(void*)
 JSRuntime::onOutOfMemory(AllocFunction allocFunc, size_t nbytes, void* reallocPtr,
                          JSContext* maybecx)

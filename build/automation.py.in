@@ -4,23 +4,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import with_statement
-import codecs
-import itertools
-import json
 import logging
 import os
 import re
 import select
-import shutil
 import signal
 import subprocess
 import sys
-import threading
 import tempfile
-import sqlite3
-import zipfile
 from datetime import datetime, timedelta
-from string import Template
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, SCRIPT_DIR)
@@ -39,8 +31,6 @@ if os.path.isdir(mozbase):
             sys.path.append(package_path)
 
 import mozcrash
-from mozprofile import Profile, Preferences
-from mozprofile.permissions import ServerLocations
 
 # ---------------------------------------------------------------
 
@@ -82,10 +72,6 @@ if _IS_WIN32:
 else:
   import errno
 
-
-def getGlobalLog():
-  return _log
-
 def resetGlobalLog(log):
   while _log.handlers:
     _log.removeHandler(_log.handlers[0])
@@ -103,31 +89,6 @@ resetGlobalLog(sys.stdout)
 #################
 # PROFILE SETUP #
 #################
-
-class SyntaxError(Exception):
-  "Signifies a syntax error on a particular line in server-locations.txt."
-
-  def __init__(self, lineno, msg = None):
-    self.lineno = lineno
-    self.msg = msg
-
-  def __str__(self):
-    s = "Syntax error on line " + str(self.lineno)
-    if self.msg:
-      s += ": %s." % self.msg
-    else:
-      s += "."
-    return s
-
-
-class Location:
-  "Represents a location line in server-locations.txt."
-
-  def __init__(self, scheme, host, port, options):
-    self.scheme = scheme
-    self.host = host
-    self.port = port
-    self.options = options
 
 class Automation(object):
   """
@@ -182,7 +143,6 @@ class Automation(object):
            "log",
            "runApp",
            "Process",
-           "initializeProfile",
            "DIST_BIN",
            "DEFAULT_APP",
            "CERTS_SRC_DIR",
@@ -237,229 +197,6 @@ class Automation(object):
           subprocess.Popen(["taskkill", "/F", "/PID", pid]).wait()
       else:
         os.kill(self.pid, signal.SIGKILL)
-
-  def readLocations(self, locationsPath = "server-locations.txt"):
-    """
-    Reads the locations at which the Mochitest HTTP server is available from
-    server-locations.txt.
-    """
-
-    locationFile = codecs.open(locationsPath, "r", "UTF-8")
-
-    # Perhaps more detail than necessary, but it's the easiest way to make sure
-    # we get exactly the format we want.  See server-locations.txt for the exact
-    # format guaranteed here.
-    lineRe = re.compile(r"^(?P<scheme>[a-z][-a-z0-9+.]*)"
-                      r"://"
-                      r"(?P<host>"
-                        r"\d+\.\d+\.\d+\.\d+"
-                        r"|"
-                        r"(?:[a-z0-9](?:[-a-z0-9]*[a-z0-9])?\.)*"
-                        r"[a-z](?:[-a-z0-9]*[a-z0-9])?"
-                      r")"
-                      r":"
-                      r"(?P<port>\d+)"
-                      r"(?:"
-                      r"\s+"
-                      r"(?P<options>\S+(?:,\S+)*)"
-                      r")?$")
-    locations = []
-    lineno = 0
-    seenPrimary = False
-    for line in locationFile:
-      lineno += 1
-      if line.startswith("#") or line == "\n":
-        continue
-      
-      match = lineRe.match(line)
-      if not match:
-        raise SyntaxError(lineno)
-
-      options = match.group("options")
-      if options:
-        options = options.split(",")
-        if "primary" in options:
-          if seenPrimary:
-            raise SyntaxError(lineno, "multiple primary locations")
-          seenPrimary = True
-      else:
-        options = []
-
-      locations.append(Location(match.group("scheme"), match.group("host"),
-                                match.group("port"), options))
-
-    if not seenPrimary:
-      raise SyntaxError(lineno + 1, "missing primary location")
-
-    return locations
-
-  def setupPermissionsDatabase(self, profileDir, permissions):
-    # Included for reftest compatibility;
-    # see https://bugzilla.mozilla.org/show_bug.cgi?id=688667
-
-    # Open database and create table
-    permDB = sqlite3.connect(os.path.join(profileDir, "permissions.sqlite"))
-    cursor = permDB.cursor();
-
-    cursor.execute("PRAGMA user_version=4");
-
-    # SQL copied from nsPermissionManager.cpp
-    cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
-      id INTEGER PRIMARY KEY,
-      host TEXT,
-      type TEXT,
-      permission INTEGER,
-      expireType INTEGER,
-      expireTime INTEGER,
-      modificationTime INTEGER,
-      appId INTEGER,
-      isInBrowserElement INTEGER)""")
-
-    # Insert desired permissions
-    for perm in permissions.keys():
-      for host,allow in permissions[perm]:
-        cursor.execute("INSERT INTO moz_hosts values(NULL, ?, ?, ?, 0, 0, 0, 0, 0)",
-                       (host, perm, 1 if allow else 2))
-
-    # Commit and close
-    permDB.commit()
-    cursor.close()
-
-  def initializeProfile(self, profileDir,
-                              extraPrefs=None,
-                              useServerLocations=False,
-                              prefsPath=_DEFAULT_PREFERENCE_FILE,
-                              appsPath=_DEFAULT_APPS_FILE,
-                              addons=None):
-    " Sets up the standard testing profile."
-
-    extraPrefs = extraPrefs or []
-
-    # create the profile
-    prefs = {}
-    locations = None
-    if useServerLocations:
-        locations = ServerLocations()
-        locations.read(os.path.abspath('server-locations.txt'), True)
-    else:
-      prefs['network.proxy.type'] = 0
-
-    prefs.update(Preferences.read_prefs(prefsPath))
-
-    for v in extraPrefs:
-      thispref = v.split("=", 1)
-      if len(thispref) < 2:
-        print "Error: syntax error in --setpref=" + v
-        sys.exit(1)
-      prefs[thispref[0]] = thispref[1]
-
-
-    interpolation = {"server": "%s:%s" % (self.webServer, self.httpPort)}
-    prefs = json.loads(json.dumps(prefs) % interpolation)
-    for pref in prefs:
-        prefs[pref] = Preferences.cast(prefs[pref])
-
-    # load apps
-    apps = None
-    if appsPath and os.path.exists(appsPath):
-        with open(appsPath, 'r') as apps_file:
-            apps = json.load(apps_file)
-
-    proxy = {'remote': str(self.webServer),
-             'http': str(self.httpPort),
-             'https': str(self.sslPort),
-    # use SSL port for legacy compatibility; see
-    # - https://bugzilla.mozilla.org/show_bug.cgi?id=688667#c66
-    # - https://bugzilla.mozilla.org/show_bug.cgi?id=899221
-    #             'ws': str(self.webSocketPort)
-             'ws': str(self.sslPort)
-             }
-
-    # return profile object
-    profile = Profile(profile=profileDir,
-                      addons=addons,
-                      locations=locations,
-                      preferences=prefs,
-                      restore=False,
-                      apps=apps,
-                      proxy=proxy)
-    return profile
-
-  def fillCertificateDB(self, profileDir, certPath, utilityPath, xrePath):
-    pwfilePath = os.path.join(profileDir, ".crtdbpw")
-    pwfile = open(pwfilePath, "w")
-    pwfile.write("\n")
-    pwfile.close()
-
-    # Create head of the ssltunnel configuration file
-    sslTunnelConfigPath = os.path.join(profileDir, "ssltunnel.cfg")
-    sslTunnelConfig = open(sslTunnelConfigPath, "w")
-  
-    sslTunnelConfig.write("httpproxy:1\n")
-    sslTunnelConfig.write("certdbdir:%s\n" % certPath)
-    sslTunnelConfig.write("forward:127.0.0.1:%s\n" % self.httpPort)
-    sslTunnelConfig.write("websocketserver:%s:%s\n" % (self.webServer, self.webSocketPort))
-    sslTunnelConfig.write("listen:*:%s:pgo server certificate\n" % self.sslPort)
-
-    # Configure automatic certificate and bind custom certificates, client authentication
-    locations = self.readLocations()
-    locations.pop(0)
-    for loc in locations:
-      if loc.scheme == "https" and "nocert" not in loc.options:
-        customCertRE = re.compile("^cert=(?P<nickname>[0-9a-zA-Z_ ]+)")
-        clientAuthRE = re.compile("^clientauth=(?P<clientauth>[a-z]+)")
-        redirRE      = re.compile("^redir=(?P<redirhost>[0-9a-zA-Z_ .]+)")
-        for option in loc.options:
-          match = customCertRE.match(option)
-          if match:
-            customcert = match.group("nickname");
-            sslTunnelConfig.write("listen:%s:%s:%s:%s\n" %
-                      (loc.host, loc.port, self.sslPort, customcert))
-
-          match = clientAuthRE.match(option)
-          if match:
-            clientauth = match.group("clientauth");
-            sslTunnelConfig.write("clientauth:%s:%s:%s:%s\n" %
-                      (loc.host, loc.port, self.sslPort, clientauth))
-
-          match = redirRE.match(option)
-          if match:
-            redirhost = match.group("redirhost")
-            sslTunnelConfig.write("redirhost:%s:%s:%s:%s\n" %
-                      (loc.host, loc.port, self.sslPort, redirhost))
-
-    sslTunnelConfig.close()
-
-    # Pre-create the certification database for the profile
-    env = self.environment(xrePath = xrePath)
-    certutil = os.path.join(utilityPath, "certutil" + self.BIN_SUFFIX)
-    pk12util = os.path.join(utilityPath, "pk12util" + self.BIN_SUFFIX)
-
-    status = self.Process([certutil, "-N", "-d", profileDir, "-f", pwfilePath], env = env).wait()
-    automationutils.printstatus(status, "certutil")
-    if status != 0:
-      return status
-
-    # Walk the cert directory and add custom CAs and client certs
-    files = os.listdir(certPath)
-    for item in files:
-      root, ext = os.path.splitext(item)
-      if ext == ".ca":
-        trustBits = "CT,,"
-        if root.endswith("-object"):
-          trustBits = "CT,,CT"
-        status = self.Process([certutil, "-A", "-i", os.path.join(certPath, item),
-                    "-d", profileDir, "-f", pwfilePath, "-n", root, "-t", trustBits],
-                    env = env).wait()
-        automationutils.printstatus(status, "certutil")
-      if ext == ".client":
-        status = self.Process([pk12util, "-i", os.path.join(certPath, item), "-w",
-                    pwfilePath, "-d", profileDir], 
-                    env = env).wait()
-        automationutils.printstatus(status, "pk12util")
-
-    os.unlink(pwfilePath)
-    return 0
 
   def environment(self, env=None, xrePath=None, crashreporter=True, debugger=False, dmdPath=None, lsanPath=None):
     if xrePath == None:
@@ -787,8 +524,7 @@ class Automation(object):
   def checkForCrashes(self, minidumpDir, symbolsPath):
     return mozcrash.check_for_crashes(minidumpDir, symbolsPath, test_name=self.lastTestSeen)
 
-  def runApp(self, testURL, env, app, profileDir, extraArgs,
-             runSSLTunnel = False, utilityPath = None,
+  def runApp(self, testURL, env, app, profileDir, extraArgs, utilityPath = None,
              xrePath = None, certPath = None,
              debuggerInfo = None, symbolsPath = None,
              timeout = -1, maxTime = None, onLaunch = None,
@@ -814,19 +550,6 @@ class Automation(object):
     os.close(tmpfd)
     env["MOZ_PROCESS_LOG"] = processLog
 
-    if self.IS_TEST_BUILD and runSSLTunnel:
-      # create certificate database for the profile
-      certificateStatus = self.fillCertificateDB(profileDir, certPath, utilityPath, xrePath)
-      if certificateStatus != 0:
-        self.log.info("TEST-UNEXPECTED-FAIL | automation.py | Certificate integration failed")
-        return certificateStatus
-
-      # start ssltunnel to provide https:// URLs capability
-      ssltunnel = os.path.join(utilityPath, "ssltunnel" + self.BIN_SUFFIX)
-      ssltunnelProcess = self.Process([ssltunnel, 
-                               os.path.join(profileDir, "ssltunnel.cfg")], 
-                               env = self.environment(xrePath = xrePath))
-      self.log.info("INFO | automation.py | SSL tunnel pid: %d", ssltunnelProcess.pid)
 
     cmd, args = self.buildCommandLine(app, debuggerInfo, profileDir, testURL, extraArgs)
     startTime = datetime.now()
@@ -868,95 +591,7 @@ class Automation(object):
     if os.path.exists(processLog):
       os.unlink(processLog)
 
-    if self.IS_TEST_BUILD and runSSLTunnel:
-      ssltunnelProcess.kill()
-
     return status
-
-  def getExtensionIDFromRDF(self, rdfSource):
-    """
-    Retrieves the extension id from an install.rdf file (or string).
-    """
-    from xml.dom.minidom import parse, parseString, Node
-
-    if isinstance(rdfSource, file):
-      document = parse(rdfSource)
-    else:
-      document = parseString(rdfSource)
-
-    # Find the <em:id> element. There can be multiple <em:id> tags
-    # within <em:targetApplication> tags, so we have to check this way.
-    for rdfChild in document.documentElement.childNodes:
-      if rdfChild.nodeType == Node.ELEMENT_NODE and rdfChild.tagName == "Description":
-        for descChild in rdfChild.childNodes:
-          if descChild.nodeType == Node.ELEMENT_NODE and descChild.tagName == "em:id":
-            return descChild.childNodes[0].data
-
-    return None
-
-  def installExtension(self, extensionSource, profileDir, extensionID = None):
-    """
-    Copies an extension into the extensions directory of the given profile.
-    extensionSource - the source location of the extension files.  This can be either
-                      a directory or a path to an xpi file.
-    profileDir      - the profile directory we are copying into.  We will create the
-                      "extensions" directory there if it doesn't exist.
-    extensionID     - the id of the extension to be used as the containing directory for the
-                      extension, if extensionSource is a directory, i.e.
-                  this is the name of the folder in the <profileDir>/extensions/<extensionID>
-    """
-    if not os.path.isdir(profileDir):
-      self.log.info("INFO | automation.py | Cannot install extension, invalid profileDir at: %s", profileDir)
-      return
-
-    installRDFFilename = "install.rdf"
-
-    extensionsRootDir = os.path.join(profileDir, "extensions", "staged")
-    if not os.path.isdir(extensionsRootDir):
-      os.makedirs(extensionsRootDir)
-
-    if os.path.isfile(extensionSource):
-      reader = zipfile.ZipFile(extensionSource, "r")
-
-      for filename in reader.namelist():
-        # Sanity check the zip file.
-        if os.path.isabs(filename):
-          self.log.info("INFO | automation.py | Cannot install extension, bad files in xpi")
-          return
-
-        # We may need to dig the extensionID out of the zip file...
-        if extensionID is None and filename == installRDFFilename:
-          extensionID = self.getExtensionIDFromRDF(reader.read(filename))
-
-      # We must know the extensionID now.
-      if extensionID is None:
-        self.log.info("INFO | automation.py | Cannot install extension, missing extensionID")
-        return
-
-      # Make the extension directory.
-      extensionDir = os.path.join(extensionsRootDir, extensionID)
-      os.mkdir(extensionDir)
-
-      # Extract all files.
-      reader.extractall(extensionDir)
-
-    elif os.path.isdir(extensionSource):
-      if extensionID is None:
-        filename = os.path.join(extensionSource, installRDFFilename)
-        if os.path.isfile(filename):
-          with open(filename, "r") as installRDF:
-            extensionID = self.getExtensionIDFromRDF(installRDF)
-
-        if extensionID is None:
-          self.log.info("INFO | automation.py | Cannot install extension, missing extensionID")
-          return
-
-      # Copy extension tree into its own directory.
-      # "destination directory must not already exist".
-      shutil.copytree(extensionSource, os.path.join(extensionsRootDir, extensionID))
-
-    else:
-      self.log.info("INFO | automation.py | Cannot install extension, invalid extensionSource at: %s", extensionSource)
 
   def elf_arm(self, filename):
     data = open(filename, 'rb').read(20)

@@ -69,6 +69,7 @@ class nsIImageLoadingContent;
 class nsIInterfaceRequestor;
 class nsIIOService;
 class nsILineBreaker;
+class nsILoadGroup;
 class nsIMessageBroadcaster;
 class nsNameSpaceManager;
 class nsIObserver;
@@ -729,6 +730,11 @@ public:
    * Returns true if this document is in a Private Browsing window.
    */
   static bool IsInPrivateBrowsing(nsIDocument* aDoc);
+
+  /**
+   * Returns true if this loadGroup uses Private Browsing.
+   */
+  static bool IsInPrivateBrowsing(nsILoadGroup* aLoadGroup);
 
   /**
    * If aNode is not an element, return true exactly when aContent's binding
