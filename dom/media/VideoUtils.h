@@ -13,6 +13,7 @@
 #include "nsIThread.h"
 #include "nsSize.h"
 #include "nsRect.h"
+#include "MediaPromise.h"
 
 #if !(defined(XP_WIN) || defined(XP_MACOSX) || defined(LINUX)) || \
     defined(MOZ_ASAN)
@@ -280,6 +281,34 @@ CreateMediaDecodeTaskQueue();
 
 already_AddRefed<FlushableMediaTaskQueue>
 CreateFlushableMediaDecodeTaskQueue();
+
+// Iteratively invokes aWork until aCondition returns true, or aWork returns false.
+// Use this rather than a while loop to avoid bogarting the task queue.
+template<class Work, class Condition>
+nsRefPtr<GenericPromise> InvokeUntil(Work aWork, Condition aCondition) {
+  nsRefPtr<GenericPromise::Private> p = new GenericPromise::Private(__func__);
+
+  if (aCondition()) {
+    p->Resolve(true, __func__);
+  }
+
+  struct Helper {
+    static void Iteration(nsRefPtr<GenericPromise::Private> aPromise, Work aWork, Condition aCondition) {
+      if (!aWork()) {
+        aPromise->Reject(NS_ERROR_FAILURE, __func__);
+      } else if (aCondition()) {
+        aPromise->Resolve(true, __func__);
+      } else {
+        nsCOMPtr<nsIRunnable> r =
+          NS_NewRunnableFunction([aPromise, aWork, aCondition] () { Iteration(aPromise, aWork, aCondition); });
+        AbstractThread::GetCurrent()->Dispatch(r.forget());
+      }
+    }
+  };
+
+  Helper::Iteration(p, aWork, aCondition);
+  return p.forget();
+}
 
 } // end namespace mozilla
 
