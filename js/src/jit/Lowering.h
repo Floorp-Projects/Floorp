@@ -17,6 +17,8 @@
 # include "jit/x64/Lowering-x64.h"
 #elif defined(JS_CODEGEN_ARM)
 # include "jit/arm/Lowering-arm.h"
+#elif defined(JS_CODEGEN_ARM64)
+# include "jit/arm64/Lowering-arm64.h"
 #elif defined(JS_CODEGEN_MIPS)
 # include "jit/mips/Lowering-mips.h"
 #elif defined(JS_CODEGEN_NONE)

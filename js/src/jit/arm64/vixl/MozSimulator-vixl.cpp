@@ -157,7 +157,7 @@ Simulator* Simulator::Create() {
   sim->init(decoder, stdout);
 
   return sim;
-} 
+}
 
 
 void Simulator::Destroy(Simulator* sim) {
@@ -207,8 +207,8 @@ bool Simulator::overRecursedWithExtra(uint32_t extra) const {
 }
 
 
-void Simulator::set_resume_pc(const Instruction* new_resume_pc) {
-  resume_pc_ = AddressUntag(new_resume_pc);
+void Simulator::set_resume_pc(void* new_resume_pc) {
+  resume_pc_ = AddressUntag(reinterpret_cast<Instruction*>(new_resume_pc));
 }
 
 
