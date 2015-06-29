@@ -83,7 +83,8 @@ int vp9_full_pixel_diamond(const struct VP9_COMP *cpi, MACROBLOCK *x,
 // Perform integral projection based motion estimation.
 unsigned int vp9_int_pro_motion_estimation(const struct VP9_COMP *cpi,
                                            MACROBLOCK *x,
-                                           BLOCK_SIZE bsize);
+                                           BLOCK_SIZE bsize,
+                                           int mi_row, int mi_col);
 
 typedef int (integer_mv_pattern_search_fn) (
     const MACROBLOCK *x,

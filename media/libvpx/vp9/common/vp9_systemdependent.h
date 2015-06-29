@@ -11,14 +11,13 @@
 #ifndef VP9_COMMON_VP9_SYSTEMDEPENDENT_H_
 #define VP9_COMMON_VP9_SYSTEMDEPENDENT_H_
 
+#include "vpx_ports/msvc.h"
+
 #ifdef _MSC_VER
 # include <math.h>  // the ceil() definition must precede intrin.h
 # if _MSC_VER > 1310 && (defined(_M_X64) || defined(_M_IX86))
 #  include <intrin.h>
-#  define USE_MSC_INTRIN
-# endif
-# if _MSC_VER < 1900
-#  define snprintf _snprintf
+#  define USE_MSC_INTRINSICS
 # endif
 #endif
 
@@ -50,7 +49,7 @@ static INLINE int round(double x) {
 static INLINE int get_msb(unsigned int n) {
   return 31 ^ __builtin_clz(n);
 }
-#elif defined(USE_MSC_INTRIN)
+#elif defined(USE_MSC_INTRINSICS)
 #pragma intrinsic(_BitScanReverse)
 
 static INLINE int get_msb(unsigned int n) {
@@ -58,7 +57,7 @@ static INLINE int get_msb(unsigned int n) {
   _BitScanReverse(&first_set_bit, n);
   return first_set_bit;
 }
-#undef USE_MSC_INTRIN
+#undef USE_MSC_INTRINSICS
 #else
 // Returns (int)floor(log2(n)). n must be > 0.
 static INLINE int get_msb(unsigned int n) {

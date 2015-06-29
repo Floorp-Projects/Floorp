@@ -14,6 +14,7 @@
 #include "./vpx_config.h"
 #include "vpx/internal/vpx_codec_internal.h"
 #include "./vp9_rtcd.h"
+#include "vp9/common/vp9_alloccommon.h"
 #include "vp9/common/vp9_loopfilter.h"
 #include "vp9/common/vp9_entropymv.h"
 #include "vp9/common/vp9_entropy.h"
@@ -88,7 +89,7 @@ typedef struct {
   int col;
 } RefCntBuffer;
 
-typedef struct {
+typedef struct BufferPool {
   // Protect BufferPool from being accessed by several FrameWorkers at
   // the same time during frame parallel decode.
   // TODO(hkuang): Try to use atomic variable instead of locking the whole pool.
@@ -184,6 +185,8 @@ typedef struct VP9Common {
   int y_dc_delta_q;
   int uv_dc_delta_q;
   int uv_ac_delta_q;
+  int16_t y_dequant[MAX_SEGMENTS][2];
+  int16_t uv_dequant[MAX_SEGMENTS][2];
 
   /* We allocate a MODE_INFO struct for each macroblock, together with
      an extra row on top and column on the left to simplify prediction. */
@@ -201,6 +204,12 @@ typedef struct VP9Common {
   void (*free_mi)(struct VP9Common *cm);
   void (*setup_mi)(struct VP9Common *cm);
 
+  // Grid of pointers to 8x8 MODE_INFO structs.  Any 8x8 not in the visible
+  // area will be NULL.
+  MODE_INFO **mi_grid_base;
+  MODE_INFO **mi_grid_visible;
+  MODE_INFO **prev_mi_grid_base;
+  MODE_INFO **prev_mi_grid_visible;
 
   // Whether to use previous frame's motion vectors for prediction.
   int use_prev_frame_mvs;
@@ -212,6 +221,7 @@ typedef struct VP9Common {
   uint8_t *seg_map_array[NUM_PING_PONG_BUFFERS];
   uint8_t *last_frame_seg_map;
   uint8_t *current_frame_seg_map;
+  int seg_map_alloc_size;
 
   INTERP_FILTER interp_filter;
 
@@ -254,6 +264,7 @@ typedef struct VP9Common {
 
   int log2_tile_cols, log2_tile_rows;
   int byte_alignment;
+  int skip_loop_filter;
 
   // Private data associated with the frame buffer callbacks.
   void *cb_priv;
@@ -268,6 +279,7 @@ typedef struct VP9Common {
 
   PARTITION_CONTEXT *above_seg_context;
   ENTROPY_CONTEXT *above_context;
+  int above_context_alloc_cols;
 } VP9_COMMON;
 
 // TODO(hkuang): Don't need to lock the whole pool after implementing atomic
@@ -297,8 +309,13 @@ static INLINE int get_free_fb(VP9_COMMON *cm) {
     if (frame_bufs[i].ref_count == 0)
       break;
 
-  assert(i < FRAME_BUFFERS);
-  frame_bufs[i].ref_count = 1;
+  if (i != FRAME_BUFFERS) {
+    frame_bufs[i].ref_count = 1;
+  } else {
+    // Reset i to be INVALID_IDX to indicate no free buffer found.
+    i = INVALID_IDX;
+  }
+
   unlock_buffer_pool(cm->buffer_pool);
   return i;
 }
@@ -325,6 +342,14 @@ static INLINE void init_macroblockd(VP9_COMMON *cm, MACROBLOCKD *xd) {
     xd->plane[i].dqcoeff = xd->dqcoeff;
     xd->above_context[i] = cm->above_context +
         i * sizeof(*cm->above_context) * 2 * mi_cols_aligned_to_sb(cm->mi_cols);
+
+    if (xd->plane[i].plane_type == PLANE_TYPE_Y) {
+      memcpy(xd->plane[i].seg_dequant, cm->y_dequant, sizeof(cm->y_dequant));
+    } else {
+      memcpy(xd->plane[i].seg_dequant, cm->uv_dequant, sizeof(cm->uv_dequant));
+    }
+    xd->fc = cm->fc;
+    xd->frame_parallel_decoding_mode = cm->frame_parallel_decoding_mode;
   }
 
   xd->above_seg_context = cm->above_seg_context;
@@ -371,7 +396,8 @@ static INLINE void set_mi_row_col(MACROBLOCKD *xd, const TileInfo *const tile,
   xd->up_available    = (mi_row != 0);
   xd->left_available  = (mi_col > tile->mi_col_start);
   if (xd->up_available) {
-    xd->above_mi = xd->mi[-xd->mi_stride].src_mi;
+    xd->above_mi = xd->mi[-xd->mi_stride];
+    // above_mi may be NULL in VP9 encoder's first pass.
     xd->above_mbmi = xd->above_mi ? &xd->above_mi->mbmi : NULL;
   } else {
     xd->above_mi = NULL;
@@ -379,7 +405,8 @@ static INLINE void set_mi_row_col(MACROBLOCKD *xd, const TileInfo *const tile,
   }
 
   if (xd->left_available) {
-    xd->left_mi = xd->mi[-1].src_mi;
+    xd->left_mi = xd->mi[-1];
+    // left_mi may be NULL in VP9 encoder's first pass.
     xd->left_mbmi = xd->left_mi ? &xd->left_mi->mbmi : NULL;
   } else {
     xd->left_mi = NULL;
@@ -400,8 +427,8 @@ static INLINE void update_partition_context(MACROBLOCKD *xd,
   // update the partition context at the end notes. set partition bits
   // of block sizes larger than the current one to be one, and partition
   // bits of smaller block sizes to be zero.
-  vpx_memset(above_ctx, partition_context_lookup[subsize].above, bs);
-  vpx_memset(left_ctx, partition_context_lookup[subsize].left, bs);
+  memset(above_ctx, partition_context_lookup[subsize].above, bs);
+  memset(left_ctx, partition_context_lookup[subsize].left, bs);
 }
 
 static INLINE int partition_plane_context(const MACROBLOCKD *xd,
@@ -409,20 +436,11 @@ static INLINE int partition_plane_context(const MACROBLOCKD *xd,
                                           BLOCK_SIZE bsize) {
   const PARTITION_CONTEXT *above_ctx = xd->above_seg_context + mi_col;
   const PARTITION_CONTEXT *left_ctx = xd->left_seg_context + (mi_row & MI_MASK);
-
   const int bsl = mi_width_log2_lookup[bsize];
-  const int bs = 1 << bsl;
-  int above = 0, left = 0, i;
+  int above = (*above_ctx >> bsl) & 1 , left = (*left_ctx >> bsl) & 1;
 
   assert(b_width_log2_lookup[bsize] == b_height_log2_lookup[bsize]);
   assert(bsl >= 0);
-
-  for (i = 0; i < bs; i++) {
-    above |= above_ctx[i];
-    left |= left_ctx[i];
-  }
-  above = (above & bs) > 0;
-  left  = (left & bs) > 0;
 
   return (left * 2 + above) + bsl * PARTITION_PLOFFSET;
 }

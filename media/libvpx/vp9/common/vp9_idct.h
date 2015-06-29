@@ -14,6 +14,7 @@
 #include <assert.h>
 
 #include "./vpx_config.h"
+#include "vpx_ports/mem.h"
 #include "vp9/common/vp9_common.h"
 #include "vp9/common/vp9_enums.h"
 

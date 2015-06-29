@@ -165,7 +165,7 @@ vp8_dequant_idct_loop2_v6
     str     r1, [r2], r12           ; store output to dst
     bne     vp8_dequant_idct_loop2_v6
 
-; vpx_memset
+; memset
     sub     r0, r0, #32
     add     sp, sp, #4
 

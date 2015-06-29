@@ -12,31 +12,10 @@
 #define VP9_ENCODER_VP9_VARIANCE_H_
 
 #include "vpx/vpx_integer.h"
+#include "vpx_ports/mem.h"
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-void variance(const uint8_t *a, int a_stride,
-              const uint8_t *b, int b_stride,
-              int  w, int  h,
-              unsigned int *sse, int *sum);
-
-#if CONFIG_VP9_HIGHBITDEPTH
-void highbd_variance(const uint8_t *a8, int a_stride,
-                     const uint8_t *b8, int b_stride,
-                     int w, int h,
-                     unsigned int *sse, int *sum);
-
-void highbd_10_variance(const uint8_t *a8, int a_stride,
-                        const uint8_t *b8, int b_stride,
-                        int w, int h,
-                        unsigned int *sse, int *sum);
-
-void highbd_12_variance(const uint8_t *a8, int a_stride,
-                        const uint8_t *b8, int b_stride,
-                        int w, int h,
-                        unsigned int *sse, int *sum);
 #endif
 
 typedef unsigned int(*vp9_sad_fn_t)(const uint8_t *src_ptr,
@@ -94,15 +73,6 @@ typedef struct vp9_variance_vtable {
   vp9_sad_multi_fn_t         sdx8f;
   vp9_sad_multi_d_fn_t       sdx4df;
 } vp9_variance_fn_ptr_t;
-
-void vp9_comp_avg_pred(uint8_t *comp_pred, const uint8_t *pred, int width,
-                       int height, const uint8_t *ref, int ref_stride);
-
-#if CONFIG_VP9_HIGHBITDEPTH
-void vp9_highbd_comp_avg_pred(uint16_t *comp_pred, const uint8_t *pred,
-                              int width, int height,
-                              const uint8_t *ref, int ref_stride);
-#endif
 
 #ifdef __cplusplus
 }  // extern "C"

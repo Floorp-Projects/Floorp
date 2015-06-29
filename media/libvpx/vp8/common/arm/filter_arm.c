@@ -99,7 +99,7 @@ void vp8_sixtap_predict4x4_armv6
 {
     const short  *HFilter;
     const short  *VFilter;
-    DECLARE_ALIGNED_ARRAY(4, short, FData, 12*4); /* Temp data buffer used in filtering */
+    DECLARE_ALIGNED(4, short, FData[12*4]); /* Temp data buffer used in filtering */
 
 
     HFilter = vp8_sub_pel_filters[xoffset];   /* 6 tap */
@@ -147,7 +147,7 @@ void vp8_sixtap_predict8x8_armv6
 {
     const short  *HFilter;
     const short  *VFilter;
-    DECLARE_ALIGNED_ARRAY(4, short, FData, 16*8); /* Temp data buffer used in filtering */
+    DECLARE_ALIGNED(4, short, FData[16*8]); /* Temp data buffer used in filtering */
 
     HFilter = vp8_sub_pel_filters[xoffset];   /* 6 tap */
     VFilter = vp8_sub_pel_filters[yoffset];   /* 6 tap */
@@ -189,7 +189,7 @@ void vp8_sixtap_predict16x16_armv6
 {
     const short  *HFilter;
     const short  *VFilter;
-    DECLARE_ALIGNED_ARRAY(4, short, FData, 24*16);    /* Temp data buffer used in filtering */
+    DECLARE_ALIGNED(4, short, FData[24*16]);    /* Temp data buffer used in filtering */
 
     HFilter = vp8_sub_pel_filters[xoffset];   /* 6 tap */
     VFilter = vp8_sub_pel_filters[yoffset];   /* 6 tap */

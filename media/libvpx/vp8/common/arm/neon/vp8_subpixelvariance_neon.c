@@ -32,7 +32,7 @@ unsigned int vp8_sub_pixel_variance16x16_neon_func(
         int dst_pixels_per_line,
         unsigned int *sse) {
     int i;
-    DECLARE_ALIGNED_ARRAY(16, unsigned char, tmp, 528);
+    DECLARE_ALIGNED(16, unsigned char, tmp[528]);
     unsigned char *tmpp;
     unsigned char *tmpp2;
     uint8x8_t d0u8, d1u8, d2u8, d3u8, d4u8, d5u8, d6u8, d7u8, d8u8, d9u8;
@@ -911,12 +911,6 @@ unsigned int vp8_variance_halfpixvar16x16_hv_neon(
     return vget_lane_u32(d0u32, 0);
 }
 
-enum { kWidth8 = 8 };
-enum { kHeight8 = 8 };
-enum { kHeight8PlusOne = 9 };
-enum { kPixelStepOne = 1 };
-enum { kAlign16 = 16 };
-
 #define FILTER_BITS 7
 
 static INLINE int horizontal_add_s16x8(const int16x8_t v_16x8) {
@@ -968,8 +962,8 @@ static unsigned int variance8x8_neon(const uint8_t *a, int a_stride,
                                      const uint8_t *b, int b_stride,
                                      unsigned int *sse) {
   int sum;
-  variance_neon_w8(a, a_stride, b, b_stride, kWidth8, kHeight8, sse, &sum);
-  return *sse - (((int64_t)sum * sum) / (kWidth8 * kHeight8));
+  variance_neon_w8(a, a_stride, b, b_stride, 8, 8, sse, &sum);
+  return *sse - (((int64_t)sum * sum) / (8 * 8));
 }
 
 static void var_filter_block2d_bil_w8(const uint8_t *src_ptr,
@@ -1003,21 +997,21 @@ unsigned int vp8_sub_pixel_variance8x8_neon(
         const unsigned char *dst,
         int dst_stride,
         unsigned int *sse) {
-  DECLARE_ALIGNED_ARRAY(kAlign16, uint8_t, temp2, kHeight8PlusOne * kWidth8);
-  DECLARE_ALIGNED_ARRAY(kAlign16, uint8_t, fdata3, kHeight8PlusOne * kWidth8);
+  DECLARE_ALIGNED(16, uint8_t, temp2[9 * 8]);
+  DECLARE_ALIGNED(16, uint8_t, fdata3[9 * 8]);
   if (xoffset == 0) {
-    var_filter_block2d_bil_w8(src, temp2, src_stride, kWidth8, kHeight8,
-                              kWidth8, bilinear_taps_coeff[yoffset]);
+    var_filter_block2d_bil_w8(src, temp2, src_stride, 8, 8,
+                              8, bilinear_taps_coeff[yoffset]);
   } else if (yoffset == 0) {
-    var_filter_block2d_bil_w8(src, temp2, src_stride, kPixelStepOne,
-                              kHeight8PlusOne, kWidth8,
+    var_filter_block2d_bil_w8(src, temp2, src_stride, 1,
+                              9, 8,
                               bilinear_taps_coeff[xoffset]);
   } else {
-    var_filter_block2d_bil_w8(src, fdata3, src_stride, kPixelStepOne,
-                              kHeight8PlusOne, kWidth8,
+    var_filter_block2d_bil_w8(src, fdata3, src_stride, 1,
+                              9, 8,
                               bilinear_taps_coeff[xoffset]);
-    var_filter_block2d_bil_w8(fdata3, temp2, kWidth8, kWidth8, kHeight8,
-                              kWidth8, bilinear_taps_coeff[yoffset]);
+    var_filter_block2d_bil_w8(fdata3, temp2, 8, 8, 8,
+                              8, bilinear_taps_coeff[yoffset]);
   }
-  return variance8x8_neon(temp2, kWidth8, dst, dst_stride, sse);
+  return variance8x8_neon(temp2, 8, dst, dst_stride, sse);
 }
