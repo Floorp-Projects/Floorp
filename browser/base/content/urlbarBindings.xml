@@ -330,7 +330,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               url = action.params.url;
             } else if (action.type == "searchengine") {
               let engine = Services.search.getEngineByName(action.params.engineName);
-              let submission = engine.getSubmission(action.params.searchQuery);
+              let query = action.params.searchSuggestion ||
+                          action.params.searchQuery;
+              let submission = engine.getSubmission(query);
 
               url = submission.uri.spec;
               postData = submission.postData;
@@ -790,12 +792,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           try {
             action.params = JSON.parse(params);
-            if (action.params.input) {
-              action.params.input = decodeURIComponent(action.params.input);
-            }
-            if (action.params.searchQuery) {
-              action.params.searchQuery = decodeURIComponent(action.params.searchQuery);
-            }
           } catch (e) {
             // If this failed, we assume that params is not a JSON object, and
             // is instead just a flat string. This will happen when
@@ -803,6 +799,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             // a URL.
             action.params = {
               url: params,
+            }
+            return action;
+          }
+
+          for (let key of [
+            "input",
+            "searchQuery",
+            "searchSuggestion",
+          ]) {
+            if (action.params[key]) {
+              action.params[key] = decodeURIComponent(action.params[key]);
             }
           }
 
@@ -1577,7 +1584,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 }
                 case "searchengine": {
                   let engine = Services.search.getEngineByName(action.params.engineName);
-                  let submission = engine.getSubmission(action.params.searchQuery);
+                  let query = action.params.searchSuggestion ||
+                              action.params.searchQuery;
+                  let submission = engine.getSubmission(query);
                   url = submission.uri.spec;
                   options.postData = submission.postData;
                   break;

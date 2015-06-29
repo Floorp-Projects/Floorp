@@ -374,11 +374,11 @@ InternalPrompt.prototype = {
   },
 
   nsIAuthPrompt_promptUsernameAndPassword : function (aTitle, aText, aPasswordRealm, aSavePassword, aUser, aPass) {
-    return nsIAuthPrompt_loginPrompt(aTitle, aText, aPasswordRealm, aSavePassword, aUser, aPass);
+    return this.nsIAuthPrompt_loginPrompt(aTitle, aText, aPasswordRealm, aSavePassword, aUser, aPass);
   },
 
   nsIAuthPrompt_promptPassword : function (aTitle, aText, aPasswordRealm, aSavePassword, aPass) {
-    return nsIAuthPrompt_loginPrompt(aTitle, aText, aPasswordRealm, aSavePassword, null, aPass);
+    return this.nsIAuthPrompt_loginPrompt(aTitle, aText, aPasswordRealm, aSavePassword, null, aPass);
   },
 
   nsIAuthPrompt_loginPrompt: function(aTitle, aPasswordRealm, aSavePassword, aUser, aPass) {
@@ -394,11 +394,12 @@ InternalPrompt.prototype = {
       [checkMsg, check] = PromptUtils.getUsernameAndPassword(foundLogins, aUser, aPass);
     }
 
+    // (eslint-disable: see bug 1177904)
     let ok = false;
     if (aUser)
-      ok = this.nsIPrompt_promptUsernameAndPassword(aTitle, aText, aUser, aPass, checkMsg, check);
+      ok = this.nsIPrompt_promptUsernameAndPassword(aTitle, aText, aUser, aPass, checkMsg, check); // eslint-disable-line no-undef
     else
-      ok = this.nsIPrompt_promptPassword(aTitle, aText, aPass, checkMsg, check);
+      ok = this.nsIPrompt_promptPassword(aTitle, aText, aPass, checkMsg, check); // eslint-disable-line no-undef
 
     if (ok && canSave && check.value)
       PromptUtils.savePassword(hostname, realm, aUser, aPass);
@@ -803,7 +804,7 @@ let PromptUtils = {
 
     // If the URI explicitly specified a port, only include it when
     // it's not the default. (We never want "http://foo.com:80")
-    port = uri.port;
+    let port = uri.port;
     if (port != -1) {
       let handler = Services.io.getProtocolHandler(scheme);
       if (port != handler.defaultPort)

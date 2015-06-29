@@ -30,6 +30,13 @@ public class TopSitesThumbnailView extends ImageView {
     // 27.34% opacity filter for the dominant color.
     private static final int COLOR_FILTER = 0x46FFFFFF;
 
+    // Cache variables used in onMeasure.
+    //
+    // Note: we have two matrices because we can't change it in place - see ImageView.getImageMatrix docs.
+    private final RectF mLayoutRect = new RectF();
+    private Matrix mLayoutCurrentMatrix = new Matrix();
+    private Matrix mLayoutNextMatrix = new Matrix();
+
     // Default filter color for "Add a bookmark" views.
     private final int mDefaultColor = getResources().getColor(R.color.top_site_default);
 
@@ -68,6 +75,34 @@ public class TopSitesThumbnailView extends ImageView {
     public void setImageBitmap(Bitmap bm, boolean resize) {
         super.setImageBitmap(bm);
         mResize = resize;
+        clearLayoutVars();
+
+        updateImageMatrix();
+    }
+
+    private void clearLayoutVars() {
+        mLayoutRect.setEmpty();
+    }
+
+    private void updateImageMatrix() {
+        if (!HardwareUtils.isTablet() || !mResize) {
+            return;
+        }
+
+        // No work to be done here - assumes the rect gets reset when a new bitmap is set.
+        if (mLayoutRect.right == mWidth && mLayoutRect.bottom == mHeight) {
+            return;
+        }
+
+        setScaleType(ScaleType.MATRIX);
+
+        mLayoutRect.set(0, 0, mWidth, mHeight);
+        mLayoutNextMatrix.setRectToRect(mLayoutRect, mLayoutRect, Matrix.ScaleToFit.CENTER);
+        setImageMatrix(mLayoutNextMatrix);
+
+        final Matrix swapReferenceMatrix = mLayoutCurrentMatrix;
+        mLayoutCurrentMatrix = mLayoutNextMatrix;
+        mLayoutNextMatrix = swapReferenceMatrix;
     }
 
     @Override
@@ -80,18 +115,6 @@ public class TopSitesThumbnailView extends ImageView {
     public void setImageDrawable(Drawable drawable) {
         super.setImageDrawable(drawable);
         mResize = false;
-    }
-
-    @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        super.onLayout(changed, left, top, right, bottom);
-        if (HardwareUtils.isTablet() && mResize) {
-            setScaleType(ScaleType.MATRIX);
-            RectF rect = new RectF(0, 0, mWidth, mHeight);
-            Matrix matrix = new Matrix();
-            matrix.setRectToRect(rect, rect, Matrix.ScaleToFit.CENTER);
-            setImageMatrix(matrix);
-        }
     }
 
     /**
@@ -110,6 +133,8 @@ public class TopSitesThumbnailView extends ImageView {
         mWidth = getMeasuredWidth();
         mHeight = (int) (mWidth * ThumbnailHelper.THUMBNAIL_ASPECT_RATIO);
         setMeasuredDimension(mWidth, mHeight);
+
+        updateImageMatrix();
     }
 
     /**

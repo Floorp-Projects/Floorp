@@ -1243,8 +1243,11 @@ MozMtpDatabase::getObjectInfo(MtpObjectHandle aHandle,
   aInfo.mAssociationDesc = 0;
   aInfo.mSequenceNumber = 0;
   aInfo.mName = ::strdup(entry->mObjectName.get());
-  aInfo.mDateCreated = entry->mDateCreated;
-  aInfo.mDateModified = entry->mDateModified;
+
+  // entry->mDateXxxx is a PRTime stores the time as microseconds from the epoch.
+  // aInfo.mDateXxxx is time_t which stores the time as seconds from the epoch.
+  aInfo.mDateCreated = entry->mDateCreated / PR_USEC_PER_SEC;
+  aInfo.mDateModified = entry->mDateModified / PR_USEC_PER_SEC;
   aInfo.mKeywords = ::strdup("fxos,touch");
 
   return MTP_RESPONSE_OK;
