@@ -38,9 +38,7 @@ from automationutils import (
     environment,
     processLeakLog,
     dumpScreen,
-    ShutdownLeaks,
     printstatus,
-    LSANLeaks,
     setAutomationLog,
 )
 
@@ -54,6 +52,7 @@ from manifestparser.filters import (
     subsuite,
     tags,
 )
+from leaks import ShutdownLeaks, LSANLeaks
 from mochitest_options import MochitestArgumentParser, build_obj
 from mozprofile import Profile, Preferences
 from mozprofile.permissions import ServerLocations
