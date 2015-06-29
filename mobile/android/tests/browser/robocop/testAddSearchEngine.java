@@ -156,11 +156,7 @@ public class testAddSearchEngine extends AboutHomeTest {
                     return false;
                 }
 
-                final int actualCount = searchResultList.getAdapter().getCount()
-                        + searchEngineBar.getAdapter().getCount()
-                        - 1; // Subtract one for the search engine bar label (Bug 1172071)
-
-                return (actualCount == expectedCount);
+                return (searchResultList.getAdapter().getCount() + searchEngineBar.getAdapter().getCount() == expectedCount);
             }
         }, MAX_WAIT_TEST_MS);
 
