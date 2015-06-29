@@ -257,8 +257,8 @@ def parse_args():
 def load_tests(options, requested_paths, excluded_paths):
     """
     Returns a tuple: (skipped_tests, test_list)
-        skip_list: [iterable<Test>] Tests found but skipped.
-        test_list: [iterable<Test>] Tests found that should be run.
+        test_count: [int] Number of tests that will be in test_gen
+        test_gen: [iterable<Test>] Tests found that should be run.
     """
     import lib.manifest as manifest
 
@@ -274,12 +274,12 @@ def load_tests(options, requested_paths, excluded_paths):
         xul_tester = manifest.XULInfoTester(xul_info, options.js_shell)
 
     test_dir = dirname(abspath(__file__))
-    test_list = manifest.load(test_dir, requested_paths, excluded_paths,
+    test_count = manifest.count_tests(test_dir, requested_paths, excluded_paths)
+    test_gen = manifest.load(test_dir, requested_paths, excluded_paths,
                               xul_tester)
-    skip_list = []
 
     if options.make_manifests:
-        manifest.make_manifests(options.make_manifests, test_list)
+        manifest.make_manifests(options.make_manifests, test_gen)
         sys.exit()
 
     # Create a new test list. Apply each TBPL configuration to every test.
@@ -292,37 +292,37 @@ def load_tests(options, requested_paths, excluded_paths):
         flags_list = get_jitflags(options.jitflags, none=None)
 
     if flags_list:
-        new_test_list = []
-        for test in test_list:
-            for jitflags in flags_list:
-                tmp_test = copy(test)
-                tmp_test.jitflags = copy(test.jitflags)
-                tmp_test.jitflags.extend(jitflags)
-                new_test_list.append(tmp_test)
-        test_list = new_test_list
+        def flag_gen(tests):
+            for test in tests:
+                for jitflags in flags_list:
+                    tmp_test = copy(test)
+                    tmp_test.jitflags = copy(test.jitflags)
+                    tmp_test.jitflags.extend(jitflags)
+                    yield tmp_test
+        test_gen = flag_gen(test_gen)
 
     if options.test_file:
         paths = set()
         for test_file in options.test_file:
             paths |= set(
                 [line.strip() for line in open(test_file).readlines()])
-        test_list = [_ for _ in test_list if _.path in paths]
+        test_gen = (_ for _ in test_gen if _.path in paths)
 
     if options.no_extensions:
         pattern = os.sep + 'extensions' + os.sep
-        test_list = [_ for _ in test_list if pattern not in _.path]
+        test_gen = (_ for _ in test_gen if pattern not in _.path)
 
     if not options.random:
-        test_list = [_ for _ in test_list if not _.random]
+        test_gen = (_ for _ in test_gen if not _.random)
 
     if options.run_only_skipped:
         options.run_skipped = True
-        test_list = [_ for _ in test_list if not _.enable]
+        test_gen = (_ for _ in test_gen if not _.enable)
 
     if not options.run_slow_tests:
-        test_list = [_ for _ in test_list if not _.slow]
+        test_gen = (_ for _ in test_gen if not _.slow)
 
-    return test_list
+    return test_count, test_gen
 
 
 def main():
@@ -330,23 +330,23 @@ def main():
     if options.js_shell is not None and not isfile(options.js_shell):
         print('Could not find shell at given path.')
         return 1
-    test_list = load_tests(options, requested_paths, excluded_paths)
+    test_count, test_gen = load_tests(options, requested_paths, excluded_paths)
 
-    if not test_list:
+    if test_count == 0:
         print('no tests selected')
         return 1
 
     test_dir = dirname(abspath(__file__))
 
     if options.debug:
-        if len(test_list) > 1:
+        if len(list(test_gen)) > 1:
             print('Multiple tests match command line arguments,'
                   ' debugger can only run one')
-            for tc in test_list:
+            for tc in test_gen:
                 print('    {}'.format(tc.path))
             return 2
 
-        cmd = test_list[0].get_command(TestCase.js_cmd_prefix)
+        cmd = test_gen[0].get_command(TestCase.js_cmd_prefix)
         if options.show_cmd:
             print(list2cmdline(cmd))
         with changedir(test_dir):
@@ -359,9 +359,9 @@ def main():
         # Force date strings to English.
         os.environ['LC_TIME'] = 'en_US.UTF-8'
 
-        results = ResultsSink(options, len(test_list))
+        results = ResultsSink(options, test_count)
         try:
-            for out in run_all_tests(test_list, prefix, results, options):
+            for out in run_all_tests(test_gen, prefix, results, options):
                 results.push(out)
             results.finish(True)
         except KeyboardInterrupt:

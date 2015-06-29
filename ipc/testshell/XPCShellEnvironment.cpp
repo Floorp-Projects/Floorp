@@ -26,7 +26,6 @@
 #include "nsIChannel.h"
 #include "nsIClassInfo.h"
 #include "nsIDirectoryService.h"
-#include "nsIJSRuntimeService.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIURI.h"
@@ -476,15 +475,8 @@ XPCShellEnvironment::Init()
     // is unbuffered by default
     setbuf(stdout, 0);
 
-    nsCOMPtr<nsIJSRuntimeService> rtsvc =
-        do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
-    if (!rtsvc) {
-        NS_ERROR("failed to get nsJSRuntimeService!");
-        return false;
-    }
-
-    JSRuntime *rt;
-    if (NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt) {
+    JSRuntime *rt = xpc::GetJSRuntime();
+    if (!rt) {
         NS_ERROR("failed to get JSRuntime from nsJSRuntimeService!");
         return false;
     }

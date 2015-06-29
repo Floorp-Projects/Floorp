@@ -44,7 +44,7 @@ const char APP_RESOURCES_PATH[] = "/Contents/Resources/";
 //the path to the WebappRT subdir within the Firefox app contents dir
 const char WEBAPPRT_PATH[] = "webapprt/";
 
-void ExecNewBinary(NSString* launchPath);
+void ExecNewBinary(NSString* launchPath, NSDictionary* args);
 
 NSString *PathToWebRT(NSString* alternateBinaryID);
 
@@ -110,9 +110,15 @@ main(int argc, char **argv)
   NSLog(@"found override firefox binary: %@", alternateBinaryID);
 
   @try {
-    //find a webapprt binary to launch with.  throws an exception with error dialog if none found.
-    firefoxPath = PathToWebRT(alternateBinaryID);
-    NSLog(@"USING FIREFOX : %@", firefoxPath);
+    // Determine the runtime with which to run the application.
+    // Throws an exception with an error dialog if it can't find one.
+    firefoxPath = [args objectForKey:@"runtime"];
+    if (firefoxPath) {
+      NSLog(@"Runtime specified with -runtime flag: %@", firefoxPath);
+    } else {
+      firefoxPath = PathToWebRT(alternateBinaryID);
+      NSLog(@"Found runtime: %@", firefoxPath);
+    }
 
     NSString* myWebRTPath = [myBundle pathForResource:@"webapprt"
                                                ofType:nil];
@@ -198,7 +204,7 @@ main(int argc, char **argv)
       }
 
       //execv the new binary, and ride off into the sunset
-      ExecNewBinary(myWebRTPath);
+      ExecNewBinary(myWebRTPath, args);
 
     } else {
       //we are ready to load XUL and such, and go go go
@@ -267,7 +273,7 @@ main(int argc, char **argv)
 
         NSString *profile = [args objectForKey:@"profile"];
         if (profile) {
-          NSLog(@"Profile specified with --profile: %@", profile);
+          NSLog(@"Profile specified with -profile flag: %@", profile);
         }
         else {
           nsINIParser parser;
@@ -351,15 +357,6 @@ NSString
   //default is firefox
   NSString *binaryPath = nil;
 
-  // We're run from the Firefox bundle during WebappRT chrome and content tests.
-  NSString *myBundlePath = [[NSBundle mainBundle] bundlePath];
-  NSString *fxPath =
-    [NSString stringWithFormat:@"%@%sfirefox-bin", myBundlePath,
-                                                   APP_MACOS_PATH];
-  if ([[NSFileManager defaultManager] fileExistsAtPath:fxPath]) {
-    return myBundlePath;
-  }
-
   //we look for these flavors of Firefox, in this order
   NSArray* launchBinarySearchList = [NSArray arrayWithObjects: @"org.mozilla.nightly",
                                                                 @"org.mozilla.firefoxdeveloperedition",
@@ -389,12 +386,26 @@ NSString
 }
 
 void
-ExecNewBinary(NSString* launchPath)
+ExecNewBinary(NSString* launchPath, NSDictionary* args)
 {
   NSLog(@" launching webrt at path: %@\n", launchPath);
 
-  const char *const newargv[] = {[launchPath UTF8String], NULL};
+  NSUInteger numArgs = [args count];
+  const char *newargv[numArgs + 2];
+  NSMutableString *commandLine = [NSMutableString string];
+  newargv[0] = [launchPath UTF8String];
+  [commandLine appendString:launchPath];
 
-  NSLog(@"COMMAND LINE: '%@ %s'", launchPath, newargv[0]);
+  NSUInteger i = 1;
+  for (id key in args) {
+    NSString *name = [@"-" stringByAppendingString:key];
+    NSString *value = [args objectForKey:key];
+    newargv[i++] = [name UTF8String];
+    newargv[i++] = [value UTF8String];
+    [commandLine appendFormat:@" %@ %@", name, value];
+  }
+  newargv[i] = NULL;
+
+  NSLog(@"Command line: '%@'", commandLine);
   execv([launchPath UTF8String], (char **)newargv);
 }

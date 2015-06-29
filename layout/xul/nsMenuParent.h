@@ -30,8 +30,11 @@ public:
   // new item aMenuItem. For a menubar, if another menu is already open, the
   // new menu aMenuItem is opened. In this case, if aSelectFirstItem is true,
   // select the first item in it. For menupopups, the menu is not opened and
-  // the aSelectFirstItem argument is not used.
-  NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem, bool aSelectFirstItem) = 0;
+  // the aSelectFirstItem argument is not used. The aFromKey argument indicates
+  // that the keyboard was used to navigate to the new menu item.
+  NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem,
+                            bool aSelectFirstItem,
+                            bool aFromKey) = 0;
 
   // returns true if the menupopup is open. For menubars, returns false.
   virtual bool IsOpen() = 0;

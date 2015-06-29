@@ -192,6 +192,29 @@ MessagePortBase::MessagePortBase()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MessagePort)
 
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(MessagePort)
+  bool isBlack = tmp->IsBlack();
+  if (isBlack || tmp->mIsKeptAlive) {
+    if (tmp->mListenerManager) {
+      tmp->mListenerManager->MarkForCC();
+    }
+    if (!isBlack && tmp->PreservingWrapper()) {
+      // This marks the wrapper black.
+      tmp->GetWrapper();
+    }
+    return true;
+  }
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(MessagePort)
+  return tmp->
+    IsBlackAndDoesNotNeedTracing(static_cast<DOMEventTargetHelper*>(tmp));
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(MessagePort)
+  return tmp->IsBlack();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MessagePort,
                                                 MessagePortBase)
   if (tmp->mDispatchRunnable) {
@@ -211,6 +234,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MessagePort,
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUnshippedEntangledPort);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(MessagePort,
+                                               MessagePortBase)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MessagePort)
   NS_INTERFACE_MAP_ENTRY(nsIIPCBackgroundChildCreateCallback)
@@ -839,6 +866,14 @@ MessagePort::UpdateMustKeepAlive()
       mWorkerFeature = nullptr;
     }
 
+    if (NS_IsMainThread()) {
+      nsCOMPtr<nsIObserverService> obs =
+        do_GetService("@mozilla.org/observer-service;1");
+      if (obs) {
+        obs->RemoveObserver(this, "inner-window-destroyed");
+      }
+    }
+
     Release();
     return;
   }
@@ -873,12 +908,6 @@ MessagePort::Observe(nsISupports* aSubject, const char* aTopic,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (innerID == mInnerID) {
-    nsCOMPtr<nsIObserverService> obs =
-      do_GetService("@mozilla.org/observer-service;1");
-    if (obs) {
-      obs->RemoveObserver(this, "inner-window-destroyed");
-    }
-
     Close();
   }
 

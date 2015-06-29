@@ -3394,14 +3394,26 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   if (eCSSUnit_FontFamilyList == familyValue->GetUnit()) {
     // set the correct font if we are using DocumentFonts OR we are overriding for XUL
     // MJA: bug 31816
-    if (aGenericFontID == kGenericFont_NONE) {
-      uint32_t len = defaultVariableFont->fontlist.Length();
-      FontFamilyType generic = defaultVariableFont->fontlist.FirstGeneric();
-      NS_ASSERTION(len == 1 &&
-                   (generic == eFamily_serif || generic == eFamily_sans_serif),
-                   "default variable font must be a single serif or sans-serif");
-      if (len == 1 && generic != eFamily_none) {
-        aFont->mFont.fontlist.SetDefaultFontType(generic);
+    bool useDocumentFonts =
+      aPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts);
+    if (aGenericFontID == kGenericFont_NONE ||
+        (!useDocumentFonts && (aGenericFontID == kGenericFont_cursive ||
+                               aGenericFontID == kGenericFont_fantasy))) {
+      FontFamilyType defaultGeneric =
+        defaultVariableFont->fontlist.FirstGeneric();
+      MOZ_ASSERT(defaultVariableFont->fontlist.Length() == 1 &&
+                 (defaultGeneric == eFamily_serif ||
+                  defaultGeneric == eFamily_sans_serif));
+      if (defaultGeneric != eFamily_none) {
+        if (useDocumentFonts) {
+          aFont->mFont.fontlist.SetDefaultFontType(defaultGeneric);
+        } else {
+          // Either prioritize the first generic in the list,
+          // or (if there isn't one) prepend the default variable font.
+          if (!aFont->mFont.fontlist.PrioritizeFirstGeneric()) {
+            aFont->mFont.fontlist.PrependGeneric(defaultGeneric);
+          }
+        }
       }
     } else {
       aFont->mFont.fontlist.SetDefaultFontType(eFamily_none);
@@ -3941,18 +3953,6 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
   // (although there is a pretty good chance they'll fully specify it
   // using the 'font' shorthand).
 
-  bool useDocumentFonts =
-    mPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts);
-
-  // See if we are in the chrome
-  // We only need to know this to determine if we have to use the
-  // document fonts (overriding the useDocumentFonts flag).
-  if (!useDocumentFonts && mPresContext->IsChrome()) {
-    // if we are not using document fonts, but this is a XUL document,
-    // then we use the document fonts anyway
-    useDocumentFonts = true;
-  }
-
   // Figure out if we are a generic font
   uint8_t generic = kGenericFont_NONE;
   // XXXldb What if we would have had a string if we hadn't been doing
@@ -3988,25 +3988,6 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
           generic = kGenericFont_moz_fixed;
           break;
         default:
-          break;
-      }
-    }
-
-    // If we aren't allowed to use document fonts, then we are only entitled
-    // to use the user's default variable-width font and fixed-width font
-    if (!useDocumentFonts) {
-      switch (fontType) {
-        case eFamily_monospace:
-          fl = FontFamilyList(eFamily_monospace);
-          generic = kGenericFont_monospace;
-          break;
-        case eFamily_moz_fixed:
-          fl = FontFamilyList(eFamily_moz_fixed);
-          generic = kGenericFont_moz_fixed;
-          break;
-        default:
-          fl.Clear();
-          generic = kGenericFont_NONE;
           break;
       }
     }

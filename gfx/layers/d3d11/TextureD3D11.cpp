@@ -717,9 +717,11 @@ DXGIYCbCrTextureHostD3D11::OpenSharedHandle()
     return false;
   }
 
+  RefPtr<ID3D11Texture2D> textures[3];
+
   HRESULT hr = GetDevice()->OpenSharedResource((HANDLE)mHandles[0],
                                                __uuidof(ID3D11Texture2D),
-                                               (void**)(ID3D11Texture2D**)byRef(mTextures[0]));
+                                               (void**)(ID3D11Texture2D**)byRef(textures[0]));
   if (FAILED(hr)) {
     NS_WARNING("Failed to open shared texture for Y Plane");
     return false;
@@ -727,7 +729,7 @@ DXGIYCbCrTextureHostD3D11::OpenSharedHandle()
 
   hr = GetDevice()->OpenSharedResource((HANDLE)mHandles[1],
                                        __uuidof(ID3D11Texture2D),
-                                       (void**)(ID3D11Texture2D**)byRef(mTextures[1]));
+                                       (void**)(ID3D11Texture2D**)byRef(textures[1]));
   if (FAILED(hr)) {
     NS_WARNING("Failed to open shared texture for Cb Plane");
     return false;
@@ -735,11 +737,15 @@ DXGIYCbCrTextureHostD3D11::OpenSharedHandle()
 
   hr = GetDevice()->OpenSharedResource((HANDLE)mHandles[2],
                                        __uuidof(ID3D11Texture2D),
-                                       (void**)(ID3D11Texture2D**)byRef(mTextures[2]));
+                                       (void**)(ID3D11Texture2D**)byRef(textures[2]));
   if (FAILED(hr)) {
     NS_WARNING("Failed to open shared texture for Cr Plane");
     return false;
   }
+
+  mTextures[0] = textures[0].forget();
+  mTextures[1] = textures[1].forget();
+  mTextures[2] = textures[2].forget();
 
   return true;
 }
@@ -768,6 +774,8 @@ DXGIYCbCrTextureHostD3D11::Lock()
     if (!mTextures[0] && !OpenSharedHandle()) {
       return false;
     }
+
+    MOZ_ASSERT(mTextures[1] && mTextures[2]);
 
     mTextureSources[0] = new DataTextureSourceD3D11(SurfaceFormat::A8, mCompositor, mTextures[0]);
     mTextureSources[1] = new DataTextureSourceD3D11(SurfaceFormat::A8, mCompositor, mTextures[1]);

@@ -1075,6 +1075,7 @@ MP4Reader::GetEvictionOffset(double aTime)
 media::TimeIntervals
 MP4Reader::GetBuffered()
 {
+  MOZ_ASSERT(OnTaskQueue());
   MonitorAutoLock mon(mDemuxerMonitor);
   media::TimeIntervals buffered;
   if (!mIndexReady) {
@@ -1146,14 +1147,9 @@ MP4Reader::VideoIsHardwareAccelerated() const
 }
 
 void
-MP4Reader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
+MP4Reader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mShutdown) {
-    return;
-  }
-
+  MOZ_ASSERT(OnTaskQueue());
   if (mLastSeenEnd < 0) {
     MonitorAutoLock mon(mDemuxerMonitor);
     mLastSeenEnd = mDecoder->GetResource()->GetLength();

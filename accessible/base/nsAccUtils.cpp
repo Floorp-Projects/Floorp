@@ -242,6 +242,27 @@ nsAccUtils::IsARIASelected(Accessible* aAccessible)
                 nsGkAtoms::_true, eCaseMatters);
 }
 
+Accessible*
+nsAccUtils::TableFor(Accessible* aRow)
+{
+  if (aRow) {
+    Accessible* table = aRow->Parent();
+    if (table) {
+      roles::Role tableRole = table->Role();
+      if (tableRole == roles::GROUPING) { // if there's a rowgroup.
+        table = table->Parent();
+        if (table)
+          tableRole = table->Role();
+      }
+
+      return tableRole == roles::TABLE || tableRole == roles::TREE_TABLE ?
+        table : nullptr;
+    }
+  }
+
+  return nullptr;
+}
+
 HyperTextAccessible*
 nsAccUtils::GetTextContainer(nsINode* aNode)
 {

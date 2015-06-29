@@ -14028,6 +14028,11 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate,
     return NS_OK;
   }
 
+  // No in private browsing
+  if (mInPrivateBrowsing) {
+    return NS_OK;
+  }
+
   if (mSandboxFlags) {
     // If we're sandboxed, don't intercept.
     return NS_OK;

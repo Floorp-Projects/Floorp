@@ -67,9 +67,6 @@ namespace mozilla {
 class EventStateManager;
 class RestyleManager;
 class CounterStyleManager;
-namespace dom {
-class FontFaceSet;
-}
 namespace layers {
 class ContainerLayer;
 class LayerManager;
@@ -878,16 +875,7 @@ public:
 
   bool             SuppressingResizeReflow() const { return mSuppressResizeReflow; }
 
-  virtual gfxUserFontSet* GetUserFontSetExternal();
-  gfxUserFontSet* GetUserFontSetInternal();
-#ifdef MOZILLA_INTERNAL_API
-  gfxUserFontSet* GetUserFontSet() { return GetUserFontSetInternal(); }
-#else
-  gfxUserFontSet* GetUserFontSet() { return GetUserFontSetExternal(); }
-#endif
-
-  void FlushUserFontSet();
-  void RebuildUserFontSet(); // asynchronously
+  gfxUserFontSet* GetUserFontSet();
 
   // Should be called whenever the set of fonts available in the user
   // font set changes (e.g., because a new font loads, or because the
@@ -896,8 +884,6 @@ public:
 
   gfxMissingFontRecorder *MissingFontRecorder() { return mMissingFonts; }
   void NotifyMissingFonts();
-
-  mozilla::dom::FontFaceSet* Fonts();
 
   void FlushCounterStyles();
   void RebuildCounterStyles(); // asynchronously
@@ -1195,11 +1181,6 @@ protected:
 
   void AppUnitsPerDevPixelChanged();
 
-  void HandleRebuildUserFontSet() {
-    mPostedFlushUserFontSet = false;
-    FlushUserFontSet();
-  }
-
   void HandleRebuildCounterStyles() {
     mPostedFlushCounterStyles = false;
     FlushCounterStyles();
@@ -1277,9 +1258,6 @@ protected:
 
   nsInvalidateRequestList mInvalidateRequestsSinceLastPaint;
   nsInvalidateRequestList mUndeliveredInvalidateRequestsBeforeLastPaint;
-
-  // container for per-context fonts (downloadable, SVG, etc.)
-  nsRefPtr<mozilla::dom::FontFaceSet> mFontFaceSet;
 
   // text performance metrics
   nsAutoPtr<gfxTextPerfMetrics>   mTextPerf;
@@ -1368,13 +1346,6 @@ protected:
 
   // Has there been a change to the viewport's dimensions?
   unsigned              mPendingViewportChange : 1;
-
-  // Is the current mFontFaceSet valid?
-  unsigned              mFontFaceSetDirty : 1;
-  // Has GetUserFontSet() been called?
-  unsigned              mGetUserFontSetCalled : 1;
-  // Do we currently have an event posted to call FlushUserFontSet?
-  unsigned              mPostedFlushUserFontSet : 1;
 
   // Is the current mCounterStyleManager valid?
   unsigned              mCounterStylesDirty : 1;
