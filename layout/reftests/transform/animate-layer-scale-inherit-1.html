@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<title>Testcase, bug 1122526</title>
+<style>
+
+#outer, #inner {
+  display: inline-block;
+  background: white;
+  color: black;
+}
+#outer { transform: scale(5) }
+#inner { animation: HoldTransform linear infinite 1s }
+#inner {
+  vertical-align: top;
+  height: 100px;
+  width: 100px;
+  background: repeating-linear-gradient(to top left, yellow, blue 10px);
+}
+@keyframes HoldTransform {
+  from, to { transform: scale(0.2) }
+}
+
+</style>
+
+<div id="outer">
+  <div id="inner">
+  </div>
+</div>
