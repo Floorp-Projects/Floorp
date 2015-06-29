@@ -271,10 +271,19 @@ class Graph(object):
             taskcluster_graph.build_task.validate(build_task)
             graph['tasks'].append(build_task)
 
-            tests_url = ARTIFACT_URL.format(
-                build_parameters['build_slugid'],
-                build_task['task']['extra']['locations']['tests']
-            )
+            test_packages_url, tests_url = None, None
+
+            if 'test_packages' in build_task['task']['extra']['locations']:
+                test_packages_url = ARTIFACT_URL.format(
+                    build_parameters['build_slugid'],
+                    build_task['task']['extra']['locations']['test_packages']
+                )
+
+            if 'tests' in build_task['task']['extra']['locations']:
+                tests_url = ARTIFACT_URL.format(
+                    build_parameters['build_slugid'],
+                    build_task['task']['extra']['locations']['tests']
+                )
 
             build_url = ARTIFACT_URL.format(
                 build_parameters['build_slugid'],
@@ -318,7 +327,10 @@ class Graph(object):
                 test_parameters = copy.copy(build_parameters)
                 test_parameters['build_url'] = build_url
                 test_parameters['img_url'] = img_url
-                test_parameters['tests_url'] = tests_url
+                if tests_url:
+                    test_parameters['tests_url'] = tests_url
+                if test_packages_url:
+                    test_parameters['test_packages_url'] = test_packages_url
 
                 test_definition = templates.load(test['task'], {})['task']
                 chunk_config = test_definition['extra']['chunks']
