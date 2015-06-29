@@ -17,6 +17,7 @@
 #include "OggCodecState.h"
 #include "VideoUtils.h"
 #include "mozilla/Monitor.h"
+#include "OggDecoder.h"
 
 namespace mozilla {
 

@@ -474,7 +474,7 @@ nsresult OggReader::ReadMetadata(MediaInfo* aInfo,
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
     MediaResource* resource = mDecoder->GetResource();
-    if (mInfo.mMetadataDuration.isNothing() && !mDecoder->IsShutdown() &&
+    if (mInfo.mMetadataDuration.isNothing() && !mDecoder->IsOggDecoderShutdown() &&
         resource->GetLength() >= 0 && mDecoder->IsMediaSeekable())
     {
       // We didn't get a duration from the index or a Content-Duration header.
@@ -1358,11 +1358,8 @@ nsresult OggReader::SeekInBufferedRange(int64_t aTarget,
     do {
       bool skip = false;
       eof = !DecodeVideoFrame(skip, 0);
-      {
-        ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-        if (mDecoder->IsShutdown()) {
-          return NS_ERROR_FAILURE;
-        }
+      if (mDecoder->IsOggDecoderShutdown()) {
+        return NS_ERROR_FAILURE;
       }
     } while (!eof &&
              mVideoQueue.GetSize() == 0);
@@ -1510,8 +1507,7 @@ nsresult OggReader::SeekInternal(int64_t aTarget, int64_t aEndTime)
       // forwards until we find a keyframe.
       bool skip = true;
       while (DecodeVideoFrame(skip, 0) && skip) {
-        ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-        if (mDecoder->IsShutdown()) {
+        if (mDecoder->IsOggDecoderShutdown()) {
           return NS_ERROR_FAILURE;
         }
       }
@@ -2007,11 +2003,8 @@ AudioData* OggReader::SyncDecodeToFirstAudioData()
 {
   bool eof = false;
   while (!eof && AudioQueue().GetSize() == 0) {
-    {
-      ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-      if (mDecoder->IsShutdown()) {
-        return nullptr;
-      }
+    if (mDecoder->IsOggDecoderShutdown()) {
+      return nullptr;
     }
     eof = !DecodeAudioData();
   }
@@ -2026,11 +2019,8 @@ VideoData* OggReader::SyncDecodeToFirstVideoData()
 {
   bool eof = false;
   while (!eof && VideoQueue().GetSize() == 0) {
-    {
-      ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-      if (mDecoder->IsShutdown()) {
-        return nullptr;
-      }
+    if (mDecoder->IsOggDecoderShutdown()) {
+      return nullptr;
     }
     bool keyframeSkip = false;
     eof = !DecodeVideoFrame(keyframeSkip, 0);
