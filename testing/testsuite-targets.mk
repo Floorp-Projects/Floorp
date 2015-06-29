@@ -407,7 +407,6 @@ package-tests: \
   stage-web-platform-tests \
   stage-luciddream \
   test-packages-manifest \
-  test-packages-manifest-tc \
   $(NULL)
 ifdef MOZ_WEBRTC
 package-tests: stage-steeplechase
@@ -417,45 +416,19 @@ else
 PKG_STAGE = $(DIST)/universal/test-stage
 endif
 
-TEST_PKGS := \
-  cppunittest \
-  mochitest \
-  reftest \
-  xpcshell \
-  web-platform \
-  $(NULL)
-
-PKG_ARG = --$(1) $(PKG_BASENAME).$(1).tests.zip
-
-test-packages-manifest-tc:
-	$(PYTHON) $(topsrcdir)/build/gen_test_packages_manifest.py \
-      --jsshell $(JSSHELL_NAME) \
-      --dest-file $(MOZ_TEST_PACKAGES_FILE_TC) \
-      --use-short-names \
-      $(call PKG_ARG,common) \
-      $(foreach pkg,$(TEST_PKGS),$(call PKG_ARG,$(pkg)))
-
 test-packages-manifest:
 	@rm -f $(MOZ_TEST_PACKAGES_FILE)
-	$(PYTHON) $(topsrcdir)/build/gen_test_packages_manifest.py \
-      --jsshell $(JSSHELL_NAME) \
-      --dest-file $(MOZ_TEST_PACKAGES_FILE) \
-      $(call PKG_ARG,common) \
-      $(foreach pkg,$(TEST_PKGS),$(call PKG_ARG,$(pkg)))
+	$(PYTHON) $(topsrcdir)/build/gen_test_packages_manifest.py --common $(TEST_PACKAGE) --jsshell $(JSSHELL_NAME) --dest-file $(MOZ_TEST_PACKAGES_FILE)
 
 package-tests:
 	@rm -f '$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)'
 ifndef UNIVERSAL_BINARY
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 endif
-# Exclude harness specific directories when generating the common zip.
 	$(MKDIR) -p $(abspath $(DIST))/$(PKG_PATH) && \
 	cd $(PKG_STAGE) && \
 	  zip -rq9D '$(abspath $(DIST))/$(PKG_PATH)$(TEST_PACKAGE)' \
-	  * -x \*/.mkdir.done \*.pyc $(foreach name,$(TEST_PKGS),$(name)\*) && \
-	$(foreach name,$(TEST_PKGS),rm -f '$(DIST)/$(PKG_PATH)$(PKG_BASENAME).'$(name)'.tests.zip' && \
-                                zip -rq9D '$(abspath $(DIST))/$(PKG_PATH)$(PKG_BASENAME).'$(name)'.tests.zip' \
-                                $(name) -x \*/.mkdir.done \*.pyc ;)
+	  * -x \*/.mkdir.done \*.pyc
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 package-tests: stage-android
@@ -537,24 +510,24 @@ endif
 endif
 
 stage-cppunittests: make-stage-dir
-	$(NSINSTALL) -D $(PKG_STAGE)/cppunittest
+	$(NSINSTALL) -D $(PKG_STAGE)/cppunittests
 ifdef STRIP_CPP_TESTS
-	$(foreach bin,$(CPP_UNIT_TEST_BINS),$(OBJCOPY) $(or $(STRIP_FLAGS),--strip-unneeded) $(bin) $(bin:$(DIST)/cppunittests/%=$(PKG_STAGE)/cppunittest/%);)
+	$(foreach bin,$(CPP_UNIT_TEST_BINS),$(OBJCOPY) $(or $(STRIP_FLAGS),--strip-unneeded) $(bin) $(bin:$(DIST)/%=$(PKG_STAGE)/%);)
 else
-	cp -RL $(CPP_UNIT_TEST_BINS) $(PKG_STAGE)/cppunittest
+	cp -RL $(DIST)/cppunittests $(PKG_STAGE)
 endif
-	cp $(topsrcdir)/testing/runcppunittests.py $(PKG_STAGE)/cppunittest
-	cp $(topsrcdir)/testing/remotecppunittests.py $(PKG_STAGE)/cppunittest
-	cp $(topsrcdir)/testing/cppunittest.ini $(PKG_STAGE)/cppunittest
-	cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/cppunittest
+	cp $(topsrcdir)/testing/runcppunittests.py $(PKG_STAGE)/cppunittests
+	cp $(topsrcdir)/testing/remotecppunittests.py $(PKG_STAGE)/cppunittests
+	cp $(topsrcdir)/testing/cppunittest.ini $(PKG_STAGE)/cppunittests
+	cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/cppunittests
 ifeq ($(MOZ_DISABLE_STARTUPCACHE),)
-	cp $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.js $(PKG_STAGE)/cppunittest
-	cp $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.manifest $(PKG_STAGE)/cppunittest
+	cp $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.js $(PKG_STAGE)/cppunittests
+	cp $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.manifest $(PKG_STAGE)/cppunittests
 endif
 ifdef STRIP_CPP_TESTS
-	$(OBJCOPY) $(or $(STRIP_FLAGS),--strip-unneeded) $(DIST)/bin/jsapi-tests$(BIN_SUFFIX) $(PKG_STAGE)/cppunittest/jsapi-tests$(BIN_SUFFIX)
+	$(OBJCOPY) $(or $(STRIP_FLAGS),--strip-unneeded) $(DIST)/bin/jsapi-tests$(BIN_SUFFIX) $(PKG_STAGE)/cppunittests/jsapi-tests$(BIN_SUFFIX)
 else
-	cp -RL $(DIST)/bin/jsapi-tests$(BIN_SUFFIX) $(PKG_STAGE)/cppunittest
+	cp -RL $(DIST)/bin/jsapi-tests$(BIN_SUFFIX) $(PKG_STAGE)/cppunittests
 endif
 
 stage-jittest: make-stage-dir
@@ -634,6 +607,5 @@ stage-instrumentation-tests: make-stage-dir
   stage-instrumentation-tests \
   stage-luciddream \
   test-packages-manifest \
-  test-packages-manifest-tc \
   $(NULL)
 

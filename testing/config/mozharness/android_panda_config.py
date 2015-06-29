@@ -15,7 +15,7 @@ config = {
                 "--skip-manifest=../tests/cppunittests/android_cppunittest_manifest.txt"
             ],
             "run_filename": "remotecppunittests.py",
-            "testsdir": "cppunittest"
+            "testsdir": "cppunittests"
         },
         "crashtest": {
             "options": [
