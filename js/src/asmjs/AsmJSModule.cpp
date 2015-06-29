@@ -1787,6 +1787,9 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
         BOffImm calleeOffset;
         callerInsn->as<InstBLImm>()->extractImm(&calleeOffset);
         void* callee = calleeOffset.getDest(callerInsn);
+#elif defined(JS_CODEGEN_ARM64)
+        MOZ_CRASH();
+        void* callee = nullptr;
 #elif defined(JS_CODEGEN_MIPS)
         Instruction* instr = (Instruction*)(callerRetAddr - 4 * sizeof(uint32_t));
         void* callee = (void*)Assembler::ExtractLuiOriValue(instr, instr->next());
@@ -1811,6 +1814,8 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
         X86Encoding::SetRel32(callerRetAddr, newCallee);
 #elif defined(JS_CODEGEN_ARM)
         new (caller) InstBLImm(BOffImm(newCallee - caller), Assembler::Always);
+#elif defined(JS_CODEGEN_ARM64)
+        MOZ_CRASH();
 #elif defined(JS_CODEGEN_MIPS)
         Assembler::WriteLuiOriInstructions(instr, instr->next(),
                                            ScratchRegister, (uint32_t)newCallee);
@@ -1874,6 +1879,8 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
             MOZ_ASSERT(reinterpret_cast<Instruction*>(jump)->is<InstBImm>());
             new (jump) InstNOP();
         }
+#elif defined(JS_CODEGEN_ARM64)
+        MOZ_CRASH();
 #elif defined(JS_CODEGEN_MIPS)
         Instruction* instr = (Instruction*)jump;
         if (enabled) {

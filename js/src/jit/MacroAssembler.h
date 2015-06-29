@@ -17,6 +17,8 @@
 # include "jit/x64/MacroAssembler-x64.h"
 #elif defined(JS_CODEGEN_ARM)
 # include "jit/arm/MacroAssembler-arm.h"
+#elif defined(JS_CODEGEN_ARM64)
+# include "jit/arm64/MacroAssembler-arm64.h"
 #elif defined(JS_CODEGEN_MIPS)
 # include "jit/mips/MacroAssembler-mips.h"
 #elif defined(JS_CODEGEN_NONE)
@@ -43,6 +45,8 @@
 #elif defined(JS_CODEGEN_X64)
 # define ONLY_X86_X64
 #elif defined(JS_CODEGEN_ARM)
+# define ONLY_X86_X64 = delete
+#elif defined(JS_CODEGEN_ARM64)
 # define ONLY_X86_X64 = delete
 #elif defined(JS_CODEGEN_MIPS)
 # define ONLY_X86_X64 = delete
@@ -233,9 +237,13 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
 
         moveResolver_.setAllocator(*jcx->temp);
-#ifdef JS_CODEGEN_ARM
+
+#if defined(JS_CODEGEN_ARM)
         initWithAllocator();
         m_buffer.id = jcx->getNextAssemblerId();
+#elif defined(JS_CODEGEN_ARM64)
+        initWithAllocator();
+        armbuffer_.id = jcx->getNextAssemblerId();
 #endif
     }
 
@@ -250,9 +258,12 @@ class MacroAssembler : public MacroAssemblerSpecific
       : emitProfilingInstrumentation_(false),
         framePushed_(0)
     {
-#ifdef JS_CODEGEN_ARM
+#if defined(JS_CODEGEN_ARM)
         initWithAllocator();
         m_buffer.id = 0;
+#elif defined(JS_CODEGEN_ARM64)
+        initWithAllocator();
+        armbuffer_.id = 0;
 #endif
     }
 
@@ -572,7 +583,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
 #elif defined(JS_PUNBOX64)
         if (dest.valueReg() != JSReturnReg)
-            movq(JSReturnReg, dest.valueReg());
+            mov(JSReturnReg, dest.valueReg());
 #else
 #error "Bad architecture"
 #endif
