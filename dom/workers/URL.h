@@ -12,6 +12,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/URLSearchParams.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace dom {
@@ -26,6 +27,7 @@ class URLProxy;
 class ConstructorRunnable;
 
 class URL final : public mozilla::dom::URLSearchParamsObserver
+                , public nsWrapperCache
 {
   typedef mozilla::dom::URLSearchParams URLSearchParams;
 
@@ -44,8 +46,8 @@ public:
     return nullptr;
   }
 
-  bool
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // Methods for WebIDL
 
