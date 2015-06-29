@@ -193,7 +193,7 @@ ResolveURI(nsIURI* aURI, nsAString& out)
 JSAddonId*
 MapURIToAddonID(nsIURI* aURI)
 {
-  if (!NS_IsMainThread() || XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!NS_IsMainThread() || !XRE_IsParentProcess()) {
     return nullptr;
   }
 

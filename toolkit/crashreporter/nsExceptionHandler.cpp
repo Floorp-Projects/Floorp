@@ -1774,7 +1774,7 @@ nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
   if (NS_FAILED(rv))
     return rv;
 
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     if (!NS_IsMainThread()) {
       NS_ERROR("Cannot call AnnotateCrashReport in child processes from non-main thread.");
       return NS_ERROR_FAILURE;
@@ -1829,7 +1829,7 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
   if (DoFindInReadable(data, NS_LITERAL_CSTRING("\0")))
     return NS_ERROR_INVALID_ARG;
 
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     if (!NS_IsMainThread()) {
       NS_ERROR("Cannot call AnnotateCrashReport in child processes from non-main thread.");
       return NS_ERROR_FAILURE;

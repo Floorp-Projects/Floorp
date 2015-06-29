@@ -583,7 +583,7 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
     if (testFile) {
         *aRealFile = true;
 
-        if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        if (XRE_IsParentProcess()) {
             nsCOMPtr<nsIXPConnectJSObjectHolder> locationHolder;
             rv = xpc->WrapNative(aCx, obj, aComponentFile,
                                  NS_GET_IID(nsIFile),

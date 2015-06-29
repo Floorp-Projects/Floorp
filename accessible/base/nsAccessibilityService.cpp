@@ -1265,7 +1265,7 @@ nsAccessibilityService::Init()
   logging::CheckEnv();
 #endif
 
-  if (XRE_GetProcessType() == GeckoProcessType_Default)
+  if (XRE_IsParentProcess())
     gApplicationAccessible = new ApplicationAccessibleWrap();
   else
     gApplicationAccessible = new ApplicationAccessible();
@@ -1286,7 +1286,7 @@ nsAccessibilityService::Init()
   gIsShutdown = false;
 
   // Now its safe to start platform accessibility.
-  if (XRE_GetProcessType() == GeckoProcessType_Default)
+  if (XRE_IsParentProcess())
     PlatformInit();
 
   return true;
@@ -1329,7 +1329,7 @@ nsAccessibilityService::Shutdown()
 
   gIsShutdown = true;
 
-  if (XRE_GetProcessType() == GeckoProcessType_Default)
+  if (XRE_IsParentProcess())
     PlatformShutdown();
 
   gApplicationAccessible->Shutdown();
