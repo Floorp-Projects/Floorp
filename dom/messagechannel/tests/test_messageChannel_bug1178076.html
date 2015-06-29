@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1178076
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1178076</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1178076">Mozilla Bug 1178076</a>
+<div id="content"></div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  function runTest() {
+    onmessage = function(e) {
+      ok(e.ports.length, 1, "A port has been received!");
+      var port = e.ports[0];
+      ok(port instanceof MessagePort, "This is a port.");
+      SimpleTest.finish();
+    }
+
+    // In this test we want to see if we leak a neutered port closing port1
+    // and sending port2 to the same window. This operation doesn't involve IPC.
+    var mc = new MessageChannel();
+    mc.port1.close();
+    postMessage(42, '*', [mc.port2]);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [["dom.messageChannel.enabled", true]]}, runTest);
+  </script>
+</body>
+</html>
