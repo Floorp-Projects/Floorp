@@ -81,6 +81,7 @@
 
 <!ENTITY settings "Settings">
 <!ENTITY settings_title "Settings">
+<!ENTITY pref_category_input_options "Input options">
 <!ENTITY pref_category_advanced "Advanced">
 <!ENTITY pref_category_customize "Customize">
 <!ENTITY pref_category_customize_summary "Home, search, tabs, import">
@@ -136,7 +137,7 @@
 <!ENTITY pref_category_display "Display">
 <!ENTITY pref_category_display_summary "Text, title bar, full-screen browsing">
 <!ENTITY pref_category_privacy_short "Privacy">
-<!ENTITY pref_category_privacy_summary "Control passwords, cookies, tracking, data">
+<!ENTITY pref_category_privacy_summary2 "Control logins, cookies, tracking, data">
 <!ENTITY pref_category_vendor "&vendorShortName;">
 <!ENTITY pref_category_vendor_summary "About &brandShortName;, FAQs, data choices">
 <!ENTITY pref_category_datareporting "Data choices">
@@ -155,7 +156,7 @@
 <!ENTITY pref_category_devtools "Developer tools">
 <!ENTITY pref_developer_remotedebugging "Remote debugging">
 <!ENTITY pref_category_logins "Logins">
-<!ENTITY pref_remember_signons "Remember passwords">
+<!ENTITY pref_remember_signons2 "Remember logins">
 <!ENTITY pref_open_external_urls_privately_title "Open links in Private browsing">
 <!ENTITY pref_open_external_urls_privately_summary "For all external links opened in &brandShortName;">
 <!ENTITY pref_manage_logins "Manage logins">
@@ -250,10 +251,14 @@ size. -->
 <!ENTITY pref_media_autoplay_enabled_summary "Control if websites can autoplay videos and other media content">
 <!ENTITY pref_zoom_force_enabled "Always enable zoom">
 <!ENTITY pref_zoom_force_enabled_summary "Force override so you can zoom any page">
+<!ENTITY pref_voice_input "Voice input">
+<!ENTITY pref_voice_input_summary "Allow voice dictation in the title bar">
+<!ENTITY pref_qrcode_enabled "QR code reader">
+<!ENTITY pref_qrcode_enabled_summary "Allow QR scanner in the title bar">
 
 <!ENTITY pref_use_master_password "Use master password">
 <!ENTITY pref_sync "Sync">
-<!ENTITY pref_sync_summary "Sync your tabs, bookmarks, passwords, history">
+<!ENTITY pref_sync_summary2 "Sync your tabs, bookmarks, logins, history">
 <!ENTITY pref_search_suggestions "Show search suggestions">
 <!ENTITY pref_import_android "Import from Android">
 <!ENTITY pref_import_android_summary "Import bookmarks and history from the native browser">
@@ -261,7 +266,7 @@ size. -->
 <!ENTITY pref_private_data_searchHistory "Search history">
 <!ENTITY pref_private_data_formdata2 "Form history">
 <!ENTITY pref_private_data_cookies2 "Cookies &amp; active logins">
-<!ENTITY pref_private_data_passwords "Saved passwords">
+<!ENTITY pref_private_data_passwords2 "Saved logins">
 <!ENTITY pref_private_data_cache "Cache">
 <!ENTITY pref_private_data_offlineApps "Offline website data">
 <!ENTITY pref_private_data_siteSettings2 "Site settings">
@@ -610,7 +615,7 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY guest_session_dialog_continue "Continue">
 <!ENTITY guest_session_dialog_cancel "Cancel">
 <!ENTITY new_guest_session_title "&brandShortName; will now restart">
-<!ENTITY new_guest_session_text "The person using it will not be able to see any of your personal browsing data (like saved passwords, history or bookmarks).\n\nWhen your guest is done, their browsing data will be deleted and your session will be restored.">
+<!ENTITY new_guest_session_text2 "The person using it will not be able to see any of your personal browsing data (like saved logins, history or bookmarks).\n\nWhen your guest is done, their browsing data will be deleted and your session will be restored.">
 <!ENTITY guest_browsing_notification_title "Guest browsing is enabled">
 <!ENTITY guest_browsing_notification_text "Tap to exit">
 

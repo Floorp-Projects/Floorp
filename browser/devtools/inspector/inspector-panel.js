@@ -686,6 +686,19 @@ InspectorPanel.prototype = {
     let copyInnerHTML = this.panelDoc.getElementById("node-menu-copyinner");
     let copyOuterHTML = this.panelDoc.getElementById("node-menu-copyouter");
     let scrollIntoView = this.panelDoc.getElementById("node-menu-scrollnodeintoview");
+    let expandAll = this.panelDoc.getElementById("node-menu-expand");
+    let collapse = this.panelDoc.getElementById("node-menu-collapse");
+
+    expandAll.setAttribute("disabled", "true");
+    collapse.setAttribute("disabled", "true");
+
+    let markUpContainer = this.markup.importNode(this.selection.nodeFront, false);
+    if (this.selection.isNode() && markUpContainer.hasChildren) {
+      if (markUpContainer.expanded) {
+        collapse.removeAttribute("disabled");
+      }
+      expandAll.removeAttribute("disabled");
+    }
 
     this._target.actorHasMethod("domnode", "scrollIntoView").then(value => {
       scrollIntoView.hidden = !value;
@@ -1119,6 +1132,14 @@ InspectorPanel.prototype = {
       // remove the node from content
       this.walker.removeNode(this.selection.nodeFront);
     }
+  },
+
+  expandNode: function() {
+    this.markup.expandAll(this.selection.nodeFront);
+  },
+
+  collapseNode: function() {
+    this.markup.collapseNode(this.selection.nodeFront);
   },
 
   /**

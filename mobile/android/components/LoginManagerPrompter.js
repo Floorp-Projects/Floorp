@@ -6,9 +6,10 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
+const Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 /* Constants for password prompt telemetry.
  * Mirrored in nsLoginManagerPrompter.js */
@@ -443,7 +444,7 @@ LoginManagerPrompter.prototype = {
 
         // If the URI explicitly specified a port, only include it when
         // it's not the default. (We never want "http://foo.com:80")
-        port = uri.port;
+        let port = uri.port;
         if (port != -1) {
             var handler = Services.io.getProtocolHandler(scheme);
             if (port != handler.defaultPort)

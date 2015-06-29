@@ -1038,7 +1038,7 @@ Search.prototype = {
   _addSearchEngineMatch(match, query, suggestion) {
     let actionURLParams = {
       engineName: match.engineName,
-      input: this._originalSearchString,
+      input: suggestion || this._originalSearchString,
       searchQuery: query,
     };
     if (suggestion)
@@ -1190,8 +1190,9 @@ Search.prototype = {
     if (this._searchSuggestionController) {
       let [match, suggestion] = this._searchSuggestionController.consume();
       if (suggestion) {
-        this._addSearchEngineMatch(match, this._originalSearchString,
-                                   suggestion);
+        // Don't include the restrict token, if present.
+        let searchString = this._searchTokens.join(" ");
+        this._addSearchEngineMatch(match, searchString, suggestion);
         return true;
       }
     }

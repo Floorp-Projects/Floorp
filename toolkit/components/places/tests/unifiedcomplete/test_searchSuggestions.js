@@ -5,12 +5,21 @@ const SERVER_PORT = 9000;
 const SUGGEST_PREF = "browser.urlbar.suggest.searches";
 const SUGGEST_RESTRICT_TOKEN = "$";
 
-// Set this to some other function to change how the server converts search
-// strings into suggestions.
-let suggestionsFromSearchString = searchStr => {
-  let suffixes = ["foo", "bar"];
-  return suffixes.map(s => searchStr + " " + s);
-};
+let suggestionsFn;
+let previousSuggestionsFn;
+
+function setSuggestionsFn(fn) {
+  previousSuggestionsFn = suggestionsFn;
+  suggestionsFn = fn;
+}
+
+function* cleanUpSuggestions() {
+  yield cleanup();
+  if (previousSuggestionsFn) {
+    suggestionsFn = previousSuggestionsFn;
+    previousSuggestionsFn = null;
+  }
+}
 
 add_task(function* setUp() {
   // Set up a server that provides some suggestions by appending strings onto
@@ -20,10 +29,14 @@ add_task(function* setUp() {
     // URL query params are x-www-form-urlencoded, which converts spaces into
     // plus signs, so un-convert any plus signs back to spaces.
     let searchStr = decodeURIComponent(req.queryString.replace(/\+/g, " "));
-    let suggestions = suggestionsFromSearchString(searchStr);
+    let suggestions = suggestionsFn(searchStr);
     let data = [searchStr, suggestions];
     resp.setHeader("Content-Type", "application/json", false);
     resp.write(JSON.stringify(data));
+  });
+  setSuggestionsFn(searchStr => {
+    let suffixes = ["foo", "bar"];
+    return suffixes.map(s => searchStr + " " + s);
   });
 
   // Install the test engine.
@@ -31,8 +44,6 @@ add_task(function* setUp() {
   do_register_cleanup(() => Services.search.currentEngine = oldCurrentEngine);
   let engine = yield addTestEngine(ENGINE_NAME, server);
   Services.search.currentEngine = engine;
-
-  yield cleanup();
 });
 
 add_task(function* disabled() {
@@ -41,20 +52,19 @@ add_task(function* disabled() {
     search: "hello",
     matches: [],
   });
-  yield cleanup();
+  yield cleanUpSuggestions();
 });
 
 add_task(function* singleWordQuery() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
 
-  let searchStr = "hello";
   yield check_autocomplete({
-    search: searchStr,
+    search: "hello",
     matches: [{
       uri: makeActionURI(("searchengine"), {
         engineName: ENGINE_NAME,
-        input: searchStr,
-        searchQuery: searchStr,
+        input: "hello foo",
+        searchQuery: "hello",
         searchSuggestion: "hello foo",
       }),
       title: ENGINE_NAME,
@@ -63,8 +73,8 @@ add_task(function* singleWordQuery() {
     }, {
       uri: makeActionURI(("searchengine"), {
         engineName: ENGINE_NAME,
-        input: searchStr,
-        searchQuery: searchStr,
+        input: "hello bar",
+        searchQuery: "hello",
         searchSuggestion: "hello bar",
       }),
       title: ENGINE_NAME,
@@ -73,20 +83,19 @@ add_task(function* singleWordQuery() {
     }],
   });
 
-  yield cleanup();
+  yield cleanUpSuggestions();
 });
 
 add_task(function* multiWordQuery() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
 
-  let searchStr = "hello world";
   yield check_autocomplete({
-    search: searchStr,
+    search: "hello world",
     matches: [{
       uri: makeActionURI(("searchengine"), {
         engineName: ENGINE_NAME,
-        input: searchStr,
-        searchQuery: searchStr,
+        input: "hello world foo",
+        searchQuery: "hello world",
         searchSuggestion: "hello world foo",
       }),
       title: ENGINE_NAME,
@@ -95,8 +104,8 @@ add_task(function* multiWordQuery() {
     }, {
       uri: makeActionURI(("searchengine"), {
         engineName: ENGINE_NAME,
-        input: searchStr,
-        searchQuery: searchStr,
+        input: "hello world bar",
+        searchQuery: "hello world",
         searchSuggestion: "hello world bar",
       }),
       title: ENGINE_NAME,
@@ -105,26 +114,24 @@ add_task(function* multiWordQuery() {
     }],
   });
 
-  yield cleanup();
+  yield cleanUpSuggestions();
 });
 
 add_task(function* suffixMatch() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
 
-  let oldFn = suggestionsFromSearchString;
-  suggestionsFromSearchString = searchStr => {
+  setSuggestionsFn(searchStr => {
     let prefixes = ["baz", "quux"];
     return prefixes.map(p => p + " " + searchStr);
-  };
+  });
 
-  let searchStr = "hello";
   yield check_autocomplete({
-    search: searchStr,
+    search: "hello",
     matches: [{
       uri: makeActionURI(("searchengine"), {
         engineName: ENGINE_NAME,
-        input: searchStr,
-        searchQuery: searchStr,
+        input: "baz hello",
+        searchQuery: "hello",
         searchSuggestion: "baz hello",
       }),
       title: ENGINE_NAME,
@@ -133,8 +140,8 @@ add_task(function* suffixMatch() {
     }, {
       uri: makeActionURI(("searchengine"), {
         engineName: ENGINE_NAME,
-        input: searchStr,
-        searchQuery: searchStr,
+        input: "quux hello",
+        searchQuery: "hello",
         searchSuggestion: "quux hello",
       }),
       title: ENGINE_NAME,
@@ -143,8 +150,42 @@ add_task(function* suffixMatch() {
     }],
   });
 
-  suggestionsFromSearchString = oldFn;
-  yield cleanup();
+  yield cleanUpSuggestions();
+});
+
+add_task(function* queryIsNotASubstring() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, true);
+
+  setSuggestionsFn(searchStr => {
+    return ["aaa", "bbb"];
+  });
+
+  yield check_autocomplete({
+    search: "hello",
+    matches: [{
+      uri: makeActionURI(("searchengine"), {
+        engineName: ENGINE_NAME,
+        input: "aaa",
+        searchQuery: "hello",
+        searchSuggestion: "aaa",
+      }),
+      title: ENGINE_NAME,
+      style: ["action", "searchengine"],
+      icon: "",
+    }, {
+      uri: makeActionURI(("searchengine"), {
+        engineName: ENGINE_NAME,
+        input: "bbb",
+        searchQuery: "hello",
+        searchSuggestion: "bbb",
+      }),
+      title: ENGINE_NAME,
+      style: ["action", "searchengine"],
+      icon: "",
+    }],
+  });
+
+  yield cleanUpSuggestions();
 });
 
 add_task(function* restrictToken() {
@@ -171,9 +212,8 @@ add_task(function* restrictToken() {
 
   // Do an unrestricted search to make sure everything appears in it, including
   // the visit and bookmark.
-  let searchStr = "hello";
   yield check_autocomplete({
-    search: searchStr,
+    search: "hello",
     matches: [
       {
         uri: NetUtil.newURI("http://example.com/hello-visit"),
@@ -187,8 +227,8 @@ add_task(function* restrictToken() {
       {
         uri: makeActionURI(("searchengine"), {
           engineName: ENGINE_NAME,
-          input: searchStr,
-          searchQuery: searchStr,
+          input: "hello foo",
+          searchQuery: "hello",
           searchSuggestion: "hello foo",
         }),
         title: ENGINE_NAME,
@@ -198,8 +238,8 @@ add_task(function* restrictToken() {
       {
         uri: makeActionURI(("searchengine"), {
           engineName: ENGINE_NAME,
-          input: searchStr,
-          searchQuery: searchStr,
+          input: "hello bar",
+          searchQuery: "hello",
           searchSuggestion: "hello bar",
         }),
         title: ENGINE_NAME,
@@ -210,15 +250,14 @@ add_task(function* restrictToken() {
   });
 
   // Now do a restricted search to make sure only suggestions appear.
-  searchStr = SUGGEST_RESTRICT_TOKEN + " hello";
   yield check_autocomplete({
-    search: searchStr,
+    search: SUGGEST_RESTRICT_TOKEN + " hello",
     matches: [
       {
         uri: makeActionURI(("searchengine"), {
           engineName: ENGINE_NAME,
-          input: searchStr,
-          searchQuery: searchStr,
+          input: "hello foo",
+          searchQuery: "hello",
           searchSuggestion: "hello foo",
         }),
         title: ENGINE_NAME,
@@ -228,8 +267,8 @@ add_task(function* restrictToken() {
       {
         uri: makeActionURI(("searchengine"), {
           engineName: ENGINE_NAME,
-          input: searchStr,
-          searchQuery: searchStr,
+          input: "hello bar",
+          searchQuery: "hello",
           searchSuggestion: "hello bar",
         }),
         title: ENGINE_NAME,
@@ -239,5 +278,5 @@ add_task(function* restrictToken() {
     ],
   });
 
-  yield cleanup();
+  yield cleanUpSuggestions();
 });
