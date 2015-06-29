@@ -67,3 +67,9 @@ HTTP(../..) == s72-border-spacing-002.xht s72-border-spacing-002-ref.xht
 HTTP(../..) == s72-border-spacing-003.xht s72-border-spacing-002-ref.xht
 HTTP(../..) == s72-border-spacing-004.xht s72-border-spacing-002-ref.xht
 HTTP(../..) == s72-border-spacing-005.xht s72-border-spacing-002-ref.xht
+fuzzy-if(winWidget,48,600) HTTP(../..) == wm-row-progression-002.xht multicol-count-002-ref.xht
+fuzzy-if(winWidget,48,600) HTTP(../..) == wm-row-progression-003.xht multicol-count-002-ref.xht
+fuzzy-if(winWidget,48,600) HTTP(../..) == wm-row-progression-004.xht multicol-count-002-ref.xht
+fuzzy-if(winWidget,48,600) HTTP(../..) == wm-row-progression-005.xht multicol-count-002-ref.xht
+fuzzy-if(winWidget,48,600) HTTP(../..) == wm-row-progression-006.xht multicol-count-002-ref.xht
+fuzzy-if(winWidget,48,600) HTTP(../..) == wm-row-progression-007.xht multicol-count-002-ref.xht
