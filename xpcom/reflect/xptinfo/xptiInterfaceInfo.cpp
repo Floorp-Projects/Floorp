@@ -12,10 +12,6 @@
 #include "mozilla/PodOperations.h"
 #include "jsapi.h"
 
-#ifdef XP_WIN
-#include <windows.h>
-#endif
-
 using namespace mozilla;
 
 /***************************************************************************/
@@ -769,25 +765,5 @@ xptiInterfaceInfo::Release(void)
     }
     return cnt;
 }
-
-#ifdef XP_WIN
-// static
-void*
-xptiInterfaceInfo::sBrokenModule;
-
-// static
-void*
-xptiInterfaceInfo::GetCaller(void* returnAddress)
-{
-    HMODULE module = nullptr;
-    if (::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                            (LPCTSTR)returnAddress,
-                            &module)) {
-        return module;
-    }
-    return nullptr;
-}
-#endif
 
 /***************************************************************************/
