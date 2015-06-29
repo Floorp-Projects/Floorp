@@ -10,7 +10,7 @@ config = {
                 "--xre-path=%(abs_app_dir)s"
             ],
             "run_filename": "runcppunittests.py",
-            "testsdir": "cppunittests"
+            "testsdir": "cppunittest"
         },
         "jittest": {
             "options": [

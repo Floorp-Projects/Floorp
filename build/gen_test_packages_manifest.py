@@ -17,9 +17,15 @@ ALL_HARNESSES = [
     'cppunittest',
     'jittest',
     'mozbase',
+    'web-platform',
 ]
 
 PACKAGE_SPECIFIED_HARNESSES = [
+    'cppunittest',
+    'mochitest',
+    'reftest',
+    'xpcshell',
+    'web-platform',
 ]
 
 
