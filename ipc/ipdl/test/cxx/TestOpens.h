@@ -40,7 +40,7 @@ namespace _ipdltest2 {
 class TestOpensOpenedParent : public PTestOpensOpenedParent
 {
 public:
-    TestOpensOpenedParent(Transport* aTransport)
+    explicit TestOpensOpenedParent(Transport* aTransport)
         : mTransport(aTransport)
     {}
     virtual ~TestOpensOpenedParent() {}
@@ -83,7 +83,7 @@ namespace _ipdltest2 {
 class TestOpensOpenedChild : public PTestOpensOpenedChild
 {
 public:
-    TestOpensOpenedChild(Transport* aTransport)
+    explicit TestOpensOpenedChild(Transport* aTransport)
         : mGotHi(false)
         , mTransport(aTransport)
     {}
