@@ -51,6 +51,25 @@ function init()
   });
 }
 
+function checkStack(expectedName) {
+  if (!Services.prefs.getBoolPref("javascript.options.asyncstack")) {
+    do_print("Async stacks are disabled.");
+    return;
+  }
+
+  let stack = Components.stack;
+  while (stack) {
+    do_print(stack.name);
+    if (stack.name == expectedName) {
+      // Reached back to outer function before request
+      ok(true, "Complete stack");
+      return;
+    }
+    stack = stack.asyncCaller || stack.caller;
+  }
+  ok(false, "Incomplete stack");
+}
+
 function test_client_request_callback()
 {
   // Test that DebuggerClient.request accepts a `onResponse` callback as 2nd argument
@@ -60,6 +79,7 @@ function test_client_request_callback()
   }, response => {
     do_check_eq(response.from, gActorId);
     do_check_eq(response.hello, "world");
+    checkStack("test_client_request_callback");
     run_next_test();
   });
 }
@@ -75,6 +95,7 @@ function test_client_request_promise()
   request.then(response => {
     do_check_eq(response.from, gActorId);
     do_check_eq(response.hello, "world");
+    checkStack("test_client_request_promise");
     run_next_test();
   });
 }
@@ -94,6 +115,7 @@ function test_client_request_promise_error()
     do_check_eq(response.from, gActorId);
     do_check_eq(response.error, "code");
     do_check_eq(response.message, "human message");
+    checkStack("test_client_request_promise_error");
     run_next_test();
   });
 }
@@ -108,6 +130,7 @@ function test_client_request_event_emitter()
   request.on("json-reply", reply => {
     do_check_eq(reply.from, gActorId);
     do_check_eq(reply.hello, "world");
+    checkStack("test_client_request_event_emitter");
     run_next_test();
   });
 }
@@ -117,4 +140,3 @@ function close_client() {
     run_next_test()
   });
 }
-
