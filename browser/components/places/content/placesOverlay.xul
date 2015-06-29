@@ -176,7 +176,8 @@
               command="placesCmd_copy"
               label="&copyCmd.label;"
               closemenu="single"
-              accesskey="&copyCmd.accesskey;"/>
+              accesskey="&copyCmd.accesskey;"
+              selection="any"/>
     <menuitem id="placesContext_paste"
               command="placesCmd_paste"
               label="&pasteCmd.label;"
