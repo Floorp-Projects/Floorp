@@ -149,8 +149,6 @@ public:
 
   void AddOutputStream(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
 
-  // Check if the decoder needs to become dormant state.
-  bool IsDormantNeeded();
   // Set/Unset dormant state.
   void SetDormant(bool aDormant);
 

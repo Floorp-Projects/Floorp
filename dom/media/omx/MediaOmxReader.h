@@ -87,7 +87,6 @@ public:
     return mHasVideo;
   }
 
-  virtual bool IsDormantNeeded() { return true;}
   virtual void ReleaseMediaResources();
 
   virtual nsRefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata() override;

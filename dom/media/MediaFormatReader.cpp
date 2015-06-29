@@ -73,9 +73,6 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mSeekable(false)
   , mIsEncrypted(false)
   , mTrackDemuxersMayBlock(false)
-#if defined(READER_DORMANT_HEURISTIC)
-  , mDormantEnabled(Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
-#endif
 {
   MOZ_ASSERT(aDemuxer);
   MOZ_COUNT_CTOR(MediaFormatReader);
@@ -1434,15 +1431,6 @@ MediaFormatReader::GetBuffered()
   }
 
   return intervals.Shift(media::TimeUnit::FromMicroseconds(-startTime));
-}
-
-bool MediaFormatReader::IsDormantNeeded()
-{
-#if defined(READER_DORMANT_HEURISTIC)
-  return mDormantEnabled;
-#else
-  return false;
-#endif
 }
 
 void MediaFormatReader::ReleaseMediaResources()
