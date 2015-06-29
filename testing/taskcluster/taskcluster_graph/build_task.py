@@ -29,5 +29,6 @@ def validate(task):
     if 'build' not in locations:
         raise BuildTaskValidationException('task.extra.locations.build missing')
 
-    if 'tests' not in locations:
-        raise BuildTaskValidationException('task.extra.locations.tests missing')
+    if 'tests' not in locations and 'test_packages' not in locations:
+        raise BuildTaskValidationException('task.extra.locations.tests or '
+                                           'task.extra.locations.tests_packages missing')
