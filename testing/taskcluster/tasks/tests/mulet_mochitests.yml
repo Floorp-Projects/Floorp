@@ -14,7 +14,7 @@ task:
         --config-file ./mozharness/configs/unittests/linux_unittest.py
         --config-file ./mozharness_configs/remove_executables.py
         --installer-url {{build_url}}
-        --test-url {{tests_url}}
+        --test-packages-url {{test_packages_url}}
         --download-symbols ondemand
         --mochitest-suite plain-chunked
         --total-chunk={{total_chunks}}
