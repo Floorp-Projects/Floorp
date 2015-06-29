@@ -4700,9 +4700,14 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     if (aContainerFrame->GetContent() &&
         nsLayoutUtils::HasAnimationsForCompositor(
           aContainerFrame->GetContent(), eCSSProperty_transform)) {
+      // compute scale using the animation on the container (ignoring
+      // its ancestors)
       scale = nsLayoutUtils::ComputeSuitableScaleForAnimation(
                 aContainerFrame->GetContent(), aVisibleRect.Size(),
                 aContainerFrame->PresContext()->GetVisibleArea().Size());
+      // multiply by the scale inherited from ancestors
+      scale.width *= aIncomingScale.mXScale;
+      scale.height *= aIncomingScale.mYScale;
     } else {
       // Scale factors are normalized to a power of 2 to reduce the number of resolution changes
       scale = RoundToFloatPrecision(ThebesMatrix(transform2d).ScaleFactors(true));
