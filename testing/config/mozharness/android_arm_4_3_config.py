@@ -102,7 +102,7 @@ config = {
         },
         "cppunittest": {
             "run_filename": "remotecppunittests.py",
-            "testsdir": "cppunittests",
+            "testsdir": "cppunittest",
             "options": [
                 "--symbols-path=%(symbols_path)s",
                 "--xre-path=%(xre_path)s",
