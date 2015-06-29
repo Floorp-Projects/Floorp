@@ -7,20 +7,21 @@
 // from the js debugger, when changing the value of a property in the variables
 // view.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-eval-in-stackframe.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-eval-in-stackframe.html";
 
 let gWebConsole, gJSTerm, gDebuggerWin, gThread, gDebuggerController,
     gStackframes, gVariablesView;
 
-function test()
-{
+function test() {
   loadTab(TEST_URI).then(() => {
     openConsole().then(consoleOpened);
   });
 }
 
-function consoleOpened(hud)
-{
+function consoleOpened(hud) {
   gWebConsole = hud;
   gJSTerm = hud.jsterm;
 
@@ -30,8 +31,7 @@ function consoleOpened(hud)
   });
 }
 
-function debuggerOpened(aResult)
-{
+function debuggerOpened(aResult) {
   gDebuggerWin = aResult.panelWin;
   gDebuggerController = gDebuggerWin.DebuggerController;
   gThread = gDebuggerController.activeThread;
@@ -45,8 +45,7 @@ function debuggerOpened(aResult)
   });
 }
 
-function onFramesAdded()
-{
+function onFramesAdded() {
   info("onFramesAdded");
 
   executeSoon(() =>
@@ -56,11 +55,10 @@ function onFramesAdded()
   );
 }
 
-
-function onExecuteFooObj(msg)
-{
+function onExecuteFooObj(msg) {
   ok(msg, "output message found");
-  ok(msg.textContent.includes('{ testProp2: "testValue2" }'), "message text check");
+  ok(msg.textContent.includes('{ testProp2: "testValue2" }'),
+                              "message text check");
 
   let anchor = msg.querySelector("a");
   ok(anchor, "object link found");
@@ -71,8 +69,7 @@ function onExecuteFooObj(msg)
                                                gWebConsole.iframeWindow));
 }
 
-function onFooObjFetch(aEvent, aVar)
-{
+function onFooObjFetch(aEvent, aVar) {
   gVariablesView = aVar._variablesView;
   ok(gVariablesView, "variables view object");
 
@@ -82,8 +79,7 @@ function onFooObjFetch(aEvent, aVar)
   ], { webconsole: gWebConsole }).then(onTestPropFound);
 }
 
-function onTestPropFound(aResults)
-{
+function onTestPropFound(aResults) {
   let prop = aResults[0].matchedProp;
   ok(prop, "matched the |testProp2| property in the variables view");
 
@@ -97,8 +93,7 @@ function onTestPropFound(aResults)
   }).then(onFooObjFetchAfterUpdate);
 }
 
-function onFooObjFetchAfterUpdate(aVar)
-{
+function onFooObjFetchAfterUpdate(aVar) {
   info("onFooObjFetchAfterUpdate");
   let para = content.wrappedJSObject.document.querySelector("p");
   let expectedValue = content.document.title + "foo2SecondCall" + para;
@@ -108,17 +103,17 @@ function onFooObjFetchAfterUpdate(aVar)
   ], { webconsole: gWebConsole }).then(onUpdatedTestPropFound);
 }
 
-function onUpdatedTestPropFound(aResults)
-{
+function onUpdatedTestPropFound(aResults) {
   let prop = aResults[0].matchedProp;
   ok(prop, "matched the updated |testProp2| property value");
 
   // Check that testProp2 was updated.
-  executeSoon(() => gJSTerm.execute("fooObj.testProp2").then(onExecuteFooObjTestProp2));
+  executeSoon(() => {
+    gJSTerm.execute("fooObj.testProp2").then(onExecuteFooObjTestProp2);
+  });
 }
 
-function onExecuteFooObjTestProp2()
-{
+function onExecuteFooObjTestProp2() {
   let para = content.wrappedJSObject.document.querySelector("p");
   let expected = content.document.title + "foo2SecondCall" + para;
 
