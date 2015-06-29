@@ -3,50 +3,30 @@ Don't use pthread for libvpx in mingw builds.
 
 
 diff --git a/media/libvpx/vpx_config_x86-win32-gcc.h b/media/libvpx/vpx_config_x86-win32-gcc.h
-index c5452c0..12b5c84 100644
+index 5bc3efb..e60f84d 100644
 --- a/media/libvpx/vpx_config_x86-win32-gcc.h
 +++ b/media/libvpx/vpx_config_x86-win32-gcc.h
-@@ -30,17 +30,18 @@
- #define HAVE_SSSE3 1
- #define HAVE_SSE4_1 1
- #define HAVE_AVX 1
+@@ -32,7 +32,8 @@
  #define HAVE_AVX2 1
- #define HAVE_ALTIVEC 0
  #define HAVE_VPX_PORTS 1
  #define HAVE_STDINT_H 1
- #define HAVE_ALT_TREE_LAYOUT 0
 -#define HAVE_PTHREAD_H 1
 +#undef HAVE_PTHREAD_H
 +#define HAVE_PTHREAD_H 0
  #define HAVE_SYS_MMAN_H 1
  #define HAVE_UNISTD_H 1
  #define CONFIG_DEPENDENCY_TRACKING 1
- #define CONFIG_EXTERNAL_BUILD 0
- #define CONFIG_INSTALL_DOCS 0
- #define CONFIG_INSTALL_BINS 1
- #define CONFIG_INSTALL_LIBS 1
- #define CONFIG_INSTALL_SRCS 0
 diff --git a/media/libvpx/vpx_config_x86_64-win64-gcc.h b/media/libvpx/vpx_config_x86_64-win64-gcc.h
-index 04f382b..4d75a4b 100644
+index 4ff4339..b056a0e 100644
 --- a/media/libvpx/vpx_config_x86_64-win64-gcc.h
 +++ b/media/libvpx/vpx_config_x86_64-win64-gcc.h
-@@ -30,17 +30,18 @@
- #define HAVE_SSSE3 1
- #define HAVE_SSE4_1 1
- #define HAVE_AVX 1
+@@ -32,7 +32,8 @@
  #define HAVE_AVX2 1
- #define HAVE_ALTIVEC 0
  #define HAVE_VPX_PORTS 1
  #define HAVE_STDINT_H 1
- #define HAVE_ALT_TREE_LAYOUT 0
 -#define HAVE_PTHREAD_H 1
 +#undef HAVE_PTHREAD_H
 +#define HAVE_PTHREAD_H 0
  #define HAVE_SYS_MMAN_H 1
  #define HAVE_UNISTD_H 1
  #define CONFIG_DEPENDENCY_TRACKING 1
- #define CONFIG_EXTERNAL_BUILD 0
- #define CONFIG_INSTALL_DOCS 0
- #define CONFIG_INSTALL_BINS 1
- #define CONFIG_INSTALL_LIBS 1
- #define CONFIG_INSTALL_SRCS 0
