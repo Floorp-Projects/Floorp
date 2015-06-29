@@ -60,12 +60,12 @@ static void setup_decoding_thread_data(VP8D_COMP *pbi, MACROBLOCKD *xd, MB_ROW_D
 
         mbd->segmentation_enabled    = xd->segmentation_enabled;
         mbd->mb_segement_abs_delta     = xd->mb_segement_abs_delta;
-        vpx_memcpy(mbd->segment_feature_data, xd->segment_feature_data, sizeof(xd->segment_feature_data));
+        memcpy(mbd->segment_feature_data, xd->segment_feature_data, sizeof(xd->segment_feature_data));
 
         /*signed char ref_lf_deltas[MAX_REF_LF_DELTAS];*/
-        vpx_memcpy(mbd->ref_lf_deltas, xd->ref_lf_deltas, sizeof(xd->ref_lf_deltas));
+        memcpy(mbd->ref_lf_deltas, xd->ref_lf_deltas, sizeof(xd->ref_lf_deltas));
         /*signed char mode_lf_deltas[MAX_MODE_LF_DELTAS];*/
-        vpx_memcpy(mbd->mode_lf_deltas, xd->mode_lf_deltas, sizeof(xd->mode_lf_deltas));
+        memcpy(mbd->mode_lf_deltas, xd->mode_lf_deltas, sizeof(xd->mode_lf_deltas));
         /*unsigned char mode_ref_lf_delta_enabled;
         unsigned char mode_ref_lf_delta_update;*/
         mbd->mode_ref_lf_delta_enabled    = xd->mode_ref_lf_delta_enabled;
@@ -73,10 +73,10 @@ static void setup_decoding_thread_data(VP8D_COMP *pbi, MACROBLOCKD *xd, MB_ROW_D
 
         mbd->current_bc = &pbi->mbc[0];
 
-        vpx_memcpy(mbd->dequant_y1_dc, xd->dequant_y1_dc, sizeof(xd->dequant_y1_dc));
-        vpx_memcpy(mbd->dequant_y1, xd->dequant_y1, sizeof(xd->dequant_y1));
-        vpx_memcpy(mbd->dequant_y2, xd->dequant_y2, sizeof(xd->dequant_y2));
-        vpx_memcpy(mbd->dequant_uv, xd->dequant_uv, sizeof(xd->dequant_uv));
+        memcpy(mbd->dequant_y1_dc, xd->dequant_y1_dc, sizeof(xd->dequant_y1_dc));
+        memcpy(mbd->dequant_y1, xd->dequant_y1, sizeof(xd->dequant_y1));
+        memcpy(mbd->dequant_y2, xd->dequant_y2, sizeof(xd->dequant_y2));
+        memcpy(mbd->dequant_uv, xd->dequant_uv, sizeof(xd->dequant_uv));
 
         mbd->fullpixel_mask = 0xffffffff;
 
@@ -137,7 +137,7 @@ static void mt_decode_macroblock(VP8D_COMP *pbi, MACROBLOCKD *xd,
              * Better to use the predictor as reconstruction.
              */
             pbi->frame_corrupt_residual = 1;
-            vpx_memset(xd->qcoeff, 0, sizeof(xd->qcoeff));
+            memset(xd->qcoeff, 0, sizeof(xd->qcoeff));
             vp8_conceal_corrupt_mb(xd);
 
 
@@ -146,7 +146,7 @@ static void mt_decode_macroblock(VP8D_COMP *pbi, MACROBLOCKD *xd,
             /* force idct to be skipped for B_PRED and use the
              * prediction only for reconstruction
              * */
-            vpx_memset(xd->eobs, 0, 25);
+            memset(xd->eobs, 0, 25);
         }
     }
 #endif
@@ -179,7 +179,7 @@ static void mt_decode_macroblock(VP8D_COMP *pbi, MACROBLOCKD *xd,
 
             /* clear out residual eob info */
             if(xd->mode_info_context->mbmi.mb_skip_coeff)
-                vpx_memset(xd->eobs, 0, 25);
+                memset(xd->eobs, 0, 25);
 
             intra_prediction_down_copy(xd, xd->recon_above[0] + 16);
 
@@ -229,7 +229,7 @@ static void mt_decode_macroblock(VP8D_COMP *pbi, MACROBLOCKD *xd,
                     {
                         vp8_dc_only_idct_add(b->qcoeff[0] * DQC[0],
                                              dst, dst_stride, dst, dst_stride);
-                        vpx_memset(b->qcoeff, 0, 2 * sizeof(b->qcoeff[0]));
+                        memset(b->qcoeff, 0, 2 * sizeof(b->qcoeff[0]));
                     }
                 }
             }
@@ -266,14 +266,14 @@ static void mt_decode_macroblock(VP8D_COMP *pbi, MACROBLOCKD *xd,
 
                     vp8_short_inv_walsh4x4(&b->dqcoeff[0],
                         xd->qcoeff);
-                    vpx_memset(b->qcoeff, 0, 16 * sizeof(b->qcoeff[0]));
+                    memset(b->qcoeff, 0, 16 * sizeof(b->qcoeff[0]));
                 }
                 else
                 {
                     b->dqcoeff[0] = b->qcoeff[0] * xd->dequant_y2[0];
                     vp8_short_inv_walsh4x4_1(&b->dqcoeff[0],
                         xd->qcoeff);
-                    vpx_memset(b->qcoeff, 0, 2 * sizeof(b->qcoeff[0]));
+                    memset(b->qcoeff, 0, 2 * sizeof(b->qcoeff[0]));
                 }
 
                 /* override the dc dequant constant in order to preserve the
@@ -360,7 +360,7 @@ static void mt_decode_mb_rows(VP8D_COMP *pbi, MACROBLOCKD *xd, int start_mb_row)
 
        /* reset contexts */
        xd->above_context = pc->above_context;
-       vpx_memset(xd->left_context, 0, sizeof(ENTROPY_CONTEXT_PLANES));
+       memset(xd->left_context, 0, sizeof(ENTROPY_CONTEXT_PLANES));
 
        xd->left_available = 0;
 
@@ -499,9 +499,9 @@ static void mt_decode_mb_rows(VP8D_COMP *pbi, MACROBLOCKD *xd, int start_mb_row)
                if( mb_row != pc->mb_rows-1 )
                {
                    /* Save decoded MB last row data for next-row decoding */
-                   vpx_memcpy((pbi->mt_yabove_row[mb_row + 1] + 32 + mb_col*16), (xd->dst.y_buffer + 15 * recon_y_stride), 16);
-                   vpx_memcpy((pbi->mt_uabove_row[mb_row + 1] + 16 + mb_col*8), (xd->dst.u_buffer + 7 * recon_uv_stride), 8);
-                   vpx_memcpy((pbi->mt_vabove_row[mb_row + 1] + 16 + mb_col*8), (xd->dst.v_buffer + 7 * recon_uv_stride), 8);
+                   memcpy((pbi->mt_yabove_row[mb_row + 1] + 32 + mb_col*16), (xd->dst.y_buffer + 15 * recon_y_stride), 16);
+                   memcpy((pbi->mt_uabove_row[mb_row + 1] + 16 + mb_col*8), (xd->dst.u_buffer + 7 * recon_uv_stride), 8);
+                   memcpy((pbi->mt_vabove_row[mb_row + 1] + 16 + mb_col*8), (xd->dst.v_buffer + 7 * recon_uv_stride), 8);
                }
 
                /* save left_col for next MB decoding */
@@ -876,23 +876,23 @@ void vp8mt_decode_mb_rows( VP8D_COMP *pbi, MACROBLOCKD *xd)
     if (filter_level)
     {
         /* Set above_row buffer to 127 for decoding first MB row */
-        vpx_memset(pbi->mt_yabove_row[0] + VP8BORDERINPIXELS-1, 127, yv12_fb_new->y_width + 5);
-        vpx_memset(pbi->mt_uabove_row[0] + (VP8BORDERINPIXELS>>1)-1, 127, (yv12_fb_new->y_width>>1) +5);
-        vpx_memset(pbi->mt_vabove_row[0] + (VP8BORDERINPIXELS>>1)-1, 127, (yv12_fb_new->y_width>>1) +5);
+        memset(pbi->mt_yabove_row[0] + VP8BORDERINPIXELS-1, 127, yv12_fb_new->y_width + 5);
+        memset(pbi->mt_uabove_row[0] + (VP8BORDERINPIXELS>>1)-1, 127, (yv12_fb_new->y_width>>1) +5);
+        memset(pbi->mt_vabove_row[0] + (VP8BORDERINPIXELS>>1)-1, 127, (yv12_fb_new->y_width>>1) +5);
 
         for (j=1; j<pc->mb_rows; j++)
         {
-            vpx_memset(pbi->mt_yabove_row[j] + VP8BORDERINPIXELS-1, (unsigned char)129, 1);
-            vpx_memset(pbi->mt_uabove_row[j] + (VP8BORDERINPIXELS>>1)-1, (unsigned char)129, 1);
-            vpx_memset(pbi->mt_vabove_row[j] + (VP8BORDERINPIXELS>>1)-1, (unsigned char)129, 1);
+            memset(pbi->mt_yabove_row[j] + VP8BORDERINPIXELS-1, (unsigned char)129, 1);
+            memset(pbi->mt_uabove_row[j] + (VP8BORDERINPIXELS>>1)-1, (unsigned char)129, 1);
+            memset(pbi->mt_vabove_row[j] + (VP8BORDERINPIXELS>>1)-1, (unsigned char)129, 1);
         }
 
         /* Set left_col to 129 initially */
         for (j=0; j<pc->mb_rows; j++)
         {
-            vpx_memset(pbi->mt_yleft_col[j], (unsigned char)129, 16);
-            vpx_memset(pbi->mt_uleft_col[j], (unsigned char)129, 8);
-            vpx_memset(pbi->mt_vleft_col[j], (unsigned char)129, 8);
+            memset(pbi->mt_yleft_col[j], (unsigned char)129, 16);
+            memset(pbi->mt_uleft_col[j], (unsigned char)129, 8);
+            memset(pbi->mt_vleft_col[j], (unsigned char)129, 8);
         }
 
         /* Initialize the loop filter for this frame. */

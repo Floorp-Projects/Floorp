@@ -73,6 +73,7 @@ typedef struct {
 
   int frames_since_golden;
   int frames_till_gf_update_due;
+  int min_gf_interval;
   int max_gf_interval;
   int static_scene_max_gf_interval;
   int baseline_gf_interval;
@@ -99,6 +100,7 @@ typedef struct {
   int64_t buffer_level;
   int64_t bits_off_target;
   int64_t vbr_bits_off_target;
+  int64_t vbr_bits_off_target_fast;
 
   int decimation_factor;
   int decimation_count;
@@ -151,7 +153,7 @@ int vp9_estimate_bits_at_q(FRAME_TYPE frame_kind, int q, int mbs,
 
 double vp9_convert_qindex_to_q(int qindex, vpx_bit_depth_t bit_depth);
 
-void vp9_rc_init_minq_luts();
+void vp9_rc_init_minq_luts(void);
 
 // Generally at the high level, the following flow is expected
 // to be enforced for rate control:
@@ -238,8 +240,8 @@ int vp9_frame_type_qdelta(const struct VP9_COMP *cpi, int rf_level, int q);
 
 void vp9_rc_update_framerate(struct VP9_COMP *cpi);
 
-void vp9_rc_set_gf_max_interval(const struct VP9_COMP *const cpi,
-                                RATE_CONTROL *const rc);
+void vp9_rc_set_gf_interval_range(const struct VP9_COMP *const cpi,
+                                  RATE_CONTROL *const rc);
 
 void vp9_set_target_rate(struct VP9_COMP *cpi);
 

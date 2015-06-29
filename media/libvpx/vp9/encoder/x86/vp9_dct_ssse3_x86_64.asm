@@ -179,4 +179,77 @@ cglobal fdct8x8, 3, 5, 13, input, output, stride
   mova              [outputq + 112], m7
 
   RET
+
+%macro HMD8_1D 0
+  psubw              m8, m0, m1
+  psubw              m9, m2, m3
+  paddw              m0, m1
+  paddw              m2, m3
+  SWAP               1, 8
+  SWAP               3, 9
+  psubw              m8, m4, m5
+  psubw              m9, m6, m7
+  paddw              m4, m5
+  paddw              m6, m7
+  SWAP               5, 8
+  SWAP               7, 9
+
+  psubw              m8, m0, m2
+  psubw              m9, m1, m3
+  paddw              m0, m2
+  paddw              m1, m3
+  SWAP               2, 8
+  SWAP               3, 9
+  psubw              m8, m4, m6
+  psubw              m9, m5, m7
+  paddw              m4, m6
+  paddw              m5, m7
+  SWAP               6, 8
+  SWAP               7, 9
+
+  psubw              m8, m0, m4
+  psubw              m9, m1, m5
+  paddw              m0, m4
+  paddw              m1, m5
+  SWAP               4, 8
+  SWAP               5, 9
+  psubw              m8, m2, m6
+  psubw              m9, m3, m7
+  paddw              m2, m6
+  paddw              m3, m7
+  SWAP               6, 8
+  SWAP               7, 9
+%endmacro
+
+INIT_XMM ssse3
+cglobal hadamard_8x8, 3, 5, 10, input, stride, output
+  lea                r3, [2 * strideq]
+  lea                r4, [4 * strideq]
+
+  mova               m0, [inputq]
+  mova               m1, [inputq + r3]
+  lea                inputq, [inputq + r4]
+  mova               m2, [inputq]
+  mova               m3, [inputq + r3]
+  lea                inputq, [inputq + r4]
+  mova               m4, [inputq]
+  mova               m5, [inputq + r3]
+  lea                inputq, [inputq + r4]
+  mova               m6, [inputq]
+  mova               m7, [inputq + r3]
+
+  HMD8_1D
+  TRANSPOSE8X8 0, 1, 2, 3, 4, 5, 6, 7, 9
+  HMD8_1D
+
+  mova              [outputq +   0], m0
+  mova              [outputq +  16], m1
+  mova              [outputq +  32], m2
+  mova              [outputq +  48], m3
+  mova              [outputq +  64], m4
+  mova              [outputq +  80], m5
+  mova              [outputq +  96], m6
+  mova              [outputq + 112], m7
+
+  RET
 %endif
