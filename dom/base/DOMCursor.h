@@ -26,6 +26,7 @@ public:
                                            DOMRequest)
 
   DOMCursor(nsPIDOMWindow* aWindow, nsICursorContinueCallback *aCallback);
+  DOMCursor(nsIGlobalObject* aGlobal, nsICursorContinueCallback *aCallback);
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
