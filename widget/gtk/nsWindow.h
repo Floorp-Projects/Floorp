@@ -482,6 +482,8 @@ private:
 
     void CleanLayerManagerRecursive();
 
+    virtual int32_t RoundsWidgetCoordinatesTo() override;
+
     /**
      * |mIMModule| takes all IME related stuff.
      *
