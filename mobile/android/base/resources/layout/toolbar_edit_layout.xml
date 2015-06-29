@@ -21,9 +21,20 @@
           android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
           android:selectAllOnFocus="true"
           android:contentDescription="@string/url_bar_default_text"
-          android:drawableRight="@drawable/ab_mic"
           android:drawablePadding="12dp"
           android:paddingRight="8dp"
           gecko:autoUpdateTheme="false"/>
+
+    <ImageButton android:id="@+id/qrcode"
+                 android:layout_width="@dimen/page_action_button_width"
+                 android:layout_height="match_parent"
+                 android:src="@drawable/ab_qrcode"
+                 android:background="@android:color/transparent"/>
+
+    <ImageButton android:id="@+id/mic"
+                 android:layout_width="@dimen/page_action_button_width"
+                 android:layout_height="match_parent"
+                 android:src="@drawable/ab_mic"
+                 android:background="@android:color/transparent"/>
 
 </merge>

@@ -43,7 +43,7 @@ function add_login(login) {
 add_test(function password_setup() {
   add_login(LOGIN_FIELDS);
 
-  // Load about:passwords.
+  // Load about:logins.
   BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
   browser = BrowserApp.addTab("about:logins", { selected: true, parentId: BrowserApp.selectedTab.id }).browser;
 

@@ -69,14 +69,15 @@
                value="&identity.connectionInternal;"/>
       </vbox>
 
+      <description id="identity-popup-content-verifier"
+                   class="identity-popup-text"/>
+
       <description id="identity-popup-securityView-connection"
                    class="identity-popup-text">&identity.connectionVerified;</description>
 
       <description id="identity-popup-content-owner"
                    class="identity-popup-text"/>
       <description id="identity-popup-content-supplemental"
-                   class="identity-popup-text"/>
-      <description id="identity-popup-content-verifier"
                    class="identity-popup-text"/>
     </panelview>
   </panelmultiview>

@@ -13,7 +13,7 @@
 
     <item android:state_checked="true"
           gecko:state_private="true"
-          android:color="@color/private_toolbar_grey" />
+          android:color="@color/tabs_tray_grey_pressed" />
 
     <item android:state_pressed="true"
           gecko:state_private="true"

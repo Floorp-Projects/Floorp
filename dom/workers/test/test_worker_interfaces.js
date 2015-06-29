@@ -99,9 +99,13 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "DataStoreCursor", b2g: true },
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMCursor",
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "DOMError",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "DOMException",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMRequest",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "DOMStringList",
 // IMPORTANT: Do not change this list without review from a DOM peer!

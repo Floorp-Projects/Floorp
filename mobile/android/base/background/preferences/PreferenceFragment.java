@@ -17,6 +17,7 @@
 package org.mozilla.gecko.background.preferences;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.WeakReferenceHandler;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -49,21 +50,28 @@ public abstract class PreferenceFragment extends Fragment implements PreferenceM
 
   private static final int MSG_BIND_PREFERENCES = 1;
 
-  // This triggers "This Handler class should be static or leaks might occur".
-  // The issue is that the Handler references the Fragment; messages targeting
-  // the Handler reference it; and if such messages are long lived, the Fragment
-  // cannot be GCed. This is not an issue for us; our messages are short-lived.
-  private final Handler mHandler = new Handler() {
+  private static class PreferenceFragmentHandler extends WeakReferenceHandler<PreferenceFragment> {
+    public PreferenceFragmentHandler(final PreferenceFragment that) {
+      super(that);
+    }
+
     @Override
     public void handleMessage(Message msg) {
+      final PreferenceFragment that = mTarget.get();
+      if (that == null) {
+        return;
+      }
+
       switch (msg.what) {
 
       case MSG_BIND_PREFERENCES:
-        bindPreferences();
+        that.bindPreferences();
         break;
       }
     }
-  };
+  }
+
+  private final Handler mHandler = new PreferenceFragmentHandler(this);
 
   final private Runnable mRequestFocus = new Runnable() {
     @Override

@@ -67,6 +67,7 @@ describe("loop.OTSdkDriver", function () {
 
     window.OT = {
       ExceptionCodes: {
+        CONNECT_FAILED: 1006,
         UNABLE_TO_PUBLISH: 1500
       }
     };
@@ -388,12 +389,31 @@ describe("loop.OTSdkDriver", function () {
         sinon.assert.calledOnce(session.publish);
       });
 
+      it("should notify metrics", function() {
+        session.connect.callsArgWith(2, {
+          title: "Fake",
+          code: OT.ExceptionCodes.CONNECT_FAILED
+        });
+
+        driver.connectSession(sessionData);
+
+        sinon.assert.calledTwice(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ConnectionStatus({
+            event: "sdk.exception." + OT.ExceptionCodes.CONNECT_FAILED,
+            state: "starting",
+            connections: 0,
+            sendStreams: 0,
+            recvStreams: 0
+          }));
+      });
+
       it("should dispatch connectionFailure if connecting failed", function() {
         session.connect.callsArgWith(2, new Error("Failure"));
 
         driver.connectSession(sessionData);
 
-        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledTwice(dispatcher.dispatch);
         sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "connectionFailure"));
         sinon.assert.calledWithMatch(dispatcher.dispatch,
@@ -723,13 +743,29 @@ describe("loop.OTSdkDriver", function () {
     });
 
     describe("sessionDisconnected", function() {
+      it("should notify metrics", function() {
+        session.trigger("sessionDisconnected", {
+          reason: "networkDisconnected"
+        });
+
+        sinon.assert.calledTwice(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ConnectionStatus({
+            event: "Session.networkDisconnected",
+            state: "starting",
+            connections: 0,
+            sendStreams: 0,
+            recvStreams: 0
+          }));
+      });
+
       it("should dispatch a connectionFailure action if the session was disconnected",
         function() {
           session.trigger("sessionDisconnected", {
             reason: "networkDisconnected"
           });
 
-          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledTwice(dispatcher.dispatch);
           sinon.assert.calledWithMatch(dispatcher.dispatch,
             sinon.match.hasOwn("name", "connectionFailure"));
           sinon.assert.calledWithMatch(dispatcher.dispatch,
@@ -742,7 +778,7 @@ describe("loop.OTSdkDriver", function () {
             reason: "forceDisconnected"
           });
 
-          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledTwice(dispatcher.dispatch);
           sinon.assert.calledWithMatch(dispatcher.dispatch,
             sinon.match.hasOwn("name", "connectionFailure"));
           sinon.assert.calledWithMatch(dispatcher.dispatch,
@@ -1368,6 +1404,24 @@ describe("loop.OTSdkDriver", function () {
     });
 
     describe("exception", function() {
+      it("should notify metrics", function() {
+        sdk.trigger("exception", {
+          code: OT.ExceptionCodes.CONNECT_FAILED,
+          message: "Fake",
+          title: "Connect Failed"
+        });
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ConnectionStatus({
+            event: "sdk.exception." + OT.ExceptionCodes.CONNECT_FAILED,
+            state: "starting",
+            connections: 0,
+            sendStreams: 0,
+            recvStreams: 0
+          }));
+      });
+
       describe("Unable to publish (GetUserMedia)", function() {
         it("should destroy the publisher", function() {
           sdk.trigger("exception", {
@@ -1376,6 +1430,25 @@ describe("loop.OTSdkDriver", function () {
           });
 
           sinon.assert.calledOnce(publisher.destroy);
+        });
+
+        // XXX We should remove this when we stop being unable to publish as a
+        // workaround for knowing if the user has video as well as audio devices
+        // installed (bug 1138851).
+        it("should not notify metrics", function() {
+          sdk.trigger("exception", {
+            code: OT.ExceptionCodes.UNABLE_TO_PUBLISH,
+            message: "GetUserMedia"
+          });
+
+          sinon.assert.neverCalledWith(dispatcher.dispatch,
+            new sharedActions.ConnectionStatus({
+              event: "sdk.exception." + OT.ExceptionCodes.UNABLE_TO_PUBLISH,
+              state: "starting",
+              connections: 0,
+              sendStreams: 0,
+              recvStreams: 0
+            }));
         });
 
         it("should dispatch a ConnectionFailure action", function() {
