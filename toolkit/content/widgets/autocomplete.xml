@@ -1651,14 +1651,36 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               let engineStr = "- " +
                 this._stringBundle.formatStringFromName("searchWithEngine",
                                                         [engineName], 1);
-              let suggestedPart = "";
+
+              // Make the title by generating an array of pairs and its
+              // corresponding interpolation string (e.g., "%1$S") to pass to
+              // _generateEmphasisPairs.
+              let pairs;
               if (searchSuggestion) {
-                suggestedPart = searchSuggestion.substr(searchQuery.length);
+                // Check if the search query appears in the suggestion.  It may
+                // not.  If it does, then emphasize the query in the suggestion
+                // and otherwise just include the suggestion without emphasis.
+                let idx = searchSuggestion.indexOf(searchQuery);
+                if (idx >= 0) {
+                  pairs = [
+                    [searchSuggestion.substring(0, idx), ""],
+                    [searchQuery, "match"],
+                    [searchSuggestion.substring(idx + searchQuery.length), ""],
+                  ];
+                } else {
+                  pairs = [
+                    [searchSuggestion, ""],
+                  ];
+                }
+              } else {
+                pairs = [
+                  [searchQuery, ""],
+                ];
               }
-              title = this._generateEmphasisPairs(`%1$S${suggestedPart} %2$S`, [
-                                                    [searchQuery, "match"],
-                                                    [engineStr, "selected"],
-                                                  ]);
+              pairs.push([engineStr, "selected"]);
+              let interpStr = pairs.map((pair, i) => `%${i + 1}$S`).join("");
+              title = this._generateEmphasisPairs(interpStr, pairs);
+
               // If this is a default search match, we remove the image so we
               // can style it ourselves with a generic search icon.
               // We don't do this when matching an aliased search engine,

@@ -5,6 +5,8 @@
 
 "use strict";
 
+/*globals MAX_URI_LENGTH, MAX_TITLE_LENGTH */
+
 let Reader = {
   // These values should match those defined in BrowserContract.java.
   STATUS_UNFETCHED: 0,

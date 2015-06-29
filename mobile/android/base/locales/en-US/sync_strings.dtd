@@ -62,7 +62,7 @@
 <!ENTITY sync.configure.engines.title.label 'What to sync'>
 <!ENTITY sync.configure.engines.sync.my.title.label 'Sync your…'>
 <!ENTITY sync.configure.engines.title.bookmarks 'Bookmarks'>
-<!ENTITY sync.configure.engines.title.passwords 'Passwords'>
+<!ENTITY sync.configure.engines.title.passwords2 'Logins'>
 <!ENTITY sync.configure.engines.title.history 'History'>
 <!ENTITY sync.configure.engines.title.tabs 'Tabs'>
 
@@ -141,7 +141,7 @@
 <!ENTITY fxaccount_policy_linkprivacy 'Privacy Notice'>
 
 <!ENTITY fxaccount_getting_started_welcome_to_sync 'Welcome to &syncBrand.shortName.label;'>
-<!ENTITY fxaccount_getting_started_description 'Sign in to sync your tabs, bookmarks, passwords &amp; more.'>
+<!ENTITY fxaccount_getting_started_description2 'Sign in to sync your tabs, bookmarks, logins &amp; more.'>
 <!ENTITY fxaccount_getting_started_get_started 'Get started'>
 <!ENTITY fxaccount_getting_started_old_firefox 'Using an older version of &syncBrand.shortName.label;?'>
 
@@ -212,7 +212,7 @@
 <!ENTITY fxaccount_status_needs_finish_migrating 'Tap to sign in to your new Firefox Account.'>
 <!ENTITY fxaccount_status_bookmarks 'Bookmarks'>
 <!ENTITY fxaccount_status_history 'History'>
-<!ENTITY fxaccount_status_passwords 'Passwords'>
+<!ENTITY fxaccount_status_passwords2 'Logins'>
 <!ENTITY fxaccount_status_tabs 'Open tabs'>
 <!ENTITY fxaccount_status_legal 'Legal' >
 <!-- Localization note: when tapped, the following two strings link to
