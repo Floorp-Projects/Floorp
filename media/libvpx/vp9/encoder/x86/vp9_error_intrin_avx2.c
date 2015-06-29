@@ -9,8 +9,9 @@
  */
 
 #include <immintrin.h>  // AVX2
-#include "vpx/vpx_integer.h"
 
+#include "./vp9_rtcd.h"
+#include "vpx/vpx_integer.h"
 
 int64_t vp9_block_error_avx2(const int16_t *coeff,
                              const int16_t *dqcoeff,

@@ -282,6 +282,8 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   psignw                          m8, m9
   psignw                         m13, m10
   psrlw                           m0, m3, 2
+%else
+  psrlw                           m0, m3, 1
 %endif
   mova            [r4q+ncoeffq*2+ 0], m8
   mova            [r4q+ncoeffq*2+16], m13
@@ -302,7 +304,7 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   mova                           m10, [  coeffq+ncoeffq*2+16] ; m10 = c[i]
   pabsw                           m6, m9                   ; m6 = abs(m9)
   pabsw                          m11, m10                  ; m11 = abs(m10)
-%ifidn %1, fp_32x32
+
   pcmpgtw                         m7, m6,  m0
   pcmpgtw                        m12, m11, m0
   pmovmskb                       r6d, m7
@@ -310,7 +312,7 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
 
   or                              r6, r2
   jz .skip_iter
-%endif
+
   pcmpeqw                         m7, m7
 
   paddsw                          m6, m1                   ; m6 += round
@@ -348,7 +350,6 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   add                        ncoeffq, mmsize
   jl .ac_only_loop
 
-%ifidn %1, fp_32x32
   jmp .accumulate_eob
 .skip_iter:
   mova            [r3q+ncoeffq*2+ 0], m5
@@ -357,7 +358,6 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   mova            [r4q+ncoeffq*2+16], m5
   add                        ncoeffq, mmsize
   jl .ac_only_loop
-%endif
 
 .accumulate_eob:
   ; horizontally accumulate/max eobs and write into [eob] memory pointer

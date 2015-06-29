@@ -8,7 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+// Due to a header conflict between math.h and intrinsics includes with ceil()
+// in certain configurations under vs9 this include needs to precede
+// immintrin.h.
+#include "./vp9_rtcd.h"
+
 #include <immintrin.h>
+
+#include "vp9/common/x86/convolve.h"
 #include "vpx_ports/mem.h"
 
 // filters for 16_h8 and 16_v8
@@ -53,23 +60,23 @@ DECLARE_ALIGNED(32, static const uint8_t, filt4_global_avx2[32]) = {
 # define MM256_BROADCASTSI128_SI256(x) _mm256_broadcastsi128_si256(x)
 #endif  // __clang__
 
-void vp9_filter_block1d16_h8_avx2(unsigned char *src_ptr,
-                                  unsigned int src_pixels_per_line,
-                                  unsigned char *output_ptr,
-                                  unsigned int  output_pitch,
-                                  unsigned int  output_height,
-                                  int16_t *filter) {
+static void vp9_filter_block1d16_h8_avx2(const uint8_t *src_ptr,
+                                         ptrdiff_t src_pixels_per_line,
+                                         uint8_t *output_ptr,
+                                         ptrdiff_t output_pitch,
+                                         uint32_t output_height,
+                                         const int16_t *filter) {
   __m128i filtersReg;
   __m256i addFilterReg64, filt1Reg, filt2Reg, filt3Reg, filt4Reg;
   __m256i firstFilters, secondFilters, thirdFilters, forthFilters;
   __m256i srcRegFilt32b1_1, srcRegFilt32b2_1, srcRegFilt32b2, srcRegFilt32b3;
   __m256i srcReg32b1, srcReg32b2, filtersReg32;
   unsigned int i;
-  unsigned int src_stride, dst_stride;
+  ptrdiff_t src_stride, dst_stride;
 
   // create a register with 0,64,0,64,0,64,0,64,0,64,0,64,0,64,0,64
   addFilterReg64 = _mm256_set1_epi32((int)0x0400040u);
-  filtersReg = _mm_loadu_si128((__m128i *)filter);
+  filtersReg = _mm_loadu_si128((const __m128i *)filter);
   // converting the 16 bit (short) to 8 bit (byte) and have the same data
   // in both lanes of 128 bit register.
   filtersReg =_mm_packs_epi16(filtersReg, filtersReg);
@@ -104,9 +111,9 @@ void vp9_filter_block1d16_h8_avx2(unsigned char *src_ptr,
   for (i = output_height; i > 1; i-=2) {
     // load the 2 strides of source
     srcReg32b1 = _mm256_castsi128_si256(
-                 _mm_loadu_si128((__m128i *)(src_ptr-3)));
+                 _mm_loadu_si128((const __m128i *)(src_ptr - 3)));
     srcReg32b1 = _mm256_inserti128_si256(srcReg32b1,
-                 _mm_loadu_si128((__m128i *)
+                 _mm_loadu_si128((const __m128i *)
                  (src_ptr+src_pixels_per_line-3)), 1);
 
     // filter the source buffer
@@ -135,9 +142,9 @@ void vp9_filter_block1d16_h8_avx2(unsigned char *src_ptr,
     // reading 2 strides of the next 16 bytes
     // (part of it was being read by earlier read)
     srcReg32b2 = _mm256_castsi128_si256(
-                 _mm_loadu_si128((__m128i *)(src_ptr+5)));
+                 _mm_loadu_si128((const __m128i *)(src_ptr + 5)));
     srcReg32b2 = _mm256_inserti128_si256(srcReg32b2,
-                 _mm_loadu_si128((__m128i *)
+                 _mm_loadu_si128((const __m128i *)
                  (src_ptr+src_pixels_per_line+5)), 1);
 
     // add and saturate the results together
@@ -202,7 +209,7 @@ void vp9_filter_block1d16_h8_avx2(unsigned char *src_ptr,
     __m128i srcReg1, srcReg2, srcRegFilt1_1, srcRegFilt2_1;
     __m128i srcRegFilt2, srcRegFilt3;
 
-    srcReg1 = _mm_loadu_si128((__m128i *)(src_ptr-3));
+    srcReg1 = _mm_loadu_si128((const __m128i *)(src_ptr - 3));
 
     // filter the source buffer
     srcRegFilt1_1 = _mm_shuffle_epi8(srcReg1,
@@ -237,7 +244,7 @@ void vp9_filter_block1d16_h8_avx2(unsigned char *src_ptr,
 
     // reading the next 16 bytes
     // (part of it was being read by earlier read)
-    srcReg2 = _mm_loadu_si128((__m128i *)(src_ptr+5));
+    srcReg2 = _mm_loadu_si128((const __m128i *)(src_ptr + 5));
 
     // add and saturate the results together
     srcRegFilt1_1 = _mm_adds_epi16(srcRegFilt1_1,
@@ -297,12 +304,12 @@ void vp9_filter_block1d16_h8_avx2(unsigned char *src_ptr,
   }
 }
 
-void vp9_filter_block1d16_v8_avx2(unsigned char *src_ptr,
-                                  unsigned int src_pitch,
-                                  unsigned char *output_ptr,
-                                  unsigned int out_pitch,
-                                  unsigned int output_height,
-                                  int16_t *filter) {
+static void vp9_filter_block1d16_v8_avx2(const uint8_t *src_ptr,
+                                         ptrdiff_t src_pitch,
+                                         uint8_t *output_ptr,
+                                         ptrdiff_t out_pitch,
+                                         uint32_t output_height,
+                                         const int16_t *filter) {
   __m128i filtersReg;
   __m256i addFilterReg64;
   __m256i srcReg32b1, srcReg32b2, srcReg32b3, srcReg32b4, srcReg32b5;
@@ -310,11 +317,11 @@ void vp9_filter_block1d16_v8_avx2(unsigned char *src_ptr,
   __m256i srcReg32b11, srcReg32b12, filtersReg32;
   __m256i firstFilters, secondFilters, thirdFilters, forthFilters;
   unsigned int i;
-  unsigned int src_stride, dst_stride;
+  ptrdiff_t src_stride, dst_stride;
 
   // create a register with 0,64,0,64,0,64,0,64,0,64,0,64,0,64,0,64
   addFilterReg64 = _mm256_set1_epi32((int)0x0400040u);
-  filtersReg = _mm_loadu_si128((__m128i *)filter);
+  filtersReg = _mm_loadu_si128((const __m128i *)filter);
   // converting the 16 bit (short) to  8 bit (byte) and have the
   // same data in both lanes of 128 bit register.
   filtersReg =_mm_packs_epi16(filtersReg, filtersReg);
@@ -344,19 +351,19 @@ void vp9_filter_block1d16_v8_avx2(unsigned char *src_ptr,
 
   // load 16 bytes 7 times in stride of src_pitch
   srcReg32b1 = _mm256_castsi128_si256(
-               _mm_loadu_si128((__m128i *)(src_ptr)));
+               _mm_loadu_si128((const __m128i *)(src_ptr)));
   srcReg32b2 = _mm256_castsi128_si256(
-               _mm_loadu_si128((__m128i *)(src_ptr+src_pitch)));
+               _mm_loadu_si128((const __m128i *)(src_ptr + src_pitch)));
   srcReg32b3 = _mm256_castsi128_si256(
-               _mm_loadu_si128((__m128i *)(src_ptr+src_pitch*2)));
+               _mm_loadu_si128((const __m128i *)(src_ptr + src_pitch * 2)));
   srcReg32b4 = _mm256_castsi128_si256(
-               _mm_loadu_si128((__m128i *)(src_ptr+src_pitch*3)));
+               _mm_loadu_si128((const __m128i *)(src_ptr + src_pitch * 3)));
   srcReg32b5 = _mm256_castsi128_si256(
-               _mm_loadu_si128((__m128i *)(src_ptr+src_pitch*4)));
+               _mm_loadu_si128((const __m128i *)(src_ptr + src_pitch * 4)));
   srcReg32b6 = _mm256_castsi128_si256(
-               _mm_loadu_si128((__m128i *)(src_ptr+src_pitch*5)));
+               _mm_loadu_si128((const __m128i *)(src_ptr + src_pitch * 5)));
   srcReg32b7 = _mm256_castsi128_si256(
-               _mm_loadu_si128((__m128i *)(src_ptr+src_pitch*6)));
+               _mm_loadu_si128((const __m128i *)(src_ptr + src_pitch * 6)));
 
   // have each consecutive loads on the same 256 register
   srcReg32b1 = _mm256_inserti128_si256(srcReg32b1,
@@ -393,11 +400,11 @@ void vp9_filter_block1d16_v8_avx2(unsigned char *src_ptr,
      // load the last 2 loads of 16 bytes and have every two
      // consecutive loads in the same 256 bit register
      srcReg32b8 = _mm256_castsi128_si256(
-     _mm_loadu_si128((__m128i *)(src_ptr+src_pitch*7)));
+     _mm_loadu_si128((const __m128i *)(src_ptr + src_pitch * 7)));
      srcReg32b7 = _mm256_inserti128_si256(srcReg32b7,
      _mm256_castsi256_si128(srcReg32b8), 1);
      srcReg32b9 = _mm256_castsi128_si256(
-     _mm_loadu_si128((__m128i *)(src_ptr+src_pitch*8)));
+     _mm_loadu_si128((const __m128i *)(src_ptr + src_pitch * 8)));
      srcReg32b8 = _mm256_inserti128_si256(srcReg32b8,
      _mm256_castsi256_si128(srcReg32b9), 1);
 
@@ -476,7 +483,7 @@ void vp9_filter_block1d16_v8_avx2(unsigned char *src_ptr,
     __m128i srcRegFilt1, srcRegFilt3, srcRegFilt4, srcRegFilt5;
     __m128i srcRegFilt6, srcRegFilt7, srcRegFilt8;
     // load the last 16 bytes
-    srcRegFilt8 = _mm_loadu_si128((__m128i *)(src_ptr+src_pitch*7));
+    srcRegFilt8 = _mm_loadu_si128((const __m128i *)(src_ptr + src_pitch * 7));
 
     // merge the last 2 results together
     srcRegFilt4 = _mm_unpacklo_epi8(
@@ -542,3 +549,54 @@ void vp9_filter_block1d16_v8_avx2(unsigned char *src_ptr,
     _mm_store_si128((__m128i*)output_ptr, srcRegFilt1);
   }
 }
+
+#if HAVE_AVX2 && HAVE_SSSE3
+filter8_1dfunction vp9_filter_block1d4_v8_ssse3;
+#if ARCH_X86_64
+filter8_1dfunction vp9_filter_block1d8_v8_intrin_ssse3;
+filter8_1dfunction vp9_filter_block1d8_h8_intrin_ssse3;
+filter8_1dfunction vp9_filter_block1d4_h8_intrin_ssse3;
+#define vp9_filter_block1d8_v8_avx2 vp9_filter_block1d8_v8_intrin_ssse3
+#define vp9_filter_block1d8_h8_avx2 vp9_filter_block1d8_h8_intrin_ssse3
+#define vp9_filter_block1d4_h8_avx2 vp9_filter_block1d4_h8_intrin_ssse3
+#else  // ARCH_X86
+filter8_1dfunction vp9_filter_block1d8_v8_ssse3;
+filter8_1dfunction vp9_filter_block1d8_h8_ssse3;
+filter8_1dfunction vp9_filter_block1d4_h8_ssse3;
+#define vp9_filter_block1d8_v8_avx2 vp9_filter_block1d8_v8_ssse3
+#define vp9_filter_block1d8_h8_avx2 vp9_filter_block1d8_h8_ssse3
+#define vp9_filter_block1d4_h8_avx2 vp9_filter_block1d4_h8_ssse3
+#endif  // ARCH_X86_64
+filter8_1dfunction vp9_filter_block1d16_v2_ssse3;
+filter8_1dfunction vp9_filter_block1d16_h2_ssse3;
+filter8_1dfunction vp9_filter_block1d8_v2_ssse3;
+filter8_1dfunction vp9_filter_block1d8_h2_ssse3;
+filter8_1dfunction vp9_filter_block1d4_v2_ssse3;
+filter8_1dfunction vp9_filter_block1d4_h2_ssse3;
+#define vp9_filter_block1d4_v8_avx2 vp9_filter_block1d4_v8_ssse3
+#define vp9_filter_block1d16_v2_avx2 vp9_filter_block1d16_v2_ssse3
+#define vp9_filter_block1d16_h2_avx2 vp9_filter_block1d16_h2_ssse3
+#define vp9_filter_block1d8_v2_avx2  vp9_filter_block1d8_v2_ssse3
+#define vp9_filter_block1d8_h2_avx2  vp9_filter_block1d8_h2_ssse3
+#define vp9_filter_block1d4_v2_avx2  vp9_filter_block1d4_v2_ssse3
+#define vp9_filter_block1d4_h2_avx2  vp9_filter_block1d4_h2_ssse3
+// void vp9_convolve8_horiz_avx2(const uint8_t *src, ptrdiff_t src_stride,
+//                                uint8_t *dst, ptrdiff_t dst_stride,
+//                                const int16_t *filter_x, int x_step_q4,
+//                                const int16_t *filter_y, int y_step_q4,
+//                                int w, int h);
+// void vp9_convolve8_vert_avx2(const uint8_t *src, ptrdiff_t src_stride,
+//                               uint8_t *dst, ptrdiff_t dst_stride,
+//                               const int16_t *filter_x, int x_step_q4,
+//                               const int16_t *filter_y, int y_step_q4,
+//                               int w, int h);
+FUN_CONV_1D(horiz, x_step_q4, filter_x, h, src, , avx2);
+FUN_CONV_1D(vert, y_step_q4, filter_y, v, src - src_stride * 3, , avx2);
+
+// void vp9_convolve8_avx2(const uint8_t *src, ptrdiff_t src_stride,
+//                          uint8_t *dst, ptrdiff_t dst_stride,
+//                          const int16_t *filter_x, int x_step_q4,
+//                          const int16_t *filter_y, int y_step_q4,
+//                          int w, int h);
+FUN_CONV_2D(, avx2);
+#endif  // HAVE_AX2 && HAVE_SSSE3

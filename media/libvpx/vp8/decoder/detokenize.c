@@ -20,8 +20,8 @@ void vp8_reset_mb_tokens_context(MACROBLOCKD *x)
     ENTROPY_CONTEXT *a_ctx = ((ENTROPY_CONTEXT *)x->above_context);
     ENTROPY_CONTEXT *l_ctx = ((ENTROPY_CONTEXT *)x->left_context);
 
-    vpx_memset(a_ctx, 0, sizeof(ENTROPY_CONTEXT_PLANES)-1);
-    vpx_memset(l_ctx, 0, sizeof(ENTROPY_CONTEXT_PLANES)-1);
+    memset(a_ctx, 0, sizeof(ENTROPY_CONTEXT_PLANES)-1);
+    memset(l_ctx, 0, sizeof(ENTROPY_CONTEXT_PLANES)-1);
 
     /* Clear entropy contexts for Y2 blocks */
     if (!x->mode_info_context->mbmi.is_4x4)

@@ -9,6 +9,8 @@
  */
 
 #include <immintrin.h>  /* AVX2 */
+
+#include "./vp9_rtcd.h"
 #include "vpx_ports/mem.h"
 
 static void mb_lpf_horizontal_edge_w_avx2_8(unsigned char *s, int p,
