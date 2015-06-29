@@ -1471,7 +1471,6 @@ public class BrowserApp extends GeckoApp
         TransitionsTracker.track(alphaAnimator);
 
         alphaAnimator.start();
-
     }
 
     @Override
