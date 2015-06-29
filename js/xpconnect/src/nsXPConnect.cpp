@@ -40,8 +40,7 @@ using namespace JS;
 NS_IMPL_ISUPPORTS(nsXPConnect,
                   nsIXPConnect,
                   nsISupportsWeakReference,
-                  nsIThreadObserver,
-                  nsIJSRuntimeService)
+                  nsIThreadObserver)
 
 nsXPConnect* nsXPConnect::gSelf = nullptr;
 bool         nsXPConnect::gOnceAliveNowDead = false;
@@ -53,7 +52,6 @@ nsIScriptSecurityManager* nsXPConnect::gScriptSecurityManager = nullptr;
 nsIPrincipal* nsXPConnect::gSystemPrincipal = nullptr;
 
 const char XPC_CONTEXT_STACK_CONTRACTID[] = "@mozilla.org/js/xpc/ContextStack;1";
-const char XPC_RUNTIME_CONTRACTID[]       = "@mozilla.org/js/xpc/RuntimeService;1";
 const char XPC_EXCEPTION_CONTRACTID[]     = "@mozilla.org/js/xpc/Exception;1";
 const char XPC_CONSOLE_CONTRACTID[]       = "@mozilla.org/consoleservice;1";
 const char XPC_SCRIPT_ERROR_CONTRACTID[]  = "@mozilla.org/scripterror;1";
@@ -995,47 +993,6 @@ nsXPConnect::SetReportAllJSExceptions(bool newval)
         gReportAllJSExceptions = newval ? 2 : 0;
 
     return NS_OK;
-}
-
-/* attribute JSRuntime runtime; */
-NS_IMETHODIMP
-nsXPConnect::GetRuntime(JSRuntime** runtime)
-{
-    if (!runtime)
-        return NS_ERROR_NULL_POINTER;
-
-    JSRuntime* rt = GetRuntime()->Runtime();
-    JS_AbortIfWrongThread(rt);
-    *runtime = rt;
-    return NS_OK;
-}
-
-/* [noscript, notxpcom] void registerGCCallback(in xpcGCCallback func); */
-NS_IMETHODIMP_(void)
-nsXPConnect::RegisterGCCallback(xpcGCCallback func)
-{
-    mRuntime->AddGCCallback(func);
-}
-
-/* [noscript, notxpcom] void unregisterGCCallback(in xpcGCCallback func); */
-NS_IMETHODIMP_(void)
-nsXPConnect::UnregisterGCCallback(xpcGCCallback func)
-{
-    mRuntime->RemoveGCCallback(func);
-}
-
-/* [noscript, notxpcom] void registerContextCallback(in xpcContextCallback func); */
-NS_IMETHODIMP_(void)
-nsXPConnect::RegisterContextCallback(xpcContextCallback func)
-{
-    mRuntime->AddContextCallback(func);
-}
-
-/* [noscript, notxpcom] void unregisterContextCallback(in xpcContextCallback func); */
-NS_IMETHODIMP_(void)
-nsXPConnect::UnregisterContextCallback(xpcContextCallback func)
-{
-    mRuntime->RemoveContextCallback(func);
 }
 
 /* virtual */

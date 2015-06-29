@@ -57,6 +57,8 @@ add_task(function*() {
 
   yield openSelectPopup(selectPopup);
 
+  let isWindows = navigator.platform.indexOf("Win") >= 0;
+
   is(menulist.selectedIndex, 1, "Initial selection");
   is(selectPopup.firstChild.localName, "menucaption", "optgroup is caption");
   is(selectPopup.firstChild.getAttribute("label"), "First Group", "optgroup label");
@@ -65,17 +67,20 @@ add_task(function*() {
 
   EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
   is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(2), "Select item 2");
+  is(menulist.selectedIndex, isWindows ? 2 : 1, "Select item 2 selectedIndex");
 
   EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
   is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(3), "Select item 3");
+  is(menulist.selectedIndex, isWindows ? 3 : 1, "Select item 3 selectedIndex");
 
   EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
 
   // On Windows, one can navigate on disabled menuitems
-  let expectedIndex = (navigator.platform.indexOf("Win") >= 0) ? 5 : 9;
+  let expectedIndex = isWindows ? 5 : 9;
      
   is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(expectedIndex),
      "Skip optgroup header and disabled items select item 7");
+  is(menulist.selectedIndex, isWindows ? 5 : 1, "Select or skip disabled item selectedIndex");
 
   for (let i = 0; i < 10; i++) {
     is(menulist.getItemAtIndex(i).disabled, i >= 4 && i <= 7, "item " + i + " disabled")
@@ -83,6 +88,7 @@ add_task(function*() {
 
   EventUtils.synthesizeKey("KEY_ArrowUp", { code: "ArrowUp" });
   is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(3), "Select item 3 again");
+  is(menulist.selectedIndex, isWindows ? 3 : 1, "Select item 3 selectedIndex");
 
   yield hideSelectPopup(selectPopup);
 

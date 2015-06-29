@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>CSS Test: Value other than 'auto' for column height sets height of cells in the column</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
+        <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#fixed-table-layout">
+        <meta name="flags" content="">
+        <meta name="assert" content="A column element with a value other than 'auto' for the 'height' property sets the height for the column of cells it contains.">
+        <style type="text/css">
+            .test { writing-mode: vertical-rl; }
+            table
+            {
+                border-collapse: collapse;
+                table-layout: fixed;
+                height: 200px;
+            }
+            #col
+            {
+                height: 100px;
+            }
+            td
+            {
+                padding: 0;
+                width: 24px;
+            }
+            #cell
+            {
+                background: blue;
+                color: blue;
+            }
+            #div1
+            {
+                background: black;
+                width: 24px;
+                height: 100px;
+            }
+        </style>
+    </head>
+    <body>
+      <p>Test passes if the boxes below are the same height.</p>
+      <div class="test">
+        <table>
+            <col id="col">
+            <col>
+            <tr>
+                <td id="cell">X</td>
+                <td></td>
+           </tr>
+        </table>
+        <div id="div1"></div>
+      </div>
+    </body>
+</html>

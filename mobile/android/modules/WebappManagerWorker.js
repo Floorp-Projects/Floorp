@@ -10,7 +10,8 @@ let Log = require("resource://gre/modules/AndroidLog.jsm");
 // the "debug" priority and a log tag.
 let log = Log.d.bind(null, "WebappManagerWorker");
 
-onmessage = function(event) {
+// (eslint-disable: see bug 1177901)
+onmessage = function(event) { // eslint-disable-line no-undef
   let { url, path } = event.data;
 
   let file = OS.File.open(path, { truncate: true });

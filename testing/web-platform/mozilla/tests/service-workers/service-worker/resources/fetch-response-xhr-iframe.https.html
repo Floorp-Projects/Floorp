@@ -1,0 +1,33 @@
+<script src="/resources/testharness.js"></script>
+<script src="test-helpers.sub.js?pipe=sub"></script>
+<script>
+
+function xhr_send(method, data) {
+  return new Promise(function(resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.onload = function() {
+        resolve(xhr);
+      };
+      xhr.onerror = function() {
+        reject('XHR should succeed.');
+      };
+      xhr.responseType = 'text';
+      xhr.open(method, './dummy?test', true);
+      xhr.send(data);
+    });
+}
+
+function coalesce_headers_test() {
+  return xhr_send('POST', 'test string')
+  .then(function(xhr) {
+      assert_equals(xhr.getResponseHeader('foo'), 'foo, bar');
+    });
+}
+
+window.addEventListener('message', function(evt) {
+    var port = evt.ports[0];
+    coalesce_headers_test()
+      .then(function() { port.postMessage({results: 'finish'}); })
+      .catch(function(e) { port.postMessage({results: 'failure:' + e}); });
+  });
+</script>

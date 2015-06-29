@@ -1562,6 +1562,9 @@ nsIDocument::nsIDocument()
     mAllowDNSPrefetch(true),
     mIsBeingUsedAsImage(false),
     mHasLinksToUpdate(false),
+    mFontFaceSetDirty(true),
+    mGetUserFontSetCalled(false),
+    mPostedFlushUserFontSet(false),
     mPartID(0),
     mDidFireDOMContentLoaded(true)
 {
@@ -1948,6 +1951,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   // Traverse all nsIDocument pointer members.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSecurityInfo)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDisplayDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFontFaceSet)
 
   // Traverse all nsDocument nsCOMPtrs.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParser)
@@ -2077,6 +2081,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMasterDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mImportManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSubImportLinks)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
 
   tmp->mParentDocument = nullptr;
 
@@ -3815,6 +3820,9 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 
   MaybeRescheduleAnimationFrameNotifications();
 
+  // Now that we have a shell, we might have @font-face rules.
+  RebuildUserFontSet();
+
   return shell.forget();
 }
 
@@ -3900,6 +3908,10 @@ nsDocument::DeleteShell()
   // discarded, so we don't carry around decoded image data for a document we
   // no longer intend to paint.
   mImageTracker.EnumerateRead(RequestDiscardEnumerator, nullptr);
+
+  // Now that we no longer have a shell, we need to forget about any FontFace
+  // objects for @font-face rules that came from the style set.
+  RebuildUserFontSet();
 
   mPresShell = nullptr;
 }
@@ -12956,20 +12968,122 @@ nsAutoSyncOperation::~nsAutoSyncOperation()
   nsContentUtils::SetMicroTaskLevel(mMicroTaskLevel);
 }
 
-FontFaceSet*
-nsIDocument::GetFonts(ErrorResult& aRv)
+gfxUserFontSet*
+nsIDocument::GetUserFontSet()
 {
-  nsIPresShell* shell = GetShell();
-  if (!shell) {
-    aRv.Throw(NS_ERROR_FAILURE);
+  // We want to initialize the user font set lazily the first time the
+  // user asks for it, rather than building it too early and forcing
+  // rule cascade creation.  Thus we try to enforce the invariant that
+  // we *never* build the user font set until the first call to
+  // GetUserFontSet.  However, once it's been requested, we can't wait
+  // for somebody to call GetUserFontSet in order to rebuild it (see
+  // comments below in RebuildUserFontSet for why).
+#ifdef DEBUG
+  bool userFontSetGottenBefore = mGetUserFontSetCalled;
+#endif
+  // Set mGetUserFontSetCalled up front, so that FlushUserFontSet will actually
+  // flush.
+  mGetUserFontSetCalled = true;
+  if (mFontFaceSetDirty) {
+    // If this assertion fails, and there have actually been changes to
+    // @font-face rules, then we will call StyleChangeReflow in
+    // FlushUserFontSet.  If we're in the middle of reflow,
+    // that's a bad thing to do, and the caller was responsible for
+    // flushing first.  If we're not (e.g., in frame construction), it's
+    // ok.
+    NS_ASSERTION(!userFontSetGottenBefore ||
+                 !GetShell() ||
+                 !GetShell()->IsReflowLocked(),
+                 "FlushUserFontSet should have been called first");
+    FlushUserFontSet();
+  }
+
+  if (!mFontFaceSet) {
     return nullptr;
   }
 
-  nsPresContext* presContext = shell->GetPresContext();
-  if (!presContext) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+  return mFontFaceSet->GetUserFontSet();
+}
+
+void
+nsIDocument::FlushUserFontSet()
+{
+  if (!mGetUserFontSetCalled) {
+    return; // No one cares about this font set yet, but we want to be careful
+            // to not unset our mFontFaceSetDirty bit, so when someone really
+            // does we'll create it.
   }
 
-  return presContext->Fonts();
+  if (mFontFaceSetDirty) {
+    if (gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
+      nsTArray<nsFontFaceRuleContainer> rules;
+      nsIPresShell* shell = GetShell();
+      if (shell && !shell->StyleSet()->AppendFontFaceRules(rules)) {
+        return;
+      }
+
+      bool changed = false;
+
+      if (!mFontFaceSet && !rules.IsEmpty()) {
+        nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetScopeObject());
+        mFontFaceSet = new FontFaceSet(window, this);
+      }
+      if (mFontFaceSet) {
+        changed = mFontFaceSet->UpdateRules(rules);
+      }
+
+      // We need to enqueue a style change reflow (for later) to
+      // reflect that we're modifying @font-face rules.  (However,
+      // without a reflow, nothing will happen to start any downloads
+      // that are needed.)
+      if (changed && shell) {
+        nsPresContext* presContext = shell->GetPresContext();
+        if (presContext) {
+          presContext->UserFontSetUpdated();
+        }
+      }
+    }
+
+    mFontFaceSetDirty = false;
+  }
+}
+
+void
+nsIDocument::RebuildUserFontSet()
+{
+  if (!mGetUserFontSetCalled) {
+    // We want to lazily build the user font set the first time it's
+    // requested (so we don't force creation of rule cascades too
+    // early), so don't do anything now.
+    return;
+  }
+
+  mFontFaceSetDirty = true;
+  SetNeedStyleFlush();
+
+  // Somebody has already asked for the user font set, so we need to
+  // post an event to rebuild it.  Setting the user font set to be dirty
+  // and lazily rebuilding it isn't sufficient, since it is only the act
+  // of rebuilding it that will trigger the style change reflow that
+  // calls GetUserFontSet.  (This reflow causes rebuilding of text runs,
+  // which starts font loads, whose completion causes another style
+  // change reflow).
+  if (!mPostedFlushUserFontSet) {
+    nsCOMPtr<nsIRunnable> ev =
+      NS_NewRunnableMethod(this, &nsIDocument::HandleRebuildUserFontSet);
+    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+      mPostedFlushUserFontSet = true;
+    }
+  }
+}
+
+FontFaceSet*
+nsIDocument::Fonts()
+{
+  if (!mFontFaceSet) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetScopeObject());
+    mFontFaceSet = new FontFaceSet(window, this);
+    GetUserFontSet();  // this will cause the user font set to be created/updated
+  }
+  return mFontFaceSet;
 }

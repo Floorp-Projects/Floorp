@@ -19,8 +19,8 @@
 #include "mozilla/unused.h"
 
 #include "nsFrameMessageManager.h"
-#include "nsIJSRuntimeService.h"
 #include "nsPrintfCString.h"
+#include "xpcpublic.h"
 
 using namespace mozilla::jsipc;
 
@@ -49,15 +49,7 @@ nsIContentParent::AsContentParent()
 PJavaScriptParent*
 nsIContentParent::AllocPJavaScriptParent()
 {
-  nsCOMPtr<nsIJSRuntimeService> svc =
-    do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
-  NS_ENSURE_TRUE(svc, nullptr);
-
-  JSRuntime *rt;
-  svc->GetRuntime(&rt);
-  NS_ENSURE_TRUE(svc, nullptr);
-
-  return NewJavaScriptParent(rt);
+  return NewJavaScriptParent(xpc::GetJSRuntime());
 }
 
 bool

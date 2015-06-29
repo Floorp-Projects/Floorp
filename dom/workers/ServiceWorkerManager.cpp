@@ -3612,7 +3612,7 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
 
 bool
 ServiceWorkerManager::IsAvailable(const OriginAttributes& aOriginAttributes,
-                                        nsIURI* aURI)
+                                  nsIURI* aURI)
 {
   MOZ_ASSERT(aURI);
 
@@ -3625,6 +3625,7 @@ bool
 ServiceWorkerManager::IsControlled(nsIDocument* aDoc, ErrorResult& aRv)
 {
   MOZ_ASSERT(aDoc);
+  MOZ_ASSERT(!nsContentUtils::IsInPrivateBrowsing(aDoc));
 
   nsRefPtr<ServiceWorkerRegistrationInfo> registration;
   nsresult rv = GetDocumentRegistration(aDoc, getter_AddRefs(registration));
@@ -3747,6 +3748,7 @@ ServiceWorkerManager::CreateServiceWorker(nsIPrincipal* aPrincipal,
 
   info.mIndexedDBAllowed =
     indexedDB::IDBFactory::AllowedForPrincipal(aPrincipal);
+   info.mPrivateBrowsing = false;
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   rv = aPrincipal->GetCsp(getter_AddRefs(csp));

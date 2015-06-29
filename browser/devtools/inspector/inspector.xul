@@ -55,6 +55,12 @@
       <menuitem id="node-menu-showdomproperties"
         label="&inspectorShowDOMProperties.label;"
         oncommand="inspector.showDOMProperties()"/>
+      <menuitem id="node-menu-expand"
+        label="&inspectorExpandNode.label;"
+        oncommand="inspector.expandNode()"/>
+      <menuitem id="node-menu-collapse"
+        label="&inspectorCollapseNode.label;"
+        oncommand="inspector.collapseNode()"/>
       <menuseparator/>
       <menuitem id="node-menu-pasteinnerhtml"
         label="&inspectorHTMLPasteInner.label;"

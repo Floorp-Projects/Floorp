@@ -342,7 +342,10 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
   bool haveRow = false;
   bool reflowAllKids = aReflowState.reflowState.ShouldReflowAllKids() ||
                          tableFrame->IsGeometryDirty();
-  bool needToCalcRowBSizes = reflowAllKids;
+
+  // in vertical-rl mode, we always need the row bsizes in order to
+  // get the necessary containerWidth for placing our kids
+  bool needToCalcRowBSizes = reflowAllKids || wm.IsVerticalRL();
 
   nscoord containerWidth = aReflowState.reflowState.ComputedWidth();
   if (containerWidth == NS_UNCONSTRAINEDSIZE) {
@@ -417,7 +420,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
       aReflowState.bCoord += cellSpacingB;
 
       if (!reflowAllKids) {
-        if (IsSimpleRowFrame(aReflowState.tableFrame, kidFrame)) {
+        if (IsSimpleRowFrame(aReflowState.tableFrame, rowFrame)) {
           // Inform the row of its new bsize.
           rowFrame->DidResize();
           // the overflow area may have changed inflate the overflow area
@@ -1581,20 +1584,16 @@ nsTableRowGroupFrame::GetBSizeBasis(const nsHTMLReflowState& aReflowState)
 
 bool
 nsTableRowGroupFrame::IsSimpleRowFrame(nsTableFrame* aTableFrame,
-                                       nsIFrame*     aFrame)
+                                       nsTableRowFrame* aRowFrame)
 {
-  // Make sure it's a row frame and not a row group frame
-  nsTableRowFrame *rowFrame = do_QueryFrame(aFrame);
-  if (rowFrame) {
-    int32_t rowIndex = rowFrame->GetRowIndex();
+  int32_t rowIndex = aRowFrame->GetRowIndex();
 
-    // It's a simple row frame if there are no cells that span into or
-    // across the row
-    int32_t numEffCols = aTableFrame->GetEffectiveColCount();
-    if (!aTableFrame->RowIsSpannedInto(rowIndex, numEffCols) &&
-        !aTableFrame->RowHasSpanningCells(rowIndex, numEffCols)) {
-      return true;
-    }
+  // It's a simple row frame if there are no cells that span into or
+  // across the row
+  int32_t numEffCols = aTableFrame->GetEffectiveColCount();
+  if (!aTableFrame->RowIsSpannedInto(rowIndex, numEffCols) &&
+      !aTableFrame->RowHasSpanningCells(rowIndex, numEffCols)) {
+    return true;
   }
 
   return false;

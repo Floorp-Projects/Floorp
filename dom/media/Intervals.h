@@ -281,6 +281,16 @@ public:
     }
   }
 
+  bool operator== (const SelfType& aOther) const
+  {
+    return mIntervals == aOther.mIntervals;
+  }
+
+  bool operator!= (const SelfType& aOther) const
+  {
+    return mIntervals != aOther.mIntervals;
+  }
+
   SelfType& operator= (const SelfType& aOther)
   {
     mIntervals = aOther.mIntervals;
