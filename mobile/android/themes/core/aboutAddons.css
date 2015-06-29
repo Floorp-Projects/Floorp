@@ -45,7 +45,7 @@ a:active {
   display: none;
 }
 
-.addon-item[isUnsigned] .warn-unsigned {
+.addon-item[isUnsigned="true"] .warn-unsigned {
   display: block;
 }
 
