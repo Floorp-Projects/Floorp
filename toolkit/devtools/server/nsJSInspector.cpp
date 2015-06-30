@@ -52,7 +52,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSInspector)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mLastRequestor)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-nsJSInspector::nsJSInspector() : mNestedLoopLevel(0), mRequestors(1), mLastRequestor(JSVAL_NULL)
+nsJSInspector::nsJSInspector() : mNestedLoopLevel(0), mRequestors(1), mLastRequestor(JS::NullValue())
 {
 }
 
@@ -99,7 +99,7 @@ nsJSInspector::ExitNestedEventLoop(uint32_t *out)
     if (mNestedLoopLevel > 0)
       mLastRequestor = mRequestors.ElementAt(mNestedLoopLevel - 1);
     else
-      mLastRequestor = JSVAL_NULL;
+      mLastRequestor = JS::NullValue();
   } else {
     return NS_ERROR_FAILURE;
   }

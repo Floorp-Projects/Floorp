@@ -67,7 +67,7 @@ BEGIN_TEST(testXDR_bug506491)
 
     // confirm
     EVAL("f() === 'ok';\n", &v2);
-    JS::RootedValue trueval(cx, JSVAL_TRUE);
+    JS::RootedValue trueval(cx, JS::TrueValue());
     CHECK_SAME(v2, trueval);
     return true;
 }

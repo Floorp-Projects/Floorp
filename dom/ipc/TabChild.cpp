@@ -503,7 +503,7 @@ TabChildBase::DispatchMessageManagerMessage(const nsAString& aMessageName,
                                             const nsAString& aJSONData)
 {
     AutoSafeJSContext cx;
-    JS::Rooted<JS::Value> json(cx, JSVAL_NULL);
+    JS::Rooted<JS::Value> json(cx, JS::NullValue());
     StructuredCloneData cloneData;
     JSAutoStructuredCloneBuffer buffer;
     if (JS_ParseJSON(cx,

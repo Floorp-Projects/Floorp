@@ -823,7 +823,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
             return;
         unsigned destOffset = branch.getOffset() + offset;
         if (offset > 0) {
-            while (curpool < numDumps_ && poolInfo_[curpool].offset <= destOffset) {
+            while (curpool < numDumps_ && poolInfo_[curpool].offset <= (size_t)destOffset) {
                 offset += poolInfo_[curpool].size;
                 curpool++;
             }

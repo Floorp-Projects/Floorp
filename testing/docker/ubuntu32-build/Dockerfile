@@ -1,4 +1,4 @@
-FROM          32bit/ubuntu:14.04
+FROM          quay.io/mrrrgn/ubuntu32:14.04
 MAINTAINER    Morgan Reece Phillips <winter2718@gmail.com>
 
 ### add worker user and setup its workspace

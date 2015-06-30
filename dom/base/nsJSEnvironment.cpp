@@ -1092,12 +1092,12 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
     case nsISupportsPrimitive::TYPE_PRTIME :
     case nsISupportsPrimitive::TYPE_VOID : {
       NS_WARNING("Unsupported primitive type used");
-      *aArgv = JSVAL_NULL;
+      aArgv->setNull();
       break;
     }
     default : {
       NS_WARNING("Unknown primitive type used");
-      *aArgv = JSVAL_NULL;
+      aArgv->setNull();
       break;
     }
   }

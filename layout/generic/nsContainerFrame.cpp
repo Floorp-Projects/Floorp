@@ -860,8 +860,7 @@ nsContainerFrame::DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
     if (aData->currentLine == 0) {
       aData->currentLine = clonePBM;
     }
-    for (nsIFrame *kid = nif->mFrames.FirstChild(); kid;
-         kid = kid->GetNextSibling()) {
+    for (nsIFrame* kid : nif->mFrames) {
       if (aType == nsLayoutUtils::MIN_ISIZE)
         kid->AddInlineMinISize(aRenderingContext,
                                static_cast<InlineMinISizeData*>(aData));
@@ -1224,8 +1223,7 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
   nsOverflowContinuationTracker tracker(this, false, false);
   bool shouldReflowAllKids = aReflowState.ShouldReflowAllKids();
 
-  for (nsIFrame* frame = overflowContainers->FirstChild(); frame;
-       frame = frame->GetNextSibling()) {
+  for (nsIFrame* frame : *overflowContainers) {
     if (frame->GetPrevInFlow()->GetParent() != GetPrevInFlow()) {
       // frame's prevInFlow has moved, skip reflowing this frame;
       // it will get reflowed once it's been placed
@@ -1315,8 +1313,7 @@ nsContainerFrame::DisplayOverflowContainers(nsDisplayListBuilder*   aBuilder,
 {
   nsFrameList* overflowconts = GetPropTableFrames(OverflowContainersProperty());
   if (overflowconts) {
-    for (nsIFrame* frame = overflowconts->FirstChild(); frame;
-         frame = frame->GetNextSibling()) {
+    for (nsIFrame* frame : *overflowconts) {
       BuildDisplayListForChild(aBuilder, frame, aDirtyRect, aLists);
     }
   }

@@ -553,10 +553,10 @@ GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
         return false;
     *out = CallTempNonArgRegs[usedIntArgs];
     return true;
-
 }
 
-void PatchJump(CodeLocationJump& jump_, CodeLocationLabel label);
+void PatchJump(CodeLocationJump& jump_, CodeLocationLabel label,
+               ReprotectCode reprotect = DontReprotect);
 
 static inline void
 PatchBackedge(CodeLocationJump& jump_, CodeLocationLabel label, JitRuntime::BackedgeTarget target)
