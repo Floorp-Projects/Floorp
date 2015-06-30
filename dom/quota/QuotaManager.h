@@ -79,7 +79,9 @@ private:
     IgnoreMozBrowser
   };
 
+  class CollectOriginsHelper;
   class DirectoryLockImpl;
+  class FinalizeOriginEvictionOp;
 
   typedef nsClassHashtable<nsCStringHashKey,
                            nsTArray<DirectoryLockImpl*>> DirectoryLockTable;
@@ -207,7 +209,7 @@ public:
   // Collect inactive and the least recently used origins.
   uint64_t
   CollectOriginsForEviction(uint64_t aMinSizeToBeFreed,
-                            nsTArray<nsRefPtr<DirectoryLock>>& aLocks);
+                            nsTArray<nsRefPtr<DirectoryLockImpl>>& aLocks);
 
   nsresult
   EnsureOriginIsInitialized(PersistenceType aPersistenceType,
@@ -371,8 +373,9 @@ private:
   RemovePendingDirectoryLock(DirectoryLockImpl* aLock);
 
   uint64_t
-  LockedCollectOriginsForEviction(uint64_t aMinSizeToBeFreed,
-                                  nsTArray<nsRefPtr<DirectoryLock>>& aLocks);
+  LockedCollectOriginsForEviction(
+                                 uint64_t aMinSizeToBeFreed,
+                                 nsTArray<nsRefPtr<DirectoryLockImpl>>& aLocks);
 
   void
   LockedRemoveQuotaForOrigin(PersistenceType aPersistenceType,
@@ -410,7 +413,7 @@ private:
                        const nsACString& aOrigin);
 
   void
-  FinalizeOriginEviction(nsTArray<nsRefPtr<DirectoryLock>>& aLocks);
+  FinalizeOriginEviction(nsTArray<nsRefPtr<DirectoryLockImpl>>& aLocks);
 
   void
   ReleaseIOThreadObjects()
@@ -501,21 +504,6 @@ class QuotaManager::DirectoryLock
   : public nsISupports
 {
   friend class DirectoryLockImpl;
-
-public:
-  // These four methods can go away once QuotaObject is merged with QuotaManager
-  // XXX RemoveMe once bug 1170021 gets fixed.
-  const Nullable<PersistenceType>&
-  GetPersistenceType() const;
-
-  const nsACString&
-  GetGroup() const;
-
-  const OriginScope&
-  GetOriginScope() const;
-
-  const Nullable<bool>&
-  GetIsApp() const;
 
 private:
   DirectoryLock()
