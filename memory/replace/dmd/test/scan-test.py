@@ -24,6 +24,9 @@ This is only for testing. Input files can be gzipped.
 '''
     p = argparse.ArgumentParser(description=description)
 
+    p.add_argument('--clamp-contents', action='store_true',
+                   help='expect that the contents of the JSON input file have had their addresses clamped')
+
     p.add_argument('input_file',
                    help='a file produced by DMD')
 
@@ -70,9 +73,12 @@ def main():
     b = blockList[0]
 
     # The expected values are based on hard-coded values in SmokeDMD.cpp.
-    addr = int(b['addr'], 16)
-    expected = ['123', '0', str(format(addr - 1, 'x')), b['addr'],
-                str(format(addr + 1, 'x')), '0']
+    if args.clamp_contents:
+        expected = ['0', '0', '0', b['addr'], b['addr']]
+    else:
+        addr = int(b['addr'], 16)
+        expected = ['123', '0', str(format(addr - 1, 'x')), b['addr'],
+                    str(format(addr + 1, 'x')), '0']
 
     checkScanContents(b['contents'], expected)
 
